@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Description &mdash; Hazma 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Hazma 1.0 documentation" href="index.html"/>
+        <link rel="next" title="Modules" href="Modules.html"/>
+        <link rel="prev" title="Welcome to Hazma’s documentation!" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Hazma
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Description</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#decay-spectra">Decay spectra</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#muon">Muon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charged-pion">Charged Pion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#neutral-pion">Neutral Pion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Usage.html">Usage</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Hazma</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Description</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Description.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="description">
+<h1>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>This package is used to compute the gamma ray spectra <span class="math">\(\dfrac{dN}{dE}\)</span> for light particles, such as, pions, kaon, electrons and muons, in an energy regime where the mass effects are important, i.e. is the MeV energy range. The code has been written in python/cython.</p>
+</div>
+<div class="section" id="decay-spectra">
+<h2>Decay spectra<a class="headerlink" href="#decay-spectra" title="Permalink to this headline">¶</a></h2>
+<p>In this section, we describe how the radiative decay spectra are computed for the muon, charged pion and neutral pion.</p>
+<div class="section" id="muon">
+<h3>Muon<a class="headerlink" href="#muon" title="Permalink to this headline">¶</a></h3>
+<p>The dominant contribution to the radiative decay of the muon comes from <span class="math">\(\mu^{\pm}\to e^{\pm}\nu\bar{\nu}\gamma\)</span>. The unpolarized differential branching fraction of this decay mode in the <em>muon rest frame</em> can be written as
+[1]</p>
+<div class="math">
+\[\dfrac{dB}{dy \ d\cos\theta_{\gamma}^{R}} = \dfrac{1}{y}
+\dfrac{\alpha}{72\pi}(1-y)\left[
+12\left(3 - 2y(1-y)^2\right)\log\left(\dfrac{1-y}{r}\right)
++ y(1-y)(46 - 55y) - 102\right]\]</div>
+<p>where <span class="math">\(r = (m_{e}/m_{\mu})^2\)</span>, <span class="math">\(0 \leq y = 2E_{\gamma}^{R\mu}/m_{\mu} \leq 1 - r\)</span>, (<span class="math">\(E_{\gamma}^{R\mu}\)</span> is the energy of the photon in the muon rest frame) and <span class="math">\(\theta_{\gamma}^{R}\)</span> is the angle the photon makes with respect to some axis in the muon rest frame.  In order to obtain the decay spectrum in the laboratory frame, we need to boost the above spectrum. In other words, we need to change variables from the gamma ray energy and angle in the muon rest frame to those in the lab frame. We then integrate over the angle to compute <span class="math">\(dN/dE_{\gamma}\)</span>. The Jacobian for this change of variables is</p>
+<div class="math">
+\[J = \dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}\]</div>
+<p>where the boost parameters are</p>
+<div class="math">
+\[\gamma = E_{\mu} / m_{\mu}, \qquad \beta = \sqrt{1 - \left(\dfrac{m_{\mu}}{E_{\mu}}\right)^2}\]</div>
+<p>Integrating over angles yields the gamma ray spectrum in the lab frame:</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}^{L}} =
+\int_{-1}^{1}d\cos\theta_{\gamma}^{L}
+\dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}
+\dfrac{dB}{dE_{\gamma}^{R\mu}}\]</div>
+<img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/muon_decay_spectra.png" />
+</div>
+<div class="section" id="charged-pion">
+<h3>Charged Pion<a class="headerlink" href="#charged-pion" title="Permalink to this headline">¶</a></h3>
+<p>To compute the gamma ray spectrum from a charged pion, one considers to possible decay modes. These decay modes are <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu}\gamma\)</span> and <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu} \to e^{\pm}\nu_{\mu}\nu_{\mu}\nu_{e}\gamma\)</span>. To compute the gamma ray spectrum from the first decay mode, one uses results from [2]. It turns out that the spectrum from this decay mode is roughly a factor of 100 times smaller than the spectrum from the second decay mode. We thus ignore the contributions from <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu}\gamma\)</span>.</p>
+<p>To compute the γ-ray spectrum from <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu} \to e^{\pm}\nu_{\mu}\nu_{\mu}\nu_{e}\gamma\)</span>, we first take the muon decay spectra (see section on muon decay spectra) and boost the muon into the pion rest frame use the following:</p>
+<div class="math">
+\[\gamma_{1} = E_{R\mu}/m_{\mu} \qquad
+\beta_{1} = \sqrt{1-\left(\dfrac{m_{\mu}}{E_{R\mu}}\right)^2} \qquad  E_{R\mu} = \dfrac{m_{\pi}^2 - m_{\mu}^2}{m_{\pi}^2 + m_{\mu}^2}\]</div>
+<p>where <span class="math">\(E_{R\mu}\)</span> is the energy of the muon in the pion rest frame. The photon spectrum in the charged pion rest frame, <span class="math">\(dN/dE_{\gamma}^{R\pi}\)</span>, is obtain by integrating the differential branching ratio times a Jacobian factor <span class="math">\(1/2\gamma_{1}(1-\beta_{1}\cos\theta_{\gamma}^{R\pi})\)</span> over the
+angle the photon makes with the muon. Once this integration is completed, one then boosts into the laboratory frame of reference. The steps are nearly identical to boosting from the muon rest frame to the pion rest frame. The only thing that changes in the boost factor and the Jacobian. In going from the charged pion rest frame to the laboratory frame, the Jacobian and boost factor are</p>
+<div class="math">
+\[J = \dfrac{1}{2\gamma_{2}(1-\beta_{2}\cos\theta_{\gamma}^{L})} \qquad
+\gamma_{2} = E_{\pi} / m_{\pi} \qquad
+\beta_{2} = \sqrt{1 - \left(\dfrac{m_{\mu}}{E_{\pi}}\right)^2}\]</div>
+<p>The gamma-ray spectrum in the laboratory frame will thus be</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}^{L}} = \int_{-1}^{1} d\cos\theta_{\gamma}^{L} \dfrac{1}{2\gamma_{2}(1-\beta_{2}\cos\theta_{\gamma}^{L})} \times
+\left(\int_{-1}^{1}d\cos\theta_{\gamma}^{R\pi}
+\dfrac{1}{2\gamma_{1}(1-\beta_{1}\cos\theta_{\gamma}^{L})}
+\dfrac{dB}{dE_{\gamma}^{R\mu}}
+\right)\]</div>
+<p>where</p>
+<div class="math">
+\[E_{\gamma}^{R\mu} = \gamma_{1} E_{\gamma}^{R\pi}\left(1 - \beta_{1}\cos\theta_{\gamma}^{R\pi}\right)\]</div>
+<p>and</p>
+<div class="math">
+\[E_{\gamma}^{R\pi} = \gamma_{2} E_{\gamma}^{L}\left(1 - \beta_{2}\cos\theta_{\gamma}^{L}\right)\]</div>
+<p>The limits on the photon energy are given by</p>
+<div class="math">
+\[0 \leq E_{\gamma}^{L} \leq \dfrac{m_{\mu}^2 - m_{e}^2}{2m_{\mu}}
+\gamma_{1}\gamma_{2}(1+\beta_{1})(1+\beta_{2})\]</div>
+<img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/charged_pion_decay_spectrum.png" />
+</div>
+<div class="section" id="neutral-pion">
+<h3>Neutral Pion<a class="headerlink" href="#neutral-pion" title="Permalink to this headline">¶</a></h3>
+<p>The dominant decay mode of the neutral pion is <span class="math">\(\pi^{0}\to\gamma\gamma\)</span>. In the laboratory frame, the spectrum is</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}} = \dfrac{2}{m_{\pi}\gamma\beta}\]</div>
+</div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><ol class="first last upperalpha simple" start="25">
+<li>Kuno and Y. Okada, Reviews of Modern Physics 73, 151 (2001), ISSN 00346861.</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><ol class="first last upperalpha simple" start="11">
+<li><ol class="first upperalpha">
+<li>Olive, P. D. Group, et al., Chinese physics C 38, 090001 (2014).</li>
+</ol>
+</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Modules.html" class="btn btn-neutral float-right" title="Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to Hazma’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Logan A. Morrison.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
