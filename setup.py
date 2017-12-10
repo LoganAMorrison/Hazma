@@ -4,9 +4,10 @@ import numpy as np
 
 packs = ['hazma',
          'hazma.helper_functions',
-         'hazma.particles']
+         'hazma.particles',
+         'hazma.rambo']
 
-extensions = ["hazma/particles/*.pyx"]
+extensions = ["hazma/particles/*.pyx", "hazma/rambo/*.pyx"]
 
 setup(name='hazma',
       version='1.0',
