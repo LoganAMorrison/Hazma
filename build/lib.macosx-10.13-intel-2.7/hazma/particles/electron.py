@@ -1,4 +1,4 @@
-from ..helper_functions.scalar_mediator_fsr import fermion
+from ..fsr_helper_functions.scalar_mediator_fsr import fermion
 import numpy as np
 
 MASS_E = 0.510998928

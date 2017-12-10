@@ -3,7 +3,7 @@ from Cython.Build import cythonize
 import numpy as np
 
 packs = ['hazma',
-         'hazma.helper_functions',
+         'hazma.fsr_helper_functions',
          'hazma.particles',
          'hazma.rambo']
 
