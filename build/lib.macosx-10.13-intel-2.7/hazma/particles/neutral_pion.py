@@ -7,7 +7,9 @@ def decay_spectra(eng_gam, eng_pi):
     """
     pi0 = _decay_neutral_pion.NeutralPion()
 
-    return pi0.decay_spectra()
+    if hasattr(eng_gam, '__len__'):
+        return pi0.decay_spectra(eng_gam, eng_pi)
+    return pi0.decay_spectra_point(eng_gam, eng_pi)
 
 
 def fsr(eng_gam, cme, mediator='scalar'):
