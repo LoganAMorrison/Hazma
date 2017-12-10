@@ -9,48 +9,42 @@ from scipy.interpolate import interp1d
 from libc.math cimport exp, log, M_PI, log10, sqrt
 import cython
 from functools import partial
-# include "parameters.pxd
+include "parameters.pxd"
 
 
-"""
-cdef int __num_phase_space_pts = 1000
-cdef np.ndarray __massesPiPiPi
-cdef np.ndarray __massesPi0MuNu
-cdef np.ndarray __massesPi0ENu
-cdef np.ndarray __massesPiPiPi0Pi0
 
-cdef np.ndarray __engsPiPiPi = np.zero(__num_phase_space_pts, dtype=float)
-cdef np.ndarray __engsPi0MuNu = np.zero(__num_phase_space_pts, dtype=float)
-cdef np.ndarray __engsPi0ENu = np.zero(__num_phase_space_pts, dtype=float)
-cdef np.ndarray __engsPiPiPi0Pi0 = np.zero(__num_phase_space_pts, dtype=float)
+cdef int __num_ps_pts = 1000
+cdef int __num_bins = 25
 
-__ramboPiPiPi = Rambo.Rambo()
-__ramboPi0MuNu = Rambo.Rambo()
-__ramboPi0ENu = Rambo.Rambo()
-__ramboPiPiPi0Pi0 = Rambo.Rambo()
-
-__massesPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], dtype=np.float64)
-__massesPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0], dtype=np.float64)
-__massesPi0ENu = np.array([MASS_PI0, MASS_E, 0.0], dtype=np.float64)
-__massesPiPiPi0Pi0 = np.array([MASS_PI, MASS_PI, MASS_PI0, MASS_PI0],\
+# Mass arrays
+cdef np.ndarray __msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
     dtype=np.float64)
+cdef np.ndarray __msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
+    dtype=np.float64)
+cdef np.ndarray __mssPi0ENu = np.array([MASS_PI0, MASS_E, 0.0],\
+    dtype=np.float64)
+cdef np.ndarray __msPiPiPi0Pi0 = np.array([MASS_PI, MASS_PI, MASS_PI0, \
+    MASS_PI0], dtype=np.float64)
 
-__psPiPiPi, __weightsPiPiPi \
-    = ramboPiPiPi.generate_phase_space(__num_phase_space_pts, \
-                                       __massesPiPiPi, MASS_K)
+# Energy probability distributions
+cdef np.ndarray __probsPiPiPi = np.zero((3, 2, __num_bins), dtype=float)
+cdef np.ndarray __probsPi0MuNu = np.zero((3, 2, __num_bins), dtype=float)
+cdef np.ndarray __probsPi0ENu = np.zero((3, 2, __num_bins), dtype=float)
+cdef np.ndarray __probsPiPiPi0Pi0 = np.zero((3, 2, __num_bins), dtype=float)
 
-__psPi0MuNu, __weightsPi0MuNu \
-    = ramboPi0MuNu.generate_phase_space(__num_phase_space_pts, \
-                                        __massesPi0MuNu, MASS_K)
+__ram = Rambo.Rambo()
 
-__psPiPiPi, __weightsPiPiPi \
-    = ramboPiPiPi.generate_phase_space(__num_phase_space_pts, \
-                                       __massesPiPiPi, MASS_K)
+__probsPiPiPi \
+    = __ram.generate_energy_histogram(__num_ps_pts, __msPiPiPi, MASS_K, 25)
 
-__psPiPiPi, __weightsPiPiPi \
-    = ramboPiPiPi.generate_phase_space(__num_phase_space_pts, \
-                                       __massesPiPiPi, MASS_K)
-"""
+__probsPi0MuNu \
+    = __ram.generate_energy_histogram(__num_ps_pts, __msPi0MuNu, MASS_K, 25)
+
+__probsPi0ENu \
+    = __ram.generate_energy_histogram(__num_ps_pts, __mssPi0ENu, MASS_K, 25)
+
+__probsPiPiPi0Pi0 \
+    = __ram.generate_energy_histogram(__num_ps_pts,__msPiPiPi0Pi0, MASS_K, 25)
 
 
 
@@ -58,8 +52,6 @@ cdef class ChargedKaon:
     """
     Class for computing the photon spectrum from radiative kaon decay.
     """
-
-
 
     def __init__(self):
         pass
