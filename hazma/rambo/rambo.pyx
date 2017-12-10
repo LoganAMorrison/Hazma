@@ -257,7 +257,10 @@ cdef class Rambo:
 
         self.__weight = self.__weight * term1 * term2 * term3 * self.__cme
 
-    cdef normalize_weights(self):
+    cdef __normalize_weights(self):
+        """
+        Normalizes the 'self.__weight_array' so that the sum of all the entries is unity.
+        """
         cdef DBL_T weight_sum = 0.0
         cdef INT_T i
 
@@ -269,7 +272,23 @@ cdef class Rambo:
 
 
     def generate_phase_space(self, num_phase_space_pts, masses, cme):
+        """
+        Creates 'num_phase_space_pts' number of phase space points with final state particles with masses 'masses' and center of mass energy 'cme'.
 
+        Arguments:
+            num_phase_space_pts: Number of phase space points to generate.
+
+            masses: List of the final state particle masses.
+
+            cme: Center of mass energy of the process.
+
+        Returns:
+            phase_space_array (np.ndarray): Array containing the four momenta of each particles for each event. The shape is (num_phase_space_pts, len(masses), 4)
+
+            wieght_array (np.ndarray): Array containing the weight of each event. The shape is (num_phase_space_pts)
+
+
+        """
         self.__initilize(num_phase_space_pts, masses, cme)
         self.__event_count = 0
         cdef INT_T i, j
@@ -292,23 +311,41 @@ cdef class Rambo:
 
             self.__event_count += 1
 
-        self.normalize_weights()
+        self.__normalize_weights()
 
         return self.__phase_space_array, self.__weight_array
 
 
     def generate_energy_histogram(self, num_phase_space_pts, masses, cme, \
-                                  bin_nums):
+                                  num_bins):
+        """
+        Returns the energy probability distributions for each particle. These
+        distributions are stored in (num_particles, 2, num_bins) array called probs. For example, probs[1, 0, :], probs[1, 1, :] are the energies and their probabilities, respectively, for the second particle.
+
+        Arguments:
+            num_phase_space_pts: Number of phase space points to generate.
+
+            masses: List of the final state particle masses.
+
+            cme: Center of mass energy of the process.
+
+            num_bins: Number of bins to use for the probability distributions.
+
+        Returns:
+            probs (np.ndarray): Array containing the energy probability distributions for each final state particle. The shape is (len(masses), 2, num_bins)
+        """
         self.generate_phase_space(num_phase_space_pts, masses, cme)
 
         cdef int i, j
         cdef np.ndarray energy_array = np.zeros((num_phase_space_pts, \
             len(masses)), dtype=float)
-        cdef np.ndarray probs = np.zeros((len(masses), bin_nums),\
+        cdef np.ndarray hist = np.zeros((len(masses), num_bins),\
             dtype=float)
-        cdef np.ndarray bins = np.zeros((len(masses), bin_nums + 1),\
+        cdef np.ndarray bins = np.zeros((len(masses), num_bins + 1),\
             dtype=float)
-        cdef np.ndarray engs = np.zeros((len(masses), bin_nums),\
+        cdef np.ndarray engs = np.zeros((len(masses), num_bins),\
+            dtype=float)
+        cdef np.ndarray probs = np.zeros((len(masses), 2, num_bins),\
             dtype=float)
 
 
@@ -317,8 +354,13 @@ cdef class Rambo:
                 energy_array[i, j] = self.__phase_space_array[i, j, 0]
 
         for i in range(len(masses)):
-            probs[i, :], bins[i, :] = np.histogram(energy_array[:, i], bins=bin_nums, weights=self.__weight_array[:])
+            hist[i, :], bins[i, :] = np.histogram(energy_array[:, i], bins=num_bins, weights=self.__weight_array[:])
 
         engs = (bins[:, :-1] + bins[:, 1:]) / 2
 
-        return engs, probs
+        for i in range(len(masses)):
+            for j in range(num_bins):
+                probs[i, 0, j] = engs[i, j]
+                probs[i, 1, j] = hist[i, j]
+
+        return probs
