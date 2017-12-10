@@ -257,6 +257,16 @@ cdef class Rambo:
 
         self.__weight = self.__weight * term1 * term2 * term3 * self.__cme
 
+    cdef normalize_weights(self):
+        cdef DBL_T weight_sum = 0.0
+        cdef INT_T i
+
+        for i in range(self.__num_phase_space_pts):
+            weight_sum += self.__weight_array[i]
+
+        for i in range(self.__num_phase_space_pts):
+            self.__weight_array[i] = self.__weight_array[i] / weight_sum
+
 
     def generate_phase_space(self, num_phase_space_pts, masses, cme):
 
@@ -287,12 +297,28 @@ cdef class Rambo:
         return self.__phase_space_array, self.__weight_array
 
 
-    cdef normalize_weights(self):
-        cdef DBL_T weight_sum = 0.0
-        cdef INT_T i
+    def generate_energy_histogram(self, num_phase_space_pts, masses, cme, \
+                                  bin_nums):
+        self.generate_phase_space(num_phase_space_pts, masses, cme)
 
-        for i in range(self.__num_phase_space_pts):
-            weight_sum += self.__weight_array[i]
+        cdef int i, j
+        cdef np.ndarray energy_array = np.zeros((num_phase_space_pts, \
+            len(masses)), dtype=float)
+        cdef np.ndarray probs = np.zeros((len(masses), bin_nums),\
+            dtype=float)
+        cdef np.ndarray bins = np.zeros((len(masses), bin_nums + 1),\
+            dtype=float)
+        cdef np.ndarray engs = np.zeros((len(masses), bin_nums),\
+            dtype=float)
 
-        for i in range(self.__num_phase_space_pts):
-            self.__weight_array[i] = self.__weight_array[i] / weight_sum
+
+        for i in range(num_phase_space_pts):
+            for j in range(len(masses)):
+                energy_array[i, j] = self.__phase_space_array[i, j, 0]
+
+        for i in range(len(masses)):
+            probs[i, :], bins[i, :] = np.histogram(energy_array[:, i], bins=bin_nums, weights=self.__weight_array[:])
+
+        engs = (bins[:, :-1] + bins[:, 1:]) / 2
+
+        return engs, probs
