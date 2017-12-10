@@ -95,6 +95,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#particles-hazma-particles">Particles (<code class="docutils literal"><span class="pre">hazma.particles</span></code>)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#muon-hazma-particles-muon">Muon (<code class="docutils literal"><span class="pre">hazma.particles.muon</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#charged-pion-hazma-particles-charged-pion">Charged Pion (<code class="docutils literal"><span class="pre">hazma.particles.charged_pion</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#neutral-pion-hazma-particles-neutral-pion">Neutral Pion (<code class="docutils literal"><span class="pre">hazma.particles.neutral_pion</span></code>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#electron-hazma-particles-electron">Electron (<code class="docutils literal"><span class="pre">hazma.particles.electron</span></code>)</a></li>
 </ul>
 </li>
 </ul>
@@ -210,6 +213,125 @@
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns the spectrum evaluated at (eng_gam, eng_mu).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="charged-pion-hazma-particles-charged-pion">
+<h3>Charged Pion (<code class="docutils literal"><span class="pre">hazma.particles.charged_pion</span></code>)<a class="headerlink" href="#charged-pion-hazma-particles-charged-pion" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="charged_pion.decay_spectra">
+<code class="descclassname">charged_pion.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#charged_pion.decay_spectra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon spectrum <span class="math">\(dN/dE\)</span> from a charged pion decay. The dominant contribution is from <span class="math">\(\pi\to\mu\nu_{\mu}\to e\nu_{\mu}\nu_{\mu}\nu_{e}\gamma\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>float</em><em> or </em><em>numpy.ndarray</em>) – A float or <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> containing gamma ray energy(ies) to evaluate the spectrum.</li>
+<li><strong>eng_pi</strong> (<em>float</em>) – Energy of the charged pion.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns the spectrum evaluated at (eng_gam, eng_pi).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="charged_pion.fsr">
+<code class="descclassname">charged_pion.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em>, <em>mediator</em><span class="sig-paren">)</span><a class="headerlink" href="#charged_pion.fsr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon spectrum <span class="math">\(dN/dE\)</span> from charged pion final state radiation given a mediator <span class="math">\(M\)</span>: <span class="math">\(M^{*}\to\pi^{+}\pi^{-}\gamma\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>float</em><em> or </em><em>numpy.ndarray</em>) – A float or <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> containing gamma ray energy(ies) to evaluate the spectrum.</li>
+<li><strong>eng_mu</strong> (<em>float</em>) – Energy of the charged pion.</li>
+<li><strong>mediator</strong> (<em>str</em>) – Mediator type: ‘scalar’, ‘pseudo-scalar’, ‘vector’, ‘axial-vector’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns the spectrum evaluated at (eng_gam, eng_pi).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="neutral-pion-hazma-particles-neutral-pion">
+<h3>Neutral Pion (<code class="docutils literal"><span class="pre">hazma.particles.neutral_pion</span></code>)<a class="headerlink" href="#neutral-pion-hazma-particles-neutral-pion" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="neutral_pion.decay_spectra">
+<code class="descclassname">neutral_pion.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#neutral_pion.decay_spectra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon spectrum <span class="math">\(dN/dE\)</span> from a neutral pion decay. The dominant contribution is from <span class="math">\(\pi\to\gamma\gamma\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>float</em><em> or </em><em>numpy.ndarray</em>) – A float or <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> containing gamma ray energy(ies) to evaluate the spectrum.</li>
+<li><strong>eng_pi</strong> (<em>float</em>) – Energy of the neutral pion.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns the spectrum evaluated at (eng_gam, eng_pi).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descclassname">charged_pion.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em>, <em>mediator</em><span class="sig-paren">)</span></dt>
+<dd><p>Returns zero.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="electron-hazma-particles-electron">
+<h3>Electron (<code class="docutils literal"><span class="pre">hazma.particles.electron</span></code>)<a class="headerlink" href="#electron-hazma-particles-electron" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="electron.decay_spectra">
+<code class="descclassname">electron.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_e</em><span class="sig-paren">)</span><a class="headerlink" href="#electron.decay_spectra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns zero. Electron is stable.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="electron.fsr">
+<code class="descclassname">electron.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em>, <em>mediator</em><span class="sig-paren">)</span><a class="headerlink" href="#electron.fsr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the photon spectrum <span class="math">\(dN/dE\)</span> from electron final state radiation given a mediator <span class="math">\(M\)</span>: <span class="math">\(M^{*}\to e^{+}e^{-}\gamma\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>float</em><em> or </em><em>numpy.ndarray</em>) – A float or <code class="docutils literal"><span class="pre">numpy.ndarray</span></code> containing gamma ray energy(ies) to evaluate the spectrum.</li>
+<li><strong>eng_mu</strong> (<em>float</em>) – Energy of the electron.</li>
+<li><strong>mediator</strong> (<em>str</em>) – Mediator type: ‘scalar’, ‘pseudo-scalar’, ‘vector’, ‘axial-vector’</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Returns the spectrum evaluated at (eng_gam, eng_e).</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or numpy.ndarray</p>
