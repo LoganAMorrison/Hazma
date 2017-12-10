@@ -1,4 +1,3 @@
-
 import numpy as np
 
 alpha = 1.0 / 137.0

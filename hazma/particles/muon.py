@@ -1,6 +1,7 @@
 from . import _decay_muon
-from ..helper_functions import scalar_mediator_fsr, pseudo_scalar_mediator_fsr
-from ..helper_functions import vector_mediator
+from ..fsr_helper_functions import scalar_mediator_fsr,\
+    pseudo_scalar_mediator_fsr
+from ..fsr_helper_functions import vector_mediator
 import numpy as np
 
 MASS_MU = 105.6583715
