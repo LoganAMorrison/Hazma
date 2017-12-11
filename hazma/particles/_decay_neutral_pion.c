@@ -1022,12 +1022,9 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
 
-/* "hazma/particles/_decay_neutral_pion.pyx":8
- * 
- * 
+/* "hazma/particles/_decay_neutral_pion.pxd":1
  * cdef class NeutralPion:             # <<<<<<<<<<<<<<
- *     """
- *     Class for computing the decay spectrum from neutral pion.
+ *     pass
  */
 struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion {
   PyObject_HEAD

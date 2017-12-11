@@ -5,21 +5,13 @@ from functools import partial
 from libc.math cimport log, M_PI, sqrt, tgamma
 import cython
 
-ctypedef np.float64_t DBL_T
-ctypedef np.int_t INT_T
+# ctypedef np.float np.float
+# ctypedef np.np.int np.int
 
-DBL = np.float64
-INT = np.int
+# np.float = np.float
+# np.int = np.np.int
 
 cdef class Rambo:
-
-    cdef INT_T __num_fsp, __num_phase_space_pts, __event_count
-    cdef DBL_T __cme
-    cdef DBL_T[:] __masses, __weight_array, __randoms
-    cdef DBL_T[:, :] __q_list, __p_list, __k_list
-    cdef DBL_T[:, :, :] __phase_space_array
-    cdef DBL_T __weight
-
 
     def __init__(self):
         pass
@@ -31,49 +23,49 @@ cdef class Rambo:
         pass
 
 
-    cdef __initilize(self, INT_T num_phase_space_pts, \
-                     DBL_T[:] masses, DBL_T cme):
+    cdef __initilize(self, np.int num_phase_space_pts, \
+                     np.float64_t[:] masses, np.float64_t cme):
         np.random.seed()
         self.__num_fsp = len(masses)
-        self.__masses = np.array(masses, dtype=DBL)
+        self.__masses = np.array(masses, dtype=np.float64)
         self.__num_phase_space_pts = num_phase_space_pts
         self.__cme = cme
 
-        self.__weight_array = np.zeros(num_phase_space_pts, dtype=DBL)
+        self.__weight_array = np.zeros(num_phase_space_pts, dtype=np.float64)
         self.__phase_space_array = np.zeros(
-            (num_phase_space_pts, len(masses), 4), dtype=DBL)
+            (num_phase_space_pts, len(masses), 4), dtype=np.float64)
 
         self.__event_count = 0
-        self.__q_list = np.zeros((len(masses), 4), dtype=DBL)
-        self.__p_list = np.zeros((len(masses), 4), dtype=DBL)
-        self.__k_list = np.zeros((len(masses), 4), dtype=DBL)
+        self.__q_list = np.zeros((len(masses), 4), dtype=np.float64)
+        self.__p_list = np.zeros((len(masses), 4), dtype=np.float64)
+        self.__k_list = np.zeros((len(masses), 4), dtype=np.float64)
         self.__weight = 1.0
         self.__randoms = np.random.random(num_phase_space_pts * len(masses) * 4)
 
     # ROOT FINDING
     @cython.cdivision(True)
-    cdef DBL_T func_xi(self, DBL_T xi):
-        cdef INT_T i
-        cdef DBL_T val = 0.0
+    cdef func_xi(self, xi):
+        cdef np.int i
+        cdef np.float64_t val = 0.0
 
-        # print('num_fsp = {}'.format(self.__num_fsp))
+        # prnp.int('num_fsp = {}'.format(self.__num_fsp))
 
         for i in range(self.__num_fsp):
             val += sqrt(self.__masses[i]**2 \
                            + xi**2 * self.__p_list[i, 0]**2)
-            # print('__masses[{}] = {}'.format(i, self.__masses[i]))
-            # print('__p_list[{}] = {}'.format(i, self.__p_list[i, 0]))
+            # prnp.int('__masses[{}] = {}'.format(i, self.__masses[i]))
+            # prnp.int('__p_list[{}] = {}'.format(i, self.__p_list[i, 0]))
 
 
-        # print('val - cme = {}'.format(val - self.__cme))
+        # prnp.int('val - cme = {}'.format(val - self.__cme))
         return val - self.__cme
 
 
     @cython.cdivision(True)
-    cdef DBL_T deriv_func_xi(self, DBL_T xi):
-        cdef INT_T i
-        cdef DBL_T val = 0.0
-        cdef DBL_T denom
+    cdef deriv_func_xi(self, xi):
+        cdef np.int i
+        cdef np.float64_t val = 0.0
+        cdef np.float64_t denom
 
         for i in range(self.__num_fsp):
             denom = sqrt(self.__masses[i]**2 \
@@ -83,9 +75,9 @@ cdef class Rambo:
 
 
     @cython.cdivision(True)
-    cdef DBL_T __find_root(self):
-        cdef DBL_T mass_sum = 0.0
-        cdef INT_T i = 0
+    cdef np.float64_t __find_root(self):
+        cdef np.float64_t mass_sum = 0.0
+        cdef np.int i = 0
 
         for i in range(self.__num_fsp):
             mass_sum += self.__masses[i]
@@ -99,13 +91,13 @@ cdef class Rambo:
 
 
     # CONVINIENCE FUNCTIONS
-    def __get_mass(self, fv):
+    cdef __get_mass(self, fv):
         return sqrt(fv[0]**2 - fv[1]**2 - fv[2]**2 - fv[3]**2)
 
 
     # FV GENERATORS
     @cython.cdivision(True)
-    def __generate_qs(self):
+    cdef __generate_qs(self):
         """
         Generate four-momenta Q_i.
 
@@ -118,10 +110,10 @@ cdef class Rambo:
                 q_0 * exp(-q_0)
         """
 
-        cdef INT_T i
-        cdef DBL_T rho_1, rho_2, rho_3, rho_4
-        cdef DBL_T c, phi
-        cdef DBL_T q_e, q_x, q_y, q_z
+        cdef np.int i
+        cdef np.float64_t rho_1, rho_2, rho_3, rho_4
+        cdef np.float64_t c, phi
+        cdef np.float64_t q_e, q_x, q_y, q_z
 
         for i in range(self.__num_fsp):
             rho_1 = self.__randoms[self.__num_fsp * i + self.__event_count + 0]
@@ -144,7 +136,7 @@ cdef class Rambo:
 
 
     @cython.cdivision(True)
-    def __generate_ps(self):
+    cdef __generate_ps(self):
         """
         Generates P's from Q's.
 
@@ -155,22 +147,22 @@ cdef class Rambo:
             Returns a numpy array containing self.__num_fsp four-momenta.
 
         Details:
-            The Q's are transformed into P's, which, when summed, have the
+            The Q's are transformed np.into P's, which, when summed, have the
             correct center of mass energy self.__cme and zero total
             three-momenta.
         """
 
-        cdef DBL_T mass_Q
-        cdef DBL_T b_x, b_y, b_z
-        cdef DBL_T x, gamma, a
-        cdef DBL_T qi_e, qi_x, qi_y, qi_z
-        cdef DBL_T b_dot_qi
-        cdef DBL_T pi_e, pi_x, pi_y, pi_z
+        cdef np.float64_t mass_Q
+        cdef np.float64_t b_x, b_y, b_z
+        cdef np.float64_t x, gamma, a
+        cdef np.float64_t qi_e, qi_x, qi_y, qi_z
+        cdef np.float64_t b_dot_qi
+        cdef np.float64_t pi_e, pi_x, pi_y, pi_z
 
         # Create the Q FV. This is the sum of all the q's.
         q_list_sum = np.sum(self.__q_list, 0)
 
-        # Transform q's into p's
+        # Transform q's np.into p's
 
         # Q mass
         mass_Q = self.__get_mass(q_list_sum)
@@ -210,7 +202,7 @@ cdef class Rambo:
 
 
     @cython.cdivision(True)
-    def __generate_ks(self):
+    cdef __generate_ks(self):
         """
         Generates K's from P's.
 
@@ -221,15 +213,15 @@ cdef class Rambo:
             Returns a numpy array containing self.__num_fsp four-momenta.
 
         Details:
-            The P's are transformed into K's, which have the correct __masses.
+            The P's are transformed np.into K's, which have the correct __masses.
         """
-        cdef DBL_T xi
-        cdef DBL_T k_e, k_x, k_y, k_z
+        cdef np.float64_t xi
+        cdef np.float64_t k_e, k_x, k_y, k_z
 
-        cdef DBL_T term1 = 0.0
-        cdef DBL_T term2 = 0.0
-        cdef DBL_T term3 = 1.0
-        cdef DBL_T modulus
+        cdef np.float64_t term1 = 0.0
+        cdef np.float64_t term2 = 0.0
+        cdef np.float64_t term3 = 1.0
+        cdef np.float64_t modulus
 
         # Find the scaling factor xi.
         xi = self.__find_root()
@@ -261,8 +253,8 @@ cdef class Rambo:
         """
         Normalizes the 'self.__weight_array' so that the sum of all the entries is unity.
         """
-        cdef DBL_T weight_sum = 0.0
-        cdef INT_T i
+        cdef np.float64_t weight_sum = 0.0
+        cdef np.int i
 
         for i in range(self.__num_phase_space_pts):
             weight_sum += self.__weight_array[i]
@@ -273,10 +265,10 @@ cdef class Rambo:
 
     def generate_phase_space(self, num_phase_space_pts, masses, cme):
         """
-        Creates 'num_phase_space_pts' number of phase space points with final state particles with masses 'masses' and center of mass energy 'cme'.
+        Creates 'num_phase_space_pts' number of phase space ponp.ints with final state particles with masses 'masses' and center of mass energy 'cme'.
 
         Arguments:
-            num_phase_space_pts: Number of phase space points to generate.
+            num_phase_space_pts: Number of phase space ponp.ints to generate.
 
             masses: List of the final state particle masses.
 
@@ -291,10 +283,10 @@ cdef class Rambo:
         """
         self.__initilize(num_phase_space_pts, masses, cme)
         self.__event_count = 0
-        cdef INT_T i, j
+        cdef np.int i, j
 
         while self.__event_count < self.__num_phase_space_pts:
-            # Transform p's = q's into the desired p's, which have the correct
+            # Transform p's = q's np.into the desired p's, which have the correct
             # center of mass energy and zero total three momenta. This function
             # also returns massless weight weight0.
 
@@ -323,7 +315,7 @@ cdef class Rambo:
         distributions are stored in (num_particles, 2, num_bins) array called probs. For example, probs[1, 0, :], probs[1, 1, :] are the energies and their probabilities, respectively, for the second particle.
 
         Arguments:
-            num_phase_space_pts: Number of phase space points to generate.
+            num_phase_space_pts: Number of phase space ponp.ints to generate.
 
             masses: List of the final state particle masses.
 
@@ -336,7 +328,7 @@ cdef class Rambo:
         """
         self.generate_phase_space(num_phase_space_pts, masses, cme)
 
-        cdef int i, j
+        cdef np.int i, j
         cdef np.ndarray energy_array = np.zeros((num_phase_space_pts, \
             len(masses)), dtype=float)
         cdef np.ndarray hist = np.zeros((len(masses), num_bins),\
