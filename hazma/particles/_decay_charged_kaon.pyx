@@ -99,14 +99,14 @@ cdef class ChargedKaon:
             for j in range(__num_bins):
                 # K -> pi + pi + pi
                 if i < len(__funcsPiPiPi):
-                    eng, weight \
-                        = __probsPiPiPi[i, 0, j], __probsPiPiPi[i, 1, j]
+                    eng = __probsPiPiPi[i, 0, j]
+                    weight = __probsPiPiPi[i, 1, j]
                     ret_val += BR_K_TO_3PI * weight \
                         * __funcsPiPiPi[i](eng_gam, eng)
                 # K -> pi0 + mu + nu
                 if i < len(__funcsPi0MuNu):
-                    eng, weight \
-                        = __probsPi0MuNu[i, 0, j], __probsPi0MuNu[i, 1, j]
+                    eng = __probsPi0MuNu[i, 0, j]
+                    weight = __probsPi0MuNu[i, 1, j]
                     ret_val += BR_K_TO_PI0MUNU * weight \
                         * __funcsPi0MuNu[i](eng_gam, eng)
 
