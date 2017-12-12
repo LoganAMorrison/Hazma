@@ -1822,18 +1822,18 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
  * 
  *         cdef float ret_val = 0.0             # <<<<<<<<<<<<<<
  * 
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
  */
   __pyx_v_ret_val = 0.0;
 
   /* "hazma/particles/_decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  */
-  __pyx_t_2 = PyFloat_FromDouble(((__pyx_v_eng_pi * (1.0 + __pyx_v_beta)) / 2.0)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
+  __pyx_t_2 = PyFloat_FromDouble(((__pyx_v_eng_pi * (1.0 - __pyx_v_beta)) / 2.0)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = PyObject_RichCompare(__pyx_t_2, __pyx_v_eng_gam, Py_LE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 25, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -1847,7 +1847,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
 
   /* "hazma/particles/_decay_neutral_pion.pyx":26
  * 
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:             # <<<<<<<<<<<<<<
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  * 
@@ -1864,14 +1864,14 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   /* "hazma/particles/_decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  */
   if (__pyx_t_1) {
 
     /* "hazma/particles/_decay_neutral_pion.pyx":27
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)             # <<<<<<<<<<<<<<
  * 
@@ -1882,7 +1882,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
     /* "hazma/particles/_decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
- *         if eng_pi * (1 + beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
+ *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  */

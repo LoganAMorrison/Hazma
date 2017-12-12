@@ -22,7 +22,7 @@ cdef class NeutralPion:
 
         cdef float ret_val = 0.0
 
-        if eng_pi * (1 + beta) / 2.0 <= eng_gam and \
+        if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
                 eng_gam <= eng_pi * (1 + beta) / 2.0:
             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
 

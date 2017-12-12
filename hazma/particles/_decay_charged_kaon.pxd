@@ -28,6 +28,6 @@ cdef class ChargedKaon:
     cdef _decay_charged_pion.ChargedPion __chrgpi
 
     """ Class functions """
-    cdef float __integrandMuNu(self, float cl, float eng_gam, float eng_k)
+    cdef float __integrand2(self, float cl, float eng_gam, float eng_k)
     cdef float __integrand3(self, float cl, float eng_gam, float eng_k)
     cdef float __integrand(self, float cl, float eng_gam, float eng_k)

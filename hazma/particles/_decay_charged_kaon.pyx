@@ -138,7 +138,6 @@ cdef class ChargedKaon:
 
         cdef int i, j
         cdef float ret_val = 0.0
-        cdef float eng, weight
         cdef float pre_factor \
             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
@@ -146,10 +145,12 @@ cdef class ChargedKaon:
         eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
 
-        ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
-        ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+        ret_val += BR_K_TO_MUNU * \
+            self.__muon.SpectrumPoint(eng_gam_k_rf, eng_mu)
         ret_val += BR_K_TO_PIPI0 * \
-            self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
+            self.__chrgpi.SpectrumPoint(eng_gam_k_rf, eng_pi)
+        ret_val += BR_K_TO_PIPI0 * \
+            self.__neuPion.SpectrumPoint(eng_gam_k_rf, eng_pi0)
 
         return pre_factor * ret_val
 
@@ -190,13 +191,13 @@ cdef class ChargedKaon:
                     eng = self.__probsPiPiPi[i, 0, j]
                     weight = self.__probsPiPiPi[i, 1, j]
                     ret_val += BR_K_TO_3PI * weight \
-                        * self.__funcsPiPiPi[i](eng_gam, eng)
+                        * self.__funcsPiPiPi[i](eng_gam_k_rf, eng)
                 # K -> pi0 + mu + nu
                 if i < len(self.__funcsPi0MuNu):
                     eng = self.__probsPi0MuNu[i, 0, j]
                     weight = self.__probsPi0MuNu[i, 1, j]
                     ret_val += BR_K_TO_PI0MUNU * weight \
-                        * self.__funcsPi0MuNu[i](eng_gam, eng)
+                        * self.__funcsPi0MuNu[i](eng_gam_k_rf, eng)
 
         return pre_factor * ret_val
 
