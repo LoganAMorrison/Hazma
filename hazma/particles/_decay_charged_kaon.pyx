@@ -17,6 +17,24 @@ include "parameters.pxd"
 cdef class ChargedKaon:
     """
     Class for computing the photon spectrum from radiative kaon decay.
+
+    Description:
+        The charged kaon has many decay modes:
+
+            k -> mu  + nu
+            k -> pi  + pi0
+            k -> pi  + pi  + pi
+            k -> pi0 + e   + nu
+            k -> pi0 + mu  + nu
+            k -> pi  + pi0 + pi0
+
+        For the the two-body final states, the sum of the decay spectra are
+        computed given the known energies of the final state particles in the
+        kaon's rest frame. The spectrum is then boosted into the lab frame.
+
+        For the three-body final state, the energies of the final state
+        particles are computed using RAMBO. The spectra for each final state
+        particle is computed are each point in phases space in the charged kaon's rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.
     """
 
     def __init__(self):
@@ -27,35 +45,36 @@ cdef class ChargedKaon:
         Initalized the ChargedKaon object.
 
         Attributes:
-            __num_ps_pts  : Number of phase space points to use for RAMBO in
-                            creating energies distributions for three-body final
-                            states. Set to 1000 by default.
+            __num_ps_pts   : Number of phase space points to use for RAMBO in
+                             creating energies distributions for three-body
+                             final states. Set to 1000 by default.
 
-            __num_bins    : Number of bins to use for energies distributions of
-                            three-body final states (i.e. the number of
-                            energies to use.) Set to 10 by default.
+            __num_bins     : Number of bins to use for energies distributions of
+                             three-body final states (i.e. the number of
+                             energies to use.) Set to 10 by default.
 
-            __msPiPiPi    : Array of masses for the three charged pion final
-                            state.
+            __msPiPiPi     : Array of masses for the three charged pion final
+                             state.
 
-            __msPi0MuNu   : Array of masses for the pi0 + mu + nu final state.
+            __msPi0MuNu    : Array of masses for the pi0 + mu + nu final state.
 
-            __probsPiPiPi : Array storing the energies and probabilities of the
-                            three charged pion final state.
+            __probsPiPiPi  : Array storing the energies and probabilities of the
+                             three charged pion final state.
 
-            __probsPi0MuNu: Array storing the energies and probabilities of the
+            __probsPi0MuNu : Array storing the energies and probabilities of the
                             pi0 + mu + nu final state.
 
-            __ram         : Rambo object used to create energy distributions.
+            __ram          : Rambo object used to create energy distributions.
 
-            __muon        : Muon object to compute muon decay and FSR spectra.
+            __muon         : Muon object to compute muon decay and FSR spectra.
 
-            __neuPion     : Neutal pion object to compute decay and FSR spectra.
+            __neuPion      : Neutal pion object to compute decay and FSR
+                             spectra.
 
-            __chrgpi      : Charged pion object to compute decay and FSR
+            __chrgpi       : Charged pion object to compute decay and FSR
                             spectra.
 
-            __funcsPiPiPi : List of functions to compute decay and FSR spectrum
+            __funcsPiPiPi  : List of functions to compute decay and FSR spectrum
                             from the three charged pion final state.
 
             __funcsPi0MuNu : List of functions to compute decay and FSR spectrum
@@ -103,7 +122,9 @@ cdef class ChargedKaon:
         """
         Integrand for K -> X, where X is a two body final state. The X's
         used are
+
             mu + nu
+            pi  + pi0
 
         Keyword arguments::
             cl: Angle of photon w.r.t. charged kaon in lab frame.
@@ -119,10 +140,16 @@ cdef class ChargedKaon:
         cdef float ret_val = 0.0
         cdef float eng, weight
         cdef float pre_factor \
-            = BR_K_TO_MUNU / (2.0 * gamma_k * (1.0 - beta_k * cl))
+            = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
-        ret_val = self.__muon.SpectrumPoint(eng_gam, eng_mu)
+        eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
+        eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
+
+        ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
+        ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+        ret_val += BR_K_TO_PIPI0 * \
+            self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
 
         return pre_factor * ret_val
 
