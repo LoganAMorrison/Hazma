@@ -303,10 +303,10 @@ body.cython { font-family: courier; font-size: 12; }
 </p>
 <p>Raw output: <a href="_decay_charged_pion.c">_decay_charged_pion.c</a></p>
 <div class="cython"><pre class="cython line score-8" onclick='toggleDiv(this)'>+<span class="">001</span>: cimport _decay_muon</pre>
-<pre class='cython code score-8 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(0);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)</span>
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_test, __pyx_t_2) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 1, __pyx_L1_error)</span>
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+<pre class='cython code score-8 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(0);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)</span>
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_test, __pyx_t_1) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 1, __pyx_L1_error)</span>
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
 </pre><pre class="cython line score-8" onclick='toggleDiv(this)'>+<span class="">002</span>: import numpy as np</pre>
 <pre class='cython code score-8 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_Import</span>(__pyx_n_s_numpy, 0, -1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 2, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
@@ -327,52 +327,38 @@ body.cython { font-family: courier; font-size: 12; }
   if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_quad, __pyx_t_1) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 4, __pyx_L1_error)</span>
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-</pre><pre class="cython line score-19" onclick='toggleDiv(this)'>+<span class="">005</span>: from scipy.interpolate import interp1d</pre>
-<pre class='cython code score-19 '>  __pyx_t_2 = <span class='py_c_api'>PyList_New</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">005</span>: from libc.math cimport exp, log, M_PI, log10, sqrt, abs</pre>
+<pre class="cython line score-0">&#xA0;<span class="">006</span>: import cython</pre>
+<pre class="cython line score-19" onclick='toggleDiv(this)'>+<span class="">007</span>: from functools import partial</pre>
+<pre class='cython code score-19 '>  __pyx_t_2 = <span class='py_c_api'>PyList_New</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_n_s_interp1d);
-  <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_n_s_interp1d);
-  <span class='py_macro_api'>PyList_SET_ITEM</span>(__pyx_t_2, 0, __pyx_n_s_interp1d);
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_Import</span>(__pyx_n_s_scipy_interpolate, __pyx_t_2, -1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)</span>
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_ImportFrom</span>(__pyx_t_1, __pyx_n_s_interp1d);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)</span>
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_interp1d, __pyx_t_2) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 5, __pyx_L1_error)</span>
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">006</span>: from libc.math cimport exp, log, M_PI, log10, sqrt, abs</pre>
-<pre class="cython line score-0">&#xA0;<span class="">007</span>: import cython</pre>
-<pre class="cython line score-19" onclick='toggleDiv(this)'>+<span class="">008</span>: from functools import partial</pre>
-<pre class='cython code score-19 '>  __pyx_t_1 = <span class='py_c_api'>PyList_New</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)</span>
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
   <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_n_s_partial);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_n_s_partial);
-  <span class='py_macro_api'>PyList_SET_ITEM</span>(__pyx_t_1, 0, __pyx_n_s_partial);
-  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_Import</span>(__pyx_n_s_functools, __pyx_t_1, -1);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)</span>
-  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_ImportFrom</span>(__pyx_t_2, __pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)</span>
+  <span class='py_macro_api'>PyList_SET_ITEM</span>(__pyx_t_2, 0, __pyx_n_s_partial);
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_Import</span>(__pyx_n_s_functools, __pyx_t_2, -1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_partial, __pyx_t_1) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 8, __pyx_L1_error)</span>
-  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">009</span>: include "parameters.pxd"</pre>
-<pre class="cython line score-0">&#xA0;<span class="">010</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">011</span>: cdef class ChargedPion:</pre>
+  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_ImportFrom</span>(__pyx_t_1, __pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)</span>
+  <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_d, __pyx_n_s_partial, __pyx_t_2) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 7, __pyx_L1_error)</span>
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
+  <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
+</pre><pre class="cython line score-0">&#xA0;<span class="">008</span>: include "parameters.pxd"</pre>
+<pre class="cython line score-0">&#xA0;<span class="">009</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">010</span>: cdef class ChargedPion:</pre>
 <pre class='cython code score-0 '>struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion {
-  float (*__pyx___Gamma)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
-  float (*__pyx___Beta)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
-  float (*__pyx___EngGamMax)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
-  float (*__pyx___Integrand)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float, float);
-  float (*__pyx___muSpectrum)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
+  float (*__pyx___gamma)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
+  float (*__pyx___beta)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
+  float (*__pyx___eng_gam_max)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
+  float (*__pyx___integrand)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float, float);
+  float (*__pyx___muon_spectrum)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
 };
 static struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_vtabptr_5hazma_9particles_19_decay_charged_pion_ChargedPion;
-</pre><pre class="cython line score-0">&#xA0;<span class="">012</span>:     """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">013</span>:     Class for computing the photon spectrum from radiative charged Pion decay.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">014</span>:     """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">015</span>: </pre>
-<pre class="cython line score-11" onclick='toggleDiv(this)'>+<span class="">016</span>:     def __init__(self):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">011</span>:     """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">012</span>:     Class for computing the photon spectrum from radiative charged Pion decay.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">013</span>:     """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">014</span>: </pre>
+<pre class="cython line score-11" onclick='toggleDiv(this)'>+<span class="">015</span>:     def __init__(self):</pre>
 <pre class='cython code score-11 '>/* Python wrapper */
 static int __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static int __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
@@ -399,10 +385,9 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion___init
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">017</span>:         #self.__muSpectrum = None</pre>
-<pre class="cython line score-0">&#xA0;<span class="">018</span>:         pass</pre>
-<pre class="cython line score-0">&#xA0;<span class="">019</span>: </pre>
-<pre class="cython line score-18" onclick='toggleDiv(this)'>+<span class="">020</span>:     def __cinit__(self):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">016</span>:         pass</pre>
+<pre class="cython line score-0">&#xA0;<span class="">017</span>: </pre>
+<pre class="cython line score-18" onclick='toggleDiv(this)'>+<span class="">018</span>:     def __cinit__(self):</pre>
 <pre class='cython code score-18 '>/* Python wrapper */
 static int __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static int __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_3__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
@@ -439,69 +424,70 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_2__cin
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">021</span>:         self.__engGamMaxMuRF = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">019</span>:         self.__eng_gam_max_mu_rf \</pre>
+<pre class='cython code score-0 '>  __pyx_v_self-&gt;__pyx___eng_gam_max_mu_rf = (__pyx_t_1 / __pyx_t_2);
+</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">020</span>:             = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)</pre>
 <pre class='cython code score-5 '>  __pyx_t_1 = (pow(((double)__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU), 2.0) - pow(((double)__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_E), 2.0));
   __pyx_t_2 = (2.0 * __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU);
   if (unlikely(__pyx_t_2 == 0)) {
     <span class='py_c_api'>PyErr_SetString</span>(PyExc_ZeroDivisionError, "float division");
-    <span class='error_goto'>__PYX_ERR(0, 21, __pyx_L1_error)</span>
+    <span class='error_goto'>__PYX_ERR(0, 20, __pyx_L1_error)</span>
   }
-  __pyx_v_self-&gt;__pyx___engGamMaxMuRF = (__pyx_t_1 / __pyx_t_2);
-</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">022</span>:         self.__engMuPiRF = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)</pre>
+</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">021</span>:         self.__eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)</pre>
 <pre class='cython code score-5 '>  __pyx_t_2 = (pow(((double)__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI), 2.0) + pow(((double)__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU), 2.0));
   __pyx_t_1 = (2.0 * __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
   if (unlikely(__pyx_t_1 == 0)) {
     <span class='py_c_api'>PyErr_SetString</span>(PyExc_ZeroDivisionError, "float division");
-    <span class='error_goto'>__PYX_ERR(0, 22, __pyx_L1_error)</span>
+    <span class='error_goto'>__PYX_ERR(0, 21, __pyx_L1_error)</span>
   }
-  __pyx_v_self-&gt;__pyx___engMuPiRF = (__pyx_t_2 / __pyx_t_1);
-</pre><pre class="cython line score-0">&#xA0;<span class="">023</span>: </pre>
-<pre class="cython line score-29" onclick='toggleDiv(this)'>+<span class="">024</span>:         self.__eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=float)</pre>
-<pre class='cython code score-29 '>  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 24, __pyx_L1_error)</span>
+  __pyx_v_self-&gt;__pyx___eng_mu_pi_rf = (__pyx_t_2 / __pyx_t_1);
+</pre><pre class="cython line score-0">&#xA0;<span class="">022</span>: </pre>
+<pre class="cython line score-29" onclick='toggleDiv(this)'>+<span class="">023</span>:         self.__eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=float)</pre>
+<pre class='cython code score-29 '>  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_3, __pyx_n_s_logspace);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 24, __pyx_L1_error)</span>
+  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_3, __pyx_n_s_logspace);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 24, __pyx_L1_error)</span>
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_3, __pyx_n_s_num, __pyx_int_10000) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 24, __pyx_L1_error)</span>
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&amp;PyFloat_Type))) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 24, __pyx_L1_error)</span>
-  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_4, __pyx_tuple_, __pyx_t_3);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 24, __pyx_L1_error)</span>
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_3, __pyx_n_s_num, __pyx_int_10000) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 23, __pyx_L1_error)</span>
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&amp;PyFloat_Type))) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 23, __pyx_L1_error)</span>
+  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_4, __pyx_tuple_, __pyx_t_3);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 24, __pyx_L1_error)</span>
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_5);
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_v_self-&gt;__pyx___eng_gams_mu);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(((PyObject *)__pyx_v_self-&gt;__pyx___eng_gams_mu));
   __pyx_v_self-&gt;__pyx___eng_gams_mu = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 /* … */
-  __pyx_tuple_ = <span class='py_c_api'>PyTuple_Pack</span>(2, __pyx_float_neg_5_5, __pyx_float_3_0);<span class='error_goto'> if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 24, __pyx_L1_error)</span>
+  __pyx_tuple_ = <span class='py_c_api'>PyTuple_Pack</span>(2, __pyx_float_neg_5_5, __pyx_float_3_0);<span class='error_goto'> if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 23, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_tuple_);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_tuple_);
-</pre><pre class="cython line score-0">&#xA0;<span class="">025</span>: </pre>
-<pre class="cython line score-3" onclick='toggleDiv(this)'>+<span class="">026</span>:         self.__muon = _decay_muon.Muon()</pre>
-<pre class='cython code score-3 '>  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(((PyObject *)__pyx_ptype_5hazma_9particles_11_decay_muon_Muon), __pyx_empty_tuple, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 26, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">024</span>: </pre>
+<pre class="cython line score-3" onclick='toggleDiv(this)'>+<span class="">025</span>:         self.__muon = _decay_muon.Muon()</pre>
+<pre class='cython code score-3 '>  __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(((PyObject *)__pyx_ptype_5hazma_9particles_11_decay_muon_Muon), __pyx_empty_tuple, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 25, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_5);
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_v_self-&gt;__pyx___muon);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(((PyObject *)__pyx_v_self-&gt;__pyx___muon));
   __pyx_v_self-&gt;__pyx___muon = ((struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *)__pyx_t_5);
   __pyx_t_5 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">027</span>: </pre>
-<pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">028</span>:         self.__mu_spec = self.__muon.Spectrum(self.__eng_gams_mu,\</pre>
-<pre class='cython code score-5 '>  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(((PyObject *)__pyx_v_self-&gt;__pyx___muon), __pyx_n_s_Spectrum);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">026</span>: </pre>
+<pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">027</span>:         self.__mu_spec = self.__muon.Spectrum(self.__eng_gams_mu,\</pre>
+<pre class='cython code score-5 '>  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(((PyObject *)__pyx_v_self-&gt;__pyx___muon), __pyx_n_s_Spectrum);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 27, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
 /* … */
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 28, __pyx_L1_error)</span>
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 27, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_5);
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_v_self-&gt;__pyx___mu_spec);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(((PyObject *)__pyx_v_self-&gt;__pyx___mu_spec));
   __pyx_v_self-&gt;__pyx___mu_spec = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
-</pre><pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">029</span>:                                               self.__engMuPiRF)</pre>
-<pre class='cython code score-43 '>  __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_self-&gt;__pyx___engMuPiRF);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 29, __pyx_L1_error)</span>
+</pre><pre class="cython line score-43" onclick='toggleDiv(this)'>+<span class="">028</span>:                                               self.__eng_mu_pi_rf)</pre>
+<pre class='cython code score-43 '>  __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_self-&gt;__pyx___eng_mu_pi_rf);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   __pyx_t_6 = NULL;
   __pyx_t_7 = 0;
@@ -518,7 +504,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_2__cin
   #if CYTHON_FAST_PYCALL
   if (<span class='py_c_api'>PyFunction_Check</span>(__pyx_t_3)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, ((PyObject *)__pyx_v_self-&gt;__pyx___eng_gams_mu), __pyx_t_4};
-    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
+    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 27, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
@@ -527,14 +513,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_2__cin
   #if CYTHON_FAST_PYCCALL
   if (<span class='pyx_c_api'>__Pyx_PyFastCFunction_Check</span>(__pyx_t_3)) {
     PyObject *__pyx_temp[3] = {__pyx_t_6, ((PyObject *)__pyx_v_self-&gt;__pyx___eng_gams_mu), __pyx_t_4};
-    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
+    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 27, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
   } else
   #endif
   {
-    __pyx_t_8 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
+    __pyx_t_8 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_7);<span class='error_goto'> if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 27, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_8);
     if (__pyx_t_6) {
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_6); <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -545,16 +531,13 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_2__cin
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4);
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_8, 1+__pyx_t_7, __pyx_t_4);
     __pyx_t_4 = 0;
-    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_3, __pyx_t_8, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 28, __pyx_L1_error)</span>
+    __pyx_t_5 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_3, __pyx_t_8, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 27, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_5);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_8); __pyx_t_8 = 0;
   }
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">030</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">031</span>:         #self.__muSpectrum = interp1d(self.__eng_gams_mu, \</pre>
-<pre class="cython line score-0">&#xA0;<span class="">032</span>:         #                             self.__mu_spec, kind='linear')</pre>
-<pre class="cython line score-0">&#xA0;<span class="">033</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">034</span>:     def __dealloc__(self):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">029</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">030</span>:     def __dealloc__(self):</pre>
 <pre class='cython code score-0 '>/* Python wrapper */
 static void __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_5__dealloc__(PyObject *__pyx_v_self); /*proto*/
 static void __pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_5__dealloc__(PyObject *__pyx_v_self) {
@@ -573,13 +556,13 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_4__de
   /* function exit code */
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">035</span>:         pass</pre>
-<pre class="cython line score-0">&#xA0;<span class="">036</span>: </pre>
-<pre class="cython line score-7" onclick='toggleDiv(this)'>+<span class="">037</span>:     cdef float __muSpectrum(self, float eng_gam):</pre>
-<pre class='cython code score-7 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___muSpectrum(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng_gam) {
+</pre><pre class="cython line score-0">&#xA0;<span class="">031</span>:         pass</pre>
+<pre class="cython line score-0">&#xA0;<span class="">032</span>: </pre>
+<pre class="cython line score-7" onclick='toggleDiv(this)'>+<span class="">033</span>:     cdef float __muon_spectrum(self, float eng_gam):</pre>
+<pre class='cython code score-7 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___muon_spectrum(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng_gam) {
   float __pyx_r;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
-  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__muSpectrum", 0);
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__muon_spectrum", 0);
 /* … */
   /* function exit code */
   __pyx_L1_error:;
@@ -588,19 +571,19 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_4__de
   <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_3);
   <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4);
   <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_6);
-  <span class='pyx_c_api'>__Pyx_WriteUnraisable</span>("hazma.particles._decay_charged_pion.ChargedPion.__muSpectrum", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  <span class='pyx_c_api'>__Pyx_WriteUnraisable</span>("hazma.particles._decay_charged_pion.ChargedPion.__muon_spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_r = 0;
   __pyx_L0:;
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-61" onclick='toggleDiv(this)'>+<span class="">038</span>:         return np.interp(eng_gam, self.__eng_gams_mu, self.__mu_spec)</pre>
-<pre class='cython code score-61 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+</pre><pre class="cython line score-61" onclick='toggleDiv(this)'>+<span class="">034</span>:         return np.interp(eng_gam, self.__eng_gams_mu, self.__mu_spec)</pre>
+<pre class='cython code score-61 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_2, __pyx_n_s_interp);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_2, __pyx_n_s_interp);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_gam);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+  __pyx_t_2 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_gam);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -617,7 +600,7 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_4__de
   #if CYTHON_FAST_PYCALL
   if (<span class='py_c_api'>PyFunction_Check</span>(__pyx_t_3)) {
     PyObject *__pyx_temp[4] = {__pyx_t_4, __pyx_t_2, ((PyObject *)__pyx_v_self-&gt;__pyx___eng_gams_mu), ((PyObject *)__pyx_v_self-&gt;__pyx___mu_spec)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_5, 3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_5, 3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
@@ -626,14 +609,14 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_4__de
   #if CYTHON_FAST_PYCCALL
   if (<span class='pyx_c_api'>__Pyx_PyFastCFunction_Check</span>(__pyx_t_3)) {
     PyObject *__pyx_temp[4] = {__pyx_t_4, __pyx_t_2, ((PyObject *)__pyx_v_self-&gt;__pyx___eng_gams_mu), ((PyObject *)__pyx_v_self-&gt;__pyx___mu_spec)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_5, 3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_3, __pyx_temp+1-__pyx_t_5, 3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   } else
   #endif
   {
-    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(3+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
     if (__pyx_t_4) {
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4); <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -647,156 +630,149 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_4__de
     <span class='refnanny'>__Pyx_GIVEREF</span>(((PyObject *)__pyx_v_self-&gt;__pyx___mu_spec));
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 2+__pyx_t_5, ((PyObject *)__pyx_v_self-&gt;__pyx___mu_spec));
     __pyx_t_2 = 0;
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_3, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 38, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_3, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 34, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
   }
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_7 = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(__pyx_t_1); if (unlikely((__pyx_t_7 == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 38, __pyx_L1_error)</span>
+  __pyx_t_7 = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(__pyx_t_1); if (unlikely((__pyx_t_7 == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 34, __pyx_L1_error)</span>
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_7;
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">039</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">040</span>:     @cython.cdivision(True)</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">041</span>:     cdef float __Gamma(self, float eng, float mass):</pre>
-<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___Gamma(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng, float __pyx_v_mass) {
+</pre><pre class="cython line score-0">&#xA0;<span class="">035</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">036</span>:     @cython.cdivision(True)</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">037</span>:     cdef float __gamma(self, float eng, float mass):</pre>
+<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___gamma(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng, float __pyx_v_mass) {
   float __pyx_r;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
-  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__Gamma", 0);
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__gamma", 0);
 /* … */
   /* function exit code */
   __pyx_L0:;
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">042</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">043</span>:         Returns special relativity boost factor gamma.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">044</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">045</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">046</span>:             eng -- energy of particle.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">047</span>:             mass -- mass of particle.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">048</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">049</span>:         return eng / mass</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">038</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">039</span>:         Returns special relativity boost factor gamma.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">040</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">041</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">042</span>:             eng -- energy of particle.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">043</span>:             mass -- mass of particle.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">044</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">045</span>:         return eng / mass</pre>
 <pre class='cython code score-0 '>  __pyx_r = (__pyx_v_eng / __pyx_v_mass);
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">050</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">051</span>:     @cython.cdivision(True)</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">052</span>:     cdef float __Beta(self, float eng, float mass):</pre>
-<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___Beta(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng, float __pyx_v_mass) {
+</pre><pre class="cython line score-0">&#xA0;<span class="">046</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">047</span>:     @cython.cdivision(True)</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">048</span>:     cdef float __beta(self, float eng, float mass):</pre>
+<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___beta(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_eng, float __pyx_v_mass) {
   float __pyx_r;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
-  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__Beta", 0);
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__beta", 0);
 /* … */
   /* function exit code */
   __pyx_L0:;
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">053</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">054</span>:         Returns velocity in natural units.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">055</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">056</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">057</span>:             eng -- energy of particle.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">058</span>:             mass -- mass of particle.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">059</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">060</span>:         return sqrt(1.0 - (mass / eng)**2.0)</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">049</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">050</span>:         Returns velocity in natural units.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">051</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">052</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">053</span>:             eng -- energy of particle.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">054</span>:             mass -- mass of particle.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">055</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">056</span>:         return sqrt(1.0 - (mass / eng)**2.0)</pre>
 <pre class='cython code score-0 '>  __pyx_r = sqrt((1.0 - pow(((double)(__pyx_v_mass / __pyx_v_eng)), 2.0)));
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">061</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">062</span>:     cdef float __EngGamMax(self, float engPi):</pre>
-<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___EngGamMax(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_engPi) {
+</pre><pre class="cython line score-0">&#xA0;<span class="">057</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">058</span>:     cdef float __eng_gam_max(self, float engPi):</pre>
+<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___eng_gam_max(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_engPi) {
   float __pyx_v_betaPi;
   float __pyx_v_gammaPi;
   float __pyx_v_betaMu;
   float __pyx_v_gammaMu;
   float __pyx_r;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
-  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__EngGamMax", 0);
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__eng_gam_max", 0);
 /* … */
   /* function exit code */
   __pyx_L0:;
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">063</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">064</span>:         Returns the maximum allowed gamma ray energy from a charged pion decay.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">065</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">066</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">067</span>:             engPi: Energy of pion in laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">068</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">069</span>:         More details:</pre>
-<pre class="cython line score-0">&#xA0;<span class="">070</span>:             This is computed using the fact that in the mu restframe, the</pre>
-<pre class="cython line score-0">&#xA0;<span class="">071</span>:             Maximum allowed value is</pre>
-<pre class="cython line score-0">&#xA0;<span class="">072</span>:                 eng_gam_max_mu_rf = (pow(mass_mu,2.0) - pow(mass_e,2.0))</pre>
-<pre class="cython line score-0">&#xA0;<span class="">073</span>:                                 / (2.0 * mass_mu).</pre>
-<pre class="cython line score-0">&#xA0;<span class="">074</span>:             Then, boosting into the pion rest frame, then to the mu rest</pre>
-<pre class="cython line score-0">&#xA0;<span class="">075</span>:             frame, we get the maximum allowed energy in the lab frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">076</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">077</span>:         cdef float betaPi = self.__Beta(engPi, MASS_PI)</pre>
-<pre class='cython code score-0 '>  __pyx_v_betaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Beta(__pyx_v_self, __pyx_v_engPi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">078</span>:         cdef float gammaPi = self.__Gamma(engPi, MASS_PI)</pre>
-<pre class='cython code score-0 '>  __pyx_v_gammaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Gamma(__pyx_v_self, __pyx_v_engPi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
-</pre><pre class="cython line score-0">&#xA0;<span class="">079</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">080</span>:         cdef float betaMu = self.__Beta(self.__engMuPiRF, MASS_MU)</pre>
-<pre class='cython code score-0 '>  __pyx_v_betaMu = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Beta(__pyx_v_self, __pyx_v_self-&gt;__pyx___engMuPiRF, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU);
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">081</span>:         cdef float gammaMu = self.__Gamma(self.__engMuPiRF, MASS_MU)</pre>
-<pre class='cython code score-0 '>  __pyx_v_gammaMu = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Gamma(__pyx_v_self, __pyx_v_self-&gt;__pyx___engMuPiRF, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU);
-</pre><pre class="cython line score-0">&#xA0;<span class="">082</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">083</span>:         return self.__engGamMaxMuRF * gammaPi * gammaMu * \</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">084</span>:             (1.0 + betaPi) * (1.0 + betaMu)</pre>
-<pre class='cython code score-0 '>  __pyx_r = ((((__pyx_v_self-&gt;__pyx___engGamMaxMuRF * __pyx_v_gammaPi) * __pyx_v_gammaMu) * (1.0 + __pyx_v_betaPi)) * (1.0 + __pyx_v_betaMu));
+</pre><pre class="cython line score-0">&#xA0;<span class="">059</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">060</span>:         Returns the maximum allowed gamma ray energy from a charged pion decay.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">061</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">062</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">063</span>:             engPi: Energy of pion in laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">064</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">065</span>:         More details:</pre>
+<pre class="cython line score-0">&#xA0;<span class="">066</span>:             This is computed using the fact that in the mu restframe, the</pre>
+<pre class="cython line score-0">&#xA0;<span class="">067</span>:             Maximum allowed value is</pre>
+<pre class="cython line score-0">&#xA0;<span class="">068</span>:                 eng_gam_max_mu_rf = (pow(mass_mu,2.0) - pow(mass_e,2.0))</pre>
+<pre class="cython line score-0">&#xA0;<span class="">069</span>:                                 / (2.0 * mass_mu).</pre>
+<pre class="cython line score-0">&#xA0;<span class="">070</span>:             Then, boosting into the pion rest frame, then to the mu rest</pre>
+<pre class="cython line score-0">&#xA0;<span class="">071</span>:             frame, we get the maximum allowed energy in the lab frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">072</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">073</span>:         cdef float betaPi = self.__beta(engPi, MASS_PI)</pre>
+<pre class='cython code score-0 '>  __pyx_v_betaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___beta(__pyx_v_self, __pyx_v_engPi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">074</span>:         cdef float gammaPi = self.__gamma(engPi, MASS_PI)</pre>
+<pre class='cython code score-0 '>  __pyx_v_gammaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___gamma(__pyx_v_self, __pyx_v_engPi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
+</pre><pre class="cython line score-0">&#xA0;<span class="">075</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">076</span>:         cdef float betaMu = self.__beta(self.__eng_mu_pi_rf, MASS_MU)</pre>
+<pre class='cython code score-0 '>  __pyx_v_betaMu = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___beta(__pyx_v_self, __pyx_v_self-&gt;__pyx___eng_mu_pi_rf, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU);
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">077</span>:         cdef float gammaMu = self.__gamma(self.__eng_mu_pi_rf, MASS_MU)</pre>
+<pre class='cython code score-0 '>  __pyx_v_gammaMu = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___gamma(__pyx_v_self, __pyx_v_self-&gt;__pyx___eng_mu_pi_rf, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU);
+</pre><pre class="cython line score-0">&#xA0;<span class="">078</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">079</span>:         return self.__eng_gam_max_mu_rf * gammaPi * gammaMu * \</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">080</span>:             (1.0 + betaPi) * (1.0 + betaMu)</pre>
+<pre class='cython code score-0 '>  __pyx_r = ((((__pyx_v_self-&gt;__pyx___eng_gam_max_mu_rf * __pyx_v_gammaPi) * __pyx_v_gammaMu) * (1.0 + __pyx_v_betaPi)) * (1.0 + __pyx_v_betaMu));
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">085</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">086</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">087</span>:     @cython.cdivision(True)</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">088</span>:     cdef float __Integrand(self, float cl, float eng_gam, float eng_pi):</pre>
-<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___Integrand(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_cl, float __pyx_v_eng_gam, float __pyx_v_eng_pi) {
+</pre><pre class="cython line score-0">&#xA0;<span class="">081</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">082</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">083</span>:     @cython.cdivision(True)</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">084</span>:     cdef float __integrand(self, float cl, float eng_gam, float eng_pi):</pre>
+<pre class='cython code score-0 '>static float __pyx_f_5hazma_9particles_19_decay_charged_pion_11ChargedPion___integrand(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_v_self, float __pyx_v_cl, float __pyx_v_eng_gam, float __pyx_v_eng_pi) {
   float __pyx_v_betaPi;
   float __pyx_v_gammaPi;
   float __pyx_v_engGamPiRF;
   float __pyx_v_preFactor;
   float __pyx_r;
   <span class='refnanny'>__Pyx_RefNannyDeclarations</span>
-  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__Integrand", 0);
+  <span class='refnanny'>__Pyx_RefNannySetupContext</span>("__integrand", 0);
 /* … */
   /* function exit code */
   __pyx_L0:;
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">089</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">090</span>:         Returns the integrand of the differential radiative decay spectrum for</pre>
-<pre class="cython line score-0">&#xA0;<span class="">091</span>:         the charged pion.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">092</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">093</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">094</span>:             cl: Angle of photon w.r.t. charged pion in lab frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">095</span>:             engPi: Energy of photon in laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">096</span>:             engPi: Energy of pion in laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">097</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">098</span>:         cdef float betaPi = self.__Beta(eng_pi, MASS_PI)</pre>
-<pre class='cython code score-0 '>  __pyx_v_betaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Beta(__pyx_v_self, __pyx_v_eng_pi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">099</span>:         cdef float gammaPi = self.__Gamma(eng_pi, MASS_PI)</pre>
-<pre class='cython code score-0 '>  __pyx_v_gammaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Gamma(__pyx_v_self, __pyx_v_eng_pi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
-</pre><pre class="cython line score-0">&#xA0;<span class="">100</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">101</span>:         cdef float engGamPiRF = eng_gam * gammaPi * (1.0 - betaPi * cl)</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">085</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">086</span>:         Returns the integrand of the differential radiative decay spectrum for</pre>
+<pre class="cython line score-0">&#xA0;<span class="">087</span>:         the charged pion.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">088</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">089</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">090</span>:             cl: Angle of photon w.r.t. charged pion in lab frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">091</span>:             engPi: Energy of photon in laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">092</span>:             engPi: Energy of pion in laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">093</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">094</span>:         cdef float betaPi = self.__beta(eng_pi, MASS_PI)</pre>
+<pre class='cython code score-0 '>  __pyx_v_betaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___beta(__pyx_v_self, __pyx_v_eng_pi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">095</span>:         cdef float gammaPi = self.__gamma(eng_pi, MASS_PI)</pre>
+<pre class='cython code score-0 '>  __pyx_v_gammaPi = ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___gamma(__pyx_v_self, __pyx_v_eng_pi, __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI);
+</pre><pre class="cython line score-0">&#xA0;<span class="">096</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">097</span>:         cdef float engGamPiRF = eng_gam * gammaPi * (1.0 - betaPi * cl)</pre>
 <pre class='cython code score-0 '>  __pyx_v_engGamPiRF = ((__pyx_v_eng_gam * __pyx_v_gammaPi) * (1.0 - (__pyx_v_betaPi * __pyx_v_cl)));
-</pre><pre class="cython line score-0">&#xA0;<span class="">102</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">103</span>:         # cdef float gamBound = __engGamMaxMuRF * gammaPi * (1.0 + betaPi)</pre>
-<pre class="cython line score-0">&#xA0;<span class="">104</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">105</span>:         cdef float preFactor = BR_PI_TO_MUNU \</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">106</span>:             / (2.0 * gammaPi * abs(1.0 - betaPi * cl))</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">098</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">099</span>:         cdef float preFactor = BR_PI_TO_MUNU \</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">100</span>:             / (2.0 * gammaPi * abs(1.0 - betaPi * cl))</pre>
 <pre class='cython code score-0 '>  __pyx_v_preFactor = (__pyx_v_5hazma_9particles_19_decay_charged_pion_BR_PI_TO_MUNU / ((2.0 * __pyx_v_gammaPi) * fabs((1.0 - (__pyx_v_betaPi * __pyx_v_cl)))));
-</pre><pre class="cython line score-0">&#xA0;<span class="">107</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">108</span>:         # cdef float result = 0.0</pre>
-<pre class="cython line score-0">&#xA0;<span class="">109</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">110</span>:         # if 0.0 &lt; engGamPiRF and engGamPiRF &lt; gamBound:</pre>
-<pre class="cython line score-0">&#xA0;<span class="">111</span>:         #     result = preFactor * __muSpectrum(engGamPiRF)</pre>
-<pre class="cython line score-0">&#xA0;<span class="">112</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">113</span>:         return preFactor * self.__muSpectrum(engGamPiRF)</pre>
-<pre class='cython code score-0 '>  __pyx_r = (__pyx_v_preFactor * ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___muSpectrum(__pyx_v_self, __pyx_v_engGamPiRF));
+</pre><pre class="cython line score-0">&#xA0;<span class="">101</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">102</span>:         return preFactor * self.__muon_spectrum(engGamPiRF)</pre>
+<pre class='cython code score-0 '>  __pyx_r = (__pyx_v_preFactor * ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___muon_spectrum(__pyx_v_self, __pyx_v_engGamPiRF));
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">114</span>: </pre>
-<pre class="cython line score-59" onclick='toggleDiv(this)'>+<span class="">115</span>:     def SpectrumPoint(self, float eng_gam, float eng_pi):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">103</span>: </pre>
+<pre class="cython line score-59" onclick='toggleDiv(this)'>+<span class="">104</span>:     def SpectrumPoint(self, float eng_gam, float eng_pi):</pre>
 <pre class='cython code score-59 '>/* Python wrapper */
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_7SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static char __pyx_doc_5hazma_9particles_19_decay_charged_pion_11ChargedPion_6SpectrumPoint[] = "\n        Returns the radiative spectrum value from charged pion given a gamma\n        ray energy Egam and charged pion energy Epi energy eng_mu. When the\n        ChargedPion object is instatiated, an interplating function for the\n        mu spectrum is computed.\n\n        Keyword arguments::\n            eng_gam: Energy of photon is laboratory frame.\n            eng_pi: Energy of charged pion in laboratory frame.\n        ";
@@ -829,11 +805,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
         case  1:
         if (likely((values[1] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_eng_pi)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("SpectrumPoint", 1, 2, 2, 1); <span class='error_goto'>__PYX_ERR(0, 115, __pyx_L3_error)</span>
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("SpectrumPoint", 1, 2, 2, 1); <span class='error_goto'>__PYX_ERR(0, 104, __pyx_L3_error)</span>
         }
       }
       if (unlikely(kw_args &gt; 0)) {
-        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "SpectrumPoint") &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 115, __pyx_L3_error)</span>
+        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "SpectrumPoint") &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 104, __pyx_L3_error)</span>
       }
     } else if (<span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -841,12 +817,12 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
       values[0] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 0);
       values[1] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 1);
     }
-    __pyx_v_eng_gam = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[0]); if (unlikely((__pyx_v_eng_gam == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 115, __pyx_L3_error)</span>
-    __pyx_v_eng_pi = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[1]); if (unlikely((__pyx_v_eng_pi == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 115, __pyx_L3_error)</span>
+    __pyx_v_eng_gam = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[0]); if (unlikely((__pyx_v_eng_gam == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 104, __pyx_L3_error)</span>
+    __pyx_v_eng_pi = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[1]); if (unlikely((__pyx_v_eng_pi == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 104, __pyx_L3_error)</span>
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("SpectrumPoint", 1, 2, 2, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); <span class='error_goto'>__PYX_ERR(0, 115, __pyx_L3_error)</span>
+  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("SpectrumPoint", 1, 2, 2, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); <span class='error_goto'>__PYX_ERR(0, 104, __pyx_L3_error)</span>
   __pyx_L3_error:;
   <span class='pyx_c_api'>__Pyx_AddTraceback</span>("hazma.particles._decay_charged_pion.ChargedPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
@@ -882,23 +858,23 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">116</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">117</span>:         Returns the radiative spectrum value from charged pion given a gamma</pre>
-<pre class="cython line score-0">&#xA0;<span class="">118</span>:         ray energy Egam and charged pion energy Epi energy eng_mu. When the</pre>
-<pre class="cython line score-0">&#xA0;<span class="">119</span>:         ChargedPion object is instatiated, an interplating function for the</pre>
-<pre class="cython line score-0">&#xA0;<span class="">120</span>:         mu spectrum is computed.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">121</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">122</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">123</span>:             eng_gam: Energy of photon is laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">124</span>:             eng_pi: Energy of charged pion in laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">125</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">126</span>:         cdef float result = 0.0</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">105</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">106</span>:         Returns the radiative spectrum value from charged pion given a gamma</pre>
+<pre class="cython line score-0">&#xA0;<span class="">107</span>:         ray energy Egam and charged pion energy Epi energy eng_mu. When the</pre>
+<pre class="cython line score-0">&#xA0;<span class="">108</span>:         ChargedPion object is instatiated, an interplating function for the</pre>
+<pre class="cython line score-0">&#xA0;<span class="">109</span>:         mu spectrum is computed.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">110</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">111</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">112</span>:             eng_gam: Energy of photon is laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">113</span>:             eng_pi: Energy of charged pion in laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">114</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">115</span>:         cdef float result = 0.0</pre>
 <pre class='cython code score-0 '>  __pyx_v_result = 0.0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">127</span>: </pre>
-<pre class="cython line score-40" onclick='toggleDiv(this)'>+<span class="">128</span>:         integrand = partial(self.__Integrand, self)</pre>
-<pre class='cython code score-40 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">116</span>: </pre>
+<pre class="cython line score-40" onclick='toggleDiv(this)'>+<span class="">117</span>:         integrand = partial(self.__integrand, self)</pre>
+<pre class='cython code score-40 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  __pyx_t_3 = __Pyx_CFunc_float____ChargedPion____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Integrand);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+  __pyx_t_3 = __Pyx_CFunc_float____ChargedPion____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___integrand);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -915,7 +891,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   #if CYTHON_FAST_PYCALL
   if (<span class='py_c_api'>PyFunction_Check</span>(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
@@ -924,14 +900,14 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   #if CYTHON_FAST_PYCCALL
   if (<span class='pyx_c_api'>__Pyx_PyFastCFunction_Check</span>(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
   } else
   #endif
   {
-    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
     if (__pyx_t_4) {
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4); <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -942,31 +918,31 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
     <span class='refnanny'>__Pyx_GIVEREF</span>(((PyObject *)__pyx_v_self));
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 1+__pyx_t_5, ((PyObject *)__pyx_v_self));
     __pyx_t_3 = 0;
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 128, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
   }
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_integrand = __pyx_t_1;
   __pyx_t_1 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">129</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">130</span>:         if 0.0 &lt;= eng_gam and eng_gam &lt;= self.__EngGamMax(eng_pi):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">118</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">119</span>:         if 0.0 &lt;= eng_gam and eng_gam &lt;= self.__eng_gam_max(eng_pi):</pre>
 <pre class='cython code score-0 '>  __pyx_t_8 = ((0.0 &lt;= __pyx_v_eng_gam) != 0);
   if (__pyx_t_8) {
   } else {
     __pyx_t_7 = __pyx_t_8;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_8 = ((__pyx_v_eng_gam &lt;= ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___EngGamMax(__pyx_v_self, __pyx_v_eng_pi)) != 0);
+  __pyx_t_8 = ((__pyx_v_eng_gam &lt;= ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___eng_gam_max(__pyx_v_self, __pyx_v_eng_pi)) != 0);
   __pyx_t_7 = __pyx_t_8;
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_7) {
 /* … */
   }
-</pre><pre class="cython line score-35" onclick='toggleDiv(this)'>+<span class="">131</span>:             result = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \</pre>
-<pre class='cython code score-35 '>    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_quad);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 131, __pyx_L1_error)</span>
+</pre><pre class="cython line score-35" onclick='toggleDiv(this)'>+<span class="">120</span>:             result = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \</pre>
+<pre class='cython code score-35 '>    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_quad);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-    __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(3);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 131, __pyx_L1_error)</span>
+    __pyx_t_2 = <span class='py_c_api'>PyTuple_New</span>(3);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
     <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_v_integrand);
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_v_integrand);
@@ -977,9 +953,9 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
     <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_1_0);
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_1_0);
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_2, 2, __pyx_float_1_0);
-    __pyx_t_6 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(4);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 131, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(4);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
-    __pyx_t_3 = <span class='py_c_api'>PyList_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 131, __pyx_L1_error)</span>
+    __pyx_t_3 = <span class='py_c_api'>PyList_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
     <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_neg_1_0);
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_neg_1_0);
@@ -987,20 +963,20 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
     <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_1_0);
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_1_0);
     <span class='py_macro_api'>PyList_SET_ITEM</span>(__pyx_t_3, 1, __pyx_float_1_0);
-    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_points, __pyx_t_3) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 131, __pyx_L1_error)</span>
+    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_points, __pyx_t_3) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
 /* … */
-    __pyx_t_9 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_1, __pyx_t_2, __pyx_t_6);<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 131, __pyx_L1_error)</span>
+    __pyx_t_9 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_1, __pyx_t_2, __pyx_t_6);<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_9);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
-</pre><pre class="cython line score-34" onclick='toggleDiv(this)'>+<span class="">132</span>:                           args=(eng_gam, eng_pi), epsabs=10**-4., \</pre>
-<pre class='cython code score-34 '>    __pyx_t_3 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_gam);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)</span>
+</pre><pre class="cython line score-34" onclick='toggleDiv(this)'>+<span class="">121</span>:                           args=(eng_gam, eng_pi), epsabs=10**-4., \</pre>
+<pre class='cython code score-34 '>    __pyx_t_3 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_gam);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-    __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_pi);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 132, __pyx_L1_error)</span>
+    __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_pi);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 121, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-    __pyx_t_9 = <span class='py_c_api'>PyTuple_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 132, __pyx_L1_error)</span>
+    __pyx_t_9 = <span class='py_c_api'>PyTuple_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 121, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_9);
     <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_3);
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_9, 0, __pyx_t_3);
@@ -1008,35 +984,35 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_9, 1, __pyx_t_4);
     __pyx_t_3 = 0;
     __pyx_t_4 = 0;
-    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_args, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 131, __pyx_L1_error)</span>
+    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_args, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -4.));<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 132, __pyx_L1_error)</span>
+    __pyx_t_9 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -4.));<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 121, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_9);
-    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 131, __pyx_L1_error)</span>
+    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_9); __pyx_t_9 = 0;
-</pre><pre class="cython line score-25" onclick='toggleDiv(this)'>+<span class="">133</span>:                           epsrel=10**-10.)[0]</pre>
-<pre class='cython code score-25 '>    __pyx_t_9 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -10.));<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 133, __pyx_L1_error)</span>
+</pre><pre class="cython line score-25" onclick='toggleDiv(this)'>+<span class="">122</span>:                           epsrel=10**-10.)[0]</pre>
+<pre class='cython code score-25 '>    __pyx_t_9 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -10.));<span class='error_goto'> if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 122, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_9);
-    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 131, __pyx_L1_error)</span>
+    if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_9) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 120, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_9); __pyx_t_9 = 0;
 /* … */
-    __pyx_t_6 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(__pyx_t_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 133, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(__pyx_t_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 122, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_10 = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(__pyx_t_6); if (unlikely((__pyx_t_10 == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 133, __pyx_L1_error)</span>
+    __pyx_t_10 = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(__pyx_t_6); if (unlikely((__pyx_t_10 == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 122, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_v_result = __pyx_t_10;
-</pre><pre class="cython line score-0">&#xA0;<span class="">134</span>: </pre>
-<pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">135</span>:         return result</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">123</span>: </pre>
+<pre class="cython line score-6" onclick='toggleDiv(this)'>+<span class="">124</span>:         return result</pre>
 <pre class='cython code score-6 '>  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
-  __pyx_t_6 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_result);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 135, __pyx_L1_error)</span>
+  __pyx_t_6 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_result);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 124, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">136</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">137</span>: </pre>
-<pre class="cython line score-52" onclick='toggleDiv(this)'>+<span class="">138</span>:     def Spectrum(self, np.ndarray eng_gams, float eng_pi):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">125</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">126</span>: </pre>
+<pre class="cython line score-52" onclick='toggleDiv(this)'>+<span class="">127</span>:     def Spectrum(self, np.ndarray eng_gams, float eng_pi):</pre>
 <pre class='cython code score-52 '>/* Python wrapper */
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_9Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static char __pyx_doc_5hazma_9particles_19_decay_charged_pion_11ChargedPion_8Spectrum[] = "\n        Returns the radiative spectrum dNde from charged pion given a gamma\n        ray energy Egam and charged pion energy Epi energy eng_mu. When the\n        ChargedPion object is instatiated, an interplating function for the\n        mu spectrum is computed.\n\n        Keyword arguments::\n            engGamMin: Minimum energy of photon is laboratory frame.\n            engGamMax: Minimum energy of photon is laboratory frame.\n            engPi: Energy of charged pion in laboratory frame.\n        ";
@@ -1069,11 +1045,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
         case  1:
         if (likely((values[1] = <span class='py_c_api'>PyDict_GetItem</span>(__pyx_kwds, __pyx_n_s_eng_pi)) != 0)) kw_args--;
         else {
-          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("Spectrum", 1, 2, 2, 1); <span class='error_goto'>__PYX_ERR(0, 138, __pyx_L3_error)</span>
+          <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("Spectrum", 1, 2, 2, 1); <span class='error_goto'>__PYX_ERR(0, 127, __pyx_L3_error)</span>
         }
       }
       if (unlikely(kw_args &gt; 0)) {
-        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "Spectrum") &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 138, __pyx_L3_error)</span>
+        if (unlikely(<span class='pyx_c_api'>__Pyx_ParseOptionalKeywords</span>(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "Spectrum") &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 127, __pyx_L3_error)</span>
       }
     } else if (<span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -1082,17 +1058,17 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
       values[1] = <span class='py_macro_api'>PyTuple_GET_ITEM</span>(__pyx_args, 1);
     }
     __pyx_v_eng_gams = ((PyArrayObject *)values[0]);
-    __pyx_v_eng_pi = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[1]); if (unlikely((__pyx_v_eng_pi == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 138, __pyx_L3_error)</span>
+    __pyx_v_eng_pi = __pyx_<span class='py_c_api'>PyFloat_AsFloat</span>(values[1]); if (unlikely((__pyx_v_eng_pi == (float)-1) &amp;&amp; <span class='py_c_api'>PyErr_Occurred</span>())) <span class='error_goto'>__PYX_ERR(0, 127, __pyx_L3_error)</span>
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("Spectrum", 1, 2, 2, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); <span class='error_goto'>__PYX_ERR(0, 138, __pyx_L3_error)</span>
+  <span class='pyx_c_api'>__Pyx_RaiseArgtupleInvalid</span>("Spectrum", 1, 2, 2, <span class='py_macro_api'>PyTuple_GET_SIZE</span>(__pyx_args)); <span class='error_goto'>__PYX_ERR(0, 127, __pyx_L3_error)</span>
   __pyx_L3_error:;
   <span class='pyx_c_api'>__Pyx_AddTraceback</span>("hazma.particles._decay_charged_pion.ChargedPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_eng_gams), __pyx_ptype_5numpy_ndarray, 1, "eng_gams", 0))) <span class='error_goto'>__PYX_ERR(0, 138, __pyx_L1_error)</span>
+  if (unlikely(!<span class='pyx_c_api'>__Pyx_ArgTypeTest</span>(((PyObject *)__pyx_v_eng_gams), __pyx_ptype_5numpy_ndarray, 1, "eng_gams", 0))) <span class='error_goto'>__PYX_ERR(0, 127, __pyx_L1_error)</span>
   __pyx_r = __pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_8Spectrum(((struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self), __pyx_v_eng_gams, __pyx_v_eng_pi);
 
   /* function exit code */
@@ -1131,24 +1107,24 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   <span class='refnanny'>__Pyx_RefNannyFinishContext</span>();
   return __pyx_r;
 }
-</pre><pre class="cython line score-0">&#xA0;<span class="">139</span>:         """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">140</span>:         Returns the radiative spectrum dNde from charged pion given a gamma</pre>
-<pre class="cython line score-0">&#xA0;<span class="">141</span>:         ray energy Egam and charged pion energy Epi energy eng_mu. When the</pre>
-<pre class="cython line score-0">&#xA0;<span class="">142</span>:         ChargedPion object is instatiated, an interplating function for the</pre>
-<pre class="cython line score-0">&#xA0;<span class="">143</span>:         mu spectrum is computed.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">144</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">145</span>:         Keyword arguments::</pre>
-<pre class="cython line score-0">&#xA0;<span class="">146</span>:             engGamMin: Minimum energy of photon is laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">147</span>:             engGamMax: Minimum energy of photon is laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">148</span>:             engPi: Energy of charged pion in laboratory frame.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">149</span>:         """</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">150</span>:         cdef float result = 0.0</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">128</span>:         """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">129</span>:         Returns the radiative spectrum dNde from charged pion given a gamma</pre>
+<pre class="cython line score-0">&#xA0;<span class="">130</span>:         ray energy Egam and charged pion energy Epi energy eng_mu. When the</pre>
+<pre class="cython line score-0">&#xA0;<span class="">131</span>:         ChargedPion object is instatiated, an interplating function for the</pre>
+<pre class="cython line score-0">&#xA0;<span class="">132</span>:         mu spectrum is computed.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">133</span>: </pre>
+<pre class="cython line score-0">&#xA0;<span class="">134</span>:         Keyword arguments::</pre>
+<pre class="cython line score-0">&#xA0;<span class="">135</span>:             engGamMin: Minimum energy of photon is laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">136</span>:             engGamMax: Minimum energy of photon is laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">137</span>:             engPi: Energy of charged pion in laboratory frame.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">138</span>:         """</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">139</span>:         cdef float result = 0.0</pre>
 <pre class='cython code score-0 '>  __pyx_v_result = 0.0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">151</span>: </pre>
-<pre class="cython line score-40" onclick='toggleDiv(this)'>+<span class="">152</span>:         integrand = partial(self.__Integrand, self)</pre>
-<pre class='cython code score-40 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">140</span>: </pre>
+<pre class="cython line score-40" onclick='toggleDiv(this)'>+<span class="">141</span>:         integrand = partial(self.__integrand, self)</pre>
+<pre class='cython code score-40 '>  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_partial);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-  __pyx_t_3 = __Pyx_CFunc_float____ChargedPion____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___Integrand);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+  __pyx_t_3 = __Pyx_CFunc_float____ChargedPion____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___integrand);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -1165,7 +1141,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   #if CYTHON_FAST_PYCALL
   if (<span class='py_c_api'>PyFunction_Check</span>(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
@@ -1174,14 +1150,14 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
   #if CYTHON_FAST_PYCCALL
   if (<span class='pyx_c_api'>__Pyx_PyFastCFunction_Check</span>(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyCFunction_FastCall</span>(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
   } else
   #endif
   {
-    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(2+__pyx_t_5);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
     if (__pyx_t_4) {
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_4); <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -1192,76 +1168,76 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
     <span class='refnanny'>__Pyx_GIVEREF</span>(((PyObject *)__pyx_v_self));
     <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 1+__pyx_t_5, ((PyObject *)__pyx_v_self));
     __pyx_t_3 = 0;
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, NULL);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
   }
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_integrand = __pyx_t_1;
   __pyx_t_1 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">153</span>: </pre>
-<pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">154</span>:         cdef int numpts = len(eng_gams)</pre>
-<pre class='cython code score-5 '>  __pyx_t_7 = <span class='py_c_api'>PyObject_Length</span>(((PyObject *)__pyx_v_eng_gams));<span class='error_goto'> if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 154, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">142</span>: </pre>
+<pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">143</span>:         cdef int numpts = len(eng_gams)</pre>
+<pre class='cython code score-5 '>  __pyx_t_7 = <span class='py_c_api'>PyObject_Length</span>(((PyObject *)__pyx_v_eng_gams));<span class='error_goto'> if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 143, __pyx_L1_error)</span>
   __pyx_v_numpts = __pyx_t_7;
-</pre><pre class="cython line score-0">&#xA0;<span class="">155</span>: </pre>
-<pre class="cython line score-33" onclick='toggleDiv(this)'>+<span class="">156</span>:         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)</pre>
-<pre class='cython code score-33 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+</pre><pre class="cython line score-0">&#xA0;<span class="">144</span>: </pre>
+<pre class="cython line score-33" onclick='toggleDiv(this)'>+<span class="">145</span>:         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)</pre>
+<pre class='cython code score-33 '>  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_zeros);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_2 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_1, __pyx_n_s_zeros);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_numpts);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyInt_From_int</span>(__pyx_v_numpts);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_6 = <span class='py_c_api'>PyTuple_New</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
   <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_1);
   <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_6, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_3 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_3, __pyx_n_s_float32);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_GetAttrStr</span>(__pyx_t_3, __pyx_n_s_float32);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_3); __pyx_t_3 = 0;
-  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_4) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 156, __pyx_L1_error)</span>
+  if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_4) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, __pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 156, __pyx_L1_error)</span>
+  __pyx_t_4 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_2, __pyx_t_6, __pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 145, __pyx_L1_error)</span>
   <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
   <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 156, __pyx_L1_error)</span>
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(<span class='pyx_c_api'>__Pyx_TypeTest</span>(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) <span class='error_goto'>__PYX_ERR(0, 145, __pyx_L1_error)</span>
   __pyx_v_spec = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">157</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">158</span>:         cdef int i = 0</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">146</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">147</span>:         cdef int i = 0</pre>
 <pre class='cython code score-0 '>  __pyx_v_i = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">159</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">160</span>:         for i in range(numpts):</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">148</span>: </pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">149</span>:         for i in range(numpts):</pre>
 <pre class='cython code score-0 '>  __pyx_t_5 = __pyx_v_numpts;
   for (__pyx_t_8 = 0; __pyx_t_8 &lt; __pyx_t_5; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
-</pre><pre class="cython line score-28" onclick='toggleDiv(this)'>+<span class="">161</span>:             if 0.0 &lt;= eng_gams[i] and eng_gams[i] &lt;= self.__EngGamMax(eng_pi):</pre>
-<pre class='cython code score-28 '>    __pyx_t_4 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 161, __pyx_L1_error)</span>
+</pre><pre class="cython line score-28" onclick='toggleDiv(this)'>+<span class="">150</span>:             if 0.0 &lt;= eng_gams[i] and eng_gams[i] &lt;= self.__eng_gam_max(eng_pi):</pre>
+<pre class='cython code score-28 '>    __pyx_t_4 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-    __pyx_t_1 = <span class='py_c_api'>PyObject_RichCompare</span>(__pyx_float_0_0, __pyx_t_4, Py_LE); <span class='refnanny'>__Pyx_XGOTREF</span>(__pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='py_c_api'>PyObject_RichCompare</span>(__pyx_float_0_0, __pyx_t_4, Py_LE); <span class='refnanny'>__Pyx_XGOTREF</span>(__pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_10 = <span class='pyx_c_api'>__Pyx_PyObject_IsTrue</span>(__pyx_t_1); if (unlikely(__pyx_t_10 &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_10 = <span class='pyx_c_api'>__Pyx_PyObject_IsTrue</span>(__pyx_t_1); if (unlikely(__pyx_t_10 &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_10) {
     } else {
       __pyx_t_9 = __pyx_t_10;
       goto __pyx_L6_bool_binop_done;
     }
-    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-    __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___EngGamMax(__pyx_v_self, __pyx_v_eng_pi));<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_4 = <span class='py_c_api'>PyFloat_FromDouble</span>(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_v_self-&gt;__pyx_vtab)-&gt;__pyx___eng_gam_max(__pyx_v_self, __pyx_v_eng_pi));<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
-    __pyx_t_6 = <span class='py_c_api'>PyObject_RichCompare</span>(__pyx_t_1, __pyx_t_4, Py_LE); <span class='refnanny'>__Pyx_XGOTREF</span>(__pyx_t_6);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_6 = <span class='py_c_api'>PyObject_RichCompare</span>(__pyx_t_1, __pyx_t_4, Py_LE); <span class='refnanny'>__Pyx_XGOTREF</span>(__pyx_t_6);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_10 = <span class='pyx_c_api'>__Pyx_PyObject_IsTrue</span>(__pyx_t_6); if (unlikely(__pyx_t_10 &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 161, __pyx_L1_error)</span>
+    __pyx_t_10 = <span class='pyx_c_api'>__Pyx_PyObject_IsTrue</span>(__pyx_t_6); if (unlikely(__pyx_t_10 &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 150, __pyx_L1_error)</span>
     <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
     __pyx_t_9 = __pyx_t_10;
     __pyx_L6_bool_binop_done:;
@@ -1269,10 +1245,10 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
 /* … */
     }
   }
-</pre><pre class="cython line score-38" onclick='toggleDiv(this)'>+<span class="">162</span>:                 spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \</pre>
-<pre class='cython code score-38 '>      __pyx_t_6 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_quad);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 162, __pyx_L1_error)</span>
+</pre><pre class="cython line score-38" onclick='toggleDiv(this)'>+<span class="">151</span>:                 spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \</pre>
+<pre class='cython code score-38 '>      __pyx_t_6 = <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_n_s_quad);<span class='error_goto'> if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_6);
-      __pyx_t_4 = <span class='py_c_api'>PyTuple_New</span>(3);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 162, __pyx_L1_error)</span>
+      __pyx_t_4 = <span class='py_c_api'>PyTuple_New</span>(3);<span class='error_goto'> if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_4);
       <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_v_integrand);
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_v_integrand);
@@ -1283,9 +1259,9 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
       <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_1_0);
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_1_0);
       <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_4, 2, __pyx_float_1_0);
-      __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(4);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)</span>
+      __pyx_t_1 = <span class='pyx_c_api'>__Pyx_PyDict_NewPresized</span>(4);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
-      __pyx_t_2 = <span class='py_c_api'>PyList_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 162, __pyx_L1_error)</span>
+      __pyx_t_2 = <span class='py_c_api'>PyList_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
       <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_neg_1_0);
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_neg_1_0);
@@ -1293,23 +1269,23 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
       <span class='pyx_macro_api'>__Pyx_INCREF</span>(__pyx_float_1_0);
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_float_1_0);
       <span class='py_macro_api'>PyList_SET_ITEM</span>(__pyx_t_2, 1, __pyx_float_1_0);
-      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_points, __pyx_t_2) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 162, __pyx_L1_error)</span>
+      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_points, __pyx_t_2) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_2); __pyx_t_2 = 0;
 /* … */
-      __pyx_t_11 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_6, __pyx_t_4, __pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)</span>
+      __pyx_t_11 = <span class='pyx_c_api'>__Pyx_PyObject_Call</span>(__pyx_t_6, __pyx_t_4, __pyx_t_1);<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_11);
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_6); __pyx_t_6 = 0;
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_4); __pyx_t_4 = 0;
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
 /* … */
-      if (unlikely(<span class='pyx_c_api'>__Pyx_SetItemInt</span>(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_1, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 162, __pyx_L1_error)</span>
+      if (unlikely(<span class='pyx_c_api'>__Pyx_SetItemInt</span>(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_1, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) &lt; 0)) <span class='error_goto'>__PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_1); __pyx_t_1 = 0;
-</pre><pre class="cython line score-31" onclick='toggleDiv(this)'>+<span class="">163</span>:                                args=(eng_gams[i], eng_pi), epsabs=10**-4., \</pre>
-<pre class='cython code score-31 '>      __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)</span>
+</pre><pre class="cython line score-31" onclick='toggleDiv(this)'>+<span class="">152</span>:                                args=(eng_gams[i], eng_pi), epsabs=10**-4., \</pre>
+<pre class='cython code score-31 '>      __pyx_t_2 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_2);
-      __pyx_t_3 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_pi);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)</span>
+      __pyx_t_3 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_eng_pi);<span class='error_goto'> if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_3);
-      __pyx_t_11 = <span class='py_c_api'>PyTuple_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)</span>
+      __pyx_t_11 = <span class='py_c_api'>PyTuple_New</span>(2);<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_11);
       <span class='refnanny'>__Pyx_GIVEREF</span>(__pyx_t_2);
       <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_11, 0, __pyx_t_2);
@@ -1317,23 +1293,23 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_pion_11ChargedPion_
       <span class='py_macro_api'>PyTuple_SET_ITEM</span>(__pyx_t_11, 1, __pyx_t_3);
       __pyx_t_2 = 0;
       __pyx_t_3 = 0;
-      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_args, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 162, __pyx_L1_error)</span>
+      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_args, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -4.));<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)</span>
+      __pyx_t_11 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -4.));<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 152, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_11);
-      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_epsabs, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 162, __pyx_L1_error)</span>
+      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_epsabs, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_11); __pyx_t_11 = 0;
-</pre><pre class="cython line score-14" onclick='toggleDiv(this)'>+<span class="">164</span>:                                epsrel=10**-10.)[0]</pre>
-<pre class='cython code score-14 '>      __pyx_t_11 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -10.));<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 164, __pyx_L1_error)</span>
+</pre><pre class="cython line score-14" onclick='toggleDiv(this)'>+<span class="">153</span>:                                epsrel=10**-10.)[0]</pre>
+<pre class='cython code score-14 '>      __pyx_t_11 = <span class='py_c_api'>PyFloat_FromDouble</span>(pow(10.0, -10.));<span class='error_goto'> if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 153, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_11);
-      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_epsrel, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 162, __pyx_L1_error)</span>
+      if (<span class='py_c_api'>PyDict_SetItem</span>(__pyx_t_1, __pyx_n_s_epsrel, __pyx_t_11) &lt; 0) <span class='error_goto'>__PYX_ERR(0, 151, __pyx_L1_error)</span>
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_11); __pyx_t_11 = 0;
 /* … */
-      __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)</span>
+      __pyx_t_1 = <span class='pyx_c_api'>__Pyx_GetItemInt</span>(__pyx_t_11, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1);<span class='error_goto'> if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 153, __pyx_L1_error)</span>
       <span class='refnanny'>__Pyx_GOTREF</span>(__pyx_t_1);
       <span class='pyx_macro_api'>__Pyx_DECREF</span>(__pyx_t_11); __pyx_t_11 = 0;
-</pre><pre class="cython line score-0">&#xA0;<span class="">165</span>: </pre>
-<pre class="cython line score-2" onclick='toggleDiv(this)'>+<span class="">166</span>:         return spec</pre>
+</pre><pre class="cython line score-0">&#xA0;<span class="">154</span>: </pre>
+<pre class="cython line score-2" onclick='toggleDiv(this)'>+<span class="">155</span>:         return spec</pre>
 <pre class='cython code score-2 '>  <span class='pyx_macro_api'>__Pyx_XDECREF</span>(__pyx_r);
   <span class='pyx_macro_api'>__Pyx_INCREF</span>(((PyObject *)__pyx_v_spec));
   __pyx_r = ((PyObject *)__pyx_v_spec);

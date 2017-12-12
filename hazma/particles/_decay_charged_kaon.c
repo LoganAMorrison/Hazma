@@ -1161,14 +1161,14 @@ struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon {
  * cimport numpy as np
  * 
  * cdef class ChargedPion:             # <<<<<<<<<<<<<<
- *     cdef float __Gamma(self, float eng, float mass)
- *     cdef float __Beta(self, float eng, float mass)
+ *     cdef float __gamma(self, float eng, float mass)
+ *     cdef float __beta(self, float eng, float mass)
  */
 struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion {
   PyObject_HEAD
   struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_vtab;
-  float __pyx___engGamMaxMuRF;
-  float __pyx___engMuPiRF;
+  float __pyx___eng_gam_max_mu_rf;
+  float __pyx___eng_mu_pi_rf;
   struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx___muon;
   PyArrayObject *__pyx___eng_gams_mu;
   PyArrayObject *__pyx___mu_spec;
@@ -1334,16 +1334,16 @@ static struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *__pyx_vtabp
  * cimport numpy as np
  * 
  * cdef class ChargedPion:             # <<<<<<<<<<<<<<
- *     cdef float __Gamma(self, float eng, float mass)
- *     cdef float __Beta(self, float eng, float mass)
+ *     cdef float __gamma(self, float eng, float mass)
+ *     cdef float __beta(self, float eng, float mass)
  */
 
 struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion {
-  float (*__pyx___Gamma)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
-  float (*__pyx___Beta)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
-  float (*__pyx___EngGamMax)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
-  float (*__pyx___Integrand)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float, float);
-  float (*__pyx___muSpectrum)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
+  float (*__pyx___gamma)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
+  float (*__pyx___beta)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float);
+  float (*__pyx___eng_gam_max)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
+  float (*__pyx___integrand)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float, float, float);
+  float (*__pyx___muon_spectrum)(struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *, float);
 };
 static struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_pion_ChargedPion *__pyx_vtabptr_5hazma_9particles_19_decay_charged_pion_ChargedPion;
 
