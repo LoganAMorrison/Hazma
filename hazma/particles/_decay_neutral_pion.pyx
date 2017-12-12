@@ -14,7 +14,7 @@ cdef class NeutralPion:
         pass
 
     @cython.cdivision(True)
-    def decay_spectra_point(self, eng_gam, float eng_pi):
+    def SpectrumPoint(self, eng_gam, float eng_pi):
         """
         Returns decay spectrum for pi0 -> g g.
         """
@@ -29,7 +29,7 @@ cdef class NeutralPion:
         return ret_val
 
     @cython.cdivision(True)
-    def decay_spectra(self, np.ndarray eng_gam, float eng_pi):
+    def Spectrum(self, np.ndarray eng_gam, float eng_pi):
         """
         Returns decay spectrum for pi0 -> g g.
         """

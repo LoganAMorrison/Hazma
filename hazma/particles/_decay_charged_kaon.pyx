@@ -112,13 +112,13 @@ cdef class ChargedKaon:
                                        self.__chrgpi.SpectrumPoint])
 
         self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\
-                                        self.__neuPion.decay_spectra_point])
+                                        self.__neuPion.SpectrumPoint])
 
     def __dealloc__(self):
         pass
 
 
-    cdef float __integrandMuNu(self, float cl, float eng_gam, float eng_k):
+    cdef float __integrand2(self, float cl, float eng_gam, float eng_k):
         """
         Integrand for K -> X, where X is a two body final state. The X's
         used are
@@ -221,7 +221,7 @@ cdef class ChargedKaon:
 
         cdef float ret_val = 0.0
 
-        ret_val += self.__integrandMuNu(cl, eng_gam, eng_k)
+        ret_val += self.__integrand2(cl, eng_gam, eng_k)
         ret_val += self.__integrand3(cl, eng_gam, eng_k)
 
         return ret_val

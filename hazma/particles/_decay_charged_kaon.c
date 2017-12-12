@@ -2423,7 +2423,6 @@ static const char __pyx_k_pyx_unpickle_Enum[] = "__pyx_unpickle_Enum";
 static const char __pyx_k_scipy_interpolate[] = "scipy.interpolate";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_strided_and_direct[] = "<strided and direct>";
-static const char __pyx_k_decay_spectra_point[] = "decay_spectra_point";
 static const char __pyx_k_strided_and_indirect[] = "<strided and indirect>";
 static const char __pyx_k_contiguous_and_direct[] = "<contiguous and direct>";
 static const char __pyx_k_MemoryView_of_r_object[] = "<MemoryView of %r object>";
@@ -2496,7 +2495,6 @@ static PyObject *__pyx_n_s_class;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_kp_s_contiguous_and_direct;
 static PyObject *__pyx_kp_s_contiguous_and_indirect;
-static PyObject *__pyx_n_s_decay_spectra_point;
 static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_dtype_is_object;
@@ -2686,7 +2684,7 @@ static PyObject *__pyx_tuple__39;
 static PyObject *__pyx_codeobj__13;
 static PyObject *__pyx_codeobj__40;
 
-/* "hazma/particles/_decay_charged_kaon.pyx":22
+/* "hazma/particles/_decay_charged_kaon.pyx":40
  *     """
  * 
  *     def __init__(self):             # <<<<<<<<<<<<<<
@@ -2721,12 +2719,12 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___init
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":25
+/* "hazma/particles/_decay_charged_kaon.pyx":43
  *         pass
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
- *         self.__num_ps_pts = 1000
- *         self.__num_bins = 10
+ *         """
+ *         Initalized the ChargedKaon object.
  */
 
 /* Python wrapper */
@@ -2758,43 +2756,43 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   PyObject *__pyx_t_8 = NULL;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":26
+  /* "hazma/particles/_decay_charged_kaon.pyx":84
  * 
- *     def __cinit__(self):
+ *         """
  *         self.__num_ps_pts = 1000             # <<<<<<<<<<<<<<
  *         self.__num_bins = 10
  * 
  */
   __pyx_v_self->__pyx___num_ps_pts = 0x3E8;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":27
- *     def __cinit__(self):
+  /* "hazma/particles/_decay_charged_kaon.pyx":85
+ *         """
  *         self.__num_ps_pts = 1000
  *         self.__num_bins = 10             # <<<<<<<<<<<<<<
  * 
- *         # Mass arrays
+ *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
  */
   __pyx_v_self->__pyx___num_bins = 10;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":30
+  /* "hazma/particles/_decay_charged_kaon.pyx":87
+ *         self.__num_bins = 10
  * 
- *         # Mass arrays
  *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \             # <<<<<<<<<<<<<<
  *             dtype=np.float64)
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_array); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_array); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = PyList_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_5 = PyList_New(3); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_GIVEREF(__pyx_t_1);
   PyList_SET_ITEM(__pyx_t_5, 0, __pyx_t_1);
@@ -2805,65 +2803,65 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_t_1 = 0;
   __pyx_t_3 = 0;
   __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":31
- *         # Mass arrays
+  /* "hazma/particles/_decay_charged_kaon.pyx":88
+ * 
  *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
  *             dtype=np.float64)             # <<<<<<<<<<<<<<
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
  *             dtype=np.float64)
  */
-  __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 31, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float64); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, __pyx_t_1) < 0) __PYX_ERR(0, 31, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_dtype, __pyx_t_1) < 0) __PYX_ERR(0, 88, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":30
+  /* "hazma/particles/_decay_charged_kaon.pyx":87
+ *         self.__num_bins = 10
  * 
- *         # Mass arrays
  *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \             # <<<<<<<<<<<<<<
  *             dtype=np.float64)
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
  */
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 30, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 87, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->__pyx___msPiPiPi);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___msPiPiPi));
   __pyx_v_self->__pyx___msPiPiPi = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":32
+  /* "hazma/particles/_decay_charged_kaon.pyx":89
  *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
  *             dtype=np.float64)
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\             # <<<<<<<<<<<<<<
  *             dtype=np.float64)
  * 
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_array); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_array); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_MU); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_MU); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = PyList_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
   PyList_SET_ITEM(__pyx_t_2, 0, __pyx_t_1);
@@ -2874,63 +2872,63 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   PyList_SET_ITEM(__pyx_t_2, 2, __pyx_float_0_0);
   __pyx_t_1 = 0;
   __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":33
+  /* "hazma/particles/_decay_charged_kaon.pyx":90
  *             dtype=np.float64)
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
  *             dtype=np.float64)             # <<<<<<<<<<<<<<
  * 
- *         # Energy probability distributions
+ *         self.__probsPiPiPi = np.zeros((3, 2, self.__num_bins), dtype=float)
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 33, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_float64); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 33, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_dtype, __pyx_t_3) < 0) __PYX_ERR(0, 90, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":32
+  /* "hazma/particles/_decay_charged_kaon.pyx":89
  *         self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
  *             dtype=np.float64)
  *         self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\             # <<<<<<<<<<<<<<
  *             dtype=np.float64)
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 32, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 32, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 89, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_3);
   __Pyx_GOTREF(__pyx_v_self->__pyx___msPi0MuNu);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___msPi0MuNu));
   __pyx_v_self->__pyx___msPi0MuNu = ((PyArrayObject *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":36
+  /* "hazma/particles/_decay_charged_kaon.pyx":92
+ *             dtype=np.float64)
  * 
- *         # Energy probability distributions
  *         self.__probsPiPiPi = np.zeros((3, 2, self.__num_bins), dtype=float)             # <<<<<<<<<<<<<<
  *         self.__probsPi0MuNu = np.zeros((3, 2, self.__num_bins), dtype=float)
  * 
  */
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_INCREF(__pyx_int_3);
   __Pyx_GIVEREF(__pyx_int_3);
@@ -2941,41 +2939,41 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_4, 2, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_GIVEREF(__pyx_t_4);
   PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_4);
   __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 36, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 36, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_4); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 36, __pyx_L1_error)
+  if (!(likely(((__pyx_t_5) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_5, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 92, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_5);
   __Pyx_GOTREF(__pyx_v_self->__pyx___probsPiPiPi);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___probsPiPiPi));
   __pyx_v_self->__pyx___probsPiPiPi = ((PyArrayObject *)__pyx_t_5);
   __pyx_t_5 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":37
- *         # Energy probability distributions
+  /* "hazma/particles/_decay_charged_kaon.pyx":93
+ * 
  *         self.__probsPiPiPi = np.zeros((3, 2, self.__num_bins), dtype=float)
  *         self.__probsPi0MuNu = np.zeros((3, 2, self.__num_bins), dtype=float)             # <<<<<<<<<<<<<<
  * 
  *         self.__ram = rambo.Rambo()
  */
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_3 = PyTuple_New(3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_int_3);
   __Pyx_GIVEREF(__pyx_int_3);
@@ -2986,34 +2984,34 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __Pyx_GIVEREF(__pyx_t_5);
   PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_t_5);
   __pyx_t_5 = 0;
-  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_5 = PyTuple_New(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 37, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 37, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 37, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, ((PyObject *)(&PyFloat_Type))) < 0) __PYX_ERR(0, 93, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_5, __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 37, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 93, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___probsPi0MuNu);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___probsPi0MuNu));
   __pyx_v_self->__pyx___probsPi0MuNu = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":39
+  /* "hazma/particles/_decay_charged_kaon.pyx":95
  *         self.__probsPi0MuNu = np.zeros((3, 2, self.__num_bins), dtype=float)
  * 
  *         self.__ram = rambo.Rambo()             # <<<<<<<<<<<<<<
  * 
  *         self.__probsPiPiPi \
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_5rambo_5rambo_Rambo), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 39, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_5rambo_5rambo_Rambo), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 95, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___ram);
@@ -3021,28 +3019,28 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___ram = ((struct __pyx_obj_5hazma_5rambo_5rambo_Rambo *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":42
+  /* "hazma/particles/_decay_charged_kaon.pyx":98
  * 
  *         self.__probsPiPiPi \
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,             # <<<<<<<<<<<<<<
  *                                                    self.__msPiPiPi, MASS_K, self.__num_bins)
  * 
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___ram), __pyx_n_s_generate_energy_histogram); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___ram), __pyx_n_s_generate_energy_histogram); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_ps_pts); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 42, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_ps_pts); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 98, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":43
+  /* "hazma/particles/_decay_charged_kaon.pyx":99
  *         self.__probsPiPiPi \
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,
  *                                                    self.__msPiPiPi, MASS_K, self.__num_bins)             # <<<<<<<<<<<<<<
  * 
  *         self.__probsPi0MuNu \
  */
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 99, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 99, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_t_6 = NULL;
   __pyx_t_7 = 0;
@@ -3059,7 +3057,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[5] = {__pyx_t_6, __pyx_t_5, ((PyObject *)__pyx_v_self->__pyx___msPiPiPi), __pyx_t_4, __pyx_t_1};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3070,7 +3068,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[5] = {__pyx_t_6, __pyx_t_5, ((PyObject *)__pyx_v_self->__pyx___msPiPiPi), __pyx_t_4, __pyx_t_1};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -3079,7 +3077,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   } else
   #endif
   {
-    __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 42, __pyx_L1_error)
+    __pyx_t_8 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     if (__pyx_t_6) {
       __Pyx_GIVEREF(__pyx_t_6); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __pyx_t_6 = NULL;
@@ -3096,22 +3094,22 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     __pyx_t_5 = 0;
     __pyx_t_4 = 0;
     __pyx_t_1 = 0;
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 42, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 98, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":42
+  /* "hazma/particles/_decay_charged_kaon.pyx":98
  * 
  *         self.__probsPiPiPi \
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,             # <<<<<<<<<<<<<<
  *                                                    self.__msPiPiPi, MASS_K, self.__num_bins)
  * 
  */
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 42, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 98, __pyx_L1_error)
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":41
+  /* "hazma/particles/_decay_charged_kaon.pyx":97
  *         self.__ram = rambo.Rambo()
  * 
  *         self.__probsPiPiPi \             # <<<<<<<<<<<<<<
@@ -3124,28 +3122,28 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___probsPiPiPi = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":46
+  /* "hazma/particles/_decay_charged_kaon.pyx":102
  * 
  *         self.__probsPi0MuNu \
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,\             # <<<<<<<<<<<<<<
  *                                                    self.__msPi0MuNu,\
  *                                                    MASS_K, self.__num_bins)
  */
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___ram), __pyx_n_s_generate_energy_histogram); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___ram), __pyx_n_s_generate_energy_histogram); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 102, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_ps_pts); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_ps_pts); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":48
+  /* "hazma/particles/_decay_charged_kaon.pyx":104
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,\
  *                                                    self.__msPi0MuNu,\
  *                                                    MASS_K, self.__num_bins)             # <<<<<<<<<<<<<<
  * 
  *         self.__muon = _decay_muon.Muon()
  */
-  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 48, __pyx_L1_error)
+  __pyx_t_1 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 48, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_self->__pyx___num_bins); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 104, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_t_5 = NULL;
   __pyx_t_7 = 0;
@@ -3162,7 +3160,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[5] = {__pyx_t_5, __pyx_t_8, ((PyObject *)__pyx_v_self->__pyx___msPi0MuNu), __pyx_t_1, __pyx_t_4};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -3173,7 +3171,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
     PyObject *__pyx_temp[5] = {__pyx_t_5, __pyx_t_8, ((PyObject *)__pyx_v_self->__pyx___msPi0MuNu), __pyx_t_1, __pyx_t_4};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-__pyx_t_7, 4+__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -3182,7 +3180,7 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 46, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(4+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_5) {
       __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
@@ -3199,22 +3197,22 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     __pyx_t_8 = 0;
     __pyx_t_1 = 0;
     __pyx_t_4 = 0;
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 46, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":46
+  /* "hazma/particles/_decay_charged_kaon.pyx":102
  * 
  *         self.__probsPi0MuNu \
  *             = self.__ram.generate_energy_histogram(self.__num_ps_pts,\             # <<<<<<<<<<<<<<
  *                                                    self.__msPi0MuNu,\
  *                                                    MASS_K, self.__num_bins)
  */
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 102, __pyx_L1_error)
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":45
+  /* "hazma/particles/_decay_charged_kaon.pyx":101
  *                                                    self.__msPiPiPi, MASS_K, self.__num_bins)
  * 
  *         self.__probsPi0MuNu \             # <<<<<<<<<<<<<<
@@ -3227,14 +3225,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___probsPi0MuNu = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":50
+  /* "hazma/particles/_decay_charged_kaon.pyx":106
  *                                                    MASS_K, self.__num_bins)
  * 
  *         self.__muon = _decay_muon.Muon()             # <<<<<<<<<<<<<<
  *         self.__neuPion = _decay_neutral_pion.NeutralPion()
  *         self.__chrgpi = _decay_charged_pion.ChargedPion()
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_11_decay_muon_Muon), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 50, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_11_decay_muon_Muon), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___muon);
@@ -3242,14 +3240,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___muon = ((struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":51
+  /* "hazma/particles/_decay_charged_kaon.pyx":107
  * 
  *         self.__muon = _decay_muon.Muon()
  *         self.__neuPion = _decay_neutral_pion.NeutralPion()             # <<<<<<<<<<<<<<
  *         self.__chrgpi = _decay_charged_pion.ChargedPion()
  * 
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_19_decay_neutral_pion_NeutralPion), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 51, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_19_decay_neutral_pion_NeutralPion), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___neuPion);
@@ -3257,14 +3255,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___neuPion = ((struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":52
+  /* "hazma/particles/_decay_charged_kaon.pyx":108
  *         self.__muon = _decay_muon.Muon()
  *         self.__neuPion = _decay_neutral_pion.NeutralPion()
  *         self.__chrgpi = _decay_charged_pion.ChargedPion()             # <<<<<<<<<<<<<<
  * 
- *         # K -> pi + pi + pi
+ *         self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \
  */
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_19_decay_charged_pion_ChargedPion), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 52, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_5hazma_9particles_19_decay_charged_pion_ChargedPion), __pyx_empty_tuple, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___chrgpi);
@@ -3272,49 +3270,49 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   __pyx_v_self->__pyx___chrgpi = ((struct __pyx_obj_5hazma_9particles_19_decay_charged_pion_ChargedPion *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":55
+  /* "hazma/particles/_decay_charged_kaon.pyx":110
+ *         self.__chrgpi = _decay_charged_pion.ChargedPion()
  * 
- *         # K -> pi + pi + pi
  *         self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \             # <<<<<<<<<<<<<<
  *                                        self.__chrgpi.SpectrumPoint, \
  *                                        self.__chrgpi.SpectrumPoint])
  */
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_array); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_array); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":56
- *         # K -> pi + pi + pi
+  /* "hazma/particles/_decay_charged_kaon.pyx":111
+ * 
  *         self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \
  *                                        self.__chrgpi.SpectrumPoint, \             # <<<<<<<<<<<<<<
  *                                        self.__chrgpi.SpectrumPoint])
  * 
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 56, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 111, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":57
+  /* "hazma/particles/_decay_charged_kaon.pyx":112
  *         self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \
  *                                        self.__chrgpi.SpectrumPoint, \
  *                                        self.__chrgpi.SpectrumPoint])             # <<<<<<<<<<<<<<
  * 
- *         # K -> pi0 + mu + nu
+ *         self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 57, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":55
+  /* "hazma/particles/_decay_charged_kaon.pyx":110
+ *         self.__chrgpi = _decay_charged_pion.ChargedPion()
  * 
- *         # K -> pi + pi + pi
  *         self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \             # <<<<<<<<<<<<<<
  *                                        self.__chrgpi.SpectrumPoint, \
  *                                        self.__chrgpi.SpectrumPoint])
  */
-  __pyx_t_8 = PyList_New(3); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_t_8 = PyList_New(3); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_GIVEREF(__pyx_t_3);
   PyList_SET_ITEM(__pyx_t_8, 0, __pyx_t_3);
@@ -3336,14 +3334,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     }
   }
   if (!__pyx_t_1) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_6)) {
       PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_8};
-      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -3352,65 +3350,65 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
       PyObject *__pyx_temp[2] = {__pyx_t_1, __pyx_t_8};
-      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     } else
     #endif
     {
-      __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 55, __pyx_L1_error)
+      __pyx_t_4 = PyTuple_New(1+1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 110, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_GIVEREF(__pyx_t_1); PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1); __pyx_t_1 = NULL;
       __Pyx_GIVEREF(__pyx_t_8);
       PyTuple_SET_ITEM(__pyx_t_4, 0+1, __pyx_t_8);
       __pyx_t_8 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_4, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
   }
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 55, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 110, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___funcsPiPiPi);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___funcsPiPiPi));
   __pyx_v_self->__pyx___funcsPiPiPi = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":60
+  /* "hazma/particles/_decay_charged_kaon.pyx":114
+ *                                        self.__chrgpi.SpectrumPoint])
  * 
- *         # K -> pi0 + mu + nu
  *         self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\             # <<<<<<<<<<<<<<
- *                                         self.__neuPion.decay_spectra_point])
+ *                                         self.__neuPion.SpectrumPoint])
  * 
  */
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_array); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_array); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___muon), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___muon), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":61
- *         # K -> pi0 + mu + nu
+  /* "hazma/particles/_decay_charged_kaon.pyx":115
+ * 
  *         self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\
- *                                         self.__neuPion.decay_spectra_point])             # <<<<<<<<<<<<<<
+ *                                         self.__neuPion.SpectrumPoint])             # <<<<<<<<<<<<<<
  * 
  *     def __dealloc__(self):
  */
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___neuPion), __pyx_n_s_decay_spectra_point); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 61, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___neuPion), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 115, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":60
+  /* "hazma/particles/_decay_charged_kaon.pyx":114
+ *                                        self.__chrgpi.SpectrumPoint])
  * 
- *         # K -> pi0 + mu + nu
  *         self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\             # <<<<<<<<<<<<<<
- *                                         self.__neuPion.decay_spectra_point])
+ *                                         self.__neuPion.SpectrumPoint])
  * 
  */
-  __pyx_t_1 = PyList_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 60, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_6);
   PyList_SET_ITEM(__pyx_t_1, 0, __pyx_t_6);
@@ -3429,14 +3427,14 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     }
   }
   if (!__pyx_t_8) {
-    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_GOTREF(__pyx_t_2);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_4)) {
       PyObject *__pyx_temp[2] = {__pyx_t_8, __pyx_t_1};
-      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -3445,38 +3443,38 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
       PyObject *__pyx_temp[2] = {__pyx_t_8, __pyx_t_1};
-      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     } else
     #endif
     {
-      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 60, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_8); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_8); __pyx_t_8 = NULL;
       __Pyx_GIVEREF(__pyx_t_1);
       PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_t_1);
       __pyx_t_1 = 0;
-      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 60, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 60, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 114, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_2);
   __Pyx_GOTREF(__pyx_v_self->__pyx___funcsPi0MuNu);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->__pyx___funcsPi0MuNu));
   __pyx_v_self->__pyx___funcsPi0MuNu = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":25
+  /* "hazma/particles/_decay_charged_kaon.pyx":43
  *         pass
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
- *         self.__num_ps_pts = 1000
- *         self.__num_bins = 10
+ *         """
+ *         Initalized the ChargedKaon object.
  */
 
   /* function exit code */
@@ -3497,8 +3495,8 @@ static int __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_2__cin
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":63
- *                                         self.__neuPion.decay_spectra_point])
+/* "hazma/particles/_decay_charged_kaon.pyx":117
+ *                                         self.__neuPion.SpectrumPoint])
  * 
  *     def __dealloc__(self):             # <<<<<<<<<<<<<<
  *         pass
@@ -3524,12 +3522,12 @@ static void __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_4__de
   __Pyx_RefNannyFinishContext();
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":68
+/* "hazma/particles/_decay_charged_kaon.pyx":121
  * 
- *     """ Integrand for K -> mu + mu """
+ * 
  *     cdef float __integrandMuNu(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float gamma_k = eng_k / MASS_K
+ *         """
+ *         Integrand for K -> X, where X is a two body final state. The X's
  */
 
 static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___integrandMuNu(struct __pyx_obj_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *__pyx_v_self, float __pyx_v_cl, float __pyx_v_eng_gam, float __pyx_v_eng_k) {
@@ -3539,6 +3537,8 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   float __pyx_v_ret_val;
   float __pyx_v_pre_factor;
   double __pyx_v_eng_mu;
+  double __pyx_v_eng_pi;
+  double __pyx_v_eng_pi0;
   float __pyx_r;
   __Pyx_RefNannyDeclarations
   double __pyx_t_1;
@@ -3548,12 +3548,14 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   PyObject *__pyx_t_7 = NULL;
-  int __pyx_t_8;
+  PyObject *__pyx_t_8 = NULL;
   PyObject *__pyx_t_9 = NULL;
+  int __pyx_t_10;
+  PyObject *__pyx_t_11 = NULL;
   __Pyx_RefNannySetupContext("__integrandMuNu", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":70
- *     cdef float __integrandMuNu(self, float cl, float eng_gam, float eng_k):
+  /* "hazma/particles/_decay_charged_kaon.pyx":135
+ *         """
  * 
  *         cdef float gamma_k = eng_k / MASS_K             # <<<<<<<<<<<<<<
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
@@ -3561,11 +3563,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   if (unlikely(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 70, __pyx_L1_error)
+    __PYX_ERR(0, 135, __pyx_L1_error)
   }
   __pyx_v_gamma_k = (__pyx_v_eng_k / __pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":71
+  /* "hazma/particles/_decay_charged_kaon.pyx":136
  * 
  *         cdef float gamma_k = eng_k / MASS_K
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)             # <<<<<<<<<<<<<<
@@ -3574,11 +3576,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   if (unlikely(__pyx_v_eng_k == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 71, __pyx_L1_error)
+    __PYX_ERR(0, 136, __pyx_L1_error)
   }
   __pyx_v_beta_k = sqrt((1.0 - powf((__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K / __pyx_v_eng_k), 2.0)));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":72
+  /* "hazma/particles/_decay_charged_kaon.pyx":137
  *         cdef float gamma_k = eng_k / MASS_K
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
  *         cdef float eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)             # <<<<<<<<<<<<<<
@@ -3587,7 +3589,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_eng_gam_k_rf = ((__pyx_v_eng_gam * __pyx_v_gamma_k) * (1.0 - (__pyx_v_beta_k * __pyx_v_cl)));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":75
+  /* "hazma/particles/_decay_charged_kaon.pyx":140
  * 
  *         cdef int i, j
  *         cdef float ret_val = 0.0             # <<<<<<<<<<<<<<
@@ -3596,50 +3598,162 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_ret_val = 0.0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":78
+  /* "hazma/particles/_decay_charged_kaon.pyx":143
  *         cdef float eng, weight
  *         cdef float pre_factor \
- *             = BR_K_TO_MUNU / (2.0 * gamma_k * (1.0 - beta_k * cl))             # <<<<<<<<<<<<<<
+ *             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))             # <<<<<<<<<<<<<<
  * 
  *         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
  */
   __pyx_t_1 = ((2.0 * __pyx_v_gamma_k) * (1.0 - (__pyx_v_beta_k * __pyx_v_cl)));
   if (unlikely(__pyx_t_1 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 78, __pyx_L1_error)
+    __PYX_ERR(0, 143, __pyx_L1_error)
   }
-  __pyx_v_pre_factor = (__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_MUNU / __pyx_t_1);
+  __pyx_v_pre_factor = (1.0 / __pyx_t_1);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":80
- *             = BR_K_TO_MUNU / (2.0 * gamma_k * (1.0 - beta_k * cl))
+  /* "hazma/particles/_decay_charged_kaon.pyx":145
+ *             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
  * 
  *         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)             # <<<<<<<<<<<<<<
- *         ret_val = self.__muon.SpectrumPoint(eng_gam, eng_mu)
- * 
+ *         eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
+ *         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
  */
   __pyx_t_2 = (powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K, 2.0) + powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_MU, 2.0));
   __pyx_t_1 = (2.0 * __pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K);
   if (unlikely(__pyx_t_1 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 80, __pyx_L1_error)
+    __PYX_ERR(0, 145, __pyx_L1_error)
   }
   __pyx_v_eng_mu = (__pyx_t_2 / __pyx_t_1);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":81
+  /* "hazma/particles/_decay_charged_kaon.pyx":146
  * 
  *         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
- *         ret_val = self.__muon.SpectrumPoint(eng_gam, eng_mu)             # <<<<<<<<<<<<<<
+ *         eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)             # <<<<<<<<<<<<<<
+ *         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
  * 
- *         return pre_factor * ret_val
  */
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___muon), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __pyx_t_2 = ((powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K, 2.0) + powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI, 2.0)) - powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI0, 2.0));
+  __pyx_t_1 = (2.0 * __pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K);
+  if (unlikely(__pyx_t_1 == 0)) {
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+    __PYX_ERR(0, 146, __pyx_L1_error)
+  }
+  __pyx_v_eng_pi = (__pyx_t_2 / __pyx_t_1);
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":147
+ *         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
+ *         eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
+ *         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)             # <<<<<<<<<<<<<<
+ * 
+ *         ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
+ */
+  __pyx_t_2 = ((powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K, 2.0) - powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI, 2.0)) + powf(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_PI0, 2.0));
+  __pyx_t_1 = (2.0 * __pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K);
+  if (unlikely(__pyx_t_1 == 0)) {
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+    __PYX_ERR(0, 147, __pyx_L1_error)
+  }
+  __pyx_v_eng_pi0 = (__pyx_t_2 / __pyx_t_1);
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":149
+ *         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
+ * 
+ *         ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)             # <<<<<<<<<<<<<<
+ *         ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+ *         ret_val += BR_K_TO_PIPI0 * \
+ */
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_MUNU); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_5 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 81, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = PyFloat_FromDouble(__pyx_v_eng_mu); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 81, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___muon), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
+  __pyx_t_7 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
+  __pyx_t_8 = PyFloat_FromDouble(__pyx_v_eng_mu); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  __pyx_t_9 = NULL;
+  __pyx_t_10 = 0;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
+    __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_6);
+    if (likely(__pyx_t_9)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+      __Pyx_INCREF(__pyx_t_9);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_6, function);
+      __pyx_t_10 = 1;
+    }
+  }
+  #if CYTHON_FAST_PYCALL
+  if (PyFunction_Check(__pyx_t_6)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_t_7, __pyx_t_8};
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  #if CYTHON_FAST_PYCCALL
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_9, __pyx_t_7, __pyx_t_8};
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  {
+    __pyx_t_11 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_11);
+    if (__pyx_t_9) {
+      __Pyx_GIVEREF(__pyx_t_9); PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_9); __pyx_t_9 = NULL;
+    }
+    __Pyx_GIVEREF(__pyx_t_7);
+    PyTuple_SET_ITEM(__pyx_t_11, 0+__pyx_t_10, __pyx_t_7);
+    __Pyx_GIVEREF(__pyx_t_8);
+    PyTuple_SET_ITEM(__pyx_t_11, 1+__pyx_t_10, __pyx_t_8);
+    __pyx_t_7 = 0;
+    __pyx_t_8 = 0;
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_11, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+  }
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_t_6 = PyNumber_Multiply(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = PyNumber_InPlaceAdd(__pyx_t_3, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_t_2 = __pyx_PyFloat_AsFloat(__pyx_t_5); if (unlikely((__pyx_t_2 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 149, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_v_ret_val = __pyx_t_2;
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":150
+ * 
+ *         ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
+ *         ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)             # <<<<<<<<<<<<<<
+ *         ret_val += BR_K_TO_PIPI0 * \
+ *             self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
+ */
+  __pyx_t_5 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __pyx_t_6 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_PIPI0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___chrgpi), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_11 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_11);
+  __pyx_t_8 = PyFloat_FromDouble(__pyx_v_eng_pi); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_7 = NULL;
-  __pyx_t_8 = 0;
+  __pyx_t_10 = 0;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_4))) {
     __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_4);
     if (likely(__pyx_t_7)) {
@@ -3647,52 +3761,154 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
       __Pyx_INCREF(__pyx_t_7);
       __Pyx_INCREF(function);
       __Pyx_DECREF_SET(__pyx_t_4, function);
-      __pyx_t_8 = 1;
+      __pyx_t_10 = 1;
     }
   }
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_4)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_7, __pyx_t_5, __pyx_t_6};
-    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 81, __pyx_L1_error)
+    PyObject *__pyx_temp[3] = {__pyx_t_7, __pyx_t_11, __pyx_t_8};
+    __pyx_t_3 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   } else
   #endif
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_7, __pyx_t_5, __pyx_t_6};
-    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_8, 2+__pyx_t_8); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 81, __pyx_L1_error)
+    PyObject *__pyx_temp[3] = {__pyx_t_7, __pyx_t_11, __pyx_t_8};
+    __pyx_t_3 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   } else
   #endif
   {
-    __pyx_t_9 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 81, __pyx_L1_error)
+    __pyx_t_9 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 150, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     if (__pyx_t_7) {
       __Pyx_GIVEREF(__pyx_t_7); PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_7); __pyx_t_7 = NULL;
     }
-    __Pyx_GIVEREF(__pyx_t_5);
-    PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_8, __pyx_t_5);
-    __Pyx_GIVEREF(__pyx_t_6);
-    PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_8, __pyx_t_6);
-    __pyx_t_5 = 0;
-    __pyx_t_6 = 0;
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_9, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 81, __pyx_L1_error)
+    __Pyx_GIVEREF(__pyx_t_11);
+    PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_10, __pyx_t_11);
+    __Pyx_GIVEREF(__pyx_t_8);
+    PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_10, __pyx_t_8);
+    __pyx_t_11 = 0;
+    __pyx_t_8 = 0;
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_9, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_2 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_2 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 81, __pyx_L1_error)
+  __pyx_t_4 = PyNumber_Multiply(__pyx_t_6, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = PyNumber_InPlaceAdd(__pyx_t_5, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 150, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_2 = __pyx_PyFloat_AsFloat(__pyx_t_3); if (unlikely((__pyx_t_2 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 150, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_ret_val = __pyx_t_2;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":83
- *         ret_val = self.__muon.SpectrumPoint(eng_gam, eng_mu)
+  /* "hazma/particles/_decay_charged_kaon.pyx":151
+ *         ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
+ *         ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+ *         ret_val += BR_K_TO_PIPI0 * \             # <<<<<<<<<<<<<<
+ *             self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
+ * 
+ */
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_PIPI0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":152
+ *         ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+ *         ret_val += BR_K_TO_PIPI0 * \
+ *             self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)             # <<<<<<<<<<<<<<
+ * 
+ *         return pre_factor * ret_val
+ */
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self->__pyx___neuPion), __pyx_n_s_SpectrumPoint); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __pyx_t_9 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_9);
+  __pyx_t_8 = PyFloat_FromDouble(__pyx_v_eng_pi0); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_8);
+  __pyx_t_11 = NULL;
+  __pyx_t_10 = 0;
+  if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_6))) {
+    __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_6);
+    if (likely(__pyx_t_11)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+      __Pyx_INCREF(__pyx_t_11);
+      __Pyx_INCREF(function);
+      __Pyx_DECREF_SET(__pyx_t_6, function);
+      __pyx_t_10 = 1;
+    }
+  }
+  #if CYTHON_FAST_PYCALL
+  if (PyFunction_Check(__pyx_t_6)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_11, __pyx_t_9, __pyx_t_8};
+    __pyx_t_5 = __Pyx_PyFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  #if CYTHON_FAST_PYCCALL
+  if (__Pyx_PyFastCFunction_Check(__pyx_t_6)) {
+    PyObject *__pyx_temp[3] = {__pyx_t_11, __pyx_t_9, __pyx_t_8};
+    __pyx_t_5 = __Pyx_PyCFunction_FastCall(__pyx_t_6, __pyx_temp+1-__pyx_t_10, 2+__pyx_t_10); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+  } else
+  #endif
+  {
+    __pyx_t_7 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    if (__pyx_t_11) {
+      __Pyx_GIVEREF(__pyx_t_11); PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_11); __pyx_t_11 = NULL;
+    }
+    __Pyx_GIVEREF(__pyx_t_9);
+    PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_10, __pyx_t_9);
+    __Pyx_GIVEREF(__pyx_t_8);
+    PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_10, __pyx_t_8);
+    __pyx_t_9 = 0;
+    __pyx_t_8 = 0;
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_7, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 152, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+  }
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":151
+ *         ret_val += BR_K_TO_MUNU * self.__muon.SpectrumPoint(eng_gam, eng_mu)
+ *         ret_val += BR_K_TO_PIPI0 * self.__chrgpi.SpectrumPoint(eng_gam, eng_pi)
+ *         ret_val += BR_K_TO_PIPI0 * \             # <<<<<<<<<<<<<<
+ *             self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
+ * 
+ */
+  __pyx_t_6 = PyNumber_Multiply(__pyx_t_4, __pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_t_5 = PyNumber_InPlaceAdd(__pyx_t_3, __pyx_t_6); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  __pyx_t_2 = __pyx_PyFloat_AsFloat(__pyx_t_5); if (unlikely((__pyx_t_2 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  __pyx_v_ret_val = __pyx_t_2;
+
+  /* "hazma/particles/_decay_charged_kaon.pyx":154
+ *             self.__neuPion.SpectrumPoint(eng_gam, eng_pi0)
  * 
  *         return pre_factor * ret_val             # <<<<<<<<<<<<<<
  * 
@@ -3701,12 +3917,12 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __pyx_r = (__pyx_v_pre_factor * __pyx_v_ret_val);
   goto __pyx_L0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":68
+  /* "hazma/particles/_decay_charged_kaon.pyx":121
  * 
- *     """ Integrand for K -> mu + mu """
+ * 
  *     cdef float __integrandMuNu(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float gamma_k = eng_k / MASS_K
+ *         """
+ *         Integrand for K -> X, where X is a two body final state. The X's
  */
 
   /* function exit code */
@@ -3716,7 +3932,9 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
+  __Pyx_XDECREF(__pyx_t_11);
   __Pyx_WriteUnraisable("hazma.particles._decay_charged_kaon.ChargedKaon.__integrandMuNu", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_r = 0;
   __pyx_L0:;
@@ -3724,12 +3942,12 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":87
+/* "hazma/particles/_decay_charged_kaon.pyx":157
  * 
- *     """ Integrand for K -> pi + pi + pi and K -> pi0 + mu + nu """
+ * 
  *     cdef float __integrand3(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float gamma_k = eng_k / MASS_K
+ *         """
+ *         Integrand for K -> X, where X is a three body final state. The X's
  */
 
 static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___integrand3(struct __pyx_obj_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *__pyx_v_self, float __pyx_v_cl, float __pyx_v_eng_gam, float __pyx_v_eng_k) {
@@ -3766,8 +3984,8 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   PyObject *__pyx_t_19 = NULL;
   __Pyx_RefNannySetupContext("__integrand3", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":89
- *     cdef float __integrand3(self, float cl, float eng_gam, float eng_k):
+  /* "hazma/particles/_decay_charged_kaon.pyx":174
+ *         """
  * 
  *         cdef float gamma_k = eng_k / MASS_K             # <<<<<<<<<<<<<<
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
@@ -3775,11 +3993,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   if (unlikely(__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 89, __pyx_L1_error)
+    __PYX_ERR(0, 174, __pyx_L1_error)
   }
   __pyx_v_gamma_k = (__pyx_v_eng_k / __pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":90
+  /* "hazma/particles/_decay_charged_kaon.pyx":175
  * 
  *         cdef float gamma_k = eng_k / MASS_K
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)             # <<<<<<<<<<<<<<
@@ -3788,11 +4006,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   if (unlikely(__pyx_v_eng_k == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 90, __pyx_L1_error)
+    __PYX_ERR(0, 175, __pyx_L1_error)
   }
   __pyx_v_beta_k = sqrt((1.0 - powf((__pyx_v_5hazma_9particles_19_decay_charged_kaon_MASS_K / __pyx_v_eng_k), 2.0)));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":91
+  /* "hazma/particles/_decay_charged_kaon.pyx":176
  *         cdef float gamma_k = eng_k / MASS_K
  *         cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
  *         cdef float eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)             # <<<<<<<<<<<<<<
@@ -3801,7 +4019,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_eng_gam_k_rf = ((__pyx_v_eng_gam * __pyx_v_gamma_k) * (1.0 - (__pyx_v_beta_k * __pyx_v_cl)));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":94
+  /* "hazma/particles/_decay_charged_kaon.pyx":179
  * 
  *         cdef int i, j
  *         cdef float ret_val = 0.0             # <<<<<<<<<<<<<<
@@ -3810,7 +4028,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_ret_val = 0.0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":97
+  /* "hazma/particles/_decay_charged_kaon.pyx":182
  *         cdef float eng, weight
  *         cdef float pre_factor \
  *             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))             # <<<<<<<<<<<<<<
@@ -3820,11 +4038,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __pyx_t_1 = ((2.0 * __pyx_v_gamma_k) * (1.0 - (__pyx_v_beta_k * __pyx_v_cl)));
   if (unlikely(__pyx_t_1 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 97, __pyx_L1_error)
+    __PYX_ERR(0, 182, __pyx_L1_error)
   }
   __pyx_v_pre_factor = (1.0 / __pyx_t_1);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":99
+  /* "hazma/particles/_decay_charged_kaon.pyx":184
  *             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
  * 
  *         cdef int size = max(len(self.__funcsPiPiPi), len(self.__funcsPi0MuNu))             # <<<<<<<<<<<<<<
@@ -3833,11 +4051,11 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_t_2 = ((PyObject *)__pyx_v_self->__pyx___funcsPi0MuNu);
   __Pyx_INCREF(__pyx_t_2);
-  __pyx_t_3 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_3 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 184, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = ((PyObject *)__pyx_v_self->__pyx___funcsPiPiPi);
   __Pyx_INCREF(__pyx_t_2);
-  __pyx_t_4 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 99, __pyx_L1_error)
+  __pyx_t_4 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_4 == ((Py_ssize_t)-1))) __PYX_ERR(0, 184, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   if (((__pyx_t_3 > __pyx_t_4) != 0)) {
     __pyx_t_5 = __pyx_t_3;
@@ -3846,7 +4064,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   }
   __pyx_v_size = __pyx_t_5;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":101
+  /* "hazma/particles/_decay_charged_kaon.pyx":186
  *         cdef int size = max(len(self.__funcsPiPiPi), len(self.__funcsPi0MuNu))
  * 
  *         for i in range(size):             # <<<<<<<<<<<<<<
@@ -3857,7 +4075,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
     __pyx_v_i = __pyx_t_7;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":102
+    /* "hazma/particles/_decay_charged_kaon.pyx":187
  * 
  *         for i in range(size):
  *             for j in range(self.__num_bins):             # <<<<<<<<<<<<<<
@@ -3868,7 +4086,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_8; __pyx_t_9+=1) {
       __pyx_v_j = __pyx_t_9;
 
-      /* "hazma/particles/_decay_charged_kaon.pyx":104
+      /* "hazma/particles/_decay_charged_kaon.pyx":189
  *             for j in range(self.__num_bins):
  *                 # K -> pi + pi + pi
  *                 if i < len(self.__funcsPiPiPi):             # <<<<<<<<<<<<<<
@@ -3877,23 +4095,23 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
       __pyx_t_2 = ((PyObject *)__pyx_v_self->__pyx___funcsPiPiPi);
       __Pyx_INCREF(__pyx_t_2);
-      __pyx_t_5 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 104, __pyx_L1_error)
+      __pyx_t_5 = PyObject_Length(__pyx_t_2); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 189, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_t_10 = ((__pyx_v_i < __pyx_t_5) != 0);
       if (__pyx_t_10) {
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":105
+        /* "hazma/particles/_decay_charged_kaon.pyx":190
  *                 # K -> pi + pi + pi
  *                 if i < len(self.__funcsPiPiPi):
  *                     eng = self.__probsPiPiPi[i, 0, j]             # <<<<<<<<<<<<<<
  *                     weight = self.__probsPiPiPi[i, 1, j]
  *                     ret_val += BR_K_TO_3PI * weight \
  */
-        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
-        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_GIVEREF(__pyx_t_2);
         PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_2);
@@ -3904,25 +4122,25 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_t_11);
         __pyx_t_2 = 0;
         __pyx_t_11 = 0;
-        __pyx_t_11 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPiPiPi), __pyx_t_12); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_11 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPiPiPi), __pyx_t_12); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 190, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
         __pyx_v_eng = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":106
+        /* "hazma/particles/_decay_charged_kaon.pyx":191
  *                 if i < len(self.__funcsPiPiPi):
  *                     eng = self.__probsPiPiPi[i, 0, j]
  *                     weight = self.__probsPiPiPi[i, 1, j]             # <<<<<<<<<<<<<<
  *                     ret_val += BR_K_TO_3PI * weight \
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)
  */
-        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 106, __pyx_L1_error)
+        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 191, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
-        __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 106, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 191, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 191, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_GIVEREF(__pyx_t_11);
         PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_11);
@@ -3933,37 +4151,37 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_t_12);
         __pyx_t_11 = 0;
         __pyx_t_12 = 0;
-        __pyx_t_12 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPiPiPi), __pyx_t_2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 106, __pyx_L1_error)
+        __pyx_t_12 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPiPiPi), __pyx_t_2); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 191, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_12); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 106, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_12); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 191, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __pyx_v_weight = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":107
+        /* "hazma/particles/_decay_charged_kaon.pyx":192
  *                     eng = self.__probsPiPiPi[i, 0, j]
  *                     weight = self.__probsPiPiPi[i, 1, j]
  *                     ret_val += BR_K_TO_3PI * weight \             # <<<<<<<<<<<<<<
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)
  *                 # K -> pi0 + mu + nu
  */
-        __pyx_t_12 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 107, __pyx_L1_error)
+        __pyx_t_12 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 192, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_2 = PyFloat_FromDouble((__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_3PI * __pyx_v_weight)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
+        __pyx_t_2 = PyFloat_FromDouble((__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_3PI * __pyx_v_weight)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 192, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":108
+        /* "hazma/particles/_decay_charged_kaon.pyx":193
  *                     weight = self.__probsPiPiPi[i, 1, j]
  *                     ret_val += BR_K_TO_3PI * weight \
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)             # <<<<<<<<<<<<<<
  *                 # K -> pi0 + mu + nu
  *                 if i < len(self.__funcsPi0MuNu):
  */
-        __pyx_t_14 = __Pyx_GetItemInt(((PyObject *)__pyx_v_self->__pyx___funcsPiPiPi), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_14 = __Pyx_GetItemInt(((PyObject *)__pyx_v_self->__pyx___funcsPiPiPi), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 193, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
-        __pyx_t_15 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_15 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 193, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_16 = PyFloat_FromDouble(__pyx_v_eng); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_16 = PyFloat_FromDouble(__pyx_v_eng); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 193, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_16);
         __pyx_t_17 = NULL;
         __pyx_t_18 = 0;
@@ -3980,7 +4198,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         #if CYTHON_FAST_PYCALL
         if (PyFunction_Check(__pyx_t_14)) {
           PyObject *__pyx_temp[3] = {__pyx_t_17, __pyx_t_15, __pyx_t_16};
-          __pyx_t_11 = __Pyx_PyFunction_FastCall(__pyx_t_14, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 108, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyFunction_FastCall(__pyx_t_14, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 193, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_17); __pyx_t_17 = 0;
           __Pyx_GOTREF(__pyx_t_11);
           __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
@@ -3990,7 +4208,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         #if CYTHON_FAST_PYCCALL
         if (__Pyx_PyFastCFunction_Check(__pyx_t_14)) {
           PyObject *__pyx_temp[3] = {__pyx_t_17, __pyx_t_15, __pyx_t_16};
-          __pyx_t_11 = __Pyx_PyCFunction_FastCall(__pyx_t_14, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 108, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyCFunction_FastCall(__pyx_t_14, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 193, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_17); __pyx_t_17 = 0;
           __Pyx_GOTREF(__pyx_t_11);
           __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
@@ -3998,7 +4216,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         } else
         #endif
         {
-          __pyx_t_19 = PyTuple_New(2+__pyx_t_18); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 108, __pyx_L1_error)
+          __pyx_t_19 = PyTuple_New(2+__pyx_t_18); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 193, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_19);
           if (__pyx_t_17) {
             __Pyx_GIVEREF(__pyx_t_17); PyTuple_SET_ITEM(__pyx_t_19, 0, __pyx_t_17); __pyx_t_17 = NULL;
@@ -4009,32 +4227,32 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
           PyTuple_SET_ITEM(__pyx_t_19, 1+__pyx_t_18, __pyx_t_16);
           __pyx_t_15 = 0;
           __pyx_t_16 = 0;
-          __pyx_t_11 = __Pyx_PyObject_Call(__pyx_t_14, __pyx_t_19, NULL); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 108, __pyx_L1_error)
+          __pyx_t_11 = __Pyx_PyObject_Call(__pyx_t_14, __pyx_t_19, NULL); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 193, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_11);
           __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
         }
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-        __pyx_t_14 = PyNumber_Multiply(__pyx_t_2, __pyx_t_11); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 108, __pyx_L1_error)
+        __pyx_t_14 = PyNumber_Multiply(__pyx_t_2, __pyx_t_11); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 193, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":107
+        /* "hazma/particles/_decay_charged_kaon.pyx":192
  *                     eng = self.__probsPiPiPi[i, 0, j]
  *                     weight = self.__probsPiPiPi[i, 1, j]
  *                     ret_val += BR_K_TO_3PI * weight \             # <<<<<<<<<<<<<<
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)
  *                 # K -> pi0 + mu + nu
  */
-        __pyx_t_11 = PyNumber_InPlaceAdd(__pyx_t_12, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 107, __pyx_L1_error)
+        __pyx_t_11 = PyNumber_InPlaceAdd(__pyx_t_12, __pyx_t_14); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 192, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 107, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_11); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 192, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
         __pyx_v_ret_val = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":104
+        /* "hazma/particles/_decay_charged_kaon.pyx":189
  *             for j in range(self.__num_bins):
  *                 # K -> pi + pi + pi
  *                 if i < len(self.__funcsPiPiPi):             # <<<<<<<<<<<<<<
@@ -4043,7 +4261,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
       }
 
-      /* "hazma/particles/_decay_charged_kaon.pyx":110
+      /* "hazma/particles/_decay_charged_kaon.pyx":195
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)
  *                 # K -> pi0 + mu + nu
  *                 if i < len(self.__funcsPi0MuNu):             # <<<<<<<<<<<<<<
@@ -4052,23 +4270,23 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
       __pyx_t_11 = ((PyObject *)__pyx_v_self->__pyx___funcsPi0MuNu);
       __Pyx_INCREF(__pyx_t_11);
-      __pyx_t_5 = PyObject_Length(__pyx_t_11); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 110, __pyx_L1_error)
+      __pyx_t_5 = PyObject_Length(__pyx_t_11); if (unlikely(__pyx_t_5 == ((Py_ssize_t)-1))) __PYX_ERR(0, 195, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       __pyx_t_10 = ((__pyx_v_i < __pyx_t_5) != 0);
       if (__pyx_t_10) {
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":111
+        /* "hazma/particles/_decay_charged_kaon.pyx":196
  *                 # K -> pi0 + mu + nu
  *                 if i < len(self.__funcsPi0MuNu):
  *                     eng = self.__probsPi0MuNu[i, 0, j]             # <<<<<<<<<<<<<<
  *                     weight = self.__probsPi0MuNu[i, 1, j]
  *                     ret_val += BR_K_TO_PI0MUNU * weight \
  */
-        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_11 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 196, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
-        __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 196, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
-        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_12 = PyTuple_New(3); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 196, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_GIVEREF(__pyx_t_11);
         PyTuple_SET_ITEM(__pyx_t_12, 0, __pyx_t_11);
@@ -4079,25 +4297,25 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         PyTuple_SET_ITEM(__pyx_t_12, 2, __pyx_t_14);
         __pyx_t_11 = 0;
         __pyx_t_14 = 0;
-        __pyx_t_14 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPi0MuNu), __pyx_t_12); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_14 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPi0MuNu), __pyx_t_12); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 196, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 196, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_v_eng = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":112
+        /* "hazma/particles/_decay_charged_kaon.pyx":197
  *                 if i < len(self.__funcsPi0MuNu):
  *                     eng = self.__probsPi0MuNu[i, 0, j]
  *                     weight = self.__probsPi0MuNu[i, 1, j]             # <<<<<<<<<<<<<<
  *                     ret_val += BR_K_TO_PI0MUNU * weight \
  *                         * self.__funcsPi0MuNu[i](eng_gam, eng)
  */
-        __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_14 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 197, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
-        __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyInt_From_int(__pyx_v_j); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 197, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_11 = PyTuple_New(3); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_11 = PyTuple_New(3); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 197, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
         __Pyx_GIVEREF(__pyx_t_14);
         PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_t_14);
@@ -4108,37 +4326,37 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         PyTuple_SET_ITEM(__pyx_t_11, 2, __pyx_t_12);
         __pyx_t_14 = 0;
         __pyx_t_12 = 0;
-        __pyx_t_12 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPi0MuNu), __pyx_t_11); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_12 = PyObject_GetItem(((PyObject *)__pyx_v_self->__pyx___probsPi0MuNu), __pyx_t_11); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 197, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_12); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_12); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 197, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __pyx_v_weight = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":113
+        /* "hazma/particles/_decay_charged_kaon.pyx":198
  *                     eng = self.__probsPi0MuNu[i, 0, j]
  *                     weight = self.__probsPi0MuNu[i, 1, j]
  *                     ret_val += BR_K_TO_PI0MUNU * weight \             # <<<<<<<<<<<<<<
  *                         * self.__funcsPi0MuNu[i](eng_gam, eng)
  * 
  */
-        __pyx_t_12 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_12 = PyFloat_FromDouble(__pyx_v_ret_val); if (unlikely(!__pyx_t_12)) __PYX_ERR(0, 198, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_12);
-        __pyx_t_11 = PyFloat_FromDouble((__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_PI0MUNU * __pyx_v_weight)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_11 = PyFloat_FromDouble((__pyx_v_5hazma_9particles_19_decay_charged_kaon_BR_K_TO_PI0MUNU * __pyx_v_weight)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 198, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":114
+        /* "hazma/particles/_decay_charged_kaon.pyx":199
  *                     weight = self.__probsPi0MuNu[i, 1, j]
  *                     ret_val += BR_K_TO_PI0MUNU * weight \
  *                         * self.__funcsPi0MuNu[i](eng_gam, eng)             # <<<<<<<<<<<<<<
  * 
  *         return pre_factor * ret_val
  */
-        __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_self->__pyx___funcsPi0MuNu), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_self->__pyx___funcsPi0MuNu), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_19 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_19 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_19)) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_19);
-        __pyx_t_16 = PyFloat_FromDouble(__pyx_v_eng); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_16 = PyFloat_FromDouble(__pyx_v_eng); if (unlikely(!__pyx_t_16)) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_16);
         __pyx_t_15 = NULL;
         __pyx_t_18 = 0;
@@ -4155,7 +4373,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         #if CYTHON_FAST_PYCALL
         if (PyFunction_Check(__pyx_t_2)) {
           PyObject *__pyx_temp[3] = {__pyx_t_15, __pyx_t_19, __pyx_t_16};
-          __pyx_t_14 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_14 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 199, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
           __Pyx_GOTREF(__pyx_t_14);
           __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
@@ -4165,7 +4383,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         #if CYTHON_FAST_PYCCALL
         if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
           PyObject *__pyx_temp[3] = {__pyx_t_15, __pyx_t_19, __pyx_t_16};
-          __pyx_t_14 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_14 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_18, 2+__pyx_t_18); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 199, __pyx_L1_error)
           __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
           __Pyx_GOTREF(__pyx_t_14);
           __Pyx_DECREF(__pyx_t_19); __pyx_t_19 = 0;
@@ -4173,7 +4391,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
         } else
         #endif
         {
-          __pyx_t_17 = PyTuple_New(2+__pyx_t_18); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_17 = PyTuple_New(2+__pyx_t_18); if (unlikely(!__pyx_t_17)) __PYX_ERR(0, 199, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_17);
           if (__pyx_t_15) {
             __Pyx_GIVEREF(__pyx_t_15); PyTuple_SET_ITEM(__pyx_t_17, 0, __pyx_t_15); __pyx_t_15 = NULL;
@@ -4184,32 +4402,32 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
           PyTuple_SET_ITEM(__pyx_t_17, 1+__pyx_t_18, __pyx_t_16);
           __pyx_t_19 = 0;
           __pyx_t_16 = 0;
-          __pyx_t_14 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_17, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 114, __pyx_L1_error)
+          __pyx_t_14 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_17, NULL); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 199, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_14);
           __Pyx_DECREF(__pyx_t_17); __pyx_t_17 = 0;
         }
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_2 = PyNumber_Multiply(__pyx_t_11, __pyx_t_14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_2 = PyNumber_Multiply(__pyx_t_11, __pyx_t_14); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 199, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":113
+        /* "hazma/particles/_decay_charged_kaon.pyx":198
  *                     eng = self.__probsPi0MuNu[i, 0, j]
  *                     weight = self.__probsPi0MuNu[i, 1, j]
  *                     ret_val += BR_K_TO_PI0MUNU * weight \             # <<<<<<<<<<<<<<
  *                         * self.__funcsPi0MuNu[i](eng_gam, eng)
  * 
  */
-        __pyx_t_14 = PyNumber_InPlaceAdd(__pyx_t_12, __pyx_t_2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_14 = PyNumber_InPlaceAdd(__pyx_t_12, __pyx_t_2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 198, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_13 = __pyx_PyFloat_AsFloat(__pyx_t_14); if (unlikely((__pyx_t_13 == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 198, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_v_ret_val = __pyx_t_13;
 
-        /* "hazma/particles/_decay_charged_kaon.pyx":110
+        /* "hazma/particles/_decay_charged_kaon.pyx":195
  *                         * self.__funcsPiPiPi[i](eng_gam, eng)
  *                 # K -> pi0 + mu + nu
  *                 if i < len(self.__funcsPi0MuNu):             # <<<<<<<<<<<<<<
@@ -4220,7 +4438,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
     }
   }
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":116
+  /* "hazma/particles/_decay_charged_kaon.pyx":201
  *                         * self.__funcsPi0MuNu[i](eng_gam, eng)
  * 
  *         return pre_factor * ret_val             # <<<<<<<<<<<<<<
@@ -4230,12 +4448,12 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __pyx_r = (__pyx_v_pre_factor * __pyx_v_ret_val);
   goto __pyx_L0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":87
+  /* "hazma/particles/_decay_charged_kaon.pyx":157
  * 
- *     """ Integrand for K -> pi + pi + pi and K -> pi0 + mu + nu """
+ * 
  *     cdef float __integrand3(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float gamma_k = eng_k / MASS_K
+ *         """
+ *         Integrand for K -> X, where X is a three body final state. The X's
  */
 
   /* function exit code */
@@ -4255,12 +4473,12 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":120
+/* "hazma/particles/_decay_charged_kaon.pyx":204
  * 
- *     """ Integrand for K -> sum_{X} X """
+ * 
  *     cdef float __integrand(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float ret_val = 0.0
+ *         """
+ *         Integrand for K -> X, where X is a any final state. The X's
  */
 
 static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___integrand(struct __pyx_obj_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *__pyx_v_self, float __pyx_v_cl, float __pyx_v_eng_gam, float __pyx_v_eng_k) {
@@ -4269,8 +4487,8 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__integrand", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":122
- *     cdef float __integrand(self, float cl, float eng_gam, float eng_k):
+  /* "hazma/particles/_decay_charged_kaon.pyx":222
+ *         """
  * 
  *         cdef float ret_val = 0.0             # <<<<<<<<<<<<<<
  * 
@@ -4278,7 +4496,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_ret_val = 0.0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":124
+  /* "hazma/particles/_decay_charged_kaon.pyx":224
  *         cdef float ret_val = 0.0
  * 
  *         ret_val += self.__integrandMuNu(cl, eng_gam, eng_k)             # <<<<<<<<<<<<<<
@@ -4287,7 +4505,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_ret_val = (__pyx_v_ret_val + ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrandMuNu(__pyx_v_self, __pyx_v_cl, __pyx_v_eng_gam, __pyx_v_eng_k));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":125
+  /* "hazma/particles/_decay_charged_kaon.pyx":225
  * 
  *         ret_val += self.__integrandMuNu(cl, eng_gam, eng_k)
  *         ret_val += self.__integrand3(cl, eng_gam, eng_k)             # <<<<<<<<<<<<<<
@@ -4296,7 +4514,7 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
  */
   __pyx_v_ret_val = (__pyx_v_ret_val + ((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrand3(__pyx_v_self, __pyx_v_cl, __pyx_v_eng_gam, __pyx_v_eng_k));
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":127
+  /* "hazma/particles/_decay_charged_kaon.pyx":227
  *         ret_val += self.__integrand3(cl, eng_gam, eng_k)
  * 
  *         return ret_val             # <<<<<<<<<<<<<<
@@ -4306,12 +4524,12 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   __pyx_r = __pyx_v_ret_val;
   goto __pyx_L0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":120
+  /* "hazma/particles/_decay_charged_kaon.pyx":204
  * 
- *     """ Integrand for K -> sum_{X} X """
+ * 
  *     cdef float __integrand(self, float cl, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
- * 
- *         cdef float ret_val = 0.0
+ *         """
+ *         Integrand for K -> X, where X is a any final state. The X's
  */
 
   /* function exit code */
@@ -4320,17 +4538,17 @@ static float __pyx_f_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon___int
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":130
+/* "hazma/particles/_decay_charged_kaon.pyx":230
  * 
  * 
  *     def SpectrumPoint(self, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
  *         """
- *         Returns the radiative spectrum value from charged kaon.
+ *         Returns the radiative spectrum value from charged kaon at
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_7SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_6SpectrumPoint[] = "\n        Returns the radiative spectrum value from charged kaon.\n        ";
+static char __pyx_doc_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_6SpectrumPoint[] = "\n        Returns the radiative spectrum value from charged kaon at\n        a single gamma ray energy.\n\n        Keyword arguments::\n            eng_gam: Energy of photon is laboratory frame.\n            eng_k: Energy of charged kaon in laboratory frame.\n        ";
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_7SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   float __pyx_v_eng_gam;
   float __pyx_v_eng_k;
@@ -4360,11 +4578,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_k)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, 1); __PYX_ERR(0, 130, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, 1); __PYX_ERR(0, 230, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "SpectrumPoint") < 0)) __PYX_ERR(0, 130, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "SpectrumPoint") < 0)) __PYX_ERR(0, 230, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -4372,12 +4590,12 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_eng_gam = __pyx_PyFloat_AsFloat(values[0]); if (unlikely((__pyx_v_eng_gam == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 130, __pyx_L3_error)
-    __pyx_v_eng_k = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_eng_k == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 130, __pyx_L3_error)
+    __pyx_v_eng_gam = __pyx_PyFloat_AsFloat(values[0]); if (unlikely((__pyx_v_eng_gam == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 230, __pyx_L3_error)
+    __pyx_v_eng_k = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_eng_k == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 230, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 130, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 230, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("hazma.particles._decay_charged_kaon.ChargedKaon.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4404,8 +4622,8 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   PyObject *__pyx_t_7 = NULL;
   __Pyx_RefNannySetupContext("SpectrumPoint", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":134
- *         Returns the radiative spectrum value from charged kaon.
+  /* "hazma/particles/_decay_charged_kaon.pyx":239
+ *             eng_k: Energy of charged kaon in laboratory frame.
  *         """
  *         cdef float result = 0.0             # <<<<<<<<<<<<<<
  * 
@@ -4413,16 +4631,16 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
  */
   __pyx_v_result = 0.0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":136
+  /* "hazma/particles/_decay_charged_kaon.pyx":241
  *         cdef float result = 0.0
  * 
  *         integrand = partial(self.__integrand, self)             # <<<<<<<<<<<<<<
  * 
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  */
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 136, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 241, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_CFunc_float____ChargedKaon____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 136, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CFunc_float____ChargedKaon____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 241, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -4439,7 +4657,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 136, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 241, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4448,14 +4666,14 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 136, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 241, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 136, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 241, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -4466,7 +4684,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
     __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
     PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, ((PyObject *)__pyx_v_self));
     __pyx_t_3 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 136, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 241, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
@@ -4474,7 +4692,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   __pyx_v_integrand = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":138
+  /* "hazma/particles/_decay_charged_kaon.pyx":243
  *         integrand = partial(self.__integrand, self)
  * 
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
@@ -4482,9 +4700,9 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
  *                       epsrel=10**-4.)[0]
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_integrand);
   __Pyx_GIVEREF(__pyx_v_integrand);
@@ -4495,9 +4713,9 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   __Pyx_INCREF(__pyx_float_1_0);
   __Pyx_GIVEREF(__pyx_float_1_0);
   PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_float_1_0);
-  __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_3 = PyList_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_3 = PyList_New(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_float_neg_1_0);
   __Pyx_GIVEREF(__pyx_float_neg_1_0);
@@ -4505,21 +4723,21 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   __Pyx_INCREF(__pyx_float_1_0);
   __Pyx_GIVEREF(__pyx_float_1_0);
   PyList_SET_ITEM(__pyx_t_3, 1, __pyx_float_1_0);
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_points, __pyx_t_3) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_points, __pyx_t_3) < 0) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":139
+  /* "hazma/particles/_decay_charged_kaon.pyx":244
  * 
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                       args=(eng_gam, eng_k), epsabs=10**-10., \             # <<<<<<<<<<<<<<
  *                       epsrel=10**-4.)[0]
  * 
  */
-  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_3 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_eng_k); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_4 = PyFloat_FromDouble(__pyx_v_eng_k); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_3);
@@ -4527,58 +4745,58 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   PyTuple_SET_ITEM(__pyx_t_7, 1, __pyx_t_4);
   __pyx_t_3 = 0;
   __pyx_t_4 = 0;
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_args, __pyx_t_7) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_args, __pyx_t_7) < 0) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
-  __pyx_t_7 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 139, __pyx_L1_error)
+  __pyx_t_7 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 244, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_7) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_7) < 0) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":140
+  /* "hazma/particles/_decay_charged_kaon.pyx":245
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                       args=(eng_gam, eng_k), epsabs=10**-10., \
  *                       epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_7 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_7 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 245, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
-  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_7) < 0) __PYX_ERR(0, 138, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_7) < 0) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":138
+  /* "hazma/particles/_decay_charged_kaon.pyx":243
  *         integrand = partial(self.__integrand, self)
  * 
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                       args=(eng_gam, eng_k), epsabs=10**-10., \
  *                       epsrel=10**-4.)[0]
  */
-  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 138, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_2, __pyx_t_6); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 243, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":140
+  /* "hazma/particles/_decay_charged_kaon.pyx":245
  *         return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                       args=(eng_gam, eng_k), epsabs=10**-10., \
  *                       epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 140, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_7, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 245, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __pyx_r = __pyx_t_6;
   __pyx_t_6 = 0;
   goto __pyx_L0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":130
+  /* "hazma/particles/_decay_charged_kaon.pyx":230
  * 
  * 
  *     def SpectrumPoint(self, float eng_gam, float eng_k):             # <<<<<<<<<<<<<<
  *         """
- *         Returns the radiative spectrum value from charged kaon.
+ *         Returns the radiative spectrum value from charged kaon at
  */
 
   /* function exit code */
@@ -4598,17 +4816,17 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   return __pyx_r;
 }
 
-/* "hazma/particles/_decay_charged_kaon.pyx":143
+/* "hazma/particles/_decay_charged_kaon.pyx":248
  * 
  * 
  *     def Spectrum(self, np.ndarray eng_gams, float eng_k):             # <<<<<<<<<<<<<<
  *         """
- *         Returns the radiative spectrum dNde from charged kaon.
+ *         Returns the radiative spectrum dNde from charged kaon for a
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_9Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_8Spectrum[] = "\n        Returns the radiative spectrum dNde from charged kaon.\n\n        Keyword arguments::\n            engGamMin: Minimum energy of photon is laboratory frame.\n            engGamMax: Minimum energy of photon is laboratory frame.\n            engPi: Energy of charged pion in laboratory frame.\n        ";
+static char __pyx_doc_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_8Spectrum[] = "\n        Returns the radiative spectrum dNde from charged kaon for a\n        list of gamma ray energies.\n\n        Keyword arguments::\n            eng_gams: List of energies of photon in laboratory frame.\n            eng_k: Energy of charged kaon in laboratory frame.\n        ";
 static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_9Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_eng_gams = 0;
   float __pyx_v_eng_k;
@@ -4638,11 +4856,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_k)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, 1); __PYX_ERR(0, 143, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, 1); __PYX_ERR(0, 248, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "Spectrum") < 0)) __PYX_ERR(0, 143, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "Spectrum") < 0)) __PYX_ERR(0, 248, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -4651,17 +4869,17 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
     __pyx_v_eng_gams = ((PyArrayObject *)values[0]);
-    __pyx_v_eng_k = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_eng_k == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 143, __pyx_L3_error)
+    __pyx_v_eng_k = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_eng_k == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 248, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 143, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 248, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("hazma.particles._decay_charged_kaon.ChargedKaon.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_eng_gams), __pyx_ptype_5numpy_ndarray, 1, "eng_gams", 0))) __PYX_ERR(0, 143, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_eng_gams), __pyx_ptype_5numpy_ndarray, 1, "eng_gams", 0))) __PYX_ERR(0, 248, __pyx_L1_error)
   __pyx_r = __pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_8Spectrum(((struct __pyx_obj_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self), __pyx_v_eng_gams, __pyx_v_eng_k);
 
   /* function exit code */
@@ -4692,8 +4910,8 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   PyObject *__pyx_t_9 = NULL;
   __Pyx_RefNannySetupContext("Spectrum", 0);
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":152
- *             engPi: Energy of charged pion in laboratory frame.
+  /* "hazma/particles/_decay_charged_kaon.pyx":257
+ *             eng_k: Energy of charged kaon in laboratory frame.
  *         """
  *         cdef float result = 0.0             # <<<<<<<<<<<<<<
  * 
@@ -4701,16 +4919,16 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
  */
   __pyx_v_result = 0.0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":154
+  /* "hazma/particles/_decay_charged_kaon.pyx":259
  *         cdef float result = 0.0
  * 
  *         integrand = partial(self.__integrand, self)             # <<<<<<<<<<<<<<
  * 
  *         cdef int numpts = len(eng_gams)
  */
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 259, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_CFunc_float____ChargedKaon____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 154, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CFunc_float____ChargedKaon____float____float____float___to_py(((struct __pyx_vtabstruct_5hazma_9particles_19_decay_charged_kaon_ChargedKaon *)__pyx_v_self->__pyx_vtab)->__pyx___integrand); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 259, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = NULL;
   __pyx_t_5 = 0;
@@ -4727,7 +4945,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 259, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4736,14 +4954,14 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_2)) {
     PyObject *__pyx_temp[3] = {__pyx_t_4, __pyx_t_3, ((PyObject *)__pyx_v_self)};
-    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_2, __pyx_temp+1-__pyx_t_5, 2+__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 259, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2+__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 259, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_4) {
       __Pyx_GIVEREF(__pyx_t_4); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_4); __pyx_t_4 = NULL;
@@ -4754,7 +4972,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
     __Pyx_GIVEREF(((PyObject *)__pyx_v_self));
     PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_5, ((PyObject *)__pyx_v_self));
     __pyx_t_3 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 259, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
@@ -4762,54 +4980,54 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   __pyx_v_integrand = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":156
+  /* "hazma/particles/_decay_charged_kaon.pyx":261
  *         integrand = partial(self.__integrand, self)
  * 
  *         cdef int numpts = len(eng_gams)             # <<<<<<<<<<<<<<
  * 
  *         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)
  */
-  __pyx_t_7 = PyObject_Length(((PyObject *)__pyx_v_eng_gams)); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 156, __pyx_L1_error)
+  __pyx_t_7 = PyObject_Length(((PyObject *)__pyx_v_eng_gams)); if (unlikely(__pyx_t_7 == ((Py_ssize_t)-1))) __PYX_ERR(0, 261, __pyx_L1_error)
   __pyx_v_numpts = __pyx_t_7;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":158
+  /* "hazma/particles/_decay_charged_kaon.pyx":263
  *         cdef int numpts = len(eng_gams)
  * 
  *         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)             # <<<<<<<<<<<<<<
  * 
  *         cdef int i = 0
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_zeros); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_numpts); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_numpts); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_float32); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 158, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_4) < 0) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 158, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_6, __pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 263, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 158, __pyx_L1_error)
+  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 263, __pyx_L1_error)
   __pyx_v_spec = ((PyArrayObject *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":160
+  /* "hazma/particles/_decay_charged_kaon.pyx":265
  *         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)
  * 
  *         cdef int i = 0             # <<<<<<<<<<<<<<
@@ -4818,7 +5036,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
  */
   __pyx_v_i = 0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":162
+  /* "hazma/particles/_decay_charged_kaon.pyx":267
  *         cdef int i = 0
  * 
  *         for i in range(numpts):             # <<<<<<<<<<<<<<
@@ -4829,16 +5047,16 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_5; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":163
+    /* "hazma/particles/_decay_charged_kaon.pyx":268
  * 
  *         for i in range(numpts):
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \
  *                            epsrel=10**-4.)[0]
  */
-    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_INCREF(__pyx_v_integrand);
     __Pyx_GIVEREF(__pyx_v_integrand);
@@ -4849,9 +5067,9 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
     __Pyx_INCREF(__pyx_float_1_0);
     __Pyx_GIVEREF(__pyx_float_1_0);
     PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_float_1_0);
-    __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_2 = PyList_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_2 = PyList_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_float_neg_1_0);
     __Pyx_GIVEREF(__pyx_float_neg_1_0);
@@ -4859,21 +5077,21 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
     __Pyx_INCREF(__pyx_float_1_0);
     __Pyx_GIVEREF(__pyx_float_1_0);
     PyList_SET_ITEM(__pyx_t_2, 1, __pyx_float_1_0);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_points, __pyx_t_2) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_points, __pyx_t_2) < 0) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":164
+    /* "hazma/particles/_decay_charged_kaon.pyx":269
  *         for i in range(numpts):
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \             # <<<<<<<<<<<<<<
  *                            epsrel=10**-4.)[0]
  * 
  */
-    __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_eng_gams), __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 269, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_eng_k); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_eng_k); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 269, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_9 = PyTuple_New(2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_9 = PyTuple_New(2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 269, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_GIVEREF(__pyx_t_2);
     PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_2);
@@ -4881,61 +5099,61 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
     PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_t_3);
     __pyx_t_2 = 0;
     __pyx_t_3 = 0;
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_args, __pyx_t_9) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_args, __pyx_t_9) < 0) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __pyx_t_9 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 164, __pyx_L1_error)
+    __pyx_t_9 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 269, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_9) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsabs, __pyx_t_9) < 0) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":165
+    /* "hazma/particles/_decay_charged_kaon.pyx":270
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \
  *                            epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return spec
  */
-    __pyx_t_9 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 165, __pyx_L1_error)
+    __pyx_t_9 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
-    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_9) < 0) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_epsrel, __pyx_t_9) < 0) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":163
+    /* "hazma/particles/_decay_charged_kaon.pyx":268
  * 
  *         for i in range(numpts):
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \
  *                            epsrel=10**-4.)[0]
  */
-    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 163, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_1, __pyx_t_6); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":165
+    /* "hazma/particles/_decay_charged_kaon.pyx":270
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \
  *                            epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return spec
  */
-    __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_9, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-    /* "hazma/particles/_decay_charged_kaon.pyx":163
+    /* "hazma/particles/_decay_charged_kaon.pyx":268
  * 
  *         for i in range(numpts):
  *             spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                            args=(eng_gams[i], eng_k), epsabs=10**-10., \
  *                            epsrel=10**-4.)[0]
  */
-    if (unlikely(__Pyx_SetItemInt(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_6, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) < 0)) __PYX_ERR(0, 163, __pyx_L1_error)
+    if (unlikely(__Pyx_SetItemInt(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_6, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) < 0)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":167
+  /* "hazma/particles/_decay_charged_kaon.pyx":272
  *                            epsrel=10**-4.)[0]
  * 
  *         return spec             # <<<<<<<<<<<<<<
@@ -4945,12 +5163,12 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_charged_kaon_11ChargedKaon_
   __pyx_r = ((PyObject *)__pyx_v_spec);
   goto __pyx_L0;
 
-  /* "hazma/particles/_decay_charged_kaon.pyx":143
+  /* "hazma/particles/_decay_charged_kaon.pyx":248
  * 
  * 
  *     def Spectrum(self, np.ndarray eng_gams, float eng_k):             # <<<<<<<<<<<<<<
  *         """
- *         Returns the radiative spectrum dNde from charged kaon.
+ *         Returns the radiative spectrum dNde from charged kaon for a
  */
 
   /* function exit code */
@@ -20844,7 +21062,7 @@ static PyTypeObject __pyx_type_5hazma_9particles_19_decay_charged_kaon_ChargedKa
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
-  "\n    Class for computing the photon spectrum from radiative kaon decay.\n    ", /*tp_doc*/
+  "\n    Class for computing the photon spectrum from radiative kaon decay.\n\n    Description:\n        The charged kaon has many decay modes:\n\n            k -> mu  + nu\n            k -> pi  + pi0\n            k -> pi  + pi  + pi\n            k -> pi0 + e   + nu\n            k -> pi0 + mu  + nu\n            k -> pi  + pi0 + pi0\n\n        For the the two-body final states, the sum of the decay spectra are\n        computed given the known energies of the final state particles in the\n        kaon's rest frame. The spectrum is then boosted into the lab frame.\n\n        For the three-body final state, the energies of the final state\n        particles are computed using RAMBO. The spectra for each final state\n        particle is computed are each point in phases space in the charged kaon's rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.\n    ", /*tp_doc*/
   __pyx_tp_traverse_5hazma_9particles_19_decay_charged_kaon_ChargedKaon, /*tp_traverse*/
   __pyx_tp_clear_5hazma_9particles_19_decay_charged_kaon_ChargedKaon, /*tp_clear*/
   0, /*tp_richcompare*/
@@ -21707,7 +21925,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_kp_s_contiguous_and_direct, __pyx_k_contiguous_and_direct, sizeof(__pyx_k_contiguous_and_direct), 0, 0, 1, 0},
   {&__pyx_kp_s_contiguous_and_indirect, __pyx_k_contiguous_and_indirect, sizeof(__pyx_k_contiguous_and_indirect), 0, 0, 1, 0},
-  {&__pyx_n_s_decay_spectra_point, __pyx_k_decay_spectra_point, sizeof(__pyx_k_decay_spectra_point), 0, 0, 1, 1},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_dtype_is_object, __pyx_k_dtype_is_object, sizeof(__pyx_k_dtype_is_object), 0, 0, 1, 1},
@@ -21793,7 +22010,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 101, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 186, __pyx_L1_error)
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(1, 2, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(2, 235, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(2, 823, __pyx_L1_error)

@@ -1671,8 +1671,8 @@ static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_zeros;
 static int __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2decay_spectra_point(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
-static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4decay_spectra(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
+static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
+static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_6__reduce_cython__(struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_8__setstate_cython__(struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion___pyx_unpickle_NeutralPion(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
@@ -1730,20 +1730,20 @@ static int __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion___init
 /* "hazma/particles/_decay_neutral_pion.pyx":17
  * 
  *     @cython.cdivision(True)
- *     def decay_spectra_point(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
+ *     def SpectrumPoint(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
  *         """
  *         Returns decay spectrum for pi0 -> g g.
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3decay_spectra_point(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2decay_spectra_point[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
-static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3decay_spectra_point(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2SpectrumPoint[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
+static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_eng_gam = 0;
   float __pyx_v_eng_pi;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("decay_spectra_point (wrapper)", 0);
+  __Pyx_RefNannySetupContext("SpectrumPoint (wrapper)", 0);
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_eng_gam,&__pyx_n_s_eng_pi,0};
     PyObject* values[2] = {0,0};
@@ -1767,11 +1767,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_pi)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("decay_spectra_point", 1, 2, 2, 1); __PYX_ERR(0, 17, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, 1); __PYX_ERR(0, 17, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "decay_spectra_point") < 0)) __PYX_ERR(0, 17, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "SpectrumPoint") < 0)) __PYX_ERR(0, 17, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -1784,20 +1784,20 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("decay_spectra_point", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 17, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 17, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.decay_spectra_point", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2decay_spectra_point(((struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
+  __pyx_r = __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2SpectrumPoint(((struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2decay_spectra_point(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
+static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
   float __pyx_v_beta;
   float __pyx_v_ret_val;
   PyObject *__pyx_r = NULL;
@@ -1806,7 +1806,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   PyObject *__pyx_t_2 = NULL;
   PyObject *__pyx_t_3 = NULL;
   int __pyx_t_4;
-  __Pyx_RefNannySetupContext("decay_spectra_point", 0);
+  __Pyx_RefNannySetupContext("SpectrumPoint", 0);
 
   /* "hazma/particles/_decay_neutral_pion.pyx":21
  *         Returns decay spectrum for pi0 -> g g.
@@ -1905,7 +1905,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   /* "hazma/particles/_decay_neutral_pion.pyx":17
  * 
  *     @cython.cdivision(True)
- *     def decay_spectra_point(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
+ *     def SpectrumPoint(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
  *         """
  *         Returns decay spectrum for pi0 -> g g.
  */
@@ -1914,7 +1914,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.decay_spectra_point", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1925,20 +1925,20 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
 /* "hazma/particles/_decay_neutral_pion.pyx":32
  * 
  *     @cython.cdivision(True)
- *     def decay_spectra(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
+ *     def Spectrum(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
  *         """
  *         Returns decay spectrum for pi0 -> g g.
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5decay_spectra(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4decay_spectra[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
-static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5decay_spectra(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4Spectrum[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
+static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_eng_gam = 0;
   float __pyx_v_eng_pi;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("decay_spectra (wrapper)", 0);
+  __Pyx_RefNannySetupContext("Spectrum (wrapper)", 0);
   {
     static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_eng_gam,&__pyx_n_s_eng_pi,0};
     PyObject* values[2] = {0,0};
@@ -1962,11 +1962,11 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_pi)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("decay_spectra", 1, 2, 2, 1); __PYX_ERR(0, 32, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, 1); __PYX_ERR(0, 32, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "decay_spectra") < 0)) __PYX_ERR(0, 32, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "Spectrum") < 0)) __PYX_ERR(0, 32, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
@@ -1979,14 +1979,14 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("decay_spectra", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 32, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 32, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.decay_spectra", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_eng_gam), __pyx_ptype_5numpy_ndarray, 1, "eng_gam", 0))) __PYX_ERR(0, 32, __pyx_L1_error)
-  __pyx_r = __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4decay_spectra(((struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
+  __pyx_r = __pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4Spectrum(((struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1997,7 +1997,7 @@ static PyObject *__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4decay_spectra(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
+static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_19_decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
   float __pyx_v_beta;
   int __pyx_v_numpts;
   PyArrayObject *__pyx_v_spec = 0;
@@ -2015,7 +2015,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   int __pyx_t_8;
   int __pyx_t_9;
   int __pyx_t_10;
-  __Pyx_RefNannySetupContext("decay_spectra", 0);
+  __Pyx_RefNannySetupContext("Spectrum", 0);
 
   /* "hazma/particles/_decay_neutral_pion.pyx":36
  *         Returns decay spectrum for pi0 -> g g.
@@ -2215,7 +2215,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   /* "hazma/particles/_decay_neutral_pion.pyx":32
  * 
  *     @cython.cdivision(True)
- *     def decay_spectra(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
+ *     def Spectrum(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
  *         """
  *         Returns decay spectrum for pi0 -> g g.
  */
@@ -2227,7 +2227,7 @@ static PyObject *__pyx_pf_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.decay_spectra", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.particles._decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_spec);
@@ -5579,8 +5579,8 @@ static void __pyx_tp_dealloc_5hazma_9particles_19_decay_neutral_pion_NeutralPion
 }
 
 static PyMethodDef __pyx_methods_5hazma_9particles_19_decay_neutral_pion_NeutralPion[] = {
-  {"decay_spectra_point", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3decay_spectra_point, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2decay_spectra_point},
-  {"decay_spectra", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5decay_spectra, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4decay_spectra},
+  {"SpectrumPoint", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_3SpectrumPoint, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_2SpectrumPoint},
+  {"Spectrum", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_5Spectrum, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_4Spectrum},
   {"__reduce_cython__", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_7__reduce_cython__, METH_NOARGS, 0},
   {"__setstate_cython__", (PyCFunction)__pyx_pw_5hazma_9particles_19_decay_neutral_pion_11NeutralPion_9__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
