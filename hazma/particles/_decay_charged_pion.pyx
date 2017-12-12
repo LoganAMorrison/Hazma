@@ -1,23 +1,12 @@
-from ._decay_muon import Muon
+cimport _decay_muon
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
-from libc.math cimport exp, log, M_PI, log10, sqrt
+from libc.math cimport exp, log, M_PI, log10, sqrt, abs
 import cython
 from functools import partial
 include "parameters.pxd"
-
-
-cdef float engGamMaxMuRF = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
-cdef float engMuPiRF = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
-
-mu = Muon()
-
-cdef np.ndarray eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=float)
-
-mu_spec = mu.Spectrum(eng_gams_mu, engMuPiRF)
-__muSpectrum = interp1d(eng_gams_mu, mu_spec, kind='linear')
 
 cdef class ChargedPion:
     """
@@ -26,6 +15,23 @@ cdef class ChargedPion:
 
     def __init__(self):
         pass
+
+    def __cinit__(self):
+        self.__engGamMaxMuRF = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
+        self.__engMuPiRF = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
+
+        self.__eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=float)
+
+        self.__muon = _decay_muon.Muon()
+
+        self.__mu_spec = self.__muon.Spectrum(self.__eng_gams_mu,\
+                                              self.__engMuPiRF)
+
+    def __dealloc__(self):
+        pass
+
+    cdef float __muSpectrum(self, float eng_gam):
+        return np.interp(eng_gam, self.__eng_gams_mu, self.__mu_spec)
 
     @cython.cdivision(True)
     cdef float __Gamma(self, float eng, float mass):
@@ -67,15 +73,15 @@ cdef class ChargedPion:
         cdef float betaPi = self.__Beta(engPi, MASS_PI)
         cdef float gammaPi = self.__Gamma(engPi, MASS_PI)
 
-        cdef float betaMu = self.__Beta(engMuPiRF, MASS_MU)
-        cdef float gammaMu = self.__Gamma(engMuPiRF, MASS_MU)
+        cdef float betaMu = self.__Beta(self.__engMuPiRF, MASS_MU)
+        cdef float gammaMu = self.__Gamma(self.__engMuPiRF, MASS_MU)
 
-        return engGamMaxMuRF * gammaPi * gammaMu * \
+        return self.__engGamMaxMuRF * gammaPi * gammaMu * \
             (1.0 + betaPi) * (1.0 + betaMu)
 
 
     @cython.cdivision(True)
-    cdef float __Integrand(self, float cl, float engGam, float engPi):
+    cdef float __integrand(self, float cl, float eng_gam, float eng_pi):
         """
         Returns the integrand of the differential radiative decay spectrum for
         the charged pion.
@@ -85,24 +91,17 @@ cdef class ChargedPion:
             engPi: Energy of photon in laboratory frame.
             engPi: Energy of pion in laboratory frame.
         """
-        cdef float betaPi = self.__Beta(engPi, MASS_PI)
-        cdef float gammaPi = self.__Gamma(engPi, MASS_PI)
+        cdef float betaPi = self.__Beta(eng_pi, MASS_PI)
+        cdef float gammaPi = self.__Gamma(eng_pi, MASS_PI)
 
-        cdef float engGamPiRF = engGam * gammaPi * (1.0 - betaPi * cl)
-
-        # cdef float gamBound = engGamMaxMuRF * gammaPi * (1.0 + betaPi)
+        cdef float engGamPiRF = eng_gam * gammaPi * (1.0 - betaPi * cl)
 
         cdef float preFactor = BR_PI_TO_MUNU \
-            / (2.0 * gammaPi * np.abs(1.0 - betaPi * cl))
+            / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
 
-        # cdef float result = 0.0
+        return preFactor * self.__muSpectrum(engGamPiRF)
 
-        # if 0.0 < engGamPiRF and engGamPiRF < gamBound:
-        #     result = preFactor * __muSpectrum(engGamPiRF)
-
-        return preFactor * __muSpectrum(engGamPiRF)
-
-    def SpectrumPoint(self, float engGam, float engPi):
+    def SpectrumPoint(self, float eng_gam, float eng_pi):
         """
         Returns the radiative spectrum value from charged pion given a gamma
         ray energy Egam and charged pion energy Epi energy eng_mu. When the
@@ -110,15 +109,17 @@ cdef class ChargedPion:
         mu spectrum is computed.
 
         Keyword arguments::
-            engGam: Energy of photon is laboratory frame.
-            engPi: Energy of charged pion in laboratory frame.
+            eng_gam: Energy of photon is laboratory frame.
+            eng_pi: Energy of charged pion in laboratory frame.
         """
         cdef float result = 0.0
 
-        integrand = partial(self.__Integrand, self)
+        integrand = partial(self.__integrand, self)
 
-        if 0.0 <= engGam and engGam <= self.__EngGamMax(engPi):
-            result = quad(integrand, -1.0, 1.0, args=(engGam, engPi))[0]
+        if 0.0 <= eng_gam and eng_gam <= self.__EngGamMax(eng_pi):
+            result = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                          args=(eng_gam, eng_pi), epsabs=10**-4., \
+                          epsrel=10**-10.)[0]
 
         return result
 
@@ -137,7 +138,7 @@ cdef class ChargedPion:
         """
         cdef float result = 0.0
 
-        integrand = partial(self.__Integrand, self)
+        integrand = partial(self.__integrand, self)
 
         cdef int numpts = len(eng_gams)
 
@@ -147,6 +148,8 @@ cdef class ChargedPion:
 
         for i in range(numpts):
             if 0.0 <= eng_gams[i] and eng_gams[i] <= self.__EngGamMax(eng_pi):
-                spec[i] = quad(integrand, -1.0, 1.0, args=(eng_gams[i], eng_pi))[0]
+                spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                               args=(eng_gams[i], eng_pi), epsabs=10**-4., \
+                               epsrel=10**-10.)[0]
 
         return spec

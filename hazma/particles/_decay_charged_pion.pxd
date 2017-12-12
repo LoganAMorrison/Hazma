@@ -1,6 +1,16 @@
+cimport _decay_muon
+import numpy as np
+cimport numpy as np
+
 cdef class ChargedPion:
     cdef float __Gamma(self, float eng, float mass)
     cdef float __Beta(self, float eng, float mass)
     cdef float __EngGamMax(self, float engPi)
     cdef float __Integrand(self, float cl, float engGam, float engPi)
-    cdef float engGamMaxMuRF
+    cdef float __engGamMaxMuRF
+    cdef float __engMuPiRF
+    cdef float __muSpectrum(self, float eng_gam)
+
+    cdef _decay_muon.Muon __muon
+    cdef np.ndarray __eng_gams_mu
+    cdef np.ndarray __mu_spec

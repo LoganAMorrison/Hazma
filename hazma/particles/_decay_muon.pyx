@@ -130,7 +130,8 @@ cdef class Muon:
         integrand = partial(self.__Integrand, self)
 
         if 0 <= engGam and engGam <= engGamMax:
-            result = quad(integrand, -1.0, 1.0, args=(engGam, engMu))[0]
+            result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
+                points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
 
         return result
 
@@ -161,6 +162,8 @@ cdef class Muon:
 
         for i in range(numpts):
             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
-                spec[i] = quad(integrand, -1.0, 1.0, args=(eng_gams[i], eng_mu))[0]
+                spec[i] = quad(integrand, -1.0, 1.0, \
+                               args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
+                               epsabs=10**-4., epsrel=10**-10.)[0]
 
         return spec
