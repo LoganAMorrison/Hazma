@@ -55,12 +55,12 @@ cdef class ChargedPion:
         """
         return sqrt(1.0 - (mass / eng)**2.0)
 
-    cdef float __eng_gam_max(self, float engPi):
+    cdef float __eng_gam_max(self, float eng_pi):
         """
         Returns the maximum allowed gamma ray energy from a charged pion decay.
 
         Keyword arguments::
-            engPi: Energy of pion in laboratory frame.
+            eng_pi: Energy of pion in laboratory frame.
 
         More details:
             This is computed using the fact that in the mu restframe, the
@@ -70,8 +70,8 @@ cdef class ChargedPion:
             Then, boosting into the pion rest frame, then to the mu rest
             frame, we get the maximum allowed energy in the lab frame.
         """
-        cdef float betaPi = self.__beta(engPi, MASS_PI)
-        cdef float gammaPi = self.__gamma(engPi, MASS_PI)
+        cdef float betaPi = self.__beta(eng_pi, MASS_PI)
+        cdef float gammaPi = self.__gamma(eng_pi, MASS_PI)
 
         cdef float betaMu = self.__beta(self.__eng_mu_pi_rf, MASS_MU)
         cdef float gammaMu = self.__gamma(self.__eng_mu_pi_rf, MASS_MU)
@@ -104,7 +104,7 @@ cdef class ChargedPion:
     def SpectrumPoint(self, float eng_gam, float eng_pi):
         """
         Returns the radiative spectrum value from charged pion given a gamma
-        ray energy Egam and charged pion energy Epi energy eng_mu. When the
+        ray energy eng_gam and charged pion energy eng_pi. When the
         ChargedPion object is instatiated, an interplating function for the
         mu spectrum is computed.
 
@@ -127,14 +127,13 @@ cdef class ChargedPion:
     def Spectrum(self, np.ndarray eng_gams, float eng_pi):
         """
         Returns the radiative spectrum dNde from charged pion given a gamma
-        ray energy Egam and charged pion energy Epi energy eng_mu. When the
-        ChargedPion object is instatiated, an interplating function for the
-        mu spectrum is computed.
+        ray energies eng_gams and charged pion energy eng_pi.
+        When the ChargedPion object is instatiated, an interplating function
+        for the mu spectrum is computed.
 
         Keyword arguments::
-            engGamMin: Minimum energy of photon is laboratory frame.
-            engGamMax: Minimum energy of photon is laboratory frame.
-            engPi: Energy of charged pion in laboratory frame.
+            eng_gams: Gamma ray energies to evaluate spectrum.
+            eng_pi: Energy of charged pion in laboratory frame.
         """
         cdef float result = 0.0
 
