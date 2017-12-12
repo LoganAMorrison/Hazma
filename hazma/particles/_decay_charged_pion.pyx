@@ -118,8 +118,8 @@ cdef class ChargedPion:
 
         if 0.0 <= eng_gam and eng_gam <= self.__eng_gam_max(eng_pi):
             result = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                          args=(eng_gam, eng_pi), epsabs=10**-4., \
-                          epsrel=10**-10.)[0]
+                          args=(eng_gam, eng_pi), epsabs=10**-10., \
+                          epsrel=10**-4.)[0]
 
         return result
 
@@ -148,7 +148,7 @@ cdef class ChargedPion:
         for i in range(numpts):
             if 0.0 <= eng_gams[i] and eng_gams[i] <= self.__eng_gam_max(eng_pi):
                 spec[i] = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                               args=(eng_gams[i], eng_pi), epsabs=10**-4., \
-                               epsrel=10**-10.)[0]
+                               args=(eng_gams[i], eng_pi), epsabs=10**-10., \
+                               epsrel=10**-4.)[0]
 
         return spec

@@ -110,7 +110,7 @@ cdef class Muon:
         return self.__dBdy((2.0 / MASS_MU) * engGamMuRF) \
             / (engMu * (1.0 - cl * beta))
 
-    def SpectrumPoint(self, float engGam, float engMu):
+    def SpectrumPoint(self, float eng_gam, float eng_mu):
         """
         Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
         laborartory frame.
@@ -121,17 +121,17 @@ cdef class Muon:
         """
         cdef float result = 0.0
 
-        cdef float beta = self.__Beta(engMu, MASS_MU)
-        cdef float gamma = self.__Gamma(engMu, MASS_MU)
+        cdef float beta = self.__Beta(eng_mu, MASS_MU)
+        cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
 
         cdef float engGamMax = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
             * gamma * (1.0 + beta)
 
         integrand = partial(self.__Integrand, self)
 
-        if 0 <= engGam and engGam <= engGamMax:
-            result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
-                points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+        if 0 <= eng_gam and eng_gam <= engGamMax:
+            result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+                points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
 
         return result
 
@@ -164,6 +164,6 @@ cdef class Muon:
             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
                 spec[i] = quad(integrand, -1.0, 1.0, \
                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
-                               epsabs=10**-4., epsrel=10**-10.)[0]
+                               epsabs=10**-10., epsrel=10**-4.)[0]
 
         return spec

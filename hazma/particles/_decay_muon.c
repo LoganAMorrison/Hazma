@@ -1717,6 +1717,7 @@ static const char __pyx_k_pickle[] = "pickle";
 static const char __pyx_k_points[] = "points";
 static const char __pyx_k_reduce[] = "__reduce__";
 static const char __pyx_k_update[] = "update";
+static const char __pyx_k_eng_gam[] = "eng_gam";
 static const char __pyx_k_float32[] = "float32";
 static const char __pyx_k_partial[] = "partial";
 static const char __pyx_k_eng_gams[] = "eng_gams";
@@ -1769,6 +1770,7 @@ static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_engGam;
 static PyObject *__pyx_n_s_engMu;
+static PyObject *__pyx_n_s_eng_gam;
 static PyObject *__pyx_n_s_eng_gams;
 static PyObject *__pyx_n_s_eng_mu;
 static PyObject *__pyx_n_s_epsabs;
@@ -1813,7 +1815,7 @@ static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_wrap;
 static PyObject *__pyx_n_s_zeros;
 static int __pyx_pf_5hazma_9particles_11_decay_muon_4Muon___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, float __pyx_v_engGam, float __pyx_v_engMu); /* proto */
+static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, float __pyx_v_eng_gam, float __pyx_v_eng_mu); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, PyArrayObject *__pyx_v_eng_gams, float __pyx_v_eng_mu); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_6__reduce_cython__(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_8__setstate_cython__(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
@@ -2277,7 +2279,7 @@ static float __pyx_f_5hazma_9particles_11_decay_muon_4Muon___Integrand(struct __
  *         return self.__dBdy((2.0 / MASS_MU) * engGamMuRF) \
  *             / (engMu * (1.0 - cl * beta))             # <<<<<<<<<<<<<<
  * 
- *     def SpectrumPoint(self, float engGam, float engMu):
+ *     def SpectrumPoint(self, float eng_gam, float eng_mu):
  */
   __pyx_r = (((struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self->__pyx_vtab)->__pyx___dBdy(__pyx_v_self, ((2.0 / __pyx_v_5hazma_9particles_11_decay_muon_MASS_MU) * __pyx_v_engGamMuRF)) / (__pyx_v_engMu * (1.0 - (__pyx_v_cl * __pyx_v_beta))));
   goto __pyx_L0;
@@ -2299,7 +2301,7 @@ static float __pyx_f_5hazma_9particles_11_decay_muon_4Muon___Integrand(struct __
 /* "hazma/particles/_decay_muon.pyx":113
  *             / (engMu * (1.0 - cl * beta))
  * 
- *     def SpectrumPoint(self, float engGam, float engMu):             # <<<<<<<<<<<<<<
+ *     def SpectrumPoint(self, float eng_gam, float eng_mu):             # <<<<<<<<<<<<<<
  *         """
  *         Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
  */
@@ -2308,13 +2310,13 @@ static float __pyx_f_5hazma_9particles_11_decay_muon_4Muon___Integrand(struct __
 static PyObject *__pyx_pw_5hazma_9particles_11_decay_muon_4Muon_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static char __pyx_doc_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint[] = "\n        Compute dN_{\\gamma}/dE_{\\gamma} from mu -> e nu nu gamma in the\n        laborartory frame.\n\n        Keyword arguments::\n            engGam -- Gamma ray energy in laboratory frame.\n            engMu -- Muon energy in laboratory frame.\n        ";
 static PyObject *__pyx_pw_5hazma_9particles_11_decay_muon_4Muon_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  float __pyx_v_engGam;
-  float __pyx_v_engMu;
+  float __pyx_v_eng_gam;
+  float __pyx_v_eng_mu;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("SpectrumPoint (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_engGam,&__pyx_n_s_engMu,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_eng_gam,&__pyx_n_s_eng_mu,0};
     PyObject* values[2] = {0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -2330,11 +2332,11 @@ static PyObject *__pyx_pw_5hazma_9particles_11_decay_muon_4Muon_3SpectrumPoint(P
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_engGam)) != 0)) kw_args--;
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_gam)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_engMu)) != 0)) kw_args--;
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_mu)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, 1); __PYX_ERR(0, 113, __pyx_L3_error)
         }
@@ -2348,8 +2350,8 @@ static PyObject *__pyx_pw_5hazma_9particles_11_decay_muon_4Muon_3SpectrumPoint(P
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_engGam = __pyx_PyFloat_AsFloat(values[0]); if (unlikely((__pyx_v_engGam == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
-    __pyx_v_engMu = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_engMu == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
+    __pyx_v_eng_gam = __pyx_PyFloat_AsFloat(values[0]); if (unlikely((__pyx_v_eng_gam == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
+    __pyx_v_eng_mu = __pyx_PyFloat_AsFloat(values[1]); if (unlikely((__pyx_v_eng_mu == (float)-1) && PyErr_Occurred())) __PYX_ERR(0, 113, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
@@ -2359,14 +2361,14 @@ static PyObject *__pyx_pw_5hazma_9particles_11_decay_muon_4Muon_3SpectrumPoint(P
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(((struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self), __pyx_v_engGam, __pyx_v_engMu);
+  __pyx_r = __pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(((struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_mu);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, float __pyx_v_engGam, float __pyx_v_engMu) {
+static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *__pyx_v_self, float __pyx_v_eng_gam, float __pyx_v_eng_mu) {
   float __pyx_v_result;
   float __pyx_v_beta;
   float __pyx_v_gamma;
@@ -2392,30 +2394,30 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
  *         """
  *         cdef float result = 0.0             # <<<<<<<<<<<<<<
  * 
- *         cdef float beta = self.__Beta(engMu, MASS_MU)
+ *         cdef float beta = self.__Beta(eng_mu, MASS_MU)
  */
   __pyx_v_result = 0.0;
 
   /* "hazma/particles/_decay_muon.pyx":124
  *         cdef float result = 0.0
  * 
- *         cdef float beta = self.__Beta(engMu, MASS_MU)             # <<<<<<<<<<<<<<
- *         cdef float gamma = self.__Gamma(engMu, MASS_MU)
+ *         cdef float beta = self.__Beta(eng_mu, MASS_MU)             # <<<<<<<<<<<<<<
+ *         cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
  * 
  */
-  __pyx_v_beta = ((struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self->__pyx_vtab)->__pyx___Beta(__pyx_v_self, __pyx_v_engMu, __pyx_v_5hazma_9particles_11_decay_muon_MASS_MU);
+  __pyx_v_beta = ((struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self->__pyx_vtab)->__pyx___Beta(__pyx_v_self, __pyx_v_eng_mu, __pyx_v_5hazma_9particles_11_decay_muon_MASS_MU);
 
   /* "hazma/particles/_decay_muon.pyx":125
  * 
- *         cdef float beta = self.__Beta(engMu, MASS_MU)
- *         cdef float gamma = self.__Gamma(engMu, MASS_MU)             # <<<<<<<<<<<<<<
+ *         cdef float beta = self.__Beta(eng_mu, MASS_MU)
+ *         cdef float gamma = self.__Gamma(eng_mu, MASS_MU)             # <<<<<<<<<<<<<<
  * 
  *         cdef float engGamMax = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
  */
-  __pyx_v_gamma = ((struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self->__pyx_vtab)->__pyx___Gamma(__pyx_v_self, __pyx_v_engMu, __pyx_v_5hazma_9particles_11_decay_muon_MASS_MU);
+  __pyx_v_gamma = ((struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *)__pyx_v_self->__pyx_vtab)->__pyx___Gamma(__pyx_v_self, __pyx_v_eng_mu, __pyx_v_5hazma_9particles_11_decay_muon_MASS_MU);
 
   /* "hazma/particles/_decay_muon.pyx":127
- *         cdef float gamma = self.__Gamma(engMu, MASS_MU)
+ *         cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
  * 
  *         cdef float engGamMax = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \             # <<<<<<<<<<<<<<
  *             * gamma * (1.0 + beta)
@@ -2441,7 +2443,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
  * 
  *         integrand = partial(self.__Integrand, self)             # <<<<<<<<<<<<<<
  * 
- *         if 0 <= engGam and engGam <= engGamMax:
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:
  */
   __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_partial); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 130, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
@@ -2500,26 +2502,26 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
   /* "hazma/particles/_decay_muon.pyx":132
  *         integrand = partial(self.__Integrand, self)
  * 
- *         if 0 <= engGam and engGam <= engGamMax:             # <<<<<<<<<<<<<<
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:             # <<<<<<<<<<<<<<
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
  */
-  __pyx_t_9 = ((0.0 <= __pyx_v_engGam) != 0);
+  __pyx_t_9 = ((0.0 <= __pyx_v_eng_gam) != 0);
   if (__pyx_t_9) {
   } else {
     __pyx_t_8 = __pyx_t_9;
     goto __pyx_L4_bool_binop_done;
   }
-  __pyx_t_9 = ((__pyx_v_engGam <= __pyx_v_engGamMax) != 0);
+  __pyx_t_9 = ((__pyx_v_eng_gam <= __pyx_v_engGamMax) != 0);
   __pyx_t_8 = __pyx_t_9;
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_8) {
 
     /* "hazma/particles/_decay_muon.pyx":133
  * 
- *         if 0 <= engGam and engGam <= engGamMax:
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \             # <<<<<<<<<<<<<<
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \             # <<<<<<<<<<<<<<
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
  * 
  */
     __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 133, __pyx_L1_error)
@@ -2537,9 +2539,9 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
     PyTuple_SET_ITEM(__pyx_t_3, 2, __pyx_float_1_0);
     __pyx_t_7 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
-    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_engGam); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_eng_gam); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyFloat_FromDouble(__pyx_v_engMu); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 133, __pyx_L1_error)
+    __pyx_t_5 = PyFloat_FromDouble(__pyx_v_eng_mu); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_10 = PyTuple_New(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
@@ -2553,9 +2555,9 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
 
     /* "hazma/particles/_decay_muon.pyx":134
- *         if 0 <= engGam and engGam <= engGamMax:
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]             # <<<<<<<<<<<<<<
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return result
  */
@@ -2569,20 +2571,20 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
     PyList_SET_ITEM(__pyx_t_10, 1, __pyx_float_1_0);
     if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_points, __pyx_t_10) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_epsabs, __pyx_t_10) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 134, __pyx_L1_error)
+    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 134, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     if (PyDict_SetItem(__pyx_t_7, __pyx_n_s_epsrel, __pyx_t_10) < 0) __PYX_ERR(0, 133, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
 
     /* "hazma/particles/_decay_muon.pyx":133
  * 
- *         if 0 <= engGam and engGam <= engGamMax:
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \             # <<<<<<<<<<<<<<
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \             # <<<<<<<<<<<<<<
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
  * 
  */
     __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_t_3, __pyx_t_7); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 133, __pyx_L1_error)
@@ -2592,9 +2594,9 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
     /* "hazma/particles/_decay_muon.pyx":134
- *         if 0 <= engGam and engGam <= engGamMax:
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]             # <<<<<<<<<<<<<<
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return result
  */
@@ -2608,14 +2610,14 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
     /* "hazma/particles/_decay_muon.pyx":132
  *         integrand = partial(self.__Integrand, self)
  * 
- *         if 0 <= engGam and engGam <= engGamMax:             # <<<<<<<<<<<<<<
- *             result = quad(integrand, -1.0, 1.0, args=(engGam, engMu), \
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+ *         if 0 <= eng_gam and eng_gam <= engGamMax:             # <<<<<<<<<<<<<<
+ *             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
  */
   }
 
   /* "hazma/particles/_decay_muon.pyx":136
- *                 points=[-1.0, 1.0], epsabs=10**-4., epsrel=10**-10.)[0]
+ *                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
  * 
  *         return result             # <<<<<<<<<<<<<<
  * 
@@ -2631,7 +2633,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_2SpectrumPoint(s
   /* "hazma/particles/_decay_muon.pyx":113
  *             / (engMu * (1.0 - cl * beta))
  * 
- *     def SpectrumPoint(self, float engGam, float engMu):             # <<<<<<<<<<<<<<
+ *     def SpectrumPoint(self, float eng_gam, float eng_mu):             # <<<<<<<<<<<<<<
  *         """
  *         Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
  */
@@ -2943,7 +2945,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
  *             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
  *                 spec[i] = quad(integrand, -1.0, 1.0, \             # <<<<<<<<<<<<<<
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
- *                                epsabs=10**-4., epsrel=10**-10.)[0]
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]
  */
       __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 165, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
@@ -2963,7 +2965,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
  *             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
  *                 spec[i] = quad(integrand, -1.0, 1.0, \
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
- *                                epsabs=10**-4., epsrel=10**-10.)[0]
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]
  * 
  */
       __pyx_t_2 = __Pyx_PyDict_NewPresized(4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 166, __pyx_L1_error)
@@ -2996,15 +2998,15 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
       /* "hazma/particles/_decay_muon.pyx":167
  *                 spec[i] = quad(integrand, -1.0, 1.0, \
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
- *                                epsabs=10**-4., epsrel=10**-10.)[0]             # <<<<<<<<<<<<<<
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return spec
  */
-      __pyx_t_11 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 167, __pyx_L1_error)
+      __pyx_t_11 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 167, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_epsabs, __pyx_t_11) < 0) __PYX_ERR(0, 166, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      __pyx_t_11 = PyFloat_FromDouble(pow(10.0, -10.)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 167, __pyx_L1_error)
+      __pyx_t_11 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 167, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_epsrel, __pyx_t_11) < 0) __PYX_ERR(0, 166, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
@@ -3014,7 +3016,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
  *             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
  *                 spec[i] = quad(integrand, -1.0, 1.0, \             # <<<<<<<<<<<<<<
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
- *                                epsabs=10**-4., epsrel=10**-10.)[0]
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]
  */
       __pyx_t_11 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_6, __pyx_t_2); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 165, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
@@ -3025,7 +3027,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
       /* "hazma/particles/_decay_muon.pyx":167
  *                 spec[i] = quad(integrand, -1.0, 1.0, \
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
- *                                epsabs=10**-4., epsrel=10**-10.)[0]             # <<<<<<<<<<<<<<
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *         return spec
  */
@@ -3038,7 +3040,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
  *             if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
  *                 spec[i] = quad(integrand, -1.0, 1.0, \             # <<<<<<<<<<<<<<
  *                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
- *                                epsabs=10**-4., epsrel=10**-10.)[0]
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]
  */
       if (unlikely(__Pyx_SetItemInt(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_2, int, 1, __Pyx_PyInt_From_int, 0, 1, 1) < 0)) __PYX_ERR(0, 165, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -3054,7 +3056,7 @@ static PyObject *__pyx_pf_5hazma_9particles_11_decay_muon_4Muon_4Spectrum(struct
   }
 
   /* "hazma/particles/_decay_muon.pyx":169
- *                                epsabs=10**-4., epsrel=10**-10.)[0]
+ *                                epsabs=10**-10., epsrel=10**-4.)[0]
  * 
  *         return spec             # <<<<<<<<<<<<<<
  */
@@ -6850,6 +6852,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_engGam, __pyx_k_engGam, sizeof(__pyx_k_engGam), 0, 0, 1, 1},
   {&__pyx_n_s_engMu, __pyx_k_engMu, sizeof(__pyx_k_engMu), 0, 0, 1, 1},
+  {&__pyx_n_s_eng_gam, __pyx_k_eng_gam, sizeof(__pyx_k_eng_gam), 0, 0, 1, 1},
   {&__pyx_n_s_eng_gams, __pyx_k_eng_gams, sizeof(__pyx_k_eng_gams), 0, 0, 1, 1},
   {&__pyx_n_s_eng_mu, __pyx_k_eng_mu, sizeof(__pyx_k_eng_mu), 0, 0, 1, 1},
   {&__pyx_n_s_epsabs, __pyx_k_epsabs, sizeof(__pyx_k_epsabs), 0, 0, 1, 1},
