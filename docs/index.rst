@@ -8,11 +8,11 @@ Welcome to Hazma's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 3
-
-   Description.rst
-   Modules.rst
-   Usage.rst
+    :maxdepth: 2
+    
+    Description.rst
+    Modules.rst
+    Usage.rst
 
 
 
