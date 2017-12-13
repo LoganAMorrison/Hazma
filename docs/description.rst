@@ -41,7 +41,7 @@ Integrating over angles yields the gamma ray spectrum in the lab frame:
     \dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}
     \dfrac{dB}{dE_{\gamma}^{R\mu}}
 
-.. image:: _static/figures/muon_decay_spectra.png
+.. image:: figures/muon_decay_spectra.png
    :alt: Gamma ray spectrum from radiative muon decay
    :align: center
 
@@ -89,7 +89,7 @@ The limits on the photon energy are given by
     0 \leq E_{\gamma}^{L} \leq \dfrac{m_{\mu}^2 - m_{e}^2}{2m_{\mu}}
     \gamma_{1}\gamma_{2}(1+\beta_{1})(1+\beta_{2})
 
-.. image:: _static/figures/charged_pion_decay_spectrum.png
+.. image:: figures/charged_pion_decay_spectrum.png
    :alt: Gamma ray spectrum from radiative muon decay
    :align: center
 
