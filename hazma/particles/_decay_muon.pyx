@@ -91,7 +91,7 @@ cdef class Muon:
         return sqrt(1.0 - (mass / eng)**2.0)
 
     @cython.cdivision(True)
-    cdef float __Integrand(self, float cl, float engGam, float engMu):
+    cdef float __integrand(self, float cl, float engGam, float engMu):
         """
         Compute integrand of dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma
         in laboratory frame. The integration variable is cl - the angle between
@@ -116,20 +116,20 @@ cdef class Muon:
         laborartory frame.
 
         Keyword arguments::
-            engGam -- Gamma ray energy in laboratory frame.
-            engMu -- Muon energy in laboratory frame.
+            eng_gam (float) -- Gamma ray energy in laboratory frame.
+            eng_mu (float) -- Muon energy in laboratory frame.
         """
         cdef float result = 0.0
 
         cdef float beta = self.__Beta(eng_mu, MASS_MU)
         cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
 
-        cdef float engGamMax = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
+        cdef float eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
             * gamma * (1.0 + beta)
 
-        integrand = partial(self.__Integrand, self)
+        integrand = partial(self.__integrand, self)
 
-        if 0 <= eng_gam and eng_gam <= engGamMax:
+        if 0 <= eng_gam and eng_gam <= eng_gam_max:
             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
 
@@ -140,12 +140,20 @@ cdef class Muon:
     @cython.cdivision(True)
     def Spectrum(self, np.ndarray eng_gams, float eng_mu):
         """
-        Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
-        laborartory frame.
+        Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
 
-        Keyword arguments::
-            engGam -- Gamma ray energy in laboratory frame.
-            engMu -- Muon energy in laboratory frame.
+        Paramaters
+        ----------
+        eng_gams : np.ndarray
+            List of gamma ray energies in laboratory frame.
+        eng_mu : float
+            Muon energy in laboratory frame.
+
+        Returns
+        -------
+        spec : np.ndarray
+            List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
+            given muon energy `eng_mu`.
         """
         cdef float result = 0.0
         cdef int numpts = len(eng_gams)
@@ -153,15 +161,15 @@ cdef class Muon:
         cdef float beta = self.__Beta(eng_mu, MASS_MU)
         cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
 
-        cdef float engGamMaxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
+        cdef float eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
             / (2.0 * MASS_MU) * gamma * (1.0 + beta)
 
         cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)
 
-        integrand = partial(self.__Integrand, self)
+        integrand = partial(self.__integrand, self)
 
         for i in range(numpts):
-            if 0 <= eng_gams[i] and eng_gams[i] <= engGamMaxMuRF:
+            if 0 <= eng_gams[i] and eng_gams[i] <= eng_gam_maxMuRF:
                 spec[i] = quad(integrand, -1.0, 1.0, \
                                args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
                                epsabs=10**-10., epsrel=10**-4.)[0]

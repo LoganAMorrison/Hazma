@@ -9,15 +9,39 @@ MASS_MU = 105.6583715
 
 def decay_spectra(eng_gam, eng_mu):
     """
-    Compute dN_{\gamma}/dE_{\gamma} from decay mu -> e nu nu gamma in the
-    laborartory frame.
+    Compute dNdE from muon decay.
 
-    Keyword arguments::
-        engGam (float or numpy.ndarray)-- Gamma ray energy in laboratory frame.
-        engMu (float) -- Muon energy in laboratory frame.
+    Compute dNdE from decay mu -> e nu nu gamma in the laborartory frame given
+    a gamma ray engergy of `eng_gam` and muon energy of `eng_mu`.
 
-    Returns:
-        Returns a float or numpy.ndarray containing spectrum.
+    Paramaters
+    ----------
+    eng_gam : float or numpy.ndarray
+        Gamma ray energy(ies) in laboratory frame.
+    eng_mu : float
+        Muon energy in laboratory frame.
+
+    Returns
+    -------
+    spec : np.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
+        given muon energy `eng_mu`.
+
+    Examples
+    --------
+    Calculate spectrum for single gamma ray energy
+
+    >>> from hazma import muon
+    >>> eng_gam, eng_mu = 200., 1000.
+    >>> spec = muon.decay_spectra(eng_gam, eng_mu)
+
+    Calculate spectrum for array of gamma ray energies
+
+    >>> from hazma import muon
+    >>> import numpy as np
+    >>> eng_gams = np.logspace(0.0, 3.0, num=200, dtype=float)
+    >>> eng_mu = 1000.
+    >>> spec = muon.decay_spectra(eng_gams, eng_mu)
     """
     mu = _decay_muon.Muon()
     if hasattr(eng_gam, "__len__"):
@@ -27,14 +51,41 @@ def decay_spectra(eng_gam, eng_mu):
 
 def fsr(eng_gam, cme, mediator='scalar'):
     """
-    Compute final state radiation spectrum dN_{\gamma}/dE_{\gamma} an
-    off-shell scalar decaying into an on-shell muon and an off-shell muon,
-    which decays to an on-shell muon and photon: S* -> mu* mu -> g mu mu.
+    Compute muon fsr spectrum.
 
-    Keyword arguments::
-        engGam (float or np.ndarray)-- Gamma ray energy in laboratory frame.
-        engMu (float) -- Muon energy in laboratory frame.
-        mediator (string) -- Mediator type
+    Compute final state radiation spectrum dN/dE from decay of an off-shell
+    mediator (scalar, psuedo-scalar, vector or axial-vector) into a pair of
+    muons.
+
+    Paramaters
+    ----------
+    eng_gam : float or np.ndarray
+        Gamma ray energy(ies) in laboratory frame.
+    cme : float
+        Center of mass energy or mass of off-shell mediator.
+    mediator : string
+        Mediator type : scalar, psuedo-scalar, vector or axial-vector.
+
+    Returns
+    -------
+    spec : np.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
+        given muon energy `eng_mu`.
+
+    Examples
+    --------
+    dNdE for a single gamma ray energy from scalar mediator.
+
+    >>> from hazma import muon
+    >>> eng_gam, cme = 200., 1000.
+    >>> spec = muon.fsr(eng_gam, cme, 'scalar')
+
+    dNdE for list of gamma ray energies from vector mediator.
+
+    >>> from hazma import muon
+    >>> eng_gams = np.logspace(0.0, 3.0, num=1000, dtype=float)
+    >>> cme = 1000.
+    >>> spec = muon.fsr(eng_gams, cme, 'scalar')
     """
     if mediator == 'scalar':
         if hasattr(eng_gam, "__len__"):

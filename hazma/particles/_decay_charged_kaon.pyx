@@ -122,10 +122,8 @@ cdef class ChargedKaon:
         """
         Integrand for K -> X, where X is a two body final state. The X's
         used are
-
             mu + nu
             pi  + pi0
-
         Keyword arguments::
             cl: Angle of photon w.r.t. charged kaon in lab frame.
             eng_gam: Energy of photon in laboratory frame.
@@ -207,6 +205,7 @@ cdef class ChargedKaon:
         Integrand for K -> X, where X is a any final state. The X's
         used are
             mu + nu
+            pi  + pi0
             pi + pi + pi
             pi0 + mu + nu.
         When the ChargedKaon object is instatiated, the energies of the FSP are
