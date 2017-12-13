@@ -31,10 +31,11 @@
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.doctest',
+              'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
               'sphinx.ext.mathjax',
-              'sphinx.ext.ifconfig',
               'sphinx.ext.githubpages']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -169,3 +170,6 @@ texinfo_documents = [
      author, 'Hazma', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {'https://docs.python.org/': None}
