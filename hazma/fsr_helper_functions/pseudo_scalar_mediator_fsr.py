@@ -27,21 +27,24 @@ def fermion(eng_gam, cme, mass_f):
     """
     val = 0.0
 
-    if 0 < eng_gam and eng_gam < (cme**2 - 2 * mass_f**2) / (2 * cme):
+    e, m = eng_gam / cme, mass_f / cme
 
-        e, m = eng_gam / cme, mass_f / cme
+    if 0 < e and e < 0.5 * (1.0 - 2 * m**2):
 
         pre_factor = alpha / \
-            (e * np.pi * np.sqrt((1 - 4 * mass_f**2) * cme**2))
+            (e * np.pi * np.sqrt((1 - 4 * m**2) * cme**2))
 
         terms = np.array([
             -2 * np.sqrt(1 - 2 * e) * np.sqrt(1 - 2 * e - 4 * m**2),
             2 * (1 + 2 * (-1 + e) * e - 2 * m**2) *
-            np.arctanh(np.sqrt(1 - 2 * e - 4 * m**2) / np.sqrt(1 - 2 * e)),
+            np.arctanh(np.sqrt(1 - 2 * e - 4 * m**2) /
+                       np.sqrt(1 - 2 * e)),
             (1 + 2 * (-1 + e) * e - 2 * m**2) *
-            np.log(-1 - np.sqrt(1 - 2 * e - 4 * m**2) / np.sqrt(1 - 2 * e)),
+            np.log(1 + np.sqrt(1 - 2 * e - 4 * m**2) /
+                   np.sqrt(1 - 2 * e)),
             -((1 + 2 * (-1 + e) * e - 2 * m**2) *
-              np.log(-1 + np.sqrt(1 - 2 * e - 4 * m**2) / np.sqrt(1 - 2 * e)))
+              np.log(1 - np.sqrt(1 - 2 * e - 4 * m**2) /
+                     np.sqrt(1 - 2 * e)))
         ])
 
         val = np.real(pre_factor * np.sum(terms))

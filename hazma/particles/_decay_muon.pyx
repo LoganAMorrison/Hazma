@@ -21,7 +21,7 @@ cdef class Muon:
         pass
 
     @cython.cdivision(True)
-    cdef float __JPlus(self, float y):
+    cdef float __j_plus(self, float y):
         """
         Form factor in differential branching fraction of radiative muon decay.
         See p.18, eqn (54) of arXiv:hep-ph/9909265.
@@ -38,7 +38,7 @@ cdef class Muon:
         return preFactor * (term1 + term2 * yconj + term3 * yconj**2.0)
 
     @cython.cdivision(True)
-    cdef float __JMinus(self, float y):
+    cdef float __j_minus(self, float y):
         """
         Form factor in differential branching fraction of radiative muon decay.
         See p.18, eqn (55) of arXiv:hep-ph/9909265.
@@ -65,11 +65,11 @@ cdef class Muon:
         """
         cdef float result = 0.0
         if 0.0 <= y and y <= 1.0 - RATIO_E_MU_MASS_SQ:
-            result = (2.0 / y) * (self.__JPlus(y) + self.__JMinus(y))
+            result = (2.0 / y) * (self.__j_plus(y) + self.__j_minus(y))
         return result
 
     @cython.cdivision(True)
-    cdef float __Gamma(self, float eng, float mass):
+    cdef float __gamma(self, float eng, float mass):
         """
         Returns special relativity boost factor gamma.
 
@@ -80,7 +80,7 @@ cdef class Muon:
         return eng / mass
 
     @cython.cdivision(True)
-    cdef float __Beta(self, float eng, float mass):
+    cdef float __beta(self, float eng, float mass):
         """
         Returns velocity in natural units.
 
@@ -102,8 +102,8 @@ cdef class Muon:
             engGam -- Gamma ray energy in laboratory frame.
             engMu -- Muon energy in laboratory frame.
         """
-        cdef float beta = self.__Beta(engMu, MASS_MU)
-        cdef float gamma = self.__Gamma(engMu, MASS_MU)
+        cdef float beta = self.__beta(engMu, MASS_MU)
+        cdef float gamma = self.__gamma(engMu, MASS_MU)
 
         cdef float engGamMuRF = gamma * engGam * (1.0 - beta * cl)
 
@@ -121,8 +121,8 @@ cdef class Muon:
         """
         cdef float result = 0.0
 
-        cdef float beta = self.__Beta(eng_mu, MASS_MU)
-        cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
+        cdef float beta = self.__beta(eng_mu, MASS_MU)
+        cdef float gamma = self.__gamma(eng_mu, MASS_MU)
 
         cdef float eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
             * gamma * (1.0 + beta)
@@ -158,8 +158,8 @@ cdef class Muon:
         cdef float result = 0.0
         cdef int numpts = len(eng_gams)
 
-        cdef float beta = self.__Beta(eng_mu, MASS_MU)
-        cdef float gamma = self.__Gamma(eng_mu, MASS_MU)
+        cdef float beta = self.__beta(eng_mu, MASS_MU)
+        cdef float gamma = self.__gamma(eng_mu, MASS_MU)
 
         cdef float eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
             / (2.0 * MASS_MU) * gamma * (1.0 + beta)

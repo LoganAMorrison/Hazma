@@ -1,7 +1,7 @@
 cdef class Muon:
-    cdef float __JPlus(self, float y)
-    cdef float __JMinus(self, float y)
+    cdef float __j_plus(self, float y)
+    cdef float __j_minus(self, float y)
     cdef float __dBdy(self, float y)
-    cdef float __Gamma(self, float eng, float mass)
-    cdef float __Beta(self, float eng, float mass)
-    cdef float __Integrand(self, float cl, float engGam, float engMu)
+    cdef float __gamma(self, float eng, float mass)
+    cdef float __beta(self, float eng, float mass)
+    cdef float __integrand(self, float cl, float engGam, float engMu)

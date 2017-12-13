@@ -1027,8 +1027,8 @@ typedef npy_cdouble __pyx_t_5numpy_complex_t;
 
 /* "_decay_muon.pxd":1
  * cdef class Muon:             # <<<<<<<<<<<<<<
- *     cdef float __JPlus(self, float y)
- *     cdef float __JMinus(self, float y)
+ *     cdef float __j_plus(self, float y)
+ *     cdef float __j_minus(self, float y)
  */
 struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon {
   PyObject_HEAD
@@ -1070,17 +1070,17 @@ struct __pyx_obj___pyx_scope_struct____Pyx_CFunc_float____ChargedPion____float__
 
 /* "_decay_muon.pxd":1
  * cdef class Muon:             # <<<<<<<<<<<<<<
- *     cdef float __JPlus(self, float y)
- *     cdef float __JMinus(self, float y)
+ *     cdef float __j_plus(self, float y)
+ *     cdef float __j_minus(self, float y)
  */
 
 struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon {
-  float (*__pyx___JPlus)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float);
-  float (*__pyx___JMinus)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float);
+  float (*__pyx___j_plus)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float);
+  float (*__pyx___j_minus)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float);
   float (*__pyx___dBdy)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float);
-  float (*__pyx___Gamma)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float);
-  float (*__pyx___Beta)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float);
-  float (*__pyx___Integrand)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float, float);
+  float (*__pyx___gamma)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float);
+  float (*__pyx___beta)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float);
+  float (*__pyx___integrand)(struct __pyx_obj_5hazma_9particles_11_decay_muon_Muon *, float, float, float);
 };
 static struct __pyx_vtabstruct_5hazma_9particles_11_decay_muon_Muon *__pyx_vtabptr_5hazma_9particles_11_decay_muon_Muon;
 

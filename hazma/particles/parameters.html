@@ -286,6 +286,75 @@ body.cython { font-family: courier; font-size: 12; }
 .cython.score-252 {background-color: #FFFF09;}
 .cython.score-253 {background-color: #FFFF09;}
 .cython.score-254 {background-color: #FFFF09;}
+.cython .hll { background-color: #ffffcc }
+.cython  { background: #f8f8f8; }
+.cython .c { color: #408080; font-style: italic } /* Comment */
+.cython .err { border: 1px solid #FF0000 } /* Error */
+.cython .k { color: #008000; font-weight: bold } /* Keyword */
+.cython .o { color: #666666 } /* Operator */
+.cython .ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+.cython .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.cython .cp { color: #BC7A00 } /* Comment.Preproc */
+.cython .cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+.cython .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.cython .cs { color: #408080; font-style: italic } /* Comment.Special */
+.cython .gd { color: #A00000 } /* Generic.Deleted */
+.cython .ge { font-style: italic } /* Generic.Emph */
+.cython .gr { color: #FF0000 } /* Generic.Error */
+.cython .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.cython .gi { color: #00A000 } /* Generic.Inserted */
+.cython .go { color: #888888 } /* Generic.Output */
+.cython .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.cython .gs { font-weight: bold } /* Generic.Strong */
+.cython .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.cython .gt { color: #0044DD } /* Generic.Traceback */
+.cython .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.cython .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.cython .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.cython .kp { color: #008000 } /* Keyword.Pseudo */
+.cython .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.cython .kt { color: #B00040 } /* Keyword.Type */
+.cython .m { color: #666666 } /* Literal.Number */
+.cython .s { color: #BA2121 } /* Literal.String */
+.cython .na { color: #7D9029 } /* Name.Attribute */
+.cython .nb { color: #008000 } /* Name.Builtin */
+.cython .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.cython .no { color: #880000 } /* Name.Constant */
+.cython .nd { color: #AA22FF } /* Name.Decorator */
+.cython .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.cython .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.cython .nf { color: #0000FF } /* Name.Function */
+.cython .nl { color: #A0A000 } /* Name.Label */
+.cython .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.cython .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.cython .nv { color: #19177C } /* Name.Variable */
+.cython .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.cython .w { color: #bbbbbb } /* Text.Whitespace */
+.cython .mb { color: #666666 } /* Literal.Number.Bin */
+.cython .mf { color: #666666 } /* Literal.Number.Float */
+.cython .mh { color: #666666 } /* Literal.Number.Hex */
+.cython .mi { color: #666666 } /* Literal.Number.Integer */
+.cython .mo { color: #666666 } /* Literal.Number.Oct */
+.cython .sa { color: #BA2121 } /* Literal.String.Affix */
+.cython .sb { color: #BA2121 } /* Literal.String.Backtick */
+.cython .sc { color: #BA2121 } /* Literal.String.Char */
+.cython .dl { color: #BA2121 } /* Literal.String.Delimiter */
+.cython .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.cython .s2 { color: #BA2121 } /* Literal.String.Double */
+.cython .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.cython .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.cython .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.cython .sx { color: #008000 } /* Literal.String.Other */
+.cython .sr { color: #BB6688 } /* Literal.String.Regex */
+.cython .s1 { color: #BA2121 } /* Literal.String.Single */
+.cython .ss { color: #19177C } /* Literal.String.Symbol */
+.cython .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.cython .fm { color: #0000FF } /* Name.Function.Magic */
+.cython .vc { color: #19177C } /* Name.Variable.Class */
+.cython .vg { color: #19177C } /* Name.Variable.Global */
+.cython .vi { color: #19177C } /* Name.Variable.Instance */
+.cython .vm { color: #19177C } /* Name.Variable.Magic */
+.cython .il { color: #666666 } /* Literal.Number.Integer.Long */
     </style>
     <script>
     function toggleDiv(id) {
@@ -302,122 +371,122 @@ body.cython { font-family: courier; font-size: 12; }
     Click on a line that starts with a "<code>+</code>" to see the C code that Cython generated for it.
 </p>
 <p>Raw output: <a href="parameters.pxd">parameters.pxd</a></p>
-<div class="cython"><pre class="cython line score-0">&#xA0;<span class="">01</span>: """</pre>
-<pre class="cython line score-0">&#xA0;<span class="">02</span>: This file contains parameters of the standard model for leptons and meson.</pre>
+<div class="cython"><pre class="cython line score-0">&#xA0;<span class="">01</span>: <span class="sd">&quot;&quot;&quot;</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">02</span>: <span class="sd">This file contains parameters of the standard model for leptons and meson.</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">03</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">04</span>: NOTE: All dimensionful parameters are in MeV.</pre>
-<pre class="cython line score-0">&#xA0;<span class="">05</span>: """</pre>
+<pre class="cython line score-0">&#xA0;<span class="">04</span>: <span class="sd">NOTE: All dimensionful parameters are in MeV.</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">05</span>: <span class="sd">&quot;&quot;&quot;</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">06</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">07</span>: # MASSES (MeV)</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">08</span>: cdef float MASS_E = 0.510998928   # electron</pre>
+<pre class="cython line score-0">&#xA0;<span class="">07</span>: <span class="c"># MASSES (MeV)</span></pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">08</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_E</span> <span class="o">=</span> <span class="mf">0.510998928</span>   <span class="c"># electron</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_E = 0.510998928;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">09</span>: cdef float MASS_MU = 105.6583715  # muon</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">09</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_MU</span> <span class="o">=</span> <span class="mf">105.6583715</span>  <span class="c"># muon</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU = 105.6583715;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">10</span>: cdef float MASS_PI0 = 134.9766    # neutral pion</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">10</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_PI0</span> <span class="o">=</span> <span class="mf">134.9766</span>    <span class="c"># neutral pion</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI0 = 134.9766;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">11</span>: cdef float MASS_PI = 139.57018    # Charged pion</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">11</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_PI</span> <span class="o">=</span> <span class="mf">139.57018</span>    <span class="c"># Charged pion</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_PI = 139.57018;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">12</span>: cdef float MASS_K0 = 497.61       # neutral kaon</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">12</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_K0</span> <span class="o">=</span> <span class="mf">497.61</span>       <span class="c"># neutral kaon</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_K0 = 497.61;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">13</span>: cdef float MASS_K = 493.68        # charged Kaon</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">13</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_K</span> <span class="o">=</span> <span class="mf">493.68</span>        <span class="c"># charged Kaon</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_K = 493.68;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">14</span>: cdef float MASS_ETA = 547.86      # eta</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">14</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_ETA</span> <span class="o">=</span> <span class="mf">547.86</span>      <span class="c"># eta</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_ETA = 547.86;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">15</span>: cdef float MASS_ETAP = 957.8      # eta prime</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">15</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_ETAP</span> <span class="o">=</span> <span class="mf">957.8</span>      <span class="c"># eta prime</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_ETAP = 957.8;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">16</span>: cdef float MASS_RHO = 775.3       # rho</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">16</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_RHO</span> <span class="o">=</span> <span class="mf">775.3</span>       <span class="c"># rho</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_RHO = 775.3;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">17</span>: cdef float MASS_OMEGA = 782.7     # omega</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">17</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">MASS_OMEGA</span> <span class="o">=</span> <span class="mf">782.7</span>     <span class="c"># omega</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_OMEGA = 782.7;
 </pre><pre class="cython line score-0">&#xA0;<span class="">18</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">19</span>: # BRANCHING RATIOS</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">20</span>: cdef float BR_PI0_TO_GG = 0.9882         # Pi0   -&gt; g   + g</pre>
+<pre class="cython line score-0">&#xA0;<span class="">19</span>: <span class="c"># BRANCHING RATIOS</span></pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">20</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_PI0_TO_GG</span> <span class="o">=</span> <span class="mf">0.9882</span>         <span class="c"># Pi0   -&gt; g   + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_PI0_TO_GG = 0.9882;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">21</span>: cdef float BR_PI_TO_MUNU = 0.9998        # pi    -&gt; mu  + nu</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">21</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_PI_TO_MUNU</span> <span class="o">=</span> <span class="mf">0.9998</span>        <span class="c"># pi    -&gt; mu  + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_PI_TO_MUNU = 0.9998;
 </pre><pre class="cython line score-0">&#xA0;<span class="">22</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">23</span>: cdef float BR_KS_TO_PIPI = 0.6920        # ks    -&gt; pi  + pi</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">23</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KS_TO_PIPI</span> <span class="o">=</span> <span class="mf">0.6920</span>        <span class="c"># ks    -&gt; pi  + pi</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KS_TO_PIPI = 0.6920;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">24</span>: cdef float BR_KS_TO_PI0PI0 = 0.3069      # ks    -&gt; pi0 + pi</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">24</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KS_TO_PI0PI0</span> <span class="o">=</span> <span class="mf">0.3069</span>      <span class="c"># ks    -&gt; pi0 + pi</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KS_TO_PI0PI0 = 0.3069;
 </pre><pre class="cython line score-0">&#xA0;<span class="">25</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">26</span>: cdef float BR_KL_TO_PIENU = 0.4055       # kl    -&gt; pi  + e   + nu</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">26</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KL_TO_PIENU</span> <span class="o">=</span> <span class="mf">0.4055</span>       <span class="c"># kl    -&gt; pi  + e   + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KL_TO_PIENU = 0.4055;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">27</span>: cdef float BR_KL_TO_PIMUNU = 0.2704      # kl    -&gt; pi  + mu  + nu</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">27</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KL_TO_PIMUNU</span> <span class="o">=</span> <span class="mf">0.2704</span>      <span class="c"># kl    -&gt; pi  + mu  + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KL_TO_PIMUNU = 0.2704;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">28</span>: cdef float BR_KL_TO_3PI0 = 0.1952        # kl    -&gt; pi0 + pi0  + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">28</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KL_TO_3PI0</span> <span class="o">=</span> <span class="mf">0.1952</span>        <span class="c"># kl    -&gt; pi0 + pi0  + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KL_TO_3PI0 = 0.1952;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">29</span>: cdef float BR_KL_TO_2PIPI0 = 0.1254      # kl    -&gt; pi  + pi  + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">29</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_KL_TO_2PIPI0</span> <span class="o">=</span> <span class="mf">0.1254</span>      <span class="c"># kl    -&gt; pi  + pi  + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_KL_TO_2PIPI0 = 0.1254;
 </pre><pre class="cython line score-0">&#xA0;<span class="">30</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">31</span>: cdef float BR_K_TO_MUNU = 0.6356         # k     -&gt; mu  + nu</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">31</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_MUNU</span> <span class="o">=</span> <span class="mf">0.6356</span>         <span class="c"># k     -&gt; mu  + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_MUNU = 0.6356;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">32</span>: cdef float BR_K_TO_PIPI0 = 0.2067        # k     -&gt; pi  + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">32</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_PIPI0</span> <span class="o">=</span> <span class="mf">0.2067</span>        <span class="c"># k     -&gt; pi  + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_PIPI0 = 0.2067;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">33</span>: cdef float BR_K_TO_3PI = 0.05583         # k     -&gt; pi  + pi  + pi</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">33</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_3PI</span> <span class="o">=</span> <span class="mf">0.05583</span>         <span class="c"># k     -&gt; pi  + pi  + pi</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_3PI = 0.05583;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">34</span>: cdef float BR_K_TO_PI0ENU = 0.0507       # k     -&gt; pi0 + e   + nu</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">34</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_PI0ENU</span> <span class="o">=</span> <span class="mf">0.0507</span>       <span class="c"># k     -&gt; pi0 + e   + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_PI0ENU = 0.0507;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">35</span>: cdef float BR_K_TO_PI0MUNU = 0.03352     # k     -&gt; pi0 + mu  + nu</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">35</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_PI0MUNU</span> <span class="o">=</span> <span class="mf">0.03352</span>     <span class="c"># k     -&gt; pi0 + mu  + nu</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_PI0MUNU = 0.03352;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">36</span>: cdef float BR_K_TO_PI2PI0 = 0.01760      # k     -&gt; pi  + pi0 + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">36</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_K_TO_PI2PI0</span> <span class="o">=</span> <span class="mf">0.01760</span>      <span class="c"># k     -&gt; pi  + pi0 + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_K_TO_PI2PI0 = 0.01760;
 </pre><pre class="cython line score-0">&#xA0;<span class="">37</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">38</span>: cdef float BR_ETA_TO_GG = 0.3941         # eta   -&gt; g   + g</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">38</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETA_TO_GG</span> <span class="o">=</span> <span class="mf">0.3941</span>         <span class="c"># eta   -&gt; g   + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETA_TO_GG = 0.3941;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">39</span>: cdef float BR_ETA_TO_3PI0 = 0.3268       # eta   -&gt; pi0 + pi0 + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">39</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETA_TO_3PI0</span> <span class="o">=</span> <span class="mf">0.3268</span>       <span class="c"># eta   -&gt; pi0 + pi0 + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETA_TO_3PI0 = 0.3268;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">40</span>: cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -&gt; pi  + pi  + pi0</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">40</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETA_TO_2PIPI0</span> <span class="o">=</span> <span class="mf">0.2292</span>     <span class="c"># eta   -&gt; pi  + pi  + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETA_TO_2PIPI0 = 0.2292;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">41</span>: cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -&gt; pi  + pi  + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">41</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETA_TO_2PIG</span> <span class="o">=</span> <span class="mf">0.0422</span>       <span class="c"># eta   -&gt; pi  + pi  + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETA_TO_2PIG = 0.0422;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">42</span>: cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -&gt; pi  + pi  + eta</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">42</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_2PIETA</span> <span class="o">=</span> <span class="mf">0.429</span>     <span class="c"># eta&#39;  -&gt; pi  + pi  + eta</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_2PIETA = 0.429;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">43</span>: cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -&gt; rho + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">43</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_RHOG</span> <span class="o">=</span> <span class="mf">0.291</span>       <span class="c"># eta&#39;  -&gt; rho + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_RHOG = 0.291;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">44</span>: cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -&gt; pi0 + pi0 + eta</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">44</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">etap_BR_pi0_pi0_eta</span> <span class="o">=</span> <span class="mf">0.222</span>   <span class="c"># eta&#39;  -&gt; pi0 + pi0 + eta</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_etap_BR_pi0_pi0_eta = 0.222;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">45</span>: cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -&gt; omega + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">45</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_OMEGAG</span> <span class="o">=</span> <span class="mf">0.0275</span>    <span class="c"># eta&#39;  -&gt; omega + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_OMEGAG = 0.0275;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">46</span>: cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -&gt; g   + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">46</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_GG</span> <span class="o">=</span> <span class="mf">0.0220</span>        <span class="c"># eta&#39;  -&gt; g   + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_GG = 0.0220;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">47</span>: cdef float BR_ETAP_TO_3PI0 = 0.0214      # eta'  -&gt; pi0 + pi0 + pi-</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">47</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_3PI0</span> <span class="o">=</span> <span class="mf">0.0214</span>      <span class="c"># eta&#39;  -&gt; pi0 + pi0 + pi-</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_3PI0 = 0.0214;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">48</span>: cdef float BR_ETAP_TO_MUMUG = 0.0108     # eta'  -&gt; mu  + mu  + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">48</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_ETAP_TO_MUMUG</span> <span class="o">=</span> <span class="mf">0.0108</span>     <span class="c"># eta&#39;  -&gt; mu  + mu  + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_ETAP_TO_MUMUG = 0.0108;
 </pre><pre class="cython line score-0">&#xA0;<span class="">49</span>: </pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">50</span>: cdef float BR_OMEGA_TO_2PIPI0 = 0.892    # omega -&gt; pi + pi   + pi0</pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">50</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_OMEGA_TO_2PIPI0</span> <span class="o">=</span> <span class="mf">0.892</span>    <span class="c"># omega -&gt; pi + pi   + pi0</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_OMEGA_TO_2PIPI0 = 0.892;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">51</span>: cdef float BR_OMEGA_TO_PI0G = 0.0828     # omega -&gt; pi0 + g</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">51</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_OMEGA_TO_PI0G</span> <span class="o">=</span> <span class="mf">0.0828</span>     <span class="c"># omega -&gt; pi0 + g</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_OMEGA_TO_PI0G = 0.0828;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">52</span>: cdef float BR_OMEGA_TO_2PI = 0.0153      # omega -&gt; pi + pi</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">52</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">BR_OMEGA_TO_2PI</span> <span class="o">=</span> <span class="mf">0.0153</span>      <span class="c"># omega -&gt; pi + pi</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_BR_OMEGA_TO_2PI = 0.0153;
 </pre><pre class="cython line score-0">&#xA0;<span class="">53</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">54</span>: # WIDTHS</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">55</span>: cdef float WIDTH_K = 3.3406**-13.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">54</span>: <span class="c"># WIDTHS</span></pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">55</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">WIDTH_K</span> <span class="o">=</span> <span class="mf">3.3406</span><span class="o">**-</span><span class="mf">13.</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_WIDTH_K = pow(3.3406, -13.);
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">56</span>: cdef float WIDTH_PI = 2.528511206475808**-14.</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">56</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">WIDTH_PI</span> <span class="o">=</span> <span class="mf">2.528511206475808</span><span class="o">**-</span><span class="mf">14.</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_WIDTH_PI = pow(2.528511206475808, -14.);
 </pre><pre class="cython line score-0">&#xA0;<span class="">57</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">58</span>: # MISC.</pre>
-<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">59</span>: cdef float ALPHA_EM = 1.0 / 137.0  # Fine structure constant.</pre>
+<pre class="cython line score-0">&#xA0;<span class="">58</span>: <span class="c"># MISC.</span></pre>
+<pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">59</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">ALPHA_EM</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="mf">137.0</span>  <span class="c"># Fine structure constant.</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_ALPHA_EM = (1.0 / 137.0);
-</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">60</span>: cdef float RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.</pre>
+</pre><pre class="cython line score-5" onclick='toggleDiv(this)'>+<span class="">60</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">RATIO_E_MU_MASS_SQ</span> <span class="o">=</span> <span class="p">(</span><span class="n">MASS_E</span> <span class="o">/</span> <span class="n">MASS_MU</span><span class="p">)</span><span class="o">**</span><span class="mf">2.</span></pre>
 <pre class='cython code score-5 '>  if (unlikely(__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU == 0)) {
     <span class='py_c_api'>PyErr_SetString</span>(PyExc_ZeroDivisionError, "float division");
     <span class='error_goto'>__PYX_ERR(5, 60, __pyx_L1_error)</span>
   }
   __pyx_v_5hazma_9particles_19_decay_charged_pion_RATIO_E_MU_MASS_SQ = pow(((double)(__pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_E / __pyx_v_5hazma_9particles_19_decay_charged_pion_MASS_MU)), 2.);
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">61</span>: cdef float A_PI = 0.0119</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">61</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">A_PI</span> <span class="o">=</span> <span class="mf">0.0119</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_A_PI = 0.0119;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">62</span>: cdef float V_PI = 0.0254</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">62</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">V_PI</span> <span class="o">=</span> <span class="mf">0.0254</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_V_PI = 0.0254;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">63</span>: cdef float A_K = 0.042</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">63</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">A_K</span> <span class="o">=</span> <span class="mf">0.042</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_A_K = 0.042;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">64</span>: cdef float V_K = 0.096</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">64</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">V_K</span> <span class="o">=</span> <span class="mf">0.096</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_V_K = 0.096;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">65</span>: cdef float DECAY_CONST_PI = 130.41</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">65</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">DECAY_CONST_PI</span> <span class="o">=</span> <span class="mf">130.41</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_DECAY_CONST_PI = 130.41;
-</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">66</span>: cdef float DECAY_CONST_K = 156.1</pre>
+</pre><pre class="cython line score-0" onclick='toggleDiv(this)'>+<span class="">66</span>: <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">DECAY_CONST_K</span> <span class="o">=</span> <span class="mf">156.1</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_5hazma_9particles_19_decay_charged_pion_DECAY_CONST_K = 156.1;
 </pre></div></body></html>
