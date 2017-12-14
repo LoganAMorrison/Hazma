@@ -1,3 +1,4 @@
+***********
 Description
 ***********
 
@@ -78,7 +79,7 @@ where
 
 .. math::
     E_{\gamma}^{R\mu} = \gamma_{1} E_{\gamma}^{R\pi}\left(1 - \beta_{1}\cos\theta_{\gamma}^{R\pi}\right)
-    
+
 and
 
 .. math::

@@ -10,9 +10,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   Description
-   Modules
-   Usage
+   description
+   modules
+   usage
 
 
 
