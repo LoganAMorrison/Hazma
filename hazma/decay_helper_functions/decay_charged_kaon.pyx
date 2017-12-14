@@ -1,7 +1,6 @@
 cimport decay_muon
 cimport decay_charged_pion
 cimport decay_neutral_pion
-from . import electron
 from ..phases_space_generator cimport rambo
 import numpy as np
 cimport numpy as np
