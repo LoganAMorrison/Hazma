@@ -133,6 +133,7 @@ cdef class Muon:
             result = quad(integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
                 points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
 
+
         return result
 
 

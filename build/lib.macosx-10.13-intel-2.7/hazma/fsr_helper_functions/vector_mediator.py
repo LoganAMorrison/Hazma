@@ -4,6 +4,27 @@ alpha = 1.0 / 137.0
 
 
 def fermion(egam, Q, mf):
+    """
+    Return the fsr spectra for fermions from decay of vector mediator.
+
+    Computes the final state radiaton spectrum value dNdE from a vector
+    mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`
+    and final state fermion mass `mass_f`.
+
+    Paramaters
+    ----------
+    eng_gam : float
+        Gamma ray energy.
+    cme: float
+        Center of mass energy of mass of off-shell vector mediator.
+    mass_f : float
+        Mass of the final state fermion.
+
+    Returns
+    -------
+    spec_val : float
+        Spectrum value dNdE from vector mediator.
+    """
     val = 0.0
 
     e, m = egam / Q, mf / Q
