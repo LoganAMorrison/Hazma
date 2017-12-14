@@ -97,6 +97,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#muon">Muon</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#charged-pion">Charged Pion</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#neutral-pion">Neutral Pion</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#final-state-radiation">Final State Radiation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -197,7 +200,7 @@
 \int_{-1}^{1}d\cos\theta_{\gamma}^{L}
 \dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}
 \dfrac{dB}{dE_{\gamma}^{R\mu}}\]</div>
-<img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/muon_decay_spectra.png" />
+<a class="reference internal image-reference" href="_images/muon_decay_spectra.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/muon_decay_spectra.png" style="width: 400px; height: 400px;" /></a>
 </div>
 <div class="section" id="charged-pion">
 <h3>Charged Pion<a class="headerlink" href="#charged-pion" title="Permalink to this headline">¶</a></h3>
@@ -229,7 +232,7 @@ angle the photon makes with the muon. Once this integration is completed, one th
 <div class="math">
 \[0 \leq E_{\gamma}^{L} \leq \dfrac{m_{\mu}^2 - m_{e}^2}{2m_{\mu}}
 \gamma_{1}\gamma_{2}(1+\beta_{1})(1+\beta_{2})\]</div>
-<img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/charged_pion_decay_spectrum.png" />
+<a class="reference internal image-reference" href="_images/charged_pion_decay_spectrum.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/charged_pion_decay_spectrum.png" style="width: 400px; height: 400px;" /></a>
 </div>
 <div class="section" id="neutral-pion">
 <h3>Neutral Pion<a class="headerlink" href="#neutral-pion" title="Permalink to this headline">¶</a></h3>
@@ -237,6 +240,35 @@ angle the photon makes with the muon. Once this integration is completed, one th
 <div class="math">
 \[\dfrac{dN}{dE_{\gamma}} = \dfrac{2}{m_{\pi}\gamma\beta}\]</div>
 </div>
+</div>
+<div class="section" id="final-state-radiation">
+<h2>Final State Radiation<a class="headerlink" href="#final-state-radiation" title="Permalink to this headline">¶</a></h2>
+<p>Along with computing decay spectra, hazma is able to compute final state radiation spectra from decays of off-shell mediators (scalar, psuedo-scalar, vector or axial-vector.) The relavent diagrams for such processes are</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="51%" />
+<col width="49%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><div class="first figure">
+<img alt="_images/scalar-fsr.png" src="_images/scalar-fsr.png" />
+</div>
+<ol class="last loweralpha simple">
+<li>Scalar mediator</li>
+</ol>
+</td>
+<td><div class="first figure">
+<img alt="_images/vector-fsr.png" src="_images/vector-fsr.png" />
+</div>
+<ol class="last loweralpha simple" start="2">
+<li>Vector mediator</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Computing the matrix elements squared of these diagrams (including diagrams with the photon attached to the other fermion leg) and integrating over all variables except the photon energy yields <span class="math">\(d\sigma(M^*\to\mu^{+}\mu^{-}\gamma)/dE\)</span>. To compute <span class="math">\(dN/dE\)</span>, we divide <span class="math">\(d\sigma(M^*\to\mu^{+}\mu^{-}\gamma)/dE\)</span> by <span class="math">\(\sigma(M^*\to\mu^{+}\mu^{-})\)</span>.</p>
+<a class="reference internal image-reference" href="_images/muon_fsr.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_images/muon_fsr.png" style="width: 800px; height: 800px;" /></a>
 <div class="section" id="references">
 <h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
 <table class="docutils footnote" frame="void" id="id1" rules="none">
