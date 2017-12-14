@@ -4,10 +4,11 @@ import numpy as np
 
 packs = ['hazma',
          'hazma.fsr_helper_functions',
-         'hazma.particles',
-         'hazma.rambo']
+         'hazma.decay_helper_functions',
+         'hazma.phases_space_generator']
 
-extensions = ["hazma/particles/*.pyx", "hazma/rambo/*.pyx"]
+extensions = ["hazma/decay_helper_functions/*.pyx",
+              "hazma/phases_space_generator/*.pyx"]
 
 setup(name='hazma',
       version='1.0',
@@ -17,5 +18,5 @@ setup(name='hazma',
       url='',
       packages=packs,
       ext_modules=cythonize(extensions),
-      include_dirs=[np.get_include(), 'hazma/particles']
+      include_dirs=[np.get_include(), 'hazma/decay_helper_functions']
       )

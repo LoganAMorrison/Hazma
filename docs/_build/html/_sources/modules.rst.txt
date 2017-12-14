@@ -1,4 +1,3 @@
-*******
 Modules
 *******
 
@@ -9,6 +8,8 @@ Particles (``hazma.particles``)
 
 Muon (``hazma.particles.muon``)
 -------------------------------
+
+.. automodule:: hazma.particles.muon
 
 .. py:function:: muon.decay_spectra(eng_gam, eng_mu)
 
