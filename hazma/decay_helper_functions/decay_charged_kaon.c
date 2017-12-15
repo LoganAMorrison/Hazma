@@ -1189,6 +1189,7 @@ struct __pyx_obj_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPio
   struct __pyx_obj_5hazma_22decay_helper_functions_10decay_muon_Muon *__pyx___muon;
   PyArrayObject *__pyx___eng_gams_mu;
   PyArrayObject *__pyx___mu_spec;
+  PyObject *__pyx___mu_spec2;
 };
 
 
@@ -1370,7 +1371,6 @@ struct __pyx_vtabstruct_5hazma_22decay_helper_functions_18decay_charged_pion_Cha
   double (*__pyx___eng_gam_max)(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion *, double);
   double (*__pyx___integrand)(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion *, double, double, double);
   double (*__pyx___muon_spectrum)(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion *, double);
-  PyArrayObject *(*CSpectrum)(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion *, PyArrayObject *, double);
 };
 static struct __pyx_vtabstruct_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion *__pyx_vtabptr_5hazma_22decay_helper_functions_18decay_charged_pion_ChargedPion;
 

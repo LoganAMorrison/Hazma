@@ -2,7 +2,7 @@ cimport decay_muon
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
-from scipy.interpolate import interp1d
+from scipy.interpolate import InterpolatedUnivariateSpline
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs
 import cython
 from functools import partial
@@ -14,7 +14,6 @@ cdef class ChargedPion:
     """
 
     def __init__(self):
-        self.__mu_interp = None
         pass
 
     @cython.cdivision(True)
@@ -30,17 +29,17 @@ cdef class ChargedPion:
         self.__mu_spec = self.__muon.Spectrum(self.__eng_gams_mu,\
                                               self.__eng_mu_pi_rf)
 
+        self.__mu_spec2 \
+            = InterpolatedUnivariateSpline(self.__eng_gams_mu,
+                                           self.__mu_spec, k=1)
 
 
     def __dealloc__(self):
         pass
 
+
     cdef double __muon_spectrum(self, double eng_gam):
         return np.interp(eng_gam, self.__eng_gams_mu, self.__mu_spec)
-
-    def __init_mu_interp(self):
-        self.__mu_interp = interp1d(self.__eng_gams_mu,
-                                    self.__mu_spec, kind='linear')
 
     @cython.cdivision(True)
     cdef double __gamma(self, double eng, double mass):
@@ -108,8 +107,8 @@ cdef class ChargedPion:
         cdef double preFactor = BR_PI_TO_MUNU \
             / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
 
-        # return preFactor * self.__muon_spectrum(engGamPiRF)
-        return preFactor * self.__mu_interp(engGamPiRF)
+        return preFactor * self.__muon_spectrum(engGamPiRF)
+
 
     def SpectrumPoint(self, double eng_gam, double eng_pi):
         """
@@ -122,10 +121,10 @@ cdef class ChargedPion:
             eng_gam: Energy of photon is laboratory frame.
             eng_pi: Energy of charged pion in laboratory frame.
         """
-        self.__init_mu_interp()
         cdef double result = 0.0
 
-        integrand = partial(self.__integrand, self)
+        integrand = lambda double cl, double eng_gam, double eng_pi : \
+            self.__integrand(cl, eng_gam, eng_pi)
 
         if 0.0 <= eng_gam and eng_gam <= self.__eng_gam_max(eng_pi):
             result = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
@@ -148,10 +147,10 @@ cdef class ChargedPion:
             eng_gams: Gamma ray energies to evaluate spectrum.
             eng_pi: Energy of charged pion in laboratory frame.
         """
-        self.__init_mu_interp()
         cdef double result = 0.0
 
-        integrand = partial(self.__integrand, self)
+        integrand = lambda double cl, double eng_gam, double eng_pi : \
+            self.__integrand(cl, eng_gam, eng_pi)
 
         cdef int numpts = len(eng_gams)
 

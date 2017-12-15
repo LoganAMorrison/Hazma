@@ -14,6 +14,4 @@ cdef class ChargedPion:
     cdef decay_muon.Muon __muon
     cdef np.ndarray __eng_gams_mu
     cdef np.ndarray __mu_spec
-    #cpdef SpectrumPoint(self, double eng_gam, double eng_pi)
-    #cpdef Spectrum(self, np.ndarray[np.float64_t, ndim=1] eng_gams, \
-    #               double eng_pi)
+    cdef __mu_spec2
