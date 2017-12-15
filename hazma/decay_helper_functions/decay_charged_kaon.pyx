@@ -1,5 +1,5 @@
-cimport decay_muon
-cimport decay_charged_pion
+import decay_muon
+import decay_charged_pion
 cimport decay_neutral_pion
 from ..phases_space_generator cimport rambo
 import numpy as np
@@ -104,15 +104,13 @@ cdef class ChargedKaon:
                                                    self.__msPi0MuNu,\
                                                    MASS_K, self.__num_bins)
 
-        self.__muon = decay_muon.Muon()
         self.__neuPion = decay_neutral_pion.NeutralPion()
-        self.__chrgpi = decay_charged_pion.ChargedPion()
 
-        self.__funcsPiPiPi = np.array([self.__chrgpi.SpectrumPoint, \
-                                       self.__chrgpi.SpectrumPoint, \
-                                       self.__chrgpi.SpectrumPoint])
+        self.__funcsPiPiPi = np.array([decay_charged_pion.SpectrumPoint, \
+                                       decay_charged_pion.SpectrumPoint, \
+                                       decay_charged_pion.SpectrumPoint])
 
-        self.__funcsPi0MuNu = np.array([self.__muon.SpectrumPoint,\
+        self.__funcsPi0MuNu = np.array([decay_muon.SpectrumPoint,\
                                         self.__neuPion.SpectrumPoint])
 
     def __dealloc__(self):
@@ -145,9 +143,9 @@ cdef class ChargedKaon:
         eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
 
         ret_val += BR_K_TO_MUNU * \
-            self.__muon.SpectrumPoint(eng_gam_k_rf, eng_mu)
+            decay_muon.SpectrumPoint(eng_gam_k_rf, eng_mu)
         ret_val += BR_K_TO_PIPI0 * \
-            self.__chrgpi.SpectrumPoint(eng_gam_k_rf, eng_pi)
+            decay_charged_pion.SpectrumPoint(eng_gam_k_rf, eng_pi)
         ret_val += BR_K_TO_PIPI0 * \
             self.__neuPion.SpectrumPoint(eng_gam_k_rf, eng_pi0)
 

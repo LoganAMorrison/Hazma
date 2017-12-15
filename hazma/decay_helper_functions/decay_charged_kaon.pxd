@@ -1,7 +1,5 @@
 from ..phases_space_generator cimport rambo
 
-cimport decay_muon
-cimport decay_charged_pion
 cimport decay_neutral_pion
 
 import numpy as np
@@ -23,9 +21,7 @@ cdef class ChargedKaon:
 
     cdef rambo.Rambo __ram
 
-    cdef decay_muon.Muon __muon
     cdef decay_neutral_pion.NeutralPion __neuPion
-    cdef decay_charged_pion.ChargedPion __chrgpi
 
     """ Class functions """
     cdef double __integrand2(self, double cl, double eng_gam, double eng_k)

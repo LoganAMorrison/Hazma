@@ -1,5 +1,4 @@
 from decay_helper_functions import decay_charged_pion
-from decay_helper_functions import decay_charged_pion2
 
 
 def decay_spectra(eng_gam, eng_pi):
@@ -37,8 +36,8 @@ def decay_spectra(eng_gam, eng_pi):
     """
     # charged_pi = decay_charged_pion.ChargedPion()
     if hasattr(eng_gam, "__len__"):
-        return decay_charged_pion2.Spectrum(eng_gam, eng_pi)
-    return decay_charged_pion2.SpectrumPoint(eng_gam, eng_pi)
+        return decay_charged_pion.Spectrum(eng_gam, eng_pi)
+    return decay_charged_pion.SpectrumPoint(eng_gam, eng_pi)
 
 
 def fsr(eng_gam, cme, mediator='scalar'):

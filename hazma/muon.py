@@ -39,10 +39,10 @@ def decay_spectra(eng_gam, eng_mu):
         >>> eng_mu = 1000.
         >>> spec = muon.decay_spectra(eng_gams, eng_mu)
     """
-    mu = decay_muon.Muon()
+    # mu = decay_muon.Muon()
     if hasattr(eng_gam, "__len__"):
-        return mu.Spectrum(eng_gam, eng_mu)
-    return mu.SpectrumPoint(eng_gam, eng_mu)
+        return decay_muon.Spectrum(eng_gam, eng_mu)
+    return decay_muon.SpectrumPoint(eng_gam, eng_mu)
 
 
 def fsr(eng_gam, cme, mediator='scalar'):
