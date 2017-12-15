@@ -21,7 +21,7 @@ cdef class Muon:
         pass
 
     @cython.cdivision(True)
-    cdef float __j_plus(self, float y):
+    cdef double __j_plus(self, double y):
         """
         Form factor in differential branching fraction of radiative muon decay.
         See p.18, eqn (54) of arXiv:hep-ph/9909265.
@@ -29,16 +29,16 @@ cdef class Muon:
         Keyword arguments::
             y -- 2 * (photon energy) / (muon mass)
         """
-        cdef float yconj = 1.0 - y
-        cdef float r = RATIO_E_MU_MASS_SQ
-        cdef float preFactor = ALPHA_EM * yconj / 6.0 / M_PI
-        cdef float term1 = 3.0 * log(yconj / r) - (17.0 / 2.0)
-        cdef float term2 = -3.0 * log(yconj / r) + 7.0
-        cdef float term3 = 2.0 * log(yconj / r) - (13.0 / 3.0)
+        cdef double yconj = 1.0 - y
+        cdef double r = RATIO_E_MU_MASS_SQ
+        cdef double preFactor = ALPHA_EM * yconj / 6.0 / M_PI
+        cdef double term1 = 3.0 * log(yconj / r) - (17.0 / 2.0)
+        cdef double term2 = -3.0 * log(yconj / r) + 7.0
+        cdef double term3 = 2.0 * log(yconj / r) - (13.0 / 3.0)
         return preFactor * (term1 + term2 * yconj + term3 * yconj**2.0)
 
     @cython.cdivision(True)
-    cdef float __j_minus(self, float y):
+    cdef double __j_minus(self, double y):
         """
         Form factor in differential branching fraction of radiative muon decay.
         See p.18, eqn (55) of arXiv:hep-ph/9909265.
@@ -46,16 +46,16 @@ cdef class Muon:
         Keyword arguments::
             y -- 2 * (photon energy) / (muon mass)
         """
-        cdef float yconj = 1.0 - y
-        cdef float r = RATIO_E_MU_MASS_SQ
-        cdef float preFactor = ALPHA_EM * yconj**2.0 / 6.0 / M_PI
-        cdef float term1 = 3.0 * log(yconj / r) - (93.0 / 12.0)
-        cdef float term2 = -4.0 * log(yconj / r) + (29.0 / 3.0)
-        cdef float term3 = 2.0 * log(yconj / r) - (55.0 / 12.0)
+        cdef double yconj = 1.0 - y
+        cdef double r = RATIO_E_MU_MASS_SQ
+        cdef double preFactor = ALPHA_EM * yconj**2.0 / 6.0 / M_PI
+        cdef double term1 = 3.0 * log(yconj / r) - (93.0 / 12.0)
+        cdef double term2 = -4.0 * log(yconj / r) + (29.0 / 3.0)
+        cdef double term3 = 2.0 * log(yconj / r) - (55.0 / 12.0)
         return preFactor * (term1 + term2 * yconj + term3 * yconj**2.0)
 
     @cython.cdivision(True)
-    cdef float __dBdy(self, float y):
+    cdef double __dBdy(self, double y):
         """
         Differential branching fraction from: mu -> e nu nu gam.
         See p.18, eqn (56) of arXiv:hep-ph/9909265.
@@ -63,13 +63,13 @@ cdef class Muon:
         Keyword arguments::
             y -- 2 * (photon energy) / (muon mass)
         """
-        cdef float result = 0.0
+        cdef double result = 0.0
         if 0.0 <= y and y <= 1.0 - RATIO_E_MU_MASS_SQ:
             result = (2.0 / y) * (self.__j_plus(y) + self.__j_minus(y))
         return result
 
     @cython.cdivision(True)
-    cdef float __gamma(self, float eng, float mass):
+    cdef double __gamma(self, double eng, double mass):
         """
         Returns special relativity boost factor gamma.
 
@@ -80,7 +80,7 @@ cdef class Muon:
         return eng / mass
 
     @cython.cdivision(True)
-    cdef float __beta(self, float eng, float mass):
+    cdef double __beta(self, double eng, double mass):
         """
         Returns velocity in natural units.
 
@@ -91,7 +91,7 @@ cdef class Muon:
         return sqrt(1.0 - (mass / eng)**2.0)
 
     @cython.cdivision(True)
-    cdef float __integrand(self, float cl, float engGam, float engMu):
+    cdef double __integrand(self, double cl, double engGam, double engMu):
         """
         Compute integrand of dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma
         in laboratory frame. The integration variable is cl - the angle between
@@ -102,15 +102,15 @@ cdef class Muon:
             engGam -- Gamma ray energy in laboratory frame.
             engMu -- Muon energy in laboratory frame.
         """
-        cdef float beta = self.__beta(engMu, MASS_MU)
-        cdef float gamma = self.__gamma(engMu, MASS_MU)
+        cdef double beta = self.__beta(engMu, MASS_MU)
+        cdef double gamma = self.__gamma(engMu, MASS_MU)
 
-        cdef float engGamMuRF = gamma * engGam * (1.0 - beta * cl)
+        cdef double engGamMuRF = gamma * engGam * (1.0 - beta * cl)
 
         return self.__dBdy((2.0 / MASS_MU) * engGamMuRF) \
             / (engMu * (1.0 - cl * beta))
 
-    def SpectrumPoint(self, float eng_gam, float eng_mu):
+    def SpectrumPoint(self, double eng_gam, double eng_mu):
         """
         Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
         laborartory frame.
@@ -119,12 +119,12 @@ cdef class Muon:
             eng_gam (float) -- Gamma ray energy in laboratory frame.
             eng_mu (float) -- Muon energy in laboratory frame.
         """
-        cdef float result = 0.0
+        cdef double result = 0.0
 
-        cdef float beta = self.__beta(eng_mu, MASS_MU)
-        cdef float gamma = self.__gamma(eng_mu, MASS_MU)
+        cdef double beta = self.__beta(eng_mu, MASS_MU)
+        cdef double gamma = self.__gamma(eng_mu, MASS_MU)
 
-        cdef float eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
+        cdef double eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
             * gamma * (1.0 + beta)
 
         integrand = partial(self.__integrand, self)
@@ -156,16 +156,16 @@ cdef class Muon:
             List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
             given muon energy `eng_mu`.
         """
-        cdef float result = 0.0
+        cdef double result = 0.0
         cdef int numpts = len(eng_gams)
 
-        cdef float beta = self.__beta(eng_mu, MASS_MU)
-        cdef float gamma = self.__gamma(eng_mu, MASS_MU)
+        cdef double beta = self.__beta(eng_mu, MASS_MU)
+        cdef double gamma = self.__gamma(eng_mu, MASS_MU)
 
-        cdef float eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
+        cdef double eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
             / (2.0 * MASS_MU) * gamma * (1.0 + beta)
 
-        cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)
+        cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
 
         integrand = partial(self.__integrand, self)
 

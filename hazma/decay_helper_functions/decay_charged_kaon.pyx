@@ -6,8 +6,9 @@ import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
-from libc.math cimport exp, log, M_PI, log10, sqrt
+from libc.math cimport exp, log, M_PI, log10, sqrt, fmax
 import cython
+from cython.parallel import prange
 from functools import partial
 include "parameters.pxd"
 
@@ -83,13 +84,14 @@ cdef class ChargedKaon:
         self.__num_ps_pts = 1000
         self.__num_bins = 10
 
-        self.__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI], \
-            dtype=np.float64)
-        self.__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0],\
-            dtype=np.float64)
+        self.__msPiPiPi \
+            = np.ndarray([MASS_PI, MASS_PI, MASS_PI], dtype=np.float64)
+        self.__msPi0MuNu \
+            = np.ndarray([MASS_PI0, MASS_MU, 0.0], dtype=np.float64)
 
-        self.__probsPiPiPi = np.zeros((3, 2, self.__num_bins), dtype=float)
-        self.__probsPi0MuNu = np.zeros((3, 2, self.__num_bins), dtype=float)
+        self.__probsPiPiPi = np.zeros((3, 2, self.__num_bins), dtype=np.float64)
+        self.__probsPi0MuNu \
+            = np.zeros((3, 2, self.__num_bins), dtype=np.float64)
 
         self.__ram = rambo.Rambo()
 
@@ -116,8 +118,8 @@ cdef class ChargedKaon:
     def __dealloc__(self):
         pass
 
-
-    cdef float __integrand2(self, float cl, float eng_gam, float eng_k):
+    @cython.cdivision(True)
+    cdef double __integrand2(self, double cl, double eng_gam, double eng_k):
         """
         Integrand for K -> X, where X is a two body final state. The X's
         used are
@@ -129,13 +131,13 @@ cdef class ChargedKaon:
             eng_k: Energy of kaon in laboratory frame.
         """
 
-        cdef float gamma_k = eng_k / MASS_K
-        cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
-        cdef float eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
+        cdef double gamma_k = eng_k / MASS_K
+        cdef double beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
+        cdef double eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
 
         cdef int i, j
-        cdef float ret_val = 0.0
-        cdef float pre_factor \
+        cdef double ret_val = 0.0
+        cdef double pre_factor \
             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
         eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
@@ -151,8 +153,8 @@ cdef class ChargedKaon:
 
         return pre_factor * ret_val
 
-
-    cdef float __integrand3(self, float cl, float eng_gam, float eng_k):
+    @cython.cdivision(True)
+    cdef double __integrand3(self, double cl, double eng_gam, double eng_k):
         """
         Integrand for K -> X, where X is a three body final state. The X's
         used are
@@ -169,19 +171,17 @@ cdef class ChargedKaon:
             eng_k: Energy of kaon in laboratory frame.
         """
 
-        cdef float gamma_k = eng_k / MASS_K
-        cdef float beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
-        cdef float eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
+        cdef double gamma_k = eng_k / MASS_K
+        cdef double beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
+        cdef double eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
 
         cdef int i, j
-        cdef float ret_val = 0.0
-        cdef float eng, weight
-        cdef float pre_factor \
+        cdef double ret_val = 0.0
+        cdef double eng, weight
+        cdef double pre_factor \
             = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-        cdef int size = max(len(self.__funcsPiPiPi), len(self.__funcsPi0MuNu))
-
-        for i in range(size):
+        for i in range(3):
             for j in range(self.__num_bins):
                 # K -> pi + pi + pi
                 if i < len(self.__funcsPiPiPi):
@@ -199,7 +199,7 @@ cdef class ChargedKaon:
         return pre_factor * ret_val
 
 
-    cdef float __integrand(self, float cl, float eng_gam, float eng_k):
+    cdef double __integrand(self, double cl, double eng_gam, double eng_k):
         """
         Integrand for K -> X, where X is a any final state. The X's
         used are
@@ -218,7 +218,7 @@ cdef class ChargedKaon:
             eng_k: Energy of kaon in laboratory frame.
         """
 
-        cdef float ret_val = 0.0
+        cdef double ret_val = 0.0
 
         ret_val += self.__integrand2(cl, eng_gam, eng_k)
         ret_val += self.__integrand3(cl, eng_gam, eng_k)
@@ -226,7 +226,7 @@ cdef class ChargedKaon:
         return ret_val
 
 
-    def SpectrumPoint(self, float eng_gam, float eng_k):
+    def SpectrumPoint(self, double eng_gam, double eng_k):
         """
         Returns the radiative spectrum value from charged kaon at
         a single gamma ray energy.
@@ -235,7 +235,7 @@ cdef class ChargedKaon:
             eng_gam: Energy of photon is laboratory frame.
             eng_k: Energy of charged kaon in laboratory frame.
         """
-        cdef float result = 0.0
+        cdef double result = 0.0
 
         integrand = partial(self.__integrand, self)
 
@@ -244,7 +244,7 @@ cdef class ChargedKaon:
                       epsrel=10**-4.)[0]
 
 
-    def Spectrum(self, np.ndarray eng_gams, float eng_k):
+    def Spectrum(self, np.ndarray eng_gams, double eng_k):
         """
         Returns the radiative spectrum dNde from charged kaon for a
         list of gamma ray energies.
@@ -253,13 +253,13 @@ cdef class ChargedKaon:
             eng_gams: List of energies of photon in laboratory frame.
             eng_k: Energy of charged kaon in laboratory frame.
         """
-        cdef float result = 0.0
+        cdef double result = 0.0
 
         integrand = partial(self.__integrand, self)
 
         cdef int numpts = len(eng_gams)
 
-        cdef np.ndarray spec = np.zeros(numpts, dtype=np.float32)
+        cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
 
         cdef int i = 0
 

@@ -4,12 +4,12 @@
 {
     "distutils": {
         "depends": [], 
-        "name": "hazma.decay.decay_neutral_pion", 
+        "name": "hazma.decay_helper_functions.decay_neutral_pion", 
         "sources": [
-            "hazma/decay/decay_neutral_pion.pyx"
+            "hazma/decay_helper_functions/decay_neutral_pion.pyx"
         ]
     }, 
-    "module_name": "hazma.decay.decay_neutral_pion"
+    "module_name": "hazma.decay_helper_functions.decay_neutral_pion"
 }
 END: Cython Metadata */
 
@@ -523,8 +523,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__hazma__decay__decay_neutral_pion
-#define __PYX_HAVE_API__hazma__decay__decay_neutral_pion
+#define __PYX_HAVE__hazma__decay_helper_functions__decay_neutral_pion
+#define __PYX_HAVE_API__hazma__decay_helper_functions__decay_neutral_pion
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -755,11 +755,11 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "hazma/decay/decay_neutral_pion.pyx",
+  "hazma/decay_helper_functions/decay_neutral_pion.pyx",
   "stringsource",
   "__init__.pxd",
   "type.pxd",
-  "hazma/decay/parameters.pxd",
+  "hazma/decay_helper_functions/parameters.pxd",
 };
 
 /* "../../../../../Library/Python/2.7/site-packages/Cython/Includes/numpy/__init__.pxd":743
@@ -976,7 +976,7 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
 
 
 /*--- Type declarations ---*/
-struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion;
+struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion;
 
 /* "../../../../../Library/Python/2.7/site-packages/Cython/Includes/numpy/__init__.pxd":782
  * ctypedef npy_longdouble longdouble_t
@@ -1014,11 +1014,11 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
 
-/* "hazma/decay/decay_neutral_pion.pxd":1
+/* "hazma/decay_helper_functions/decay_neutral_pion.pxd":1
  * cdef class NeutralPion:             # <<<<<<<<<<<<<<
  *     pass
  */
-struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion {
+struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion {
   PyObject_HEAD
 };
 
@@ -1512,61 +1512,61 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 
 /* Module declarations from 'cython' */
 
-/* Module declarations from 'hazma.decay.decay_neutral_pion' */
-static PyTypeObject *__pyx_ptype_5hazma_5decay_18decay_neutral_pion_NeutralPion = 0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_E;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_MU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_K0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_K;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_ETA;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_ETAP;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_RHO;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_OMEGA;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI0_TO_GG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI_TO_MUNU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KS_TO_PIPI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KS_TO_PI0PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_PIENU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_PIMUNU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_3PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_2PIPI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_MUNU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PIPI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_3PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI0ENU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI0MUNU;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI2PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_GG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_3PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_2PIPI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_2PIG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_2PIETA;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_RHOG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_etap_BR_pi0_pi0_eta;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_OMEGAG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_GG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_3PI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_MUMUG;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_2PIPI0;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_PI0G;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_2PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_WIDTH_K;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_WIDTH_PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_ALPHA_EM;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_RATIO_E_MU_MASS_SQ;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_A_PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_V_PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_A_K;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_V_K;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_DECAY_CONST_PI;
-static float __pyx_v_5hazma_5decay_18decay_neutral_pion_DECAY_CONST_K;
-static PyObject *__pyx_f_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *, PyObject *); /*proto*/
-#define __Pyx_MODULE_NAME "hazma.decay.decay_neutral_pion"
-int __pyx_module_is_main_hazma__decay__decay_neutral_pion = 0;
+/* Module declarations from 'hazma.decay_helper_functions.decay_neutral_pion' */
+static PyTypeObject *__pyx_ptype_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion = 0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_E;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_MU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_K0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_K;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_ETA;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_ETAP;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_RHO;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_OMEGA;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI0_TO_GG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI_TO_MUNU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KS_TO_PIPI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KS_TO_PI0PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_PIENU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_PIMUNU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_3PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_2PIPI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_MUNU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PIPI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_3PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI0ENU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI0MUNU;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI2PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_GG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_3PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_2PIPI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_2PIG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_2PIETA;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_RHOG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_etap_BR_pi0_pi0_eta;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_OMEGAG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_GG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_3PI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_MUMUG;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_2PIPI0;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_PI0G;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_2PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_WIDTH_K;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_WIDTH_PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_ALPHA_EM;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_RATIO_E_MU_MASS_SQ;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_A_PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_V_PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_A_K;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_V_K;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_DECAY_CONST_PI;
+static double __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_DECAY_CONST_K;
+static PyObject *__pyx_f_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *, PyObject *); /*proto*/
+#define __Pyx_MODULE_NAME "hazma.decay_helper_functions.decay_neutral_pion"
+int __pyx_module_is_main_hazma__decay_helper_functions__decay_neutral_pion = 0;
 
-/* Implementation of 'hazma.decay.decay_neutral_pion' */
+/* Implementation of 'hazma.decay_helper_functions.decay_neutral_pion' */
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
@@ -1604,12 +1604,12 @@ static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_pyx_unpickle_NeutralPion[] = "__pyx_unpickle_NeutralPion";
 static const char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
-static const char __pyx_k_hazma_decay_decay_neutral_pion[] = "hazma.decay.decay_neutral_pion";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static const char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static const char __pyx_k_Incompatible_checksums_s_vs_0xd4[] = "Incompatible checksums (%s vs 0xd41d8cd = ())";
 static const char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order not supported";
+static const char __pyx_k_hazma_decay_helper_functions_dec[] = "hazma.decay_helper_functions.decay_neutral_pion";
 static const char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran contiguous";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static const char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
@@ -1626,7 +1626,7 @@ static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_eng_gam;
 static PyObject *__pyx_n_s_eng_pi;
 static PyObject *__pyx_n_s_getstate;
-static PyObject *__pyx_n_s_hazma_decay_decay_neutral_pion;
+static PyObject *__pyx_n_s_hazma_decay_helper_functions_dec;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_name;
@@ -1655,15 +1655,15 @@ static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_zeros;
-static int __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static int __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi); /* proto */
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
-static PyObject *__pyx_tp_new_5hazma_5decay_18decay_neutral_pion_NeutralPion(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_int_222419149;
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
@@ -1677,7 +1677,7 @@ static PyObject *__pyx_tuple__9;
 static PyObject *__pyx_tuple__10;
 static PyObject *__pyx_codeobj__11;
 
-/* "hazma/decay/decay_neutral_pion.pyx":13
+/* "hazma/decay_helper_functions/decay_neutral_pion.pyx":13
  *     """
  * 
  *     def __init__(self):             # <<<<<<<<<<<<<<
@@ -1686,22 +1686,22 @@ static PyObject *__pyx_codeobj__11;
  */
 
 /* Python wrapper */
-static int __pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__ (wrapper)", 0);
   if (unlikely(PyTuple_GET_SIZE(__pyx_args) > 0)) {
     __Pyx_RaiseArgtupleInvalid("__init__", 1, 0, 0, PyTuple_GET_SIZE(__pyx_args)); return -1;}
   if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__init__", 0))) return -1;
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion___init__(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion___init__(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self) {
+static int __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion___init__(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__", 0);
@@ -1712,7 +1712,7 @@ static int __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion___init__(CY
   return __pyx_r;
 }
 
-/* "hazma/decay/decay_neutral_pion.pyx":17
+/* "hazma/decay_helper_functions/decay_neutral_pion.pyx":17
  * 
  *     @cython.cdivision(True)
  *     def SpectrumPoint(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
@@ -1721,9 +1721,9 @@ static int __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion___init__(CY
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2SpectrumPoint[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_2SpectrumPoint[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_3SpectrumPoint(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_eng_gam = 0;
   float __pyx_v_eng_pi;
   PyObject *__pyx_r = 0;
@@ -1771,18 +1771,18 @@ static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_3Spec
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("SpectrumPoint", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 17, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_2SpectrumPoint(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
   float __pyx_v_beta;
   float __pyx_v_ret_val;
   PyObject *__pyx_r = NULL;
@@ -1793,16 +1793,16 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
   int __pyx_t_4;
   __Pyx_RefNannySetupContext("SpectrumPoint", 0);
 
-  /* "hazma/decay/decay_neutral_pion.pyx":21
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":21
  *         Returns decay spectrum for pi0 -> g g.
  *         """
  *         cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)             # <<<<<<<<<<<<<<
  * 
  *         cdef float ret_val = 0.0
  */
-  __pyx_v_beta = sqrt((1.0 - powf((__pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI0 / __pyx_v_eng_pi), 2.0)));
+  __pyx_v_beta = sqrt((1.0 - pow((__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI0 / __pyx_v_eng_pi), 2.0)));
 
-  /* "hazma/decay/decay_neutral_pion.pyx":23
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":23
  *         cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
  * 
  *         cdef float ret_val = 0.0             # <<<<<<<<<<<<<<
@@ -1811,7 +1811,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
  */
   __pyx_v_ret_val = 0.0;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":25
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
  *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
@@ -1830,7 +1830,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
     goto __pyx_L4_bool_binop_done;
   }
 
-  /* "hazma/decay/decay_neutral_pion.pyx":26
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":26
  * 
  *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:             # <<<<<<<<<<<<<<
@@ -1846,7 +1846,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
   __pyx_t_1 = __pyx_t_4;
   __pyx_L4_bool_binop_done:;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":25
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
  *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
@@ -1855,16 +1855,16 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
  */
   if (__pyx_t_1) {
 
-    /* "hazma/decay/decay_neutral_pion.pyx":27
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":27
  *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \
  *                 eng_gam <= eng_pi * (1 + beta) / 2.0:
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)             # <<<<<<<<<<<<<<
  * 
  *         return ret_val
  */
-    __pyx_v_ret_val = ((__pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI0_TO_GG * 2.0) / (__pyx_v_eng_pi * __pyx_v_beta));
+    __pyx_v_ret_val = ((__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI0_TO_GG * 2.0) / (__pyx_v_eng_pi * __pyx_v_beta));
 
-    /* "hazma/decay/decay_neutral_pion.pyx":25
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":25
  *         cdef float ret_val = 0.0
  * 
  *         if eng_pi * (1 - beta) / 2.0 <= eng_gam and \             # <<<<<<<<<<<<<<
@@ -1873,7 +1873,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
  */
   }
 
-  /* "hazma/decay/decay_neutral_pion.pyx":29
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":29
  *             ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  * 
  *         return ret_val             # <<<<<<<<<<<<<<
@@ -1887,7 +1887,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":17
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":17
  * 
  *     @cython.cdivision(True)
  *     def SpectrumPoint(self, eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
@@ -1899,7 +1899,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.SpectrumPoint", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1907,7 +1907,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
   return __pyx_r;
 }
 
-/* "hazma/decay/decay_neutral_pion.pyx":32
+/* "hazma/decay_helper_functions/decay_neutral_pion.pyx":32
  * 
  *     @cython.cdivision(True)
  *     def Spectrum(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
@@ -1916,9 +1916,9 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2Spec
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spectrum[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_4Spectrum[] = "\n        Returns decay spectrum for pi0 -> g g.\n        ";
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_5Spectrum(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_eng_gam = 0;
   float __pyx_v_eng_pi;
   PyObject *__pyx_r = 0;
@@ -1966,12 +1966,12 @@ static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_5Spec
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("Spectrum", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 32, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_eng_gam), __pyx_ptype_5numpy_ndarray, 1, "eng_gam", 0))) __PYX_ERR(0, 32, __pyx_L1_error)
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spectrum(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_4Spectrum(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v_self), __pyx_v_eng_gam, __pyx_v_eng_pi);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1982,7 +1982,7 @@ static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_5Spec
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_4Spectrum(CYTHON_UNUSED struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyArrayObject *__pyx_v_eng_gam, float __pyx_v_eng_pi) {
   float __pyx_v_beta;
   int __pyx_v_numpts;
   PyArrayObject *__pyx_v_spec = 0;
@@ -2002,16 +2002,16 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   int __pyx_t_10;
   __Pyx_RefNannySetupContext("Spectrum", 0);
 
-  /* "hazma/decay/decay_neutral_pion.pyx":36
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":36
  *         Returns decay spectrum for pi0 -> g g.
  *         """
  *         cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)             # <<<<<<<<<<<<<<
  *         cdef int numpts = len(eng_gam)
  *         cdef np.ndarray spec = np.zeros(numpts, float)
  */
-  __pyx_v_beta = sqrt((1.0 - powf((__pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI0 / __pyx_v_eng_pi), 2.0)));
+  __pyx_v_beta = sqrt((1.0 - pow((__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI0 / __pyx_v_eng_pi), 2.0)));
 
-  /* "hazma/decay/decay_neutral_pion.pyx":37
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":37
  *         """
  *         cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
  *         cdef int numpts = len(eng_gam)             # <<<<<<<<<<<<<<
@@ -2021,7 +2021,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_eng_gam)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 37, __pyx_L1_error)
   __pyx_v_numpts = __pyx_t_1;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":38
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":38
  *         cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
  *         cdef int numpts = len(eng_gam)
  *         cdef np.ndarray spec = np.zeros(numpts, float)             # <<<<<<<<<<<<<<
@@ -2086,7 +2086,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   __pyx_v_spec = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":42
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":42
  *         cdef float ret_val
  * 
  *         for i in range(numpts):             # <<<<<<<<<<<<<<
@@ -2097,7 +2097,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_6; __pyx_t_8+=1) {
     __pyx_v_i = __pyx_t_8;
 
-    /* "hazma/decay/decay_neutral_pion.pyx":44
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":44
  *         for i in range(numpts):
  * 
  *             ret_val = 0.0             # <<<<<<<<<<<<<<
@@ -2106,7 +2106,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
  */
     __pyx_v_ret_val = 0.0;
 
-    /* "hazma/decay/decay_neutral_pion.pyx":46
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":46
  *             ret_val = 0.0
  * 
  *             if eng_pi * (1 - beta) / 2.0 <= eng_gam[i] and \             # <<<<<<<<<<<<<<
@@ -2128,7 +2128,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
       goto __pyx_L6_bool_binop_done;
     }
 
-    /* "hazma/decay/decay_neutral_pion.pyx":47
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":47
  * 
  *             if eng_pi * (1 - beta) / 2.0 <= eng_gam[i] and \
  *                     eng_gam[i] <= eng_pi * (1 + beta) / 2.0:             # <<<<<<<<<<<<<<
@@ -2147,7 +2147,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
     __pyx_t_9 = __pyx_t_10;
     __pyx_L6_bool_binop_done:;
 
-    /* "hazma/decay/decay_neutral_pion.pyx":46
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":46
  *             ret_val = 0.0
  * 
  *             if eng_pi * (1 - beta) / 2.0 <= eng_gam[i] and \             # <<<<<<<<<<<<<<
@@ -2156,16 +2156,16 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
  */
     if (__pyx_t_9) {
 
-      /* "hazma/decay/decay_neutral_pion.pyx":48
+      /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":48
  *             if eng_pi * (1 - beta) / 2.0 <= eng_gam[i] and \
  *                     eng_gam[i] <= eng_pi * (1 + beta) / 2.0:
  *                 ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)             # <<<<<<<<<<<<<<
  *             spec[i] = ret_val
  * 
  */
-      __pyx_v_ret_val = ((__pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI0_TO_GG * 2.0) / (__pyx_v_eng_pi * __pyx_v_beta));
+      __pyx_v_ret_val = ((__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI0_TO_GG * 2.0) / (__pyx_v_eng_pi * __pyx_v_beta));
 
-      /* "hazma/decay/decay_neutral_pion.pyx":46
+      /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":46
  *             ret_val = 0.0
  * 
  *             if eng_pi * (1 - beta) / 2.0 <= eng_gam[i] and \             # <<<<<<<<<<<<<<
@@ -2174,7 +2174,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
  */
     }
 
-    /* "hazma/decay/decay_neutral_pion.pyx":49
+    /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":49
  *                     eng_gam[i] <= eng_pi * (1 + beta) / 2.0:
  *                 ret_val = BR_PI0_TO_GG * 2.0 / (eng_pi * beta)
  *             spec[i] = ret_val             # <<<<<<<<<<<<<<
@@ -2187,7 +2187,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
 
-  /* "hazma/decay/decay_neutral_pion.pyx":51
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":51
  *             spec[i] = ret_val
  * 
  *         return spec             # <<<<<<<<<<<<<<
@@ -2197,7 +2197,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   __pyx_r = ((PyObject *)__pyx_v_spec);
   goto __pyx_L0;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":32
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":32
  * 
  *     @cython.cdivision(True)
  *     def Spectrum(self, np.ndarray eng_gam, float eng_pi):             # <<<<<<<<<<<<<<
@@ -2212,7 +2212,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.Spectrum", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_spec);
@@ -2228,19 +2228,19 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spec
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_7__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_7__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_7__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_7__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v_self));
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self) {
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_6__reduce_cython__(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self) {
   int __pyx_v_use_setstate;
   PyObject *__pyx_v_state = NULL;
   PyObject *__pyx_v__dict = NULL;
@@ -2436,7 +2436,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_6__re
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -2454,19 +2454,19 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_6__re
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_9__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_9__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_9__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_9__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_8__setstate_cython__(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2478,7 +2478,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__se
  *     __pyx_unpickle_NeutralPion__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 15, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 15, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 15, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -2494,7 +2494,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__se
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.NeutralPion.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.NeutralPion.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2509,9 +2509,9 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion_11NeutralPion_8__se
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_NeutralPion(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_NeutralPion = {"__pyx_unpickle_NeutralPion", (PyCFunction)__pyx_pw_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_NeutralPion, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_NeutralPion(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_1__pyx_unpickle_NeutralPion(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_5hazma_22decay_helper_functions_18decay_neutral_pion_1__pyx_unpickle_NeutralPion = {"__pyx_unpickle_NeutralPion", (PyCFunction)__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_1__pyx_unpickle_NeutralPion, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_1__pyx_unpickle_NeutralPion(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -2570,18 +2570,18 @@ static PyObject *__pyx_pw_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_Neu
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle_NeutralPion", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.__pyx_unpickle_NeutralPion", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.__pyx_unpickle_NeutralPion", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = NULL;
   PyObject *__pyx_v___pyx_result = NULL;
   PyObject *__pyx_r = NULL;
@@ -2704,7 +2704,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_Neut
  *     if __pyx_state is not None:
  *         __pyx_unpickle_NeutralPion__set_state(<NeutralPion> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_5hazma_5decay_18decay_neutral_pion_NeutralPion), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 5, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_6 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -2771,7 +2771,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_Neut
  * cdef __pyx_unpickle_NeutralPion__set_state(NeutralPion __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 7, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(((struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 7, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(((struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 7, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -2809,7 +2809,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_Neut
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.__pyx_unpickle_NeutralPion", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.__pyx_unpickle_NeutralPion", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -2827,7 +2827,7 @@ static PyObject *__pyx_pf_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_Neut
  *         __pyx_result.__dict__.update(__pyx_state[0])
  */
 
-static PyObject *__pyx_f_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_5hazma_22decay_helper_functions_18decay_neutral_pion___pyx_unpickle_NeutralPion__set_state(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -2953,7 +2953,7 @@ static PyObject *__pyx_f_5hazma_5decay_18decay_neutral_pion___pyx_unpickle_Neutr
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("hazma.decay.decay_neutral_pion.__pyx_unpickle_NeutralPion__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("hazma.decay_helper_functions.decay_neutral_pion.__pyx_unpickle_NeutralPion__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5543,7 +5543,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   return __pyx_r;
 }
 
-static PyObject *__pyx_tp_new_5hazma_5decay_18decay_neutral_pion_NeutralPion(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+static PyObject *__pyx_tp_new_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -5554,7 +5554,7 @@ static PyObject *__pyx_tp_new_5hazma_5decay_18decay_neutral_pion_NeutralPion(PyT
   return o;
 }
 
-static void __pyx_tp_dealloc_5hazma_5decay_18decay_neutral_pion_NeutralPion(PyObject *o) {
+static void __pyx_tp_dealloc_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion(PyObject *o) {
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && (!PyType_IS_GC(Py_TYPE(o)) || !_PyGC_FINALIZED(o))) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -5563,20 +5563,20 @@ static void __pyx_tp_dealloc_5hazma_5decay_18decay_neutral_pion_NeutralPion(PyOb
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static PyMethodDef __pyx_methods_5hazma_5decay_18decay_neutral_pion_NeutralPion[] = {
-  {"SpectrumPoint", (PyCFunction)__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_3SpectrumPoint, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_5decay_18decay_neutral_pion_11NeutralPion_2SpectrumPoint},
-  {"Spectrum", (PyCFunction)__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_5Spectrum, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_5decay_18decay_neutral_pion_11NeutralPion_4Spectrum},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_7__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_9__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion[] = {
+  {"SpectrumPoint", (PyCFunction)__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_3SpectrumPoint, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_2SpectrumPoint},
+  {"Spectrum", (PyCFunction)__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_5Spectrum, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_4Spectrum},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_7__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_9__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion = {
+static PyTypeObject __pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion = {
   PyVarObject_HEAD_INIT(0, 0)
-  "hazma.decay.decay_neutral_pion.NeutralPion", /*tp_name*/
-  sizeof(struct __pyx_obj_5hazma_5decay_18decay_neutral_pion_NeutralPion), /*tp_basicsize*/
+  "hazma.decay_helper_functions.decay_neutral_pion.NeutralPion", /*tp_name*/
+  sizeof(struct __pyx_obj_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_5hazma_5decay_18decay_neutral_pion_NeutralPion, /*tp_dealloc*/
+  __pyx_tp_dealloc_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion, /*tp_dealloc*/
   0, /*tp_print*/
   0, /*tp_getattr*/
   0, /*tp_setattr*/
@@ -5604,7 +5604,7 @@ static PyTypeObject __pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion = 
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_5hazma_5decay_18decay_neutral_pion_NeutralPion, /*tp_methods*/
+  __pyx_methods_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -5612,9 +5612,9 @@ static PyTypeObject __pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion = 
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  __pyx_pw_5hazma_5decay_18decay_neutral_pion_11NeutralPion_1__init__, /*tp_init*/
+  __pyx_pw_5hazma_22decay_helper_functions_18decay_neutral_pion_11NeutralPion_1__init__, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_5hazma_5decay_18decay_neutral_pion_NeutralPion, /*tp_new*/
+  __pyx_tp_new_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -5679,7 +5679,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_eng_gam, __pyx_k_eng_gam, sizeof(__pyx_k_eng_gam), 0, 0, 1, 1},
   {&__pyx_n_s_eng_pi, __pyx_k_eng_pi, sizeof(__pyx_k_eng_pi), 0, 0, 1, 1},
   {&__pyx_n_s_getstate, __pyx_k_getstate, sizeof(__pyx_k_getstate), 0, 0, 1, 1},
-  {&__pyx_n_s_hazma_decay_decay_neutral_pion, __pyx_k_hazma_decay_decay_neutral_pion, sizeof(__pyx_k_hazma_decay_decay_neutral_pion), 0, 0, 1, 1},
+  {&__pyx_n_s_hazma_decay_helper_functions_dec, __pyx_k_hazma_decay_helper_functions_dec, sizeof(__pyx_k_hazma_decay_helper_functions_dec), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
@@ -5963,14 +5963,14 @@ static int __pyx_pymod_exec_decay_neutral_pion(PyObject *__pyx_pyinit_module)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_hazma__decay__decay_neutral_pion) {
+  if (__pyx_module_is_main_hazma__decay_helper_functions__decay_neutral_pion) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "hazma.decay.decay_neutral_pion")) {
-      if (unlikely(PyDict_SetItemString(modules, "hazma.decay.decay_neutral_pion", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "hazma.decay_helper_functions.decay_neutral_pion")) {
+      if (unlikely(PyDict_SetItemString(modules, "hazma.decay_helper_functions.decay_neutral_pion", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -5982,11 +5982,11 @@ static int __pyx_pymod_exec_decay_neutral_pion(PyObject *__pyx_pyinit_module)
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
-  __pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "NeutralPion", (PyObject *)&__pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
-  __pyx_ptype_5hazma_5decay_18decay_neutral_pion_NeutralPion = &__pyx_type_5hazma_5decay_18decay_neutral_pion_NeutralPion;
+  if (PyType_Ready(&__pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "NeutralPion", (PyObject *)&__pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_ptype_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion = &__pyx_type_5hazma_22decay_helper_functions_18decay_neutral_pion_NeutralPion;
   /*--- Type import code ---*/
   __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__Pyx_BUILTIN_MODULE_NAME, "type", 
   #if CYTHON_COMPILING_IN_PYPY
@@ -6007,7 +6007,7 @@ static int __pyx_pymod_exec_decay_neutral_pion(PyObject *__pyx_pyinit_module)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "hazma/decay/decay_neutral_pion.pyx":2
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":2
  * from libc.math cimport sqrt
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
@@ -6018,450 +6018,450 @@ static int __pyx_pymod_exec_decay_neutral_pion(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(0, 2, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "hazma/decay/parameters.pxd":8
+  /* "hazma/decay_helper_functions/parameters.pxd":8
  * 
  * # MASSES (MeV)
- * cdef float MASS_E = 0.510998928   # electron             # <<<<<<<<<<<<<<
- * cdef float MASS_MU = 105.6583715  # muon
- * cdef float MASS_PI0 = 134.9766    # neutral pion
+ * cdef double MASS_E = 0.510998928   # electron             # <<<<<<<<<<<<<<
+ * cdef double MASS_MU = 105.6583715  # muon
+ * cdef double MASS_PI0 = 134.9766    # neutral pion
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_E = 0.510998928;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_E = 0.510998928;
 
-  /* "hazma/decay/parameters.pxd":9
+  /* "hazma/decay_helper_functions/parameters.pxd":9
  * # MASSES (MeV)
- * cdef float MASS_E = 0.510998928   # electron
- * cdef float MASS_MU = 105.6583715  # muon             # <<<<<<<<<<<<<<
- * cdef float MASS_PI0 = 134.9766    # neutral pion
- * cdef float MASS_PI = 139.57018    # Charged pion
+ * cdef double MASS_E = 0.510998928   # electron
+ * cdef double MASS_MU = 105.6583715  # muon             # <<<<<<<<<<<<<<
+ * cdef double MASS_PI0 = 134.9766    # neutral pion
+ * cdef double MASS_PI = 139.57018    # Charged pion
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_MU = 105.6583715;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_MU = 105.6583715;
 
-  /* "hazma/decay/parameters.pxd":10
- * cdef float MASS_E = 0.510998928   # electron
- * cdef float MASS_MU = 105.6583715  # muon
- * cdef float MASS_PI0 = 134.9766    # neutral pion             # <<<<<<<<<<<<<<
- * cdef float MASS_PI = 139.57018    # Charged pion
- * cdef float MASS_K0 = 497.61       # neutral kaon
+  /* "hazma/decay_helper_functions/parameters.pxd":10
+ * cdef double MASS_E = 0.510998928   # electron
+ * cdef double MASS_MU = 105.6583715  # muon
+ * cdef double MASS_PI0 = 134.9766    # neutral pion             # <<<<<<<<<<<<<<
+ * cdef double MASS_PI = 139.57018    # Charged pion
+ * cdef double MASS_K0 = 497.61       # neutral kaon
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI0 = 134.9766;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI0 = 134.9766;
 
-  /* "hazma/decay/parameters.pxd":11
- * cdef float MASS_MU = 105.6583715  # muon
- * cdef float MASS_PI0 = 134.9766    # neutral pion
- * cdef float MASS_PI = 139.57018    # Charged pion             # <<<<<<<<<<<<<<
- * cdef float MASS_K0 = 497.61       # neutral kaon
- * cdef float MASS_K = 493.68        # charged Kaon
+  /* "hazma/decay_helper_functions/parameters.pxd":11
+ * cdef double MASS_MU = 105.6583715  # muon
+ * cdef double MASS_PI0 = 134.9766    # neutral pion
+ * cdef double MASS_PI = 139.57018    # Charged pion             # <<<<<<<<<<<<<<
+ * cdef double MASS_K0 = 497.61       # neutral kaon
+ * cdef double MASS_K = 493.68        # charged Kaon
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_PI = 139.57018;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_PI = 139.57018;
 
-  /* "hazma/decay/parameters.pxd":12
- * cdef float MASS_PI0 = 134.9766    # neutral pion
- * cdef float MASS_PI = 139.57018    # Charged pion
- * cdef float MASS_K0 = 497.61       # neutral kaon             # <<<<<<<<<<<<<<
- * cdef float MASS_K = 493.68        # charged Kaon
- * cdef float MASS_ETA = 547.86      # eta
+  /* "hazma/decay_helper_functions/parameters.pxd":12
+ * cdef double MASS_PI0 = 134.9766    # neutral pion
+ * cdef double MASS_PI = 139.57018    # Charged pion
+ * cdef double MASS_K0 = 497.61       # neutral kaon             # <<<<<<<<<<<<<<
+ * cdef double MASS_K = 493.68        # charged Kaon
+ * cdef double MASS_ETA = 547.86      # eta
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_K0 = 497.61;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_K0 = 497.61;
 
-  /* "hazma/decay/parameters.pxd":13
- * cdef float MASS_PI = 139.57018    # Charged pion
- * cdef float MASS_K0 = 497.61       # neutral kaon
- * cdef float MASS_K = 493.68        # charged Kaon             # <<<<<<<<<<<<<<
- * cdef float MASS_ETA = 547.86      # eta
- * cdef float MASS_ETAP = 957.8      # eta prime
+  /* "hazma/decay_helper_functions/parameters.pxd":13
+ * cdef double MASS_PI = 139.57018    # Charged pion
+ * cdef double MASS_K0 = 497.61       # neutral kaon
+ * cdef double MASS_K = 493.68        # charged Kaon             # <<<<<<<<<<<<<<
+ * cdef double MASS_ETA = 547.86      # eta
+ * cdef double MASS_ETAP = 957.8      # eta prime
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_K = 493.68;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_K = 493.68;
 
-  /* "hazma/decay/parameters.pxd":14
- * cdef float MASS_K0 = 497.61       # neutral kaon
- * cdef float MASS_K = 493.68        # charged Kaon
- * cdef float MASS_ETA = 547.86      # eta             # <<<<<<<<<<<<<<
- * cdef float MASS_ETAP = 957.8      # eta prime
- * cdef float MASS_RHO = 775.3       # rho
+  /* "hazma/decay_helper_functions/parameters.pxd":14
+ * cdef double MASS_K0 = 497.61       # neutral kaon
+ * cdef double MASS_K = 493.68        # charged Kaon
+ * cdef double MASS_ETA = 547.86      # eta             # <<<<<<<<<<<<<<
+ * cdef double MASS_ETAP = 957.8      # eta prime
+ * cdef double MASS_RHO = 775.3       # rho
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_ETA = 547.86;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_ETA = 547.86;
 
-  /* "hazma/decay/parameters.pxd":15
- * cdef float MASS_K = 493.68        # charged Kaon
- * cdef float MASS_ETA = 547.86      # eta
- * cdef float MASS_ETAP = 957.8      # eta prime             # <<<<<<<<<<<<<<
- * cdef float MASS_RHO = 775.3       # rho
- * cdef float MASS_OMEGA = 782.7     # omega
+  /* "hazma/decay_helper_functions/parameters.pxd":15
+ * cdef double MASS_K = 493.68        # charged Kaon
+ * cdef double MASS_ETA = 547.86      # eta
+ * cdef double MASS_ETAP = 957.8      # eta prime             # <<<<<<<<<<<<<<
+ * cdef double MASS_RHO = 775.3       # rho
+ * cdef double MASS_OMEGA = 782.7     # omega
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_ETAP = 957.8;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_ETAP = 957.8;
 
-  /* "hazma/decay/parameters.pxd":16
- * cdef float MASS_ETA = 547.86      # eta
- * cdef float MASS_ETAP = 957.8      # eta prime
- * cdef float MASS_RHO = 775.3       # rho             # <<<<<<<<<<<<<<
- * cdef float MASS_OMEGA = 782.7     # omega
+  /* "hazma/decay_helper_functions/parameters.pxd":16
+ * cdef double MASS_ETA = 547.86      # eta
+ * cdef double MASS_ETAP = 957.8      # eta prime
+ * cdef double MASS_RHO = 775.3       # rho             # <<<<<<<<<<<<<<
+ * cdef double MASS_OMEGA = 782.7     # omega
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_RHO = 775.3;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_RHO = 775.3;
 
-  /* "hazma/decay/parameters.pxd":17
- * cdef float MASS_ETAP = 957.8      # eta prime
- * cdef float MASS_RHO = 775.3       # rho
- * cdef float MASS_OMEGA = 782.7     # omega             # <<<<<<<<<<<<<<
- * 
- * # BRANCHING RATIOS
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_OMEGA = 782.7;
-
-  /* "hazma/decay/parameters.pxd":20
+  /* "hazma/decay_helper_functions/parameters.pxd":17
+ * cdef double MASS_ETAP = 957.8      # eta prime
+ * cdef double MASS_RHO = 775.3       # rho
+ * cdef double MASS_OMEGA = 782.7     # omega             # <<<<<<<<<<<<<<
  * 
  * # BRANCHING RATIOS
- * cdef float BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g             # <<<<<<<<<<<<<<
- * cdef float BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
- * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI0_TO_GG = 0.9882;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_OMEGA = 782.7;
 
-  /* "hazma/decay/parameters.pxd":21
+  /* "hazma/decay_helper_functions/parameters.pxd":20
+ * 
  * # BRANCHING RATIOS
- * cdef float BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g
- * cdef float BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu             # <<<<<<<<<<<<<<
- * 
- * cdef float BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_PI_TO_MUNU = 0.9998;
-
-  /* "hazma/decay/parameters.pxd":23
- * cdef float BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
- * 
- * cdef float BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi             # <<<<<<<<<<<<<<
- * cdef float BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi
+ * cdef double BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g             # <<<<<<<<<<<<<<
+ * cdef double BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KS_TO_PIPI = 0.6920;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI0_TO_GG = 0.9882;
 
-  /* "hazma/decay/parameters.pxd":24
+  /* "hazma/decay_helper_functions/parameters.pxd":21
+ * # BRANCHING RATIOS
+ * cdef double BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g
+ * cdef double BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu             # <<<<<<<<<<<<<<
  * 
- * cdef float BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
- * cdef float BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi             # <<<<<<<<<<<<<<
- * 
- * cdef float BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
+ * cdef double BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KS_TO_PI0PI0 = 0.3069;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_PI_TO_MUNU = 0.9998;
 
-  /* "hazma/decay/parameters.pxd":26
- * cdef float BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi
+  /* "hazma/decay_helper_functions/parameters.pxd":23
+ * cdef double BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
  * 
- * cdef float BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu             # <<<<<<<<<<<<<<
- * cdef float BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
- * cdef float BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_PIENU = 0.4055;
-
-  /* "hazma/decay/parameters.pxd":27
- * 
- * cdef float BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
- * cdef float BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu             # <<<<<<<<<<<<<<
- * cdef float BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
- * cdef float BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_PIMUNU = 0.2704;
-
-  /* "hazma/decay/parameters.pxd":28
- * cdef float BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
- * cdef float BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
- * cdef float BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0             # <<<<<<<<<<<<<<
- * cdef float BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
+ * cdef double BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi             # <<<<<<<<<<<<<<
+ * cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_3PI0 = 0.1952;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KS_TO_PIPI = 0.6920;
 
-  /* "hazma/decay/parameters.pxd":29
- * cdef float BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
- * cdef float BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
- * cdef float BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0             # <<<<<<<<<<<<<<
+  /* "hazma/decay_helper_functions/parameters.pxd":24
  * 
- * cdef float BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_KL_TO_2PIPI0 = 0.1254;
-
-  /* "hazma/decay/parameters.pxd":31
- * cdef float BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
+ * cdef double BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
+ * cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi             # <<<<<<<<<<<<<<
  * 
- * cdef float BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu             # <<<<<<<<<<<<<<
- * cdef float BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
- * cdef float BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
+ * cdef double BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_MUNU = 0.6356;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KS_TO_PI0PI0 = 0.3069;
 
-  /* "hazma/decay/parameters.pxd":32
+  /* "hazma/decay_helper_functions/parameters.pxd":26
+ * cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi
  * 
- * cdef float BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
- * cdef float BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0             # <<<<<<<<<<<<<<
- * cdef float BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
- * cdef float BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
+ * cdef double BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu             # <<<<<<<<<<<<<<
+ * cdef double BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
+ * cdef double BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PIPI0 = 0.2067;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_PIENU = 0.4055;
 
-  /* "hazma/decay/parameters.pxd":33
- * cdef float BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
- * cdef float BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
- * cdef float BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi             # <<<<<<<<<<<<<<
- * cdef float BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
- * cdef float BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
+  /* "hazma/decay_helper_functions/parameters.pxd":27
+ * 
+ * cdef double BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
+ * cdef double BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu             # <<<<<<<<<<<<<<
+ * cdef double BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
+ * cdef double BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_3PI = 0.05583;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_PIMUNU = 0.2704;
 
-  /* "hazma/decay/parameters.pxd":34
- * cdef float BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
- * cdef float BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
- * cdef float BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu             # <<<<<<<<<<<<<<
- * cdef float BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
- * cdef float BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI0ENU = 0.0507;
-
-  /* "hazma/decay/parameters.pxd":35
- * cdef float BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
- * cdef float BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
- * cdef float BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu             # <<<<<<<<<<<<<<
- * cdef float BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
+  /* "hazma/decay_helper_functions/parameters.pxd":28
+ * cdef double BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
+ * cdef double BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
+ * cdef double BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0             # <<<<<<<<<<<<<<
+ * cdef double BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI0MUNU = 0.03352;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_3PI0 = 0.1952;
 
-  /* "hazma/decay/parameters.pxd":36
- * cdef float BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
- * cdef float BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
- * cdef float BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0             # <<<<<<<<<<<<<<
+  /* "hazma/decay_helper_functions/parameters.pxd":29
+ * cdef double BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu
+ * cdef double BR_KL_TO_3PI0 = 0.1952        # kl    -> pi0 + pi0  + pi0
+ * cdef double BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0             # <<<<<<<<<<<<<<
  * 
- * cdef float BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
+ * cdef double BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_K_TO_PI2PI0 = 0.01760;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_KL_TO_2PIPI0 = 0.1254;
 
-  /* "hazma/decay/parameters.pxd":38
- * cdef float BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
+  /* "hazma/decay_helper_functions/parameters.pxd":31
+ * cdef double BR_KL_TO_2PIPI0 = 0.1254      # kl    -> pi  + pi  + pi0
  * 
- * cdef float BR_ETA_TO_GG = 0.3941         # eta   -> g   + g             # <<<<<<<<<<<<<<
- * cdef float BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
- * cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
+ * cdef double BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu             # <<<<<<<<<<<<<<
+ * cdef double BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
+ * cdef double BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_GG = 0.3941;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_MUNU = 0.6356;
 
-  /* "hazma/decay/parameters.pxd":39
+  /* "hazma/decay_helper_functions/parameters.pxd":32
  * 
- * cdef float BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
- * cdef float BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0             # <<<<<<<<<<<<<<
- * cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
- * cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
+ * cdef double BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
+ * cdef double BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0             # <<<<<<<<<<<<<<
+ * cdef double BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
+ * cdef double BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_3PI0 = 0.3268;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PIPI0 = 0.2067;
 
-  /* "hazma/decay/parameters.pxd":40
- * cdef float BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
- * cdef float BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
- * cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0             # <<<<<<<<<<<<<<
- * cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
- * cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
+  /* "hazma/decay_helper_functions/parameters.pxd":33
+ * cdef double BR_K_TO_MUNU = 0.6356         # k     -> mu  + nu
+ * cdef double BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
+ * cdef double BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi             # <<<<<<<<<<<<<<
+ * cdef double BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
+ * cdef double BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_2PIPI0 = 0.2292;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_3PI = 0.05583;
 
-  /* "hazma/decay/parameters.pxd":41
- * cdef float BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
- * cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
- * cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
- * cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
+  /* "hazma/decay_helper_functions/parameters.pxd":34
+ * cdef double BR_K_TO_PIPI0 = 0.2067        # k     -> pi  + pi0
+ * cdef double BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
+ * cdef double BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu             # <<<<<<<<<<<<<<
+ * cdef double BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
+ * cdef double BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETA_TO_2PIG = 0.0422;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI0ENU = 0.0507;
 
-  /* "hazma/decay/parameters.pxd":42
- * cdef float BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
- * cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
- * cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
- * cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_2PIETA = 0.429;
-
-  /* "hazma/decay/parameters.pxd":43
- * cdef float BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
- * cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
- * cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g             # <<<<<<<<<<<<<<
- * cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
- * cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_RHOG = 0.291;
-
-  /* "hazma/decay/parameters.pxd":44
- * cdef float BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
- * cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
- * cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
- * cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_etap_BR_pi0_pi0_eta = 0.222;
-
-  /* "hazma/decay/parameters.pxd":45
- * cdef float BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
- * cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
- * cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
- * cdef float BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_OMEGAG = 0.0275;
-
-  /* "hazma/decay/parameters.pxd":46
- * cdef float etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
- * cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
- * cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
- * cdef float BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
- */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_GG = 0.0220;
-
-  /* "hazma/decay/parameters.pxd":47
- * cdef float BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
- * cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
- * cdef float BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-             # <<<<<<<<<<<<<<
- * cdef float BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
+  /* "hazma/decay_helper_functions/parameters.pxd":35
+ * cdef double BR_K_TO_3PI = 0.05583         # k     -> pi  + pi  + pi
+ * cdef double BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
+ * cdef double BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu             # <<<<<<<<<<<<<<
+ * cdef double BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_3PI0 = 0.0214;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI0MUNU = 0.03352;
 
-  /* "hazma/decay/parameters.pxd":48
- * cdef float BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
- * cdef float BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
- * cdef float BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g             # <<<<<<<<<<<<<<
+  /* "hazma/decay_helper_functions/parameters.pxd":36
+ * cdef double BR_K_TO_PI0ENU = 0.0507       # k     -> pi0 + e   + nu
+ * cdef double BR_K_TO_PI0MUNU = 0.03352     # k     -> pi0 + mu  + nu
+ * cdef double BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0             # <<<<<<<<<<<<<<
  * 
- * cdef float BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
+ * cdef double BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_ETAP_TO_MUMUG = 0.0108;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_K_TO_PI2PI0 = 0.01760;
 
-  /* "hazma/decay/parameters.pxd":50
- * cdef float BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
+  /* "hazma/decay_helper_functions/parameters.pxd":38
+ * cdef double BR_K_TO_PI2PI0 = 0.01760      # k     -> pi  + pi0 + pi0
  * 
- * cdef float BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0             # <<<<<<<<<<<<<<
- * cdef float BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g
- * cdef float BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi
+ * cdef double BR_ETA_TO_GG = 0.3941         # eta   -> g   + g             # <<<<<<<<<<<<<<
+ * cdef double BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
+ * cdef double BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_2PIPI0 = 0.892;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_GG = 0.3941;
 
-  /* "hazma/decay/parameters.pxd":51
+  /* "hazma/decay_helper_functions/parameters.pxd":39
  * 
- * cdef float BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
- * cdef float BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g             # <<<<<<<<<<<<<<
- * cdef float BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi
+ * cdef double BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
+ * cdef double BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0             # <<<<<<<<<<<<<<
+ * cdef double BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
+ * cdef double BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_3PI0 = 0.3268;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":40
+ * cdef double BR_ETA_TO_GG = 0.3941         # eta   -> g   + g
+ * cdef double BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
+ * cdef double BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0             # <<<<<<<<<<<<<<
+ * cdef double BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
+ * cdef double BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_2PIPI0 = 0.2292;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":41
+ * cdef double BR_ETA_TO_3PI0 = 0.3268       # eta   -> pi0 + pi0 + pi0
+ * cdef double BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
+ * cdef double BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
+ * cdef double BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETA_TO_2PIG = 0.0422;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":42
+ * cdef double BR_ETA_TO_2PIPI0 = 0.2292     # eta   -> pi  + pi  + pi0
+ * cdef double BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
+ * cdef double BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
+ * cdef double etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_2PIETA = 0.429;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":43
+ * cdef double BR_ETA_TO_2PIG = 0.0422       # eta   -> pi  + pi  + g
+ * cdef double BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
+ * cdef double BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g             # <<<<<<<<<<<<<<
+ * cdef double etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
+ * cdef double BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_RHOG = 0.291;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":44
+ * cdef double BR_ETAP_TO_2PIETA = 0.429     # eta'  -> pi  + pi  + eta
+ * cdef double BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
+ * cdef double etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
+ * cdef double BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_etap_BR_pi0_pi0_eta = 0.222;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":45
+ * cdef double BR_ETAP_TO_RHOG = 0.291       # eta'  -> rho + g
+ * cdef double etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
+ * cdef double BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
+ * cdef double BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_OMEGAG = 0.0275;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":46
+ * cdef double etap_BR_pi0_pi0_eta = 0.222   # eta'  -> pi0 + pi0 + eta
+ * cdef double BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
+ * cdef double BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
+ * cdef double BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_GG = 0.0220;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":47
+ * cdef double BR_ETAP_TO_OMEGAG = 0.0275    # eta'  -> omega + g
+ * cdef double BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
+ * cdef double BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-             # <<<<<<<<<<<<<<
+ * cdef double BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_PI0G = 0.0828;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_3PI0 = 0.0214;
 
-  /* "hazma/decay/parameters.pxd":52
- * cdef float BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
- * cdef float BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g
- * cdef float BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi             # <<<<<<<<<<<<<<
+  /* "hazma/decay_helper_functions/parameters.pxd":48
+ * cdef double BR_ETAP_TO_GG = 0.0220        # eta'  -> g   + g
+ * cdef double BR_ETAP_TO_3PI0 = 0.0214      # eta'  -> pi0 + pi0 + pi-
+ * cdef double BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g             # <<<<<<<<<<<<<<
+ * 
+ * cdef double BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_ETAP_TO_MUMUG = 0.0108;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":50
+ * cdef double BR_ETAP_TO_MUMUG = 0.0108     # eta'  -> mu  + mu  + g
+ * 
+ * cdef double BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0             # <<<<<<<<<<<<<<
+ * cdef double BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g
+ * cdef double BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_2PIPI0 = 0.892;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":51
+ * 
+ * cdef double BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
+ * cdef double BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g             # <<<<<<<<<<<<<<
+ * cdef double BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi
+ * 
+ */
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_PI0G = 0.0828;
+
+  /* "hazma/decay_helper_functions/parameters.pxd":52
+ * cdef double BR_OMEGA_TO_2PIPI0 = 0.892    # omega -> pi + pi   + pi0
+ * cdef double BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g
+ * cdef double BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi             # <<<<<<<<<<<<<<
  * 
  * # WIDTHS
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_BR_OMEGA_TO_2PI = 0.0153;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_BR_OMEGA_TO_2PI = 0.0153;
 
-  /* "hazma/decay/parameters.pxd":55
+  /* "hazma/decay_helper_functions/parameters.pxd":55
  * 
  * # WIDTHS
- * cdef float WIDTH_K = 3.3406**-13.             # <<<<<<<<<<<<<<
- * cdef float WIDTH_PI = 2.528511206475808**-14.
+ * cdef double WIDTH_K = 3.3406**-13.             # <<<<<<<<<<<<<<
+ * cdef double WIDTH_PI = 2.528511206475808**-14.
  * 
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_WIDTH_K = pow(3.3406, -13.);
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_WIDTH_K = pow(3.3406, -13.);
 
-  /* "hazma/decay/parameters.pxd":56
+  /* "hazma/decay_helper_functions/parameters.pxd":56
  * # WIDTHS
- * cdef float WIDTH_K = 3.3406**-13.
- * cdef float WIDTH_PI = 2.528511206475808**-14.             # <<<<<<<<<<<<<<
+ * cdef double WIDTH_K = 3.3406**-13.
+ * cdef double WIDTH_PI = 2.528511206475808**-14.             # <<<<<<<<<<<<<<
  * 
  * # MISC.
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_WIDTH_PI = pow(2.528511206475808, -14.);
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_WIDTH_PI = pow(2.528511206475808, -14.);
 
-  /* "hazma/decay/parameters.pxd":59
+  /* "hazma/decay_helper_functions/parameters.pxd":59
  * 
  * # MISC.
- * cdef float ALPHA_EM = 1.0 / 137.0  # Fine structure constant.             # <<<<<<<<<<<<<<
- * cdef float RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
- * cdef float A_PI = 0.0119
+ * cdef double ALPHA_EM = 1.0 / 137.0  # Fine structure constant.             # <<<<<<<<<<<<<<
+ * cdef double RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
+ * cdef double A_PI = 0.0119
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_ALPHA_EM = (1.0 / 137.0);
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_ALPHA_EM = (1.0 / 137.0);
 
-  /* "hazma/decay/parameters.pxd":60
+  /* "hazma/decay_helper_functions/parameters.pxd":60
  * # MISC.
- * cdef float ALPHA_EM = 1.0 / 137.0  # Fine structure constant.
- * cdef float RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.             # <<<<<<<<<<<<<<
- * cdef float A_PI = 0.0119
- * cdef float V_PI = 0.0254
+ * cdef double ALPHA_EM = 1.0 / 137.0  # Fine structure constant.
+ * cdef double RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.             # <<<<<<<<<<<<<<
+ * cdef double A_PI = 0.0119
+ * cdef double V_PI = 0.0254
  */
-  if (unlikely(__pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_MU == 0)) {
+  if (unlikely(__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_MU == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(4, 60, __pyx_L1_error)
   }
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_RATIO_E_MU_MASS_SQ = pow(((double)(__pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_E / __pyx_v_5hazma_5decay_18decay_neutral_pion_MASS_MU)), 2.);
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_RATIO_E_MU_MASS_SQ = pow((__pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_E / __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_MASS_MU), 2.);
 
-  /* "hazma/decay/parameters.pxd":61
- * cdef float ALPHA_EM = 1.0 / 137.0  # Fine structure constant.
- * cdef float RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
- * cdef float A_PI = 0.0119             # <<<<<<<<<<<<<<
- * cdef float V_PI = 0.0254
- * cdef float A_K = 0.042
+  /* "hazma/decay_helper_functions/parameters.pxd":61
+ * cdef double ALPHA_EM = 1.0 / 137.0  # Fine structure constant.
+ * cdef double RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
+ * cdef double A_PI = 0.0119             # <<<<<<<<<<<<<<
+ * cdef double V_PI = 0.0254
+ * cdef double A_K = 0.042
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_A_PI = 0.0119;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_A_PI = 0.0119;
 
-  /* "hazma/decay/parameters.pxd":62
- * cdef float RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
- * cdef float A_PI = 0.0119
- * cdef float V_PI = 0.0254             # <<<<<<<<<<<<<<
- * cdef float A_K = 0.042
- * cdef float V_K = 0.096
+  /* "hazma/decay_helper_functions/parameters.pxd":62
+ * cdef double RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
+ * cdef double A_PI = 0.0119
+ * cdef double V_PI = 0.0254             # <<<<<<<<<<<<<<
+ * cdef double A_K = 0.042
+ * cdef double V_K = 0.096
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_V_PI = 0.0254;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_V_PI = 0.0254;
 
-  /* "hazma/decay/parameters.pxd":63
- * cdef float A_PI = 0.0119
- * cdef float V_PI = 0.0254
- * cdef float A_K = 0.042             # <<<<<<<<<<<<<<
- * cdef float V_K = 0.096
- * cdef float DECAY_CONST_PI = 130.41
+  /* "hazma/decay_helper_functions/parameters.pxd":63
+ * cdef double A_PI = 0.0119
+ * cdef double V_PI = 0.0254
+ * cdef double A_K = 0.042             # <<<<<<<<<<<<<<
+ * cdef double V_K = 0.096
+ * cdef double DECAY_CONST_PI = 130.41
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_A_K = 0.042;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_A_K = 0.042;
 
-  /* "hazma/decay/parameters.pxd":64
- * cdef float V_PI = 0.0254
- * cdef float A_K = 0.042
- * cdef float V_K = 0.096             # <<<<<<<<<<<<<<
- * cdef float DECAY_CONST_PI = 130.41
- * cdef float DECAY_CONST_K = 156.1
+  /* "hazma/decay_helper_functions/parameters.pxd":64
+ * cdef double V_PI = 0.0254
+ * cdef double A_K = 0.042
+ * cdef double V_K = 0.096             # <<<<<<<<<<<<<<
+ * cdef double DECAY_CONST_PI = 130.41
+ * cdef double DECAY_CONST_K = 156.1
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_V_K = 0.096;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_V_K = 0.096;
 
-  /* "hazma/decay/parameters.pxd":65
- * cdef float A_K = 0.042
- * cdef float V_K = 0.096
- * cdef float DECAY_CONST_PI = 130.41             # <<<<<<<<<<<<<<
- * cdef float DECAY_CONST_K = 156.1
+  /* "hazma/decay_helper_functions/parameters.pxd":65
+ * cdef double A_K = 0.042
+ * cdef double V_K = 0.096
+ * cdef double DECAY_CONST_PI = 130.41             # <<<<<<<<<<<<<<
+ * cdef double DECAY_CONST_K = 156.1
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_DECAY_CONST_PI = 130.41;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_DECAY_CONST_PI = 130.41;
 
-  /* "hazma/decay/parameters.pxd":66
- * cdef float V_K = 0.096
- * cdef float DECAY_CONST_PI = 130.41
- * cdef float DECAY_CONST_K = 156.1             # <<<<<<<<<<<<<<
+  /* "hazma/decay_helper_functions/parameters.pxd":66
+ * cdef double V_K = 0.096
+ * cdef double DECAY_CONST_PI = 130.41
+ * cdef double DECAY_CONST_K = 156.1             # <<<<<<<<<<<<<<
  */
-  __pyx_v_5hazma_5decay_18decay_neutral_pion_DECAY_CONST_K = 156.1;
+  __pyx_v_5hazma_22decay_helper_functions_18decay_neutral_pion_DECAY_CONST_K = 156.1;
 
   /* "(tree fragment)":1
  * def __pyx_unpickle_NeutralPion(__pyx_type, long __pyx_checksum, __pyx_state):             # <<<<<<<<<<<<<<
  *     if __pyx_checksum != 0xd41d8cd:
  *         from pickle import PickleError as __pyx_PickleError
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5hazma_5decay_18decay_neutral_pion_1__pyx_unpickle_NeutralPion, NULL, __pyx_n_s_hazma_decay_decay_neutral_pion); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_5hazma_22decay_helper_functions_18decay_neutral_pion_1__pyx_unpickle_NeutralPion, NULL, __pyx_n_s_hazma_decay_helper_functions_dec); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_NeutralPion, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "hazma/decay/decay_neutral_pion.pyx":1
+  /* "hazma/decay_helper_functions/decay_neutral_pion.pyx":1
  * from libc.math cimport sqrt             # <<<<<<<<<<<<<<
  * import numpy as np
  * cimport numpy as np
@@ -6486,11 +6486,11 @@ static int __pyx_pymod_exec_decay_neutral_pion(PyObject *__pyx_pyinit_module)
   __Pyx_XDECREF(__pyx_t_1);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init hazma.decay.decay_neutral_pion", 0, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init hazma.decay_helper_functions.decay_neutral_pion", 0, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init hazma.decay.decay_neutral_pion");
+    PyErr_SetString(PyExc_ImportError, "init hazma.decay_helper_functions.decay_neutral_pion");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

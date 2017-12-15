@@ -1,7 +1,9 @@
 cdef class Muon:
-    cdef float __j_plus(self, float y)
-    cdef float __j_minus(self, float y)
-    cdef float __dBdy(self, float y)
-    cdef float __gamma(self, float eng, float mass)
-    cdef float __beta(self, float eng, float mass)
-    cdef float __integrand(self, float cl, float engGam, float engMu)
+    cdef double __j_plus(self, double y)
+    cdef double __j_minus(self, double y)
+    cdef double __dBdy(self, double y)
+    cdef double __gamma(self, double eng, double mass)
+    cdef double __beta(self, double eng, double mass)
+    cdef double __integrand(self, double cl, double engGam, double engMu)
+
+    cdef np.ndarray CSpectrum(self, np.ndarray eng_gams, float eng_mu)
