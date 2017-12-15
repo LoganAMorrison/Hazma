@@ -15,9 +15,10 @@ def decay_spectra(eng_gam, eng_mu):
     a gamma ray engergy of `eng_gam` and muon energy of `eng_mu`.
 
     Paramaters
-        eng_gam (float or numpy.ndarray) : Gamma ray energy(ies) in laboratory
-                                           frame.
-        eng_mu (float) : Muon energy in laboratory frame.
+        eng_gam (float or numpy.ndarray) :
+            Gamma ray energy(ies) in laboratory frame.
+        eng_mu (float) :
+            Muon energy in laboratory frame.
 
     Returns
         spec (np.ndarray) List of gamma ray spectrum values, dNdE, evaluated at

@@ -20,15 +20,15 @@ def fsr(eng_gam, cme, mediator='scalar'):
     electronss.
 
     Paramaters
-        eng_gam : float or np.ndarray
+        eng_gam (float or np.ndarray) :
             Gamma ray energy(ies) in laboratory frame.
-        cme : float
+        cme (float) :
             Center of mass energy or mass of the off-shell mediator.
-        mediator : string
+        mediator (string) :
             Mediator type : scalar, psuedo-scalar, vector or axial-vector.
 
     Returns
-        spec : np.ndarray
+        spec (np.ndarray) :
             List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
             given a center of mass energy `cme`.
 

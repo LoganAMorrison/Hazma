@@ -9,13 +9,13 @@ def decay_spectra(eng_gam, eng_pi):
     given a gamma ray engergy of `eng_gam` and muon energy of `eng_pi`.
 
     Paramaters
-        eng_gam : float or numpy.ndarray
+        eng_gam (float or numpy.ndarray) :
             Gamma ray energy(ies) in laboratory frame.
-        eng_pi : float
+        eng_pi (float) :
             Charged pion energy in laboratory frame.
 
     Returns
-        spec : np.ndarray
+        spec (np.ndarray) :
             List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
             given charged pion energy `eng_pi`.
 
