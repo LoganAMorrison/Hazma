@@ -19,11 +19,9 @@ def decay_spectra(eng_gam, eng_pi):
             List of gamma ray spectrum values, dNdE, evaluated at
             `eng_gams` given neutral pion energy `eng_pi`.
     """
-    pi0 = decay_neutral_pion.NeutralPion()
-
     if hasattr(eng_gam, '__len__'):
-        return pi0.Spectrum(eng_gam, eng_pi)
-    return pi0.SpectrumPoint(eng_gam, eng_pi)
+        return decay_neutral_pion.Spectrum(eng_gam, eng_pi)
+    return decay_neutral_pion.SpectrumPoint(eng_gam, eng_pi)
 
 
 def fsr(eng_gam, cme, mediator='scalar'):

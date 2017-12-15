@@ -26,10 +26,9 @@ def decay_spectra(eng_gam, eng_k):
             List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
             given muon energy `eng_mu`.
     """
-    charged_k = decay_charged_kaon.ChargedKaon()
     if hasattr(eng_gam, "__len__"):
-        return charged_k.Spectrum(eng_gam, eng_k)
-    return charged_k.SpectrumPoint(eng_gam, eng_k)
+        return decay_charged_kaon.Spectrum(eng_gam, eng_k)
+    return decay_charged_kaon.SpectrumPoint(eng_gam, eng_k)
 
 
 def fsr(eng_gam, cme, mediator='scalar'):
