@@ -13,4 +13,4 @@ cdef double __eng_gam_max(double)
 cdef double __integrand(double, double, double)
 
 cdef double CSpectrumPoint(double, double)
-cdef np.ndarray CSpectrum(np.ndarray, double)
+cdef np.ndarray[np.float64_t, ndim=1] CSpectrum(np.ndarray, double)

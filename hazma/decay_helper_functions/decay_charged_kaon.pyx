@@ -1,10 +1,11 @@
-from decay_muon cimport CSpectrumPoint as mu_spec
-from decay_charged_pion cimport CSpectrumPoint as chrg_pi_spec
-from decay_neutral_pion cimport CSpectrumPoint as neut_pi_spec
+cimport decay_muon
+cimport decay_charged_pion
+cimport decay_neutral_pion
 from ..phases_space_generator cimport rambo
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
+from scipy.interpolate import interp2d
 from libc.math cimport exp, log, M_PI, log10, sqrt, fmax
 import cython
 include "parameters.pxd"
@@ -29,65 +30,79 @@ Description:
     For the three-body final state, the energies of the final state
     particles are computed using RAMBO. The spectra for each final state
     particle is computed are each point in phases space in the charged kaon's rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.
-
-    Attributes:
-        __num_ps_pts   : Number of phase space points to use for RAMBO in
-                         creating energies distributions for three-body
-                         final states. Set to 1000 by default.
-
-        __num_bins     : Number of bins to use for energies distributions of
-                         three-body final states (i.e. the number of
-                         energies to use.) Set to 10 by default.
-
-        __msPiPiPi     : Array of masses for the three charged pion final
-                         state.
-
-        __msPi0MuNu    : Array of masses for the pi0 + mu + nu final state.
-
-        __probsPiPiPi  : Array storing the energies and probabilities of the
-                         three charged pion final state.
-
-        __probsPi0MuNu : Array storing the energies and probabilities of the
-                        pi0 + mu + nu final state.
-
-        __ram          : Rambo object used to create energy distributions.
-
-        __muon         : Muon object to compute muon decay and FSR spectra.
-
-        __neuPion      : Neutal pion object to compute decay and FSR
-                         spectra.
-
-        __chrgpi       : Charged pion object to compute decay and FSR
-                        spectra.
-
-        __funcsPiPiPi  : List of functions to compute decay and FSR spectrum
-                        from the three charged pion final state.
-
-        __funcsPi0MuNu : List of functions to compute decay and FSR spectrum
-                        from the pi0 + mu + nu final state.
 """
+
+""" Distributions for 3-body final states """
+# Number of phase space points to use for RAMBO in creating energies
+# distributions for three-body final states. Set to 1000 by default.
 __num_ps_pts = 1000
+# Number of bins to use for energies distributions of three-body final
+# states (i.e. the number of energies to use.) Set to 10 by default.
 __num_bins = 10
-
-
+# Array of masses for the three charged pion final state.
 __msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI])
+# Array of masses for the pi0 + mu + nu final
 __msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0])
-
+# Array storing the energies and probabilities of the three charged pion
+# final state.
 __probsPiPiPi = np.zeros((3, 2, __num_bins), dtype=np.float64)
+# Array storing the energies and probabilities of the pi0 + mu + nu final
+# state.
 __probsPi0MuNu = np.zeros((3, 2, __num_bins), dtype=np.float64)
-
+# Rambo object used to create energy distributions.
 __ram = rambo.Rambo()
-
+# Call rambo to generate energ distributions for 3 charged pion final state.
 __probsPiPiPi = __ram.generate_energy_histogram(__num_ps_pts, __msPiPiPi,
                                                 MASS_K, __num_bins)
-
+# Call rambo to generate energ distributions for pi0 + mu + nu  final state.
 __probsPi0MuNu = __ram.generate_energy_histogram(__num_ps_pts, __msPi0MuNu,
                                                  MASS_K, __num_bins)
 
-__funcsPiPiPi = np.array([chrg_pi_spec, chrg_pi_spec, chrg_pi_spec])
+# Energy of muon in the k -> mu + nu final state.
+__eng_mu_k_rf = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
+# Energy of charged pion in the k -> pi + pi0 final state.
+__eng_pi_k_rf = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
+# Energy of neutral pion in the k -> pi + pi0 final state.
+__eng_pi0_k_rf = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
 
-__funcsPi0MuNu = np.array([mu_spec, neut_pi_spec])
+""" Interpolating spectrum functions """
+# Gamma ray energies for interpolating functions. Need a very low lower bound
+# in order to no pass outside interpolation bounds when called from kaon decay.
+__eng_gams_interp = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
 
+__spec_PiPi0 = decay_charged_pion.CSpectrum(__eng_gams_interp, __eng_pi_k_rf)
+__spec_PiPi0 += decay_neutral_pion.CSpectrum(__eng_gams_interp, __eng_pi0_k_rf)
+__spec_MuNu = decay_muon.CSpectrum(__eng_gams_interp, __eng_mu_k_rf)
+
+__spec_Pi0MuNu = np.zeros(10000, dtype=np.float64)
+__spec_PiPiPi = np.zeros(10000, dtype=np.float64)
+
+cdef int k
+for k in range(__num_bins):
+    __spec_Pi0MuNu += __probsPi0MuNu[0, 0, k] * \
+        decay_muon.CSpectrum(__eng_gams_interp, __probsPi0MuNu[0, 1, k])
+    __spec_Pi0MuNu += __probsPi0MuNu[1, 0, k] * \
+        decay_muon.CSpectrum(__eng_gams_interp, __probsPi0MuNu[1, 1, k])
+
+    __spec_PiPiPi += __probsPiPiPi[0, 0, k] * \
+        decay_muon.CSpectrum(__eng_gams_interp, __probsPiPiPi[0, 1, k])
+    __spec_PiPiPi += __probsPiPiPi[1, 0, k] * \
+        decay_muon.CSpectrum(__eng_gams_interp, __probsPiPiPi[1, 1, k])
+    __spec_PiPiPi += __probsPiPiPi[2, 0, k] * \
+        decay_muon.CSpectrum(__eng_gams_interp, __probsPiPiPi[2, 1, k])
+
+
+cdef double __interp_MuNu(double eng_gam):
+    return np.interp(eng_gam, __eng_gams_interp, __spec_MuNu)
+
+cdef double __interp_PiPi0(double eng_gam):
+    return np.interp(eng_gam, __eng_gams_interp, __spec_PiPi0)
+
+cdef double __interp_PiPiPi(double eng_gam):
+    return np.interp(eng_gam, __eng_gams_interp, __spec_PiPiPi)
+
+cdef double __interp_Pi0MuNu(double eng_gam):
+    return np.interp(eng_gam, __eng_gams_interp, __spec_Pi0MuNu)
 
 @cython.cdivision(True)
 cdef double __integrand2(double cl, double eng_gam, double eng_k):
@@ -111,16 +126,8 @@ cdef double __integrand2(double cl, double eng_gam, double eng_k):
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    eng_mu = (MASS_K**2 + MASS_MU**2) / (2.0 * MASS_K)
-    eng_pi = (MASS_K**2 + MASS_PI**2 - MASS_PI0**2) / (2.0 * MASS_K)
-    eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
-
-    ret_val += BR_K_TO_MUNU * \
-        mu_spec(eng_gam_k_rf, eng_mu)
-    ret_val += BR_K_TO_PIPI0 * \
-        chrg_pi_spec(eng_gam_k_rf, eng_pi)
-    ret_val += BR_K_TO_PIPI0 * \
-        neut_pi_spec(eng_gam_k_rf, eng_pi0)
+    ret_val += BR_K_TO_MUNU * __interp_MuNu(eng_gam_k_rf)
+    ret_val += BR_K_TO_PIPI0 * __interp_PiPi0(eng_gam_k_rf)
 
     return pre_factor * ret_val
 
@@ -153,23 +160,8 @@ cdef double __integrand3(double cl, double eng_gam, double eng_k):
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    cdef int lenPiPiPi = int(len(__funcsPiPiPi))
-    cdef int lenPi0MuNu = int(len(__funcsPi0MuNu))
-
-    for i in range(3):
-        for j in range(__num_bins):
-            # K -> pi + pi + pi
-            if i < lenPiPiPi:
-                eng = __probsPiPiPi[i, 0, j]
-                weight = __probsPiPiPi[i, 1, j]
-                ret_val += BR_K_TO_3PI * weight \
-                    * __funcsPiPiPi[i](eng_gam_k_rf, eng)
-            # K -> pi0 + mu + nu
-            if i < lenPi0MuNu:
-                eng = __probsPi0MuNu[i, 0, j]
-                weight = __probsPi0MuNu[i, 1, j]
-                ret_val += BR_K_TO_PI0MUNU * weight \
-                    * __funcsPi0MuNu[i](eng_gam_k_rf, eng)
+    ret_val += BR_K_TO_PI0MUNU * __interp_Pi0MuNu(eng_gam_k_rf)
+    ret_val += BR_K_TO_3PI * __interp_PiPiPi(eng_gam_k_rf)
 
     return pre_factor * ret_val
 
@@ -218,7 +210,7 @@ def SpectrumPoint(double eng_gam, double eng_k):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def Spectrum(np.ndarray eng_gams, double eng_k):
+def Spectrum(np.ndarray[np.float64_t, ndim=1] eng_gams, double eng_k):
     """
     Returns the radiative spectrum dNde from charged kaon for a
     list of gamma ray energies.
