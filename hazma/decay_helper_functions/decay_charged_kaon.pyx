@@ -230,6 +230,6 @@ def Spectrum(np.ndarray[np.float64_t, ndim=1] eng_gams, double eng_k):
     for i in range(numpts):
         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
                        args=(eng_gams[i], eng_k), epsabs=0.0, \
-                       epsrel=10**-2.)[0]
+                       epsrel=10**-4.)[0]
 
     return spec

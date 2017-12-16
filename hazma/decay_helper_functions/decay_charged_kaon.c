@@ -3817,7 +3817,7 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
  *     for i in range(numpts):
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \
- *                        epsrel=10**-2.)[0]
+ *                        epsrel=10**-4.)[0]
  */
     __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_quad); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
@@ -3851,7 +3851,7 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
  *     for i in range(numpts):
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \             # <<<<<<<<<<<<<<
- *                        epsrel=10**-2.)[0]
+ *                        epsrel=10**-4.)[0]
  * 
  */
     __pyx_t_9 = __pyx_v_i;
@@ -3874,11 +3874,11 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
     /* "hazma/decay_helper_functions/decay_charged_kaon.pyx":233
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \
- *                        epsrel=10**-2.)[0]             # <<<<<<<<<<<<<<
+ *                        epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *     return spec
  */
-    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -2.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 233, __pyx_L1_error)
+    __pyx_t_10 = PyFloat_FromDouble(pow(10.0, -4.)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 233, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_epsrel, __pyx_t_10) < 0) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
@@ -3888,7 +3888,7 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
  *     for i in range(numpts):
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \
- *                        epsrel=10**-2.)[0]
+ *                        epsrel=10**-4.)[0]
  */
     __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_4, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
@@ -3899,7 +3899,7 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
     /* "hazma/decay_helper_functions/decay_charged_kaon.pyx":233
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \
- *                        epsrel=10**-2.)[0]             # <<<<<<<<<<<<<<
+ *                        epsrel=10**-4.)[0]             # <<<<<<<<<<<<<<
  * 
  *     return spec
  */
@@ -3912,14 +3912,14 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_kaon_2
  *     for i in range(numpts):
  *         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \             # <<<<<<<<<<<<<<
  *                        args=(eng_gams[i], eng_k), epsabs=0.0, \
- *                        epsrel=10**-2.)[0]
+ *                        epsrel=10**-4.)[0]
  */
     if (unlikely(__Pyx_SetItemInt(((PyObject *)__pyx_v_spec), __pyx_v_i, __pyx_t_2, int, 1, __Pyx_PyInt_From_int, 0, 0, 0) < 0)) __PYX_ERR(0, 231, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
 
   /* "hazma/decay_helper_functions/decay_charged_kaon.pyx":235
- *                        epsrel=10**-2.)[0]
+ *                        epsrel=10**-4.)[0]
  * 
  *     return spec             # <<<<<<<<<<<<<<
  */
