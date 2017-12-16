@@ -106,7 +106,7 @@ cdef double __integrand(double cl, double engGam, double engMu):
         / (engMu * (1.0 - cl * beta))
 
 
-cdef double SpectrumPoint(double eng_gam, double eng_mu):
+cdef double CSpectrumPoint(double eng_gam, double eng_mu):
     """
     Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
     laborartory frame.
@@ -132,7 +132,7 @@ cdef double SpectrumPoint(double eng_gam, double eng_mu):
 
 
 @cython.cdivision(True)
-cdef double Spectrum(np.ndarray eng_gams, float eng_mu):
+cdef np.ndarray CSpectrum(np.ndarray eng_gams, float eng_mu):
     """
     Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
 

@@ -1,4 +1,4 @@
-import decay_muon
+from decay_muon import Spectrum as muspec
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
@@ -13,7 +13,7 @@ __eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
 
 __eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
 
-__mu_spec = decay_muon.Spectrum(__eng_gams_mu, __eng_mu_pi_rf)
+__mu_spec = muspec(__eng_gams_mu, __eng_mu_pi_rf)
 
 __mu_spec2 = InterpolatedUnivariateSpline(__eng_gams_mu, __mu_spec, k=1)
 
@@ -88,7 +88,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi):
 
     return preFactor * __muon_spectrum(engGamPiRF)
 
-cdef double SpectrumPoint(double eng_gam, double eng_pi):
+cdef double CSpectrumPoint(double eng_gam, double eng_pi):
     """
     Returns the radiative spectrum value from charged pion given a gamma
     ray energy eng_gam and charged pion energy eng_pi. When the

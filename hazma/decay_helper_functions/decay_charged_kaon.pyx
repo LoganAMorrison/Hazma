@@ -1,6 +1,6 @@
-import decay_muon
-import decay_charged_pion
-import decay_neutral_pion
+from decay_muon import SpectrumPoint as muspec
+from decay_charged_pion import SpectrumPoint as chrgpispec
+from decay_neutral_pion import SpectrumPoint as neutpispec
 from ..phases_space_generator cimport rambo
 import numpy as np
 cimport numpy as np
@@ -66,19 +66,9 @@ Description:
         __funcsPi0MuNu : List of functions to compute decay and FSR spectrum
                         from the pi0 + mu + nu final state.
 """
-cdef int __num_ps_pts = 1000
-cdef int __num_bins = 10
+__num_ps_pts = 1000
+__num_bins = 10
 
-cdef np.ndarray __msPiPiPi
-cdef np.ndarray __msPi0MuNu
-
-cdef np.ndarray __probsPiPiPi
-cdef np.ndarray __probsPi0MuNu
-
-cdef np.ndarray __funcsPiPiPi
-cdef np.ndarray __funcsPi0MuNu
-
-cdef rambo.Rambo __ram
 
 __msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI])
 __msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0])
@@ -94,12 +84,9 @@ __probsPiPiPi = __ram.generate_energy_histogram(__num_ps_pts, __msPiPiPi,
 __probsPi0MuNu = __ram.generate_energy_histogram(__num_ps_pts, __msPi0MuNu,
                                                  MASS_K, __num_bins)
 
-__funcsPiPiPi = np.array([decay_charged_pion.SpectrumPoint, \
-                          decay_charged_pion.SpectrumPoint, \
-                          decay_charged_pion.SpectrumPoint])
+__funcsPiPiPi = np.array([chrgpispec, chrgpispec, chrgpispec])
 
-__funcsPi0MuNu = np.array([decay_muon.SpectrumPoint,\
-                           decay_neutral_pion.SpectrumPoint])
+__funcsPi0MuNu = np.array([muspec, neutpispec])
 
 
 @cython.cdivision(True)
@@ -129,11 +116,11 @@ cdef double __integrand2(double cl, double eng_gam, double eng_k):
     eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
 
     ret_val += BR_K_TO_MUNU * \
-        decay_muon.SpectrumPoint(eng_gam_k_rf, eng_mu)
+        muspec(eng_gam_k_rf, eng_mu)
     ret_val += BR_K_TO_PIPI0 * \
-        decay_charged_pion.SpectrumPoint(eng_gam_k_rf, eng_pi)
+        chrgpispec(eng_gam_k_rf, eng_pi)
     ret_val += BR_K_TO_PIPI0 * \
-        decay_neutral_pion.SpectrumPoint(eng_gam_k_rf, eng_pi0)
+        neutpispec(eng_gam_k_rf, eng_pi0)
 
     return pre_factor * ret_val
 
@@ -211,6 +198,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
     ret_val += __integrand3(cl, eng_gam, eng_k)
 
     return ret_val
+
 
 
 def SpectrumPoint(double eng_gam, double eng_k):
