@@ -125,6 +125,8 @@ cdef double __integrand2(double cl, double eng_gam, double eng_k):
     return pre_factor * ret_val
 
 @cython.cdivision(True)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef double __integrand3(double cl, double eng_gam, double eng_k):
     """
     Integrand for K -> X, where X is a three body final state. The X's
@@ -141,7 +143,6 @@ cdef double __integrand3(double cl, double eng_gam, double eng_k):
         eng_gam: Energy of photon in laboratory frame.
         eng_k: Energy of kaon in laboratory frame.
     """
-
     cdef double gamma_k = eng_k / MASS_K
     cdef double beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
     cdef double eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
@@ -191,7 +192,6 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
         eng_gam: Energy of photon in laboratory frame.
         eng_k: Energy of kaon in laboratory frame.
     """
-
     cdef double ret_val = 0.0
 
     ret_val += __integrand2(cl, eng_gam, eng_k)
@@ -216,7 +216,8 @@ def SpectrumPoint(double eng_gam, double eng_k):
                   args=(eng_gam, eng_k), epsabs=10**-10., \
                   epsrel=10**-4.)[0]
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def Spectrum(np.ndarray eng_gams, double eng_k):
     """
     Returns the radiative spectrum dNde from charged kaon for a
