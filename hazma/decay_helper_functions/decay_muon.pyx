@@ -105,6 +105,69 @@ cdef double __integrand(double cl, double engGam, double engMu):
     return __dBdy((2.0 / MASS_MU) * engGamMuRF) \
         / (engMu * (1.0 - cl * beta))
 
+
+cdef double SpectrumPoint(double eng_gam, double eng_mu):
+    """
+    Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
+    laborartory frame.
+
+    Keyword arguments::
+        eng_gam (float) -- Gamma ray energy in laboratory frame.
+        eng_mu (float) -- Muon energy in laboratory frame.
+    """
+    cdef double result = 0.0
+
+    cdef double beta = __beta(eng_mu, MASS_MU)
+    cdef double gamma = __gamma(eng_mu, MASS_MU)
+
+    cdef double eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
+        * gamma * (1.0 + beta)
+
+    if 0 <= eng_gam and eng_gam <= eng_gam_max:
+        result = quad(__integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
+            points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
+
+
+    return result
+
+
+@cython.cdivision(True)
+cdef double Spectrum(np.ndarray eng_gams, float eng_mu):
+    """
+    Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
+
+    Paramaters
+    ----------
+    eng_gams : np.ndarray
+        List of gamma ray energies in laboratory frame.
+    eng_mu : float
+        Muon energy in laboratory frame.
+
+    Returns
+    -------
+    spec : np.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
+        given muon energy `eng_mu`.
+    """
+    cdef double result = 0.0
+    cdef int numpts = len(eng_gams)
+
+    cdef double beta = __beta(eng_mu, MASS_MU)
+    cdef double gamma = __gamma(eng_mu, MASS_MU)
+
+    cdef double eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
+        / (2.0 * MASS_MU) * gamma * (1.0 + beta)
+
+    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
+
+    for i in range(numpts):
+        if 0 <= eng_gams[i] and eng_gams[i] <= eng_gam_maxMuRF:
+            spec[i] = quad(__integrand, -1.0, 1.0, \
+                           args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
+                           epsabs=10**-10., epsrel=10**-4.)[0]
+
+    return spec
+
 def SpectrumPoint(double eng_gam, double eng_mu):
     """
     Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
