@@ -88,6 +88,56 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi):
 
     return preFactor * __muon_spectrum(engGamPiRF)
 
+cdef double SpectrumPoint(double eng_gam, double eng_pi):
+    """
+    Returns the radiative spectrum value from charged pion given a gamma
+    ray energy eng_gam and charged pion energy eng_pi. When the
+    ChargedPion object is instatiated, an interplating function for the
+    mu spectrum is computed.
+
+    Keyword arguments::
+        eng_gam: Energy of photon is laboratory frame.
+        eng_pi: Energy of charged pion in laboratory frame.
+    """
+    cdef double result = 0.0
+
+    if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
+        result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                      args=(eng_gam, eng_pi), epsabs=10**-10., \
+                      epsrel=10**-4.)[0]
+
+    return result
+
+
+@cython.boundscheck(True)
+@cython.wraparound(False)
+cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
+    """
+    Returns the radiative spectrum dNde from charged pion given a gamma
+    ray energies eng_gams and charged pion energy eng_pi.
+    When the ChargedPion object is instatiated, an interplating function
+    for the mu spectrum is computed.
+
+    Keyword arguments::
+        eng_gams: Gamma ray energies to evaluate spectrum.
+        eng_pi: Energy of charged pion in laboratory frame.
+    """
+    cdef double result = 0.0
+
+    cdef int numpts = len(eng_gams)
+
+    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
+
+    cdef int i = 0
+
+    for i in range(numpts):
+        if 0.0 <= eng_gams[i] and eng_gams[i] <= __eng_gam_max(eng_pi):
+            spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                           args=(eng_gams[i], eng_pi), epsabs=10**-10., \
+                           epsrel=10**-4.)[0]
+
+    return spec
+
 
 def SpectrumPoint(double eng_gam, double eng_pi):
     """
