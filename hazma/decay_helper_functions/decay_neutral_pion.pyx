@@ -9,7 +9,7 @@ Module for computing the decay spectrum from neutral pion.
 """
 
 @cython.cdivision(True)
-cdef double CSpectrumPoint(eng_gam, float eng_pi):
+cdef double CSpectrumPoint(double eng_gam, double eng_pi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
@@ -24,13 +24,13 @@ cdef double CSpectrumPoint(eng_gam, float eng_pi):
     return ret_val
 
 @cython.cdivision(True)
-cdef np.ndarray CSpectrum(np.ndarray eng_gam, float eng_pi):
+cdef np.ndarray CSpectrum(np.ndarray eng_gam, double eng_pi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
     cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
     cdef int numpts = len(eng_gam)
-    cdef np.ndarray spec = np.zeros(numpts, float)
+    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
     cdef int i
     cdef float ret_val
 
@@ -46,7 +46,7 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gam, float eng_pi):
     return spec
 
 @cython.cdivision(True)
-def SpectrumPoint(eng_gam, float eng_pi):
+def SpectrumPoint(double eng_gam, double eng_pi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
@@ -61,13 +61,13 @@ def SpectrumPoint(eng_gam, float eng_pi):
     return ret_val
 
 @cython.cdivision(True)
-def Spectrum(np.ndarray eng_gam, float eng_pi):
+def Spectrum(np.ndarray eng_gam, double eng_pi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
     cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
     cdef int numpts = len(eng_gam)
-    cdef np.ndarray spec = np.zeros(numpts, float)
+    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
     cdef int i
     cdef float ret_val
 

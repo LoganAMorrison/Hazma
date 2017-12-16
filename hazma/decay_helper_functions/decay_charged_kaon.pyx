@@ -1,6 +1,6 @@
-from decay_muon import SpectrumPoint as muspec
-from decay_charged_pion import SpectrumPoint as chrgpispec
-from decay_neutral_pion import SpectrumPoint as neutpispec
+from decay_muon cimport CSpectrumPoint as mu_spec
+from decay_charged_pion cimport CSpectrumPoint as chrg_pi_spec
+from decay_neutral_pion cimport CSpectrumPoint as neut_pi_spec
 from ..phases_space_generator cimport rambo
 import numpy as np
 cimport numpy as np
@@ -84,9 +84,9 @@ __probsPiPiPi = __ram.generate_energy_histogram(__num_ps_pts, __msPiPiPi,
 __probsPi0MuNu = __ram.generate_energy_histogram(__num_ps_pts, __msPi0MuNu,
                                                  MASS_K, __num_bins)
 
-__funcsPiPiPi = np.array([chrgpispec, chrgpispec, chrgpispec])
+__funcsPiPiPi = np.array([chrg_pi_spec, chrg_pi_spec, chrg_pi_spec])
 
-__funcsPi0MuNu = np.array([muspec, neutpispec])
+__funcsPi0MuNu = np.array([mu_spec, neut_pi_spec])
 
 
 @cython.cdivision(True)
@@ -116,11 +116,11 @@ cdef double __integrand2(double cl, double eng_gam, double eng_k):
     eng_pi0 = (MASS_K**2 - MASS_PI**2 + MASS_PI0**2) / (2.0 * MASS_K)
 
     ret_val += BR_K_TO_MUNU * \
-        muspec(eng_gam_k_rf, eng_mu)
+        mu_spec(eng_gam_k_rf, eng_mu)
     ret_val += BR_K_TO_PIPI0 * \
-        chrgpispec(eng_gam_k_rf, eng_pi)
+        chrg_pi_spec(eng_gam_k_rf, eng_pi)
     ret_val += BR_K_TO_PIPI0 * \
-        neutpispec(eng_gam_k_rf, eng_pi0)
+        neut_pi_spec(eng_gam_k_rf, eng_pi0)
 
     return pre_factor * ret_val
 

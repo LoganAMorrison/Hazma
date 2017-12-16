@@ -132,7 +132,7 @@ cdef double CSpectrumPoint(double eng_gam, double eng_mu):
 
 
 @cython.cdivision(True)
-cdef np.ndarray CSpectrum(np.ndarray eng_gams, float eng_mu):
+cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_mu):
     """
     Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
 
@@ -195,7 +195,7 @@ def SpectrumPoint(double eng_gam, double eng_mu):
 
 
 @cython.cdivision(True)
-def Spectrum(np.ndarray eng_gams, float eng_mu):
+def Spectrum(np.ndarray eng_gams, double eng_mu):
     """
     Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
 

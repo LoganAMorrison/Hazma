@@ -1,4 +1,4 @@
-from decay_muon import Spectrum as muspec
+from decay_muon cimport CSpectrum  as muspec
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad

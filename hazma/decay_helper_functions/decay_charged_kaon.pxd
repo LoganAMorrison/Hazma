@@ -16,6 +16,6 @@ cdef np.ndarray __funcsPi0MuNu
 
 cdef rambo.Rambo __ram
 
-cdef double __integrand2(double cl, double eng_gam, double eng_k)
-cdef double __integrand3(double cl, double eng_gam, double eng_k)
-cdef double __integrand(double cl, double eng_gam, double eng_k)
+cdef double __integrand2(double, double, double)
+cdef double __integrand3(double, double, double)
+cdef double __integrand(double, double, double)

@@ -1018,8 +1018,8 @@ typedef npy_cdouble __pyx_t_5numpy_complex_t;
  * 
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):             # <<<<<<<<<<<<<<
- *     def wrap(double cl, double eng_gam, double eng_pi):
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
+ *     def wrap(double arg0, double arg1, double arg2):
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
  */
 struct __pyx_obj___pyx_scope_struct____Pyx_CFunc_double____double____double____double___to_py {
   PyObject_HEAD
@@ -1545,6 +1545,9 @@ static PyObject *__Pyx_ImportModule(const char *name);
 /* TypeImport.proto */
 static PyTypeObject *__Pyx_ImportType(const char *module_name, const char *class_name, size_t size, int strict);
 
+/* FunctionImport.proto */
+static int __Pyx_ImportFunction(PyObject *module, const char *funcname, void (**f)(void), const char *sig);
+
 /* InitStrings.proto */
 static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
@@ -1577,6 +1580,9 @@ static PyTypeObject *__pyx_ptype_5numpy_broadcast = 0;
 static PyTypeObject *__pyx_ptype_5numpy_ndarray = 0;
 static PyTypeObject *__pyx_ptype_5numpy_ufunc = 0;
 static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, char *, char *, int *); /*proto*/
+
+/* Module declarations from 'hazma.decay_helper_functions.decay_muon' */
+static PyArrayObject *(*__pyx_f_5hazma_22decay_helper_functions_10decay_muon_CSpectrum)(PyArrayObject *, double); /*proto*/
 
 /* Module declarations from 'libc.math' */
 
@@ -1652,9 +1658,11 @@ static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_ImportError;
 static const char __pyx_k_i[] = "i";
 static const char __pyx_k_k[] = "k";
-static const char __pyx_k_cl[] = "cl";
 static const char __pyx_k_np[] = "np";
 static const char __pyx_k_num[] = "num";
+static const char __pyx_k_arg0[] = "arg0";
+static const char __pyx_k_arg1[] = "arg1";
+static const char __pyx_k_arg2[] = "arg2";
 static const char __pyx_k_args[] = "args";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_quad[] = "quad";
@@ -1670,7 +1678,6 @@ static const char __pyx_k_epsabs[] = "epsabs";
 static const char __pyx_k_epsrel[] = "epsrel";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_interp[] = "interp";
-static const char __pyx_k_muspec[] = "muspec";
 static const char __pyx_k_numpts[] = "numpts";
 static const char __pyx_k_points[] = "points";
 static const char __pyx_k_result[] = "result";
@@ -1685,7 +1692,6 @@ static const char __pyx_k_mu_spec2[] = "__mu_spec2";
 static const char __pyx_k_pyx_capi[] = "__pyx_capi__";
 static const char __pyx_k_functools[] = "functools";
 static const char __pyx_k_ValueError[] = "ValueError";
-static const char __pyx_k_decay_muon[] = "decay_muon";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_cfunc_to_py[] = "cfunc.to_py";
 static const char __pyx_k_eng_gams_mu[] = "__eng_gams_mu";
@@ -1720,11 +1726,12 @@ static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_n_s_Spectrum;
 static PyObject *__pyx_n_s_SpectrumPoint;
 static PyObject *__pyx_n_s_ValueError;
+static PyObject *__pyx_n_s_arg0;
+static PyObject *__pyx_n_s_arg1;
+static PyObject *__pyx_n_s_arg2;
 static PyObject *__pyx_n_s_args;
 static PyObject *__pyx_n_s_cfunc_to_py;
-static PyObject *__pyx_n_s_cl;
 static PyObject *__pyx_n_s_cline_in_traceback;
-static PyObject *__pyx_n_s_decay_muon;
 static PyObject *__pyx_n_s_double__eng_mu_pi_rf;
 static PyObject *__pyx_n_s_dtype;
 static PyObject *__pyx_n_s_eng_gam;
@@ -1747,7 +1754,6 @@ static PyObject *__pyx_n_s_logspace;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_mu_spec;
 static PyObject *__pyx_n_s_mu_spec2;
-static PyObject *__pyx_n_s_muspec;
 static PyObject *__pyx_kp_u_ndarray_is_not_C_contiguous;
 static PyObject *__pyx_kp_u_ndarray_is_not_Fortran_contiguou;
 static PyObject *__pyx_n_s_np;
@@ -1774,7 +1780,7 @@ static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_pion_S
 static PyObject *__pyx_pf_5hazma_22decay_helper_functions_18decay_charged_pion_2Spectrum(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_eng_gams, double __pyx_v_eng_pi); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
-static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(PyObject *__pyx_self, double __pyx_v_cl, double __pyx_v_eng_gam, double __pyx_v_eng_pi); /* proto */
+static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(PyObject *__pyx_self, double __pyx_v_arg0, double __pyx_v_arg1, double __pyx_v_arg2); /* proto */
 static PyObject *__pyx_tp_new___pyx_scope_struct____Pyx_CFunc_double____double____double____double___to_py(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_float_0_0;
 static PyObject *__pyx_float_1_0;
@@ -5834,24 +5840,24 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
 /* "cfunc.to_py":65
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):
- *     def wrap(double cl, double eng_gam, double eng_pi):             # <<<<<<<<<<<<<<
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)
+ *     def wrap(double arg0, double arg1, double arg2):             # <<<<<<<<<<<<<<
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)
  */
 
 /* Python wrapper */
 static PyObject *__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_1wrap(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap[] = "wrap(cl: float, eng_gam: float, eng_pi: float) -> float";
+static char __pyx_doc_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap[] = "wrap(arg0: float, arg1: float, arg2: float) -> float";
 static PyMethodDef __pyx_mdef_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_1wrap = {"wrap", (PyCFunction)__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_1wrap, METH_VARARGS|METH_KEYWORDS, __pyx_doc_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap};
 static PyObject *__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_1wrap(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  double __pyx_v_cl;
-  double __pyx_v_eng_gam;
-  double __pyx_v_eng_pi;
+  double __pyx_v_arg0;
+  double __pyx_v_arg1;
+  double __pyx_v_arg2;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("wrap (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_cl,&__pyx_n_s_eng_gam,&__pyx_n_s_eng_pi,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_arg0,&__pyx_n_s_arg1,&__pyx_n_s_arg2,0};
     PyObject* values[3] = {0,0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
@@ -5869,17 +5875,17 @@ static PyObject *__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
       kw_args = PyDict_Size(__pyx_kwds);
       switch (pos_args) {
         case  0:
-        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_cl)) != 0)) kw_args--;
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_arg0)) != 0)) kw_args--;
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_gam)) != 0)) kw_args--;
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_arg1)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("wrap", 1, 3, 3, 1); __PYX_ERR(2, 65, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_eng_pi)) != 0)) kw_args--;
+        if (likely((values[2] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_arg2)) != 0)) kw_args--;
         else {
           __Pyx_RaiseArgtupleInvalid("wrap", 1, 3, 3, 2); __PYX_ERR(2, 65, __pyx_L3_error)
         }
@@ -5894,9 +5900,9 @@ static PyObject *__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_cl = __pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_cl == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
-    __pyx_v_eng_gam = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_eng_gam == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
-    __pyx_v_eng_pi = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_eng_pi == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
+    __pyx_v_arg0 = __pyx_PyFloat_AsDouble(values[0]); if (unlikely((__pyx_v_arg0 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
+    __pyx_v_arg1 = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_arg1 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
+    __pyx_v_arg2 = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_arg2 == (double)-1) && PyErr_Occurred())) __PYX_ERR(2, 65, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
@@ -5906,14 +5912,14 @@ static PyObject *__pyx_pw_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(__pyx_self, __pyx_v_cl, __pyx_v_eng_gam, __pyx_v_eng_pi);
+  __pyx_r = __pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(__pyx_self, __pyx_v_arg0, __pyx_v_arg1, __pyx_v_arg2);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(PyObject *__pyx_self, double __pyx_v_cl, double __pyx_v_eng_gam, double __pyx_v_eng_pi) {
+static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_wrap(PyObject *__pyx_self, double __pyx_v_arg0, double __pyx_v_arg1, double __pyx_v_arg2) {
   struct __pyx_obj___pyx_scope_struct____Pyx_CFunc_double____double____double____double___to_py *__pyx_cur_scope;
   struct __pyx_obj___pyx_scope_struct____Pyx_CFunc_double____double____double____double___to_py *__pyx_outer_scope;
   PyObject *__pyx_r = NULL;
@@ -5925,14 +5931,14 @@ static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
   __pyx_cur_scope = __pyx_outer_scope;
 
   /* "cfunc.to_py":67
- *     def wrap(double cl, double eng_gam, double eng_pi):
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)             # <<<<<<<<<<<<<<
+ *     def wrap(double arg0, double arg1, double arg2):
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)             # <<<<<<<<<<<<<<
  *     return wrap
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_cur_scope->__pyx_v_f(__pyx_v_cl, __pyx_v_eng_gam, __pyx_v_eng_pi); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(2, 67, __pyx_L1_error)
+  __pyx_t_1 = __pyx_cur_scope->__pyx_v_f(__pyx_v_arg0, __pyx_v_arg1, __pyx_v_arg2); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(2, 67, __pyx_L1_error)
   __pyx_t_2 = PyFloat_FromDouble(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(2, 67, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
@@ -5942,9 +5948,9 @@ static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
   /* "cfunc.to_py":65
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):
- *     def wrap(double cl, double eng_gam, double eng_pi):             # <<<<<<<<<<<<<<
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)
+ *     def wrap(double arg0, double arg1, double arg2):             # <<<<<<<<<<<<<<
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)
  */
 
   /* function exit code */
@@ -5962,8 +5968,8 @@ static PyObject *__pyx_pf_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____do
  * 
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):             # <<<<<<<<<<<<<<
- *     def wrap(double cl, double eng_gam, double eng_pi):
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
+ *     def wrap(double arg0, double arg1, double arg2):
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
  */
 
 static PyObject *__Pyx_CFunc_double____double____double____double___to_py(double (*__pyx_v_f)(double, double, double)) {
@@ -5986,9 +5992,9 @@ static PyObject *__Pyx_CFunc_double____double____double____double___to_py(double
   /* "cfunc.to_py":65
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):
- *     def wrap(double cl, double eng_gam, double eng_pi):             # <<<<<<<<<<<<<<
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)
+ *     def wrap(double arg0, double arg1, double arg2):             # <<<<<<<<<<<<<<
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)
  */
   __pyx_t_1 = __Pyx_CyFunction_NewEx(&__pyx_mdef_11cfunc_dot_to_py_56__Pyx_CFunc_double____double____double____double___to_py_1wrap, 0, __pyx_n_s_Pyx_CFunc_double____double, ((PyObject*)__pyx_cur_scope), __pyx_n_s_cfunc_to_py, __pyx_d, ((PyObject *)__pyx_codeobj__11)); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -5996,8 +6002,8 @@ static PyObject *__Pyx_CFunc_double____double____double____double___to_py(double
   __pyx_t_1 = 0;
 
   /* "cfunc.to_py":68
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)
  *     return wrap             # <<<<<<<<<<<<<<
  * 
  * 
@@ -6011,8 +6017,8 @@ static PyObject *__Pyx_CFunc_double____double____double____double___to_py(double
  * 
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):             # <<<<<<<<<<<<<<
- *     def wrap(double cl, double eng_gam, double eng_pi):
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
+ *     def wrap(double arg0, double arg1, double arg2):
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
  */
 
   /* function exit code */
@@ -6157,11 +6163,12 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_Spectrum, __pyx_k_Spectrum, sizeof(__pyx_k_Spectrum), 0, 0, 1, 1},
   {&__pyx_n_s_SpectrumPoint, __pyx_k_SpectrumPoint, sizeof(__pyx_k_SpectrumPoint), 0, 0, 1, 1},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
+  {&__pyx_n_s_arg0, __pyx_k_arg0, sizeof(__pyx_k_arg0), 0, 0, 1, 1},
+  {&__pyx_n_s_arg1, __pyx_k_arg1, sizeof(__pyx_k_arg1), 0, 0, 1, 1},
+  {&__pyx_n_s_arg2, __pyx_k_arg2, sizeof(__pyx_k_arg2), 0, 0, 1, 1},
   {&__pyx_n_s_args, __pyx_k_args, sizeof(__pyx_k_args), 0, 0, 1, 1},
   {&__pyx_n_s_cfunc_to_py, __pyx_k_cfunc_to_py, sizeof(__pyx_k_cfunc_to_py), 0, 0, 1, 1},
-  {&__pyx_n_s_cl, __pyx_k_cl, sizeof(__pyx_k_cl), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
-  {&__pyx_n_s_decay_muon, __pyx_k_decay_muon, sizeof(__pyx_k_decay_muon), 0, 0, 1, 1},
   {&__pyx_n_s_double__eng_mu_pi_rf, __pyx_k_double__eng_mu_pi_rf, sizeof(__pyx_k_double__eng_mu_pi_rf), 0, 0, 1, 1},
   {&__pyx_n_s_dtype, __pyx_k_dtype, sizeof(__pyx_k_dtype), 0, 0, 1, 1},
   {&__pyx_n_s_eng_gam, __pyx_k_eng_gam, sizeof(__pyx_k_eng_gam), 0, 0, 1, 1},
@@ -6184,7 +6191,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_mu_spec, __pyx_k_mu_spec, sizeof(__pyx_k_mu_spec), 0, 0, 1, 1},
   {&__pyx_n_s_mu_spec2, __pyx_k_mu_spec2, sizeof(__pyx_k_mu_spec2), 0, 0, 1, 1},
-  {&__pyx_n_s_muspec, __pyx_k_muspec, sizeof(__pyx_k_muspec), 0, 0, 1, 1},
   {&__pyx_kp_u_ndarray_is_not_C_contiguous, __pyx_k_ndarray_is_not_C_contiguous, sizeof(__pyx_k_ndarray_is_not_C_contiguous), 0, 1, 0, 0},
   {&__pyx_kp_u_ndarray_is_not_Fortran_contiguou, __pyx_k_ndarray_is_not_Fortran_contiguou, sizeof(__pyx_k_ndarray_is_not_Fortran_contiguou), 0, 1, 0, 0},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
@@ -6323,11 +6329,11 @@ static int __Pyx_InitCachedConstants(void) {
   /* "cfunc.to_py":65
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):
- *     def wrap(double cl, double eng_gam, double eng_pi):             # <<<<<<<<<<<<<<
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
- *         return f(cl, eng_gam, eng_pi)
+ *     def wrap(double arg0, double arg1, double arg2):             # <<<<<<<<<<<<<<
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
+ *         return f(arg0, arg1, arg2)
  */
-  __pyx_tuple__10 = PyTuple_Pack(3, __pyx_n_s_cl, __pyx_n_s_eng_gam, __pyx_n_s_eng_pi); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(2, 65, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(3, __pyx_n_s_arg0, __pyx_n_s_arg1, __pyx_n_s_arg2); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(2, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
   __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_stringsource, __pyx_n_s_wrap, 65, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(2, 65, __pyx_L1_error)
@@ -6438,12 +6444,11 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
 {
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
-  double __pyx_t_3;
+  PyObject *__pyx_t_3 = NULL;
   double __pyx_t_4;
-  PyObject *__pyx_t_5 = NULL;
+  double __pyx_t_5;
   PyObject *__pyx_t_6 = NULL;
-  int __pyx_t_7;
-  PyObject *__pyx_t_8 = NULL;
+  PyObject *__pyx_t_7 = NULL;
   __Pyx_RefNannyDeclarations
   #if CYTHON_PEP489_MULTI_PHASE_INIT
   if (__pyx_m && __pyx_m == __pyx_pyinit_module) return 0;
@@ -6563,32 +6568,16 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
   __pyx_ptype_5numpy_ufunc = __Pyx_ImportType("numpy", "ufunc", sizeof(PyUFuncObject), 0); if (unlikely(!__pyx_ptype_5numpy_ufunc)) __PYX_ERR(1, 885, __pyx_L1_error)
   /*--- Variable import code ---*/
   /*--- Function import code ---*/
+  __pyx_t_1 = __Pyx_ImportModule("hazma.decay_helper_functions.decay_muon"); if (!__pyx_t_1) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (__Pyx_ImportFunction(__pyx_t_1, "CSpectrum", (void (**)(void))&__pyx_f_5hazma_22decay_helper_functions_10decay_muon_CSpectrum, "PyArrayObject *(PyArrayObject *, double)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  Py_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   /*--- Execution code ---*/
   #if defined(__Pyx_Generator_USED) || defined(__Pyx_Coroutine_USED)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "hazma/decay_helper_functions/decay_charged_pion.pyx":1
- * from decay_muon import Spectrum as muspec             # <<<<<<<<<<<<<<
- * import numpy as np
- * cimport numpy as np
- */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(__pyx_n_s_Spectrum);
-  __Pyx_GIVEREF(__pyx_n_s_Spectrum);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_Spectrum);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_decay_muon, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_Spectrum); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_muspec, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":2
- * from decay_muon import Spectrum as muspec
+ * from decay_muon cimport CSpectrum  as muspec
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
  * from scipy.integrate import quad
@@ -6610,14 +6599,14 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
   __Pyx_INCREF(__pyx_n_s_quad);
   __Pyx_GIVEREF(__pyx_n_s_quad);
   PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_quad);
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_scipy_integrate, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 4, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_Import(__pyx_n_s_scipy_integrate, __pyx_t_2, -1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 4, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_quad); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 4, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_3, __pyx_n_s_quad); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_quad, __pyx_t_2) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":5
  * cimport numpy as np
@@ -6626,18 +6615,18 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * from libc.math cimport exp, log, M_PI, log10, sqrt, abs
  * import cython
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = PyList_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_INCREF(__pyx_n_s_InterpolatedUnivariateSpline);
   __Pyx_GIVEREF(__pyx_n_s_InterpolatedUnivariateSpline);
-  PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_InterpolatedUnivariateSpline);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_scipy_interpolate, __pyx_t_1, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)
+  PyList_SET_ITEM(__pyx_t_3, 0, __pyx_n_s_InterpolatedUnivariateSpline);
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_scipy_interpolate, __pyx_t_3, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_InterpolatedUnivariateSpline); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_InterpolatedUnivariateSpline, __pyx_t_1) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_InterpolatedUnivariateSpline); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_InterpolatedUnivariateSpline, __pyx_t_3) < 0) __PYX_ERR(0, 5, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":8
@@ -6652,14 +6641,14 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
   __Pyx_INCREF(__pyx_n_s_partial);
   __Pyx_GIVEREF(__pyx_n_s_partial);
   PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_partial);
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_functools, __pyx_t_2, -1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_Import(__pyx_n_s_functools, __pyx_t_2, -1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_1, __pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_ImportFrom(__pyx_t_3, __pyx_n_s_partial); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_partial, __pyx_t_2) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "hazma/decay_helper_functions/parameters.pxd":8
  * 
@@ -7101,13 +7090,13 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * __eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
  * 
  */
-  __pyx_t_3 = (pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU, 2.0) - pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_E, 2.0));
-  __pyx_t_4 = (2.0 * __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU);
-  if (unlikely(__pyx_t_4 == 0)) {
+  __pyx_t_4 = (pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU, 2.0) - pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_E, 2.0));
+  __pyx_t_5 = (2.0 * __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU);
+  if (unlikely(__pyx_t_5 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 11, __pyx_L1_error)
   }
-  __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gam_max_mu_rf = (__pyx_t_3 / __pyx_t_4);
+  __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gam_max_mu_rf = (__pyx_t_4 / __pyx_t_5);
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":12
  * 
@@ -7116,16 +7105,16 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * 
  * __eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
  */
-  __pyx_t_4 = (pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_PI, 2.0) + pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU, 2.0));
-  __pyx_t_3 = (2.0 * __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_PI);
-  if (unlikely(__pyx_t_3 == 0)) {
+  __pyx_t_5 = (pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_PI, 2.0) + pow(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_MU, 2.0));
+  __pyx_t_4 = (2.0 * __pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion_MASS_PI);
+  if (unlikely(__pyx_t_4 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 12, __pyx_L1_error)
   }
-  __pyx_t_1 = PyFloat_FromDouble((__pyx_t_4 / __pyx_t_3)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 12, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_eng_mu_pi_rf, __pyx_t_1) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  __pyx_t_3 = PyFloat_FromDouble((__pyx_t_5 / __pyx_t_4)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 12, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_eng_mu_pi_rf, __pyx_t_3) < 0) __PYX_ERR(0, 12, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":14
  * __eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
@@ -7134,30 +7123,30 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * 
  * __mu_spec = muspec(__eng_gams_mu, __eng_mu_pi_rf)
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_logspace); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_logspace); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_num, __pyx_int_10000) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
-  __pyx_t_5 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 14, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_float64); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(2); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_num, __pyx_int_10000) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_dtype, __pyx_t_6) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_float64); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__12, __pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 14, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_7) < 0) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+  __pyx_t_7 = __Pyx_PyObject_Call(__pyx_t_2, __pyx_tuple__12, __pyx_t_3); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 14, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (!(likely(((__pyx_t_7) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_7, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 14, __pyx_L1_error)
   __Pyx_XGOTREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
-  __Pyx_DECREF_SET(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu, ((PyArrayObject *)__pyx_t_6));
-  __Pyx_GIVEREF(__pyx_t_6);
-  __pyx_t_6 = 0;
+  __Pyx_DECREF_SET(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu, ((PyArrayObject *)__pyx_t_7));
+  __Pyx_GIVEREF(__pyx_t_7);
+  __pyx_t_7 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":16
  * __eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
@@ -7166,62 +7155,19 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * 
  * __mu_spec2 = InterpolatedUnivariateSpline(__eng_gams_mu, __mu_spec, k=1)
  */
-  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_muspec); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 16, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_eng_mu_pi_rf); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 16, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = NULL;
-  __pyx_t_7 = 0;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_1))) {
-    __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_1);
-    if (likely(__pyx_t_5)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
-      __Pyx_INCREF(__pyx_t_5);
-      __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_1, function);
-      __pyx_t_7 = 1;
-    }
-  }
-  #if CYTHON_FAST_PYCALL
-  if (PyFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_5, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu), __pyx_t_2};
-    __pyx_t_6 = __Pyx_PyFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 16, __pyx_L1_error)
-    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  } else
-  #endif
-  #if CYTHON_FAST_PYCCALL
-  if (__Pyx_PyFastCFunction_Check(__pyx_t_1)) {
-    PyObject *__pyx_temp[3] = {__pyx_t_5, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu), __pyx_t_2};
-    __pyx_t_6 = __Pyx_PyCFunction_FastCall(__pyx_t_1, __pyx_temp+1-__pyx_t_7, 2+__pyx_t_7); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 16, __pyx_L1_error)
-    __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  } else
-  #endif
-  {
-    __pyx_t_8 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 16, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_8);
-    if (__pyx_t_5) {
-      __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_5); __pyx_t_5 = NULL;
-    }
-    __Pyx_INCREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
-    __Pyx_GIVEREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
-    PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_7, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
-    __Pyx_GIVEREF(__pyx_t_2);
-    PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_7, __pyx_t_2);
-    __pyx_t_2 = 0;
-    __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_8, NULL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 16, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  }
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  if (!(likely(((__pyx_t_6) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_6, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_t_7 = ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu);
+  __Pyx_INCREF(__pyx_t_7);
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_eng_mu_pi_rf); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = __pyx_PyFloat_AsDouble(__pyx_t_3); if (unlikely((__pyx_t_4 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 16, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_3 = ((PyObject *)__pyx_f_5hazma_22decay_helper_functions_10decay_muon_CSpectrum(((PyArrayObject *)__pyx_t_7), __pyx_t_4)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_XGOTREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec));
-  __Pyx_DECREF_SET(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec, ((PyArrayObject *)__pyx_t_6));
-  __Pyx_GIVEREF(__pyx_t_6);
-  __pyx_t_6 = 0;
+  __Pyx_DECREF_SET(__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec, ((PyArrayObject *)__pyx_t_3));
+  __Pyx_GIVEREF(__pyx_t_3);
+  __pyx_t_3 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":18
  * __mu_spec = muspec(__eng_gams_mu, __eng_mu_pi_rf)
@@ -7230,26 +7176,26 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  * 
  * cdef double __muon_spectrum(double eng_gam):
  */
-  __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_InterpolatedUnivariateSpline); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_InterpolatedUnivariateSpline); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_7 = PyTuple_New(2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_7);
   __Pyx_INCREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
-  PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
+  PyTuple_SET_ITEM(__pyx_t_7, 0, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___eng_gams_mu));
   __Pyx_INCREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec));
   __Pyx_GIVEREF(((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec));
-  PyTuple_SET_ITEM(__pyx_t_1, 1, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec));
-  __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 18, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_8);
-  if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_k, __pyx_int_1) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_1, __pyx_t_8); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
+  PyTuple_SET_ITEM(__pyx_t_7, 1, ((PyObject *)__pyx_v_5hazma_22decay_helper_functions_18decay_charged_pion___mu_spec));
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 18, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_mu_spec2, __pyx_t_2) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_2, __pyx_n_s_k, __pyx_int_1) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_7, __pyx_t_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_mu_spec2, __pyx_t_6) < 0) __PYX_ERR(0, 18, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":142
  * 
@@ -7258,10 +7204,10 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  *     """
  *     Returns the radiative spectrum value from charged pion given a gamma
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5hazma_22decay_helper_functions_18decay_charged_pion_1SpectrumPoint, NULL, __pyx_n_s_hazma_decay_helper_functions_dec_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_SpectrumPoint, __pyx_t_2) < 0) __PYX_ERR(0, 142, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_6 = PyCFunction_NewEx(&__pyx_mdef_5hazma_22decay_helper_functions_18decay_charged_pion_1SpectrumPoint, NULL, __pyx_n_s_hazma_decay_helper_functions_dec_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 142, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_SpectrumPoint, __pyx_t_6) < 0) __PYX_ERR(0, 142, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":165
  * @cython.boundscheck(True)
@@ -7270,27 +7216,27 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
  *     """
  *     Returns the radiative spectrum dNde from charged pion given a gamma
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_5hazma_22decay_helper_functions_18decay_charged_pion_3Spectrum, NULL, __pyx_n_s_hazma_decay_helper_functions_dec_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 165, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Spectrum, __pyx_t_2) < 0) __PYX_ERR(0, 165, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_6 = PyCFunction_NewEx(&__pyx_mdef_5hazma_22decay_helper_functions_18decay_charged_pion_3Spectrum, NULL, __pyx_n_s_hazma_decay_helper_functions_dec_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Spectrum, __pyx_t_6) < 0) __PYX_ERR(0, 165, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
   /* "hazma/decay_helper_functions/decay_charged_pion.pyx":1
- * from decay_muon import Spectrum as muspec             # <<<<<<<<<<<<<<
+ * from decay_muon cimport CSpectrum  as muspec             # <<<<<<<<<<<<<<
  * import numpy as np
  * cimport numpy as np
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_t_6 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_6);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_6) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
   /* "cfunc.to_py":64
  * 
  * @cname("__Pyx_CFunc_double____double____double____double___to_py")
  * cdef object __Pyx_CFunc_double____double____double____double___to_py(double (*f)(double, double, double) except *):             # <<<<<<<<<<<<<<
- *     def wrap(double cl, double eng_gam, double eng_pi):
- *         """wrap(cl: float, eng_gam: float, eng_pi: float) -> float"""
+ *     def wrap(double arg0, double arg1, double arg2):
+ *         """wrap(arg0: float, arg1: float, arg2: float) -> float"""
  */
 
   /*--- Wrapped vars code ---*/
@@ -7299,9 +7245,9 @@ static int __pyx_pymod_exec_decay_charged_pion(PyObject *__pyx_pyinit_module)
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_XDECREF(__pyx_t_7);
   if (__pyx_m) {
     if (__pyx_d) {
       __Pyx_AddTraceback("init hazma.decay_helper_functions.decay_charged_pion", 0, __pyx_lineno, __pyx_filename);
@@ -10148,6 +10094,60 @@ bad:
     Py_XDECREF(py_module);
     Py_XDECREF(result);
     return NULL;
+}
+#endif
+
+/* FunctionImport */
+          #ifndef __PYX_HAVE_RT_ImportFunction
+#define __PYX_HAVE_RT_ImportFunction
+static int __Pyx_ImportFunction(PyObject *module, const char *funcname, void (**f)(void), const char *sig) {
+    PyObject *d = 0;
+    PyObject *cobj = 0;
+    union {
+        void (*fp)(void);
+        void *p;
+    } tmp;
+    d = PyObject_GetAttrString(module, (char *)"__pyx_capi__");
+    if (!d)
+        goto bad;
+    cobj = PyDict_GetItemString(d, funcname);
+    if (!cobj) {
+        PyErr_Format(PyExc_ImportError,
+            "%.200s does not export expected C function %.200s",
+                PyModule_GetName(module), funcname);
+        goto bad;
+    }
+#if PY_VERSION_HEX >= 0x02070000
+    if (!PyCapsule_IsValid(cobj, sig)) {
+        PyErr_Format(PyExc_TypeError,
+            "C function %.200s.%.200s has wrong signature (expected %.500s, got %.500s)",
+             PyModule_GetName(module), funcname, sig, PyCapsule_GetName(cobj));
+        goto bad;
+    }
+    tmp.p = PyCapsule_GetPointer(cobj, sig);
+#else
+    {const char *desc, *s1, *s2;
+    desc = (const char *)PyCObject_GetDesc(cobj);
+    if (!desc)
+        goto bad;
+    s1 = desc; s2 = sig;
+    while (*s1 != '\0' && *s1 == *s2) { s1++; s2++; }
+    if (*s1 != *s2) {
+        PyErr_Format(PyExc_TypeError,
+            "C function %.200s.%.200s has wrong signature (expected %.500s, got %.500s)",
+             PyModule_GetName(module), funcname, sig, desc);
+        goto bad;
+    }
+    tmp.p = PyCObject_AsVoidPtr(cobj);}
+#endif
+    *f = tmp.fp;
+    if (!(*f))
+        goto bad;
+    Py_DECREF(d);
+    return 0;
+bad:
+    Py_XDECREF(d);
+    return -1;
 }
 #endif
 
