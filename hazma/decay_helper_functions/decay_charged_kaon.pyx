@@ -66,8 +66,8 @@ Description:
         __funcsPi0MuNu : List of functions to compute decay and FSR spectrum
                         from the pi0 + mu + nu final state.
 """
-cdef int __num_ps_pts
-cdef int __num_bins
+cdef int __num_ps_pts = 1000
+cdef int __num_bins = 10
 
 cdef np.ndarray __msPiPiPi
 cdef np.ndarray __msPi0MuNu
@@ -80,11 +80,8 @@ cdef np.ndarray __funcsPi0MuNu
 
 cdef rambo.Rambo __ram
 
-__num_ps_pts = 1000
-__num_bins = 10
-
-__msPiPiPi = np.ndarray([MASS_PI, MASS_PI, MASS_PI], dtype=np.float64)
-__msPi0MuNu = np.ndarray([MASS_PI0, MASS_MU, 0.0], dtype=np.float64)
+__msPiPiPi = np.array([MASS_PI, MASS_PI, MASS_PI])
+__msPi0MuNu = np.array([MASS_PI0, MASS_MU, 0.0])
 
 __probsPiPiPi = np.zeros((3, 2, __num_bins), dtype=np.float64)
 __probsPi0MuNu = np.zeros((3, 2, __num_bins), dtype=np.float64)
@@ -251,7 +248,7 @@ def Spectrum(np.ndarray eng_gams, double eng_k):
 
     for i in range(numpts):
         spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                       args=(eng_gams[i], eng_k), epsabs=10**-10., \
-                       epsrel=10**-4.)[0]
+                       args=(eng_gams[i], eng_k), epsabs=0.0, \
+                       epsrel=10**-2.)[0]
 
     return spec
