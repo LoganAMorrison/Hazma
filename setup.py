@@ -5,10 +5,10 @@ import numpy as np
 packs = ['hazma',
          'hazma.fsr_helper_functions',
          'hazma.decay_helper_functions',
-         'hazma.phases_space_generator']
+         'hazma.phase_space_generator']
 
 extensions = ["hazma/decay_helper_functions/*.pyx",
-              "hazma/phases_space_generator/*.pyx"]
+              "hazma/phase_space_generator/*.pyx"]
 
 setup(name='hazma',
       version='1.0',

@@ -1,12 +1,10 @@
 cimport decay_muon
 cimport decay_charged_pion
 cimport decay_neutral_pion
-from ..phases_space_generator cimport rambo
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
-from scipy.interpolate import interp2d
-from libc.math cimport exp, log, M_PI, log10, sqrt, fmax
+from libc.math cimport sqrt
 import cython
 include "parameters.pxd"
 

@@ -11,6 +11,8 @@ import cython
 # np.float = np.float
 # np.int = np.np.int
 
+ctypedef double (*f_type)(np.ndarray)
+
 cdef class Rambo:
 
     def __init__(self):
@@ -262,8 +264,11 @@ cdef class Rambo:
         for i in range(self.__num_phase_space_pts):
             self.__weight_array[i] = self.__weight_array[i] / weight_sum
 
-
-    def generate_phase_space(self, num_phase_space_pts, masses, cme):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    def generate_phase_space(self, int num_phase_space_pts, \
+                             np.ndarray masses, double cme,
+                             mat_elem_sqrd=lambda klist: 1):
         """
         Creates 'num_phase_space_pts' number of phase space ponp.ints with final state particles with masses 'masses' and center of mass energy 'cme'.
 
@@ -273,6 +278,9 @@ cdef class Rambo:
             masses: List of the final state particle masses.
 
             cme: Center of mass energy of the process.
+
+            mat_elem_sqrd : Function matrix element squared. Arguments are
+            a list of the four momenta.
 
         Returns:
             phase_space_array (np.ndarray): Array containing the four momenta of each particles for each event. The shape is (num_phase_space_pts, len(masses), 4)
@@ -294,7 +302,8 @@ cdef class Rambo:
             self.__generate_ps()
             self.__generate_ks()
 
-            self.__weight_array[self.__event_count] = self.__weight
+            self.__weight_array[self.__event_count] \
+                = self.__weight * mat_elem_sqrd(self.__k_list)
 
             for i in range(self.__num_fsp):
                 for j in range(4):
@@ -308,8 +317,9 @@ cdef class Rambo:
         return self.__phase_space_array, self.__weight_array
 
 
-    def generate_energy_histogram(self, num_phase_space_pts, masses, cme, \
-                                  num_bins):
+    def generate_energy_histogram(self, int num_phase_space_pts, \
+                                  np.ndarray masses, double cme, \
+                                  int num_bins, mat_elem_sqrd=lambda klist: 1):
         """
         Returns the energy probability distributions for each particle. These
         distributions are stored in (num_particles, 2, num_bins) array called probs. For example, probs[1, 0, :], probs[1, 1, :] are the energies and their probabilities, respectively, for the second particle.
