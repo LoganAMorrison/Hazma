@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>hazma.decay_helper_functions package &mdash; Hazma 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Hazma 1.0 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Hazma
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../description.html">Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Hazma</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>hazma.decay_helper_functions package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/hazma.decay_helper_functions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="hazma-decay-helper-functions-package">
+<h1>hazma.decay_helper_functions package<a class="headerlink" href="#hazma-decay-helper-functions-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hazma.decay_helper_functions.decay_charged_kaon">
+<span id="hazma-decay-helper-functions-decay-charged-kaon-module"></span><h2>hazma.decay_helper_functions.decay_charged_kaon module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_charged_kaon" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon">
+<em class="property">class </em><code class="descclassname">hazma.decay_helper_functions.decay_charged_kaon.</code><code class="descname">ChargedKaon</code><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Class for computing the photon spectrum from radiative kaon decay.</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><p class="first">The charged kaon has many decay modes:</p>
+<blockquote>
+<div>k -&gt; mu  + nu
+k -&gt; pi  + pi0
+k -&gt; pi  + pi  + pi
+k -&gt; pi0 + e   + nu
+k -&gt; pi0 + mu  + nu
+k -&gt; pi  + pi0 + pi0</div></blockquote>
+<p>For the the two-body final states, the sum of the decay spectra are
+computed given the known energies of the final state particles in the
+kaon’s rest frame. The spectrum is then boosted into the lab frame.</p>
+<p class="last">For the three-body final state, the energies of the final state
+particles are computed using RAMBO. The spectra for each final state
+particle is computed are each point in phases space in the charged kaon’s rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.Spectrum">
+<code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radiative spectrum dNde from charged kaon for a
+list of gamma ray energies.</p>
+<dl class="docutils">
+<dt>Keyword arguments::</dt>
+<dd>eng_gams: List of energies of photon in laboratory frame.
+eng_k: Energy of charged kaon in laboratory frame.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.SpectrumPoint">
+<code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radiative spectrum value from charged kaon at
+a single gamma ray energy.</p>
+<dl class="docutils">
+<dt>Keyword arguments::</dt>
+<dd>eng_gam: Energy of photon is laboratory frame.
+eng_k: Energy of charged kaon in laboratory frame.</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-hazma.decay_helper_functions.decay_charged_pion">
+<span id="hazma-decay-helper-functions-decay-charged-pion-module"></span><h2>hazma.decay_helper_functions.decay_charged_pion module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_charged_pion" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hazma.decay_helper_functions.decay_muon">
+<span id="hazma-decay-helper-functions-decay-muon-module"></span><h2>hazma.decay_helper_functions.decay_muon module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_muon" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hazma.decay_helper_functions.decay_neutral_pion">
+<span id="hazma-decay-helper-functions-decay-neutral-pion-module"></span><h2>hazma.decay_helper_functions.decay_neutral_pion module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_neutral_pion" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hazma.decay_helper_functions">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hazma.decay_helper_functions" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Logan A. Morrison.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
