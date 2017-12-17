@@ -32,10 +32,12 @@ Description:
     particle is computed are each point in phases space in the charged kaon's rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.
 """
 
-__spec = np.loadtxt("charged_kaon_interp.dat", delimiter=',')
+__data = np.loadtxt("charged_kaon_interp.dat", delimiter=',')
+__eng_gams = __data[:, 0]
+__spec = __data[:, 1]
 
 cdef double __interp_spec(double eng_gam):
-    np.interp(eng_gam, __spec[:, 0], __spec[:, 1])
+    return np.interp(eng_gam, __eng_gams, __spec)
 
 cdef double __integrand(double cl, double eng_gam, double eng_k):
     """

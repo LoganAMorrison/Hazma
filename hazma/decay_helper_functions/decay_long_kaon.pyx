@@ -29,7 +29,7 @@ Description:
 __spec = np.loadtxt("long_kaon_interp.dat", delimiter=',')
 
 cdef double __interp_spec(double eng_gam):
-    np.interp(eng_gam, __spec[:, 0], __spec[:, 1])
+    return np.interp(eng_gam, __spec[:, 0], __spec[:, 1])
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
