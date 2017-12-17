@@ -21,23 +21,11 @@ Description:
     kaon's rest frame. The spectrum is then boosted into the lab frame.
 """
 
-""" Interpolating spectrum functions """
-# Gamma ray energies for interpolating functions. Need a very low lower bound
-# in order to no pass outside interpolation bounds when called from kaon decay.
-__eng_gams_interp = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
-
-__spec_PiPi = decay_charged_pion.CSpectrum(__eng_gams_interp, MASS_K / 2.0)
-__spec_PiPi += decay_charged_pion.CSpectrum(__eng_gams_interp, MASS_K / 2.0)
-
-__spec_Pi0Pi0 = decay_neutral_pion.CSpectrum(__eng_gams_interp, MASS_K / 2.0)
-__spec_Pi0Pi0 += decay_neutral_pion.CSpectrum(__eng_gams_interp, MASS_K / 2.0)
+__spec = np.loadtxt("short_kaon_interp.dat", delimiter=',')
 
 
-cdef double __interp_PiPi(double eng_gam):
-    return np.interp(eng_gam, __eng_gams_interp, __spec_PiPi)
-
-cdef double __interp_Pi0Pi0(double eng_gam):
-    return np.interp(eng_gam, __eng_gams_interp, __spec_Pi0Pi0)
+cdef double __interp_spec(double eng_gam):
+    np.interp(eng_gam, __spec[:, 0], __spec[:, 1])
 
 
 @cython.cdivision(True)
@@ -68,11 +56,9 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    ret_val += BR_KS_TO_PIPI * __interp_PiPi(eng_gam_k_rf)
-    ret_val += BR_KS_TO_PI0PI0 * __interp_Pi0Pi0(eng_gam_k_rf)
+    ret_val += __interp_spec(eng_gam_k_rf)
 
     return pre_factor * ret_val
-
 
 
 def SpectrumPoint(double eng_gam, double eng_k):
@@ -89,6 +75,7 @@ def SpectrumPoint(double eng_gam, double eng_k):
     return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
                   args=(eng_gam, eng_k), epsabs=10**-10., \
                   epsrel=10**-4.)[0]
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

@@ -1,0 +1,2 @@
+include hazma/decay_helper_functions/*.dat
+include hazma/*.txt

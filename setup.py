@@ -18,5 +18,6 @@ setup(name='hazma',
       url='',
       packages=packs,
       ext_modules=cythonize(extensions),
-      include_dirs=[np.get_include(), 'hazma/decay_helper_functions']
+      include_dirs=[np.get_include(), 'hazma/decay_helper_functions'],
+      include_package_data=True
       )
