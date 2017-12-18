@@ -81,9 +81,55 @@ def SpectrumPoint(double eng_gam, double eng_k):
                   epsrel=10**-4.)[0]
 
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def Spectrum(np.ndarray[np.float64_t, ndim=1] eng_gams, double eng_k):
+    """
+    Returns the radiative spectrum dNde from charged kaon for a
+    list of gamma ray energies.
+
+    Keyword arguments::
+        eng_gams: List of energies of photon in laboratory frame.
+        eng_k: Energy of charged kaon in laboratory frame.
+    """
+    cdef double result = 0.0
+
+    cdef int numpts = len(eng_gams)
+
+    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
+
+    cdef int i = 0
+
+    for i in range(numpts):
+        spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                       args=(eng_gams[i], eng_k), epsabs=0.0, \
+                       epsrel=10**-4.)[0]
+
+    return spec
+
+
+cdef double CSpectrumPoint(double eng_gam, double eng_k):
+    """
+    Returns the radiative spectrum value from charged kaon at
+    a single gamma ray energy.
+
+    Keyword arguments::
+        eng_gam: Energy of photon is laboratory frame.
+        eng_k: Energy of charged kaon in laboratory frame.
+    """
+    cdef double result = 0.0
+
+    return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                  args=(eng_gam, eng_k), epsabs=10**-10., \
+                  epsrel=10**-4.)[0]
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef np.ndarray CSpectrum(np.ndarray[np.float64_t, ndim=1] eng_gams,
+                          double eng_k):
     """
     Returns the radiative spectrum dNde from charged kaon for a
     list of gamma ray energies.

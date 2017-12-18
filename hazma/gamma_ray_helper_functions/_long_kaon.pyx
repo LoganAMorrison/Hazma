@@ -3,7 +3,7 @@ import numpy as np
 cimport numpy as np
 
 
-cdef double decay_spectra_point(double eng_gam, double eng_pi):
+cdef double decay_spectra_point(double eng_gam, double eng_k):
     """
     Compute dNdE from long kaon decay.
 

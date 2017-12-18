@@ -1,6 +1,8 @@
 from ..decay_helper_functions cimport decay_short_kaon
+import numpy as np
+cimport numpy as np
 
-cdef double decay_spectra_point(double eng_gam, double eng_pi):
+cdef double decay_spectra_point(double eng_gam, double eng_k):
     """
     Compute dNdE from short kaon decay.
 

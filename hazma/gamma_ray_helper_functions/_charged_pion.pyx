@@ -16,7 +16,7 @@ cdef double decay_spectra_point(double eng_gam, double eng_pi):
     return decay_charged_pion.CSpectrumPoint(eng_gam, eng_pi)
 
 
-cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_k):
+cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_pi):
     """
     Compute dNdE from charged pion decay.
 

@@ -49,7 +49,7 @@ cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_k):
     return decay_charged_kaon.CSpectrum(eng_gam, eng_k)
 
 
-cdef fsr(eng_gam, cme, mediator='scalar'):
+def fsr(eng_gam, cme, mediator='scalar'):
     """
     NOT YET IMPLEMENTED!
     """

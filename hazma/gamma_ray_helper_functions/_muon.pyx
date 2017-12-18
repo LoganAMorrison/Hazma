@@ -8,7 +8,7 @@ cimport numpy as np
 MASS_MU = 105.6583715
 
 
-cdef double decay_spectra_point(double eng_gam, double eng_pi):
+cdef double decay_spectra_point(double eng_gam, double eng_mu):
     """
     Compute dNdE from muon decay.
 
@@ -28,7 +28,7 @@ cdef double decay_spectra_point(double eng_gam, double eng_pi):
     return decay_muon.CSpectrumPoint(eng_gam, eng_mu)
 
 
-cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_k):
+cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_mu):
     """
     Compute dNdE from muon decay.
 
@@ -48,7 +48,7 @@ cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_k):
     return decay_muon.CSpectrum(eng_gam, eng_mu)
 
 
-cdef fsr(eng_gam, cme, mediator='scalar'):
+def fsr(eng_gam, cme, mediator='scalar'):
     """
     Compute muon fsr spectrum.
 

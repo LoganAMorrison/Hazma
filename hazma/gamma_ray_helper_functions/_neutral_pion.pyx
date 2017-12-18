@@ -1,5 +1,6 @@
 from ..decay_helper_functions cimport decay_neutral_pion
-
+import numpy as np
+cimport numpy as np
 
 cdef double decay_spectra_point(double eng_gam, double eng_pi):
     """
@@ -23,7 +24,7 @@ cdef double decay_spectra_point(double eng_gam, double eng_pi):
 
 
 
-cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_k):
+cdef np.ndarray decay_spectra(np.ndarray eng_gam, double eng_pi):
     """
     Compute dNdE from neutral pion decay.
 
