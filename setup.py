@@ -1,4 +1,5 @@
 from distutils.core import setup
+from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
 
@@ -11,9 +12,9 @@ packs = ["hazma",
          "hazma.phase_space_generator",
          "hazma.gamma_ray_helper_functions"]
 
-extensions = ["hazma/decay_helper_functions/*.pyx",
-              "hazma/phase_space_generator/*.pyx",
-              "hazma/gamma_ray_helper_functions/*.pyx"]
+extensions = [Extension("*", ["hazma/decay_helper_functions/*.pyx"]),
+              Extension("*", ["hazma/phase_space_generator/*.pyx"]),
+              Extension("*", ["hazma/gamma_ray_helper_functions/*.pyx"])]
 
 setup(name='hazma',
       version='1.0',

@@ -61,11 +61,12 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
     cdef double beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
     cdef double eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)
 
-    cdef double ret_val
+    cdef double ret_val = 0.0
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    ret_val = __interp_spec(eng_gam_k_rf)
+    if 0 <= eng_gam_k_rf and eng_gam_k_rf <= MASS_K:
+        ret_val = __interp_spec(eng_gam_k_rf)
     return ret_val
 
 

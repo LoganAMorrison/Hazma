@@ -8,6 +8,7 @@ Module for computing gamma ray spectra from a many-particle final state.
 import numpy as np
 cimport numpy as np
 import cython
+from cython.parallel import prange
 
 from ..phase_space_generator cimport rambo
 
@@ -17,9 +18,9 @@ from ..decay_helper_functions cimport decay_electron as de
 from ..decay_helper_functions cimport decay_neutral_pion as dnp
 from ..decay_helper_functions cimport decay_charged_pion as dcp
 
-from ..decay_helper_functions cimport decay_charged_kaon as dck
-from ..decay_helper_functions cimport decay_long_kaon as dlk
-from ..decay_helper_functions cimport decay_short_kaon as dsk
+from ..decay_helper_functions import decay_charged_kaon as dck
+from ..decay_helper_functions import decay_long_kaon as dlk
+from ..decay_helper_functions import decay_short_kaon as dsk
 
 include "../decay_helper_functions/parameters.pxd"
 
@@ -121,14 +122,13 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
                     dnp.CSpectrum(eng_gams, __probs[j, 0, i])
             if particles[j] == 'charged_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dck.CSpectrum(eng_gams, __probs[j, 0, i])
+                    dck.Spectrum(eng_gams, __probs[j, 0, i])
             if particles[j] == 'short_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dsk.CSpectrum(eng_gams, __probs[j, 0, i])
+                    dsk.Spectrum(eng_gams, __probs[j, 0, i])
             if particles[j] == 'long_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dlk.CSpectrum(eng_gams, __probs[j, 0, i])
-
+                    dlk.Spectrum(eng_gams, __probs[j, 0, i])
     return __spec
 
 @cython.boundscheck(False)
@@ -191,12 +191,12 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
                     dnp.CSpectrumPoint(eng_gam, __probs[j, 0, i])
             if particles[j] is 'charged_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dck.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                    dck.SpectrumPoint(eng_gam, __probs[j, 0, i])
             if particles[j] is 'short_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dsk.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                    dsk.SpectrumPoint(eng_gam, __probs[j, 0, i])
             if particles[j] is 'long_kaon':
                 __spec += __probs[j, 1, i] * \
-                    dlk.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                    dlk.SpectrumPoint(eng_gam, __probs[j, 0, i])
 
     return __spec_val

@@ -56,12 +56,9 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    # ret_val += BR_KL_TO_PIENU * __interp_PIENU(eng_gam_k_rf)
-    # ret_val += BR_KL_TO_PIMUNU * __interp_PIMUNU(eng_gam_k_rf)
-    # ret_val += BR_KL_TO_3PI0 * __interp_3PI0(eng_gam_k_rf)
-    # ret_val += BR_KL_TO_2PIPI0 * __interp_2PIPI0(eng_gam_k_rf)
+    if 0 <= eng_gam_k_rf and eng_gam_k_rf <= MASS_K0:
+        ret_val = __interp_spec(eng_gam_k_rf)
 
-    ret_val = __interp_spec(eng_gam_k_rf)
     return pre_factor * ret_val
 
 
