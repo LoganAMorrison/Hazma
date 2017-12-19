@@ -56,10 +56,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_k):
     cdef double pre_factor \
         = 1.0 / (2.0 * gamma_k * (1.0 - beta_k * cl))
 
-    if 0 <= eng_gam_k_rf and eng_gam_k_rf <= MASS_K0:
-        ret_val = __interp_spec(eng_gam_k_rf)
-
-    return pre_factor * ret_val
+    return pre_factor * __interp_spec(eng_gam_k_rf)
 
 
 def SpectrumPoint(double eng_gam, double eng_k):
@@ -146,7 +143,7 @@ cdef np.ndarray CSpectrum(np.ndarray[np.float64_t, ndim=1] eng_gams,
     """
     if eng_k < MASS_K0:
         raise ValueError('Energy of kaon cannot be less than the kaon mass.')
-    
+
     cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)

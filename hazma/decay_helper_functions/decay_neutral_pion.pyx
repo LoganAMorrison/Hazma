@@ -76,7 +76,7 @@ def Spectrum(np.ndarray eng_gam, double eng_pi):
     """
     if eng_pi < MASS_PI0:
         raise ValueError('Energy of pion cannot be less than the pion mass.')
-    
+
     cdef float beta = sqrt(1.0 - (MASS_PI0 / eng_pi)**2)
     cdef int numpts = len(eng_gam)
     cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
