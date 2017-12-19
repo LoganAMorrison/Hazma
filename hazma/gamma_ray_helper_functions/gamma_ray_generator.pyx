@@ -61,18 +61,25 @@ cdef np.ndarray names_to_masses(np.ndarray names):
 def __gen_spec(name, prob, eng, eng_gams):
 
     if name == 'electron':
+        print("creating electron spectrum with energy {}".format(eng))
         return prob * de.Spectrum(eng_gams, eng)
     if name == 'muon':
+        print("creating muon spectrum with energy {}".format(eng))
         return prob * dm.Spectrum(eng_gams, eng)
     if name == 'charged_pion':
+        print("creating charged pion spectrum with energy {}".format(eng))
         return prob * dcp.Spectrum(eng_gams, eng)
     if name == 'neutral_pion':
+        print("creating neutral pion spectrum with energy {}".format(eng))
         return prob * dnp.Spectrum(eng_gams, eng)
     if name == 'charged_kaon':
+        print("creating charged kaon spectrum with energy {}".format(eng))
         return prob * dck.Spectrum(eng_gams, eng)
     if name == 'short_kaon':
+        print("creating short kaon spectrum with energy {}".format(eng))
         return prob * dsk.Spectrum(eng_gams, eng)
     if name == 'long_kaon':
+        print("creating long kaon spectrum with energy {}".format(eng))
         return prob * dlk.Spectrum(eng_gams, eng)
 
 
@@ -126,7 +133,7 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
 
     p = mp.Pool(4)
     specs = []
-
+    print(__probs)
     for i in range(num_bins):
         for j in range(__num_fsp):
             specs.append(p.apply_async(__gen_spec, (particles[j],

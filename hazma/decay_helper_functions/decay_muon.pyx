@@ -115,6 +115,9 @@ cdef double CSpectrumPoint(double eng_gam, double eng_mu):
         eng_gam (float) -- Gamma ray energy in laboratory frame.
         eng_mu (float) -- Muon energy in laboratory frame.
     """
+    if eng_mu < MASS_MU:
+        raise ValueError('Energy of muon cannot be less than the muon mass.')
+
     cdef double result = 0.0
 
     cdef double beta = __beta(eng_mu, MASS_MU)
@@ -149,6 +152,9 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_mu):
         List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
         given muon energy `eng_mu`.
     """
+    if eng_mu < MASS_MU:
+        raise ValueError('Energy of muon cannot be less than the muon mass.')
+
     cdef double result = 0.0
     cdef int numpts = len(eng_gams)
 
@@ -177,6 +183,9 @@ def SpectrumPoint(double eng_gam, double eng_mu):
         eng_gam (float) -- Gamma ray energy in laboratory frame.
         eng_mu (float) -- Muon energy in laboratory frame.
     """
+    if eng_mu < MASS_MU:
+        raise ValueError('Energy of muon cannot be less than the muon mass.')
+
     cdef double result = 0.0
 
     cdef double beta = __beta(eng_mu, MASS_MU)
@@ -212,6 +221,9 @@ def Spectrum(np.ndarray eng_gams, double eng_mu):
         List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
         given muon energy `eng_mu`.
     """
+    if eng_mu < MASS_MU:
+        raise ValueError('Energy of muon cannot be less than the muon mass.')
+
     cdef double result = 0.0
     cdef int numpts = len(eng_gams)
 

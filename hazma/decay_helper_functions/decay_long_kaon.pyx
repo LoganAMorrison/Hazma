@@ -71,6 +71,9 @@ def SpectrumPoint(double eng_gam, double eng_k):
         eng_gam: Energy of photon is laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
+    if eng_k < MASS_K0:
+        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
+
     cdef double result = 0.0
 
     return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
@@ -90,6 +93,9 @@ def Spectrum(np.ndarray[np.float64_t, ndim=1] eng_gams, double eng_k):
         eng_gams: List of energies of photon in laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
+    if eng_k < MASS_K0:
+        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
+
     cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)
@@ -115,6 +121,9 @@ cdef double CSpectrumPoint(double eng_gam, double eng_k):
         eng_gam: Energy of photon is laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
+    if eng_k < MASS_K0:
+        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
+
     cdef double result = 0.0
 
     return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
@@ -135,6 +144,9 @@ cdef np.ndarray CSpectrum(np.ndarray[np.float64_t, ndim=1] eng_gams,
         eng_gams: List of energies of photon in laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
+    if eng_k < MASS_K0:
+        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
+    
     cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)
