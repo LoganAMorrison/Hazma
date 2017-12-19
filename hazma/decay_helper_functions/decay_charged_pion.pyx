@@ -99,6 +99,8 @@ cdef double CSpectrumPoint(double eng_gam, double eng_pi):
         eng_gam: Energy of photon is laboratory frame.
         eng_pi: Energy of charged pion in laboratory frame.
     """
+    if eng_pi < MASS_PI:
+        raise ValueError('Energy of pion cannot be less than the pion mass.')
     cdef double result = 0.0
 
     if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
@@ -122,6 +124,9 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
         eng_gams: Gamma ray energies to evaluate spectrum.
         eng_pi: Energy of charged pion in laboratory frame.
     """
+    if eng_pi < MASS_PI:
+        raise ValueError('Energy of pion cannot be less than the pion mass.')
+
     cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)
@@ -150,6 +155,9 @@ def SpectrumPoint(double eng_gam, double eng_pi):
         eng_gam: Energy of photon is laboratory frame.
         eng_pi: Energy of charged pion in laboratory frame.
     """
+    if eng_pi < MASS_PI:
+        raise ValueError('Energy of pion cannot be less than the pion mass.')
+
     cdef double result = 0.0
 
     if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
@@ -173,6 +181,9 @@ def Spectrum(np.ndarray eng_gams, double eng_pi):
         eng_gams: Gamma ray energies to evaluate spectrum.
         eng_pi: Energy of charged pion in laboratory frame.
     """
+    if eng_pi < MASS_PI:
+        raise ValueError('Energy of pion cannot be less than the pion mass.')
+    
     cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)
