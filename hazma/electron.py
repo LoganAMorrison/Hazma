@@ -1,3 +1,9 @@
+"""
+Module for computing gamma ray spectra from an electron.
+
+@author - Logan Morrison and Adam Coogan
+@date - December 2017
+"""
 from .fsr_helper_functions.scalar_mediator_fsr import fermion
 import numpy as np
 

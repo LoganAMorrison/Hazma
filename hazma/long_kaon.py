@@ -1,3 +1,9 @@
+"""
+Module for computing gamma ray spectra from a K-Long.
+
+@author - Logan Morrison and Adam Coogan
+@date - December 2017
+"""
 from decay_helper_functions import decay_long_kaon
 
 

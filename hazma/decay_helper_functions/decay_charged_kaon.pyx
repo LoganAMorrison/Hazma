@@ -34,6 +34,8 @@ __data = np.loadtxt("charged_kaon_interp.dat", delimiter=',')
 __eng_gams = __data[:, 0]
 __spec = __data[:, 1]
 
+print('Interpolation data for charged kaon loaded!')
+
 cdef double __interp_spec(double eng_gam):
     return np.interp(eng_gam, __eng_gams, __spec)
 
@@ -78,9 +80,11 @@ cdef double CSpectrumPoint(double eng_gam, double eng_k):
     """
     cdef double result = 0.0
 
-    return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+    result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
                   args=(eng_gam, eng_k), epsabs=10**-10., \
                   epsrel=10**-4.)[0]
+
+    return result
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

@@ -1,3 +1,9 @@
+"""
+Module for computing gamma ray spectra from a K-Short.
+
+@author - Logan Morrison and Adam Coogan
+@date - December 2017
+"""
 from decay_helper_functions import decay_short_kaon
 
 

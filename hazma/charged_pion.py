@@ -1,3 +1,9 @@
+"""
+Module for computing gamma ray spectra from a charged pion.
+
+@author - Logan Morrison and Adam Coogan
+@date - December 2017
+"""
 from decay_helper_functions import decay_charged_pion
 
 

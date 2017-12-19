@@ -1,3 +1,9 @@
+"""
+Module for computing gamma ray spectra from a many-particle final state.
+
+@author - Logan Morrison and Adam Coogan
+@date - December 2017
+"""
 from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
 
 
