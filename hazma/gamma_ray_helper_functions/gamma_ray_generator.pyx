@@ -8,15 +8,15 @@ Module for computing gamma ray spectra from a many-particle final state.
 import numpy as np
 cimport numpy as np
 import cython
-from cython.parallel import prange
+import multiprocessing as mp
 
 from ..phase_space_generator cimport rambo
 
-from ..decay_helper_functions cimport decay_muon as dm
-from ..decay_helper_functions cimport decay_electron as de
+from ..decay_helper_functions import decay_muon as dm
+from ..decay_helper_functions import decay_electron as de
 
-from ..decay_helper_functions cimport decay_neutral_pion as dnp
-from ..decay_helper_functions cimport decay_charged_pion as dcp
+from ..decay_helper_functions import decay_neutral_pion as dnp
+from ..decay_helper_functions import decay_charged_pion as dcp
 
 from ..decay_helper_functions import decay_charged_kaon as dck
 from ..decay_helper_functions import decay_long_kaon as dlk
@@ -56,6 +56,24 @@ cdef np.ndarray names_to_masses(np.ndarray names):
         if names[i] is 'long_kaon':
             masses[i] = MASS_K0
     return masses
+
+
+def __gen_spec(name, prob, eng, eng_gams):
+
+    if name == 'electron':
+        return prob * de.Spectrum(eng_gams, eng)
+    if name == 'muon':
+        return prob * dm.Spectrum(eng_gams, eng)
+    if name == 'charged_pion':
+        return prob * dcp.Spectrum(eng_gams, eng)
+    if name == 'neutral_pion':
+        return prob * dnp.Spectrum(eng_gams, eng)
+    if name == 'charged_kaon':
+        return prob * dck.Spectrum(eng_gams, eng)
+    if name == 'short_kaon':
+        return prob * dsk.Spectrum(eng_gams, eng)
+    if name == 'long_kaon':
+        return prob * dlk.Spectrum(eng_gams, eng)
 
 
 @cython.boundscheck(False)
@@ -106,6 +124,20 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
 
     __spec = np.zeros(__num_engs, dtype=np.float64)
 
+    p = mp.Pool(4)
+    specs = []
+
+    for i in range(num_bins):
+        for j in range(__num_fsp):
+            specs.append(p.apply_async(__gen_spec, (particles[j],
+                                                      __probs[j, 1, i], \
+                                                      __probs[j, 0, i], eng_gams)))
+
+
+    __spec = sum([spec.get() for spec in specs])
+
+
+    """
     for i in range(num_bins):
         for j in range(__num_fsp):
             if particles[j] == 'electron':
@@ -129,7 +161,9 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
             if particles[j] == 'long_kaon':
                 __spec += __probs[j, 1, i] * \
                     dlk.Spectrum(eng_gams, __probs[j, 0, i])
+    """
     return __spec
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
