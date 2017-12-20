@@ -21,29 +21,33 @@ def decay_spectra(eng_gam, eng_mu):
     a gamma ray engergy of `eng_gam` and muon energy of `eng_mu`.
 
     Paramaters
-        eng_gam (float or numpy.ndarray) :
-            Gamma ray energy(ies) in laboratory frame.
-        eng_mu (float) :
-            Muon energy in laboratory frame.
+    ----------
+    eng_gam : float or numpy.ndarray
+        Gamma ray energy(ies) in laboratory frame.
+    eng_mu : float
+        Muon energy in laboratory frame.
 
     Returns
-        spec (np.ndarray) List of gamma ray spectrum values, dNdE, evaluated at
-        `eng_gams` given muon energy `eng_mu`.
+    -------
+    spec : np.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at `eng_gams` given
+        muon energy `eng_mu`.
 
     Examples
-        Calculate spectrum for single gamma ray energy
+    --------
+    Calculate spectrum for single gamma ray energy
 
-        >>> from hazma import muon
-        >>> eng_gam, eng_mu = 200., 1000.
-        >>> spec = muon.decay_spectra(eng_gam, eng_mu)
+    >>> from hazma import muon
+    >>> eng_gam, eng_mu = 200., 1000.
+    >>> spec = muon.decay_spectra(eng_gam, eng_mu)
 
-        Calculate spectrum for array of gamma ray energies
+    Calculate spectrum for array of gamma ray energies
 
-        >>> from hazma import muon
-        >>> import numpy as np
-        >>> eng_gams = np.logspace(0.0, 3.0, num=200, dtype=float)
-        >>> eng_mu = 1000.
-        >>> spec = muon.decay_spectra(eng_gams, eng_mu)
+    >>> from hazma import muon
+    >>> import numpy as np
+    >>> eng_gams = np.logspace(0.0, 3.0, num=200, dtype=float)
+    >>> eng_mu = 1000.
+    >>> spec = muon.decay_spectra(eng_gams, eng_mu)
     """
     # mu = decay_muon.Muon()
     if hasattr(eng_gam, "__len__"):

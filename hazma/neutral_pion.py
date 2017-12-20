@@ -15,15 +15,17 @@ def decay_spectra(eng_gam, eng_pi):
     a gamma ray engergy of `eng_gam` and neutral pion energy of `eng_pi`.
 
     Paramaters
-        eng_gam (float/numpy.ndarray) :
-            Gamma ray energy(ies) in laboratory frame.
-        eng_pi (float) :
-            Neutral pion energy in laboratory frame.
+    ----------
+    eng_gam : double or numpy.ndarray
+        Gamma ray energy(ies) in laboratory frame.
+    eng_pi : float
+        Neutral pion energy in laboratory frame.
 
     Returns
-        spec (np.ndarray) :
-            List of gamma ray spectrum values, dNdE, evaluated at
-            `eng_gams` given neutral pion energy `eng_pi`.
+    -------
+    spec : np.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at
+        `eng_gams` given neutral pion energy `eng_pi`.
     """
     if hasattr(eng_gam, '__len__'):
         return decay_neutral_pion.Spectrum(eng_gam, eng_pi)
