@@ -1,10 +1,10 @@
 # Fdb version 3
-["makeindex Hazma.idx"] 1513757439 "Hazma.idx" "Hazma.ind" "Hazma" 1513757963
-  "Hazma.idx" 1513757963 1387 c593f468b216c1df09c63ffaeaaeb111 ""
+["makeindex Hazma.idx"] 1513757439 "Hazma.idx" "Hazma.ind" "Hazma" 1513758324
+  "Hazma.idx" 1513758324 1387 c593f468b216c1df09c63ffaeaaeb111 ""
   (generated)
   "Hazma.ind"
   "Hazma.ilg"
-["pdflatex"] 1513757962 "Hazma.tex" "Hazma.pdf" "Hazma" 1513757963
+["pdflatex"] 1513758323 "Hazma.tex" "Hazma.pdf" "Hazma" 1513758324
   "/usr/local/texlive/2017/texmf-dist/fonts/enc/dvips/base/8r.enc" 1480098666 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2017/texmf-dist/fonts/map/fontname/texfonts.map" 1480098670 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/courier/pcrb8r.tfm" 1480098688 1292 3059476c50a24578715759f22652f3d0 ""
@@ -156,26 +156,25 @@
   "/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1495593472 2350277 a699055bee05bf8a40b0504752487295 ""
   "/usr/local/texlive/2017/texmf-var/web2c/pdftex/pdflatex.fmt" 1495593487 4129592 0e6cfee100d68e6d96b92c0258f2ff73 ""
   "/usr/local/texlive/2017/texmf.cnf" 1495593465 577 2b71d4d888f9e5560b2e99985915a9fa ""
-  "Hazma.aux" 1513757963 7840 b05e0a05fcb60d3231d80980dc2dcfcc ""
+  "Hazma.aux" 1513758324 7840 698e7705384132ea768f525e2bb1513e ""
   "Hazma.ind" 1513757439 1140 09c81594ebfdd78e64230982b263e2d8 "makeindex Hazma.idx"
-  "Hazma.out" 1513757963 2668 02a493fbcf8c9bb66a5bb6dc4018f8a8 ""
-  "Hazma.png" 1512792799 707 2f52d1739b0a0de41ff7d3133dc5a87a ""
-  "Hazma.tex" 1513757960 31032 425092a0c02f6d2c98000f4c85b43ca3 ""
-  "Hazma.toc" 1513757963 1877 972e6da8941826cbbc9a862f35b930dc ""
+  "Hazma.out" 1513758324 2668 02a493fbcf8c9bb66a5bb6dc4018f8a8 ""
+  "Hazma.tex" 1513758321 30904 5b5099b6886a5bc5956eb71cfeafbc23 ""
+  "Hazma.toc" 1513758324 1877 60726fcd3669c849b9e2b4663cba351a ""
   "charged_pion_decay_spectrum.png" 1513498688 35001 fe35f58294f6c1cab8ce049102f39c34 ""
   "footnotehyper-sphinx.sty" 1511575942 8841 e18cbb7bca599a223414f9b8a156abee ""
   "muon_decay_spectra.png" 1513498688 34041 9d06e59a49f4eef4da78df9f1f6a4576 ""
   "muon_fsr.png" 1513498688 790266 a6932ed062ade7237d41e81032c3776d ""
   "scalar-fsr.png" 1513498688 111898 fb28bb2ada85250de4bc30e4327d77a1 ""
   "sphinx.sty" 1511575942 62670 74cadfc8799b8ec9c0014b7f476b628d ""
-  "sphinxhighlight.sty" 1513757960 8137 b8d4ef963833564f6e4eadc09cd757c4 ""
+  "sphinxhighlight.sty" 1513758321 8137 b8d4ef963833564f6e4eadc09cd757c4 ""
   "sphinxmanual.cls" 1511575942 3589 0b0aac49c6f36925cf5f9d524a75a978 ""
   "sphinxmulticell.sty" 1511575942 14618 0defbdc8536ad2e67f1eac6a1431bc55 ""
   "vector-fsr.png" 1513498688 124932 546157bfaa75b89986723250a8d88d82 ""
   (generated)
-  "Hazma.pdf"
-  "Hazma.out"
   "Hazma.aux"
-  "Hazma.toc"
+  "Hazma.out"
   "Hazma.log"
   "Hazma.idx"
+  "Hazma.toc"
+  "Hazma.pdf"
