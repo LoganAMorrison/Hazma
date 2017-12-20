@@ -160,71 +160,11 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-hazma.phases_space_generator.rambo">
-<span id="hazma-phases-space-generator-rambo-module"></span><h2>hazma.phases_space_generator.rambo module<a class="headerlink" href="#module-hazma.phases_space_generator.rambo" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="hazma.phases_space_generator.rambo.Rambo">
-<em class="property">class </em><code class="descclassname">hazma.phases_space_generator.rambo.</code><code class="descname">Rambo</code><a class="headerlink" href="#hazma.phases_space_generator.rambo.Rambo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="hazma.phases_space_generator.rambo.Rambo.generate_energy_histogram">
-<code class="descname">generate_energy_histogram</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.phases_space_generator.rambo.Rambo.generate_energy_histogram" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the energy probability distributions for each particle. These
-distributions are stored in (num_particles, 2, num_bins) array called probs. For example, probs[1, 0, :], probs[1, 1, :] are the energies and their probabilities, respectively, for the second particle.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_phase_space_pts</strong> – Number of phase space ponp.ints to generate.</li>
-<li><strong>masses</strong> – List of the final state particle masses.</li>
-<li><strong>cme</strong> – Center of mass energy of the process.</li>
-<li><strong>num_bins</strong> – Number of bins to use for the probability distributions.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Array containing the energy probability distributions for each final state particle. The shape is (len(masses), 2, num_bins)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">probs (np.ndarray)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="hazma.phases_space_generator.rambo.Rambo.generate_phase_space">
-<code class="descname">generate_phase_space</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.phases_space_generator.rambo.Rambo.generate_phase_space" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates ‘num_phase_space_pts’ number of phase space ponp.ints with final state particles with masses ‘masses’ and center of mass energy ‘cme’.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_phase_space_pts</strong> – Number of phase space ponp.ints to generate.</li>
-<li><strong>masses</strong> – List of the final state particle masses.</li>
-<li><strong>cme</strong> – Center of mass energy of the process.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p>Array containing the four momenta of each particles for each event. The shape is (num_phase_space_pts, len(masses), 4)</p>
-<p>wieght_array (np.ndarray): Array containing the weight of each event. The shape is (num_phase_space_pts)</p>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">phase_space_array (np.ndarray)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="hazma-phases-space-generator-rambo-module">
+<h2>hazma.phases_space_generator.rambo module<a class="headerlink" href="#hazma-phases-space-generator-rambo-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-hazma.phases_space_generator">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hazma.phases_space_generator" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

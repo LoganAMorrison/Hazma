@@ -162,32 +162,9 @@
 </div>
 <div class="section" id="module-hazma.decay_helper_functions.decay_charged_kaon">
 <span id="hazma-decay-helper-functions-decay-charged-kaon-module"></span><h2>hazma.decay_helper_functions.decay_charged_kaon module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_charged_kaon" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon">
-<em class="property">class </em><code class="descclassname">hazma.decay_helper_functions.decay_charged_kaon.</code><code class="descname">ChargedKaon</code><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<p>Class for computing the photon spectrum from radiative kaon decay.</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><p class="first">The charged kaon has many decay modes:</p>
-<blockquote>
-<div>k -&gt; mu  + nu
-k -&gt; pi  + pi0
-k -&gt; pi  + pi  + pi
-k -&gt; pi0 + e   + nu
-k -&gt; pi0 + mu  + nu
-k -&gt; pi  + pi0 + pi0</div></blockquote>
-<p>For the the two-body final states, the sum of the decay spectra are
-computed given the known energies of the final state particles in the
-kaon’s rest frame. The spectrum is then boosted into the lab frame.</p>
-<p class="last">For the three-body final state, the energies of the final state
-particles are computed using RAMBO. The spectra for each final state
-particle is computed are each point in phases space in the charged kaon’s rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.</p>
-</dd>
-</dl>
-<dl class="method">
-<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.Spectrum">
-<code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_charged_kaon.Spectrum">
+<code class="descclassname">hazma.decay_helper_functions.decay_charged_kaon.</code><code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.Spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the radiative spectrum dNde from charged kaon for a
 list of gamma ray energies.</p>
 <dl class="docutils">
@@ -197,9 +174,9 @@ eng_k: Energy of charged kaon in laboratory frame.</dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.SpectrumPoint">
-<code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.ChargedKaon.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_charged_kaon.SpectrumPoint">
+<code class="descclassname">hazma.decay_helper_functions.decay_charged_kaon.</code><code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_kaon.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the radiative spectrum value from charged kaon at
 a single gamma ray energy.</p>
 <dl class="docutils">
@@ -209,17 +186,90 @@ eng_k: Energy of charged kaon in laboratory frame.</dd>
 </dl>
 </dd></dl>
 
-</dd></dl>
-
 </div>
 <div class="section" id="module-hazma.decay_helper_functions.decay_charged_pion">
 <span id="hazma-decay-helper-functions-decay-charged-pion-module"></span><h2>hazma.decay_helper_functions.decay_charged_pion module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_charged_pion" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_charged_pion.Spectrum">
+<code class="descclassname">hazma.decay_helper_functions.decay_charged_pion.</code><code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_pion.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radiative spectrum dNde from charged pion given a gamma
+ray energies eng_gams and charged pion energy eng_pi.
+When the ChargedPion object is instatiated, an interplating function
+for the mu spectrum is computed.</p>
+<dl class="docutils">
+<dt>Keyword arguments::</dt>
+<dd>eng_gams: Gamma ray energies to evaluate spectrum.
+eng_pi: Energy of charged pion in laboratory frame.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_charged_pion.SpectrumPoint">
+<code class="descclassname">hazma.decay_helper_functions.decay_charged_pion.</code><code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_charged_pion.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radiative spectrum value from charged pion given a gamma
+ray energy eng_gam and charged pion energy eng_pi. When the
+ChargedPion object is instatiated, an interplating function for the
+mu spectrum is computed.</p>
+<dl class="docutils">
+<dt>Keyword arguments::</dt>
+<dd>eng_gam: Energy of photon is laboratory frame.
+eng_pi: Energy of charged pion in laboratory frame.</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-hazma.decay_helper_functions.decay_muon">
 <span id="hazma-decay-helper-functions-decay-muon-module"></span><h2>hazma.decay_helper_functions.decay_muon module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_muon" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_muon.Spectrum">
+<code class="descclassname">hazma.decay_helper_functions.decay_muon.</code><code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_muon.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dN/dE from mu -&gt; e nu nu gamma in the laborartory frame.</p>
+<dl class="docutils">
+<dt>eng_gams <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray</span></dt>
+<dd>List of gamma ray energies in laboratory frame.</dd>
+<dt>eng_mu <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>Muon energy in laboratory frame.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
+given muon energy <cite>eng_mu</cite>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_muon.SpectrumPoint">
+<code class="descclassname">hazma.decay_helper_functions.decay_muon.</code><code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_muon.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dN_{gamma}/dE_{gamma} from mu -&gt; e nu nu gamma in the
+laborartory frame.</p>
+<dl class="docutils">
+<dt>Keyword arguments::</dt>
+<dd>eng_gam (float) – Gamma ray energy in laboratory frame.
+eng_mu (float) – Muon energy in laboratory frame.</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="module-hazma.decay_helper_functions.decay_neutral_pion">
 <span id="hazma-decay-helper-functions-decay-neutral-pion-module"></span><h2>hazma.decay_helper_functions.decay_neutral_pion module<a class="headerlink" href="#module-hazma.decay_helper_functions.decay_neutral_pion" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_neutral_pion.Spectrum">
+<code class="descclassname">hazma.decay_helper_functions.decay_neutral_pion.</code><code class="descname">Spectrum</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_neutral_pion.Spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns decay spectrum for pi0 -&gt; g g.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay_helper_functions.decay_neutral_pion.SpectrumPoint">
+<code class="descclassname">hazma.decay_helper_functions.decay_neutral_pion.</code><code class="descname">SpectrumPoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay_helper_functions.decay_neutral_pion.SpectrumPoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns decay spectrum for pi0 -&gt; g g.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-hazma.decay_helper_functions">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hazma.decay_helper_functions" title="Permalink to this headline">¶</a></h2>

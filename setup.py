@@ -3,9 +3,6 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
 
-# 'hazma.gamma_ray_helper_functions'
-# "hazma/gamma_ray_helper_functions/*.pyx"
-
 packs = ["hazma",
          "hazma.fsr_helper_functions",
          "hazma.decay_helper_functions",
