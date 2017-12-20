@@ -5,6 +5,9 @@ cimport numpy as np
 from scipy.integrate import quad
 from libc.math cimport sqrt
 import cython
+import os
+import sys
+from .get_path import get_dir_path
 include "parameters.pxd"
 
 """
@@ -21,7 +24,11 @@ Description:
     kaon's rest frame. The spectrum is then boosted into the lab frame.
 """
 
-__spec = np.loadtxt("short_kaon_interp.dat", delimiter=',')
+DATA_PATH = os.path.join(get_dir_path(),
+                         "interpolation_data",
+                         "short_kaon_interp.dat")
+
+__spec = np.loadtxt(DATA_PATH, delimiter=',')
 
 
 cdef double __interp_spec(double eng_gam):

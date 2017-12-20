@@ -6,6 +6,9 @@ cimport numpy as np
 from scipy.integrate import quad
 from libc.math cimport sqrt
 import cython
+import os
+import sys
+from .get_path import get_dir_path
 include "parameters.pxd"
 
 """
@@ -30,7 +33,12 @@ Description:
     particle is computed are each point in phases space in the charged kaon's rest frame and then spectra are summed over. The spectra is then boosted into the lab frame.
 """
 
-__data = np.loadtxt("charged_kaon_interp.dat", delimiter=',')
+
+DATA_PATH = os.path.join(get_dir_path(),
+                         "interpolation_data",
+                         "charged_kaon_interp.dat")
+
+__data = np.loadtxt(DATA_PATH, delimiter=',')
 __eng_gams = __data[:, 0]
 __spec = __data[:, 1]
 
