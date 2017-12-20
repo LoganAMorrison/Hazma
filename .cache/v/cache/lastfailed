@@ -1,0 +1,11 @@
+{
+  "hazma/test/test_decay_spectra.py::test_charged_pion_decay_spectra": true, 
+  "hazma/test/test_decay_spectra.py::test_electron_decay_spectra": true, 
+  "hazma/test/test_decay_spectra.py::test_muon_decay_spectra": true, 
+  "hazma/test/test_decay_spectra.py::test_neutral_pion_decay_spectra": true, 
+  "hazma/test/test_fsr.py::test_charged_pion_fsr": true, 
+  "hazma/test/test_fsr.py::test_electron_fsr": true, 
+  "hazma/test/test_fsr.py::test_muon_fsr": true, 
+  "hazma/test/test_fsr.py::test_neutral_pion_fsr": true, 
+  "hazma/test/test_gamma_ray.py": true
+}
