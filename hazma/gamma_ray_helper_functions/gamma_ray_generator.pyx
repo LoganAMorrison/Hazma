@@ -175,7 +175,7 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
     cdef int i, j
     cdef int num_fsp
     cdef np.ndarray masses
-    cdef np.ndarray probs
+    cdef np.ndarray hist
     cdef double spec_val = 0.0
     cdef rambo.Rambo ram
 
@@ -185,30 +185,30 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
 
     ram = rambo.Rambo()
 
-    probs = ram.generate_energy_histogram(num_ps_pts,masses, cme, num_bins)
+    hist = ram.generate_energy_histogram(num_ps_pts,masses, cme, num_bins)
 
     for i in range(num_bins):
-        for j in range(__num_fsp):
+        for j in range(num_fsp):
             if particles[j] is 'electron':
-                __spec += __probs[j, 1, i] * \
-                    de.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    de.CSpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'muon':
-                __spec += __probs[j, 1, i] * \
-                    dm.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dm.CSpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'charged_pion':
-                __spec += __probs[j, 1, i] * \
-                    dcp.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dcp.CSpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'neutral_pion':
-                __spec += __probs[j, 1, i] * \
-                    dnp.CSpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dnp.CSpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'charged_kaon':
-                __spec += __probs[j, 1, i] * \
-                    dck.SpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dck.SpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'short_kaon':
-                __spec += __probs[j, 1, i] * \
-                    dsk.SpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dsk.SpectrumPoint(eng_gam, hist[j, 0, i])
             if particles[j] is 'long_kaon':
-                __spec += __probs[j, 1, i] * \
-                    dlk.SpectrumPoint(eng_gam, __probs[j, 0, i])
+                spec_val += hist[j, 1, i] * \
+                    dlk.SpectrumPoint(eng_gam, hist[j, 0, i])
 
-    return __spec_val
+    return spec_val

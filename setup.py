@@ -34,5 +34,10 @@ setup(name='hazma',
       include_package_data=True,
       license='MIT License',
       platforms='MacOS and Linux',
-      download_url='https://github.com/LoganAMorrison/Hazma'
+      download_url='https://github.com/LoganAMorrison/Hazma',
+      classifiers=[
+          "Programming Language :: Python",
+          "License :: MIT License",
+          "Topic :: High Energy Particle Physics"
+      ]
       )
