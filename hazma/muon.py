@@ -4,7 +4,7 @@ Module for computing gamma ray spectra from a muon.
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
 """
-from decay_helper_functions import decay_muon
+from .decay_helper_functions import decay_muon
 from .fsr_helper_functions import scalar_mediator_fsr,\
     pseudo_scalar_mediator_fsr
 from .fsr_helper_functions import vector_mediator
