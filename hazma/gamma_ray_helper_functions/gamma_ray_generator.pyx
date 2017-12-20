@@ -58,28 +58,35 @@ cdef np.ndarray names_to_masses(np.ndarray names):
     return masses
 
 
-def __gen_spec(name, prob, eng, eng_gams):
+def __gen_spec(name, prob, eng, eng_gams, verbose='0'):
 
     if name == 'electron':
-        print("creating electron spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating electron spectrum with energy {}".format(eng))
         return prob * de.Spectrum(eng_gams, eng)
     if name == 'muon':
-        print("creating muon spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating muon spectrum with energy {}".format(eng))
         return prob * dm.Spectrum(eng_gams, eng)
     if name == 'charged_pion':
-        print("creating charged pion spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating charged pion spectrum with energy {}".format(eng))
         return prob * dcp.Spectrum(eng_gams, eng)
     if name == 'neutral_pion':
-        print("creating neutral pion spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating neutral pion spectrum with energy {}".format(eng))
         return prob * dnp.Spectrum(eng_gams, eng)
     if name == 'charged_kaon':
-        print("creating charged kaon spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating charged kaon spectrum with energy {}".format(eng))
         return prob * dck.Spectrum(eng_gams, eng)
     if name == 'short_kaon':
-        print("creating short kaon spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating short kaon spectrum with energy {}".format(eng))
         return prob * dsk.Spectrum(eng_gams, eng)
     if name == 'long_kaon':
-        print("creating long kaon spectrum with energy {}".format(eng))
+        if verbose == '1':
+            print("creating long kaon spectrum with energy {}".format(eng))
         return prob * dlk.Spectrum(eng_gams, eng)
 
 
@@ -87,7 +94,7 @@ def __gen_spec(name, prob, eng, eng_gams):
 @cython.wraparound(False)
 def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
           mat_elem_sqrd=lambda k_list : 1.0,
-          int num_ps_pts=1000, int num_bins=25):
+          int num_ps_pts=1000, int num_bins=25, verbose='0'):
     """
     Returns total gamma ray spectrum from final state particles.
 
@@ -132,7 +139,7 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
 
     for i in range(num_bins):
         for j in range(num_fsp):
-            specs.append(p.apply_async(__gen_spec, (particles[j], hist[j, 1, i], hist[j, 0, i], eng_gams)))
+            specs.append(p.apply_async(__gen_spec, (particles[j], hist[j, 1, i], hist[j, 0, i], eng_gams, verbose)))
 
     return sum([spec.get() for spec in specs])
 
@@ -166,20 +173,19 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
             Total gamma ray spectrum from all final state particles.
     """
     cdef int i, j
-    cdef int __num_fsp
-    cdef np.ndarray __masses
-    cdef np.ndarray __probs
-    cdef double __spec_val = 0.0
-    cdef rambo.Rambo __ram
+    cdef int num_fsp
+    cdef np.ndarray masses
+    cdef np.ndarray probs
+    cdef double spec_val = 0.0
+    cdef rambo.Rambo ram
 
-    __masses = names_to_masses(particles)
+    masses = names_to_masses(particles)
 
-    __num_fsp = len(__masses)
+    num_fsp = len(masses)
 
-    __ram = rambo.Rambo()
+    ram = rambo.Rambo()
 
-    __probs = __ram.generate_energy_histogram(num_ps_pts, __masses,
-                                            cme, num_bins)
+    probs = ram.generate_energy_histogram(num_ps_pts,masses, cme, num_bins)
 
     for i in range(num_bins):
         for j in range(__num_fsp):
