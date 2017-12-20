@@ -17,7 +17,7 @@ extensions = [Extension("*", ["hazma/decay_helper_functions/*.pyx"]),
               Extension("*", ["hazma/gamma_ray_helper_functions/*.pyx"])]
 
 setup(name='hazma',
-      version='1.0',
+      version='1.1',
       author='Logan Morrison and Adam Coogan',
       author_email='loanmorr@ucsc.edu',
       maintainer='Logan Morrison',
