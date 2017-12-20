@@ -5,6 +5,11 @@
 
 Welcome to Hazma's documentation!
 =================================
+.. image:: _static/Hazma.png
+   :align: center
+   :width: 400px
+   :height: 400px
+
 Contents:
 
 .. toctree::

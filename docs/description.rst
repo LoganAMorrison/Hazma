@@ -2,6 +2,11 @@
 Description
 ***********
 
+.. image:: _static/Hazma.png
+   :align: center
+   :width: 200px
+   :height: 200px
+
 Introduction
 ============
 

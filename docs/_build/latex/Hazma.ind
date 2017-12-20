@@ -1,0 +1,28 @@
+\begin{sphinxtheindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter D
+  \item decay\_spectra() (in module hazma.charged\_kaon), \hyperpage{12, 13}
+  \item decay\_spectra() (in module hazma.charged\_pion), \hyperpage{11}
+  \item decay\_spectra() (in module hazma.electron), \hyperpage{10}
+  \item decay\_spectra() (in module hazma.muon), \hyperpage{9}
+  \item decay\_spectra() (in module hazma.neutral\_pion), \hyperpage{11}
+
+  \indexspace
+  \bigletter F
+  \item fsr() (in module hazma.charged\_kaon), \hyperpage{12--14}
+  \item fsr() (in module hazma.charged\_pion), \hyperpage{11}
+  \item fsr() (in module hazma.electron), \hyperpage{10}
+  \item fsr() (in module hazma.muon), \hyperpage{10}
+  \item fsr() (in module hazma.neutral\_pion), \hyperpage{12}
+
+  \indexspace
+  \bigletter H
+  \item hazma.charged\_kaon (module), \hyperpage{12, 13}
+  \item hazma.charged\_pion (module), \hyperpage{11}
+  \item hazma.electron (module), \hyperpage{10}
+  \item hazma.gamma\_ray (module), \hyperpage{9}
+  \item hazma.muon (module), \hyperpage{9}
+  \item hazma.neutral\_pion (module), \hyperpage{11}
+
+\end{sphinxtheindex}
