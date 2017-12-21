@@ -35,7 +35,7 @@ def fsr(eng_gam, cme, mediator='scalar'):
 
     Returns
     -------
-    spec (np.ndarray) :
+    spec : (np.ndarray)
         List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
         given a center of mass energy `cme`.
 

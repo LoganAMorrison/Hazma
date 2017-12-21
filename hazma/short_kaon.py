@@ -18,7 +18,7 @@ def decay_spectra(eng_gam, eng_k):
 
     Paramaters
     ----------
-    eng_gam double or numpy.ndarray
+    eng_gam : double or numpy.ndarray
         Gamma ray energy(ies) in laboratory frame.
     eng_k : float
         Charged kaon energy in laboratory frame.
@@ -35,7 +35,5 @@ def decay_spectra(eng_gam, eng_k):
 
 
 def fsr(eng_gam, cme, mediator='scalar'):
-    """
-    NOT YET IMPLEMENTED!
-    """
+    """NOT YET IMPLEMENTED!"""
     raise ValueError('FSR spectrum for charged pion is not yet available')

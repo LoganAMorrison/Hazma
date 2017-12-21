@@ -42,8 +42,6 @@ __data = np.loadtxt(DATA_PATH, delimiter=',')
 __eng_gams = __data[:, 0]
 __spec = __data[:, 1]
 
-print('Interpolation data for charged kaon loaded!')
-
 cdef double __interp_spec(double eng_gam):
     return np.interp(eng_gam, __eng_gams, __spec)
 

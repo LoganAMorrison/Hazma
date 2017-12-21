@@ -8,8 +8,7 @@ from decay_helper_functions import decay_neutral_pion
 
 
 def decay_spectra(eng_gam, eng_pi):
-    """
-    Compute dNdE from neutral pion decay.
+    """Compute dNdE from neutral pion decay.
 
     Compute dNdE from decay pi0 -> gamma gamma in the laborartory frame given
     a gamma ray engergy of `eng_gam` and neutral pion energy of `eng_pi`.

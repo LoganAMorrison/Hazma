@@ -14,27 +14,29 @@ MASS_MU = 105.6583715
 
 
 def decay_spectra(eng_gam, eng_mu):
-    """
-    Compute dNdE from muon decay.
+    """Compute dNdE from muon decay.
 
     Compute dNdE from decay mu -> e nu nu gamma in the laborartory frame given
-    a gamma ray engergy of `eng_gam` and muon energy of `eng_mu`.
+    a gamma ray engergy of ``eng_gam`` and muon energy of ``eng_mu``.
 
-    Paramaters
+    Parameters
     ----------
-    eng_gam : float or numpy.ndarray
+
+    eng_gam : numpy.ndarray
         Gamma ray energy(ies) in laboratory frame.
-    eng_mu : float
+    eng_mu : double
         Muon energy in laboratory frame.
 
     Returns
     -------
-    spec : np.ndarray
-        List of gamma ray spectrum values, dNdE, evaluated at `eng_gams` given
-        muon energy `eng_mu`.
+
+    spec : numpy.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at ``eng_gam`` given
+        muon energy ``eng_mu``.
 
     Examples
     --------
+
     Calculate spectrum for single gamma ray energy
 
     >>> from hazma import muon

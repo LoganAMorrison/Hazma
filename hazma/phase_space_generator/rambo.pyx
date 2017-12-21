@@ -268,7 +268,7 @@ cdef class Rambo:
     @cython.wraparound(False)
     def generate_phase_space(self, int num_phase_space_pts, \
                              np.ndarray masses, double cme,
-                             mat_elem_sqrd=lambda klist: 1):
+                             mat_elem_sqrd=lambda klist: 1, normalize=True):
         """
         Creates 'num_phase_space_pts' number of phase space ponp.ints with final state particles with masses 'masses' and center of mass energy 'cme'.
 
@@ -312,14 +312,16 @@ cdef class Rambo:
 
             self.__event_count += 1
 
-        self.__normalize_weights()
+        if normalize == True:
+            self.__normalize_weights()
 
         return self.__phase_space_array, self.__weight_array
 
 
     def generate_energy_histogram(self, int num_phase_space_pts, \
                                   np.ndarray masses, double cme, \
-                                  int num_bins, mat_elem_sqrd=lambda klist: 1):
+                                  int num_bins, mat_elem_sqrd=lambda klist: 1,
+                                  logscale=False, normalize=True):
         """
         Returns the energy probability distributions for each particle. These
         distributions are stored in (num_particles, 2, num_bins) array called probs. For example, probs[1, 0, :], probs[1, 1, :] are the energies and their probabilities, respectively, for the second particle.
@@ -336,7 +338,8 @@ cdef class Rambo:
         Returns:
             probs (np.ndarray): Array containing the energy probability distributions for each final state particle. The shape is (len(masses), 2, num_bins)
         """
-        self.generate_phase_space(num_phase_space_pts, masses, cme)
+        self.generate_phase_space(num_phase_space_pts, masses, cme,
+                                  mat_elem_sqrd, normalize)
 
         cdef np.int i, j
         cdef np.ndarray energy_array = np.zeros((num_phase_space_pts, \
@@ -355,8 +358,18 @@ cdef class Rambo:
             for j in range(len(masses)):
                 energy_array[i, j] = self.__phase_space_array[i, j, 0]
 
-        for i in range(len(masses)):
-            hist[i, :], bins[i, :] = np.histogram(energy_array[:, i], bins=num_bins, weights=self.__weight_array[:])
+        if logscale == True:
+            for i in range(len(masses)):
+                eng_min = np.min(energy_array[i, :])
+                eng_max = np.max(energy_array[i, :])
+                engs = np.logspace(np.log10(eng_min), np.log10(eng_max),
+                                   num=num_bins+1)
+                hist[i, :], bins[i, :] \
+                    = np.histogram(energy_array[:, i], bins=engs,
+                                   weights=self.__weight_array[:])
+        if logscale == False:
+            for i in range(len(masses)):
+                hist[i, :], bins[i, :] = np.histogram(energy_array[:, i], bins=num_bins, weights=self.__weight_array[:])
 
         engs = (bins[:, :-1] + bins[:, 1:]) / 2
 

@@ -12,13 +12,15 @@ def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
               num_ps_pts=1000, num_bins=25):
     """Returns total gamma ray spectrum from a set of particles.
 
+    Blah Blah
+
     Parameters
     ----------
-    particles : np.ndarray[string, ndim=1]
-        List of particle names. Availible particles are
-        * 'muon', 'electron'
-        * 'charged_pion', 'neutral pion'
-        * 'charged_kaon', 'long_kaon', 'short_kaon'
+
+    particles : np.ndarray
+        List of particle names. Availible particles are 'muon', 'electron'
+        'charged_pion', 'neutral pion', 'charged_kaon', 'long_kaon',
+        'short_kaon'
     cme : double
         Center of mass energy of the final state in MeV.
     eng_gams : np.ndarray[double, ndim=1]
@@ -39,7 +41,7 @@ def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
 
     Notes
     -----
-    The total spectrum is computed using:
+    The total spectrum is computed using
 
     .. math::
         \frac{dN}{dE}(E_{\gamma}) =

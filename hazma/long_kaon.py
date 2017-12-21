@@ -37,7 +37,5 @@ def decay_spectra(eng_gam, eng_k):
 
 
 def fsr(eng_gam, cme, mediator='scalar'):
-    """
-    NOT YET IMPLEMENTED!
-    """
+    """NOT YET IMPLEMENTED!"""
     raise ValueError('FSR spectrum for charged pion is not yet available')
