@@ -11,8 +11,11 @@ TODO:
 import numpy as np
 cimport numpy as np
 from scipy.optimize import newton
-from libc.math cimport log, M_PI, sqrt, tgamma
+from libc.math cimport log, M_PI, sqrt, tgamma, fabs
 import cython
+
+cdef extern from "get_rand.h":
+    double get_rand()
 
 @cython.cdivision(True)
 cdef double __f_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
@@ -78,8 +81,8 @@ cdef double __df_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
 
 
 @cython.cdivision(True)
-cdef double np.float64_t __find_root(double xi, np.ndarray masses, double cme,
-                                     np.ndarray ps):
+cdef double __find_root(np.ndarray masses, double cme,
+                                     np.ndarray ps, tol=10**-4, max_iter=50):
     """
     Function for finding the scaling parameter to turn massless four-vectors
     the correct set of masses.
@@ -101,8 +104,8 @@ cdef double np.float64_t __find_root(double xi, np.ndarray masses, double cme,
         The scaling factor.
     """
     cdef double mass_sum = 0.0
-    cdef double xi0
-    cdef int i
+    cdef double xi0, xi1, xi2
+    cdef int i, iter_count
     cdef int num_fsp = len(masses)
 
     for i in range(num_fsp):
@@ -110,7 +113,19 @@ cdef double np.float64_t __find_root(double xi, np.ndarray masses, double cme,
 
     xi0 = sqrt(1.0 - (mass_sum / cme)**2)
 
-    return newton(__f_xi, xi0, __df_xi)
+    isDone = False
+    iter_count = 0
+    xi2 = xi0
+    while isDone is False:
+        if iter_count > 50:
+            break
+        xi1 = xi2
+        xi2 = xi1 - __f_xi(xi1, masses, cme, ps) / __df_xi(xi1, masses, cme, ps)
+        if fabs(xi2-xi1) < tol:
+            isDone=True
+
+    return xi2
+    #return newton(__f_xi, xi0, __df_xi)
 
 
 @cython.boundscheck(False)
@@ -136,7 +151,7 @@ cdef double __get_mass(np.ndarray fv):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray __generate_qs(np.ndarray masses, double cme, np.ndarray rands):
+cdef np.ndarray __generate_qs(np.ndarray masses, double cme):
     """
     Computes isotropic, random four-vectors with energies, q_0, distributed
     according to q_0 * exp(-q_0).
@@ -164,10 +179,10 @@ cdef np.ndarray __generate_qs(np.ndarray masses, double cme, np.ndarray rands):
     cdef np.ndarray qs = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
     for i in range(num_fsp):
-        rho_1 = rands[4 * i + 0]
-        rho_2 = rands[4 * i + 1]
-        rho_3 = rands[4 * i + 2]
-        rho_4 = rands[4 * i + 3]
+        rho_1 = get_rand()
+        rho_2 = get_rand()
+        rho_3 = get_rand()
+        rho_4 = get_rand()
 
         c = 2.0 * rho_1 - 1.0
         phi = 2.0 * M_PI * rho_2
@@ -323,7 +338,7 @@ cdef np.ndarray __generate_ks(np.ndarray masses, double cme, np.ndarray ps):
     return ks
 
 
-def generate_point(np.ndarray masses, double cme, np.ndarray rands):
+def generate_point(np.ndarray masses, double cme):
     """
     Generate a single relativistic phase space point.
 
@@ -347,8 +362,8 @@ def generate_point(np.ndarray masses, double cme, np.ndarray rands):
     cdef np.ndarray ps = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
     cdef np.ndarray ks = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
-    qs = __generate_qs(masses, cme, rands)
-    ps = __generate_qs(masses, cme, qs)
-    ks = __generate_qs(masses, cme, ks)
+    qs = __generate_qs(masses, cme)
+    ps = __generate_ps(masses, cme, qs)
+    ks = __generate_ks(masses, cme, ks)
 
     return ks

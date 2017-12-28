@@ -1,3 +1,4 @@
+#include "get_rand.h"
 #include <random>
 
 using namespace std;

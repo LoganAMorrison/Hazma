@@ -3,18 +3,24 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy as np
 
+hdhf = "hazma/decay_helper_functions"
+hgrhf = "hazma/gamma_ray_helper_functions"
+hpshf = "hazma/phase_space_helper_functions"
+
 packs = ["hazma",
          "hazma.fsr_helper_functions",
          "hazma.decay_helper_functions",
          "hazma.phase_space_helper_functions",
          "hazma.gamma_ray_helper_functions"]
 
-extensions = [Extension("*", "hazma/decay_helper_functions/*.pyx"),
-              Extension("*", "hazma/phase_space_helper_functions/*.pyx",
-                        sources=["hazma/phase_space_helper_functions/\
-                                 get_rand.cpp"],
-                        language="c++"),
-              Extension("*", "hazma/gamma_ray_helper_functions/*.pyx")]
+decay_ext = Extension("*", sources=[hdhf + "/*.pyx"])
+gamma_ext = Extension("*", sources=[hgrhf + "/*.pyx"])
+phase_ext = Extension("*", sources=[hpshf + "/*.pyx", hpshf + "/get_rand.cpp"],
+                      extra_compile_args=[
+                          '-g', '-std=c++11', '-stdlib=libc++'],
+                      language="c++")
+
+extensions = [decay_ext, gamma_ext, phase_ext]
 
 setup(name='hazma',
       version='1.1',
