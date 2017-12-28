@@ -4,6 +4,7 @@ High level module to generate relativistic phase space points.
 * Author - Logan A. Morrison and Adam Coogan
 * Date - December 2017
 """
+from .phase_space_helper_functions import phase_space_point_generator as pspg
 
 
 def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
@@ -26,6 +27,7 @@ def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
+    point = pspg.generate_phase_space_point(masses, cme)
 
 
 def generate_phase_space():

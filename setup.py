@@ -9,9 +9,12 @@ packs = ["hazma",
          "hazma.phase_space_helper_functions",
          "hazma.gamma_ray_helper_functions"]
 
-extensions = [Extension("*", ["hazma/decay_helper_functions/*.pyx"]),
-              Extension("*", ["hazma/phase_space_helper_functions/*.pyx"]),
-              Extension("*", ["hazma/gamma_ray_helper_functions/*.pyx"])]
+extensions = [Extension("*", "hazma/decay_helper_functions/*.pyx"),
+              Extension("*", "hazma/phase_space_helper_functions/*.pyx",
+                        sources=["hazma/phase_space_helper_functions/\
+                                 get_rand.cpp"],
+                        language="c++"),
+              Extension("*", "hazma/gamma_ray_helper_functions/*.pyx")]
 
 setup(name='hazma',
       version='1.1',
