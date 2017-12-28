@@ -10,7 +10,7 @@ cimport numpy as np
 import cython
 import multiprocessing as mp
 
-from ..phase_space_generator cimport rambo
+from ..phase_space_helper_functions cimport rambo
 
 from ..decay_helper_functions import decay_muon as dm
 from ..decay_helper_functions import decay_electron as de
