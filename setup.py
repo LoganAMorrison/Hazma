@@ -6,11 +6,11 @@ import numpy as np
 packs = ["hazma",
          "hazma.fsr_helper_functions",
          "hazma.decay_helper_functions",
-         "hazma.phase_space_generator",
+         "hazma.phase_space_helper_functions",
          "hazma.gamma_ray_helper_functions"]
 
 extensions = [Extension("*", ["hazma/decay_helper_functions/*.pyx"]),
-              Extension("*", ["hazma/phase_space_generator/*.pyx"]),
+              Extension("*", ["hazma/phase_space_helper_functions/*.pyx"]),
               Extension("*", ["hazma/gamma_ray_helper_functions/*.pyx"])]
 
 setup(name='hazma',
