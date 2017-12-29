@@ -3,20 +3,33 @@ Module for generating a relativistic phase space point.
 
 * Author - Logan A. Morrison and Adam Coogan.
 * Date - December 2017
-
-TODO:
-    * fix find root functions to work with 4 * num_fsp + 1 shape np.ndarrays.
 """
 
 import numpy as np
 cimport numpy as np
-from scipy.optimize import newton
-from libc.math cimport log, M_PI, sqrt, tgamma, fabs
+from libc.math cimport log, M_PI, sqrt, tgamma, fabs, pow, cos, sin
+from libcpp cimport bool
 import cython
+import time
 
-cdef extern from "get_rand.h":
-    double get_rand()
 
+cdef extern from "<random>" namespace "std":
+    cdef cppclass mt19937:
+        mt19937()
+        mt19937(unsigned int seed)
+
+    cdef cppclass uniform_real_distribution[T]:
+        uniform_real_distribution()
+        uniform_real_distribution(T a, T b)
+        T operator()(mt19937 gen)
+
+cdef mt19937 rng = mt19937(round(time.time()))
+
+cdef uniform_real_distribution[double] uniform \
+    = uniform_real_distribution[double](0., 1.)
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
 cdef double __f_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
     """
@@ -44,11 +57,12 @@ cdef double __f_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
     cdef int num_fsp = len(masses)
 
     for i in range(num_fsp):
-        val += sqrt(masses[i]**2 + xi**2 * ps[i, 0]**2)
+        val = val + sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
 
     return val - cme
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.cdivision(True)
 cdef double __df_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
     """
@@ -75,14 +89,15 @@ cdef double __df_xi(double xi, np.ndarray masses, double cme, np.ndarray ps):
     cdef int num_fsp = len(masses)
 
     for i in range(num_fsp):
-        denom = sqrt(masses[i]**2 + xi**2 * ps[i, 0]**2)
-        val = val + xi * ps[i, 0]**2 / denom
+        denom = sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
+        val = val + xi * pow(ps[4 * i], 2.) / denom
+
     return val
 
 
 @cython.cdivision(True)
-cdef double __find_root(np.ndarray masses, double cme,
-                                     np.ndarray ps, tol=10**-4, max_iter=50):
+cdef double __find_root(np.ndarray masses, double cme, np.ndarray ps,
+                        double tol=10**-4.0, int max_iter=50):
     """
     Function for finding the scaling parameter to turn massless four-vectors
     the correct set of masses.
@@ -107,6 +122,7 @@ cdef double __find_root(np.ndarray masses, double cme,
     cdef double xi0, xi1, xi2
     cdef int i, iter_count
     cdef int num_fsp = len(masses)
+    cdef bool isDone
 
     for i in range(num_fsp):
         mass_sum = mass_sum + masses[i]
@@ -117,15 +133,15 @@ cdef double __find_root(np.ndarray masses, double cme,
     iter_count = 0
     xi2 = xi0
     while isDone is False:
-        if iter_count > 50:
+        if iter_count > max_iter:
             break
         xi1 = xi2
         xi2 = xi1 - __f_xi(xi1, masses, cme, ps) / __df_xi(xi1, masses, cme, ps)
         if fabs(xi2-xi1) < tol:
             isDone=True
+        iter_count = iter_count + 1
 
     return xi2
-    #return newton(__f_xi, xi0, __df_xi)
 
 
 @cython.boundscheck(False)
@@ -145,13 +161,15 @@ cdef double __get_mass(np.ndarray fv):
     mass : double
         Mass of four-vector.
     """
-    return sqrt(fv[0]**2 - fv[1]**2 - fv[2]**2 - fv[3]**2)
+    return sqrt(pow(fv[0], 2.) - \
+        pow(fv[1], 2.) - pow(fv[2], 2.) - pow(fv[3], 2.))
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray __generate_qs(np.ndarray masses, double cme):
+cdef np.ndarray[double, ndim=1] __generate_qs(
+    np.ndarray[double, ndim=1] masses, double cme):
     """
     Computes isotropic, random four-vectors with energies, q_0, distributed
     according to q_0 * exp(-q_0).
@@ -170,26 +188,27 @@ cdef np.ndarray __generate_qs(np.ndarray masses, double cme):
     qs : np.ndarray
         List of the massless four-momenta.
     """
-    cdef np.int i
-    cdef np.float64_t rho_1, rho_2, rho_3, rho_4
-    cdef np.float64_t c, phi
-    cdef np.float64_t q_e, q_x, q_y, q_z
+    cdef int i
+    cdef double rho_1, rho_2, rho_3, rho_4
+    cdef double c, phi
+    cdef double q_e, q_x, q_y, q_z
     cdef int num_fsp = len(masses)
 
-    cdef np.ndarray qs = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] qs = \
+        np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
     for i in range(num_fsp):
-        rho_1 = get_rand()
-        rho_2 = get_rand()
-        rho_3 = get_rand()
-        rho_4 = get_rand()
+        rho_1 = uniform(rng)
+        rho_2 = uniform(rng)
+        rho_3 = uniform(rng)
+        rho_4 = uniform(rng)
 
         c = 2.0 * rho_1 - 1.0
         phi = 2.0 * M_PI * rho_2
 
         q_e = -log(rho_3 * rho_4)
-        q_x = q_e * sqrt(1.0 - c**2.0) * np.cos(phi)
-        q_y = q_e * sqrt(1.0 - c**2.0) * np.sin(phi)
+        q_x = q_e * sqrt(1.0 - pow(c, 2.)) * cos(phi)
+        q_y = q_e * sqrt(1.0 - pow(c, 2.)) * sin(phi)
         q_z = q_e * c
 
         qs[4 * i + 0] = q_e
@@ -203,7 +222,9 @@ cdef np.ndarray __generate_qs(np.ndarray masses, double cme):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray __generate_ps(np.ndarray masses, double cme, np.ndarray qs):
+cdef np.ndarray[double, ndim=1] __generate_ps(
+    np.ndarray[double, ndim=1] masses, double cme,
+    np.ndarray[double, ndim=1] qs):
     """
     Generates a list of four-momentum with correct center of mass energy from
     isotropic, random four-momentum with energies, q_0,  distributed according
@@ -232,8 +253,9 @@ cdef np.ndarray __generate_ps(np.ndarray masses, double cme, np.ndarray qs):
     cdef double b_dot_qi
     cdef double pi_e, pi_x, pi_y, pi_z
 
-    cdef np.ndarray sum_qs = np.zeros(4, dtype=np.float64)
-    cdef np.ndarray ps = np.zeros(4 * num_fsp + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] sum_qs = np.zeros(4, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] ps = \
+        np.zeros(4 * num_fsp + 1, dtype=np.float64)
 
     for i in range(num_fsp):
         sum_qs[0] = sum_qs[0] + qs[4 * i + 0]
@@ -270,7 +292,7 @@ cdef np.ndarray __generate_ps(np.ndarray masses, double cme, np.ndarray qs):
 
 
     ps[4 * num_fsp] = (M_PI / 2.0)**(num_fsp - 1.0) \
-        * (cme)**(2.0 * num_fsp - 4.0) \
+        * cme**(2.0 * num_fsp - 4.0) \
         / tgamma(num_fsp) \
         / tgamma(num_fsp - 1) \
         * (2.0 * M_PI)**(4.0 - 3.0 * num_fsp)
@@ -281,7 +303,9 @@ cdef np.ndarray __generate_ps(np.ndarray masses, double cme, np.ndarray qs):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray __generate_ks(np.ndarray masses, double cme, np.ndarray ps):
+cdef np.ndarray[double, ndim=1] __generate_ks(
+    np.ndarray[double, ndim=1] masses, double cme,
+    np.ndarray[double, ndim=1] ps):
     """
     Generates a list of four-momentum with correct masses from massless
     four-momenta.
@@ -300,8 +324,9 @@ cdef np.ndarray __generate_ks(np.ndarray masses, double cme, np.ndarray ps):
     ks : np.ndarray
         List of the massive four-momenta with correct masses.
     """
+    cdef int i
     cdef double xi
-    cdef double  k_e, k_x, k_y, k_z
+    cdef double k_e, k_x, k_y, k_z
 
     cdef double term1 = 0.0
     cdef double term2 = 0.0
@@ -309,7 +334,8 @@ cdef np.ndarray __generate_ks(np.ndarray masses, double cme, np.ndarray ps):
     cdef double modulus
 
     cdef int num_fsp = len(masses)
-    cdef np.ndarray ks = np.zeros(4 * num_fsp + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] ks = \
+        np.zeros(4 * num_fsp + 1, dtype=np.float64)
 
     xi = __find_root(masses, cme, ps)
 
@@ -333,12 +359,12 @@ cdef np.ndarray __generate_ks(np.ndarray masses, double cme, np.ndarray ps):
     term1 = term1**(2.0 * num_fsp - 3.0)
     term2 = term2**(-1.0)
 
-    ks[4 * num_fsp] = ks[4 * num_fsp] * term1 * term2 * term3 * cme
+    ks[4 * num_fsp] = ps[4 * num_fsp] * term1 * term2 * term3 * cme
 
     return ks
 
 
-def generate_point(np.ndarray masses, double cme):
+def generate_point(np.ndarray[double, ndim=1] masses, double cme):
     """
     Generate a single relativistic phase space point.
 
@@ -358,12 +384,15 @@ def generate_point(np.ndarray masses, double cme):
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
     cdef int num_fsp = len(masses)
-    cdef np.ndarray qs = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
-    cdef np.ndarray ps = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
-    cdef np.ndarray ks = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] qs = \
+        np.zeros(num_fsp * 4 + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] ps = \
+        np.zeros(num_fsp * 4 + 1, dtype=np.float64)
+    cdef np.ndarray[double, ndim=1] ks = \
+        np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
     qs = __generate_qs(masses, cme)
     ps = __generate_ps(masses, cme, qs)
-    ks = __generate_ks(masses, cme, ks)
+    ks = __generate_ks(masses, cme, ps)
 
     return ks
