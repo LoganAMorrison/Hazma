@@ -15,7 +15,7 @@ packs = ["hazma",
 
 decay_ext = Extension("*", sources=[hdhf + "/*.pyx"])
 gamma_ext = Extension("*", sources=[hgrhf + "/*.pyx"])
-phase_ext = Extension("*", sources=[hpshf + "/*.pyx", hpshf + "/get_rand.cpp"],
+phase_ext = Extension("*", sources=[hpshf + "/*.pyx"],
                       extra_compile_args=[
                           '-g', '-std=c++11', '-stdlib=libc++'],
                       language="c++")
