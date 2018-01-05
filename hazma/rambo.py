@@ -9,6 +9,8 @@ TODO :
       a new lower-level cython module to do this.
 """
 from .phase_space_helper_functions import phase_space_point_generator as pspg
+from .phase_space_helper_functions import energy_hist_generator as ehg
+import numpy as np
 
 
 def split_point(l, n):
@@ -72,12 +74,12 @@ def generate_phase_space(num_ps_pts, masses, cme,
          {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
     """
 
-    return [generate_phase_space_point(masses, cme, mat_elem_sqrd)
-            for _ in range(num_ps_pts)]
+    return np.array([generate_phase_space_point(masses, cme, mat_elem_sqrd)
+                     for _ in range(num_ps_pts)])
 
 
 def generate_energy_histogram(num_ps_pts, masses, cme,
-                              mat_elem_sqrd=lambda klist: 1):
+                              mat_elem_sqrd=lambda klist: 1, num_bins=25):
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -103,4 +105,8 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
             .
          {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
     """
-    pass
+    num_fsp = len(masses)
+
+    pts = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
+
+    return ehg.space_to_energy_hist(pts, num_ps_pts, num_fsp, num_bins)
