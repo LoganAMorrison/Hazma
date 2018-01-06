@@ -13,10 +13,12 @@ from .phase_space_helper_functions import energy_hist_generator as ehg
 import numpy as np
 
 
-def split_point(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+def split_point(l, num_fsp):
+    kList = np.zeros((num_fsp, 4), dtype=np.float64)
+    for i in xrange(num_fsp):
+        for j in xrange(4):
+            kList[i, j] = l[4 * i + j]
+    return kList
 
 
 def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
@@ -39,9 +41,9 @@ def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
-
+    num_fsp = len(masses)
     point = pspg.generate_point(masses, cme)
-    point[4 * len(masses)] = mat_elem_sqrd(split_point(point, 4)) * \
+    point[4 * len(masses)] = mat_elem_sqrd(split_point(point, num_fsp)) * \
         point[4 * len(masses)]
     return point
 
