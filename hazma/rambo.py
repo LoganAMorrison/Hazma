@@ -10,6 +10,8 @@ TODO :
 """
 from .phase_space_helper_functions import phase_space_point_generator as pspg
 from .phase_space_helper_functions import energy_hist_generator as ehg
+from .phase_space_helper_functions.modifiers import normalize_weights
+from .phase_space_helper_functions.modifiers import apply_matrix_elem
 import numpy as np
 
 
@@ -21,7 +23,7 @@ def split_point(l, num_fsp):
     return kList
 
 
-def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
+def generate_phase_space_point(masses, cme):
     """
     Generate a phase space point given a set of
     final state particles and a given center of mass energy.
@@ -41,11 +43,7 @@ def generate_phase_space_point(masses, cme, mat_elem_sqrd=lambda klist: 1):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
-    num_fsp = len(masses)
-    point = pspg.generate_point(masses, cme)
-    point[4 * len(masses)] = mat_elem_sqrd(split_point(point, num_fsp)) * \
-        point[4 * len(masses)]
-    return point
+    return pspg.generate_point(masses, cme)
 
 
 def generate_phase_space(num_ps_pts, masses, cme,
@@ -75,9 +73,13 @@ def generate_phase_space(num_ps_pts, masses, cme,
             .
          {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
     """
+    num_fsp = len(masses)
 
-    return np.array([generate_phase_space_point(masses, cme, mat_elem_sqrd)
-                     for _ in range(num_ps_pts)])
+    points = np.array([generate_phase_space_point(masses, cme)
+                       for _ in range(num_ps_pts)])
+    points = normalize_weights(points, num_ps_pts, num_fsp)
+    points = apply_matrix_elem(points, num_ps_pts, num_fsp, mat_elem_sqrd)
+    return points
 
 
 def generate_energy_histogram(num_ps_pts, masses, cme,
