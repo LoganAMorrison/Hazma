@@ -360,6 +360,31 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
     return ps
 
 
+cdef double[:] c_generate_point(double[:] masses, double cme):
+    """
+    Generate a single relativistic phase space point.
+
+    Parameters
+    ----------
+    masses : double[:]
+        List of masses of the final state particles.
+    cme : double
+        Center of mass energy of the process.
+    rands : double[:]
+        List of random numbers.
+
+    Returns
+    -------
+    phase_space_point : double[:]
+        List of four momenta and a event weight. The returned numpy array is of
+        the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
+    """
+
+    return __generate_ks(masses, cme,
+                         __generate_ps(masses, cme,
+                                        __generate_qs(masses, cme)))
+
+
 def generate_point(double[:] masses, double cme):
     """
     Generate a single relativistic phase space point.
@@ -383,3 +408,46 @@ def generate_point(double[:] masses, double cme):
     return __generate_ks(masses, cme,
                          __generate_ps(masses, cme,
                                         __generate_qs(masses, cme)))
+
+
+def generate_space(int num_ps_pts, double[:] masses, double cme):
+    """
+    Generate a specified number of phase space points given a set of
+    final state particles and a given center of mass energy.
+
+    Parameters
+    ----------
+    num_ps_pts : int
+        Total number of phase space points to generate.
+    masses : numpy.ndarray
+        List of masses of the final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+
+    Returns
+    -------
+    phase_space_points : numpy.ndarray
+        List of phase space points. The phase space points are in the form
+        {{ke11, kx11, ky11, kz11, ..., keN1, kxN1, kyN1, kzN1, weight1},
+            .
+            .
+            .
+         {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
+    """
+    cdef int i, j
+    cdef int num_fsp = len(masses)
+    cdef int point_size = 4 * num_fsp + 1
+    cdef np.ndarray space = np.zeros((num_ps_pts, point_size),
+                                     dtype=np.float64)
+
+    cdef double[:] point
+
+    for i in range(num_ps_pts):
+        #point = c_generate_point(masses, cme)
+        space[i] = c_generate_point(masses, cme)
+        #for j in range(point_size):
+        #    space[i, j] = point[j]
+
+    return space
