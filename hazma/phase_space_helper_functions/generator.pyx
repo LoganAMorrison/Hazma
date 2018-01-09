@@ -358,8 +358,7 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
 
     return ps
 
-
-cdef double[:] c_generate_point(double[:] masses, double cme):
+def generate_point(double[:] masses, double cme):
     """
     Generate a single relativistic phase space point.
 
@@ -384,24 +383,9 @@ cdef double[:] c_generate_point(double[:] masses, double cme):
                                         __generate_qs(masses, cme)))
 
 
-def generate_point(double[:] masses, double cme):
+cdef double[:] c_generate_point(double[:] masses, double cme):
     """
-    Generate a single relativistic phase space point.
-
-    Parameters
-    ----------
-    masses : double[:]
-        List of masses of the final state particles.
-    cme : double
-        Center of mass energy of the process.
-    rands : double[:]
-        List of random numbers.
-
-    Returns
-    -------
-    phase_space_point : double[:]
-        List of four momenta and a event weight. The returned numpy array is of
-        the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
+    c version of generate_point.
     """
 
     return __generate_ks(masses, cme,

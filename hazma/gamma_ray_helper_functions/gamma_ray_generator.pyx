@@ -10,7 +10,7 @@ cimport numpy as np
 import cython
 import multiprocessing as mp
 
-from ..phase_space_helper_functions cimport rambo
+from .. import rambo
 
 from ..decay_helper_functions import decay_muon as dm
 from ..decay_helper_functions import decay_electron as de
@@ -123,16 +123,14 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
     cdef int num_engs
     cdef np.ndarray masses
     cdef np.ndarray hist
-    cdef rambo.Rambo ram
 
     masses = names_to_masses(particles)
 
     num_fsp = len(masses)
     num_engs = len(eng_gams)
 
-    ram = rambo.Rambo()
-
-    hist = ram.generate_energy_histogram(num_ps_pts, masses, cme, num_bins)
+    hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
+                                           mat_elem_sqrd, num_bins)
 
     p = mp.Pool(4)
     specs = []
@@ -177,15 +175,13 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
     cdef np.ndarray masses
     cdef np.ndarray hist
     cdef double spec_val = 0.0
-    cdef rambo.Rambo ram
 
     masses = names_to_masses(particles)
 
     num_fsp = len(masses)
 
-    ram = rambo.Rambo()
-
-    hist = ram.generate_energy_histogram(num_ps_pts,masses, cme, num_bins)
+    hist = rambo.generate_energy_histogram(num_ps_pts,masses, cme,
+                                           mat_elem_sqrd, num_bins)
 
     for i in range(num_bins):
         for j in range(num_fsp):

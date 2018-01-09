@@ -1,5 +1,5 @@
 """
-Module containing squared matrix elements.
+Module containing squared matrix elements for a scalar mediator.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
