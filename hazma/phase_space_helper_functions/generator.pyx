@@ -331,7 +331,6 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
     cdef double modulus
 
     cdef int num_fsp = len(masses)
-    # cdef double[:] ks = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
     xi = __find_root(masses, cme, ps)
 
@@ -445,9 +444,6 @@ def generate_space(int num_ps_pts, double[:] masses, double cme):
     cdef double[:] point
 
     for i in range(num_ps_pts):
-        #point = c_generate_point(masses, cme)
         space[i] = c_generate_point(masses, cme)
-        #for j in range(point_size):
-        #    space[i, j] = point[j]
 
     return space

@@ -32,11 +32,11 @@ def space_to_energy_hist(np.ndarray pts, int num_ps_pts, int num_fsp,
 
     weights = pts[:, 4 * num_fsp]
 
-    for i in range(num_ps_pts):
-        tot_weight += weights[i]
+    #for i in range(num_ps_pts):
+    #    tot_weight += weights[i]
 
-    for i in range(num_ps_pts):
-        weights[i] = weights[i] / tot_weight
+    # for i in range(num_ps_pts):
+    #     weights[i] = weights[i] / tot_weight
 
     for i in range(num_fsp):
         hist[i, :], bins[i, :] = np.histogram(pts[:, 4 * i], bins=num_bins,
@@ -46,6 +46,6 @@ def space_to_energy_hist(np.ndarray pts, int num_ps_pts, int num_fsp,
     for i in range(num_fsp):
         for j in range(num_bins):
             probs[i, 0, j] = engs[i, j]
-            probs[i, 1, j] = hist[i, j]
+            probs[i, 1, j] = hist[i, j] / (bins[i, j+1] - bins[i, j])
 
     return probs

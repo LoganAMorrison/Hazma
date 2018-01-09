@@ -1,3 +1,9 @@
+"""
+Generate histograms of the energies of particles.
+
+* Author - Logan A. Morrison and Adam Coogan
+* Date - December 2017
+"""
 import numpy as np
 
 alpha = 1.0 / 137.0
@@ -34,13 +40,13 @@ def fermion(eng_gam, cme, mass_f):
 
         terms = np.array([
             2 * (-1 + 4 * m**2) *
-            np.sqrt((1 - 2 * e) * (1 - 2 * e - 4 * m**2)),
+            np.np.sqrt((1 - 2 * e) * (1 - 2 * e - 4 * m**2)),
             2 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 + 8 *
-                 m**4) * np.arctanh(np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
+                 m**4) * np.arctanh(np.np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
             (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 + 8 * m**4) *
-            np.log(1 + np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
+            np.log(1 + np.np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
             (-1 - 2 * (-1 + e) * e + 6 * m**2 - 8 * e * m**2 - 8 * m**4) *
-            np.log(1 - np.sqrt(1 - (4 * m**2) / (1 - 2 * e)))
+            np.log(1 - np.np.sqrt(1 - (4 * m**2) / (1 - 2 * e)))
         ])
 
         val = np.real(prefac * np.sum(terms))
