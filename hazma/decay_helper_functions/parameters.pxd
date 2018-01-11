@@ -21,7 +21,7 @@ cdef double BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g
 cdef double BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
 
 cdef double BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
-cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi
+cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi0
 
 cdef double BR_KL_TO_PIENU = 0.4055       # kl    -> pi  + e   + nu
 cdef double BR_KL_TO_PIMUNU = 0.2704      # kl    -> pi  + mu  + nu

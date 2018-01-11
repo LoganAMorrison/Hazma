@@ -18,3 +18,8 @@ omega_mass = 782.7     # omega
 
 # MISC.
 alpha_em = 1.0 / 137.0  # Fine structure constant.
+GF = 1.1663787**-11.0  # Fermi constant in MeV**-2
+
+# CKM Matrix Elements
+Vud = 0.97417
+Vus = 0.2248

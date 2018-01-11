@@ -14,7 +14,7 @@ def decay_spectra(eng_gam, eng_k):
     frame given a gamma ray engergy of `eng_gam` and short kaon energy of
     `eng_k`. The decay modes impemendted are
     * ks    -> pi  + pi
-    * ks    -> pi0 + pi
+    * ks    -> pi0 + pi0
 
     Paramaters
     ----------

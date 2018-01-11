@@ -29,6 +29,7 @@ cdef mt19937 rng = mt19937(round(time.time()))
 cdef uniform_real_distribution[double] uniform \
     = uniform_real_distribution[double](0., 1.)
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
@@ -197,7 +198,7 @@ cdef double[:] __generate_qs(double[:] masses, double cme):
     cdef double q_e, q_x, q_y, q_z
     cdef int num_fsp = len(masses)
 
-    cdef double[:] qs = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
+    cdef double[:] qs = np.empty(num_fsp * 4 + 1, dtype=np.float64)
 
     for i in range(num_fsp):
         rho_1 = uniform(rng)
@@ -254,7 +255,6 @@ cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
     cdef double pi_e, pi_x, pi_y, pi_z
 
     cdef double sum_qs[4]
-    #cdef double[:] ps = np.zeros(num_fsp * 4 + 1, dtype=np.float64)
 
     for i in range(num_fsp):
         sum_qs[0] = sum_qs[0] + qs[4 * i + 0]
@@ -358,6 +358,10 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
 
     return ps
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def generate_point(double[:] masses, double cme):
     """
     Generate a single relativistic phase space point.
@@ -383,6 +387,10 @@ def generate_point(double[:] masses, double cme):
                                         __generate_qs(masses, cme)))
 
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 cdef double[:] c_generate_point(double[:] masses, double cme):
     """
     c version of generate_point.
@@ -393,6 +401,8 @@ cdef double[:] c_generate_point(double[:] masses, double cme):
                                         __generate_qs(masses, cme)))
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def generate_space(int num_ps_pts, double[:] masses, double cme):
     """
     Generate a specified number of phase space points given a set of
@@ -422,7 +432,7 @@ def generate_space(int num_ps_pts, double[:] masses, double cme):
     cdef int i, j
     cdef int num_fsp = len(masses)
     cdef int point_size = 4 * num_fsp + 1
-    cdef np.ndarray space = np.zeros((num_ps_pts, point_size),
+    cdef np.ndarray space = np.empty((num_ps_pts, point_size),
                                      dtype=np.float64)
 
     cdef double[:] point

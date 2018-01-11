@@ -6,17 +6,8 @@ High level module to generate relativistic phase space points.
 """
 from .phase_space_helper_functions import generator
 from .phase_space_helper_functions import histogram
-from .phase_space_helper_functions.modifiers import normalize_weights
 from .phase_space_helper_functions.modifiers import apply_matrix_elem
 import numpy as np
-
-
-def split_point(l, num_fsp):
-    kList = np.zeros((num_fsp, 4), dtype=np.float64)
-    for i in xrange(num_fsp):
-        for j in xrange(4):
-            kList[i, j] = l[4 * i + j]
-    return kList
 
 
 def generate_phase_space_point(masses, cme):
@@ -73,8 +64,6 @@ def generate_phase_space(num_ps_pts, masses, cme,
 
     points = np.array([generate_phase_space_point(masses, cme)
                        for _ in range(num_ps_pts)])
-    # points = generator.generate_space(num_ps_pts, masses, cme)
-    # points = normalize_weights(points, num_ps_pts, num_fsp)
     points = apply_matrix_elem(points, num_ps_pts, num_fsp, mat_elem_sqrd)
     points[:, 4 * num_fsp] = points[:, 4 * num_fsp] * (1.0 / num_ps_pts)
     return points

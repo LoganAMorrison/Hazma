@@ -1,6 +1,11 @@
 import numpy as np
 cimport numpy as np
+import cython
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
 def normalize_weights(np.ndarray pts, int num_ps_pts, int num_fsp):
     """
     Sums all the events weights and normalizes the each weight.
@@ -16,16 +21,22 @@ def normalize_weights(np.ndarray pts, int num_ps_pts, int num_fsp):
 
     return pts
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef np.ndarray split_point(np.ndarray l, int num_fsp):
     """
     Returns a list of four momentum from a flattened list.
     """
-    kList = np.zeros((num_fsp, 4), dtype=np.float64)
-    for i in xrange(num_fsp):
-        for j in xrange(4):
+    kList = np.empty((num_fsp, 4), dtype=np.float64)
+    for i in range(num_fsp):
+        for j in range(4):
             kList[i, j] = l[4 * i + j]
     return kList
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def apply_matrix_elem(np.ndarray pts, int num_ps_pts, int num_fsp,
                       mat_elem_sqrd=lambda klist: 1):
     """

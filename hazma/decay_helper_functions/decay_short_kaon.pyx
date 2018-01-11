@@ -1,3 +1,6 @@
+"""
+TODO: Update documentation.
+"""
 cimport decay_charged_pion
 cimport decay_neutral_pion
 import numpy as np
