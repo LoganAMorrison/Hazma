@@ -12,6 +12,8 @@ from libcpp cimport bool
 import cython
 import time
 from cpython.array cimport array, clone
+from cython.parallel import prange
+
 
 
 cdef extern from "<random>" namespace "std":
@@ -200,7 +202,7 @@ cdef double[:] __generate_qs(double[:] masses, double cme):
 
     cdef double[:] qs = np.empty(num_fsp * 4 + 1, dtype=np.float64)
 
-    for i in range(num_fsp):
+    for i in prange(num_fsp, nogil=True):
         rho_1 = uniform(rng)
         rho_2 = uniform(rng)
         rho_3 = uniform(rng)
