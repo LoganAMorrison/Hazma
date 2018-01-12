@@ -10,7 +10,7 @@ from .phase_space_helper_functions.modifiers import apply_matrix_elem
 import numpy as np
 
 
-def generate_phase_space_point(masses, cme):
+def generate_phase_space_point(masses, cme, num_fsp):
     """
     Generate a phase space point given a set of
     final state particles and a given center of mass energy.
@@ -30,7 +30,7 @@ def generate_phase_space_point(masses, cme):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
-    return generator.generate_point(masses, cme)
+    return generator.generate_point(masses, cme, num_fsp)
 
 
 def generate_phase_space(num_ps_pts, masses, cme,
@@ -62,7 +62,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
     """
     num_fsp = len(masses)
 
-    points = np.array([generate_phase_space_point(masses, cme)
+    points = np.array([generate_phase_space_point(masses, cme, num_fsp)
                        for _ in range(num_ps_pts)])
     points = apply_matrix_elem(points, num_ps_pts, num_fsp, mat_elem_sqrd)
     points[:, 4 * num_fsp] = points[:, 4 * num_fsp] * (1.0 / num_ps_pts)

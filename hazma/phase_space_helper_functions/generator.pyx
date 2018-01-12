@@ -13,6 +13,7 @@ import cython
 import time
 from cpython.array cimport array, clone
 from cython.parallel import prange
+# from libcpp.vector cimport vector
 
 
 
@@ -32,10 +33,18 @@ cdef uniform_real_distribution[double] uniform \
     = uniform_real_distribution[double](0., 1.)
 
 
+cdef extern from "<vector>" namespace "std":
+    cdef cppclass vector[T]:
+        void push_back(T&) nogil except+
+        size_t size() nogil
+        T& operator[](size_t)
+
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double __f_xi(double xi, double[:] masses, double cme, double[:] ps) nogil:
+cdef double __f_xi(double xi, vector[double] masses, double cme, int num_fsp,
+vector[double] ps) nogil:
     """
     Function whose zero is the scaling factor to correct masses of massless
     four momenta.
@@ -58,7 +67,6 @@ cdef double __f_xi(double xi, double[:] masses, double cme, double[:] ps) nogil:
     """
     cdef int i
     cdef double val = 0.0
-    cdef int num_fsp = len(masses)
 
     for i in range(num_fsp):
         val = val + sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
@@ -68,8 +76,8 @@ cdef double __f_xi(double xi, double[:] masses, double cme, double[:] ps) nogil:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double __df_xi(double xi, double[:] masses, double cme,
-                    double[:] ps) nogil:
+cdef double __df_xi(double xi, vector[double] masses, double cme, int num_fsp,
+vector[double] ps) nogil:
     """
     Derivative of the func_xi.
 
@@ -91,7 +99,6 @@ cdef double __df_xi(double xi, double[:] masses, double cme,
     """
     cdef int i
     cdef double val = 0.0
-    cdef int num_fsp = len(masses)
 
     for i in range(num_fsp):
         denom = sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
@@ -103,8 +110,7 @@ cdef double __df_xi(double xi, double[:] masses, double cme,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double __find_root(double[:] masses, double cme, double[:] ps,
-                        double tol=10**-4.0, int max_iter=50) nogil:
+cdef double __find_root(vector[double] masses, double cme, int num_fsp, vector[double] ps, double tol=10**-4.0, int max_iter=50) nogil:
     """
     Function for finding the scaling parameter to turn massless four-vectors
     the correct set of masses.
@@ -128,7 +134,6 @@ cdef double __find_root(double[:] masses, double cme, double[:] ps,
     cdef double mass_sum = 0.0
     cdef double xi0, xi1, xi2
     cdef int i, iter_count
-    cdef int num_fsp = len(masses)
     cdef bool isDone
 
     for i in range(num_fsp):
@@ -143,7 +148,7 @@ cdef double __find_root(double[:] masses, double cme, double[:] ps,
         if iter_count > max_iter:
             break
         xi1 = xi2
-        xi2 = xi1 - __f_xi(xi1, masses, cme, ps) / __df_xi(xi1, masses, cme, ps)
+        xi2 = xi1 - __f_xi(xi1, masses, cme, num_fsp, ps) / __df_xi(xi1, masses, cme, num_fsp, ps)
         if fabs(xi2-xi1) < tol:
             isDone=True
         iter_count = iter_count + 1
@@ -154,7 +159,7 @@ cdef double __find_root(double[:] masses, double cme, double[:] ps,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double __get_mass(double[:] fv) nogil:
+cdef double __get_mass(vector[double] fv) nogil:
     """
     Computes mass of a four-vector.
 
@@ -175,7 +180,7 @@ cdef double __get_mass(double[:] fv) nogil:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double[:] __generate_qs(double[:] masses, double cme):
+cdef vector[double] __generate_qs(vector[double] masses, double cme, int num_fsp) nogil:
     """
     Computes isotropic, random four-vectors with energies, q_0, distributed
     according to q_0 * exp(-q_0).
@@ -198,9 +203,12 @@ cdef double[:] __generate_qs(double[:] masses, double cme):
     cdef double rho_1, rho_2, rho_3, rho_4
     cdef double c, phi
     cdef double q_e, q_x, q_y, q_z
-    cdef int num_fsp = len(masses)
 
-    cdef double[:] qs = np.empty(num_fsp * 4 + 1, dtype=np.float64)
+    # cdef double[:] qs = np.empty(num_fsp * 4 + 1, dtype=np.float64)
+    cdef vector[double] qs
+
+    for _ in range(num_fsp * 4 + 1):
+        qs.push_back(0)
 
     for i in prange(num_fsp, nogil=True):
         rho_1 = uniform(rng)
@@ -227,7 +235,7 @@ cdef double[:] __generate_qs(double[:] masses, double cme):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
+cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp, vector[double] qs) nogil:
     """
     Generates a list of four-momentum with correct center of mass energy from
     isotropic, random four-momentum with energies, q_0,  distributed according
@@ -248,7 +256,6 @@ cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
         List of the massless four-momenta with correct center of mass energy.
     """
     cdef int i
-    cdef int num_fsp = len(masses)
     cdef double mass_Q
     cdef double b_x, b_y, b_z
     cdef double x, gamma, a
@@ -256,7 +263,10 @@ cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
     cdef double b_dot_qi
     cdef double pi_e, pi_x, pi_y, pi_z
 
-    cdef double sum_qs[4]
+    cdef vector[double] sum_qs
+
+    for i in range(4):
+        sum_qs.push_back(0)
 
     for i in range(num_fsp):
         sum_qs[0] = sum_qs[0] + qs[4 * i + 0]
@@ -273,7 +283,7 @@ cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
     gamma = sum_qs[0] / mass_Q
     a = 1.0 / (1.0 + gamma)
 
-    for i in range(num_fsp):
+    for i in prange(num_fsp):
         qi_e = qs[4 * i + 0]
         qi_x = qs[4 * i + 1]
         qi_y = qs[4 * i + 2]
@@ -304,7 +314,7 @@ cdef double[:] __generate_ps(double[:] masses, double cme, double[:] qs):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
+cdef vector[double] __generate_ks(vector[double] masses, double cme, int num_fsp, vector[double] ps) nogil:
     """
     Generates a list of four-momentum with correct masses from massless
     four-momenta.
@@ -332,9 +342,7 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
     cdef double term3 = 1.0
     cdef double modulus
 
-    cdef int num_fsp = len(masses)
-
-    xi = __find_root(masses, cme, ps)
+    xi = __find_root(masses, cme, num_fsp, ps)
 
     for i in range(num_fsp):
         k_e = sqrt(masses[i]**2 + xi**2 * ps[4 * i + 0]**2)
@@ -364,7 +372,7 @@ cdef double[:] __generate_ks(double[:] masses, double cme, double[:] ps):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def generate_point(double[:] masses, double cme):
+def generate_point(vector[double] masses, double cme, int num_fsp):
     """
     Generate a single relativistic phase space point.
 
@@ -384,28 +392,28 @@ def generate_point(double[:] masses, double cme):
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
 
-    return __generate_ks(masses, cme,
-                         __generate_ps(masses, cme,
-                                        __generate_qs(masses, cme)))
+    return __generate_ks(masses, cme, num_fsp,
+                         __generate_ps(masses, cme, num_fsp,
+                                        __generate_qs(masses, cme, num_fsp)))
 
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double[:] c_generate_point(double[:] masses, double cme):
+cdef vector[double] c_generate_point(vector[double] masses, double cme, int num_fsp) nogil:
     """
     c version of generate_point.
     """
 
-    return __generate_ks(masses, cme,
-                         __generate_ps(masses, cme,
-                                        __generate_qs(masses, cme)))
+    return __generate_ks(masses, cme, num_fsp,
+                         __generate_ps(masses, cme, num_fsp,
+                                        __generate_qs(masses, cme, num_fsp)))
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generate_space(int num_ps_pts, double[:] masses, double cme):
+cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp) nogil:
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -432,14 +440,60 @@ def generate_space(int num_ps_pts, double[:] masses, double cme):
          {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
     """
     cdef int i, j
-    cdef int num_fsp = len(masses)
     cdef int point_size = 4 * num_fsp + 1
-    cdef np.ndarray space = np.empty((num_ps_pts, point_size),
-                                     dtype=np.float64)
 
-    cdef double[:] point
+    cdef vector[double] point
+
+    for i in range(point_size):
+        point.push_back(0)
+
+    cdef vector[vector[double]] space
 
     for i in range(num_ps_pts):
-        space[i] = c_generate_point(masses, cme)
+        space.push_back(point)
+
+    for i in prange(num_ps_pts, nogil=True):
+        space[i] = c_generate_point(masses, cme, num_fsp)
 
     return space
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp):
+    """
+    Generate a specified number of phase space points given a set of
+    final state particles and a given center of mass energy.
+
+    Parameters
+    ----------
+    num_ps_pts : int
+        Total number of phase space points to generate.
+    masses : numpy.ndarray
+        List of masses of the final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+
+    Returns
+    -------
+    phase_space_points : numpy.ndarray
+        List of phase space points. The phase space points are in the form
+        {{ke11, kx11, ky11, kz11, ..., keN1, kxN1, kyN1, kzN1, weight1},
+            .
+            .
+            .
+         {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
+    """
+    #cdef int i, j
+    #cdef int point_size = 4 * num_fsp + 1
+    #cdef np.ndarray space = np.empty((num_ps_pts, point_size),
+    #                                 dtype=np.float64)
+
+    #cdef double[:] point
+
+    #for i in range(num_ps_pts):
+    #    space[i] = c_generate_point(masses, cme, num_fsp)
+
+    return c_generate_space(num_ps_pts, masses, cme, num_fsp)
