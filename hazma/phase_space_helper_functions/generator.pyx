@@ -13,7 +13,7 @@ import cython
 import time
 from cpython.array cimport array, clone
 from cython.parallel import prange
-# from libcpp.vector cimport vector
+import multiprocessing as mp
 
 
 
@@ -210,7 +210,7 @@ cdef vector[double] __generate_qs(vector[double] masses, double cme, int num_fsp
     for _ in range(num_fsp * 4 + 1):
         qs.push_back(0)
 
-    for i in prange(num_fsp, nogil=True):
+    for i in range(num_fsp):
         rho_1 = uniform(rng)
         rho_2 = uniform(rng)
         rho_3 = uniform(rng)
@@ -283,7 +283,7 @@ cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp
     gamma = sum_qs[0] / mass_Q
     a = 1.0 / (1.0 + gamma)
 
-    for i in prange(num_fsp):
+    for i in range(num_fsp):
         qi_e = qs[4 * i + 0]
         qi_x = qs[4 * i + 1]
         qi_y = qs[4 * i + 2]
@@ -413,53 +413,6 @@ cdef vector[double] c_generate_point(vector[double] masses, double cme, int num_
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp) nogil:
-    """
-    Generate a specified number of phase space points given a set of
-    final state particles and a given center of mass energy.
-
-    Parameters
-    ----------
-    num_ps_pts : int
-        Total number of phase space points to generate.
-    masses : numpy.ndarray
-        List of masses of the final state particles.
-    cme : double
-        Center-of-mass-energy of the process.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
-        Function for the matrix element squared.
-
-    Returns
-    -------
-    phase_space_points : numpy.ndarray
-        List of phase space points. The phase space points are in the form
-        {{ke11, kx11, ky11, kz11, ..., keN1, kxN1, kyN1, kzN1, weight1},
-            .
-            .
-            .
-         {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
-    """
-    cdef int i, j
-    cdef int point_size = 4 * num_fsp + 1
-
-    cdef vector[double] point
-
-    for i in range(point_size):
-        point.push_back(0)
-
-    cdef vector[vector[double]] space
-
-    for i in range(num_ps_pts):
-        space.push_back(point)
-
-    for i in prange(num_ps_pts, nogil=True):
-        space[i] = c_generate_point(masses, cme, num_fsp)
-
-    return space
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp):
     """
     Generate a specified number of phase space points given a set of
@@ -486,14 +439,43 @@ def generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fs
             .
          {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
     """
-    #cdef int i, j
-    #cdef int point_size = 4 * num_fsp + 1
-    #cdef np.ndarray space = np.empty((num_ps_pts, point_size),
-    #                                 dtype=np.float64)
-
-    #cdef double[:] point
-
-    #for i in range(num_ps_pts):
-    #    space[i] = c_generate_point(masses, cme, num_fsp)
-
     return c_generate_space(num_ps_pts, masses, cme, num_fsp)
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp):
+    """
+    Generate a specified number of phase space points given a set of
+    final state particles and a given center of mass energy.
+
+    Parameters
+    ----------
+    num_ps_pts : int
+        Total number of phase space points to generate.
+    masses : numpy.ndarray
+        List of masses of the final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+
+    Returns
+    -------
+    phase_space_points : numpy.ndarray
+        List of phase space points. The phase space points are in the form
+        {{ke11, kx11, ky11, kz11, ..., keN1, kxN1, kyN1, kzN1, weight1},
+            .
+            .
+            .
+         {ke1N, kx1N, ky1N, kz1N, ..., keNN, kxNN, kyNN, kzNN, weightN}}
+    """
+    cdef int i
+
+    cdef vector[vector[double]] space
+
+    for i in range(num_ps_pts):
+        space.push_back(c_generate_point(masses, cme, num_fsp))
+
+    return space
