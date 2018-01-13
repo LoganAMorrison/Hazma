@@ -8,6 +8,7 @@ Generate histograms of the energies of particles.
 import numpy as np
 cimport numpy as np
 import cython
+from . import generator
 
 
 @cython.boundscheck(False)

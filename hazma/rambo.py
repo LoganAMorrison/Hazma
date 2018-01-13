@@ -63,7 +63,6 @@ def generate_phase_space(num_ps_pts, masses, cme,
 
     Examples
     --------
-
     Generate 100000 phase space points for a 3 body final state.
 
     >>> from hazma import rambo
@@ -99,8 +98,8 @@ def generate_phase_space(num_ps_pts, masses, cme,
     # Resize the weights to have the correct cross section.
     points = apply_matrix_elem(
         points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
-    # Divide the weights by the number of phase space points used.
-    points[:, 4 * num_fsp] = points[:, 4 * num_fsp] * (1.0 / actual_num_ps_pts)
+    # Normalize weights
+    points[:, 4 * num_fsp] = points[:, 4 * num_fsp] * (1. / actual_num_ps_pts)
 
     return points
 
@@ -158,3 +157,38 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
     pts = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
 
     return histogram.space_to_energy_hist(pts, num_ps_pts, num_fsp, num_bins)
+
+
+def compute_cross_section(num_ps_pts, masses, cme,
+                          mat_elem_sqrd=lambda klist: 1):
+    """
+    Computes the cross section for a given process.
+
+    Parameters
+    ----------
+    num_ps_pts : int
+        Total number of phase space points to generate.
+    masses : numpy.ndarray
+        List of masses of the final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+
+    Returns
+    -------
+    cross_section : double
+        Cross section for X -> final state particles(fsp), where the fsp have
+        masses `masses` and the process X -> fsp has a squared matrix element
+        of `mat_elem_sqrd`.
+    std : double
+        Estimated error in cross section.
+    """
+    num_fsp = len(masses)
+    points = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
+    actual_num_ps_pts = len(points[:, 4 * num_fsp])
+    weights = points[:, 4 * num_fsp] * actual_num_ps_pts
+    cross_section = np.average(weights)
+    std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+
+    return cross_section, std

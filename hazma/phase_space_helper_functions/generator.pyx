@@ -27,11 +27,10 @@ cdef extern from "<random>" namespace "std":
         uniform_real_distribution(T a, T b) nogil
         T operator()(mt19937 gen) nogil
 
-cdef mt19937 rng = mt19937(round(time.time()))
-
 cdef uniform_real_distribution[double] uniform \
     = uniform_real_distribution[double](0., 1.)
 
+cdef mt19937 rng = mt19937(round(time.time()))
 
 cdef extern from "<vector>" namespace "std":
     cdef cppclass vector[T]:
@@ -180,7 +179,7 @@ cdef double __get_mass(vector[double] fv) nogil:
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef vector[double] __generate_qs(vector[double] masses, double cme, int num_fsp) nogil:
+cdef vector[double] __generate_qs(vector[double] masses, double cme, int num_fsp):
     """
     Computes isotropic, random four-vectors with energies, q_0, distributed
     according to q_0 * exp(-q_0).
@@ -235,7 +234,7 @@ cdef vector[double] __generate_qs(vector[double] masses, double cme, int num_fsp
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp, vector[double] qs) nogil:
+cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp, vector[double] qs):
     """
     Generates a list of four-momentum with correct center of mass energy from
     isotropic, random four-momentum with energies, q_0,  distributed according
@@ -314,7 +313,7 @@ cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef vector[double] __generate_ks(vector[double] masses, double cme, int num_fsp, vector[double] ps) nogil:
+cdef vector[double] __generate_ks(vector[double] masses, double cme, int num_fsp, vector[double] ps):
     """
     Generates a list of four-momentum with correct masses from massless
     four-momenta.
@@ -391,17 +390,16 @@ def generate_point(vector[double] masses, double cme, int num_fsp):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
-
-    return __generate_ks(masses, cme, num_fsp,
-                         __generate_ps(masses, cme, num_fsp,
-                                        __generate_qs(masses, cme, num_fsp)))
+    global rng
+    rng = mt19937(round(time.time()))
+    return c_generate_point(masses, cme, num_fsp)
 
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef vector[double] c_generate_point(vector[double] masses, double cme, int num_fsp) nogil:
+cdef vector[double] c_generate_point(vector[double] masses, double cme, int num_fsp):
     """
     c version of generate_point.
     """
@@ -473,9 +471,13 @@ cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] mass
     """
     cdef int i
 
+    global rng
+    rng = mt19937(round(time.time()))
+
     cdef vector[vector[double]] space
 
     for i in range(num_ps_pts):
         space.push_back(c_generate_point(masses, cme, num_fsp))
+
 
     return space
