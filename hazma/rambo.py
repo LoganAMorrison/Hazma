@@ -35,7 +35,8 @@ def generate_phase_space_point(masses, cme, num_fsp):
 
 
 def generate_phase_space(num_ps_pts, masses, cme,
-                         mat_elem_sqrd=lambda klist: 1):
+                         mat_elem_sqrd=lambda klist: 1,
+                         num_cpus=None):
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -51,6 +52,9 @@ def generate_phase_space(num_ps_pts, masses, cme,
         Center-of-mass-energy of the process.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
         Function for the matrix element squared.
+    num_cpus : int {None}
+        Number of cpus to use in parallel with rambo. If not specified, 75% of
+        the cpus will be used.
 
     Returns
     -------
@@ -76,12 +80,16 @@ def generate_phase_space(num_ps_pts, masses, cme,
     >>> pts = rambo.generate_phase_space(num_ps_pts, masses, cme)
     """
     num_fsp = len(masses)
-    # Use 75% of the cpu power.
-    num_cpus = int(np.floor(mp.cpu_count() * 0.75))
-    # If user wants a number of phase space points which is less
-    # than the number of cpus availible, use num_ps_pts cpus instead.
-    if num_cpus > num_ps_pts:
-        num_cpus = num_ps_pts
+    # If the user doesn't specify the number of cpus to use,
+    # use 75% of them.
+    if num_cpus is None:
+        # Use 75% of the cpu power.
+        num_cpus = int(np.floor(mp.cpu_count() * 0.75))
+        # If user wants a number of phase space points which is less
+        # than the number of cpus availible, use num_ps_pts cpus instead.
+        if num_cpus > num_ps_pts:
+            num_cpus = num_ps_pts
+    print('Using {} number of cpus'.format(num_cpus))
     # Instantiate `num_cpus` number of workers and divide num_ps_pts among the
     # the workers to speed up phase space generation.
     pool = mp.Pool(num_cpus)
@@ -108,7 +116,8 @@ def generate_phase_space(num_ps_pts, masses, cme,
 
 
 def generate_energy_histogram(num_ps_pts, masses, cme,
-                              mat_elem_sqrd=lambda klist: 1, num_bins=25):
+                              mat_elem_sqrd=lambda klist: 1, num_bins=25,
+                              num_cpus=None):
     """
     Generate energy histograms for each of the final state particles.
 
@@ -124,6 +133,9 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
         Function for the matrix element squared.
     num_bins : int
         Number of energy bins to use for each of the final state particles.
+    num_cpus : int {None}
+        Number of cpus to use in parallel with rambo. If not specified, 75% of
+        the cpus will be used.
 
     Returns
     -------
@@ -157,13 +169,14 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
     """
     num_fsp = len(masses)
 
-    pts = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
+    pts = generate_phase_space(
+        num_ps_pts, masses, cme, mat_elem_sqrd, num_cpus)
 
     return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
 
 
 def compute_cross_section(num_ps_pts, masses, cme,
-                          mat_elem_sqrd=lambda klist: 1):
+                          mat_elem_sqrd=lambda klist: 1, num_cpus=None):
     """
     Computes the cross section for a given process.
 
@@ -177,6 +190,9 @@ def compute_cross_section(num_ps_pts, masses, cme,
         Center-of-mass-energy of the process.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
         Function for the matrix element squared.
+    num_cpus : int {None}
+        Number of cpus to use in parallel with rambo. If not specified, 75% of
+        the cpus will be used.
 
     Returns
     -------
@@ -188,7 +204,8 @@ def compute_cross_section(num_ps_pts, masses, cme,
         Estimated error in cross section.
     """
     num_fsp = len(masses)
-    points = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
+    points = generate_phase_space(
+        num_ps_pts, masses, cme, mat_elem_sqrd, num_cpus)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
     weights = points[:, 4 * num_fsp]
     cross_section = np.average(weights)
