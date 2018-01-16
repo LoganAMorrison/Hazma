@@ -30,23 +30,31 @@ def space_to_energy_hist(np.ndarray pts, int num_ps_pts, int num_fsp,
     """
     cdef int i, j
     cdef np.ndarray weights = np.zeros(num_ps_pts, dtype=np.float64)
-    cdef np.ndarray hist = np.zeros((num_fsp, num_bins), dtype=np.float64)
     cdef np.ndarray bins = np.zeros((num_fsp, num_bins + 1), dtype=np.float64)
     cdef np.ndarray engs = np.zeros((num_fsp, num_bins), dtype=np.float64)
     cdef np.ndarray probs = np.zeros((num_fsp, 2, num_bins), dtype=np.float64)
+
+    cdef np.ndarray means = np.zeros((num_fsp, num_bins), dtype=np.float64)
+    cdef np.ndarray vars = np.zeros((num_fsp, num_bins), dtype=np.float64)
+    cdef np.ndarray errs = np.zeros((num_fsp, num_bins), dtype=np.float64)
 
     cdef double tot_weight = 0.0
 
     weights = pts[:, 4 * num_fsp]
 
     for i in range(num_fsp):
-        hist[i, :], bins[i, :] = np.histogram(pts[:, 4 * i], bins=num_bins,
-                                              weights=weights)
+        means[i, :], bins[i, :] = np.histogram(pts[:, 4 * i], bins=num_bins,
+                                   weights=weights)
+        means[i, :] = means[i, :] * (1.0 / num_ps_pts)
+        vars[i, :] = np.histogram(pts[:, 4 * i], bins=num_bins,
+                                  weights=weights * weights)[0] / num_ps_pts
+        errs[i, :] = np.sqrt((vars[i, :] - means[i, :]**2) * (1.0 / num_ps_pts))
+
     engs = (bins[:, :-1] + bins[:, 1:]) / 2
 
     for i in range(num_fsp):
         for j in range(num_bins):
             probs[i, 0, j] = engs[i, j]
-            probs[i, 1, j] = hist[i, j] / (bins[i, j+1] - bins[i, j])
+            probs[i, 1, j] = means[i, j] / (bins[i, j+1] - bins[i, j])
 
-    return probs
+    return probs, errs

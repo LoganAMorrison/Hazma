@@ -39,6 +39,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
+    NOTE: weights are not normalized.
 
     Parameters
     ----------
@@ -98,8 +99,6 @@ def generate_phase_space(num_ps_pts, masses, cme,
     # Resize the weights to have the correct cross section.
     points = apply_matrix_elem(
         points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
-    # Normalize weights
-    points[:, 4 * num_fsp] = points[:, 4 * num_fsp] * (1. / actual_num_ps_pts)
 
     return points
 
@@ -156,7 +155,7 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
 
     pts = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
 
-    return histogram.space_to_energy_hist(pts, num_ps_pts, num_fsp, num_bins)
+    return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
 
 
 def compute_cross_section(num_ps_pts, masses, cme,
@@ -187,7 +186,7 @@ def compute_cross_section(num_ps_pts, masses, cme,
     num_fsp = len(masses)
     points = generate_phase_space(num_ps_pts, masses, cme, mat_elem_sqrd)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
-    weights = points[:, 4 * num_fsp] * actual_num_ps_pts
+    weights = points[:, 4 * num_fsp]
     cross_section = np.average(weights)
     std = np.std(weights) / np.sqrt(actual_num_ps_pts)
 
