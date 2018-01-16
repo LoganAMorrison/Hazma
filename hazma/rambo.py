@@ -9,6 +9,7 @@ from .phase_space_helper_functions import histogram
 from .phase_space_helper_functions.modifiers import apply_matrix_elem
 import numpy as np
 import multiprocessing as mp
+import warnings
 
 
 def generate_phase_space_point(masses, cme, num_fsp):
@@ -82,6 +83,14 @@ def generate_phase_space(num_ps_pts, masses, cme,
     num_fsp = len(masses)
     # If the user doesn't specify the number of cpus to use,
     # use 75% of them.
+    if num_cpus is not None:
+        if num_cpus > num_ps_pts:
+            num_cpus = num_ps_pts
+        if num_cpus > mp.cpu_count():
+            num_cpus = int(np.floor(mp.cpu_count() * 0.75))
+            warnings.warn("""You only have {} cpus.
+                          Using {} cpus instead.
+                          """.format(mp.cpu_count(), num_cpus))
     if num_cpus is None:
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))

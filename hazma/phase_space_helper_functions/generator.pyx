@@ -21,6 +21,9 @@ cdef extern from "<random>" namespace "std":
     cdef cppclass mt19937 nogil:
         mt19937() nogil
         mt19937(unsigned int seed) nogil
+    cdef cppclass random_device nogil:
+        random_device() except +
+        unsigned int operator()()
 
     cdef cppclass uniform_real_distribution[T] nogil:
         uniform_real_distribution() nogil
@@ -30,13 +33,16 @@ cdef extern from "<random>" namespace "std":
 cdef uniform_real_distribution[double] uniform \
     = uniform_real_distribution[double](0., 1.)
 
-cdef mt19937 rng = mt19937(round(time.time()))
+cdef mt19937 rng # = mt19937(std::random_device{}())
 
 cdef extern from "<vector>" namespace "std":
     cdef cppclass vector[T]:
         void push_back(T&) nogil except+
         size_t size() nogil
         T& operator[](size_t)
+
+cdef extern from "random" namespace "std":
+    cdef cppclass random
 
 
 @cython.boundscheck(False)
@@ -391,7 +397,9 @@ def generate_point(vector[double] masses, double cme, int num_fsp):
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
     global rng
-    rng = mt19937(round(time.time()))
+    global rng
+    cdef random_device rd
+    rng = mt19937(rd())
     return c_generate_point(masses, cme, num_fsp)
 
 
@@ -472,7 +480,8 @@ cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] mass
     cdef int i
 
     global rng
-    rng = mt19937(round(time.time()))
+    cdef random_device rd
+    rng = mt19937(rd())
 
     cdef vector[vector[double]] space
 
