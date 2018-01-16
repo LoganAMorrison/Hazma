@@ -89,7 +89,6 @@ def generate_phase_space(num_ps_pts, masses, cme,
         # than the number of cpus availible, use num_ps_pts cpus instead.
         if num_cpus > num_ps_pts:
             num_cpus = num_ps_pts
-    print('Using {} number of cpus'.format(num_cpus))
     # Instantiate `num_cpus` number of workers and divide num_ps_pts among the
     # the workers to speed up phase space generation.
     pool = mp.Pool(num_cpus)
