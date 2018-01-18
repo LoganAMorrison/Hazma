@@ -21,6 +21,7 @@ cdef extern from "<random>" namespace "std":
     cdef cppclass mt19937 nogil:
         mt19937() nogil
         mt19937(unsigned int seed) nogil
+
     cdef cppclass random_device nogil:
         random_device() except +
         unsigned int operator()()
@@ -33,7 +34,7 @@ cdef extern from "<random>" namespace "std":
 cdef uniform_real_distribution[double] uniform \
     = uniform_real_distribution[double](0., 1.)
 
-cdef mt19937 rng # = mt19937(std::random_device{}())
+cdef mt19937 rng
 
 cdef extern from "<vector>" namespace "std":
     cdef cppclass vector[T]:
