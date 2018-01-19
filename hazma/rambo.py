@@ -7,6 +7,7 @@ High level module to generate relativistic phase space points.
 from .phase_space_helper_functions import generator
 from .phase_space_helper_functions import histogram
 from .phase_space_helper_functions.modifiers import apply_matrix_elem
+from .cross_sections.helper_functions import cross_section_prefactor
 import numpy as np
 import multiprocessing as mp
 import warnings
@@ -183,8 +184,10 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
     return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
 
 
-def compute_cross_section(num_ps_pts, masses, cme,
-                          mat_elem_sqrd=lambda klist: 1, num_cpus=None):
+def compute_annihilation_cross_section(num_ps_pts, isp_masses,
+                                       fsp_masses, cme,
+                                       mat_elem_sqrd=lambda klist: 1,
+                                       num_cpus=None):
     """
     Computes the cross section for a given process.
 
@@ -193,7 +196,7 @@ def compute_cross_section(num_ps_pts, masses, cme,
     num_ps_pts : int
         Total number of phase space points to generate.
     masses : numpy.ndarray
-        List of masses of the final state particles.
+        List of masses of the initial state and final state particles.
     cme : double
         Center-of-mass-energy of the process.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
@@ -211,12 +214,27 @@ def compute_cross_section(num_ps_pts, masses, cme,
     std : double
         Estimated error in cross section.
     """
-    num_fsp = len(masses)
+    num_fsp = len(fsp_masses)
     points = generate_phase_space(
-        num_ps_pts, masses, cme, mat_elem_sqrd, num_cpus)
+        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
     weights = points[:, 4 * num_fsp]
     cross_section = np.average(weights)
     std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+
+    m1 = isp_masses[0]
+    m2 = isp_masses[1]
+
+    E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
+    E2 = (cme**2 + m2**2 - m1**2) / (2 * cme)
+
+    p = (cme**2 - m1**2 - m2**2) / (2 * cme)
+
+    v1 = p / E1
+    v2 = p / E2
+
+    vrel = v1 + v2
+
+    cross_section = cross_section / (2.0 * E1) / (2.0 * E2) / vrel
 
     return cross_section, std
