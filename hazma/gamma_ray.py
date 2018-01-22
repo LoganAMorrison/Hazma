@@ -6,6 +6,8 @@ Module for computing gamma ray spectra from a many-particle final state.
 """
 
 from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
+from . import rambo
+from .cross_sections.helper_functions import cross_section_prefactor
 
 
 def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
@@ -73,3 +75,28 @@ def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
                      num_ps_pts, num_bins)
     return gamma_point(particles, cme, eng_gams, mat_elem_sqrd,
                        num_ps_pts, num_bins)
+
+
+def gamma_ray_rambo(isp_masses, fsp_masses, cme,
+                    mat_elem_sqrd_tree=lambda k_list: 1.0,
+                    mat_elem_sqrd_rad=lambda k_list: 1.0,
+                    num_ps_pts=1000, num_bins=25):
+    """
+    """
+
+    cross_section = rambo.compute_annihilation_cross_section(
+        num_ps_pts, isp_masses, fsp_masses[0:-1], cme,
+        mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+
+    eng_hists = rambo.generate_energy_histogram(
+        num_ps_pts, fsp_masses, cme, num_bins=num_bins,
+        mat_elem_sqrd=mat_elem_sqrd_rad)[0]
+
+    m1 = isp_masses[0]
+    m2 = isp_masses[1]
+
+    engs_gam = eng_hists[-1, 0]
+    dndes = eng_hists[-1, 1] * \
+        cross_section_prefactor(m1, m2, cme) / cross_section
+
+    return engs_gam, dndes

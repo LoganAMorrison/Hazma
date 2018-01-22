@@ -41,7 +41,7 @@ def xx_to_s_to_ff(cme, mx, mf, ms, cxxs, cffs):
         (16. * np.pi * (-(ms**2 * cme) + cme**3)**2)
 
 
-def xx_to_P_to_ff(cme, mx, mf, mp, cxxp, cffp):
+def xx_to_p_to_ff(cme, mx, mf, mp, cxxp, cffp):
     """
     Returns the cross section for two identical fermions "x" to two
     identical fermions "f".
@@ -76,7 +76,7 @@ def xx_to_P_to_ff(cme, mx, mf, mp, cxxp, cffp):
          np.sqrt(-4 * mx**2 + cme**2))
 
 
-def xx_to_V_to_ff(cme, mx, mf, mv, cxxp, cffp):
+def xx_to_v_to_ff(cme, mx, mf, mv, cxxp, cffp):
     """
     Returns the cross section for two identical fermions "x" to two
     identical fermions "f".

@@ -181,7 +181,12 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
     pts = generate_phase_space(
         num_ps_pts, masses, cme, mat_elem_sqrd, num_cpus)
 
-    return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
+    actual_num_ps_pts = (pts.shape)[0]
+
+    return histogram.space_to_energy_hist(pts, actual_num_ps_pts, num_fsp,
+                                          num_bins)
+
+    # return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
 
 
 def compute_annihilation_cross_section(num_ps_pts, isp_masses,

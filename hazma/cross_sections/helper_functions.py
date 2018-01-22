@@ -5,8 +5,16 @@ Module containing commonly used particle physics factors.
 @date - December 2017
 """
 
-import numpy as np
 
+def cross_section_prefactor(m1, m2, cme):
 
-def cross_section_prefactor(m, Q):
-    return 1.0 / (2.0 * Q**2 * np.sqrt(1. - 4.0 * m**2 / Q**2))
+    E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
+    E2 = (cme**2 + m2**2 - m1**2) / (2 * cme)
+
+    p = (cme**2 - m1**2 - m2**2) / (2 * cme)
+
+    v1, v2 = p / E1, p / E2
+
+    vrel = v1 + v2
+
+    return 1.0 / (2.0 * E1) / (2.0 * E2) / vrel

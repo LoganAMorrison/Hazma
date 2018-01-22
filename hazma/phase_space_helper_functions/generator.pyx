@@ -10,10 +10,6 @@ cimport numpy as np
 from libc.math cimport log, M_PI, sqrt, tgamma, fabs, pow, cos, sin
 from libcpp cimport bool
 import cython
-import time
-from cpython.array cimport array, clone
-from cython.parallel import prange
-import multiprocessing as mp
 
 
 
@@ -75,7 +71,7 @@ vector[double] ps) nogil:
     cdef double val = 0.0
 
     for i in range(num_fsp):
-        val = val + sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
+        val = val + sqrt(pow(masses[i], 2.) + pow(xi * ps[4 * i], 2.))
 
     return val - cme
 
@@ -105,9 +101,10 @@ vector[double] ps) nogil:
     """
     cdef int i
     cdef double val = 0.0
+    cdef double denom
 
     for i in range(num_fsp):
-        denom = sqrt(pow(masses[i], 2.) + pow(xi, 2.) * pow(ps[4 * i], 2.))
+        denom = sqrt(pow(masses[i], 2.) + pow(xi * ps[4 * i], 2.))
         val = val + xi * pow(ps[4 * i], 2.) / denom
 
     return val
@@ -141,20 +138,28 @@ cdef double __find_root(vector[double] masses, double cme, int num_fsp, vector[d
     cdef double xi0, xi1, xi2
     cdef int i, iter_count
     cdef bool isDone
+    cdef double f, df
 
     for i in range(num_fsp):
         mass_sum = mass_sum + masses[i]
 
-    xi0 = sqrt(1.0 - (mass_sum / cme)**2)
+    xi0 = sqrt(1.0 - pow(mass_sum / cme, 2.0))
 
     isDone = False
     iter_count = 0
     xi2 = xi0
+
     while isDone is False:
         if iter_count > max_iter:
             break
+
         xi1 = xi2
-        xi2 = xi1 - __f_xi(xi1, masses, cme, num_fsp, ps) / __df_xi(xi1, masses, cme, num_fsp, ps)
+
+        f = __f_xi(xi1, masses, cme, num_fsp, ps)
+        df = __df_xi(xi1, masses, cme, num_fsp, ps)
+
+        xi2 = xi1 - (f / df)
+
         if fabs(xi2-xi1) < tol:
             isDone=True
         iter_count = iter_count + 1
@@ -308,11 +313,11 @@ cdef vector[double] __generate_ps(vector[double] masses, double cme, int num_fsp
         qs[4 * i + 3] = pi_z
 
 
-    qs[4 * num_fsp] = (M_PI / 2.0)**(num_fsp - 1.0) \
-        * cme**(2.0 * num_fsp - 4.0) \
+    qs[4 * num_fsp] = pow(M_PI / 2.0, num_fsp - 1.0) \
+        * pow(cme, 2.0 * num_fsp - 4.0) \
         / tgamma(num_fsp) \
         / tgamma(num_fsp - 1) \
-        * (2.0 * M_PI)**(4.0 - 3.0 * num_fsp)
+        * pow(2.0 * M_PI, 4.0 - 3.0 * num_fsp)
 
     return qs
 
@@ -351,7 +356,7 @@ cdef vector[double] __generate_ks(vector[double] masses, double cme, int num_fsp
     xi = __find_root(masses, cme, num_fsp, ps)
 
     for i in range(num_fsp):
-        k_e = sqrt(masses[i]**2 + xi**2 * ps[4 * i + 0]**2)
+        k_e = sqrt(pow(masses[i], 2.0) + pow(xi * ps[4 * i + 0], 2.0))
         k_x = xi * ps[4 * i + 1]
         k_y = xi * ps[4 * i + 2]
         k_z = xi * ps[4 * i + 3]
@@ -361,14 +366,14 @@ cdef vector[double] __generate_ks(vector[double] masses, double cme, int num_fsp
         ps[4 * i + 2] = k_y
         ps[4 * i + 3] = k_z
 
-        modulus = sqrt(k_x**2.0 + k_y**2.0 + k_z**2.0)
+        modulus = sqrt(pow(k_x, 2.0) + pow(k_y, 2.0) + pow(k_z, 2.0))
 
         term1 += modulus / cme
-        term2 += modulus**2 / ps[4 * i + 0]
+        term2 += pow(modulus, 2.0) / ps[4 * i + 0]
         term3 = term3 * modulus / ps[4 * i + 0]
 
-    term1 = term1**(2.0 * num_fsp - 3.0)
-    term2 = term2**(-1.0)
+    term1 = pow(term1, 2.0 * num_fsp - 3.0)
+    term2 = pow(term2, -1.0)
 
     ps[4 * num_fsp] = ps[4 * num_fsp] * term1 * term2 * term3 * cme
 
@@ -397,7 +402,6 @@ def generate_point(vector[double] masses, double cme, int num_fsp):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
-    global rng
     global rng
     cdef random_device rd
     rng = mt19937(rd())
@@ -452,7 +456,9 @@ def generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fs
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef vector[vector[double]] c_generate_space(int num_ps_pts, vector[double] masses, double cme, int num_fsp):
+cdef vector[vector[double]] c_generate_space(int num_ps_pts,
+                                             vector[double] masses,
+                                             double cme, int num_fsp):
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
