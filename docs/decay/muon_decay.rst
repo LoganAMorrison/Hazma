@@ -1,6 +1,6 @@
 .. _func_muon_decay:
 
-hazma.muon.decay_spectra
-------------------------
+hazma.decay.muon
+----------------
 
-.. autofunction:: hazma.muon.decay_spectra
+.. autofunction:: hazma.decay.muon

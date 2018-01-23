@@ -16,9 +16,9 @@ Functions
 ---------
 
 +-------------------------------------------+-----------------------------+
-| Generate spectrum from builtin functions. | :ref:`func_gamma_ray`       |
+| Generate spectrum from builtin functions  | :ref:`func_gamma_ray`       |
 +-------------------------------------------+-----------------------------+
-| Generate spectrum from matrix elements.   | :ref:`func_gamma_ray_rambo` |
+| Generate spectrum using Monte Carlo       | :ref:`func_gamma_ray_rambo` |
 +-------------------------------------------+-----------------------------+
 
 RAMBO (hazma.rambo)
@@ -31,18 +31,24 @@ Sub-package for generating phases space points and computing phase space integra
 Functions
 ---------
 
-+------------------------+-------------------------------------------------+
-| Computing annihilation |  :ref:`func_compute_annihilation_cross_section` |
-| cross sections         |                                                 |
-+------------------------+-------------------------------------------------+
-| Computing decay widths |  :ref:`func_compute_decay_width`                |
-+------------------------+-------------------------------------------------+
-| Computing annihilation |  :ref:`func_generate_energy_histogram`          |
-+------------------------+-------------------------------------------------+
-| Computing annihilation |  :ref:`func_generate_phase_space_point`         |
-+------------------------+-------------------------------------------------+
-| Computing annihilation |  :ref:`func_generate_phase_space`               |
-+------------------------+-------------------------------------------------+
++-------------------------+-------------------------------------------------+
+| Computing annihilation  |  :ref:`func_compute_annihilation_cross_section` |
+| cross sections          |                                                 |
++-------------------------+-------------------------------------------------+
+| Computing decay widths  |  :ref:`func_compute_decay_width`                |
++-------------------------+-------------------------------------------------+
+| Computing energy        |  :ref:`func_generate_energy_histogram`          |
+| histograms for final    |                                                 |
+| state particles         |                                                 |
++-------------------------+-------------------------------------------------+
+| Compute a single        |  :ref:`func_generate_phase_space_point`         |
+| relativistic phase      |                                                 |
+| space point             |                                                 |
++-------------------------+-------------------------------------------------+
+| Compute many            |  :ref:`func_generate_phase_space`               |
+| relativistic phase      |                                                 |
+| space points            |                                                 |
++-------------------------+-------------------------------------------------+
 
 
 Decay (hazma.decay)
@@ -51,8 +57,8 @@ Decay (hazma.decay)
 Description
 -----------
 
-Muon (hazma.decay.muon)
------------------------
+Functions
+---------
 
 +----------------+----------------------------------+
 | Muon           |  :ref:`func_muon_decay`          |

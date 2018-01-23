@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>hazma.short_kaon.decay_spectra &#8212; Hazma 1.0 documentation</title>
+    <title>hazma.decay.short_kaon &#8212; Hazma 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -40,30 +40,59 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="hazma-short-kaon-decay-spectra">
-<span id="func-short-kaon-decay"></span><h1>hazma.short_kaon.decay_spectra<a class="headerlink" href="#hazma-short-kaon-decay-spectra" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="hazma-decay-short-kaon">
+<span id="func-short-kaon-decay"></span><h1>hazma.decay.short_kaon<a class="headerlink" href="#hazma-decay-short-kaon" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="hazma.short_kaon.decay_spectra">
-<code class="descclassname">hazma.short_kaon.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.short_kaon.decay_spectra" title="Permalink to this definition">¶</a></dt>
+<dt id="hazma.decay.short_kaon">
+<code class="descclassname">hazma.decay.</code><code class="descname">short_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.short_kaon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute dNdE from short kaon decay.</p>
-<p>Compute dNdE from decay of short kaon through K -&gt; X in the laboratory
-frame given a gamma ray engergy of <cite>eng_gam</cite> and short kaon energy of
-<cite>eng_k</cite>. The decay modes impemendted are
-* ks    -&gt; pi  + pi
-* ks    -&gt; pi0 + pi0</p>
+<p>Compute dNdE from decay of short kaon through <img class="math" src="../_images/math/000d181f215ca03ffef55a19193ac9c7368e6672.png" alt="K\to X"/> in the
+laboratory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and short kaon
+energy of <code class="docutils literal"><span class="pre">eng_k</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>eng_gam</strong> : double or numpy.ndarray</p>
+<blockquote>
+<div><p>Gamma ray energy(ies) in laboratory frame.</p>
+</div></blockquote>
+<p><strong>eng_k</strong> : float</p>
+<blockquote>
+<div><p>Charged kaon energy in laboratory frame.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
 <blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given muon energy <cite>eng_mu</cite>.</p>
+<div><p>List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gams</span></code>
+given muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>The decay modes impemendted are</p>
+<div class="math">
+<p><img src="../_images/math/4220601825d9cea484579499a191f8a8a56c10c0.png" alt="K_{S} \to \pi^{+}  + \pi^{-}"/></p>
+</div><div class="math">
+<p><img src="../_images/math/17f1529c3561052bdf9112695906778d06b56772.png" alt="K_{S} \to \pi^{0} + \pi^{0}"/></p>
+</div><p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>

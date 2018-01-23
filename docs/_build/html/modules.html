@@ -22,9 +22,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Usage" href="usage.html" />
-    <link rel="prev" title="Description" href="description.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -33,12 +31,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="usage.html" title="Usage"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="description.html" title="Description"
-             accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Hazma 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
@@ -65,10 +57,10 @@
 <col width="40%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td>Generate spectrum from builtin functions.</td>
+<tr class="row-odd"><td>Generate spectrum from builtin functions</td>
 <td><a class="reference internal" href="gamma_ray_functions/gamma_ray.html#func-gamma-ray"><span class="std std-ref">hazma.gamma_ray.gamma_ray</span></a></td>
 </tr>
-<tr class="row-even"><td>Generate spectrum from matrix elements.</td>
+<tr class="row-even"><td>Generate spectrum using Monte Carlo</td>
 <td><a class="reference internal" href="gamma_ray_functions/gamma_ray_rambo.html#func-gamma-ray-rambo"><span class="std std-ref">hazma.gamma_ray.gamma_ray_rambo</span></a></td>
 </tr>
 </tbody>
@@ -85,8 +77,8 @@
 <h3>Functions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <table border="1" class="docutils">
 <colgroup>
-<col width="33%" />
-<col width="67%" />
+<col width="34%" />
+<col width="66%" />
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Computing annihilation
@@ -96,13 +88,19 @@ cross sections</td>
 <tr class="row-even"><td>Computing decay widths</td>
 <td><a class="reference internal" href="rambo_functions/compute_decay_width.html#func-compute-decay-width"><span class="std std-ref">hazma.rambo.compute_decay_width</span></a></td>
 </tr>
-<tr class="row-odd"><td>Computing annihilation</td>
+<tr class="row-odd"><td>Computing energy
+histograms for final
+state particles</td>
 <td><a class="reference internal" href="rambo_functions/generate_energy_histogram.html#func-generate-energy-histogram"><span class="std std-ref">hazma.rambo.generate_energy_histogram</span></a></td>
 </tr>
-<tr class="row-even"><td>Computing annihilation</td>
+<tr class="row-even"><td>Compute a single
+relativistic phase
+space point</td>
 <td><a class="reference internal" href="rambo_functions/generate_phase_space_point.html#func-generate-phase-space-point"><span class="std std-ref">hazma.rambo.generate_phase_space_point</span></a></td>
 </tr>
-<tr class="row-odd"><td>Computing annihilation</td>
+<tr class="row-odd"><td>Compute many
+relativistic phase
+space points</td>
 <td><a class="reference internal" href="rambo_functions/generate_phase_space.html#func-generate-phase-space"><span class="std std-ref">hazma.rambo.generate_phase_space</span></a></td>
 </tr>
 </tbody>
@@ -114,8 +112,8 @@ cross sections</td>
 <div class="section" id="id3">
 <h3>Description<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 </div>
-<div class="section" id="muon-hazma-decay-muon">
-<h3>Muon (hazma.decay.muon)<a class="headerlink" href="#muon-hazma-decay-muon" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Functions<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <table border="1" class="docutils">
 <colgroup>
 <col width="32%" />
@@ -123,25 +121,25 @@ cross sections</td>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Muon</td>
-<td><a class="reference internal" href="decay/muon_decay.html#func-muon-decay"><span class="std std-ref">hazma.muon.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/muon_decay.html#func-muon-decay"><span class="std std-ref">hazma.decay.muon</span></a></td>
 </tr>
 <tr class="row-even"><td>Electron</td>
-<td><a class="reference internal" href="decay/electron_decay.html#func-electron-decay"><span class="std std-ref">hazma.electron.decay_spectra</span></a></td>
+<td><span class="xref std std-ref">func_electron_decay</span></td>
 </tr>
 <tr class="row-odd"><td>Neutral Pion</td>
-<td><a class="reference internal" href="decay/neutral_pion_decay.html#func-neutral-pion-decay"><span class="std std-ref">hazma.neutral_pion.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/neutral_pion_decay.html#func-neutral-pion-decay"><span class="std std-ref">hazma.decay.neutral_pion</span></a></td>
 </tr>
 <tr class="row-even"><td>Charged Pion</td>
-<td><a class="reference internal" href="decay/charged_pion_decay.html#func-charged-pion-decay"><span class="std std-ref">hazma.charged_pion.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/charged_pion_decay.html#func-charged-pion-decay"><span class="std std-ref">hazma.decay.charged_pion</span></a></td>
 </tr>
 <tr class="row-odd"><td>Short Kaon</td>
-<td><a class="reference internal" href="decay/short_kaon_decay.html#func-short-kaon-decay"><span class="std std-ref">hazma.short_kaon.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/short_kaon_decay.html#func-short-kaon-decay"><span class="std std-ref">hazma.decay.short_kaon</span></a></td>
 </tr>
 <tr class="row-even"><td>Long Kaon</td>
-<td><a class="reference internal" href="decay/long_kaon_decay.html#func-long-kaon-decay"><span class="std std-ref">hazma.long_kaon.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/long_kaon_decay.html#func-long-kaon-decay"><span class="std std-ref">hazma.decay.long_kaon</span></a></td>
 </tr>
 <tr class="row-odd"><td>Charged Kaon</td>
-<td><a class="reference internal" href="decay/charged_kaon_decay.html#func-charged-kaon-decay"><span class="std std-ref">hazma.charged_kaon.decay_spectra</span></a></td>
+<td><a class="reference internal" href="decay/charged_kaon_decay.html#func-charged-kaon-decay"><span class="std std-ref">hazma.decay.charged_kaon</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -155,12 +153,6 @@ cross sections</td>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="description.html"
-                        title="previous chapter">Description</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="usage.html"
-                        title="next chapter">Usage</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -181,12 +173,6 @@ cross sections</td>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="usage.html" title="Usage"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="description.html" title="Description"
-             >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Hazma 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>

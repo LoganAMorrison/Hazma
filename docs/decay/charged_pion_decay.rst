@@ -1,6 +1,6 @@
 .. _func_charged_pion_decay:
 
-hazma.charged_pion.decay_spectra
-----------------------------
+hazma.decay.charged_pion
+------------------------
 
-.. autofunction:: hazma.charged_pion.decay_spectra
+.. autofunction:: hazma.decay.charged_pion

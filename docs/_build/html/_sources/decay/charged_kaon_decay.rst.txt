@@ -1,6 +1,6 @@
 .. _func_charged_kaon_decay:
 
-hazma.charged_kaon.decay_spectra
-----------------------------
+hazma.decay.charged_kaon
+------------------------
 
-.. autofunction:: hazma.charged_kaon.decay_spectra
+.. autofunction:: hazma.decay.charged_kaon

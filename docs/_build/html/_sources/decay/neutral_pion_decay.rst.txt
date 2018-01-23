@@ -1,6 +1,6 @@
 .. _func_neutral_pion_decay:
 
-hazma.neutral_pion.decay_spectra
-----------------------------
+hazma.decay.neutral_pion
+------------------------
 
-.. autofunction:: hazma.neutral_pion.decay_spectra
+.. autofunction:: hazma.decay.neutral_pion

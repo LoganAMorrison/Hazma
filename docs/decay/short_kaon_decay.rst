@@ -1,6 +1,6 @@
 .. _func_short_kaon_decay:
 
-hazma.short_kaon.decay_spectra
-----------------------------
+hazma.decay.short_kaon
+----------------------
 
-.. autofunction:: hazma.short_kaon.decay_spectra
+.. autofunction:: hazma.decay.short_kaon

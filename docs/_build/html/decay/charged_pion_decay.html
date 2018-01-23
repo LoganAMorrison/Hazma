@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>hazma.charged_pion.decay_spectra &#8212; Hazma 1.0 documentation</title>
+    <title>hazma.decay.charged_pion &#8212; Hazma 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -40,19 +40,30 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="hazma-charged-pion-decay-spectra">
-<span id="func-charged-pion-decay"></span><h1>hazma.charged_pion.decay_spectra<a class="headerlink" href="#hazma-charged-pion-decay-spectra" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="hazma-decay-charged-pion">
+<span id="func-charged-pion-decay"></span><h1>hazma.decay.charged_pion<a class="headerlink" href="#hazma-decay-charged-pion" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="hazma.charged_pion.decay_spectra">
-<code class="descclassname">hazma.charged_pion.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.charged_pion.decay_spectra" title="Permalink to this definition">¶</a></dt>
+<dt id="hazma.decay.charged_pion">
+<code class="descclassname">hazma.decay.</code><code class="descname">charged_pion</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.charged_pion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute dNdE from charged pion decay.</p>
-<p>Compute dNdE from decay pi -&gt; mu nu -&gt; e nu nu g in the laborartory frame
-given a gamma ray engergy of <cite>eng_gam</cite> and muon energy of <cite>eng_pi</cite>.</p>
+<p>Compute dNdE from decay <img class="math" src="../_images/math/7749b5a2ef0eef6f8126d8af1f1d625c5d88d338.png" alt="\pi^{\pm} \to \mu^{\pm} + \nu_{\mu} \to
+e^{\pm} + \nu_{e} + \nu_{\mu} + \gamma"/> in the laborartory frame given a
+gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and muon energy of <code class="docutils literal"><span class="pre">eng_pi</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : double np.ndarray</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>eng_gam</strong> : double or numpy.ndarray</p>
+<blockquote>
+<div><p>Gamma ray energy(ies) in laboratory frame.</p>
+</div></blockquote>
+<p><strong>eng_pi</strong> : double</p>
+<blockquote>
+<div><p>Charged pion energy in laboratory frame.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : double np.ndarray</p>
 <blockquote class="last">
 <div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite> given
 charged pion energy <cite>eng_pi</cite>.</p>
@@ -63,17 +74,17 @@ charged pion energy <cite>eng_pi</cite>.</p>
 </table>
 <p class="rubric">Examples</p>
 <p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">charged_pion</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">charged_pion</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">charged_pion</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">charged_pion</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
