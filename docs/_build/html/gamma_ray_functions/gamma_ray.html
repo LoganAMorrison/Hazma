@@ -1,0 +1,153 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>hazma.gamma_ray.gamma_ray &#8212; Hazma 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hazma-gamma-ray-gamma-ray">
+<span id="func-gamma-ray"></span><h1>hazma.gamma_ray.gamma_ray<a class="headerlink" href="#hazma-gamma-ray-gamma-ray" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazma.gamma_ray.gamma_ray">
+<code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray</code><span class="sig-paren">(</span><em>particles</em>, <em>cme</em>, <em>eng_gams</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns total gamma ray spectrum from a set of particles.</p>
+<p>Blah and blah.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>particles</strong> : array_like</p>
+<blockquote>
+<div><p>List of particle names. Availible particles are ‘muon’, ‘electron’
+‘charged_pion’, ‘neutral pion’, ‘charged_kaon’, ‘long_kaon’,
+‘short_kaon’.</p>
+</div></blockquote>
+<p><strong>cme</strong> : double</p>
+<blockquote>
+<div><p>Center of mass energy of the final state in MeV.</p>
+</div></blockquote>
+<p><strong>eng_gams</strong> : np.ndarray[double, ndim=1]</p>
+<blockquote>
+<div><p>List of gamma ray energies in MeV to evaluate spectra at.</p>
+</div></blockquote>
+<p><strong>mat_elem_sqrd</strong> : double(<a href="#id1"><span class="problematic" id="id2">*</span></a>func)(np.ndarray, )</p>
+<blockquote>
+<div><p>Function for the matrix element squared of the proccess. Must be a
+function taking in a list of four momenta of size (num_fsp, 4).
+Default value is a flat matrix element.</p>
+</div></blockquote>
+<p><strong>num_ps_pts</strong> : int {1000}, optional</p>
+<blockquote>
+<div><p>Number of phase space points to use.</p>
+</div></blockquote>
+<p><strong>num_bins</strong> : int {25}, optional</p>
+<blockquote>
+<div><p>Number of bins to use.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
+<blockquote class="last">
+<div><p>Total gamma ray spectrum from all final state particles.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The total spectrum is computed using</p>
+<div class="math">
+<p><img src="../_images/math/ef055b872e5b0c71ba9f8c22911f6a746883b527.png" alt="\frac{dN}{dE}(E_{\gamma})
+=\sum_{i,j}P_{i}(E_{j})\frac{dN_i}{dE}(E_{\gamma}, E_{j})"/></p>
+</div><p>where <img class="math" src="../_images/math/a581f053bbfa5115f42c13094857cdd12a37ec49.png" alt="i"/> runs over the final state particles, <img class="math" src="../_images/math/d32c78b759903e3f4bd4fd2ce0b86358f7500c5d.png" alt="j"/> runs over
+energies sampled from probability distributions. <img class="math" src="../_images/math/a11d6b2d77c57d029f801fffdd97181c97a82696.png" alt="P_{i}(E_{j})"/> is
+the probability that particle <img class="math" src="../_images/math/a581f053bbfa5115f42c13094857cdd12a37ec49.png" alt="i"/> has energy <img class="math" src="../_images/math/bf3cf215d6536989befb49bedf520c392b8031c7.png" alt="E_{j}"/>. The
+probabilities are computed using <cite>hazma.phase_space_generator.rambo</cite>. The
+total number of energies used is <cite>num_bins</cite>.</p>
+<p class="rubric">Examples</p>
+<p>Example of generating a spectrum from a muon, charged kaon and long kaon
+with total energy of 5000 MeV.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.gamma_ray</span> <span class="k">import</span> <span class="n">gamma_ray</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;muon&#39;</span><span class="p">,</span> <span class="s1">&#39;charged_kaon&#39;</span><span class="p">,</span> <span class="s1">&#39;long_kaon&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">5000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">cme</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="n">eng_gams</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Logan A. Morrison.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>

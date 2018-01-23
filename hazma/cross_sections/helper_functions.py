@@ -1,8 +1,8 @@
-"""
-Module containing commonly used particle physics factors.
+"""Module containing commonly used particle physics factors.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
+
 """
 
 

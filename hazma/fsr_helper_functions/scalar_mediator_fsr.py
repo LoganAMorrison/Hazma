@@ -1,8 +1,8 @@
-"""
-Generate histograms of the energies of particles.
+"""Module for computing fsr spectrum from a scalar mediator.
 
-* Author - Logan A. Morrison and Adam Coogan
-* Date - December 2017
+@author - Logan Morrison and Adam Coogan.
+@data - December 2017
+
 """
 import numpy as np
 
@@ -10,8 +10,7 @@ alpha = 1.0 / 137.0
 
 
 def fermion(eng_gam, cme, mass_f):
-    """
-    Return the fsr spectra for fermions from decay of scalar mediator.
+    """Return the fsr spectra for fermions from decay of scalar mediator.
 
     Computes the final state radiaton spectrum value dNdE from a scalar
     mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`

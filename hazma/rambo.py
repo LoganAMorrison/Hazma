@@ -243,3 +243,45 @@ def compute_annihilation_cross_section(num_ps_pts, isp_masses,
     cross_section = cross_section / (2.0 * E1) / (2.0 * E2) / vrel
 
     return cross_section, std
+
+
+def compute_decay_width(num_ps_pts, fsp_masses, cme,
+                        mat_elem_sqrd=lambda klist: 1,
+                        num_cpus=None):
+    """
+    Computes the cross section for a given process.
+
+    Parameters
+    ----------
+    num_ps_pts : int
+        Total number of phase space points to generate.
+    masses : numpy.ndarray
+        List of masses of the initial state and final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+    num_cpus : int {None}
+        Number of cpus to use in parallel with rambo. If not specified, 75% of
+        the cpus will be used.
+
+    Returns
+    -------
+    cross_section : double
+        Cross section for X -> final state particles(fsp), where the fsp have
+        masses `masses` and the process X -> fsp has a squared matrix element
+        of `mat_elem_sqrd`.
+    std : double
+        Estimated error in cross section.
+    """
+    num_fsp = len(fsp_masses)
+    points = generate_phase_space(
+        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
+    actual_num_ps_pts = len(points[:, 4 * num_fsp])
+    weights = points[:, 4 * num_fsp]
+    cross_section = np.average(weights)
+    std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+
+    cross_section = cross_section / (2.0 * cme)
+
+    return cross_section, std

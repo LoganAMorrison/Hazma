@@ -1,11 +1,16 @@
+"""Module for computing fsr spectrum from a vector mediator.
+
+@author - Logan Morrison and Adam Coogan.
+@data - December 2017
+
+"""
 import numpy as np
 
-alpha = 1.0 / 137.0
+alpha = 1.0 / 137.0  # Fine structure constant.
 
 
 def fermion(egam, Q, mf):
-    """
-    Return the fsr spectra for fermions from decay of vector mediator.
+    """Return the fsr spectra for fermions from decay of vector mediator.
 
     Computes the final state radiaton spectrum value dNdE from a vector
     mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`

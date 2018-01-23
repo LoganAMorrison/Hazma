@@ -1,8 +1,8 @@
-"""
-Module containing cross sections.
+"""Module containing cross sections.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
+
 """
 import numpy as np
 

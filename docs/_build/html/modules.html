@@ -1,671 +1,198 @@
 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Modules &mdash; Hazma 1.0 documentation</title>
-  
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Modules &#8212; Hazma 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Description" href="description.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="description.html" title="Description"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
 
-  
-  
-  
-  
-
-  
-
-  
-  
-    
-
-  
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Hazma 1.0 documentation" href="index.html"/>
-        <link rel="next" title="Usage" href="usage.html"/>
-        <link rel="prev" title="Description" href="description.html"/> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
-</head>
-
-<body class="wy-body-for-nav" role="document">
-
-   
-  <div class="wy-grid-for-nav">
-
-    
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
-            <a href="index.html" class="icon icon-home"> Hazma
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                1.0
-              </div>
-            
-          
-
-          
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.gamma_ray">Gamma Ray (<code class="docutils literal"><span class="pre">hazma.gamma_ray</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.muon">Muon (<code class="docutils literal"><span class="pre">hazma.muon</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.electron">Electron (<code class="docutils literal"><span class="pre">hazma.electron</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.charged_pion">Charged Pion (<code class="docutils literal"><span class="pre">hazma.charged_pion</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.neutral_pion">Neutral Pion (<code class="docutils literal"><span class="pre">hazma.neutral_pion</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.charged_kaon">Charged Kaon (<code class="docutils literal"><span class="pre">hazma.charged_kaon</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.charged_kaon">Long Kaon (<code class="docutils literal"><span class="pre">hazma.long_kaon</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.charged_kaon">Short Kaon (<code class="docutils literal"><span class="pre">hazma.short_kaon</span></code>)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-</ul>
-
-            
-          
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Hazma</a>
-        
-      </nav>
-
-
-      
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
-  <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Modules</li>
-    
-    
-      <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
-          
-        
-      </li>
-    
-  </ul>
-
-  
-  <hr/>
-</div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
             
   <div class="section" id="modules">
 <h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
-<p>The main modules of Hazma are the particle modules (electron, muon, charged pion, neutral pion, charged kaon and the neutral kaons) and the <cite>gamma_ray</cite> module. Each of the particle modules have two functions <code class="docutils literal"><span class="pre">decay_spectra</span></code> and <code class="docutils literal"><span class="pre">fsr</span></code> which produce the gamma ray spectra from radiative decays and final state radiation, respectively.</p>
-<div class="section" id="module-hazma.gamma_ray">
-<span id="gamma-ray-hazma-gamma-ray"></span><h2>Gamma Ray (<code class="docutils literal"><span class="pre">hazma.gamma_ray</span></code>)<a class="headerlink" href="#module-hazma.gamma_ray" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a many-particle final state.</p>
-<ul class="simple">
-<li>author : Logan Morrison and Adam Coogan</li>
-<li>date : December 2017</li>
-</ul>
-<dl class="function">
-<dt id="hazma.gamma_ray.gamma_ray">
-<code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray</code><span class="sig-paren">(</span><em>particles</em>, <em>cme</em>, <em>eng_gams</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns total gamma ray spectrum from a set of particles.</p>
-<blockquote>
-<div>Blah Blah</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<div class="section" id="gamma-ray-spectra-generator-hazma-gamma-ray">
+<h2>Gamma Ray Spectra Generator (hazma.gamma_ray)<a class="headerlink" href="#gamma-ray-spectra-generator-hazma-gamma-ray" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="description">
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h3>
+<p>Sub-package for generating gamma ray spectra given a multi-particle final state.</p>
+<p>Hazma includes two different methods for computing gamma ray spectra. The first is done by specifying the final state of a process. Doing so, the particle decay spectra are then computed. The second method <code class="docutils literal"><span class="pre">gamma_ray_rambo</span></code> takes in the tree-level and radiative squared matrix elements and runs a Monte-Carlo to generate the gamma ray spectra.</p>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>particles</strong> : np.ndarray</p>
-<blockquote>
-<div><blockquote>
-<div><p>List of particle names. Availible particles are ‘muon’, ‘electron’
-‘charged_pion’, ‘neutral pion’, ‘charged_kaon’, ‘long_kaon’,
-‘short_kaon’</p>
-</div></blockquote>
-<dl class="docutils">
-<dt>cme <span class="classifier-delimiter">:</span> <span class="classifier">double</span></dt>
-<dd><p class="first last">Center of mass energy of the final state in MeV.</p>
-</dd>
-<dt>eng_gams <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray[double, ndim=1]</span></dt>
-<dd><p class="first last">List of gamma ray energies in MeV to evaluate spectra at.</p>
-</dd>
-<dt>mat_elem_sqrd <span class="classifier-delimiter">:</span> <span class="classifier">double(<a href="#id1"><span class="problematic" id="id2">*</span></a>func)(np.ndarray, )</span></dt>
-<dd><p class="first last">Function for the matrix element squared of the proccess. Must be a
-function taking in a list of four momenta of size (num_fsp, 4).
-Default value is a flat matrix element.</p>
-</dd>
-<dt>num_ps_pts <span class="classifier-delimiter">:</span> <span class="classifier">int {1000}, optional</span></dt>
-<dd><p class="first last">Number of phase space points to use.</p>
-</dd>
-<dt>num_bins <span class="classifier-delimiter">:</span> <span class="classifier">int {25}, optional</span></dt>
-<dd><p class="first last">Number of bins to use.</p>
-</dd>
-</dl>
-</div></blockquote>
-</td>
+<tr class="row-odd"><td>Generate spectrum from builtin functions.</td>
+<td><a class="reference internal" href="gamma_ray_functions/gamma_ray.html#func-gamma-ray"><span class="std std-ref">hazma.gamma_ray.gamma_ray</span></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
-<blockquote class="last">
-<div><p>Total gamma ray spectrum from all final state particles.</p>
-</div></blockquote>
-</td>
+<tr class="row-even"><td>Generate spectrum from matrix elements.</td>
+<td><a class="reference internal" href="gamma_ray_functions/gamma_ray_rambo.html#func-gamma-ray-rambo"><span class="std std-ref">hazma.gamma_ray.gamma_ray_rambo</span></a></td>
 </tr>
 </tbody>
 </table>
-<dl class="docutils">
-<dt>rac{dN}{dE}(E_{gamma}) =</dt>
-<dd>sum_{i,j}P_{i}(E_{j})</dd>
-</dl>
-<p>rac{dN_i}{dE}(E_{gamma}, E_{j})</p>
-<blockquote>
-<div>where <span class="math">\(i\)</span> runs over the final state particles, <span class="math">\(j\)</span> runs over
-energies sampled from probability distributions. <span class="math">\(P_{i}(E_{j})\)</span> is
-the probability that particle <span class="math">\(i\)</span> has energy <span class="math">\(E_{j}\)</span>. The
-probabilities are computed using <cite>hazma.phase_space_generator.rambo</cite>. The
-total number of energies used is <cite>num_bins</cite>.</div></blockquote>
-<p class="rubric">Examples</p>
-<p>Example of generating a spectrum from a muon, charged kaon and long kaon
-with total energy of 5000 MeV.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.gamma_ray</span> <span class="k">import</span> <span class="n">gamma_ray</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;muon&#39;</span><span class="p">,</span> <span class="s1">&#39;charged_kaon&#39;</span><span class="p">,</span> <span class="s1">&#39;long_kaon&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">5000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">cme</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="n">eng_gams</span><span class="p">)</span>
-</pre></div>
 </div>
-</dd></dl>
-
 </div>
-<div class="section" id="module-hazma.muon">
-<span id="muon-hazma-muon"></span><h2>Muon (<code class="docutils literal"><span class="pre">hazma.muon</span></code>)<a class="headerlink" href="#module-hazma.muon" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a muon.</p>
-<p>&#64;author - Logan Morrison and Adam Coogan
-&#64;date - December 2017</p>
-<dl class="function">
-<dt id="hazma.muon.decay_spectra">
-<code class="descclassname">hazma.muon.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_mu</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.muon.decay_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from muon decay.</p>
-<p>Compute dNdE from decay mu -&gt; e nu nu gamma in the laborartory frame given
-a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and muon energy of <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<div class="section" id="rambo-hazma-rambo">
+<h2>RAMBO (hazma.rambo)<a class="headerlink" href="#rambo-hazma-rambo" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id1">
+<h3>Description<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Sub-package for generating phases space points and computing phase space integrals using a Monte Carlo algorithm called RAMBO.</p>
+</div>
+<div class="section" id="id2">
+<h3>Functions<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>eng_gam</strong> : numpy.ndarray</p>
-<blockquote>
-<div><p>Gamma ray energy(ies) in laboratory frame.</p>
-</div></blockquote>
-<p><strong>eng_mu</strong> : double</p>
-<blockquote>
-<div><p>Muon energy in laboratory frame.</p>
-</div></blockquote>
-</td>
+<tr class="row-odd"><td>Computing annihilation
+cross sections</td>
+<td><a class="reference internal" href="rambo_functions/compute_annihilation_cross_section.html#func-compute-annihilation-cross-section"><span class="std std-ref">hazma.rambo.compute_annihilation_cross_section</span></a></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : numpy.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gam</span></code> given
-muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
-</div></blockquote>
-</td>
+<tr class="row-even"><td>Computing decay widths</td>
+<td><a class="reference internal" href="rambo_functions/compute_decay_width.html#func-compute-decay-width"><span class="std std-ref">hazma.rambo.compute_decay_width</span></a></td>
+</tr>
+<tr class="row-odd"><td>Computing annihilation</td>
+<td><a class="reference internal" href="rambo_functions/generate_energy_histogram.html#func-generate-energy-histogram"><span class="std std-ref">hazma.rambo.generate_energy_histogram</span></a></td>
+</tr>
+<tr class="row-even"><td>Computing annihilation</td>
+<td><a class="reference internal" href="rambo_functions/generate_phase_space_point.html#func-generate-phase-space-point"><span class="std std-ref">hazma.rambo.generate_phase_space_point</span></a></td>
+</tr>
+<tr class="row-odd"><td>Computing annihilation</td>
+<td><a class="reference internal" href="rambo_functions/generate_phase_space.html#func-generate-phase-space"><span class="std std-ref">hazma.rambo.generate_phase_space</span></a></td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">muon</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">muon</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
-</pre></div>
 </div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">muon</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">muon</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
-</pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.muon.fsr">
-<code class="descclassname">hazma.muon.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.muon.fsr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute muon fsr spectrum.</p>
-<p>Compute final state radiation spectrum dN/dE from decay of an off-shell
-mediator (scalar, psuedo-scalar, vector or axial-vector) into a pair of
-muons.</p>
-<dl class="docutils">
-<dt>Paramaters</dt>
-<dd>eng_gam (float or np.ndarray) : Gamma ray energy(ies) in laboratory
-frame.
-cme (float) : Center of mass energy or mass of the off-shell mediator.
-mediator (string) : Mediator type : scalar, psuedo-scalar, vector or
-axial-vector.</dd>
-<dt>Returns</dt>
-<dd>spec (np.ndarray) : List of gamma ray spectrum values, dNdE, evaluated
-at <cite>eng_gams</cite> given a center of mass energy <cite>cme</cite>.</dd>
-<dt>Examples</dt>
-<dd><p class="first">dNdE for a single gamma ray energy from scalar mediator.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">muon</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">cme</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">muon</span><span class="o">.</span><span class="n">fsr</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="s1">&#39;scalar&#39;</span><span class="p">)</span>
-</pre></div>
+<div class="section" id="decay-hazma-decay">
+<h2>Decay (hazma.decay)<a class="headerlink" href="#decay-hazma-decay" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>Description<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 </div>
-<p>dNdE for list of gamma ray energies from vector mediator.</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">muon</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">muon</span><span class="o">.</span><span class="n">fsr</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="s1">&#39;scalar&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.electron">
-<span id="electron-hazma-electron"></span><h2>Electron (<code class="docutils literal"><span class="pre">hazma.electron</span></code>)<a class="headerlink" href="#module-hazma.electron" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from an electron.</p>
-<p>&#64;author - Logan Morrison and Adam Coogan
-&#64;date - December 2017</p>
-<dl class="function">
-<dt id="hazma.electron.decay_spectra">
-<code class="descclassname">hazma.electron.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_mu</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.electron.decay_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns zero. Electron is stable.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.electron.fsr">
-<code class="descclassname">hazma.electron.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.electron.fsr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute electron fsr spectrum.</p>
-<p>Compute final state radiation spectrum dN/dE from decay of an off-shell
-mediator (scalar, psuedo-scalar, vector or axial-vector) into a pair of
-electrons.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<div class="section" id="muon-hazma-decay-muon">
+<h3>Muon (hazma.decay.muon)<a class="headerlink" href="#muon-hazma-decay-muon" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="68%" />
+</colgroup>
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : (np.ndarray)</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given a center of mass energy <cite>cme</cite>.</p>
-</div></blockquote>
-</td>
+<tr class="row-odd"><td>Muon</td>
+<td><a class="reference internal" href="decay/muon_decay.html#func-muon-decay"><span class="std std-ref">hazma.muon.decay_spectra</span></a></td>
+</tr>
+<tr class="row-even"><td>Electron</td>
+<td><a class="reference internal" href="decay/electron_decay.html#func-electron-decay"><span class="std std-ref">hazma.electron.decay_spectra</span></a></td>
+</tr>
+<tr class="row-odd"><td>Neutral Pion</td>
+<td><a class="reference internal" href="decay/neutral_pion_decay.html#func-neutral-pion-decay"><span class="std std-ref">hazma.neutral_pion.decay_spectra</span></a></td>
+</tr>
+<tr class="row-even"><td>Charged Pion</td>
+<td><a class="reference internal" href="decay/charged_pion_decay.html#func-charged-pion-decay"><span class="std std-ref">hazma.charged_pion.decay_spectra</span></a></td>
+</tr>
+<tr class="row-odd"><td>Short Kaon</td>
+<td><a class="reference internal" href="decay/short_kaon_decay.html#func-short-kaon-decay"><span class="std std-ref">hazma.short_kaon.decay_spectra</span></a></td>
+</tr>
+<tr class="row-even"><td>Long Kaon</td>
+<td><a class="reference internal" href="decay/long_kaon_decay.html#func-long-kaon-decay"><span class="std std-ref">hazma.long_kaon.decay_spectra</span></a></td>
+</tr>
+<tr class="row-odd"><td>Charged Kaon</td>
+<td><a class="reference internal" href="decay/charged_kaon_decay.html#func-charged-kaon-decay"><span class="std std-ref">hazma.charged_kaon.decay_spectra</span></a></td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Examples</p>
-<p>dNdE for a single gamma ray energy from scalar mediator.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">electron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">cme</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">electron</span><span class="o">.</span><span class="n">fsr</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="s1">&#39;scalar&#39;</span><span class="p">)</span>
-</pre></div>
 </div>
-<p>dNdE for list of gamma ray energies from vector mediator.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">electron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">electron</span><span class="o">.</span><span class="n">fsr</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="s1">&#39;scalar&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.charged_pion">
-<span id="charged-pion-hazma-charged-pion"></span><h2>Charged Pion (<code class="docutils literal"><span class="pre">hazma.charged_pion</span></code>)<a class="headerlink" href="#module-hazma.charged_pion" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a charged pion.</p>
-<p>&#64;author - Logan Morrison and Adam Coogan
-&#64;date - December 2017</p>
-<dl class="function">
-<dt id="hazma.charged_pion.decay_spectra">
-<code class="descclassname">hazma.charged_pion.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.charged_pion.decay_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from charged pion decay.</p>
-<p>Compute dNdE from decay pi -&gt; mu nu -&gt; e nu nu g in the laborartory frame
-given a gamma ray engergy of <cite>eng_gam</cite> and muon energy of <cite>eng_pi</cite>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : double np.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite> given
-charged pion energy <cite>eng_pi</cite>.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">charged_pion</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">charged_pion</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">charged_pion</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">charged_pion</span><span class="o">.</span><span class="n">decay_spectra</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.charged_pion.fsr">
-<code class="descclassname">hazma.charged_pion.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.charged_pion.fsr" title="Permalink to this definition">¶</a></dt>
-<dd><p>NOT YET IMPLEMENTED!</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.neutral_pion">
-<span id="neutral-pion-hazma-neutral-pion"></span><h2>Neutral Pion (<code class="docutils literal"><span class="pre">hazma.neutral_pion</span></code>)<a class="headerlink" href="#module-hazma.neutral_pion" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a neutral pion.</p>
-<p>&#64;author - Logan Morrison and Adam Coogan
-&#64;date - December 2017</p>
-<dl class="function">
-<dt id="hazma.neutral_pion.decay_spectra">
-<code class="descclassname">hazma.neutral_pion.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.neutral_pion.decay_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from neutral pion decay.</p>
-<p>Compute dNdE from decay pi0 -&gt; gamma gamma in the laborartory frame given
-a gamma ray engergy of <cite>eng_gam</cite> and neutral pion energy of <cite>eng_pi</cite>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at
-<cite>eng_gams</cite> given neutral pion energy <cite>eng_pi</cite>.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.neutral_pion.fsr">
-<code class="descclassname">hazma.neutral_pion.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.neutral_pion.fsr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns zero.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.charged_kaon">
-<span id="charged-kaon-hazma-charged-kaon"></span><h2>Charged Kaon (<code class="docutils literal"><span class="pre">hazma.charged_kaon</span></code>)<a class="headerlink" href="#module-hazma.charged_kaon" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a charged kaon.</p>
-<ul class="simple">
-<li>author : Logan Morrison and Adam Coogan</li>
-<li>date : December 2017</li>
-</ul>
-<dl class="function">
-<dt id="hazma.charged_kaon.decay_spectra">
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.charged_kaon.decay_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from charged kaon decay.</p>
-<p>Compute dNdE from decay of charged kaon through K -&gt; X in the
-laboratory frame given a gamma ray engergy of <cite>eng_gam</cite> and charged
-kaon energy of <cite>eng_k</cite>. The decay modes impemendted are
-* k -&gt; mu  + nu
-* k -&gt; pi  + pi0
-* k -&gt; pi  + pi  + pi
-* k -&gt; pi0 + e   + nu
-* k -&gt; pi0 + mu  + nu
-* k -&gt; pi  + pi0 + pi0</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given muon energy <cite>eng_mu</cite>.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.charged_kaon.fsr">
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.charged_kaon.fsr" title="Permalink to this definition">¶</a></dt>
-<dd><p>NOT YET IMPLEMENTED!</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.charged_kaon">
-<span id="long-kaon-hazma-long-kaon"></span><h2>Long Kaon (<code class="docutils literal"><span class="pre">hazma.long_kaon</span></code>)<a class="headerlink" href="#module-hazma.charged_kaon" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a charged kaon.</p>
-<ul class="simple">
-<li>author : Logan Morrison and Adam Coogan</li>
-<li>date : December 2017</li>
-</ul>
-<dl class="function">
-<dt>
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span></dt>
-<dd><p>Compute dNdE from charged kaon decay.</p>
-<p>Compute dNdE from decay of charged kaon through K -&gt; X in the
-laboratory frame given a gamma ray engergy of <cite>eng_gam</cite> and charged
-kaon energy of <cite>eng_k</cite>. The decay modes impemendted are
-* k -&gt; mu  + nu
-* k -&gt; pi  + pi0
-* k -&gt; pi  + pi  + pi
-* k -&gt; pi0 + e   + nu
-* k -&gt; pi0 + mu  + nu
-* k -&gt; pi  + pi0 + pi0</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given muon energy <cite>eng_mu</cite>.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span></dt>
-<dd><p>NOT YET IMPLEMENTED!</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-hazma.charged_kaon">
-<span id="short-kaon-hazma-short-kaon"></span><h2>Short Kaon (<code class="docutils literal"><span class="pre">hazma.short_kaon</span></code>)<a class="headerlink" href="#module-hazma.charged_kaon" title="Permalink to this headline">¶</a></h2>
-<p>Module for computing gamma ray spectra from a charged kaon.</p>
-<ul class="simple">
-<li>author : Logan Morrison and Adam Coogan</li>
-<li>date : December 2017</li>
-</ul>
-<dl class="function">
-<dt>
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">decay_spectra</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span></dt>
-<dd><p>Compute dNdE from charged kaon decay.</p>
-<p>Compute dNdE from decay of charged kaon through K -&gt; X in the
-laboratory frame given a gamma ray engergy of <cite>eng_gam</cite> and charged
-kaon energy of <cite>eng_k</cite>. The decay modes impemendted are
-* k -&gt; mu  + nu
-* k -&gt; pi  + pi0
-* k -&gt; pi  + pi  + pi
-* k -&gt; pi0 + e   + nu
-* k -&gt; pi0 + mu  + nu
-* k -&gt; pi  + pi0 + pi0</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> : np.ndarray</p>
-<blockquote class="last">
-<div><p>List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given muon energy <cite>eng_mu</cite>.</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt>
-<code class="descclassname">hazma.charged_kaon.</code><code class="descname">fsr</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>cme</em>, <em>mediator='scalar'</em><span class="sig-paren">)</span></dt>
-<dd><p>NOT YET IMPLEMENTED!</p>
-</dd></dl>
-
 </div>
 </div>
 
 
-           </div>
-           <div class="articleComments">
-            
-           </div>
           </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="description.html" class="btn btn-neutral" title="Description" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
-  
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>
-        &copy; Copyright 2017, Logan A. Morrison.
-
-    </p>
-  </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
-
-</footer>
-
         </div>
       </div>
-
-    </section>
-
-  </div>
-  
-
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'1.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
-  <script type="text/javascript">
-      jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
-      });
-  </script>
-   
-
-</body>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="description.html"
+                        title="previous chapter">Description</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="next chapter">Usage</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="description.html" title="Description"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Logan A. Morrison.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
 </html>

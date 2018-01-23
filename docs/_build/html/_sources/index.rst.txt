@@ -11,6 +11,8 @@ Contents:
    :maxdepth: 2
 
    description
+   gamma_ray.rst
+   rambo.rst
    modules
    usage
 

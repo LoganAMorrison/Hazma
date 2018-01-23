@@ -1,5 +1,4 @@
-"""
-Module containing squared matrix elements from simplified models.
+"""Module containing squared matrix elements from simplified models.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
@@ -14,11 +13,14 @@ def minkowski_dot(fv1, fv2):
     return fv1[0] * fv2[0] - np.dot(fv1[1:4], fv2[1:4])
 
 
-"""TREE-LEVEL SQUARED MATRIX ELEMENTS."""
+# TREE-LEVEL SQUARED MATRIX ELEMENTS.
 
 
 def xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, through a scalar mediator
+    in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -36,6 +38,11 @@ def xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
         Coupling of initial state fermions with the scalar mediator.
     cffs : float
         Coupling of final state fermions with the scalar mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> S^* -> f + f.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -47,7 +54,10 @@ def xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
 
 
 def xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, through a pseudo-scalar
+    mediator in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -67,6 +77,11 @@ def xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
         Coupling of initial state fermions with the pseudo-scalar mediator.
     cffp : float
         Coupling of final state fermions with the pseudo-scalar mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> P^* -> f + f.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -77,7 +92,10 @@ def xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
 
 
 def xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, through a vector
+    mediator in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -97,6 +115,11 @@ def xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
         Coupling of initial state fermions with the vector mediator.
     cffv : float
         Coupling of final state fermions with the vector mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> V^* -> f + f.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -120,7 +143,10 @@ def xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
 
 
 def xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, through a axial-vector
+    mediator in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -140,6 +166,11 @@ def xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
         Coupling of initial state fermions with the axial-vector mediator.
     cffa : float
         Coupling of final state fermions with the axial-vector mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> A^* -> f + f.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -163,13 +194,13 @@ def xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
         (-ma**2 + Q**2)**2
 
 
-"""RADIATIVE SQUARED MATRIX ELEMENTS."""
+# RADIATIVE SQUARED MATRIX ELEMENTS.
 
 
 def xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
-    """
-    Returns the matrix element squared for two identical fermions "x" to two
-    identical fermions "f" and a photon.
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, and a photon through a
+    scalar mediator in the s-channel.
 
     Parameters
     ----------
@@ -192,7 +223,7 @@ def xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
     Returns
     -------
     mat_elem_sqrd : float
-        Modulus squared of the matrix element for x + x -> S^* -> f + f + p.
+        Spin averaged, squared matrix element for x + x -> A^* -> f + f + g.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -221,9 +252,9 @@ def xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
 
 
 def xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
-    """
-    Returns the matrix element squared for two identical fermions "x" to two
-    identical fermions "f" and a photon.
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, and a photon through a
+    pseudo-scalar mediator in the s-channel.
 
     Parameters
     ----------
@@ -248,7 +279,7 @@ def xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
     Returns
     -------
     mat_elem_sqrd : float
-        Modulus squared of the matrix element for x + x -> P^* -> f + f + g.
+        Spin averaged, squared matrix element for x + x -> p^* -> f + f + g.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -278,7 +309,10 @@ def xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
 
 
 def xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, and a photon through a
+    vector mediator in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -298,6 +332,11 @@ def xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
         Coupling of initial state fermions with the vector mediator.
     cffv : float
         Coupling of final state fermions with the vector mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> v^* -> f + f + g.
     """
     p3 = moms[0]
     p4 = moms[1]
@@ -366,7 +405,10 @@ def xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
 
 
 def xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
-    """
+    """Returns the spin-averaged, squared matrix element for a pair of fermions,
+    *x*, annihilating into a pair of fermions, *f*, and a photon through a
+    axial-vector mediator in the s-channel.
+
     Parameters
     ----------
     moms : numpy.ndarray
@@ -386,6 +428,11 @@ def xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
         Coupling of initial state fermions with the axial-vector mediator.
     cffa : float
         Coupling of final state fermions with the axial-vector mediator.
+
+    Returns
+    -------
+    mat_elem_sqrd : float
+        Spin averaged, squared matrix element for x + x -> a^* -> f + f + g.
     """
     p3 = moms[0]
     p4 = moms[1]

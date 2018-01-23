@@ -1,54 +1,71 @@
+*******
 Modules
 *******
 
-The main modules of Hazma are the particle modules (electron, muon, charged pion, neutral pion, charged kaon and the neutral kaons) and the `gamma_ray` module. Each of the particle modules have two functions ``decay_spectra`` and ``fsr`` which produce the gamma ray spectra from radiative decays and final state radiation, respectively.
+Gamma Ray Spectra Generator (hazma.gamma_ray)
+=============================================
 
-Gamma Ray (``hazma.gamma_ray``)
------------------------------------------
+Description
+-----------
 
-.. automodule:: hazma.gamma_ray
-    :members:
-    :undoc-members:
+Sub-package for generating gamma ray spectra given a multi-particle final state.
 
-Muon (``hazma.muon``)
----------------------
+Hazma includes two different methods for computing gamma ray spectra. The first is done by specifying the final state of a process. Doing so, the particle decay spectra are then computed. The second method ``gamma_ray_rambo`` takes in the tree-level and radiative squared matrix elements and runs a Monte-Carlo to generate the gamma ray spectra.
 
-.. automodule:: hazma.muon
-    :members:
-    :undoc-members:
+Functions
+---------
 
-Electron (``hazma.electron``)
------------------------------
-.. automodule:: hazma.electron
-    :members:
-    :undoc-members:
++-------------------------------------------+-----------------------------+
+| Generate spectrum from builtin functions. | :ref:`func_gamma_ray`       |
++-------------------------------------------+-----------------------------+
+| Generate spectrum from matrix elements.   | :ref:`func_gamma_ray_rambo` |
++-------------------------------------------+-----------------------------+
 
-Charged Pion (``hazma.charged_pion``)
--------------------------------------
-.. automodule:: hazma.charged_pion
-    :members:
-    :undoc-members:
+RAMBO (hazma.rambo)
+===================
 
-Neutral Pion (``hazma.neutral_pion``)
--------------------------------------
-.. automodule:: hazma.neutral_pion
-    :members:
-    :undoc-members:
+Description
+-----------
+Sub-package for generating phases space points and computing phase space integrals using a Monte Carlo algorithm called RAMBO.
 
-Charged Kaon (``hazma.charged_kaon``)
--------------------------------------
-.. automodule:: hazma.charged_kaon
-    :members:
-    :undoc-members:
+Functions
+---------
 
-Long Kaon (``hazma.long_kaon``)
--------------------------------
-.. automodule:: hazma.charged_kaon
-    :members:
-    :undoc-members:
++------------------------+-------------------------------------------------+
+| Computing annihilation |  :ref:`func_compute_annihilation_cross_section` |
+| cross sections         |                                                 |
++------------------------+-------------------------------------------------+
+| Computing decay widths |  :ref:`func_compute_decay_width`                |
++------------------------+-------------------------------------------------+
+| Computing annihilation |  :ref:`func_generate_energy_histogram`          |
++------------------------+-------------------------------------------------+
+| Computing annihilation |  :ref:`func_generate_phase_space_point`         |
++------------------------+-------------------------------------------------+
+| Computing annihilation |  :ref:`func_generate_phase_space`               |
++------------------------+-------------------------------------------------+
 
-Short Kaon (``hazma.short_kaon``)
----------------------------------
-.. automodule:: hazma.charged_kaon
-    :members:
-    :undoc-members:
+
+Decay (hazma.decay)
+===================
+
+Description
+-----------
+
+Muon (hazma.decay.muon)
+-----------------------
+
++----------------+----------------------------------+
+| Muon           |  :ref:`func_muon_decay`          |
++----------------+----------------------------------+
+| Electron       |  :ref:`func_electron_decay`      |
++----------------+----------------------------------+
+| Neutral Pion   |  :ref:`func_neutral_pion_decay`  |
++----------------+----------------------------------+
+| Charged Pion   |  :ref:`func_charged_pion_decay`  |
++----------------+----------------------------------+
+| Short Kaon     |  :ref:`func_short_kaon_decay`    |
++----------------+----------------------------------+
+| Long Kaon      |  :ref:`func_long_kaon_decay`     |
++----------------+----------------------------------+
+| Charged Kaon   |  :ref:`func_charged_kaon_decay`  |
++----------------+----------------------------------+

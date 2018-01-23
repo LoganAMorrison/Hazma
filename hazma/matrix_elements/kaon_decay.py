@@ -1,8 +1,9 @@
-"""
-Module containing squared matrix elements.
+"""Module containing squared matrix elements.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
+
+TODO: correct matrix elements by removing decay width factors.
 """
 
 import warnings
@@ -40,7 +41,7 @@ def kl_to_pienu(kList):
         (peDOTpn * (mk**2 + mp**2 + 2 * pkDOTpp) -
          2 * (peDOTpk + peDOTpp) * (pkDOTpn + pnDOTpp)) * Vus**2
 
-    return mat_elem_sqrd / (2.0 * Q)
+    return mat_elem_sqrd
 
 
 def kl_to_pienug(kList):
@@ -119,7 +120,7 @@ def kl_to_pienug(kList):
                            (peDOTpn + 2 * pnDOTpp)))) * Vus**2) / \
         (peDOTpg**2 * pgDOTpp**2)
 
-    return mat_elem_sqrd / (2.0 * Q)
+    return mat_elem_sqrd
 
 
 def kl_to_pimunu(kList):

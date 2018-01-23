@@ -1,10 +1,8 @@
-"""
-Module for computing gamma ray spectra from a many-particle final state.
+"""Module for computing gamma ray spectra from a many-particle final state.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
 """
-
 import numpy as np
 cimport numpy as np
 import cython
@@ -26,14 +24,17 @@ include "../decay_helper_functions/parameters.pxd"
 
 
 cdef np.ndarray names_to_masses(np.ndarray names):
-    """
-    Returns the masses of particles given a list of their names.
+    """Returns the masses of particles given a list of their names.
 
-    Parameters:
-        names (np.ndarray) : List of names of the final state particles.
+    Parameters
+    ----------
+    names : np.ndarray
+        List of names of the final state particles.
 
-    Returns:
-        masses (np.ndarray) : List of masses of the final state particles. For
+    Returns
+    -------
+    masses : np.ndarray
+        List of masses of the final state particles. For
         example, ['electron', 'muon'] -> [0.510998928, 105.6583715].
     """
     cdef int i
@@ -59,7 +60,10 @@ cdef np.ndarray names_to_masses(np.ndarray names):
 
 
 def __gen_spec(name, prob, eng, eng_gams, verbose='0'):
-
+    """
+    c-function used by ``gamma`` and ``gamma_point`` to generate spectrum
+    values.
+    """
     if name == 'electron':
         if verbose == '1':
             print("creating electron spectrum with energy {}".format(eng))
@@ -95,28 +99,31 @@ def __gen_spec(name, prob, eng, eng_gams, verbose='0'):
 def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
           mat_elem_sqrd=lambda k_list : 1.0,
           int num_ps_pts=1000, int num_bins=25, verbose='0'):
-    """
-    Returns total gamma ray spectrum from final state particles.
+    """Returns total gamma ray spectrum from final state particles.
 
-    Parameters:
-        particles (np.ndarray[string, ndim=1]) :
-            List of particle names.
-        cme (double) :
-            Center of mass energy of the final state.
-        eng_gams (np.ndarray[double, ndim=1]) :
-            List of gamma ray energies to compute spectra at.
-        mat_elem_sqrd (double(np.ndarray)) :
-            Function for the matrix element squared of the proccess. Must be
-            a function taking in a list of four momenta of size (num_fsp, 4).
-            Default value is a flat matrix element.
-        num_ps_pts (int) :
-            Number of phase space points to use.
-        num_bins (int) :
-            Number of bins to use.
+    Parameters
+    ----------
+    particles : np.ndarray[string, ndim=1]
+        1-D array of strings containing the final state particle names. The
+        accepted particle names are: "muon", "electron", "neutral_pion",
+        "charged_pion", "long_kaon", "short_kaon" and "charged_kaon".
+    cme : double
+        Center of mass energy of the final state.
+    eng_gams : np.ndarray[double, ndim=1]
+        List of gamma ray energies to compute spectra at.
+    mat_elem_sqrd : double(*)(np.ndarray)
+        Function for the matrix element squared of the proccess. Must be
+        a function taking in a list of four momenta of size (num_fsp, 4).
+        Default value is a flat matrix element.
+    num_ps_pts : int
+        Number of phase space points to use.
+    num_bins : int
+        Number of bins to use.
 
-    Returns:
-        spec (np.ndarray) :
-            Total gamma ray spectrum from all final state particles.
+    Returns
+    -------
+    spec : np.ndarray[double, ndim=1]
+        1-D array of total gamma ray spectrum from all final state particles.
     """
     cdef int i, j
     cdef int num_fsp
@@ -147,30 +154,33 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def gamma_point(np.ndarray particles, double cme, double eng_gam,
-          mat_elem_sqrd=lambda k_list : 1.0,
-          int num_ps_pts=1000, int num_bins=25):
-    """
-    Returns total gamma ray spectrum from final state particles.
+                mat_elem_sqrd=lambda k_list : 1.0,
+                int num_ps_pts=1000, int num_bins=25):
+    """Returns total gamma ray spectrum from final state particles.
 
-    Parameters:
-        particles (np.ndarray[string, ndim=1]) :
-            List of particle names.
-        cme (double) :
-            Center of mass energy of the final state.
-        eng_gam (double) :
-            Gamma ray energy to compute spectrum at.
-        mat_elem_sqrd (double(np.ndarray)) :
-            Function for the matrix element squared of the proccess. Must be
-            a function taking in a list of four momenta of size (num_fsp, 4).
-            Default value is a flat matrix element.
-        num_ps_pts (int) :
-            Number of phase space points to use.
-        num_bins (int) :
-            Number of bins to use.
+    Parameters
+    ----------
+    particles : np.ndarray[string, ndim=1]
+        1-D array of strings containing the final state particle names. The
+        accepted particle names are: "muon", "electron", "neutral_pion",
+        "charged_pion", "long_kaon", "short_kaon" and "charged_kaon".
+    cme : double
+        Center of mass energy of the final state.
+    eng_gam : double
+        Gamma ray energy to evaluate spectrum at.
+    mat_elem_sqrd : double(*)(np.ndarray)
+        Function for the matrix element squared of the proccess. Must be
+        a function taking in a list of four momenta of size (num_fsp, 4).
+        Default value is a flat matrix element.
+    num_ps_pts : int
+        Number of phase space points to use.
+    num_bins : int
+        Number of bins to use.
 
-    Returns:
-        spec (np.ndarray) :
-            Total gamma ray spectrum from all final state particles.
+    Returns
+    -------
+    spec : double
+        Spectrum evaluated at ``eng_gam``.
     """
     cdef int i, j
     cdef int num_fsp

@@ -1,11 +1,17 @@
+"""Module for computing fsr spectrum from a pseudo-scalar mediator.
+
+@author - Logan Morrison and Adam Coogan.
+@data - December 2017
+
+"""
 import numpy as np
 
 alpha = 1.0 / 137.0
 
 
 def fermion(eng_gam, cme, mass_f):
-    """
-    Return the fsr spectra for fermions from decay of pseudo-scalar mediator.
+    """Returns the fsr spectra for fermions from decay of pseudo-scalar
+    mediator.
 
     Computes the final state radiaton spectrum value dNdE from a pseudo-scalar
     mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`

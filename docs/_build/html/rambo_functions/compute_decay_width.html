@@ -1,0 +1,128 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>hazma.rambo.compute_decay_width &#8212; Hazma 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hazma-rambo-compute-decay-width">
+<span id="func-compute-decay-width"></span><h1>hazma.rambo.compute_decay_width<a class="headerlink" href="#hazma-rambo-compute-decay-width" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazma.rambo.compute_decay_width">
+<code class="descclassname">hazma.rambo.</code><code class="descname">compute_decay_width</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.compute_decay_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the cross section for a given process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_ps_pts</strong> : int</p>
+<blockquote>
+<div><p>Total number of phase space points to generate.</p>
+</div></blockquote>
+<p><strong>masses</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>List of masses of the initial state and final state particles.</p>
+</div></blockquote>
+<p><strong>cme</strong> : double</p>
+<blockquote>
+<div><p>Center-of-mass-energy of the process.</p>
+</div></blockquote>
+<p><strong>mat_elem_sqrd</strong> : (double)(numpy.ndarray) {lambda klist: 1}</p>
+<blockquote>
+<div><p>Function for the matrix element squared.</p>
+</div></blockquote>
+<p><strong>num_cpus</strong> : int {None}</p>
+<blockquote>
+<div><p>Number of cpus to use in parallel with rambo. If not specified, 75% of
+the cpus will be used.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>cross_section</strong> : double</p>
+<blockquote>
+<div><p>Cross section for X -&gt; final state particles(fsp), where the fsp have
+masses <cite>masses</cite> and the process X -&gt; fsp has a squared matrix element
+of <cite>mat_elem_sqrd</cite>.</p>
+</div></blockquote>
+<p><strong>std</strong> : double</p>
+<blockquote class="last">
+<div><p>Estimated error in cross section.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Hazma 1.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Logan A. Morrison.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.5.
+    </div>
+  </body>
+</html>
