@@ -11,8 +11,12 @@ Hazma includes two different methods for computing gamma ray spectra. The first 
 Functions
 ---------
 
-+-------------------------------------------+-----------------------------+
-| Generate spectrum from builtin functions  | :ref:`func_gamma_ray`       |
-+-------------------------------------------+-----------------------------+
-| Generate spectrum using Monte Carlo       | :ref:`func_gamma_ray_rambo` |
-+-------------------------------------------+-----------------------------+
+hazma.gamma_ray.gamma_ray
+*************************
+
+.. autofunction:: hazma.gamma_ray.gamma_ray
+
+hazma.gamma_ray.gamma_ray_rambo
+*******************************
+
+.. autofunction:: hazma.gamma_ray.gamma_ray_rambo
