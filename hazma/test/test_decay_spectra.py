@@ -1,5 +1,4 @@
 from hazma.decay import muon
-from hazma.decay import electron
 from hazma.decay import charged_pion
 from hazma.decay import neutral_pion
 from hazma.decay import charged_kaon
