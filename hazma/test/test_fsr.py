@@ -2,7 +2,7 @@ from hazma.fsr_helper_functions import scalar_mediator_fsr
 from hazma.fsr_helper_functions import pseudo_scalar_mediator_fsr
 from hazma.fsr_helper_functions import vector_mediator_fsr
 
-from ..parameters import muon_mass
+from hazma.parameters import muon_mass
 
 import numpy as np
 
