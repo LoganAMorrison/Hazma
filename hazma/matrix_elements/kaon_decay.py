@@ -23,23 +23,18 @@ def kl_to_pienu(kList):
     pe = kList[1]
     pn = kList[2]
 
-    Q = pp[0] + pe[0] + pn[0]
-
-    pk = np.array([Q, 0., 0., 0.])
-
     peDOTpn = __fv_dot_prod(pe, pn)
-    peDOTpk = __fv_dot_prod(pe, pk)
-    pkDOTpn = __fv_dot_prod(pk, pn)
-    peDOTpp = __fv_dot_prod(pe, pp)
-    pkDOTpp = __fv_dot_prod(pk, pp)
-    pnDOTpp = __fv_dot_prod(pn, pp)
+    ppDOTpe = __fv_dot_prod(pp, pe)
+    ppDOTpn = __fv_dot_prod(pp, pn)
 
-    mk = neutral_kaon_mass
+    mk0 = neutral_kaon_mass
     mp = charged_pion_mass
+    me = charged_pion_mass
 
-    mat_elem_sqrd = -2 * GF**2 * \
-        (peDOTpn * (mk**2 + mp**2 + 2 * pkDOTpp) -
-         2 * (peDOTpk + peDOTpp) * (pkDOTpn + pnDOTpp)) * Vus**2
+    mat_elem_sqrd = 2 * GF**2 * \
+        (peDOTpn * (2 * me**2 - mk0**2 - 3 * mp**2 + 2 * (
+            peDOTpn + ppDOTpe)) + 2 *
+         (2 * me**2 + peDOTpn + 4 * ppDOTpe) * ppDOTpn) * Vus**2
 
     return mat_elem_sqrd
 
@@ -55,70 +50,72 @@ def kl_to_pienug(kList):
 
     Q = pp[0] + pe[0] + pn[0] + pg[0]
 
-    pk = np.array([Q, 0., 0., 0.])
+    pk = np.array([Q, 0., 0., 0])
 
     pkDOTpn = __fv_dot_prod(pk, pn)
     pkDOTpp = __fv_dot_prod(pk, pp)
+    pkDOTpe = __fv_dot_prod(pk, pe)
+    pkDOTpg = __fv_dot_prod(pk, pg)
     peDOTpk = __fv_dot_prod(pe, pk)
     peDOTpg = __fv_dot_prod(pe, pg)
     peDOTpn = __fv_dot_prod(pe, pn)
-    peDOTpp = __fv_dot_prod(pe, pp)
-    pgDOTpp = __fv_dot_prod(pg, pp)
-    pgDOTpk = __fv_dot_prod(pg, pk)
-    pgDOTpn = __fv_dot_prod(pg, pn)
-    pnDOTpp = __fv_dot_prod(pn, pp)
+    pnDOTpg = __fv_dot_prod(pn, pg)
+    pnDOTpk = __fv_dot_prod(pn, pk)
+    ppDOTpn = __fv_dot_prod(pp, pn)
+    ppDOTpe = __fv_dot_prod(pp, pe)
+    ppDOTpg = __fv_dot_prod(pp, pg)
 
-    e = np.sqrt(4 * np.pi * alpha_em)
     mp = charged_pion_mass
-    mk = neutral_kaon_mass
+    mk0 = neutral_kaon_mass
     me = electron_mass
 
-    mat_elem_sqrd = (2 * e**2 * GF**2 *
-                     (mp**4 * peDOTpg**2 * peDOTpn + mk**2 *
-                      (mp**2 * peDOTpg**2 * peDOTpn + pgDOTpp *
-                       (me**2 * (peDOTpn + pgDOTpn) * pgDOTpp - peDOTpg *
-                        (peDOTpp * (2 * peDOTpn + pgDOTpn) +
-                           (peDOTpn + pgDOTpn) * pgDOTpp) + peDOTpg**2 *
-                        pnDOTpp)) - mp**2 *
-                      (-(me**2 * (peDOTpn + pgDOTpn) * pgDOTpp**2) +
-                       peDOTpg * pgDOTpp *
-                       (pgDOTpn * (peDOTpp + pgDOTpp) +
-                        peDOTpn * (2 * peDOTpp + pgDOTpp)) +
-                          2 * peDOTpg**3 * (pgDOTpn + pkDOTpn + pnDOTpp) +
-                          peDOTpg**2 *
-                          (2 * (peDOTpk + peDOTpp + pgDOTpp) *
-                           (pgDOTpn + pkDOTpn) - 2 *
-                           peDOTpn * (pgDOTpk + pgDOTpp + pkDOTpp) +
-                           (2 * (peDOTpk + peDOTpp) + pgDOTpp) * pnDOTpp)) +
-                      pgDOTpp *
-                      (-(peDOTpg**3 * (2 * pgDOTpn + pkDOTpn + pnDOTpp)) +
-                       2 * peDOTpg *
-                          (peDOTpk * peDOTpp * pgDOTpn + peDOTpp**2 * pgDOTpn +
-                           peDOTpk * pgDOTpn * pgDOTpp + peDOTpp * pgDOTpn *
-                           pgDOTpp - peDOTpn * (peDOTpp + pgDOTpp) *
-                           (pgDOTpk + pgDOTpp) +
-                           2 * peDOTpk * peDOTpp * pkDOTpn +
-                           2 * peDOTpp**2 * pkDOTpn +
-                           peDOTpp * pgDOTpk * pkDOTpn + peDOTpk * pgDOTpp *
-                           pkDOTpn +
-                           2 * peDOTpp * pgDOTpp * pkDOTpn +
-                           pgDOTpk * pgDOTpp * pkDOTpn +
-                           pgDOTpp**2 * pkDOTpn - peDOTpp * pgDOTpn * pkDOTpp -
-                           pgDOTpn * pgDOTpp * pkDOTpp - peDOTpn *
-                           (2 * peDOTpp + pgDOTpp) * pkDOTpp +
-                           (peDOTpp * (2 * (peDOTpk + peDOTpp) + pgDOTpk) +
-                            (peDOTpk + 2 * peDOTpp + pgDOTpk) *
-                            pgDOTpp + pgDOTpp**2) *
-                           pnDOTpp) - 2 * me**2 * pgDOTpp *
-                          (-((peDOTpn + pgDOTpn) * pkDOTpp) +
-                           (peDOTpk + peDOTpp + pgDOTpk + pgDOTpp) *
-                           (pkDOTpn + pnDOTpp)) +
-                          peDOTpg**2 *
-                          (-(peDOTpk * pgDOTpn) - peDOTpp * pgDOTpn - 2 *
-                           (pgDOTpn + pkDOTpn) * pkDOTpp + 2 * peDOTpp *
-                           (pkDOTpn + pnDOTpp) + (pgDOTpk + pgDOTpp) *
-                           (peDOTpn + 2 * pnDOTpp)))) * Vus**2) / \
-        (peDOTpg**2 * pgDOTpp**2)
+    mat_elem_sqrd =\
+        (-8 * alpha_em * GF**2 * np.pi *
+         (-(mp**4 * peDOTpg**2 * peDOTpn) +
+          ppDOTpg *
+          (-(mk0**2 * (me**2 * (peDOTpn + pnDOTpg) * ppDOTpg +
+                       peDOTpg *
+                       (2 * peDOTpn * ppDOTpe + pnDOTpg * ppDOTpe +
+                        peDOTpn * ppDOTpg - pnDOTpg * ppDOTpg) + peDOTpg**2 *
+                       (peDOTpn - ppDOTpn))) + peDOTpg**3 *
+           (3 * pkDOTpn + 2 * pnDOTpg + 3 * ppDOTpn) + peDOTpg**2 *
+           (2 * pkDOTpe * pkDOTpn - 2 * pkDOTpn * pkDOTpp + 3 *
+            pkDOTpe * pnDOTpg - 2 * pkDOTpp * pnDOTpg + 2 * pkDOTpe *
+            pnDOTpk + 6 * pkDOTpn * ppDOTpe + 3 * pnDOTpg * ppDOTpe -
+            peDOTpn * (3 * pkDOTpg + 4 * pkDOTpp + 3 * ppDOTpg) + 2 *
+            (2 * pkDOTpe + pkDOTpg + 3 * ppDOTpe + ppDOTpg) *
+            ppDOTpn) +
+           2 * peDOTpg *
+           (2 * pkDOTpe * pkDOTpn * ppDOTpe + pkDOTpg *
+            pkDOTpn * ppDOTpe + pkDOTpe * pnDOTpg * ppDOTpe -
+            pkDOTpp * pnDOTpg * ppDOTpe + 2 * pkDOTpn * ppDOTpe**2 +
+            pnDOTpg * ppDOTpe**2 + pkDOTpe * pkDOTpn * ppDOTpg -
+            pkDOTpg * pkDOTpn * ppDOTpg +
+            pkDOTpe * pnDOTpg * ppDOTpg +
+            pkDOTpp * pnDOTpg * ppDOTpg +
+            2 * pkDOTpn * ppDOTpe * ppDOTpg + pnDOTpg * ppDOTpe *
+            ppDOTpg - pkDOTpn * ppDOTpg**2 -
+            peDOTpn * ((pkDOTpg + 2 * pkDOTpp) * ppDOTpe +
+                       (pkDOTpg + pkDOTpp + ppDOTpe) * ppDOTpg +
+                       ppDOTpg**2) +
+            (ppDOTpe * (2 * pkDOTpe + pkDOTpg + 2 * ppDOTpe) +
+                       (pkDOTpe - pkDOTpg + 2 * ppDOTpe) * ppDOTpg -
+             ppDOTpg**2) * ppDOTpn) +
+           2 * me**2 * ppDOTpg *
+           (-(pkDOTpp * (peDOTpn + pnDOTpg)) +
+            (pkDOTpe + pkDOTpg + ppDOTpe + ppDOTpg) *
+            (pkDOTpn + ppDOTpn))) +
+          mp**2 * (-(me**2 * (peDOTpn + pnDOTpg) * ppDOTpg**2) -
+                   peDOTpg * ppDOTpg *
+                   (peDOTpk * peDOTpn + pnDOTpg * (ppDOTpe - ppDOTpg) +
+                    peDOTpn * (-pkDOTpe + 2 * ppDOTpe + ppDOTpg)) + 2 *
+                   peDOTpg**3 * (pkDOTpn + pnDOTpg + ppDOTpn) +
+                   peDOTpg**2 *
+                   (-2 * peDOTpn * (pkDOTpg + pkDOTpp + 2 * ppDOTpg) -
+                    ppDOTpg * (2 * (pkDOTpn + pnDOTpg) + ppDOTpn) +
+                    2 * (ppDOTpe * (pkDOTpn + pnDOTpg + ppDOTpn) + pkDOTpe *
+                         (pnDOTpg + pnDOTpk + ppDOTpn))))) * Vus**2) \
+        / (peDOTpg**2 * ppDOTpg**2)
 
     return mat_elem_sqrd
 

@@ -147,19 +147,29 @@ def gamma_ray_rambo(isp_masses, fsp_masses, cme,
 
     """
 
-    cross_section = rambo.compute_annihilation_cross_section(
-        num_ps_pts, isp_masses, fsp_masses[0:-1], cme,
-        mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+    prefactor = 0.0
+
+    if len(isp_masses) == 1:
+        cross_section = \
+            rambo.compute_decay_width(
+                num_ps_pts, fsp_masses[0:-1], cme,
+                mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+
+        prefactor = 1.0 / (2.0 * cme)
+    else:
+        cross_section = rambo.compute_annihilation_cross_section(
+            num_ps_pts, isp_masses, fsp_masses[0:-1], cme,
+            mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+
+        m1 = isp_masses[0]
+        m2 = isp_masses[1]
+        prefactor = cross_section_prefactor(m1, m2, cme)
 
     eng_hists = rambo.generate_energy_histogram(
         num_ps_pts, fsp_masses, cme, num_bins=num_bins,
         mat_elem_sqrd=mat_elem_sqrd_rad)[0]
 
-    m1 = isp_masses[0]
-    m2 = isp_masses[1]
-
     engs_gam = eng_hists[-1, 0]
-    dndes = eng_hists[-1, 1] * \
-        cross_section_prefactor(m1, m2, cme) / cross_section
+    dndes = eng_hists[-1, 1] * prefactor / cross_section
 
     return engs_gam, dndes
