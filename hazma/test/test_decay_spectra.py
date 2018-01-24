@@ -12,11 +12,6 @@ def test_muon_decay_spectra():
     muon(eng_gams, 1000.)
 
 
-def test_electron_decay_spectra():
-    eng_gams = np.logspace(-3., 3., num=100)
-    electron(eng_gams, 1000.)
-
-
 def test_charged_pion_decay_spectra():
     eng_gams = np.logspace(-3., 3., num=100)
     charged_pion(eng_gams, 1000.)
