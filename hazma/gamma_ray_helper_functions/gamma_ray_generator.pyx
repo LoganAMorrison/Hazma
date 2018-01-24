@@ -137,7 +137,7 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
     num_engs = len(eng_gams)
 
     hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
-                                           mat_elem_sqrd, num_bins)
+                                           mat_elem_sqrd, num_bins)[0]
 
     cpdef int num_cpus = int(np.floor(mp.cpu_count() * 0.75))
 
@@ -193,7 +193,7 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
     num_fsp = len(masses)
 
     hist = rambo.generate_energy_histogram(num_ps_pts,masses, cme,
-                                           mat_elem_sqrd, num_bins)
+                                           mat_elem_sqrd, num_bins)[0]
 
     for i in range(num_bins):
         for j in range(num_fsp):
