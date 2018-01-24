@@ -9,14 +9,14 @@ import numpy as np
 
 def test_scalar_mediator_fsr():
     eng_gams = np.logspace(-3., 3., num=100)
-    scalar_mediator_fsr(eng_gams, 1000., muon_mass)
+    scalar_mediator_fsr.fermion(eng_gams, 1000., muon_mass)
 
 
 def test_pseudo_scalar_mediator_fsr():
     eng_gams = np.logspace(-3., 3., num=100)
-    pseudo_scalar_mediator_fsr(eng_gams, 1000., muon_mass)
+    pseudo_scalar_mediator_fsr.fermion(eng_gams, 1000., muon_mass)
 
 
 def test_vector_mediator_fsr():
     eng_gams = np.logspace(-3., 3., num=100)
-    vector_mediator_fsr(eng_gams, 1000., muon_mass)
+    vector_mediator_fsr.fermion(eng_gams, 1000., muon_mass)
