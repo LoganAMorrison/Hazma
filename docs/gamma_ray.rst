@@ -11,12 +11,7 @@ Hazma includes two different methods for computing gamma ray spectra. The first 
 Functions
 ---------
 
-hazma.gamma_ray.gamma_ray
-*************************
-
-.. autofunction:: hazma.gamma_ray.gamma_ray
-
-hazma.gamma_ray.gamma_ray_rambo
-*******************************
-
-.. autofunction:: hazma.gamma_ray.gamma_ray_rambo
+.. automodule:: hazma.gamma_ray
+    :members:
+    :undoc-members:
+    :show-inheritance:

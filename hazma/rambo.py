@@ -1,13 +1,13 @@
 """
-High level module to generate relativistic phase space points.
+# Module for computing relativistic phase space points.
 
-* Author - Logan A. Morrison and Adam Coogan
-* Date - December 2017
+# Authors: Logan Morrison and Adam Coogan
+# Date: December 2017
+
 """
 from .phase_space_helper_functions import generator
 from .phase_space_helper_functions import histogram
 from .phase_space_helper_functions.modifiers import apply_matrix_elem
-from .cross_sections.helper_functions import cross_section_prefactor
 import numpy as np
 import multiprocessing as mp
 import warnings

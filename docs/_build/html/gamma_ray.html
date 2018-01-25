@@ -94,11 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Gamma Ray Spectra Generator (hazma.gamma_ray)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-gamma-ray-gamma-ray">hazma.gamma_ray.gamma_ray</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-gamma-ray-gamma-ray-rambo">hazma.gamma_ray.gamma_ray_rambo</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hazma.gamma_ray">Functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rambo.html">RAMBO (hazma.rambo)</a></li>
@@ -173,10 +169,9 @@
 <p>Sub-package for generating gamma ray spectra given a multi-particle final state.</p>
 <p>Hazma includes two different methods for computing gamma ray spectra. The first is done by specifying the final state of a process. Doing so, the particle decay spectra are then computed. The second method <code class="docutils literal"><span class="pre">gamma_ray_rambo</span></code> takes in the tree-level and radiative squared matrix elements and runs a Monte-Carlo to generate the gamma ray spectra.</p>
 </div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="hazma-gamma-ray-gamma-ray">
-<h3>hazma.gamma_ray.gamma_ray<a class="headerlink" href="#hazma-gamma-ray-gamma-ray" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="module-hazma.gamma_ray">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-hazma.gamma_ray" title="Permalink to this headline">¶</a></h2>
+<p>Module for computing gamma ray spectra from a many-particle final state.</p>
 <dl class="function">
 <dt id="hazma.gamma_ray.gamma_ray">
 <code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray</code><span class="sig-paren">(</span><em>particles</em>, <em>cme</em>, <em>eng_gams</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray" title="Permalink to this definition">¶</a></dt>
@@ -233,9 +228,6 @@ with total energy of 5000 MeV.</p>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="hazma-gamma-ray-gamma-ray-rambo">
-<h3>hazma.gamma_ray.gamma_ray_rambo<a class="headerlink" href="#hazma-gamma-ray-gamma-ray-rambo" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="hazma.gamma_ray.gamma_ray_rambo">
 <code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray_rambo</code><span class="sig-paren">(</span><em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd_tree=&lt;function &lt;lambda&gt;&gt;</em>, <em>mat_elem_sqrd_rad=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray_rambo" title="Permalink to this definition">¶</a></dt>
@@ -303,7 +295,6 @@ fermions through a scalar mediator.</p>
 </div>
 </dd></dl>
 
-</div>
 </div>
 </div>
 

@@ -95,15 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="rambo.html">RAMBO (hazma.rambo)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Decay (hazma.decay)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-muon">hazma.decay.muon</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-neutral-pion">hazma.decay.neutral_pion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-charged-pion">hazma.decay.charged_pion</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-long-kaon">hazma.decay.long_kaon</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-short-kaon">hazma.decay.short_kaon</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-decay-charged-kaon">hazma.decay.charged_kaon</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hazma.decay">Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -174,256 +166,11 @@
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="hazma-decay-muon">
-<h3>hazma.decay.muon<a class="headerlink" href="#hazma-decay-muon" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.decay.muon">
-<code class="descclassname">hazma.decay.</code><code class="descname">muon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_mu</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.muon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from muon decay.</p>
-<p>Compute dNdE from decay <img class="math" src="_images/math/8f0036e81ad141060eb56dbdad96623e343f883c.png" alt="\mu^{\pm} \to e^{\pm} + \nu_{e} +\nu_{\mu}
-+ \gamma"/> in the laborartory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code>
-and muon energy of <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>eng_gam</strong> (<em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
-<li><strong>eng_mu</strong> (<em>double</em>) – Muon energy in laboratory frame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gam</span></code> given
-muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">muon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">muon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="hazma-decay-neutral-pion">
-<h3>hazma.decay.neutral_pion<a class="headerlink" href="#hazma-decay-neutral-pion" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.decay.neutral_pion">
-<code class="descclassname">hazma.decay.</code><code class="descname">neutral_pion</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.neutral_pion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from neutral pion decay.</p>
-<p>Compute dNdE from decay <img class="math" src="_images/math/12411c120c66b5265b68328d23794e768ef86203.png" alt="\pi^{0} \to \gamma + \gamma"/> in the
-laborartory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and neutral pion
-energy of <code class="docutils literal"><span class="pre">eng_pi</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
-<li><strong>eng_pi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Neutral pion energy in laboratory frame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at
-<cite>eng_gams</cite> given neutral pion energy <cite>eng_pi</cite>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">neutral_pion</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">neutral_pion</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="hazma-decay-charged-pion">
-<h3>hazma.decay.charged_pion<a class="headerlink" href="#hazma-decay-charged-pion" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.decay.charged_pion">
-<code class="descclassname">hazma.decay.</code><code class="descname">charged_pion</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.charged_pion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from charged pion decay.</p>
-<p>Compute dNdE from decay <img class="math" src="_images/math/7749b5a2ef0eef6f8126d8af1f1d625c5d88d338.png" alt="\pi^{\pm} \to \mu^{\pm} + \nu_{\mu} \to
-e^{\pm} + \nu_{e} + \nu_{\mu} + \gamma"/> in the laborartory frame given a
-gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and muon energy of <code class="docutils literal"><span class="pre">eng_pi</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
-<li><strong>eng_pi</strong> (<em>double</em>) – Charged pion energy in laboratory frame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite> given
-charged pion energy <cite>eng_pi</cite>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">double np.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="hazma-decay-long-kaon">
-<h3>hazma.decay.long_kaon<a class="headerlink" href="#hazma-decay-long-kaon" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.decay.long_kaon">
-<code class="descclassname">hazma.decay.</code><code class="descname">long_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.long_kaon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from long kaon decay.</p>
-<p>Compute dNdE from decay of charged kaon through <img class="math" src="_images/math/000d181f215ca03ffef55a19193ac9c7368e6672.png" alt="K\to X"/> in the
-laboratory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and long kaon
-energy of <code class="docutils literal"><span class="pre">eng_k</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>eng_gam</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
-<li><strong>eng_k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Charged kaon energy in laboratory frame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
-given muon energy <cite>eng_mu</cite>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_kl</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">long_kaon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_kl</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_kl</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">long_kaon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_kl</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>The decay modes impemendted are</p>
-<div class="math">
-<p><img src="_images/math/48028a77bb2d5a2118614501f097b39a786671bb.png" alt="K_{L} \to \pi^{\pm} + e^{\pm} + \nu_{e}"/></p>
-</div><div class="math">
-<p><img src="_images/math/4a5be27090a37387362b5cbde992597dfd925dad.png" alt="K_{L} \to \pi^{\pm} + \mu^{\mp} + \nu_{\mu}"/></p>
-</div><div class="math">
-<p><img src="_images/math/8c1e84c54368dafe105dfa899a232b5421a27db0.png" alt="K_{L} \to \pi^{0} + \pi^{0} + \pi^{0}"/></p>
-</div><div class="math">
-<p><img src="_images/math/9694e103b0755fa3c48e32c38f24392dc501b01c.png" alt="K_{L} \to \pi^{\pm} + \pi^{\mp} + \pi^{0}"/></p>
-</div></dd></dl>
-
-</div>
-<div class="section" id="hazma-decay-short-kaon">
-<h3>hazma.decay.short_kaon<a class="headerlink" href="#hazma-decay-short-kaon" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.decay.short_kaon">
-<code class="descclassname">hazma.decay.</code><code class="descname">short_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.short_kaon" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute dNdE from short kaon decay.</p>
-<p>Compute dNdE from decay of short kaon through <img class="math" src="_images/math/000d181f215ca03ffef55a19193ac9c7368e6672.png" alt="K\to X"/> in the
-laboratory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and short kaon
-energy of <code class="docutils literal"><span class="pre">eng_k</span></code>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
-<li><strong>eng_k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Charged kaon energy in laboratory frame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gams</span></code>
-given muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>The decay modes impemendted are</p>
-<div class="math">
-<p><img src="_images/math/4220601825d9cea484579499a191f8a8a56c10c0.png" alt="K_{S} \to \pi^{+}  + \pi^{-}"/></p>
-</div><div class="math">
-<p><img src="_images/math/17f1529c3561052bdf9112695906778d06b56772.png" alt="K_{S} \to \pi^{0} + \pi^{0}"/></p>
-</div><p class="rubric">Examples</p>
-<p>Calculate spectrum for single gamma ray energy</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Calculate spectrum for array of gamma ray energies</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="hazma-decay-charged-kaon">
-<h3>hazma.decay.charged_kaon<a class="headerlink" href="#hazma-decay-charged-kaon" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="module-hazma.decay">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-hazma.decay" title="Permalink to this headline">¶</a></h2>
+<p>Module for computing decay spectra from a muon and light mesons.</p>
+<p>&#64;author: Logan Morrison and Adam Coogan
+&#64;date: January 2018</p>
 <dl class="function">
 <dt id="hazma.decay.charged_kaon">
 <code class="descclassname">hazma.decay.</code><code class="descname">charged_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.charged_kaon" title="Permalink to this definition">¶</a></dt>
@@ -481,7 +228,237 @@ given muon energy <code class="docutils literal"><span class="pre">eng_mu</span>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="hazma.decay.charged_pion">
+<code class="descclassname">hazma.decay.</code><code class="descname">charged_pion</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.charged_pion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dNdE from charged pion decay.</p>
+<p>Compute dNdE from decay <img class="math" src="_images/math/7749b5a2ef0eef6f8126d8af1f1d625c5d88d338.png" alt="\pi^{\pm} \to \mu^{\pm} + \nu_{\mu} \to
+e^{\pm} + \nu_{e} + \nu_{\mu} + \gamma"/> in the laborartory frame given a
+gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and muon energy of <code class="docutils literal"><span class="pre">eng_pi</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
+<li><strong>eng_pi</strong> (<em>double</em>) – Charged pion energy in laboratory frame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite> given
+charged pion energy <cite>eng_pi</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">double np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+</pre></div>
 </div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">charged_pion</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay.long_kaon">
+<code class="descclassname">hazma.decay.</code><code class="descname">long_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.long_kaon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dNdE from long kaon decay.</p>
+<p>Compute dNdE from decay of charged kaon through <img class="math" src="_images/math/000d181f215ca03ffef55a19193ac9c7368e6672.png" alt="K\to X"/> in the
+laboratory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and long kaon
+energy of <code class="docutils literal"><span class="pre">eng_k</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
+<li><strong>eng_k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Charged kaon energy in laboratory frame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <cite>eng_gams</cite>
+given muon energy <cite>eng_mu</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_kl</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">long_kaon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_kl</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_kl</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">long_kaon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_kl</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>The decay modes impemendted are</p>
+<div class="math">
+<p><img src="_images/math/48028a77bb2d5a2118614501f097b39a786671bb.png" alt="K_{L} \to \pi^{\pm} + e^{\pm} + \nu_{e}"/></p>
+</div><div class="math">
+<p><img src="_images/math/4a5be27090a37387362b5cbde992597dfd925dad.png" alt="K_{L} \to \pi^{\pm} + \mu^{\mp} + \nu_{\mu}"/></p>
+</div><div class="math">
+<p><img src="_images/math/8c1e84c54368dafe105dfa899a232b5421a27db0.png" alt="K_{L} \to \pi^{0} + \pi^{0} + \pi^{0}"/></p>
+</div><div class="math">
+<p><img src="_images/math/9694e103b0755fa3c48e32c38f24392dc501b01c.png" alt="K_{L} \to \pi^{\pm} + \pi^{\mp} + \pi^{0}"/></p>
+</div></dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay.muon">
+<code class="descclassname">hazma.decay.</code><code class="descname">muon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_mu</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.muon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dNdE from muon decay.</p>
+<p>Compute dNdE from decay <img class="math" src="_images/math/8f0036e81ad141060eb56dbdad96623e343f883c.png" alt="\mu^{\pm} \to e^{\pm} + \nu_{e} +\nu_{\mu}
++ \gamma"/> in the laborartory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code>
+and muon energy of <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
+<li><strong>eng_mu</strong> (<em>double</em>) – Muon energy in laboratory frame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gam</span></code> given
+muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">muon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_mu</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">muon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_mu</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay.neutral_pion">
+<code class="descclassname">hazma.decay.</code><code class="descname">neutral_pion</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_pi</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.neutral_pion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dNdE from neutral pion decay.</p>
+<p>Compute dNdE from decay <img class="math" src="_images/math/12411c120c66b5265b68328d23794e768ef86203.png" alt="\pi^{0} \to \gamma + \gamma"/> in the
+laborartory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and neutral pion
+energy of <code class="docutils literal"><span class="pre">eng_pi</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
+<li><strong>eng_pi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Neutral pion energy in laboratory frame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at
+<cite>eng_gams</cite> given neutral pion energy <cite>eng_pi</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">neutral_pion</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_pi</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">neutral_pion</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_pi</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="hazma.decay.short_kaon">
+<code class="descclassname">hazma.decay.</code><code class="descname">short_kaon</code><span class="sig-paren">(</span><em>eng_gam</em>, <em>eng_k</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.decay.short_kaon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute dNdE from short kaon decay.</p>
+<p>Compute dNdE from decay of short kaon through <img class="math" src="_images/math/000d181f215ca03ffef55a19193ac9c7368e6672.png" alt="K\to X"/> in the
+laboratory frame given a gamma ray engergy of <code class="docutils literal"><span class="pre">eng_gam</span></code> and short kaon
+energy of <code class="docutils literal"><span class="pre">eng_k</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>eng_gam</strong> (<em>double</em><em> or </em><em>numpy.ndarray</em>) – Gamma ray energy(ies) in laboratory frame.</li>
+<li><strong>eng_k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Charged kaon energy in laboratory frame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spec</strong> – List of gamma ray spectrum values, dNdE, evaluated at <code class="docutils literal"><span class="pre">eng_gams</span></code>
+given muon energy <code class="docutils literal"><span class="pre">eng_mu</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The decay modes impemendted are</p>
+<div class="math">
+<p><img src="_images/math/4220601825d9cea484579499a191f8a8a56c10c0.png" alt="K_{S} \to \pi^{+}  + \pi^{-}"/></p>
+</div><div class="math">
+<p><img src="_images/math/17f1529c3561052bdf9112695906778d06b56772.png" alt="K_{S} \to \pi^{0} + \pi^{0}"/></p>
+</div><p class="rubric">Examples</p>
+<p>Calculate spectrum for single gamma ray energy</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gam</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calculate spectrum for array of gamma ray energies</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">decay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_ks</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">decay</span><span class="o">.</span><span class="n">short_kaon</span><span class="p">(</span><span class="n">eng_gams</span><span class="p">,</span> <span class="n">eng_ks</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </div>
 </div>
 

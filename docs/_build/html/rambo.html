@@ -95,14 +95,14 @@
 <li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">RAMBO (hazma.rambo)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-rambo-compute-annihilation-cross-section">hazma.rambo.compute_annihilation_cross_section</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-rambo-compute-decay-width">hazma.rambo.compute_decay_width</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-rambo-generate-energy-histogram">hazma.rambo.generate_energy_histogram</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-rambo-generate-phase-space-point">hazma.rambo.generate_phase_space_point</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hazma-rambo-generate-phase-space">hazma.rambo.generate_phase_space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#details">Details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#generating-the">Generating the <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Generating the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Generating the <img class="math" src="_images/math/ce21cf1e481d9321deb0ed7109830f09985c0f35.png" alt="\{k_{i}\}"/></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-the-phase-space-weight">Compute the phase space weight</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#module-hazma.rambo">Functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="decay.html">Decay (hazma.decay)</a></li>
@@ -171,14 +171,106 @@
             
   <div class="section" id="rambo-hazma-rambo">
 <h1>RAMBO (hazma.rambo)<a class="headerlink" href="#rambo-hazma-rambo" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>Author - Logan A. Morrison and Adam Coogan</li>
+<li>Date - December 2017</li>
+</ul>
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-<p>Sub-package for generating phases space points and computing phase space integrals using a Monte Carlo algorithm called RAMBO.</p>
+<p>Sub-package for generating phases space points and computing phase space
+integrals using a Monte Carlo algorithm called RAMBO. This algorithm was
+originally implemented by [1].</p>
+<p>This algorithm starts by generating random, massless four-momenta <img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>
+with energies distributed according to <img class="math" src="_images/math/a17c8ccd50d1cdb18766383d1fd32a5ce0dc4196.png" alt="q_{0}\exp(-q_{0})"/>. These
+<img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>‘s are then transformed into <img class="math" src="_images/math/8aab0f756df2f2e9393e60a4bb617217b27b0df2.png" alt="p_{i}"/>‘s by boosting the
+<img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>‘s into the center-of-mass frame so that
+<img class="math" src="_images/math/9403779a62a051dfe5840e3f7adf88655ff764d6.png" alt="\sum_{i}p_{i}^{\mu} = (E_{\text{CM}}, 0, 0, 0)"/>. Lastly, the
+<img class="math" src="_images/math/8aab0f756df2f2e9393e60a4bb617217b27b0df2.png" alt="p_{i}"/>‘s are rescaled into <img class="math" src="_images/math/8f2c47ec5ab0b3095a58333446ecd46d51093b4c.png" alt="k_{i}"/>‘s so that the <img class="math" src="_images/math/8f2c47ec5ab0b3095a58333446ecd46d51093b4c.png" alt="k_{i}"/>‘s
+give the correct masses.</p>
 </div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="hazma-rambo-compute-annihilation-cross-section">
-<h3>hazma.rambo.compute_annihilation_cross_section<a class="headerlink" href="#hazma-rambo-compute-annihilation-cross-section" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="details">
+<h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
+<p>The RAMBO algorithm can be broken up into four steps:</p>
+<ul class="simple">
+<li>Randomly generate <img class="math" src="_images/math/413f8a8e40062a9090d9d50b88bc7b551b314c26.png" alt="n"/> massless four-momenta: <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/>.</li>
+<li>Boost the set <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/> into <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>.</li>
+<li>Transform the set <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/> into <img class="math" src="_images/math/ce21cf1e481d9321deb0ed7109830f09985c0f35.png" alt="\{k_{i}\}"/>.</li>
+<li>Compute the weight of the phase space point.</li>
+</ul>
+<p>Repeating these steps many times will generate the phase space.</p>
+<div class="section" id="generating-the">
+<h3>Generating the <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/><a class="headerlink" href="#generating-the" title="Permalink to this headline">¶</a></h3>
+<p>The first step is to generate the set <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/>, where
+<img class="math" src="_images/math/3436d9d4cb41720db85efb058ea7fade9532c4bc.png" alt="i\in\{1,\dots,n\}"/> and <img class="math" src="_images/math/413f8a8e40062a9090d9d50b88bc7b551b314c26.png" alt="n"/> is the number of final state particles.
+The <img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>‘s will have energies distributed according to
+<img class="math" src="_images/math/a17c8ccd50d1cdb18766383d1fd32a5ce0dc4196.png" alt="q_{0}\exp(-q_{0})"/> and will be massless. Additionally, the
+<img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>‘s will be unphysical, i.e. will not have the correct
+center-of-mass energy. To generate the <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/>, we first compute
+<img class="math" src="_images/math/59a41512af7da5185479a0fdb833874ef02acefe.png" alt="4n"/> uniform random numbers, <img class="math" src="_images/math/0e030adff03d6de1de2d84b6c94beeaf947c6c2c.png" alt="\rho_{1}^{i}, \rho_{2}^{i},
+\rho_{3}^{i}, \rho_{4}^{i}"/>, on the interval <img class="math" src="_images/math/6aee55b36253768c28def6253ae0a26a68951a8d.png" alt="(0,1)"/>. Then, we compute
+the following:</p>
+<div class="math">
+<p><img src="_images/math/49c341b3860ec7f84fb0b5f5f131e1e2dce716e0.png" alt="c^{i} = 2\rho_{1}^{i} - 1.0 \qquad \phi^{i} = 2\pi\rho_{2}^{i}"/></p>
+</div><p>Then, the components of <img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/> will be:</p>
+<div class="math">
+<p><img src="_images/math/89a24df1a5b46d465fd69ec249c8c2aa215ead3f.png" alt="q_{i}^{0} = -\log(\rho_{3}\rho_{4})\\
+q_{i}^{x} = q_{i}^{0}\sqrt{1-\left(c^{i}\right)^2}\cos\phi^{i}\\
+q_{i}^{y} = q_{i}^{0}\sqrt{1-\left(c^{i}\right)^2}\sin\phi^{i}\\
+q_{i}^{z} = q_{i}^{0}c^{i}"/></p>
+</div></div>
+<div class="section" id="id1">
+<h3>Generating the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Next, the <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/>‘s need to be boosted to generate the
+<img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>‘s. This is done using the following:</p>
+<div class="math">
+<p><img src="_images/math/4991191fa4f9090a58c595fca8a5326f4e266fcf.png" alt="p_{i}^{0} = x(\gamma q_{i}^{0} + \vec{b}\cdot\vec{q}_{i})\\
+\vec{p}_{i} = x\left(\vec{q}_{i}^{0} + q_{i}^{0}\vec{b} +
+a\left(\vec{b}\cdot\vec{q}_{i}\right)\vec{b}\right)"/></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="_images/math/0b2bcb6c29a8b70a50eca0269f745e5b50d26ae4.png" alt="\vec{b} = -\vec{Q} / M, \quad x = E_{\text{CM}} / M, \quad a =
+\dfrac{1}{1+\gamma}"/></p>
+</div><p>Here, <img class="math" src="_images/math/7b1816c51f7d31275cd3ad400208fb7b3ce136a0.png" alt="Q"/> is a four-vector equal to the sum of the <img class="math" src="_images/math/59fa2a3d293bb76c78cac477a1dfa5abb61546c0.png" alt="q_{i}"/>‘s,
+<img class="math" src="_images/math/b296a0e6dc4d547ca6b5b748a5ec408592fc3389.png" alt="M = \sqrt{Q^2}"/> and <img class="math" src="_images/math/6b64af96a5bb8f88549e1e06e0ff3ed5845b7da1.png" alt="\gamma = Q^{0}/M"/> is the relativistic boost
+factor.</p>
+</div>
+<div class="section" id="id2">
+<h3>Generating the <img class="math" src="_images/math/ce21cf1e481d9321deb0ed7109830f09985c0f35.png" alt="\{k_{i}\}"/><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>At this point, we have the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>‘s, which are four-momenta with the
+correct center of mass energy, but which are still massless. Our next, step is
+to transform the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>‘s into <img class="math" src="_images/math/ce21cf1e481d9321deb0ed7109830f09985c0f35.png" alt="\{k_{i}\}"/>‘s, which have the
+correct masses.</p>
+<p>In order to get the correct masses, we need to rescale the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>‘s.
+This is done as follows:</p>
+<div class="math">
+<p><img src="_images/math/e46e30f86acc097e1e7711317b11e8c0f5edd8cb.png" alt="\vec{k}_{i} = \xi\vec{p}_{i}\\
+k_{i}^{0} = \sqrt{m_{i}^2 + \xi^2 \left(p_{i}^0\right)^2}"/></p>
+</div><p>where <img class="math" src="_images/math/26bfd3bc4c5db78139d8897f9cfa5bba511a2f22.png" alt="\xi"/> is the scaling factor. To compute the scaling factor, we
+require that the sum of the <img class="math" src="_images/math/07257670dfbad72a5265ba081136692b4a03f610.png" alt="k_{i}^{0}"/>‘s gives the correct
+center-of-mass energy. That is, that <img class="math" src="_images/math/26bfd3bc4c5db78139d8897f9cfa5bba511a2f22.png" alt="\xi"/> satisfies:</p>
+<div class="math">
+<p><img src="_images/math/6a36a8bf68ed7dc7efa2d65c875e4f2102034636.png" alt="E_{\text{CM}} = \sum_{i=1}^{n}\sqrt{m_{i}^2 + \xi^2 \left(p_{i}^0\right)^2}"/></p>
+</div><p>Thus, to compute the <img class="math" src="_images/math/ce21cf1e481d9321deb0ed7109830f09985c0f35.png" alt="\{k_{i}\}"/>‘s, we solve for <img class="math" src="_images/math/26bfd3bc4c5db78139d8897f9cfa5bba511a2f22.png" alt="\xi"/> an then
+rescale the <img class="math" src="_images/math/5a3c0783dcd8daa6f273925506ac1b9cb4d33125.png" alt="\{p_{i}\}"/>‘s according to the above transformations.</p>
+</div>
+<div class="section" id="compute-the-phase-space-weight">
+<h3>Compute the phase space weight<a class="headerlink" href="#compute-the-phase-space-weight" title="Permalink to this headline">¶</a></h3>
+<p>The last step is to compute the phase space weight. The weights are such that,
+when summing over all phase space points, weighted by the weights, we get the
+correct phase space volume. The phase space weight is given by</p>
+<div class="math">
+<p><img src="_images/math/4e217d74d176c1eb8e8a1f16d92220b552e9b899.png" alt="W = E_{\text{CM}}^{2n-3}
+\left(\sum_{i=1}^{n}|\vec{k}_{i}|\right)^{2n-3}
+\left(\prod_{i=1}^{n}\dfrac{|\vec{k_{i}}|}{k_{i}^{0}}\right)
+\left(\sum_{i=1}^{n}\dfrac{|\vec{k}_{i}|^{2}}{k_{i}^{0}}\right)^{-1}
+\dfrac{(\pi/2)^{n-1}(2\pi)^{4 - 3n}}{\Gamma(n)\Gamma(n-1)}"/></p>
+</div></div>
+</div>
+<div class="section" id="module-hazma.rambo">
+<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-hazma.rambo" title="Permalink to this headline">¶</a></h2>
+<p># Module for computing relativistic phase space points.</p>
+<p># Authors: Logan Morrison and Adam Coogan
+# Date: December 2017</p>
 <dl class="function">
 <dt id="hazma.rambo.compute_annihilation_cross_section">
 <code class="descclassname">hazma.rambo.</code><code class="descname">compute_annihilation_cross_section</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.compute_annihilation_cross_section" title="Permalink to this definition">¶</a></dt>
@@ -210,9 +302,6 @@ of <cite>mat_elem_sqrd</cite>.</li>
 </table>
 </dd></dl>
 
-</div>
-<div class="section" id="hazma-rambo-compute-decay-width">
-<h3>hazma.rambo.compute_decay_width<a class="headerlink" href="#hazma-rambo-compute-decay-width" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="hazma.rambo.compute_decay_width">
 <code class="descclassname">hazma.rambo.</code><code class="descname">compute_decay_width</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.compute_decay_width" title="Permalink to this definition">¶</a></dt>
@@ -244,9 +333,6 @@ of <cite>mat_elem_sqrd</cite>.</li>
 </table>
 </dd></dl>
 
-</div>
-<div class="section" id="hazma-rambo-generate-energy-histogram">
-<h3>hazma.rambo.generate_energy_histogram<a class="headerlink" href="#hazma-rambo-generate-energy-histogram" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="hazma.rambo.generate_energy_histogram">
 <code class="descclassname">hazma.rambo.</code><code class="descname">generate_energy_histogram</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_bins=25</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_energy_histogram" title="Permalink to this definition">¶</a></dt>
@@ -303,39 +389,6 @@ energy spectra.</p>
 </div>
 </dd></dl>
 
-</div>
-<div class="section" id="hazma-rambo-generate-phase-space-point">
-<h3>hazma.rambo.generate_phase_space_point<a class="headerlink" href="#hazma-rambo-generate-phase-space-point" title="Permalink to this headline">¶</a></h3>
-<dl class="function">
-<dt id="hazma.rambo.generate_phase_space_point">
-<code class="descclassname">hazma.rambo.</code><code class="descname">generate_phase_space_point</code><span class="sig-paren">(</span><em>masses</em>, <em>cme</em>, <em>num_fsp</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_phase_space_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a phase space point given a set of
-final state particles and a given center of mass energy.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>phase_space_points</strong> – List of four momenta and a event weight. The returned numpy array is of
-the form {ke1, kx1, ky1, kz1, …, keN, kxN, kyN, kzN, weight}.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="hazma-rambo-generate-phase-space">
-<h3>hazma.rambo.generate_phase_space<a class="headerlink" href="#hazma-rambo-generate-phase-space" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="hazma.rambo.generate_phase_space">
 <code class="descclassname">hazma.rambo.</code><code class="descname">generate_phase_space</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_phase_space" title="Permalink to this definition">¶</a></dt>
@@ -386,7 +439,33 @@ the cpus will be used.</li>
 </div>
 </dd></dl>
 
-</div>
+<dl class="function">
+<dt id="hazma.rambo.generate_phase_space_point">
+<code class="descclassname">hazma.rambo.</code><code class="descname">generate_phase_space_point</code><span class="sig-paren">(</span><em>masses</em>, <em>cme</em>, <em>num_fsp</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_phase_space_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a phase space point given a set of
+final state particles and a given center of mass energy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the final state particles.</li>
+<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
+<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>phase_space_points</strong> – List of four momenta and a event weight. The returned numpy array is of
+the form {ke1, kx1, ky1, kz1, …, keN, kxN, kyN, kzN, weight}.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 </div>
 
