@@ -13,7 +13,7 @@ from ..parameters import charged_pion_mass, electron_mass, neutral_kaon_mass
 
 
 def __fv_dot_prod(fv1, fv2):
-    return fv1[0] * fv2[0] - np.dot(fv1[1:4], fv2[1:4])
+    return fv1[0] * fv2[0] - np.dot(fv1[1:], fv2[1:])
 
 
 def kl_to_pienu(kList):

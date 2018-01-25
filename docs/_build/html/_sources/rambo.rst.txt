@@ -3,6 +3,28 @@ RAMBO (hazma.rambo)
 * Author - Logan A. Morrison and Adam Coogan
 * Date - December 2017
 
+Functions
+---------
+
++------------------------+-----------------------------------+
+| Computing annihilation | :ref:`annihilation_cross_section` |
+| cross sections         |                                   |
++------------------------+-----------------------------------+
+| Computing decay        | :ref:`decay_width`                |
+| widths                 |                                   |
++------------------------+-----------------------------------+
+| Computing energy       | :ref:`energy_histogram`           |
+| histograms             |                                   |
++------------------------+-----------------------------------+
+| Computing a single     | :ref:`phase_space_point`          |
+| relativistic phase     |                                   |
+| space point            |                                   |
++------------------------+-----------------------------------+
+| Computing many         | :ref:`phase_space`                |
+| relativistic phase     |                                   |
+| space points           |                                   |
++------------------------+-----------------------------------+
+
 Description
 -----------
 Sub-package for generating phases space points and computing phase space
@@ -109,11 +131,3 @@ correct phase space volume. The phase space weight is given by
     \left(\prod_{i=1}^{n}\dfrac{|\vec{k_{i}}|}{k_{i}^{0}}\right)
     \left(\sum_{i=1}^{n}\dfrac{|\vec{k}_{i}|^{2}}{k_{i}^{0}}\right)^{-1}
     \dfrac{(\pi/2)^{n-1}(2\pi)^{4 - 3n}}{\Gamma(n)\Gamma(n-1)}
-
-Functions
----------
-
-.. automodule:: hazma.rambo
-    :members:
-    :undoc-members:
-    :show-inheritance:

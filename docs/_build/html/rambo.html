@@ -36,8 +36,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="Hazma 1.2 documentation" href="index.html"/>
-        <link rel="next" title="Decay (hazma.decay)" href="decay.html"/>
-        <link rel="prev" title="Gamma Ray Spectra Generator (hazma.gamma_ray)" href="gamma_ray.html"/> 
+        <link rel="next" title="Decay (hazma.decay)" href="decay/decay.html"/>
+        <link rel="prev" title="Gamma Ray Spectra Generator (hazma.gamma_ray)" href="gamma_ray/gamma_ray.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,10 +90,12 @@
               
             
             
-              <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="description.html">Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray)</a></li>
+              <p class="caption"><span class="caption-text">Introduction and Details</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray/gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">RAMBO (hazma.rambo)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#details">Details</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#generating-the">Generating the <img class="math" src="_images/math/2fd0758199d8cafc167508a1b63b1bdbc2232ca1.png" alt="\{q_{i}\}"/></a></li>
@@ -102,10 +104,32 @@
 <li class="toctree-l3"><a class="reference internal" href="#compute-the-phase-space-weight">Compute the phase space weight</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-hazma.rambo">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="decay.html">Decay (hazma.decay)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay.html">Decay (hazma.decay)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsr.html">Final State Radiation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Gamma Ray Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray/gamma_ray_gamma_ray.html">Gamma Ray (hazma.gamma_ray.gamma_ray)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray/gamma_ray_gamma_ray_rambo.html">Gamma Ray (hazma.gamma_ray.gamma_ray_rambo)</a></li>
+</ul>
+<p class="caption"><span class="caption-text">RAMBO Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rambo/annihilation_cross_section.html">hazma.compute_annihilation_cross_section</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rambo/decay_width.html">hazma.compute_decay_width</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rambo/energy_histogram.html">hazma.generate_energy_histogram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rambo/phase_space.html">hazma.generate_phase_space</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rambo/phase_space_point.html">hazma.generate_phase_space_point</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Decay Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay_muon.html">Muon Decay (hazma.decay.muon)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay_neutral_pion.html">Neutral Pion Decay (hazma.decay.neutral_pion)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay_charged_pion.html">Charged Pion Decay (hazma.decay.charged_pion)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay_long_kaon.html">Long Kaon Decay (hazma.decay.long_kaon)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decay/decay_short_kaon.html">Short Kaon Decay (hazma.decay.short_kaon)</a></li>
 </ul>
 
             
@@ -175,6 +199,39 @@
 <li>Author - Logan A. Morrison and Adam Coogan</li>
 <li>Date - December 2017</li>
 </ul>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="59%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Computing annihilation
+cross sections</td>
+<td><a class="reference internal" href="rambo/annihilation_cross_section.html#annihilation-cross-section"><span class="std std-ref">hazma.compute_annihilation_cross_section</span></a></td>
+</tr>
+<tr class="row-even"><td>Computing decay
+widths</td>
+<td><a class="reference internal" href="rambo/decay_width.html#decay-width"><span class="std std-ref">hazma.compute_decay_width</span></a></td>
+</tr>
+<tr class="row-odd"><td>Computing energy
+histograms</td>
+<td><a class="reference internal" href="rambo/energy_histogram.html#energy-histogram"><span class="std std-ref">hazma.generate_energy_histogram</span></a></td>
+</tr>
+<tr class="row-even"><td>Computing a single
+relativistic phase
+space point</td>
+<td><a class="reference internal" href="rambo/phase_space_point.html#phase-space-point"><span class="std std-ref">hazma.generate_phase_space_point</span></a></td>
+</tr>
+<tr class="row-odd"><td>Computing many
+relativistic phase
+space points</td>
+<td><a class="reference internal" href="rambo/phase_space.html#phase-space"><span class="std std-ref">hazma.generate_phase_space</span></a></td>
+</tr>
+</tbody>
+</table>
+</div>
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 <p>Sub-package for generating phases space points and computing phase space
@@ -266,207 +323,6 @@ correct phase space volume. The phase space weight is given by</p>
 \dfrac{(\pi/2)^{n-1}(2\pi)^{4 - 3n}}{\Gamma(n)\Gamma(n-1)}"/></p>
 </div></div>
 </div>
-<div class="section" id="module-hazma.rambo">
-<span id="functions"></span><h2>Functions<a class="headerlink" href="#module-hazma.rambo" title="Permalink to this headline">¶</a></h2>
-<p># Module for computing relativistic phase space points.</p>
-<p># Authors: Logan Morrison and Adam Coogan
-# Date: December 2017</p>
-<dl class="function">
-<dt id="hazma.rambo.compute_annihilation_cross_section">
-<code class="descclassname">hazma.rambo.</code><code class="descname">compute_annihilation_cross_section</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.compute_annihilation_cross_section" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the cross section for a given process.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_ps_pts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total number of phase space points to generate.</li>
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the initial state and final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-<li><strong>num_cpus</strong> (<em>int {None}</em>) – Number of cpus to use in parallel with rambo. If not specified, 75% of
-the cpus will be used.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li><strong>cross_section</strong> (<em>double</em>) – Cross section for X -&gt; final state particles(fsp), where the fsp have
-masses <cite>masses</cite> and the process X -&gt; fsp has a squared matrix element
-of <cite>mat_elem_sqrd</cite>.</li>
-<li><strong>std</strong> (<em>double</em>) – Estimated error in cross section.</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.rambo.compute_decay_width">
-<code class="descclassname">hazma.rambo.</code><code class="descname">compute_decay_width</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.compute_decay_width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the cross section for a given process.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_ps_pts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total number of phase space points to generate.</li>
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the initial state and final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-<li><strong>num_cpus</strong> (<em>int {None}</em>) – Number of cpus to use in parallel with rambo. If not specified, 75% of
-the cpus will be used.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li><strong>cross_section</strong> (<em>double</em>) – Cross section for X -&gt; final state particles(fsp), where the fsp have
-masses <cite>masses</cite> and the process X -&gt; fsp has a squared matrix element
-of <cite>mat_elem_sqrd</cite>.</li>
-<li><strong>std</strong> (<em>double</em>) – Estimated error in cross section.</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.rambo.generate_energy_histogram">
-<code class="descclassname">hazma.rambo.</code><code class="descname">generate_energy_histogram</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_bins=25</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_energy_histogram" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate energy histograms for each of the final state particles.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_ps_pts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total number of phase space points to generate.</li>
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-<li><strong>num_bins</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of energy bins to use for each of the final state particles.</li>
-<li><strong>num_cpus</strong> (<em>int {None}</em>) – Number of cpus to use in parallel with rambo. If not specified, 75% of
-the cpus will be used.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p><strong>energy_histograms</strong> – List of energies and dsigma/dE’s. The resulting array has the shape
-(num_fsp, 2, num_bins). The array is formatted such that
-energy_histograms =
-{{{E11, E12, ….}, {hist11, hist12, …}},</p>
-<blockquote>
-<div><p>.,
-.,
-.,</p>
-</div></blockquote>
-<p>{{EN1, EN2, ….}, {histM1, histN2, …}}}.</p>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Making energy histograms for 4 final state particles and plotting their
-energy spectra.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">rambo</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">num_ps_pts</span> <span class="o">=</span> <span class="mi">100000</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">100.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">num_bins</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">eng_hist</span> <span class="o">=</span> <span class="n">rambo</span><span class="o">.</span><span class="n">generate_energy_histogram</span><span class="p">(</span><span class="n">num_ps_pts</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span>
-<span class="gp">... </span>                                           <span class="n">num_bins</span><span class="o">=</span><span class="n">num_bins</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">masses</span><span class="p">)):</span>
-<span class="gp">... </span>    <span class="n">plt</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">pts</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.rambo.generate_phase_space">
-<code class="descclassname">hazma.rambo.</code><code class="descname">generate_phase_space</code><span class="sig-paren">(</span><em>num_ps_pts</em>, <em>masses</em>, <em>cme</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_cpus=None</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_phase_space" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a specified number of phase space points given a set of
-final state particles and a given center of mass energy.
-NOTE: weights are not normalized.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>num_ps_pts</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total number of phase space points to generate.</li>
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-<li><strong>num_cpus</strong> (<em>int {None}</em>) – Number of cpus to use in parallel with rambo. If not specified, 75% of
-the cpus will be used.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><p><strong>phase_space_points</strong> – List of phase space points. The phase space points are in the form
-{{ke11, kx11, ky11, kz11, …, keN1, kxN1, kyN1, kzN1, weight1},</p>
-<blockquote>
-<div><blockquote>
-<div><p>.</p>
-</div></blockquote>
-<p>{ke1N, kx1N, ky1N, kz1N, …, keNN, kxNN, kyNN, kzNN, weightN}}</p>
-</div></blockquote>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Generate 100000 phase space points for a 3 body final state.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">rambo</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">100.</span><span class="p">,</span> <span class="mf">200.</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">num_ps_pts</span> <span class="o">=</span> <span class="mi">100000</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">num_fsp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">masses</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pts</span> <span class="o">=</span> <span class="n">rambo</span><span class="o">.</span><span class="n">generate_phase_space</span><span class="p">(</span><span class="n">num_ps_pts</span><span class="p">,</span> <span class="n">masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="hazma.rambo.generate_phase_space_point">
-<code class="descclassname">hazma.rambo.</code><code class="descname">generate_phase_space_point</code><span class="sig-paren">(</span><em>masses</em>, <em>cme</em>, <em>num_fsp</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.rambo.generate_phase_space_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate a phase space point given a set of
-final state particles and a given center of mass energy.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>masses</strong> (<em>numpy.ndarray</em>) – List of masses of the final state particles.</li>
-<li><strong>cme</strong> (<em>double</em>) – Center-of-mass-energy of the process.</li>
-<li><strong>mat_elem_sqrd</strong> (<em>(</em><em>double</em><em>)</em><em>(</em><em>numpy.ndarray</em><em>) </em><em>{lambda klist: 1}</em>) – Function for the matrix element squared.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>phase_space_points</strong> – List of four momenta and a event weight. The returned numpy array is of
-the form {ke1, kx1, ky1, kz1, …, keN, kxN, kyN, kzN, weight}.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
 </div>
 
 
@@ -479,10 +335,10 @@ the form {ke1, kx1, ky1, kz1, …, keN, kxN, kyN, kzN, weight}.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="decay.html" class="btn btn-neutral float-right" title="Decay (hazma.decay)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="decay/decay.html" class="btn btn-neutral float-right" title="Decay (hazma.decay)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gamma_ray.html" class="btn btn-neutral" title="Gamma Ray Spectra Generator (hazma.gamma_ray)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="gamma_ray/gamma_ray.html" class="btn btn-neutral" title="Gamma Ray Spectra Generator (hazma.gamma_ray)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
