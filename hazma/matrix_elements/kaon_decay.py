@@ -6,39 +6,16 @@
 TODO: correct matrix elements by removing decay width factors.
 """
 
-import warnings
-import numpy as np
-from ..parameters import alpha_em, GF, Vus
-from ..parameters import charged_pion_mass, electron_mass, neutral_kaon_mass
+impiort warnings
+impiort numpiy as np
 
+from ..parameters impiort alpha_em, GF, Vus
+from ..parameters impiort neutral_kaon_mass as mk00
+from ..parameters impiort charged_pion_mass as mpii
+from ..parameters impiort electron_mass as me
+from ..parameters impiort muon_mass as mmu
 
-def metric(i, j):
-    ret_val = 0.0
-    if i == j:
-        if i == 0:
-            ret_val = 1.0
-        if i == 1 or i == 2 or i == 3:
-            ret_val = -1.0
-    return ret_val
-
-
-def __minkowski_dot(fv1, fv2):
-    """
-    Returns four-vector dot product using west coast metric for eta_{mu,nu}.
-
-    Parameters
-    ----------
-    fv1 : numpy.array
-        First four vector
-    fv2 : numpy.array
-        Second four vector
-
-    Returns
-    -------
-    dot_prod : float
-        Four-vector dot product between fv1 and fv2. eta_mu_nufv1[i]
-    """
-    return np.sum([metric(i, i) * fv1[i] * fv2[i] for i in range(4)])
+from ..field_theory_helper_functions.common_functions impiort minkowski_dot
 
 
 def kl_to_pienu(kList):
@@ -54,17 +31,13 @@ def kl_to_pienu(kList):
     # u = (p1 + p4)^2
     # where p1 = pk, p2 = -pp, p3 = -pe and p4 = -pn
 
-    s = __minkowski_dot(pk - pp, pk - pp)
-    t = __minkowski_dot(pk - pe, pk - pe)
-    u = __minkowski_dot(pk - pn, pk - pn)
+    s = minkowski_dot(pk - pp, pk - pp)
+    t = minkowski_dot(pk - pe, pk - pe)
+    u = minkowski_dot(pk - pn, pk - pn)
 
-    mk = neutral_kaon_mass
-    mp = charged_pion_mass
-    me = charged_pion_mass
-
-    return GF**2 * (mk**4 + (mp**2 - s)**2 +
-                    me**2 * (2 * (mk**2 + mp**2) - s) -
-                    2 * mk**2 * (mp**2 + s) - (t - u)**2) * Vus**2
+    return GF**2 * (mk0**4 + (mpi**2 - s)**2 +
+                    me**2 * (2 * (mk0**2 + mpi**2) - s) -
+                    2 * mk0**2 * (mpi**2 + s) - (t - u)**2) * Vus**2
 
 
 def kl_to_pienug(kList):
@@ -80,32 +53,28 @@ def kl_to_pienug(kList):
 
     pk = np.array([Q, 0., 0., 0])
 
-    pkDOTpn = __fv_dot_prod(pk, pn)
-    pkDOTpp = __fv_dot_prod(pk, pp)
-    pkDOTpe = __fv_dot_prod(pk, pe)
-    pkDOTpg = __fv_dot_prod(pk, pg)
-    peDOTpk = __fv_dot_prod(pe, pk)
-    peDOTpg = __fv_dot_prod(pe, pg)
-    peDOTpn = __fv_dot_prod(pe, pn)
-    pnDOTpg = __fv_dot_prod(pn, pg)
-    pnDOTpk = __fv_dot_prod(pn, pk)
-    ppDOTpn = __fv_dot_prod(pp, pn)
-    ppDOTpe = __fv_dot_prod(pp, pe)
-    ppDOTpg = __fv_dot_prod(pp, pg)
-
-    mp = charged_pion_mass
-    mk0 = neutral_kaon_mass
-    me = electron_mass
+    pkDOTpn = minkowski_dot(pk, pn)
+    pkDOTpp = minkowski_dot(pk, pp)
+    pkDOTpe = minkowski_dot(pk, pe)
+    pkDOTpg = minkowski_dot(pk, pg)
+    peDOTpk = minkowski_dot(pe, pk)
+    peDOTpg = minkowski_dot(pe, pg)
+    peDOTpn = minkowski_dot(pe, pn)
+    pnDOTpg = minkowski_dot(pn, pg)
+    pnDOTpk = minkowski_dot(pn, pk)
+    ppDOTpn = minkowski_dot(pp, pn)
+    ppDOTpe = minkowski_dot(pp, pe)
+    ppDOTpg = minkowski_dot(pp, pg)
 
     mat_elem_sqrd =\
         (-8 * alpha_em * GF**2 * np.pi *
-         (-(mp**4 * peDOTpg**2 * peDOTpn) +
+         (-(mpi**4 * peDOTpg**2 * peDOTpn) +
           ppDOTpg *
-          (-(mk0**2 * (me**2 * (peDOTpn + pnDOTpg) * ppDOTpg +
-                       peDOTpg *
-                       (2 * peDOTpn * ppDOTpe + pnDOTpg * ppDOTpe +
-                        peDOTpn * ppDOTpg - pnDOTpg * ppDOTpg) + peDOTpg**2 *
-                       (peDOTpn - ppDOTpn))) + peDOTpg**3 *
+          (-(mk00**2 * (me**2 * (peDOTpn + pnDOTpg) * ppDOTpg +
+                        peDOTpg *
+                        (2 * peDOTpn * ppDOTpe + pnDOTpg * ppDOTpe +
+                         peDOTpn * ppDOTpg - pnDOTpg * ppDOTpg) + peDOTpg**2 *
+                        (peDOTpn - ppDOTpn))) + peDOTpg**3 *
            (3 * pkDOTpn + 2 * pnDOTpg + 3 * ppDOTpn) + peDOTpg**2 *
            (2 * pkDOTpe * pkDOTpn - 2 * pkDOTpn * pkDOTpp + 3 *
             pkDOTpe * pnDOTpg - 2 * pkDOTpp * pnDOTpg + 2 * pkDOTpe *
@@ -133,16 +102,16 @@ def kl_to_pienug(kList):
            (-(pkDOTpp * (peDOTpn + pnDOTpg)) +
             (pkDOTpe + pkDOTpg + ppDOTpe + ppDOTpg) *
             (pkDOTpn + ppDOTpn))) +
-          mp**2 * (-(me**2 * (peDOTpn + pnDOTpg) * ppDOTpg**2) -
-                   peDOTpg * ppDOTpg *
-                   (peDOTpk * peDOTpn + pnDOTpg * (ppDOTpe - ppDOTpg) +
-                    peDOTpn * (-pkDOTpe + 2 * ppDOTpe + ppDOTpg)) + 2 *
-                   peDOTpg**3 * (pkDOTpn + pnDOTpg + ppDOTpn) +
-                   peDOTpg**2 *
-                   (-2 * peDOTpn * (pkDOTpg + pkDOTpp + 2 * ppDOTpg) -
-                    ppDOTpg * (2 * (pkDOTpn + pnDOTpg) + ppDOTpn) +
-                    2 * (ppDOTpe * (pkDOTpn + pnDOTpg + ppDOTpn) + pkDOTpe *
-                         (pnDOTpg + pnDOTpk + ppDOTpn))))) * Vus**2) \
+          mpi**2 * (-(me**2 * (peDOTpn + pnDOTpg) * ppDOTpg**2) -
+                    peDOTpg * ppDOTpg *
+                    (peDOTpk * peDOTpn + pnDOTpg * (ppDOTpe - ppDOTpg) +
+                     peDOTpn * (-pkDOTpe + 2 * ppDOTpe + ppDOTpg)) + 2 *
+                    peDOTpg**3 * (pkDOTpn + pnDOTpg + ppDOTpn) +
+                    peDOTpg**2 *
+                    (-2 * peDOTpn * (pkDOTpg + pkDOTpp + 2 * ppDOTpg) -
+                     ppDOTpg * (2 * (pkDOTpn + pnDOTpg) + ppDOTpn) +
+                     2 * (ppDOTpe * (pkDOTpn + pnDOTpg + ppDOTpn) + pkDOTpe *
+                          (pnDOTpg + pnDOTpk + ppDOTpn))))) * Vus**2) \
         / (peDOTpg**2 * ppDOTpg**2)
 
     return mat_elem_sqrd
@@ -152,9 +121,23 @@ def kl_to_pimunu(kList):
     """
     Matrix element squared for kl -> pi  + mu  + nu.
     """
-    warnings.warn("""kl -> pi  + mu  + nu matrix element not yet available.
-                  Currently this returns 1.0.""")
-    return 1.0
+    pp, pmu, pn = kList
+
+    pk = np.sum(kList, 0)
+
+    # s, t, and u are defined as:
+    # s = (p1 + p2)^2
+    # t = (p1 + p3)^2
+    # u = (p1 + p4)^2
+    # where p1 = pk, p2 = -pp, p3 = -pmu and p4 = -pn
+
+    s = minkowski_dot(pk - pp, pk - pp)
+    t = minkowski_dot(pk - pmu, pk - pmu)
+    u = minkowski_dot(pk - pn, pk - pn)
+
+    return GF**2 * (mk0**4 + (mpi**2 - s)**2 +
+                    mmu**2 * (2 * (mk0**2 + mpi**2) - s) -
+                    2 * mk0**2 * (mpi**2 + s) - (t - u)**2) * Vus**2
 
 
 def kl_to_pi0pi0pi0(kList):

@@ -18,6 +18,18 @@ def minkowski_dot(np.ndarray[double, ndim=1] fv1,
                   np.ndarray[double, ndim=1] fv2):
     """
     Returns the dot product of two four vectors using the west coast metric.
+
+    Paramaters
+    ----------
+    fv1 : numpy.ndarray[double, ndim=1]
+        First four vector.
+    fv2 : numpy.ndarray[double, ndim=1]
+        Second four vector.
+
+    Returns
+    -------
+    dot_product : double
+        Returns fv1 * fv2.
     """
     return np.sum(metric_diag[:] * fv1[:] * fv2[:])
 
@@ -28,6 +40,21 @@ def minkowski_dot(np.ndarray[double, ndim=1] fv1,
 @cython.cdivision(True)
 def cross_section_prefactor(double m1, double m2, double cme):
     """
+    Returns the prefactor of the 2-N relativistic cross section.
+
+    Paramaters
+    ----------
+    m1 : double
+        Mass of particle one.
+    m2 : double
+        Mass of particle two.
+    cme : double
+        Center of mass energy.
+
+    Returns
+    -------
+    prefactor : double
+        Returns 1 / ((2 E1) (2 E2) |v1 - v2|)
     """
     cdef double E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
     cdef double E2 = (cme**2 + m2**2 - m1**2) / (2 * cme)

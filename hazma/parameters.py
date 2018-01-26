@@ -25,9 +25,12 @@ GF = 1.1663787 * 10**-11.0  # Fermi constant in MeV**-2
 vh = 246.22795 * 10**3  # Higgs VEV in MeV
 
 # Low Energy constants
-fpi0 = 91.924
-fpi = 92.2138
+fpi0 = 91.924  # Neutral pion decay constant
+fpi = 92.2138  # Charged pion decay constant
+fk = 110.379  # Charged kaon decay constant
 b0 = neutral_pion_mass**2 / (up_quark_mass + down_quark_mass)
+G8 = 5.47
+G27 = 0.392
 
 # CKM Matrix Elements
 Vud = 0.97417
