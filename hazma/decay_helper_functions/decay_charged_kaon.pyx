@@ -45,6 +45,7 @@ __spec = __data[:, 1]
 cdef double __interp_spec(double eng_gam):
     return np.interp(eng_gam, __eng_gams, __spec)
 
+@cython.cdivision(True)
 cdef double __integrand(double cl, double eng_gam, double eng_k):
     """
     Integrand for K -> X, where X is a any final state. The X's

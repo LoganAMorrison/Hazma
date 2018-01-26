@@ -16,9 +16,18 @@ eta_prime_mass = 957.8      # eta prime
 rho_mass = 775.3       # rho
 omega_mass = 782.7     # omega
 
+up_quark_mass = 2.3
+down_quark_mass = 4.8
+
 # MISC.
 alpha_em = 1.0 / 137.04  # Fine structure constant.
 GF = 1.1663787 * 10**-11.0  # Fermi constant in MeV**-2
+vh = 246.22795 * 10**3  # Higgs VEV in MeV
+
+# Low Energy constants
+fpi0 = 91.924
+fpi = 92.2138
+b0 = neutral_pion_mass**2 / (up_quark_mass + down_quark_mass)
 
 # CKM Matrix Elements
 Vud = 0.97417

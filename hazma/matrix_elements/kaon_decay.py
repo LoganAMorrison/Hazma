@@ -12,31 +12,59 @@ from ..parameters import alpha_em, GF, Vus
 from ..parameters import charged_pion_mass, electron_mass, neutral_kaon_mass
 
 
-def __fv_dot_prod(fv1, fv2):
-    return fv1[0] * fv2[0] - np.dot(fv1[1:], fv2[1:])
+def metric(i, j):
+    ret_val = 0.0
+    if i == j:
+        if i == 0:
+            ret_val = 1.0
+        if i == 1 or i == 2 or i == 3:
+            ret_val = -1.0
+    return ret_val
+
+
+def __minkowski_dot(fv1, fv2):
+    """
+    Returns four-vector dot product using west coast metric for eta_{mu,nu}.
+
+    Parameters
+    ----------
+    fv1 : numpy.array
+        First four vector
+    fv2 : numpy.array
+        Second four vector
+
+    Returns
+    -------
+    dot_prod : float
+        Four-vector dot product between fv1 and fv2. eta_mu_nufv1[i]
+    """
+    return np.sum([metric(i, i) * fv1[i] * fv2[i] for i in range(4)])
 
 
 def kl_to_pienu(kList):
     """
     """
-    pp = kList[0]
-    pe = kList[1]
-    pn = kList[2]
+    pp, pe, pn = kList
 
-    peDOTpn = __fv_dot_prod(pe, pn)
-    ppDOTpe = __fv_dot_prod(pp, pe)
-    ppDOTpn = __fv_dot_prod(pp, pn)
+    pk = np.sum(kList, 0)
 
-    mk0 = neutral_kaon_mass
+    # s, t, and u are defined as:
+    # s = (p1 + p2)^2
+    # t = (p1 + p3)^2
+    # u = (p1 + p4)^2
+    # where p1 = pk, p2 = -pp, p3 = -pe and p4 = -pn
+
+    s = __minkowski_dot(pk - pp, pk - pp)
+    t = __minkowski_dot(pk - pe, pk - pe)
+    u = __minkowski_dot(pk - pn, pk - pn)
+
+    mk = neutral_kaon_mass
     mp = charged_pion_mass
     me = charged_pion_mass
 
-    mat_elem_sqrd = 2 * GF**2 * \
-        (peDOTpn * (2 * me**2 - mk0**2 - 3 * mp**2 + 2 * (
-            peDOTpn + ppDOTpe)) + 2 *
-         (2 * me**2 + peDOTpn + 4 * ppDOTpe) * ppDOTpn) * Vus**2
-
-    return mat_elem_sqrd
+    return GF**2 * (mk**4 + (mp**2 - s)**2 +
+                    me**2 * (2 * (mk**2 + mp**2) - s) -
+                    2 * mk**2 * (mp**2 + s) - (t - u)**2) * Vus**2
 
 
 def kl_to_pienug(kList):
