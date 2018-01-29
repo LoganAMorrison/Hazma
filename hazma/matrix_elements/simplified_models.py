@@ -16,7 +16,7 @@ def minkowski_dot(fv1, fv2):
 # TREE-LEVEL SQUARED MATRIX ELEMENTS.
 
 
-def xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
+def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, through a scalar mediator
     in the s-channel.
@@ -53,7 +53,7 @@ def xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
         (Q**2 - 4.0 * mx**2) / (ms**2 - Q**2)**2
 
 
-def xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
+def msqrd_xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, through a pseudo-scalar
     mediator in the s-channel.
@@ -91,7 +91,7 @@ def xx_to_p_to_ff(moms, mx, mf, mp, cxxp, cffp):
     return (cffp**2 * cxxp**2 * Q**4) / (mp**2 - Q**2)**2
 
 
-def xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
+def msqrd_xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, through a vector
     mediator in the s-channel.
@@ -142,7 +142,7 @@ def xx_to_v_to_ff(moms, mx, mf, mv, cxxv, cffv):
              (mf**2 + mx**2) * Q**2)) / (mv**2 - Q**2)**2
 
 
-def xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
+def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, through a axial-vector
     mediator in the s-channel.
@@ -197,7 +197,7 @@ def xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
 # RADIATIVE SQUARED MATRIX ELEMENTS.
 
 
-def xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
+def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, and a photon through a
     scalar mediator in the s-channel.
@@ -251,7 +251,7 @@ def xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
     return mat_elem
 
 
-def xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
+def msqrd_xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, and a photon through a
     pseudo-scalar mediator in the s-channel.
@@ -308,7 +308,7 @@ def xx_to_p_to_ffg(moms, mx, mf, mp, qf, cxxp, cffp):
     return mat_elem
 
 
-def xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
+def msqrd_xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, and a photon through a
     vector mediator in the s-channel.
@@ -404,7 +404,7 @@ def xx_to_v_to_ffg(moms, mx, mf, mv, qf, cxxv, cffv):
           2 * (kDOTp3 + kDOTp4 + p3DOTp4))**2)
 
 
-def xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
+def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, and a photon through a
     axial-vector mediator in the s-channel.

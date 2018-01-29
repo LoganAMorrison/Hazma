@@ -3,6 +3,8 @@ from ..parameters import charged_pion_mass as mpi
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 
+from ..field_theory_helper_functions.common_functions import minkowski_dot
+
 import numpy as np
 
 import os
@@ -14,21 +16,58 @@ DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 unitarizated_data = np.genfromtxt(DATA_PATH, delimiter=',')
 
-metric_diag = np.array([1.0, -1.0, -1.0, -1.0])
-
-
-def minkowski_dot(fv1, fv2):
-    return np.sum(metric_diag[:] * fv1[:] * fv2[:])
-
 
 def unit_matrix_elem_sqrd(cme):
+    """
+    Returns the unitarized squared matrix element for :math:`\pi\pi\to\pi\pi`
+    divided by the leading order, ununitarized squared matrix element for
+    :math:`\pi\pi\to\pi\pi`.
+
+    Parameters
+    ----------
+    cme : double
+        Invariant mass of the two charged pions.
+
+    Results
+    -------
+    __unit_matrix_elem_sqrd : double
+        The unitarized matrix element for :math:`\pi\pi\to\pi\pi`, |t_u|^2,
+        divided by the un-unitarized squared matrix element for
+        :math:`\pi\pi\to\pi\pi`, |t|^2; |t_u|^2 / |t|^2.
+    """
     t_mod_sqrd = np.interp(cme, unitarizated_data[0], unitarizated_data[1])
     additional_factor = (2 * cme**2 - mpi**2) / (32. * fpi**2 * np.pi)
     return t_mod_sqrd / additional_factor**2
 
 
-def xx_to_s_to_pipi(moms, mx, ms, cxxs, cffs, cggs, vs):
+def msqrd_xx_to_s_to_pipi(moms, mx, ms, cxxs, cffs, cggs, vs):
+    """
+    Returns the cross section for two fermions annihilating into two
+    charged pions.
 
+    Parameters
+    ----------
+    cme : double
+        Center of mass energy.
+    mx : double
+        Mass of the initial state fermion.
+    ms : double
+        Mass of the scalar mediator.
+    cxxs : double
+        Coupling of the initial state fermion to the scalar mediator.
+    cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
+    cggs : double
+        Coupling of the scalar to gluons.
+    vs : double
+        Vacuum expectation value of the scalar mediator.
+
+    Returns
+    -------
+    Returns matrix element squared for :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}`.
+    """
     pp, pm = moms
 
     s = minkowski_dot(pp + pm, pp + pm)
@@ -47,8 +86,33 @@ def xx_to_s_to_pipi(moms, mx, ms, cxxs, cffs, cggs, vs):
     return mat_elem_sqrd * unit_matrix_elem_sqrd(np.sqrt(s))
 
 
-def xx_to_s_to_pipi2(moms, mx, ms, cxxs, cffs, cggs, vs):
+def msqrd_xx_to_s_to_pipi_no_fsi(moms, mx, ms, cxxs, cffs, cggs, vs):
+    """Returns the cross section for two fermions annihilating into two
+    charged pions WITHOUT includeing final state interactions.
 
+    Parameters
+    ----------
+    cme : double
+        Center of mass energy.
+    mx : double
+        Mass of the initial state fermion.
+    ms : double
+        Mass of the scalar mediator.
+    cxxs : double
+        Coupling of the initial state fermion to the scalar mediator.
+    cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
+    cggs : double
+        Coupling of the scalar to gluons.
+    vs : double
+        Vacuum expectation value of the scalar mediator.
+
+    Returns
+    -------
+    Returns matrix element squared for :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}`.
+    """
     pp, pm = moms
 
     s = minkowski_dot(pp + pm, pp + pm)
@@ -67,8 +131,40 @@ def xx_to_s_to_pipi2(moms, mx, ms, cxxs, cffs, cggs, vs):
     return mat_elem_sqrd
 
 
-def xx_to_s_to_pipig(moms, mx, ms, cxxs, cffs, cggs, vs):
+def msqrd_xx_to_s_to_pipig(moms, mx, ms, cxxs, cffs, cggs, vs):
+    """Returns the squared matrix element for two fermions annihilating into two
+    charged pions and a photon.
 
+    Parameters
+    ----------
+    s : double
+        Mandelstam variable associated with the photon, defined as (P-pg)^2,
+        where P = ppip + ppim + pg.
+    t : double
+        Mandelstam variable associated with the charged pion, defined as
+        (P-ppip)^2, where P = ppip + ppim + pg.
+    Q : double
+        Center of mass energy, or sqrt((ppip + ppim + pg)^2).
+    mx : double
+        Mass of the initial state fermion.
+    ms : double
+        Mass of the scalar mediator.
+    cxxs : double
+        Coupling of the initial state fermion to the scalar mediator.
+    cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
+    cggs : double
+        Coupling of the scalar to gluons.
+    vs : double
+        Vacuum expectation value of the scalar mediator.
+
+    Returns
+    -------
+    Returns matrix element squared for
+    :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma`.
+    """
     pp, pm, pg = moms
 
     Q = (np.sum(moms, 0))[0]
@@ -99,8 +195,40 @@ def xx_to_s_to_pipig(moms, mx, ms, cxxs, cffs, cggs, vs):
     return unit_matrix_elem_sqrd(pions_inv_mass) * mat_elem_sqrd
 
 
-def xx_to_s_to_pipig2(moms, mx, ms, cxxs, cffs, cggs, vs):
+def msqrd_xx_to_s_to_pipig_no_fsi(moms, mx, ms, cxxs, cffs, cggs, vs):
+    """Returns the squared matrix element for two fermions annihilating into two
+    charged pions and a photon WITHOUT including final state interactions.
 
+    Parameters
+    ----------
+    s : double
+        Mandelstam variable associated with the photon, defined as (P-pg)^2,
+        where P = ppip + ppim + pg.
+    t : double
+        Mandelstam variable associated with the charged pion, defined as
+        (P-ppip)^2, where P = ppip + ppim + pg.
+    Q : double
+        Center of mass energy, or sqrt((ppip + ppim + pg)^2).
+    mx : double
+        Mass of the initial state fermion.
+    ms : double
+        Mass of the scalar mediator.
+    cxxs : double
+        Coupling of the initial state fermion to the scalar mediator.
+    cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
+    cggs : double
+        Coupling of the scalar to gluons.
+    vs : double
+        Vacuum expectation value of the scalar mediator.
+
+    Returns
+    -------
+    Returns matrix element squared for
+    :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma`.
+    """
     pp, pm, pg = moms
 
     Q = (np.sum(moms, 0))[0]

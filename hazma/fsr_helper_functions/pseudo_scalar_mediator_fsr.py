@@ -9,7 +9,7 @@ import numpy as np
 alpha = 1.0 / 137.0
 
 
-def fermion(eng_gam, cme, mass_f):
+def dnde_xx_to_p_to_ffg(eng_gam, cme, mass_f):
     """Returns the fsr spectra for fermions from decay of pseudo-scalar
     mediator.
 

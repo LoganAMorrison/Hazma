@@ -25,7 +25,7 @@ from ..field_theory_helper_functions.common_functions import \
 e = np.sqrt(4 * np.pi * alpha_em)
 
 
-def fermion(eng_gam, cme, mass_f):
+def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
     """Return the fsr spectra for fermions from decay of scalar mediator.
 
     Computes the final state radiaton spectrum value dNdE from a scalar
@@ -81,7 +81,7 @@ DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 unitarizated_data = np.genfromtxt(DATA_PATH, delimiter=',')
 
 
-def unit_matrix_elem_sqrd(cme):
+def __unit_matrix_elem_sqrd(cme):
     """
     Returns the unitarized squared matrix element for :math:`\pi\pi\to\pi\pi`
     divided by the leading order, ununitarized squared matrix element for
@@ -94,7 +94,7 @@ def unit_matrix_elem_sqrd(cme):
 
     Results
     -------
-    unit_matrix_elem_sqrd : double
+    __unit_matrix_elem_sqrd : double
         The unitarized matrix element for :math:`\pi\pi\to\pi\pi`, |t_u|^2,
         divided by the un-unitarized squared matrix element for
         :math:`\pi\pi\to\pi\pi`, |t|^2; |t_u|^2 / |t|^2.
@@ -104,7 +104,7 @@ def unit_matrix_elem_sqrd(cme):
     return t_mod_sqrd / additional_factor**2
 
 
-def __xx_to_s_pipig_mat_elem(s, t, Q, mx, ms, cxxs, cffs, cggs, vs):
+def __msqrd_xx_to_s_pipig(s, t, Q, mx, ms, cxxs, cffs, cggs, vs):
     """
     Returns the squared matrix element for two fermions annihilating into two
     charged pions and a photon.
@@ -126,6 +126,9 @@ def __xx_to_s_pipig_mat_elem(s, t, Q, mx, ms, cxxs, cffs, cggs, vs):
     cxxs : double
         Coupling of the initial state fermion to the scalar mediator.
     cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
     cggs : double
         Coupling of the scalar to gluons.
     vs : double
@@ -153,12 +156,12 @@ def __xx_to_s_pipig_mat_elem(s, t, Q, mx, ms, cxxs, cffs, cggs, vs):
          (9 * vh + 9 * cffs * vs - 2 * cggs * vs)**2 *
          (9 * vh + 4 * cggs * vs)**2 * (9 * vh + 8 * cggs * vs)**2)
 
-    return mat_elem_sqrd * unit_matrix_elem_sqrd(np.sqrt(s))
+    return mat_elem_sqrd * __unit_matrix_elem_sqrd(np.sqrt(s))
 
 
-def __xx_to_s_pipi_xsec(cme, mx, ms, cxxs, cffs, cggs, vs):
+def __sigma_xx_to_s_pipi(cme, mx, ms, cxxs, cffs, cggs, vs):
     """
-    Returns the squared matrix element for two fermions annihilating into two
+    Returns the cross section for two fermions annihilating into two
     charged pions.
 
     Parameters
@@ -172,6 +175,9 @@ def __xx_to_s_pipi_xsec(cme, mx, ms, cxxs, cffs, cggs, vs):
     cxxs : double
         Coupling of the initial state fermion to the scalar mediator.
     cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
     cggs : double
         Coupling of the scalar to gluons.
     vs : double
@@ -179,7 +185,7 @@ def __xx_to_s_pipi_xsec(cme, mx, ms, cxxs, cffs, cggs, vs):
 
     Returns
     -------
-    Returns matrix element squared for :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}`.
+    Returns cross section for :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}`.
     """
     mat_elem_sqrd = (-2 * cxxs**2 * (4 * mx**2 - cme**2) *
                      (2 * cggs * (2 * mpi**2 - cme**2) *
@@ -197,10 +203,10 @@ def __xx_to_s_pipi_xsec(cme, mx, ms, cxxs, cffs, cggs, vs):
 
     prefactor = 1.0 / (16. * np.pi * cme**2) * p_f / p_i
 
-    return prefactor * unit_matrix_elem_sqrd(np.sqrt(cme**2)) * mat_elem_sqrd
+    return prefactor * __unit_matrix_elem_sqrd(np.sqrt(cme**2)) * mat_elem_sqrd
 
 
-def __xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs):
+def __dnde_xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs):
     """
     Returns the gamma ray energy spectrum for two fermions annihilating into
     two charged pions and a photon.
@@ -218,6 +224,9 @@ def __xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs):
     cxxs : double
         Coupling of the initial state fermion to the scalar mediator.
     cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
     cggs : double
         Coupling of the scalar to gluons.
     vs : double
@@ -231,12 +240,12 @@ def __xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs):
     s = E1_to_s(eng_gam, 0.0, cme)
 
     def mat_elem_sqrd(t):
-        return __xx_to_s_pipig_mat_elem(s, t, cme, mx, ms, cxxs,
-                                        cffs, cggs, vs)
+        return __msqrd_xx_to_s_pipig(s, t, cme, mx, ms, cxxs,
+                                     cffs, cggs, vs)
 
     prefactor1 = phase_space_prefactor(cme)
     prefactor2 = 2 * cme / \
-        __xx_to_s_pipi_xsec(cme, mx, ms, cxxs, cffs, cggs, vs)
+        __sigma_xx_to_s_pipi(cme, mx, ms, cxxs, cffs, cggs, vs)
     prefactor3 = cross_section_prefactor(mx, mx, cme)
 
     prefactor = prefactor1 * prefactor2 * prefactor3
@@ -247,7 +256,7 @@ def __xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs):
     return prefactor * int_val, err
 
 
-def xx_to_s_pipig(eng_gams, cme, mx, ms, cxxs, cffs, cggs, vs):
+def dnde_xx_to_s_pipig(eng_gams, cme, mx, ms, cxxs, cffs, cggs, vs):
     """
     Returns the gamma ray energy spectrum for two fermions annihilating into
     two charged pions and a photon.
@@ -265,6 +274,9 @@ def xx_to_s_pipig(eng_gams, cme, mx, ms, cxxs, cffs, cggs, vs):
     cxxs : double
         Coupling of the initial state fermion to the scalar mediator.
     cffs : double
+        Coupling of the scalar to the standard model fermions. Note that the
+        coupling to the standard model fermions comes from the scalar mixing
+        with the Higgs, thus the coupling is :math:`c_{ffs} * m_{f} / v`.
     cggs : double
         Coupling of the scalar to gluons.
     vs : double
@@ -277,7 +289,8 @@ def xx_to_s_pipig(eng_gams, cme, mx, ms, cxxs, cffs, cggs, vs):
     energy(ies).
     """
     if hasattr(eng_gams, '__len__'):
-        return [__xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs)
+        return [__dnde_xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs,
+                                     cggs, vs)
                 for eng_gam in eng_gams]
     else:
-        __xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs)
+        __dnde_xx_to_s_pipig(eng_gam, cme, mx, ms, cxxs, cffs, cggs, vs)

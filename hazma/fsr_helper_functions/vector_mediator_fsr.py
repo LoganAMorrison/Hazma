@@ -9,7 +9,7 @@ import numpy as np
 alpha = 1.0 / 137.0  # Fine structure constant.
 
 
-def fermion(egam, Q, mf):
+def dnde_xx_to_v_to_ffg(egam, Q, mf):
     """Return the fsr spectra for fermions from decay of vector mediator.
 
     Computes the final state radiaton spectrum value dNdE from a vector
