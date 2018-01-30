@@ -16,8 +16,13 @@ eta_prime_mass = 957.8      # eta prime
 rho_mass = 775.3       # rho
 omega_mass = 782.7     # omega
 
+# Quark masses in MS-bar scheme
 up_quark_mass = 2.3
 down_quark_mass = 4.8
+strange_quark_mass = 95.0
+charm_quark_mass = 1.275 * 10**3
+bottom_quark_mass = 4.18 * 10**3
+top_quark_mass = 160.0 * 10**3
 
 # MISC.
 alpha_em = 1.0 / 137.04  # Fine structure constant.
