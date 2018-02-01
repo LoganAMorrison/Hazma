@@ -5,7 +5,7 @@ from libc.math cimport exp, log, M_PI, log10, sqrt
 import cython
 from functools import partial
 include "parameters.pxd"
-
+import warnings
 
 
 """
@@ -115,8 +115,10 @@ cdef double CSpectrumPoint(double eng_gam, double eng_mu):
         eng_gam (float) -- Gamma ray energy in laboratory frame.
         eng_mu (float) -- Muon energy in laboratory frame.
     """
+    message = 'Energy of kaon cannot be less than the kaon mass. Returning 0.'
     if eng_mu < MASS_MU:
-        raise ValueError('Energy of muon cannot be less than the muon mass.')
+        # raise warnings.warn(message, RuntimeWarning)
+        return 0.0
 
     cdef double result = 0.0
 
@@ -152,25 +154,12 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_mu):
         List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
         given muon energy `eng_mu`.
     """
-    if eng_mu < MASS_MU:
-        raise ValueError('Energy of muon cannot be less than the muon mass.')
-
-    cdef double result = 0.0
     cdef int numpts = len(eng_gams)
-
-    cdef double beta = __beta(eng_mu, MASS_MU)
-    cdef double gamma = __gamma(eng_mu, MASS_MU)
-
-    cdef double eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
-        / (2.0 * MASS_MU) * gamma * (1.0 + beta)
 
     cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
 
     for i in range(numpts):
-        if 0 <= eng_gams[i] and eng_gams[i] <= eng_gam_maxMuRF:
-            spec[i] = quad(__integrand, -1.0, 1.0, \
-                           args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
-                           epsabs=10**-10., epsrel=10**-4.)[0]
+        spec[i] = CSpectrumPoint(eng_gams[i], eng_mu)
 
     return spec
 
@@ -183,23 +172,7 @@ def SpectrumPoint(double eng_gam, double eng_mu):
         eng_gam (float) -- Gamma ray energy in laboratory frame.
         eng_mu (float) -- Muon energy in laboratory frame.
     """
-    if eng_mu < MASS_MU:
-        raise ValueError('Energy of muon cannot be less than the muon mass.')
-
-    cdef double result = 0.0
-
-    cdef double beta = __beta(eng_mu, MASS_MU)
-    cdef double gamma = __gamma(eng_mu, MASS_MU)
-
-    cdef double eng_gam_max = 0.5 * (MASS_MU - MASS_E**2.0 / MASS_MU) \
-        * gamma * (1.0 + beta)
-
-    if 0 <= eng_gam and eng_gam <= eng_gam_max:
-        result = quad(__integrand, -1.0, 1.0, args=(eng_gam, eng_mu), \
-            points=[-1.0, 1.0], epsabs=10**-10., epsrel=10**-4.)[0]
-
-
-    return result
+    return CSpectrumPoint(eng_gam, eng_mu)
 
 
 
@@ -221,24 +194,4 @@ def Spectrum(np.ndarray eng_gams, double eng_mu):
         List of gamma ray spectrum values, dNdE, evaluated at `eng_gams`
         given muon energy `eng_mu`.
     """
-    if eng_mu < MASS_MU:
-        raise ValueError('Energy of muon cannot be less than the muon mass.')
-
-    cdef double result = 0.0
-    cdef int numpts = len(eng_gams)
-
-    cdef double beta = __beta(eng_mu, MASS_MU)
-    cdef double gamma = __gamma(eng_mu, MASS_MU)
-
-    cdef double eng_gam_maxMuRF = (MASS_MU**2.0 - MASS_E**2.0) \
-        / (2.0 * MASS_MU) * gamma * (1.0 + beta)
-
-    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
-
-    for i in range(numpts):
-        if 0 <= eng_gams[i] and eng_gams[i] <= eng_gam_maxMuRF:
-            spec[i] = quad(__integrand, -1.0, 1.0, \
-                           args=(eng_gams[i], eng_mu), points=[-1.0, 1.0], \
-                           epsabs=10**-10., epsrel=10**-4.)[0]
-
-    return spec
+    return CSpectrum(eng_gams, eng_mu)

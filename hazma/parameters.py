@@ -4,6 +4,8 @@ This file contains parameters of the standard model for leptons and meson.
 NOTE: All dimensionful parameters are in MeV.
 """
 
+import numpy as np
+
 # MASSES (MeV)
 electron_mass = 0.510998928   # electron
 muon_mass = 105.6583715  # muon
@@ -28,6 +30,7 @@ top_quark_mass = 160.0 * 10**3
 alpha_em = 1.0 / 137.04  # Fine structure constant.
 GF = 1.1663787 * 10**-11.0  # Fermi constant in MeV**-2
 vh = 246.22795 * 10**3  # Higgs VEV in MeV
+qe = np.sqrt(4.0 * np.pi * alpha_em)
 
 # Low Energy constants
 fpi0 = 91.924  # Neutral pion decay constant

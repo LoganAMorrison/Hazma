@@ -129,7 +129,7 @@ def gamma_ray_rambo(isp_masses, fsp_masses, cme,
     >>>
     >>> mx, ms = 120., 0.
     >>> qf = 1.
-    >>> cxxs, cffs = 1.0, 1.0
+    >>> gsxx, gsff = 1.0, 1.0
     >>>
     >>> num_ps_pts = 10**6
     >>> fsp_masses = np.array([mmu, mmu, 0.0])
@@ -137,9 +137,9 @@ def gamma_ray_rambo(isp_masses, fsp_masses, cme,
     >>> cme = 1000.
     >>> num_bins = 150
     >>>
-    >>> tree = lambda moms : xx_to_s_to_ff(moms, mx, mmu, ms, cxxs, cffs)
+    >>> tree = lambda moms : xx_to_s_to_ff(moms, mx, mmu, ms, gsxx, gsff)
     >>> radiative = lambda moms : xx_to_s_to_ffg(moms, mx, mmu,
-    ..                                           ms, qf, cxxs, cffs)
+    ..                                           ms, qf, gsxx, gsff)
     >>>
     >>> engs, dnde = gamma_ray.gamma_ray_rambo(isp_masses, fsp_masses, cme,
     ..                                         tree, radiative, num_ps_pts,

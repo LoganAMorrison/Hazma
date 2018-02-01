@@ -16,7 +16,7 @@ def minkowski_dot(fv1, fv2):
 # TREE-LEVEL SQUARED MATRIX ELEMENTS.
 
 
-def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
+def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, gsxx, gsff):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, through a scalar mediator
     in the s-channel.
@@ -34,9 +34,9 @@ def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
         Mass of final state fermions.
     ms : float
         Mass of scalar mediator.
-    cxxs : float
+    gsxx : float
         Coupling of initial state fermions with the scalar mediator.
-    cffs : float
+    gsff : float
         Coupling of final state fermions with the scalar mediator.
 
     Returns
@@ -49,7 +49,7 @@ def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, cxxs, cffs):
 
     Q = p3[0] + p4[0]
 
-    return cffs**2 * cxxs**2 * (Q**2 - 4.0 * mf**2) * \
+    return gsff**2 * gsxx**2 * (Q**2 - 4.0 * mf**2) * \
         (Q**2 - 4.0 * mx**2) / (ms**2 - Q**2)**2
 
 
@@ -197,7 +197,7 @@ def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
 # RADIATIVE SQUARED MATRIX ELEMENTS.
 
 
-def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
+def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, gsxx, gsff):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f*, and a photon through a
     scalar mediator in the s-channel.
@@ -215,9 +215,9 @@ def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
         Mass of final state fermions.
     ms : float
         Mass of scalar mediator.
-    cxxs : float
+    gsxx : float
         Coupling of initial state fermions with the scalar mediator.
-    cffs : float
+    gsff : float
         Coupling of final state fermions with the scalar mediator.
 
     Returns
@@ -239,7 +239,7 @@ def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, cxxs, cffs):
     kDOTp4 = minkowski_dot(k, p4)
     p3DOTp4 = minkowski_dot(p3, p4)
 
-    mat_elem = (-8 * cffs**2 * cxxs**2 * e**2 * (-1 + 4 * mxp**2) *
+    mat_elem = (-8 * gsff**2 * gsxx**2 * e**2 * (-1 + 4 * mxp**2) *
                 (kDOTp3 * kDOTp4 *
                  ((kDOTp3 + kDOTp4)**2 + 2 * (kDOTp3 + kDOTp4) * p3DOTp4 +
                   2 * p3DOTp4**2) - (kDOTp3 + kDOTp4) * mfp**2 *

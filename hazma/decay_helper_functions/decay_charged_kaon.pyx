@@ -10,6 +10,7 @@ import os
 import sys
 from .get_path import get_dir_path
 include "parameters.pxd"
+import warnings
 
 """
 Module for computing the photon spectrum from radiative kaon decay.
@@ -83,6 +84,11 @@ cdef double CSpectrumPoint(double eng_gam, double eng_k):
         eng_gam: Energy of photon is laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
+    message = 'Energy of kaon cannot be less than the kaon mass. Returning 0.'
+    if eng_k < MASS_K:
+        # raise warnings.warn(message, RuntimeWarning)
+        return 0.0
+
     cdef double result = 0.0
 
     result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
@@ -103,7 +109,6 @@ cdef np.ndarray CSpectrum(np.ndarray[np.float64_t, ndim=1] eng_gams,
         eng_gams: List of energies of photon in laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
-    cdef double result = 0.0
 
     cdef int numpts = len(eng_gams)
 
@@ -112,9 +117,7 @@ cdef np.ndarray CSpectrum(np.ndarray[np.float64_t, ndim=1] eng_gams,
     cdef int i = 0
 
     for i in range(numpts):
-        spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                       args=(eng_gams[i], eng_k), epsabs=0.0, \
-                       epsrel=10**-4.)[0]
+        spec[i] = CSpectrumPoint(eng_gams[i], eng_k)
 
     return spec
 
@@ -127,16 +130,8 @@ def SpectrumPoint(double eng_gam, double eng_k):
         eng_gam: Energy of photon is laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
-    if eng_k < MASS_K:
-        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
-    cdef double result = 0.0
 
-    if eng_gam < eng_k:
-        result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                      args=(eng_gam, eng_k), epsabs=10**-10., \
-                      epsrel=10**-4.)[0]
-
-    return result
+    return CSpectrumPoint(eng_gam, eng_k)
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -149,19 +144,4 @@ def Spectrum(np.ndarray[np.float64_t, ndim=1] eng_gams, double eng_k):
         eng_gams: List of energies of photon in laboratory frame.
         eng_k: Energy of charged kaon in laboratory frame.
     """
-    if eng_k < MASS_K:
-        raise ValueError('Energy of kaon cannot be less than the kaon mass.')
-
-    cdef int numpts = len(eng_gams)
-
-    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
-
-    cdef int i = 0
-
-    for i in range(numpts):
-        if eng_gams[i] < eng_k:
-            spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                           args=(eng_gams[i], eng_k), epsabs=0.0, \
-                           epsrel=10**-4.)[0]
-
-    return spec
+    return CSpectrum(eng_gams, eng_k)

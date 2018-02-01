@@ -3,10 +3,12 @@ import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
 from scipy.interpolate import InterpolatedUnivariateSpline
-from libc.math cimport exp, log, M_PI, log10, sqrt, abs
+from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 import cython
 from functools import partial
 include "parameters.pxd"
+
+import warnings
 
 __eng_gam_max_mu_rf = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
 __eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
@@ -20,6 +22,78 @@ __mu_spec2 = InterpolatedUnivariateSpline(__eng_gams_mu, __mu_spec, k=1)
 cdef double __muon_spectrum(double eng_gam):
     return np.interp(eng_gam, __eng_gams_mu, __mu_spec)
 
+cdef double fpi = DECAY_CONST_PI / np.sqrt(2)
+cdef double mpi = MASS_PI
+cdef double me = MASS_E
+cdef double mmu = MASS_MU
+
+
+@cython.cdivision(True)
+cdef double __dnde_pi_to_lnug(double egam, double ml):
+    cdef double r = pow(ml / mpi, 2.0)
+    if 0.0 <= egam and egam <= (mpi**2 - ml**2) / 2.0 / mpi:
+        return (ALPHA_EM  *
+                (-(((ml**2 + (2 * egam - mpi) * mpi) *
+                    (48 * egam**5 * fpi**2 * mpi**5 * r**2 +
+                     3 * fpi**2 * mpi**6 * (-1 + r) * r *
+                     (ml**2 - mpi**2 * r)**2 +
+                     24 * egam**4 * fpi**2 * mpi**4 * r *
+                     (3 * mpi**2 * (-2 + r) * r + ml**2 * (1 + r)) -
+                     6 * egam * fpi**2 * mpi**5 * (-1 + r) * r *
+                     (-ml**2 + mpi**2 * r) *
+                     (-2 * ml**2 + mpi**2 * (1 + 3 * r)) +
+                     6 * egam**2 * fpi**2 * mpi**4 * r *
+                     (ml**4 * (-3 + 2 * r) +
+                      2 * ml**2 * mpi**2 * (2 + (3 - 4 * r) * r) +
+                      mpi**4 * r * (-8 + r + 6 * r**2)) +
+                     12 * egam**3 * fpi**2 * mpi**3 * r *
+                     (ml**4 + mpi**4 * r * (11 - 2 * r * (3 + r)) +
+                      ml**2 * mpi**2 * (-3 + r * (-3 + 2 * r))) +
+                     A_PI**2 * egam**2 * (ml**2 + (2 * egam - mpi) * mpi * r) *
+                     (ml**2 + mpi * (2 * egam - mpi * r)) *
+                     (16 * egam**4 * mpi**2 +
+                      4 * egam**3 * mpi * (ml**2 - 4 * mpi**2) -
+                      6 * egam * mpi * (ml**2 - mpi**2 * r)**2 +
+                      3 * mpi**2 * (ml**2 - mpi**2 * r)**2 +
+                      egam**2 *
+                      (4 * ml**4 + 4 * mpi**4 -
+                       2 * ml**2 * mpi**2 * (1 + 3 * r))) +
+                     12 * egam**3 * fpi * (2 * egam - mpi) * mpi**3 * r *
+                     (ml**2 + (2 * egam - mpi) * mpi * r) *
+                     (ml**2 + mpi * (2 * egam - mpi * r)) * V_PI +
+                     egam**2 * (ml**2 + (2 * egam - mpi) * mpi * r) *
+                     (ml**2 + mpi * (2 * egam - mpi * r)) *
+                     (16 * egam**4 * mpi**2 +
+                      4 * egam**3 * mpi * (ml**2 - 4 * mpi**2) -
+                      6 * egam * mpi * (ml**2 - mpi**2 * r)**2 +
+                      3 * mpi**2 * (ml**2 - mpi**2 * r)**2 +
+                      egam**2 *
+                      (4 * ml**4 + 4 * mpi**4 -
+                       2 * ml**2 * mpi**2 * (1 + 3 * r))) *
+                     V_PI**2 + 6 * A_PI * egam * (2 * egam - mpi) * mpi *
+                     (ml**2 + (2 * egam - mpi) * mpi * r) *
+                     (ml**2 + mpi * (2 * egam - mpi * r)) *
+                     (fpi * mpi * r *
+                      (-4 * egam**2 * mpi - ml**2 * mpi +
+                       egam * (ml**2 + mpi**2) + mpi**3 * r) +
+                      2 * egam**2 * (egam - mpi) *
+                      (ml**2 - mpi**2 * r) * V_PI))) /
+                   ((-2 * egam + mpi)**2 * r *
+                    (ml**2 + (2 * egam - mpi) * mpi * r) *
+                    (ml**2 + mpi * (2 * egam - mpi * r)))) +
+                 3 * fpi * mpi**4 * (-2 * egam**2 * fpi -
+                                     2 * egam * fpi * mpi * (-1 + r) +
+                                     4 * A_PI * egam**2 * (egam - mpi * r) +
+                                     fpi * mpi**2 * (-1 + r**2) -
+                                     4 * egam**3 * V_PI) *
+                 (np.log(np.abs(mpi * (ml**2 / (2 * egam - mpi) + mpi * r))) -
+                  np.log(np.abs(-ml**2 - 2 * egam * mpi + mpi**2 * r))))) / \
+            (3. * egam * fpi**2 * mpi**6 * np.pi * (-1 + r)**2)
+    else :
+        return 0.0
+
+
+
 @cython.cdivision(True)
 cdef double __gamma(double eng, double mass):
     """
@@ -31,6 +105,7 @@ cdef double __gamma(double eng, double mass):
     """
     return eng / mass
 
+
 @cython.cdivision(True)
 cdef double __beta(double eng, double mass):
     """
@@ -41,6 +116,7 @@ cdef double __beta(double eng, double mass):
         mass -- mass of particle.
     """
     return sqrt(1.0 - (mass / eng)**2.0)
+
 
 cdef double __eng_gam_max(double eng_pi):
     """
@@ -85,8 +161,13 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi):
 
     cdef double preFactor = BR_PI_TO_MUNU \
         / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
+    cdef double preFactorE = BR_PI_TO_ENU \
+        / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
 
-    return preFactor * __muon_spectrum(engGamPiRF)
+    return preFactor * (__muon_spectrum(engGamPiRF) +
+                        __dnde_pi_to_lnug(engGamPiRF, mmu)) + \
+            preFactorE * __dnde_pi_to_lnug(engGamPiRF, me)
+
 
 cdef double CSpectrumPoint(double eng_gam, double eng_pi):
     """
@@ -99,14 +180,21 @@ cdef double CSpectrumPoint(double eng_gam, double eng_pi):
         eng_gam: Energy of photon is laboratory frame.
         eng_pi: Energy of charged pion in laboratory frame.
     """
+    message = 'Energy of pion cannot be less than the pion mass. Returning 0.'
     if eng_pi < MASS_PI:
-        raise ValueError('Energy of pion cannot be less than the pion mass.')
+        # raise warnings.warn(message, RuntimeWarning)
+        return 0.0
+
     cdef double result = 0.0
 
     if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
         result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
                       args=(eng_gam, eng_pi), epsabs=10**-10., \
                       epsrel=10**-4.)[0]
+
+    if 0.0 <= eng_gam and eng_gam <= (mpi**2 - mmu**2) / 2.0 / mpi:
+        result = result + __dnde_pi_to_lnug(eng_gam, me)
+        result = result + __dnde_pi_to_lnug(eng_gam, mmu)
 
     return result
 
@@ -124,11 +212,6 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
         eng_gams: Gamma ray energies to evaluate spectrum.
         eng_pi: Energy of charged pion in laboratory frame.
     """
-    if eng_pi < MASS_PI:
-        raise ValueError('Energy of pion cannot be less than the pion mass.')
-
-    cdef double result = 0.0
-
     cdef int numpts = len(eng_gams)
 
     cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
@@ -136,10 +219,7 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
     cdef int i = 0
 
     for i in range(numpts):
-        if 0.0 <= eng_gams[i] and eng_gams[i] <= __eng_gam_max(eng_pi):
-            spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                           args=(eng_gams[i], eng_pi), epsabs=10**-10., \
-                           epsrel=10**-4.)[0]
+        spec[i] = CSpectrumPoint(eng_gams[i], eng_pi)
 
     return spec
 
@@ -155,17 +235,7 @@ def SpectrumPoint(double eng_gam, double eng_pi):
         eng_gam: Energy of photon is laboratory frame.
         eng_pi: Energy of charged pion in laboratory frame.
     """
-    if eng_pi < MASS_PI:
-        raise ValueError('Energy of pion cannot be less than the pion mass.')
-
-    cdef double result = 0.0
-
-    if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
-        result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                      args=(eng_gam, eng_pi), epsabs=10**-10., \
-                      epsrel=10**-4.)[0]
-
-    return result
+    return CSpectrum(eng_gam, eng_pi)
 
 
 @cython.boundscheck(True)
@@ -181,21 +251,4 @@ def Spectrum(np.ndarray eng_gams, double eng_pi):
         eng_gams: Gamma ray energies to evaluate spectrum.
         eng_pi: Energy of charged pion in laboratory frame.
     """
-    if eng_pi < MASS_PI:
-        raise ValueError('Energy of pion cannot be less than the pion mass.')
-    
-    cdef double result = 0.0
-
-    cdef int numpts = len(eng_gams)
-
-    cdef np.ndarray spec = np.zeros(numpts, dtype=np.float64)
-
-    cdef int i = 0
-
-    for i in range(numpts):
-        if 0.0 <= eng_gams[i] and eng_gams[i] <= __eng_gam_max(eng_pi):
-            spec[i] = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                           args=(eng_gams[i], eng_pi), epsabs=10**-10., \
-                           epsrel=10**-4.)[0]
-
-    return spec
+    return CSpectrum(eng_gams, eng_pi)

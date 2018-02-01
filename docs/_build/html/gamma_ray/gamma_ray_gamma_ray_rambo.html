@@ -232,7 +232,7 @@ fermions through a scalar mediator.</p>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mx</span><span class="p">,</span> <span class="n">ms</span> <span class="o">=</span> <span class="mf">120.</span><span class="p">,</span> <span class="mf">0.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">qf</span> <span class="o">=</span> <span class="mf">1.</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cxxs</span><span class="p">,</span> <span class="n">cffs</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gsxx</span><span class="p">,</span> <span class="n">gsff</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">num_ps_pts</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">fsp_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mmu</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
@@ -240,9 +240,9 @@ fermions through a scalar mediator.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">num_bins</span> <span class="o">=</span> <span class="mi">150</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ff</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">cxxs</span><span class="p">,</span> <span class="n">cffs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ff</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">gsxx</span><span class="p">,</span> <span class="n">gsff</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">radiative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ffg</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span>
-<span class="go">..                                           ms, qf, cxxs, cffs)</span>
+<span class="go">..                                           ms, qf, gsxx, gsff)</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">engs</span><span class="p">,</span> <span class="n">dnde</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="o">.</span><span class="n">gamma_ray_rambo</span><span class="p">(</span><span class="n">isp_masses</span><span class="p">,</span> <span class="n">fsp_masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span>
 <span class="go">..                                         tree, radiative, num_ps_pts,</span>

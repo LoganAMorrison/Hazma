@@ -7,7 +7,7 @@
 import numpy as np
 
 
-def xx_to_s_to_ff(cme, mx, mf, ms, cxxs, cffs):
+def xx_to_s_to_ff(cme, mx, mf, ms, gsxx, gsff):
     """
     Returns the cross section for two identical fermions "x" to two
     identical fermions "f".
@@ -25,9 +25,9 @@ def xx_to_s_to_ff(cme, mx, mf, ms, cxxs, cffs):
         Mass of final state fermions.
     ms : float
         Mass of scalar mediator.
-    cxxs : float
+    gsxx : float
         Coupling of initial state fermions with the scalar mediator.
-    cffs : float
+    gsff : float
         Coupling of final state fermions with the scalar mediator.
 
     Returns
@@ -36,7 +36,7 @@ def xx_to_s_to_ff(cme, mx, mf, ms, cxxs, cffs):
         Cross section for x + x -> S^* -> f + f.
     """
 
-    return (cffs**2 * cxxs**2 * (-4 * mf**2 + cme**2)**1.5 *
+    return (gsff**2 * gsxx**2 * (-4 * mf**2 + cme**2)**1.5 *
             np.sqrt(-4 * mx**2 + cme**2)) / \
         (16. * np.pi * (-(ms**2 * cme) + cme**3)**2)
 
