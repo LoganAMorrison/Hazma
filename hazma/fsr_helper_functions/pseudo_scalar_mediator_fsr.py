@@ -6,7 +6,7 @@
 """
 import numpy as np
 
-alpha = 1.0 / 137.0
+from ..parameters import alpha_em
 
 
 def dnde_xx_to_p_to_ffg(eng_gam, cme, mass_f):
@@ -31,28 +31,21 @@ def dnde_xx_to_p_to_ffg(eng_gam, cme, mass_f):
     spec_val : float
         Spectrum value dNdE from pseudo-scalar mediator.
     """
-    val = 0.0
-
     e, m = eng_gam / cme, mass_f / cme
 
-    if 0 < e and e < 0.5 * (1.0 - 2 * m**2):
-
-        pre_factor = alpha / \
-            (e * np.pi * np.sqrt((1 - 4 * m**2) * cme**2))
-
-        terms = np.array([
-            -2 * np.sqrt(1 - 2 * e) * np.sqrt(1 - 2 * e - 4 * m**2),
-            2 * (1 + 2 * (-1 + e) * e - 2 * m**2) *
-            np.arctanh(np.sqrt(1 - 2 * e - 4 * m**2) /
-                       np.sqrt(1 - 2 * e)),
-            (1 + 2 * (-1 + e) * e - 2 * m**2) *
-            np.log(1 + np.sqrt(1 - 2 * e - 4 * m**2) /
-                   np.sqrt(1 - 2 * e)),
-            -((1 + 2 * (-1 + e) * e - 2 * m**2) *
-              np.log(1 - np.sqrt(1 - 2 * e - 4 * m**2) /
-                     np.sqrt(1 - 2 * e)))
-        ])
-
-        val = np.real(pre_factor * np.sum(terms))
-
-    return val
+    if 0 < e and e < 0.5 * (1.0 - 4 * m**2):
+        return (2 * alpha_em *
+                (-np.sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
+                 (2 + 4 * (-1 + e) * e) * np.log(m) +
+                 m**2 * (2 * np.log(np.sqrt(1 - 2 * e) -
+                                    np.sqrt(1 - 2 * e - 4 * m**2)) -
+                         np.log(2 * (1 - 2 * e - 2 * m**2 +
+                                     np.sqrt((-1 + 2 * e) *
+                                             (-1 + 2 * e + 4 * m**2))))) +
+                 (1 + 2 * (-1 + e) * e) *
+                 np.log(-2 / (-1 + 2 * e + 2 * m**2 +
+                              np.sqrt((-1 + 2 * e) *
+                                      (-1 + 2 * e + 4 * m**2)))))) / \
+            (e * np.sqrt(1 - 4 * m**2) * np.pi * cme)
+    else:
+        return 0.0

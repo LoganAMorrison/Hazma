@@ -6,7 +6,7 @@
 """
 import numpy as np
 
-alpha = 1.0 / 137.0  # Fine structure constant.
+from ..parameters import alpha_em
 
 
 def dnde_xx_to_v_to_ffg(egam, Q, mf):
@@ -30,33 +30,23 @@ def dnde_xx_to_v_to_ffg(egam, Q, mf):
     spec_val : float
         Spectrum value dNdE from vector mediator.
     """
-    val = 0.0
-
     e, m = egam / Q, mf / Q
 
-    if 0 < e and e < 0.5 * (1.0 - 2 * m**2):
+    if 0 < e and e < 0.5 * (1.0 - 4 * m**2):
+        return (alpha_em *
+                (4 * np.sqrt(1 - 2 * e - 4 * m**2) *
+                 (1 - 2 * m**2 + 2 * e * (-1 + e + 2 * m**2)) +
+                 np.sqrt(1 - 2 * e) * (1 + 2 * (-1 + e) * e -
+                                       4 * e * m**2 - 4 * m**4) *
+                 (np.log(1 - 2 * e) - 4 *
+                  np.log(np.sqrt(1 - 2 * e) +
+                         np.sqrt(1 - 2 * e - 4 * m**2)) +
+                  2 * np.log((np.sqrt(1 - 2 * e) -
+                              np.sqrt(1 - 2 * e - 4 * m**2)) *
+                             (1 - np.sqrt(1 + (4 * m**2) /
+                                          (-1 + 2 * e))))))) / \
+            (2. * e * (1 + 2 * m**2) *
+             np.sqrt((-1 + 2 * e) * (-1 + 4 * m**2)) * np.pi * Q)
 
-        pre_factor = alpha / (4 * e *
-                              np.sqrt(1 - 4 * m**2) * (1 + 2 * m**2) *
-                              np.pi * np.sqrt(Q * (Q - 2 * e * Q)))
-
-        terms = np.array([
-            2 * np.sqrt(1 - 2 * e - 4 * m**2) *
-            (1 + 2 * m**2 + 2 * e * (-1 + e - 2 * m**2)),
-            -2 * np.sqrt(1 - 2 * e) *
-            (1 + 2 * (-1 + e) * e - 4 * e * m**2 - 4 * m**4) * np.arctanh(
-                np.sqrt(1 - 2 * e - 4 * m**2) /
-                np.sqrt(1 - 2 * e)),
-            np.sqrt(1 - 2 * e) *
-            (1 + 2 * (-1 + e) * e - 4 * e * m**2 - 4 * m**4) *
-            np.log(1 + np.sqrt(1 - 2 * e - 4 * m**2) /
-                   np.sqrt(1 - 2 * e)),
-            - (np.sqrt(1 - 2 * e) *
-               (1 + 2 * (-1 + e) * e - 4 * e * m**2 - 4 * m**4) *
-               np.log(1 - np.sqrt(1 - 2 * e - 4 * m**2) /
-                      np.sqrt(1 - 2 * e)))
-        ])
-
-        val = np.real(pre_factor * np.sum(terms))
-
-    return val
+    else:
+        return 0.0

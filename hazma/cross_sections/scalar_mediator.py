@@ -1,11 +1,11 @@
-"""Module containing cross sections.
+"""Module containing cross sections for the scalar mediator.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
 """
 
 import numpy as np
-from ..parameters import vh, b0, alpha_em, fpi
+from ..parameters import vh, b0, alpha_em
 from ..parameters import charged_kaon_mass as mk
 from ..parameters import neutral_kaon_mass as mk0
 from ..parameters import eta_mass as meta

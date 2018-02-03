@@ -48,30 +48,18 @@ def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
         Spectrum value dNdE from scalar mediator.
 
     """
-    val = 0.0
+    e, m = eng_gam / cme, mass_f / cme
 
-    if cme < 2 * mass_f:
-        return 0
-
-    if 0 < eng_gam and eng_gam < (cme**2 - 2 * mass_f**2) / (2 * cme):
-        e, m = eng_gam / cme, mass_f / cme
-
-        prefac = (4 * alpha_em) / (e * (1 - 4 * m**2)**1.5 * np.pi * cme)
-
-        terms = np.array([
-            2 * (-1 + 4 * m**2) *
-            np.sqrt((1 - 2 * e) * (1 - 2 * e - 4 * m**2)),
-            2 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 + 8 *
-                 m**4) * np.arctanh(np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
-            (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 + 8 * m**4) *
-            np.log(1 + np.sqrt(1 - (4 * m**2) / (1 - 2 * e))),
-            (-1 - 2 * (-1 + e) * e + 6 * m**2 - 8 * e * m**2 - 8 * m**4) *
-            np.log(1 - np.sqrt(1 - (4 * m**2) / (1 - 2 * e)))
-        ])
-
-        val = np.real(prefac * np.sum(terms)) / 4.0
-
-    return val
+    if 0 < e and e < 0.5 * (1.0 - 4.0 * m**2):
+        return (alpha_em *
+                (2 * (-1 + 4 * m**2) *
+                 np.sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
+                 4 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 +
+                      8 * m**4) *
+                 np.arctanh(np.sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
+            (e * (1 - 4 * m**2)**1.5 * np.pi * cme)
+    else:
+        return 0.0
 
 
 """ Charged Pion FSR """
