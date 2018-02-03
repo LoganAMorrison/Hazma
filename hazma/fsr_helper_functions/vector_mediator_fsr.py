@@ -9,20 +9,20 @@ import numpy as np
 from ..parameters import alpha_em
 
 
-def dnde_xx_to_v_to_ffg(egam, Q, mf):
+def __dnde_xx_to_v_to_ffg(egam, Q, mf):
     """Return the fsr spectra for fermions from decay of vector mediator.
 
     Computes the final state radiaton spectrum value dNdE from a vector
-    mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`
-    and final state fermion mass `mass_f`.
+    mediator given a gamma ray energy of `egam`, center of mass energy `Q`
+    and final state fermion mass `mf`.
 
     Paramaters
     ----------
-    eng_gam : float
+    egam : float
         Gamma ray energy.
-    cme: float
+    Q: float
         Center of mass energy of mass of off-shell vector mediator.
-    mass_f : float
+    mf : float
         Mass of the final state fermion.
 
     Returns
@@ -50,3 +50,30 @@ def dnde_xx_to_v_to_ffg(egam, Q, mf):
 
     else:
         return 0.0
+
+
+def dnde_xx_to_v_to_ffg(egam, Q, mf):
+    """Return the fsr spectra for fermions from decay of vector mediator.
+
+    Computes the final state radiaton spectrum value dNdE from a vector
+    mediator given a gamma ray energy of `egam`, center of mass energy `Q`
+    and final state fermion mass `mf`.
+
+    Paramaters
+    ----------
+    egam : float
+        Gamma ray energy.
+    Q: float
+        Center of mass energy of mass of off-shell vector mediator.
+    mf : float
+        Mass of the final state fermion.
+
+    Returns
+    -------
+    spec_val : float
+        Spectrum value dNdE from vector mediator.
+    """
+    if hasattr(egam, '__len__'):
+        return np.array([__dnde_xx_to_v_to_ffg(e, Q, mf) for e in egam])
+    else:
+        return __dnde_xx_to_v_to_ffg(egam, Q, mf)

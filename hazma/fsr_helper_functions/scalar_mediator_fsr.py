@@ -26,7 +26,7 @@ from ..unitarization import unit_matrix_elem_sqrd
 e = np.sqrt(4 * np.pi * alpha_em)
 
 
-def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
+def __dnde_xx_to_s_to_ffg(egam, Q, mf):
     """Return the fsr spectra for fermions from decay of scalar mediator.
 
     Computes the final state radiaton spectrum value dNdE from a scalar
@@ -35,11 +35,11 @@ def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
 
     Paramaters
     ----------
-    eng_gam : float
+    egam : float
         Gamma ray energy.
-    cme: float
+    Q: float
         Center of mass energy of mass of off-shell scalar mediator.
-    mass_f : float
+    mf : float
         Mass of the final state fermion.
 
     Returns
@@ -48,7 +48,7 @@ def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
         Spectrum value dNdE from scalar mediator.
 
     """
-    e, m = eng_gam / cme, mass_f / cme
+    e, m = egam / Q, mf / Q
 
     if 0 < e and e < 0.5 * (1.0 - 4.0 * m**2):
         return (alpha_em *
@@ -57,9 +57,37 @@ def dnde_xx_to_s_to_ffg(eng_gam, cme, mass_f):
                  4 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 +
                       8 * m**4) *
                  np.arctanh(np.sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
-            (e * (1 - 4 * m**2)**1.5 * np.pi * cme)
+            (e * (1 - 4 * m**2)**1.5 * np.pi * Q)
     else:
         return 0.0
+
+
+def dnde_xx_to_s_to_ffg(egam, Q, mf):
+    """Return the fsr spectra for fermions from decay of scalar mediator.
+
+    Computes the final state radiaton spectrum value dNdE from a scalar
+    mediator given a gamma ray energy of `eng_gam`, center of mass energy `cme`
+    and final state fermion mass `mass_f`.
+
+    Paramaters
+    ----------
+    egam : float
+        Gamma ray energy.
+    Q: float
+        Center of mass energy of mass of off-shell scalar mediator.
+    mf : float
+        Mass of the final state fermion.
+
+    Returns
+    -------
+    spec_val : float
+        Spectrum value dNdE from scalar mediator.
+
+    """
+    if hasattr(egam, '__len__'):
+        return np.array([__dnde_xx_to_s_to_ffg(e, Q, mf) for e in egam])
+    else:
+        return __dnde_xx_to_s_to_ffg(egam, Q, mf)
 
 
 """ Charged Pion FSR """
