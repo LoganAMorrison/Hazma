@@ -1,0 +1,156 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>hazma.gamma_ray.gamma_ray_rambo &#8212; Hazma 2.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="hazma.rambo.compute_annihilation_cross_section" href="../rambo/annihilation_cross_section.html" />
+    <link rel="prev" title="hazma.gamma_ray.gamma_ray" href="gamma_ray_gamma_ray.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hazma-gamma-ray-gamma-ray-rambo">
+<span id="gamma-ray-gamma-ray-rambo"></span><h1>hazma.gamma_ray.gamma_ray_rambo<a class="headerlink" href="#hazma-gamma-ray-gamma-ray-rambo" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="hazma.gamma_ray.gamma_ray_rambo">
+<code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray_rambo</code><span class="sig-paren">(</span><em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd_tree=&lt;function &lt;lambda&gt;&gt;</em>, <em>mat_elem_sqrd_rad=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray_rambo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns total gamma ray spectrum from a set of particles using a Monte
+Carlo.</p>
+<p>Returns total gamma ray spectrum from a set of particles. This is done by
+first running a Monte Carlos to compute the non-radiative cross
+cross_section, <span class="math">\(\sigma(I \to F)\)</span> from the non-radiative squared
+matrix element: <span class="math">\(|M(I \to F)|^2\)</span>. The differential radiative cross
+section, <span class="math">\(\frac{d\sigma(I \to F + \gamma)}{dE_{\gamma}}\)</span>, is then
+computed using a Monte Carlo using the radiative squared matrix element
+<span class="math">\(|M(I \to F + \gamma)|^2\)</span>. The spectrum is then</p>
+<div class="math">
+\[\frac{dN}{dE_{\gamma}} = \frac{1}{\sigma(I \to F)}
+\frac{d\sigma(I \to F + \gamma)}{dE_{\gamma}}\]</div>
+<dl class="docutils">
+<dt>isp_masses <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray[double, ndim=1]</span></dt>
+<dd>Array of masses of the initial state particles.</dd>
+<dt>fsp_masses <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray[double, ndim=1]</span></dt>
+<dd>Array of masses of the final state particles.</dd>
+<dt>cme <span class="classifier-delimiter">:</span> <span class="classifier">double</span></dt>
+<dd>Center of mass energy of the process.</dd>
+<dt>mat_elem_sqrd_tree <span class="classifier-delimiter">:</span> <span class="classifier">double(*)(np.ndarray[double, ndim=1])</span></dt>
+<dd>Tree level squared matrix element.</dd>
+<dt>mat_elem_sqrd_rad <span class="classifier-delimiter">:</span> <span class="classifier">double(*)(np.ndarray[double, ndim=1])</span></dt>
+<dd>Radiative squared matrix element.</dd>
+<dt>num_ps_pts <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of Monte Carlo events to generate.</dd>
+<dt>num_bins <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd>Number of gamma ray energies to use.</dd>
+</dl>
+<dl class="docutils">
+<dt>eng_gams <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray[double, ndim=1]</span></dt>
+<dd>Array of the gamma ray energies.</dd>
+<dt>dndes <span class="classifier-delimiter">:</span> <span class="classifier">np.ndarray[double, ndim=1]</span></dt>
+<dd>Array of the spectrum values evaluated at the gamma ray energies.</dd>
+</dl>
+<p>Compute spectrum from two fermions annihilating into a pair of charged
+fermions through a scalar mediator.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma</span> <span class="k">import</span> <span class="n">rambo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.matrix_elements.simplified_models</span> <span class="k">import</span> <span class="n">xx_to_s_to_ff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.matrix_elements.simplified_models</span> <span class="k">import</span> <span class="n">xx_to_s_to_ffg</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mx</span><span class="p">,</span> <span class="n">ms</span> <span class="o">=</span> <span class="mf">120.</span><span class="p">,</span> <span class="mf">0.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qf</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gsxx</span><span class="p">,</span> <span class="n">gsff</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">num_ps_pts</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fsp_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mmu</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isp_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mx</span><span class="p">,</span> <span class="n">mx</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">1000.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">num_bins</span> <span class="o">=</span> <span class="mi">150</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tree</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ff</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span> <span class="n">ms</span><span class="p">,</span> <span class="n">gsxx</span><span class="p">,</span> <span class="n">gsff</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">radiative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ffg</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span>
+<span class="go">..                                           ms, qf, gsxx, gsff)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">engs</span><span class="p">,</span> <span class="n">dnde</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="o">.</span><span class="n">gamma_ray_rambo</span><span class="p">(</span><span class="n">isp_masses</span><span class="p">,</span> <span class="n">fsp_masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span>
+<span class="go">..                                         tree, radiative, num_ps_pts,</span>
+<span class="go">..                                         num_bins)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="gamma_ray_gamma_ray.html" title="previous chapter">hazma.gamma_ray.gamma_ray</a></li>
+      <li>Next: <a href="../rambo/annihilation_cross_section.html" title="next chapter">hazma.rambo.compute_annihilation_cross_section</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Logan A. Morrison and Adam Coogan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/gamma_ray/gamma_ray_gamma_ray_rambo.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
