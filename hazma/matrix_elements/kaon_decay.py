@@ -87,36 +87,40 @@ def msqrd_kl_to_pienug(moms):
 
     mat_elem_sqrd =\
         (8 * alpha_em * GF**2 * np.pi *
-         (-2 * mpi**2 * peDOTpg**3 * (pgDOTpn + pkDOTpn + pnDOTpp) +
-          me**2 * pgDOTpp**2 *
-          (peDOTpn * (mk0**2 + mpi**2 + 2 * pkDOTpp) +
-           pgDOTpn * (mk0**2 + mpi**2 + 2 * pkDOTpp) -
-           2 * (peDOTpk + peDOTpp + pgDOTpk + pgDOTpp) * (pkDOTpn + pnDOTpp)) +
+         (-2 * peDOTpg**3 *
+          (mpi**2 * (pgDOTpn + pkDOTpn) + (mpi**2 - pgDOTpp) * pnDOTpp) +
           peDOTpg**2 *
-          (-2 * mpi**2 * peDOTpp * pgDOTpn - 2 * mpi**2 * pgDOTpn * pgDOTpp -
-           2 * mpi**2 * peDOTpp * pkDOTpn - 2 * mpi**2 * pgDOTpp * pkDOTpn +
-           2 * peDOTpp * pgDOTpp * pkDOTpn - 2 * pgDOTpn * pgDOTpp * pkDOTpp -
-           2 * pgDOTpp * pkDOTpn * pkDOTpp + mpi**2 * peDOTpn *
-           (mk0**2 + mpi**2 + 2 * pgDOTpk + 2 * pgDOTpp + 2 * pkDOTpp) -
-           2 * mpi**2 * peDOTpp * pnDOTpp + mk0**2 * pgDOTpp * pnDOTpp -
-           mpi**2 * pgDOTpp * pnDOTpp +
-           2 * peDOTpp * pgDOTpp * pnDOTpp + 2 * pgDOTpk * pgDOTpp * pnDOTpp +
-           2 * pgDOTpp**2 * pnDOTpp -
-           2 * mpi**2 * peDOTpk * (pgDOTpn + pkDOTpn + pnDOTpp)) -
+          (2 * pgDOTpn *
+           (-(mpi**2 * (peDOTpk + peDOTpp)) +
+            (mpi**2 + peDOTpp) * pgDOTpp) -
+           2 * (mpi**2 * (peDOTpk + peDOTpp) - mpi**2 * pgDOTpp +
+                pgDOTpp**2) * pkDOTpn +
+           2 * pgDOTpp * (pgDOTpn + pkDOTpn) * pkDOTpp +
+           peDOTpn * (mpi**2 * (mk0**2 + mpi**2 + 2 * pgDOTpk) +
+                      2 * (mpi**2 - pgDOTpp) * pkDOTpp) -
+           (2 * mpi**2 *
+            (peDOTpk + peDOTpp) +
+            (mk0**2 - mpi**2 - 2 * peDOTpk - 2 * peDOTpp + 2 * pgDOTpk) *
+            pgDOTpp + 4 * pgDOTpp**2) * pnDOTpp) +
+          me**2 * pgDOTpp**2 *
+          ((peDOTpn + pgDOTpn) *
+           (mk0**2 + mpi**2 + 2 * pkDOTpp) -
+           2 * (peDOTpk + peDOTpp + pgDOTpk + pgDOTpp) *
+           (pkDOTpn + pnDOTpp)) +
           peDOTpg * pgDOTpp *
           (peDOTpn *
-           (2 * peDOTpp *
-            (mk0**2 + mpi**2 + pgDOTpk + pgDOTpp + 2 * pkDOTpp) +
-            pgDOTpp * (mk0**2 + mpi**2 +
-                       2 * pgDOTpk + 2 * pgDOTpp + 2 * pkDOTpp)) -
-           2 * peDOTpp**2 * (pgDOTpn + 2 * (pkDOTpn + pnDOTpp)) - pgDOTpp *
-           (-(pgDOTpn * (mk0**2 + mpi**2 - 2 * peDOTpk + 2 * pkDOTpp)) +
-            2 * (peDOTpk + pgDOTpk + pgDOTpp) * (pkDOTpn + pnDOTpp)) +
-           peDOTpp * (pgDOTpn * (mk0**2 + mpi**2 - 2 * peDOTpk -
-                                 2 * pgDOTpp + 2 * pkDOTpp) -
-                      2 * (2 * peDOTpk + pgDOTpk + 2 * pgDOTpp) *
-                      (pkDOTpn + pnDOTpp)))) * Vus**2) / \
-        (peDOTpg**2 * pgDOTpp**2)
+           (pgDOTpp * (mk0**2 + mpi**2 + 2 * pkDOTpp) +
+            2 * peDOTpp * (mk0**2 + mpi**2 + pgDOTpk + pgDOTpp +
+                           2 * pkDOTpp)) -
+           2 * peDOTpp**2 * (pgDOTpn + 2 * (pkDOTpn + pnDOTpp)) +
+           pgDOTpp * (-(pgDOTpn * (mk0**2 + mpi**2 + 2 * pkDOTpp)) +
+                      2 * (me**2 - peDOTpk + pgDOTpk + pgDOTpp) *
+                      (pkDOTpn + pnDOTpp)) +
+           peDOTpp *
+           (pgDOTpn *
+            (mk0**2 + mpi**2 - 2 * peDOTpk + 2 * pkDOTpp) -
+            2 * (2 * peDOTpk + pgDOTpk + 2 * pgDOTpp) * (pkDOTpn + pnDOTpp)))
+          ) * Vus**2) / (peDOTpg**2 * pgDOTpp**2)
 
     return mat_elem_sqrd
 

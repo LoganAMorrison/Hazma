@@ -14,7 +14,9 @@ from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
-from ..unitarization import unit_matrix_elem_sqrd
+from ..unitarization import amp_inverse_amplitude_pipi_to_pipi
+from ..unitarization import amp_pipi_to_pipi_I0
+from ..unitarization import amp_bethe_salpeter_pipi_to_pipi, bubble_loop
 
 
 def sigma_xx_to_s_to_etaeta(cme, mx, ms, gsxx, gsff, gsGG, vs):
@@ -241,7 +243,7 @@ def sigma_xx_to_s_to_kk(cme, mx, ms, gsxx, gsff, gsGG, vs):
     return sigma
 
 
-def sigma_xx_to_s_to_pi0pi0(cme, mx, ms, gsxx, gsff, gsGG, vs):
+def sigma_xx_to_s_to_pi0pi0(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of neutral pion through a
     scalar mediator in the s-channel.
@@ -285,10 +287,19 @@ def sigma_xx_to_s_to_pi0pi0(cme, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    return sigma * unit_matrix_elem_sqrd(cme)
+    unit_factor = 1. + 1.0j * \
+        amp_bethe_salpeter_pipi_to_pipi(cme) * bubble_loop(cme)
+
+    if unit == "IAM":
+        unit_factor = amp_inverse_amplitude_pipi_to_pipi(cme) / \
+            amp_pipi_to_pipi_I0(cme)
+    if unit == "LO":
+        unit_factor = 1.0
+
+    return sigma * np.abs(unit_factor)**2.
 
 
-def sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
+def sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of charged pions through a
     scalar mediator in the s-channel.
@@ -332,4 +343,13 @@ def sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    return sigma * unit_matrix_elem_sqrd(cme)
+    unit_factor = 1. + 1.0j * \
+        amp_bethe_salpeter_pipi_to_pipi(cme) * bubble_loop(cme)
+
+    if unit == "IAM":
+        unit_factor = amp_inverse_amplitude_pipi_to_pipi(cme) / \
+            amp_pipi_to_pipi_I0(cme)
+    if unit == "LO":
+        unit_factor = 1.0
+
+    return sigma * np.abs(unit_factor)**2.

@@ -21,9 +21,9 @@ from ..field_theory_helper_functions.common_functions import minkowski_dot
 # from ..parameters import eta_mass as meta
 
 
-# #####################################
-# ####### MATRIX ELEMENTS #############
-# #####################################
+# ###################################
+# ####### NON-RADIATIVE #############
+# ###################################
 
 def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, gsxx, gsff):
     """Returns the spin-averaged, squared matrix element for a pair of fermions,
@@ -60,6 +60,11 @@ def msqrd_xx_to_s_to_ff(moms, mx, mf, ms, gsxx, gsff):
 
     return gsff**2 * gsxx**2 * mf**2 * (Q**2 - 4.0 * mf**2) * \
         (Q**2 - 4.0 * mx**2) / (ms**2 - Q**2)**2 / vh**2
+
+
+# ###############################
+# ####### RADIATIVE #############
+# ###############################
 
 
 def msqrd_xx_to_s_to_ffg(moms, mx, mf, ms, qf, gsxx, gsff):
