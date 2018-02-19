@@ -25,6 +25,7 @@ jobs:
           name: install dependencies
           command: |
             pip install -r requirements.txt
+            pip install .
 
       - save_cache:
           paths:
@@ -39,7 +40,6 @@ jobs:
       - run:
           name: run tests
           command: |
-            . venv/bin/activate
             python hazma/test/test_decay_spectra.py test
             python hazma/test/test_fsr.py test
             python hazma/test/test_gamma_ray.py test
