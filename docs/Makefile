@@ -7,7 +7,7 @@ SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = Hazma
 SOURCEDIR     = source
 BUILDDIR      = ../../Hazma-docs
-PDFBUILDER    = /tmp
+PDFBUILDDIR   = /tmp
 PDF           = ../manual.pdf
 
 
@@ -22,13 +22,9 @@ help:
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-
 latexpdf:
-    $(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(PDFBUILDDIR)/latex
-    #                                          ^^^
-    @echo "Running LaTeX files through pdflatex..."
-    make -C $(PDFBUILDDIR)/latex all-pdf
-    #         ^^^
-    cp $(PDFBUILDDIR)/latex/*.pdf $(PDF)
-    #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    @echo "pdflatex finished; see $(PDF)"
+	$(SPHINXBUILD) -b latex "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+	@echo "Running LaTeX files through pdflatex..."
+	make -C $(BUILDDIR)/latex all-pdf
+	cp $(BUILDDIR)/latex/*.pdf $(PDF)
+	@echo "pdflatex finished; the PDF files are in $(PDF)/latex."
