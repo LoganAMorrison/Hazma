@@ -17,34 +17,6 @@ Welcome to Hazma's documentation!
     fsr.rst
     tutorial.rst
 
-.. toctree::
-    :maxdepth: 2
-    :caption: Gamma Ray Modules
-
-    gamma_ray/gamma_ray_gamma_ray.rst
-    gamma_ray/gamma_ray_gamma_ray_rambo.rst
-
-
-.. toctree::
-    :maxdepth: 2
-    :caption: RAMBO Modules
-
-    rambo/annihilation_cross_section.rst
-    rambo/decay_width.rst
-    rambo/energy_histogram.rst
-    rambo/phase_space.rst
-    rambo/phase_space_point.rst
-
-.. toctree::
-    :maxdepth: 2
-    :caption: Decay Modules
-
-    decay/decay_muon.rst
-    decay/decay_neutral_pion.rst
-    decay/decay_charged_pion.rst
-    decay/decay_long_kaon.rst
-    decay/decay_short_kaon.rst
-
 
 
 
