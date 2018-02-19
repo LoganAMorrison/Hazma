@@ -40,9 +40,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            python hazma/test/test_decay_spectra.py test
-            python hazma/test/test_fsr.py test
-            python hazma/test/test_gamma_ray.py test
+            pytest
 
       - store_artifacts:
           path: test-reports
