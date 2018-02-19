@@ -18,7 +18,7 @@
 #
 # import os
 # import sys
-import sphinx_rtd_theme
+# import sphinx_rtd_theme
 
 # -- General configuration ------------------------------------------------
 
@@ -29,10 +29,30 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+"""
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath',
               'sphinx.ext.napoleon',
               'sphinx.ext.intersphinx', 'sphinx.ext.coverage',
               'sphinx.ext.autosummary', 'sphinx.ext.githubpages']
+"""
+
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.githubpages',
+]
+
+autodoc_member_order = 'groupwise'
+autodoc_default_flags = ['members', 'show-inheritance']
+autosummary_generate = True
+
+napoleon_google_docstring = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_rtype = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -84,8 +104,15 @@ todo_include_todos = False
 # a list of builtin themes.
 #
 # html_theme = 'classic'
-html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme = 'ribokit-Sphinx-theme'
+html_theme_path = ['_theme']
+html_theme_options = {
+    'description': 'PCR Assembly Primer Design',
+    'author': author.split(',')[0].strip(),
+    'github_repo': 'ribokit/Primerize',
+    'ga_tracker': 'UA-12345678-9'
+}
+html_additional_pages = {'404': '404.html'}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
