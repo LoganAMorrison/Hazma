@@ -1,0 +1,211 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Decay (hazma.decay) &#8212; Hazma 2.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Final State Radiation" href="../fsr.html" />
+    <link rel="prev" title="RAMBO (hazma.rambo)" href="../rambo.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="decay-hazma-decay">
+<h1>Decay (hazma.decay)<a class="headerlink" href="#decay-hazma-decay" title="Permalink to this headline">¶</a></h1>
+<p>In this section, we describe how the radiative decay spectra are computed for the muon, charged pion and neutral pion.</p>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>The submodule <code class="docutils literal"><span class="pre">hazma.decay</span></code> has the following functions:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="34%" />
+<col width="66%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Muon</td>
+<td><a class="reference internal" href="decay_muon.html#decay-muon"><span class="std std-ref">hazma.decay.muon</span></a></td>
+</tr>
+<tr class="row-even"><td>Neutral Pion</td>
+<td><a class="reference internal" href="decay_neutral_pion.html#decay-neutral-pion"><span class="std std-ref">hazma.decay.neutral_pion</span></a></td>
+</tr>
+<tr class="row-odd"><td>Charged Pion</td>
+<td><a class="reference internal" href="decay_charged_pion.html#decay-charged-pion"><span class="std std-ref">hazma.decay.charged_pion</span></a></td>
+</tr>
+<tr class="row-even"><td>Short Kaon</td>
+<td><a class="reference internal" href="decay_short_kaon.html#decay-short-kaon"><span class="std std-ref">hazma.decay.short_kaon</span></a></td>
+</tr>
+<tr class="row-odd"><td>Long Kaon</td>
+<td><a class="reference internal" href="decay_long_kaon.html#decay-long-kaon"><span class="std std-ref">hazma.decay.long_kaon</span></a></td>
+</tr>
+<tr class="row-even"><td>Charged Kaon</td>
+<td><a class="reference internal" href="decay_charged_kaon.html#decay-charged-kaon"><span class="std std-ref">hazma.decay.charged_kaon</span></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="details">
+<h2>Details<a class="headerlink" href="#details" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="muon">
+<h3>Muon<a class="headerlink" href="#muon" title="Permalink to this headline">¶</a></h3>
+<p>The dominant contribution to the radiative decay of the muon comes from <span class="math">\(\mu^{\pm}\to e^{\pm}\nu\bar{\nu}\gamma\)</span>. The unpolarized differential branching fraction of this decay mode in the <em>muon rest frame</em> can be written as
+[1]</p>
+<div class="math">
+\[\dfrac{dB}{dy \ d\cos\theta_{\gamma}^{R}} = \dfrac{1}{y}
+\dfrac{\alpha}{72\pi}(1-y)\left[
+12\left(3 - 2y(1-y)^2\right)\log\left(\dfrac{1-y}{r}\right)
++ y(1-y)(46 - 55y) - 102\right]\]</div>
+<p>where <span class="math">\(r = (m_{e}/m_{\mu})^2\)</span>, <span class="math">\(0 \leq y = 2E_{\gamma}^{R\mu}/m_{\mu} \leq 1 - r\)</span>, (<span class="math">\(E_{\gamma}^{R\mu}\)</span> is the energy of the photon in the muon rest frame) and <span class="math">\(\theta_{\gamma}^{R}\)</span> is the angle the photon makes with respect to some axis in the muon rest frame.  In order to obtain the decay spectrum in the laboratory frame, we need to boost the above spectrum. In other words, we need to change variables from the gamma ray energy and angle in the muon rest frame to those in the lab frame. We then integrate over the angle to compute <span class="math">\(dN/dE_{\gamma}\)</span>. The Jacobian for this change of variables is</p>
+<div class="math">
+\[J = \dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}\]</div>
+<p>where the boost parameters are</p>
+<div class="math">
+\[\gamma = E_{\mu} / m_{\mu}, \qquad \beta = \sqrt{1 - \left(\dfrac{m_{\mu}}{E_{\mu}}\right)^2}\]</div>
+<p>Integrating over angles yields the gamma ray spectrum in the lab frame:</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}^{L}} =
+\int_{-1}^{1}d\cos\theta_{\gamma}^{L}
+\dfrac{1}{2\gamma(1-\beta\cos\theta_{\gamma}^{L})}
+\dfrac{dB}{dE_{\gamma}^{R\mu}}\]</div>
+<a class="reference internal image-reference" href="../_images/muon_decay_spectra.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="../_images/muon_decay_spectra.png" style="width: 400px; height: 400px;" /></a>
+</div>
+<div class="section" id="charged-pion">
+<h3>Charged Pion<a class="headerlink" href="#charged-pion" title="Permalink to this headline">¶</a></h3>
+<p>To compute the gamma ray spectrum from a charged pion, one considers to possible decay modes. These decay modes are <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu}\gamma\)</span> and <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu} \to e^{\pm}\nu_{\mu}\nu_{\mu}\nu_{e}\gamma\)</span>. To compute the gamma ray spectrum from the first decay mode, one uses results from [2]. It turns out that the spectrum from this decay mode is roughly a factor of 100 times smaller than the spectrum from the second decay mode. We thus ignore the contributions from <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu}\gamma\)</span>.</p>
+<p>To compute the γ-ray spectrum from <span class="math">\(\pi^{\pm} \to \mu^{\pm}\nu_{\mu} \to e^{\pm}\nu_{\mu}\nu_{\mu}\nu_{e}\gamma\)</span>, we first take the muon decay spectra (see section on muon decay spectra) and boost the muon into the pion rest frame use the following:</p>
+<div class="math">
+\[\gamma_{1} = E_{R\mu}/m_{\mu} \qquad
+\beta_{1} = \sqrt{1-\left(\dfrac{m_{\mu}}{E_{R\mu}}\right)^2} \qquad  E_{R\mu} = \dfrac{m_{\pi}^2 - m_{\mu}^2}{m_{\pi}^2 + m_{\mu}^2}\]</div>
+<p>where <span class="math">\(E_{R\mu}\)</span> is the energy of the muon in the pion rest frame. The photon spectrum in the charged pion rest frame, <span class="math">\(dN/dE_{\gamma}^{R\pi}\)</span>, is obtain by integrating the differential branching ratio times a Jacobian factor <span class="math">\(1/2\gamma_{1}(1-\beta_{1}\cos\theta_{\gamma}^{R\pi})\)</span> over the
+angle the photon makes with the muon. Once this integration is completed, one then boosts into the laboratory frame of reference. The steps are nearly identical to boosting from the muon rest frame to the pion rest frame. The only thing that changes in the boost factor and the Jacobian. In going from the charged pion rest frame to the laboratory frame, the Jacobian and boost factor are</p>
+<div class="math">
+\[J = \dfrac{1}{2\gamma_{2}(1-\beta_{2}\cos\theta_{\gamma}^{L})} \qquad
+\gamma_{2} = E_{\pi} / m_{\pi} \qquad
+\beta_{2} = \sqrt{1 - \left(\dfrac{m_{\mu}}{E_{\pi}}\right)^2}\]</div>
+<p>The gamma-ray spectrum in the laboratory frame will thus be</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}^{L}} = \int_{-1}^{1} d\cos\theta_{\gamma}^{L} \dfrac{1}{2\gamma_{2}(1-\beta_{2}\cos\theta_{\gamma}^{L})} \times
+\left(\int_{-1}^{1}d\cos\theta_{\gamma}^{R\pi}
+\dfrac{1}{2\gamma_{1}(1-\beta_{1}\cos\theta_{\gamma}^{L})}
+\dfrac{dB}{dE_{\gamma}^{R\mu}}
+\right)\]</div>
+<p>where</p>
+<div class="math">
+\[E_{\gamma}^{R\mu} = \gamma_{1} E_{\gamma}^{R\pi}\left(1 - \beta_{1}\cos\theta_{\gamma}^{R\pi}\right)\]</div>
+<p>and</p>
+<div class="math">
+\[E_{\gamma}^{R\pi} = \gamma_{2} E_{\gamma}^{L}\left(1 - \beta_{2}\cos\theta_{\gamma}^{L}\right)\]</div>
+<p>The limits on the photon energy are given by</p>
+<div class="math">
+\[0 \leq E_{\gamma}^{L} \leq \dfrac{m_{\mu}^2 - m_{e}^2}{2m_{\mu}}
+\gamma_{1}\gamma_{2}(1+\beta_{1})(1+\beta_{2})\]</div>
+<a class="reference internal image-reference" href="../_images/charged_pion_decay_spectrum.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="../_images/charged_pion_decay_spectrum.png" style="width: 400px; height: 400px;" /></a>
+</div>
+<div class="section" id="neutral-pion">
+<h3>Neutral Pion<a class="headerlink" href="#neutral-pion" title="Permalink to this headline">¶</a></h3>
+<p>The dominant decay mode of the neutral pion is <span class="math">\(\pi^{0}\to\gamma\gamma\)</span>. In the laboratory frame, the spectrum is</p>
+<div class="math">
+\[\dfrac{dN}{dE_{\gamma}} = \dfrac{2}{m_{\pi}\gamma\beta}\]</div>
+</div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><ol class="first last upperalpha simple" start="25">
+<li>Kuno and Y. Okada, Reviews of Modern Physics 73, 151 (2001), ISSN 00346861.</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><ol class="first last upperalpha simple" start="11">
+<li><ol class="first upperalpha">
+<li>Olive, P. D. Group, et al., Chinese physics C 38, 090001 (2014).</li>
+</ol>
+</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../rambo.html" title="previous chapter">RAMBO (hazma.rambo)</a></li>
+      <li>Next: <a href="../fsr.html" title="next chapter">Final State Radiation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Logan A. Morrison and Adam Coogan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/decay/decay.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

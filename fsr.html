@@ -1,0 +1,118 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Final State Radiation &#8212; Hazma 2.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Decay (hazma.decay)" href="decay/decay.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="final-state-radiation">
+<h1>Final State Radiation<a class="headerlink" href="#final-state-radiation" title="Permalink to this headline">¶</a></h1>
+<p>Along with computing decay spectra, hazma is able to compute final state radiation spectra from decays of off-shell mediators (scalar, psuedo-scalar, vector or axial-vector.) The relavent diagrams for such processes are</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="51%" />
+<col width="49%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><div class="first figure">
+<img alt="_static/scalar-fsr.png" src="_static/scalar-fsr.png" />
+</div>
+<ol class="last loweralpha simple">
+<li>Scalar mediator</li>
+</ol>
+</td>
+<td><div class="first figure">
+<img alt="_static/vector-fsr.png" src="_static/vector-fsr.png" />
+</div>
+<ol class="last loweralpha simple" start="2">
+<li>Vector mediator</li>
+</ol>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Computing the matrix elements squared of these diagrams (including diagrams with the photon attached to the other fermion leg) and integrating over all variables except the photon energy yields <span class="math">\(d\sigma(M^*\to\mu^{+}\mu^{-}\gamma)/dE\)</span>. To compute <span class="math">\(dN/dE\)</span>, we divide <span class="math">\(d\sigma(M^*\to\mu^{+}\mu^{-}\gamma)/dE\)</span> by <span class="math">\(\sigma(M^*\to\mu^{+}\mu^{-})\)</span>.</p>
+<a class="reference internal image-reference" href="_static/muon_fsr.png"><img alt="Gamma ray spectrum from radiative muon decay" class="align-center" src="_static/muon_fsr.png" style="width: 800px; height: 800px;" /></a>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="decay/decay.html" title="previous chapter">Decay (hazma.decay)</a></li>
+      <li>Next: <a href="tutorial.html" title="next chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Logan A. Morrison and Adam Coogan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/fsr.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
