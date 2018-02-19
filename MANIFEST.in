@@ -1,3 +1,0 @@
-include hazma/decay_helper_functions/interpolation_data/*.dat
-include hazma/cross_sections/unitarization/*.dat
-include hazma/unitarization_data/*.dat
