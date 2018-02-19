@@ -1,5 +1,5 @@
 .. Hazma documentation master file, created by
-   sphinx-quickstart on Sun Feb 18 22:43:10 2018.
+   sphinx-quickstart on Sat Dec  9 12:12:04 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -7,8 +7,45 @@ Welcome to Hazma's documentation!
 =================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+    :caption: Introduction and Details
+
+    introduction.rst
+    gamma_ray/gamma_ray.rst
+    rambo.rst
+    decay/decay.rst
+    fsr.rst
+    tutorial.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Gamma Ray Modules
+
+    gamma_ray/gamma_ray_gamma_ray.rst
+    gamma_ray/gamma_ray_gamma_ray_rambo.rst
+
+
+.. toctree::
+    :maxdepth: 2
+    :caption: RAMBO Modules
+
+    rambo/annihilation_cross_section.rst
+    rambo/decay_width.rst
+    rambo/energy_histogram.rst
+    rambo/phase_space.rst
+    rambo/phase_space_point.rst
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Decay Modules
+
+    decay/decay_muon.rst
+    decay/decay_neutral_pion.rst
+    decay/decay_charged_pion.rst
+    decay/decay_long_kaon.rst
+    decay/decay_short_kaon.rst
+
+
 
 
 
