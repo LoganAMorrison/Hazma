@@ -25,7 +25,7 @@ jobs:
           name: install dependencies
           command: |
             pip install -r requirements.txt
-            pip install .
+            pip install --upgrade .
 
       - save_cache:
           paths:
@@ -33,14 +33,10 @@ jobs:
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # run tests!
-      # this example uses Django's built-in test-runner
-      # other common Python testing frameworks include pytest and nose
-      # https://pytest.org
-      # https://nose.readthedocs.io
       - run:
           name: run tests
           command: |
-            - py.test ./test/
+            py.test ./hazma/test/
 
       - store_artifacts:
           path: test-reports
