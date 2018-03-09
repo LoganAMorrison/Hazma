@@ -14,12 +14,55 @@ from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
-from ..unitarization import amp_inverse_amplitude_pipi_to_pipi
-from ..unitarization import amp_pipi_to_pipi_I0
 from ..unitarization import amp_bethe_salpeter_pipi_to_pipi, bubble_loop
+from ..unitarization import amp_bethe_salpeter_pipi_to_kk
+from ..unitarization import amp_bethe_salpeter_kk_to_kk
 
 
-def sigma_xx_to_s_to_etaeta(cme, mx, ms, gsxx, gsff, gsGG, vs):
+def msqrd_xx_s(s, mx, gsxx):
+    return -(gsxx**2 * (4 * mx**2 - s)) / 2.
+
+
+def __amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs):
+    return (-2 * gsGG * (-2 * mk0**2 + s)) / \
+        (9 * vh + 4 * gsGG * vs) - \
+        (b0 * (mdq + msq) * (54 * gsGG * vh - 32 * gsGG**2 * vs +
+                             9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
+        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
+         (9 * vh + 8 * gsGG * vs))
+
+
+def __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs):
+    return (-2 * gsGG * (-2 * mk**2 + s)) / \
+        (9 * vh + 4 * gsGG * vs) - \
+        (b0 * (msq + muq) *
+         (54 * gsGG * vh - 32 * gsGG**2 * vs +
+          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
+        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
+         (9 * vh + 8 * gsGG * vs))
+
+
+def __amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs):
+    return (-2 * gsGG * (-2 * mpi0**2 + s)) / \
+        (9 * vh + 4 * gsGG * vs) - \
+        (b0 * (mdq + muq) *
+         (54 * gsGG * vh - 32 * gsGG**2 * vs +
+          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
+        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
+         (9 * vh + 8 * gsGG * vs))
+
+
+def __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs):
+    return (-2 * gsGG * (-2 * mpi**2 + s)) / \
+        (9 * vh + 4 * gsGG * vs) - \
+        (b0 * (mdq + muq) *
+         (54 * gsGG * vh - 32 * gsGG**2 * vs +
+          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
+        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
+         (9 * vh + 8 * gsGG * vs))
+
+
+def sigma_xx_to_s_to_etaeta(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of eta mesons through a
     scalar mediator in the s-channel.
@@ -56,8 +99,8 @@ def sigma_xx_to_s_to_etaeta(cme, mx, ms, gsxx, gsff, gsGG, vs):
     sigma = (gsxx**2 * np.sqrt(-4 * meta**2 + s) *
              np.sqrt(-4 * mx**2 + s) *
              (6 * gsGG * (2 * meta**2 - s) *
-                 (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-                 (9 * vh + 8 * gsGG * vs) + b0 *
+              (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
+              (9 * vh + 8 * gsGG * vs) + b0 *
                  (mdq + 4 * msq + muq) * (9 * vh + 4 * gsGG * vs) *
                  (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
                   (9 * vh + 16 * gsGG * vs)))**2) / \
@@ -68,7 +111,7 @@ def sigma_xx_to_s_to_etaeta(cme, mx, ms, gsxx, gsff, gsGG, vs):
     return sigma
 
 
-def sigma_xx_to_s_to_ff(cme, mx, mf, ms, gsxx, gsff, gsGG, vs):
+def sigma_xx_to_s_to_ff(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f* through a
     scalar mediator in the s-channel.
@@ -109,7 +152,7 @@ def sigma_xx_to_s_to_ff(cme, mx, mf, ms, gsxx, gsff, gsGG, vs):
     return sigma
 
 
-def sigma_xx_to_s_to_gg(cme, mx, ms, gsxx, gsFF):
+def sigma_xx_to_s_to_gg(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of photons through a
     scalar mediator in the s-channel.
@@ -146,7 +189,8 @@ def sigma_xx_to_s_to_gg(cme, mx, ms, gsxx, gsFF):
     return sigma
 
 
-def sigma_xx_to_s_to_k0k0(cme, mx, ms, gsxx, gsff, gsGG, vs):
+def sigma_xx_to_s_to_k0k0(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs,
+                          unit='BSE'):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of neutral kaons through a
     scalar mediator in the s-channel.
@@ -171,29 +215,49 @@ def sigma_xx_to_s_to_k0k0(cme, mx, ms, gsxx, gsff, gsGG, vs):
         Cross section for x + x -> s* -> k0 + k0.
     """
 
+    if cme < 2 * mk0:
+        return 0.0
+
     s = cme**2
 
-    if -2 * mk0 + np.sqrt(s) <= 0:
-        return 0.0
-    if -4 * mx**2 + s < 0:
-        return 0.0
+    if unit == 'BSE':
 
-    sigma = (gsxx**2 * np.sqrt(-4 * mk0**2 + s) *
-             np.sqrt(-4 * mx**2 + s) *
-             (2 * gsGG * (2 * mk0**2 - s) *
-              (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-              (9 * vh + 8 * gsGG * vs) + b0 * (mdq + msq) *
-              (9 * vh + 4 * gsGG * vs) *
-              (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-               (9 * vh + 16 * gsGG * vs)))**2) / \
-        (32. * np.pi * (ms**2 - s)**2 * s *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+        amp_s_to_k0k0 = __amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+        amp_s_to_PIPI = \
+            (__amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             2 * __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)) / \
+            np.sqrt(6.)
+
+        amp_s_to_KK = \
+            (__amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs))
+
+        amp_PIPI_to_k0k0 = amp_bethe_salpeter_pipi_to_kk(cme)
+        amp_KK_to_k0k0 = amp_bethe_salpeter_kk_to_kk(cme)
+
+        amp_s = amp_s_to_k0k0 - \
+            amp_s_to_PIPI * bubble_loop(cme, mpi) * amp_PIPI_to_k0k0 - \
+            amp_s_to_KK * bubble_loop(cme, mk) * amp_KK_to_k0k0
+
+        msqrd = np.abs(amp_s)**2 * msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    if unit == 'LO':
+
+        amp_s_to_k0k0 = __amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+
+        msqrd = np.abs(amp_s_to_k0k0)**2 * \
+            msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    pf = np.sqrt(1.0 - 4. * mk0**2 / s)
+    pi = np.sqrt(1.0 - 4. * mx**2 / s)
+
+    sigma = msqrd / 16. / np.pi * pf / pi / s
 
     return sigma
 
 
-def sigma_xx_to_s_to_kk(cme, mx, ms, gsxx, gsff, gsGG, vs):
+def sigma_xx_to_s_to_kk(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs,
+                        unit='BSE'):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of charged kaon through a
     scalar mediator in the s-channel.
@@ -218,32 +282,48 @@ def sigma_xx_to_s_to_kk(cme, mx, ms, gsxx, gsff, gsGG, vs):
         Cross section for x + x -> s* -> k+ + k-.
     """
 
+    if cme < 2 * mk:
+        return 0.0
+
     s = cme**2
 
-    if -2 * mk + np.sqrt(s) <= 0:
-        return 0.0
-    if -4 * mx**2 + s < 0:
-        return 0.0
+    if unit == 'BSE':
+        amp_s_to_kk = __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+        amp_s_to_PIPI = \
+            (__amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             2 * __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)) / \
+            np.sqrt(6.)
 
-    sigma = (gsxx**2 * np.sqrt(-4 * mk**2 + s) *
-             np.sqrt(-4 * mx**2 + s) *
-             (729 * b0 * gsff * (msq + muq) * vh**2 +
-              32 * gsGG**3 * (2 * mk**2 - 4 * b0 * (msq + muq) - s) * vs**2 +
-              36 * gsGG**2 * vs * (-2 * b0 * (msq + muq) *
-                                   (vh - 8 * gsff * vs) -
-                                   2 * mk**2 * (3 * vh + 4 * gsff * vs) + s *
-                                   (3 * vh + 4 * gsff * vs)) +
-              162 * gsGG * vh *
-              (-2 * mk**2 * (vh + gsff * vs) + s * (vh + gsff * vs) +
-               b0 * (msq + muq) * (3 * vh + 10 * gsff * vs)))**2) /\
-        (32. * np.pi * (ms**2 - s)**2 * s *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+        amp_s_to_KK = \
+            (__amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs))
+
+        amp_PIPI_to_kk = amp_bethe_salpeter_pipi_to_kk(cme)
+        amp_KK_to_kk = amp_bethe_salpeter_kk_to_kk(cme)
+
+        amp_s = amp_s_to_kk - \
+            amp_s_to_PIPI * bubble_loop(cme, mpi) * amp_PIPI_to_kk - \
+            amp_s_to_KK * bubble_loop(cme, mk) * amp_KK_to_kk
+
+        msqrd = np.abs(amp_s)**2 * msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    if unit == 'LO':
+
+        amp_s_to_kk = __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+
+        msqrd = np.abs(amp_s_to_kk)**2 * \
+            msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    pf = np.sqrt(1.0 - 4. * mk**2 / s)
+    pi = np.sqrt(1.0 - 4. * mx**2 / s)
+
+    sigma = msqrd / 16. / np.pi * pf / pi / s
 
     return sigma
 
 
-def sigma_xx_to_s_to_pi0pi0(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
+def sigma_xx_to_s_to_pi0pi0(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs,
+                            unit="BSE"):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of neutral pion through a
     scalar mediator in the s-channel.
@@ -268,38 +348,51 @@ def sigma_xx_to_s_to_pi0pi0(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
         Cross section for x + x -> s* -> pi0 + pi0.
     """
 
+    if cme < 2 * mpi0:
+        return 0.0
+
     s = cme**2
 
-    if -2 * mpi0 + np.sqrt(s) <= 0:
-        return 0.0
-    if -4 * mx**2 + s < 0:
-        return 0.0
+    if unit == 'BSE':
 
-    sigma = (gsxx**2 * np.sqrt(-4 * mpi0**2 + s) *
-             np.sqrt(-4 * mx**2 + s) *
-             (2 * gsGG * (2 * mpi0**2 - s) *
-              (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-              (9 * vh + 8 * gsGG * vs) + b0 * (mdq + muq) *
-              (9 * vh + 4 * gsGG * vs) *
-              (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-               (9 * vh + 16 * gsGG * vs)))**2) / \
-        (64. * np.pi * (ms**2 - s)**2 * s *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+        amp_s_to_pi0pi0 = __amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+        amp_s_to_PIPI = \
+            (__amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             2 * __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)) / \
+            np.sqrt(6.)
 
-    unit_factor = 1. + 1.0j * \
-        amp_bethe_salpeter_pipi_to_pipi(cme) * bubble_loop(cme)
+        amp_s_to_KK = \
+            (__amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             __amp_s_kk(s, ms, gsxx, gsff, gsGG, gsFF, vs))
 
-    if unit == "IAM":
-        unit_factor = amp_inverse_amplitude_pipi_to_pipi(cme) / \
-            amp_pipi_to_pipi_I0(cme)
-    if unit == "LO":
-        unit_factor = 1.0
+        amp_PIPI_to_pi0pi0 = 2. * \
+            amp_bethe_salpeter_pipi_to_pipi(cme) / np.sqrt(6.)
+        amp_KK_to_pi0pi0 = 2. * \
+            amp_bethe_salpeter_pipi_to_kk(cme) / np.sqrt(6.)
 
-    return sigma * np.abs(unit_factor)**2.
+        amp_s = amp_s_to_pi0pi0 - \
+            amp_s_to_PIPI * bubble_loop(cme, mpi) * amp_PIPI_to_pi0pi0 - \
+            amp_s_to_KK * bubble_loop(cme, mk) * amp_KK_to_pi0pi0
+
+        msqrd = np.abs(amp_s)**2 * msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    if unit == 'LO':
+
+        amp_s_to_pi0pi0 = __amp_s_pi0pi0(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+
+        msqrd = np.abs(amp_s_to_pi0pi0)**2 * \
+            msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    pf = np.sqrt(1.0 - 4. * mpi0**2 / s)
+    pi = np.sqrt(1.0 - 4. * mx**2 / s)
+
+    sigma = msqrd / 16. / np.pi * pf / pi / s
+
+    return sigma
 
 
-def sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
+def sigma_xx_to_s_to_pipi(cme, mx, mf, ms, gsxx, gsff, gsGG, gsFF, vs,
+                          unit="BSE"):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of charged pions through a
     scalar mediator in the s-channel.
@@ -326,30 +419,40 @@ def sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs, unit="BSE"):
 
     s = cme**2
 
-    if -2 * mpi + np.sqrt(s) <= 0:
-        return 0.0
-    if -4 * mx**2 + s < 0:
-        return 0.0
+    if unit == 'BSE':
+        if cme < 2 * mpi:
+            return 0.0
 
-    sigma = (gsxx**2 * np.sqrt(-4 * mpi**2 + s) *
-             np.sqrt(-4 * mx**2 + s) *
-             (2 * gsGG * (2 * mpi**2 - s) *
-              (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-              (9 * vh + 8 * gsGG * vs) + b0 * (mdq + muq) *
-              (9 * vh + 4 * gsGG * vs) *
-              (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-               (9 * vh + 16 * gsGG * vs)))**2) / \
-        (32. * np.pi * (ms**2 - s)**2 * s *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+        amp_s_to_pipi = __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+        amp_s_to_PIPI = \
+            (__amp_s_pi0pi0(s, mx, gsxx, gsff, gsGG, gsFF, vs) +
+             2 * __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)) / \
+            np.sqrt(6.)
 
-    unit_factor = 1. + 1.0j * \
-        amp_bethe_salpeter_pipi_to_pipi(cme) * bubble_loop(cme)
+        amp_s_to_KK =  \
+            (__amp_s_k0k0(s, ms, gsxx, gsff, gsGG, gsFF, vs) +
+             __amp_s_kk(s, mx, gsxx, gsff, gsGG, gsFF, vs))
 
-    if unit == "IAM":
-        unit_factor = amp_inverse_amplitude_pipi_to_pipi(cme) / \
-            amp_pipi_to_pipi_I0(cme)
-    if unit == "LO":
-        unit_factor = 1.0
+        amp_PIPI_to_pipi = 2. * \
+            amp_bethe_salpeter_pipi_to_pipi(cme) / np.sqrt(6.)
+        amp_KK_to_pipi = 2. * amp_bethe_salpeter_pipi_to_kk(cme) / np.sqrt(6.)
 
-    return sigma * np.abs(unit_factor)**2.
+        amp_s = amp_s_to_pipi - \
+            amp_s_to_PIPI * bubble_loop(cme, mpi) * amp_PIPI_to_pipi - \
+            amp_s_to_KK * bubble_loop(cme, mk) * amp_KK_to_pipi
+
+        msqrd = np.abs(amp_s)**2 * msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    if unit == 'LO':
+
+        amp_s_to_pipi = __amp_s_pipi(s, ms, gsxx, gsff, gsGG, gsFF, vs)
+
+        msqrd = np.abs(amp_s_to_pipi)**2 * \
+            msqrd_xx_s(s, mx, gsxx) / (s - ms**2)**2
+
+    pf = np.sqrt(1.0 - 4. * mpi**2 / s)
+    pi = np.sqrt(1.0 - 4. * mx**2 / s)
+
+    sigma = msqrd / 16. / np.pi * pf / pi / s
+
+    return sigma

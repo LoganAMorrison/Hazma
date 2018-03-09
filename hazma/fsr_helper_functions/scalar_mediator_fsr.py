@@ -21,7 +21,7 @@ from ..field_theory_helper_functions.three_body_phase_space import \
 from ..field_theory_helper_functions.common_functions import \
     cross_section_prefactor
 
-from ..unitarization import unit_matrix_elem_sqrd
+from ..unitarization import amp_bethe_salpeter_pipi_to_pipi
 
 e = np.sqrt(4 * np.pi * alpha_em)
 
@@ -145,7 +145,7 @@ def __msqrd_xx_to_s_to_pipig(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    return mat_elem_sqrd * unit_matrix_elem_sqrd(np.sqrt(s))
+    return mat_elem_sqrd * amp_bethe_salpeter_pipi_to_pipi(np.sqrt(s))
 
 
 def __sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
@@ -196,7 +196,8 @@ def __sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
 
     prefactor = 1.0 / (16. * np.pi * cme**2) * p_f / p_i
 
-    return prefactor * unit_matrix_elem_sqrd(np.sqrt(cme**2)) * mat_elem_sqrd
+    return prefactor * amp_bethe_salpeter_pipi_to_pipi(np.sqrt(cme**2)) *\
+        mat_elem_sqrd
 
 
 def __dnde_xx_to_s_to_pipig(eng_gam, cme, mx, ms, gsxx, gsff, gsGG, vs):

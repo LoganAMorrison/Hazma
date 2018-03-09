@@ -33,18 +33,18 @@ def __dnde_xx_to_v_to_ffg(egam, Q, mf):
     e, m = egam / Q, mf / Q
 
     if 0 < e and e < 0.5 * (1.0 - 4 * m**2):
-        return (alpha_em *
-                (4 * np.sqrt(1 - 2 * e - 4 * m**2) *
-                 (1 - 2 * m**2 + 2 * e * (-1 + e + 2 * m**2)) +
-                 np.sqrt(1 - 2 * e) * (1 + 2 * (-1 + e) * e -
-                                       4 * e * m**2 - 4 * m**4) *
-                 (np.log(1 - 2 * e) - 4 *
-                  np.log(np.sqrt(1 - 2 * e) +
-                         np.sqrt(1 - 2 * e - 4 * m**2)) +
-                  2 * np.log((np.sqrt(1 - 2 * e) -
-                              np.sqrt(1 - 2 * e - 4 * m**2)) *
-                             (1 - np.sqrt(1 + (4 * m**2) /
-                                          (-1 + 2 * e))))))) / \
+        return -(alpha_em *
+                 (4 * np.sqrt(1 - 2 * e - 4 * m**2) *
+                  (1 - 2 * m**2 + 2 * e * (-1 + e + 2 * m**2)) +
+                  np.sqrt(1 - 2 * e) * (1 + 2 * (-1 + e) * e -
+                                        4 * e * m**2 - 4 * m**4) *
+                  (np.log(1 - 2 * e) - 4 *
+                   np.log(np.sqrt(1 - 2 * e) +
+                          np.sqrt(1 - 2 * e - 4 * m**2)) +
+                   2 * np.log((np.sqrt(1 - 2 * e) -
+                               np.sqrt(1 - 2 * e - 4 * m**2)) *
+                              (1 - np.sqrt(1 + (4 * m**2) /
+                                           (-1 + 2 * e))))))) / \
             (2. * e * (1 + 2 * m**2) *
              np.sqrt((-1 + 2 * e) * (-1 + 4 * m**2)) * np.pi * Q)
 
