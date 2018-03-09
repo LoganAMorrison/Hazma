@@ -126,7 +126,7 @@ when summing over all phase space points, weighted by the weights, we get the
 correct phase space volume. The phase space weight is given by
 
 .. math::
-    W = E_{\text{CM}}^{2n-3}
+    W = E_{\text{CM}}^{4-2n}
     \left(\sum_{i=1}^{n}|\vec{k}_{i}|\right)^{2n-3}
     \left(\prod_{i=1}^{n}\dfrac{|\vec{k_{i}}|}{k_{i}^{0}}\right)
     \left(\sum_{i=1}^{n}\dfrac{|\vec{k}_{i}|^{2}}{k_{i}^{0}}\right)^{-1}
