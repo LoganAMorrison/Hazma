@@ -38,6 +38,12 @@ def generate_phase_space_point(masses, cme, num_fsp):
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
+
+    if not hasattr(masses):
+        masses = [masses]
+
+    masses = np.array(masses)
+
     return generator.generate_point(masses, cme, num_fsp)
 
 

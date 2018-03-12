@@ -117,7 +117,7 @@ def gamma(np.ndarray particles, double cme,
     """
 
     if len(particles) == 1:
-        return cspec_dict[particles].Spectrum(eng_gams, cme)
+        return cspec_dict[particles[0]].Spectrum(eng_gams, cme)
 
     if len(particles) == 2:
         return __gen_spec_2body(particles, cme, eng_gams)

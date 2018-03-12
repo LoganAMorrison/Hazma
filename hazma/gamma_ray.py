@@ -7,6 +7,7 @@
 from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
 from . import rambo
 from .cross_sections.helper_functions import cross_section_prefactor
+import numpy as np
 
 
 def gamma_ray(particles, cme, eng_gams,
@@ -71,6 +72,10 @@ def gamma_ray(particles, cme, eng_gams,
     >>> spec = gamma_ray(particles, cme, eng_gams)
 
     """
+    if type(particles) == str:
+        particles = [particles]
+
+    particles = np.array(particles)
 
     if hasattr(eng_gams, '__len__'):
         return gamma(particles, cme, eng_gams, mat_elem_sqrd=mat_elem_sqrd,
