@@ -131,7 +131,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
 
 def generate_energy_histogram(num_ps_pts, masses, cme,
                               mat_elem_sqrd=lambda klist: 1, num_bins=25,
-                              num_cpus=None):
+                              num_cpus=None, density=False):
     """
     Generate energy histograms for each of the final state particles.
 
@@ -188,10 +188,9 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
 
     actual_num_ps_pts = (pts.shape)[0]
 
-    return histogram.space_to_energy_hist(pts, actual_num_ps_pts, num_fsp,
-                                          num_bins)
-
-    # return histogram.space_to_energy_hist(pts, len(pts), num_fsp, num_bins)
+    return histogram.space_to_energy_hist(pts, actual_num_ps_pts,
+                                          num_fsp, num_bins,
+                                          density=density)
 
 
 def compute_annihilation_cross_section(num_ps_pts, isp_masses,

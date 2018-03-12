@@ -9,6 +9,8 @@ import cython
 import multiprocessing as mp
 
 from .. import rambo
+from ..rambo import compute_annihilation_cross_section
+from ..rambo import compute_decay_width
 
 from ..decay_helper_functions import decay_muon as dm
 from ..decay_helper_functions import decay_electron as de
@@ -21,6 +23,17 @@ from ..decay_helper_functions import decay_long_kaon as dlk
 from ..decay_helper_functions import decay_short_kaon as dsk
 
 include "../decay_helper_functions/parameters.pxd"
+
+cdef spec_dict = {'muon': dm, 'electron': de, 'neutral_pion': dnp,
+                  'charged_pion': dcp, 'charged_kaon': dck,
+                  'long_kaon': dlk, 'short_kaon': dsk}
+
+cdef mass_dict = {'muon': MASS_MU, 'electron': MASS_E,
+                  'neutral_pion': MASS_PI0, 'charged_pion': MASS_PI, 'charged_kaon': MASS_K, 'long_kaon': MASS_K0,
+                  'short_kaon': MASS_K0}
+
+cdef dict cspec_dict = spec_dict
+cdef dict cmass_dict = mass_dict
 
 
 cdef np.ndarray names_to_masses(np.ndarray names):
@@ -42,63 +55,40 @@ cdef np.ndarray names_to_masses(np.ndarray names):
     cdef np.ndarray masses = np.zeros(size, dtype=np.float64)
 
     for i in range(size):
-        if names[i] == 'electron':
-            masses[i] = MASS_E
-        if names[i] == 'muon':
-            masses[i] = MASS_MU
-        if names[i] == 'charged_pion':
-            masses[i] = MASS_PI
-        if names[i] == 'neutral_pion':
-            masses[i] = MASS_PI0
-        if names[i] == 'charged_kaon':
-            masses[i] = MASS_K
-        if names[i] == 'short_kaon':
-            masses[i] = MASS_K0
-        if names[i] == 'long_kaon':
-            masses[i] = MASS_K0
+        masses[i] = cmass_dict[names[i]]
     return masses
 
 
-def __gen_spec(name, prob, eng, eng_gams, verbose='0'):
+def __gen_spec(name, eng, eng_gams, norm, verbose=False):
     """
     c-function used by ``gamma`` and ``gamma_point`` to generate spectrum
     values.
     """
-    if name == 'electron':
-        if verbose == '1':
-            print("creating electron spectrum with energy {}".format(eng))
-        return prob * de.Spectrum(eng_gams, eng)
-    if name == 'muon':
-        if verbose == '1':
-            print("creating muon spectrum with energy {}".format(eng))
-        return prob * dm.Spectrum(eng_gams, eng)
-    if name == 'charged_pion':
-        if verbose == '1':
-            print("creating charged pion spectrum with energy {}".format(eng))
-        return prob * dcp.Spectrum(eng_gams, eng)
-    if name == 'neutral_pion':
-        if verbose == '1':
-            print("creating neutral pion spectrum with energy {}".format(eng))
-        return prob * dnp.Spectrum(eng_gams, eng)
-    if name == 'charged_kaon':
-        if verbose == '1':
-            print("creating charged kaon spectrum with energy {}".format(eng))
-        return prob * dck.Spectrum(eng_gams, eng)
-    if name == 'short_kaon':
-        if verbose == '1':
-            print("creating short kaon spectrum with energy {}".format(eng))
-        return prob * dsk.Spectrum(eng_gams, eng)
-    if name == 'long_kaon':
-        if verbose == '1':
-            print("creating long kaon spectrum with energy {}".format(eng))
-        return prob * dlk.Spectrum(eng_gams, eng)
+    if verbose is True:
+        print("creating {} spectrum with energy {}".format(name, eng))
+    return norm * cspec_dict[name].Spectrum(eng_gams, eng)
+
+def __gen_spec_2body(particles, cme, eng_gams):
+    masses = names_to_masses(particles)
+
+    m1 = masses[0]
+    m2 = masses[1]
+
+    E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
+    E2 = (cme**2 - m1**2 + m2**2) / (2 * cme)
+
+    spec = cspec_dict[particles[0]].Spectrum(eng_gams, E1)
+    spec += cspec_dict[particles[1]].Spectrum(eng_gams, E2)
+
+    return spec
+
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
-          mat_elem_sqrd=lambda k_list : 1.0,
-          int num_ps_pts=1000, int num_bins=25, verbose='0'):
+def gamma(np.ndarray particles, double cme,
+          np.ndarray eng_gams, mat_elem_sqrd=lambda k_list : 1.0,
+          int num_ps_pts=10000, int num_bins=25, verbose=False):
     """Returns total gamma ray spectrum from final state particles.
 
     Parameters
@@ -125,11 +115,19 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
     spec : np.ndarray[double, ndim=1]
         1-D array of total gamma ray spectrum from all final state particles.
     """
+
+    if len(particles) == 1:
+        return cspec_dict[particles].Spectrum(eng_gams, cme)
+
+    if len(particles) == 2:
+        return __gen_spec_2body(particles, cme, eng_gams)
+
     cdef int i, j
     cdef int num_fsp
     cdef int num_engs
     cdef np.ndarray masses
     cdef np.ndarray hist
+    cdef double prefactor
 
     masses = names_to_masses(particles)
 
@@ -137,7 +135,7 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
     num_engs = len(eng_gams)
 
     hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
-                                           mat_elem_sqrd, num_bins)[0]
+                                           mat_elem_sqrd, num_bins, density=True)[0]
 
     cpdef int num_cpus = int(np.floor(mp.cpu_count() * 0.75))
 
@@ -146,15 +144,26 @@ def gamma(np.ndarray particles, double cme, np.ndarray eng_gams,
 
     for i in range(num_bins):
         for j in range(num_fsp):
-            specs.append(p.apply_async(__gen_spec, (particles[j], hist[j, 1, i], hist[j, 0, i], eng_gams, verbose)))
+            part = particles[j] # particle name
+            part_eng = hist[j, 0, i] # particle energy
+
+            # Normalize spectrum: Need to multiply by the probability of
+            # particle having energy part_eng. Since we are essentially
+            # integrating over the energy probability distribution, we need to
+            # multiply by (b - a) / N, where a = e_min, b = e_max and
+            # N = num_bins.
+            norm = (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins * hist[j, 1, i]
+
+            specs.append(p.apply_async(__gen_spec, \
+                (part, part_eng, eng_gams, norm, verbose)))
 
     return sum([spec.get() for spec in specs])
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def gamma_point(np.ndarray particles, double cme, double eng_gam,
-                mat_elem_sqrd=lambda k_list : 1.0,
+def gamma_point(np.ndarray particles, double cme,
+                double eng_gam, mat_elem_sqrd=lambda k_list : 1.0,
                 int num_ps_pts=1000, int num_bins=25):
     """Returns total gamma ray spectrum from final state particles.
 
@@ -187,36 +196,44 @@ def gamma_point(np.ndarray particles, double cme, double eng_gam,
     cdef np.ndarray masses
     cdef np.ndarray hist
     cdef double spec_val = 0.0
+    cdef double prefactor
 
     masses = names_to_masses(particles)
 
     num_fsp = len(masses)
 
-    hist = rambo.generate_energy_histogram(num_ps_pts,masses, cme,
+    hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
                                            mat_elem_sqrd, num_bins)[0]
 
     for i in range(num_bins):
         for j in range(num_fsp):
             if particles[j] is 'electron':
                 spec_val += hist[j, 1, i] * \
-                    de.CSpectrumPoint(eng_gam, hist[j, 0, i])
+                    de.CSpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'muon':
                 spec_val += hist[j, 1, i] * \
-                    dm.CSpectrumPoint(eng_gam, hist[j, 0, i])
+                    dm.CSpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'charged_pion':
                 spec_val += hist[j, 1, i] * \
-                    dcp.CSpectrumPoint(eng_gam, hist[j, 0, i])
+                    dcp.CSpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'neutral_pion':
                 spec_val += hist[j, 1, i] * \
-                    dnp.CSpectrumPoint(eng_gam, hist[j, 0, i])
+                    dnp.CSpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'charged_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dck.SpectrumPoint(eng_gam, hist[j, 0, i])
+                    dck.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'short_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dsk.SpectrumPoint(eng_gam, hist[j, 0, i])
+                    dsk.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'long_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dlk.SpectrumPoint(eng_gam, hist[j, 0, i])
+                    dlk.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
 
-    return spec_val
+    return spec_val * prefactor

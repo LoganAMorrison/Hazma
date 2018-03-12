@@ -9,14 +9,17 @@ from . import rambo
 from .cross_sections.helper_functions import cross_section_prefactor
 
 
-def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
-              num_ps_pts=1000, num_bins=25):
+def gamma_ray(particles, cme, eng_gams,
+              mat_elem_sqrd=lambda k_list: 1.0,
+              num_ps_pts=1000, num_bins=25, verbose=False):
     r"""Returns total gamma ray spectrum from a set of particles.
 
     Blah and blah.
 
     Parameters
     ----------
+    isp_masses : np.ndarray[double, ndim=1]
+        Array of masses of the initial state particles.
     particles : array_like
         List of particle names. Availible particles are 'muon', 'electron'
         'charged_pion', 'neutral pion', 'charged_kaon', 'long_kaon',
@@ -70,8 +73,8 @@ def gamma_ray(particles, cme, eng_gams, mat_elem_sqrd=lambda k_list: 1.0,
     """
 
     if hasattr(eng_gams, '__len__'):
-        return gamma(particles, cme, eng_gams, mat_elem_sqrd,
-                     num_ps_pts, num_bins)
+        return gamma(particles, cme, eng_gams, mat_elem_sqrd=mat_elem_sqrd,
+                     num_ps_pts=num_ps_pts, num_bins=num_bins, verbose=verbose)
     return gamma_point(particles, cme, eng_gams, mat_elem_sqrd,
                        num_ps_pts, num_bins)
 
