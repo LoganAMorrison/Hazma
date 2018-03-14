@@ -169,3 +169,21 @@ def width_s_to_xx(gsxx, mx, ms):
     return (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) *
             np.sqrt(ms**2 - 4 * mx**2) *
             np.heaviside(ms - 2 * mx)) / (8. * ms**2 * np.pi)
+
+
+def width_s_to_ff(gsff, mf, ms):
+    """
+    Returns the partial decay width of the scalar decaying into two fermions x.
+
+    Parameters
+    ----------
+    gsxx : double
+        Coupling of the initial state fermion to the scalar mediator.
+    mx : double
+        Mass of the initial state fermion.
+    ms : double
+        Mass of the scalar mediator.
+    """
+    return (gsff**2 * (ms - 2 * mf) * (ms + 2 * mf) *
+            np.sqrt(ms**2 - 4 * mf**2) *
+            np.heaviside(ms - 2 * mf)) / (8. * ms**2 * np.pi)

@@ -8,6 +8,7 @@ from .fsr_helper_functions.scalar_mediator_fsr import dnde_xx_to_s_to_ffg
 from .fsr_helper_functions.scalar_mediator_fsr import dnde_xx_to_s_to_pipig
 
 from .cross_sections import scalar_mediator as SMCS
+from .widths import scalar_mediator as SMW
 
 from .parameters import muon_mass as mmu
 from .parameters import electron_mass as me
@@ -125,6 +126,42 @@ class ScalarMediator:
             Array of the available final states.
         """
         return self._2_body_final_states
+
+    def partial_widths(self):
+        """
+        Returns a dictionary for the partial decay widths of the scalar
+        mediator.
+
+        Returns
+        -------
+        width_dict : dictionary
+            Dictionary of all of the individual decay widths of the scalar
+            mediator as well as the total decay width. The possible decay
+            modes of the scalar mediator are 'g g', 'k0 k0', 'k k', 'pi0 pi0',
+            'pi pi', 'x x' and 'f f'. The total decay width has the key
+            'total'.
+        """
+        w_gg = SMW.width_s_to_gg(self.gsFF, self.ms)
+        w_k0k0 = SMW.width_s_to_k0k0(self.gsff, self. gsGG, self.ms, self.vs)
+        w_kk = SMW.width_s_to_kk(self.gsff, self.gsGG, self.ms, self.vs)
+        w_pi0pi0 = SMW.width_s_to_pi0pi0(self.gsff, self.gsGG, self.ms,
+                                         self.vs)
+        w_pipi = SMW.width_s_to_pipi(self.gsff, self.gsGG, self.ms, self.vs)
+        w_xx = SMW.width_s_to_xx(self.gsxx, self.mx, self.ms)
+        w_ff = SMW.width_s_to_ff(self.gsff, self.mx, self.ms)
+
+        total = w_gg + w_k0k0 + w_kk + w_pi0pi0 + w_pipi + w_xx + w_ff
+
+        width_dict = {'g g': w_gg,
+                      'k0 k0': w_k0k0,
+                      'k k': w_kk,
+                      'pi0 pi0': w_pi0pi0,
+                      'pi pi': w_pipi,
+                      'x x': w_xx,
+                      'f f': w_ff,
+                      'total': total}
+
+        return width_dict
 
     def total_cross_section(self, cme):
         """
