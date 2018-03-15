@@ -31,26 +31,26 @@ cdef double mmu = MASS_MU
 @cython.cdivision(True)
 cdef double __dnde_pi_to_lnug(double egam, double ml):
     cdef double r = pow(ml / mpi, 2.0)
-    if 0.0 <= egam and egam <= mpi * (1. - r) / 2.
-        return (ALPHA_EM  * (2 * (2 * Eg + mpi * (-1 + r)) *
-                 (3 * fp**2 * mpi * (-2 * Eg + mpi) *
-                  (Eg**2 + 2 * Eg * mpi * (-1 + r) -
+    if 0.0 <= egam and egam <= mpi * (1. - r) / 2. :
+        return (ALPHA_EM  * (2 * (2 * egam + mpi * (-1 + r)) *
+                 (3 * fpi**2 * mpi * (-2 * egam + mpi) *
+                  (egam**2 + 2 * egam * mpi * (-1 + r) -
                    mpi**2 * (-1 + r)) * r -
-                  3 * a * Eg**2 * fp * (2 * Eg - mpi) * mpi * r *
-                  (-4 * Eg + mpi + mpi * r) + a**2 * Eg**4 *
-                  (2 * Eg + mpi * (-1 + r)) *
-                  (-4 * Eg + mpi * (2 + r)) -
-                  6 * Eg**3 * fp * (2 * Eg - mpi) *
-                  mpi * r * v + Eg**4 *
-                  (2 * Eg + mpi * (-1 + r)) *
-                  (-4 * Eg + mpi * (2 + r)) * v**2) +
-                 3 * fp * mpi * (-2 * Eg + mpi)**2 * r *
-                 (-2 * Eg**2 * fp - 2 * Eg * fp * mpi * (-1 + r) +
-                  4 * a * Eg**2 * (Eg - mpi * r) + fp * mpi**2 *
-                  (-1 + r**2) - 4 * Eg**3 * v) *
+                  3 * A_PI * egam**2 * fpi * (2 * egam - mpi) * mpi * r *
+                  (-4 * egam + mpi + mpi * r) + A_PI**2 * egam**4 *
+                  (2 * egam + mpi * (-1 + r)) *
+                  (-4 * egam + mpi * (2 + r)) -
+                  6 * egam**3 * fpi * (2 * egam - mpi) *
+                  mpi * r * V_PI + egam**4 *
+                  (2 * egam + mpi * (-1 + r)) *
+                  (-4 * egam + mpi * (2 + r)) * V_PI**2) +
+                 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
+                 (-2 * egam**2 * fpi - 2 * egam * fpi * mpi * (-1 + r) +
+                  4 * A_PI * egam**2 * (egam - mpi * r) + fpi * mpi**2 *
+                  (-1 + r**2) - 4 * egam**3 * V_PI) *
                  (2 * np.log(mpi) -
-                  np.log(mpi * (-2 * Eg + mpi)) + np.log(r)))) / \
-            (1536. * Eg * fp**2 * mpi**3 * (-2 * Eg + mpi)**2 * np.pi**4 *
+                  np.log(mpi * (-2 * egam + mpi)) + np.log(r)))) / \
+            (1536. * egam * fpi**2 * mpi**3 * (-2 * egam + mpi)**2 * np.pi**4 *
              (-1 + r)**2 * r)
     else :
         return 0.0
