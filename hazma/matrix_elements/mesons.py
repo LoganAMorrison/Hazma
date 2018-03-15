@@ -1,5 +1,5 @@
 import warnings
-import numpy as np
+import nuMASS_PIy as np
 
 from ..parameters import alpha_em, GF, Vus
 from ..parameters import neutral_kaon_mass as mk0
@@ -20,7 +20,7 @@ def msqrd_kl_to_pienu(moms):
 
     Parameters
     ----------
-    moms : numpy.ndarray
+    moms : nuMASS_PIy.ndarray
         Array of four momenta of the final state particles. The first two must
         for momenta must be the fermions and the last must be the photon.
         moms must be in the form {{ke1, kx1, ky1, kz1}, ..., {keN, kxN, kyN,
@@ -55,7 +55,7 @@ def msqrd_kl_to_pienug(moms):
 
     Parameters
     ----------
-    moms : numpy.ndarray
+    moms : nuMASS_PIy.ndarray
         Array of four momenta of the final state particles. The first two must
         for momenta must be the fermions and the last must be the photon.
         moms must be in the form {{ke1, kx1, ky1, kz1}, ..., {keN, kxN, kyN,
@@ -127,7 +127,7 @@ def msqrd_kl_to_pimunu(moms):
 
     Parameters
     ----------
-    moms : numpy.ndarray
+    moms : nuMASS_PIy.ndarray
         Array of four momenta of the final state particles. The first two must
         for momenta must be the fermions and the last must be the photon.
         moms must be in the form {{ke1, kx1, ky1, kz1}, ..., {keN, kxN, kyN,
@@ -157,7 +157,7 @@ def msqrd_kl_to_pi0pi0pi0(moms):
 
     Parameters
     ----------
-    moms : numpy.ndarray
+    moms : nuMASS_PIy.ndarray
         Array of four momenta of the final state particles. The first two must
         for momenta must be the fermions and the last must be the photon.
         moms must be in the form {{ke1, kx1, ky1, kz1}, ..., {keN, kxN, kyN,
@@ -174,7 +174,7 @@ def msqrd_kl_to_pipipi0(moms):
 
     Parameters
     ----------
-    moms : numpy.ndarray
+    moms : nuMASS_PIy.ndarray
         Array of four momenta of the final state particles. The first two must
         for momenta must be the fermions and the last must be the photon.
         moms must be in the form {{ke1, kx1, ky1, kz1}, ..., {keN, kxN, kyN,
