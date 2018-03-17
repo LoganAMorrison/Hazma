@@ -66,10 +66,10 @@ def amp_pipi_to_pipi_LO(s, t, u):
     return (s - mPI**2) / fpi**2
 
 
-def amp_pipi_to_pipi_LO_I0(s, t):
+def amp_pipi_to_pipi_LO_I(s, t, iso=0):
     """
-    Returns the leading-order pion scattering amplitude in the iso-scalar
-    channel (I = 0).
+    Returns the leading-order pion scattering amplitude in a definite isospin
+    channel.
 
     Parameters
     ----------
@@ -79,6 +79,8 @@ def amp_pipi_to_pipi_LO_I0(s, t):
         Mandelstam variable (p1 - p3)^2.
     u : float
         Mandelstam variable (p1 - p4)^2.
+    iso : int
+        Isospin.
 
     Returns
     -------
@@ -91,10 +93,17 @@ def amp_pipi_to_pipi_LO_I0(s, t):
     A2tsu = amp_pipi_to_pipi_LO(s, t, u)
     A2uts = amp_pipi_to_pipi_LO(s, t, u)
 
-    return 0.5 * (3. * A2stu + A2tsu + A2uts)
+    if iso == 0:
+        return 0.5 * (3. * A2stu + A2tsu + A2uts)
+    if iso == 1:
+        return 0.5 * (A2tsu - A2uts)
+    if iso == 2:
+        return 0.5 * (A2tsu + A2uts)
+    else:
+        raise ValueError("Invalid isospin index. 'iso' must be 0, 1 or 2.")
 
 
-def msqrd_pipi_to_pipi_LO_I0(s):
+def msqrd_pipi_to_pipi_LO_I(s, iso=0):
     """
     Returns the integrated, leading order, squared pion scattering amplitude.
 
@@ -109,12 +118,12 @@ def msqrd_pipi_to_pipi_LO_I0(s):
         Integrated (over t), leading order, squared pion scattering amplitude.
     """
     def f(x):
-        return abs(amp_pipi_to_pipi_LO_I0(s, mandlestam_t(x, s)))**2
+        return abs(amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s)), iso=iso)**2
 
     return quad(f, -1., 1.)[0]
 
 
-def partial_wave_pipi_to_pipi_LO_I0(s, l):
+def partial_wave_pipi_to_pipi_LO_I(s, l, iso=0):
     """
     Returns the lth partial wave of the leading order pion scattering
     amplitude.
@@ -132,11 +141,11 @@ def partial_wave_pipi_to_pipi_LO_I0(s, l):
 
     """
     def f_real(x):
-        return amp_pipi_to_pipi_LO_I0(s, mandlestam_t(x, s)).real * \
+        return amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).real * \
             lpmv(0, l, x)
 
     def f_imag(x):
-        return amp_pipi_to_pipi_LO_I0(s, mandlestam_t(x, s)).imag * \
+        return amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).imag * \
             lpmv(0, l, x)
 
     return 0.5 * (quad(f_real, -1., 1.)[0] + 1j * quad(f_imag, -1., 1.)[0])
@@ -210,10 +219,10 @@ def amp_pipi_to_pipi_NLO(s, t, u):
     return amp_pipi_to_pipi_NLO(s, t, u) + _B4(s, t, u) + _C4(s, t, u)
 
 
-def amp_pipi_to_pipi_NLO_I0(s, t):
+def amp_pipi_to_pipi_NLO_I(s, t, iso=0):
     """
-    Returns the next-to-leading-order pion scattering amplitude in the
-    iso-scalar channel (I = 0).
+    Returns the next-to-leading-order pion scattering amplitude in a definite
+    isospin channel.
 
     Parameters
     ----------
@@ -223,19 +232,28 @@ def amp_pipi_to_pipi_NLO_I0(s, t):
         Mandelstam variable (p1 - p3)^2.
     u : float
         Mandelstam variable (p1 - p4)^2.
+    iso : int, optional {0}
+        Isospin
 
     Returns
     -------
     M : float
-        Next-to-leading order pion scattering amplitude in the iso-scalar
-        channel (I = 0).
+        Next-to-leading order pion scattering amplitude in a definite isospin
+        channel.
     """
     u = 4. * mPI**2 - s - t
     A4stu = amp_pipi_to_pipi_NLO(s, t, u)
     A4tsu = amp_pipi_to_pipi_NLO(t, s, u)
     A4uts = amp_pipi_to_pipi_NLO(u, t, s)
 
-    return 0.5 * (3. * A4stu + A4tsu + A4uts)
+    if iso == 0:
+        return 0.5 * (3. * A4stu + A4tsu + A4uts)
+    if iso == 1:
+        return 0.5 * (A4tsu - A4uts)
+    if iso == 2:
+        return 0.5 * (A4tsu + A4uts)
+    else:
+        raise ValueError("Invalid isospin index. 'iso' must be 0, 1 or 2.")
 
 
 def mandlestam_t(x, s):
@@ -258,31 +276,33 @@ def mandlestam_t(x, s):
     return 0.5 * (4. * mPI**2 - s) * (1. - x)
 
 
-def msqrd_pipi_to_pipi_NLO_I0(s):
+def msqrd_pipi_to_pipi_NLO_I(s, iso=0):
     """
     Returns the integrated, next to leading order, squared pion scattering
-    amplitude.
+    amplitude in a definite isospin channel.
 
     Parameters
     ----------
     s : float
         Squared center of mass energy.
+    iso : int, optional {0}
+        Isospin.
 
     Returns
     -------
-    M2_NLO : float
+    MI2_NLO : float
         Integrated (over t), next to leading order, squared pion scattering
-        amplitude.
+        amplitude in a definite isospin channel.
     """
     def integrand(x):
-        return abs(amp_pipi_to_pipi_NLO_I0(s, mandlestam_t(x, s)))**2
+        return abs(amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s)), iso=iso)**2
     return quad(integrand, -1., 1.)[0]
 
 
-def partial_wave_pipi_to_pipi_NLO_I0(s, l):
+def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0):
     """
     Returns the lth partial wave of the next-to-leading-order pion scattering
-    amplitude.
+    amplitude in a definite isospin channel.
 
     Parameters
     ----------
@@ -290,17 +310,19 @@ def partial_wave_pipi_to_pipi_NLO_I0(s, l):
         Squared center of mass energy.
     l : int
         Partial wave index.
+    iso : int, optional {0}
+        Isospin
 
     Returns
     -------
-    Ml_NLO : complex
+    MIL_NLO : complex
     """
     def f_real(x):
-        return amp_pipi_to_pipi_NLO_I0(s, mandlestam_t(x, s)).real * \
+        return amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso).real * \
             lpmv(0, l, x)
 
     def f_imag(x):
-        return amp_pipi_to_pipi_NLO_I0(s, mandlestam_t(x, s)).imag * \
+        return amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso).imag * \
             lpmv(0, l, x)
 
     NLOreal = quad(f_real, -1., 1.)[0]
@@ -309,21 +331,23 @@ def partial_wave_pipi_to_pipi_NLO_I0(s, l):
     return 0.5 * (NLOreal + 1.0j * NLOimag)
 
 
-def high_L_partial_wave_pipi_to_pipi_NLO_I0(s):
+def high_L_partial_wave_pipi_to_pipi_NLO_I(s, iso=0):
     """
     Returns the sum of all partial waves of the next-to-leading-order pion
-    scattering amplitude for l > 0.
+    scattering amplitude for l > 0 in a definite isospin channel.
 
     Parameters
     ----------
     s : float
         Squared center of mass energy.
+    iso : int, optional {0}
+        Isospin
 
     Returns
     -------
-    Ml_NLO : float
+    MIL_NLO : float
         Sum of all partial waves of the next-to-leading-order pion
-        scattering amplitude for l > 0
+        scattering amplitude for l > 0 in a definite isospin channel.
     """
-    return msqrd_pipi_to_pipi_NLO_I0(s) - 2. * \
-        partial_wave_pipi_to_pipi_NLO_I0(s, 0)**2
+    return msqrd_pipi_to_pipi_NLO_I(s, iso=iso) - 2. * \
+        partial_wave_pipi_to_pipi_NLO_I(s, 0, iso=iso)**2
