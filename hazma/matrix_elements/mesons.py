@@ -1,18 +1,124 @@
 import warnings
-import nuMASS_PIy as np
+import numpy as np
 
-from ..parameters import alpha_em, GF, Vus
-from ..parameters import neutral_kaon_mass as mk0
+from cmath import sqrt, log, pi
+
+from ..parameters import alpha_em, GF, Vus, fpi
 from ..parameters import charged_pion_mass as mpi
+from ..parameters import neutral_pion_mass as mpi0
+from ..parameters import charged_kaon_mass as mk
+from ..parameters import neutral_kaon_mass as mk0
+from ..parameters import eta_mass as meta
+from ..parameters import rho_mass as mrho
 from ..parameters import electron_mass as me
 from ..parameters import muon_mass as mmu
 
 from ..field_theory_helper_functions.common_functions import minkowski_dot
 
 
+mPI = (mpi + mpi0) / 2.
+mK = (mk + mk0) / 2.
+
+# ####################################
+# LO Meson-Meson Scattering amplutudes
+# ####################################
+
+
+def amp_pipi_to_pipi_LO(s, t, u):
+    return (s - mPI**2) / fpi**2
+
+
+def amp_pipi_to_pipi_LO_I0(s, t):
+    u = 4. * mPI**2 - s - t
+    A2stu = amp_pipi_to_pipi_LO(s, t, u)
+    A2tsu = amp_pipi_to_pipi_LO(s, t, u)
+    A2uts = amp_pipi_to_pipi_LO(s, t, u)
+
+    return 0.5 * (3. * A2stu + A2tsu + A2uts)
+
+
+# #####################################
+# NLO Meson-Meson Scattering amplutudes
+# #####################################
+
+mu = mrho
+Lr1 = 0.56 * 1.0e-3  # (0.56 +- 0.10) * 1.0e-3
+Lr2 = 1.21 * 1.0e-3  # (1.21 +- 0.10) * 1.0e-3
+L3 = -2.79 * 1.0e-3  # (-2.79 +- 0.14) * 1.0e-3
+Lr4 = -0.36 * 1.0e-3  # (-0.36 +- 0.17) * 1.0e-3
+Lr5 = 1.4 * 1.0e-3  # (1.4 +- 0.5) * 1.0e-3
+Lr6 = 0.07 * 1.0e-3  # (0.07 +- 0.08) * 1.0e-3
+L7 = -0.44 * 1.0e-3  # (-0.44 +- 0.15) * 1.0e-3
+Lr8 = 0.78 * 1.0e-3  # (0.78 +- 0.18) * 1.0e-3
+
+
+def M(P):
+    if P == "pi":
+        return mPI
+    if P == "k":
+        return mK
+    if P == "eta":
+        return meta
+
+
+def v(P, s):
+    return sqrt(1. - 4. * M(P)**2 / s)
+
+
+def kP(P):
+    return (1. + log(M(P)**2 / mu**2)) / (32. * np.pi**2)
+
+
+def Jbar(P, s):
+    num = v(P, s) - 1. + 0.0j
+    den = v(P, s) + 1. + 0.0j
+    return (2. + v(P, s) * np.log(num / den)) / (16. * np.pi**2)
+
+
+def Jr(P, s):
+    return Jbar(P, s) - 2. * kP(P)
+
+
+def Mr(P, s):
+    return (1.0 / 12.) * Jbar(P, s) * v(P, s)**2 - \
+        (1. / 6.0) * kP(P) + 1. / (288. * np.pi**2)
+
+
+def B4(s, t, u):
+    return ((mPI**4. / 18.) * Jr("eta", s) +
+            (1. / 2.) * (s**2 - mPI**4) * Jr("pi", s) +
+            (1. / 8.) * s**2 * Jr("k", s) +
+            (1. / 4.) * (t - 2 * mPI**2)**2 * Jr("pi", t) +
+            t * (s - u) * (Mr("pi", t) + 0.5 * Mr("k", t)) +
+            (1. / 4.) * (u - 2 * mPI**2)**2 * Jr("pi", u) +
+            u * (s - t) * (Mr("pi", u) + 0.5 * Mr("k", u))) / fpi**4
+
+
+def C4(s, t, u):
+    return (4. * ((8. * Lr6 + 4. * Lr8) * mPI**4. +
+                  (4. * Lr4 + 2. * Lr5) * mPI**2. *
+                  (s - 2. * mPI**2.) +
+                  (L3 + 2. * Lr1) * (s - 2. * mPI**2)**2. +
+                  Lr2 * ((t - 2. * mPI**2)**2 +
+                         (u - 2. * mPI**2)**2))) / fpi**4
+
+
+def A4(s, t, u):
+    return B4(s, t, u) + C4(s, t, u)
+
+
+def T4(s, t):
+    u = 4. * mPI**2 - s - t
+    return 0.5 * (3. * A4(s, t, u) + A4(t, s, u) + A4(u, t, s))
+
+
+def mandlestam_t(x, s):
+    return 0.5 * (4. * mPI**2 - s) * (1. - x)
+
 # ####################
 # Kaon Matrix Elements
 # ####################
+
 
 def msqrd_kl_to_pienu(moms):
     """
