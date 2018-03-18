@@ -1,4 +1,6 @@
-from cmath import sqrt, log, pi, abs
+from cmath import sqrt, log, pi
+
+import numpy as np
 
 from ..parameters import fpi
 from ..parameters import charged_pion_mass as mpi
@@ -15,9 +17,9 @@ from scipy.special import lpmv
 mPI = (mpi + mpi0) / 2.
 mK = (mk + mk0) / 2.
 
-# ####################
-# Low energy Constants
-# ####################
+# ########################################################################### #
+#                                Parameters                                   #
+# ########################################################################### #
 
 # All low energy constants are for NLO ChiPT, evaluated at mu = mrho.
 # These are:
@@ -40,58 +42,38 @@ Lr6 = 0.07 * 1.0e-3
 L7 = -0.44 * 1.0e-3
 Lr8 = 0.78 * 1.0e-3
 
-# ####################################
-# LO Meson-Meson Scattering amplutudes
-# ####################################
+# SU(2) LECs
+Er = 0.029
+Gr = 0.0073
+
+# ########################################################################### #
+#                                                                             #
+#                            Scattering Amplitudes                            #
+#                                                                             #
+# ########################################################################### #
 
 
-def amp_pipi_to_pipi_LO(s, t, u):
+# ########################################################################### #
+#                               LO Functions                                  #
+# ########################################################################### #
+
+
+def __amp_pipi_pipi_LO(s, t, u):
     """
     Returns the leading-order pion scattering amplitude.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-    t : float
-        Mandelstam variable (p1 - p3)^2.
-    u : float
-        Mandelstam variable (p1 - p4)^2.
-
-    Returns
-    -------
-    M : float
-        Leading order pion scattering amplitude.
     """
     return (s - mPI**2) / fpi**2
 
 
-def amp_pipi_to_pipi_LO_I(s, t, iso=0):
+def __amp_pipi_pipi_LO_I(s, t, iso=0):
     """
     Returns the leading-order pion scattering amplitude in a definite isospin
     channel.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-    t : float
-        Mandelstam variable (p1 - p3)^2.
-    u : float
-        Mandelstam variable (p1 - p4)^2.
-    iso : int
-        Isospin.
-
-    Returns
-    -------
-    M : float
-        Leading order pion scattering amplitude in the iso-scalar channel
-        (I = 0).
     """
     u = 4. * mPI**2 - s - t
-    A2stu = amp_pipi_to_pipi_LO(s, t, u)
-    A2tsu = amp_pipi_to_pipi_LO(s, t, u)
-    A2uts = amp_pipi_to_pipi_LO(s, t, u)
+    A2stu = __amp_pipi_pipi_LO(s, t, u)
+    A2tsu = __amp_pipi_pipi_LO(s, t, u)
+    A2uts = __amp_pipi_pipi_LO(s, t, u)
 
     if iso == 0:
         return 0.5 * (3. * A2stu + A2tsu + A2uts)
@@ -103,60 +85,40 @@ def amp_pipi_to_pipi_LO_I(s, t, iso=0):
         raise ValueError("Invalid isospin index. 'iso' must be 0, 1 or 2.")
 
 
-def msqrd_pipi_to_pipi_LO_I(s, iso=0):
+def __msqrd_pipi_pipi_LO_I(s, iso=0):
     """
-    Returns the integrated, leading order, squared pion scattering amplitude.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-
-    Returns
-    -------
-    M2_LO : float
-        Integrated (over t), leading order, squared pion scattering amplitude.
+    Returns the integrated, leading order, squared pion scattering amplitude..
     """
     def f(x):
-        return abs(amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s)), iso=iso)**2
+        return abs(__amp_pipi_pipi_LO_I(s, mandlestam_t(x, s), iso=iso))**2
 
     return quad(f, -1., 1.)[0]
 
 
-def partial_wave_pipi_to_pipi_LO_I(s, l, iso=0):
+def __pw_pipi_pipi_LO_I(s, l, iso=0):
     """
     Returns the lth partial wave of the leading order pion scattering
     amplitude.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-    l : int
-        Partial wave index.
-
-    Returns
-    -------
-    Ml_LO : complex
-
     """
     def f_real(x):
-        return amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).real * \
+        return __amp_pipi_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).real * \
             lpmv(0, l, x)
 
     def f_imag(x):
-        return amp_pipi_to_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).imag * \
+        return __amp_pipi_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).imag * \
             lpmv(0, l, x)
 
     return 0.5 * (quad(f_real, -1., 1.)[0] + 1j * quad(f_imag, -1., 1.)[0])
 
 
-# #####################################
-# NLO Meson-Meson Scattering amplutudes
-# #####################################
+# ########################################################################### #
+#                              NLO Functions                                  #
+# ########################################################################### #
 
 
 def _v(m, s):
+    s = complex(s)
+
     return sqrt(1. - 4. * m**2 / s)
 
 
@@ -167,84 +129,86 @@ def _kP(m):
 def _Jbar(m, s):
     num = complex(_v(m, s) - 1.)
     den = complex(_v(m, s) + 1.)
+
     return (2. + _v(m, s) * log(num / den)) / (16. * pi**2)
 
 
 def _Jr(m, s):
+    s = complex(s)
+
     return _Jbar(m, s) - 2. * _kP(m)
 
 
 def _Mr(m, s):
+    s = complex(s)
+
     return (1.0 / 12.) * _Jbar(m, s) * _v(m, s)**2 - \
         (1. / 6.0) * _kP(m) + 1. / (288. * pi**2)
 
 
-def _B4(s, t, u):
-    return ((mPI**4. / 18.) * _Jr(meta, s) +
-            (1. / 2.) * (s**2 - mPI**4) * _Jr(mPI, s) +
-            (1. / 8.) * s**2 * _Jr(mK, s) +
-            (1. / 4.) * (t - 2 * mPI**2)**2 * _Jr(mPI, t) +
-            t * (s - u) * (_Mr(mPI, t) + 0.5 * _Mr(mK, t)) +
-            (1. / 4.) * (u - 2 * mPI**2)**2 * _Jr(mPI, u) +
-            u * (s - t) * (_Mr(mPI, u) + 0.5 * _Mr(mK, u))) / fpi**4
+def _B4(s, t, u, su=3):
+    s = complex(s)
+
+    if su == 2:
+        return (1. / 6. / fpi**4) * \
+            (3. * (s**2 - mPI**4) * _Jbar(mPI, s) +
+             (t * (t - u) - 2 * mPI**2 * t + 4 * mPI**2 * u - 2 * mPI**4) *
+             _Jbar(mPI, t) +
+             (u * (u - t) - 2 * mPI**2 * u + 4 * mPI**2 * t - 2 * mPI**4) *
+             _Jbar(mPI, u) -
+             (1. / 96. / pi**2) *
+             (21 * s**2 + 5 * (t - u)**2 + 8 * mPI**2 * s - 26. * mPI**4))
+    if su == 3:
+        return ((mPI**4. / 18.) * _Jr(meta, s) +
+                (1. / 2.) * (s**2 - mPI**4) * _Jr(mPI, s) +
+                (1. / 8.) * s**2 * _Jr(mK, s) +
+                (1. / 4.) * (t - 2 * mPI**2)**2 * _Jr(mPI, t) +
+                t * (s - u) * (_Mr(mPI, t) + 0.5 * _Mr(mK, t)) +
+                (1. / 4.) * (u - 2 * mPI**2)**2 * _Jr(mPI, u) +
+                u * (s - t) * (_Mr(mPI, u) + 0.5 * _Mr(mK, u))) / fpi**4
+    else:
+        raise ValueError("Invalid value for 'su'. 'su' must be 2 or 3.")
 
 
-def _C4(s, t, u):
-    return (4. * ((8. * Lr6 + 4. * Lr8) * mPI**4. +
-                  (4. * Lr4 + 2. * Lr5) * mPI**2. *
-                  (s - 2. * mPI**2.) +
-                  (L3 + 2. * Lr1) * (s - 2. * mPI**2)**2. +
-                  Lr2 * ((t - 2. * mPI**2)**2 +
-                         (u - 2. * mPI**2)**2))) / fpi**4
+def _C4(s, t, u, su=3):
+    s = complex(s)
+
+    if su == 2:
+        return (Er / 4. / fpi**4) * (-2 * (s - 2 * mPI**2) ** 2 +
+                                     (t - 2 * mPI**2)**2 +
+                                     (t - 2 * mPI**2)**2) + \
+            (Gr / fpi**4) * (s - 2 * mPI**2)**2
+    if su == 3:
+        return (4. * ((8. * Lr6 + 4. * Lr8) * mPI**4. +
+                      (4. * Lr4 + 2. * Lr5) * mPI**2. *
+                      (s - 2. * mPI**2.) +
+                      (L3 + 2. * Lr1) * (s - 2. * mPI**2)**2. +
+                      Lr2 * ((t - 2. * mPI**2)**2 +
+                             (u - 2. * mPI**2)**2))) / fpi**4
 
 
-def amp_pipi_to_pipi_NLO(s, t, u):
+def __amp_pipi_pipi_NLO(s, t, u, su=3):
     """
-    Returns the next-to-leading-order pion scattering amplitude.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-    t : float
-        Mandelstam variable (p1 - p3)^2.
-    u : float
-        Mandelstam variable (p1 - p4)^2.
-
-    Returns
-    -------
-    M : float
-        Next-to-leading order pion scattering amplitude.
+    Returns the next-to-leading-order pion scattering amplitude in either SU(2)
+    or SU(3) ChiPT.
     """
-    return amp_pipi_to_pipi_NLO(s, t, u) + _B4(s, t, u) + _C4(s, t, u)
+    s = complex(s)
+
+    return __amp_pipi_pipi_LO(s, t, u) + _B4(s, t, u, su=su) + \
+        _C4(s, t, u, su=su)
 
 
-def amp_pipi_to_pipi_NLO_I(s, t, iso=0):
+def __amp_pipi_pipi_NLO_I(s, t, iso=0, su=3):
     """
     Returns the next-to-leading-order pion scattering amplitude in a definite
-    isospin channel.
-
-    Parameters
-    ----------
-    s : float
-        Squared center of mass energy.
-    t : float
-        Mandelstam variable (p1 - p3)^2.
-    u : float
-        Mandelstam variable (p1 - p4)^2.
-    iso : int, optional {0}
-        Isospin
-
-    Returns
-    -------
-    M : float
-        Next-to-leading order pion scattering amplitude in a definite isospin
-        channel.
+    isospin channel in either SU(2) or SU(3) ChiPT.
     """
+    s = complex(s)
+
     u = 4. * mPI**2 - s - t
-    A4stu = amp_pipi_to_pipi_NLO(s, t, u)
-    A4tsu = amp_pipi_to_pipi_NLO(t, s, u)
-    A4uts = amp_pipi_to_pipi_NLO(u, t, s)
+    A4stu = __amp_pipi_pipi_NLO(s, t, u, su=su)
+    A4tsu = __amp_pipi_pipi_NLO(t, s, u, su=su)
+    A4uts = __amp_pipi_pipi_NLO(u, t, s, su=su)
 
     if iso == 0:
         return 0.5 * (3. * A4stu + A4tsu + A4uts)
@@ -273,13 +237,275 @@ def mandlestam_t(x, s):
     t : float
         Mandlestam variable t.
     """
+    s = complex(s)
+
     return 0.5 * (4. * mPI**2 - s) * (1. - x)
 
 
-def msqrd_pipi_to_pipi_NLO_I(s, iso=0):
+def __msqrd_pipi_pipi_NLO_I(s, iso=0, su=3):
     """
     Returns the integrated, next to leading order, squared pion scattering
-    amplitude in a definite isospin channel.
+    amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
+    """
+    s = complex(s)
+
+    def integrand(x):
+        return abs(__amp_pipi_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso,
+                                         su=su))**2
+    return quad(integrand, -1., 1.)[0]
+
+
+def __pw_pipi_pipi_NLO_I(s, l, iso=0, su=3):
+    """
+    Returns the lth partial wave of the next-to-leading-order pion scattering
+    amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
+    """
+    s = complex(s)
+
+    def f_real(x):
+        return __amp_pipi_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso,
+                                     su=su).real * lpmv(0, l, x)
+
+    def f_imag(x):
+        return __amp_pipi_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso,
+                                     su=su).imag * lpmv(0, l, x)
+
+    NLOreal = quad(f_real, -1., 1.)[0]
+    NLOimag = quad(f_imag, -1., 1.)[0]
+
+    return 0.5 * (NLOreal + 1.0j * NLOimag)
+
+
+def __high_L_partial_wave_pipi_pipi_NLO_I(s, iso=0, su=3):
+    """
+    Returns the sum of all partial waves of the next-to-leading-order pion
+    scattering amplitude for l > 0 in a definite isospin channel in either
+    SU(2) or SU(3) ChiPT.
+    """
+    s = complex(s)
+
+    return __msqrd_pipi_pipi_NLO_I(s, iso=iso, su=su) - 2. * \
+        __pw_pipi_pipi_NLO_I(s, 0, iso=iso, su=su)**2
+
+
+# ########################################################################### #
+#                                                                             #
+#                            Vectorized Functions                             #
+#                                                                             #
+# ########################################################################### #
+
+
+# ########################################################################### #
+#                               LO Functions                                  #
+# ########################################################################### #
+
+def amp_pipi_to_pipi_LO(s, t, u):
+    """
+    Returns the leading-order pion scattering amplitude.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+    t : float
+        Mandelstam variable (p1 - p3)^2.
+    u : float
+        Mandelstam variable (p1 - p4)^2.
+
+    Returns
+    -------
+    M : float
+        Leading order pion scattering amplitude.
+    """
+
+    isVec = hasattr(s, "__len__") * hasattr(t, "__len__") * \
+        hasattr(u, "__len__")
+
+    if isVec:
+        s, t, u = np.array(s), np.array(t), np.array(u)
+
+        if s.shape != t.shape or s.shape != u.shape or t.shape != u.shape:
+            raise ValueError("s, t and u must have the same shape.")
+
+        return np.array([__amp_pipi_pipi_LO(s[i], t[i], u[i])
+                         for i in range(len(s))])
+    if hasattr(s, "__len__") or hasattr(t, "__len__") or hasattr(u, "__len__"):
+        raise ValueError("s, t and u must have the same shape.")
+
+    return __amp_pipi_pipi_LO(s, t, u)
+
+
+def amp_pipi_to_pipi_LO_I(s, t, iso=0):
+    """
+    Returns the leading-order pion scattering amplitude in a definite isospin
+    channel.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+    t : float
+        Mandelstam variable (p1 - p3)^2.
+    u : float
+        Mandelstam variable (p1 - p4)^2.
+    iso : int
+        Isospin.
+
+    Returns
+    -------
+    M : float
+        Leading order pion scattering amplitude in the iso-scalar channel
+        (I = 0).
+    """
+    isVec = hasattr(s, "__len__") * hasattr(t, "__len__")
+
+    if isVec:
+        s, t = np.array(s), np.array(t)
+
+        if s.shape != t.shape:
+            raise ValueError("s and t must have the same shape.")
+
+        return np.array([__amp_pipi_pipi_LO_I(s[i], t[i], iso=iso)
+                         for i in range(len(s))])
+    if hasattr(s, "__len__") or hasattr(t, "__len__"):
+        raise ValueError("s and u must have the same shape.")
+
+    return __amp_pipi_pipi_LO_I(s, t, iso=iso)
+
+
+def msqrd_pipi_to_pipi_LO_I(s, iso=0):
+    """
+    Returns the integrated, leading order, squared pion scattering amplitude.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+
+    Returns
+    -------
+    M2_LO : float
+        Integrated (over t), leading order, squared pion scattering amplitude.
+    """
+    if hasattr(s, "__len__"):
+
+        return np.array([__msqrd_pipi_pipi_LO_I(s[i], iso=iso)
+                         for i in range(len(s))])
+
+    return __msqrd_pipi_pipi_LO_I(s, iso=iso)
+
+
+def partial_wave_pipi_to_pipi_LO_I(s, l, iso=0):
+    """
+    Returns the lth partial wave of the leading order pion scattering
+    amplitude.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+    l : int
+        Partial wave index.
+
+    Returns
+    -------
+    Ml_LO : complex
+    """
+    __pw_pipi_pipi_LO_I
+    if hasattr(s, "__len__"):
+
+        return np.array([__pw_pipi_pipi_LO_I(s[i], l, iso=iso)
+                         for i in range(len(s))])
+
+    return __pw_pipi_pipi_LO_I(s, l, iso=iso)
+
+
+# ########################################################################### #
+#                              NLO Functions                                  #
+# ########################################################################### #
+
+def amp_pipi_to_pipi_NLO(s, t, u, su=3):
+    """
+    Returns the next-to-leading-order pion scattering amplitude in either SU(2)
+    or SU(3) ChiPT.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+    t : float
+        Mandelstam variable (p1 - p3)^2.
+    u : float
+        Mandelstam variable (p1 - p4)^2.
+    su : int, optional {3}
+        SU version of ChiPT to use.
+
+    Returns
+    -------
+    M : float
+        Next-to-leading order pion scattering amplitude.
+    """
+    isVec = hasattr(s, "__len__") * hasattr(t, "__len__") * \
+        hasattr(u, "__len__")
+
+    if isVec:
+        s, t, u = np.array(s), np.array(t), np.array(u)
+
+        if s.shape != t.shape or s.shape != u.shape or t.shape != u.shape:
+            raise ValueError("s, t and u must have the same shape.")
+
+        return np.array([__amp_pipi_pipi_NLO(s[i], t[i], u[i], su=su)
+                         for i in range(len(s))])
+    if hasattr(s, "__len__") or hasattr(t, "__len__") or hasattr(u, "__len__"):
+        raise ValueError("s, t and u must have the same shape.")
+
+    return __amp_pipi_pipi_NLO(s, t, u, su=su)
+
+
+def amp_pipi_to_pipi_NLO_I(s, t, iso=0, su=3):
+    """
+    Returns the next-to-leading-order pion scattering amplitude in a definite
+    isospin channel in either SU(2) or SU(3) ChiPT.
+
+    Parameters
+    ----------
+    s : float
+        Squared center of mass energy.
+    t : float
+        Mandelstam variable (p1 - p3)^2.
+    u : float
+        Mandelstam variable (p1 - p4)^2.
+    iso : int, optional {0}
+        Isospin
+    su : int, optional {3}
+        SU version of ChiPT to use.
+
+    Returns
+    -------
+    M : float
+        Next-to-leading order pion scattering amplitude in a definite isospin
+        channel.
+    """
+    isVec = hasattr(s, "__len__") * hasattr(t, "__len__")
+
+    if isVec:
+        s, t = np.array(s), np.array(t)
+
+        if s.shape != t.shape:
+            raise ValueError("s and t must have the same shape.")
+
+        return np.array([__amp_pipi_pipi_NLO_I(s[i], t[i], iso=iso, su=su)
+                         for i in range(len(s))])
+    if hasattr(s, "__len__") or hasattr(t, "__len__"):
+        raise ValueError("s and u must have the same shape.")
+
+    return __amp_pipi_pipi_NLO_I(s, t, iso=iso, su=su)
+
+
+def msqrd_pipi_to_pipi_NLO_I(s, iso=0, su=3):
+    """
+    Returns the integrated, next to leading order, squared pion scattering
+    amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
 
     Parameters
     ----------
@@ -287,6 +513,8 @@ def msqrd_pipi_to_pipi_NLO_I(s, iso=0):
         Squared center of mass energy.
     iso : int, optional {0}
         Isospin.
+    su : int, optional {3}
+        SU version of ChiPT to use.
 
     Returns
     -------
@@ -294,15 +522,19 @@ def msqrd_pipi_to_pipi_NLO_I(s, iso=0):
         Integrated (over t), next to leading order, squared pion scattering
         amplitude in a definite isospin channel.
     """
-    def integrand(x):
-        return abs(amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s)), iso=iso)**2
-    return quad(integrand, -1., 1.)[0]
+
+    if hasattr(s, "__len__"):
+
+        return np.array([__msqrd_pipi_pipi_NLO_I(s[i], iso=iso, su=su)
+                         for i in range(len(s))])
+
+    return __msqrd_pipi_pipi_NLO_I(s, iso=iso, su=su)
 
 
-def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0):
+def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0, su=3):
     """
     Returns the lth partial wave of the next-to-leading-order pion scattering
-    amplitude in a definite isospin channel.
+    amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
 
     Parameters
     ----------
@@ -312,29 +544,28 @@ def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0):
         Partial wave index.
     iso : int, optional {0}
         Isospin
+    su : int, optional {3}
+        SU version of ChiPT to use.
+
 
     Returns
     -------
     MIL_NLO : complex
     """
-    def f_real(x):
-        return amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso).real * \
-            lpmv(0, l, x)
 
-    def f_imag(x):
-        return amp_pipi_to_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso).imag * \
-            lpmv(0, l, x)
+    if hasattr(s, "__len__"):
 
-    NLOreal = quad(f_real, -1., 1.)[0]
-    NLOimag = quad(f_imag, -1., 1.)[0]
+        return np.array([__pw_pipi_pipi_NLO_I(s[i], l, iso=iso, su=su)
+                         for i in range(len(s))])
 
-    return 0.5 * (NLOreal + 1.0j * NLOimag)
+    return __pw_pipi_pipi_NLO_I(s, l, iso=iso, su=su)
 
 
-def high_L_partial_wave_pipi_to_pipi_NLO_I(s, iso=0):
+def high_L_partial_wave_pipi_to_pipi_NLO_I(s, iso=0, su=3):
     """
     Returns the sum of all partial waves of the next-to-leading-order pion
-    scattering amplitude for l > 0 in a definite isospin channel.
+    scattering amplitude for l > 0 in a definite isospin channel in either
+    SU(2) or SU(3) ChiPT.
 
     Parameters
     ----------
@@ -349,5 +580,10 @@ def high_L_partial_wave_pipi_to_pipi_NLO_I(s, iso=0):
         Sum of all partial waves of the next-to-leading-order pion
         scattering amplitude for l > 0 in a definite isospin channel.
     """
-    return msqrd_pipi_to_pipi_NLO_I(s, iso=iso) - 2. * \
-        partial_wave_pipi_to_pipi_NLO_I(s, 0, iso=iso)**2
+    if hasattr(s, "__len__"):
+
+        return np.array([
+            __high_L_partial_wave_pipi_pipi_NLO_I(s[i], iso=iso, su=su)
+            for i in range(len(s))])
+
+    return __high_L_partial_wave_pipi_pipi_NLO_I(s, iso=iso, su=su)
