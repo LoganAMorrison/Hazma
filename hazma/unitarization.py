@@ -1,3 +1,7 @@
+"""
+Module for computing unitarized meson-meson scattering amplitudes.
+"""
+
 import os
 import numpy as np
 from .parameters import charged_pion_mass as mpi
@@ -7,20 +11,19 @@ from .parameters import neutral_kaon_mass as mk0
 from .parameters import fpi
 from cmath import sqrt, log, pi, phase
 
-mPI = (mpi + mpi0) / 2. + 0.0j
-mK = (mk + mk0) / 2. + 0.0j
-FPI = fpi + 0j
-Lam = 1.1 * 10**3 + 0j  # cut-off scale taken to be 1.1 GeV
-q_MAX = sqrt(Lam**2 - mK**2)
+MPI = complex((mpi + mpi0) / 2.)
+MK = complex((mk + mk0) / 2.)
+FPI = complex(fpi)
+LAM = complex(1.1 * 10**3)  # cut-off scale taken to be 1.1 GeV
+Q_MAX = sqrt(LAM**2 - MK**2)
 
 
 # #######################
 # Bethe Salpeter Equation
 # #######################
 
-
-def bubble_loop(cme, m, q_max=q_MAX):
-    """
+def bubble_loop(cme, mass, q_max=Q_MAX):
+    r"""
     Returns value of bubble loop
 
     Returns
@@ -31,49 +34,17 @@ def bubble_loop(cme, m, q_max=q_MAX):
     -----
     The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
     """
-    s = complex(cme**2, 0.0)
+    mand_s = complex(cme**2, 0.0)
 
-    sig = sqrt(1. - 4. * m**2 / s)
-    cut_fac = sqrt(1. + m**2 / q_max**2)
+    sig = sqrt(1. - 4. * mass**2 / mand_s)
+    cut_fac = sqrt(1. + mass**2 / q_max**2)
 
     return (sig * log((sig * cut_fac + 1) / (sig * cut_fac - 1)) -
-            2. * log(q_max / m * (1. + cut_fac))) / 16. / pi**2
+            2. * log(q_max / mass * (1. + cut_fac))) / 16. / pi**2
 
 
-def __G11(cme, q_max):
-    """
-    Returns kaon bubble loop factor.
-
-    Returns
-    -------
-    G11 : complex
-        G_{11} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
-            \frac{1}{q^2-m_{K}^2}\frac{1}{(P-q)^2-m_{K}^2}
-
-    Notes
-    -----
-    The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
-    """
-    s = complex(cme**2, 0.0)
-
-    p1 = complex(sqrt(s - 4. * mK**2) / 2.)
-    p2 = complex(sqrt(s - 4. * mPI**2) / 2.)
-
-    g11 = complex(bubble_loop(cme, mK, q_max))
-    return g11
-
-    if p1.imag > 0. and p2.imag > 0.:
-        return g11
-    if p1.imag > 0. and p2.imag < 0.:
-        return g11
-    if p1.imag < 0. and p2.imag < 0.:
-        return g11 - 2.0j * g11.imag
-    if p1.imag < 0. and p2.imag > 0.:
-        return g11 - 2.0j * g11.imag
-
-
-def __G22(cme, q_max):
-    """
+def pion_bubble(cme, q_max):
+    r"""
     Returns pion bubble loop factor.
 
     Returns
@@ -85,84 +56,119 @@ def __G22(cme, q_max):
     Notes
     -----
     The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
+
+    This code is used to determine branch for bubble:
+
+    mand_s = complex(cme**2, 0.0)
+
+    mom1 = complex(sqrt(mand_s - 4. * MK**2) / 2.)
+    mom2 = complex(sqrt(mand_s - 4. * MPI**2) / 2.)
+
+    if mom1.imag > 0. and mom2.imag > 0.:
+        return g22
+    if mom1.imag > 0. and mom2.imag < 0.:
+        return g22
+    if mom1.imag < 0. and mom2.imag < 0.:
+        return g22 - 2.0j * g22.imag
+    if mom1.imag < 0. and mom2.imag > 0.:
+        return g22 - 2.0j * g22.imag
     """
-    s = complex(cme**2, 0.0)
 
-    p1 = complex(sqrt(s - 4. * mK**2) / 2.)
-    p2 = complex(sqrt(s - 4. * mPI**2) / 2.)
-
-    g22 = complex(bubble_loop(cme, mPI, q_max))
-
-    return g22
-
-    if p1.imag > 0. and p2.imag > 0.:
-        return g22
-    if p1.imag > 0. and p2.imag < 0.:
-        return g22
-    if p1.imag < 0. and p2.imag < 0.:
-        return g22 - 2.0j * g22.imag
-    if p1.imag < 0. and p2.imag > 0.:
-        return g22 - 2.0j * g22.imag
+    return complex(bubble_loop(cme, MPI, q_max=q_max))
 
 
-def __v11(cme):
-    s = complex(cme**2, 0.0)
-    return - (1 / 4. / fpi**2) * (3 * s)
+def kaon_bubble(cme, q_max):
+    r"""
+    Returns kaon bubble loop factor.
+
+    Returns
+    -------
+    G11 : complex
+        G_{11} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
+            \frac{1}{q^2-m_{K}^2}\frac{1}{(P-q)^2-m_{K}^2}
+
+    Notes
+    -----
+    The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
+
+    mand_s = complex(cme**2, 0.0)
+
+    mom1 = complex(sqrt(mand_s - 4. * MK**2) / 2.)
+    mom2 = complex(sqrt(mand_s - 4. * MPI**2) / 2.)
+
+    if mom1.imag > 0. and mom2.imag > 0.:
+        return g11
+    if mom1.imag > 0. and mom2.imag < 0.:
+        return g11
+    if mom1.imag < 0. and mom2.imag < 0.:
+        return g11 - 2.0j * g11.imag
+    if mom1.imag < 0. and mom2.imag > 0.:
+        return g11 - 2.0j * g11.imag
+    """
+
+    return complex(bubble_loop(cme, MK, q_max))
 
 
-def __v12(cme):
-    s = complex(cme**2, 0.0)
-    return - (1. / 3.0 / sqrt(12.) / fpi**2) * (9.0 / 2. * s)
+def amp_pipi_to_pipi_lo(cme):
+    """
+    Returns leading-order
+    """
+    mand_s = complex(cme**2, 0.0)
+    return complex((1. / 2. / fpi**2) * (2. * mand_s - MPI**2))
 
 
-def __v22(cme):
-    s = complex(cme**2, 0.0)
-    return - (1. / 9. / fpi**2) * (9. * s + 15. * mPI**2 / 2. - 12. * mPI**2)
+def __M12(cme):
+    mand_s = complex(cme**2, 0.0)
+    return complex((sqrt(3) / 4. / fpi**2) * mand_s)
 
 
-def __delta_pi(cme, q_max):
-    return 1.0 - __v22(cme) * __G22(cme, q_max)
+def __M22(cme):
+    mand_s = complex(cme**2, 0.0)
+    return complex((3. / 4. / fpi**2) * mand_s)
 
 
-def __delta_k(cme, q_max):
-    return 1.0 - __v11(cme) * __G11(cme, q_max)
-
-
-def __delta_c(cme, q_max):
-    return __delta_pi(cme, q_max) * __delta_k(cme, q_max) - \
-        __v12(cme)**2 * __G11(cme, q_max) * __G22(cme, q_max)
+def __detM(cme):
+    eng = complex(cme)
+    return complex(amp_pipi_to_pipi_lo(eng) * __M22(eng) - __M12(eng)**2)
 
 
 def __delta(cme, q_max):
-    return __delta_pi(cme, q_max) * __delta_c(cme, q_max)
-
-
-def __amp_bs_kk_to_kk(cme, q_max):
-
-    Q = complex(cme)
-
-    return complex((__delta_pi(Q, q_max) * __v11(Q) +
-                    __v12(Q)**2 * __G22(Q, q_max)) / __delta_c(Q, q_max))
-
-
-def __amp_bs_pipi_to_kk(cme, q_max):
-
-    Q = complex(cme)
-
-    return complex((__v12(Q) * __G11(Q, q_max) * __v11(Q) +
-                    __delta_k(Q, q_max) * __v12(Q)) / __delta_c(Q, q_max))
+    eng = complex(cme)
+    return 1. + kaon_bubble(eng, q_max) * __M22(eng) + \
+        pion_bubble(eng, q_max) * \
+        (amp_pipi_to_pipi_lo(eng) + kaon_bubble(eng, q_max) * __detM(eng))
 
 
 def __amp_bs_pipi_to_pipi(cme, q_max):
 
-    Q = complex(cme)
+    eng = complex(cme)
 
-    return complex(__v22(Q) / __delta_pi(Q, q_max) +
-                   __v12(Q)**2 * __G11(Q, q_max) /
-                   (__delta_pi(Q, q_max) * __delta_c(Q, q_max)))
+    retval = (amp_pipi_to_pipi_lo(eng) +
+              kaon_bubble(eng, q_max) * __detM(eng)) / __delta(eng, q_max)
+
+    return complex(retval)
 
 
-def amp_bethe_salpeter_kk_to_kk(cmes, q_max=q_MAX):
+def __amp_bs_pipi_to_kk(cme, q_max):
+
+    eng = complex(cme)
+
+    retval = __M12(eng) / __delta(eng, q_max)
+
+    return complex(retval)
+
+
+def __amp_bs_kk_to_kk(cme, q_max):
+
+    eng = complex(cme)
+
+    retval = (__M22(eng) + pion_bubble(eng, q_max) * __detM(eng)) \
+        / __delta(eng, q_max)
+
+    return complex(retval)
+
+
+def amp_bethe_salpeter_kk_to_kk(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for kk -> kk in the zero isospin
     channel.
@@ -189,7 +195,7 @@ def amp_bethe_salpeter_kk_to_kk(cmes, q_max=q_MAX):
     return __amp_bs_kk_to_kk(cmes, q_max)
 
 
-def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=q_MAX):
+def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for pipi -> kk in the zero isospin
     channel.
@@ -216,7 +222,7 @@ def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=q_MAX):
     return __amp_bs_pipi_to_kk(cmes, q_max)
 
 
-def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=q_MAX):
+def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for pipi -> pipi in the zero isospin
     channel.
@@ -246,9 +252,9 @@ def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=q_MAX):
 def __phase_shift(cme, t, deg=False):
     s = complex(cme**2, 0.0)
 
-    p2 = complex(sqrt(s - 4 * mPI**2) / 2.)
+    p2 = complex(sqrt(s - 4 * MPI**2) / 2.)
 
-    z = complex(1.0 - 2.0j * p2 * t / (8. * pi * sqrt(s)))
+    z = complex(1.0 + 2.0j * p2 * t / (8. * pi * sqrt(s)))
 
     theta = phase(z)
 

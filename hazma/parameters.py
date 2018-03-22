@@ -40,6 +40,28 @@ b0 = neutral_pion_mass**2 / (up_quark_mass + down_quark_mass)
 G8 = 5.47
 G27 = 0.392
 
+# The following low energy constants are for NLO ChiPT, evaluated at mu = mrho.
+nlo_lec_mu = rho_mass
+Lr1 = 0.56 * 1.0e-3
+Lr2 = 1.21 * 1.0e-3
+L3 = -2.79 * 1.0e-3
+Lr4 = -0.36 * 1.0e-3
+Lr5 = 1.4 * 1.0e-3
+Lr6 = 0.07 * 1.0e-3
+L7 = -0.44 * 1.0e-3
+Lr8 = 0.78 * 1.0e-3
+
+# SU(2) LECs
+Er = 0.029
+Gr = 0.0073
+
+LECS = {"1": Lr1, "2": Lr2, "3": L3, "4": Lr4, "5": Lr5, "6": Lr6,
+        "7": L7, "8": Lr8, "SU2_Er": Er, "SU2_Gr": Gr}
+
+# SU(2) LECs
+Er = 0.029
+Gr = 0.0073
+
 # CKM Matrix Elements
 Vud = 0.97417
 Vus = 0.2248
