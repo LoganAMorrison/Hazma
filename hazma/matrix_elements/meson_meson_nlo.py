@@ -14,7 +14,7 @@ from ..parameters import LECS, nlo_lec_mu
 from scipy.integrate import quad
 from scipy.special import lpmv
 
-from .leading_order import __amp_pipi_pipi_LO
+from .meson_meson_lo import __amp_pipi_pipi_LO
 
 mPI = (mpi + mpi0) / 2.
 mK = (mk + mk0) / 2.
