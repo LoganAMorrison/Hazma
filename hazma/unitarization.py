@@ -2,7 +2,6 @@
 Module for computing unitarized meson-meson scattering amplitudes.
 """
 
-import os
 import numpy as np
 from .parameters import charged_pion_mass as mpi
 from .parameters import charged_kaon_mass as mk
@@ -10,6 +9,10 @@ from .parameters import neutral_pion_mass as mpi0
 from .parameters import neutral_kaon_mass as mk0
 from .parameters import fpi
 from cmath import sqrt, log, pi, phase
+
+from .matrix_elements.meson_meson_lo import partial_wave_pipi_to_pipi_LO_I
+from .matrix_elements.meson_meson_nlo import partial_wave_pipi_to_pipi_NLO_I
+
 
 MPI = complex((mpi + mpi0) / 2.)
 MK = complex((mk + mk0) / 2.)
@@ -43,129 +46,74 @@ def bubble_loop(cme, mass, q_max=Q_MAX):
             2. * log(q_max / mass * (1. + cut_fac))) / 16. / pi**2
 
 
-def pion_bubble(cme, q_max):
-    r"""
-    Returns pion bubble loop factor.
-
-    Returns
-    -------
-    G22 : complex
-        G_{22} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
-            \frac{1}{q^2-m_{\pi}^2}\frac{1}{(P-q)^2-m_{\pi}^2}
-
-    Notes
-    -----
-    The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
-
-    This code is used to determine branch for bubble:
-
-    mand_s = complex(cme**2, 0.0)
-
-    mom1 = complex(sqrt(mand_s - 4. * MK**2) / 2.)
-    mom2 = complex(sqrt(mand_s - 4. * MPI**2) / 2.)
-
-    if mom1.imag > 0. and mom2.imag > 0.:
-        return g22
-    if mom1.imag > 0. and mom2.imag < 0.:
-        return g22
-    if mom1.imag < 0. and mom2.imag < 0.:
-        return g22 - 2.0j * g22.imag
-    if mom1.imag < 0. and mom2.imag > 0.:
-        return g22 - 2.0j * g22.imag
+def __loop_matrix(cme, q_max, i):
     """
-
-    return complex(bubble_loop(cme, MPI, q_max=q_max))
-
-
-def kaon_bubble(cme, q_max):
-    r"""
-    Returns kaon bubble loop factor.
-
-    Returns
-    -------
-    G11 : complex
-        G_{11} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
-            \frac{1}{q^2-m_{K}^2}\frac{1}{(P-q)^2-m_{K}^2}
-
-    Notes
-    -----
-    The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
-
-    mand_s = complex(cme**2, 0.0)
-
-    mom1 = complex(sqrt(mand_s - 4. * MK**2) / 2.)
-    mom2 = complex(sqrt(mand_s - 4. * MPI**2) / 2.)
-
-    if mom1.imag > 0. and mom2.imag > 0.:
-        return g11
-    if mom1.imag > 0. and mom2.imag < 0.:
-        return g11
-    if mom1.imag < 0. and mom2.imag < 0.:
-        return g11 - 2.0j * g11.imag
-    if mom1.imag < 0. and mom2.imag > 0.:
-        return g11 - 2.0j * g11.imag
+    Vector of bubble integrals.
+    Note that 1 stands from pion and 2 for kaon.
     """
+    if i == 1:
+        complex(bubble_loop(cme, MK, q_max))
+    if i == 2:
+        complex(bubble_loop(cme, MK, q_max))
 
-    return complex(bubble_loop(cme, MK, q_max))
 
-
-def amp_pipi_to_pipi_lo(cme):
+def __amp_matrix(cme, i, j):
     """
-    Returns leading-order
+    Matrix of tree level amplitudes.
+    Note that 1 stands from pion and 2 for kaon.
     """
     mand_s = complex(cme**2, 0.0)
-    return complex((1. / 2. / fpi**2) * (2. * mand_s - MPI**2))
-
-
-def __M12(cme):
-    mand_s = complex(cme**2, 0.0)
-    return complex((sqrt(3) / 4. / fpi**2) * mand_s)
-
-
-def __M22(cme):
-    mand_s = complex(cme**2, 0.0)
-    return complex((3. / 4. / fpi**2) * mand_s)
+    if i == 1:
+        if j == 1:
+            complex((2 * mand_s - MPI**2) / 2. / FPI**2)
+        if j == 2:
+            complex((sqrt(3) / 4. / fpi**2) * mand_s)
+    if i == 2:
+        if j == 1:
+            complex((sqrt(3) / 4. / fpi**2) * mand_s)
+        if j == 2:
+            complex((3. / 4. / fpi**2) * mand_s)
 
 
 def __detM(cme):
+    """determinant of matrix of amplitudes."""
     eng = complex(cme)
-    return complex(amp_pipi_to_pipi_lo(eng) * __M22(eng) - __M12(eng)**2)
+    return complex(__amp_matrix(eng, 1, 1) * __amp_matrix(eng, 2, 2) -
+                   __amp_matrix(eng, 1, 2)**2)
 
 
 def __delta(cme, q_max):
+    """1 + G22 M22 + G11 (M11 + G22 det(M))"""
     eng = complex(cme)
-    return 1. + kaon_bubble(eng, q_max) * __M22(eng) + \
-        pion_bubble(eng, q_max) * \
-        (amp_pipi_to_pipi_lo(eng) + kaon_bubble(eng, q_max) * __detM(eng))
+    return 1. + __loop_matrix(eng, eng, 2) * __amp_matrix(eng, 2, 2) + \
+        __loop_matrix(eng, eng, 1) * \
+        (__amp_matrix(eng, 1, 1) + __loop_matrix(eng, eng, 2) * __detM(eng))
 
 
 def __amp_bs_pipi_to_pipi(cme, q_max):
-
+    """bse pipi->pipi scattering"""
     eng = complex(cme)
 
-    retval = (amp_pipi_to_pipi_lo(eng) +
-              kaon_bubble(eng, q_max) * __detM(eng)) / __delta(eng, q_max)
+    retval = (__amp_matrix(eng, 1, 1) +
+              __loop_matrix(eng, eng, 2) * __detM(eng)) / __delta(eng, q_max)
 
     return complex(retval)
 
 
 def __amp_bs_pipi_to_kk(cme, q_max):
-
+    """bse pipi->kk scattering"""
     eng = complex(cme)
 
-    retval = __M12(eng) / __delta(eng, q_max)
-
-    return complex(retval)
+    return complex(__amp_matrix(eng, 1, 2) / __delta(eng, q_max))
 
 
 def __amp_bs_kk_to_kk(cme, q_max):
-
+    """bse kk->kk scattering"""
     eng = complex(cme)
 
-    retval = (__M22(eng) + pion_bubble(eng, q_max) * __detM(eng)) \
-        / __delta(eng, q_max)
-
-    return complex(retval)
+    return complex((__amp_matrix(eng, 2, 2) +
+                    __loop_matrix(eng, eng, 1) * __detM(eng)) /
+                   __delta(eng, q_max))
 
 
 def amp_bethe_salpeter_kk_to_kk(cmes, q_max=Q_MAX):
@@ -337,34 +285,23 @@ def fix_phases(phases, trigger=250):
 # Inverse Amplitude Method
 # ########################
 
-# Import data for IAM
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         "unitarization_data",
-                         "final_state_int_unitarizated.dat")
-
-unitarizated_data = np.loadtxt(DATA_PATH, delimiter=',', dtype=complex)
-unitarizated_data_x = np.real(unitarizated_data[:, 0])
-unitarizated_data_y = unitarizated_data[:, 1]
-
-
-def amp_pipi_to_pipi_I0(cme):
-    """
-    Lowest order pion scattering squared matrix element in the isospin I = 0
-    channel.
-
-    Parameters
-    ----------
-    cme: double
-        Invariant mass of the two charged pions.
-    """
-    return (2 * cme**2 - mpi0**2) / (32. * fpi**2 * pi)
-
-
-def amp_inverse_amplitude_pipi_to_pipi(cme):
+def __amp_iam_pipi_to_pipi(cme):
     """
     Unitarized pion scattering squared matrix element in the isopin I = 0
     channel.
+    """
+    s = complex(cme**2)
+
+    amp_lo = partial_wave_pipi_to_pipi_LO_I(s, l=0, iso=0)
+    amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, l=0, iso=0)
+
+    return amp_lo / (amp_lo - amp_nlo)
+
+
+def amp_inverse_amplitude_pipi_to_pipi(cmes):
+    """
+    Unitarized pion scattering amplitude in the isopin I = 0 channel.
 
     Unitarization was computed using the inverse amplitude method(IAM) with
     only pion contributions.
@@ -374,46 +311,26 @@ def amp_inverse_amplitude_pipi_to_pipi(cme):
     cme: double
         Invariant mass of the two charged pions.
     """
-    return np.interp(cme, unitarizated_data_x, unitarizated_data_y)
+    if hasattr(cmes, "__len__"):
+        return np.array([__amp_iam_pipi_to_pipi(cme) for cme in cmes])
+    else:
+        return __amp_iam_pipi_to_pipi(cmes)
 
 
-def ratio_pipi_to_pipi_unitarized_tree(cme):
+def msqrd_inverse_amplitude_pipi_to_pipi(cmes):
     """
-    Returns the unitarized squared matrix element for: math: `\pi\pi\to\pi\pi`
-    divided by the leading order, ununitarized squared matrix element for
-    : math: `\pi\pi\to\pi\pi`.
+    Unitarized pion scattering sqrd amplitude in the isopin I = 0 channel.
 
-    This was computed using the inverse amplitude method(IAM) with only
+    Unitarization was computed using the inverse amplitude method(IAM) with
+    only pion contributions.
 
     Parameters
     ----------
     cme: double
         Invariant mass of the two charged pions.
-
-    Results
-    -------
-    __unit_matrix_elem_sqrd: double
-        The unitarized matrix element for: math: `\pi\pi\to\pi\pi`, | t_u | ^2,
-        divided by the un - unitarized squared matrix element for
-        : math: `\pi\pi\to\pi\pi`, | t | ^2; | t_u | ^2 / |t | ^2.
     """
-    return amp_inverse_amplitude_pipi_to_pipi(cme) / \
-        amp_pipi_to_pipi_I0(cme)
-
-
-def msqrd_bethe_salpeter_pipi_to_pipi(Q):
-    """
-    Returns the square of the unitarized pipi -> pipi amplitude.
-
-    Parameters
-    ----------
-    Q: float
-        Invariant mass of the pions.
-
-    Returns
-    -------
-    Mu2: float
-        Unitarized squared matrix element for pipi -> pipi in the zero isospin
-        channel.
-    """
-    return np.abs(amp_bethe_salpeter_pipi_to_pipi(Q))**2
+    if hasattr(cmes, "__len__"):
+        return np.array([abs(amp_inverse_amplitude_pipi_to_pipi(cme))
+                         for cme in cmes])
+    else:
+        return abs(amp_inverse_amplitude_pipi_to_pipi(cmes))
