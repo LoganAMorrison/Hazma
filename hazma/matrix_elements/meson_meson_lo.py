@@ -74,18 +74,18 @@ def __msqrd_pipi_pipi_LO_I(s, iso=0):
     return quad(f, -1., 1.)[0]
 
 
-def __pw_pipi_pipi_LO_I(s, l, iso=0):
+def __pw_pipi_pipi_LO_I(s, ell, iso=0):
     """
     Returns the lth partial wave of the leading order pion scattering
     amplitude. Use 'partial_wave_pipi_to_pipi_LO_I' instead.
     """
     def f_real(x):
         return __amp_pipi_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).real * \
-            lpmv(0, l, x)
+            lpmv(0, ell, x)
 
     def f_imag(x):
         return __amp_pipi_pipi_LO_I(s, mandlestam_t(x, s), iso=iso).imag * \
-            lpmv(0, l, x)
+            lpmv(0, ell, x)
 
     return 0.5 * (quad(f_real, -1., 1.)[0] + 1j * quad(f_imag, -1., 1.)[0])
 
@@ -186,7 +186,7 @@ def msqrd_pipi_to_pipi_LO_I(s, iso=0):
     return __msqrd_pipi_pipi_LO_I(s, iso=iso)
 
 
-def partial_wave_pipi_to_pipi_LO_I(s, l, iso=0):
+def partial_wave_pipi_to_pipi_LO_I(s, ell, iso=0):
     """
     Returns the lth partial wave of the leading order pion scattering
     amplitude.
@@ -203,7 +203,7 @@ def partial_wave_pipi_to_pipi_LO_I(s, l, iso=0):
     Ml_LO : complex
     """
     if hasattr(s, "__len__"):
-        return np.array([__pw_pipi_pipi_LO_I(s[i], l, iso=iso)
+        return np.array([__pw_pipi_pipi_LO_I(s[i], ell, iso=iso)
                          for i in range(len(s))])
 
-    return __pw_pipi_pipi_LO_I(s, l, iso=iso)
+    return __pw_pipi_pipi_LO_I(s, ell, iso=iso)

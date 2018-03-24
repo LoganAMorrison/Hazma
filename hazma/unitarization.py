@@ -25,95 +25,99 @@ Q_MAX = sqrt(LAM**2 - MK**2)
 # Bethe Salpeter Equation
 # #######################
 
+
+def __bubble_loop_mat_elements(cme, m1, m2, q_max=Q_MAX):
+    r"""Returns value of bubble loop for m1, m2 running in loop"""
+    s = complex(cme**2, 0.0)
+
+    delta = complex(m1**2 - m2**2)
+    nu = sqrt((s - complex(m1 - m2)**2) * (s - complex(m1 + m2)**2))
+    cut_fac1 = sqrt(complex(1. + m1**2 / q_max**2))
+    cut_fac2 = sqrt(complex(1. + m2**2 / q_max**2))
+
+    log1 = log(complex(m1**2 / m2**2))
+    log2 = log(s - delta + nu * cut_fac1) - log(-s + delta + nu * cut_fac1)
+    log3 = log(s - delta + nu * cut_fac2) - log(-s + delta + nu * cut_fac2)
+    log4 = log(1. + cut_fac1) - log(1. + cut_fac2)
+    log5 = log(1. + cut_fac1) + log(1. + cut_fac2)
+    log6 = log(m1**2 * m2**2 / q_max**4)
+
+    sum_logs = complex(-delta / s * log1 + nu / s * (log2 + log3) +
+                       2. * delta / s * log4 - 2. * log5 + log6)
+
+    return sum_logs / 32. / pi**2
+
+
 def bubble_loop(cme, mass, q_max=Q_MAX):
     r"""
-    Returns value of bubble loop
+    Returns value of bubble loop given a hard momentum cut-off.
 
-    Returns
-        G_{ii} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
-            \frac{1}{q^2-m_{i}^2}\frac{1}{(P-q)^2-m_{i}^2}
+    Parameters
+    ----------
+    cme : float
+        Center of mass energy.
+    mass : float
+        Mass of particle running in loop.
 
     Notes
     -----
-    The integral is regulated with a finite momentum cutoff equal to 1.1 GeV.
+    The bubble integral is
+        G_{ii} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
+            \frac{1}{q^2-m_{i}^2}\frac{1}{(P-q)^2-m_{i}^2}
     """
+    return __bubble_loop_mat_elements(cme, mass, mass, q_max=q_max)
+
+
+def loop_matrix(cme, q_max=Q_MAX):
+    """
+    Returns a matrix of the bubble loop integrals.
+
+    Parameters
+    ----------
+    cme : float
+        Center of mass energy.
+    q_max : optional
+        Hard momentum cut-off. Taken to be 1.1 GeV by default.
+
+    Returns
+    -------
+    loop_mat : numpy.matrix
+        Matrix of the bubble loop integrals. The 'i, j' component is the result
+        of a bubble loop with a mass 'i' and mass 'j' running in the loop.
+        'i=0' and 'i=1' correspond to the pion and kaon respectively.
+
+    Notes
+    -----
+    The bubble loop is given by
+        G_{ij} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
+            \frac{1}{q^2-m_{i}^2}\frac{1}{(P-q)^2-m_{j}^2}
+    """
+    g11 = __bubble_loop_mat_elements(cme, MPI, MPI, q_max=q_max)
+    g12 = __bubble_loop_mat_elements(cme, MPI, MK, q_max=q_max)
+    g22 = __bubble_loop_mat_elements(cme, MK, MK, q_max=q_max)
+
+    return np.matrix([[g11, g12], [g12, g22]], dtype=complex)
+
+
+def __amp_matrix(cme):
+    """Matrix of tree level amplitudes. Note: 1 = pion, 2 = kaon."""
     mand_s = complex(cme**2, 0.0)
 
-    sig = sqrt(1. - 4. * mass**2 / mand_s)
-    cut_fac = sqrt(1. + mass**2 / q_max**2)
+    m11 = complex((2 * mand_s - MPI**2) / 2. / FPI**2)
+    m12 = complex((sqrt(3) / 4. / fpi**2) * mand_s)
+    m22 = complex((3. / 4. / fpi**2) * mand_s)
 
-    return (sig * log((sig * cut_fac + 1) / (sig * cut_fac - 1)) -
-            2. * log(q_max / mass * (1. + cut_fac))) / 16. / pi**2
-
-
-def __loop_matrix(cme, q_max, i):
-    """
-    Vector of bubble integrals.
-    Note that 1 stands from pion and 2 for kaon.
-    """
-    if i == 1:
-        complex(bubble_loop(cme, MK, q_max))
-    if i == 2:
-        complex(bubble_loop(cme, MK, q_max))
+    return np.matrix([[m11, m12], [m12, m22]], dtype=complex)
 
 
-def __amp_matrix(cme, i, j):
-    """
-    Matrix of tree level amplitudes.
-    Note that 1 stands from pion and 2 for kaon.
-    """
-    mand_s = complex(cme**2, 0.0)
-    if i == 1:
-        if j == 1:
-            complex((2 * mand_s - MPI**2) / 2. / FPI**2)
-        if j == 2:
-            complex((sqrt(3) / 4. / fpi**2) * mand_s)
-    if i == 2:
-        if j == 1:
-            complex((sqrt(3) / 4. / fpi**2) * mand_s)
-        if j == 2:
-            complex((3. / 4. / fpi**2) * mand_s)
+def __unit_mat(cme, q_max):
+    """Returns matrix of unitarized I=0 amplitudes."""
+    iden = np.identity(2, dtype=complex)
+    gmat_diag = np.diag(np.diag(loop_matrix(cme)))
+    mmat = __amp_matrix(cme)
+    inv = np.matrix(iden + mmat * gmat_diag).getI()
 
-
-def __detM(cme):
-    """determinant of matrix of amplitudes."""
-    eng = complex(cme)
-    return complex(__amp_matrix(eng, 1, 1) * __amp_matrix(eng, 2, 2) -
-                   __amp_matrix(eng, 1, 2)**2)
-
-
-def __delta(cme, q_max):
-    """1 + G22 M22 + G11 (M11 + G22 det(M))"""
-    eng = complex(cme)
-    return 1. + __loop_matrix(eng, eng, 2) * __amp_matrix(eng, 2, 2) + \
-        __loop_matrix(eng, eng, 1) * \
-        (__amp_matrix(eng, 1, 1) + __loop_matrix(eng, eng, 2) * __detM(eng))
-
-
-def __amp_bs_pipi_to_pipi(cme, q_max):
-    """bse pipi->pipi scattering"""
-    eng = complex(cme)
-
-    retval = (__amp_matrix(eng, 1, 1) +
-              __loop_matrix(eng, eng, 2) * __detM(eng)) / __delta(eng, q_max)
-
-    return complex(retval)
-
-
-def __amp_bs_pipi_to_kk(cme, q_max):
-    """bse pipi->kk scattering"""
-    eng = complex(cme)
-
-    return complex(__amp_matrix(eng, 1, 2) / __delta(eng, q_max))
-
-
-def __amp_bs_kk_to_kk(cme, q_max):
-    """bse kk->kk scattering"""
-    eng = complex(cme)
-
-    return complex((__amp_matrix(eng, 2, 2) +
-                    __loop_matrix(eng, eng, 1) * __detM(eng)) /
-                   __delta(eng, q_max))
+    return inv * mmat
 
 
 def amp_bethe_salpeter_kk_to_kk(cmes, q_max=Q_MAX):
@@ -138,9 +142,9 @@ def amp_bethe_salpeter_kk_to_kk(cmes, q_max=Q_MAX):
     """
 
     if hasattr(cmes, "__len__"):
-        return np.array([__amp_bs_kk_to_kk(cme, q_max) for cme in cmes])
+        return np.array([__unit_mat(cme, q_max)[1, 1] for cme in cmes])
 
-    return __amp_bs_kk_to_kk(cmes, q_max)
+    return __unit_mat(cme, q_max)[1, 1]
 
 
 def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=Q_MAX):
@@ -165,9 +169,9 @@ def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=Q_MAX):
     """
 
     if hasattr(cmes, "__len__"):
-        return np.array([__amp_bs_pipi_to_kk(cme, q_max) for cme in cmes])
+        return np.array([__unit_mat(cme, q_max)[0, 1] for cme in cmes])
 
-    return __amp_bs_pipi_to_kk(cmes, q_max)
+    return __unit_mat(cme, q_max)[0, 1]
 
 
 def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=Q_MAX):
@@ -192,9 +196,9 @@ def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=Q_MAX):
     """
 
     if hasattr(cmes, "__len__"):
-        return np.array([__amp_bs_pipi_to_pipi(cme, q_max) for cme in cmes])
+        return np.array([__unit_mat(cme, q_max)[0, 0] for cme in cmes])
 
-    return __amp_bs_pipi_to_pipi(cmes, q_max)
+    return __unit_mat(cme, q_max)[0, 0]
 
 
 def __phase_shift(cme, t, deg=False):
@@ -293,8 +297,8 @@ def __amp_iam_pipi_to_pipi(cme):
     """
     s = complex(cme**2)
 
-    amp_lo = partial_wave_pipi_to_pipi_LO_I(s, l=0, iso=0)
-    amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, l=0, iso=0)
+    amp_lo = partial_wave_pipi_to_pipi_LO_I(s, ell=0, iso=0)
+    amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, ell=0, iso=0)
 
     return amp_lo / (amp_lo - amp_nlo)
 
