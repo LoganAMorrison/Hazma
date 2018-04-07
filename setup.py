@@ -1,7 +1,8 @@
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Build import cythonize
+
 import numpy as np
+from Cython.Build import cythonize
 
 hdhf = "hazma/decay_helper_functions"
 hgrhf = "hazma/gamma_ray_helper_functions"
@@ -18,7 +19,7 @@ packs = ["hazma",
          "hazma.matrix_elements",
          "hazma.field_theory_helper_functions",
          "hazma.simplified_model_helper_functions",
-         "hazma.widths"]
+         "hazma.scalar_mediator"]
 
 decay_ext = Extension("*", sources=[hdhf + "/*.pyx"])
 gamma_ext = Extension("*", sources=[hgrhf + "/*.pyx"])

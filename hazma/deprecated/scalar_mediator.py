@@ -243,7 +243,7 @@ class ScalarMediator:
 
         # Define analytic spectra
         dnde_ff = np.vectorize(dnde_xx_to_s_to_ffg)
-        dnde_pipi = np.vectorize(dnde_xx_to_s_to_pipig)
+        # dnde_pipi = np.vectorize(dnde_xx_to_s_to_pipig)
 
         # Compute branching fractions
         bfs = self.branching_fractions(cme)
@@ -253,7 +253,7 @@ class ScalarMediator:
             0.5 * short_kaon(egams, cme / 2.0)
         ckaon_decay = charged_kaon(egams, cme / 2.0)
         npion_decay = neutral_pion(egams, cme / 2.0)
-        cpion_decay = charged_pion(egams, cme / 2.0)
+        # cpion_decay = charged_pion(egams, cme / 2.0)
         muon_decay = muon(egams, cme / 2.0)
 
         # FSR spectra
@@ -262,9 +262,10 @@ class ScalarMediator:
 
         # Pions
         npions = 2.0 * bfs['pi0 pi0'] * npion_decay
-        cpions = bfs['pi pi'] * (dnde_pipi(egams, cme, self.mx, self.ms,
-                                           self.gsxx, self.gsff,
-                                           self.gsGG) + 2.0 * cpion_decay[:])
+        cpions = np.array([0.0 for _ in range(len(egams))])
+        # cpions = bfs['pi pi'] * (dnde_pipi(egams, cme, self.mx, self.ms,
+        #                                   self.gsxx, self.gsff,
+        #                                   self.gsGG) + 2.0 * cpion_decay[:])
 
         # Leptons
         muons = bfs['mu mu'] * (muon_decay[:] + muon_fsr[:])

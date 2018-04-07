@@ -5,25 +5,32 @@
 
 """
 import numpy as np
-
-from ..parameters import vh, b0, alpha_em
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import up_quark_mass as muq
-from ..parameters import down_quark_mass as mdq
-
-from ..field_theory_helper_functions.three_body_phase_space import u_to_st
-from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
-from ..field_theory_helper_functions.three_body_phase_space import \
-    phase_space_prefactor
-from ..field_theory_helper_functions.three_body_phase_space import \
-    t_integral
+from cmath import sqrt, pi
 
 from ..field_theory_helper_functions.common_functions import \
     cross_section_prefactor
+from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
+from ..field_theory_helper_functions.three_body_phase_space import t_integral
+from ..field_theory_helper_functions.three_body_phase_space import \
+    phase_space_prefactor
+
+from ..parameters import rho_mass as mrho
+from ..parameters import down_quark_mass as mdq
+from ..parameters import up_quark_mass as muq
+from ..parameters import alpha_em, b0, vh, fv, gv, qe, fpi
+
+from ..parameters import charged_pion_mass as mpi
+from ..parameters import neutral_pion_mass as mpi0
+from ..parameters import charged_kaon_mass as mk
+from ..parameters import neutral_kaon_mass as mk0
+from ..parameters import rho_width
 
 from ..unitarization import amp_bethe_salpeter_pipi_to_pipi
+from .chrg_pi import msqrd_xx_s_pipig
 
-e = np.sqrt(4 * np.pi * alpha_em)
+
+mPI = (mpi0 + mpi) / 2.
+mK = (mk0 + mk) / 2.
 
 
 def __dnde_xx_to_s_to_ffg(egam, Q, mf):
@@ -53,11 +60,11 @@ def __dnde_xx_to_s_to_ffg(egam, Q, mf):
     if 0 < e and e < 0.5 * (1.0 - 4.0 * m**2):
         return (alpha_em *
                 (2 * (-1 + 4 * m**2) *
-                 np.sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
+                 sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
                  4 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 +
                       8 * m**4) *
-                 np.arctanh(np.sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
-            (e * (1 - 4 * m**2)**1.5 * np.pi * Q)
+                 np.arctanh(sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
+            (e * (1 - 4 * m**2)**1.5 * pi * Q)
     else:
         return 0.0
 
@@ -127,7 +134,7 @@ def __msqrd_xx_to_s_to_pipig(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs):
     -------
     Returns matrix element squared for
     :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma`.
-    """
+
     u = u_to_st(0.0, mpi, mpi, Q, s, t)
 
     mat_elem_sqrd = (-16 * gsxx**2 *
@@ -145,7 +152,9 @@ def __msqrd_xx_to_s_to_pipig(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    return mat_elem_sqrd * amp_bethe_salpeter_pipi_to_pipi(np.sqrt(s))
+    return mat_elem_sqrd * amp_bethe_salpeter_pipi_to_pipi(sqrt(s))
+    """
+    return msqrd_xx_s_pipig(Q, s, t, mx, ms, gsxx, gsff, gsGG, vs)
 
 
 def __sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
@@ -191,12 +200,12 @@ def __sigma_xx_to_s_to_pipi(cme, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs) ** 2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    p_i = np.sqrt(cme**2 / 4.0 - mx**2)
-    p_f = np.sqrt(cme**2 / 4.0 - mpi**2)
+    p_i = sqrt(cme**2 / 4.0 - mx**2)
+    p_f = sqrt(cme**2 / 4.0 - mpi**2)
 
-    prefactor = 1.0 / (16. * np.pi * cme**2) * p_f / p_i
+    prefactor = 1.0 / (16. * pi * cme**2) * p_f / p_i
 
-    return prefactor * amp_bethe_salpeter_pipi_to_pipi(np.sqrt(cme**2)) *\
+    return prefactor * amp_bethe_salpeter_pipi_to_pipi(sqrt(cme**2)) *\
         mat_elem_sqrd
 
 
@@ -322,40 +331,54 @@ def __sigma_xx_to_s_to_pipi_no_fsi(cme, mx, ms, gsxx, gsff, gsGG, vs):
          (9 * vh + 9 * gsff * vs - 2 * gsGG * vs) ** 2 *
          (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
 
-    p_i = np.sqrt(cme**2 / 4.0 - mx**2)
-    p_f = np.sqrt(cme**2 / 4.0 - mpi**2)
+    p_i = sqrt(cme**2 / 4.0 - mx**2)
+    p_f = sqrt(cme**2 / 4.0 - mpi**2)
 
-    prefactor = 1.0 / (16. * np.pi * cme**2) * p_f / p_i
+    prefactor = 1.0 / (16. * pi * cme**2) * p_f / p_i
 
     return prefactor * mat_elem_sqrd
 
 
+def __xx_s_pipig_no_FSI_E(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs):
+
+    mrhoT = sqrt(mrho**2 - 2 * gsGG * vs / 9. / vh)
+
+    return (complex(0., 0.037037037037037035) * sqrt(2.) * gsxx *
+            sqrt(-4. * mx**2 + Q**2) * qe *
+            (3. * fv * gsGG * gv * s * (mPI**2 - t) * (mPI**2 + Q**2 - s - t) *
+             (3. * vh + 3. * gsff * vs + 2. * gsGG * vs) *
+             (9. * vh + 4. * gsGG * vs) -
+             fpi**2 * mrhoT**2 *
+             (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+             (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
+                           (9. * vh + 8. * gsGG * vs)**2) +
+              2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
+                           mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
+                                     64. * gsGG**2 * vs**2))))) / \
+        (fpi**2 * mrhoT**2 * (-ms**2 + Q**2) *
+         (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+         (mPI**2 - t) * vh *
+         (3. * vh + 3. * gsff * vs + 2. * gsGG * vs) *
+         (9. * vh + 4. * gsGG * vs))
+
+
 def __msqrd_xx_to_s_to_pipig_no_fsi(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs):
-    """
-    Returns the squared matrix element for two fermions annihilating into two
-    charged pions and a photon **WITHOUT FSI***.
+    """Compute matrix element squared for xbar x -> s^* -> pi+ pi- g.
+
+    Notes
+    -----
+    The matrix element for this process, M, is related to the form factor by
+        |M|^2. = s Re[E(s,t,u) E^*(s,u,t)] - m_PI^2. |E(s,t,u) + E(s,u,t)|^2..
     """
     if Q < 2 * mpi:
         return 0
 
-    u = u_to_st(0.0, mpi, mpi, Q, s, t)
+    u = Q**2 + 2. * mPI**2 - s - t
 
-    mat_elem_sqrd = (-16 * gsxx**2 *
-                     (-4 * mx**2 + Q**2) *
-                     (4 * mpi**6 - s * t * u + mpi**2 *
-                         (t + u) * (s + t + u) - mpi**4 * (s + 4 * (t + u))) *
-                     (2 * gsGG * (4 * mpi**2 - s - t - u) *
-                         (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-                         (9 * vh + 8 * gsGG * vs) +
-                         b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                         (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-                          (9 * vh + 16 * gsGG * vs)))**2 * e**2) / \
-        ((ms**2 - Q**2)**2 *
-         (mpi**2 - t)**2 * (mpi**2 - u)**2 *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+    E_t = __xx_s_pipig_no_FSI_E(s, t, Q, mx, ms, gsxx, gsff, gsGG, vs)
+    E_u = __xx_s_pipig_no_FSI_E(s, u, Q, mx, ms, gsxx, gsff, gsGG, vs)
 
-    return mat_elem_sqrd
+    return s * np.real(E_t * np.conj(E_u)) - mPI**2 * np.abs(E_t + E_u)**2
 
 
 def __dnde_xx_to_s_to_pipig_no_fsi(eng_gam, cme, mx, ms, gsxx, gsff, gsGG, vs):

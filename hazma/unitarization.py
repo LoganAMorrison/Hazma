@@ -65,6 +65,10 @@ def bubble_loop(cme, mass, q_max=Q_MAX):
         G_{ii} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
             \frac{1}{q^2-m_{i}^2}\frac{1}{(P-q)^2-m_{i}^2}
     """
+    cutFact = sqrt(complex(1. + mass**2 / q_max**2))
+    if abs(cme) == 0.0:
+        return complex((1. - cutFact * log(((1. + cutFact) * q_max) / mass)) /
+                       (8. * cutFact * pi**2))
     return __bubble_loop_mat_elements(cme, mass, mass, q_max=q_max)
 
 
@@ -115,7 +119,7 @@ def __unit_mat(cme, q_max):
     iden = np.identity(2, dtype=complex)
     gmat_diag = np.diag(np.diag(loop_matrix(cme)))
     mmat = __amp_matrix(cme)
-    inv = np.matrix(iden + mmat * gmat_diag).getI()
+    inv = np.matrix(iden + mmat * gmat_diag, dtype=complex).getI()
 
     return inv * mmat
 
@@ -144,7 +148,7 @@ def amp_bethe_salpeter_kk_to_kk(cmes, q_max=Q_MAX):
     if hasattr(cmes, "__len__"):
         return np.array([__unit_mat(cme, q_max)[1, 1] for cme in cmes])
 
-    return __unit_mat(cme, q_max)[1, 1]
+    return __unit_mat(cmes, q_max)[1, 1]
 
 
 def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=Q_MAX):
@@ -171,7 +175,7 @@ def amp_bethe_salpeter_pipi_to_kk(cmes, q_max=Q_MAX):
     if hasattr(cmes, "__len__"):
         return np.array([__unit_mat(cme, q_max)[0, 1] for cme in cmes])
 
-    return __unit_mat(cme, q_max)[0, 1]
+    return __unit_mat(cmes, q_max)[0, 1]
 
 
 def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=Q_MAX):
@@ -198,7 +202,7 @@ def amp_bethe_salpeter_pipi_to_pipi(cmes, q_max=Q_MAX):
     if hasattr(cmes, "__len__"):
         return np.array([__unit_mat(cme, q_max)[0, 0] for cme in cmes])
 
-    return __unit_mat(cme, q_max)[0, 0]
+    return __unit_mat(cmes, q_max)[0, 0]
 
 
 def __phase_shift(cme, t, deg=False):
@@ -300,7 +304,7 @@ def __amp_iam_pipi_to_pipi(cme):
     amp_lo = partial_wave_pipi_to_pipi_LO_I(s, ell=0, iso=0)
     amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, ell=0, iso=0)
 
-    return amp_lo / (amp_lo - amp_nlo)
+    return amp_lo**2 / (amp_lo - amp_nlo)
 
 
 def amp_inverse_amplitude_pipi_to_pipi(cmes):

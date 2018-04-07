@@ -39,6 +39,9 @@ fk = 110.379  # Charged kaon decay constant
 b0 = neutral_pion_mass**2 / (up_quark_mass + down_quark_mass)
 G8 = 5.47
 G27 = 0.392
+gv, fv = 0., 0.
+# gv = 67.
+# fv = 153.
 
 # The following low energy constants are for NLO ChiPT, evaluated at mu = mrho.
 nlo_lec_mu = rho_mass
@@ -65,3 +68,7 @@ Gr = 0.0073
 # CKM Matrix Elements
 Vud = 0.97417
 Vus = 0.2248
+
+
+# widths
+rho_width = 146.2

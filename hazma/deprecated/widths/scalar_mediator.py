@@ -4,6 +4,8 @@
 @date - December 2017
 """
 
+from cmath import sqrt
+
 import numpy as np
 from ..parameters import vh, b0, alpha_em
 from ..parameters import charged_kaon_mass as mk
@@ -13,6 +15,11 @@ from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
+
+from ..unitarization import amp_bethe_salpeter_pipi_to_pipi
+from ..unitarization import amp_bethe_salpeter_pipi_to_kk
+from ..unitarization import amp_bethe_salpeter_kk_to_kk
+from ..unitarization import loop_matrix
 
 
 def width_s_to_gg(gsFF, ms):
@@ -47,17 +54,24 @@ def width_s_to_k0k0(gsff, gsGG, ms, vs):
     vs : double
         Vacuum expectation value of the scalar mediator.
     """
-    return (np.sqrt(-4 * mk0**2 + ms**2) *
-            (2 * gsGG * (2 * mk0**2 - ms**2) *
-             (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-             (9 * vh + 8 * gsGG * vs) +
-             b0 * (mdq + msq) * (9 * vh + 4 * gsGG * vs) *
-             (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-              (9 * vh + 16 * gsGG * vs)))**2 *
-            np.heaviside(-2 * mk0 + ms)) / \
+    loop_mat = loop_matrix(ms)
+    unit_fact1 = amp_bethe_salpeter_pipi_to_kk(ms) / sqrt(2)
+    unit_fact2 = amp_bethe_salpeter_kk_to_kk(ms) / sqrt(2)
+    unit_fact = 1. + unit_fact1 * loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (np.sqrt(-4 * mk0**2 + ms**2) *
+              (2 * gsGG * (2 * mk0**2 - ms**2) *
+               (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
+               (9 * vh + 8 * gsGG * vs) +
+               b0 * (mdq + msq) * (9 * vh + 4 * gsGG * vs) *
+               (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
+                  (9 * vh + 16 * gsGG * vs)))**2 *
+              np.heaviside(-2 * mk0 + ms)) / \
         (16. * ms**2 * np.pi * (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 *
          (9 * vh + 8 * gsGG * vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_kk(gsff, gsGG, ms, vs):
@@ -77,20 +91,27 @@ def width_s_to_kk(gsff, gsGG, ms, vs):
     vs : double
         Vacuum expectation value of the scalar mediator.
     """
-    return (np.sqrt(-4 * mk**2 + ms**2) *
-            (729 * b0 * gsff * (msq + muq) * vh**2 +
-             32 * gsGG**3 * (2 * mk**2 - ms**2 - 4 * b0 * (msq + muq)) *
-             vs**2 + 36 * gsGG**2 * vs *
-             (-2 * b0 * (msq + muq) *
-              (vh - 8 * gsff * vs) - 2 * mk**2 *
-              (3 * vh + 4 * gsff * vs) + ms**2 *
-              (3 * vh + 4 * gsff * vs)) + 162 * gsGG * vh *
-             (-2 * mk**2 * (vh + gsff * vs) + ms**2 * (vh + gsff * vs) +
-              b0 * (msq + muq) * (3 * vh + 10 * gsff * vs)))**2 *
-            np.heaviside(-2 * mk + ms)) / \
+    loop_mat = loop_matrix(ms)
+    unit_fact1 = amp_bethe_salpeter_pipi_to_kk(ms) / sqrt(2)
+    unit_fact2 = amp_bethe_salpeter_kk_to_kk(ms) / sqrt(2)
+    unit_fact = 1. + unit_fact1 * loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (np.sqrt(-4 * mk**2 + ms**2) *
+              (729 * b0 * gsff * (msq + muq) * vh**2 +
+               32 * gsGG**3 * (2 * mk**2 - ms**2 - 4 * b0 * (msq + muq)) *
+               vs**2 + 36 * gsGG**2 * vs *
+               (-2 * b0 * (msq + muq) *
+                  (vh - 8 * gsff * vs) - 2 * mk**2 *
+                  (3 * vh + 4 * gsff * vs) + ms**2 *
+                  (3 * vh + 4 * gsff * vs)) + 162 * gsGG * vh *
+               (-2 * mk**2 * (vh + gsff * vs) + ms**2 * (vh + gsff * vs) +
+                  b0 * (msq + muq) * (3 * vh + 10 * gsff * vs)))**2 *
+              np.heaviside(-2 * mk + ms)) / \
         (16. * ms**2 * np.pi * (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 *
          (9 * vh + 8 * gsGG * vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_pi0pi0(gsff, gsGG, ms, vs):
@@ -110,17 +131,24 @@ def width_s_to_pi0pi0(gsff, gsGG, ms, vs):
     vs : double
         Vacuum expectation value of the scalar mediator.
     """
-    return (np.sqrt(-4 * mpi0**2 + ms**2) *
-            (2 * gsGG * (2 * mpi0**2 - ms**2) *
-             (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-             (9 * vh + 8 * gsGG * vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-             (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-              (9 * vh + 16 * gsGG * vs)))**2 *
-            np.heaviside(-2 * mpi0 + ms)) / \
+    loop_mat = loop_matrix(ms)
+    unit_fact1 = amp_bethe_salpeter_pipi_to_pipi(ms) / sqrt(3)
+    unit_fact2 = amp_bethe_salpeter_pipi_to_kk(ms) / sqrt(3)
+    unit_fact = 1. + unit_fact1 * loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (np.sqrt(-4 * mpi0**2 + ms**2) *
+              (2 * gsGG * (2 * mpi0**2 - ms**2) *
+               (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
+               (9 * vh + 8 * gsGG * vs) +
+               b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
+               (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
+                  (9 * vh + 16 * gsGG * vs)))**2 *
+              np.heaviside(-2 * mpi0 + ms)) / \
         (32. * ms**2 * np.pi * (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 *
          (9 * vh + 8 * gsGG * vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_pipi(gsff, gsGG, ms, vs):
@@ -140,17 +168,24 @@ def width_s_to_pipi(gsff, gsGG, ms, vs):
     vs : double
         Vacuum expectation value of the scalar mediator.
     """
-    return (np.sqrt(-4 * mpi**2 + ms**2) *
-            (2 * gsGG * (2 * mpi**2 - ms**2) *
-             (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-             (9 * vh + 8 * gsGG * vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-             (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-              (9 * vh + 16 * gsGG * vs)))**2 *
-            np.heaviside(-2 * mpi + ms)) / \
+    loop_mat = loop_matrix(ms)
+    unit_fact1 = amp_bethe_salpeter_pipi_to_pipi(ms) / sqrt(3)
+    unit_fact2 = amp_bethe_salpeter_pipi_to_kk(ms) / sqrt(3)
+    unit_fact = 1. + unit_fact1 * loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (np.sqrt(-4 * mpi**2 + ms**2) *
+              (2 * gsGG * (2 * mpi**2 - ms**2) *
+               (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
+               (9 * vh + 8 * gsGG * vs) +
+               b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
+               (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
+                  (9 * vh + 16 * gsGG * vs)))**2 *
+              np.heaviside(-2 * mpi + ms)) / \
         (16. * ms**2 * np.pi * (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
          (9 * vh + 4 * gsGG * vs)**2 *
          (9 * vh + 8 * gsGG * vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_xx(gsxx, mx, ms):
