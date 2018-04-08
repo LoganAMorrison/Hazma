@@ -6,15 +6,13 @@ from ..field_theory_helper_functions.common_functions import \
 from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
 from ..field_theory_helper_functions.three_body_phase_space import t_integral
 from ..field_theory_helper_functions.three_body_phase_space import \
-    phase_space_prefactor
+    phase_space_prefactor, t_lim1, t_lim2
 
 
 from ..parameters import alpha_em
 
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import neutral_pion_mass as mpi0
-from ..parameters import charged_kaon_mass as mk
-from ..parameters import neutral_kaon_mass as mk0
+from ..parameters import pion_mass_chiral_limit as mPI
+from ..parameters import kaon_mass_chiral_limit as mK
 
 
 from hazma.parameters import rho_mass as mrho
@@ -26,8 +24,9 @@ from hazma.unitarization import (amp_bethe_salpeter_kk_to_kk,
 
 from .scalar_mediator_cross_sections import sigma_xx_to_s_to_pipi
 
-mPI = (mpi0 + mpi) / 2.
-mK = (mk0 + mk) / 2.
+import warnings
+# from hazma.hazma_errors import NegativeSquaredMatrixElementError
+from hazma.hazma_errors import NegativeSquaredMatrixElementWarning
 
 
 def __msqrd_xx_s_ffg(Q, s, t, mf, params):
@@ -49,9 +48,9 @@ def __msqrd_xx_s_ffg(Q, s, t, mf, params):
 def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
     """ Unvectorized dnde_xx_to_s_to_ffg """
 
-    e, m = egam / Q, mf / Q
+    e, m, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
 
-    if 0 < e and e < 0.5 * (1.0 - 4.0 * m**2):
+    if 4. * mPI**2 <= s <= Q**2:
         ret_val = (alpha_em *
                    (2 * (-1 + 4 * m**2) *
                     sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
@@ -132,35 +131,58 @@ def __msqrd_xx_to_s_to_pipig(Q, s, t, params):
     |E(s,t,u) + E(s,u,t)|^2.
     """
 
-    u = Q**2 + 2. * mPI**2 - s - t
+    ret_val = 0.0
 
-    E_t = xx_s_pipig_E(Q, s, t, params)
-    E_u = xx_s_pipig_E(Q, s, u, params)
+    if 4. * mPI**2 <= s <= Q**2:
+        if t_lim1(s, 0.0, mPI, mPI, Q) <= t <= t_lim2(s, 0.0, mPI, mPI, Q):
 
-    return s * (E_t * E_u.conjugate()).real - mPI**2 * abs(E_t + E_u)**2
+            u = Q**2 + 2. * mPI**2 - s - t
+
+            E_t = xx_s_pipig_E(Q, s, t, params)
+            E_u = xx_s_pipig_E(Q, s, u, params)
+
+            ret_val = s * (E_t * E_u.conjugate()).real - \
+                mPI**2 * abs(E_t + E_u)**2
+
+            assert ret_val.imag == 0.0
+
+            ret_val = ret_val.real
+
+    if ret_val <= 0.0:
+        msg = ""
+        warnings.warn(msg, NegativeSquaredMatrixElementWarning)
+
+    return ret_val
 
 
 def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
     """Unvectorized dnde_xx_to_s_to_pipig"""
     mx = params.mx
 
-    if Q < 2. * mpi:
-        return 0.
+    s = Q**2 - 2. * Q * eng_gam
 
-    s = E1_to_s(eng_gam, 0., Q)
+    ret_val = 0.0
 
-    def mat_elem_sqrd(t):
-        return __msqrd_xx_to_s_to_pipig(Q, s, t, params)
+    if Q >= 2. * mPI and 4. * mPI**2 <= s <= Q**2:
 
-    prefactor1 = phase_space_prefactor(Q)
-    prefactor2 = 2. * Q / sigma_xx_to_s_to_pipi(Q, params)
-    prefactor3 = cross_section_prefactor(mx, mx, Q)
+        s = E1_to_s(eng_gam, 0., Q)
 
-    prefactor = prefactor1 * prefactor2 * prefactor3
+        def mat_elem_sqrd(t):
+            return __msqrd_xx_to_s_to_pipig(Q, s, t, params)
 
-    int_val, _ = t_integral(s, 0., mPI, mPI, Q, mat_elem_sqrd)
+        prefactor1 = phase_space_prefactor(Q)
+        prefactor2 = 2. * Q / sigma_xx_to_s_to_pipi(Q, params)
+        prefactor3 = cross_section_prefactor(mx, mx, Q)
 
-    return prefactor * int_val
+        prefactor = prefactor1 * prefactor2 * prefactor3
+
+        int_val, _ = t_integral(s, 0., mPI, mPI, Q, mat_elem_sqrd)
+
+        ret_val = prefactor * int_val
+
+    assert ret_val >= 0.
+
+    return ret_val
 
 
 def dnde_xx_to_s_to_pipig(eng_gams, Q, params):
@@ -1519,41 +1541,53 @@ def msqrd_xx_s_pipig_no_FSI(Q, s, t, params):
     vs = params.vs
     mrhoT = sqrt(mrho**2 - 2. * gsGG * vs / 9. / vh)
 
-    def __xx_s_pipig_no_FSI_E(Q, s, t):
-        return (complex(0., 0.012345679012345678) * gsxx *
-                sqrt(-4. * mx**2 + Q**2) * qe *
-                ((fv * gsGG * gv * s * (-Q**2 + s) *
-                  (9. * vh + 2. * gsGG * vs)) /
-                 (fpi**2 * mrhoT**2 *
-                  (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
-                  vh**2) -
-                 (fv * gsGG * gv * s * (mPI**2 - t) *
-                  (9. * vh + 2. * gsGG * vs)) /
-                 (fpi**2 * mrhoT**2 *
-                  (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
-                  vh**2) -
-                 (4. * fv * gsGG * gv *
-                  (mPI**2 + Q**2 - s - t) *
-                    (9. * vh + 2. * gsGG * vs)) /
-                 (fpi**2 * mrhoT**2 * vh**2) +
-                 (fv * gsGG * gv * s * (-mPI**2 - Q**2 + s + t) *
-                  (9. * vh + 2. * gsGG * vs)) /
-                 (fpi**2 * mrhoT**2 *
-                  (mrho**2 - complex(0., 1.) *
-                   mrho * rho_width - s) * vh**2) -
-                 (324. * gsGG) / (9. * vh + 4. * gsGG * vs) -
-                 (complex(0., 162.) *
-                    ((complex(0., 2.) * gsGG * (mPI**2 - Q**2 + t)) /
-                     (9. * vh + 4. * gsGG * vs) -
-                     (complex(0., 0.037037037037037035) * mPI**2 *
-                        (54. * gsGG * vh - 32. * gsGG**2 * vs + 9. * gsff *
-                         (9. * vh + 16. * gsGG * vs))) /
-                     (vh * (3. * vh + 3. * gsff * vs + 2. * gsGG * vs)))) /
-                 (-mPI**2 + t))) / (sqrt(2.) * (-ms**2 + Q**2))
+    ret_val = 0.0
 
-    u = Q**2 + 2. * mPI**2 - s - t
+    if 4. * mPI**2 <= s <= Q**2:
+        if t_lim1(s, 0.0, mPI, mPI, Q) <= t <= t_lim2(s, 0.0, mPI, mPI, Q):
 
-    E_t = __xx_s_pipig_no_FSI_E(Q, s, t)
-    E_u = __xx_s_pipig_no_FSI_E(Q, s, u)
+            def __xx_s_pipig_no_FSI_E(Q, s, t):
+                return (complex(0., 0.012345679012345678) * gsxx *
+                        sqrt(-4. * mx**2 + Q**2) * qe *
+                        ((fv * gsGG * gv * s * (-Q**2 + s) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+                          vh**2) -
+                         (fv * gsGG * gv * s * (mPI**2 - t) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+                          vh**2) -
+                         (4. * fv * gsGG * gv *
+                          (mPI**2 + Q**2 - s - t) *
+                            (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 * vh**2) +
+                         (fv * gsGG * gv * s * (-mPI**2 - Q**2 + s + t) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) *
+                           mrho * rho_width - s) * vh**2) -
+                         (324. * gsGG) / (9. * vh + 4. * gsGG * vs) -
+                         (complex(0., 162.) *
+                            ((complex(0., 2.) * gsGG * (mPI**2 - Q**2 + t)) /
+                             (9. * vh + 4. * gsGG * vs) -
+                             (complex(0., 0.037037037037037035) * mPI**2 *
+                                (54. * gsGG * vh - 32. * gsGG**2 *
+                                 vs + 9. * gsff *
+                                 (9. * vh + 16. * gsGG * vs))) /
+                             (vh * (3. * vh + 3. * gsff * vs +
+                                    2. * gsGG * vs)))) /
+                         (-mPI**2 + t))) / (sqrt(2.) * (-ms**2 + Q**2))
 
-    return s * (E_t * E_u.conjugate()).real - mPI**2 * abs(E_t + E_u)**2
+            u = Q**2 + 2. * mPI**2 - s - t
+
+            E_t = __xx_s_pipig_no_FSI_E(Q, s, t)
+            E_u = __xx_s_pipig_no_FSI_E(Q, s, u)
+
+            ret_val = s * (E_t * E_u.conjugate()).real - \
+                mPI**2 * abs(E_t + E_u)**2
+
+    assert ret_val >= 0.0
+
+    return ret_val

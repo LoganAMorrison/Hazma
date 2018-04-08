@@ -3,19 +3,19 @@ Module for computing unitarized meson-meson scattering amplitudes.
 """
 
 import numpy as np
-from .parameters import charged_pion_mass as mpi
-from .parameters import charged_kaon_mass as mk
-from .parameters import neutral_pion_mass as mpi0
-from .parameters import neutral_kaon_mass as mk0
+
 from .parameters import fpi
 from cmath import sqrt, log, pi, phase
 
 from .matrix_elements.meson_meson_lo import partial_wave_pipi_to_pipi_LO_I
 from .matrix_elements.meson_meson_nlo import partial_wave_pipi_to_pipi_NLO_I
 
+from .parameters import pion_mass_chiral_limit as mPI
+from .parameters import kaon_mass_chiral_limit as mK
 
-MPI = complex((mpi + mpi0) / 2.)
-MK = complex((mk + mk0) / 2.)
+
+MPI = complex(mPI)
+MK = complex(mK)
 FPI = complex(fpi)
 LAM = complex(1.1 * 10**3)  # cut-off scale taken to be 1.1 GeV
 Q_MAX = sqrt(LAM**2 - MK**2)

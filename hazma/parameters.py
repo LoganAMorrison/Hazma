@@ -18,6 +18,9 @@ eta_prime_mass = 957.8      # eta prime
 rho_mass = 775.3       # rho
 omega_mass = 782.7     # omega
 
+pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.
+kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.
+
 # Quark masses in MS-bar scheme
 up_quark_mass = 2.3
 down_quark_mass = 4.8
@@ -39,9 +42,8 @@ fk = 110.379  # Charged kaon decay constant
 b0 = neutral_pion_mass**2 / (up_quark_mass + down_quark_mass)
 G8 = 5.47
 G27 = 0.392
-gv, fv = 0., 0.
-# gv = 67.
-# fv = 153.
+gv = 67.
+fv = 153.
 
 # The following low energy constants are for NLO ChiPT, evaluated at mu = mrho.
 nlo_lec_mu = rho_mass
