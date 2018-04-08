@@ -4,9 +4,12 @@
 # author : Logan Morrison and Adam Coogan
 # date : December 2017
 
-from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
 from . import rambo
-from .cross_sections.helper_functions import cross_section_prefactor
+
+from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
+
+from .field_theory_helper_functions.common_functions import \
+    cross_section_prefactor
 import numpy as np
 
 
