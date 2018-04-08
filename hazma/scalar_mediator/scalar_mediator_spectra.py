@@ -108,7 +108,7 @@ def dnde_charged_kaon(egams, cme, params, type='All'):
                          'Decay'".format(type))
 
 
-def spectra(cme, egams, params):
+def spectra(egams, cme, params):
     """
     Compute the total spectrum from two fermions annihilating through a
     scalar mediator to mesons and leptons.

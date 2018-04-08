@@ -181,17 +181,17 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         """
         return bfs(cme, self.params)
 
-    def spectra(self, eng_gams, cme):
+    def spectra(self, egams, cme):
         """
         Compute the total spectrum from two fermions annihilating through a
         scalar mediator to mesons and leptons.
 
         Parameters
         ----------
-        cme : float
-            Center of mass energy.
         egams : array-like, optional
             Gamma ray energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
 
         Returns
         -------
@@ -199,7 +199,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
             'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
-        return specs(eng_gams, cme, self.params)
+        return specs(egams, cme, self.params)
 
     def spectrum_functions(self):
         """

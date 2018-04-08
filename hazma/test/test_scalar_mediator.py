@@ -32,10 +32,10 @@ def test_spectra():
     mx, ms = [100., 200.]
     gsxx, gsff, gsGG, gsFF = [1., 1., 1., 1.]
     cme = 1000.
-    eng_gams = np.logspace(0., np.log10(cme), num=50)
+    egams = np.logspace(0., np.log10(cme), num=50)
 
     SM = ScalarMediator(mx, ms, gsxx, gsff, gsGG, gsFF)
-    SM.spectra(eng_gams, cme)
+    SM.spectra(egams, cme)
 
 
 def test_spectrum_functions():
