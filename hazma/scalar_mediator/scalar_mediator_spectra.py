@@ -108,7 +108,7 @@ def dnde_charged_kaon(egams, cme, params, type='All'):
                          'Decay'".format(type))
 
 
-def spectra(cme, params, egams=None):
+def spectra(cme, egams, params):
     """
     Compute the total spectrum from two fermions annihilating through a
     scalar mediator to mesons and leptons.
@@ -126,9 +126,6 @@ def spectra(cme, params, egams=None):
         Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
         'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
     """
-    # Energies to compute spectrum
-    if egams is None:
-        egams = np.logspace(0.0, np.log10(cme), num=150)
 
     # Compute branching fractions
     bfs = branching_fractions(cme, params)
