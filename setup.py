@@ -8,18 +8,17 @@ hdhf = "hazma/decay_helper_functions"
 hgrhf = "hazma/gamma_ray_helper_functions"
 hpshf = "hazma/phase_space_helper_functions"
 hfthf = "hazma/field_theory_helper_functions"
-hsmhf = "hazma/simplified_model_helper_functions"
 
 packs = ["hazma",
-         "hazma.fsr_helper_functions",
+         "hazma.axial_vector_mediator",
          "hazma.decay_helper_functions",
-         "hazma.phase_space_helper_functions",
-         "hazma.gamma_ray_helper_functions",
-         "hazma.cross_sections",
-         "hazma.matrix_elements",
          "hazma.field_theory_helper_functions",
-         "hazma.simplified_model_helper_functions",
-         "hazma.scalar_mediator"]
+         "hazma.gamma_ray_helper_functions",
+         "hazma.phase_space_helper_functions",
+         "hazma.pseudo_scalar_mediator",
+         "hazma.scalar_mediator",
+         "hazma.unitarization",
+         "hazma.vector_mediator"]
 
 decay_ext = Extension("*", sources=[hdhf + "/*.pyx"])
 gamma_ext = Extension("*", sources=[hgrhf + "/*.pyx"])

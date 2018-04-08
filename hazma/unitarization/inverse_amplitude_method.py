@@ -1,15 +1,12 @@
 import numpy as np
-
-from .parameters import fpi
 from cmath import sqrt
 
-from .meson_matrix_elements.leading_order import \
-    partial_wave_pipi_to_pipi_LO_I
-from .meson_matrix_elements.next_leading_order import \
-    partial_wave_pipi_to_pipi_NLO_I
+from .lo_amplitudes import partial_wave_pipi_to_pipi_LO_I
+from nlo_amplitudes import partial_wave_pipi_to_pipi_NLO_I
 
-from .parameters import pion_mass_chiral_limit as mPI
-from .parameters import kaon_mass_chiral_limit as mK
+from ..parameters import fpi
+from ..parameters import pion_mass_chiral_limit as mPI
+from ..parameters import kaon_mass_chiral_limit as mK
 
 
 MPI = complex(mPI)
@@ -19,7 +16,7 @@ LAM = complex(1.1 * 10**3)  # cut-off scale taken to be 1.1 GeV
 Q_MAX = sqrt(LAM**2 - MK**2)
 
 
-def __amp_iam_pipi_to_pipi(cme):
+def __amp_pipi_to_pipi_iam(cme):
     """
     Unitarized pion scattering squared matrix element in the isopin I = 0
     channel.
@@ -32,7 +29,7 @@ def __amp_iam_pipi_to_pipi(cme):
     return amp_lo**2 / (amp_lo - amp_nlo)
 
 
-def amp_inverse_amplitude_pipi_to_pipi(cmes):
+def amp_pipi_to_pipi_iam(cmes):
     """
     Unitarized pion scattering amplitude in the isopin I = 0 channel.
 
@@ -45,9 +42,9 @@ def amp_inverse_amplitude_pipi_to_pipi(cmes):
         Invariant mass of the two charged pions.
     """
     if hasattr(cmes, "__len__"):
-        return np.array([__amp_iam_pipi_to_pipi(cme) for cme in cmes])
+        return np.array([__amp_pipi_to_pipi_iam(cme) for cme in cmes])
     else:
-        return __amp_iam_pipi_to_pipi(cmes)
+        return __amp_pipi_to_pipi_iam(cmes)
 
 
 def msqrd_inverse_amplitude_pipi_to_pipi(cmes):
@@ -63,7 +60,7 @@ def msqrd_inverse_amplitude_pipi_to_pipi(cmes):
         Invariant mass of the two charged pions.
     """
     if hasattr(cmes, "__len__"):
-        return np.array([abs(amp_inverse_amplitude_pipi_to_pipi(cme))
+        return np.array([abs(amp_pipi_to_pipi_iam(cme))
                          for cme in cmes])
     else:
-        return abs(amp_inverse_amplitude_pipi_to_pipi(cmes))
+        return abs(amp_pipi_to_pipi_iam(cmes))

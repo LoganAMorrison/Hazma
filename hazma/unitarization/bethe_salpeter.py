@@ -3,12 +3,11 @@ Module for computing unitarized meson-meson scattering amplitudes.
 """
 
 import numpy as np
-
-from .parameters import fpi
 from cmath import sqrt, pi, phase
 
-from .parameters import pion_mass_chiral_limit as mPI
-from .parameters import kaon_mass_chiral_limit as mK
+from ..parameters import fpi
+from ..parameters import pion_mass_chiral_limit as mPI
+from ..parameters import kaon_mass_chiral_limit as mK
 
 from .loops import loop_matrix
 
@@ -45,7 +44,7 @@ def __unit_mat(cme, q_max):
     return inv * mmat
 
 
-def amp_kk_to_kk(cmes, q_max=Q_MAX):
+def amp_kk_to_kk_bse(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for kk -> kk in the zero isospin
     channel.
@@ -72,7 +71,7 @@ def amp_kk_to_kk(cmes, q_max=Q_MAX):
     return __unit_mat(cmes, q_max)[1, 1]
 
 
-def amp_pipi_to_kk(cmes, q_max=Q_MAX):
+def amp_pipi_to_kk_bse(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for pipi -> kk in the zero isospin
     channel.
@@ -99,7 +98,7 @@ def amp_pipi_to_kk(cmes, q_max=Q_MAX):
     return __unit_mat(cmes, q_max)[0, 1]
 
 
-def amp_pipi_to_pipi(cmes, q_max=Q_MAX):
+def amp_pipi_to_pipi_bse(cmes, q_max=Q_MAX):
     """
     Returns the unitarized matrix element for pipi -> pipi in the zero isospin
     channel.

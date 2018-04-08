@@ -12,10 +12,10 @@ from ..parameters import strange_quark_mass as msq
 from ..parameters import electron_mass as me
 from ..parameters import muon_mass as mmu
 
-from ..unitarization import amp_bethe_salpeter_pipi_to_pipi
-from ..unitarization import amp_bethe_salpeter_pipi_to_kk
-from ..unitarization import amp_bethe_salpeter_kk_to_kk
-from ..unitarization import loop_matrix
+from ..unitarization.bethe_salpeter import amp_pipi_to_pipi_bse
+from ..unitarization.bethe_salpeter import amp_pipi_to_kk_bse
+from ..unitarization.bethe_salpeter import amp_kk_to_kk_bse
+from ..unitarization.loops import loop_matrix
 
 
 def width_s_to_gg(params):
@@ -34,8 +34,8 @@ def width_s_to_k0k0(params):
     """
 
     loop_mat = loop_matrix(params.ms)
-    unit_fact1 = amp_bethe_salpeter_pipi_to_kk(params.ms) / sqrt(2)
-    unit_fact2 = amp_bethe_salpeter_kk_to_kk(params.ms) / sqrt(2)
+    unit_fact1 = amp_pipi_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact2 = amp_kk_to_kk_bse(params.ms) / sqrt(2)
     unit_fact = 1. + unit_fact1 * \
         loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
 
@@ -65,8 +65,8 @@ def width_s_to_kk(params):
     """
 
     loop_mat = loop_matrix(params.ms)
-    unit_fact1 = amp_bethe_salpeter_pipi_to_kk(params.ms) / sqrt(2)
-    unit_fact2 = amp_bethe_salpeter_kk_to_kk(params.ms) / sqrt(2)
+    unit_fact1 = amp_pipi_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact2 = amp_kk_to_kk_bse(params.ms) / sqrt(2)
     unit_fact = 1. + unit_fact1 * \
         loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
 
@@ -101,8 +101,8 @@ def width_s_to_pi0pi0(params):
     """
 
     loop_mat = loop_matrix(params.ms)
-    unit_fact1 = amp_bethe_salpeter_pipi_to_pipi(params.ms) / sqrt(3)
-    unit_fact2 = amp_bethe_salpeter_pipi_to_kk(params.ms) / sqrt(3)
+    unit_fact1 = amp_pipi_to_pipi_bse(params.ms) / sqrt(3)
+    unit_fact2 = amp_pipi_to_kk_bse(params.ms) / sqrt(3)
     unit_fact = 1. + unit_fact1 * \
         loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
 
@@ -132,8 +132,8 @@ def width_s_to_pipi(params):
     """
 
     loop_mat = loop_matrix(params.ms)
-    unit_fact1 = amp_bethe_salpeter_pipi_to_pipi(params.ms) / sqrt(3)
-    unit_fact2 = amp_bethe_salpeter_pipi_to_kk(params.ms) / sqrt(3)
+    unit_fact1 = amp_pipi_to_pipi_bse(params.ms) / sqrt(3)
+    unit_fact2 = amp_pipi_to_kk_bse(params.ms) / sqrt(3)
     unit_fact = 1. + unit_fact1 * \
         loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
 

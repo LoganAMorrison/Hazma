@@ -1,32 +1,29 @@
 import numpy as np
 from cmath import sqrt, log, pi, atanh
-
-from ..field_theory_helper_functions.common_functions import \
-    cross_section_prefactor
-from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
-from ..field_theory_helper_functions.three_body_phase_space import t_integral
-from ..field_theory_helper_functions.three_body_phase_space import \
-    phase_space_prefactor, t_lim1, t_lim2
-
-
-from ..parameters import alpha_em
-
-from ..parameters import pion_mass_chiral_limit as mPI
-from ..parameters import kaon_mass_chiral_limit as mK
-
-
-from hazma.parameters import rho_mass as mrho
-from hazma.parameters import rho_width
-from hazma.parameters import fpi, fv, gv, qe, vh
-from hazma.unitarization import (amp_bethe_salpeter_kk_to_kk,
-                                 amp_bethe_salpeter_pipi_to_kk,
-                                 amp_bethe_salpeter_pipi_to_pipi, bubble_loop)
+import warnings
 
 from .scalar_mediator_cross_sections import sigma_xx_to_s_to_pipi
 
-import warnings
-# from hazma.hazma_errors import NegativeSquaredMatrixElementError
-from hazma.hazma_errors import NegativeSquaredMatrixElementWarning
+from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
+from ..field_theory_helper_functions.three_body_phase_space import t_integral
+from ..field_theory_helper_functions.common_functions import \
+    cross_section_prefactor
+from ..field_theory_helper_functions.three_body_phase_space import \
+    phase_space_prefactor, t_lim1, t_lim2
+
+from ..parameters import alpha_em
+from ..parameters import pion_mass_chiral_limit as mPI
+from ..parameters import kaon_mass_chiral_limit as mK
+from ..parameters import rho_mass as mrho
+from ..parameters import rho_width
+from ..parameters import fpi, fv, gv, qe, vh
+
+from ..unitarization.bethe_salpeter import amp_kk_to_kk_bse
+from ..unitarization.bethe_salpeter import amp_pipi_to_kk_bse
+from ..unitarization.bethe_salpeter import amp_pipi_to_pipi_bse
+from ..unitarization.loops import bubble_loop
+
+from ..hazma_errors import NegativeSquaredMatrixElementWarning
 
 
 def __msqrd_xx_s_ffg(Q, s, t, mf, params):
@@ -277,7 +274,7 @@ def xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
                                 mK**2 *
                                 (81. * vh**2 - 144. * gsGG * vh * vs -
                                  64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 +
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 +
              12. * (9. * gsff *
                     (18. * gsGG * Q**2 * vh * vs + mPI**2 *
                      (9. * vh + 8. * gsGG * vs)**2) +
@@ -287,7 +284,7 @@ def xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
                                  (81. * vh**2 - 144. * gsGG * vh * vs -
                                   64. * gsGG**2 * vs**2))) *
              bubble_loop(Q, mPI) *
-             (-1. + amp_bethe_salpeter_pipi_to_pipi(Q) *
+             (-1. + amp_pipi_to_pipi_bse(Q) *
               bubble_loop(Q, mPI)) + bubble_loop(Q, mK) *
              (8. * sqrt(3.) *
               (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mK**2 *
@@ -295,7 +292,7 @@ def xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
                2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                             mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-              amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mPI) +
+              amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mPI) +
               3. * (-2. * (9. * gsff *
                            (18. * gsGG * Q**2 * vh * vs +
                             mK**2 * (9. * vh + 8. * gsGG * vs)**2) +
@@ -312,7 +309,7 @@ def xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
                                  mPI**2 *
                                  (81. * vh**2 - 144. * gsGG * vh * vs -
                                   64. * gsGG**2 * vs**2))) *
-                    amp_bethe_salpeter_pipi_to_kk(Q) *
+                    amp_pipi_to_kk_bse(Q) *
                     bubble_loop(Q, mPI))))) / \
         (sqrt(2.) * fpi**2 * (ms - Q) * (ms + Q) * vh *
          (3. * vh + 3. * gsff * vs + 2. * gsGG * vs) *
@@ -342,7 +339,7 @@ def xx_s_pipig_no_rho_fsr_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 -
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 -
              6. * (mPI**2 - 6. * Q**2 + 2. * t) *
              (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
                            (9. * vh + 8. * gsGG * vs)**2) +
@@ -356,7 +353,7 @@ def xx_s_pipig_no_rho_fsr_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) -
              3. * sqrt(3.) * (mPI**2 + 3. * Q**2 - t) *
              (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
@@ -364,7 +361,7 @@ def xx_s_pipig_no_rho_fsr_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) +
              6. * (mPI**2 - 6. * Q**2 + 2. * t) *
              (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
@@ -372,7 +369,7 @@ def xx_s_pipig_no_rho_fsr_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) *
+             amp_pipi_to_pipi_bse(Q) *
              bubble_loop(Q, mPI)**2)) / \
         (sqrt(2.) * fpi**2 * (ms - Q) * (ms + Q) * (mPI**2 - t) * vh *
          (3. * vh + 3. * gsff * vs + 2. * gsGG * vs) *
@@ -575,7 +572,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(0., mK) *
+             amp_kk_to_kk_bse(Q) * bubble_loop(0., mK) *
              bubble_loop(Q, mK)**2 -
              2304. * mPI**2 * pi**2 * (Q**2 - s) *
              (mPI**2 + Q**2 - s - t) *
@@ -584,7 +581,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(0., mPI) *
+             amp_kk_to_kk_bse(Q) * bubble_loop(0., mPI) *
              bubble_loop(Q, mK)**2 +
              1296. * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -593,7 +590,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**3 +
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**3 +
              864. * mK**2 * pi**2 * (Q**2 - s) * (mPI**2 + Q**2 - s - t) *
              (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
                            (9. * vh + 8. * gsGG * vs)**2) +
@@ -632,7 +629,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(0., mK) *
+             amp_pipi_to_kk_bse(Q) * bubble_loop(0., mK) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) -
              864. * sqrt(3.) * mK**2 * pi**2 * (Q**2 - s) *
              (mPI**2 + Q**2 - s - t) *
@@ -642,7 +639,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                              mPI**2 * (81. * vh**2 -
                                        144. * gsGG * vh * vs -
                                        64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(0., mK) *
+             amp_pipi_to_kk_bse(Q) * bubble_loop(0., mK) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) -
              3072. * sqrt(3.) * mPI**2 * pi**2 * (Q**2 - s) *
              (mPI**2 + Q**2 - s - t) *
@@ -651,7 +648,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(0., mPI) * bubble_loop(Q, mK) *
              bubble_loop(Q, mPI) - 1152. * sqrt(3.) * mPI**2 * pi**2 *
              (Q**2 - s) * (mPI**2 + Q**2 - s - t) *
@@ -661,7 +658,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                              mPI**2 * (81. * vh**2 -
                                        144. * gsGG * vh * vs -
                                        64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(0., mPI) * bubble_loop(Q, mK) *
              bubble_loop(Q, mPI) + 1728. * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -670,7 +667,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) *
+             amp_kk_to_kk_bse(Q) *
              bubble_loop(Q, mK)**2 * bubble_loop(Q, mPI) +
              432. * sqrt(3.) * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -679,7 +676,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK)**2 * bubble_loop(Q, mPI) +
              648. * sqrt(3.) * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -688,7 +685,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK)**2 * bubble_loop(Q, mPI) +
              1728. * pi**2 * (mPI**2 - 2. * Q**2) *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -705,7 +702,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                              mPI**2 *
                              (81. * vh**2 - 144. * gsGG * vh * vs -
                               64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(
+             amp_pipi_to_pipi_bse(
                  Q) * bubble_loop(0., mK) * bubble_loop(Q, mPI)**2 -
              4608. * mPI**2 * pi**2 *
              (Q**2 - s) * (mPI**2 + Q**2 - s - t) *
@@ -714,7 +711,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(
+             amp_pipi_to_pipi_bse(
                  Q) * bubble_loop(0., mPI) * bubble_loop(Q, mPI)**2 -
              1152. * sqrt(3.) * pi**2 * (mPI**2 - 2. * Q**2) *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -723,7 +720,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI)**2 +
              864. * sqrt(3.) * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -732,7 +729,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI)**2 +
              648. * pi**2 * Q**2 *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -741,7 +738,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(
+             amp_pipi_to_pipi_bse(
                  Q) * bubble_loop(Q, mK) * bubble_loop(Q, mPI)**2 -
              1728. * pi**2 * (mPI**2 - 2. * Q**2) *
              (Q**4 - s * (-2. * mPI**2 + s + 2. * t)) *
@@ -750,7 +747,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**3 +
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**3 +
              144. * pi**2 *
              (4. * mK**2 * (Q**2 - s)**2 -
               s * (-18. * mPI**2 * Q**2 - 17. * Q**4 + s**2 +
@@ -770,7 +767,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) *
+             amp_kk_to_kk_bse(Q) *
              bubble_loop(Q, mK)**2 * bubble_loop(sqrt(s), mK) +
              72. * pi**2 * (4. * mK**2 * (Q**2 - s)**2 -
                             s * (-18. * mPI**2 * Q**2 - 17. * Q**4 + s**2 +
@@ -790,7 +787,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              bubble_loop(sqrt(s), mK) -
              72. * sqrt(3.) * pi**2 *
@@ -803,7 +800,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                          64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mK) *
+             amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mK) *
              bubble_loop(Q, mPI) * bubble_loop(sqrt(s), mK) -
              72. * pi**2 *
              (4. * mK**2 * (Q**2 - s)**2 -
@@ -814,7 +811,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              bubble_loop(sqrt(s), mK) +
              192. * pi**2 *
              (2. * mPI**2 * (2. * Q**4 + 5. * Q**2 * s + 2. * s**2) -
@@ -835,7 +832,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 *
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 *
              bubble_loop(sqrt(s), mPI) +
              384. * pi**2 * (-9. * mPI**4 * s - s *
                              (-17. * Q**4 + s**2 + 2. * Q**2 *
@@ -858,7 +855,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                         64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mK) *
+             amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mK) *
              bubble_loop(Q, mPI) * bubble_loop(sqrt(s), mPI) -
              96. * sqrt(3.) * pi**2 *
              (2. * mPI**2 * (2. * Q**4 + 5. * Q**2 * s + 2. * s**2) -
@@ -868,7 +865,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              bubble_loop(sqrt(s), mPI) +
              384. * pi**2 * (9. * mPI**4 * s + s *
@@ -881,7 +878,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              bubble_loop(sqrt(s), mPI) +
              162. * mK**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
              (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mK**2 *
@@ -898,7 +895,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 *
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 *
              log((2. * mK**2 + Q * (-Q + sqrt(-4. * mK**2 + Q**2))) /
                  (2. * mK**2))**2 +
              81. * mK**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
@@ -916,7 +913,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mK**2 + Q * (-Q + sqrt(-4. * mK**2 + Q**2))) /
                  (2. * mK**2))**2 -
@@ -926,7 +923,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mK**2 + Q * (-Q + sqrt(-4. * mK**2 + Q**2))) /
                  (2. * mK**2))**2 -
@@ -936,7 +933,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              log((2. * mK**2 + Q * (-Q + sqrt(-4. * mK**2 + Q**2))) /
                  (2. * mK**2))**2 +
              216. * mPI**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
@@ -954,7 +951,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 *
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 *
              log((2. * mPI**2 + Q * (-Q + sqrt(-4. * mPI**2 + Q**2))) /
                  (2. * mPI**2))**2 -
              216. * mPI**2 * (mPI**2 - 2. * Q**2) *
@@ -975,7 +972,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mK) *
+             amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mK) *
              bubble_loop(Q, mPI) *
              log((2. * mPI**2 + Q * (-Q + sqrt(-4. * mPI**2 + Q**2))) /
                  (2. * mPI**2))**2 -
@@ -985,7 +982,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mPI**2 + Q * (-Q + sqrt(-4. * mPI**2 + Q**2))) /
                  (2. * mPI**2))**2 +
@@ -996,7 +993,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              log((2. * mPI**2 + Q * (-Q + sqrt(-4. * mPI**2 + Q**2))) /
                  (2. * mPI**2))**2 -
              162. * mK**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
@@ -1014,7 +1011,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 *
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 *
              log((2. * mK**2 - s + sqrt(s * (-4. * mK**2 + s))) /
                  (2. * mK**2))**2 -
              81. * mK**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
@@ -1032,7 +1029,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mK**2 - s + sqrt(s * (-4. * mK**2 + s))) /
                  (2. * mK**2))**2 +
@@ -1042,7 +1039,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mK**2 - s + sqrt(s * (-4. * mK**2 + s))) /
                  (2. * mK**2))**2 +
@@ -1052,7 +1049,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              log((2. * mK**2 - s + sqrt(s * (-4. * mK**2 + s))) /
                  (2. * mK**2))**2 -
              216. * mPI**2 * Q**2 * (mPI**2 + Q**2 - s - t) *
@@ -1070,7 +1067,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 *
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 *
              log((2. * mPI**2 - s + sqrt(s * (-4. * mPI**2 + s))) /
                  (2. * mPI**2))**2 +
              216. * mPI**2 * (mPI**2 - 2. * Q**2) *
@@ -1090,7 +1087,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mPI**2 - s + sqrt(s * (-4. * mPI**2 + s))) /
                  (2. * mPI**2))**2 +
@@ -1102,7 +1099,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
                              (81. * vh**2 -
                               144. * gsGG * vh * vs -
                               64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_kk(Q) *
+             amp_pipi_to_kk_bse(Q) *
              bubble_loop(Q, mK) * bubble_loop(Q, mPI) *
              log((2. * mPI**2 - s + sqrt(s * (-4. * mPI**2 + s))) /
                  (2. * mPI**2))**2 -
@@ -1113,7 +1110,7 @@ def xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)**2 *
+             amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)**2 *
              log((2. * mPI**2 - s + sqrt(s * (-4. * mPI**2 + s))) /
                  (2. * mPI**2))**2)) / \
         (sqrt(2.) * fpi**4 * (ms - Q) * (ms + Q) * (Q**2 - s)**2 * vh *
@@ -1138,7 +1135,7 @@ def xx_s_pipig_rho_4_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**2 +
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**2 +
              3. * (3. * fv + 8. * gv) *
              (9. * gsff *
               (18. * gsGG * Q**2 * vh * vs + mPI**2 *
@@ -1147,7 +1144,7 @@ def xx_s_pipig_rho_4_bub_E(Q, s, t, params):
                            mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
              bubble_loop(Q, mPI) *
-             (-1. + amp_bethe_salpeter_pipi_to_pipi(Q) *
+             (-1. + amp_pipi_to_pipi_bse(Q) *
               bubble_loop(Q, mPI)) +
              bubble_loop(Q, mK) *
              (2. * sqrt(3.) * (3. * fv + 8. * gv) *
@@ -1156,7 +1153,7 @@ def xx_s_pipig_rho_4_bub_E(Q, s, t, params):
                2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                             mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-              amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mPI) -
+              amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mPI) -
               3. * (fv + 2. * gv) *
               (2. * (9. * gsff *
                      (18. * gsGG * Q**2 * vh * vs + mK**2 *
@@ -1174,7 +1171,7 @@ def xx_s_pipig_rho_4_bub_E(Q, s, t, params):
                             (3. * vh + 2. * gsGG * vs) +
                             mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-               amp_bethe_salpeter_pipi_to_kk(Q) *
+               amp_pipi_to_kk_bse(Q) *
                bubble_loop(Q, mPI))))) / \
         (sqrt(2.) * fpi**4 * mrhoT**2 * (ms - Q) * (ms + Q) *
          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) * vh *
@@ -1317,7 +1314,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
               2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                            mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                     64. * gsGG**2 * vs**2))) *
-             amp_bethe_salpeter_kk_to_kk(Q) * bubble_loop(Q, mK)**3 -
+             amp_kk_to_kk_bse(Q) * bubble_loop(Q, mK)**3 -
              3. * (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mPI**2 *
                                 (9. * vh + 8. * gsGG * vs)**2) +
                    2. * gsGG *
@@ -1326,7 +1323,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                               64. * gsGG**2 * vs**2))) *
              bubble_loop(Q, mPI) *
              (-1. +
-              amp_bethe_salpeter_pipi_to_pipi(Q) * bubble_loop(Q, mPI)) *
+              amp_pipi_to_pipi_bse(Q) * bubble_loop(Q, mPI)) *
              (128. * pi**2 * (mPI**2 - 2. * Q**2) * s *
               bubble_loop(Q, mPI) +
               48. * pi**2 * Q**2 * s * bubble_loop(sqrt(s), mK) -
@@ -1356,7 +1353,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-               amp_bethe_salpeter_pipi_to_kk(Q) * bubble_loop(Q, mPI) +
+               amp_pipi_to_kk_bse(Q) * bubble_loop(Q, mPI) +
                3. * (-2. * (9. * gsff *
                             (18. * gsGG * Q**2 * vh * vs +
                              mK**2 * (9. * vh + 8. * gsGG * vs)**2) +
@@ -1375,14 +1372,14 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                        mPI**2 *
                        (81. * vh**2 - 144. * gsGG * vh * vs -
                         64. * gsGG**2 * vs**2))) *
-                     amp_bethe_salpeter_pipi_to_kk(Q) *
+                     amp_pipi_to_kk_bse(Q) *
                      bubble_loop(Q, mPI))) +
               (9. * gsff * (18. * gsGG * Q**2 * vh * vs + mK**2 *
                             (9. * vh + 8. * gsGG * vs)**2) +
                2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                             mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                      64. * gsGG**2 * vs**2))) *
-              amp_bethe_salpeter_kk_to_kk(Q) *
+              amp_kk_to_kk_bse(Q) *
               (64. * pi**2 * s * bubble_loop(Q, mPI) -
                48. * pi**2 * s * bubble_loop(sqrt(s), mK) -
                64. * pi**2 * s * bubble_loop(sqrt(s), mPI) -
@@ -1403,7 +1400,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-               amp_bethe_salpeter_pipi_to_kk(Q) -
+               amp_pipi_to_kk_bse(Q) -
                3. * Q**2 *
                (9. * gsff *
                 (18. * gsGG * Q**2 * vh * vs +
@@ -1412,8 +1409,8 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                 (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                  mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                            64. * gsGG**2 * vs**2))) *
-               (4. * sqrt(3.) * amp_bethe_salpeter_pipi_to_kk(Q) +
-                3. * amp_bethe_salpeter_pipi_to_pipi(Q))) *
+               (4. * sqrt(3.) * amp_pipi_to_kk_bse(Q) +
+                3. * amp_pipi_to_pipi_bse(Q))) *
               bubble_loop(Q, mPI)**2 +
               6. * Q**2 *
               (9. * gsff *
@@ -1444,7 +1441,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                 2. * gsGG * (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                              mK**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                                       64. * gsGG**2 * vs**2))) *
-               amp_bethe_salpeter_pipi_to_kk(Q) *
+               amp_pipi_to_kk_bse(Q) *
                (48. * pi**2 * Q**2 * s * bubble_loop(sqrt(s), mK) -
                 128. * pi**2 * (mPI**2 - 2. * Q**2) * s *
                 bubble_loop(sqrt(s), mPI) +
@@ -1487,7 +1484,7 @@ def xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                  (27. * Q**2 * vh * (3. * vh + 2. * gsGG * vs) +
                   mPI**2 * (81. * vh**2 - 144. * gsGG * vh * vs -
                             64. * gsGG**2 * vs**2))) *
-                amp_bethe_salpeter_pipi_to_kk(Q) *
+                amp_pipi_to_kk_bse(Q) *
                 (48. * pi**2 * s * bubble_loop(sqrt(s), mK) +
                  64. * pi**2 * s * bubble_loop(sqrt(s), mPI) +
                  3. * mK**2 *

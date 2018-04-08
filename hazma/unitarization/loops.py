@@ -1,10 +1,9 @@
 import numpy as np
-
-from .parameters import fpi
 from cmath import sqrt, log, pi
 
-from .parameters import pion_mass_chiral_limit as mPI
-from .parameters import kaon_mass_chiral_limit as mK
+from ..parameters import fpi
+from ..parameters import pion_mass_chiral_limit as mPI
+from ..parameters import kaon_mass_chiral_limit as mK
 
 
 MPI = complex(mPI)
