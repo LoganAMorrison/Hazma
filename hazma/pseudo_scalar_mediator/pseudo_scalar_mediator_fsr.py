@@ -6,6 +6,8 @@
 """
 import numpy as np
 
+from cmath import sqrt, log, pi
+
 from ..parameters import alpha_em
 
 
@@ -33,22 +35,32 @@ def __dnde_xx_to_p_to_ffg(egam, Q, mf):
     """
     e, m = egam / Q, mf / Q
 
-    if 0 < e and e < 0.5 * (1.0 - 4 * m**2):
-        return (2 * alpha_em *
-                (-np.sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
-                 (2 + 4 * (-1 + e) * e) * np.log(m) +
-                 m**2 * (2 * np.log(np.sqrt(1 - 2 * e) -
-                                    np.sqrt(1 - 2 * e - 4 * m**2)) -
-                         np.log(2 * (1 - 2 * e - 2 * m**2 +
-                                     np.sqrt((-1 + 2 * e) *
-                                             (-1 + 2 * e + 4 * m**2))))) +
-                 (1 + 2 * (-1 + e) * e) *
-                 np.log(-2 / (-1 + 2 * e + 2 * m**2 +
-                              np.sqrt((-1 + 2 * e) *
-                                      (-1 + 2 * e + 4 * m**2)))))) / \
-            (e * np.sqrt(1 - 4 * m**2) * np.pi * Q)
-    else:
-        return 0.0
+    s = Q**2 - 2. * Q * egam
+
+    ret_val = 0.0
+
+    if 4. * mf**2 <= s <= Q**2:
+        ret_val = (2. * alpha_em *
+                   (-sqrt((-1. + 2. * e) * (-1. + 2. * e + 4. * m**2)) +
+                    (2. + 4. * (-1. + e) * e) * log(m) +
+                       m**2 * (2. * log(sqrt(1. - 2. * e) -
+                                        sqrt(1. - 2. * e - 4. * m**2)) -
+                               log(2. * (1. - 2. * e - 2. * m**2 +
+                                         sqrt((-1. + 2. * e) *
+                                              (-1. + 2. * e + 4. * m**2))))) +
+                       (1. + 2. * (-1. + e) * e) *
+                       log(-2. / (-1. + 2. * e + 2. * m**2 +
+                                  sqrt((-1. + 2. * e) *
+                                       (-1. + 2. * e + 4. * m**2)))))) / \
+            (e * sqrt(1. - 4. * m**2) * pi * Q)
+
+        assert ret_val.imag == 0.0
+
+        ret_val = ret_val.real
+
+        assert ret_val >= 0.0
+
+    return ret_val
 
 
 def dnde_xx_to_p_to_ffg(egam, Q, mf):

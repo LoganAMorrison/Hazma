@@ -10,10 +10,10 @@ from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
 
 
-from ..unitarization import amp_bethe_salpeter_pipi_to_pipi
-from ..unitarization import amp_bethe_salpeter_pipi_to_kk
-from ..unitarization import amp_bethe_salpeter_kk_to_kk
-from ..unitarization import loop_matrix
+from ..unitarization.bethe_salpeter import amp_pipi_to_pipi
+from ..unitarization.bethe_salpeter import amp_pipi_to_kk
+from ..unitarization.bethe_salpeter import amp_kk_to_kk
+from ..unitarization.loops import loop_matrix
 
 
 def __amp_s_PIPI(s, params):
@@ -49,8 +49,8 @@ def amp_s_k0k0(s, params, unit='BSE'):
         amp_s_PIPI = __amp_s_PIPI(s, params)
         amp_s_KK = __amp_s_KK(s, params)
 
-        amp_PIPI_k0k0 = amp_bethe_salpeter_pipi_to_kk(sqrt(s)) / sqrt(2)
-        amp_KK_k0k0 = amp_bethe_salpeter_kk_to_kk(sqrt(s)) / sqrt(2)
+        amp_PIPI_k0k0 = amp_pipi_to_kk(sqrt(s)) / sqrt(2)
+        amp_KK_k0k0 = amp_kk_to_kk(sqrt(s)) / sqrt(2)
 
         return amp_s_k0k0 - amp_s_PIPI * loop_mat[0, 0] * amp_PIPI_k0k0 - \
             amp_s_KK * loop_mat[1, 1] * amp_KK_k0k0
@@ -86,8 +86,8 @@ def amp_s_kk(s, params, unit='BSE'):
         amp_s_PIPI = __amp_s_PIPI(s, params)
         amp_s_KK = __amp_s_KK(s, params)
 
-        amp_PIPI_k0k0 = amp_bethe_salpeter_pipi_to_kk(sqrt(s)) / sqrt(2)
-        amp_KK_k0k0 = amp_bethe_salpeter_kk_to_kk(sqrt(s)) / sqrt(2)
+        amp_PIPI_k0k0 = amp_pipi_to_kk(sqrt(s)) / sqrt(2)
+        amp_KK_k0k0 = amp_kk_to_kk(sqrt(s)) / sqrt(2)
 
         return amp_s_kk - amp_s_PIPI * loop_mat[0, 0] * amp_PIPI_k0k0 - \
             amp_s_KK * loop_mat[1, 1] * amp_KK_k0k0
@@ -123,9 +123,9 @@ def amp_s_pi0pi0(s, params, unit='BSE'):
         amp_s_PIPI = __amp_s_PIPI(s, params)
         amp_s_KK = __amp_s_KK(s, params)
 
-        amp_PIPI_pi0pi0 = amp_bethe_salpeter_pipi_to_pipi(
+        amp_PIPI_pi0pi0 = amp_pipi_to_pipi(
             sqrt(s)) / sqrt(3)
-        amp_KK_pi0pi0 = amp_bethe_salpeter_kk_to_kk(sqrt(s)) / sqrt(3)
+        amp_KK_pi0pi0 = amp_kk_to_kk(sqrt(s)) / sqrt(3)
 
         return amp_s_pi0pi0 - amp_s_PIPI * loop_mat[0, 0] * \
             amp_PIPI_pi0pi0 - amp_s_KK * loop_mat[1, 1] * amp_KK_pi0pi0
@@ -161,8 +161,8 @@ def amp_s_pipi(s, params, unit='BSE'):
         amp_s_PIPI = __amp_s_PIPI(s, params)
         amp_s_KK = __amp_s_KK(s, params)
 
-        amp_PIPI_pipi = amp_bethe_salpeter_pipi_to_pipi(sqrt(s)) / sqrt(3)
-        amp_KK_pipi = amp_bethe_salpeter_kk_to_kk(sqrt(s)) / sqrt(3)
+        amp_PIPI_pipi = amp_pipi_to_pipi(sqrt(s)) / sqrt(3)
+        amp_KK_pipi = amp_kk_to_kk(sqrt(s)) / sqrt(3)
 
         return amp_s_pipi - amp_s_PIPI * loop_mat[0, 0] * amp_PIPI_pipi - \
             amp_s_KK * loop_mat[1, 1] * amp_KK_pipi
