@@ -1,5 +1,5 @@
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
+# from ..parameters import muon_mass as mmu
+# from ..parameters import electron_mass as me
 
 
 def sigma_xx_to_v_to_ff(Q, mf, params):

@@ -7,7 +7,7 @@ from ..parameters import electron_mass as me
 
 from .vector_mediator_fsr import dnde_xx_to_v_to_ffg
 
-from .vector_mediator_cross_sections import branching_fractions
+# from .vector_mediator_cross_sections import branching_fractions
 
 
 def dnde_ee(egams, cme, params, type='All'):
@@ -67,8 +67,8 @@ def spectra(egams, cme, params):
     # muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
     # electrons = bfs['e e'] * dnde_ee(egams, cme, params)
 
-    muons = dnde_mumu(egams, cme, params)
-    electrons = dnde_ee(egams, cme, params)
+    muons = dnde_mumu(egams, cme, mmu, params)
+    electrons = dnde_ee(egams, cme, me, params)
 
     # Compute total spectrum
     total = muons + electrons

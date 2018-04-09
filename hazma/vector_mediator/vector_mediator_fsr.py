@@ -4,7 +4,7 @@ from cmath import sqrt, log, pi
 import numpy as np
 
 
-def __dnde_xx_to_v_to_ffg(egam, Q, mf):
+def __dnde_xx_to_v_to_ffg(egam, Q, mf, params):
     """Return the fsr spectra for fermions from decay of vector mediator.
 
     Computes the final state radiaton spectrum value dNdE from a vector
@@ -56,7 +56,7 @@ def __dnde_xx_to_v_to_ffg(egam, Q, mf):
     return ret_val
 
 
-def dnde_xx_to_v_to_ffg(egam, Q, mf):
+def dnde_xx_to_v_to_ffg(egam, Q, mf, params):
     """Return the fsr spectra for fermions from decay of vector mediator.
 
     Computes the final state radiaton spectrum value dNdE from a vector
