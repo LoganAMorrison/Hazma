@@ -2,12 +2,20 @@ from ..theory import Theory
 
 from .pseudo_scalar_mediator_parameters import PseudoScalarMediatorParameters
 
+from pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
+from pseudo_scalar_mediator_cross_sections import cross_sections as cs
+
+from scalar_mediator_spectra import dnde_mumu, dnde_ee
+from scalar_mediator_spectra import spectra as specs
+
 import warnings
 from hazma_errors import PreAlphaWarning
 
 
 class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
     r"""
+    WARNING: This class is pre-alpha.
+
     Create a vector mediator model object.
     """
 
@@ -21,21 +29,99 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         pass
 
     def list_final_states(self):
+        """
+        WARNING: This function is pre-alpha.
+
+        Return a list of the available final states.
+
+        Returns
+        -------
+        fs : array-like
+            Array of the available final states.
+        """
         warnings.warn("", PreAlphaWarning)
-        pass
+
+        return ['mu mu', 'e e']
 
     def cross_sections(self, cme):
+        """
+        WARNING: This function is pre-alpha.
+
+        Compute the all the cross sections of the theory.
+
+        Parameters
+        ----------
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        cs : dictionary
+            Dictionary of the cross sections of the theory.
+        """
         warnings.warn("", PreAlphaWarning)
-        pass
+        return cs(cme, self.params)
 
     def branching_fractions(self, cme):
-        warnings.warn("", PreAlphaWarning)
-        pass
+        """
+        WARNING: This function is pre-alpha.
 
-    def spectra(self, eng_gams, cme):
+        Compute the branching fractions for two fermions annihilating through a
+        psuedo-scalar mediator to mesons and leptons.
+
+        Parameters
+        ----------
+        Q : float
+            Center of mass energy.
+
+        Returns
+        -------
+        bfs : dictionary
+            Dictionary of the branching fractions.
+        """
         warnings.warn("", PreAlphaWarning)
-        pass
+        return bfs(cme, self.params)
+
+    def spectra(self, egams, cme):
+        """
+        WARNING: This function is pre-alpha.
+
+        Compute the total spectrum from two fermions annihilating through a
+        vector mediator to mesons and leptons.
+
+        Parameters
+        ----------
+        egams : array-like, optional
+            Gamma ray energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        specs : dictionary
+            Dictionary of the spectra
+        """
+        warnings.warn("", PreAlphaWarning)
+        return specs(egams, cme, self.params)
 
     def spectrum_functions(self):
+        """
+        WARNING: This function is pre-alpha.
+
+        Returns a dictionary of all the avaiable spectrum functions for
+        a pair of initial state fermions with mass `mx` annihilating into
+        each available final state.
+
+        Each argument of the spectrum functions in `eng_gams`, an array
+        of the gamma ray energies to evaluate the spectra at and `cme`, the
+        center of mass energy of the process.
+        """
         warnings.warn("", PreAlphaWarning)
-        pass
+
+        def mumu(eng_gams, cme):
+            return dnde_mumu(eng_gams, cme, self.params)
+
+        def ee(eng_gams, cme):
+            return dnde_ee(eng_gams, cme, self.params)
+
+        return {'mu mu': mumu, 'e e': ee}

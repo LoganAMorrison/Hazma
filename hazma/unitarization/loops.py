@@ -52,10 +52,11 @@ def bubble_loop(cme, mass, q_max=Q_MAX):
         G_{ii} = i\int_{0}^{\infty}\frac{d^4q}{(2\pi)^4}
             \frac{1}{q^2-m_{i}^2}\frac{1}{(P-q)^2-m_{i}^2}
     """
-    cutFact = sqrt(complex(1. + mass**2 / q_max**2))
     if abs(cme) == 0.0:
+        cutFact = sqrt(complex(1. + mass**2 / q_max**2))
         return complex((1. - cutFact * log(((1. + cutFact) * q_max) / mass)) /
                        (8. * cutFact * pi**2))
+        return 0.0
     return __bubble_loop_mat_elements(cme, mass, mass, q_max=q_max)
 
 
