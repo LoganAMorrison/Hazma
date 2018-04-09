@@ -16,20 +16,20 @@ LAM = complex(1.1 * 10**3)  # cut-off scale taken to be 1.1 GeV
 Q_MAX = sqrt(LAM**2 - MK**2)
 
 
-def __amp_pipi_to_pipi_iam(cme):
+def __amp_pipi_to_pipi_iam(cme, ell=0, iso=0, su=3):
     """
     Unitarized pion scattering squared matrix element in the isopin I = 0
     channel.
     """
     s = complex(cme**2)
 
-    amp_lo = partial_wave_pipi_to_pipi_LO_I(s, ell=0, iso=0)
-    amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, ell=0, iso=0)
+    amp_lo = partial_wave_pipi_to_pipi_LO_I(s, ell=ell, iso=iso)
+    amp_nlo = partial_wave_pipi_to_pipi_NLO_I(s, ell, iso=iso, su=su)
 
     return amp_lo**2 / (amp_lo - amp_nlo)
 
 
-def amp_pipi_to_pipi_iam(cmes):
+def amp_pipi_to_pipi_iam(cmes, ell=0, iso=0, su=3):
     """
     Unitarized pion scattering amplitude in the isopin I = 0 channel.
 
@@ -42,12 +42,13 @@ def amp_pipi_to_pipi_iam(cmes):
         Invariant mass of the two charged pions.
     """
     if hasattr(cmes, "__len__"):
-        return np.array([__amp_pipi_to_pipi_iam(cme) for cme in cmes])
+        return np.array([__amp_pipi_to_pipi_iam(cme, ell=ell, iso=iso, su=su)
+                         for cme in cmes])
     else:
-        return __amp_pipi_to_pipi_iam(cmes)
+        return __amp_pipi_to_pipi_iam(cmes, ell=ell, iso=iso, su=su)
 
 
-def msqrd_inverse_amplitude_pipi_to_pipi(cmes):
+def msqrd_inverse_amplitude_pipi_to_pipi(cmes, ell=0, iso=0, su=3):
     """
     Unitarized pion scattering sqrd amplitude in the isopin I = 0 channel.
 
@@ -60,7 +61,8 @@ def msqrd_inverse_amplitude_pipi_to_pipi(cmes):
         Invariant mass of the two charged pions.
     """
     if hasattr(cmes, "__len__"):
-        return np.array([abs(amp_pipi_to_pipi_iam(cme))
+        return np.array([abs(amp_pipi_to_pipi_iam(cme, ell=ell, iso=iso,
+                                                  su=su))
                          for cme in cmes])
     else:
-        return abs(amp_pipi_to_pipi_iam(cmes))
+        return abs(amp_pipi_to_pipi_iam(cmes, ell=ell, iso=iso, su=su))

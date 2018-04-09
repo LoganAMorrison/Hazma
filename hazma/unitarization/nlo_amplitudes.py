@@ -158,7 +158,7 @@ def __msqrd_pipi_pipi_NLO_I(s, iso=0, su=3):
     return quad(integrand, -1., 1.)[0]
 
 
-def __pw_pipi_pipi_NLO_I(s, l, iso=0, su=3):
+def __pw_pipi_pipi_NLO_I(s, ell, iso=0, su=3):
     """
     Returns the lth partial wave of the next-to-leading-order pion scattering
     amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
@@ -167,11 +167,11 @@ def __pw_pipi_pipi_NLO_I(s, l, iso=0, su=3):
 
     def f_real(x):
         return __amp_pipi_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso,
-                                     su=su).real * lpmv(0, l, x)
+                                     su=su).real * lpmv(0, ell, x)
 
     def f_imag(x):
         return __amp_pipi_pipi_NLO_I(s, mandlestam_t(x, s), iso=iso,
-                                     su=su).imag * lpmv(0, l, x)
+                                     su=su).imag * lpmv(0, ell, x)
 
     NLOreal = quad(f_real, -1., 1.)[0]
     NLOimag = quad(f_imag, -1., 1.)[0]
@@ -298,7 +298,7 @@ def msqrd_pipi_to_pipi_NLO_I(s, iso=0, su=3):
     return __msqrd_pipi_pipi_NLO_I(s, iso=iso, su=su)
 
 
-def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0, su=3):
+def partial_wave_pipi_to_pipi_NLO_I(s, ell, iso=0, su=3):
     """
     Returns the lth partial wave of the next-to-leading-order pion scattering
     amplitude in a definite isospin channel in either SU(2) or SU(3) ChiPT.
@@ -307,7 +307,7 @@ def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0, su=3):
     ----------
     s : float
         Squared center of mass energy.
-    l : int
+    ell : int
         Partial wave index.
     iso : int, optional {0}
         Isospin
@@ -322,10 +322,10 @@ def partial_wave_pipi_to_pipi_NLO_I(s, l, iso=0, su=3):
 
     if hasattr(s, "__len__"):
 
-        return np.array([__pw_pipi_pipi_NLO_I(s[i], l, iso=iso, su=su)
+        return np.array([__pw_pipi_pipi_NLO_I(s[i], ell, iso=iso, su=su)
                          for i in range(len(s))])
 
-    return __pw_pipi_pipi_NLO_I(s, l, iso=iso, su=su)
+    return __pw_pipi_pipi_NLO_I(s, ell, iso=iso, su=su)
 
 
 def high_L_partial_wave_pipi_to_pipi_NLO_I(s, iso=0, su=3):
