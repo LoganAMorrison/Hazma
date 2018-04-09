@@ -11,7 +11,7 @@ from cmath import sqrt, log, pi
 from ..parameters import alpha_em
 
 
-def __dnde_xx_to_p_to_ffg(egam, Q, mf):
+def __dnde_xx_to_p_to_ffg(egam, Q, mf, params):
     """Returns the fsr spectra for fermions from decay of pseudo-scalar
     mediator.
 
@@ -63,7 +63,7 @@ def __dnde_xx_to_p_to_ffg(egam, Q, mf):
     return ret_val
 
 
-def dnde_xx_to_p_to_ffg(egam, Q, mf):
+def dnde_xx_to_p_to_ffg(egam, Q, mf, params):
     """Returns the fsr spectra for fermions from decay of pseudo-scalar
     mediator.
 
