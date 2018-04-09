@@ -4,6 +4,7 @@ from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
 from ..parameters import fpi, b0, vh
+from ..parameters import rho_mass as mrho
 
 trM = muq + mdq + msq
 
@@ -73,6 +74,58 @@ class ScalarMediatorParameters(object):
         self._gsFF = gsFF
         self.compute_vs()
 
+    @property
+    def mrhoT(self):
+        return sqrt(mrho**2 - 2. * self._gsGG * self.vs / 9. / vh)
+
+    def compute_vs(self):
+        """
+        Returns the value of the scalar vev.
+        """
+        vs_roots = self.__vs_roots()
+        fpiTs = [self.fpiT(vs) for vs in vs_roots]
+        kappas = [self.__kappa(fpiT) for fpiT in fpiTs]
+        BTs = [self.BT(kappa) for kappa in kappas]
+        msTs = [self.msT(fpiT, BT) for (fpiT, BT) in zip(fpiTs, BTs)]
+        alphas = [self.__alpha(fpiT, BT, msT)
+                  for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
+        betas = [self.__beta(fpiT, BT, msT)
+                 for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
+
+        potvals = [- alpha * vs + 0.5 * beta * vs **
+                   2 for (alpha, beta, vs) in zip(alphas, betas, vs_roots)]
+
+        if potvals[0] < potvals[1]:
+            return vs_roots[0]
+        else:
+            return vs_roots[1]
+
+    # #################### #
+    """ HELPER FUNCTIONS """
+    # #################### #
+
+    def fpiT(self, vs):
+        """
+        Returns the unphysical value of fpi.
+        """
+        return fpi / sqrt(1.0 + 4. * self._gsGG * vs / 9. / vh)
+
+    def BT(self, kappa):
+        """
+        Returns the unphysical value of B.
+        """
+        return b0 * (1 + kappa) / (1 + 6. * kappa *
+                                   (1. + 3. * self._gsff / 2. / self._gsGG))
+
+    def msT(self, fpiT, BT):
+        """
+        Returns the unphysical mass of the scalar mediator.
+        """
+        gamma = BT * fpiT * trM / vh
+        return sqrt(self._ms**2 +
+                    16. * gamma * self._gsff * self._gsGG / 9. / vh -
+                    32. * gamma * self._gsGG**2 / 81. / vh)
+
     def __alpha(self, fT, BT, msT):
         """
         Returns coefficent of linear term in the scalar potential before adding
@@ -103,49 +156,5 @@ class ScalarMediatorParameters(object):
 
         return root1, root2
 
-    def __fpiT(self, vs):
-        """
-        Returns the unphysical value of fpi.
-        """
-        return fpi / sqrt(1.0 + 4. * self._gsGG * vs / 9. / vh)
-
     def __kappa(self, fpiT):
         return fpi**2 / fpiT**2 - 1.
-
-    def __BT(self, kappa):
-        """
-        Returns the unphysical value of B.
-        """
-        return b0 * (1 + kappa) / (1 + 6. * kappa *
-                                   (1. + 3. * self._gsff / 2. / self._gsGG))
-
-    def __msT(self, fpiT, BT):
-        """
-        Returns the unphysical mass of the scalar mediator.
-        """
-        gamma = BT * fpiT * trM / vh
-        return sqrt(self._ms**2 +
-                    16. * gamma * self._gsff * self._gsGG / 9. / vh -
-                    32. * gamma * self._gsGG**2 / 81. / vh)
-
-    def compute_vs(self):
-        """
-        Returns the value of the scalar vev.
-        """
-        vs_roots = self.__vs_roots()
-        fpiTs = [self.__fpiT(vs) for vs in vs_roots]
-        kappas = [self.__kappa(fpiT) for fpiT in fpiTs]
-        BTs = [self.__BT(kappa) for kappa in kappas]
-        msTs = [self.__msT(fpiT, BT) for (fpiT, BT) in zip(fpiTs, BTs)]
-        alphas = [self.__alpha(fpiT, BT, msT)
-                  for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
-        betas = [self.__beta(fpiT, BT, msT)
-                 for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
-
-        potvals = [- alpha * vs + 0.5 * beta * vs **
-                   2 for (alpha, beta, vs) in zip(alphas, betas, vs_roots)]
-
-        if potvals[0] < potvals[1]:
-            return vs_roots[0]
-        else:
-            return vs_roots[1]

@@ -11,6 +11,7 @@ from ..unitarization.bethe_salpeter import amp_kk_to_kk_bse
 from ..unitarization.bethe_salpeter import amp_pipi_to_kk_bse
 from ..unitarization.bethe_salpeter import amp_pipi_to_pipi_bse
 from ..unitarization.loops import bubble_loop
+from ..unitarization.loops import Q_MAX as qmax
 
 
 def __xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
@@ -25,8 +26,8 @@ def __xx_s_pipig_no_rho_5_bub_E(Q, s, t, params):
             (6. *
              (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                       mK**2 *
-                       (81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2))) *
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
              amp_kk_to_kk_bse(Q)*bubble_loop(Q, mK)**2 +
              12. *
              (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
@@ -101,8 +102,8 @@ def __xx_s_pipig_no_rho_fsr_bub_E(Q, s, t, params):
                        mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
                                64.*gsGG**2*vs**2))) *
              amp_pipi_to_pipi_bse(Q)*bubble_loop(Q, mPI)**2)) / \
-            (sqrt(2.)*fpi**2*(ms - Q)*(ms + Q)*(mPI**2 - t)*vh *
-             (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs))
+        (sqrt(2.)*fpi**2*(ms - Q)*(ms + Q)*(mPI**2 - t)*vh *
+         (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs))
 
 
 def __xx_s_pipig_no_rho_no_bub_E(Q, s, t, params):
@@ -112,6 +113,7 @@ def __xx_s_pipig_no_rho_no_bub_E(Q, s, t, params):
     mx = params.mx
     ms = params.ms
     vs = params.vs
+    mrhoT = params.mrhoT
 
     return (complex(0., 0.012345679012345678)*gsxx*sqrt(-4.*mx**2 + Q**2)*qe*
         ((-2.*(-2.*fv*gsGG*gv*(mPI**2 - t)*(mPI**2 + Q**2 - s - t)*
@@ -121,144 +123,78 @@ def __xx_s_pipig_no_rho_no_bub_E(Q, s, t, params):
                 (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
                   2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                      mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))))/
-           (mrhoT**2*(mPI**2 - t)*vh**2*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
-          (5184.*gsGG*mK**2*pi**4*(mPI**2 - u)*bubble_loop(0., mK))/
-           (-2.*mPI**2 + t + u) + (10368.*gsGG*mPI**2*pi**4*(mPI**2 - u)*
-             bubble_loop(0., mPI))/(-2.*mPI**2 + t + u) -
-          (48.*pi**4*(gsGG*(-9.*(24.*mPI**6 - 6.*s**2*t - 8.*s*t**2 - 3.*t**3 -
-                     12.*s**2*u - 22.*s*t*u - 9.*t**2*u - 14.*s*u**2 -
-                     9.*t*u**2 - 3.*u**3 + 3.*Q**2*(t + u)*(2.*s + t + u) +
-                     4.*mPI**4*(3.*Q**2 - 11.*s - 9.*(t + u)) -
-                     2.*mPI**2*(-9.*s**2 - 9.*(t + u)**2 +
-                        6.*Q**2*(s + t + u) - s*(19.*t + 25.*u)))*vh*
-                   (3.*vh + 2.*gsGG*vs) +
-                  2.*mK**2*(81.*s*t*vh**2 + 135.*t**2*vh**2 + 162.*s*u*vh**2 +
-                     270.*t*u*vh**2 + 135.*u**2*vh**2 - 144.*gsGG*s*t*vh*vs -
-                     108.*gsGG*t**2*vh*vs - 288.*gsGG*s*u*vh*vs -
-                     216.*gsGG*t*u*vh*vs - 108.*gsGG*u**2*vh*vs -
-                     64.*gsGG**2*s*t*vs**2 - 64.*gsGG**2*t**2*vs**2 -
-                     128.*gsGG**2*s*u*vs**2 - 128.*gsGG**2*t*u*vs**2 -
-                     64.*gsGG**2*u**2*vs**2 -
-                     Q**2*(t + u)*
-                      (81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2) +
-                     4.*mPI**4*(135.*vh**2 - 108.*gsGG*vh*vs -
-                        64.*gsGG**2*vs**2) +
-                     mPI**2*(2.*Q**2*
-                         (81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2) -
-                        4.*(t + u)*
-                         (135.*vh**2 - 108.*gsGG*vh*vs - 64.*gsGG**2*vs**2) +
-                        3.*s*(-81.*vh**2 + 144.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))) + 9.*gsff*(-3.*gsGG*(24.*mPI**6 - 6.*s**2*t - 8.*s*t**2 - 3.*t**3 -
-                     12.*s**2*u - 22.*s*t*u - 9.*t**2*u - 14.*s*u**2 -
-                     9.*t*u**2 - 3.*u**3 + 3.*Q**2*(t + u)*(2.*s + t + u) +
-                     4.*mPI**4*(3.*Q**2 - 11.*s - 9.*(t + u)) -
-                     2.*mPI**2*(-9.*s**2 - 9.*(t + u)**2 +
-                        6.*Q**2*(s + t + u) - s*(19.*t + 25.*u)))*vh*vs +
-                  mK**2*(81.*s*t*vh**2 + 81.*t**2*vh**2 + 162.*s*u*vh**2 +
-                     162.*t*u*vh**2 + 81.*u**2*vh**2 + 144.*gsGG*s*t*vh*vs +
-                     156.*gsGG*t**2*vh*vs + 288.*gsGG*s*u*vh*vs +
-                     312.*gsGG*t*u*vh*vs + 156.*gsGG*u**2*vh*vs +
-                     64.*gsGG**2*s*t*vs**2 + 64.*gsGG**2*t**2*vs**2 +
-                     128.*gsGG**2*s*u*vs**2 + 128.*gsGG**2*t*u*vs**2 +
-                     64.*gsGG**2*u**2*vs**2 -
-                     Q**2*(t + u)*(9.*vh + 8.*gsGG*vs)**2 +
-                     4.*mPI**4*(81.*vh**2 + 156.*gsGG*vh*vs +
-                        64.*gsGG**2*vs**2) +
-                     mPI**2*(2.*Q**2*(9.*vh + 8.*gsGG*vs)**2 -
-                        3.*s*(9.*vh + 8.*gsGG*vs)**2 -
-                        4.*(t + u)*
-                         (81.*vh**2 + 156.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))))*
+           (mrhoT**2*(mPI**2 - t)*vh**2*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
+          (5184.*gsGG*mK**2*pi**4*(mPI**2 + Q**2 - s - t)*bubble_loop(0., mK))/
+           (Q**2 - s) - (10368.*gsGG*mPI**2*pi**4*(mPI**2 + Q**2 - s - t)*
+             bubble_loop(0., mPI))/(Q**2 - s) +
+          (24.*pi**4*(Q**4 - s*(-2.*mPI**2 + s + 2.*t))*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
+             bubble_loop(Q, mK))/
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
+          (48.*pi**4*(Q**4 - s*(-2.*mPI**2 + s + 2.*t))*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
+             bubble_loop(Q, mPI))/
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
+          (48.*pi**4*(729.*gsff*mK**2*s*(-mPI**2 - Q**2 + s + t)*vh**2 +
+               128.*gsGG**3*mK**2*s*(mPI**2 + Q**2 - s - t)*vs**2 -
+               18.*gsGG**2*vs*(-(s*
+                     (-6.*mPI**2*Q**2 - 5.*Q**4 + s**2 + Q**2*(4.*s + 6.*t))*vh\
+    ) + 4.*mK**2*(Q**4*vh + Q**2*s*(-6.*vh + 8.*gsff*vs) +
+                     s*(5.*s*vh + 4.*t*vh - 8.*gsff*s*vs - 8.*gsff*t*vs -
+                        4.*mPI**2*(vh - 2.*gsff*vs)))) -
+               27.*gsGG*vh*(-(s*(-6.*mPI**2*Q**2 - 5.*Q**4 + s**2 +
+                       Q**2*(4.*s + 6.*t))*(vh + gsff*vs)) +
+                  mK**2*(-2.*Q**2*s*(vh - 20.*gsff*vs) +
+                     4.*Q**4*(vh + gsff*vs) -
+                     2.*s*(-3.*mPI**2*(vh + 8.*gsff*vs) +
+                        3.*t*(vh + 8.*gsff*vs) + s*(vh + 22.*gsff*vs)))))*
              bubble_loop(sqrt(s), mK))/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
-          (96.*pi**4*(9.*gsff*(3.*gsGG*
-                   (3.*(t + u)**3 - 3.*Q**2*(t + u)*(2.*s + t + u) +
-                     6.*s**2*(t + 2.*u) + 2.*s*(4.*t**2 + 11.*t*u + 7.*u**2))*vh*
-                   vs + 4.*mPI**6*
-                   (81.*vh**2 + 138.*gsGG*vh*vs + 64.*gsGG**2*vs**2) +
-                  mPI**4*(-3.*s*(81.*vh**2 + 100.*gsGG*vh*vs +
-                        64.*gsGG**2*vs**2) +
-                     2.*Q**2*(81.*vh**2 + 126.*gsGG*vh*vs +
-                        64.*gsGG**2*vs**2) -
-                     4.*(t + u)*(81.*vh**2 + 129.*gsGG*vh*vs +
-                        64.*gsGG**2*vs**2)) +
-                  mPI**2*(-54.*gsGG*s**2*vh*vs +
-                     (t + u)**2*(81.*vh**2 + 102.*gsGG*vh*vs +
-                        64.*gsGG**2*vs**2) +
-                     s*(t*(81.*vh**2 + 30.*gsGG*vh*vs + 64.*gsGG**2*vs**2) +
-                        2.*u*(81.*vh**2 + 69.*gsGG*vh*vs + 64.*gsGG**2*vs**2)) \
-    - Q**2*(81.*u*vh**2 - 36.*gsGG*s*vh*vs + 108.*gsGG*u*vh*vs +
-                        64.*gsGG**2*u*vs**2 +
-                        t*(81.*vh**2 + 108.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))) +
-                      gsGG*(-9.*(-3.*(t + u)**3 + 3.*Q**2*(t + u)*(2.*s + t + u) -
-                     6.*s**2*(t + 2.*u) - 2.*s*(4.*t**2 + 11.*t*u + 7.*u**2))*vh*
-                   (3.*vh + 2.*gsGG*vs) +
-                  16.*mPI**6*(27.*vh**2 - 81.*gsGG*vh*vs - 32.*gsGG**2*vs**2) +
-                  2.*mPI**4*(-54.*u*vh**2 - 396.*gsGG*Q**2*vh*vs +
-                     756.*gsGG*u*vh*vs - 128.*gsGG**2*Q**2*vs**2 +
-                     256.*gsGG**2*u*vs**2 +
-                     3.*s*(117.*vh**2 + 276.*gsGG*vh*vs + 64.*gsGG**2*vs**2) +
-                     t*(-54.*vh**2 + 756.*gsGG*vh*vs + 256.*gsGG**2*vs**2)) +
-                  2.*mPI**2*(-81.*s**2*vh*(3.*vh + 2.*gsGG*vs) -
-                     2.*(t + u)**2*
-                      (54.*vh**2 + 135.*gsGG*vh*vs + 32.*gsGG**2*vs**2) -
-                     s*(432.*t*vh**2 + 513.*u*vh**2 + 486.*gsGG*t*vh*vs +
-                        738.*gsGG*u*vh*vs + 64.*gsGG**2*t*vs**2 +
-                        128.*gsGG**2*u*vs**2) +
-                     Q**2*(54.*s*vh*(3.*vh + 2.*gsGG*vs) +
-                        (t + u)*(81.*vh**2 + 252.*gsGG*vh*vs +
-                           64.*gsGG**2*vs**2)))))*bubble_loop(sqrt(s), mPI))/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
-          (24.*pi**4*(12.*mPI**4 + 2.*s*t + 3.*t**2 + 4.*s*u + 6.*t*u + 3.*u**2 -
-               2.*Q**2*(t + u) + 2.*mPI**2*(2.*Q**2 - 3.*(s + 2.*(t + u))))*
-             (-9.*gsff*(18.*gsGG*(-2.*mPI**2 + s + t + u)*vh*vs +
-                  mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-               2.*gsGG*(27.*(2.*mPI**2 - s - t - u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mK**2*(-81.*vh**2 + 144.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
-             bubble_loop(sqrt(-2.*mPI**2 + s + t + u), mK))/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
-          (48.*pi**4*(12.*mPI**4 + 2.*s*t + 3.*t**2 + 4.*s*u + 6.*t*u + 3.*u**2 -
-               2.*Q**2*(t + u) + 2.*mPI**2*(2.*Q**2 - 3.*(s + 2.*(t + u))))*
-             (9.*gsff*(18.*gsGG*(s + t + u)*vh*vs +
-                  mPI**2*(81.*vh**2 + 108.*gsGG*vh*vs + 64.*gsGG**2*vs**2)) -
-               2.*gsGG*(-27.*(s + t + u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mPI**2*(81.*vh**2 + 252.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
-             bubble_loop(sqrt(-2.*mPI**2 + s + t + u), mPI))/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
-          (216.*gsGG*mK**2*pi**2*(mPI**2 - 2.*t + u)*
-             log((qmax + sqrt(mK**2 + qmax**2))/mK))/(-2.*mPI**2 + t + u) -
-          (432.*gsGG*mPI**2*pi**2*(mPI**2 - 2.*t + u)*
-             log((qmax + sqrt(mPI**2 + qmax**2))/mPI))/(-2.*mPI**2 + t + u) -
-          (3.*mK**2*pi**2*(mPI**2 - u)*
-             (9.*gsff*(18.*gsGG*(-2.*mPI**2 + s + t + u)*vh*vs +
-                  mK**2*(9.*vh + 8.*gsGG*vs)**2) -
-               2.*gsGG*(27.*(2.*mPI**2 - s - t - u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mK**2*(-81.*vh**2 + 144.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
+          (96.*pi**4*(-729.*gsff*mPI**2*s*(mPI**2 + Q**2 - s - t)*vh**2 +
+               128.*gsGG**3*mPI**2*s*(mPI**2 + Q**2 - s - t)*vs**2 +
+               18.*gsGG**2*vs*(s*(-5.*Q**4 + s**2 + Q**2*(4.*s + 6.*t))*vh +
+                  16.*mPI**4*s*(vh - 2.*gsff*vs) -
+                  2.*mPI**2*(2.*Q**4*vh + Q**2*s*(-9.*vh + 16.*gsff*vs) +
+                     2.*s*(5.*s*vh + 4.*t*vh - 8.*gsff*s*vs - 8.*gsff*t*vs))) -
+               27.*gsGG*vh*(-(s*(-5.*Q**4 + s**2 + Q**2*(4.*s + 6.*t))*
+                     (vh + gsff*vs)) + 6.*mPI**4*s*(vh + 8.*gsff*vs) +
+                  mPI**2*(4.*Q**4*(vh + gsff*vs) +
+                     Q**2*s*(4.*vh + 46.*gsff*vs) -
+                     2.*s*(3.*t*(vh + 8.*gsff*vs) + s*(vh + 22.*gsff*vs)))))*
+             bubble_loop(sqrt(s), mPI))/
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
+          (3.*mK**2*pi**2*(mPI**2 + Q**2 - s - t)*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
+             log((2.*mK**2 + Q*(-Q + sqrt(-4.*mK**2 + Q**2)))/(2.*mK**2))**2)/
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
+          (6.*mPI**2*pi**2*(mPI**2 + Q**2 - s - t)*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
+             log((2.*mPI**2 + Q*(-Q + sqrt(-4.*mPI**2 + Q**2)))/(2.*mPI**2))**2)/
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
+          (216.*gsGG*mK**2*pi**2*(3.*mPI**2 + Q**2 - s - 3.*t)*
+             log((qmax + sqrt(mK**2 + qmax**2))/mK))/(Q**2 - s) -
+          (432.*gsGG*mPI**2*pi**2*(3.*mPI**2 + Q**2 - s - 3.*t)*
+             log((qmax + sqrt(mPI**2 + qmax**2))/mPI))/(Q**2 - s) +
+          (3.*mK**2*pi**2*(mPI**2 + Q**2 - s - t)*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mK**2 - s + sqrt(s*(-4.*mK**2 + s)))/(2.*mK**2))**2)/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) -
-          (6.*mPI**2*pi**2*(mPI**2 - u)*
-             (9.*gsff*(18.*gsGG*(s + t + u)*vh*vs +
-                  mPI**2*(81.*vh**2 + 108.*gsGG*vh*vs + 64.*gsGG**2*vs**2)) -
-               2.*gsGG*(-27.*(s + t + u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mPI**2*(81.*vh**2 + 252.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
+          (6.*mPI**2*pi**2*(mPI**2 + Q**2 - s - t)*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                  mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mPI**2 - s + sqrt(s*(-4.*mPI**2 + s)))/(2.*mPI**2))**2)/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
-          (6.*mPI**2*pi**2*(mPI**2 - u)*
-             (9.*gsff*(18.*gsGG*(s + t + u)*vh*vs +
-                  mPI**2*(81.*vh**2 + 108.*gsGG*vh*vs + 64.*gsGG**2*vs**2)) -
-               2.*gsGG*(-27.*(s + t + u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mPI**2*(81.*vh**2 + 252.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
-             log(-(-4.*mPI**2 + s + t + u -
-                   sqrt((-6.*mPI**2 + s + t + u)*(-2.*mPI**2 + s + t + u)))/
-                (2.*mPI**2))**2)/
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)) +
-          (3.*mK**2*pi**2*(mPI**2 - u)*
-             (9.*gsff*(18.*gsGG*(-2.*mPI**2 + s + t + u)*vh*vs +
-                  mK**2*(9.*vh + 8.*gsGG*vs)**2) -
-               2.*gsGG*(27.*(2.*mPI**2 - s - t - u)*vh*(3.*vh + 2.*gsGG*vs) +
-                  mK**2*(-81.*vh**2 + 144.*gsGG*vh*vs + 64.*gsGG**2*vs**2)))*
-             log(-(-2.*mK**2 - 2.*mPI**2 + s + t + u -
-                   sqrt((-2.*mPI**2 + s + t + u)*
-                     (-4.*mK**2 - 2.*mPI**2 + s + t + u)))/(2.*mK**2))**2) /
-           ((-2.*mPI**2 + t + u)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)))) / \
+           ((Q**2 - s)**2*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs))))/ \
       (sqrt(2.)*fpi**2*(ms - Q)*(ms + Q)*(9.*vh + 4.*gsGG*vs))
 
 
@@ -270,69 +206,82 @@ def __xx_s_pipig_no_rho_triangle_bub_E(Q, s, t, params):
     ms = params.ms
     vs = params.vs
 
-    return (complex(0., 0.00017146776406035664)*gsxx*pi**2*sqrt(-4.*mx**2 + Q**2)*qe*
-        (1728.*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+    return (complex(0., 0.00017146776406035664)*gsxx*pi**2 *
+            sqrt(-4.*mx**2 + Q**2)*qe *
+            (1728.*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             bubble_loop(0., mK)*bubble_loop(Q, mK) +
+             2304.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             bubble_loop(0., mPI)*bubble_loop(Q, mK) -
+             1296.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t)) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             bubble_loop(Q, mK)**2 - 1728.*mK**2*pi**2*(Q**2 - s) *
+             (mPI**2 + Q**2 - s - t) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             amp_kk_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK)**2 -
+             2304.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             amp_kk_to_kk_bse(Q)*bubble_loop(0., mPI)*bubble_loop(Q, mK)**2 +
+             1296.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t)) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+             amp_kk_to_kk_bse(Q)*bubble_loop(Q, mK)**3 +
+             864.*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                               64.*gsGG**2*vs**2))) *
+             bubble_loop(0., mK)*bubble_loop(Q, mPI) +
+             4608.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t) *
+             (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                       mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                               64.*gsGG**2*vs**2))) *
+             bubble_loop(0., mPI)*bubble_loop(Q, mPI) -
+             216.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t)) *
+             (9.*gsff*(8.*mK**2*(9.*vh + 8.*gsGG*vs)**2 +
+                       3.*(66.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh +
+                                                         8.*gsGG*vs)**2)) -
+              2.*gsGG*(-8.*mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                                  64.*gsGG**2*vs**2) +
+                       3.*(-99.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                           mPI**2*(-81.*vh**2 + 144.*gsGG*vh*vs +
+                                   64.*gsGG**2*vs**2)))) *
+            bubble_loop(Q, mK)*bubble_loop(Q, mPI) -
+            576.*sqrt(3.)*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t) *
+            (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(0., mK)*bubble_loop(Q, mK) +
-          2304.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+                      mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                             64.*gsGG**2*vs**2))) *
+            amp_pipi_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK) *
+            bubble_loop(Q, mPI) - 864.*sqrt(3.)*mK**2*pi**2*(Q**2 - s) *
+            (mPI**2 + Q**2 - s - t) *
+            (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(0., mPI)*bubble_loop(Q, mK) -
-          1296.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t))*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(Q, mK)**2 - 1728.*mK**2*pi**2*(Q**2 - s)*
-           (mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_kk_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK)**2 -
-          2304.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_kk_to_kk_bse(Q)*bubble_loop(0., mPI)*bubble_loop(Q, mK)**2 +
-          1296.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t))*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_kk_to_kk_bse(Q)*bubble_loop(Q, mK)**3 +
-          864.*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(0., mK)*bubble_loop(Q, mPI) +
-          4608.*mPI**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(0., mPI)*bubble_loop(Q, mPI) -
-          216.*pi**2*Q**2*(Q**4 - s*(-2.*mPI**2 + s + 2.*t))*
-           (9.*gsff*(8.*mK**2*(9.*vh + 8.*gsGG*vs)**2 +
-                3.*(66.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2)) -
-             2.*gsGG*(-8.*mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
-                   64.*gsGG**2*vs**2) +
-                3.*(-99.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                   mPI**2*(-81.*vh**2 + 144.*gsGG*vh*vs + 64.*gsGG**2*vs**2))))*
-           bubble_loop(Q, mK)*bubble_loop(Q, mPI) -
-          576.*sqrt(3.)*mK**2*pi**2*(Q**2 - s)*(mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_pipi_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK)*
-           bubble_loop(Q, mPI) - 864.*sqrt(3.)*mK**2*pi**2*(Q**2 - s)*
-           (mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_pipi_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK)*
-           bubble_loop(Q, mPI) - 3072.*sqrt(3.)*mPI**2*pi**2*(Q**2 - s)*
-           (mPI**2 + Q**2 - s - t)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+                      mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                              64.*gsGG**2*vs**2))) *
+            amp_pipi_to_kk_bse(Q)*bubble_loop(0., mK)*bubble_loop(Q, mK) *
+            bubble_loop(Q, mPI) - 3072.*sqrt(3.)*mPI**2*pi**2*(Q**2 - s) *
+            (mPI**2 + Q**2 - s - t) *
+            (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
              2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                 mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
            amp_pipi_to_kk_bse(Q)*bubble_loop(0., mPI)*bubble_loop(Q, mK)*
@@ -691,36 +640,47 @@ def __xx_s_pipig_rho_4_bub_E(Q, s, t, params):
     mx = params.mx
     ms = params.ms
     vs = params.vs
+    mrhoT = params.mrhoT
 
-    return (complex(0., 0.0030864197530864196)*gsxx*gv*sqrt(-4.*mx**2 + Q**2)*qe*s*
-        (mPI**2 + Q**2 - s - t)*(6.*(fv + 2.*gv)*
-           (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           amp_kk_to_kk_bse(Q)*bubble_loop(Q, mK)**2 +
-          3.*(3.*fv + 8.*gv)*(9.*gsff*
-              (18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
-             2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-           bubble_loop(Q, mPI)*(-1. +
-             amp_pipi_to_pipi_bse(Q)*bubble_loop(Q, mPI)) +
-          bubble_loop(Q, mK)*(2.*sqrt(3.)*(3.*fv + 8.*gv)*
+    return (complex(0., 0.0030864197530864196)*gsxx*gv*sqrt(-4.*mx**2 + Q**2) *
+            qe*s *
+            (mPI**2 + Q**2 - s - t) *
+            (6.*(fv + 2.*gv)*(9.*gsff *
+                              (18.*gsGG*Q**2*vh*vs +
+                               mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+                              2.*gsGG*(27.*Q**2*vh*(3.*vh+2.*gsGG*vs) +
+                                       mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                                              64.*gsGG**2*vs**2))) *
+             amp_kk_to_kk_bse(Q)*bubble_loop(Q, mK)**2 +
+             3.*(3.*fv + 8.*gv)*(9.*gsff*(18.*gsGG*Q**2*vh*vs +
+                                          mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+                                 2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                                          mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                                                  64.*gsGG**2*vs**2))) *
+             bubble_loop(Q, mPI)*(-1. + amp_pipi_to_pipi_bse(Q) *
+                                  bubble_loop(Q, mPI)) +
+             bubble_loop(Q, mK) *
+             (2.*sqrt(3.)*(3.*fv + 8.*gv) *
               (9.*gsff*(18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
-                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                   mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
+               2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                        mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                               64.*gsGG**2*vs**2))) *
               amp_pipi_to_kk_bse(Q)*bubble_loop(Q, mPI) -
-             3.*(fv + 2.*gv)*(2.*(9.*gsff*
-                    (18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
+              3.*(fv + 2.*gv) *
+              (2.*(9.*gsff*(18.*gsGG*Q**2*vh*vs +
+                            mK**2*(9.*vh + 8.*gsGG*vs)**2) +
                    2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                      mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2))) -
-                sqrt(3.)*(9.*gsff*(18.*gsGG*Q**2*vh*vs +
-                      mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
-                   2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
-                      mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
-                 amp_pipi_to_kk_bse(Q)*bubble_loop(Q, mPI)))))/ \
-      (sqrt(2.)*fpi**4*mrhoT**2*(ms - Q)*(ms + Q)*
-        (mrho**2 - complex(0., 1.)*mrho*rhowidth - s)*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*
-        (9.*vh + 4.*gsGG*vs))
+                            mK**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                                   64.*gsGG**2*vs**2))) -
+               sqrt(3.)*(9.*gsff*(18.*gsGG*Q**2*vh*vs +
+                                  mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
+                         2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
+                                  mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs -
+                                          64.*gsGG**2*vs**2))) *
+               amp_pipi_to_kk_bse(Q)*bubble_loop(Q, mPI))))) / \
+        (sqrt(2.)*fpi**4*mrhoT**2*(ms - Q)*(ms + Q) *
+         (mrho**2 - complex(0., 1.)*mrho*rho_width - s)*vh *
+         (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs))
 
 
 def __xx_s_pipig_rho_no_bub_E(Q, s, t, params):
@@ -730,65 +690,67 @@ def __xx_s_pipig_rho_no_bub_E(Q, s, t, params):
     mx = params.mx
     ms = params.ms
     vs = params.vs
+    mrhoT = params.mrhoT
 
-    return (complex(0., 0.037037037037037035)*sqrt(2.)*gsxx*gv*sqrt(-4.*mx**2 + Q**2)*qe*s*
+    return (complex(0., 0.037037037037037035)*sqrt(2.)*gsxx*gv *
+            sqrt(-4.*mx**2 + Q**2)*qe*s*
         (mPI**2 + Q**2 - s - t)*((3.*fpi**2*fv*gsGG)/
-           (mrho**2 - complex(0., 1.)*mrho*rhowidth - s) -
+           (mrho**2 - complex(0., 1.)*mrho*rho_width - s) -
           (16.*gv*pi**4*s**2*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              bubble_loop(Q, mK))/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) -
           (32.*gv*pi**4*s**2*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              bubble_loop(Q, mPI))/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) +
           (16.*gv*pi**4*s**2*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              bubble_loop(sqrt(s), mK))/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) +
           (32.*gv*pi**4*s**2*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              bubble_loop(sqrt(s), mPI))/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) +
           (gv*mK**2*pi**2*s*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mK**2 + Q*(-Q + sqrt(-4.*mK**2 + Q**2)))/(2.*mK**2))**2)/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) +
           (2.*gv*mPI**2*pi**2*s*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mPI**2 + Q*(-Q + sqrt(-4.*mPI**2 + Q**2)))/(2.*mPI**2))**2)/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) -
           (gv*mK**2*pi**2*s*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mK**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mK**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mK**2 - s + sqrt(s*(-4.*mK**2 + s)))/(2.*mK**2))**2)/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs)) -
           (2.*gv*mPI**2*pi**2*s*(9.*gsff*
                 (18.*gsGG*Q**2*vh*vs + mPI**2*(9.*vh + 8.*gsGG*vs)**2) +
                2.*gsGG*(27.*Q**2*vh*(3.*vh + 2.*gsGG*vs) +
                   mPI**2*(81.*vh**2 - 144.*gsGG*vh*vs - 64.*gsGG**2*vs**2)))*
              log((2.*mPI**2 - s + sqrt(s*(-4.*mPI**2 + s)))/(2.*mPI**2))**2)/
-           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*
+           ((Q**2 - s)**2*(-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*
              (3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*(9.*vh + 4.*gsGG*vs))))/ \
       (fpi**4*mrhoT**2*(ms - Q)*(ms + Q)*vh)
 
@@ -800,6 +762,7 @@ def __xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
     mx = params.mx
     ms = params.ms
     vs = params.vs
+    mrhoT = params.mrhoT
 
     return (complex(0., 0.0030864197530864196)*gsxx*gv**2*pi**2*sqrt(-4.*mx**2 + Q**2)*qe*s**2*
         (mPI**2 + Q**2 - s - t)*(288.*pi**2*Q**2*s*
@@ -926,7 +889,7 @@ def __xx_s_pipig_rho_triangle_bub_E(Q, s, t, params):
                       4.*mPI**2*log((2.*mPI**2 - s + sqrt(s*(-4.*mPI**2 + s)))/
                           (2.*mPI**2))**2))))))/ \
       (sqrt(2.)*fpi**6*mrhoT**2*(ms - Q)*(ms + Q)*(Q**2 - s)**2*
-        (-mrho**2 + complex(0., 1.)*mrho*rhowidth + s)*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*
+        (-mrho**2 + complex(0., 1.)*mrho*rho_width + s)*vh*(3.*vh + 3.*gsff*vs + 2.*gsGG*vs)*
         (9.*vh + 4.*gsGG*vs))
 
 
