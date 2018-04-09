@@ -73,8 +73,6 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         """
         super(ScalarMediator, self).__init__(mx, ms, gsxx, gsff, gsGG, gsFF)
 
-        self.params = ScalarMediatorParameters(mx, ms, gsxx, gsff, gsGG, gsFF)
-
     def description(self):
         """
         Returns a string giving the details of the model.
@@ -161,7 +159,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         cs : dictionary
             Dictionary of the cross sections of the theory.
         """
-        return cs(cme, self.params)
+        return cs(cme, self)
 
     def branching_fractions(self, cme):
         """
@@ -179,7 +177,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Dictionary of the branching fractions. The keys are 'total',
             'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
-        return bfs(cme, self.params)
+        return bfs(cme, self)
 
     def spectra(self, egams, cme):
         """
@@ -199,7 +197,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
             'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
-        return specs(egams, cme, self.params)
+        return specs(egams, cme, self)
 
     def spectrum_functions(self):
         """
@@ -212,25 +210,25 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         center of mass energy of the process.
         """
         def mumu(eng_gams, cme):
-            return dnde_mumu(eng_gams, cme, self.params)
+            return dnde_mumu(eng_gams, cme, self)
 
         def ee(eng_gams, cme):
-            return dnde_ee(eng_gams, cme, self.params)
+            return dnde_ee(eng_gams, cme, self)
 
         def pi0pi0(eng_gams, cme):
-            return dnde_neutral_pion(eng_gams, cme, self.params)
+            return dnde_neutral_pion(eng_gams, cme, self)
 
         def pipi(eng_gams, cme):
-            return dnde_charged_pion(eng_gams, cme, self.params)
+            return dnde_charged_pion(eng_gams, cme, self)
 
         def pipi_no_fsi(eng_gams, cme):
-            return dnde_charged_pion(eng_gams, cme, self.params, fsi=False)
+            return dnde_charged_pion(eng_gams, cme, self, fsi=False)
 
         def k0k0(eng_gams, cme):
-            return dnde_neutral_kaon(eng_gams, cme, self.params)
+            return dnde_neutral_kaon(eng_gams, cme, self)
 
         def kk(eng_gams, cme):
-            return dnde_charged_kaon(eng_gams, cme, self.params)
+            return dnde_charged_kaon(eng_gams, cme, self)
 
         return {'mu mu': mumu,
                 'e e': ee,
@@ -254,4 +252,4 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             'pi pi', 'x x' and 'f f'. The total decay width has the key
             'total'.
         """
-        return pws(self.params)
+        return pws(self)
