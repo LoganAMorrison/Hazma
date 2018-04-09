@@ -147,7 +147,7 @@ def test_loop_matrix():
 # ###########################################
 
 
-def test_amp_pipi_to_pipi_iam(cmes):
+def test_amp_pipi_to_pipi_iam():
     ell = 0
     iso = 0
     su = 3
