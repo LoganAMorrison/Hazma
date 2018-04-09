@@ -2,11 +2,11 @@ from ..theory import Theory
 
 from .pseudo_scalar_mediator_parameters import PseudoScalarMediatorParameters
 
-from pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
-from pseudo_scalar_mediator_cross_sections import cross_sections as cs
+from .pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
+from .pseudo_scalar_mediator_cross_sections import cross_sections as cs
 
-from scalar_mediator_spectra import dnde_mumu, dnde_ee
-from scalar_mediator_spectra import spectra as specs
+from .pseudo_scalar_mediator_spectra import dnde_mumu, dnde_ee
+from .pseudo_scalar_mediator_spectra import spectra as specs
 
 import warnings
 from hazma_errors import PreAlphaWarning
