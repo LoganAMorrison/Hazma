@@ -67,8 +67,8 @@ def spectra(egams, cme, params):
     # muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
     # electrons = bfs['e e'] * dnde_ee(egams, cme, params)
 
-    muons = dnde_mumu(egams, cme, mmu, params)
-    electrons = dnde_ee(egams, cme, me, params)
+    muons = dnde_mumu(egams, cme, params)
+    electrons = dnde_ee(egams, cme, params)
 
     # Compute total spectrum
     total = muons + electrons
