@@ -1,4 +1,5 @@
-[![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma/tree/master.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma/tree/master)
+.. image:: https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg
+    :target: https://circleci.com/gh/LoganAMorrison/Hazma
 
 # Hazma
 Gamma ray spectrum generator for light standard model particles.
