@@ -47,7 +47,7 @@ def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
 
     e, m, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
 
-    if 4. * mPI**2 <= s <= Q**2:
+    if 4. * mPI**2 < s < Q**2:
         ret_val = (alpha_em *
                    (2 * (-1 + 4 * m**2) *
                     sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
@@ -130,8 +130,8 @@ def __msqrd_xx_to_s_to_pipig(Q, s, t, params):
 
     ret_val = 0.0
 
-    if 4. * mPI**2 <= s <= Q**2:
-        if t_lim1(s, 0.0, mPI, mPI, Q) <= t <= t_lim2(s, 0.0, mPI, mPI, Q):
+    if 4. * mPI**2 < s < Q**2:
+        if t_lim1(s, 0.0, mPI, mPI, Q) < t < t_lim2(s, 0.0, mPI, mPI, Q):
 
             u = Q**2 + 2. * mPI**2 - s - t
 
@@ -148,6 +148,7 @@ def __msqrd_xx_to_s_to_pipig(Q, s, t, params):
     if ret_val <= 0.0:
         msg = ""
         warnings.warn(msg, NegativeSquaredMatrixElementWarning)
+        ret_val = 0.0
 
     return ret_val
 
@@ -160,7 +161,7 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
 
     ret_val = 0.0
 
-    if Q >= 2. * mPI and 4. * mPI**2 <= s <= Q**2:
+    if 2. * mPI < Q and 4. * mPI**2 <= s <= Q**2:
 
         s = E1_to_s(eng_gam, 0., Q)
 
@@ -212,6 +213,75 @@ def dnde_xx_to_s_to_pipig(eng_gams, Q, params):
 # #########################
 """ NO FSI CALCULATIONS """
 # #########################
+
+
+def msqrd_xx_s_pipig_no_FSI(Q, s, t, params):
+    """Compute matrix element squared for xbar x -> s^* -> pi+ pi- g.
+
+    Notes
+    -----
+    The matrix element for this process, M, is related to the form factor
+    by |M|^2. = s Re[E(s,t,u) E^*(s,u,t)] - m_PI^2.
+        |E(s,t,u) + E(s,u,t)|^2.
+    """
+    gsxx = params.gsxx
+    gsGG = params.gsGG
+    gsff = params.gsff
+    mx = params.mx
+    ms = params.ms
+    vs = params.vs
+    mrhoT = sqrt(mrho**2 - 2. * gsGG * vs / 9. / vh)
+
+    ret_val = 0.0
+
+    if 4. * mPI**2 < s < Q**2:
+        if t_lim1(s, 0.0, mPI, mPI, Q) < t < t_lim2(s, 0.0, mPI, mPI, Q):
+
+            def __xx_s_pipig_no_FSI_E(Q, s, t):
+                return (complex(0., 0.012345679012345678) * gsxx *
+                        sqrt(-4. * mx**2 + Q**2) * qe *
+                        ((fv * gsGG * gv * s * (-Q**2 + s) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+                          vh**2) -
+                         (fv * gsGG * gv * s * (mPI**2 - t) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
+                          vh**2) -
+                         (4. * fv * gsGG * gv *
+                          (mPI**2 + Q**2 - s - t) *
+                            (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 * vh**2) +
+                         (fv * gsGG * gv * s * (-mPI**2 - Q**2 + s + t) *
+                          (9. * vh + 2. * gsGG * vs)) /
+                         (fpi**2 * mrhoT**2 *
+                          (mrho**2 - complex(0., 1.) *
+                           mrho * rho_width - s) * vh**2) -
+                         (324. * gsGG) / (9. * vh + 4. * gsGG * vs) -
+                         (complex(0., 162.) *
+                            ((complex(0., 2.) * gsGG * (mPI**2 - Q**2 + t)) /
+                             (9. * vh + 4. * gsGG * vs) -
+                             (complex(0., 0.037037037037037035) * mPI**2 *
+                                (54. * gsGG * vh - 32. * gsGG**2 *
+                                 vs + 9. * gsff *
+                                 (9. * vh + 16. * gsGG * vs))) /
+                             (vh * (3. * vh + 3. * gsff * vs +
+                                    2. * gsGG * vs)))) /
+                         (-mPI**2 + t))) / (sqrt(2.) * (-ms**2 + Q**2))
+
+            u = Q**2 + 2. * mPI**2 - s - t
+
+            E_t = __xx_s_pipig_no_FSI_E(Q, s, t)
+            E_u = __xx_s_pipig_no_FSI_E(Q, s, u)
+
+            ret_val = s * (E_t * E_u.conjugate()).real - \
+                mPI**2 * abs(E_t + E_u)**2
+
+    assert ret_val >= 0.0
+
+    return ret_val
 
 
 def __dnde_xx_to_s_to_pipig_no_fsi(eng_gam, Q, params):
@@ -1514,77 +1584,3 @@ def xx_s_pipig_E(Q, s, t, params):
         xx_s_pipig_rho_4_bub_E(Q, s, t, params) + \
         xx_s_pipig_rho_no_bub_E(Q, s, t, params) + \
         xx_s_pipig_rho_triangle_bub_E(Q, s, t, params)
-
-
-# #############################
-""" NO FSI HELPER FUNCTIONS """
-# #############################
-
-
-def msqrd_xx_s_pipig_no_FSI(Q, s, t, params):
-    """Compute matrix element squared for xbar x -> s^* -> pi+ pi- g.
-
-    Notes
-    -----
-    The matrix element for this process, M, is related to the form factor
-    by |M|^2. = s Re[E(s,t,u) E^*(s,u,t)] - m_PI^2.
-        |E(s,t,u) + E(s,u,t)|^2.
-    """
-    gsxx = params.gsxx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    mx = params.mx
-    ms = params.ms
-    vs = params.vs
-    mrhoT = sqrt(mrho**2 - 2. * gsGG * vs / 9. / vh)
-
-    ret_val = 0.0
-
-    if 4. * mPI**2 <= s <= Q**2:
-        if t_lim1(s, 0.0, mPI, mPI, Q) <= t <= t_lim2(s, 0.0, mPI, mPI, Q):
-
-            def __xx_s_pipig_no_FSI_E(Q, s, t):
-                return (complex(0., 0.012345679012345678) * gsxx *
-                        sqrt(-4. * mx**2 + Q**2) * qe *
-                        ((fv * gsGG * gv * s * (-Q**2 + s) *
-                          (9. * vh + 2. * gsGG * vs)) /
-                         (fpi**2 * mrhoT**2 *
-                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
-                          vh**2) -
-                         (fv * gsGG * gv * s * (mPI**2 - t) *
-                          (9. * vh + 2. * gsGG * vs)) /
-                         (fpi**2 * mrhoT**2 *
-                          (mrho**2 - complex(0., 1.) * mrho * rho_width - s) *
-                          vh**2) -
-                         (4. * fv * gsGG * gv *
-                          (mPI**2 + Q**2 - s - t) *
-                            (9. * vh + 2. * gsGG * vs)) /
-                         (fpi**2 * mrhoT**2 * vh**2) +
-                         (fv * gsGG * gv * s * (-mPI**2 - Q**2 + s + t) *
-                          (9. * vh + 2. * gsGG * vs)) /
-                         (fpi**2 * mrhoT**2 *
-                          (mrho**2 - complex(0., 1.) *
-                           mrho * rho_width - s) * vh**2) -
-                         (324. * gsGG) / (9. * vh + 4. * gsGG * vs) -
-                         (complex(0., 162.) *
-                            ((complex(0., 2.) * gsGG * (mPI**2 - Q**2 + t)) /
-                             (9. * vh + 4. * gsGG * vs) -
-                             (complex(0., 0.037037037037037035) * mPI**2 *
-                                (54. * gsGG * vh - 32. * gsGG**2 *
-                                 vs + 9. * gsff *
-                                 (9. * vh + 16. * gsGG * vs))) /
-                             (vh * (3. * vh + 3. * gsff * vs +
-                                    2. * gsGG * vs)))) /
-                         (-mPI**2 + t))) / (sqrt(2.) * (-ms**2 + Q**2))
-
-            u = Q**2 + 2. * mPI**2 - s - t
-
-            E_t = __xx_s_pipig_no_FSI_E(Q, s, t)
-            E_u = __xx_s_pipig_no_FSI_E(Q, s, u)
-
-            ret_val = s * (E_t * E_u.conjugate()).real - \
-                mPI**2 * abs(E_t + E_u)**2
-
-    assert ret_val >= 0.0
-
-    return ret_val

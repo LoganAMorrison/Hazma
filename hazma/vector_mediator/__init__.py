@@ -9,7 +9,7 @@ from vector_mediator_spectra import spectra as specs
 from vector_mediator_spectra import dnde_mumu, dnde_ee
 
 import warnings
-from hazma_errors import PreAlphaWarning
+from ..hazma_errors import PreAlphaWarning
 
 
 class VectorMediator(Theory, VectorMediatorParameters):

@@ -9,7 +9,7 @@ from .pseudo_scalar_mediator_spectra import dnde_mumu, dnde_ee
 from .pseudo_scalar_mediator_spectra import spectra as specs
 
 import warnings
-from hazma_errors import PreAlphaWarning
+from ..hazma_errors import PreAlphaWarning
 
 
 class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):

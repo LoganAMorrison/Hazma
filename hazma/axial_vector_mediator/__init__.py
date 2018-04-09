@@ -3,7 +3,7 @@ from ..theory import Theory
 from .axial_vector_mediator_parameters import AxialVectorMediatorParameters
 
 import warnings
-from hazma_errors import PreAlphaWarning
+from ..hazma_errors import PreAlphaWarning
 
 
 class AxialVectorMediator(Theory, AxialVectorMediatorParameters):
