@@ -29,7 +29,6 @@ from ..hazma_errors import NegativeSquaredMatrixElementWarning
 from .scalar_mediator_chrg_pi_amps import msqrd_xx_s_pipig
 
 
-
 def __msqrd_xx_s_ffg(Q, s, t, mf, params):
     gsxx = params.gsxx
     gsff = params.gsff
