@@ -25,6 +25,8 @@ from ..unitarization.loops import bubble_loop
 
 from ..hazma_errors import NegativeSquaredMatrixElementWarning
 
+# from .chrg_pi import c_dnde_xx_to_s_to_pipig
+
 
 def __msqrd_xx_s_ffg(Q, s, t, mf, params):
     gsxx = params.gsxx
@@ -166,6 +168,7 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
         s = E1_to_s(eng_gam, 0., Q)
 
         def mat_elem_sqrd(t):
+            # return __msqrd_xx_to_s_to_pipig(Q, s, t, params)
             return __msqrd_xx_to_s_to_pipig(Q, s, t, params)
 
         prefactor1 = phase_space_prefactor(Q)

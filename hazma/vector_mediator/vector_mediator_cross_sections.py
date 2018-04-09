@@ -40,16 +40,17 @@ def cross_sections(Q, params):
     cs : float
         Total cross section.
     """
-    muon_contr = sigma_xx_to_v_to_ff(Q, mmu, params)
-    electron_contr = sigma_xx_to_v_to_ff(Q, me, params)
+    # muon_contr = sigma_xx_to_v_to_ff(Q, mmu, params)
+    # electron_contr = sigma_xx_to_v_to_ff(Q, me, params)
 
-    total = muon_contr + electron_contr
+    # total = muon_contr + electron_contr
 
-    cross_secs = {'mu mu': muon_contr,
-                  'e e': electron_contr,
-                  'total': total}
+    # cross_secs = {'mu mu': muon_contr,
+    #              'e e': electron_contr,
+    #              'total': total}
 
-    return cross_secs
+    # return cross_secs
+    pass
 
 
 def branching_fractions(Q, params):
@@ -68,9 +69,10 @@ def branching_fractions(Q, params):
         Dictionary of the branching fractions. The keys are 'total',
         'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
     """
-    CSs = cross_sections(Q, params)
+    # CSs = cross_sections(Q, params)
 
-    bfs = {'mu mu': CSs['mu mu'] / CSs['total'],
-           'e e': CSs['e e'] / CSs['total']}
+    # bfs = {'mu mu': CSs['mu mu'] / CSs['total'],
+    #        'e e': CSs['e e'] / CSs['total']}
 
-    return bfs
+    # return bfs
+    pass

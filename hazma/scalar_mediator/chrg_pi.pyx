@@ -12,6 +12,15 @@ from ..unitarization.bethe_salpeter import amp_pipi_to_kk_bse
 from ..unitarization.bethe_salpeter import amp_pipi_to_pipi_bse
 from ..unitarization.loops import bubble_loop
 
+from ..field_theory_helper_functions.three_body_phase_space import E1_to_s
+from ..field_theory_helper_functions.three_body_phase_space import t_integral
+from ..field_theory_helper_functions.common_functions import \
+    cross_section_prefactor
+from ..field_theory_helper_functions.three_body_phase_space import \
+    phase_space_prefactor, t_lim1, t_lim2
+
+from .scalar_mediator_cross_sections import sigma_xx_to_s_to_pipi
+
 cdef xx_s_pipig_no_rho_5_bub_E(double Q, double s, double t, params):
     cdef double gsxx = params.gsxx
     cdef double gsGG = params.gsGG
@@ -1268,3 +1277,79 @@ cdef xx_s_pipig_E(double Q, double s, double t, params):
         xx_s_pipig_rho_4_bub_E(Q, s, t, params) + \
         xx_s_pipig_rho_no_bub_E(Q, s, t, params) + \
         xx_s_pipig_rho_triangle_bub_E(Q, s, t, params)
+
+
+cdef msqrd_xx_to_s_to_pipig(double Q, double s, double t, params):
+    """
+    Returns the squared matrix element for two fermions annihilating
+    into two charged pions and a photon.
+
+    Parameters
+    ----------
+    Q : double
+        Center of mass energy, or sqrt((ppip + ppim + pg)^2).
+    s : double
+        Mandelstam variable associated with the photon, defined as
+        (P-pg)^2, where P = ppip + ppim + pg.
+    t : double
+        Mandelstam variable associated with the charged pion, defined as
+        (P-ppip)^2, where P = ppip + ppim + pg.
+    params: namedtuple
+        Namedtuple of the model parameters.
+
+    Returns
+    -------
+    Returns matrix element squared for
+    :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma`.
+
+    Notes
+    -----
+    The matrix element for this process, M, is related to the
+    form factor by |M|^2. = s Re[E(s,t,u) E^*(s,u,t)] - m_PI^2.
+    |E(s,t,u) + E(s,u,t)|^2.
+    """
+
+    cdef double ret_val = 0.0
+    cdef double u = 0.0
+
+    if 4. * mPI**2 < s < Q**2:
+        if t_lim1(s, 0.0, mPI, mPI, Q) < t < t_lim2(s, 0.0, mPI, mPI, Q):
+
+            u = Q**2 + 2. * mPI**2 - s - t
+
+            E_t = xx_s_pipig_E(Q, s, t, params)
+            E_u = xx_s_pipig_E(Q, s, u, params)
+
+            ret_val = s * (E_t * E_u.conjugate()).real - \
+                mPI**2 * abs(E_t + E_u)**2
+
+    return ret_val
+
+
+def c_dnde_xx_to_s_to_pipig(eng_gam, Q, params):
+    """Unvectorized dnde_xx_to_s_to_pipig"""
+    cdef double mx = params.mx
+
+    cdef double s = Q**2 - 2. * Q * eng_gam
+
+    cdef double ret_val = 0.0
+
+    if 2. * mPI < Q and 4. * mPI**2 <= s <= Q**2:
+
+        s = E1_to_s(eng_gam, 0., Q)
+
+        mat_elem_sqrd = lambda t: msqrd_xx_to_s_to_pipig(Q, s, t, params)
+
+        prefactor1 = phase_space_prefactor(Q)
+        prefactor2 = 2. * Q / sigma_xx_to_s_to_pipi(Q, params)
+        prefactor3 = cross_section_prefactor(mx, mx, Q)
+
+        prefactor = prefactor1 * prefactor2 * prefactor3
+
+        int_val, _ = t_integral(s, 0., mPI, mPI, Q, mat_elem_sqrd)
+
+        ret_val = prefactor * int_val
+
+    assert ret_val >= 0.
+
+    return ret_val

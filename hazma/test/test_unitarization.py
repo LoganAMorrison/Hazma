@@ -155,7 +155,7 @@ def test_amp_pipi_to_pipi_iam():
     cmes = 1500.
     amp_pipi_to_pipi_iam(cmes, ell=ell, iso=iso, su=su)
 
-    cmes = np.linspace(2. * mPI, 2000.)
+    cmes = np.linspace(2.5 * mPI, 2000.)
     amp_pipi_to_pipi_iam(cmes, ell=ell, iso=iso, su=su)
 
 
@@ -165,9 +165,9 @@ def test_msqrd_inverse_amplitude_pipi_to_pipi():
     su = 3
 
     cmes = 1500.
-    msqrd_inverse_amplitude_pipi_to_pipi(cmes, ell=ell, iso=iso, su=su)
+    msqrd_inverse_amplitude_pipi_to_pipi(cmes, ell=0, iso=0, su=3)
 
-    cmes = np.linspace(2. * mPI, 2000.)
+    cmes = np.linspace(2.5 * mPI, 2000.)
     msqrd_inverse_amplitude_pipi_to_pipi(cmes, ell=ell, iso=iso, su=su)
 
 
@@ -180,7 +180,7 @@ def test_amp_kk_to_kk_bse():
     cmes = 1500.
     amp_kk_to_kk_bse(cmes, q_max=Q_MAX)
 
-    cmes = np.linspace(2. * mK, 2000.)
+    cmes = np.linspace(2.5 * mK, 2000.)
     amp_kk_to_kk_bse(cmes, q_max=Q_MAX)
 
 
@@ -188,7 +188,7 @@ def test_amp_pipi_to_kk_bse():
     cmes = 1500.
     amp_pipi_to_kk_bse(cmes, q_max=Q_MAX)
 
-    cmes = np.linspace(2. * mK, 2000.)
+    cmes = np.linspace(2.5 * mK, 2000.)
     amp_pipi_to_kk_bse(cmes, q_max=Q_MAX)
 
 
@@ -196,12 +196,12 @@ def test_amp_pipi_to_pipi_bse():
     cmes = 1500.
     amp_pipi_to_pipi_bse(cmes, q_max=Q_MAX)
 
-    cmes = np.linspace(2. * mPI, 2000.)
+    cmes = np.linspace(2.5 * mPI, 2000.)
     amp_pipi_to_pipi_bse(cmes, q_max=Q_MAX)
 
 
 def test_phase_shift():
-    cmes = np.linspace(2 * mPI * (1.001), 1300., dtype=complex)
+    cmes = np.linspace(2.5 * mPI, 1300., dtype=complex)
     ss = cmes**2
 
     t0sLO = partial_wave_pipi_to_pipi_LO_I(ss, 0, 0)
@@ -220,7 +220,7 @@ def test_phase_shift():
 
 
 def test_fix_phases():
-    cmes = np.linspace(2 * mPI * (1.001), 1300., dtype=complex)
+    cmes = np.linspace(2.5 * mPI, 1300., dtype=complex)
     ss = cmes**2
 
     t0sLO = partial_wave_pipi_to_pipi_LO_I(ss, 0, 0)

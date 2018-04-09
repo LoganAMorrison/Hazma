@@ -8,6 +8,7 @@ hdhf = "hazma/decay_helper_functions"
 hgrhf = "hazma/gamma_ray_helper_functions"
 hpshf = "hazma/phase_space_helper_functions"
 hfthf = "hazma/field_theory_helper_functions"
+# hsm = "hazma/scalar_mediator"
 
 packs = ["hazma",
          "hazma.axial_vector_mediator",
@@ -26,8 +27,10 @@ phase_ext = Extension("*", sources=[hpshf + "/*.pyx"],
                       extra_compile_args=['-g', '-std=c++11'],
                       language="c++")
 field_theory_ext = Extension("*", sources=[hfthf + "/*.pyx"])
+# scalar_med_ext = Extension("*", sources=[hsm + "/*.pyx"])
 
-extensions = [decay_ext, gamma_ext, phase_ext, field_theory_ext]
+extensions = [decay_ext, gamma_ext, phase_ext,
+              field_theory_ext]
 
 setup(name='hazma',
       version='1.1',

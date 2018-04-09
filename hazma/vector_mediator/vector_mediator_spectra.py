@@ -61,11 +61,14 @@ def spectra(egams, cme, params):
     """
 
     # Compute branching fractions
-    bfs = branching_fractions(cme, params)
+    # bfs = branching_fractions(cme, params)
 
     # Leptons
-    muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
-    electrons = bfs['e e'] * dnde_ee(egams, cme, params)
+    # muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
+    # electrons = bfs['e e'] * dnde_ee(egams, cme, params)
+
+    muons = dnde_mumu(egams, cme, params)
+    electrons = dnde_ee(egams, cme, params)
 
     # Compute total spectrum
     total = muons + electrons
