@@ -86,6 +86,7 @@ def dnde_xx_to_p_to_ffg(egam, Q, mf, params):
         Spectrum value dNdE from pseudo-scalar mediator.
     """
     if hasattr(egam, '__len__'):
-        return np.array([__dnde_xx_to_p_to_ffg(e, Q, mf) for e in egam])
+        return np.array([__dnde_xx_to_p_to_ffg(e, Q, mf, params)
+                         for e in egam])
     else:
-        return __dnde_xx_to_p_to_ffg(egam, Q, mf)
+        return __dnde_xx_to_p_to_ffg(egam, Q, mf, params)
