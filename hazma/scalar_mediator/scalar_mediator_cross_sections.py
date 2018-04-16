@@ -49,7 +49,7 @@ def sigma_xx_to_s_to_etaeta(Q, params):
 
     s = Q**2
 
-    if -2 * meta + abs(sqrt(s)) <= 0:
+    if Q <= 2 * meta or Q < 2. * mx:
         return 0.0
 
     sigma = (gsxx**2 * sqrt(-4 * meta**2 + s) *
@@ -90,7 +90,7 @@ def sigma_xx_to_s_to_ff(Q, mf, params):
 
     s = Q**2
 
-    if -2 * mf + abs(sqrt(s)) <= 0:
+    if Q <= 2 * mf or Q < 2. * mx:
         return 0.0
 
     sigma = (gsff**2 * gsxx**2 * mf**2 * (-4 * mf**2 + s)**1.5 *
@@ -123,7 +123,7 @@ def sigma_xx_to_s_to_gg(Q, params):
 
     s = Q**2
 
-    if -4 * mx**2 + s < 0:
+    if Q < 2. * mx:
         return 0.0
 
     sigma = (alpha_em**2 * gsFF**2 * gsxx**2 * s**1.5 *
@@ -152,7 +152,7 @@ def sigma_xx_to_s_to_k0k0(Q, params, unit='BSE'):
     ms = params.ms
     mx = params.mx
 
-    if Q < 2 * mk0:
+    if Q < 2. * mk0 or Q < 2. * mx:
         return 0.0
 
     s = Q**2
@@ -188,7 +188,7 @@ def sigma_xx_to_s_to_kk(Q, params, unit='BSE'):
     ms = params.ms
     mx = params.mx
 
-    if Q < 2 * mk:
+    if Q < 2. * mk or Q < 2. * mx:
         return 0.0
 
     s = Q**2
@@ -223,7 +223,7 @@ def sigma_xx_to_s_to_pi0pi0(Q, params, unit="BSE"):
     ms = params.ms
     mx = params.mx
 
-    if Q < 2 * mpi0:
+    if Q < 2. * mpi0 or Q < 2. * mx:
         return 0.0
 
     s = Q**2
@@ -258,7 +258,7 @@ def sigma_xx_to_s_to_pipi(Q, params, unit="BSE"):
     ms = params.ms
     mx = params.mx
 
-    if Q < 2. * mpi:
+    if Q < 2. * mpi or Q < 2. * mx:
         return 0.0
 
     s = Q**2
@@ -333,13 +333,21 @@ def branching_fractions(Q, params):
     """
     CSs = cross_sections(Q, params)
 
-    bfs = {'eta eta': CSs['eta eta'] / CSs['total'],
-           'mu mu': CSs['mu mu'] / CSs['total'],
-           'e e': CSs['e e'] / CSs['total'],
-           'g g': CSs['g g'] / CSs['total'],
-           'k0 k0': CSs['k0 k0'] / CSs['total'],
-           'k k': CSs['k k'] / CSs['total'],
-           'pi0 pi0': CSs['pi0 pi0'] / CSs['total'],
-           'pi pi': CSs['pi pi'] / CSs['total']}
-
-    return bfs
+    if CSs['total'] == 0.0:
+        return {'eta eta': 0.0,
+                'mu mu': 0.0,
+                'e e': 0.0,
+                'g g': 0.0,
+                'k0 k0': 0.0,
+                'k k': 0.0,
+                'pi0 pi0': 0.0,
+                'pi pi': 0.0}
+    else:
+        return {'eta eta': CSs['eta eta'] / CSs['total'],
+                'mu mu': CSs['mu mu'] / CSs['total'],
+                'e e': CSs['e e'] / CSs['total'],
+                'g g': CSs['g g'] / CSs['total'],
+                'k0 k0': CSs['k0 k0'] / CSs['total'],
+                'k k': CSs['k k'] / CSs['total'],
+                'pi0 pi0': CSs['pi0 pi0'] / CSs['total'],
+                'pi pi': CSs['pi pi'] / CSs['total']}
