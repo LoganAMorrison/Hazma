@@ -108,7 +108,7 @@ def dnde_charged_kaon(egams, cme, params, type='All'):
                          'Decay'".format(type))
 
 
-def spectra(egams, cme, params):
+def spectra(egams, cme, params, fsi=True):
     """
     Compute the total spectrum from two fermions annihilating through a
     scalar mediator to mesons and leptons.
@@ -132,7 +132,7 @@ def spectra(egams, cme, params):
 
     # Pions
     npions = bfs['pi0 pi0'] * dnde_neutral_pion(egams, cme, params)
-    cpions = bfs['pi pi'] * dnde_charged_pion(egams, cme, params)
+    cpions = bfs['pi pi'] * dnde_charged_pion(egams, cme, params, fsi=fsi)
 
     # Leptons
     muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
