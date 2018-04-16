@@ -1,3 +1,4 @@
 docs/source/_theme
 *.DS_Store
 *.ipynb_checkpoints
+*.ipynb
