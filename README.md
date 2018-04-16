@@ -1,4 +1,5 @@
-![alt text][logo]
+![Logo](docs/source/_images/hazma_logo.png)
+Icon made by Freepik from www.flaticon.com
 
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
 
@@ -8,6 +9,3 @@
 Gamma ray spectrum generator for light standard model particles.
 
 For more information, visit https://loganamorrison.github.io/Hazma/
-
-
-[logo]: https://github.com/LoganAMorrison/Hazma/tree/master/docs/source/_images/hazma_logo.png
