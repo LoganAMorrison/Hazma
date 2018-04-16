@@ -54,11 +54,14 @@ def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
 def dnde_charged_pion(egams, cme, params, spectrum_type='All', fsi=True):
     if spectrum_type == 'All':
         cpi_decay = 2. * charged_pion(egams, cme / 2.0)
-        if fsi is True:
-            cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
-        if fsi is False:
-            cpi_fsr = dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
-        return 2. * cpi_decay + cpi_fsr
+
+        ### TODO: uncomment when done debugging
+        # if fsi is True:
+        #     cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
+        # if fsi is False:
+        #     cpi_fsr = dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
+
+        return cpi_decay# + cpi_fsr
     if spectrum_type == 'FSR':
         if fsi is True:
             return dnde_xx_to_s_to_pipig(egams, cme, params)
