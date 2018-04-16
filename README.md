@@ -1,5 +1,5 @@
 ![Logo](docs/source/_images/hazma_logo.png)
-Icon made by Freepik from www.flaticon.com
+Icon made by Freepik from www.flaticon.com (Logo designed by David Reiman)
 
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
 
