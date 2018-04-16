@@ -50,7 +50,9 @@ def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
 
     e, m, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
 
-    if 4. * mPI**2 < s < Q**2:
+    mx = params.mx
+
+    if 2. * mPI < Q and 4. * mf**2 < s < Q**2 and 2. * mx < Q:
         ret_val = (alpha_em *
                    (2 * (-1 + 4 * m**2) *
                     sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
@@ -133,7 +135,9 @@ def __msqrd_xx_to_s_to_pipig(Q, s, t, params):
 
     ret_val = 0.0
 
-    if 4. * mPI**2 < s < Q**2:
+    mx = params.mx
+
+    if 2. * mPI < Q and 4. * mPI**2 < s < Q**2 and 2. * mx < Q:
         if t_lim1(s, 0.0, mPI, mPI, Q) < t < t_lim2(s, 0.0, mPI, mPI, Q):
 
             u = Q**2 + 2. * mPI**2 - s - t
@@ -164,7 +168,7 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
 
     ret_val = 0.0
 
-    if 2. * mPI < Q and 4. * mPI**2 <= s <= Q**2:
+    if 2. * mPI < Q and 4. * mPI**2 <= s <= Q**2 and 2. * mx < Q:
 
         s = E1_to_s(eng_gam, 0., Q)
 
@@ -238,7 +242,7 @@ def msqrd_xx_s_pipig_no_FSI(Q, s, t, params):
 
     ret_val = 0.0
 
-    if 4. * mPI**2 < s < Q**2:
+    if 2. * mPI < Q and 4. * mPI**2 < s < Q**2 and 2. * mx < Q:
         if t_lim1(s, 0.0, mPI, mPI, Q) < t < t_lim2(s, 0.0, mPI, mPI, Q):
 
             def __xx_s_pipig_no_FSI_E(Q, s, t):
