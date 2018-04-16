@@ -1,6 +1,7 @@
-from gamma_ray_limit_parameters import (eASTROGAM_params, dSph_params)
-from gamma_ray_limits import compute_limit
-from parameters import neutral_pion_mass as mpi0
+from .gamma_ray_limits.gamma_ray_limit_parameters import (eASTROGAM_params,
+                                                          dSph_params)
+from .gamma_ray_limits.compute_limits import compute_limit
+from .parameters import neutral_pion_mass as mpi0
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -49,7 +50,7 @@ class Theory(object):
             Boundaries of energy window
         """
         if self.mx < mpi0:
-            e_gam_min = 0.5
+            e_gam_min = 5.
         else:
             e_gam_min = mpi0 / 2.
 
@@ -119,3 +120,18 @@ class Theory(object):
         return compute_limit(dN_dE_DM, self.mx, e_gam_min, e_gam_max,
                              n_sigma=n_sigma, exp_params=exp_params,
                              target_params=target_params)
+
+    def compute_limits(self, mxs, n_sigma=5., exp_params=eASTROGAM_params,
+                       target_params=dSph_params):
+        """Computes gamma ray constraints over a range of DM masses.
+
+        See documentation for :func:`compute_limit`.
+        """
+        limits = []
+
+        for mx in mxs:
+            self.mx = mx
+            limits.append(self.compute_limit(n_sigma, exp_params,
+                                             target_params))
+
+        return np.array(limits)
