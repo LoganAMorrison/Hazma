@@ -52,7 +52,7 @@ def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
 
     mx = params.mx
 
-    if 2. * mPI < Q and 4. * mf**2 < s < Q**2 and 2. * mx < Q:
+    if 2. * mf < Q and 4. * mf**2 < s < Q**2 and 2. * mx < Q:
         ret_val = (alpha_em *
                    (2 * (-1 + 4 * m**2) *
                     sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
