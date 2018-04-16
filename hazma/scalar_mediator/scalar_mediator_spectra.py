@@ -13,99 +13,88 @@ from .scalar_mediator_fsr import dnde_xx_to_s_to_pipig_no_fsi
 from .scalar_mediator_cross_sections import branching_fractions
 
 
-def dnde_ee(egams, cme, params, type='All'):
-    fsr = np.vectorize(dnde_xx_to_s_to_ffg)
-
-    if type == 'All':
-        return fsr(egams, cme / 2., me, params)
-    if type == 'FSR':
-        return fsr(egams, cme / 2., me, params)
-    if type == 'Decay':
-        return np.arrary([0.0 for _ in range(len(egams))])
+def dnde_ee(egams, cme, params, spectrum_type='All'):
+    if spectrum_type == 'All':
+        return dnde_xx_to_s_to_ffg(egams, cme, me, params)
+    if spectrum_type == 'FSR':
+        return dnde_xx_to_s_to_ffg(egams, cme, me, params)
+    if spectrum_type == 'Decay':
+        return np.array([0.0 for _ in range(len(egams))])
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
-def dnde_mumu(egams, cme, params, type='All'):
-    fsr = np.vectorize(dnde_xx_to_s_to_ffg)
-    decay = np.vectorize(muon)
-
-    if type == 'All':
-        mu_decay = decay(egams, cme / 2.0)
-        mu_fsr = fsr(egams, cme / 2., mmu, params)
+def dnde_mumu(egams, cme, params, spectrum_type='All'):
+    if spectrum_type == 'All':
+        mu_decay = 2. * muon(egams, cme / 2.0)
+        mu_fsr = dnde_xx_to_s_to_ffg(egams, cme, mmu, params)
         return 2. * mu_decay + mu_fsr
-    if type == 'FSR':
-        return fsr(egams, cme / 2., mmu, params)
-    if type == 'Decay':
-        return 2. * decay(egams, cme / 2.0)
+    if spectrum_type == 'FSR':
+        return dnde_xx_to_s_to_ffg(egams, cme, mmu, params)
+    if spectrum_type == 'Decay':
+        return 2. * muon(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
-def dnde_neutral_pion(egams, cme, params, type='All'):
-    decay = np.vectorize(neutral_pion)
-
-    if type == 'All':
-        return 2.0 * decay(egams, cme / 2.0)
-    if type == 'FSR':
-        return np.arrary([0.0 for _ in range(len(egams))])
-    if type == 'Decay':
-        return 2.0 * decay(egams, cme / 2.0)
+def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
+    if spectrum_type == 'All':
+        return 2.0 * neutral_pion(egams, cme / 2.0)
+    if spectrum_type == 'FSR':
+        return np.array([0.0 for _ in range(len(egams))])
+    if spectrum_type == 'Decay':
+        return 2.0 * neutral_pion(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
-def dnde_charged_pion(egams, cme, params, type='All', fsi=True):
-
-    if type == 'All':
-        cpi_decay = charged_pion(egams, cme / 2.0)
+def dnde_charged_pion(egams, cme, params, spectrum_type='All', fsi=True):
+    if spectrum_type == 'All':
+        cpi_decay = 2. * charged_pion(egams, cme / 2.0)
         if fsi is True:
             cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
         if fsi is False:
             cpi_fsr = dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
         return 2. * cpi_decay + cpi_fsr
-    if type == 'FSR':
+    if spectrum_type == 'FSR':
         if fsi is True:
             return dnde_xx_to_s_to_pipig(egams, cme, params)
         if fsi is False:
             return dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
-    if type == 'Decay':
+    if spectrum_type == 'Decay':
         return 2. * charged_pion(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
-def dnde_neutral_kaon(egams, cme, params, type='All'):
-    decay1 = np.vectorize(long_kaon)
-    decay2 = np.vectorize(short_kaon)
-
-    if type == 'All':
-        return decay1(egams, cme / 2.0) + decay2(egams, cme / 2.0)
-    if type == 'FSR':
-        return np.arrary([0.0 for _ in range(len(egams))])
-    if type == 'Decay':
-        return decay1(egams, cme / 2.0) + decay2(egams, cme / 2.0)
+def dnde_neutral_kaon(egams, cme, params, spectrum_type='All'):
+    if spectrum_type == 'All':
+        return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
+    if spectrum_type == 'FSR':
+        return np.array([0.0 for _ in range(len(egams))])
+    if spectrum_type == 'Decay':
+        return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
-def dnde_charged_kaon(egams, cme, params, type='All'):
+def dnde_charged_kaon(egams, cme, params, spectrum_type='All'):
     decay = charged_kaon
 
-    if type == 'All':
+    if spectrum_type == 'All':
         return 2. * decay(egams, cme / 2.0)
-    if type == 'FSR':
-        return np.arrary([0.0 for _ in range(len(egams))])
-    if type == 'Decay':
+    if spectrum_type == 'FSR':
+        return np.array([0.0 for _ in range(len(egams))])
+    if spectrum_type == 'Decay':
         return 2. * decay(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(type))
+                         'Decay'".format(spectrum_type))
 
 
 def spectra(egams, cme, params, fsi=True):
