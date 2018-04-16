@@ -1,21 +1,12 @@
-from gamma_ray_limit_parameters import (J_factor_draco, delta_Omega_dSph,
-                                        A_eff_e_ASTROGAM, T_obs_e_ASTROGAM)
-from gamma_ray_background import dPhi_dEdOmega_B_default
+from gamma_ray_limit_parameters import (ExperimentParams, TargetParams,
+                                        eASTROGAM_params, dSph_params)
 from scipy.integrate import quad
 import numpy as np
 
 
-def compute_limit(dN_dE_DM,
-                  mx,
-                  e_gam_min,
-                  e_gam_max,
-                  dPhi_dEdOmega_B=dPhi_dEdOmega_B_default,
-                  self_conjugate=False,
-                  n_sigma=5.,
-                  delta_Omega=delta_Omega_dSph,
-                  J_factor=J_factor_draco,
-                  A_eff=A_eff_e_ASTROGAM,
-                  T_obs=T_obs_e_ASTROGAM):
+def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
+                  n_sigma=5., exp_params=eASTROGAM_params,
+                  target_params=dSph_params):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -66,7 +57,7 @@ def compute_limit(dN_dE_DM,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Prefactor for converting integrated spectrum to photon counts
-    prefactor = T_obs * A_eff * delta_Omega
+    prefactor = exp_params.T_obs * exp_params.A_eff * target_params.delta_Omega
 
     # Factor to avoid double counting pairs of DM particles
     if self_conjugate:
@@ -75,10 +66,12 @@ def compute_limit(dN_dE_DM,
         dm_factor = 4.
 
     # Number of background photons
-    N_gam_B = prefactor * quad(dPhi_dEdOmega_B, e_gam_min, e_gam_max)[0]
+    N_gam_B = prefactor * quad(target_params.dPhi_dEdOmega_B, e_gam_min,
+                               e_gam_max)[0]
 
     # Number of signal photons
-    dm_prefactor = prefactor * J_factor / (4. * np.pi * dm_factor * mx**2)
+    dm_prefactor = prefactor * target_params.J_factor / (4. * np.pi * dm_factor
+                                                         * mx**2)
     N_gam_S = dm_prefactor * quad(dN_dE_DM, e_gam_min, e_gam_max)[0]
 
     return n_sigma * np.sqrt(N_gam_B) / N_gam_S
