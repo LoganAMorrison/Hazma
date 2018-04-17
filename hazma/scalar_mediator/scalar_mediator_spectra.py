@@ -9,6 +9,7 @@ from ..parameters import electron_mass as me
 
 from .scalar_mediator_fsr import dnde_xx_to_s_to_ffg
 from .scalar_mediator_fsr import dnde_xx_to_s_to_pipig
+from .scalar_mediator_fsr import dnde_xx_to_s_to_kkg
 from .scalar_mediator_cross_sections import branching_fractions
 
 
@@ -52,10 +53,10 @@ def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
 
 def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        cpi_decay = charged_pion(egams, cme / 2.0)
+        cpi_decay = 2. * charged_pion(egams, cme / 2.0)
         cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
 
-        return 2. * cpi_decay + cpi_fsr
+        return cpi_decay + cpi_fsr
     if spectrum_type == 'FSR':
         return dnde_xx_to_s_to_pipig(egams, cme, params)
     if spectrum_type == 'Decay':
@@ -67,9 +68,11 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
 
 def dnde_neutral_kaon(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
+        ck_decay = long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
+        ck_fsr = dnde_xx_to_s_to_kkg(egams, cme, params)
+        return ck_decay + ck_fsr
     if spectrum_type == 'FSR':
-        return np.array([0.0 for _ in range(len(egams))])
+        return dnde_xx_to_s_to_kkg(egams, cme, params)
     if spectrum_type == 'Decay':
         return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
     else:
