@@ -12,6 +12,9 @@ from ..parameters import strange_quark_mass as msq
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
+from .scalar_mediator_amplitudes import amp_s_k0k0, amp_s_kk
+from .scalar_mediator_amplitudes import amp_s_pi0pi0, amp_s_pipi
+
 
 def __msqrd_xx_s(s, params):
     """ Returns DM portion of amplitudes XX -> S -> anything """
@@ -148,21 +151,13 @@ def sigma_xx_to_s_to_k0k0(Q, params, unit='BSE'):
 
     ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
     if Q < 2. * mk0 or Q < 2. * mx:
         return 0.0
 
     s = Q**2
 
-    amp_s_to_k0k0 = (-2 * gsGG * (-2 * mk0**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
-        (b0 * (mdq + msq) * (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                             9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+    amp_s_to_k0k0 = amp_s_k0k0(s, params, unit=unit)
 
     msqrd = abs(amp_s_to_k0k0)**2 * \
         __msqrd_xx_s(s, params) / (s - ms**2)**2
@@ -192,22 +187,13 @@ def sigma_xx_to_s_to_kk(Q, params, unit='BSE'):
     """
     ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
     if Q < 2. * mk or Q < 2. * mx:
         return 0.0
 
     s = Q**2
 
-    amp_s_to_kk = (-2 * gsGG * (-2 * mk**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
-        (b0 * (msq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+    amp_s_to_kk = amp_s_kk(s, params, unit=unit)
 
     msqrd = abs(amp_s_to_kk)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 
@@ -236,22 +222,13 @@ def sigma_xx_to_s_to_pi0pi0(Q, params, unit="BSE"):
     """
     ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
     if Q < 2. * mpi0 or Q < 2. * mx:
         return 0.0
 
     s = Q**2
 
-    amp_s_to_pi0pi0 = (-2 * gsGG * (-2 * mpi0**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
-        (b0 * (mdq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+    amp_s_to_pi0pi0 = amp_s_pi0pi0(s, params, unit=unit)
 
     msqrd = abs(amp_s_to_pi0pi0)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 
@@ -280,22 +257,13 @@ def sigma_xx_to_s_to_pipi(Q, params, unit="BSE"):
     """
     ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
     if Q < 2. * mpi or Q < 2. * mx:
         return 0.0
 
     s = Q**2
 
-    amp_s_to_pipi = (-2 * gsGG * (-2 * mpi**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
-        (b0 * (mdq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+    amp_s_to_pipi = amp_s_pipi(s, params, unit=unit)
 
     msqrd = abs(amp_s_to_pipi)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 

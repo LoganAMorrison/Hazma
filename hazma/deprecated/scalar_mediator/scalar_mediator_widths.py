@@ -12,6 +12,11 @@ from ..parameters import strange_quark_mass as msq
 from ..parameters import electron_mass as me
 from ..parameters import muon_mass as mmu
 
+from ..unitarization.bethe_salpeter import amp_pipi_to_pipi_bse
+from ..unitarization.bethe_salpeter import amp_pipi_to_kk_bse
+from ..unitarization.bethe_salpeter import amp_kk_to_kk_bse
+from ..unitarization.loops import loop_matrix
+
 
 def width_s_to_gg(params):
     """
@@ -28,21 +33,29 @@ def width_s_to_k0k0(params):
      neutral kaon.
     """
 
-    return (sqrt(-4 * mk0**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mk0**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs + 2 *
+    loop_mat = loop_matrix(params.ms)
+    unit_fact1 = amp_pipi_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact2 = amp_kk_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact = 1. + unit_fact1 * \
+        loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (sqrt(-4 * mk0**2 + params.ms**2) *
+              (2 * params.gsGG * (2 * mk0**2 - params.ms**2) *
+               (-9 * vh - 9 * params.gsff * params.vs + 2 *
                 params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + msq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
+               (9 * vh + 8 * params.gsGG * params.vs) +
+               b0 * (mdq + msq) * (9 * vh + 4 * params.gsGG * params.vs) *
+               (54 * params.gsGG * vh -
                 32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mk0 + params.ms, 0.)) / \
+                  (9 * vh + 16 * params.gsGG * params.vs)))**2 *
+              np.heaviside(-2 * mk0 + params.ms, 0.)) / \
         (16. * params.ms**2 * pi *
          (9 * vh + 9 * params.gsff * params.vs -
           2 * params.gsGG * params.vs)**2 *
          (9 * vh + 4 * params.gsGG * params.vs)**2 *
          (9 * vh + 8 * params.gsGG * params.vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_kk(params):
@@ -51,26 +64,34 @@ def width_s_to_kk(params):
     charged kaon.
     """
 
-    return (sqrt(-4 * mk**2 + params.ms**2) *
-            (729 * b0 * params.gsff * (msq + muq) * vh**2 +
-             32 * params.gsGG**3 *
-             (2 * mk**2 - params.ms**2 - 4 * b0 * (msq + muq)) *
-             params.vs**2 + 36 * params.gsGG**2 * params.vs *
-             (-2 * b0 * (msq + muq) *
-                (vh - 8 * params.gsff * params.vs) - 2 * mk**2 *
-                (3 * vh + 4 * params.gsff * params.vs) + params.ms**2 *
-              (3 * vh + 4 * params.gsff * params.vs)) +
-             162 * params.gsGG * vh *
-             (-2 * mk**2 * (vh + params.gsff * params.vs) +
+    loop_mat = loop_matrix(params.ms)
+    unit_fact1 = amp_pipi_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact2 = amp_kk_to_kk_bse(params.ms) / sqrt(2)
+    unit_fact = 1. + unit_fact1 * \
+        loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (sqrt(-4 * mk**2 + params.ms**2) *
+              (729 * b0 * params.gsff * (msq + muq) * vh**2 +
+               32 * params.gsGG**3 *
+               (2 * mk**2 - params.ms**2 - 4 * b0 * (msq + muq)) *
+               params.vs**2 + 36 * params.gsGG**2 * params.vs *
+               (-2 * b0 * (msq + muq) *
+                  (vh - 8 * params.gsff * params.vs) - 2 * mk**2 *
+                  (3 * vh + 4 * params.gsff * params.vs) + params.ms**2 *
+                  (3 * vh + 4 * params.gsff * params.vs)) +
+               162 * params.gsGG * vh *
+               (-2 * mk**2 * (vh + params.gsff * params.vs) +
                 params.ms**2 * (vh + params.gsff * params.vs) +
-                b0 * (msq + muq) * (3 * vh +
-                                    10 * params.gsff * params.vs)))**2 *
-            np.heaviside(-2 * mk + params.ms, 0.)) / \
+                  b0 * (msq + muq) * (3 * vh +
+                                      10 * params.gsff * params.vs)))**2 *
+              np.heaviside(-2 * mk + params.ms, 0.)) / \
         (16. * params.ms**2 * pi *
          (9 * vh + 9 * params.gsff * params.vs -
           2 * params.gsGG * params.vs)**2 *
          (9 * vh + 4 * params.gsGG * params.vs)**2 *
          (9 * vh + 8 * params.gsGG * params.vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_pi0pi0(params):
@@ -79,21 +100,29 @@ def width_s_to_pi0pi0(params):
     neutral pions.
     """
 
-    return (sqrt(-4 * mpi0**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mpi0**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs +
+    loop_mat = loop_matrix(params.ms)
+    unit_fact1 = amp_pipi_to_pipi_bse(params.ms) / sqrt(3)
+    unit_fact2 = amp_pipi_to_kk_bse(params.ms) / sqrt(3)
+    unit_fact = 1. + unit_fact1 * \
+        loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (sqrt(-4 * mpi0**2 + params.ms**2) *
+              (2 * params.gsGG * (2 * mpi0**2 - params.ms**2) *
+               (-9 * vh - 9 * params.gsff * params.vs +
                 2 * params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
+               (9 * vh + 8 * params.gsGG * params.vs) +
+               b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
+               (54 * params.gsGG * vh -
                 32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mpi0 + params.ms, 0.)) / \
+                  (9 * vh + 16 * params.gsGG * params.vs)))**2 *
+              np.heaviside(-2 * mpi0 + params.ms, 0.)) / \
         (32. * params.ms**2 * np.pi *
          (9 * vh + 9 * params.gsff * params.vs -
           2 * params.gsGG * params.vs)**2 *
          (9 * vh + 4 * params.gsGG * params.vs)**2 *
          (9 * vh + 8 * params.gsGG * params.vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_pipi(params):
@@ -102,21 +131,29 @@ def width_s_to_pipi(params):
     charged pion.
     """
 
-    return (sqrt(-4 * mpi**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mpi**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs +
+    loop_mat = loop_matrix(params.ms)
+    unit_fact1 = amp_pipi_to_pipi_bse(params.ms) / sqrt(3)
+    unit_fact2 = amp_pipi_to_kk_bse(params.ms) / sqrt(3)
+    unit_fact = 1. + unit_fact1 * \
+        loop_mat[0, 0] + unit_fact2 * loop_mat[1, 1]
+
+    width0 = (sqrt(-4 * mpi**2 + params.ms**2) *
+              (2 * params.gsGG * (2 * mpi**2 - params.ms**2) *
+               (-9 * vh - 9 * params.gsff * params.vs +
                 2 * params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
+               (9 * vh + 8 * params.gsGG * params.vs) +
+               b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
+               (54 * params.gsGG * vh -
                 32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mpi + params.ms, 0.)) / \
+                  (9 * vh + 16 * params.gsGG * params.vs)))**2 *
+              np.heaviside(-2 * mpi + params.ms, 0.)) / \
         (16. * params.ms**2 * pi *
          (9 * vh + 9 * params.gsff * params.vs -
           2 * params.gsGG * params.vs)**2 *
          (9 * vh + 4 * params.gsGG * params.vs)**2 *
          (9 * vh + 8 * params.gsGG * params.vs)**2)
+
+    return width0 * abs(unit_fact)**2
 
 
 def width_s_to_xx(params):

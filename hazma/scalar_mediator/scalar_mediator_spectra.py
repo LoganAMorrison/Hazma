@@ -9,7 +9,6 @@ from ..parameters import electron_mass as me
 
 from .scalar_mediator_fsr import dnde_xx_to_s_to_ffg
 from .scalar_mediator_fsr import dnde_xx_to_s_to_pipig
-from .scalar_mediator_fsr import dnde_xx_to_s_to_pipig_no_fsi
 from .scalar_mediator_cross_sections import branching_fractions
 
 
@@ -51,22 +50,14 @@ def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
-def dnde_charged_pion(egams, cme, params, spectrum_type='All', fsi=True):
+def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        cpi_decay = 2. * charged_pion(egams, cme / 2.0)
+        cpi_decay = charged_pion(egams, cme / 2.0)
+        cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
 
-        ### TODO: uncomment when done debugging
-        # if fsi is True:
-        #     cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
-        # if fsi is False:
-        #     cpi_fsr = dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
-
-        return cpi_decay# + cpi_fsr
+        return 2. * cpi_decay + cpi_fsr
     if spectrum_type == 'FSR':
-        if fsi is True:
-            return dnde_xx_to_s_to_pipig(egams, cme, params)
-        if fsi is False:
-            return dnde_xx_to_s_to_pipig_no_fsi(egams, cme, params)
+        return dnde_xx_to_s_to_pipig(egams, cme, params)
     if spectrum_type == 'Decay':
         return 2. * charged_pion(egams, cme / 2.0)
     else:
@@ -124,7 +115,7 @@ def spectra(egams, cme, params, fsi=True):
 
     # Pions
     npions = bfs['pi0 pi0'] * dnde_neutral_pion(egams, cme, params)
-    cpions = bfs['pi pi'] * dnde_charged_pion(egams, cme, params, fsi=fsi)
+    cpions = bfs['pi pi'] * dnde_charged_pion(egams, cme, params)
 
     # Leptons
     muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
