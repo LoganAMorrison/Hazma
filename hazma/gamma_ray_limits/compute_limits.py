@@ -46,8 +46,8 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
         Angular size of observation region in sr
     J_factor : float
         J factor for target in MeV^2 / cm^5
-    A_eff : float
-        Effective area of experiment in cm^2
+    A_eff : float -> float
+        Effective area of experiment in cm^2 as a function of photon energy
     T_obs : float
         Experiment's observation time in s
 
@@ -57,7 +57,13 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Prefactor for converting integrated spectrum to photon counts
-    prefactor = exp_params.T_obs * exp_params.A_eff * target_params.delta_Omega
+    prefactor = exp_params.T_obs * target_params.delta_Omega
+
+    # Number of background photons
+    def integrand_B(e_gam):
+        return (prefactor * target_params.dPhi_dEdOmega_B(e_gam) *
+                exp_params.A_eff(e_gam))
+    N_gam_B = quad(integrand_B, e_gam_min, e_gam_max)[0]
 
     # Factor to avoid double counting pairs of DM particles
     if self_conjugate:
@@ -65,13 +71,12 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
     else:
         dm_factor = 4.
 
-    # Number of background photons
-    N_gam_B = prefactor * quad(target_params.dPhi_dEdOmega_B, e_gam_min,
-                               e_gam_max)[0]
-
     # Number of signal photons
-    dm_prefactor = prefactor * target_params.J_factor / (4. * np.pi * dm_factor
-                                                         * mx**2)
-    N_gam_S = dm_prefactor * quad(dN_dE_DM, e_gam_min, e_gam_max)[0]
+    def integrand_S(e_gam):
+        dm_prefactor = prefactor * target_params.J_factor / (4. * np.pi *
+                                                             dm_factor * mx**2)
+        return dm_prefactor * dN_dE_DM(e_gam) * exp_params.A_eff(e_gam)
+
+    N_gam_S = quad(integrand_S, e_gam_min, e_gam_max)[0]
 
     return n_sigma * np.sqrt(N_gam_B) / N_gam_S
