@@ -3,19 +3,21 @@ Parameters relevant to computing constraints from gamma ray experiments
 """
 from collections import namedtuple
 import numpy as np
+from pkg_resources import resource_filename
 from scipy.interpolate import interp1d
 
 
+# Get paths to files inside the module
+bg_rf = resource_filename(__name__, "background_1703-02546.dat")
+A_eff_rf = resource_filename(__name__, "e-astrogam_effective_area.dat")
+
 # Background model from arxiv:1703.02546
-e_Bs, dPhi_dEdOmega_Bs = np.transpose(np.loadtxt("background_1703-02546.csv",
-                                                 delimiter=","))
+e_Bs, dPhi_dEdOmega_Bs = np.transpose(np.loadtxt(bg_rf, delimiter=","))
 dPhi_dEdOmega_Bs = 1.0e3 * dPhi_dEdOmega_Bs / e_Bs**2  # convert GeV^2 -> MeV^2
 dPhi_dEdOmega_B_default = interp1d(e_Bs, dPhi_dEdOmega_Bs)
 
-
 # e-ASTROGAM's effective area in cm^2 (see arxiv:1711.01265)
-e_gams_eA, A_effs_eA = np.transpose(np.loadtxt("e-astrogam_effective_area.csv",
-                                               delimiter=","))
+e_gams_eA, A_effs_eA = np.transpose(np.loadtxt(A_eff_rf, delimiter=","))
 A_eff_e_ASTROGAM = interp1d(e_gams_eA, A_effs_eA, fill_value=0.0)
 
 
