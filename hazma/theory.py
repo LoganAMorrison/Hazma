@@ -36,26 +36,6 @@ class Theory(object):
     def spectrum_functions(self):
         pass
 
-    def get_e_gam_window(self):
-        """Return best gamma ray energy range over which to probe this model.
-
-        Notes
-        -----
-        This could probably be significantly optimized. For a start, centering
-        it on the pi0 peak would be a big improvement...
-
-        Returns
-        -------
-        e_gam_min, e_gam_max : (float, float)
-            Boundaries of energy window
-        """
-        if self.mx < mpi0:
-            e_gam_min = 5.
-        else:
-            e_gam_min = mpi0 / 2.
-
-        return e_gam_min, self.mx
-
     def compute_limit(self, n_sigma=5., exp_params=eASTROGAM_params,
                       target_params=dSph_params):
         """Computes smallest value of <sigma v> detectable for given target and
@@ -82,10 +62,6 @@ class Theory(object):
             photon energy
         mx : float
             Dark matter mass
-        e_gam_min : float
-            Lower bound for energy window used to set limit
-        e_gam_max : float
-            Upper bound for energy window used to set limit
         dPhi_dEdOmega_B : float -> float
             Background photon spectrum per solid angle as a function of photon
             energy
@@ -109,16 +85,13 @@ class Theory(object):
             Smallest detectable thermally averaged total cross section in units
             of cm^3 / s
         """
-        # Choose energy window in which to search for signal
-        e_gam_min, e_gam_max = self.get_e_gam_window()
-
         # Create function to interpolate spectrum over energy window
-        e_gams = np.logspace(np.log10(e_gam_min), np.log10(e_gam_max), 100)
+        e_gams = np.logspace(0., np.log10(self.mx), 200)
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
 
-        return compute_limit(dN_dE_DM, self.mx, e_gam_min, e_gam_max,
-                             n_sigma=n_sigma, exp_params=exp_params,
+        return compute_limit(dN_dE_DM, self.mx, n_sigma=n_sigma,
+                             exp_params=exp_params,
                              target_params=target_params)
 
     def compute_limits(self, mxs, n_sigma=5., exp_params=eASTROGAM_params,
