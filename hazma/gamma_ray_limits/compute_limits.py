@@ -75,15 +75,36 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
 
         return quad(integrand_B, e_a, e_b)[0]
 
-    # Function to optimize to select energy window
-    def objective(e_ab):
-        e_a = e_ab[0]
-        e_b = e_ab[1]
+    # Objective function for selecting energy window
+    def f(e_ab):
+        return -I_S(*e_ab) / np.sqrt(I_B(*e_ab))
 
-        return -I_S(e_a, e_b) / np.sqrt(I_B(e_a, e_b))
+    # Computes Jacobian of the objective function
+    def df_dE(e_ab, bound):
+        # df/dE_b and df/dE_a have the same form, up to a minus sign
+        if bound == "a":
+            e = e_ab[0]
+            sign = -1.0
+        elif bound == "b":
+            e = e_ab[1]
+            sign = 1.0
+
+        I_S_val = I_S(*e_ab)
+        I_B_val = I_B(*e_ab)
+        # Evaluate spectra at upper or lower bound
+        dN_dE_DM_val = dN_dE_DM(e)
+        dPhi_dEdOmega_B_val = target_params.dPhi_dEdOmega_B(e)
+
+        prefactor = exp_params.A_eff(e) / np.sqrt(I_B_val)
+
+        return sign * prefactor * (dN_dE_DM_val - 0.5 * I_S_val / I_B_val *
+                                   dPhi_dEdOmega_B_val)
+
+    def jac(e_ab):
+        return np.array([df_dE(e_ab, "a"), df_dE(e_ab, "b")])
 
     # Minimize the objective function to compute the limit
-    limit_obj = optimize.minimize(objective, [e_a_0, e_b_0],
+    limit_obj = optimize.minimize(f, [e_a_0, e_b_0], jac=jac,
                                   bounds=[e_a_bounds, e_b_bounds])
 
     # Factor to avoid double counting pairs of DM particles
