@@ -86,7 +86,7 @@ class Theory(object):
             of cm^3 / s
         """
         # Create function to interpolate spectrum over energy window
-        e_gams = np.logspace(0., np.log10(self.mx), 200)
+        e_gams = np.logspace(np.log10(self.mx / 100.), np.log10(self.mx), 200)
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
 
