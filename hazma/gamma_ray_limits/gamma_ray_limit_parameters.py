@@ -18,7 +18,8 @@ dPhi_dEdOmega_B_default = interp1d(e_Bs, dPhi_dEdOmega_Bs)
 
 # e-ASTROGAM's effective area in cm^2 (see arxiv:1711.01265)
 e_gams_eA, A_effs_eA = np.transpose(np.loadtxt(A_eff_rf, delimiter=","))
-A_eff_e_ASTROGAM = interp1d(e_gams_eA, A_effs_eA, fill_value=0.0)
+A_eff_e_ASTROGAM = interp1d(e_gams_eA, A_effs_eA, bounds_error=False,
+                            fill_value=0.0)
 
 
 # Reference angular size of dSph galaxy
