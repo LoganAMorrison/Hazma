@@ -34,32 +34,6 @@ def __f_lim(e_ab, dN_dE_DM, exp_params, target_params):
         return -__I_S(e_a, e_b, dN_dE_DM, exp_params) / \
                 np.sqrt(__I_B(e_a, e_b, exp_params, target_params))
 
-# def __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, energy):
-#     """Computes Jacobian of the objective function.
-#     """
-#     # df/dE_b and df/dE_a have the same form, up to a minus sign
-#     if energy == "a":
-#         e = e_ab[0]
-#         sign = -1.0
-#     elif energy == "b":
-#         e = e_ab[1]
-#         sign = 1.0
-#
-#     I_S_val = __I_S(e_ab[0], e_ab[1], dN_dE_DM, exp_params)
-#     I_B_val = __I_B(e_ab[0], e_ab[1], exp_params, target_params)
-#
-#     prefactor = exp_params.A_eff(e) / np.sqrt(I_B_val)
-#
-#     return sign * prefactor * (dN_dE_DM(e) - 0.5 * I_S_val / I_B_val *
-#                                target_params.dPhi_dEdOmega_B(e))
-#
-#
-# def __jac_lim(e_ab, dN_dE_DM, exp_params, target_params):
-#     df_lim_de_a = __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, "a")
-#     df_lim_de_b = __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, "b")
-#
-#     return np.array([df_lim_de_a, df_lim_de_b])
-
 
 def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
                   exp_params=eASTROGAM_params, target_params=dSph_params):
