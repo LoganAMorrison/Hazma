@@ -1,9 +1,64 @@
 from gamma_ray_limit_parameters import eASTROGAM_params, dSph_params
 from ..parameters import neutral_pion_mass as mpi0
-from scipy.interpolate import interp1d
 from scipy import optimize
 from scipy.integrate import quad
 import numpy as np
+
+
+def __I_S(e_a, e_b, dN_dE_DM, exp_params):
+    """Integrand required to compute number of photons from DM annihilations.
+    """
+    def integrand_S(e):
+        return dN_dE_DM(e) * exp_params.A_eff(e)
+
+    return quad(integrand_S, e_a, e_b)[0]
+
+
+def __I_B(e_a, e_b, exp_params, target_params):
+    """Integrand required to compute number of background photons"""
+    def integrand_B(e):
+        return target_params.dPhi_dEdOmega_B(e) * exp_params.A_eff(e)
+
+    return quad(integrand_B, e_a, e_b)[0]
+
+
+def __f_lim(e_ab, dN_dE_DM, exp_params, target_params):
+    """Objective function for selecting energy window.
+    """
+    e_a = min(e_ab)
+    e_b = max(e_ab)
+
+    if e_a == e_b:
+        return 0.
+    else:
+        return -__I_S(e_a, e_b, dN_dE_DM, exp_params) / \
+                np.sqrt(__I_B(e_a, e_b, exp_params, target_params))
+
+# def __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, energy):
+#     """Computes Jacobian of the objective function.
+#     """
+#     # df/dE_b and df/dE_a have the same form, up to a minus sign
+#     if energy == "a":
+#         e = e_ab[0]
+#         sign = -1.0
+#     elif energy == "b":
+#         e = e_ab[1]
+#         sign = 1.0
+#
+#     I_S_val = __I_S(e_ab[0], e_ab[1], dN_dE_DM, exp_params)
+#     I_B_val = __I_B(e_ab[0], e_ab[1], exp_params, target_params)
+#
+#     prefactor = exp_params.A_eff(e) / np.sqrt(I_B_val)
+#
+#     return sign * prefactor * (dN_dE_DM(e) - 0.5 * I_S_val / I_B_val *
+#                                target_params.dPhi_dEdOmega_B(e))
+#
+#
+# def __jac_lim(e_ab, dN_dE_DM, exp_params, target_params):
+#     df_lim_de_a = __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, "a")
+#     df_lim_de_b = __df_lim_dE(e_ab, dN_dE_DM, exp_params, target_params, "b")
+#
+#     return np.array([df_lim_de_a, df_lim_de_b])
 
 
 def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
@@ -53,59 +108,25 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Initial guesses for energy window bounds
-    e_a_0 = mpi0 / 2.
-    e_b_0 = mx
+    # Make sure not to go outside the interpolators' ranges
+    e_a_min = max([dN_dE_DM.x[0], target_params.dPhi_dEdOmega_B.x[0]])
+    e_b_max = min([mx, target_params.dPhi_dEdOmega_B.x[-1]])
 
-    # Bounds on upper and lower limits for energy window
-    e_a_bounds = [dN_dE_DM.x[0], mpi0 / 2.00001]
-    e_b_bounds = [mpi0 / 1.99999, mx]
+    # Allowed range for energy window bounds
+    e_bounds = [e_a_min, e_b_max]
 
-    # Integrand required to compute number of photons from DM annihilations
-    def I_S(e_a, e_b):
-        def integrand_S(e):
-            return dN_dE_DM(e) * exp_params.A_eff(e)
+    # Initial guesses for energy window lower bound
+    e_a_0 = 0.5 * (e_b_max - e_a_min)
+    e_b_0 = 0.75 * (e_b_max - e_a_min)
 
-        return quad(integrand_S, e_a, e_b)[0]
-
-    # Integrand required to compute number of background photons
-    def I_B(e_a, e_b):
-        def integrand_B(e):
-            return target_params.dPhi_dEdOmega_B(e) * exp_params.A_eff(e)
-
-        return quad(integrand_B, e_a, e_b)[0]
-
-    # Objective function for selecting energy window
-    def f(e_ab):
-        return -I_S(*e_ab) / np.sqrt(I_B(*e_ab))
-
-    # Computes Jacobian of the objective function
-    def df_dE(e_ab, bound):
-        # df/dE_b and df/dE_a have the same form, up to a minus sign
-        if bound == "a":
-            e = e_ab[0]
-            sign = -1.0
-        elif bound == "b":
-            e = e_ab[1]
-            sign = 1.0
-
-        I_S_val = I_S(*e_ab)
-        I_B_val = I_B(*e_ab)
-        # Evaluate spectra at upper or lower bound
-        dN_dE_DM_val = dN_dE_DM(e)
-        dPhi_dEdOmega_B_val = target_params.dPhi_dEdOmega_B(e)
-
-        prefactor = exp_params.A_eff(e) / np.sqrt(I_B_val)
-
-        return sign * prefactor * (dN_dE_DM_val - 0.5 * I_S_val / I_B_val *
-                                   dPhi_dEdOmega_B_val)
-
-    def jac(e_ab):
-        return np.array([df_dE(e_ab, "a"), df_dE(e_ab, "b")])
-
-    # Minimize the objective function to compute the limit
-    limit_obj = optimize.minimize(f, [e_a_0, e_b_0], jac=jac,
-                                  bounds=[e_a_bounds, e_b_bounds])
+    # Optimize upper and lower bounds for energy window
+    limit_obj = optimize.minimize(__f_lim,
+                                  [e_a_0, e_b_0],
+                                  bounds=2*[e_bounds],
+                                  args=(dN_dE_DM, exp_params,
+                                        target_params),
+                                  method="L-BFGS-B",
+                                  options={"ftol": 1e-3})
 
     # Factor to avoid double counting pairs of DM particles
     if self_conjugate:
