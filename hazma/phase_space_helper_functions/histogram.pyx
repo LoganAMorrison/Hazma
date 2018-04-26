@@ -59,9 +59,9 @@ def space_to_energy_hist(np.ndarray[np.float64_t, ndim=2] pts, int num_ps_pts,
         errs[i, :] = np.sqrt((vars[i, :] - means[i, :]**2))
 
         # Normalize the distributions by the number of phase space points.
-        # means[i, :] = means[i, :] * (1.0 / num_ps_pts)
-        # vars[i, :] = vars[i, :] * (1.0 / num_ps_pts)
-        # errs[i, :] = errs[i, :] * (1.0 / num_ps_pts)
+        means[i, :] = means[i, :] * (1.0 / num_ps_pts)
+        vars[i, :] = vars[i, :] * (1.0 / num_ps_pts)
+        errs[i, :] = errs[i, :] * (1.0 / num_ps_pts)
 
     for i in range(num_fsp):
         for j in range(num_bins):
