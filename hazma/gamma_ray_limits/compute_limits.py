@@ -1,12 +1,42 @@
-from gamma_ray_limit_parameters import (ExperimentParams, TargetParams,
-                                        eASTROGAM_params, dSph_params)
+from gamma_ray_limit_parameters import eASTROGAM_params, dSph_params
+from ..parameters import neutral_pion_mass as mpi0
+from scipy import optimize
 from scipy.integrate import quad
 import numpy as np
 
 
-def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
-                  n_sigma=5., exp_params=eASTROGAM_params,
-                  target_params=dSph_params):
+def __I_S(e_a, e_b, dN_dE_DM, exp_params):
+    """Integrand required to compute number of photons from DM annihilations.
+    """
+    def integrand_S(e):
+        return dN_dE_DM(e) * exp_params.A_eff(e)
+
+    return quad(integrand_S, e_a, e_b)[0]
+
+
+def __I_B(e_a, e_b, exp_params, target_params):
+    """Integrand required to compute number of background photons"""
+    def integrand_B(e):
+        return target_params.dPhi_dEdOmega_B(e) * exp_params.A_eff(e)
+
+    return quad(integrand_B, e_a, e_b)[0]
+
+
+def __f_lim(e_ab, dN_dE_DM, exp_params, target_params):
+    """Objective function for selecting energy window.
+    """
+    e_a = min(e_ab)
+    e_b = max(e_ab)
+
+    if e_a == e_b:
+        return 0.
+    else:
+        return -__I_S(e_a, e_b, dN_dE_DM, exp_params) / \
+                np.sqrt(__I_B(e_a, e_b, exp_params, target_params))
+
+
+def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
+                  exp_params=eASTROGAM_params, target_params=dSph_params):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -30,10 +60,6 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
         energy
     mx : float
         Dark matter mass
-    e_gam_min : float
-        Lower bound for energy window used to set limit
-    e_gam_max : float
-        Upper bound for energy window used to set limit
     dPhi_dEdOmega_B : float -> float
         Background photon spectrum per solid angle as a function of photon
         energy
@@ -53,17 +79,28 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
 
     Returns
     -------
-    <sigma v> : float
+    <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Prefactor for converting integrated spectrum to photon counts
-    prefactor = exp_params.T_obs * target_params.delta_Omega
+    # Make sure not to go outside the interpolators' ranges
+    e_a_min = max([dN_dE_DM.x[0], target_params.dPhi_dEdOmega_B.x[0]])
+    e_b_max = min([mx, target_params.dPhi_dEdOmega_B.x[-1]])
 
-    # Number of background photons
-    def integrand_B(e_gam):
-        return (prefactor * target_params.dPhi_dEdOmega_B(e_gam) *
-                exp_params.A_eff(e_gam))
-    N_gam_B = quad(integrand_B, e_gam_min, e_gam_max)[0]
+    # Allowed range for energy window bounds
+    e_bounds = [e_a_min, e_b_max]
+
+    # Initial guesses for energy window lower bound
+    e_a_0 = 0.5 * (e_b_max - e_a_min)
+    e_b_0 = 0.75 * (e_b_max - e_a_min)
+
+    # Optimize upper and lower bounds for energy window
+    limit_obj = optimize.minimize(__f_lim,
+                                  [e_a_0, e_b_0],
+                                  bounds=2*[e_bounds],
+                                  args=(dN_dE_DM, exp_params,
+                                        target_params),
+                                  method="L-BFGS-B",
+                                  options={"ftol": 1e-3})
 
     # Factor to avoid double counting pairs of DM particles
     if self_conjugate:
@@ -71,12 +108,9 @@ def compute_limit(dN_dE_DM, mx, e_gam_min, e_gam_max, self_conjugate=False,
     else:
         dm_factor = 4.
 
-    # Number of signal photons
-    def integrand_S(e_gam):
-        dm_prefactor = prefactor * target_params.J_factor / (4. * np.pi *
-                                                             dm_factor * mx**2)
-        return dm_prefactor * dN_dE_DM(e_gam) * exp_params.A_eff(e_gam)
+    # Insert appropriate prefactors to convert result to <sigma v>_tot
+    prefactor = 4. * np.pi * dm_factor * mx**2 / \
+        (np.sqrt(exp_params.T_obs * target_params.delta_Omega) *
+         target_params.J_factor)
 
-    N_gam_S = quad(integrand_S, e_gam_min, e_gam_max)[0]
-
-    return n_sigma * np.sqrt(N_gam_B) / N_gam_S
+    return prefactor * n_sigma / (-limit_obj.fun)
