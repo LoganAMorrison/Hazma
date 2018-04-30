@@ -1,7 +1,7 @@
-from .gamma_ray_limits.gamma_ray_limit_parameters import (eASTROGAM_params,
+from .gamma_ray_limits.gamma_ray_limit_parameters import (A_eff_e_astrogam,
+                                                          T_obs_e_astrogam,
                                                           dSph_params)
 from .gamma_ray_limits.compute_limits import compute_limit
-from .parameters import neutral_pion_mass as mpi0
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -36,8 +36,8 @@ class Theory(object):
     def spectrum_functions(self):
         pass
 
-    def compute_limit(self, n_sigma=5., exp_params=eASTROGAM_params,
-                      target_params=dSph_params):
+    def compute_limit(self, n_sigma=5., A_eff=A_eff_e_astrogam,
+                      T_obs=T_obs_e_astrogam, target_params=dSph_params):
         """Computes smallest value of <sigma v> detectable for given target and
         experiment parameters.
 
@@ -90,12 +90,12 @@ class Theory(object):
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
 
-        return compute_limit(dN_dE_DM, self.mx, n_sigma=n_sigma,
-                             exp_params=exp_params,
+        return compute_limit(dN_dE_DM, self.mx, self_conjugate=False,
+                             n_sigma=n_sigma, A_eff=A_eff, T_obs=T_obs,
                              target_params=target_params)
 
-    def compute_limits(self, mxs, n_sigma=5., exp_params=eASTROGAM_params,
-                       target_params=dSph_params):
+    def compute_limits(self, mxs, n_sigma=5., A_eff=A_eff_e_astrogam,
+                       T_obs=T_obs_e_astrogam, target_params=dSph_params):
         """Computes gamma ray constraints over a range of DM masses.
 
         See documentation for :func:`compute_limit`.
@@ -104,7 +104,7 @@ class Theory(object):
 
         for mx in mxs:
             self.mx = mx
-            limits.append(self.compute_limit(n_sigma, exp_params,
+            limits.append(self.compute_limit(n_sigma, A_eff, T_obs,
                                              target_params))
 
         return np.array(limits)

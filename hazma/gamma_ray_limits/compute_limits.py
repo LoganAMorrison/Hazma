@@ -1,28 +1,28 @@
-from gamma_ray_limit_parameters import eASTROGAM_params, dSph_params
-from ..parameters import neutral_pion_mass as mpi0
+from gamma_ray_limit_parameters import (A_eff_e_astrogam, T_obs_e_astrogam,
+                                        dSph_params)
 from scipy import optimize
 from scipy.integrate import quad
 import numpy as np
 
 
-def __I_S(e_a, e_b, dN_dE_DM, exp_params):
+def __I_S(e_a, e_b, dN_dE_DM, A_eff, T_obs):
     """Integrand required to compute number of photons from DM annihilations.
     """
     def integrand_S(e):
-        return dN_dE_DM(e) * exp_params.A_eff(e)
+        return dN_dE_DM(e) * A_eff(e)
 
     return quad(integrand_S, e_a, e_b)[0]
 
 
-def __I_B(e_a, e_b, exp_params, target_params):
+def __I_B(e_a, e_b, A_eff, T_obs, target_params):
     """Integrand required to compute number of background photons"""
     def integrand_B(e):
-        return target_params.dPhi_dEdOmega_B(e) * exp_params.A_eff(e)
+        return target_params.dPhi_dEdOmega_B(e) * A_eff(e)
 
     return quad(integrand_B, e_a, e_b)[0]
 
 
-def __f_lim(e_ab, dN_dE_DM, exp_params, target_params):
+def __f_lim(e_ab, dN_dE_DM, A_eff, T_obs, target_params):
     """Objective function for selecting energy window.
     """
     e_a = min(e_ab)
@@ -31,12 +31,13 @@ def __f_lim(e_ab, dN_dE_DM, exp_params, target_params):
     if e_a == e_b:
         return 0.
     else:
-        return -__I_S(e_a, e_b, dN_dE_DM, exp_params) / \
-                np.sqrt(__I_B(e_a, e_b, exp_params, target_params))
+        return -__I_S(e_a, e_b, dN_dE_DM, A_eff, T_obs) / \
+                np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params))
 
 
 def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
-                  exp_params=eASTROGAM_params, target_params=dSph_params):
+                  A_eff=A_eff_e_astrogam, T_obs=T_obs_e_astrogam,
+                  target_params=dSph_params):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -97,8 +98,7 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
                                   bounds=2*[e_bounds],
-                                  args=(dN_dE_DM, exp_params,
-                                        target_params),
+                                  args=(dN_dE_DM, A_eff, T_obs, target_params),
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
 
@@ -110,7 +110,7 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = 4. * np.pi * dm_factor * mx**2 / \
-        (np.sqrt(exp_params.T_obs * target_params.delta_Omega) *
+        (np.sqrt(T_obs * target_params.delta_Omega) *
          target_params.J_factor)
 
     return prefactor * n_sigma / (-limit_obj.fun)
