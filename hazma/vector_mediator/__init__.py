@@ -19,10 +19,9 @@ class VectorMediator(Theory, VectorMediatorParameters):
     Create a vector mediator model object.
     """
 
-    def __init__(self, mx, mv, gvxx, gvff):
-        super(VectorMediator, self).__init__(mx, mv, gvxx, gvff)
-
-        self.params = VectorMediatorParameters(mx, mv, gvxx, gvff)
+    def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu):
+        super(VectorMediator, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss,
+                                             gvee, gvmumu)
 
     def description(self):
         warnings.warn("", PreAlphaWarning)
@@ -40,12 +39,10 @@ class VectorMediator(Theory, VectorMediatorParameters):
             Array of the available final states.
         """
         warnings.warn("", PreAlphaWarning)
-        return ['mu mu', 'e e']
+        return ['mu mu', 'e e', 'pi pi', 'pi0 g']
 
     def cross_sections(self, cme):
         """
-        WARNING: This function is pre-alpha.
-
         Compute the all the cross sections of the theory.
 
         Parameters
@@ -56,15 +53,13 @@ class VectorMediator(Theory, VectorMediatorParameters):
         Returns
         -------
         cs : dictionary
-            Dictionary of the cross sections of the theory.
+            Dictionary of the cross sections of the theory. The keys are
+            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi'.
         """
-        warnings.warn("", PreAlphaWarning)
-        return cs(cme, self.params)
+        return cs(cme, self)
 
     def branching_fractions(self, cme):
         """
-        WARNING: This function is pre-alpha.
-
         Compute the branching fractions for two fermions annihilating through a
         vector mediator to mesons and leptons.
 
@@ -76,11 +71,10 @@ class VectorMediator(Theory, VectorMediatorParameters):
         Returns
         -------
         bfs : dictionary
-            Dictionary of the branching fractions. The keys are 'total',
-            'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+            Dictionary of the branching fractions of the theory. The keys are
+            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi'.
         """
-        warnings.warn("", PreAlphaWarning)
-        return bfs(cme, self.params)
+        return bfs(cme, self)
 
     def spectra(self, egams, cme):
         """
@@ -103,7 +97,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
             'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
         warnings.warn("", PreAlphaWarning)
-        return specs(egams, cme, self.params)
+        return specs(egams, cme, self)
 
     def spectrum_functions(self):
         """
@@ -120,9 +114,9 @@ class VectorMediator(Theory, VectorMediatorParameters):
         warnings.warn("", PreAlphaWarning)
 
         def mumu(eng_gams, cme):
-            return dnde_mumu(eng_gams, cme, self.params)
+            return dnde_mumu(eng_gams, cme, self)
 
         def ee(eng_gams, cme):
-            return dnde_ee(eng_gams, cme, self.params)
+            return dnde_ee(eng_gams, cme, self)
 
         return {'mu mu': mumu, 'e e': ee}
