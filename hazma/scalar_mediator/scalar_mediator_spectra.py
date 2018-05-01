@@ -15,10 +15,11 @@ from .scalar_mediator_cross_sections import branching_fractions
 
 def dnde_ee(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
+        return (dnde_ee(egams, cme, params, 'FSR') +
+                dnde_ee(egams, cme, params, 'Decay'))
+    elif spectrum_type == 'FSR':
         return dnde_xx_to_s_to_ffg(egams, cme, me, params)
-    if spectrum_type == 'FSR':
-        return dnde_xx_to_s_to_ffg(egams, cme, me, params)
-    if spectrum_type == 'Decay':
+    elif spectrum_type == 'Decay':
         return np.array([0.0 for _ in range(len(egams))])
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
@@ -27,12 +28,11 @@ def dnde_ee(egams, cme, params, spectrum_type='All'):
 
 def dnde_mumu(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        mu_decay = 2. * muon(egams, cme / 2.0)
-        mu_fsr = dnde_xx_to_s_to_ffg(egams, cme, mmu, params)
-        return 2. * mu_decay + mu_fsr
-    if spectrum_type == 'FSR':
+        return (dnde_mumu(egams, cme, params, 'FSR') +
+                dnde_mumu(egams, cme, params, 'Decay'))
+    elif spectrum_type == 'FSR':
         return dnde_xx_to_s_to_ffg(egams, cme, mmu, params)
-    if spectrum_type == 'Decay':
+    elif spectrum_type == 'Decay':
         return 2. * muon(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
@@ -41,7 +41,8 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
 
 def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        return 2.0 * neutral_pion(egams, cme / 2.0)
+        return (dnde_neutral_pion(egams, cme, params, 'FSR') +
+                dnde_neutral_pion(egams, cme, params, 'Decay'))
     if spectrum_type == 'FSR':
         return np.array([0.0 for _ in range(len(egams))])
     if spectrum_type == 'Decay':
@@ -53,13 +54,11 @@ def dnde_neutral_pion(egams, cme, params, spectrum_type='All'):
 
 def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        cpi_decay = 2. * charged_pion(egams, cme / 2.0)
-        cpi_fsr = dnde_xx_to_s_to_pipig(egams, cme, params)
-
-        return cpi_decay + cpi_fsr
-    if spectrum_type == 'FSR':
+        return (dnde_charged_pion(egams, cme, params, 'FSR') +
+                dnde_charged_pion(egams, cme, params, 'Decay'))
+    elif spectrum_type == 'FSR':
         return dnde_xx_to_s_to_pipig(egams, cme, params)
-    if spectrum_type == 'Decay':
+    elif spectrum_type == 'Decay':
         return 2. * charged_pion(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
@@ -68,12 +67,11 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
 
 def dnde_neutral_kaon(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
-        ck_decay = long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
-        ck_fsr = dnde_xx_to_s_to_kkg(egams, cme, params)
-        return ck_decay + ck_fsr
-    if spectrum_type == 'FSR':
+        return (dnde_neutral_kaon(egams, cme, params, 'FSR') +
+                dnde_neutral_kaon(egams, cme, params, 'Decay'))
+    elif spectrum_type == 'FSR':
         return dnde_xx_to_s_to_kkg(egams, cme, params)
-    if spectrum_type == 'Decay':
+    elif spectrum_type == 'Decay':
         return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
@@ -84,10 +82,11 @@ def dnde_charged_kaon(egams, cme, params, spectrum_type='All'):
     decay = charged_kaon
 
     if spectrum_type == 'All':
-        return 2. * decay(egams, cme / 2.0)
-    if spectrum_type == 'FSR':
+        return (dnde_charged_kaon(egams, cme, params, 'FSR') +
+                dnde_charged_kaon(egams, cme, params, 'Decay'))
+    elif spectrum_type == 'FSR':
         return np.array([0.0 for _ in range(len(egams))])
-    if spectrum_type == 'Decay':
+    elif spectrum_type == 'Decay':
         return 2. * decay(egams, cme / 2.0)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
