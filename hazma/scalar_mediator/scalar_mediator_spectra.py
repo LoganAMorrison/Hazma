@@ -127,7 +127,7 @@ def spectra(egams, cme, params, fsi=True):
     nkaons = bfs['k0 k0'] * dnde_neutral_kaon(egams, cme, params)
     ckaons = bfs['k k'] * dnde_charged_kaon(egams, cme, params)
 
-    # Comput total spectrum
+    # Compute total spectrum
     total = muons + electrons + npions + cpions + nkaons + ckaons
 
     # Define dictionary for spectra
