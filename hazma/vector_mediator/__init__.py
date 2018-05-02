@@ -39,7 +39,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
             Array of the available final states.
         """
         warnings.warn("", PreAlphaWarning)
-        return ['mu mu', 'e e', 'pi pi', 'pi0 g']
+        return ['mu mu', 'e e', 'pi pi', 'pi0 g', "pi0 pi pi"]
 
     def cross_sections(self, cme):
         """
