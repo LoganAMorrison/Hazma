@@ -54,14 +54,18 @@ T_obs_comptel = 1.0e8
 T_obs_fermi_lat = 1.0e8
 
 
-# Reference angular size of dSph galaxy
-delta_Omega_dSph = 1.0e-3  # sr
-# J factors for various objects, all in MeV^2 cm^-5
+# Angular sizes (in sr) and J factors (in MeV^2 cm^-5) for various objects
+dOmega_dSph = 1.0e-3
 J_factor_draco = 1.0e29
+# EGRET diffuse target region
+dOmega_egret_diffuse = 6.585
+J_factor_egret_diffuse = 3.79e27
+# Fermi-LAT diffuse region
+dOmega_fermi_diffuse = 8.269
+J_factor_fermi_diffuse = 3.48e27
 
 # Object to source information
 TargetParams = namedtuple("gamma_ray_target_params",
-                          ["dPhi_dEdOmega_B", "J_factor", "delta_Omega"])
+                          ["J_factor", "dOmega"])
 # Generic dSph parameters
-dSph_params = TargetParams(dPhi_dEdOmega_B_default, J_factor_draco,
-                           delta_Omega_dSph)
+dSph_params = TargetParams(J_factor_draco, dOmega_dSph)

@@ -1,6 +1,7 @@
 from .gamma_ray_limits.gamma_ray_limit_parameters import (A_eff_e_astrogam,
                                                           T_obs_e_astrogam,
-                                                          dSph_params)
+                                                          dSph_params,
+                                                          dPhi_dEdOmega_B_default)
 from .gamma_ray_limits.compute_limits import compute_limit
 
 import numpy as np
@@ -37,7 +38,8 @@ class Theory(object):
         pass
 
     def compute_limit(self, n_sigma=5., A_eff=A_eff_e_astrogam,
-                      T_obs=T_obs_e_astrogam, target_params=dSph_params):
+                      T_obs=T_obs_e_astrogam, target_params=dSph_params,
+                      dPhi_dEdOmega_B=dPhi_dEdOmega_B_default):
         """Computes smallest value of <sigma v> detectable for given target and
         experiment parameters.
 
@@ -91,8 +93,8 @@ class Theory(object):
                             self.spectra(e_gams, 2.001*self.mx)["total"])
 
         return compute_limit(dN_dE_DM, self.mx, self_conjugate=False,
-                             n_sigma=n_sigma, A_eff=A_eff, T_obs=T_obs,
-                             target_params=target_params)
+                             n_sigma, A_eff, T_obs, target_params,
+                             dPhi_dEdOmega_B)
 
     def compute_limits(self, mxs, n_sigma=5., A_eff=A_eff_e_astrogam,
                        T_obs=T_obs_e_astrogam, target_params=dSph_params):
@@ -105,6 +107,6 @@ class Theory(object):
         for mx in mxs:
             self.mx = mx
             limits.append(self.compute_limit(n_sigma, A_eff, T_obs,
-                                             target_params))
+                                             target_params, dPhi_dEdOmega_B))
 
         return np.array(limits)
