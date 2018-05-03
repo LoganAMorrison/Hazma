@@ -1,5 +1,5 @@
 from gamma_ray_limit_parameters import (A_eff_e_astrogam, T_obs_e_astrogam,
-                                        dSph_params, dPhi_dEdOmega_B_default)
+                                        draco_params, dPhi_dEdOmega_B_default)
 from scipy import optimize
 from scipy.integrate import quad
 import numpy as np
@@ -38,7 +38,7 @@ def __f_lim(e_ab, dN_dE_DM, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
 
 def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
                   A_eff=A_eff_e_astrogam, T_obs=T_obs_e_astrogam,
-                  target_params=dSph_params,
+                  target_params=draco_params,
                   dPhi_dEdOmega_B=dPhi_dEdOmega_B_default):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
