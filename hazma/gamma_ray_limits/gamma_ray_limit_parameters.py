@@ -8,14 +8,34 @@ from scipy.interpolate import interp1d
 
 
 # Get paths to files inside the module
-bg_rf = resource_filename(__name__, "background_1703-02546.dat")
 A_eff_e_astrogam_rf = resource_filename(__name__,
                                         "e-astrogam_effective_area.dat")
 
-# Background model from arxiv:1703.02546
-e_Bs, dPhi_dEdOmega_Bs = np.transpose(np.loadtxt(bg_rf, delimiter=","))
-dPhi_dEdOmega_Bs = 1.0e3 * dPhi_dEdOmega_Bs / e_Bs**2  # convert GeV^2 -> MeV^2
-dPhi_dEdOmega_B_default = interp1d(e_Bs, dPhi_dEdOmega_Bs)
+
+def dPhi_dEdOmega_B_default(e):
+    """Simple model for the gamma ray background, d^2Phi / dE dOmega.
+
+    Notes
+    -----
+    This is the background model from arXiv:1504.04024, eq. 14. It was derived
+    by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
+    EGRET data from 30 MeV - 10 GeV.
+
+    Parameters
+    ----------
+    e : float
+        Photon energy in MeV. Must be between 0.8 MeV and 10 GeV.
+
+    Returns
+    -------
+    d^2Phi / dE dOmega : float
+        The gamma ray background.
+    """
+    if 0.8 <= e and e <= 10e3:
+        return 2.74e-3 / e**2
+    else:
+        raise ValueError("The gamma ray background model is not applicable " +
+                         "for energy %f MeV." % e)
 
 # Effective areas in cm^2
 # e-ASTROGAM
