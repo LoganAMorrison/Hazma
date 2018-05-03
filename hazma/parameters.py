@@ -74,3 +74,29 @@ Vus = 0.2248
 
 # widths
 rho_width = 146.2
+
+
+def convert_sigmav(sv, target):
+    """Changes the units of <sigma v>.
+
+    Parameters
+    ----------
+    sv : float
+        Cross section in units of MeV^-2 or cm^3 / s.
+    target : string
+        Units to convert to. Must be "MeV^-2" or "cm^3/s" -- whichever units sv
+        is NOT in.
+
+    Returns
+    -------
+    sv : float
+        sv converted to be in the target units.
+    """
+    # hbar^2 c^3 in units of MeV^2 cm^3 / s
+    hbar2_c3 = (3.e10)**3 * (6.58e-22)**2
+
+    if target == "cm^3 / s":
+        return sv * hbar2_c3
+    elif target == "MeV^-2":
+        return sv / hbar2_c3
+
