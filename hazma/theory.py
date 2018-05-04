@@ -38,10 +38,14 @@ class Theory(object):
         pass
 
     def binned_limit(self, measurement, n_sigma=2.):
-        # Create function to interpolate spectrum over energy window
+        # Create function to interpolate spectrum over energy window. Leave
+        # enough room for the convolution with an experiment's energy
+        # resolution to work correctly.
         e_gam_min = measurement.bins[0][0]
         e_gam_max = min(measurement.bins[-1][1], self.mx)
-        e_gams = np.logspace(np.log10(e_gam_min), np.log10(e_gam_max), 200)
+        e_gams = np.logspace(np.log10(e_gam_min) - 1,
+                             np.log10(e_gam_max) + 1,
+                             300)
 
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
@@ -107,10 +111,14 @@ class Theory(object):
             Smallest detectable thermally averaged total cross section in units
             of cm^3 / s
         """
-        # Create function to interpolate spectrum over energy window
+        # Create function to interpolate spectrum over energy window. Leave
+        # enough room for the convolution with an experiment's energy
+        # resolution to work correctly.
         e_gam_min = A_eff.x[0]
         e_gam_max = min(A_eff.x[-1], self.mx)
-        e_gams = np.logspace(np.log10(e_gam_min), np.log10(e_gam_max), 200)
+        e_gams = np.logspace(np.log10(e_gam_min) - 1,
+                             np.log10(e_gam_max) + 1,
+                             300)
 
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
