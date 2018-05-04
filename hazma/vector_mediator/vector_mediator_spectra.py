@@ -17,7 +17,7 @@ def dnde_ee(egams, cme, params, spectrum_type='All'):
         return (dnde_ee(egams, cme, params, "FSR") +
                 dnde_ee(egams, cme, params, "Decay"))
     elif spectrum_type == 'FSR':
-        return fsr(egams, cme / 2., "e", params)
+        return fsr(egams, cme, "e", params)
     elif spectrum_type == 'Decay':
         return np.array([0.0 for _ in range(len(egams))])
     else:
@@ -33,7 +33,7 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
         return (dnde_mumu(egams, cme, params, "FSR") +
                 dnde_mumu(egams, cme, params, "Decay"))
     elif spectrum_type == 'FSR':
-        return fsr(egams, cme / 2., "mu", params)
+        return fsr(egams, cme, "mu", params)
     elif spectrum_type == 'Decay':
         return 2. * decay(egams, cme / 2.0)
     else:
