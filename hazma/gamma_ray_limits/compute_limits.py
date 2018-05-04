@@ -1,5 +1,4 @@
-from gamma_ray_limit_parameters import (A_eff_e_astrogam, T_obs_e_astrogam,
-                                        draco_params, dPhi_dEdOmega_B_default)
+from gamma_ray_limit_parameters import background_model_range
 from scipy import optimize
 from scipy.integrate import quad
 import numpy as np
@@ -36,10 +35,8 @@ def __f_lim(e_ab, dN_dE_DM, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
                               dPhi_dEdOmega_B))
 
 
-def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
-                  A_eff=A_eff_e_astrogam, T_obs=T_obs_e_astrogam,
-                  target_params=draco_params,
-                  dPhi_dEdOmega_B=dPhi_dEdOmega_B_default):
+def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
+                   target_params, dPhi_dEdOmega_B, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -71,10 +68,6 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
     n_sigma : float
         Number of standard deviations the signal must be above the background
         to be considered detectable
-    dOmega : float
-        Angular size of observation region in sr
-    J_factor : float
-        J factor for target in MeV^2 / cm^5
     A_eff : float -> float
         Effective area of experiment in cm^2 as a function of photon energy
     T_obs : float
@@ -86,8 +79,8 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Make sure not to go outside the interpolators' ranges
-    e_a_min = max([dN_dE_DM.x[0], dPhi_dEdOmega_B.x[0]])
-    e_b_max = min([mx, dPhi_dEdOmega_B.x[-1]])
+    e_a_min = max([dN_dE_DM.x[0], background_model_range[0]])
+    e_b_max = min([mx, background_model_range[1]])
 
     # Allowed range for energy window bounds
     e_bounds = [e_a_min, e_b_max]
@@ -107,13 +100,93 @@ def compute_limit(dN_dE_DM, mx, self_conjugate=False, n_sigma=5.,
 
     # Factor to avoid double counting pairs of DM particles
     if self_conjugate:
-        dm_factor = 1.
+        f_dm = 1.
     else:
-        dm_factor = 2.
+        f_dm = 2.
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
-    prefactor = 2. * 4. * np.pi * dm_factor * mx**2 / \
+    prefactor = 2. * 4. * np.pi * f_dm * mx**2 / \
         (np.sqrt(T_obs * target_params.dOmega) *
-         target_params.J_factor)
+         target_params.J)
 
     return prefactor * n_sigma / (-limit_obj.fun)
+
+
+def binned_limit(dN_dE_DM, mx, self_conjugate, measurement, n_sigma=2.):
+    """Determines the limit on <sigma v> from data for a given DM spectrum.
+
+    Notes
+    -----
+    We define a signal to be in conflict for the measured flux for the
+    :math:`i`th bin for an experiment if
+
+    .. math:: \Phi_\chi^{(i)} > n_\sigma \sigma^{(i)} + \Phi^{(i)},
+
+    where :math:`\Phi_\chi^{(i)}` is the flux due to DM annihilations for the
+    bin, :math:`\Phi^{(i)}` is the measured flux in the bin,
+    :math:`\sigma^{(i)}` is size of the upper error bar for the bin and
+    :math:`n_\sigma = 2` is the significance. The overall limit on
+    :math:`\langle\sigma v\rangle` is computed by minimizing over the limits
+    determined for each bin.
+
+    Parameters
+    ----------
+    dN_dE_DM : float -> float
+        Photon spectrum per dark matter annihilation as a function of photon
+        energy
+    mx : float
+        Dark matter mass
+    self_conjugate : bool
+        True if DM is its own antiparticle; false otherwise
+    measurement : FluxMeasurement
+        Information about the flux measurement and target.
+    n_sigma : float
+        See the notes for this function.
+
+    Returns
+    -------
+    <sigma v>_tot : float
+        Largest allowed thermally averaged total cross section in cm^3 / s
+    """
+    # Factor to avoid double counting pairs of DM particles
+    if self_conjugate:
+        f_dm = 1.
+    else:
+        f_dm = 2.
+
+    # Factor to convert dN/dE to Phi
+    dm_flux_factor = measurement.target.J * measurement.target.dOmega / \
+        (2. * 4. * np.pi * f_dm * mx**2)
+
+    # Keep track of <sigma v> limit for each bin
+    sv_lims = [np.inf]  # make sure to return SOMETHING
+
+    # Check whether interpolator and bins have any overlap
+    if (dN_dE_DM.x[0] > measurement.bins[-1][-1] or
+            dN_dE_DM.x[-1] < measurement.bins[0][0]):
+        return np.inf
+
+    # Loop over experiment's bins
+    for i, ((bin_low, bin_high), phi, sigma) in \
+        enumerate(zip(measurement.bins, measurement.fluxes,
+                      measurement.flux_upper_errors)):
+        # Make sure not to go out of the DM spectrum interpolator's range
+        if bin_low > dN_dE_DM.x[0] and bin_high < dN_dE_DM.x[-1]:
+            # Integrate DM spectrum to compute flux in this bin
+            phi_dm = dm_flux_factor * quad(dN_dE_DM, bin_low, bin_high)[0]
+
+            assert phi_dm >= 0
+
+            if phi_dm != 0:
+                # Compute maximum allow flux
+                phi_max = measurement.target.dOmega * (bin_high - bin_low) * \
+                    (n_sigma * sigma + phi)
+
+                assert phi_max > 0
+
+                # Find limit on <sigma v>
+                sv_lims.append(phi_max / phi_dm)
+            else:
+                sv_lims.append(np.inf)
+
+    return np.min(sv_lims)

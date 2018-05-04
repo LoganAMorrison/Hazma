@@ -1,8 +1,8 @@
 from .gamma_ray_limits.gamma_ray_limit_parameters import (A_eff_e_astrogam,
                                                           T_obs_e_astrogam,
-                                                          dSph_params,
+                                                          draco_params,
                                                           dPhi_dEdOmega_B_default)
-from .gamma_ray_limits.compute_limits import compute_limit
+from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -37,9 +37,29 @@ class Theory(object):
     def spectrum_functions(self):
         pass
 
-    def compute_limit(self, n_sigma=5., A_eff=A_eff_e_astrogam,
-                      T_obs=T_obs_e_astrogam, target_params=dSph_params,
-                      dPhi_dEdOmega_B=dPhi_dEdOmega_B_default):
+    def binned_limit(self, measurement, n_sigma=2.):
+        # Create function to interpolate spectrum over energy window
+        e_gam_min = measurement.bins[0][0]
+        e_gam_max = min(measurement.bins[-1][1], self.mx)
+        e_gams = np.logspace(np.log10(e_gam_min), np.log10(e_gam_max), 200)
+
+        dN_dE_DM = interp1d(e_gams,
+                            self.spectra(e_gams, 2.001*self.mx)["total"])
+
+        return binned_limit(dN_dE_DM, self.mx, False, measurement, n_sigma)
+
+    def binned_limits(self, mxs, measurement, n_sigma=2.):
+        limits = []
+
+        for mx in mxs:
+            self.mx = mx
+            limits.append(self.binned_limit(measurement, n_sigma))
+
+        return np.array(limits)
+
+    def unbinned_limit(self, A_eff=A_eff_e_astrogam, T_obs=T_obs_e_astrogam,
+                       target_params=draco_params,
+                       dPhi_dEdOmega_B=dPhi_dEdOmega_B_default, n_sigma=5.):
         """Computes smallest value of <sigma v> detectable for given target and
         experiment parameters.
 
@@ -88,25 +108,28 @@ class Theory(object):
             of cm^3 / s
         """
         # Create function to interpolate spectrum over energy window
-        e_gams = np.logspace(np.log10(self.mx / 100.), np.log10(self.mx), 200)
+        e_gam_min = A_eff.x[0]
+        e_gam_max = min(A_eff.x[-1], self.mx)
+        e_gams = np.logspace(np.log10(e_gam_min), np.log10(e_gam_max), 200)
+
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
 
-        return compute_limit(dN_dE_DM, self.mx, self_conjugate=False,
-                             n_sigma, A_eff, T_obs, target_params,
-                             dPhi_dEdOmega_B)
+        return unbinned_limit(dN_dE_DM, self.mx, False, A_eff, T_obs,
+                              target_params, dPhi_dEdOmega_B, n_sigma)
 
-    def compute_limits(self, mxs, n_sigma=5., A_eff=A_eff_e_astrogam,
-                       T_obs=T_obs_e_astrogam, target_params=dSph_params):
+    def unbinned_limits(self, mxs, A_eff=A_eff_e_astrogam,
+                        T_obs=T_obs_e_astrogam, target_params=draco_params,
+                        dPhi_dEdOmega_B=dPhi_dEdOmega_B_default, n_sigma=5.):
         """Computes gamma ray constraints over a range of DM masses.
 
-        See documentation for :func:`compute_limit`.
+        See documentation for :func:`unbinned_limit`.
         """
         limits = []
 
         for mx in mxs:
             self.mx = mx
-            limits.append(self.compute_limit(n_sigma, A_eff, T_obs,
-                                             target_params, dPhi_dEdOmega_B))
+            limits.append(self.unbinned_limit(A_eff, T_obs, target_params,
+                                              dPhi_dEdOmega_B, n_sigma))
 
         return np.array(limits)
