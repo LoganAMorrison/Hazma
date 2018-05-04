@@ -34,6 +34,13 @@ class Theory(object):
         pass
 
     @abstractmethod
+    def gamma_ray_line_energies(self, cme):
+        """Returns the energies of monochromatic gamma rays produces by this
+        theory.
+        """
+        pass
+
+    @abstractmethod
     def spectrum_functions(self):
         pass
 
@@ -45,7 +52,7 @@ class Theory(object):
         e_gam_max = min(measurement.bins[-1][1], self.mx)
         e_gams = np.logspace(np.log10(e_gam_min) - 1,
                              np.log10(e_gam_max) + 1,
-                             300)
+                             200)
 
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
@@ -118,7 +125,7 @@ class Theory(object):
         e_gam_max = min(A_eff.x[-1], self.mx)
         e_gams = np.logspace(np.log10(e_gam_min) - 1,
                              np.log10(e_gam_max) + 1,
-                             300)
+                             200)
 
         dN_dE_DM = interp1d(e_gams,
                             self.spectra(e_gams, 2.001*self.mx)["total"])
