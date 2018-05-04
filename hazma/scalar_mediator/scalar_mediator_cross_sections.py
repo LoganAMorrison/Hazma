@@ -18,7 +18,7 @@ def __msqrd_xx_s(s, params):
     gsxx = params.gsxx
     mx = params.mx
 
-    return -(gsxx**2 * (4 * mx**2 - s)) / 2.
+    return -(gsxx**2 * (4. * mx**2 - s)) / 2.
 
 
 def sigma_xx_to_s_to_etaeta(Q, params):
@@ -49,17 +49,17 @@ def sigma_xx_to_s_to_etaeta(Q, params):
     if Q <= 2 * meta or Q < 2. * mx:
         return 0.0
 
-    sigma = (gsxx**2 * sqrt(-4 * meta**2 + s) *
-             sqrt(-4 * mx**2 + s) *
-             (6 * gsGG * (2 * meta**2 - s) *
-              (-9 * vh - 9 * gsff * vs + 2 * gsGG * vs) *
-              (9 * vh + 8 * gsGG * vs) + b0 *
-                 (mdq + 4 * msq + muq) * (9 * vh + 4 * gsGG * vs) *
-                 (54 * gsGG * vh - 32 * gsGG**2 * vs + 9 * gsff *
-                  (9 * vh + 16 * gsGG * vs)))**2) / \
+    sigma = (gsxx**2 * sqrt(-4. * meta**2 + s) *
+             sqrt(-4. * mx**2 + s) *
+             (6. * gsGG * (2. * meta**2 - s) *
+              (-9. * vh - 9. * gsff * vs + 2. * gsGG * vs) *
+              (9. * vh + 8. * gsGG * vs) + b0 *
+                 (mdq + 4. * msq + muq) * (9. * vh + 4. * gsGG * vs) *
+                 (54. * gsGG * vh - 32. * gsGG**2 * vs + 9. * gsff *
+                  (9. * vh + 16. * gsGG * vs)))**2) / \
         (576. * pi * (ms**2 - s)**2 * s *
-         (9 * vh + 9 * gsff * vs - 2 * gsGG * vs)**2 *
-         (9 * vh + 4 * gsGG * vs)**2 * (9 * vh + 8 * gsGG * vs)**2)
+         (9. * vh + 9. * gsff * vs - 2. * gsGG * vs)**2 *
+         (9. * vh + 4. * gsGG * vs)**2 * (9. * vh + 8. * gsGG * vs)**2)
 
     return sigma.real
 
@@ -90,8 +90,8 @@ def sigma_xx_to_s_to_ff(Q, mf, params):
     if Q <= 2 * mf or Q < 2. * mx:
         return 0.0
 
-    sigma = (gsff**2 * gsxx**2 * mf**2 * (-4 * mf**2 + s)**1.5 *
-             sqrt(-4 * mx**2 + s)) / \
+    sigma = (gsff**2 * gsxx**2 * mf**2 * (-4. * mf**2 + s)**1.5 *
+             sqrt(-4. * mx**2 + s)) / \
         (16. * pi * (ms**2 - s)**2 * s * vh**2)
 
     return sigma.real
@@ -124,7 +124,7 @@ def sigma_xx_to_s_to_gg(Q, params):
         return 0.0
 
     sigma = (alpha_em**2 * gsFF**2 * gsxx**2 * s**1.5 *
-             sqrt(-4 * mx**2 + s)) / \
+             sqrt(-4. * mx**2 + s)) / \
         (512. * pi**3 * (ms**2 - s)**2 * vh**2)
 
     return sigma.real
@@ -157,12 +157,12 @@ def sigma_xx_to_s_to_k0k0(Q, params, unit='BSE'):
 
     s = Q**2
 
-    amp_s_to_k0k0 = (-2 * gsGG * (-2 * mk0**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
-        (b0 * (mdq + msq) * (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                             9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+    amp_s_to_k0k0 = (-2. * gsGG * (-2. * mk0**2 + s)) / \
+        (9. * vh + 4. * gsGG * vs) - \
+        (b0 * (mdq + msq) * (54. * gsGG * vh - 32. * gsGG**2 * vs +
+                             9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
+        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
+         (9. * vh + 8. * gsGG * vs))
 
     msqrd = abs(amp_s_to_k0k0)**2 * \
         __msqrd_xx_s(s, params) / (s - ms**2)**2
@@ -201,13 +201,13 @@ def sigma_xx_to_s_to_kk(Q, params, unit='BSE'):
 
     s = Q**2
 
-    amp_s_to_kk = (-2 * gsGG * (-2 * mk**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
+    amp_s_to_kk = (-2. * gsGG * (-2. * mk**2 + s)) / \
+        (9. * vh + 4. * gsGG * vs) - \
         (b0 * (msq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+         (54. * gsGG * vh - 32. * gsGG**2 * vs +
+          9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
+        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
+         (9. * vh + 8. * gsGG * vs))
 
     msqrd = abs(amp_s_to_kk)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 
@@ -245,13 +245,13 @@ def sigma_xx_to_s_to_pi0pi0(Q, params, unit="BSE"):
 
     s = Q**2
 
-    amp_s_to_pi0pi0 = (-2 * gsGG * (-2 * mpi0**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
+    amp_s_to_pi0pi0 = (-2. * gsGG * (-2. * mpi0**2 + s)) / \
+        (9. * vh + 4. * gsGG * vs) - \
         (b0 * (mdq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+         (54. * gsGG * vh - 32. * gsGG**2 * vs +
+          9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
+        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
+         (9. * vh + 8. * gsGG * vs))
 
     msqrd = abs(amp_s_to_pi0pi0)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 
@@ -289,13 +289,13 @@ def sigma_xx_to_s_to_pipi(Q, params, unit="BSE"):
 
     s = Q**2
 
-    amp_s_to_pipi = (-2 * gsGG * (-2 * mpi**2 + s)) / \
-        (9 * vh + 4 * gsGG * vs) - \
+    amp_s_to_pipi = (-2. * gsGG * (-2. * mpi**2 + s)) / \
+        (9. * vh + 4. * gsGG * vs) - \
         (b0 * (mdq + muq) *
-         (54 * gsGG * vh - 32 * gsGG**2 * vs +
-          9 * gsff * (9 * vh + 16 * gsGG * vs))) / \
-        ((9 * vh + 9 * gsff * vs - 2 * gsGG * vs) *
-         (9 * vh + 8 * gsGG * vs))
+         (54. * gsGG * vh - 32. * gsGG**2 * vs +
+          9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
+        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
+         (9. * vh + 8. * gsGG * vs))
 
     msqrd = abs(amp_s_to_pipi)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
 
