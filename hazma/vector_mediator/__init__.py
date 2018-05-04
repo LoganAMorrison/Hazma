@@ -6,7 +6,7 @@ from vector_mediator_cross_sections import branching_fractions as bfs
 from vector_mediator_cross_sections import cross_sections as cs
 
 from vector_mediator_spectra import spectra as specs
-from vector_mediator_spectra import dnde_mumu, dnde_ee
+from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
 import warnings
 from ..hazma_errors import PreAlphaWarning
@@ -14,8 +14,6 @@ from ..hazma_errors import PreAlphaWarning
 
 class VectorMediator(Theory, VectorMediatorParameters):
     r"""
-    WARNING: This class is pre-alpha.
-
     Create a vector mediator model object.
     """
 
@@ -29,8 +27,6 @@ class VectorMediator(Theory, VectorMediatorParameters):
 
     def list_final_states(self):
         """
-        WARNING: This function is pre-alpha.
-
         Return a list of the available final states.
 
         Returns
@@ -38,7 +34,6 @@ class VectorMediator(Theory, VectorMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        warnings.warn("", PreAlphaWarning)
         return ['mu mu', 'e e', 'pi pi', 'pi0 g', "pi0 pi pi"]
 
     def cross_sections(self, cme):
@@ -54,7 +49,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         -------
         cs : dictionary
             Dictionary of the cross sections of the theory. The keys are
-            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi'.
+            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi', 'pi0 pi pi'.
         """
         return cs(cme, self)
 
@@ -78,8 +73,6 @@ class VectorMediator(Theory, VectorMediatorParameters):
 
     def spectra(self, egams, cme):
         """
-        WARNING: This function is pre-alpha.
-
         Compute the total spectrum from two fermions annihilating through a
         vector mediator to mesons and leptons.
 
@@ -96,13 +89,10 @@ class VectorMediator(Theory, VectorMediatorParameters):
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
             'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
-        warnings.warn("", PreAlphaWarning)
         return specs(egams, cme, self)
 
     def spectrum_functions(self):
         """
-        WARNING: This function is pre-alpha.
-
         Returns a dictionary of all the avaiable spectrum functions for
         a pair of initial state fermions with mass `mx` annihilating into
         each available final state.
@@ -111,12 +101,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         of the gamma ray energies to evaluate the spectra at and `cme`, the
         center of mass energy of the process.
         """
-        warnings.warn("", PreAlphaWarning)
-
-        def mumu(eng_gams, cme):
-            return dnde_mumu(eng_gams, cme, self)
-
-        def ee(eng_gams, cme):
-            return dnde_ee(eng_gams, cme, self)
-
-        return {'mu mu': mumu, 'e e': ee}
+        return {'mu mu': lambda egams, cme: dnde_mumu(egams, cme, self),
+                'e e': lambda egams, cme: dnde_ee(egams, cme, self),
+                'pi pi': lambda egams, cme: dnde_pipi(egams, cme, self),
+                'pi0 g': lambda egams, cme: dnde_pi0g(egams, cme, self)}
