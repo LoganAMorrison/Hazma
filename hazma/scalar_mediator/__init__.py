@@ -179,6 +179,11 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         """
         return bfs(cme, self)
 
+    def gamma_ray_lines(self, cme):
+        bfs = self.branching_fractions(cme)
+
+        return [cme / 2.0, bfs["g g"]]
+
     def spectra(self, egams, cme):
         """
         Compute the total spectrum from two fermions annihilating through a

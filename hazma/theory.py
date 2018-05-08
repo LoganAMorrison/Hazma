@@ -30,14 +30,14 @@ class Theory(object):
         pass
 
     @abstractmethod
-    def spectra(self, eng_gams, cme):
+    def gamma_ray_lines(self, cme):
+        """Returns the energies of and branching fractions into monochromatic
+        gamma rays produces by this theory.
+        """
         pass
 
     @abstractmethod
-    def gamma_ray_line_energies(self, cme):
-        """Returns the energies of monochromatic gamma rays produces by this
-        theory.
-        """
+    def spectra(self, eng_gams, cme):
         pass
 
     @abstractmethod

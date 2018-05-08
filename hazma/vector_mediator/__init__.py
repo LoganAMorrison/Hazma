@@ -8,6 +8,8 @@ from vector_mediator_cross_sections import cross_sections as cs
 from vector_mediator_spectra import spectra as specs
 from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
+from ..parameters import neutral_pion_mass as mpi0
+
 import warnings
 from ..hazma_errors import PreAlphaWarning
 
@@ -70,6 +72,11 @@ class VectorMediator(Theory, VectorMediatorParameters):
             'total', 'mu mu', 'e e', 'pi0 g', 'pi pi'.
         """
         return bfs(cme, self)
+
+    def gamma_ray_line_energies(self, cme):
+        bfs = self.branching_fractions(cme)
+
+        return [(cme**2 - mpi0**2) / (2. * cme), bfs["pi0 g"]]
 
     def spectra(self, egams, cme):
         """
