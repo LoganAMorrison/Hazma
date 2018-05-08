@@ -1,6 +1,7 @@
 from gamma_ray_limit_parameters import background_model_range
 from scipy import optimize
 from scipy.integrate import quad
+from scipy.interpolate import interp1d
 import numpy as np
 
 
@@ -190,3 +191,45 @@ def binned_limit(dnde, mx, self_conjugate, measurement, n_sigma=2.):
                 sv_lims.append(np.inf)
 
     return np.min(sv_lims)
+
+
+def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, eps):
+    """Convolves a DM annihilation spectrum with a detector's spectral
+    resolution function.
+
+    Parameters
+    ----------
+    e_gams : np.array
+        An array of photon energies, in MeV.
+    dndes : np.array
+        The source spectrum at the energies in e_gams, in MeV^-1.
+    line_es : np.array
+        An array of energies at which the DM spectrum has monochromatic gamma
+        ray lines, in MeV.
+    line_bfs : np.array
+        The branching fraction for DM to annihilate to the states producing
+        lines with energies line_es.
+    eps : float -> float
+        The detector's energy resolution (Delta E / E) as a function of photon
+        energy in MeV.
+
+    Returns
+    -------
+    dnde_det : interp1d
+        An interpolator giving the DM annihilation spectrum as seen by the
+        detector. Given photon energies outside the range covered by e_gams,
+        the interpolator will produce bounds_errors.
+    """
+    # Get the spectral resolution function, normalized to one
+    def spec_res_fn(e):
+        spec_res_fn = np.exp(-(e_gams - e)**2 / (2. * (eps(e) * e)**2))
+        return spec_res_fn / spec_res_fn.sum()
+
+    # Continuum contribution
+    dndes_cont_det = np.array([np.dot(spec_res_fn(e), dndes) for e in e_gams])
+
+    # Line contribution
+    dndes_line_det = np.array([spec_res_fn(e) * bf for
+                               e, bf in zip(line_es, line_bfs)]).sum(axis=0)
+
+    return interp1d(e_gams, dndes_cont_det + dndes_line_det)
