@@ -13,6 +13,8 @@ from scalar_mediator_widths import partial_widths as pws
 
 from .scalar_mediator_parameters import ScalarMediatorParameters
 
+import numpy as np
+
 
 class ScalarMediator(Theory, ScalarMediatorParameters):
     r"""
@@ -142,7 +144,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['eta eta', 'mu mu', 'e e', 'g g', 'K0 K0',
+        return ['eta eta', 'mu mu', 'e e', 'g g', 'k0 k0',
                 'k k', 'pi0 pi0', 'pi pi']
 
     def cross_sections(self, cme):
@@ -182,7 +184,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
     def gamma_ray_lines(self, cme):
         bfs = self.branching_fractions(cme)
 
-        return [cme / 2.0, bfs["g g"]]
+        return [np.array([cme / 2.0]), np.array([bfs["g g"]])]
 
     def spectra(self, egams, cme):
         """
