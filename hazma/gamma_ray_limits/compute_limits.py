@@ -4,11 +4,11 @@ from scipy.integrate import quad
 import numpy as np
 
 
-def __I_S(e_a, e_b, dN_dE_DM, A_eff, T_obs):
+def __I_S(e_a, e_b, dnde, A_eff, T_obs):
     """Integrand required to compute number of photons from DM annihilations.
     """
     def integrand_S(e):
-        return dN_dE_DM(e) * A_eff(e)
+        return dnde(e) * A_eff(e)
 
     return quad(integrand_S, e_a, e_b)[0]
 
@@ -21,7 +21,7 @@ def __I_B(e_a, e_b, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
     return quad(integrand_B, e_a, e_b)[0]
 
 
-def __f_lim(e_ab, dN_dE_DM, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
+def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
     """Objective function for selecting energy window.
     """
     e_a = min(e_ab)
@@ -30,12 +30,12 @@ def __f_lim(e_ab, dN_dE_DM, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
     if e_a == e_b:
         return 0.
     else:
-        return -__I_S(e_a, e_b, dN_dE_DM, A_eff, T_obs) / \
+        return -__I_S(e_a, e_b, dnde, A_eff, T_obs) / \
                 np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params,
                               dPhi_dEdOmega_B))
 
 
-def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
+def unbinned_limit(dnde, mx, self_conjugate, A_eff, T_obs,
                    target_params, dPhi_dEdOmega_B, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
@@ -55,7 +55,7 @@ def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
 
     Parameters
     ----------
-    dN_dE_DM : float -> float
+    dnde : float -> float
         Photon spectrum per dark matter annihilation as a function of photon
         energy
     mx : float
@@ -79,7 +79,7 @@ def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Make sure not to go outside the interpolators' ranges
-    e_a_min = max([dN_dE_DM.x[0], background_model_range[0]])
+    e_a_min = max([dnde.x[0], background_model_range[0]])
     e_b_max = min([mx, background_model_range[1]])
 
     # Allowed range for energy window bounds
@@ -93,7 +93,7 @@ def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
                                   bounds=2*[e_bounds],
-                                  args=(dN_dE_DM, A_eff, T_obs, target_params,
+                                  args=(dnde, A_eff, T_obs, target_params,
                                         dPhi_dEdOmega_B),
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
@@ -112,7 +112,7 @@ def unbinned_limit(dN_dE_DM, mx, self_conjugate, A_eff, T_obs,
     return prefactor * n_sigma / (-limit_obj.fun)
 
 
-def binned_limit(dN_dE_DM, mx, self_conjugate, measurement, n_sigma=2.):
+def binned_limit(dnde, mx, self_conjugate, measurement, n_sigma=2.):
     """Determines the limit on <sigma v> from data for a given DM spectrum.
 
     Notes
@@ -131,7 +131,7 @@ def binned_limit(dN_dE_DM, mx, self_conjugate, measurement, n_sigma=2.):
 
     Parameters
     ----------
-    dN_dE_DM : float -> float
+    dnde : float -> float
         Photon spectrum per dark matter annihilation as a function of photon
         energy
     mx : float
@@ -162,18 +162,18 @@ def binned_limit(dN_dE_DM, mx, self_conjugate, measurement, n_sigma=2.):
     sv_lims = [np.inf]  # make sure to return SOMETHING
 
     # Check whether interpolator and bins have any overlap
-    if (dN_dE_DM.x[0] > measurement.bins[-1][-1] or
-            dN_dE_DM.x[-1] < measurement.bins[0][0]):
+    if (dnde.x[0] > measurement.bins[-1][-1] or
+            dnde.x[-1] < measurement.bins[0][0]):
         return np.inf
 
     # Loop over experiment's bins
     for i, ((bin_low, bin_high), phi, sigma) in \
         enumerate(zip(measurement.bins, measurement.fluxes,
-                      measurement.flux_upper_errors)):
+                      measurement.upper_errors)):
         # Make sure not to go out of the DM spectrum interpolator's range
-        if bin_low > dN_dE_DM.x[0] and bin_high < dN_dE_DM.x[-1]:
+        if bin_low > dnde.x[0] and bin_high < dnde.x[-1]:
             # Integrate DM spectrum to compute flux in this bin
-            phi_dm = dm_flux_factor * quad(dN_dE_DM, bin_low, bin_high)[0]
+            phi_dm = dm_flux_factor * quad(dnde, bin_low, bin_high)[0]
 
             assert phi_dm >= 0
 
