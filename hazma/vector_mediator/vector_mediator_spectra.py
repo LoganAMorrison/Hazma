@@ -92,13 +92,20 @@ def spectra(egams, cme, params):
     # Compute branching fractions
     bfs = branching_fractions(cme, params)
 
+    # Only compute the spectrum if the channel's branching fraction is nonzero
+    def spec_helper(bf, specfn):
+        if bf != 0:
+            return bf * specfn(egams, cme, params)
+        else:
+            return np.zeros(egams.shape)
+
     # Leptons
-    muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
-    electrons = bfs['e e'] * dnde_ee(egams, cme, params)
+    muons = spec_helper(bfs['mu mu'], dnde_mumu)
+    electrons = spec_helper(bfs['e e'], dnde_ee)
 
     # Pions
-    pi0g = bfs["pi0 g"] * dnde_pi0g(egams, cme, params)
-    pipi = bfs["pi pi"] * dnde_pipi(egams, cme, params)
+    pi0g = spec_helper(bfs["pi0 g"], dnde_pi0g)
+    pipi = spec_helper(bfs["pi pi"], dnde_pipi)
 
     # Compute total spectrum
     total = muons + electrons + pi0g + pipi
