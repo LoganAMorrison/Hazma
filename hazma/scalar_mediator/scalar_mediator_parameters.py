@@ -114,8 +114,11 @@ class ScalarMediatorParameters(object):
         """
         Returns the unphysical value of B.
         """
-        return b0 * (1 + kappa) / (1 + 6. * kappa *
-                                   (1. + 3. * self._gsff / 2. / self._gsGG))
+        if self.__is_vev_zero():
+            return b0
+        else:
+            return b0 * (1 + kappa) /  \
+                    (1 + 6. * kappa * (1. + 3. * self._gsff / 2. / self._gsGG))
 
     def msT(self, fpiT, BT):
         """
@@ -145,7 +148,7 @@ class ScalarMediatorParameters(object):
         """
         Returns the two possible values of the scalar potential.
         """
-        if 2.*self._gsGG + 3.*self._gsff == 0.0:
+        if self.__is_vev_zero():
             return 0., 0.
         else:
             root1 = (-3 * self._ms * sqrt(trM) * vh +
@@ -163,3 +166,12 @@ class ScalarMediatorParameters(object):
 
     def __kappa(self, fpiT):
         return fpi**2 / fpiT**2 - 1.
+
+    def __is_vev_zero(self):
+        """Checks whether the scalar's vev is zero
+
+        Returns
+        -------
+        True if 2 gsGG + 3 gsff == 0, False otherwise.
+        """
+        return 2. * self._gsGG + 3. * self._gsff == 0.
