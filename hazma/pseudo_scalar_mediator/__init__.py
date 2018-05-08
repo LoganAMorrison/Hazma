@@ -9,6 +9,7 @@ from .pseudo_scalar_mediator_spectra import dnde_mumu, dnde_ee
 from .pseudo_scalar_mediator_spectra import spectra as specs
 
 import warnings
+import numpy as np
 from ..hazma_errors import PreAlphaWarning
 
 
@@ -81,6 +82,10 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         """
         warnings.warn("", PreAlphaWarning)
         return bfs(cme, self.params)
+
+    def gamma_ray_lines(self, cme):
+        warnings.warn("", PreAlphaWarning)
+        return [np.array([]), np.array([])]
 
     def spectra(self, egams, cme):
         """
