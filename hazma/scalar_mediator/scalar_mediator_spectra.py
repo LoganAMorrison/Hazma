@@ -115,17 +115,24 @@ def spectra(egams, cme, params, fsi=True):
     # Compute branching fractions
     bfs = branching_fractions(cme, params)
 
+    # Only compute the spectrum if the channel's branching fraction is nonzero
+    def spec_helper(bf, specfn):
+        if bf != 0:
+            return bf * specfn(egams, cme, params)
+        else:
+            return np.zeros(egams.shape)
+
     # Pions
-    npions = bfs['pi0 pi0'] * dnde_neutral_pion(egams, cme, params)
-    cpions = bfs['pi pi'] * dnde_charged_pion(egams, cme, params)
+    npions = spec_helper(bfs['pi0 pi0'], dnde_neutral_pion)
+    cpions = spec_helper(bfs['pi pi'], dnde_charged_pion)
 
     # Leptons
-    muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
-    electrons = bfs['e e'] * dnde_ee(egams, cme, params)
+    muons = spec_helper(bfs['mu mu'], dnde_mumu)
+    electrons = spec_helper(bfs['e e'], dnde_ee)
 
     # Kaons
-    nkaons = bfs['k0 k0'] * dnde_neutral_kaon(egams, cme, params)
-    ckaons = bfs['k k'] * dnde_charged_kaon(egams, cme, params)
+    nkaons = spec_helper(bfs['k0 k0'], dnde_neutral_kaon)
+    ckaons = spec_helper(bfs['k k'], dnde_charged_kaon)
 
     # Compute total spectrum
     total = muons + electrons + npions + cpions + nkaons + ckaons
