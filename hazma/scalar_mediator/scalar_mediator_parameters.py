@@ -145,16 +145,21 @@ class ScalarMediatorParameters(object):
         """
         Returns the two possible values of the scalar potential.
         """
-        root1 = (-3 * self._ms * sqrt(trM) * vh +
-                 sqrt(4 * b0 * fpi**2 * (3 * self._gsff + 2 * self._gsGG)**2 +
-                      9 * self._ms**2 * trM * vh**2)) / \
-            (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
-        root2 = (-3 * self._ms * sqrt(trM) * vh -
-                 sqrt(4 * b0 * fpi**2 * (3 * self._gsff + 2 * self._gsGG)**2 +
-                      9 * self._ms**2 * trM * vh**2)) / \
-            (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
+        if 2.*self._gsGG + 3.*self._gsff == 0.0:
+            return 0., 0.
+        else:
+            root1 = (-3 * self._ms * sqrt(trM) * vh +
+                     sqrt(4 * b0 * fpi**2 *
+                          (3 * self._gsff + 2 * self._gsGG)**2 +
+                          9 * self._ms**2 * trM * vh**2)) / \
+                (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
+            root2 = (-3 * self._ms * sqrt(trM) * vh -
+                     sqrt(4 * b0 * fpi**2 *
+                          (3 * self._gsff + 2 * self._gsGG)**2 +
+                          9 * self._ms**2 * trM * vh**2)) / \
+                (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
 
-        return root1, root2
+            return root1, root2
 
     def __kappa(self, fpiT):
         return fpi**2 / fpiT**2 - 1.
