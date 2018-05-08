@@ -1,4 +1,3 @@
-from gamma_ray_limit_parameters import background_model_range
 from scipy import optimize
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
@@ -36,8 +35,9 @@ def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
                               dPhi_dEdOmega_B))
 
 
-def unbinned_limit(dnde, mx, self_conjugate, A_eff, T_obs,
-                   target_params, dPhi_dEdOmega_B, n_sigma=5.):
+def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
+                   energy_res, T_obs, target_params, dPhi_dEdOmega_B,
+                   n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -58,12 +58,14 @@ def unbinned_limit(dnde, mx, self_conjugate, A_eff, T_obs,
     ----------
     dnde : float -> float
         Photon spectrum per dark matter annihilation as a function of photon
-        energy
+        energy. Note that this spectrum must be defined over the whole domain
+        of A_eff.
     mx : float
         Dark matter mass
     dPhi_dEdOmega_B : float -> float
         Background photon spectrum per solid angle as a function of photon
-        energy
+        energy. Note that the model must be defined over the whole domain of
+        A_eff.
     self_conjugate : bool
         True if DM is its own antiparticle; false otherwise
     n_sigma : float
@@ -79,41 +81,35 @@ def unbinned_limit(dnde, mx, self_conjugate, A_eff, T_obs,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Make sure not to go outside the interpolators' ranges
-    e_a_min = max([dnde.x[0], background_model_range[0]])
-    e_b_max = min([mx, background_model_range[1]])
+    # Convolve the spectrum with the detector's spectral resolution
+    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
+                                     energy_res)
 
     # Allowed range for energy window bounds
-    e_bounds = [e_a_min, e_b_max]
+    e_bounds = [e_gams[0], e_gams[-1]]
 
     # Initial guesses for energy window lower bound
-    e_a_0 = 0.5 * (e_b_max - e_a_min)
-    e_b_0 = 0.75 * (e_b_max - e_a_min)
+    e_a_0 = 0.5 * (e_gams[-1] - e_gams[0])
+    e_b_0 = 0.75 * (e_gams[-1] - e_gams[0])
 
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
                                   bounds=2*[e_bounds],
-                                  args=(dnde, A_eff, T_obs, target_params,
+                                  args=(dnde_det, A_eff, T_obs, target_params,
                                         dPhi_dEdOmega_B),
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
 
-    # Factor to avoid double counting pairs of DM particles
-    if self_conjugate:
-        f_dm = 1.
-    else:
-        f_dm = 2.
-
     # Insert appropriate prefactors to convert result to <sigma v>_tot
-    prefactor = 2. * 4. * np.pi * f_dm * mx**2 / \
-        (np.sqrt(T_obs * target_params.dOmega) *
-         target_params.J)
+    prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
+                 (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
 
     return prefactor * n_sigma / (-limit_obj.fun)
 
 
-def binned_limit(dnde, mx, self_conjugate, measurement, n_sigma=2.):
+def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
+                 measurement, n_sigma=2.):
     """Determines the limit on <sigma v> from data for a given DM spectrum.
 
     Notes
@@ -134,7 +130,8 @@ def binned_limit(dnde, mx, self_conjugate, measurement, n_sigma=2.):
     ----------
     dnde : float -> float
         Photon spectrum per dark matter annihilation as a function of photon
-        energy
+        energy. Note that this spectrum must be defined over the whole energy
+        range covered by measurement.bins.
     mx : float
         Dark matter mass
     self_conjugate : bool
@@ -149,51 +146,42 @@ def binned_limit(dnde, mx, self_conjugate, measurement, n_sigma=2.):
     <sigma v>_tot : float
         Largest allowed thermally averaged total cross section in cm^3 / s
     """
-    # Factor to avoid double counting pairs of DM particles
-    if self_conjugate:
-        f_dm = 1.
-    else:
-        f_dm = 2.
-
     # Factor to convert dN/dE to Phi
-    dm_flux_factor = measurement.target.J * measurement.target.dOmega / \
-        (2. * 4. * np.pi * f_dm * mx**2)
+    dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
+                      (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2))
 
     # Keep track of <sigma v> limit for each bin
-    sv_lims = [np.inf]  # make sure to return SOMETHING
+    sv_lims = [np.inf]
 
-    # Check whether interpolator and bins have any overlap
-    if (dnde.x[0] > measurement.bins[-1][-1] or
-            dnde.x[-1] < measurement.bins[0][0]):
-        return np.inf
+    # Convolve the spectrum with the detector's spectral resolution
+    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
+                                     measurement.energy_res)
 
     # Loop over experiment's bins
     for i, ((bin_low, bin_high), phi, sigma) in \
         enumerate(zip(measurement.bins, measurement.fluxes,
                       measurement.upper_errors)):
-        # Make sure not to go out of the DM spectrum interpolator's range
-        if bin_low > dnde.x[0] and bin_high < dnde.x[-1]:
-            # Integrate DM spectrum to compute flux in this bin
-            phi_dm = dm_flux_factor * quad(dnde, bin_low, bin_high)[0]
+        # Integrate DM spectrum to compute flux in this bin
+        phi_dm = dm_flux_factor * quad(dnde_det, bin_low, bin_high)[0]
 
+        if not np.isnan(phi_dm):
             assert phi_dm >= 0
 
-            if phi_dm != 0:
-                # Compute maximum allow flux
-                phi_max = measurement.target.dOmega * (bin_high - bin_low) * \
-                    (n_sigma * sigma + phi)
+            # Compute maximum allow flux
+            phi_max = (measurement.target.dOmega * (bin_high - bin_low) *
+                       (n_sigma * sigma + phi))
 
-                assert phi_max > 0
+            assert phi_max > 0
 
-                # Find limit on <sigma v>
-                sv_lims.append(phi_max / phi_dm)
-            else:
-                sv_lims.append(np.inf)
+            # Find limit on <sigma v>
+            sv_lims.append(phi_max / phi_dm)
+        else:
+            sv_lims.append(np.inf)
 
     return np.min(sv_lims)
 
 
-def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, eps):
+def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
     """Convolves a DM annihilation spectrum with a detector's spectral
     resolution function.
 
@@ -209,7 +197,7 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, eps):
     line_bfs : np.array
         The branching fraction for DM to annihilate to the states producing
         lines with energies line_es.
-    eps : float -> float
+    energy_res : float -> float
         The detector's energy resolution (Delta E / E) as a function of photon
         energy in MeV.
 
@@ -222,8 +210,13 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, eps):
     """
     # Get the spectral resolution function, normalized to one
     def spec_res_fn(e):
-        spec_res_fn = np.exp(-(e_gams - e)**2 / (2. * (eps(e) * e)**2))
-        return spec_res_fn / spec_res_fn.sum()
+        eps = energy_res(e)
+
+        if eps == 0.:
+            return np.zeros(e_gams.shape)
+        else:
+            srf = np.exp(-(e_gams - e)**2 / (2. * (energy_res(e) * e)**2))
+            return srf / srf.sum()
 
     # Continuum contribution
     dndes_cont_det = np.array([np.dot(spec_res_fn(e), dndes) for e in e_gams])
