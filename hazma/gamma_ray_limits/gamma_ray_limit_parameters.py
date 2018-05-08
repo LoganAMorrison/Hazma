@@ -29,35 +29,96 @@ e_astrogam_energy_res_rf = resource_filename(__name__,
                                              "e-astrogam_energy_resolution.dat")
 
 
-# Range of validity for the background model. TODO: put this in a class.
-background_model_range = [0.8, 10.e3]
+class BackgroundModel(object):
+    """Represents a gamma ray background model.
 
-
-def dPhi_dEdOmega_B_default(e):
-    """Simple model for the gamma ray background, d^2Phi / dE dOmega.
-
-    Notes
-    -----
-    This is the background model from arXiv:1504.04024, eq. 14. It was derived
-    by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
-    EGRET data from 30 MeV - 10 GeV.
-
-    Parameters
+    Attributes
     ----------
-    e : float
-        Photon energy in MeV. Must be between 0.8 MeV and 10 GeV.
-
-    Returns
-    -------
-    d^2Phi / dE dOmega : float
-        The gamma ray background.
+    e_range : [float, float]
+        Minimum and maximum photon energies for which this model is valid, in
+        MeV.
     """
-    if background_model_range[0] <= e and e <= background_model_range[1]:
-        return 2.74e-3 / e**2
-    else:
-        raise ValueError("The gamma ray background model is not applicable " +
-                         "for energy %f MeV." % e)
+    def __init__(self, e_range, flux_fn):
+        """
+        Parameters
+        ----------
+        e_range : [float, float]
+            Photon energies (MeV) between which this background model is valid.
+            Note that these bounds are inclusive.
+        flux_fn : np.array
+            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
+            photon energy (MeV).
+        """
+        self.e_range = e_range
+        self.__dPhi_dEdOmega = flux_fn
 
+    @classmethod
+    def from_file(cls, rf_name):
+        """Factory method to create a BackgroundModel from a data file.
+
+        Parameters
+        ----------
+        rf_name : resource_filename
+            Name of file whose lines are comma-separated pairs of photon
+            energies and background fluxes, in MeV and MeV^-1 sr^-1 m^-2 s^-1.
+
+        Returns
+        -------
+        bg_model : BackgroundModel
+        """
+        flux_fn = load_interp(rf_name, bounds_error=True, fill_value=np.nan)
+        e_range = flux_fn.x[[0, -1]]
+
+        return cls(e_range, flux_fn)
+
+    @classmethod
+    def from_vals(cls, es, fluxes):
+        """Factory method to create a BackgroundModel from flux data points.
+
+        Parameters
+        ----------
+        es : np.array
+            Photon energies (MeV).
+        fluxes : np.array
+            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) at the energies
+            in es.
+
+        Returns
+        -------
+        bg_model : BackgroundModel
+        """
+        return cls(es[[0, -1]], interp1d(es, fluxes))
+
+    def dPhi_dEdOmega(self, es):
+        """Computes this background model's gamma ray flux.
+
+        Parameters
+        ----------
+        es : float or np.array
+            Photon energy/energies at which to compute
+
+        Returns
+        -------
+        d^2Phi / dE dOmega
+            Background gamma ray flux, in MeV^-1 sr^-1 m^-2 s^-1. For any
+            energies outside of self.e_range, np.nan is returned.
+        """
+        if hasattr(es, "__len__"):
+            return np.array([self.dPhi_dEdOmega(e) for e in es])
+        else:
+            if es >= self.e_range[0] and es <= self.e_range[1]:
+                return np.array([self.__dPhi_dEdOmega(es)])
+            else:
+                raise ValueError("The gamma ray background model is not "
+                                 "applicable for energy %f MeV." % es)
+                return np.array([np.nan])
+
+
+# This is the background model from arXiv:1504.04024, eq. 14. It was derived
+# by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
+# EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
+# the lowest energy for which e-ASTROGAM has nonzero effective area.
+default_bg_model = BackgroundModel([0.3, 10.0e3], lambda e: 2.74e-3 / e**2)
 
 def load_interp(rf_name, bounds_error=False, fill_value=0.0):
     """Creates an interpolator from a data file.
@@ -146,7 +207,7 @@ class FluxMeasurement(object):
         Function returning energy resolution (Delta E / E) as a function of
         photon energy.
     """
-    def __init__(self, bin_rf, measurement_rf, energy_res_rf, J, dOmega):
+    def __init__(self, bin_rf, measurement_rf, energy_res_rf, target):
         """Constructor.
 
         Parameters
@@ -168,13 +229,11 @@ class FluxMeasurement(object):
             energy resolution Delta E / E. The energy resolution must be
             defined over the full range of energy bins used for this
             measurement.
-        J : float
-            The J-factor for the target region in MeV^2 cm^-5 sr^-1.
-        dOmega : float
-            Solid angle subtended by the target region in sr.
+        target : TargetParams
+            The target of the analysis
         """
         # Store analysis region
-        self.target = TargetParams(J, dOmega)
+        self.target = target
 
         # Load bin info
         self.bins = np.loadtxt(bin_rf, delimiter=",")
@@ -196,14 +255,18 @@ class FluxMeasurement(object):
 
 
 # COMPTEL diffuse
+comptel_diffuse_target = TargetParams(J=3.725e28,
+                                      dOmega=solid_angle(60., 0., 20.))
 comptel_diffuse = FluxMeasurement(comptel_bins_rf, comptel_diffuse_rf,
-                                  comptel_energy_res_rf, J=3.725e28,
-                                  dOmega=solid_angle(60., 0., 20.))
+                                  comptel_energy_res_rf,
+                                  comptel_diffuse_target)
 # EGRET diffuse
+egret_diffuse_target = TargetParams(J=3.79e27,
+                                    dOmega=solid_angle(180., 20., 60.))
 egret_diffuse = FluxMeasurement(egret_bins_rf, egret_diffuse_rf,
-                                egret_energy_res_rf, J=3.79e27,
-                                dOmega=solid_angle(180., 20., 60.))
+                                egret_energy_res_rf, egret_diffuse_target)
 # Fermi diffuse
+fermi_diffuse_target = TargetParams(J=4.698e27,
+                                    dOmega=solid_angle(180., 8., 90.))
 fermi_diffuse = FluxMeasurement(fermi_bins_rf, fermi_diffuse_rf,
-                                fermi_energy_res_rf, J=4.698e27,
-                                dOmega=solid_angle(180., 8., 90.))
+                                fermi_energy_res_rf, fermi_diffuse_target)

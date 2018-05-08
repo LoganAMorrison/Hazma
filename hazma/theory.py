@@ -1,7 +1,8 @@
 from .gamma_ray_limits.gamma_ray_limit_parameters import (A_eff_e_astrogam,
                                                           T_obs_e_astrogam,
                                                           draco_params,
-                                                          dPhi_dEdOmega_B_default,
+                                                          BackgroundModel,
+                                                          default_bg_model,
                                                           energy_res_e_astrogam)
 from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
 
@@ -55,9 +56,11 @@ class Theory(object):
                              200)
         dndes = self.spectra(e_gams, cme)["total"]
 
-        return binned_limit(e_gams, dndes, *self.gamma_ray_lines(cme),
-                            mx=self.mx, self_conjugate=False,
-                            measurement=measurement, n_sigma=n_sigma)
+        # Line contribution
+        line_es, line_bfs = self.gamma_ray_lines(cme)
+
+        return binned_limit(e_gams, dndes, line_es, line_bfs, self.mx, False,
+                            measurement, n_sigma)
 
     def binned_limits(self, mxs, measurement, n_sigma=2.):
         limits = []
@@ -69,9 +72,9 @@ class Theory(object):
         return np.array(limits)
 
     def unbinned_limit(self, A_eff=A_eff_e_astrogam,
-                       energy_res=energy_res_e_astrogam, T_obs=T_obs_e_astrogam,
-                       target_params=draco_params,
-                       dPhi_dEdOmega_B=dPhi_dEdOmega_B_default, n_sigma=5.):
+                       energy_res=energy_res_e_astrogam,
+                       T_obs=T_obs_e_astrogam, target_params=draco_params,
+                       bg_model=default_bg_model, n_sigma=5.):
         """Computes smallest value of <sigma v> detectable for given target and
         experiment parameters.
 
@@ -128,16 +131,17 @@ class Theory(object):
                              200)
         dndes = self.spectra(e_gams, cme)["total"]
 
-        return unbinned_limit(e_gams, dndes, *self.gamma_ray_lines(cme),
-                              mx=self.mx, self_conjugate=False, A_eff=A_eff,
-                              energy_res=energy_res, T_obs=T_obs,
-                              target_params=target_params,
-                              dPhi_dEdOmega_B=dPhi_dEdOmega_B, n_sigma=n_sigma)
+        # Line contribution
+        line_es, line_bfs = self.gamma_ray_lines(cme)
+
+        return unbinned_limit(e_gams, dndes, line_es, line_bfs,
+                              self.mx, False, A_eff, energy_res, T_obs,
+                              target_params, bg_model, n_sigma)
 
     def unbinned_limits(self, mxs, A_eff=A_eff_e_astrogam,
                         energy_res=energy_res_e_astrogam,
                         T_obs=T_obs_e_astrogam, target_params=draco_params,
-                        dPhi_dEdOmega_B=dPhi_dEdOmega_B_default, n_sigma=5.):
+                        bg_model=default_bg_model, n_sigma=5.):
         """Computes gamma ray constraints over a range of DM masses.
 
         See documentation for :func:`unbinned_limit`.
@@ -147,7 +151,7 @@ class Theory(object):
         for mx in mxs:
             self.mx = mx
             limits.append(self.unbinned_limit(A_eff, energy_res, T_obs,
-                                              target_params, dPhi_dEdOmega_B,
+                                              target_params, bg_model,
                                               n_sigma))
 
         return np.array(limits)

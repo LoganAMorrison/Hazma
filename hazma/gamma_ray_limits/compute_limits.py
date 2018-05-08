@@ -13,15 +13,15 @@ def __I_S(e_a, e_b, dnde, A_eff, T_obs):
     return quad(integrand_S, e_a, e_b)[0]
 
 
-def __I_B(e_a, e_b, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
+def __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model):
     """Integrand required to compute number of background photons"""
     def integrand_B(e):
-        return dPhi_dEdOmega_B(e) * A_eff(e)
+        return bg_model.dPhi_dEdOmega(e) * A_eff(e)
 
     return quad(integrand_B, e_a, e_b)[0]
 
 
-def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
+def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
     """Objective function for selecting energy window.
     """
     e_a = min(e_ab)
@@ -31,13 +31,11 @@ def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, dPhi_dEdOmega_B):
         return 0.
     else:
         return -__I_S(e_a, e_b, dnde, A_eff, T_obs) / \
-                np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params,
-                              dPhi_dEdOmega_B))
+                np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
 
 
 def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
-                   energy_res, T_obs, target_params, dPhi_dEdOmega_B,
-                   n_sigma=5.):
+                   energy_res, T_obs, target_params, bg_model, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -86,18 +84,18 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
                                      energy_res)
 
     # Allowed range for energy window bounds
-    e_bounds = [e_gams[0], e_gams[-1]]
+    e_min, e_max = A_eff.x[[0, -1]]
 
     # Initial guesses for energy window lower bound
-    e_a_0 = 0.5 * (e_gams[-1] - e_gams[0])
-    e_b_0 = 0.75 * (e_gams[-1] - e_gams[0])
+    e_a_0 = 0.5 * (e_max - e_min)
+    e_b_0 = 0.75 * (e_max - e_min)
 
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
-                                  bounds=2*[e_bounds],
+                                  bounds=2*[[e_min, e_max]],
                                   args=(dnde_det, A_eff, T_obs, target_params,
-                                        dPhi_dEdOmega_B),
+                                        bg_model),
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
 
