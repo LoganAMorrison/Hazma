@@ -59,7 +59,7 @@ def dPhi_dEdOmega_B_default(e):
                          "for energy %f MeV." % e)
 
 
-def load_interp(rf_name):
+def load_interp(rf_name, bounds_error=False, fill_value=0.0):
     """Creates an interpolator from a data file.
 
     Parameters
@@ -75,7 +75,7 @@ def load_interp(rf_name):
         and uses a fill values of 0.0.
     """
     xs, ys = np.transpose(np.loadtxt(rf_name, delimiter=","))
-    return interp1d(xs, ys, bounds_error=False, fill_value=0.0)
+    return interp1d(xs, ys, bounds_error=bounds_error, fill_value=fill_value)
 
 
 # Effective areas in cm^2
@@ -85,10 +85,12 @@ A_eff_comptel = load_interp(A_eff_comptel_rf)
 A_eff_egret = load_interp(A_eff_egret_rf)
 
 # Energy resolutions, Delta E / E
-energy_res_comptel = load_interp(comptel_energy_res_rf)
-energy_res_egret = load_interp(egret_energy_res_rf)
-energy_res_fermi = load_interp(fermi_energy_res_rf)
-energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf)
+energy_res_comptel = load_interp(comptel_energy_res_rf,
+                                 fill_value="extrapolate")
+energy_res_egret = load_interp(egret_energy_res_rf, fill_value="extrapolate")
+energy_res_fermi = load_interp(fermi_energy_res_rf, fill_value="extrapolate")
+energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf,
+                                    fill_value="extrapolate")
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365. * 24. * 60.**2
