@@ -184,7 +184,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
     def gamma_ray_lines(self, cme):
         bfs = self.branching_fractions(cme)
 
-        return [np.array([cme / 2.0]), np.array([bfs["g g"]])]
+        return [np.array([cme / 2.0]), np.array([2.*bfs["g g"]])]
 
     def spectra(self, egams, cme):
         """
@@ -216,34 +216,18 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         of the gamma ray energies to evaluate the spectra at and `cme`, the
         center of mass energy of the process.
         """
-        def mumu(eng_gams, cme):
-            return dnde_mumu(eng_gams, cme, self)
-
-        def ee(eng_gams, cme):
-            return dnde_ee(eng_gams, cme, self)
-
-        def pi0pi0(eng_gams, cme):
-            return dnde_neutral_pion(eng_gams, cme, self)
-
-        def pipi(eng_gams, cme):
-            return dnde_charged_pion(eng_gams, cme, self)
-
-        def pipi_no_fsi(eng_gams, cme):
-            return dnde_charged_pion(eng_gams, cme, self, fsi=False)
-
-        def k0k0(eng_gams, cme):
-            return dnde_neutral_kaon(eng_gams, cme, self)
-
-        def kk(eng_gams, cme):
-            return dnde_charged_kaon(eng_gams, cme, self)
-
-        return {'mu mu': mumu,
-                'e e': ee,
-                'pi0 pi0': pi0pi0,
-                'pi pi': pipi,
-                'pi pi no fsi': pipi_no_fsi,
-                'k0 k0': k0k0,
-                'k k': kk}
+        return {'mu mu': lambda e_gams, cme: dnde_mumu(e_gams, cme, self),
+                'e e': lambda e_gams, cme: dnde_ee(e_gams, cme, self),
+                'pi0 pi0': lambda e_gams, cme:
+                    dnde_neutral_pion(e_gams, cme, self),
+                'pi pi': lambda e_gams, cme:
+                    dnde_charged_pion(e_gams, cme, self),
+                'pi pi no fsi': lambda e_gams, cme:
+                    dnde_charged_pion(e_gams, cme, self, fsi=False),
+                'k0 k0': lambda e_gams, cme:
+                    dnde_neutral_kaon(e_gams, cme, self),
+                'k k': lambda e_gams, cme:
+                    dnde_charged_kaon(e_gams, cme, self)}
 
     def partial_widths(self):
         """
