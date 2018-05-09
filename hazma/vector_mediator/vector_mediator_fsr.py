@@ -104,24 +104,29 @@ def __dnde_xx_to_v_to_pipig(egam, Q, params):
     if egam <= 0 or egam >= (Q**2 - 4. * mpi**2) / (2. * Q):
         return 0.
 
-    ret_val = -(Q*(-(mv**2*Q) + Q**3)**2*qe**2 *
-                ((2*sqrt((2*egam**2 - 2*egam*Q + Q**2) *
-                         (2*egam**2 - 4*mpi**2 - 2*egam*Q + Q**2)) *
-                  (4*egam**2*(egam**2 + 2*mpi**2) -
-                   8*egam*(egam**2 + mpi**2)*Q + 2*(egam**2 + 2*mpi**2)*Q**2 +
-                   2*egam*Q**3 - Q**4)) /
-                 (egam*(egam - Q)*(2*egam**2 - 2*egam*Q + Q**2)) +
-                 (2*(-4*mpi**2 + Q**2)*(2*egam**2 - 2*mpi**2 -
-                                        2*egam*Q + Q**2) *
-                  log((2*egam**2 - 2*egam*Q + Q**2 -
-                       sqrt((2*egam**2 - 2*egam*Q + Q**2) *
-                            (2*egam**2 - 4*mpi**2 - 2*egam*Q + Q**2))) /
-                      (2*egam**2 - 2*egam*Q + Q**2 +
-                       sqrt((2*egam**2 - 2*egam*Q + Q**2) *
-                            (2*egam**2 - 4*mpi**2 - 2*egam*Q + Q**2))))) /
-                 (egam*(-egam + Q)))) / \
-        (4.*pi**2*(-4*mpi**2 + Q**2)**1.5 *
-         (-mv**2 + Q**2)**2*(2*mx**2*Q + Q**3))
+    ret_val = -(Q * (-(mv**2 * Q) + Q**3)**2 * qe**2 *
+                ((2 * sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
+                           (2 * egam**2 - 4 * mpi**2 -
+                            2 * egam * Q + Q**2)) *
+                  (4 * egam**2 * (egam**2 + 2 * mpi**2) -
+                   8 * egam * (egam**2 + mpi**2) * Q + 2 *
+                   (egam**2 + 2 * mpi**2) * Q**2 +
+                   2 * egam * Q**3 - Q**4)) /
+                 (egam * (egam - Q) * (2 * egam**2 - 2 * egam * Q + Q**2)) +
+                 (2 * (-4 * mpi**2 + Q**2) *
+                  (2 * egam**2 - 2 * mpi**2 -
+                   2 * egam * Q + Q**2) *
+                  log((2 * egam**2 - 2 * egam * Q + Q**2 -
+                       sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
+                            (2 * egam**2 - 4 * mpi**2 -
+                             2 * egam * Q + Q**2))) /
+                      (2 * egam**2 - 2 * egam * Q + Q**2 +
+                       sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
+                            (2 * egam**2 - 4 * mpi**2 -
+                             2 * egam * Q + Q**2))))) /
+                 (egam * (-egam + Q)))) / \
+        (4. * pi**2 * (-4 * mpi**2 + Q**2)**1.5 *
+         (-mv**2 + Q**2)**2 * (2 * mx**2 * Q + Q**3))
 
     # assert ret_val >= 0.
 
