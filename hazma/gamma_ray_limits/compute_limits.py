@@ -35,6 +35,31 @@ def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
                 np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
 
 
+def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
+    e_a = min(e_ab)
+    e_b = max(e_ab)
+
+    if e_a == e_b:
+        return 0.
+    else:
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, T_obs)
+        I_B_val = __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model)
+
+        # Function value
+        f_val = -I_S_val / np.sqrt(I_B_val)
+
+        # Jacobian
+        df_de_a = A_eff(e_a) * (-dnde(e_a) / np.sqrt(I_B_val) +
+                                0.5 * I_S_val / I_B_val**1.5 *
+                                bg_model.dPhi_dEdOmega(e_a))
+        df_de_b = A_eff(e_b) * (dnde(e_b) / np.sqrt(I_B_val) -
+                                0.5 * I_S_val / I_B_val**1.5 *
+                                bg_model.dPhi_dEdOmega(e_b))
+        jac_val = np.array([df_de_a, df_de_b]).T
+
+        return f_val, jac_val
+
+
 def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
                    energy_res, T_obs, target_params, bg_model, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
@@ -226,7 +251,10 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
         sigma = sigma_srf(e)
 
         if sigma == 0:
-            return np.zeros(ep.shape)
+            if hasattr(ep, '__len__'):
+                return np.zeros(ep.shape)
+            else:
+                return 0.
         else:
             return norm.pdf(ep, loc=e, scale=sigma)
 
