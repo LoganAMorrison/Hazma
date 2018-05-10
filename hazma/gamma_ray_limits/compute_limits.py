@@ -81,9 +81,8 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Convolve the spectrum with the detector's spectral resolution
-    # dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-    #                                  energy_res)
-    dnde_det = interp1d(e_gams, dndes)
+    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
+                                     energy_res)
 
     # Min photon energy is determined by comparing effective area and first
     # energy at which dN/dE != 0
@@ -93,6 +92,7 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     e_max = min(A_eff.x[-1], e_gams[np.where(dndes)[0][-1]])
 
     # Initial guesses for energy window lower bound
+    # TODO: this can produce a divide by zero error...
     e_a_0 = 0.25 * 10.**(np.log10(e_max) - np.log10(e_min))
     e_b_0 = 0.75 * 10.**(np.log10(e_max) - np.log10(e_min))
     # e_a_0, e_b_0 = A_eff.x[[1, -2]]
