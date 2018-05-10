@@ -38,6 +38,7 @@ class BackgroundModel(object):
         Minimum and maximum photon energies for which this model is valid, in
         MeV.
     """
+
     def __init__(self, e_range, flux_fn):
         """
         Parameters
@@ -120,6 +121,7 @@ class BackgroundModel(object):
 # the lowest energy for which e-ASTROGAM has nonzero effective area.
 default_bg_model = BackgroundModel([0.3, 10.0e3], lambda e: 2.74e-3 / e**2)
 
+
 def load_interp(rf_name, bounds_error=False, fill_value=0.0):
     """Creates an interpolator from a data file.
 
@@ -181,8 +183,8 @@ def solid_angle(l_max, b_min, b_max):
         Solid angle subtended by the region in sr.
     """
     deg_to_rad = np.pi / 180.
-    return 4. * l_max*deg_to_rad * (np.sin(b_max*deg_to_rad) -
-                                    np.sin(b_min*deg_to_rad))
+    return 4. * l_max * deg_to_rad * (np.sin(b_max * deg_to_rad) -
+                                      np.sin(b_min * deg_to_rad))
 
 
 class FluxMeasurement(object):
@@ -207,6 +209,7 @@ class FluxMeasurement(object):
         Function returning energy resolution (Delta E / E) as a function of
         photon energy.
     """
+
     def __init__(self, bin_rf, measurement_rf, energy_res_rf, target):
         """Constructor.
 
