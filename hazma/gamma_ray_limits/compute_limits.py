@@ -1,6 +1,7 @@
 from scipy import optimize
 from scipy.integrate import quad
 from scipy.interpolate import interp1d
+from scipy.stats import norm
 import numpy as np
 
 
@@ -80,15 +81,21 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
     # Convolve the spectrum with the detector's spectral resolution
-    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                     energy_res)
+    # dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
+    #                                  energy_res)
+    dnde_det = interp1d(e_gams, dndes)
 
-    # Allowed range for energy window bounds
-    e_min, e_max = A_eff.x[[0, -1]]
+    # Min photon energy is determined by comparing effective area and first
+    # energy at which dN/dE != 0
+    e_min = max(A_eff.x[0], e_gams[np.where(dndes)[0][0]])
+    # Max photon energy is determined by comparing effective area and last
+    # energy at which dN/dE != 0
+    e_max = min(A_eff.x[-1], e_gams[np.where(dndes)[0][-1]])
 
     # Initial guesses for energy window lower bound
-    e_a_0 = 0.5 * (e_max - e_min)
-    e_b_0 = 0.75 * (e_max - e_min)
+    e_a_0 = 0.25 * 10.**(np.log10(e_max) - np.log10(e_min))
+    e_b_0 = 0.75 * 10.**(np.log10(e_max) - np.log10(e_min))
+    # e_a_0, e_b_0 = A_eff.x[[1, -2]]
 
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
@@ -102,6 +109,10 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
                  (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
+
+    print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
+    print("e_b: %f -> %f" % (e_b_0, limit_obj.x[1]))
+    print(" ")
 
     return prefactor * n_sigma / (-limit_obj.fun)
 
@@ -206,21 +217,37 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
         detector. Given photon energies outside the range covered by e_gams,
         the interpolator will produce bounds_errors.
     """
-    # Get the spectral resolution function, normalized to one
-    def spec_res_fn(e):
-        eps = energy_res(e)
+    # Standard deviation of spectra resolution function
+    def sigma_srf(e):
+        return e*energy_res(e)
 
-        if eps == 0.:
-            return np.zeros(e_gams.shape)
+    # Get the spectral resolution function
+    def spec_res_fn(ep, e):
+        sigma = sigma_srf(e)
+
+        if sigma == 0:
+            return np.zeros(ep.shape)
         else:
-            srf = np.exp(-(e_gams - e)**2 / (2. * (energy_res(e) * e)**2))
-            return srf / srf.sum()
+            return norm.pdf(ep, loc=e, scale=sigma)
 
-    # Continuum contribution
-    dndes_cont_det = np.array([np.dot(spec_res_fn(e), dndes) for e in e_gams])
+    # Source spectrum function
+    dnde_src = interp1d(e_gams, dndes)
+
+    # Due to numerical limitations, the convolution must be performed in a
+    # window of n_std standard deviations around the mean of the spectral
+    # resolution function. N(5; 0, 1) / N(0;, 0, 1) ~ 6e-6, which seems to be
+    # a good compromise between accuracy and speed.
+    n_std = 6.
+
+    # Continuum contribution to detected spectrum
+    dndes_cont_det = np.array([quad(lambda ep: dnde_src(ep) *
+                                    spec_res_fn(ep, e),
+                                    max(e_gams[0], e-n_std*sigma_srf(e)),
+                                    min(e_gams[-1], e+n_std*sigma_srf(e)))[0]
+                               for e in e_gams])
 
     # Line contribution
-    dndes_line_det = np.array([spec_res_fn(e) * bf for
+    dndes_line_det = np.array([spec_res_fn(e_gams, e) * bf for
                                e, bf in zip(line_es, line_bfs)]).sum(axis=0)
 
     return interp1d(e_gams, dndes_cont_det + dndes_line_det)
