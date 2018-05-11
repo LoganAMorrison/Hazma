@@ -32,7 +32,7 @@ def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
         return 0.
     else:
         return -__I_S(e_a, e_b, dnde, A_eff, T_obs) / \
-                np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
+            np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
 
 
 def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
@@ -125,14 +125,14 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
-                                  bounds=2*[[e_min, e_max]],
+                                  bounds=2 * [[e_min, e_max]],
                                   args=(dnde_det, A_eff, T_obs, target_params,
                                         bg_model),
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
-    prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
+    prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
                  (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
 
     print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
@@ -182,7 +182,7 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
     """
     # Factor to convert dN/dE to Phi
     dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
-                      (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2))
+                      (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2))
 
     # Keep track of <sigma v> limit for each bin
     sv_lims = [np.inf]
@@ -244,7 +244,7 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
     """
     # Standard deviation of spectra resolution function
     def sigma_srf(e):
-        return e*energy_res(e)
+        return e * energy_res(e)
 
     # Get the spectral resolution function
     def spec_res_fn(ep, e):
@@ -270,8 +270,10 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
     # Continuum contribution to detected spectrum
     dndes_cont_det = np.array([quad(lambda ep: dnde_src(ep) *
                                     spec_res_fn(ep, e),
-                                    max(e_gams[0], e-n_std*sigma_srf(e)),
-                                    min(e_gams[-1], e+n_std*sigma_srf(e)))[0]
+                                    max(e_gams[0], e -
+                                        n_std * sigma_srf(e)),
+                                    min(e_gams[-1], e + n_std *
+                                        sigma_srf(e)))[0]
                                for e in e_gams])
 
     # Line contribution
