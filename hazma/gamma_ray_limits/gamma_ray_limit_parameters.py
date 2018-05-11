@@ -159,7 +159,7 @@ def solid_angle(l_max, b_min, b_max):
 # Angular sizes (in sr) and J factors (in MeV^2 cm^-5) for various objects
 TargetParams = namedtuple("TargetParams", ["J", "dOmega"])
 # Dwarf with high J factor
-draco_params = TargetParams(1.0e29, 1.0e-3)
+draco_params = TargetParams(6.94e27, 1.62e-3)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
