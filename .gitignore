@@ -3,3 +3,4 @@ docs/source/_theme
 *.ipynb_checkpoints
 *.ipynb
 *.pyc
+development_notebooks
