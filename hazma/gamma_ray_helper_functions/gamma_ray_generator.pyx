@@ -157,6 +157,9 @@ def gamma(np.ndarray particles, double cme,
             specs.append(p.apply_async(__gen_spec, \
                 (part, part_eng, eng_gams, norm, verbose)))
 
+    pool.close()
+    pool.join()
+
     return sum([spec.get() for spec in specs])
 
 
