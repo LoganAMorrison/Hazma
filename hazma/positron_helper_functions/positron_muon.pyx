@@ -30,7 +30,7 @@ cdef double __spectrum_rf(double ee):
     cdef double smax = mmu**2 * (1. - r)**2
     cdef double smin = 0.
     cdef double dnds = 0.0
-    if s < smin or smax < s:
+    if s <= smin or smax <= s:
         return dnds
     dnds = (2 * (mmu**4 * (-1 + r**2)**2 + mmu**2 *
                  (1 + r**2) * s - 2 * s**2) *
@@ -60,9 +60,9 @@ cdef double __integrand(double cl, double ee, double emu):
         Integral for the boost integral.
     """
     cdef double gamma = emu / mmu
-    cdef double beta = sqrt(1. - 1. / gamma**2)
-    cdef double emurf = gamma * emu * (1. - cl * beta)
-    cdef double jac = 1. / (2. * gamma * abs(1. - beta * cl))
+    cdef double beta = sqrt(1.0 - (mmu / emu)**2.0)
+    cdef double emurf = gamma * ee * (1.0 - beta * cl)
+    cdef double jac = 1.0 / (2.0 * gamma * abs(1.0 - beta * cl))
 
     return __spectrum_rf(emurf) * jac
 
@@ -88,8 +88,6 @@ cdef double CSpectrumPoint(double ee, double emu):
     """
     if emu < mmu:
         return 0.0
-
-    cdef double result = 0.0
 
     return quad(__integrand, -1., 1., points=[-1.0, 1.0], \
                 args=(ee, emu), epsabs=10**-10., epsrel=10**-4.)[0]
@@ -122,9 +120,13 @@ cdef np.ndarray CSpectrum(np.ndarray ee, double emu):
     cdef int i = 0
 
     for i in range(numpts):
-        spec[i] = Cdnde_muon_point(ee[i], emu)
+        spec[i] = CSpectrumPoint(ee[i], emu)
 
     return spec
+
+
+def integrand(double cl, double ee, double emu):
+    return __integrand(cl, ee, emu)
 
 
 def SpectrumPoint(double ee, double emu):
@@ -150,7 +152,7 @@ def SpectrumPoint(double ee, double emu):
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
-def SpectrumPoint(np.ndarray ee, double emu):
+def Spectrum(np.ndarray ee, double emu):
     """
     Returns the positron spectrum at many electron energies from the muon
     given an arbitrary muon energy.
