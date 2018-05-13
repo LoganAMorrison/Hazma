@@ -1,9 +1,9 @@
-from .gamma_ray_limits.gamma_ray_limit_parameters import (A_eff_e_astrogam,
-                                                          T_obs_e_astrogam,
-                                                          draco_params,
-                                                          BackgroundModel,
-                                                          default_bg_model,
-                                                          energy_res_e_astrogam)
+from .gamma_ray_limits.gamma_ray_limit_parameters import A_eff_e_astrogam
+from .gamma_ray_limits.gamma_ray_limit_parameters import T_obs_e_astrogam
+from .gamma_ray_limits.gamma_ray_limit_parameters import draco_params
+from .gamma_ray_limits.gamma_ray_limit_parameters import BackgroundModel
+from .gamma_ray_limits.gamma_ray_limit_parameters import default_bg_model
+from .gamma_ray_limits.gamma_ray_limit_parameters import energy_res_e_astrogam
 from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
 
 import numpy as np
@@ -46,7 +46,7 @@ class Theory(object):
         pass
 
     def binned_limit(self, measurement, n_sigma=2.):
-        cme = 2.001*self.mx
+        cme = 2.001 * self.mx
 
         # Compute DM spectrum. Leave enough room for the convolution with an
         # experiment's energy resolution to work correctly.
@@ -155,3 +155,7 @@ class Theory(object):
                                               n_sigma))
 
         return np.array(limits)
+
+    @abstractmethod
+    def positron_spectra(self, eng_es, cme):
+        pass

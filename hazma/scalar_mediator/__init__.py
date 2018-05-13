@@ -242,3 +242,6 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             'total'.
         """
         return pws(self)
+
+    def positron_spectra(self, eng_es, cme):
+        pass

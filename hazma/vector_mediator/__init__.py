@@ -114,3 +114,6 @@ class VectorMediator(Theory, VectorMediatorParameters):
                 'e e': lambda egams, cme: dnde_ee(egams, cme, self),
                 'pi pi': lambda egams, cme: dnde_pipi(egams, cme, self),
                 'pi0 g': lambda egams, cme: dnde_pi0g(egams, cme, self)}
+
+    def positron_spectra(self, eng_es, cme):
+        pass
