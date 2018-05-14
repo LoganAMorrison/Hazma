@@ -10,10 +10,9 @@ def find_nearest(array, value):
     return idx
 
 
-def pspec_electron(eng_ps, cme, params):
+def pspec_electron(eng_ps, eng_e):
     spec = np.zeros(len(eng_ps), dtype=float)
-    eng_p = cme / 2.
-    idx = find_nearest(eng_ps, eng_p)
+    idx = find_nearest(eng_ps, eng_e)
     spec[idx] = 1.
     return spec
 
@@ -28,7 +27,7 @@ def positron_spectra(eng_ps, cme, params):
     # Only compute the spectrum if the channel's branching fraction is nonzero
     def spec_helper(bf, specfn):
         if bf != 0:
-            return bf * specfn(eng_ps, cme, params)
+            return bf * specfn(eng_ps, cme / 2.)
         else:
             return np.zeros(eng_ps.shape)
 
