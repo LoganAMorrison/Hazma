@@ -1,4 +1,4 @@
-from cmath import sqrt, pi
+from cmath import sqrt, pi, log
 
 from ..parameters import vh, b0, alpha_em
 from ..parameters import charged_pion_mass as mpi
@@ -169,6 +169,34 @@ def sigma_xx_to_s_to_pipi(Q, params):
     sigma = msqrd / 16. / pi * (pf / pi) / s
 
     return sigma.real
+
+
+def sigma_xx_to_ss(Q, params):
+    ms = params.ms
+
+    if Q > 2. * ms:
+        mx = params.mx
+        gsxx = params.gsxx
+
+        return (gsxx**4*sqrt(Q**2 - 4*ms**2) *
+                ((4*(ms**2 - 4*mx**2)**2) /
+                 (Q**2 - 2*ms**2 + sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) +
+                 (4*(ms**2 - 4*mx**2)**2) /
+                 (-Q**2 + 2*ms**2 + sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) -
+                 2*(Q**2 - 2*ms**2 - 2*mx**2 +
+                    sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) -
+                 2*(-Q**2 + 2*ms**2 + 2*mx**2 +
+                    sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) +
+                 ((Q**2*(-Q**2 + 2*ms**2 + 8*mx**2) +
+                   2*(Q**4 + 3*ms**4 + 4*Q**2*mx**2 - 16*mx**4 -
+                      ms**2*(3*Q**2 + 8*mx**2))) *
+                  log((Q**2 - 2*ms**2 +
+                       sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2 /
+                      (-Q**2 + 2*ms**2 +
+                       sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2)) /
+                 (Q**2 - 2*ms**2)))/(64.*Q**2*sqrt(Q**2 - 4*mx**2)*pi)
+    else:
+        return 0.
 
 
 def cross_sections(Q, params):
