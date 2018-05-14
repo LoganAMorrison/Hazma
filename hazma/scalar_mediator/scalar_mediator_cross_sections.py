@@ -83,7 +83,7 @@ def sigma_xx_to_s_to_gg(Q, params):
     return sigma.real
 
 
-def sigma_xx_to_s_to_pi0pi0(Q, params, unit="BSE"):
+def sigma_xx_to_s_to_pi0pi0(Q, params):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of neutral pion through a
     scalar mediator in the s-channel.
@@ -127,7 +127,7 @@ def sigma_xx_to_s_to_pi0pi0(Q, params, unit="BSE"):
     return sigma.real
 
 
-def sigma_xx_to_s_to_pipi(Q, params, unit="BSE"):
+def sigma_xx_to_s_to_pipi(Q, params):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of charged pions through a
     scalar mediator in the s-channel.
