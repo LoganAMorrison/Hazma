@@ -11,34 +11,16 @@ from ..field_theory_helper_functions.common_functions import \
 from ..field_theory_helper_functions.three_body_phase_space import \
     phase_space_prefactor, t_lim1, t_lim2
 
-from ..parameters import alpha_em
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import rho_mass as mrho
-from ..parameters import rho_width
-from ..parameters import fpi, fv, gv, qe, vh
+from ..parameters import (b0, qe, vh, alpha_em,
+                          up_quark_mass as muq,
+                          charged_pion_mass as mpi,
+                          down_quark_mass as mdq)
 
 from ..hazma_errors import NegativeSquaredMatrixElementWarning
 
 
-def __msqrd_xx_s_ffg(Q, s, t, mf, params):
-    gsxx = params.gsxx
-    gsff = params.gsff
-    mx = params.mx
-    ms = params.ms
-    return (2 * qe**2 * (-4 * mx**2 + Q**2) *
-            (8 * mf**6 * s + (Q**4 + s**2) * (Q**2 - s - t) * t +
-             mf**4 * (7 * Q**4 - 8 * Q**2 * s - s * (s + 16 * t)) +
-             mf**2 * (-3 * Q**6 + Q**4 * (5 * s + 2 * t) - Q**2 * s *
-                      (3 * s + 8 * t) +
-                      s * (s**2 + 10 * s * t +
-                           8 * t**2))) * gsff**2 * gsxx**2) / \
-        ((-ms**2 + Q**2)**2 * (mf**2 + Q**2 - s - t)**2 *
-         (-mf**2 + t)**2)
-
-
 def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
     """ Unvectorized dnde_xx_to_s_to_ffg """
-
     e, m, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
 
     mx = params.mx
@@ -130,39 +112,23 @@ def __msqrd_xx_to_s_to_pipig(Q, s, t, params):
     gsff = params.gsff
     gsGG = params.gsGG
     vs = params.vs
-    mrhoT = params.mrhoT
     gsxx = params.gsxx
     ms = params.ms
+    width_s = params.width_s
 
     if 2. * mpi < Q and 4. * mpi**2 < s < Q**2 and 2. * mx < Q:
         if t_lim1(s, 0.0, mpi, mpi, Q) < t < t_lim2(s, 0.0, mpi, mpi, Q):
-
-            ret_val = (-4 * gsxx * qe**2 *
-                       (mpi**4 * s + s * t * (-Q**2 + s + t) +
-                        mpi**2 * (Q**4 - Q**2 * s - 2 * s * t)) *
-                       (fv * gsGG * gv * (mpi**2 - t) *
-                        (mpi**2 + Q**2 - s - t) *
-                        (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) *
-                        (9 * vh + 4 * gsGG * vs) *
-                        (-9 * mrhoT * s * vh - 2 * mrho**3 *
-                         (9 * vh + 2 * gsGG * vs) +
-                         mrho * s * (9 * vh + 2 * gsGG * vs)) +
-                        3 * fpi**2 * mrho * mrhoT**2 * (mrho**2 - s) * vh *
-                        (-729 * gsff * mpi**2 * vh**2 +
-                         128 * gsGG**3 * mpi**2 * vs**2 +
-                         36 * gsGG**2 * vs *
-                         (6 * mpi**2 * vh - 3 * Q**2 * vh +
-                          2 * mpi**2 * (vh - 8 * gsff * vs)) -
-                         162 * gsGG * vh *
-                         (-2 * mpi**2 * (vh + gsff * vs) + Q**2 *
-                          (vh + gsff * vs) +
-                          mpi**2 * (3 * vh + 10 * gsff * vs))))**2) / \
-                (6561. * fpi**4 * mrho**2 * mrhoT**4 *
-                 (mrho**4 + mrho**2 * (rho_width**2 - 2 * s) + s**2) *
-                 (-ms**2 + s)**2 * (mpi**2 - t)**2 *
-                 (mpi**2 + Q**2 - s - t)**2 * vh**4 *
-                 (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-                 (9 * vh + 4 * gsGG * vs)**2)
+            ret_val = (-2*gsxx**2*(Q**2 - 4*mx**2)*qe**2 *
+                       (mpi**4*s - Q**2*s*t + mpi**2*(Q**4 + t*(-s + t) +
+                                                      Q**2*(s + 2*t))) *
+                       (-54*gsGG*(2*mpi**2 - Q**2 - s - t)*vh *
+                        (3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                        b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                        (54*gsGG*vh - 32*gsGG**2*vs +
+                         9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+                (729.*(mpi**2 + Q**2)**2*(mpi**2 - t)**2*vh**2 *
+                 (3*vh + 3*gsff*vs + 2*gsGG*vs)**2*(9*vh + 4*gsGG*vs)**2 *
+                 ((Q**2-ms**2 + s + t)**2 + (ms*width_s)**2))
 
     if ret_val <= 0.0:
         msg = ""
