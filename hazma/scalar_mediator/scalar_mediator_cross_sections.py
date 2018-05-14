@@ -32,22 +32,20 @@ def sigma_xx_to_s_to_ff(Q, mf, params):
     sigma : float
         Cross section for x + x -> s* -> f + f.
     """
-
-    gsff = params.gsff
     mx = params.mx
-    gsxx = params.gsxx
-    ms = params.ms
 
-    s = Q**2
+    if Q > 2. * mf and Q >= 2. * mx:
+        ms = params.ms
+        gsff = params.gsff
+        gsxx = params.gsxx
+        width_s = params.width_s
 
-    if Q <= 2 * mf or Q < 2. * mx:
-        return 0.0
-
-    sigma = (gsff**2 * gsxx**2 * mf**2 * (-4. * mf**2 + s)**1.5 *
-             sqrt(-4. * mx**2 + s)) / \
-        (16. * pi * (ms**2 - s)**2 * s * vh**2)
-
-    return sigma.real
+        return (gsff**2*gsxx**2*mf**2*(-2*mx + Q) *
+                (2*mx + Q)*(-4*mf**2 + Q**2)**1.5) / \
+            (16.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
+             (ms**4 - 2*ms**2*Q**2 + Q**4 + ms**2*width_s**2))
+    else:
+        return 0.
 
 
 def sigma_xx_to_s_to_gg(Q, params):
@@ -65,22 +63,19 @@ def sigma_xx_to_s_to_gg(Q, params):
     sigma : float
         Cross section for x + x -> s* -> g + g.
     """
-
     mx = params.mx
-    gsFF = params.gsFF
-    gsxx = params.gsxx
-    ms = params.ms
 
-    s = Q**2
+    if Q >= 2. * mx:
+        gsFF = params.gsFF
+        gsxx = params.gsxx
+        ms = params.ms
+        width_s = params.width_s
 
-    if Q < 2. * mx:
+        return (alpha_em**2*gsFF**2*gsxx**2*Q**3*(-2*mx + Q)*(2*mx + Q)) / \
+            (256.*pi**3*sqrt(-4*mx**2 + Q**2)*vh**2*
+             (ms**4 - 2*ms**2*Q**2 + Q**4 + ms**2*width_s**2))
+    else:
         return 0.0
-
-    sigma = (alpha_em**2 * gsFF**2 * gsxx**2 * s**1.5 *
-             sqrt(-4. * mx**2 + s)) / \
-        (512. * pi**3 * (ms**2 - s)**2 * vh**2)
-
-    return sigma.real
 
 
 def sigma_xx_to_s_to_pi0pi0(Q, params):
@@ -98,33 +93,26 @@ def sigma_xx_to_s_to_pi0pi0(Q, params):
     sigma : float
         Cross section for x + x -> s* -> pi0 + pi0.
     """
-    ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
-    if Q < 2. * mpi0 or Q < 2. * mx:
-        return 0.0
+    if Q > 2. * mpi0 and Q >= 2. * mx:
+        gsxx = params.gsxx
+        gsff = params.gsff
+        gsGG = params.gsGG
+        ms = params.ms
+        vs = params.vs
+        width_s = params.width_s
 
-    s = Q**2
-
-    amp_s_to_pi0pi0 = (-2. * gsGG * (-2. * mpi0**2 + s)) / \
-        (9. * vh + 4. * gsGG * vs) - \
-        (b0 * (mdq + muq) *
-         (54. * gsGG * vh - 32. * gsGG**2 * vs +
-          9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
-        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
-         (9. * vh + 8. * gsGG * vs))
-
-    msqrd = abs(amp_s_to_pi0pi0)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
-
-    pf = sqrt(1.0 - 4. * mpi0**2 / s)
-    pi = sqrt(1.0 - 4. * mx**2 / s)
-
-    sigma = msqrd / 16. / pi * (pf / pi) / s
-
-    return sigma.real
+        return (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
+                (54*gsGG*(-2*mpi**2 + Q**2)*vh*(3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                 (54*gsGG*vh - 32*gsGG**2*vs +
+                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+            (23328.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
+             (3*vh + 3*gsff*vs + 2*gsGG*vs)**2*(9*vh + 4*gsGG*vs)**2 *
+             (ms**4 + Q**4 + ms**2*(-2*Q**2 + width_s**2)))
+    else:
+        return 0.
 
 
 def sigma_xx_to_s_to_pipi(Q, params):
@@ -142,40 +130,34 @@ def sigma_xx_to_s_to_pipi(Q, params):
     sigma : float
         Cross section for x + x -> s* -> pi + pi.
     """
-    ms = params.ms
     mx = params.mx
-    gsGG = params.gsGG
-    gsff = params.gsff
-    vs = params.vs
 
-    if Q < 2. * mpi or Q < 2. * mx:
-        return 0.0
+    if Q > 2. * mpi and Q >= 2. * mx:
+        gsxx = params.gsxx
+        gsff = params.gsff
+        gsGG = params.gsGG
+        ms = params.ms
+        vs = params.vs
+        width_s = params.width_s
 
-    s = Q**2
+        return (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
+                (54*gsGG*(-2*mpi**2 + Q**2)*vh*(3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs)*
+                 (54*gsGG*vh - 32*gsGG**2*vs +
+                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+            (23328.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
+             (3*vh + 3*gsff*vs + 2*gsGG*vs)**2*(9*vh + 4*gsGG*vs)**2 *
+             (ms**4 + Q**4 + ms**2*(-2*Q**2 + width_s**2)))
 
-    amp_s_to_pipi = (-2. * gsGG * (-2. * mpi**2 + s)) / \
-        (9. * vh + 4. * gsGG * vs) - \
-        (b0 * (mdq + muq) *
-         (54. * gsGG * vh - 32. * gsGG**2 * vs +
-          9. * gsff * (9. * vh + 16. * gsGG * vs))) / \
-        ((9. * vh + 9. * gsff * vs - 2. * gsGG * vs) *
-         (9. * vh + 8. * gsGG * vs))
-
-    msqrd = abs(amp_s_to_pipi)**2 * __msqrd_xx_s(s, params) / (s - ms**2)**2
-
-    pf = sqrt(1.0 - 4. * mpi**2 / s)
-    pi = sqrt(1.0 - 4. * mx**2 / s)
-
-    sigma = msqrd / 16. / pi * (pf / pi) / s
-
-    return sigma.real
+    else:
+        return 0.
 
 
 def sigma_xx_to_ss(Q, params):
     ms = params.ms
+    mx = params.mx
 
-    if Q > 2. * ms:
-        mx = params.mx
+    if Q > 2. * ms and Q >= 2. * mx:
         gsxx = params.gsxx
 
         return (gsxx**4*sqrt(Q**2 - 4*ms**2) *
