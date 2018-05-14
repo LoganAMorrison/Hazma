@@ -182,7 +182,8 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
     """
     # Factor to convert dN/dE to Phi
     dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
-                      (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2))
+                      (2. * 4. * np.pi * (1. if self_conjugate else 2.) *
+                       mx**2))
 
     # Keep track of <sigma v> limit for each bin
     sv_lims = [np.inf]
