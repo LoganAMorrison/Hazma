@@ -13,7 +13,6 @@ from ..field_theory_helper_functions.three_body_phase_space import \
 
 from ..parameters import alpha_em
 from ..parameters import charged_pion_mass as mpi
-from ..parameters import charged_kaon_mass as mk
 from ..parameters import rho_mass as mrho
 from ..parameters import rho_width
 from ..parameters import fpi, fv, gv, qe, vh
