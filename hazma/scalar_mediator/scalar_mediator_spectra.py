@@ -65,34 +65,6 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
-def dnde_neutral_kaon(egams, cme, params, spectrum_type='All'):
-    if spectrum_type == 'All':
-        return (dnde_neutral_kaon(egams, cme, params, 'FSR') +
-                dnde_neutral_kaon(egams, cme, params, 'Decay'))
-    elif spectrum_type == 'FSR':
-        return dnde_xx_to_s_to_kkg(egams, cme, params)
-    elif spectrum_type == 'Decay':
-        return long_kaon(egams, cme / 2.0) + short_kaon(egams, cme / 2.0)
-    else:
-        raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(spectrum_type))
-
-
-def dnde_charged_kaon(egams, cme, params, spectrum_type='All'):
-    decay = charged_kaon
-
-    if spectrum_type == 'All':
-        return (dnde_charged_kaon(egams, cme, params, 'FSR') +
-                dnde_charged_kaon(egams, cme, params, 'Decay'))
-    elif spectrum_type == 'FSR':
-        return np.array([0.0 for _ in range(len(egams))])
-    elif spectrum_type == 'Decay':
-        return 2. * decay(egams, cme / 2.0)
-    else:
-        raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                         'Decay'".format(spectrum_type))
-
-
 def spectra(egams, cme, params, fsi=True):
     """
     Compute the total spectrum from two fermions annihilating through a
