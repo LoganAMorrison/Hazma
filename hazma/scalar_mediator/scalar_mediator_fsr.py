@@ -147,7 +147,6 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
     ret_val = 0.0
 
     if 2. * mpi < Q and 4. * mpi**2 <= s <= Q**2 and 2. * mx < Q:
-
         s = E1_to_s(eng_gam, 0., Q)
 
         def mat_elem_sqrd(t):
@@ -162,6 +161,8 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
         int_val, _ = t_integral(s, 0., mpi, mpi, Q, mat_elem_sqrd)
 
         ret_val = prefactor * int_val
+        assert ret_val.imag == 0
+        ret_val = ret_val.real
 
     assert ret_val >= 0.
 
