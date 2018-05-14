@@ -22,57 +22,6 @@ def width_s_to_gg(params):
             np.heaviside(params.ms, 0.0)) / (256. * np.pi**3 * vh**2)
 
 
-def width_s_to_k0k0(params):
-    """
-    Returns the partial decay width of the scalar decaying into
-     neutral kaon.
-    """
-
-    return (sqrt(-4 * mk0**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mk0**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs + 2 *
-                params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + msq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
-                32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mk0 + params.ms, 0.)) / \
-        (16. * params.ms**2 * pi *
-         (9 * vh + 9 * params.gsff * params.vs -
-          2 * params.gsGG * params.vs)**2 *
-         (9 * vh + 4 * params.gsGG * params.vs)**2 *
-         (9 * vh + 8 * params.gsGG * params.vs)**2)
-
-
-def width_s_to_kk(params):
-    """
-    Returns the partial decay width of the scalar decaying into
-    charged kaon.
-    """
-
-    return (sqrt(-4 * mk**2 + params.ms**2) *
-            (729 * b0 * params.gsff * (msq + muq) * vh**2 +
-             32 * params.gsGG**3 *
-             (2 * mk**2 - params.ms**2 - 4 * b0 * (msq + muq)) *
-             params.vs**2 + 36 * params.gsGG**2 * params.vs *
-             (-2 * b0 * (msq + muq) *
-                (vh - 8 * params.gsff * params.vs) - 2 * mk**2 *
-                (3 * vh + 4 * params.gsff * params.vs) + params.ms**2 *
-              (3 * vh + 4 * params.gsff * params.vs)) +
-             162 * params.gsGG * vh *
-             (-2 * mk**2 * (vh + params.gsff * params.vs) +
-                params.ms**2 * (vh + params.gsff * params.vs) +
-                b0 * (msq + muq) * (3 * vh +
-                                    10 * params.gsff * params.vs)))**2 *
-            np.heaviside(-2 * mk + params.ms, 0.)) / \
-        (16. * params.ms**2 * pi *
-         (9 * vh + 9 * params.gsff * params.vs -
-          2 * params.gsGG * params.vs)**2 *
-         (9 * vh + 4 * params.gsGG * params.vs)**2 *
-         (9 * vh + 8 * params.gsGG * params.vs)**2)
-
-
 def width_s_to_pi0pi0(params):
     """
     Returns the partial decay width of the scalar decaying into
@@ -164,8 +113,6 @@ def partial_widths(params):
         'total'.
     """
     w_gg = width_s_to_gg(params).real
-    w_k0k0 = width_s_to_k0k0(params).real
-    w_kk = width_s_to_kk(params).real
     w_pi0pi0 = width_s_to_pi0pi0(params).real
     w_pipi = width_s_to_pipi(params).real
     w_xx = width_s_to_xx(params).real
@@ -173,11 +120,9 @@ def partial_widths(params):
     w_ee = width_s_to_ff(me, params).real
     w_mumu = width_s_to_ff(mmu, params).real
 
-    total = w_gg + w_k0k0 + w_kk + w_pi0pi0 + w_pipi + w_xx + w_ee + w_mumu
+    total = w_gg + w_pi0pi0 + w_pipi + w_xx + w_ee + w_mumu
 
     width_dict = {'g g': w_gg,
-                  'k0 k0': w_k0k0,
-                  'k k': w_kk,
                   'pi0 pi0': w_pi0pi0,
                   'pi pi': w_pipi,
                   'x x': w_xx,
