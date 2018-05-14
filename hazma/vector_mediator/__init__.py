@@ -8,6 +8,8 @@ from vector_mediator_cross_sections import cross_sections as cs
 from vector_mediator_spectra import spectra as specs
 from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
+from vector_mediator_positron_spectra import positron_spectra
+
 from ..parameters import neutral_pion_mass as mpi0
 
 import warnings
@@ -115,5 +117,22 @@ class VectorMediator(Theory, VectorMediatorParameters):
                 'pi pi': lambda egams, cme: dnde_pipi(egams, cme, self),
                 'pi0 g': lambda egams, cme: dnde_pi0g(egams, cme, self)}
 
-    def positron_spectra(self, eng_es, cme):
-        pass
+    def positron_spectra(self, eng_ps, cme):
+        """
+        Compute the total positron spectrum from two fermions annihilating
+        through a vector mediator to mesons and leptons.
+
+        Parameters
+        ----------
+        eng_ps : array-like, optional
+            Positron energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        specs : dictionary
+            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
+            'pi pi'.
+        """
+        return positron_spectra(eng_ps, cme, self)

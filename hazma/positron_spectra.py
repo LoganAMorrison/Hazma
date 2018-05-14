@@ -7,45 +7,48 @@ Module for computing positron spectra.
 """
 
 from positron_helper_functions import positron_muon
+from positron_helper_functions import positron_charged_pion
 
 
-def muon(ee, emu):
+def muon(eng_p, eng_mu):
     """
     Returns the positron spectrum from a muon.
 
     Parameters
     ----------
-    ee : float or array-like
+    eng_p : float or numpy.array
         Energy of the positron.
-    emu : float or array-like
+    eng_mu : float or array-like
         Energy of the muon.
 
     Returns
     -------
-    dnde : float or array-like
+    dnde : float or numpy.array
         The value of the spectrum given a positron energy `ee`
         and muon energy `emu`
     """
-    if hasattr(ee, "__len__"):
-        return positron_muon.Spectrum(ee, emu)
-    return positron_muon.SpectrumPoint(ee, emu)
+    if hasattr(eng_p, "__len__"):
+        return positron_muon.Spectrum(eng_p, eng_mu)
+    return positron_muon.SpectrumPoint(eng_p, eng_mu)
 
 
-"""
-def __dnde_cpion(ee):
-    emu = (mmu**2 / mpi + mpi) / 2.
-    gamma = emu / mmu
-    beta = np.sqrt(1. - 1. / gamma**2)
+def charged_pion(eng_p, eng_pi):
+    """
+    Returns the positron spectrum from a muon.
 
-    def integrand(c2):
-        ee1 = gamma * ee * (1. - beta * c2)
-        return dnde_muon(ee1) / 2. / gamma / abs(1. - beta * c2)
+    Parameters
+    ----------
+    eng_p : float or numpy.array
+        Energy of the positron.
+    eng_pi : float or numpy.array
+        Energy of the charged pion.
 
-    return quad(integrand, -1., 1.)[0]
-
-
-def dnde_cpion(ee):
-    if hasattr(ee, "__len__"):
-        return np.array([__dnde_cpion(e) for e in ee])
-    return __dnde_cpion(ee)
-"""
+    Returns
+    -------
+    dnde : float or numpy.array
+        The value of the spectrum given a positron energy(ies) `eng_p`
+        and charged pion energy `eng_pi`
+    """
+    if hasattr(eng_p, "__len__"):
+        return positron_charged_pion.Spectrum(eng_p, eng_pi)
+    return positron_charged_pion.SpectrumPoint(eng_p, eng_pi)

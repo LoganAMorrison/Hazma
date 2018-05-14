@@ -4,6 +4,7 @@ from scalar_mediator_cross_sections import branching_fractions as bfs
 from scalar_mediator_cross_sections import cross_sections as cs
 
 from scalar_mediator_spectra import spectra as specs
+from scalar_mediator_positron_spectra import positron_spectra
 
 from scalar_mediator_spectra import dnde_mumu, dnde_ee
 from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
@@ -243,5 +244,22 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         """
         return pws(self)
 
-    def positron_spectra(self, eng_es, cme):
-        pass
+    def positron_spectra(self, eng_ps, cme):
+        """
+        Compute the total positron spectrum from two fermions annihilating
+        through a scalar mediator to mesons and leptons.
+
+        Parameters
+        ----------
+        eng_ps : array-like, optional
+            Positron energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        specs : dictionary
+            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
+            'pi pi'.
+        """
+        return positron_spectra(eng_ps, cme, self)
