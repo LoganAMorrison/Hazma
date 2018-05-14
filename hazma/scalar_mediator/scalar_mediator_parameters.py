@@ -118,7 +118,7 @@ class ScalarMediatorParameters(object):
             return b0
         else:
             return b0 * (1 + kappa) /  \
-                    (1 + 6. * kappa * (1. + 3. * self._gsff / 2. / self._gsGG))
+                (1 + 6. * kappa * (1. + 3. * self._gsff / 2. / self._gsGG))
 
     def msT(self, fpiT, BT):
         """

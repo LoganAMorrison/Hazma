@@ -124,6 +124,9 @@ def generate_phase_space(num_ps_pts, masses, cme,
         job_results.append(pool.apply_async(generator.generate_space,
                                             (num_ps_pts_per_cpu,
                                              masses, cme, num_fsp)))
+    # Close the pool and wait for results to finish
+    pool.close()
+    pool.join()
     # Put results in a numpy array.
     points = np.array([result.get() for result in job_results])
     # Flatten the outer axis to have a list of phase space points.

@@ -58,6 +58,7 @@ class BackgroundModel(object):
         Minimum and maximum photon energies for which this model is valid, in
         MeV.
     """
+
     def __init__(self, e_range, flux_fn):
         """
         Parameters
@@ -152,8 +153,8 @@ def solid_angle(l_max, b_min, b_max):
         Solid angle subtended by the region in sr.
     """
     deg_to_rad = np.pi / 180.
-    return 4. * l_max*deg_to_rad * (np.sin(b_max*deg_to_rad) -
-                                    np.sin(b_min*deg_to_rad))
+    return 4. * l_max * deg_to_rad * (np.sin(b_max * deg_to_rad) -
+                                      np.sin(b_min * deg_to_rad))
 
 
 # Angular sizes (in sr) and J factors (in MeV^2 cm^-5) for various objects
@@ -189,6 +190,7 @@ energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf,
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365. * 24. * 60.**2
 
+
 class FluxMeasurement(object):
     """Container for all information about a completed gamma ray analysis.
 
@@ -211,6 +213,7 @@ class FluxMeasurement(object):
         Function returning energy resolution (Delta E / E) as a function of
         photon energy.
     """
+
     def __init__(self, bin_rf, measurement_rf, energy_res_rf, target):
         """Constructor.
 

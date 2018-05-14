@@ -78,7 +78,7 @@ def t_to_E2(double t, double m2, double M):
 
 
 @cython.cdivision(True)
-def u_to_st(double m1, double m2, double m3, double M, double s, double t):
+def st_to_u(double m1, double m2, double m3, double M, double s, double t):
     """
     Returns the value of the mandelstam variable u using the mandelstam variables s and t.
 
@@ -193,8 +193,6 @@ def s_max(double m1, double m2, double m3, double M):
 
     Parameters
     ----------
-    s : double
-        Mandelstam variable associated with m1, defined as (P-p1)^2, where P = p1 + p2 + p3.
     m1 : double
         Mass of particle 1.
     m2 : double
@@ -218,8 +216,6 @@ def s_min(double m1, double m2, double m3, double M):
 
     Parameters
     ----------
-    s : double
-        Mandelstam variable associated with m1, defined as (P-p1)^2, where P = p1 + p2 + p3.
     m1 : double
         Mass of particle 1.
     m2 : double

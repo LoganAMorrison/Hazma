@@ -8,7 +8,7 @@ hdhf = "hazma/decay_helper_functions"
 hgrhf = "hazma/gamma_ray_helper_functions"
 hpshf = "hazma/phase_space_helper_functions"
 hfthf = "hazma/field_theory_helper_functions"
-# hsm = "hazma/scalar_mediator"
+hphf = "hazma/positron_helper_functions"
 
 packs = ["hazma",
          "hazma.axial_vector_mediator",
@@ -17,6 +17,7 @@ packs = ["hazma",
          "hazma.gamma_ray_helper_functions",
          "hazma.gamma_ray_limits",
          "hazma.phase_space_helper_functions",
+         "hazma.positron_helper_functions",
          "hazma.pseudo_scalar_mediator",
          "hazma.scalar_mediator",
          "hazma.unitarization",
@@ -28,10 +29,10 @@ phase_ext = Extension("*", sources=[hpshf + "/*.pyx"],
                       extra_compile_args=['-g', '-std=c++11'],
                       language="c++")
 field_theory_ext = Extension("*", sources=[hfthf + "/*.pyx"])
-# scalar_med_ext = Extension("*", sources=[hsm + "/*.pyx"])
+positron_ext = Extension("*", sources=[hphf + "/*.pyx"])
 
 extensions = [decay_ext, gamma_ext, phase_ext,
-              field_theory_ext]
+              field_theory_ext, positron_ext]
 
 setup(name='hazma',
       version='1.1',
@@ -47,7 +48,9 @@ setup(name='hazma',
       """,
       packages=packs,
       ext_modules=cythonize(extensions),
-      include_dirs=[np.get_include(), 'hazma/decay_helper_functions'],
+      include_dirs=[np.get_include(),
+                    'hazma/decay_helper_functions',
+                    'hazma/positron_helper_functions'],
       include_package_data=True,
       license='MIT License',
       platforms='MacOS and Linux',
