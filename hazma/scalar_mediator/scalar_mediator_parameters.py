@@ -4,8 +4,6 @@ from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
 from ..parameters import fpi, b0, vh
-from ..parameters import rho_mass as mrho
-
 trM = muq + mdq + msq
 
 
@@ -73,10 +71,6 @@ class ScalarMediatorParameters(object):
     def gsFF(self, gsFF):
         self._gsFF = gsFF
         self.compute_vs()
-
-    @property
-    def mrhoT(self):
-        return sqrt(mrho**2 - 2. * self._gsGG * self.vs / 9. / vh)
 
     def compute_vs(self):
         """
