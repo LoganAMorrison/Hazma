@@ -1,6 +1,5 @@
 from cmath import sqrt, pi
 
-import numpy as np
 from ..parameters import vh, b0, alpha_em
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
@@ -14,9 +13,7 @@ def width_s_to_gg(params):
     """
     Returns the partial decay width of the scalar decaying into photon.
     """
-
-    return (alpha_em**2 * params.gsFF**2 * (params.ms**2)**1.5 *
-            np.heaviside(params.ms, 0.0)) / (256. * np.pi**3 * vh**2)
+    return (alpha_em**2*params.gsFF**2*(params.ms**2)**1.5)/(512.*pi**3*vh**2)
 
 
 def width_s_to_pi0pi0(params):
@@ -24,22 +21,23 @@ def width_s_to_pi0pi0(params):
     Returns the partial decay width of the scalar decaying into
     neutral pions.
     """
+    ms = params.ms
 
-    return (sqrt(-4 * mpi0**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mpi0**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs +
-                2 * params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
-                32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mpi0 + params.ms, 0.)) / \
-        (32. * params.ms**2 * np.pi *
-         (9 * vh + 9 * params.gsff * params.vs -
-          2 * params.gsGG * params.vs)**2 *
-         (9 * vh + 4 * params.gsGG * params.vs)**2 *
-         (9 * vh + 8 * params.gsGG * params.vs)**2)
+    if ms > 2. * mpi0:
+        gsff = params.gsff
+        gsGG = params.gsGG
+        vs = params.vs
+
+        return (sqrt(-4*mpi0**2 + ms**2) *
+                (-54*gsGG*(2*mpi0**2 - ms**2)*vh *
+                 (3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                 (54*gsGG*vh - 32*gsGG**2*vs +
+                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+            (11664.*ms**2*pi*vh**2*(3*vh + 3*gsff*vs + 2*gsGG*vs)**2 *
+             (9*vh + 4*gsGG*vs)**2)
+    else:
+        return 0.
 
 
 def width_s_to_pipi(params):
@@ -47,22 +45,23 @@ def width_s_to_pipi(params):
     Returns the partial decay width of the scalar decaying into
     charged pion.
     """
+    ms = params.ms
 
-    return (sqrt(-4 * mpi**2 + params.ms**2) *
-            (2 * params.gsGG * (2 * mpi**2 - params.ms**2) *
-             (-9 * vh - 9 * params.gsff * params.vs +
-                2 * params.gsGG * params.vs) *
-             (9 * vh + 8 * params.gsGG * params.vs) +
-             b0 * (mdq + muq) * (9 * vh + 4 * params.gsGG * params.vs) *
-             (54 * params.gsGG * vh -
-                32 * params.gsGG**2 * params.vs + 9 * params.gsff *
-                (9 * vh + 16 * params.gsGG * params.vs)))**2 *
-            np.heaviside(-2 * mpi + params.ms, 0.)) / \
-        (16. * params.ms**2 * pi *
-         (9 * vh + 9 * params.gsff * params.vs -
-          2 * params.gsGG * params.vs)**2 *
-         (9 * vh + 4 * params.gsGG * params.vs)**2 *
-         (9 * vh + 8 * params.gsGG * params.vs)**2)
+    if ms > 2. * mpi:
+        gsff = params.gsff
+        gsGG = params.gsGG
+        vs = params.vs
+
+        return (sqrt(-4*mpi**2 + ms**2) *
+                (-54*gsGG*(2*mpi**2 - ms**2)*vh *
+                 (3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                 (54*gsGG*vh - 32*gsGG**2*vs +
+                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+            (11664.*ms**2*pi*vh**2*(3*vh + 3*gsff*vs + 2*gsGG*vs)**2 *
+             (9*vh + 4*gsGG*vs)**2)
+    else:
+        return 0.
 
 
 def width_s_to_xx(params):
@@ -71,11 +70,15 @@ def width_s_to_xx(params):
     two fermions x.
     """
 
-    return (params.gsxx**2 * (params.ms - 2 * params.mx) *
-            (params.ms + 2 * params.mx) *
-            sqrt(params.ms**2 - 4 * params.mx**2) *
-            np.heaviside(params.ms - 2 * params.mx, 0.)) / \
-        (8. * params.ms**2 * pi)
+    ms = params.ms
+    mx = params.mx
+
+    if ms > 2. * mx:
+        gsxx = params.gsxx
+        return (gsxx**2*(ms - 2*mx)*(ms + 2*mx)*sqrt(ms**2 - 4*mx**2)) / \
+            (32.*ms**2*pi)
+    else:
+        return 0.0
 
 
 def width_s_to_ff(mf, params):
@@ -88,11 +91,15 @@ def width_s_to_ff(mf, params):
     mf : double
         Mass of the final state fermion.
     """
+    ms = params.ms
 
-    return (params.gsff**2 * (params.ms - 2 * mf) * (params.ms + 2 * mf) *
-            sqrt(params.ms**2 - 4 * mf**2) *
-            np.heaviside(params.ms - 2 * mf, 0.)) / \
-        (8. * params.ms**2 * pi)
+    if ms > 2. * mpi:
+        gsff = params.gsff
+
+        return -(gsff**2*mf**2*(2*mf - ms)*(2*mf + ms) *
+                 sqrt(-4*mf**2 + ms**2)) / (32.*ms**2*pi*vh**2)
+    else:
+        return 0.
 
 
 def partial_widths(params):
