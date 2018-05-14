@@ -9,14 +9,6 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
 
-def __msqrd_xx_s(s, params):
-    """ Returns DM portion of amplitudes XX -> S -> anything """
-    gsxx = params.gsxx
-    mx = params.mx
-
-    return -(gsxx**2 * (4. * mx**2 - s)) / 2.
-
-
 def sigma_xx_to_s_to_ff(Q, mf, params):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f* through a
