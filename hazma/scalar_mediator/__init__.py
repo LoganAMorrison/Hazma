@@ -8,7 +8,6 @@ from scalar_mediator_positron_spectra import positron_spectra
 
 from scalar_mediator_spectra import dnde_mumu, dnde_ee
 from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
-from scalar_mediator_spectra import dnde_neutral_kaon, dnde_charged_kaon
 
 from scalar_mediator_widths import partial_widths as pws
 
@@ -145,8 +144,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['eta eta', 'mu mu', 'e e', 'g g', 'k0 k0',
-                'k k', 'pi0 pi0', 'pi pi']
+        return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi']
 
     def cross_sections(self, cme):
         """
@@ -178,7 +176,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         -------
         bfs : dictionary
             Dictionary of the branching fractions. The keys are 'total',
-            'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+            'mu mu', 'e e', 'pi0 pi0', 'pi pi'
         """
         return bfs(cme, self)
 
@@ -203,7 +201,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         -------
         specs : dictionary
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+            'pi0 pi0', 'pi pi'
         """
         return specs(egams, cme, self)
 
@@ -222,11 +220,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
                 'pi0 pi0': lambda e_gams, cme:
                     dnde_neutral_pion(e_gams, cme, self),
                 'pi pi': lambda e_gams, cme:
-                    dnde_charged_pion(e_gams, cme, self),
-                'k0 k0': lambda e_gams, cme:
-                    dnde_neutral_kaon(e_gams, cme, self),
-                'k k': lambda e_gams, cme:
-                    dnde_charged_kaon(e_gams, cme, self)}
+                    dnde_charged_pion(e_gams, cme, self)}
 
     def partial_widths(self):
         """
@@ -238,8 +232,8 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         width_dict : dictionary
             Dictionary of all of the individual decay widths of the scalar
             mediator as well as the total decay width. The possible decay
-            modes of the scalar mediator are 'g g', 'k0 k0', 'k k', 'pi0 pi0',
-            'pi pi', 'x x' and 'f f'. The total decay width has the key
+            modes of the scalar mediator are 'g g', 'pi0 pi0', 'pi pi', 'x x'
+            and 'f f'. The total decay width has the key
             'total'.
         """
         return pws(self)

@@ -2,13 +2,10 @@ from cmath import sqrt, pi
 
 import numpy as np
 from ..parameters import vh, b0, alpha_em
-from ..parameters import charged_kaon_mass as mk
-from ..parameters import neutral_kaon_mass as mk0
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
-from ..parameters import strange_quark_mass as msq
 from ..parameters import electron_mass as me
 from ..parameters import muon_mass as mmu
 
@@ -108,8 +105,8 @@ def partial_widths(params):
     width_dict : dictionary
         Dictionary of all of the individual decay widths of the scalar
         mediator as well as the total decay width. The possible decay
-        modes of the scalar mediator are 'g g', 'k0 k0', 'k k', 'pi0 pi0',
-        'pi pi', 'x x' and 'f f'. The total decay width has the key
+        modes of the scalar mediator are 'g g', 'pi0 pi0', 'pi pi', 'x x' and
+        'f f'. The total decay width has the key
         'total'.
     """
     w_gg = width_s_to_gg(params).real

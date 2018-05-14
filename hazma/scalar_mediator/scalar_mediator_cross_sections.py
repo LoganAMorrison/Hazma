@@ -1,14 +1,10 @@
 from cmath import sqrt, pi
 
 from ..parameters import vh, b0, alpha_em
-from ..parameters import charged_kaon_mass as mk
-from ..parameters import neutral_kaon_mass as mk0
-from ..parameters import eta_mass as meta
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
-from ..parameters import strange_quark_mass as msq
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
@@ -190,24 +186,18 @@ def cross_sections(Q, params):
     cs : float
         Total cross section.
     """
-    eta_contr = sigma_xx_to_s_to_etaeta(Q, params)
     muon_contr = sigma_xx_to_s_to_ff(Q, mmu, params)
     electron_contr = sigma_xx_to_s_to_ff(Q, me, params)
     photon_contr = sigma_xx_to_s_to_gg(Q, params)
-    NKaon_contr = sigma_xx_to_s_to_k0k0(Q, params)
-    CKaon_contr = sigma_xx_to_s_to_kk(Q, params)
     NPion_contr = sigma_xx_to_s_to_pi0pi0(Q, params)
     CPion_contr = sigma_xx_to_s_to_pipi(Q, params)
 
-    total = eta_contr + muon_contr + electron_contr + NKaon_contr + \
-        CKaon_contr + NPion_contr + CPion_contr + photon_contr
+    total = (muon_contr + electron_contr + NPion_contr + CPion_contr +
+             photon_contr)
 
-    cross_secs = {'eta eta': eta_contr,
-                  'mu mu': muon_contr,
+    cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
                   'g g': photon_contr,
-                  'k0 k0': NKaon_contr,
-                  'k k': CKaon_contr,
                   'pi0 pi0': NPion_contr,
                   'pi pi': CPion_contr,
                   'total': total}
@@ -229,25 +219,19 @@ def branching_fractions(Q, params):
     -------
     bfs : dictionary
         Dictionary of the branching fractions. The keys are 'total',
-        'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+        'mu mu', 'e e', 'pi0 pi0', 'pi pi'
     """
     CSs = cross_sections(Q, params)
 
     if CSs['total'] == 0.0:
-        return {'eta eta': 0.0,
-                'mu mu': 0.0,
+        return {'mu mu': 0.0,
                 'e e': 0.0,
                 'g g': 0.0,
-                'k0 k0': 0.0,
-                'k k': 0.0,
                 'pi0 pi0': 0.0,
                 'pi pi': 0.0}
     else:
-        return {'eta eta': CSs['eta eta'] / CSs['total'],
-                'mu mu': CSs['mu mu'] / CSs['total'],
+        return {'mu mu': CSs['mu mu'] / CSs['total'],
                 'e e': CSs['e e'] / CSs['total'],
                 'g g': CSs['g g'] / CSs['total'],
-                'k0 k0': CSs['k0 k0'] / CSs['total'],
-                'k k': CSs['k k'] / CSs['total'],
                 'pi0 pi0': CSs['pi0 pi0'] / CSs['total'],
                 'pi pi': CSs['pi pi'] / CSs['total']}
