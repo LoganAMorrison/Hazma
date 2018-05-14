@@ -4,6 +4,7 @@ from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
 from ..parameters import fpi, b0, vh
+from scalar_mediator_widths import partial_widths
 trM = muq + mdq + msq
 
 
@@ -16,7 +17,8 @@ class ScalarMediatorParameters(object):
         self._gsff = gsff
         self._gsGG = gsGG
         self._gsFF = gsFF
-        self.vs = self.compute_vs()
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def mx(self):
@@ -26,6 +28,7 @@ class ScalarMediatorParameters(object):
     def mx(self, mx):
         self._mx = mx
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def ms(self):
@@ -35,6 +38,7 @@ class ScalarMediatorParameters(object):
     def ms(self, ms):
         self._ms = ms
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def gsxx(self):
@@ -44,6 +48,7 @@ class ScalarMediatorParameters(object):
     def gsxx(self, gsxx):
         self._gsxx = gsxx
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def gsff(self):
@@ -53,6 +58,7 @@ class ScalarMediatorParameters(object):
     def gsff(self, gsff):
         self._gsff = gsff
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def gsGG(self):
@@ -62,6 +68,7 @@ class ScalarMediatorParameters(object):
     def gsGG(self, gsGG):
         self._gsGG = gsGG
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     @property
     def gsFF(self):
@@ -71,6 +78,7 @@ class ScalarMediatorParameters(object):
     def gsFF(self, gsFF):
         self._gsFF = gsFF
         self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     def compute_vs(self):
         """
@@ -90,9 +98,13 @@ class ScalarMediatorParameters(object):
                    2 for (alpha, beta, vs) in zip(alphas, betas, vs_roots)]
 
         if potvals[0] < potvals[1]:
-            return vs_roots[0]
+            self.vs = vs_roots[0]
         else:
-            return vs_roots[1]
+            self.vs = vs_roots[1]
+
+    def compute_width_s(self):
+        """Recomputes the scalar's total width."""
+        self.width_s = partial_widths(self)["total"]
 
     # #################### #
     """ HELPER FUNCTIONS """
