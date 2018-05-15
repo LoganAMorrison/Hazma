@@ -77,6 +77,20 @@ class VectorMediator(Theory, VectorMediatorParameters):
         return bfs(cme, self)
 
     def gamma_ray_lines(self, cme):
+        """
+        Parameters
+        ----------
+        cme : float
+            Center of mass energy
+
+        Returns
+        -------
+        line_es : numpy.array
+        line_bfs : numpy.array
+            The energies for gamma ray lines produced in DM annihilations and
+            the branching fractions into the final states producing these
+            lines. In this case, the relevant final state is pi0 g.
+        """
         bfs = self.branching_fractions(cme)
 
         return [np.array([(cme**2 - mpi0**2) / (2. * cme)]),
@@ -98,7 +112,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         -------
         specs : dictionary
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+            'pi0 g', 'pi pi'
         """
         return specs(egams, cme, self)
 
@@ -111,6 +125,12 @@ class VectorMediator(Theory, VectorMediatorParameters):
         Each argument of the spectrum functions in `eng_gams`, an array
         of the gamma ray energies to evaluate the spectra at and `cme`, the
         center of mass energy of the process.
+
+        Note
+        ----
+        This does not return a function for computing the spectrum for the pi0
+        pi pi final state since it always contributes orders of magnitude less
+        than the pi pi and pi0 g final states.
         """
         return {'mu mu': lambda egams, cme: dnde_mumu(egams, cme, self),
                 'e e': lambda egams, cme: dnde_ee(egams, cme, self),
