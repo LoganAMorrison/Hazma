@@ -130,3 +130,6 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
             return dnde_ee(eng_gams, cme, self.params)
 
         return {'mu mu': mumu, 'e e': ee}
+
+    def positron_spectra(self, eng_es, cme):
+        pass
