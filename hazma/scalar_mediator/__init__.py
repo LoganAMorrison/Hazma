@@ -144,7 +144,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi']
+        return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
 
     def cross_sections(self, cme):
         """

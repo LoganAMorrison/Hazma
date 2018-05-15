@@ -39,7 +39,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['mu mu', 'e e', 'pi pi', 'pi0 g', "pi0 pi pi"]
+        return ['mu mu', 'e e', 'pi pi', 'pi0 g', "pi0 pi pi", 'v v']
 
     def cross_sections(self, cme):
         """
