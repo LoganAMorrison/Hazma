@@ -33,14 +33,17 @@ def sigma_xx_to_v_to_ff(Q, f, params):
         mf = mmu
         gvll = params.gvmumu
 
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= 2. * mf and Q >= 2. * mx:
-        return (gvll**2*gvxx**2*sqrt(Q**2 - 4*mf**2)*(Q**2 + 2*mf**2) *
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return (gvll**2*gvxx**2*sqrt(Q**2 - 4.*mf**2)*(Q**2 + 2.*mf**2) *
                 (Q**2 + 2*mx**2)) / \
-            (12.*(Q**3 - Q*mv**2)**2*sqrt(Q**2 - 4*mx**2)*pi)
+            (12.*Q**2*sqrt(Q**2 - 4.*mx**2)*pi *
+             (Q**4 - 2.*Q**2*mv**2 + mv**4 + mv**2*width_v**2))
     else:
         return 0.
 
@@ -61,16 +64,19 @@ def sigma_xx_to_v_to_pipi(Q, params):
     cross_section : float
         Cross section for xbar + x -> v -> f + f.
     """
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= 2. * mpi and Q >= 2. * mx:
-        return ((gvdd - gvuu)**2*gvxx**2*(Q**2 - 4*mpi**2)**1.5 *
-                (Q**2 + 2*mx**2)) / \
-            (48.*(Q**3 - Q*mv**2)**2*sqrt(Q**2 - 4*mx**2)*pi)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return ((gvdd - gvuu)**2*gvxx**2*(-4.*mpi**2 + Q**2)**1.5 *
+                (2.*mx**2 + Q**2)) / \
+            (48.*pi*Q**2*sqrt(-4.*mx**2 + Q**2) *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
     else:
         return 0.
 
@@ -91,43 +97,48 @@ def sigma_xx_to_v_to_pi0g(Q, params):
     cross_section : float
         Cross section for xbar + x -> v -> pi0 g
     """
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= mpi0 and Q >= 2. * mx:
-        return ((gvdd + 2*gvuu)**2*gvxx**2*(Q**2 - mpi0**2)**3 *
-                (Q**2 + 2*mx**2)*qe**2) / \
-            (13824.*Q**3*fpi**2*(Q**2 - mv**2)**2 *
-             sqrt(Q**2 - 4*mx**2)*pi**5)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return ((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
+                (2.*mx**2 + Q**2)*qe**2) / \
+            (13824.*fpi**2*pi**5*Q**3*sqrt(-4.*mx**2 + Q**2) *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
     else:
         return 0.
 
 
 def __sigma_t_integrated_xx_to_v_to_pi0pipi(s, Q, params):
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4.*mpi**2
             and s < (Q - mpi0)**2):
-        ret_val = ((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4*mpi**2 + s)) *
-                   sqrt(Q**4 + (mpi0**2 - s)**2 - 2*Q**2*(mpi0**2 + s)) *
-                   (-24*mpi**6*s + mpi**4*(-2*mpi0**4 + 28*mpi0**2*s +
-                                           22*s**2) +
-                    2*mpi**2*(mpi0**6 - 4*s**3) +
-                    s*(-2*mpi0**6 - 4*mpi0**4*s - mpi0**2*s**2 + s**3) +
-                    Q**4*(-2*mpi**4 + 2*mpi**2*(mpi0**2 - s) +
-                          s*(-2*mpi0**2 + s)) +
-                    Q**2*(4*mpi**4*(mpi0**2 + s) +
-                          s*(4*mpi0**4 + 5*mpi0**2*s - 2*s**2) -
-                          4*mpi**2*(mpi0**4 + 3*mpi0**2*s - s**2)))) / \
-            (294912.*fpi**6*pi**7*sqrt(Q**2)*(-mv**2 + Q**2)**2 *
-             sqrt(-4*mx**2 + Q**2)*s**2)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        ret_val = ((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4.*mpi**2 + s)) *
+                   sqrt(Q**4 + (mpi0**2 - s)**2 - 2.*Q**2*(mpi0**2 + s)) *
+                   (-24.*mpi**6*s + mpi**4 *
+                    (-2.*mpi0**4 + 28.*mpi0**2*s + 22.*s**2) +
+                    2.*mpi**2*(mpi0**6 - 4.*s**3) +
+                    s*(-2.*mpi0**6 - 4.*mpi0**4*s - mpi0**2*s**2 + s**3) +
+                    Q**4*(-2.*mpi**4 +
+                          2.*mpi**2*(mpi0**2 - s) +
+                          s*(-2.*mpi0**2 + s)) +
+                    Q**2*(4.*mpi**4*(mpi0**2 + s) +
+                          s*(4.*mpi0**4 + 5.*mpi0**2*s - 2.*s**2) -
+                          4.*mpi**2*(mpi0**4 + 3.*mpi0**2*s - s**2)))) / \
+            (294912.*fpi**6*pi**7*sqrt(Q**2)*sqrt(-4.*mx**2 + Q**2)*s**2 *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
 
         assert ret_val.imag == 0.
 
