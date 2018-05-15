@@ -193,15 +193,17 @@ def cross_sections(Q, params):
     photon_contr = sigma_xx_to_s_to_gg(Q, params)
     NPion_contr = sigma_xx_to_s_to_pi0pi0(Q, params)
     CPion_contr = sigma_xx_to_s_to_pipi(Q, params)
+    ss_contr = sigma_xx_to_ss(Q, params)
 
     total = (muon_contr + electron_contr + NPion_contr + CPion_contr +
-             photon_contr)
+             photon_contr + ss_contr)
 
     cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
                   'g g': photon_contr,
                   'pi0 pi0': NPion_contr,
                   'pi pi': CPion_contr,
+                  's s': ss_contr,
                   'total': total}
 
     return cross_secs
@@ -230,10 +232,12 @@ def branching_fractions(Q, params):
                 'e e': 0.0,
                 'g g': 0.0,
                 'pi0 pi0': 0.0,
-                'pi pi': 0.0}
+                'pi pi': 0.0,
+                's s': 0.0}
     else:
         return {'mu mu': CSs['mu mu'] / CSs['total'],
                 'e e': CSs['e e'] / CSs['total'],
                 'g g': CSs['g g'] / CSs['total'],
                 'pi0 pi0': CSs['pi0 pi0'] / CSs['total'],
-                'pi pi': CSs['pi pi'] / CSs['total']}
+                'pi pi': CSs['pi pi'] / CSs['total'],
+                's s': CSs['s s'] / CSs['total']}

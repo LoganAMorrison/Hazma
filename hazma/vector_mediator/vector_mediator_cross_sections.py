@@ -1,4 +1,4 @@
-from cmath import sqrt, pi
+from cmath import sqrt, pi, log
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import fpi
@@ -33,14 +33,17 @@ def sigma_xx_to_v_to_ff(Q, f, params):
         mf = mmu
         gvll = params.gvmumu
 
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= 2. * mf and Q >= 2. * mx:
-        return (gvll**2*gvxx**2*sqrt(Q**2 - 4*mf**2)*(Q**2 + 2*mf**2) *
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return (gvll**2*gvxx**2*sqrt(Q**2 - 4.*mf**2)*(Q**2 + 2.*mf**2) *
                 (Q**2 + 2*mx**2)) / \
-            (12.*(Q**3 - Q*mv**2)**2*sqrt(Q**2 - 4*mx**2)*pi)
+            (12.*Q**2*sqrt(Q**2 - 4.*mx**2)*pi *
+             (Q**4 - 2.*Q**2*mv**2 + mv**4 + mv**2*width_v**2))
     else:
         return 0.
 
@@ -61,16 +64,19 @@ def sigma_xx_to_v_to_pipi(Q, params):
     cross_section : float
         Cross section for xbar + x -> v -> f + f.
     """
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= 2. * mpi and Q >= 2. * mx:
-        return ((gvdd - gvuu)**2*gvxx**2*(Q**2 - 4*mpi**2)**1.5 *
-                (Q**2 + 2*mx**2)) / \
-            (48.*(Q**3 - Q*mv**2)**2*sqrt(Q**2 - 4*mx**2)*pi)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return ((gvdd - gvuu)**2*gvxx**2*(-4.*mpi**2 + Q**2)**1.5 *
+                (2.*mx**2 + Q**2)) / \
+            (48.*pi*Q**2*sqrt(-4.*mx**2 + Q**2) *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
     else:
         return 0.
 
@@ -91,43 +97,48 @@ def sigma_xx_to_v_to_pi0g(Q, params):
     cross_section : float
         Cross section for xbar + x -> v -> pi0 g
     """
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if Q >= mpi0 and Q >= 2. * mx:
-        return ((gvdd + 2*gvuu)**2*gvxx**2*(Q**2 - mpi0**2)**3 *
-                (Q**2 + 2*mx**2)*qe**2) / \
-            (13824.*Q**3*fpi**2*(Q**2 - mv**2)**2 *
-             sqrt(Q**2 - 4*mx**2)*pi**5)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        return ((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
+                (2.*mx**2 + Q**2)*qe**2) / \
+            (13824.*fpi**2*pi**5*Q**3*sqrt(-4.*mx**2 + Q**2) *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
     else:
         return 0.
 
 
 def __sigma_t_integrated_xx_to_v_to_pi0pipi(s, Q, params):
-    gvuu = params.gvuu
-    gvdd = params.gvdd
-    gvxx = params.gvxx
     mx = params.mx
-    mv = params.mv
 
     if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4.*mpi**2
             and s < (Q - mpi0)**2):
-        ret_val = ((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4*mpi**2 + s)) *
-                   sqrt(Q**4 + (mpi0**2 - s)**2 - 2*Q**2*(mpi0**2 + s)) *
-                   (-24*mpi**6*s + mpi**4*(-2*mpi0**4 + 28*mpi0**2*s +
-                                           22*s**2) +
-                    2*mpi**2*(mpi0**6 - 4*s**3) +
-                    s*(-2*mpi0**6 - 4*mpi0**4*s - mpi0**2*s**2 + s**3) +
-                    Q**4*(-2*mpi**4 + 2*mpi**2*(mpi0**2 - s) +
-                          s*(-2*mpi0**2 + s)) +
-                    Q**2*(4*mpi**4*(mpi0**2 + s) +
-                          s*(4*mpi0**4 + 5*mpi0**2*s - 2*s**2) -
-                          4*mpi**2*(mpi0**4 + 3*mpi0**2*s - s**2)))) / \
-            (294912.*fpi**6*pi**7*sqrt(Q**2)*(-mv**2 + Q**2)**2 *
-             sqrt(-4*mx**2 + Q**2)*s**2)
+        gvuu = params.gvuu
+        gvdd = params.gvdd
+        gvxx = params.gvxx
+        mv = params.mv
+        width_v = params.width_v
+
+        ret_val = ((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4.*mpi**2 + s)) *
+                   sqrt(Q**4 + (mpi0**2 - s)**2 - 2.*Q**2*(mpi0**2 + s)) *
+                   (-24.*mpi**6*s + mpi**4 *
+                    (-2.*mpi0**4 + 28.*mpi0**2*s + 22.*s**2) +
+                    2.*mpi**2*(mpi0**6 - 4.*s**3) +
+                    s*(-2.*mpi0**6 - 4.*mpi0**4*s - mpi0**2*s**2 + s**3) +
+                    Q**4*(-2.*mpi**4 +
+                          2.*mpi**2*(mpi0**2 - s) +
+                          s*(-2.*mpi0**2 + s)) +
+                    Q**2*(4.*mpi**4*(mpi0**2 + s) +
+                          s*(4.*mpi0**4 + 5.*mpi0**2*s - 2.*s**2) -
+                          4.*mpi**2*(mpi0**4 + 3.*mpi0**2*s - s**2)))) / \
+            (294912.*fpi**6*pi**7*sqrt(Q**2)*sqrt(-4.*mx**2 + Q**2)*s**2 *
+             (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
 
         assert ret_val.imag == 0.
 
@@ -142,6 +153,29 @@ def sigma_xx_to_v_to_pi0pipi(Q, params):
 
     return quad(__sigma_t_integrated_xx_to_v_to_pi0pipi, s_min, s_max,
                 args=(Q, params))[0]
+
+
+def sigma_xx_to_vv(Q, params):
+    mx = params.mx
+    mv = params.mv
+
+    if Q >= 2. * mv and Q >= 2. * mx:
+        gvxx = params.gvxx
+
+        return (gvxx**4*sqrt(-4.*mv**2 + Q**2) *
+                (-2.*sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)) -
+                 (2.*(mv**2 + 2.*mx**2)**2*sqrt((-4.*mv**2 + Q**2) *
+                                                (-4.*mx**2 + Q**2))) /
+                 (mv**4 - 4.*mv**2*mx**2 + mx**2*Q**2) +
+                 ((4.*mv**4 - 8.*mv**2*mx**2 -
+                   8.*mx**4. + 4*mx**2*Q**2 + Q**4) *
+                  log((-2.*mv**2 + Q**2 +
+                       sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)))**2 /
+                      (2.*mv**2 - Q**2 + sqrt((-4.*mv**2 + Q**2) *
+                                              (-4.*mx**2 + Q**2)))**2)) /
+                 (-2.*mv**2 + Q**2))) / (16.*pi*Q**2*sqrt(-4.*mx**2 + Q**2))
+    else:
+        return 0.0
 
 
 def cross_sections(Q, params):
@@ -164,15 +198,17 @@ def cross_sections(Q, params):
     pipi_contr = sigma_xx_to_v_to_pipi(Q, params)
     pi0g_contr = sigma_xx_to_v_to_pi0g(Q, params)
     pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(Q, params)
+    vv_contr = sigma_xx_to_vv(Q, params)
 
     total = (muon_contr + electron_contr + pipi_contr + pi0g_contr +
-             pi0pipi_contr)
+             pi0pipi_contr + vv_contr)
 
     cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
                   'pi pi': pipi_contr,
                   'pi0 g': pi0g_contr,
                   'pi0 pi pi': pi0pipi_contr,
+                  'v v': vv_contr,
                   'total': total}
 
     return cross_secs
@@ -201,10 +237,12 @@ def branching_fractions(Q, params):
                 'e e': 0.0,
                 'pi pi': 0.0,
                 'pi0 g': 0.0,
-                "pi0 pi pi": 0.0}
+                "pi0 pi pi": 0.0,
+                'v v': 0.0}
     else:
         return {'mu mu': CSs['mu mu'] / CSs['total'],
                 'e e': CSs['e e'] / CSs['total'],
                 'pi pi': CSs['pi pi'] / CSs['total'],
                 'pi0 g': CSs['pi0 g'] / CSs['total'],
-                "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"]}
+                "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"],
+                'v v': CSs['v v'] / CSs['total']}

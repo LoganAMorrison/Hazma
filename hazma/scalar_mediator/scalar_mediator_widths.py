@@ -93,7 +93,7 @@ def width_s_to_ff(mf, params):
     """
     ms = params.ms
 
-    if ms > 2. * mpi:
+    if ms > 2. * mf:
         gsff = params.gsff
 
         return -(gsff**2*mf**2*(2*mf - ms)*(2*mf + ms) *

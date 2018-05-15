@@ -1,3 +1,6 @@
+from vector_mediator_widths import partial_widths
+
+
 class VectorMediatorParameters(object):
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu):
@@ -9,6 +12,7 @@ class VectorMediatorParameters(object):
         self._gvss = gvss
         self._gvee = gvee
         self._gvmumu = gvmumu
+        self.compute_width_v()
 
     @property
     def mx(self):
@@ -17,6 +21,7 @@ class VectorMediatorParameters(object):
     @mx.setter
     def mx(self, mx):
         self._mx = mx
+        self.compute_width_v()
 
     @property
     def mv(self):
@@ -25,6 +30,7 @@ class VectorMediatorParameters(object):
     @mv.setter
     def mv(self, mv):
         self._mv = mv
+        self.compute_width_v()
 
     @property
     def gvxx(self):
@@ -33,6 +39,7 @@ class VectorMediatorParameters(object):
     @gvxx.setter
     def gvxx(self, gvxx):
         self._gvxx = gvxx
+        self.compute_width_v()
 
     @property
     def gvuu(self):
@@ -41,6 +48,7 @@ class VectorMediatorParameters(object):
     @gvuu.setter
     def gvuu(self, gvuu):
         self._gvuu = gvuu
+        self.compute_width_v()
 
     @property
     def gvdd(self):
@@ -49,6 +57,7 @@ class VectorMediatorParameters(object):
     @gvdd.setter
     def gvdd(self, gvdd):
         self._gvdd = gvdd
+        self.compute_width_v()
 
     @property
     def gvss(self):
@@ -57,6 +66,7 @@ class VectorMediatorParameters(object):
     @gvss.setter
     def gvss(self, gvss):
         self._gvss = gvss
+        self.compute_width_v()
 
     @property
     def gvee(self):
@@ -65,6 +75,7 @@ class VectorMediatorParameters(object):
     @gvee.setter
     def gvee(self, gvee):
         self._gvee = gvee
+        self.compute_width_v()
 
     @property
     def gvmumu(self):
@@ -73,3 +84,9 @@ class VectorMediatorParameters(object):
     @gvmumu.setter
     def gvmumu(self, gvmumu):
         self._gvmumu = gvmumu
+        self.compute_width_v()
+
+    def compute_width_v(self):
+        """Recomputes the scalar's total width."""
+        self.width_v = partial_widths(self)["total"]
+
