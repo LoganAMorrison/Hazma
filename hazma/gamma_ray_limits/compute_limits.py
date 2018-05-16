@@ -105,41 +105,48 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Convolve the spectrum with the detector's spectral resolution
-    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                     energy_res)
+    # Make sure e_gams fully overlaps with the detector's energy range
+    if e_gams[0] > A_eff.x[0] or e_gams[-1] < A_eff.x[-1]:
+        raise ValueError("Spectrum must be computed at all energies in the " +
+                         "detector's range.")
+    elif np.all(dndes == 0) and np.all((line_es < A_eff.x[0]) +
+                                       (line_es > A_eff.x[-1])):
+        # If spectrum is zero and all lines lie outside the detector's energy
+        # range, no limit can be set
+        return np.inf
+    else:
+        # Convolve the spectrum with the detector's spectral resolution
+        dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
+                                         energy_res)
 
-    # Min photon energy is determined by comparing effective area and first
-    # energy at which dN/dE != 0
-    e_min = max(A_eff.x[0], e_gams[np.where(dndes)[0][0]])
-    # Max photon energy is determined by comparing effective area and last
-    # energy at which dN/dE != 0
-    e_max = min(A_eff.x[-1], e_gams[np.where(dndes)[0][-1]])
+        # Min photon energy is determined by comparing effective area and first
+        # energy at which dN/dE != 0
+        e_min = max(A_eff.x[0], e_gams[np.where(dnde_det)[0][0]])
+        # Max photon energy is determined by comparing effective area and last
+        # energy at which dN/dE != 0
+        e_max = min(A_eff.x[-1], e_gams[np.where(dnde_det)[0][-1]])
 
-    # Initial guesses for energy window lower bound
-    # TODO: this can produce a divide by zero error...
-    e_a_0 = 0.25 * 10.**(np.log10(e_max) - np.log10(e_min))
-    e_b_0 = 0.75 * 10.**(np.log10(e_max) - np.log10(e_min))
-    # e_a_0, e_b_0 = A_eff.x[[1, -2]]
+        # Initial guesses for energy window lower bound
+        # TODO: this will likely break if a narrow line dominates the spectrum
+        e_a_0 = 0.25 * 10.**(np.log10(e_max) - np.log10(e_min))
+        e_b_0 = 0.75 * 10.**(np.log10(e_max) - np.log10(e_min))
 
-    # Optimize upper and lower bounds for energy window
-    limit_obj = optimize.minimize(__f_lim,
-                                  [e_a_0, e_b_0],
-                                  bounds=2 * [[e_min, e_max]],
-                                  args=(dnde_det, A_eff, T_obs, target_params,
-                                        bg_model),
-                                  method="L-BFGS-B",
-                                  options={"ftol": 1e-3})
+        # Optimize upper and lower bounds for energy window
+        limit_obj = optimize.minimize(__f_lim,
+                                      [e_a_0, e_b_0],
+                                      bounds=2 * [[e_min, e_max]],
+                                      args=(dnde_det, A_eff, T_obs,
+                                            target_params, bg_model),
+                                      method="L-BFGS-B",
+                                      options={"ftol": 1e-3})
 
-    # Insert appropriate prefactors to convert result to <sigma v>_tot
-    prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
-                 (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
+        # Insert appropriate prefactors to convert result to <sigma v>_tot
+        prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
+                     (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
 
-    print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
-    print("e_b: %f -> %f" % (e_b_0, limit_obj.x[1]))
-    print(" ")
+        assert -limit_obj.fun >= 0
 
-    return prefactor * n_sigma / (-limit_obj.fun)
+        return prefactor * n_sigma / (-limit_obj.fun)
 
 
 def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
