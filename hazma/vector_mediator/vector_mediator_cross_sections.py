@@ -40,10 +40,15 @@ def sigma_xx_to_v_to_ff(Q, f, params):
         mv = params.mv
         width_v = params.width_v
 
-        return (gvll**2*gvxx**2*sqrt(Q**2 - 4.*mf**2)*(Q**2 + 2.*mf**2) *
-                (Q**2 + 2*mx**2)) / \
+        ret_val = (gvll**2*gvxx**2*sqrt(Q**2 - 4.*mf**2)*(Q**2 + 2.*mf**2) *
+                   (Q**2 + 2*mx**2)) / \
             (12.*Q**2*sqrt(Q**2 - 4.*mx**2)*pi *
              (Q**4 - 2.*Q**2*mv**2 + mv**4 + mv**2*width_v**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -73,10 +78,15 @@ def sigma_xx_to_v_to_pipi(Q, params):
         mv = params.mv
         width_v = params.width_v
 
-        return ((gvdd - gvuu)**2*gvxx**2*(-4.*mpi**2 + Q**2)**1.5 *
-                (2.*mx**2 + Q**2)) / \
+        ret_val = ((gvdd - gvuu)**2*gvxx**2*(-4.*mpi**2 + Q**2)**1.5 *
+                   (2.*mx**2 + Q**2)) / \
             (48.*pi*Q**2*sqrt(-4.*mx**2 + Q**2) *
              (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -106,10 +116,15 @@ def sigma_xx_to_v_to_pi0g(Q, params):
         mv = params.mv
         width_v = params.width_v
 
-        return ((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
-                (2.*mx**2 + Q**2)*qe**2) / \
+        ret_val = ((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
+                   (2.*mx**2 + Q**2)*qe**2) / \
             (13824.*fpi**2*pi**5*Q**3*sqrt(-4.*mx**2 + Q**2) *
              (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -151,8 +166,13 @@ def sigma_xx_to_v_to_pi0pipi(Q, params):
     s_min = 4. * mpi**2
     s_max = (Q - mpi0)**2
 
-    return quad(__sigma_t_integrated_xx_to_v_to_pi0pipi, s_min, s_max,
-                args=(Q, params))[0]
+    ret_val = quad(__sigma_t_integrated_xx_to_v_to_pi0pipi, s_min, s_max,
+                   args=(Q, params))[0]
+
+    assert ret_val.imag == 0
+    assert ret_val.real >= 0
+
+    return ret_val.real
 
 
 def sigma_xx_to_vv(Q, params):
@@ -162,18 +182,23 @@ def sigma_xx_to_vv(Q, params):
     if Q >= 2. * mv and Q >= 2. * mx:
         gvxx = params.gvxx
 
-        return (gvxx**4*sqrt(-4.*mv**2 + Q**2) *
-                (-2.*sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)) -
-                 (2.*(mv**2 + 2.*mx**2)**2*sqrt((-4.*mv**2 + Q**2) *
-                                                (-4.*mx**2 + Q**2))) /
-                 (mv**4 - 4.*mv**2*mx**2 + mx**2*Q**2) +
-                 ((4.*mv**4 - 8.*mv**2*mx**2 -
-                   8.*mx**4. + 4*mx**2*Q**2 + Q**4) *
-                  log((-2.*mv**2 + Q**2 +
-                       sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)))**2 /
-                      (2.*mv**2 - Q**2 + sqrt((-4.*mv**2 + Q**2) *
-                                              (-4.*mx**2 + Q**2)))**2)) /
-                 (-2.*mv**2 + Q**2))) / (16.*pi*Q**2*sqrt(-4.*mx**2 + Q**2))
+        ret_val = (gvxx**4*sqrt(-4.*mv**2 + Q**2) *
+                   (-2.*sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)) -
+                    (2.*(mv**2 + 2.*mx**2)**2*sqrt((-4.*mv**2 + Q**2) *
+                                                   (-4.*mx**2 + Q**2))) /
+                    (mv**4 - 4.*mv**2*mx**2 + mx**2*Q**2) +
+                    ((4.*mv**4 - 8.*mv**2*mx**2 -
+                      8.*mx**4. + 4*mx**2*Q**2 + Q**4) *
+                     log((-2.*mv**2 + Q**2 +
+                          sqrt((-4.*mv**2 + Q**2)*(-4.*mx**2 + Q**2)))**2 /
+                         (2.*mv**2 - Q**2 + sqrt((-4.*mv**2 + Q**2) *
+                                                 (-4.*mx**2 + Q**2)))**2)) /
+                    (-2.*mv**2 + Q**2))) / (16.*pi*Q**2*sqrt(-4.*mx**2 + Q**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.0
 

@@ -32,10 +32,15 @@ def sigma_xx_to_s_to_ff(Q, mf, params):
         gsxx = params.gsxx
         width_s = params.width_s
 
-        return (gsff**2*gsxx**2*mf**2*(-2*mx + Q) *
-                (2*mx + Q)*(-4*mf**2 + Q**2)**1.5) / \
+        ret_val = (gsff**2*gsxx**2*mf**2*(-2*mx + Q) *
+                   (2*mx + Q)*(-4*mf**2 + Q**2)**1.5) / \
             (16.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
              (ms**4 - 2*ms**2*Q**2 + Q**4 + ms**2*width_s**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -63,9 +68,14 @@ def sigma_xx_to_s_to_gg(Q, params):
         ms = params.ms
         width_s = params.width_s
 
-        return (alpha_em**2*gsFF**2*gsxx**2*Q**3*(-2*mx + Q)*(2*mx + Q)) / \
-            (256.*pi**3*sqrt(-4*mx**2 + Q**2)*vh**2*
+        ret_val = (alpha_em**2*gsFF**2*gsxx**2*Q**3*(-2*mx + Q)*(2*mx + Q)) / \
+            (256.*pi**3*sqrt(-4*mx**2 + Q**2)*vh**2 *
              (ms**4 - 2*ms**2*Q**2 + Q**4 + ms**2*width_s**2))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.0
 
@@ -95,14 +105,20 @@ def sigma_xx_to_s_to_pi0pi0(Q, params):
         vs = params.vs
         width_s = params.width_s
 
-        return (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
-                (54*gsGG*(-2*mpi**2 + Q**2)*vh*(3*vh + 3*gsff*vs + 2*gsGG*vs) +
-                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
-                 (54*gsGG*vh - 32*gsGG**2*vs +
-                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+        ret_val = (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
+                   (54*gsGG*(-2*mpi**2 + Q**2)*vh *
+                    (3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                    b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                    (54*gsGG*vh - 32*gsGG**2*vs +
+                     9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
             (23328.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
              (3*vh + 3*gsff*vs + 2*gsGG*vs)**2*(9*vh + 4*gsGG*vs)**2 *
              (ms**4 + Q**4 + ms**2*(-2*Q**2 + width_s**2)))
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -132,15 +148,20 @@ def sigma_xx_to_s_to_pipi(Q, params):
         vs = params.vs
         width_s = params.width_s
 
-        return (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
-                (54*gsGG*(-2*mpi**2 + Q**2)*vh*(3*vh + 3*gsff*vs + 2*gsGG*vs) +
-                 b0*(mdq + muq)*(9*vh + 4*gsGG*vs)*
-                 (54*gsGG*vh - 32*gsGG**2*vs +
-                  9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
+        ret_val = (gsxx**2*(-2*mx + Q)*(2*mx + Q)*sqrt(-4*mpi**2 + Q**2) *
+                   (54*gsGG*(-2*mpi**2 + Q**2)*vh *
+                    (3*vh + 3*gsff*vs + 2*gsGG*vs) +
+                    b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
+                    (54*gsGG*vh - 32*gsGG**2*vs +
+                     9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
             (23328.*pi*Q**2*sqrt(-4*mx**2 + Q**2)*vh**2 *
              (3*vh + 3*gsff*vs + 2*gsGG*vs)**2*(9*vh + 4*gsGG*vs)**2 *
              (ms**4 + Q**4 + ms**2*(-2*Q**2 + width_s**2)))
 
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 
@@ -152,23 +173,30 @@ def sigma_xx_to_ss(Q, params):
     if Q > 2. * ms and Q >= 2. * mx:
         gsxx = params.gsxx
 
-        return (gsxx**4*sqrt(Q**2 - 4*ms**2) *
-                ((4*(ms**2 - 4*mx**2)**2) /
-                 (Q**2 - 2*ms**2 + sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) +
-                 (4*(ms**2 - 4*mx**2)**2) /
-                 (-Q**2 + 2*ms**2 + sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) -
-                 2*(Q**2 - 2*ms**2 - 2*mx**2 +
-                    sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) -
-                 2*(-Q**2 + 2*ms**2 + 2*mx**2 +
-                    sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2))) +
-                 ((Q**2*(-Q**2 + 2*ms**2 + 8*mx**2) +
-                   2*(Q**4 + 3*ms**4 + 4*Q**2*mx**2 - 16*mx**4 -
-                      ms**2*(3*Q**2 + 8*mx**2))) *
-                  log((Q**2 - 2*ms**2 +
-                       sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2 /
-                      (-Q**2 + 2*ms**2 +
-                       sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2)) /
-                 (Q**2 - 2*ms**2)))/(64.*Q**2*sqrt(Q**2 - 4*mx**2)*pi)
+        ret_val = (gsxx**4*sqrt(Q**2 - 4*ms**2) *
+                   ((4*(ms**2 - 4*mx**2)**2) /
+                    (Q**2 - 2*ms**2 + sqrt((Q**2 - 4*ms**2) *
+                                           (Q**2 - 4*mx**2))) +
+                    (4*(ms**2 - 4*mx**2)**2) /
+                    (-Q**2 + 2*ms**2 + sqrt((Q**2 - 4*ms**2) *
+                                            (Q**2 - 4*mx**2))) -
+                    2*(Q**2 - 2*ms**2 - 2*mx**2 + sqrt((Q**2 - 4*ms**2) *
+                                                       (Q**2 - 4*mx**2))) -
+                    2*(-Q**2 + 2*ms**2 + 2*mx**2 + sqrt((Q**2 - 4*ms**2) *
+                                                        (Q**2 - 4*mx**2))) +
+                    ((Q**2*(-Q**2 + 2*ms**2 + 8*mx**2) +
+                      2*(Q**4 + 3*ms**4 + 4*Q**2*mx**2 - 16*mx**4 -
+                         ms**2*(3*Q**2 + 8*mx**2))) *
+                     log((Q**2 - 2*ms**2 +
+                          sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2 /
+                         (-Q**2 + 2*ms**2 +
+                          sqrt((Q**2 - 4*ms**2)*(Q**2 - 4*mx**2)))**2)) /
+                    (Q**2 - 2*ms**2)))/(64.*Q**2*sqrt(Q**2 - 4*mx**2)*pi)
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
     else:
         return 0.
 

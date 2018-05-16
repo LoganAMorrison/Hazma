@@ -56,12 +56,11 @@ def __dnde_xx_to_v_to_ffg(egam, Q, f, params):
              sqrt((-1 + 2. * e) * (-1 + 4. * m**2)) * pi * Q)
 
         assert ret_val.imag == 0.
-
         ret_val = ret_val.real
 
-        assert ret_val >= 0
+    assert ret_val >= 0
 
-    return ret_val
+    return ret_val.real
 
 
 def dnde_xx_to_v_to_ffg(egam, Q, f, params):
@@ -128,9 +127,10 @@ def __dnde_xx_to_v_to_pipig(egam, Q, params):
         (4. * pi**2 * (-4 * mpi**2 + Q**2)**1.5 *
          (-mv**2 + Q**2)**2 * (2 * mx**2 * Q + Q**3))
 
-    # assert ret_val >= 0.
+    assert ret_val.imag == 0.
+    assert ret_val.real >= 0
 
-    return ret_val
+    return ret_val.real
 
 
 def dnde_xx_to_v_to_pipig(eng_gams, Q, params):
