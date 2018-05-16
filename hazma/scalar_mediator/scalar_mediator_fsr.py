@@ -34,7 +34,11 @@ def __dnde_xx_to_s_to_ffg(egam, Q, mf, params):
                     atanh(sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
             (e * (1 - 4 * m**2)**1.5 * pi * Q)
 
-        return ret_val.real
+        assert ret_val.imag == 0
+        ret_val = ret_val.real
+        assert ret_val >= 0
+
+        return ret_val
     else:
         return 0.0
 
@@ -161,10 +165,11 @@ def __dnde_xx_to_s_to_pipig(eng_gam, Q, params):
         int_val, _ = t_integral(s, 0., mpi, mpi, Q, mat_elem_sqrd)
 
         ret_val = prefactor * int_val
+
         assert ret_val.imag == 0
         ret_val = ret_val.real
 
-    assert ret_val >= 0.
+    assert ret_val >= 0
 
     return ret_val
 
