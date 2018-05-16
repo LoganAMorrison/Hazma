@@ -32,26 +32,22 @@ cdef double mmu = MASS_MU
 cdef double __dnde_pi_to_lnug(double egam, double ml):
     cdef double r = pow(ml / mpi, 2.0)
     if 0.0 <= egam and egam <= mpi * (1. - r) / 2. :
-        return (ALPHA_EM  * (2 * (2 * egam + mpi * (-1 + r)) *
-                 (3 * fpi**2 * mpi * (-2 * egam + mpi) *
-                  (egam**2 + 2 * egam * mpi * (-1 + r) -
-                   mpi**2 * (-1 + r)) * r -
-                  3 * A_PI * egam**2 * fpi * (2 * egam - mpi) * mpi * r *
-                  (-4 * egam + mpi + mpi * r) + A_PI**2 * egam**4 *
-                  (2 * egam + mpi * (-1 + r)) *
-                  (-4 * egam + mpi * (2 + r)) -
-                  6 * egam**3 * fpi * (2 * egam - mpi) *
-                  mpi * r * V_PI + egam**4 *
-                  (2 * egam + mpi * (-1 + r)) *
-                  (-4 * egam + mpi * (2 + r)) * V_PI**2) +
-                 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
-                 (-2 * egam**2 * fpi - 2 * egam * fpi * mpi * (-1 + r) +
-                  4 * A_PI * egam**2 * (egam - mpi * r) + fpi * mpi**2 *
-                  (-1 + r**2) - 4 * egam**3 * V_PI) *
-                 (2 * np.log(mpi) -
-                  np.log(mpi * (-2 * egam + mpi)) + np.log(r)))) / \
-            (1536. * egam * fpi**2 * mpi**3 * (-2 * egam + mpi)**2 * np.pi**4 *
-             (-1 + r)**2 * r)
+        return (ALPHA_EM *
+            (-2 * (2 * egam + mpi * (-1 + r)) *
+             (3 * fpi**2 * (2 * egam - mpi) * mpi * r *
+              ((egam - mpi)**2 +
+               (2 * egam - mpi) * mpi * r) - 3 * egam**2 * fpi *
+              (2 * egam - mpi) * mpi * r *
+              (4 * A_PI * egam - A_PI * mpi *
+              (1 + r) - 2 * egam * V_PI) + egam**4 *
+              (2 * egam + mpi * (-1 + r)) * (4 * egam - mpi * (2 + r)) *
+              (A_PI**2 + V_PI**2)) + 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
+             (2 * egam**2 * fpi + 2 * egam * fpi * mpi *
+              (-1 + r) - 4 * A_PI * egam**2 * (egam - mpi * r) - fpi * mpi**2 *
+              (-1 + r**2) + 4 * egam**3 * V_PI) *
+             (log(-2 * egam + mpi) - log(mpi * r)))) / \
+        (6. * egam * fpi**2 * (
+            1 - (2 * egam) / mpi)**2 * mpi**4 * M_PI * (-1 + r)**2 * r)
     else :
         return 0.0
 
@@ -107,7 +103,7 @@ cdef double __eng_gam_max(double eng_pi):
 
 
 @cython.cdivision(True)
-cdef double __integrand(double cl, double eng_gam, double eng_pi):
+cdef double __integrand(double cl, double eng_gam, double eng_pi, str mode):
     """
     Returns the integrand of the differential radiative decay spectrum for
     the charged pion.
@@ -120,19 +116,35 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi):
     cdef double betaPi = __beta(eng_pi, MASS_PI)
     cdef double gammaPi = __gamma(eng_pi, MASS_PI)
 
+    cdef double betaMu = __beta(__eng_mu_pi_rf, MASS_MU)
+    cdef double gammaMu = __gamma(__eng_mu_pi_rf, MASS_MU)
+
     cdef double engGamPiRF = eng_gam * gammaPi * (1.0 - betaPi * cl)
 
-    cdef double preFactor = BR_PI_TO_MUNU \
-        / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
-    cdef double preFactorE = BR_PI_TO_ENU \
-        / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
+    cdef double jac = 1. / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
 
-    return preFactor * (__muon_spectrum(engGamPiRF) +
-                        __dnde_pi_to_lnug(engGamPiRF, mmu)) + \
-            preFactorE * __dnde_pi_to_lnug(engGamPiRF, me)
+    cdef double dnde_munu = 0.
+    cdef double dnde_munug = 0.
+    cdef double dnde_enug = 0.
 
+    __eng_gam_max_pi_rf = __eng_gam_max_mu_rf * gammaMu * (1.0 + betaMu)
 
-cdef double CSpectrumPoint(double eng_gam, double eng_pi):
+    if 0. < eng_gam and eng_gam < __eng_gam_max_pi_rf:
+        dnde_munu = BR_PI_TO_MUNU * jac * __muon_spectrum(engGamPiRF)
+
+    dnde_munug = BR_PI_TO_MUNU * jac * __dnde_pi_to_lnug(engGamPiRF, mmu)
+    dnde_enug = 0.000123 * jac * __dnde_pi_to_lnug(engGamPiRF, me)
+
+    if mode == "total":
+        return dnde_munu + dnde_munug + dnde_enug
+    if mode == "munu":
+        return dnde_munu
+    if mode == "munug":
+        return dnde_munug
+    if mode == "enug":
+        return dnde_enug
+
+cdef double CSpectrumPoint(double eng_gam, double eng_pi, str mode):
     """
     Returns the radiative spectrum value from charged pion given a gamma
     ray energy eng_gam and charged pion energy eng_pi. When the
@@ -145,26 +157,16 @@ cdef double CSpectrumPoint(double eng_gam, double eng_pi):
     """
     message = 'Energy of pion cannot be less than the pion mass. Returning 0.'
     if eng_pi < MASS_PI:
-        # raise warnings.warn(message, RuntimeWarning)
         return 0.0
 
-    cdef double result = 0.0
-
-    if 0.0 <= eng_gam and eng_gam <= __eng_gam_max(eng_pi):
-        result = quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
-                      args=(eng_gam, eng_pi), epsabs=10**-10., \
-                      epsrel=10**-4.)[0]
-
-    if 0.0 <= eng_gam and eng_gam <= (mpi**2 - mmu**2) / 2.0 / mpi:
-        result = result + __dnde_pi_to_lnug(eng_gam, me)
-        result = result + __dnde_pi_to_lnug(eng_gam, mmu)
-
-    return result
+    return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+                  args=(eng_gam, eng_pi, mode), epsabs=10**-10., \
+                  epsrel=10**-5.)[0]
 
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
-cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
+cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi, str mode):
     """
     Returns the radiative spectrum dNde from charged pion given a gamma
     ray energies eng_gams and charged pion energy eng_pi.
@@ -182,12 +184,12 @@ cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_pi):
     cdef int i = 0
 
     for i in range(numpts):
-        spec[i] = CSpectrumPoint(eng_gams[i], eng_pi)
+        spec[i] = CSpectrumPoint(eng_gams[i], eng_pi, mode)
 
     return spec
 
 
-def SpectrumPoint(double eng_gam, double eng_pi):
+def SpectrumPoint(double eng_gam, double eng_pi, str mode):
     """
     Returns the radiative spectrum value from charged pion given a gamma
     ray energy eng_gam and charged pion energy eng_pi. When the
@@ -198,12 +200,12 @@ def SpectrumPoint(double eng_gam, double eng_pi):
         eng_gam: Energy of photon is laboratory frame.
         eng_pi: Energy of charged pion in laboratory frame.
     """
-    return CSpectrum(eng_gam, eng_pi)
+    return CSpectrumPoint(eng_gam, eng_pi, mode)
 
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
-def Spectrum(np.ndarray eng_gams, double eng_pi):
+def Spectrum(np.ndarray eng_gams, double eng_pi, str mode):
     """
     Returns the radiative spectrum dNde from charged pion given a gamma
     ray energies eng_gams and charged pion energy eng_pi.
@@ -214,4 +216,4 @@ def Spectrum(np.ndarray eng_gams, double eng_pi):
         eng_gams: Gamma ray energies to evaluate spectrum.
         eng_pi: Energy of charged pion in laboratory frame.
     """
-    return CSpectrum(eng_gams, eng_pi)
+    return CSpectrum(eng_gams, eng_pi, mode)

@@ -220,7 +220,7 @@ def gamma_point(np.ndarray particles, double cme,
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'charged_pion':
                 spec_val += hist[j, 1, i] * \
-                    dcp.CSpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    dcp.CSpectrumPoint(eng_gam, hist[j, 0, i], "total") * \
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'neutral_pion':
                 spec_val += hist[j, 1, i] * \
@@ -228,15 +228,15 @@ def gamma_point(np.ndarray particles, double cme,
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'charged_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dck.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    dck.SpectrumPoint(eng_gam, hist[j, 0, i], "total") * \
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'short_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dsk.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    dsk.SpectrumPoint(eng_gam, hist[j, 0, i], "total") * \
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'long_kaon':
                 spec_val += hist[j, 1, i] * \
-                    dlk.SpectrumPoint(eng_gam, hist[j, 0, i]) * \
+                    dlk.SpectrumPoint(eng_gam, hist[j, 0, i], "total") * \
                     (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
 
     return spec_val * prefactor
