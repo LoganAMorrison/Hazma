@@ -141,7 +141,7 @@ def charged_pion(eng_gam, eng_pi):
     return decay_charged_pion.SpectrumPoint(eng_gam, eng_pi)
 
 
-def charged_kaon(eng_gam, eng_k):
+def charged_kaon(eng_gam, eng_k, mode="total"):
     r"""Compute dNdE from charged kaon decay.
 
     Compute dNdE from decay of charged kaon through :math:`K\to X` in the
@@ -154,6 +154,10 @@ def charged_kaon(eng_gam, eng_k):
         Gamma ray energy(ies) in laboratory frame.
     eng_k : float
         Charged kaon energy in laboratory frame.
+    mode : str {"total"}
+        The mode the user would like to have returned. The options are "total",
+        "0enu", "0munu", "00p", "mmug", "munu", "p0", "p0g" and "ppm". Here
+        "p" stands for pi plus, "m" stands for pi minus and "0" stands pi 0.
 
     Returns
     -------
@@ -195,11 +199,11 @@ def charged_kaon(eng_gam, eng_k):
 
     """
     if hasattr(eng_gam, "__len__"):
-        return decay_charged_kaon.Spectrum(eng_gam, eng_k)
-    return decay_charged_kaon.SpectrumPoint(eng_gam, eng_k)
+        return decay_charged_kaon.Spectrum(eng_gam, eng_k, mode)
+    return decay_charged_kaon.SpectrumPoint(eng_gam, eng_k, mode)
 
 
-def short_kaon(eng_gam, eng_k):
+def short_kaon(eng_gam, eng_k, mode="total"):
     r"""Compute dNdE from short kaon decay.
 
     Compute dNdE from decay of short kaon through :math:`K\to X` in the
@@ -212,7 +216,10 @@ def short_kaon(eng_gam, eng_k):
         Gamma ray energy(ies) in laboratory frame.
     eng_k : float
         Charged kaon energy in laboratory frame.
-
+    mode : str
+        The mode the user would like to have returned. The options are "total",
+        "00", "pm" or "pmg". Here "p" stands for pi plus, "m" stands for pi
+        minus and "0" stands pi 0.
     Returns
     -------
     spec : np.ndarray
@@ -245,11 +252,11 @@ def short_kaon(eng_gam, eng_k):
 
     """
     if hasattr(eng_gam, "__len__"):
-        return decay_short_kaon.Spectrum(eng_gam, eng_k)
-    return decay_short_kaon.SpectrumPoint(eng_gam, eng_k)
+        return decay_short_kaon.Spectrum(eng_gam, eng_k, mode)
+    return decay_short_kaon.SpectrumPoint(eng_gam, eng_k, mode)
 
 
-def long_kaon(eng_gam, eng_k):
+def long_kaon(eng_gam, eng_k, mode="total"):
     r"""Compute dNdE from long kaon decay.
 
     Compute dNdE from decay of charged kaon through :math:`K\to X` in the
@@ -262,6 +269,10 @@ def long_kaon(eng_gam, eng_k):
         Gamma ray energy(ies) in laboratory frame.
     eng_k : float
         Charged kaon energy in laboratory frame.
+    mode : str
+        The mode the user would like to have returned. The options are "total",
+        "000", "penu", "penug", "pm0", "pm0g", "pmunu" or "pmunug". Here "p"
+        stands for pi plus, "m" stands for pi minus and "0" stands pi 0.
 
     Returns
     -------
@@ -299,5 +310,5 @@ def long_kaon(eng_gam, eng_k):
 
     """
     if hasattr(eng_gam, "__len__"):
-        return decay_long_kaon.Spectrum(eng_gam, eng_k)
-    return decay_long_kaon.SpectrumPoint(eng_gam, eng_k)
+        return decay_long_kaon.Spectrum(eng_gam, eng_k, mode)
+    return decay_long_kaon.SpectrumPoint(eng_gam, eng_k, mode)
