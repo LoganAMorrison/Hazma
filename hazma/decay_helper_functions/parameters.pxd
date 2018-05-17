@@ -19,7 +19,7 @@ cdef double MASS_OMEGA = 782.7     # omega
 # BRANCHING RATIOS
 cdef double BR_PI0_TO_GG = 0.9882         # Pi0   -> g   + g
 cdef double BR_PI_TO_MUNU = 0.9998        # pi    -> mu  + nu
-cdef double BR_PI_TO_ENU = 1.2 * 10**-4   # pi    -> e  + nu
+cdef double BR_PI_TO_ENU = 0.000123       # pi    -> e  + nu
 
 cdef double BR_KS_TO_PIPI = 0.6920        # ks    -> pi  + pi
 cdef double BR_KS_TO_PI0PI0 = 0.3069      # ks    -> pi0 + pi0
