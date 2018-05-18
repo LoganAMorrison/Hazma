@@ -109,27 +109,32 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     if e_gams[0] > A_eff.x[0] or e_gams[-1] < A_eff.x[-1]:
         raise ValueError("Spectrum must be computed at all energies in the " +
                          "detector's range.")
-    elif np.all(dndes == 0) and np.all((line_es < A_eff.x[0]) +
-                                       (line_es > A_eff.x[-1])):
-        # If spectrum is zero and all lines lie outside the detector's energy
-        # range, no limit can be set
+    elif np.all(dndes == 0) and len(line_es) == 0:
+        # If spectrum is zero and no lines are present, no limit can be set
         return np.inf
     else:
         # Convolve the spectrum with the detector's spectral resolution
         dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
                                          energy_res)
 
-        # Min photon energy is determined by comparing effective area and first
-        # energy at which dN/dE != 0
-        e_min = max(A_eff.x[0], e_gams[np.where(dnde_det)[0][0]])
-        # Max photon energy is determined by comparing effective area and last
-        # energy at which dN/dE != 0
-        e_max = min(A_eff.x[-1], e_gams[np.where(dnde_det)[0][-1]])
+        # Look at where spectrum is nonzero and domain of effective area to
+        # determine range of valid bounds for the integration window
+        e_min = max(A_eff.x[0], dnde_det.x[np.where(dnde_det.x)[0][0]])
+        e_max = min(A_eff.x[-1], dnde_det.x[np.where(dnde_det.x)[0][-1]])
 
-        # Initial guesses for energy window lower bound
-        # TODO: this will likely break if a narrow line dominates the spectrum
-        e_a_0 = 0.25 * 10.**(np.log10(e_max) - np.log10(e_min))
-        e_b_0 = 0.75 * 10.**(np.log10(e_max) - np.log10(e_min))
+        # Energy at which spectrum peaks
+        e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
+
+        if e_dnde_max != e_min and e_dnde_max != e_max:
+            # If there is a peak in the spectrum, include it in the initial
+            # energy window
+            e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
+            e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
+        else:
+            # If the spectrum has no prominent features, the initial window
+            # matters less
+            e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
+            e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
 
         # Optimize upper and lower bounds for energy window
         limit_obj = optimize.minimize(__f_lim,
@@ -143,6 +148,9 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
         # Insert appropriate prefactors to convert result to <sigma v>_tot
         prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
                      (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
+
+        print("(e_a_0, e_b_0) = (%f, %f)" % (e_a_0, e_b_0))
+        print("(e_a, e_b) = (%f, %f)\n" % (limit_obj.x[0], limit_obj.x[1]))
 
         assert -limit_obj.fun >= 0
 
@@ -206,9 +214,8 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
         # Integrate DM spectrum to compute flux in this bin
         phi_dm = dm_flux_factor * quad(dnde_det, bin_low, bin_high)[0]
 
-        if not np.isnan(phi_dm):
-            assert phi_dm >= 0
-
+        # If flux is finite and nonzero, set a limit using this bin
+        if not np.isnan(phi_dm) and phi_dm > 0:
             # Compute maximum allow flux
             phi_max = (measurement.target.dOmega * (bin_high - bin_low) *
                        (n_sigma * sigma + phi))
@@ -217,8 +224,6 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
 
             # Find limit on <sigma v>
             sv_lims.append(phi_max / phi_dm)
-        else:
-            sv_lims.append(np.inf)
 
     return np.min(sv_lims)
 
@@ -278,10 +283,8 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
     # Continuum contribution to detected spectrum
     dndes_cont_det = np.array([quad(lambda ep: dnde_src(ep) *
                                     spec_res_fn(ep, e),
-                                    max(e_gams[0], e -
-                                        n_std * sigma_srf(e)),
-                                    min(e_gams[-1], e + n_std *
-                                        sigma_srf(e)))[0]
+                                    max(e_gams[0], e-n_std*sigma_srf(e)),
+                                    min(e_gams[-1], e+n_std*sigma_srf(e)))[0]
                                for e in e_gams])
 
     # Line contribution
