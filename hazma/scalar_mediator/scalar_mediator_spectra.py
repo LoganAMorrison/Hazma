@@ -9,6 +9,8 @@ from ..parameters import electron_mass as me
 from .scalar_mediator_fsr import dnde_xx_to_s_to_ffg
 from .scalar_mediator_fsr import dnde_xx_to_s_to_pipig
 from .scalar_mediator_cross_sections import branching_fractions
+from .scalar_mediator_decay_spectrum import dnde_decay_s, dnde_decay_s_pt
+from .scalar_mediator_widths import partial_widths
 
 
 def dnde_ee(egams, cme, params, spectrum_type='All'):
@@ -63,6 +65,22 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
+def dnde_s(egams, eng_s, params, mode="total"):
+    ms = params.ms
+    pws = partial_widths(params)
+    pw_array = np.zeros(5, dtype=float)
+
+    pw_array[0] = pws["e e"] / pws["total"]
+    pw_array[1] = pws["mu mu"] / pws["total"]
+    pw_array[2] = pws["pi0 pi0"] / pws["total"]
+    pw_array[3] = pws["pi pi"] / pws["total"]
+    pw_array[4] = pws["g g"] / pws["total"]
+
+    if hasattr(egams, "__len__"):
+        return 2. * dnde_decay_s(egams, eng_s, ms, pw_array, mode)
+    return 2. * dnde_decay_s_pt(egams, eng_s, ms, pw_array, mode)
+
+
 def spectra(egams, cme, params, fsi=True):
     """
     Compute the total spectrum from two fermions annihilating through a
@@ -100,7 +118,8 @@ def spectra(egams, cme, params, fsi=True):
     muons = spec_helper(bfs['mu mu'], dnde_mumu)
     electrons = spec_helper(bfs['e e'], dnde_ee)
 
-    # Kaons
+    # mediator
+    mediator = spec_helper(bfs['pi0 pi0'], dnde_s)
 
     # Compute total spectrum
     total = muons + electrons + npions + cpions
@@ -110,6 +129,7 @@ def spectra(egams, cme, params, fsi=True):
              'mu mu': muons,
              'e e': electrons,
              'pi0 pi0': npions,
-             'pi pi': cpions}
+             'pi pi': cpions,
+             's s': mediator}
 
     return specs

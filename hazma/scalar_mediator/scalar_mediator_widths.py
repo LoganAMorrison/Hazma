@@ -13,7 +13,7 @@ def width_s_to_gg(params):
     """
     Returns the partial decay width of the scalar decaying into photon.
     """
-    return (alpha_em**2*params.gsFF**2*(params.ms**2)**1.5)/(512.*pi**3*vh**2)
+    return (alpha_em**2 * params.gsFF**2 * (params.ms**2)**1.5) / (512. * pi**3 * vh**2)
 
 
 def width_s_to_pi0pi0(params):
@@ -28,14 +28,14 @@ def width_s_to_pi0pi0(params):
         gsGG = params.gsGG
         vs = params.vs
 
-        ret_val = (sqrt(-4*mpi0**2 + ms**2) *
-                   (-54*gsGG*(2*mpi0**2 - ms**2)*vh *
-                    (3*vh + 3*gsff*vs + 2*gsGG*vs) +
-                    b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
-                    (54*gsGG*vh - 32*gsGG**2*vs +
-                     9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
-            (11664.*ms**2*pi*vh**2*(3*vh + 3*gsff*vs + 2*gsGG*vs)**2 *
-             (9*vh + 4*gsGG*vs)**2)
+        ret_val = (sqrt(-4 * mpi0**2 + ms**2) *
+                   (-54 * gsGG * (2 * mpi0**2 - ms**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
+                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
+                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
+            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
+             (9 * vh + 4 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -57,14 +57,14 @@ def width_s_to_pipi(params):
         gsGG = params.gsGG
         vs = params.vs
 
-        ret_val = (sqrt(-4*mpi**2 + ms**2) *
-                   (-54*gsGG*(2*mpi**2 - ms**2)*vh *
-                    (3*vh + 3*gsff*vs + 2*gsGG*vs) +
-                    b0*(mdq + muq)*(9*vh + 4*gsGG*vs) *
-                    (54*gsGG*vh - 32*gsGG**2*vs +
-                     9*gsff*(9*vh + 16*gsGG*vs)))**2) / \
-            (11664.*ms**2*pi*vh**2*(3*vh + 3*gsff*vs + 2*gsGG*vs)**2 *
-             (9*vh + 4*gsGG*vs)**2)
+        ret_val = (sqrt(-4 * mpi**2 + ms**2) *
+                   (-54 * gsGG * (2 * mpi**2 - ms**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
+                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
+                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
+            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
+             (9 * vh + 4 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -86,8 +86,8 @@ def width_s_to_xx(params):
     if ms > 2. * mx:
         gsxx = params.gsxx
 
-        ret_val = (gsxx**2*(ms - 2*mx)*(ms + 2*mx)*sqrt(ms**2 - 4*mx**2)) / \
-            (32.*ms**2*pi)
+        ret_val = (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) * sqrt(ms**2 - 4 * mx**2)) / \
+            (32. * ms**2 * pi)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -112,8 +112,8 @@ def width_s_to_ff(mf, params):
     if ms > 2. * mf:
         gsff = params.gsff
 
-        ret_val = -(gsff**2*mf**2*(2*mf - ms)*(2*mf + ms) *
-                    sqrt(-4*mf**2 + ms**2)) / (32.*ms**2*pi*vh**2)
+        ret_val = -(gsff**2 * mf**2 * (2 * mf - ms) * (2 * mf + ms) *
+                    sqrt(-4 * mf**2 + ms**2)) / (32. * ms**2 * pi * vh**2)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
