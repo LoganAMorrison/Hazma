@@ -163,16 +163,19 @@ def __sigma_t_integrated_xx_to_v_to_pi0pipi(s, Q, params):
 
 
 def sigma_xx_to_v_to_pi0pipi(Q, params):
-    s_min = 4. * mpi**2
-    s_max = (Q - mpi0)**2
+    if Q > 2. * mpi + mpi0 and Q > 2. * params.mx:
+        s_min = 4. * mpi**2
+        s_max = (Q - mpi0)**2
 
-    ret_val = quad(__sigma_t_integrated_xx_to_v_to_pi0pipi, s_min, s_max,
-                   args=(Q, params))[0]
+        ret_val = quad(__sigma_t_integrated_xx_to_v_to_pi0pipi, s_min, s_max,
+                       args=(Q, params))[0]
 
-    assert ret_val.imag == 0
-    assert ret_val.real >= 0
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
 
-    return ret_val.real
+        return ret_val.real
+    else:
+        return 0.
 
 
 def sigma_xx_to_vv(Q, params):
@@ -222,7 +225,7 @@ def cross_sections(Q, params):
     electron_contr = sigma_xx_to_v_to_ff(Q, "e", params)
     pipi_contr = sigma_xx_to_v_to_pipi(Q, params)
     pi0g_contr = sigma_xx_to_v_to_pi0g(Q, params)
-    pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(Q, params)
+    pi0pipi_contr = 0.  # sigma_xx_to_v_to_pi0pipi(Q, params)
     vv_contr = sigma_xx_to_vv(Q, params)
 
     total = (muon_contr + electron_contr + pipi_contr + pi0g_contr +
