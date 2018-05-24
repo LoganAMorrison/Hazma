@@ -133,3 +133,6 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
 
     def positron_spectra(self, eng_es, cme):
         pass
+
+    def positron_lines(self, cme):
+        pass

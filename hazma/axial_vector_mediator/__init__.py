@@ -39,3 +39,9 @@ class AxialVectorMediator(Theory, AxialVectorMediatorParameters):
     def spectrum_functions(self):
         warnings.warn("", PreAlphaWarning)
         pass
+
+    def positron_spectra(self, eng_es, cme):
+        pass
+
+    def positron_lines(self, cme):
+        pass
