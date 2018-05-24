@@ -46,7 +46,8 @@ class Theory(object):
         pass
 
     def binned_limit(self, measurement, n_sigma=2.):
-        spec_fn = lambda e_gams, e_cm: self.spectra(e_gams, e_cm)["total"]
+        def spec_fn(e_gams, e_cm):
+            return self.spectra(e_gams, e_cm)["total"]
 
         return binned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
                             measurement, n_sigma)
@@ -111,7 +112,8 @@ class Theory(object):
             Smallest detectable thermally averaged total cross section in units
             of cm^3 / s
         """
-        spec_fn = lambda e_gams, e_cm: self.spectra(e_gams, e_cm)["total"]
+        def spec_fn(e_gams, e_cm):
+            return self.spectra(e_gams, e_cm)["total"]
 
         return unbinned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
                               A_eff, energy_res, T_obs, target_params,
