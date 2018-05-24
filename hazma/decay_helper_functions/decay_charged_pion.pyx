@@ -129,7 +129,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi, str mode):
 
     __eng_gam_max_pi_rf = __eng_gam_max_mu_rf * gammaMu * (1.0 + betaMu)
 
-    if 0. < eng_gam and eng_gam < __eng_gam_max_pi_rf:
+    if 0. < engGamPiRF and engGamPiRF < __eng_gam_max_pi_rf:
         dnde_munu = BR_PI_TO_MUNU * jac * __muon_spectrum(engGamPiRF)
 
     dnde_munug = BR_PI_TO_MUNU * jac * __dnde_pi_to_lnug(engGamPiRF, mmu)
