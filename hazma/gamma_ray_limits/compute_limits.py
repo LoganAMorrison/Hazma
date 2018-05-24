@@ -60,6 +60,9 @@ def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
         return f_val, jac_val
 
 
+# line_es, line_bfs,
+
+
 def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
                    energy_res, T_obs, target_params, bg_model, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
@@ -148,9 +151,6 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
         # Insert appropriate prefactors to convert result to <sigma v>_tot
         prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
                      (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
-
-        print("(e_a_0, e_b_0) = (%f, %f)" % (e_a_0, e_b_0))
-        print("(e_a, e_b) = (%f, %f)\n" % (limit_obj.x[0], limit_obj.x[1]))
 
         assert -limit_obj.fun >= 0
 
