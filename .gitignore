@@ -3,3 +3,8 @@ docs/source/_theme
 *.ipynb_checkpoints
 *.pyc
 development_notebooks
+build/
+hazma.egg-info
+*.c
+*.so
+*.cpp
