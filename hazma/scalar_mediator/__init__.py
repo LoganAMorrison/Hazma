@@ -259,7 +259,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         """
         return positron_spectra(eng_ps, cme, self)
 
-    def positron_lines(self, eng_ps, cme):
+    def positron_lines(self, cme):
         """
         Returns a dictionary of the energies and branching fractions of
         positron lines
@@ -276,4 +276,4 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         lines : dictionary
             Dictionary of the lines. The keys are 'e e'.
         """
-        return pls(eng_ps, cme, self)
+        return pls(cme, self)
