@@ -5,6 +5,7 @@ from scalar_mediator_cross_sections import cross_sections as cs
 
 from scalar_mediator_spectra import spectra as specs
 from scalar_mediator_positron_spectra import positron_spectra
+from scalar_mediator_positron_spectra import positron_lines as pls
 
 from scalar_mediator_spectra import dnde_mumu, dnde_ee
 from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
@@ -253,7 +254,26 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         Returns
         -------
         specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
+            Dictionary of the spectra. The keys are 'total', 'mu mu',
             'pi pi'.
         """
         return positron_spectra(eng_ps, cme, self)
+
+    def positron_lines(self, eng_ps, cme):
+        """
+        Returns a dictionary of the energies and branching fractions of
+        positron lines
+
+        Parameters
+        ----------
+        eng_ps : array-like, optional
+            Positron energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        lines : dictionary
+            Dictionary of the lines. The keys are 'e e'.
+        """
+        return pls(eng_ps, cme, self)

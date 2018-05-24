@@ -10,13 +10,6 @@ def find_nearest(array, value):
     return idx
 
 
-def pspec_electron(eng_ps, eng_e):
-    spec = np.zeros(len(eng_ps), dtype=float)
-    idx = find_nearest(eng_ps, eng_e)
-    spec[idx] = 1.
-    return spec
-
-
 def positron_spectra(eng_ps, cme, params):
     """
     """
@@ -33,8 +26,15 @@ def positron_spectra(eng_ps, cme, params):
 
     cpions = spec_helper(bfs['pi pi'], pspec_charged_pion)
     muons = spec_helper(bfs['mu mu'], pspec_muon)
-    electrons = spec_helper(bfs['e e'], pspec_electron)
 
-    total = cpions + muons + electrons
+    total = cpions + muons
 
-    return {"total": total, "e e": electrons, "mu mu": muons, "pi pi": cpions}
+    return {"total": total, "mu mu": muons, "pi pi": cpions}
+
+
+def positron_lines(eng_ps, cme, params):
+    bf = branching_fractions(cme, params)["e e"]
+    if bf != 0:
+        return {"e e": np.array([eng_ps[find_nearest(eng_ps, cme / 2.)], bf])}
+    else:
+        return {"e e": np.array([0., 0.])}

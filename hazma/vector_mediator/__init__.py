@@ -9,6 +9,7 @@ from vector_mediator_spectra import spectra as specs
 from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
 from vector_mediator_positron_spectra import positron_spectra
+from vector_mediator_positron_spectra import positron_lines as pls
 
 from ..parameters import neutral_pion_mass as mpi0
 
@@ -156,3 +157,22 @@ class VectorMediator(Theory, VectorMediatorParameters):
             'pi pi'.
         """
         return positron_spectra(eng_ps, cme, self)
+
+    def positron_lines(self, eng_ps, cme):
+        """
+        Returns a dictionary of the energies and branching fractions of
+        positron lines
+
+        Parameters
+        ----------
+        eng_ps : array-like, optional
+            Positron energies to evaluate the spectrum at.
+        cme : float
+            Center of mass energy.
+
+        Returns
+        -------
+        lines : dictionary
+            Dictionary of the lines. The keys are 'e e'.
+        """
+        return pls(eng_ps, cme, self)
