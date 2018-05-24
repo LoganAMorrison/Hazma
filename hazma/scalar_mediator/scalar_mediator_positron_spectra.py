@@ -34,7 +34,5 @@ def positron_spectra(eng_ps, cme, params):
 
 def positron_lines(cme, params):
     bf = branching_fractions(cme, params)["e e"]
-    if bf != 0:
-        return {"e e": np.array([cme / 2., bf])}
-    else:
-        return {"e e": np.array([0., 0.])}
+
+    return {"e e": {"energy": cme / 2., "bf": bf}}

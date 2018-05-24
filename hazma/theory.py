@@ -46,20 +46,9 @@ class Theory(object):
         pass
 
     def binned_limit(self, measurement, n_sigma=2.):
-        cme = 2.001 * self.mx
+        spec_fn = lambda e_gams, e_cm: self.spectra(e_gams, e_cm)["total"]
 
-        # Compute DM spectrum. Leave enough room for the convolution with an
-        # experiment's energy resolution to work correctly.
-        e_gam_min, e_gam_max = measurement.bins[0][0], measurement.bins[-1][1]
-        e_gams = np.logspace(np.log10(e_gam_min) - 1,
-                             np.log10(e_gam_max) + 1,
-                             200)
-        dndes = self.spectra(e_gams, cme)["total"]
-
-        # Line contribution
-        line_es, line_bfs = self.gamma_ray_lines(cme)
-
-        return binned_limit(e_gams, dndes, line_es, line_bfs, self.mx, False,
+        return binned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
                             measurement, n_sigma)
 
     def binned_limits(self, mxs, measurement, n_sigma=2.):
@@ -122,21 +111,11 @@ class Theory(object):
             Smallest detectable thermally averaged total cross section in units
             of cm^3 / s
         """
-        cme = 2.001 * self.mx
-        # Compute DM spectrum. Leave enough room for the convolution with an
-        # experiment's energy resolution to work correctly.
-        e_gam_min, e_gam_max = A_eff.x[[0, -1]]
-        e_gams = np.logspace(np.log10(e_gam_min) - 1,
-                             np.log10(e_gam_max) + 1,
-                             200)
-        dndes = self.spectra(e_gams, cme)["total"]
+        spec_fn = lambda e_gams, e_cm: self.spectra(e_gams, e_cm)["total"]
 
-        # Line contribution
-        line_es, line_bfs = self.gamma_ray_lines(cme)
-
-        return unbinned_limit(e_gams, dndes, line_es, line_bfs,
-                              self.mx, False, A_eff, energy_res, T_obs,
-                              target_params, bg_model, n_sigma)
+        return unbinned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
+                              A_eff, energy_res, T_obs, target_params,
+                              bg_model, n_sigma)
 
     def unbinned_limits(self, mxs, A_eff=A_eff_e_astrogam,
                         energy_res=energy_res_e_astrogam,
@@ -157,5 +136,9 @@ class Theory(object):
         return np.array(limits)
 
     @abstractmethod
-    def positron_spectra(self, eng_es, cme):
+    def positron_spectra(self, eng_es, e_cm):
+        pass
+
+    @abstractmethod
+    def positron_lines(self, e_cm):
         pass

@@ -3,18 +3,17 @@ from ..theory import Theory
 from scalar_mediator_cross_sections import branching_fractions as bfs
 from scalar_mediator_cross_sections import cross_sections as cs
 
-from scalar_mediator_spectra import spectra as specs
 from scalar_mediator_positron_spectra import positron_spectra
 from scalar_mediator_positron_spectra import positron_lines as pls
 
+from scalar_mediator_spectra import spectra as specs
+from scalar_mediator_spectra import gamma_ray_lines as gls
 from scalar_mediator_spectra import dnde_mumu, dnde_ee
 from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
 
 from scalar_mediator_widths import partial_widths as pws
 
 from .scalar_mediator_parameters import ScalarMediatorParameters
-
-import numpy as np
 
 
 class ScalarMediator(Theory, ScalarMediatorParameters):
@@ -182,9 +181,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         return bfs(cme, self)
 
     def gamma_ray_lines(self, cme):
-        bfs = self.branching_fractions(cme)
-
-        return [np.array([cme / 2.0]), np.array([2. * bfs["g g"]])]
+        return gls(cme, self)
 
     def spectra(self, egams, cme):
         """
