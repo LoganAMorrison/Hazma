@@ -1,7 +1,6 @@
 from .gamma_ray_limits.gamma_ray_limit_parameters import A_eff_e_astrogam
 from .gamma_ray_limits.gamma_ray_limit_parameters import T_obs_e_astrogam
 from .gamma_ray_limits.gamma_ray_limit_parameters import draco_params
-from .gamma_ray_limits.gamma_ray_limit_parameters import BackgroundModel
 from .gamma_ray_limits.gamma_ray_limit_parameters import default_bg_model
 from .gamma_ray_limits.gamma_ray_limit_parameters import energy_res_e_astrogam
 from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
