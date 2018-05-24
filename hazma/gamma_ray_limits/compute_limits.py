@@ -60,10 +60,7 @@ def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
         return f_val, jac_val
 
 
-# line_es, line_bfs,
-
-
-def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
+def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                    energy_res, T_obs, target_params, bg_model, n_sigma=5.):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
@@ -108,57 +105,57 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Make sure e_gams fully overlaps with the detector's energy range
-    if e_gams[0] > A_eff.x[0] or e_gams[-1] < A_eff.x[-1]:
-        raise ValueError("Spectrum must be computed at all energies in the " +
-                         "detector's range.")
-    elif np.all(dndes == 0) and len(line_es) == 0:
-        # If spectrum is zero and no lines are present, no limit can be set
-        return np.inf
+    # Compute the spectrum over a grid over photon energies so it's not
+    # recomputed every time it's needed. Pad the grid to avoid edge effects
+    # from the convolution.
+    e_min, e_max = A_eff.x[[0, -1]]
+
+    # TODO: this should depend on the target!
+    e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
+
+    # Convolve the spectrum with the detector's spectral resolution
+    dnde_det = get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm,
+                                     energy_res)
+
+    # Energy at which spectrum peaks
+    e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
+
+    # Choose initial guess for energy window bounds
+    if e_dnde_max != e_min and e_dnde_max != e_max:
+        # If there is a peak in the spectrum, include it in the initial
+        # energy window
+        e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
+        e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
     else:
-        # Convolve the spectrum with the detector's spectral resolution
-        dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                         energy_res)
+        # If the spectrum has no prominent features, the initial window
+        # matters less
+        e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
+        e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
 
-        # Look at where spectrum is nonzero and domain of effective area to
-        # determine range of valid bounds for the integration window
-        e_min = max(A_eff.x[0], dnde_det.x[np.where(dnde_det.x)[0][0]])
-        e_max = min(A_eff.x[-1], dnde_det.x[np.where(dnde_det.x)[0][-1]])
+    # Optimize upper and lower bounds for energy window
+    limit_obj = optimize.minimize(__f_lim,
+                                  [e_a_0, e_b_0],
+                                  bounds=2 * [[e_min, e_max]],
+                                  args=(dnde_det, A_eff, T_obs,
+                                        target_params, bg_model),
+                                  method="L-BFGS-B",
+                                  options={"ftol": 1e-3})
 
-        # Energy at which spectrum peaks
-        e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
+    # Debug messages
+    print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
+    print("e_b: %f -> %f" % (e_b_0, limit_obj.x[1]))
 
-        if e_dnde_max != e_min and e_dnde_max != e_max:
-            # If there is a peak in the spectrum, include it in the initial
-            # energy window
-            e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
-            e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
-        else:
-            # If the spectrum has no prominent features, the initial window
-            # matters less
-            e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
-            e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
+    # Insert appropriate prefactors to convert result to <sigma v>_tot
+    prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
+                 (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
 
-        # Optimize upper and lower bounds for energy window
-        limit_obj = optimize.minimize(__f_lim,
-                                      [e_a_0, e_b_0],
-                                      bounds=2 * [[e_min, e_max]],
-                                      args=(dnde_det, A_eff, T_obs,
-                                            target_params, bg_model),
-                                      method="L-BFGS-B",
-                                      options={"ftol": 1e-3})
+    assert -limit_obj.fun >= 0
 
-        # Insert appropriate prefactors to convert result to <sigma v>_tot
-        prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
-                     (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
-
-        assert -limit_obj.fun >= 0
-
-        return prefactor * n_sigma / (-limit_obj.fun)
+    return prefactor * n_sigma / (-limit_obj.fun)
 
 
-def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
-                 measurement, n_sigma=2.):
+def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
+                 n_sigma=2.):
     """Determines the limit on <sigma v> from data for a given DM spectrum.
 
     Notes
@@ -200,12 +197,16 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
                       (2. * 4. * np.pi * (1. if self_conjugate else 2.) *
                        mx**2))
 
+    # TODO: this should depend on the target!
+    e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
+
     # Keep track of <sigma v> limit for each bin
     sv_lims = [np.inf]
 
     # Convolve the spectrum with the detector's spectral resolution
-    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                     measurement.energy_res)
+    e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
+    dnde_det = get_detected_spectrum(spec_fn, line_fn, e_bin_min, e_bin_max,
+                                     e_cm, measurement.energy_res)
 
     # Loop over experiment's bins
     for i, ((bin_low, bin_high), phi, sigma) in \
@@ -228,7 +229,20 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
     return np.min(sv_lims)
 
 
-def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
+# Get the spectral resolution function
+def spec_res_fn(ep, e, energy_res):
+    sigma = e * energy_res(e)
+
+    if sigma == 0:
+        if hasattr(ep, '__len__'):
+            return np.zeros(ep.shape)
+        else:
+            return 0.
+    else:
+        return norm.pdf(ep, loc=e, scale=sigma)
+
+
+def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res):
     """Convolves a DM annihilation spectrum with a detector's spectral
     resolution function.
 
@@ -255,40 +269,41 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
         detector. Given photon energies outside the range covered by e_gams,
         the interpolator will produce bounds_errors.
     """
-    # Standard deviation of spectra resolution function
-    def sigma_srf(e):
-        return e * energy_res(e)
+    # Compute source spectrum over a grid of photon energies so it's not
+    # recomputed every time it's needed. Pad the grid to avoid edge effects
+    # from the convolution.
+    e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1, 200)
+    dnde_src = interp1d(e_gams_padded, spec_fn(e_gams_padded, e_cm))
 
-    # Get the spectral resolution function
-    def spec_res_fn(ep, e):
-        sigma = sigma_srf(e)
+    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), 200)
+    dndes_cont_det = np.zeros(e_gams.shape)
 
-        if sigma == 0:
-            if hasattr(ep, '__len__'):
-                return np.zeros(ep.shape)
-            else:
-                return 0.
-        else:
-            return norm.pdf(ep, loc=e, scale=sigma)
+    # If continuum spectrum is zero, don't waste time on the convolution
+    if not np.all(dnde_src == 0):
+        # Due to numerical limitations, the convolution must be performed in a
+        # window of n_std standard deviations around the mean of the spectral
+        # resolution function. N(5; 0, 1) / N(0;, 0, 1) ~ 6e-6, which seems to
+        # be a good compromise between accuracy and speed.
+        n_std = 6.
 
-    # Source spectrum function
-    dnde_src = interp1d(e_gams, dndes)
+        for i, e in enumerate(e_gams):
+            e_int_min = max(e_gams[0], e - n_std * e * energy_res(e))
+            e_int_max = min(e_gams[-1], e + n_std * e * energy_res(e))
 
-    # Due to numerical limitations, the convolution must be performed in a
-    # window of n_std standard deviations around the mean of the spectral
-    # resolution function. N(5; 0, 1) / N(0;, 0, 1) ~ 6e-6, which seems to be
-    # a good compromise between accuracy and speed.
-    n_std = 6.
+            def conv_integrand(ep):
+                return dnde_src(ep) * spec_res_fn(ep, e, energy_res)
 
-    # Continuum contribution to detected spectrum
-    dndes_cont_det = np.array([quad(lambda ep: dnde_src(ep) *
-                                    spec_res_fn(ep, e),
-                                    max(e_gams[0], e-n_std*sigma_srf(e)),
-                                    min(e_gams[-1], e+n_std*sigma_srf(e)))[0]
-                               for e in e_gams])
+            dndes_cont_det[i] = quad(conv_integrand, e_int_min, e_int_max,
+                                     epsabs=0, epsrel=1e-3)[0]
 
     # Line contribution
-    dndes_line_det = np.array([spec_res_fn(e_gams, e) * bf for
-                               e, bf in zip(line_es, line_bfs)]).sum(axis=0)
+    lines = line_fn(e_cm)
+    dndes_line_det = np.array([line["bf"] *
+                               spec_res_fn(e_gams,
+                                           line["energy"],
+                                           energy_res) *
+                               (2. if ch == "g g" else 1.)
+                               for ch, line in lines.iteritems()])
+    dndes_line_det = dndes_line_det.sum(axis=0)
 
     return interp1d(e_gams, dndes_cont_det + dndes_line_det)
