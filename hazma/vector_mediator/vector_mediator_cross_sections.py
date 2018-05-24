@@ -116,8 +116,8 @@ def sigma_xx_to_v_to_pi0g(Q, params):
         mv = params.mv
         width_v = params.width_v
 
-        ret_val = ((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
-                   (2.*mx**2 + Q**2)*qe**2) / \
+        ret_val = 3.*((gvdd + 2.*gvuu)**2.*gvxx**2*(-mpi0**2 + Q**2)**3 *
+                      (2.*mx**2 + Q**2)*qe**2) / \
             (13824.*fpi**2*pi**5*Q**3*sqrt(-4.*mx**2 + Q**2) *
              (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
 
@@ -140,18 +140,18 @@ def __sigma_t_integrated_xx_to_v_to_pi0pipi(s, Q, params):
         mv = params.mv
         width_v = params.width_v
 
-        ret_val = ((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4.*mpi**2 + s)) *
-                   sqrt(Q**4 + (mpi0**2 - s)**2 - 2.*Q**2*(mpi0**2 + s)) *
-                   (-24.*mpi**6*s + mpi**4 *
-                    (-2.*mpi0**4 + 28.*mpi0**2*s + 22.*s**2) +
-                    2.*mpi**2*(mpi0**6 - 4.*s**3) +
-                    s*(-2.*mpi0**6 - 4.*mpi0**4*s - mpi0**2*s**2 + s**3) +
-                    Q**4*(-2.*mpi**4 +
-                          2.*mpi**2*(mpi0**2 - s) +
-                          s*(-2.*mpi0**2 + s)) +
-                    Q**2*(4.*mpi**4*(mpi0**2 + s) +
-                          s*(4.*mpi0**4 + 5.*mpi0**2*s - 2.*s**2) -
-                          4.*mpi**2*(mpi0**4 + 3.*mpi0**2*s - s**2)))) / \
+        ret_val = 3.*((gvdd + gvuu)**2*gvxx**2*sqrt(s*(-4.*mpi**2 + s)) *
+                      sqrt(Q**4 + (mpi0**2 - s)**2 - 2.*Q**2*(mpi0**2 + s)) *
+                      (-24.*mpi**6*s + mpi**4 *
+                       (-2.*mpi0**4 + 28.*mpi0**2*s + 22.*s**2) +
+                       2.*mpi**2*(mpi0**6 - 4.*s**3) +
+                       s*(-2.*mpi0**6 - 4.*mpi0**4*s - mpi0**2*s**2 + s**3) +
+                       Q**4*(-2.*mpi**4 +
+                             2.*mpi**2*(mpi0**2 - s) +
+                             s*(-2.*mpi0**2 + s)) +
+                       Q**2*(4.*mpi**4*(mpi0**2 + s) +
+                             s*(4.*mpi0**4 + 5.*mpi0**2*s - 2.*s**2) -
+                             4.*mpi**2*(mpi0**4 + 3.*mpi0**2*s - s**2)))) / \
             (294912.*fpi**6*pi**7*sqrt(Q**2)*sqrt(-4.*mx**2 + Q**2)*s**2 *
              (mv**4 - 2.*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
 
