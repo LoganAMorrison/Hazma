@@ -45,6 +45,14 @@ class Theory(object):
     def spectrum_functions(self):
         pass
 
+    @abstractmethod
+    def positron_spectra(self, eng_es, e_cm):
+        pass
+
+    @abstractmethod
+    def positron_lines(self, e_cm):
+        pass
+
     def binned_limit(self, measurement, n_sigma=2.):
         def spec_fn(e_gams, e_cm):
             if hasattr(e_gams, "__len__"):
@@ -56,13 +64,11 @@ class Theory(object):
                             measurement, n_sigma)
 
     def binned_limits(self, mxs, measurement, n_sigma=2.):
-        limits = []
-
-        for mx in mxs:
+        def binned_limit_change_mass(mx):
             self.mx = mx
-            limits.append(self.binned_limit(measurement, n_sigma))
+            return self.binned_limit(measurement, n_sigma)
 
-        return np.array(limits)
+        return np.vectorize(binned_limit_change_mass)(mxs)
 
     def unbinned_limit(self, A_eff=A_eff_e_astrogam,
                        energy_res=energy_res_e_astrogam,
@@ -133,23 +139,12 @@ class Theory(object):
 
         See documentation for :func:`unbinned_limit`.
         """
-        limits = []
-
-        for mx in mxs:
+        def unbinned_limit_change_mass(mx):
             self.mx = mx
-            limits.append(self.unbinned_limit(A_eff, energy_res, T_obs,
-                                              target_params, bg_model,
-                                              n_sigma))
+            return self.unbinned_limit(A_eff, energy_res, T_obs, target_params,
+                                       bg_model, n_sigma)
 
-        return np.array(limits)
-
-    @abstractmethod
-    def positron_spectra(self, eng_es, e_cm):
-        pass
-
-    @abstractmethod
-    def positron_lines(self, e_cm):
-        pass
+        return np.vectorize(unbinned_limit_change_mass)(mxs)
 
     def cmb_limit(self, x_kd=1.0e-4):
         """Computes CMB limit on <sigma v>.
@@ -182,7 +177,7 @@ class Theory(object):
 
         return cmb_limit(self.mx, f_eff_dm)
 
-    def cmb_limits(self, mxs, x_kd=1.0e-4):
+    def cmb_limits(self, mxs, x_kd=1.0e-4):  # TODO: clean this up...
         """Computes CMB limit on <sigma v>.
 
         Parameters
@@ -198,10 +193,31 @@ class Theory(object):
         svs : np.array
             Array of upper bounds on <sigma v> for each mass in mxs.
         """
-        limits = []
-
-        for mx in mxs:
+        def cmb_limit_change_mass(mx):
             self.mx = mx
-            limits.append(self.cmb_limit(x_kd))
+            return self.cmb_limit(x_kd)
 
-        return np.array(limits)
+        return np.vectorize(cmb_limit_change_mass)(mxs)
+
+    def f_eff(self, x_kd=1.0e-4):  # TODO: clean this up...
+        def spec_fn(e_gams, e_cm):
+            if hasattr(e_gams, "__len__"):
+                return self.spectra(e_gams, e_cm)["total"]
+            else:
+                return self.spectra(np.array([e_gams]), e_cm)["total"]
+
+        def pos_spec_fn(e_ps, e_cm):
+            if hasattr(e_ps, "__len__"):
+                return self.positron_spectra(e_ps, e_cm)["total"]
+            else:
+                return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
+
+        return f_eff(spec_fn, self.gamma_ray_lines, pos_spec_fn,
+                     self.positron_lines, self.mx, x_kd)
+
+    def f_effs(self, mxs, x_kd=1.0e-4):
+        def f_eff_change_mass(mx):
+            self.mx = mx
+            return self.f_eff(x_kd)
+
+        return np.vectorize(f_eff_change_mass)(mxs)
