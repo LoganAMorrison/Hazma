@@ -32,8 +32,6 @@ def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
     e_a = min(e_ab)
     e_b = max(e_ab)
 
-    # print("e_a, e_b: %f, %f \n" % (e_a, e_b))
-
     if e_a == e_b:
         return 0.
     else:
@@ -129,13 +127,11 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
        np.isclose(e_dnde_max, e_max, atol=0, rtol=1e-8):
         # If there is a peak in the spectrum, include it in the initial
         # energy window
-        # print("There's a peak")
         e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
         e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
     else:
         # If the spectrum has no prominent features, the initial window
         # matters less
-        # print("There's no peak")
         e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
         e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
 
@@ -145,9 +141,6 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                                   bounds=2*[[e_min, e_max]],
                                   args=(dnde_det, A_eff, bg_model, n_pts),
                                   method="L-BFGS-B")  # options={"ftol": 1e-4})
-
-    # print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
-    # print("e_b: %f -> %f\n" % (e_b_0, limit_obj.x[1]))
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
