@@ -141,10 +141,6 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                                   method="L-BFGS-B",
                                   options={"ftol": 1e-3})
 
-    # Debug messages
-    print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
-    print("e_b: %f -> %f" % (e_b_0, limit_obj.x[1]))
-
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
                  (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
