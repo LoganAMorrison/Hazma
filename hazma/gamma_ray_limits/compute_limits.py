@@ -1,5 +1,5 @@
 from scipy import optimize
-from scipy.integrate import quad
+from scipy.integrate import quad, cumtrapz
 from scipy.interpolate import interp1d
 from scipy.stats import norm
 import numpy as np
@@ -238,7 +238,13 @@ def spec_res_fn(ep, e, energy_res):
         return norm.pdf(ep, loc=e, scale=sigma)
 
 
-def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res):
+def find_nearest_idx(array, value):
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+
+def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
+                          n_energies=250):
     """Convolves a DM annihilation spectrum with a detector's spectral
     resolution function.
 
@@ -265,41 +271,29 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res):
         detector. Given photon energies outside the range covered by e_gams,
         the interpolator will produce bounds_errors.
     """
-    # Compute source spectrum over a grid of photon energies so it's not
-    # recomputed every time it's needed. Pad the grid to avoid edge effects
-    # from the convolution.
-    e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1, 200)
-    dnde_src = interp1d(e_gams_padded, spec_fn(e_gams_padded, e_cm))
+    # Compute source spectrum over a wide grid to avoid edge effects from the
+    # convolution
+    e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1,
+                                n_energies)
+    dnde_src = spec_fn(e_gams_padded, e_cm)
 
-    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), 200)
-    dndes_cont_det = np.zeros(e_gams.shape)
+    # Energies at which to compute detected spectrum
+    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), n_energies)
+    dnde_cont_det = np.zeros(e_gams.shape)
 
     # If continuum spectrum is zero, don't waste time on the convolution
     if not np.all(dnde_src == 0):
-        # Due to numerical limitations, the convolution must be performed in a
-        # window of n_std standard deviations around the mean of the spectral
-        # resolution function. N(5; 0, 1) / N(0;, 0, 1) ~ 6e-6, which seems to
-        # be a good compromise between accuracy and speed.
-        n_std = 6.
+        def integral(e):  # performs the integration at the given photon energy
+            integrand_vals = dnde_src*spec_res_fn(e_gams_padded, e, energy_res)
+            return cumtrapz(integrand_vals, e_gams_padded)[-1]
 
-        for i, e in enumerate(e_gams):
-            e_int_min = max(e_gams[0], e - n_std * e * energy_res(e))
-            e_int_max = min(e_gams[-1], e + n_std * e * energy_res(e))
-
-            def conv_integrand(ep):
-                return dnde_src(ep) * spec_res_fn(ep, e, energy_res)
-
-            dndes_cont_det[i] = quad(conv_integrand, e_int_min, e_int_max,
-                                     epsabs=0, epsrel=1e-3)[0]
+        dnde_cont_det = np.vectorize(integral)(e_gams)
 
     # Line contribution
     lines = line_fn(e_cm)
-    dndes_line_det = np.array([line["bf"] *
-                               spec_res_fn(e_gams,
-                                           line["energy"],
-                                           energy_res) *
-                               (2. if ch == "g g" else 1.)
-                               for ch, line in lines.iteritems()])
-    dndes_line_det = dndes_line_det.sum(axis=0)
+    dnde_line_det = np.array([line["bf"] *
+                              spec_res_fn(e_gams, line["energy"], energy_res) *
+                              (2. if ch == "g g" else 1.)
+                              for ch, line in lines.iteritems()]).sum(axis=0)
 
-    return interp1d(e_gams, dndes_cont_det + dndes_line_det)
+    return interp1d(e_gams, dnde_cont_det + dnde_line_det)
