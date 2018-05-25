@@ -5,11 +5,6 @@ from ..positron_spectra import charged_pion as pspec_charged_pion
 from .vector_mediator_cross_sections import branching_fractions
 
 
-def find_nearest(array, value):
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
-
 def positron_spectra(eng_ps, cme, params):
     """
     """
