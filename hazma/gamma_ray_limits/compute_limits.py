@@ -1,38 +1,44 @@
 from scipy import optimize
-from scipy.integrate import quad, cumtrapz
+from scipy.integrate import quad, trapz
 from scipy.interpolate import interp1d
 from scipy.stats import norm
 import numpy as np
 
 
-def __I_S(e_a, e_b, dnde, A_eff, T_obs):
+def __I_S(e_a, e_b, dnde, A_eff, n_pts=20):
     """Integrand required to compute number of photons from DM annihilations.
     """
     def integrand_S(e):
         return dnde(e) * A_eff(e)
 
-    return quad(integrand_S, e_a, e_b)[0]
+    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+
+    return trapz(integrand_S(e_gams), e_gams)
 
 
-def __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model):
+def __I_B(e_a, e_b, A_eff, bg_model, n_pts=250):
     """Integrand required to compute number of background photons"""
     def integrand_B(e):
         return bg_model.dPhi_dEdOmega(e) * A_eff(e)
 
-    return quad(integrand_B, e_a, e_b)[0]
+    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+
+    return trapz(integrand_B(e_gams), e_gams)
 
 
-def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
+def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
     """Objective function for selecting energy window.
     """
     e_a = min(e_ab)
     e_b = max(e_ab)
 
+    # print("e_a, e_b: %f, %f \n" % (e_a, e_b))
+
     if e_a == e_b:
         return 0.
     else:
-        return -__I_S(e_a, e_b, dnde, A_eff, T_obs) / \
-            np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
+        return -__I_S(e_a, e_b, dnde, A_eff, n_pts) / \
+            np.sqrt(__I_B(e_a, e_b, A_eff, bg_model, n_pts))
 
 
 def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
@@ -61,7 +67,8 @@ def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
 
 
 def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
-                   energy_res, T_obs, target_params, bg_model, n_sigma=5.):
+                   energy_res, T_obs, target_params, bg_model, n_sigma=5.,
+                   n_pts=250):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -105,41 +112,42 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Compute the spectrum over a grid over photon energies so it's not
-    # recomputed every time it's needed. Pad the grid to avoid edge effects
-    # from the convolution.
-    e_min, e_max = A_eff.x[[0, -1]]
 
     # TODO: this should depend on the target!
     e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
     # Convolve the spectrum with the detector's spectral resolution
+    e_min, e_max = A_eff.x[[0, -1]]
     dnde_det = get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm,
                                      energy_res)
 
-    # Energy at which spectrum peaks
+    # Energy at which spectrum peaks. TODO: look at peak in E dN/dE instead?
     e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
 
     # Choose initial guess for energy window bounds
-    if e_dnde_max != e_min and e_dnde_max != e_max:
+    if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) and \
+       np.isclose(e_dnde_max, e_max, atol=0, rtol=1e-8):
         # If there is a peak in the spectrum, include it in the initial
         # energy window
+        # print("There's a peak")
         e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
         e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
     else:
         # If the spectrum has no prominent features, the initial window
         # matters less
+        # print("There's no peak")
         e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
         e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
 
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
-                                  bounds=2 * [[e_min, e_max]],
-                                  args=(dnde_det, A_eff, T_obs,
-                                        target_params, bg_model),
-                                  method="L-BFGS-B",
-                                  options={"ftol": 1e-3})
+                                  bounds=2*[[e_min, e_max]],
+                                  args=(dnde_det, A_eff, bg_model, n_pts),
+                                  method="L-BFGS-B")  # options={"ftol": 1e-4})
+
+    # print("e_a: %f -> %f" % (e_a_0, limit_obj.x[0]))
+    # print("e_b: %f -> %f\n" % (e_b_0, limit_obj.x[1]))
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
@@ -238,13 +246,8 @@ def spec_res_fn(ep, e, energy_res):
         return norm.pdf(ep, loc=e, scale=sigma)
 
 
-def find_nearest_idx(array, value):
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
-
 def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
-                          n_energies=250):
+                          n_pts=250):
     """Convolves a DM annihilation spectrum with a detector's spectral
     resolution function.
 
@@ -274,18 +277,18 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
     # Compute source spectrum over a wide grid to avoid edge effects from the
     # convolution
     e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1,
-                                n_energies)
+                                n_pts)
     dnde_src = spec_fn(e_gams_padded, e_cm)
 
     # Energies at which to compute detected spectrum
-    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), n_energies)
+    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), n_pts)
     dnde_cont_det = np.zeros(e_gams.shape)
 
     # If continuum spectrum is zero, don't waste time on the convolution
     if not np.all(dnde_src == 0):
         def integral(e):  # performs the integration at the given photon energy
             integrand_vals = dnde_src*spec_res_fn(e_gams_padded, e, energy_res)
-            return cumtrapz(integrand_vals, e_gams_padded)[-1]
+            return trapz(integrand_vals, e_gams_padded)
 
         dnde_cont_det = np.vectorize(integral)(e_gams)
 
