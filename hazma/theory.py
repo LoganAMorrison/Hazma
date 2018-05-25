@@ -4,6 +4,7 @@ from .gamma_ray_limits.gamma_ray_limit_parameters import draco_params
 from .gamma_ray_limits.gamma_ray_limit_parameters import default_bg_model
 from .gamma_ray_limits.gamma_ray_limit_parameters import energy_res_e_astrogam
 from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
+from .cmb import f_eff, cmb_limit
 
 import numpy as np
 from abc import ABCMeta, abstractmethod
@@ -46,7 +47,10 @@ class Theory(object):
 
     def binned_limit(self, measurement, n_sigma=2.):
         def spec_fn(e_gams, e_cm):
-            return self.spectra(e_gams, e_cm)["total"]
+            if hasattr(e_gams, "__len__"):
+                return self.spectra(e_gams, e_cm)["total"]
+            else:
+                return self.spectra(np.array([e_gams]), e_cm)["total"]
 
         return binned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
                             measurement, n_sigma)
@@ -112,7 +116,10 @@ class Theory(object):
             of cm^3 / s
         """
         def spec_fn(e_gams, e_cm):
-            return self.spectra(e_gams, e_cm)["total"]
+            if hasattr(e_gams, "__len__"):
+                return self.spectra(e_gams, e_cm)["total"]
+            else:
+                return self.spectra(np.array([e_gams]), e_cm)["total"]
 
         return unbinned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
                               A_eff, energy_res, T_obs, target_params,
@@ -143,3 +150,58 @@ class Theory(object):
     @abstractmethod
     def positron_lines(self, e_cm):
         pass
+
+    def cmb_limit(self, x_kd=1.0e-4):
+        """Computes CMB limit on <sigma v>.
+
+        Parameters
+        ----------
+        x_kd: float
+            T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
+            temperature.
+
+        Returns
+        -------
+        <sigma v> : float
+            Upper bound on <sigma v>.
+        """
+        def spec_fn(e_gams, e_cm):
+            if hasattr(e_gams, "__len__"):
+                return self.spectra(e_gams, e_cm)["total"]
+            else:
+                return self.spectra(np.array([e_gams]), e_cm)["total"]
+
+        def pos_spec_fn(e_ps, e_cm):
+            if hasattr(e_ps, "__len__"):
+                return self.positron_spectra(e_ps, e_cm)["total"]
+            else:
+                return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
+
+        f_eff_dm = f_eff(spec_fn, self.gamma_ray_lines, pos_spec_fn,
+                         self.positron_lines, self.mx, x_kd)
+
+        return cmb_limit(self.mx, f_eff_dm)
+
+    def cmb_limits(self, mxs, x_kd=1.0e-4):
+        """Computes CMB limit on <sigma v>.
+
+        Parameters
+        ----------
+        mxs : np.array
+            DM masses at which to compute the CMB limits.
+        x_kd: float
+            T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
+            temperature.
+
+        Returns
+        -------
+        svs : np.array
+            Array of upper bounds on <sigma v> for each mass in mxs.
+        """
+        limits = []
+
+        for mx in mxs:
+            self.mx = mx
+            limits.append(self.cmb_limit(x_kd))
+
+        return np.array(limits)
