@@ -1,65 +1,116 @@
 from scipy import optimize
-from scipy.integrate import quad, trapz
-from scipy.interpolate import interp1d
+from scipy.integrate import trapz
+from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import norm
 import numpy as np
 
 
-def __I_S(e_a, e_b, dnde, A_eff, n_pts=20):
+def __get_spline_prod(s1, s2, grid, ext="raise"):
+    """Creates a spline that is the product of two functions.
+
+    Parameters
+    ----------
+    s1, s2 : callable
+        Two vectorized functions.
+    grid : numpy.array
+        Points at which to multiply the functions.
+    ext : string
+        Extrapolation method for the product spline. See
+        `InterpolatedUnivariateSpline` documentation.
+
+    Returns
+    -------
+    prod : InterpolatedUnivariateSpline
+        A spline created by taking s1(grid) * s2(grid), with extrapolation
+        method ext.
+    """
+    return InterpolatedUnivariateSpline(grid, s1(grid) * s2(grid), ext=ext)
+
+
+def __I_S(e_a, e_b, dnde, A_eff, n_pts=250):
     """Integrand required to compute number of photons from DM annihilations.
     """
-    def integrand_S(e):
-        return dnde(e) * A_eff(e)
+    integrand_S = __get_spline_prod(dnde, A_eff, dnde.get_knots())
 
-    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
-
-    return trapz(integrand_S(e_gams), e_gams)
+    return integrand_S.integral(e_a, e_b)
 
 
-def __I_B(e_a, e_b, A_eff, bg_model, n_pts=250):
+def __I_B(e_a, e_b, dnde, A_eff, bg_model, n_pts=250):
     """Integrand required to compute number of background photons"""
-    def integrand_B(e):
-        return bg_model.dPhi_dEdOmega(e) * A_eff(e)
+    integrand_B = __get_spline_prod(bg_model.dPhi_dEdOmega, A_eff,
+                                    dnde.get_knots())
 
-    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
-
-    return trapz(integrand_B(e_gams), e_gams)
+    return integrand_B.integral(e_a, e_b)
 
 
 def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
     """Objective function for selecting energy window.
     """
-    e_a = min(e_ab)
-    e_b = max(e_ab)
+    # e_a = min(e_ab)
+    # e_b = max(e_ab)
+    e_a = e_ab[0]
+    e_b = e_ab[1]
+
+    print("    e_a, e_b: ", e_a, e_b)
 
     if e_a == e_b:
         return 0.
     else:
-        return -__I_S(e_a, e_b, dnde, A_eff, n_pts) / \
+        f_val = -__I_S(e_a, e_b, dnde, A_eff, n_pts) / \
             np.sqrt(__I_B(e_a, e_b, A_eff, bg_model, n_pts))
 
+        print("        f: ", f_val)
 
-def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
-    e_a = min(e_ab)
-    e_b = max(e_ab)
+        return f_val
+
+
+def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
+    e_a = e_ab[0]
+    e_b = e_ab[1]
 
     if e_a == e_b:
-        return 0.
+        return 0., 0.
     else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, T_obs)
-        I_B_val = __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model)
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts)
+        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts)
+
+        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
+                                                 0.5 * I_S_val / I_B_val *
+                                                 bg_model.dPhi_dEdOmega(e_a))
+        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * (dnde(e_b) -
+                                                  0.5 * I_S_val / I_B_val *
+                                                  bg_model.dPhi_dEdOmega(e_b))
+        jac_val = np.array([df_de_a, df_de_b]).T
+
+        print("        grad(f): ", jac_val)
+
+        return jac_val
+
+
+def __f_jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
+    e_a = e_ab
+    e_b = e_ab
+
+    if e_a == e_b:
+        return 0., 0.
+    else:
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts)
+        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts)
 
         # Function value
         f_val = -I_S_val / np.sqrt(I_B_val)
 
         # Jacobian
-        df_de_a = A_eff(e_a) * (-dnde(e_a) / np.sqrt(I_B_val) +
-                                0.5 * I_S_val / I_B_val**1.5 *
-                                bg_model.dPhi_dEdOmega(e_a))
-        df_de_b = A_eff(e_b) * (dnde(e_b) / np.sqrt(I_B_val) -
-                                0.5 * I_S_val / I_B_val**1.5 *
-                                bg_model.dPhi_dEdOmega(e_b))
+        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
+                                                 0.5 * I_S_val / I_B_val *
+                                                 bg_model.dPhi_dEdOmega(e_a))
+        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * (dnde(e_b) -
+                                                  0.5 * I_S_val / I_B_val *
+                                                  bg_model.dPhi_dEdOmega(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
+
+        print("    e_a, e_b, f, grad(f): ", e_a, e_b, f_val, jac_val)
+        print("        f.dtype, grad(f).dtype", f_val.dtype, jac_val.dtype)
 
         return f_val, jac_val
 
@@ -115,12 +166,20 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
     e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
     # Convolve the spectrum with the detector's spectral resolution
-    e_min, e_max = A_eff.x[[0, -1]]
+    e_min, e_max = A_eff.get_knots()[[0, -1]]
     dnde_det = get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm,
                                      energy_res)
 
-    # Energy at which spectrum peaks. TODO: look at peak in E dN/dE instead?
-    e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
+    # Energy at which E^2 dN/dE peaks, since background goes as E^{-2}
+    e_dnde_max = optimize.minimize_scalar(lambda e: -e**2*dnde_det(e),
+                                          bounds=dnde_det.get_knots()[[0, -1]],
+                                          method="bounded")
+    # dnde_det.x[np.argmax(dnde_det.y)]
+
+    print("mx: ", mx)
+    print("e_min, e_dnde_max, e_max: ", e_min, e_dnde_max, e_max)
+    print("A_eff range: ", A_eff.x[[0, -1]])
+    print("dnde_det range: ", dnde_det.x[[0, -1]])
 
     # Choose initial guess for energy window bounds
     if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) and \
@@ -138,9 +197,16 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
-                                  bounds=2*[[e_min, e_max]],
+                                  jac=__jac_lim,
                                   args=(dnde_det, A_eff, bg_model, n_pts),
-                                  method="L-BFGS-B")  # options={"ftol": 1e-4})
+                                  bounds=2*[[e_min, e_max]],
+                                  constraints=({"type": "ineq",
+                                                "fun": lambda x: x[1] - x[0]}))
+    # options={"ftol": 1e-4})
+
+    print("e_a: ", e_a_0, " -> ", limit_obj.x[0])
+    print("e_b: ", e_b_0, " -> ", limit_obj.x[1])
+    print("")
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
@@ -197,20 +263,22 @@ def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
     # TODO: this should depend on the target!
     e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
-    # Keep track of <sigma v> limit for each bin
-    sv_lims = [np.inf]
-
     # Convolve the spectrum with the detector's spectral resolution
     e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
     dnde_det = get_detected_spectrum(spec_fn, line_fn, e_bin_min, e_bin_max,
-                                     e_cm, measurement.energy_res)
+                                     e_cm, measurement.energy_res, 500)
 
-    # Loop over experiment's bins
-    for i, ((bin_low, bin_high), phi, sigma) in \
-        enumerate(zip(measurement.bins, measurement.fluxes,
-                      measurement.upper_errors)):
+    def bin_lim(e_bin, phi, sigma):  # computes limit in a bin
+        bin_low, bin_high = e_bin
+
+        # Find indices of energies in interpolation grid nearest to bin
+        # edges
+        idx_low = (np.abs(dnde_det.x - bin_low)).argmin()
+        idx_high = (np.abs(dnde_det.x - bin_high)).argmin()
+
         # Integrate DM spectrum to compute flux in this bin
-        phi_dm = dm_flux_factor * quad(dnde_det, bin_low, bin_high)[0]
+        phi_dm = dm_flux_factor * trapz(dnde_det.y[idx_low:idx_high],
+                                        dnde_det.x[idx_low:idx_high])
 
         # If flux is finite and nonzero, set a limit using this bin
         if not np.isnan(phi_dm) and phi_dm > 0:
@@ -221,13 +289,20 @@ def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
             assert phi_max > 0
 
             # Find limit on <sigma v>
-            sv_lims.append(phi_max / phi_dm)
+            return phi_max / phi_dm
+        else:
+            return np.inf
+
+    sv_lims = [bin_lim(e_bin, phi, sigma)
+               for (e_bin, phi, sigma) in zip(measurement.bins,
+                                              measurement.fluxes,
+                                              measurement.upper_errors)]
 
     return np.min(sv_lims)
 
 
-# Get the spectral resolution function
 def spec_res_fn(ep, e, energy_res):
+    # Get the spectral resolution function
     sigma = e * energy_res(e)
 
     if sigma == 0:
@@ -292,4 +367,5 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
                               (2. if ch == "g g" else 1.)
                               for ch, line in lines.iteritems()]).sum(axis=0)
 
-    return interp1d(e_gams, dnde_cont_det + dnde_line_det)
+    return InterpolatedUnivariateSpline(e_gams, dnde_cont_det + dnde_line_det,
+                                        ext="raise")
