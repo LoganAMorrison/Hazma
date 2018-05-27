@@ -13,7 +13,8 @@ def width_v_to_pipi(params):
     if mv > 2. * mpi:
         gvuu = params.gvuu
         gvdd = params.gvdd
-        return ((gvdd - gvuu)**2*(-4.*mpi**2 + mv**2)**1.5)/(16.*mv**2*pi)
+        return ((gvdd - gvuu)**2 * (-4. * mpi**2 + mv**2)**1.5) / \
+            (16. * mv**2 * pi)
     else:
         return 0.
 
@@ -25,11 +26,13 @@ def width_v_to_pi0g(params):
         gvuu = params.gvuu
         gvdd = params.gvdd
 
-        ret_val = 3.*((gvdd + 2.*gvuu)**2*(-mpi0**2 + mv**2) *
-                      (-mpi0**6 + 4.*mpi**4*mv**2 + 12.*mpi0**4*mv**2 -
-                       21.*mpi0**2*mv**4 + 4.*mv**6 + mpi**2 *
-                       (mpi0**4 - 12.*mpi0**2*mv**2 + 13.*mv**4))*qe**2) / \
-            (18432.*fpi**2*mv**5*pi**5)
+        ret_val = 3. * ((gvdd + 2. * gvuu)**2 * (-mpi0**2 + mv**2) *
+                        (-mpi0**6 + 4. * mpi**4 * mv**2 +
+                         12. * mpi0**4 * mv**2 -
+                         21. * mpi0**2 * mv**4 + 4. * mv**6 + mpi**2 *
+                         (mpi0**4 - 12. * mpi0**2 * mv**2 +
+                          13. * mv**4)) * qe**2) / \
+            (18432. * fpi**2 * mv**5 * pi**5)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -46,17 +49,17 @@ def width_v_to_xx(params):
     if mv > 2. * mx:
         gvxx = params.gvxx
 
-        return (gvxx**2*sqrt(mv**2 - 4.*mx**2)*(mv**2 + 2.*mx**2)) / \
-            (4.*mv**2*pi)
+        return (gvxx**2 * sqrt(mv**2 - 4. * mx**2) * (mv**2 + 2. * mx**2)) / \
+            (4. * mv**2 * pi)
     else:
         return 0.0
 
 
 def width_v_to_ff(f, params):
-    if f == "e e":
+    if f == "e":
         mf = me
         gvll = params.gvee
-    elif f == "mu mu":
+    elif f == "mu":
         mf = mmu
         gvll = params.gvmumu
     else:
@@ -65,8 +68,8 @@ def width_v_to_ff(f, params):
     mv = params.mv
 
     if mv > 2. * mf:
-        return (gvll**2*sqrt(mv**2 - 4.*mf**2)*(2.*mf**2 + mv**2)) / \
-            (4.*mv**2*pi)
+        return (gvll**2 * sqrt(mv**2 - 4. * mf**2) * (2. * mf**2 + mv**2)) / \
+            (4. * mv**2 * pi)
     else:
         return 0.
 

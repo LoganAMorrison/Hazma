@@ -89,4 +89,3 @@ class VectorMediatorParameters(object):
     def compute_width_v(self):
         """Recomputes the scalar's total width."""
         self.width_v = partial_widths(self)["total"]
-

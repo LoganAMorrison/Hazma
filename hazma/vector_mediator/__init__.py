@@ -11,6 +11,8 @@ from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 from vector_mediator_positron_spectra import positron_spectra
 from vector_mediator_positron_spectra import positron_lines as pls
 
+from vector_mediator_widths import partial_widths as pws
+
 from ..parameters import neutral_pion_mass as mpi0
 
 import warnings
@@ -137,6 +139,21 @@ class VectorMediator(Theory, VectorMediatorParameters):
                 'e e': lambda egams, cme: dnde_ee(egams, cme, self),
                 'pi pi': lambda egams, cme: dnde_pipi(egams, cme, self),
                 'pi0 g': lambda egams, cme: dnde_pi0g(egams, cme, self)}
+
+    def partial_widths(self):
+        """
+        Returns a dictionary for the partial decay widths of the vector
+        mediator.
+
+        Returns
+        -------
+        width_dict : dictionary
+            Dictionary of all of the individual decay widths of the vector
+            mediator as well as the total decay width. The possible decay
+            modes of the vector mediator are 'e e', 'mu mu', 'pi0 g', 'pi pi'
+            and 'x x'. The total decay width has the key 'total'.
+        """
+        return pws(self)
 
     def positron_spectra(self, eng_ps, cme):
         """
