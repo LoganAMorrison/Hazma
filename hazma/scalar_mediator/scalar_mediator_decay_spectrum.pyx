@@ -1,7 +1,7 @@
-from ..decay_helper_functions.decay_charged_pion cimport CSpectrum as cspec
-from ..decay_helper_functions.decay_neutral_pion cimport CSpectrumPoint as nspec
-from ..decay_helper_functions.decay_muon cimport CSpectrumPoint as muspec
-include "../decay_helper_functions/parameters.pxd"
+from ..decay_helper_functions.decay_charged_pion cimport CSpectrum as cp_spec
+from ..decay_helper_functions.decay_neutral_pion cimport CSpectrum as np_spec
+from ..decay_helper_functions.decay_neutral_pion cimport CSpectrumPoint
+from ..decay_helper_functions.decay_muon cimport CSpectrum as mu_spec
 
 import cython
 import numpy as np
@@ -10,27 +10,58 @@ from scipy.integrate import quad
 
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 
+include "../decay_helper_functions/parameters.pxd"
+
 cdef double mmu = MASS_MU
 cdef double me = MASS_E
 cdef double mpi = MASS_PI
 cdef double qe = sqrt(4. * M_PI * ALPHA_EM)
 ctypedef np.ndarray ndarray
 
+cdef int n_interp_pts = 500
 
-cdef int num_interp = 100
-cdef np.ndarray eng_gams_interp = np.zeros(num_interp, dtype=np.float64)
-cdef np.ndarray cp_spec_interp = np.zeros(num_interp, dtype=np.float64)
+cdef np.ndarray __e_gams = np.zeros((n_interp_pts,), dtype=np.float64)
 
-def set_cp_spec(double ms):
-    global eng_gams_interp
-    global cp_spec_interp
-    eng_gams_interp = np.logspace(-3., np.log10(ms / 2.), num=num_interp)
-    cp_spec_interp = cspec(eng_gams_interp, ms / 2., "total")
+cdef np.ndarray __spec_cp = np.zeros((n_interp_pts,), dtype=np.float64)
+cdef np.ndarray __spec_np = np.zeros((n_interp_pts,), dtype=np.float64)
+cdef np.ndarray __spec_mu = np.zeros((n_interp_pts,), dtype=np.float64)
 
-cdef double __cp_spec(double eng_gam):
-    if eng_gam < eng_gams_interp[0]:
-        return cp_spec_interp[0] * eng_gams_interp[0] / eng_gam
-    return np.interp(eng_gam, eng_gams_interp, cp_spec_interp)
+
+cdef double __set_spectra(double ms):
+    global __e_gams
+    global __spec_cp
+    global __spec_np
+    global __spec_mu
+
+    __e_gams = np.logspace(-1., np.log10(ms / 2.), num=n_interp_pts)
+
+    __spec_cp = cp_spec(__e_gams, ms / 2., "total")
+    __spec_np = np_spec(__e_gams, ms / 2.)
+    __spec_mu = mu_spec(__e_gams, ms / 2.)
+
+
+
+cdef double __interp_spec(double eng_gam, str mode):
+    """
+    Intepolation function for the short kaon data.
+
+    Parameters
+    ----------
+    eng_gam : double
+        Energy of the photon.
+    mode : str {"total"}
+        String specifying which decay mode to use.
+    """
+    if mode == "cp":
+        if eng_gam < 10**-1:
+            return __spec_cp[0] * __e_gams[0] / eng_gam
+        return np.interp(eng_gam, __e_gams, __spec_cp)
+    if mode == "mu":
+        if eng_gam < 10**-1:
+            return __spec_mu[0] * __e_gams[0] / eng_gam
+        return np.interp(eng_gam, __e_gams, __spec_mu)
+    else :
+        return 0.0
 
 
 @cython.cdivision(True)
@@ -91,6 +122,8 @@ cdef double __dnde_fsr_l_srf(double egam, double ml, double ms):
 
 
 @cython.cdivision(True)
+@cython.boundscheck(True)
+@cython.wraparound(False)
 cdef double __integrand(double cl, double eng_gam, double eng_s,
                         double ms, np.ndarray[double] pws, str mode):
     """
@@ -126,32 +159,38 @@ cdef double __integrand(double cl, double eng_gam, double eng_s,
 
     cdef double dnde = 0.0
 
+    cdef double dnde_ee_f = pwee * __dnde_fsr_l_srf(eng_gam_srf, me, ms)
+    cdef double dnde_mu_f = pwmumu * __dnde_fsr_l_srf(eng_gam_srf, mmu, ms)
+
+    cdef double dnde_cp_f = pwpipi * __dnde_fsr_cp_srf(eng_gam_srf, ms)
+
+    cdef double dnde_cp_d = 2. * pwpipi * __interp_spec(eng_gam_srf, "cp")
+    cdef double dnde_np_d = 2. * pwpi0pi0 * CSpectrumPoint(eng_gam_srf, ms / 2.)
+    cdef double dnde_mu_d = 2. * pwmumu * __interp_spec(eng_gam_srf, "mu")
+
+    dnde = dnde_ee_f + dnde_mu_f + dnde_cp_f + \
+        dnde_cp_d + dnde_np_d + dnde_mu_d
+
     if mode == "total":
-        dnde = pwee * __dnde_fsr_l_srf(eng_gam_srf, me, ms) + \
-            2. * pwpipi * __cp_spec(eng_gam_srf) + \
-            pwpipi * __dnde_fsr_cp_srf(eng_gam_srf, ms) + \
-            2. * pwpi0pi0 * nspec(eng_gam_srf, ms / 2.) +\
-            2. * pwmumu * muspec(eng_gam_srf, ms / 2.) + \
-            pwmumu * __dnde_fsr_l_srf(eng_gam_srf, mmu, ms)
-
+        return jac * dnde
     if mode == "e e g":
-        dnde = pwee * __dnde_fsr_l_srf(eng_gam_srf, me, ms)
+        return jac * dnde_ee_f
     if mode == "pi pi g":
-        dnde = pwpipi * __dnde_fsr_cp_srf(eng_gam_srf, ms)
+        return jac * dnde_cp_f
     if mode == "pi pi":
-        dnde = 2. * pwpipi * __cp_spec(eng_gam_srf)
+        return jac * dnde_cp_d
     if mode == "pi0 pi0":
-        dnde = 2. * pwpi0pi0 * nspec(eng_gam_srf, ms / 2.)
+        return jac * dnde_np_d
     if mode == "mu mu g":
-        dnde = pwmumu * __dnde_fsr_l_srf(eng_gam_srf, mmu, ms)
+        return jac * dnde_mu_f
     if mode == "mu mu":
-        dnde = 2. * pwmumu * muspec(eng_gam_srf, ms / 2.)
+        return jac * dnde_mu_d
     if mode == "g g":
-        dnde = 0.0
-
-    return jac * dnde
+        return 0.0
 
 
+@cython.boundscheck(True)
+@cython.wraparound(False)
 @cython.cdivision(True)
 cdef double __dnde_decay_s(double eng_gam, double eng_s, double ms,
                            np.ndarray[double] pws, str mode):
@@ -175,7 +214,7 @@ cdef double __dnde_decay_s(double eng_gam, double eng_s, double ms,
         Values of dnde at gamma-ray energies `eng_gams`.
     """
     cdef double lines_contrib = 0.0
-    cdef double beta = np.sqrt(1. - pow(ms / eng_s, 2.))
+    cdef double beta = sqrt(1. - pow(ms / eng_s, 2.))
     cdef double gamma = eng_s / ms
 
     if eng_s < ms:
@@ -203,30 +242,6 @@ cdef double __dnde_decay_s(double eng_gam, double eng_s, double ms,
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
-def cdnde_decay_s_pt(double eng_gam, double eng_s, double ms,
-                 np.ndarray[double] pws, str mode):
-    """
-    Compute the gamma ray spectrum from the decay of the scalar mediator.
-
-    Parameters
-    ----------
-    eng_gams : float
-        Gamma-ray energy to evaluate spectrum at.
-    eng_s : float
-        Energy of the scalar mediator.
-    params :
-        Scalar mediator model parameters.
-
-    Returns
-    -------
-    dnde : float or array-like
-        Value of dnde at gamma-ray energy `eng_gam`.
-    """
-    return __dnde_decay_s(eng_gam, eng_s, ms, pws, mode)
-
-
-@cython.boundscheck(True)
-@cython.wraparound(False)
 def dnde_decay_s_pt(double eng_gam, double eng_s, double ms,
                  np.ndarray[double] pws, str mode):
     """
@@ -246,8 +261,8 @@ def dnde_decay_s_pt(double eng_gam, double eng_s, double ms,
     dnde : float or array-like
         Value of dnde at gamma-ray energy `eng_gam`.
     """
-    set_cp_spec(ms)
-    return cdnde_decay_s_pt(eng_gam, eng_s, ms, pws, mode)
+    __set_spectra(ms)
+    return __dnde_decay_s(eng_gam, eng_s, ms, pws, mode)
 
 
 @cython.boundscheck(True)
@@ -271,13 +286,13 @@ def dnde_decay_s(np.ndarray[double] eng_gam, double eng_s, double ms,
     dnde : float or array-like
         Value of dnde at gamma-ray energy `eng_gam`.
     """
-    set_cp_spec(ms)
+    __set_spectra(ms)
     cdef int num_pts = len(eng_gam)
     cdef int i
 
     spec = np.zeros(num_pts, dtype=np.float64)
 
     for i in range(num_pts):
-        spec[i] = cdnde_decay_s_pt(eng_gam[i], eng_s, ms, pws, mode)
+        spec[i] = __dnde_decay_s(eng_gam[i], eng_s, ms, pws, mode)
 
     return spec

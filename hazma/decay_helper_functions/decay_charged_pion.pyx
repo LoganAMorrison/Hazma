@@ -1,35 +1,40 @@
-from decay_muon cimport CSpectrum  as muspec
+from decay_muon cimport CSpectrum as muspec
+from decay_muon cimport CSpectrumPoint as muspecpt
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
-from scipy.interpolate import InterpolatedUnivariateSpline
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 import cython
-from functools import partial
 include "parameters.pxd"
 
 import warnings
 
-__eng_gam_max_mu_rf = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
-__eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
-
-__eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
-
-__mu_spec = muspec(__eng_gams_mu, __eng_mu_pi_rf)
-
-__mu_spec2 = InterpolatedUnivariateSpline(__eng_gams_mu, __mu_spec, k=1)
-
-cdef double __muon_spectrum(double eng_gam):
-    return np.interp(eng_gam, __eng_gams_mu, __mu_spec)
-
-cdef double fpi = DECAY_CONST_PI / np.sqrt(2)
+cdef double eng_gam_max_mu_rf = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
+cdef double eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
+cdef double fpi = DECAY_CONST_PI / sqrt(2.)
 cdef double mpi = MASS_PI
 cdef double me = MASS_E
 cdef double mmu = MASS_MU
 
+cdef np.ndarray eng_gams_mu
+cdef np.ndarray mu_spec
+
+eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
+mu_spec = muspec(eng_gams_mu, eng_mu_pi_rf)
+
+
+cdef double muon_spectrum(double eng_gam):
+    """
+    Returns the interpolated muon spectrum.
+    """
+    return np.interp(eng_gam, eng_gams_mu, mu_spec)
+
 
 @cython.cdivision(True)
-cdef double __dnde_pi_to_lnug(double egam, double ml):
+cdef double dnde_pi_to_lnug(double egam, double ml):
+    """
+    Returns dnde from pi-> l nu g.
+    """
     cdef double r = pow(ml / mpi, 2.0)
     if 0.0 <= egam and egam <= mpi * (1. - r) / 2. :
         return (ALPHA_EM *
@@ -54,7 +59,7 @@ cdef double __dnde_pi_to_lnug(double egam, double ml):
 
 
 @cython.cdivision(True)
-cdef double __gamma(double eng, double mass):
+cdef double gamma(double eng, double mass):
     """
     Returns special relativity boost factor gamma.
 
@@ -66,7 +71,7 @@ cdef double __gamma(double eng, double mass):
 
 
 @cython.cdivision(True)
-cdef double __beta(double eng, double mass):
+cdef double beta(double eng, double mass):
     """
     Returns velocity in natural units.
 
@@ -77,7 +82,7 @@ cdef double __beta(double eng, double mass):
     return sqrt(1.0 - (mass / eng)**2.0)
 
 
-cdef double __eng_gam_max(double eng_pi):
+cdef double eng_gam_max(double eng_pi):
     """
     Returns the maximum allowed gamma ray energy from a charged pion decay.
 
@@ -92,18 +97,18 @@ cdef double __eng_gam_max(double eng_pi):
         Then, boosting into the pion rest frame, then to the mu rest
         frame, we get the maximum allowed energy in the lab frame.
     """
-    cdef double betaPi = __beta(eng_pi, MASS_PI)
-    cdef double gammaPi = __gamma(eng_pi, MASS_PI)
+    cdef double beta_pi = beta(eng_pi, MASS_PI)
+    cdef double gamma_pi = gamma(eng_pi, MASS_PI)
 
-    cdef double betaMu = __beta(__eng_mu_pi_rf, MASS_MU)
-    cdef double gammaMu = __gamma(__eng_mu_pi_rf, MASS_MU)
+    cdef double beta_mu = beta(eng_mu_pi_rf, MASS_MU)
+    cdef double gamma_mu = gamma(eng_mu_pi_rf, MASS_MU)
 
-    return __eng_gam_max_mu_rf * gammaPi * gammaMu * \
-        (1.0 + betaPi) * (1.0 + betaMu)
+    return eng_gam_max_mu_rf * gamma_pi * gamma_mu * \
+        (1.0 + beta_pi) * (1.0 + beta_mu)
 
 
 @cython.cdivision(True)
-cdef double __integrand(double cl, double eng_gam, double eng_pi, str mode):
+cdef double integrand(double cl, double eng_gam, double eng_pi, str mode):
     """
     Returns the integrand of the differential radiative decay spectrum for
     the charged pion.
@@ -113,27 +118,27 @@ cdef double __integrand(double cl, double eng_gam, double eng_pi, str mode):
         engPi: Energy of photon in laboratory frame.
         engPi: Energy of pion in laboratory frame.
     """
-    cdef double betaPi = __beta(eng_pi, MASS_PI)
-    cdef double gammaPi = __gamma(eng_pi, MASS_PI)
+    cdef double beta_pi = beta(eng_pi, MASS_PI)
+    cdef double gamma_pi = gamma(eng_pi, MASS_PI)
 
-    cdef double betaMu = __beta(__eng_mu_pi_rf, MASS_MU)
-    cdef double gammaMu = __gamma(__eng_mu_pi_rf, MASS_MU)
+    cdef double beta_mu = beta(eng_mu_pi_rf, MASS_MU)
+    cdef double gamma_mu = gamma(eng_mu_pi_rf, MASS_MU)
 
-    cdef double engGamPiRF = eng_gam * gammaPi * (1.0 - betaPi * cl)
+    cdef double eng_gam_pi_rF = eng_gam * gamma_pi * (1.0 - beta_pi * cl)
 
-    cdef double jac = 1. / (2.0 * gammaPi * abs(1.0 - betaPi * cl))
+    cdef double jac = 1. / (2.0 * gamma_pi * abs(1.0 - beta_pi * cl))
 
     cdef double dnde_munu = 0.
     cdef double dnde_munug = 0.
     cdef double dnde_enug = 0.
 
-    __eng_gam_max_pi_rf = __eng_gam_max_mu_rf * gammaMu * (1.0 + betaMu)
+    __eng_gam_max_pi_rf = eng_gam_max_mu_rf * gamma_mu * (1.0 + beta_mu)
 
-    if 0. < engGamPiRF and engGamPiRF < __eng_gam_max_pi_rf:
-        dnde_munu = BR_PI_TO_MUNU * jac * __muon_spectrum(engGamPiRF)
+    if 0. < eng_gam_pi_rF and eng_gam_pi_rF < __eng_gam_max_pi_rf:
+        dnde_munu = BR_PI_TO_MUNU * jac * muon_spectrum(eng_gam_pi_rF)
 
-    dnde_munug = BR_PI_TO_MUNU * jac * __dnde_pi_to_lnug(engGamPiRF, mmu)
-    dnde_enug = 0.000123 * jac * __dnde_pi_to_lnug(engGamPiRF, me)
+    dnde_munug = BR_PI_TO_MUNU * jac * dnde_pi_to_lnug(eng_gam_pi_rF, mmu)
+    dnde_enug = 0.000123 * jac * dnde_pi_to_lnug(eng_gam_pi_rF, me)
 
     if mode == "total":
         return dnde_munu + dnde_munug + dnde_enug
@@ -159,7 +164,7 @@ cdef double CSpectrumPoint(double eng_gam, double eng_pi, str mode):
     if eng_pi < MASS_PI:
         return 0.0
 
-    return quad(__integrand, -1.0, 1.0, points=[-1.0, 1.0], \
+    return quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], \
                   args=(eng_gam, eng_pi, mode), epsabs=10**-10., \
                   epsrel=10**-5.)[0]
 
