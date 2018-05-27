@@ -1,5 +1,5 @@
 # s-wave thermal relic cross section
-# Columns are: log10(m_DM), log10(<sigma v>), with units of MeV and cm^3/s.
+# Columns are: log10(m_DM), log10(<sigma v>), with units of GeV and cm^3/s.
 -3.,-25.502091931508645
 -2.99,-25.501239585854975
 -2.98,-25.500388915225862
