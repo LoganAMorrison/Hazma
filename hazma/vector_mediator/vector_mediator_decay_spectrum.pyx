@@ -75,7 +75,7 @@ cdef double __dnde_fsr_cp_vrf(double egam, double mv):
     if x < xmin or x > xmax:
         return 0.0
 
-    coeff = qe**2 / (8. * (1 - 4 * mupi**2)**1.5 * M_PI**2)
+    coeff = qe**2 / (4. * (1 - 4 * mupi**2)**1.5 * M_PI**2)
 
     dynamic = ((2 * sqrt(1 - 4 * mupi**2 - x) *
                 (-1 - 4 * mupi**2 * (-1 + x) + x + x**2)) / sqrt(1 - x) +
