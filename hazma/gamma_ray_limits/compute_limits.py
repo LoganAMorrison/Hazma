@@ -1,46 +1,30 @@
 from scipy import optimize
+from scipy.optimize.slsqp import approx_jacobian
 from scipy.integrate import trapz
-from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.interpolate import interp1d
 from scipy.stats import norm
 import numpy as np
-
-
-def __get_spline_prod(s1, s2, grid, ext="raise"):
-    """Creates a spline that is the product of two functions.
-
-    Parameters
-    ----------
-    s1, s2 : callable
-        Two vectorized functions.
-    grid : numpy.array
-        Points at which to multiply the functions.
-    ext : string
-        Extrapolation method for the product spline. See
-        `InterpolatedUnivariateSpline` documentation.
-
-    Returns
-    -------
-    prod : InterpolatedUnivariateSpline
-        A spline created by taking s1(grid) * s2(grid), with extrapolation
-        method ext.
-    """
-    return InterpolatedUnivariateSpline(grid, s1(grid) * s2(grid), ext=ext)
 
 
 def __I_S(e_a, e_b, dnde, A_eff, n_pts=250):
     """Integrand required to compute number of photons from DM annihilations.
     """
-    integrand_S = __get_spline_prod(dnde, A_eff, dnde.get_knots())
+    def integrand_S(e):
+        return dnde(e) * A_eff(e)
 
-    return integrand_S.integral(e_a, e_b)
+    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+
+    return trapz(integrand_S(e_gams), e_gams)
 
 
-def __I_B(e_a, e_b, dnde, A_eff, bg_model, n_pts=250):
+def __I_B(e_a, e_b, A_eff, bg_model, n_pts=250):
     """Integrand required to compute number of background photons"""
-    integrand_B = __get_spline_prod(bg_model.dPhi_dEdOmega, A_eff,
-                                    dnde.get_knots())
+    def integrand_B(e):
+        return bg_model.dPhi_dEdOmega(e) * A_eff(e)
 
-    return integrand_B.integral(e_a, e_b)
+    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+
+    return trapz(integrand_B(e_gams), e_gams)
 
 
 def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
@@ -51,7 +35,7 @@ def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
     e_a = e_ab[0]
     e_b = e_ab[1]
 
-    print("    e_a, e_b: ", e_a, e_b)
+    # print("    e_a, e_b: ", e_a, e_b)
 
     if e_a == e_b:
         return 0.
@@ -59,7 +43,7 @@ def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
         f_val = -__I_S(e_a, e_b, dnde, A_eff, n_pts) / \
             np.sqrt(__I_B(e_a, e_b, A_eff, bg_model, n_pts))
 
-        print("        f: ", f_val)
+        # print("        f: ", f_val)
 
         return f_val
 
@@ -81,8 +65,6 @@ def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
                                                   0.5 * I_S_val / I_B_val *
                                                   bg_model.dPhi_dEdOmega(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
-
-        print("        grad(f): ", jac_val)
 
         return jac_val
 
@@ -108,9 +90,6 @@ def __f_jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
                                                   0.5 * I_S_val / I_B_val *
                                                   bg_model.dPhi_dEdOmega(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
-
-        print("    e_a, e_b, f, grad(f): ", e_a, e_b, f_val, jac_val)
-        print("        f.dtype, grad(f).dtype", f_val.dtype, jac_val.dtype)
 
         return f_val, jac_val
 
@@ -166,20 +145,19 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
     e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
     # Convolve the spectrum with the detector's spectral resolution
-    e_min, e_max = A_eff.get_knots()[[0, -1]]
+    e_min, e_max = A_eff.x[[0, -1]]
     dnde_det = get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm,
                                      energy_res)
 
-    # Energy at which E^2 dN/dE peaks, since background goes as E^{-2}
-    e_dnde_max = optimize.minimize_scalar(lambda e: -e**2*dnde_det(e),
-                                          bounds=dnde_det.get_knots()[[0, -1]],
-                                          method="bounded")
-    # dnde_det.x[np.argmax(dnde_det.y)]
+    # Energy at which spectrum peaks. TODO: look at peak in E dN/dE instead?
+    e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
 
-    print("mx: ", mx)
-    print("e_min, e_dnde_max, e_max: ", e_min, e_dnde_max, e_max)
-    print("A_eff range: ", A_eff.x[[0, -1]])
-    print("dnde_det range: ", dnde_det.x[[0, -1]])
+    # print("mx: ", mx)
+    # print("e_min, e_dnde_max, e_max: %0.10f, %0.10f, %0.10f" % (e_min,
+    #                                                             e_dnde_max,
+    #                                                             e_max))
+    # print("A_eff range: %0.10f, %0.10f" % (A_eff.x[0], A_eff.x[-1]))
+    # print("dnde_det range: %0.10f, %0.10f" % (dnde_det.x[0], dnde_det.x[-1]))
 
     # Choose initial guess for energy window bounds
     if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) and \
@@ -194,19 +172,34 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
         e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
         e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
 
+    # print("e_a_0, e_b_0: %0.10f, %0.10f" % (e_a_0, e_b_0))
+
+    def callback(x):
+        print("e_a, e_b = %f, %f" % (x[0], x[1]))
+        print("        approx Jacobian: ",
+              approx_jacobian(x,
+                              lambda x: __f_lim(x, dnde_det, A_eff, bg_model),
+                              1.0e-10))
+        print("        exact Jacobian: ",
+              __jac_lim(x, dnde_det, A_eff, bg_model))
+        print("")
+
     # Optimize upper and lower bounds for energy window
     limit_obj = optimize.minimize(__f_lim,
                                   [e_a_0, e_b_0],
-                                  jac=__jac_lim,
+                                  # jac=__jac_lim,
                                   args=(dnde_det, A_eff, bg_model, n_pts),
-                                  bounds=2*[[e_min, e_max]],
+                                  bounds=2*[[1.001*e_min, e_max]],
                                   constraints=({"type": "ineq",
-                                                "fun": lambda x: x[1] - x[0]}))
+                                                "fun": lambda x: x[1] - x[0]}),
+                                  callback=callback,
+                                  options={"ftol": 1e-4, "eps": 1e-10},
+                                  method="SLSQP")
     # options={"ftol": 1e-4})
 
-    print("e_a: ", e_a_0, " -> ", limit_obj.x[0])
-    print("e_b: ", e_b_0, " -> ", limit_obj.x[1])
-    print("")
+    # print("e_a: ", e_a_0, " -> ", limit_obj.x[0])
+    # print("e_b: ", e_b_0, " -> ", limit_obj.x[1])
+    # print("")
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
@@ -214,7 +207,10 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
 
     assert -limit_obj.fun >= 0
 
-    return prefactor * n_sigma / (-limit_obj.fun)
+    lim = prefactor * n_sigma / (-limit_obj.fun)
+    # print("<sigma v> < ", lim)
+
+    return lim
 
 
 def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
@@ -367,5 +363,4 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
                               (2. if ch == "g g" else 1.)
                               for ch, line in lines.iteritems()]).sum(axis=0)
 
-    return InterpolatedUnivariateSpline(e_gams, dnde_cont_det + dnde_line_det,
-                                        ext="raise")
+    return interp1d(e_gams, dnde_cont_det + dnde_line_det)
