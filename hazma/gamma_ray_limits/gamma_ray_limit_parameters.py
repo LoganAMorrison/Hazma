@@ -125,15 +125,24 @@ class BackgroundModel(object):
             Background gamma ray flux, in MeV^-1 sr^-1 m^-2 s^-1. For any
             energies outside of self.e_range, np.nan is returned.
         """
-        # Check if any energies are out of bounds
-        es_out_of_bounds = es[(es < self.e_range[0]) | (es > self.e_range[1])]
+        if hasattr(es, "__len__"):
+            # Check if any energies are out of bounds
+            es_out_of_bounds = es[(es < self.e_range[0]) |
+                                  (es > self.e_range[1])]
 
-        if len(es_out_of_bounds) == 0:
-            return self.__dPhi_dEdOmega(es)
+            if len(es_out_of_bounds) == 0:
+                return self.__dPhi_dEdOmega(es)
+            else:
+                raise ValueError("The gamma ray background model is not "
+                                 "applicable for energy %f MeV." %
+                                 es_out_of_bounds[0])
         else:
-            raise ValueError("The gamma ray background model is not "
-                             "applicable for energy %f MeV." %
-                             es_out_of_bounds[0])
+            if es < self.e_range[0] or es > self.e_range[1]:
+                raise ValueError("The gamma ray background model is not "
+                                 "applicable for energy %f MeV." %
+                                 es_out_of_bounds[0])
+            else:
+                return self.__dPhi_dEdOmega(es)
 
 
 def solid_angle(l_max, b_min, b_max):
