@@ -9,6 +9,9 @@ from .vector_mediator_fsr import dnde_xx_to_v_to_ffg, dnde_xx_to_v_to_pipig
 
 from .vector_mediator_cross_sections import branching_fractions
 
+from .vector_mediator_decay_spectrum import dnde_decay_v, dnde_decay_v_pt
+from .vector_mediator_widths import partial_widths
+
 
 def dnde_ee(egams, cme, params, spectrum_type='All'):
     fsr = np.vectorize(dnde_xx_to_v_to_ffg)
@@ -70,6 +73,21 @@ def dnde_pipi(egams, cme, params, spectrum_type="All"):
                          'Decay'".format(spectrum_type))
 
 
+def dnde_v(egams, eng_v, params, mode="total"):
+    mv = params.mv
+    pws = partial_widths(params)
+    pw_array = np.zeros(5, dtype=float)
+
+    pw_array[0] = pws["e e"] / pws["total"]
+    pw_array[1] = pws["mu mu"] / pws["total"]
+    pw_array[2] = pws["pi0 g"] / pws["total"]
+    pw_array[3] = pws["pi pi"] / pws["total"]
+
+    if hasattr(egams, "__len__"):
+        return 2. * dnde_decay_v(egams, eng_v, mv, pw_array, mode)
+    return 2. * dnde_decay_v_pt(egams, eng_v, mv, pw_array, mode)
+
+
 def spectra(egams, cme, params):
     """
     Compute the total spectrum from two fermions annihilating through a
@@ -107,15 +125,19 @@ def spectra(egams, cme, params):
     pi0g = spec_helper(bfs["pi0 g"], dnde_pi0g)
     pipi = spec_helper(bfs["pi pi"], dnde_pipi)
 
+    # mediator
+    mediator = spec_helper(bfs['pi0 pi0'], dnde_v)
+
     # Compute total spectrum
-    total = muons + electrons + pi0g + pipi
+    total = muons + electrons + pi0g + pipi + mediator
 
     # Define dictionary for spectra
     specs = {'total': total,
              'mu mu': muons,
              'e e': electrons,
              "pi0 g": pi0g,
-             "pi pi": pipi}
+             "pi pi": pipi,
+             "v v": mediator}
 
     return specs
 
