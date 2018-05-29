@@ -95,40 +95,27 @@ def __dnde_xx_to_v_to_pipig(egam, Q, params):
     """Unvectorized dnde_xx_to_v_to_pipig"""
     mx = params.mx
 
-    # Make sure the COM energy is large enough for this process to occur
-    if Q < 2. * mpi or Q < 2. * mx:
-        return 0.
-    # Make sure the photon energy is in bounds
-    if egam <= 0 or egam >= (Q**2 - 4. * mpi**2) / (2. * Q):
-        return 0.
-    else:
-        ret_val = (Q**2 * qe**2 *
-                   ((-2 *
-                     sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
-                          (2 * egam**2 - 4 * mpi**2 - 2 * egam * Q + Q**2)) *
-                     (-4 * (egam**4 + 2 * egam**2 * mpi**2) +
-                      8 * egam * (egam**2 + mpi**2) * Q -
-                      2 * (egam**2 + 2 * mpi**2) * Q**2 -
-                      2 * egam * Q**3 + Q**4)) /
-                    (egam * (-egam + Q) *
-                     (2 * egam**2 - 2 * egam * Q + Q**2)) +
-                    ((-4 * mpi**2 + Q**2) *
-                     (2 * egam**2 - 2 * mpi**2 - 2 * egam * Q + Q**2) *
-                     log((2 * egam**2 - 2 * egam * Q + Q**2 +
-                          sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
-                               (2 * egam**2 - 4 * mpi**2 -
-                                2 * egam * Q + Q**2)))**2 /
-                         (2 * egam**2 - 2 * egam * Q + Q**2 -
-                          sqrt((2 * egam**2 - 2 * egam * Q + Q**2) *
-                               (2 * egam**2 - 4 * mpi**2 -
-                                2 * egam * Q + Q**2)))**2)) /
-                    (egam * (-egam + Q)))) / \
-            (4. * pi**2 * (-4 * mpi**2 + Q**2)**1.5 * (2 * mx**2 + Q**2))
+    mupi = mpi / Q
+    x = 2. * egam / Q
+    xmin = 0.0
+    xmax = 1 - 4. * mupi**2
 
-        assert ret_val.imag == 0.
-        assert ret_val.real >= 0
+    if x < xmin or x > xmax or Q < 2 * mpi or Q < 2. * mx:
+        return 0.0
 
-        return ret_val.real
+    coeff = qe**2 / (8. * (1 - 4 * mupi**2)**1.5 * pi**2)
+
+    dynamic = ((2 * sqrt(1 - 4 * mupi**2 - x) *
+                (-1 - 4 * mupi**2 * (-1 + x) + x + x**2)) / sqrt(1 - x) +
+               (-1 + 4 * mupi**2) * (-1 + 2 * mupi**2 + x) *
+               log((1 + sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) - x)**2 /
+                   (-1 + sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) + x)**2)) / x
+
+    ret_val = dynamic * coeff
+
+    assert ret_val.imag == 0.
+    assert ret_val.real >= 0
+    return ret_val.real
 
 
 def dnde_xx_to_v_to_pipig(eng_gams, Q, params):
@@ -156,6 +143,3 @@ def dnde_xx_to_v_to_pipig(eng_gams, Q, params):
                          for eng_gam in eng_gams])
     else:
         return __dnde_xx_to_v_to_pipig(eng_gams, Q, params)
-
-
-# TODO: FSR for pi0 pi pi final state!
