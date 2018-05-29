@@ -1,62 +1,82 @@
 from scipy import optimize
 from scipy.optimize.slsqp import approx_jacobian
-from scipy.integrate import trapz
+from scipy.integrate import quad, trapz
 from scipy.interpolate import interp1d
 from scipy.stats import norm
 import numpy as np
 
 
-def __I_S(e_a, e_b, dnde, A_eff, n_pts=250):
+def __I_S(e_a, e_b, dnde, A_eff, n_pts=1000, method="quad"):
     """Integrand required to compute number of photons from DM annihilations.
     """
     def integrand_S(e):
         return dnde(e) * A_eff(e)
 
-    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+    if method == "trapz":
+        e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+        integral_val = trapz(integrand_S(e_gams), e_gams)
 
-    return trapz(integrand_S(e_gams), e_gams)
+        eps = 1.0e-8
+        dint_de_a = ((integrand_S(e_a*(1 + eps)) - integrand_S(e_a))/(e_a*eps))
+        dint_de_b = ((integrand_S(e_b) - integrand_S(e_b*(1 - eps)))/(e_b*eps))
+        error_estimate = -(e_b - e_a)**2 / (12.*n_pts) * (dint_de_b -
+                                                          dint_de_a)
+
+        print("I_S error:", np.abs(error_estimate/integral_val))
+
+        return integral_val
+    elif method == "quad":
+        return quad(integrand_S, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
 
 
-def __I_B(e_a, e_b, A_eff, bg_model, n_pts=250):
+def __I_B(e_a, e_b, A_eff, bg_model, n_pts=1000, method="quad"):
     """Integrand required to compute number of background photons"""
     def integrand_B(e):
         return bg_model.dPhi_dEdOmega(e) * A_eff(e)
 
-    e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+    if method == "trapz":
+        e_gams = np.logspace(np.log10(e_a), np.log10(e_b), n_pts)
+        integral_val = trapz(integrand_B(e_gams), e_gams)
 
-    return trapz(integrand_B(e_gams), e_gams)
+        eps = 1.0e-8
+        dint_de_a = ((integrand_B(e_a*(1 + eps)) - integrand_B(e_a))/(e_a*eps))
+        dint_de_b = ((integrand_B(e_b) - integrand_B(e_b*(1 - eps)))/(e_b*eps))
+        error_estimate = -(e_b - e_a)**2 / (12.*n_pts) * (dint_de_b -
+                                                          dint_de_a)
+
+        print("I_B error:", np.abs(error_estimate/integral_val))
+
+        return integral_val
+    elif method == "quad":
+        return quad(integrand_B, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
 
 
-def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
+def __f_lim(e_ab, dnde, A_eff, bg_model, n_pts=1000, method="quad"):
     """Objective function for selecting energy window.
     """
-    # e_a = min(e_ab)
-    # e_b = max(e_ab)
     e_a = e_ab[0]
     e_b = e_ab[1]
-
     # print("    e_a, e_b: ", e_a, e_b)
 
     if e_a == e_b:
         return 0.
     else:
-        f_val = -__I_S(e_a, e_b, dnde, A_eff, n_pts) / \
-            np.sqrt(__I_B(e_a, e_b, A_eff, bg_model, n_pts))
-
+        f_val = -__I_S(e_a, e_b, dnde, A_eff, n_pts, method) / \
+            np.sqrt(__I_B(e_a, e_b, A_eff, bg_model, n_pts, method))
         # print("        f: ", f_val)
 
         return f_val
 
 
-def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
+def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=1000, method="quad"):
     e_a = e_ab[0]
     e_b = e_ab[1]
 
     if e_a == e_b:
         return 0., 0.
     else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts)
-        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts)
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts, method)
+        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts, method)
 
         df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
                                                  0.5 * I_S_val / I_B_val *
@@ -69,20 +89,16 @@ def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
         return jac_val
 
 
-def __f_jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
-    e_a = e_ab
-    e_b = e_ab
+def __f_jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=1000, method="quad"):
+    e_a = e_ab[0]
+    e_b = e_ab[1]
 
     if e_a == e_b:
         return 0., 0.
     else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts)
-        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts)
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts, method)
+        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts, method)
 
-        # Function value
-        f_val = -I_S_val / np.sqrt(I_B_val)
-
-        # Jacobian
         df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
                                                  0.5 * I_S_val / I_B_val *
                                                  bg_model.dPhi_dEdOmega(e_a))
@@ -91,12 +107,12 @@ def __f_jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=250):
                                                   bg_model.dPhi_dEdOmega(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
 
-        return f_val, jac_val
+        return -I_S_val/np.sqrt(I_B_val), jac_val
 
 
 def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                    energy_res, T_obs, target_params, bg_model, n_sigma=5.,
-                   n_pts=250):
+                   n_pts=1000):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -174,25 +190,27 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
 
     # print("e_a_0, e_b_0: %0.10f, %0.10f" % (e_a_0, e_b_0))
 
-    def callback(x):
-        print("e_a, e_b = %f, %f" % (x[0], x[1]))
-        print("        approx Jacobian: ",
-              approx_jacobian(x,
-                              lambda x: __f_lim(x, dnde_det, A_eff, bg_model),
-                              1.0e-10))
-        print("        exact Jacobian: ",
-              __jac_lim(x, dnde_det, A_eff, bg_model))
-        print("")
+    # def callback(x):
+    #     print("e_a, e_b = %f, %f" % (x[0], x[1]))
+    #     print("        approx Jacobian: ",
+    #           approx_jacobian(x,
+    #                           lambda x: __f_lim(x, dnde_det, A_eff, bg_model,
+    #                                             "quad"),
+    #                           1.0e-10))
+    #     print("        exact Jacobian: ",
+    #           __jac_lim(x, dnde_det, A_eff, bg_model, "quad"))
+    #     print("")
 
     # Optimize upper and lower bounds for energy window
-    limit_obj = optimize.minimize(__f_lim,
+    limit_obj = optimize.minimize(__f_jac_lim,
                                   [e_a_0, e_b_0],
-                                  # jac=__jac_lim,
-                                  args=(dnde_det, A_eff, bg_model, n_pts),
+                                  args=(dnde_det, A_eff, bg_model, n_pts,
+                                        "trapz"),
                                   bounds=2*[[1.001*e_min, e_max]],
                                   constraints=({"type": "ineq",
                                                 "fun": lambda x: x[1] - x[0]}),
-                                  callback=callback,
+                                  # callback=callback,
+                                  jac=True,
                                   options={"ftol": 1e-4, "eps": 1e-10},
                                   method="SLSQP")
     # options={"ftol": 1e-4})
