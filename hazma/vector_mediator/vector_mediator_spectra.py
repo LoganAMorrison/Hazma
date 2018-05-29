@@ -140,3 +140,9 @@ def spectra(egams, cme, params):
              "v v": mediator}
 
     return specs
+
+
+def gamma_ray_lines(cme, params):
+    bf = branching_fractions(cme, params)["pi0 g"]
+
+    return {"pi0 g": {"energy": (cme**2 - mpi0**2) / (2.*cme), "bf": bf}}

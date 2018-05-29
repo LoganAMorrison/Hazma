@@ -1,70 +1,114 @@
 from scipy import optimize
-from scipy.integrate import quad
-from scipy.interpolate import interp1d
+from scipy.integrate import quad, trapz
+from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import norm
 import numpy as np
 
 
-def __I_S(e_a, e_b, dnde, A_eff, T_obs):
+def __get_product_spline(f1, f2, grid, k=1, ext="raise"):
+    """Returns a spline representing the product of two functions.
+
+    Parameters
+    ----------
+    f1, f2 : float -> float
+        The two functions to multiply.
+    grid : numpy.array
+        The grid used to create the product spline.
+    k : int
+        Degree of returned spline, 1 <= k <= 5.
+    ext : string or int
+        Extrapolation method. See documentation for
+        `InterpolatedUnivariateSpline`.
+
+    Returns
+    -------
+    spl : InterpolatedUnivariateSpline
+        A degree k spline created using grid for the x array and
+        f1(grid)*f2(grid) for the y array, with the specified extrapolation
+        method.
+    """
+    return InterpolatedUnivariateSpline(grid, f1(grid)*f2(grid), k=k, ext=ext)
+
+
+def __I_S(e_a, e_b, dnde, A_eff, method="quad"):
     """Integrand required to compute number of photons from DM annihilations.
     """
-    def integrand_S(e):
-        return dnde(e) * A_eff(e)
+    integrand_S = __get_product_spline(dnde, A_eff, dnde.get_knots())
 
-    return quad(integrand_S, e_a, e_b)[0]
+    if method == "trapz":
+        return integrand_S.integral(e_a, e_b)
+    elif method == "quad":
+        return quad(integrand_S, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
 
 
-def __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model):
+def __I_B(e_a, e_b, dnde, A_eff, bg_model, method="quad"):
     """Integrand required to compute number of background photons"""
-    def integrand_B(e):
-        return bg_model.dPhi_dEdOmega(e) * A_eff(e)
+    integrand_B = __get_product_spline(bg_model.dPhi_dEdOmega, A_eff,
+                                       dnde.get_knots())
 
-    return quad(integrand_B, e_a, e_b)[0]
+    if method == "trapz":
+        return integrand_B.integral(e_a, e_b)
+    elif method == "quad":
+        return quad(integrand_B, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
 
 
-def __f_lim(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
+def __f_lim(e_ab, dnde, A_eff, bg_model, method="quad"):
     """Objective function for selecting energy window.
     """
-    e_a = min(e_ab)
-    e_b = max(e_ab)
+    e_a = e_ab[0]
+    e_b = e_ab[1]
 
     if e_a == e_b:
         return 0.
     else:
-        return -__I_S(e_a, e_b, dnde, A_eff, T_obs) / \
-            np.sqrt(__I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model))
+        return -__I_S(e_a, e_b, dnde, A_eff, method) / \
+            np.sqrt(__I_B(e_a, e_b, dnde, A_eff, bg_model, method))
 
 
-def __f_jac(e_ab, dnde, A_eff, T_obs, target_params, bg_model):
-    e_a = min(e_ab)
-    e_b = max(e_ab)
+def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=1000, method="quad"):
+    e_a = e_ab[0]
+    e_b = e_ab[1]
 
     if e_a == e_b:
-        return 0.
+        return 0., 0.
     else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, T_obs)
-        I_B_val = __I_B(e_a, e_b, A_eff, T_obs, target_params, bg_model)
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts, method)
+        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts, method)
 
-        # Function value
-        f_val = -I_S_val / np.sqrt(I_B_val)
-
-        # Jacobian
-        df_de_a = A_eff(e_a) * (-dnde(e_a) / np.sqrt(I_B_val) +
-                                0.5 * I_S_val / I_B_val**1.5 *
-                                bg_model.dPhi_dEdOmega(e_a))
-        df_de_b = A_eff(e_b) * (dnde(e_b) / np.sqrt(I_B_val) -
-                                0.5 * I_S_val / I_B_val**1.5 *
-                                bg_model.dPhi_dEdOmega(e_b))
+        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
+                                                 0.5 * I_S_val / I_B_val *
+                                                 bg_model.dPhi_dEdOmega(e_a))
+        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * (dnde(e_b) -
+                                                  0.5 * I_S_val / I_B_val *
+                                                  bg_model.dPhi_dEdOmega(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
 
-        return f_val, jac_val
+        return jac_val
 
 
-# line_es, line_bfs,
+def __f_jac_lim(e_ab, dnde, A_eff, bg_model, method="quad"):
+    e_a = e_ab[0]
+    e_b = e_ab[1]
+
+    if e_a == e_b:
+        return 0., 0.
+    else:
+        I_S_val = __I_S(e_a, e_b, dnde, A_eff, method)
+        I_B_val = __I_B(e_a, e_b, dnde, A_eff, bg_model, method)
+
+        # Jacobian
+        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * \
+            (dnde(e_a) - 0.5 * I_S_val / I_B_val * bg_model.dPhi_dEdOmega(e_a))
+        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * \
+            (dnde(e_b) - 0.5 * I_S_val / I_B_val * bg_model.dPhi_dEdOmega(e_b))
+        jac_val = np.array([df_de_a, df_de_b]).T
+
+        return -I_S_val/np.sqrt(I_B_val), jac_val
 
 
-def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
-                   energy_res, T_obs, target_params, bg_model, n_sigma=5.):
+def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
+                   energy_res, T_obs, target_params, bg_model, n_sigma=5.,
+                   n_pts=1000):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -108,57 +152,56 @@ def unbinned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate, A_eff,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-    # Make sure e_gams fully overlaps with the detector's energy range
-    if e_gams[0] > A_eff.x[0] or e_gams[-1] < A_eff.x[-1]:
-        raise ValueError("Spectrum must be computed at all energies in the " +
-                         "detector's range.")
-    elif np.all(dndes == 0) and len(line_es) == 0:
-        # If spectrum is zero and no lines are present, no limit can be set
-        return np.inf
+
+    # TODO: this should depend on the target!
+    e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
+
+    # Convolve the spectrum with the detector's spectral resolution
+    e_min, e_max = A_eff.x[[0, -1]]
+    dnde_det = get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm,
+                                     energy_res)
+
+    # Energy at which spectrum peaks. TODO: look at peak in E dN/dE instead?
+    e_dnde_max = optimize.minimize(dnde_det, 0.5*(e_min+e_max),
+                                   bounds=[[e_min, e_max]]).x[0]
+
+    # Choose initial guess for energy window bounds
+    if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) and \
+       np.isclose(e_dnde_max, e_max, atol=0, rtol=1e-8):
+        # If there is a peak in the spectrum, include it in the initial
+        # energy window
+        e_a_0 = 10.**(0.5*(np.log10(e_dnde_max) + np.log10(e_min)))
+        e_b_0 = 10.**(0.5*(np.log10(e_max) + np.log10(e_dnde_max)))
     else:
-        # Convolve the spectrum with the detector's spectral resolution
-        dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                         energy_res)
+        # If the spectrum has no prominent features, the initial window
+        # matters less
+        e_a_0 = 10.**(0.25*np.log10(e_max) + 0.75*np.log10(e_min))
+        e_b_0 = 10.**(0.75*np.log10(e_max) + 0.25*np.log10(e_min))
 
-        # Look at where spectrum is nonzero and domain of effective area to
-        # determine range of valid bounds for the integration window
-        e_min = max(A_eff.x[0], dnde_det.x[np.where(dnde_det.x)[0][0]])
-        e_max = min(A_eff.x[-1], dnde_det.x[np.where(dnde_det.x)[0][-1]])
+    # Optimize upper and lower bounds for energy window
+    limit_obj = optimize.minimize(__f_lim,  # __f_jac_lim,
+                                  [e_a_0, e_b_0],
+                                  args=(dnde_det, A_eff, bg_model, "trapz"),
+                                  bounds=2*[[1.001*e_min, e_max]],
+                                  constraints=({"type": "ineq",
+                                                "fun": lambda x: x[1] - x[0]}),
+                                  # jac=True,
+                                  options={"ftol": 1e-4, "eps": 1e-10},
+                                  method="SLSQP")
 
-        # Energy at which spectrum peaks
-        e_dnde_max = dnde_det.x[np.argmax(dnde_det.y)]
+    # Insert appropriate prefactors to convert result to <sigma v>_tot
+    prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
+                 (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
 
-        if e_dnde_max != e_min and e_dnde_max != e_max:
-            # If there is a peak in the spectrum, include it in the initial
-            # energy window
-            e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
-            e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
-        else:
-            # If the spectrum has no prominent features, the initial window
-            # matters less
-            e_a_0 = 0.25 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
-            e_b_0 = 0.75 * 10.**(0.5 * (np.log10(e_max) + np.log10(e_min)))
+    assert -limit_obj.fun >= 0
 
-        # Optimize upper and lower bounds for energy window
-        limit_obj = optimize.minimize(__f_lim,
-                                      [e_a_0, e_b_0],
-                                      bounds=2 * [[e_min, e_max]],
-                                      args=(dnde_det, A_eff, T_obs,
-                                            target_params, bg_model),
-                                      method="L-BFGS-B",
-                                      options={"ftol": 1e-3})
+    lim = prefactor * n_sigma / (-limit_obj.fun)
 
-        # Insert appropriate prefactors to convert result to <sigma v>_tot
-        prefactor = (2.*4.*np.pi * (1. if self_conjugate else 2.) * mx**2 /
-                     (np.sqrt(T_obs * target_params.dOmega) * target_params.J))
-
-        assert -limit_obj.fun >= 0
-
-        return prefactor * n_sigma / (-limit_obj.fun)
+    return lim
 
 
-def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
-                 measurement, n_sigma=2.):
+def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
+                 n_sigma=2.):
     """Determines the limit on <sigma v> from data for a given DM spectrum.
 
     Notes
@@ -200,19 +243,28 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
                       (2. * 4. * np.pi * (1. if self_conjugate else 2.) *
                        mx**2))
 
-    # Keep track of <sigma v> limit for each bin
-    sv_lims = [np.inf]
+    # TODO: this should depend on the target!
+    e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
     # Convolve the spectrum with the detector's spectral resolution
-    dnde_det = get_detected_spectrum(e_gams, dndes, line_es, line_bfs,
-                                     measurement.energy_res)
+    e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
+    dnde_det = get_detected_spectrum(spec_fn, line_fn, e_bin_min, e_bin_max,
+                                     e_cm, measurement.energy_res, 1000)
 
-    # Loop over experiment's bins
-    for i, ((bin_low, bin_high), phi, sigma) in \
-        enumerate(zip(measurement.bins, measurement.fluxes,
-                      measurement.upper_errors)):
+    def bin_lim(e_bin, phi, sigma):  # computes limit in a bin
+        bin_low, bin_high = e_bin
+
+        # Find indices of energies in interpolation grid nearest to bin
+        # edges
+        # idx_low = (np.abs(dnde_det.x - bin_low)).argmin()
+        # idx_high = (np.abs(dnde_det.x - bin_high)).argmin()
+
         # Integrate DM spectrum to compute flux in this bin
-        phi_dm = dm_flux_factor * quad(dnde_det, bin_low, bin_high)[0]
+        # phi_dm = dm_flux_factor * trapz(dnde_det.y[idx_low:idx_high],
+        #                                 dnde_det.x[idx_low:idx_high])
+
+        # Integrate DM spectrum to compute flux in this bin
+        phi_dm = dm_flux_factor * dnde_det.integral(bin_low, bin_high)
 
         # If flux is finite and nonzero, set a limit using this bin
         if not np.isnan(phi_dm) and phi_dm > 0:
@@ -223,12 +275,33 @@ def binned_limit(e_gams, dndes, line_es, line_bfs, mx, self_conjugate,
             assert phi_max > 0
 
             # Find limit on <sigma v>
-            sv_lims.append(phi_max / phi_dm)
+            return phi_max / phi_dm
+        else:
+            return np.inf
+
+    sv_lims = [bin_lim(e_bin, phi, sigma)
+               for (e_bin, phi, sigma) in zip(measurement.bins,
+                                              measurement.fluxes,
+                                              measurement.upper_errors)]
 
     return np.min(sv_lims)
 
 
-def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
+def spec_res_fn(ep, e, energy_res):
+    # Get the spectral resolution function
+    sigma = e * energy_res(e)
+
+    if sigma == 0:
+        if hasattr(ep, '__len__'):
+            return np.zeros(ep.shape)
+        else:
+            return 0.
+    else:
+        return norm.pdf(ep, loc=e, scale=sigma)
+
+
+def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
+                          n_pts=1000):
     """Convolves a DM annihilation spectrum with a detector's spectral
     resolution function.
 
@@ -255,40 +328,31 @@ def get_detected_spectrum(e_gams, dndes, line_es, line_bfs, energy_res):
         detector. Given photon energies outside the range covered by e_gams,
         the interpolator will produce bounds_errors.
     """
-    # Standard deviation of spectra resolution function
-    def sigma_srf(e):
-        return e * energy_res(e)
+    # Compute source spectrum over a wide grid to avoid edge effects from the
+    # convolution
+    e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1,
+                                n_pts)
+    dnde_src = spec_fn(e_gams_padded, e_cm)
 
-    # Get the spectral resolution function
-    def spec_res_fn(ep, e):
-        sigma = sigma_srf(e)
+    # Energies at which to compute detected spectrum
+    e_gams = np.logspace(np.log10(e_min), np.log10(e_max), n_pts)
+    dnde_cont_det = np.zeros(e_gams.shape)
 
-        if sigma == 0:
-            if hasattr(ep, '__len__'):
-                return np.zeros(ep.shape)
-            else:
-                return 0.
-        else:
-            return norm.pdf(ep, loc=e, scale=sigma)
+    # If continuum spectrum is zero, don't waste time on the convolution
+    if not np.all(dnde_src == 0):
+        def integral(e):  # performs the integration at the given photon energy
+            integrand_vals = dnde_src*spec_res_fn(e_gams_padded, e, energy_res)
+            return trapz(integrand_vals, e_gams_padded)
 
-    # Source spectrum function
-    dnde_src = interp1d(e_gams, dndes)
-
-    # Due to numerical limitations, the convolution must be performed in a
-    # window of n_std standard deviations around the mean of the spectral
-    # resolution function. N(5; 0, 1) / N(0;, 0, 1) ~ 6e-6, which seems to be
-    # a good compromise between accuracy and speed.
-    n_std = 6.
-
-    # Continuum contribution to detected spectrum
-    dndes_cont_det = np.array([quad(lambda ep: dnde_src(ep) *
-                                    spec_res_fn(ep, e),
-                                    max(e_gams[0], e-n_std*sigma_srf(e)),
-                                    min(e_gams[-1], e+n_std*sigma_srf(e)))[0]
-                               for e in e_gams])
+        dnde_cont_det = np.vectorize(integral)(e_gams)
 
     # Line contribution
-    dndes_line_det = np.array([spec_res_fn(e_gams, e) * bf for
-                               e, bf in zip(line_es, line_bfs)]).sum(axis=0)
+    lines = line_fn(e_cm)
+    dnde_line_det = np.array([line["bf"] *
+                              spec_res_fn(e_gams, line["energy"], energy_res) *
+                              (2. if ch == "g g" else 1.)
+                              for ch, line in lines.iteritems()]).sum(axis=0)
 
-    return interp1d(e_gams, dndes_cont_det + dndes_line_det)
+    # return interp1d(e_gams, dnde_cont_det + dnde_line_det)
+    return InterpolatedUnivariateSpline(e_gams, dnde_cont_det + dnde_line_det,
+                                        k=1, ext="raise")

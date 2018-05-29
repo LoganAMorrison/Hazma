@@ -6,6 +6,7 @@ from vector_mediator_cross_sections import branching_fractions as bfs
 from vector_mediator_cross_sections import cross_sections as cs
 
 from vector_mediator_spectra import spectra as specs
+from vector_mediator_spectra import gamma_ray_lines as gls
 from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
 from vector_mediator_positron_spectra import positron_spectra
@@ -13,10 +14,7 @@ from vector_mediator_positron_spectra import positron_lines as pls
 
 from vector_mediator_widths import partial_widths as pws
 
-from ..parameters import neutral_pion_mass as mpi0
-
 import warnings
-import numpy as np
 from ..hazma_errors import PreAlphaWarning
 
 
@@ -94,10 +92,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
             the branching fractions into the final states producing these
             lines. In this case, the relevant final state is pi0 g.
         """
-        bfs = self.branching_fractions(cme)
-
-        return [np.array([(cme**2 - mpi0**2) / (2. * cme)]),
-                np.array([bfs["pi0 g"]])]
+        return gls(cme, self)
 
     def spectra(self, egams, cme):
         """

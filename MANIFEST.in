@@ -5,3 +5,4 @@ include hazma/scalar_mediator/interpolation_data/*.dat
 include hazma/cross_sections/unitarization/*.dat
 include hazma/unitarization_data/*.dat
 include hazma/gamma_ray_limits/*.dat
+include hazma/cmb/*.dat
