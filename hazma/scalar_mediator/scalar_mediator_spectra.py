@@ -119,7 +119,7 @@ def spectra(egams, cme, params, fsi=True):
     electrons = spec_helper(bfs['e e'], dnde_ee)
 
     # mediator
-    mediator = spec_helper(bfs['pi0 pi0'], dnde_s)
+    mediator = spec_helper(bfs['s s'], dnde_s)
 
     # Compute total spectrum
     total = muons + electrons + npions + cpions + mediator

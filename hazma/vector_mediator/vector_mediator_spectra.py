@@ -126,7 +126,7 @@ def spectra(egams, cme, params):
     pipi = spec_helper(bfs["pi pi"], dnde_pipi)
 
     # mediator
-    mediator = spec_helper(bfs['pi0 pi0'], dnde_v)
+    mediator = spec_helper(bfs['v v'], dnde_v)
 
     # Compute total spectrum
     total = muons + electrons + pi0g + pipi + mediator
