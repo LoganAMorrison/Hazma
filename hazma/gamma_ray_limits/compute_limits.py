@@ -341,7 +341,10 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
     # If continuum spectrum is zero, don't waste time on the convolution
     if not np.all(dnde_src == 0):
         def integral(e):  # performs the integration at the given photon energy
-            integrand_vals = dnde_src*spec_res_fn(e_gams_padded, e, energy_res)
+            spec_res_fn_vals = spec_res_fn(e_gams_padded, e, energy_res)
+            integrand_vals = dnde_src * spec_res_fn_vals / \
+                trapz(spec_res_fn_vals, e_gams_padded)
+
             return trapz(integrand_vals, e_gams_padded)
 
         dnde_cont_det = np.vectorize(integral)(e_gams)

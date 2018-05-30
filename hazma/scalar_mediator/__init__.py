@@ -135,7 +135,8 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         \t mediator. \n
         '''
 
-    def list_final_states(self):
+    @classmethod
+    def list_final_states(cls):
         """
         Return a list of the available final states.
 

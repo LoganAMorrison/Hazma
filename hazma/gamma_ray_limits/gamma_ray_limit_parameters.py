@@ -181,7 +181,7 @@ default_bg_model = BackgroundModel([0.3, 10.0e3], lambda e: 2.74e-3 / e**2)
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
 gc_bg_model = BackgroundModel.from_file(gc_bg_model_rf)
-gc_bg_model_target = TargetParams(1.795e29, solid_angle(10., 0., 10.))
+gc_target = TargetParams(1.795e29, solid_angle(10., 0., 10.))
 
 # Effective areas in cm^2
 A_eff_e_astrogam = load_interp(A_eff_e_astrogam_rf)

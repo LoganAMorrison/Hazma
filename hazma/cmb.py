@@ -115,8 +115,8 @@ def f_eff(spec_fn, line_fn, pos_spec_fn, pos_line_fn, mx, x_kd=1.0e-4):
             bf = line["bf"]
             multiplicity = 2. if ch == "g g" else 1.
 
-            f_eff_g_line_dm = (f_eff_g_line_dm +
-                               bf * f_eff_g(energy) * multiplicity) / (2.*mx)
+            f_eff_g_line_dm += (energy * bf * f_eff_g(energy) * multiplicity /
+                                (2.*mx))
 
     # Line contributions from e+e-
     pos_lines = pos_line_fn(e_cm)
@@ -127,10 +127,10 @@ def f_eff(spec_fn, line_fn, pos_spec_fn, pos_line_fn, mx, x_kd=1.0e-4):
         # Make sure f_eff^ep is defined at this energy
         if energy > e_min_ep:
             bf = line["bf"]
-            multiplicity = 2. * (2. if ch == "e e" else 1.)
+            multiplicity = 2. if ch == "e e" else 1.
 
-            f_eff_ep_line_dm = (f_eff_ep_line_dm +
-                                bf * f_eff_ep(energy) * multiplicity) / (2.*mx)
+            f_eff_ep_line_dm += (energy * bf * f_eff_ep(energy) * multiplicity
+                                 / (2.*mx))
 
     return f_eff_g_dm + f_eff_ep_dm + f_eff_g_line_dm + f_eff_ep_line_dm
 
@@ -141,7 +141,7 @@ def cmb_limit(mx, f_eff):
     Notes
     -----
     We use the constraint from the Planck collaboration:
-    .. math:: f_{\text{eff}} \langle \sigma v \rangle / m_\chi < 4.1\times 10^{-31} \text{cm}^3/\text{s}/\text{MeV}.
+        f_eff <sigma v> / m_x < 4.1e-31 cm^3 s^-1 MeV^-1
 
     Parameters
     ----------
