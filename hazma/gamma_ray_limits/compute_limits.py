@@ -30,77 +30,21 @@ def __get_product_spline(f1, f2, grid, k=1, ext="raise"):
     return InterpolatedUnivariateSpline(grid, f1(grid)*f2(grid), k=k, ext=ext)
 
 
-def __I_S(e_a, e_b, dnde, A_eff, method="quad"):
-    """Integrand required to compute number of photons from DM annihilations.
-    """
-    integrand_S = __get_product_spline(dnde, A_eff, dnde.get_knots())
-
-    if method == "trapz":
-        return integrand_S.integral(e_a, e_b)
-    elif method == "quad":
-        return quad(integrand_S, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
-
-
-def __I_B(e_a, e_b, dnde, A_eff, bg_model, method="quad"):
-    """Integrand required to compute number of background photons"""
-    integrand_B = __get_product_spline(bg_model.dPhi_dEdOmega, A_eff,
-                                       dnde.get_knots())
-
-    if method == "trapz":
-        return integrand_B.integral(e_a, e_b)
-    elif method == "quad":
-        return quad(integrand_B, e_a, e_b, epsabs=0, epsrel=1e-4)[0]
-
-
-def __f_lim(e_ab, dnde, A_eff, bg_model, method="quad"):
-    """Objective function for selecting energy window.
-    """
-    e_a = e_ab[0]
-    e_b = e_ab[1]
-
-    if e_a == e_b:
-        return 0.
-    else:
-        return -__I_S(e_a, e_b, dnde, A_eff, method) / \
-            np.sqrt(__I_B(e_a, e_b, dnde, A_eff, bg_model, method))
-
-
-def __jac_lim(e_ab, dnde, A_eff, bg_model, n_pts=1000, method="quad"):
+def __f_jac_lim(e_ab, integrand_S, integrand_B):
     e_a = e_ab[0]
     e_b = e_ab[1]
 
     if e_a == e_b:
         return 0., 0.
     else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, n_pts, method)
-        I_B_val = __I_B(e_a, e_b, A_eff, bg_model, n_pts, method)
-
-        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * (dnde(e_a) -
-                                                 0.5 * I_S_val / I_B_val *
-                                                 bg_model.dPhi_dEdOmega(e_a))
-        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * (dnde(e_b) -
-                                                  0.5 * I_S_val / I_B_val *
-                                                  bg_model.dPhi_dEdOmega(e_b))
-        jac_val = np.array([df_de_a, df_de_b]).T
-
-        return jac_val
-
-
-def __f_jac_lim(e_ab, dnde, A_eff, bg_model, method="quad"):
-    e_a = e_ab[0]
-    e_b = e_ab[1]
-
-    if e_a == e_b:
-        return 0., 0.
-    else:
-        I_S_val = __I_S(e_a, e_b, dnde, A_eff, method)
-        I_B_val = __I_B(e_a, e_b, dnde, A_eff, bg_model, method)
+        I_S_val = integrand_S.integral(e_a, e_b)
+        I_B_val = integrand_B.integral(e_a, e_b)
 
         # Jacobian
-        df_de_a = A_eff(e_a)/np.sqrt(I_B_val) * \
-            (dnde(e_a) - 0.5 * I_S_val / I_B_val * bg_model.dPhi_dEdOmega(e_a))
-        df_de_b = -A_eff(e_b)/np.sqrt(I_B_val) * \
-            (dnde(e_b) - 0.5 * I_S_val / I_B_val * bg_model.dPhi_dEdOmega(e_b))
+        df_de_a = 1./np.sqrt(I_B_val) * \
+            (integrand_S(e_a) - 0.5 * I_S_val / I_B_val * integrand_B(e_a))
+        df_de_b = -1./np.sqrt(I_B_val) * \
+            (integrand_S(e_b) - 0.5 * I_S_val / I_B_val * integrand_B(e_b))
         jac_val = np.array([df_de_a, df_de_b]).T
 
         return -I_S_val/np.sqrt(I_B_val), jac_val
@@ -152,7 +96,6 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
     <sigma v>_tot : float
         Smallest detectable thermally averaged total cross section in cm^3 / s
     """
-
     # TODO: this should depend on the target!
     e_cm = 2.*mx*(1. + 0.5*1e-6)  # v_x = Milky Way velocity dispersion
 
@@ -166,27 +109,32 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                                    bounds=[[e_min, e_max]]).x[0]
 
     # Choose initial guess for energy window bounds
-    if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) and \
+    if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) or \
        np.isclose(e_dnde_max, e_max, atol=0, rtol=1e-8):
+        # If the spectrum has no prominent features, the initial window
+        # matters less
+        e_a_0 = 10.**(0.15*np.log10(e_max) + 0.85*np.log10(e_min))
+        e_b_0 = 10.**(0.85*np.log10(e_max) + 0.15*np.log10(e_min))
+    else:
         # If there is a peak in the spectrum, include it in the initial
         # energy window
         e_a_0 = 10.**(0.5*(np.log10(e_dnde_max) + np.log10(e_min)))
         e_b_0 = 10.**(0.5*(np.log10(e_max) + np.log10(e_dnde_max)))
-    else:
-        # If the spectrum has no prominent features, the initial window
-        # matters less
-        e_a_0 = 10.**(0.25*np.log10(e_max) + 0.75*np.log10(e_min))
-        e_b_0 = 10.**(0.75*np.log10(e_max) + 0.25*np.log10(e_min))
+
+    # Integrating these gives the number of signal and background photons
+    integrand_S = __get_product_spline(dnde_det, A_eff, dnde_det.get_knots())
+    integrand_B = __get_product_spline(bg_model.dPhi_dEdOmega, A_eff,
+                                       dnde_det.get_knots())
 
     # Optimize upper and lower bounds for energy window
-    limit_obj = optimize.minimize(__f_lim,  # __f_jac_lim,
+    limit_obj = optimize.minimize(__f_jac_lim,
                                   [e_a_0, e_b_0],
-                                  args=(dnde_det, A_eff, bg_model, "trapz"),
+                                  args=(integrand_S, integrand_B),
                                   bounds=2*[[1.001*e_min, e_max]],
                                   constraints=({"type": "ineq",
                                                 "fun": lambda x: x[1] - x[0]}),
-                                  # jac=True,
-                                  options={"ftol": 1e-4, "eps": 1e-10},
+                                  jac=True,
+                                  options={"ftol": 1e-7, "eps": 1e-10},
                                   method="SLSQP")
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
