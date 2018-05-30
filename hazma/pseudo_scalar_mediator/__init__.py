@@ -29,7 +29,8 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         warnings.warn("", PreAlphaWarning)
         pass
 
-    def list_final_states(self):
+    @classmethod
+    def list_final_states(cls):
         """
         WARNING: This function is pre-alpha.
 

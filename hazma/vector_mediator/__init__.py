@@ -31,7 +31,8 @@ class VectorMediator(Theory, VectorMediatorParameters):
         warnings.warn("", PreAlphaWarning)
         pass
 
-    def list_final_states(self):
+    @classmethod
+    def list_final_states(cls):
         """
         Return a list of the available final states.
 

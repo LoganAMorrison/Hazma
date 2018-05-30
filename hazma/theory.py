@@ -18,8 +18,9 @@ class Theory(object):
     def description(self):
         pass
 
+    @classmethod
     @abstractmethod
-    def list_final_states(self):
+    def list_final_states(cls):
         pass
 
     @abstractmethod

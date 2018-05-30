@@ -20,7 +20,8 @@ class AxialVectorMediator(Theory, AxialVectorMediatorParameters):
         warnings.warn("", PreAlphaWarning)
         pass
 
-    def list_final_states(self):
+    @classmethod
+    def list_final_states(cls):
         warnings.warn("", PreAlphaWarning)
         pass
 
