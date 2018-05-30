@@ -103,7 +103,7 @@ def __dnde_xx_to_v_to_pipig(egam, Q, params):
     if x < xmin or x > xmax or Q < 2 * mpi or Q < 2. * mx:
         return 0.0
 
-    coeff = qe**2 / (8. * (1 - 4 * mupi**2)**1.5 * pi**2)
+    coeff = qe**2 / (4. * (1 - 4 * mupi**2)**1.5 * pi**2)
 
     dynamic = ((2 * sqrt(1 - 4 * mupi**2 - x) *
                 (-1 - 4 * mupi**2 * (-1 + x) + x + x**2)) / sqrt(1 - x) +
@@ -111,7 +111,7 @@ def __dnde_xx_to_v_to_pipig(egam, Q, params):
                log((1 + sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) - x)**2 /
                    (-1 + sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) + x)**2)) / x
 
-    ret_val = dynamic * coeff
+    ret_val = 2. * dynamic * coeff / Q
 
     assert ret_val.imag == 0.
     assert ret_val.real >= 0
