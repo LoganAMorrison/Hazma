@@ -82,12 +82,13 @@ def _C4(s, t, u, su=3):
                                                  (t - 2 * mPI**2)**2) + \
             (LECS["SU2_Gr"] / fpi**4) * (s - 2 * mPI**2)**2
     if su == 3:
-        return (4. * ((8. * LECS["6"] + 4. * LECS["8"]) * mPI**4. +
-                      (4. * LECS["4"] + 2. * LECS["5"]) * mPI**2. *
-                      (s - 2. * mPI**2.) +
-                      (LECS["3"] + 2. * LECS["1"]) * (s - 2. * mPI**2)**2. +
-                      LECS["2"] * ((t - 2. * mPI**2)**2 +
-                                   (u - 2. * mPI**2)**2))) / fpi**4
+        return 4. / fpi**4 * \
+            ((8. * LECS["6"] + 4. * LECS["8"]) * mPI**4. +
+             (4. * LECS["4"] + 2. * LECS["5"]) * mPI**2. *
+                (s - 2. * mPI**2.) +
+             (LECS["3"] + 2. * LECS["1"]) * (s - 2. * mPI**2)**2. +
+                LECS["2"] * ((t - 2. * mPI**2)**2 +
+                             (u - 2. * mPI**2)**2))
 
 
 def __amp_pipi_pipi_NLO(s, t, u, su=3):
