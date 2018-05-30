@@ -1,5 +1,5 @@
 from scipy import optimize
-from scipy.integrate import quad, trapz
+from scipy.integrate import trapz
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import norm
 import numpy as np
