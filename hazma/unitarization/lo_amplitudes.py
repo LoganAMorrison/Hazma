@@ -50,8 +50,8 @@ def __amp_pipi_pipi_LO_I(s, t, iso=0):
     """
     u = 4. * mPI**2 - s - t
     A2stu = __amp_pipi_pipi_LO(s, t, u)
-    A2tsu = __amp_pipi_pipi_LO(s, t, u)
-    A2uts = __amp_pipi_pipi_LO(s, t, u)
+    A2tsu = __amp_pipi_pipi_LO(t, s, u)
+    A2uts = __amp_pipi_pipi_LO(u, t, s)
 
     if iso == 0:
         return 0.5 * (3. * A2stu + A2tsu + A2uts)
