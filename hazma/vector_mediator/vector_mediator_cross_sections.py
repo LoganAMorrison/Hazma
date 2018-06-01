@@ -226,7 +226,7 @@ def cross_sections(Q, params):
     electron_contr = sigma_xx_to_v_to_ff(Q, "e", params)
     pipi_contr = sigma_xx_to_v_to_pipi(Q, params)
     pi0g_contr = sigma_xx_to_v_to_pi0g(Q, params)
-    pi0pipi_contr = 0.  # sigma_xx_to_v_to_pi0pipi(Q, params)
+    pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(Q, params)
     vv_contr = sigma_xx_to_vv(Q, params)
 
     total = (muon_contr + electron_contr + pipi_contr + pi0g_contr +
