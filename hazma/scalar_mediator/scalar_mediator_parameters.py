@@ -1,15 +1,14 @@
 from math import sqrt
+import numpy as np
 
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
 from ..parameters import fpi, b0, vh
 from scalar_mediator_widths import partial_widths
-trM = muq + mdq + msq
 
 
 class ScalarMediatorParameters(object):
-
     def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF):
         self._mx = mx
         self._ms = ms
@@ -81,74 +80,60 @@ class ScalarMediatorParameters(object):
         self.compute_width_s()  # vs MUST be computed first
 
     def compute_vs(self):
+        """Updates and returns the value of the scalar vev.
         """
-        Returns the value of the scalar vev.
-        """
-        vs_roots = self.__vs_roots()
-        fpiTs = [self.fpiT(vs) for vs in vs_roots]
-        kappas = [self.__kappa(fpiT) for fpiT in fpiTs]
-        BTs = [self.BT(kappa) for kappa in kappas]
-        msTs = [self.msT(fpiT, BT) for (fpiT, BT) in zip(fpiTs, BTs)]
-        alphas = [self.__alpha(fpiT, BT, msT)
-                  for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
-        betas = [self.__beta(fpiT, BT, msT)
-                 for (fpiT, BT, msT) in zip(fpiTs, BTs, msTs)]
+        if self.__is_vev_zero():
+            self.vs = 0.
 
-        potvals = [- alpha * vs + 0.5 * beta * vs **
-                   2 for (alpha, beta, vs) in zip(alphas, betas, vs_roots)]
-
-        if potvals[0] < potvals[1]:
-            self.vs = vs_roots[0]
+            return 0.
         else:
-            self.vs = vs_roots[1]
+            trM = muq + mdq + msq
+
+            # Computes linear term in the scalar potential
+            def linear_term(fpiT, b0T):
+                return -b0T*fpiT**2*trM / (3.*vh) * (2.*self._gsGG +
+                                                     3.*self._gsff)
+
+            # Compute value of potential at each of the vs roots
+            vss = self.__vs_roots()
+            fpiTs = self.fpiT(vss)
+            b0Ts = self.b0T(vss, fpiTs)
+            pot_vals = 0.5*self._ms**2*vss**2 + linear_term(fpiTs, b0Ts)*vss
+
+            self.vs = vss[np.argmax(pot_vals)]
+
+            return self.vs
 
     def compute_width_s(self):
-        """Recomputes the scalar's total width."""
+        """Updates and returns the scalar's total width.
+        """
         self.width_s = partial_widths(self)["total"]
+
+        return self.width_s
 
     # #################### #
     """ HELPER FUNCTIONS """
     # #################### #
 
     def fpiT(self, vs):
+        """Returns the Lagrangian parameter fpiT.
         """
-        Returns the unphysical value of fpi.
-        """
-        return fpi / sqrt(1.0 + 4. * self._gsGG * vs / 9. / vh)
+        return fpi / np.sqrt(1. + 4.*self._gsGG*vs / (9.*vh))
 
-    def BT(self, kappa):
+    def b0T(self, vs, fpiT):
+        """Returns the Lagrangian parameter b0T.
         """
-        Returns the unphysical value of B.
-        """
-        if self.__is_vev_zero():
-            return b0
-        else:
-            return b0 * (1 + kappa) /  \
-                (1 + 6. * kappa * (1. + 3. * self._gsff / (2. * self._gsGG)))
+        return b0 * (fpi/fpiT)**2 / (1. +
+                                     vs/vh * (2.*self._gsGG/3. + self._gsff))
 
-    def msT(self, fpiT, BT):
+    def msT(self, fpiT, b0T):
+        """Returns the Lagrangian parameter msT.
         """
-        Returns the unphysical mass of the scalar mediator.
-        """
-        gamma = BT * fpiT * trM / vh
-        return sqrt(self._ms**2 +
-                    16. * gamma * self._gsff * self._gsGG / 9. / vh -
-                    32. * gamma * self._gsGG**2 / 81. / vh)
+        trM = muq + mdq + msq
 
-    def __alpha(self, fT, BT, msT):
-        """
-        Returns coefficent of linear term in the scalar potential before adding
-        scalar vev.
-        """
-        return (BT * fT**2 * (self._gsff + (2 * self._gsGG) / 3.) * trM) / vh
-
-    def __beta(self, fT, BT, msT):
-        """
-        Returns curvature of the scalar potential.
-        """
-        return msT**2 - (16 * BT * fT**2 * self._gsff * self._gsGG * trM) / \
-            (9. * vh**2) + (32 * BT * fT**2 *
-                            self._gsGG**2 * trM) / (81. * vh**2)
+        return np.sqrt(self._ms**2 -
+                       16.*self._gsGG*b0T*fpiT**2 / (81.*vh**2) *
+                       (2.*self._gsGG - 9.*self._gsff) * trM)
 
     def __vs_roots(self):
         """
@@ -157,21 +142,18 @@ class ScalarMediatorParameters(object):
         if self.__is_vev_zero():
             return 0., 0.
         else:
-            root1 = (-3 * self._ms * sqrt(trM) * vh +
-                     sqrt(4 * b0 * fpi**2 *
-                          (3 * self._gsff + 2 * self._gsGG)**2 +
-                          9 * self._ms**2 * trM * vh**2)) / \
-                (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
-            root2 = (-3 * self._ms * sqrt(trM) * vh -
-                     sqrt(4 * b0 * fpi**2 *
-                          (3 * self._gsff + 2 * self._gsGG)**2 +
-                          9 * self._ms**2 * trM * vh**2)) / \
-                (2. * (3 * self._gsff + 2 * self._gsGG) * self._ms * sqrt(trM))
+            trM = muq + mdq + msq
 
-            return root1, root2
+            root1 = (-3. * self._ms * sqrt(trM) * vh +
+                     sqrt(4.*b0*fpi**2*(3.*self._gsff + 2.*self._gsGG)**2 +
+                          9.*self._ms**2*trM*vh**2)) / \
+                    (2.*self._ms*sqrt(trM)*(3.*self._gsff + 2.*self._gsGG))
+            root2 = (-3. * self._ms * sqrt(trM) * vh -
+                     sqrt(4.*b0*fpi**2*(3.*self._gsff + 2.*self._gsGG)**2 +
+                          9.*self._ms**2*trM*vh**2)) / \
+                    (2.*self._ms*sqrt(trM)*(3.*self._gsff + 2.*self._gsGG))
 
-    def __kappa(self, fpiT):
-        return fpi**2 / fpiT**2 - 1.
+            return np.array([root1, root2])
 
     def __is_vev_zero(self):
         """Checks whether the scalar's vev is zero
