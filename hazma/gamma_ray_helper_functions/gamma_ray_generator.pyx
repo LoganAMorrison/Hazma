@@ -13,7 +13,7 @@ from ..rambo import compute_annihilation_cross_section
 from ..rambo import compute_decay_width
 
 from ..decay import muon as dm
-from ..decay_helper_functions.decay_electron import Spectrum as de
+from ..decay import electron as de
 
 from ..decay import neutral_pion as dnp
 from ..decay import charged_pion as dcp
