@@ -255,6 +255,10 @@ class Theory(object):
             corresponding constraint and I_ij < 0 if (p1_vals[i], p2_vals[j])
             is excluded by the constraint.
         """
+        if p1 == p2:
+            raise ValueError("Parameters being constrained must be equal.  "
+                             "Both are %s." % p1)
+
         # Create a 2D array whose elements are the theory's parameter object
         param_grid = self._to_param_grid(p1, p2, p1_vals, p2_vals)
 
