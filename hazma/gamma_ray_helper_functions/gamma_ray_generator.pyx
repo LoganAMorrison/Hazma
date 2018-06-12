@@ -66,7 +66,7 @@ def __gen_spec(name, eng, eng_gams, norm, verbose=False):
     """
     if verbose is True:
         print("creating {} spectrum with energy {}".format(name, eng))
-    return norm * cspec_dict[name].Spectrum(eng_gams, eng)
+    return norm * cspec_dict[name].Spectrum(eng_gams, eng, "total")
 
 def __gen_spec_2body(particles, cme, eng_gams):
     masses = names_to_masses(particles)
@@ -77,8 +77,8 @@ def __gen_spec_2body(particles, cme, eng_gams):
     E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
     E2 = (cme**2 - m1**2 + m2**2) / (2 * cme)
 
-    spec = cspec_dict[particles[0]].Spectrum(eng_gams, E1)
-    spec += cspec_dict[particles[1]].Spectrum(eng_gams, E2)
+    spec = cspec_dict[particles[0]].Spectrum(eng_gams, E1, "total")
+    spec += cspec_dict[particles[1]].Spectrum(eng_gams, E2, "total")
 
     return spec
 
@@ -117,7 +117,7 @@ def gamma(np.ndarray particles, double cme,
     """
 
     if len(particles) == 1:
-        return cspec_dict[particles[0]].Spectrum(eng_gams, cme)
+        return cspec_dict[particles[0]].Spectrum(eng_gams, cme, "total")
 
     if len(particles) == 2:
         return __gen_spec_2body(particles, cme, eng_gams)
