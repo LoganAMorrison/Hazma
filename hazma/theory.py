@@ -7,6 +7,7 @@ from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
 from .cmb import f_eff, cmb_limit
 
 import numpy as np
+from skimage import measure
 from abc import ABCMeta, abstractmethod
 
 
@@ -222,3 +223,69 @@ class Theory(object):
             return self.f_eff(x_kd)
 
         return np.vectorize(f_eff_change_mass)(mxs)
+
+    def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
+        """Computes constraints over 2D slice of parameter space.
+
+        Parameters
+        ----------
+        p1 : string
+            Name of a parameter to constraint.
+        p1_vals : np.array
+            Values of p1 at which to compute constraints. Must be sorted.
+        p2 : string
+            Name of the other parameter to constraint. Must be different than
+            p1.
+        p2_vals : np.array
+            Values of p2 at which to compute constraints. Must be sorted.
+        ls_or_img : "image" or "ls"
+            Controls whether this function returns level sets or images.
+
+        Returns
+        -------
+        constrs : dict
+            A dictionary containing the constraints on the theory in the (p1,
+            p2) plane.
+
+            If ls_or_img is "ls", the values are level sets. A level set is a
+            list of curves, where each curve is a list of values of (p1, p2)
+            defining the parameter values that saturate the constraint. If
+            ls_or_img is "image", each value is a 2D numpy.array I(x,y) such
+            that I_ij > 0 when (p1_vals[i], p2_vals[j]) is not excluded by the
+            corresponding constraint and I_ij < 0 if (p1_vals[i], p2_vals[j])
+            is excluded by the constraint.
+        """
+        # Create a 2D array whose elements are the theory's parameter object
+        param_grid = self._to_param_grid(p1, p2, p1_vals, p2_vals)
+
+        # Store the constraint images
+        constr_imgs = {}
+
+        # Loop over all available constraint functions
+        for cn, fn in self.get_contraint_fns():
+            # Apply the constraint to the parameter grid
+            constr_imgs[cn] = fn(param_grid)
+
+        if ls_or_img == "image":
+            return constr_imgs
+        elif ls_or_img == "ls":
+            return {cn: _img_to_ls(img) for cn, img in constr_imgs}
+
+    @abstractmethod
+    def _to_param_grid(self, p1, p2, p1_vals, p2_vals):
+        pass
+
+
+def _img_to_ls(p1_vals, p2_vals, img):
+    """Finds levels sets for an image.
+    """
+    contours_raw = measure.find_contours(img, level=0)
+    contours = []
+
+    # Convert from indices to values of p1 and p2
+    for c in contours_raw:
+        p1s = c[:, 1] / len(p1_vals) * (p1_vals[-1] - p1_vals[0]) + p1_vals[0]
+        p2s = c[:, 0] / len(p2_vals) * (p2_vals[-1] - p2_vals[0]) + p2_vals[0]
+        contours.append(np.array([p1s, p2s]))
+
+    return contours
