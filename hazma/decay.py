@@ -5,6 +5,7 @@ Module for computing decay spectra from a muon and light mesons.
 @date: January 2018
 
 """
+import numpy as np
 from decay_helper_functions import decay_long_kaon
 from decay_helper_functions import decay_charged_pion
 from decay_helper_functions import decay_charged_kaon
@@ -344,3 +345,26 @@ def long_kaon(eng_gam, eng_k, mode="total"):
     if hasattr(eng_gam, "__len__"):
         return decay_long_kaon.Spectrum(eng_gam, eng_k, mode)
     return decay_long_kaon.SpectrumPoint(eng_gam, eng_k, mode)
+
+
+def electron(eng_gam, eng_e):
+    r"""Compute dNdE from electron decay (returns zero).
+
+
+    Parameters
+    ----------
+    eng_gam : numpy.ndarray
+        Gamma ray energy(ies) in laboratory frame.
+    eng_mu : double
+        Electron energy in laboratory frame.
+
+    Returns
+    -------
+    spec : numpy.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at ``eng_gam`` given
+        muon energy ``eng_e``.
+    """
+    # mu = decay_muon.Muon()
+    if hasattr(eng_gam, "__len__"):
+        return np.array([0.0 for _ in eng_gam])
+    return 0.0
