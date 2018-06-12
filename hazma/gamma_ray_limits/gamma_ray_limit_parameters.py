@@ -4,8 +4,9 @@ Parameters relevant to computing constraints from gamma ray experiments
 from collections import namedtuple
 import numpy as np
 from pkg_resources import resource_filename
-from scipy.interpolate import interp1d
-
+from BackgroundModel import BackgroundModel
+from FluxMeasurement import FluxMeasurement
+from ..parameters import load_interp
 
 # Get paths to files inside the module
 A_eff_e_astrogam_rf = resource_filename(__name__,
@@ -26,123 +27,9 @@ egret_energy_res_rf = resource_filename(__name__,
 fermi_energy_res_rf = resource_filename(__name__,
                                         "fermi_energy_resolution.dat")
 e_astrogam_energy_res_rf = resource_filename(__name__,
-                                             "e-astrogam_energy_resolution.dat")
+                                             ("e-astrogam_energy_"
+                                              "resolution.dat"))
 gc_bg_model_rf = resource_filename(__name__, "gc_bg_model.dat")
-
-
-def load_interp(rf_name, bounds_error=False, fill_value=0.0):
-    """Creates an interpolator from a data file.
-
-    Parameters
-    ----------
-    rf_name : resource_filename
-        Name of resource file.
-
-    Returns
-    -------
-    interp : interp1d
-        An interpolator created using the first column of the file as the x
-        values and second as the y values. interp will not raise a bounds error
-        and uses a fill values of 0.0.
-    """
-    xs, ys = np.loadtxt(rf_name, delimiter=",").T
-    return interp1d(xs, ys, bounds_error=bounds_error, fill_value=fill_value)
-
-
-class BackgroundModel(object):
-    """Represents a gamma ray background model.
-
-    Attributes
-    ----------
-    e_range : [float, float]
-        Minimum and maximum photon energies for which this model is valid, in
-        MeV.
-    """
-
-    def __init__(self, e_range, flux_fn):
-        """
-        Parameters
-        ----------
-        e_range : [float, float]
-            Photon energies (MeV) between which this background model is valid.
-            Note that these bounds are inclusive.
-        flux_fn : np.array
-            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
-            photon energy (MeV). This function must be vectorized (ie, able to
-            map a 1D numpy.array of energies to a 1D numpy.array of fluxes).
-        """
-        self.e_range = e_range
-        self.__dPhi_dEdOmega = flux_fn
-
-    @classmethod
-    def from_file(cls, rf_name):
-        """Factory method to create a BackgroundModel from a data file.
-
-        Parameters
-        ----------
-        rf_name : resource_filename
-            Name of file whose lines are comma-separated pairs of photon
-            energies and background fluxes, in MeV and MeV^-1 sr^-1 m^-2 s^-1.
-
-        Returns
-        -------
-        bg_model : BackgroundModel
-        """
-        flux_fn = load_interp(rf_name, bounds_error=True, fill_value=np.nan)
-        e_range = flux_fn.x[[0, -1]]
-
-        return cls(e_range, flux_fn)
-
-    @classmethod
-    def from_vals(cls, es, fluxes):
-        """Factory method to create a BackgroundModel from flux data points.
-
-        Parameters
-        ----------
-        es : np.array
-            Photon energies (MeV).
-        fluxes : np.array
-            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) at the energies
-            in es.
-
-        Returns
-        -------
-        bg_model : BackgroundModel
-        """
-        return cls(es[[0, -1]], interp1d(es, fluxes))
-
-    def dPhi_dEdOmega(self, es):
-        """Computes this background model's gamma ray flux.
-
-        Parameters
-        ----------
-        es : float or np.array
-            Photon energy/energies at which to compute
-
-        Returns
-        -------
-        d^2Phi / dE dOmega
-            Background gamma ray flux, in MeV^-1 sr^-1 m^-2 s^-1. For any
-            energies outside of self.e_range, np.nan is returned.
-        """
-        if hasattr(es, "__len__"):
-            # Check if any energies are out of bounds
-            es_out_of_bounds = es[(es < self.e_range[0]) |
-                                  (es > self.e_range[1])]
-
-            if len(es_out_of_bounds) == 0:
-                return self.__dPhi_dEdOmega(es)
-            else:
-                raise ValueError("The gamma ray background model is not "
-                                 "applicable for energy %f MeV." %
-                                 es_out_of_bounds[0])
-        else:
-            if es < self.e_range[0] or es > self.e_range[1]:
-                raise ValueError("The gamma ray background model is not "
-                                 "applicable for energy %f MeV." %
-                                 es_out_of_bounds[0])
-            else:
-                return self.__dPhi_dEdOmega(es)
 
 
 def solid_angle(l_max, b_min, b_max):
@@ -199,76 +86,6 @@ energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf,
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365. * 24. * 60.**2
-
-
-class FluxMeasurement(object):
-    """Container for all information about a completed gamma ray analysis.
-
-    Attributes
-    ----------
-    target : TargetParams
-        Information about the target observed for this measurement.
-    bins : 2D np.array
-        Bins used for the measurement. This is an Nx2 array where each pair
-        indicates the lower and upper edges of the bin (MeV).
-    fluxes : np.array
-        Flux measurements for each bin (MeV^-1 cm^-2 s^-1 sr^-1).
-    upper_errors : np.array
-        Size of upper error bars on flux measurements (MeV^-1 cm^-2 s^-1
-        sr^-1).
-    lower_errors : np.array
-        Size of lower error bars on flux measurements (MeV^-1 cm^-2 s^-1
-        sr^-1).
-    energy_res : interp1d
-        Function returning energy resolution (Delta E / E) as a function of
-        photon energy.
-    """
-
-    def __init__(self, bin_rf, measurement_rf, energy_res_rf, target):
-        """Constructor.
-
-        Parameters
-        ----------
-        bin_rf : resource_filename
-            Name of file where bins are defined. The file must contain
-            comma-separated pairs. The elements of the pair define the lower
-            and upper bounds for each energy bin in MeV.
-        measurement_rf : resource_filename
-            Name of file containing flux measurements. The rows of the file
-            must be sets of three comma-separated values, where the first
-            indicated the central value for the measurement of E^2 dN/dE, and
-            the second and third indicate the absolute positions of the upper
-            and lower error bars respectively. All values are in MeV cm^-2 s^-1
-            sr^-1
-        energy_res_rf : resource_filename
-            Name of file containing energy resolution data. The rows of the
-            file must be comma-separated pairs indicating an energy in MeV and
-            energy resolution Delta E / E. The energy resolution must be
-            defined over the full range of energy bins used for this
-            measurement.
-        target : TargetParams
-            The target of the analysis
-        """
-        # Store analysis region
-        self.target = target
-
-        # Load bin info
-        self.bins = np.loadtxt(bin_rf, delimiter=",")
-
-        # Load flux data
-        # Get bin central values
-        bin_centers = np.mean(self.bins, axis=1)
-
-        # Load E^2 dN/dE and convert to dN/dE
-        raw_fluxes = np.loadtxt(measurement_rf, delimiter=",")
-        self.fluxes = raw_fluxes[:, 0] / bin_centers**2
-
-        # Compute upper and lower error bars
-        self.upper_errors = raw_fluxes[:, 1] / bin_centers**2 - self.fluxes
-        self.lower_errors = self.fluxes - raw_fluxes[:, 2] / bin_centers**2
-
-        # Load energy resolution
-        self.energy_res = load_interp(energy_res_rf)
 
 
 # COMPTEL diffuse

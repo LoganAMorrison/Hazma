@@ -5,6 +5,7 @@ NOTE: All dimensionful parameters are in MeV.
 """
 
 import numpy as np
+from scipy.interpolate import interp1d
 
 # MASSES (MeV)
 electron_mass = 0.510998928   # electron
@@ -100,3 +101,21 @@ def convert_sigmav(sv, target):
     elif target == "MeV^-2":
         return sv / hbar2_c3
 
+
+def load_interp(rf_name, bounds_error=False, fill_value=0.0):
+    """Creates an interpolator from a data file.
+
+    Parameters
+    ----------
+    rf_name : resource_filename
+        Name of resource file.
+
+    Returns
+    -------
+    interp : interp1d
+        An interpolator created using the first column of the file as the x
+        values and second as the y values. interp will not raise a bounds error
+        and uses a fill values of 0.0.
+    """
+    xs, ys = np.loadtxt(rf_name, delimiter=",").T
+    return interp1d(xs, ys, bounds_error=bounds_error, fill_value=fill_value)
