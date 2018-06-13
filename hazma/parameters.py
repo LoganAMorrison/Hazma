@@ -19,7 +19,7 @@ eta_mass = 547.86      # eta
 eta_prime_mass = 957.8      # eta prime
 rho_mass = 775.3       # rho
 omega_mass = 782.7     # omega
-charged_B_mass = 5279.29 # B^+ meson
+charged_B_mass = 5279.29  # B^+ meson
 
 pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.
 kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.
