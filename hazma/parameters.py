@@ -7,17 +7,19 @@ NOTE: All dimensionful parameters are in MeV.
 import numpy as np
 from scipy.interpolate import interp1d
 
-# MASSES (MeV)
+# Masses (MeV)
 electron_mass = 0.510998928   # electron
 muon_mass = 105.6583715  # muon
 neutral_pion_mass = 134.9766    # neutral pion
 charged_pion_mass = 139.57018    # Charged pion
 neutral_kaon_mass = 497.61       # neutral kaon
+long_kaon_mass = 497.614
 charged_kaon_mass = 493.68        # charged Kaon
 eta_mass = 547.86      # eta
 eta_prime_mass = 957.8      # eta prime
 rho_mass = 775.3       # rho
 omega_mass = 782.7     # omega
+charged_B_mass = 5279.29 # B^+ meson
 
 pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.
 kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.
@@ -71,10 +73,15 @@ Gr = 0.0073
 # CKM Matrix Elements
 Vud = 0.97417
 Vus = 0.2248
+Vts = 0.0404
+Vtb = 0.999146
 
 
-# widths
+# widths (MeV)
 rho_width = 146.2
+B_width = 4.35e-10
+k_width = 5.32e-14
+kl_width = 1.29e-14
 
 
 def convert_sigmav(sv, target):
