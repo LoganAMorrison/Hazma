@@ -259,16 +259,13 @@ class Theory(object):
             raise ValueError("Parameters being constrained must not be the "
                              "same. Both are %s." % p1)
 
-        # Create a 2D array whose elements are the theory's parameter object
-        param_grid = self._to_param_grid(p1, p2, p1_vals, p2_vals)
-
         # Store the constraint images
         constr_imgs = {}
 
         # Loop over all available constraint functions
         for cn, fn in self.get_contraint_fns():
             # Apply the constraint to the parameter grid
-            constr_imgs[cn] = fn(param_grid)
+            constr_imgs[cn] = np.vectorize(self.fn)(p1, p2, p1_vals, p2_vals)
 
         if ls_or_img == "image":
             return constr_imgs
