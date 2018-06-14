@@ -259,21 +259,40 @@ class Theory(object):
             raise ValueError("Parameters being constrained must not be the "
                              "same. Both are %s." % p1)
 
-        # Store the constraint images
-        constr_imgs = {}
+        n_p1s, n_p2s = len(p1_vals), len(p2_vals)
+        constraints = self.constraints()
 
-        # Loop over all available constraint functions
-        for cn, fn in self.get_contraint_fns():
-            # Apply the constraint to the parameter grid
-            constr_imgs[cn] = np.vectorize(self.fn)(p1, p2, p1_vals, p2_vals)
+        # Store the constraint images. Note that p1 and p2 must be swapped
+        # so we can use Cartesian rather than matrix indexing.
+        imgs = {cn: np.zeros([n_p2s, n_p1s]) for cn in constraints.keys()}
+
+        # Loop over the parameter values
+        for idx_p1, p1_val in np.ndenumerate(p1_vals):
+            for idx_p2, p2_val in np.ndenumerate(p2_vals):
+                setattr(self, p1, p1_val)
+                setattr(self, p2, p2_val)
+                # TODO: remove this
+                self.gsGG = self.gsff
+
+                # Compute all constraints at this point in parameter space
+                for cn, fn in constraints.iteritems():
+                    imgs[cn][idx_p2[0], idx_p1[0]] = fn()
 
         if ls_or_img == "image":
-            return constr_imgs
+            return imgs
         elif ls_or_img == "ls":
-            return {cn: _img_to_ls(img) for cn, img in constr_imgs}
+            return {cn: _img_to_ls(img) for cn, img in imgs}
 
     @abstractmethod
-    def _to_param_grid(self, p1, p2, p1_vals, p2_vals):
+    def constraints(self):
+        """Get a dictionary of all available constraints.
+
+        Notes
+        -----
+        Each key in the dictionary is the name of a constraint. Each value is a
+        function that is positive when the constraint is satisfied and negative
+        when it is not.
+        """
         pass
 
 
