@@ -82,27 +82,9 @@ class ScalarMediatorParameters(object):
     def compute_vs(self):
         """Updates and returns the value of the scalar vev.
         """
-        if self.__is_vev_zero():
-            self.vs = 0.
+        self.vs = 0.
 
-            return 0.
-        else:
-            trM = muq + mdq + msq
-
-            # Computes linear term in the scalar potential
-            def linear_term(fpiT, b0T):
-                return -b0T*fpiT**2*trM / (3.*vh) * (2.*self._gsGG +
-                                                     3.*self._gsff)
-
-            # Compute value of potential at each of the vs roots
-            vss = self.__vs_roots()
-            fpiTs = self.fpiT(vss)
-            b0Ts = self.b0T(vss, fpiTs)
-            pot_vals = 0.5*self._ms**2*vss**2 + linear_term(fpiTs, b0Ts)*vss
-
-            self.vs = vss[np.argmax(pot_vals)]
-
-            return self.vs
+        return self.vs
 
     def compute_width_s(self):
         """Updates and returns the scalar's total width.
@@ -134,32 +116,3 @@ class ScalarMediatorParameters(object):
         return np.sqrt(self._ms**2 -
                        16.*self._gsGG*b0T*fpiT**2 / (81.*vh**2) *
                        (2.*self._gsGG - 9.*self._gsff) * trM)
-
-    def __vs_roots(self):
-        """
-        Returns the two possible values of the scalar potential.
-        """
-        if self.__is_vev_zero():
-            return 0., 0.
-        else:
-            trM = muq + mdq + msq
-
-            root1 = (-3. * self._ms * sqrt(trM) * vh +
-                     sqrt(4.*b0*fpi**2*(3.*self._gsff + 2.*self._gsGG)**2 +
-                          9.*self._ms**2*trM*vh**2)) / \
-                    (2.*self._ms*sqrt(trM)*(3.*self._gsff + 2.*self._gsGG))
-            root2 = (-3. * self._ms * sqrt(trM) * vh -
-                     sqrt(4.*b0*fpi**2*(3.*self._gsff + 2.*self._gsGG)**2 +
-                          9.*self._ms**2*trM*vh**2)) / \
-                    (2.*self._ms*sqrt(trM)*(3.*self._gsff + 2.*self._gsGG))
-
-            return np.array([root1, root2])
-
-    def __is_vev_zero(self):
-        """Checks whether the scalar's vev is zero
-
-        Returns
-        -------
-        True if 2 gsGG + 3 gsff == 0, False otherwise.
-        """
-        return 2. * self._gsGG + 3. * self._gsff == 0.
