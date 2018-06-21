@@ -226,17 +226,18 @@ def cross_sections(Q, params):
     electron_contr = sigma_xx_to_v_to_ff(Q, "e", params)
     pipi_contr = sigma_xx_to_v_to_pipi(Q, params)
     pi0g_contr = sigma_xx_to_v_to_pi0g(Q, params)
-    pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(Q, params)
+    # pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(Q, params)
     vv_contr = sigma_xx_to_vv(Q, params)
 
     total = (muon_contr + electron_contr + pipi_contr + pi0g_contr +
-             pi0pipi_contr + vv_contr)
+             vv_contr)
+    # pi0pipi_contr
 
     cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
                   'pi pi': pipi_contr,
                   'pi0 g': pi0g_contr,
-                  'pi0 pi pi': pi0pipi_contr,
+                  # 'pi0 pi pi': pi0pipi_contr,
                   'v v': vv_contr,
                   'total': total}
 
@@ -266,12 +267,12 @@ def branching_fractions(Q, params):
                 'e e': 0.0,
                 'pi pi': 0.0,
                 'pi0 g': 0.0,
-                "pi0 pi pi": 0.0,
+                # "pi0 pi pi": 0.0,
                 'v v': 0.0}
     else:
         return {'mu mu': CSs['mu mu'] / CSs['total'],
                 'e e': CSs['e e'] / CSs['total'],
                 'pi pi': CSs['pi pi'] / CSs['total'],
                 'pi0 g': CSs['pi0 g'] / CSs['total'],
-                "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"],
+                # "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"],
                 'v v': CSs['v v'] / CSs['total']}

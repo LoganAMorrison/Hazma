@@ -41,7 +41,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['mu mu', 'e e', 'pi pi', 'pi0 g', "pi0 pi pi", 'v v']
+        return ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
 
     def cross_sections(self, cme):
         """
@@ -56,7 +56,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
         -------
         cs : dictionary
             Dictionary of the cross sections of the theory. The keys are
-            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi', 'pi0 pi pi'.
+            'total', 'mu mu', 'e e', 'pi0 g', 'pi pi'.
         """
         return cs(cme, self)
 
@@ -189,3 +189,9 @@ class VectorMediator(Theory, VectorMediatorParameters):
             Dictionary of the lines. The keys are 'e e'.
         """
         return pls(cme, self)
+
+    def constraints(self):
+        pass
+
+    def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
+        pass
