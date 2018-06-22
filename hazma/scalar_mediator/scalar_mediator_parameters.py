@@ -1,4 +1,3 @@
-from math import sqrt
 import numpy as np
 
 from ..parameters import up_quark_mass as muq
@@ -82,9 +81,20 @@ class ScalarMediatorParameters(object):
     def compute_vs(self):
         """Updates and returns the value of the scalar vev.
         """
-        self.vs = 0.
+        if 3*self.gsff + 2*self.gsGG == 0:
+            self.vs = 0.
+        else:
+            trM = muq + mdq + msq
 
-        return self.vs
+            ms = self.ms
+            gsff = self.gsff
+            gsGG = self.gsGG
+
+            self.vs = (-3*ms*vh +
+                       np.sqrt(4*b0*fpi**2*(3*gsff + 2*gsGG)**2*trM +
+                               9*ms**2*vh**2)) / (6*gsff*ms + 4*gsGG*ms)
+
+            return self.vs
 
     def compute_width_s(self):
         """Updates and returns the scalar's total width.
