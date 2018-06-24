@@ -279,10 +279,12 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
     from scalar_mediator_constraints import (width_B_k_s,
                                              width_k_pi_s,
                                              width_kl_pi0_s,
+                                             width_B_xs_s,
                                              constraint_B_k_invis,
                                              constraint_B_k_mu_mu,
                                              constraint_B_k_e_e,
                                              constraint_k_pi_invis,
                                              constraint_kl_pi0_mu_mu,
                                              constraint_kl_pi0_e_e,
+                                             constrain_beam_dump,
                                              constraints)

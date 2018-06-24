@@ -273,6 +273,7 @@ class Theory(object):
                 setattr(self, p2, p2_val)
                 # TODO: remove this
                 self.gsGG = self.gsff
+                self.gsFF = self.gsff
 
                 # Compute all constraints at this point in parameter space
                 for cn, fn in constraints.iteritems():
