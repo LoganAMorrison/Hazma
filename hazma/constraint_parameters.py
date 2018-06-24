@@ -2,8 +2,7 @@ import numpy as np
 from collections import namedtuple
 from parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
                         charged_pion_mass as mpi, muon_mass as mmu,
-                        neutral_pion_mass as mpi0, electron_mass as me,
-                        long_kaon_mass as mkl, B_width, k_width, kl_width)
+                        B_width, k_width, kl_width)
 
 
 # Conversion factors
