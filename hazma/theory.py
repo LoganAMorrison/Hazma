@@ -224,6 +224,52 @@ class Theory(object):
 
         return np.vectorize(f_eff_change_mass)(mxs)
 
+    def custom_constrain(self, param_grid, ls_or_img="image"):
+        """Computes constraints over grid of parameter values.
+
+        Parameters
+        ----------
+        param_grid : 2D array of parameters
+            Parameter values at which to compute constraints.
+        ls_or_img : "image" or "ls"
+            Controls whether this function returns level sets or images.
+
+        Returns
+        -------
+        constrs : dict
+            A dictionary containing the constraints on the theory in the (p1,
+            p2) plane.
+
+            If ls_or_img is "ls", the values are level sets. A level set is a
+            list of curves, where each curve is a list of values of (p1, p2)
+            defining the parameter values that saturate the constraint. If
+            ls_or_img is "image", each value is a 2D numpy.array I(x,y) such
+            that I_ij > 0 when (p1_vals[i], p2_vals[j]) is not excluded by the
+            corresponding constraint and I_ij < 0 if (p1_vals[i], p2_vals[j])
+            is excluded by the constraint.
+        """
+        n_rows, n_cols = param_grid.shape
+        constraints = self.constraints()
+
+        # Store the constraint images. Note that p1 and p2 must be swapped
+        # so we can use Cartesian rather than matrix indexing.
+        imgs = {cn: np.zeros([n_rows, n_rows]) for cn in constraints.keys()}
+
+        # Loop over the parameter grid
+        for i in range(n_rows):
+            for j in range(n_cols):
+                # Set this theory's parameters to the values at this point
+                self.__dict__.update(param_grid[i, j].__dict__)
+
+                # Compute all constraints at this point in parameter space
+                for cn, fn in constraints.iteritems():
+                    imgs[cn][i, j] = fn()
+
+        if ls_or_img == "image":
+            return imgs
+        elif ls_or_img == "ls":
+            return {cn: _img_to_ls(img) for cn, img in imgs}
+
     def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
         """Computes constraints over 2D slice of parameter space.
 
