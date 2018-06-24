@@ -33,8 +33,6 @@ r_vert_ktev = 0.1
 
 Attributes
 ----------
-name : string
-    Name of process. For example B^+ -> K^+ invisible is called "B -> k invis".
 width_bound : float
     Maximum contribution permitted to the width for this process.
 r_max : float
@@ -106,3 +104,44 @@ kl_pi0_e_e_obs = RareDecayObs(width_bound=(br_kl_pi0_e_e_ktev -
                                            br_kl_pi0_e_e_SM) * kl_width,
                               r_max=r_vert_ktev,
                               s_bounds=[[140.0**2, 362.7**2]])
+
+"""Container for information about beam dump experiments.
+
+Attributes
+----------
+br_pN_k : float
+    Inclusive branching fraction for pN -> K, where K is a charged or neutral
+    kaon.
+br_pN_B : float
+    Inclusive branching fraction for pN -> K, where B is a charged or neutral
+    B-meson.
+mediator_energy : float
+    Energy of particle produced in meson decays (MeV).
+dist : float
+    Distance to the detector (m).
+len : float
+    Length of the detector (m).
+visible_fss : list of strings
+    List of mediator decay final states that can be detected.
+n_pot : float
+    Number of protons on target.
+n_dec : float
+    Upper bound on the number of mediator decays.
+"""
+BeamDumpParams = namedtuple("BeamDumpParams",
+                            ["br_pN_k", "br_pN_B", "mediator_energy", "dist",
+                             "length", "visible_fss", "n_pot", "n_dec"])
+
+# CHARM experiment
+# Dolan et al (arXiv:1412.5174) use br_pN_k=3/7, which is a ~10% difference.
+bd_charm = BeamDumpParams(br_pN_k=10./40., br_pN_B=3.6e-6/40.,
+                          mediator_energy=10.0e3, dist=480., length=35.,
+                          visible_fss=["g g", "e e", "mu mu"], n_pot=2.9e17,
+                          n_dec=2.3)
+
+# SHiP experiment
+bd_ship = BeamDumpParams(br_pN_k=10./40., br_pN_B=3.6e-3/40.,
+                         mediator_energy=25.0e3, dist=70., length=55.,
+                         visible_fss=["g g", "e e", "mu mu", "pi pi",
+                                      "pi0 pi0", "k k", "k0 k0"],
+                         n_pot=2.0e20, n_dec=3.)

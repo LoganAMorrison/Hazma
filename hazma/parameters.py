@@ -28,14 +28,14 @@ kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.
 up_quark_mass = 2.3
 down_quark_mass = 4.8
 strange_quark_mass = 95.0
-charm_quark_mass = 1.275 * 10**3
-bottom_quark_mass = 4.18 * 10**3
-top_quark_mass = 160.0 * 10**3
+charm_quark_mass = 1.275e3
+bottom_quark_mass = 4.18e3
+top_quark_mass = 160.0e3
 
 # MISC.
 alpha_em = 1.0 / 137.04  # Fine structure constant.
-GF = 1.1663787 * 10**-11.0  # Fermi constant in MeV**-2
-vh = 246.22795 * 10**3  # Higgs VEV in MeV
+GF = 1.1663787e-11  # Fermi constant in MeV**-2
+vh = 246.22795e3  # Higgs VEV in MeV
 qe = np.sqrt(4.0 * np.pi * alpha_em)
 
 # Low Energy constants
