@@ -89,8 +89,8 @@ def width_s_to_xx(params):
     if ms > 2. * mx:
         gsxx = params.gsxx
 
-        ret_val = (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) * sqrt(ms**2 - 4 * mx**2)) / \
-            (32. * ms**2 * pi)
+        ret_val = (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) *
+                   sqrt(ms**2 - 4 * mx**2)) / (32. * ms**2 * pi)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
