@@ -1,7 +1,6 @@
 from scipy import optimize
 from scipy.integrate import trapz
 from scipy.interpolate import InterpolatedUnivariateSpline
-from scipy.stats import norm
 import numpy as np
 
 
@@ -202,15 +201,6 @@ def binned_limit(spec_fn, line_fn, mx, self_conjugate, measurement,
     def bin_lim(e_bin, phi, sigma):  # computes limit in a bin
         bin_low, bin_high = e_bin
 
-        # Find indices of energies in interpolation grid nearest to bin
-        # edges
-        # idx_low = (np.abs(dnde_det.x - bin_low)).argmin()
-        # idx_high = (np.abs(dnde_det.x - bin_high)).argmin()
-
-        # Integrate DM spectrum to compute flux in this bin
-        # phi_dm = dm_flux_factor * trapz(dnde_det.y[idx_low:idx_high],
-        #                                 dnde_det.x[idx_low:idx_high])
-
         # Integrate DM spectrum to compute flux in this bin
         phi_dm = dm_flux_factor * dnde_det.integral(bin_low, bin_high)
 
@@ -245,7 +235,7 @@ def spec_res_fn(ep, e, energy_res):
         else:
             return 0.
     else:
-        return norm.pdf(ep, loc=e, scale=sigma)
+        return 1. / (np.sqrt(2.*np.pi) * sigma) * np.exp(-(ep - e)**2 / sigma)
 
 
 def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
