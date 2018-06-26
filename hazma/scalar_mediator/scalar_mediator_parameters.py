@@ -81,7 +81,7 @@ class ScalarMediatorParameters(object):
     def compute_vs(self):
         """Updates and returns the value of the scalar vev.
         """
-        if 3*self.gsff + 2*self.gsGG == 0:
+        if 3.*self.gsff + 6.*self.gsGG == 0:
             self.vs = 0.
         else:
             trM = muq + mdq + msq
@@ -91,8 +91,8 @@ class ScalarMediatorParameters(object):
             gsGG = self.gsGG
 
             self.vs = (-3*ms*vh +
-                       np.sqrt(4*b0*fpi**2*(3*gsff + 2*gsGG)**2*trM +
-                               9*ms**2*vh**2)) / (6*gsff*ms + 4*gsGG*ms)
+                       np.sqrt(4*b0*fpi**2*(3*gsff + 6*gsGG)**2*trM +
+                               9*ms**2*vh**2)) / (6*gsff*ms + 12*gsGG*ms)
 
             return self.vs
 
@@ -110,13 +110,13 @@ class ScalarMediatorParameters(object):
     def fpiT(self, vs):
         """Returns the Lagrangian parameter fpiT.
         """
-        return fpi / np.sqrt(1. + 4.*self._gsGG*vs / (9.*vh))
+        return fpi / np.sqrt(1. + 12.*self._gsGG*vs / (9.*vh))
 
     def b0T(self, vs, fpiT):
         """Returns the Lagrangian parameter b0T.
         """
         return b0 * (fpi/fpiT)**2 / (1. +
-                                     vs/vh * (2.*self._gsGG/3. + self._gsff))
+                                     vs/vh * (2.*self._gsGG + self._gsff))
 
     def msT(self, fpiT, b0T):
         """Returns the Lagrangian parameter msT.
@@ -124,5 +124,5 @@ class ScalarMediatorParameters(object):
         trM = muq + mdq + msq
 
         return np.sqrt(self._ms**2 -
-                       16.*self._gsGG*b0T*fpiT**2 / (81.*vh**2) *
-                       (2.*self._gsGG - 9.*self._gsff) * trM)
+                       48.*self._gsGG*b0T*fpiT**2 / (81.*vh**2) *
+                       (6.*self._gsGG - 9.*self._gsff) * trM)

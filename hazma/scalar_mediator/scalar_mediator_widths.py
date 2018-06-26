@@ -13,7 +13,8 @@ def width_s_to_gg(params):
     """
     Returns the partial decay width of the scalar decaying into photon.
     """
-    return (alpha_em**2 * params.gsFF**2 * (params.ms**2)**1.5) / (512. * pi**3 * vh**2)
+    return ((alpha_em**2 * (5.*params.gsFF/3.)**2 * (params.ms**2)**1.5) /
+            (512. * pi**3 * vh**2))
 
 
 def width_s_to_pi0pi0(params):
@@ -29,13 +30,14 @@ def width_s_to_pi0pi0(params):
         vs = params.vs
 
         ret_val = (sqrt(-4 * mpi0**2 + ms**2) *
-                   (-54 * gsGG * (2 * mpi0**2 - ms**2) * vh *
-                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-             (9 * vh + 4 * gsGG * vs)**2)
+                   (-162 * gsGG * (2 * mpi0**2 - ms**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 6 * gsGG * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 12 * gsGG * vs) *
+                    (162. * gsGG * vh - 288 * gsGG**2 * vs +
+                     9 * gsff * (9 * vh + 48 * gsGG * vs)))**2) / \
+            (11664. * ms**2 * pi * vh**2 *
+             (3 * vh + 3 * gsff * vs + 6 * gsGG * vs)**2 *
+             (9 * vh + 12 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -58,13 +60,14 @@ def width_s_to_pipi(params):
         vs = params.vs
 
         ret_val = (sqrt(-4 * mpi**2 + ms**2) *
-                   (-54 * gsGG * (2 * mpi**2 - ms**2) * vh *
-                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-             (9 * vh + 4 * gsGG * vs)**2)
+                   (-162 * gsGG * (2 * mpi**2 - ms**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 6 * gsGG * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 12 * gsGG * vs) *
+                    (162 * gsGG * vh - 288 * gsGG**2 * vs +
+                     9 * gsff * (9 * vh + 48 * gsGG * vs)))**2) / \
+            (11664. * ms**2 * pi * vh**2 *
+             (3 * vh + 3 * gsff * vs + 6 * gsGG * vs)**2 *
+             (9 * vh + 12 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0

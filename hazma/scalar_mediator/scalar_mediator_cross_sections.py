@@ -68,7 +68,7 @@ def sigma_xx_to_s_to_gg(Q, params):
         ms = params.ms
         width_s = params.width_s
 
-        ret_val = (alpha_em**2 * gsFF**2 * gsxx**2 * Q**3 *
+        ret_val = (alpha_em**2 * (5.*gsFF/3.)**2 * gsxx**2 * Q**3 *
                    (-2 * mx + Q) * (2 * mx + Q)) / \
             (256. * pi**3 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
              (ms**4 - 2 * ms**2 * Q**2 + Q**4 + ms**2 * width_s**2))
@@ -106,14 +106,16 @@ def sigma_xx_to_s_to_pi0pi0(Q, params):
         vs = params.vs
         width_s = params.width_s
 
-        ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) * sqrt(-4 * mpi0**2 + Q**2) *
-                   (54 * gsGG * (-2 * mpi0**2 + Q**2) * vh *
-                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
+        ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) *
+                   sqrt(-4 * mpi0**2 + Q**2) *
+                   (54 * (3.*gsGG) * (-2 * mpi0**2 + Q**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 2 * (3.*gsGG) * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 4 * (3.*gsGG) * vs) *
+                    (54 * (3.*gsGG) * vh - 32 * (3.*gsGG)**2 * vs +
+                     9 * gsff * (9 * vh + 16 * (3.*gsGG) * vs)))**2) / \
             (23328. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-             (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 * (9 * vh + 4 * gsGG * vs)**2 *
+             (3 * vh + 3 * gsff * vs + 2 * (3.*gsGG) * vs)**2 *
+             (9 * vh + 4 * (3.*gsGG) * vs)**2 *
              (ms**4 + Q**4 + ms**2 * (-2 * Q**2 + width_s**2)))
 
         assert ret_val.imag == 0
@@ -151,14 +153,14 @@ def sigma_xx_to_s_to_pipi(Q, params):
 
         ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) *
                    sqrt(-4 * mpi**2 + Q**2) *
-                   (54 * gsGG * (-2 * mpi**2 + Q**2) * vh *
-                    (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                    b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                    (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                     9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
+                   (54 * (3.*gsGG) * (-2 * mpi**2 + Q**2) * vh *
+                    (3 * vh + 3 * gsff * vs + 2 * (3.*gsGG) * vs) +
+                    b0 * (mdq + muq) * (9 * vh + 4 * (3.*gsGG) * vs) *
+                    (54 * (3.*gsGG) * vh - 32 * (3.*gsGG)**2 * vs +
+                     9 * gsff * (9 * vh + 16 * (3.*gsGG) * vs)))**2) / \
             (23328. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-             (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-             (9 * vh + 4 * gsGG * vs)**2 *
+             (3 * vh + 3 * gsff * vs + 2 * (3.*gsGG) * vs)**2 *
+             (9 * vh + 4 * (3.*gsGG) * vs)**2 *
              (ms**4 + Q**4 + ms**2 * (-2 * Q**2 + width_s**2)))
 
         assert ret_val.imag == 0
