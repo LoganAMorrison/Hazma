@@ -5,7 +5,6 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
-from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import charged_pion_mass as mpi
 
 from scipy.integrate import quad
@@ -109,6 +108,7 @@ def sigma_xx_to_pp(Q, params):
 
 def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
     mx = params.mx
+    mpi0 = params.mpi0  # use shifted pion mass!
 
     if Q > 2. * mx and Q >= 3. * mpi0:
         beta = params._beta
@@ -157,6 +157,7 @@ def sigma_xx_to_p_to_pi0pi0pi0(Q, params):
         The DM annihilation cross section into 3 pi^0.
     """
 
+    mpi0 = params.mpi0  # use shifted pion mass!
     smax = (Q - mpi0)**2
     smin = 4. * mpi0**2
 
@@ -167,6 +168,7 @@ def sigma_xx_to_p_to_pi0pi0pi0(Q, params):
 
 def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
     mx = params.mx
+    mpi0 = params.mpi0  # use shifted pion mass!
 
     if Q > 2. * mx and Q >= 2. * mpi + mpi0:
         beta = params._beta
@@ -219,6 +221,7 @@ def sigma_xx_to_p_to_pi0pipi(Q, params):
         The DM annihilation cross section into pi^0, pi^-, pi^+.
     """
 
+    mpi0 = params.mpi0  # use shifted pion mass!
     smax = (Q - mpi0)**2
     smin = 4. * mpi**2
 

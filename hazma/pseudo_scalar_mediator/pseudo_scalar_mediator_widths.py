@@ -5,7 +5,6 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
-from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import charged_pion_mass as mpi
 
 from scipy.integrate import quad
@@ -29,8 +28,8 @@ def width_p_to_xx(params):
     rx = params.mx / mp
 
     if 2.*rx < 1:
-        ret = -((-1 + params._beta**2)*params.gpxx**2*mp*np.sqrt(1-4*rx**2)) / \
-            (32.*np.pi)
+        ret = -((-1 + params._beta**2)*params.gpxx**2*mp *
+                np.sqrt(1-4*rx**2)) / (32.*np.pi)
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -64,6 +63,7 @@ def width_p_to_ff(f, params):
 
 def dwidth_ds_p_to_pi0pi0pi0(s, params):
     mp = params.mp
+    mpi0 = params.mpi0  # use shifted pion mass!
 
     if mp >= 3.*mpi0:
         gpuu = params.gpuu
@@ -105,6 +105,8 @@ def width_p_to_pi0pi0pi0(params):
         The width for P -> pi0 pi0 pi0.
     """
     mp = params.mp
+    mpi0 = params.mpi0  # use shifted pion mass!
+
     smax = (mp - mpi0)**2
     smin = 4. * mpi0**2
 
@@ -115,6 +117,7 @@ def width_p_to_pi0pi0pi0(params):
 
 def dwidth_ds_p_to_pi0pipi(s, params):
     mp = params.mp
+    mpi0 = params.mpi0  # use shifted pion mass!
 
     if mp >= 2.*mpi + mpi0:
         gpuu = params.gpuu
@@ -161,6 +164,8 @@ def width_p_to_pi0pipi(params):
         The width for P -> pi0 pi+ pi-.
     """
     mp = params.mp
+    mpi0 = params.mpi0  # use shifted pion mass!
+
     smax = (mp - mpi0)**2
     smin = 4. * mpi**2
 
