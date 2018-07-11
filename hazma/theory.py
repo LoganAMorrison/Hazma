@@ -5,6 +5,8 @@ from .gamma_ray_limits.gamma_ray_limit_parameters import default_bg_model
 from .gamma_ray_limits.gamma_ray_limit_parameters import energy_res_e_astrogam
 from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
 from .cmb import f_eff, cmb_limit
+from .gamma_ray_limits.compute_limits import get_detected_spectrum
+from .constraint_parameters import sv_inv_MeV_to_cm3_per_s
 
 import numpy as np
 from skimage import measure
@@ -317,9 +319,6 @@ class Theory(object):
             for idx_p2, p2_val in np.ndenumerate(p2_vals):
                 setattr(self, p1, p1_val)
                 setattr(self, p2, p2_val)
-                # TODO: remove this
-                self.gsGG = self.gsff
-                self.gsFF = self.gsff
 
                 # Compute all constraints at this point in parameter space
                 for cn, fn in constraints.iteritems():
@@ -341,6 +340,81 @@ class Theory(object):
         when it is not.
         """
         pass
+
+    def constrain_gamma_helper(self, p2, p2_vals, measurement, n_sigma=2):
+        """Computes constraints on a parameter from gamma ray experiments.
+
+        Notes
+        -----
+        p2 must not depend on mx or the center of mass energy.
+        """
+        vx = 1.0e-3
+        e_cm = 2.*self.mx*(1 + 0.5*vx**2)  # TODO: change this!
+
+        # Factor to convert dN/dE to Phi/<sigma v>
+        dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
+                          (2. * 4. * np.pi * self.mx**2))
+
+        # Energy range over which to compute convolved spectrum
+        e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
+
+        def get_bin_fluxes(spec_fn, line_fn):
+            """Gets Phi/<sigma v> for a particular channel.
+            """
+            dnde_det = get_detected_spectrum(spec_fn, line_fn, e_bin_min,
+                                             e_bin_max, e_cm,
+                                             measurement.energy_res, 500)
+            return np.array([dm_flux_factor*dnde_det.integral(bl, br)
+                             for bl, br in measurement.bins])
+
+        # Compute Phi/<sigma v> in each bin for each final state
+        fs_bin_fluxes = {fs: get_bin_fluxes(spec_fn, lambda e_cm: {})
+                         for fs, spec_fn in
+                         self.spectrum_functions().iteritems()
+                         if fs != "total"}
+        # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn in
+        #                    self.gamma_ray_lines(cme) if fs != "total"}
+
+        def flux_difference(p2, p2_val):
+            """Compute difference between Phi_obs+N*sigma - Phi_th.
+            """
+            setattr(self, p2, p2_val)
+
+            # Compute cross sections
+            css = self.cross_sections(e_cm)
+            # Get fluxes by multiplying <sigma v>
+            bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
+                                   for fs, bf in fs_bin_fluxes.iteritems()])
+            # bin_fluxes += np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
+            #                         for fs, bf in line_bin_fluxes])
+
+            print "phi_obs = ", \
+                measurement.fluxes+n_sigma*measurement.upper_errors
+            print "phi_th = ", bin_fluxes.sum(axis=0)
+
+            return np.min(measurement.fluxes+n_sigma*measurement.upper_errors -
+                          bin_fluxes.sum(axis=0))
+
+        return np.array([flux_difference(p2, p2v) for p2v in p2_vals])
+
+    def constrain_gamma(self, p1, p1_vals, p2, p2_vals, measurement,
+                        n_sigma=2):
+        """Computes constraints from gamma ray experiments in the p1-p2 plane.
+
+        Notes
+        -----
+        p1 must not depend on mx or the center of mass energy.
+        """
+        img = np.zeros([len(p2_vals), len(p1_vals)])
+
+        for idx_p1, p1_val in enumerate(p1_vals):
+            setattr(self, p1, p1_val)
+
+            # Compute constraint function along the current column
+            img[idx_p1, :] = self.constrain_gamma_helper(p2, p2_vals,
+                                                         measurement, n_sigma)
+
+        return img
 
 
 def _img_to_ls(p1_vals, p2_vals, img):
