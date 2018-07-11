@@ -9,7 +9,7 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
 
-def sigma_xx_to_s_to_ff(Q, mf, params):
+def sigma_xx_to_s_to_ff(Q, f, params):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f* through a
     scalar mediator in the s-channel.
@@ -25,6 +25,11 @@ def sigma_xx_to_s_to_ff(Q, mf, params):
         Cross section for x + x -> s* -> f + f.
     """
     mx = params.mx
+
+    if f == 'e':
+        mf = me
+    elif f == 'mu':
+        mf = mmu
 
     if Q > 2. * mf and Q >= 2. * mx:
         ms = params.ms
@@ -221,8 +226,8 @@ def cross_sections(Q, params):
     cs : float
         Total cross section.
     """
-    muon_contr = sigma_xx_to_s_to_ff(Q, mmu, params)
-    electron_contr = sigma_xx_to_s_to_ff(Q, me, params)
+    muon_contr = sigma_xx_to_s_to_ff(Q, 'mu', params)
+    electron_contr = sigma_xx_to_s_to_ff(Q, 'e', params)
     photon_contr = sigma_xx_to_s_to_gg(Q, params)
     NPion_contr = sigma_xx_to_s_to_pi0pi0(Q, params)
     CPion_contr = sigma_xx_to_s_to_pipi(Q, params)

@@ -13,7 +13,8 @@ def width_s_to_gg(params):
     """
     Returns the partial decay width of the scalar decaying into photon.
     """
-    return (alpha_em**2 * params.gsFF**2 * (params.ms**2)**1.5) / (512. * pi**3 * vh**2)
+    return (alpha_em**2 * params.gsFF**2 * (params.ms**2)**1.5) / \
+        (512. * pi**3 * vh**2)
 
 
 def width_s_to_pi0pi0(params):
@@ -34,7 +35,8 @@ def width_s_to_pi0pi0(params):
                     b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
                     (54 * gsGG * vh - 32 * gsGG**2 * vs +
                      9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
+            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs +
+                                            2 * gsGG * vs)**2 *
              (9 * vh + 4 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
@@ -63,7 +65,8 @@ def width_s_to_pipi(params):
                     b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
                     (54 * gsGG * vh - 32 * gsGG**2 * vs +
                      9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
+            (11664. * ms**2 * pi * vh**2 * (3 * vh + 3 * gsff * vs +
+                                            2 * gsGG * vs)**2 *
              (9 * vh + 4 * gsGG * vs)**2)
 
         assert ret_val.imag == 0
@@ -86,8 +89,8 @@ def width_s_to_xx(params):
     if ms > 2. * mx:
         gsxx = params.gsxx
 
-        ret_val = (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) * sqrt(ms**2 - 4 * mx**2)) / \
-            (32. * ms**2 * pi)
+        ret_val = (gsxx**2 * (ms - 2 * mx) * (ms + 2 * mx) *
+                   sqrt(ms**2 - 4 * mx**2)) / (32. * ms**2 * pi)
 
         assert ret_val.imag == 0
         assert ret_val.real >= 0
@@ -97,17 +100,22 @@ def width_s_to_xx(params):
         return 0.0
 
 
-def width_s_to_ff(mf, params):
+def width_s_to_ff(f, params):
     """
     Returns the partial decay width of the scalar decaying into
     two fermions x.
 
     Parameters
     ----------
-    mf : double
-        Mass of the final state fermion.
+    f : string
+        Name of the final state fermion.
     """
     ms = params.ms
+
+    if f == 'e':
+        mf = me
+    elif f == 'mu':
+        mf = mmu
 
     if ms > 2. * mf:
         gsff = params.gsff
@@ -142,8 +150,8 @@ def partial_widths(params):
     w_pipi = width_s_to_pipi(params).real
     w_xx = width_s_to_xx(params).real
 
-    w_ee = width_s_to_ff(me, params).real
-    w_mumu = width_s_to_ff(mmu, params).real
+    w_ee = width_s_to_ff('e', params).real
+    w_mumu = width_s_to_ff('mu', params).real
 
     total = w_gg + w_pi0pi0 + w_pipi + w_xx + w_ee + w_mumu
 
