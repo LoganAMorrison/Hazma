@@ -1,4 +1,3 @@
-from cmath import sqrt, pi
 import numpy as np
 
 from ..parameters import vh, b0, alpha_em, fpi
@@ -38,15 +37,16 @@ def sigma_xx_to_p_to_ff(Q, f, params):
         rf = mmu / Q
         gpff = params.gpmumu
 
+    beta = params.beta
     gpxx = params.gpxx
     mp = params.mp
     widthp = params.widthp
     rx = params.mx / Q
 
     if 2.*rf < 1 and 2.*rx < 1:
-        ret = (gpff**2*gpxx**2*Q**2*np.sqrt(1 - 4*rf**2)) / \
-            (16.*np.pi*np.sqrt(1 - 4*rx**2)*((mp**2 - Q**2)**2 +
-                                             mp**2*widthp**2))
+        ret = ((1 - 2*beta**2)*gpff**2*gpxx**2*Q**2*np.sqrt(1 - 4*rf**2)) / \
+            (16.*np.pi*np.sqrt(1 - 4*rx**2) *
+             ((mp**2 - Q**2)**2 + mp**2*widthp**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -57,6 +57,7 @@ def sigma_xx_to_p_to_ff(Q, f, params):
 
 
 def sigma_xx_to_p_to_gg(Q, params):
+    beta = params.beta
     mx = params.mx
 
     if Q >= 2. * mx:
@@ -66,9 +67,9 @@ def sigma_xx_to_p_to_gg(Q, params):
         rx = mx / Q
         widthp = params.widthp
 
-        ret = (alpha_em**2 * gpFF**2 * gpxx**2 * Q**4) / \
-            (256. * np.pi**3 * np.sqrt(1 - 4 * rx**2) * vh**2 * ((mp**2 - Q**2)**2 +
-                                                                 mp**2 * widthp**2))
+        ret = (alpha_em**2*(1 - 2*beta**2)*gpFF**2*gpxx**2*Q**4) / \
+            (256.*np.pi**3*np.sqrt(1 - 4*rx**2)*vh**2 *
+             ((mp**2 - Q**2)**2 + mp**2*widthp**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -81,22 +82,22 @@ def sigma_xx_to_p_to_gg(Q, params):
 def sigma_xx_to_pp(Q, params):
     mx = params.mx
     mp = params.mp
+    beta = params.beta
 
     if Q > 2. * mp and Q >= 2. * mx:
         gpxx = params.gpxx
         rp = mp / Q
         rx = mx / Q
 
-        ret = (gpxx**4 * ((-2 * np.sqrt((-1 + 4 * rp**2) * (-1 + 4 * rx**2)) *
-                           (3 * rp**4 + 2 * rx**2 - 8 * rp**2 * rx**2)) /
-                          (rp**4 + rx**2 - 4 * rp**2 * rx**2) +
-                          (2 * (1 - 4 * rp**2 + 6 * rp**4) *
-                           (-1j * np.pi +
-                              2 * np.arctanh((-1 + 2 * rp**2) /
-                                             np.sqrt((-1 + 4 * rp**2) *
-                                                     (-1 + 4 * rx**2))))) /
-                          (-1 + 2 * rp**2))) / \
-            (64. * Q**2 * np.pi * (1. - 4 * rx**2))
+        ret = ((-1 + 2*beta**2)*gpxx**4 *
+               ((2*np.sqrt((-1 + 4*rp**2)*(-1 + 4*rx**2)) *
+                 (3*rp**4 + 2*rx**2 - 8*rp**2*rx**2)) /
+                (rp**4 + rx**2 - 4*rp**2*rx**2) +
+                (2*(1 - 4*rp**2 + 6*rp**4) *
+                 (1j*np.pi +
+                  2*np.arctanh((1 - 2*rp**2) /
+                               np.sqrt((-1 + 4*rp**2)*(-1 + 4*rx**2))))) /
+                (-1 + 2*rp**2))) / (64.*Q**2*np.pi*(1 - 4*rx**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -106,10 +107,11 @@ def sigma_xx_to_pp(Q, params):
         return 0.
 
 
-def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
+def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
     mx = params.mx
 
-    if Q > 2. * mx and Q >= 2. * mpi + mpi0:
+    if Q > 2. * mx and Q >= 3. * mpi:
+        beta = params.beta
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd
@@ -117,12 +119,77 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
         mp = params.mp
         widthp = params.widthp
 
-        ret = (b0**2 * gpxx**2 * np.sqrt(s * (-4 * mpi**2 + s)) *
-               np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2 * mpi0**2 * (Q**2 + s)) *
-               (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)**2) / \
-            (4608. * fpi**2 * np.pi**3 * Q * np.sqrt(-4 * mx**2 + Q**2) *
-             s * vh**2 *
-             (mp**4 + Q**4 + mp**2 * (-2 * Q**2 + widthp**2)))
+        ret = -(b0**2*gpxx**2*np.sqrt(s*(-4*mpi0**2 + s)) *
+                np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
+                (-(beta**2*(mdq + muq)**2*vh**2) +
+                 2*beta*fpi*(mdq + muq)*vh*(gpGG*(mdq - muq) +
+                                            (gpdd - gpuu)*vh) +
+                 (-1 + 11*beta**2)*fpi**2*(gpGG*(mdq - muq) +
+                                           (gpdd - gpuu)*vh)**2)) / \
+            (512.*fpi**4*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
+             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret
+    else:
+        return 0.
+
+
+def sigma_xx_to_p_to_pi0pi0pi0(Q, params):
+    """
+    Returns the dark matter annihilation cross section into three neutral pions
+    through a pseudo-scalar mediator.
+
+    Parameters
+    ----------
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediator or PseudoScalarMediatorParameters object
+        Object containing the parameters of the pseudo-scalar mediator
+        model. Can be a PseudoScalarMediator or a
+        PseudoScalarMediatorParameters object.
+
+    Returns
+    -------
+    sigma : float
+        The DM annihilation cross section into 3 pi^0.
+    """
+
+    smax = (Q - mpi0)**2
+    smin = 4. * mpi0**2
+
+    res = quad(dsigma_ds_xx_to_p_to_pi0pi0pi0, smin, smax, args=(Q, params))
+
+    return res[0]
+
+
+def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
+    mx = params.mx
+
+    if Q > 2. * mx and Q >= 2. * mpi + mpi0:
+        beta = params.beta
+        gpxx = params.gpxx
+        gpuu = params.gpuu
+        gpdd = params.gpdd
+        gpGG = params.gpGG
+        mp = params.mp
+        widthp = params.widthp
+
+        ret = (gpxx**2*np.sqrt(s*(-4*mpi**2 + s)) *
+               np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
+               (beta**2*(2*mpi**2 + mpi0 - 3*s)**2*vh**2 +
+                2*b0*beta*(2*mpi**2 + mpi0 - 3*s)*vh *
+                (-(beta*(mdq + muq)*vh) + fpi*(gpGG*(mdq - muq) +
+                                               (gpdd - gpuu)*vh)) +
+                b0**2*(beta**2*(mdq + muq)**2*vh**2 -
+                       2*beta*fpi*(mdq + muq)*vh*(gpGG*(mdq - muq) +
+                                                  (gpdd - gpuu)*vh) -
+                       (-1 + 5*beta**2)*fpi**2*(gpGG*(mdq - muq) +
+                                                (gpdd - gpuu)*vh)**2))) / \
+            (4608.*fpi**4*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
+             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
 
         assert ret.imag == 0
         assert ret.real >= 0
