@@ -110,7 +110,7 @@ def sigma_xx_to_pp(Q, params):
 def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
     mx = params.mx
 
-    if Q > 2. * mx and Q >= 3. * mpi:
+    if Q > 2. * mx and Q >= 3. * mpi0:
         beta = params.beta
         gpxx = params.gpxx
         gpuu = params.gpuu

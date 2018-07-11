@@ -15,7 +15,8 @@ def width_p_to_gg(params):
     """Returns the partial decay width of the pseudoscalar decaying into
     photons.
     """
-    ret = (alpha_em**2*params.gpFF**2*params.mp**3)/(128.*np.pi**3*vh**2)
+    ret = (alpha_em**2*(1. - params.beta**2)*params.gpFF**2*params.mp**3) / \
+        (128.*np.pi**3*vh**2)
 
     assert ret.imag == 0
     assert ret.real >= 0
@@ -28,7 +29,8 @@ def width_p_to_xx(params):
     rx = params.mx / mp
 
     if 2.*rx < 1:
-        ret = (params.gpxx**2*mp*np.sqrt(1 - 4*rx**2))/(32.*np.pi)
+        ret = -((-1 + params.beta**2)*params.gpxx**2*mp*np.sqrt(1-4*rx**2)) / \
+            (32.*np.pi)
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -49,7 +51,8 @@ def width_p_to_ff(f, params):
         gpff = params.gpmumu
 
     if 2.*rf < 1:
-        ret = (gpff**2*mp*np.sqrt(1 - 4*rf**2))/(8.*np.pi)
+        ret = -((-1 + params.beta**2)*gpff**2*mp*np.sqrt(1 - 4*rf**2)) / \
+            (8.*np.pi)
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -59,17 +62,78 @@ def width_p_to_ff(f, params):
         return 0.
 
 
+def dwidth_ds_p_to_pi0pi0pi0(s, params):
+    mp = params.mp
+
+    if mp >= 3.*mpi0:
+        gpuu = params.gpuu
+        gpdd = params.gpdd
+        gpGG = params.gpGG
+        beta = params.beta
+
+        ret = -(b0**2*np.sqrt(s*(-4*mpi0**2 + s)) *
+                np.sqrt(mp**4 + (mpi0**2 - s)**2 - 2*mp**2*(mpi0**2 + s)) *
+                (-(beta**2*(mdq + muq)**2*vh**2) +
+                 2*beta*fpi*(mdq + muq)*vh*(gpGG*(mdq - muq) +
+                                            (gpdd - gpuu)*vh) +
+                 (-1 + 10*beta**2)*fpi**2*(gpGG*(mdq - muq) +
+                                           (gpdd - gpuu)*vh)**2)) / \
+            (256.*fpi**4*mp**3*np.pi**3*s*vh**2)
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret
+    else:
+        return 0.
+
+
+def width_p_to_pi0pi0pi0(params):
+    """
+    Returns the width for the pseudoscalar's decay into three neutral pions.
+
+    Parameters
+    ----------
+    params : PseudoScalarMediator or PseudoScalarMediatorParameters object
+        Object containing the parameters of the pseudo-scalar mediator
+        model. Can be a PseudoScalarMediator or a
+        PseudoScalarMediatorParameters object.
+
+    Returns
+    -------
+    gamma : float
+        The width for P -> pi0 pi0 pi0.
+    """
+    mp = params.mp
+    smax = (mp - mpi0)**2
+    smin = 4. * mpi0**2
+
+    res = quad(dwidth_ds_p_to_pi0pi0pi0, smin, smax, args=(params))
+
+    return res[0]
+
+
 def dwidth_ds_p_to_pi0pipi(s, params):
-    gpuu = params.gpuu
-    gpdd = params.gpdd
-    gpGG = params.gpGG
     mp = params.mp
 
     if mp >= 2.*mpi + mpi0:
-        ret = (b0**2*np.sqrt(s*(-4*mpi**2 + s)) *
+        gpuu = params.gpuu
+        gpdd = params.gpdd
+        gpGG = params.gpGG
+        beta = params.beta
+
+        ret = (np.sqrt(s*(-4*mpi**2 + s)) *
                np.sqrt(mp**4 + (mpi0**2 - s)**2 - 2*mp**2*(mpi0**2 + s)) *
-               (gpGG*(mdq - muq) + (gpdd - gpuu)*vh)**2) / \
-            (2304.*fpi**2*mp**3*np.pi**3*s*vh**2)
+               (beta**2*(2*mpi**2 + mpi0 - 3*s)**2*vh**2 +
+                2*b0*beta*(2*mpi**2 + mpi0 - 3*s)*vh *
+                (-(beta*(mdq + muq)*vh) + fpi*(gpGG*(mdq - muq) +
+                                               (gpdd - gpuu)*vh)) +
+                b0**2*(beta**2*(mdq + muq)**2*vh**2 -
+                       2*beta*fpi*(mdq + muq)*vh*(gpGG*(mdq - muq) +
+                                                  (gpdd - gpuu)*vh) -
+                       (-1 + 4*beta**2)*fpi**2*(gpGG*(mdq - muq) +
+                                                (gpdd - gpuu)*vh)**2))) / \
+            (2304.*fpi**4*mp**3*np.pi**3*s*vh**2)
 
         assert ret.imag == 0
         assert ret.real >= 0
