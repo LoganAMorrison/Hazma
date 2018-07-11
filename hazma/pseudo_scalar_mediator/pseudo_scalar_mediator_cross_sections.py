@@ -37,7 +37,7 @@ def sigma_xx_to_p_to_ff(Q, f, params):
         rf = mmu / Q
         gpff = params.gpmumu
 
-    beta = params.beta
+    beta = params._beta
     gpxx = params.gpxx
     mp = params.mp
     widthp = params.widthp
@@ -57,7 +57,7 @@ def sigma_xx_to_p_to_ff(Q, f, params):
 
 
 def sigma_xx_to_p_to_gg(Q, params):
-    beta = params.beta
+    beta = params._beta
     mx = params.mx
 
     if Q >= 2. * mx:
@@ -82,7 +82,7 @@ def sigma_xx_to_p_to_gg(Q, params):
 def sigma_xx_to_pp(Q, params):
     mx = params.mx
     mp = params.mp
-    beta = params.beta
+    beta = params._beta
 
     if Q > 2. * mp and Q >= 2. * mx:
         gpxx = params.gpxx
@@ -111,7 +111,7 @@ def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
     mx = params.mx
 
     if Q > 2. * mx and Q >= 3. * mpi0:
-        beta = params.beta
+        beta = params._beta
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd
@@ -169,7 +169,7 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
     mx = params.mx
 
     if Q > 2. * mx and Q >= 2. * mpi + mpi0:
-        beta = params.beta
+        beta = params._beta
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd

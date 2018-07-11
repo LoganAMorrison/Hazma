@@ -15,7 +15,7 @@ def width_p_to_gg(params):
     """Returns the partial decay width of the pseudoscalar decaying into
     photons.
     """
-    ret = (alpha_em**2*(1. - params.beta**2)*params.gpFF**2*params.mp**3) / \
+    ret = (alpha_em**2*(1. - params._beta**2)*params.gpFF**2*params.mp**3) / \
         (128.*np.pi**3*vh**2)
 
     assert ret.imag == 0
@@ -29,7 +29,7 @@ def width_p_to_xx(params):
     rx = params.mx / mp
 
     if 2.*rx < 1:
-        ret = -((-1 + params.beta**2)*params.gpxx**2*mp*np.sqrt(1-4*rx**2)) / \
+        ret = -((-1 + params._beta**2)*params.gpxx**2*mp*np.sqrt(1-4*rx**2)) / \
             (32.*np.pi)
 
         assert ret.imag == 0
@@ -51,7 +51,7 @@ def width_p_to_ff(f, params):
         gpff = params.gpmumu
 
     if 2.*rf < 1:
-        ret = -((-1 + params.beta**2)*gpff**2*mp*np.sqrt(1 - 4*rf**2)) / \
+        ret = -((-1 + params._beta**2)*gpff**2*mp*np.sqrt(1 - 4*rf**2)) / \
             (8.*np.pi)
 
         assert ret.imag == 0
@@ -69,7 +69,7 @@ def dwidth_ds_p_to_pi0pi0pi0(s, params):
         gpuu = params.gpuu
         gpdd = params.gpdd
         gpGG = params.gpGG
-        beta = params.beta
+        beta = params._beta
 
         ret = -(b0**2*np.sqrt(s*(-4*mpi0**2 + s)) *
                 np.sqrt(mp**4 + (mpi0**2 - s)**2 - 2*mp**2*(mpi0**2 + s)) *
@@ -120,7 +120,7 @@ def dwidth_ds_p_to_pi0pipi(s, params):
         gpuu = params.gpuu
         gpdd = params.gpdd
         gpGG = params.gpGG
-        beta = params.beta
+        beta = params._beta
 
         ret = (np.sqrt(s*(-4*mpi**2 + s)) *
                np.sqrt(mp**4 + (mpi0**2 - s)**2 - 2*mp**2*(mpi0**2 + s)) *
