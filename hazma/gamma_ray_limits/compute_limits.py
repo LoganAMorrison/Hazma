@@ -235,7 +235,7 @@ def spec_res_fn(ep, e, energy_res):
         else:
             return 0.
     else:
-        return 1. / (np.sqrt(2.*np.pi) * sigma) * np.exp(-(ep - e)**2 / sigma)
+        return 1. / (np.sqrt(2.*np.pi)*sigma) * np.exp(-0.5*(ep-e)**2/sigma**2)
 
 
 def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
@@ -270,22 +270,24 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
     # convolution
     e_gams_padded = np.logspace(np.log10(e_min) - 1, np.log10(e_max) + 1,
                                 n_pts)
-    dnde_src = spec_fn(e_gams_padded, e_cm)
-
     # Energies at which to compute detected spectrum
     e_gams = np.logspace(np.log10(e_min), np.log10(e_max), n_pts)
     dnde_cont_det = np.zeros(e_gams.shape)
 
-    # If continuum spectrum is zero, don't waste time on the convolution
-    if not np.all(dnde_src == 0):
-        def integral(e):  # performs the integration at the given photon energy
-            spec_res_fn_vals = spec_res_fn(e_gams_padded, e, energy_res)
-            integrand_vals = dnde_src * spec_res_fn_vals / \
-                trapz(spec_res_fn_vals, e_gams_padded)
+    # Compute continuum spectrum if a function was provided
+    if spec_fn is not None:
+        dnde_src = spec_fn(e_gams_padded, e_cm)
 
-            return trapz(integrand_vals, e_gams_padded)
+        # If continuum spectrum is zero, don't waste time on the convolution
+        if not np.all(dnde_src == 0):
+            def integral(e):  # perform integration at the given photon energy
+                spec_res_fn_vals = spec_res_fn(e_gams_padded, e, energy_res)
+                integrand_vals = dnde_src * spec_res_fn_vals / \
+                    trapz(spec_res_fn_vals, e_gams_padded)
 
-        dnde_cont_det = np.vectorize(integral)(e_gams)
+                return trapz(integrand_vals, e_gams_padded)
+
+            dnde_cont_det = np.vectorize(integral)(e_gams)
 
     # Line contribution
     lines = line_fn(e_cm)
