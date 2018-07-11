@@ -1,17 +1,18 @@
 from ..theory import Theory
 
-from .pseudo_scalar_mediator_parameters import PseudoScalarMediatorParameters
+from pseudo_scalar_mediator_parameters import PseudoScalarMediatorParameters
 
-from .pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
-from .pseudo_scalar_mediator_cross_sections import cross_sections as cs
+from pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
+from pseudo_scalar_mediator_cross_sections import cross_sections as cs
 
-from .pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
-                                             dnde_pp)
-from .pseudo_scalar_mediator_spectra import spectra as specs
-from scalar_mediator_spectra import gamma_ray_lines as gls
+from pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
+                                            dnde_pp)
+from pseudo_scalar_mediator_spectra import spectra as specs
+from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
+from pseudo_scalar_mediator_positron_spectra import pos_specs
+from pseudo_scalar_mediator_positron_spectra import positron_lines as pls
 
 import warnings
-import numpy as np
 from ..hazma_errors import PreAlphaWarning
 
 
@@ -72,7 +73,6 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         """
         return bfs(cme, self.params)
 
-    # TODO: this
     def gamma_ray_lines(self, cme):
         return gls(cme, self)
 
@@ -114,8 +114,8 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
                 'p p': lambda e_gams, cme:
                     dnde_pp(e_gams, cme, self)}
 
-    def positron_spectra(self, eng_es, cme):
-        pass
+    def positron_spectra(self, eng_ps, cme):
+        return pos_specs(eng_ps, cme, self)
 
     def positron_lines(self, cme):
-        pass
+        return pls(cme, self)
