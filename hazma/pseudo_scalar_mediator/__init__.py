@@ -5,7 +5,8 @@ from .pseudo_scalar_mediator_parameters import PseudoScalarMediatorParameters
 from .pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
 from .pseudo_scalar_mediator_cross_sections import cross_sections as cs
 
-from .pseudo_scalar_mediator_spectra import dnde_mumu, dnde_ee, dnde_pi0pipi
+from .pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
+                                             dnde_pp)
 from .pseudo_scalar_mediator_spectra import spectra as specs
 
 import warnings
@@ -75,7 +76,6 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         warnings.warn("", PreAlphaWarning)
         return [np.array([]), np.array([])]
 
-    # TODO: this
     def spectra(self, egams, cme):
         """
         WARNING: This function is pre-alpha.
@@ -95,10 +95,8 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         specs : dictionary
             Dictionary of the spectra
         """
-        warnings.warn("", PreAlphaWarning)
         return specs(egams, cme, self.params)
 
-    # TODO: pp spectrum
     def spectrum_functions(self):
         """
         Returns a dictionary of all the avaiable spectrum functions for
@@ -112,7 +110,9 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         return {'mu mu': lambda e_gams, cme: dnde_mumu(e_gams, cme, self),
                 'e e': lambda e_gams, cme: dnde_ee(e_gams, cme, self),
                 'pi0 pi pi': lambda e_gams, cme:
-                    dnde_pi0pipi(e_gams, cme, self)}
+                    dnde_pi0pipi(e_gams, cme, self),
+                'p p': lambda e_gams, cme:
+                    dnde_pp(e_gams, cme, self)}
 
     def positron_spectra(self, eng_es, cme):
         pass
