@@ -12,7 +12,7 @@ from ..parameters import charged_pion_mass as mpi
 from scipy.integrate import quad
 
 
-def sigma_xx_to_p_to_ff(Q, mf, params):
+def sigma_xx_to_p_to_ff(Q, f, params):
     """
     Returns the cross section for two identical fermions "x" to two
     identical fermions "f".
@@ -21,8 +21,8 @@ def sigma_xx_to_p_to_ff(Q, mf, params):
     ----------
     Q : float
         Center of mass energy.
-    mf : float
-        Mass of final state fermions.
+    f : string
+        Name of final state fermions.
     params : object
         Object of the pseudo-scalar parameters class.
 
@@ -31,16 +31,19 @@ def sigma_xx_to_p_to_ff(Q, mf, params):
     cross_section : float
         Cross section for x + x -> p -> f + f.
     """
+    if f == "e":
+        mf = me
+        gpff = params.gpee
+    elif f == "mu":
+        mf = mmu
+        gpff = params.gpmumu
 
-    gpff = params.gpff
     gpxx = params.gpxx
     mp = params.mp
     mx = params.mx
 
-    return (gpff**2 * gpxx**2 * Q**2 *
-            sqrt(-4 * mf**2 + Q**2)) /\
-        (16. * pi * (mp**2 - Q**2)**2 *
-         sqrt(-4 * mx**2 + Q**2))
+    return (gpff**2 * gpxx**2 * Q**2 * np.sqrt(-4 * mf**2 + Q**2)) / \
+        (16. * pi * (mp**2 - Q**2)**2 * np.sqrt(-4 * mx**2 + Q**2))
 
 
 def sigma_xx_to_p_to_gg(Q, params):
@@ -82,7 +85,8 @@ def sigma_xx_to_pp(Q, params):
                               2 * np.arctanh((-1 + 2 * rp**2) /
                                              np.sqrt((-1 + 4 * rp**2) *
                                                      (-1 + 4 * rx**2))))) /
-                          (-1 + 2 * rp**2))) / (64. * Q**2 * np.pi * (1. - 4 * rx**2))
+                          (-1 + 2 * rp**2))) / \
+            (64. * Q**2 * np.pi * (1. - 4 * rx**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -161,13 +165,20 @@ def cross_sections(Q, params):
     cs : dict
         Total cross section.
     """
-    muon_contr = sigma_xx_to_p_to_ff(Q, mmu, params)
-    electron_contr = sigma_xx_to_p_to_ff(Q, me, params)
+    muon_contr = sigma_xx_to_p_to_ff(Q, 'mu', params)
+    electron_contr = sigma_xx_to_p_to_ff(Q, 'e', params)
+    photon_contr = sigma_xx_to_p_to_gg(Q, params)
+    pi0pipi_contr = sigma_xx_to_p_to_pi0pipi(Q, params)
+    pp_contr = sigma_xx_to_pp(Q, params)
 
-    total = muon_contr + electron_contr
+    total = (muon_contr + electron_contr + pi0pipi_contr + photon_contr +
+             pp_contr)
 
     cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
+                  "pi0 pi pi": pi0pipi_contr,
+                  'g g': photon_contr,
+                  'p p': pp_contr,
                   'total': total}
 
     return cross_secs
@@ -191,7 +202,10 @@ def branching_fractions(Q, params):
     """
     CSs = cross_sections(Q, params)
 
-    bfs = {'mu mu': CSs['mu mu'] / CSs['total'],
-           'e e': CSs['e e'] / CSs['total']}
+    bfs = {'e e': CSs['e e'] / CSs['total'],
+           'mu mu': CSs['mu mu'] / CSs['total'],
+           'g g': CSs['g g'] / CSs['total'],
+           'p p': CSs['p p'] / CSs['total'],
+           'pi0 pi pi': CSs['pi0 pi pi'] / CSs['total']}
 
     return bfs
