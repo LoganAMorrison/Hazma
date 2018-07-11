@@ -3,7 +3,7 @@ from ..theory import Theory
 from scalar_mediator_cross_sections import branching_fractions as bfs
 from scalar_mediator_cross_sections import cross_sections as cs
 
-from scalar_mediator_positron_spectra import positron_spectra
+from scalar_mediator_positron_spectra import pos_specs
 from scalar_mediator_positron_spectra import positron_lines as pls
 
 from scalar_mediator_spectra import spectra as specs
@@ -256,7 +256,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Dictionary of the spectra. The keys are 'total', 'mu mu',
             'pi pi'.
         """
-        return positron_spectra(eng_ps, cme, self)
+        return pos_specs(eng_ps, cme, self)
 
     def positron_lines(self, cme):
         """
