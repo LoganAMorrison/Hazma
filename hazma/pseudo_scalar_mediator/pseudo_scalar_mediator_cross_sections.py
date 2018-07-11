@@ -1,7 +1,13 @@
 from cmath import sqrt, pi
+import numpy as np
 
+from ..parameters import vh, b0, alpha_em, fpi
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
+from ..parameters import up_quark_mass as muq
+from ..parameters import down_quark_mass as mdq
+from ..parameters import neutral_pion_mass as mpi0
+from ..parameters import charged_pion_mass as mpi
 
 
 def sigma_xx_to_p_to_ff(Q, mf, params):
@@ -33,6 +39,80 @@ def sigma_xx_to_p_to_ff(Q, mf, params):
             sqrt(-4 * mf**2 + Q**2)) /\
         (16. * pi * (mp**2 - Q**2)**2 *
          sqrt(-4 * mx**2 + Q**2))
+
+
+def sigma_xx_to_p_to_gg(Q, params):
+    mx = params.mx
+
+    if Q >= 2. * mx:
+        gpFF = params.gpFF
+        gpxx = params.gpxx
+        mp = params.mp
+        rx = mx / Q
+        widthp = params.widthp
+
+        ret = (alpha_em**2*gpFF**2*gpxx**2*Q**4) / \
+            (256.*np.pi**3*np.sqrt(1 - 4*rx**2)*vh**2*((mp**2 - Q**2)**2 +
+                                                       mp**2*widthp**2))
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret
+    else:
+        return 0.
+
+
+def sigma_xx_to_pp(Q, params):
+    mx = params.mx
+    mp = params.mp
+
+    if Q > 2. * mp and Q >= 2. * mx:
+        gpxx = params.gpxx
+        rp = mp / Q
+        rx = mx / Q
+
+        ret = (gpxx**4*((-2*np.sqrt((-1 + 4*rp**2)*(-1 + 4*rx**2)) *
+                         (3*rp**4 + 2*rx**2 - 8*rp**2*rx**2)) /
+                        (rp**4 + rx**2 - 4*rp**2*rx**2) +
+                        (2*(1 - 4*rp**2 + 6*rp**4) *
+                         (-1j*np.pi +
+                          2*np.arctanh((-1 + 2*rp**2) /
+                                       np.sqrt((-1 + 4*rp**2) *
+                                               (-1 + 4*rx**2))))) /
+                        (-1 + 2*rp**2))) / (64.*Q**2*np.pi*(1. - 4*rx**2))
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret
+    else:
+        return 0.
+
+
+def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
+    mx = params.mx
+
+    if Q > 2. * mx and Q >= 2.*mpi + mpi0:
+        gpxx = params.gpxx
+        gpuu = params.gpuu
+        gpdd = params.gpdd
+        gpGG = params.gpGG
+        mp = params.mp
+        widthp = params.widthp
+
+        ret = (b0**2*gpxx**2*np.sqrt(s*(-4*mpi**2 + s)) *
+               np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
+               (gpGG*(mdq - muq) + (gpdd - gpuu)*vh)**2) / \
+            (4608.*fpi**2*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
+             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret
+    else:
+        return 0.
 
 
 def cross_sections(Q, params):
