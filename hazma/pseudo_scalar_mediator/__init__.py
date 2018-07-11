@@ -21,8 +21,11 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
     Create a pseudoscalar mediator model object.
     """
 
-    def __init__(self, mx, mp, gpxx, gpff):
-        super(PseudoScalarMediator, self).__init__(mx, mp, gpxx, gpff)
+    def __init__(self, mx, mp, gpxx, gpuu, gpdd, gpss, gpee, gpmumu, gpGG,
+                 gpFF):
+        super(PseudoScalarMediator, self).__init__(mx, mp, gpxx, gpuu, gpdd,
+                                                   gpss, gpee, gpmumu, gpGG,
+                                                   gpFF)
 
     def description(self):
         warnings.warn("", PreAlphaWarning)
