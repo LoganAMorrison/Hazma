@@ -8,6 +8,7 @@ from .pseudo_scalar_mediator_cross_sections import cross_sections as cs
 from .pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
                                              dnde_pp)
 from .pseudo_scalar_mediator_spectra import spectra as specs
+from scalar_mediator_spectra import gamma_ray_lines as gls
 
 import warnings
 import numpy as np
@@ -73,8 +74,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
 
     # TODO: this
     def gamma_ray_lines(self, cme):
-        warnings.warn("", PreAlphaWarning)
-        return [np.array([]), np.array([])]
+        return gls(cme, self)
 
     def spectra(self, egams, cme):
         """
