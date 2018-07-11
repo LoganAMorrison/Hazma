@@ -70,10 +70,12 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         """
         return bfs(cme, self.params)
 
+    # TODO: this
     def gamma_ray_lines(self, cme):
         warnings.warn("", PreAlphaWarning)
         return [np.array([]), np.array([])]
 
+    # TODO: this
     def spectra(self, egams, cme):
         """
         WARNING: This function is pre-alpha.
@@ -96,6 +98,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         warnings.warn("", PreAlphaWarning)
         return specs(egams, cme, self.params)
 
+    # TODO: pp spectrum
     def spectrum_functions(self):
         """
         Returns a dictionary of all the avaiable spectrum functions for

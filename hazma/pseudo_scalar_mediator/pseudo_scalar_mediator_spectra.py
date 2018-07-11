@@ -9,6 +9,13 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
 
+# TODO: pp spectrum. Gonna need Logan to do this since it requires cython...
+def dnde_pp(egams, Q, params, mode="total"):
+    eng_p = Q / 2.
+
+    pass
+
+
 def dnde_ee(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
         return (dnde_ee(egams, cme, params, 'FSR') +
@@ -69,15 +76,32 @@ def spectra(egams, cme, params):
     # Compute branching fractions
     bfs = branching_fractions(cme, params)
 
-    # Leptons
-    muons = bfs['mu mu'] * dnde_mumu(egams, cme, params)
-    electrons = bfs['e e'] * dnde_ee(egams, cme, params)
+    # Only compute the spectrum if the channel's branching fraction is nonzero
+    def spec_helper(bf, specfn):
+        if bf != 0:
+            return bf * specfn(egams, cme, params)
+        else:
+            return np.zeros(egams.shape)
 
-    # Comput total spectrum
-    total = muons + electrons
+    # Pions
+    pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
+
+    # Leptons
+    mumu_spec = spec_helper(bfs['mu mu'], dnde_pi0pipi)
+    ee_spec = spec_helper(bfs['e e'], dnde_pi0pipi)
+
+    # Mediator
+    pp_spec = spec_helper(bfs['p p'], dnde_pp)
+
+    # Compute total spectrum
+    total = pi0pipi_spec + mumu_spec + ee_spec + pp_spec
 
     # Define dictionary for spectra
-    specs = {'total': total, 'mu mu': muons, 'e e': electrons}
+    specs = {'total': total,
+             'pi0 pi pi': pi0pipi_spec,
+             'mu mu': mumu_spec,
+             'e e': ee_spec,
+             'p p': pp_spec}
 
     return specs
 
