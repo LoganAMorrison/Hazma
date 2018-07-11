@@ -65,7 +65,7 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
-def dnde_s(egams, Q, params, mode="total"):
+def dnde_ss(egams, Q, params, mode="total"):
     # Each scalar gets half the COM energy
     eng_s = Q / 2.
 
@@ -122,7 +122,7 @@ def spectra(egams, cme, params, fsi=True):
     electrons = spec_helper(bfs['e e'], dnde_ee)
 
     # mediator
-    mediator = spec_helper(bfs['s s'], dnde_s)
+    mediator = spec_helper(bfs['s s'], dnde_ss)
 
     # Compute total spectrum
     total = muons + electrons + npions + cpions + mediator

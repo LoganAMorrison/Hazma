@@ -8,7 +8,7 @@ from scalar_mediator_positron_spectra import positron_lines as pls
 
 from scalar_mediator_spectra import spectra as specs
 from scalar_mediator_spectra import gamma_ray_lines as gls
-from scalar_mediator_spectra import dnde_mumu, dnde_ee, dnde_s
+from scalar_mediator_spectra import dnde_mumu, dnde_ee, dnde_ss
 from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
 
 from scalar_mediator_widths import partial_widths as pws
@@ -220,7 +220,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
                     dnde_neutral_pion(e_gams, cme, self),
                 'pi pi': lambda e_gams, cme:
                     dnde_charged_pion(e_gams, cme, self),
-                's s': lambda e_gams, cme: dnde_s(e_gams, cme, self)}
+                's s': lambda e_gams, cme: dnde_ss(e_gams, cme, self)}
 
     def partial_widths(self):
         """
