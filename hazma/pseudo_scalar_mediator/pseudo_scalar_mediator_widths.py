@@ -49,7 +49,7 @@ def width_p_to_ff(f, params):
         gpff = params.gpmumu
 
     if 2.*rf < 1:
-        ret = (gpff**2*mp**3*rf**2*np.sqrt(1 - 4*rf**2))/(8.*np.pi*vh**2)
+        ret = (gpff**2*mp*np.sqrt(1 - 4*rf**2))/(8.*np.pi)
 
         assert ret.imag == 0
         assert ret.real >= 0

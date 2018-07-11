@@ -32,19 +32,21 @@ def sigma_xx_to_p_to_ff(Q, f, params):
         Cross section for x + x -> p -> f + f.
     """
     if f == "e":
-        mf = me
+        rf = me / Q
         gpff = params.gpee
     elif f == "mu":
-        mf = mmu
+        rf = mmu / Q
         gpff = params.gpmumu
 
     gpxx = params.gpxx
     mp = params.mp
-    mx = params.mx
+    widthp = params.widthp
+    rx = params.mx / Q
 
-    if Q > 2. * mf and Q >= 2. * mx:
-        ret = (gpff**2 * gpxx**2 * Q**2 * np.sqrt(-4 * mf**2 + Q**2)) / \
-            (16. * pi * (mp**2 - Q**2)**2 * np.sqrt(-4 * mx**2 + Q**2))
+    if 2.*rf < 1 and 2.*rx < 1:
+        ret = (gpff**2*gpxx**2*Q**2*np.sqrt(1 - 4*rf**2)) / \
+            (16.*np.pi*np.sqrt(1 - 4*rx**2)*((mp**2 - Q**2)**2 +
+                                             mp**2*widthp**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
