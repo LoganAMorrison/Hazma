@@ -42,15 +42,31 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
+# TODO: figure this out!
 def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
     if spectrum_type == 'All':
         return (dnde_pi0pipi(egams, cme, params, 'FSR') +
                 dnde_pi0pipi(egams, cme, params, 'Decay'))
     elif spectrum_type == 'FSR':
-        # TODO: implement this using Low's theorem or something
+        # Either use rambo with the 4-body FSR matrix element or Low's theorem
+        pass
+    elif spectrum_type == 'Decay':
+        # Will need to use rambo for this
+        pass
+    else:
+        raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
+                         'Decay'".format(spectrum_type))
+
+
+# TODO: figure this out!
+def dnde_pi0pi0pi0(egams, cme, params, spectrum_type='All'):
+    if spectrum_type == 'All':
+        return dnde_pi0pipi(egams, cme, params, 'Decay')
+    elif spectrum_type == 'FSR':
         return np.array([0.0 for _ in range(len(egams))])
     elif spectrum_type == 'Decay':
-        return 2. * charged_pion(egams, cme / 2.0) + neutral_pion
+        # Will need rambo for this
+        pass
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                          'Decay'".format(spectrum_type))
@@ -83,8 +99,8 @@ def spectra(egams, cme, params):
         else:
             return np.zeros(egams.shape)
 
-    # Pions
-    pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
+    # Pions. TODO: use rambo to compute this.
+    pi0pipi_spec = bfs['pi0 pi pi'] * dnde_pi0pipi
 
     # Leptons
     mumu_spec = spec_helper(bfs['mu mu'], dnde_pi0pipi)

@@ -5,6 +5,7 @@ from ..positron_spectra import charged_pion as pspec_charged_pion
 from .pseudo_scalar_mediator_cross_sections import branching_fractions
 
 
+# TODO: figure this out!
 def positron_spectra(eng_ps, cme, params):
     """Computes continuum part of positron spectrum from DM annihilation.
 
@@ -33,9 +34,7 @@ def positron_spectra(eng_ps, cme, params):
 
     mumu_spec = spec_helper(bfs['mu mu'], pspec_muon)
 
-    # TODO: figure this out. Since the matrix element is constant, we just need
-    # to average the pion energies over phase space! Should end up with a
-    # 1-parameter integral for each pion species.
+    # Will need rambo for this
     pi0pipi_spec = 0.
 
     total = mumu_spec
