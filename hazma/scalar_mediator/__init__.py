@@ -220,8 +220,7 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
                     dnde_neutral_pion(e_gams, cme, self),
                 'pi pi': lambda e_gams, cme:
                     dnde_charged_pion(e_gams, cme, self),
-                's s': lambda e_gams, cme:
-                    dnde_s(e_gams, cme/2., self)}
+                's s': lambda e_gams, cme: dnde_s(e_gams, cme, self)}
 
     def partial_widths(self):
         """

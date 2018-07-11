@@ -65,7 +65,10 @@ def dnde_charged_pion(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
-def dnde_s(egams, eng_s, params, mode="total"):
+def dnde_s(egams, Q, params, mode="total"):
+    # Each scalar gets half the COM energy
+    eng_s = Q / 2.
+
     ms = params.ms
     pws = partial_widths(params)
     pw_array = np.zeros(5, dtype=float)
