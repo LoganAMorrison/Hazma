@@ -56,11 +56,11 @@ def cross_section_prefactor(double m1, double m2, double cme):
     prefactor : double
         Returns 1 / ((2 E1) (2 E2) |v1 - v2|)
     """
-    cdef double E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
-    cdef double E2 = (cme**2 + m2**2 - m1**2) / (2 * cme)
+    cdef double E1 = (cme**2 + m1**2 - m2**2) / (2. * cme)
+    cdef double E2 = (cme**2 + m2**2 - m1**2) / (2. * cme)
 
     cdef double p = np.sqrt((m1 - m2 - cme) * (m1 + m2 - cme) *
-                            (m1 - m2 + cme) * (m1 + m2 + cme)) / (2 * cme)
+                            (m1 - m2 + cme) * (m1 + m2 + cme)) / (2. * cme)
 
     cdef double v1 = p / E1
     cdef double v2 = p / E2
