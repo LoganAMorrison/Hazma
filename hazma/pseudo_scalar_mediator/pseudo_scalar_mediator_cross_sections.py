@@ -9,6 +9,8 @@ from ..parameters import down_quark_mass as mdq
 from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import charged_pion_mass as mpi
 
+from scipy.integrate import quad
+
 
 def sigma_xx_to_p_to_ff(Q, mf, params):
     """
@@ -51,9 +53,9 @@ def sigma_xx_to_p_to_gg(Q, params):
         rx = mx / Q
         widthp = params.widthp
 
-        ret = (alpha_em**2*gpFF**2*gpxx**2*Q**4) / \
-            (256.*np.pi**3*np.sqrt(1 - 4*rx**2)*vh**2*((mp**2 - Q**2)**2 +
-                                                       mp**2*widthp**2))
+        ret = (alpha_em**2 * gpFF**2 * gpxx**2 * Q**4) / \
+            (256. * np.pi**3 * np.sqrt(1 - 4 * rx**2) * vh**2 * ((mp**2 - Q**2)**2 +
+                                                                 mp**2 * widthp**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -72,15 +74,15 @@ def sigma_xx_to_pp(Q, params):
         rp = mp / Q
         rx = mx / Q
 
-        ret = (gpxx**4*((-2*np.sqrt((-1 + 4*rp**2)*(-1 + 4*rx**2)) *
-                         (3*rp**4 + 2*rx**2 - 8*rp**2*rx**2)) /
-                        (rp**4 + rx**2 - 4*rp**2*rx**2) +
-                        (2*(1 - 4*rp**2 + 6*rp**4) *
-                         (-1j*np.pi +
-                          2*np.arctanh((-1 + 2*rp**2) /
-                                       np.sqrt((-1 + 4*rp**2) *
-                                               (-1 + 4*rx**2))))) /
-                        (-1 + 2*rp**2))) / (64.*Q**2*np.pi*(1. - 4*rx**2))
+        ret = (gpxx**4 * ((-2 * np.sqrt((-1 + 4 * rp**2) * (-1 + 4 * rx**2)) *
+                           (3 * rp**4 + 2 * rx**2 - 8 * rp**2 * rx**2)) /
+                          (rp**4 + rx**2 - 4 * rp**2 * rx**2) +
+                          (2 * (1 - 4 * rp**2 + 6 * rp**4) *
+                           (-1j * np.pi +
+                              2 * np.arctanh((-1 + 2 * rp**2) /
+                                             np.sqrt((-1 + 4 * rp**2) *
+                                                     (-1 + 4 * rx**2))))) /
+                          (-1 + 2 * rp**2))) / (64. * Q**2 * np.pi * (1. - 4 * rx**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -93,7 +95,7 @@ def sigma_xx_to_pp(Q, params):
 def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
     mx = params.mx
 
-    if Q > 2. * mx and Q >= 2.*mpi + mpi0:
+    if Q > 2. * mx and Q >= 2. * mpi + mpi0:
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd
@@ -101,11 +103,12 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
         mp = params.mp
         widthp = params.widthp
 
-        ret = (b0**2*gpxx**2*np.sqrt(s*(-4*mpi**2 + s)) *
-               np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
-               (gpGG*(mdq - muq) + (gpdd - gpuu)*vh)**2) / \
-            (4608.*fpi**2*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
-             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
+        ret = (b0**2 * gpxx**2 * np.sqrt(s * (-4 * mpi**2 + s)) *
+               np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2 * mpi0**2 * (Q**2 + s)) *
+               (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)**2) / \
+            (4608. * fpi**2 * np.pi**3 * Q * np.sqrt(-4 * mx**2 + Q**2) *
+             s * vh**2 *
+             (mp**4 + Q**4 + mp**2 * (-2 * Q**2 + widthp**2)))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -115,19 +118,47 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
         return 0.
 
 
-def cross_sections(Q, params):
+def sigma_xx_to_p_to_pi0pipi(Q, params):
     """
-    Compute the total cross section for two fermions annihilating through a
-    scalar mediator to mesons and leptons.
+    Returns the dark matter annihilation cross section into a neutral pion and
+    two charged pions through a pseudo-scalar mediator.
 
     Parameters
     ----------
-    cme : float
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediator or PseudoScalarMediatorParameters object
+        Object containing the parameters of the pseudo-scalar mediator
+        model. Can be a PseudoScalarMediator or a
+        PseudoScalarMediatorParameters object.
+
+    Returns
+    -------
+    sigma : float
+        The DM annihilation cross section into pi^0, pi^-, pi^+.
+    """
+
+    smax = (Q - mpi0)**2
+    smin = 4. * mpi**2
+
+    res = quad(dsigma_ds_xx_to_p_to_pi0pipi, smin, smax, args=(Q, params))
+
+    return res[0]
+
+
+def cross_sections(Q, params):
+    """
+    Compute the total cross section for two fermions annihilating through a
+    pseudo-scalar mediator to mesons and leptons.
+
+    Parameters
+    ----------
+    Q : float
         Center of mass energy.
 
     Returns
     -------
-    cs : float
+    cs : dict
         Total cross section.
     """
     muon_contr = sigma_xx_to_p_to_ff(Q, mmu, params)
