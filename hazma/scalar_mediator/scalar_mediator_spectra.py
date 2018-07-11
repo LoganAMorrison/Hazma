@@ -136,6 +136,6 @@ def spectra(egams, cme, params, fsi=True):
 
 
 def gamma_ray_lines(cme, params):
-        bf = branching_fractions(cme, params)["g g"]
+    bf = branching_fractions(cme, params)["g g"]
 
-        return {"g g": {"energy": cme / 2.0, "bf": bf}}
+    return {"g g": {"energy": cme / 2.0, "bf": bf}}
