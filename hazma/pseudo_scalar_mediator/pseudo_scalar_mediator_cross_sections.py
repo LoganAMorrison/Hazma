@@ -42,8 +42,16 @@ def sigma_xx_to_p_to_ff(Q, f, params):
     mp = params.mp
     mx = params.mx
 
-    return (gpff**2 * gpxx**2 * Q**2 * np.sqrt(-4 * mf**2 + Q**2)) / \
-        (16. * pi * (mp**2 - Q**2)**2 * np.sqrt(-4 * mx**2 + Q**2))
+    if Q > 2. * mf and Q >= 2. * mx:
+        ret = (gpff**2 * gpxx**2 * Q**2 * np.sqrt(-4 * mf**2 + Q**2)) / \
+            (16. * pi * (mp**2 - Q**2)**2 * np.sqrt(-4 * mx**2 + Q**2))
+
+        assert ret.imag == 0
+        assert ret.real >= 0
+
+        return ret.real
+    else:
+        return 0.
 
 
 def sigma_xx_to_p_to_gg(Q, params):
