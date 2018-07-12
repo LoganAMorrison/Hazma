@@ -97,11 +97,9 @@ class ScalarMediatorParameters(object):
             return self.vs
 
     def compute_width_s(self):
-        """Updates and returns the scalar's total width.
+        """Updates the scalar's total width.
         """
         self.width_s = partial_widths(self)["total"]
-
-        return self.width_s
 
     # #################### #
     """ HELPER FUNCTIONS """
