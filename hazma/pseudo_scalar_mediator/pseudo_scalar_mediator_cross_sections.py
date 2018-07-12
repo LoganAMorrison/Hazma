@@ -182,8 +182,8 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
 
         ret = (gpxx**2*np.sqrt(s*(-4*mpi**2 + s)) *
                np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
-               (beta**2*(2*mpi**2 + mpi0 - 3*s)**2*vh**2 +
-                2*b0*beta*(2*mpi**2 + mpi0 - 3*s)*vh *
+               (beta**2*(2*mpi**2 + mpi0**2 - 3*s)**2*vh**2 +
+                2*b0*beta*(2*mpi**2 + mpi0**2 - 3*s)*vh *
                 (-(beta*(mdq + muq)*vh) + fpi*(gpGG*(mdq - muq) +
                                                (gpdd - gpuu)*vh)) +
                 b0**2*(beta**2*(mdq + muq)**2*vh**2 -
