@@ -196,14 +196,16 @@ def partial_widths(params):
     w_mumu = width_p_to_ff('mu', params)
 
     w_pi0pipi = width_p_to_pi0pipi(params)
+    w_pi0pi0pi0 = width_p_to_pi0pi0pi0(params)
 
-    total = w_gg + w_xx + w_ee + w_mumu + w_pi0pipi
+    total = w_gg + w_xx + w_ee + w_mumu + w_pi0pipi + w_pi0pi0pi0
 
     width_dict = {'g g': w_gg,
                   'x x': w_xx,
                   'e e': w_ee,
                   'mu mu': w_mumu,
                   'pi0 pi pi': w_pi0pipi,
+                  'pi0 pi0 pi0': w_pi0pi0pi0,
                   'total': total}
 
     return width_dict

@@ -6,7 +6,7 @@ from pseudo_scalar_mediator_cross_sections import branching_fractions as bfs
 from pseudo_scalar_mediator_cross_sections import cross_sections as cs
 
 from pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
-                                            dnde_pp)
+                                            dnde_pi0pi0pi0, dnde_pp)
 from pseudo_scalar_mediator_spectra import spectra as specs
 from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
 from pseudo_scalar_mediator_positron_spectra import positron_spectra as pss
@@ -45,7 +45,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         fs : array-like
             Array of the available final states.
         """
-        return ['e e', 'mu mu', 'g g', 'pi0 pi pi', 'p p']
+        return ['e e', 'mu mu', 'g g', 'pi0 pi pi', 'pi0 pi0 pi0', 'p p']
 
     def cross_sections(self, cme):
         """
@@ -118,6 +118,8 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
                 'e e': lambda e_gams, cme: dnde_ee(e_gams, cme, self),
                 'pi0 pi pi': lambda e_gams, cme:
                     dnde_pi0pipi(e_gams, cme, self),
+                'pi0 pi0 pi0': lambda e_gams, cme:
+                    dnde_pi0pi0pi0(e_gams, cme, self),
                 'p p': lambda e_gams, cme:
                     dnde_pp(e_gams, cme, self)}
 

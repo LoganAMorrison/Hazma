@@ -101,6 +101,7 @@ def spectra(egams, cme, params):
 
     # Pions. TODO: use rambo to compute this.
     pi0pipi_spec = bfs['pi0 pi pi'] * dnde_pi0pipi
+    pi0pi0pi0_spec = bfs['pi0 pi0 pi0'] * dnde_pi0pi0pi0
 
     # Leptons
     mumu_spec = spec_helper(bfs['mu mu'], dnde_pi0pipi)
@@ -110,11 +111,12 @@ def spectra(egams, cme, params):
     pp_spec = spec_helper(bfs['p p'], dnde_pp)
 
     # Compute total spectrum
-    total = pi0pipi_spec + mumu_spec + ee_spec + pp_spec
+    total = pi0pipi_spec + mumu_spec + ee_spec + pp_spec + pi0pi0pi0_spec
 
     # Define dictionary for spectra
     specs = {'total': total,
              'pi0 pi pi': pi0pipi_spec,
+             'pi0 pi0 pi0': pi0pi0pi0_spec,
              'mu mu': mumu_spec,
              'e e': ee_spec,
              'p p': pp_spec}

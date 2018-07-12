@@ -249,15 +249,19 @@ def cross_sections(Q, params):
     muon_contr = sigma_xx_to_p_to_ff(Q, 'mu', params)
     electron_contr = sigma_xx_to_p_to_ff(Q, 'e', params)
     photon_contr = sigma_xx_to_p_to_gg(Q, params)
+
     pi0pipi_contr = sigma_xx_to_p_to_pi0pipi(Q, params)
+    pi0pi0pi0_contr = sigma_xx_to_p_to_pi0pi0pi0(Q, params)
+
     pp_contr = sigma_xx_to_pp(Q, params)
 
-    total = (muon_contr + electron_contr + pi0pipi_contr + photon_contr +
-             pp_contr)
+    total = (muon_contr + electron_contr + pi0pipi_contr + pi0pi0pi0_contr +
+             photon_contr + pp_contr)
 
     cross_secs = {'mu mu': muon_contr,
                   'e e': electron_contr,
                   "pi0 pi pi": pi0pipi_contr,
+                  "pi0 pi0 pi0": pi0pi0pi0_contr,
                   'g g': photon_contr,
                   'p p': pp_contr,
                   'total': total}
@@ -287,6 +291,7 @@ def branching_fractions(Q, params):
            'mu mu': CSs['mu mu'] / CSs['total'],
            'g g': CSs['g g'] / CSs['total'],
            'p p': CSs['p p'] / CSs['total'],
-           'pi0 pi pi': CSs['pi0 pi pi'] / CSs['total']}
+           'pi0 pi pi': CSs['pi0 pi pi'] / CSs['total'],
+           'pi0 pi0 pi0': CSs['pi0 pi0 pi0'] / CSs['total']}
 
     return bfs
