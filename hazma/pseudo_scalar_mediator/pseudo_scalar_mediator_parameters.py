@@ -123,10 +123,10 @@ class PseudoScalarMediatorParameters(object):
 
         # Mixing angle between pi0 and p. Here I have assumed that the pi0 mass
         # is given by leading order chiPT.
-        self._beta = eps / (self.mp**2 - mpi0**2)
+        self.beta = eps / (self.mp**2 - mpi0**2)
 
         # Shifted mass of neutral pion
-        mpi0Sqrd = mpi0**2 - eps * self._beta
+        mpi0Sqrd = mpi0**2 - eps * self.beta
 
         if mpi0Sqrd < 0:  # mixing is way too big if this fails
             print "Warning: your choice of mp and/or couplings produced an" + \

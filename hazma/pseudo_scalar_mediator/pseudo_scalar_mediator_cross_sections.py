@@ -36,7 +36,7 @@ def sigma_xx_to_p_to_ff(Q, f, params):
         rf = mmu / Q
         gpff = params.gpmumu
 
-    beta = params._beta
+    beta = params.beta
     gpxx = params.gpxx
     mp = params.mp
     width_p = params.width_p
@@ -56,7 +56,7 @@ def sigma_xx_to_p_to_ff(Q, f, params):
 
 
 def sigma_xx_to_p_to_gg(Q, params):
-    beta = params._beta
+    beta = params.beta
     mx = params.mx
 
     if Q >= 2. * mx:
@@ -66,7 +66,8 @@ def sigma_xx_to_p_to_gg(Q, params):
         rx = mx / Q
         width_p = params.width_p
 
-        ret = (alpha_em**2*(1 - 2*beta**2)*gpFF**2*gpxx**2*Q**4) / \
+        ret = (alpha_em**2*gpxx**2*Q**4*((1 - 2*beta**2)*gpFF**2 +
+                                         2*beta*gpFF*vh + beta**2*vh**2)) / \
             (256.*np.pi**3*np.sqrt(1 - 4*rx**2)*vh**2 *
              ((mp**2 - Q**2)**2 + mp**2*width_p**2))
 
@@ -81,7 +82,7 @@ def sigma_xx_to_p_to_gg(Q, params):
 def sigma_xx_to_pp(Q, params):
     mx = params.mx
     mp = params.mp
-    beta = params._beta
+    beta = params.beta
 
     if Q > 2. * mp and Q >= 2. * mx:
         gpxx = params.gpxx
@@ -111,7 +112,7 @@ def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
     mpi0 = params.mpi0  # use shifted pion mass!
 
     if Q > 2. * mx and Q >= 3. * mpi0:
-        beta = params._beta
+        beta = params.beta
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd
@@ -171,7 +172,7 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
     mpi0 = params.mpi0  # use shifted pion mass!
 
     if Q > 2. * mx and Q >= 2. * mpi + mpi0:
-        beta = params._beta
+        beta = params.beta
         gpxx = params.gpxx
         gpuu = params.gpuu
         gpdd = params.gpdd
