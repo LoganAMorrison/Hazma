@@ -9,7 +9,7 @@ from pseudo_scalar_mediator_spectra import (dnde_mumu, dnde_ee, dnde_pi0pipi,
                                             dnde_pp)
 from pseudo_scalar_mediator_spectra import spectra as specs
 from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
-from pseudo_scalar_mediator_positron_spectra import pos_specs
+from pseudo_scalar_mediator_positron_spectra import positron_spectra as pss
 from pseudo_scalar_mediator_positron_spectra import positron_lines as pls
 
 import warnings
@@ -118,7 +118,10 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
                     dnde_pp(e_gams, cme, self)}
 
     def positron_spectra(self, eng_ps, cme):
-        return pos_specs(eng_ps, cme, self)
+        return pss(eng_ps, cme, self)
 
     def positron_lines(self, cme):
         return pls(cme, self)
+
+    def constraints(self):
+        pass
