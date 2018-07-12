@@ -142,7 +142,7 @@ def msqrd_xx_to_p_to_pm0g(momenta, params):
     p1 = momenta[0]
     p2 = momenta[1]
     p3 = momenta[2]
-    k = momenta[4]
+    k = momenta[3]
 
     P = sum(momenta)
 
