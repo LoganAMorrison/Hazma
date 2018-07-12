@@ -123,7 +123,7 @@ def phase_space_prefactor(double M):
         :math:`d\phi_3 = C dt st`
 
     """
-    return 1.0 / (16.0 * M**2 * (2 * np.pi)**3)
+    return 1.0 / (16.0 * M**2 * (2. * np.pi)**3)
 
 
 @cython.cdivision(True)
@@ -151,9 +151,9 @@ def t_lim1(double s, double m1, double m2, double m3, double M):
     """
     return -((M - m1) * (M + m1) * (m2 - m3) * (m2 + m3) -
              (M**2 + m1**2 + m2**2 + m3**2) * s + s**2 +
-             np.sqrt(M**4 + (m1**2 - s)**2 - 2 * M**2 * (m1**2 + s)) *
-             np.sqrt(m2**4 + (m3**2 - s)**2 - 2 * m2**2 * (m3**2 + s))) / \
-        (2. * s)
+             np.sqrt(M**4 + (m1**2 - s)**2 - 2 * M**2 *
+                  (m1**2 + s)) * np.sqrt(m2**4 + (m3**2 - s)**2 - 2 * m2**2 *
+                                      (m3**2 + s))) / (2. * s)
 
 
 @cython.cdivision(True)
@@ -179,11 +179,10 @@ def t_lim2(double s, double m1, double m2, double m3, double M):
     -------
     The seconds limiting curve of the three-body phase space.
     """
-    return (-((M - m1) * (M + m1) * (m2 - m3) * (m2 + m3)) +
+    return ((-M + m1) * (M + m1) * (m2 - m3) * (m2 + m3) +
             (M**2 + m1**2 + m2**2 + m3**2) * s - s**2 +
-            np.sqrt(M**4 + (m1**2 - s)**2 - 2 * M**2 * (m1**2 + s)) *
-            np.sqrt(m2**4 + (m3**2 - s)**2 - 2 * m2**2 * (m3**2 + s))) /\
-        (2. * s)
+            np.sqrt(M**4 + (m1**2 - s)**2 - 2 * M**2 * (m1**2 + s)) * np.sqrt(
+                m2**4 + (m3**2 - s)**2 - 2 * m2**2 * (m3**2 + s))) / (2. * s)
 
 
 @cython.cdivision(True)
@@ -275,7 +274,8 @@ def t_integral(double s, double m1, double m2, double m3, double M,
 
 
 @cython.cdivision(True)
-def s_integral(double m1, double m2, double m3, double M, mat_elem_sqrd):
+def three_body_phase_space_integral(double m1, double m2, double m3, double M,
+                                    mat_elem_sqrd):
     """
     Returns the integral over the mandelstam variable s.
 
@@ -289,7 +289,7 @@ def s_integral(double m1, double m2, double m3, double M, mat_elem_sqrd):
         Mass of particle 3.
     M : double
         Center of mass energy, or sqrt((p1 + p2 + p3)^2).
-    mat_elem_sqrd : double(*func)(double s)
+    mat_elem_sqrd : double(*func)(double s, double t)
         Function for the matrix element squared. Argument is the mandelstam variable s associated with m1, defined as (P-p1)^2, where P = p1 + p2 + p3.
 
     Returns
@@ -301,6 +301,15 @@ def s_integral(double m1, double m2, double m3, double M, mat_elem_sqrd):
     cdef double smin = s_min(m1, m2, m3, M)
 
     def integrand(s):
-        return t_integral(s, m1, m2, m3, M, mat_elem_sqrd)
+        """
+        Integrand for s integral
+        """
+        def mat_elem_sqrd_t(t):
+            """
+            Integrand for t integral
+            """
+            return mat_elem_sqrd(s, t)
 
-    return quad(integrand, s_min, s_max)
+        return t_integral(s, m1, m2, m3, M, mat_elem_sqrd_t)[0]
+
+    return quad(integrand, smin, smax)
