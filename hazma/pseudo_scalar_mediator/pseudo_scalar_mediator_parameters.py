@@ -6,7 +6,6 @@ import numpy as np
 
 
 class PseudoScalarMediatorParameters(object):
-
     def __init__(self, mx, mp, gpxx, gpuu, gpdd, gpss, gpee, gpmumu, gpGG,
                  gpFF):
         self._mx = mx
@@ -37,6 +36,7 @@ class PseudoScalarMediatorParameters(object):
     @mp.setter
     def mp(self, mp):
         self._mp = mp
+        self.determine_mixing()
 
     @property
     def gpxx(self):
@@ -47,12 +47,63 @@ class PseudoScalarMediatorParameters(object):
         self._gpxx = gpxx
 
     @property
-    def gpff(self):
-        return self._gpff
+    def gpee(self):
+        return self._gpee
 
-    @gpff.setter
-    def gpff(self, gpff):
-        self._gpff = gpff
+    @gpee.setter
+    def gpee(self, gpee):
+        self._gpee = gpee
+
+    @property
+    def gpmumu(self):
+        return self._gpmumu
+
+    @gpmumu.setter
+    def gpmumu(self, gpmumu):
+        self._gpmumu = gpmumu
+
+    @property
+    def gpuu(self):
+        return self._gpuu
+
+    @gpuu.setter
+    def gpuu(self, gpuu):
+        self._gpuu = gpuu
+        self.determine_mixing()
+
+    @property
+    def gpdd(self):
+        return self._gpdd
+
+    @gpdd.setter
+    def gpdd(self, gpdd):
+        self._gpdd = gpdd
+        self.determine_mixing()
+
+    @property
+    def gpss(self):
+        return self._gpss
+
+    @gpss.setter
+    def gpss(self, gpss):
+        self._gpss = gpss
+
+    @property
+    def gpGG(self):
+        return self._gpGG
+
+    @gpGG.setter
+    def gpGG(self, gpGG):
+        self._gpGG = gpGG
+        self.determine_mixing()
+
+    @property
+    def gpFF(self):
+        return self._gpFF
+
+    @gpFF.setter
+    def gpFF(self, gpFF):
+        self._gpFF = gpFF
 
     def determine_mixing(self):
         eps = b0*fpi*(self.gpuu - self.gpdd + (muq - mdq) / vh * self.gpGG)
@@ -62,8 +113,14 @@ class PseudoScalarMediatorParameters(object):
         self._beta = eps / (self.mp**2 - mpi0**2)
 
         # Shifted mass of neutral pion
-        self.mpi0 = np.sqrt(mpi0**2 + eps**2 / (mpi0**2 - self.mp**2))
+        mpi0Sqrd = mpi0**2 - eps * self._beta
+
+        if mpi0Sqrd < 0:  # mixing is way too big if this fails
+            print "Warning: your choice of mp and/or couplings produced an" + \
+                    " imaginary neutral pion mass. Undefined behavior."
+
+        self.mpi0 = np.sqrt(mpi0Sqrd)
 
         if abs(self.mpi0 - mpi0) > 10.:
             print "Warning: your choice of mp and/or couplings produced a " + \
-                    "10 MeV or larger shift in m_pi0."
+                    "10 MeV or larger shift in m_pi0. Theory is invalid."
