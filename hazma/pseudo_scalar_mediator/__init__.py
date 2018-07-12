@@ -57,7 +57,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         cs : dictionary
             Dictionary of the cross sections of the theory.
         """
-        return cs(cme, self.params)
+        return cs(cme, self)
 
     def branching_fractions(self, cme):
         """
@@ -74,7 +74,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         bfs : dictionary
             Dictionary of the branching fractions.
         """
-        return bfs(cme, self.params)
+        return bfs(cme, self)
 
     def gamma_ray_lines(self, cme):
         return gls(cme, self)
@@ -98,7 +98,7 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
         specs : dictionary
             Dictionary of the spectra
         """
-        return specs(egams, cme, self.params)
+        return specs(egams, cme, self)
 
     def spectrum_functions(self):
         """
