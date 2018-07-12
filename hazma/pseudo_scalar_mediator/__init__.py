@@ -11,10 +11,10 @@ from pseudo_scalar_mediator_spectra import spectra as specs
 from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
 from pseudo_scalar_mediator_positron_spectra import positron_spectra as pss
 from pseudo_scalar_mediator_positron_spectra import positron_lines as pls
-from parameters import up_quark_mass as muq
-from parameters import down_quark_mass as mdq
-from parameters import strange_quark_mass as msq
-from parameters import vh
+from ..parameters import up_quark_mass as muq
+from ..parameters import down_quark_mass as mdq
+from ..parameters import strange_quark_mass as msq
+from ..parameters import vh
 
 import warnings
 from ..hazma_errors import PreAlphaWarning
