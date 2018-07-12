@@ -11,6 +11,10 @@ from pseudo_scalar_mediator_spectra import spectra as specs
 from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
 from pseudo_scalar_mediator_positron_spectra import positron_spectra as pss
 from pseudo_scalar_mediator_positron_spectra import positron_lines as pls
+from parameters import up_quark_mass as muq
+from parameters import down_quark_mass as mdq
+from parameters import strange_quark_mass as msq
+from parameters import vh
 
 import warnings
 from ..hazma_errors import PreAlphaWarning
@@ -125,3 +129,35 @@ class PseudoScalarMediator(Theory, PseudoScalarMediatorParameters):
 
     def constraints(self):
         pass
+
+
+class PseudoScalarMFV(PseudoScalarMediator):
+    """MFV version of the pseudoscalar model. While lepton couplings are free
+    variables, the quark ones are gpqq times the Yukawas.
+    """
+    def __init__(self, mx, mp, gpxx, gpqq, gpee, gpmumu, gpGG, gpFF):
+        self._gpqq = gpqq
+
+        yu = muq / vh
+        yd = mdq / vh
+        ys = msq / vh
+
+        super(PseudoScalarMediator, self).__init__(mx, mp, gpxx, gpqq*yu,
+                                                   gpqq*yd, gpqq*ys, gpee,
+                                                   gpmumu, gpGG)
+
+    @property
+    def gpqq(self):
+        return self._gpqq
+
+    @gpqq.setter
+    def gpqq(self, gpqq):
+        self._gpqq = gpqq
+
+        yu = muq / vh
+        yd = mdq / vh
+        ys = msq / vh
+
+        self.gpuu = gpqq * yu
+        self.gpdd = gpqq * yd
+        self.gpss = gpqq * ys
