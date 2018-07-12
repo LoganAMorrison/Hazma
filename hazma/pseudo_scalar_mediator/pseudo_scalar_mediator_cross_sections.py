@@ -39,13 +39,13 @@ def sigma_xx_to_p_to_ff(Q, f, params):
     beta = params._beta
     gpxx = params.gpxx
     mp = params.mp
-    widthp = params.widthp
+    width_p = params.width_p
     rx = params.mx / Q
 
     if 2.*rf < 1 and 2.*rx < 1:
         ret = ((1 - 2*beta**2)*gpff**2*gpxx**2*Q**2*np.sqrt(1 - 4*rf**2)) / \
             (16.*np.pi*np.sqrt(1 - 4*rx**2) *
-             ((mp**2 - Q**2)**2 + mp**2*widthp**2))
+             ((mp**2 - Q**2)**2 + mp**2*width_p**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -64,11 +64,11 @@ def sigma_xx_to_p_to_gg(Q, params):
         gpxx = params.gpxx
         mp = params.mp
         rx = mx / Q
-        widthp = params.widthp
+        width_p = params.width_p
 
         ret = (alpha_em**2*(1 - 2*beta**2)*gpFF**2*gpxx**2*Q**4) / \
             (256.*np.pi**3*np.sqrt(1 - 4*rx**2)*vh**2 *
-             ((mp**2 - Q**2)**2 + mp**2*widthp**2))
+             ((mp**2 - Q**2)**2 + mp**2*width_p**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -117,7 +117,7 @@ def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
         gpdd = params.gpdd
         gpGG = params.gpGG
         mp = params.mp
-        widthp = params.widthp
+        width_p = params.width_p
 
         ret = -(b0**2*gpxx**2*np.sqrt(s*(-4*mpi0**2 + s)) *
                 np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
@@ -127,7 +127,7 @@ def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
                  (-1 + 11*beta**2)*fpi**2*(gpGG*(mdq - muq) +
                                            (gpdd - gpuu)*vh)**2)) / \
             (512.*fpi**4*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
-             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
+             (mp**4 + Q**4 + mp**2*(-2*Q**2 + width_p**2)))
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -177,7 +177,7 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
         gpdd = params.gpdd
         gpGG = params.gpGG
         mp = params.mp
-        widthp = params.widthp
+        width_p = params.width_p
 
         ret = (gpxx**2*np.sqrt(s*(-4*mpi**2 + s)) *
                np.sqrt(mpi0**4 + (Q**2 - s)**2 - 2*mpi0**2*(Q**2 + s)) *
@@ -191,7 +191,7 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
                        (-1 + 5*beta**2)*fpi**2*(gpGG*(mdq - muq) +
                                                 (gpdd - gpuu)*vh)**2))) / \
             (4608.*fpi**4*np.pi**3*Q*np.sqrt(-4*mx**2 + Q**2)*s*vh**2 *
-             (mp**4 + Q**4 + mp**2*(-2*Q**2 + widthp**2)))
+             (mp**4 + Q**4 + mp**2*(-2*Q**2 + width_p**2)))
 
         assert ret.imag == 0
         assert ret.real >= 0

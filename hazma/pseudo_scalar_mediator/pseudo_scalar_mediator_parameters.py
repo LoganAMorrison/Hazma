@@ -1,8 +1,10 @@
+import numpy as np
+
 from ..parameters import vh, b0, fpi
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import neutral_pion_mass as mpi0
-import numpy as np
+from pseudo_scalar_mediator_widths import partial_widths
 
 
 class PseudoScalarMediatorParameters(object):
@@ -20,6 +22,7 @@ class PseudoScalarMediatorParameters(object):
         self._gpFF = gpFF
 
         self.determine_mixing()
+        self.compute_width_p()
 
     @property
     def mx(self):
@@ -28,6 +31,7 @@ class PseudoScalarMediatorParameters(object):
     @mx.setter
     def mx(self, mx):
         self._mx = mx
+        self.compute_width_p()
 
     @property
     def mp(self):
@@ -37,6 +41,7 @@ class PseudoScalarMediatorParameters(object):
     def mp(self, mp):
         self._mp = mp
         self.determine_mixing()
+        self.compute_width_p()
 
     @property
     def gpxx(self):
@@ -45,6 +50,7 @@ class PseudoScalarMediatorParameters(object):
     @gpxx.setter
     def gpxx(self, gpxx):
         self._gpxx = gpxx
+        self.compute_width_p()
 
     @property
     def gpee(self):
@@ -53,6 +59,7 @@ class PseudoScalarMediatorParameters(object):
     @gpee.setter
     def gpee(self, gpee):
         self._gpee = gpee
+        self.compute_width_p()
 
     @property
     def gpmumu(self):
@@ -61,6 +68,7 @@ class PseudoScalarMediatorParameters(object):
     @gpmumu.setter
     def gpmumu(self, gpmumu):
         self._gpmumu = gpmumu
+        self.compute_width_p()
 
     @property
     def gpuu(self):
@@ -70,6 +78,7 @@ class PseudoScalarMediatorParameters(object):
     def gpuu(self, gpuu):
         self._gpuu = gpuu
         self.determine_mixing()
+        self.compute_width_p()
 
     @property
     def gpdd(self):
@@ -79,6 +88,7 @@ class PseudoScalarMediatorParameters(object):
     def gpdd(self, gpdd):
         self._gpdd = gpdd
         self.determine_mixing()
+        self.compute_width_p()
 
     @property
     def gpss(self):
@@ -87,6 +97,7 @@ class PseudoScalarMediatorParameters(object):
     @gpss.setter
     def gpss(self, gpss):
         self._gpss = gpss
+        self.compute_width_p()
 
     @property
     def gpGG(self):
@@ -96,6 +107,7 @@ class PseudoScalarMediatorParameters(object):
     def gpGG(self, gpGG):
         self._gpGG = gpGG
         self.determine_mixing()
+        self.compute_width_p()
 
     @property
     def gpFF(self):
@@ -104,6 +116,7 @@ class PseudoScalarMediatorParameters(object):
     @gpFF.setter
     def gpFF(self, gpFF):
         self._gpFF = gpFF
+        self.compute_width_p()
 
     def determine_mixing(self):
         eps = b0*fpi*(self.gpuu - self.gpdd + (muq - mdq) / vh * self.gpGG)
@@ -124,3 +137,8 @@ class PseudoScalarMediatorParameters(object):
         if abs(self.mpi0 - mpi0) > 10.:
             print "Warning: your choice of mp and/or couplings produced a " + \
                     "10 MeV or larger shift in m_pi0. Theory is invalid."
+
+    def compute_width_p(self):
+        """Updates the pseudoscalar's total width.
+        """
+        self.width_p = partial_widths(self)["total"]
