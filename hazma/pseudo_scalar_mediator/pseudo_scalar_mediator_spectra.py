@@ -159,12 +159,12 @@ def spectra(egams, cme, params):
             return np.zeros(egams.shape)
 
     # Pions. TODO: use rambo to compute this.
-    pi0pipi_spec = bfs['pi0 pi pi'] * dnde_pi0pipi
-    pi0pi0pi0_spec = bfs['pi0 pi0 pi0'] * dnde_pi0pi0pi0
+    pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
+    pi0pi0pi0_spec = spec_helper(bfs['pi0 pi0 pi0'], dnde_pi0pi0pi0)
 
     # Leptons
-    mumu_spec = spec_helper(bfs['mu mu'], dnde_pi0pipi)
-    ee_spec = spec_helper(bfs['e e'], dnde_pi0pipi)
+    mumu_spec = spec_helper(bfs['mu mu'], dnde_mumu)
+    ee_spec = spec_helper(bfs['e e'], dnde_ee)
 
     # Mediator
     pp_spec = spec_helper(bfs['p p'], dnde_pp)
