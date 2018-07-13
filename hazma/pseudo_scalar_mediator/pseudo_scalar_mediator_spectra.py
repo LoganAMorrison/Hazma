@@ -3,18 +3,21 @@ import numpy as np
 from .pseudo_scalar_mediator_fsr import dnde_xx_to_p_to_ffg
 from .pseudo_scalar_mediator_cross_sections import branching_fractions
 
-from ..decay import muon, charged_pion, neutral_pion
+from ..decay import muon
 
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import neutral_pion_mass as mpi0
 
 from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_000
 from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0
-from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0g
 
-from ..gamma_ray import gamma_ray, gamma_ray_rambo
+from ..gamma_ray import gamma_ray
+
+# Stuff needed to compute FSR from x xbar -> P -> pip pim pi0
+# from ..gamma_ray import gamma_ray_rambo
+# from ..parameters import charged_pion_mass as mpi
+# from ..parameters import neutral_pion_mass as mpi0
+# from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0g
 
 
 # TODO: pp spectrum. Gonna need Logan to do this since it requires cython...
@@ -50,17 +53,23 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
                          'Decay'".format(spectrum_type))
 
 
-# TODO: figure this out!
 def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
+
     if spectrum_type == 'All':
         return (dnde_pi0pipi(egams, cme, params, 'FSR') +
                 dnde_pi0pipi(egams, cme, params, 'Decay'))
+
     elif spectrum_type == 'FSR':
         # Define the tree level and radiative matrix element squared for
         # RAMBO. These need to be of the form double(*func)(np.ndarray) where
         # the np.ndarray is a list of 4-momenta. Note msqrd_xx_to_p_to_pm0
         # takes params as the second argument. The first and second FS
         # particles must be the charged pions and the third a neutral pion.
+
+        # NOTE: I am removing this because it takes too long and need to
+        # be extrapolated and evaluated at the correct egams
+
+        """
         def msqrd_tree(momenta):
             return msqrd_xx_to_p_to_pm0(momenta, params)
 
@@ -74,6 +83,9 @@ def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
                                num_ps_pts=50000, num_bins=150,
                                mat_elem_sqrd_tree=msqrd_tree,
                                mat_elem_sqrd_rad=msqrd_rad)
+        """
+
+        return np.array([0.0 for _ in range(len(egams))])
 
     elif spectrum_type == 'Decay':
         # Define the matrix element squared for RAMBO. This needs to be
@@ -85,7 +97,7 @@ def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
             return msqrd_xx_to_p_to_pm0(momenta, params)
 
         return gamma_ray(["charged_pion", "charged_pion", "neutral_pion"],
-                         1000., egams, num_ps_pts=1000,
+                         cme, egams, num_ps_pts=1000,
                          mat_elem_sqrd=msqrd_tree)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
@@ -98,7 +110,7 @@ def dnde_pi0pi0pi0(egams, cme, params, spectrum_type='All'):
     three neutral pions.
     """
     if spectrum_type == 'All':
-        return dnde_pi0pipi(egams, cme, params, 'Decay')
+        return dnde_pi0pi0pi0(egams, cme, params, 'Decay')
 
     elif spectrum_type == 'FSR':
         return np.array([0.0 for _ in range(len(egams))])
@@ -112,7 +124,7 @@ def dnde_pi0pi0pi0(egams, cme, params, spectrum_type='All'):
             return msqrd_xx_to_p_to_000(momenta, params)
 
         return gamma_ray(["neutral_pion", "neutral_pion", "neutral_pion"],
-                         1000., egams, num_ps_pts=1000,
+                         cme, egams, num_ps_pts=1000,
                          mat_elem_sqrd=msqrd_tree)
     else:
         raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
