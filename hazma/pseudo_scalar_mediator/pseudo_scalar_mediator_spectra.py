@@ -7,6 +7,8 @@ from ..decay import muon
 
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
+from ..parameters import charged_pion_mass as mpi
+from ..parameters import neutral_pion_mass as mpi0
 
 from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_000
 from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0
@@ -15,8 +17,6 @@ from ..gamma_ray import gamma_ray
 
 # Stuff needed to compute FSR from x xbar -> P -> pip pim pi0
 # from ..gamma_ray import gamma_ray_rambo
-# from ..parameters import charged_pion_mass as mpi
-# from ..parameters import neutral_pion_mass as mpi0
 # from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0g
 
 
@@ -54,6 +54,9 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
 
 
 def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
+
+    if cme < 2. * mpi + mpi0:
+        return np.array([0.0 for _ in range(len(egams))])
 
     if spectrum_type == 'All':
         return (dnde_pi0pipi(egams, cme, params, 'FSR') +
@@ -109,6 +112,9 @@ def dnde_pi0pi0pi0(egams, cme, params, spectrum_type='All'):
     Return the gamma ray spectrum for dark matter annihilations into
     three neutral pions.
     """
+    if cme < 3. * mpi0:
+        return np.array([0.0 for _ in range(len(egams))])
+
     if spectrum_type == 'All':
         return dnde_pi0pi0pi0(egams, cme, params, 'Decay')
 
