@@ -9,7 +9,7 @@ from vector_mediator_spectra import spectra as specs
 from vector_mediator_spectra import gamma_ray_lines as gls
 from vector_mediator_spectra import dnde_mumu, dnde_ee, dnde_pipi, dnde_pi0g
 
-from vector_mediator_positron_spectra import positron_spectra
+from vector_mediator_positron_spectra import positron_spectra as pos_specs
 from vector_mediator_positron_spectra import positron_lines as pls
 
 from vector_mediator_widths import partial_widths as pws
@@ -169,7 +169,7 @@ class VectorMediator(Theory, VectorMediatorParameters):
             Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
             'pi pi'.
         """
-        return positron_spectra(eng_ps, cme, self)
+        return pos_specs(eng_ps, cme, self)
 
     def positron_lines(self, cme):
         """
