@@ -1,11 +1,33 @@
 import numpy as np
 
 from ..positron_spectra import muon as pspec_muon
-from ..positron_spectra import charged_pion as pspec_charged_pion
+from ..positron_spectra import positron_rambo
 from .pseudo_scalar_mediator_cross_sections import branching_fractions
 
+from hazma.pseudo_scalar_mediator.pseudo_scalar_mediator_mat_elem_sqrd_rambo \
+    import msqrd_xx_to_p_to_pm0
 
-# TODO: figure this out!
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import neutral_pion_mass as mpi0
+
+
+def dnde_pi0pipi(eng_ps, cme, params, num_ps_pts=1000):
+
+    if cme <= 2. * mpi + mpi0:
+        return np.zeros(len(eng_ps), dtype=float)
+
+    def msqrd_tree(momenta):
+        return msqrd_xx_to_p_to_pm0(momenta, params)
+
+    return positron_rambo(["charged_pion", "charged_pion", "neutral_pion"],
+                          cme, eng_ps, num_ps_pts=1000,
+                          mat_elem_sqrd=msqrd_tree)
+
+
+def dnde_mumu(eng_ps, cme, params):
+    return 2. * pspec_muon(eng_ps, cme / 2.)
+
+
 def positron_spectra(eng_ps, cme, params):
     """Computes continuum part of positron spectrum from DM annihilation.
 
@@ -28,14 +50,13 @@ def positron_spectra(eng_ps, cme, params):
     # Only compute the spectrum if the channel's branching fraction is nonzero
     def spec_helper(bf, specfn):
         if bf != 0:
-            return bf * specfn(eng_ps, cme / 2.)
+            return bf * specfn(eng_ps, cme, params)
         else:
             return np.zeros(eng_ps.shape)
 
-    mumu_spec = spec_helper(bfs['mu mu'], pspec_muon)
+    mumu_spec = spec_helper(bfs['mu mu'], dnde_mumu)
 
-    # Will need rambo for this
-    pi0pipi_spec = 0.
+    pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
 
     total = mumu_spec
 
