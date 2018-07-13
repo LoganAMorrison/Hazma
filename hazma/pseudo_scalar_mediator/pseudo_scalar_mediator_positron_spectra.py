@@ -11,7 +11,7 @@ from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
 
 
-def positron_spectra_pi0pipi(eng_ps, cme, params, num_ps_pts=1000):
+def dnde_pi0pipi(eng_ps, cme, params, num_ps_pts=1000):
 
     if cme <= 2. * mpi + mpi0:
         return np.zeros(len(eng_ps), dtype=float)
@@ -23,7 +23,9 @@ def positron_spectra_pi0pipi(eng_ps, cme, params, num_ps_pts=1000):
                           cme, eng_ps, num_ps_pts=1000,
                           mat_elem_sqrd=msqrd_tree)
 
-# TODO: figure this out!
+
+def dnde_mumu(eng_ps, cme, params):
+    return 2. * pspec_muon(eng_ps, cme / 2.)
 
 
 def positron_spectra(eng_ps, cme, params):
@@ -48,13 +50,13 @@ def positron_spectra(eng_ps, cme, params):
     # Only compute the spectrum if the channel's branching fraction is nonzero
     def spec_helper(bf, specfn):
         if bf != 0:
-            return bf * specfn(eng_ps, cme / 2.)
+            return bf * specfn(eng_ps, cme, params)
         else:
             return np.zeros(eng_ps.shape)
 
-    mumu_spec = spec_helper(bfs['mu mu'], pspec_muon)
+    mumu_spec = spec_helper(bfs['mu mu'], dnde_mumu)
 
-    pi0pipi_spec = positron_spectra_pi0pipi(eng_ps, cme, params)
+    pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
 
     total = mumu_spec
 
