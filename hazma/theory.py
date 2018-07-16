@@ -231,11 +231,9 @@ class Theory(object):
         return np.array(lims)
 
     def f_eff(self, x_kd=1.0e-4):  # TODO: clean this up...
-        spec_fn = self._get_f_eff_spec_fn()
-        pos_spec_fn = self._get_f_eff_pos_spec_fn()
-
-        return f_eff(spec_fn, self.gamma_ray_lines, pos_spec_fn,
-                     self.positron_lines, self.mx, x_kd)
+        return f_eff(self.total_spectrum, self.gamma_ray_lines,
+                     self.total_positron_spectrum, self.positron_lines,
+                     self.mx, x_kd)
 
     def f_effs(self, mxs, x_kd=1.0e-4):
         f_eff_vals = []
