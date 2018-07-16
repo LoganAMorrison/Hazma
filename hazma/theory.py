@@ -3,7 +3,8 @@ from .gamma_ray_limits.gamma_ray_limit_parameters import T_obs_e_astrogam
 from .gamma_ray_limits.gamma_ray_limit_parameters import draco_params
 from .gamma_ray_limits.gamma_ray_limit_parameters import default_bg_model
 from .gamma_ray_limits.gamma_ray_limit_parameters import energy_res_e_astrogam
-from .gamma_ray_limits.compute_limits import unbinned_limit, binned_limit
+from .gamma_ray_limits.compute_limits import (unbinned_limit as ubl,
+                                              binned_limit as bl)
 from .cmb import f_eff, cmb_limit
 from .gamma_ray_limits.compute_limits import get_detected_spectrum
 from .constraint_parameters import sv_inv_MeV_to_cm3_per_s
@@ -42,42 +43,79 @@ class Theory(object):
         pass
 
     @abstractmethod
-    def spectra(self, eng_gams, cme):
+    def spectra(self, e_gams, cme):
         pass
 
     @abstractmethod
     def spectrum_functions(self):
         pass
 
+    def total_spectrum(self, e_gams, e_cm):
+        """Returns total gamma ray spectrum.
+
+        Parameters
+        ----------
+        e_gams : float or float numpy.array
+            Photon energy or energies at which to compute the spectrum.
+        e_cm : float
+            DM center of mass energy.
+
+        Returns
+        -------
+        tot_spec : float numpy.array
+            Array containing the total annihilation spectrum.
+        """
+        if hasattr(e_gams, "__len__"):
+            return self.spectra(e_gams, e_cm)["total"]
+        else:
+            return self.spectra(np.array([e_gams]), e_cm)["total"]
+
     @abstractmethod
-    def positron_spectra(self, eng_es, e_cm):
+    def positron_spectra(self, e_ps, e_cm):
         pass
+
+    def total_positron_spectrum(self, e_ps, e_cm):
+        """Returns total positron ray spectrum.
+
+        Parameters
+        ----------
+        e_ps : float or float numpy.array
+            Positron energy or energies at which to compute the spectrum.
+        e_cm : float
+            DM center of mass energy.
+
+        Returns
+        -------
+        tot_spec : float numpy.array
+            Array containing the total annihilation positron spectrum.
+        """
+        if hasattr(e_ps, "__len__"):
+            return self.positron_spectra(e_ps, e_cm)["total"]
+        else:
+            return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
 
     @abstractmethod
     def positron_lines(self, e_cm):
         pass
 
     def binned_limit(self, measurement, n_sigma=2.):
-        def spec_fn(e_gams, e_cm):
-            if hasattr(e_gams, "__len__"):
-                return self.spectra(e_gams, e_cm)["total"]
-            else:
-                return self.spectra(np.array([e_gams]), e_cm)["total"]
-
-        return binned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
-                            measurement, n_sigma)
+        return bl(self.total_spectrum, self.gamma_ray_lines, self.mx, False,
+                  measurement, n_sigma)
 
     def binned_limits(self, mxs, measurement, n_sigma=2.):
-        def binned_limit_change_mass(mx):
-            self.mx = mx
-            return self.binned_limit(measurement, n_sigma)
+        lims = []
 
-        return np.vectorize(binned_limit_change_mass)(mxs)
+        for mx in mxs:
+            self.mx = mx
+            lims.append(self.binned_limit(measurement, n_sigma))
+
+        return np.array(lims)
 
     def unbinned_limit(self, A_eff=A_eff_e_astrogam,
                        energy_res=energy_res_e_astrogam,
                        T_obs=T_obs_e_astrogam, target_params=draco_params,
-                       bg_model=default_bg_model, n_sigma=5.):
+                       bg_model=default_bg_model, n_sigma=5.,
+                       debug_msgs=False):
         """Computes smallest value of <sigma v> detectable for given target and
         experiment parameters.
 
@@ -125,30 +163,28 @@ class Theory(object):
             Smallest detectable thermally averaged total cross section in units
             of cm^3 / s
         """
-        def spec_fn(e_gams, e_cm):
-            if hasattr(e_gams, "__len__"):
-                return self.spectra(e_gams, e_cm)["total"]
-            else:
-                return self.spectra(np.array([e_gams]), e_cm)["total"]
-
-        return unbinned_limit(spec_fn, self.gamma_ray_lines, self.mx, False,
-                              A_eff, energy_res, T_obs, target_params,
-                              bg_model, n_sigma)
+        return ubl(self.total_spectrum, self.gamma_ray_lines, self.mx, False,
+                   A_eff, energy_res, T_obs, target_params, bg_model, n_sigma,
+                   debug_msgs=debug_msgs)
 
     def unbinned_limits(self, mxs, A_eff=A_eff_e_astrogam,
                         energy_res=energy_res_e_astrogam,
                         T_obs=T_obs_e_astrogam, target_params=draco_params,
-                        bg_model=default_bg_model, n_sigma=5.):
+                        bg_model=default_bg_model, n_sigma=5.,
+                        debug_msgs=False):
         """Computes gamma ray constraints over a range of DM masses.
 
         See documentation for :func:`unbinned_limit`.
         """
-        def unbinned_limit_change_mass(mx):
-            self.mx = mx
-            return self.unbinned_limit(A_eff, energy_res, T_obs, target_params,
-                                       bg_model, n_sigma)
+        lims = []
 
-        return np.vectorize(unbinned_limit_change_mass)(mxs)
+        for mx in mxs:
+            self.mx = mx
+            lims.append(self.unbinned_limit(A_eff, energy_res, T_obs,
+                                            target_params, bg_model, n_sigma,
+                                            debug_msgs))
+
+        return np.array(lims)
 
     def cmb_limit(self, x_kd=1.0e-4):
         """Computes CMB limit on <sigma v>.
@@ -164,24 +200,13 @@ class Theory(object):
         <sigma v> : float
             Upper bound on <sigma v>.
         """
-        def spec_fn(e_gams, e_cm):
-            if hasattr(e_gams, "__len__"):
-                return self.spectra(e_gams, e_cm)["total"]
-            else:
-                return self.spectra(np.array([e_gams]), e_cm)["total"]
-
-        def pos_spec_fn(e_ps, e_cm):
-            if hasattr(e_ps, "__len__"):
-                return self.positron_spectra(e_ps, e_cm)["total"]
-            else:
-                return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
-
-        f_eff_dm = f_eff(spec_fn, self.gamma_ray_lines, pos_spec_fn,
-                         self.positron_lines, self.mx, x_kd)
+        f_eff_dm = f_eff(self.total_spectrum, self.gamma_ray_lines,
+                         self.total_positron_spectrum, self.positron_lines,
+                         self.mx, x_kd)
 
         return cmb_limit(self.mx, f_eff_dm)
 
-    def cmb_limits(self, mxs, x_kd=1.0e-4):  # TODO: clean this up...
+    def cmb_limits(self, mxs, x_kd=1.0e-4):
         """Computes CMB limit on <sigma v>.
 
         Parameters
@@ -197,34 +222,29 @@ class Theory(object):
         svs : np.array
             Array of upper bounds on <sigma v> for each mass in mxs.
         """
-        def cmb_limit_change_mass(mx):
-            self.mx = mx
-            return self.cmb_limit(x_kd)
+        lims = []
 
-        return np.vectorize(cmb_limit_change_mass)(mxs)
+        for mx in mxs:
+            self.mx = mx
+            lims.append(self.cmb_limit(x_kd))
+
+        return np.array(lims)
 
     def f_eff(self, x_kd=1.0e-4):  # TODO: clean this up...
-        def spec_fn(e_gams, e_cm):
-            if hasattr(e_gams, "__len__"):
-                return self.spectra(e_gams, e_cm)["total"]
-            else:
-                return self.spectra(np.array([e_gams]), e_cm)["total"]
-
-        def pos_spec_fn(e_ps, e_cm):
-            if hasattr(e_ps, "__len__"):
-                return self.positron_spectra(e_ps, e_cm)["total"]
-            else:
-                return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
+        spec_fn = self._get_f_eff_spec_fn()
+        pos_spec_fn = self._get_f_eff_pos_spec_fn()
 
         return f_eff(spec_fn, self.gamma_ray_lines, pos_spec_fn,
                      self.positron_lines, self.mx, x_kd)
 
     def f_effs(self, mxs, x_kd=1.0e-4):
-        def f_eff_change_mass(mx):
-            self.mx = mx
-            return self.f_eff(x_kd)
+        f_eff_vals = []
 
-        return np.vectorize(f_eff_change_mass)(mxs)
+        for mx in mxs:
+            self.mx = mx
+            f_eff_vals.append(self.f_eff(x_kd))
+
+        return np.array(f_eff_vals)
 
     def custom_constrain(self, param_grid, ls_or_img="image"):
         """Computes constraints over grid of parameter values.
@@ -372,8 +392,8 @@ class Theory(object):
                          for fs, spec_fn in
                          self.spectrum_functions().iteritems()
                          if fs != "total"}
-        # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn in
-        #                    self.gamma_ray_lines(cme) if fs != "total"}
+        # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn
+        #                    in self.gamma_ray_lines(cme) if fs != "total"}
 
         def flux_difference(p2, p2_val):
             """Compute difference between Phi_obs+N*sigma - Phi_th.
