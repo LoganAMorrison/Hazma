@@ -46,6 +46,8 @@ def vx_cmb(mx, x_kd):
     return 2.0e-4 * temp_cmb / mx * np.sqrt(1.0e-4 / x_kd)
 
 
+# TODO: moving this into theory would make it much cleaner.
+
 def f_eff(spec_fn, line_fn, pos_spec_fn, pos_line_fn, mx, x_kd=1.0e-4):
     """Computes f_eff(m_x) for DM annihilations.
 
@@ -91,16 +93,29 @@ def f_eff(spec_fn, line_fn, pos_spec_fn, pos_line_fn, mx, x_kd=1.0e-4):
     # Lower bound on integrals
     e_min_ep = f_eff_ep.x[0]
 
-    # Continuum contributions from photons
+    # Continuum contributions from photons. Create an interpolator to avoid
+    # recomputing spectrum.
+    e_gams = np.logspace(np.log10(e_min_g), np.log10(mx), 1000)
+    dnde_tot = spec_fn(e_gams, e_cm)
+    spec_interp = interp1d(e_gams, dnde_tot, bounds_error=False, fill_value=0.)
+
     def g_integrand(e):
-        return e * spec_fn(e, e_cm) * f_eff_g(e)
+        return e * spec_interp(e) * f_eff_g(e)
+
     f_eff_g_dm = quad(g_integrand, e_min_g, mx, epsabs=0, epsrel=1e-3)[0] \
         / (2.*mx)
 
-    # Continuum contributions from e+ e-
+    # Continuum contributions from e+ e-. Create an interpolator to avoid
+    # recomputing positron spectrum.
+    e_eps = np.logspace(np.log10(e_min_ep), np.log10(mx), 1000)
+    dnde_ep_tot = pos_spec_fn(e_eps, e_cm)
+    pos_spec_interp = interp1d(e_eps, dnde_ep_tot, bounds_error=False,
+                               fill_value=0.)
+
     def ep_integrand(e):
         # Note the factor of 2
-        return e * 2.*pos_spec_fn(e, e_cm) * f_eff_ep(e)
+        return e * 2.*pos_spec_interp(e) * f_eff_ep(e)
+
     f_eff_ep_dm = quad(ep_integrand, e_min_ep, mx, epsabs=0, epsrel=1e-3)[0] \
         / (2.*mx)
 
