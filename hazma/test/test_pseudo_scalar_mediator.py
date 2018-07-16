@@ -3,17 +3,15 @@ import numpy as np
 
 
 def test_list_final_states():
-    mx, mp = [100., 200.]
-    gpxx, gpff = [1., 1.]
-    PSM = PseudoScalarMediator(mx, mp, gpxx, gpff)
+    PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
+                               gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
     PSM.list_final_states()
 
 
 def test_cross_sections():
-    mx, mp = [100., 200.]
-    gpxx, gpff = [1., 1.]
-    PSM = PseudoScalarMediator(mx, mp, gpxx, gpff)
+    PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
+                               gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
     cme = 1000.
 
@@ -21,9 +19,8 @@ def test_cross_sections():
 
 
 def test_branching_fractions():
-    mx, mp = [100., 200.]
-    gpxx, gpff = [1., 1.]
-    PSM = PseudoScalarMediator(mx, mp, gpxx, gpff)
+    PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
+                               gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
     cme = 1000.
 
@@ -31,9 +28,8 @@ def test_branching_fractions():
 
 
 def test_spectra():
-    mx, mp = [100., 200.]
-    gpxx, gpff = [1., 1.]
-    PSM = PseudoScalarMediator(mx, mp, gpxx, gpff)
+    PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
+                               gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
     cme = 1000.
     egams = np.logspace(0., np.log10(cme), num=50)
@@ -42,9 +38,8 @@ def test_spectra():
 
 
 def test_spectrum_functions():
-    mx, mp = [100., 200.]
-    gpxx, gpff = [1., 1.]
-    PSM = PseudoScalarMediator(mx, mp, gpxx, gpff)
+    PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
+                               gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
     PSM.spectrum_functions()
 
