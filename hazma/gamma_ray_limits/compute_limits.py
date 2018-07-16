@@ -52,7 +52,7 @@ def __f_jac_lim(e_ab, integrand_S, integrand_B):
 
 def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                    energy_res, T_obs, target_params, bg_model, n_sigma=5.,
-                   n_pts=1000):
+                   n_pts=1000, debug_msgs=False):
     """Computes smallest value of <sigma v> detectable for given target and
     experiment parameters.
 
@@ -136,6 +136,9 @@ def unbinned_limit(spec_fn, line_fn, mx, self_conjugate, A_eff,
                                   jac=True,
                                   options={"ftol": 1e-7, "eps": 1e-10},
                                   method="SLSQP")
+
+    if debug_msgs:
+        print "\te_a, e_b = ", limit_obj.x
 
     # Insert appropriate prefactors to convert result to <sigma v>_tot
     prefactor = (2. * 4. * np.pi * (1. if self_conjugate else 2.) * mx**2 /
@@ -295,7 +298,7 @@ def get_detected_spectrum(spec_fn, line_fn, e_min, e_max, e_cm, energy_res,
 
             return trapz(integrand_vals, e_gams_padded)
 
-        dnde_cont_det = np.vectorize(integral)(e_gams)
+        dnde_cont_det = np.array([integral(e) for e in e_gams])
 
     # Line contribution
     lines = line_fn(e_cm)
