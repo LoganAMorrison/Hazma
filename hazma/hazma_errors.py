@@ -23,6 +23,20 @@ class NegativeSquaredMatrixElementError(HazmaError):
         return self.default_message
 
 
+class RamboCMETooSmall(HazmaError):
+    """
+    Exception raised when RAMBO is called with a CME less than the sum of final
+    state masses.
+    """
+
+    def __init__(self, message=None):
+        super(RamboCMETooSmall, self).__init__(message)
+        self.default_message = ("Center of mass energy is less than sum of " +
+                                "the final state masses")
+
+    def __str__(self):
+        return self.default_message
+
 # #############################################################################
 # ################## HAZMA WARNINGS ###########################################
 # #############################################################################
