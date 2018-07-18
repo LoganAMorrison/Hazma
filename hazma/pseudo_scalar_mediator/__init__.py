@@ -201,6 +201,9 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
         """
         return ['e e', 'mu mu', 'g g', 'pi0 pi pi', 'pi0 pi0 pi0', 'p p']
 
+    def constraints(self):
+        pass
+
 
 class PseudoScalarMFV(PseudoScalarMediator):
     """MFV version of the pseudoscalar model. While lepton couplings are free

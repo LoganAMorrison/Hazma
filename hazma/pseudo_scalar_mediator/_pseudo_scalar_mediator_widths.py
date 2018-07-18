@@ -42,7 +42,7 @@ class PseudoScalarMediatorWidths:
         else:
             return 0.
 
-    def width_p_to_ff(f, self):
+    def width_p_to_ff(self, f):
         mp = self.mp
 
         if f == "e":
@@ -63,7 +63,7 @@ class PseudoScalarMediatorWidths:
         else:
             return 0.
 
-    def dwidth_ds_p_to_pi0pi0pi0(s, self):
+    def dwidth_ds_p_to_pi0pi0pi0(self, s):
         mp = self.mp
         mpi0 = self.mpi0  # use shifted pion mass!
 
@@ -113,7 +113,7 @@ class PseudoScalarMediatorWidths:
         smax = (mp - mpi0)**2
         smin = 4. * mpi0**2
 
-        res = quad(self.dwidth_ds_p_to_pi0pi0pi0, smin, smax, args=(self))
+        res = quad(self.dwidth_ds_p_to_pi0pi0pi0, smin, smax)
 
         return res[0]
 
