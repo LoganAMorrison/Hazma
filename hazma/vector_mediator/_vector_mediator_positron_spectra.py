@@ -5,6 +5,12 @@ from ..positron_spectra import charged_pion as pspec_charged_pion
 
 
 class VectorMediatorPositronSpectra:
+    def dnde_pos_pipi(eng_ps, cme):
+        return pspec_charged_pion(eng_ps, cme / 2.)
+
+    def dnde_pos_mumu(eng_ps, cme):
+        return pspec_muon(eng_ps, cme / 2.)
+
     def positron_spectra(self, eng_ps, cme):
         """
         """
@@ -16,16 +22,16 @@ class VectorMediatorPositronSpectra:
         # nonzero
         def spec_helper(bf, specfn):
             if bf != 0:
-                return bf * specfn(eng_ps, cme / 2.)
+                return bf * specfn(eng_ps, cme)
             else:
                 return np.zeros(eng_ps.shape)
 
-        cpions = spec_helper(bfs['pi pi'], pspec_charged_pion)
-        muons = spec_helper(bfs['mu mu'], pspec_muon)
+        muon_spec = spec_helper(bfs['mu mu'], self.dnde_pos_mumu)
+        pipi_spec = spec_helper(bfs['pi pi'], self.dnde_pos_pipi)
 
-        total = cpions + muons
+        total = pipi_spec + muon_spec
 
-        return {"total": total, "mu mu": muons, "pi pi": cpions}
+        return {"total": total, "mu mu": muon_spec, "pi pi": pipi_spec}
 
     def positron_lines(self, cme):
         bf = self.branching_fractions(cme)["e e"]

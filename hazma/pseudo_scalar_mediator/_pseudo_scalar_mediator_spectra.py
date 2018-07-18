@@ -82,7 +82,7 @@ class PseudoScalarMediatorSpectra:
             def msqrd_rad(momenta):
                 return msqrd_xx_to_p_to_pm0g(momenta)
 
-            isp_masses = np.array([params.mx.mx])
+            isp_masses = np.array([params.mx, params.mx])
             fsp_masses = np.array([mpi, mpi, mpi0, 0.0])
 
             return gamma_ray_rambo(isp_masses, fsp_masses, cme,
@@ -96,15 +96,12 @@ class PseudoScalarMediatorSpectra:
             # Define the matrix element squared for RAMBO. This needs to be
             # of the form double(*func)(np.ndarray) where the np.ndarray is
             # a list of 4-momenta. Note msqrd_xx_to_p_to_pm0 takes params as
-            # the
-            # second argument. The first and second FS particles must be the
-            # charged pions and the third a neutral pion.
-            def msqrd_tree(momenta):
-                return self.msqrd_xx_to_p_to_pm0(momenta)
+            # the second argument. The first and second FS particles must be
+            # the charged pions and the third a neutral pion.
 
             return gamma_ray(["charged_pion", "charged_pion", "neutral_pion"],
                              cme, egams, num_ps_pts=1000,
-                             mat_elem_sqrd=msqrd_tree)
+                             mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
         else:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))

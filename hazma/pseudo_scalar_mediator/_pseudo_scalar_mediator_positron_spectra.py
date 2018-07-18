@@ -8,20 +8,16 @@ from hazma.parameters import neutral_pion_mass as mpi0
 
 
 class PseudoScalarMediatorPositronSpectra:
-    def dnde_pi0pipi(self, eng_ps, cme, num_ps_pts=1000):
-
+    def dnde_pos_pi0pipi(self, eng_ps, cme, num_ps_pts=1000):
         if cme <= 2. * mpi + mpi0:
             return np.zeros(len(eng_ps), dtype=float)
 
-        def msqrd_tree(momenta):
-            return self.msqrd_xx_to_p_to_pm0(momenta)
-
         return positron_rambo(["charged_pion", "charged_pion", "neutral_pion"],
                               cme, eng_ps, num_ps_pts=1000,
-                              mat_elem_sqrd=msqrd_tree)
+                              mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
 
-    def dnde_mumu(eng_ps, cme):
-        return 2. * pspec_muon(eng_ps, cme / 2.)
+    def dnde_pos_mumu(eng_ps, cme):
+        return pspec_muon(eng_ps, cme / 2.)
 
     def positron_spectra(self, eng_ps, cme):
         """Computes continuum part of positron spectrum from DM annihilation.
@@ -51,11 +47,10 @@ class PseudoScalarMediatorPositronSpectra:
             else:
                 return np.zeros(eng_ps.shape)
 
-        mumu_spec = spec_helper(bfs['mu mu'], self.dnde_mumu)
+        mumu_spec = spec_helper(bfs['mu mu'], self.dnde_pos_mumu)
+        pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], self.dnde_pos_pi0pipi)
 
-        pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], self.dnde_pi0pipi)
-
-        total = mumu_spec
+        total = mumu_spec + pi0pipi_spec
 
         return {"total": total,
                 "mu mu": mumu_spec,

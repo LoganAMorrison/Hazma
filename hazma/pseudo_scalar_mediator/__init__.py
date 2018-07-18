@@ -206,24 +206,25 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
 
 
 class PseudoScalarMFV(PseudoScalarMediator):
-    """MFV version of the pseudoscalar model. While lepton couplings are free
-    variables, the quark ones are gpqq times the Yukawas.
+    """MFV version of the pseudoscalar model.
     """
 
-    def __init__(self, mx, mp, gpxx, gpqq, gpll, gpGG, gpFF):
-        self._gpqq = gpqq
+    def __init__(self, mx, mp, gpxx, gpuu, gpdd, gpll, gpGG, gpFF):
+        self._gpuu = gpuu
+        self._gpdd = gpdd
         self._gpll = gpll
 
         yu = muq / vh
         yd = mdq / vh
         ys = msq / vh
+
         ye = me / vh
         ymu = mmu / vh
 
-        super(PseudoScalarMediator, self).__init__(mx, mp, gpxx, gpqq * yu,
-                                                   gpqq * yd, gpqq * ys,
-                                                   gpll * ye,
-                                                   gpll * ymu, gpGG, gpFF)
+        super(PseudoScalarMFV, self).__init__(mx, mp, gpxx, gpuu * yu,
+                                              gpdd * yd, gpdd * ys,
+                                              gpll * ye, gpll * ymu, gpGG,
+                                              gpFF)
 
     @property
     def gpll(self):
@@ -240,17 +241,27 @@ class PseudoScalarMFV(PseudoScalarMediator):
         self.gpmumu = gpll * ymu
 
     @property
-    def gpqq(self):
-        return self._gpqq
+    def gpuu(self):
+        return self._gpuu
 
-    @gpqq.setter
-    def gpqq(self, gpqq):
-        self._gpqq = gpqq
+    @gpuu.setter
+    def gpuu(self, gpuu):
+        self._gpuu = gpuu
 
         yu = muq / vh
+
+        self.gpuu = gpuu * yu
+
+    @property
+    def gpdd(self):
+        return self._gpdd
+
+    @gpdd.setter
+    def gpdd(self, gpdd):
+        self._gpdd = gpdd
+
         yd = mdq / vh
         ys = msq / vh
 
-        self.gpuu = gpqq * yu
-        self.gpdd = gpqq * yd
-        self.gpss = gpqq * ys
+        self.gpdd = gpdd * yd
+        self.gpss = gpdd * ys

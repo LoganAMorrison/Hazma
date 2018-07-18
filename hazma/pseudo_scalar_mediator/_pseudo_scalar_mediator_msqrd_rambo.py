@@ -207,7 +207,7 @@ class PseudoScalarMediatorMSqrdRambo:
 
         return beta0 + beta1 + beta2
 
-    def msqrd_xx_to_p_to_000(momenta, self):
+    def msqrd_xx_to_p_to_000(self, momenta):
         """
         Returns the squared matrix element for dark matter annihilating into
         three neutral pions through a scalar mediator. This function is used
