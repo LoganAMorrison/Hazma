@@ -12,7 +12,7 @@ class VectorMediatorPositronSpectra:
         return pspec_muon(eng_ps, cme / 2.)
 
     def positron_spectra(self, eng_ps, cme):
-        """
+        """Computes total continuum positron spectrum.
         """
 
         # Compute branching fractions
