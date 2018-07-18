@@ -1,8 +1,5 @@
 from ..theory import Theory
 
-from scalar_mediator_cross_sections import branching_fractions as bfs
-from scalar_mediator_cross_sections import cross_sections as cs
-
 from scalar_mediator_positron_spectra import positron_spectra as pos_specs
 from scalar_mediator_positron_spectra import positron_lines as pls
 
@@ -52,6 +49,14 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
     gsFF : float
         Coupling of the scalar mediator to photons.
     """
+
+    from scalar_mediator_cross_sections import (cross_sections,
+                                                branching_fractions,
+                                                sigma_xx_to_s_to_ff,
+                                                sigma_xx_to_s_to_gg,
+                                                sigma_xx_to_s_to_pi0pi0,
+                                                sigma_xx_to_s_to_pipi,
+                                                sigma_xx_to_ss)
 
     def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF):
         """
@@ -146,40 +151,6 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Array of the available final states.
         """
         return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
-
-    def cross_sections(self, cme):
-        """
-        Compute the all the cross sections of the theory.
-
-        Parameters
-        ----------
-        cme : float
-            Center of mass energy.
-
-        Returns
-        -------
-        cs : dictionary
-            Dictionary of the cross sections of the theory.
-        """
-        return cs(cme, self)
-
-    def branching_fractions(self, cme):
-        """
-        Compute the branching fractions for two fermions annihilating through a
-        scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        Q : float
-            Center of mass energy.
-
-        Returns
-        -------
-        bfs : dictionary
-            Dictionary of the branching fractions. The keys are 'total',
-            'mu mu', 'e e', 'pi0 pi0', 'pi pi'
-        """
-        return bfs(cme, self)
 
     def gamma_ray_lines(self, cme):
         return gls(cme, self)

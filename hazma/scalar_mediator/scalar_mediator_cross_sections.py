@@ -9,7 +9,7 @@ from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
 
-def sigma_xx_to_s_to_ff(Q, f, params):
+def sigma_xx_to_s_to_ff(self, Q, f):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of fermions, *f* through a
     scalar mediator in the s-channel.
@@ -24,7 +24,7 @@ def sigma_xx_to_s_to_ff(Q, f, params):
     sigma : float
         Cross section for x + x -> s* -> f + f.
     """
-    mx = params.mx
+    mx = self.mx
 
     if f == 'e':
         mf = me
@@ -32,10 +32,10 @@ def sigma_xx_to_s_to_ff(Q, f, params):
         mf = mmu
 
     if Q > 2. * mf and Q >= 2. * mx:
-        ms = params.ms
-        gsff = params.gsff
-        gsxx = params.gsxx
-        width_s = params.width_s
+        ms = self.ms
+        gsff = self.gsff
+        gsxx = self.gsxx
+        width_s = self.width_s
 
         ret_val = (gsff**2 * gsxx**2 * mf**2 * (-2 * mx + Q) *
                    (2 * mx + Q) * (-4 * mf**2 + Q**2)**1.5) / \
@@ -50,7 +50,7 @@ def sigma_xx_to_s_to_ff(Q, f, params):
         return 0.
 
 
-def sigma_xx_to_s_to_gg(Q, params):
+def sigma_xx_to_s_to_gg(self, Q):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of photons through a
     scalar mediator in the s-channel.
@@ -65,13 +65,13 @@ def sigma_xx_to_s_to_gg(Q, params):
     sigma : float
         Cross section for x + x -> s* -> g + g.
     """
-    mx = params.mx
+    mx = self.mx
 
     if Q >= 2. * mx:
-        gsFF = params.gsFF
-        gsxx = params.gsxx
-        ms = params.ms
-        width_s = params.width_s
+        gsFF = self.gsFF
+        gsxx = self.gsxx
+        ms = self.ms
+        width_s = self.width_s
 
         ret_val = (alpha_em**2 * gsFF**2 * gsxx**2 * Q**3 *
                    (-2 * mx + Q) * (2 * mx + Q)) / \
@@ -86,7 +86,7 @@ def sigma_xx_to_s_to_gg(Q, params):
         return 0.0
 
 
-def sigma_xx_to_s_to_pi0pi0(Q, params):
+def sigma_xx_to_s_to_pi0pi0(self, Q):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of neutral pion through a
     scalar mediator in the s-channel.
@@ -101,15 +101,15 @@ def sigma_xx_to_s_to_pi0pi0(Q, params):
     sigma : float
         Cross section for x + x -> s* -> pi0 + pi0.
     """
-    mx = params.mx
+    mx = self.mx
 
     if Q > 2. * mpi0 and Q >= 2. * mx:
-        gsxx = params.gsxx
-        gsff = params.gsff
-        gsGG = params.gsGG
-        ms = params.ms
-        vs = params.vs
-        width_s = params.width_s
+        gsxx = self.gsxx
+        gsff = self.gsff
+        gsGG = self.gsGG
+        ms = self.ms
+        vs = self.vs
+        width_s = self.width_s
 
         ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) * sqrt(-4 * mpi0**2 + Q**2) *
                    (54 * gsGG * (-2 * mpi0**2 + Q**2) * vh *
@@ -129,7 +129,7 @@ def sigma_xx_to_s_to_pi0pi0(Q, params):
         return 0.
 
 
-def sigma_xx_to_s_to_pipi(Q, params):
+def sigma_xx_to_s_to_pipi(self, Q):
     """Returns the spin-averaged, cross section for a pair of fermions,
     *x*, annihilating into a pair of charged pions through a
     scalar mediator in the s-channel.
@@ -144,15 +144,15 @@ def sigma_xx_to_s_to_pipi(Q, params):
     sigma : float
         Cross section for x + x -> s* -> pi + pi.
     """
-    mx = params.mx
+    mx = self.mx
 
     if Q > 2. * mpi and Q >= 2. * mx:
-        gsxx = params.gsxx
-        gsff = params.gsff
-        gsGG = params.gsGG
-        ms = params.ms
-        vs = params.vs
-        width_s = params.width_s
+        gsxx = self.gsxx
+        gsff = self.gsff
+        gsGG = self.gsGG
+        ms = self.ms
+        vs = self.vs
+        width_s = self.width_s
 
         ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) *
                    sqrt(-4 * mpi**2 + Q**2) *
@@ -174,12 +174,12 @@ def sigma_xx_to_s_to_pipi(Q, params):
         return 0.
 
 
-def sigma_xx_to_ss(Q, params):
-    ms = params.ms
-    mx = params.mx
+def sigma_xx_to_ss(self, Q):
+    ms = self.ms
+    mx = self.mx
 
     if Q > 2. * ms and Q >= 2. * mx:
-        gsxx = params.gsxx
+        gsxx = self.gsxx
 
         ret_val = (gsxx**4 * sqrt(Q**2 - 4 * ms**2) *
                    ((4 * (ms**2 - 4 * mx**2)**2) /
@@ -211,27 +211,26 @@ def sigma_xx_to_ss(Q, params):
         return 0.
 
 
-def cross_sections(Q, params):
+def cross_sections(self, Q):
     """
-    Compute the total cross section for two fermions annihilating through a
-    scalar mediator to mesons and leptons.
+    Compute the all the cross sections of the theory.
 
     Parameters
     ----------
     cme : float
-        Center of mass energy.
+    Center of mass energy.
 
     Returns
     -------
-    cs : float
-        Total cross section.
+    cs : dictionary
+    Dictionary of the cross sections of the theory.
     """
-    muon_contr = sigma_xx_to_s_to_ff(Q, 'mu', params)
-    electron_contr = sigma_xx_to_s_to_ff(Q, 'e', params)
-    photon_contr = sigma_xx_to_s_to_gg(Q, params)
-    NPion_contr = sigma_xx_to_s_to_pi0pi0(Q, params)
-    CPion_contr = sigma_xx_to_s_to_pipi(Q, params)
-    ss_contr = sigma_xx_to_ss(Q, params)
+    muon_contr = self.sigma_xx_to_s_to_ff(Q, 'mu')
+    electron_contr = self.sigma_xx_to_s_to_ff(Q, 'e')
+    photon_contr = self.sigma_xx_to_s_to_gg(Q)
+    NPion_contr = self.sigma_xx_to_s_to_pi0pi0(Q)
+    CPion_contr = self.sigma_xx_to_s_to_pipi(Q)
+    ss_contr = self.sigma_xx_to_ss(Q)
 
     total = (muon_contr + electron_contr + NPion_contr + CPion_contr +
              photon_contr + ss_contr)
@@ -247,7 +246,7 @@ def cross_sections(Q, params):
     return cross_secs
 
 
-def branching_fractions(Q, params):
+def branching_fractions(self, Q):
     """
     Compute the branching fractions for two fermions annihilating through a
     scalar mediator to mesons and leptons.
@@ -263,7 +262,7 @@ def branching_fractions(Q, params):
         Dictionary of the branching fractions. The keys are 'total',
         'mu mu', 'e e', 'pi0 pi0', 'pi pi'
     """
-    CSs = cross_sections(Q, params)
+    CSs = self.cross_sections(Q)
 
     if CSs['total'] == 0.0:
         return {'mu mu': 0.0,
