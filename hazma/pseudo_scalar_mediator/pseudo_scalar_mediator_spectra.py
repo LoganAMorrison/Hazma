@@ -28,6 +28,8 @@ def dnde_pp(egams, Q, params, mode="total"):
 
 
 def dnde_ee(egams, cme, params, spectrum_type='All'):
+    """Computes spectrum from DM annihilation into electrons.
+    """
     if spectrum_type == 'All':
         return (dnde_ee(egams, cme, params, 'FSR') +
                 dnde_ee(egams, cme, params, 'Decay'))
@@ -41,6 +43,8 @@ def dnde_ee(egams, cme, params, spectrum_type='All'):
 
 
 def dnde_mumu(egams, cme, params, spectrum_type='All'):
+    """Computes spectrum from DM annihilation into muons.
+    """
     if spectrum_type == 'All':
         return (dnde_mumu(egams, cme, params, 'FSR') +
                 dnde_mumu(egams, cme, params, 'Decay'))
@@ -54,14 +58,20 @@ def dnde_mumu(egams, cme, params, spectrum_type='All'):
 
 
 def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
+    """Computes spectrum from DM annihilation into a neutral pion and two
+    charged pions.
 
+    Notes
+    -----
+    This function uses RAMBO to "convolve" the pions' spectra with the matrix
+    element over the pi0 pi pi phase space.
+    """
     if cme < 2. * mpi + mpi0:
         return np.array([0.0 for _ in range(len(egams))])
 
     if spectrum_type == 'All':
         return (dnde_pi0pipi(egams, cme, params, 'FSR') +
                 dnde_pi0pipi(egams, cme, params, 'Decay'))
-
     elif spectrum_type == 'FSR':
         # Define the tree level and radiative matrix element squared for
         # RAMBO. These need to be of the form double(*func)(np.ndarray) where
@@ -89,7 +99,6 @@ def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
         """
 
         return np.array([0.0 for _ in range(len(egams))])
-
     elif spectrum_type == 'Decay':
         # Define the matrix element squared for RAMBO. This needs to be
         # of the form double(*func)(np.ndarray) where the np.ndarray is
@@ -108,19 +117,21 @@ def dnde_pi0pipi(egams, cme, params, spectrum_type='All'):
 
 
 def dnde_pi0pi0pi0(egams, cme, params, spectrum_type='All'):
-    """
-    Return the gamma ray spectrum for dark matter annihilations into
+    """Return the gamma ray spectrum for dark matter annihilations into
     three neutral pions.
+
+    Notes
+    -----
+    This function uses RAMBO to "convolve" the pions' spectra with the matrix
+    element over the pi0 pi0 pi0 phase space.
     """
     if cme < 3. * mpi0:
         return np.array([0.0 for _ in range(len(egams))])
 
     if spectrum_type == 'All':
         return dnde_pi0pi0pi0(egams, cme, params, 'Decay')
-
     elif spectrum_type == 'FSR':
         return np.array([0.0 for _ in range(len(egams))])
-
     elif spectrum_type == 'Decay':
         # Define the matrix element squared for RAMBO. This needs to be
         # of the form double(*func)(np.ndarray) where the np.ndarray is
@@ -164,7 +175,7 @@ def spectra(egams, cme, params):
         else:
             return np.zeros(egams.shape)
 
-    # Pions. TODO: use rambo to compute this.
+    # Pions
     pi0pipi_spec = spec_helper(bfs['pi0 pi pi'], dnde_pi0pipi)
     pi0pi0pi0_spec = spec_helper(bfs['pi0 pi0 pi0'], dnde_pi0pi0pi0)
 

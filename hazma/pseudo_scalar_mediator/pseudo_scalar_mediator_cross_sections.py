@@ -11,23 +11,21 @@ from scipy.integrate import quad
 
 
 def sigma_xx_to_p_to_ff(Q, f, params):
-    """
-    Returns the cross section for two identical fermions "x" to two
-    identical fermions "f".
+    """Returns the cross section for two DM particles into two fermions.
 
     Parameters
     ----------
     Q : float
         Center of mass energy.
     f : string
-        Name of final state fermions.
-    params : object
-        Object of the pseudo-scalar parameters class.
+        Name of final state fermions: 'e' or 'mu'.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
 
     Returns
     -------
     cross_section : float
-        Cross section for x + x -> p -> f + f.
+        Cross section for xx -> p -> ff.
     """
     if f == "e":
         rf = me / Q
@@ -56,6 +54,20 @@ def sigma_xx_to_p_to_ff(Q, f, params):
 
 
 def sigma_xx_to_p_to_gg(Q, params):
+    """Returns the cross section for DM annihilating into two photons.
+
+    Parameters
+    ----------
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
+
+    Returns
+    -------
+    cross_section : float
+        Cross section for xx -> p -> gg.
+    """
     beta = params.beta
     mx = params.mx
 
@@ -80,6 +92,20 @@ def sigma_xx_to_p_to_gg(Q, params):
 
 
 def sigma_xx_to_pp(Q, params):
+    """Returns the cross section for DM annihilating into two mediators.
+
+    Parameters
+    ----------
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
+
+    Returns
+    -------
+    cross_section : float
+        Cross section for xx -> pp.
+    """
     mx = params.mx
     mp = params.mp
     beta = params.beta
@@ -108,6 +134,21 @@ def sigma_xx_to_pp(Q, params):
 
 
 def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
+    """Returns the dsigma/ds for DM annihilation into three neutral pions.
+
+    Parameters
+    ----------
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
+
+    Returns
+    -------
+    dsigma_ds : float
+        dsigma/ds for xx -> p -> pi0 pi0 pi0, where s=(P-q)^2, with P the
+        center of mass momentum and q the momentum of one of the pi0s.
+    """
     mx = params.mx
     mpi0 = params.mpi0  # use shifted pion mass!
 
@@ -139,23 +180,23 @@ def dsigma_ds_xx_to_p_to_pi0pi0pi0(s, Q, params):
 
 
 def sigma_xx_to_p_to_pi0pi0pi0(Q, params):
-    """
-    Returns the dark matter annihilation cross section into three neutral pions
-    through a pseudo-scalar mediator.
+    """Returns the DM annihilation cross section into three neutral pions.
+
+    Notes
+    -----
+    Integrates dsigma/ds as given by `dsigma_ds_xx_to_p_to_pi0pi0pi0` over s.
 
     Parameters
     ----------
     Q : float
         Center of mass energy.
-    params : PseudoScalarMediator or PseudoScalarMediatorParameters object
-        Object containing the parameters of the pseudo-scalar mediator
-        model. Can be a PseudoScalarMediator or a
-        PseudoScalarMediatorParameters object.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
 
     Returns
     -------
-    sigma : float
-        The DM annihilation cross section into 3 pi^0.
+    cross_section : float
+        The DM annihilation cross section xx -> p -> pi0 pi0 pi0.
     """
 
     mpi0 = params.mpi0  # use shifted pion mass!
@@ -168,6 +209,22 @@ def sigma_xx_to_p_to_pi0pi0pi0(Q, params):
 
 
 def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
+    """Returns the dsigma/ds for DM annihilation into a neutral pion and two
+    charged pions.
+
+    Parameters
+    ----------
+    Q : float
+        Center of mass energy.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
+
+    Returns
+    -------
+    dsigma_ds : float
+        dsigma/ds for xx -> p -> pi0 pi pi, where s=(P-q)^2, with P the
+        center of mass momentum and q the momentum of the pi0.
+    """
     mx = params.mx
     mpi0 = params.mpi0  # use shifted pion mass!
 
@@ -203,23 +260,24 @@ def dsigma_ds_xx_to_p_to_pi0pipi(s, Q, params):
 
 
 def sigma_xx_to_p_to_pi0pipi(Q, params):
-    """
-    Returns the dark matter annihilation cross section into a neutral pion and
-    two charged pions through a pseudo-scalar mediator.
+    """Returns the DM annihilation cross section into a neutral pion and two
+    charged pions.
+
+    Notes
+    -----
+    Integrates dsigma/ds as given by `dsigma_ds_xx_to_p_to_pi0pipi` over s.
 
     Parameters
     ----------
     Q : float
         Center of mass energy.
-    params : PseudoScalarMediator or PseudoScalarMediatorParameters object
-        Object containing the parameters of the pseudo-scalar mediator
-        model. Can be a PseudoScalarMediator or a
-        PseudoScalarMediatorParameters object.
+    params : PseudoScalarMediatorParameters
+        Object of the pseudoscalar parameters class.
 
     Returns
     -------
-    sigma : float
-        The DM annihilation cross section into pi^0, pi^-, pi^+.
+    cross_section : float
+        The DM annihilation cross section xx -> p -> pi0 pi pi.
     """
 
     mpi0 = params.mpi0  # use shifted pion mass!
@@ -233,8 +291,7 @@ def sigma_xx_to_p_to_pi0pipi(Q, params):
 
 def cross_sections(Q, params):
     """
-    Compute the total cross section for two fermions annihilating through a
-    pseudo-scalar mediator to mesons and leptons.
+    Compute the total cross section DM annihilation.
 
     Parameters
     ----------
@@ -244,7 +301,8 @@ def cross_sections(Q, params):
     Returns
     -------
     cs : dict
-        Total cross section.
+        Dictionary containing the theory's cross sections. The keys are
+        'total', 'mu mu', 'e e', 'pi0 pi0 pi0', 'pi0 pi pi', 'g g', 'p p'.
     """
     muon_contr = sigma_xx_to_p_to_ff(Q, 'mu', params)
     electron_contr = sigma_xx_to_p_to_ff(Q, 'e', params)
@@ -271,8 +329,7 @@ def cross_sections(Q, params):
 
 def branching_fractions(Q, params):
     """
-    Compute the branching fractions for two fermions annihilating through a
-    scalar mediator to mesons and leptons.
+    Compute the branching fractions for DM annihilation.
 
     Parameters
     ----------
@@ -283,7 +340,7 @@ def branching_fractions(Q, params):
     -------
     bfs : dictionary
         Dictionary of the branching fractions. The keys are 'total',
-        'mu mu', 'e e', 'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
+        'mu mu', 'e e', 'pi0 pi0 pi0', 'pi0 pi pi', 'g g', 'p p'.
     """
     CSs = cross_sections(Q, params)
 

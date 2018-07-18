@@ -11,6 +11,8 @@ from pseudo_scalar_mediator_spectra import spectra as specs
 from pseudo_scalar_mediator_spectra import gamma_ray_lines as gls
 from pseudo_scalar_mediator_positron_spectra import positron_spectra as pss
 from pseudo_scalar_mediator_positron_spectra import positron_lines as pls
+from ..parameters import electron_mass as me
+from ..parameters import muon_mass as mmu
 from ..parameters import up_quark_mass as muq
 from ..parameters import down_quark_mass as mdq
 from ..parameters import strange_quark_mass as msq
@@ -137,16 +139,33 @@ class PseudoScalarMFV(PseudoScalarMediator):
     """MFV version of the pseudoscalar model. While lepton couplings are free
     variables, the quark ones are gpqq times the Yukawas.
     """
-    def __init__(self, mx, mp, gpxx, gpqq, gpee, gpmumu, gpGG, gpFF):
+    def __init__(self, mx, mp, gpxx, gpqq, gpll, gpGG, gpFF):
         self._gpqq = gpqq
+        self._gpll = gpll
 
         yu = muq / vh
         yd = mdq / vh
         ys = msq / vh
+        ye = me / vh
+        ymu = mmu / vh
 
         super(PseudoScalarMediator, self).__init__(mx, mp, gpxx, gpqq*yu,
-                                                   gpqq*yd, gpqq*ys, gpee,
-                                                   gpmumu, gpGG)
+                                                   gpqq*yd, gpqq*ys, gpll*ye,
+                                                   gpll*ymu, gpGG, gpFF)
+
+    @property
+    def gpll(self):
+        return self._gpll
+
+    @gpll.setter
+    def gpll(self, gpll):
+        self._gpll = gpll
+
+        ye = me / vh
+        ymu = mmu / vh
+
+        self.gpee = gpll*ye
+        self.gpmumu = gpll*ymu
 
     @property
     def gpqq(self):

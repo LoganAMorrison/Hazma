@@ -21,7 +21,7 @@ class PseudoScalarMediatorParameters(object):
         self._gpGG = gpGG
         self._gpFF = gpFF
 
-        self.determine_mixing()
+        self.determine_mixing()  # must be called BEFORE computing P's width!
         self.compute_width_p()
 
     @property
@@ -97,6 +97,8 @@ class PseudoScalarMediatorParameters(object):
     @gpss.setter
     def gpss(self, gpss):
         self._gpss = gpss
+        # This impacts P-eta mixing, but not P-pi0 mixing. The eta is above the
+        # mass range we are interested in.
         self.compute_width_p()
 
     @property
@@ -119,6 +121,18 @@ class PseudoScalarMediatorParameters(object):
         self.compute_width_p()
 
     def determine_mixing(self):
+        """Recomputes the mixing between P and pi0 and computes the resulting
+        shift in mpi0.
+
+        Notes
+        -----
+        * Depends on gpuu, gpdd, gpGG and mp.
+        * Must be called before calling compute_width_p().
+        * Resets the attributes `beta` (the mixing angle) and `mpi0` (the
+          shifted neutral pion mass). Warnings are printed if the neutral pion
+          mass shift is larger than 10 MeV, with a specific warning if the mass
+          is shifted to be imaginary.
+        """
         eps = b0*fpi*(self.gpuu - self.gpdd + (muq - mdq) / vh * self.gpGG)
 
         # Mixing angle between pi0 and p. Here I have assumed that the pi0 mass
