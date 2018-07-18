@@ -17,6 +17,11 @@ import numpy as np
 import multiprocessing as mp
 import warnings
 
+from hazma.hazma_errors import RamboCMETooSmall
+
+from hazma.field_theory_helper_functions.common_functions import \
+    cross_section_prefactor
+
 
 def generate_phase_space_point(masses, cme, num_fsp):
     """
@@ -39,7 +44,7 @@ def generate_phase_space_point(masses, cme, num_fsp):
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
     """
 
-    if not hasattr(masses):
+    if not hasattr(masses, "__len__"):
         masses = [masses]
 
     masses = np.array(masses)
@@ -92,6 +97,12 @@ def generate_phase_space(num_ps_pts, masses, cme,
     >>>
     >>> pts = rambo.generate_phase_space(num_ps_pts, masses, cme)
     """
+    if not hasattr(masses, "__len__"):
+        masses = [masses]
+
+    if cme < sum(masses):
+        raise RamboCMETooSmall()
+
     num_fsp = len(masses)
     # If the user doesn't specify the number of cpus to use,
     # use 75% of them.
@@ -113,7 +124,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
     # Instantiate `num_cpus` number of workers and divide num_ps_pts among the
     # the workers to speed up phase space generation.
     pool = mp.Pool(num_cpus)
-    num_ps_pts_per_cpu = num_ps_pts / num_cpus
+    num_ps_pts_per_cpu = int(num_ps_pts / num_cpus)
     # If num_ps_pts % num_cpus !=0, then we need to compute the actual number
     # of phase space points.
     actual_num_ps_pts = num_ps_pts_per_cpu * num_cpus
@@ -190,6 +201,12 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
     >>> for i in range(len(masses)):
     ...     plt.loglog(pts[i, 0], pts[i, 1])
     """
+    if not hasattr(masses, "__len__"):
+        masses = [masses]
+
+    if cme < sum(masses):
+        raise RamboCMETooSmall()
+
     num_fsp = len(masses)
 
     pts = generate_phase_space(
@@ -202,8 +219,59 @@ def generate_energy_histogram(num_ps_pts, masses, cme,
                                           density=density)
 
 
-def compute_annihilation_cross_section(num_ps_pts, isp_masses,
-                                       fsp_masses, cme,
+def integrate_over_phase_space(fsp_masses, cme,
+                               num_ps_pts=10000,
+                               mat_elem_sqrd=lambda klist: 1,
+                               num_cpus=None):
+    """
+    Returns the integral over phase space given a squard matrix element, a
+    set of final state particle masses and a given energy.
+
+    Parameters
+    ----------
+    masses : numpy.ndarray
+        List of masses of the initial state and final state particles.
+    cme : double
+        Center-of-mass-energy of the process.
+    num_ps_pts : int {10000}
+        Total number of phase space points to generate.
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+        Function for the matrix element squared.
+    num_cpus : int {None}
+        Number of cpus to use in parallel with rambo. If not specified, 75% of
+        the cpus will be used.
+
+    Returns
+    -------
+    integral : float
+        The result of the integral over phase space.
+    std : float
+        The estimated error in the integral over phase space.
+    """
+    if not hasattr(fsp_masses, "__len__"):
+        fsp_masses = [fsp_masses]
+
+    if cme < sum(fsp_masses):
+        raise RamboCMETooSmall()
+
+    num_fsp = len(fsp_masses)
+
+    points = generate_phase_space(
+        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
+
+    actual_num_ps_pts = len(points[:, 4 * num_fsp])
+
+    weights = points[:, 4 * num_fsp]
+
+    integral = np.average(weights)
+
+    std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+
+    return integral, std
+
+
+def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
+                                       num_ps_pts=10000,
                                        mat_elem_sqrd=lambda klist: 1,
                                        num_cpus=None):
     """
@@ -211,12 +279,12 @@ def compute_annihilation_cross_section(num_ps_pts, isp_masses,
 
     Parameters
     ----------
-    num_ps_pts : int
-        Total number of phase space points to generate.
     masses : numpy.ndarray
         List of masses of the initial state and final state particles.
     cme : double
         Center-of-mass-energy of the process.
+    num_ps_pts : int
+        Total number of phase space points to generate.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
@@ -232,33 +300,22 @@ def compute_annihilation_cross_section(num_ps_pts, isp_masses,
     std : double
         Estimated error in cross section.
     """
-    num_fsp = len(fsp_masses)
-    points = generate_phase_space(
-        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
-    actual_num_ps_pts = len(points[:, 4 * num_fsp])
-    weights = points[:, 4 * num_fsp]
-    cross_section = np.average(weights)
-    std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+    integral, std = integrate_over_phase_space(fsp_masses, cme,
+                                               num_ps_pts=num_ps_pts,
+                                               mat_elem_sqrd=mat_elem_sqrd,
+                                               num_cpus=num_cpus)
 
     m1 = isp_masses[0]
     m2 = isp_masses[1]
 
-    E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
-    E2 = (cme**2 + m2**2 - m1**2) / (2 * cme)
+    cross_section = integral * cross_section_prefactor(m1, m2, cme)
+    error = cross_section_prefactor(m1, m2, cme) * std
 
-    p = (cme**2 - m1**2 - m2**2) / (2 * cme)
-
-    v1 = p / E1
-    v2 = p / E2
-
-    vrel = v1 + v2
-
-    cross_section = cross_section / (2.0 * E1) / (2.0 * E2) / vrel
-
-    return cross_section, std
+    return cross_section, error
 
 
-def compute_decay_width(num_ps_pts, fsp_masses, cme,
+def compute_decay_width(fsp_masses, cme,
+                        num_ps_pts=10000,
                         mat_elem_sqrd=lambda klist: 1,
                         num_cpus=None):
     """
@@ -266,12 +323,12 @@ def compute_decay_width(num_ps_pts, fsp_masses, cme,
 
     Parameters
     ----------
-    num_ps_pts : int
-        Total number of phase space points to generate.
     masses : numpy.ndarray
         List of masses of the initial state and final state particles.
     cme : double
         Center-of-mass-energy of the process.
+    num_ps_pts : int
+        Total number of phase space points to generate.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
@@ -287,14 +344,12 @@ def compute_decay_width(num_ps_pts, fsp_masses, cme,
     std : double
         Estimated error in cross section.
     """
-    num_fsp = len(fsp_masses)
-    points = generate_phase_space(
-        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
-    actual_num_ps_pts = len(points[:, 4 * num_fsp])
-    weights = points[:, 4 * num_fsp]
-    cross_section = np.average(weights)
-    std = np.std(weights) / np.sqrt(actual_num_ps_pts)
+    integral, std = integrate_over_phase_space(fsp_masses, cme,
+                                               num_ps_pts=num_ps_pts,
+                                               mat_elem_sqrd=mat_elem_sqrd,
+                                               num_cpus=num_cpus)
 
-    cross_section = cross_section / (2.0 * cme)
+    cross_section = integral / (2.0 * cme)
+    error = std / (2.0 * cme)
 
-    return cross_section, std
+    return cross_section, error
