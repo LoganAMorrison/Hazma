@@ -1,19 +1,27 @@
 from ..theory import Theory
 
-from scalar_mediator_positron_spectra import positron_spectra as pos_specs
-from scalar_mediator_positron_spectra import positron_lines as pls
+from ..parameters import up_quark_mass as muq
+from ..parameters import down_quark_mass as mdq
+from ..parameters import strange_quark_mass as msq
+from ..parameters import fpi, b0, vh
 
-from scalar_mediator_spectra import spectra as specs
-from scalar_mediator_spectra import gamma_ray_lines as gls
-from scalar_mediator_spectra import dnde_mumu, dnde_ee, dnde_ss
-from scalar_mediator_spectra import dnde_neutral_pion, dnde_charged_pion
+from _scalar_mediator_constraints import ScalarMediatorConstraints
+from _scalar_mediator_cross_sections import ScalarMediatorCrossSection
+from _scalar_mediator_fsr import ScalarMediatorFSR
+from _scalar_mediator_positron_spectra import ScalarMediatorPositronSpectra
+from _scalar_mediator_spectra import ScalarMediatorSpectra
+from _scalar_mediator_widths import ScalarMediatorWidths
 
-from scalar_mediator_widths import partial_widths as pws
-
-from .scalar_mediator_parameters import ScalarMediatorParameters
+import numpy as np
 
 
-class ScalarMediator(Theory, ScalarMediatorParameters):
+class ScalarMediator(ScalarMediatorConstraints,
+                     ScalarMediatorCrossSection,
+                     ScalarMediatorFSR,
+                     ScalarMediatorPositronSpectra,
+                     ScalarMediatorSpectra,
+                     ScalarMediatorWidths,
+                     Theory):
     r"""
     Create a scalar mediator model object.
 
@@ -50,14 +58,6 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         Coupling of the scalar mediator to photons.
     """
 
-    from scalar_mediator_cross_sections import (cross_sections,
-                                                branching_fractions,
-                                                sigma_xx_to_s_to_ff,
-                                                sigma_xx_to_s_to_gg,
-                                                sigma_xx_to_s_to_pi0pi0,
-                                                sigma_xx_to_s_to_pipi,
-                                                sigma_xx_to_ss)
-
     def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF):
         """
         Initialize scalar mediator model parameters.
@@ -78,7 +78,14 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         gsFF : float
             Coupling of the scalar mediator to photons.
         """
-        super(ScalarMediator, self).__init__(mx, ms, gsxx, gsff, gsGG, gsFF)
+        self._mx = mx
+        self._ms = ms
+        self._gsxx = gsxx
+        self._gsff = gsff
+        self._gsGG = gsGG
+        self._gsFF = gsFF
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
 
     def description(self):
         """
@@ -140,6 +147,115 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
         \t mediator. \n
         '''
 
+    @property
+    def mx(self):
+        return self._mx
+
+    @mx.setter
+    def mx(self, mx):
+        self._mx = mx
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def ms(self):
+        return self._ms
+
+    @ms.setter
+    def ms(self, ms):
+        self._ms = ms
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def gsxx(self):
+        return self._gsxx
+
+    @gsxx.setter
+    def gsxx(self, gsxx):
+        self._gsxx = gsxx
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def gsff(self):
+        return self._gsff
+
+    @gsff.setter
+    def gsff(self, gsff):
+        self._gsff = gsff
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def gsGG(self):
+        return self._gsGG
+
+    @gsGG.setter
+    def gsGG(self, gsGG):
+        self._gsGG = gsGG
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def gsFF(self):
+        return self._gsFF
+
+    @gsFF.setter
+    def gsFF(self, gsFF):
+        self._gsFF = gsFF
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    def compute_vs(self):
+        """Updates and returns the value of the scalar vev.
+        """
+        if 3 * self.gsff + 2 * self.gsGG == 0:
+            self.vs = 0.
+        else:
+            trM = muq + mdq + msq
+
+            ms = self.ms
+            gsff = self.gsff
+            gsGG = self.gsGG
+
+            self.vs = (-3 * ms * vh +
+                       np.sqrt(4 * b0 * fpi**2 *
+                               (3 * gsff + 2 * gsGG)**2 * trM +
+                               9 * ms**2 * vh**2)) / (6 * gsff * ms +
+                                                      4 * gsGG * ms)
+
+            return self.vs
+
+    def compute_width_s(self):
+        """Updates the scalar's total width.
+        """
+        self.width_s = self.partial_widths()["total"]
+
+    # #################### #
+    """ HELPER FUNCTIONS """
+    # #################### #
+
+    def fpiT(self, vs):
+        """Returns the Lagrangian parameter fpiT.
+        """
+        return fpi / np.sqrt(1. + 4. * self._gsGG * vs / (9. * vh))
+
+    def b0T(self, vs, fpiT):
+        """Returns the Lagrangian parameter b0T.
+        """
+        return (b0 * (fpi / fpiT)**2 /
+                (1. + vs / vh * (2. * self._gsGG / 3. + self._gsff)))
+
+    def msT(self, fpiT, b0T):
+        """Returns the Lagrangian parameter msT.
+        """
+        trM = muq + mdq + msq
+
+        return np.sqrt(self._ms**2 -
+                       16. * self._gsGG * b0T * fpiT**2 / (81. * vh**2) *
+                       (2. * self._gsGG - 9. * self._gsff) * trM)
+
     @classmethod
     def list_final_states(cls):
         """
@@ -151,112 +267,3 @@ class ScalarMediator(Theory, ScalarMediatorParameters):
             Array of the available final states.
         """
         return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
-
-    def gamma_ray_lines(self, cme):
-        return gls(cme, self)
-
-    def spectra(self, egams, cme):
-        """
-        Compute the total spectrum from two fermions annihilating through a
-        scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        egams : array-like, optional
-            Gamma ray energies to evaluate the spectrum at.
-        cme : float
-            Center of mass energy.
-
-        Returns
-        -------
-        specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi'
-        """
-        return specs(egams, cme, self)
-
-    def spectrum_functions(self):
-        """
-        Returns a dictionary of all the avaiable spectrum functions for
-        a pair of initial state fermions with mass `mx` annihilating into
-        each available final state.
-
-        Each argument of the spectrum functions in `eng_gams`, an array
-        of the gamma ray energies to evaluate the spectra at and `cme`, the
-        center of mass energy of the process.
-        """
-        return {'mu mu': lambda e_gams, cme: dnde_mumu(e_gams, cme, self),
-                'e e': lambda e_gams, cme: dnde_ee(e_gams, cme, self),
-                'pi0 pi0': lambda e_gams, cme:
-                    dnde_neutral_pion(e_gams, cme, self),
-                'pi pi': lambda e_gams, cme:
-                    dnde_charged_pion(e_gams, cme, self),
-                's s': lambda e_gams, cme: dnde_ss(e_gams, cme, self)}
-
-    def partial_widths(self):
-        """
-        Returns a dictionary for the partial decay widths of the scalar
-        mediator.
-
-        Returns
-        -------
-        width_dict : dictionary
-            Dictionary of all of the individual decay widths of the scalar
-            mediator as well as the total decay width. The possible decay
-            modes of the scalar mediator are 'g g', 'pi0 pi0', 'pi pi', 'x x'
-            and 'f f'. The total decay width has the key
-            'total'.
-        """
-        return pws(self)
-
-    def positron_spectra(self, eng_ps, cme):
-        """
-        Compute the total positron spectrum from two fermions annihilating
-        through a scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        eng_ps : array-like, optional
-            Positron energies to evaluate the spectrum at.
-        cme : float
-            Center of mass energy.
-
-        Returns
-        -------
-        specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu',
-            'pi pi'.
-        """
-        return pos_specs(eng_ps, cme, self)
-
-    def positron_lines(self, cme):
-        """
-        Returns a dictionary of the energies and branching fractions of
-        positron lines
-
-        Parameters
-        ----------
-        eng_ps : array-like, optional
-            Positron energies to evaluate the spectrum at.
-        cme : float
-            Center of mass energy.
-
-        Returns
-        -------
-        lines : dictionary
-            Dictionary of the lines. The keys are 'e e'.
-        """
-        return pls(cme, self)
-
-    from scalar_mediator_constraints import (width_B_k_s,
-                                             width_k_pi_s,
-                                             width_kl_pi0_s,
-                                             width_B_xs_s,
-                                             constraint_B_k_invis,
-                                             constraint_B_k_mu_mu,
-                                             constraint_B_k_e_e,
-                                             constraint_k_pi_invis,
-                                             constraint_kl_pi0_mu_mu,
-                                             constraint_kl_pi0_e_e,
-                                             constrain_beam_dump,
-                                             constraints)
