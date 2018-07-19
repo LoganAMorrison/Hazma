@@ -4,5 +4,5 @@ include hazma/decay_helper_functions/interpolation_data/lkaon/*.dat
 include hazma/scalar_mediator/interpolation_data/*.dat
 include hazma/cross_sections/unitarization/*.dat
 include hazma/unitarization_data/*.dat
-include gamma_ray_data/*.dat
+include hazma/gamma_ray_data/*.dat
 include hazma/cmb_data/*.dat
