@@ -1,5 +1,5 @@
 import numpy as np
-from ..parameters import load_interp
+from parameters import load_interp
 
 
 class FluxMeasurement(object):

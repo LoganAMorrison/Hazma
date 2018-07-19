@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-from ..parameters import load_interp
+from parameters import load_interp
 
 
 class BackgroundModel(object):
