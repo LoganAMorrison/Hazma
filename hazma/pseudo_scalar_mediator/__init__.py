@@ -267,3 +267,13 @@ class PseudoScalarMFV(PseudoScalarMediator):
 
         self.gpdd = gpdd * yd
         self.gpss = gpdd * ys
+
+    def f_eff_g(self, x_kd=1e-4):
+        # Need to override the default method since the pseudoscalar uses RAMBO
+        # for its spectra.
+        return self._f_eff_helper("g g", x_kd, "interp")
+
+    def f_eff_ep(self, x_kd=1e-4):
+        # Need to override the default method since the pseudoscalar uses RAMBO
+        # for its spectra.
+        return self._f_eff_helper("e e", x_kd, "interp")
