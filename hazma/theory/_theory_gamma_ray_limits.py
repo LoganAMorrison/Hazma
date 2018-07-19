@@ -52,7 +52,7 @@ class TheoryGammaRayLimits:
 
     def get_detected_spectrum(self, e_min, e_max, e_cm, energy_res,
                               n_pts=1000):
-        """Convolves a DM annihilation spectrum with a detector's spectral
+        """Convolves total DM annihilation spectrum with a detector's spectral
         resolution function.
 
         Parameters
@@ -100,13 +100,6 @@ class TheoryGammaRayLimits:
             dnde_cont_det = np.array([integral(e) for e in e_gams])
 
         # Line contribution
-        # lines = self.gamma_ray_lines(e_cm)
-        # dnde_line_det = np.array([line["bf"] *
-        #                           self._spec_res_fn(e_gams, line["energy"],
-        #                                             energy_res) *
-        #                           (2. if ch == "g g" else 1.)
-        #                           for ch, line in
-        #                           lines.iteritems()]).sum(axis=0)
         dnde_line_det = np.zeros(e_gams.shape)
         for ch, line in self.gamma_ray_lines(e_cm).iteritems():
             dnde_line_det += (line["bf"] *
