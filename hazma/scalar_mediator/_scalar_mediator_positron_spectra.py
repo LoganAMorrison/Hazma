@@ -5,10 +5,10 @@ from ..positron_spectra import charged_pion as pspec_charged_pion
 
 
 class ScalarMediatorPositronSpectra:
-    def dnde_pos_pipi(eng_ps, cme):
+    def dnde_pos_pipi(self, eng_ps, cme):
         return pspec_charged_pion(eng_ps, cme / 2.)
 
-    def dnde_pos_mumu(eng_ps, cme):
+    def dnde_pos_mumu(self, eng_ps, cme):
         return pspec_muon(eng_ps, cme / 2.)
 
     def positron_spectra(self, eng_ps, cme):
