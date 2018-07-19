@@ -15,6 +15,8 @@ from _scalar_mediator_widths import ScalarMediatorWidths
 import numpy as np
 
 
+# Note that Theory must be inherited from AFTER all the other mixin classes,
+# since they furnish definitions of the abstract methods in Theory.
 class ScalarMediator(ScalarMediatorConstraints,
                      ScalarMediatorCrossSection,
                      ScalarMediatorFSR,

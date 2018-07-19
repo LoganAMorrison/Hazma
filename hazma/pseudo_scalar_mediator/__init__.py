@@ -25,6 +25,8 @@ from ..hazma_errors import PreAlphaWarning
 import numpy as np
 
 
+# Note that Theory must be inherited from AFTER all the other mixin classes,
+# since they furnish definitions of the abstract methods in Theory.
 class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
                            PseudoScalarMediatorFSR,
                            PseudoScalarMediatorMSqrdRambo,

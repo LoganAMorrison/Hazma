@@ -11,6 +11,8 @@ import warnings
 from ..hazma_errors import PreAlphaWarning
 
 
+# Note that Theory must be inherited from AFTER all the other mixin classes,
+# since they furnish definitions of the abstract methods in Theory.
 class VectorMediator(VectorMediatorCrossSections,
                      VectorMediatorFSR,
                      VectorMediatorPositronSpectra,
