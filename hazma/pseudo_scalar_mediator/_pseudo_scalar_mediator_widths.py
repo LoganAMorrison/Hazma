@@ -19,8 +19,8 @@ class PseudoScalarMediatorWidths:
         gpFF = self.gpFF
         mp = self.mp
 
-        ret = (alpha_em**2 * mp**3 * (gpFF - beta * gpFF + beta * vh) *
-               (gpFF + beta * (gpFF + vh))) / (128. * np.pi**3 * vh**2)
+        ret = -(alpha_em**2*mp**3*((1 + beta)*fpi*gpFF - beta*vh) *
+                ((-1 + beta)*fpi*gpFF + beta*vh))/(128.*fpi**2*np.pi**3*vh**2)
 
         assert ret.imag == 0
         assert ret.real >= 0
