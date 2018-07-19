@@ -1,4 +1,3 @@
-from ..gamma_ray_limits.compute_limits import get_detected_spectrum
 from ..constraint_parameters import sv_inv_MeV_to_cm3_per_s
 from skimage import measure
 
@@ -131,9 +130,8 @@ class TheoryConstrain:
         def get_bin_fluxes(spec_fn, line_fn):
             """Gets Phi/<sigma v> for a particular channel.
             """
-            dnde_det = get_detected_spectrum(spec_fn, line_fn, e_bin_min,
-                                             e_bin_max, e_cm,
-                                             measurement.energy_res, 500)
+            dnde_det = self.get_detected_spectrum(e_bin_min, e_bin_max, e_cm,
+                                                  measurement.energy_res, 500)
             return np.array([dm_flux_factor*dnde_det.integral(bl, br)
                              for bl, br in measurement.bins])
 
@@ -146,8 +144,7 @@ class TheoryConstrain:
         #                    in self.gamma_ray_lines(cme) if fs != "total"}
 
         def flux_difference(p2, p2_val):
-            """Compute difference between Phi_obs+N*sigma - Phi_th.
-            """
+            """Compute difference between Phi_obs+N*sigma - Phi_th."""
             setattr(self, p2, p2_val)
 
             # Compute cross sections
@@ -155,13 +152,6 @@ class TheoryConstrain:
             # Get fluxes by multiplying <sigma v>
             bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
                                    for fs, bf in fs_bin_fluxes.iteritems()])
-            # bin_fluxes += np.array([bf * css[fs] * vx *
-            #                         sv_inv_MeV_to_cm3_per_s
-            #                         for fs, bf in line_bin_fluxes])
-
-            print "phi_obs = ", \
-                measurement.fluxes+n_sigma*measurement.upper_errors
-            print "phi_th = ", bin_fluxes.sum(axis=0)
 
             return np.min(measurement.fluxes+n_sigma*measurement.upper_errors -
                           bin_fluxes.sum(axis=0))
