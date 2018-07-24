@@ -130,7 +130,7 @@ class VectorMediatorCrossSections:
         else:
             return 0.
 
-    def __sigma_t_integrated_xx_to_v_to_pi0pipi(self, s, Q):
+    def dsigma_ds_xx_to_v_to_pi0pipi(self, s, Q):
         mx = self.mx
 
         if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4. * mpi**2 and
@@ -176,7 +176,7 @@ class VectorMediatorCrossSections:
             s_min = 4. * mpi**2
             s_max = (Q - mpi0)**2
 
-            ret_val = quad(self.__sigma_t_integrated_xx_to_v_to_pi0pipi,
+            ret_val = quad(self.dsigma_ds_xx_to_v_to_pi0pipi,
                            s_min, s_max, args=(Q))[0]
 
             assert ret_val.imag == 0
