@@ -7,18 +7,18 @@ from ..parameters import (qe, alpha_em, charged_pion_mass as mpi)
 class ScalarMediatorFSR:
     def __dnde_xx_to_s_to_ffg(self, egam, Q, mf):
         """ Unvectorized dnde_xx_to_s_to_ffg """
-        e, m, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
+        e, rf, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
 
         mx = self.mx
 
         if 2. * mf < Q and 4. * mf**2 < s < Q**2 and 2. * mx < Q:
             ret_val = (alpha_em *
-                       (2 * (-1 + 4 * m**2) *
-                        sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * m**2)) +
-                        4 * (1 + 2 * (-1 + e) * e - 6 * m**2 + 8 * e * m**2 +
-                             8 * m**4) *
-                        atanh(sqrt(1 + (4 * m**2) / (-1 + 2 * e))))) / \
-                (e * (1 - 4 * m**2)**1.5 * pi * Q)
+                       (2 * (-1 + 4 * rf**2) *
+                        sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * rf**2)) +
+                        4 * (1 + 2 * (-1 + e) * e - 6 * rf**2 + 8 * e * rf**2 +
+                             8 * rf**4) *
+                        atanh(sqrt(1 + (4 * rf**2) / (-1 + 2 * e))))) / \
+                (e * (1 - 4 * rf**2)**1.5 * pi * Q)
 
             assert ret_val.imag == 0
             ret_val = ret_val.real
