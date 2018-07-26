@@ -159,12 +159,12 @@ class TheoryGammaRayLimits:
             """Subroutine to compute limit in a single bin."""
             bin_low, bin_high = e_bin
 
-            # Integrate DM spectrum to compute flux in this bin
+            # Compute integrated flux from DM annihilation
             phi_dm = dm_flux_factor * dnde_det.integral(bin_low, bin_high)
 
-            # If flux is finite and nonzero, set a limit using this bin
+            # If flux is finite and nonzero, set a limit
             if not np.isnan(phi_dm) and phi_dm > 0:
-                # Compute maximum allow flux in this bin
+                # Compute maximum allow integrated flux
                 phi_max = (measurement.target.dOmega * (bin_high - bin_low) *
                            (n_sigma * sigma + phi))
 
