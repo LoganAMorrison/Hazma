@@ -273,7 +273,7 @@ class PseudoScalarMFV(PseudoScalarMediator):
         yd = mdq / vh
         ys = msq / vh
 
-        self.gpdown = gpdown * yd
+        self.gpdd = gpdown * yd
         self.gpss = gpdown * ys
 
         self.gpFF = self.gpll + (8.*self.gpup + gpdown) / 9.
