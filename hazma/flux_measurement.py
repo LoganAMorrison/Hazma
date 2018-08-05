@@ -69,5 +69,5 @@ class FluxMeasurement(object):
         self.lower_errors = self.fluxes - raw_fluxes[:, 2] / bin_centers**2
 
         # Load energy resolution
-        self.energy_res = load_interp(energy_res_rf)
+        self.energy_res = load_interp(energy_res_rf, fill_value="extrapolate")
 
