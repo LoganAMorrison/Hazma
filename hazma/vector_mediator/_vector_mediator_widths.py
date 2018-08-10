@@ -54,7 +54,7 @@ class VectorMediatorWidths:
         else:
             return 0.0
 
-    def width_v_to_ff(f, self):
+    def width_v_to_ff(self, f):
         if f == "e":
             mf = me
             gvll = self.gvee

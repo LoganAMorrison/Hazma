@@ -23,6 +23,10 @@ class Theory(object, TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
+    def partial_widths(self):
+        pass
+
+    @abstractmethod
     def branching_fractions(self, cme):
         pass
 
