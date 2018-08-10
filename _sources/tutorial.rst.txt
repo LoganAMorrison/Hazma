@@ -1,5 +1,0 @@
-********
-Tutorial
-********
-
-Will update soon!
