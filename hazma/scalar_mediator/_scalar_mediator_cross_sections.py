@@ -71,12 +71,15 @@ class ScalarMediatorCrossSection:
             gsFF = self.gsFF
             gsxx = self.gsxx
             ms = self.ms
-            width_s = self.width_s
+            widths = self.width_s
+            rx = mx / Q
+            Lam = self.lam
 
-            ret_val = (alpha_em**2 * gsFF**2 * gsxx**2 * Q**3 *
-                       (-2 * mx + Q) * (2 * mx + Q)) / \
-                (256. * pi**3 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-                 (ms**4 - 2 * ms**2 * Q**2 + Q**4 + ms**2 * width_s**2))
+            ret_val = ((alpha_em**2 * gsFF**2 * gsxx**2 * Q**4 *
+                        sqrt(1 - 4 * rx**2)) /
+                       (64. * Lam**2 * pi**3 *
+                        (ms**4 + Q**4 + ms**2 *
+                         (-2 * Q**2 + widths**2))))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -108,19 +111,30 @@ class ScalarMediatorCrossSection:
             gsGG = self.gsGG
             ms = self.ms
             vs = self.vs
-            width_s = self.width_s
+            widths = self.width_s
+            Lam = self.lam
+            rpi0 = mpi0 / Q
+            rx = mx / Q
 
-            ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) *
-                       sqrt(-4 * mpi0**2 + Q**2) *
-                       (54 * gsGG * (-2 * mpi0**2 + Q**2) * vh *
-                        (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                        b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                        (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                         9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-                (23328. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-                 (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-                 (9 * vh + 4 * gsGG * vs)**2 *
-                 (ms**4 + Q**4 + ms**2 * (-2 * Q**2 + width_s**2)))
+            ret_val = ((gsxx**2 *
+                        sqrt((-1 + 4 * rpi0**2) *
+                             (-1 + 4 * rx**2)) *
+                        (162 * gsGG * Lam**3 * Q**2 *
+                         (-1 + 2 * rpi0**2) * vh**2 +
+                         b0 * (mdq + muq) *
+                         (9 * Lam + 4 * gsGG * vs) *
+                         (27 * gsff**2 * Lam**2 * vs *
+                          (3 * Lam + 4 * gsGG * vs) -
+                          2 * gsGG * vh**2 *
+                          (27 * Lam**2 -
+                           30 * gsGG * Lam * vs + 8 * gsGG**2 * vs**2) +
+                          gsff *
+                          (-81 * Lam**3 * vh +
+                           48 * gsGG**2 * Lam * vh * vs**2)))**2) /
+                       (209952. * Lam**6 * pi * vh**4 *
+                        (9 * Lam + 4 * gsGG * vs)**2 *
+                        (ms**4 + Q**4 + ms**2 *
+                         (-2 * Q**2 + widths**2))))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -152,19 +166,29 @@ class ScalarMediatorCrossSection:
             gsGG = self.gsGG
             ms = self.ms
             vs = self.vs
-            width_s = self.width_s
+            widths = self.width_s
+            Lam = self.lam
+            rpi = mpi / Q
+            rx = mx / Q
 
-            ret_val = (gsxx**2 * (-2 * mx + Q) * (2 * mx + Q) *
-                       sqrt(-4 * mpi**2 + Q**2) *
-                       (54 * gsGG * (-2 * mpi**2 + Q**2) * vh *
-                        (3 * vh + 3 * gsff * vs + 2 * gsGG * vs) +
-                        b0 * (mdq + muq) * (9 * vh + 4 * gsGG * vs) *
-                        (54 * gsGG * vh - 32 * gsGG**2 * vs +
-                         9 * gsff * (9 * vh + 16 * gsGG * vs)))**2) / \
-                (23328. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-                 (3 * vh + 3 * gsff * vs + 2 * gsGG * vs)**2 *
-                 (9 * vh + 4 * gsGG * vs)**2 *
-                 (ms**4 + Q**4 + ms**2 * (-2 * Q**2 + width_s**2)))
+            ret_val = ((gsxx**2 *
+                        sqrt((-1 + 4 * rpi**2) *
+                             (-1 + 4 * rx**2)) *
+                        (162 * gsGG * Lam**3 * Q**2 *
+                         (-1 + 2 * rpi**2) * vh**2 +
+                         b0 * (mdq + muq) *
+                         (9 * Lam + 4 * gsGG * vs) *
+                         (27 * gsff**2 * Lam**2 * vs *
+                          (3 * Lam + 4 * gsGG * vs) -
+                          2 * gsGG * vh**2 *
+                          (27 * Lam**2 -
+                           30 * gsGG * Lam * vs + 8 * gsGG**2 * vs**2) +
+                          gsff *
+                          (-81 * Lam**3 * vh +
+                           48 * gsGG**2 * Lam * vh * vs**2)))**2) /
+                       (104976. * Lam**6 * pi * vh**4 *
+                        (9 * Lam + 4 * gsGG * vs)**2 *
+                        (ms**4 + Q**4 + ms**2 * (-2 * Q**2 + widths**2))))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0

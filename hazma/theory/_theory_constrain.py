@@ -118,7 +118,7 @@ class TheoryConstrain:
         account for gamma ray lines!!!
         """
         vx = 1.0e-3
-        e_cm = 2.*self.mx*(1 + 0.5*vx**2)  # TODO: change this!
+        e_cm = 2. * self.mx * (1 + 0.5 * vx**2)  # TODO: change this!
 
         # Factor to convert dN/dE to Phi/<sigma v>
         dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
@@ -132,7 +132,7 @@ class TheoryConstrain:
             """
             dnde_det = self.get_detected_spectrum(e_bin_min, e_bin_max, e_cm,
                                                   measurement.energy_res, 500)
-            return np.array([dm_flux_factor*dnde_det.integral(bl, br)
+            return np.array([dm_flux_factor * dnde_det.integral(bl, br)
                              for bl, br in measurement.bins])
 
         # Compute Phi/<sigma v> in each bin for each final state
@@ -153,7 +153,7 @@ class TheoryConstrain:
             bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
                                    for fs, bf in fs_bin_fluxes.iteritems()])
 
-            return np.min(measurement.fluxes+n_sigma*measurement.upper_errors -
+            return np.min(measurement.fluxes + n_sigma * measurement.upper_errors -
                           bin_fluxes.sum(axis=0))
 
         return np.array([flux_difference(p2, p2v) for p2v in p2_vals])
@@ -185,8 +185,10 @@ class TheoryConstrain:
 
         # Convert from indices to values of p1 and p2
         for c in contours_raw:
-            p1s = c[:, 1]/len(p1_vals)*(p1_vals[-1] - p1_vals[0]) + p1_vals[0]
-            p2s = c[:, 0]/len(p2_vals)*(p2_vals[-1] - p2_vals[0]) + p2_vals[0]
+            p1s = c[:, 1] / len(p1_vals) * (p1_vals[-1] -
+                                            p1_vals[0]) + p1_vals[0]
+            p2s = c[:, 0] / len(p2_vals) * (p2_vals[-1] -
+                                            p2_vals[0]) + p2_vals[0]
             contours.append(np.array([p1s, p2s]))
 
         return contours
