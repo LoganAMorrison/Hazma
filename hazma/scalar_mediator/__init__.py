@@ -60,7 +60,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         Coupling of the scalar mediator to photons.
     """
 
-    def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF, Lam):
+    def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF, lam):
         """
         Initialize scalar mediator model parameters.
 
@@ -79,7 +79,7 @@ class ScalarMediator(ScalarMediatorConstraints,
             Coupling of the scalar mediator to gluons.
         gsFF : float
             Coupling of the scalar mediator to photons.
-        Lam : float
+        lam : float
             Mass scale associated with integrating out a heavy colored or
             charged fermion leading to SGG or SFF.
         """
@@ -89,7 +89,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         self._gsff = gsff
         self._gsGG = gsGG
         self._gsFF = gsFF
-        self.lam = Lam
+        self._lam = lam
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
@@ -216,6 +216,16 @@ class ScalarMediator(ScalarMediatorConstraints,
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
+    @property
+    def lam(self):
+        return self._lam
+
+    @lam.setter
+    def lam(self, lam):
+        self._lam = lam
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
     def compute_vs(self):
         """Updates and returns the value of the scalar vev.
         """
@@ -278,3 +288,131 @@ class ScalarMediator(ScalarMediatorConstraints,
             Array of the available final states.
         """
         return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
+
+
+class HiggsPortal(ScalarMediator):
+    r"""
+    Create a ScalarMediator object with Higgs Portal couplings.
+
+    Creates an object for the scalar mediator model with the following
+    specific coupling definitions:
+        gsff = sin(theta)
+        gsGG = 3 sin(theta)
+        gsFF = -5/6 sin(theta)
+        Lam = vh
+    where theta is the mixing angle between the Standard Model Higgs
+    and the scalar mediator.
+
+    Attributes
+    ----------
+    mx : float
+        Mass of the initial state fermion.
+    ms : float
+        Mass of the scalar mediator.
+    gsxx : float
+        Coupling of scalar mediator to initial state fermions.
+    stheta : float
+        Sine of the mixing angle between the Standard Model Higgs
+        and the scalar mediator.
+    """
+
+    def __init__(self, mx, ms, gsxx, stheta):
+        self._mx = mx
+        self._ms = ms
+        self._gsxx = gsxx
+        self._gsff = stheta
+        self._gsGG = 3. * stheta
+        self._gsFF = - 5. * stheta / 6.
+        self._lam = vh
+        self._stheta = stheta
+        super(ScalarMediator, self).__init__()
+
+    @property
+    def stheta(self):
+        return self._stheta
+
+    @stheta.setter
+    def stheta(self, stheta):
+        self._stheta = stheta
+        self._gsff = stheta
+        self._gsGG = 3. * stheta
+        self._gsFF = - 5. * stheta / 6.
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+
+class HeavyQuark(ScalarMediator):
+    r"""
+    Create a ScalarMediator object with heavy quark couplings.
+
+    Creates an object for the scalar mediator model with the following
+    specific coupling definitions:
+        gsff = 0
+        gsGG = gsQ
+        gsFF = 0
+        Lam = mQ
+    where gsQ is the coupling of the heavy quark to the scalar mediator
+    (-gsQ S Qbar Q) and mQ is the mass of the heavy quark.
+
+    Attributes
+    ----------
+    mx : float
+        Mass of the initial state fermion.
+    ms : float
+        Mass of the scalar mediator.
+    gsxx : float
+        Coupling of scalar mediator to initial state fermions.
+    gsQ : float
+        Coupling of the heavy quark to the scalar mediator.
+    mQ : float
+        Mass of the heavy quark.
+    QQ : float
+        Charge of the heavy quark.
+    """
+
+    def __init__(self, mx, ms, gsxx, gsQ, mQ, QQ):
+        self._mx = mx
+        self._ms = ms
+        self._gsxx = gsxx
+        self._gsff = 0.0
+        self._gsGG = gsQ
+        self._gsFF = 2.0 * gsQ * QQ**2
+        self._lam = mQ
+        self._gsQ = gsQ
+        self._mQ = mQ
+        self._QQ = QQ
+        super(ScalarMediator, self).__init__()
+
+    @property
+    def gsQ(self):
+        return self._gsQ
+
+    @gsQ.setter
+    def gsQ(self, gsQ):
+        self._gsQ = gsQ
+        self._gsGG = gsQ
+        self._gsFF = 2.0 * gsQ * self._QQ**2
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def mQ(self):
+        return self._mQ
+
+    @mQ.setter
+    def mQ(self, mQ):
+        self._mQ = mQ
+        self._lam = mQ
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
+
+    @property
+    def QQ(self):
+        return self._QQ
+
+    @QQ.setter
+    def QQ(self, QQ):
+        self._QQ = QQ
+        self._gsFF = 2.0 * self._gsQ * QQ**2
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
