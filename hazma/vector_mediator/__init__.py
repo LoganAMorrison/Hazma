@@ -174,7 +174,7 @@ class KineticMixing(VectorMediator):
         Mass of the initial state fermion.
     mv : float
         Mass of the vector mediator.
-    gsxx : float
+    gvxx : float
         Coupling of vector mediator to dark matter.
     eps : float
         Kinetic mixing parameter.
@@ -205,3 +205,40 @@ class KineticMixing(VectorMediator):
         self._gvee = Qe * eps * qe
         self._gvmumu = Qe * eps * qe
         self.compute_width_v()
+
+
+class QuarksOnly(VectorMediator):
+    r"""
+    Create a VectorMediator object with only quark couplings.
+
+    Creates an object for the vector mediator model with the following
+    specific coupling definitions:
+        gvee = 0
+        gvmumu = 0.
+
+    Attributes
+    ----------
+    mx : float
+        Mass of the initial state fermion.
+    mv : float
+        Mass of the vector mediator.
+    gvxx : float
+        Coupling of vector mediator to dark matter.
+    gvuu : float
+        Coupling of vector mediator to the up-quark.
+    gvdd : float
+        Coupling of vector mediator to the down-quark.
+    gvss : float
+        Coupling of vector mediator to the strange-quark.
+    """
+
+    def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
+        self._mx = mx
+        self._mv = mv
+        self._gvxx = gvxx
+        self._gvuu = gvuu
+        self._gvdd = gvdd
+        self._gvss = gvss
+        self._gvee = 0.0
+        self._gvmumu = 0.0
+        super(VectorMediator, self).__init__()
