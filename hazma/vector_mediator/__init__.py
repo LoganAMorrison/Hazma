@@ -5,6 +5,7 @@ from _vector_mediator_fsr import VectorMediatorFSR
 from _vector_mediator_positron_spectra import VectorMediatorPositronSpectra
 from _vector_mediator_spectra import VectorMediatorSpectra
 from _vector_mediator_widths import VectorMediatorWidths
+from ..parameters import qe, Qu, Qd, Qe
 
 
 import warnings
@@ -20,7 +21,26 @@ class VectorMediator(VectorMediatorCrossSections,
                      VectorMediatorWidths,
                      Theory):
     r"""
-    Create a vector mediator model object.
+    Create a VectorMediator object with generic couplings.
+
+    Attributes
+    ----------
+    mx : float
+        Mass of the initial state fermion.
+    mv : float
+        Mass of the vector mediator.
+    gvxx : float
+        Coupling of vector mediator to dark matter.
+    gvuu : float
+        Coupling of vector mediator to the up-quark.
+    gvdd : float
+        Coupling of vector mediator to the down-quark.
+    gvss : float
+        Coupling of vector mediator to the strange-quark.
+    gvee : float
+        Coupling of vector mediator to the electron.
+    gvmumu : float
+        Coupling of vector mediator to the muon.
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu):
@@ -131,3 +151,57 @@ class VectorMediator(VectorMediatorCrossSections,
 
     def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
         pass
+
+
+class KineticMixing(VectorMediator):
+    r"""
+    Create a VectorMediator object with kinetic mixing couplings.
+
+    Creates an object for the vector mediator model with the following
+    specific coupling definitions:
+        gvuu = Qu qe eps
+        gvdd = Qd qe eps
+        gvss = Qd qe eps
+        gvee = Qe qe eps
+        gvmumu = Qe qe eps
+    where Qu, Qd and Qe are the up-like-quark, down-like-quark and
+    lepton electic charges in units of the electric charge, qe is the
+    electric charge and eps is the kinetic mixing parameter.
+
+    Attributes
+    ----------
+    mx : float
+        Mass of the initial state fermion.
+    mv : float
+        Mass of the vector mediator.
+    gsxx : float
+        Coupling of vector mediator to dark matter.
+    eps : float
+        Kinetic mixing parameter.
+    """
+
+    def __init__(self, mx, mv, gvxx, eps):
+        self._mx = mx
+        self._mv = mv
+        self._gvxx = gvxx
+        self._gvuu = Qu * eps * qe
+        self._gvdd = Qd * eps * qe
+        self._gvss = Qd * eps * qe
+        self._gvee = Qe * eps * qe
+        self._gvmumu = Qe * eps * qe
+        self._eps = eps
+        super(VectorMediator, self).__init__()
+
+    @property
+    def eps(self):
+        return self._eps
+
+    @eps.setter
+    def eps(self, eps):
+        self._eps = eps
+        self._gvuu = Qu * eps * qe
+        self._gvdd = Qd * eps * qe
+        self._gvss = Qd * eps * qe
+        self._gvee = Qe * eps * qe
+        self._gvmumu = Qe * eps * qe
+        self.compute_width_v()

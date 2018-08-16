@@ -38,6 +38,11 @@ GF = 1.1663787e-11  # Fermi constant in MeV**-2
 vh = 246.22795e3  # Higgs VEV in MeV
 qe = np.sqrt(4.0 * np.pi * alpha_em)
 
+# Charges
+Qu = 2. / 3.
+Qd = -1. / 3.
+Qe = -1.
+
 # Low Energy constants
 fpi0 = 91.924  # Neutral pion decay constant
 fpi = 92.2138  # Charged pion decay constant
