@@ -60,7 +60,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         Coupling of the scalar mediator to photons.
     """
 
-    def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF):
+    def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF, Lam):
         """
         Initialize scalar mediator model parameters.
 
@@ -79,6 +79,9 @@ class ScalarMediator(ScalarMediatorConstraints,
             Coupling of the scalar mediator to gluons.
         gsFF : float
             Coupling of the scalar mediator to photons.
+        Lam : float
+            Mass scale associated with integrating out a heavy colored or
+            charged fermion leading to SGG or SFF.
         """
         self._mx = mx
         self._ms = ms
@@ -86,6 +89,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         self._gsff = gsff
         self._gsGG = gsGG
         self._gsFF = gsFF
+        self.lam = Lam
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
@@ -125,6 +129,9 @@ class ScalarMediator(ScalarMediatorConstraints,
         \t Coupling of the scalar mediator to gluons. \n
         gsFF : float \n
         \t Coupling of the scalar mediator to photons. \n
+        Lam : float \n
+        \t Mass scale associated with integrating out a heavy colored or
+        charged fermion leading to SGG or SFF. \n
 
         Methods \n
         ------- \n
@@ -215,17 +222,19 @@ class ScalarMediator(ScalarMediatorConstraints,
         if 3 * self.gsff + 2 * self.gsGG == 0:
             self.vs = 0.
         else:
-            trM = muq + mdq + msq
+            # trM = muq + mdq + msq
 
-            ms = self.ms
-            gsff = self.gsff
-            gsGG = self.gsGG
+            # ms = self.ms
+            # gsff = self.gsff
+            # gsGG = self.gsGG
+            # Lam = self.lam
 
-            self.vs = (-3 * ms * vh +
-                       np.sqrt(4 * b0 * fpi**2 *
-                               (3 * gsff + 2 * gsGG)**2 * trM +
-                               9 * ms**2 * vh**2)) / (6 * gsff * ms +
-                                                      4 * gsGG * ms)
+            # self.vs = (-3 * ms * vh +
+            #           np.sqrt(4 * b0 * fpi**2 *
+            #                   (3 * gsff + 2 * gsGG)**2 * trM +
+            #                   9 * ms**2 * vh**2)) / (6 * gsff * ms +
+            #                                          4 * gsGG * ms)
+            self.vs = 0
 
             return self.vs
 
