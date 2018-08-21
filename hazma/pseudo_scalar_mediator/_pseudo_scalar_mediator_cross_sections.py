@@ -77,11 +77,11 @@ class PseudoScalarMediatorCrossSections:
             rx = mx / Q
             width_p = self.width_p
 
-            ret = (alpha_em**2*gpxx**2*Q**4 *
-                   ((1 - 2*beta**2)*fpi**2*gpFF**2 -
-                    2*beta*fpi*gpFF*vh + beta**2*vh**2)) / \
-                (256.*fpi**2*np.pi**3*np.sqrt(1. - 4*rx**2)*vh**2 *
-                 ((mp**2 - Q**2)**2 + mp**2*width_p**2))
+            ret = (alpha_em**2 * gpxx**2 * Q**4 *
+                   ((1 - 2 * beta**2) * fpi**2 * gpFF**2 -
+                    2 * beta * fpi * gpFF * vh + beta**2 * vh**2)) / \
+                (256. * fpi**2 * np.pi**3 * np.sqrt(1. - 4 * rx**2) * vh**2 *
+                 ((mp**2 - Q**2)**2 + mp**2 * width_p**2))
 
             assert ret.imag == 0
             assert ret.real >= 0
@@ -292,7 +292,7 @@ class PseudoScalarMediatorCrossSections:
 
         return res[0]
 
-    def cross_sections(self, Q):
+    def annihilation_cross_sections(self, Q):
         """
         Compute the total cross section DM annihilation.
 
@@ -329,7 +329,7 @@ class PseudoScalarMediatorCrossSections:
 
         return cross_secs
 
-    def branching_fractions(self, Q):
+    def annihilation_branching_fractions(self, Q):
         """
         Compute the branching fractions for DM annihilation.
 
@@ -344,7 +344,7 @@ class PseudoScalarMediatorCrossSections:
             Dictionary of the branching fractions. The keys are 'total',
             'mu mu', 'e e', 'pi0 pi0 pi0', 'pi0 pi pi', 'g g', 'p p'.
         """
-        CSs = self.cross_sections(Q)
+        CSs = self.annihilation_cross_sections(Q)
 
         bfs = {'e e': CSs['e e'] / CSs['total'],
                'mu mu': CSs['mu mu'] / CSs['total'],

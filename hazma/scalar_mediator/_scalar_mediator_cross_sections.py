@@ -8,6 +8,8 @@ from ..parameters import down_quark_mass as mdq
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 
+from scipy.integrate import quad
+
 
 class ScalarMediatorCrossSection:
     def sigma_xx_to_s_to_ff(self, Q, f):
@@ -235,7 +237,48 @@ class ScalarMediatorCrossSection:
         else:
             return 0.
 
-    def cross_sections(self, Q):
+    def sigma_xx_to_s_to_xx(self, Q):
+        """
+        Returns the DM annihilation cross section into DM.
+        """
+        rs = self.ms / Q
+        rx = self.mx / Q
+        gsxx = self.gsxx
+        rws = self.width_s / Q
+
+        if Q > 2. * self.mx:
+            def msqrd(z):
+                return ((gsxx**4 *
+                         (3 * (-1 + z)**2 +
+                          256 * rx**8 * (-1 + z)**2 -
+                          64 * rx**6 * (5 - 8 * z + 3 * z**2) +
+                          32 * rx**4 * (5 - 6 * z + 3 * z**2) -
+                          4 * rx**2 * (5 - 12 * z + 7 * z**2) +
+                          rs**4 *
+                          (3 + z**2 - 8 * rx**2 * (1 + z**2) +
+                           16 * rx**4 * (3 + z**2)) +
+                          rs**2 *
+                          (3 - 3 * z**2 - 64 * rx**6 *
+                           (3 - 4 * z + z**2) -
+                           16 * rx**4 * (-9 + 12 * z + z**2) +
+                           4 * rx**2 * (-17 + 8 * z + 5 * z**2) +
+                           rws**2 * (3 + z**2 - 8 * rx**2 * (1 + z**2) +
+                                     16 * rx**4 * (3 + z**2))))) /
+                        ((1 + rs**4 + rs**2 * (-2 + rws**2)) *
+                         (4 * rs**4 + 4 * rs**2 *
+                          (rws**2 + (-1 + 4 * rx**2) * (-1 + z)) +
+                          (1 - 4 * rx**2)**2 * (-1 + z)**2)))
+
+            ret_val = (quad(msqrd, -1, 1)[0] / (32. * pi * Q))
+
+            assert ret_val.imag == 0.
+            assert ret_val.real >= 0.
+
+            return ret_val.real
+        else:
+            return 0.
+
+    def annihilation_cross_sections(self, Q):
         """
         Compute the all the cross sections of the theory.
 
@@ -269,10 +312,10 @@ class ScalarMediatorCrossSection:
 
         return cross_secs
 
-    def branching_fractions(self, Q):
+    def annihilation_branching_fractions(self, Q):
         """
-        Compute the branching fractions for two fermions annihilating through a
-        scalar mediator to mesons and leptons.
+        Compute the branching fractions for two fermions annihilating
+        through a scalar mediator to mesons and leptons.
 
         Parameters
         ----------
@@ -285,7 +328,7 @@ class ScalarMediatorCrossSection:
             Dictionary of the branching fractions. The keys are 'total',
             'mu mu', 'e e', 'pi0 pi0', 'pi pi'
         """
-        CSs = self.cross_sections(Q)
+        CSs = self.annihilation_cross_sections(Q)
 
         if CSs['total'] == 0.0:
             return {'mu mu': 0.0,

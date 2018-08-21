@@ -53,7 +53,7 @@ br_B_k_invis_SM = (4.5 - 0.7) * 1.0e-6
 br_B_k_invis_babar = 1.6e-5
 B_k_invis_obs = RareDecayObs(width_bound=(br_B_k_invis_babar -
                                           br_B_k_invis_SM) * B_width,
-                             r_max=r_det_babar, s_bounds=[[0., 0.3*mB**2]])
+                             r_max=r_det_babar, s_bounds=[[0., 0.3 * mB**2]])
 
 # K^+ -> pi^+ invis, arxiv:0709.1000
 br_k_pi_invis_SM = (0.85 - 0.07) * 1.0e-10
@@ -64,25 +64,25 @@ k_pi_invis_obs = RareDecayObs(width_bound=(br_k_pi_invis_E949 -
                                            br_k_pi_invis_SM) * k_width,
                               r_max=r_det_E949,
                               s_bounds=[[max((mk**2 + mpi**2 -
-                                              2*mk*np.sqrt(mpi**2 + p**2)),
+                                              2 * mk * np.sqrt(mpi**2 + p**2)),
                                              0.0) for p in p_pis] for p_pis in
                                         [[229.0, 211.0], [195.0, 140.0]]])
 
 # B^+ -> K^+ mu mu, arXiv:hep-ph/0112300
 br_B_k_mu_mu_SM = (3.5 - 1.2) * 1.0e-7
 # Belle measurement, arxiv:0904.0770
-br_B_k_mu_mu_belle = (4.8 + 0.6)*1.0e-7
+br_B_k_mu_mu_belle = (4.8 + 0.6) * 1.0e-7
 B_k_mu_mu_obs = RareDecayObs(width_bound=(br_B_k_mu_mu_belle -
                                           br_B_k_mu_mu_SM) * B_width,
                              r_max=r_vert_belle,
-                             s_bounds=[[4*mmu**2, 8.68e6],
+                             s_bounds=[[4 * mmu**2, 8.68e6],
                                        [10.09e6, 12.86e6],
                                        [14.18e6, (mB - mk)**2]])
 
 # B^+ -> K^+ e^+ e^-, arXiv:hep-ph/0112300
 br_B_k_e_e_SM = br_B_k_mu_mu_SM
 # Belle measurement, arxiv:0904.0770
-br_B_k_e_e_belle = (4.8 + 0.6)*1.0e-7/1.03
+br_B_k_e_e_belle = (4.8 + 0.6) * 1.0e-7 / 1.03
 B_k_e_e_obs = RareDecayObs(width_bound=(br_B_k_e_e_belle -
                                         br_B_k_e_e_SM) * B_width,
                            r_max=r_vert_belle,
@@ -136,13 +136,13 @@ BeamDumpParams = namedtuple("BeamDumpParams",
 
 # CHARM experiment
 # Dolan et al (arXiv:1412.5174) use br_pN_k=3/7, which is a ~10% difference.
-bd_charm = BeamDumpParams(br_pN_k=10./40., br_pN_B=3.6e-6/40.,
+bd_charm = BeamDumpParams(br_pN_k=10. / 40., br_pN_B=3.6e-6 / 40.,
                           mediator_energy=10.0e3, dist=480., length=35.,
                           visible_fss=["g g", "e e", "mu mu"], n_pot=2.9e17,
                           n_dec=2.3)
 
 # SHiP experiment
-bd_ship = BeamDumpParams(br_pN_k=10./40., br_pN_B=3.6e-3/40.,
+bd_ship = BeamDumpParams(br_pN_k=10. / 40., br_pN_B=3.6e-3 / 40.,
                          mediator_energy=25.0e3, dist=70., length=55.,
                          visible_fss=["g g", "e e", "mu mu", "pi pi",
                                       "pi0 pi0", "k k", "k0 k0"],

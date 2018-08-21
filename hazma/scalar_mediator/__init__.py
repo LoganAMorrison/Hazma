@@ -278,7 +278,7 @@ class ScalarMediator(ScalarMediatorConstraints,
                        (2. * self._gsGG - 9. * self._gsff) * trM)
 
     @classmethod
-    def list_final_states(cls):
+    def list_annihilation_final_states(cls):
         """
         Return a list of the available final states.
 
@@ -325,6 +325,8 @@ class HiggsPortal(ScalarMediator):
         self._gsFF = - 5. * stheta / 6.
         self._lam = vh
         self._stheta = stheta
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
         super(ScalarMediator, self).__init__()
 
     @property

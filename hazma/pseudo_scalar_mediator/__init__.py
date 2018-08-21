@@ -192,7 +192,7 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
         pass
 
     @classmethod
-    def list_final_states(cls):
+    def list_annihilation_final_states(cls):
         """
         Return a list of the available final states.
 
@@ -223,8 +223,8 @@ class PseudoScalarMFV(PseudoScalarMediator):
         ye = me / vh
         ymu = mmu / vh
 
-        gpGG = 2.*gpup + gpdown
-        gpFF = gpll + (8.*gpup + gpdown) / 9.
+        gpGG = 2. * gpup + gpdown
+        gpFF = gpll + (8. * gpup + gpdown) / 9.
 
         super(PseudoScalarMFV, self).__init__(mx, mp, gpxx, gpup * yu,
                                               gpdown * yd, gpdown * ys,
@@ -245,7 +245,7 @@ class PseudoScalarMFV(PseudoScalarMediator):
         self.gpee = gpll * ye
         self.gpmumu = gpll * ymu
 
-        self.gpFF = gpll + (8.*self.gpup + self.gpdown) / 9.
+        self.gpFF = gpll + (8. * self.gpup + self.gpdown) / 9.
 
     @property
     def gpup(self):
@@ -259,8 +259,8 @@ class PseudoScalarMFV(PseudoScalarMediator):
 
         self.gpuu = gpup * yu
 
-        self.gpFF = self.gpll + (8.*gpup + self.gpdown) / 9.
-        self.gpGG = 2.*gpup + self.gpdown
+        self.gpFF = self.gpll + (8. * gpup + self.gpdown) / 9.
+        self.gpGG = 2. * gpup + self.gpdown
 
     @property
     def gpdown(self):
@@ -276,8 +276,8 @@ class PseudoScalarMFV(PseudoScalarMediator):
         self.gpdd = gpdown * yd
         self.gpss = gpdown * ys
 
-        self.gpFF = self.gpll + (8.*self.gpup + gpdown) / 9.
-        self.gpGG = 2.*self.gpup + gpdown
+        self.gpFF = self.gpll + (8. * self.gpup + gpdown) / 9.
+        self.gpGG = 2. * self.gpup + gpdown
 
     def f_eff_g(self, x_kd=1e-4):
         # Need to override the default method since the pseudoscalar uses RAMBO

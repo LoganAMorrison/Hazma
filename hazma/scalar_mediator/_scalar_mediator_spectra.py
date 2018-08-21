@@ -96,7 +96,7 @@ class ScalarMediatorSpectra:
         """
 
         # Compute branching fractions
-        bfs = self.branching_fractions(cme)
+        bfs = self.annihilation_annihilation_branching_fractions(cme)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
@@ -149,6 +149,6 @@ class ScalarMediatorSpectra:
                 's s': lambda e_gams, cme: self.dnde_ss(e_gams, cme)}
 
     def gamma_ray_lines(self, cme):
-        bf = self.branching_fractions(cme)["g g"]
+        bf = self.annihilation_branching_fractions(cme)["g g"]
 
         return {"g g": {"energy": cme / 2.0, "bf": bf}}

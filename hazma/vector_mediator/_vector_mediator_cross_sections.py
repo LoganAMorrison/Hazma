@@ -218,10 +218,56 @@ class VectorMediatorCrossSections:
         else:
             return 0.0
 
-    def cross_sections(self, Q):
+    def sigma_xx_to_v_to_xx(self, Q):
         """
-        Compute the total cross section for two fermions annihilating through a
-        vector mediator to mesons and leptons.
+        Returns the DM annihilation cross section into DM.
+        """
+        rv = self.mv / Q
+        rx = self.mx / Q
+        gvxx = self.gvxx
+        rwv = self.width_v / Q
+
+        if Q > 2. * self.mx:
+            def msqrd(z):
+                return ((gvxx**4 *
+                         (9 - 56 * rx**2 + 2 *
+                          (9 * rv**2 * (-1 + rv**2 + rwv**2) +
+                           4 * rv**2 *
+                           (11 + 2 * rv**2 + 2 * rwv**2) * rx**2 +
+                           8 * (7 + 6 * rv**2 *
+                                (-4 + rv**2 + rwv**2)) * rx**4 +
+                           64 * rx**6) -
+                          2 * (-1 + 4 * rx**2) *
+                          (3 * rv**2 * (-3 + 2 * rv**2 + 2 * rwv**2) +
+                           4 *
+                           (3 + 6 * rv**4 + 2 * rv**2 *
+                            (-7 + 3 * rwv**2)) * rx**2 -
+                           32 * (-2 + rv**2) * rx**4) * z +
+                          2 * (3 * rv**2 - 4 * rx**2) *
+                          (-1 + 4 * rx**2)**3 * z**3 +
+                          (1 - 4 * rx**2)**4 * z**4 +
+                          2 * (3 + 5 * rv**4 + 12 * rx**2 +
+                               8 * rx**4 + rv**2 *
+                               (-3 + 5 * rwv**2 - 20 * rx**2)) *
+                          (z - 4 * rx**2 * z)**2)) /
+                        ((1 + rv**4 + rv**2 * (-2 + rwv**2)) *
+                         (4 * rv**4 + 4 * rv**2 *
+                          (rwv**2 + (-1 + 4 * rx**2) * (-1 + z)) +
+                            (1 - 4 * rx**2)**2 * (-1 + z)**2)))
+
+            ret_val = (quad(msqrd, -1, 1)[0] / (32. * pi * Q))
+
+            assert ret_val.imag == 0.
+            assert ret_val.real >= 0.
+
+            return ret_val.real
+        else:
+            return 0.
+
+    def annihilation_cross_sections(self, Q):
+        """
+        Compute the total cross section for two fermions annihilating
+        through a vector mediator to mesons and leptons.
 
         Parameters
         ----------
@@ -254,10 +300,10 @@ class VectorMediatorCrossSections:
 
         return cross_secs
 
-    def branching_fractions(self, Q):
+    def annihilation_branching_fractions(self, Q):
         """
-        Compute the branching fractions for two fermions annihilating through a
-        vector mediator to mesons and leptons.
+        Compute the branching fractions for two fermions annihilating
+        through a vector mediator to mesons and leptons.
 
         Parameters
         ----------
@@ -270,7 +316,7 @@ class VectorMediatorCrossSections:
             Dictionary of the branching fractions. The keys are 'total',
             'mu mu', 'e e', 'pi0 g', 'pi pi'.
         """
-        CSs = self.cross_sections(Q)
+        CSs = self.annihilation_cross_sections(Q)
 
         if CSs['total'] == 0.0:
             return {'mu mu': 0.0,

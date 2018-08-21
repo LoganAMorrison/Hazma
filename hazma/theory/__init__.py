@@ -15,11 +15,11 @@ class Theory(object, TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @classmethod
     @abstractmethod
-    def list_final_states(cls):
+    def list_annihilation_final_states(cls):
         pass
 
     @abstractmethod
-    def cross_sections(self, cme):
+    def annihilation_cross_sections(self, cme):
         pass
 
     @abstractmethod
@@ -27,7 +27,7 @@ class Theory(object, TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
-    def branching_fractions(self, cme):
+    def annihilation_branching_fractions(self, cme):
         pass
 
     @abstractmethod

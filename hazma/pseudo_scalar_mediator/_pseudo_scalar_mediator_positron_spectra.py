@@ -37,7 +37,7 @@ class PseudoScalarMediatorPositronSpectra:
             'total'.
         """
         # Compute branching fractions
-        bfs = self.branching_fractions(cme)
+        bfs = self.annihilation_branching_fractions(cme)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
@@ -57,6 +57,6 @@ class PseudoScalarMediatorPositronSpectra:
                 "pi0 pi pi": pi0pipi_spec}
 
     def positron_lines(self, cme):
-        bf = self.branching_fractions(cme)["e e"]
+        bf = self.annihilation_branching_fractions(cme)["e e"]
 
         return {"e e": {"energy": cme / 2., "bf": bf}}

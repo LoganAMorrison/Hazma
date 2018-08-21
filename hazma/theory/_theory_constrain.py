@@ -148,7 +148,7 @@ class TheoryConstrain:
             setattr(self, p2, p2_val)
 
             # Compute cross sections
-            css = self.cross_sections(e_cm)
+            css = self.annihilation_cross_sections(e_cm)
             # Get fluxes by multiplying <sigma v>
             bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
                                    for fs, bf in fs_bin_fluxes.iteritems()])

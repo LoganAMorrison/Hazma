@@ -1,8 +1,8 @@
-from cmath import sqrt, pi, log
+# from cmath import sqrt, pi, log
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
-from ..parameters import fpi
-from ..parameters import qe
+# from ..parameters import fpi
+# from ..parameters import qe
 from ..parameters import muon_mass as mmu
 from ..parameters import electron_mass as me
 from scipy.integrate import quad
@@ -29,15 +29,15 @@ class AxialVectorMediatorCrossSections:
         """
         if f == "e":
             mf = me
-            gall = self.gaee
+            # gall = self.gaee
         elif f == "mu":
             mf = mmu
-            gall = self.gamumu
+            # gall = self.gamumu
         mx = self.mx
         if Q >= 2. * mf and Q >= 2. * mx:
-            gaxx = self.gaxx
-            ma = self.ma
-            width_a = self.width_a
+            # gaxx = self.gaxx
+            # ma = self.ma
+            # width_a = self.width_a
             ret_val = 0.
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -45,17 +45,16 @@ class AxialVectorMediatorCrossSections:
         else:
             return 0.
 
-
     def dsigma_ds_xx_to_a_to_pi0pipi(self, s, Q):
         mx = self.mx
 
         if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4. * mpi**2 and
                 s < (Q - mpi0)**2):
-            gauu = self.gauu
-            gadd = self.gadd
-            gaxx = self.gaxx
-            ma = self.ma
-            width_a = self.width_a
+            # gauu = self.gauu
+            # gadd = self.gadd
+            # gaxx = self.gaxx
+            # ma = self.ma
+            # width_a = self.width_a
 
             ret_val = 0.
 
@@ -85,7 +84,7 @@ class AxialVectorMediatorCrossSections:
         ma = self.ma
 
         if Q >= 2. * ma and Q >= 2. * mx:
-            gaxx = self.gaxx
+            # gaxx = self.gaxx
 
             ret_val = 0.
 
@@ -96,7 +95,7 @@ class AxialVectorMediatorCrossSections:
         else:
             return 0.0
 
-    def cross_sections(self, Q):
+    def annihilation_cross_sections(self, Q):
         """
         Compute the total cross section for two fermions annihilating through a
         vector mediator to mesons and leptons.
@@ -127,7 +126,7 @@ class AxialVectorMediatorCrossSections:
 
         return cross_secs
 
-    def branching_fractions(self, Q):
+    def annihilation_branching_fractions(self, Q):
         """
         Compute the branching fractions for two fermions annihilating through
         an axial vector mediator to mesons and leptons.

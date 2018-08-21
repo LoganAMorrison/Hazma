@@ -1,9 +1,12 @@
 from ..theory import Theory
 
+import warnings
+from hazma.hazma_errors import PreAlphaWarning
+
 from _axial_vector_mediator_cross_sections import \
-        AxialVectorMediatorCrossSections
+    AxialVectorMediatorCrossSections
 from _axial_vector_mediator_positron_spectra import \
-        AxialVectorMediatorPositronSpectra
+    AxialVectorMediatorPositronSpectra
 from _axial_vector_mediator_spectra import AxialVectorMediatorSpectra
 from _axial_vector_mediator_widths import AxialVectorMediatorWidths
 
@@ -105,7 +108,7 @@ class AxialVectorMediator(AxialVectorMediatorCrossSections,
         pass
 
     @classmethod
-    def list_final_states(cls):
+    def list_annihilation_final_states(cls):
         """
         Return a list of the available final states.
 

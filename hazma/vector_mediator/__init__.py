@@ -135,7 +135,7 @@ class VectorMediator(VectorMediatorCrossSections,
         pass
 
     @classmethod
-    def list_final_states(cls):
+    def list_annihilation_final_states(cls):
         """
         Return a list of the available final states.
 

@@ -155,7 +155,7 @@ class PseudoScalarMediatorSpectra:
             'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
         """
         # Compute branching fractions
-        bfs = self.branching_fractions(cme)
+        bfs = self.annihilation_branching_fractions(cme)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
@@ -209,6 +209,6 @@ class PseudoScalarMediatorSpectra:
                     self.dnde_pp(e_gams, cme)}
 
     def gamma_ray_lines(self, cme):
-        bf = self.branching_fractions(cme)["g g"]
+        bf = self.annihilation_branching_fractions(cme)["g g"]
 
         return {"g g": {"energy": cme / 2.0, "bf": bf}}

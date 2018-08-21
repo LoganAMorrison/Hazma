@@ -91,7 +91,7 @@ class TheoryCMB:
             spec_fn = self.total_spectrum
         elif fs == "e e":
             def spec_fn(es, e_cm):
-                return 2.*self.total_positron_spectrum(es, e_cm)
+                return 2. * self.total_positron_spectrum(es, e_cm)
 
         if mode == "interp":
             # If RAMBO is needed to compute the spectrum, it is prohibitively
@@ -106,7 +106,7 @@ class TheoryCMB:
                 return e * spec_interp(e) * f_eff_base(e)
 
             f_eff_dm = quad(integrand, e_min, self.mx, epsabs=0,
-                            epsrel=1e-3)[0] / (2.*self.mx)
+                            epsrel=1e-3)[0] / (2. * self.mx)
         elif mode == "quad":
             # If RAMBO is not needed to compute the spectrum, this will give
             # much cleaner results.
@@ -114,7 +114,7 @@ class TheoryCMB:
                 return e * spec_fn(e, e_cm) * f_eff_base(e)
 
             f_eff_dm = quad(integrand, e_min, self.mx, epsabs=0,
-                            epsrel=1e-3)[0] / (2.*self.mx)
+                            epsrel=1e-3)[0] / (2. * self.mx)
 
         # Line contributions from the relevant final state
         if fs == "g g":
@@ -132,7 +132,7 @@ class TheoryCMB:
                 bf = line["bf"]
                 multiplicity = 2. if ch == fs else 1.
                 f_eff_line_dm += (energy * bf * f_eff_base(energy) *
-                                  multiplicity / (2.*self.mx))
+                                  multiplicity / (2. * self.mx))
 
         return f_eff_dm + f_eff_line_dm
 
