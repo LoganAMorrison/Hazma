@@ -383,6 +383,8 @@ class HeavyQuark(ScalarMediator):
         self._gsQ = gsQ
         self._mQ = mQ
         self._QQ = QQ
+        self.compute_vs()
+        self.compute_width_s()  # vs MUST be computed first
         super(ScalarMediator, self).__init__()
 
     @property
