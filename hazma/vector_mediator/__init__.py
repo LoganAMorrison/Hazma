@@ -206,6 +206,27 @@ class KineticMixing(VectorMediator):
         self._gvmumu = Qe * eps * qe
         self.compute_width_v()
 
+    # Hide underlying properties' setters
+    @VectorMediator.gvuu.setter
+    def gvuu(self, gvuu):
+        raise AttributeError("Cannot set gvuu")
+
+    @VectorMediator.gvdd.setter
+    def gvdd(self, gvdd):
+        raise AttributeError("Cannot set gvdd")
+
+    @VectorMediator.gvss.setter
+    def gvss(self, gvss):
+        raise AttributeError("Cannot set gvss")
+
+    @VectorMediator.gvee.setter
+    def gvee(self, gvee):
+        raise AttributeError("Cannot set gvee")
+
+    @VectorMediator.gvmumu.setter
+    def gvmumu(self, gvmumu):
+        raise AttributeError("Cannot set gvmumu")
+
 
 class QuarksOnly(VectorMediator):
     r"""
@@ -242,3 +263,12 @@ class QuarksOnly(VectorMediator):
         self._gvee = 0.0
         self._gvmumu = 0.0
         super(VectorMediator, self).__init__()
+
+    # Hide underlying properties' setters
+    @VectorMediator.gvee.setter
+    def gvee(self, gvee):
+        raise AttributeError("Cannot set gvee")
+
+    @VectorMediator.gvmumu.setter
+    def gvmumu(self, gvmumu):
+        raise AttributeError("Cannot set gvmumu")
