@@ -27,6 +27,9 @@ def get_tex_label(fs):
     tex_label = tex_label.replace("g", r"\gamma")
     tex_label = tex_label.replace("e e", r"e^+ e^-")
     tex_label = tex_label.replace("x x", r"\bar{\chi} \chi")
+    tex_label = tex_label.replace("s s", r"S S")
+    tex_label = tex_label.replace("v v", r"V V")
+    tex_label = tex_label.replace("p p", r"P P")
     return tex_label + r"$"
 
 
@@ -43,9 +46,11 @@ def get_color(fs):
     -------
     The color to be used when plotting that final state.
     """
-    fss = sorted(list(set(ScalarMediator.list_final_states() +
-                          VectorMediator.list_final_states() +
-                          PseudoScalarMediator.list_final_states()) -
-                      set(['s s', 'p p', 'v v']))) + ['s s', 'v v', 'p p',
-                                                      'x x']
+    fss = set(ScalarMediator.list_annihilation_final_states() +
+              VectorMediator.list_annihilation_final_states() +
+              PseudoScalarMediator.list_annihilation_final_states()) - \
+        set(['s s', 'p p', 'v v'])
+
+    fss = sorted(list(fss)) + ['s s', 'v v', 'p p', 'x x']
+
     return (2*list(plt.rcParams["axes.prop_cycle"]))[fss.index(fs)]["color"]
