@@ -342,6 +342,19 @@ class HiggsPortal(ScalarMediator):
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
+    # Hide underlying properties' setters
+    @ScalarMediator.gsff.setter
+    def gsff(self, gsff):
+        raise AttributeError("Cannot set gsff")
+
+    @ScalarMediator.gsGG.setter
+    def gsGG(self, gsGG):
+        raise AttributeError("Cannot set gsGG")
+
+    @ScalarMediator.gsFF.setter
+    def gsFF(self, gsFF):
+        raise AttributeError("Cannot set gsFF")
+
 
 class HeavyQuark(ScalarMediator):
     r"""
@@ -420,3 +433,16 @@ class HeavyQuark(ScalarMediator):
         self._gsFF = 2.0 * self._gsQ * QQ**2
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
+
+    # Hide underlying properties' setters
+    @ScalarMediator.gsff.setter
+    def gsff(self, gsff):
+        raise AttributeError("Cannot set gsff")
+
+    @ScalarMediator.gsGG.setter
+    def gsGG(self, gsGG):
+        raise AttributeError("Cannot set gsGG")
+
+    @ScalarMediator.gsFF.setter
+    def gsFF(self, gsFF):
+        raise AttributeError("Cannot set gsFF")
