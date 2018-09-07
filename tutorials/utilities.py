@@ -4,7 +4,8 @@ from hazma.vector_mediator import VectorMediator
 
 import matplotlib.pyplot as plt
 
-latex_text_width_1col = 5.75113  # inches
+# latex_text_width_1col = 5.75113  # inches. UCSC thesis class.
+latex_text_width_1col = 7.05826  # inches. Article class.
 
 
 def get_tex_label(fs):
