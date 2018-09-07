@@ -1,4 +1,4 @@
-from cmath import sqrt, pi, log
+from cmath import sqrt, pi, log, atanh
 from ..parameters import charged_pion_mass as mpi
 from ..parameters import neutral_pion_mass as mpi0
 from ..parameters import fpi
@@ -193,23 +193,17 @@ class VectorMediatorCrossSections:
         if Q >= 2. * mv and Q >= 2. * mx:
             gvxx = self.gvxx
 
-            ret_val = (gvxx**4 * sqrt(-4. * mv**2 + Q**2) *
-                       (-2. * sqrt((-4. * mv**2 + Q**2) *
-                                   (-4. * mx**2 + Q**2)) -
-                        (2. * (mv**2 + 2. * mx**2)**2 *
-                         sqrt((-4. * mv**2 + Q**2) *
-                              (-4. * mx**2 + Q**2))) /
-                        (mv**4 - 4. * mv**2 * mx**2 + mx**2 * Q**2) +
-                        ((4. * mv**4 - 8. * mv**2 * mx**2 -
-                          8. * mx**4. + 4 * mx**2 * Q**2 + Q**4) *
-                         log((-2. * mv**2 + Q**2 +
-                              sqrt((-4. * mv**2 + Q**2) *
-                                   (-4. * mx**2 + Q**2)))**2 /
-                             (2. * mv**2 - Q**2 + sqrt((-4. * mv**2 + Q**2) *
-                                                       (-4. * mx**2 +
-                                                        Q**2)))**2)) /
-                        (-2. * mv**2 + Q**2))) / (16. * pi * Q**2 *
-                                                  sqrt(-4. * mx**2 + Q**2))
+            ret_val = ((gvxx**4 * sqrt(-4 * mv**2 + Q**2) *
+                        (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
+                         (mv**4 - 4 * mv**2 * mx**2 + mx**2 * Q**2) +
+                         (4 * (4 * mv**4 - 8 * mv**2 * mx**2 -
+                               8 * mx**4 + 4 * mx**2 * Q**2 + Q**4) *
+                            atanh((sqrt(4 * mv**2 - Q**2) *
+                                   sqrt(4 * mx**2 - Q**2)) /
+                                  (2 * mv**2 - Q**2))) /
+                         ((2 * mv**2 - Q**2) * sqrt(4 * mv**2 - Q**2) *
+                          sqrt(4 * mx**2 - Q**2)))) /
+                       (8. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2)))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
