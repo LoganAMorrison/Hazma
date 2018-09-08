@@ -1,4 +1,4 @@
-from cmath import sqrt, pi, log
+from cmath import sqrt, pi, atanh
 
 from ..parameters import vh, b0, alpha_em
 from ..parameters import charged_pion_mass as mpi
@@ -206,29 +206,19 @@ class ScalarMediatorCrossSection:
         if Q > 2. * ms and Q >= 2. * mx:
             gsxx = self.gsxx
 
-            ret_val = (gsxx**4 * sqrt(Q**2 - 4 * ms**2) *
-                       ((4 * (ms**2 - 4 * mx**2)**2) /
-                        (Q**2 - 2 * ms**2 +
-                         sqrt((Q**2 - 4 * ms**2) *
-                              (Q**2 - 4 * mx**2))) +
-                        (4 * (ms**2 - 4 * mx**2)**2) /
-                        (-Q**2 + 2 * ms**2 +
-                         sqrt((Q**2 - 4 * ms**2) * (Q**2 - 4 * mx**2))) -
-                        2 * (Q**2 - 2 * ms**2 - 2 * mx**2 +
-                             sqrt((Q**2 - 4 * ms**2) * (Q**2 - 4 * mx**2))) -
-                        2 * (-Q**2 + 2 * ms**2 + 2 * mx**2 +
-                             sqrt((Q**2 - 4 * ms**2) * (Q**2 - 4 * mx**2))) +
-                        ((Q**2 * (-Q**2 + 2 * ms**2 + 8 * mx**2) +
-                          2 * (Q**4 + 3 * ms**4 + 4 * Q**2 * mx**2 -
-                               16 * mx**4 - ms**2 * (3 * Q**2 + 8 * mx**2))) *
-                         log((Q**2 - 2 * ms**2 +
-                              sqrt((Q**2 - 4 * ms**2) *
-                                   (Q**2 - 4 * mx**2)))**2 /
-                             (-Q**2 + 2 * ms**2 +
-                              sqrt((Q**2 - 4 * ms**2) *
-                                   (Q**2 - 4 * mx**2)))**2)) /
-                        (Q**2 - 2 * ms**2))) / \
-                (64. * Q**2 * sqrt(Q**2 - 4 * mx**2) * pi)
+            ret_val = ((-(gsxx**4 * sqrt(-4 * ms**2 + Q**2) *
+                          sqrt(-4 * mx**2 + Q**2) *
+                          (-2 / (4 * mx**2 - Q**2) - (ms**2 - 4 * mx**2)**2 /
+                           ((4 * mx**2 - Q**2) *
+                            (ms**4 - 4 * ms**2 * mx**2 + mx**2 * Q**2)) -
+                           (2 * (6 * ms**4 - 32 * mx**4 +
+                                 16 * mx**2 * Q**2 + Q**4 -
+                                 4 * ms**2 * (4 * mx**2 + Q**2)) *
+                            atanh((sqrt(-4 * ms**2 + Q**2) *
+                                   sqrt(-4 * mx**2 + Q**2)) /
+                                  (-2 * ms**2 + Q**2))) /
+                           (sqrt(-4 * ms**2 + Q**2) * (-2 * ms**2 + Q**2) *
+                            (-4 * mx**2 + Q**2)**1.5))) / (16. * pi * Q**2)))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
