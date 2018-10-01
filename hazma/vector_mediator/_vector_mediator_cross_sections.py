@@ -130,6 +130,45 @@ class VectorMediatorCrossSections:
         else:
             return 0.
 
+#    def sigma_xx_to_v_to_pi0v(self, Q):
+#        """
+#        Returns the cross section for xbar x to pi0 v.
+#
+#        Parameters
+#        ----------
+#        Q : float
+#            Center of mass energy.
+#        self : object
+#            Class containing the vector mediator parameters.
+#
+#        Returns
+#        -------
+#        cross_section : float
+#            Cross section for xbar + x -> v -> pi0 v
+#        """
+#        mx = self.mx
+#        mv = self.mv
+#
+#        if Q >= mpi0 + mv and Q >= 2. * mx:
+#            gvuu = self.gvuu
+#            gvdd = self.gvdd
+#            gvxx = self.gvxx
+#            width_v = self.width_v
+#
+#            ret_val = ((gvdd - gvuu)**2 * (gvdd + gvuu)**2 * gvxx**2 *
+#                       (2*mx**2 + Q**2) *
+#                       ((mpi0**2 - mv**2)**2 -
+#                        2*(mpi0**2 + mv**2)*Q**2 + Q**4)**1.5) / \
+#                (1536.*fpi**2*pi**5*Q**3*sqrt(-4*mx**2 + Q**2) *
+#                 (mv**4 - 2*mv**2*Q**2 + Q**4 + mv**2*width_v**2))
+#
+#            assert ret_val.imag == 0
+#            assert ret_val.real >= 0
+#
+#            return ret_val.real
+#        else:
+#            return 0.
+
     def dsigma_ds_xx_to_v_to_pi0pipi(self, s, Q):
         mx = self.mx
 
