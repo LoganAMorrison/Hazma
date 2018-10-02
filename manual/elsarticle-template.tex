@@ -1,15 +1,13 @@
 \documentclass[review]{elsarticle}
 
-\usepackage{lineno,hyperref}
-\modulolinenumbers[5]
+\usepackage{hyperref}
 
-\journal{Journal of \LaTeX\ Templates}
+\journal{Computer Physics Communications}
 
 %%%%%%%%%%%%%%%%%%%%%%%
-%% Elsevier bibliography styles
-%%%%%%%%%%%%%%%%%%%%%%%
-%% To change the style, put a % in front of the second line of the current style and
-%% remove the % from the second line of the style you would like to use.
+%% To change the bib style, put a % in front of the second line of the current
+%% style and remove the % from the second line of the style you would like to
+%% use.
 %%%%%%%%%%%%%%%%%%%%%%%
 
 %% Numbered
@@ -41,32 +39,25 @@
 
 \begin{frontmatter}
 
-\title{Hazma}
-\tnotetext[mytitlenote]{Fully documented templates are available in the elsarticle package on \href{http://www.ctan.org/tex-archive/macros/latex/contrib/elsarticle}{CTAN}.}
+\title{Hazma\tnoteref{mytitlenote}}
+\tnotetext[mytitlenote]{Code and tutorials available at \href{https://github.com/LoganAMorrison/Hazma}{github.com/LoganAMorrison/Hazma}.}
 
-%% Group authors per affiliation:
-\author{Elsevier\fnref{myfootnote}}
-\address{Radarweg 29, Amsterdam}
-\fntext[myfootnote]{Since 1880.}
+\author[grappa,ucsc,scipp]{Adam Coogan}
+\ead{a.m.coogan@uva.nl}
 
-%% or include affiliations in footnotes:
-\author[mymainaddress,mysecondaryaddress]{Elsevier Inc}
-\ead[url]{www.elsevier.com}
+\author[ucsc,scipp]{Logan A. Morrison}
+\ead{loanmorr@ucsc.edu}
 
-\author[mysecondaryaddress]{Global Customer Service\corref{mycorrespondingauthor}}
-\cortext[mycorrespondingauthor]{Corresponding author}
-\ead{support@elsevier.com}
-
-\address[mymainaddress]{1600 John F Kennedy Boulevard, Philadelphia}
-\address[mysecondaryaddress]{360 Park Avenue South, New York}
+\address[grappa]{GRAPPA, Institute of Physics, University of Amsterdam, 1098 XH Amsterdam, The Netherlands}
+\address[ucsc]{Department of Physics, 1156 High St., University of California Santa Cruz, Santa Cruz, CA 95064, USA}
+\address[scipp]{Santa Cruz Institute for Particle Physics, 1156 High St., Santa Cruz, CA 95064, USA}
 
 \begin{abstract}
-This template helps you to create a properly formatted \LaTeX\ manuscript.
+    Hazma does many wonderful things.
 \end{abstract}
 
 \begin{keyword}
-\texttt{elsarticle.cls}\sep \LaTeX\sep Elsevier \sep template
-\MSC[2010] 00-01\sep  99-00
+Dark matter \sep indirect detection
 \end{keyword}
 
 \end{frontmatter}
@@ -74,10 +65,6 @@ This template helps you to create a properly formatted \LaTeX\ manuscript.
 \linenumbers
 
 \section{The Elsevier article class}
-
-\paragraph{Installation} If the document class \emph{elsarticle} is not available on your computer, you can download and install the system package \emph{texlive-publishers} (Linux) or install the \LaTeX\ package \emph{elsarticle} using the package manager of your \TeX\ installation, which is typically \TeX\ Live or Mik\TeX.
-
-\paragraph{Usage} Once the package is properly installed, you can use the document class \emph{elsarticle} to create a manuscript. Please make sure that your manuscript follows the guidelines in the Guide for Authors of the relevant journal. It is not necessary to typeset your manuscript in exactly the same way as an article, unless you are submitting to a camera-ready copy (CRC) journal.
 
 \paragraph{Functionality} The Elsevier article class is based on the standard article class and supports almost all of the functionality of that class. In addition, it features commands and options to format the
 \begin{itemize}
@@ -90,18 +77,7 @@ This template helps you to create a properly formatted \LaTeX\ manuscript.
 \item citation style and labeling.
 \end{itemize}
 
-\section{Front matter}
-
-The author names and affiliations could be formatted in two ways:
-\begin{enumerate}[(1)]
-\item Group the authors per affiliation.
-\item Use footnotes to indicate the affiliations.
-\end{enumerate}
-See the front matter of this document for examples. You are recommended to conform your choice to the journal you are submitting to.
-
-\section{Bibliography styles}
-
-There are various bibliography styles available. You can select the style of your choice in the preamble of this document. These styles are Elsevier styles based on standard styles like Harvard and Vancouver. Please use Bib\TeX\ to generate your bibliography and include DOIs whenever available.
+\section{Bibliography}
 
 Here are two sample references: \cite{Feynman1963118,Dirac1953888}.
 
