@@ -6,7 +6,7 @@ def test_list_final_states():
     PSM = PseudoScalarMediator(mx=200., mp=1e3, gpxx=1., gpuu=1., gpdd=1.,
                                gpss=1., gpee=1., gpmumu=1., gpGG=1., gpFF=1.)
 
-    PSM.list_final_states()
+    PSM.list_annihilation_final_states()
 
 
 def test_cross_sections():
@@ -15,7 +15,7 @@ def test_cross_sections():
 
     cme = 1000.
 
-    PSM.cross_sections(cme)
+    PSM.annihilation_cross_sections(cme)
 
 
 def test_branching_fractions():
@@ -24,7 +24,7 @@ def test_branching_fractions():
 
     cme = 1000.
 
-    PSM.branching_fractions(cme)
+    PSM.annihilation_branching_fractions(cme)
 
 
 def test_spectra():

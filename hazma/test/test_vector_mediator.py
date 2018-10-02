@@ -7,7 +7,7 @@ def test_list_final_states():
     gvxx, gvuu, gvdd, gvss, gvee, gvmumu = 6 * [1.]
 
     VM = VectorMediator(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
-    VM.list_final_states()
+    VM.list_annihilation_final_states()
 
 
 def test_cross_sections():
@@ -16,7 +16,7 @@ def test_cross_sections():
     gvxx, gvuu, gvdd, gvss, gvee, gvmumu = 6 * [1.]
 
     VM = VectorMediator(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
-    VM.cross_sections(cme)
+    VM.annihilation_cross_sections(cme)
 
 
 def test_branching_fractions():
@@ -25,7 +25,7 @@ def test_branching_fractions():
     gvxx, gvuu, gvdd, gvss, gvee, gvmumu = 6 * [1.]
 
     VM = VectorMediator(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
-    VM.branching_fractions(cme)
+    VM.annihilation_branching_fractions(cme)
 
 
 def test_spectra():
