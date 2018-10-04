@@ -15,5 +15,5 @@ hazma.egg-info
 *.fls
 *.log
 *.out
-*.pdf*
+*.pdf\*
 *.synctex.gz
