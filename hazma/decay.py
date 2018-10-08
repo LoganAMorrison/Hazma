@@ -6,12 +6,12 @@ Module for computing decay spectra from a muon and light mesons.
 
 """
 import numpy as np
-from decay_helper_functions import decay_long_kaon
-from decay_helper_functions import decay_charged_pion
-from decay_helper_functions import decay_charged_kaon
-from decay_helper_functions import decay_muon
-from decay_helper_functions import decay_neutral_pion
-from decay_helper_functions import decay_short_kaon
+from hazma.decay_helper_functions import decay_long_kaon
+from hazma.decay_helper_functions import decay_charged_pion
+from hazma.decay_helper_functions import decay_charged_kaon
+from hazma.decay_helper_functions import decay_muon
+from hazma.decay_helper_functions import decay_neutral_pion
+from hazma.decay_helper_functions import decay_short_kaon
 
 
 def muon(eng_gam, eng_mu):

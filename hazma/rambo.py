@@ -10,9 +10,9 @@ TODO: Code up specific functions for cross-section
       functions for 2->3 processes.
 
 """
-from .phase_space_helper_functions import generator
-from .phase_space_helper_functions import histogram
-from .phase_space_helper_functions.modifiers import apply_matrix_elem
+from hazma.phase_space_helper_functions import generator
+from hazma.phase_space_helper_functions import histogram
+from hazma.phase_space_helper_functions.modifiers import apply_matrix_elem
 import numpy as np
 import multiprocessing as mp
 import warnings

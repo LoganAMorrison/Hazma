@@ -1,8 +1,8 @@
-from ..gamma_ray_parameters import A_eff_e_astrogam
-from ..gamma_ray_parameters import T_obs_e_astrogam
-from ..gamma_ray_parameters import draco_params
-from ..gamma_ray_parameters import default_bg_model
-from ..gamma_ray_parameters import energy_res_e_astrogam
+from hazma.gamma_ray_parameters import A_eff_e_astrogam
+from hazma.gamma_ray_parameters import T_obs_e_astrogam
+from hazma.gamma_ray_parameters import draco_params
+from hazma.gamma_ray_parameters import default_bg_model
+from hazma.gamma_ray_parameters import energy_res_e_astrogam
 
 from scipy import optimize
 from scipy.integrate import trapz
@@ -10,7 +10,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 import numpy as np
 
 
-class TheoryGammaRayLimits:
+class TheoryGammaRayLimits(object):
     def __get_product_spline(self, f1, f2, grid, k=1, ext="raise"):
         """Returns a spline representing the product of two functions.
 
@@ -33,7 +33,7 @@ class TheoryGammaRayLimits:
             f1(grid)*f2(grid) for the y array, with the specified extrapolation
             method.
         """
-        return InterpolatedUnivariateSpline(grid, f1(grid)*f2(grid), k=k,
+        return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k,
                                             ext=ext)
 
     def _spec_res_fn(self, ep, e, energy_res):
@@ -47,8 +47,8 @@ class TheoryGammaRayLimits:
             else:
                 return 0.
         else:
-            return (1./np.sqrt(2.*np.pi*sigma**2) *
-                    np.exp(-(ep - e)**2 / (2.*sigma**2)))
+            return (1. / np.sqrt(2. * np.pi * sigma**2) *
+                    np.exp(-(ep - e)**2 / (2. * sigma**2)))
 
     def get_detected_spectrum(self, e_min, e_max, e_cm, energy_res,
                               n_pts=1000):
@@ -78,8 +78,8 @@ class TheoryGammaRayLimits:
         """
         # Compute source spectrum over a wide grid to avoid edge effects from
         # the convolution
-        e_gams_padded = np.logspace(np.log10(e_min)-1,
-                                    np.log10(e_max)+1,
+        e_gams_padded = np.logspace(np.log10(e_min) - 1,
+                                    np.log10(e_max) + 1,
                                     n_pts)
         dnde_src = self.total_spectrum(e_gams_padded, e_cm)
 
@@ -148,7 +148,7 @@ class TheoryGammaRayLimits:
 
         # TODO: this should depend on the target!
         vx = 1e-3  # v_x = Milky Way velocity dispersion
-        e_cm = 2.*self.mx*(1. + 0.5*vx**2)
+        e_cm = 2. * self.mx * (1. + 0.5 * vx**2)
 
         # Convolve the spectrum with the detector's spectral resolution
         e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
@@ -230,13 +230,13 @@ class TheoryGammaRayLimits:
             I_B_val = integrand_B.integral(e_a, e_b)
 
             # Jacobian
-            df_de_a = 1./np.sqrt(I_B_val) * \
+            df_de_a = 1. / np.sqrt(I_B_val) * \
                 (integrand_S(e_a) - 0.5 * I_S_val / I_B_val * integrand_B(e_a))
-            df_de_b = -1./np.sqrt(I_B_val) * \
+            df_de_b = -1. / np.sqrt(I_B_val) * \
                 (integrand_S(e_b) - 0.5 * I_S_val / I_B_val * integrand_B(e_b))
             jac_val = np.array([df_de_a, df_de_b]).T
 
-            return -I_S_val/np.sqrt(I_B_val), jac_val
+            return -I_S_val / np.sqrt(I_B_val), jac_val
 
     def unbinned_limit(self, A_eff=A_eff_e_astrogam,
                        energy_res=energy_res_e_astrogam,
@@ -289,7 +289,7 @@ class TheoryGammaRayLimits:
         """
         # TODO: this should depend on the target!
         vx = 1e-3  # v_x = Milky Way velocity dispersion
-        e_cm = 2.*self.mx*(1. + 0.5*vx**2)
+        e_cm = 2. * self.mx * (1. + 0.5 * vx**2)
 
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
@@ -302,11 +302,11 @@ class TheoryGammaRayLimits:
         # If there's a peak, include it in the initial energy window.
         if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) or \
            np.isclose(e_dnde_max, e_max, atol=0, rtol=1e-8):  # no peak
-            e_a_0 = 10.**(0.15*np.log10(e_max) + 0.85*np.log10(e_min))
-            e_b_0 = 10.**(0.85*np.log10(e_max) + 0.15*np.log10(e_min))
+            e_a_0 = 10.**(0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
+            e_b_0 = 10.**(0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
         else:
-            e_a_0 = 10.**(0.5*(np.log10(e_dnde_max) + np.log10(e_min)))
-            e_b_0 = 10.**(0.5*(np.log10(e_max) + np.log10(e_dnde_max)))
+            e_a_0 = 10.**(0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
+            e_b_0 = 10.**(0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
 
         # Integrating these gives the number of signal and background photons
         integrand_S = self.__get_product_spline(dnde_det, A_eff,
@@ -318,7 +318,7 @@ class TheoryGammaRayLimits:
         limit_obj = optimize.minimize(self.__f_jac_lim,
                                       [e_a_0, e_b_0],
                                       args=(integrand_S, integrand_B),
-                                      bounds=2*[[1.001*e_min, e_max]],
+                                      bounds=2 * [[1.001 * e_min, e_max]],
                                       constraints=({"type": "ineq",
                                                     "fun":
                                                     lambda x: x[1] - x[0]}),
@@ -327,7 +327,7 @@ class TheoryGammaRayLimits:
                                       method="SLSQP")
 
         if debug_msgs:
-            print "\te_a, e_b = ", limit_obj.x
+            print("\te_a, e_b = ".format(limit_obj.x))
 
         # Insert appropriate prefactors to convert result to <sigma v>_tot. The
         # factor of 2 is from the DM not being self-conjugate.
@@ -356,4 +356,3 @@ class TheoryGammaRayLimits:
                                             debug_msgs))
 
         return np.array(lims)
-

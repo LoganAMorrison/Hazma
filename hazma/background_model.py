@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-from parameters import load_interp
+from hazma.parameters import load_interp
 
 
 class BackgroundModel(object):
@@ -97,4 +97,3 @@ class BackgroundModel(object):
                                  es_out_of_bounds[0])
             else:
                 return self.__dPhi_dEdOmega(es)
-

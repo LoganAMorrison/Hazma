@@ -1,14 +1,14 @@
 import numpy as np
-from ..parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
-                          charged_pion_mass as mpi, down_quark_mass as mdq,
-                          bottom_quark_mass as mbq, strange_quark_mass as msq,
-                          long_kaon_mass as mkl, top_quark_mass as mtq,
-                          neutral_pion_mass as mpi0, GF, vh, Vts, Vtb, Vtd)
-from ..constraint_parameters import (B_k_invis_obs, k_pi_invis_obs,
-                                     kl_pi0_mu_mu_obs, kl_pi0_e_e_obs,
-                                     B_k_mu_mu_obs, B_k_e_e_obs, k_width,
-                                     kl_width, B_width, cm_to_inv_MeV,
-                                     bd_charm)
+from hazma.parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
+                              charged_pion_mass as mpi, down_quark_mass as mdq,
+                              bottom_quark_mass as mbq, strange_quark_mass as msq,
+                              long_kaon_mass as mkl, top_quark_mass as mtq,
+                              neutral_pion_mass as mpi0, GF, vh, Vts, Vtb, Vtd)
+from hazma.constraint_parameters import (B_k_invis_obs, k_pi_invis_obs,
+                                         kl_pi0_mu_mu_obs, kl_pi0_e_e_obs,
+                                         B_k_mu_mu_obs, B_k_e_e_obs, k_width,
+                                         kl_width, B_width, cm_to_inv_MeV,
+                                         bd_charm)
 
 # TODO
 # * 3-body phase space integration for s -> x x contribution to invisible

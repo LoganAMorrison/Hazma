@@ -1,5 +1,5 @@
-from decay_muon cimport CSpectrum as muspec
-from decay_muon cimport CSpectrumPoint as muspecpt
+from hazma.decay_helper_functions.decay_muon cimport CSpectrum as muspec
+from hazma.decay_helper_functions.decay_muon cimport CSpectrumPoint as muspecpt
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad

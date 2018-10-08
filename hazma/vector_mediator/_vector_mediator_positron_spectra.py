@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..positron_spectra import muon as pspec_muon
-from ..positron_spectra import charged_pion as pspec_charged_pion
+from hazma.positron_spectra import muon as pspec_muon
+from hazma.positron_spectra import charged_pion as pspec_charged_pion
 
 
 class VectorMediatorPositronSpectra:

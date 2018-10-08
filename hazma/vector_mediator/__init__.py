@@ -1,15 +1,18 @@
-from ..theory import Theory
+from hazma.theory import Theory
 
-from _vector_mediator_cross_sections import VectorMediatorCrossSections
-from _vector_mediator_fsr import VectorMediatorFSR
-from _vector_mediator_positron_spectra import VectorMediatorPositronSpectra
-from _vector_mediator_spectra import VectorMediatorSpectra
-from _vector_mediator_widths import VectorMediatorWidths
+from hazma.vector_mediator._vector_mediator_cross_sections \
+    import VectorMediatorCrossSections
+from hazma.vector_mediator._vector_mediator_fsr import VectorMediatorFSR
+from hazma.vector_mediator._vector_mediator_positron_spectra \
+    import VectorMediatorPositronSpectra
+from hazma.vector_mediator._vector_mediator_spectra \
+    import VectorMediatorSpectra
+from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
 
 import warnings
-from ..hazma_errors import PreAlphaWarning
+from hazma.hazma_errors import PreAlphaWarning
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,

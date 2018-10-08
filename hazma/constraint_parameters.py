@@ -1,8 +1,8 @@
 import numpy as np
 from collections import namedtuple
-from parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
-                        charged_pion_mass as mpi, muon_mass as mmu,
-                        B_width, k_width, kl_width)
+from hazma.parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
+                              charged_pion_mass as mpi, muon_mass as mmu,
+                              B_width, k_width, kl_width)
 
 
 # Conversion factors

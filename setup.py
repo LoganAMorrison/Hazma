@@ -1,45 +1,91 @@
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup, Extension, find_packages
 
 import numpy as np
-from Cython.Build import cythonize
 
-hdhf = "hazma/decay_helper_functions"
-hgrhf = "hazma/gamma_ray_helper_functions"
-hpshf = "hazma/phase_space_helper_functions"
-hfthf = "hazma/field_theory_helper_functions"
-hphf = "hazma/positron_helper_functions"
-hsm = "hazma/scalar_mediator"
-hvm = "hazma/vector_mediator"
+decay_dir = "hazma/decay_helper_functions/"
+gr_dir = "hazma/gamma_ray_helper_functions/"
+ps_dir = "hazma/phase_space_helper_functions/"
+ft_dir = "hazma/field_theory_helper_functions/"
+pos_dir = "hazma/positron_helper_functions/"
+sm_dir = "hazma/scalar_mediator/"
+vm_dir = "hazma/vector_mediator/"
 
-packs = ["hazma",
-         "hazma.axial_vector_mediator",
-         "hazma.decay_helper_functions",
-         "hazma.field_theory_helper_functions",
-         "hazma.gamma_ray_helper_functions",
-         "hazma.theory",
-         "hazma.phase_space_helper_functions",
-         "hazma.positron_helper_functions",
-         "hazma.pseudo_scalar_mediator",
-         "hazma.scalar_mediator",
-         "hazma.unitarization",
-         "hazma.vector_mediator"]
+decay_pack = "hazma.decay_helper_functions"
+ft_pack = "hazma.field_theory_helper_functions"
+gr_pack = "hazma.gamma_ray_helper_functions"
+theory_pack = "hazma.theory"
+ps_pack = "hazma.phase_space_helper_functions"
+pos_pack = "hazma.positron_helper_functions"
+sm_pack = "hazma.scalar_mediator"
+vm_pack = "hazma.vector_mediator"
 
-decay_ext = Extension("*", sources=[hdhf + "/*.pyx"])
-gamma_ext = Extension("*", sources=[hgrhf + "/*.pyx"])
-phase_ext = Extension("*", sources=[hpshf + "/*.pyx"],
-                      extra_compile_args=['-g', '-std=c++11'],
-                      language="c++")
-field_theory_ext = Extension("*", sources=[hfthf + "/*.pyx"])
-positron_ext = Extension("*", sources=[hphf + "/*.pyx"])
-sm_ext = Extension("*", sources=[hsm + "/*.pyx"])
-vm_ext = Extension("*", sources=[hvm + "/*.pyx"])
+psm_pack = "hazma.pseudo_scalar_mediator"
+avm_pack = "hazma.axial_vector_mediator"
+unit_pack = "hazma.unitarization"
 
-extensions = [decay_ext, gamma_ext, phase_ext,
-              field_theory_ext, positron_ext, sm_ext, vm_ext]
+packs = ["hazma", avm_pack, decay_pack, ft_pack,
+         gr_pack, theory_pack, ps_pack, pos_pack,
+         psm_pack, sm_pack, unit_pack, vm_pack]
+
+extensions = []
+
+# Decay helper functions extensions
+extensions += [Extension(decay_pack + ".decay_charged_pion",
+                         sources=[decay_dir + "decay_charged_pion.pyx"])]
+extensions += [Extension(decay_pack + ".decay_neutral_pion",
+                         sources=[decay_dir + "decay_neutral_pion.pyx"])]
+extensions += [Extension(decay_pack + ".decay_muon",
+                         sources=[decay_dir + "decay_muon.pyx"])]
+extensions += [Extension(decay_pack + ".decay_charged_kaon",
+                         sources=[decay_dir + "decay_charged_kaon.pyx"])]
+extensions += [Extension(decay_pack + ".decay_long_kaon",
+                         sources=[decay_dir + "decay_long_kaon.pyx"])]
+extensions += [Extension(decay_pack + ".decay_short_kaon",
+                         sources=[decay_dir + "decay_short_kaon.pyx"])]
+
+# Gamma-Ray Helper functions extensions
+extensions += [Extension(gr_pack + ".gamma_ray_generator",
+                         sources=[gr_dir + "gamma_ray_generator.pyx"])]
+
+# Phase space helper functions extensions
+extensions += [Extension(ps_pack + ".generator",
+                         sources=[ps_dir + "generator.pyx"],
+                         extra_compile_args=['-g', '-std=c++11'],
+                         language="c++")]
+extensions += [Extension(ps_pack + ".histogram",
+                         sources=[ps_dir + "histogram.pyx"],
+                         extra_compile_args=['-g', '-std=c++11'],
+                         language="c++")]
+extensions += [Extension(ps_pack + ".modifiers",
+                         sources=[ps_dir + "modifiers.pyx"],
+                         extra_compile_args=['-g', '-std=c++11'],
+                         language="c++")]
+
+# Field Theory helper functions extensions
+extensions += [Extension(ft_pack + ".common_functions",
+                         sources=[ft_dir + "common_functions.pyx"])]
+extensions += [Extension(ft_pack + ".three_body_phase_space",
+                         sources=[ft_dir + "three_body_phase_space.pyx"])]
+
+# Positron Helper functions
+extensions += [Extension(pos_pack + ".positron_charged_pion",
+                         sources=[pos_dir + "positron_charged_pion.pyx"])]
+extensions += [Extension(pos_pack + ".positron_muon",
+                         sources=[pos_dir + "positron_muon.pyx"])]
+extensions += [Extension(pos_pack + ".positron_rambo",
+                         sources=[pos_dir + "positron_rambo.pyx"])]
+
+# Scalar mediator
+extensions += [Extension(sm_pack + ".scalar_mediator_decay_spectrum",
+                         sources=[sm_dir +
+                                  "scalar_mediator_decay_spectrum.pyx"])]
+# Vector mediator
+extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
+                         sources=[vm_dir +
+                                  "vector_mediator_decay_spectrum.pyx"])]
 
 setup(name='hazma',
-      version='1.1',
+      version='0.40',
       author='Logan Morrison and Adam Coogan',
       author_email='loanmorr@ucsc.edu',
       maintainer='Logan Morrison',
@@ -50,17 +96,22 @@ setup(name='hazma',
       long_description="""Package for computing the FSR and decay spectra for
       light mesons (pions and kaons) and light fermions (electron and muon).
       """,
-      packages=packs,
-      ext_modules=cythonize(extensions),
+      packages=find_packages(),
+      ext_modules=extensions,
       include_dirs=[np.get_include(),
                     'hazma/decay_helper_functions',
                     'hazma/positron_helper_functions'],
+      package_data={
+          'hazma/decay_helper_functions': ['*.pxd'],
+          'hazma/positron_helper_functions': ['*.pxd'],
+      },
+      setup_requires=['numpy>=1.13.3'],
+      install_requires=['numpy>=1.13.3'],
+      zip_safe=False,
       include_package_data=True,
-      license='MIT License',
+      license='gpl-3.0',
       platforms='MacOS and Linux',
       download_url='https://github.com/LoganAMorrison/Hazma',
       classifiers=[
-          "Programming Language :: Python",
-          "License :: MIT License",
-          "Topic :: High Energy Particle Physics"]
+          "Programming Language :: Python"]
       )

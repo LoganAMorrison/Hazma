@@ -1,5 +1,5 @@
 import numpy as np
-from parameters import load_interp
+from hazma.parameters import load_interp
 
 
 class FluxMeasurement(object):
@@ -70,4 +70,3 @@ class FluxMeasurement(object):
 
         # Load energy resolution
         self.energy_res = load_interp(energy_res_rf, fill_value="extrapolate")
-

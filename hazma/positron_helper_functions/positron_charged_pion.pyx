@@ -1,4 +1,4 @@
-from positron_muon cimport CSpectrum as muspec
+from hazma.positron_helper_functions.positron_muon cimport CSpectrum as muspec
 from scipy.integrate import quad
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 import numpy as np

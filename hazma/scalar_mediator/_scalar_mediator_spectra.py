@@ -1,12 +1,13 @@
 import numpy as np
 
-from ..decay import muon
-from ..decay import neutral_pion, charged_pion
+from hazma.decay import muon
+from hazma.decay import neutral_pion, charged_pion
 
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import electron_mass as me
 
-from .scalar_mediator_decay_spectrum import dnde_decay_s, dnde_decay_s_pt
+from hazma.scalar_mediator.scalar_mediator_decay_spectrum \
+    import dnde_decay_s, dnde_decay_s_pt
 
 
 class ScalarMediatorSpectra:

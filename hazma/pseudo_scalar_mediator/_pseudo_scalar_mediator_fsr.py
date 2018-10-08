@@ -8,7 +8,7 @@ import numpy as np
 
 from cmath import sqrt, log, pi
 
-from ..parameters import alpha_em
+from hazma.parameters import alpha_em
 
 
 class PseudoScalarMediatorFSR:

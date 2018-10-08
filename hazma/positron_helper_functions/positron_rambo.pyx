@@ -8,12 +8,12 @@ cimport numpy as np
 import cython
 import multiprocessing as mp
 
-from .. import rambo
-from ..rambo import compute_annihilation_cross_section
-from ..rambo import compute_decay_width
+from hazma import rambo
+from hazma.rambo import compute_annihilation_cross_section
+from hazma.rambo import compute_decay_width
 
-from . import positron_muon
-from . import positron_charged_pion
+from hazma.positron_helper_functions import positron_muon
+from hazma.positron_helper_functions import positron_charged_pion
 
 include "../decay_helper_functions/parameters.pxd"
 

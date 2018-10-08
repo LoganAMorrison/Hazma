@@ -1,11 +1,11 @@
-from ..cmb import vx_cmb, f_eff_g, f_eff_ep
+from hazma.cmb import vx_cmb, f_eff_g, f_eff_ep
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
 
 import numpy as np
 
 
-class TheoryCMB:
+class TheoryCMB(object):
     def cmb_limit(self, x_kd=1.0e-4):
         """Computes the CMB limit on <sigma v>.
 
