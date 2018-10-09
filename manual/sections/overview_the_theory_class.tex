@@ -1,0 +1,39 @@
+Instances of the \texttt{theory} class represent dark matter models, and are the main objects used to perform analyses in Hazma. 
+
+\subsection{Built-in Theories}%
+\label{sub:built_in_theories}
+
+Present Lagrangians for scalar and vector models. Link to github with FR and FC calculations.
+
+This section briefly describes the two models currently implemented \texttt{hazma}. Each model contains two BSM particles:
+\begin{itemize}
+    \item A dark matter particle;
+    \item A mediator that interacts with the dark matter as well as Standard Model particles.
+\end{itemize}
+Both the dark matter and the mediator are uncharged under the Standard Model gauge group. Each model is defined in terms of a Lagrangian written in terms of the microscopic degrees of freedom of the Standard Model (quarks, leptons and gauge bosons). However, at the energy scale of interest for self-annihilations of nonrelativistic MeV dark matter, quarks and gluons are not the corrent strongly-interacting degrees of freedom. Instead, the microscopic Lagrangian must be matched onto the effective Lagrangian for pions and other mesons using the techniques of chiral perturbation theory (chPT). The models currently implemented in \texttt{hazma} utilize leading-order chPT. 
+
+Observables in chPT are computed in terms of an expansion in a small parameter, the meson momentum $p$ divided by the mass scale $\Lambda_\u{ChPT} \sim 4 \pi f_\pi \sim 1\us{GeV}$, where $f_\pi$ is the pion decay constant. As with an effective field theory (EFT), chPT has a limited range of validity: as $p^2 \to \Lambda_\u{ChPT}$, higher-order Feynman diagrams in the chPT expansion provide contributions to observables comparable to leading order ones. This suggests that leading-order chPT cannot be trusted for computing dark matter self-annihilation cross sections when $m_\u{DM} \gtrsim 500\us{GeV}$. In fact, the convergence of the chPT expansion is disrupted at a lower mass scale by the lowest-lying hadronic resonances, the $\rho$ ($m_\rho = 770\us{GeV}$) and the $f_0(500)$ ($m_{f_0(500)} \sim 450\us{MeV}$). Figure~\ref{fig:chpt_validity} illustrates where the leading-order chPT calculations can and cannot be trusted in the $(m_\u{DM}, m_\u{mediator})$ plane. This is important to keep in mind when using the models provided with \texttt{hazma}.
+
+In this manual we state the microscopic Lagrangian as well as the chiral Lagrangian for each of the following theories without justification. The particular forms chosen for the interaction Lagrangians and the matching procedure are described and justified in detail in a companion papers~\cite{matching_paper}.
+
+\subsubsection{Scalar model}
+
+The 
+
+\subsubsection{Vector model}
+
+\subsection{Using \texttt{theory}}%
+\label{sub:using_theory}
+
+\subsubsection{Annihilation cross sections, decay widths and branching fractions}
+
+\subsubsection{Gamma ray and positron spectra}
+
+\subsubsection{Gamma ray limits}
+
+Explain procedure
+
+\subsubsection{Cosmic Microwave Background limits}
+
+Explain procedure
+
