@@ -1,11 +1,11 @@
 import numpy as np
 
-from ..parameters import vh, b0, alpha_em, fpi
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
-from ..parameters import up_quark_mass as muq
-from ..parameters import down_quark_mass as mdq
-from ..parameters import charged_pion_mass as mpi
+from hazma.parameters import vh, b0, alpha_em, fpi
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import electron_mass as me
+from hazma.parameters import up_quark_mass as muq
+from hazma.parameters import down_quark_mass as mdq
+from hazma.parameters import charged_pion_mass as mpi
 
 from scipy.integrate import quad
 

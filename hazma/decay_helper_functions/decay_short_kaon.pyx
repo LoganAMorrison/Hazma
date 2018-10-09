@@ -1,8 +1,8 @@
 """
 TODO: Update documentation.
 """
-cimport decay_charged_pion
-cimport decay_neutral_pion
+from hazma.decay_helper_functions cimport decay_charged_pion
+from hazma.decay_helper_functions cimport decay_neutral_pion
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad

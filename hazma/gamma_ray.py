@@ -6,11 +6,12 @@
 
 import numpy as np
 
-from . import rambo
+from hazma import rambo
 
-from .gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
+from hazma.gamma_ray_helper_functions.gamma_ray_generator \
+    import gamma, gamma_point
 
-from .field_theory_helper_functions.common_functions import \
+from hazma.field_theory_helper_functions.common_functions import \
     cross_section_prefactor
 
 

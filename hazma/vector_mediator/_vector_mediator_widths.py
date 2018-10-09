@@ -1,10 +1,10 @@
 from cmath import sqrt, pi
 
-from ..parameters import (charged_pion_mass as mpi,
-                          neutral_pion_mass as mpi0,
-                          electron_mass as me,
-                          muon_mass as mmu,
-                          qe, fpi)
+from hazma.parameters import (charged_pion_mass as mpi,
+                              neutral_pion_mass as mpi0,
+                              electron_mass as me,
+                              muon_mass as mmu,
+                              qe, fpi)
 
 
 class VectorMediatorWidths:

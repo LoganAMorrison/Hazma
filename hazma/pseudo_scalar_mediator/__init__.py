@@ -1,26 +1,30 @@
-from ..theory import Theory
+from hazma.theory import Theory
 
-from ..parameters import electron_mass as me
-from ..parameters import muon_mass as mmu
-from ..parameters import up_quark_mass as muq
-from ..parameters import down_quark_mass as mdq
-from ..parameters import strange_quark_mass as msq
-from ..parameters import vh
+from hazma.parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import up_quark_mass as muq
+from hazma.parameters import down_quark_mass as mdq
+from hazma.parameters import strange_quark_mass as msq
+from hazma.parameters import vh
 
-from ..parameters import b0, fpi
-from ..parameters import neutral_pion_mass as mpi0
+from hazma.parameters import b0, fpi
+from hazma.parameters import neutral_pion_mass as mpi0
 
-from _pseudo_scalar_mediator_cross_sections import \
-    PseudoScalarMediatorCrossSections
-from _pseudo_scalar_mediator_fsr import PseudoScalarMediatorFSR
-from _pseudo_scalar_mediator_msqrd_rambo import PseudoScalarMediatorMSqrdRambo
-from _pseudo_scalar_mediator_positron_spectra import \
-    PseudoScalarMediatorPositronSpectra
-from _pseudo_scalar_mediator_spectra import PseudoScalarMediatorSpectra
-from _pseudo_scalar_mediator_widths import PseudoScalarMediatorWidths
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_cross_sections \
+    import PseudoScalarMediatorCrossSections
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_fsr \
+    import PseudoScalarMediatorFSR
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_msqrd_rambo \
+    import PseudoScalarMediatorMSqrdRambo
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_positron_spectra\
+    import PseudoScalarMediatorPositronSpectra
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_spectra \
+    import PseudoScalarMediatorSpectra
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_widths \
+    import PseudoScalarMediatorWidths
 
 import warnings
-from ..hazma_errors import PreAlphaWarning
+from hazma.hazma_errors import PreAlphaWarning
 
 import numpy as np
 

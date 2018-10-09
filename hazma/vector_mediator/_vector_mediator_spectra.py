@@ -1,11 +1,12 @@
 import numpy as np
 
-from ..decay import muon
-from ..decay import neutral_pion, charged_pion
+from hazma.decay import muon
+from hazma.decay import neutral_pion, charged_pion
 
-from ..parameters import neutral_pion_mass as mpi0
+from hazma.parameters import neutral_pion_mass as mpi0
 
-from .vector_mediator_decay_spectrum import dnde_decay_v, dnde_decay_v_pt
+from hazma.vector_mediator.vector_mediator_decay_spectrum \
+    import dnde_decay_v, dnde_decay_v_pt
 
 
 class VectorMediatorSpectra:

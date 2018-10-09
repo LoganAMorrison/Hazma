@@ -1,12 +1,12 @@
-from _theory_gamma_ray_limits import TheoryGammaRayLimits
-from _theory_cmb import TheoryCMB
-from _theory_constrain import TheoryConstrain
+from hazma.theory._theory_gamma_ray_limits import TheoryGammaRayLimits
+from hazma.theory._theory_cmb import TheoryCMB
+from hazma.theory._theory_constrain import TheoryConstrain
 
 import numpy as np
 from abc import ABCMeta, abstractmethod
 
 
-class Theory(object, TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
+class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     __metaclass__ = ABCMeta
 
     @abstractmethod

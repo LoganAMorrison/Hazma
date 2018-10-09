@@ -4,8 +4,8 @@
 @date - December 2017
 """
 import numpy as np
-from ..field_theory_helper_functions.common_functions import minkowski_dot
-from ..parameters import alpha_em
+from hazma.field_theory_helper_functions.common_functions import minkowski_dot
+from hazma.parameters import alpha_em
 
 
 def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):

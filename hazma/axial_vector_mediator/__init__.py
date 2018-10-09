@@ -1,14 +1,16 @@
-from ..theory import Theory
+from hazma.theory import Theory
 
 import warnings
 from hazma.hazma_errors import PreAlphaWarning
 
-from _axial_vector_mediator_cross_sections import \
-    AxialVectorMediatorCrossSections
-from _axial_vector_mediator_positron_spectra import \
-    AxialVectorMediatorPositronSpectra
-from _axial_vector_mediator_spectra import AxialVectorMediatorSpectra
-from _axial_vector_mediator_widths import AxialVectorMediatorWidths
+from hazma.axial_vector_mediator._axial_vector_mediator_cross_sections \
+    import AxialVectorMediatorCrossSections
+from hazma.axial_vector_mediator._axial_vector_mediator_positron_spectra \
+    import AxialVectorMediatorPositronSpectra
+from hazma.axial_vector_mediator._axial_vector_mediator_spectra\
+    import AxialVectorMediatorSpectra
+from hazma.axial_vector_mediator._axial_vector_mediator_widths \
+    import AxialVectorMediatorWidths
 
 
 class AxialVectorMediator(AxialVectorMediatorCrossSections,

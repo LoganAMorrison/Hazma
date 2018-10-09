@@ -6,9 +6,10 @@ Module for computing positron spectra.
 
 """
 
-from positron_helper_functions import positron_muon
-from positron_helper_functions import positron_charged_pion
-from positron_helper_functions.positron_rambo import positron, positron_point
+from hazma.positron_helper_functions import positron_muon
+from hazma.positron_helper_functions import positron_charged_pion
+from hazma.positron_helper_functions.positron_rambo\
+    import positron, positron_point
 
 import numpy as np
 

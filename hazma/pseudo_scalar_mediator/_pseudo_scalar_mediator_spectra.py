@@ -1,13 +1,13 @@
 import numpy as np
 
-from ..decay import muon
+from hazma.decay import muon
 
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import neutral_pion_mass as mpi0
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import electron_mass as me
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import neutral_pion_mass as mpi0
 
-from ..gamma_ray import gamma_ray
+from hazma.gamma_ray import gamma_ray
 
 # Stuff needed to compute FSR from x xbar -> P -> pip pim pi0
 # from ..gamma_ray import gamma_ray_rambo

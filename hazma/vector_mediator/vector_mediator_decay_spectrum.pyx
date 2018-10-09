@@ -1,7 +1,9 @@
-from ..decay_helper_functions.decay_charged_pion cimport CSpectrum as cp_spec
-from ..decay_helper_functions.decay_neutral_pion cimport CSpectrum as np_spec
-from ..decay_helper_functions.decay_neutral_pion cimport CSpectrumPoint
-from ..decay_helper_functions.decay_muon cimport CSpectrum as mu_spec
+from hazma.decay_helper_functions.decay_charged_pion \
+    cimport CSpectrum as cp_spec
+from hazma.decay_helper_functions.decay_neutral_pion \
+    cimport CSpectrum as np_spec
+from hazma.decay_helper_functions.decay_neutral_pion cimport CSpectrumPoint
+from hazma.decay_helper_functions.decay_muon cimport CSpectrum as mu_spec
 
 import cython
 import numpy as np

@@ -4,9 +4,9 @@ Parameters relevant to computing constraints from gamma ray experiments.
 from collections import namedtuple
 import numpy as np
 from pkg_resources import resource_filename
-from background_model import BackgroundModel
-from flux_measurement import FluxMeasurement
-from parameters import load_interp
+from hazma.background_model import BackgroundModel
+from hazma.flux_measurement import FluxMeasurement
+from hazma.parameters import load_interp
 
 # Get paths to files inside the module
 gr_data_dir = "gamma_ray_data/"

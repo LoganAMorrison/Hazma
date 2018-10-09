@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..positron_spectra import muon as pspec_muon
-from ..positron_spectra import positron_rambo
+from hazma.positron_spectra import muon as pspec_muon
+from hazma.positron_spectra import positron_rambo
 
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0

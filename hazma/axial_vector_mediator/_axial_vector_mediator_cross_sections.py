@@ -1,10 +1,10 @@
 # from cmath import sqrt, pi, log
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import neutral_pion_mass as mpi0
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import neutral_pion_mass as mpi0
 # from ..parameters import fpi
 # from ..parameters import qe
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import electron_mass as me
 from scipy.integrate import quad
 
 

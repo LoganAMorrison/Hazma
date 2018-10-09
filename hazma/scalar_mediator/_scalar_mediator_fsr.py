@@ -1,7 +1,7 @@
 import numpy as np
 from cmath import sqrt, pi, atanh, log
 
-from ..parameters import (qe, alpha_em, charged_pion_mass as mpi)
+from hazma.parameters import (qe, alpha_em, charged_pion_mass as mpi)
 
 
 class ScalarMediatorFSR:

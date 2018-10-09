@@ -1,7 +1,7 @@
-from ..parameters import alpha_em, qe
-from ..parameters import charged_pion_mass as mpi
-from ..parameters import electron_mass as me
-from ..parameters import muon_mass as mmu
+from hazma.parameters import alpha_em, qe
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
 
 from cmath import sqrt, log, pi
 import numpy as np

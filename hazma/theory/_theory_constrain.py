@@ -1,10 +1,10 @@
-from ..constraint_parameters import sv_inv_MeV_to_cm3_per_s
+from hazma.constraint_parameters import sv_inv_MeV_to_cm3_per_s
 from skimage import measure
 
 import numpy as np
 
 
-class TheoryConstrain:
+class TheoryConstrain(object):
     def custom_constrain(self, param_grid, ls_or_img="image"):
         """Computes constraints over grid of parameter values.
 

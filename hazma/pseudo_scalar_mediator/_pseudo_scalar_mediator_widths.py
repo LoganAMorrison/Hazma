@@ -1,11 +1,11 @@
 import numpy as np
 
-from ..parameters import vh, b0, alpha_em, fpi
-from ..parameters import muon_mass as mmu
-from ..parameters import electron_mass as me
-from ..parameters import up_quark_mass as muq
-from ..parameters import down_quark_mass as mdq
-from ..parameters import charged_pion_mass as mpi
+from hazma.parameters import vh, b0, alpha_em, fpi
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import electron_mass as me
+from hazma.parameters import up_quark_mass as muq
+from hazma.parameters import down_quark_mass as mdq
+from hazma.parameters import charged_pion_mass as mpi
 
 from scipy.integrate import quad
 
@@ -19,8 +19,9 @@ class PseudoScalarMediatorWidths:
         gpFF = self.gpFF
         mp = self.mp
 
-        ret = -(alpha_em**2*mp**3*((1 + beta)*fpi*gpFF - beta*vh) *
-                ((-1 + beta)*fpi*gpFF + beta*vh))/(128.*fpi**2*np.pi**3*vh**2)
+        ret = (-(alpha_em**2 * mp**3 * ((1 + beta) * fpi * gpFF - beta * vh) *
+                 ((-1 + beta) * fpi * gpFF + beta * vh)) /
+               (128. * fpi**2 * np.pi**3 * vh**2))
 
         assert ret.imag == 0
         assert ret.real >= 0
