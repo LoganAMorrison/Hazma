@@ -100,7 +100,7 @@ class VectorMediatorSpectra:
         """
 
         # Compute branching fractions
-        bfs = self.branching_fractions(cme)
+        bfs = self.annihilation_branching_fractions(cme)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
@@ -156,6 +156,6 @@ class VectorMediatorSpectra:
                 'pi0 g': lambda egams, cme: self.dnde_pi0g(egams, cme)}
 
     def gamma_ray_lines(self, cme):
-        bf = self.branching_fractions(cme)["pi0 g"]
+        bf = self.annihilation_branching_fractions(cme)["pi0 g"]
 
         return {"pi0 g": {"energy": (cme**2 - mpi0**2) / (2. * cme), "bf": bf}}
