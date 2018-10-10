@@ -9,18 +9,18 @@ import cython
 import multiprocessing as mp
 
 from hazma import rambo
-from hamza.rambo import compute_annihilation_cross_section
-from hamza.rambo import compute_decay_width
-
-from hamza.decay import muon as dm
-from hamza.decay import electron as de
-
-from hamza.decay import neutral_pion as dnp
-from hamza.decay import charged_pion as dcp
-
-from hamza.decay import charged_kaon as dck
-from hamza.decay import long_kaon as dlk
-from hamza.decay import short_kaon as dsk
+from hazma.rambo import compute_annihilation_cross_section
+from hazma.rambo import compute_decay_width
+         
+from hazma.decay import muon as dm
+from hazma.decay import electron as de
+         
+from hazma.decay import neutral_pion as dnp
+from hazma.decay import charged_pion as dcp
+         
+from hazma.decay import charged_kaon as dck
+from hazma.decay import long_kaon as dlk
+from hazma.decay import short_kaon as dsk
 
 include "../decay_helper_functions/parameters.pxd"
 

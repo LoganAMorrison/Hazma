@@ -97,7 +97,7 @@ class ScalarMediatorSpectra:
         """
 
         # Compute branching fractions
-        bfs = self.annihilation_annihilation_branching_fractions(cme)
+        bfs = self.annihilation_branching_fractions(cme)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
