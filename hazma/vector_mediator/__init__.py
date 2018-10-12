@@ -193,6 +193,7 @@ class KineticMixing(VectorMediator):
         self._gvee = -Qe * eps * qe
         self._gvmumu = -Qe * eps * qe
         self._eps = eps
+        self.compute_width_v()
         super(VectorMediator, self).__init__()
 
     @property
