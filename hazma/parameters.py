@@ -32,6 +32,10 @@ charm_quark_mass = 1.275e3
 bottom_quark_mass = 4.18e3
 top_quark_mass = 160.0e3
 
+# Convert <sigma v> from MeV^2
+cm_to_inv_MeV = 5.08e10  # MeV^-1 cm^-1
+sv_inv_MeV_to_cm3_per_s = 1. / cm_to_inv_MeV**2 * 3e10  # cm^3/s * MeV^2
+
 # MISC.
 alpha_em = 1.0 / 137.04  # Fine structure constant.
 GF = 1.1663787e-11  # Fermi constant in MeV**-2
