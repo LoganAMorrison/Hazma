@@ -1,0 +1,7 @@
+^^Istring title = "This is a Unicode π in the sky"
+^^I/*
+^^IDefined as $\pi=\lim_{n\to\infty}\frac{P_n}{d}$ where $P$ is the perimeter
+^^Iof an $n$-sided regular polygon circumscribing a
+^^Icircle of diameter $d$.
+^^I*/
+^^Iconst double pi = 3.1415926535
