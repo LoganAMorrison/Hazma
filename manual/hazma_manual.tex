@@ -35,30 +35,34 @@
 \newcommand{\sm}{\mil{scalar_mediator}}
 \newcommand{\vm}{\mil{vector_mediator}}
 
+
 \begin{document}
+
+
+
 
 \begin{frontmatter}
 
-\title{Hazma\tnoteref{mytitlenote}}
-\tnotetext[mytitlenote]{Code and tutorials available at \href{https://github.com/LoganAMorrison/Hazma}{github.com/LoganAMorrison/Hazma}.}
+	\title{Hazma\tnoteref{mytitlenote}}
+	\tnotetext[mytitlenote]{Code and tutorials available at \href{https://github.com/LoganAMorrison/Hazma}{github.com/LoganAMorrison/Hazma}.}
 
-\author[grappa,ucsc,scipp]{Adam Coogan}
-\ead{a.m.coogan@uva.nl}
+	\author[grappa,ucsc,scipp]{Adam Coogan}
+	\ead{a.m.coogan@uva.nl}
 
-\author[ucsc,scipp]{Logan A. Morrison}
-\ead{loanmorr@ucsc.edu}
+	\author[ucsc,scipp]{Logan A. Morrison}
+	\ead{loanmorr@ucsc.edu}
 
-\address[grappa]{GRAPPA, Institute of Physics, University of Amsterdam, 1098 XH Amsterdam, The Netherlands}
-\address[ucsc]{Department of Physics, 1156 High St., University of California Santa Cruz, Santa Cruz, CA 95064, USA}
-\address[scipp]{Santa Cruz Institute for Particle Physics, 1156 High St., Santa Cruz, CA 95064, USA}
+	\address[grappa]{GRAPPA, Institute of Physics, University of Amsterdam, 1098 XH Amsterdam, The Netherlands}
+	\address[ucsc]{Department of Physics, 1156 High St., University of California Santa Cruz, Santa Cruz, CA 95064, USA}
+	\address[scipp]{Santa Cruz Institute for Particle Physics, 1156 High St., Santa Cruz, CA 95064, USA}
 
-\begin{abstract}
-    Hazma does many wonderful things.
-\end{abstract}
+	\begin{abstract}
+		Hazma does many wonderful things.
+	\end{abstract}
 
-\begin{keyword}
-Dark matter \sep indirect detection
-\end{keyword}
+	\begin{keyword}
+		Dark matter \sep indirect detection
+	\end{keyword}
 
 \end{frontmatter}
 
@@ -73,13 +77,47 @@ Hazma is great.
     \item Cross sections: $\u{cm}^3 / \u{s}$
 \end{itemize}
 
-\section{Installation}%
+\section{Installation and Package Structure}%
 \label{sec:installation}
+
+\subsection{Installation}
+
+Before installing \texttt{hazma}, the user needs to have a few of well-established packages : cython, scipy, numpy, and scikit-image. Theses are easily installed by using PyPi. If the user has PyPi installed on their system, then these packages can be installed using
+\begin{verbatim}
+	pip install cython, scipy, numpy, scikit-image
+\end{verbatim}
+Hazma can be installed in the same way, using:
+\begin{verbatim}
+	pip install hazma
+\end{verbatim}
+This will download a tarball from the PyPi repository, compile all the c-code and install \texttt{hazma} on the system. Alternatively, the user can install \texttt{hazma} by downloading the package from \url{https://github.com/LoganAMorrison/Hazma.git}. Once downloaded, navigate to the package directory using the command line and run either
+\begin{verbatim}
+	pip install .
+\end{verbatim}
+or
+\begin{verbatim}
+	python setup.py install
+\end{verbatim}
+
+
+Note that since \texttt{hazma} makes extensive usage of the package cython, the user will need to have a c-compiler installed on their system. For more information, see the cython installation guide: \url{https://cython.readthedocs.io/en/latest/src/quickstart/install.html}
+
+
+
 
 \section{Overview: The \texttt{theory} Class}%
 \label{sec:overview_the_theory_class}
 
 \input{sections/overview_the_theory_class}
+
+\subsection{Gamma-ray and Positron Spectra}
+In \texttt{hazma}, their are two main types of spectra: Final state radiation (FSR) and decay spectra. Processes where there is a photon or electron in the immediate final state are classified as FSR. For example, the process of two dark matter particles annihilating through a scalar mediator into two charged fermions or mesons and a photon, i.e. \(\overline{\chi}\chi\to S^{*}\to\overline{f}f\gamma\) or \(\overline{\chi}\chi\to S^{*}\to\pi^{+}\pi^{-}\gamma\). Decay spectra arise when one of the final state particles is unstable and is able to decay radiatively, like the muon, charged pion or neutral pion. If this is the case, the spectrum for the state \(A\) decaying or annihilating into the state \(XB\) with \(X\) being some state and \(B\) then decaying radiatively to the state \(C\gamma\), can be approximated using the narrow width approximation as
+\begin{align}
+	\dfrac{dN(A\to XB\to XC\gamma)}{dE} & \sim \mathrm{BF}(A\to XB)\dfrac{dN(B\to X\gamma)}{dE}
+\end{align}
+An example of such a proccess is two dark matter particles annihilating into two muons or two pions: \(\overline{\chi}\chi\to S^{*}\to\mu^{+}\mu^{-}\) or \(\overline{\chi}\chi\to S^{*}\to\pi^{+}\pi^{-}\). For both cases, the final state particles are unstable and will decay. For the decay spectra, it is easiest to compute the gamma-ray or positron spectra in the rest frame of the decaying particle. Then, to compute the spectra in another frame, the spectrum must be boosted.
+\subsubsection{Boost Integrals}
+
 
 \section{How Hazma Works}%
 \label{sec:how_hazma_works}

@@ -19,4 +19,4 @@ hazma.egg-info
 *.synctex.gz
 *.spl
 manual/_minted-hazma_manual/*
-manual/minted.pdf
+manual/*.pdf
