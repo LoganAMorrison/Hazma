@@ -1,6 +1,6 @@
 {\color{red} Should we have boxes for different functions and constructors specifying type signatures? Should that be left for the actual docs in the code? Seems like it, based on other publications in this journal.}
 
-Instances of the \theory\ class represent dark matter models, and are the main objects used to perform analyses in Hazma. Two \theory\ s, each containing a DM and mediator particle, come built into \hazma\. The Lagrangians defining these theories and the domains of validity are described in the following subsection. \theory\ possesses methods to compute quantities such as DM annihilation cross sections, gamma ray spectra and constraints, and CMB constraints. This section catalogues the definitions of these quantities used by \hazma\ along with minimal examples of how to use the associated methods.
+Instances of the \theory\ class represent dark matter models, and are the main objects used to perform analyses in Hazma. Two \theory\s, each containing a DM and mediator particle, come built into \hazma. The Lagrangians defining these theories and the domains of validity are described in the following subsection. \theory\ possesses methods to compute quantities such as DM annihilation cross sections, gamma ray spectra and constraints, and CMB constraints. This section catalogues the definitions of these quantities used by \hazma\ along with minimal examples of how to use the associated methods.
 
 \subsection{Built-in Theories}%
 \label{sub:built_in_theories}
@@ -25,9 +25,9 @@ which consists of the SM Lagrangian, the free Lagrangians for the mediator and D
     \label{fig:chpt_validity}
 \end{figure}
 
-As with an effective field theory (EFT), chPT has a limited range of validity. Observables in chPT are computed in terms of an expansion in a small parameter, the meson momentum $p$ divided by the mass scale $\Lambda_\u{ChPT} \sim 4 \pi f_\pi \sim 1\us{GeV}$, where $f_\pi$ is the pion decay constant. As $p^2 \to \Lambda_\u{ChPT}$, higher-order Feynman diagrams in the chPT expansion provide contributions to observables comparable to leading order ones. This suggests that leading-order chPT cannot be trusted for computing dark matter self-annihilation cross sections when $m_\u{DM} \gtrsim 500\us{GeV}$. In fact, the convergence of the chPT expansion is disrupted at a lower mass scale by the lowest-lying hadronic resonances, the $\rho$ ($m_\rho = 770\us{GeV}$) and the $f_0(500)$ ($m_{f_0(500)} \sim 450\us{MeV}$). Figure~\ref{fig:chpt_validity} illustrates the resulting regions where the leading-order chPT calculations can and cannot be trusted in the $(m_\u{DM}, m_\u{mediator})$ plane. An important consequence is that annihilation into kaons and heavier mesons can be ignored since that would require DM masses far above the chPT range of validity. This is important to keep in mind when using the models provided with \hazma\.\footnote{Of course, user-defined models (see Section~\ref{sec:advanced_usage}) need not use leading-order chPT.}
+As with an effective field theory (EFT), chPT has a limited range of validity. Observables in chPT are computed in terms of an expansion in a small parameter, the meson momentum $p$ divided by the mass scale $\Lambda_\u{ChPT} \sim 4 \pi f_\pi \sim 1\us{GeV}$, where $f_\pi$ is the pion decay constant. As $p^2 \to \Lambda_\u{ChPT}$, higher-order Feynman diagrams in the chPT expansion provide contributions to observables comparable to leading order ones. This suggests that leading-order chPT cannot be trusted for computing dark matter self-annihilation cross sections when $m_\u{DM} \gtrsim 500\us{GeV}$. In fact, the convergence of the chPT expansion is disrupted at a lower mass scale by the lowest-lying hadronic resonances, the $\rho$ ($m_\rho = 770\us{GeV}$) and the $f_0(500)$ ($m_{f_0(500)} \sim 450\us{MeV}$). Figure~\ref{fig:chpt_validity} illustrates the resulting regions where the leading-order chPT calculations can and cannot be trusted in the $(m_\u{DM}, m_\u{mediator})$ plane. An important consequence is that annihilation into kaons and heavier mesons can be ignored since that would require DM masses far above the chPT range of validity. This is important to keep in mind when using the models provided with \hazma.\footnote{Of course, user-defined models (see Section~\ref{sec:advanced_usage}) need not use leading-order chPT.}
 
-While the preceding discussion applies irrespective of the mediator and DM spin and quantum numbers, the rest of this subsection specializes to the two models that come with \hazma\: \sm, which contains a real scalar mediator $S$ and \vm, where the mediator is a vector $V$.
+While the preceding discussion applies irrespective of the mediator and DM spin and quantum numbers, the rest of this subsection specializes to the two models that come with \hazma: \sm, which contains a real scalar mediator $S$ and \vm, where the mediator is a vector $V$.
  In both cases the DM is taken to be a Dirac fermion, so that
 \begin{align}
     \L &= \bar{\chi} (i \slashed \d - m_\chi) \chi.
@@ -148,7 +148,9 @@ AttributeError: Cannot set gvuu
 \end{minted}
 {\color{red} This is not quite right. For example, it excludes the final states $e^+ e^- \gamma$, $S \pi^0 \pi^0$, $\pi^+ \pi^- \gamma \gamma$ for the scalar and $V \pi^0$ for the vector. While that's fine since those final states are so suppressed, the wording here needs to be precise.}
 
-\paragraph{\texttt{theory.annihilation\_cross\_sections(cme)}} For an instance \mil{th} of theory and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and \mil{'total'} and whose values are the corresponding cross sections for annihilating into those states. In the following example, the DM is lighter than the mediator, but the center of mass energy is large enough to permit annihilations into the mediator:
+\paragraph{\texttt{theory.annihilation\_cross\_sections(cme)}} For an instance \mil{th} of \mil{theory} and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and \mil{'total'} and whose values are the corresponding cross sections for annihilating into those states. In the theories included with \hazma, the propagators used for the mediators take into account their widths.
+
+In the following example, the DM is lighter than the mediator, but the center of mass energy is large enough to permit annihilations into the mediator:
 \begin{minted}[bgcolor=bg]{python}
 >>> sm = ScalarMediator(mx=180., ms=190., gsxx=1., gsff=0.1,
 ...                     gsGG=0.1, gsFF=0.1, lam=2e5)
@@ -163,7 +165,7 @@ AttributeError: Cannot set gvuu
  'pi pi': 3.526880321768581e-27}
 \end{minted}
 
-\paragraph{\texttt{theory.annihilation\_branching\_fractions(cme)}} For an instance \mil{th} of theory and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and whose values are the corresponding branching fractions for annihilating into those states.
+\paragraph{\texttt{theory.annihilation\_branching\_fractions(cme)}} For an instance \mil{th} of \mil{theory} and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and whose values are the corresponding branching fractions for annihilating into those states.
 \begin{minted}[bgcolor=bg]{python}
 >>> km = KineticMixing(mx=170., mv=1e3, gvxx=1., eps=0.2)
 >>> bfs = km.annihilation_branching_fractions(400.)
@@ -175,8 +177,19 @@ AttributeError: Cannot set gvuu
  'pi pi': 0.04460388797207543}
 \end{minted}
 
-
-\paragraph{\texttt{theory.partial\_widths()}}
+\paragraph{\texttt{theory.partial\_widths()}} Returns a \mil{dict} whose keys are states into which the mediator can decay and whose values are the corresponding decay widths.
+\begin{minted}[bgcolor=bg]{python}
+>>> vm = VectorMediator(mx=100, mv=300, gvxx=0.5, gvuu=0.3,
+...                     gvdd=0.2, gvss=0.0, gvee=0, gvmumu=0.1)
+>>> widths = vm.partial_widths()
+>>> print(widths)
+{'x x': 5.437074984436769,
+ 'e e': 0.0,
+ 'pi0 g': 0.00021474193246750537,
+ 'total': 5.651719337662487,
+ 'mu mu': 0.2114945066034031,
+ 'pi pi': 0.002935104689847661}
+\end{minted}
 
 \subsection{Gamma ray and positron spectra}
 
