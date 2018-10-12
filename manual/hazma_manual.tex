@@ -1,4 +1,39 @@
-\input{settings}
+\documentclass[review]{elsarticle}
+
+\usepackage{hyperref}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{slashed}
+\usepackage{xcolor}
+
+\usepackage{minted}  % syntax highlighting
+\definecolor{bg}{rgb}{0.94,0.94,0.94}
+\usemintedstyle{pastie}
+\newcommand{\mil}[1]{\mintinline{python}{#1}}
+
+\journal{Computer Physics Communications}
+
+% Numbered without titles
+\bibliographystyle{model1a-num-names}
+
+% `Elsevier LaTeX' style
+%\bibliographystyle{elsarticle-num}
+
+\newcommand{\us}[1]{{~\mathrm{#1}}}
+\renewcommand\u[1]{{\mathrm{#1}}}
+\renewcommand\L{\mathcal{L}}
+\renewcommand\d{\partial}
+
+% hazma commands
+% \newcommand{\hazma}{\texttt{hazma}}
+% \newcommand{\theory}{\texttt{theory}}
+% \newcommand{\sm}{\texttt{scalar\_mediator}}
+% \newcommand{\vm}{\texttt{vector\_mediator}}
+\newcommand{\hazma}{\mil{hazma}}
+\newcommand{\theory}{\mil{theory}}
+\newcommand{\sm}{\mil{scalar_mediator}}
+\newcommand{\vm}{\mil{vector_mediator}}
 
 \begin{document}
 
@@ -29,7 +64,14 @@ Dark matter \sep indirect detection
 
 \section{Introduction}
 
-\paragraph{Hazma} Hazma is great.
+Hazma is great.
+
+\paragraph{Notation/units} Unless otherwise noted, the units used throughout \hazma\ are
+\begin{itemize}
+    \item Masses: MeV
+    \item Decay widths: MeV
+    \item Cross sections: $\u{cm}^3 / \u{s}$
+\end{itemize}
 
 \section{Installation}%
 \label{sec:installation}
@@ -44,6 +86,10 @@ Dark matter \sep indirect detection
 
 \section{Advanced Usage}%
 \label{sec:advanced_usage}
+
+\begin{itemize}
+    \item Make a list or graphic showing what the user has to implement.
+\end{itemize}
 
 \section{Conclusion}%
 \label{sec:conclusion}
