@@ -187,11 +187,11 @@ class KineticMixing(VectorMediator):
         self._mx = mx
         self._mv = mv
         self._gvxx = gvxx
-        self._gvuu = Qu * eps * qe
-        self._gvdd = Qd * eps * qe
-        self._gvss = Qd * eps * qe
-        self._gvee = Qe * eps * qe
-        self._gvmumu = Qe * eps * qe
+        self._gvuu = -Qu * eps * qe
+        self._gvdd = -Qd * eps * qe
+        self._gvss = -Qd * eps * qe
+        self._gvee = -Qe * eps * qe
+        self._gvmumu = -Qe * eps * qe
         self._eps = eps
         super(VectorMediator, self).__init__()
 
@@ -202,11 +202,11 @@ class KineticMixing(VectorMediator):
     @eps.setter
     def eps(self, eps):
         self._eps = eps
-        self._gvuu = Qu * eps * qe
-        self._gvdd = Qd * eps * qe
-        self._gvss = Qd * eps * qe
-        self._gvee = Qe * eps * qe
-        self._gvmumu = Qe * eps * qe
+        self._gvuu = -Qu * eps * qe
+        self._gvdd = -Qd * eps * qe
+        self._gvss = -Qd * eps * qe
+        self._gvee = -Qe * eps * qe
+        self._gvmumu = -Qe * eps * qe
         self.compute_width_v()
 
     # Hide underlying properties' setters
