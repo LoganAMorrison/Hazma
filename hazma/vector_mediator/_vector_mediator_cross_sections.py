@@ -1,10 +1,9 @@
 from cmath import sqrt, pi, atanh
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
-from hazma.parameters import fpi
-from hazma.parameters import qe
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
+from hazma.parameters import fpi, qe, sv_inv_MeV_to_cm3_per_s
 from scipy.integrate import quad
 
 
@@ -50,7 +49,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
@@ -88,7 +87,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
@@ -126,7 +125,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
@@ -165,7 +164,7 @@ class VectorMediatorCrossSections:
 #            assert ret_val.imag == 0
 #            assert ret_val.real >= 0
 #
-#            return ret_val.real
+#            return ret_val.real * sv_inv_MeV_to_cm3_per_s
 #        else:
 #            return 0.
 
@@ -206,7 +205,7 @@ class VectorMediatorCrossSections:
 
             assert ret_val.imag == 0.
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
@@ -221,7 +220,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
@@ -247,7 +246,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.0
 
@@ -293,7 +292,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0.
             assert ret_val.real >= 0.
 
-            return ret_val.real
+            return ret_val.real * sv_inv_MeV_to_cm3_per_s
         else:
             return 0.
 
