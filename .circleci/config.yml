@@ -4,6 +4,40 @@
 #
 version: 2
 jobs:
+  linux_wheels:
+      working_directory: ~/linux_wheels
+      docker:
+          - image: circleci/python:2.7
+      steps:
+          - checkout
+          - setup_remote_docker
+          - run:
+              name: Build Linux Wheels
+              command: |
+                pip install --user cibuildwheel
+                cibuildwheel --output-dir dist
+          - store_artifacts:
+              path: dist
+  osx-wheels:
+    working_directory: ~/osx-wheels
+    macos:
+      xcode: "10.0.0"
+    steps:
+      - checkout
+      - run:
+          name: Build the OS X wheels.
+          command: |
+            pip install --user cibuildwheel
+            cibuildwheel --output-dir wheelhouse
+      - store_artifacts:
+          path: dist/
+          
+  workflows:
+      version: 2
+      all-tests:
+          jobs:
+              - linux-wheels
+              - osx-wheels
   build:
     machine:
         python:
