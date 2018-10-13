@@ -78,7 +78,7 @@ jobs:
         path: wheelhouse/
 
 workflows:
-  versions: 2
+  version: 2
   all-tests:
     jobs:
       - linux-test-and-wheels
