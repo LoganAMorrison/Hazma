@@ -3,12 +3,13 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2
+
 jobs:
-  build:
+    build:
     machine:
         python:
-            version: 2.7.10
-
+            version: 3.6
+    
     working_directory: ~/repo
 
     steps:
@@ -41,3 +42,39 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+
+    linux_wheels:
+        working_directory: ~/linux-wheels
+        docker:
+            - image: circleci/python:3.6
+        steps:
+            - checkout
+            - setup_remote_docker
+            - run:
+                name: Build the Linux wheeels
+                command: |
+                    pip install --user cibuildwheel
+                    cibuildwheel --output-dir wheelhouse
+            - store_artifacts:
+                path: wheelhouse/
+    osx-wheels:
+        working_directory: ~/osx-wheels
+        macos:
+            xcode: "10.0.0"
+        steps:
+            - checkout
+            - run:
+                name: Build the OS X wheels
+                command: |
+                    pip install --user cibuildwheel
+                    cibuildwheel --output-dir wheelhouse
+            - store_artifacts:
+                path: wheelhouse/
+
+workflows:
+    versions: 2
+    all-tests:
+        jobs:
+            - linux_wheels
+            - osx-wheels
+
