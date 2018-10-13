@@ -75,7 +75,7 @@ jobs:
 
             pip install -r requirements.txt
 
-            pip install --user cibuildwheel
+            pip install cibuildwheel
             cibuildwheel --output-dir wheelhouse
 
             rm -rf ~/.pyenv
