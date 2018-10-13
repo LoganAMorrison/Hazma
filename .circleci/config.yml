@@ -2,22 +2,25 @@
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
+
 version: 2
+
 jobs:
-  linux_wheels:
-      working_directory: ~/linux_wheels
-      docker:
-          - image: circleci/python:2.7
-      steps:
-          - checkout
-          - setup_remote_docker
-          - run:
-              name: Build Linux Wheels
-              command: |
-                pip install --user cibuildwheel
-                cibuildwheel --output-dir dist
-          - store_artifacts:
-              path: dist
+  linux-wheels:
+    working_directory: ~/linux-wheels
+    docker:
+      - image: circleci/python:3.6
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build the Linux wheels.
+          command: |
+            pip install --user cibuildwheel
+            cibuildwheel --output-dir wheelhouse
+      - store_artifacts:
+          path: wheelhouse/
+
   osx-wheels:
     working_directory: ~/osx-wheels
     macos:
@@ -30,48 +33,51 @@ jobs:
             pip install --user cibuildwheel
             cibuildwheel --output-dir wheelhouse
       - store_artifacts:
-          path: dist/
-          
-  workflows:
-      version: 2
-      all-tests:
-          jobs:
-              - linux-wheels
-              - osx-wheels
-  build:
-    machine:
-        python:
-            version: 2.7.10
+          path: wheelhouse/
 
-    working_directory: ~/repo
+workflows:
+  version: 2
+  all-tests:
+    jobs:
+      - linux-wheels
+      - osx-wheels
 
-    steps:
-      - checkout
+#version: 2
+#jobs:
+#  build:
+#    machine:
+#        python:
+#            version: 2.7.10
+#
+#    working_directory: ~/repo
+#
+#    steps:
+#      - checkout
 
       # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
+#      - restore_cache:
+#          keys:
+#          - v1-dependencies-{{ checksum "requirements.txt" }}
           # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+#          - v1-dependencies-
 
-      - run:
-          name: install dependencies
-          command: |
-            pip install -r requirements.txt
-            pip install --upgrade .
+#      - run:
+#          name: install dependencies
+#          command: |
+#            pip install -r requirements.txt
+#            pip install --upgrade .
 
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
+#      - save_cache:
+#          paths:
+#            - ./venv
+#          key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # run tests!
-      - run:
-          name: run tests
-          command: |
-            py.test ./hazma/test/
+#      - run:
+#          name: run tests
+#          command: |
+#            py.test ./hazma/test/
 
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+#      - store_artifacts:
+#          path: test-reports
+#          destination: test-reports
