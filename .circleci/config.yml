@@ -20,12 +20,23 @@ jobs:
           - v1-dependencies-{{ checksum "requirements.txt" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - run:
+          name: install pyenv
+          command: |
+            git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+            echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+            echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+            echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
+            echo 'source ~/.bash_profile'
+
+            pyenv install 2.7.13
+            pyenv global 2.7.13
 
       - run:
           name: install dependencies
           command: |
-            pip install --user -r requirements.txt
-            pip install --user --upgrade .
+            pip install -r requirements.txt
+            pip install --upgrade .
 
       - save_cache:
           paths: ./venv
