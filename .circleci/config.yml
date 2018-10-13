@@ -41,41 +41,41 @@ jobs:
       - store_artifacts:
         path: wheelhouse/
 
-  osx-test-and-wheels:
-    working_directory: ~/osx-wheels
-    # Get xcode
-    macos:
-      xcode: "10.0.0"
-    steps:
-      - checkout
-      - restore_cache:
-        keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-      # Install depndencies from requirements.txt
-      - run:
-        name: install dependencies
-        command: |
-          pip install -r requirements.txt
-          pip install --upgrade .
-      - save_cache:
-        paths:
-          - ./venv
-        key: v1-dependencies-{{ checksum "requirements.txt" }}
-      # run tests!
-      - run:
-        name: run tests
-        command: |
-          py.test ./hazma/test/
-      # Build OS X wheels
-      - run:
-        name: Build the OS X wheels
-        command: |
-          pip install --user cibuildwheel
-          cibuildwheel --output-dir wheelhouse
-      - store_artifacts:
-        path: wheelhouse/
+#   osx-test-and-wheels:
+#     working_directory: ~/osx-wheels
+#     # Get xcode
+#     macos:
+#      xcode: "10.0.0"
+#    steps:
+#      - checkout
+#      - restore_cache:
+#        keys:
+#          - v1-dependencies-{{ checksum "requirements.txt" }}
+#          # fallback to using the latest cache if no exact match is found
+#          - v1-dependencies-
+#      # Install depndencies from requirements.txt
+#      - run:
+#        name: install dependencies
+#        command: |
+#          pip install -r requirements.txt
+#          pip install --upgrade .
+#      - save_cache:
+#        paths:
+#          - ./venv
+#        key: v1-dependencies-{{ checksum "requirements.txt" }}
+#      # run tests!
+#      - run:
+#        name: run tests
+#        command: |
+#          py.test ./hazma/test/
+#      # Build OS X wheels
+#      - run:
+#        name: Build the OS X wheels
+#        command: |
+#          pip install --user cibuildwheel
+#          cibuildwheel --output-dir wheelhouse
+#      - store_artifacts:
+#        path: wheelhouse/
 
 workflows:
   version: 2
