@@ -29,14 +29,13 @@ jobs:
             echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
             source ~/.bash_profile
 
-            tail ~/.bash_profile
-
             pyenv install 2.7.13
             pyenv global 2.7.13
 
       - run:
           name: install dependencies
           command: |
+            pyenv global 2.7.13
             pip install -r requirements.txt
             pip install --upgrade .
 
