@@ -82,4 +82,4 @@ workflows:
   all-tests:
     jobs:
       - linux-test-and-wheels
-      - osx-test-and-wheels
+#      - osx-test-and-wheels
