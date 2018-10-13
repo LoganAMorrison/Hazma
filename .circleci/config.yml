@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Build the Linux wheels.
           command: |
-            pip install --user cibuildwheel
+            pip install --upgrade cibuildwheel
             cibuildwheel --output-dir wheelhouse
       - store_artifacts:
           path: wheelhouse/
@@ -30,7 +30,7 @@ jobs:
       - run:
           name: Build the OS X wheels.
           command: |
-            pip install --user cibuildwheel
+            pip install --upgrade cibuildwheel
             cibuildwheel --output-dir wheelhouse
       - store_artifacts:
           path: wheelhouse/
