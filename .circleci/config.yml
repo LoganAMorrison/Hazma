@@ -21,7 +21,7 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run:
-          name: install pyenv, requirements and hazma
+          name: install and test
           command: |
             git clone https://github.com/pyenv/pyenv.git ~/.pyenv
             echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
@@ -35,14 +35,6 @@ jobs:
             pip install -r requirements.txt
             pip install --upgrade .
 
-      - save_cache:
-          paths: ./venv
-          key: v1-dependencies-{{ checksum "requirements.txt" }}
-
-      # run tests!
-      - run:
-          name: run tests
-          command: |
             py.test ./hazma/test/
 
       # Build Linux wheels
