@@ -6,50 +6,33 @@
 version: 2
 
 jobs:
-  test:
-    machine:
-      python:
-        version: 3.6
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-      # Download and cache dependencies
-      - restore_cache:
-        keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-        name: install dependencies
-        command: |
-          pip install -r requirements.txt
-          pip install --upgrade .
-
-      - save_cache:
-        paths:
-          - ./venv
-        key: v1-dependencies-{{ checksum "requirements.txt" }}
-
-      # run tests!
-      - run:
-        name: run tests
-        command: |
-          py.test ./hazma/test/
-
-      - store_artifacts:
-        path: test-reports
-        destination: test-reports
-
-  linux_wheels:
+  linux-test-and-wheels:
     working_directory: ~/linux-wheels
     docker:
       - image: circleci/python:3.6
     steps:
       - checkout
       - setup_remote_docker
+      - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+        name: install dependencies
+        command: |
+          pip install -r requirements.txt
+          pip install --upgrade .
+      - save_cache:
+        paths:
+          - ./venv
+        key: v1-dependencies-{{ checksum "requirements.txt" }}
+      # run tests!
+      - run:
+        name: run tests
+        command: |
+          py.test ./hazma/test/
+      # Build Linux wheels
       - run:
         name: Build the Linux wheeels
         command: |
@@ -58,12 +41,34 @@ jobs:
       - store_artifacts:
         path: wheelhouse/
 
-  osx-wheels:
+  osx-test-and-wheels:
     working_directory: ~/osx-wheels
+    # Get xcode
     macos:
       xcode: "10.0.0"
     steps:
       - checkout
+      - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      # Install depndencies from requirements.txt
+      - run:
+        name: install dependencies
+        command: |
+          pip install -r requirements.txt
+          pip install --upgrade .
+      - save_cache:
+        paths:
+          - ./venv
+        key: v1-dependencies-{{ checksum "requirements.txt" }}
+      # run tests!
+      - run:
+        name: run tests
+        command: |
+          py.test ./hazma/test/
+      # Build OS X wheels
       - run:
         name: Build the OS X wheels
         command: |
@@ -76,6 +81,5 @@ workflows:
   versions: 2
   all-tests:
     jobs:
-      - test
-      - linux_wheels
-      - osx-wheels
+      - linux-test-and-wheels
+      - osx-test-and-wheels
