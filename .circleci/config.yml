@@ -8,7 +8,7 @@ version: 2
 jobs:
   linux-test-and-wheels:
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:2.7
 
     working_directory: ~/repo
 
