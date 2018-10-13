@@ -22,30 +22,30 @@ jobs:
           - v1-dependencies-
 
       - run:
-        name: install dependencies
-        command: |
-          pip install -r requirements.txt
-          pip install --upgrade .
+          name: install dependencies
+          command: |
+            pip install -r requirements.txt
+            pip install --upgrade .
 
       - save_cache:
-        paths: ./venv
-        key: v1-dependencies-{{ checksum "requirements.txt" }}
+          paths: ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # run tests!
       - run:
-        name: run tests
-        command: |
-          py.test ./hazma/test/
+          name: run tests
+          command: |
+            py.test ./hazma/test/
 
       # Build Linux wheels
       - run:
-        name: Build the Linux wheeels
-        command: |
-          pip install --user cibuildwheel
-          cibuildwheel --output-dir wheelhouse
+          name: Build the Linux wheeels
+          command: |
+            pip install --user cibuildwheel
+            cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
-        path: wheelhouse/
+          path: wheelhouse/
 
 #   osx-test-and-wheels:
 #     working_directory: ~/osx-wheels
