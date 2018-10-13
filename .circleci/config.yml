@@ -15,20 +15,24 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+          - deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: install and test
           command: |
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install multiprocessing
-            pip install --upgrade .
+            sudo pip install pipenv
+            pipenv install
 
             py.test ./hazma/test/
+      - save_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
 
   linux-test-and-wheels-36:
     docker:
@@ -39,21 +43,24 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
+          - deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: install and test
           command: |
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            pip install multiprocessing
-            pip install --upgrade .
+            sudo pip install pipenv
+            pipenv install
 
             py.test ./hazma/test/
+      - save_cache:
+          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
 
       # Build Linux wheels
       - run:
