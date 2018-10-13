@@ -16,7 +16,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python2.7/site-packages
       - restore_cache:
           keys:
           - deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
@@ -26,7 +26,7 @@ jobs:
             sudo pip install pipenv
             pipenv install
 
-            py.test ./hazma/test/
+            pipenv run "py.test ./hazma/test/"
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -54,7 +54,7 @@ jobs:
             sudo pip install pipenv
             pipenv install
 
-            py.test ./hazma/test/
+            pipenv run "py.test ./hazma/test/"
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -66,13 +66,11 @@ jobs:
       - run:
           name: Build the Linux wheeels
           command: |
+            sudo pip install pipenv
+            pipenv install
+            pipenv install cibuildwheel
 
-
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
-            pip install cibuildwheel
-            cibuildwheel --output-dir wheelhouse
+            pipenv run "cibuildwheel --output-dir wheelhouse"
 
       - store_artifacts:
           path: wheelhouse/
