@@ -25,7 +25,7 @@ jobs:
           name: install dependencies
           command: |
             pip install --user -r requirements.txt
-            pip install --upgrade .
+            pip install --user --upgrade .
 
       - save_cache:
           paths: ./venv
