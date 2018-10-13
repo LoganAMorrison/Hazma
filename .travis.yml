@@ -10,9 +10,16 @@ matrix:
       language: generic
       env: PIP=pip2
 
+python:
+  - "2.7"
+  - "3.6"
+install:
+  - pip install -r requirements.txt
+  - pip install .
+
 script:
   - $PIP install cibuildwheel==0.10.0
-  - cibuildwheel --output-dir wheelhouse        
+  - cibuildwheel --output-dir wheelhouse
 
 # command to run tests
 script:
