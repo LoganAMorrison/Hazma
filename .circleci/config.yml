@@ -33,6 +33,7 @@ jobs:
             pyenv global 2.7.13
 
             pip install -r requirements.txt
+            pip install multiprocessing
             pip install --upgrade .
 
             py.test ./hazma/test/
