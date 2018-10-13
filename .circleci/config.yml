@@ -21,7 +21,7 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run:
-          name: install and test: Python27
+          name: Python27 install and test
           command: |
             git clone https://github.com/pyenv/pyenv.git ~/.pyenv
             echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
@@ -38,7 +38,7 @@ jobs:
             py.test ./hazma/test/
 
       - run:
-          name: install and test: Python36
+          name: Python36 install and test
           command: |
             git clone https://github.com/pyenv/pyenv.git ~/.pyenv
             echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
