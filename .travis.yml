@@ -1,14 +1,14 @@
 language: python
 
 matrix:
-    include:
-        - sudo: required
-            services:
-                - docker
-            env: PIP=pip
-        - os: osx
-            language: generic
-            env: PIP=pip2
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: PIP=pip
+    - os: osx
+      language: generic
+      env: PIP=pip2
 
 python:
   - "2.7"
