@@ -1,9 +1,19 @@
 language: python
-python:
-  - "2.7"
-install:
-  - pip install -r requirements.txt
-  - pip install .
+
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: PIP=pip
+    - os: osx
+      language: generic
+      env: PIP=pip2
+
+script:
+  - $PIP install cibuildwheel==0.10.0
+  - cibuildwheel --output-dir wheelhouse        
+
 # command to run tests
 script:
     pytest
