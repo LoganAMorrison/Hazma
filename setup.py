@@ -96,7 +96,10 @@ setup(name='hazma',
       long_description="""Package for computing the FSR and decay spectra for
       light mesons (pions and kaons) and light fermions (electron and muon).
       """,
-      packages=find_packages(),
+      packages=find_packages(
+          exclude=["*.tests", "*.tests.*", "tests.*", "tests",
+                   "*.deprecated", "*.deprecated.*", "deprecated.*",
+                   "deprecated"]),
       ext_modules=extensions,
       include_dirs=[np.get_include(),
                     'hazma/decay_helper_functions',
