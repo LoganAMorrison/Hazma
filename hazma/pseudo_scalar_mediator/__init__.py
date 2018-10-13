@@ -177,14 +177,14 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
         mpi0Sqrd = mpi0**2 - eps * self.beta
 
         if mpi0Sqrd < 0:  # mixing is way too big if this fails
-            print "Warning: your choice of mp and/or couplings produced an" + \
-                " imaginary neutral pion mass. Undefined behavior."
+            print("Warning: your choice of mp and/or couplings produced an" +
+                  " imaginary neutral pion mass. Undefined behavior.")
 
         self.mpi0 = np.sqrt(mpi0Sqrd)
 
         if abs(self.mpi0 - mpi0) > 10.:
-            print "Warning: your choice of mp and/or couplings produced a " + \
-                "10 MeV or larger shift in m_pi0. Theory is invalid."
+            print("Warning: your choice of mp and/or couplings produced a " +
+                  "10 MeV or larger shift in m_pi0. Theory is invalid.")
 
     def compute_width_p(self):
         """Updates the pseudoscalar's total width.

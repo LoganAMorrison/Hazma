@@ -75,8 +75,8 @@ class ScalarMediatorConstraints:
             pr_vis = (1. - np.exp(-B_k_mu_mu_obs.r_max * cm_to_inv_MeV *
                                   width_s * ms / ps))
 
-            # print pr_vis
-            # print widths_s["mu mu"] / width_s
+            # print(pr_vis)
+            # print(widths_s["mu mu"] / width_s)
 
             # Compute the contribution to the mu mu decay width
             width_contr = self.width_B_k_s() * \
