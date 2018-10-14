@@ -6,9 +6,9 @@
 version: 2
 
 jobs:
-  linux-test-and-wheels-27:
+  test:
     docker:
-      - image: circleci/python:2.7
+      - image: circleci/python:3.6
 
     environment:
       PYTHON: python
@@ -17,17 +17,21 @@ jobs:
       - checkout
       - setup_remote_docker
 
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+
       - run:
-          name: Prepare the enviornment
+          name: Prepare the enviornment.
           command: |
-            bash .circleci/prepare.sh
+            pip install -r requirements.txt
+            pip install .
 
-#      - run:
-#          name: Test
-#          command: |
-#            venv/bin/python -m pytest ./hazma/test/
+      - run:
+          name: Test
+          command: |
+            py.test ./hazma/test/
 
-  linux-test-and-wheels-36:
+  build:
     docker:
       - image: circleci/python:3.6
 
@@ -41,19 +45,15 @@ jobs:
       - run:
           name: Prepare the enviornment.
           command: |
-            bash .circleci/prepare.sh
-
-#      - run:
-#          name: Test
-#          command: |
-#            venv/bin/python -m pytest ./hazma/test/
+            pip install -r requirements.txt
+            pip install .
 
       # Build Linux wheels
       - run:
           name: Build the Linux wheeels
           command: |
 
-            venv/bin/python -m pip install cibuildwheel
+            pip install cibuildwheel
             cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
@@ -99,8 +99,8 @@ workflows:
   version: 2
   all-tests:
     jobs:
-      - linux-test-and-wheels-27
-      - linux-test-and-wheels-36
+      - test
+      - build
 #      - osx-test-and-wheels
 
 
