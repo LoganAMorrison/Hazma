@@ -1,117 +1,122 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
+# To test:
+# docker pull circleci/picard
+# docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):$(pwd) -v ~/.circleci/:/root/.circleci --workdir $(pwd) circleci/picard circleci build
 
 version: 2
-
 jobs:
-  test:
+  build-2.7: &build_template
+    working_directory: /hazma
     docker:
-      - image: circleci/python:3.6
-
-    environment:
-      PYTHON: python
-
+      - image: circleci/python:2.7-jessie
+        user: root
     steps:
       - checkout
-      - setup_remote_docker
-
+      - attach_workspace:
+          at: /hazma
       - run:
-          name: Prepare the enviornment.
+          name: Setup SciKit-CI
           command: |
-            bash .circleci/prepare.sh
+            pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
+            ci_addons --install ../addons
+      - run:
+          name: Install
+          command: ci install
+      - run:
+          name: Test
+          command: ci test
+      - run:
+          name: Build Distribution
+          command: ci after_test
+      - persist_to_workspace:
+          root: .
+          paths: dist
 
-#      - run:
-#          name: Test
-#          command: |
-#            venv/bin/python -m pytest ./hazma/test/
-
-  build:
+  build-3.4:
+    <<: *build_template
     docker:
-      - image: circleci/python:3.6
+      - image: circleci/python:3.4-jessie
+        user: root
 
-    environment:
-      PYTHON: python
+  build-3.5:
+    <<: *build_template
+    docker:
+      - image: circleci/python:3.5-jessie
+        user: root
 
+  build-3.6:
+    <<: *build_template
+    docker:
+      - image: circleci/python:3.6-jessie
+        user: root
+
+  deploy:
+    working_directory: /hazma
+    docker:
+      - image: circleci/python:3.6-jessie
+        user: root
     steps:
+      - run:
+          name: Check Repo User
+          command: if [[ $CIRCLE_PROJECT_USERNAME != "LoganAMorrison" ]]; then circleci step halt; fi
       - checkout
-      - setup_remote_docker
-
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-
       - run:
-          name: Prepare the enviornment.
+          name: Setup SciKit-CI
           command: |
-            bash .circleci/prepare.sh
-
-      # Build Linux wheels
+            pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
+            ci_addons --install ../addons
       - run:
-          name: Build the Linux wheeels
+          name: Install
+          command: ci install
+      - run:
+          name: Install patchelf auditwheel, twine
           command: |
-            sudo chown -R circleci:circleci venv/bin
-            venv/bin/activate
-            ci build
-#            venv/bin/python -m pip install cibuildwheel
-#            cibuildwheel --output-dir wheelhouse
-
-      - store_artifacts:
-          path: wheelhouse/
-
-#   osx-test-and-wheels:
-#     working_directory: ~/osx-wheels
-#     # Get xcode
-#     macos:
-#      xcode: "10.0.0"
-#    steps:
-#      - checkout
-#      - restore_cache:
-#        keys:
-#          - v1-dependencies-{{ checksum "requirements.txt" }}
-#          # fallback to using the latest cache if no exact match is found
-#          - v1-dependencies-
-#      # Install depndencies from requirements.txt
-#      - run:
-#        name: install dependencies
-#        command: |
-#          pip install -r requirements.txt
-#          pip install --upgrade .
-#      - save_cache:
-#        paths:
-#          - ./venv
-#        key: v1-dependencies-{{ checksum "requirements.txt" }}
-#      # run tests!
-#      - run:
-#        name: run tests
-#        command: |
-#          py.test ./hazma/test/
-#      # Build OS X wheels
-#      - run:
-#        name: Build the OS X wheels
-#        command: |
-#          pip install --user cibuildwheel
-#          cibuildwheel --output-dir wheelhouse
-#      - store_artifacts:
-#        path: wheelhouse/
-
+            apt-get install patchelf  # needed to run auditwheel
+            python -m pip install auditwheel
+            python -m pip install twine
+      # only attach the workspace at this point to prevent the removal of source distributions
+      - attach_workspace:
+          at: /hazma
+      - run:
+          name: Create sdist
+          command: python setup.py sdist
+      - run:
+          name: Fix Distribution Wheels
+          command: |
+            ls ./dist/*-linux_$(uname -m).whl  # This will prevent further deployment if no wheels are found
+            # Since there are no external shared libraries to bundle into the wheels
+            # this step will fixup the wheel switching from 'linux' to 'manylinux1' tag
+            for whl in $(ls ./dist/*-linux_$(uname -m).whl); do
+                auditwheel repair $whl -w ./dist/
+                rm $whl
+            done
+      - run:
+          name: Deploy source and linux wheels
+          command: twine upload ./dist/*.whl ./dist/*.tar.gz -u $PYPI_USER -p $PYPI_PASSWORD
 workflows:
   version: 2
-  all-tests:
+  build_and_deploy:
     jobs:
-      - test
-      - build
-#      - osx-test-and-wheels
-
-
-
-
-
-#git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-#echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
-#echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
-#echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
-#source ~/.bash_profile
-
-#pyenv install 2.7.13
-#pyenv global 2.7.13
+      - build-2.7: &build_job_template
+          filters:
+            tags:
+              only:
+                - /^v?[0-9]+(\.[0-9]+)*(rc[0-9]+)?/
+      - build-3.4:
+          <<: *build_job_template
+      - build-3.5:
+          <<: *build_job_template
+      - build-3.6:
+          <<: *build_job_template
+      - deploy: &deploy_template
+          requires:
+            - build-2.7
+            - build-3.4
+            - build-3.5
+            - build-3.6
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /^v?[0-9]+(\.[0-9]+)*(rc[0-9]+)?/
