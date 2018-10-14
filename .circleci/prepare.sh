@@ -5,4 +5,5 @@ $PYTHON -m virtualenv -p $PYTHON venv
 . venv/bin/activate
 pip install -r requirements.txt
 pip install --install-option="--prefix"
+pip install scikit-ci
 python --version

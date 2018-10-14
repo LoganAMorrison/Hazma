@@ -17,20 +17,15 @@ jobs:
       - checkout
       - setup_remote_docker
 
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-      - run: sudo chrown -R circleci:circleci /usr/local/share/doc
-
       - run:
           name: Prepare the enviornment.
           command: |
-            pip install -r requirements.txt
-            pip install .
+            bash .circleci/prepare.sh
 
-      - run:
-          name: Test
-          command: |
-            py.test ./hazma/test/
+#      - run:
+#          name: Test
+#          command: |
+#            venv/bin/python -m pytest ./hazma/test/
 
   build:
     docker:
@@ -46,16 +41,16 @@ jobs:
       - run:
           name: Prepare the enviornment.
           command: |
-            pip install -r requirements.txt
-            pip install .
+            bash .circleci/prepare.sh
 
       # Build Linux wheels
       - run:
           name: Build the Linux wheeels
           command: |
-
-            pip install cibuildwheel
-            cibuildwheel --output-dir wheelhouse
+            venv/bin/activate
+            ci build
+#            venv/bin/python -m pip install cibuildwheel
+#            cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
           path: wheelhouse/
