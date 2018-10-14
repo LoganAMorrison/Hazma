@@ -23,10 +23,11 @@ jobs:
       - run:
           name: install and test
           command: |
-            sudo pip install pipenv
-            pipenv install
+            sudo pip install --upgrade pip
+            sudo pip install multiprocessing
+            sudo pip install -r requirements.txt
 
-            pipenv run "py.test ./hazma/test/"
+            sudo py.test ./hazma/test/
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -51,10 +52,11 @@ jobs:
       - run:
           name: install and test
           command: |
-            sudo pip install pipenv
-            pipenv install
+            sudo pip install --upgrade pip
+            sudo pip install multiprocessing
+            sudo pip install -r requirements.txt
 
-            pipenv run "py.test ./hazma/test/"
+            sudo py.test ./hazma/test/
       - save_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
           paths:
@@ -66,11 +68,13 @@ jobs:
       - run:
           name: Build the Linux wheeels
           command: |
-            sudo pip install pipenv
-            pipenv install
-            pipenv install cibuildwheel
 
-            pipenv run "cibuildwheel --output-dir wheelhouse"
+
+            sudo pip install --upgrade pip
+            sudo pip install -r requirements.txt
+
+            sudo pip install cibuildwheel
+            sudo cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
           path: wheelhouse/
