@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Test
           command: |
-            ven/bin/python py.test ./hazma/test/
+            venv/bin/python py.test ./hazma/test/
 
   linux-test-and-wheels-36:
     docker:
@@ -46,14 +46,14 @@ jobs:
       - run:
           name: Test
           command: |
-            ven/bin/python py.test ./hazma/test/
+            venv/bin/python py.test ./hazma/test/
 
       # Build Linux wheels
       - run:
           name: Build the Linux wheeels
           command: |
 
-            ven/bin/python -m pip install cibuildwheel
+            venv/bin/python -m pip install cibuildwheel
             cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
