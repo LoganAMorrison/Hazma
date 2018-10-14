@@ -10,72 +10,51 @@ jobs:
     docker:
       - image: circleci/python:2.7
 
-    working_directory: ~/repo
+    environment:
+      PYTHON: python3
 
     steps:
       - checkout
       - setup_remote_docker
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python2.7/site-packages
-      - restore_cache:
-          keys:
-          - deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-      - run:
-          name: install and test
-          command: |
-            sudo pip install --upgrade pip
-            sudo pip install multiprocessing
-            sudo pip install -r requirements.txt
-            sudo pip install .
 
-            sudo py.test ./hazma/test/
-      - save_cache:
-          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
+      - run:
+          name: Prepare the enviornment
+          command: |
+            bash .circleci/prepare.sh
+
+      - run:
+          name: Test
+          command: |
+            ven/bin/python py.test ./hazma/test/
 
   linux-test-and-wheels-36:
     docker:
       - image: circleci/python:3.6
 
-    working_directory: ~/repo
+    environment:
+      PYTHON: python3
 
     steps:
       - checkout
       - setup_remote_docker
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-      - restore_cache:
-          keys:
-          - deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-      - run:
-          name: install and test
-          command: |
-            sudo pip install --upgrade pip
-            sudo pip install -r requirements.txt
-            sudo pip install .
 
-            sudo py.test ./hazma/test/
-      - save_cache:
-          key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
+      - run:
+          name: Prepare the enviornment.
+          command: |
+            bash .circleci/prepare.sh
+
+      - run:
+          name: Test
+          command: |
+            ven/bin/python py.test ./hazma/test/
 
       # Build Linux wheels
       - run:
           name: Build the Linux wheeels
           command: |
 
-
-            sudo pip install --upgrade pip
-            sudo pip install -r requirements.txt
-
-            sudo pip install cibuildwheel
-            sudo cibuildwheel --platform linux --output-dir wheelhouse
+            ven/bin/python -m pip install cibuildwheel
+            cibuildwheel --output-dir wheelhouse
 
       - store_artifacts:
           path: wheelhouse/
