@@ -28,7 +28,6 @@ jobs:
 #            venv/bin/python -m pytest ./hazma/test/
 
   build:
-    v
     docker:
       - image: circleci/python:3.6
 
