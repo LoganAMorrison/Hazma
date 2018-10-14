@@ -27,6 +27,6 @@ matrix:
         - brew update
         - brew outdated python || brew upgrade python
 
-install: $PYTHON -m pip install -r requirements-dev.txt
+install: $PYTHON -m pip install -r requirements.txt
 
 script: $PYTHON -m pytest ./hazma/run_tests.py
