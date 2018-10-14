@@ -1,7 +1,8 @@
 import numpy as np
 from hazma.parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
                               charged_pion_mass as mpi, down_quark_mass as mdq,
-                              bottom_quark_mass as mbq, strange_quark_mass as msq,
+                              bottom_quark_mass as mbq,
+                              strange_quark_mass as msq,
                               long_kaon_mass as mkl, top_quark_mass as mtq,
                               neutral_pion_mass as mpi0, GF, vh, Vts, Vtb, Vtd)
 from hazma.constraint_parameters import (B_k_invis_obs, k_pi_invis_obs,

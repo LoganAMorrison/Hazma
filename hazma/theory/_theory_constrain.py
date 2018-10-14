@@ -153,7 +153,8 @@ class TheoryConstrain(object):
             bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
                                    for fs, bf in fs_bin_fluxes.iteritems()])
 
-            return np.min(measurement.fluxes + n_sigma * measurement.upper_errors -
+            return np.min(measurement.fluxes +
+                          n_sigma * measurement.upper_errors -
                           bin_fluxes.sum(axis=0))
 
         return np.array([flux_difference(p2, p2v) for p2v in p2_vals])
