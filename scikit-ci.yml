@@ -45,7 +45,7 @@ build:
 
 test:
   commands:
-    - $<RUN_ENV> python setup.py test  --args="--with-xunit --logging-level=DEBUG"
+    - $<RUN_ENV> python setup.py test
 
   circleci:
     commands:
