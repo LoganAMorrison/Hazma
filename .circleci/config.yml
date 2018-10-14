@@ -26,6 +26,7 @@ jobs:
             sudo pip install --upgrade pip
             sudo pip install multiprocessing
             sudo pip install -r requirements.txt
+            sudo pip install .
 
             sudo py.test ./hazma/test/
       - save_cache:
@@ -53,8 +54,8 @@ jobs:
           name: install and test
           command: |
             sudo pip install --upgrade pip
-            sudo pip install multiprocessing
             sudo pip install -r requirements.txt
+            sudo pip install .
 
             sudo py.test ./hazma/test/
       - save_cache:
