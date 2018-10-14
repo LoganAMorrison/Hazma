@@ -1,26 +1,32 @@
-language: python
+language: generic
 
 matrix:
   include:
+    # Linux Python 2
     - sudo: required
-      services:
-        - docker
-      env: PIP=pip
+      language: python
+      python: 2.7
+      services: docker
+      env: PYTHON=python
+
+    # Linux Python 3
+    - sudo: required
+      language: python
+      python: 3.4
+      services: docker
+      env: PYTHON=python
+
+    # macOS Python 2
     - os: osx
-      language: generic
-      env: PIP=pip2
+      env: PYTHON=python
 
-python:
-  - "2.7"
-  - "3.6"
-install:
-  - pip install -r requirements.txt
-  - pip install .
+    # macOS Python 3
+    - os: osx
+      env: PYTHON=python
+      before_install:
+        - brew update
+        - brew outdated python || brew upgrade python
 
-script:
-  - $PIP install cibuildwheel==0.10.0
-  - cibuildwheel --output-dir wheelhouse
+install: $PYTHON -m pip install -r requirements-dev.txt
 
-# command to run tests
-script:
-    pytest ./hazma/test/
+script: $PYTHON -m pytest ./hazma/run_tests.py
