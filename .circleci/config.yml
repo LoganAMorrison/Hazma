@@ -11,7 +11,7 @@ jobs:
       - image: circleci/python:2.7
 
     environment:
-      PYTHON: python3
+      PYTHON: python
 
     steps:
       - checkout
@@ -32,7 +32,7 @@ jobs:
       - image: circleci/python:3.6
 
     environment:
-      PYTHON: python3
+      PYTHON: python
 
     steps:
       - checkout
