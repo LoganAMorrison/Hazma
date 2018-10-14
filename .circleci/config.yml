@@ -75,7 +75,7 @@ jobs:
             sudo pip install -r requirements.txt
 
             sudo pip install cibuildwheel
-            sudo cibuildwheel --output-dir wheelhouse
+            sudo cibuildwheel --platform linux --output-dir wheelhouse
 
       - store_artifacts:
           path: wheelhouse/
