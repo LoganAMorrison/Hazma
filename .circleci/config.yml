@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Test
           command: |
-            venv/bin/py.test -m /home/circleci/project/hazma/test/
+            venv/bin/python -m py.test /home/circleci/project/hazma/test/
 
   linux-test-and-wheels-36:
     docker:
@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Test
           command: |
-            venv/bin/py.test -m /home/circleci/project/hazma/test/
+            venv/bin/python -m py.test /home/circleci/project/hazma/test/
 
       # Build Linux wheels
       - run:
