@@ -5,9 +5,9 @@ before_install:
   appveyor:
     environment:
       PATH: $<PYTHON_DIR>;$<PYTHON_DIR>\\Scripts;$<PATH>
-      RUN_ENV: .\\..\\addons\\appveyor\\run-with-visual-studio.cmd
+      RUN_ENV: build.cmd #.\\..\\addons\\appveyor\\run-with-visual-studio.cmd
     commands:
-      - python ../addons/appveyor/patch_vs2008.py
+      # - python ../addons/appveyor/patch_vs2008.py
       - $<RUN_ENV> pip install numpy>=1.9.2
       - $<RUN_ENV> pip install cython
 
