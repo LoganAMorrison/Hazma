@@ -5,23 +5,23 @@ environment:
 
     # Visual Studio (Python 2 & 3, 64 bit)
 
-    - PYTHON_DIR: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x"
-      PYTHON_SHORT_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-      BLOCK: "0"
-
-    - PYTHON_DIR: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x"
-      PYTHON_SHORT_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      BLOCK: "0"
-
-    - PYTHON_DIR: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.x"
-      PYTHON_SHORT_VERSION: "3.5"
-      PYTHON_ARCH: "64"
-      BLOCK: "0"
+    # - PYTHON_DIR: "C:\\Python27-x64"
+    #   PYTHON_VERSION: "2.7.x"
+    #   PYTHON_SHORT_VERSION: "2.7"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
+    #
+    # - PYTHON_DIR: "C:\\Python34-x64"
+    #   PYTHON_VERSION: "3.4.x"
+    #   PYTHON_SHORT_VERSION: "3.4"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
+    #
+    # - PYTHON_DIR: "C:\\Python35-x64"
+    #   PYTHON_VERSION: "3.5.x"
+    #   PYTHON_SHORT_VERSION: "3.5"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
 
     - PYTHON_DIR: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
@@ -32,9 +32,7 @@ environment:
 init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - python -m pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
-  - python -m ci_addons appveyor/patch_vs2008
   - python -m ci_addons --install ../addons
-  - cp "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars64.bat" "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\vcvarsamd64.bat"
   - python -m pip install twine
 
   - ps: ../addons/appveyor/rolling-build.ps1
