@@ -48,3 +48,11 @@ script:
 
 after_success:
   - ci after_test
+
+before_deploy:
+  - sudo pip install twine  # Twine installation requires sudo to get access to /usr/local/man
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: twine upload dist/*.whl -u $TEST_PYPI_USER -p $TEST_PYPI_PASSWORD
