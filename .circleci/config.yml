@@ -49,7 +49,7 @@ jobs:
       - image: circleci/python:3.6-jessie
         user: root
 
-  deploy:
+  deploy: &deploy_template
     working_directory: /hazma
     docker:
       - image: circleci/python:3.6-jessie
