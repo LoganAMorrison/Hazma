@@ -79,16 +79,16 @@ jobs:
       - run:
           name: Create sdist
           command: python setup.py sdist
-      - run:
-          name: Fix Distribution Wheels
-          command: |
-            ls ./dist/*-linux_$(uname -m).whl  # This will prevent further deployment if no wheels are found
-            # Since there are no external shared libraries to bundle into the wheels
-            # this step will fixup the wheel switching from 'linux' to 'manylinux1' tag
-            for whl in $(ls ./dist/*-linux_$(uname -m).whl); do
-                auditwheel repair $whl -w ./dist/
-                rm $whl
-            done
+      # - run:
+      #     name: Fix Distribution Wheels
+      #     command: |
+      #       ls ./dist/*-linux_$(uname -m).whl  # This will prevent further deployment if no wheels are found
+      #       # Since there are no external shared libraries to bundle into the wheels
+      #       # this step will fixup the wheel switching from 'linux' to 'manylinux1' tag
+      #       for whl in $(ls ./dist/*-linux_$(uname -m).whl); do
+      #           auditwheel repair $whl -w ./dist/
+      #           rm $whl
+      #       done
       - run:
           name: Deploy source and linux wheels
           command: twine upload ./dist/*.whl ./dist/*.tar.gz -u $TEST_PYPI_USER -p $TEST_PYPI_PASSWORD
