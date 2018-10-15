@@ -45,7 +45,7 @@ build:
 
 test:
   commands:
-    - $<RUN_ENV> python -m pytest hazma/test
+    - $<RUN_ENV> python setup.py test
 
   circleci:
     commands:
