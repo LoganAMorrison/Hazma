@@ -29,4 +29,4 @@ matrix:
 
 install: $PYTHON -m pip install -r requirements.txt
 
-script: $PYTHON -m pytest ./hazma/run_tests.py
+script: $PYTHON -m pytest ./hazma/test/
