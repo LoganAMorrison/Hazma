@@ -25,6 +25,24 @@ params2 = {"mx": mx, "ms": ms2, "gsxx": gsxx,
 SM1 = ScalarMediator(**params1)
 SM2 = ScalarMediator(**params2)
 
+with open('test_sm_acs_1.pkl', 'rb') as f:
+    acs_1_pickle = pickle.load(f)
+
+with open('test_sm_acs_2.pkl', 'rb') as f:
+    acs_2_pickle = pickle.load(f)
+
+with open('test_sm_abfs_1.pkl', 'rb') as f:
+    abfs_1_pickle = pickle.load(f)
+
+with open('test_sm_abfs_2.pkl', 'rb') as f:
+    abfs_2_pickle = pickle.load(f)
+
+with open('test_sm_spectra_1.pkl', 'rb') as f:
+    spec_1_pickle = pickle.load(f)
+
+with open('test_sm_spectra_2.pkl', 'rb') as f:
+    spec_2_pickle = pickle.load(f)
+
 
 def test_description():
     SM1.description()
@@ -40,19 +58,16 @@ def test_cross_sections():
     css1 = SM1.annihilation_cross_sections(cme)
     css2 = SM2.annihilation_cross_sections(cme)
 
-    data1 = pickle.load("test_sm_acs_1.pkl")
-    data2 = pickle.load("test_sm_acs_2.pkl")
-
     is_close = True
-    for key in data1.keys():
-        is_close = is_close * np.isclose(data1[key], css1[key],
+    for key in acs_1_pickle.keys():
+        is_close = is_close * np.isclose(acs_1_pickle[key], css1[key],
                                          rtol=1e-5, atol=0.0)
 
     assert is_close is True
 
     is_close = True
-    for key in data1.keys():
-        is_close = is_close * np.isclose(data2[key], css2[key],
+    for key in acs_2_pickle.keys():
+        is_close = is_close * np.isclose(acs_2_pickle[key], css2[key],
                                          rtol=1e-5, atol=0.0)
 
     assert is_close is True
@@ -62,19 +77,16 @@ def test_branching_fractions():
     cbfs1 = SM1.annihilation_cross_sections(cme)
     cbfs2 = SM2.annihilation_cross_sections(cme)
 
-    data1 = pickle.load("test_sm_abfs_1.pkl")
-    data2 = pickle.load("test_sm_abfs_2.pkl")
-
     is_close = True
-    for key in data1.keys():
-        is_close = is_close * np.isclose(data1[key], cbfs1[key],
+    for key in abfs_1_pickle.keys():
+        is_close = is_close * np.isclose(abfs_1_pickle[key], cbfs1[key],
                                          rtol=1e-5, atol=0.0)
 
     assert is_close is True
 
     is_close = True
-    for key in data1.keys():
-        is_close = is_close * np.isclose(data2[key], cbfs2[key],
+    for key in abfs_2_pickle.keys():
+        is_close = is_close * np.isclose(abfs_2_pickle[key], cbfs2[key],
                                          rtol=1e-5, atol=0.0)
 
     assert is_close is True
@@ -91,21 +103,18 @@ def test_spectra():
     spectra1 = SM1.spectra(egams, cme)
     spectra2 = SM2.spectra(egams, cme)
 
-    data1 = pickle.load("test_sm_spectra_1.pkl")
-    data2 = pickle.load("test_sm_spectra_2.pkl")
-
     isclose = True
-    for key in spectra1.keys():
+    for key in spec_1_pickle.keys():
         isclose = np.bool(
-            np.prod(np.isclose(spectra1[key], data1[key],
+            np.prod(np.isclose(spectra1[key], spec_1_pickle[key],
                                atol=0., rtol=100)))
 
     assert isclose is True
 
     isclose = True
-    for key in spectra1.keys():
+    for key in spec_2_pickle.keys():
         isclose = np.bool(
-            np.prod(np.isclose(spectra2[key], data2[key],
+            np.prod(np.isclose(spectra2[key], spec_2_pickle[key],
                                atol=0., rtol=100)))
 
     assert isclose is True
