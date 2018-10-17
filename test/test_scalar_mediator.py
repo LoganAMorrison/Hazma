@@ -40,8 +40,8 @@ def test_cross_sections():
     css1 = SM1.annihilation_cross_sections(cme)
     css2 = SM2.annihilation_cross_sections(cme)
 
-    data1 = pickle.load("test_sm_acs_1.pkl", "rb")
-    data2 = pickle.load("test_sm_acs_2.pkl", "rb")
+    data1 = pickle.load("test_sm_acs_1.pkl")
+    data2 = pickle.load("test_sm_acs_2.pkl")
 
     is_close = True
     for key in data1.keys():
@@ -62,8 +62,8 @@ def test_branching_fractions():
     cbfs1 = SM1.annihilation_cross_sections(cme)
     cbfs2 = SM2.annihilation_cross_sections(cme)
 
-    data1 = pickle.load("test_sm_abfs_1.pkl", "rb")
-    data2 = pickle.load("test_sm_abfs_2.pkl", "rb")
+    data1 = pickle.load("test_sm_abfs_1.pkl")
+    data2 = pickle.load("test_sm_abfs_2.pkl")
 
     is_close = True
     for key in data1.keys():
@@ -91,8 +91,8 @@ def test_spectra():
     spectra1 = SM1.spectra(egams, cme)
     spectra2 = SM2.spectra(egams, cme)
 
-    data1 = pickle.load("test_sm_spectra_1.pkl", "rb")
-    data2 = pickle.load("test_sm_spectra_2.pkl", "rb")
+    data1 = pickle.load("test_sm_spectra_1.pkl")
+    data2 = pickle.load("test_sm_spectra_2.pkl")
 
     isclose = True
     for key in spectra1.keys():
