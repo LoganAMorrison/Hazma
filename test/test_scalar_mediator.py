@@ -112,19 +112,19 @@ def test_spectra():
 
 
 def test_spectrum_functions():
-    spec_funcs = SM.spectrum_functions()
+    spec_funcs = SM1.spectrum_functions()
 
 
 def test_partial_widths():
-    pws = SM.partial_widths()
+    pws = SM1.partial_widths()
 
 
 def test_positron_spectra():
     cme = 1e3
     eng_ps = np.logspace(me, np.log10(cme), num=10)
-    pos_spec = SM.positron_spectra(eng_ps, cme)
+    pos_spec = SM1.positron_spectra(eng_ps, cme)
 
 
 def test_positron_lines():
     cme = 1e3
-    pos_lines = SM.positron_lines(cme)
+    pos_lines = SM1.positron_lines(cme)
