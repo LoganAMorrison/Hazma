@@ -27,7 +27,7 @@ SM2 = ScalarMediator(**params2)
 
 
 def test_description():
-    description = SM1.description()
+    SM1.description()
 
 
 def test_list_final_states():
@@ -112,19 +112,19 @@ def test_spectra():
 
 
 def test_spectrum_functions():
-    spec_funcs = SM1.spectrum_functions()
+    SM1.spectrum_functions()
 
 
 def test_partial_widths():
-    pws = SM1.partial_widths()
+    SM1.partial_widths()
 
 
 def test_positron_spectra():
     cme = 1e3
     eng_ps = np.logspace(me, np.log10(cme), num=10)
-    pos_spec = SM1.positron_spectra(eng_ps, cme)
+    SM1.positron_spectra(eng_ps, cme)
 
 
 def test_positron_lines():
     cme = 1e3
-    pos_lines = SM1.positron_lines(cme)
+    SM1.positron_lines(cme)
