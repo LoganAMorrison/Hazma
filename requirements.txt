@@ -2,8 +2,9 @@ pip>=9.0.1
 matplotlib==2.2.3
 scipy>=1.0.0
 numpy>=1.13.3
-multiprocessing>=2.6.2.1
 cython>=0.27.3
 numpydoc>=0.7.0
 pytest>=3.2.5
 scikit-image>=0.14.0
+setuptools>=27.3
+flake8>=3.5.0

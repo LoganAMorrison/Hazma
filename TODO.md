@@ -4,7 +4,6 @@ TODO
 - [x] Check Derivation of AP
 - [ ] Make Function Arguments more Intuitive and Consistent
 - [ ] Make Function Documentations
-- [ ] Negative Squared Matrix Elements
 
 Check Derivation of AP (FIXED)
 ------------------------------

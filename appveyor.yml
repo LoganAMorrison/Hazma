@@ -1,0 +1,60 @@
+version: "0.0.1.{build}"
+
+environment:
+  matrix:
+
+    # Visual Studio (Python 2 & 3, 64 bit)
+
+    # - PYTHON_DIR: "C:\\Python27-x64"
+    #   PYTHON_VERSION: "2.7.x"
+    #   PYTHON_SHORT_VERSION: "2.7"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
+    #
+    # - PYTHON_DIR: "C:\\Python34-x64"
+    #   PYTHON_VERSION: "3.4.x"
+    #   PYTHON_SHORT_VERSION: "3.4"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
+    #
+    # - PYTHON_DIR: "C:\\Python35-x64"
+    #   PYTHON_VERSION: "3.5.x"
+    #   PYTHON_SHORT_VERSION: "3.5"
+    #   PYTHON_ARCH: "64"
+    #   BLOCK: "0"
+
+    - PYTHON_DIR: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6.x"
+      PYTHON_SHORT_VERSION: "3.6"
+      PYTHON_ARCH: "64"
+      BLOCK: "0"
+
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+  - python -m pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
+  - python -m ci_addons --install ../addons
+  - python -m pip install twine
+
+  - ps: ../addons/appveyor/rolling-build.ps1
+
+install:
+  - python -m ci install
+
+build_script:
+  - python -m ci build
+
+test_script:
+#  - python -m ci test
+
+after_test:
+  - python -m ci after_test
+
+artifacts:
+  - path: dist/*
+    name: pypiartefacts
+
+on_finish:
+  - ps: ../addons/appveyor/enable-worker-remote-access.ps1 -check_for_block
+
+matrix:
+  fast_finish: false

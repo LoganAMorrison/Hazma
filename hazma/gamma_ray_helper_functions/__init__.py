@@ -1,1 +1,1 @@
-from . import *
+__all__ = ["gamma_ray_generator"]

@@ -1,7 +1,8 @@
 import numpy as np
 from hazma.parameters import (charged_B_mass as mB, charged_kaon_mass as mk,
                               charged_pion_mass as mpi, down_quark_mass as mdq,
-                              bottom_quark_mass as mbq, strange_quark_mass as msq,
+                              bottom_quark_mass as mbq,
+                              strange_quark_mass as msq,
                               long_kaon_mass as mkl, top_quark_mass as mtq,
                               neutral_pion_mass as mpi0, GF, vh, Vts, Vtb, Vtd)
 from hazma.constraint_parameters import (B_k_invis_obs, k_pi_invis_obs,
@@ -75,8 +76,8 @@ class ScalarMediatorConstraints:
             pr_vis = (1. - np.exp(-B_k_mu_mu_obs.r_max * cm_to_inv_MeV *
                                   width_s * ms / ps))
 
-            # print pr_vis
-            # print widths_s["mu mu"] / width_s
+            # print(pr_vis)
+            # print(widths_s["mu mu"] / width_s)
 
             # Compute the contribution to the mu mu decay width
             width_contr = self.width_B_k_s() * \

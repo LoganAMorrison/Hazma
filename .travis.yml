@@ -1,9 +1,60 @@
 language: python
-python:
-  - "2.7"
+
+matrix:
+  include:
+
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=2.7.12
+        - PYTHON_SHORT_VERSION=2.7
+
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=3.4.8
+        - PYTHON_SHORT_VERSION=3.4
+
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=3.5.5
+        - PYTHON_SHORT_VERSION=3.5
+
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=3.6.5
+        - PYTHON_SHORT_VERSION=3.6
+
+cache:
+  directories:
+    - $HOME/.pyenv/versions/3.6.5
+    - $HOME/.pyenv/versions/3.5.5
+    - $HOME/.pyenv/versions/3.4.8
+    - $HOME/.pyenv/versions/2.7.12
+    - $HOME/downloads
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir $HOME/bin; ln -s $(which pip2) $HOME/bin/pip; fi
+  - pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
+  - ci_addons --install ../addons
+
 install:
-  - pip install -r requirements.txt
-  - pip install .
-# command to run tests
+  - ci install
+
 script:
-    pytest
+  - ci test
+
+after_success:
+  - ci after_test
+
+before_deploy:
+  - sudo pip install twine  # Twine installation requires sudo to get access to /usr/local/man
+
+deploy:
+  - provider: script
+    skip_cleanup: true
+    script: twine upload dist/*.whl --username $TEST_PYPI_USER --password $TEST_PYPI_PASSWORD
+    on:
+      tags: true
