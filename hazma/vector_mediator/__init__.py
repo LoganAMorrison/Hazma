@@ -186,9 +186,9 @@ class KineticMixing(VectorMediator):
     def __init__(self, mx, mv, gvxx, eps):
         self._eps = eps
 
-        super(VectorMediator, self).__init__(mx, mv, gvxx, -Qu*eps*qe,
-                                             -Qd*eps*qe, -Qd*eps*qe,
-                                             -Qe*eps*qe, -Qe*eps*qe)
+        super(KineticMixing, self).__init__(mx, mv, gvxx, -Qu*eps*qe,
+                                            -Qd*eps*qe, -Qd*eps*qe,
+                                            -Qe*eps*qe, -Qe*eps*qe)
 
     @property
     def eps(self):
@@ -252,8 +252,8 @@ class QuarksOnly(VectorMediator):
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
-        super(VectorMediator, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss,
-                                             0., 0.)
+        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.,
+                                         0.)
 
     # Hide underlying properties' setters
     @VectorMediator.gvee.setter
