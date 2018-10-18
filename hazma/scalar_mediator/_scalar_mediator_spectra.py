@@ -77,7 +77,7 @@ class ScalarMediatorSpectra:
             return 2. * dnde_decay_s(egams, eng_s, ms, pw_array, mode)
         return 2. * dnde_decay_s_pt(egams, eng_s, ms, pw_array, mode)
 
-    def spectra(self, egams, cme, fsi=True):
+    def spectra(self, egams, cme):
         """
         Compute the total spectrum from two fermions annihilating through a
         scalar mediator to mesons and leptons.
