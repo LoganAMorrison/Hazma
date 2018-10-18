@@ -50,8 +50,8 @@ class TheoryGammaRayLimits(object):
             return (1. / np.sqrt(2. * np.pi * sigma**2) *
                     np.exp(-(ep - e)**2 / (2. * sigma**2)))
 
-    def get_detected_spectrum(self, e_min, e_max, e_cm, energy_res,
-                              n_pts=1000):
+    def get_detected_spectrum_function(self, e_min, e_max, e_cm, energy_res,
+                                       n_pts=1000):
         """Convolves total DM annihilation spectrum with a detector's spectral
         resolution function.
 
@@ -152,8 +152,9 @@ class TheoryGammaRayLimits(object):
 
         # Convolve the spectrum with the detector's spectral resolution
         e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
-        dnde_det = self.get_detected_spectrum(e_bin_min, e_bin_max, e_cm,
-                                              measurement.energy_res)
+        dnde_det = self.get_detected_spectrum_function(e_bin_min, e_bin_max,
+                                                       e_cm,
+                                                       measurement.energy_res)
 
         def bin_lim(e_bin, phi, sigma):
             """Subroutine to compute limit in a single bin."""
@@ -293,7 +294,8 @@ class TheoryGammaRayLimits(object):
 
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
-        dnde_det = self.get_detected_spectrum(e_min, e_max, e_cm, energy_res)
+        dnde_det = self.get_detected_spectrum_function(e_min, e_max, e_cm,
+                                                       energy_res)
 
         # Energy at which spectrum peaks.
         e_dnde_max = optimize.minimize(dnde_det, 0.5 * (e_min + e_max),
