@@ -58,4 +58,3 @@ deploy:
     script: twine upload dist/*.whl --username $TEST_PYPI_USER --password $TEST_PYPI_PASSWORD
     on:
       tags: true
-      condition: $TRAVIS_TAG =~ ^v?[0-9]+(\.[0-9]+)*(rc[0-9]+)?$ && $TRAVIS_REPO_SLUG == LoganAMorrison/Hazma
