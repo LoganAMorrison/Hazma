@@ -66,7 +66,7 @@ class VectorMediatorSpectra:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))
 
-    def dnde_v(self, egams, eng_v, mode="total"):
+    def dnde_vv(self, egams, eng_v, mode="total"):
         mv = self.mv
         pws = self.partial_widths()
         pw_array = np.zeros(5, dtype=float)
@@ -119,7 +119,7 @@ class VectorMediatorSpectra:
         pipi = spec_helper(bfs["pi pi"], self.dnde_pipi)
 
         # mediator
-        mediator = spec_helper(bfs['v v'], self.dnde_v)
+        mediator = spec_helper(bfs['v v'], self.dnde_vv)
 
         # Compute total spectrum
         total = muons + electrons + pi0g + pipi + mediator
