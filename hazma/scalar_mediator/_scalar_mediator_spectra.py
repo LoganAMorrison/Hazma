@@ -11,57 +11,57 @@ from hazma.scalar_mediator.scalar_mediator_decay_spectrum \
 
 
 class ScalarMediatorSpectra:
-    def dnde_ee(self, egams, cme, spectrum_type='All'):
+    def dnde_ee(self, e_gams, e_cm, spectrum_type='All'):
         if spectrum_type == 'All':
-            return (self.dnde_ee(egams, cme, 'FSR') +
-                    self.dnde_ee(egams, cme, 'Decay'))
+            return (self.dnde_ee(e_gams, e_cm, 'FSR') +
+                    self.dnde_ee(e_gams, e_cm, 'Decay'))
         elif spectrum_type == 'FSR':
-            return self.dnde_xx_to_s_to_ffg(egams, cme, me)
+            return self.dnde_xx_to_s_to_ffg(e_gams, e_cm, me)
         elif spectrum_type == 'Decay':
-            return np.array([0.0 for _ in range(len(egams))])
+            return np.array([0.0 for _ in range(len(e_gams))])
         else:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))
 
-    def dnde_mumu(self, egams, cme, spectrum_type='All'):
+    def dnde_mumu(self, e_gams, e_cm, spectrum_type='All'):
         if spectrum_type == 'All':
-            return (self.dnde_mumu(egams, cme, 'FSR') +
-                    self.dnde_mumu(egams, cme, 'Decay'))
+            return (self.dnde_mumu(e_gams, e_cm, 'FSR') +
+                    self.dnde_mumu(e_gams, e_cm, 'Decay'))
         elif spectrum_type == 'FSR':
-            return self.dnde_xx_to_s_to_ffg(egams, cme, mmu)
+            return self.dnde_xx_to_s_to_ffg(e_gams, e_cm, mmu)
         elif spectrum_type == 'Decay':
-            return 2. * muon(egams, cme / 2.0)
+            return 2. * muon(e_gams, e_cm / 2.0)
         else:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))
 
-    def dnde_neutral_pion(self, egams, cme, spectrum_type='All'):
+    def dnde_neutral_pion(self, e_gams, e_cm, spectrum_type='All'):
         if spectrum_type == 'All':
-            return (self.dnde_neutral_pion(egams, cme, 'FSR') +
-                    self.dnde_neutral_pion(egams, cme, 'Decay'))
+            return (self.dnde_neutral_pion(e_gams, e_cm, 'FSR') +
+                    self.dnde_neutral_pion(e_gams, e_cm, 'Decay'))
         if spectrum_type == 'FSR':
-            return np.array([0.0 for _ in range(len(egams))])
+            return np.array([0.0 for _ in range(len(e_gams))])
         if spectrum_type == 'Decay':
-            return 2.0 * neutral_pion(egams, cme / 2.0)
+            return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
         else:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))
 
-    def dnde_charged_pion(self, egams, cme, spectrum_type='All'):
+    def dnde_charged_pion(self, e_gams, e_cm, spectrum_type='All'):
         if spectrum_type == 'All':
-            return (self.dnde_charged_pion(egams, cme, 'FSR') +
-                    self.dnde_charged_pion(egams, cme, 'Decay'))
+            return (self.dnde_charged_pion(e_gams, e_cm, 'FSR') +
+                    self.dnde_charged_pion(e_gams, e_cm, 'Decay'))
         elif spectrum_type == 'FSR':
-            return self.dnde_xx_to_s_to_pipig(egams, cme)
+            return self.dnde_xx_to_s_to_pipig(e_gams, e_cm)
         elif spectrum_type == 'Decay':
-            return 2. * charged_pion(egams, cme / 2.0)
+            return 2. * charged_pion(e_gams, e_cm / 2.0)
         else:
             raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
                              'Decay'".format(spectrum_type))
 
-    def dnde_ss(self, egams, Q, mode="total"):
+    def dnde_ss(self, e_gams, e_cm, mode="total"):
         # Each scalar gets half the COM energy
-        eng_s = Q / 2.
+        eng_s = e_cm / 2.
 
         ms = self.ms
         pws = self.partial_widths()
@@ -73,20 +73,20 @@ class ScalarMediatorSpectra:
         pw_array[3] = pws["pi pi"] / pws["total"]
         pw_array[4] = pws["g g"] / pws["total"]
 
-        if hasattr(egams, "__len__"):
-            return 2. * dnde_decay_s(egams, eng_s, ms, pw_array, mode)
-        return 2. * dnde_decay_s_pt(egams, eng_s, ms, pw_array, mode)
+        if hasattr(e_gams, "__len__"):
+            return 2. * dnde_decay_s(e_gams, eng_s, ms, pw_array, mode)
+        return 2. * dnde_decay_s_pt(e_gams, eng_s, ms, pw_array, mode)
 
-    def spectra(self, egams, cme):
+    def spectra(self, e_gams, e_cm):
         """
         Compute the total spectrum from two fermions annihilating through a
         scalar mediator to mesons and leptons.
 
         Parameters
         ----------
-        cme : float
+        e_cm : float
             Center of mass energy.
-        egams : array-like, optional
+        e_gams : array-like, optional
             Gamma ray energies to evaluate the spectrum at.
 
         Returns
@@ -97,15 +97,15 @@ class ScalarMediatorSpectra:
         """
 
         # Compute branching fractions
-        bfs = self.annihilation_branching_fractions(cme)
+        bfs = self.annihilation_branching_fractions(e_cm)
 
         # Only compute the spectrum if the channel's branching fraction is
         # nonzero
         def spec_helper(bf, specfn):
             if bf != 0:
-                return bf * specfn(egams, cme)
+                return bf * specfn(e_gams, e_cm)
             else:
-                return np.zeros(egams.shape)
+                return np.zeros(e_gams.shape)
 
         # Pions
         npions = spec_helper(bfs['pi0 pi0'], self.dnde_neutral_pion)
@@ -138,18 +138,18 @@ class ScalarMediatorSpectra:
         each available final state.
 
         Each argument of the spectrum functions in `eng_gams`, an array
-        of the gamma ray energies to evaluate the spectra at and `cme`, the
+        of the gamma ray energies to evaluate the spectra at and `e_cm`, the
         center of mass energy of the process.
         """
-        return {'mu mu': lambda e_gams, cme: self.dnde_mumu(e_gams, cme),
-                'e e': lambda e_gams, cme: self.dnde_ee(e_gams, cme),
-                'pi0 pi0': lambda e_gams, cme:
-                    self.dnde_neutral_pion(e_gams, cme),
-                'pi pi': lambda e_gams, cme:
-                    self.dnde_charged_pion(e_gams, cme),
-                's s': lambda e_gams, cme: self.dnde_ss(e_gams, cme)}
+        return {'mu mu': lambda e_gams, e_cm: self.dnde_mumu(e_gams, e_cm),
+                'e e': lambda e_gams, e_cm: self.dnde_ee(e_gams, e_cm),
+                'pi0 pi0': lambda e_gams, e_cm:
+                    self.dnde_neutral_pion(e_gams, e_cm),
+                'pi pi': lambda e_gams, e_cm:
+                    self.dnde_charged_pion(e_gams, e_cm),
+                's s': lambda e_gams, e_cm: self.dnde_ss(e_gams, e_cm)}
 
-    def gamma_ray_lines(self, cme):
-        bf = self.annihilation_branching_fractions(cme)["g g"]
+    def gamma_ray_lines(self, e_cm):
+        bf = self.annihilation_branching_fractions(e_cm)["g g"]
 
-        return {"g g": {"energy": cme / 2.0, "bf": bf}}
+        return {"g g": {"energy": e_cm / 2.0, "bf": bf}}
