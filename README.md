@@ -14,14 +14,14 @@ For more information, visit https://loganamorrison.github.io/Hazma/
 
 `hazma` is currently still in development. If you would like to try it anyways, you can install it using the command:
 
-    `pip install --index-url https://test.pypi.org/simple/ hazma`
+    pip install --index-url https://test.pypi.org/simple/ hazma
 
 Alternatively, you can download `hazma` directly from github, navigate to the package directory using the command line and run
 
-    `pip install .`
+    pip install .
 
 or
 
-    `python setup.py install`
+    python setup.py install
 
 Since `hazma` utilizes C to rapidly compute gamma ray and electron/positron spectra, you will need to have the cython package installed.
