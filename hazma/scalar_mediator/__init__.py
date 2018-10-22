@@ -327,7 +327,7 @@ class HiggsPortal(ScalarMediator):
         self._stheta = stheta
 
         super(HiggsPortal, self).__init__(mx, ms, gsxx, stheta, 3.*stheta,
-                                             -5.*stheta/6., vh)
+                                          -5.*stheta/6., vh)
 
     @property
     def stheta(self):
@@ -391,7 +391,7 @@ class HeavyQuark(ScalarMediator):
         self._QQ = QQ
 
         super(HeavyQuark, self).__init__(mx, ms, gsxx, 0., gsQ,
-                                             2.*gsQ*QQ**2, mQ)
+                                         2.*gsQ*QQ**2, mQ)
 
     @property
     def gsQ(self):
