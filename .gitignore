@@ -20,3 +20,5 @@ hazma.egg-info
 *.spl
 manual/_minted-hazma_manual/*
 manual/*.pdf
+.eggs/*
+.python-version
