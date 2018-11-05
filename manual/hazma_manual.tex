@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{slashed}
 \usepackage{xcolor}
+\usepackage{booktabs}
 
 \usepackage{minted}  % syntax highlighting
 \definecolor{bg}{rgb}{0.94,0.94,0.94}
@@ -34,6 +35,7 @@
 \newcommand{\theory}{\mil{theory}}
 \newcommand{\sm}{\mil{scalar_mediator}}
 \newcommand{\vm}{\mil{vector_mediator}}
+\newcommand{\svann}{\langle \sigma v \range_{\bar{\chi} \chi}}
 
 
 \begin{document}
@@ -75,6 +77,8 @@ Hazma is great.
     \item Masses: MeV
     \item Decay widths: MeV
     \item Cross sections: $\u{cm}^3 / \u{s}$
+    \item The \mil{numpy} package is referred to in some of the code snippets.
+    \item We have sometimes rounded or formatted the output from \mil{hazma} to make the code snippets more readable.
 \end{itemize}
 
 \section{Installation and Package Structure}%
