@@ -11,55 +11,55 @@ from hazma.scalar_mediator.scalar_mediator_decay_spectrum \
 
 
 class ScalarMediatorSpectra:
-    def dnde_ee(self, e_gams, e_cm, spectrum_type='All'):
-        if spectrum_type == 'All':
-            return (self.dnde_ee(e_gams, e_cm, 'FSR') +
-                    self.dnde_ee(e_gams, e_cm, 'Decay'))
-        elif spectrum_type == 'FSR':
+    def dnde_ee(self, e_gams, e_cm, spectrum_type='all'):
+        if spectrum_type == 'all':
+            return (self.dnde_ee(e_gams, e_cm, 'fsr') +
+                    self.dnde_ee(e_gams, e_cm, 'decay'))
+        elif spectrum_type == 'fsr':
             return self.dnde_xx_to_s_to_ffg(e_gams, e_cm, me)
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             return np.array([0.0 for _ in range(len(e_gams))])
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_mumu(self, e_gams, e_cm, spectrum_type='All'):
-        if spectrum_type == 'All':
-            return (self.dnde_mumu(e_gams, e_cm, 'FSR') +
-                    self.dnde_mumu(e_gams, e_cm, 'Decay'))
-        elif spectrum_type == 'FSR':
+    def dnde_mumu(self, e_gams, e_cm, spectrum_type='all'):
+        if spectrum_type == 'all':
+            return (self.dnde_mumu(e_gams, e_cm, 'fsr') +
+                    self.dnde_mumu(e_gams, e_cm, 'decay'))
+        elif spectrum_type == 'fsr':
             return self.dnde_xx_to_s_to_ffg(e_gams, e_cm, mmu)
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             return 2. * muon(e_gams, e_cm / 2.0)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_neutral_pion(self, e_gams, e_cm, spectrum_type='All'):
-        if spectrum_type == 'All':
-            return (self.dnde_neutral_pion(e_gams, e_cm, 'FSR') +
-                    self.dnde_neutral_pion(e_gams, e_cm, 'Decay'))
-        if spectrum_type == 'FSR':
+    def dnde_pi0pi0(self, e_gams, e_cm, spectrum_type='all'):
+        if spectrum_type == 'all':
+            return (self.dnde_pi0pi0(e_gams, e_cm, 'fsr') +
+                    self.dnde_pi0pi0(e_gams, e_cm, 'decay'))
+        if spectrum_type == 'fsr':
             return np.array([0.0 for _ in range(len(e_gams))])
-        if spectrum_type == 'Decay':
+        if spectrum_type == 'decay':
             return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_charged_pion(self, e_gams, e_cm, spectrum_type='All'):
-        if spectrum_type == 'All':
-            return (self.dnde_charged_pion(e_gams, e_cm, 'FSR') +
-                    self.dnde_charged_pion(e_gams, e_cm, 'Decay'))
-        elif spectrum_type == 'FSR':
+    def dnde_pipi(self, e_gams, e_cm, spectrum_type='all'):
+        if spectrum_type == 'all':
+            return (self.dnde_pipi(e_gams, e_cm, 'fsr') +
+                    self.dnde_pipi(e_gams, e_cm, 'decay'))
+        elif spectrum_type == 'fsr':
             return self.dnde_xx_to_s_to_pipig(e_gams, e_cm)
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             return 2. * charged_pion(e_gams, e_cm / 2.0)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_ss(self, e_gams, e_cm, mode="total"):
+    def dnde_ss(self, e_gams, e_cm, fs="total"):
         # Each scalar gets half the COM energy
         eng_s = e_cm / 2.
 
@@ -74,8 +74,8 @@ class ScalarMediatorSpectra:
         pw_array[4] = pws["g g"] / pws["total"]
 
         if hasattr(e_gams, "__len__"):
-            return 2. * dnde_decay_s(e_gams, eng_s, ms, pw_array, mode)
-        return 2. * dnde_decay_s_pt(e_gams, eng_s, ms, pw_array, mode)
+            return 2. * dnde_decay_s(e_gams, eng_s, ms, pw_array, fs)
+        return 2. * dnde_decay_s_pt(e_gams, eng_s, ms, pw_array, fs)
 
     def spectra(self, e_gams, e_cm):
         """
@@ -108,8 +108,8 @@ class ScalarMediatorSpectra:
                 return np.zeros(e_gams.shape)
 
         # Pions
-        npions = spec_helper(bfs['pi0 pi0'], self.dnde_neutral_pion)
-        cpions = spec_helper(bfs['pi pi'], self.dnde_charged_pion)
+        npions = spec_helper(bfs['pi0 pi0'], self.dnde_pi0pi0)
+        cpions = spec_helper(bfs['pi pi'], self.dnde_pipi)
 
         # Leptons
         muons = spec_helper(bfs['mu mu'], self.dnde_mumu)
@@ -144,9 +144,9 @@ class ScalarMediatorSpectra:
         return {'mu mu': lambda e_gams, e_cm: self.dnde_mumu(e_gams, e_cm),
                 'e e': lambda e_gams, e_cm: self.dnde_ee(e_gams, e_cm),
                 'pi0 pi0': lambda e_gams, e_cm:
-                    self.dnde_neutral_pion(e_gams, e_cm),
+                    self.dnde_pi0pi0(e_gams, e_cm),
                 'pi pi': lambda e_gams, e_cm:
-                    self.dnde_charged_pion(e_gams, e_cm),
+                    self.dnde_pipi(e_gams, e_cm),
                 's s': lambda e_gams, e_cm: self.dnde_ss(e_gams, e_cm)}
 
     def gamma_ray_lines(self, e_cm):
