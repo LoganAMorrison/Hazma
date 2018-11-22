@@ -186,9 +186,12 @@ class KineticMixing(VectorMediator):
     def __init__(self, mx, mv, gvxx, eps):
         self._eps = eps
 
-        super(KineticMixing, self).__init__(mx, mv, gvxx, -Qu*eps*qe,
-                                            -Qd*eps*qe, -Qd*eps*qe,
-                                            -Qe*eps*qe, -Qe*eps*qe)
+        super(KineticMixing, self).__init__(mx, mv, gvxx,
+                                            -Qu * eps * qe,
+                                            -Qd * eps * qe,
+                                            -Qd * eps * qe,
+                                            -Qe * eps * qe,
+                                            -Qe * eps * qe)
 
     @property
     def eps(self):
