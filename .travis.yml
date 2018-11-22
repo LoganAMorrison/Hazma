@@ -55,6 +55,6 @@ before_deploy:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: twine upload dist/*.whl --username $TEST_PYPI_USER --password $TEST_PYPI_PASSWORD
+    script: twine upload dist/*.whl --username $PYPI_USER --password $PYPI_PASSWORD
     on:
       tags: true
