@@ -37,7 +37,7 @@ install:
 
 before_build:
   commands:
-    - flake8
+    - flake8 --ignore=W605
 
 build:
   commands:

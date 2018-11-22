@@ -92,7 +92,7 @@ jobs:
       - run:
           name: Deploy source and linux wheels
           command: |
-            twine upload ./dist/*.whl ./dist/*.tar.gz --username $TEST_PYPI_USER --password $TEST_PYPI_PASSWORD
+            twine upload ./dist/*.whl ./dist/*.tar.gz -u $PYPI_USER -p $PYPI_PASSWORD
 workflows:
   version: 2
   build_and_deploy:
