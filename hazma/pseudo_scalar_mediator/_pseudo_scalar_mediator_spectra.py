@@ -9,7 +9,7 @@ from hazma.parameters import neutral_pion_mass as mpi0
 
 from hazma.gamma_ray import gamma_ray
 
-# Stuff needed to compute FSR from x xbar -> P -> pip pim pi0
+# Stuff needed to compute fsr from x xbar -> P -> pip pim pi0
 # from ..gamma_ray import gamma_ray_rambo
 # from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0g
 
@@ -21,35 +21,35 @@ class PseudoScalarMediatorSpectra:
         # eng_p = Q / 2.
         pass
 
-    def dnde_ee(self, egams, cme, spectrum_type='All'):
+    def dnde_ee(self, egams, cme, spectrum_type='all'):
         """Computes spectrum from DM annihilation into electrons.
         """
-        if spectrum_type == 'All':
-            return (self.dnde_ee(egams, cme, 'FSR') +
-                    self.dnde_ee(egams, cme, 'Decay'))
-        elif spectrum_type == 'FSR':
+        if spectrum_type == 'all':
+            return (self.dnde_ee(egams, cme, 'fsr') +
+                    self.dnde_ee(egams, cme, 'decay'))
+        elif spectrum_type == 'fsr':
             return self.dnde_xx_to_p_to_ffg(egams, cme, me)
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             return np.array([0.0 for _ in range(len(egams))])
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_mumu(self, egams, cme, spectrum_type='All'):
+    def dnde_mumu(self, egams, cme, spectrum_type='all'):
         """Computes spectrum from DM annihilation into muons.
         """
-        if spectrum_type == 'All':
-            return (self.dnde_mumu(egams, cme, 'FSR') +
-                    self.dnde_mumu(egams, cme, 'Decay'))
-        elif spectrum_type == 'FSR':
+        if spectrum_type == 'all':
+            return (self.dnde_mumu(egams, cme, 'fsr') +
+                    self.dnde_mumu(egams, cme, 'decay'))
+        elif spectrum_type == 'fsr':
             return self.dnde_xx_to_p_to_ffg(egams, cme, mmu)
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             return 2. * muon(egams, cme / 2.0)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_pi0pipi(self, egams, cme, spectrum_type='All'):
+    def dnde_pi0pipi(self, egams, cme, spectrum_type='all'):
         """Computes spectrum from DM annihilation into a neutral pion and two
         charged pions.
 
@@ -61,10 +61,10 @@ class PseudoScalarMediatorSpectra:
         if cme < 2. * mpi + mpi0:
             return np.array([0.0 for _ in range(len(egams))])
 
-        if spectrum_type == 'All':
-            return (self.dnde_pi0pipi(egams, cme, 'FSR') +
-                    self.dnde_pi0pipi(egams, cme, 'Decay'))
-        elif spectrum_type == 'FSR':
+        if spectrum_type == 'all':
+            return (self.dnde_pi0pipi(egams, cme, 'fsr') +
+                    self.dnde_pi0pipi(egams, cme, 'decay'))
+        elif spectrum_type == 'fsr':
             # Define the tree level and radiative matrix element squared for
             # RAMBO. These need to be of the form double(*func)(np.ndarray)
             # where
@@ -92,7 +92,7 @@ class PseudoScalarMediatorSpectra:
             """
 
             return np.array([0.0 for _ in range(len(egams))])
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             # Define the matrix element squared for RAMBO. This needs to be
             # of the form double(*func)(np.ndarray) where the np.ndarray is
             # a list of 4-momenta. Note msqrd_xx_to_p_to_pm0 takes params as
@@ -103,10 +103,10 @@ class PseudoScalarMediatorSpectra:
                              cme, egams, num_ps_pts=1000,
                              mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
-    def dnde_pi0pi0pi0(self, egams, cme, spectrum_type='All'):
+    def dnde_pi0pi0pi0(self, egams, cme, spectrum_type='all'):
         """Return the gamma ray spectrum for dark matter annihilations into
         three neutral pions.
 
@@ -118,11 +118,11 @@ class PseudoScalarMediatorSpectra:
         if cme < 3. * mpi0:
             return np.array([0.0 for _ in range(len(egams))])
 
-        if spectrum_type == 'All':
-            return self.dnde_pi0pi0pi0(egams, cme, 'Decay')
-        elif spectrum_type == 'FSR':
+        if spectrum_type == 'all':
+            return self.dnde_pi0pi0pi0(egams, cme, 'decay')
+        elif spectrum_type == 'fsr':
             return np.array([0.0 for _ in range(len(egams))])
-        elif spectrum_type == 'Decay':
+        elif spectrum_type == 'decay':
             # Define the matrix element squared for RAMBO. This needs to be
             # of the form double(*func)(np.ndarray) where the np.ndarray is
             # a list of 4-momenta. Note msqrd_xx_to_p_to_000 takes params as
@@ -134,8 +134,8 @@ class PseudoScalarMediatorSpectra:
                              cme, egams, num_ps_pts=1000,
                              mat_elem_sqrd=msqrd_tree)
         else:
-            raise ValueError("Type {} is invalid. Use 'All', 'FSR' or \
-                             'Decay'".format(spectrum_type))
+            raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                             'decay'".format(spectrum_type))
 
     def spectra(self, egams, cme):
         """Compute the total spectrum from two fermions annihilating through a

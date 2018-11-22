@@ -17,6 +17,7 @@ include "../decay_helper_functions/parameters.pxd"
 cdef double mmu = MASS_MU
 cdef double me = MASS_E
 cdef double mpi = MASS_PI
+cdef double mpi0 = MASS_PI0
 cdef double qe = sqrt(4. * M_PI * ALPHA_EM)
 ctypedef np.ndarray ndarray
 
@@ -159,7 +160,11 @@ cdef double __integrand(double cl, double eng_gam, double eng_v,
     cdef double dnde_cp_f = pwpipi * __dnde_fsr_cp_vrf(eng_gam_vrf, mv)
 
     cdef double dnde_cp_d = 2. * pwpipi * __interp_spec(eng_gam_vrf, "cp")
-    cdef double dnde_np_d = pwpi0g * CSpectrumPoint(eng_gam_vrf, mv / 2.)
+
+    # Neutral pion energy is:
+    cdef double e_pi0 = 0.5 * (mpi0**2 + mv**2) / mv
+    cdef double dnde_np_d = pwpi0g * CSpectrumPoint(eng_gam_vrf, e_pi0)
+
     cdef double dnde_mu_d = 2. * pwmumu * __interp_spec(eng_gam_vrf, "mu")
 
     dnde = dnde_ee_f + dnde_mu_f + dnde_cp_f + \

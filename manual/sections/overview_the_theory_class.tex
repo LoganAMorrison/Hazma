@@ -1,11 +1,11 @@
-{\color{red} Should we have boxes for different functions and constructors specifying type signatures? Should that be left for the actual docs in the code? Seems like it, based on other publications in this journal.}
+{\color{red} Should we have boxes for different functions and constructors specifying type signatures? Should that be left for the actual docs in the code? Seems like it, based on other publications in this journal?}
 
 Instances of the \theory\ class represent dark matter models, and are the main objects used to perform analyses in Hazma. Two \theory\s, each containing a DM and mediator particle, come built into \hazma. The Lagrangians defining these theories and the domains of validity are described in the following subsection. \theory\ possesses methods to compute quantities such as DM annihilation cross sections, gamma ray spectra and constraints, and CMB constraints. This section catalogues the definitions of these quantities used by \hazma\ along with minimal examples of how to use the associated methods.
 
 \subsection{Built-in Theories}%
 \label{sub:built_in_theories}
 
-% Present Lagrangians for scalar and vector models. Link to github with FR and FC calculations.
+{\color{red} Present Lagrangians for scalar and vector models. Link to github with FR and FC calculations.}
 
 Each of the models that ship with \hazma\ contain two BSM particles:
 \begin{itemize}
@@ -61,7 +61,7 @@ The parameters for the scalar model are attributes of the \sm\ class. Their name
 \begin{align*}
     (m_\chi, m_S, g_{S\chi}, g_{Sf}, g_{SG}, g_{SF}, \Lambda) \leftrightarrow (\mathtt{mx}, \mathtt{ms}, \mathtt{gsxx}, \mathtt{gsff}, \mathtt{gsGG}, \mathtt{gsFF}, \mathtt{lam}).
 \end{align*}
-The following snippet shows how to create an instance of \sm, change the value of a parameter, and print its new value:
+The following snippet shows how to instantiate \sm, change the value of a parameter, and print its new value:
 \begin{minted}[bgcolor=bg]{python}
 >>> from hazma.scalar_mediator import ScalarMediator
 >>> sm = ScalarMediator(mx=150., ms=1e3, gsxx=1., gsff=0.1,
@@ -101,10 +101,10 @@ Matching onto the chiral Lagrangian and isolating the terms contributing at lead
                          &\hspace{4cm} \left. + 3 (g_{Vu}^2 - g_{Vd}^2) (\d_\nu V_\rho) V_\sigma \right\}.
 \end{align} 
 
-The base \vm\ class contains the parameters\footnote{Note that $\texttt{gvss}$ is not currently used since \vm\ is based on leading-order chPT.}
+The correspondence between the microscopic parameters for the vector model and attributes of the base \vm\ class is\footnote{Note that $\mil{gvss}$ is not currently used since \vm\ is based on leading-order chPT.}
 \begin{align*}
     &(m_\chi, m_V, g_{V\chi}, g_{Vu}, g_{Vd}, g_{Vs}, g_{Ve}, g_{V\mu})\\
-    &\hspace{1cm} \leftrightarrow (\texttt{mx}, \texttt{mv}, \texttt{gvxx}, \texttt{gvuu}, \texttt{gvdd}, \texttt{gvss}, \texttt{gvee}, \texttt{gvmumu}).
+    &\hspace{1cm} \leftrightarrow (\mil{mx}, \mil{mv}, \mil{gvxx}, \mil{gvuu}, \mil{gvdd}, \mil{gvss}, \mil{gvee}, \mil{gvmumu}).
 \end{align*}
 The following snippet shows how to instantiate and alter the parameter values for \vm:
 \begin{minted}[bgcolor=bg]{python}
@@ -121,11 +121,11 @@ The following snippet shows how to instantiate and alter the parameter values fo
 0.05
 \end{minted}
 
-For convenience, a subclass called \texttt{KineticMixing} is also provided to handle the important case where $V$ couples to the SM purely through the kinetic mixing term ($\epsilon \neq 0$, $g_{Vf} = 0$ for all $f$). The parameters for this subclass are
+For convenience, a subclass called \mil{KineticMixing} is also provided to handle the important case where $V$ couples to the SM purely through the kinetic mixing term ($\epsilon \neq 0$, $g_{Vf} = 0$ for all $f$). The parameters for this subclass are
 \begin{align*}
-    (m_\chi, m_V, g_{V\chi}, \epsilon) \leftrightarrow (\texttt{mx}, \texttt{mv}, \texttt{gvxx}, \texttt{eps}).
+    (m_\chi, m_V, g_{V\chi}, \epsilon) \leftrightarrow (\mil{mx}, \mil{mv}, \mil{gvxx}, \mil{eps}).
 \end{align*}
-While the underlying parameters \texttt{gvuu}, \dots, \texttt{gvmumu} can be accessed by instances of \texttt{KineticMixing}, they cannot be set directly since they are fully determined by \texttt{eps}:
+While the underlying parameters \mil{gvuu}, \dots, \mil{gvmumu} can be accessed by instances of \mil{KineticMixing}, they cannot be set directly since they are fully determined by \mil{eps}:
 \begin{minted}[bgcolor=bg]{python}
 >>> from hazma.vector_mediator import KineticMixing
 >>> km = KineticMixing(mx=150., mv=1e3, gvxx=1., eps=0.1)
@@ -139,7 +139,11 @@ AttributeError: Cannot set gvuu
 
 \subsection{Cross section, decay widths and branching fractions}
 
-\paragraph{\texttt{theory.list\_annihilation\_final\_states()}} Lists the final states into which the DM can potentially annihilate. These are based on the terms appearing in $\L_{\u{Int}(M)}$. Note that the actual branching fractions into a given final state may be zero if the relevant couplings are zero or the center of mass energy for the annihilation is smaller than the sum of the final state particles' masses. 
+Instances of \mil{theory} provide the following four methods for computing particle physics quantities.
+
+\subsubsection{\mil{Theory.list_annihilation_final_states()}}
+
+Lists the final states into which the DM can potentially annihilate. These are based on the terms appearing in $\L_{\u{Int}(M)}$. Note that the actual branching fractions into a given final state may be zero if the relevant couplings are zero or the center of mass energy for the annihilation is smaller than the sum of the final state particles' masses. 
 \begin{minted}[bgcolor=bg]{python}
 >>> ScalarMediator.list_annihilation_final_states()
 ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
@@ -148,7 +152,9 @@ AttributeError: Cannot set gvuu
 \end{minted}
 {\color{red} This is not quite right. For example, it excludes the final states $e^+ e^- \gamma$, $S \pi^0 \pi^0$, $\pi^+ \pi^- \gamma \gamma$ for the scalar and $V \pi^0$ for the vector. While that's fine since those final states are so suppressed, the wording here needs to be precise.}
 
-\paragraph{\texttt{theory.annihilation\_cross\_sections(cme)}} For an instance \mil{th} of \mil{theory} and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and \mil{'total'} and whose values are the corresponding cross sections for annihilating into those states. In the theories included with \hazma, the propagators used for the mediators take into account their widths.
+\subsubsection{\mil{Theory.annihilation_cross_sections(e_cm)}}
+
+For an instance \mil{th} of \mil{theory} and a center of mass energy \mil{e_cm}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and \mil{'total'} and whose values are the corresponding cross sections for annihilating into those states. In the theories included with \hazma, the propagators used for the mediators take into account their widths.
 
 In the following example, the DM is lighter than the mediator, but the center of mass energy is large enough to permit annihilations into the mediator:
 \begin{minted}[bgcolor=bg]{python}
@@ -165,7 +171,9 @@ In the following example, the DM is lighter than the mediator, but the center of
  'pi pi': 3.526880321768581e-27}
 \end{minted}
 
-\paragraph{\texttt{theory.annihilation\_branching\_fractions(cme)}} For an instance \mil{th} of \mil{theory} and a center of mass energy \texttt{cme}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and whose values are the corresponding branching fractions for annihilating into those states.
+\subsubsection{\mil{Theory.annihilation_branching_fractions(e_cm)}} 
+
+For an instance \mil{th} of \mil{theory} and a center of mass energy \mil{e_cm}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and whose values are the corresponding branching fractions for annihilating into those states.
 \begin{minted}[bgcolor=bg]{python}
 >>> km = KineticMixing(mx=170., mv=1e3, gvxx=1., eps=0.2)
 >>> bfs = km.annihilation_branching_fractions(400.)
@@ -177,7 +185,9 @@ In the following example, the DM is lighter than the mediator, but the center of
  'pi pi': 0.04460388797207543}
 \end{minted}
 
-\paragraph{\texttt{theory.partial\_widths()}} Returns a \mil{dict} whose keys are states into which the mediator can decay and whose values are the corresponding decay widths.
+\subsubsection{\mil{Theory.partial_widths()}}
+
+Returns a \mil{dict} whose keys are states into which the mediator can decay and whose values are the corresponding decay widths.
 \begin{minted}[bgcolor=bg]{python}
 >>> vm = VectorMediator(mx=100, mv=300, gvxx=0.5, gvuu=0.3,
 ...                     gvdd=0.2, gvss=0.0, gvee=0, gvmumu=0.1)
@@ -193,9 +203,99 @@ In the following example, the DM is lighter than the mediator, but the center of
 
 \subsection{Gamma ray and positron spectra}
 
+The gamma ray spectrum for DM annihilation consists of three pieces:
+\begin{align}
+    \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi} &= \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{line}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{FSR}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{dec}}.
+\end{align}
+The first term is a linear combination of delta functions coming from final states with a monochromatic gamma ray. The second is the contribution from final state radiation (FSR) off of electromagnetically charged final state particles. Photons produced in radiative decays of final state particles are accounted for by the third term. Our other companion paper~\cite{spectrum_paper} explains in detail how to calculate these terms. This section describes the methods in \mil{theory} that can compute different contributions to the gamma ray spectrum.
+
+{\color{red} Do we want to talk about all of the methods below, or just the main ones? Many of them do very similar things or are convenience methods. I've commented these out below.}
+
+\subsubsection{\mil{Theory.gamma_ray_lines(e_cm)}}
+
+Returns information about monochromatic gamma-ray lines produced in dark matter annihilations. The return value is a \mil{dict} whose keys are the final states producing gamma-ray lines. The values in this \mil{dict} are the energy of the line and branching fraction for annihilation into the line. 
+
+\begin{minted}[bgcolor=bg]{python}
+>>> vm = QuarksOnly(mx=120., mv=1e3, gvxx=1., gvuu=0.1, gvdd=0.1,
+                    gvss=0.)
+>>> vm.gamma_ray_lines(e_cm=300.)
+{'pi0 g': {'energy': 119.6, 'bf': 1.0}}
+>>> sm = HeavyQuark(mx=120., ms=1e3, gsxx=1., gsQ=0.1, mQ=1e3,
+                    QQ=0.1)
+>>> sm.gamma_ray_lines(e_cm=300.)
+{'g g': {'energy': 150.0, 'bf': 1.286e-08}}
+\end{minted}
+
+\subsubsection{\mil{Theory.spectra(e_gams, e_cm)}}
+
+Computes the continuum part of the spectrum
+\begin{align}
+    \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{FSR}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{dec}}
+\end{align}
+and their sum for the given center of mass energy and photon energies. Note that the $\gamma\gamma$ final state is not included since it exclusively produces a gamma-ray line.
+
+This example computes the spectra for the scalar model with Higgs portal-type couplings where the DM annihilates with velocity equal to the Milky Way velocity dispersion $10^{-3} c$. The spectrum for the $S S$ final state is zero since the mediator is much heavier than the dark matter.
+
+\begin{minted}[bgcolor=bg]{python}
+>>> sm = HiggsPortal(mx=150., ms=1e3, gsxx=1., stheta=0.1)
+>>> e_cm = 2.*sm.mx * (1 + 0.5*1e-6)
+>>> e_gams = numpy.array([50., 100., 149., 200.])
+>>> sm.spectra(e_gams, e_cm)
+{'total': array([2.155ee-02, 2.148e-02, 5.423e-10, 0.]),
+ 'e e': array([3.451e-09, 1.284e-09, 5.423e-10, 0.]),
+ 'pi0 pi0': array([0.02148, 0.02148, 0., 0.]),
+ 's s': array([0., 0., 0., 0.]),
+ 'mu mu': array([1.422e-05, 5.809e-07, 0., 0.]),
+ 'pi pi': array([5.422e-05, 3.124e-08, 0., 0.])}
+\end{minted}
+
+% \subsubsection{Individual channel spectrum methods}
+% 
+% Each model has methods to compute $dN/dE_\gamma|_\u{FSR}$ and $dN/dE_\gamma|_\u{dec}$ for the relevant Standard Model final states. The various contributions to each final state's spectrum can be studied by setting the \mil{spectrum_type} argument to one of three values:
+% \begin{itemize}
+%     \item \mil{'fsr'}: returns $dN/dE_\gamma|_\u{FSR}$;
+%     \item \mil{'decay'}: returns $dN/dE_\gamma|_\u{decay}$;
+%     \item \mil{'all'}: returns $dN/dE_\gamma|_\u{FSR} + dN/dE_\gamma|_\u{decay}$.
+% \end{itemize}
+% The spectrum methods provided by each theory are listed in Table~\ref{tab:spectrum_fns}.
+% 
+% \begin{table}[t]
+%     \centering
+%     \begin{tabular}{cc}
+%         \toprule
+%         \mil{ScalarMediator} & \mil{VectorMediator}\\
+%         \midrule
+%         \mil{dnde_ee}        & \mil{dnde_ee}\\
+%         \mil{dnde_mumu}      & \mil{dnde_mumu}\\
+%         \mil{dnde_pi0pi0}    & \mil{dnde_pi0g}\\
+%         \mil{dnde_pipi}      & \mil{dnde_pipi}\\
+%         \bottomrule
+%     \end{tabular}
+%     \caption{Spectrum functions for individual final states for the two theories in \hazma. Each takes the same arguments: \mil{e_gams}, \mil{e_cm} and \mil{spectrum_type}.}
+%     \label{tab:spectrum_fns}
+% \end{table}
+% 
+% \subsubsection{\mil{ScalarMediator.dnde_ss(e_gams, e_cm, fs='total')},\\ \mil{VectorMediator.dnde_vv(e_gams, e_cm, fs='total')}}
+% 
+% These functions compute the spectrum for the final state containing two mediators and return an array of zeros if it is kinematically inaccessible. The \mil{fs} argument computes the contribution to this spectrum from a given final state into which the mediator can decay.
+% 
+% \begin{minted}[bgcolor=bg]{python}
+% >>> sm = HiggsPortal(mx=350., ms=300., gsxx=1., stheta=0.1)
+% >>> e_cm = 2.*sm.mx * (1 + 0.5*1e-6)
+% >>> e_gams = numpy.array([150., 200., 250., 300.])
+% >>> sm.dnde_ss(e_gams, e_cm)
+% array([1.29038283e-02, 1.54138816e-08, 1.22159562e-08, 0.])
+% >>> sm.dnde_ss(e_gams, e_cm, mode='pi0 pi0')
+% array([0.01290359, 0., 0., 0.])
+% \end{minted}
+% 
+% \subsubsection{\mil{Theory.spectrum_functions()}}
+% 
+% Returns a \mil{dict} whose keys are the theory's annihilation final states (excepting $\gamma\gamma$) and whose values are the corresponding spectrum methods, with \mil{spectrum_type} set to \mil{'all'}. This is primarily useful for looping over the final states' spectra.
+
 \subsection{Gamma ray limits}
 
-Explain procedure
+\hazma\ uses a simple procedure to set constraints on the DM self-annihilation cross section $\svann$ using current gamma-ray flux measurements and to make projections for planned detectors. 
 
 \subsection{Cosmic Microwave Background limits}
 

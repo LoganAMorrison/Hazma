@@ -323,17 +323,11 @@ class HiggsPortal(ScalarMediator):
     """
 
     def __init__(self, mx, ms, gsxx, stheta):
-        self._mx = mx
-        self._ms = ms
-        self._gsxx = gsxx
-        self._gsff = stheta
-        self._gsGG = 3. * stheta
-        self._gsFF = - 5. * stheta / 6.
         self._lam = vh
         self._stheta = stheta
-        self.compute_vs()
-        self.compute_width_s()  # vs MUST be computed first
-        super(ScalarMediator, self).__init__()
+
+        super(HiggsPortal, self).__init__(mx, ms, gsxx, stheta, 3.*stheta,
+                                          -5.*stheta/6., vh)
 
     @property
     def stheta(self):
@@ -392,19 +386,12 @@ class HeavyQuark(ScalarMediator):
     """
 
     def __init__(self, mx, ms, gsxx, gsQ, mQ, QQ):
-        self._mx = mx
-        self._ms = ms
-        self._gsxx = gsxx
-        self._gsff = 0.0
-        self._gsGG = gsQ
-        self._gsFF = 2.0 * gsQ * QQ**2
-        self._lam = mQ
         self._gsQ = gsQ
         self._mQ = mQ
         self._QQ = QQ
-        self.compute_vs()
-        self.compute_width_s()  # vs MUST be computed first
-        super(ScalarMediator, self).__init__()
+
+        super(HeavyQuark, self).__init__(mx, ms, gsxx, 0., gsQ,
+                                         2.*gsQ*QQ**2, mQ)
 
     @property
     def gsQ(self):

@@ -130,8 +130,10 @@ class TheoryConstrain(object):
         def get_bin_fluxes(spec_fn, line_fn):
             """Gets Phi/<sigma v> for a particular channel.
             """
-            dnde_det = self.get_detected_spectrum(e_bin_min, e_bin_max, e_cm,
-                                                  measurement.energy_res, 500)
+            dnde_det = \
+                self.get_detected_spectrum_function(e_bin_min, e_bin_max, e_cm,
+                                                    measurement.energy_res,
+                                                    500)
             return np.array([dm_flux_factor * dnde_det.integral(bl, br)
                              for bl, br in measurement.bins])
 
