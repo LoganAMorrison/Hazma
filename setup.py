@@ -2,7 +2,7 @@ from setuptools import setup, Extension, find_packages
 
 import numpy as np
 
-VERSION = "0.1"
+VERSION = "0.1.0"
 
 
 def readme():
