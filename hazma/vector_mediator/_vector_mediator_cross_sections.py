@@ -78,11 +78,12 @@ class VectorMediatorCrossSections:
             mv = self.mv
             width_v = self.width_v
 
-            ret_val = ((gvdd - gvuu)**2 * gvxx**2 *
-                       (-4. * mpi**2 + Q**2)**1.5 *
-                       (2. * mx**2 + Q**2)) / \
-                (48. * pi * Q**2 * sqrt(-4. * mx**2 + Q**2) *
-                 (mv**4 - 2. * mv**2 * Q**2 + Q**4 + mv**2 * width_v**2))
+            ret_val = (((gvdd - gvuu)**2 * gvxx**2 *
+                        (-4. * mpi**2 + Q**2)**1.5 *
+                        (2. * mx**2 + Q**2)) /
+                       (48. * pi * Q**2 * sqrt(-4. * mx**2 + Q**2) *
+                        (mv**4 - 2. * mv**2 * Q**2 + Q**4 + mv**2 *
+                         width_v**2)))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
