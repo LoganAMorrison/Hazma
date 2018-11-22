@@ -106,7 +106,7 @@ workflows:
       - build-2.7: &build_job_template
           filters:
             tags:
-              only: [0-9]\.[0-9]
+              only: /[0-9]+(\.[0-9]+)*/
       - build-3.4:
           <<: *build_job_template
       - build-3.5:
@@ -121,4 +121,4 @@ workflows:
             - build-3.6
           filters:
             tags:
-              only: [0-9]\.[0-9]
+              only: /[0-9]+(\.[0-9]+)*/
