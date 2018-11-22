@@ -2,6 +2,8 @@ from setuptools import setup, Extension, find_packages
 
 import numpy as np
 
+VERSION = "0.1"
+
 decay_dir = "hazma/decay_helper_functions/"
 gr_dir = "hazma/gamma_ray_helper_functions/"
 ps_dir = "hazma/phase_space_helper_functions/"
