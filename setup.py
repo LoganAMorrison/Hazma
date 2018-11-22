@@ -87,7 +87,7 @@ extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
                                   "vector_mediator_decay_spectrum.pyx"])]
 
 setup(name='hazma',
-      version='0.45',
+      version=VERSION,
       author='Logan Morrison and Adam Coogan',
       author_email='loanmorr@ucsc.edu',
       maintainer='Logan Morrison',
