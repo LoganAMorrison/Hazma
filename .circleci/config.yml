@@ -7,7 +7,7 @@ jobs:
   build-2.7: &build_template
     working_directory: /hazma
     docker:
-      - image: circleci/python:2.7-jessie
+      - image: circleci/python:2.7
         user: root
     steps:
       - checkout
@@ -34,25 +34,25 @@ jobs:
   build-3.4:
     <<: *build_template
     docker:
-      - image: circleci/python:3.4-jessie
+      - image: circleci/python:3.4
         user: root
 
   build-3.5:
     <<: *build_template
     docker:
-      - image: circleci/python:3.5-jessie
+      - image: circleci/python:3.5
         user: root
 
   build-3.6:
     <<: *build_template
     docker:
-      - image: circleci/python:3.6-jessie
+      - image: circleci/python:3.6
         user: root
 
   deploy:
     working_directory: /hazma
     docker:
-      - image: circleci/python:3.6-jessie
+      - image: circleci/python:3.6
         user: root
     steps:
       - run:
