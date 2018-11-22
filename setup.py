@@ -4,6 +4,13 @@ import numpy as np
 
 VERSION = "0.1"
 
+
+def readme():
+    """print long description"""
+    with open('README.rst') as f:
+        return f.read()
+
+
 decay_dir = "hazma/decay_helper_functions/"
 gr_dir = "hazma/gamma_ray_helper_functions/"
 ps_dir = "hazma/phase_space_helper_functions/"
@@ -95,9 +102,8 @@ setup(name='hazma',
       url='http://hazma.readthedocs.io/en/latest/',
       description='Package for computing FSR and decay spectra for light \
       particles',
-      long_description="""Package for computing the FSR and decay spectra for
-      light mesons (pions and kaons) and light fermions (electron and muon).
-      """,
+      long_description=readme(),
+      keywords='dark-matter mev-dark-matter gamma-ray-spectra',
       packages=find_packages(),
       ext_modules=extensions,
       include_dirs=[np.get_include(),
