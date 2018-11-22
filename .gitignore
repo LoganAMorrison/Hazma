@@ -4,6 +4,7 @@ docs/source/_theme
 *.pyc
 development_notebooks
 build/
+dist/
 hazma.egg-info
 *.c
 *.so
@@ -20,3 +21,5 @@ hazma.egg-info
 *.spl
 manual/_minted-hazma_manual/*
 manual/*.pdf
+.vscode
+.pypirc
