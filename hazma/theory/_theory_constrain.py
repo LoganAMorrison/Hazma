@@ -43,7 +43,7 @@ class TheoryConstrain(object):
                 self.__dict__.update(param_grid[i, j].__dict__)
 
                 # Compute all constraints at this point in parameter space
-                for cn, fn in constraints.iteritems():
+                for cn, fn in constraints.items():
                     imgs[cn][i, j] = fn()
 
         if ls_or_img == "image":
@@ -100,7 +100,7 @@ class TheoryConstrain(object):
                 setattr(self, p2, p2_val)
 
                 # Compute all constraints at this point in parameter space
-                for cn, fn in constraints.iteritems():
+                for cn, fn in constraints.items():
                     imgs[cn][idx_p2[0], idx_p1[0]] = fn()
 
         if ls_or_img == "image":
@@ -140,7 +140,7 @@ class TheoryConstrain(object):
         # Compute Phi/<sigma v> in each bin for each final state
         fs_bin_fluxes = {fs: get_bin_fluxes(spec_fn, lambda e_cm: {})
                          for fs, spec_fn in
-                         self.spectrum_functions().iteritems()
+                         self.spectrum_functions().items()
                          if fs != "total"}
         # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn
         #                    in self.gamma_ray_lines(cme) if fs != "total"}
@@ -152,8 +152,9 @@ class TheoryConstrain(object):
             # Compute cross sections
             css = self.annihilation_cross_sections(e_cm)
             # Get fluxes by multiplying <sigma v>
-            bin_fluxes = np.array([bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
-                                   for fs, bf in fs_bin_fluxes.iteritems()])
+            bin_fluxes = np.array([bf * css[fs] * vx *
+                                   sv_inv_MeV_to_cm3_per_s
+                                   for fs, bf in fs_bin_fluxes.items()])
 
             return np.min(measurement.fluxes +
                           n_sigma * measurement.upper_errors -

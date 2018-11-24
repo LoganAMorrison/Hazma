@@ -101,7 +101,7 @@ class TheoryGammaRayLimits(object):
 
         # Line contribution
         dnde_line_det = np.zeros(e_gams.shape)
-        for ch, line in self.gamma_ray_lines(e_cm).iteritems():
+        for ch, line in self.gamma_ray_lines(e_cm).items():
             dnde_line_det += (line["bf"] *
                               self._spec_res_fn(e_gams,
                                                 line["energy"],

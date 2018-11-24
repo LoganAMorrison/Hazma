@@ -124,7 +124,7 @@ class TheoryCMB(object):
 
         f_eff_line_dm = 0.
 
-        for ch, line in lines.iteritems():
+        for ch, line in lines.items():
             energy = line["energy"]
 
             # Make sure the base f_eff is defined at this energy

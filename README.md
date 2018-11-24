@@ -25,3 +25,15 @@ or
     python setup.py install
 
 Since `hazma` utilizes C to rapidly compute gamma ray and electron/positron spectra, you will need to have the cython package installed.
+
+Another way to run `hazma` is by using **docker**. If you have docker installed on your machine, clone the `hazma` repository and in the `hazma` directory, run:
+
+    docker build --rm -t jupyter/hazma .
+
+This will build the docker image and will call it *jupyter/hazma*. Then to start a jupyter notebook, run:
+    
+    docker run -it -p 8888:8888 -v /path/to/hazma/tutorials:/home/jovyan/work --rm --name jupyter jupyter/hazma
+
+This will start a jupyter kernal. 
+
+
