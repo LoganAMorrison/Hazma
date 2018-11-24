@@ -27,7 +27,7 @@ jobs:
           paths: dist
 
   build-3.6:
-      <<: *build_template
+    <<: *build_template
     docker:
       - image: circleci/python:3.6
         user: root
