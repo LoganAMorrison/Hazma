@@ -45,7 +45,7 @@ build:
 
 test:
   commands:
-    - $<RUN_ENV> python setup.py tests
+    - $<RUN_ENV> python setup.py test
 
   circleci:
     commands:
