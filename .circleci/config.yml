@@ -48,3 +48,18 @@ jobs:
     docker:
       - image: circleci/python:3.6
         user: root
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build-2.7: &build_job_template
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*/
+      - build-3.4:
+          <<: *build_job_template
+      - build-3.5:
+          <<: *build_job_template
+      - build-3.6:
+          <<: *build_job_template
