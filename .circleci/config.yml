@@ -24,7 +24,7 @@ jobs:
       - run:
           name: Build Distribution
           command: |
-            cibuildwheel --output-dir dist
+            venv/bin/cibuildwheel --output-dir dist
       - persist_to_workspace:
           root: .
           paths: dist
