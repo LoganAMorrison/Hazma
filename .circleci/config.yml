@@ -26,6 +26,7 @@ jobs:
       - run:
           name: Build Distribution
           command: |
+            chmod u+x .circleci/prepare_cibw.sh
             venv/bin/cibuildwheel --output-dir dist
       - persist_to_workspace:
           root: .
