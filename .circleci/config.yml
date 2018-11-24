@@ -23,7 +23,9 @@ jobs:
             venv/bin/python setup.py test
       - run:
           name: Build Distribution
-          command: venv/bin/python setup.py bdist_wheel
+          command: |
+            venv/bin/python -m pip install --user cibuildwheel
+            cibuildwheel --output-dir dist
       - persist_to_workspace:
           root: .
           paths: dist
