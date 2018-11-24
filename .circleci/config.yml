@@ -4,6 +4,7 @@ jobs:
   linux-python2:
     docker:
       - image: circleci/python:2.7
+        user: root
     environment:
       PYTHON: python2
     steps:
@@ -21,6 +22,7 @@ jobs:
   linux-python3:
     docker:
       - image: circleci/python:3.6
+        user: root
     environment:
       PYTHON: python3
     steps:
