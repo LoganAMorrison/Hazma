@@ -19,6 +19,7 @@ hazma.egg-info
 *.pdf\*
 *.synctex.gz
 *.spl
+.travis
 manual/_minted-hazma_manual/*
 manual/*.pdf
 <<<<<<< HEAD

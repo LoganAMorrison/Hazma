@@ -1,68 +1,35 @@
-language: python
+language: generic
 
 matrix:
   include:
 
-    - os: linux
-      python: 2.7
-
-    - os: linux
-      python: 3.4
-
-    - os: linux
-      python: 3.5
-
-    - os: linux
-      python: 3.6
-
+    # macOS Python 2
     - os: osx
-      language: generic
       env:
-        - PYTHON_VERSION=2.7.12
-        - PYTHON_SHORT_VERSION=2.7
+          PYTHON=python2
+          PIP=pip2
 
+    # macOS Python 3
     - os: osx
-      language: generic
       env:
-        - PYTHON_VERSION=3.4.8
-        - PYTHON_SHORT_VERSION=3.4
-
-    - os: osx
-      language: generic
-      env:
-        - PYTHON_VERSION=3.5.5
-        - PYTHON_SHORT_VERSION=3.5
-
-    - os: osx
-      language: generic
-      env:
-        - PYTHON_VERSION=3.6.5
-        - PYTHON_SHORT_VERSION=3.6
-
-cache:
-  directories:
-    - $HOME/.pyenv/versions/3.6.5
-    - $HOME/.pyenv/versions/3.5.5
-    - $HOME/.pyenv/versions/3.4.8
-    - $HOME/.pyenv/versions/2.7.12
-    - $HOME/downloads
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir $HOME/bin; ln -s $(which pip2) $HOME/bin/pip; fi
-  - pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
-  - ci_addons --install ../addons
+          PYTHON=python3
+          PIP=pip2
+      before_install:
+        - brew update
+        - brew cask uninstall oclint # Workaround for upgrading gcc, see https://github.com/travis-ci/travis-ci/issues/8826
+        - brew outdated python || brew upgrade python
 
 install:
-  - ci install
+    $PYTHON -m pip install -r requirements.txt
 
 script:
-  - ci test
+    $PYTHON setup.py test
 
 after_success:
-  - ci after_test
+    $PYTHON setup.py bdist_wheel
 
 before_deploy:
-  - sudo pip install twine  # Twine installation requires sudo to get access to /usr/local/man
+    $PYTHON -m pip install twine
 
 deploy:
   - provider: script
