@@ -4,3 +4,4 @@ There are a bunch of cases of `dict.iteritems` in hazma. `iteritems` was removed
 - `hazma.theory._theory_cmb.py` (ln 127)
 - `hazma.theory._theory_constrain.py` (lns 46, 103, 143, 157)
 - `hazma.theory._theory_gamma_ray_limits.py` (ln 104)
+- `scalar_mediator._scalar_mediator_contraints.py` (ln 245)

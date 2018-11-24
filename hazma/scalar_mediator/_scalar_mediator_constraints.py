@@ -242,7 +242,7 @@ class ScalarMediatorConstraints:
                            (1. - np.exp(-L * width_s / gamma_beta)))
 
         # Probability that S decays into a visible final state
-        br_visible = np.sum([bf for fs, bf in self.partial_widths().iteritems()
+        br_visible = np.sum([bf for fs, bf in self.partial_widths().items()
                              if fs in bd_params.visible_fss]) / width_s
 
         # Number of expected events
