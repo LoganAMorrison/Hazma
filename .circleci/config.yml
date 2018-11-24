@@ -1,16 +1,16 @@
 version: 2
 
 jobs:
-  linux-python2:
+  build-2.7: &build_template
     docker:
       - image: circleci/python:2.7
         user: root
-    environment:
-      PYTHON: python2
     steps:
       - checkout
       - setup_remote_docker
 
+      - attach_workspace:
+          at: /hazma
       - run:
           name: Prepare the environment.
           command: |
@@ -19,27 +19,22 @@ jobs:
           name: Test.
           command: |
             venv/bin/python setup.py test
-  linux-python3:
+      - run:
+          name: Build Distribution
+          command: venv/bin/python setup.py bdist_wheel
+      - persist_to_workspace:
+          root: .
+          paths: dist
+
+  build-3.6:
+      <<: *build_template
     docker:
       - image: circleci/python:3.6
         user: root
-    environment:
-      PYTHON: python3
-    steps:
-      - checkout
-      - setup_remote_docker
 
-      - run:
-          name: Prepare the environment.
-          command: |
-            bash .circleci/prepare.sh
-      - run:
-          name: Test.
-          command: |
-            venv/bin/python setup.py test
 workflows:
   version: 2
   all-tests:
     jobs:
-      - linux-python2
-      - linux-python3
+      - build-2.7
+      - build-3.6

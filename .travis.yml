@@ -8,6 +8,10 @@ matrix:
       env:
           PYTHON=python2
           PIP=pip2
+      before_install:
+        - brew update
+        # - brew cask uninstall oclint # Workaround for upgrading gcc, see https://github.com/travis-ci/travis-ci/issues/8826
+        - brew outdated python || brew upgrade python
 
     # macOS Python 3
     - os: osx
@@ -16,7 +20,7 @@ matrix:
           PIP=pip2
       before_install:
         - brew update
-        - brew cask uninstall oclint # Workaround for upgrading gcc, see https://github.com/travis-ci/travis-ci/issues/8826
+        # - brew cask uninstall oclint # Workaround for upgrading gcc, see https://github.com/travis-ci/travis-ci/issues/8826
         - brew outdated python || brew upgrade python
 
 install:
