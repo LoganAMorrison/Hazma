@@ -8,4 +8,4 @@ There are a bunch of cases of `dict.iteritems` in hazma. `iteritems` was removed
 
 November 27th (Logan)
 ---------------------
-Adding unittest to test functions 
+Adding test classes. First bug with vector mediator spectrum when the vector has zero decay width (ln 77) in `hazma._vector_mediator_spectra.py`.

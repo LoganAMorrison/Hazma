@@ -74,6 +74,12 @@ class VectorMediatorSpectra:
         pws = self.partial_widths()
         pw_array = np.zeros(5, dtype=float)
 
+        # Check is the decay width of the vector is zero.
+        if (pws['total'] == 0.):
+            if hasattr(e_gams, "__len__"):
+                return np.array([0.0] * len(e_gams))
+            return 0.0
+
         pw_array[0] = pws["e e"] / pws["total"]
         pw_array[1] = pws["mu mu"] / pws["total"]
         pw_array[2] = pws["pi0 g"] / pws["total"]
