@@ -11,10 +11,6 @@ from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
 
-import warnings
-from hazma.hazma_errors import PreAlphaWarning
-
-
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
 class VectorMediator(VectorMediatorCrossSections,
