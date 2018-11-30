@@ -1,6 +1,6 @@
 {\color{red} Should we have boxes for different functions and constructors specifying type signatures? Should that be left for the actual docs in the code? Seems like it, based on other publications in this journal?}
 
-Instances of the \theory\ class represent dark matter models, and are the main objects used to perform analyses in Hazma. Two \theory\s, each containing a DM and mediator particle, come built into \hazma. The Lagrangians defining these theories and the domains of validity are described in the following subsection. \theory\ possesses methods to compute quantities such as DM annihilation cross sections, gamma ray spectra and constraints, and CMB constraints. This section catalogues the definitions of these quantities used by \hazma\ along with minimal examples of how to use the associated methods.
+Instances of the \theory\ class represent dark matter models, and are the main objects used to perform analyses in Hazma. Two \theory\'s, each containing a DM and mediator particle, come built into \hazma. The Lagrangians defining these theories and the domains of validity are described in the following subsection. \theory\ possesses methods to compute quantities such as DM annihilation cross sections, gamma ray spectra and constraints, and CMB constraints. This section catalogues the definitions of these quantities used by \hazma\ along with minimal examples of how to use the associated methods.
 
 \subsection{Built-in Theories}%
 \label{sub:built_in_theories}
@@ -14,9 +14,9 @@ Each of the models that ship with \hazma\ contain two BSM particles:
 \end{itemize}
 The Lagrangians can be expressed as
 \begin{align}
-    \L &= \L_\u{SM} + \L_\u{DM} + \L_\u{M} + \L_{\u{Int}(M)},
+    \L & = \L_\u{SM} + \L_\u{DM} + \L_\u{M} + \L_{\u{Int}(M)},
 \end{align}
-which consists of the SM Lagrangian, the free Lagrangians for the mediator and DM, and the mediator's interactions with the DM and SM fields. Both the dark matter and the mediator are taken to be uncharged under the Standard Model gauge group. The Lagrangian is defined in terms of the microscopic degrees of freedom of the Standard Model (quarks, leptons and gauge bosons). However, at the energy scale of interest for self-annihilations of nonrelativistic MeV dark matter, quarks and gluons are not the corrent strongly-interacting degrees of freedom. Instead, the microscopic Lagrangian must be matched onto the effective Lagrangian for pions and other mesons using the techniques of chiral perturbation theory (chPT). The models currently implemented in \hazma\ utilize leading-order chPT. 
+which consists of the SM Lagrangian, the free Lagrangians for the mediator and DM, and the mediator's interactions with the DM and SM fields. Both the dark matter and the mediator are taken to be uncharged under the Standard Model gauge group. The Lagrangian is defined in terms of the microscopic degrees of freedom of the Standard Model (quarks, leptons and gauge bosons). However, at the energy scale of interest for self-annihilations of nonrelativistic MeV dark matter, quarks and gluons are not the corrent strongly-interacting degrees of freedom. Instead, the microscopic Lagrangian must be matched onto the effective Lagrangian for pions and other mesons using the techniques of chiral perturbation theory (chPT). The models currently implemented in \hazma\ utilize leading-order chPT.
 
 \begin{figure}
     \centering
@@ -28,9 +28,9 @@ which consists of the SM Lagrangian, the free Lagrangians for the mediator and D
 As with an effective field theory (EFT), chPT has a limited range of validity. Observables in chPT are computed in terms of an expansion in a small parameter, the meson momentum $p$ divided by the mass scale $\Lambda_\u{ChPT} \sim 4 \pi f_\pi \sim 1\us{GeV}$, where $f_\pi$ is the pion decay constant. As $p^2 \to \Lambda_\u{ChPT}$, higher-order Feynman diagrams in the chPT expansion provide contributions to observables comparable to leading order ones. This suggests that leading-order chPT cannot be trusted for computing dark matter self-annihilation cross sections when $m_\u{DM} \gtrsim 500\us{GeV}$. In fact, the convergence of the chPT expansion is disrupted at a lower mass scale by the lowest-lying hadronic resonances, the $\rho$ ($m_\rho = 770\us{GeV}$) and the $f_0(500)$ ($m_{f_0(500)} \sim 450\us{MeV}$). Figure~\ref{fig:chpt_validity} illustrates the resulting regions where the leading-order chPT calculations can and cannot be trusted in the $(m_\u{DM}, m_\u{mediator})$ plane. An important consequence is that annihilation into kaons and heavier mesons can be ignored since that would require DM masses far above the chPT range of validity. This is important to keep in mind when using the models provided with \hazma.\footnote{Of course, user-defined models (see Section~\ref{sec:advanced_usage}) need not use leading-order chPT.}
 
 While the preceding discussion applies irrespective of the mediator and DM spin and quantum numbers, the rest of this subsection specializes to the two models that come with \hazma: \sm, which contains a real scalar mediator $S$ and \vm, where the mediator is a vector $V$.
- In both cases the DM is taken to be a Dirac fermion, so that
+In both cases the DM is taken to be a Dirac fermion, so that
 \begin{align}
-    \L &= \bar{\chi} (i \slashed \d - m_\chi) \chi.
+    \L & = \bar{\chi} (i \slashed \d - m_\chi) \chi.
 \end{align}
 The rest of this subsection presents $\L_{\u{Int}(S)}$ and $\L_{\u{Int}(V)}$ at the level of quarks and gluons as well as the Lagrangians obtained by performing the chPT matching. Snippets are provided to demonstrate how to construct each \theory\ and change its parameters. The interaction Lagrangians, matching procedure and a brief overview of the chiral Lagrangian are explained in detail in a companion paper~\cite{matching_paper}.
 
@@ -38,23 +38,23 @@ The rest of this subsection presents $\L_{\u{Int}(S)}$ and $\L_{\u{Int}(V)}$ at 
 
 The free Lagrangian for a real scalar is
 \begin{align}
-    \L_S &= \frac{1}{2} (\d_\mu S) (\d^\mu S) - \frac{1}{2} m_S^2 S^2,
+    \L_S & = \frac{1}{2} (\d_\mu S) (\d^\mu S) - \frac{1}{2} m_S^2 S^2,
 \end{align}
 where $m_S$ is the scalar's mass. The interactions with the light fundamental SM degrees of freedom
 \begin{align}
-    \L_{\u{Int}(S)} &= -S \left( g_{S\chi} + g_{Sf} \sum_f \frac{y_f}{\sqrt{2}} \bar{f} f \right)\\
-                    &\hspace{2cm} + \frac{S}{\Lambda} \left( g_{SF} \frac{\alpha_\u{EM}}{4\pi} F_{\mu\nu} F^{\mu\nu} + g_{SG} \frac{\alpha_s}{4\pi} G_{\mu\nu}^a G^{a \mu\nu} \right).
+    \L_{\u{Int}(S)} & = -S \left( g_{S\chi} + g_{Sf} \sum_f \frac{y_f}{\sqrt{2}} \bar{f} f \right)                                                                                      \\
+                    & \hspace{2cm} + \frac{S}{\Lambda} \left( g_{SF} \frac{\alpha_\u{EM}}{4\pi} F_{\mu\nu} F^{\mu\nu} + g_{SG} \frac{\alpha_s}{4\pi} G_{\mu\nu}^a G^{a \mu\nu} \right).
 \end{align}
 The sum runs over fermions with mass below the GeV scale ($f = e, \mu, u, d, s$). Note that the coupling $g_{Sf}$ is outside the sum. The Yukawas are defined to be $y_f = \sqrt{2} m_f / v_h$, with the Higgs vacuum expectation value (vev) defined as $v_h = 246\us{GeV}$. The parameter $\Lambda$ is the mass scale at which $S$ acquires (non-renormalizable) interactions with the photon and gluon.
 
 After performing the matching onto the chiral Lagrangian and expanding to leading order in the pion fields, the resulting interaction Lagrangian is
 \begin{align}
-    \L_{\mathrm{Int}(S)} &= \frac{2 g_{SG}}{9 \Lambda} S \left[ (\d_\mu \pi^0) (\d^\mu \pi^0) + 2 (\d_\mu \pi^+) (\d^\mu \pi^-) \right]\\
-                         &\hspace{1cm} + \frac{4 i e g_{SG}}{9 \Lambda} S A^\mu \left[ \pi^- (\d_\mu \pi^+) - \pi^+ (\d_\mu \pi^-) \right]\\
-                         &\hspace{1cm} - \frac{B (m_u + m_d)}{6} \left( \frac{3 g_{Sf}}{v_h} + \frac{2 g_{SG}}{3 \Lambda} \right) S \left[ (\pi^0)^2 + 2 \pi^+ \pi^- \right]\\
-                         &\hspace{1cm} + \frac{B (m_u + m_d) g_{SG}}{81 \Lambda} \left( \frac{2 g_{SG}}{\Lambda} - \frac{9 g_{Sf}}{v_h} \right) S^2 \left[ (\pi^0)^2 + 2 \pi^+ \pi^- \right]\\
-                         &\hspace{1cm} + \frac{4 e^2 g_{SG}}{9\Lambda} S \pi^+ \pi^- A_\mu A^\mu\\
-                         &\hspace{1cm} - g_{S \chi} S \bar{\chi} \chi - g_{Sf} S \sum_{\ell=e,\mu} \frac{y_\ell}{\sqrt{2}} \bar{\ell} \ell + \frac{\alpha_s}{4\pi \Lambda} g_{SG} S G_{\mu\nu}^a G^{a \mu\nu}.
+    \L_{\mathrm{Int}(S)} & = \frac{2 g_{SG}}{9 \Lambda} S \left[ (\d_\mu \pi^0) (\d^\mu \pi^0) + 2 (\d_\mu \pi^+) (\d^\mu \pi^-) \right]                                                                        \\
+                         & \hspace{1cm} + \frac{4 i e g_{SG}}{9 \Lambda} S A^\mu \left[ \pi^- (\d_\mu \pi^+) - \pi^+ (\d_\mu \pi^-) \right]                                                                     \\
+                         & \hspace{1cm} - \frac{B (m_u + m_d)}{6} \left( \frac{3 g_{Sf}}{v_h} + \frac{2 g_{SG}}{3 \Lambda} \right) S \left[ (\pi^0)^2 + 2 \pi^+ \pi^- \right]                                   \\
+                         & \hspace{1cm} + \frac{B (m_u + m_d) g_{SG}}{81 \Lambda} \left( \frac{2 g_{SG}}{\Lambda} - \frac{9 g_{Sf}}{v_h} \right) S^2 \left[ (\pi^0)^2 + 2 \pi^+ \pi^- \right]                   \\
+                         & \hspace{1cm} + \frac{4 e^2 g_{SG}}{9\Lambda} S \pi^+ \pi^- A_\mu A^\mu                                                                                                               \\
+                         & \hspace{1cm} - g_{S \chi} S \bar{\chi} \chi - g_{Sf} S \sum_{\ell=e,\mu} \frac{y_\ell}{\sqrt{2}} \bar{\ell} \ell + \frac{\alpha_s}{4\pi \Lambda} g_{SG} S G_{\mu\nu}^a G^{a \mu\nu}.
 \end{align}
 
 The parameters for the scalar model are attributes of the \sm\ class. Their names in \hazma\ are
@@ -63,14 +63,14 @@ The parameters for the scalar model are attributes of the \sm\ class. Their name
 \end{align*}
 The following snippet shows how to instantiate \sm, change the value of a parameter, and print its new value:
 \begin{minted}[bgcolor=bg]{python}
->>> from hazma.scalar_mediator import ScalarMediator
->>> sm = ScalarMediator(mx=150., ms=1e3, gsxx=1., gsff=0.1,
-...                     gsGG=0.1, gsFF=0.1, lam=2e5)
->>> print(sm.gsff)
-0.1
->>> sm.gsff = 0.5
->>> print(sm.gsff)
-0.5
+    >>> from hazma.scalar_mediator import ScalarMediator
+    >>> sm = ScalarMediator(mx=150., ms=1e3, gsxx=1., gsff=0.1,
+    ...                     gsGG=0.1, gsFF=0.1, lam=2e5)
+    >>> print(sm.gsff)
+    0.1
+    >>> sm.gsff = 0.5
+    >>> print(sm.gsff)
+    0.5
 \end{minted}
 
 {\color{red} Talk about Higgs portal and heavy fermion subclasses!}
@@ -79,11 +79,11 @@ The following snippet shows how to instantiate \sm, change the value of a parame
 
 For the vector mediator the free part of the Lagrangian is
 \begin{align}
-    \L_V &= -\frac{1}{4} V_{\mu\nu} V^{\mu\nu} + \frac{1}{2} m_V^2 V_\mu V^\mu,
+    \L_V & = -\frac{1}{4} V_{\mu\nu} V^{\mu\nu} + \frac{1}{2} m_V^2 V_\mu V^\mu,
 \end{align}
 where $m_V$ is the mass of the vector. The interactions considered are
 \begin{align}
-    \L_{\u{Int}(V)} &= V_\mu \left( g_{V\chi} \bar{\chi} \gamma^\mu \chi + \sum_f g_{Vf} \bar{f} \gamma^\mu f \right) - \frac{\epsilon}{2} V^{\mu\nu} F_{\mu\nu}.
+    \L_{\u{Int}(V)} & = V_\mu \left( g_{V\chi} \bar{\chi} \gamma^\mu \chi + \sum_f g_{Vf} \bar{f} \gamma^\mu f \right) - \frac{\epsilon}{2} V^{\mu\nu} F_{\mu\nu}.
 \end{align}
 The sum again runs over the light fermions ($f = e, \mu, u, d, s$), and $V$ may have different couplings to each of these. The last term is a kinetic mixing between the photon and $V$, which can be eliminated by transforming the photon $A_\mu \to A_\mu - \epsilon V_\mu$. Upon this field redefinition $V$ acquires an $\epsilon$-suppressed interaction with the SM fermions, which is captured by changing the fermion couplings
 \begin{align}
@@ -93,32 +93,32 @@ where $Q_f$ is the electric charge of the fermion $f$ and $e > 0$ is the electro
 
 Matching onto the chiral Lagrangian and isolating the terms contributing at leading order to the quantities computed in \hazma\ gives
 \begin{align}
-    \L_{\mathrm{Int}(V)} &= -i (g_{Vu} - g_{Vd}) V^\mu \left( \pi^+ \d_\mu \pi^- - \pi^- \d_\mu \pi^+ \right)\\
-                         &\hspace{1cm} + ( g_{Vu} - g_{Vd} )^2 V_\mu V^\mu \pi^+ \pi^-\\
-                         &\hspace{1cm} + 2 e (Q_u - Q_d) (g_{Vu} - g_{Vd}) A_\mu V^\mu \pi^+ \pi^-\\
-                         &\hspace{1cm} + \frac{1}{8\pi^2 f_\pi} \epsilon^{\mu\nu\rho\sigma} (\d_\mu \pi^0)\\
-                         &\hspace{2cm} \times \left\{ e (2 g_{Vu} + g_{Vd}) \left[ (\d_\nu A_\rho) V_\sigma + (\d_\nu V_\rho) A_\sigma \right] \right.\\
-                         &\hspace{4cm} \left. + 3 (g_{Vu}^2 - g_{Vd}^2) (\d_\nu V_\rho) V_\sigma \right\}.
-\end{align} 
+    \L_{\mathrm{Int}(V)} & = -i (g_{Vu} - g_{Vd}) V^\mu \left( \pi^+ \d_\mu \pi^- - \pi^- \d_\mu \pi^+ \right)                                          \\
+                         & \hspace{1cm} + ( g_{Vu} - g_{Vd} )^2 V_\mu V^\mu \pi^+ \pi^-                                                                 \\
+                         & \hspace{1cm} + 2 e (Q_u - Q_d) (g_{Vu} - g_{Vd}) A_\mu V^\mu \pi^+ \pi^-                                                     \\
+                         & \hspace{1cm} + \frac{1}{8\pi^2 f_\pi} \epsilon^{\mu\nu\rho\sigma} (\d_\mu \pi^0)                                             \\
+                         & \hspace{2cm} \times \left\{ e (2 g_{Vu} + g_{Vd}) \left[ (\d_\nu A_\rho) V_\sigma + (\d_\nu V_\rho) A_\sigma \right] \right. \\
+                         & \hspace{4cm} \left. + 3 (g_{Vu}^2 - g_{Vd}^2) (\d_\nu V_\rho) V_\sigma \right\}.
+\end{align}
 
 The correspondence between the microscopic parameters for the vector model and attributes of the base \vm\ class is\footnote{Note that $\mil{gvss}$ is not currently used since \vm\ is based on leading-order chPT.}
 \begin{align*}
-    &(m_\chi, m_V, g_{V\chi}, g_{Vu}, g_{Vd}, g_{Vs}, g_{Ve}, g_{V\mu})\\
-    &\hspace{1cm} \leftrightarrow (\mil{mx}, \mil{mv}, \mil{gvxx}, \mil{gvuu}, \mil{gvdd}, \mil{gvss}, \mil{gvee}, \mil{gvmumu}).
+      & (m_\chi, m_V, g_{V\chi}, g_{Vu}, g_{Vd}, g_{Vs}, g_{Ve}, g_{V\mu})                                                           \\
+      & \hspace{1cm} \leftrightarrow (\mil{mx}, \mil{mv}, \mil{gvxx}, \mil{gvuu}, \mil{gvdd}, \mil{gvss}, \mil{gvee}, \mil{gvmumu}).
 \end{align*}
 The following snippet shows how to instantiate and alter the parameter values for \vm:
 \begin{minted}[bgcolor=bg]{python}
->>> from hazma.vector_mediator import VectorMediator
->>> vm = VectorMediator(mx=150., mv=1e3, gvxx=1., gvuu=0.1,
-...                     gvdd=0.2, gvss=0.3, gvee=0.4,
-...                     gvmumu=0.5)
->>> print(vm.gvee)
-0.4
->>> print(vm.gvuu)
-0.1
->>> vm.gvuu = 0.05
->>> print(vm.gvuu)
-0.05
+    >>> from hazma.vector_mediator import VectorMediator
+    >>> vm = VectorMediator(mx=150., mv=1e3, gvxx=1., gvuu=0.1,
+    ...                     gvdd=0.2, gvss=0.3, gvee=0.4,
+    ...                     gvmumu=0.5)
+    >>> print(vm.gvee)
+    0.4
+    >>> print(vm.gvuu)
+    0.1
+    >>> vm.gvuu = 0.05
+    >>> print(vm.gvuu)
+    0.05
 \end{minted}
 
 For convenience, a subclass called \mil{KineticMixing} is also provided to handle the important case where $V$ couples to the SM purely through the kinetic mixing term ($\epsilon \neq 0$, $g_{Vf} = 0$ for all $f$). The parameters for this subclass are
@@ -127,14 +127,14 @@ For convenience, a subclass called \mil{KineticMixing} is also provided to handl
 \end{align*}
 While the underlying parameters \mil{gvuu}, \dots, \mil{gvmumu} can be accessed by instances of \mil{KineticMixing}, they cannot be set directly since they are fully determined by \mil{eps}:
 \begin{minted}[bgcolor=bg]{python}
->>> from hazma.vector_mediator import KineticMixing
->>> km = KineticMixing(mx=150., mv=1e3, gvxx=1., eps=0.1)
->>> km.eps
-0.1
->>> km.gvuu
--0.020187846690459792  # = -0.1 * 2/3 * sqrt(4 pi / 137)
->>> km.gvuu = 0.1
-AttributeError: Cannot set gvuu
+    >>> from hazma.vector_mediator import KineticMixing
+    >>> km = KineticMixing(mx=150., mv=1e3, gvxx=1., eps=0.1)
+    >>> km.eps
+    0.1
+    >>> km.gvuu
+    -0.020187846690459792  # = -0.1 * 2/3 * sqrt(4 pi / 137)
+    >>> km.gvuu = 0.1
+    AttributeError: Cannot set gvuu
 \end{minted}
 
 \subsection{Cross section, decay widths and branching fractions}
@@ -143,12 +143,12 @@ Instances of \mil{theory} provide the following four methods for computing parti
 
 \subsubsection{\mil{Theory.list_annihilation_final_states()}}
 
-Lists the final states into which the DM can potentially annihilate. These are based on the terms appearing in $\L_{\u{Int}(M)}$. Note that the actual branching fractions into a given final state may be zero if the relevant couplings are zero or the center of mass energy for the annihilation is smaller than the sum of the final state particles' masses. 
+Lists the final states into which the DM can potentially annihilate. These are based on the terms appearing in $\L_{\u{Int}(M)}$. Note that the actual branching fractions into a given final state may be zero if the relevant couplings are zero or the center of mass energy for the annihilation is smaller than the sum of the final state particles' masses.
 \begin{minted}[bgcolor=bg]{python}
->>> ScalarMediator.list_annihilation_final_states()
-['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
->>> VectorMediator.list_annihilation_final_states()
-['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
+    >>> ScalarMediator.list_annihilation_final_states()
+    ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
+    >>> VectorMediator.list_annihilation_final_states()
+    ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
 \end{minted}
 {\color{red} This is not quite right. For example, it excludes the final states $e^+ e^- \gamma$, $S \pi^0 \pi^0$, $\pi^+ \pi^- \gamma \gamma$ for the scalar and $V \pi^0$ for the vector. While that's fine since those final states are so suppressed, the wording here needs to be precise.}
 
@@ -158,54 +158,54 @@ For an instance \mil{th} of \mil{theory} and a center of mass energy \mil{e_cm},
 
 In the following example, the DM is lighter than the mediator, but the center of mass energy is large enough to permit annihilations into the mediator:
 \begin{minted}[bgcolor=bg]{python}
->>> sm = ScalarMediator(mx=180., ms=190., gsxx=1., gsff=0.1,
-...                     gsGG=0.1, gsFF=0.1, lam=2e5)
->>> xsecs = sm.annihilation_cross_sections(400.)
->>> print(xsecs)
-{'g g': 5.668702951121324e-32,
- 'e e': 4.525214520210817e-32,
- 'pi0 pi0': 1.8542010286144253e-27,
- 'total': 4.1600065791804136e-18,
- 's s': 4.160006572615015e-18,
- 'mu mu': 1.1842156064646993e-27,
- 'pi pi': 3.526880321768581e-27}
+    >>> sm = ScalarMediator(mx=180., ms=190., gsxx=1., gsff=0.1,
+    ...                     gsGG=0.1, gsFF=0.1, lam=2e5)
+    >>> xsecs = sm.annihilation_cross_sections(400.)
+    >>> print(xsecs)
+    {'g g': 5.668702951121324e-32,
+            'e e': 4.525214520210817e-32,
+            'pi0 pi0': 1.8542010286144253e-27,
+            'total': 4.1600065791804136e-18,
+            's s': 4.160006572615015e-18,
+            'mu mu': 1.1842156064646993e-27,
+            'pi pi': 3.526880321768581e-27}
 \end{minted}
 
-\subsubsection{\mil{Theory.annihilation_branching_fractions(e_cm)}} 
+\subsubsection{\mil{Theory.annihilation_branching_fractions(e_cm)}}
 
 For an instance \mil{th} of \mil{theory} and a center of mass energy \mil{e_cm}, this returns a \mil{dict} whose keys are the elements of \mil{th.list_annihilation_final_states()} and whose values are the corresponding branching fractions for annihilating into those states.
 \begin{minted}[bgcolor=bg]{python}
->>> km = KineticMixing(mx=170., mv=1e3, gvxx=1., eps=0.2)
->>> bfs = km.annihilation_branching_fractions(400.)
->>> print(bfs)
-{'pi0 g': 1.5585058782195258e-05,
- 'e e': 0.4855695299567697,
- 'mu mu': 0.4698109970123726,
- 'v v': 0.0,
- 'pi pi': 0.04460388797207543}
+    >>> km = KineticMixing(mx=170., mv=1e3, gvxx=1., eps=0.2)
+    >>> bfs = km.annihilation_branching_fractions(400.)
+    >>> print(bfs)
+    {'pi0 g': 1.5585058782195258e-05,
+            'e e': 0.4855695299567697,
+            'mu mu': 0.4698109970123726,
+            'v v': 0.0,
+            'pi pi': 0.04460388797207543}
 \end{minted}
 
 \subsubsection{\mil{Theory.partial_widths()}}
 
 Returns a \mil{dict} whose keys are states into which the mediator can decay and whose values are the corresponding decay widths.
 \begin{minted}[bgcolor=bg]{python}
->>> vm = VectorMediator(mx=100, mv=300, gvxx=0.5, gvuu=0.3,
-...                     gvdd=0.2, gvss=0.0, gvee=0, gvmumu=0.1)
->>> widths = vm.partial_widths()
->>> print(widths)
-{'x x': 5.437074984436769,
- 'e e': 0.0,
- 'pi0 g': 0.00021474193246750537,
- 'total': 5.651719337662487,
- 'mu mu': 0.2114945066034031,
- 'pi pi': 0.002935104689847661}
+    >>> vm = VectorMediator(mx=100, mv=300, gvxx=0.5, gvuu=0.3,
+    ...                     gvdd=0.2, gvss=0.0, gvee=0, gvmumu=0.1)
+    >>> widths = vm.partial_widths()
+    >>> print(widths)
+    {'x x': 5.437074984436769,
+            'e e': 0.0,
+            'pi0 g': 0.00021474193246750537,
+            'total': 5.651719337662487,
+            'mu mu': 0.2114945066034031,
+            'pi pi': 0.002935104689847661}
 \end{minted}
 
 \subsection{Gamma ray and positron spectra}
 
 The gamma ray spectrum for DM annihilation consists of three pieces:
 \begin{align}
-    \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi} &= \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{line}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{FSR}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{dec}}.
+    \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi} & = \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{line}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{FSR}} + \left. \frac{dN}{dE_\gamma} \right|_{\bar{\chi}\chi,\u{dec}}.
 \end{align}
 The first term is a linear combination of delta functions coming from final states with a monochromatic gamma ray. The second is the contribution from final state radiation (FSR) off of electromagnetically charged final state particles. Photons produced in radiative decays of final state particles are accounted for by the third term. Our other companion paper~\cite{spectrum_paper} explains in detail how to calculate these terms. This section describes the methods in \mil{theory} that can compute different contributions to the gamma ray spectrum.
 
@@ -213,17 +213,17 @@ The first term is a linear combination of delta functions coming from final stat
 
 \subsubsection{\mil{Theory.gamma_ray_lines(e_cm)}}
 
-Returns information about monochromatic gamma-ray lines produced in dark matter annihilations. The return value is a \mil{dict} whose keys are the final states producing gamma-ray lines. The values in this \mil{dict} are the energy of the line and branching fraction for annihilation into the line. 
+Returns information about monochromatic gamma-ray lines produced in dark matter annihilations. The return value is a \mil{dict} whose keys are the final states producing gamma-ray lines. The values in this \mil{dict} are the energy of the line and branching fraction for annihilation into the line.
 
 \begin{minted}[bgcolor=bg]{python}
->>> vm = QuarksOnly(mx=120., mv=1e3, gvxx=1., gvuu=0.1, gvdd=0.1,
-                    gvss=0.)
->>> vm.gamma_ray_lines(e_cm=300.)
-{'pi0 g': {'energy': 119.6, 'bf': 1.0}}
->>> sm = HeavyQuark(mx=120., ms=1e3, gsxx=1., gsQ=0.1, mQ=1e3,
-                    QQ=0.1)
->>> sm.gamma_ray_lines(e_cm=300.)
-{'g g': {'energy': 150.0, 'bf': 1.286e-08}}
+    >>> vm = QuarksOnly(mx=120., mv=1e3, gvxx=1., gvuu=0.1, gvdd=0.1,
+    gvss=0.)
+    >>> vm.gamma_ray_lines(e_cm=300.)
+    {'pi0 g': {'energy': 119.6, 'bf': 1.0}}
+    >>> sm = HeavyQuark(mx=120., ms=1e3, gsxx=1., gsQ=0.1, mQ=1e3,
+    QQ=0.1)
+    >>> sm.gamma_ray_lines(e_cm=300.)
+    {'g g': {'energy': 150.0, 'bf': 1.286e-08}}
 \end{minted}
 
 \subsubsection{\mil{Theory.spectra(e_gams, e_cm)}}
@@ -237,16 +237,16 @@ and their sum for the given center of mass energy and photon energies. Note that
 This example computes the spectra for the scalar model with Higgs portal-type couplings where the DM annihilates with velocity equal to the Milky Way velocity dispersion $10^{-3} c$. The spectrum for the $S S$ final state is zero since the mediator is much heavier than the dark matter.
 
 \begin{minted}[bgcolor=bg]{python}
->>> sm = HiggsPortal(mx=150., ms=1e3, gsxx=1., stheta=0.1)
->>> e_cm = 2.*sm.mx * (1 + 0.5*1e-6)
->>> e_gams = numpy.array([50., 100., 149., 200.])
->>> sm.spectra(e_gams, e_cm)
-{'total': array([2.155ee-02, 2.148e-02, 5.423e-10, 0.]),
- 'e e': array([3.451e-09, 1.284e-09, 5.423e-10, 0.]),
- 'pi0 pi0': array([0.02148, 0.02148, 0., 0.]),
- 's s': array([0., 0., 0., 0.]),
- 'mu mu': array([1.422e-05, 5.809e-07, 0., 0.]),
- 'pi pi': array([5.422e-05, 3.124e-08, 0., 0.])}
+    >>> sm = HiggsPortal(mx=150., ms=1e3, gsxx=1., stheta=0.1)
+    >>> e_cm = 2.*sm.mx * (1 + 0.5*1e-6)
+    >>> e_gams = numpy.array([50., 100., 149., 200.])
+    >>> sm.spectra(e_gams, e_cm)
+    {'total': array([2.155ee-02, 2.148e-02, 5.423e-10, 0.]),
+            'e e': array([3.451e-09, 1.284e-09, 5.423e-10, 0.]),
+            'pi0 pi0': array([0.02148, 0.02148, 0., 0.]),
+            's s': array([0., 0., 0., 0.]),
+            'mu mu': array([1.422e-05, 5.809e-07, 0., 0.]),
+            'pi pi': array([5.422e-05, 3.124e-08, 0., 0.])}
 \end{minted}
 
 % \subsubsection{Individual channel spectrum methods}
@@ -295,7 +295,7 @@ This example computes the spectra for the scalar model with Higgs portal-type co
 
 \subsection{Gamma ray limits}
 
-\hazma\ uses a simple procedure to set constraints on the DM self-annihilation cross section $\svann$ using current gamma-ray flux measurements and to make projections for planned detectors. 
+\hazma\ uses a simple procedure to set constraints on the DM self-annihilation cross section \(\svann\) using current gamma-ray flux measurements and to make projections for planned detectors.
 
 \subsection{Cosmic Microwave Background limits}
 
