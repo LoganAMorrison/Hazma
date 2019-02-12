@@ -53,7 +53,7 @@ class TestRambo(unittest.TestCase):
 
     def test_compute_decay_width_muon(self):
         """
-        Test rambo decay width function on mu -> e nu nu. 
+        Test rambo decay width function on mu -> e nu nu.
         """
         def msqrd_mu_to_enunu(momenta):
             """
@@ -79,7 +79,7 @@ class TestRambo(unittest.TestCase):
 
     def test_compute_decay_width_Zee(self):
         """
-        Test rambo decay width function on Z -> e e. 
+        Test rambo decay width function on Z -> e e.
         """
         sw = np.sqrt(0.2223)
         cw = np.sqrt(1. - sw**2)

@@ -141,7 +141,7 @@ class VectorMediator(VectorMediatorCrossSections,
         \t   + gvuu ubar.GA[mu].u V[mu] + gvdd dbar.GA[mu].d V[mu] \n
         \t   + gvss sbar.GA[mu].s V[mu] + gvee ebar.GA[mu].e V[mu] \n
         \t   + gvmumu mubar.GA[mu].mu V[mu] \n \n
-        
+
 
         Attributes \n
         ---------- \n
@@ -370,7 +370,7 @@ class QuarksOnly(VectorMediator):
         Returns a string giving the details of the model.
         """
         return '''
-        This model is identical to the vector mediator model except the only \n 
+        This model is identical to the vector mediator model except the only \n
         Standard Model particles that the vector mediator couples to are the \n
         quarks. The Lagrangian is:\n
         \t L = LSM + Lkin + gvxx xbar.GA[mu].x V[mu] \n
