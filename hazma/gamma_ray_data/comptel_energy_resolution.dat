@@ -1,8 +1,0 @@
-# COMPTEL energy resolution Delta E / E. These are approximate values, taken
-# from http://wwwgro.unh.edu/users/ckappada/thesis_stuff/thesis.html, ch. II,
-# pg 11.
-# Columns: energy (MeV), Delta E / E
-0.7,0.05
-5.0,0.05
-10.0,0.05
-30.0,0.05

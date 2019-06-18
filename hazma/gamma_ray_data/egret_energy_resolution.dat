@@ -1,7 +1,0 @@
-# EGRET's energy resolution Delta E / E. This is the most optimistic value,
-# taken from http://adsabs.harvard.edu/doi/10.1086/191793, sec. 4.3.3.
-# Columns: energy (MeV), Delta E / E
-25.0,0.18
-100.0,0.18
-1000.0,0.18
-8700.0,0.18

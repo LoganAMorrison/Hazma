@@ -1,8 +1,0 @@
-# Fermi-LAT's energy resolution Delta E / E. This is the average of the most
-# optimistic normal and 60deg off-axis values from fig. 18 of
-# https://arxiv.org/abs/0902.1089.
-# Columns: energy (MeV), Delta E / E
-150.0,0.075
-1000.0,0.075
-10000.0,0.075
-95000.0,0.075
