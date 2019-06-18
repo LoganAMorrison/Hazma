@@ -1,5 +1,4 @@
 import numpy as np
-from hazma.parameters import load_interp
 
 
 class FluxMeasurement(object):
@@ -27,7 +26,7 @@ class FluxMeasurement(object):
         Information about the target observed for this measurement.
     """
 
-    def __init__(self, obs_rf, energy_res, target):
+    def __init__(self, obs_rf, energy_res, target, power=2):
         """Constructor.
 
         Parameters
@@ -54,11 +53,13 @@ class FluxMeasurement(object):
         self._e_bins = 0.5 * (self.e_lows + self.e_highs)
 
         # E^2 dN/dE -> dN/dE
-        self.fluxes /= self._e_bins**2
+        self.fluxes /= self._e_bins**power
 
         # Compute upper and lower error bars
-        self.upper_errors = self.upper_errors / self._e_bins**2 - self.fluxes
-        self.lower_errors = self.fluxes - self.lower_errors / self._e_bins**2
+        self.upper_errors = (
+            self.upper_errors / self._e_bins**power - self.fluxes)
+        self.lower_errors = (
+            self.fluxes - self.lower_errors / self._e_bins**power)
 
         # Load energy resolution
         self.energy_res = energy_res
