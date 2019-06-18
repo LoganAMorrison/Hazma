@@ -41,6 +41,7 @@ alpha_em = 1.0 / 137.04  # Fine structure constant.
 GF = 1.1663787e-11  # Fermi constant in MeV**-2
 vh = 246.22795e3  # Higgs VEV in MeV
 qe = np.sqrt(4.0 * np.pi * alpha_em)
+temp_cmb_formation = 0.235e-6  # CMB temperature at formation in MeV
 
 # Charges
 Qu = 2. / 3.

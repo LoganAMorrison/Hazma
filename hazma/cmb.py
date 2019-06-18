@@ -1,9 +1,11 @@
-"""
-Functions required for computing CMB limits and related quantities.
-"""
 from scipy.interpolate import interp1d
 import numpy as np
 from pkg_resources import resource_filename
+from hazma.parameters import temp_cmb_formation
+
+"""
+Functions required for computing CMB limits and related quantities.
+"""
 
 # Get paths to files inside the module
 f_eff_ep_rf = resource_filename(__name__, "cmb_data/f_eff_ep.dat")
@@ -16,6 +18,11 @@ f_eff_ep = interp1d(f_eff_ep_data[0] / 1.0e6, f_eff_ep_data[1])  # eV -> MeV
 # Load f_eff^{e+ e-}
 f_eff_g_data = np.loadtxt(f_eff_g_rf, delimiter=",").T
 f_eff_g = interp1d(f_eff_g_data[0] / 1.0e6, f_eff_g_data[1])  # eV -> MeV
+
+# Planck 2018 95% upper limits on p_ann, in cm^3 s^-1 MeV^-1
+p_ann_planck_temp_pol = 3.5e-31              # temperature + polarization
+p_ann_planck_temp_pol_lensing = 3.3e-31      # temp + pol + lensing
+p_ann_planck_temp_pol_lensing_bao = 3.2e-31  # temp + pol + lensing + BAO
 
 
 def vx_cmb(mx, x_kd):
@@ -38,6 +45,4 @@ def vx_cmb(mx, x_kd):
     v_x : float
         The DM relative velocity at the time of CMB formation.
     """
-    temp_cmb = 0.235  # eV
-
-    return 2.0e-4 * temp_cmb / mx * np.sqrt(1.0e-4 / x_kd)
+    return 2.0e-4 * 10e6*temp_cmb_formation / mx * np.sqrt(1.0e-4 / x_kd)

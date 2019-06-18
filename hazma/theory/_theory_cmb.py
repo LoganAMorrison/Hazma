@@ -1,18 +1,25 @@
-from hazma.cmb import vx_cmb, f_eff_g, f_eff_ep
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
+from hazma.cmb import vx_cmb, f_eff_g, f_eff_ep, p_ann_planck_temp_pol
 
 import numpy as np
 
 
+"""
+TODO
+----
+Handle Majorana vs Dirac DM!
+"""
+
+
 class TheoryCMB(object):
-    def cmb_limit(self, x_kd=1.0e-4):
+    def cmb_limit(self, x_kd=1.0e-4, p_ann=p_ann_planck_temp_pol):
         """Computes the CMB limit on <sigma v>.
 
         Notes
         -----
-        We use the constraint from the Planck collaboration:
-            f_eff <sigma v> / m_x < 4.1e-31 cm^3 s^-1 MeV^-1
+        The constraint is computed using
+            f_eff <sigma v> / m_x < p_ann
 
         Parameters
         ----------
@@ -21,38 +28,16 @@ class TheoryCMB(object):
         f_eff : float
             Efficiency with which energy is deposited into the CMB by DM
             annihilations.
+        p_ann : float
+            Constraint on energy release per DM annihilation in cm^3 s^-1
+            MeV^-1.
 
         Returns
         -------
         <sigma v> : float
             Upper bound on <sigma v>, in cm^3 s^-1.
         """
-        return 4.1e-31 * self.mx / self.f_eff(x_kd)
-
-    def cmb_limits(self, mxs, x_kd=1.0e-4):
-        """Computes CMB limit on <sigma v>.
-
-        Parameters
-        ----------
-        mxs : np.array
-            DM masses at which to compute the CMB limits.
-        x_kd: float
-            T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
-            temperature.
-
-        Returns
-        -------
-        svs : np.array
-            Array of upper bounds on <sigma v> (in cm^3/s) for each mass in
-            mxs.
-        """
-        lims = []
-
-        for mx in mxs:
-            self.mx = mx
-            lims.append(self.cmb_limit(x_kd))
-
-        return np.array(lims)
+        return p_ann * self.mx / self.f_eff(x_kd)
 
     def _f_eff_helper(self, fs, x_kd=1e-4, mode="quad"):
         """Computes f_eff^gg or f_eff^ep for DM annihilation.
@@ -77,27 +62,28 @@ class TheoryCMB(object):
         # Center of mass energy
         e_cm = 2. * self.mx * (1. + 0.5 * vx_cmb(self.mx, x_kd)**2)
 
-        # Lower bound on integrals
         if fs == "g g":
             f_eff_base = f_eff_g
+            lines = self.gamma_ray_lines(e_cm)
+            spec_fn = self.total_spectrum
         elif fs == "e e":
             f_eff_base = f_eff_ep
+            lines = self.positron_lines(e_cm)
 
+            def spec_fn(es, e_cm):
+                return 2. * self.total_positron_spectrum(es, e_cm)
+
+        # Lower bound on integrals. Upper bound is many GeV, so we don't need
+        # to do error checking.
         e_min = f_eff_base.x[0]
 
         # Continuum contributions from photons. Create an interpolator to avoid
         # recomputing spectrum.
-        if fs == "g g":
-            spec_fn = self.total_spectrum
-        elif fs == "e e":
-            def spec_fn(es, e_cm):
-                return 2. * self.total_positron_spectrum(es, e_cm)
-
         if mode == "interp":
             # If RAMBO is needed to compute the spectrum, it is prohibitively
             # time-consuming to try integrating the spectrum function. Instead,
             # simultaneously compute the spectrum over a grid of points.
-            es = np.logspace(np.log10(e_min), np.log10(self.mx), 1000)
+            es = np.geomspace(e_min, e_cm / 2, 1000)
             dnde_tot = spec_fn(es, e_cm)
             spec_interp = interp1d(es, dnde_tot, bounds_error=False,
                                    fill_value=0.)
@@ -105,25 +91,19 @@ class TheoryCMB(object):
             def integrand(e):
                 return e * spec_interp(e) * f_eff_base(e)
 
-            f_eff_dm = quad(integrand, e_min, self.mx, epsabs=0,
-                            epsrel=1e-3)[0] / (2. * self.mx)
+            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0,
+                            epsrel=1e-3)[0] / e_cm
         elif mode == "quad":
             # If RAMBO is not needed to compute the spectrum, this will give
             # much cleaner results.
             def integrand(e):
                 return e * spec_fn(e, e_cm) * f_eff_base(e)
 
-            f_eff_dm = quad(integrand, e_min, self.mx, epsabs=0,
-                            epsrel=1e-3)[0] / (2. * self.mx)
+            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0,
+                            epsrel=1e-3)[0] / e_cm
 
-        # Line contributions from the relevant final state
-        if fs == "g g":
-            lines = self.gamma_ray_lines(e_cm)
-        elif fs == "e e":
-            lines = self.positron_lines(e_cm)
-
+        # Sum up line contributions
         f_eff_line_dm = 0.
-
         for ch, line in lines.items():
             energy = line["energy"]
 
@@ -132,7 +112,7 @@ class TheoryCMB(object):
                 bf = line["bf"]
                 multiplicity = 2. if ch == fs else 1.
                 f_eff_line_dm += (energy * bf * f_eff_base(energy) *
-                                  multiplicity / (2. * self.mx))
+                                  multiplicity / e_cm)
 
         return f_eff_dm + f_eff_line_dm
 
@@ -145,11 +125,36 @@ class TheoryCMB(object):
     def f_eff(self, x_kd=1.0e-4):
         return self.f_eff_ep(x_kd) + self.f_eff_g(x_kd)
 
-    def f_effs(self, mxs, x_kd=1.0e-4):
-        f_eff_vals = []
-
-        for mx in mxs:
-            self.mx = mx
-            f_eff_vals.append(self.f_eff(x_kd))
-
-        return np.array(f_eff_vals)
+#     def f_effs(self, mxs, x_kd=1.0e-4):
+#         f_eff_vals = []
+#
+#         for mx in mxs:
+#             self.mx = mx
+#             f_eff_vals.append(self.f_eff(x_kd))
+#
+#         return np.array(f_eff_vals)
+#
+#     def cmb_limits(self, mxs, x_kd=1.0e-4):
+#         """Computes CMB limit on <sigma v>.
+#
+#         Parameters
+#         ----------
+#         mxs : np.array
+#             DM masses at which to compute the CMB limits.
+#         x_kd: float
+#             T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
+#             temperature.
+#
+#         Returns
+#         -------
+#         svs : np.array
+#             Array of upper bounds on <sigma v> (in cm^3/s) for each mass in
+#             mxs.
+#         """
+#         lims = []
+#
+#         for mx in mxs:
+#             self.mx = mx
+#             lims.append(self.cmb_limit(x_kd))
+#
+#         return np.array(lims)
