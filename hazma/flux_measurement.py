@@ -58,7 +58,7 @@ class FluxMeasurement(object):
 
         # Compute upper and lower error bars
         self.upper_errors = self.upper_errors / self._e_bins**2 - self.fluxes
-        self.lower_errors = self.lower_errors / self._e_bins**2 - self.fluxes
+        self.lower_errors = self.fluxes - self.lower_errors / self._e_bins**2
 
         # Load energy resolution
         self.energy_res = energy_res
