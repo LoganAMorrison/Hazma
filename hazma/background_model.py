@@ -4,7 +4,8 @@ from hazma.parameters import load_interp
 
 
 class BackgroundModel(object):
-    """Represents a gamma ray background model.
+    """
+    Represents a gamma ray background model.
 
     Attributes
     ----------
@@ -13,57 +14,20 @@ class BackgroundModel(object):
         MeV.
     """
 
-    def __init__(self, e_range, flux_fn):
+    def __init__(self, e_range, dPhi_dEdOmega):
         """
         Parameters
         ----------
         e_range : [float, float]
             Photon energies (MeV) between which this background model is valid.
             Note that these bounds are inclusive.
-        flux_fn : np.array
+        dPhi_dEdOmega : np.array
             Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
             photon energy (MeV). This function must be vectorized (ie, able to
             map a 1D numpy.array of energies to a 1D numpy.array of fluxes).
         """
         self.e_range = e_range
-        self.__dPhi_dEdOmega = flux_fn
-
-    @classmethod
-    def from_file(cls, rf_name):
-        """Factory method to create a BackgroundModel from a data file.
-
-        Parameters
-        ----------
-        rf_name : resource_filename
-            Name of file whose lines are comma-separated pairs of photon
-            energies and background fluxes, in MeV and MeV^-1 sr^-1 m^-2 s^-1.
-
-        Returns
-        -------
-        bg_model : BackgroundModel
-        """
-        flux_fn = load_interp(rf_name, bounds_error=True, fill_value=np.nan)
-        e_range = flux_fn.x[[0, -1]]
-
-        return cls(e_range, flux_fn)
-
-    @classmethod
-    def from_vals(cls, es, fluxes):
-        """Factory method to create a BackgroundModel from flux data points.
-
-        Parameters
-        ----------
-        es : np.array
-            Photon energies (MeV).
-        fluxes : np.array
-            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) at the energies
-            in es.
-
-        Returns
-        -------
-        bg_model : BackgroundModel
-        """
-        return cls(es[[0, -1]], interp1d(es, fluxes))
+        self.__dPhi_dEdOmega = dPhi_dEdOmega
 
     def dPhi_dEdOmega(self, es):
         """Computes this background model's gamma ray flux.
