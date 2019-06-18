@@ -151,22 +151,19 @@ class TheoryGammaRayLimits(object):
         e_cm = 2. * self.mx * (1. + 0.5 * vx**2)
 
         # Convolve the spectrum with the detector's spectral resolution
-        e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
-        dnde_det = self.get_detected_spectrum_function(e_bin_min, e_bin_max,
-                                                       e_cm,
+        e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
+        dnde_det = self.get_detected_spectrum_function(e_min, e_max, e_cm,
                                                        measurement.energy_res)
 
-        def bin_lim(e_bin, phi, sigma):
+        def bin_lim(e_low, e_high, phi, sigma):
             """Subroutine to compute limit in a single bin."""
-            bin_low, bin_high = e_bin
-
             # Compute integrated flux from DM annihilation
-            phi_dm = dm_flux_factor * dnde_det.integral(bin_low, bin_high)
+            phi_dm = dm_flux_factor * dnde_det.integral(e_low, e_high)
 
             # If flux is finite and nonzero, set a limit
             if not np.isnan(phi_dm) and phi_dm > 0:
                 # Compute maximum allow integrated flux
-                phi_max = (measurement.target.dOmega * (bin_high - bin_low) *
+                phi_max = (measurement.target.dOmega * (e_high - e_low) *
                            (n_sigma * sigma + phi))
 
                 assert phi_max > 0
@@ -179,10 +176,10 @@ class TheoryGammaRayLimits(object):
         # Compute limits for each bin
         sv_lims = []
 
-        for (e_bin, phi, sigma) in zip(measurement.bins,
-                                       measurement.fluxes,
-                                       measurement.upper_errors):
-            sv_lims.append(bin_lim(e_bin, phi, sigma))
+        for (e_low, e_high, phi,
+             sigma) in zip(measurement.e_lows, measurement.e_highs,
+                           measurement.fluxes, measurement.upper_errors):
+            sv_lims.append(bin_lim(e_low, e_high, phi, sigma))
 
         # Return the most stringent limit
         return np.min(sv_lims)
