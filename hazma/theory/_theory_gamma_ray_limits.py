@@ -184,15 +184,6 @@ class TheoryGammaRayLimits(object):
         # Return the most stringent limit
         return np.min(sv_lims)
 
-    def binned_limits(self, mxs, measurement, n_sigma=2.):
-        lims = []
-
-        for mx in mxs:
-            self.mx = mx
-            lims.append(self.binned_limit(measurement, n_sigma))
-
-        return np.array(lims)
-
     def __f_jac_lim(self, e_ab, integrand_S, integrand_B):
         """Computes signal-to-noise ratio and Jacobian for an energy window.
 
@@ -336,22 +327,3 @@ class TheoryGammaRayLimits(object):
         assert -limit_obj.fun >= 0
 
         return prefactor * n_sigma / (-limit_obj.fun)
-
-    def unbinned_limits(self, mxs, A_eff=A_eff_e_astrogam,
-                        energy_res=energy_res_e_astrogam,
-                        T_obs=T_obs_e_astrogam, target_params=draco_params,
-                        bg_model=default_bg_model, n_sigma=5.,
-                        debug_msgs=False):
-        """Computes gamma ray constraints over a range of DM masses.
-
-        See documentation for :func:`unbinned_limit`.
-        """
-        lims = []
-
-        for mx in mxs:
-            self.mx = mx
-            lims.append(self.unbinned_limit(A_eff, energy_res, T_obs,
-                                            target_params, bg_model, n_sigma,
-                                            debug_msgs))
-
-        return np.array(lims)

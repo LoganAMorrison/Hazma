@@ -124,37 +124,3 @@ class TheoryCMB(object):
 
     def f_eff(self, x_kd=1.0e-4):
         return self.f_eff_ep(x_kd) + self.f_eff_g(x_kd)
-
-#     def f_effs(self, mxs, x_kd=1.0e-4):
-#         f_eff_vals = []
-#
-#         for mx in mxs:
-#             self.mx = mx
-#             f_eff_vals.append(self.f_eff(x_kd))
-#
-#         return np.array(f_eff_vals)
-#
-#     def cmb_limits(self, mxs, x_kd=1.0e-4):
-#         """Computes CMB limit on <sigma v>.
-#
-#         Parameters
-#         ----------
-#         mxs : np.array
-#             DM masses at which to compute the CMB limits.
-#         x_kd: float
-#             T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
-#             temperature.
-#
-#         Returns
-#         -------
-#         svs : np.array
-#             Array of upper bounds on <sigma v> (in cm^3/s) for each mass in
-#             mxs.
-#         """
-#         lims = []
-#
-#         for mx in mxs:
-#             self.mx = mx
-#             lims.append(self.cmb_limit(x_kd))
-#
-#         return np.array(lims)
