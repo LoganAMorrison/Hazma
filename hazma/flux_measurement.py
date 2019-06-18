@@ -3,15 +3,15 @@ from hazma.parameters import load_interp
 
 
 class FluxMeasurement(object):
-    """Container for all information about a completed gamma ray analysis.
+    """
+    Container for all information about a completed gamma ray analysis.
 
     Attributes
     ----------
-    target : TargetParams
-        Information about the target observed for this measurement.
-    bins : 2D np.array
-        Bins used for the measurement. This is an Nx2 array where each pair
-        indicates the lower and upper edges of the bin (MeV).
+    e_lows : np.array
+        Lower edges of energy bins.
+    e_highs : np.array
+        Upper edges of energy bins.
     fluxes : np.array
         Flux measurements for each bin (MeV^-1 cm^-2 s^-1 sr^-1).
     upper_errors : np.array
@@ -20,53 +20,48 @@ class FluxMeasurement(object):
     lower_errors : np.array
         Size of lower error bars on flux measurements (MeV^-1 cm^-2 s^-1
         sr^-1).
-    energy_res : interp1d
+    energy_res : callable
         Function returning energy resolution (Delta E / E) as a function of
         photon energy.
+    target : TargetParams
+        Information about the target observed for this measurement.
     """
 
-    def __init__(self, bin_rf, measurement_rf, energy_res_rf, target):
+    def __init__(self, obs_rf, energy_res, target):
         """Constructor.
 
         Parameters
         ----------
-        bin_rf : resource_filename
-            Name of file where bins are defined. The file must contain
-            comma-separated pairs. The elements of the pair define the lower
-            and upper bounds for each energy bin in MeV.
-        measurement_rf : resource_filename
-            Name of file containing flux measurements. The rows of the file
-            must be sets of three comma-separated values, where the first
-            indicated the central value for the measurement of E^2 dN/dE, and
-            the second and third indicate the absolute positions of the upper
-            and lower error bars respectively. All values are in MeV cm^-2 s^-1
-            sr^-1
-        energy_res_rf : resource_filename
-            Name of file containing energy resolution data. The rows of the
-            file must be comma-separated pairs indicating an energy in MeV and
-            energy resolution Delta E / E. The energy resolution must be
-            defined over the full range of energy bins used for this
-            measurement.
+        obs_rf : str
+            Name of file containing observation information. The columns of
+            this file must be:
+                1. Lower bin edge (MeV)
+                2. Upper bin edge (MeV)
+                3. E^2 d^2Phi/dEdOmega (MeV cm^-2 s^-1 sr^-1)
+                4. Upper error bar (MeV cm^-2 s^-1 sr^-1)
+                5. Lower error bar (MeV cm^-2 s^-1 sr^-1)
+            Note that the error bar values are their y-coordinates, not their
+            relative distances from the central flux.
+        energy_res : callable
+            Energy resolution function which takes E and returns Delta E / E.
         target : TargetParams
             The target of the analysis
         """
-        # Store analysis region
-        self.target = target
+        self.e_lows, self.e_highs, self.fluxes, self.upper_errors, \
+            self.lower_errors = np.loadtxt(obs_rf, delimiter=",").T
 
-        # Load bin info
-        self.bins = np.loadtxt(bin_rf, delimiter=",")
-
-        # Load flux data
         # Get bin central values
-        bin_centers = np.mean(self.bins, axis=1)
+        self._e_bins = 0.5 * (self.e_lows + self.e_highs)
 
-        # Load E^2 dN/dE and convert to dN/dE
-        raw_fluxes = np.loadtxt(measurement_rf, delimiter=",")
-        self.fluxes = raw_fluxes[:, 0] / bin_centers**2
+        # E^2 dN/dE -> dN/dE
+        self.fluxes /= self._e_bins**2
 
         # Compute upper and lower error bars
-        self.upper_errors = raw_fluxes[:, 1] / bin_centers**2 - self.fluxes
-        self.lower_errors = self.fluxes - raw_fluxes[:, 2] / bin_centers**2
+        self.upper_errors = self.upper_errors / self._e_bins**2 - self.fluxes
+        self.lower_errors = self.lower_errors / self._e_bins**2 - self.fluxes
 
         # Load energy resolution
-        self.energy_res = load_interp(energy_res_rf, fill_value="extrapolate")
+        self.energy_res = energy_res
+
+        # Store analysis region
+        self.target = target
