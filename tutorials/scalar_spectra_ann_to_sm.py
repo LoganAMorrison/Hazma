@@ -29,12 +29,10 @@ from hazma.scalar_mediator import HiggsPortal, HeavyQuark
 mxs = np.array([100., 110., 140., 250.])
 # Mediator mass
 ms = 1e3
-# Make array of models. The top row of the plot will contain the Higgs
-# portal model spectra, the bottom the heavy quark model spectra.
-sms = np.array([[HiggsPortal(mx, ms, gsxx=1., stheta=1e-1)
-                 for mx in mxs],
-                [HeavyQuark(mx, ms, gsxx=1., gsQ=1e-1, mQ=1e3, QQ=1.)
-                 for mx in mxs]])
+# List of models. The top row of the plot will contain the Higgs portal model
+# spectra, the bottom the heavy quark model spectra.
+sms = [HiggsPortal(1., ms, gsxx=1., stheta=1e-1),
+       HeavyQuark(1., ms, gsxx=1., gsQ=1e-1, mQ=1e3, QQ=1.)]
 
 # Approximate Milky Way velocity dispersion, used to compute the DM
 # center of mass energy
@@ -65,10 +63,11 @@ for row in range(n_subplot_rows):  # loop over type of model
     for col in range(n_subplot_cols):  # loop over DM masses
         ax = axes[row, col]
 
-        # Get the model
-        sm = sms[row, col]
+        # Get the model and set DM mass to column's value
+        sm = sms[row]
+        sm.mx = mxs[col]
         # DM center of mass energy
-        e_cm = 2.*sm.mx * (1. + 0.5 * vx_mw**2)
+        e_cm = 2. * sm.mx * (1. + 0.5 * vx_mw**2)
 
         # Get function to compute total convolved spectrum
         dnde_det_fn = sm.get_detected_spectrum_function(
@@ -87,7 +86,7 @@ for row in range(n_subplot_rows):  # loop over type of model
                        alpha=0.5, linewidth=1.5,
                        label=r"$E_{\gamma\gamma}$")
 
-        # Formatting: abel final states
+        # Formatting: label final states
         for fs, (x, y) in fs_labels[row, col].items():
             ax.text(x, y, get_tex_label(fs), fontsize=10, color=get_color(fs))
 
