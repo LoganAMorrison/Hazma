@@ -40,7 +40,7 @@ e_gams = np.geomspace(1, 300, num=200)
 # %%
 fig, axs = plt.subplots(
     1, 2, sharex='col', sharey='row',
-    figsize=(latex_text_width_1col, 0.35 * latex_text_width_1col))
+    figsize=(latex_text_width_1col, 0.3 * latex_text_width_1col))
 
 for i, ax in enumerate(axs.flatten()):
     e_cm = e_cms[i]
@@ -61,7 +61,5 @@ for i, ax in enumerate(axs.flatten()):
         ax.legend(loc="upper right")
 
 fig.subplots_adjust(hspace=0.1, wspace=0.1)
-plt.show()
 plt.savefig("figures/pion_fsr.pdf")
-
-# %%
+plt.show()
