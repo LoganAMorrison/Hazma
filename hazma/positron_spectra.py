@@ -6,12 +6,10 @@ Module for computing positron spectra.
 
 """
 
-from hazma.positron_helper_functions import positron_muon
-from hazma.positron_helper_functions import positron_charged_pion
-from hazma.positron_helper_functions.positron_rambo\
-    import positron, positron_point
-
 import numpy as np
+
+from hazma.positron_helper_functions import positron_charged_pion, positron_muon
+from hazma.positron_helper_functions.positron_rambo import positron, positron_point
 
 
 def muon(eng_p, eng_mu):
@@ -58,12 +56,16 @@ def charged_pion(eng_p, eng_pi):
     return positron_charged_pion.SpectrumPoint(eng_p, eng_pi)
 
 
-def positron_rambo(particles, cme, eng_ps,
-                   mat_elem_sqrd=lambda k_list: 1.0,
-                   num_ps_pts=1000, num_bins=25, verbose=False):
+def positron_rambo(
+    particles,
+    cme,
+    eng_ps,
+    mat_elem_sqrd=lambda k_list: 1.0,
+    num_ps_pts=1000,
+    num_bins=25,
+    verbose=False,
+):
     r"""Returns total gamma ray spectrum from a set of particles.
-
-    Blah and blah.
 
     Parameters
     ----------
@@ -125,11 +127,14 @@ def positron_rambo(particles, cme, eng_ps,
 
     particles = np.array(particles)
 
-    if hasattr(eng_ps, '__len__'):
-        return positron(particles, cme, eng_ps,
-                        mat_elem_sqrd=mat_elem_sqrd,
-                        num_ps_pts=num_ps_pts,
-                        num_bins=num_bins,
-                        verbose=verbose)
-    return positron_point(particles, cme, eng_ps, mat_elem_sqrd,
-                          num_ps_pts, num_bins)
+    if hasattr(eng_ps, "__len__"):
+        return positron(
+            particles,
+            cme,
+            eng_ps,
+            mat_elem_sqrd=mat_elem_sqrd,
+            num_ps_pts=num_ps_pts,
+            num_bins=num_bins,
+            verbose=verbose,
+        )
+    return positron_point(particles, cme, eng_ps, mat_elem_sqrd, num_ps_pts, num_bins)
