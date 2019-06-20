@@ -1,12 +1,18 @@
-from hazma.theory._theory_gamma_ray_limits import TheoryGammaRayLimits
-from hazma.theory._theory_cmb import TheoryCMB
-from hazma.theory._theory_constrain import TheoryConstrain
+from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from abc import ABCMeta, abstractmethod
+
+from hazma.parameters import convolved_spectrum_fn
+from hazma.theory._theory_cmb import TheoryCMB
+from hazma.theory._theory_constrain import TheoryConstrain
+from hazma.theory._theory_gamma_ray_limits import TheoryGammaRayLimits
 
 
 class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
+    """
+    Represents a sub-GeV DM theory.
+    """
+
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -28,13 +34,6 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @abstractmethod
     def annihilation_branching_fractions(self, cme):
-        pass
-
-    @abstractmethod
-    def gamma_ray_lines(self, cme):
-        """Returns the energies of and branching fractions into monochromatic
-        gamma rays produces by this theory.
-        """
         pass
 
     @abstractmethod
@@ -66,6 +65,29 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.spectra(np.array([e_gams]), e_cm)["total"]
 
     @abstractmethod
+    def gamma_ray_lines(self, cme):
+        """Returns the energies of and branching fractions into monochromatic
+        gamma rays produces by this theory.
+        """
+        pass
+
+    def total_conv_spectrum_fn(
+        self, e_gam_min, e_gam_max, e_cm, energy_res, n_pts=1000
+    ):
+        """Applies `convolved_spectrum_fn` to obtain the convolved gamma-ray
+        spectrum. See documentation for that function.
+        """
+        return convolved_spectrum_fn(
+            e_gam_min,
+            e_gam_max,
+            e_cm,
+            energy_res,
+            self.total_spectrum,
+            self.gamma_ray_lines,
+            n_pts,
+        )
+
+    @abstractmethod
     def positron_spectra(self, e_ps, e_cm):
         pass
 
@@ -92,6 +114,22 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     @abstractmethod
     def positron_lines(self, e_cm):
         pass
+
+    def total_conv_positron_spectrum_fn(
+        self, e_pos_min, e_pos_max, e_cm, energy_res, n_pts=1000
+    ):
+        """Applies `convolved_spectrum_fn` to obtain the convolved positron
+        spectrum. See documentation for that function.
+        """
+        return convolved_spectrum_fn(
+            e_pos_min,
+            e_pos_max,
+            e_cm,
+            energy_res,
+            self.total_positron_spectrum,
+            self.positron_lines,
+            n_pts,
+        )
 
     @abstractmethod
     def constraints(self):
