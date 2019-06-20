@@ -2,9 +2,13 @@ import numpy as np
 from scipy import optimize
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from hazma.gamma_ray_parameters import (A_eff_e_astrogam, T_obs_e_astrogam,
-                                        default_bg_model, draco_params,
-                                        energy_res_e_astrogam)
+from hazma.gamma_ray_parameters import (
+    A_eff_e_astrogam,
+    T_obs_e_astrogam,
+    default_bg_model,
+    draco_params,
+    energy_res_e_astrogam,
+)
 
 
 class TheoryGammaRayLimits(object):
@@ -139,8 +143,7 @@ class TheoryGammaRayLimits(object):
             independent of the energy window) and f's Jacobian with respect to
             the window boundaries.
         """
-        e_a = e_ab[0]
-        e_b = e_ab[1]
+        e_a, e_b = e_ab.min(), e_ab.max()
 
         if e_a == e_b:
             return 0.0, 0.0
