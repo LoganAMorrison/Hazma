@@ -86,5 +86,7 @@ for i, ax in enumerate(axs.flatten()):
                       fontsize=10)
 
 fig.subplots_adjust(hspace=0.1, wspace=0.1)
-plt.savefig("figures/muon_fsr.pdf")
+plt.savefig("figures/muon_fsr.pdf", bbox_inches="tight")
 plt.show()
+
+# %%

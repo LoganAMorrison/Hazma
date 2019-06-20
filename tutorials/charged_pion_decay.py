@@ -57,5 +57,7 @@ plt.text(2e0, 2.3e-4, r"$e^+ \nu \gamma$", fontsize=9, color=colors[2])
 plt.text(3.7e1, 7e-3, "Total", fontsize=9)
 
 plt.tight_layout()
-plt.savefig("figures/charged_pion_decay.pdf")
+plt.savefig("figures/charged_pion_decay.pdf", bbox_inches="tight")
 plt.show()
+
+# %%

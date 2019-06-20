@@ -61,5 +61,7 @@ for i, ax in enumerate(axs.flatten()):
         ax.legend(loc="upper right")
 
 fig.subplots_adjust(hspace=0.1, wspace=0.1)
-plt.savefig("figures/pion_fsr.pdf")
+plt.savefig("figures/charged_pion_fsr.pdf", bbox_inches="tight")
 plt.show()
+
+# %%
