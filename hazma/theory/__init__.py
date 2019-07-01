@@ -22,22 +22,64 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     @classmethod
     @abstractmethod
     def list_annihilation_final_states(cls):
+        """Returns a list of the annihilation final states.
+
+        Excludes states that are suppressed by (eg) factors of alpha_EM or
+        |m_d-m_u|.
+
+        Returns
+        -------
+        list(str)
+            Possible annihilation final states.
+        """
         pass
 
     @abstractmethod
-    def annihilation_cross_sections(self, cme):
+    def annihilation_cross_sections(self, e_cm):
+        """Gets DM annihilation cross sections.
+
+        Arguments
+        ---------
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+
+        Returns
+        -------
+        dict(str, float)
+            Annihilation cross section into each final state in MeV**-2 as well
+            as the total cross section.
+        """
         pass
 
     @abstractmethod
     def partial_widths(self):
+        """Gets mediator decay widths.
+
+        Returns
+        -------
+        dict(str, float)
+            Mediator partial widths in MeV as the total cross decay width.
+        """
         pass
 
     @abstractmethod
-    def annihilation_branching_fractions(self, cme):
+    def annihilation_branching_fractions(self, e_cm):
+        """Gets DM annihilation branching fractions.
+
+        Arguments
+        ---------
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+
+        Returns
+        -------
+        dict(str, float)
+            Annihilation branching fractions into each final state.
+        """
         pass
 
     @abstractmethod
-    def spectra(self, e_gams, cme):
+    def spectra(self, e_gams, e_cm):
         pass
 
     @abstractmethod
@@ -65,15 +107,18 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.spectra(np.array([e_gams]), e_cm)["total"]
 
     @abstractmethod
-    def gamma_ray_lines(self, cme):
+    def gamma_ray_lines(self, e_cm):
         """Returns the energies of and branching fractions into monochromatic
         gamma rays produces by this theory.
         """
         pass
 
-    def total_conv_spectrum_fn(
-        self, e_gam_min, e_gam_max, e_cm, energy_res, n_pts=1000
-    ):
+    def total_conv_spectrum_fn(self,
+                               e_gam_min,
+                               e_gam_max,
+                               e_cm,
+                               energy_res,
+                               n_pts=1000):
         """Applies `convolved_spectrum_fn` to obtain the convolved gamma-ray
         spectrum. See documentation for that function.
         """
@@ -115,9 +160,12 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     def positron_lines(self, e_cm):
         pass
 
-    def total_conv_positron_spectrum_fn(
-        self, e_p_min, e_p_max, e_cm, energy_res, n_pts=1000
-    ):
+    def total_conv_positron_spectrum_fn(self,
+                                        e_p_min,
+                                        e_p_max,
+                                        e_cm,
+                                        energy_res,
+                                        n_pts=1000):
         """Applies `convolved_spectrum_fn` to obtain the convolved positron
         spectrum. See documentation for that function.
         """
