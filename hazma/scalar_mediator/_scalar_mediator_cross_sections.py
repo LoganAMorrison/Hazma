@@ -1,6 +1,6 @@
 from cmath import sqrt, pi, atanh
 
-from hazma.parameters import vh, b0, alpha_em, sv_inv_MeV_to_cm3_per_s
+from hazma.parameters import vh, b0, alpha_em
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import up_quark_mass as muq
@@ -48,7 +48,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -86,7 +86,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.0
 
@@ -141,7 +141,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -195,7 +195,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -223,7 +223,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -264,7 +264,7 @@ class ScalarMediatorCrossSection:
             assert ret_val.imag == 0.
             assert ret_val.real >= 0.
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 

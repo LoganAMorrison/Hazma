@@ -3,7 +3,7 @@ from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
-from hazma.parameters import fpi, qe, sv_inv_MeV_to_cm3_per_s
+from hazma.parameters import fpi, qe
 from scipy.integrate import quad
 
 
@@ -49,7 +49,7 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -78,17 +78,16 @@ class VectorMediatorCrossSections:
             mv = self.mv
             width_v = self.width_v
 
-            ret_val = (((gvdd - gvuu)**2 * gvxx**2 *
-                        (-4. * mpi**2 + Q**2)**1.5 *
-                        (2. * mx**2 + Q**2)) /
-                       (48. * pi * Q**2 * sqrt(-4. * mx**2 + Q**2) *
-                        (mv**4 - 2. * mv**2 * Q**2 + Q**4 + mv**2 *
-                         width_v**2)))
+            ret_val = (
+                ((gvdd - gvuu)**2 * gvxx**2 * (-4. * mpi**2 + Q**2)**1.5 *
+                 (2. * mx**2 + Q**2)) /
+                (48. * pi * Q**2 * sqrt(-4. * mx**2 + Q**2) *
+                 (mv**4 - 2. * mv**2 * Q**2 + Q**4 + mv**2 * width_v**2)))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -126,9 +125,10 @@ class VectorMediatorCrossSections:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
+
 
 #    def sigma_xx_to_v_to_pi0v(self, Q):
 #        """
@@ -165,48 +165,40 @@ class VectorMediatorCrossSections:
 #            assert ret_val.imag == 0
 #            assert ret_val.real >= 0
 #
-#            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+#            return ret_val.real
 #        else:
 #            return 0.
 
     def dsigma_ds_xx_to_v_to_pi0pipi(self, s, Q):
         mx = self.mx
 
-        if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4. * mpi**2 and
-                s < (Q - mpi0)**2):
+        if (Q > 2. * mpi + mpi0 and Q > 2. * mx and s > 4. * mpi**2 and s <
+            (Q - mpi0)**2):
             gvuu = self.gvuu
             gvdd = self.gvdd
             gvxx = self.gvxx
             mv = self.mv
             width_v = self.width_v
 
-            ret_val = (3. * ((gvdd + gvuu)**2 * gvxx**2 *
-                             sqrt(s * (-4. * mpi**2 + s)) *
-                             sqrt(Q**4 + (mpi0**2 - s)**2 -
-                                  2. * Q**2 * (mpi0**2 + s)) *
-                             (-24. * mpi**6 * s + mpi**4 *
-                              (-2. * mpi0**4 + 28. * mpi0**2 * s +
-                               22. * s**2) +
-                              2. * mpi**2 * (mpi0**6 - 4. * s**3) +
-                              s * (-2. * mpi0**6 - 4. * mpi0**4 * s -
-                                   mpi0**2 * s**2 + s**3) +
-                              Q**4 * (-2. * mpi**4 +
-                                      2. * mpi**2 * (mpi0**2 - s) +
-                                      s * (-2. * mpi0**2 + s)) +
-                              Q**2 * (4. * mpi**4 * (mpi0**2 + s) +
-                                      s * (4. * mpi0**4 + 5. * mpi0**2 * s -
-                                           2. * s**2) -
-                                      4. * mpi**2 *
-                                      (mpi0**4 +
-                                       3. * mpi0**2 * s - s**2)))) /
-                       (294912. * fpi**6 * pi**7 * sqrt(Q**2) *
-                        sqrt(-4. * mx**2 + Q**2) * s**2 *
-                        (mv**4 - 2. * mv**2 * Q**2 + Q**4 +
-                         mv**2 * width_v**2)))
+            ret_val = (3. * (
+                (gvdd + gvuu)**2 * gvxx**2 * sqrt(s * (-4. * mpi**2 + s)) *
+                sqrt(Q**4 + (mpi0**2 - s)**2 - 2. * Q**2 * (mpi0**2 + s)) *
+                (-24. * mpi**6 * s + mpi**4 *
+                 (-2. * mpi0**4 + 28. * mpi0**2 * s + 22. * s**2) +
+                 2. * mpi**2 * (mpi0**6 - 4. * s**3) + s *
+                 (-2. * mpi0**6 - 4. * mpi0**4 * s - mpi0**2 * s**2 + s**3) +
+                 Q**4 * (-2. * mpi**4 + 2. * mpi**2 * (mpi0**2 - s) + s *
+                         (-2. * mpi0**2 + s)) + Q**2 *
+                 (4. * mpi**4 * (mpi0**2 + s) + s *
+                  (4. * mpi0**4 + 5. * mpi0**2 * s - 2. * s**2) - 4. * mpi**2 *
+                  (mpi0**4 + 3. * mpi0**2 * s - s**2)))) / (
+                      294912. * fpi**6 * pi**7 * sqrt(Q**2) *
+                      sqrt(-4. * mx**2 + Q**2) * s**2 *
+                      (mv**4 - 2. * mv**2 * Q**2 + Q**4 + mv**2 * width_v**2)))
 
             assert ret_val.imag == 0.
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -216,12 +208,14 @@ class VectorMediatorCrossSections:
             s_max = (Q - mpi0)**2
 
             ret_val = quad(self.dsigma_ds_xx_to_v_to_pi0pipi,
-                           s_min, s_max, args=(Q))[0]
+                           s_min,
+                           s_max,
+                           args=(Q))[0]
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -232,22 +226,22 @@ class VectorMediatorCrossSections:
         if Q >= 2. * mv and Q >= 2. * mx:
             gvxx = self.gvxx
 
-            ret_val = ((gvxx**4 * sqrt(-4 * mv**2 + Q**2) *
-                        (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
-                         (mv**4 - 4 * mv**2 * mx**2 + mx**2 * Q**2) +
-                         (4 * (4 * mv**4 - 8 * mv**2 * mx**2 -
-                               8 * mx**4 + 4 * mx**2 * Q**2 + Q**4) *
-                            atanh((sqrt(4 * mv**2 - Q**2) *
-                                   sqrt(4 * mx**2 - Q**2)) /
-                                  (2 * mv**2 - Q**2))) /
-                         ((2 * mv**2 - Q**2) * sqrt(4 * mv**2 - Q**2) *
-                          sqrt(4 * mx**2 - Q**2)))) /
-                       (8. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2)))
+            ret_val = (
+                (gvxx**4 * sqrt(-4 * mv**2 + Q**2) *
+                 (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
+                  (mv**4 - 4 * mv**2 * mx**2 + mx**2 * Q**2) +
+                  (4 * (4 * mv**4 - 8 * mv**2 * mx**2 - 8 * mx**4 +
+                        4 * mx**2 * Q**2 + Q**4) * atanh(
+                            (sqrt(4 * mv**2 - Q**2) * sqrt(4 * mx**2 - Q**2)) /
+                            (2 * mv**2 - Q**2))) /
+                  ((2 * mv**2 - Q**2) * sqrt(4 * mv**2 - Q**2) *
+                   sqrt(4 * mx**2 - Q**2)))) /
+                (8. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2)))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.0
 
@@ -261,39 +255,36 @@ class VectorMediatorCrossSections:
         rwv = self.width_v / Q
 
         if Q > 2. * self.mx:
+
             def msqrd(z):
                 return ((gvxx**4 *
                          (9 - 56 * rx**2 + 2 *
-                          (9 * rv**2 * (-1 + rv**2 + rwv**2) +
-                           4 * rv**2 *
-                           (11 + 2 * rv**2 + 2 * rwv**2) * rx**2 +
-                           8 * (7 + 6 * rv**2 *
-                                (-4 + rv**2 + rwv**2)) * rx**4 +
-                           64 * rx**6) -
-                          2 * (-1 + 4 * rx**2) *
-                          (3 * rv**2 * (-3 + 2 * rv**2 + 2 * rwv**2) +
-                           4 *
+                          (9 * rv**2 * (-1 + rv**2 + rwv**2) + 4 * rv**2 *
+                           (11 + 2 * rv**2 + 2 * rwv**2) * rx**2 + 8 *
+                           (7 + 6 * rv**2 *
+                            (-4 + rv**2 + rwv**2)) * rx**4 + 64 * rx**6) - 2 *
+                          (-1 + 4 * rx**2) *
+                          (3 * rv**2 * (-3 + 2 * rv**2 + 2 * rwv**2) + 4 *
                            (3 + 6 * rv**4 + 2 * rv**2 *
-                            (-7 + 3 * rwv**2)) * rx**2 -
-                           32 * (-2 + rv**2) * rx**4) * z +
-                          2 * (3 * rv**2 - 4 * rx**2) *
+                            (-7 + 3 * rwv**2)) * rx**2 - 32 *
+                           (-2 + rv**2) * rx**4) * z + 2 *
+                          (3 * rv**2 - 4 * rx**2) *
                           (-1 + 4 * rx**2)**3 * z**3 +
-                          (1 - 4 * rx**2)**4 * z**4 +
-                          2 * (3 + 5 * rv**4 + 12 * rx**2 +
-                               8 * rx**4 + rv**2 *
-                               (-3 + 5 * rwv**2 - 20 * rx**2)) *
+                          (1 - 4 * rx**2)**4 * z**4 + 2 *
+                          (3 + 5 * rv**4 + 12 * rx**2 + 8 * rx**4 + rv**2 *
+                           (-3 + 5 * rwv**2 - 20 * rx**2)) *
                           (z - 4 * rx**2 * z)**2)) /
                         ((1 + rv**4 + rv**2 * (-2 + rwv**2)) *
-                         (4 * rv**4 + 4 * rv**2 *
-                          (rwv**2 + (-1 + 4 * rx**2) * (-1 + z)) +
-                            (1 - 4 * rx**2)**2 * (-1 + z)**2)))
+                         (4 * rv**4 + 4 * rv**2 * (rwv**2 + (-1 + 4 * rx**2) *
+                                                   (-1 + z)) +
+                          (1 - 4 * rx**2)**2 * (-1 + z)**2)))
 
             ret_val = (quad(msqrd, -1, 1)[0] / (32. * pi * Q))
 
             assert ret_val.imag == 0.
             assert ret_val.real >= 0.
 
-            return ret_val.real * sv_inv_MeV_to_cm3_per_s
+            return ret_val.real
         else:
             return 0.
 
@@ -323,13 +314,15 @@ class VectorMediatorCrossSections:
                  vv_contr)
         # pi0pipi_contr
 
-        cross_secs = {'mu mu': muon_contr,
-                      'e e': electron_contr,
-                      'pi pi': pipi_contr,
-                      'pi0 g': pi0g_contr,
-                      # 'pi0 pi pi': pi0pipi_contr,
-                      'v v': vv_contr,
-                      'total': total}
+        cross_secs = {
+            'mu mu': muon_contr,
+            'e e': electron_contr,
+            'pi pi': pipi_contr,
+            'pi0 g': pi0g_contr,
+            # 'pi0 pi pi': pi0pipi_contr,
+            'v v': vv_contr,
+            'total': total
+        }
 
         return cross_secs
 
@@ -352,16 +345,20 @@ class VectorMediatorCrossSections:
         CSs = self.annihilation_cross_sections(Q)
 
         if CSs['total'] == 0.0:
-            return {'mu mu': 0.0,
-                    'e e': 0.0,
-                    'pi pi': 0.0,
-                    'pi0 g': 0.0,
-                    # "pi0 pi pi": 0.0,
-                    'v v': 0.0}
+            return {
+                'mu mu': 0.0,
+                'e e': 0.0,
+                'pi pi': 0.0,
+                'pi0 g': 0.0,
+                # "pi0 pi pi": 0.0,
+                'v v': 0.0
+            }
         else:
-            return {'mu mu': CSs['mu mu'] / CSs['total'],
-                    'e e': CSs['e e'] / CSs['total'],
-                    'pi pi': CSs['pi pi'] / CSs['total'],
-                    'pi0 g': CSs['pi0 g'] / CSs['total'],
-                    # "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"],
-                    'v v': CSs['v v'] / CSs['total']}
+            return {
+                'mu mu': CSs['mu mu'] / CSs['total'],
+                'e e': CSs['e e'] / CSs['total'],
+                'pi pi': CSs['pi pi'] / CSs['total'],
+                'pi0 g': CSs['pi0 g'] / CSs['total'],
+                # "pi0 pi pi": CSs["pi0 pi pi"] / CSs["total"],
+                'v v': CSs['v v'] / CSs['total']
+            }
