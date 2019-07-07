@@ -150,7 +150,24 @@ The radiative decay modes taken into account for the neutral pion are:
 \begin{align}
 	\pi^{0} & \to \gamma\gamma
 \end{align}
-The formulas for these spectra are given in an appendix.
+The formulas for these spectra are given in an appendix. To compute decay spectra in \hazma\, the user needs to import the decaying particle from \mil{hazma.decay}. For example:
+\begin{minted}[bgcolor=bg]{python}
+>>> from hazma.decay import muon, neutral_pion, charged_pion
+\end{minted}
+Each function in \mil{hazma.decay} accepts a list of gamma-ray energies as the first argument and the particle energy as the second. It is easiest to create arrays of gamma-ray energies using \mil{numpy}:
+\begin{minted}[bgcolor=bg]{python}
+>>> import numpy as np
+>>> eng_gams = np.logspace(0., 3., num=10)
+\end{minted}
+The spectra are then created by calling:
+\begin{minted}[bgcolor=bg]{python}
+>>> eng_mu, eng_npi, eng_cpi = 200., 300., 400.
+>>>
+>>> mu_spec = muon(eng_gams, eng_mu)
+>>> npi_spec = neutral_pion(eng_gams, eng_mu)
+>>> cpi_spec = charged_pion(eng_gams, eng_mu)
+\end{minted}
+These functions will compute the gamma-ray spectra evaluted at the gamma-ray energies passed into each function.
 
 
 
