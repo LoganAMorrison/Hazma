@@ -11,7 +11,7 @@ Welcome to Hazma's documentation!
     :caption: Introduction and Details
 
     introduction.rst
-    gamma_ray/gamma_ray.rst
+    gamma_ray_decay/gamma_ray_decay.rst
     rambo.rst
     decay/decay.rst
     fsr.rst

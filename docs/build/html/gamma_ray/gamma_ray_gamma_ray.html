@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-    <title>hazma.gamma_ray.gamma_ray &mdash; Hazma 1.2 documentation | RiboKit</title>
+    <title>hazma.gamma_ray_decay.gamma_ray_decay &mdash; Hazma 1.2 documentation | RiboKit</title>
     
 
     
@@ -28,7 +28,7 @@
           <link rel="index" title="Index" href="../genindex.html" />
           <link rel="search" title="Search" href="../search.html" />
       <link rel="top" title="Hazma 1.2 documentation" href="../index.html" />
-          <link rel="next" title="hazma.gamma_ray.gamma_ray_rambo" href="gamma_ray_gamma_ray_rambo.html" />
+          <link rel="next" title="hazma.gamma_ray_decay.gamma_ray_fsr" href="gamma_ray_gamma_ray_rambo.html" />
           <link rel="prev" title="Tutorial" href="../tutorial.html" /> 
 
     <script type="text/javascript">
@@ -81,7 +81,7 @@
 
     
       <div class="downloads">
-        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray/gamma_ray_gamma_ray</u></span>
+        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray_decay/gamma_ray_gamma_ray</u></span>
         <ul>
           
             <li><a href="index.html" class="button">&#x21E7;</a></li>
@@ -110,7 +110,7 @@
             <p class="caption"><span class="caption-text">Introduction and Details</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray_decay)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rambo.html">RAMBO (hazma.rambo)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../decay/decay.html">Decay (hazma.decay)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fsr.html">Final State Radiation</a></li>
@@ -118,8 +118,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Gamma Ray Modules</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">hazma.gamma_ray.gamma_ray</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html">hazma.gamma_ray.gamma_ray_rambo</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hazma.gamma_ray_decay.gamma_ray_decay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html">hazma.gamma_ray_decay.gamma_ray_fsr</a></li>
 </ul>
 <p class="caption"><span class="caption-text">RAMBO Modules</span></p>
 <ul>
@@ -144,10 +144,10 @@
       <section>
       
   <div class="section" id="hazma-gamma-ray-gamma-ray">
-<span id="gamma-ray-gamma-ray"></span><h1>hazma.gamma_ray.gamma_ray<a class="headerlink" href="#hazma-gamma-ray-gamma-ray" title="Permalink to this headline">¶</a></h1>
+<span id="gamma-ray-gamma-ray"></span><h1>hazma.gamma_ray_decay.gamma_ray_decay<a class="headerlink" href="#hazma-gamma-ray-gamma-ray" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="hazma.gamma_ray.gamma_ray">
-<code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray</code><span class="sig-paren">(</span><em>particles</em>, <em>cme</em>, <em>eng_gams</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">hazma.gamma_ray_decay.</code><code class="descname">gamma_ray_decay</code><span class="sig-paren">(</span><em>particles</em>, <em>cme</em>, <em>eng_gams</em>, <em>mat_elem_sqrd=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns total gamma ray spectrum from a set of particles.</p>
 <p>Blah and blah.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -186,14 +186,14 @@ total number of energies used is <cite>num_bins</cite>.</p>
 <p class="rubric">Examples</p>
 <p>Example of generating a spectrum from a muon, charged kaon and long kaon
 with total energy of 5000 MeV.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.gamma_ray</span> <span class="k">import</span> <span class="n">gamma_ray</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">hazma.gamma_ray_decay</span> <span class="k">import</span> <span class="n">gamma_ray_decay</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">particles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;muon&#39;</span><span class="p">,</span> <span class="s1">&#39;charged_kaon&#39;</span><span class="p">,</span> <span class="s1">&#39;long_kaon&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cme</span> <span class="o">=</span> <span class="mf">5000.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">eng_gams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">cme</span><span class="p">),</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="n">eng_gams</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">gamma_ray_decay</span><span class="p">(</span><span class="n">particles</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span> <span class="n">eng_gams</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

@@ -11,7 +11,7 @@ Welcome to Hazma's documentation!
     :caption: Introduction and Details
 
     introduction.rst
-    gamma_ray/gamma_ray.rst
+    gamma_ray_decay/gamma_ray_decay.rst
     rambo.rst
     decay/decay.rst
     fsr.rst
@@ -21,8 +21,8 @@ Welcome to Hazma's documentation!
     :maxdepth: 2
     :caption: Gamma Ray Modules
 
-    gamma_ray/gamma_ray_gamma_ray.rst
-    gamma_ray/gamma_ray_gamma_ray_rambo.rst
+    gamma_ray_decay/gamma_ray_gamma_ray.rst
+    gamma_ray_decay/gamma_ray_gamma_ray_rambo.rst
 
 
 .. toctree::

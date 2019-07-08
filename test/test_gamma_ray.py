@@ -27,24 +27,24 @@ class TestGammaRay(unittest.TestCase):
 
     def test_mu_mu_mu(self):
         particles = np.array(['muon', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)
 
     def test_ck_mu_mu(self):
         particles = np.array(['charged_kaon', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)
 
     def test_sk_mu_mu(self):
         particles = np.array(['short_kaon', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)
 
     def test_lk_mu_mu(self):
         particles = np.array(['long_kaon', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)
 
     def test_cp_mu_mu(self):
         particles = np.array(['charged_pion', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)
 
     def test_np_mu_mu(self):
         particles = np.array(['neutral_pion', 'muon', 'muon'])
-        gamma_ray.gamma_ray(particles, self.cme, self.eng_gams)
+        gamma_ray.gamma_ray_decay(particles, self.cme, self.eng_gams)

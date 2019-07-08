@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-    <title>hazma.gamma_ray.gamma_ray_rambo &mdash; Hazma 1.2 documentation | RiboKit</title>
+    <title>hazma.gamma_ray_decay.gamma_ray_fsr &mdash; Hazma 1.2 documentation | RiboKit</title>
     
 
     
@@ -29,7 +29,7 @@
           <link rel="search" title="Search" href="../search.html" />
       <link rel="top" title="Hazma 1.2 documentation" href="../index.html" />
           <link rel="next" title="hazma.rambo.compute_annihilation_cross_section" href="../rambo/annihilation_cross_section.html" />
-          <link rel="prev" title="hazma.gamma_ray.gamma_ray" href="gamma_ray_gamma_ray.html" /> 
+          <link rel="prev" title="hazma.gamma_ray_decay.gamma_ray_decay" href="gamma_ray_gamma_ray.html" />
 
     <script type="text/javascript">
       if (window.location.protocol.indexOf('https') == -1 && window.location.hostname.indexOf('.github.io') != -1) {
@@ -81,7 +81,7 @@
 
     
       <div class="downloads">
-        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray/gamma_ray_gamma_ray_rambo</u></span>
+        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray_decay/gamma_ray_gamma_ray_rambo</u></span>
         <ul>
           
             <li><a href="index.html" class="button">&#x21E7;</a></li>
@@ -110,7 +110,7 @@
             <p class="caption"><span class="caption-text">Introduction and Details</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray.html">Gamma Ray Spectra Generator (hazma.gamma_ray_decay)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../rambo.html">RAMBO (hazma.rambo)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../decay/decay.html">Decay (hazma.decay)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fsr.html">Final State Radiation</a></li>
@@ -118,8 +118,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Gamma Ray Modules</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray.html">hazma.gamma_ray.gamma_ray</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">hazma.gamma_ray.gamma_ray_rambo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray.html">hazma.gamma_ray_decay.gamma_ray_decay</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">hazma.gamma_ray_decay.gamma_ray_fsr</a></li>
 </ul>
 <p class="caption"><span class="caption-text">RAMBO Modules</span></p>
 <ul>
@@ -144,10 +144,10 @@
       <section>
       
   <div class="section" id="hazma-gamma-ray-gamma-ray-rambo">
-<span id="gamma-ray-gamma-ray-rambo"></span><h1>hazma.gamma_ray.gamma_ray_rambo<a class="headerlink" href="#hazma-gamma-ray-gamma-ray-rambo" title="Permalink to this headline">¶</a></h1>
+<span id="gamma-ray-gamma-ray-rambo"></span><h1>hazma.gamma_ray_decay.gamma_ray_fsr<a class="headerlink" href="#hazma-gamma-ray-gamma-ray-rambo" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="hazma.gamma_ray.gamma_ray_rambo">
-<code class="descclassname">hazma.gamma_ray.</code><code class="descname">gamma_ray_rambo</code><span class="sig-paren">(</span><em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd_tree=&lt;function &lt;lambda&gt;&gt;</em>, <em>mat_elem_sqrd_rad=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray_rambo" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">hazma.gamma_ray_decay.</code><code class="descname">gamma_ray_fsr</code><span class="sig-paren">(</span><em>isp_masses</em>, <em>fsp_masses</em>, <em>cme</em>, <em>mat_elem_sqrd_tree=&lt;function &lt;lambda&gt;&gt;</em>, <em>mat_elem_sqrd_rad=&lt;function &lt;lambda&gt;&gt;</em>, <em>num_ps_pts=1000</em>, <em>num_bins=25</em><span class="sig-paren">)</span><a class="headerlink" href="#hazma.gamma_ray.gamma_ray_rambo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns total gamma ray spectrum from a set of particles using a Monte
 Carlo.</p>
 <p>Returns total gamma ray spectrum from a set of particles. This is done by
@@ -205,7 +205,7 @@ fermions through a scalar mediator.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">radiative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">moms</span> <span class="p">:</span> <span class="n">xx_to_s_to_ffg</span><span class="p">(</span><span class="n">moms</span><span class="p">,</span> <span class="n">mx</span><span class="p">,</span> <span class="n">mmu</span><span class="p">,</span>
 <span class="go">..                                           ms, qf, gsxx, gsff)</span>
 <span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">engs</span><span class="p">,</span> <span class="n">dnde</span> <span class="o">=</span> <span class="n">gamma_ray</span><span class="o">.</span><span class="n">gamma_ray_rambo</span><span class="p">(</span><span class="n">isp_masses</span><span class="p">,</span> <span class="n">fsp_masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">engs</span><span class="p">,</span> <span class="n">dnde</span> <span class="o">=</span> <span class="n">gamma_ray_decay</span><span class="o">.</span><span class="n">gamma_ray_fsr</span><span class="p">(</span><span class="n">isp_masses</span><span class="p">,</span> <span class="n">fsp_masses</span><span class="p">,</span> <span class="n">cme</span><span class="p">,</span>
 <span class="go">..                                         tree, radiative, num_ps_pts,</span>
 <span class="go">..                                         num_bins)</span>
 </pre></div>

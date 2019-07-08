@@ -15,9 +15,9 @@ from hazma.field_theory_helper_functions.common_functions import \
     cross_section_prefactor
 
 
-def gamma_ray(particles, cme, eng_gams,
-              mat_elem_sqrd=lambda k_list: 1.0,
-              num_ps_pts=1000, num_bins=25, verbose=False):
+def gamma_ray_decay(particles, cme, eng_gams,
+                    mat_elem_sqrd=lambda k_list: 1.0,
+                    num_ps_pts=1000, num_bins=25, verbose=False):
     r"""Returns total gamma ray spectrum from a set of particles.
 
     Blah and blah.
@@ -67,14 +67,14 @@ def gamma_ray(particles, cme, eng_gams,
     Example of generating a spectrum from a muon, charged kaon and long kaon
     with total energy of 5000 MeV.
 
-    >>> from hazma.gamma_ray import gamma_ray
+    >>> from hazma.gamma_ray_decay import gamma_ray_decay
     >>> import numpy as np
     >>>
     >>> particles = np.array(['muon', 'charged_kaon', 'long_kaon'])
     >>> cme = 5000.
     >>> eng_gams = np.logspace(0., np.log10(cme), num=200, dtype=np.float64)
     >>>
-    >>> spec = gamma_ray(particles, cme, eng_gams)
+    >>> spec = gamma_ray_decay(particles, cme, eng_gams)
 
     """
     if type(particles) == str:
@@ -89,10 +89,10 @@ def gamma_ray(particles, cme, eng_gams,
                        num_ps_pts, num_bins)
 
 
-def gamma_ray_rambo(isp_masses, fsp_masses, cme,
-                    mat_elem_sqrd_tree=lambda k_list: 1.0,
-                    mat_elem_sqrd_rad=lambda k_list: 1.0,
-                    num_ps_pts=1000, num_bins=25):
+def gamma_ray_fsr(isp_masses, fsp_masses, cme,
+                  mat_elem_sqrd_tree=lambda k_list: 1.0,
+                  mat_elem_sqrd_rad=lambda k_list: 1.0,
+                  num_ps_pts=1000, num_bins=25):
     r"""Returns total gamma ray spectrum from a set of particles using a Monte
     Carlo.
 
@@ -154,7 +154,7 @@ def gamma_ray_rambo(isp_masses, fsp_masses, cme,
     >>> radiative = lambda moms : xx_to_s_to_ffg(moms, mx, mmu,
     ..                                           ms, qf, gsxx, gsff)
     >>>
-    >>> engs, dnde = gamma_ray.gamma_ray_rambo(isp_masses, fsp_masses, cme,
+    >>> engs, dnde = gamma_ray_decay.gamma_ray_fsr(isp_masses, fsp_masses, cme,
     ..                                         tree, radiative, num_ps_pts,
     ..                                         num_bins)
 

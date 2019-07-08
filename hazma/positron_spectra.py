@@ -112,14 +112,14 @@ def positron_rambo(
     Example of generating a spectrum from a muon, charged kaon and long kaon
     with total energy of 5000 MeV.
 
-    >>> from hazma.gamma_ray import gamma_ray
+    >>> from hazma.gamma_ray import gamma_ray_decay
     >>> import numpy as np
     >>>
     >>> particles = np.array(['muon', 'charged_kaon', 'long_kaon'])
     >>> cme = 5000.
     >>> eng_gams = np.logspace(0., np.log10(cme), num=200, dtype=np.float64)
     >>>
-    >>> spec = gamma_ray(particles, cme, eng_gams)
+    >>> spec = gamma_ray_decay(particles, cme, eng_gams)
 
     """
     if type(particles) == str:

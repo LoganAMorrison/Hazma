@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-    <title>Gamma Ray Spectra Generator (hazma.gamma_ray) &mdash; Hazma 1.2 documentation | RiboKit</title>
+    <title>Gamma Ray Spectra Generator (hazma.gamma_ray_decay) &mdash; Hazma 1.2 documentation | RiboKit</title>
     
 
     
@@ -81,7 +81,7 @@
 
     
       <div class="downloads">
-        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray/gamma_ray</u></span>
+        <span style="text-transform: none; font-size: 120%;"><u>gamma_ray_decay/gamma_ray_decay</u></span>
         <ul>
           
             <li><a href="index.html" class="button">&#x21E7;</a></li>
@@ -110,7 +110,7 @@
             <p class="caption"><span class="caption-text">Introduction and Details</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Gamma Ray Spectra Generator (hazma.gamma_ray)</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Gamma Ray Spectra Generator (hazma.gamma_ray_decay)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a></li>
 </ul>
@@ -122,8 +122,8 @@
 </ul>
 <p class="caption"><span class="caption-text">Gamma Ray Modules</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray.html">hazma.gamma_ray.gamma_ray</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html">hazma.gamma_ray.gamma_ray_rambo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray.html">hazma.gamma_ray_decay.gamma_ray_decay</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html">hazma.gamma_ray_decay.gamma_ray_fsr</a></li>
 </ul>
 <p class="caption"><span class="caption-text">RAMBO Modules</span></p>
 <ul>
@@ -148,15 +148,15 @@
       <section>
       
   <div class="section" id="gamma-ray-spectra-generator-hazma-gamma-ray">
-<h1>Gamma Ray Spectra Generator (hazma.gamma_ray)<a class="headerlink" href="#gamma-ray-spectra-generator-hazma-gamma-ray" title="Permalink to this headline">¶</a></h1>
+<h1>Gamma Ray Spectra Generator (hazma.gamma_ray_decay)<a class="headerlink" href="#gamma-ray-spectra-generator-hazma-gamma-ray" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 <p>Sub-package for generating gamma ray spectra given a multi-particle final state.</p>
-<p>Hazma includes two different methods for computing gamma ray spectra. The first is done by specifying the final state of a process. Doing so, the particle decay spectra are then computed. The second method <code class="docutils literal"><span class="pre">gamma_ray_rambo</span></code> takes in the tree-level and radiative squared matrix elements and runs a Monte-Carlo to generate the gamma ray spectra.</p>
+<p>Hazma includes two different methods for computing gamma ray spectra. The first is done by specifying the final state of a process. Doing so, the particle decay spectra are then computed. The second method <code class="docutils literal"><span class="pre">gamma_ray_fsr</span></code> takes in the tree-level and radiative squared matrix elements and runs a Monte-Carlo to generate the gamma ray spectra.</p>
 </div>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">hazma.gamma_ray</span></code> has the following functions</p>
+<p><code class="docutils literal"><span class="pre">hazma.gamma_ray_decay</span></code> has the following functions</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="50%" />
@@ -164,10 +164,10 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Semi-Analytic Spectrum Generator</td>
-<td><a class="reference internal" href="gamma_ray_gamma_ray.html#gamma-ray-gamma-ray"><span class="std std-ref">hazma.gamma_ray.gamma_ray</span></a></td>
+<td><a class="reference internal" href="gamma_ray_gamma_ray.html#gamma-ray-gamma-ray"><span class="std std-ref">hazma.gamma_ray_decay.gamma_ray_decay</span></a></td>
 </tr>
 <tr class="row-even"><td>Monte Carlo Spectrum Generator</td>
-<td><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html#gamma-ray-gamma-ray-rambo"><span class="std std-ref">hazma.gamma_ray.gamma_ray_rambo</span></a></td>
+<td><a class="reference internal" href="gamma_ray_gamma_ray_rambo.html#gamma-ray-gamma-ray-rambo"><span class="std std-ref">hazma.gamma_ray_decay.gamma_ray_fsr</span></a></td>
 </tr>
 </tbody>
 </table>

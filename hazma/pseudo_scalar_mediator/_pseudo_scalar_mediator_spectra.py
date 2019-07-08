@@ -7,10 +7,10 @@ from hazma.parameters import electron_mass as me
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
 
-from hazma.gamma_ray import gamma_ray
+from hazma.gamma_ray import gamma_ray_decay
 
 # Stuff needed to compute fsr from x xbar -> P -> pip pim pi0
-# from ..gamma_ray import gamma_ray_rambo
+# from ..gamma_ray_decay import gamma_ray_fsr
 # from .pseudo_scalar_mediator_mat_elem_sqrd_rambo import msqrd_xx_to_p_to_pm0g
 
 
@@ -85,7 +85,7 @@ class PseudoScalarMediatorSpectra:
             isp_masses = np.array([params.mx, params.mx])
             fsp_masses = np.array([mpi, mpi, mpi0, 0.0])
 
-            return gamma_ray_rambo(isp_masses, fsp_masses, cme,
+            return gamma_ray_fsr(isp_masses, fsp_masses, cme,
                                    num_ps_pts=50000, num_bins=150,
                                    mat_elem_sqrd_tree=msqrd_tree,
                                    mat_elem_sqrd_rad=msqrd_rad)
@@ -99,9 +99,9 @@ class PseudoScalarMediatorSpectra:
             # the second argument. The first and second FS particles must be
             # the charged pions and the third a neutral pion.
 
-            return gamma_ray(["charged_pion", "charged_pion", "neutral_pion"],
-                             cme, egams, num_ps_pts=1000,
-                             mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
+            return gamma_ray_decay(["charged_pion", "charged_pion", "neutral_pion"],
+                                   cme, egams, num_ps_pts=1000,
+                                   mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
         else:
             raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
                              'decay'".format(spectrum_type))
@@ -130,9 +130,9 @@ class PseudoScalarMediatorSpectra:
             def msqrd_tree(momenta):
                 return self.msqrd_xx_to_p_to_000(momenta)
 
-            return gamma_ray(["neutral_pion", "neutral_pion", "neutral_pion"],
-                             cme, egams, num_ps_pts=1000,
-                             mat_elem_sqrd=msqrd_tree)
+            return gamma_ray_decay(["neutral_pion", "neutral_pion", "neutral_pion"],
+                                   cme, egams, num_ps_pts=1000,
+                                   mat_elem_sqrd=msqrd_tree)
         else:
             raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
                              'decay'".format(spectrum_type))
