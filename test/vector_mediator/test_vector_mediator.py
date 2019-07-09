@@ -6,13 +6,13 @@ from hazma.vector_mediator import VectorMediator, KineticMixing
 import numpy as np
 import unittest
 
-shr_dir = 'Hazma/test/vector_mediator/shared_data/'
-vm1_dir = 'Hazma/test/vector_mediator/vm1_data/'
-vm2_dir = 'Hazma/test/vector_mediator/vm2_data/'
-vm3_dir = 'Hazma/test/vector_mediator/vm3_data/'
-vm4_dir = 'Hazma/test/vector_mediator/vm4_data/'
-vm5_dir = 'Hazma/test/vector_mediator/vm5_data/'
-vm6_dir = 'Hazma/test/vector_mediator/vm6_data/'
+shr_dir = 'test/vector_mediator/shared_data/'
+vm1_dir = 'test/vector_mediator/vm1_data/'
+vm2_dir = 'test/vector_mediator/vm2_data/'
+vm3_dir = 'test/vector_mediator/vm3_data/'
+vm4_dir = 'test/vector_mediator/vm4_data/'
+vm5_dir = 'test/vector_mediator/vm5_data/'
+vm6_dir = 'test/vector_mediator/vm6_data/'
 
 
 class TestVectorMediator(unittest.TestCase):
@@ -359,25 +359,25 @@ class TestVectorMediator(unittest.TestCase):
 
         for key in self.vm1_pos_line['e e']:
             assert np.isclose(
-                ln1['e e'][key],  self.vm1_pos_line['e e'][key],
+                ln1['e e'][key], self.vm1_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)
         for key in self.vm2_pos_line['e e']:
             assert np.isclose(
-                ln2['e e'][key],  self.vm2_pos_line['e e'][key],
+                ln2['e e'][key], self.vm2_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)
         for key in self.vm3_pos_line['e e']:
             assert np.isclose(
-                ln3['e e'][key],  self.vm3_pos_line['e e'][key],
+                ln3['e e'][key], self.vm3_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)
         for key in self.vm4_pos_line['e e']:
             assert np.isclose(
-                ln4['e e'][key],  self.vm4_pos_line['e e'][key],
+                ln4['e e'][key], self.vm4_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)
         for key in self.vm5_pos_line['e e']:
             assert np.isclose(
-                ln5['e e'][key],  self.vm5_pos_line['e e'][key],
+                ln5['e e'][key], self.vm5_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)
         for key in self.vm6_pos_line['e e']:
             assert np.isclose(
-                ln6['e e'][key],  self.vm6_pos_line['e e'][key],
+                ln6['e e'][key], self.vm6_pos_line['e e'][key],
                 atol=0.0, rtol=1e-3)

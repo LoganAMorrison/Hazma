@@ -6,8 +6,8 @@ from hazma.scalar_mediator import ScalarMediator
 import numpy as np
 import unittest
 
-sm1_dir = 'Hazma/test/scalar_mediator/sm1_data/'
-sm2_dir = 'Hazma/test/scalar_mediator/sm2_data/'
+sm1_dir = 'test/scalar_mediator/sm1_data/'
+sm2_dir = 'test/scalar_mediator/sm2_data/'
 
 
 class TestScalarMediator(unittest.TestCase):
@@ -82,7 +82,7 @@ class TestScalarMediator(unittest.TestCase):
 
     def test_description(self):
         """
-        Test that the scalar mediator class desciption is working.
+        Test that the scalar mediator class description is working.
         """
         self.sm1.description()
         self.sm2.description()
@@ -196,7 +196,7 @@ class TestScalarMediator(unittest.TestCase):
         lns2_new = self.sm2.positron_lines(self.cme2)
 
         assert np.isclose(
-            lns1_new['e e']['bf'],  self.lns1_old['e e']['bf'],
+            lns1_new['e e']['bf'], self.lns1_old['e e']['bf'],
             atol=0.0, rtol=1e-3)
 
         assert np.isclose(

@@ -4,9 +4,9 @@ from hazma.decay import charged_pion
 import numpy as np
 import unittest
 
-mu_dir = 'Hazma/test/decay/muon_data/'
-np_dir = 'Hazma/test/decay/npion_data/'
-cp_dir = 'Hazma/test/decay/cpion_data/'
+mu_dir = 'test/decay/muon_data/'
+np_dir = 'test/decay/npion_data/'
+cp_dir = 'test/decay/cpion_data/'
 
 
 class TestDecay(unittest.TestCase):

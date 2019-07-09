@@ -88,6 +88,9 @@ extensions += [Extension(pos_pack + ".positron_rambo",
 extensions += [Extension(sm_pack + ".scalar_mediator_decay_spectrum",
                          sources=[sm_dir +
                                   "scalar_mediator_decay_spectrum.pyx"])]
+extensions += [Extension(sm_pack + ".scalar_mediator_positron_spec",
+                         sources=[sm_dir +
+                                  "scalar_mediator_positron_spec.pyx"])]
 # Vector mediator
 extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
                          sources=[vm_dir +

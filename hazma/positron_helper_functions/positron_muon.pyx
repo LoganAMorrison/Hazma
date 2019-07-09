@@ -2,13 +2,13 @@ import numpy as np
 cimport numpy as np
 import cython
 from libc.math cimport M_PI, sqrt, abs
+
 include "parameters.pxd"
 
 from scipy.integrate import quad
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E
-
 
 @cython.cdivision(True)
 cdef double __spectrum_rf(double eng_p):
@@ -26,18 +26,17 @@ cdef double __spectrum_rf(double eng_p):
         The value of the spectrum given a positron energy `eng_p`.
     """
     cdef double r = me / mmu
-    cdef double s = me**2 - 2. * eng_p * mmu + mmu**2
-    cdef double smax = mmu**2 * (1. - r)**2
+    cdef double s = me * me - 2. * eng_p * mmu + mmu * mmu
+    cdef double smax = mmu * mmu * (1. - r) * (1. - r)
     cdef double smin = 0.
     cdef double dnds = 0.0
     if s <= smin or smax <= s:
         return dnds
-    dnds = (2 * (mmu**4 * (-1 + r**2)**2 + mmu**2 *
-                 (1 + r**2) * s - 2 * s**2) *
-            np.sqrt(mmu**4 * (-1 + r**2)**2 -
-                    2 * mmu**2 * (1 + r**2) * s + s**2)) / mmu**8
+    dnds = (2 * (pow(mmu, 4) * pow(-1 + r * r, 2) + mmu * mmu *
+                 (1 + r * r) * s - 2 * s * s) *
+            np.sqrt(pow(mmu, 4) * pow(-1 + r * r, 2) -
+                    2 * mmu**2 * (1 + r * r) * s + s * s)) / pow(mmu, 8)
     return 2 * mmu * dnds
-
 
 @cython.cdivision(True)
 cdef double __integrand(double cl, double eng_p, double eng_mu):
@@ -59,13 +58,16 @@ cdef double __integrand(double cl, double eng_p, double eng_mu):
     integrand : double
         Integral for the boost integral.
     """
+    cdef double p = sqrt(eng_p * eng_p - me * me)
     cdef double gamma = eng_mu / mmu
-    cdef double beta = sqrt(1.0 - (mmu / eng_mu)**2.0)
-    cdef double emurf = gamma * eng_p * (1.0 - beta * cl)
-    cdef double jac = 1.0 / (2.0 * gamma * abs(1.0 - beta * cl))
+    cdef double beta = sqrt(1.0 - pow(mmu / eng_mu, 2))
+    cdef double emurf = gamma * (eng_p - p * beta * cl)
+    cdef double jac = p / (2. * sqrt((1 + pow(beta * cl, 2)) * eng_p * eng_p -
+                                     (1 + beta * beta * (-1 + cl * cl)) *
+                                     me * me -
+                                     2 * beta * cl * eng_p * p) * gamma)
 
     return __spectrum_rf(emurf) * jac
-
 
 @cython.cdivision(True)
 cdef double CSpectrumPoint(double eng_p, double eng_mu):
@@ -89,9 +91,8 @@ cdef double CSpectrumPoint(double eng_p, double eng_mu):
     if eng_mu < mmu:
         return 0.0
 
-    return quad(__integrand, -1., 1., points=[-1.0, 1.0], \
-                args=(eng_p, eng_mu), epsabs=10**-10., epsrel=10**-4.)[0]
-
+    return quad(__integrand, -1., 1., points=[-1.0, 1.0],
+                args=(eng_p, eng_mu), epsabs=1e-10, epsrel=1e-4)[0]
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
@@ -124,7 +125,6 @@ cdef np.ndarray CSpectrum(np.ndarray engs_p, double eng_mu):
 
     return spec
 
-
 def SpectrumPoint(double eng_p, double eng_mu):
     """
     Returns the positron spectrum at a single electron energy from the muon
@@ -144,7 +144,6 @@ def SpectrumPoint(double eng_p, double eng_mu):
         energy `eng_mu`.
     """
     return CSpectrumPoint(eng_p, eng_mu)
-
 
 @cython.boundscheck(True)
 @cython.wraparound(False)

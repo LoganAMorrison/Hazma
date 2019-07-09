@@ -1,4 +1,4 @@
-"""Module for computing gamma ray spectra from a many-particle final state.
+"""Module for computing positron spectra from a many-particle final state.
 
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
@@ -66,8 +66,8 @@ def __gen_spec_2body(particles, cme, eng_ps):
     m1 = masses[0]
     m2 = masses[1]
 
-    E1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
-    E2 = (cme**2 - m1**2 + m2**2) / (2 * cme)
+    E1 = (cme * cme + m1 * m1 - m2 * m2) / (2 * cme)
+    E2 = (cme * cme - m1 * m1 + m2 * m2) / (2 * cme)
 
     spec = cspec_dict[particles[0]](eng_ps, E1)
     spec += cspec_dict[particles[1]](eng_ps, E2)
@@ -142,7 +142,7 @@ def positron(np.ndarray particles, double cme,
             # N = num_bins.
             norm = (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins * hist[j, 1, i]
 
-            specs.append(p.apply_async(__gen_spec, \
+            specs.append(p.apply_async(__gen_spec,
                                        (part, part_eng, eng_ps, norm, verbose)))
 
     p.close()
