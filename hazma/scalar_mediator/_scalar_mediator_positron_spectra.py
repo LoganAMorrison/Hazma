@@ -27,7 +27,7 @@ class ScalarMediatorPositronSpectra:
             pw_array /= pws["total"]
 
             # Factor of 2 since S is self-conjugate
-            return 2.0 * dnde_decay_s(e_ps, e_s, self.ms, pw_array, "total")
+            return 2.0 * dnde_decay_s(e_ps, e_s, self.ms, pw_array, fs)
         else:
             return np.zeros_like(e_ps)
 

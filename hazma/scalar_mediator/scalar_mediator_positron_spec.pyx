@@ -73,9 +73,6 @@ cdef void __set_spectra(double ms):
 
     __e_ps = np.logspace(log10(me), log10(ms / 2.), num=n_interp_pts)
     __spec_cp = cp_spec(__e_ps, ms / 2.)
-    print(ms / 2)
-    print(__e_ps)
-    print(__spec_cp)
     __spec_mu = mu_spec(__e_ps, ms / 2.)
 
 cdef double __interp_spec(double eng_p, str fs):
