@@ -15,8 +15,21 @@ class ScalarMediatorPositronSpectra:
         return pspec_muon(e_ps, e_cm / 2.0)
 
     # positron decay spectrum for chi chibar -> s s
-    def dnde_pos_ss(self, e_ps, e_cm, ms, pws, fs="total"):
-        return dnde_decay_s(e_ps, e_cm / 2.0, ms, pws, fs)
+    def dnde_pos_ss(self, e_ps, e_cm, fs="total"):
+        # Each scalar gets half the COM energy
+        e_s = e_cm / 2.0
+
+        ms = self.ms
+        pws = self.partial_widths()
+
+        if pws["total"] != 0:
+            pw_array = np.array([pws["e e"], pws["mu mu"], pws["pi pi"]], dtype=float)
+            pw_array /= pws["total"]
+
+            # Factor of 2 since S is self-conjugate
+            return 2.0 * dnde_decay_s(e_ps, e_s, self.ms, pw_array, "total")
+        else:
+            return np.zeros_like(e_ps)
 
     def positron_spectra(self, e_ps, e_cm):
         """Computes total continuum positron spectrum.
@@ -27,30 +40,15 @@ class ScalarMediatorPositronSpectra:
             if bf != 0:
                 return bf * specfn(e_ps, e_cm)
             else:
-                return np.zeros(e_ps.shape)
+                return np.zeros_like(e_ps)
 
         muon_spec = spec_helper(bfs["mu mu"], self.dnde_pos_mumu)
         pipi_spec = spec_helper(bfs["pi pi"], self.dnde_pos_pipi)
-
-        # Handle the chi chibar-> S S seperately.
-        if bfs["s s"] != 0.0:
-            pws = self.partial_widths()
-            if pws["total"] != 0.0:
-                pw_array = np.zeros(3, dtype=float)
-                pw_array[0] = pws["e e"] / pws["total"]
-                pw_array[1] = pws["mu mu"] / pws["total"]
-                pw_array[2] = pws["pi pi"] / pws["total"]
-                ss_spec = bfs["s s"] * self.dnde_pos_ss(e_ps, e_cm, self.ms,
-                                                        pw_array, "total")
-            else:
-                ss_spec = np.zeros(e_ps.shape)
-        else:
-            ss_spec = np.zeros(e_ps.shape)
+        ss_spec = spec_helper(bfs["s s"], self.dnde_pos_ss)
 
         total = pipi_spec + muon_spec + ss_spec
 
-        return {"total": total, "mu mu": muon_spec, "pi pi": pipi_spec,
-                "s s": ss_spec}
+        return {"total": total, "mu mu": muon_spec, "pi pi": pipi_spec, "s s": ss_spec}
 
     def positron_lines(self, e_cm):
         bf = self.annihilation_branching_fractions(e_cm)["e e"]
