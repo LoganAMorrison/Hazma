@@ -35,10 +35,6 @@ install:
     - $<RUN_ENV> python -c "import SimpleITK; print('SimpleITK Version:' + SimpleITK.Version_VersionString())"
     - $<RUN_ENV> pip install -r requirements.txt
 
-before_build:
-  commands:
-  #- flake8 --ignore=W605,E226,E121,E123,E126,E226,E24,E704,W503,W504
-
 build:
   commands:
     - $<RUN_ENV> python setup.py build_ext
