@@ -26,7 +26,6 @@ cdef mass_dict = {'muon': MASS_MU, 'charged_pion': MASS_PI,
 cdef dict cspec_dict = spec_dict
 cdef dict cmass_dict = mass_dict
 
-
 cdef np.ndarray names_to_masses(np.ndarray names):
     """Returns the masses of particles given a list of their names.
 
@@ -48,7 +47,6 @@ cdef np.ndarray names_to_masses(np.ndarray names):
     for i in range(size):
         masses[i] = cmass_dict[names[i]]
     return masses
-
 
 def __gen_spec(name, eng, eng_ps, norm, verbose=False):
     """
@@ -76,11 +74,10 @@ def __gen_spec_2body(particles, cme, eng_ps):
 
     return spec
 
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def positron(np.ndarray particles, double cme,
-             np.ndarray eng_ps, mat_elem_sqrd=lambda k_list : 1.0,
+             np.ndarray eng_ps, mat_elem_sqrd=lambda k_list: 1.0,
              int num_ps_pts=10000, int num_bins=25, verbose=False):
     """Returns total gamma ray spectrum from final state particles.
 
@@ -126,8 +123,7 @@ def positron(np.ndarray particles, double cme,
     num_fsp = len(masses)
     num_engs = len(eng_ps)
 
-    hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
-                                           mat_elem_sqrd, num_bins, density=True)[0]
+    hist = rambo.generate_energy_histogram(masses, cme, num_ps_pts, mat_elem_sqrd, num_bins, density=True)[0]
 
     cpdef int num_cpus = int(np.floor(mp.cpu_count() * 0.75))
 
@@ -136,8 +132,8 @@ def positron(np.ndarray particles, double cme,
 
     for i in range(num_bins):
         for j in range(num_fsp):
-            part = particles[j] # particle name
-            part_eng = hist[j, 0, i] # particle energy
+            part = particles[j]  # particle name
+            part_eng = hist[j, 0, i]  # particle energy
 
             # Normalize spectrum: Need to multiply by the probability of
             # particle having energy part_eng. Since we are essentially
@@ -147,18 +143,17 @@ def positron(np.ndarray particles, double cme,
             norm = (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins * hist[j, 1, i]
 
             specs.append(p.apply_async(__gen_spec, \
-                (part, part_eng, eng_ps, norm, verbose)))
+                                       (part, part_eng, eng_ps, norm, verbose)))
 
     p.close()
     p.join()
 
     return sum([spec.get() for spec in specs])
 
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def positron_point(np.ndarray particles, double cme,
-                   double eng_p, mat_elem_sqrd=lambda k_list : 1.0,
+                   double eng_p, mat_elem_sqrd=lambda k_list: 1.0,
                    int num_ps_pts=1000, int num_bins=25):
     """
     Returns gamma ray spectrum at single gamma ray enegy from final state
@@ -198,20 +193,19 @@ def positron_point(np.ndarray particles, double cme,
 
     num_fsp = len(masses)
 
-    hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
-                                           mat_elem_sqrd, num_bins)[0]
+    hist = rambo.generate_energy_histogram(masses, cme, num_ps_pts, mat_elem_sqrd, num_bins)[0]
 
     for i in range(num_bins):
         for j in range(num_fsp):
             if particles[j] is 'muon':
                 spec_val += hist[j, 1, i] * \
-                    positron_muon.SpectrumPoint(eng_p, hist[j, 0, i]) * \
-                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
+                            positron_muon.SpectrumPoint(eng_p, hist[j, 0, i]) * \
+                            (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             if particles[j] is 'charged_pion':
                 spec_val += hist[j, 1, i] * \
-                    positron_charged_pion.Spectrum(eng_p, hist[j, 0, i],
-                                                   "total") * \
-                    (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
+                            positron_charged_pion.Spectrum(eng_p, hist[j, 0, i],
+                                                           "total") * \
+                            (hist[j, 0, -1] - hist[j, 0, 0]) / num_bins
             else:
                 spec_val += 0.0
 

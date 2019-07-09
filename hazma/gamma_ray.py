@@ -171,7 +171,7 @@ def gamma_ray_fsr(isp_masses, fsp_masses, cme,
         prefactor = 1.0 / (2.0 * cme)
     else:
         cross_section = rambo.compute_annihilation_cross_section(
-            num_ps_pts, isp_masses, fsp_masses[0:-1], cme,
+            isp_masses, fsp_masses[0:-1], cme, num_ps_pts=num_ps_pts,
             mat_elem_sqrd=mat_elem_sqrd_tree)[0]
 
         m1 = isp_masses[0]
@@ -179,8 +179,8 @@ def gamma_ray_fsr(isp_masses, fsp_masses, cme,
         prefactor = cross_section_prefactor(m1, m2, cme)
 
     eng_hists = rambo.generate_energy_histogram(
-        num_ps_pts, fsp_masses, cme, num_bins=num_bins,
-        mat_elem_sqrd=mat_elem_sqrd_rad)[0]
+        fsp_masses, cme, num_ps_pts=num_ps_pts,
+        mat_elem_sqrd=mat_elem_sqrd_rad, num_bins=num_bins)[0]
 
     engs_gam = eng_hists[-1, 0]
     dndes = eng_hists[-1, 1] * prefactor / cross_section

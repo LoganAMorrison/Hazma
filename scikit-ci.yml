@@ -37,7 +37,7 @@ install:
 
 before_build:
   commands:
-    - flake8 --ignore=W605,E226,E121,E123,E126,E226,E24,E704,W503,W504
+  #- flake8 --ignore=W605,E226,E121,E123,E126,E226,E24,E704,W503,W504
 
 build:
   commands:

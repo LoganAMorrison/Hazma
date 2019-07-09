@@ -149,7 +149,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
     return points
 
 
-def generate_energy_histogram(num_ps_pts, masses, cme,
+def generate_energy_histogram(masses, cme, num_ps_pts,
                               mat_elem_sqrd=lambda klist: 1, num_bins=25,
                               num_cpus=None, density=False):
     """
