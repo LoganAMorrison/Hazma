@@ -85,7 +85,7 @@ for row in range(n_subplot_rows):  # loop over type of model
                 ax.loglog(e_gams, sm.spectra(e_gams, e_cm)["s s"],
                           color=cmap(sm.ms))
 
-        # Formatting: label final states
+        # Formatting: label mediator masses
         for ms, (x, y) in ms_labels[row, col].items():
             ax.text(x, y, r"%i MeV" % ms, fontsize=8, color=cmap(ms))
 
