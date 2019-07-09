@@ -22,10 +22,13 @@ from hazma.scalar_mediator import HiggsPortal, ScalarMediator
 from hazma.vector_mediator import KineticMixing, VectorMediator
 from utilities import colors, latex_text_width_1col
 
+# %% [markdown]
+# **To-do:** fix this `nan`
+
 # %%
 hp = HiggsPortal(300., 300., gsxx=1.0, stheta=1e-1)
 
-hp.dnde_pos_ss(np.array([1.0, 10.0, 100.0]), 1000.0)
+print(hp.dnde_pos_ss(np.array([1.0]), 1000.0, fs="pi pi"))
 
 # %% [markdown]
 # **Plots $e^+$ annihilation spectra for the scalar and vector models for annihilation into mediators.**
@@ -57,6 +60,9 @@ n_subplot_rows, n_subplot_cols = len(models), len(mxs)
 def cmap(mM):
     return colors[np.where(mMs == mM)[0][0]]
 
+
+# %% [markdown]
+# **To-do:** fix gap in green curve due to `nan` problem above
 
 # %% {"code_folding": [0]}
 fig, axes = plt.subplots(
