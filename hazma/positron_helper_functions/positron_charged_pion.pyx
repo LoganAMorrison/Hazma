@@ -1,6 +1,6 @@
 from hazma.positron_helper_functions.positron_muon cimport CSpectrum as muspec
 from scipy.integrate import quad
-from libc.math cimport sqrt, pow
+from libc.math cimport sqrt, pow, log10
 import numpy as np
 cimport numpy as np
 import cython
@@ -20,7 +20,7 @@ cdef double eng_p_max_mu_rf = (me * me + mmu * mmu) / (2.0 * mmu)
 cdef double eng_p_max_pi_rf = eng_p_max_mu_rf * gamma_mu * (1.0 + beta_mu)
 
 # TODO: Really?? 10000 pts?
-eng_ps_mu = np.linspace(0.0, eng_p_max_pi_rf, num=10000, dtype=np.float64)
+eng_ps_mu = np.logspace(log10(me), log10(eng_p_max_pi_rf), num=500, dtype=np.float64)
 
 cdef np.ndarray __muspec = muspec(eng_ps_mu, eng_mu_pi_rf)
 
@@ -58,6 +58,8 @@ cdef double __integrand(double cl, double eng_p, double eng_pi):
         Integrand of the boost integral at angle `cl`, positron energy `eng_p`
         and pion energy `eng_pi`.
     """
+    if eng_p < me:
+        return 0.0
     cdef double p = sqrt(eng_p * eng_p - me * me)
     cdef double gamma = eng_pi / mpi
     cdef double beta = sqrt(1.0 - pow(mpi / eng_pi, 2))

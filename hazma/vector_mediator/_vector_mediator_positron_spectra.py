@@ -6,11 +6,9 @@ from hazma.vector_mediator.vector_mediator_positron_spec import dnde_decay_v
 
 
 class VectorMediatorPositronSpectra:
-    @staticmethod
     def dnde_pos_pipi(self, e_ps, e_cm):
         return pspec_charged_pion(e_ps, e_cm / 2.0)
 
-    @staticmethod
     def dnde_pos_mumu(self, e_ps, e_cm):
         return pspec_muon(e_ps, e_cm / 2.0)
 

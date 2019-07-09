@@ -27,16 +27,15 @@ cdef double __spectrum_rf(double eng_p):
     """
     cdef double r = me / mmu
     cdef double s = me * me - 2. * eng_p * mmu + mmu * mmu
-    cdef double smax = mmu * mmu * (1. - r) * (1. - r)
-    cdef double smin = 0.
-    cdef double dnds = 0.0
+    cdef double smax = (mmu - me) * (mmu - me)
+    cdef double smin = 0.0
     if s <= smin or smax <= s:
-        return dnds
-    dnds = (2 * (pow(mmu, 4) * pow(-1 + r * r, 2) + mmu * mmu *
-                 (1 + r * r) * s - 2 * s * s) *
-            np.sqrt(pow(mmu, 4) * pow(-1 + r * r, 2) -
-                    2 * mmu**2 * (1 + r * r) * s + s * s)) / pow(mmu, 8)
-    return 2 * mmu * dnds
+        return 0.0
+
+    return 2 * mmu * (2 * (pow(mmu, 4) * pow(-1 + r * r, 2) + mmu * mmu *
+                           (1 + r * r) * s - 2 * s * s) *
+                      np.sqrt(pow(mmu, 4) * pow(-1 + r * r, 2) -
+                              2 * mmu**2 * (1 + r * r) * s + s * s)) / pow(mmu, 8)
 
 @cython.cdivision(True)
 cdef double __integrand(double cl, double eng_p, double eng_mu):
@@ -58,6 +57,8 @@ cdef double __integrand(double cl, double eng_p, double eng_mu):
     integrand : double
         Integral for the boost integral.
     """
+    if eng_p < me:
+        return 0.0
     cdef double p = sqrt(eng_p * eng_p - me * me)
     cdef double gamma = eng_mu / mmu
     cdef double beta = sqrt(1.0 - pow(mmu / eng_mu, 2))

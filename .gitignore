@@ -6,6 +6,7 @@ development_notebooks
 build/
 dist/
 hazma.egg-info
+.idea/
 *.c
 *.so
 *.cpp
