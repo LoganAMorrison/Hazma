@@ -28,7 +28,6 @@ cdef np.ndarray __spec_cp = np.zeros((n_interp_pts,), dtype=np.float64)
 cdef np.ndarray __spec_np = np.zeros((n_interp_pts,), dtype=np.float64)
 cdef np.ndarray __spec_mu = np.zeros((n_interp_pts,), dtype=np.float64)
 
-
 cdef double __set_spectra(double ms):
     global __e_gams
     global __spec_cp
@@ -40,8 +39,6 @@ cdef double __set_spectra(double ms):
     __spec_cp = cp_spec(__e_gams, ms / 2., "total")
     __spec_np = np_spec(__e_gams, ms / 2.)
     __spec_mu = mu_spec(__e_gams, ms / 2.)
-
-
 
 cdef double __interp_spec(double eng_gam, str fs):
     """
@@ -62,13 +59,11 @@ cdef double __interp_spec(double eng_gam, str fs):
         if eng_gam < 10**-1:
             return __spec_mu[0] * __e_gams[0] / eng_gam
         return np.interp(eng_gam, __e_gams, __spec_mu)
-    else :
+    else:
         return 0.0
-
 
 @cython.cdivision(True)
 cdef double __dnde_fsr_cp_srf(double egam, double ms):
-
     cdef double mupi = mpi / ms
     cdef double x = 2. * egam / ms
     cdef double xmin = 0.0
@@ -81,17 +76,16 @@ cdef double __dnde_fsr_cp_srf(double egam, double ms):
         return 0.0
 
     dynamic = (
-        -2 * sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) +
-        (-1 + 2 * mupi**2 + x) * log(
-            (1 - x - sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x))**2 /
-            (-1 + x - sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x))**2)) / x
+                      -2 * sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) +
+                      (-1 + 2 * mupi**2 + x) * log(
+                  (1 - x - sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x))**2 /
+                  (-1 + x - sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x))**2)) / x
 
     coeff = qe**2 / (8. * sqrt(1 - 4 * mupi**2) * M_PI**2)
 
     result = dynamic * coeff
 
     return 2 * result / ms
-
 
 @cython.cdivision(True)
 cdef double __dnde_fsr_l_srf(double egam, double ml, double ms):
@@ -109,19 +103,18 @@ cdef double __dnde_fsr_l_srf(double egam, double ml, double ms):
         return 0.0
 
     dynamic = (
-        4 * (-1 + 4 * mul**2) *
-        sqrt(1 - x) * sqrt(1 - 4 * mul**2 - x) +
-        (2 - 12 * mul**2 + 16 * mul**4 - 2 * x + 8 * mul**2 * x + x**2) * log(
-            (1 - x + sqrt(
-                (-1 + x) * (-1 + 4 * mul**2 + x)))**2 / (-1 + x + sqrt(
-                    (-1 + x) * (-1 + 4 * mul**2 + x)))**2)) / x
+                      4 * (-1 + 4 * mul**2) *
+                      sqrt(1 - x) * sqrt(1 - 4 * mul**2 - x) +
+                      (2 - 12 * mul**2 + 16 * mul**4 - 2 * x + 8 * mul**2 * x + x**2) * log(
+                  (1 - x + sqrt(
+                      (-1 + x) * (-1 + 4 * mul**2 + x)))**2 / (-1 + x + sqrt(
+                      (-1 + x) * (-1 + 4 * mul**2 + x)))**2)) / x
 
     coeff = qe**2 / (16. * (1 - 4 * mul**2)**1.5 * M_PI**2)
 
     result = dynamic * coeff
 
     return 2 * result / ms
-
 
 @cython.cdivision(True)
 @cython.boundscheck(True)
@@ -171,7 +164,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_s,
     cdef double dnde_mu_d = 2. * pwmumu * __interp_spec(eng_gam_srf, "mu")
 
     dnde = dnde_ee_f + dnde_mu_f + dnde_cp_f + \
-        dnde_cp_d + dnde_np_d + dnde_mu_d
+           dnde_cp_d + dnde_np_d + dnde_mu_d
 
     if fs == "total":
         return jac * dnde
@@ -189,7 +182,6 @@ cdef double __integrand(double cl, double eng_gam, double eng_s,
         return jac * dnde_mu_d
     if fs == "g g":
         return 0.0
-
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
@@ -226,8 +218,8 @@ cdef double __dnde_decay_s(double eng_gam, double eng_s, double ms,
     cdef double eminus = eng_s * (1. - beta) / 2.0
     cdef double result = 0.0
 
-    if eminus <= eng_gam and eng_gam <= eplus:
-        lines_contrib = pws[4] * 2. / (eng_s * beta)
+    if eminus <= eng_gam <= eplus:
+        lines_contrib = pws[4] * 1. / (eng_s * beta)
 
     if fs == "g g":
         return lines_contrib
@@ -241,11 +233,10 @@ cdef double __dnde_decay_s(double eng_gam, double eng_s, double ms,
 
     return result
 
-
 @cython.boundscheck(True)
 @cython.wraparound(False)
 def dnde_decay_s_pt(double eng_gam, double eng_s, double ms,
-                 np.ndarray[double] pws, str fs):
+                    np.ndarray[double] pws, str fs):
     """
     Compute the gamma ray spectrum from the decay of the scalar mediator.
 
@@ -266,11 +257,10 @@ def dnde_decay_s_pt(double eng_gam, double eng_s, double ms,
     __set_spectra(ms)
     return __dnde_decay_s(eng_gam, eng_s, ms, pws, fs)
 
-
 @cython.boundscheck(True)
 @cython.wraparound(False)
 def dnde_decay_s(np.ndarray[double] eng_gam, double eng_s, double ms,
-                   np.ndarray[double] pws, str fs):
+                 np.ndarray[double] pws, str fs):
     """
     Compute the gamma ray spectrum from the decay of the scalar mediator.
 

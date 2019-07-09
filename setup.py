@@ -95,6 +95,9 @@ extensions += [Extension(sm_pack + ".scalar_mediator_positron_spec",
 extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
                          sources=[vm_dir +
                                   "vector_mediator_decay_spectrum.pyx"])]
+extensions += [Extension(vm_pack + ".vector_mediator_positron_spec",
+                         sources=[vm_dir +
+                                  "vector_mediator_positron_spec.pyx"])]
 
 setup(name='hazma',
       version=VERSION,

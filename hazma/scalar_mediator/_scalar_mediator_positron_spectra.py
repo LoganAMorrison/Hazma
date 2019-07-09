@@ -7,10 +7,12 @@ from hazma.scalar_mediator.scalar_mediator_positron_spec import dnde_decay_s
 
 class ScalarMediatorPositronSpectra:
     # positron decay spectrum for chi chibar -> pi pi
+    @staticmethod
     def dnde_pos_pipi(self, e_ps, e_cm):
         return pspec_charged_pion(e_ps, e_cm / 2.0)
 
     # positron decay spectrum for chi chibar -> mu mu
+    @staticmethod
     def dnde_pos_mumu(self, e_ps, e_cm):
         return pspec_muon(e_ps, e_cm / 2.0)
 
@@ -18,8 +20,6 @@ class ScalarMediatorPositronSpectra:
     def dnde_pos_ss(self, e_ps, e_cm, fs="total"):
         # Each scalar gets half the COM energy
         e_s = e_cm / 2.0
-
-        ms = self.ms
         pws = self.partial_widths()
 
         if pws["total"] != 0:
@@ -36,9 +36,9 @@ class ScalarMediatorPositronSpectra:
         """
         bfs = self.annihilation_branching_fractions(e_cm)
 
-        def spec_helper(bf, specfn):
+        def spec_helper(bf, spec_fn):
             if bf != 0:
-                return bf * specfn(e_ps, e_cm)
+                return bf * spec_fn(e_ps, e_cm)
             else:
                 return np.zeros_like(e_ps)
 
