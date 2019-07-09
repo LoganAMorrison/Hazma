@@ -35,13 +35,15 @@ class ScalarMediatorPositronSpectra:
         # Handle the chi chibar-> S S seperately.
         if bfs["s s"] != 0.0:
             pws = self.partial_widths()
-            pw_array = np.zeros(3, dtype=float)
-
-            pw_array[0] = pws["e e"] / pws["total"]
-            pw_array[1] = pws["mu mu"] / pws["total"]
-            pw_array[2] = pws["pi pi"] / pws["total"]
-            ss_spec = bfs["s s"] * self.dnde_pos_ss(e_ps, e_cm, self.ms,
-                                                    pw_array, "total")
+            if pws["total"] != 0.0:
+                pw_array = np.zeros(3, dtype=float)
+                pw_array[0] = pws["e e"] / pws["total"]
+                pw_array[1] = pws["mu mu"] / pws["total"]
+                pw_array[2] = pws["pi pi"] / pws["total"]
+                ss_spec = bfs["s s"] * self.dnde_pos_ss(e_ps, e_cm, self.ms,
+                                                        pw_array, "total")
+            else:
+                ss_spec = np.zeros(e_ps.shape)
         else:
             ss_spec = np.zeros(e_ps.shape)
 
