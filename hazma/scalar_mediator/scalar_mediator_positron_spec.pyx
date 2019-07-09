@@ -32,15 +32,15 @@ cdef np.ndarray __spec_mu = np.zeros((n_interp_pts,), dtype=np.float64)
 
 cdef int __recompute_rf_spectra(double ms, np.ndarray[double] pws):
     """
-    Determine if we need to recompute the positron spectra for the muon and 
+    Determine if we need to recompute the positron spectra for the muon and
     pion spectra in the scalar rest frame.
-    
+
     Parameters
     ----------
     ms: double
         Mass of the scalar mediator
     pws: np.ndarray
-        Relevant partial widths: pws[0] = pw_ee, pws[1] = pw_mumu and 
+        Relevant partial widths: pws[0] = pw_ee, pws[1] = pw_mumu and
         pws[2] = pw_pipi
 
     Returns
@@ -58,7 +58,7 @@ cdef int __recompute_rf_spectra(double ms, np.ndarray[double] pws):
 
 cdef void __set_spectra(double ms):
     """
-    Set interpolating functions for charged pion and muon positron spectra to 
+    Set interpolating functions for charged pion and muon positron spectra to
     speed up functions calls during integration.
 
     Parameters
@@ -73,13 +73,16 @@ cdef void __set_spectra(double ms):
 
     __e_ps = np.logspace(log10(me), log10(ms / 2.), num=n_interp_pts)
     __spec_cp = cp_spec(__e_ps, ms / 2.)
+    print(ms / 2)
+    print(__e_ps)
+    print(__spec_cp)
     __spec_mu = mu_spec(__e_ps, ms / 2.)
 
 cdef double __interp_spec(double eng_p, str fs):
     """
     Return the positron spectrum from the decay of the scalar mediator into
     either a charged pion or muon for a given electron/positron energy.
-    
+
     Parameters
     ----------
     eng_p: double
@@ -121,7 +124,7 @@ cdef double __integrand(double cl, double eng_p, double eng_s,
     ms : double
         Scalar mediator mass.
     pws: np.ndarray
-        Relevant partial widths: pws[0] = pw_ee, pws[1] = pw_mumu and 
+        Relevant partial widths: pws[0] = pw_ee, pws[1] = pw_mumu and
         pws[2] = pw_pipi
     fs: str
         String specifying the final state to compute spectrum for.
@@ -146,7 +149,6 @@ cdef double __integrand(double cl, double eng_p, double eng_s,
                                      me * me -
                                      2 * beta * cl * eng_p * p) * gamma)
 
-    cdef double dnde = 0.0
     cdef double dnde_cp = 0.0
     cdef double dnde_mu = 0.0
 
@@ -185,7 +187,7 @@ cdef double __dnde_decay_s(double eng_p, double eng_s, double ms,
     ms : double
         Mass of the scalar mediator.
     pws: np.ndarray[double]
-        Array of the relevant partial widths: pws[0] = pw_ee, 
+        Array of the relevant partial widths: pws[0] = pw_ee,
         pws[1] = pw_mumu and pws[2] = pw_pipi
 
     Returns
