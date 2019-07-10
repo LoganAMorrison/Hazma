@@ -28,13 +28,13 @@ pos_pack = "hazma.positron_helper_functions"
 sm_pack = "hazma.scalar_mediator"
 vm_pack = "hazma.vector_mediator"
 
-psm_pack = "hazma.pseudo_scalar_mediator"
-avm_pack = "hazma.axial_vector_mediator"
+# psm_pack = "hazma.pseudo_scalar_mediator"
+# avm_pack = "hazma.axial_vector_mediator"
 unit_pack = "hazma.unitarization"
 
-packs = ["hazma", avm_pack, decay_pack, ft_pack,
+packs = ["hazma", decay_pack, ft_pack,
          gr_pack, theory_pack, ps_pack, pos_pack,
-         psm_pack, sm_pack, unit_pack, vm_pack]
+         sm_pack, unit_pack, vm_pack]
 
 extensions = []
 
