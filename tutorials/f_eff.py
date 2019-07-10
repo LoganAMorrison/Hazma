@@ -23,24 +23,41 @@ from hazma.scalar_mediator import ScalarMediator, HiggsPortal, HeavyQuark
 from hazma.vector_mediator import VectorMediator, KineticMixing, QuarksOnly
 
 # %%
-mxs = np.geomspace(0.1, 250, 200)  # DM masses
+mxs = np.geomspace(0.1, 250, 300)  # DM masses
 m_meds = np.array([50, 175, 500])  # mediator masses
 x_kd = 1e-6  # 1e-4 gives weaker CMB limits for the scalar models
 
 # Models
-models = np.array([[KineticMixing(1., 1e3, gvxx=1., eps=0.1),
-                    QuarksOnly(1., 1e3, gvxx=1., gvuu=1., gvdd=-1., gvss=0.),
-                    QuarksOnly(1., 1e3, gvxx=1., gvuu=1., gvdd=1., gvss=0.)],
-                   [HiggsPortal(1., 1e3, gsxx=1., stheta=1e-1),
-                    HeavyQuark(1., 1e3, gsxx=1., gsQ=1e-1, mQ=1e3, QQ=1.),
-                    None]])
+models = np.array(
+    [
+        [
+            KineticMixing(1.0, 1e3, gvxx=1.0, eps=0.1),
+            QuarksOnly(1.0, 1e3, gvxx=1.0, gvuu=1.0, gvdd=-1.0, gvss=0.0),
+            QuarksOnly(1.0, 1e3, gvxx=1.0, gvuu=1.0, gvdd=1.0, gvss=0.0),
+        ],
+        [
+            HiggsPortal(1.0, 1e3, gsxx=1.0, stheta=1e-1),
+            HeavyQuark(1.0, 1e3, gsxx=1.0, gsQ=1e-1, mQ=1e3, QQ=1.0),
+            None,
+        ],
+    ]
+)
 
 # Subplot titles indicating model parameters
-titles = np.array([[r"$\epsilon = 0.1$",
-                    r"$(g_{Vuu}, g_{Vdd}) = (1, -1)$",
-                    r"$(g_{Vuu}, g_{Vdd}) = (1, 1)$"],
-                   [r"$\sin\theta = 0.1$",
-                    r"$(g_{S\Psi}, Q_\Psi) = (0.1, 1)$" + "\n" + r"$m_\Psi = 1$ GeV", ""]])
+titles = np.array(
+    [
+        [
+            r"$\epsilon = 0.1$",
+            r"$(g_{Vuu}, g_{Vdd}) = (1, -1)$",
+            r"$(g_{Vuu}, g_{Vdd}) = (1, 1)$",
+        ],
+        [
+            r"$\sin\theta = 0.1$",
+            r"$(g_{S\Psi}, Q_\Psi) = (0.1, 1)$" + "\n" + r"$m_\Psi = 1$ GeV",
+            "",
+        ],
+    ]
+)
 
 n_subplot_rows, n_subplot_cols = models.shape
 
@@ -50,7 +67,8 @@ fig, axes = plt.subplots(
     n_subplot_cols,
     sharex=True,
     sharey=True,
-    figsize=(latex_text_width_1col, 0.55 * latex_text_width_1col))
+    figsize=(latex_text_width_1col, 0.55 * latex_text_width_1col),
+)
 
 # Delete last subplot: it will be replaced by the legend
 fig.delaxes(axes[-1, -1])
