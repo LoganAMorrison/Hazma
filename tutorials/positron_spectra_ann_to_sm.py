@@ -113,7 +113,7 @@ for col in range(n_subplot_cols):
     axes[-1, col].set_xlim(e_p_min, e_p_max)
 
 axes[0, -1].text(
-    1.6e3,
+    2.4e3,
     1e-3,
     "Higgs portal,\n" + r"$\sin\theta = 0.1$",
     ha="center",
@@ -121,7 +121,7 @@ axes[0, -1].text(
     fontsize=10,
 )
 axes[1, -1].text(
-    2.1e3,
+    2.4e3,
     1e-3,
     "Kinetic mixing,\n" + r"$\epsilon = 0.1$",
     ha="center",
