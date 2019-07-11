@@ -1,7 +1,7 @@
 import numpy as np
 
 from hazma.positron_spectra import muon as pspec_muon
-from hazma.positron_spectra import positron_rambo
+from hazma.positron_spectra import positron_decay
 
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
@@ -12,7 +12,7 @@ class PseudoScalarMediatorPositronSpectra:
         if cme <= 2. * mpi + mpi0:
             return np.zeros(len(eng_ps), dtype=float)
 
-        return positron_rambo(["charged_pion", "charged_pion", "neutral_pion"],
+        return positron_decay(["charged_pion", "charged_pion", "neutral_pion"],
                               cme, eng_ps, num_ps_pts=1000,
                               mat_elem_sqrd=self.msqrd_xx_to_p_to_pm0)
 

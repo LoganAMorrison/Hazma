@@ -81,8 +81,8 @@ extensions += [Extension(pos_pack + ".positron_charged_pion",
                          sources=[pos_dir + "positron_charged_pion.pyx"])]
 extensions += [Extension(pos_pack + ".positron_muon",
                          sources=[pos_dir + "positron_muon.pyx"])]
-extensions += [Extension(pos_pack + ".positron_rambo",
-                         sources=[pos_dir + "positron_rambo.pyx"])]
+extensions += [Extension(pos_pack + ".positron_decay",
+                         sources=[pos_dir + "positron_decay.pyx"])]
 
 # Scalar mediator
 extensions += [Extension(sm_pack + ".scalar_mediator_decay_spectrum",
