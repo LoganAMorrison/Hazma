@@ -199,9 +199,8 @@ def gamma_ray_fsr(isp_masses, fsp_masses, cme,
         m2 = isp_masses[1]
         pre_factor = cross_section_prefactor(m1, m2, cme)
 
-    eng_hists = rambo.generate_energy_histogram(
-        fsp_masses, cme, num_ps_pts=num_ps_pts,
-        mat_elem_sqrd=mat_elem_sqrd_rad, num_bins=num_bins)[0]
+    eng_hists = rambo.generate_energy_histogram(fsp_masses, cme, num_ps_pts=num_ps_pts,
+                                                mat_elem_sqrd=mat_elem_sqrd_rad, num_bins=num_bins)[0]
 
     photon_energies = eng_hists[-1, 0]
     spectrum = eng_hists[-1, 1] * pre_factor / cross_section

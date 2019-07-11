@@ -23,7 +23,7 @@ from hazma.field_theory_helper_functions.common_functions import \
     cross_section_prefactor
 
 
-def generate_phase_space_point(masses, cme, num_fsp):
+def generate_phase_space_point(masses, cme):
     """
     Generate a phase space point given a set of
     final state particles and a given center of mass energy.
@@ -34,8 +34,6 @@ def generate_phase_space_point(masses, cme, num_fsp):
         List of masses of the final state particles.
     cme : double
         Center-of-mass-energy of the process.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
-        Function for the matrix element squared.
 
     Returns
     -------
@@ -48,13 +46,11 @@ def generate_phase_space_point(masses, cme, num_fsp):
         masses = [masses]
 
     masses = np.array(masses)
+    return generator.generate_point(masses, cme, len(masses))
 
-    return generator.generate_point(masses, cme, num_fsp)
 
-
-def generate_phase_space(num_ps_pts, masses, cme,
-                         mat_elem_sqrd=lambda klist: 1,
-                         num_cpus=None):
+def generate_phase_space(masses, cme, num_ps_pts=10000,
+                         mat_elem_sqrd=lambda klist: 1, num_cpus=None):
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -62,12 +58,12 @@ def generate_phase_space(num_ps_pts, masses, cme,
 
     Parameters
     ----------
-    num_ps_pts : int
-        Total number of phase space points to generate.
     masses : numpy.ndarray
         List of masses of the final state particles.
     cme : double
         Center-of-mass-energy of the process.
+    num_ps_pts : int {10000}
+        Total number of phase space points to generate.
     mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
@@ -87,15 +83,12 @@ def generate_phase_space(num_ps_pts, masses, cme,
     Examples
     --------
     Generate 100000 phase space points for a 3 body final state.
-
     >>> from hazma import rambo
     >>> import numpy as np
     >>> masses = np.array([100., 200., 0.0])
-    >>> cme = 1000.
+    >>> cme = 10.0 * sum(masses)
     >>> num_ps_pts = 100000
-    >>> num_fsp = len(masses)
-    >>>
-    >>> pts = rambo.generate_phase_space(num_ps_pts, masses, cme)
+    >>> rambo.generate_phase_space(masses, cme, num_ps_pts=num_ps_pts)
     """
     if not hasattr(masses, "__len__"):
         masses = [masses]
@@ -118,7 +111,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))
         # If user wants a number of phase space points which is less
-        # than the number of cpus availible, use num_ps_pts cpus instead.
+        # than the number of cpus available, use num_ps_pts cpus instead.
         if num_cpus > num_ps_pts:
             num_cpus = num_ps_pts
     # Instantiate `num_cpus` number of workers and divide num_ps_pts among the
@@ -149,7 +142,7 @@ def generate_phase_space(num_ps_pts, masses, cme,
     return points
 
 
-def generate_energy_histogram(masses, cme, num_ps_pts,
+def generate_energy_histogram(masses, cme, num_ps_pts=10000,
                               mat_elem_sqrd=lambda klist: 1, num_bins=25,
                               num_cpus=None, density=False):
     """
@@ -170,6 +163,9 @@ def generate_energy_histogram(masses, cme, num_ps_pts,
     num_cpus : int {None}
         Number of cpus to use in parallel with rambo. If not specified, 75% of
         the cpus will be used.
+    density: Bool
+        If true, the histograms will be normalized to have unit area underneath
+        the curves, i.e. they will be probability density functions.
 
     Returns
     -------
@@ -187,7 +183,6 @@ def generate_energy_histogram(masses, cme, num_ps_pts,
     --------
     Making energy histograms for 4 final state particles and plotting their
     energy spectra.
-
     >>> from hazma import rambo
     >>> import numpy as np
     >>> num_ps_pts = 100000
@@ -195,11 +190,12 @@ def generate_energy_histogram(masses, cme, num_ps_pts,
     >>> cme = 1000.
     >>> num_bins = 100
     >>>
-    >>> eng_hist = rambo.generate_energy_histogram(num_ps_pts, masses, cme,
+    >>> eng_hist = rambo.generate_energy_histogram(masses, cme,
+    ...                                            num_ps_pts=num_ps_pts
     ...                                            num_bins=num_bins)
-    >>> import matplotlib as plt
+    >>> import matplotlib.pyplot as plt
     >>> for i in range(len(masses)):
-    ...     plt.loglog(pts[i, 0], pts[i, 1])
+    ...     plt.loglog(eng_hist[i, 0], eng_hist[i, 1])
     """
     if not hasattr(masses, "__len__"):
         masses = [masses]
@@ -209,10 +205,9 @@ def generate_energy_histogram(masses, cme, num_ps_pts,
 
     num_fsp = len(masses)
 
-    pts = generate_phase_space(
-        num_ps_pts, masses, cme, mat_elem_sqrd, num_cpus)
+    pts = generate_phase_space(masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
 
-    actual_num_ps_pts = (pts.shape)[0]
+    actual_num_ps_pts = pts.shape[0]
 
     return histogram.space_to_energy_hist(pts, actual_num_ps_pts,
                                           num_fsp, num_bins,
@@ -221,21 +216,21 @@ def generate_energy_histogram(masses, cme, num_ps_pts,
 
 def integrate_over_phase_space(fsp_masses, cme,
                                num_ps_pts=10000,
-                               mat_elem_sqrd=lambda klist: 1,
+                               mat_elem_sqrd=lambda momenta: 1,
                                num_cpus=None):
     """
-    Returns the integral over phase space given a squard matrix element, a
+    Returns the integral over phase space given a squared matrix element, a
     set of final state particle masses and a given energy.
 
     Parameters
     ----------
-    masses : numpy.ndarray
-        List of masses of the initial state and final state particles.
+    fsp_masses : numpy.ndarray
+        List of masses of the final state particles.
     cme : double
         Center-of-mass-energy of the process.
     num_ps_pts : int {10000}
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -255,16 +250,10 @@ def integrate_over_phase_space(fsp_masses, cme,
         raise RamboCMETooSmall()
 
     num_fsp = len(fsp_masses)
-
-    points = generate_phase_space(
-        num_ps_pts, fsp_masses, cme, mat_elem_sqrd, num_cpus)
-
+    points = generate_phase_space(fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
-
     weights = points[:, 4 * num_fsp]
-
     integral = np.average(weights)
-
     std = np.std(weights) / np.sqrt(actual_num_ps_pts)
 
     return integral, std
@@ -272,20 +261,22 @@ def integrate_over_phase_space(fsp_masses, cme,
 
 def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
                                        num_ps_pts=10000,
-                                       mat_elem_sqrd=lambda klist: 1,
+                                       mat_elem_sqrd=lambda momenta: 1,
                                        num_cpus=None):
     """
     Computes the cross section for a given process.
 
     Parameters
     ----------
-    masses : numpy.ndarray
-        List of masses of the initial state and final state particles.
+    isp_masses : numpy.ndarray
+        List of masses of the initial state particles.
+    fsp_masses : numpy.ndarray
+        List of masses of the final state and particles.
     cme : double
         Center-of-mass-energy of the process.
     num_ps_pts : int
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -299,6 +290,38 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
         of `mat_elem_sqrd`.
     std : double
         Estimated error in cross section.
+
+    Examples
+    --------
+    Compute the cross section for electrons annihilating into muons through a
+    photon. First, we construct a function for the matrix element:
+    >>> from hazma.parameters import electron_mass as me
+    >>> from hazma.parameters import muon_mass as mmu
+    >>> from hazma.parameters import qe
+    >>> from hazma.field_theory_helper_functions.common_functions \
+    ...     import minkowski_dot as MDot
+    >>> def msqrd(momenta):
+    ...     Q = sum(momenta)[0] # center-of-mass energy
+    ...     # Momenta of the incoming electrons
+    ...     p1 = np.array([Q / 2., 0., 0., np.sqrt(Q**2 / 4. - me**2)])
+    ...     p2 = np.array([Q / 2., 0., 0., -np.sqrt(Q**2 / 4. - me**2)])
+    ...     # Momenta for the outgoing muons
+    ...     p3 = momenta[0]
+    ...     p4 = momenta[1]
+    ...     # Mandelstam variables
+    ...     s = MDot(p1 + p2, p1 + p2)
+    ...     t = MDot(p1 - p3, p1 - p3)
+    ...     u = MDot(p1 - p4, p1 - p4)
+    ...     return ((2 * qe**4 * (t**2 + u**2 - 4 * (t + u)* me**2 +
+    ...             6 * me**4 + 4 * s * mmu**2 + 2 * mmu**4))/ s**2)
+    Compute the cross section:
+    >>> from hazma.rambo import compute_annihilation_cross_section
+    >>> import numpy as np
+    >>> isp_masses = np.array([me, me])
+    >>> fsp_masses = np.array([mmu, mmu])
+    >>> cme = 1000.
+    >>> compute_annihilation_cross_section(
+    ...     isp_masses, fsp_masses, cme, num_ps_pts=5000, mat_elem_sqrd=msqrd)
     """
     integral, std = integrate_over_phase_space(fsp_masses, cme,
                                                num_ps_pts=num_ps_pts,
@@ -316,20 +339,20 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
 
 def compute_decay_width(fsp_masses, cme,
                         num_ps_pts=10000,
-                        mat_elem_sqrd=lambda klist: 1,
+                        mat_elem_sqrd=lambda momenta: 1,
                         num_cpus=None):
     """
-    Computes the cross section for a given process.
+    Computes the decay width for a given process.
 
     Parameters
     ----------
-    masses : numpy.ndarray
-        List of masses of the initial state and final state particles.
+    fsp_masses : numpy.ndarray
+        List of masses of the final state particles.
     cme : double
         Center-of-mass-energy of the process.
     num_ps_pts : int
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1}
+    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1}
         Function for the matrix element squared.
     num_cpus : int {None}
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -343,6 +366,29 @@ def compute_decay_width(fsp_masses, cme,
         of `mat_elem_sqrd`.
     std : double
         Estimated error in cross section.
+
+    Examples
+    --------
+    In this example we compute the partial decay width of the muon for
+        .. math:: \mu\to e\nu\nu
+    First, we declare the matrix element
+    >>> from hazma.parameters import GF
+    >>> from hazma.field_theory_helper_functions.common_functions \
+    ...     import minkowski_dot as MDot
+    >>> def msqrd(momenta):
+    ...     pe = momenta[0]
+    ...     pve = momenta[1]
+    ...     pvmu = momenta[2]
+    ...     pmu = sum(momenta)
+    ...     return 64. * GF**2 * MDot(pe, pvmu) * MDot(pmu, pve)
+    Next, we compute the decay width:
+    >>> from hazma.rambo import compute_decay_width
+    >>> from hazma.parameters import electron_mass as me
+    >>> from hazma.parameters import muon_mass as mmu
+    >>> import numpy as np
+    >>> fsp_masses = np.array([me, 0.0, 0.0])
+    >>> cme = mmu
+    >>> compute_decay_width(fsp_masses, cme, mat_elem_sqrd=msqrd)
     """
     integral, std = integrate_over_phase_space(fsp_masses, cme,
                                                num_ps_pts=num_ps_pts,
