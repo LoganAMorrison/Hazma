@@ -5,9 +5,9 @@ from hazma.parameters import (qe, alpha_em, charged_pion_mass as mpi)
 
 
 class ScalarMediatorFSR:
-    def __dnde_xx_to_s_to_ffg(self, egam, Q, mf):
+    def __dnde_xx_to_s_to_ffg(self, photon_energy, Q, mf):
         """ Unvectorized dnde_xx_to_s_to_ffg """
-        e, rf, s = egam / Q, mf / Q, Q**2 - 2. * Q * egam
+        e, rf, s = photon_energy / Q, mf / Q, Q**2 - 2. * Q * photon_energy
 
         mx = self.mx
 
@@ -18,7 +18,7 @@ class ScalarMediatorFSR:
                         4 * (1 + 2 * (-1 + e) * e - 6 * rf**2 + 8 * e * rf**2 +
                              8 * rf**4) *
                         atanh(sqrt(1 + (4 * rf**2) / (-1 + 2 * e))))) / \
-                (e * (1 - 4 * rf**2)**1.5 * pi * Q)
+                      (e * (1 - 4 * rf**2)**1.5 * pi * Q)
 
             assert ret_val.imag == 0
             ret_val = ret_val.real
@@ -28,24 +28,23 @@ class ScalarMediatorFSR:
         else:
             return 0.0
 
-    def dnde_xx_to_s_to_ffg(self, egam, Q, mf):
-        """Return the fsr spectra for fermions from decay of scalar mediator.
+    def dnde_xx_to_s_to_ffg(self, photon_energies, Q, mf):
+        """Return the fsr spectra for dark matter annihilating into a pair of
+        fermions.
 
-        Computes the final state radiaton spectrum value dNdE from a scalar
+        Computes the final state radiation spectrum value dNdE from a scalar
         mediator given a gamma ray energy of `eng_gam`, center of mass
         energy `cme`
         and final state fermion mass `mass_f`.
 
-        Paramaters
+        Parameters
         ----------
-        egam : float
-            Gamma ray energy.
+        photon_energies : float or np.array
+            Energy(ies) of the final state photon.
         Q: float
             Center of mass energy of mass of off-shell scalar mediator.
         mf : float
             Mass of the final state fermion.
-        params: namedtuple
-            Namedtuple of the model parameters.
 
         Returns
         -------
@@ -53,23 +52,19 @@ class ScalarMediatorFSR:
             Spectrum value dNdE from scalar mediator.
 
         """
-        if hasattr(egam, '__len__'):
+        if hasattr(photon_energies, '__len__'):
             return np.array([self.__dnde_xx_to_s_to_ffg(e, Q, mf)
-                             for e in egam])
+                             for e in photon_energies])
         else:
-            return self.__dnde_xx_to_s_to_ffg(egam, Q, mf)
+            return self.__dnde_xx_to_s_to_ffg(photon_energies, Q, mf)
 
-    # ######################
-    """ Charged Pion FSR """
-    # ######################
-
-    def __dnde_xx_to_s_to_pipig(self, eng_gam, Q):
+    def __dnde_xx_to_s_to_pipig(self, photon_energy, Q):
         """Unvectorized dnde_xx_to_s_to_pipig"""
 
         mupi = mpi / Q
-        x = 2 * eng_gam / Q
+        x = 2 * photon_energy / Q
 
-        if x < 0. or 1. - 4. * mupi**2 < x:
+        if x < 0. or 1. - 4. * mupi**2 < x or 2. * self.mx > Q:
             return 0.
 
         dynamic = (2 * sqrt(-1 + x) * sqrt(-1 + 4 * mupi**2 + x) +
@@ -88,28 +83,27 @@ class ScalarMediatorFSR:
 
         return ret_val.real
 
-    def dnde_xx_to_s_to_pipig(self, eng_gams, Q):
+    def dnde_xx_to_s_to_pipig(self, photon_energies, Q):
         """
         Returns the gamma ray energy spectrum for two fermions annihilating
         into two charged pions and a photon.
 
         Parameters
         ----------
-        eng_gam : numpy.ndarray or double
-            Gamma ray energy.
+        photon_energies : float or np.array
+            Energy(ies) of the final state photon.
         Q : double
-            Center of mass energy, or sqrt((ppip + ppim + pg)^2).
+            Center of mass energy
 
         Returns
         -------
-        Returns gamma ray energy spectrum for
-        :math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma` evaluated at the gamma
-        ray energy(ies).
+        dnde: float or np.array
+            Gamma-ray spectrum for dark matter annihilating into charged pions.
 
         """
 
-        if hasattr(eng_gams, '__len__'):
+        if hasattr(photon_energies, '__len__'):
             return np.array([self.__dnde_xx_to_s_to_pipig(eng_gam, Q)
-                             for eng_gam in eng_gams])
+                             for eng_gam in photon_energies])
         else:
-            return self.__dnde_xx_to_s_to_pipig(eng_gams, Q)
+            return self.__dnde_xx_to_s_to_pipig(photon_energies, Q)

@@ -13,14 +13,17 @@ from scipy.integrate import quad
 
 class ScalarMediatorCrossSection:
     def sigma_xx_to_s_to_ff(self, Q, f):
-        """Returns the spin-averaged, cross section for a pair of fermions,
-        *x*, annihilating into a pair of fermions, *f* through a
-        scalar mediator in the s-channel.
+        """Returns the spin-averaged, cross section for dark matter
+        annihilating into a pair of fermions, *f* through a scalar mediator in
+        the s-channel.
 
         Parameters
         ----------
         Q : float
             Center of mass energy.
+        f: str
+            String for the final state fermion: f = 'e' for electron and
+            f = 'mu' for muon.
 
         Returns
         -------
@@ -42,8 +45,8 @@ class ScalarMediatorCrossSection:
 
             ret_val = (gsff**2 * gsxx**2 * mf**2 * (-2 * mx + Q) *
                        (2 * mx + Q) * (-4 * mf**2 + Q**2)**1.5) / \
-                (16. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
-                 (ms**4 - 2 * ms**2 * Q**2 + Q**4 + ms**2 * width_s**2))
+                      (16. * pi * Q**2 * sqrt(-4 * mx**2 + Q**2) * vh**2 *
+                       (ms**4 - 2 * ms**2 * Q**2 + Q**4 + ms**2 * width_s**2))
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -53,9 +56,9 @@ class ScalarMediatorCrossSection:
             return 0.
 
     def sigma_xx_to_s_to_gg(self, Q):
-        """Returns the spin-averaged, cross section for a pair of fermions,
-        *x*, annihilating into a pair of photons through a
-        scalar mediator in the s-channel.
+        """Returns the spin-averaged, cross section for dark matter
+        annihilating into a pair of photons through a scalar mediator in the
+        s-channel.
 
         Parameters
         ----------
@@ -91,9 +94,9 @@ class ScalarMediatorCrossSection:
             return 0.0
 
     def sigma_xx_to_s_to_pi0pi0(self, Q):
-        """Returns the spin-averaged, cross section for a pair of fermions,
-        *x*, annihilating into a pair of neutral pion through a
-        scalar mediator in the s-channel.
+        """Returns the spin-averaged, cross section for dark matter
+        annihilating into a pair of neutral pion through a scalar mediator in
+        the s-channel.
 
         Parameters
         ----------
@@ -146,9 +149,9 @@ class ScalarMediatorCrossSection:
             return 0.
 
     def sigma_xx_to_s_to_pipi(self, Q):
-        """Returns the spin-averaged, cross section for a pair of fermions,
-        *x*, annihilating into a pair of charged pions through a
-        scalar mediator in the s-channel.
+        """Returns the spin-averaged, cross section for dark matter
+        annihilating into a pair of charged pions through a scalar mediator in
+        the s-channel.
 
         Parameters
         ----------
@@ -200,6 +203,20 @@ class ScalarMediatorCrossSection:
             return 0.
 
     def sigma_xx_to_ss(self, Q):
+        """Returns the spin-averaged, cross section for dark matter
+        annihilating into a pair of scalar mediator through the t and u
+        channels.
+
+        Parameters
+        ----------
+        Q : float
+            Center of mass energy.
+
+        Returns
+        -------
+        sigma : float
+            Cross section for x + x -> s + s.
+        """
         ms = self.ms
         mx = self.mx
 
@@ -228,8 +245,18 @@ class ScalarMediatorCrossSection:
             return 0.
 
     def sigma_xx_to_s_to_xx(self, Q):
-        """
-        Returns the DM annihilation cross section into DM.
+        """Returns the spin-averaged, self interaction cross section for dark
+        matter.
+
+        Parameters
+        ----------
+        Q : float
+            Center of mass energy.
+
+        Returns
+        -------
+        sigma : float
+            Cross section for x + x -> x + x
         """
         rs = self.ms / Q
         rx = self.mx / Q
@@ -270,33 +297,35 @@ class ScalarMediatorCrossSection:
 
     def annihilation_cross_sections(self, Q):
         """
-        Compute the all the cross sections of the theory.
+        Compute the cross sections for dark matter annihilating through a
+        scalar mediator to mesons and leptons.
 
         Parameters
         ----------
-        cme : float
-        Center of mass energy.
+        Q : float
+            Center of mass energy.
 
         Returns
         -------
         cs : dictionary
-        Dictionary of the cross sections of the theory.
+            Dictionary of the cross sections. The keys are 'total', 'mu mu',
+            'e e', 'pi0 pi0', 'pi pi'
         """
         muon_contr = self.sigma_xx_to_s_to_ff(Q, 'mu')
         electron_contr = self.sigma_xx_to_s_to_ff(Q, 'e')
         photon_contr = self.sigma_xx_to_s_to_gg(Q)
-        NPion_contr = self.sigma_xx_to_s_to_pi0pi0(Q)
-        CPion_contr = self.sigma_xx_to_s_to_pipi(Q)
+        npion_contr = self.sigma_xx_to_s_to_pi0pi0(Q)
+        cpion_contr = self.sigma_xx_to_s_to_pipi(Q)
         ss_contr = self.sigma_xx_to_ss(Q)
 
-        total = (muon_contr + electron_contr + NPion_contr + CPion_contr +
+        total = (muon_contr + electron_contr + npion_contr + cpion_contr +
                  photon_contr + ss_contr)
 
         cross_secs = {'mu mu': muon_contr,
                       'e e': electron_contr,
                       'g g': photon_contr,
-                      'pi0 pi0': NPion_contr,
-                      'pi pi': CPion_contr,
+                      'pi0 pi0': npion_contr,
+                      'pi pi': cpion_contr,
                       's s': ss_contr,
                       'total': total}
 
@@ -304,7 +333,7 @@ class ScalarMediatorCrossSection:
 
     def annihilation_branching_fractions(self, Q):
         """
-        Compute the branching fractions for two fermions annihilating
+        Compute the branching fractions for dark matter annihilating
         through a scalar mediator to mesons and leptons.
 
         Parameters
@@ -318,9 +347,9 @@ class ScalarMediatorCrossSection:
             Dictionary of the branching fractions. The keys are 'total',
             'mu mu', 'e e', 'pi0 pi0', 'pi pi'
         """
-        CSs = self.annihilation_cross_sections(Q)
+        cs = self.annihilation_cross_sections(Q)
 
-        if CSs['total'] == 0.0:
+        if cs['total'] == 0.0:
             return {'mu mu': 0.0,
                     'e e': 0.0,
                     'g g': 0.0,
@@ -328,9 +357,9 @@ class ScalarMediatorCrossSection:
                     'pi pi': 0.0,
                     's s': 0.0}
         else:
-            return {'mu mu': CSs['mu mu'] / CSs['total'],
-                    'e e': CSs['e e'] / CSs['total'],
-                    'g g': CSs['g g'] / CSs['total'],
-                    'pi0 pi0': CSs['pi0 pi0'] / CSs['total'],
-                    'pi pi': CSs['pi pi'] / CSs['total'],
-                    's s': CSs['s s'] / CSs['total']}
+            return {'mu mu': cs['mu mu'] / cs['total'],
+                    'e e': cs['e e'] / cs['total'],
+                    'g g': cs['g g'] / cs['total'],
+                    'pi0 pi0': cs['pi0 pi0'] / cs['total'],
+                    'pi pi': cs['pi pi'] / cs['total'],
+                    's s': cs['s s'] / cs['total']}

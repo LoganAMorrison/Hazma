@@ -96,7 +96,8 @@ class ScalarMediator(ScalarMediatorConstraints,
         self._gsGG = gsGG
         self._gsFF = gsFF
         self._lam = lam
-        self.compute_vs()
+        self.width_s = 0.0
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     def description(self):
@@ -169,7 +170,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @mx.setter
     def mx(self, mx):
         self._mx = mx
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -179,7 +180,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @ms.setter
     def ms(self, ms):
         self._ms = ms
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -189,7 +190,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @gsxx.setter
     def gsxx(self, gsxx):
         self._gsxx = gsxx
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -199,7 +200,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @gsff.setter
     def gsff(self, gsff):
         self._gsff = gsff
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -209,7 +210,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @gsGG.setter
     def gsGG(self, gsGG):
         self._gsGG = gsGG
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -219,7 +220,7 @@ class ScalarMediator(ScalarMediatorConstraints,
     @gsFF.setter
     def gsFF(self, gsFF):
         self._gsFF = gsFF
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     @property
@@ -229,14 +230,26 @@ class ScalarMediator(ScalarMediatorConstraints,
     @lam.setter
     def lam(self, lam):
         self._lam = lam
-        self.compute_vs()
+        self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
     def compute_vs(self):
-        """Updates and returns the value of the scalar vev.
+        """
+        Compute the value of the scalar mediator vacuum expectation value.
+
+        Notes
+        -----
+        Warning! Currently this function simply returns zero. This is a very
+        good approximation in areas of parameters space which are allowed by
+        experimental observations.
+
+        Returns
+        -------
+        vs: float
+            vacuum expectation value of scalar mediator.
         """
         if 3 * self.gsff + 2 * self.gsGG == 0:
-            self.vs = 0.
+            vs = 0.0
         else:
             # trM = muq + mdq + msq
 
@@ -250,32 +263,28 @@ class ScalarMediator(ScalarMediatorConstraints,
             #                   (3 * gsff + 2 * gsGG)**2 * trM +
             #                   9 * ms**2 * vh**2)) / (6 * gsff * ms +
             #                                          4 * gsGG * ms)
-            self.vs = 0
+            vs = 0.0
 
-            return self.vs
+        return vs
 
     def compute_width_s(self):
         """Updates the scalar's total width.
         """
         self.width_s = self.partial_widths()["total"]
 
-    # #################### #
-    """ HELPER FUNCTIONS """
-    # #################### #
-
-    def fpiT(self, vs):
-        """Returns the Lagrangian parameter fpiT.
+    def __fpiT(self, vs):
+        """Returns the Lagrangian parameter __fpiT.
         """
         return fpi / np.sqrt(1. + 4. * self._gsGG * vs / (9. * vh))
 
-    def b0T(self, vs, fpiT):
-        """Returns the Lagrangian parameter b0T.
+    def __b0T(self, vs, fpiT):
+        """Returns the Lagrangian parameter __b0T.
         """
         return (b0 * (fpi / fpiT)**2 /
                 (1. + vs / vh * (2. * self._gsGG / 3. + self._gsff)))
 
-    def msT(self, fpiT, b0T):
-        """Returns the Lagrangian parameter msT.
+    def __msT(self, fpiT, b0T):
+        """Returns the Lagrangian parameter __msT.
         """
         trM = muq + mdq + msq
 
@@ -326,8 +335,8 @@ class HiggsPortal(ScalarMediator):
         self._lam = vh
         self._stheta = stheta
 
-        super(HiggsPortal, self).__init__(mx, ms, gsxx, stheta, 3.*stheta,
-                                          -5.*stheta/6., vh)
+        super(HiggsPortal, self).__init__(mx, ms, gsxx, stheta, 3. * stheta,
+                                          -5. * stheta / 6., vh)
 
     @property
     def stheta(self):
@@ -391,7 +400,7 @@ class HeavyQuark(ScalarMediator):
         self._QQ = QQ
 
         super(HeavyQuark, self).__init__(mx, ms, gsxx, 0., gsQ,
-                                         2.*gsQ*QQ**2, mQ)
+                                         2. * gsQ * QQ**2, mQ)
 
     @property
     def gsQ(self):
