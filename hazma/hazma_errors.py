@@ -1,11 +1,9 @@
-
-# #############################################################################
-# ################## HAZMA ERRORS #############################################
-# #############################################################################
+# Hazma errors
 
 
 class HazmaError(Exception):
     """Base class for exceptions in Hazma."""
+
     pass
 
 
@@ -31,19 +29,20 @@ class RamboCMETooSmall(HazmaError):
 
     def __init__(self, message=None):
         super(RamboCMETooSmall, self).__init__(message)
-        self.default_message = ("Center of mass energy is less than sum of " +
-                                "the final state masses")
+        self.default_message = (
+            "Center of mass energy is less than sum of " + "the final state masses"
+        )
 
     def __str__(self):
         return self.default_message
 
-# #############################################################################
-# ################## HAZMA WARNINGS ###########################################
-# #############################################################################
+
+# Hazma warnings
 
 
 class HazmaWarning(UserWarning):
     """Base class for exceptions in Hazma."""
+
     pass
 
 
@@ -55,8 +54,9 @@ class NegativeSquaredMatrixElementWarning(HazmaWarning):
 
     def __init__(self, message=None):
         super(NegativeSquaredMatrixElementWarning, self).__init__(message)
-        self.default_message = "Negative squared matrix element" + \
-            "encountered. Using zero instead."
+        self.default_message = (
+            "Negative squared matrix element" + "encountered. Using zero instead."
+        )
 
     def __str__(self):
         return self.default_message

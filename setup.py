@@ -7,7 +7,7 @@ VERSION = "0.1"
 
 def readme():
     """print long description"""
-    with open('README.md') as f:
+    with open("README.md") as f:
         return f.read()
 
 
@@ -32,100 +32,168 @@ vm_pack = "hazma.vector_mediator"
 # avm_pack = "hazma.axial_vector_mediator"
 unit_pack = "hazma.unitarization"
 
-packs = ["hazma", decay_pack, ft_pack,
-         gr_pack, theory_pack, ps_pack, pos_pack,
-         sm_pack, unit_pack, vm_pack]
+packs = [
+    "hazma",
+    decay_pack,
+    ft_pack,
+    gr_pack,
+    theory_pack,
+    ps_pack,
+    pos_pack,
+    sm_pack,
+    unit_pack,
+    vm_pack,
+]
 
 extensions = []
 
 # Decay helper functions extensions
-extensions += [Extension(decay_pack + ".decay_charged_pion",
-                         sources=[decay_dir + "decay_charged_pion.pyx"])]
-extensions += [Extension(decay_pack + ".decay_neutral_pion",
-                         sources=[decay_dir + "decay_neutral_pion.pyx"])]
-extensions += [Extension(decay_pack + ".decay_muon",
-                         sources=[decay_dir + "decay_muon.pyx"])]
-extensions += [Extension(decay_pack + ".decay_charged_kaon",
-                         sources=[decay_dir + "decay_charged_kaon.pyx"])]
-extensions += [Extension(decay_pack + ".decay_long_kaon",
-                         sources=[decay_dir + "decay_long_kaon.pyx"])]
-extensions += [Extension(decay_pack + ".decay_short_kaon",
-                         sources=[decay_dir + "decay_short_kaon.pyx"])]
+extensions += [
+    Extension(
+        decay_pack + ".decay_charged_pion",
+        sources=[decay_dir + "decay_charged_pion.pyx"],
+    )
+]
+extensions += [
+    Extension(
+        decay_pack + ".decay_neutral_pion",
+        sources=[decay_dir + "decay_neutral_pion.pyx"],
+    )
+]
+extensions += [
+    Extension(decay_pack + ".decay_muon", sources=[decay_dir + "decay_muon.pyx"])
+]
+extensions += [
+    Extension(
+        decay_pack + ".decay_charged_kaon",
+        sources=[decay_dir + "decay_charged_kaon.pyx"],
+    )
+]
+extensions += [
+    Extension(
+        decay_pack + ".decay_long_kaon", sources=[decay_dir + "decay_long_kaon.pyx"]
+    )
+]
+extensions += [
+    Extension(
+        decay_pack + ".decay_short_kaon", sources=[decay_dir + "decay_short_kaon.pyx"]
+    )
+]
 
 # Gamma-Ray Helper functions extensions
-extensions += [Extension(gr_pack + ".gamma_ray_generator",
-                         sources=[gr_dir + "gamma_ray_generator.pyx"])]
+extensions += [
+    Extension(
+        gr_pack + ".gamma_ray_generator", sources=[gr_dir + "gamma_ray_generator.pyx"]
+    )
+]
 
 # Phase space helper functions extensions
-extensions += [Extension(ps_pack + ".generator",
-                         sources=[ps_dir + "generator.pyx"],
-                         extra_compile_args=['-g', '-std=c++11'],
-                         language="c++")]
-extensions += [Extension(ps_pack + ".histogram",
-                         sources=[ps_dir + "histogram.pyx"],
-                         extra_compile_args=['-g', '-std=c++11'],
-                         language="c++")]
-extensions += [Extension(ps_pack + ".modifiers",
-                         sources=[ps_dir + "modifiers.pyx"],
-                         extra_compile_args=['-g', '-std=c++11'],
-                         language="c++")]
+extensions += [
+    Extension(
+        ps_pack + ".generator",
+        sources=[ps_dir + "generator.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
+]
+extensions += [
+    Extension(
+        ps_pack + ".histogram",
+        sources=[ps_dir + "histogram.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
+]
+extensions += [
+    Extension(
+        ps_pack + ".modifiers",
+        sources=[ps_dir + "modifiers.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
+]
 
 # Field Theory helper functions extensions
-extensions += [Extension(ft_pack + ".common_functions",
-                         sources=[ft_dir + "common_functions.pyx"])]
-extensions += [Extension(ft_pack + ".three_body_phase_space",
-                         sources=[ft_dir + "three_body_phase_space.pyx"])]
+extensions += [
+    Extension(ft_pack + ".common_functions", sources=[ft_dir + "common_functions.pyx"])
+]
+extensions += [
+    Extension(
+        ft_pack + ".three_body_phase_space",
+        sources=[ft_dir + "three_body_phase_space.pyx"],
+    )
+]
 
 # Positron Helper functions
-extensions += [Extension(pos_pack + ".positron_charged_pion",
-                         sources=[pos_dir + "positron_charged_pion.pyx"])]
-extensions += [Extension(pos_pack + ".positron_muon",
-                         sources=[pos_dir + "positron_muon.pyx"])]
-extensions += [Extension(pos_pack + ".positron_rambo",
-                         sources=[pos_dir + "positron_rambo.pyx"])]
+extensions += [
+    Extension(
+        pos_pack + ".positron_charged_pion",
+        sources=[pos_dir + "positron_charged_pion.pyx"],
+    )
+]
+extensions += [
+    Extension(pos_pack + ".positron_muon", sources=[pos_dir + "positron_muon.pyx"])
+]
+extensions += [
+    Extension(pos_pack + ".positron_rambo", sources=[pos_dir + "positron_rambo.pyx"])
+]
 
 # Scalar mediator
-extensions += [Extension(sm_pack + ".scalar_mediator_decay_spectrum",
-                         sources=[sm_dir +
-                                  "scalar_mediator_decay_spectrum.pyx"])]
-extensions += [Extension(sm_pack + ".scalar_mediator_positron_spec",
-                         sources=[sm_dir +
-                                  "scalar_mediator_positron_spec.pyx"])]
+extensions += [
+    Extension(
+        sm_pack + ".scalar_mediator_decay_spectrum",
+        sources=[sm_dir + "scalar_mediator_decay_spectrum.pyx"],
+    )
+]
+extensions += [
+    Extension(
+        sm_pack + ".scalar_mediator_positron_spec",
+        sources=[sm_dir + "scalar_mediator_positron_spec.pyx"],
+    )
+]
 # Vector mediator
-extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
-                         sources=[vm_dir +
-                                  "vector_mediator_decay_spectrum.pyx"])]
-extensions += [Extension(vm_pack + ".vector_mediator_positron_spec",
-                         sources=[vm_dir +
-                                  "vector_mediator_positron_spec.pyx"])]
+extensions += [
+    Extension(
+        vm_pack + ".vector_mediator_decay_spectrum",
+        sources=[vm_dir + "vector_mediator_decay_spectrum.pyx"],
+    )
+]
+extensions += [
+    Extension(
+        vm_pack + ".vector_mediator_positron_spec",
+        sources=[vm_dir + "vector_mediator_positron_spec.pyx"],
+    )
+]
 
-setup(name='hazma',
-      version=VERSION,
-      author='Logan Morrison and Adam Coogan',
-      author_email='loanmorr@ucsc.edu',
-      maintainer='Logan Morrison',
-      maintainer_email='loanmorr@ucsc.edu',
-      url='http://hazma.readthedocs.io/en/latest/',
-      description='Package for computing FSR and decay spectra for light \
-      particles',
-      long_description=readme(),
-      keywords='dark-matter mev-dark-matter gamma-ray-spectra',
-      packages=find_packages(),
-      ext_modules=extensions,
-      include_dirs=[np.get_include(),
-                    'hazma/decay_helper_functions',
-                    'hazma/positron_helper_functions'],
-      package_data={
-          'hazma/decay_helper_functions': ['*.pxd'],
-          'hazma/positron_helper_functions': ['*.pxd'],
-      },
-      setup_requires=["pytest-runner", 'numpy>=1.13.3'],
-      install_requires=["pytest", 'numpy>=1.13.3'],
-      zip_safe=False,
-      include_package_data=True,
-      license='gpl-3.0',
-      platforms='MacOS and Linux',
-      download_url='https://github.com/LoganAMorrison/Hazma',
-      classifiers=[
-          "Programming Language :: Python"]
-      )
+setup(
+    name="hazma",
+    version=VERSION,
+    author="Logan Morrison and Adam Coogan",
+    author_email="loanmorr@ucsc.edu",
+    maintainer="Logan Morrison",
+    maintainer_email="loanmorr@ucsc.edu",
+    url="http://hazma.readthedocs.io/en/latest/",
+    description="Package for computing FSR and decay spectra for light \
+      particles",
+    long_description=readme(),
+    keywords="dark-matter mev-dark-matter gamma-ray-spectra",
+    packages=find_packages(),
+    ext_modules=extensions,
+    include_dirs=[
+        np.get_include(),
+        "hazma/decay_helper_functions",
+        "hazma/positron_helper_functions",
+    ],
+    package_data={
+        "hazma/decay_helper_functions": ["*.pxd"],
+        "hazma/positron_helper_functions": ["*.pxd"],
+    },
+    setup_requires=["pytest-runner", "numpy>=1.13.3"],
+    install_requires=["pytest", "numpy>=1.13.3"],
+    zip_safe=False,
+    include_package_data=True,
+    license="gpl-3.0",
+    platforms="MacOS and Linux",
+    download_url="https://github.com/LoganAMorrison/Hazma",
+    classifiers=["Programming Language :: Python"],
+)

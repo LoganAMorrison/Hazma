@@ -45,18 +45,20 @@ class BackgroundModel(object):
         """
         if hasattr(es, "__len__"):
             # Check if any energies are out of bounds
-            es_out_of_bounds = es[(es < self.e_range[0]) |
-                                  (es > self.e_range[1])]
+            es_out_of_bounds = es[(es < self.e_range[0]) | (es > self.e_range[1])]
 
             if len(es_out_of_bounds) == 0:
                 return self.__dPhi_dEdOmega(es)
             else:
-                raise ValueError("The gamma ray background model is not "
-                                 "applicable for energy %f MeV." %
-                                 es_out_of_bounds[0])
+                raise ValueError(
+                    "The gamma ray background model is not "
+                    "applicable for energy %f MeV." % es_out_of_bounds[0]
+                )
         else:
             if es < self.e_range[0] or es > self.e_range[1]:
-                raise ValueError("The gamma ray background model is not "
-                                 "applicable for energy %f MeV." % es)
+                raise ValueError(
+                    "The gamma ray background model is not "
+                    "applicable for energy %f MeV." % es
+                )
             else:
                 return self.__dPhi_dEdOmega(es)

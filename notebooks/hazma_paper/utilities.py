@@ -48,10 +48,11 @@ def get_color(fs):
     -------
     The color to be used when plotting that final state.
     """
-    fss = set(ScalarMediator.list_annihilation_final_states() +
-              VectorMediator.list_annihilation_final_states()) - \
-        set(['s s', 'v v'])
+    fss = set(
+        ScalarMediator.list_annihilation_final_states()
+        + VectorMediator.list_annihilation_final_states()
+    ) - set(["s s", "v v"])
 
-    fss = sorted(list(fss)) + ['s s', 'v v', 'x x']
+    fss = sorted(list(fss)) + ["s s", "v v", "x x"]
 
-    return (2*list(plt.rcParams["axes.prop_cycle"]))[fss.index(fs)]["color"]
+    return (2 * list(plt.rcParams["axes.prop_cycle"]))[fss.index(fs)]["color"]

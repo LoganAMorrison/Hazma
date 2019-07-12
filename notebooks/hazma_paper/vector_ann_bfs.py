@@ -27,23 +27,27 @@ from utilities import get_color, get_tex_label, latex_text_width_1col
 # DM masses
 mxs = np.logspace(np.log10(50), np.log10(250), 500)
 # Mediator masses
-mM_light, mM_heavy = [200., 1000.]
+mM_light, mM_heavy = [200.0, 1000.0]
 mMs = [mM_light, mM_heavy]
 # Approximate DM velocity in Milky Way
 vx = 1e-3
 
 vms = np.array(
-    [[KineticMixing(100, mM, gvxx=1., eps=1e-1) for mM in mMs],
-     [QuarksOnly(100, mM, gvxx=1., gvuu=1., gvdd=-1., gvss=0.) for mM in mMs],
-     [QuarksOnly(100, mM, gvxx=1., gvuu=1., gvdd=1., gvss=0.) for mM in mMs]])
+    [
+        [KineticMixing(100, mM, gvxx=1.0, eps=1e-1) for mM in mMs],
+        [QuarksOnly(100, mM, gvxx=1.0, gvuu=1.0, gvdd=-1.0, gvss=0.0) for mM in mMs],
+        [QuarksOnly(100, mM, gvxx=1.0, gvuu=1.0, gvdd=1.0, gvss=0.0) for mM in mMs],
+    ]
+)
 
 # %% {"code_folding": []}
-fig, axes = plt.subplots(3,
-                         2,
-                         sharex=True,
-                         sharey=True,
-                         figsize=(latex_text_width_1col,
-                                  0.8 * latex_text_width_1col))
+fig, axes = plt.subplots(
+    3,
+    2,
+    sharex=True,
+    sharey=True,
+    figsize=(latex_text_width_1col, 0.8 * latex_text_width_1col),
+)
 
 for row in range(3):
     for col in range(2):
@@ -54,7 +58,7 @@ for row in range(3):
         branching_fracts = defaultdict(list)
         for mx in mxs:
             vm.mx = mx
-            e_cm = 2 * mx * (1 + 0.5 * vx**2)
+            e_cm = 2 * mx * (1 + 0.5 * vx ** 2)
             cur_bfs = vm.annihilation_branching_fractions(e_cm)
             # Unpack this dict
             for (fs, bf) in cur_bfs.items():
@@ -62,11 +66,7 @@ for row in range(3):
 
         # Plot BFs
         for (fs, bfs) in branching_fracts.items():
-            ax.plot(mxs,
-                    bfs,
-                    label=get_tex_label(fs),
-                    color=get_color(fs),
-                    linewidth=1)
+            ax.plot(mxs, bfs, label=get_tex_label(fs), color=get_color(fs), linewidth=1)
 
         # Formatting
         ax.set_yscale("log")
@@ -81,16 +81,12 @@ for row in range(3):
 
 # Label couplings
 axes[0, 1].text(260, 7e-3, r"$\epsilon = 0.1$", va="center", fontsize=10)
-axes[1, 1].text(260,
-                7e-3,
-                r"$g_{Vuu} = 1$" + "\n" + r"$g_{Vdd} = -1$",
-                va="center",
-                fontsize=10)
-axes[2, 1].text(260,
-                7e-3,
-                r"$g_{Vuu} = 1$" + "\n" + r"$g_{Vdd} = 1$",
-                va="center",
-                fontsize=10)
+axes[1, 1].text(
+    260, 7e-3, r"$g_{Vuu} = 1$" + "\n" + r"$g_{Vdd} = -1$", va="center", fontsize=10
+)
+axes[2, 1].text(
+    260, 7e-3, r"$g_{Vuu} = 1$" + "\n" + r"$g_{Vdd} = 1$", va="center", fontsize=10
+)
 
 # Label mediator masses
 axes[0, 0].set_title(r"$m_V = %i$ MeV" % mM_light, fontsize=10)
@@ -98,25 +94,16 @@ axes[0, 1].set_title(r"$m_V > 500$ MeV", fontsize=10)
 
 # Label final states
 for col in [0, 1]:
-    axes[0, col].text(75,
-                      3e-1,
-                      r"$e^+ e^-$",
-                      color=get_color("e e"),
-                      fontsize=8,
-                      ha="center")
-    axes[0, col].text(77,
-                      3e-3,
-                      r"$\mu^+ \mu^-$",
-                      color=get_color("mu mu"),
-                      fontsize=8)
+    axes[0, col].text(
+        75, 3e-1, r"$e^+ e^-$", color=get_color("e e"), fontsize=8, ha="center"
+    )
+    axes[0, col].text(77, 3e-3, r"$\mu^+ \mu^-$", color=get_color("mu mu"), fontsize=8)
 
 for row in [1, 2]:
     for col in [0, 1]:
-        axes[row, col].text(73,
-                            3e-1,
-                            r"$\pi^0 \gamma$",
-                            color=get_color("pi0 g"),
-                            fontsize=8)
+        axes[row, col].text(
+            73, 3e-1, r"$\pi^0 \gamma$", color=get_color("pi0 g"), fontsize=8
+        )
 
 vv = r"$V V$"
 c_vv = get_color("v v")

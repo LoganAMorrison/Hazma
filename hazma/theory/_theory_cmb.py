@@ -60,7 +60,7 @@ class TheoryCMB(object):
             f_eff for photons or electrons and positrons.
         """
         # Center of mass energy
-        e_cm = 2. * self.mx * (1. + 0.5 * vx_cmb(self.mx, x_kd)**2)
+        e_cm = 2.0 * self.mx * (1.0 + 0.5 * vx_cmb(self.mx, x_kd) ** 2)
 
         if fs == "g g":
             f_eff_base = f_eff_g
@@ -71,7 +71,7 @@ class TheoryCMB(object):
             lines = self.positron_lines(e_cm)
 
             def spec_fn(es, e_cm):
-                return 2. * self.total_positron_spectrum(es, e_cm)
+                return 2.0 * self.total_positron_spectrum(es, e_cm)
 
         # Lower bound on integrals. Upper bound is many GeV, so we don't need
         # to do error checking.
@@ -85,34 +85,30 @@ class TheoryCMB(object):
             # simultaneously compute the spectrum over a grid of points.
             es = np.geomspace(e_min, e_cm / 2, 1000)
             dnde_tot = spec_fn(es, e_cm)
-            spec_interp = interp1d(es, dnde_tot, bounds_error=False,
-                                   fill_value=0.)
+            spec_interp = interp1d(es, dnde_tot, bounds_error=False, fill_value=0.0)
 
             def integrand(e):
                 return e * spec_interp(e) * f_eff_base(e)
 
-            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0,
-                            epsrel=1e-3)[0] / e_cm
+            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0, epsrel=1e-3)[0] / e_cm
         elif mode == "quad":
             # If RAMBO is not needed to compute the spectrum, this will give
             # much cleaner results.
             def integrand(e):
                 return e * spec_fn(e, e_cm) * f_eff_base(e)
 
-            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0,
-                            epsrel=1e-3)[0] / e_cm
+            f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0, epsrel=1e-3)[0] / e_cm
 
         # Sum up line contributions
-        f_eff_line_dm = 0.
+        f_eff_line_dm = 0.0
         for ch, line in lines.items():
             energy = line["energy"]
 
             # Make sure the base f_eff is defined at this energy
             if energy > e_min:
                 bf = line["bf"]
-                multiplicity = 2. if ch == fs else 1.
-                f_eff_line_dm += (energy * bf * f_eff_base(energy) *
-                                  multiplicity / e_cm)
+                multiplicity = 2.0 if ch == fs else 1.0
+                f_eff_line_dm += energy * bf * f_eff_base(energy) * multiplicity / e_cm
 
         return f_eff_dm + f_eff_line_dm
 

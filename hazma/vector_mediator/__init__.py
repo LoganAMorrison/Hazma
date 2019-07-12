@@ -1,24 +1,27 @@
 from hazma.theory import Theory
 
-from hazma.vector_mediator._vector_mediator_cross_sections \
-    import VectorMediatorCrossSections
+from hazma.vector_mediator._vector_mediator_cross_sections import (
+    VectorMediatorCrossSections,
+)
 from hazma.vector_mediator._vector_mediator_fsr import VectorMediatorFSR
-from hazma.vector_mediator._vector_mediator_positron_spectra \
-    import VectorMediatorPositronSpectra
-from hazma.vector_mediator._vector_mediator_spectra \
-    import VectorMediatorSpectra
+from hazma.vector_mediator._vector_mediator_positron_spectra import (
+    VectorMediatorPositronSpectra,
+)
+from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
-class VectorMediator(VectorMediatorCrossSections,
-                     VectorMediatorFSR,
-                     VectorMediatorPositronSpectra,
-                     VectorMediatorSpectra,
-                     VectorMediatorWidths,
-                     Theory):
+class VectorMediator(
+    VectorMediatorCrossSections,
+    VectorMediatorFSR,
+    VectorMediatorPositronSpectra,
+    VectorMediatorSpectra,
+    VectorMediatorWidths,
+    Theory,
+):
     r"""
     Create a VectorMediator object with generic couplings.
 
@@ -133,7 +136,7 @@ class VectorMediator(VectorMediatorCrossSections,
         """
         Returns a string giving the details of the model.
         """
-        return '''
+        return """
         The vector mediator model appends to the Standard Model  a dark \n
         matter particle, `x` and a massive vector mediator, `v`. The \n
         Lagrangian at 1 GeV is: \n
@@ -183,7 +186,7 @@ class VectorMediator(VectorMediatorCrossSections,
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
         \t mediator. \n
-        '''
+        """
 
     @classmethod
     def list_annihilation_final_states(cls):
@@ -195,7 +198,7 @@ class VectorMediator(VectorMediatorCrossSections,
         fs : array-like
             Array of the available final states.
         """
-        return ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
+        return ["mu mu", "e e", "pi pi", "pi0 g", "v v"]
 
     def constraints(self):
         pass
@@ -234,12 +237,16 @@ class KineticMixing(VectorMediator):
     def __init__(self, mx, mv, gvxx, eps):
         self._eps = eps
 
-        super(KineticMixing, self).__init__(mx, mv, gvxx,
-                                            -Qu * eps * qe,
-                                            -Qd * eps * qe,
-                                            -Qd * eps * qe,
-                                            -Qe * eps * qe,
-                                            -Qe * eps * qe)
+        super(KineticMixing, self).__init__(
+            mx,
+            mv,
+            gvxx,
+            -Qu * eps * qe,
+            -Qd * eps * qe,
+            -Qd * eps * qe,
+            -Qe * eps * qe,
+            -Qe * eps * qe,
+        )
 
     @property
     def eps(self):
@@ -280,7 +287,7 @@ class KineticMixing(VectorMediator):
         """
         Returns a string giving the details of the model.
         """
-        return '''
+        return """
         The Kinetic Mixing model is specific implementation of the vector \n
         mediator model in which the vector mediator mixes with the Standard \n
         Model photon with a mixing parameter `eps`. This causes the \n
@@ -324,7 +331,7 @@ class KineticMixing(VectorMediator):
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
         \t mediator. \n
-        '''
+        """
 
 
 class QuarksOnly(VectorMediator):
@@ -353,8 +360,7 @@ class QuarksOnly(VectorMediator):
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
-        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.,
-                                         0.)
+        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
 
     # Hide underlying properties' setters
     @VectorMediator.gvee.setter
@@ -369,7 +375,7 @@ class QuarksOnly(VectorMediator):
         """
         Returns a string giving the details of the model.
         """
-        return '''
+        return """
         This model is identical to the vector mediator model except the only \n
         Standard Model particles that the vector mediator couples to are the \n
         quarks. The Lagrangian is:\n
@@ -413,4 +419,4 @@ class QuarksOnly(VectorMediator):
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
         \t mediator. \n
-        '''
+        """

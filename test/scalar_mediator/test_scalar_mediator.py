@@ -6,12 +6,11 @@ from hazma.scalar_mediator import ScalarMediator
 import numpy as np
 import unittest
 
-sm1_dir = 'test/scalar_mediator/sm1_data/'
-sm2_dir = 'test/scalar_mediator/sm2_data/'
+sm1_dir = "test/scalar_mediator/sm1_data/"
+sm2_dir = "test/scalar_mediator/sm2_data/"
 
 
 class TestScalarMediator(unittest.TestCase):
-
     def setUp(self):
         self.load_sm1_data()
         self.load_sm2_data()
@@ -39,17 +38,23 @@ class TestScalarMediator(unittest.TestCase):
         with v_rel = 10^-3.
 
         """
-        self.params1 = np.load(sm1_dir + 'params.npy', allow_pickle=True)[()]
-        self.cme1 = np.load(sm1_dir + 'cme.npy', allow_pickle=True)
-        self.cs1_old = np.load(sm1_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.bf1_old = np.load(sm1_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vs1 = np.load(sm1_dir + 'vs.npy', allow_pickle=True)
-        self.spec1_old = np.load(sm1_dir + 'spectra.npy', allow_pickle=True)[()]
-        self.egams1 = np.load(sm1_dir + 'spectra_egams.npy', allow_pickle=True)
-        self.ps1_old = np.load(sm1_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.eng_ps1 = np.load(sm1_dir + 'eng_ps.npy', allow_pickle=True)
-        self.pspec1_old = np.load(sm1_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.lns1_old = np.load(sm1_dir + 'ps_lines.npy', allow_pickle=True)[()]
+        self.params1 = np.load(sm1_dir + "params.npy", allow_pickle=True)[()]
+        self.cme1 = np.load(sm1_dir + "cme.npy", allow_pickle=True)
+        self.cs1_old = np.load(sm1_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.bf1_old = np.load(
+            sm1_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vs1 = np.load(sm1_dir + "vs.npy", allow_pickle=True)
+        self.spec1_old = np.load(sm1_dir + "spectra.npy", allow_pickle=True)[()]
+        self.egams1 = np.load(sm1_dir + "spectra_egams.npy", allow_pickle=True)
+        self.ps1_old = np.load(sm1_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.eng_ps1 = np.load(sm1_dir + "eng_ps.npy", allow_pickle=True)
+        self.pspec1_old = np.load(sm1_dir + "positron_spectra.npy", allow_pickle=True)[
+            ()
+        ]
+        self.lns1_old = np.load(sm1_dir + "ps_lines.npy", allow_pickle=True)[()]
 
     def load_sm2_data(self):
         """
@@ -68,17 +73,23 @@ class TestScalarMediator(unittest.TestCase):
         with v_rel = 10^-3.
 
         """
-        self.params2 = np.load(sm1_dir + 'params.npy', allow_pickle=True)[()]
-        self.cme2 = np.load(sm1_dir + 'cme.npy', allow_pickle=True)
-        self.cs2_old = np.load(sm1_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.bf2_old = np.load(sm1_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vs2 = np.load(sm1_dir + 'vs.npy', allow_pickle=True)
-        self.spec2_old = np.load(sm1_dir + 'spectra.npy', allow_pickle=True)[()]
-        self.egams2 = np.load(sm1_dir + 'spectra_egams.npy', allow_pickle=True)
-        self.ps2_old = np.load(sm1_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.eng_ps2 = np.load(sm1_dir + 'eng_ps.npy', allow_pickle=True)
-        self.pspec2_old = np.load(sm1_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.lns2_old = np.load(sm1_dir + 'ps_lines.npy', allow_pickle=True)[()]
+        self.params2 = np.load(sm1_dir + "params.npy", allow_pickle=True)[()]
+        self.cme2 = np.load(sm1_dir + "cme.npy", allow_pickle=True)
+        self.cs2_old = np.load(sm1_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.bf2_old = np.load(
+            sm1_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vs2 = np.load(sm1_dir + "vs.npy", allow_pickle=True)
+        self.spec2_old = np.load(sm1_dir + "spectra.npy", allow_pickle=True)[()]
+        self.egams2 = np.load(sm1_dir + "spectra_egams.npy", allow_pickle=True)
+        self.ps2_old = np.load(sm1_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.eng_ps2 = np.load(sm1_dir + "eng_ps.npy", allow_pickle=True)
+        self.pspec2_old = np.load(sm1_dir + "positron_spectra.npy", allow_pickle=True)[
+            ()
+        ]
+        self.lns2_old = np.load(sm1_dir + "ps_lines.npy", allow_pickle=True)[()]
 
     def test_description(self):
         """
@@ -92,7 +103,7 @@ class TestScalarMediator(unittest.TestCase):
         Test that the scalar mediator final state are equal to:
             'mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s'
         """
-        list_fs = ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
+        list_fs = ["mu mu", "e e", "g g", "pi0 pi0", "pi pi", "s s"]
 
         assert self.sm1.list_annihilation_final_states() == list_fs
         assert self.sm2.list_annihilation_final_states() == list_fs
@@ -106,12 +117,10 @@ class TestScalarMediator(unittest.TestCase):
         cs2_new = self.sm2.annihilation_cross_sections(self.cme2)
 
         for key in self.cs1_old.keys():
-            assert np.isclose(self.cs1_old[key], cs1_new[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.cs1_old[key], cs1_new[key], atol=0.0, rtol=1e-3)
 
         for key in self.cs2_old.keys():
-            assert np.isclose(self.cs2_old[key], cs2_new[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.cs2_old[key], cs2_new[key], atol=0.0, rtol=1e-3)
 
     def test_branching_fractions(self):
         """
@@ -196,17 +205,23 @@ class TestScalarMediator(unittest.TestCase):
         lns2_new = self.sm2.positron_lines(self.cme2)
 
         assert np.isclose(
-            lns1_new['e e']['bf'], self.lns1_old['e e']['bf'],
-            atol=0.0, rtol=1e-3)
+            lns1_new["e e"]["bf"], self.lns1_old["e e"]["bf"], atol=0.0, rtol=1e-3
+        )
 
         assert np.isclose(
-            lns1_new['e e']['energy'], self.lns1_old['e e']['energy'],
-            atol=0.0, rtol=1e-3)
+            lns1_new["e e"]["energy"],
+            self.lns1_old["e e"]["energy"],
+            atol=0.0,
+            rtol=1e-3,
+        )
 
         assert np.isclose(
-            lns2_new['e e']['bf'], self.lns2_old['e e']['bf'],
-            atol=0.0, rtol=1e-3)
+            lns2_new["e e"]["bf"], self.lns2_old["e e"]["bf"], atol=0.0, rtol=1e-3
+        )
 
         assert np.isclose(
-            lns2_new['e e']['energy'], self.lns2_old['e e']['energy'],
-            atol=0.0, rtol=1e-3)
+            lns2_new["e e"]["energy"],
+            self.lns2_old["e e"]["energy"],
+            atol=0.0,
+            rtol=1e-3,
+        )

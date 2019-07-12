@@ -6,17 +6,16 @@ from hazma.vector_mediator import VectorMediator, KineticMixing
 import numpy as np
 import unittest
 
-shr_dir = 'test/vector_mediator/shared_data/'
-vm1_dir = 'test/vector_mediator/vm1_data/'
-vm2_dir = 'test/vector_mediator/vm2_data/'
-vm3_dir = 'test/vector_mediator/vm3_data/'
-vm4_dir = 'test/vector_mediator/vm4_data/'
-vm5_dir = 'test/vector_mediator/vm5_data/'
-vm6_dir = 'test/vector_mediator/vm6_data/'
+shr_dir = "test/vector_mediator/shared_data/"
+vm1_dir = "test/vector_mediator/vm1_data/"
+vm2_dir = "test/vector_mediator/vm2_data/"
+vm3_dir = "test/vector_mediator/vm3_data/"
+vm4_dir = "test/vector_mediator/vm4_data/"
+vm5_dir = "test/vector_mediator/vm5_data/"
+vm6_dir = "test/vector_mediator/vm6_data/"
 
 
 class TestVectorMediator(unittest.TestCase):
-
     def setUp(self):
         self.load_shared_data()
         self.load_vm1_data()
@@ -41,9 +40,9 @@ class TestVectorMediator(unittest.TestCase):
         Load in the shared data.
         """
 
-        self.cme = np.load(shr_dir + 'cme.npy', allow_pickle=True)
-        self.eng_gams = np.load(shr_dir + 'spectra_egams.npy', allow_pickle=True)
-        self.eng_ps = np.load(shr_dir + 'eng_ps.npy', allow_pickle=True)
+        self.cme = np.load(shr_dir + "cme.npy", allow_pickle=True)
+        self.eng_gams = np.load(shr_dir + "spectra_egams.npy", allow_pickle=True)
+        self.eng_ps = np.load(shr_dir + "eng_ps.npy", allow_pickle=True)
 
     def load_vm1_data(self):
         """
@@ -56,13 +55,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm1_bfs = np.load(vm1_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm1_css = np.load(vm1_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm1_par = np.load(vm1_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm1_pws = np.load(vm1_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm1_pos_spec = np.load(vm1_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm1_pos_line = np.load(vm1_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm1_gam_spec = np.load(vm1_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm1_bfs = np.load(
+            vm1_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm1_css = np.load(vm1_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm1_par = np.load(vm1_dir + "params.npy", allow_pickle=True)[()]
+        self.vm1_pws = np.load(vm1_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm1_pos_spec = np.load(
+            vm1_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm1_pos_line = np.load(vm1_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm1_gam_spec = np.load(vm1_dir + "spectra.npy", allow_pickle=True)[()]
 
     def load_vm2_data(self):
         """
@@ -75,13 +80,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm2_bfs = np.load(vm2_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm2_css = np.load(vm2_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm2_par = np.load(vm2_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm2_pws = np.load(vm2_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm2_pos_spec = np.load(vm2_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm2_pos_line = np.load(vm2_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm2_gam_spec = np.load(vm2_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm2_bfs = np.load(
+            vm2_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm2_css = np.load(vm2_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm2_par = np.load(vm2_dir + "params.npy", allow_pickle=True)[()]
+        self.vm2_pws = np.load(vm2_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm2_pos_spec = np.load(
+            vm2_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm2_pos_line = np.load(vm2_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm2_gam_spec = np.load(vm2_dir + "spectra.npy", allow_pickle=True)[()]
 
     def load_vm3_data(self):
         """
@@ -94,13 +105,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm3_bfs = np.load(vm3_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm3_css = np.load(vm3_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm3_par = np.load(vm3_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm3_pws = np.load(vm3_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm3_pos_spec = np.load(vm3_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm3_pos_line = np.load(vm3_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm3_gam_spec = np.load(vm3_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm3_bfs = np.load(
+            vm3_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm3_css = np.load(vm3_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm3_par = np.load(vm3_dir + "params.npy", allow_pickle=True)[()]
+        self.vm3_pws = np.load(vm3_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm3_pos_spec = np.load(
+            vm3_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm3_pos_line = np.load(vm3_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm3_gam_spec = np.load(vm3_dir + "spectra.npy", allow_pickle=True)[()]
 
     def load_vm4_data(self):
         """
@@ -113,13 +130,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm4_bfs = np.load(vm4_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm4_css = np.load(vm4_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm4_par = np.load(vm4_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm4_pws = np.load(vm4_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm4_pos_spec = np.load(vm4_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm4_pos_line = np.load(vm4_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm4_gam_spec = np.load(vm4_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm4_bfs = np.load(
+            vm4_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm4_css = np.load(vm4_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm4_par = np.load(vm4_dir + "params.npy", allow_pickle=True)[()]
+        self.vm4_pws = np.load(vm4_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm4_pos_spec = np.load(
+            vm4_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm4_pos_line = np.load(vm4_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm4_gam_spec = np.load(vm4_dir + "spectra.npy", allow_pickle=True)[()]
 
     def load_vm5_data(self):
         """
@@ -132,13 +155,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm5_bfs = np.load(vm5_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm5_css = np.load(vm5_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm5_par = np.load(vm5_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm5_pws = np.load(vm5_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm5_pos_spec = np.load(vm5_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm5_pos_line = np.load(vm5_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm5_gam_spec = np.load(vm5_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm5_bfs = np.load(
+            vm5_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm5_css = np.load(vm5_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm5_par = np.load(vm5_dir + "params.npy", allow_pickle=True)[()]
+        self.vm5_pws = np.load(vm5_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm5_pos_spec = np.load(
+            vm5_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm5_pos_line = np.load(vm5_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm5_gam_spec = np.load(vm5_dir + "spectra.npy", allow_pickle=True)[()]
 
     def load_vm6_data(self):
         """
@@ -151,13 +180,19 @@ class TestVectorMediator(unittest.TestCase):
             gvxx = 1.
             eps  = 0.1
         """
-        self.vm6_bfs = np.load(vm6_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
-        self.vm6_css = np.load(vm6_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
-        self.vm6_par = np.load(vm6_dir + 'params.npy', allow_pickle=True)[()]
-        self.vm6_pws = np.load(vm6_dir + 'partial_widths.npy', allow_pickle=True)[()]
-        self.vm6_pos_spec = np.load(vm6_dir + 'positron_spectra.npy', allow_pickle=True)[()]
-        self.vm6_pos_line = np.load(vm6_dir + 'ps_lines.npy', allow_pickle=True)[()]
-        self.vm6_gam_spec = np.load(vm6_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.vm6_bfs = np.load(
+            vm6_dir + "ann_branching_fractions.npy", allow_pickle=True
+        )[()]
+        self.vm6_css = np.load(vm6_dir + "ann_cross_sections.npy", allow_pickle=True)[
+            ()
+        ]
+        self.vm6_par = np.load(vm6_dir + "params.npy", allow_pickle=True)[()]
+        self.vm6_pws = np.load(vm6_dir + "partial_widths.npy", allow_pickle=True)[()]
+        self.vm6_pos_spec = np.load(
+            vm6_dir + "positron_spectra.npy", allow_pickle=True
+        )[()]
+        self.vm6_pos_line = np.load(vm6_dir + "ps_lines.npy", allow_pickle=True)[()]
+        self.vm6_gam_spec = np.load(vm6_dir + "spectra.npy", allow_pickle=True)[()]
 
     def test_description(self):
         """
@@ -175,7 +210,7 @@ class TestVectorMediator(unittest.TestCase):
         Test that the scalar mediator final state are equal to:
             'mu mu', 'e e', 'pi pi', 'pi0 g', 'v v'
         """
-        list_fs = ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
+        list_fs = ["mu mu", "e e", "pi pi", "pi0 g", "v v"]
 
         assert self.vm1.list_annihilation_final_states() == list_fs
         assert self.vm2.list_annihilation_final_states() == list_fs
@@ -197,23 +232,17 @@ class TestVectorMediator(unittest.TestCase):
         css6 = self.vm6.annihilation_cross_sections(self.cme)
 
         for key in self.vm1_css.keys():
-            assert np.isclose(self.vm1_css[key], css1[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm1_css[key], css1[key], atol=0.0, rtol=1e-3)
         for key in self.vm2_css.keys():
-            assert np.isclose(self.vm2_css[key], css2[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm2_css[key], css2[key], atol=0.0, rtol=1e-3)
         for key in self.vm3_css.keys():
-            assert np.isclose(self.vm3_css[key], css3[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm3_css[key], css3[key], atol=0.0, rtol=1e-3)
         for key in self.vm4_css.keys():
-            assert np.isclose(self.vm4_css[key], css4[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm4_css[key], css4[key], atol=0.0, rtol=1e-3)
         for key in self.vm5_css.keys():
-            assert np.isclose(self.vm5_css[key], css5[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm5_css[key], css5[key], atol=0.0, rtol=1e-3)
         for key in self.vm6_css.keys():
-            assert np.isclose(self.vm6_css[key], css6[key],
-                              atol=0.0, rtol=1e-3)
+            assert np.isclose(self.vm6_css[key], css6[key], atol=0.0, rtol=1e-3)
 
     def test_branching_fractions(self):
         """
@@ -357,27 +386,27 @@ class TestVectorMediator(unittest.TestCase):
         ln5 = self.vm5.positron_lines(self.cme)
         ln6 = self.vm6.positron_lines(self.cme)
 
-        for key in self.vm1_pos_line['e e']:
+        for key in self.vm1_pos_line["e e"]:
             assert np.isclose(
-                ln1['e e'][key], self.vm1_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
-        for key in self.vm2_pos_line['e e']:
+                ln1["e e"][key], self.vm1_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )
+        for key in self.vm2_pos_line["e e"]:
             assert np.isclose(
-                ln2['e e'][key], self.vm2_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
-        for key in self.vm3_pos_line['e e']:
+                ln2["e e"][key], self.vm2_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )
+        for key in self.vm3_pos_line["e e"]:
             assert np.isclose(
-                ln3['e e'][key], self.vm3_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
-        for key in self.vm4_pos_line['e e']:
+                ln3["e e"][key], self.vm3_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )
+        for key in self.vm4_pos_line["e e"]:
             assert np.isclose(
-                ln4['e e'][key], self.vm4_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
-        for key in self.vm5_pos_line['e e']:
+                ln4["e e"][key], self.vm4_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )
+        for key in self.vm5_pos_line["e e"]:
             assert np.isclose(
-                ln5['e e'][key], self.vm5_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
-        for key in self.vm6_pos_line['e e']:
+                ln5["e e"][key], self.vm5_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )
+        for key in self.vm6_pos_line["e e"]:
             assert np.isclose(
-                ln6['e e'][key], self.vm6_pos_line['e e'][key],
-                atol=0.0, rtol=1e-3)
+                ln6["e e"][key], self.vm6_pos_line["e e"][key], atol=0.0, rtol=1e-3
+            )

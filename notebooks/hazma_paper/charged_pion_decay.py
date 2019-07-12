@@ -26,16 +26,18 @@ from utilities import latex_text_width_1col, colors
 
 # %%
 # Pion energy
-e_pi = 1.0001*mpi
+e_pi = 1.0001 * mpi
 # Photon energies
 e_gams = np.logspace(0, 2, num=200)
 
 # %%
-fig, ax = plt.subplots(1, 1, figsize=(0.5*latex_text_width_1col, 0.35*latex_text_width_1col))
+fig, ax = plt.subplots(
+    1, 1, figsize=(0.5 * latex_text_width_1col, 0.35 * latex_text_width_1col)
+)
 
 # Plot all the contributions
 dnde_total = dnde_pi(e_gams, e_pi, mode="total")
-ax.loglog(e_gams, e_gams * dnde_total, 'k', label="Total")
+ax.loglog(e_gams, e_gams * dnde_total, "k", label="Total")
 
 dnde_munu = dnde_pi(e_gams, e_pi, mode="munug")
 ax.loglog(e_gams, e_gams * dnde_munu, label=r"$\mu^{+}\nu\gamma$")
