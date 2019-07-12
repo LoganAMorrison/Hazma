@@ -39,17 +39,17 @@ class TestScalarMediator(unittest.TestCase):
         with v_rel = 10^-3.
 
         """
-        self.params1 = np.load(sm1_dir + 'params.npy')[()]
-        self.cme1 = np.load(sm1_dir + 'cme.npy')
-        self.cs1_old = np.load(sm1_dir + 'ann_cross_sections.npy')[()]
-        self.bf1_old = np.load(sm1_dir + 'ann_branching_fractions.npy')[()]
-        self.vs1 = np.load(sm1_dir + 'vs.npy')
-        self.spec1_old = np.load(sm1_dir + 'spectra.npy')[()]
-        self.egams1 = np.load(sm1_dir + 'spectra_egams.npy')
-        self.ps1_old = np.load(sm1_dir + 'partial_widths.npy')[()]
-        self.eng_ps1 = np.load(sm1_dir + 'eng_ps.npy')
-        self.pspec1_old = np.load(sm1_dir + 'positron_spectra.npy')[()]
-        self.lns1_old = np.load(sm1_dir + 'ps_lines.npy')[()]
+        self.params1 = np.load(sm1_dir + 'params.npy', allow_pickle=True)[()]
+        self.cme1 = np.load(sm1_dir + 'cme.npy', allow_pickle=True)
+        self.cs1_old = np.load(sm1_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
+        self.bf1_old = np.load(sm1_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
+        self.vs1 = np.load(sm1_dir + 'vs.npy', allow_pickle=True)
+        self.spec1_old = np.load(sm1_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.egams1 = np.load(sm1_dir + 'spectra_egams.npy', allow_pickle=True)
+        self.ps1_old = np.load(sm1_dir + 'partial_widths.npy', allow_pickle=True)[()]
+        self.eng_ps1 = np.load(sm1_dir + 'eng_ps.npy', allow_pickle=True)
+        self.pspec1_old = np.load(sm1_dir + 'positron_spectra.npy', allow_pickle=True)[()]
+        self.lns1_old = np.load(sm1_dir + 'ps_lines.npy', allow_pickle=True)[()]
 
     def load_sm2_data(self):
         """
@@ -68,17 +68,17 @@ class TestScalarMediator(unittest.TestCase):
         with v_rel = 10^-3.
 
         """
-        self.params2 = np.load(sm1_dir + 'params.npy')[()]
-        self.cme2 = np.load(sm1_dir + 'cme.npy')
-        self.cs2_old = np.load(sm1_dir + 'ann_cross_sections.npy')[()]
-        self.bf2_old = np.load(sm1_dir + 'ann_branching_fractions.npy')[()]
-        self.vs2 = np.load(sm1_dir + 'vs.npy')
-        self.spec2_old = np.load(sm1_dir + 'spectra.npy')[()]
-        self.egams2 = np.load(sm1_dir + 'spectra_egams.npy')
-        self.ps2_old = np.load(sm1_dir + 'partial_widths.npy')[()]
-        self.eng_ps2 = np.load(sm1_dir + 'eng_ps.npy')
-        self.pspec2_old = np.load(sm1_dir + 'positron_spectra.npy')[()]
-        self.lns2_old = np.load(sm1_dir + 'ps_lines.npy')[()]
+        self.params2 = np.load(sm1_dir + 'params.npy', allow_pickle=True)[()]
+        self.cme2 = np.load(sm1_dir + 'cme.npy', allow_pickle=True)
+        self.cs2_old = np.load(sm1_dir + 'ann_cross_sections.npy', allow_pickle=True)[()]
+        self.bf2_old = np.load(sm1_dir + 'ann_branching_fractions.npy', allow_pickle=True)[()]
+        self.vs2 = np.load(sm1_dir + 'vs.npy', allow_pickle=True)
+        self.spec2_old = np.load(sm1_dir + 'spectra.npy', allow_pickle=True)[()]
+        self.egams2 = np.load(sm1_dir + 'spectra_egams.npy', allow_pickle=True)
+        self.ps2_old = np.load(sm1_dir + 'partial_widths.npy', allow_pickle=True)[()]
+        self.eng_ps2 = np.load(sm1_dir + 'eng_ps.npy', allow_pickle=True)
+        self.pspec2_old = np.load(sm1_dir + 'positron_spectra.npy', allow_pickle=True)[()]
+        self.lns2_old = np.load(sm1_dir + 'ps_lines.npy', allow_pickle=True)[()]
 
     def test_description(self):
         """
