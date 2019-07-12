@@ -27,3 +27,4 @@ manual/*.pdf
 .pypirc
 .eggs/*
 .python-version
+.pytest_cache/

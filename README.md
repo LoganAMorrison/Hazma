@@ -30,10 +30,10 @@ Another way to run `hazma` is by using `docker`. If you have docker installed on
     docker build --rm -t jupyter/hazma .
 
 This will build the docker image called `jupyter/hazma`. Then to start a jupyter notebook, run:
-    
+
     docker run -it -p 8888:8888 -v /path/to/hazma/tutorials:/home/jovyan/work --rm --name jupyter jupyter/hazma
 
-This will start a jupyter kernel. 
+This will start a jupyter kernel.
 
 ## Other information
 
