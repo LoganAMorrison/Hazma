@@ -118,7 +118,7 @@ class TheoryConstrain(object):
         account for gamma ray lines!!!
         """
         vx = 1.0e-3
-        e_cm = 2. * self.mx * (1 + 0.5 * vx**2)  # TODO: change this!
+        e_cm = 2. * self.mx * (1 + 0.5 * vx**2)  # TODO: should depend on target
 
         # Factor to convert dN/dE to Phi/<sigma v>
         dm_flux_factor = (measurement.target.J * measurement.target.dOmega /

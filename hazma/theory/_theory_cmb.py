@@ -5,13 +5,6 @@ from hazma.cmb import vx_cmb, f_eff_g, f_eff_ep, p_ann_planck_temp_pol
 import numpy as np
 
 
-"""
-TODO
-----
-Handle Majorana vs Dirac DM!
-"""
-
-
 class TheoryCMB(object):
     def cmb_limit(self, x_kd=1.0e-4, p_ann=p_ann_planck_temp_pol):
         """Computes the CMB limit on <sigma v>.
@@ -37,6 +30,13 @@ class TheoryCMB(object):
         <sigma v> : float
             Upper bound on <sigma v>, in cm^3 s^-1.
         """
+        # TODO: account for non-self-conjugate DM. See discussion in Gondolo
+        # and Gelmini.
+        # if self.self_conjugate:
+        #     factor = 1.0
+        # else:
+        #     factor = 0.5
+
         return p_ann * self.mx / self.f_eff(x_kd)
 
     def _f_eff_helper(self, fs, x_kd=1e-4, mode="quad"):

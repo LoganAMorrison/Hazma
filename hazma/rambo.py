@@ -3,12 +3,6 @@
 
 # Authors: Logan Morrison and Adam Coogan
 # Date: December 2017
-
-TODO: Code up specific functions for cross-section
-      functions for 2->2 processes.
-TODO: Code up specific functions for cross-section
-      functions for 2->3 processes.
-
 """
 from hazma.phase_space_helper_functions import generator
 from hazma.phase_space_helper_functions import histogram
