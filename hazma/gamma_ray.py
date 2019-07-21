@@ -8,16 +8,20 @@ import numpy as np
 
 from hazma import rambo
 
-from hazma.gamma_ray_helper_functions.gamma_ray_generator \
-    import gamma, gamma_point
+from hazma.gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
 
-from hazma.field_theory_helper_functions.common_functions import \
-    cross_section_prefactor
+from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
 
 
-def gamma_ray_decay(particles, cme, eng_gams,
-                    mat_elem_sqrd=lambda k_list: 1.0,
-                    num_ps_pts=1000, num_bins=25, verbose=False):
+def gamma_ray_decay(
+    particles,
+    cme,
+    eng_gams,
+    mat_elem_sqrd=lambda k_list: 1.0,
+    num_ps_pts=1000,
+    num_bins=25,
+    verbose=False,
+):
     r"""Returns total gamma ray spectrum from a set of particles.
 
     Blah and blah.
@@ -82,17 +86,28 @@ def gamma_ray_decay(particles, cme, eng_gams,
 
     particles = np.array(particles)
 
-    if hasattr(eng_gams, '__len__'):
-        return gamma(particles, cme, eng_gams, mat_elem_sqrd=mat_elem_sqrd,
-                     num_ps_pts=num_ps_pts, num_bins=num_bins, verbose=verbose)
-    return gamma_point(particles, cme, eng_gams, mat_elem_sqrd,
-                       num_ps_pts, num_bins)
+    if hasattr(eng_gams, "__len__"):
+        return gamma(
+            particles,
+            cme,
+            eng_gams,
+            mat_elem_sqrd=mat_elem_sqrd,
+            num_ps_pts=num_ps_pts,
+            num_bins=num_bins,
+            verbose=verbose,
+        )
+    return gamma_point(particles, cme, eng_gams, mat_elem_sqrd, num_ps_pts, num_bins)
 
 
-def gamma_ray_fsr(isp_masses, fsp_masses, cme,
-                  mat_elem_sqrd_tree=lambda k_list: 1.0,
-                  mat_elem_sqrd_rad=lambda k_list: 1.0,
-                  num_ps_pts=1000, num_bins=25):
+def gamma_ray_fsr(
+    isp_masses,
+    fsp_masses,
+    cme,
+    mat_elem_sqrd_tree=lambda k_list: 1.0,
+    mat_elem_sqrd_rad=lambda k_list: 1.0,
+    num_ps_pts=1000,
+    num_bins=25,
+):
     r"""Returns total gamma ray spectrum from a set of particles using a Monte
     Carlo.
 
@@ -163,24 +178,31 @@ def gamma_ray_fsr(isp_masses, fsp_masses, cme,
     prefactor = 0.0
 
     if len(isp_masses) == 1:
-        cross_section = \
-            rambo.compute_decay_width(
-                num_ps_pts, fsp_masses[0:-1], cme,
-                mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+        cross_section = rambo.compute_decay_width(
+            num_ps_pts, fsp_masses[0:-1], cme, mat_elem_sqrd=mat_elem_sqrd_tree
+        )[0]
 
         prefactor = 1.0 / (2.0 * cme)
     else:
         cross_section = rambo.compute_annihilation_cross_section(
-            isp_masses, fsp_masses[0:-1], cme, num_ps_pts=num_ps_pts,
-            mat_elem_sqrd=mat_elem_sqrd_tree)[0]
+            isp_masses,
+            fsp_masses[0:-1],
+            cme,
+            num_ps_pts=num_ps_pts,
+            mat_elem_sqrd=mat_elem_sqrd_tree,
+        )[0]
 
         m1 = isp_masses[0]
         m2 = isp_masses[1]
         prefactor = cross_section_prefactor(m1, m2, cme)
 
     eng_hists = rambo.generate_energy_histogram(
-        fsp_masses, cme, num_ps_pts=num_ps_pts,
-        mat_elem_sqrd=mat_elem_sqrd_rad, num_bins=num_bins)[0]
+        fsp_masses,
+        cme,
+        num_ps_pts=num_ps_pts,
+        mat_elem_sqrd=mat_elem_sqrd_rad,
+        num_bins=num_bins,
+    )[0]
 
     engs_gam = eng_hists[-1, 0]
     dndes = eng_hists[-1, 1] * prefactor / cross_section

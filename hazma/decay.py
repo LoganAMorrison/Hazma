@@ -94,7 +94,7 @@ def neutral_pion(eng_gam, eng_pi):
     >>> spec = decay.neutral_pion(eng_gams, eng_pi)
 
     """
-    if hasattr(eng_gam, '__len__'):
+    if hasattr(eng_gam, "__len__"):
         return decay_neutral_pion.Spectrum(eng_gam, eng_pi)
     return decay_neutral_pion.SpectrumPoint(eng_gam, eng_pi)
 
@@ -140,10 +140,11 @@ def charged_pion(eng_gam, eng_pi, mode="total"):
 
     """
 
-    if mode != "total" and mode != "munu" and mode != "munug" and \
-            mode != "enug":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" +\
-            "'munu', 'munug' or 'enug'.".format(mode)
+    if mode != "total" and mode != "munu" and mode != "munug" and mode != "enug":
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'munu', 'munug' or 'enug'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(eng_gam, "__len__"):
@@ -209,12 +210,22 @@ def charged_kaon(eng_gam, eng_k, mode="total"):
 
     """
 
-    if mode != "total" and mode != "0enu" and mode != "0munu" and \
-            mode != "00p" and mode != "mmug" and mode != "munu" and \
-            mode != "p0" and mode != "p0g" and mode != "ppm":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" +\
-            "'0enu', '0munu', '00p', 'mmug', 'munu', 'p0'," +\
-            " 'p0g' or 'ppm'.".format(mode)
+    if (
+        mode != "total"
+        and mode != "0enu"
+        and mode != "0munu"
+        and mode != "00p"
+        and mode != "mmug"
+        and mode != "munu"
+        and mode != "p0"
+        and mode != "p0g"
+        and mode != "ppm"
+    ):
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'0enu', '0munu', '00p', 'mmug', 'munu', 'p0',"
+            + " 'p0g' or 'ppm'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(eng_gam, "__len__"):
@@ -270,10 +281,11 @@ def short_kaon(eng_gam, eng_k, mode="total"):
     >>> spec = decay.short_kaon(eng_gams, eng_ks)
 
     """
-    if mode != "total" and mode != "00" and mode != "pm" and \
-            mode != "pmg":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" +\
-            "'00', 'pm' or 'pmg'.".format(mode)
+    if mode != "total" and mode != "00" and mode != "pm" and mode != "pmg":
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'00', 'pm' or 'pmg'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(eng_gam, "__len__"):
@@ -334,12 +346,21 @@ def long_kaon(eng_gam, eng_k, mode="total"):
     .. math:: K_{L} \to \pi^{\pm} + \pi^{\mp} + \pi^{0}
 
     """
-    if mode != "total" and mode != "000" and mode != "penu" and \
-            mode != "penug" and mode != "pm0" and mode != "pm0g" and \
-            mode != "pmunu" and mode != "pmunug":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" +\
-            "'000', 'penu', 'penug', 'pm0', 'pm0g'," +\
-            "'pmunu' or 'pmunug'.".format(mode)
+    if (
+        mode != "total"
+        and mode != "000"
+        and mode != "penu"
+        and mode != "penug"
+        and mode != "pm0"
+        and mode != "pm0g"
+        and mode != "pmunu"
+        and mode != "pmunug"
+    ):
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'000', 'penu', 'penug', 'pm0', 'pm0g',"
+            + "'pmunu' or 'pmunug'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(eng_gam, "__len__"):

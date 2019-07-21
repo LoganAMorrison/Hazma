@@ -5,31 +5,31 @@ from hazma.parameters import down_quark_mass as mdq
 from hazma.parameters import strange_quark_mass as msq
 from hazma.parameters import fpi, b0, vh
 
-from hazma.scalar_mediator._scalar_mediator_constraints \
-    import ScalarMediatorConstraints
-from hazma.scalar_mediator._scalar_mediator_cross_sections \
-    import ScalarMediatorCrossSection
-from hazma.scalar_mediator._scalar_mediator_fsr \
-    import ScalarMediatorFSR
-from hazma.scalar_mediator._scalar_mediator_positron_spectra \
-    import ScalarMediatorPositronSpectra
-from hazma.scalar_mediator._scalar_mediator_spectra \
-    import ScalarMediatorSpectra
-from hazma.scalar_mediator._scalar_mediator_widths \
-    import ScalarMediatorWidths
+from hazma.scalar_mediator._scalar_mediator_constraints import ScalarMediatorConstraints
+from hazma.scalar_mediator._scalar_mediator_cross_sections import (
+    ScalarMediatorCrossSection,
+)
+from hazma.scalar_mediator._scalar_mediator_fsr import ScalarMediatorFSR
+from hazma.scalar_mediator._scalar_mediator_positron_spectra import (
+    ScalarMediatorPositronSpectra,
+)
+from hazma.scalar_mediator._scalar_mediator_spectra import ScalarMediatorSpectra
+from hazma.scalar_mediator._scalar_mediator_widths import ScalarMediatorWidths
 
 import numpy as np
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
-class ScalarMediator(ScalarMediatorConstraints,
-                     ScalarMediatorCrossSection,
-                     ScalarMediatorFSR,
-                     ScalarMediatorPositronSpectra,
-                     ScalarMediatorSpectra,
-                     ScalarMediatorWidths,
-                     Theory):
+class ScalarMediator(
+    ScalarMediatorConstraints,
+    ScalarMediatorCrossSection,
+    ScalarMediatorFSR,
+    ScalarMediatorPositronSpectra,
+    ScalarMediatorSpectra,
+    ScalarMediatorWidths,
+    Theory,
+):
     r"""
     Create a scalar mediator model object.
 
@@ -103,7 +103,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         """
         Returns a string giving the details of the model.
         """
-        return '''
+        return """
         The UV complete models are: \n \n
 
         \t 1) Scalar mediator coupling to a new heavy quark. When the heavy \n
@@ -160,7 +160,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
         \t mediator. \n
-        '''
+        """
 
     @property
     def mx(self):
@@ -236,7 +236,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         """Updates and returns the value of the scalar vev.
         """
         if 3 * self.gsff + 2 * self.gsGG == 0:
-            self.vs = 0.
+            self.vs = 0.0
         else:
             # trM = muq + mdq + msq
 
@@ -266,22 +266,32 @@ class ScalarMediator(ScalarMediatorConstraints,
     def fpiT(self, vs):
         """Returns the Lagrangian parameter fpiT.
         """
-        return fpi / np.sqrt(1. + 4. * self._gsGG * vs / (9. * vh))
+        return fpi / np.sqrt(1.0 + 4.0 * self._gsGG * vs / (9.0 * vh))
 
     def b0T(self, vs, fpiT):
         """Returns the Lagrangian parameter b0T.
         """
-        return (b0 * (fpi / fpiT)**2 /
-                (1. + vs / vh * (2. * self._gsGG / 3. + self._gsff)))
+        return (
+            b0
+            * (fpi / fpiT) ** 2
+            / (1.0 + vs / vh * (2.0 * self._gsGG / 3.0 + self._gsff))
+        )
 
     def msT(self, fpiT, b0T):
         """Returns the Lagrangian parameter msT.
         """
         trM = muq + mdq + msq
 
-        return np.sqrt(self._ms**2 -
-                       16. * self._gsGG * b0T * fpiT**2 / (81. * vh**2) *
-                       (2. * self._gsGG - 9. * self._gsff) * trM)
+        return np.sqrt(
+            self._ms ** 2
+            - 16.0
+            * self._gsGG
+            * b0T
+            * fpiT ** 2
+            / (81.0 * vh ** 2)
+            * (2.0 * self._gsGG - 9.0 * self._gsff)
+            * trM
+        )
 
     @classmethod
     def list_annihilation_final_states(cls):
@@ -293,7 +303,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         fs : array-like
             Array of the available final states.
         """
-        return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
+        return ["mu mu", "e e", "g g", "pi0 pi0", "pi pi", "s s"]
 
 
 class HiggsPortal(ScalarMediator):
@@ -326,8 +336,9 @@ class HiggsPortal(ScalarMediator):
         self._lam = vh
         self._stheta = stheta
 
-        super(HiggsPortal, self).__init__(mx, ms, gsxx, stheta, 3.*stheta,
-                                          -5.*stheta/6., vh)
+        super(HiggsPortal, self).__init__(
+            mx, ms, gsxx, stheta, 3.0 * stheta, -5.0 * stheta / 6.0, vh
+        )
 
     @property
     def stheta(self):
@@ -337,8 +348,8 @@ class HiggsPortal(ScalarMediator):
     def stheta(self, stheta):
         self._stheta = stheta
         self._gsff = stheta
-        self._gsGG = 3. * stheta
-        self._gsFF = - 5. * stheta / 6.
+        self._gsGG = 3.0 * stheta
+        self._gsFF = -5.0 * stheta / 6.0
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
@@ -390,8 +401,9 @@ class HeavyQuark(ScalarMediator):
         self._mQ = mQ
         self._QQ = QQ
 
-        super(HeavyQuark, self).__init__(mx, ms, gsxx, 0., gsQ,
-                                         2.*gsQ*QQ**2, mQ)
+        super(HeavyQuark, self).__init__(
+            mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ ** 2, mQ
+        )
 
     @property
     def gsQ(self):
@@ -401,7 +413,7 @@ class HeavyQuark(ScalarMediator):
     def gsQ(self, gsQ):
         self._gsQ = gsQ
         self._gsGG = gsQ
-        self._gsFF = 2.0 * gsQ * self._QQ**2
+        self._gsFF = 2.0 * gsQ * self._QQ ** 2
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
@@ -423,7 +435,7 @@ class HeavyQuark(ScalarMediator):
     @QQ.setter
     def QQ(self, QQ):
         self._QQ = QQ
-        self._gsFF = 2.0 * self._gsQ * QQ**2
+        self._gsFF = 2.0 * self._gsQ * QQ ** 2
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 

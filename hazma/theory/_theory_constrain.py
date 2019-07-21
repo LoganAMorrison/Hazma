@@ -83,8 +83,10 @@ class TheoryConstrain(object):
             is excluded by the constraint.
         """
         if p1 == p2:
-            raise ValueError("Parameters being constrained must not be the "
-                             "same. Both are %s." % p1)
+            raise ValueError(
+                "Parameters being constrained must not be the "
+                "same. Both are %s." % p1
+            )
 
         n_p1s, n_p2s = len(p1_vals), len(p2_vals)
         constraints = self.constraints()
@@ -118,11 +120,14 @@ class TheoryConstrain(object):
         account for gamma ray lines!!!
         """
         vx = 1.0e-3
-        e_cm = 2. * self.mx * (1 + 0.5 * vx**2)  # TODO: change this!
+        e_cm = 2.0 * self.mx * (1 + 0.5 * vx ** 2)  # TODO: should depend on target
 
         # Factor to convert dN/dE to Phi/<sigma v>
-        dm_flux_factor = (measurement.target.J * measurement.target.dOmega /
-                          (2. * 4. * np.pi * self.mx**2))
+        dm_flux_factor = (
+            measurement.target.J
+            * measurement.target.dOmega
+            / (2.0 * 4.0 * np.pi * self.mx ** 2)
+        )
 
         # Energy range over which to compute convolved spectrum
         e_bin_min, e_bin_max = measurement.bins[0][0], measurement.bins[-1][1]
@@ -130,18 +135,22 @@ class TheoryConstrain(object):
         def get_bin_fluxes(spec_fn, line_fn):
             """Gets Phi/<sigma v> for a particular channel.
             """
-            dnde_det = \
-                self.get_detected_spectrum_function(e_bin_min, e_bin_max, e_cm,
-                                                    measurement.energy_res,
-                                                    500)
-            return np.array([dm_flux_factor * dnde_det.integral(bl, br)
-                             for bl, br in measurement.bins])
+            dnde_det = self.get_detected_spectrum_function(
+                e_bin_min, e_bin_max, e_cm, measurement.energy_res, 500
+            )
+            return np.array(
+                [
+                    dm_flux_factor * dnde_det.integral(bl, br)
+                    for bl, br in measurement.bins
+                ]
+            )
 
         # Compute Phi/<sigma v> in each bin for each final state
-        fs_bin_fluxes = {fs: get_bin_fluxes(spec_fn, lambda e_cm: {})
-                         for fs, spec_fn in
-                         self.spectrum_functions().items()
-                         if fs != "total"}
+        fs_bin_fluxes = {
+            fs: get_bin_fluxes(spec_fn, lambda e_cm: {})
+            for fs, spec_fn in self.spectrum_functions().items()
+            if fs != "total"
+        }
         # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn
         #                    in self.gamma_ray_lines(cme) if fs != "total"}
 
@@ -152,18 +161,22 @@ class TheoryConstrain(object):
             # Compute cross sections
             css = self.annihilation_cross_sections(e_cm)
             # Get fluxes by multiplying <sigma v>
-            bin_fluxes = np.array([bf * css[fs] * vx *
-                                   sv_inv_MeV_to_cm3_per_s
-                                   for fs, bf in fs_bin_fluxes.items()])
+            bin_fluxes = np.array(
+                [
+                    bf * css[fs] * vx * sv_inv_MeV_to_cm3_per_s
+                    for fs, bf in fs_bin_fluxes.items()
+                ]
+            )
 
-            return np.min(measurement.fluxes +
-                          n_sigma * measurement.upper_errors -
-                          bin_fluxes.sum(axis=0))
+            return np.min(
+                measurement.fluxes
+                + n_sigma * measurement.upper_errors
+                - bin_fluxes.sum(axis=0)
+            )
 
         return np.array([flux_difference(p2, p2v) for p2v in p2_vals])
 
-    def constrain_gamma(self, p1, p1_vals, p2, p2_vals, measurement,
-                        n_sigma=2):
+    def constrain_gamma(self, p1, p1_vals, p2, p2_vals, measurement, n_sigma=2):
         """Computes constraints from gamma ray experiments in the p1-p2 plane.
 
         Notes
@@ -176,8 +189,9 @@ class TheoryConstrain(object):
             setattr(self, p1, p1_val)
 
             # Compute constraint function along the current column
-            img[idx_p1, :] = self.constrain_gamma_helper(p2, p2_vals,
-                                                         measurement, n_sigma)
+            img[idx_p1, :] = self.constrain_gamma_helper(
+                p2, p2_vals, measurement, n_sigma
+            )
 
         return img
 
@@ -189,10 +203,8 @@ class TheoryConstrain(object):
 
         # Convert from indices to values of p1 and p2
         for c in contours_raw:
-            p1s = c[:, 1] / len(p1_vals) * (p1_vals[-1] -
-                                            p1_vals[0]) + p1_vals[0]
-            p2s = c[:, 0] / len(p2_vals) * (p2_vals[-1] -
-                                            p2_vals[0]) + p2_vals[0]
+            p1s = c[:, 1] / len(p1_vals) * (p1_vals[-1] - p1_vals[0]) + p1_vals[0]
+            p2s = c[:, 0] / len(p2_vals) * (p2_vals[-1] - p2_vals[0]) + p2_vals[0]
             contours.append(np.array([p1s, p2s]))
 
         return contours

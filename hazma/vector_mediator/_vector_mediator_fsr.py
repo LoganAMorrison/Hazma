@@ -36,27 +36,40 @@ class VectorMediatorFSR:
 
         e, m = egam / Q, mf / Q
 
-        s = Q**2 - 2. * Q * egam
+        s = Q ** 2 - 2.0 * Q * egam
 
         ret_val = 0.0
 
-        if 4. * mf**2 <= s <= Q**2 and Q > 2. * mf and Q > 2. * self.mx:
-            ret_val = -(alpha_em *
-                        (4. * sqrt(1. - 2. * e - 4. * m**2) *
-                         (1. - 2. * m**2 + 2. * e * (-1 + e + 2. * m**2)) +
-                         sqrt(1. - 2. * e) * (1. + 2. * (-1 + e) * e -
-                                              4. * e * m**2 - 4. * m**4) *
-                         (log(1. - 2. * e) - 4. *
-                          log(sqrt(1. - 2. * e) +
-                              sqrt(1. - 2. * e - 4. * m**2)) +
-                            2. * log((sqrt(1. - 2. * e) -
-                                      sqrt(1. - 2. * e - 4. * m**2)) *
-                                     (1. - sqrt(1. + (4. * m**2) /
-                                                (-1 + 2. * e))))))) / \
-                (2. * e * (1. + 2. * m**2) *
-                 sqrt((-1 + 2. * e) * (-1 + 4. * m**2)) * pi * Q)
+        if 4.0 * mf ** 2 <= s <= Q ** 2 and Q > 2.0 * mf and Q > 2.0 * self.mx:
+            ret_val = -(
+                alpha_em
+                * (
+                    4.0
+                    * sqrt(1.0 - 2.0 * e - 4.0 * m ** 2)
+                    * (1.0 - 2.0 * m ** 2 + 2.0 * e * (-1 + e + 2.0 * m ** 2))
+                    + sqrt(1.0 - 2.0 * e)
+                    * (1.0 + 2.0 * (-1 + e) * e - 4.0 * e * m ** 2 - 4.0 * m ** 4)
+                    * (
+                        log(1.0 - 2.0 * e)
+                        - 4.0
+                        * log(sqrt(1.0 - 2.0 * e) + sqrt(1.0 - 2.0 * e - 4.0 * m ** 2))
+                        + 2.0
+                        * log(
+                            (sqrt(1.0 - 2.0 * e) - sqrt(1.0 - 2.0 * e - 4.0 * m ** 2))
+                            * (1.0 - sqrt(1.0 + (4.0 * m ** 2) / (-1 + 2.0 * e)))
+                        )
+                    )
+                )
+            ) / (
+                2.0
+                * e
+                * (1.0 + 2.0 * m ** 2)
+                * sqrt((-1 + 2.0 * e) * (-1 + 4.0 * m ** 2))
+                * pi
+                * Q
+            )
 
-            assert ret_val.imag == 0.
+            assert ret_val.imag == 0.0
             ret_val = ret_val.real
 
         assert ret_val >= 0
@@ -84,9 +97,8 @@ class VectorMediatorFSR:
         spec_val : float
             Spectrum value dNdE from vector mediator.
         """
-        if hasattr(egam, '__len__'):
-            return np.array([self.__dnde_xx_to_v_to_ffg(e, Q, f)
-                             for e in egam])
+        if hasattr(egam, "__len__"):
+            return np.array([self.__dnde_xx_to_v_to_ffg(e, Q, f) for e in egam])
         else:
             return self.__dnde_xx_to_v_to_ffg(egam, Q, f)
 
@@ -95,25 +107,33 @@ class VectorMediatorFSR:
         mx = self.mx
 
         mupi = mpi / Q
-        x = 2. * egam / Q
+        x = 2.0 * egam / Q
         xmin = 0.0
-        xmax = 1 - 4. * mupi**2
+        xmax = 1 - 4.0 * mupi ** 2
 
-        if x < xmin or x > xmax or Q < 2 * mpi or Q < 2. * mx:
+        if x < xmin or x > xmax or Q < 2 * mpi or Q < 2.0 * mx:
             return 0.0
 
-        coeff = qe**2 / (4. * (1 - 4 * mupi**2)**1.5 * pi**2)
+        coeff = qe ** 2 / (4.0 * (1 - 4 * mupi ** 2) ** 1.5 * pi ** 2)
 
-        dynamic = ((2 * sqrt(1 - 4 * mupi**2 - x) *
-                    (-1 - 4 * mupi**2 * (-1 + x) + x + x**2)) / sqrt(1 - x) +
-                   (-1 + 4 * mupi**2) * (-1 + 2 * mupi**2 + x) *
-                   log((1 + sqrt(1 - x) * sqrt(1 - 4 * mupi**2 - x) - x)**2 /
-                       (-1 + sqrt(1 - x) *
-                        sqrt(1 - 4 * mupi**2 - x) + x)**2)) / x
+        dynamic = (
+            (
+                2
+                * sqrt(1 - 4 * mupi ** 2 - x)
+                * (-1 - 4 * mupi ** 2 * (-1 + x) + x + x ** 2)
+            )
+            / sqrt(1 - x)
+            + (-1 + 4 * mupi ** 2)
+            * (-1 + 2 * mupi ** 2 + x)
+            * log(
+                (1 + sqrt(1 - x) * sqrt(1 - 4 * mupi ** 2 - x) - x) ** 2
+                / (-1 + sqrt(1 - x) * sqrt(1 - 4 * mupi ** 2 - x) + x) ** 2
+            )
+        ) / x
 
-        ret_val = 2. * dynamic * coeff / Q
+        ret_val = 2.0 * dynamic * coeff / Q
 
-        assert ret_val.imag == 0.
+        assert ret_val.imag == 0.0
         assert ret_val.real >= 0
         return ret_val.real
 
@@ -137,8 +157,9 @@ class VectorMediatorFSR:
 
         """
 
-        if hasattr(eng_gams, '__len__'):
-            return np.array([self.__dnde_xx_to_v_to_pipig(eng_gam, Q)
-                             for eng_gam in eng_gams])
+        if hasattr(eng_gams, "__len__"):
+            return np.array(
+                [self.__dnde_xx_to_v_to_pipig(eng_gam, Q) for eng_gam in eng_gams]
+            )
         else:
             return self.__dnde_xx_to_v_to_pipig(eng_gams, Q)
