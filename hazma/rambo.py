@@ -40,6 +40,7 @@ def generate_phase_space_point(masses, cme):
     phase_space_points : numpy.ndarray
         List of four momenta and a event weight. The returned numpy array is of
         the form {ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight}.
+
     """
 
     if not hasattr(masses, "__len__"):
@@ -89,6 +90,7 @@ def generate_phase_space(masses, cme, num_ps_pts=10000,
     >>> cme = 10.0 * sum(masses)
     >>> num_ps_pts = 100000
     >>> rambo.generate_phase_space(masses, cme, num_ps_pts=num_ps_pts)
+
     """
     if not hasattr(masses, "__len__"):
         masses = [masses]
@@ -196,6 +198,7 @@ def generate_energy_histogram(masses, cme, num_ps_pts=10000,
     >>> import matplotlib.pyplot as plt
     >>> for i in range(len(masses)):
     ...     plt.loglog(eng_hist[i, 0], eng_hist[i, 1])
+
     """
     if not hasattr(masses, "__len__"):
         masses = [masses]
@@ -242,6 +245,7 @@ def integrate_over_phase_space(fsp_masses, cme,
         The result of the integral over phase space.
     std : float
         The estimated error in the integral over phase space.
+
     """
     if not hasattr(fsp_masses, "__len__"):
         fsp_masses = [fsp_masses]
@@ -298,8 +302,8 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
     >>> from hazma.parameters import electron_mass as me
     >>> from hazma.parameters import muon_mass as mmu
     >>> from hazma.parameters import qe
-    >>> from hazma.field_theory_helper_functions.common_functions \
-    ...     import minkowski_dot as MDot
+    >>> MDot = lambda p1, p2: (p1[0] * p2[0] - p1[1] * p1[1] - p1[2] * p1[2] -
+    ...                        p1[3] * p1[3])
     >>> def msqrd(momenta):
     ...     Q = sum(momenta)[0] # center-of-mass energy
     ...     # Momenta of the incoming electrons
@@ -314,7 +318,7 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
     ...     u = MDot(p1 - p4, p1 - p4)
     ...     return ((2 * qe**4 * (t**2 + u**2 - 4 * (t + u)* me**2 +
     ...             6 * me**4 + 4 * s * mmu**2 + 2 * mmu**4))/ s**2)
-    Compute the cross section:
+    >>> # Compute the cross section:
     >>> from hazma.rambo import compute_annihilation_cross_section
     >>> import numpy as np
     >>> isp_masses = np.array([me, me])
@@ -322,6 +326,7 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
     >>> cme = 1000.
     >>> compute_annihilation_cross_section(
     ...     isp_masses, fsp_masses, cme, num_ps_pts=5000, mat_elem_sqrd=msqrd)
+
     """
     integral, std = integrate_over_phase_space(fsp_masses, cme,
                                                num_ps_pts=num_ps_pts,
@@ -370,18 +375,19 @@ def compute_decay_width(fsp_masses, cme,
     Examples
     --------
     In this example we compute the partial decay width of the muon for
-        .. math:: \mu\to e\nu\nu
+    :math:`\mu\to e\nu\nu`
+
     First, we declare the matrix element
     >>> from hazma.parameters import GF
-    >>> from hazma.field_theory_helper_functions.common_functions \
-    ...     import minkowski_dot as MDot
+    >>> MDot = lambda p1, p2: (p1[0] * p2[0] - p1[1] * p1[1] - p1[2] * p1[2] -
+    ...                        p1[3] * p1[3])
     >>> def msqrd(momenta):
     ...     pe = momenta[0]
     ...     pve = momenta[1]
     ...     pvmu = momenta[2]
     ...     pmu = sum(momenta)
     ...     return 64. * GF**2 * MDot(pe, pvmu) * MDot(pmu, pve)
-    Next, we compute the decay width:
+    ... # Next, we compute the decay width:
     >>> from hazma.rambo import compute_decay_width
     >>> from hazma.parameters import electron_mass as me
     >>> from hazma.parameters import muon_mass as mmu
@@ -389,6 +395,7 @@ def compute_decay_width(fsp_masses, cme,
     >>> fsp_masses = np.array([me, 0.0, 0.0])
     >>> cme = mmu
     >>> compute_decay_width(fsp_masses, cme, mat_elem_sqrd=msqrd)
+
     """
     integral, std = integrate_over_phase_space(fsp_masses, cme,
                                                num_ps_pts=num_ps_pts,

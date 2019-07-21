@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 import cython
-from libc.math cimport M_PI, sqrt, abs
+from libc.math cimport sqrt
 
 include "parameters.pxd"
 

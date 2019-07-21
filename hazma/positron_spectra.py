@@ -9,7 +9,7 @@ Module for computing positron spectra.
 import numpy as np
 
 from hazma.positron_helper_functions import positron_charged_pion, positron_muon
-from hazma.positron_helper_functions.positron_rambo import positron, positron_point
+from hazma.positron_helper_functions.positron_decay import positron, positron_point
 
 
 def muon(positron_energies, muon_energy):
@@ -92,8 +92,9 @@ def positron_decay(particles, cme, positron_energies,
     The total spectrum is computed using
 
     .. math::
-        \frac{dN}{dE}(E_{\gamma})
-        =\sum_{i,j}P_{i}(E_{j})\frac{dN_i}{dE}(E_{\gamma}, E_{j})
+
+        \frac{dN}{dE}(E_{e^{\pm}})
+        =\sum_{i,j}P_{i}(E_{j})\frac{dN_i}{dE}(E_{e^{\pm}, E_{j})
 
     where :math:`i` runs over the final state particles, :math:`j` runs over
     energies sampled from probability distributions. :math:`P_{i}(E_{j})` is
