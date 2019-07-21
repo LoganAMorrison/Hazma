@@ -9,15 +9,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/saveactions_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.circleci/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.circleci/config.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Hazma.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Hazma.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.travis.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.travis.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scikit-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/scikit-ci.yml" afterDir="false" />
-    </list>
+    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="Adding new docs" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,84 +22,27 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/get_path.py">
-          <provider selected="true" editor-type-id="live-pycharm">
-            <state>
-              <first_editor relative-caret-position="168">
-                <caret line="6" selection-start-line="6" selection-end-line="6" />
-              </first_editor>
-              <second_editor />
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/rambo.py">
-          <provider selected="true" editor-type-id="live-pycharm">
-            <state>
-              <first_editor relative-caret-position="174">
-                <caret line="151" column="30" lean-forward="true" selection-start-line="151" selection-start-column="30" selection-end-line="153" selection-end-column="58" />
-                <folding>
-                  <element signature="e#8#31#0" expanded="true" />
-                  <element signature="e#5356#7478#0" />
-                  <element signature="e#8#31#0" expanded="true" />
-                </folding>
-              </first_editor>
-              <second_editor relative-caret-position="-196" />
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/docs/source/modules/scalar_mediator.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/gamma_ray.py">
-          <provider selected="true" editor-type-id="live-pycharm">
-            <state>
-              <first_editor relative-caret-position="323">
-                <caret line="174" column="26" selection-start-line="174" selection-start-column="26" selection-end-line="174" selection-end-column="26" />
-                <folding>
-                  <element signature="e#8#57#0" expanded="true" />
-                  <element signature="e#8#31#0" expanded="true" />
-                </folding>
-              </first_editor>
-              <second_editor relative-caret-position="-196" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.travis.yml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
-              <caret line="6" column="17" selection-start-line="6" selection-start-column="17" selection-end-line="6" selection-end-column="17" />
-            </state>
-          </provider>
+        <entry file="file://$PROJECT_DIR$/docs/source/modules/vector_mediator.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.circleci/config.yml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1414">
-              <caret line="52" column="39" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scikit-ci.yml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="362">
-              <caret line="35" column="48" selection-start-line="35" selection-start-column="48" selection-end-line="35" selection-end-column="48" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/theory/_theory_cmb.py">
+        <entry file="file://$PROJECT_DIR$/hazma/cmb.py">
           <provider selected="true" editor-type-id="live-pycharm">
             <state>
               <first_editor>
                 <folding>
-                  <element signature="e#0#47#0" expanded="true" />
+                  <element signature="e#0#38#0" expanded="true" />
                 </folding>
               </first_editor>
               <second_editor />
@@ -116,21 +51,7 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/__init__.py">
-          <provider selected="true" editor-type-id="live-pycharm">
-            <state>
-              <first_editor>
-                <folding>
-                  <element signature="e#0#31#0" expanded="true" />
-                </folding>
-              </first_editor>
-              <second_editor />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_constraints.py">
+        <entry file="file://$PROJECT_DIR$/hazma/constraint_parameters.py">
           <provider selected="true" editor-type-id="live-pycharm">
             <state>
               <first_editor>
@@ -144,7 +65,22 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/hazma/theory/__init__.py">
+        <entry file="file://$PROJECT_DIR$/hazma/background_model.py">
+          <provider selected="true" editor-type-id="live-pycharm">
+            <state>
+              <first_editor relative-caret-position="1512">
+                <caret line="56" column="13" selection-start-line="56" selection-start-column="13" selection-end-line="56" selection-end-column="13" />
+                <folding>
+                  <element signature="e#0#18#0" expanded="true" />
+                </folding>
+              </first_editor>
+              <second_editor relative-caret-position="-56" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/hazma/flux_measurement.py">
           <provider selected="true" editor-type-id="live-pycharm">
             <state>
               <first_editor />
@@ -153,27 +89,119 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/hazma/gamma_ray_parameters.py">
+          <provider selected="true" editor-type-id="live-pycharm">
+            <state>
+              <first_editor relative-caret-position="3360">
+                <caret line="120" column="15" lean-forward="true" selection-start-line="120" selection-start-column="15" selection-end-line="120" selection-end-column="15" />
+                <folding>
+                  <element signature="e#0#34#0" expanded="true" />
+                </folding>
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/docs/source/usage.rst">
+          <provider selected="true" editor-type-id="restructured-text-editor" />
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/__init__.py">
+          <provider selected="true" editor-type-id="live-pycharm">
+            <state>
+              <first_editor relative-caret-position="10276">
+                <caret line="367" column="16" selection-start-line="367" selection-start-column="6" selection-end-line="367" selection-end-column="16" />
+                <folding>
+                  <element signature="e#0#31#0" expanded="true" />
+                  <element signature="e#3929#6716#0" />
+                  <element signature="e#8306#9296#0" />
+                  <element signature="e#9337#9439#0" />
+                  <element signature="e#9475#9598#0" />
+                </folding>
+              </first_editor>
+              <second_editor />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>**</find>
+      <find>beta_mu</find>
+      <find>log10</find>
+      <find>fpiT</find>
+      <find>abs</find>
+      <find>pi</find>
+      <find>positron_rambo</find>
+    </findStrings>
+    <replaceStrings>
+      <replace />
+    </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/hazma/__init__.py" />
-        <option value="$PROJECT_DIR$/hazma/rambo.py" />
-        <option value="$PROJECT_DIR$/hazma/gamma_ray.py" />
         <option value="$PROJECT_DIR$/.circleci/config.yml" />
         <option value="$PROJECT_DIR$/scikit-ci.yml" />
         <option value="$PROJECT_DIR$/.travis.yml" />
+        <option value="$PROJECT_DIR$/test/decay/test_decay.py" />
+        <option value="$PROJECT_DIR$/test/vector_mediator/test_vector_mediator.py" />
+        <option value="$PROJECT_DIR$/test/scalar_mediator/test_scalar_mediator.py" />
+        <option value="$PROJECT_DIR$/hazma/positron_helper_functions/positron_rambo.pyx" />
+        <option value="$PROJECT_DIR$/hazma/vector_mediator/vector_mediator_positron_spec.pyx" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/scalar_mediator_positron_spec.pyx" />
+        <option value="$PROJECT_DIR$/hazma/decay_helper_functions/decay_neutral_pion.pyx" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx" />
+        <option value="$PROJECT_DIR$/hazma/vector_mediator/vector_mediator_decay_spectrum.pyx" />
+        <option value="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_positron_spectra.py" />
+        <option value="$PROJECT_DIR$/hazma/positron_helper_functions/positron_charged_pion.pyx" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/hazma/decay.py" />
+        <option value="$PROJECT_DIR$/hazma/gamma_ray.py" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/__init__.py" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_cross_sections.py" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_fsr.py" />
+        <option value="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_positron_spectra.py" />
+        <option value="$PROJECT_DIR$/hazma/theory/__init__.py" />
+        <option value="$PROJECT_DIR$/docs/source/introduction.rst" />
+        <option value="$PROJECT_DIR$/docs/source/basic_usage.rst" />
+        <option value="$PROJECT_DIR$/docs/source/installation.rst" />
+        <option value="$PROJECT_DIR$/docs/source/conf.py" />
+        <option value="$PROJECT_DIR$/hazma/rambo.py" />
+        <option value="$PROJECT_DIR$/docs/source/modules/rambo.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/gamma_ray.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/decay.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/positron_spectra.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/positron.rst" />
+        <option value="$PROJECT_DIR$/hazma/positron_helper_functions/positron_muon.pyx" />
+        <option value="$PROJECT_DIR$/setup.py" />
+        <option value="$PROJECT_DIR$/hazma/positron_spectra.py" />
+        <option value="$PROJECT_DIR$/docs/source/usage.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/scalar_mediator.rst" />
+        <option value="$PROJECT_DIR$/docs/source/index.rst" />
+        <option value="$PROJECT_DIR$/docs/source/modules/vector_mediator.rst" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="y" value="23" />
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="1680" />
-    <option name="height" value="967" />
+    <option name="height" value="1050" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -191,7 +219,12 @@
             <path>
               <item name="Hazma" type="b2602c69:ProjectViewProjectNode" />
               <item name="Hazma" type="462c0819:PsiDirectoryNode" />
-              <item name=".circleci" type="462c0819:PsiDirectoryNode" />
+              <item name="docs" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Hazma" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Hazma" type="462c0819:PsiDirectoryNode" />
+              <item name="tutorials" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -204,11 +237,14 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="settings.saveactions" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -235,7 +271,13 @@
       <workItem from="1557130176203" duration="3151000" />
       <workItem from="1557705820115" duration="482000" />
       <workItem from="1557725636074" duration="3847000" />
-      <workItem from="1562543792092" duration="6456000" />
+      <workItem from="1562543792092" duration="17574000" />
+      <workItem from="1562704325048" duration="4763000" />
+      <workItem from="1562733089510" duration="1568000" />
+      <workItem from="1562791316276" duration="3000" />
+      <workItem from="1562798187271" duration="13934000" />
+      <workItem from="1563673847305" duration="11009000" />
+      <workItem from="1563690903385" duration="4882000" />
     </task>
     <task id="LOCAL-00001" summary="Renaming hazma-example notebook">
       <created>1562543939666</created>
@@ -258,17 +300,145 @@
       <option name="project" value="LOCAL" />
       <updated>1562633121197</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Removing python 3.4 from CIs">
+      <created>1562633277026</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1562633277026</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Fixed positron spectra for the pion and muon and added spectra for scalar mediator">
+      <created>1562655201363</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1562655201363</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Added check to make sure mediator decays before computing positron spectrum">
+      <created>1562655322710</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1562655322710</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Added incomplete notebook for scalar mediator positron spectra">
+      <created>1562655435434</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1562655435434</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Adding the vector mediator decay positron spectrum and adding minor adjustments">
+      <created>1562707586527</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1562707586527</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Fixing nan in positron spectra">
+      <created>1562710983163</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1562710983163</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Removing axial-vector and ps mediators from master branch">
+      <created>1562798602594</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1562798602595</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Adding dev branch">
+      <created>1562798692857</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1562798692857</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Updating docstrings for hazma.decay">
+      <created>1562799846865</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1562799846865</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Updating docs for gamma_ray module">
+      <created>1562814703951</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1562814703951</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Updated docs for positron functions and charged function name for positron_rambo to positron_decay">
+      <created>1562815428995</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1562815428995</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added complete docstrings for rambo functions">
+      <created>1562821819861</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1562821819861</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Updating scalar mediator docstrings. Not quite finished yet.">
+      <created>1562823835797</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1562823835797</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Deleting ps and av tests">
+      <created>1562861470990</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1562861470990</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Adding new docs">
+      <created>1563695087539</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1563695087539</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="13936000" />
+    <option name="totallyTimeSpent" value="61214000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1680" height="956" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2591687" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.27506113" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32883817" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Database Changes" order="7" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32883817" />
+      <window_info anchor="bottom" id="Terminal" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" weight="0.32987553" />
+      <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Python Console" order="12" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="JuliaSciView" order="3" />
+      <window_info anchor="right" id="Database" order="4" />
+      <window_info anchor="right" id="SciView" order="5" />
+    </layout>
+    <layout-to-restore>
+      <window_info content_ui="combo" id="Project" order="0" weight="0.26894864" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -279,7 +449,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Version Control" order="8" visible="true" weight="0.32883817" />
       <window_info anchor="bottom" id="Terminal" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
@@ -290,7 +460,7 @@
       <window_info anchor="right" id="JuliaSciView" order="3" />
       <window_info anchor="right" id="Database" order="4" />
       <window_info anchor="right" id="SciView" order="5" />
-    </layout>
+    </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
@@ -299,44 +469,190 @@
     <MESSAGE value="Renaming hazma-example notebook" />
     <MESSAGE value="Renaming gamma_ray.py functions" />
     <MESSAGE value="Removing flake8 from CI" />
-    <option name="LAST_COMMIT_MESSAGE" value="Removing flake8 from CI" />
+    <MESSAGE value="Removing python 3.4 from CIs" />
+    <MESSAGE value="Fixed positron spectra for the pion and muon and added spectra for scalar mediator" />
+    <MESSAGE value="Added check to make sure mediator decays before computing positron spectrum" />
+    <MESSAGE value="Added incomplete notebook for scalar mediator positron spectra" />
+    <MESSAGE value="Adding the vector mediator decay positron spectrum and adding minor adjustments" />
+    <MESSAGE value="Fixing nan in positron spectra" />
+    <MESSAGE value="Removing axial-vector and ps mediators from master branch" />
+    <MESSAGE value="Updating docstrings for hazma.decay" />
+    <MESSAGE value="Updating docs for gamma_ray module" />
+    <MESSAGE value="Updated docs for positron functions and charged function name for positron_rambo to positron_decay" />
+    <MESSAGE value="Added complete docstrings for rambo functions" />
+    <MESSAGE value="Updating scalar mediator docstrings. Not quite finished yet." />
+    <MESSAGE value="Deleting ps and av tests" />
+    <MESSAGE value="Adding new documentation" />
+    <MESSAGE value="Adding dev branch" />
+    <MESSAGE value="Adding new docs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding new docs" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="live-pycharm">
-        <state>
-          <first_editor relative-caret-position="2912">
-            <caret line="106" column="6" selection-start-line="106" selection-start-column="6" selection-end-line="106" selection-end-column="31" />
-            <folding>
-              <element signature="e#0#54#0" expanded="true" />
-            </folding>
-          </first_editor>
-          <second_editor relative-caret-position="-56" />
+    <entry file="file://$PROJECT_DIR$/hazma/positron_helper_functions/positron_charged_pion.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1708">
+          <caret line="61" column="18" selection-start-line="61" selection-start-column="18" selection-end-line="61" selection-end-column="18" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_charged_kaon.pxd">
-      <provider selected="true" editor-type-id="text-editor" />
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="224">
+          <caret line="8" column="6" selection-start-line="8" selection-start-column="6" selection-end-line="8" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_muon.pxd">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_neutral_pion.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="19" column="56" selection-start-line="19" selection-start-column="56" selection-end-line="19" selection-end-column="56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_charged_pion.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="12" column="18" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_charged_kaon.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1036">
-          <caret line="37" column="31" selection-start-line="37" selection-start-column="31" selection-end-line="37" selection-end-column="45" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MANIFEST.in">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="6" />
+        <state relative-caret-position="1540">
+          <caret line="55" column="16" selection-start-line="55" selection-start-column="16" selection-end-line="55" selection-end-column="16" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/hazma/__init__.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
+          <first_editor relative-caret-position="112">
+            <caret line="4" selection-start-line="4" selection-end-line="4" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_neutral_pion.pxd">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/decay_muon.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="224">
+          <caret line="13" column="20" selection-start-line="13" selection-start-column="20" selection-end-line="13" selection-end-column="20" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/test_pseudo_scalar_mediator.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="336">
+            <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
+            <folding>
+              <element signature="e#0#61#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/vector_mediator/test_vector_mediator.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="336">
+            <caret line="14" column="12" selection-start-line="14" selection-start-column="12" selection-end-line="14" selection-end-column="12" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/vector_mediator/__init__.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="6244">
+            <caret line="233" column="40" selection-start-line="233" selection-start-column="23" selection-end-line="233" selection-end-column="40" />
+            <folding>
+              <element signature="e#0#31#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_fsr.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="1568">
+            <caret line="59" selection-start-line="59" selection-end-line="59" />
+            <folding>
+              <element signature="e#0#18#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-84" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_positron_spectra.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
           <first_editor relative-caret-position="84">
-            <caret line="3" column="18" selection-start-column="11" selection-end-line="3" selection-end-column="18" />
+            <caret line="7" selection-start-line="7" selection-end-line="7" />
+            <folding>
+              <element signature="e#0#18#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-112" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_spectra.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="728">
+            <caret line="37" column="36" selection-start-line="37" selection-start-column="36" selection-end-line="37" selection-end-column="36" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/theory/_theory_gamma_ray_limits.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="288">
+            <caret line="264" column="5" selection-start-line="264" selection-start-column="5" selection-end-line="264" selection-end-column="5" />
+            <folding>
+              <element signature="e#0#18#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/theory/_theory_constrain.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor>
+            <folding>
+              <element signature="e#0#63#0" expanded="true" />
+            </folding>
           </first_editor>
           <second_editor />
         </state>
@@ -347,26 +663,200 @@
         <state>
           <first_editor>
             <folding>
-              <element signature="e#0#47#0" expanded="true" />
+              <element signature="e#0#38#0" expanded="true" />
             </folding>
           </first_editor>
           <second_editor />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/__init__.py">
+    <entry file="file://$PROJECT_DIR$/docs/index.html" />
+    <entry file="file://$PROJECT_DIR$/docs/source/fsr.rst" />
+    <entry file="file://$PROJECT_DIR$/docs/source/includeme.rst" />
+    <entry file="file://$PROJECT_DIR$/docs/source/rambo.rst" />
+    <entry file="file://$PROJECT_DIR$/docs/source/introduction.rst" />
+    <entry file="file://$PROJECT_DIR$/hazma/theory/__init__.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="140">
+            <caret line="12" column="30" selection-start-line="12" selection-start-column="30" selection-end-line="12" selection-end-column="30" />
+            <folding>
+              <element signature="e#0#39#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/basic_usage/using_simplified_models.rst" />
+    <entry file="file://$PROJECT_DIR$/docs/source/installation.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/conf.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="449">
+            <caret line="32" column="34" selection-start-line="32" selection-start-column="34" selection-end-line="32" selection-end-column="34" />
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/rambo.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="-1892">
+            <caret line="168" column="69" lean-forward="true" selection-start-line="168" selection-start-column="69" selection-end-line="168" selection-end-column="69" />
+            <folding>
+              <element signature="e#305#361#0" expanded="true" />
+              <element signature="e#8#56#0" expanded="true" />
+              <element signature="e#8#56#0" expanded="true" />
+              <element signature="e#8#66#0" expanded="true" />
+              <element signature="e#8#39#0" expanded="true" />
+              <element signature="e#8#51#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/gamma_ray.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="160">
+            <caret line="92" column="17" selection-start-line="92" selection-start-column="4" selection-end-line="92" selection-end-column="17" />
+            <folding>
+              <element signature="e#147#170#0" expanded="true" />
+              <element signature="e#8#51#0" expanded="true" />
+              <element signature="e#8#49#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/rambo.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+      <provider editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="112">
+            <caret line="4" column="16" lean-forward="true" selection-start-line="4" selection-start-column="16" selection-end-line="4" selection-end-column="16" />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/gamma_ray.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/decay.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="7672">
+            <caret line="274" column="13" selection-start-line="274" selection-start-column="4" selection-end-line="274" selection-end-column="13" />
+            <folding>
+              <element signature="e#135#153#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/decay.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/phase_space_helper_functions/modifiers.cpp" />
+    <entry file="file://$PROJECT_DIR$/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="6" column="13" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/positron_helper_functions/positron_decay.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="110">
+          <caret line="27" selection-start-line="27" selection-end-line="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/positron_helper_functions/positron_muon.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/positron_helper_functions/positron_muon.pxd">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="196">
+          <caret line="7" lean-forward="true" selection-start-line="7" selection-end-line="7" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="333">
+            <caret line="84" column="59" selection-start-line="84" selection-start-column="59" selection-end-line="84" selection-end-column="59" />
+            <folding>
+              <element signature="e#0#54#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/positron.rst">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="252">
+          <caret line="9" column="9" lean-forward="true" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="9" />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/positron_spectra.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="409">
+            <caret line="104" column="12" lean-forward="true" selection-start-line="104" selection-start-column="12" selection-end-line="104" selection-end-column="12" />
+            <folding>
+              <element signature="e#106#124#0" expanded="true" />
+              <element signature="e#8#57#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/index.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/scalar_mediator.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/docs/source/modules/vector_mediator.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/cmb.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
           <first_editor>
             <folding>
-              <element signature="e#0#31#0" expanded="true" />
+              <element signature="e#0#38#0" expanded="true" />
             </folding>
           </first_editor>
           <second_editor />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_constraints.py">
+    <entry file="file://$PROJECT_DIR$/hazma/constraint_parameters.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
           <first_editor>
@@ -378,7 +868,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/theory/__init__.py">
+    <entry file="file://$PROJECT_DIR$/hazma/background_model.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="1512">
+            <caret line="56" column="13" selection-start-line="56" selection-start-column="13" selection-end-line="56" selection-end-column="13" />
+            <folding>
+              <element signature="e#0#18#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-56" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/flux_measurement.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
           <first_editor />
@@ -386,63 +889,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/decay_helper_functions/get_path.py">
+    <entry file="file://$PROJECT_DIR$/docs/source/usage.rst">
+      <provider selected="true" editor-type-id="restructured-text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/hazma/scalar_mediator/__init__.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
-          <first_editor relative-caret-position="168">
-            <caret line="6" selection-start-line="6" selection-end-line="6" />
+          <first_editor relative-caret-position="10276">
+            <caret line="367" column="16" selection-start-line="367" selection-start-column="6" selection-end-line="367" selection-end-column="16" />
+            <folding>
+              <element signature="e#0#31#0" expanded="true" />
+              <element signature="e#3929#6716#0" />
+              <element signature="e#8306#9296#0" />
+              <element signature="e#9337#9439#0" />
+              <element signature="e#9475#9598#0" />
+            </folding>
           </first_editor>
           <second_editor />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/rambo.py">
+    <entry file="file://$PROJECT_DIR$/hazma/gamma_ray_parameters.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
-          <first_editor relative-caret-position="174">
-            <caret line="151" column="30" lean-forward="true" selection-start-line="151" selection-start-column="30" selection-end-line="153" selection-end-column="58" />
+          <first_editor relative-caret-position="3360">
+            <caret line="120" column="15" lean-forward="true" selection-start-line="120" selection-start-column="15" selection-end-line="120" selection-end-column="15" />
             <folding>
-              <element signature="e#8#31#0" expanded="true" />
-              <element signature="e#5356#7478#0" />
-              <element signature="e#8#31#0" expanded="true" />
+              <element signature="e#0#34#0" expanded="true" />
             </folding>
           </first_editor>
-          <second_editor relative-caret-position="-196" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hazma/gamma_ray.py">
-      <provider selected="true" editor-type-id="live-pycharm">
-        <state>
-          <first_editor relative-caret-position="323">
-            <caret line="174" column="26" selection-start-line="174" selection-start-column="26" selection-end-line="174" selection-end-column="26" />
-            <folding>
-              <element signature="e#8#57#0" expanded="true" />
-              <element signature="e#8#31#0" expanded="true" />
-            </folding>
-          </first_editor>
-          <second_editor relative-caret-position="-196" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.circleci/config.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1414">
-          <caret line="52" column="39" selection-start-line="52" selection-start-column="39" selection-end-line="52" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scikit-ci.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="362">
-          <caret line="35" column="48" selection-start-line="35" selection-start-column="48" selection-end-line="35" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/.travis.yml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="6" column="17" selection-start-line="6" selection-start-column="17" selection-end-line="6" selection-end-column="17" />
+          <second_editor />
         </state>
       </provider>
     </entry>

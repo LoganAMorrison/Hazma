@@ -1,23 +1,23 @@
 .. Hazma documentation master file, created by
-   sphinx-quickstart on Sat Dec  9 12:12:04 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+sphinx-quickstart on Sat Jul 20 19:01:52 2019.
+You can adapt this file completely to your liking, but it should at least
+contain the root `toctree` directive.
 
 Welcome to Hazma's documentation!
 =================================
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Introduction and Details
+   :maxdepth: 2
+   :caption: Contents:
 
-    introduction.rst
-    gamma_ray_decay/gamma_ray_decay.rst
-    rambo.rst
-    decay/decay.rst
-    fsr.rst
-    tutorial.rst
-
-
+   installation
+   usage
+   modules/scalar_mediator
+   modules/vector_mediator
+   modules/rambo
+   modules/gamma_ray
+   modules/decay
+   modules/positron
 
 
 
