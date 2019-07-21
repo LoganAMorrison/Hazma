@@ -9,108 +9,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/changelog.md" beforeDir="false" afterPath="$PROJECT_DIR$/changelog.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/_axial_vector_mediator_cross_sections.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/_axial_vector_mediator_positron_spectra.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/avm_msqrd.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/axial_vector_mediator_cross_sections.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/axial_vector_mediator/axial_vector_mediator_parameters.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/background_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/background_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/cmb.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/cmb.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/constraint_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/constraint_parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/decay_helper_functions/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/decay_helper_functions/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/decay_helper_functions/interpolation_data/gen_ckaon_interp.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/decay_helper_functions/interpolation_data/gen_ckaon_interp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/flux_measurement.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/flux_measurement.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/gamma_ray_parameters.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/gamma_ray_parameters.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/hazma_errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/hazma_errors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/model_builder/cross_sections.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_cross_sections.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_fsr.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_msqrd_rambo.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_positron_spectra.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_spectra.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/pseudo_scalar_mediator/_pseudo_scalar_mediator_widths.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_constraints.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_constraints.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_widths.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/scalar_mediator/_scalar_mediator_widths.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/theory/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/theory/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/theory/_theory_cmb.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/theory/_theory_cmb.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/theory/_theory_constrain.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/theory/_theory_constrain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_cross_sections.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_cross_sections.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_fsr.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_fsr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_spectra.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_spectra.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_widths.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/_vector_mediator_widths.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/chpt_paper/phase_diagram.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/decay_spectra.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/interactive_branching_fractions.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/minimal_tests.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/pseudoscalar_branching_fractions.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/pseudoscalar_mediator_spectra.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/dev/unitarization.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/charged_pion_decay.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/charged_pion_decay.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/charged_pion_fsr.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/charged_pion_fsr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/muon_fsr.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/muon_fsr.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/scalar_ann_bfs.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/scalar_spectra_ann_to_med.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/scalar_spectra_ann_to_med.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/scalar_spectra_ann_to_sm.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/scalar_spectra_ann_to_sm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/utilities.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/utilities.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/vector_ann_bfs.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/vector_ann_bfs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/vector_spectra_ann_to_med.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/vector_spectra_ann_to_med.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/hazma_paper/vector_spectra_ann_to_sm.py" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/hazma_paper/vector_spectra_ann_to_sm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/benchmark_sigmavs.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/constraints.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/data/relic_abundance.dat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/gamma_ray_limits.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/individual_channel_constraints.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/telescope_params.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/notebooks/pheno_paper/utilities.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/setup.cfg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/decay/test_decay.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/decay/test_decay.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/rambo/test_rambo.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/rambo/test_rambo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/generate_test_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/generate_test_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm1_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm1_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm1_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm1_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/ann_branching_fractions.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/ann_branching_fractions.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/sm2_data/spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/scalar_mediator/test_scalar_mediator.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/scalar_mediator/test_scalar_mediator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_axial_vector_mediator.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_gamma_ray.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_gamma_ray.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_pseudo_scalar_mediator.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/generate_test_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/generate_test_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/test_vector_mediator.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/test_vector_mediator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm1_data/ann_branching_fractions.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm1_data/ann_branching_fractions.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm1_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm1_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm1_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm1_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm1_data/spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm1_data/spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ann_branching_fractions.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ann_branching_fractions.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm2_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm2_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ps_lines.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm2_data/ps_lines.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm2_data/spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm2_data/spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm3_data/ann_branching_fractions.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm3_data/ann_branching_fractions.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm3_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm3_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm3_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm3_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm3_data/spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm3_data/spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm4_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm4_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm4_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm4_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm5_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm5_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm5_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm5_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm6_data/ann_branching_fractions.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm6_data/ann_branching_fractions.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm6_data/ann_cross_sections.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm6_data/ann_cross_sections.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm6_data/positron_spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm6_data/positron_spectra.npy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/vector_mediator/vm6_data/spectra.npy" beforeDir="false" afterPath="$PROJECT_DIR$/test/vector_mediator/vm6_data/spectra.npy" afterDir="false" />
-    </list>
+    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -179,8 +78,8 @@
         <entry file="file://$PROJECT_DIR$/hazma/decay.py">
           <provider selected="true" editor-type-id="live-pycharm">
             <state>
-              <first_editor relative-caret-position="437">
-                <caret line="311" lean-forward="true" selection-start-line="311" selection-end-line="311" />
+              <first_editor relative-caret-position="493">
+                <caret line="313" column="9" lean-forward="true" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
                 <folding>
                   <element signature="e#135#153#0" expanded="true" />
                   <element signature="e#8#31#0" expanded="true" />
@@ -529,14 +428,16 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="61689000" />
+    <option name="totallyTimeSpent" value="61937000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.27506113" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Messages" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32883817" />
       <window_info anchor="bottom" id="Run" order="2" />
@@ -545,7 +446,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Version Control" order="8" sideWeight="0.49938875" visible="true" weight="0.32883817" />
+      <window_info anchor="bottom" id="Version Control" order="8" sideWeight="0.49938875" weight="0.32883817" />
       <window_info anchor="bottom" id="Terminal" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50061125" side_tool="true" weight="0.32883817" />
       <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
@@ -605,7 +506,8 @@
     <MESSAGE value="Adding new documentation" />
     <MESSAGE value="Adding dev branch" />
     <MESSAGE value="Adding new docs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding new docs" />
+    <MESSAGE value="merging" />
+    <option name="LAST_COMMIT_MESSAGE" value="merging" />
     <option name="GROUP_MULTIFILE_MERGE_BY_DIRECTORY" value="true" />
   </component>
   <component name="editorHistoryManager">
@@ -1029,8 +931,8 @@
     <entry file="file://$PROJECT_DIR$/hazma/decay.py">
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
-          <first_editor relative-caret-position="437">
-            <caret line="311" lean-forward="true" selection-start-line="311" selection-end-line="311" />
+          <first_editor relative-caret-position="493">
+            <caret line="313" column="9" lean-forward="true" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
             <folding>
               <element signature="e#135#153#0" expanded="true" />
               <element signature="e#8#31#0" expanded="true" />
