@@ -13,6 +13,7 @@ Welcome to Hazma's documentation!
    installation
    usage
    modules/scalar_mediator
+   modules/vector_mediator
    modules/rambo
    modules/gamma_ray
    modules/decay
