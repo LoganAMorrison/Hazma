@@ -22,11 +22,6 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/docs/source/modules/scalar_mediator.rst">
-          <provider selected="true" editor-type-id="restructured-text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/docs/source/modules/vector_mediator.rst">
           <provider selected="true" editor-type-id="restructured-text-editor" />
         </entry>
@@ -74,12 +69,12 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/hazma/decay.py">
           <provider selected="true" editor-type-id="live-pycharm">
             <state>
               <first_editor relative-caret-position="493">
-                <caret line="313" column="9" lean-forward="true" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
+                <caret line="313" column="9" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
                 <folding>
                   <element signature="e#135#153#0" expanded="true" />
                   <element signature="e#8#31#0" expanded="true" />
@@ -88,6 +83,21 @@
                   <element signature="e#8#31#0" expanded="true" />
                   <element signature="e#8#31#0" expanded="true" />
                   <element signature="e#8#31#0" expanded="true" />
+                </folding>
+              </first_editor>
+              <second_editor relative-caret-position="-196" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/setup.py">
+          <provider selected="true" editor-type-id="live-pycharm">
+            <state>
+              <first_editor relative-caret-position="710">
+                <caret line="84" column="59" selection-start-line="84" selection-start-column="59" selection-end-line="84" selection-end-column="59" />
+                <folding>
+                  <element signature="e#0#54#0" expanded="true" />
                 </folding>
               </first_editor>
               <second_editor relative-caret-position="-196" />
@@ -428,7 +438,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="61937000" />
+    <option name="totallyTimeSpent" value="62128000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1680" height="1050" extended-state="0" />
@@ -810,19 +820,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="live-pycharm">
-        <state>
-          <first_editor relative-caret-position="333">
-            <caret line="84" column="59" selection-start-line="84" selection-start-column="59" selection-end-line="84" selection-end-column="59" />
-            <folding>
-              <element signature="e#0#54#0" expanded="true" />
-            </folding>
-          </first_editor>
-          <second_editor relative-caret-position="-196" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/docs/source/modules/positron.rst">
       <provider editor-type-id="text-editor">
         <state relative-caret-position="252">
@@ -932,7 +929,7 @@
       <provider selected="true" editor-type-id="live-pycharm">
         <state>
           <first_editor relative-caret-position="493">
-            <caret line="313" column="9" lean-forward="true" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
+            <caret line="313" column="9" selection-start-line="313" selection-start-column="9" selection-end-line="313" selection-end-column="9" />
             <folding>
               <element signature="e#135#153#0" expanded="true" />
               <element signature="e#8#31#0" expanded="true" />
@@ -941,6 +938,19 @@
               <element signature="e#8#31#0" expanded="true" />
               <element signature="e#8#31#0" expanded="true" />
               <element signature="e#8#31#0" expanded="true" />
+            </folding>
+          </first_editor>
+          <second_editor relative-caret-position="-196" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup.py">
+      <provider selected="true" editor-type-id="live-pycharm">
+        <state>
+          <first_editor relative-caret-position="710">
+            <caret line="84" column="59" selection-start-line="84" selection-start-column="59" selection-end-line="84" selection-end-column="59" />
+            <folding>
+              <element signature="e#0#54#0" expanded="true" />
             </folding>
           </first_editor>
           <second_editor relative-caret-position="-196" />
