@@ -113,12 +113,9 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    def total_conv_spectrum_fn(self,
-                               e_gam_min,
-                               e_gam_max,
-                               e_cm,
-                               energy_res,
-                               n_pts=1000):
+    def total_conv_spectrum_fn(
+        self, e_gam_min, e_gam_max, e_cm, energy_res, n_pts=1000
+    ):
         """Applies `convolved_spectrum_fn` to obtain the convolved gamma-ray
         spectrum. See documentation for that function.
         """
@@ -160,12 +157,9 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     def positron_lines(self, e_cm):
         pass
 
-    def total_conv_positron_spectrum_fn(self,
-                                        e_p_min,
-                                        e_p_max,
-                                        e_cm,
-                                        energy_res,
-                                        n_pts=1000):
+    def total_conv_positron_spectrum_fn(
+        self, e_p_min, e_p_max, e_cm, energy_res, n_pts=1000
+    ):
         """Applies `convolved_spectrum_fn` to obtain the convolved positron
         spectrum. See documentation for that function.
         """

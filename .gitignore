@@ -23,10 +23,8 @@ hazma.egg-info
 .travis
 manual/_minted-hazma_manual/*
 manual/*.pdf
-<<<<<<< HEAD
 .vscode
 .pypirc
-=======
 .eggs/*
 .python-version
->>>>>>> 008b5e756c0d6f5fc9e904f54c383e69e80e85e3
+.pytest_cache/

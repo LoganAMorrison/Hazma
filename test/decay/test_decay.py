@@ -4,50 +4,49 @@ from hazma.decay import charged_pion
 import numpy as np
 import unittest
 
-mu_dir = 'test/decay/muon_data/'
-np_dir = 'test/decay/npion_data/'
-cp_dir = 'test/decay/cpion_data/'
+mu_dir = "test/decay/muon_data/"
+np_dir = "test/decay/npion_data/"
+cp_dir = "test/decay/cpion_data/"
 
 
 class TestDecay(unittest.TestCase):
-
     def setUp(self):
         self.load_muon_data()
         self.load_npion_data()
         self.load_cpion_data()
 
     def load_muon_data(self):
-        self.emu1 = np.load(mu_dir + 'emu1.npy')
-        self.emu2 = np.load(mu_dir + 'emu2.npy')
-        self.emu3 = np.load(mu_dir + 'emu3.npy')
+        self.emu1 = np.load(mu_dir + "emu1.npy")
+        self.emu2 = np.load(mu_dir + "emu2.npy")
+        self.emu3 = np.load(mu_dir + "emu3.npy")
 
-        self.eng_gams = np.load(mu_dir + 'egams.npy')
+        self.eng_gams = np.load(mu_dir + "egams.npy")
 
-        self.muspec1 = np.load(mu_dir + 'spec1.npy')
-        self.muspec2 = np.load(mu_dir + 'spec2.npy')
-        self.muspec3 = np.load(mu_dir + 'spec3.npy')
+        self.muspec1 = np.load(mu_dir + "spec1.npy")
+        self.muspec2 = np.load(mu_dir + "spec2.npy")
+        self.muspec3 = np.load(mu_dir + "spec3.npy")
 
     def load_npion_data(self):
-        self.enp1 = np.load(np_dir + 'enp1.npy')
-        self.enp2 = np.load(np_dir + 'enp2.npy')
-        self.enp3 = np.load(np_dir + 'enp3.npy')
+        self.enp1 = np.load(np_dir + "enp1.npy")
+        self.enp2 = np.load(np_dir + "enp2.npy")
+        self.enp3 = np.load(np_dir + "enp3.npy")
 
-        self.eng_gams = np.load(np_dir + 'egams.npy')
+        self.eng_gams = np.load(np_dir + "egams.npy")
 
-        self.npspec1 = np.load(np_dir + 'spec1.npy')
-        self.npspec2 = np.load(np_dir + 'spec2.npy')
-        self.npspec3 = np.load(np_dir + 'spec3.npy')
+        self.npspec1 = np.load(np_dir + "spec1.npy")
+        self.npspec2 = np.load(np_dir + "spec2.npy")
+        self.npspec3 = np.load(np_dir + "spec3.npy")
 
     def load_cpion_data(self):
-        self.ecp1 = np.load(cp_dir + 'ecp1.npy')
-        self.ecp2 = np.load(cp_dir + 'ecp2.npy')
-        self.ecp3 = np.load(cp_dir + 'ecp3.npy')
+        self.ecp1 = np.load(cp_dir + "ecp1.npy")
+        self.ecp2 = np.load(cp_dir + "ecp2.npy")
+        self.ecp3 = np.load(cp_dir + "ecp3.npy")
 
-        self.eng_gams = np.load(cp_dir + 'egams.npy')
+        self.eng_gams = np.load(cp_dir + "egams.npy")
 
-        self.cpspec1 = np.load(cp_dir + 'spec1.npy')
-        self.cpspec2 = np.load(cp_dir + 'spec2.npy')
-        self.cpspec3 = np.load(cp_dir + 'spec3.npy')
+        self.cpspec1 = np.load(cp_dir + "spec1.npy")
+        self.cpspec2 = np.load(cp_dir + "spec2.npy")
+        self.cpspec3 = np.load(cp_dir + "spec3.npy")
 
     def test_muon_spec(self):
         spec1 = muon(self.eng_gams, self.emu1)
