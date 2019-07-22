@@ -7,8 +7,7 @@ Welcome to Hazma's documentation!
 
    installation
    usage
-   scalar_mediator
-   vector_mediator
+   models
    gamma_ray_limits
    cmb
    gamma_ray
