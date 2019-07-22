@@ -1,7 +1,7 @@
 Installation
 ============
 
-`hazma` was developed with python3.6, and it is recommended to use python3.
+``hazma`` was developed with python3.6, and it is recommended to use python3.
 While ``hazma`` should work correctly with python2.7, this version of
 python will soon lose support. Before installing ``hazma``, the user
 needs to install several well-established python packages: ``cython``,
@@ -35,7 +35,7 @@ or:
 
     python setup.py install
 
-Note that since \mil{hazma} makes extensive usage of the package
+Note that since ``hazma`` makes extensive usage of the package
 ``cython``, the user will need to have a ``c`` and ``c++`` compiler installed on
 their system (for example ``gcc`` and ``g++`` on unix-like systems or
 Microsoft Visual Studios 2015 or later on Windows). For more information,

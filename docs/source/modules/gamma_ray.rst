@@ -49,15 +49,15 @@ center-of-mass energy, a function for the tree-level matrix element
 a single argument which is a list of the four-momenta for the final state
 particles. As an example, we consider the process of two dark-matter
 particles annihilating into charged pions,
-:math:`\chi\bar{\chi}\to \pi^{+}\pi^{-}(\gamma)` using the model from
+:math:`\bar{\chi}\chi\to \pi^{+}\pi^{-}(\gamma)` using the model from
 :ref:`advanced_usage`. In :ref:`advanced_usage`, we gave the
 analytic expressions for the gamma-ray spectra. The tree-level and
 radiative matrix elements for this process are:
 
 .. math::
 
-    |\mathcal{M}(\chi\bar{\chi}\to \pi^{+}\pi^{-})|^2 &= \frac{c_1^2 \left(s-4 m_{\chi}^2\right)}{2 \Lambda^2}\\
-    |\mathcal{M}(\chi\bar{\chi}\to \pi^{+}\pi^{-}\gamma)|^2 &= \dfrac{2 c_1^2 \left(4 \mu_{\chi}^2-1\right) Q^2 e^2}{\Lambda^2 \left(t-\mu_{\pi}^2 Q^2\right)^2
+    |\mathcal{M}(\bar{\chi}\chi\to \pi^{+}\pi^{-})|^2 &= \frac{c_1^2 \left(s-4 m_{\chi}^2\right)}{2 \Lambda^2}\\
+    |\mathcal{M}(\bar{\chi}\chi\to \pi^{+}\pi^{-}\gamma)|^2 &= \dfrac{2 c_1^2 \left(4 \mu_{\chi}^2-1\right) Q^2 e^2}{\Lambda^2 \left(t-\mu_{\pi}^2 Q^2\right)^2
     \left(u-\mu_{\pi}^2 Q^2\right)^2}\\
     &\qquad \times \left(\left(\mu_{\pi} Q (t+u)-2 \mu_{\pi}^3 Q^3\right)^2+s
     \left(t-\mu_{\pi}^2 Q^2\right) \left(\mu_{\pi}^2
@@ -112,7 +112,7 @@ elements. Note that these functions take in an array of four-momenta.
                     (-(mupi**2*Q**2) + u)**2))
 
 Next, we can compute the gamma-ray spectrum for
-:math:`\chi\bar{\chi}\to\pi^{+}\pi^{-}\gamma` using:
+:math:`\bar{\chi}\chi\to\pi^{+}\pi^{-}\gamma` using:
 
 .. code-block:: python
 

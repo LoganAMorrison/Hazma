@@ -25,20 +25,20 @@ class VectorMediator(
     r"""
     Create a VectorMediator object with generic couplings.
 
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Mass of the dark matter.
     mv : float
         Mass of the vector mediator.
     gvxx : float
         Coupling of vector mediator to dark matter.
     gvuu : float
-        Coupling of vector mediator to the up-quark.
+        Coupling of vector mediator to the up quark.
     gvdd : float
-        Coupling of vector mediator to the down-quark.
+        Coupling of vector mediator to the down quark.
     gvss : float
-        Coupling of vector mediator to the strange-quark.
+        Coupling of vector mediator to the strange quark.
     gvee : float
         Coupling of vector mediator to the electron.
     gvmumu : float
@@ -146,7 +146,7 @@ class VectorMediator(
         \t   + gvmumu mubar.GA[mu].mu V[mu] \n \n
 
 
-        Attributes \n
+        Parameters \n
         ---------- \n
         mx : float \n
         \t Mass of the initial dark matter. \n
@@ -181,7 +181,7 @@ class VectorMediator(
         \t and returns a dictionary of arrays containing the spectra. \n
         spectrum_functions :
         \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of initial state fermions with mass `mx` \n
+        \t a pair of dark matter particles with mass `mx` \n
         \t annihilating into each available final state. \n
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
@@ -209,23 +209,24 @@ class VectorMediator(
 
 class KineticMixing(VectorMediator):
     r"""
-    Create a VectorMediator object with kinetic mixing couplings.
+    Create a ``VectorMediator`` object with kinetic mixing couplings.
 
-    Creates an object for the vector mediator model with the following
-    specific coupling definitions:
+    The couplings are defined as::
+
         gvuu = Qu qe eps
         gvdd = Qd qe eps
         gvss = Qd qe eps
         gvee = Qe qe eps
         gvmumu = Qe qe eps
-    where Qu, Qd and Qe are the up-like-quark, down-like-quark and
+
+    where Qu, Qd and Qe are the up-type quark, down-type quark and
     lepton electic charges in units of the electric charge, qe is the
     electric charge and eps is the kinetic mixing parameter.
 
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Mass of the dark matter.
     mv : float
         Mass of the vector mediator.
     gvxx : float
@@ -299,7 +300,7 @@ class KineticMixing(VectorMediator):
         \t   - 1/3 e eps sbar.GA[mu].s V[mu] - e eps ebar.GA[mu].e V[mu] \n
         \t   - e eps mubar.GA[mu].mu V[mu] \n \n
 
-        Attributes \n
+        Parameters \n
         ---------- \n
         mx : float \n
         \t Mass of the initial dark matter. \n
@@ -326,7 +327,7 @@ class KineticMixing(VectorMediator):
         \t and returns a dictionary of arrays containing the spectra. \n
         spectrum_functions :
         \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of initial state fermions with mass `mx` \n
+        \t a pair of dark matter particles with mass `mx` \n
         \t annihilating into each available final state. \n
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n
@@ -338,25 +339,20 @@ class QuarksOnly(VectorMediator):
     r"""
     Create a VectorMediator object with only quark couplings.
 
-    Creates an object for the vector mediator model with the following
-    specific coupling definitions:
-        gvee = 0
-        gvmumu = 0.
-
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Mass of the dark matter.
     mv : float
         Mass of the vector mediator.
     gvxx : float
         Coupling of vector mediator to dark matter.
     gvuu : float
-        Coupling of vector mediator to the up-quark.
+        Coupling of vector mediator to the up quark.
     gvdd : float
-        Coupling of vector mediator to the down-quark.
+        Coupling of vector mediator to the down quark.
     gvss : float
-        Coupling of vector mediator to the strange-quark.
+        Coupling of vector mediator to the strange quark.
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
@@ -383,7 +379,7 @@ class QuarksOnly(VectorMediator):
         \t   + 2/3 e epsubar.GA[mu].u V[mu] - 1/3 e eps dbar.GA[mu].d V[mu] \n
         \t   - 1/3 e eps sbar.GA[mu].s V[mu] \n \n
 
-        Attributes \n
+        Parameters \n
         ---------- \n
         mx : float \n
         \t Mass of the initial dark matter. \n
@@ -414,7 +410,7 @@ class QuarksOnly(VectorMediator):
         \t and returns a dictionary of arrays containing the spectra. \n
         spectrum_functions :
         \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of initial state fermions with mass `mx` \n
+        \t a pair of dark matter particles with mass `mx` \n
         \t annihilating into each available final state. \n
         partial_widths : \n
         \t Returns a dictionary for the partial decay widths of the scalar \n

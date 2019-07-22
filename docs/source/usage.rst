@@ -50,7 +50,7 @@ Here we have created a model with a dark matter fermion of mass
 250 MeV, a vector mediator which mixes with the standard model with a
 mass of 1 TeV. We set the coupling of the vector mediator to the dark
 matter, :math:`g_{V\chi} = 1` and set the kinetic mixing parameter
-:math: `\epsilon = 10^{-3}`. To list all of the available final states for
+:math:`\epsilon = 10^{-3}`. To list all of the available final states for
 which the dark matter can annihilate into, we use:
 
 .. code-block:: python
@@ -59,11 +59,12 @@ which the dark matter can annihilate into, we use:
     ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
 
 This tells us that we can potentially annihilate through:
-:math:`\chi\bar{\chi}\to\mu^{+}\mu^{-},e^{+}e^{-},
-\pi^{+}\pi^{-},\pi^{0}\gamma` or :math:`V^{\mu}V^{\mu}`. However, which of
-these final states is actually available depends on the center of mass
-energy. We can see this fact by looking at the annihilation cross sections
-or branching fractions, which can be computed using:
+:math:`\bar{\chi}\chi\to\mu^{+}\mu^{-},e^{+}e^{-},
+\pi^{+}\pi^{-},\pi^{0}\gamma` or :math:`V V` (the two-mediator
+final state). However, which of these final states is actually available
+depends on the center of mass energy. We can see this fact by looking at
+the annihilation cross sections or branching fractions, which can be
+computed using:
 
 .. code-block:: python
 
@@ -83,8 +84,8 @@ or branching fractions, which can be computed using:
      'v v': 0.0}
 
 Here we have chosen a realistic center of mass energy for dark matter in
-our galaxy, which as a velocity dispersion of :math:`\delta v\sim 10^{-3}`.
-We can that the :math:`V^{\mu}V^{\mu}` final state is unavailable, as it
+our galaxy, which as a velocity dispersion of :math:`\sigma_v \sim 10^{-3}`.
+We can that the :math:`V V` final state is unavailable, as it
 should be since the vector mediator mass is too heavy. In this theory, the
 vector mediator can decay. If we would like to know the decay width and the
 partial widths, we can use:
@@ -115,7 +116,8 @@ annihilations, we can use:
 
 Note that we only used a single photon energy because of display purposes,
 but in general the user can specify any number of photon energies. If the
-user would like access to the underlying spectrum functions, they can use:
+user would like access to the underlying spectrum functions so they can call
+them repeatedly, they can use:
 
 .. code-block:: python
 
@@ -127,9 +129,9 @@ user would like access to the underlying spectrum functions, they can use:
     array([2.94759389e-05])
 
 Notice that the direct call to the spectrum function for
-:math:`\chi\bar{\chi}\to\mu^{+}\mu^{-}` doesn't given the same result as
+:math:`\bar{\chi}\chi\to\mu^{+}\mu^{-}` doesn't given the same result as
 ``km.spectra(photon_energies, cme)['mu mu']``. This is because the
-branching fractions are not applied for the `
+branching fractions are not applied for the 
 `spec_funs = km.spectrum_functions()``. If the user doesn't care about
 the underlying components of the gamma-ray spectra, the can simply call:
 
@@ -140,8 +142,8 @@ the underlying components of the gamma-ray spectra, the can simply call:
 
 to get the total gamma-ray spectrum. The reader may have caught the fact
 that there is a gamma-ray line in the spectrum for
-:math:`\chi\bar{\chi}\to\pi^{0}\gamma`. To get the location of this line,
-the user can use:
+:math:`\bar{\chi}\chi\to\pi^{0}\gamma`. To get the location of this
+monochromatic gamma-ray line, the user can run:
 
 .. code-block:: python
 
@@ -184,8 +186,8 @@ show how to call the functions and we suppress the output
     >>> km.positron_lines(cme)
     >>> km.total_positron_spectrum(positron_energies, cme)
     >>> km.total_conv_positron_spectrum_fn(min(positron_energies),
-    ...                                   max(positron_energies), cme,
-    ...                                   energy_resolution, number_points)
+    ...                                    max(positron_energies), cme,
+    ...                                    energy_resolution, number_points)
 
 The last thing that we would like to demonstrate is how to compute
 limits. In order to compute the limits on the annihilation cross section
@@ -196,40 +198,40 @@ of a model from a gamma-ray telescope, say EGRET, we can use:
     >>> from hazma.gamma_ray_parameters import egret_diffuse
     # Choose DM masses from half the electron mass to 250 MeV
     >>> mxs = np.linspace(me/2., 250., num=100)
-    # Compute limits from E-Astrogam
+    # Compute limits from e-ASTROGAM
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
-    ...    km.mx = mx
-    ...    limits[i] = km.binned_limit(egret_diffuse)
+    ...     km.mx = mx
+    ...     limits[i] = km.binned_limit(egret_diffuse)
 
-Similarly, if we would like to set constraints using E-Astrogam, one can
+Similarly, if we would like to set constraints using e-ASTROGAM, one can
 use:
 
 .. code-block:: python
 
-    # Import target and background model for the E-Astrogam telescope
+    # Import target and background model for the e-ASTROGAM telescope
     >>> from hazma.gamma_ray_parameters import gc_target, gc_bg_model
     # Choose DM masses from half the electron mass to 250 MeV
     >>> mxs = np.linspace(me/2., 250., num=100)
-    # Compute limits from E-Astrogam
+    # Compute limits from e-ASTROGAM
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
-    ...    km.mx = mx
-    ...    limits[i] = km.unbinned_limit(target_params=gc_target,
-    ...                                  bg_model=gc_bg_model)
+    ...     km.mx = mx
+    ...     limits[i] = km.unbinned_limit(target_params=gc_target,
+    ...                                   bg_model=gc_bg_model)
 
 .. _subclassing_the_simplified_models:
 
 Subclassing the Simplified Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-As mentioned in Sec.~\ref{sec:structure_workflow}, the user may not be
-interested in the generic simplified models built into \mil{hazma},
+The user might not be
+interested in the generic simplified models built into ``hazma``,
 but instead a more specialized model. In this case, it makes sense for
 the user to subclass one of the simplified models (i.e. create a class
 which inherits from one of the simplified models.) As and example, we
 illustrate how to do this with the Higgs-portal model (of course this
-model is already built into \mil{hazma}, but it works nicely as an
+model is already built into ``hazma``, but it works nicely as an
 example.) Recall that the full set of parameters for the scalar mediator
 model are:
 
@@ -327,7 +329,7 @@ Advanced Usage
 Adding New Gamma-Ray Experiments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Currently \mil{hazma} only includes information for producing projected
+Currently ``hazma`` only includes information for producing projected
 unbinned limits with e-ASTROGAM, using the dwarf Draco or inner
 :math:`10^\circ\times10^\circ` region of the Milky Way as a target.
 Adding new detectors and target regions is straightforward. A detector is
@@ -345,7 +347,7 @@ with:
     >>> print(tp)
     TargetParams(J=1e+29, dOmega=0.1)
 
-Finally, the background model should be packaged in an object of type
+The background model should be packaged in an object of type
 ``BackgroundModel``. This light-weight class has a function
 ``dPhi_dEdOmega()`` for computing the differential photon flux per solid
 angle (in :math:`\mathrm{MeV}^{-1}\mathrm{sr}`) and an attribute
@@ -458,14 +460,14 @@ we need the FSR spectrum for
 
 .. math::
 
-    \dfrac{dN(\bar{\chi}\chi\to\pi^{+}\pi^{-}\gamma)}{dE_{\gamma}} &= \frac{\alpha  \left(2 f(x)-2\left(1-x-2 \mu_{\pi} ^2\right)
-   \log \left(\frac{1-x-f(x)}{1-x+f(x)}\right)\right)}{\pi  \sqrt{1-4 \mu_{\pi} ^2} x}
+    \frac{dN(\bar{\chi}\chi\to\pi^{+}\pi^{-}\gamma)}{dE_{\gamma}} &= \frac{\alpha  \left(2 f(x)-2\left(1-x-2 \mu_{\pi}^2\right)
+   \log \left(\frac{1-x-f(x)}{1-x+f(x)}\right)\right)}{\pi \sqrt{1-4 \mu_{\pi}^2} x}
 
 where
 
 .. math::
 
-    f(x) &= \sqrt{1-x} \sqrt{1-x-4 \mu_{\pi} ^2}
+    f(x) &= \sqrt{1-x} \sqrt{1-x-4 \mu_{\pi}^2}
 
 We are now ready to set up the Hazma model. For ``hazma`` to work
 properly, we will need to define the following functions in our model:
@@ -584,10 +586,10 @@ implemented by ``hazma``. Next, we implement a class for the FSR spectra:
                 return self.__dnde_xx_to_pipig(eng_gams, Q)
 
 Note the the second ``__dnde_xx_to_pipig`` is an unvectorized function,
-which is not to be used and ``dnde_xx_to_pipig`` is a vectorized function,
-allowing us to pass a vector of photon energies all at once. Next, we
-implement the spectrum functions which will produce the FSR and decay
-spectra:
+which is not to be used by the user and ``dnde_xx_to_pipig`` is a
+vectorized function, allowing us to pass a vector of photon energies all
+at once. Next, we implement the spectrum functions which will produce the
+FSR and decay spectra:
 
 .. code-block:: python
 
@@ -677,8 +679,8 @@ Lastly, we group all of these classes into a master class and we're done:
 
 Now we can easily compute gamma-ray spectra, positron spectra and limit on
 our new model from gamma-ray telescopes. To implement our new model with
-:math:`m_{\chi} = 200\mathrm{MeV}, c_{1} = c_{2} = 1` and
-:math:`\Lambda = 100\mathrm{GeV}`, we can use:
+:math:`m_{\chi} = 200~\mathrm{MeV}, c_{1} = c_{2} = 1` and
+:math:`\Lambda = 100~\mathrm{GeV}`, we can use:
 
 .. code-block:: python
 
@@ -716,18 +718,18 @@ cross section of our model for various DM masses using:
 
 .. code-block:: python
 
-    # Import target and background model for the E-Astrogam telescope
+    # Import target and background model for the e-ASTROGAM telescope
     >>> from hazma.gamma_ray_parameters import gc_target, gc_bg_model
     # Choose DM masses from half the pion mass to 250 MeV
     >>> mxs = np.linspace(mpi/2., 250., num=100)
-    # Compute limits from E-Astrogam
+    # Compute limits from e-ASTROGAM
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
-    ...    model.mx = mx
-    ...    limits[i] = model.unbinned_limit(target_params=gc_target,
-    ...                                     bg_model=gc_bg_model)
+    ...     model.mx = mx
+    ...     limits[i] = model.unbinned_limit(target_params=gc_target,
+    ...                                      bg_model=gc_bg_model)
 
-.. _HazmaExample: \href{https://github.com/LoganAMorrison/Hazma/blob/master/notebooks/hazma_paper/hazma_example.ipynb}{\faBook}
+.. _HazmaExample: https://github.com/LoganAMorrison/Hazma/blob/master/notebooks/hazma_paper/hazma_example.ipynb
 
 .. [1] If the CSV containing the observations uses a different power of
        :math:`E` than :math:`n=2`, this can be specified using the

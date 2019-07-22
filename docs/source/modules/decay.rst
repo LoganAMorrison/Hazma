@@ -10,7 +10,7 @@ The functions in this module allow the user to compute the decay spectra
 for arbitrary parent-particle energy. In order to obtain spectra for
 arbitrary parent-particle energy, we compute the decay spectra in the
 rest-frame of the parent-particle and perform a Lorentz boost, which
-amounts to doing a change-of-variables along with a convolution integral.
+amounts to doing a change-of-variables along with a "convolution" integral.
 To achieve higher computational performance, we perform all integrations
 in ``c`` using ``cython`` and build extension modules to interface with
 python.

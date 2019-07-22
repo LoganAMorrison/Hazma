@@ -49,46 +49,26 @@ class ScalarMediator(ScalarMediatorConstraints,
            and v_h is the higgs vev.  The scalar mediator also gets an
            effective coupling to gluons when the top quark is integrated out.
 
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Dark matter mass.
     ms : float
         Mass of the scalar mediator.
     gsxx : float
-        Coupling of scalar mediator to initial state fermions.
+        Coupling constant for scalar interactions with dark matter.
     gsff : float
-        Coupling of scalar mediator to standard model fermions. This is
-        the sine of the mixing angle between scalar mediator and the higgs.
+        Constant of proportionality for the scalar's couplings to Standard
+        Model fermions.
     gsGG : float
-        Coupling of the scalar mediator to gluons.
+        Coupling constant for scalar interactions with gluons.
     gsFF : float
-        Coupling of the scalar mediator to photons.
+        Coupling constant for scalar interactions with photons.
+    lam : float
+        Mass scale in scalar's interactions with photons and gluons.
     """
 
     def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF, lam):
-        """
-        Initialize scalar mediator model parameters.
-
-        Parameters
-        ----------
-        mx : float
-            Mass of the initial state fermion.
-        ms : float
-            Mass of the scalar mediator.
-        gsxx : float
-            Coupling of scalar mediator to initial state fermions.
-        gsff : float
-            Coupling of scalar mediator to standard model fermions. This is
-            the sine of the mixing angle between scalar mediator and the higgs.
-        gsGG : float
-            Coupling of the scalar mediator to gluons.
-        gsFF : float
-            Coupling of the scalar mediator to photons.
-        lam : float
-            Mass scale associated with integrating out a heavy colored or
-            charged fermion leading to SGG or SFF.
-        """
         self._mx = mx
         self._ms = ms
         self._gsxx = gsxx
@@ -123,7 +103,7 @@ class ScalarMediator(ScalarMediatorConstraints,
         Attributes \n
         ---------- \n
         mx : float \n
-        \t Mass of the initial state fermion. \n
+        \t Mass of the dark matter. \n
         ms : float \n
         \t Mass of the scalar mediator. \n
         gsxx : float \n
@@ -306,26 +286,26 @@ class ScalarMediator(ScalarMediatorConstraints,
 
 
 class HiggsPortal(ScalarMediator):
-    r"""
-    Create a ScalarMediator object with Higgs Portal couplings.
+    r"""Create a ``ScalarMediator`` object with Higgs Portal couplings.
 
-    Creates an object for the scalar mediator model with the following
-    specific coupling definitions:
+    The couplings in the full scalar model are defined by::
+
         gsff = sin(theta)
         gsGG = 3 sin(theta)
         gsFF = -5/6 sin(theta)
         Lam = vh
+
     where theta is the mixing angle between the Standard Model Higgs
     and the scalar mediator.
 
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Mass of the dark matter.
     ms : float
         Mass of the scalar mediator.
     gsxx : float
-        Coupling of scalar mediator to initial state fermions.
+        Coupling of scalar mediator to dark matter.
     stheta : float
         Sine of the mixing angle between the Standard Model Higgs
         and the scalar mediator.
@@ -378,14 +358,14 @@ class HeavyQuark(ScalarMediator):
     where gsQ is the coupling of the heavy quark to the scalar mediator
     (-gsQ S Qbar Q) and mQ is the mass of the heavy quark.
 
-    Attributes
+    Parameters
     ----------
     mx : float
-        Mass of the initial state fermion.
+        Mass of the dark matter.
     ms : float
         Mass of the scalar mediator.
     gsxx : float
-        Coupling of scalar mediator to initial state fermions.
+        Coupling of scalar mediator to dark matter.
     gsQ : float
         Coupling of the heavy quark to the scalar mediator.
     mQ : float

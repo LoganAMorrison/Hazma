@@ -6,18 +6,18 @@ Overview
 
 The ``scalar_mediator.py`` module contains three models for which dark
 matter interacts with the Standard Model through a scalar mediator. For
-energies :math:`\mu\gg 1\mathrm{GeV}`, the interaction Lagrangian can for
+energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian can for
 this theory is given by:
 
 .. math::
 
-    \mathcal{L}_{\mathrm{Int}(S)} & = -S \left( g_{S\chi} + g_{Sf} \sum_f \frac{y_f}{\sqrt{2}} \bar{f} f \right)                                                                                     \\
+    \mathcal{L}_{\mathrm{Int}(S)} & = -S \left( g_{S\chi} + g_{Sf} \sum_f \frac{y_f}{\sqrt{2}} \bar{f} f \right) \\
                     & \hspace{2cm} + \frac{S}{\Lambda} \left( g_{SG} \frac{\alpha_\mathrm{EM}}{4\pi} F_{\mu\nu} F^{\mu\nu} + g_{SF} \frac{\alpha_s}{4\pi} G_{\mu\nu}^a G^{a \mu\nu} \right)
 
 where the :math:`y_{f}`'s are the Yukawa couplings for the Standard Model
 fermions and :math:`F_{\mu\nu}` and :math:`G^{a}_{\mu\nu}` are the field
 strength tensors for the photon and gluons (we will describe the remaining
-parameters below.) For energies :math:`\mu<1\mathrm{GeV}`, the quarks and
+parameters below.) For energies :math:`\mu<1~\mathrm{GeV}`, the quarks and
 gluons confine into mesons and baryons. In order to describe the
 interactions of the scalar mediator to the mesons, we use Chiral
 Perturbation theory. The interaction Lagrangian becomes:
@@ -31,7 +31,7 @@ Perturbation theory. The interaction Lagrangian becomes:
                          & \hspace{1cm} + \frac{4 e^2 g_{SF}}{9\Lambda} S \pi^+ \pi^- A_\mu A^\mu\\
                          & \hspace{1cm} - g_{S \chi} S \bar{\chi} \chi - g_{Sf} S \sum_{\ell=e,\mu} \frac{y_\ell}{\sqrt{2}} \bar{\ell} \ell.
 
-where :math:`B\approx 2800 \mathrm{MeV}`, :math:`v_{h} = 246\mathrm{GeV}`
+where :math:`B\approx 2800~\mathrm{MeV}`, :math:`v_{h} = 246~\mathrm{GeV}`
 and the model parameters are:
 
 1. :math:`m_{\chi}`: dark matter mass,
@@ -86,12 +86,6 @@ Classes
 
 .. autoclass:: hazma.scalar_mediator.ScalarMediator
 
-    .. automethod:: __init__
-
 .. autoclass:: hazma.scalar_mediator.HiggsPortal
 
-    .. automethod:: __init__
-
 .. autoclass:: hazma.scalar_mediator.HeavyQuark
-
-    .. automethod:: __init__

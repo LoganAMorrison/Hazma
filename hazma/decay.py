@@ -15,11 +15,7 @@ from hazma.decay_helper_functions import decay_short_kaon
 
 
 def muon(photon_energies, muon_energy):
-    r"""Compute gamma-ray decay spectrum from muon.
-
-    Compute dNdE from decay :math:`\mu^{\pm} \to e^{\pm} + \nu_{e} +\nu_{\mu}
-    + \gamma` in the laboratory frame given a gamma ray energy of ``eng_gam``
-    and muon energy of ``eng_mu``.
+    r"""Compute gamma-ray decay spectrum from the muon decay :math:`\mu^{\pm} \to e^{\pm} \nu_{e} \nu_{\mu}.
 
     Parameters
     ----------
@@ -36,19 +32,20 @@ def muon(photon_energies, muon_energy):
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energy, muon_energy = 200., 1000.
-    # Compute spectrum
-    >>> decay.muon(photon_energy, muon_energy)
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> muon_energy = 1000.
-    >>> decay.muon(photon_energies, muon_energy)
+    Calculate spectrum for single gamma ray energy::
 
+        from hazma import decay
+        photon_energy, muon_energy = 200., 1000.
+        decay.muon(photon_energy, muon_energy)
+
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        muon_energy = 1000.
+        decay.muon(photon_energies, muon_energy)
     """
     # mu = decay_muon.Muon()
     if hasattr(photon_energies, "__len__"):
@@ -57,11 +54,8 @@ def muon(photon_energies, muon_energy):
 
 
 def neutral_pion(photon_energies, pion_energy):
-    r"""Compute dNdE from neutral pion decay.
-
-    Compute dNdE from decay :math:`\pi^{0} \to \gamma + \gamma` in the
-    laboratory frame given a gamma ray energy of ``eng_gam`` and neutral pion
-    energy of ``eng_pi``.
+    r"""Compute gamma-ray spectrum from the neutral pion decay
+    :math:`\pi^{0} \to \gamma \gamma`.
 
     Parameters
     ----------
@@ -78,30 +72,29 @@ def neutral_pion(photon_energies, pion_energy):
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energies, pion_energy = 200., 1000.
-    >>> decay.neutral_pion(photon_energies, pion_energy)
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> pion_energy = 1000.
-    >>> decay.neutral_pion(photon_energies, pion_energy)
+    Calculate spectrum for single gamma ray energy::
 
+        from hazma import decay
+        photon_energies, pion_energy = 200., 1000.
+        decay.neutral_pion(photon_energies, pion_energy)
+
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        pion_energy = 1000.
+        decay.neutral_pion(photon_energies, pion_energy)
     """
-    if hasattr(photon_energies, '__len__'):
+    if hasattr(photon_energies, "__len__"):
         return decay_neutral_pion.Spectrum(photon_energies, pion_energy)
     return decay_neutral_pion.SpectrumPoint(photon_energies, pion_energy)
 
 
 def charged_pion(photon_energies, pion_energy, mode="total"):
-    r"""Compute dNdE from charged pion decay.
-
-    Compute dNdE from decay :math:`\pi^{\pm} \to \mu^{\pm} + \nu_{\mu} \to
-    e^{\pm} + \nu_{e} + \nu_{\mu} + \gamma` in the laboratory frame given a
-    gamma ray energy of ``photon_energies`` and muon energy of ``pion_energy``.
+    r"""Compute gamma-ray spectrum from the charged pion decay :math:`\pi^{\pm}
+    \to \mu^{\pm} \nu_{\mu} \to e^{\pm} \nu_{e} \nu_{\mu} \gamma`.
 
     Parameters
     ----------
@@ -121,24 +114,26 @@ def charged_pion(photon_energies, pion_energy, mode="total"):
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energies, pion_energy = 200., 1000.
-    >>> decay.charged_pion(photon_energies, pion_energy)
+    Calculate spectrum for single gamma ray energy::
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> pion_energy = 1000.
-    >>> decay.charged_pion(photon_energies, pion_energy)
+        from hazma import decay
+        photon_energies, pion_energy = 200., 1000.
+        decay.charged_pion(photon_energies, pion_energy)
 
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        pion_energy = 1000.
+        decay.charged_pion(photon_energies, pion_energy)
     """
 
-    if mode != "total" and mode != "munu" and mode != "munug" and \
-            mode != "enug":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" + \
-                       "'munu', 'munug' or 'enug'.".format(mode)
+    if mode != "total" and mode != "munu" and mode != "munug" and mode != "enug":
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'munu', 'munug' or 'enug'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(photon_energies, "__len__"):
@@ -147,11 +142,7 @@ def charged_pion(photon_energies, pion_energy, mode="total"):
 
 
 def charged_kaon(photon_energies, kaon_energy, mode="total"):
-    r"""Compute dNdE from charged Kaon decay.
-
-    Compute dNdE from decay of charged Kaon through :math:`K\to X` in the
-    laboratory frame given a gamma ray energy of ``eng_gam`` and charged
-    Kaon energy of ``kaon_energy``.
+    r"""Compute gamma-ray spectrum from charged kaon decay into various final states.
 
     Parameters
     ----------
@@ -174,40 +165,52 @@ def charged_kaon(photon_energies, kaon_energy, mode="total"):
     -----
     The decay modes implemented are
 
-    .. math:: K^{\pm} \to \mu^{\pm}  + \nu_{\mu}
+    .. math:: K^{\pm} \to \mu^{\pm} \nu_{\mu}
 
-    .. math:: K^{\pm} \to \pi^{\pm}  + \pi^{0}
+    .. math:: K^{\pm} \to \pi^{\pm} \pi^{0}
 
-    .. math:: K^{\pm} \to \pi^{\pm} + \pi^{\mp} + \pi^{\pm}
+    .. math:: K^{\pm} \to \pi^{\pm} \pi^{\mp} + \pi^{\pm}
 
-    .. math:: K^{\pm} \to e^{\pm}  + \nu_{e}
+    .. math:: K^{\pm} \to e^{\pm} \nu_{e}
 
-    .. math:: K^{\pm} \to \mu^{\pm}  + \nu_{\mu} + \pi^{0}
+    .. math:: K^{\pm} \to \mu^{\pm} \nu_{\mu} \pi^{0}
 
-    .. math:: K^{\pm} \to \pi^{\pm} + \pi^{0} + \pi^{0}
+    .. math:: K^{\pm} \to \pi^{\pm} \pi^{0} \pi^{0}
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energies, kaon_energy = 200., 1000.
-    >>> decay.charged_kaon(photon_energies, kaon_energy)
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> kaon_energy = 1000.
-    >>> decay.charged_kaon(photon_energies, kaon_energy)
+    Calculate spectrum for single gamma ray energy::
 
+        from hazma import decay
+        photon_energies, kaon_energy = 200., 1000.
+        decay.charged_kaon(photon_energies, kaon_energy)
+
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        kaon_energy = 1000.
+        decay.charged_kaon(photon_energies, kaon_energy)
     """
 
-    if mode != "total" and mode != "0enu" and mode != "0munu" and \
-            mode != "00p" and mode != "mmug" and mode != "munu" and \
-            mode != "p0" and mode != "p0g" and mode != "ppm":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" + \
-                       "'0enu', '0munu', '00p', 'mmug', 'munu', 'p0'," + \
-                       " 'p0g' or 'ppm'.".format(mode)
+    if (
+        mode != "total"
+        and mode != "0enu"
+        and mode != "0munu"
+        and mode != "00p"
+        and mode != "mmug"
+        and mode != "munu"
+        and mode != "p0"
+        and mode != "p0g"
+        and mode != "ppm"
+    ):
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'0enu', '0munu', '00p', 'mmug', 'munu', 'p0',"
+            + " 'p0g' or 'ppm'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(photon_energies, "__len__"):
@@ -216,11 +219,7 @@ def charged_kaon(photon_energies, kaon_energy, mode="total"):
 
 
 def short_kaon(photon_energies, kaon_energy, mode="total"):
-    r"""Compute dNdE from short kaon decay.
-
-    Compute dNdE from decay of short Kaon through :math:`K\to X` in the
-    laboratory frame given photon energy(ies) ``photon_energies`` and short
-    Kaon energy of ``kaon_energy``.
+    r"""Compute gamma-ray spectrum from short kaon decay into various final states.
 
     Parameters
     ----------
@@ -232,6 +231,7 @@ def short_kaon(photon_energies, kaon_energy, mode="total"):
         The mode the user would like to have returned. The options are "total",
         "00", "pm" or "pmg". Here "p" stands for pi plus, "m" stands for pi
         minus and "0" stands pi 0.
+
     Returns
     -------
     spec : np.ndarray
@@ -248,23 +248,26 @@ def short_kaon(photon_energies, kaon_energy, mode="total"):
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energies, kaon_energy = 200., 1000.
-    >>> decay.short_kaon(photon_energies, kaon_energy)
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> kaon_energy = 1000.
-    >>> decay.short_kaon(photon_energies, kaon_energy)
+    Calculate spectrum for single gamma ray energy::
 
+        from hazma import decay
+        photon_energies, kaon_energy = 200., 1000.
+        decay.short_kaon(photon_energies, kaon_energy)
+
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        kaon_energy = 1000.
+        decay.short_kaon(photon_energies, kaon_energy)
     """
-    if mode != "total" and mode != "00" and mode != "pm" and \
-            mode != "pmg":
-        val_err_mess = "mode '{}'' is not available. Please use 'total'" + \
-                       "'00', 'pm' or 'pmg'.".format(mode)
+    if mode != "total" and mode != "00" and mode != "pm" and mode != "pmg":
+        val_err_mess = (
+            "mode '{}'' is not available. Please use 'total'"
+            + "'00', 'pm' or 'pmg'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(photon_energies, "__len__"):
@@ -273,11 +276,8 @@ def short_kaon(photon_energies, kaon_energy, mode="total"):
 
 
 def long_kaon(photon_energies, kaon_energy, mode="total"):
-    r"""Compute dNdE from long kaon decay.
-
-    Compute dNdE from decay of charged Kaon through :math:`K\to X` in the
-    laboratory frame given a gamma ray energy of ``photon_energies`` and long
-    Kaon energy of ``kaon_energy``.
+    r"""Compute gamma-ray spectrum from long kaon decay into various final
+    states.
 
     Parameters
     ----------
@@ -298,37 +298,48 @@ def long_kaon(photon_energies, kaon_energy, mode="total"):
 
     Examples
     --------
-    Calculate spectrum for single gamma ray energy
-    >>> from hazma import decay
-    >>> photon_energies, kaon_energy = 200., 1000.
-    >>> decay.long_kaon(photon_energies, kaon_energy)
+    Calculate spectrum for single gamma ray energy::
 
-    Calculate spectrum for array of gamma ray energies
-    >>> from hazma import decay
-    >>> import numpy as np
-    >>> photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
-    >>> kaon_energy = 1000.
-    >>> decay.long_kaon(photon_energies, kaon_energy)
+        from hazma import decay
+        photon_energies, kaon_energy = 200., 1000.
+        decay.long_kaon(photon_energies, kaon_energy)
+
+    Calculate spectrum for array of gamma ray energies::
+
+        from hazma import decay
+        import numpy as np
+        photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
+        kaon_energy = 1000.
+        decay.long_kaon(photon_energies, kaon_energy)
 
     Notes
     -----
     The decay modes implemented are
 
-    .. math:: K_{L} \to \pi^{\pm} + e^{\pm} + \nu_{e}
+    .. math:: K_{L} \to \pi^{\pm} e^{\pm} \nu_{e}
 
-    .. math:: K_{L} \to \pi^{\pm} + \mu^{\mp} + \nu_{\mu}
+    .. math:: K_{L} \to \pi^{\pm} \mu^{\mp} \nu_{\mu}
 
-    .. math:: K_{L} \to \pi^{0} + \pi^{0} + \pi^{0}
+    .. math:: K_{L} \to \pi^{0} \pi^{0} \pi^{0}
 
-    .. math:: K_{L} \to \pi^{\pm} + \pi^{\mp} + \pi^{0}
+    .. math:: K_{L} \to \pi^{+} \pi^{-} \pi^{0}
 
     """
-    if mode != "total" and mode != "000" and mode != "penu" and \
-            mode != "penug" and mode != "pm0" and mode != "pm0g" and \
-            mode != "pmunu" and mode != "pmunug":
-        val_err_mess = "mode '{}'' is not availible. Please use 'total'" + \
-                       "'000', 'penu', 'penug', 'pm0', 'pm0g'," + \
-                       "'pmunu' or 'pmunug'.".format(mode)
+    if (
+        mode != "total"
+        and mode != "000"
+        and mode != "penu"
+        and mode != "penug"
+        and mode != "pm0"
+        and mode != "pm0g"
+        and mode != "pmunu"
+        and mode != "pmunug"
+    ):
+        val_err_mess = (
+            "mode '{}'' is not availible. Please use 'total'"
+            + "'000', 'penu', 'penug', 'pm0', 'pm0g',"
+            + "'pmunu' or 'pmunug'.".format(mode)
+        )
         raise ValueError(val_err_mess)
 
     if hasattr(photon_energies, "__len__"):
@@ -337,7 +348,7 @@ def long_kaon(photon_energies, kaon_energy, mode="total"):
 
 
 def electron(photon_energies, electron_energy):
-    r"""Compute dNdE from electron decay (returns zero).
+    r"""Compute gamma-ray spectrum from electron decay (returns zero).
 
     The purpose of this function is so we can use the electron as a final
     state in `hazma.gamma_ray`.
@@ -352,8 +363,7 @@ def electron(photon_energies, electron_energy):
     Returns
     -------
     spec : numpy.ndarray
-        List of gamma ray spectrum values, dNdE, evaluated at ``eng_gam`` given
-        muon energy ``eng_e``.
+        An array of zeros.
     """
     if hasattr(photon_energies, "__len__"):
         return np.array([0.0 for _ in photon_energies])

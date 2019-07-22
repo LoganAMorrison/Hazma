@@ -6,7 +6,7 @@ Overview
 
 The ``vector_mediator.py`` module contains two models for which dark
 matter interacts with the Standard Model through a vector mediator. For
-energies :math:`\mu\gg 1\mathrm{GeV}`, the interaction Lagrangian can for
+energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian can for
 this theory is given by:
 
 .. math::
@@ -16,7 +16,7 @@ this theory is given by:
 where the :math:`\epsilon` is the kinetic mixing couplings for the
 Standard Model fermions and :math:`F_{\mu\nu}` is the field
 strength tensor for the photon (we will describe the remaining
-parameters below.) For energies :math:`\mu<1\mathrm{GeV}`, the quarks and
+parameters below.) For energies :math:`\mu<1~\mathrm{GeV}`, the quarks and
 gluons confine into mesons and baryons. In order to describe the
 interactions of the vector mediator to the mesons, we use Chiral
 Perturbation theory. The interaction Lagrangian becomes:
@@ -30,7 +30,8 @@ Perturbation theory. The interaction Lagrangian becomes:
                          & \hspace{2cm} \times \left\{ e (2 g_{Vu} + g_{Vd}) \left[ (\partial_\nu A_\rho) V_\sigma + (\partial_\nu V_\rho) A_\sigma \right] \right. \\
                          & \hspace{4cm} \left. + 3 (g_{Vu}^2 - g_{Vd}^2) (\partial_\nu V_\rho) V_\sigma \right\}\\
                          & \hspace{1cm} + V_{\mu}\left(g_{Ve}\bar{e}\gamma^{\mu}e + g_{V\mu}\bar{\mu}\gamma^{\mu}\mu\right)
-where :math:`f_{\pi}\approx 93 \mathrm{MeV}` and the model parameters are:
+
+where :math:`f_{\pi}\approx 93~\mathrm{MeV}` and the model parameters are:
 
 1. :math:`m_{\chi}`: dark matter mass,
 2. :math:`m_{V}`: vector mediator mass,
@@ -67,8 +68,6 @@ Classes
 
 .. autoclass:: hazma.vector_mediator.VectorMediator
 
-    .. automethod:: __init__
-
 .. autoclass:: hazma.vector_mediator.KineticMixing
 
-    .. automethod:: __init__
+.. autoclass:: hazma.vector_mediator.QuarksOnly
