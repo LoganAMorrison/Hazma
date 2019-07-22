@@ -34,15 +34,17 @@ class FluxMeasurement(object):
         obs_rf : str
             Name of file containing observation information. The columns of
             this file must be:
+
                 1. Lower bin edge (MeV)
                 2. Upper bin edge (MeV)
-                3. E^2 d^2Phi/dEdOmega (MeV cm^-2 s^-1 sr^-1)
+                3. :math:`E^2 d^2 \Phi/dE d\Omega` (MeV cm^-2 s^-1 sr^-1)
                 4. Upper error bar (MeV cm^-2 s^-1 sr^-1)
                 5. Lower error bar (MeV cm^-2 s^-1 sr^-1)
+
             Note that the error bar values are their y-coordinates, not their
             relative distances from the central flux.
         energy_res : callable
-            Energy resolution function which takes E and returns Delta E / E.
+            Energy resolution function.
         target : TargetParams
             The target of the analysis
         """

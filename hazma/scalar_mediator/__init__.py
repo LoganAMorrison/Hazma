@@ -351,10 +351,12 @@ class HeavyQuark(ScalarMediator):
 
     Creates an object for the scalar mediator model with the following
     specific coupling definitions:
+
         gsff = 0
         gsGG = gsQ
         gsFF = 0
         Lam = mQ
+
     where gsQ is the coupling of the heavy quark to the scalar mediator
     (-gsQ S Qbar Q) and mQ is the mass of the heavy quark.
 

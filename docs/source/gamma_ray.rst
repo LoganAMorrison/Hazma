@@ -1,23 +1,27 @@
-gamma_ray.py
-============
+Gamma ray spectra
+=================
 
 Overview
 --------
 
 Since computing gamma-ray spectra is a model-dependent process, we include
-in ``hazma`` tools for computing gamma-ray spectra from both FSR and the
-decay of final state-particles. The ``gamma_ray.py`` module contains two
+in ``hazma`` tools for computing gamma-ray spectra from *both* FSR and the
+decay of final state-particles.
+
+The ``gamma_ray`` module contains two
 functions called ``gamma_ray_decay`` and ``gamma_ray_fsr``. The
 ``gamma_ray_decay`` function accepts a list of the final-state particles,
 the center-of-mass energy, the gamma-ray energies to compute the spectrum
 at and optionally the matrix element. Currently, the final-state particles
-can be :math:`\pi^{0}, \pi^{\pm}, \mu^{\pm}, e^{\pm}, K^{\pm}, K_{L}` and
-:math:`K_{S}` where :math:`K` stands for kaon. We caution that when
-including many final-state mesons, one needs to take care to supply the
-properly unitarized matrix element. The ``gamma_ray_decay`` functions works
-by first computing the energies distributions of all the final-state
-particles and convolving the energy distributions with the decay spectra
-of the final-state particles. The ``gamma_ray_decay`` function can be
+can be :math:`\pi^{0}`, :math:`\pi^{\pm}`, :math:`\mu^{\pm}`,
+:math:`e^{\pm}`, :math:`K^{\pm}`, :math:`K_{L}` and :math:`K_{S}` where
+:math:`K` stands for kaon.
+
+We caution that when including many final-state mesons, one needs to take
+care to supply the properly unitarized matrix element. The ``gamma_ray_decay``
+functions works by first computing the energies distributions of all the
+final-state particles and convolving the energy distributions with the decay
+spectra of the final-state particles. The ``gamma_ray_decay`` function can be
 used as follows:
 
 .. code-block:: python

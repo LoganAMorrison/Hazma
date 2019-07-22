@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('../..'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 master_doc = 'index'
 
@@ -32,6 +32,7 @@ release = '1.0'
 # ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
+              'sphinx.ext.linkcode',
               'sphinx.ext.mathjax']
 
 # Add any paths that contain templates here, relative to this directory.
@@ -42,12 +43,24 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return "https://github.com/LoganAMorrison/Hazma/tree/master/%s.py" % filename
+
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+
+html_logo = "_static/img/hazma_logo_large.png"
 
 html_theme_options = {
     'canonical_url': '',

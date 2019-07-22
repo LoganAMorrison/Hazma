@@ -24,7 +24,7 @@ A_eff_comptel_rf = resource_filename(
 )
 A_eff_egret_rf = resource_filename(__name__, gr_data_dir + "egret_effective_area.dat")
 A_eff_fermi_rf = resource_filename(__name__, gr_data_dir + "fermi_effective_area.dat")
-# Energy resolution
+
 e_astrogam_energy_res_rf = resource_filename(
     __name__, gr_data_dir + ("e-astrogam_energy" "_resolution.dat")
 )
@@ -33,16 +33,19 @@ gc_bg_model_rf = resource_filename(__name__, gr_data_dir + "gc_bg_model.dat")
 
 
 def solid_angle(l_max, b_min, b_max):
-    """Returns solid angle subtended for a target region.
+    """
+    Returns solid angle subtended for a rectangular target region centered on
+    the galactic center.
 
     Parameters
     ----------
     l_max : float
-        Maximum value of galactic longitude in deg. Note that l must lie in the
-        interval [-180, 180].
+        Maximum value of galactic longitude in deg. Note that :math:`l` must
+        lie in the interval :math:`[-180, 180]`.
     b_min, b_max : float, float
-        Minimum and maximum values for |b| in deg. Note that b must lie in the
-        interval [-90, 90], with the equator at b = 0.
+        Minimum and maximum values for :math:`b` in deg. Note that :math:`b`
+        must lie in the interval :math:`[-90, 90]`, with the equator at
+        :math:`b = 0`.
 
     Returns
     -------
@@ -58,8 +61,27 @@ def solid_angle(l_max, b_min, b_max):
     )
 
 
-# # # Angular sizes (in sr) and J factors (in MeV^2 cm^-5) for various targets
-TargetParams = namedtuple("TargetParams", ["J", "dOmega"])
+class TargetParams:
+    """
+    Container for information about a target region.
+
+    Currently implemented for the Draco dwarf galaxy and :math:`10^\circ \times
+    10^\circ` region around the galactic center, which can be imported using::
+
+        from hazma.gamma_ray_parameters import draco_params, gc_target
+
+    Parameters
+    ----------
+    J : float
+        J-factor in MeV^2 cm^-5
+    dOmega : float
+        Angular size in sr
+    """
+    def __init__(self, J, dOmega):
+        self.J = J
+        self.dOmega = dOmega
+
+
 # Dwarf with high J factor
 draco_params = TargetParams(6.94e27, 1.62e-3)
 
@@ -77,56 +99,55 @@ gc_bg_model = BackgroundModel(gc_bg_e_range, gc_bg_flux_fn)
 gc_target = TargetParams(1.795e29, solid_angle(10.0, 0.0, 10.0))
 
 # # # Effective areas, cm^2
-A_eff_e_astrogam = load_interp(A_eff_e_astrogam_rf)
-A_eff_fermi = load_interp(A_eff_fermi_rf)
-A_eff_comptel = load_interp(A_eff_comptel_rf)
-A_eff_egret = load_interp(A_eff_egret_rf)
+A_eff_e_astrogam = load_interp(A_eff_e_astrogam_rf)  #: e-ASTROGAM effective area function
+A_eff_fermi = load_interp(A_eff_fermi_rf)  #: Fermi-LAT effective area function
+A_eff_comptel = load_interp(A_eff_comptel_rf)  #: COMPTEL effective area function
+A_eff_egret = load_interp(A_eff_egret_rf)  #: EGRET effective area function
 
 
-# # # Energy resolutions, Delta E / E
 def energy_res_comptel(e):
-    """COMPTEL energy resolution Delta E / E.
+    """COMPTEL energy resolution :math:`\Delta E / E`.
 
-    These are approximate values, taken from
-    http://wwwgro.unh.edu/users/ckappada/thesis_stuff/thesis.html, ch. II, pg
-    11.
+    Taken from `ch. II, page 11
+    <http://wwwgro.unh.edu/users/ckappada/thesis_stuff/thesis.html>`_.
     """
     return 0.05
 
 
 def energy_res_egret(e):
-    """EGRET's energy resolution Delta E / E.
+    """EGRET's energy resolution :math:`\Delta E / E`.
 
     This is the most optimistic value, taken from
-    http://adsabs.harvard.edu/doi/10.1086/191793, sec. 4.3.3.
+    `sec. 4.3.3 <http://adsabs.harvard.edu/doi/10.1086/191793>`_.
     """
     return 0.18
 
 
 def energy_res_fermi(e):
-    """Fermi-LAT's energy resolution Delta E / E.
+    """Fermi-LAT's energy resolution :math:`\Delta E / E`.
 
     This is the average of the most optimistic normal and 60deg off-axis values
-    from fig. 18 of https://arxiv.org/abs/0902.1089.
+    from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
     """
     return 0.075
 
 
-# Easiest to define using an interpolator
+#: e-ASTROGAM energy resolution function. From table 1 of the `e-ASTROGAM
+#: whitebook <https://arxiv.org/abs/1711.01265>`_.
 energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf, fill_value="extrapolate")
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365.0 * 24.0 * 60.0 ** 2
 
 # # # Target parameters
-# COMPTEL diffuse
 comptel_diffuse_target = TargetParams(J=3.725e28, dOmega=solid_angle(60.0, 0.0, 20.0))
+egret_diffuse_target = TargetParams(J=3.79e27, dOmega=solid_angle(180.0, 20.0, 60.0))
+fermi_diffuse_target = TargetParams(J=4.698e27, dOmega=solid_angle(180.0, 8.0, 90.0))
+#: COMPTEL diffuse gamma-ray flux measurements
 comptel_diffuse = FluxMeasurement(
     comptel_obs_rf, energy_res_comptel, comptel_diffuse_target
 )
-# EGRET diffuse
-egret_diffuse_target = TargetParams(J=3.79e27, dOmega=solid_angle(180.0, 20.0, 60.0))
+#: EGRET diffuse gamma-ray flux measurements
 egret_diffuse = FluxMeasurement(egret_obs_rf, energy_res_egret, egret_diffuse_target)
-# Fermi diffuse
-fermi_diffuse_target = TargetParams(J=4.698e27, dOmega=solid_angle(180.0, 8.0, 90.0))
+#: Fermi diffuse gamma-ray flux measurements
 fermi_diffuse = FluxMeasurement(fermi_obs_rf, energy_res_fermi, fermi_diffuse_target)

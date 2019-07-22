@@ -7,20 +7,24 @@ import numpy as np
 
 class TheoryCMB(object):
     def cmb_limit(self, x_kd=1.0e-4, p_ann=p_ann_planck_temp_pol):
-        """Computes the CMB limit on <sigma v>.
+        r"""
+        Computes the CMB limit on <sigma v>.
 
-        Notes
-        -----
-        The constraint is computed using
-            f_eff <sigma v> / m_x < p_ann
+        This is derived by requiring that
+
+        .. math::
+            f_{\mathrm{eff}} \langle \sigma v \rangle / m_{\chi} < p_{\mathrm{ann}},
+
+        where :math:`f_{\mathrm{eff}}` is the efficiency with which dark matter
+        annihilations around recombination inject energy into the plasma and
+        :math:`p_{\mathrm{ann}}` is derived from CMB observations.
 
         Parameters
         ----------
-        mx : float
-            Dark matter mass in MeV.
-        f_eff : float
-            Efficiency with which energy is deposited into the CMB by DM
-            annihilations.
+        x_kd: float
+            T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
+            temperature. This will be computed self-consistently in future
+            versions of ``hazma``.
         p_ann : float
             Constraint on energy release per DM annihilation in cm^3 s^-1
             MeV^-1.
@@ -119,4 +123,9 @@ class TheoryCMB(object):
         return self._f_eff_helper("e e", x_kd, "quad")
 
     def f_eff(self, x_kd=1.0e-4):
+        """
+        Computes :math:`f_{\mathrm{eff}}` the efficiency with which dark matter
+        annihilations around recombination inject energy into the thermal
+        plasma.
+        """
         return self.f_eff_ep(x_kd) + self.f_eff_g(x_kd)

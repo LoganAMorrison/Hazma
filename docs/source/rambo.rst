@@ -1,10 +1,10 @@
-rambo.py
-========
+RAMBO
+=====
 
 Overview
 --------
 
-In ``hazma``, the ``rambo.py`` module can be used to perform various tasks. We
+In ``hazma``, the ``rambo`` module can be used to perform various tasks. We
 include a generic functions for generating phase-space points called
 ``generate_phase_space_point`` and ``generate_phase_space``, which will
 compute a single or many phase-space points. The ``generate_phase_space``

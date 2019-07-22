@@ -1,10 +1,10 @@
-vector_mediator.py
-==================
+Vector mediator
+===============
 
 Overview
 --------
 
-The ``vector_mediator.py`` module contains two models for which dark
+The ``vector_mediator`` module contains two models for which dark
 matter interacts with the Standard Model through a vector mediator. For
 energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian can for
 this theory is given by:

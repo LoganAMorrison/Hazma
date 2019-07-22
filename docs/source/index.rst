@@ -7,12 +7,14 @@ Welcome to Hazma's documentation!
 
    installation
    usage
-   modules/scalar_mediator
-   modules/vector_mediator
-   modules/rambo
-   modules/gamma_ray
-   modules/decay
-   modules/positron
+   scalar_mediator
+   vector_mediator
+   gamma_ray_limits
+   cmb
+   gamma_ray
+   positron
+   decay
+   rambo
 
 
 

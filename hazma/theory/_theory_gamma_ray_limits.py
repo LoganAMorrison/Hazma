@@ -29,17 +29,20 @@ class TheoryGammaRayLimits(object):
         return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k, ext=ext)
 
     def binned_limit(self, measurement, n_sigma=2.0):
-        """Determines the limit on :math:`<sigma v>` from gamma-ray data.
+        r"""
+        Determines the limit on :math:`<sigma v>` from gamma-ray data.
 
-        We define a signal to be in conflict with the measured flux for the
-        :math:`i`th bin for an experiment if
+        We define a signal to be in conflict with the measured flux for bin
+        :math:`i` for an experiment if
 
-        ..math:: \Phi_\chi^{(i)} > n_\sigma \sigma^{(i)} + \Phi^{(i)},
+        .. math::
+
+            \Phi_{\chi}^{(i)} > n_{\sigma} \sigma^{(i)} + \Phi^{(i)},
 
         where :math:`\Phi_\chi^{(i)}` is the integrated flux due to DM
         annihilations for the bin, :math:`\Phi^{(i)}` is the measured flux in
         the bin, :math:`\sigma^{(i)}` is size of the upper error bar for the
-        bin and :math:`n_\sigma = 2` is the significance. The overall limit on
+        bin and :math:`n_{\sigma} = 2` is the significance. The overall limit on
         :math:`\langle\sigma v\rangle` is computed by minimizing over the
         limits determined for each bin.
 
@@ -167,13 +170,15 @@ class TheoryGammaRayLimits(object):
         n_sigma=5.0,
         debug_msgs=False,
     ):
-        """
+        r"""
         Computes smallest-detectable value of <sigma v> for given target and
         experiment parameters.
 
         We define a signal to be detectable if
 
-        .. math:: N_S / sqrt(N_B) >= n_\sigma,
+        .. math::
+
+            N_S / \sqrt{N_B} \geq n_{\sigma},
 
         where :math:`N_S` and :math:`N_B` are the number of signal and
         background photons in the energy window of interest and
@@ -190,8 +195,8 @@ class TheoryGammaRayLimits(object):
             Effective area of experiment in cm^2 as a function of photon
             energy.
         energy_res : float -> float
-            The detector's energy resolution (Delta E / E) as a function of
-            photon energy in MeV.
+            The detector's energy resolution (:math:`\Delta E / E`) as a
+            function of photon energy in MeV.
         T_obs : float
             Experiment's observation time in s
         target_params : TargetParams

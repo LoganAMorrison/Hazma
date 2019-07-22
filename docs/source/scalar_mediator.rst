@@ -1,10 +1,10 @@
-scalar_mediator.py
-==================
+Scalar mediator
+===============
 
 Overview
 --------
 
-The ``scalar_mediator.py`` module contains three models for which dark
+The ``scalar_mediator`` module contains three models for which dark
 matter interacts with the Standard Model through a scalar mediator. For
 energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian can for
 this theory is given by:

@@ -15,7 +15,8 @@ from hazma.decay_helper_functions import decay_short_kaon
 
 
 def muon(photon_energies, muon_energy):
-    r"""Compute gamma-ray decay spectrum from the muon decay :math:`\mu^{\pm} \to e^{\pm} \nu_{e} \nu_{\mu}.
+    r"""Compute gamma-ray decay spectrum from the muon decay
+    :math:`\mu^{\pm} \to e^{\pm} \nu_{e} \nu_{\mu}`.
 
     Parameters
     ----------

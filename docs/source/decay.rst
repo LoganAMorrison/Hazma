@@ -1,11 +1,13 @@
-decay.py
-========
+Decay spectra
+=============
 
 Overview
 --------
 
 The ``decay.py`` module contains high-performance functions for computing
-the decay spectra from :math:`\pi^{\pm}, \pi^{0}` and :math:`\mu^{\pm}`.
+the gamma-ray spectra from :math:`\pi^{\pm}`, math::`\pi^{0}` and
+:math:`\mu^{\pm}` decays.
+
 The functions in this module allow the user to compute the decay spectra
 for arbitrary parent-particle energy. In order to obtain spectra for
 arbitrary parent-particle energy, we compute the decay spectra in the

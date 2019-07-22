@@ -19,18 +19,20 @@ f_eff_ep = interp1d(f_eff_ep_data[0] / 1.0e6, f_eff_ep_data[1])  # eV -> MeV
 f_eff_g_data = np.loadtxt(f_eff_g_rf, delimiter=",").T
 f_eff_g = interp1d(f_eff_g_data[0] / 1.0e6, f_eff_g_data[1])  # eV -> MeV
 
-# Planck 2018 95% upper limits on p_ann, in cm^3 s^-1 MeV^-1
+#: Planck 2018 95% upper limit on p_ann from temperature + polarization
+#: measurements, in cm^3 s^-1 MeV^-1
 p_ann_planck_temp_pol = 3.5e-31  # temperature + polarization
+#: Planck 2018 95% upper limit on p_ann from temperature + polarization +
+#: lensing measurements, in cm^3 s^-1 MeV^-1
 p_ann_planck_temp_pol_lensing = 3.3e-31  # temp + pol + lensing
+#: Planck 2018 95% upper limit on p_ann from temperature + polarization +
+#: lensing + BAO measurements, in cm^3 s^-1 MeV^-1
 p_ann_planck_temp_pol_lensing_bao = 3.2e-31  # temp + pol + lensing + BAO
 
 
 def vx_cmb(mx, x_kd):
-    """Computes the DM relative velocity at CMB.
-
-    Notes
-    -----
-    This is equation 28 from arXiv:1506.03811 [hep-ph].
+    """Computes the DM relative velocity at CMB using eq. 28 from `this
+    reference <https://arxiv.org/abs/1309.4091>`_.
 
     Parameters
     ----------

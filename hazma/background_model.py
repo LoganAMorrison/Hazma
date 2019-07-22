@@ -1,31 +1,20 @@
-import numpy as np
-from scipy.interpolate import interp1d
-from hazma.parameters import load_interp
-
 
 class BackgroundModel(object):
     """
-    Represents a gamma ray background model.
+    Represents a gamma ray background model, which is required for computing
+    projected limits for planned gamma-ray detectors.
 
-    Attributes
+    Parameters
     ----------
     e_range : [float, float]
         Minimum and maximum photon energies for which this model is valid, in
         MeV.
+    dPhi_dEdOmega : np.array
+        Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
+        photon energy (MeV). This function must be vectorized.
     """
 
     def __init__(self, e_range, dPhi_dEdOmega):
-        """
-        Parameters
-        ----------
-        e_range : [float, float]
-            Photon energies (MeV) between which this background model is valid.
-            Note that these bounds are inclusive.
-        dPhi_dEdOmega : np.array
-            Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
-            photon energy (MeV). This function must be vectorized (ie, able to
-            map a 1D numpy.array of energies to a 1D numpy.array of fluxes).
-        """
         self.e_range = e_range
         self.__dPhi_dEdOmega = dPhi_dEdOmega
 
@@ -39,9 +28,9 @@ class BackgroundModel(object):
 
         Returns
         -------
-        d^2Phi / dE dOmega
+        dPhi_dEdOmega : np.array
             Background gamma ray flux, in MeV^-1 sr^-1 m^-2 s^-1. For any
-            energies outside of self.e_range, np.nan is returned.
+            energies outside of ``self.e_range``, ``np.nan`` is returned.
         """
         if hasattr(es, "__len__"):
             # Check if any energies are out of bounds
