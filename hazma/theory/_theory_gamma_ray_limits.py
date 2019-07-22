@@ -2,14 +2,6 @@ import numpy as np
 from scipy import optimize
 from scipy.interpolate import InterpolatedUnivariateSpline
 
-from hazma.gamma_ray_parameters import (
-    A_eff_e_astrogam,
-    T_obs_e_astrogam,
-    default_bg_model,
-    draco_params,
-    energy_res_e_astrogam,
-)
-
 
 class TheoryGammaRayLimits(object):
     def __get_product_spline(self, f1, f2, grid, k=1, ext="raise"):
@@ -37,19 +29,17 @@ class TheoryGammaRayLimits(object):
         return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k, ext=ext)
 
     def binned_limit(self, measurement, n_sigma=2.0):
-        """Determines the limit on <sigma v> from data for a given DM spectrum.
+        """Determines the limit on :math:`<sigma v>` from gamma-ray data.
 
-        Notes
-        -----
-        We define a signal to be in conflict for the measured flux for the
+        We define a signal to be in conflict with the measured flux for the
         :math:`i`th bin for an experiment if
 
-        .. math:: \Phi_\chi^{(i)} > n_\sigma \sigma^{(i)} + \Phi^{(i)},
+        ..math:: \Phi_\chi^{(i)} > n_\sigma \sigma^{(i)} + \Phi^{(i)},
 
-        where :math:`\Phi_\chi^{(i)}` is the flux due to DM annihilations for
-        the bin, :math:`\Phi^{(i)}` is the measured flux in the bin,
-        :math:`\sigma^{(i)}` is size of the upper error bar for the bin and
-        :math:`n_\sigma = 2` is the significance. The overall limit on
+        where :math:`\Phi_\chi^{(i)}` is the integrated flux due to DM
+        annihilations for the bin, :math:`\Phi^{(i)}` is the measured flux in
+        the bin, :math:`\sigma^{(i)}` is size of the upper error bar for the
+        bin and :math:`n_\sigma = 2` is the significance. The overall limit on
         :math:`\langle\sigma v\rangle` is computed by minimizing over the
         limits determined for each bin.
 
@@ -64,6 +54,7 @@ class TheoryGammaRayLimits(object):
         -------
         <sigma v>_tot : float
             Largest allowed thermally averaged total cross section in cm^3 / s
+
         """
         # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
         # self-conjugate.
@@ -168,19 +159,18 @@ class TheoryGammaRayLimits(object):
 
     def unbinned_limit(
         self,
-        A_eff=A_eff_e_astrogam,
-        energy_res=energy_res_e_astrogam,
-        T_obs=T_obs_e_astrogam,
-        target_params=draco_params,
-        bg_model=default_bg_model,
+        A_eff,
+        energy_res,
+        T_obs,
+        target_params,
+        bg_model,
         n_sigma=5.0,
         debug_msgs=False,
     ):
-        """Computes smallest value of <sigma v> detectable for given target and
+        """
+        Computes smallest-detectable value of <sigma v> for given target and
         experiment parameters.
 
-        Notes
-        -----
         We define a signal to be detectable if
 
         .. math:: N_S / sqrt(N_B) >= n_\sigma,
@@ -217,7 +207,7 @@ class TheoryGammaRayLimits(object):
         Returns
         -------
         <sigma v> : float
-            Smallest detectable thermally averaged total cross section in units
+            Smallest-detectable thermally averaged total cross section in units
             of cm^3 / s.
         """
         # TODO: this should depend on the target!
