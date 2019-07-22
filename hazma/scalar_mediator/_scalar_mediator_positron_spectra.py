@@ -43,7 +43,7 @@ class ScalarMediatorPositronSpectra:
         """
         return pspec_muon(positron_energies, cme / 2.0)
 
-    def dnde_pos_ss(self, positron_energies, cme, fs='total'):
+    def dnde_pos_ss(self, positron_energies, cme, fs="total"):
         """
         Positron/electron spectrum from dark matter annihilating into muons
 
@@ -70,8 +70,9 @@ class ScalarMediatorPositronSpectra:
             pw_array /= pws["total"]
 
             # Factor of 2 since S is self-conjugate
-            return 2.0 * dnde_decay_s(positron_energies, scalar_energy,
-                                      self.ms, pw_array, fs)
+            return 2.0 * dnde_decay_s(
+                positron_energies, scalar_energy, self.ms, pw_array, fs
+            )
         else:
             return np.zeros_like(positron_energies)
 

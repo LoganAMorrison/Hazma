@@ -10,18 +10,24 @@ from hazma.parameters import vh
 from hazma.parameters import b0, fpi
 from hazma.parameters import neutral_pion_mass as mpi0
 
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_cross_sections \
-    import PseudoScalarMediatorCrossSections
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_fsr \
-    import PseudoScalarMediatorFSR
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_msqrd_rambo \
-    import PseudoScalarMediatorMSqrdRambo
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_positron_spectra\
-    import PseudoScalarMediatorPositronSpectra
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_spectra \
-    import PseudoScalarMediatorSpectra
-from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_widths \
-    import PseudoScalarMediatorWidths
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_cross_sections import (
+    PseudoScalarMediatorCrossSections,
+)
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_fsr import (
+    PseudoScalarMediatorFSR,
+)
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_msqrd_rambo import (
+    PseudoScalarMediatorMSqrdRambo,
+)
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_positron_spectra import (
+    PseudoScalarMediatorPositronSpectra,
+)
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_spectra import (
+    PseudoScalarMediatorSpectra,
+)
+from hazma.pseudo_scalar_mediator._pseudo_scalar_mediator_widths import (
+    PseudoScalarMediatorWidths,
+)
 
 import warnings
 from hazma.hazma_errors import PreAlphaWarning
@@ -31,19 +37,20 @@ import numpy as np
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
-class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
-                           PseudoScalarMediatorFSR,
-                           PseudoScalarMediatorMSqrdRambo,
-                           PseudoScalarMediatorPositronSpectra,
-                           PseudoScalarMediatorSpectra,
-                           PseudoScalarMediatorWidths,
-                           Theory):
+class PseudoScalarMediator(
+    PseudoScalarMediatorCrossSections,
+    PseudoScalarMediatorFSR,
+    PseudoScalarMediatorMSqrdRambo,
+    PseudoScalarMediatorPositronSpectra,
+    PseudoScalarMediatorSpectra,
+    PseudoScalarMediatorWidths,
+    Theory,
+):
     r"""
     Create a pseudoscalar mediator model object.
     """
 
-    def __init__(self, mx, mp, gpxx, gpuu, gpdd, gpss, gpee, gpmumu, gpGG,
-                 gpFF):
+    def __init__(self, mx, mp, gpxx, gpuu, gpdd, gpss, gpee, gpmumu, gpGG, gpFF):
         self._mx = mx
         self._mp = mp
         self._gpxx = gpxx
@@ -171,20 +178,24 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
 
         # Mixing angle between pi0 and p. Here I have assumed that the pi0 mass
         # is given by leading order chiPT.
-        self.beta = eps / (self.mp**2 - mpi0**2)
+        self.beta = eps / (self.mp ** 2 - mpi0 ** 2)
 
         # Shifted mass of neutral pion
-        mpi0Sqrd = mpi0**2 - eps * self.beta
+        mpi0Sqrd = mpi0 ** 2 - eps * self.beta
 
         if mpi0Sqrd < 0:  # mixing is way too big if this fails
-            print("Warning: your choice of mp and/or couplings produced an" +
-                  " imaginary neutral pion mass. Undefined behavior.")
+            print(
+                "Warning: your choice of mp and/or couplings produced an"
+                + " imaginary neutral pion mass. Undefined behavior."
+            )
 
         self.mpi0 = np.sqrt(mpi0Sqrd)
 
-        if abs(self.mpi0 - mpi0) > 10.:
-            print("Warning: your choice of mp and/or couplings produced a " +
-                  "10 MeV or larger shift in m_pi0. Theory is invalid.")
+        if abs(self.mpi0 - mpi0) > 10.0:
+            print(
+                "Warning: your choice of mp and/or couplings produced a "
+                + "10 MeV or larger shift in m_pi0. Theory is invalid."
+            )
 
     def compute_width_p(self):
         """Updates the pseudoscalar's total width.
@@ -205,7 +216,7 @@ class PseudoScalarMediator(PseudoScalarMediatorCrossSections,
         fs : array-like
             Array of the available final states.
         """
-        return ['e e', 'mu mu', 'g g', 'pi0 pi pi', 'pi0 pi0 pi0', 'p p']
+        return ["e e", "mu mu", "g g", "pi0 pi pi", "pi0 pi0 pi0", "p p"]
 
     def constraints(self):
         pass
@@ -227,13 +238,21 @@ class PseudoScalarMFV(PseudoScalarMediator):
         ye = me / vh
         ymu = mmu / vh
 
-        gpGG = 2. * gpup + gpdown
-        gpFF = gpll + (8. * gpup + gpdown) / 9.
+        gpGG = 2.0 * gpup + gpdown
+        gpFF = gpll + (8.0 * gpup + gpdown) / 9.0
 
-        super(PseudoScalarMFV, self).__init__(mx, mp, gpxx, gpup * yu,
-                                              gpdown * yd, gpdown * ys,
-                                              gpll * ye, gpll * ymu,
-                                              gpGG, gpFF)
+        super(PseudoScalarMFV, self).__init__(
+            mx,
+            mp,
+            gpxx,
+            gpup * yu,
+            gpdown * yd,
+            gpdown * ys,
+            gpll * ye,
+            gpll * ymu,
+            gpGG,
+            gpFF,
+        )
 
     @property
     def gpll(self):
@@ -249,7 +268,7 @@ class PseudoScalarMFV(PseudoScalarMediator):
         self.gpee = gpll * ye
         self.gpmumu = gpll * ymu
 
-        self.gpFF = gpll + (8. * self.gpup + self.gpdown) / 9.
+        self.gpFF = gpll + (8.0 * self.gpup + self.gpdown) / 9.0
 
     @property
     def gpup(self):
@@ -263,8 +282,8 @@ class PseudoScalarMFV(PseudoScalarMediator):
 
         self.gpuu = gpup * yu
 
-        self.gpFF = self.gpll + (8. * gpup + self.gpdown) / 9.
-        self.gpGG = 2. * gpup + self.gpdown
+        self.gpFF = self.gpll + (8.0 * gpup + self.gpdown) / 9.0
+        self.gpGG = 2.0 * gpup + self.gpdown
 
     @property
     def gpdown(self):
@@ -280,8 +299,8 @@ class PseudoScalarMFV(PseudoScalarMediator):
         self.gpdd = gpdown * yd
         self.gpss = gpdown * ys
 
-        self.gpFF = self.gpll + (8. * self.gpup + gpdown) / 9.
-        self.gpGG = 2. * self.gpup + gpdown
+        self.gpFF = self.gpll + (8.0 * self.gpup + gpdown) / 9.0
+        self.gpGG = 2.0 * self.gpup + gpdown
 
     def f_eff_g(self, x_kd=1e-4):
         # Need to override the default method since the pseudoscalar uses RAMBO

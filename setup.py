@@ -200,7 +200,7 @@ setup(
         "numpydoc>=0.7.0",
         "scikit-image>=0.14.0",
         "setuptools>=27.3",
-        "flake8>=3.5.0"
+        "flake8>=3.5.0",
     ],
     tests_require=["pytest>=3.2.5"],
     zip_safe=False,

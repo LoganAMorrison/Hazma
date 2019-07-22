@@ -3,21 +3,27 @@ from hazma.theory import Theory
 import warnings
 from hazma.hazma_errors import PreAlphaWarning
 
-from hazma.axial_vector_mediator._axial_vector_mediator_cross_sections \
-    import AxialVectorMediatorCrossSections
-from hazma.axial_vector_mediator._axial_vector_mediator_positron_spectra \
-    import AxialVectorMediatorPositronSpectra
-from hazma.axial_vector_mediator._axial_vector_mediator_spectra\
-    import AxialVectorMediatorSpectra
-from hazma.axial_vector_mediator._axial_vector_mediator_widths \
-    import AxialVectorMediatorWidths
+from hazma.axial_vector_mediator._axial_vector_mediator_cross_sections import (
+    AxialVectorMediatorCrossSections,
+)
+from hazma.axial_vector_mediator._axial_vector_mediator_positron_spectra import (
+    AxialVectorMediatorPositronSpectra,
+)
+from hazma.axial_vector_mediator._axial_vector_mediator_spectra import (
+    AxialVectorMediatorSpectra,
+)
+from hazma.axial_vector_mediator._axial_vector_mediator_widths import (
+    AxialVectorMediatorWidths,
+)
 
 
-class AxialVectorMediator(AxialVectorMediatorCrossSections,
-                          AxialVectorMediatorPositronSpectra,
-                          AxialVectorMediatorSpectra,
-                          AxialVectorMediatorWidths,
-                          Theory):
+class AxialVectorMediator(
+    AxialVectorMediatorCrossSections,
+    AxialVectorMediatorPositronSpectra,
+    AxialVectorMediatorSpectra,
+    AxialVectorMediatorWidths,
+    Theory,
+):
     r"""
     Create an axial vector mediator model object.
     """
@@ -119,7 +125,7 @@ class AxialVectorMediator(AxialVectorMediatorCrossSections,
         fs : array-like
             Array of the available final states.
         """
-        return ['pi0 pi pi']
+        return ["pi0 pi pi"]
 
     def constraints(self):
         pass

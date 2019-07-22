@@ -1,5 +1,4 @@
-from hazma.field_theory_helper_functions.common_functions import \
-    minkowski_dot as MDot
+from hazma.field_theory_helper_functions.common_functions import minkowski_dot as MDot
 
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0
@@ -45,58 +44,140 @@ class PseudoScalarMediatorMSqrdRambo:
         beta = self.beta
         widthp = self.width_p
 
-        pxmag = np.sqrt(P[0]**2 / 4. - mx**2)
+        pxmag = np.sqrt(P[0] ** 2 / 4.0 - mx ** 2)
 
-        px = np.array([P[0] / 2., 0., 0., pxmag])
-        pxbar = np.array([P[0] / 2., 0., 0., -pxmag])
+        px = np.array([P[0] / 2.0, 0.0, 0.0, pxmag])
+        pxbar = np.array([P[0] / 2.0, 0.0, 0.0, -pxmag])
 
         """ Order beta^0 """
-        beta0 = (gpxx**2 *
-                 (-(b0 * fpi * gpGG * mdq) +
-                  b0 * fpi * gpGG * muq - b0 * fpi * gpdd * vh +
-                  b0 * fpi * gpuu * vh)**2 * (mx**2 + MDot(px, pxbar))) / \
-            (9. * fpi**4 * vh**2 *
-             ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 + mp**2 * widthp**2 - 4 *
-              (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(p1, p2) -
-               MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta0 = (
+            gpxx ** 2
+            * (
+                -(b0 * fpi * gpGG * mdq)
+                + b0 * fpi * gpGG * muq
+                - b0 * fpi * gpdd * vh
+                + b0 * fpi * gpuu * vh
+            )
+            ** 2
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
         """ Order beta^1 """
-        beta1 = (2 * beta * gpxx**2 *
-                 (-(b0 * fpi * gpGG * mdq) + b0 * fpi * gpGG * muq -
-                  b0 * fpi * gpdd * vh + b0 * fpi * gpuu * vh) *
-                 (b0 * mdq * vh + 2 * mpi**2 * vh - 2 * mpi0**2 * vh +
-                  b0 * muq * vh + 4 * vh * MDot(p1, p2) -
-                  2 * vh * MDot(p1, p3) - 2 * vh * MDot(p2, p3)) *
-                 (mx**2 + MDot(px, pxbar))) / \
-            (9. * fpi**4 * vh**2 *
-             ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 +
-              mp**2 * widthp**2 - 4 *
-              (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(p1, p2) -
-               MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta1 = (
+            2
+            * beta
+            * gpxx ** 2
+            * (
+                -(b0 * fpi * gpGG * mdq)
+                + b0 * fpi * gpGG * muq
+                - b0 * fpi * gpdd * vh
+                + b0 * fpi * gpuu * vh
+            )
+            * (
+                b0 * mdq * vh
+                + 2 * mpi ** 2 * vh
+                - 2 * mpi0 ** 2 * vh
+                + b0 * muq * vh
+                + 4 * vh * MDot(p1, p2)
+                - 2 * vh * MDot(p1, p3)
+                - 2 * vh * MDot(p2, p3)
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
         """ Order beta^2 """
 
-        beta2 = (beta**2 * gpxx**2 *
-                 (2 * (2 * b0 * fpi * gpGG * mdq -
-                       2 * b0 * fpi * gpGG * muq + 2 * b0 * fpi * gpdd * vh -
-                       2 * b0 * fpi * gpuu * vh) *
-                  (-(b0 * fpi * gpGG * mdq) +
-                   b0 * fpi * gpGG * muq - b0 * fpi * gpdd * vh +
-                   b0 * fpi * gpuu * vh) -
-                  (-(b0 * fpi * gpGG * mdq) + b0 * fpi * gpGG * muq -
-                   b0 * fpi * gpdd * vh + b0 * fpi * gpuu * vh)**2 +
-                  (b0 * mdq * vh + 2 * mpi**2 * vh - 2 * mpi0**2 * vh +
-                   b0 * muq * vh + 4 * vh * MDot(p1, p2) -
-                   2 * vh * MDot(p1, p3) - 2 * vh * MDot(p2, p3))**2) *
-                 (mx**2 + MDot(px, pxbar))) / \
-            (9. * fpi**4 * vh**2 *
-             ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 +
-              mp**2 * widthp**2 - 4 *
-              (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(p1, p2) -
-               MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta2 = (
+            beta ** 2
+            * gpxx ** 2
+            * (
+                2
+                * (
+                    2 * b0 * fpi * gpGG * mdq
+                    - 2 * b0 * fpi * gpGG * muq
+                    + 2 * b0 * fpi * gpdd * vh
+                    - 2 * b0 * fpi * gpuu * vh
+                )
+                * (
+                    -(b0 * fpi * gpGG * mdq)
+                    + b0 * fpi * gpGG * muq
+                    - b0 * fpi * gpdd * vh
+                    + b0 * fpi * gpuu * vh
+                )
+                - (
+                    -(b0 * fpi * gpGG * mdq)
+                    + b0 * fpi * gpGG * muq
+                    - b0 * fpi * gpdd * vh
+                    + b0 * fpi * gpuu * vh
+                )
+                ** 2
+                + (
+                    b0 * mdq * vh
+                    + 2 * mpi ** 2 * vh
+                    - 2 * mpi0 ** 2 * vh
+                    + b0 * muq * vh
+                    + 4 * vh * MDot(p1, p2)
+                    - 2 * vh * MDot(p1, p3)
+                    - 2 * vh * MDot(p2, p3)
+                )
+                ** 2
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
         msqrd = beta0 + beta1 + beta2
 
@@ -139,71 +220,196 @@ class PseudoScalarMediatorMSqrdRambo:
 
         P = sum(momenta)
 
-        pxmag = np.sqrt(P[0]**2 / 4. - mx**2)
+        pxmag = np.sqrt(P[0] ** 2 / 4.0 - mx ** 2)
 
-        px = np.array([P[0] / 2., 0., 0., pxmag])
-        pxbar = np.array([P[0] / 2., 0., 0., -pxmag])
+        px = np.array([P[0] / 2.0, 0.0, 0.0, pxmag])
+        pxbar = np.array([P[0] / 2.0, 0.0, 0.0, -pxmag])
 
-        beta0 = (-(gpxx**2 * qe**2 *
-                   (-(b0 * fpi * gpGG * mdq) +
-                    b0 * fpi * gpGG * muq - b0 * fpi * gpdd * vh +
-                    b0 * fpi * gpuu * vh)**2 *
-                   (mpi**2 * MDot(k, p1)**2 + mpi**2 * MDot(k, p2)**2 -
-                    2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)) *
-                   (mx**2 + MDot(px, pxbar))) /
-                 (9. * fpi**4 * vh**2 * MDot(k, p1)**2 * MDot(k, p2)**2 *
-                  ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 + mp**2 * widthp**2 -
-                   4 * (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(k, p1) -
-                        MDot(k, p2) - MDot(k, p3) - MDot(p1, p2) -
-                        MDot(p1, p3) - MDot(p2, p3)) *
-                   (MDot(k, p1) + MDot(k, p2) + MDot(k, p3) +
-                    MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3)))))
+        beta0 = -(
+            gpxx ** 2
+            * qe ** 2
+            * (
+                -(b0 * fpi * gpGG * mdq)
+                + b0 * fpi * gpGG * muq
+                - b0 * fpi * gpdd * vh
+                + b0 * fpi * gpuu * vh
+            )
+            ** 2
+            * (
+                mpi ** 2 * MDot(k, p1) ** 2
+                + mpi ** 2 * MDot(k, p2) ** 2
+                - 2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * MDot(k, p1) ** 2
+            * MDot(k, p2) ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(k, p1)
+                    - MDot(k, p2)
+                    - MDot(k, p3)
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (
+                    MDot(k, p1)
+                    + MDot(k, p2)
+                    + MDot(k, p3)
+                    + MDot(p1, p2)
+                    + MDot(p1, p3)
+                    + MDot(p2, p3)
+                )
+            )
+        )
 
-        beta1 = (-2 * beta * gpxx**2 * qe**2 *
-                 (-(b0 * fpi * gpGG * mdq) +
-                  b0 * fpi * gpGG * muq - b0 * fpi * gpdd * vh +
-                  b0 * fpi * gpuu * vh) *
-                 (mpi**2 * MDot(k, p1)**2 + mpi**2 * MDot(k, p2)**2 -
-                  2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)) *
-                 (b0 * mdq * vh + 2 * mpi**2 * vh -
-                  2 * mpi0**2 * vh + b0 * muq * vh + 4 * vh * MDot(k, p1) +
-                  4 * vh * MDot(k, p2) - 2 *
-                  vh * MDot(k, p3) + 4 * vh * MDot(p1, p2) -
-                  2 * vh * MDot(p1, p3) - 2 * vh * MDot(p2, p3)) *
-                 (mx**2 + MDot(px, pxbar))
-                 ) / \
-            (9. * fpi**4 * vh**2 * MDot(k, p1)**2 * MDot(k, p2)**2 *
-             ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 + mp**2 * widthp**2 -
-              4 * (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(k, p1) -
-                   MDot(k, p2) - MDot(k, p3) - MDot(p1, p2) -
-                   MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(k, p1) + MDot(k, p2) + MDot(k, p3) + MDot(p1, p2) +
-               MDot(p1, p3) + MDot(p2, p3))))
+        beta1 = (
+            -2
+            * beta
+            * gpxx ** 2
+            * qe ** 2
+            * (
+                -(b0 * fpi * gpGG * mdq)
+                + b0 * fpi * gpGG * muq
+                - b0 * fpi * gpdd * vh
+                + b0 * fpi * gpuu * vh
+            )
+            * (
+                mpi ** 2 * MDot(k, p1) ** 2
+                + mpi ** 2 * MDot(k, p2) ** 2
+                - 2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)
+            )
+            * (
+                b0 * mdq * vh
+                + 2 * mpi ** 2 * vh
+                - 2 * mpi0 ** 2 * vh
+                + b0 * muq * vh
+                + 4 * vh * MDot(k, p1)
+                + 4 * vh * MDot(k, p2)
+                - 2 * vh * MDot(k, p3)
+                + 4 * vh * MDot(p1, p2)
+                - 2 * vh * MDot(p1, p3)
+                - 2 * vh * MDot(p2, p3)
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * MDot(k, p1) ** 2
+            * MDot(k, p2) ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(k, p1)
+                    - MDot(k, p2)
+                    - MDot(k, p3)
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (
+                    MDot(k, p1)
+                    + MDot(k, p2)
+                    + MDot(k, p3)
+                    + MDot(p1, p2)
+                    + MDot(p1, p3)
+                    + MDot(p2, p3)
+                )
+            )
+        )
 
-        beta2 = (beta**2 * gpxx**2 * qe**2 *
-                 (mpi**2 * MDot(k, p1)**2 + mpi**2 * MDot(k, p2)**2 -
-                  2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)) *
-                 (-2 * (2 * b0 * fpi * gpGG * mdq - 2 * b0 * fpi * gpGG * muq +
-                        2 * b0 * fpi * gpdd * vh -
-                        2 * b0 * fpi * gpuu * vh) *
-                  (-(b0 * fpi * gpGG * mdq) +
-                   b0 * fpi * gpGG * muq -
-                   b0 * fpi * gpdd * vh + b0 * fpi * gpuu * vh) +
-                  (-(b0 * fpi * gpGG * mdq) + b0 * fpi * gpGG * muq -
-                   b0 * fpi * gpdd * vh + b0 * fpi * gpuu * vh)**2 -
-                  (b0 * mdq * vh + 2 * mpi**2 * vh -
-                   2 * mpi0**2 * vh + b0 * muq * vh + 4 * vh * MDot(k, p1) +
-                   4 * vh * MDot(k, p2) - 2 * vh * MDot(k, p3) +
-                   4 * vh * MDot(p1, p2) - 2 * vh * MDot(p1, p3) -
-                   2 * vh * MDot(p2, p3))**2) *
-                 (mx**2 + MDot(px, pxbar))) / \
-            (9. * fpi**4 * vh**2 * MDot(k, p1)**2 * MDot(k, p2)**2 *
-             ((-mp**2 + 2 * mpi**2 + mpi0**2)**2 + mp**2 * widthp**2 -
-              4 * (mp**2 - 2 * mpi**2 - mpi0**2 - MDot(k, p1) -
-                   MDot(k, p2) - MDot(k, p3) - MDot(p1, p2) -
-                   MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(k, p1) + MDot(k, p2) + MDot(k, p3) + MDot(p1, p2) +
-               MDot(p1, p3) + MDot(p2, p3))))
+        beta2 = (
+            beta ** 2
+            * gpxx ** 2
+            * qe ** 2
+            * (
+                mpi ** 2 * MDot(k, p1) ** 2
+                + mpi ** 2 * MDot(k, p2) ** 2
+                - 2 * MDot(k, p1) * MDot(k, p2) * MDot(p1, p2)
+            )
+            * (
+                -2
+                * (
+                    2 * b0 * fpi * gpGG * mdq
+                    - 2 * b0 * fpi * gpGG * muq
+                    + 2 * b0 * fpi * gpdd * vh
+                    - 2 * b0 * fpi * gpuu * vh
+                )
+                * (
+                    -(b0 * fpi * gpGG * mdq)
+                    + b0 * fpi * gpGG * muq
+                    - b0 * fpi * gpdd * vh
+                    + b0 * fpi * gpuu * vh
+                )
+                + (
+                    -(b0 * fpi * gpGG * mdq)
+                    + b0 * fpi * gpGG * muq
+                    - b0 * fpi * gpdd * vh
+                    + b0 * fpi * gpuu * vh
+                )
+                ** 2
+                - (
+                    b0 * mdq * vh
+                    + 2 * mpi ** 2 * vh
+                    - 2 * mpi0 ** 2 * vh
+                    + b0 * muq * vh
+                    + 4 * vh * MDot(k, p1)
+                    + 4 * vh * MDot(k, p2)
+                    - 2 * vh * MDot(k, p3)
+                    + 4 * vh * MDot(p1, p2)
+                    - 2 * vh * MDot(p1, p3)
+                    - 2 * vh * MDot(p2, p3)
+                )
+                ** 2
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            9.0
+            * fpi ** 4
+            * vh ** 2
+            * MDot(k, p1) ** 2
+            * MDot(k, p2) ** 2
+            * (
+                (-mp ** 2 + 2 * mpi ** 2 + mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (
+                    mp ** 2
+                    - 2 * mpi ** 2
+                    - mpi0 ** 2
+                    - MDot(k, p1)
+                    - MDot(k, p2)
+                    - MDot(k, p3)
+                    - MDot(p1, p2)
+                    - MDot(p1, p3)
+                    - MDot(p2, p3)
+                )
+                * (
+                    MDot(k, p1)
+                    + MDot(k, p2)
+                    + MDot(k, p3)
+                    + MDot(p1, p2)
+                    + MDot(p1, p3)
+                    + MDot(p2, p3)
+                )
+            )
+        )
 
         return beta0 + beta1 + beta2
 
@@ -241,45 +447,89 @@ class PseudoScalarMediatorMSqrdRambo:
 
         P = sum(momenta)
 
-        pxmag = np.sqrt(P[0]**2 / 4. - mx**2)
+        pxmag = np.sqrt(P[0] ** 2 / 4.0 - mx ** 2)
 
-        px = np.array([P[0] / 2., 0., 0., pxmag])
-        pxbar = np.array([P[0] / 2., 0., 0., -pxmag])
+        px = np.array([P[0] / 2.0, 0.0, 0.0, pxmag])
+        pxbar = np.array([P[0] / 2.0, 0.0, 0.0, -pxmag])
 
-        beta0 = (b0**2 * gpxx**2 *
-                 (fpi * gpGG * mdq -
-                  fpi * gpGG * muq + fpi * gpdd * vh - fpi * gpuu * vh)**2 *
-                 (mx**2 + MDot(px, pxbar))) / \
-            (fpi**4 * vh**2 *
-             ((mp**2 - 3 * mpi0**2)**2 + mp**2 * widthp**2 -
-              4 * (mp**2 - 3 * mpi0**2 -
-                   MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta0 = (
+            b0 ** 2
+            * gpxx ** 2
+            * (fpi * gpGG * mdq - fpi * gpGG * muq + fpi * gpdd * vh - fpi * gpuu * vh)
+            ** 2
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            fpi ** 4
+            * vh ** 2
+            * (
+                (mp ** 2 - 3 * mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (mp ** 2 - 3 * mpi0 ** 2 - MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3))
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
-        beta1 = (-2 * b0**2 * beta * gpxx**2 *
-                 (fpi * gpGG * mdq - fpi * gpGG * muq + fpi * gpdd * vh -
-                  fpi * gpuu * vh) * (mdq * vh + muq * vh) *
-                 (mx**2 + MDot(px, pxbar))) /\
-            (fpi**4 * vh**2 *
-             ((mp**2 - 3 * mpi0**2)**2 + mp**2 * widthp**2 -
-              4 * (mp**2 - 3 * mpi0**2 -
-                   MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta1 = (
+            -2
+            * b0 ** 2
+            * beta
+            * gpxx ** 2
+            * (fpi * gpGG * mdq - fpi * gpGG * muq + fpi * gpdd * vh - fpi * gpuu * vh)
+            * (mdq * vh + muq * vh)
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            fpi ** 4
+            * vh ** 2
+            * (
+                (mp ** 2 - 3 * mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (mp ** 2 - 3 * mpi0 ** 2 - MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3))
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
-        beta2 = (b0**2 * beta**2 * gpxx**2 *
-                 (-3 * (fpi * gpGG * mdq - fpi * gpGG * muq +
-                        fpi * gpdd * vh - fpi * gpuu * vh)**2 +
-                  2 * (fpi * gpGG * mdq - fpi * gpGG * muq + fpi * gpdd * vh -
-                       fpi * gpuu * vh) *
-                  (-4 * fpi * gpGG * mdq +
-                   4 * fpi * gpGG * muq - 4 * fpi * gpdd * vh +
-                   4 * fpi * gpuu * vh) + (-(mdq * vh) - muq * vh)**2) *
-                 (mx**2 + MDot(px, pxbar))) / \
-            (fpi**4 * vh**2 *
-             ((mp**2 - 3 * mpi0**2)**2 + mp**2 * widthp**2 -
-              4 * (mp**2 - 3 * mpi0**2 -
-                   MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3)) *
-              (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))))
+        beta2 = (
+            b0 ** 2
+            * beta ** 2
+            * gpxx ** 2
+            * (
+                -3
+                * (
+                    fpi * gpGG * mdq
+                    - fpi * gpGG * muq
+                    + fpi * gpdd * vh
+                    - fpi * gpuu * vh
+                )
+                ** 2
+                + 2
+                * (
+                    fpi * gpGG * mdq
+                    - fpi * gpGG * muq
+                    + fpi * gpdd * vh
+                    - fpi * gpuu * vh
+                )
+                * (
+                    -4 * fpi * gpGG * mdq
+                    + 4 * fpi * gpGG * muq
+                    - 4 * fpi * gpdd * vh
+                    + 4 * fpi * gpuu * vh
+                )
+                + (-(mdq * vh) - muq * vh) ** 2
+            )
+            * (mx ** 2 + MDot(px, pxbar))
+        ) / (
+            fpi ** 4
+            * vh ** 2
+            * (
+                (mp ** 2 - 3 * mpi0 ** 2) ** 2
+                + mp ** 2 * widthp ** 2
+                - 4
+                * (mp ** 2 - 3 * mpi0 ** 2 - MDot(p1, p2) - MDot(p1, p3) - MDot(p2, p3))
+                * (MDot(p1, p2) + MDot(p1, p3) + MDot(p2, p3))
+            )
+        )
 
         msqrd = beta0 + beta1 + beta2
 

@@ -1,4 +1,3 @@
-
 class BackgroundModel(object):
     """
     Represents a gamma ray background model, which is required for computing

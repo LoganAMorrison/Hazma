@@ -77,6 +77,7 @@ class TargetParams:
     dOmega : float
         Angular size in sr
     """
+
     def __init__(self, J, dOmega):
         self.J = J
         self.dOmega = dOmega
@@ -99,7 +100,9 @@ gc_bg_model = BackgroundModel(gc_bg_e_range, gc_bg_flux_fn)
 gc_target = TargetParams(1.795e29, solid_angle(10.0, 0.0, 10.0))
 
 # # # Effective areas, cm^2
-A_eff_e_astrogam = load_interp(A_eff_e_astrogam_rf)  #: e-ASTROGAM effective area function
+A_eff_e_astrogam = load_interp(
+    A_eff_e_astrogam_rf
+)  #: e-ASTROGAM effective area function
 A_eff_fermi = load_interp(A_eff_fermi_rf)  #: Fermi-LAT effective area function
 A_eff_comptel = load_interp(A_eff_comptel_rf)  #: COMPTEL effective area function
 A_eff_egret = load_interp(A_eff_egret_rf)  #: EGRET effective area function

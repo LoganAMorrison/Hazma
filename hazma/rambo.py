@@ -19,8 +19,7 @@ import warnings
 
 from hazma.hazma_errors import RamboCMETooSmall
 
-from hazma.field_theory_helper_functions.common_functions import \
-    cross_section_prefactor
+from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
 
 
 def generate_phase_space_point(masses, cme):
@@ -52,8 +51,9 @@ def generate_phase_space_point(masses, cme):
     return generator.generate_point(masses, cme, len(masses))
 
 
-def generate_phase_space(masses, cme, num_ps_pts=10000,
-                         mat_elem_sqrd=lambda klist: 1, num_cpus=None):
+def generate_phase_space(
+    masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda klist: 1, num_cpus=None
+):
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -109,9 +109,13 @@ def generate_phase_space(masses, cme, num_ps_pts=10000,
             num_cpus = num_ps_pts
         if num_cpus > mp.cpu_count():
             num_cpus = int(np.floor(mp.cpu_count() * 0.75))
-            warnings.warn("""You only have {] cpus.
+            warnings.warn(
+                """You only have {] cpus.
                           Using {] cpus instead.
-                          """.format(mp.cpu_count(), num_cpus))
+                          """.format(
+                    mp.cpu_count(), num_cpus
+                )
+            )
     if num_cpus is None:
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))
@@ -130,9 +134,11 @@ def generate_phase_space(masses, cme, num_ps_pts=10000,
     job_results = []
     # Run the jobs on 75% of the cpus.
     for i in range(num_cpus):
-        job_results.append(pool.apply_async(generator.generate_space,
-                                            (num_ps_pts_per_cpu,
-                                             masses, cme, num_fsp)))
+        job_results.append(
+            pool.apply_async(
+                generator.generate_space, (num_ps_pts_per_cpu, masses, cme, num_fsp)
+            )
+        )
     # Close the pool and wait for results to finish
     pool.close()
     pool.join()
@@ -141,15 +147,20 @@ def generate_phase_space(masses, cme, num_ps_pts=10000,
     # Flatten the outer axis to have a list of phase space points.
     points = points.reshape(actual_num_ps_pts, 4 * num_fsp + 1)
     # Resize the weights to have the correct cross section.
-    points = apply_matrix_elem(
-        points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
+    points = apply_matrix_elem(points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
 
     return points
 
 
-def generate_energy_histogram(masses, cme, num_ps_pts=10000,
-                              mat_elem_sqrd=lambda klist: 1, num_bins=25,
-                              num_cpus=None, density=False):
+def generate_energy_histogram(
+    masses,
+    cme,
+    num_ps_pts=10000,
+    mat_elem_sqrd=lambda klist: 1,
+    num_bins=25,
+    num_cpus=None,
+    density=False,
+):
     """
     Generate energy histograms for each of the final state particles.
 
@@ -214,15 +225,14 @@ def generate_energy_histogram(masses, cme, num_ps_pts=10000,
 
     actual_num_ps_pts = pts.shape[0]
 
-    return histogram.space_to_energy_hist(pts, actual_num_ps_pts,
-                                          num_fsp, num_bins,
-                                          density=density)
+    return histogram.space_to_energy_hist(
+        pts, actual_num_ps_pts, num_fsp, num_bins, density=density
+    )
 
 
-def integrate_over_phase_space(fsp_masses, cme,
-                               num_ps_pts=10000,
-                               mat_elem_sqrd=lambda momenta: 1,
-                               num_cpus=None):
+def integrate_over_phase_space(
+    fsp_masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda momenta: 1, num_cpus=None
+):
     """
     Returns the integral over phase space given a squared matrix element, a
     set of final state particle masses and a given energy.
@@ -265,10 +275,14 @@ def integrate_over_phase_space(fsp_masses, cme,
     return integral, std
 
 
-def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
-                                       num_ps_pts=10000,
-                                       mat_elem_sqrd=lambda momenta: 1,
-                                       num_cpus=None):
+def compute_annihilation_cross_section(
+    isp_masses,
+    fsp_masses,
+    cme,
+    num_ps_pts=10000,
+    mat_elem_sqrd=lambda momenta: 1,
+    num_cpus=None,
+):
     """
     Computes the cross section for a given process.
 
@@ -334,10 +348,13 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
             isp_masses, fsp_masses, cme, num_ps_pts=5000, mat_elem_sqrd=msqrd)
 
     """
-    integral, std = integrate_over_phase_space(fsp_masses, cme,
-                                               num_ps_pts=num_ps_pts,
-                                               mat_elem_sqrd=mat_elem_sqrd,
-                                               num_cpus=num_cpus)
+    integral, std = integrate_over_phase_space(
+        fsp_masses,
+        cme,
+        num_ps_pts=num_ps_pts,
+        mat_elem_sqrd=mat_elem_sqrd,
+        num_cpus=num_cpus,
+    )
 
     m1 = isp_masses[0]
     m2 = isp_masses[1]
@@ -348,10 +365,9 @@ def compute_annihilation_cross_section(isp_masses, fsp_masses, cme,
     return cross_section, error
 
 
-def compute_decay_width(fsp_masses, cme,
-                        num_ps_pts=10000,
-                        mat_elem_sqrd=lambda momenta: 1,
-                        num_cpus=None):
+def compute_decay_width(
+    fsp_masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda momenta: 1, num_cpus=None
+):
     r"""
     Computes the decay width for a given process.
 
@@ -406,10 +422,13 @@ def compute_decay_width(fsp_masses, cme,
         cme = mmu
         compute_decay_width(fsp_masses, cme, mat_elem_sqrd=msqrd)
     """
-    integral, std = integrate_over_phase_space(fsp_masses, cme,
-                                               num_ps_pts=num_ps_pts,
-                                               mat_elem_sqrd=mat_elem_sqrd,
-                                               num_cpus=num_cpus)
+    integral, std = integrate_over_phase_space(
+        fsp_masses,
+        cme,
+        num_ps_pts=num_ps_pts,
+        mat_elem_sqrd=mat_elem_sqrd,
+        num_cpus=num_cpus,
+    )
 
     cross_section = integral / (2.0 * cme)
     error = std / (2.0 * cme)

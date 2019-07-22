@@ -2,7 +2,6 @@ import numpy as np
 
 
 class VectorMediatorPositronSpectra:
-
     def positron_spectra(self, eng_ps, cme):
         """Computes total continuum positron spectrum.
         """

@@ -12,31 +12,34 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
 
-master_doc = 'index'
+sys.path.insert(0, os.path.abspath("../.."))
+
+master_doc = "index"
 
 # -- Project information -----------------------------------------------------
 
-project = 'Hazma'
-copyright = '2019, Adam Coogan and Logan Morrison'
-author = 'Adam Coogan and Logan Morrison'
+project = "Hazma"
+copyright = "2019, Adam Coogan and Logan Morrison"
+author = "Adam Coogan and Logan Morrison"
 
 # The full version, including alpha/beta/rc tags
-release = '1.0'
+release = "1.0"
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.linkcode',
-              'sphinx.ext.mathjax']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.linkcode",
+    "sphinx.ext.mathjax",
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -45,11 +48,11 @@ exclude_patterns = []
 
 
 def linkcode_resolve(domain, info):
-    if domain != 'py':
+    if domain != "py":
         return None
-    if not info['module']:
+    if not info["module"]:
         return None
-    filename = info['module'].replace('.', '/')
+    filename = info["module"].replace(".", "/")
     return "https://github.com/LoganAMorrison/Hazma/tree/master/%s.py" % filename
 
 
@@ -63,23 +66,23 @@ html_theme = "sphinx_rtd_theme"
 html_logo = "_static/img/hazma_logo_large.png"
 
 html_theme_options = {
-    'canonical_url': '',
-    'analytics_id': 'UA-XXXXXXX-1',  # Provided by Google in your dashboard
-    'logo_only': False,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': False,
+    "canonical_url": "",
+    "analytics_id": "UA-XXXXXXX-1",  # Provided by Google in your dashboard
+    "logo_only": False,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
     # 'vcs_pageview_mode': '',
-    'style_nav_header_background': 'white',
+    "style_nav_header_background": "white",
     # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]

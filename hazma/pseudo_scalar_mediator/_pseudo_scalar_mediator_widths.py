@@ -19,9 +19,12 @@ class PseudoScalarMediatorWidths:
         gpFF = self.gpFF
         mp = self.mp
 
-        ret = (-(alpha_em**2 * mp**3 * ((1 + beta) * fpi * gpFF - beta * vh) *
-                 ((-1 + beta) * fpi * gpFF + beta * vh)) /
-               (128. * fpi**2 * np.pi**3 * vh**2))
+        ret = -(
+            alpha_em ** 2
+            * mp ** 3
+            * ((1 + beta) * fpi * gpFF - beta * vh)
+            * ((-1 + beta) * fpi * gpFF + beta * vh)
+        ) / (128.0 * fpi ** 2 * np.pi ** 3 * vh ** 2)
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -32,16 +35,17 @@ class PseudoScalarMediatorWidths:
         mp = self.mp
         rx = self.mx / mp
 
-        if 2. * rx < 1:
-            ret = -((-1 + self.beta**2) * self.gpxx**2 * mp *
-                    np.sqrt(1 - 4 * rx**2)) / (32. * np.pi)
+        if 2.0 * rx < 1:
+            ret = -(
+                (-1 + self.beta ** 2) * self.gpxx ** 2 * mp * np.sqrt(1 - 4 * rx ** 2)
+            ) / (32.0 * np.pi)
 
             assert ret.imag == 0
             assert ret.real >= 0
 
             return ret.real
         else:
-            return 0.
+            return 0.0
 
     def width_p_to_ff(self, f):
         mp = self.mp
@@ -53,43 +57,54 @@ class PseudoScalarMediatorWidths:
             rf = mmu / mp
             gpff = self.gpmumu
 
-        if 2. * rf < 1:
-            ret = (-((-1 + self.beta**2) * gpff**2 * mp *
-                     np.sqrt(1 - 4 * rf**2)) / (8. * np.pi))
+        if 2.0 * rf < 1:
+            ret = -(
+                (-1 + self.beta ** 2) * gpff ** 2 * mp * np.sqrt(1 - 4 * rf ** 2)
+            ) / (8.0 * np.pi)
 
             assert ret.imag == 0
             assert ret.real >= 0
 
             return ret.real
         else:
-            return 0.
+            return 0.0
 
     def dwidth_ds_p_to_pi0pi0pi0(self, s):
         mp = self.mp
         mpi0 = self.mpi0  # use shifted pion mass!
 
-        if mp >= 3. * mpi0:
+        if mp >= 3.0 * mpi0:
             gpuu = self.gpuu
             gpdd = self.gpdd
             gpGG = self.gpGG
             beta = self.beta
 
-            ret = (-(b0**2 * np.sqrt(s * (-4 * mpi0**2 + s)) *
-                     np.sqrt(mp**4 + (mpi0**2 - s)**2 - 2 * mp**2 *
-                             (mpi0**2 + s)) *
-                     (-(beta**2 * (mdq + muq)**2 * vh**2) +
-                      2 * beta * fpi * (mdq + muq) * vh *
-                      (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) +
-                      (-1 + 10 * beta**2) * fpi**2 *
-                      (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)**2)) /
-                   (256. * fpi**4 * mp**3 * np.pi**3 * s * vh**2))
+            ret = -(
+                b0 ** 2
+                * np.sqrt(s * (-4 * mpi0 ** 2 + s))
+                * np.sqrt(
+                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
+                )
+                * (
+                    -(beta ** 2 * (mdq + muq) ** 2 * vh ** 2)
+                    + 2
+                    * beta
+                    * fpi
+                    * (mdq + muq)
+                    * vh
+                    * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
+                    + (-1 + 10 * beta ** 2)
+                    * fpi ** 2
+                    * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
+                )
+            ) / (256.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
 
             assert ret.imag == 0
             assert ret.real >= 0
 
             return ret
         else:
-            return 0.
+            return 0.0
 
     def width_p_to_pi0pi0pi0(self):
         """
@@ -111,8 +126,8 @@ class PseudoScalarMediatorWidths:
         mp = self.mp
         mpi0 = self.mpi0  # use shifted pion mass!
 
-        smax = (mp - mpi0)**2
-        smin = 4. * mpi0**2
+        smax = (mp - mpi0) ** 2
+        smin = 4.0 * mpi0 ** 2
 
         res = quad(self.dwidth_ds_p_to_pi0pi0pi0, smin, smax)
 
@@ -122,50 +137,82 @@ class PseudoScalarMediatorWidths:
         mp = self.mp
         mpi0 = self.mpi0  # use shifted pion mass!
 
-        if mp >= 2. * mpi + mpi0:
+        if mp >= 2.0 * mpi + mpi0:
             gpuu = self.gpuu
             gpdd = self.gpdd
             gpGG = self.gpGG
             beta = self.beta
 
-            ret = ((np.sqrt(s * (-4 * mpi**2 + s)) *
-                    np.sqrt(mp**4 + (mpi0**2 - s)**2 -
-                            2 * mp**2 * (mpi0**2 + s)) *
-                    (beta**2 * (2 * mpi**2 + mpi0 - 3 * s)**2 * vh**2 +
-                     2 * b0 * beta * (2 * mpi**2 + mpi0 - 3 * s) * vh *
-                     (-(beta * (mdq + muq) * vh) + fpi *
-                      (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)) +
-                     b0**2 * (beta**2 * (mdq + muq)**2 * vh**2 -
-                              2 * beta * fpi * (mdq + muq) * vh *
-                              (gpGG * (mdq - muq) +
-                               (gpdd - gpuu) * vh) -
-                              (-1 + 4 * beta**2) * fpi**2 *
-                              (gpGG * (mdq - muq) +
-                               (gpdd - gpuu) * vh)**2))) /
-                   (2304. * fpi**4 * mp**3 * np.pi**3 * s * vh**2))
+            ret = (
+                np.sqrt(s * (-4 * mpi ** 2 + s))
+                * np.sqrt(
+                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
+                )
+                * (
+                    beta ** 2 * (2 * mpi ** 2 + mpi0 - 3 * s) ** 2 * vh ** 2
+                    + 2
+                    * b0
+                    * beta
+                    * (2 * mpi ** 2 + mpi0 - 3 * s)
+                    * vh
+                    * (
+                        -(beta * (mdq + muq) * vh)
+                        + fpi * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
+                    )
+                    + b0 ** 2
+                    * (
+                        beta ** 2 * (mdq + muq) ** 2 * vh ** 2
+                        - 2
+                        * beta
+                        * fpi
+                        * (mdq + muq)
+                        * vh
+                        * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
+                        - (-1 + 4 * beta ** 2)
+                        * fpi ** 2
+                        * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
+                    )
+                )
+            ) / (2304.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
 
-            ret = (np.sqrt(s * (-4 * mpi**2 + s)) *
-                   np.sqrt(mp**4 + (mpi0**2 - s)**2 -
-                           2 * mp**2 * (mpi0**2 + s)) *
-                   (beta**2 * (2 * mpi**2 + mpi0**2 - 3 * s)**2 * vh**2 +
-                    2 * b0 * beta * (2 * mpi**2 + mpi0**2 - 3 * s) * vh *
-                    (-(beta * (mdq + muq) * vh) + fpi * (gpGG * (mdq - muq) +
-                                                         (gpdd - gpuu) * vh)) +
-                    b0**2 * (beta**2 * (mdq + muq)**2 * vh**2 -
-                             2 * beta * fpi * (mdq + muq) * vh *
-                             (gpGG * (mdq - muq) +
-                              (gpdd - gpuu) * vh) -
-                             (-1 + 4 * beta**2) * fpi**2 *
-                             (gpGG * (mdq - muq) +
-                              (gpdd - gpuu) * vh)**2))) / \
-                (2304. * fpi**4 * mp**3 * np.pi**3 * s * vh**2)
+            ret = (
+                np.sqrt(s * (-4 * mpi ** 2 + s))
+                * np.sqrt(
+                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
+                )
+                * (
+                    beta ** 2 * (2 * mpi ** 2 + mpi0 ** 2 - 3 * s) ** 2 * vh ** 2
+                    + 2
+                    * b0
+                    * beta
+                    * (2 * mpi ** 2 + mpi0 ** 2 - 3 * s)
+                    * vh
+                    * (
+                        -(beta * (mdq + muq) * vh)
+                        + fpi * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
+                    )
+                    + b0 ** 2
+                    * (
+                        beta ** 2 * (mdq + muq) ** 2 * vh ** 2
+                        - 2
+                        * beta
+                        * fpi
+                        * (mdq + muq)
+                        * vh
+                        * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
+                        - (-1 + 4 * beta ** 2)
+                        * fpi ** 2
+                        * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
+                    )
+                )
+            ) / (2304.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
 
             assert ret.imag == 0
             assert ret.real >= 0
 
             return ret
         else:
-            return 0.
+            return 0.0
 
     def width_p_to_pi0pipi(self):
         """
@@ -187,8 +234,8 @@ class PseudoScalarMediatorWidths:
         mp = self.mp
         mpi0 = self.mpi0  # use shifted pion mass!
 
-        smax = (mp - mpi0)**2
-        smin = 4. * mpi**2
+        smax = (mp - mpi0) ** 2
+        smin = 4.0 * mpi ** 2
 
         res = quad(self.dwidth_ds_p_to_pi0pipi, smin, smax)
 
@@ -208,20 +255,22 @@ class PseudoScalarMediatorWidths:
         w_gg = self.width_p_to_gg()
         w_xx = self.width_p_to_xx()
 
-        w_ee = self.width_p_to_ff('e')
-        w_mumu = self.width_p_to_ff('mu')
+        w_ee = self.width_p_to_ff("e")
+        w_mumu = self.width_p_to_ff("mu")
 
         w_pi0pipi = self.width_p_to_pi0pipi()
         w_pi0pi0pi0 = self.width_p_to_pi0pi0pi0()
 
         total = w_gg + w_xx + w_ee + w_mumu + w_pi0pipi + w_pi0pi0pi0
 
-        width_dict = {'g g': w_gg,
-                      'x x': w_xx,
-                      'e e': w_ee,
-                      'mu mu': w_mumu,
-                      'pi0 pi pi': w_pi0pipi,
-                      'pi0 pi0 pi0': w_pi0pi0pi0,
-                      'total': total}
+        width_dict = {
+            "g g": w_gg,
+            "x x": w_xx,
+            "e e": w_ee,
+            "mu mu": w_mumu,
+            "pi0 pi pi": w_pi0pipi,
+            "pi0 pi0 pi0": w_pi0pi0pi0,
+            "total": total,
+        }
 
         return width_dict

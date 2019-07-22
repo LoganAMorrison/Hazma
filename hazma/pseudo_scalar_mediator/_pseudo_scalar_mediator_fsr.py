@@ -38,25 +38,45 @@ class PseudoScalarMediatorFSR:
         """
         e, m = egam / Q, mf / Q
 
-        s = Q**2 - 2. * Q * egam
+        s = Q ** 2 - 2.0 * Q * egam
 
         ret_val = 0.0
 
-        if 4. * mf**2 <= s <= Q**2:
-            ret_val = (2. * alpha_em *
-                       (-sqrt((-1. + 2. * e) * (-1. + 2. * e + 4. * m**2)) +
-                        (2. + 4. * (-1. + e) * e) * log(m) +
-                           m**2 * (2. * log(sqrt(1. - 2. * e) -
-                                            sqrt(1. - 2. * e - 4. * m**2)) -
-                                   log(2. * (1. - 2. * e - 2. * m**2 +
-                                             sqrt((-1. + 2. * e) *
-                                                  (-1. + 2. * e + 4. *
-                                                   m**2))))) +
-                           (1. + 2. * (-1. + e) * e) *
-                           log(-2. / (-1. + 2. * e + 2. * m**2 +
-                                      sqrt((-1. + 2. * e) *
-                                           (-1. + 2. * e + 4. * m**2)))))) / \
-                (e * sqrt(1. - 4. * m**2) * pi * Q)
+        if 4.0 * mf ** 2 <= s <= Q ** 2:
+            ret_val = (
+                2.0
+                * alpha_em
+                * (
+                    -sqrt((-1.0 + 2.0 * e) * (-1.0 + 2.0 * e + 4.0 * m ** 2))
+                    + (2.0 + 4.0 * (-1.0 + e) * e) * log(m)
+                    + m ** 2
+                    * (
+                        2.0
+                        * log(sqrt(1.0 - 2.0 * e) - sqrt(1.0 - 2.0 * e - 4.0 * m ** 2))
+                        - log(
+                            2.0
+                            * (
+                                1.0
+                                - 2.0 * e
+                                - 2.0 * m ** 2
+                                + sqrt(
+                                    (-1.0 + 2.0 * e) * (-1.0 + 2.0 * e + 4.0 * m ** 2)
+                                )
+                            )
+                        )
+                    )
+                    + (1.0 + 2.0 * (-1.0 + e) * e)
+                    * log(
+                        -2.0
+                        / (
+                            -1.0
+                            + 2.0 * e
+                            + 2.0 * m ** 2
+                            + sqrt((-1.0 + 2.0 * e) * (-1.0 + 2.0 * e + 4.0 * m ** 2))
+                        )
+                    )
+                )
+            ) / (e * sqrt(1.0 - 4.0 * m ** 2) * pi * Q)
 
             assert ret_val.imag == 0.0
 
@@ -88,8 +108,7 @@ class PseudoScalarMediatorFSR:
         spec_val : float
             Spectrum value dNdE from pseudo-scalar mediator.
         """
-        if hasattr(egam, '__len__'):
-            return np.array([self.__dnde_xx_to_p_to_ffg(e, Q, mf)
-                             for e in egam])
+        if hasattr(egam, "__len__"):
+            return np.array([self.__dnde_xx_to_p_to_ffg(e, Q, mf) for e in egam])
         else:
             return self.__dnde_xx_to_p_to_ffg(egam, Q, mf)
