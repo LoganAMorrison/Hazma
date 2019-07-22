@@ -1,4 +1,4 @@
-![Logo](docs/source/_images/hazma_logo.png)
+![Logo](docs/source/_static/img/hazma_logo_large.png)
 
 
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
