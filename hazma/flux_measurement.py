@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class FluxMeasurement(object):
+class FluxMeasurement:
     """
     Container for all information about a completed gamma ray analysis.
 

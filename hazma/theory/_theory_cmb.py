@@ -5,7 +5,7 @@ from hazma.cmb import vx_cmb, f_eff_g, f_eff_ep, p_ann_planck_temp_pol
 import numpy as np
 
 
-class TheoryCMB(object):
+class TheoryCMB:
     def cmb_limit(self, x_kd=1.0e-4, p_ann=p_ann_planck_temp_pol):
         r"""
         Computes the CMB limit on <sigma v>.

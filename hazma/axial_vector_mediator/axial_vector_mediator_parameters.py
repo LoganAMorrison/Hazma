@@ -1,4 +1,4 @@
-class AxialVectorMediatorParameters(object):
+class AxialVectorMediatorParameters:
     def __init__(self, mx, ma, gaxx, gaff):
         self._mx = mx
         self._ma = ma

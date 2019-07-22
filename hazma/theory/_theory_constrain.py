@@ -4,7 +4,7 @@ from skimage import measure
 import numpy as np
 
 
-class TheoryConstrain(object):
+class TheoryConstrain:
     def custom_constrain(self, param_grid, ls_or_img="image"):
         """Computes constraints over grid of parameter values.
 

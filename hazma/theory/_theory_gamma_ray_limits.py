@@ -3,7 +3,7 @@ from scipy import optimize
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 
-class TheoryGammaRayLimits(object):
+class TheoryGammaRayLimits:
     def __get_product_spline(self, f1, f2, grid, k=1, ext="raise"):
         """Returns a spline representing the product of two functions.
 

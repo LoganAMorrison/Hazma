@@ -165,7 +165,7 @@ def gamma_ray_fsr(
         from hazma.parameters import qe # electric charge
         from hazma.field_theory_helper_functions.common_functions \
             import minkowski_dot as MDot
-        class Msqrds(object):
+        class Msqrds:
             def __init__(self, mx, c1, lam):
                 self.mx = mx
                 self.c1 = c1
