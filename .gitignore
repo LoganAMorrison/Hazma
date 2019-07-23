@@ -15,6 +15,7 @@ hazma.egg-info
 *.blg
 *.fdb_latexmk
 *.fls
+*.latexmkrc
 *.log
 *.out
 *.pdf\*
