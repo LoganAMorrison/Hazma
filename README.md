@@ -2,7 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
 [![Documentation Status](https://readthedocs.org/projects/hazma/badge/?version=latest)](https://hazma.readthedocs.io/en/latest/?badge=latest)
-
+[![DOI](https://zenodo.org/badge/113697781.svg)](https://zenodo.org/badge/latestdoi/113697781)
 
 # Hazma
 
