@@ -198,7 +198,7 @@ setup(
         "numpy>=1.13.3",
         "cython>=0.27.3",
         "numpydoc>=0.7.0",
-        "scikit-image<0.15",
+        "scikit-image>=0.14",
         "setuptools>=27.3",
         "flake8>=3.5.0",
     ],
