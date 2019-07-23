@@ -1,9 +1,9 @@
 ![Logo](docs/source/_images/hazma_logo.png)
 
-
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
-
 [![Build Status](https://travis-ci.org/LoganAMorrison/Hazma.svg?branch=master)](https://travis-ci.org/LoganAMorrison/Hazma)
+[![Documentation Status](https://readthedocs.org/projects/pip/badge/?version=stable)](http://pip.pypa.io/en/stable/?badge=stable)
+
 
 # Hazma
 
@@ -11,9 +11,9 @@
 
 ## Installation
 
-`hazma` is currently still in development. If you would like to try it anyways, you can install it using the command:
+`hazma` can be installed from PyPI using:
 
-    pip install --index-url https://test.pypi.org/simple/ hazma
+    pip install hazma
 
 Alternatively, you can download `hazma` directly from this page, navigate to the package directory using the command line and run
 
