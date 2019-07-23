@@ -13,7 +13,7 @@
 
 `hazma` can be installed from PyPI using:
 
-    pip install --index-url https://test.pypi.org/simple/ hazma
+    pip install hazma
 
 Alternatively, you can download `hazma` directly from this page, navigate to the package directory using the command line and run
 
