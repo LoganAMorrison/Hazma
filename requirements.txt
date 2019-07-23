@@ -6,6 +6,6 @@ numpydoc>=0.9.1
 flake8>=3.7.7
 jupyter>=1.0.0
 jupyter-client>=5.2.4
-jupyter-console>=6.0.0
+jupyter-console>=5.2.0
 jupyter-core>=4.4.0
 jupytext>=1.1.6
