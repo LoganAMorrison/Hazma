@@ -175,9 +175,9 @@ setup(
     maintainer="Logan Morrison",
     maintainer_email="loanmorr@ucsc.edu",
     url="http://hazma.readthedocs.io/en/latest/",
-    description="Package for computing FSR and decay spectra for light \
-      particles",
+    description="Python package for computing indirect detection constraints on sub-GeV dark matter.",
     long_description=readme(),
+    long_description_content_type="text/markdown",
     keywords="dark-matter mev-dark-matter gamma-ray-spectra",
     packages=find_packages(),
     ext_modules=extensions,
