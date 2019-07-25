@@ -2,7 +2,7 @@
 Test module for the scalar mediator model.
 """
 
-from hazma.scalar_mediator import ScalarMediator
+from hazma.scalar_mediator import ScalarMediator, HeavyQuark
 import numpy as np
 import unittest
 
@@ -104,9 +104,13 @@ class TestScalarMediator(unittest.TestCase):
             'mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s'
         """
         list_fs = ["mu mu", "e e", "g g", "pi0 pi0", "pi pi", "s s"]
+        hq_fss = ["g g", "pi0 pi0", "pi pi", "s s"]
 
         assert self.sm1.list_annihilation_final_states() == list_fs
         assert self.sm2.list_annihilation_final_states() == list_fs
+
+        assert ScalarMediator.list_annihilation_final_states() == list_fs
+        assert HeavyQuark.list_annihilation_final_states() == hq_fss
 
     def test_cross_sections(self):
         """
@@ -161,9 +165,9 @@ class TestScalarMediator(unittest.TestCase):
             for (val1, val2) in zip(self.spec2_old[key], spec2_new[key]):
                 assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
 
-    def test_spectrum_functions(self):
-        self.sm1.spectrum_functions()
-        self.sm2.spectrum_functions()
+    def test_spectrum_funcs(self):
+        self.sm1.spectrum_funcs()
+        self.sm2.spectrum_funcs()
 
     def test_partial_widths(self):
         """

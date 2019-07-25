@@ -2,7 +2,7 @@
 Test module for the scalar mediator model.
 """
 
-from hazma.vector_mediator import VectorMediator, KineticMixing
+from hazma.vector_mediator import VectorMediator, KineticMixing, QuarksOnly
 import numpy as np
 import unittest
 
@@ -210,7 +210,8 @@ class TestVectorMediator(unittest.TestCase):
         Test that the scalar mediator final state are equal to:
             'mu mu', 'e e', 'pi pi', 'pi0 g', 'v v'
         """
-        list_fs = ["mu mu", "e e", "pi pi", "pi0 g", "v v"]
+        list_fs = ["mu mu", "e e", "pi pi", "pi0 g", "pi0 v", "v v"]
+        quark_only_fss = ["pi pi", "pi0 g", "pi0 v", "v v"]
 
         assert self.vm1.list_annihilation_final_states() == list_fs
         assert self.vm2.list_annihilation_final_states() == list_fs
@@ -218,6 +219,10 @@ class TestVectorMediator(unittest.TestCase):
         assert self.vm4.list_annihilation_final_states() == list_fs
         assert self.vm5.list_annihilation_final_states() == list_fs
         assert self.vm6.list_annihilation_final_states() == list_fs
+
+        assert VectorMediator.list_annihilation_final_states() == list_fs
+        assert KineticMixing.list_annihilation_final_states() == list_fs
+        assert QuarksOnly.list_annihilation_final_states() == quark_only_fss
 
     def test_cross_sections(self):
         """
@@ -306,13 +311,13 @@ class TestVectorMediator(unittest.TestCase):
             for (val1, val2) in zip(self.vm6_gam_spec[key], spec6[key]):
                 assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
 
-    def test_spectrum_functions(self):
-        self.vm1.spectrum_functions()
-        self.vm2.spectrum_functions()
-        self.vm3.spectrum_functions()
-        self.vm4.spectrum_functions()
-        self.vm5.spectrum_functions()
-        self.vm6.spectrum_functions()
+    def test_spectrum_funcs(self):
+        self.vm1.spectrum_funcs()
+        self.vm2.spectrum_funcs()
+        self.vm3.spectrum_funcs()
+        self.vm4.spectrum_funcs()
+        self.vm5.spectrum_funcs()
+        self.vm6.spectrum_funcs()
 
     def test_partial_widths(self):
         """
