@@ -24,8 +24,8 @@ import numpy as np
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import ScalarMediator
-sm = ScalarMediator(mx=150., ms=1e3, gsxx=1., gsff=0.1,
-                    gsGG=0.1, gsFF=0.1, lam=2e5)
+
+sm = ScalarMediator(mx=150.0, ms=1e3, gsxx=1.0, gsff=0.1, gsGG=0.1, gsFF=0.1, lam=2e5)
 print(sm.gsff)
 # 0.1
 sm.gsff = 0.5
@@ -34,18 +34,21 @@ print(sm.gsff)
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import HiggsPortal, HeavyQuark
-hp = HiggsPortal(mx=150., ms=1e3, gsxx=1., stheta=1e-3)
-hq = HeavyQuark(mx=150., ms=1e3, gsxx=1., gsQ=1.0, mQ=1e6, QQ=1.)
+
+hp = HiggsPortal(mx=150.0, ms=1e3, gsxx=1.0, stheta=1e-3)
+hq = HeavyQuark(mx=150.0, ms=1e3, gsxx=1.0, gsQ=1.0, mQ=1e6, QQ=1.0)
 
 # %% {"hidden": true}
 from hazma.vector_mediator import VectorMediator
-vm = VectorMediator(mx=150., mv=1e3, gvxx=1., gvuu=0.1,
-                    gvdd=0.2, gvss=0.3, gvee=0.4,
-                    gvmumu=0.5)
+
+vm = VectorMediator(
+    mx=150.0, mv=1e3, gvxx=1.0, gvuu=0.1, gvdd=0.2, gvss=0.3, gvee=0.4, gvmumu=0.5
+)
 
 # %% {"hidden": true}
 from hazma.vector_mediator import KineticMixing
-km = KineticMixing(mx=150., mv=1e3, gvxx=1., eps=0.1)
+
+km = KineticMixing(mx=150.0, mv=1e3, gvxx=1.0, eps=0.1)
 print(km.gvuu)
 # -0.020187846690459792
 km.gvuu = 0.1
@@ -59,9 +62,9 @@ print(VectorMediator.list_annihilation_final_states())
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import ScalarMediator
-sm = ScalarMediator(mx=180., ms=190., gsxx=1., gsff=0.1,
-                    gsGG=0.1, gsFF=0.1, lam=2e5)
-e_cm = 400.
+
+sm = ScalarMediator(mx=180.0, ms=190.0, gsxx=1.0, gsff=0.1, gsGG=0.1, gsFF=0.1, lam=2e5)
+e_cm = 400.0
 sm.annihilation_cross_sections(e_cm)  # MeV^-2
 # {'mu mu': 1.0186780542223538e-16,
 #  'e e': 3.892649866478948e-21,
@@ -73,8 +76,8 @@ sm.annihilation_cross_sections(e_cm)  # MeV^-2
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import ScalarMediator
-sm = ScalarMediator(mx=120., ms=280., gsxx=1., gsff=0.1,
-                    gsGG=0.1, gsFF=0.1, lam=2e5)
+
+sm = ScalarMediator(mx=120.0, ms=280.0, gsxx=1.0, gsff=0.1, gsGG=0.1, gsFF=0.1, lam=2e5)
 sm.partial_widths()  # MeV
 # {'g g': 7.363085017295395e-14,
 #  'pi0 pi0': 6.523373994152967e-09,
@@ -89,40 +92,46 @@ sm.partial_widths()  # MeV
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import HeavyQuark
-sm = HeavyQuark(mx=140., ms=1e3, gsxx=1., gsQ=0.1, mQ=1e3, QQ=0.1)
-print(sm.gamma_ray_lines(e_cm=300.))
+
+sm = HeavyQuark(mx=140.0, ms=1e3, gsxx=1.0, gsQ=0.1, mQ=1e3, QQ=0.1)
+print(sm.gamma_ray_lines(e_cm=300.0))
 # {'g g': {'energy': 150.0, 'bf': 1.285653242415087e-08}}
 from hazma.vector_mediator import QuarksOnly
-vm = QuarksOnly(mx=140., mv=1e3, gvxx=1., gvuu=0.1, gvdd=0.1, gvss=0.)
-print(vm.gamma_ray_lines(e_cm=300.))
+
+vm = QuarksOnly(mx=140.0, mv=1e3, gvxx=1.0, gvuu=0.1, gvdd=0.1, gvss=0.0)
+print(vm.gamma_ray_lines(e_cm=300.0))
 # {'pi0 g': {'energy': 119.63552908740002, 'bf': 1.0}}
 
 # %% {"hidden": true}
 from hazma.decay import neutral_pion as dnde_pi0
-e_gams = np.array([100., 125., 150])  # photon energies
-e_pi0 = 180.                          # pion energy
+
+e_gams = np.array([100.0, 125.0, 150])  # photon energies
+e_pi0 = 180.0  # pion energy
 dnde_pi0(e_gams, e_pi0)
 # array([0.0165965, 0.0165965, 0.       ])
 
 # %% {"hidden": true}
 from hazma.decay import muon as dnde_mu
-e_gams = np.array([1., 10., 100.])  # photon energies
-e_mu = 130.                         # muon energy
+
+e_gams = np.array([1.0, 10.0, 100.0])  # photon energies
+e_mu = 130.0  # muon energy
 dnde_mu(e_gams, e_mu)
 # array([1.76076858e-02, 1.34063877e-03, 4.64775301e-08])
 
 # %% {"hidden": true}
 from hazma.decay import charged_pion as dnde_pi
-e_gams = np.array([1., 10., 100.])  # photon energies
-e_pi = 150.                         # pion energy
+
+e_gams = np.array([1.0, 10.0, 100.0])  # photon energies
+e_pi = 150.0  # pion energy
 dnde_pi(e_gams, e_pi)
 # array([2.54329145e-02, 1.70431824e-03, 2.71309637e-08])
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import HiggsPortal
-e_cm = 305.                         # DM center of mass energy
-e_gams = np.array([1., 10., 100.])  # photon energies
-hp = HiggsPortal(mx=150., ms=1e3, gsxx=0.7, stheta=0.1)
+
+e_cm = 305.0  # DM center of mass energy
+e_gams = np.array([1.0, 10.0, 100.0])  # photon energies
+hp = HiggsPortal(mx=150.0, ms=1e3, gsxx=0.7, stheta=0.1)
 hp.total_spectrum(e_gams, e_cm)
 
 # %% {"hidden": true}
@@ -145,19 +154,19 @@ print(hp.dnde_pipi(e_gams, e_cm))
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import HiggsPortal
-e_cm = 305.                  # DM center of mass energy
-e_min, e_max = 1., 100.      # define energy range
+
+e_cm = 305.0  # DM center of mass energy
+e_min, e_max = 1.0, 100.0  # define energy range
 energy_res = lambda e: 0.05  # 5% energy resolution function
-hp = HiggsPortal(mx=150., ms=1e3, gsxx=0.7, stheta=0.1)
-dnde_conv = hp.total_conv_spectrum_fn(
-    e_min, e_max, e_cm, energy_res, n_pts=1000)
+hp = HiggsPortal(mx=150.0, ms=1e3, gsxx=0.7, stheta=0.1)
+dnde_conv = hp.total_conv_spectrum_fn(e_min, e_max, e_cm, energy_res, n_pts=1000)
 
 # %% {"hidden": true}
-dnde_conv(25.)
+dnde_conv(25.0)
 # array(0.00048767)
 
 # %% {"hidden": true}
-dnde_conv.integral(25., 85.)
+dnde_conv.integral(25.0, 85.0)
 # 0.8691133833417997
 
 # %% [markdown] {"heading_collapsed": true}
@@ -165,23 +174,26 @@ dnde_conv.integral(25., 85.)
 
 # %% {"hidden": true}
 from hazma.positron_spectra import muon as dnde_p_mu
-e_mu = 150.                      # muon energy
-e_p = np.array([1., 10., 100.])  # positron energies
+
+e_mu = 150.0  # muon energy
+e_p = np.array([1.0, 10.0, 100.0])  # positron energies
 dnde_p_mu(e_p, e_mu)
 # array([4.86031362e-05, 4.56232320e-03, 4.45753994e-03])
 
 # %% {"hidden": true}
 from hazma.positron_spectra import charged_pion as dnde_p_pi
-e_pi = 150.                      # charged pion energy
-e_p = np.array([1., 10., 100.])  # positron energies
+
+e_pi = 150.0  # charged pion energy
+e_p = np.array([1.0, 10.0, 100.0])  # positron energies
 dnde_p_pi(e_p, e_pi)
 # array([3.84163631e-05, 3.85242442e-03, 2.55578895e-05])
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import HiggsPortal
-e_cm = 305.                       # DM center of mass energy
-e_ps = np.array([1., 10., 100.])  # positron energies
-hp = HiggsPortal(mx=150., ms=1e3, gsxx=0.7, stheta=0.1)
+
+e_cm = 305.0  # DM center of mass energy
+e_ps = np.array([1.0, 10.0, 100.0])  # positron energies
+hp = HiggsPortal(mx=150.0, ms=1e3, gsxx=0.7, stheta=0.1)
 print(hp.total_positron_spectrum(e_ps, e_cm))
 # [2.60677406e-05 2.58192085e-03 4.09383294e-04]
 print(hp.positron_spectra(e_ps, e_cm))
@@ -193,12 +205,11 @@ print(hp.positron_lines(e_cm))
 # {'e e': {'energy': 152.5, 'bf': 4.109750194098895e-06}}
 
 # %% {"hidden": true}
-e_cm = 305.                  # DM center of mass energy
-e_p_min, e_p_max = 1., 100.  # define energy range
+e_cm = 305.0  # DM center of mass energy
+e_p_min, e_p_max = 1.0, 100.0  # define energy range
 energy_res = lambda e: 0.05
-dnde_p_conv = hp.total_conv_positron_spectrum_fn(
-    e_p_min, e_p_max, e_cm, energy_res)
-print(dnde_p_conv(20.))
+dnde_p_conv = hp.total_conv_positron_spectrum_fn(e_p_min, e_p_max, e_cm, energy_res)
+print(dnde_p_conv(20.0))
 # 0.008336136582135356
 print(dnde_p_conv.integral(10, 100))  # integrate spectrum
 # 0.6369485109837103
@@ -209,10 +220,10 @@ print(dnde_p_conv.integral(10, 100))  # integrate spectrum
 # %% {"hidden": true}
 from hazma.scalar_mediator import ScalarMediator
 from hazma.gamma_ray_parameters import egret_diffuse, TargetParams
+
 egret_diffuse.target  # target region information
-TargetParams(J=3.79e+27, dOmega=6.584844306798711)
-sm = ScalarMediator(mx=150., ms=1e4, gsxx=1., gsff=0.1, gsGG=0.5,
-                    gsFF=0, lam=1e5)
+TargetParams(J=3.79e27, dOmega=6.584844306798711)
+sm = ScalarMediator(mx=150.0, ms=1e4, gsxx=1.0, gsff=0.1, gsGG=0.5, gsFF=0, lam=1e5)
 sm.binned_limit(egret_diffuse)
 # 7.841784676562726e-27  # cm^3 / s
 
@@ -221,15 +232,18 @@ from hazma.gamma_ray_parameters import A_eff_e_astrogam
 from hazma.gamma_ray_parameters import energy_res_e_astrogam
 from hazma.gamma_ray_parameters import T_obs_e_astrogam
 from hazma.gamma_ray_parameters import gc_target, gc_bg_model
+
 print(gc_target.J)
 # 1.795e+29
-print(gc_target.dOmega)      # target region information
+print(gc_target.dOmega)  # target region information
 # 0.12122929761504078
-sm.unbinned_limit(A_eff_e_astrogam,       # effective area
-                  energy_res_e_astrogam,  # energy resolution
-                  T_obs_e_astrogam,       # observing time
-                  gc_target,              # target region
-                  gc_bg_model)            # background model
+sm.unbinned_limit(
+    A_eff_e_astrogam,  # effective area
+    energy_res_e_astrogam,  # energy resolution
+    T_obs_e_astrogam,  # observing time
+    gc_target,  # target region
+    gc_bg_model,
+)  # background model
 # 5.63534935653953e-30  # cm^3 / s
 
 # %% [markdown] {"heading_collapsed": true}
@@ -237,18 +251,19 @@ sm.unbinned_limit(A_eff_e_astrogam,       # effective area
 
 # %% {"hidden": true}
 from hazma.scalar_mediator import ScalarMediator
-sm = ScalarMediator(mx=150., ms=1e4, gsxx=1., gsff=0.1, gsGG=0.5,
-                    gsFF=0, lam=1e5)
+
+sm = ScalarMediator(mx=150.0, ms=1e4, gsxx=1.0, gsff=0.1, gsGG=0.5, gsFF=0, lam=1e5)
 x_kd = 1e-4
 sm.f_eff(x_kd), sm.f_eff_ep(x_kd), sm.f_eff_g(x_kd)
 # (0.4373205896743133, 0.1657568724934657, 0.2715637171808476)
 
 # %% {"hidden": true}
 from hazma.cmb import p_ann_planck_temp_pol as p_ann
+
 p_ann
 # 3.5e-31  # cm^3 / MeV / s
 x_kd = 1e-4
-sm = HiggsPortal(mx=150., ms=1e4, gsxx=1., stheta=0.01)
+sm = HiggsPortal(mx=150.0, ms=1e4, gsxx=1.0, stheta=0.01)
 sm.cmb_limit(x_kd, p_ann)
 # 1.2209926980668773e-28  # cm^3 / s
 
@@ -257,7 +272,8 @@ sm.cmb_limit(x_kd, p_ann)
 
 # %% {"hidden": true}
 from hazma.vector_mediator import KineticMixing
-params = {'mx':250.0, 'mv':1e6, 'gvxx':1.0, 'eps':1e-3}
+
+params = {"mx": 250.0, "mv": 1e6, "gvxx": 1.0, "eps": 1e-3}
 km = KineticMixing(**params)
 
 # %% {"hidden": true}
@@ -286,15 +302,15 @@ print(km.annihilation_branching_fractions(cme))
 km.partial_widths()
 
 # %% {"hidden": true}
-photon_energies = np.array([cme/4])
+photon_energies = np.array([cme / 4])
 km.spectra(photon_energies, cme)
 
 # %% {"hidden": true}
 spec_funs = km.spectrum_funcs()
-print(spec_funs['mu mu'](photon_energies, cme))
+print(spec_funs["mu mu"](photon_energies, cme))
 # [6.35970849e-05]
-mumu_bf = km.annihilation_branching_fractions(cme)['mu mu']
-print(mumu_bf * spec_funs['mu mu'](photon_energies, cme))
+mumu_bf = km.annihilation_branching_fractions(cme)["mu mu"]
+print(mumu_bf * spec_funs["mu mu"](photon_energies, cme))
 # [2.94759389e-05]
 
 # %% {"hidden": true}
@@ -306,28 +322,33 @@ km.gamma_ray_lines(cme)
 # %% {"hidden": true}
 min_photon_energy = 1e-3
 max_photon_energy = cme
-energy_resolution = lambda photon_energy : 1.0
+energy_resolution = lambda photon_energy: 1.0
 number_points = 1000
 
-spec = km.total_conv_spectrum_fn(min_photon_energy, max_photon_energy, 
-                                 cme, energy_resolution, number_points)
+spec = km.total_conv_spectrum_fn(
+    min_photon_energy, max_photon_energy, cme, energy_resolution, number_points
+)
 spec(cme / 4)
 
 # %% {"hidden": true}
 from hazma.parameters import electron_mass as me
+
 positron_energies = np.logspace(np.log10(me), np.log10(cme), num=100)
 km.positron_spectra(positron_energies, cme)
 km.positron_lines(cme)
 km.total_positron_spectrum(positron_energies, cme)
-dnde_pos = km.total_conv_positron_spectrum_fn(min(positron_energies),
-                                              max(positron_energies),
-                                              cme, 
-                                              energy_resolution,
-                                              number_points)
+dnde_pos = km.total_conv_positron_spectrum_fn(
+    min(positron_energies),
+    max(positron_energies),
+    cme,
+    energy_resolution,
+    number_points,
+)
 
 # %% {"hidden": true}
 from hazma.gamma_ray_parameters import egret_diffuse
-mxs = np.linspace(me/2., 250., num=100)
+
+mxs = np.linspace(me / 2.0, 250.0, num=100)
 limits = np.zeros(len(mxs), dtype=float)
 for i, mx in enumerate(mxs):
     km.mx = mx
@@ -337,27 +358,31 @@ for i, mx in enumerate(mxs):
 from hazma.gamma_ray_parameters import gc_target, gc_bg_model
 from hazma.gamma_ray_parameters import A_eff_e_astrogam, energy_res_e_astrogam
 from hazma.gamma_ray_parameters import T_obs_e_astrogam
-mxs = np.linspace(me/2., 250., num=100)
+
+mxs = np.linspace(me / 2.0, 250.0, num=100)
 limits = np.zeros(len(mxs), dtype=float)
 for i, mx in enumerate(mxs):
     km.mx = mx
-    limits[i] = km.unbinned_limit(A_eff_e_astrogam,
-                                  energy_res_e_astrogam,
-                                  T_obs_e_astrogam,
-                                  gc_target,
-                                  gc_bg_model)
+    limits[i] = km.unbinned_limit(
+        A_eff_e_astrogam,
+        energy_res_e_astrogam,
+        T_obs_e_astrogam,
+        gc_target,
+        gc_bg_model,
+    )
 
 # %% [markdown] {"heading_collapsed": true}
 # ## Appendix C: Advanced Usage
 
 # %% {"hidden": true}
 from hazma.gamma_ray_parameters import TargetParams
+
 tp = TargetParams(J=1e29, dOmega=0.1)
 
 # %% {"hidden": true}
 from hazma.background_model import BackgroundModel
-bg = BackgroundModel(e_range=[0.5, 1e4],
-                     dPhi_dEdOmega=lambda e: 2.7e-3 / e**2)
+
+bg = BackgroundModel(e_range=[0.5, 1e4], dPhi_dEdOmega=lambda e: 2.7e-3 / e ** 2)
 
 # %% [markdown] {"hidden": true}
 # See the notebook ``hazma_example.ipynb`` for the custom model implementation.

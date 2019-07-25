@@ -72,7 +72,7 @@ class VectorMediatorWidths:
                 gvxx ** 2
                 * sqrt(mv ** 2 - 4.0 * mx ** 2).real
                 * (mv ** 2 + 2.0 * mx ** 2)
-                ) / (4.0 * mv ** 2 * pi)
+            ) / (4.0 * mv ** 2 * pi)
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -94,10 +94,11 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mf:
-            ret_val = (gvll ** 2
-                       * sqrt(mv ** 2 - 4.0 * mf ** 2).real
-                       * (2.0 * mf ** 2 + mv ** 2)
-                       ) / (4.0 * mv ** 2 * pi)
+            ret_val = (
+                gvll ** 2
+                * sqrt(mv ** 2 - 4.0 * mf ** 2).real
+                * (2.0 * mf ** 2 + mv ** 2)
+            ) / (4.0 * mv ** 2 * pi)
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
