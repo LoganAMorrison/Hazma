@@ -91,13 +91,6 @@ class TestScalarMediator(unittest.TestCase):
         ]
         self.lns2_old = np.load(sm1_dir + "ps_lines.npy", allow_pickle=True)[()]
 
-    def test_description(self):
-        """
-        Test that the scalar mediator class description is working.
-        """
-        self.sm1.description()
-        self.sm2.description()
-
     def test_list_final_states(self):
         """
         Test that the scalar mediator final state are equal to:

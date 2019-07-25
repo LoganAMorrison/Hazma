@@ -194,17 +194,6 @@ class TestVectorMediator(unittest.TestCase):
         self.vm6_pos_line = np.load(vm6_dir + "ps_lines.npy", allow_pickle=True)[()]
         self.vm6_gam_spec = np.load(vm6_dir + "spectra.npy", allow_pickle=True)[()]
 
-    def test_description(self):
-        """
-        Test that the scalar mediator class desciption is working.
-        """
-        self.vm1.description()
-        self.vm2.description()
-        self.vm3.description()
-        self.vm4.description()
-        self.vm5.description()
-        self.vm6.description()
-
     def test_list_final_states(self):
         """
         Test that the scalar mediator final state are equal to:
