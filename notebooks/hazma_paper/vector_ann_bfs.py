@@ -40,12 +40,27 @@ vms = np.array(
     ]
 )
 
+# %%
+# Get branching fractions for each DM mass
+branching_fracts = defaultdict(list)
+vm = vms[0, 0]
+for mx in mxs:
+    vm.mx = mx
+    e_cm = 2 * mx * (1 + 0.5 * vx ** 2)
+    cur_bfs = vm.annihilation_branching_fractions(e_cm)
+    # Unpack this dict
+    for (fs, bf) in cur_bfs.items():
+        branching_fracts[fs].append(bf)
+
+# %%
+branching_fracts["pi0 v"]
+
 # %% {"code_folding": []}
 fig, axes = plt.subplots(
     3,
     2,
     sharex=True,
-    sharey=True,
+    sharey=False,
     figsize=(latex_text_width_1col, 0.8 * latex_text_width_1col),
 )
 
@@ -71,7 +86,6 @@ for row in range(3):
         # Formatting
         ax.set_yscale("log")
         ax.set_xlim(mxs[[0, -1]])
-        ax.set_ylim(5e-5, 2)
 
 # Only label outer plots' axes
 for col in range(2):
@@ -95,9 +109,10 @@ axes[0, 1].set_title(r"$m_V > 500$ MeV", fontsize=10)
 # Label final states
 for col in [0, 1]:
     axes[0, col].text(
-        75, 3e-1, r"$e^+ e^-$", color=get_color("e e"), fontsize=8, ha="center"
+        75, 8e-2, r"$e^+ e^-$", color=get_color("e e"), fontsize=8, ha="center"
     )
-    axes[0, col].text(77, 3e-3, r"$\mu^+ \mu^-$", color=get_color("mu mu"), fontsize=8)
+    axes[0, col].text(78, 1e-3, r"$\mu^+ \mu^-$", color=get_color("mu mu"), fontsize=8)
+    axes[0, col].text(69, 1e-6, r"$\pi^0 \gamma$", color=get_color("pi0 g"), fontsize=8)
 
 for row in [1, 2]:
     for col in [0, 1]:
@@ -105,18 +120,25 @@ for row in [1, 2]:
             73, 3e-1, r"$\pi^0 \gamma$", color=get_color("pi0 g"), fontsize=8
         )
 
+axes[0, 0].text(170, 1e-8, r"$\pi^0 V$", color=get_color("pi0 v"), fontsize=8)
+
 vv = r"$V V$"
 c_vv = get_color("v v")
-axes[0, 0].text(225, 3e-1, vv, color=c_vv, fontsize=8)
+axes[0, 0].text(225, 8e-2, vv, color=c_vv, fontsize=8)
 axes[1, 0].text(225, 1e-1, vv, color=c_vv, fontsize=8)
 axes[2, 0].text(225, 3e-1, vv, color=c_vv, fontsize=8)
 
 pipi = r"$\pi^+ \pi^-$"
 c_pipi = get_color("pi pi")
 axes[0, 0].text(150, 1e-3, pipi, color=c_pipi, fontsize=8)
-axes[0, 1].text(200, 1.7e-2, pipi, color=c_pipi, fontsize=8)
+axes[0, 1].text(200, 5e-3, pipi, color=c_pipi, fontsize=8)
 axes[1, 0].text(150, 3.5e-1, pipi, color=c_pipi, fontsize=8)
 axes[1, 1].text(200, 3.3e-1, pipi, color=c_pipi, fontsize=8)
+
+for col in range(2):
+    axes[0, col].set_ylim(1e-10, 2)
+    axes[1, col].set_ylim(3e-5, 2)
+    axes[2, col].set_ylim(5e-4, 2)
 
 fig.savefig("figures/vector_ann_bfs.pdf", bbox_inches="tight")
 
