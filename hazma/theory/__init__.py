@@ -19,9 +19,9 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     def description(self):
         pass
 
-    @classmethod
+    @staticmethod
     @abstractmethod
-    def list_annihilation_final_states(cls):
+    def list_annihilation_final_states():
         """Returns a list of the annihilation final states.
 
         Excludes states that are suppressed by (eg) factors of alpha_EM or
