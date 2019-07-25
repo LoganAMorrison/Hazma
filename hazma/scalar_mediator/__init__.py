@@ -219,8 +219,8 @@ class ScalarMediator(
             * trM
         )
 
-    @classmethod
-    def list_annihilation_final_states(cls):
+    @staticmethod
+    def list_annihilation_final_states():
         """
         Return a list of the available final states.
 
@@ -332,6 +332,10 @@ class HeavyQuark(ScalarMediator):
         super(HeavyQuark, self).__init__(
             mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ ** 2, mQ
         )
+
+    @staticmethod
+    def list_annihilation_final_states():
+        return ["g g", "pi0 pi0", "pi pi", "s s"]
 
     @property
     def gsQ(self):

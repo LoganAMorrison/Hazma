@@ -132,8 +132,8 @@ class VectorMediator(
         """Recomputes the scalar's total width."""
         self.width_v = self.partial_widths()["total"]
 
-    @classmethod
-    def list_annihilation_final_states(cls):
+    @staticmethod
+    def list_annihilation_final_states():
         """
         Return a list of the available final states.
 
@@ -142,7 +142,7 @@ class VectorMediator(
         fs : array-like
             Array of the available final states.
         """
-        return ["mu mu", "e e", "pi pi", "pi0 g", "v v"]
+        return ["mu mu", "e e", "pi pi", "pi0 g", "pi0 v", "v v"]
 
     def constraints(self):
         pass
@@ -251,6 +251,10 @@ class QuarksOnly(VectorMediator):
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
         super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
+
+    @staticmethod
+    def list_annihilation_final_states():
+        return ["pi pi", "pi0 g", "pi0 v", "v v"]
 
     # Hide underlying properties' setters
     @VectorMediator.gvee.setter
