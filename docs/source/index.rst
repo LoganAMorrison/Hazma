@@ -10,6 +10,7 @@ Welcome to Hazma's documentation!
    models
    gamma_ray_limits
    cmb
+   particle_physics
    gamma_ray
    positron
    decay

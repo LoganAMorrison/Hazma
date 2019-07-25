@@ -4,9 +4,10 @@ Gamma ray spectra
 Overview
 --------
 
-Since computing gamma-ray spectra is a model-dependent process, we include
-in ``hazma`` tools for computing gamma-ray spectra from *both* FSR and the
-decay of final state-particles.
+This page discusses how to compute the gamma-ray spectrum for a particular
+particle physics process. Since computing gamma-ray spectra is a
+model-dependent process, we include in ``hazma`` tools for computing gamma-ray
+spectra from *both* FSR and the decay of final state-particles.
 
 The ``gamma_ray`` module contains two
 functions called ``gamma_ray_decay`` and ``gamma_ray_fsr``. The

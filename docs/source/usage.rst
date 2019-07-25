@@ -42,7 +42,7 @@ To create a ``KineticMixing`` model, we use:
     # Import the model
     >>> from hazma.vector_mediator import KineticMixing
     # Specify the parameters
-    >>> params = {'mx':250.0, 'mv':1e6, 'gvxx':1.0, 'eps':1e-3}
+    >>> params = {'mx': 250.0, 'mv': 1e6, 'gvxx': 1.0, 'eps': 1e-3}
     # Create KineticMixing object
     >>> km = KineticMixing(**params)
 
@@ -56,11 +56,11 @@ which the dark matter can annihilate into, we use:
 .. code-block:: python
 
     >>> km.list_annihilation_final_states()
-    ['mu mu', 'e e', 'pi pi', 'pi0 g', 'v v']
+    ['mu mu', 'e e', 'pi pi', 'pi0 g', 'pi0 v', 'v v']
 
 This tells us that we can potentially annihilate through:
 :math:`\bar{\chi}\chi\to\mu^{+}\mu^{-},e^{+}e^{-},
-\pi^{+}\pi^{-},\pi^{0}\gamma` or :math:`V V` (the two-mediator
+\pi^{+}\pi^{-},\pi^{0}\gamma,\pi^0{0}V` or :math:`V V` (the two-mediator
 final state). However, which of these final states is actually available
 depends on the center of mass energy. We can see this fact by looking at
 the annihilation cross sections or branching fractions, which can be
@@ -74,6 +74,7 @@ computed using:
      'e e': 9.064036692829845e-25,
      'pi pi': 1.2940469635262499e-25,
      'pi0 g': 5.206158864833925e-29,
+     'pi0 v': 0.0,
      'v v': 0.0,
      'total': 1.9307002022456507e-24}
     >>> km.annihilation_branching_fractions(cme)
@@ -81,6 +82,7 @@ computed using:
      'e e': 0.4694688839980031,
      'pi pi': 0.06702474894968717,
      'pi0 g': 2.6965133472190545e-05,
+     'pi0 v': 0.0,
      'v v': 0.0}
 
 Here we have chosen a realistic center of mass energy for dark matter in
@@ -105,14 +107,15 @@ annihilations, we can use:
 
 .. code-block:: python
 
-    >>> photon_energies = np.array([cme / 4])
+    >>> photon_energies = np.array([cme/4])
     >>> km.spectra(photon_energies, cme)
-    {'total': array([0.00016362]),
-     'mu mu': array([2.94759389e-05]),
+    {'mu mu': array([2.94759389e-05]),
      'e e': array([0.00013171]),
-     'pi0 g': array([2.29931655e-07]),
      'pi pi': array([2.20142244e-06]),
-     'v v': array([0.])}
+     'pi0 g': array([2.29931655e-07]),
+     'pi0 v': array([0.]),
+     'v v': array([0.]),
+     'total': array([0.00016362])}
 
 Note that we only used a single photon energy because of display purposes,
 but in general the user can specify any number of photon energies. If the
@@ -123,16 +126,16 @@ them repeatedly, they can use:
 
     >>> spec_funs = km.spectrum_functions()
     >>> spec_funs['mu mu'](photon_energies, cme)
-    array([6.35970849e-05])
+    [6.35970849e-05]
     >>> mumu_bf = km.annihilation_branching_fractions(cme)['mu mu']
     >>> mumu_bf * spec_funs['mu mu'](photon_energies, cme)
-    array([2.94759389e-05])
+    [2.94759389e-05]
 
 Notice that the direct call to the spectrum function for
 :math:`\bar{\chi}\chi\to\mu^{+}\mu^{-}` doesn't given the same result as
 ``km.spectra(photon_energies, cme)['mu mu']``. This is because the
-branching fractions are not applied for the 
-`spec_funs = km.spectrum_functions()``. If the user doesn't care about
+branching fractions are not applied for the
+``spec_funs = km.spectrum_funcs()``. If the user doesn't care about
 the underlying components of the gamma-ray spectra, the can simply call:
 
 .. code-block:: python
@@ -163,11 +166,10 @@ achieved using:
     >>> max_photon_energy = cme
     >>> energy_resolution = lambda photon_energy : 1.0
     >>> number_points = 1000
-
     >>> spec = km.total_conv_spectrum_fn(min_photon_energy, max_photon_energy,
     ...                                  cme, energy_resolution, number_points)
-    # Compute the spectrum at a photon energy of `cme/4`
-    spec(cme / 4)
+    >>> spec(cme / 4)  # compute the spectrum at a photon energy of `cme/4`
+    array(0.001718)
 
 The ``km.total_conv_spectrum_fn`` computes and returns an
 interpolating function of the convolved function. An important thing to
@@ -185,9 +187,11 @@ show how to call the functions and we suppress the output
     >>> km.positron_spectra(positron_energies, cme)
     >>> km.positron_lines(cme)
     >>> km.total_positron_spectrum(positron_energies, cme)
-    >>> km.total_conv_positron_spectrum_fn(min(positron_energies),
-    ...                                    max(positron_energies), cme,
-    ...                                    energy_resolution, number_points)
+    >>> dnde_pos = km.total_conv_positron_spectrum_fn(min(positron_energies),
+    ...                                               max(positron_energies),
+    ...                                               cme,
+    ...                                               energy_resolution,
+    ...                                               number_points)
 
 The last thing that we would like to demonstrate is how to compute
 limits. In order to compute the limits on the annihilation cross section
@@ -197,7 +201,7 @@ of a model from a gamma-ray telescope, say EGRET, we can use:
 
     >>> from hazma.gamma_ray_parameters import egret_diffuse
     # Choose DM masses from half the electron mass to 250 MeV
-    >>> mxs = np.linspace(me/2., 250., num=100)
+    >>> mxs = np.linspace(me/2., 250., num=10)
     # Compute limits from e-ASTROGAM
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
@@ -212,7 +216,7 @@ use:
     # Import target and background model for the e-ASTROGAM telescope
     >>> from hazma.gamma_ray_parameters import gc_target, gc_bg_model
     # Choose DM masses from half the electron mass to 250 MeV
-    >>> mxs = np.linspace(me/2., 250., num=100)
+    >>> mxs = np.linspace(me/2., 250., num=10)
     # Compute limits from e-ASTROGAM
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
@@ -337,15 +341,13 @@ characterized by the effective area :math:`A_{\mathrm{eff}}(E)`, the
 energy resolution :math:`\epsilon(E)` and observation time
 :math:`T_{\mathrm{obs}}`. In ``hazma``, the first two can be any callables
 (functions) and the third must be a float. The region of interest is
-defined by a ``TargetParams`` ``namedtuple``, which can be instantiated
+defined by a ``TargetParams`` object, which can be instantiated
 with:
 
 .. code-block:: python
 
     >>> from hazma.gamma_ray_parameters import TargetParams
     >>> tp = TargetParams(J=1e29, dOmega=0.1)
-    >>> print(tp)
-    TargetParams(J=1e+29, dOmega=0.1)
 
 The background model should be packaged in an object of type
 ``BackgroundModel``. This light-weight class has a function
@@ -412,7 +414,7 @@ method, and can be accessed as follows:
     >>> obs.e_lows, obs.e_highs
     (array([150., 650.]), array([275., 900.]))
     >>> obs.target
-    TargetParams(J=1e+29, dOmega=0.1)
+    <hazma.gamma_ray_parameters.TargetParams at 0x1c1bbbafd0>
     >>> obs.fluxes
     array([8.85813149e-08, 5.82726327e-09])
     >>> obs.upper_errors
@@ -427,69 +429,41 @@ method, and can be accessed as follows:
 User-Defined Models
 ^^^^^^^^^^^^^^^^^^^
 
-In this subsection, we demonstrate how to implement new models in Hazma.
-A notebook containing all the code in this appendix can be downloaded
-from GitHub HazmaExample_. The model we will consider is an effective
-field theory with a Dirac fermion DM particle which talks to neutral and
-charged pions through gauge-invariant dimension-5 operators. The
-Lagrangian for this model is:
+In this subsection, we demonstrate how to implement new models in Hazma. A notebook containing all th.. code in this appendix can be downloaded from GitHub HazmaExample_. The model we will consider is an effective field theory with a Dirac fermion DM particle which talks to neutral and charged pions through gauge-invariant dimension-5 operators. The Lagrangian for this model is:
 
 .. math::
 
-    \mathcal{L} \supset \frac{c_{1}}{\Lambda}\bar{\chi}\chi\pi^{+}\pi^{-} +
-    \frac{c_{2}}{\Lambda}\bar{\chi}\chi\pi^{0}\pi^{0}
+    \mathcal{L} \supset \frac{c_1}{\Lambda}\overline{\chi}\chi\pi^{+}\pi^{-}+\frac{c_2}{\Lambda}\overline{\chi}\chi\pi^{0}\pi^{0}
 
-where :math:`c_{1}, c_{2}` are dimensionless Wilson coefficients and
-:math:`\Lambda` is the cut-off scale of the theory. In order to implement
-this model in Hazma, we need to compute the annihilation cross sections
-and the FSR spectra. The annihilation channels for this model are simply
-:math:`\bar{\chi}\chi\to\pi^{0}\pi^{0}` and
-:math:`\bar{\chi}\chi\to\pi^{+}\pi^{-}`. The computations for the cross
-sections are straight forward and yield:
+where :math:`c_{1}, c_{2}` are dimensionless Wilson coefficients and :math:`\Lambda` is the cut-off scale of the theory. In order to implement this model in Hazma, we need to compute the annihilation cross sections and the FSR spectra. The annihilation channels for this model are simply :math:`\bar{\chi}\chi\to\pi^{0}\pi^{0}` and :math:`\bar{\chi}\chi\to\pi^{+}\pi^{-}`. The computations for the cross sections are straight forward and yield:
 
 .. math::
 
-    \sigma(\bar{\chi}\chi\to\pi^{+}\pi^{-}) &= \frac{c_1^2 \sqrt{1-4 \mu _{\pi }^2} \sqrt{1-4 \mu _{\chi }^2}}{32 \pi \Lambda^2}\\
-    \sigma(\bar{\chi}\chi\to\pi^{0}\pi^{0}) &= \frac{c_2^2 \sqrt{1-4 \mu_{\pi^{0}}^2} \sqrt{1-4 \mu_{\chi}^2}}{8 \pi \Lambda^2}
+    \sigma(\bar{\chi}\chi\to\pi^{+}\pi^{-}) = \frac{c_1^2 \sqrt{1-4 \mu _{\pi }^2} \sqrt{1-4 \mu _{\chi }^2}}{32 \pi \Lambda^2}\\
+    \sigma(\bar{\chi}\chi\to\pi^{0}\pi^{0}) = \frac{c_2^2 \sqrt{1-4 \mu_{\pi^{0}}^2} \sqrt{1-4 \mu_{\chi}^2}}{8 \pi \Lambda^2}
 
-where :math:`Q` is the center of mass energy,
-:math:`\mu_{\chi} = m_{\chi}/Q`, :math:`\mu_{\pi} = m_{\pi^{\pm}}/Q` and
-:math:`\mu_{\pi^{0}} = m_{\pi^{0}}/Q`. In addition to the cross sections,
-we need the FSR spectrum for
-:math:`\overline{\chi}\chi\to\pi^{+}\pi^{-}\gamma`. This is:
+where :math:`Q` is the center of mass energy, :math:`\mu_{\chi} = m_{\chi}/Q`, :math:`\mu_{\pi} = m_{\pi^{\pm}}/Q` and :math:`\mu_{\pi^{0}} = m_{\pi^{0}}/Q`. In addition to the cross sections, we need the FSR spectrum for :math:`\overline{\chi}\chi\to\pi^{+}\pi^{-}\gamma`. This is:
 
 .. math::
 
-    \frac{dN(\bar{\chi}\chi\to\pi^{+}\pi^{-}\gamma)}{dE_{\gamma}} &= \frac{\alpha  \left(2 f(x)-2\left(1-x-2 \mu_{\pi}^2\right)
-   \log \left(\frac{1-x-f(x)}{1-x+f(x)}\right)\right)}{\pi \sqrt{1-4 \mu_{\pi}^2} x}
+    \frac{dN(\bar{\chi}\chi\to\pi^{+}\pi^{-}\gamma)}{dE_{\gamma}} = \frac{\alpha  \left(2 f(x)-2\left(1-x-2 \mu_{\pi} ^2\right)
+   \log \left(\frac{1-x-f(x)}{1-x+f(x)}\right)\right)}{\pi\sqrt{1-4 \mu_{\pi} ^2} x}
 
 where
 
 .. math::
 
-    f(x) &= \sqrt{1-x} \sqrt{1-x-4 \mu_{\pi}^2}
+    f(x) = \sqrt{1-x} \sqrt{1-x-4 \mu_{\pi} ^2}
 
-We are now ready to set up the Hazma model. For ``hazma`` to work
-properly, we will need to define the following functions in our model:
+We are now ready to set up the Hazma model. For ``hazma`` to work properly, we will need to define the following functions in our model:
 
-#. ``annihilation_cross_sections(cme)``: A function returning a dictionary
-   of the annihilation cross sections for a given center of mass energy.
-#. ``annihilation_branching_fractions(cme)``: A function returning a
-   dictionary of the annihilation branching fractions for a given center
-   of mass energy.
-#. ``gamma_ray_lines(cme)``: A function returning a dictionary of the
-   gamma-ray lines for a given center of mass energy.
-#. ``spectra(e_gams, cme)``: A function returning a dictionary of the
-   continuum gamma-ray spectra for a given photon and center of mass energy.
-#. ``positron_spectra(e_ps, e_cm)``: A function returning a dictionary of
-   the continuum electron/positron spectra for a given positron and center of mass energy.
-#. ``positron_lines(e_cm)``: A function returning a dictionary of the
-   electron/positron lines for a center of mass energy.
+#. ``annihilation_cross_section_funcs()``: A function returning a ``dict`` of the annihilation cross sections functions, each of which take a center of mass energy.
+#. ``spectrum_funcs()``: A function returning a ``dict`` of functions which take photon energies and a center of mass energy and return the gamma-ray spectrum contribution from each final state.
+#. ``gamma_ray_lines(e_cm)``: A function returning a ``dict`` of the gamma-ray lines for a given center of mass energy.
+#. ``positron_spectrum_funcs()``: Like ``spectrum_funcs()``, but for positron spectra.
+#. ``positron_lines(e_cm)``: A function returning a ``dict`` of the electron/positron lines for a center of mass energy.
 
-We find it easiest to place all of these components is modular classes
-and then combine all the individual classes into a master class
-representing our model. Before we begin writing the classes, we will
-need a few helper functions and constants from ``hazma``:
+We find it easiest to place all of these components is modular classes and then combine all the individual classes into a master class representing our model. Before we begin writing the classes, we will need a few helper functions and constants from ``hazma``:
 
 .. code-block:: python
 
@@ -511,148 +485,83 @@ Now, we implement a cross section class:
 .. code-block:: python
 
     class HazmaExampleCrossSection:
-        # Cross section for DM annihilating into charged pions
         def sigma_xx_to_pipi(self, Q):
             mupi = mpi / Q
             mux = self.mx / Q
-            # Determine if Q is large enough
+
             if Q > 2 * self.mx and Q > 2 * mpi:
                 sigma = (self.c1**2 * np.sqrt(1 - 4 * mupi**2) *
                          np.sqrt(1 - 4 * mux**2)**2 /
                          (32.0 * self.lam**2 * np.pi))
             else:
                 sigma = 0.0
+
             return sigma
-        # Cross section for DM annihilating into neutral pions
+
         def sigma_xx_to_pi0pi0(self, Q):
             mupi0 = mpi0 / Q
             mux = self.mx / Q
-            # Determine if Q is large enough
+
             if Q > 2 * self.mx and Q > 2 * mpi0:
                 sigma = (self.c2**2 * np.sqrt(1 - 4 * mux**2) *
                          np.sqrt(1 - 4 * mupi0**2) /
                          (8.0 * self.lam**2 * np.pi))
             else:
                 sigma = 0.0
+
             return sigma
-        # Compute a dictionary of the annihilation cross sections
-        def annihilation_cross_sections(self, Q):
-            pipi = self.sigma_xx_to_pipi(Q)
-            pi0pi0 = self.sigma_xx_to_pi0pi0(Q)
-            total = pipi + pi0pi0
-            return {'pi0 pi0': pi0pi0,
-                    'pi pi': pipi,
-                    'total': total}
-        # Compute a dictionary of the annihilation branching fractions
-        def annihilation_branching_fractions(self, Q):
-            css = self.annihilation_cross_sections(Q)
-            brs = {key: 0.0 for key in css.keys()}
-            if css['total'] > 0.0:
-                for key in brs.keys():
-                    brs[key] = css[key] / css['total']
-            del brs['total']
-            return brs
 
-The important functions are ``annihilation_cross_sections`` and
-``annihilation_branching_fractions``. These are **required** to be
-implemented by ``hazma``. Next, we implement a class for the FSR spectra:
+        def annihilation_cross_section_funcs(self):
+            return {'pi0 pi0': self.sigma_xx_to_pi0pi0,
+                    'pi pi': self.sigma_xx_to_pipi}
 
-.. code-block:: python
-
-    class HazmaExampleFSR:
-        # Unvectorized function for the charged pion FSR
-        def __dnde_xx_to_pipig(self, eng_gam, Q):
-            mupi = mpi / Q
-            mux = self.mx / Q
-            x = 2.0 * eng_gam / Q
-            if 0.0 < x and x < 1. - 4. * mupi**2:
-                dnde = ((qe**2 * (2 * np.sqrt(1 - x) *
-                                  np.sqrt(1 - 4*mupi**2 - x) +
-                              (-1 + 2 * mupi**2 + x) *
-                              np.log((-1 + np.sqrt(1 - x) *
-                              np.sqrt(1 - 4*mupi**2 - x) + x)**2/
-                                     (1 + np.sqrt(1 - x) *
-                                      np.sqrt(1 - 4*mupi**2 - x) - x)**2)))/
-                    (Q * 2.0 * np.sqrt(1 - 4 * mupi**2) * np.pi**2 * x))
-            else:
-                dnde = 0
-            return dnde
-        # Vectorized version of `__dnde_xx_to_pipig`
-        def dnde_xx_to_pipig(self, eng_gams, Q):
-            if hasattr(eng_gams, '__len__'):
-                return np.array([self.__dnde_xx_to_pipig(eng_gam, Q)
-                                 for eng_gam in eng_gams])
-            else:
-                return self.__dnde_xx_to_pipig(eng_gams, Q)
-
-Note the the second ``__dnde_xx_to_pipig`` is an unvectorized function,
-which is not to be used by the user and ``dnde_xx_to_pipig`` is a
-vectorized function, allowing us to pass a vector of photon energies all
-at once. Next, we implement the spectrum functions which will produce the
-FSR and decay spectra:
+The key function is ``annihilation_cross_sections``, which is required to be implemented by ``hazma``. Next, we implement the spectrum functions which will produce the FSR and decay spectra:
 
 .. code-block:: python
 
     class HazmaExampleSpectra:
-        # Neutral pion spectrum: this consists only of the decay spectrum
-        def dnde_pi0pi0(self, e_gams, e_cm, spectrum_type='all'):
+        def dnde_pi0pi0(self, e_gams, e_cm):
             return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
-        # Charged pion spectrum: contains the FSR and decay spectra
-        def dnde_pipi(self, e_gams, e_cm, spectrum_type='all'):
-            return (self.dnde_xx_to_pipig(e_gams, e_cm) +
+
+        def __dnde_xx_to_pipig(self, e_gam, Q):
+            # Unvectorized function for computing FSR spectrum
+            mupi = mpi / Q
+            mux = self.mx / Q
+            x = 2.0 * e_gam / Q
+            if 0.0 < x and x < 1. - 4. * mupi**2:
+                dnde = ((qe**2 * (2 * np.sqrt(1 - x) * np.sqrt(1 - 4*mupi**2 - x) +
+                              (-1 + 2 * mupi**2 + x) *
+                              np.log((-1 + np.sqrt(1 - x) * np.sqrt(1 - 4*mupi**2 - x) + x)**2/
+                                     (1 + np.sqrt(1 - x)*np.sqrt(1 - 4*mupi**2 - x) - x)**2)))/
+                    (Q * 2.0 * np.sqrt(1 - 4 * mupi**2) * np.pi**2 * x))
+            else:
+                dnde = 0
+
+            return dnde
+
+        def dnde_pipi(self, e_gams, e_cm):
+            return (np.vectorize(self.__dnde_xx_to_pipig)(e_gams, e_cm) +
                     2. * charged_pion(e_gams, e_cm / 2.0))
-        # Compute a dictionary containing the individual spectra and the total
-        # spectrum
-        def spectra(self, e_gams, e_cm):
-            bfs = self.annihilation_branching_fractions(e_cm)
-            # Function that multiplies spectrum by branching fraction
-            def spec_helper(bf, specfn):
-                if bf != 0:
-                    return bf * specfn(e_gams, e_cm)
-                else:
-                    return np.zeros(e_gams.shape)
-            # Pions
-            npions = spec_helper(bfs['pi0 pi0'], self.dnde_pi0pi0)
-            cpions = spec_helper(bfs['pi pi'], self.dnde_pipi)
-            # Compute total spectrum
-            total = npions + cpions
-            # Define dictionary for spectra
-            specs = {'total': total,
-                     'pi0 pi0': npions,
-                     'pi pi': cpions}
-            return specs
-        # Returns functions for the individual spectra
-        def spectrum_functions(self):
-            return {'pi0 pi0': lambda e_gams, e_cm:
-                        self.dnde_pi0pi0(e_gams, e_cm),
-                    'pi pi': lambda e_gams, e_cm:
-                        self.dnde_pipi(e_gams, e_cm)}
-        # Returns dictionary of gamma ray lines (this theory has none)
+
+        def spectrum_funcs(self):
+            return {'pi0 pi0':  self.dnde_pi0pi0,
+                    'pi pi':  self.dnde_pipi}
+
         def gamma_ray_lines(self, e_cm):
             return {}
 
-Next we implement the positron spectra:
+Note the the second ``__dnde_xx_to_pipig`` is an unvectorized helper function, which is not to be used directly. Next we implement the positron spectra:
 
 .. code-block:: python
 
     class HazmaExamplePositronSpectra:
-        # Positron spectra for charged pions
-        def dnde_pos_pipi(self, eng_ps, cme):
-            return pspec_charged_pion(eng_ps, cme / 2.)
-        # Returns dictionary of positron spectra
-        def positron_spectra(self, eng_ps, cme):
-            bfs = self.annihilation_branching_fractions(cme)
-            # Only compute the spectrum if the channel's branching fraction is
-            # nonzero
-            def spec_helper(bf, specfn):
-                if bf != 0:
-                    return bf * specfn(eng_ps, cme)
-                else:
-                    return np.zeros(eng_ps.shape)
-            pipi_spec = spec_helper(bfs['pi pi'], self.dnde_pos_pipi)
-            return {"total": pipi_spec, "pi pi": pipi_spec}
-        # Returns dictionary of positron lines (this theory has none)
-        def positron_lines(self, cme):
+        def dnde_pos_pipi(self, e_ps, e_cm):
+            return pspec_charged_pion(e_ps, e_cm / 2.)
+
+        def positron_spectrum_funcs(self):
+            return {"pi pi": self.dnde_pos_pipi}
+
+        def positron_lines(self, e_cm):
             return {}
 
 Lastly, we group all of these classes into a master class and we're done:
@@ -660,7 +569,6 @@ Lastly, we group all of these classes into a master class and we're done:
 .. code-block:: python
 
     class HazmaExample(HazmaExampleCrossSection,
-                       HazmaExampleFSR,
                        HazmaExamplePositronSpectra,
                        HazmaExampleSpectra,
                        Theory):
@@ -672,19 +580,16 @@ Lastly, we group all of these classes into a master class and we're done:
             self.c1 = c1
             self.c2 = c2
             self.lam = lam
-        # Returns an array of the available final states
-        @classmethod
-        def list_annihilation_final_states(cls):
+
+        @staticmethod
+        def list_annihilation_final_states():
             return ['pi pi', 'pi0 pi0']
 
-Now we can easily compute gamma-ray spectra, positron spectra and limit on
-our new model from gamma-ray telescopes. To implement our new model with
-:math:`m_{\chi} = 200~\mathrm{MeV}, c_{1} = c_{2} = 1` and
-:math:`\Lambda = 100~\mathrm{GeV}`, we can use:
+Now we can easily compute gamma-ray spectra, positron spectra and limit on our new model from gamma-ray telescopes. To implement our new model with :math:`m_{\chi} = 200~\mathrm{MeV}, c_{1} = c_{2} = 1` and :math:`\Lambda = 100~\mathrm{GeV}`, we can use:
 
 .. code-block:: python
 
-    >> model = HazmaExample(200.0, 1.0, 1.0, 100e3)
+    >>> model = HazmaExample(200.0, 1.0, 1.0, 100e3)
 
 To compute a gamma-ray spectrum:
 
@@ -706,23 +611,21 @@ Then we can plot the spectra using:
     >>> plt.figure(dpi=100)
     >>> for key, val in spectra.items():
     ...     plt.plot(egams, val, label=key)
-
     >>> plt.xlabel(r'$E_{\gamma} (\mathrm{MeV})$', fontsize=16)
     >>> plt.ylabel(r'$\frac{dN}{dE_{\gamma}} (\mathrm{MeV}^{-1})$', fontsize=16)
     >>> plt.xscale('log')
     >>> plt.yscale('log')
     >>> plt.legend()
 
-Additionally, we can compute limits on the thermally-averaged annihilation
-cross section of our model for various DM masses using:
+Additionally, we can compute limits on the thermally-averaged annihilation cross section of our model for various DM masses using
 
 .. code-block:: python
 
-    # Import target and background model for the e-ASTROGAM telescope
+    # Import target and background model for the E-Astrogam telescope
     >>> from hazma.gamma_ray_parameters import gc_target, gc_bg_model
     # Choose DM masses from half the pion mass to 250 MeV
     >>> mxs = np.linspace(mpi/2., 250., num=100)
-    # Compute limits from e-ASTROGAM
+    # Compute limits from E-Astrogam
     >>> limits = np.zeros(len(mxs), dtype=float)
     >>> for i, mx in enumerate(mxs):
     ...     model.mx = mx
