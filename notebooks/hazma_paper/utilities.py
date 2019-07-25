@@ -32,6 +32,7 @@ def get_tex_label(fs):
     tex_label = tex_label.replace("x x", r"\bar{\chi} \chi")
     tex_label = tex_label.replace("s s", r"S S")
     tex_label = tex_label.replace("v v", r"V V")
+    tex_label = tex_label.replace("pi0 v", r"\pi^0 V")
     return tex_label + r"$"
 
 
@@ -48,11 +49,14 @@ def get_color(fs):
     -------
     The color to be used when plotting that final state.
     """
-    fss = set(
-        ScalarMediator.list_annihilation_final_states()
-        + VectorMediator.list_annihilation_final_states()
-    ) - set(["s s", "v v"])
+    if fs == "total":
+        return "k"
+    else:
+        fss = set(
+            ScalarMediator.list_annihilation_final_states()
+            + VectorMediator.list_annihilation_final_states()
+        ) - set(["s s", "v v"])
 
-    fss = sorted(list(fss)) + ["s s", "v v", "x x"]
+        fss = sorted(list(fss)) + ["s s", "v v", "x x"]
 
-    return (2 * list(plt.rcParams["axes.prop_cycle"]))[fss.index(fs)]["color"]
+        return (2 * list(plt.rcParams["axes.prop_cycle"]))[fss.index(fs)]["color"]
