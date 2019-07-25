@@ -15,10 +15,6 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     __metaclass__ = ABCMeta
 
-    @abstractmethod
-    def description(self):
-        pass
-
     @staticmethod
     @abstractmethod
     def list_annihilation_final_states():
