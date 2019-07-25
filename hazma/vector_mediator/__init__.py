@@ -132,62 +132,6 @@ class VectorMediator(
         """Recomputes the scalar's total width."""
         self.width_v = self.partial_widths()["total"]
 
-    def description(self):
-        """
-        Returns a string giving the details of the model.
-        """
-        return """
-        The vector mediator model appends to the Standard Model  a dark \n
-        matter particle, `x` and a massive vector mediator, `v`. The \n
-        Lagrangian at 1 GeV is: \n
-        \t L = LSM + Lkin + gvxx xbar.GA[mu].x V[mu] \n
-        \t   + gvuu ubar.GA[mu].u V[mu] + gvdd dbar.GA[mu].d V[mu] \n
-        \t   + gvss sbar.GA[mu].s V[mu] + gvee ebar.GA[mu].e V[mu] \n
-        \t   + gvmumu mubar.GA[mu].mu V[mu] \n \n
-
-
-        Parameters \n
-        ---------- \n
-        mx : float \n
-        \t Mass of the initial dark matter. \n
-        mv : float \n
-        \t Mass of the vector mediator. \n
-        gvxx : float \n
-        \t Coupling of vector mediator to the dark matter. \n
-        gvuu : float \n
-        \t Coupling of vector mediator to standard model up quark. \n
-        gvdd : float \n
-        \t Coupling of vector mediator to standard model down quark. \n
-        gvss : float \n
-        \t Coupling of vector mediator to standard model strange quark. \n
-        gvee : float \n
-        \t Coupling of vector mediator to standard model electron. \n
-        gvmumu : float \n
-        \t Coupling of vector mediator to standard model muon. \n
-
-        Methods \n
-        ------- \n
-        list_final_states : \n
-        \t Return a list of the available final states. \n
-        cross_sections : \n
-        \t Computes the all the cross sections of the theory and returns \n
-        \t a dictionary containing the cross sections. \n
-        branching_fractions : \n
-        \t Computes the all the branching fractions of the theory and \n
-        \t returns a dictionary containing the branching fractions. \n
-        spectra : \n
-        \t Computes all spectra of the theory for a pair of initial \n
-        \t state fermions annihilating into each available final state \n
-        \t and returns a dictionary of arrays containing the spectra. \n
-        spectrum_functions :
-        \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of dark matter particles with mass `mx` \n
-        \t annihilating into each available final state. \n
-        partial_widths : \n
-        \t Returns a dictionary for the partial decay widths of the scalar \n
-        \t mediator. \n
-        """
-
     @classmethod
     def list_annihilation_final_states(cls):
         """
@@ -284,56 +228,6 @@ class KineticMixing(VectorMediator):
     def gvmumu(self, gvmumu):
         raise AttributeError("Cannot set gvmumu")
 
-    def description(self):
-        """
-        Returns a string giving the details of the model.
-        """
-        return """
-        The Kinetic Mixing model is specific implementation of the vector \n
-        mediator model in which the vector mediator mixes with the Standard \n
-        Model photon with a mixing parameter `eps`. This causes the \n
-        couplings of the vector mediator the charged Standard Model fermions \n
-        to be  proportional to the fermion charge times `eps`. The \n
-        Lagrangian is: \n
-        \t L = LSM + Lkin + gvxx xbar.GA[mu].x V[mu] \n
-        \t   + 2/3 e epsubar.GA[mu].u V[mu] - 1/3 e eps dbar.GA[mu].d V[mu] \n
-        \t   - 1/3 e eps sbar.GA[mu].s V[mu] - e eps ebar.GA[mu].e V[mu] \n
-        \t   - e eps mubar.GA[mu].mu V[mu] \n \n
-
-        Parameters \n
-        ---------- \n
-        mx : float \n
-        \t Mass of the initial dark matter. \n
-        mv : float \n
-        \t Mass of the vector mediator. \n
-        gvxx : float \n
-        \t Coupling of vector mediator to the dark matter. \n
-        eps : float \n
-        \t Kinetic mixing parameter. \n \n
-
-        Methods \n
-        ------- \n
-        list_final_states : \n
-        \t Return a list of the available final states. \n
-        cross_sections : \n
-        \t Computes the all the cross sections of the theory and returns \n
-        \t a dictionary containing the cross sections. \n
-        branching_fractions : \n
-        \t Computes the all the branching fractions of the theory and \n
-        \t returns a dictionary containing the branching fractions. \n
-        spectra : \n
-        \t Computes all spectra of the theory for a pair of initial \n
-        \t state fermions annihilating into each available final state \n
-        \t and returns a dictionary of arrays containing the spectra. \n
-        spectrum_functions :
-        \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of dark matter particles with mass `mx` \n
-        \t annihilating into each available final state. \n
-        partial_widths : \n
-        \t Returns a dictionary for the partial decay widths of the scalar \n
-        \t mediator. \n
-        """
-
 
 class QuarksOnly(VectorMediator):
     r"""
@@ -366,53 +260,3 @@ class QuarksOnly(VectorMediator):
     @VectorMediator.gvmumu.setter
     def gvmumu(self, gvmumu):
         raise AttributeError("Cannot set gvmumu")
-
-    def description(self):
-        """
-        Returns a string giving the details of the model.
-        """
-        return """
-        This model is identical to the vector mediator model except the only \n
-        Standard Model particles that the vector mediator couples to are the \n
-        quarks. The Lagrangian is:\n
-        \t L = LSM + Lkin + gvxx xbar.GA[mu].x V[mu] \n
-        \t   + 2/3 e epsubar.GA[mu].u V[mu] - 1/3 e eps dbar.GA[mu].d V[mu] \n
-        \t   - 1/3 e eps sbar.GA[mu].s V[mu] \n \n
-
-        Parameters \n
-        ---------- \n
-        mx : float \n
-        \t Mass of the initial dark matter. \n
-        mv : float \n
-        \t Mass of the vector mediator. \n
-        gvxx : float \n
-        \t Coupling of vector mediator to the dark matter. \n
-        gvuu : float \n
-        \t Coupling of vector mediator to standard model up quark. \n
-        gvdd : float \n
-        \t Coupling of vector mediator to standard model down quark. \n
-        gvss : float \n
-        \t Coupling of vector mediator to standard model strange quark. \n \n
-
-        Methods \n
-        ------- \n
-        list_final_states : \n
-        \t Return a list of the available final states. \n
-        cross_sections : \n
-        \t Computes the all the cross sections of the theory and returns \n
-        \t a dictionary containing the cross sections. \n
-        branching_fractions : \n
-        \t Computes the all the branching fractions of the theory and \n
-        \t returns a dictionary containing the branching fractions. \n
-        spectra : \n
-        \t Computes all spectra of the theory for a pair of initial \n
-        \t state fermions annihilating into each available final state \n
-        \t and returns a dictionary of arrays containing the spectra. \n
-        spectrum_functions :
-        \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of dark matter particles with mass `mx` \n
-        \t annihilating into each available final state. \n
-        partial_widths : \n
-        \t Returns a dictionary for the partial decay widths of the scalar \n
-        \t mediator. \n
-        """

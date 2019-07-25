@@ -80,69 +80,6 @@ class ScalarMediator(
         self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
-    def description(self):
-        """
-        Returns a string giving the details of the model.
-        """
-        return """
-        The UV complete models are: \n \n
-
-        \t 1) Scalar mediator coupling to a new heavy quark. When the heavy \n
-        \t    quark is integrated out of the theory, the scalar obtains an \n
-        \t    effective coupling to gluons, leading to a coupling to pions \n
-        \t    through a dialation current. \n \n
-
-        \t 2) Scalar mediator mixing with the standard model higgs. The \n
-        \t    scalar mediator obtains couplings to the massive standard \n
-        \t    model states which will be `sin(theta) m / v_h` where theta \n
-        \t    is the mixing angle between the higgs and the scalar, m is the \n
-        \t    mass of the massive state and v_h is the higgs vev.  The \n
-        \t    scalar mediator also gets an effective coupling to gluons when \n
-        \t    the top quark is integrated out. \n
-
-        Attributes \n
-        ---------- \n
-        mx : float \n
-        \t Mass of the dark matter. \n
-        ms : float \n
-        \t Mass of the scalar mediator. \n
-        gsxx : float \n
-        \t Coupling of scalar mediator to initial state fermions. \n
-        gsff : float \n
-        \t Coupling of scalar mediator to standard model fermions. This is \n
-        \t the sine of the mixing angle between scalar mediator and the
-        \t higgs. \n
-        gsGG : float \n
-        \t Coupling of the scalar mediator to gluons. \n
-        gsFF : float \n
-        \t Coupling of the scalar mediator to photons. \n
-        Lam : float \n
-        \t Mass scale associated with integrating out a heavy colored or
-        charged fermion leading to SGG or SFF. \n
-
-        Methods \n
-        ------- \n
-        list_final_states : \n
-        \t Return a list of the available final states. \n
-        cross_sections : \n
-        \t Computes the all the cross sections of the theory and returns \n
-        \t a dictionary containing the cross sections. \n
-        branching_fractions : \n
-        \t Computes the all the branching fractions of the theory and \n
-        \t returns a dictionary containing the branching fractions. \n
-        spectra : \n
-        \t Computes all spectra of the theory for a pair of initial \n
-        \t state fermions annihilating into each available final state \n
-        \t and returns a dictionary of arrays containing the spectra. \n
-        spectrum_functions :
-        \t Returns a dictionary of all the avaiable spectrum functions for \n
-        \t a pair of initial state fermions with mass `mx` \n
-        \t annihilating into each available final state. \n
-        partial_widths : \n
-        \t Returns a dictionary for the partial decay widths of the scalar \n
-        \t mediator. \n
-        """
-
     @property
     def mx(self):
         return self._mx
