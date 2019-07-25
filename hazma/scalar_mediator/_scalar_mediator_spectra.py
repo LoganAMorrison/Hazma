@@ -99,63 +99,7 @@ class ScalarMediatorSpectra:
         else:
             return np.zeros_like(e_gams)
 
-    def spectra(self, e_gams, e_cm):
-        """
-        Compute the total spectrum from two fermions annihilating through a
-        scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        e_cm : float
-            Center of mass energy.
-        e_gams : array-like, optional
-            Gamma ray energies to evaluate the spectrum at.
-
-        Returns
-        -------
-        specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi'
-        """
-
-        # Compute branching fractions
-        bfs = self.annihilation_branching_fractions(e_cm)
-
-        # Only compute the spectrum if the channel's branching fraction is
-        # nonzero
-        def spec_helper(bf, specfn):
-            if bf != 0:
-                return bf * specfn(e_gams, e_cm)
-            else:
-                return np.zeros_like(e_gams)
-
-        # Pions
-        pi0pi0_spec = spec_helper(bfs["pi0 pi0"], self.dnde_pi0pi0)
-        pipi_spec = spec_helper(bfs["pi pi"], self.dnde_pipi)
-
-        # Leptons
-        mumu_spec = spec_helper(bfs["mu mu"], self.dnde_mumu)
-        ee_spec = spec_helper(bfs["e e"], self.dnde_ee)
-
-        # Mediator
-        ss_spec = spec_helper(bfs["s s"], self.dnde_ss)
-
-        # Compute total spectrum
-        total = mumu_spec + ee_spec + pi0pi0_spec + pipi_spec + ss_spec
-
-        # Define dictionary for spectra
-        specs = {
-            "total": total,
-            "mu mu": mumu_spec,
-            "e e": ee_spec,
-            "pi0 pi0": pi0pi0_spec,
-            "pi pi": pipi_spec,
-            "s s": ss_spec,
-        }
-
-        return specs
-
-    def spectrum_functions(self):
+    def spectrum_funcs(self):
         """
         Returns a dictionary of all the avaiable spectrum functions for
         a pair of initial state fermions with mass `mx` annihilating into
@@ -166,11 +110,11 @@ class ScalarMediatorSpectra:
         center of mass energy of the process.
         """
         return {
-            "mu mu": lambda e_gams, e_cm: self.dnde_mumu(e_gams, e_cm),
-            "e e": lambda e_gams, e_cm: self.dnde_ee(e_gams, e_cm),
-            "pi0 pi0": lambda e_gams, e_cm: self.dnde_pi0pi0(e_gams, e_cm),
-            "pi pi": lambda e_gams, e_cm: self.dnde_pipi(e_gams, e_cm),
-            "s s": lambda e_gams, e_cm: self.dnde_ss(e_gams, e_cm),
+            "mu mu": self.dnde_mumu,
+            "e e": self.dnde_ee,
+            "pi0 pi0": self.dnde_pi0pi0,
+            "pi pi": self.dnde_pipi,
+            "s s": self.dnde_ss
         }
 
     def gamma_ray_lines(self, e_cm):

@@ -88,10 +88,11 @@ class VectorMediatorSpectra:
                 )
             )
 
-    def dnde_vv(self, e_gams, e_cm, fs="total"):
-        # Each vector gets half the COM energy
-        e_v = e_cm / 2.0
-
+    def __dnde_v(self, e_gams, e_v, fs="total"):
+        """
+        Helper function for computing the spectrum from V decaying with
+        arbitrary boost.
+        """
         mv = self.mv
         pws = self.partial_widths()
         pw_array = np.zeros(5, dtype=float)
@@ -108,66 +109,24 @@ class VectorMediatorSpectra:
         pw_array[3] = pws["pi pi"] / pws["total"]
 
         if hasattr(e_gams, "__len__"):
-            return 2.0 * dnde_decay_v(e_gams, e_v, mv, pw_array, fs)
-        return 2.0 * dnde_decay_v_pt(e_gams, e_v, mv, pw_array, fs)
+            return dnde_decay_v(e_gams, e_v, mv, pw_array, fs)
 
-    def spectra(self, e_gams, e_cm):
-        """
-        Compute the total spectrum from two fermions annihilating through a
-        scalar mediator to mesons and leptons.
+        return dnde_decay_v_pt(e_gams, e_v, mv, pw_array, fs)
 
-        Parameters
-        ----------
-        e_cm : float
-            Center of mass energy.
-        e_gams : array-like, optional
-            Gamma ray energies to evaluate the spectrum at.
+    def dnde_pi0v(self, e_gams, e_cm):
+        e_pi0 = (e_cm**2 + mpi0**2 - self.mv**2) / (2 * e_cm)
+        pi0_spec = neutral_pion(e_gams, e_pi0)
 
-        Returns
-        -------
-        specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
-        """
+        e_v = (e_cm**2 - mpi0**2 + self.mv**2) / (2 * e_cm)
+        v_spec = self.__dnde_v(e_gams, e_v, fs="total")
 
-        # Compute branching fractions
-        bfs = self.annihilation_branching_fractions(e_cm)
+        return pi0_spec + v_spec
 
-        # Only compute the spectrum if the channel's branching fraction is
-        # nonzero
-        def spec_helper(bf, specfn):
-            if bf != 0:
-                return bf * specfn(e_gams, e_cm)
-            else:
-                return np.zeros(e_gams.shape)
+    def dnde_vv(self, e_gams, e_cm, fs="total"):
+        # Each vector gets half the COM energy
+        return 2.0 * self.__dnde_v(e_gams, e_cm / 2.0, fs)
 
-        # Leptons
-        muons = spec_helper(bfs["mu mu"], self.dnde_mumu)
-        electrons = spec_helper(bfs["e e"], self.dnde_ee)
-
-        # Pions
-        pi0g = spec_helper(bfs["pi0 g"], self.dnde_pi0g)
-        pipi = spec_helper(bfs["pi pi"], self.dnde_pipi)
-
-        # mediator
-        mediator = spec_helper(bfs["v v"], self.dnde_vv)
-
-        # Compute total spectrum
-        total = muons + electrons + pi0g + pipi + mediator
-
-        # Define dictionary for spectra
-        specs = {
-            "total": total,
-            "mu mu": muons,
-            "e e": electrons,
-            "pi0 g": pi0g,
-            "pi pi": pipi,
-            "v v": mediator,
-        }
-
-        return specs
-
-    def spectrum_functions(self):
+    def spectrum_funcs(self):
         """
         Returns a dictionary of all the avaiable spectrum functions for
         a pair of initial state fermions with mass `mx` annihilating into
@@ -184,10 +143,12 @@ class VectorMediatorSpectra:
         than the pi pi and pi0 g final states.
         """
         return {
-            "mu mu": lambda e_gams, e_cm: self.dnde_mumu(e_gams, e_cm),
-            "e e": lambda e_gams, e_cm: self.dnde_ee(e_gams, e_cm),
-            "pi pi": lambda e_gams, e_cm: self.dnde_pipi(e_gams, e_cm),
-            "pi0 g": lambda e_gams, e_cm: self.dnde_pi0g(e_gams, e_cm),
+            "mu mu": self.dnde_mumu,
+            "e e": self.dnde_ee,
+            "pi pi": self.dnde_pipi,
+            "pi0 g": self.dnde_pi0g,
+            "pi0 v": self.dnde_pi0v,
+            "v v": self.dnde_vv
         }
 
     def gamma_ray_lines(self, e_cm):

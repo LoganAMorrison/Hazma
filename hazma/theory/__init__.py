@@ -87,12 +87,22 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return {fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"}
 
     @abstractmethod
-    def spectra(self, e_gams, e_cm):
+    def spectrum_funcs(self):
         pass
 
-    @abstractmethod
-    def spectrum_functions(self):
-        pass
+    def spectra(self, e_gams, e_cm):
+        bfs = self.annihilation_branching_fractions(e_cm)
+        dndes = {}
+
+        for fs, dnde_func in self.spectrum_funcs().items():
+            if bfs[fs] == 0:
+                dndes[fs] = np.zeros_like(e_gams)
+            else:
+                dndes[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
+
+        dndes["total"] = sum(dndes.values())
+
+        return dndes
 
     def total_spectrum(self, e_gams, e_cm):
         """Returns total gamma ray spectrum.

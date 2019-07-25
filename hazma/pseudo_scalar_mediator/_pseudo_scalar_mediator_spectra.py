@@ -162,61 +162,7 @@ class PseudoScalarMediatorSpectra:
                 )
             )
 
-    def spectra(self, egams, cme):
-        """Compute the total spectrum from two fermions annihilating through a
-        scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        cme : float
-            Center of mass energy.
-        egams : array-like, optional
-            Gamma ray energies to evaluate the spectrum at.
-
-        Returns
-        -------
-        specs : dictionary
-            Dictionary of the spectra. The keys are 'total', 'mu mu', 'e e',
-            'pi0 pi0', 'pi pi', 'k k', 'k0 k0'.
-        """
-        # Compute branching fractions
-        bfs = self.annihilation_branching_fractions(cme)
-
-        # Only compute the spectrum if the channel's branching fraction is
-        # nonzero
-        def spec_helper(bf, specfn):
-            if bf != 0:
-                return bf * specfn(egams, cme)
-            else:
-                return np.zeros(egams.shape)
-
-        # Pions
-        pi0pipi_spec = spec_helper(bfs["pi0 pi pi"], self.dnde_pi0pipi)
-        pi0pi0pi0_spec = spec_helper(bfs["pi0 pi0 pi0"], self.dnde_pi0pi0pi0)
-
-        # Leptons
-        mumu_spec = spec_helper(bfs["mu mu"], self.dnde_mumu)
-        ee_spec = spec_helper(bfs["e e"], self.dnde_ee)
-
-        # Mediator
-        pp_spec = spec_helper(bfs["p p"], self.dnde_pp)
-
-        # Compute total spectrum
-        total = pi0pipi_spec + mumu_spec + ee_spec + pp_spec + pi0pi0pi0_spec
-
-        # Define dictionary for spectra
-        specs = {
-            "total": total,
-            "pi0 pi pi": pi0pipi_spec,
-            "pi0 pi0 pi0": pi0pi0pi0_spec,
-            "mu mu": mumu_spec,
-            "e e": ee_spec,
-            "p p": pp_spec,
-        }
-
-        return specs
-
-    def spectrum_functions(self):
+    def spectrum_funcs(self):
         """
         Returns a dictionary of all the avaiable spectrum functions for
         a pair of initial state fermions with mass `mx` annihilating into
@@ -227,11 +173,11 @@ class PseudoScalarMediatorSpectra:
         center of mass energy of the process.
         """
         return {
-            "mu mu": lambda e_gams, cme: self.dnde_mumu(e_gams, cme),
-            "e e": lambda e_gams, cme: self.dnde_ee(e_gams, cme),
-            "pi0 pi pi": lambda e_gams, cme: self.dnde_pi0pipi(e_gams, cme),
-            "pi0 pi0 pi0": lambda e_gams, cme: self.dnde_pi0pi0pi0(e_gams, cme),
-            "p p": lambda e_gams, cme: self.dnde_pp(e_gams, cme),
+            "mu mu": self.dnde_mumu,
+            "e e": self.dnde_ee,
+            "pi0 pi pi": self.dnde_pi0pipi,
+            "pi0 pi0 pi0": self.dnde_pi0pi0pi0,
+            "p p": self.dnde_pp,
         }
 
     def gamma_ray_lines(self, cme):
