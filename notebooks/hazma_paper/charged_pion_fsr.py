@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: hydrogen
 #       format_version: '1.2'
-#       jupytext_version: 1.1.6
+#       jupytext_version: 1.1.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -66,7 +66,7 @@ for i, ax in enumerate(axs.flatten()):
         ax.legend(loc="upper right")
 
 fig.subplots_adjust(hspace=0.1, wspace=0.1)
-plt.savefig("figures/charged_pion_fsr.pdf", bbox_inches="tight")
+# plt.savefig("figures/charged_pion_fsr.pdf", bbox_inches="tight")
 plt.show()
 
 # %%

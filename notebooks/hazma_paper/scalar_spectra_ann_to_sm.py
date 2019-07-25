@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: hydrogen
 #       format_version: '1.2'
-#       jupytext_version: 1.1.6
+#       jupytext_version: 1.1.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -79,7 +79,7 @@ for row in range(n_subplot_rows):  # loop over type of model
         e_cm = 2.0 * sm.mx * (1.0 + 0.5 * vx_mw ** 2)
 
         # Get function to compute total convolved spectrum
-        dnde_det_fn = sm.get_detected_spectrum_function(
+        dnde_det_fn = sm.total_conv_spectrum_fn(
             e_gam_min, e_gam_max, e_cm, energy_res=energy_res_comptel
         )
         # Evaluate and plot

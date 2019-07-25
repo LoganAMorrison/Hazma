@@ -52,9 +52,6 @@ for mx in mxs:
     for (fs, bf) in cur_bfs.items():
         branching_fracts[fs].append(bf)
 
-# %%
-branching_fracts["pi0 v"]
-
 # %% {"code_folding": []}
 fig, axes = plt.subplots(
     3,
