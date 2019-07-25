@@ -14,9 +14,14 @@ class ScalarMediatorWidths:
         """
         Returns the partial decay width of the scalar decaying into photon.
         """
-        return (alpha_em ** 2 * self.gsFF ** 2 * (self.ms ** 2) ** 1.5) / (
+        ret_val = (alpha_em ** 2 * self.gsFF ** 2 * (self.ms ** 2) ** 1.5) / (
             128.0 * self.lam ** 2 * pi ** 3
         )
+
+        assert ret_val.imag == 0
+        assert ret_val.real >= 0
+
+        return ret_val.real
 
     def width_s_to_pi0pi0(self):
         """
@@ -63,7 +68,7 @@ class ScalarMediatorWidths:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val
+            return ret_val.real
         else:
             return 0.0
 
@@ -112,7 +117,7 @@ class ScalarMediatorWidths:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val
+            return ret_val.real
         else:
             return 0.0
 
@@ -135,7 +140,7 @@ class ScalarMediatorWidths:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val
+            return ret_val.real
         else:
             return 0.0
 
@@ -170,7 +175,7 @@ class ScalarMediatorWidths:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val
+            return ret_val.real
         else:
             return 0.0
 

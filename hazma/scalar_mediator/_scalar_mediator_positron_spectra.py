@@ -66,7 +66,7 @@ class ScalarMediatorPositronSpectra:
         pws = self.partial_widths()
 
         if pws["total"] != 0:
-            pw_array = np.array([pws["e e"], pws["mu mu"], pws["pi pi"]], dtype=float)
+            pw_array = np.array([pws["e e"], pws["mu mu"], pws["pi pi"]])
             pw_array /= pws["total"]
 
             # Factor of 2 since S is self-conjugate

@@ -295,7 +295,8 @@ class VectorMediatorCrossSections:
                 )
             )
 
-            assert ret_val.imag == 0.0
+            assert ret_val.imag == 0
+            assert ret_val.real >= 0
 
             return ret_val.real
         else:
