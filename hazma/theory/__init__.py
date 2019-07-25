@@ -148,8 +148,22 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         )
 
     @abstractmethod
-    def positron_spectra(self, e_ps, e_cm):
+    def positron_spectrum_funcs(self):
         pass
+
+    def positron_spectra(self, e_ps, e_cm):
+        bfs = self.annihilation_branching_fractions(e_cm)
+        dndes_pos = {}
+
+        for fs, dnde_pos_func in self.positron_spectrum_funcs().items():
+            if bfs[fs] == 0:
+                dndes_pos[fs] = np.zeros_like(e_ps)
+            else:
+                dndes_pos[fs] = bfs[fs] * dnde_pos_func(e_ps, e_cm)
+
+        dndes_pos["total"] = sum(dndes_pos.values())
+
+        return dndes_pos
 
     def total_positron_spectrum(self, e_ps, e_cm):
         """Returns total positron ray spectrum.

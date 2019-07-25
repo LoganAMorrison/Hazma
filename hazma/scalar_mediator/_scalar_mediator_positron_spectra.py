@@ -76,40 +76,12 @@ class ScalarMediatorPositronSpectra:
         else:
             return np.zeros_like(positron_energies)
 
-    def positron_spectra(self, positron_energies, cme):
-        """
-        Positron/electron spectrum from dark matter annihilating into
-        charged pions, muons or scalar mediators.
-
-        Parameters
-        ----------
-        positron_energies: float or np.array
-            Energies of the positrons/electrons
-        cme: float
-            Center of mass energy
-
-        Returns
-        -------
-        dnde: dict
-            Dictionary of the positron spectrum from dark matter annihilating
-            into charged pions, muons or scalar mediators. Keys are: 'total',
-            'mu mu', 'pi pi' or 's s'.
-        """
-        bfs = self.annihilation_branching_fractions(cme)
-
-        def spec_helper(bf, spec_fn):
-            if bf != 0:
-                return bf * spec_fn(positron_energies, cme)
-            else:
-                return np.zeros_like(positron_energies)
-
-        muon_spec = spec_helper(bfs["mu mu"], self.dnde_pos_mumu)
-        pipi_spec = spec_helper(bfs["pi pi"], self.dnde_pos_pipi)
-        ss_spec = spec_helper(bfs["s s"], self.dnde_pos_ss)
-
-        total = pipi_spec + muon_spec + ss_spec
-
-        return {"total": total, "mu mu": muon_spec, "pi pi": pipi_spec, "s s": ss_spec}
+    def positron_spectrum_funcs(self):
+        return {
+            "mu mu": self.dnde_pos_mumu,
+            "pi pi": self.dnde_pos_pipi,
+            "s s": self.dnde_pos_ss
+        }
 
     def positron_lines(self, cme):
         """

@@ -19,7 +19,8 @@ class VectorMediatorPositronSpectra:
         pws = self.partial_widths()
 
         if pws["total"] != 0:
-            pw_array = np.array([pws["e e"], pws["mu mu"], pws["pi pi"]], dtype=float)
+            # dnde_decay_v relies on this ordering of the partial widths
+            pw_array = np.array([pws["e e"], pws["mu mu"], pws["pi pi"]])
             pw_array /= pws["total"]
 
             # Factor of 2 since there are two V's
@@ -27,24 +28,12 @@ class VectorMediatorPositronSpectra:
         else:
             return np.zeros_like(e_ps)
 
-    def positron_spectra(self, e_ps, e_cm):
-        """Computes total continuum positron spectrum.
-        """
-        bfs = self.annihilation_branching_fractions(e_cm)
-
-        def spec_helper(bf, spec_fn):
-            if bf != 0:
-                return bf * spec_fn(e_ps, e_cm)
-            else:
-                return np.zeros(e_ps.shape)
-
-        muon_spec = spec_helper(bfs["mu mu"], self.dnde_pos_mumu)
-        pipi_spec = spec_helper(bfs["pi pi"], self.dnde_pos_pipi)
-        vv_spec = spec_helper(bfs["v v"], self.dnde_pos_vv)
-
-        total = pipi_spec + muon_spec + vv_spec
-
-        return {"total": total, "mu mu": muon_spec, "pi pi": pipi_spec, "v v": vv_spec}
+    def positron_spectrum_funcs(self):
+        return {
+            "mu mu": self.dnde_pos_mumu,
+            "pi pi": self.dnde_pos_pipi,
+            "v v": self.dnde_pos_vv
+        }
 
     def positron_lines(self, e_cm):
         bf = self.annihilation_branching_fractions(e_cm)["e e"]
