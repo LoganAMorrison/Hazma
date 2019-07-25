@@ -84,7 +84,9 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         if cs["total"] == 0:
             return {fs: 0.0 for fs in cs if fs != "total"}
         else:
-            return {fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"}
+            return {
+                fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"
+            }
 
     @abstractmethod
     def spectrum_funcs(self):

@@ -51,7 +51,12 @@ class VectorMediatorCrossSections:
                 * e_cm ** 2
                 * sqrt(e_cm ** 2 - 4.0 * mx ** 2)
                 * pi
-                * (e_cm ** 4 - 2.0 * e_cm ** 2 * mv ** 2 + mv ** 4 + mv ** 2 * width_v ** 2)
+                * (
+                    e_cm ** 4
+                    - 2.0 * e_cm ** 2 * mv ** 2
+                    + mv ** 4
+                    + mv ** 2 * width_v ** 2
+                )
             )
 
             assert ret_val.imag == 0
@@ -96,7 +101,12 @@ class VectorMediatorCrossSections:
                 * pi
                 * e_cm ** 2
                 * sqrt(-4.0 * mx ** 2 + e_cm ** 2)
-                * (mv ** 4 - 2.0 * mv ** 2 * e_cm ** 2 + e_cm ** 4 + mv ** 2 * width_v ** 2)
+                * (
+                    mv ** 4
+                    - 2.0 * mv ** 2 * e_cm ** 2
+                    + e_cm ** 4
+                    + mv ** 2 * width_v ** 2
+                )
             )
 
             assert ret_val.imag == 0
@@ -237,7 +247,9 @@ class VectorMediatorCrossSections:
                     * gvxx ** 2
                     * sqrt(s * (-4.0 * mpi ** 2 + s))
                     * sqrt(
-                        e_cm ** 4 + (mpi0 ** 2 - s) ** 2 - 2.0 * e_cm ** 2 * (mpi0 ** 2 + s)
+                        e_cm ** 4
+                        + (mpi0 ** 2 - s) ** 2
+                        - 2.0 * e_cm ** 2 * (mpi0 ** 2 + s)
                     )
                     * (
                         -24.0 * mpi ** 6 * s
@@ -294,7 +306,9 @@ class VectorMediatorCrossSections:
             s_min = 4.0 * mpi ** 2
             s_max = (e_cm - mpi0) ** 2
 
-            ret_val = quad(self.dsigma_ds_xx_to_v_to_pi0pipi, s_min, s_max, args=(e_cm))[0]
+            ret_val = quad(
+                self.dsigma_ds_xx_to_v_to_pi0pipi, s_min, s_max, args=(e_cm)
+            )[0]
 
             assert ret_val.imag == 0
             assert ret_val.real >= 0
@@ -327,7 +341,10 @@ class VectorMediatorCrossSections:
                             + e_cm ** 4
                         )
                         * atanh(
-                            (sqrt(4 * mv ** 2 - e_cm ** 2) * sqrt(4 * mx ** 2 - e_cm ** 2))
+                            (
+                                sqrt(4 * mv ** 2 - e_cm ** 2)
+                                * sqrt(4 * mx ** 2 - e_cm ** 2)
+                            )
                             / (2 * mv ** 2 - e_cm ** 2)
                         )
                     )

@@ -114,7 +114,7 @@ class ScalarMediatorSpectra:
             "e e": self.dnde_ee,
             "pi0 pi0": self.dnde_pi0pi0,
             "pi pi": self.dnde_pipi,
-            "s s": self.dnde_ss
+            "s s": self.dnde_ss,
         }
 
     def gamma_ray_lines(self, e_cm):

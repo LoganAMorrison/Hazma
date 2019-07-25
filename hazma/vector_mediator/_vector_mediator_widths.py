@@ -52,7 +52,7 @@ class VectorMediatorWidths:
             assert ret_val.imag == 0
             assert ret_val.real >= 0
 
-            return ret_val
+            return ret_val.real
         else:
             return 0.0
 
@@ -64,7 +64,9 @@ class VectorMediatorWidths:
             gvxx = self.gvxx
 
             return (
-                gvxx ** 2 * sqrt(mv ** 2 - 4.0 * mx ** 2) * (mv ** 2 + 2.0 * mx ** 2)
+                gvxx ** 2
+                * sqrt(mv ** 2 - 4.0 * mx ** 2).real
+                * (mv ** 2 + 2.0 * mx ** 2)
             ) / (4.0 * mv ** 2 * pi)
         else:
             return 0.0
@@ -83,21 +85,23 @@ class VectorMediatorWidths:
 
         if mv > 2.0 * mf:
             return (
-                gvll ** 2 * sqrt(mv ** 2 - 4.0 * mf ** 2) * (2.0 * mf ** 2 + mv ** 2)
+                gvll ** 2
+                * sqrt(mv ** 2 - 4.0 * mf ** 2).real
+                * (2.0 * mf ** 2 + mv ** 2)
             ) / (4.0 * mv ** 2 * pi)
         else:
             return 0.0
 
     def partial_widths(self):
-        w_pipi = self.width_v_to_pipi().real
-        w_pi0g = self.width_v_to_pi0g().real
-        w_xx = self.width_v_to_xx().real
-        w_ee = self.width_v_to_ff("e").real
-        w_mumu = self.width_v_to_ff("mu").real
+        w_pipi = self.width_v_to_pipi()
+        w_pi0g = self.width_v_to_pi0g()
+        w_xx = self.width_v_to_xx()
+        w_ee = self.width_v_to_ff("e")
+        w_mumu = self.width_v_to_ff("mu")
 
         total = w_pipi + w_pi0g + w_xx + w_ee + w_mumu
 
-        width_dict = {
+        return {
             "pi pi": w_pipi,
             "pi0 g": w_pi0g,
             "x x": w_xx,
@@ -105,5 +109,3 @@ class VectorMediatorWidths:
             "mu mu": w_mumu,
             "total": total,
         }
-
-        return width_dict

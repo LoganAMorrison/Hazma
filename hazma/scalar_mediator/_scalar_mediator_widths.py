@@ -187,13 +187,13 @@ class ScalarMediatorWidths:
             modes of the scalar mediator are 'g g', 'pi0 pi0', 'pi pi', 'x x'
             and 'f f'. The total decay width has the key 'total'.
         """
-        w_gg = self.width_s_to_gg().real
-        w_pi0pi0 = self.width_s_to_pi0pi0().real
-        w_pipi = self.width_s_to_pipi().real
-        w_xx = self.width_s_to_xx().real
+        w_gg = self.width_s_to_gg()
+        w_pi0pi0 = self.width_s_to_pi0pi0()
+        w_pipi = self.width_s_to_pipi()
+        w_xx = self.width_s_to_xx()
 
-        w_ee = self.width_s_to_ff("e").real
-        w_mumu = self.width_s_to_ff("mu").real
+        w_ee = self.width_s_to_ff("e")
+        w_mumu = self.width_s_to_ff("mu")
 
         total = w_gg + w_pi0pi0 + w_pipi + w_xx + w_ee + w_mumu
 

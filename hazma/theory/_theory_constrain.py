@@ -148,7 +148,7 @@ class TheoryConstrain:
         # Compute Phi/<sigma v> in each bin for each final state
         fs_bin_fluxes = {
             fs: get_bin_fluxes(spec_fn, lambda e_cm: {})
-            for fs, spec_fn in self.spectrum_functions().items()
+            for fs, spec_fn in self.spectrum_funcs().items()
             if fs != "total"
         }
         # line_bin_fluxes = {fs: get_bin_fluxes(None, line_fn) for fs, line_fn

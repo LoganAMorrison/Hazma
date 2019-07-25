@@ -114,10 +114,10 @@ class VectorMediatorSpectra:
         return dnde_decay_v_pt(e_gams, e_v, mv, pw_array, fs)
 
     def dnde_pi0v(self, e_gams, e_cm):
-        e_pi0 = (e_cm**2 + mpi0**2 - self.mv**2) / (2 * e_cm)
+        e_pi0 = (e_cm ** 2 + mpi0 ** 2 - self.mv ** 2) / (2 * e_cm)
         pi0_spec = neutral_pion(e_gams, e_pi0)
 
-        e_v = (e_cm**2 - mpi0**2 + self.mv**2) / (2 * e_cm)
+        e_v = (e_cm ** 2 - mpi0 ** 2 + self.mv ** 2) / (2 * e_cm)
         v_spec = self.__dnde_v(e_gams, e_v, fs="total")
 
         return pi0_spec + v_spec
@@ -148,7 +148,7 @@ class VectorMediatorSpectra:
             "pi pi": self.dnde_pipi,
             "pi0 g": self.dnde_pi0g,
             "pi0 v": self.dnde_pi0v,
-            "v v": self.dnde_vv
+            "v v": self.dnde_vv,
         }
 
     def gamma_ray_lines(self, e_cm):

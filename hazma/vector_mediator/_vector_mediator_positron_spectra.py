@@ -32,7 +32,7 @@ class VectorMediatorPositronSpectra:
         return {
             "mu mu": self.dnde_pos_mumu,
             "pi pi": self.dnde_pos_pipi,
-            "v v": self.dnde_pos_vv
+            "v v": self.dnde_pos_vv,
         }
 
     def positron_lines(self, e_cm):

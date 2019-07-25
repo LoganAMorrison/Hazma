@@ -56,7 +56,12 @@ class ScalarMediatorCrossSection:
                 * e_cm ** 2
                 * sqrt(-4 * mx ** 2 + e_cm ** 2)
                 * vh ** 2
-                * (ms ** 4 - 2 * ms ** 2 * e_cm ** 2 + e_cm ** 4 + ms ** 2 * width_s ** 2)
+                * (
+                    ms ** 4
+                    - 2 * ms ** 2 * e_cm ** 2
+                    + e_cm ** 4
+                    + ms ** 2 * width_s ** 2
+                )
             )
 
             assert ret_val.imag == 0
@@ -92,7 +97,11 @@ class ScalarMediatorCrossSection:
             Lam = self.lam
 
             ret_val = (
-                alpha_em ** 2 * gsFF ** 2 * gsxx ** 2 * e_cm ** 4 * sqrt(1 - 4 * rx ** 2)
+                alpha_em ** 2
+                * gsFF ** 2
+                * gsxx ** 2
+                * e_cm ** 4
+                * sqrt(1 - 4 * rx ** 2)
             ) / (
                 64.0
                 * Lam ** 2
@@ -283,7 +292,10 @@ class ScalarMediatorCrossSection:
                             - 4 * ms ** 2 * (4 * mx ** 2 + e_cm ** 2)
                         )
                         * atanh(
-                            (sqrt(-4 * ms ** 2 + e_cm ** 2) * sqrt(-4 * mx ** 2 + e_cm ** 2))
+                            (
+                                sqrt(-4 * ms ** 2 + e_cm ** 2)
+                                * sqrt(-4 * mx ** 2 + e_cm ** 2)
+                            )
                             / (-2 * ms ** 2 + e_cm ** 2)
                         )
                     )

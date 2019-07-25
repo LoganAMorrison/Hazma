@@ -80,7 +80,7 @@ class ScalarMediatorPositronSpectra:
         return {
             "mu mu": self.dnde_pos_mumu,
             "pi pi": self.dnde_pos_pipi,
-            "s s": self.dnde_pos_ss
+            "s s": self.dnde_pos_ss,
         }
 
     def positron_lines(self, cme):
