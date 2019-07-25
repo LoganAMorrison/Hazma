@@ -373,46 +373,12 @@ class ScalarMediatorCrossSection:
         else:
             return 0.0
 
-    def annihilation_cross_sections(self, e_cm):
-        """
-        Compute the cross sections for dark matter annihilating through a
-        scalar mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        e_cm : float
-            Center of mass energy.
-
-        Returns
-        -------
-        cs : dictionary
-            Dictionary of the cross sections. The keys are 'total', 'mu mu',
-            'e e', 'pi0 pi0', 'pi pi'
-        """
-        muon_contr = self.sigma_xx_to_s_to_ff(e_cm, "mu")
-        electron_contr = self.sigma_xx_to_s_to_ff(e_cm, "e")
-        photon_contr = self.sigma_xx_to_s_to_gg(e_cm)
-        npion_contr = self.sigma_xx_to_s_to_pi0pi0(e_cm)
-        cpion_contr = self.sigma_xx_to_s_to_pipi(e_cm)
-        ss_contr = self.sigma_xx_to_ss(e_cm)
-
-        total = (
-            muon_contr
-            + electron_contr
-            + npion_contr
-            + cpion_contr
-            + photon_contr
-            + ss_contr
-        )
-
-        cross_secs = {
-            "mu mu": muon_contr,
-            "e e": electron_contr,
-            "g g": photon_contr,
-            "pi0 pi0": npion_contr,
-            "pi pi": cpion_contr,
-            "s s": ss_contr,
-            "total": total
+    def annihilation_cross_section_funcs(self):
+        return {
+            "mu mu": lambda e_cm: self.sigma_xx_to_s_to_ff(e_cm, "mu"),
+            "e e": lambda e_cm: self.sigma_xx_to_s_to_ff(e_cm, "e"),
+            "g g": self.sigma_xx_to_s_to_gg,
+            "pi0 pi0": self.sigma_xx_to_s_to_pi0pi0,
+            "pi pi": self.sigma_xx_to_s_to_pipi,
+            "s s": self.sigma_xx_to_ss,
         }
-
-        return cross_secs

@@ -34,7 +34,6 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    @abstractmethod
     def annihilation_cross_sections(self, e_cm):
         """Gets DM annihilation cross sections.
 
@@ -49,7 +48,12 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             Annihilation cross section into each final state in MeV**-2 as well
             as the total cross section.
         """
-        pass
+        xsecs = {
+            fs: sigma_fn(e_cm)
+            for fs, sigma_fn in self.annihilation_cross_section_funcs().items()
+        }
+        xsecs["total"] = sum(xsecs.values())
+        return xsecs
 
     @abstractmethod
     def partial_widths(self):
@@ -80,7 +84,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         if cs["total"] == 0:
             return {fs: 0.0 for fs in cs if fs != "total"}
         else:
-            return {fs: sigma / cs["total"] for fs, sigma in cs.items()}
+            return {fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"}
 
     @abstractmethod
     def spectra(self, e_gams, e_cm):

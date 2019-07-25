@@ -415,41 +415,12 @@ class VectorMediatorCrossSections:
         else:
             return 0.0
 
-    def annihilation_cross_sections(self, e_cm):
-        """
-        Compute the total cross section for two fermions annihilating
-        through a vector mediator to mesons and leptons.
-
-        Parameters
-        ----------
-        cme : float
-            Center of mass energy.
-
-        Returns
-        -------
-        cs : float
-            Total cross section.
-        """
-        muon_contr = self.sigma_xx_to_v_to_ff(e_cm, "mu")
-        electron_contr = self.sigma_xx_to_v_to_ff(e_cm, "e")
-        pipi_contr = self.sigma_xx_to_v_to_pipi(e_cm)
-        pi0g_contr = self.sigma_xx_to_v_to_pi0g(e_cm)
-        pi0v_contr = self.sigma_xx_to_v_to_pi0v(e_cm)
-        # pi0pipi_contr = sigma_xx_to_v_to_pi0pipi(e_cm)
-        vv_contr = self.sigma_xx_to_vv(e_cm)
-
-        total = muon_contr + electron_contr + pipi_contr + pi0g_contr + vv_contr
-        # pi0pipi_contr
-
-        cross_secs = {
-            "mu mu": muon_contr,
-            "e e": electron_contr,
-            "pi pi": pipi_contr,
-            "pi0 g": pi0g_contr,
-            "pi0 v": pi0v_contr,
-            # 'pi0 pi pi': pi0pipi_contr,
-            "v v": vv_contr,
-            "total": total
+    def annihilation_cross_section_funcs(self):
+        return {
+            "mu mu": lambda e_cm: self.sigma_xx_to_v_to_ff(e_cm, "mu"),
+            "e e": lambda e_cm: self.sigma_xx_to_v_to_ff(e_cm, "e"),
+            "pi pi": self.sigma_xx_to_v_to_pipi,
+            "pi0 g": self.sigma_xx_to_v_to_pi0g,
+            "pi0 v": self.sigma_xx_to_v_to_pi0v,
+            "v v": self.sigma_xx_to_vv,
         }
-
-        return cross_secs
