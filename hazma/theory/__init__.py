@@ -62,7 +62,6 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    @abstractmethod
     def annihilation_branching_fractions(self, e_cm):
         """Gets DM annihilation branching fractions.
 
@@ -76,7 +75,12 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         dict(str, float)
             Annihilation branching fractions into each final state.
         """
-        pass
+        cs = self.annihilation_cross_sections(e_cm)
+
+        if cs["total"] == 0:
+            return {fs: 0.0 for fs in cs if fs != "total"}
+        else:
+            return {fs: sigma / cs["total"] for fs, sigma in cs.items()}
 
     @abstractmethod
     def spectra(self, e_gams, e_cm):
