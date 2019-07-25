@@ -168,33 +168,34 @@ def spec_res_fn(ep, e, energy_res):
 def convolved_spectrum_fn(
     e_min, e_max, e_cm, energy_res, spec_fn=None, line_fn=None, n_pts=1000
 ):
-    """Convolves a continuum and line spectrum with a detector's spectral
+    r"""
+    Convolves a continuum and line spectrum with a detector's spectral
     resolution function.
 
     Parameters
     ----------
     e_min : float
-    Lower bound of energy range over which to perform convolution.
+        Lower bound of energy range over which to perform convolution.
     e_max : float
-    Upper bound of energy range over which to perform convolution.
+        Upper bound of energy range over which to perform convolution.
     e_cm : float
-    Center of mass energy for DM annihilation.
+        Center of mass energy for DM annihilation.
     energy_res : float -> float
-    The detector's energy resolution (Delta E / E) as a function of
-    photon energy in MeV.
+        The detector's energy resolution (Delta E / E) as a function of
+        photon energy in MeV.
     spec_fn : np.array -> np.array
-    Continuum spectrum function.
+        Continuum spectrum function.
     line_fn : np.array -> np.array
-    Function returning a dict with information about spectral lines.
+        Function returning a dict with information about spectral lines.
     n_pts : float
-    Number of points to use to create resulting interpolating function.
+        Number of points to use to create resulting interpolating function.
 
     Returns
     -------
-    interp1d
-    An interpolator giving the DM annihilation spectrum as seen by the
-    detector. Given photon energies outside the range covered by
-    e_gams, the interpolator will raise a bounds_errors.
+    dnde_conv : InterpolatedUnivariateSpline
+        An interpolator giving the DM annihilation spectrum as seen by the
+        detector. Using photon energies outside the range [e_min, e_max] will
+        produce a ``bounds_errors``.
     """
     es = np.geomspace(e_min, e_max, n_pts)
     dnde_conv = np.zeros(es.shape)
@@ -217,7 +218,6 @@ def convolved_spectrum_fn(
                 return trapz(integrand_vals, es_padded)
 
             dnde_conv += np.vectorize(integral)(es)
-            # dnde_conv += np.array([integral(e) for e in es])
 
     # Line contribution
     if line_fn is not None:
