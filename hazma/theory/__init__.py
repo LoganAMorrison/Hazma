@@ -18,61 +18,68 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     @staticmethod
     @abstractmethod
     def list_annihilation_final_states():
-        """Returns a list of the annihilation final states.
+        r"""
+        Lists annihilation final states.
 
-        Excludes states that are suppressed by (eg) factors of alpha_EM or
-        |m_d-m_u|.
+        Subclasses must implement this method.
 
         Returns
         -------
-        list(str)
+        fss : list(str)
             Possible annihilation final states.
         """
         pass
 
-    def annihilation_cross_sections(self, e_cm):
-        """Gets DM annihilation cross sections.
-
-        Arguments
-        ---------
-        e_cm : float
-            Center of mass energy for the annihilation in MeV.
-
-        Returns
-        -------
-        dict(str, float)
-            Annihilation cross section into each final state in MeV**-2 as well
-            as the total cross section.
-        """
-        xsecs = {
-            fs: sigma_fn(e_cm)
-            for fs, sigma_fn in self.annihilation_cross_section_funcs().items()
-        }
-        xsecs["total"] = sum(xsecs.values())
-        return xsecs
-
     @abstractmethod
-    def partial_widths(self):
-        """Gets mediator decay widths.
+    def annihilation_cross_section_funcs(self):
+        r"""
+        Gets functions to compute annihilation cross sections.
+
+        Subclasses must implement this method.
 
         Returns
         -------
-        dict(str, float)
-            Mediator partial widths in MeV as the total cross decay width.
+        sigma_fns : dict(str, (float) -> float)
+            A map specifying a function for each final state which takes a
+            center of mass energy and returns the corresponding annihilation
+            cross section in :math:`\mathrm{MeV}^{-2}`.
         """
         pass
 
-    def annihilation_branching_fractions(self, e_cm):
-        """Gets DM annihilation branching fractions.
+    def annihilation_cross_sections(self, e_cm):
+        r"""
+        Computes annihilation cross sections.
 
-        Arguments
+        Parameters
         ---------
         e_cm : float
             Center of mass energy for the annihilation in MeV.
 
         Returns
         -------
-        dict(str, float)
+        sigmas : dict(str, float)
+            Annihilation cross section into each final state in
+            :math:`\mathrm{MeV}^{-2}` as well as the total cross section.
+        """
+        sigmas = {
+            fs: sigma_fn(e_cm)
+            for fs, sigma_fn in self.annihilation_cross_section_funcs().items()
+        }
+        sigmas["total"] = sum(sigmas.values())
+        return sigmas
+
+    def annihilation_branching_fractions(self, e_cm):
+        r"""
+        Computes annihilation branching fractions.
+
+        Parameters
+        ---------
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+
+        Returns
+        -------
+        bfs : dict(str, float)
             Annihilation branching fractions into each final state.
         """
         cs = self.annihilation_cross_sections(e_cm)
@@ -85,37 +92,85 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             }
 
     @abstractmethod
+    def partial_widths(self):
+        """
+        Computes mediator decay widths.
+
+        Subclasses must implement this method.
+
+        Returns
+        -------
+        widths : dict(str, float)
+            Mediator partial widths in MeV as the total cross decay width.
+        """
+        pass
+
+    @abstractmethod
     def spectrum_funcs(self):
+        r"""
+        Gets a function computing the continuum gamma-ray spectrum for
+        annihilations into each relevant final state.
+
+        Subclasses must implement this method.
+
+        Returns
+        -------
+        spec_fns : dict(str, (float or np.array, float) -> float)
+            :math:`dN/dE_\gamma` as a function of photon energies and the
+            annihilation center of mass energy for annihilation into each final
+            state that produces a continuum spectrum.
+        """
         pass
 
     def spectra(self, e_gams, e_cm):
+        r"""
+        Gets the contributions to the continuum gamma-ray annihilation spectrum
+        for each final state.
+
+        Parameters
+        ---------
+        e_gams : float or float numpy.array
+            Photon energy or energies at which to compute the spectrum.
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+
+        Returns
+        -------
+        specs : dict(str, float)
+            Contribution to :math:`dN/dE_\gamma` at the given photon energies
+            and center-of-mass energy for each relevant final state. More
+            specifically, this is the spectrum for annihilation into each
+            channel rescaled by the corresponding branching fraction into that
+            channel.
+        """
         bfs = self.annihilation_branching_fractions(e_cm)
-        dndes = {}
+        specs = {}
 
         for fs, dnde_func in self.spectrum_funcs().items():
             if bfs[fs] == 0:
-                dndes[fs] = np.zeros_like(e_gams)
+                specs[fs] = np.zeros_like(e_gams)
             else:
-                dndes[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
+                specs[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
 
-        dndes["total"] = sum(dndes.values())
+        specs["total"] = sum(specs.values())
 
-        return dndes
+        return specs
 
     def total_spectrum(self, e_gams, e_cm):
-        """Returns total gamma ray spectrum.
+        r"""
+        Computes total continuum gamma-ray spectrum.
 
         Parameters
         ----------
         e_gams : float or float numpy.array
             Photon energy or energies at which to compute the spectrum.
         e_cm : float
-            DM center of mass energy.
+            Annihilation center of mass energy.
 
         Returns
         -------
-        tot_spec : float numpy.array
-            Array containing the total annihilation spectrum.
+        spec : float numpy.array
+            Array containing the total annihilation gamma-ray spectrum.
         """
         if hasattr(e_gams, "__len__"):
             return self.spectra(e_gams, e_cm)["total"]
@@ -124,16 +179,54 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @abstractmethod
     def gamma_ray_lines(self, e_cm):
-        """Returns the energies of and branching fractions into monochromatic
-        gamma rays produces by this theory.
+        r"""
+        Gets information about annihilation into gamma-ray lines.
+
+        Subclasses must implement this method.
+
+        Parameters
+        ----------
+        e_cm : float
+            Annihilation center of mass energy.
+
+        Returns
+        -------
+        lines : dict(str, dict(str, float))
+            For each final state containing a monochromatic photon, gives the
+            energy of the photon and branching fraction into that final state.
         """
         pass
 
     def total_conv_spectrum_fn(
         self, e_gam_min, e_gam_max, e_cm, energy_res, n_pts=1000
     ):
-        """Applies `convolved_spectrum_fn` to obtain the convolved gamma-ray
-        spectrum. See documentation for that function.
+        r"""
+        Computes the total gamma-ray spectrum convolved with an energy
+        resolution function.
+
+        Parameters
+        ----------
+        e_min : float
+            Lower bound of energy range over which to perform convolution.
+        e_max : float
+            Upper bound of energy range over which to perform convolution.
+        e_cm : float
+            Center of mass energy for DM annihilation.
+        energy_res : float -> float
+            The detector's energy resolution (Delta E / E) as a function of
+            photon energy in MeV.
+        n_pts : float
+            Number of points to use to create resulting interpolating function.
+            More points gives higher accuracy at the cost of computing time,
+            but is necessary if the continuum spectrum contains very sharp
+            features.
+
+        Returns
+        -------
+        dnde_conv : InterpolatedUnivariateSpline
+            An interpolator giving the DM annihilation spectrum smeared by the
+            energy resolution function. Using photon energies outside the range
+            [e_min, e_max] will produce a ``bounds_error``.
         """
         return convolved_spectrum_fn(
             e_gam_min,
@@ -147,9 +240,42 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @abstractmethod
     def positron_spectrum_funcs(self):
+        r"""
+        Gets a function computing the continuum positron spectrum for
+        annihilations into each relevant final state.
+
+        Subclasses must implement this method.
+
+        Returns
+        -------
+        spec_fns : dict(str, (float or np.array, float) -> float)
+            :math:`dN/dE_{e^+}` as a function of positron energies and the
+            annihilation center of mass energy for annihilation into each final
+            state that produces a continuum spectrum.
+        """
         pass
 
     def positron_spectra(self, e_ps, e_cm):
+        r"""
+        Gets the contributions to the continuum positron annihilation spectrum
+        for each final state.
+
+        Parameters
+        ---------
+        e_ps : float or float numpy.array
+            Positron energy or energies at which to compute the spectrum.
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+
+        Returns
+        -------
+        specs : dict(str, float)
+            Contribution to :math:`dN/dE_\gamma` at the given positron energies
+            and center-of-mass energy for each relevant final state. More
+            specifically, this is the spectrum for annihilation into each
+            channel rescaled by the corresponding branching fraction into that
+            channel.
+        """
         bfs = self.annihilation_branching_fractions(e_cm)
         dndes_pos = {}
 
@@ -164,18 +290,19 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         return dndes_pos
 
     def total_positron_spectrum(self, e_ps, e_cm):
-        """Returns total positron ray spectrum.
+        r"""
+        Computes the total positron ray spectrum.
 
         Parameters
         ----------
         e_ps : float or float numpy.array
             Positron energy or energies at which to compute the spectrum.
         e_cm : float
-            DM center of mass energy.
+            Annihilation center of mass energy.
 
         Returns
         -------
-        tot_spec : float numpy.array
+        spec : float numpy.array
             Array containing the total annihilation positron spectrum.
         """
         if hasattr(e_ps, "__len__"):
@@ -185,13 +312,55 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @abstractmethod
     def positron_lines(self, e_cm):
+        r"""
+        Gets information about annihilation into monochromatic positrons.
+
+        Subclasses must implement this method.
+
+        Parameters
+        ----------
+        e_cm : float
+            Annihilation center of mass energy.
+
+        Returns
+        -------
+        lines : dict(str, dict(str, float))
+            For each final state containing a monochromatic positron, gives the
+            energy of the positron and branching fraction into that final
+            state.
+        """
         pass
 
     def total_conv_positron_spectrum_fn(
         self, e_p_min, e_p_max, e_cm, energy_res, n_pts=1000
     ):
-        """Applies `convolved_spectrum_fn` to obtain the convolved positron
-        spectrum. See documentation for that function.
+        r"""
+        Computes the total positron spectrum convolved with an energy
+        resolution function.
+
+        Parameters
+        ----------
+        e_min : float
+            Lower bound of energy range over which to perform convolution.
+        e_max : float
+            Upper bound of energy range over which to perform convolution.
+        e_cm : float
+            Center of mass energy for DM annihilation.
+        energy_res : float -> float
+            The detector's energy resolution (Delta E / E) as a function of
+            positron energy in MeV.
+        n_pts : float
+            Number of points to use to create resulting interpolating function.
+            More points gives higher accuracy at the cost of computing time,
+            but is necessary if the continuum spectrum contains very sharp
+            features.
+
+        Returns
+        -------
+        dnde_conv : InterpolatedUnivariateSpline
+            An interpolator giving the DM annihilation spectrum smeared by the
+            energy resolution function. Using positron energies outside the
+            range [e_min, e_max] will produce a ``bounds_error``.
         """
         return convolved_spectrum_fn(
             e_p_min,
@@ -205,7 +374,10 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @abstractmethod
     def constraints(self):
-        """Get a dictionary of all available constraints.
+        r"""
+        Get a dictionary of all available constraints.
+
+        Subclasses must implement this method.
 
         Notes
         -----
@@ -213,4 +385,4 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         function that is positive when the constraint is satisfied and negative
         when it is not.
         """
-        pass
+        raise NotImplementedError()
