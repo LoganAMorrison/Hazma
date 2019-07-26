@@ -2,12 +2,12 @@ from setuptools import setup, Extension, find_packages
 
 import numpy as np
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 
 def readme():
     """print long description"""
-    with open("README.md") as f:
+    with open("READMEPYPI.md") as f:
         return f.read()
 
 
@@ -174,7 +174,7 @@ setup(
     author_email="loanmorr@ucsc.edu",
     maintainer="Logan Morrison",
     maintainer_email="loanmorr@ucsc.edu",
-    url="http://hazma.readthedocs.io/en/latest/",
+    url="http://hazma.readthedocs.io",
     description="Python package for computing indirect detection constraints on sub-GeV dark matter.",
     long_description=readme(),
     long_description_content_type="text/markdown",
