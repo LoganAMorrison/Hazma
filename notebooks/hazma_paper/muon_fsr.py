@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: hydrogen
 #       format_version: '1.2'
-#       jupytext_version: 1.1.6
+#       jupytext_version: 1.1.5
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -27,14 +27,29 @@ from utilities import latex_text_width_1col
 # **Generates plots of the muon FSR spectrum for the scalar and vector-mediator models.**
 
 # %%
-def ap_approx(e_gam, mass, e_cm):
+def dnde_ap(e_gam, mass, e_cm):
     """Altarelli-Parisi approximation of FSR spectrum.
+    
+    Parameters
+    ----------
+    e_gam : float
+        Gamma-ray energy in MeV.
+    mass : float
+        Mass of radiating particle in MeV.
+    e_cm : float
+        Center-of-mass energy of reaction in MeV.
+    
+    Returns
+    -------
+    dnde : float
+        Value of energy spectrum dN/dE at the specified point in
+        :math:`\mathrm{MeV}^{-1}`.
     """
-    x0 = 2.0 * e_gam / e_cm
-    eps = 2 * mass / e_cm
+    x = 2.0 * e_gam / e_cm
+    mu = mass / e_cm
     pre_fac = 1.0 / (137.0 * np.pi) * 2.0 / e_cm
-    split_func = (1.0 + (1.0 - x0) ** 2) / x0
-    log_sup = -1.0 + np.log(4.0 * (1 - x0) / eps ** 2)
+    split_func = (1.0 + (1.0 - x) ** 2) / x
+    log_sup = -1.0 + np.log((1 - x) / mu ** 2)
 
     return pre_fac * split_func * log_sup
 
@@ -69,7 +84,7 @@ for i, ax in enumerate(axs.flatten()):
     ax.loglog(e_gams, e_gams * vm.dnde_mumu(e_gams, e_cm, "fsr"), label="V")
 
     # Plot AP approximation
-    ax.loglog(e_gams, e_gams * ap_approx(e_gams, mmu, e_cm), "--k", label="AP")
+    ax.loglog(e_gams, e_gams * dnde_ap(e_gams, mmu, e_cm), "--k", label="AP")
 
     # Formatting
     ax.set_xlim(e_gams[[0, -1]])

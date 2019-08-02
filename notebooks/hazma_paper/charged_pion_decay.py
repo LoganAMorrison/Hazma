@@ -39,8 +39,8 @@ fig, ax = plt.subplots(
 dnde_total = dnde_pi(e_gams, e_pi, mode="total")
 ax.loglog(e_gams, e_gams * dnde_total, "k", label="Total")
 
-dnde_munu = dnde_pi(e_gams, e_pi, mode="munug")
-ax.loglog(e_gams, e_gams * dnde_munu, label=r"$\mu^{+}\nu\gamma$")
+dnde_munug = dnde_pi(e_gams, e_pi, mode="munug")
+ax.loglog(e_gams, e_gams * dnde_munug, label=r"$\mu^{+}\nu\gamma$")
 
 dnde_munu = dnde_pi(e_gams, e_pi, mode="munu")
 ax.loglog(e_gams, e_gams * dnde_munu, label=r"$\mu^{+}\nu$")
@@ -50,13 +50,12 @@ ax.loglog(e_gams, e_gams * dnde_enug, label=r"$e^{+}\nu\gamma$")
 
 # Formatting
 plt.xlim(e_gams[[0, -1]])
-plt.ylim([1e-4, 3e-2])
+plt.ylim([1e-6, 3e-2])
 plt.xlabel(r"$E_{\gamma}$ (MeV)")
 plt.ylabel(r"$E_\gamma \frac{dN}{dE_\gamma}$")
-plt.text(2e0, 4e-3, r"$\mu^+ \nu \gamma$", fontsize=9, color=colors[0])
-plt.text(1e1, 7.5e-3, r"$\mu^+ \nu$", fontsize=9, color=colors[1])
-plt.text(2e0, 2.3e-4, r"$e^+ \nu \gamma$", fontsize=9, color=colors[2])
-plt.text(3.7e1, 7e-3, "Total", fontsize=9)
+plt.text(1e1, 5e-3, r"$\mu^+ \nu$", fontsize=9, color=colors[1])
+plt.text(2e0, 1.5e-4, r"$\mu^+ \nu \gamma$", fontsize=9, color=colors[0])
+plt.text(2e0, 4e-6, r"$e^+ \nu \gamma$", fontsize=9, color=colors[2])
 
 plt.tight_layout()
 plt.savefig("figures/charged_pion_decay.pdf", bbox_inches="tight")

@@ -225,7 +225,7 @@ egret_diffuse.target  # target region information
 TargetParams(J=3.79e27, dOmega=6.584844306798711)
 sm = ScalarMediator(mx=150.0, ms=1e4, gsxx=1.0, gsff=0.1, gsGG=0.5, gsFF=0, lam=1e5)
 sm.binned_limit(egret_diffuse)
-# 7.841784676562726e-27  # cm^3 / s
+# 7.842099364343105e-27  # cm^3 / s
 
 # %% {"hidden": true}
 from hazma.gamma_ray_parameters import A_eff_e_astrogam
@@ -244,7 +244,7 @@ sm.unbinned_limit(
     gc_target,  # target region
     gc_bg_model,
 )  # background model
-# 5.63534935653953e-30  # cm^3 / s
+# 5.635716615303109e-30  # cm^3 / s
 
 # %% [markdown] {"heading_collapsed": true}
 # ## Section 8: Cosmic Microwave Background limits
@@ -255,22 +255,24 @@ from hazma.scalar_mediator import ScalarMediator
 sm = ScalarMediator(mx=150.0, ms=1e4, gsxx=1.0, gsff=0.1, gsGG=0.5, gsFF=0, lam=1e5)
 x_kd = 1e-4
 sm.f_eff(x_kd), sm.f_eff_ep(x_kd), sm.f_eff_g(x_kd)
-# (0.4373205896743133, 0.1657568724934657, 0.2715637171808476)
+# (0.4371171534060625, 0.1657568724934657, 0.2713602809125968)
 
 # %% {"hidden": true}
 from hazma.cmb import p_ann_planck_temp_pol as p_ann
+from hazma.scalar_mediator import HiggsPortal
 
 p_ann
 # 3.5e-31  # cm^3 / MeV / s
 x_kd = 1e-4
 sm = HiggsPortal(mx=150.0, ms=1e4, gsxx=1.0, stheta=0.01)
 sm.cmb_limit(x_kd, p_ann)
-# 1.2209926980668773e-28  # cm^3 / s
+# 1.2215415859552705e-28  # cm^3 / s
 
 # %% [markdown] {"heading_collapsed": true}
 # ## Appendix B: Basic Usage
 
 # %% {"hidden": true}
+import numpy as np
 from hazma.vector_mediator import KineticMixing
 
 params = {"mx": 250.0, "mv": 1e6, "gvxx": 1.0, "eps": 1e-3}
@@ -304,6 +306,13 @@ km.partial_widths()
 # %% {"hidden": true}
 photon_energies = np.array([cme / 4])
 km.spectra(photon_energies, cme)
+# {'mu mu': array([2.94759389e-05]),
+#  'e e': array([0.00013171]),
+#  'pi pi': array([2.14636322e-06]),
+#  'pi0 g': array([2.29931655e-07]),
+#  'pi0 v': array([0.]),
+#  'v v': array([0.]),
+#  'total': array([0.00016357])}
 
 # %% {"hidden": true}
 spec_funs = km.spectrum_funcs()
@@ -315,9 +324,11 @@ print(mumu_bf * spec_funs["mu mu"](photon_energies, cme))
 
 # %% {"hidden": true}
 km.total_spectrum(photon_energies, cme)
+# array([0.00016357])
 
 # %% {"hidden": true}
 km.gamma_ray_lines(cme)
+# {'pi0 g': {'energy': 231.78145156177675, 'bf': 2.6965133472190545e-05}}
 
 # %% {"hidden": true}
 min_photon_energy = 1e-3
@@ -329,6 +340,7 @@ spec = km.total_conv_spectrum_fn(
     min_photon_energy, max_photon_energy, cme, energy_resolution, number_points
 )
 spec(cme / 4)
+# array(0.00168782)
 
 # %% {"hidden": true}
 from hazma.parameters import electron_mass as me

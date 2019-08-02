@@ -50,8 +50,8 @@ n_subplot_rows, n_subplot_cols = len(vms), len(mxs)
 # Label final states
 fs_labels = np.array(
     [
-        [{"e e": (1e1, 7e-3)}, {"mu mu": (7e0, 9e-5)}, {}, {"pi pi": (7e0, 4e-5)}],
-        [{"pi0 g": (1.7e1, 1e-3)}, {}, {"pi pi": (1e1, 7e-3)}, {}],
+        [{"e e": (1e1, 7e-3)}, {"mu mu": (7e0, 9e-5)}, {}, {"pi pi": (7e0, 3e-5)}],
+        [{"pi0 g": (1.7e1, 1e-3)}, {}, {"pi pi": (1e1, 5e-3)}, {}],
         [{"pi0 g": (1.7e1, 1e-3)}, {}, {}, {}],
     ]
 )
