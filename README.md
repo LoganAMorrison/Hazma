@@ -36,4 +36,4 @@ This will start a jupyter kernel.
 
 ## Other information
 
-Logo design: David Reiman and Adam Coogan; icon from Freepik from [flaticon.com](flaticon.com).
+Logo design: David Reiman and Adam Coogan; icon from Freepik from [flaticon.com](https://www.flaticon.com/).
