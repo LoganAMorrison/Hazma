@@ -59,9 +59,10 @@ cdef double WIDTH_PI = 2.528511206475808**-14.
 # MISC.
 cdef double ALPHA_EM = 1.0 / 137.0  # Fine structure constant.
 cdef double RATIO_E_MU_MASS_SQ = (MASS_E / MASS_MU)**2.
-cdef double A_PI = 0.0119
-cdef double V_PI = 0.0254
-cdef double A_K = 0.042
-cdef double V_K = 0.096
-cdef double DECAY_CONST_PI = 130.41
-cdef double DECAY_CONST_K = 156.1
+cdef double F_A_PI = 0.0119
+cdef double F_V_PI = 0.0254
+cdef double F_V_PI_SLOPE = 0.1
+cdef double F_A_K = 0.042
+cdef double F_V_K = 0.096
+cdef double DECAY_CONST_PI = 130.41  # PDG convention
+cdef double DECAY_CONST_K = 156.1  # PDG convention

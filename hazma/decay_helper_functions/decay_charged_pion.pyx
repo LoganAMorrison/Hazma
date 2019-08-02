@@ -11,7 +11,7 @@ import warnings
 
 cdef double eng_gam_max_mu_rf = (MASS_MU**2.0 - MASS_E**2.0) / (2.0 * MASS_MU)
 cdef double eng_mu_pi_rf = (MASS_PI**2.0 + MASS_MU**2.0) / (2.0 * MASS_PI)
-cdef double fpi = DECAY_CONST_PI / sqrt(2.)
+cdef double fpi = DECAY_CONST_PI / sqrt(2.)  # ~92 MeV
 cdef double mpi = MASS_PI
 cdef double me = MASS_E
 cdef double mmu = MASS_MU
@@ -19,6 +19,7 @@ cdef double mmu = MASS_MU
 cdef np.ndarray eng_gams_mu
 cdef np.ndarray mu_spec
 
+# TODO: load from a file
 eng_gams_mu = np.logspace(-5.5, 3.0, num=10000, dtype=np.float64)
 mu_spec = muspec(eng_gams_mu, eng_mu_pi_rf)
 
@@ -35,27 +36,52 @@ cdef double dnde_pi_to_lnug(double egam, double ml):
     """
     Returns dnde from pi-> l nu g.
     """
-    cdef double r = pow(ml / mpi, 2.0)
-    if 0.0 <= egam and egam <= mpi * (1. - r) / 2. :
-        return (ALPHA_EM *
-            (-2 * (2 * egam + mpi * (-1 + r)) *
-             (3 * fpi**2 * (2 * egam - mpi) * mpi * r *
-              ((egam - mpi)**2 +
-               (2 * egam - mpi) * mpi * r) - 3 * egam**2 * fpi *
-              (2 * egam - mpi) * mpi * r *
-              (4 * A_PI * egam - A_PI * mpi *
-              (1 + r) - 2 * egam * V_PI) + egam**4 *
-              (2 * egam + mpi * (-1 + r)) * (4 * egam - mpi * (2 + r)) *
-              (A_PI**2 + V_PI**2)) + 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
-             (2 * egam**2 * fpi + 2 * egam * fpi * mpi *
-              (-1 + r) - 4 * A_PI * egam**2 * (egam - mpi * r) - fpi * mpi**2 *
-              (-1 + r**2) + 4 * egam**3 * V_PI) *
-             (log(-2 * egam + mpi) - log(mpi * r)))) / \
-        (6. * egam * fpi**2 * (
-            1 - (2 * egam) / mpi)**2 * mpi**4 * M_PI * (-1 + r)**2 * r)
+    cdef double x = 2 * egam / mpi
+    cdef double r = (ml / mpi) * (ml / mpi)
+
+    if 0.0 <= x and x <= (1 - r):
+        return __dnde_pi_to_lnug(x, r)
     else :
         return 0.0
 
+
+@cython.cdivision(True)
+cdef double __dnde_pi_to_lnug(double x, double r):
+    """
+    Helper function for computing dnde from pi-> l nu g.
+    """
+    # Account for energy-dependence of vector form factor
+    cdef double F_V = F_V_PI * (1 + F_V_PI_SLOPE * (1 - x))
+
+    # Numerator terms with no log
+    cdef double f = (r + x - 1) * (
+        mpi*mpi * x*x*x*x * (F_A_PI*F_A_PI + F_V*F_V) * (r*r - r*x + r - 2 * (x-1)*(x-1))
+        - 12 * sqrt(2) * fpi * mpi * r * (x-1) * x*x * (F_A_PI * (r - 2*x + 1) + F_V * x)
+        - 24 * fpi*fpi * r * (x-1) * (4*r*(x-1) + (x-2)*(x-2)))
+
+    # Numerator terms with log
+    cdef double g = 12 * sqrt(2) * fpi * r * (x-1)*(x-1) * log(r / (1-x)) * (
+        mpi * x*x * (F_A_PI * (x - 2*r) - F_V * x)
+        + sqrt(2) * fpi * (2*r*r - 2*r*x - x*x + 2*x - 2))
+
+    return ALPHA_EM * (f + g) / (24 * M_PI * mpi * fpi*fpi * (r-1)*(r-1)
+                                 * (x-1)*(x-1) * r * x)
+#    return (ALPHA_EM *
+#        (-2 * (2 * egam + mpi * (-1 + r)) *
+#         (3 * fpi**2 * (2 * egam - mpi) * mpi * r *
+#          ((egam - mpi)**2 +
+#           (2 * egam - mpi) * mpi * r) - 3 * egam**2 * fpi *
+#          (2 * egam - mpi) * mpi * r *
+#          (4 * F_A_PI * egam - F_A_PI * mpi *
+#          (1 + r) - 2 * egam * F_V) + egam**4 *
+#          (2 * egam + mpi * (-1 + r)) * (4 * egam - mpi * (2 + r)) *
+#          (F_A_PI**2 + F_V**2)) + 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
+#         (2 * egam**2 * fpi + 2 * egam * fpi * mpi *
+#          (-1 + r) - 4 * F_A_PI * egam**2 * (egam - mpi * r) - fpi * mpi**2 *
+#          (-1 + r**2) + 4 * egam**3 * F_V) *
+#         (log(-2 * egam + mpi) - log(mpi * r)))) / \
+#    (6 * egam * mpi * fpi**2 * (
+#        1 - (2 * egam) / mpi)**2 * mpi**4 * M_PI * (-1 + r)**2 * r)
 
 
 @cython.cdivision(True)
@@ -138,7 +164,7 @@ cdef double integrand(double cl, double eng_gam, double eng_pi, str mode):
         dnde_munu = BR_PI_TO_MUNU * jac * muon_spectrum(eng_gam_pi_rF)
 
     dnde_munug = BR_PI_TO_MUNU * jac * dnde_pi_to_lnug(eng_gam_pi_rF, mmu)
-    dnde_enug = 0.000123 * jac * dnde_pi_to_lnug(eng_gam_pi_rF, me)
+    dnde_enug = BR_PI_TO_ENU * jac * dnde_pi_to_lnug(eng_gam_pi_rF, me)
 
     if mode == "total":
         return dnde_munu + dnde_munug + dnde_enug
