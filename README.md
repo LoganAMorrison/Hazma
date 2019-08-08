@@ -1,10 +1,10 @@
 ![Logo](docs/source/_static/img/hazma_logo_large.png)
 
+-----------------------------------------
+
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
 [![Documentation Status](https://readthedocs.org/projects/hazma/badge/?version=latest)](https://hazma.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3351972.svg)](https://doi.org/10.5281/zenodo.3351972)
-
-# Hazma
 
 `hazma` is a tool for analyzing theories of sub-GeV dark matter. It can compute gamma-ray spectra from dark matter annihilations, set limits using current gamma-ray data and make projects for future gamma-ray detectors. It can generate positron spectra as well, and derive accurate CMB constraints. `hazma` includes several pre-implemented sub-GeV dark matter models, and provides the infrastructure to add custom ones.
 
