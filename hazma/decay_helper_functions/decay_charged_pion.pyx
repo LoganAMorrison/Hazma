@@ -66,22 +66,6 @@ cdef double __dnde_pi_to_lnug(double x, double r):
 
     return ALPHA_EM * (f + g) / (24 * M_PI * mpi * fpi*fpi * (r-1)*(r-1)
                                  * (x-1)*(x-1) * r * x)
-#    return (ALPHA_EM *
-#        (-2 * (2 * egam + mpi * (-1 + r)) *
-#         (3 * fpi**2 * (2 * egam - mpi) * mpi * r *
-#          ((egam - mpi)**2 +
-#           (2 * egam - mpi) * mpi * r) - 3 * egam**2 * fpi *
-#          (2 * egam - mpi) * mpi * r *
-#          (4 * F_A_PI * egam - F_A_PI * mpi *
-#          (1 + r) - 2 * egam * F_V) + egam**4 *
-#          (2 * egam + mpi * (-1 + r)) * (4 * egam - mpi * (2 + r)) *
-#          (F_A_PI**2 + F_V**2)) + 3 * fpi * mpi * (-2 * egam + mpi)**2 * r *
-#         (2 * egam**2 * fpi + 2 * egam * fpi * mpi *
-#          (-1 + r) - 4 * F_A_PI * egam**2 * (egam - mpi * r) - fpi * mpi**2 *
-#          (-1 + r**2) + 4 * egam**3 * F_V) *
-#         (log(-2 * egam + mpi) - log(mpi * r)))) / \
-#    (6 * egam * mpi * fpi**2 * (
-#        1 - (2 * egam) / mpi)**2 * mpi**4 * M_PI * (-1 + r)**2 * r)
 
 
 @cython.cdivision(True)
