@@ -202,16 +202,16 @@ class TestVectorMediator(unittest.TestCase):
         list_fs = ["mu mu", "e e", "pi pi", "pi0 g", "pi0 v", "v v"]
         quark_only_fss = ["pi pi", "pi0 g", "pi0 v", "v v"]
 
-        assert self.vm1.list_annihilation_final_states() == list_fs
-        assert self.vm2.list_annihilation_final_states() == list_fs
-        assert self.vm3.list_annihilation_final_states() == list_fs
-        assert self.vm4.list_annihilation_final_states() == list_fs
-        assert self.vm5.list_annihilation_final_states() == list_fs
-        assert self.vm6.list_annihilation_final_states() == list_fs
+        self.assertEqual(self.vm1.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.vm2.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.vm3.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.vm4.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.vm5.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.vm6.list_annihilation_final_states(), list_fs)
 
-        assert VectorMediator.list_annihilation_final_states() == list_fs
-        assert KineticMixing.list_annihilation_final_states() == list_fs
-        assert QuarksOnly.list_annihilation_final_states() == quark_only_fss
+        self.assertEqual(VectorMediator.list_annihilation_final_states(), list_fs)
+        self.assertEqual(KineticMixing.list_annihilation_final_states(), list_fs)
+        self.assertEqual(QuarksOnly.list_annihilation_final_states(), quark_only_fss)
 
     def test_cross_sections(self):
         """
@@ -226,17 +226,17 @@ class TestVectorMediator(unittest.TestCase):
         css6 = self.vm6.annihilation_cross_sections(self.cme)
 
         for key in self.vm1_css.keys():
-            assert np.isclose(self.vm1_css[key], css1[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm1_css[key], css1[key], places=3)
         for key in self.vm2_css.keys():
-            assert np.isclose(self.vm2_css[key], css2[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm2_css[key], css2[key], places=3)
         for key in self.vm3_css.keys():
-            assert np.isclose(self.vm3_css[key], css3[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm3_css[key], css3[key], places=3)
         for key in self.vm4_css.keys():
-            assert np.isclose(self.vm4_css[key], css4[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm4_css[key], css4[key], places=3)
         for key in self.vm5_css.keys():
-            assert np.isclose(self.vm5_css[key], css5[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm5_css[key], css5[key], places=3)
         for key in self.vm6_css.keys():
-            assert np.isclose(self.vm6_css[key], css6[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.vm6_css[key], css6[key], places=3)
 
     def test_branching_fractions(self):
         """
@@ -252,22 +252,22 @@ class TestVectorMediator(unittest.TestCase):
 
         for key in self.vm1_bfs.keys():
             val1, val2 = self.vm1_bfs[key], bfs1[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm2_bfs.keys():
             val1, val2 = self.vm2_bfs[key], bfs2[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm3_bfs.keys():
             val1, val2 = self.vm3_bfs[key], bfs3[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm4_bfs.keys():
             val1, val2 = self.vm4_bfs[key], bfs4[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm5_bfs.keys():
             val1, val2 = self.vm5_bfs[key], bfs5[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm6_bfs.keys():
             val1, val2 = self.vm6_bfs[key], bfs6[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_spectra(self):
         """
@@ -283,22 +283,22 @@ class TestVectorMediator(unittest.TestCase):
 
         for key in self.vm1_gam_spec.keys():
             for (val1, val2) in zip(self.vm1_gam_spec[key], spec1[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm2_gam_spec.keys():
             for (val1, val2) in zip(self.vm2_gam_spec[key], spec2[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm3_gam_spec.keys():
             for (val1, val2) in zip(self.vm3_gam_spec[key], spec3[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm4_gam_spec.keys():
             for (val1, val2) in zip(self.vm4_gam_spec[key], spec4[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm5_gam_spec.keys():
             for (val1, val2) in zip(self.vm5_gam_spec[key], spec5[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm6_gam_spec.keys():
             for (val1, val2) in zip(self.vm6_gam_spec[key], spec6[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
     def test_spectrum_funcs(self):
         self.vm1.spectrum_funcs()
@@ -321,22 +321,22 @@ class TestVectorMediator(unittest.TestCase):
 
         for key in self.vm1_pws.keys():
             val1, val2 = self.vm1_pws[key], pws1[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm2_pws.keys():
             val1, val2 = self.vm2_pws[key], pws2[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm3_pws.keys():
             val1, val2 = self.vm3_pws[key], pws3[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm4_pws.keys():
             val1, val2 = self.vm4_pws[key], pws4[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm5_pws.keys():
             val1, val2 = self.vm5_pws[key], pws5[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm6_pws.keys():
             val1, val2 = self.vm6_pws[key], pws6[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_positron_spectra(self):
         """
@@ -352,22 +352,22 @@ class TestVectorMediator(unittest.TestCase):
 
         for key in self.vm1_pos_spec.keys():
             for (val1, val2) in zip(self.vm1_pos_spec[key], pspec1[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm2_pos_spec.keys():
             for (val1, val2) in zip(self.vm2_pos_spec[key], pspec2[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm3_pos_spec.keys():
             for (val1, val2) in zip(self.vm3_pos_spec[key], pspec3[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm4_pos_spec.keys():
             for (val1, val2) in zip(self.vm4_pos_spec[key], pspec4[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm5_pos_spec.keys():
             for (val1, val2) in zip(self.vm5_pos_spec[key], pspec5[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
         for key in self.vm6_pos_spec.keys():
             for (val1, val2) in zip(self.vm6_pos_spec[key], pspec6[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
     def test_positron_lines(self):
         """
@@ -381,26 +381,14 @@ class TestVectorMediator(unittest.TestCase):
         ln6 = self.vm6.positron_lines(self.cme)
 
         for key in self.vm1_pos_line["e e"]:
-            assert np.isclose(
-                ln1["e e"][key], self.vm1_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln1["e e"][key], self.vm1_pos_line["e e"][key], places=3)
         for key in self.vm2_pos_line["e e"]:
-            assert np.isclose(
-                ln2["e e"][key], self.vm2_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln2["e e"][key], self.vm2_pos_line["e e"][key], places=3)
         for key in self.vm3_pos_line["e e"]:
-            assert np.isclose(
-                ln3["e e"][key], self.vm3_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln3["e e"][key], self.vm3_pos_line["e e"][key], places=3)
         for key in self.vm4_pos_line["e e"]:
-            assert np.isclose(
-                ln4["e e"][key], self.vm4_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln4["e e"][key], self.vm4_pos_line["e e"][key], places=3)
         for key in self.vm5_pos_line["e e"]:
-            assert np.isclose(
-                ln5["e e"][key], self.vm5_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln5["e e"][key], self.vm5_pos_line["e e"][key], places=3)
         for key in self.vm6_pos_line["e e"]:
-            assert np.isclose(
-                ln6["e e"][key], self.vm6_pos_line["e e"][key], atol=0.0, rtol=1e-3
-            )
+            self.assertAlmostEqual(ln6["e e"][key], self.vm6_pos_line["e e"][key], places=3)

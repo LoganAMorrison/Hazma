@@ -99,11 +99,11 @@ class TestScalarMediator(unittest.TestCase):
         list_fs = ["mu mu", "e e", "g g", "pi0 pi0", "pi pi", "s s"]
         hq_fss = ["g g", "pi0 pi0", "pi pi", "s s"]
 
-        assert self.sm1.list_annihilation_final_states() == list_fs
-        assert self.sm2.list_annihilation_final_states() == list_fs
+        self.assertEqual(self.sm1.list_annihilation_final_states(), list_fs)
+        self.assertEqual(self.sm2.list_annihilation_final_states(), list_fs)
 
-        assert ScalarMediator.list_annihilation_final_states() == list_fs
-        assert HeavyQuark.list_annihilation_final_states() == hq_fss
+        self.assertEqual(ScalarMediator.list_annihilation_final_states(), list_fs)
+        self.assertEqual(HeavyQuark.list_annihilation_final_states(), hq_fss)
 
     def test_cross_sections(self):
         """
@@ -114,10 +114,10 @@ class TestScalarMediator(unittest.TestCase):
         cs2_new = self.sm2.annihilation_cross_sections(self.cme2)
 
         for key in self.cs1_old.keys():
-            assert np.isclose(self.cs1_old[key], cs1_new[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.cs1_old[key], cs1_new[key], places=3)
 
         for key in self.cs2_old.keys():
-            assert np.isclose(self.cs2_old[key], cs2_new[key], atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(self.cs2_old[key], cs2_new[key], places=3)
 
     def test_branching_fractions(self):
         """
@@ -129,18 +129,18 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.bf1_old.keys():
             val1, val2 = self.bf1_old[key], bf1_new[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
         for key in self.bf2_old.keys():
             val1, val2 = self.bf2_old[key], bf2_new[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_compute_vs(self):
         """
         Test that the scalar mediator vev is correct.
         """
-        assert self.sm1.compute_vs() == self.vs1
-        assert self.sm2.compute_vs() == self.vs2
+        self.assertEqual(self.sm1.compute_vs(), self.vs1)
+        self.assertEqual(self.sm2.compute_vs(), self.vs2)
 
     def test_spectra(self):
         """
@@ -152,11 +152,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.spec1_old.keys():
             for (val1, val2) in zip(self.spec1_old[key], spec1_new[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
         for key in self.spec2_old.keys():
             for (val1, val2) in zip(self.spec2_old[key], spec2_new[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
     def test_spectrum_funcs(self):
         self.sm1.spectrum_funcs()
@@ -172,11 +172,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.ps1_old.keys():
             val1, val2 = self.ps1_old[key], ps1_new[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
         for key in self.ps2_old.keys():
             val1, val2 = self.ps2_old[key], ps2_new[key]
-            assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_positron_spectra(self):
         """
@@ -188,11 +188,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.pspec1_old.keys():
             for (val1, val2) in zip(self.pspec1_old[key], pspec1_new[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
         for key in self.pspec2_old.keys():
             for (val1, val2) in zip(self.pspec2_old[key], pspec2_new[key]):
-                assert np.isclose(val1, val2, atol=0.0, rtol=1e-3)
+                self.assertAlmostEqual(val1, val2, places=3)
 
     def test_positron_lines(self):
         """
@@ -201,24 +201,10 @@ class TestScalarMediator(unittest.TestCase):
         lns1_new = self.sm1.positron_lines(self.cme1)
         lns2_new = self.sm2.positron_lines(self.cme2)
 
-        assert np.isclose(
-            lns1_new["e e"]["bf"], self.lns1_old["e e"]["bf"], atol=0.0, rtol=1e-3
-        )
+        self.assertAlmostEqual(lns1_new["e e"]["bf"], self.lns1_old["e e"]["bf"], places=3)
 
-        assert np.isclose(
-            lns1_new["e e"]["energy"],
-            self.lns1_old["e e"]["energy"],
-            atol=0.0,
-            rtol=1e-3,
-        )
+        self.assertAlmostEqual(lns1_new["e e"]["energy"], self.lns1_old["e e"]["energy"], places=3)
 
-        assert np.isclose(
-            lns2_new["e e"]["bf"], self.lns2_old["e e"]["bf"], atol=0.0, rtol=1e-3
-        )
+        self.assertAlmostEqual(lns2_new["e e"]["bf"], self.lns2_old["e e"]["bf"], places=3)
 
-        assert np.isclose(
-            lns2_new["e e"]["energy"],
-            self.lns2_old["e e"]["energy"],
-            atol=0.0,
-            rtol=1e-3,
-        )
+        self.assertAlmostEqual(lns2_new["e e"]["energy"], self.lns2_old["e e"]["energy"], places=3)

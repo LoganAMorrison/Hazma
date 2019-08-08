@@ -54,11 +54,11 @@ class TestDecay(unittest.TestCase):
         spec3 = muon(self.eng_gams, self.emu3)
 
         for (val1, val2) in zip(self.muspec1, spec1):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.muspec2, spec2):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.muspec3, spec3):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_npion_spec(self):
         spec1 = neutral_pion(self.eng_gams, self.enp1)
@@ -66,11 +66,11 @@ class TestDecay(unittest.TestCase):
         spec3 = neutral_pion(self.eng_gams, self.enp3)
 
         for (val1, val2) in zip(self.npspec1, spec1):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.npspec2, spec2):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.npspec3, spec3):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
 
     def test_cpion_spec(self):
         spec1 = charged_pion(self.eng_gams, self.ecp1)
@@ -78,8 +78,8 @@ class TestDecay(unittest.TestCase):
         spec3 = charged_pion(self.eng_gams, self.ecp3)
 
         for (val1, val2) in zip(self.cpspec1, spec1):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.cpspec2, spec2):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
         for (val1, val2) in zip(self.cpspec3, spec3):
-            assert np.isclose(val1, val2, 1e-3)
+            self.assertAlmostEqual(val1, val2, places=3)
