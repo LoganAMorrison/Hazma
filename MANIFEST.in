@@ -1,4 +1,5 @@
-global-include *.txt *.rst *.pyx *.pxd *.c
+global-include *.txt *.rst *.pyx *.pxd *.c *.md
+include MANIFEST.in
 include hazma/decay_helper_functions/interpolation_data/ckaon/*.dat
 include hazma/decay_helper_functions/interpolation_data/skaon/*.dat
 include hazma/decay_helper_functions/interpolation_data/lkaon/*.dat
