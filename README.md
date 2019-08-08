@@ -52,8 +52,7 @@ If you use Hazma in your own research, please cite:
       year           = "2019",
       eprint         = "1907.11846",
       archivePrefix  = "arXiv",
-      primaryClass   = "hep-ph",
-      SLACcitation   = "%%CITATION = ARXIV:1907.11846;%%"
+      primaryClass   = "hep-ph"
 }
 ```
 
