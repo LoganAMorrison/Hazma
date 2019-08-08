@@ -18,6 +18,11 @@ from hazma.scalar_mediator._scalar_mediator_spectra \
 from hazma.scalar_mediator._scalar_mediator_widths \
     import ScalarMediatorWidths
 
+from hazma.scalar_mediator.scalar_mediator_relic_density import \
+    solve_boltzmann as _solve_boltzmann
+from hazma.scalar_mediator.scalar_mediator_relic_density import \
+    relic_density as _relic_density
+
 import numpy as np
 
 
@@ -303,6 +308,12 @@ class ScalarMediator(ScalarMediatorConstraints,
             Array of the available final states.
         """
         return ['mu mu', 'e e', 'g g', 'pi0 pi0', 'pi pi', 's s']
+
+    def solve_boltzmann(self):
+        return _solve_boltzmann(self)
+
+    def relic_density(self):
+        return _relic_density(self)
 
 
 class HiggsPortal(ScalarMediator):

@@ -91,6 +91,9 @@ extensions += [Extension(sm_pack + ".scalar_mediator_decay_spectrum",
 extensions += [Extension(sm_pack + ".scalar_mediator_positron_spec",
                          sources=[sm_dir +
                                   "scalar_mediator_positron_spec.pyx"])]
+extensions += [Extension(sm_pack + ".scalar_mediator_relic_density",
+                         sources=[sm_dir +
+                                  "scalar_mediator_relic_density.pyx"])]
 # Vector mediator
 extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
                          sources=[vm_dir +
