@@ -9,18 +9,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/hazma/scalar_mediator/get_path.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hazma/scalar_mediator/scalar_mediator_relic_density.pyx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hazma/sm_dof_data/geff.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hazma/sm_dof_data/heff.dat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hazma/sm_dof_data/sqrt_gstar.dat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MANIFEST.in" beforeDir="false" afterPath="$PROJECT_DIR$/MANIFEST.in" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hazma/scalar_mediator/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/scalar_mediator/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-    </list>
+    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +92,7 @@
       <workItem from="1563673847305" duration="11009000" />
       <workItem from="1563690903385" duration="4882000" />
       <workItem from="1564967285668" duration="12467000" />
-      <workItem from="1565059662834" duration="5861000" />
+      <workItem from="1565059662834" duration="6118000" />
     </task>
     <task id="LOCAL-00001" summary="Renaming hazma-example notebook">
       <created>1562543939666</created>
