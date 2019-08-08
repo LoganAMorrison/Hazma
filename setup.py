@@ -10,7 +10,7 @@ def long_description():
     """
     with open("README.md", encoding="utf-8") as f:
         ld = f.read()
-    return '\n'.join([str(l) for l in ld.split('\n')[4:]])
+    return "\n".join([str(l) for l in ld.split("\n")[4:]])
 
 
 decay_dir = "hazma/decay_helper_functions/"
