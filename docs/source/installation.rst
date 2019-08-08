@@ -1,9 +1,7 @@
 Installation
 ============
 
-``hazma`` was developed with python3.6, and it is recommended to use python3.
-While ``hazma`` should work correctly with python2.7, this version of
-python will soon lose support. Before installing ``hazma``, the user
+``hazma`` was developed for python3. Before installing ``hazma``, the user
 needs to install several well-established python packages: ``cython``,
 ``scipy``, ``numpy``, and ``scikit-image``. Theses are easily installed by using
 PyPI. If the user has PyPI installed on their system, then these packages
