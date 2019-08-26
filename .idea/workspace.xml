@@ -9,7 +9,14 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="" />
+    <list default="true" id="d3f5726c-bc41-4f6e-a412-efec3994a826" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/hazma/vector_mediator/get_path.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hazma/vector_mediator/vector_mediator_relic_density.pyx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hazma/vector_mediator/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/hazma/vector_mediator/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebooks/dev/Relic Density.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebooks/dev/Relic Density.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,22 +34,18 @@
     </option>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="JsFlowSettings">
     <service-enabled>true</service-enabled>
     <exe-path />
     <other-services-enabled>true</other-services-enabled>
     <auto-save>true</auto-save>
-  </component>
-  <component name="ProjectFrameBounds" fullScreen="true">
-    <option name="width" value="1680" />
-    <option name="height" value="1050" />
   </component>
   <component name="ProjectId" id="1Oz4puaOR0ZO7zcGRFMmDJ1wlVy" />
   <component name="PropertiesComponent">
@@ -93,6 +96,9 @@
       <workItem from="1563690903385" duration="4882000" />
       <workItem from="1564967285668" duration="12467000" />
       <workItem from="1565059662834" duration="6118000" />
+      <workItem from="1565727519734" duration="5000" />
+      <workItem from="1565762165679" duration="977000" />
+      <workItem from="1565930842105" duration="2536000" />
     </task>
     <task id="LOCAL-00001" summary="Renaming hazma-example notebook">
       <created>1562543939666</created>

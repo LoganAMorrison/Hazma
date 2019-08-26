@@ -11,6 +11,11 @@ from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
+from hazma.vector_mediator.vector_mediator_relic_density import \
+    solve_boltzmann as _solve_boltzmann
+from hazma.vector_mediator.vector_mediator_relic_density import \
+    relic_density as _relic_density
+
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
@@ -205,6 +210,12 @@ class VectorMediator(
 
     def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
         pass
+
+    def solve_boltzmann(self):
+        return _solve_boltzmann(self)
+
+    def relic_density(self):
+        return _relic_density(self)
 
 
 class KineticMixing(VectorMediator):

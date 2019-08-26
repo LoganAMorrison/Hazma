@@ -101,6 +101,9 @@ extensions += [Extension(vm_pack + ".vector_mediator_decay_spectrum",
 extensions += [Extension(vm_pack + ".vector_mediator_positron_spec",
                          sources=[vm_dir +
                                   "vector_mediator_positron_spec.pyx"])]
+extensions += [Extension(vm_pack + ".vector_mediator_relic_density",
+                         sources=[vm_dir +
+                                  "vector_mediator_relic_density.pyx"])]
 
 setup(name='hazma',
       version=VERSION,
