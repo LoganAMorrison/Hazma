@@ -115,7 +115,7 @@ cdef double CSpectrumPoint(double eng_gam, double eng_mu):
         eng_gam (float) -- Gamma ray energy in laboratory frame.
         eng_mu (float) -- Muon energy in laboratory frame.
     """
-    message = 'Energy of kaon cannot be less than the kaon mass. Returning 0.'
+    message = 'Energy of muon cannot be less than the muon mass. Returning 0.'
     if eng_mu < MASS_MU:
         # raise warnings.warn(message, RuntimeWarning)
         return 0.0
