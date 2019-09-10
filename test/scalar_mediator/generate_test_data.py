@@ -2,87 +2,80 @@ from hazma.scalar_mediator import ScalarMediator
 from hazma.parameters import vh
 from hazma.parameters import electron_mass as me
 import numpy as np
+import os
+from os import path
 
 
-mx1, mx2 = 250.0, 250.0
-ms1, ms2 = 550.0, 200.0
-gsxx = 1.0
-stheta = 1e-3
-gsff = stheta
-gsGG = 3.0 * stheta
-gsFF = -5.0 * stheta / 6.0
-lam = vh
-
-vrel = 1e-3
-cme1 = 2.0 * mx1 * (1.0 + 0.5 * vrel ** 2)
-cme2 = 2.0 * mx2 * (1.0 + 0.5 * vrel ** 2)
-
-params1 = {
-    "mx": mx1,
-    "ms": ms1,
-    "gsxx": gsxx,
-    "gsff": gsff,
-    "gsGG": gsGG,
-    "gsFF": gsFF,
-    "lam": lam,
-}
-params2 = {
-    "mx": mx2,
-    "ms": ms2,
-    "gsxx": gsxx,
-    "gsff": gsff,
-    "gsGG": gsGG,
-    "gsFF": gsFF,
-    "lam": lam,
-}
-
-SM1 = ScalarMediator(**params1)
-SM2 = ScalarMediator(**params2)
+def e_cm_mw(mx, vrel=1e-3):
+    """Computes DM COM energy, assuming its velocity is much less than c.
+    """
+    return 2 * mx * (1 + 0.5 * vrel**2)
 
 
-np.save("sm1_data/params.npy", params1)
-np.save("sm2_data/params.npy", params2)
-np.save("sm1_data/cme.npy", cme1)
-np.save("sm2_data/cme.npy", cme2)
+def save_data(params_list, Models):
+    """Generates and saves data for a set of scalar mediator models.
+    """
+    # Make data directory
+    data_dir = path.join(path.dirname(__file__), "data")
+    if not path.exists(path.join(data_dir)):
+        os.makedirs(data_dir)
+
+    for i, (params, Model) in enumerate(zip(params_list, Models)):
+        # Make directory for model
+        cur_dir = path.join(data_dir, "sm_{}".format(i + 1))
+        print("writing tests to {}".format(cur_dir))
+        if not path.exists(cur_dir):
+            os.makedirs(cur_dir)
+
+        SM = ScalarMediator(**params)
+        np.save(path.join(cur_dir, "params.npy"), params)
+
+        # Particle physics quantities
+        e_cm = e_cm_mw(SM.mx)
+        np.save(path.join(cur_dir, "e_cm.npy"), e_cm)
+        np.save(path.join(cur_dir, "ann_cross_sections.npy"), SM.annihilation_cross_sections(e_cm))
+        np.save(path.join(cur_dir, "ann_branching_fractions.npy"), SM.annihilation_branching_fractions(e_cm))
+        np.save(path.join(cur_dir, "partial_widths.npy"), SM.partial_widths())
+        np.save(path.join(cur_dir, "vs.npy"), SM.compute_vs())
+
+        # Gamma-ray spectra
+        e_gams = np.geomspace(1.0, e_cm, 10)
+        np.save(path.join(cur_dir, "e_gams.npy"), e_gams)
+        np.save(path.join(cur_dir, "spectra.npy"), SM.spectra(e_gams, e_cm))
+        np.save(path.join(cur_dir, "gamma_ray_lines.npy"), SM.gamma_ray_lines(e_cm))
+
+        # Positron spectra
+        e_ps = np.geomspace(me, e_cm, 10)
+        np.save(path.join(cur_dir, "e_ps.npy"), e_ps)
+        np.save(path.join(cur_dir, "positron_spectra.npy"), SM.positron_spectra(e_ps, e_cm))
+        np.save(path.join(cur_dir, "positron_lines.npy"), SM.positron_lines(e_cm))
+
+def generate_test_data():
+    params = []
+    # Higgs-portal couplings
+    stheta = 1e-3
+
+    params.append({
+        "mx": 250.0,
+        "ms": 125.0,
+        "gsxx": 1.0,
+        "gsff": stheta,
+        "gsGG": 3 * stheta,
+        "gsFF": -5 / 6 * stheta,
+        "lam": vh,
+    })
+    params.append({
+        "mx": 250.0,
+        "ms": 550.0,
+        "gsxx": 1.0,
+        "gsff": stheta,
+        "gsGG": 3 * stheta,
+        "gsFF": -5 / 6 * stheta,
+        "lam": vh,
+    })
+
+    save_data(params, 2 * [ScalarMediator])
 
 
-np.save("sm1_data/ann_cross_sections.npy", SM1.annihilation_cross_sections(cme1))
-np.save("sm2_data/ann_cross_sections.npy", SM2.annihilation_cross_sections(cme2))
-
-
-np.save(
-    "sm1_data/ann_branching_fractions.npy", SM1.annihilation_branching_fractions(cme1)
-)
-np.save(
-    "sm2_data/ann_branching_fractions.npy", SM2.annihilation_branching_fractions(cme2)
-)
-
-
-np.save("sm1_data/vs.npy", SM1.compute_vs())
-np.save("sm2_data/vs.npy", SM2.compute_vs())
-
-
-egams1 = np.logspace(0.0, np.log10(cme1), num=10)
-egams2 = np.logspace(0.0, np.log10(cme2), num=10)
-
-np.save("sm1_data/spectra.npy", SM1.spectra(egams1, cme1))
-np.save("sm2_data/spectra.npy", SM2.spectra(egams2, cme2))
-np.save("sm1_data/spectra_egams.npy", egams1)
-np.save("sm2_data/spectra_egams.npy", egams2)
-
-
-np.save("sm1_data/partial_widths.npy", SM1.partial_widths())
-np.save("sm2_data/partial_widths.npy", SM2.partial_widths())
-
-
-eng_ps1 = np.logspace(me, np.log10(cme1), num=10)
-eng_ps2 = np.logspace(me, np.log10(cme2), num=10)
-
-np.save("sm1_data/positron_spectra.npy", SM1.positron_spectra(eng_ps1, cme1))
-np.save("sm2_data/positron_spectra.npy", SM2.positron_spectra(eng_ps2, cme2))
-np.save("sm1_data/eng_ps.npy", eng_ps1)
-np.save("sm2_data/eng_ps.npy", eng_ps2)
-
-
-np.save("sm1_data/ps_lines.npy", SM1.positron_lines(cme1))
-np.save("sm2_data/ps_lines.npy", SM2.positron_lines(cme2))
+if __name__ == "__main__":
+    generate_test_data()

@@ -1,145 +1,89 @@
 from hazma.vector_mediator import VectorMediator, KineticMixing
+from hazma.parameters import vh
 from hazma.parameters import electron_mass as me
 import numpy as np
+import os
+from os import path
 
 
-mx = 250.0
-gvxx = 1.0
-eps = 0.1
+def e_cm_mw(mx, vrel=1e-3):
+    """Computes DM COM energy, assuming its velocity is much less than c.
+    """
+    return 2 * mx * (1 + 0.5 * vrel**2)
 
-mv1, mv2 = 125.0, 550.0
 
-gvuu = 1.0
-gvdd1, gvdd2 = 1.0, -1.0
-gvss, gvee, gvmumu = 0.0, 0.0, 0.0
+def save_data(params_list, Models):
+    """Generates and saves data for a set of scalar mediator models.
+    """
+    # Make data directory
+    data_dir = path.join(path.dirname(__file__), "data")
+    if not path.exists(path.join(data_dir)):
+        os.makedirs(data_dir)
 
-vrel = 1e-3
-cme = 2.0 * mx * (1.0 + 0.5 * vrel ** 2)
-egams = np.logspace(0.0, np.log10(cme), num=10)
-eng_ps = np.logspace(me, np.log10(cme), num=10)
+    for i, (params, Model) in enumerate(zip(params_list, Models)):
+        # Make directory for model
+        cur_dir = path.join(data_dir, "vm_{}".format(i + 1))
+        print("writing tests to {}".format(cur_dir))
+        if not path.exists(cur_dir):
+            os.makedirs(cur_dir)
 
-params1 = {"mx": mx, "mv": mv1, "gvxx": gvxx, "eps": eps}
-params2 = {"mx": mx, "mv": mv2, "gvxx": gvxx, "eps": eps}
-params3 = {
-    "mx": mx,
-    "mv": mv1,
-    "gvxx": gvxx,
-    "gvuu": gvuu,
-    "gvdd": gvdd1,
-    "gvss": gvss,
-    "gvee": gvee,
-    "gvmumu": gvmumu,
-}
-params4 = {
-    "mx": mx,
-    "mv": mv2,
-    "gvxx": gvxx,
-    "gvuu": gvuu,
-    "gvdd": gvdd1,
-    "gvss": gvss,
-    "gvee": gvee,
-    "gvmumu": gvmumu,
-}
-params5 = {
-    "mx": mx,
-    "mv": mv1,
-    "gvxx": gvxx,
-    "gvuu": gvuu,
-    "gvdd": gvdd2,
-    "gvss": gvss,
-    "gvee": gvee,
-    "gvmumu": gvmumu,
-}
-params6 = {
-    "mx": mx,
-    "mv": mv2,
-    "gvxx": gvxx,
-    "gvuu": gvuu,
-    "gvdd": gvdd2,
-    "gvss": gvss,
-    "gvee": gvee,
-    "gvmumu": gvmumu,
-}
+        model = Model(**params)
+        np.save(path.join(cur_dir, "params.npy"), params)
 
-vm1 = KineticMixing(**params1)
-vm2 = KineticMixing(**params2)
-vm3 = VectorMediator(**params3)
-vm4 = VectorMediator(**params4)
-vm5 = VectorMediator(**params5)
-vm6 = VectorMediator(**params6)
+        # Particle physics quantities
+        e_cm = e_cm_mw(model.mx)
+        np.save(path.join(cur_dir, "e_cm.npy"), e_cm)
+        np.save(path.join(cur_dir, "ann_cross_sections.npy"), model.annihilation_cross_sections(e_cm))
+        np.save(path.join(cur_dir, "ann_branching_fractions.npy"), model.annihilation_branching_fractions(e_cm))
+        np.save(path.join(cur_dir, "partial_widths.npy"), model.partial_widths())
 
-# Save the shared data
-np.save("shared_data/cme.npy", cme)
-np.save("shared_data/spectra_egams.npy", egams)
-np.save("shared_data/eng_ps.npy", eng_ps)
+        # Gamma-ray spectra
+        e_gams = np.geomspace(1.0, e_cm, 10)
+        np.save(path.join(cur_dir, "e_gams.npy"), e_gams)
+        np.save(path.join(cur_dir, "spectra.npy"), model.spectra(e_gams, e_cm))
+        np.save(path.join(cur_dir, "gamma_ray_lines.npy"), model.gamma_ray_lines(e_cm))
 
-# Save the parameters
-np.save("vm1_data/params.npy", params1)
-np.save("vm2_data/params.npy", params2)
-np.save("vm3_data/params.npy", params3)
-np.save("vm4_data/params.npy", params4)
-np.save("vm5_data/params.npy", params5)
-np.save("vm6_data/params.npy", params6)
+        # Positron spectra
+        e_ps = np.geomspace(me, e_cm, 10)
+        np.save(path.join(cur_dir, "e_ps.npy"), e_ps)
+        np.save(path.join(cur_dir, "positron_spectra.npy"), model.positron_spectra(e_ps, e_cm))
+        np.save(path.join(cur_dir, "positron_lines.npy"), model.positron_lines(e_cm))
 
-# Save the annihilation cross sections
-np.save("vm1_data/ann_cross_sections.npy", vm1.annihilation_cross_sections(cme))
-np.save("vm2_data/ann_cross_sections.npy", vm2.annihilation_cross_sections(cme))
-np.save("vm3_data/ann_cross_sections.npy", vm3.annihilation_cross_sections(cme))
-np.save("vm4_data/ann_cross_sections.npy", vm4.annihilation_cross_sections(cme))
-np.save("vm5_data/ann_cross_sections.npy", vm5.annihilation_cross_sections(cme))
-np.save("vm6_data/ann_cross_sections.npy", vm6.annihilation_cross_sections(cme))
+def generate_test_data():
+    params = []
 
-# Save the annihilation branching fractions
-np.save(
-    "vm1_data/ann_branching_fractions.npy", vm1.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm2_data/ann_branching_fractions.npy", vm2.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm3_data/ann_branching_fractions.npy", vm3.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm3_data/ann_branching_fractions.npy", vm3.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm4_data/ann_branching_fractions.npy", vm4.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm5_data/ann_branching_fractions.npy", vm5.annihilation_branching_fractions(cme)
-)
-np.save(
-    "vm6_data/ann_branching_fractions.npy", vm6.annihilation_branching_fractions(cme)
-)
+    mx = 250.0
+    eps = 0.1
+    gvxx = 1.0
+    mvs = 2 * [125.0, 550.0]
+    gvuus = 4 * [1.0]
+    gvdds = 2 * [1.0, -1.0]
+    gvsss = 4 * [1.0]
+    gvees = 4 * [1.0]
+    gvmumus = 4 * [1.0]
 
-# Save the spectra
-np.save("vm1_data/spectra.npy", vm1.spectra(egams, cme))
-np.save("vm2_data/spectra.npy", vm2.spectra(egams, cme))
-np.save("vm3_data/spectra.npy", vm3.spectra(egams, cme))
-np.save("vm4_data/spectra.npy", vm4.spectra(egams, cme))
-np.save("vm5_data/spectra.npy", vm5.spectra(egams, cme))
-np.save("vm6_data/spectra.npy", vm6.spectra(egams, cme))
+    for mv in [125.0, 550.0]:
+        params.append({
+            "mx": mx,
+            "mv": mv,
+            "gvxx": gvxx,
+            "eps": eps
+        })
 
-# Save the partial widths
-np.save("vm1_data/partial_widths.npy", vm1.partial_widths())
-np.save("vm2_data/partial_widths.npy", vm2.partial_widths())
-np.save("vm3_data/partial_widths.npy", vm3.partial_widths())
-np.save("vm4_data/partial_widths.npy", vm4.partial_widths())
-np.save("vm5_data/partial_widths.npy", vm5.partial_widths())
-np.save("vm6_data/partial_widths.npy", vm6.partial_widths())
+    for mv, gvuu, gvdd, gvss, gvee, gvmumu in zip(mvs, gvuus, gvdds, gvsss, gvees, gvmumus):
+        params.append({
+            "mx": mx,
+            "mv": mv,
+            "gvxx": gvxx,
+            "gvuu": gvuu,
+            "gvdd": gvdd,
+            "gvss": gvss,
+            "gvee": gvee,
+            "gvmumu": gvmumu
+        })
 
-# Save the positron spectra
-np.save("vm1_data/positron_spectra.npy", vm1.positron_spectra(eng_ps, cme))
-np.save("vm2_data/positron_spectra.npy", vm2.positron_spectra(eng_ps, cme))
-np.save("vm3_data/positron_spectra.npy", vm3.positron_spectra(eng_ps, cme))
-np.save("vm4_data/positron_spectra.npy", vm4.positron_spectra(eng_ps, cme))
-np.save("vm5_data/positron_spectra.npy", vm5.positron_spectra(eng_ps, cme))
-np.save("vm6_data/positron_spectra.npy", vm6.positron_spectra(eng_ps, cme))
+    save_data(params, 2 * [KineticMixing] + 4 * [VectorMediator])
 
-# Save the positron lines
-np.save("vm1_data/ps_lines.npy", vm1.positron_lines(cme))
-np.save("vm2_data/ps_lines.npy", vm2.positron_lines(cme))
-np.save("vm3_data/ps_lines.npy", vm3.positron_lines(cme))
-np.save("vm4_data/ps_lines.npy", vm4.positron_lines(cme))
-np.save("vm5_data/ps_lines.npy", vm5.positron_lines(cme))
-np.save("vm6_data/ps_lines.npy", vm6.positron_lines(cme))
+
+if __name__ == "__main__":
+    generate_test_data()
