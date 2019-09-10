@@ -43,7 +43,7 @@ This will start a jupyter kernel.
 
 ## Other information
 
-If you use Hazma in your own research, please cite:
+If you use Hazma in your own research, please cite [our paper](https://arxiv.org/abs/1907.11846):
 ```
 @article{Coogan:2019qpu,
       author         = "Coogan, Adam and Morrison, Logan and Profumo, Stefano",
