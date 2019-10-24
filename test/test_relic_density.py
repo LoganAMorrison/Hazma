@@ -12,7 +12,7 @@ class ToyModel(object):
         self.mx = mx
         self.sigmav = sigmav
 
-    def annihilation_cross_sections(self, ecm):
+    def thermal_cross_section(self, ecm):
         """
         Compute the dark matter annihilation cross section for a given
         center of mass energy.
@@ -27,7 +27,7 @@ class ToyModel(object):
         sigmav: float
             Dark matter annihilation cross section.
         """
-        return {'total': self.sigmav}
+        self.sigmav
 
 
 class TestRelicDensity(unittest.TestCase):
