@@ -40,6 +40,10 @@ GF = 1.1663787e-11  # Fermi constant in MeV**-2
 vh = 246.22795e3  # Higgs VEV in MeV
 qe = np.sqrt(4.0 * np.pi * alpha_em)
 temp_cmb_formation = 0.235e-6  # CMB temperature at formation in MeV
+plank_mass = 1.22091e22  # MeV
+rho_crit = 1.05375e-2  # Critical energy density in units of h^2 MeV / cm^3
+sm_entropy_density_today = 2891.2  # Entropy density today in units of cm^-3
+omega_h2_cdm = 0.1198  # Dark matter energy fraction times h^2
 
 # Charges
 Qu = 2.0 / 3.0
@@ -212,7 +216,8 @@ def convolved_spectrum_fn(
                 """
                 spec_res_fn_vals = spec_res_fn(es_padded, e, energy_res)
                 integrand_vals = (
-                    dnde_src * spec_res_fn_vals / trapz(spec_res_fn_vals, es_padded)
+                    dnde_src * spec_res_fn_vals /
+                    trapz(spec_res_fn_vals, es_padded)
                 )
 
                 return trapz(integrand_vals, es_padded)
