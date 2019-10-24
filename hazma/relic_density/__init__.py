@@ -4,11 +4,11 @@ from scipy.integrate import simps
 from scipy.interpolate import UnivariateSpline
 from scipy.integrate import solve_ivp
 from hazma.parameters import plank_mass, rho_crit, sm_entropy_density_today
-from pkg_resources import resource_filename
+import os
 
-
-_sm_data_rf = resource_filename(__name__, "relic_density/smdof.dat")
-_sm_data = np.genfromtxt(_sm_data_rf, delimiter=',', skip_header=1).T
+_this_dir, _ = os.path.split(__file__)
+_fname_sm_data = os.path.join(_this_dir, 'smdof.dat')
+_sm_data = np.genfromtxt(_fname_sm_data, delimiter=',', skip_header=1).T
 _sm_tempetatures = _sm_data[0] * 1e3  # convert to MeV
 _sm_sqrt_gstars = _sm_data[1]
 _sm_heff = _sm_data[3]
