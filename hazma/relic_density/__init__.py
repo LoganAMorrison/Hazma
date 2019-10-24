@@ -191,7 +191,7 @@ def boltzmann_eqn(logx, w, model):
 
     Returns
     -------
-    jac: float
+    dw_dlogx: array-like
         Jacobian of the Boltzmann equation w.r.t. the comoving
         number density of the dark matter particle.
     """
@@ -224,7 +224,7 @@ def jacobian_boltzmann_eqn(logx, w, model):
 
     Returns
     -------
-    jac: float
+    jac: 2-D array
         Jacobian of the Boltzmann equation w.r.t. the comoving
         number density of the dark matter particle.
     """
@@ -235,8 +235,8 @@ def jacobian_boltzmann_eqn(logx, w, model):
     _weq = weq(T, mx, g=2.0)
     sv = thermal_cross_section(x, model)
 
-    return np.array([
-        pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))])
+    return np.array([[
+        pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))]])
 
 
 def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
