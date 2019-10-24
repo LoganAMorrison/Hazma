@@ -33,10 +33,15 @@ class ToyModel(object):
 class TestRelicDensity(unittest.TestCase):
 
     def setUp(self):
-        self.model1 = ToyModel(10.313897683787216, 1.966877938634266e-9)
-        self.model2 = ToyModel(04.74522360006331, 1.7597967261428258e-9)
-        self.model3 = ToyModel(1063.764854316313, 1.837766552668581e-9)
-        self.model4 = ToyModel(10000.0, 1.8795945459427076e-9)
+        mx1, sigmav1 = 10.313897683787216e3, 1.966877938634266e-3
+        mx2, sigmav2 = 104.74522360006331e3, 1.7597967261428258e-3
+        mx3, sigmav3 = 1063.764854316313e3, 1.837766552668581e-3
+        mx4, sigmav4 = 10000.0e3, 1.8795945459427076e-3
+
+        self.model1 = ToyModel(mx1, sigmav1)
+        self.model2 = ToyModel(mx2, sigmav2)
+        self.model3 = ToyModel(mx3, sigmav3)
+        self.model4 = ToyModel(mx4, sigmav4)
 
     def test_relic_density(self):
         rd1 = relic_density(self.model1)
