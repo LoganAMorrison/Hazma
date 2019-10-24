@@ -236,7 +236,7 @@ def jacobian_boltzmann_eqn(logx, w, model):
     sv = thermal_cross_section(x, model)
 
     return np.array([[
-        pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))]])
+        pf * sv * (np.exp(w[0]) + np.exp(2.0 * _weq - w[0]))]])
 
 
 def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
