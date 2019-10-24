@@ -27,7 +27,7 @@ class ToyModel(object):
         sigmav: float
             Dark matter annihilation cross section.
         """
-        return self.sigmav
+        return {'total': self.sigmav}
 
 
 class TestRelicDensity(unittest.TestCase):
