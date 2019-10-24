@@ -278,7 +278,7 @@ def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
 
     """
     mx = model.mx
-    w0 = np.log(neq(mx, mx, g=2.0, stats=-1) / sm_entropy_density(mx))
+    w0 = np.log(neq(mx, mx, g=2.0) / sm_entropy_density(mx))
     logx0 = np.log(x0)
     logxf = logx0 + 3.0 if xf is None else np.log(xf)
 
