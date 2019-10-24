@@ -33,22 +33,17 @@ class ToyModel(object):
 class TestRelicDensity(unittest.TestCase):
 
     def setUp(self):
-        mx1, sigmav1 = 10.313897683787216e3, 1.966877938634266e-3
-        mx2, sigmav2 = 104.74522360006331e3, 1.7597967261428258e-3
-        mx3, sigmav3 = 1063.764854316313e3, 1.837766552668581e-3
-        mx4, sigmav4 = 10000.0e3, 1.8795945459427076e-3
+        mx1, sigmav1 = 10.313897683787216e3, 1.966877938634266e-15
+        mx2, sigmav2 = 104.74522360006331e3, 1.7597967261428258e-15
+        mx3, sigmav3 = 1063.764854316313e3, 1.837766552668581e-15
+        mx4, sigmav4 = 10000.0e3, 1.8795945459427076e-15
 
-        self.model1 = ToyModel(mx1, sigmav1)
-        self.model2 = ToyModel(mx2, sigmav2)
-        self.model3 = ToyModel(mx3, sigmav3)
-        self.model4 = ToyModel(mx4, sigmav4)
+        self.models = [ToyModel(mx1, sigmav1), ToyModel(mx2, sigmav2),
+                       ToyModel(mx3, sigmav3), ToyModel(mx4, sigmav4)]
 
     def test_relic_density(self):
-        rd1 = relic_density(self.model1)
-        rd2 = relic_density(self.model1)
-        rd3 = relic_density(self.model1)
-        rd4 = relic_density(self.model1)
-        self.assertAlmostEqual(rd1, omega_h2_cdm, places=3)
-        self.assertAlmostEqual(rd2, omega_h2_cdm, places=3)
-        self.assertAlmostEqual(rd3, omega_h2_cdm, places=3)
-        self.assertAlmostEqual(rd4, omega_h2_cdm, places=3)
+        for model in self.models:
+            rd = relic_density(model)
+            fractional_diff = abs(rd - omega_h2_cdm) / omega_h2_cdm
+            # check that our result is within 1% of correct relic density
+            self.assertLessEqual(fractional_diff, 1e-2)

@@ -11,7 +11,7 @@ _fname_sm_data = os.path.join(_this_dir, 'smdof.dat')
 _sm_data = np.genfromtxt(_fname_sm_data, delimiter=',', skip_header=1).T
 _sm_tempetatures = _sm_data[0] * 1e3  # convert to MeV
 _sm_sqrt_gstars = _sm_data[1]
-_sm_heff = _sm_data[3]
+_sm_heff = _sm_data[2]
 
 
 # Interpolating function for SM's sqrt(g_star)
@@ -129,7 +129,8 @@ def weq(T, mass, g=1.0, is_fermion=True):
         the SM entropy density.
     """
     s = sm_entropy_density(T)
-    return np.log(neq(T, mass, g=g, is_fermion=is_fermion) / s)
+    _neq = neq(T, mass, g=g, is_fermion=is_fermion)
+    return np.log(_neq / s) if _neq > 0.0 else -np.inf
 
 
 def thermal_cross_section(x, model):
@@ -150,6 +151,8 @@ def thermal_cross_section(x, model):
     tcs: float
         Thermally average cross section.
     """
+    if hasattr(model, 'thermal_cross_section'):
+        return model.thermal_cross_section(x)
     mx = model.mx
     T = mx / x
     numpf = 2.0 * np.pi**2 * T
@@ -196,7 +199,7 @@ def boltzmann_eqn(logx, w, model):
         number density of the dark matter particle.
     """
     mx = model.mx
-    x = np.exp(-logx)
+    x = np.exp(logx)
     T = mx / x
     pf = -np.sqrt(np.pi / 45) * plank_mass * mx * sm_sqrt_gstar(T) / x
     _weq = weq(T, mx, g=2.0)
@@ -229,7 +232,7 @@ def jacobian_boltzmann_eqn(logx, w, model):
         number density of the dark matter particle.
     """
     mx = model.mx
-    x = np.exp(-logx)
+    x = np.exp(logx)
     T = mx / x
     pf = -np.sqrt(np.pi / 45) * plank_mass * mx * sm_sqrt_gstar(T) / x
     _weq = weq(T, mx, g=2.0)
@@ -240,7 +243,7 @@ def jacobian_boltzmann_eqn(logx, w, model):
 
 
 def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
-                    rtol=1e-3, atol=1e-6):
+                    rtol=1e-5, atol=1e-3):
     """
     Solve the Boltzmann equation for the log of the dark matter
     comoving number density as a function of `logx` - which is the
@@ -278,9 +281,10 @@ def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
 
     """
     mx = model.mx
-    w0 = np.log(neq(mx, mx, g=2.0) / sm_entropy_density(mx))
+    T0 = mx / x0
+    w0 = weq(T0, mx, g=2.0)
     logx0 = np.log(x0)
-    logxf = logx0 + 3.0 if xf is None else np.log(xf)
+    logxf = logx0 + 7.0 if xf is None else np.log(xf)
 
     def f(logx, w):
         return boltzmann_eqn(logx, w, model)
@@ -293,7 +297,7 @@ def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
 
 
 def relic_density(model, x0=1.0, xf=None, method='Radau',
-                  rtol=1e-3, atol=1e-6):
+                  rtol=1e-5, atol=1e-3):
     """
     Solves the Boltzmann equation and returns the relic density
     computed from the final dark matter comoving number density.
