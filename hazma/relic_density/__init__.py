@@ -5,7 +5,7 @@ from scipy.interpolate import UnivariateSpline
 from scipy.integrate import solve_ivp
 from hazma.parameters import plank_mass, rho_crit, sm_entropy_density_today
 
-_sm_data = np.genfromtxt('smdof.csv', delimiter=',', skip_header=1).T
+_sm_data = np.genfromtxt('smdof.dat', delimiter=',', skip_header=1).T
 _sm_tempetatures = _sm_data[0] * 1e3  # convert to MeV
 _sm_sqrt_gstars = _sm_data[1]
 _sm_heff = _sm_data[3]
