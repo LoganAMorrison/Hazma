@@ -69,12 +69,12 @@ class ScalarMediatorCrossSection:
 
         Parameters
         ----------
-        e_cm : float
-            Center of mass energy.
+        e_cm : float or array-like
+            Center of mass energy(ies).
 
         Returns
         -------
-        sigma : float
+        sigma : float or array-like
             Cross section for x + x -> s* -> g + g.
         """
 
@@ -111,12 +111,12 @@ class ScalarMediatorCrossSection:
 
         Parameters
         ----------
-        e_cm : float
-            Center of mass energy.
+        e_cm : float or array-like
+            Center of mass energy(ies).
 
         Returns
         -------
-        sigma : float
+        sigma : float or array-like
             Cross section for x + x -> s* -> pi0 + pi0.
         """
         # see sigma_xx_to_s_to_ff for explaination of this context mangager
@@ -165,12 +165,12 @@ class ScalarMediatorCrossSection:
 
         Parameters
         ----------
-        e_cm : float
-            Center of mass energy.
+        e_cm : float or array-like
+            Center of mass energy(ies).
 
         Returns
         -------
-        sigma : float
+        sigma : float or array-like
             Cross section for x + x -> s* -> np.pi + np.pi.
         """
         # see sigma_xx_to_s_to_ff for explaination of this context mangager
@@ -220,12 +220,12 @@ class ScalarMediatorCrossSection:
 
         Parameters
         ----------
-        e_cm : float
-            Center of mass energy.
+        e_cm : float or array-like
+            Center of mass energy(ies).
 
         Returns
         -------
-        sigma : float
+        sigma : float or array-like
             Cross section for x + x -> s + s.
         """
         # see sigma_xx_to_s_to_ff for explaination of this context mangager
@@ -272,12 +272,12 @@ class ScalarMediatorCrossSection:
 
         Parameters
         ----------
-        e_cm : float
-            Center of mass energy.
+        e_cm : float or array-like
+            Center of mass energy(ies).
 
         Returns
         -------
-        sigma : float
+        sigma : float or array-like
             Cross section for x + x -> x + x
         """
         # see sigma_xx_to_s_to_ff for explaination of this context mangager
