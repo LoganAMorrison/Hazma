@@ -100,7 +100,7 @@ class ScalarMediatorCrossSection:
                 np.sqrt(1 - 4 * rxs**2)) /
                 (64.0 * self.lam**2 * np.pi**3 *
                  (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.widths**2))))
+                  (-2 * e_cms**2 + self.width_s**2))))
 
         return ret_val.real
 
@@ -141,11 +141,11 @@ class ScalarMediatorCrossSection:
             ret_val = mask * np.nan_to_num((
                 self.gsxx**2 *
                 np.sqrt((-1 + 4 * rpi0s**2) * (-1 + 4 * rxs**2)) *
-                (162 * self.gsGG * self.am**3 * e_cms**2 *
+                (162 * self.gsGG * self.lam**3 * e_cms**2 *
                  (-1 + 2 * rpi0s**2) * vh**2 + b0 * (mdq + muq) *
                  (9 * self.lam + 4 * self.gsGG * self.vs) *
                  (27 * self.gsff**2 * self.lam**2 *
-                  self.vs * (3 * self.am + 4 * self.gsGG * self.vs) -
+                  self.vs * (3 * self.lam + 4 * self.gsGG * self.vs) -
                   2 * self.gsGG * vh**2 *
                   (27 * self.lam**2 - 30 * self.gsGG * self.lam * self.vs +
                    8 * self.gsGG**2 * self.vs**2) + self.gsff *
@@ -154,7 +154,7 @@ class ScalarMediatorCrossSection:
                 (209952.0 * self.lam**6 * np.pi * vh**4 *
                  (9 * self.lam + 4 * self.gsGG * self.vs)**2 *
                  (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.widths**2))))
+                  (-2 * e_cms**2 + self.width_s**2))))
 
         return ret_val.real
 
@@ -209,7 +209,7 @@ class ScalarMediatorCrossSection:
                 (104976.0 * self.lam**6 * np.pi * vh**4 *
                  (9 * self.lam + 4 * self.gsGG * self.vs)**2 *
                  (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.widths**2))))
+                  (-2 * e_cms**2 + self.width_s**2))))
 
         return ret_val.real
 
@@ -244,7 +244,7 @@ class ScalarMediatorCrossSection:
             e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
             mask = (e_cms > 2.0 * self.ms) & (e_cms >= 2.0 * self.mx)
 
-            ret_val = -mask * np.nan_to_num((
+            ret_val = mask * -np.nan_to_num((
                 self.gsxx**4 * np.sqrt(-4 * self.ms**2 + e_cms**2) *
                 np.sqrt(-4 * self.mx**2 + e_cms**2) *
                 (-2 / (4 * self.mx**2 - e_cms**2) -
@@ -292,6 +292,10 @@ class ScalarMediatorCrossSection:
                 'ignore', r'invalid value encountered in sqrt')
             warnings.filterwarnings(
                 'ignore', r'invalid value encountered in power')
+            warnings.filterwarnings(
+                'ignore', r'invalid value encountered in subtract')
+            warnings.filterwarnings(
+                'ignore', r'invalid value encountered in add')
 
             e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
             mask = e_cms > 2.0 * self.mx
@@ -323,7 +327,10 @@ class ScalarMediatorCrossSection:
                           (1 - 4 * rxs**2)**2 * (-1 + z)**2))).real
 
             zs = np.linspace(-1, 1, num=100)
-            ret_val = mask * simps(msqrd(zs), zs) / (32.0 * np.pi * e_cms)
+            msqrds = [msqrd(z) for z in zs]
+            ret_val = mask * \
+                np.nan_to_num(simps(msqrds, zs, axis=0) /
+                              (32.0 * np.pi * e_cms))
 
         return ret_val
 
