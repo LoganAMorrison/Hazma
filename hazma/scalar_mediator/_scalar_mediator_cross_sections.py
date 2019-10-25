@@ -6,7 +6,7 @@ from hazma.parameters import down_quark_mass as mdq
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
 
-from scipy.integrate import simps
+from numpy.polynomial.legendre import leggauss
 import warnings
 import numpy as np
 
@@ -326,9 +326,13 @@ class ScalarMediatorCrossSection:
                           (rwss**2 + (-1 + 4 * rxs**2) * (-1 + z)) +
                           (1 - 4 * rxs**2)**2 * (-1 + z)**2))).real
 
-            zs = np.reshape(np.linspace(-1, 1, num=100), (100, 1))
-            ret_val = mask * np.nan_to_num(simps(msqrd(zs), zs, axis=0) /
-                                           (32.0 * np.pi * e_cms))
+            # Compute the nodes and weights for Legendre-Gauss quadrature
+            nodes, weights = leggauss(10)
+            nodes, weights = (np.reshape(nodes, (10, 1)),
+                              np.reshape(weights, (10, 1)))
+            ret_val = mask * \
+                np.nan_to_num(np.sum(weights * msqrd(nodes),
+                                     axis=0) / (32.0 * np.pi * e_cms))
 
         return ret_val.real
 
