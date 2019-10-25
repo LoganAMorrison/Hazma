@@ -326,13 +326,11 @@ class ScalarMediatorCrossSection:
                           (rwss**2 + (-1 + 4 * rxs**2) * (-1 + z)) +
                           (1 - 4 * rxs**2)**2 * (-1 + z)**2))).real
 
-            zs = np.linspace(-1, 1, num=100)
-            msqrds = [msqrd(z) for z in zs]
-            ret_val = mask * \
-                np.nan_to_num(simps(msqrds, zs, axis=0) /
-                              (32.0 * np.pi * e_cms))
+            zs = np.reshape(np.linspace(-1, 1, num=100), (100, 1))
+            ret_val = mask * np.nan_to_num(simps(msqrd(zs), zs, axis=0) /
+                                           (32.0 * np.pi * e_cms))
 
-        return ret_val
+        return ret_val.real
 
     def annihilation_cross_section_funcs(self):
         return {
