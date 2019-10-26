@@ -247,17 +247,18 @@ class VectorMediatorCrossSections:
             mask = (e_cms > 2.0 * mv) & (e_cms > 2.0 * mx)
 
             ret_val = mask * np.nan_to_num((
-                gvxx**4 * np.sqrt(-4 * mv**2 + e_cms**2) *
+                gvxx**4 * np.sqrt(e_cm**2 - 4 * mv**2) *
                 (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
-                 (mv**4 - 4 * mv**2 * mx**2 + mx**2 * e_cms**2) +
-                 (4 * (4 * mv**4 - 8 * mv**2 * mx**2 - 8 * mx**4 +
-                       4 * mx**2 * e_cms**2 + e_cms**4) *
-                  np.arctanh((np.sqrt(4 * mv**2 - e_cms**2) *
-                              np.sqrt(4 * mx**2 - e_cms**2)) /
-                             (2 * mv**2 - e_cms**2))) /
-                 ((2 * mv**2 - e_cms**2) * np.sqrt(4 * mv**2 - e_cms**2) *
-                  np.sqrt(4 * mx**2 - e_cms**2)))) /
-                (8.0 * np.pi * e_cms**2 * np.sqrt(-4 * mx**2 + e_cms**2)))
+                 (mv**4 - 4 * mv**2 * mx**2 + mx**2 * e_cm**2) +
+                 (4 * (4 * mv**4 - 8 * mv**2 * mx**2 -
+                       8 * mx**4 + 4 * mx**2 * e_cm**2 + e_cm**4) *
+                  np.arctanh((np.sqrt(e_cm**2 - 4 * mv**2) *
+                              np.sqrt(e_cm**2 - 4 * mx**2)) /
+                             (e_cm**2 - 2 * mv**2))) /
+                 ((e_cm**2 - 2 * mv**2) *
+                  np.sqrt(e_cm**2 - 4 * mv**2) *
+                  np.sqrt(e_cm**2 - 4 * mx**2)))) /
+                (8.0 * np.pi * e_cm**2 * np.sqrt(e_cm**2 - 4 * mx**2)))
 
         return ret_val.real
 
