@@ -44,6 +44,7 @@ class ScalarMediatorCrossSection:
                 'ignore', r'invalid value encountered in sqrt')
             warnings.filterwarnings(
                 'ignore', r'invalid value encountered in power')
+
             assert f == 'e' or f == 'mu'
             mf = me if f == 'e' else mmu
 
