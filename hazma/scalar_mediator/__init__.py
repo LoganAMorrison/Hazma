@@ -238,7 +238,7 @@ class ScalarMediator(
     def __thermal_cross_section_integrand(self, z, x):
         """
         Compute the integrand of the thermally average cross section for
-        the dark matter particle of the given model.
+        scalar mediator model.
 
         Parameters
         ----------
@@ -256,10 +256,9 @@ class ScalarMediator(
         kernal = z**2 * (z**2 - 4.0) * k1(x * z)
         return sig * kernal
 
-    def thermal_cross_section(self, x, model):
+    def thermal_cross_section(self, x):
         """
-        Compute the thermally average cross section for the dark
-        matter particle of the given model.
+        Compute the thermally average cross section for scalar mediator model.
 
         Parameters
         ----------
@@ -286,9 +285,8 @@ class ScalarMediator(
         #   2. when ss final state is accessible => z = 2 ms / mx
         #   3. when we hit mediator resonance => z = ms / mx
         return pf * quad(self.__thermal_cross_section_integrand, 2.0, 50.0 / x,
-                         args=(x, ),
-                         points=[2.0, self.ms / self.mx,
-                                 2.0 * self.ms / self.mx])[0]
+                         args=(x, ), points=[2.0, self.ms / self.mx,
+                                             2.0 * self.ms / self.mx])[0]
 
 
 class HiggsPortal(ScalarMediator):
