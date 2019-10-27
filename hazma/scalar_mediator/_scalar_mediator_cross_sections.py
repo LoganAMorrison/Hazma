@@ -134,7 +134,7 @@ class ScalarMediatorCrossSection:
                 'ignore', r'invalid value encountered in power')
 
             e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mpi0) & (e_cms >= 2.0 * self.mx)
+            mask = (e_cms > 2.0 * mpi0) & (e_cms > 2.0 * self.mx)
 
             rpi0s = mpi0 / e_cms
             rxs = self.mx / e_cms
@@ -188,7 +188,7 @@ class ScalarMediatorCrossSection:
                 'ignore', r'invalid value encountered in power')
 
             e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mpi) & (e_cms >= 2.0 * self.mx)
+            mask = (e_cms > 2.0 * mpi) & (e_cms > 2.0 * self.mx)
 
             rpis = mpi / e_cms
             rxs = self.mx / e_cms
@@ -243,7 +243,7 @@ class ScalarMediatorCrossSection:
                 'ignore', r'invalid value encountered in power')
 
             e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * self.ms) & (e_cms >= 2.0 * self.mx)
+            mask = (e_cms > 2.0 * self.ms) & (e_cms > 2.0 * self.mx)
 
             ret_val = mask * -np.nan_to_num((
                 self.gsxx**4 * np.sqrt(-4 * self.ms**2 + e_cms**2) *
