@@ -154,4 +154,5 @@ class VectorMediatorSpectra:
     def gamma_ray_lines(self, e_cm):
         bf = self.annihilation_branching_fractions(e_cm)["pi0 g"]
 
-        return {"pi0 g": {"energy": (e_cm ** 2 - mpi0 ** 2) / (2.0 * e_cm), "bf": bf}}
+        return {"pi0 g":
+                {"energy": (e_cm ** 2 - mpi0 ** 2) / (2.0 * e_cm), "bf": bf}}

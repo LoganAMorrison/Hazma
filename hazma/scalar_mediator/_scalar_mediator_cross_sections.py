@@ -343,6 +343,6 @@ class ScalarMediatorCrossSection:
             "e e": lambda e_cm: self.sigma_xx_to_s_to_ff(e_cm, "e"),
             "g g": self.sigma_xx_to_s_to_gg,
             "pi0 pi0": self.sigma_xx_to_s_to_pi0pi0,
-            "np.pi np.pi": self.sigma_xx_to_s_to_pipi,
+            "pi pi": self.sigma_xx_to_s_to_pipi,
             "s s": self.sigma_xx_to_ss,
         }
