@@ -53,11 +53,11 @@ class ScalarMediatorCrossSection:
 
             ret_val = mask * np.nan_to_num((
                 self.gsff**2 * self.gsxx**2 * mf**2 *
-                (-2 * self.mx + e_cm) * (2 * self.mx + e_cm) *
-                (-4 * mf**2 + e_cm**2)**1.5) /
-                (16.0 * np.pi * e_cm**2 *
-                 np.sqrt(-4 * self.mx**2 + e_cm**2) *
-                 vh**2 * (self.ms**4 - 2 * self.ms**2 * e_cm**2 + e_cm**4 +
+                (-2 * self.mx + e_cms) * (2 * self.mx + e_cms) *
+                (-4 * mf**2 + e_cms**2)**1.5) /
+                (16.0 * np.pi * e_cms**2 *
+                 np.sqrt(-4 * self.mx**2 + e_cms**2) *
+                 vh**2 * (self.ms**4 - 2 * self.ms**2 * e_cms**2 + e_cms**4 +
                           self.ms**2 * self.width_s**2)))
 
         # need the .real for the case where the User passes a float.
@@ -254,7 +254,7 @@ class ScalarMediatorCrossSection:
                   (self.ms**4 - 4 * self.ms**2 * self.mx**2 +
                    self.mx**2 * e_cms**2)) -
                  (2 * (6 * self.ms**4 - 32 * self.mx**4 +
-                       16 * self.mx**2 * e_cm**2 +
+                       16 * self.mx**2 * e_cms**2 +
                        e_cms**4 - 4 * self.ms**2 *
                        (4 * self.mx**2 + e_cms**2)) *
                   np.arctanh((np.sqrt(-4 * self.ms**2 + e_cms**2) *
