@@ -347,8 +347,15 @@ def thermal_cross_section(x, model):
     # seem to fail?
     # ss = np.linspace(2.0, 150, 500)
     # return simps(integrand(ss), ss) * numpf / den
+
+    # points at which integrand may have trouble are:
+    #   1. endpoint
+    #   2. when ss final state is accessible => z = 2 ms / mx
+    #   3. when we hit mediator resonance => z = ms / mx
     return pf * quad(thermal_cross_section_integrand, 2.0, np.inf,
-                     args=(x, model))[0]
+                     args=(x, model),
+                     points=[2.0, model.ms / model.mx,
+                             2.0 * model.ms / model.mx])[0]
 
 # ----------------------------------------------- #
 # Functions for solving the Bolzmann equation     #
