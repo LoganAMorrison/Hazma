@@ -11,6 +11,9 @@ from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
+from scipy.integrate import quad
+from scipy.special import k1, kn
+
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
@@ -150,6 +153,59 @@ class VectorMediator(
     def constrain(self, p1, p1_vals, p2, p2_vals, ls_or_img="image"):
         pass
 
+    def __thermal_cross_section_integrand(self, z, x):
+        """
+        Compute the integrand of the thermally average cross section for
+        vector mediator model.
+
+        Parameters
+        ----------
+        z: float
+            Center of mass energy divided by DM mass.
+        x: float
+            Mass of the dark matter divided by its temperature.
+
+        Returns
+        -------
+        integrand: float
+            Integrand of the thermally-averaged cross-section.
+        """
+        sig = self.annihilation_cross_sections(self.mx * z)['total']
+        kernal = z**2 * (z**2 - 4.0) * k1(x * z)
+        return sig * kernal
+
+    def thermal_cross_section(self, x):
+        """
+        Compute the thermally average cross section for vector mediator model.
+
+        Parameters
+        ----------
+        x: float
+            Mass of the dark matter divided by its temperature.
+        model: dark matter model
+            Dark matter model, i.e. `ScalarMediator`, `VectorMediator`
+            or any model with a dark matter particle.
+
+        Returns
+        -------
+        tcs: float
+            Thermally average cross section.
+        """
+
+        # If x is really large, we will get divide by zero errors
+        if x > 300:
+            return 0.0
+
+        pf = x / (2.0 * kn(2, x))**2
+
+        # points at which integrand may have trouble are:
+        #   1. endpoint
+        #   2. when ss final state is accessible => z = 2 ms / mx
+        #   3. when we hit mediator resonance => z = ms / mx
+        return pf * quad(self.__thermal_cross_section_integrand, 2.0, 50.0 / x,
+                         args=(x, ), points=[2.0, self.mv / self.mx,
+                                             2.0 * self.mv / self.mx])[0]
+
 
 class KineticMixing(VectorMediator):
     r"""
@@ -250,7 +306,8 @@ class QuarksOnly(VectorMediator):
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
-        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
+        super(QuarksOnly, self).__init__(
+            mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
 
     @staticmethod
     def list_annihilation_final_states():
