@@ -288,6 +288,31 @@ def weq(T, mass, g=2.0, is_fermion=True):
     return np.log(_neq / s) if _neq > 0.0 else -np.inf
 
 
+def thermal_cross_section_integrand(z, x, model):
+    """
+    Compute the integrand of the thermally average cross section for the dark
+    matter particle of the given model.
+
+    Parameters
+    ----------
+    z: float
+        Center of mass energy divided by DM mass.
+    x: float
+        Mass of the dark matter divided by its temperature.
+    model: dark matter model
+        Dark matter model, i.e. `ScalarMediator`, `VectorMediator`
+        or any model with a dark matter particle.
+
+    Returns
+    -------
+    integrand: float
+        Integrand of the thermally-averaged cross-section.
+    """
+    sig = model.annihilation_cross_sections(model.mx * z)['total']
+    kernal = z**2 * (z**2 - 4.0) * k1(x * z)
+    return sig * kernal
+
+
 def thermal_cross_section(x, model):
     """
     Compute the thermally average cross section for the dark
@@ -310,20 +335,11 @@ def thermal_cross_section(x, model):
     if hasattr(model, 'thermal_cross_section'):
         return model.thermal_cross_section(x)
 
-    num, den = x, (4.0 * kn(2, x)**2)
-    if den == 0.0:
+    # If x is really large, we will get divide by zero errors
+    if x > 300:
         return 0.0
-    pf = num / den
 
-    def integrand(z):
-        """
-        Integrand for the thermal cross section
-
-        Note: z = (center mass energy) / mass
-        """
-        sig = model.annihilation_cross_sections(model.mx * z)['total']
-        kernal = z**2 * (z**2 - 4.0) * k1(x * z)
-        return sig * kernal
+    pf = x / (2.0 * kn(2, x))**2
 
     # Commented out code does not seem to work. It give about a two
     # orders-of-magnitude larger value that `quad`. I've tried `simps`,
@@ -331,7 +347,8 @@ def thermal_cross_section(x, model):
     # seem to fail?
     # ss = np.linspace(2.0, 150, 500)
     # return simps(integrand(ss), ss) * numpf / den
-    return pf * quad(integrand, 2.0, np.inf)[0]
+    return pf * quad(thermal_cross_section_integrand, 2.0, np.inf,
+                     args=(x, model))[0]
 
 # ----------------------------------------------- #
 # Functions for solving the Bolzmann equation     #
