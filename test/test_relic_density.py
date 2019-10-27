@@ -43,7 +43,11 @@ class TestRelicDensity(unittest.TestCase):
 
     def test_relic_density(self):
         for model in self.models:
-            rd = relic_density(model)
-            fractional_diff = abs(rd - omega_h2_cdm) / omega_h2_cdm
-            # check that our result is within 1% of correct relic density
-            self.assertLessEqual(fractional_diff, 1e-2)
+            rd1 = relic_density(model, semi_analytic=True)
+            rd2 = relic_density(model, semi_analytic=False)
+            fractional_diff1 = abs(rd1 - omega_h2_cdm) / omega_h2_cdm
+            fractional_diff2 = abs(rd2 - omega_h2_cdm) / omega_h2_cdm
+            # check that semi-analytical esult is within 6% omega_h2_cdm
+            self.assertLessEqual(fractional_diff1, 0.06)
+            # check that semi-analytical esult is within 0.5% omega_h2_cdm
+            self.assertLessEqual(fractional_diff2, 0.005)
