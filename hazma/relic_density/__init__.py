@@ -333,6 +333,11 @@ def thermal_cross_section(x, model):
     # return simps(integrand(ss), ss) * numpf / den
     return pf * quad(integrand, 2.0, np.inf)[0]
 
+# ----------------------------------------------- #
+# Functions for solving the Bolzmann equation     #
+# see arXiv:1204.3622v3 for detailed explaination #
+# ------------------------------- --------------- #
+
 
 def boltzmann_eqn(logx, w, model):
     """
@@ -459,7 +464,7 @@ def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
 # see arXiv:1204.3622v3 for detailed explaination             #
 # ----------------------------------------------------------- #
 
-def xstar_root_eqn(xstar, model, delta=0.618033988749895):
+def xstar_root_eqn(xstar, model, delta=None):
     """
     Returns residual of root equation used to solve for x_star.
 
@@ -486,7 +491,7 @@ def xstar_root_eqn(xstar, model, delta=0.618033988749895):
     residual: float
         Residual of the root equation.
     """
-    deltabar = delta * (2.0 + delta) / (1.0 + delta)
+    deltabar = 1.0 if delta is None else delta * (2.0 + delta) / (1.0 + delta)
     T = model.mx / xstar
     lam = np.sqrt(np.pi / 45.0) * model.mx * plank_mass * sm_sqrt_gstar(T)
     tcs = thermal_cross_section(xstar, model)
@@ -495,7 +500,7 @@ def xstar_root_eqn(xstar, model, delta=0.618033988749895):
     return xstar**2 * dyeq + lam * deltabar * tcs * _yeq**2
 
 
-def compute_xstar(model, delta=0.618033988749895):
+def compute_xstar(model, delta=None):
     """
     Computes to value of `xstar`: the value of dm_mass / temperature such that
     the DM begins to freeze out.
@@ -597,8 +602,7 @@ def relic_density(model, semi_analytic=True, **kwargs):
                 'ignore', r'divide by zero encountered in double_scalars')
             warnings.filterwarnings(
                 'ignore', r'overflow encountered in double_scalars')
-            delta = (kwargs['delta'] if ('delta' in kwargs)
-                     else 0.618033988749895)
+            delta = (kwargs['delta'] if ('delta' in kwargs) else None)
             xstar = compute_xstar(model, delta=delta)
             alpha = compute_alpha(model, xstar)
         ystar = yeq(model.mx / xstar, model.mx)
