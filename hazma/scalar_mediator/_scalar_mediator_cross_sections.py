@@ -1,8 +1,28 @@
-from hazma.parameters import vh, b0, alpha_em
-from hazma.parameters import charged_pion_mass as mpi
-from hazma.parameters import neutral_pion_mass as mpi0
-from hazma.parameters import up_quark_mass as muq
-from hazma.parameters import down_quark_mass as mdq
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xx_to_s_to_ff as sig_ff
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xx_to_s_to_gg as sig_gg
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xx_to_s_to_pi0pi0 as sig_pi0pi0
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xx_to_s_to_pipi as sig_pipi
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xx_to_ss as sig_ss
+
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xl_to_xl as sig_xl
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xpi_to_xpi as sig_xpi
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xpi0_to_xpi0 as sig_xpi0
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xg_to_xg as sig_xg
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    sigma_xs_to_xs as sig_xs
+
+from hazma.scalar_mediator._c_scalar_mediator_cross_sections import \
+    thermal_cross_section as tcs
+
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
 
@@ -30,38 +50,11 @@ class ScalarMediatorCrossSection:
         sigma : float or array-like
             Cross section for x + x -> s* -> f + f.
         """
-        # Avoid the numpy warnings when e_cm = 0 and when e_cm = 2mx or when
-        # e_cm < 2mf and e_cm < 2mx. We know the cross section is just zero for
-        # these cases. NOTE: catching these causes about a ~20us slowdown.
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
+        assert f == 'e' or f == 'mu'
+        mf = me if f == 'e' else mmu
 
-            assert f == 'e' or f == 'mu'
-            mf = me if f == 'e' else mmu
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mf) & (e_cms > 2.0 * self.mx)
-
-            ret_val = mask * np.nan_to_num((
-                self.gsff**2 * self.gsxx**2 * mf**2 *
-                (-2 * self.mx + e_cms) * (2 * self.mx + e_cms) *
-                (-4 * mf**2 + e_cms**2)**1.5) /
-                (16.0 * np.pi * e_cms**2 *
-                 np.sqrt(-4 * self.mx**2 + e_cms**2) *
-                 vh**2 * (self.ms**4 - 2 * self.ms**2 * e_cms**2 + e_cms**4 +
-                          self.ms**2 * self.width_s**2)))
-
-        # need the .real for the case where the User passes a float.
-        return ret_val.real
+        return sig_ff(e_cm, self.mx, self.ms, self.gsxx, self.gsff, self.gsGG,
+                      self.gsFF, self.lam, self.width_s, self.vs, mf)
 
     def sigma_xx_to_s_to_gg(self, e_cm):
         """Returns the spin-averaged, cross section for dark matter
@@ -78,32 +71,8 @@ class ScalarMediatorCrossSection:
         sigma : float or array-like
             Cross section for x + x -> s* -> g + g.
         """
-
-        # see sigma_xx_to_s_to_ff for explaination of this context mangager
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = e_cms > 2.0 * self.mx
-
-            rxs = self.mx / e_cms
-            ret_val = mask * np.nan_to_num((
-                alpha_em**2 * self.gsFF**2 * self.gsxx**2 * e_cms**4 *
-                np.sqrt(1 - 4 * rxs**2)) /
-                (64.0 * self.lam**2 * np.pi**3 *
-                 (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.width_s**2))))
-
-        return ret_val.real
+        return sig_gg(e_cm, self.mx, self.ms, self.gsxx, self.gsff, self.gsGG,
+                      self.gsFF, self.lam, self.width_s, self.vs)
 
     def sigma_xx_to_s_to_pi0pi0(self, e_cm):
         """Returns the spin-averaged, cross section for dark matter
@@ -120,44 +89,9 @@ class ScalarMediatorCrossSection:
         sigma : float or array-like
             Cross section for x + x -> s* -> pi0 + pi0.
         """
-        # see sigma_xx_to_s_to_ff for explaination of this context mangager
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mpi0) & (e_cms > 2.0 * self.mx)
-
-            rpi0s = mpi0 / e_cms
-            rxs = self.mx / e_cms
-
-            ret_val = mask * np.nan_to_num((
-                self.gsxx**2 *
-                np.sqrt((-1 + 4 * rpi0s**2) * (-1 + 4 * rxs**2)) *
-                (162 * self.gsGG * self.lam**3 * e_cms**2 *
-                 (-1 + 2 * rpi0s**2) * vh**2 + b0 * (mdq + muq) *
-                 (9 * self.lam + 4 * self.gsGG * self.vs) *
-                 (27 * self.gsff**2 * self.lam**2 *
-                  self.vs * (3 * self.lam + 4 * self.gsGG * self.vs) -
-                  2 * self.gsGG * vh**2 *
-                  (27 * self.lam**2 - 30 * self.gsGG * self.lam * self.vs +
-                   8 * self.gsGG**2 * self.vs**2) + self.gsff *
-                  (-81 * self.lam**3 * vh +
-                   48 * self.gsGG**2 * self.lam * vh * self.vs**2)))**2) /
-                (209952.0 * self.lam**6 * np.pi * vh**4 *
-                 (9 * self.lam + 4 * self.gsGG * self.vs)**2 *
-                 (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.width_s**2))))
-
-        return ret_val.real
+        return sig_pi0pi0(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                          self.gsGG, self.gsFF, self.lam, self.width_s,
+                          self.vs)
 
     def sigma_xx_to_s_to_pipi(self, e_cm):
         """Returns the spin-averaged, cross section for dark matter
@@ -174,45 +108,9 @@ class ScalarMediatorCrossSection:
         sigma : float or array-like
             Cross section for x + x -> s* -> np.pi + np.pi.
         """
-        # see sigma_xx_to_s_to_ff for explaination of this context mangager
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mpi) & (e_cms > 2.0 * self.mx)
-
-            rpis = mpi / e_cms
-            rxs = self.mx / e_cms
-
-            ret_val = mask * np.nan_to_num((
-                self.gsxx**2 * np.sqrt((-1 + 4 * rpis**2) *
-                                       (-1 + 4 * rxs**2)) *
-                (162 * self.gsGG * self.lam**3 * e_cms**2 *
-                 (-1 + 2 * rpis**2) * vh**2 +
-                 b0 * (mdq + muq) * (9 * self.lam + 4 * self.gsGG * self.vs) *
-                 (27 * self.gsff**2 * self.lam**2 * self.vs *
-                  (3 * self.lam + 4 * self.gsGG * self.vs) -
-                  2 * self.gsGG * vh**2 *
-                  (27 * self.lam**2 - 30 * self.gsGG * self.lam * self.vs +
-                   8 * self.gsGG**2 * self.vs**2) +
-                  self.gsff *
-                  (-81 * self.lam**3 * vh +
-                   48 * self.gsGG**2 * self.lam * vh * self.vs**2)))**2) /
-                (104976.0 * self.lam**6 * np.pi * vh**4 *
-                 (9 * self.lam + 4 * self.gsGG * self.vs)**2 *
-                 (self.ms**4 + e_cms**4 + self.ms**2 *
-                  (-2 * e_cms**2 + self.width_s**2))))
-
-        return ret_val.real
+        return sig_pipi(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                        self.gsGG, self.gsFF, self.lam, self.width_s,
+                        self.vs)
 
     def sigma_xx_to_ss(self, e_cm):
         """Returns the spin-averaged, cross section for dark matter
@@ -229,43 +127,9 @@ class ScalarMediatorCrossSection:
         sigma : float or array-like
             Cross section for x + x -> s + s.
         """
-        # see sigma_xx_to_s_to_ff for explaination of this context mangager
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * self.ms) & (e_cms > 2.0 * self.mx)
-
-            ret_val = mask * -np.nan_to_num((
-                self.gsxx**4 * np.sqrt(-4 * self.ms**2 + e_cms**2) *
-                np.sqrt(-4 * self.mx**2 + e_cms**2) *
-                (-2 / (4 * self.mx**2 - e_cms**2) -
-                 (self.ms**2 - 4 * self.mx**2)**2 /
-                 ((4 * self.mx**2 - e_cms**2) *
-                  (self.ms**4 - 4 * self.ms**2 * self.mx**2 +
-                   self.mx**2 * e_cms**2)) -
-                 (2 * (6 * self.ms**4 - 32 * self.mx**4 +
-                       16 * self.mx**2 * e_cms**2 +
-                       e_cms**4 - 4 * self.ms**2 *
-                       (4 * self.mx**2 + e_cms**2)) *
-                  np.arctanh((np.sqrt(-4 * self.ms**2 + e_cms**2) *
-                              np.sqrt(-4 * self.mx**2 + e_cms**2)) /
-                             (-2 * self.ms**2 + e_cms**2))) /
-                 (np.sqrt(-4 * self.ms**2 + e_cms**2) *
-                  (-2 * self.ms**2 + e_cms**2) *
-                  (-4 * self.mx**2 + e_cms**2)**1.5))) /
-                (16.0 * np.pi * e_cms**2))
-
-        return ret_val.real
+        return sig_ss(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                      self.gsGG, self.gsFF, self.lam, self.width_s,
+                      self.vs)
 
     def sigma_xx_to_s_to_xx(self, e_cm):
         """Returns the spin-averaged, self interaction cross section for dark
@@ -353,115 +217,9 @@ class ScalarMediatorCrossSection:
         sigma : float
             Cross section for x + pi -> x + pi
         """
-        gsGG = self.gsGG
-        gsff = self.gsff
-        gsxx = self.gsxx
-        lam = self.lam
-        ms = self.ms
-        mx = self.mx
-        widths = self.width_s
-        vs = widths = self.vs
-
-        e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-        mask = e_cms > mx + mpi
-
-        return 2.0 * mask * np.nan_to_num(
-            (gsxx**2 *
-             (2 *
-              (b0**2 * (mdq + muq)**2 * (ms**2 - 4 * mx**2) *
-               (9 * lam + 4 * gsGG * vs)**2 *
-               (27 * gsff**2 * lam**2 * vs *
-                (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                gsff * (-81 * lam**3 * vh +
-                        48 * gsGG**2 * lam * vh * vs**2))**2 +
-               324 * b0 * gsGG * lam**3 * (mdq + muq) * vh**2 *
-               (9 * lam + 4 * gsGG * vs) *
-               (27 * gsff**2 * lam**2 * vs *
-                (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                gsff * (-81 * lam**3 * vh + 48 * gsGG**2 *
-                        lam * vh * vs**2)) *
-               (2 * mpi**2 * (ms**2 - 4 * mx**2) +
-                ms**2 * (-ms**2 + 4 * mx**2 + widths**2)) +
-               26244 * gsGG**2 * lam**6 * vh**4 *
-               (ms**6 + 4 * mpi**4 * (ms**2 - 4 * mx**2) +
-                4 * ms**2 * mx**2 * widths**2 - 4 * mpi**2 * ms**2 *
-                (ms**2 - 4 * mx**2 - widths**2) -
-                ms**4 * (4 * mx**2 + 3 * widths**2))) *
-              np.arctan(ms / widths - e_cms**2 / (2. * ms * widths)) -
-              2 * (b0**2 * (mdq + muq)**2 * (ms**2 - 4 * mx**2) *
-                   (9 * lam + 4 * gsGG * vs)**2 *
-                   (27 * gsff**2 * lam**2 * vs *
-                    (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                    (27 * lam**2 - 30 * gsGG * lam * vs +
-                     8 * gsGG**2 * vs**2) + gsff *
-                    (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))**2 +
-                   324 * b0 * gsGG * lam**3 * (mdq + muq) * vh**2 *
-                   (9 * lam + 4 * gsGG * vs) *
-                   (27 * gsff**2 * lam**2 * vs *
-                    (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                    (27 * lam**2 - 30 * gsGG * lam * vs +
-                     8 * gsGG**2 * vs**2) + gsff *
-                    (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2)) *
-                   (2 * mpi**2 * (ms**2 - 4 * mx**2) +
-                    ms**2 * (-ms**2 + 4 * mx**2 + widths**2)) +
-                   26244 * gsGG**2 * lam**6 * vh**4 *
-                   (ms**6 + 4 * mpi**4 * (ms**2 - 4 * mx**2) +
-                    4 * ms**2 * mx**2 * widths**2 - 4 * mpi**2 * ms**2 *
-                    (ms**2 - 4 * mx**2 - widths**2) - ms**4 *
-                    (4 * mx**2 + 3 * widths**2))) *
-              np.arctan((2 * ms**2 - 8 * mx**2 + e_cms**2) /
-                        (2. * ms * widths)) + ms * widths *
-              (-648 * gsGG * lam**3 * (4 * mx**2 - e_cms**2) * vh**2 *
-               (162 * gsGG * lam**3 * (2 * mpi**2 - ms**2 + mx**2) * vh**2 +
-                b0 * (mdq + muq) * (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs *
-                 (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                 gsff * (-81 * lam**3 * vh + 48 * gsGG**2 *
-                         lam * vh * vs**2))) -
-               (648 * b0 * gsGG * lam**3 * (mdq + muq) *
-                (mpi**2 - ms**2 + 2 * mx**2) * vh**2 *
-                (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs *
-                 (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                 gsff * (-81 * lam**3 * vh +
-                         48 * gsGG**2 * lam * vh * vs**2)) +
-                b0**2 * (mdq + muq)**2 * (9 * lam + 4 * gsGG * vs)**2 *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                 gsff * (-81 * lam**3 * vh +
-                         48 * gsGG**2 * lam * vh * vs**2))**2 +
-                26244 * gsGG**2 * lam**6 * vh**4 *
-                (4 * mpi**4 - 8 * mpi**2 * (ms**2 - 2 * mx**2) +
-                 ms**2 * (3 * ms**2 - 8 * mx**2 - widths**2))) *
-               np.log(4 * ms**4 + e_cms**4 - 4 * ms**2 *
-                      (e_cms**2 - widths**2)) +
-               (648 * b0 * gsGG * lam**3 * (mdq + muq) *
-                (mpi**2 - ms**2 + 2 * mx**2) * vh**2 *
-                (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs +
-                  8 * gsGG**2 * vs**2) + gsff *
-                 (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2)) +
-                b0**2 * (mdq + muq)**2 * (9 * lam + 4 * gsGG * vs)**2 *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs +
-                  8 * gsGG**2 * vs**2) + gsff *
-                 (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))**2 +
-                26244 * gsGG**2 * lam**6 * vh**4 *
-                (4 * mpi**4 - 8 * mpi**2 * (ms**2 - 2 * mx**2) + ms**2 *
-                 (3 * ms**2 - 8 * mx**2 - widths**2))) *
-               np.log(4 * ms**4 + (-8 * mx**2 + e_cms**2)**2 +
-                      4 * ms**2 * (-8 * mx**2 + e_cms**2 + widths**2))))) /
-            (209952. * lam**6 * ms * np.pi * e_cms**2 *
-             (-4 * mx**2 + e_cms**2) * vh**4 *
-             (9 * lam + 4 * gsGG * vs)**2 * widths))
+        return sig_xpi(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                       self.gsGG, self.gsFF, self.lam, self.width_s,
+                       self.vs)
 
     def sigma_xpi0_to_xpi0(self, e_cm):
         """
@@ -478,118 +236,9 @@ class ScalarMediatorCrossSection:
         sigma : float
             Cross section for x + pi^0 -> x + pi^0
         """
-        gsGG = self.gsGG
-        gsff = self.gsff
-        gsxx = self.gsxx
-        lam = self.lam
-        ms = self.ms
-        mx = self.mx
-        widths = self.width_s
-        vs = widths = self.vs
-
-        e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-        mask = e_cms > self.mx + mpi0
-
-        return mask * (
-            (gsxx**2 *
-             (2 *
-              (b0**2 * (mdq + muq)**2 *
-               (ms**2 - 4 * mx**2) * (9 * lam + 4 * gsGG * vs)**2 *
-               (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                2 * gsGG * vh**2 *
-                (27 * lam**2 - 30 * gsGG * lam * vs +
-                 8 * gsGG**2 * vs**2) + gsff *
-                (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))**2 +
-               324 * b0 * gsGG * lam**3 * (mdq + muq) * vh**2 *
-               (9 * lam + 4 * gsGG * vs) *
-               (27 * gsff**2 * lam**2 * vs *
-                (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                gsff * (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2)) *
-               (2 * mpi0**2 * (ms**2 - 4 * mx**2) + ms**2 *
-                (-ms**2 + 4 * mx**2 + widths**2)) +
-               26244 * gsGG**2 * lam**6 * vh**4 *
-               (ms**6 + 4 * mpi0**4 * (ms**2 - 4 * mx**2) +
-                4 * ms**2 * mx**2 * widths**2 - 4 * mpi0**2 * ms**2 *
-                (ms**2 - 4 * mx**2 - widths**2) -
-                ms**4 * (4 * mx**2 + 3 * widths**2))) *
-              np.arctan(ms / widths - e_cms**2 / (2. * ms * widths)) -
-              2 * (b0**2 * (mdq + muq)**2 * (ms**2 - 4 * mx**2) *
-                   (9 * lam + 4 * gsGG * vs)**2 *
-                   (27 * gsff**2 * lam**2 * vs *
-                    (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                    (27 * lam**2 - 30 * gsGG * lam * vs +
-                     8 * gsGG**2 * vs**2) + gsff *
-                    (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))**2 +
-                   324 * b0 * gsGG * lam**3 * (mdq + muq) * vh**2 *
-                   (9 * lam + 4 * gsGG * vs) *
-                   (27 * gsff**2 * lam**2 * vs *
-                    (3 * lam + 4 * gsGG * vs) -
-                    2 * gsGG * vh**2 *
-                    (27 * lam**2 - 30 * gsGG * lam * vs +
-                     8 * gsGG**2 * vs**2) + gsff *
-                    (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2)) *
-                   (2 * mpi0**2 * (ms**2 - 4 * mx**2) + ms**2 *
-                    (-ms**2 + 4 * mx**2 + widths**2)) +
-                   26244 * gsGG**2 * lam**6 * vh**4 *
-                   (ms**6 + 4 * mpi0**4 *
-                    (ms**2 - 4 * mx**2) +
-                    4 * ms**2 * mx**2 * widths**2 -
-                    4 * mpi0**2 * ms**2 *
-                    (ms**2 - 4 * mx**2 - widths**2) -
-                    ms**4 * (4 * mx**2 + 3 * widths**2))) *
-              np.arctan((2 * ms**2 - 8 * mx**2 + e_cms**2) /
-                        (2. * ms * widths)) + ms * widths *
-              (-648 * gsGG * lam**3 * (4 * mx**2 - e_cms**2) * vh**2 *
-               (162 * gsGG * lam**3 *
-                (2 * mpi0**2 - ms**2 + mx**2) * vh**2 +
-                b0 * (mdq + muq) * (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs *
-                 (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs +
-                  8 * gsGG**2 * vs**2) + gsff *
-                 (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))) -
-               (648 * b0 * gsGG * lam**3 * (mdq + muq) *
-                (mpi0**2 - ms**2 + 2 * mx**2) * vh**2 *
-                (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs +
-                  8 * gsGG**2 * vs**2) + gsff *
-                 (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2)) +
-                b0**2 * (mdq + muq)**2 * (9 * lam + 4 * gsGG * vs)**2 *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs +
-                  8 * gsGG**2 * vs**2) + gsff *
-                 (-81 * lam**3 * vh + 48 * gsGG**2 * lam * vh * vs**2))**2 +
-                26244 * gsGG**2 * lam**6 * vh**4 *
-                (4 * mpi0**4 - 8 * mpi0**2 * (ms**2 - 2 * mx**2) +
-                 ms**2 * (3 * ms**2 - 8 * mx**2 - widths**2))) *
-               np.log(4 * ms**4 + e_cms**4 - 4 * ms**2 *
-                      (e_cms**2 - widths**2)) +
-               (648 * b0 * gsGG * lam**3 *
-                (mdq + muq) * (mpi0**2 - ms**2 + 2 * mx**2) * vh**2 *
-                (9 * lam + 4 * gsGG * vs) *
-                (27 * gsff**2 * lam**2 * vs *
-                 (3 * lam + 4 * gsGG * vs) - 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                 gsff * (-81 * lam**3 * vh + 48 * gsGG**2 *
-                         lam * vh * vs**2)) +
-                b0**2 * (mdq + muq)**2 * (9 * lam + 4 * gsGG * vs)**2 *
-                (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-                 2 * gsGG * vh**2 *
-                 (27 * lam**2 - 30 * gsGG * lam * vs + 8 * gsGG**2 * vs**2) +
-                 gsff * (-81 * lam**3 * vh +
-                         48 * gsGG**2 * lam * vh * vs**2))**2 +
-                26244 * gsGG**2 * lam**6 * vh**4 *
-                (4 * mpi0**4 - 8 * mpi0**2 * (ms**2 - 2 * mx**2) +
-                 ms**2 * (3 * ms**2 - 8 * mx**2 - widths**2))) *
-               np.log(4 * ms**4 + (-8 * mx**2 + e_cms**2)**2 +
-                      4 * ms**2 * (-8 * mx**2 + e_cms**2 + widths**2))))) /
-            (209952. * lam**6 * ms * np.pi * e_cms**2 *
-             (-4 * mx**2 + e_cms**2) * vh**4 *
-             (9 * lam + 4 * gsGG * vs)**2 * widths))
+        return sig_xpi0(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                        self.gsGG, self.gsFF, self.lam, self.width_s,
+                        self.vs)
 
     def sigma_xl_to_xl(self, e_cm, f):
         """
@@ -612,36 +261,9 @@ class ScalarMediatorCrossSection:
         assert f == 'e' or f == 'mu'
         ml = me if f == 'e' else mmu
 
-        gsll = self.gsff
-        gsxx = self.gsxx
-        ms = self.ms
-        mx = self.mx
-        widths = self.width_s
-
-        e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-        mask = e_cms > mx + ml
-
-        return 2.0 * mask * np.nan_to_num(
-            -(gsll**2 * gsxx**2 *
-              ((4 * ml**2 * (ms**2 - 4 * mx**2) + ms**2 *
-                (-ms**2 + 4 * mx**2 + widths**2)) *
-               np.arctan(ms / widths - e_cms**2 /
-                         (2. * ms * widths)) +
-               (-4 * ml**2 * (ms**2 - 4 * mx**2) + ms**2 *
-                (ms**2 - 4 * mx**2 - widths**2)) *
-               np.arctan((2 * ms**2 - 8 * mx**2 + e_cms**2) /
-                         (2. * ms * widths)) +
-               ms * widths *
-               (-4 * mx**2 + e_cms**2 +
-                (-2 * ml**2 + ms**2 - 2 * mx**2) *
-                np.log(4 * ms**4 + e_cms**4 - 4 * ms**2 *
-                       (e_cms**2 - widths**2)) +
-                (2 * ml**2 - ms**2 + 2 * mx**2) *
-                np.log(4 * ms**4 + (-8 * mx**2 + e_cms**2)**2 +
-                       4 * ms**2 * (-8 * mx**2 + e_cms**2 +
-                                    widths**2))))) /
-            (16. * ms * np.pi * e_cms**2 *
-             (4 * mx**2 - e_cms**2) * widths))
+        return sig_xl(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                      self.gsGG, self.gsFF, self.lam, self.width_s,
+                      self.vs, ml)
 
     def sigma_xg_to_xg(self, e_cm):
         """
@@ -658,39 +280,9 @@ class ScalarMediatorCrossSection:
         sigma : float
             Cross section for x + g -> x + g
         """
-        gsFF = self.gsFF
-        gsxx = self.gsxx
-        lam = self.lam
-        ms = self.ms
-        mx = self.mx
-        widths = self.width_s
-
-        e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-        mask = e_cms > self.mx
-
-        return mask * np.nan_to_num(
-            (alpha_em**2 * gsFF**2 * gsxx**2 *
-             (2 *
-              (ms**5 + 4 * ms * mx**2 * widths**2 - ms**3 *
-               (4 * mx**2 + 3 * widths**2)) *
-              np.arctan(ms / widths - e_cms**2 /
-                        (2. * ms * widths)) - 2 *
-              (ms**5 + 4 * ms * mx**2 * widths**2 - ms**3 *
-               (4 * mx**2 + 3 * widths**2)) *
-              np.arctan((2 * ms**2 - 8 * mx**2 + e_cms**2) /
-                        (2. * ms * widths)) +
-              widths *
-              (4 * (ms**2 - mx**2) *
-               (4 * mx**2 - e_cms**2) + ms**2 *
-               (-3 * ms**2 + 8 * mx**2 + widths**2) *
-               np.log(4 * ms**4 + e_cms**4 - 4 * ms**2 *
-                      (e_cms**2 - widths**2)) +
-               ms**2 * (3 * ms**2 - 8 * mx**2 - widths**2) *
-               np.log(4 * ms**4 + (-8 * mx**2 + e_cms**2)**2 +
-                      4 * ms**2 * (-8 * mx**2 + e_cms**2 +
-                                   widths**2))))) /
-            (128. * lam**2 * np.pi**3 * e_cms**2 *
-             (-4 * mx**2 + e_cms**2) * widths))
+        return sig_xg(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                      self.gsGG, self.gsFF, self.lam, self.width_s,
+                      self.vs)
 
     def sigma_xs_to_xs(self, e_cm):
         """
@@ -707,46 +299,26 @@ class ScalarMediatorCrossSection:
         sigma : float
             Cross section for x + s -> x + s
         """
-        gsxx = self.gsxx
-        ms = self.ms
-        mx = self.mx
+        return sig_xs(e_cm, self.mx, self.ms, self.gsxx, self.gsff,
+                      self.gsGG, self.gsFF, self.lam, self.width_s,
+                      self.vs)
 
-        e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-        mask = e_cms > mx + ms
+    def thermal_cross_section(self, x):
+        """
+        Compute the thermally average cross section for scalar mediator model.
 
-        return mask * np.nan_to_num(
-            (gsxx**4 *
-             ((4 * mx**2 - e_cms**2) *
-              (16 * ms**8 + 52 * mx**8 - 256 * mx**6 * e_cms**2 +
-               223 * mx**4 * e_cms**4 + 84 * mx**2 * e_cms**6 +
-               9 * e_cms**8 - 16 * ms**6 * (7 * mx**2 + 3 * e_cms**2) +
-               ms**4 *
-               (104 * mx**4 + 328 * mx**2 * e_cms**2 +
-                87 * e_cms**4) + ms**2 *
-               (24 * mx**6 - 216 * mx**4 * e_cms**2 -
-                322 * mx**2 * e_cms**4 - 54 * e_cms**6)) +
-              (mx**2 - e_cms**2) *
-              (32 * ms**8 + 180 * mx**8 - 24 * mx**6 * e_cms**2 -
-               345 * mx**4 * e_cms**4 - 38 * mx**2 * e_cms**6 +
-               3 * e_cms**8 + 32 * ms**6 * (7 * mx**2 - e_cms**2) +
-               ms**4 * (-520 * mx**4 - 512 * mx**2 * e_cms**2 +
-                        22 * e_cms**4) + 16 * ms**2 *
-               (3 * mx**6 + 49 * mx**4 * e_cms**2 +
-                20 * mx**2 * e_cms**4 - e_cms**6)) *
-              np.log(4 * ms**2 + 2 * mx**2 - 3 * e_cms**2) -
-              (mx**2 - e_cms**2) *
-              (32 * ms**8 + 180 * mx**8 -
-               24 * mx**6 * e_cms**2 - 345 * mx**4 * e_cms**4 -
-               38 * mx**2 * e_cms**6 + 3 * e_cms**8 +
-               32 * ms**6 * (7 * mx**2 - e_cms**2) + ms**4 *
-               (-520 * mx**4 - 512 * mx**2 * e_cms**2 + 22 * e_cms**4) +
-               16 * ms**2 *
-               (3 * mx**6 + 49 * mx**4 * e_cms**2 +
-                20 * mx**2 * e_cms**4 - e_cms**6)) *
-              np.log(4 * ms**2 - 6 * mx**2 - e_cms**2))) /
-            (16. * np.pi * (mx - e_cms)**2 * e_cms**2 *
-             (mx + e_cms)**2 * (4 * ms**2 + 2 * mx**2 - 3 * e_cms**2) *
-             (4 * ms**2 - 6 * mx**2 - e_cms**2) * (4 * mx**2 - e_cms**2)))
+        Parameters
+        ----------
+        x: float
+            Mass of the dark matter divided by its temperature.
+
+        Returns
+        -------
+        tcs: float
+            Thermally average cross section.
+        """
+        return tcs(x, self.mx, self.ms, self.gsxx, self.gsff, self.gsGG,
+                   self.gsFF, self.lam, self.width_s, self.vs)
 
     def annihilation_cross_section_funcs(self):
         return {

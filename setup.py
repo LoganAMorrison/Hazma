@@ -65,7 +65,8 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(decay_pack + ".decay_muon", sources=[decay_dir + "decay_muon.pyx"])
+    Extension(decay_pack + ".decay_muon",
+              sources=[decay_dir + "decay_muon.pyx"])
 ]
 extensions += [
     Extension(
@@ -119,7 +120,8 @@ extensions += [
 
 # Field Theory helper functions extensions
 extensions += [
-    Extension(ft_pack + ".common_functions", sources=[ft_dir + "common_functions.pyx"])
+    Extension(ft_pack + ".common_functions",
+              sources=[ft_dir + "common_functions.pyx"])
 ]
 extensions += [
     Extension(
@@ -136,10 +138,12 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(pos_pack + ".positron_muon", sources=[pos_dir + "positron_muon.pyx"])
+    Extension(pos_pack + ".positron_muon",
+              sources=[pos_dir + "positron_muon.pyx"])
 ]
 extensions += [
-    Extension(pos_pack + ".positron_decay", sources=[pos_dir + "positron_decay.pyx"])
+    Extension(pos_pack + ".positron_decay",
+              sources=[pos_dir + "positron_decay.pyx"])
 ]
 
 # Scalar mediator
@@ -153,6 +157,12 @@ extensions += [
     Extension(
         sm_pack + ".scalar_mediator_positron_spec",
         sources=[sm_dir + "scalar_mediator_positron_spec.pyx"],
+    )
+]
+extensions += [
+    Extension(
+        sm_pack + "._c_scalar_mediator_cross_sections",
+        sources=[sm_dir + "_c_scalar_mediator_cross_sections.pyx"],
     )
 ]
 # Vector mediator
