@@ -5,6 +5,20 @@ from hazma.parameters import electron_mass as me
 from hazma.parameters import fpi, qe
 from scipy.integrate import quad
 
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    sigma_xx_to_v_to_ff as sig_ff
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    sigma_xx_to_v_to_pipi as sig_pipi
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    sigma_xx_to_v_to_pi0g as sig_pi0g
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    sigma_xx_to_v_to_pi0v as sig_pi0v
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    sigma_xx_to_vv as sig_vv
+
+from hazma.vector_mediator._c_vector_mediator_cross_sections import \
+    thermal_cross_section as tcs
+
 from numpy.polynomial.legendre import leggauss
 import warnings
 import numpy as np
@@ -29,41 +43,12 @@ class VectorMediatorCrossSections:
         cross_section : float
             Cross section for xbar + x -> v -> fbar + f.
         """
-        # Avoid the numpy warnings when e_cm = 0 and when e_cm = 2mx or when
-        # e_cm < 2mf and e_cm < 2mx. We know the cross section is just zero for
-        # these cases. NOTE: catching these causes about a ~20us slowdown.
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
+        assert (f == 'e' or f == 'mu')
+        ml = me if f == 'e' else mmu
+        gvll = self.gvee if f == 'e' else self.gvmumu
 
-            gvxx = self.gvxx
-            mv = self.mv
-            width_v = self.width_v
-            mx = self.mx
-
-            assert f == 'e' or f == 'mu'
-            mf = me if f == 'e' else mmu
-            gvll = self.gvee if f == 'e' else self.gvmumu
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mf) & (e_cms > 2.0 * mx)
-
-            ret_val = mask * np.nan_to_num((
-                gvll**2 * gvxx**2 * np.sqrt(e_cms**2 - 4.0 * mf**2) *
-                (e_cms**2 + 2.0 * mf**2) * (e_cms**2 + 2 * mx**2)) /
-                (12.0 * e_cms**2 * np.sqrt(e_cms**2 - 4.0 * mx**2) *
-                 np.pi * (e_cms**4 - 2.0 * e_cms**2 * mv**2 + mv**4 +
-                          mv**2 * width_v**2)))
-
-        return ret_val.real
+        return sig_ff(e_cm, self.mx, self.mv, self.gvxx, gvll,
+                      self.width_v, ml)
 
     def sigma_xx_to_v_to_pipi(self, e_cm):
         """
@@ -81,37 +66,9 @@ class VectorMediatorCrossSections:
         cross_section : float
             Cross section for xbar + x -> v -> f + f.
         """
-        # see `sigma_xx_to_v_to_ff` for explanation
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-            mx = self.mx
-            gvuu = self.gvuu
-            gvdd = self.gvdd
-            gvxx = self.gvxx
-            mv = self.mv
-            width_v = self.width_v
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mpi) & (e_cms > 2.0 * mx)
-
-            ret_val = mask * np.nan_to_num((
-                (gvdd - gvuu)**2 * gvxx**2 * (-4.0 * mpi**2 + e_cms**2)**1.5 *
-                (2.0 * mx**2 + e_cms**2)) /
-                (48.0 * np.pi * e_cms**2 *
-                 np.sqrt(-4.0 * mx**2 + e_cms**2) *
-                 (mv**4 - 2.0 * mv**2 * e_cms**2 + e_cms**4 + mv**2 *
-                  width_v**2)))
-
-        return ret_val.real
+        return sig_pipi(e_cm, self.mx, self.mv, self.gvxx, self.gvuu,
+                        self.gvdd, self.gvss, self.gvee, self.gvmumu,
+                        self.width_v)
 
     def sigma_xx_to_v_to_pi0g(self, e_cm):
         """
@@ -129,38 +86,9 @@ class VectorMediatorCrossSections:
         cross_section : float
             Cross section for xbar + x -> v -> pi0 g
         """
-        # see `sigma_xx_to_v_to_ff` for explanation
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-            mx = self.mx
-            gvuu = self.gvuu
-            gvdd = self.gvdd
-            gvxx = self.gvxx
-            mv = self.mv
-            width_v = self.width_v
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > mpi0) & (e_cms > 2.0 * mx)
-
-            ret_val = mask * np.nan_to_num((
-                3.0 * ((gvdd + 2.0 * gvuu)**2.0 * gvxx**2 *
-                       (-mpi0**2 + e_cms**2)**3 *
-                       (2.0 * mx**2 + e_cms**2) * qe**2) /
-                (13824.0 * fpi**2 * np.pi**5 * e_cms**3 *
-                 np.sqrt(-4.0 * mx**2 + e_cms**2) *
-                 (mv**4 - 2.0 * mv**2 * e_cms**2 +
-                  e_cms**4 + mv**2 * width_v**2))))
-
-        return ret_val.real
+        return sig_pi0g(e_cm, self.mx, self.mv, self.gvxx, self.gvuu,
+                        self.gvdd, self.gvss, self.gvee, self.gvmumu,
+                        self.width_v)
 
     def sigma_xx_to_v_to_pi0v(self, e_cm):
         """
@@ -178,38 +106,9 @@ class VectorMediatorCrossSections:
         cross_section : float
             Cross section for xbar + x -> v -> pi0 v
         """
-        # see `sigma_xx_to_v_to_ff` for explanation
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-            mx = self.mx
-            mv = self.mv
-            gvuu = self.gvuu
-            gvdd = self.gvdd
-            gvxx = self.gvxx
-            width_v = self.width_v
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > mpi0 + mv) & (e_cms > 2.0 * mx)
-
-            ret_val = mask * np.nan_to_num((
-                (gvdd - gvuu)**2 * (gvdd + gvuu)**2 * gvxx**2 *
-                ((-mpi0 - mv + e_cms) * (mpi0 - mv + e_cms) *
-                 (-mpi0 + mv + e_cms) * (mpi0 + mv + e_cms))**1.5 *
-                (2 * mx**2 + e_cms**2)) /
-                (1536.0 * fpi**2 * np.pi**5 * e_cms**3 *
-                 np.sqrt(-4 * mx**2 + e_cms**2) *
-                 ((-mv**2 + e_cms**2)**2 + mv**2 * width_v**2)))
-
-        return ret_val.real
+        return sig_pi0v(e_cm, self.mx, self.mv, self.gvxx, self.gvuu,
+                        self.gvdd, self.gvss, self.gvee, self.gvmumu,
+                        self.width_v)
 
     def sigma_xx_to_vv(self, e_cm):
         """
@@ -227,40 +126,9 @@ class VectorMediatorCrossSections:
         cross_section : float or array-like
             Cross section for xbar + x -> v -> pi0 v
         """
-        # see `sigma_xx_to_v_to_ff` for explanation
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in true_divide')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in multiply')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in sqrt')
-            warnings.filterwarnings(
-                'ignore', r'invalid value encountered in power')
-            mx = self.mx
-            mv = self.mv
-            gvxx = self.gvxx
-
-            e_cms = np.array(e_cm) if hasattr(e_cm, '__len__') else e_cm
-            mask = (e_cms > 2.0 * mv) & (e_cms > 2.0 * mx)
-
-            ret_val = mask * np.nan_to_num((
-                gvxx**4 * np.sqrt(e_cms**2 - 4 * mv**2) *
-                (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
-                 (mv**4 - 4 * mv**2 * mx**2 + mx**2 * e_cms**2) +
-                 (4 * (4 * mv**4 - 8 * mv**2 * mx**2 -
-                       8 * mx**4 + 4 * mx**2 * e_cms**2 + e_cms**4) *
-                  np.arctanh((np.sqrt(e_cms**2 - 4 * mv**2) *
-                              np.sqrt(e_cms**2 - 4 * mx**2)) /
-                             (e_cms**2 - 2 * mv**2))) /
-                 ((e_cms**2 - 2 * mv**2) *
-                  np.sqrt(e_cms**2 - 4 * mv**2) *
-                  np.sqrt(e_cms**2 - 4 * mx**2)))) /
-                (8.0 * np.pi * e_cms**2 * np.sqrt(e_cms**2 - 4 * mx**2)))
-
-        return ret_val.real
+        return sig_vv(e_cm, self.mx, self.mv, self.gvxx, self.gvuu,
+                      self.gvdd, self.gvss, self.gvee, self.gvmumu,
+                      self.width_v)
 
     def sigma_xx_to_v_to_xx(self, e_cm):
         """
@@ -425,3 +293,22 @@ class VectorMediatorCrossSections:
             "pi0 v": self.sigma_xx_to_v_to_pi0v,
             "v v": self.sigma_xx_to_vv,
         }
+
+    def thermal_cross_section(self, x):
+        """
+        Compute the thermally average cross section for vector mediator
+        model.
+
+        Parameters
+        ----------
+        x: float
+            Mass of the dark matter divided by its temperature.
+
+        Returns
+        -------
+        tcs: float
+            Thermally average cross section.
+        """
+        return tcs(x, self.mx, self.mv, self.gvxx, self.gvuu,
+                   self.gvdd, self.gvss, self.gvee, self.gvmumu,
+                   self.width_v)
