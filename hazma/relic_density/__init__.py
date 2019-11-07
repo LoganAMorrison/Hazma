@@ -9,16 +9,15 @@ import os
 import warnings
 
 _this_dir, _ = os.path.split(__file__)
-_fname_sm_data = os.path.join(_this_dir, 'smdof.dat')
-_sm_data = np.genfromtxt(_fname_sm_data, delimiter=',', skip_header=1).T
+_fname_sm_data = os.path.join(_this_dir, "smdof.dat")
+_sm_data = np.genfromtxt(_fname_sm_data, delimiter=",", skip_header=1).T
 _sm_tempetatures = _sm_data[0] * 1e3  # convert to MeV
 _sm_sqrt_gstars = _sm_data[1]
 _sm_heff = _sm_data[2]
 
 
 # Interpolating function for SM's sqrt(g_star)
-_sm_sqrt_gstar = UnivariateSpline(
-    _sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3, )
+_sm_sqrt_gstar = UnivariateSpline(_sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3)
 # Interpolating function for SM d.o.f. stored in entropy: h_eff
 _sm_heff = UnivariateSpline(_sm_tempetatures, _sm_heff, s=0, ext=3)
 # derivative of SM d.o.f. in entropy w.r.t temperature
@@ -73,7 +72,7 @@ def sm_entropy_density(T):
     s: float
         energy entropy of the Standard Model
     """
-    return 2.0 * np.pi**2 / 45.0 * sm_dof_entropy(T) * T**3
+    return 2.0 * np.pi ** 2 / 45.0 * sm_dof_entropy(T) * T ** 3
 
 
 def sm_entropy_density_deriv(T):
@@ -92,8 +91,13 @@ def sm_entropy_density_deriv(T):
         derivative of the entropy density of the Standard Model w.r.t
         temperature.
     """
-    return 2.0 * np.pi**2 / 45.0 * (
-        _sm_heff_deriv(T) * T + 3.0 * sm_dof_entropy(T)) * T**2
+    return (
+        2.0
+        * np.pi ** 2
+        / 45.0
+        * (_sm_heff_deriv(T) * T + 3.0 * sm_dof_entropy(T))
+        * T ** 2
+    )
 
 
 def neq(Ts, mass, g=2.0, is_fermion=True):
@@ -116,7 +120,7 @@ def neq(Ts, mass, g=2.0, is_fermion=True):
     neq: float or array-like
         Equilibrium number density of particle at temperature `T`.
     """
-    Ts = np.array(Ts) if hasattr(Ts, '__len__') else Ts
+    Ts = np.array(Ts) if hasattr(Ts, "__len__") else Ts
     if mass == 0:
         # if particle is massless, use analytic expression.
         # fermion: 7 / 8 zeta(3) / pi^2
@@ -127,11 +131,17 @@ def neq(Ts, mass, g=2.0, is_fermion=True):
         # nbar = x^2 sum_n (\pm 1)^{n+1}/n k_2(nx)
         eta = -1 if is_fermion else 1
         xs = mass / Ts
-        ns = np.array([1, 2, 3, 4, 5]).reshape(5, 1) if hasattr(
-            Ts, '__len__') else np.array([1, 2, 3, 4, 5])
-        nbar = xs**2 * np.sum(eta**(ns + 1) / ns *
-                              kn(2, ns * xs), axis=0) / (2.0 * np.pi**2)
-    return g * nbar * Ts**3
+        ns = (
+            np.array([1, 2, 3, 4, 5]).reshape(5, 1)
+            if hasattr(Ts, "__len__")
+            else np.array([1, 2, 3, 4, 5])
+        )
+        nbar = (
+            xs ** 2
+            * np.sum(eta ** (ns + 1) / ns * kn(2, ns * xs), axis=0)
+            / (2.0 * np.pi ** 2)
+        )
+    return g * nbar * Ts ** 3
 
 
 def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
@@ -156,7 +166,7 @@ def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
         Derivative of the quilibrium number density of particle w.r.t. its
         temperature at temperature `T`.
     """
-    Ts = np.array(Ts) if hasattr(Ts, '__len__') else Ts
+    Ts = np.array(Ts) if hasattr(Ts, "__len__") else Ts
     if mass == 0:
         # if particle is massless, use analytic expression.
         dnbar = 0.0
@@ -167,12 +177,17 @@ def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
         eta = -1 if is_fermion else 1
         xs = mass / Ts
         # perform a reshape is `x` is an array so we properly sum over ns
-        ns = np.array([1, 2, 3, 4, 5]).reshape(5, 1) if hasattr(
-            Ts, '__len__') else np.array([1, 2, 3, 4, 5])
-        dnbar = xs**2 * np.sum(eta**ns * k1(ns * xs),
-                               axis=0) / (2.0 * np.pi**2)
-        nbar = xs**2 * np.sum(eta**(ns + 1) / ns *
-                              kn(2, ns * xs), axis=0) / (2.0 * np.pi**2)
+        ns = (
+            np.array([1, 2, 3, 4, 5]).reshape(5, 1)
+            if hasattr(Ts, "__len__")
+            else np.array([1, 2, 3, 4, 5])
+        )
+        dnbar = xs ** 2 * np.sum(eta ** ns * k1(ns * xs), axis=0) / (2.0 * np.pi ** 2)
+        nbar = (
+            xs ** 2
+            * np.sum(eta ** (ns + 1) / ns * kn(2, ns * xs), axis=0)
+            / (2.0 * np.pi ** 2)
+        )
 
     return g * Ts * (3.0 * Ts * nbar - mass * dnbar)
 
@@ -199,7 +214,7 @@ def yeq(T, mass, g=2.0, is_fermion=True):
     yeq: float or array-like
         Equilibrium number density divided by the SM entropy density.
     """
-    Ts = np.array(T) if hasattr(T, '__len__') else T
+    Ts = np.array(T) if hasattr(T, "__len__") else T
     s = sm_entropy_density(Ts)
     _neq = neq(Ts, mass, g=g, is_fermion=is_fermion)
     return _neq / s
@@ -226,12 +241,12 @@ def yeq_deriv(T, mass, g=2.0, is_fermion=True):
     dyeq: float or array-like
         Derivative of `yeq` w.r.t. temperature.
     """
-    Ts = np.array(T) if hasattr(T, '__len__') else T
+    Ts = np.array(T) if hasattr(T, "__len__") else T
     s = sm_entropy_density(Ts)
     ds = sm_entropy_density_deriv(Ts)
     _neq = neq(Ts, mass, g=g, is_fermion=is_fermion)
     _dneq = neq_deriv(Ts, mass, g=g, is_fermion=is_fermion)
-    return (_dneq * s - ds * _neq) / s**2
+    return (_dneq * s - ds * _neq) / s ** 2
 
 
 def yeq_derivx(x, mass, g=2.0, is_fermion=True):
@@ -256,7 +271,7 @@ def yeq_derivx(x, mass, g=2.0, is_fermion=True):
     """
     T = mass / x
     dyeq = yeq_deriv(T, mass, g=g, is_fermion=is_fermion)
-    return -mass * dyeq / x**2
+    return -mass * dyeq / x ** 2
 
 
 def weq(T, mass, g=2.0, is_fermion=True):
@@ -308,8 +323,8 @@ def thermal_cross_section_integrand(z, x, model):
     integrand: float
         Integrand of the thermally-averaged cross-section.
     """
-    sig = model.annihilation_cross_sections(model.mx * z)['total']
-    kernal = z**2 * (z**2 - 4.0) * k1(x * z)
+    sig = model.annihilation_cross_sections(model.mx * z)["total"]
+    kernal = z ** 2 * (z ** 2 - 4.0) * k1(x * z)
     return sig * kernal
 
 
@@ -332,14 +347,14 @@ def thermal_cross_section(x, model):
         Thermally average cross section.
     """
     # If model implements 'thermal_cross_section', use that
-    if hasattr(model, 'thermal_cross_section'):
+    if hasattr(model, "thermal_cross_section"):
         return model.thermal_cross_section(x)
 
     # If x is really large, we will get divide by zero errors
     if x > 300:
         return 0.0
 
-    pf = x / (2.0 * kn(2, x))**2
+    pf = x / (2.0 * kn(2, x)) ** 2
 
     # Commented out code does not seem to work. It give about a two
     # orders-of-magnitude larger value that `quad`. I've tried `simps`,
@@ -348,8 +363,17 @@ def thermal_cross_section(x, model):
     # ss = np.linspace(2.0, 150, 500)
     # return simps(integrand(ss), ss) * numpf / den
 
-    return pf * quad(thermal_cross_section_integrand, 2.0, 50.0 / x,
-                     args=(x, model), points=[2.0])[0]
+    return (
+        pf
+        * quad(
+            thermal_cross_section_integrand,
+            2.0,
+            50.0 / x,
+            args=(x, model),
+            points=[2.0],
+        )[0]
+    )
+
 
 # ----------------------------------------------- #
 # Functions for solving the Bolzmann equation     #
@@ -386,8 +410,7 @@ def boltzmann_eqn(logx, w, model):
     _weq = weq(T, mx, g=2.0)
     sv = thermal_cross_section(x, model)
 
-    return np.array([
-        pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))])
+    return np.array([pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))])
 
 
 def jacobian_boltzmann_eqn(logx, w, model):
@@ -419,12 +442,10 @@ def jacobian_boltzmann_eqn(logx, w, model):
     _weq = weq(T, mx, g=2.0)
     sv = thermal_cross_section(x, model)
 
-    return np.array([[
-        pf * sv * (np.exp(w[0]) + np.exp(2.0 * _weq - w[0]))]])
+    return np.array([[pf * sv * (np.exp(w[0]) + np.exp(2.0 * _weq - w[0]))]])
 
 
-def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
-                    rtol=1e-5, atol=1e-3):
+def solve_boltzmann(model, x0=1.0, xf=None, method="Radau", rtol=1e-5, atol=1e-3):
     """
     Solve the Boltzmann equation for the log of the dark matter
     comoving number density as a function of `logx` - which is the
@@ -473,14 +494,14 @@ def solve_boltzmann(model, x0=1.0, xf=None, method='Radau',
     def jac(logx, w):
         return jacobian_boltzmann_eqn(logx, w, model)
 
-    return solve_ivp(f, (logx0, logxf), [w0], method=method,
-                     jac=jac, vectorized=True)
+    return solve_ivp(f, (logx0, logxf), [w0], method=method, jac=jac, vectorized=True)
 
 
 # ----------------------------------------------------------- #
 # Functions for computing the relic density semi-analytically #
 # see arXiv:1204.3622v3 for detailed explaination             #
 # ----------------------------------------------------------- #
+
 
 def xstar_root_eqn(xstar, model, delta=None):
     """
@@ -515,7 +536,7 @@ def xstar_root_eqn(xstar, model, delta=None):
     tcs = thermal_cross_section(xstar, model)
     _yeq = yeq(T, model.mx)
     dyeq = yeq_derivx(xstar, model.mx)
-    return xstar**2 * dyeq + lam * deltabar * tcs * _yeq**2
+    return xstar ** 2 * dyeq + lam * deltabar * tcs * _yeq ** 2
 
 
 def compute_xstar(model, delta=None):
@@ -539,8 +560,7 @@ def compute_xstar(model, delta=None):
     xstar: float
         Value of mass / temperature at which DM begins to freeze-out.
     """
-    return root_scalar(xstar_root_eqn, bracket=(0.01, 100.0),
-                       args=(model, delta)).root
+    return root_scalar(xstar_root_eqn, bracket=(0.01, 100.0), args=(model, delta)).root
 
 
 def compute_alpha(model, xstar):
@@ -559,8 +579,8 @@ def compute_alpha(model, xstar):
     pf = np.sqrt(np.pi / 45.0) * model.mx * plank_mass
 
     def integrand(x):
-        return (sm_sqrt_gstar(model.mx / x) *
-                thermal_cross_section(x, model) / x**2)
+        return sm_sqrt_gstar(model.mx / x) * thermal_cross_section(x, model) / x ** 2
+
     return pf * quad(integrand, xstar, 100 * xstar)[0]
 
 
@@ -617,22 +637,21 @@ def relic_density(model, semi_analytic=True, **kwargs):
         # TODO: track down where these warnings are stemming from.
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                'ignore', r'divide by zero encountered in double_scalars')
-            warnings.filterwarnings(
-                'ignore', r'overflow encountered in double_scalars')
-            delta = (kwargs['delta'] if ('delta' in kwargs) else None)
+                "ignore", r"divide by zero encountered in double_scalars"
+            )
+            warnings.filterwarnings("ignore", r"overflow encountered in double_scalars")
+            delta = kwargs["delta"] if ("delta" in kwargs) else None
             xstar = compute_xstar(model, delta=delta)
             alpha = compute_alpha(model, xstar)
         ystar = yeq(model.mx / xstar, model.mx)
         Y0 = ystar / (1 + ystar * alpha)
     else:
-        x0 = kwargs['x0'] if ('x0' in kwargs) else 1.0
-        xf = kwargs['xf'] if ('xf' in kwargs) else None
-        method = kwargs['method'] if ('method' in kwargs) else 'Radau'
-        rtol = kwargs['rtol'] if ('rtol' in kwargs) else 1e-5
-        atol = kwargs['atol'] if ('atol' in kwargs) else 1e-3
-        sol = solve_boltzmann(model, x0=x0, xf=xf, method=method,
-                              rtol=rtol, atol=atol)
+        x0 = kwargs["x0"] if ("x0" in kwargs) else 1.0
+        xf = kwargs["xf"] if ("xf" in kwargs) else None
+        method = kwargs["method"] if ("method" in kwargs) else "Radau"
+        rtol = kwargs["rtol"] if ("rtol" in kwargs) else 1e-5
+        atol = kwargs["atol"] if ("atol" in kwargs) else 1e-3
+        sol = solve_boltzmann(model, x0=x0, xf=xf, method=method, rtol=rtol, atol=atol)
 
         Y0 = np.exp(sol.y[0, -1])
 

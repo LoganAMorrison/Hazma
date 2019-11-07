@@ -5,8 +5,7 @@ from hazma.parameters import down_quark_mass as mdq
 from hazma.parameters import strange_quark_mass as msq
 from hazma.parameters import fpi, b0, vh
 
-from hazma.scalar_mediator._scalar_mediator_constraints import \
-    ScalarMediatorConstraints
+from hazma.scalar_mediator._scalar_mediator_constraints import ScalarMediatorConstraints
 from hazma.scalar_mediator._scalar_mediator_cross_sections import (
     ScalarMediatorCrossSection,
 )
@@ -14,8 +13,7 @@ from hazma.scalar_mediator._scalar_mediator_fsr import ScalarMediatorFSR
 from hazma.scalar_mediator._scalar_mediator_positron_spectra import (
     ScalarMediatorPositronSpectra,
 )
-from hazma.scalar_mediator._scalar_mediator_spectra import \
-    ScalarMediatorSpectra
+from hazma.scalar_mediator._scalar_mediator_spectra import ScalarMediatorSpectra
 from hazma.scalar_mediator._scalar_mediator_widths import ScalarMediatorWidths
 
 import numpy as np

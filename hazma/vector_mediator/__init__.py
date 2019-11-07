@@ -253,8 +253,7 @@ class QuarksOnly(VectorMediator):
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
-        super(QuarksOnly, self).__init__(
-            mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
+        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
 
     @staticmethod
     def list_annihilation_final_states():
