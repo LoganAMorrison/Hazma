@@ -21,16 +21,23 @@ cdef double __sigma_xx_to_s_to_ff(double e_cm, double mx, double ms,
                                   double gsxx, double gsff, double gsGG,
                                   double gsFF, double lam, double width_s,
                                   double vs, double mf):
-
     if e_cm < 2.0 * mf or e_cm < 2.0 * mx:
         return 0.0
-    return ((gsff**2 * gsxx**2 * mf**2 *
-               (-2 * mx + e_cm) * (2 * mx + e_cm) *
-               (-4 * mf**2 + e_cm**2)**1.5) /
-               (16.0 * M_PI * e_cm**2 *
-                sqrt(e_cm**2 - 4 * mx**2) *
-                vh**2 * (ms**4 - 2 * ms**2 * e_cm**2 + e_cm**4 +
-                         ms**2 * width_s**2)))
+
+    return (
+        gsff ** 2
+        * gsxx ** 2
+        * mf ** 2
+        * (e_cm ** 2 - 4 * mf ** 2)**1.5
+        *  (-4 * mx ** 2 + e_cm ** 2)
+    ) / (
+        16.0
+        * M_PI
+        * e_cm ** 2
+        * sqrt(e_cm ** 2 - 4.0 * mx ** 2)
+        * vh ** 2
+        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+    )
 
 
 @cython.cdivision(True)
@@ -41,12 +48,19 @@ cdef double __sigma_xx_to_s_to_gg(double e_cm, double mx, double ms,
     if e_cm < 2.0 * mx:
         return 0.0
 
-    rxs = mx / e_cm
-    return ((alpha_em**2 * gsFF**2 * gsxx**2 * e_cm**4 *
-             sqrt(1 - 4 * rxs**2)) /
-            (64.0 * lam**2 * M_PI**3 *
-             (ms**4 + e_cm**4 + ms**2 *
-              (-2 * e_cm**2 + width_s**2))))
+    return -(
+        alpha_em ** 2
+        * gsFF ** 2
+        * gsxx ** 2
+        * (e_cm ** 2) ** 1.5
+        * (4 * mx ** 2 - e_cm ** 2)
+    ) / (
+        128.0
+        * lam ** 2
+        * M_PI ** 3
+        * sqrt(-mx ** 2 + e_cm ** 2 / 4.0)
+        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+    )
 
 
 @cython.cdivision(True)
@@ -57,23 +71,38 @@ cdef double __sigma_xx_to_s_to_pi0pi0(double e_cm, double mx, double ms,
     if e_cm < 2.0 * mpi0 or e_cm < 2.0 * mx:
         return 0.0
 
-    rpi0s = mpi0 / e_cm
-    rxs = mx / e_cm
+    rpi0 = mpi0 / e_cm
+    rx = mx / e_cm
 
-    return ((gsxx**2 * sqrt((-1 + 4 * rpi0s**2) * (-1 + 4 * rxs**2)) *
-             (162 * gsGG * lam**3 * e_cm**2 *
-              (-1 + 2 * rpi0s**2) * vh**2 + b0 * (mdq + muq) *
-              (9 * lam + 4 * gsGG * vs) *
-              (27 * gsff**2 * lam**2 * vs * (3 * lam + 4 * gsGG * vs) -
-               2 * gsGG * vh**2 *
-               (27 * lam**2 - 30 * gsGG * lam * vs +
-                8 * gsGG**2 * vs**2) + gsff *
-               (-81 * lam**3 * vh +
-                48 * gsGG**2 * lam * vh * vs**2)))**2) /
-            (209952.0 * lam**6 * M_PI * vh**4 *
-             (9 * lam + 4 * gsGG * vs)**2 *
-             (ms**4 + e_cm**4 + ms**2 *
-              (-2 * e_cm**2 + width_s**2))))
+    return -(
+        gsxx ** 2
+        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rpi0 ** 2)
+        * (-e_cm ** 2 / 2.0 + 2 * e_cm ** 2 * rx ** 2)
+        * (
+            162 * gsGG * lam ** 3 * (-e_cm ** 2 + 2 * e_cm ** 2 * rpi0 ** 2) * vh ** 2
+            + b0
+            * (mdq + muq)
+            * (9 * lam + 4 * gsGG * vs)
+            * (
+                27 * gsff ** 2 * lam ** 2 * vs * (3 * lam + 4 * gsGG * vs)
+                - 2
+                * gsGG
+                * vh ** 2
+                * (27 * lam ** 2 - 30 * gsGG * lam * vs + 8 * gsGG ** 2 * vs ** 2)
+                + gsff * (-81 * lam ** 3 * vh + 48 * gsGG ** 2 * lam * vh * vs ** 2)
+            )
+        )
+        ** 2
+    ) / (
+        104976.0
+        * lam ** 6
+        * M_PI
+        * e_cm ** 2
+        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rx ** 2)
+        * vh ** 4
+        * (9 * lam + 4 * gsGG * vs) ** 2
+        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+    )
 
 
 @cython.cdivision(True)
@@ -84,25 +113,39 @@ cdef double __sigma_xx_to_s_to_pipi(double e_cm, double mx, double ms,
     if e_cm < 2.0 * mpi or e_cm < 2.0 * mx:
         return 0.0
 
-    rpis = mpi / e_cm
-    rxs = mx / e_cm
+    rpi = mpi / e_cm
+    rx = mx / e_cm
 
-    return ((gsxx**2 * sqrt((-1 + 4 * rpis**2) *
-                               (-1 + 4 * rxs**2)) *
-             (162 * gsGG * lam**3 * e_cm**2 *
-              (-1 + 2 * rpis**2) * vh**2 +
-              b0 * (mdq + muq) * (9 * lam + 4 * gsGG * vs) *
-              (27 * gsff**2 * lam**2 * vs *
-               (3 * lam + 4 * gsGG * vs) -
-               2 * gsGG * vh**2 *
-               (27 * lam**2 - 30 * gsGG * lam * vs +
-                8 * gsGG**2 * vs**2) + gsff *
-               (-81 * lam**3 * vh +
-                48 * gsGG**2 * lam * vh * vs**2)))**2) /
-            (104976.0 * lam**6 * M_PI * vh**4 *
-             (9 * lam + 4 * gsGG * vs)**2 *
-             (ms**4 + e_cm**4 + ms**2 *
-              (-2 * e_cm**2 + width_s**2))))
+    return -(
+        gsxx ** 2
+        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rpi ** 2)
+        * (-e_cm ** 2 / 2.0 + 2 * e_cm ** 2 * rx ** 2)
+        * (
+            162 * gsGG * lam ** 3 * (-e_cm ** 2 + 2 * e_cm ** 2 * rpi ** 2) * vh ** 2
+            + b0
+            * (mdq + muq)
+            * (9 * lam + 4 * gsGG * vs)
+            * (
+                27 * gsff ** 2 * lam ** 2 * vs * (3 * lam + 4 * gsGG * vs)
+                - 2
+                * gsGG
+                * vh ** 2
+                * (27 * lam ** 2 - 30 * gsGG * lam * vs + 8 * gsGG ** 2 * vs ** 2)
+                + gsff * (-81 * lam ** 3 * vh + 48 * gsGG ** 2 * lam * vh * vs ** 2)
+            )
+        )
+        ** 2
+    ) / (
+        104976.0
+        * lam ** 6
+        * M_PI
+        * e_cm ** 2
+        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rx ** 2)
+        * vh ** 4
+        * (9 * lam + 4 * gsGG * vs) ** 2
+        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+    )
+
 
 
 @cython.cdivision(True)
@@ -112,22 +155,49 @@ cdef double __sigma_xx_to_ss(double e_cm, double mx, double ms, double gsxx,
     if e_cm < 2.0 * ms or e_cm < 2.0 * mx:
         return 0.0
 
-    return -((gsxx**4 * sqrt(-4 * ms**2 + e_cm**2) *
-              sqrt(-4 * mx**2 + e_cm**2) *
-             (-2 / (4 * mx**2 - e_cm**2) -
-              (ms**2 - 4 * mx**2)**2 /
-              ((4 * mx**2 - e_cm**2) *
-               (ms**4 - 4 * ms**2 * mx**2 + mx**2 * e_cm**2)) -
-              (2 * (6 * ms**4 - 32 * mx**4 + 16 * mx**2 * e_cm**2 +
-                    e_cm**4 - 4 * ms**2 *
-                    (4 * mx**2 + e_cm**2)) *
-               atanh((sqrt(-4 * ms**2 + e_cm**2) *
-                      sqrt(-4 * mx**2 + e_cm**2)) /
-                          (-2 * ms**2 + e_cm**2))) /
-              (sqrt(-4 * ms**2 + e_cm**2) *
-               (-2 * ms**2 + e_cm**2) *
-               (-4 * mx**2 + e_cm**2)**1.5))) /
-            (16.0 * M_PI * e_cm**2))
+    return -(
+        gsxx ** 4
+        * (4 * mx ** 2 - e_cm ** 2)
+        * sqrt((-4 * ms ** 2 + e_cm ** 2) / (-4 * mx ** 2 + e_cm ** 2))
+        * (
+            -2 / (-4 * mx ** 2 + e_cm ** 2)
+            + (ms ** 2 - 4 * mx ** 2) ** 2
+            / (
+                (4 * mx ** 2 - e_cm ** 2)
+                * (ms ** 4 - 4 * ms ** 2 * mx ** 2 + mx ** 2 * e_cm ** 2)
+            )
+            + (
+                (
+                    6 * ms ** 4
+                    - 32 * mx ** 4
+                    + 16 * mx ** 2 * e_cm ** 2
+                    + e_cm ** 4
+                    - 4 * ms ** 2 * (4 * mx ** 2 + e_cm ** 2)
+                )
+                * np.log(
+                    (
+                        -2 * ms ** 2
+                        + e_cm ** 2
+                        - sqrt(
+                            (-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2)
+                        )
+                    )
+                    / (
+                        -2 * ms ** 2
+                        + e_cm ** 2
+                        + sqrt(
+                            (-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2)
+                        )
+                    )
+                )
+            )
+            / (
+                (2 * ms ** 2 - e_cm ** 2)
+                * sqrt(-4 * ms ** 2 + e_cm ** 2)
+                * (-4 * mx ** 2 + e_cm ** 2) ** 1.5
+            )
+        )
+    ) / (16.0 * M_PI * e_cm ** 2)
 
 
 @cython.cdivision(True)
@@ -159,11 +229,10 @@ cdef double __sigma_xl_to_xl(double e_cm, double mx, double ms, double gsxx,
     if e_cm < mx + ml:
         return 0.0
 
-    cdef double gsll = gsff * ml
     cdef double s = e_cm**2
 
     return 2.0 * (
-        (gsll**2 * gsxx**2 *
+        ((gsff * ml)**2 * gsxx**2 *
          ((-4 * ml**2 * (ms**2 - 4 * mx**2) + ms**2 *
            (ms**2 - 4 * mx**2 - width_s**2)) *
           atan(ms / width_s) +
@@ -682,11 +751,15 @@ def sigma_xx_to_s_to_ff(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s* -> f + f.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_s_to_ff(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs, mf)
-    return __sigma_xx_to_s_to_ff(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_s_to_ff(e_cm, mx, ms, gsxx, gsff, gsGG,
                                  gsFF, lam, width_s, vs, mf)
 
 
@@ -729,11 +802,15 @@ def sigma_xx_to_s_to_gg(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s* -> g + g.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_s_to_gg(np.array(e_cms),
                                          mx, ms, gsxx, gsff, gsGG,
                                          gsFF, lam, width_s, vs)
-    return __sigma_xx_to_s_to_gg(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_s_to_gg(e_cm, mx, ms, gsxx, gsff, gsGG,
                                  gsFF, lam, width_s, vs)
 
 
@@ -777,11 +854,15 @@ def sigma_xx_to_s_to_pi0pi0(e_cms, double mx, double ms,
     sigma : double
         Cross section for x + x -> s* -> pi0 + pi0.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_s_to_pi0pi0(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xx_to_s_to_pi0pi0(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_s_to_pi0pi0(e_cm, mx, ms, gsxx, gsff, gsGG,
                                      gsFF, lam, width_s, vs)
 
 
@@ -825,11 +906,15 @@ def sigma_xx_to_s_to_pipi(e_cms, double mx, double ms,
     sigma : double
         Cross section for x + x -> s* -> pi + pi.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_s_to_pipi(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xx_to_s_to_pipi(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_s_to_pipi(e_cm, mx, ms, gsxx, gsff, gsGG,
                                    gsFF, lam, width_s, vs)
 
 
@@ -872,11 +957,15 @@ def sigma_xx_to_ss(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_ss(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xx_to_ss(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_ss(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
 
@@ -918,11 +1007,15 @@ def sigma_xx_to_all(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> anything except x + x.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_all(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xx_to_all(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_all(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
 
@@ -965,11 +1058,15 @@ def sigma_xl_to_xl(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xl_to_xl(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs, mf)
-    return __sigma_xl_to_xl(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xl_to_xl(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs, mf)
 
 
@@ -1012,11 +1109,15 @@ def sigma_xpi_to_xpi(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xpi_to_xpi(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xpi_to_xpi(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xpi_to_xpi(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
 
@@ -1059,11 +1160,15 @@ def sigma_xpi0_to_xpi0(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xpi0_to_xpi0(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xpi0_to_xpi0(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xpi0_to_xpi0(e_cm, mx, ms, gsxx, gsff, gsGG,
                                 gsFF, lam, width_s, vs)
 
 
@@ -1106,11 +1211,15 @@ def sigma_xg_to_xg(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xg_to_xg(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xg_to_xg(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xg_to_xg(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
 
@@ -1153,11 +1262,15 @@ def sigma_xs_to_xs(e_cms, double mx, double ms, double gsxx,
     sigma : double
         Cross section for x + x -> s + s.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xs_to_xs(
             np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
             gsFF, lam, width_s, vs)
-    return __sigma_xs_to_xs(e_cms, mx, ms, gsxx, gsff, gsGG,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xs_to_xs(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
 

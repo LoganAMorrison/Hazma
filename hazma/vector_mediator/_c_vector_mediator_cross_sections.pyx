@@ -273,11 +273,15 @@ def sigma_xx_to_v_to_ff(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> v* -> f + f.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_v_to_ff(
             np.array(e_cms), mx, mv, gvxx, gvll, width_v, ml)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
     return __sigma_xx_to_v_to_ff(
-        e_cms, mx, mv, gvxx, gvll, width_v, ml)
+        e_cm, mx, mv, gvxx, gvll, width_v, ml)
 
 
 @cython.cdivision(True)
@@ -321,12 +325,16 @@ def sigma_xx_to_v_to_pipi(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> v* -> pi + pi.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_v_to_pipi(
             np.array(e_cms), mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
             gvmumu, width_v)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
     return __sigma_xx_to_v_to_pipi(
-        e_cms, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu, width_v)
+        e_cm, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu, width_v)
 
 
 @cython.cdivision(True)
@@ -370,12 +378,16 @@ def sigma_xx_to_v_to_pi0g(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> v* -> pi0 + g.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_v_to_pi0g(
             np.array(e_cms), mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
             gvmumu, width_v)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
     return __sigma_xx_to_v_to_pi0g(
-        e_cms, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
+        e_cm, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
         gvmumu, width_v)
 
 
@@ -418,12 +430,16 @@ def sigma_xx_to_v_to_pi0v(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> v* -> v + pi0.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_v_to_pi0v(
             np.array(e_cms), mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
             gvmumu, width_v)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
     return __sigma_xx_to_v_to_pi0v(
-        e_cms, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
+        e_cm, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
         gvmumu, width_v)
 
 
@@ -466,11 +482,15 @@ def sigma_xx_to_vv(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> v + v.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_vv(
             np.array(e_cms), mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
             gvmumu, width_v)
-    return __sigma_xx_to_vv(e_cms, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_xx_to_vv(e_cm, mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
                             gvmumu, width_v)
 
 
@@ -512,12 +532,16 @@ def sigma_xx_to_all(e_cms, double mx, double mv, double gvxx,
     sigma : double
         Cross section for x + x -> anything except x + x.
     """
-    if hasattr(e_cms, '__len__'):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
         return __vec_sigma_xx_to_all(
             np.array(e_cms), mx, mv, gvxx, gvuu, gvdd, gvss, gvee,
             gvmumu, width_v)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
     return __sigma_xx_to_all(
-        e_cms, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu, width_v)
+        e_cm, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu, width_v)
 
 
 @cython.cdivision(True)
