@@ -1,10 +1,11 @@
-from hazma.decay import muon
-from hazma.decay import neutral_pion
-from hazma.decay import charged_pion
-import numpy as np
 import os
-from os import path
 import unittest
+from os import path
+
+import numpy as np
+from numpy.testing import assert_allclose
+
+from hazma.decay import charged_pion, muon, neutral_pion
 
 
 class TestDecay(unittest.TestCase):
@@ -53,11 +54,11 @@ class TestDecay(unittest.TestCase):
             dnde = dnde_func(e_gams, e)
             # Compare
             for e_gam, val, val_ref in zip(e_gams, dnde, dnde_ref):
-                self.assertAlmostEqual(
+                assert_allclose(
                     val,
                     val_ref,
-                    5,
-                    msg="reference spectrum from {} does not match recomputed value at e_gam = {}".format(
+                    rtol=1e-5,
+                    err_msg="reference spectrum from {} does not match recomputed value at e_gam = {}".format(
                         data_dir, e_gam
                     ),
                 )
