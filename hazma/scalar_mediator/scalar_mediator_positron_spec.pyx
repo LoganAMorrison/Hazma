@@ -150,14 +150,14 @@ cdef double __integrand(double cl, double eng_p, double eng_s,
     cdef double dnde_mu = 0.0
 
     if fs == "total":
-        dnde_cp = 2. * pwpipi * __interp_spec(eng_p_srf, "cp")
-        dnde_mu = 2. * pwmumu * __interp_spec(eng_p_srf, "mu")
+        dnde_cp = pwpipi * __interp_spec(eng_p_srf, "cp")
+        dnde_mu = pwmumu * __interp_spec(eng_p_srf, "mu")
         return jac * (dnde_cp + dnde_mu)
     if fs == "pi pi":
-        dnde_cp = 2. * pwpipi * __interp_spec(eng_p_srf, "cp")
+        dnde_cp = pwpipi * __interp_spec(eng_p_srf, "cp")
         return jac * (dnde_cp + dnde_mu)
     if fs == "mu mu":
-        dnde_mu = 2. * pwmumu * __interp_spec(eng_p_srf, "mu")
+        dnde_mu = pwmumu * __interp_spec(eng_p_srf, "mu")
         return jac * (dnde_cp + dnde_mu)
     if fs == "e e":
         return 0.0
