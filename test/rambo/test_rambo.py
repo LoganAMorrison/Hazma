@@ -52,7 +52,7 @@ class TestRambo(unittest.TestCase):
 
         analytic = 4.0 * np.pi * alpha_em ** 2 / (3.0 * cme ** 2)
 
-        assert_allclose(rambo[0], analytic, rtol=1e-3)
+        assert_allclose(rambo[0], analytic, rtol=5e-3)
 
     def test_compute_decay_width_muon(self):
         """
@@ -80,7 +80,7 @@ class TestRambo(unittest.TestCase):
         corr_fac = 1.0 - 8.0 * r + 8 * r ** 3 - r ** 4 - 12.0 * r ** 2 * np.log(r)
         analytic = GF ** 2 * mmu ** 5 / (192.0 * np.pi ** 3) * corr_fac
 
-        assert_allclose(rambo[0], analytic, rtol=1e-3)
+        assert_allclose(rambo[0], analytic, rtol=5e-3)
 
     def test_compute_decay_width_Zee(self):
         """
@@ -115,4 +115,4 @@ class TestRambo(unittest.TestCase):
         den = 96.0 * np.pi * cw ** 2 * sw ** 2
         analytic = num / den
 
-        assert_allclose(rambo[0], analytic, rtol=1e-3)
+        assert_allclose(rambo[0], analytic, rtol=5e-3)
