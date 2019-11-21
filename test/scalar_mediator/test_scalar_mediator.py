@@ -2,9 +2,12 @@
 Test module for the scalar mediator model.
 """
 
-from hazma.scalar_mediator import ScalarMediator, HeavyQuark
-import numpy as np
 import unittest
+
+import numpy as np
+from numpy.testing import assert_allclose
+
+from hazma.scalar_mediator import HeavyQuark, ScalarMediator
 
 sm1_dir = "test/scalar_mediator/data/sm_1/"
 sm2_dir = "test/scalar_mediator/data/sm_2/"
@@ -113,11 +116,26 @@ class TestScalarMediator(unittest.TestCase):
         cs1_new = self.sm1.annihilation_cross_sections(self.e_cm1)
         cs2_new = self.sm2.annihilation_cross_sections(self.e_cm2)
 
-        for key in self.cs1_old.keys():
-            self.assertAlmostEqual(self.cs1_old[key], cs1_new[key], places=3)
+        print(
+            self.cs1_old["pi pi"],
+            cs1_new["pi pi"],
+            round(self.cs1_old["pi pi"] - cs1_new["pi pi"], 5),
+        )
+        print(
+            self.cs2_old["pi pi"],
+            cs2_new["pi pi"],
+            round(self.cs2_old["pi pi"] - cs2_new["pi pi"], 5),
+        )
 
+        print("SM1")
+        for key in self.cs1_old.keys():
+            print(key, self.cs1_old[key], cs1_new[key])
+            assert_allclose(self.cs1_old[key], cs1_new[key], rtol=1e-4, err_msg=key)
+
+        print("SM2")
         for key in self.cs2_old.keys():
-            self.assertAlmostEqual(self.cs2_old[key], cs2_new[key], places=3)
+            print(key, self.cs2_old[key], cs2_new[key])
+            assert_allclose(self.cs2_old[key], cs2_new[key], rtol=1e-4, err_msg=key)
 
     def test_branching_fractions(self):
         """
@@ -129,11 +147,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.bf1_old.keys():
             val1, val2 = self.bf1_old[key], bf1_new[key]
-            self.assertAlmostEqual(val1, val2, places=3)
+            assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.bf2_old.keys():
             val1, val2 = self.bf2_old[key], bf2_new[key]
-            self.assertAlmostEqual(val1, val2, places=3)
+            assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_compute_vs(self):
         """
@@ -152,11 +170,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.spec1_old.keys():
             for (val1, val2) in zip(self.spec1_old[key], spec1_new[key]):
-                self.assertAlmostEqual(val1, val2, places=3)
+                assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.spec2_old.keys():
             for (val1, val2) in zip(self.spec2_old[key], spec2_new[key]):
-                self.assertAlmostEqual(val1, val2, places=3)
+                assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_spectrum_funcs(self):
         self.sm1.spectrum_funcs()
@@ -172,11 +190,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.ps1_old.keys():
             val1, val2 = self.ps1_old[key], ps1_new[key]
-            self.assertAlmostEqual(val1, val2, places=3)
+            assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.ps2_old.keys():
             val1, val2 = self.ps2_old[key], ps2_new[key]
-            self.assertAlmostEqual(val1, val2, places=3)
+            assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_positron_spectra(self):
         """
@@ -188,11 +206,11 @@ class TestScalarMediator(unittest.TestCase):
 
         for key in self.pspec1_old.keys():
             for (val1, val2) in zip(self.pspec1_old[key], pspec1_new[key]):
-                self.assertAlmostEqual(val1, val2, places=3)
+                assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.pspec2_old.keys():
             for (val1, val2) in zip(self.pspec2_old[key], pspec2_new[key]):
-                self.assertAlmostEqual(val1, val2, places=3)
+                assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_positron_lines(self):
         """
@@ -201,10 +219,14 @@ class TestScalarMediator(unittest.TestCase):
         lns1_new = self.sm1.positron_lines(self.e_cm1)
         lns2_new = self.sm2.positron_lines(self.e_cm2)
 
-        self.assertAlmostEqual(lns1_new["e e"]["bf"], self.lns1_old["e e"]["bf"], places=3)
+        assert_allclose(lns1_new["e e"]["bf"], self.lns1_old["e e"]["bf"], rtol=1e-4)
 
-        self.assertAlmostEqual(lns1_new["e e"]["energy"], self.lns1_old["e e"]["energy"], places=3)
+        assert_allclose(
+            lns1_new["e e"]["energy"], self.lns1_old["e e"]["energy"], rtol=1e-4
+        )
 
-        self.assertAlmostEqual(lns2_new["e e"]["bf"], self.lns2_old["e e"]["bf"], places=3)
+        assert_allclose(lns2_new["e e"]["bf"], self.lns2_old["e e"]["bf"], rtol=1e-4)
 
-        self.assertAlmostEqual(lns2_new["e e"]["energy"], self.lns2_old["e e"]["energy"], places=3)
+        assert_allclose(
+            lns2_new["e e"]["energy"], self.lns2_old["e e"]["energy"], rtol=1e-4
+        )

@@ -155,6 +155,12 @@ extensions += [
         sources=[sm_dir + "scalar_mediator_positron_spec.pyx"],
     )
 ]
+extensions += [
+    Extension(
+        sm_pack + "._c_scalar_mediator_cross_sections",
+        sources=[sm_dir + "_c_scalar_mediator_cross_sections.pyx"],
+    )
+]
 # Vector mediator
 extensions += [
     Extension(
@@ -168,6 +174,13 @@ extensions += [
         sources=[vm_dir + "vector_mediator_positron_spec.pyx"],
     )
 ]
+extensions += [
+    Extension(
+        vm_pack + "._c_vector_mediator_cross_sections",
+        sources=[vm_dir + "_c_vector_mediator_cross_sections.pyx"],
+    )
+]
+
 
 setup(
     name="hazma",

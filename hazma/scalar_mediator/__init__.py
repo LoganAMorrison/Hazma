@@ -17,6 +17,8 @@ from hazma.scalar_mediator._scalar_mediator_spectra import ScalarMediatorSpectra
 from hazma.scalar_mediator._scalar_mediator_widths import ScalarMediatorWidths
 
 import numpy as np
+from scipy.integrate import quad
+from scipy.special import k1, kn
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,

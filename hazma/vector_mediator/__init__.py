@@ -11,6 +11,9 @@ from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from ..parameters import qe, Qu, Qd, Qe
 
+from scipy.integrate import quad
+from scipy.special import k1, kn
+
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.

@@ -9,7 +9,7 @@ from os import path
 def e_cm_mw(mx, vrel=1e-3):
     """Computes DM COM energy, assuming its velocity is much less than c.
     """
-    return 2 * mx * (1 + 0.5 * vrel**2)
+    return 2 * mx * (1 + 0.5 * vrel ** 2)
 
 
 def save_data(params_list, Models):
@@ -33,8 +33,14 @@ def save_data(params_list, Models):
         # Particle physics quantities
         e_cm = e_cm_mw(SM.mx)
         np.save(path.join(cur_dir, "e_cm.npy"), e_cm)
-        np.save(path.join(cur_dir, "ann_cross_sections.npy"), SM.annihilation_cross_sections(e_cm))
-        np.save(path.join(cur_dir, "ann_branching_fractions.npy"), SM.annihilation_branching_fractions(e_cm))
+        np.save(
+            path.join(cur_dir, "ann_cross_sections.npy"),
+            SM.annihilation_cross_sections(e_cm),
+        )
+        np.save(
+            path.join(cur_dir, "ann_branching_fractions.npy"),
+            SM.annihilation_branching_fractions(e_cm),
+        )
         np.save(path.join(cur_dir, "partial_widths.npy"), SM.partial_widths())
         np.save(path.join(cur_dir, "vs.npy"), SM.compute_vs())
 
@@ -47,32 +53,39 @@ def save_data(params_list, Models):
         # Positron spectra
         e_ps = np.geomspace(me, e_cm, 10)
         np.save(path.join(cur_dir, "e_ps.npy"), e_ps)
-        np.save(path.join(cur_dir, "positron_spectra.npy"), SM.positron_spectra(e_ps, e_cm))
+        np.save(
+            path.join(cur_dir, "positron_spectra.npy"), SM.positron_spectra(e_ps, e_cm)
+        )
         np.save(path.join(cur_dir, "positron_lines.npy"), SM.positron_lines(e_cm))
+
 
 def generate_test_data():
     params = []
     # Higgs-portal couplings
     stheta = 1e-3
 
-    params.append({
-        "mx": 250.0,
-        "ms": 125.0,
-        "gsxx": 1.0,
-        "gsff": stheta,
-        "gsGG": 3 * stheta,
-        "gsFF": -5 / 6 * stheta,
-        "lam": vh,
-    })
-    params.append({
-        "mx": 250.0,
-        "ms": 550.0,
-        "gsxx": 1.0,
-        "gsff": stheta,
-        "gsGG": 3 * stheta,
-        "gsFF": -5 / 6 * stheta,
-        "lam": vh,
-    })
+    params.append(
+        {
+            "mx": 250.0,
+            "ms": 125.0,
+            "gsxx": 1.0,
+            "gsff": stheta,
+            "gsGG": 3 * stheta,
+            "gsFF": -5 / 6 * stheta,
+            "lam": vh,
+        }
+    )
+    params.append(
+        {
+            "mx": 250.0,
+            "ms": 550.0,
+            "gsxx": 1.0,
+            "gsff": stheta,
+            "gsGG": 3 * stheta,
+            "gsFF": -5 / 6 * stheta,
+            "lam": vh,
+        }
+    )
 
     save_data(params, 2 * [ScalarMediator])
 

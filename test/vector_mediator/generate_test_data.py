@@ -9,7 +9,7 @@ from os import path
 def e_cm_mw(mx, vrel=1e-3):
     """Computes DM COM energy, assuming its velocity is much less than c.
     """
-    return 2 * mx * (1 + 0.5 * vrel**2)
+    return 2 * mx * (1 + 0.5 * vrel ** 2)
 
 
 def save_data(params_list, Models):
@@ -33,8 +33,14 @@ def save_data(params_list, Models):
         # Particle physics quantities
         e_cm = e_cm_mw(model.mx)
         np.save(path.join(cur_dir, "e_cm.npy"), e_cm)
-        np.save(path.join(cur_dir, "ann_cross_sections.npy"), model.annihilation_cross_sections(e_cm))
-        np.save(path.join(cur_dir, "ann_branching_fractions.npy"), model.annihilation_branching_fractions(e_cm))
+        np.save(
+            path.join(cur_dir, "ann_cross_sections.npy"),
+            model.annihilation_cross_sections(e_cm),
+        )
+        np.save(
+            path.join(cur_dir, "ann_branching_fractions.npy"),
+            model.annihilation_branching_fractions(e_cm),
+        )
         np.save(path.join(cur_dir, "partial_widths.npy"), model.partial_widths())
 
         # Gamma-ray spectra
@@ -46,8 +52,12 @@ def save_data(params_list, Models):
         # Positron spectra
         e_ps = np.geomspace(me, e_cm, 10)
         np.save(path.join(cur_dir, "e_ps.npy"), e_ps)
-        np.save(path.join(cur_dir, "positron_spectra.npy"), model.positron_spectra(e_ps, e_cm))
+        np.save(
+            path.join(cur_dir, "positron_spectra.npy"),
+            model.positron_spectra(e_ps, e_cm),
+        )
         np.save(path.join(cur_dir, "positron_lines.npy"), model.positron_lines(e_cm))
+
 
 def generate_test_data():
     params = []
@@ -63,24 +73,23 @@ def generate_test_data():
     gvmumus = 4 * [1.0]
 
     for mv in [125.0, 550.0]:
-        params.append({
-            "mx": mx,
-            "mv": mv,
-            "gvxx": gvxx,
-            "eps": eps
-        })
+        params.append({"mx": mx, "mv": mv, "gvxx": gvxx, "eps": eps})
 
-    for mv, gvuu, gvdd, gvss, gvee, gvmumu in zip(mvs, gvuus, gvdds, gvsss, gvees, gvmumus):
-        params.append({
-            "mx": mx,
-            "mv": mv,
-            "gvxx": gvxx,
-            "gvuu": gvuu,
-            "gvdd": gvdd,
-            "gvss": gvss,
-            "gvee": gvee,
-            "gvmumu": gvmumu
-        })
+    for mv, gvuu, gvdd, gvss, gvee, gvmumu in zip(
+        mvs, gvuus, gvdds, gvsss, gvees, gvmumus
+    ):
+        params.append(
+            {
+                "mx": mx,
+                "mv": mv,
+                "gvxx": gvxx,
+                "gvuu": gvuu,
+                "gvdd": gvdd,
+                "gvss": gvss,
+                "gvee": gvee,
+                "gvmumu": gvmumu,
+            }
+        )
 
     save_data(params, 2 * [KineticMixing] + 4 * [VectorMediator])
 
