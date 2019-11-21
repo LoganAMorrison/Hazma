@@ -5,6 +5,7 @@
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
 [![Documentation Status](https://readthedocs.org/projects/hazma/badge/?version=latest)](https://hazma.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3347114.svg)](https://doi.org/10.5281/zenodo.3347114)
+[![arXiv](https://img.shields.io/badge/arXiv-1907.11846-B31B1B.svg)](https://arxiv.org/pdf/1907.11846)
 
 Hazma is a tool for studying indirect detection of sub-GeV dark. Its main uses are:
 
