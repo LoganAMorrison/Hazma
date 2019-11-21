@@ -28,15 +28,14 @@ cdef double __sigma_xx_to_s_to_ff(double e_cm, double mx, double ms,
         gsff ** 2
         * gsxx ** 2
         * mf ** 2
-        * (e_cm ** 2 - 4 * mf ** 2)**1.5
-        *  (-4 * mx ** 2 + e_cm ** 2)
+        * (-4 * mf ** 2 + e_cm ** 2) ** 1.5
+        * sqrt(-4 * mx ** 2 + e_cm ** 2)
     ) / (
         16.0
         * M_PI
         * e_cm ** 2
-        * sqrt(e_cm ** 2 - 4.0 * mx ** 2)
         * vh ** 2
-        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+        * ((ms ** 2 - e_cm ** 2) ** 2 + ms ** 2 * width_s ** 2)
     )
 
 
@@ -48,18 +47,17 @@ cdef double __sigma_xx_to_s_to_gg(double e_cm, double mx, double ms,
     if e_cm < 2.0 * mx:
         return 0.0
 
-    return -(
+    return (
         alpha_em ** 2
         * gsFF ** 2
         * gsxx ** 2
         * (e_cm ** 2) ** 1.5
-        * (4 * mx ** 2 - e_cm ** 2)
+        * sqrt(-4 * mx ** 2 + e_cm ** 2)
     ) / (
         128.0
         * lam ** 2
         * M_PI ** 3
-        * sqrt(-mx ** 2 + e_cm ** 2 / 4.0)
-        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+        * ((ms ** 2 - e_cm ** 2) ** 2 + ms ** 2 * width_s ** 2)
     )
 
 
@@ -74,34 +72,30 @@ cdef double __sigma_xx_to_s_to_pi0pi0(double e_cm, double mx, double ms,
     rpi0 = mpi0 / e_cm
     rx = mx / e_cm
 
-    return -(
+    return (
         gsxx ** 2
-        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rpi0 ** 2)
-        * (-e_cm ** 2 / 2.0 + 2 * e_cm ** 2 * rx ** 2)
+        * sqrt(e_cm ** 2 * (1 - 4 * rpi0 ** 2))
+        * sqrt(e_cm ** 2 * (1 - 4 * rx ** 2))
         * (
-            162 * gsGG * lam ** 3 * (-e_cm ** 2 + 2 * e_cm ** 2 * rpi0 ** 2) * vh ** 2
+            162 * gsGG * lam ** 3 * e_cm ** 2 * (-1 + 2 * rpi0 ** 2) * vh ** 2
             + b0
             * (mdq + muq)
             * (9 * lam + 4 * gsGG * vs)
+            * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
             * (
-                27 * gsff ** 2 * lam ** 2 * vs * (3 * lam + 4 * gsGG * vs)
-                - 2
-                * gsGG
-                * vh ** 2
-                * (27 * lam ** 2 - 30 * gsGG * lam * vs + 8 * gsGG ** 2 * vs ** 2)
-                + gsff * (-81 * lam ** 3 * vh + 48 * gsGG ** 2 * lam * vh * vs ** 2)
+                2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
             )
         )
         ** 2
     ) / (
-        104976.0
+        419904.0
         * lam ** 6
         * M_PI
         * e_cm ** 2
-        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rx ** 2)
         * vh ** 4
         * (9 * lam + 4 * gsGG * vs) ** 2
-        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+        * ((ms ** 2 - e_cm ** 2) ** 2 + ms ** 2 * width_s ** 2)
     )
 
 
@@ -116,34 +110,30 @@ cdef double __sigma_xx_to_s_to_pipi(double e_cm, double mx, double ms,
     rpi = mpi / e_cm
     rx = mx / e_cm
 
-    return -(
+    return (
         gsxx ** 2
-        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rpi ** 2)
-        * (-e_cm ** 2 / 2.0 + 2 * e_cm ** 2 * rx ** 2)
+        * sqrt(e_cm ** 2 * (1 - 4 * rpi ** 2))
+        * sqrt(e_cm ** 2 * (1 - 4 * rx ** 2))
         * (
-            162 * gsGG * lam ** 3 * (-e_cm ** 2 + 2 * e_cm ** 2 * rpi ** 2) * vh ** 2
+            162 * gsGG * lam ** 3 * e_cm ** 2 * (-1 + 2 * rpi ** 2) * vh ** 2
             + b0
             * (mdq + muq)
             * (9 * lam + 4 * gsGG * vs)
+            * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
             * (
-                27 * gsff ** 2 * lam ** 2 * vs * (3 * lam + 4 * gsGG * vs)
-                - 2
-                * gsGG
-                * vh ** 2
-                * (27 * lam ** 2 - 30 * gsGG * lam * vs + 8 * gsGG ** 2 * vs ** 2)
-                + gsff * (-81 * lam ** 3 * vh + 48 * gsGG ** 2 * lam * vh * vs ** 2)
+                2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
             )
         )
         ** 2
     ) / (
-        104976.0
+        209952.0
         * lam ** 6
         * M_PI
         * e_cm ** 2
-        * sqrt(e_cm ** 2 / 4.0 - e_cm ** 2 * rx ** 2)
         * vh ** 4
         * (9 * lam + 4 * gsGG * vs) ** 2
-        * (ms ** 4 + e_cm ** 4 + ms ** 2 * (-2 * e_cm ** 2 + width_s ** 2))
+        * ((ms ** 2 - e_cm ** 2) ** 2 + ms ** 2 * width_s ** 2)
     )
 
 
@@ -157,14 +147,29 @@ cdef double __sigma_xx_to_ss(double e_cm, double mx, double ms, double gsxx,
 
     return -(
         gsxx ** 4
-        * (4 * mx ** 2 - e_cm ** 2)
-        * sqrt((-4 * ms ** 2 + e_cm ** 2) / (-4 * mx ** 2 + e_cm ** 2))
         * (
-            -2 / (-4 * mx ** 2 + e_cm ** 2)
-            + (ms ** 2 - 4 * mx ** 2) ** 2
+            4 * ms ** 2
+            + 4 * mx ** 2
+            - 2 * e_cm ** 2
+            + 2 * sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
+            - (4 * (ms ** 2 - 4 * mx ** 2) ** 2)
             / (
-                (4 * mx ** 2 - e_cm ** 2)
-                * (ms ** 4 - 4 * ms ** 2 * mx ** 2 + mx ** 2 * e_cm ** 2)
+                2 * ms ** 2
+                - e_cm ** 2
+                + sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
+            )
+            - (4 * (ms ** 2 - 4 * mx ** 2) ** 2)
+            / (
+                -2 * ms ** 2
+                + e_cm ** 2
+                + sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
+            )
+            + 2
+            * (
+                -2 * ms ** 2
+                - 2 * mx ** 2
+                + e_cm ** 2
+                + sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
             )
             + (
                 (
@@ -174,30 +179,44 @@ cdef double __sigma_xx_to_ss(double e_cm, double mx, double ms, double gsxx,
                     + e_cm ** 4
                     - 4 * ms ** 2 * (4 * mx ** 2 + e_cm ** 2)
                 )
-                * np.log(
-                    (
-                        -2 * ms ** 2
-                        + e_cm ** 2
-                        - sqrt(
-                            (-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2)
-                        )
+                * (
+                    log(
+                        2 * ms ** 2
+                        - e_cm ** 2
+                        - sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
                     )
-                    / (
+                    - log(
                         -2 * ms ** 2
                         + e_cm ** 2
-                        + sqrt(
-                            (-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2)
-                        )
+                        - sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
                     )
                 )
             )
-            / (
-                (2 * ms ** 2 - e_cm ** 2)
-                * sqrt(-4 * ms ** 2 + e_cm ** 2)
-                * (-4 * mx ** 2 + e_cm ** 2) ** 1.5
+            / (2 * ms ** 2 - e_cm ** 2)
+            - (
+                (
+                    6 * ms ** 4
+                    - 32 * mx ** 4
+                    + 16 * mx ** 2 * e_cm ** 2
+                    + e_cm ** 4
+                    - 4 * ms ** 2 * (4 * mx ** 2 + e_cm ** 2)
+                )
+                * (
+                    log(
+                        2 * ms ** 2
+                        - e_cm ** 2
+                        + sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
+                    )
+                    - log(
+                        -2 * ms ** 2
+                        + e_cm ** 2
+                        + sqrt((-4 * ms ** 2 + e_cm ** 2) * (-4 * mx ** 2 + e_cm ** 2))
+                    )
+                )
             )
+            / (2 * ms ** 2 - e_cm ** 2)
         )
-    ) / (16.0 * M_PI * e_cm ** 2)
+    ) / (64.0 * M_PI * e_cm ** 2 * (-4 * mx ** 2 + e_cm ** 2))
 
 
 @cython.cdivision(True)
