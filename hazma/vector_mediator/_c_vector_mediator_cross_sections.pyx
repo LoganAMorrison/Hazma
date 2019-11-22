@@ -21,12 +21,13 @@ cdef double __sigma_xx_to_v_to_ff(double e_cm, double mx, double mv,
     if e_cm < 2.0 * mf or e_cm < 2.0 * mx:
         return 0.0
 
-    return ((
-        gvll**2 * gvxx**2 * sqrt(e_cm**2 - 4.0 * mf**2) *
-        (e_cm**2 + 2.0 * mf**2) * (e_cm**2 + 2 * mx**2)) /
-        (12.0 * e_cm**2 * sqrt(e_cm**2 - 4.0 * mx**2) *
-         M_PI * (e_cm**4 - 2.0 * e_cm**2 * mv**2 + mv**4 +
-                  mv**2 * width_v**2)))
+    return (
+        gvll ** 2
+        * gvxx ** 2
+        * (2 * mf ** 2 + e_cm ** 2)
+        * sqrt((-4 * mf ** 2 + e_cm ** 2) / (-4 * mx ** 2 + e_cm ** 2))
+        * (2 * mx ** 2 + e_cm ** 2)
+    ) / (12.0 * M_PI * e_cm ** 2 * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2))
 
 
 @cython.cdivision(True)
@@ -36,13 +37,18 @@ cdef double __sigma_xx_to_v_to_pipi(double e_cm, double mx, double mv,
     if e_cm < 2.0 * mx or e_cm < 2.0 * mpi:
         return 0.0
 
-    return ((
-        (gvdd - gvuu)**2 * gvxx**2 * (-4.0 * mpi**2 + e_cm**2)**1.5 *
-        (2.0 * mx**2 + e_cm**2)) /
-        (48.0 * M_PI * e_cm**2 *
-         sqrt(-4.0 * mx**2 + e_cm**2) *
-         (mv**4 - 2.0 * mv**2 * e_cm**2 + e_cm**4 + mv**2 *
-          width_v**2)))
+    return (
+        (gvdd - gvuu) ** 2
+        * gvxx ** 2
+        * (-4 * mpi ** 2 + e_cm ** 2) ** 1.5
+        * (2 * mx ** 2 + e_cm ** 2)
+    ) / (
+        48.0
+        * M_PI
+        * e_cm ** 2
+        * sqrt(-4 * mx ** 2 + e_cm ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+    )
 
 
 @cython.cdivision(True)
@@ -52,16 +58,23 @@ cdef double __sigma_xx_to_v_to_pi0g(double e_cm, double mx, double mv,
     if e_cm < mpi0 or e_cm < 2.0 * mx:
         return 0.0
 
-    return ((
-        3.0 * ((gvdd + 2.0 * gvuu)**2.0 * gvxx**2 *
-               (-mpi0**2 + e_cm**2)**3 *
-               (2.0 * mx**2 + e_cm**2) * qe**2) /
-        (13824.0 * fpi**2 * M_PI**5 * e_cm**3 *
-         sqrt(-4.0 * mx**2 + e_cm**2) *
-         (mv**4 - 2.0 * mv**2 * e_cm**2 +
-          e_cm**4 + mv**2 * width_v**2))))
+    return (
+        alpha_em
+        * (gvdd + 2 * gvuu) ** 2
+        * gvxx ** 2
+        * (-mpi0 ** 2 + e_cm ** 2) ** 3
+        * (2 * mx ** 2 + e_cm ** 2)
+    ) / (
+        3456.0
+        * fpi ** 2
+        * M_PI ** 4
+        * e_cm ** 3
+        * sqrt(-4 * mx ** 2 + e_cm ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+    )
 
 
+# TODO: UPDATE THIS!
 @cython.cdivision(True)
 cdef double __sigma_xx_to_v_to_pi0v(double e_cm, double mx, double mv,
                                     double gvxx, double gvuu, double gvdd,
@@ -70,14 +83,26 @@ cdef double __sigma_xx_to_v_to_pi0v(double e_cm, double mx, double mv,
         return 0.0
 
 
-    return ((
-        (gvdd - gvuu)**2 * (gvdd + gvuu)**2 * gvxx**2 *
-        ((-mpi0 - mv + e_cm) * (mpi0 - mv + e_cm) *
-         (-mpi0 + mv + e_cm) * (mpi0 + mv + e_cm))**1.5 *
-        (2 * mx**2 + e_cm**2)) /
-        (1536.0 * fpi**2 * M_PI**5 * e_cm**3 *
-         sqrt(-4 * mx**2 + e_cm**2) *
-         ((-mv**2 + e_cm**2)**2 + mv**2 * width_v**2)))
+    return (
+        (gvdd - gvuu) ** 2
+        * (gvdd + gvuu) ** 2
+        * gvxx ** 2
+        * (
+            (mpi0 - mv - e_cm)
+            * (mpi0 + mv - e_cm)
+            * (mpi0 - mv + e_cm)
+            * (mpi0 + mv + e_cm)
+        )
+        ** 1.5
+        * (2 * mx ** 2 + e_cm ** 2)
+    ) / (
+        1536.0
+        * fpi ** 2
+        * M_PI ** 5
+        * e_cm ** 3
+        * sqrt(-4 * mx ** 2 + e_cm ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+    )
 
 
 @cython.cdivision(True)
@@ -88,19 +113,43 @@ cdef double __sigma_xx_to_vv(double e_cm, double mx, double mv,
     if e_cm < 2.0 * mv or e_cm < 2.0 * mx:
         return 0.0
 
-    return ((
-        gvxx**4 * sqrt(e_cm**2 - 4 * mv**2) *
-        (-2 - (2 * (mv**2 + 2 * mx**2)**2) /
-         (mv**4 - 4 * mv**2 * mx**2 + mx**2 * e_cm**2) +
-         (4 * (4 * mv**4 - 8 * mv**2 * mx**2 -
-               8 * mx**4 + 4 * mx**2 * e_cm**2 + e_cm**4) *
-          atanh((sqrt(e_cm**2 - 4 * mv**2) *
-                 sqrt(e_cm**2 - 4 * mx**2)) /
-                     (e_cm**2 - 2 * mv**2))) /
-         ((e_cm**2 - 2 * mv**2) *
-          sqrt(e_cm**2 - 4 * mv**2) *
-          sqrt(e_cm**2 - 4 * mx**2)))) /
-        (8.0 * M_PI * e_cm**2 * sqrt(e_cm**2 - 4 * mx**2)))
+    return (
+        gvxx ** 4
+        * (
+            (
+                -2
+                * sqrt(-4 * mv ** 2 + e_cm ** 2)
+                * sqrt(-4 * mx ** 2 + e_cm ** 2)
+                * (2 * mv ** 4 + 4 * mx ** 4 + mx ** 2 * e_cm ** 2)
+            )
+            / (mv ** 4 - 4 * mv ** 2 * mx ** 2 + mx ** 2 * e_cm ** 2)
+            + (
+                2
+                * (
+                    4 * mv ** 4
+                    - 8 * mv ** 2 * mx ** 2
+                    - 8 * mx ** 4
+                    + 4 * mx ** 2 * e_cm ** 2
+                    + e_cm ** 4
+                )
+                * log(
+                    (
+                        -2 * mv ** 2
+                        + e_cm ** 2
+                        + sqrt(-4 * mv ** 2 + e_cm ** 2)
+                        * sqrt(-4 * mx ** 2 + e_cm ** 2)
+                    )
+                    / (
+                        -2 * mv ** 2
+                        + e_cm ** 2
+                        - sqrt(-4 * mv ** 2 + e_cm ** 2)
+                        * sqrt(-4 * mx ** 2 + e_cm ** 2)
+                    )
+                )
+            )
+            / (-2 * mv ** 2 + e_cm ** 2)
+        )
+    ) / (16.0 * M_PI * e_cm ** 2 * (-4 * mx ** 2 + e_cm ** 2))
 
 
 @cython.cdivision(True)

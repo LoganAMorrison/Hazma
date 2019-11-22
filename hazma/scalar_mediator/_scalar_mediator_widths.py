@@ -14,14 +14,9 @@ class ScalarMediatorWidths:
         """
         Returns the partial decay width of the scalar decaying into photon.
         """
-        ret_val = (alpha_em ** 2 * self.gsFF ** 2 * (self.ms ** 2) ** 1.5) / (
-            128.0 * self.lam ** 2 * pi ** 3
+        return (alpha_em ** 2 * self.gsFF ** 2 * self.ms ** 3) / (
+            64.0 * self.lam ** 2 * pi ** 3
         )
-
-        assert ret_val.imag == 0
-        assert ret_val.real >= 0
-
-        return ret_val.real
 
     def width_s_to_pi0pi0(self):
         """
@@ -34,41 +29,30 @@ class ScalarMediatorWidths:
             gsff = self.gsff
             gsGG = self.gsGG
             vs = self.vs
-            Lam = self.lam
+            lam = self.lam
 
-            ret_val = (
+            return (
                 sqrt(-4 * mpi0 ** 2 + ms ** 2)
                 * (
-                    (gsGG * (4 * mpi0 ** 2 - 2 * ms ** 2)) / (9 * Lam + 4 * gsGG * vs)
-                    + (
-                        b0
-                        * (mdq + muq)
-                        * (
-                            27 * gsff ** 2 * Lam ** 2 * vs * (3 * Lam + 4 * gsGG * vs)
-                            - 2
-                            * gsGG
-                            * vh ** 2
-                            * (
-                                27 * Lam ** 2
-                                - 30 * gsGG * Lam * vs
-                                + 8 * gsGG ** 2 * vs ** 2
-                            )
-                            + gsff
-                            * (
-                                -81 * Lam ** 3 * vh
-                                + 48 * gsGG ** 2 * Lam * vh * vs ** 2
-                            )
-                        )
+                    -162 * gsGG * lam ** 3 * (-2 * mpi0 ** 2 + ms ** 2) * vh ** 2
+                    + b0
+                    * (mdq + muq)
+                    * (9 * lam + 4 * gsGG * vs)
+                    * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+                    * (
+                        2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                        + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
                     )
-                    / (81.0 * Lam ** 3 * vh ** 2)
                 )
                 ** 2
-            ) / (16.0 * ms ** 2 * pi)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            ) / (
+                209952.0
+                * lam ** 6
+                * ms ** 2
+                * pi
+                * vh ** 4
+                * (9 * lam + 4 * gsGG * vs) ** 2
+            )
         else:
             return 0.0
 
@@ -83,41 +67,30 @@ class ScalarMediatorWidths:
             gsff = self.gsff
             gsGG = self.gsGG
             vs = self.vs
-            Lam = self.lam
+            lam = self.lam
 
-            ret_val = (
+            return (
                 sqrt(-4 * mpi ** 2 + ms ** 2)
                 * (
-                    (gsGG * (4 * mpi ** 2 - 2 * ms ** 2)) / (9 * Lam + 4 * gsGG * vs)
-                    + (
-                        b0
-                        * (mdq + muq)
-                        * (
-                            27 * gsff ** 2 * Lam ** 2 * vs * (3 * Lam + 4 * gsGG * vs)
-                            - 2
-                            * gsGG
-                            * vh ** 2
-                            * (
-                                27 * Lam ** 2
-                                - 30 * gsGG * Lam * vs
-                                + 8 * gsGG ** 2 * vs ** 2
-                            )
-                            + gsff
-                            * (
-                                -81 * Lam ** 3 * vh
-                                + 48 * gsGG ** 2 * Lam * vh * vs ** 2
-                            )
-                        )
+                    -162 * gsGG * lam ** 3 * (-2 * mpi ** 2 + ms ** 2) * vh ** 2
+                    + b0
+                    * (mdq + muq)
+                    * (9 * lam + 4 * gsGG * vs)
+                    * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+                    * (
+                        2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                        + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
                     )
-                    / (81.0 * Lam ** 3 * vh ** 2)
                 )
                 ** 2
-            ) / (16.0 * ms ** 2 * pi)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            ) / (
+                104976.0
+                * lam ** 6
+                * ms ** 2
+                * pi
+                * vh ** 4
+                * (9 * lam + 4 * gsGG * vs) ** 2
+            )
         else:
             return 0.0
 
@@ -126,21 +99,13 @@ class ScalarMediatorWidths:
         Returns the partial decay width of the scalar decaying into
         two fermions x.
         """
-
         ms = self.ms
         mx = self.mx
 
         if ms > 2.0 * mx:
             gsxx = self.gsxx
 
-            ret_val = (
-                gsxx ** 2 * (ms - 2 * mx) * (ms + 2 * mx) * sqrt(ms ** 2 - 4 * mx ** 2)
-            ) / (32.0 * ms ** 2 * pi)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            return (gsxx ** 2 * (ms ** 2 - 4 * mx ** 2) ** 1.5) / (8.0 * ms ** 2 * pi)
         else:
             return 0.0
 
@@ -162,20 +127,9 @@ class ScalarMediatorWidths:
             mf = mmu
 
         if ms > 2.0 * mf:
-            gsff = self.gsff
-
-            ret_val = -(
-                gsff ** 2
-                * mf ** 2
-                * (2 * mf - ms)
-                * (2 * mf + ms)
-                * sqrt(-4 * mf ** 2 + ms ** 2)
-            ) / (32.0 * ms ** 2 * pi * vh ** 2)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            return (self.gsff ** 2 * mf ** 2 * (-4 * mf ** 2 + ms ** 2) ** 1.5) / (
+                8.0 * ms ** 2 * pi * vh ** 2
+            )
         else:
             return 0.0
 

@@ -7,6 +7,7 @@ from hazma.parameters import (
     muon_mass as mmu,
     qe,
     fpi,
+    alpha_em,
 )
 
 
@@ -15,16 +16,9 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mpi:
-            gvuu = self.gvuu
-            gvdd = self.gvdd
-            ret_val = ((gvdd - gvuu) ** 2 * (-4.0 * mpi ** 2 + mv ** 2) ** 1.5) / (
-                16.0 * mv ** 2 * pi
+            return ((self.gvdd - self.gvuu) ** 2 * (-4 * mpi ** 2 + mv ** 2) ** 1.5) / (
+                48.0 * mv ** 2 * pi
             )
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
         else:
             return 0.0
 
@@ -32,32 +26,11 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > mpi0:
-            gvuu = self.gvuu
-            gvdd = self.gvdd
-
-            ret_val = (
-                3.0
-                * (
-                    (gvdd + 2.0 * gvuu) ** 2
-                    * (-mpi0 ** 2 + mv ** 2)
-                    * (
-                        -mpi0 ** 6
-                        + 4.0 * mpi ** 4 * mv ** 2
-                        + 12.0 * mpi0 ** 4 * mv ** 2
-                        - 21.0 * mpi0 ** 2 * mv ** 4
-                        + 4.0 * mv ** 6
-                        + mpi ** 2
-                        * (mpi0 ** 4 - 12.0 * mpi0 ** 2 * mv ** 2 + 13.0 * mv ** 4)
-                    )
-                    * qe ** 2
-                )
-                / (18432.0 * fpi ** 2 * mv ** 5 * pi ** 5)
-            )
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            return (
+                alpha_em
+                * (self.gvdd + 2 * self.gvuu) ** 2
+                * (-mpi0 ** 2 + mv ** 2) ** 3
+            ) / (3456.0 * fpi ** 2 * mv ** 3 * pi ** 4)
         else:
             return 0.0
 
@@ -66,18 +39,9 @@ class VectorMediatorWidths:
         mx = self.mx
 
         if mv > 2.0 * mx:
-            gvxx = self.gvxx
-
-            ret_val = (
-                gvxx ** 2
-                * sqrt(mv ** 2 - 4.0 * mx ** 2).real
-                * (mv ** 2 + 2.0 * mx ** 2)
-            ) / (4.0 * mv ** 2 * pi)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            return (
+                self.gvxx ** 2 * sqrt(mv ** 2 - 4 * mx ** 2) * (mv ** 2 + 2 * mx ** 2)
+            ) / (12.0 * mv ** 2 * pi)
         else:
             return 0.0
 
@@ -94,16 +58,9 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mf:
-            ret_val = (
-                gvll ** 2
-                * sqrt(mv ** 2 - 4.0 * mf ** 2).real
-                * (2.0 * mf ** 2 + mv ** 2)
-            ) / (4.0 * mv ** 2 * pi)
-
-            assert ret_val.imag == 0
-            assert ret_val.real >= 0
-
-            return ret_val.real
+            return (
+                gvll ** 2 * sqrt(-4 * mf ** 2 + mv ** 2) * (2 * mf ** 2 + mv ** 2)
+            ) / (12.0 * mv ** 2 * pi)
         else:
             return 0.0
 

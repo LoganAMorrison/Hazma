@@ -12,29 +12,24 @@ class ScalarMediatorFSR:
         mx = self.mx
 
         if 2.0 * mf < Q and 4.0 * mf ** 2 < s < Q ** 2 and 2.0 * mx < Q:
-            ret_val = (
-                alpha_em
+            x = 2 * photon_energy / Q
+            mu_l = mf / Q
+
+            return (
+                2
+                * alpha_em
                 * (
-                    2
-                    * (-1 + 4 * rf ** 2)
-                    * sqrt((-1 + 2 * e) * (-1 + 2 * e + 4 * rf ** 2))
-                    + 4
-                    * (
-                        1
-                        + 2 * (-1 + e) * e
-                        - 6 * rf ** 2
-                        + 8 * e * rf ** 2
-                        + 8 * rf ** 4
+                    -2
+                    * (-1 + x)
+                    * (-1 + 4 * mu_l ** 2)
+                    * sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
+                    + ((x + 4 * mu_l ** 2) ** 2 - 2 * (-1 + x + 6 * mu_l ** 2))
+                    * log(
+                        (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                        / (1 - sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
                     )
-                    * atanh(sqrt(1 + (4 * rf ** 2) / (-1 + 2 * e)))
                 )
-            ) / (e * (1 - 4 * rf ** 2) ** 1.5 * pi * Q)
-
-            assert ret_val.imag == 0
-            ret_val = ret_val.real
-            assert ret_val >= 0
-
-            return ret_val
+            ) / (pi * Q * x * (1 - 4 * mu_l ** 2) ** 1.5)
         else:
             return 0.0
 
@@ -72,29 +67,26 @@ class ScalarMediatorFSR:
     def __dnde_xx_to_s_to_pipig(self, photon_energy, Q):
         """Unvectorized dnde_xx_to_s_to_pipig"""
 
-        mupi = mpi / Q
+        mu_pi = mpi / Q
         x = 2 * photon_energy / Q
 
-        if x < 0.0 or 1.0 - 4.0 * mupi ** 2 < x or 2.0 * self.mx > Q:
+        if x < 0.0 or 1.0 - 4.0 * mu_pi ** 2 < x or 2.0 * self.mx > Q:
             return 0.0
 
-        dynamic = (
-            2 * sqrt(-1 + x) * sqrt(-1 + 4 * mupi ** 2 + x)
-            + (-1 + 2 * mupi ** 2 + x)
-            * log(
-                (1 - x + sqrt(-1 + x) * sqrt(-1 + 4 * mupi ** 2 + x)) ** 2
-                / (-1 + x + sqrt(-1 + x) * sqrt(-1 + 4 * mupi ** 2 + x)) ** 2
+        return (
+            4
+            * alpha_em
+            * (
+                (-1 + x) * sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
+                - (-1 + x + 2 * mu_pi ** 2)
+                * log(
+                    -(
+                        (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                        / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                    )
+                )
             )
-        ) / x
-
-        coeff = qe ** 2 / (4.0 * sqrt(1 - 4 * mupi ** 2) * pi ** 2)
-
-        ret_val = 2.0 * dynamic * coeff / Q
-
-        assert ret_val.imag == 0.0
-        assert ret_val.real >= 0.0
-
-        return ret_val.real
+        ) / (pi * Q * x * sqrt(1 - 4 * mu_pi ** 2))
 
     def dnde_xx_to_s_to_pipig(self, photon_energies, Q):
         """

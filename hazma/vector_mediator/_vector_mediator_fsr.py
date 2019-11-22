@@ -34,47 +34,35 @@ class VectorMediatorFSR:
         elif f == "mu":
             mf = mmu
 
-        e, m = egam / Q, mf / Q
-
-        s = Q ** 2 - 2.0 * Q * egam
+        mu_l = mf / Q
+        x = 2 * egam / Q
 
         ret_val = 0.0
 
-        if 4.0 * mf ** 2 <= s <= Q ** 2 and Q > 2.0 * mf and Q > 2.0 * self.mx:
-            ret_val = -(
-                alpha_em
+        if (
+            4.0 * mf ** 2 <= (Q ** 2 - 2.0 * Q * egam) <= Q ** 2
+            and Q > 2.0 * mf
+            and Q > 2.0 * self.mx
+        ):
+            return (
+                2
+                * alpha_em
                 * (
-                    4.0
-                    * sqrt(1.0 - 2.0 * e - 4.0 * m ** 2)
-                    * (1.0 - 2.0 * m ** 2 + 2.0 * e * (-1 + e + 2.0 * m ** 2))
-                    + sqrt(1.0 - 2.0 * e)
-                    * (1.0 + 2.0 * (-1 + e) * e - 4.0 * e * m ** 2 - 4.0 * m ** 4)
-                    * (
-                        log(1.0 - 2.0 * e)
-                        - 4.0
-                        * log(sqrt(1.0 - 2.0 * e) + sqrt(1.0 - 2.0 * e - 4.0 * m ** 2))
-                        + 2.0
-                        * log(
-                            (sqrt(1.0 - 2.0 * e) - sqrt(1.0 - 2.0 * e - 4.0 * m ** 2))
-                            * (1.0 - sqrt(1.0 + (4.0 * m ** 2) / (-1 + 2.0 * e)))
+                    -(
+                        sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
+                        * (2 - 2 * x + x ** 2 - 4 * (-1 + x) * mu_l ** 2)
+                    )
+                    + (2 + (-2 + x) * x - 4 * x * mu_l ** 2 - 8 * mu_l ** 4)
+                    * log(
+                        -(
+                            (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                            / (-1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
                         )
                     )
                 )
-            ) / (
-                2.0
-                * e
-                * (1.0 + 2.0 * m ** 2)
-                * sqrt((-1 + 2.0 * e) * (-1 + 4.0 * m ** 2))
-                * pi
-                * Q
-            )
-
-            assert ret_val.imag == 0.0
-            ret_val = ret_val.real
-
-        assert ret_val >= 0
-
-        return ret_val.real
+            ) / (pi * Q * x * sqrt(1 - 4 * mu_l ** 2) * (1 + 2 * mu_l ** 2))
+        else:
+            return 0.0
 
     def dnde_xx_to_v_to_ffg(self, egam, Q, f):
         """Return the fsr spectra for fermions from decay of vector mediator.
@@ -106,36 +94,30 @@ class VectorMediatorFSR:
         """Unvectorized dnde_xx_to_v_to_pipig"""
         mx = self.mx
 
-        mupi = mpi / Q
+        mu_pi = mpi / Q
         x = 2.0 * egam / Q
-        xmin = 0.0
-        xmax = 1 - 4.0 * mupi ** 2
+        x_min = 0.0
+        x_max = 1 - 4.0 * mu_pi ** 2
 
-        if x < xmin or x > xmax or Q < 2 * mpi or Q < 2.0 * mx:
+        if x < x_min or x > x_max or Q < 2 * mpi or Q < 2.0 * mx:
             return 0.0
-
-        coeff = qe ** 2 / (4.0 * (1 - 4 * mupi ** 2) ** 1.5 * pi ** 2)
-
-        dynamic = (
-            (
-                2
-                * sqrt(1 - 4 * mupi ** 2 - x)
-                * (-1 - 4 * mupi ** 2 * (-1 + x) + x + x ** 2)
-            )
-            / sqrt(1 - x)
-            + (-1 + 4 * mupi ** 2)
-            * (-1 + 2 * mupi ** 2 + x)
-            * log(
-                (1 + sqrt(1 - x) * sqrt(1 - 4 * mupi ** 2 - x) - x) ** 2
-                / (-1 + sqrt(1 - x) * sqrt(1 - 4 * mupi ** 2 - x) + x) ** 2
-            )
-        ) / x
-
-        ret_val = 2.0 * dynamic * coeff / Q
-
-        assert ret_val.imag == 0.0
-        assert ret_val.real >= 0
-        return ret_val.real
+        else:
+            return (
+                4
+                * alpha_em
+                * (
+                    sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
+                    * (-1 + x + x ** 2 - 4 * (-1 + x) * mu_pi ** 2)
+                    + (-1 + x + 2 * mu_pi ** 2)
+                    * (-1 + 4 * mu_pi ** 2)
+                    * log(
+                        -(
+                            (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                            / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                        )
+                    )
+                )
+            ) / (pi * Q * x * (1 - 4 * mu_pi ** 2) ** 1.5)
 
     def dnde_xx_to_v_to_pipig(self, eng_gams, Q):
         """
