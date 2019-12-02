@@ -20,13 +20,14 @@ import numpy as np
 from hazma.scalar_mediator import ScalarMediator
 from hazma.vector_mediator import VectorMediator
 from hazma.parameters import muon_mass as mmu
+from hazma.parameters import alpha_em
 from utilities import latex_text_width_1col
 
 
 # %% [markdown]
 # **Generates plots of the muon FSR spectrum for the scalar and vector-mediator models.**
 
-# %%
+# %% {"code_folding": [0]}
 def dnde_ap(e_gam, mass, e_cm):
     """Altarelli-Parisi approximation of FSR spectrum.
     
@@ -67,7 +68,7 @@ e_cms = 2 * np.array([110.0, 125.0, 150.0, 250.0])
 # Photon energies
 e_gams = np.geomspace(1, 300, num=200)
 
-# %%
+# %% {"code_folding": [0, 24, 29, 30, 34, 36, 38]}
 fig, axs = plt.subplots(
     2,
     2,

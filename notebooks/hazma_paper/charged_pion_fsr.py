@@ -19,14 +19,44 @@ import numpy as np
 
 from hazma.scalar_mediator import ScalarMediator
 from hazma.vector_mediator import VectorMediator
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import alpha_em
 from utilities import latex_text_width_1col
+
 
 # %% [markdown]
 # **Generates plots of the pion FSR spectrum for the scalar and vector-mediator models.**
 
+# %% {"code_folding": []}
+def dnde_ap(e_gam, mass, e_cm):
+    """Altarelli-Parisi approximation of FSR spectrum.
+    
+    Parameters
+    ----------
+    e_gam : float
+        Gamma-ray energy in MeV.
+    mass : float
+        Mass of radiating particle in MeV.
+    e_cm : float
+        Center-of-mass energy of reaction in MeV.
+    
+    Returns
+    -------
+    dnde : float
+        Value of energy spectrum dN/dE at the specified point in
+        :math:`\mathrm{MeV}^{-1}`.
+    """
+    x = 2.0 * e_gam / e_cm
+    mu = mass / e_cm
+    pre_fac = 1.0 / (137.0 * np.pi) * 2.0 / e_cm
+    split_func = 2 * (1.0 - x) / x
+    log_sup = -1.0 + np.log((1 - x) / mu ** 2)
+
+    return pre_fac * split_func * log_sup
+
+
 # %%
-# As noted in the text, the specific parameter values do not impact the
-# FSR spectra
+# As noted in the text, the specific parameter values do not impact the FSR spectra
 sm = ScalarMediator(mx=100, ms=1e3, gsxx=1.0, gsff=1.0, gsGG=1.0, gsFF=1.0, lam=246e3)
 vm = VectorMediator(
     mx=100, mv=1e3, gvxx=1.0, gvuu=1.0, gvdd=-1.0, gvss=0.0, gvee=0.0, gvmumu=1.0
@@ -53,6 +83,9 @@ for i, ax in enumerate(axs.flatten()):
     ax.loglog(e_gams, e_gams * sm.dnde_pipi(e_gams, e_cm, "fsr"), label="S")
     ax.loglog(e_gams, e_gams * vm.dnde_pipi(e_gams, e_cm, "fsr"), label="V")
 
+    # Plot AP approximation
+    ax.loglog(e_gams, e_gams * dnde_ap(e_gams, mpi, e_cm), "--k", label="AP")
+
     # Formatting
     ax.set_xlim(e_gams[[0, -1]])
     ax.set_ylim(1e-5, 1e-2)
@@ -66,7 +99,7 @@ for i, ax in enumerate(axs.flatten()):
         ax.legend(loc="upper right")
 
 fig.subplots_adjust(hspace=0.1, wspace=0.1)
-# plt.savefig("figures/charged_pion_fsr.pdf", bbox_inches="tight")
+plt.savefig("figures/charged_pion_fsr.pdf", bbox_inches="tight")
 plt.show()
 
 # %%

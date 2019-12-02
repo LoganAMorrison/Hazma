@@ -85,10 +85,12 @@ for row in range(n_subplot_rows):  # loop over type of model
             for m_med in m_meds:
                 if isinstance(model, ScalarMediator):
                     model.ms = m_med
-                    label = r"$m_S = %i$ MeV" % model.ms
+                    style = "-"
+                    label = r"$m_{\mathrm{med}} = %i$ MeV" % model.ms
                 elif isinstance(model, VectorMediator):
                     model.mv = m_med
-                    label = r"$m_V = %i$ MeV" % model.mv
+                    style = "-"
+                    label = r"$m_{\mathrm{med}} = %i$ MeV" % model.mv
 
                 # Compute f_eff
                 f_effs = np.zeros_like(mxs)
@@ -97,7 +99,7 @@ for row in range(n_subplot_rows):  # loop over type of model
                     f_effs[i] = model.f_eff(x_kd)
 
                 # Plot f_eff
-                ax.plot(mxs, f_effs, label=label)
+                ax.plot(mxs, f_effs, label=label, linestyle=style)
 
 # Formatting
 axes[1, 0].set_xlabel(r"$m_\chi$ (MeV)")
@@ -110,8 +112,17 @@ axes[0, 0].set_ylim(0, 1)
 axes[0, 2].xaxis.set_tick_params(labelbottom=True)
 
 fig.tight_layout()
+
 # Placing the legend before tight_layout call doesn't work
-axes[1, 1].legend(loc="center right", bbox_to_anchor=(2.05, 0.5))
+axes[1, 1].legend(loc="center right", bbox_to_anchor=(2.15, 0.5))
+
+axes[0, -1].text(
+    275, 0.5, "Vector\nmodels", ha="center", va="center", fontsize=10, rotation=-90
+)
+axes[1, 1].text(
+    275, 0.5, "Scalar\nmodels", ha="center", va="center", fontsize=10, rotation=-90
+)
+
 fig.savefig("figures/f_eff.pdf", bbox_inches="tight")
 plt.show()
 

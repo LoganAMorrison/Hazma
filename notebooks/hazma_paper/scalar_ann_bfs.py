@@ -98,22 +98,22 @@ axs[0, 1].set_title(r"$m_S > 500$ MeV", fontsize=10)
 # Label final states
 for col in range(2):
     axs[0, col].text(
-        78, 3e-2, r"$\gamma \gamma$", color=get_color("g g"), fontsize=8, ha="center"
+        78, 1.7e-2, r"$\gamma \gamma$", color=get_color("g g"), fontsize=8, ha="center"
     )
     axs[0, col].text(
-        78, 3e-1, r"$e^+ e^-$", color=get_color("e e"), fontsize=8, ha="center"
+        78, 4e-1, r"$e^+ e^-$", color=get_color("e e"), fontsize=8, ha="center"
     )
     axs[0, col].text(145, 5e-4, r"$\pi^+ \pi^-$", color=get_color("pi pi"), fontsize=8)
     axs[0, col].text(
         180,
-        1.1e-1,
+        1.4e-1,
         r"$\pi^0 \pi^0$",
         color=get_color("pi0 pi0"),
         fontsize=8,
         ha="center",
     )
     axs[0, col].text(
-        175, 1.9e-2, r"$\mu^+ \mu^-$", color=get_color("mu mu"), fontsize=8, ha="center"
+        175, 4.5e-2, r"$\mu^+ \mu^-$", color=get_color("mu mu"), fontsize=8, ha="center"
     )
 
 for col in range(2):

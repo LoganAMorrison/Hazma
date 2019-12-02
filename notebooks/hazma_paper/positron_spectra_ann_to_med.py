@@ -51,8 +51,8 @@ n_subplot_rows, n_subplot_cols = len(models), len(mxs)
 # Labels for mediator masses
 mM_labels = np.array(
     [
-        [{10: (1e0, 5e-2)}, {225: (2e0, 3e-4)}, {300: (5e0, 7e-4)}],
-        [{10: (1e0, 5e-2)}, {225: (3e0, 1e-4)}, {300: (5e0, 3e-2)}],
+        [{10: (1e0, 5e-2)}, {225: (3e0, 3e-4)}, {300: (5e0, 7e-4)}],
+        [{10: (1e0, 5e-2)}, {225: (3e0, 1e-4)}, {300: (1e1, 2e-2)}],
     ]
 )
 
