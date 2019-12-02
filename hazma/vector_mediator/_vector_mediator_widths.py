@@ -16,9 +16,14 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mpi:
-            return ((self.gvdd - self.gvuu) ** 2 * (-4 * mpi ** 2 + mv ** 2) ** 1.5) / (
-                48.0 * mv ** 2 * pi
-            )
+            val = (
+                ((self.gvdd - self.gvuu) ** 2 * (-4 * mpi ** 2 + mv ** 2) ** 1.5)
+                / (48.0 * mv ** 2 * pi)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -26,11 +31,18 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > mpi0:
-            return (
-                alpha_em
-                * (self.gvdd + 2 * self.gvuu) ** 2
-                * (-mpi0 ** 2 + mv ** 2) ** 3
-            ) / (3456.0 * fpi ** 2 * mv ** 3 * pi ** 4)
+            val = (
+                (
+                    alpha_em
+                    * (self.gvdd + 2 * self.gvuu) ** 2
+                    * (-mpi0 ** 2 + mv ** 2) ** 3
+                )
+                / (3456.0 * fpi ** 2 * mv ** 3 * pi ** 4)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -39,9 +51,14 @@ class VectorMediatorWidths:
         mx = self.mx
 
         if mv > 2.0 * mx:
-            return (
-                self.gvxx ** 2 * sqrt(mv ** 2 - 4 * mx ** 2) * (mv ** 2 + 2 * mx ** 2)
-            ) / (12.0 * mv ** 2 * pi)
+            val = (
+                (self.gvxx ** 2 * sqrt(mv ** 2 - 4 * mx ** 2) * (mv ** 2 + 2 * mx ** 2))
+                / (12.0 * mv ** 2 * pi)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -58,9 +75,14 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mf:
-            return (
-                gvll ** 2 * sqrt(-4 * mf ** 2 + mv ** 2) * (2 * mf ** 2 + mv ** 2)
-            ) / (12.0 * mv ** 2 * pi)
+            val = (
+                (gvll ** 2 * sqrt(-4 * mf ** 2 + mv ** 2) * (2 * mf ** 2 + mv ** 2))
+                / (12.0 * mv ** 2 * pi)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 

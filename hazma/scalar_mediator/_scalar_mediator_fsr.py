@@ -15,21 +15,28 @@ class ScalarMediatorFSR:
             x = 2 * photon_energy / Q
             mu_l = mf / Q
 
-            return (
-                2
-                * alpha_em
-                * (
-                    -2
-                    * (-1 + x)
-                    * (-1 + 4 * mu_l ** 2)
-                    * sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
-                    + ((x + 4 * mu_l ** 2) ** 2 - 2 * (-1 + x + 6 * mu_l ** 2))
-                    * log(
-                        (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
-                        / (1 - sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+            val = (
+                (
+                    2
+                    * alpha_em
+                    * (
+                        -2
+                        * (-1 + x)
+                        * (-1 + 4 * mu_l ** 2)
+                        * sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
+                        + ((x + 4 * mu_l ** 2) ** 2 - 2 * (-1 + x + 6 * mu_l ** 2))
+                        * log(
+                            (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                            / (1 - sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                        )
                     )
                 )
-            ) / (pi * Q * x * (1 - 4 * mu_l ** 2) ** 1.5)
+                / (pi * Q * x * (1 - 4 * mu_l ** 2) ** 1.5)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -72,21 +79,28 @@ class ScalarMediatorFSR:
 
         if x < 0.0 or 1.0 - 4.0 * mu_pi ** 2 < x or 2.0 * self.mx > Q:
             return 0.0
-
-        return (
-            4
-            * alpha_em
-            * (
-                (-1 + x) * sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
-                - (-1 + x + 2 * mu_pi ** 2)
-                * log(
-                    -(
-                        (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
-                        / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+        else:
+            val = (
+                (
+                    4
+                    * alpha_em
+                    * (
+                        (-1 + x) * sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
+                        - (-1 + x + 2 * mu_pi ** 2)
+                        * log(
+                            -(
+                                (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                                / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                            )
+                        )
                     )
                 )
-            )
-        ) / (pi * Q * x * sqrt(1 - 4 * mu_pi ** 2))
+                / (pi * Q * x * sqrt(1 - 4 * mu_pi ** 2))
+            ).real
+
+            assert val >= 0
+
+            return val
 
     def dnde_xx_to_s_to_pipig(self, photon_energies, Q):
         """

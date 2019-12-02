@@ -44,7 +44,7 @@ class VectorMediatorFSR:
             and Q > 2.0 * mf
             and Q > 2.0 * self.mx
         ):
-            return (
+            val = ((
                 2
                 * alpha_em
                 * (
@@ -60,7 +60,11 @@ class VectorMediatorFSR:
                         )
                     )
                 )
-            ) / (pi * Q * x * sqrt(1 - 4 * mu_l ** 2) * (1 + 2 * mu_l ** 2))
+            ) / (pi * Q * x * sqrt(1 - 4 * mu_l ** 2) * (1 + 2 * mu_l **
+                                                         2))).real
+
+            assert val >= 0
+            return val
         else:
             return 0.0
 
@@ -102,7 +106,7 @@ class VectorMediatorFSR:
         if x < x_min or x > x_max or Q < 2 * mpi or Q < 2.0 * mx:
             return 0.0
         else:
-            return (
+            val = ((
                 4
                 * alpha_em
                 * (
@@ -117,7 +121,10 @@ class VectorMediatorFSR:
                         )
                     )
                 )
-            ) / (pi * Q * x * (1 - 4 * mu_pi ** 2) ** 1.5)
+            ) / (pi * Q * x * (1 - 4 * mu_pi ** 2) ** 1.5)).real
+
+            assert val >= 0
+            return val
 
     def dnde_xx_to_v_to_pipig(self, eng_gams, Q):
         """

@@ -31,28 +31,35 @@ class ScalarMediatorWidths:
             vs = self.vs
             lam = self.lam
 
-            return (
-                sqrt(-4 * mpi0 ** 2 + ms ** 2)
-                * (
-                    -162 * gsGG * lam ** 3 * (-2 * mpi0 ** 2 + ms ** 2) * vh ** 2
-                    + b0
-                    * (mdq + muq)
-                    * (9 * lam + 4 * gsGG * vs)
-                    * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+            val = (
+                (
+                    sqrt(-4 * mpi0 ** 2 + ms ** 2)
                     * (
-                        2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
-                        + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
+                        -162 * gsGG * lam ** 3 * (-2 * mpi0 ** 2 + ms ** 2) * vh ** 2
+                        + b0
+                        * (mdq + muq)
+                        * (9 * lam + 4 * gsGG * vs)
+                        * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+                        * (
+                            2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                            + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
+                        )
                     )
+                    ** 2
                 )
-                ** 2
-            ) / (
-                209952.0
-                * lam ** 6
-                * ms ** 2
-                * pi
-                * vh ** 4
-                * (9 * lam + 4 * gsGG * vs) ** 2
-            )
+                / (
+                    209952.0
+                    * lam ** 6
+                    * ms ** 2
+                    * pi
+                    * vh ** 4
+                    * (9 * lam + 4 * gsGG * vs) ** 2
+                )
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -69,28 +76,35 @@ class ScalarMediatorWidths:
             vs = self.vs
             lam = self.lam
 
-            return (
-                sqrt(-4 * mpi ** 2 + ms ** 2)
-                * (
-                    -162 * gsGG * lam ** 3 * (-2 * mpi ** 2 + ms ** 2) * vh ** 2
-                    + b0
-                    * (mdq + muq)
-                    * (9 * lam + 4 * gsGG * vs)
-                    * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+            val = (
+                (
+                    sqrt(-4 * mpi ** 2 + ms ** 2)
                     * (
-                        2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
-                        + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
+                        -162 * gsGG * lam ** 3 * (-2 * mpi ** 2 + ms ** 2) * vh ** 2
+                        + b0
+                        * (mdq + muq)
+                        * (9 * lam + 4 * gsGG * vs)
+                        * (-3 * lam * vh + 3 * gsff * lam * vs + 2 * gsGG * vh * vs)
+                        * (
+                            2 * gsGG * vh * (9 * lam - 4 * gsGG * vs)
+                            + 9 * gsff * lam * (3 * lam + 4 * gsGG * vs)
+                        )
                     )
+                    ** 2
                 )
-                ** 2
-            ) / (
-                104976.0
-                * lam ** 6
-                * ms ** 2
-                * pi
-                * vh ** 4
-                * (9 * lam + 4 * gsGG * vs) ** 2
-            )
+                / (
+                    104976.0
+                    * lam ** 6
+                    * ms ** 2
+                    * pi
+                    * vh ** 4
+                    * (9 * lam + 4 * gsGG * vs) ** 2
+                )
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -105,7 +119,13 @@ class ScalarMediatorWidths:
         if ms > 2.0 * mx:
             gsxx = self.gsxx
 
-            return (gsxx ** 2 * (ms ** 2 - 4 * mx ** 2) ** 1.5) / (8.0 * ms ** 2 * pi)
+            val = (
+                (gsxx ** 2 * (ms ** 2 - 4 * mx ** 2) ** 1.5) / (8.0 * ms ** 2 * pi)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
@@ -127,9 +147,14 @@ class ScalarMediatorWidths:
             mf = mmu
 
         if ms > 2.0 * mf:
-            return (self.gsff ** 2 * mf ** 2 * (-4 * mf ** 2 + ms ** 2) ** 1.5) / (
-                8.0 * ms ** 2 * pi * vh ** 2
-            )
+            val = (
+                (self.gsff ** 2 * mf ** 2 * (-4 * mf ** 2 + ms ** 2) ** 1.5)
+                / (8.0 * ms ** 2 * pi * vh ** 2)
+            ).real
+
+            assert val >= 0
+
+            return val
         else:
             return 0.0
 
