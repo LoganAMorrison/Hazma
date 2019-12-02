@@ -10,8 +10,9 @@ cdef double me = 0.510998928
 cdef double mmu = 105.6583715
 cdef double mpi0 = 134.9766
 cdef double mpi = 139.57018
-cdef double qe = 0.30281770035689687
 cdef double fpi = 92.2138
+cdef double alpha_em = 1.0 / 137.04
+
 
 @cython.cdivision(True)
 cdef double __sigma_xx_to_v_to_ff(double e_cm, double mx, double mv,
@@ -27,7 +28,7 @@ cdef double __sigma_xx_to_v_to_ff(double e_cm, double mx, double mv,
         * (2 * mf ** 2 + e_cm ** 2)
         * sqrt((-4 * mf ** 2 + e_cm ** 2) / (-4 * mx ** 2 + e_cm ** 2))
         * (2 * mx ** 2 + e_cm ** 2)
-    ) / (12.0 * M_PI * e_cm ** 2 * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2))
+    ) / (12.0 * M_PI * e_cm ** 2 * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * width_v ** 2))
 
 
 @cython.cdivision(True)
@@ -47,7 +48,7 @@ cdef double __sigma_xx_to_v_to_pipi(double e_cm, double mx, double mv,
         * M_PI
         * e_cm ** 2
         * sqrt(-4 * mx ** 2 + e_cm ** 2)
-        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * width_v ** 2)
     )
 
 
@@ -70,7 +71,7 @@ cdef double __sigma_xx_to_v_to_pi0g(double e_cm, double mx, double mv,
         * M_PI ** 4
         * e_cm ** 3
         * sqrt(-4 * mx ** 2 + e_cm ** 2)
-        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * width_v ** 2)
     )
 
 
@@ -101,7 +102,7 @@ cdef double __sigma_xx_to_v_to_pi0v(double e_cm, double mx, double mv,
         * M_PI ** 5
         * e_cm ** 3
         * sqrt(-4 * mx ** 2 + e_cm ** 2)
-        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * widthv ** 2)
+        * ((mv ** 2 - e_cm ** 2) ** 2 + mv ** 2 * width_v ** 2)
     )
 
 
