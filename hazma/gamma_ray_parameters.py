@@ -15,7 +15,7 @@ gr_data_dir = "gamma_ray_data/"
 egret_obs_rf = resource_filename(__name__, gr_data_dir + "egret_obs.dat")
 comptel_obs_rf = resource_filename(__name__, gr_data_dir + "comptel_obs.dat")
 fermi_obs_rf = resource_filename(__name__, gr_data_dir + "fermi_obs.dat")
-# Effective areas
+# Resources
 A_eff_e_astrogam_rf = resource_filename(
     __name__, gr_data_dir + "e-astrogam_effective_area.dat"
 )
@@ -24,9 +24,16 @@ A_eff_comptel_rf = resource_filename(
 )
 A_eff_egret_rf = resource_filename(__name__, gr_data_dir + "egret_effective_area.dat")
 A_eff_fermi_rf = resource_filename(__name__, gr_data_dir + "fermi_effective_area.dat")
+A_eff_gecco_rf = resource_filename(__name__, gr_data_dir + "gecco_effective_area.dat")
 
 e_astrogam_energy_res_rf = resource_filename(
-    __name__, gr_data_dir + ("e-astrogam_energy" "_resolution.dat")
+    __name__, gr_data_dir + ("e-astrogam_energy_resolution.dat")
+)
+gecco_energy_res_rf = resource_filename(
+    __name__, gr_data_dir + "gecco_energy_resolution.dat"
+)
+gecco_large_energy_res_rf = resource_filename(
+    __name__, gr_data_dir + "gecco_large_energy_resolution.dat"
 )
 # Complex background model
 gc_bg_model_rf = resource_filename(__name__, gr_data_dir + "gc_bg_model.dat")
@@ -84,13 +91,13 @@ class TargetParams:
 
 
 # Dwarf with high J factor
-draco_params = TargetParams(6.94e27, 1.62e-3)
+draco_target = TargetParams(6.94e27, 1.62e-3)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
 # EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
 # the lowest energy for which e-ASTROGAM has nonzero effective area.
-default_bg_model = BackgroundModel([0.3, 10.0e3], lambda e: 2.74e-3 / e ** 2)
+default_bg_model = BackgroundModel([0.299, 10.0e3], lambda e: 2.74e-3 / e ** 2)
 
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
@@ -106,6 +113,7 @@ A_eff_e_astrogam = load_interp(
 A_eff_fermi = load_interp(A_eff_fermi_rf)  #: Fermi-LAT effective area function
 A_eff_comptel = load_interp(A_eff_comptel_rf)  #: COMPTEL effective area function
 A_eff_egret = load_interp(A_eff_egret_rf)  #: EGRET effective area function
+A_eff_gecco = load_interp(A_eff_gecco_rf)  #: Fermi-LAT effective area function
 
 
 def energy_res_comptel(e):
@@ -138,6 +146,8 @@ def energy_res_fermi(e):
 #: e-ASTROGAM energy resolution function. From table 1 of the `e-ASTROGAM
 #: whitebook <https://arxiv.org/abs/1711.01265>`_.
 energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf, fill_value="extrapolate")
+energy_res_gecco = load_interp(gecco_energy_res_rf, fill_value="extrapolate")
+energy_res_gecco_large = load_interp(gecco_large_energy_res_rf, fill_value="extrapolate")
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365.0 * 24.0 * 60.0 ** 2

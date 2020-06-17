@@ -29,4 +29,3 @@ manual/*.pdf
 .eggs/*
 .python-version
 .pytest_cache/
-dev/
