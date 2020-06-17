@@ -4,7 +4,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 
 
 class TheoryGammaRayLimits:
-    def __get_product_spline(self, f1, f2, grid, k=1, ext="raise"):
+    def _get_product_spline(self, f1, f2, grid, k=1, ext="raise"):
         """Returns a spline representing the product of two functions.
 
         Parameters
@@ -225,22 +225,24 @@ class TheoryGammaRayLimits:
 
         # Energy at which spectrum peaks.
         e_dnde_max = optimize.minimize(
-            dnde_conv, 0.5 * (e_min + e_max), bounds=[[e_min, e_max]]
+            dnde_conv,
+            0.5 * (e_min + e_max),
+            bounds=[[e_min * (1 + 1e-8), e_max * (1 - 1e-8)]],
         ).x[0]
 
         # If there's a peak, include it in the initial energy window.
-        if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-8) or np.isclose(
-            e_dnde_max, e_max, atol=0, rtol=1e-8
-        ):  # no peak
-            e_a_0 = 10.0 ** (0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
-            e_b_0 = 10.0 ** (0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
-        else:
+        if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-5) or np.isclose(
+            e_dnde_max, e_max, atol=0, rtol=1e-5
+        ):
             e_a_0 = 10.0 ** (0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
             e_b_0 = 10.0 ** (0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
+        else:
+            e_a_0 = 10.0 ** (0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
+            e_b_0 = 10.0 ** (0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
 
         # Integrating these gives the number of signal and background photons
-        integrand_S = self.__get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
-        integrand_B = self.__get_product_spline(
+        integrand_S = self._get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
+        integrand_B = self._get_product_spline(
             bg_model.dPhi_dEdOmega, A_eff, dnde_conv.get_knots()
         )
 
@@ -249,7 +251,7 @@ class TheoryGammaRayLimits:
             self.__f_jac_lim,
             [e_a_0, e_b_0],
             args=(integrand_S, integrand_B),
-            bounds=2 * [[1.001 * e_min, e_max]],
+            bounds=2 * [[(1 + 1e-8) * e_min, (1 - 1e-8) * e_max]],
             constraints=({"type": "ineq", "fun": lambda x: x[1] - x[0]}),
             jac=True,
             options={"ftol": 1e-7, "eps": 1e-10},
@@ -257,7 +259,7 @@ class TheoryGammaRayLimits:
         )
 
         if debug_msgs:
-            print("\te_a, e_b = ".format(limit_obj.x))
+            print(f"\te_a, e_b = {limit_obj.x[0]}, {limit_obj.x[1]}; {limit_obj.fun}")
 
         # Insert appropriate prefactors to convert result to <sigma v>_tot. The
         # factor of 2 is from the DM not being self-conjugate.
@@ -271,5 +273,8 @@ class TheoryGammaRayLimits:
         )
 
         assert -limit_obj.fun >= 0
+
+        if -limit_obj.fun == 0:
+            return np.inf
 
         return prefactor * n_sigma / (-limit_obj.fun)
