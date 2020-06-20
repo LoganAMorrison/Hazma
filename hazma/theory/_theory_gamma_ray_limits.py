@@ -251,7 +251,7 @@ class TheoryGammaRayLimits:
             self.__f_jac_lim,
             [e_a_0, e_b_0],
             args=(integrand_S, integrand_B),
-            bounds=2 * [[(1 + 1e-8) * e_min, (1 - 1e-8) * e_max]],
+            bounds=2 * [[(1 + 1e-7) * e_min, (1 - 1e-7) * e_max]],
             constraints=({"type": "ineq", "fun": lambda x: x[1] - x[0]}),
             jac=True,
             options={"ftol": 1e-7, "eps": 1e-10},
