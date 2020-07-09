@@ -112,7 +112,7 @@ class TheoryGammaRayLimits:
         # Return the most stringent limit
         return np.min(sv_lims)
 
-    def __f_jac_lim(self, e_ab, integrand_S, integrand_B):
+    def __f_jac_lim(self, e_ab, integrand_S, integrand_B, debug_msgs):
         """Computes signal-to-noise ratio and Jacobian for an energy window.
 
         Notes
@@ -144,6 +144,9 @@ class TheoryGammaRayLimits:
         else:
             I_S_val = integrand_S.integral(e_a, e_b)
             I_B_val = integrand_B.integral(e_a, e_b)
+
+            if debug_msgs and I_S_val / np.sqrt(I_B_val) < 0:
+                print("I_S_val, I_B_val:", I_S_val, I_B_val)
 
             # Jacobian
             df_de_a = (
@@ -250,7 +253,7 @@ class TheoryGammaRayLimits:
         limit_obj = optimize.minimize(
             self.__f_jac_lim,
             [e_a_0, e_b_0],
-            args=(integrand_S, integrand_B),
+            args=(integrand_S, integrand_B, debug_msgs),
             bounds=2 * [[(1 + 1e-7) * e_min, (1 - 1e-7) * e_max]],
             constraints=({"type": "ineq", "fun": lambda x: x[1] - x[0]}),
             jac=True,
@@ -272,7 +275,9 @@ class TheoryGammaRayLimits:
             / (np.sqrt(T_obs * target_params.dOmega) * target_params.J)
         )
 
-        assert -limit_obj.fun >= 0
+        assert -limit_obj.fun > 0 or np.isclose(
+            -limit_obj.fun, 0, atol=1e-10, rtol=1e-100
+        ), "optimization failed: -limit_obj.fun"
 
         if -limit_obj.fun == 0:
             return np.inf
