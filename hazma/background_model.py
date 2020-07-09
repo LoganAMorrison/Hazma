@@ -9,7 +9,7 @@ class BackgroundModel(object):
         Minimum and maximum photon energies for which this model is valid, in
         MeV.
     dPhi_dEdOmega : np.array
-        Background gamma ray flux (MeV^-1 sr^-1 m^-2 s^-1) as a function of
+        Background gamma ray flux (MeV^-1 sr^-1 cm^-2 s^-1) as a function of
         photon energy (MeV). This function must be vectorized.
     """
 
@@ -28,7 +28,7 @@ class BackgroundModel(object):
         Returns
         -------
         dPhi_dEdOmega : np.array
-            Background gamma ray flux, in MeV^-1 sr^-1 m^-2 s^-1. For any
+            Background gamma ray flux, in MeV^-1 sr^-1 cm^-2 s^-1. For any
             energies outside of ``self.e_range``, ``np.nan`` is returned.
         """
         if hasattr(es, "__len__"):
