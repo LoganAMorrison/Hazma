@@ -93,6 +93,11 @@ class TargetParams:
 # Dwarf with high J factor
 draco_target = TargetParams(6.94e27, 1.62e-3)
 
+# From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
+# Additional factor of two due to uncertainty about radioactive and
+# instrumental backgrounds.
+gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam**2)
+
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
 # EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
