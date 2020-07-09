@@ -23,14 +23,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import jupyter_beeper
 from collections import defaultdict
-
-colors = 2*[c["color"] for c in plt.rcParams["axes.prop_cycle"]]
-beeper = jupyter_beeper.Beeper()
-def beep():
-    return beeper.beep(frequency=900, secs=0.7, blocking=True)
-
-
-# %%
 from hazma.gamma_ray_parameters import egret_diffuse, fermi_diffuse, comptel_diffuse, gecco_bg_model
 from hazma.gamma_ray_parameters import A_eff_comptel, A_eff_egret, A_eff_fermi, energy_res_comptel, BackgroundModel
 from hazma.gamma_ray_parameters import (
@@ -48,13 +40,12 @@ from hazma.vector_mediator import KineticMixing, QuarksOnly
 from hazma.single_channel import SingleChannel
 
 # %%
-# Rescale J factor and change observing area since GECCO has a large PSF
-gecco_angular_resolution = 6 * 180 / np.pi
-dOmega_gecco = 4*np.pi*np.sin(gecco_angular_resolution / 2)**2
+colors = 2*[c["color"] for c in plt.rcParams["axes.prop_cycle"]]
+beeper = jupyter_beeper.Beeper()
 
-gecco_draco_target = TargetParams(
-    draco_target.J * draco_target.dOmega / dOmega_gecco, dOmega_gecco
-)
+def beep():
+    return beeper.beep(frequency=900, secs=0.7, blocking=True)
+
 
 # %% [markdown] {"heading_collapsed": true}
 # # Setup and utils
@@ -369,10 +360,10 @@ beeper.beep(frequency=900, secs=0.7, blocking=True)
 
 # %% {"hidden": true}
 
-# %% [markdown]
+# %% [markdown] {"heading_collapsed": true}
 # # Model-independent constraints
 
-# %% {"code_folding": [3]}
+# %% {"code_folding": [3], "hidden": true}
 fss = ["e e", "mu mu", "pi pi", "pi0 pi0", "g g", "pi0 g"]
 sc_constraints = {}
 
@@ -400,11 +391,11 @@ for fs in fss:
     
     sc_constraints[fs] = cur_constraints
 
-# %%
+# %% {"hidden": true}
 # Save constraints
 # np.savez("data/sv_constraints_single_channels.npz", {k: dict(v) for k, v in sc_constraints.items()})
 
-# %%
+# %% {"hidden": true}
 fig, axes = get_formatted_fig(3, 2, (4 * 2, 2.5 * 3), mxs[[0, -1]], (1e-35, 1e-23))
 
 for fs, ax in zip(fss, axes.flatten()):
@@ -429,9 +420,9 @@ axes[-1, -1].legend(
 
 fig.savefig("figures/single_channel_sigmav_limits.pdf")
 
-# %%
+# %% {"hidden": true}
 
-# %%
+# %% {"hidden": true}
 mx = 100
 sm = HiggsPortal(mx, 1e3, 1, 0.1)
 sc_pi0_pi0 = SingleChannel(mx, "pi0 pi0", 1)
@@ -439,11 +430,11 @@ sc_pi_pi = SingleChannel(mx, "pi pi", 1)
 sc_mu_mu = SingleChannel(mx, "mu mu", 1)
 sc_e_e = SingleChannel(mx, "e e", 1)
 
-# %%
+# %% {"hidden": true}
 e_gams = np.geomspace(5e0, 3e2, 1000)
 e_cm = 2 * mx * (1 + 1e-3**2)
 
-# %%
+# %% {"hidden": true}
 plt.loglog(e_gams, sm.total_spectrum(e_gams, e_cm))
 # plt.loglog(e_gams, sc_pi_pi.total_spectrum(e_gams, e_cm) * 1/3 + sc_pi0_pi0.total_spectrum(e_gams, e_cm) * 1/5)
 plt.loglog(e_gams, 0.93 * sc_e_e.total_spectrum(e_gams, e_cm))
@@ -451,7 +442,7 @@ plt.loglog(e_gams, 0.93 * sc_e_e.total_spectrum(e_gams, e_cm))
 plt.xlim(e_gams[[0, -1]])
 plt.ylim(1e-5, 1e-1)
 
-# %%
+# %% {"hidden": true}
 
 # %% [markdown] {"heading_collapsed": true}
 # # Background models
@@ -459,14 +450,16 @@ plt.ylim(1e-5, 1e-1)
 # %% {"hidden": true}
 e_gams = np.geomspace(0.3, 3e3, 500)
 
-plt.loglog(e_gams, e_gams**2 * gc_bg_model.dPhi_dEdOmega(e_gams), label="GC")
-plt.loglog(e_gams, e_gams**2 * default_bg_model.dPhi_dEdOmega(e_gams), label="EGRET/COMPTEL-based")
+plt.loglog(e_gams, e_gams**2 * gc_bg_model.dPhi_dEdOmega(e_gams), label="GC (1703.02546)")
+plt.loglog(e_gams, e_gams**2 * default_bg_model.dPhi_dEdOmega(e_gams), label="1504.04024 eq. 14")
 plt.loglog(e_gams, e_gams**2 * gecco_bg_model.dPhi_dEdOmega(e_gams), label="GECCO")
 
 plt.xlim(e_gams[[0, -1]])
 plt.xlabel(r"$E_\gamma$ [MeV]")
 plt.ylabel(r"$E_\gamma^2 \frac{d\Phi}{dE_\gamma d\Omega}$ [$\mathrm{MeV} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, \mathrm{sr}^{-1}$]")
 plt.legend(fontsize=10)
+
+plt.savefig("figures/gecco/bg_models.png")
 
 # %% {"hidden": true}
 
