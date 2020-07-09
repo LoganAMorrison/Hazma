@@ -22,6 +22,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import jupyter_beeper
+from collections import defaultdict
 
 colors = 2*[c["color"] for c in plt.rcParams["axes.prop_cycle"]]
 beeper = jupyter_beeper.Beeper()
@@ -30,33 +31,43 @@ def beep():
 
 
 # %%
-from hazma.gamma_ray_parameters import egret_diffuse, fermi_diffuse, comptel_diffuse
-from hazma.gamma_ray_parameters import A_eff_comptel, A_eff_egret, A_eff_fermi, energy_res_comptel
+from hazma.gamma_ray_parameters import egret_diffuse, fermi_diffuse, comptel_diffuse, gecco_bg_model
+from hazma.gamma_ray_parameters import A_eff_comptel, A_eff_egret, A_eff_fermi, energy_res_comptel, BackgroundModel
 from hazma.gamma_ray_parameters import (
     gc_target, gc_bg_model, draco_target, default_bg_model
 )
 from hazma.gamma_ray_parameters import (
-    A_eff_e_astrogam, energy_res_e_astrogam, T_obs_e_astrogam
+    A_eff_e_astrogam, energy_res_e_astrogam, T_obs_e_astrogam, TargetParams
 )
 from hazma.gamma_ray_parameters import (
-    A_eff_gecco, energy_res_gecco, energy_res_gecco_large
+    A_eff_gecco, energy_res_gecco, energy_res_gecco_large, draco_target
 )
 
 from hazma.scalar_mediator import HiggsPortal, HeavyQuark
 from hazma.vector_mediator import KineticMixing, QuarksOnly
+from hazma.single_channel import SingleChannel
+
+# %%
+# Rescale J factor and change observing area since GECCO has a large PSF
+gecco_angular_resolution = 6 * 180 / np.pi
+dOmega_gecco = 4*np.pi*np.sin(gecco_angular_resolution / 2)**2
+
+gecco_draco_target = TargetParams(
+    draco_target.J * draco_target.dOmega / dOmega_gecco, dOmega_gecco
+)
 
 # %% [markdown] {"heading_collapsed": true}
 # # Setup and utils
 
-# %% {"code_folding": [12, 62], "hidden": true}
+# %% {"code_folding": [12, 45, 65, 81], "hidden": true}
 # Masses to scan over
 mx_min = 0.55  # a bit larger than m_e
 mx_max = 250.
-n_mxs = 50
+n_mxs = 25
 mxs = np.geomspace(mx_min, mx_max, n_mxs)
 
 # Other constants
-T_obs_gecco = 1e6  # s. This is a VERY short time!
+T_obs_gecco = 1e6  # s. From Alex.
 v_mw = 1e-3
 x_kd = 1e-6
 
@@ -66,8 +77,8 @@ def get_sv_constraints(model, mxs=mxs):
     Computes constraints on <sigma v> for a model over a grid of DM masses.
     """
     constraints = {k: np.zeros_like(mxs) for k in [
-        "comptel", "egret", "fermi", "e_astrogam", "gecco", "gecco_large",
-        "comptel_check", "cmb"
+        "comptel", "egret", "fermi", "e_astrogam", "gecco_comptel", "gecco_egret",
+        "gecco_fermi", "gecco_gc", "gecco_draco", "comptel_check", "cmb",
     ]}
 
     for i, mx in enumerate(mxs):
@@ -83,17 +94,9 @@ def get_sv_constraints(model, mxs=mxs):
             A_eff_e_astrogam, energy_res_e_astrogam, T_obs_e_astrogam,
             gc_target, gc_bg_model
         )
-        constraints["gecco"][i] = model.unbinned_limit(
-            A_eff_gecco, energy_res_gecco, T_obs_gecco, comptel_diffuse.target,
-            default_bg_model
-        )
-        constraints["gecco_large"][i] = model.unbinned_limit(
-            A_eff_gecco, energy_res_gecco_large, T_obs_gecco, comptel_diffuse.target,
-            default_bg_model
-        )
-        constraints["comptel_check"][i] = model.unbinned_limit(
-            A_eff_comptel, energy_res_comptel, T_obs_gecco, comptel_diffuse.target,
-            default_bg_model
+
+        constraints["gecco_gc"][i] = model.unbinned_limit(
+            A_eff_gecco, energy_res_gecco, T_obs_gecco, gc_target, gc_bg_model
         )
         
         # CMB
@@ -102,16 +105,41 @@ def get_sv_constraints(model, mxs=mxs):
     return constraints
 
 
-def get_label(key):
+def get_constraint_label(key):
     if key == "comptel_check":
         return "COMPTEL check"
     elif key == "e_astrogam":
         return "e-ASTROGAM"
+    elif key == "gecco_comptel":
+        return "GECCO (COMPTEL)"
+    elif key == "gecco_egret":
+        return "GECCO (EGRET)"
+    elif key == "gecco_fermi":
+        return "GECCO (Fermi)"
+    elif key == "gecco_gc":
+        return "GECCO (GC)"
+    elif key == "gecco_draco":
+        return "GECCO (Draco)"
     elif key == "gecco_large":
         return "GECCO (large)"
     else:
         return key.upper()
 
+def get_fs_label(fs):
+    if fs == "e e":
+        return r"$e^+ e^-$"
+    elif fs == "mu mu":
+        return r"$\mu^+ \mu^-$"
+    elif fs == "pi pi":
+        return r"$\pi^+ \pi^-$"
+    elif fs == "pi0 pi0":
+        return r"$\pi^0 \pi^0$"
+    elif fs == "pi0 g":
+        return r"$\pi^0 \gamma$"
+    elif fs == "g g":
+        return r"$\gamma \gamma$"
+    else:
+        return fs
 
 def get_formatted_fig(nrows, ncols, figsize, xlim, ylim):
     fig, axes = plt.subplots(nrows, ncols, figsize=figsize)
@@ -151,11 +179,6 @@ SMs = np.array([
 # Instantiate all the models
 sms = np.vectorize(lambda SM, kwargs: SM(**kwargs))(SMs, sm_args)
 
-# Load precomputed constraints
-sv_constraints_sms = np.load(
-    "data/sv_constraints_sms.npz", allow_pickle=True
-)["sv_constraints_sms"]
-
 # %% {"hidden": true}
 # Recompute constraints
 sv_constraints_sms = np.empty_like(sms)
@@ -168,7 +191,11 @@ for i in range(len(sms)):
 #     "data/sv_constraints_sms.npz", sv_constraints_sms=sv_constraints_sms, sm_args=sm_args
 # )
 
-# %% {"hidden": true}
+# sv_constraints_sms = np.load(
+#     "data/sv_constraints_sms.npz", allow_pickle=True
+# )["sv_constraints_sms"]
+
+# %% {"code_folding": [6], "hidden": true}
 fig, axes = get_formatted_fig(
     *sms.shape, (4 * sms.shape[1], 2.5 * sms.shape[0]),
     mxs[[0, -1]], (1e-35, 1e-23)
@@ -187,14 +214,13 @@ for i in range(len(axes)):
         
         # Constraints
         for key, svs in sv_constraints_sms[i, j].items():
-            if key == "cmb":
-                ax.plot(mxs, svs, "k", label=r"CMB")
-            elif key in ["comptel_check", "gecco_large"]:
+            if key in ["comptel_check", "gecco_large", "e_astrogam", 'gecco_gc', 'gecco_egret', 'gecco_fermi', 'gecco_draco']:
                 continue
-#             elif key == "comptel_check":
-#                 ax.plot(mxs, svs, ":k", alpha=0.5, label=get_label(key))
+            elif key == "cmb":
+                v_cmbs = 2e-4 * (0.235) * (1 / mxs) * np.sqrt(1e-4 / x_kd)
+                ax.plot(mxs, svs * (v_mw / v_cmbs)**2, "k", label=r"CMB")
             else:
-                ax.plot(mxs, svs, label=get_label(key))
+                ax.plot(mxs, svs, label=get_constraint_label(key))
 
 # Mediator mass labels
 for ms, ax in zip(mss, axes[0]):
@@ -215,17 +241,49 @@ axes[-1, -1].legend(
     loc='upper center', bbox_to_anchor=(-0.1, -0.4), fancybox=True, shadow=True, ncol=3
 )
 
-fig.savefig("figures/gecco/sm.png", bbox_inches="tight")
+fig.savefig("figures/gecco/sm_comptel.png", bbox_inches="tight")
 
 # %% {"hidden": true}
 beep()
 
 # %% {"hidden": true}
 
-# %% [markdown]
+# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# ## Understanding gap in heavy quark model
+
+# %% {"hidden": true}
+mxs = np.geomspace(mx_min, mx_max, 100)
+
+sv_gecco = np.zeros(len(mxs))
+sm = sms[1, 1]
+
+for i, mx in enumerate(mxs):
+    sm.mx = mx
+    print(mx)
+    sv_gecco[i] = sm.unbinned_limit(
+        A_eff_gecco, energy_res_gecco, T_obs_gecco, comptel_diffuse.target,
+        default_bg_model, debug_msgs=True
+    )
+
+# %% {"hidden": true}
+plt.loglog(mxs, sv_gecco)
+plt.xlim(mxs[[0, -1]])
+plt.ylim(1e-35, 1e-23)
+plt.axvline(0.3)
+plt.axvline(7.98/2)
+plt.axvline(7.98)
+plt.axvline(135)
+
+# %% {"hidden": true}
+
+# %% {"hidden": true}
+
+# %% {"hidden": true}
+
+# %% [markdown] {"heading_collapsed": true}
 # # Vector
 
-# %%
+# %% {"hidden": true}
 mvs = [200, 1000]
 
 vm_args = np.array([
@@ -243,12 +301,7 @@ VMs = np.array([
 # Instantiate all the models
 vms = np.vectorize(lambda VM, args: VM(**args))(VMs, vm_args)
 
-# Load precomputed constraints
-sv_constraints_vms = np.load(
-    "data/sv_constraints_vms.npz", allow_pickle=True
-)["sv_constraints_vms"]
-
-# %%
+# %% {"hidden": true}
 # Recompute constraints
 sv_constraints_vms = np.empty_like(vms)
 for i in range(len(vms)):
@@ -256,11 +309,16 @@ for i in range(len(vms)):
         sv_constraints_vms[i, j] = get_sv_constraints(vms[i, j], mxs)
 
 # Save results
-# np.savez(
-#     "data/sv_constraints_vms.npz", sv_constraints_vms=sv_constraints_vms, vm_args=vm_args
-# )
+np.savez(
+    "data/sv_constraints_vms.npz", sv_constraints_vms=sv_constraints_vms, vm_args=vm_args
+)
 
-# %%
+# # Load precomputed constraints
+# sv_constraints_vms = np.load(
+#     "data/sv_constraints_vms.npz", allow_pickle=True
+# )["sv_constraints_vms"]
+
+# %% {"hidden": true}
 fig, axes = get_formatted_fig(
     *vms.shape, (4 * vms.shape[1], 2.5 * vms.shape[0]),
     mxs[[0, -1]], (1e-31, 1e-20)
@@ -276,19 +334,12 @@ for i in range(len(axes)):
         
         # Constraints
         for key, svs in sv_constraints_vms[i, j].items():
-            if key == "cmb":
-                ax.plot(mxs, svs, "k", label=r"CMB")
-            elif key in ["comptel_check", "gecco_large"]:
+            if key in ["comptel_check", "gecco_large", "e_astrogam", 'gecco_gc', 'gecco_egret', 'gecco_fermi', 'gecco_draco']:
                 continue
-#             elif key == "comptel_check":
-#                 ax.plot(mxs, svs, ":k", alpha=0.5, label=get_label(key))
+            elif key == "cmb":
+                ax.plot(mxs, svs, "k", label=r"CMB")
             else:
-                ax.plot(mxs, svs, label=get_label(key))
-
-# Change limits for models quark-only couplings
-# for ax in axes[1:, :].flatten():
-#     ax.set_xlim(50, mxs[-1])
-#     ax.set_xscale("linear")
+                ax.plot(mxs, svs, label=get_constraint_label(key))
 
 # Mediator mass labels
 for mv, ax in zip(mvs, axes[0]):
@@ -308,28 +359,132 @@ axes[-1, -1].legend(
     loc='upper center', bbox_to_anchor=(-0.1, -0.4), fancybox=True, shadow=True, ncol=3
 )
 
-fig.savefig("figures/gecco/vm.png", bbox_inches="tight")
+fig.savefig("figures/gecco/vm_comptel.png", bbox_inches="tight")
 
-# %%
+# %% {"hidden": true}
+T_obs_gecco / 1e6
+
+# %% {"hidden": true}
 beeper.beep(frequency=900, secs=0.7, blocking=True)
 
+# %% {"hidden": true}
+
+# %% [markdown]
+# # Model-independent constraints
+
+# %% {"code_folding": [3]}
+fss = ["e e", "mu mu", "pi pi", "pi0 pi0", "g g", "pi0 g"]
+sc_constraints = {}
+
+for fs in fss:
+    cur_constraints = defaultdict(lambda: np.zeros(len(mxs)))
+    model = SingleChannel(1., fs, 1.)
+    print("fs:", fs)
+    
+    for i, mx in enumerate(mxs):
+        model.mx = mx
+
+        # Constraints from existing data
+        cur_constraints["comptel"][i] = model.binned_limit(comptel_diffuse)
+        cur_constraints["egret"][i] = model.binned_limit(egret_diffuse)
+        cur_constraints["fermi"][i] = model.binned_limit(fermi_diffuse)
+
+        # Projections
+        cur_constraints["gecco_gc"][i] = model.unbinned_limit(
+            A_eff_gecco, energy_res_gecco, T_obs_gecco, gc_target, gecco_bg_model,
+#             debug_msgs=True
+        )
+
+        # CMB
+        cur_constraints["cmb"][i] = model.cmb_limit(x_kd=x_kd)
+    
+    sc_constraints[fs] = cur_constraints
+
 # %%
+# Save constraints
+# np.savez("data/sv_constraints_single_channels.npz", {k: dict(v) for k, v in sc_constraints.items()})
+
+# %%
+fig, axes = get_formatted_fig(3, 2, (4 * 2, 2.5 * 3), mxs[[0, -1]], (1e-35, 1e-23))
+
+for fs, ax in zip(fss, axes.flatten()):
+    ax.set_title(get_fs_label(fs))
+    for key, svs in sc_constraints[fs].items():
+        if key == "cmb":
+            # s-wave
+            # ax.plot(mxs, svs, "k", label=r"CMB")
+            
+            # p-wave
+            v_cmbs = 2e-4 * (0.235) * (1 / mxs) * np.sqrt(1e-4 / x_kd)
+            ax.plot(mxs, svs * (v_mw / v_cmbs)**2, "k", label=r"CMB")
+        else:
+            ax.plot(mxs, svs, label=get_constraint_label(key))
+
+fig.tight_layout()
+
+# Put a legend below last axis
+axes[-1, -1].legend(
+    loc='upper center', bbox_to_anchor=(-0.1, -0.4), fancybox=True, shadow=True, ncol=3
+)
+
+fig.savefig("figures/single_channel_sigmav_limits.pdf")
+
+# %%
+
+# %%
+mx = 100
+sm = HiggsPortal(mx, 1e3, 1, 0.1)
+sc_pi0_pi0 = SingleChannel(mx, "pi0 pi0", 1)
+sc_pi_pi = SingleChannel(mx, "pi pi", 1)
+sc_mu_mu = SingleChannel(mx, "mu mu", 1)
+sc_e_e = SingleChannel(mx, "e e", 1)
+
+# %%
+e_gams = np.geomspace(5e0, 3e2, 1000)
+e_cm = 2 * mx * (1 + 1e-3**2)
+
+# %%
+plt.loglog(e_gams, sm.total_spectrum(e_gams, e_cm))
+# plt.loglog(e_gams, sc_pi_pi.total_spectrum(e_gams, e_cm) * 1/3 + sc_pi0_pi0.total_spectrum(e_gams, e_cm) * 1/5)
+plt.loglog(e_gams, 0.93 * sc_e_e.total_spectrum(e_gams, e_cm))
+
+plt.xlim(e_gams[[0, -1]])
+plt.ylim(1e-5, 1e-1)
+
+# %%
+
+# %% [markdown] {"heading_collapsed": true}
+# # Background models
+
+# %% {"hidden": true}
+e_gams = np.geomspace(0.3, 3e3, 500)
+
+plt.loglog(e_gams, e_gams**2 * gc_bg_model.dPhi_dEdOmega(e_gams), label="GC")
+plt.loglog(e_gams, e_gams**2 * default_bg_model.dPhi_dEdOmega(e_gams), label="EGRET/COMPTEL-based")
+plt.loglog(e_gams, e_gams**2 * gecco_bg_model.dPhi_dEdOmega(e_gams), label="GECCO")
+
+plt.xlim(e_gams[[0, -1]])
+plt.xlabel(r"$E_\gamma$ [MeV]")
+plt.ylabel(r"$E_\gamma^2 \frac{d\Phi}{dE_\gamma d\Omega}$ [$\mathrm{MeV} \, \mathrm{cm}^{-2} \, \mathrm{s}^{-1} \, \mathrm{sr}^{-1}$]")
+plt.legend(fontsize=10)
+
+# %% {"hidden": true}
 
 # %% [markdown] {"heading_collapsed": true}
 # # Effective areas
 
 # %% {"hidden": true}
-e_gammas = np.geomspace(0.55, 3e3, 500)
+e_gams = np.geomspace(0.2, 3e3, 500)
 
-plt.plot(e_gammas, A_eff_comptel(e_gammas), label="COMPTEL")
-plt.plot(e_gammas, A_eff_egret(e_gammas), label="EGRET")
-plt.plot(e_gammas, A_eff_fermi(e_gammas), label="Fermi")
-plt.plot(e_gammas, A_eff_e_astrogam(e_gammas), label="e-ASTROGAM")
-plt.plot(e_gammas, A_eff_gecco(e_gammas), label="Gecco")
+plt.plot(e_gams, A_eff_comptel(e_gams), label="COMPTEL")
+plt.plot(e_gams, A_eff_egret(e_gams), label="EGRET")
+plt.plot(e_gams, A_eff_fermi(e_gams), label="Fermi")
+plt.plot(e_gams, A_eff_e_astrogam(e_gams), label="e-ASTROGAM")
+plt.plot(e_gams, A_eff_gecco(e_gams), label="Gecco")
 
 plt.xlabel(r"$E_\gamma$ [MeV]")
 plt.ylabel(r"$A_\mathrm{eff}$ [cm$^2$]")
-plt.xlim(e_gammas[[0, -1]])
+plt.xlim(e_gams[[0, -1]])
 plt.ylim(1e1, 1e4)
 plt.xscale("log")
 plt.yscale("log")
@@ -340,5 +495,27 @@ plt.tight_layout()
 plt.savefig("figures/gecco/a_eff.png")
 
 # %% {"hidden": true}
+
+# %% [markdown] {"heading_collapsed": true}
+# # Energy resolution
+
+# %% {"hidden": true}
+e_gams = np.geomspace(0.2, 3e3, 500)
+
+plt.plot(e_gams, energy_res_comptel(e_gams) * np.ones(len(e_gams)), label="COMPTEL")
+plt.plot(e_gams, energy_res_e_astrogam(e_gams), label="e-ASTROGAM")
+plt.plot(e_gams, energy_res_gecco(e_gams), label="Gecco")
+
+plt.xlabel(r"$E_\gamma$ [MeV]")
+plt.ylabel(r"$\Delta E / E$")
+plt.xlim(e_gams[[0, -1]])
+# plt.ylim(1e1, 1e4)
+plt.xscale("log")
+plt.yscale("log")
+plt.legend(fontsize=8)
+plt.title("Telescope energy resolution")
+
+plt.tight_layout()
+plt.savefig("figures/gecco/energy_res.png")
 
 # %% {"hidden": true}
