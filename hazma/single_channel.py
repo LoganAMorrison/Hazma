@@ -21,9 +21,137 @@ from hazma.positron_spectra import charged_pion as dnde_p_pi, muon as dnde_p_mu
 
 class SingleChannel(Theory):
     def __init__(self, mx, fs, sigma):
-        self.mx = mx
-        self.fs = fs
-        self.sigma = sigma
+        self._mx = mx
+        self._fs = fs
+        self._sigma = sigma
+        self.setup()
+
+    @property
+    def fs(self):
+        return self._fs
+
+    @fs.setter
+    def fs(self, fs):
+        self._fs = fs
+        self.setup()
+
+    @property
+    def mx(self):
+        return self._mx
+
+    @mx.setter
+    def mx(self, mx):
+        self._mx = mx
+        self.setup()
+
+    @property
+    def sigma(self):
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, sigma):
+        self._sigma = sigma
+        self.setup()
+
+    def setup(self):
+        self.set_fs_mass()
+        self.set_spectrum_funcs()
+        self.set_gamma_ray_line_energies()
+        self.set_positron_spectrum_funcs()
+        self.set_positron_line_energies()
+
+    def set_fs_mass(self):
+        # Sets kinematic threshold for DM annihilations
+        if self.fs == "g g":
+            self.fs_mass = 0.0
+        elif self.fs == "e e":
+            self.fs_mass = 2 * m_e
+        elif self.fs == "mu mu":
+            self.fs_mass = 2 * m_mu
+        elif self.fs == "pi pi":
+            self.fs_mass = 2 * m_pi
+        elif self.fs == "pi0 pi0":
+            self.fs_mass = 2 * m_pi0
+        elif self.fs == "pi0 g":
+            self.fs_mass = m_pi0
+
+    def set_spectrum_funcs(self):
+        """
+        Sets gamma ray spectrum functions.
+        """
+        if self.fs == "e e":
+
+            def dnde_g(e_g, e_cm):
+                return self._dnde_ap_fermion(e_g, e_cm, m_e)
+
+        elif self.fs == "mu mu":
+
+            def dnde_g(e_g, e_cm):
+                return 2 * dnde_g_mu(e_g, e_cm / 2) + self._dnde_ap_fermion(
+                    e_g, e_cm, m_mu
+                )
+
+        elif self.fs == "pi0 pi0":
+
+            def dnde_g(e_g, e_cm):
+                return 2 * dnde_g_pi0(e_g, e_cm / 2)
+
+        elif self.fs == "pi0 g":
+
+            def dnde_g(e_g, e_cm):
+                return dnde_g_pi0(e_g, (e_cm ** 2 + m_pi0 ** 2) / (2.0 * e_cm))
+
+        elif self.fs == "pi pi":
+
+            def dnde_g(e_g, e_cm):
+                return 2 * dnde_g_pi(e_g, e_cm / 2) + self._dnde_ap_scalar(
+                    e_g, e_cm, m_pi
+                )
+
+        else:
+            # Final state produces no photons
+            self._spectrum_funcs = lambda: {}
+            return
+
+        self._spectrum_funcs = lambda: {self.fs: dnde_g}
+
+    def set_gamma_ray_line_energies(self):
+        if self.fs == "g g":
+            self._gamma_ray_line_energies = lambda e_cm: {"g g": e_cm / 2}
+        elif self.fs == "pi0 g":
+            self._gamma_ray_line_energies = lambda e_cm: {
+                "pi0 g": (e_cm ** 2 - m_pi0 ** 2) / (2.0 * e_cm)
+            }
+        else:
+            self._gamma_ray_line_energies = lambda e_cm: {}
+
+    def set_positron_spectrum_funcs(self):
+        if self.fs == "mu mu":
+
+            def dnde_p(e_p, e_cm):
+                if e_cm < self.fs_mass:
+                    return 0.0
+                return dnde_p_mu(e_p, e_cm / 2.0)
+
+        elif self.fs == "pi pi":
+
+            def dnde_p(e_p, e_cm):
+                if e_cm < self.fs_mass:
+                    return 0.0
+                return dnde_p_pi(e_p, e_cm / 2.0)
+
+        else:
+            # Final state produces no positrons
+            self._positron_spectrum_funcs = lambda: {}
+            return
+
+        self._positron_spectrum_funcs = lambda: {self.fs: dnde_p}
+
+    def set_positron_line_energies(self):
+        if self.fs == "e e":
+            self._positron_line_energies = lambda e_cm: {"e e": e_cm / 2.0}
+        else:
+            self._positron_line_energies = lambda e_cm: {}
 
     def _dnde_ap_scalar(self, e_g, e_cm, m_scalar):
         def fn(e_g):
@@ -63,76 +191,14 @@ class SingleChannel(Theory):
 
         return np.vectorize(fn)(e_g)
 
+    def sigma(self, e_cm):
+        if e_cm < 2 * self.mx or e_cm < self.fs_mass:
+            return 0.0
+        else:
+            return self._sigma
+
     def annihilation_cross_section_funcs(self):
-        return {self.fs: lambda e_cm: self.sigma}
-
-    def spectrum_funcs(self):
-        if self.fs == "e e":
-
-            def dnde_g(e_g, e_cm):
-                return self._dnde_ap_fermion(e_g, e_cm, m_e)
-
-        elif self.fs == "mu mu":
-
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_mu(e_g, e_cm / 2) + self._dnde_ap_fermion(
-                    e_g, e_cm, m_mu
-                )
-
-        elif self.fs == "pi0 pi0":
-
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_pi0(e_g, e_cm / 2)
-
-        elif self.fs == "pi0 g":
-
-            def dnde_g(e_g, e_cm):
-                e_pi0 = (e_cm ** 2 + m_pi0 ** 2) / (2.0 * e_cm)
-                return dnde_g_pi0(e_g, e_pi0)
-
-        elif self.fs == "pi pi":
-
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_pi(e_g, e_cm / 2) + self._dnde_ap_scalar(
-                    e_g, e_cm, m_pi
-                )
-
-        else:
-            return {}
-
-        return {self.fs: dnde_g}
-
-    def gamma_ray_lines(self, e_cm):
-        if self.fs == "g g":
-            return {"g g": {"energy": e_cm / 2, "bf": 1}}
-        elif self.fs == "pi0 g":
-            return {
-                "pi0 g": {"energy": (e_cm ** 2 - m_pi0 ** 2) / (2.0 * e_cm), "bf": 1}
-            }
-        else:
-            return {}
-
-    def positron_spectrum_funcs(self):
-        if self.fs == "mu mu":
-
-            def dnde_p(e_p, e_cm):
-                return dnde_p_mu(e_p, e_cm / 2.0)
-
-        elif self.fs == "pi pi":
-
-            def dnde_p(e_p, e_cm):
-                return dnde_p_pi(e_p, e_cm / 2.0)
-
-        else:
-            return {}
-
-        return {self.fs: dnde_p}
-
-    def positron_lines(self, e_cm):
-        if self.fs == "e e":
-            return {"e e": {"energy": e_cm / 2.0, "bf": 1}}
-        else:
-            return {}
+        return {self.fs: self.sigma}
 
     def list_annihilation_final_states(self):
         return [self.fs]

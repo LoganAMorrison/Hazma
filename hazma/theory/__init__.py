@@ -106,7 +106,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
-    def spectrum_funcs(self):
+    def _spectrum_funcs(self):
         r"""
         Gets a function computing the continuum gamma-ray spectrum for
         annihilations into each relevant final state.
@@ -121,6 +121,26 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             state that produces a continuum spectrum.
         """
         pass
+
+    def spectrum_funcs(self):
+        """
+        Wraps _spectrum_functions so the function for a final state returns
+        zero when annihilation into that state is not permitted.
+        """
+        sigma_ann_fns = self.annihilation_cross_section_funcs()
+        dndes_wrapped = {}
+
+        for fs, dnde in self._spectrum_funcs().items():
+
+            def dnde_wrapped(e_gams, e_cm):
+                if sigma_ann_fns[fs](e_cm) > 0:
+                    return dnde(e_gams, e_cm)
+                else:
+                    return np.zeros_like(e_gams)
+
+            dndes_wrapped[fs] = dnde_wrapped
+
+        return dndes_wrapped
 
     def spectra(self, e_gams, e_cm):
         r"""
@@ -147,10 +167,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         specs = {}
 
         for fs, dnde_func in self.spectrum_funcs().items():
-            if bfs[fs] == 0:
-                specs[fs] = np.zeros_like(e_gams)
-            else:
-                specs[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
+            specs[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
 
         specs["total"] = sum(specs.values())
 
@@ -178,7 +195,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.spectra(np.array([e_gams]), e_cm)["total"]
 
     @abstractmethod
-    def gamma_ray_lines(self, e_cm):
+    def _gamma_ray_line_energies(self, e_cm):
         r"""
         Gets information about annihilation into gamma-ray lines.
 
@@ -191,11 +208,27 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         Returns
         -------
+        lines : dict(str, float)
+            Energy of the photon for each final state containing a
+            monochromatic photon.
+        """
+        pass
+
+    def gamma_ray_lines(self, e_cm):
+        """
+        Returns
+        -------
         lines : dict(str, dict(str, float))
             For each final state containing a monochromatic photon, gives the
             energy of the photon and branching fraction into that final state.
         """
-        pass
+        bfs = self.annihilation_branching_fractions(e_cm)
+        lines = {}
+
+        for fs, e in self._gamma_ray_line_energies(e_cm).items():
+            lines[fs] = {"energy": e, "bf": bfs[fs]}
+
+        return lines
 
     def total_conv_spectrum_fn(
         self, e_gam_min, e_gam_max, e_cm, energy_res, n_pts=1000
@@ -239,7 +272,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         )
 
     @abstractmethod
-    def positron_spectrum_funcs(self):
+    def _positron_spectrum_funcs(self):
         r"""
         Gets a function computing the continuum positron spectrum for
         annihilations into each relevant final state.
@@ -254,6 +287,26 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             state that produces a continuum spectrum.
         """
         pass
+
+    def positron_spectrum_funcs(self):
+        """
+        Wraps _positron_spectrum_functions so the function for a final state
+        returns zero when annihilation into that state is not permitted.
+        """
+        sigma_ann_fns = self.annihilation_cross_section_funcs()
+        dndes_wrapped = {}
+
+        for fs, dnde in self._positron_spectrum_funcs().items():
+
+            def dnde_wrapped(e_ps, e_cm):
+                if sigma_ann_fns[fs](e_cm) > 0:
+                    return dnde(e_ps, e_cm)
+                else:
+                    return np.zeros_like(e_ps)
+
+            dndes_wrapped[fs] = dnde_wrapped
+
+        return dndes_wrapped
 
     def positron_spectra(self, e_ps, e_cm):
         r"""
@@ -277,17 +330,14 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             channel.
         """
         bfs = self.annihilation_branching_fractions(e_cm)
-        dndes_pos = {}
+        specs = {}
 
         for fs, dnde_pos_func in self.positron_spectrum_funcs().items():
-            if bfs[fs] == 0:
-                dndes_pos[fs] = np.zeros_like(e_ps)
-            else:
-                dndes_pos[fs] = bfs[fs] * dnde_pos_func(e_ps, e_cm)
+            specs[fs] = bfs[fs] * dnde_pos_func(e_ps, e_cm)
 
-        dndes_pos["total"] = sum(dndes_pos.values())
+        specs["total"] = sum(specs.values())
 
-        return dndes_pos
+        return specs
 
     def total_positron_spectrum(self, e_ps, e_cm):
         r"""
@@ -311,7 +361,7 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
 
     @abstractmethod
-    def positron_lines(self, e_cm):
+    def _positron_line_energies(self, e_cm):
         r"""
         Gets information about annihilation into monochromatic positrons.
 
@@ -324,12 +374,27 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         Returns
         -------
-        lines : dict(str, dict(str, float))
-            For each final state containing a monochromatic positron, gives the
-            energy of the positron and branching fraction into that final
-            state.
+        lines : dict(str, float)
+            Energy of positron in each final state containing a monochromatic
+            positron.
         """
         pass
+
+    def positron_lines(self, e_cm):
+        """
+        Returns
+        -------
+        lines : dict(str, dict(str, float))
+            For each final state containing a monochromatic photon, gives the
+            energy of the photon and branching fraction into that final state.
+        """
+        bfs = self.annihilation_branching_fractions(e_cm)
+        lines = {}
+
+        for fs, e in self._positron_line_energies(e_cm).items():
+            lines[fs] = {"energy": e, "bf": bfs[fs]}
+
+        return lines
 
     def total_conv_positron_spectrum_fn(
         self, e_p_min, e_p_max, e_cm, energy_res, n_pts=1000
