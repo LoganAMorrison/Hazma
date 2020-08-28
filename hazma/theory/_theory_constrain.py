@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from hazma.constraint_parameters import sv_inv_MeV_to_cm3_per_s
 from skimage import measure
 
@@ -208,3 +209,18 @@ class TheoryConstrain:
             contours.append(np.array([p1s, p2s]))
 
         return contours
+
+    @abstractmethod
+    def constraints(self):
+        r"""
+        Get a dictionary of all available constraints.
+
+        Subclasses must implement this method.
+
+        Notes
+        -----
+        Each key in the dictionary is the name of a constraint. Each value is a
+        function that is positive when the constraint is satisfied and negative
+        when it is not.
+        """
+        raise NotImplementedError()

@@ -1,4 +1,4 @@
-from hazma.theory import Theory
+from hazma.theory import TheoryAnn
 
 from hazma.parameters import up_quark_mass as muq
 from hazma.parameters import down_quark_mass as mdq
@@ -30,7 +30,7 @@ class ScalarMediator(
     ScalarMediatorPositronSpectra,
     ScalarMediatorSpectra,
     ScalarMediatorWidths,
-    Theory,
+    TheoryAnn,
 ):
     r"""
     Create a scalar mediator model object.

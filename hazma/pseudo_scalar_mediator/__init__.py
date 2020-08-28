@@ -1,4 +1,4 @@
-from hazma.theory import Theory
+from hazma.theory import TheoryAnn
 
 from hazma.parameters import electron_mass as me
 from hazma.parameters import muon_mass as mmu
@@ -44,7 +44,7 @@ class PseudoScalarMediator(
     PseudoScalarMediatorPositronSpectra,
     PseudoScalarMediatorSpectra,
     PseudoScalarMediatorWidths,
-    Theory,
+    TheoryAnn,
 ):
     r"""
     Create a pseudoscalar mediator model object.

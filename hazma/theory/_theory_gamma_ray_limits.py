@@ -59,23 +59,34 @@ class TheoryGammaRayLimits:
             Largest allowed thermally averaged total cross section in cm^3 / s
 
         """
-        # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
-        # self-conjugate.
-        dm_flux_factor = (
-            measurement.target.J
-            * measurement.target.dOmega
-            / (2.0 * 4.0 * np.pi * 2.0 * self.mx ** 2)
-        )
-
-        # TODO: this should depend on the target!
-        vx = 1e-3  # v_x = Milky Way velocity dispersion
-        e_cm = 2.0 * self.mx * (1.0 + 0.5 * vx ** 2)
-
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
-        dnde_conv = self.total_conv_spectrum_fn(
-            e_min, e_max, e_cm, measurement.energy_res
-        )
+
+        # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
+        # self-conjugate.
+        if self.kind == "ann":
+            f_dm = 2.0
+            dm_flux_factor = (
+                measurement.target.J
+                * measurement.target.dOmega
+                / (2.0 * f_dm * self.mx ** 2 * 4.0 * np.pi)
+            )
+
+            # TODO: this should depend on the target!
+            e_cm = 2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx ** 2)
+            dnde_conv = self.total_conv_spectrum_fn(
+                e_min, e_max, e_cm, measurement.energy_res
+            )
+        elif self.kind == "dec":
+            # e_cm = self.mx
+            dm_flux_factor = (
+                measurement.target.D
+                * measurement.target.dOmega
+                / (self.mx * 4.0 * np.pi)
+            )
+            dnde_conv = self.total_conv_spectrum_fn(
+                e_min, e_max, measurement.energy_res
+            )
 
         def bin_lim(e_low, e_high, phi, sigma):
             """Subroutine to compute limit in a single bin."""
@@ -168,8 +179,9 @@ class TheoryGammaRayLimits:
         A_eff,
         energy_res,
         T_obs,
-        target_params,
+        target,
         bg_model,
+        e_window_0=None,
         n_sigma=5.0,
         debug_msgs=False,
     ):
@@ -202,7 +214,7 @@ class TheoryGammaRayLimits:
             function of photon energy in MeV.
         T_obs : float
             Experiment's observation time in s
-        target_params : TargetParams
+        target : TargetParams
             Object containing information about the observation target.
         bg_model : BackgroundModel
             Object representing a gamma ray background model.
@@ -218,30 +230,40 @@ class TheoryGammaRayLimits:
             Smallest-detectable thermally averaged total cross section in units
             of cm^3 / s.
         """
-        # TODO: this should depend on the target!
-        vx = 1e-3  # v_x = Milky Way velocity dispersion
-        e_cm = 2.0 * self.mx * (1.0 + 0.5 * vx ** 2)
-
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
-        dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, e_cm, energy_res)
 
-        # Energy at which spectrum peaks.
-        e_dnde_max = optimize.minimize(
-            dnde_conv,
-            0.5 * (e_min + e_max),
-            bounds=[[e_min * (1 + 1e-8), e_max * (1 - 1e-8)]],
-        ).x[0]
+        if self.kind == "ann":
+            # TODO: this should depend on the target!
+            e_cm = 2.0 * self.mx * (1.0 + 0.5 * target.vx ** 2)
+            dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, e_cm, energy_res)
+        elif self.kind == "dec":
+            dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, energy_res)
 
-        # If there's a peak, include it in the initial energy window.
-        if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-5) or np.isclose(
-            e_dnde_max, e_max, atol=0, rtol=1e-5
-        ):
-            e_a_0 = 10.0 ** (0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
-            e_b_0 = 10.0 ** (0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
+        # Use initial energy window if provided. Otherwise, use heuristics...
+        if e_window_0 is not None:
+            e_a_0, e_b_0 = e_window_0
+            if e_a_0 > e_max:
+                return np.inf
+            elif e_b_0 < e_min:
+                return np.inf
         else:
-            e_a_0 = 10.0 ** (0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
-            e_b_0 = 10.0 ** (0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
+            # Energy at which spectrum peaks.
+            e_dnde_max = optimize.minimize(
+                dnde_conv,
+                0.5 * (e_min + e_max),
+                bounds=[[e_min * (1 + 1e-8), e_max * (1 - 1e-8)]],
+            ).x[0]
+
+            # If there's a peak, include it in the initial energy window.
+            if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-5) or np.isclose(
+                e_dnde_max, e_max, atol=0, rtol=1e-5
+            ):
+                e_a_0 = 10.0 ** (0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
+                e_b_0 = 10.0 ** (0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
+            else:
+                e_a_0 = 10.0 ** (0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
+                e_b_0 = 10.0 ** (0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
 
         # Integrating these gives the number of signal and background photons
         integrand_S = self._get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
@@ -266,13 +288,19 @@ class TheoryGammaRayLimits:
 
         # Insert appropriate prefactors to convert result to <sigma v>_tot. The
         # factor of 2 is from the DM not being self-conjugate.
-        prefactor = (
-            2.0
-            * 4.0
+        if self.kind == "ann":
+            f_dm = 2.0  # TODO: refactor
+            prefactor = 2.0 * f_dm * self.mx ** 2
+        else:
+            prefactor = self.mx
+
+        prefactor *= (
+            4.0
             * np.pi
-            * 2.0
-            * self.mx ** 2
-            / (np.sqrt(T_obs * target_params.dOmega) * target_params.J)
+            / (
+                np.sqrt(T_obs * target.dOmega)
+                * (target.J if self.kind == "ann" else target.D)
+            )
         )
 
         assert -limit_obj.fun > 0 or np.isclose(

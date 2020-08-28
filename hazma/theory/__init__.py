@@ -8,12 +8,14 @@ from hazma.theory._theory_constrain import TheoryConstrain
 from hazma.theory._theory_gamma_ray_limits import TheoryGammaRayLimits
 
 
-class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
+class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     """
     Represents a sub-GeV DM theory.
     """
 
     __metaclass__ = ABCMeta
+
+    kind = "ann"
 
     @staticmethod
     @abstractmethod
@@ -264,10 +266,9 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         return convolved_spectrum_fn(
             e_gam_min,
             e_gam_max,
-            e_cm,
             energy_res,
-            self.total_spectrum,
-            self.gamma_ray_lines,
+            lambda e_gams: self.total_spectrum(e_gams, e_cm),
+            self.gamma_ray_lines(e_cm),
             n_pts,
         )
 
@@ -432,22 +433,186 @@ class Theory(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             e_p_max,
             e_cm,
             energy_res,
-            self.total_positron_spectrum,
-            self.positron_lines,
+            lambda e_ps: self.total_positron_spectrum(e_ps, e_cm),
+            self.positron_lines(e_cm),
+            n_pts,
+        )
+
+
+class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
+
+    __metaclass__ = ABCMeta
+
+    kind = "dec"
+
+    @staticmethod
+    @abstractmethod
+    def list_decay_final_states():
+        pass
+
+    @abstractmethod
+    def _decay_widths(self):
+        """
+        Decay width into each final state.
+        """
+        pass
+
+    def decay_widths(self):
+        """
+        Wraps `_decay_widths`, adding the total width in.
+        """
+        widths = {fs: width for fs, width in self._decay_widths().items()}
+        widths["total"] = sum(widths.values())
+        return widths
+
+    def decay_branching_fractions(self):
+        """
+        Branching fraction for decay into each final state.
+        """
+        widths = self.decay_widths()
+
+        if widths["total"] == 0:
+            return {fs: 0.0 for fs in widths if fs != "total"}
+        else:
+            return {
+                fs: width / widths["total"]
+                for fs, width in widths.items()
+                if fs != "total"
+            }
+
+    @abstractmethod
+    def _spectrum_funcs(self):
+        """
+        Gets a function taking a photon energy and returning the continuum
+        gamma ray spectrum dN/dE for each relevant decay final state.
+        """
+        pass
+
+    def spectrum_funcs(self):
+        widths = self.decay_widths()
+        dndes_wrapped = {}
+
+        for fs, dnde in self._spectrum_funcs().items():
+
+            def dnde_wrapped(e_gams):
+                if widths[fs] > 0:
+                    return dnde(e_gams)
+                else:
+                    return np.zeros_like(e_gams)
+
+            dndes_wrapped[fs] = dnde_wrapped
+
+        return dndes_wrapped
+
+    def spectra(self, e_gams):
+        """
+        Computes spectra for each final state at the provided photon energies.
+        """
+        bfs = self.decay_branching_fractions()
+        specs = {}
+
+        for fs, dnde_func in self.spectrum_funcs().items():
+            specs[fs] = bfs[fs] * dnde_func(e_gams)
+
+        specs["total"] = sum(specs.values())
+
+        return specs
+
+    def total_spectrum(self, e_gams):
+        if hasattr(e_gams, "__len__"):
+            return self.spectra(e_gams)["total"]
+        else:
+            return self.spectra(np.array([e_gams]))["total"]
+
+    @abstractmethod
+    def _gamma_ray_line_energies(self):
+        """
+        Returns dict of final states and photon energies for final states
+        containing monochromatic gamma ray lines.
+        """
+        pass
+
+    def gamma_ray_lines(self):
+        bfs = self.decay_branching_fractions()
+        lines = {}
+
+        for fs, e in self._gamma_ray_line_energies().items():
+            lines[fs] = {"energy": e, "bf": bfs[fs]}
+
+        return lines
+
+    def total_conv_spectrum_fn(self, e_gam_min, e_gam_max, energy_res, n_pts=1000):
+        return convolved_spectrum_fn(
+            e_gam_min,
+            e_gam_max,
+            energy_res,
+            self.total_spectrum,
+            self.gamma_ray_lines(),
             n_pts,
         )
 
     @abstractmethod
-    def constraints(self):
-        r"""
-        Get a dictionary of all available constraints.
-
-        Subclasses must implement this method.
-
-        Notes
-        -----
-        Each key in the dictionary is the name of a constraint. Each value is a
-        function that is positive when the constraint is satisfied and negative
-        when it is not.
+    def _positron_spectrum_funcs(self):
         """
-        raise NotImplementedError()
+        Returns functions `float -> float` giving the continuum positron
+        spectrum for each final state.
+        """
+        pass
+
+    def positron_spectrum_funcs(self):
+        widths = self.decay_widths()
+        dndes_wrapped = {}
+
+        for fs, dnde in self._positron_spectrum_funcs().items():
+
+            def dnde_wrapped(e_ps):
+                if widths[fs] > 0:
+                    return dnde(e_ps)
+                else:
+                    return np.zeros_like(e_ps)
+
+            dndes_wrapped[fs] = dnde_wrapped
+
+        return dndes_wrapped
+
+    def positron_spectra(self, e_ps):
+        bfs = self.decay_branching_fractions()
+        specs = {}
+
+        for fs, dnde_pos_func in self.positron_spectrum_funcs().items():
+            specs[fs] = bfs[fs] * dnde_pos_func(e_ps)
+
+        specs["total"] = sum(specs.values())
+
+        return specs
+
+    def total_positron_spectrum(self, e_ps):
+        if hasattr(e_ps, "__len__"):
+            return self.positron_spectra(e_ps)["total"]
+        else:
+            return self.positron_spectra(np.array([e_ps]))["total"]
+
+    @abstractmethod
+    def _positron_line_energies(self):
+        pass
+
+    def positron_lines(self):
+        bfs = self.decay_branching_fractions()
+        lines = {}
+
+        for fs, e in self._positron_line_energies().items():
+            lines[fs] = {"energy": e, "bf": bfs[fs]}
+
+        return lines
+
+    def total_conv_positron_spectrum_fn(
+        self, e_p_min, e_p_max, energy_res, n_pts=1000
+    ):
+        return convolved_spectrum_fn(
+            e_p_min,
+            e_p_max,
+            energy_res,
+            self.total_positron_spectrum,
+            self.positron_lines(),
+            n_pts,
+        )

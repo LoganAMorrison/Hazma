@@ -1,4 +1,4 @@
-from hazma.theory import Theory
+from hazma.theory import TheoryAnn
 
 from hazma.vector_mediator._vector_mediator_cross_sections import (
     VectorMediatorCrossSections,
@@ -23,7 +23,7 @@ class VectorMediator(
     VectorMediatorPositronSpectra,
     VectorMediatorSpectra,
     VectorMediatorWidths,
-    Theory,
+    TheoryAnn,
 ):
     r"""
     Create a VectorMediator object with generic couplings.

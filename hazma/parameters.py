@@ -170,7 +170,7 @@ def spec_res_fn(ep, e, energy_res):
 
 
 def convolved_spectrum_fn(
-    e_min, e_max, e_cm, energy_res, spec_fn=None, line_fn=None, n_pts=1000
+    e_min, e_max, energy_res, spec_fn=None, lines=None, n_pts=1000
 ):
     r"""
     Convolves a continuum and line spectrum with a detector's spectral
@@ -182,15 +182,13 @@ def convolved_spectrum_fn(
         Lower bound of energy range over which to perform convolution.
     e_max : float
         Upper bound of energy range over which to perform convolution.
-    e_cm : float
-        Center of mass energy for DM annihilation.
     energy_res : float -> float
         The detector's energy resolution (Delta E / E) as a function of
         photon energy in MeV.
     spec_fn : np.array -> np.array
         Continuum spectrum function.
-    line_fn : np.array -> np.array
-        Function returning a dict with information about spectral lines.
+    lines : dict
+        Information about spectral lines.
     n_pts : float
         Number of points to use to create resulting interpolating function.
 
@@ -207,7 +205,7 @@ def convolved_spectrum_fn(
     # Pad energy grid to avoid edge effects
     es_padded = np.geomspace(0.1 * e_min, 10 * e_max, n_pts)
     if spec_fn is not None:
-        dnde_src = spec_fn(es_padded, e_cm)
+        dnde_src = spec_fn(es_padded)
         if not np.all(dnde_src == 0):
 
             def integral(e):
@@ -224,8 +222,8 @@ def convolved_spectrum_fn(
             dnde_conv += np.vectorize(integral)(es)
 
     # Line contribution
-    if line_fn is not None:
-        for ch, line in line_fn(e_cm).items():
+    if lines is not None:
+        for ch, line in lines.items():
             dnde_conv += (
                 line["bf"]
                 * spec_res_fn(es, line["energy"], energy_res)

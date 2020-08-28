@@ -39,7 +39,24 @@ gecco_large_energy_res_rf = resource_filename(
 gc_bg_model_rf = resource_filename(__name__, gr_data_dir + "gc_bg_model.dat")
 
 
-def solid_angle(l_max, b_min, b_max):
+def solid_angle_cone(radius):
+    """
+    Returns solid angle subtended for a circular/conical target region.
+
+    Parameters
+    ----------
+    radius : float
+        Cone radius in degrees.
+
+    Returns
+    -------
+    Omega : float
+        Solid angle subtended by the region in sr.
+    """
+    return 4 * np.pi * np.sin(radius * np.pi / 180 / 2) ** 2
+
+
+def solid_angle_rect(l_max, b_min, b_max):
     """
     Returns solid angle subtended for a rectangular target region centered on
     the galactic center.
@@ -72,31 +89,30 @@ class TargetParams:
     """
     Container for information about a target region.
 
-    Currently implemented for the Draco dwarf galaxy and :math:`10^\circ \times
-    10^\circ` region around the galactic center, which can be imported using::
-
-        from hazma.gamma_ray_parameters import draco_params, gc_target
-
     Parameters
     ----------
     J : float
-        J-factor in MeV^2 cm^-5
+        (Averaged) J-factor for DM annihilation in MeV^2 cm^-5.
+    D : float
+        (Averaged) D-factor for DM decay in MeV cm^-2.
     dOmega : float
-        Angular size in sr
+        Angular size in sr.
+    vx : float
+        Average DM velocity in target in units of c. Defaults to 1e-3, the
+        Milky Way velocity dispersion.
     """
 
-    def __init__(self, J, dOmega):
+    def __init__(self, J=None, D=None, dOmega=None, vx=1e-3):
         self.J = J
+        self.D = D
         self.dOmega = dOmega
+        self.vx = vx
 
-
-# Dwarf with high J factor
-draco_target = TargetParams(6.94e27, 1.62e-3)
 
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
 # Additional factor of two due to uncertainty about radioactive and
 # instrumental backgrounds.
-gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam**2)
+gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
@@ -109,7 +125,64 @@ default_bg_model = BackgroundModel([0.299, 10.0e3], lambda e: 2.74e-3 / e ** 2)
 gc_bg_flux_fn = load_interp(gc_bg_model_rf, bounds_error=True, fill_value=np.nan)
 gc_bg_e_range = gc_bg_flux_fn.x[[0, -1]]
 gc_bg_model = BackgroundModel(gc_bg_e_range, gc_bg_flux_fn)
-gc_target = TargetParams(1.795e29, solid_angle(10.0, 0.0, 10.0))
+
+# Several different GC targets. Halo parameters are from the DM fit using
+# baryonic model B2 in https://arxiv.org/abs/1906.06133 (table III).
+gc_targets = {
+    "nfw": {
+        "1 arcmin cone": TargetParams(J=6.972e32, D=4.84e26, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=1.782e30, D=1.597e26, dOmega=0.0239),
+        "10 deg cone": TargetParams(J=7.458e29, D=1.214e26, dOmega=0.0955),
+    },
+    "ein": {
+        "1 arcmin cone": TargetParams(J=1.724e32, D=5.413e26, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=4.442e30, D=2.269e26, dOmega=0.0239),
+        "10 deg cone": TargetParams(J=1.706e30, D=1.615e26, dOmega=0.0955),
+    },
+}
+# +/- 1 sigma
+gc_targets_optimistic = {
+    "nfw": {
+        "1 arcmin cone": TargetParams(J=1.415e33, D=6.666e26, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=3.372e30, D=2.058e26, dOmega=0.0239),
+        "10 deg cone": TargetParams(J=1.355e30, D=1.522e26, dOmega=0.0955),
+    },
+    "ein": {
+        "1 arcmin cone": TargetParams(J=5.987e34, D=4.179e27, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=4.965e31, D=4.345e26, dOmega=0.0239),
+        "10 deg cone": TargetParams(J=1.404e31, D=2.62e26, dOmega=0.0955),
+    },
+}
+
+
+# Observing regions for various experiments. Same NFW profile as above.
+comptel_diffuse_target = TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433)
+egret_diffuse_target = TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585)
+fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
+
+# Draco dwarf.
+draco_targets = {
+    "nfw": {
+        "1 arcmin cone": TargetParams(J=3.418e30, D=5.949e25, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=8.058e26, D=1.986e24, dOmega=0.0239),
+    },
+}
+
+# Andromeda. See https://arxiv.org/abs/1009.5988.
+m31_targets = {
+    "nfw": {
+        "1 arcmin cone": TargetParams(J=1.496e31, D=3.297e26, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=1.479e27, D=4.017e24, dOmega=0.0239),
+    },
+}
+
+# Fornax cluster. See https://arxiv.org/abs/1009.5988.
+fornax_targets = {
+    "nfw": {
+        "1 arcmin cone": TargetParams(J=5.316e29, D=2.898e26, dOmega=2.66e-7),
+        "2 deg cone": TargetParams(J=2.558e26, D=9.081e24, dOmega=0.00383),
+    },
+}
 
 # # # Effective areas, cm^2
 A_eff_e_astrogam = load_interp(
@@ -152,15 +225,13 @@ def energy_res_fermi(e):
 #: whitebook <https://arxiv.org/abs/1711.01265>`_.
 energy_res_e_astrogam = load_interp(e_astrogam_energy_res_rf, fill_value="extrapolate")
 energy_res_gecco = load_interp(gecco_energy_res_rf, fill_value="extrapolate")
-energy_res_gecco_large = load_interp(gecco_large_energy_res_rf, fill_value="extrapolate")
+energy_res_gecco_large = load_interp(
+    gecco_large_energy_res_rf, fill_value="extrapolate"
+)
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365.0 * 24.0 * 60.0 ** 2
 
-# # # Target parameters
-comptel_diffuse_target = TargetParams(J=3.725e28, dOmega=solid_angle(60.0, 0.0, 20.0))
-egret_diffuse_target = TargetParams(J=3.79e27, dOmega=solid_angle(180.0, 20.0, 60.0))
-fermi_diffuse_target = TargetParams(J=4.698e27, dOmega=solid_angle(180.0, 8.0, 90.0))
 #: COMPTEL diffuse gamma-ray flux measurements
 comptel_diffuse = FluxMeasurement(
     comptel_obs_rf, energy_res_comptel, comptel_diffuse_target
