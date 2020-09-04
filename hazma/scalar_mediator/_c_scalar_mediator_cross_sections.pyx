@@ -1213,7 +1213,7 @@ def sigma_xs_to_xs(e_cms, double mx, double ms, double gsxx,
 
     Parameters
     ----------
-    e_cm : double
+    e_cms : double
         Center of mass energy(ies).
     mx: double
         Dark matter mass
