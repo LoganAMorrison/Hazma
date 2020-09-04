@@ -1,3 +1,6 @@
+import warnings
+
+
 class BackgroundModel(object):
     """
     Represents a gamma ray background model, which is required for computing
@@ -35,18 +38,16 @@ class BackgroundModel(object):
             # Check if any energies are out of bounds
             es_out_of_bounds = es[(es < self.e_range[0]) | (es > self.e_range[1])]
 
-            if len(es_out_of_bounds) == 0:
-                return self.__dPhi_dEdOmega(es)
-            else:
-                raise ValueError(
-                    "The gamma ray background model is not "
-                    "applicable for energy %f MeV." % es_out_of_bounds[0]
+            if len(es_out_of_bounds) > 0:
+                warnings.warn(
+                    "The gamma ray background model is not applicable for energy %f MeV."
+                    % es_out_of_bounds[0]
                 )
+            return self.__dPhi_dEdOmega(es)
         else:
             if es < self.e_range[0] or es > self.e_range[1]:
-                raise ValueError(
-                    "The gamma ray background model is not "
-                    "applicable for energy %f MeV." % es
+                warnings.warn(
+                    "The gamma ray background model is not applicable for energy %f MeV."
+                    % es
                 )
-            else:
-                return self.__dPhi_dEdOmega(es)
+            return self.__dPhi_dEdOmega(es)

@@ -11,10 +11,12 @@ Parameters relevant to computing constraints from gamma ray experiments.
 
 # Get paths to files inside the module
 gr_data_dir = "gamma_ray_data/"
+
 # Gamma-ray observations
 egret_obs_rf = resource_filename(__name__, gr_data_dir + "egret_obs.dat")
 comptel_obs_rf = resource_filename(__name__, gr_data_dir + "comptel_obs.dat")
 fermi_obs_rf = resource_filename(__name__, gr_data_dir + "fermi_obs.dat")
+
 # Resources
 A_eff_e_astrogam_rf = resource_filename(
     __name__, gr_data_dir + "e-astrogam_effective_area.dat"
@@ -25,6 +27,10 @@ A_eff_comptel_rf = resource_filename(
 A_eff_egret_rf = resource_filename(__name__, gr_data_dir + "egret_effective_area.dat")
 A_eff_fermi_rf = resource_filename(__name__, gr_data_dir + "fermi_effective_area.dat")
 A_eff_gecco_rf = resource_filename(__name__, gr_data_dir + "gecco_effective_area.dat")
+A_eff_adept_rf = resource_filename(__name__, gr_data_dir + "adept_effective_area.dat")
+A_eff_amego_rf = resource_filename(__name__, gr_data_dir + "amego_effective_area.dat")
+A_eff_mast_rf = resource_filename(__name__, gr_data_dir + "mast_effective_area.dat")
+A_eff_pangu_rf = resource_filename(__name__, gr_data_dir + "pangu_effective_area.dat")
 
 e_astrogam_energy_res_rf = resource_filename(
     __name__, gr_data_dir + ("e-astrogam_energy_resolution.dat")
@@ -32,9 +38,16 @@ e_astrogam_energy_res_rf = resource_filename(
 gecco_energy_res_rf = resource_filename(
     __name__, gr_data_dir + "gecco_energy_resolution.dat"
 )
+amego_energy_res_rf = resource_filename(
+    __name__, gr_data_dir + "amego_energy_resolution.dat"
+)
+mast_energy_res_rf = resource_filename(
+    __name__, gr_data_dir + "mast_energy_resolution.dat"
+)
 gecco_large_energy_res_rf = resource_filename(
     __name__, gr_data_dir + "gecco_large_energy_resolution.dat"
 )
+
 # Complex background model
 gc_bg_model_rf = resource_filename(__name__, gr_data_dir + "gc_bg_model.dat")
 
@@ -118,7 +131,7 @@ gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
 # EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
 # the lowest energy for which e-ASTROGAM has nonzero effective area.
-default_bg_model = BackgroundModel([0.299, 10.0e3], lambda e: 2.74e-3 / e ** 2)
+default_bg_model = BackgroundModel([0., 10.0e3], lambda e: 2.74e-3 / e ** 2)
 
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
@@ -191,7 +204,35 @@ A_eff_e_astrogam = load_interp(
 A_eff_fermi = load_interp(A_eff_fermi_rf)  #: Fermi-LAT effective area function
 A_eff_comptel = load_interp(A_eff_comptel_rf)  #: COMPTEL effective area function
 A_eff_egret = load_interp(A_eff_egret_rf)  #: EGRET effective area function
-A_eff_gecco = load_interp(A_eff_gecco_rf)  #: Fermi-LAT effective area function
+A_eff_gecco = load_interp(A_eff_gecco_rf)  #: GECCO effective area function
+A_eff_adept = load_interp(A_eff_adept_rf)  #: AdEPT effective area function
+A_eff_amego = load_interp(A_eff_amego_rf)  #: AMEGO effective area function
+A_eff_mast = load_interp(A_eff_mast_rf)  #: MAST effective area function
+A_eff_pangu = load_interp(A_eff_pangu_rf)  #: PANGU effective area function
+
+
+def energy_res_adept(e):
+    """
+    AdEPT energy resolution. See arXiv1311.2059. The energy dependence is not
+    given.
+    """
+
+    def _res(e):
+        return 0.3
+
+    return np.vectorize(_res)(e)
+
+
+def energy_res_pangu(e):
+    """
+    PANGU energy resolution. https://doi.org/10.22323/1.246.0069. There is not
+    much energy dependence.
+    """
+
+    def _res(e):
+        return 0.4
+
+    return np.vectorize(_res)(e)
 
 
 def energy_res_comptel(e):
@@ -200,7 +241,11 @@ def energy_res_comptel(e):
     Taken from `ch. II, page 11
     <http://wwwgro.unh.edu/users/ckappada/thesis_stuff/thesis.html>`_.
     """
-    return 0.05
+
+    def _res(e):
+        return 0.05
+
+    return np.vectorize(_res)(e)
 
 
 def energy_res_egret(e):
@@ -209,7 +254,11 @@ def energy_res_egret(e):
     This is the most optimistic value, taken from
     `sec. 4.3.3 <http://adsabs.harvard.edu/doi/10.1086/191793>`_.
     """
-    return 0.18
+
+    def _res(e):
+        return 0.18
+
+    return np.vectorize(_res)(e)
 
 
 def energy_res_fermi(e):
@@ -218,7 +267,11 @@ def energy_res_fermi(e):
     This is the average of the most optimistic normal and 60deg off-axis values
     from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
     """
-    return 0.075
+
+    def _res(e):
+        return 0.075
+
+    return np.vectorize(_res)(e)
 
 
 #: e-ASTROGAM energy resolution function. From table 1 of the `e-ASTROGAM
@@ -228,6 +281,8 @@ energy_res_gecco = load_interp(gecco_energy_res_rf, fill_value="extrapolate")
 energy_res_gecco_large = load_interp(
     gecco_large_energy_res_rf, fill_value="extrapolate"
 )
+energy_res_amego = load_interp(amego_energy_res_rf, fill_value="extrapolate")
+energy_res_mast = load_interp(mast_energy_res_rf, fill_value="extrapolate")
 
 # Approximate observing time for e-ASTROGAM in seconds
 T_obs_e_astrogam = 365.0 * 24.0 * 60.0 ** 2

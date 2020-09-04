@@ -45,6 +45,11 @@ rho_crit = 1.05375e-2  # Critical energy density in units of h^2 MeV / cm^3
 sm_entropy_density_today = 2891.2  # Entropy density today in units of cm^-3
 omega_h2_cdm = 0.1198  # Dark matter energy fraction times h^2
 
+g_to_MeV = 5.61e26
+MeV_to_g = 1 / g_to_MeV
+Msun_to_g = 1.988e33
+g_to_Msun = 1 / Msun_to_g
+
 # Charges
 Qu = 2.0 / 3.0
 Qd = -1.0 / 3.0

@@ -248,12 +248,10 @@ class TheoryGammaRayLimits:
             elif e_b_0 < e_min:
                 return np.inf
         else:
-            # Energy at which spectrum peaks.
-            e_dnde_max = optimize.minimize(
-                dnde_conv,
-                0.5 * (e_min + e_max),
-                bounds=[[e_min * (1 + 1e-8), e_max * (1 - 1e-8)]],
-            ).x[0]
+            # Find energy at which spectrum peaks
+            e_grid = np.geomspace(e_min, e_max, 5)
+            idx_e_dnde_max = np.argmax(dnde_conv(e_grid))
+            e_dnde_max = e_grid[idx_e_dnde_max]
 
             # If there's a peak, include it in the initial energy window.
             if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-5) or np.isclose(
