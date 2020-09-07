@@ -44,6 +44,9 @@ plank_mass = 1.22091e22  # MeV
 rho_crit = 1.05375e-2  # Critical energy density in units of h^2 MeV / cm^3
 sm_entropy_density_today = 2891.2  # Entropy density today in units of cm^-3
 omega_h2_cdm = 0.1198  # Dark matter energy fraction times h^2
+sin_theta_weak_sqrd = 0.22290
+sin_theta_weak = np.sqrt(sin_theta_weak_sqrd)
+cos_theta_weak = np.sqrt(1.0 - sin_theta_weak_sqrd)
 
 g_to_MeV = 5.61e26
 MeV_to_g = 1 / g_to_MeV
@@ -170,7 +173,7 @@ def spec_res_fn(ep, e, energy_res):
         return (
             1.0
             / np.sqrt(2.0 * np.pi * sigma ** 2)
-            * np.exp(-(ep - e) ** 2 / (2.0 * sigma ** 2))
+            * np.exp(-((ep - e) ** 2) / (2.0 * sigma ** 2))
         )
 
 
@@ -219,7 +222,9 @@ def convolved_spectrum_fn(
                 """
                 spec_res_fn_vals = spec_res_fn(es_padded, e, energy_res)
                 integrand_vals = (
-                    dnde_src * spec_res_fn_vals / trapz(spec_res_fn_vals, es_padded)
+                    dnde_src
+                    * spec_res_fn_vals
+                    / trapz(spec_res_fn_vals, es_padded)
                 )
 
                 return trapz(integrand_vals, es_padded)
