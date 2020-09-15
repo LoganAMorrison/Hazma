@@ -184,8 +184,7 @@ cdef double __get_mass(vector[double] fv) nogil:
     mass : double
         Mass of four-vector.
     """
-    return sqrt(pow(fv[0], 2.) - \
-        pow(fv[1], 2.) - pow(fv[2], 2.) - pow(fv[3], 2.))
+    return sqrt(pow(fv[0], 2.) - pow(fv[1], 2.) - pow(fv[2], 2.) - pow(fv[3], 2.))
 
 
 @cython.boundscheck(False)

@@ -5,8 +5,13 @@
 # date : December 2017
 
 from hazma import rambo
-from hazma.gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
-from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
+from hazma.gamma_ray_helper_functions.gamma_ray_generator import (
+    gamma,
+    gamma_point,
+)
+from hazma.field_theory_helper_functions.common_functions import (
+    cross_section_prefactor,
+)
 import numpy as np
 
 
@@ -206,7 +211,10 @@ def gamma_ray_fsr(
     """
     if len(isp_masses) == 1:
         cross_section = rambo.compute_decay_width(
-            num_ps_pts, fsp_masses[0:-1], cme, mat_elem_sqrd=mat_elem_sqrd_tree
+            fsp_masses[0:-1],
+            cme,
+            mat_elem_sqrd=mat_elem_sqrd_tree,
+            num_ps_pts=num_ps_pts,
         )[0]
 
         pre_factor = 1.0 / (2.0 * cme)
