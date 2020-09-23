@@ -3,6 +3,7 @@ This file contains the mixin class which implements the partial widths of the
 right-handed neutrino.
 """
 from hazma.parameters import (
+    qe,
     GF,
     fpi,
     Vud,
@@ -15,44 +16,7 @@ from hazma.parameters import (
 )
 from scipy.integrate import quad
 import numpy as np
-
-# Load data for N -> gamma + nu
-import os
-
-_this_dir, _ = os.path.split(__file__)
-
-_data_n_to_g_nue = np.log10(
-    np.genfromtxt(
-        os.path.join(_this_dir, "msqrd_n_to_g_nue.csv"),
-        skip_header=1,
-        delimiter=",",
-    )
-).T
-_data_n_to_g_num = np.log10(
-    np.genfromtxt(
-        os.path.join(_this_dir, "msqrd_n_to_g_numu.csv"),
-        skip_header=1,
-        delimiter=",",
-    )
-).T
-_data_fit_n_to_g_nu = np.genfromtxt(
-    os.path.join(_this_dir, "msqrd_n_to_g_nu_fit.csv"),
-    skip_header=1,
-    delimiter=",",
-)
-
-_mx_min_n_to_g_nu = _data_n_to_g_nue[0][0]
-_mx_max_n_to_g_nu = _data_n_to_g_nue[0][-1]
-
-_small_mx_int_nue = _data_fit_n_to_g_nu[0]
-_small_mx_slo_nue = _data_fit_n_to_g_nu[1]
-_large_mx_int_nue = _data_fit_n_to_g_nu[2]
-_large_mx_slo_nue = _data_fit_n_to_g_nu[3]
-
-_small_mx_int_num = _data_fit_n_to_g_nu[4]
-_small_mx_slo_num = _data_fit_n_to_g_nu[5]
-_large_mx_int_num = _data_fit_n_to_g_nu[6]
-_large_mx_slo_num = _data_fit_n_to_g_nu[7]
+import mpmath as mp
 
 
 # =======================
@@ -70,28 +34,17 @@ def width_pi0_nu(self):
     width: float
         Partial width for N -> pi^0 + nu.
     """
-    mvr = self.mx
-    stheta = self.stheta
-    if mvr < mpi0:
+    mx = self.mx
+    smix = self.stheta
+    if mx < mpi0:
         return 0.0
-    return -(
+    return (
         fpi ** 2
         * GF ** 2
-        * stheta ** 2
-        * (
-            mvr ** 2 * (1 - 2 * stheta ** 2) ** 2
-            - mpi0 ** 2 * (-1 + stheta ** 2) ** 2
-        )
-        * np.sqrt(
-            -((mvr ** 2 * stheta ** 4) / (-1 + stheta ** 2) ** 2)
-            + (
-                mpi0 ** 2
-                - mvr ** 2 * (1 + stheta ** 4 / (-1 + stheta ** 2) ** 2)
-            )
-            ** 2
-            / (4.0 * mvr ** 2)
-        )
-    ) / (4.0 * cw ** 2 * np.pi * (-1 + stheta ** 2) ** 3)
+        * (mx ** 2 - mpi0 ** 2) ** 2
+        * smix ** 2
+        * (-1 + smix ** 2)
+    ) / (8.0 * mx * np.pi * (-1 + sw ** 2))
 
 
 def width_pi_l(self):
@@ -105,28 +58,25 @@ def width_pi_l(self):
     width: float
         Partial width for N -> pi + l.
     """
-    mvr = self.mx
-    stheta = self.stheta
+    mx = self.mx
+    smix = self.stheta
     ml = self.ml
 
-    if mvr < mpi + ml:
+    if mx < mpi + ml:
         return 0.0
     return (
         fpi ** 2
         * GF ** 2
         * np.sqrt(
-            -(ml ** 2)
-            + (ml ** 2 - mpi ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
+            (ml - mx - mpi)
+            * (ml + mx - mpi)
+            * (ml - mx + mpi)
+            * (ml + mx + mpi)
         )
-        * (
-            ml ** 4
-            - mpi ** 2 * mvr ** 2
-            + mvr ** 4
-            - ml ** 2 * (mpi ** 2 + 2 * mvr ** 2)
-        )
-        * stheta ** 2
+        * ((ml ** 2 - mx ** 2) ** 2 - (ml ** 2 + mx ** 2) * mpi ** 2)
+        * smix ** 2
         * Vud ** 2
-    ) / (4.0 * mvr ** 2 * np.pi)
+    ) / (8.0 * mx ** 3 * np.pi)
 
 
 def width_k_l(self):
@@ -140,24 +90,23 @@ def width_k_l(self):
     width: float
         Partial width for N -> K + l.
     """
-    mvr = self.mx
-    stheta = self.stheta
+    mx = self.mx
+    smix = self.stheta
     ml = self.ml
 
-    if mvr < mk + ml:
+    if mx < mk + ml:
         return 0.0
 
-    return -(
+    return (
         fpi ** 2
         * GF ** 2
-        * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
         * np.sqrt(
-            -(ml ** 2)
-            + (-(mk ** 2) + ml ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
+            (mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx)
         )
-        * stheta ** 2
+        * ((ml ** 2 - mx ** 2) ** 2 - mk ** 2 * (ml ** 2 + mx ** 2))
+        * smix ** 2
         * Vus ** 2
-    ) / (4.0 * mvr ** 2 * np.pi)
+    ) / (8.0 * mx ** 3 * np.pi)
 
 
 def width_nu_gamma(self):
@@ -172,31 +121,10 @@ def width_nu_gamma(self):
 
     """
     mx = self.mx
-    logmx = np.log10(mx)
-    stheta = self.stheta
-    lepton = self.lepton
-
-    if _mx_min_n_to_g_nu < mx < _mx_max_n_to_g_nu:
-        if lepton == "e":
-            msqrd = 10 ** np.interp(
-                logmx, _data_n_to_g_nue[0], _data_n_to_g_nue[1]
-            )
-        else:
-            msqrd = 10 ** np.interp(
-                logmx, _data_n_to_g_num[0], _data_n_to_g_num[1]
-            )
-    elif mx < _mx_min_n_to_g_nu:
-        if lepton == "e":
-            msqrd = 10 ** (_small_mx_int_nue + _small_mx_slo_nue * logmx)
-        else:
-            msqrd = 10 ** (_small_mx_int_num + _small_mx_slo_num * logmx)
-    else:
-        if lepton == "e":
-            msqrd = 10 ** (_large_mx_int_nue + _large_mx_slo_nue * logmx)
-        else:
-            msqrd = 10 ** (_large_mx_int_num + _large_mx_slo_num * logmx)
-
-    return stheta ** 2 * msqrd / (16.0 * mx * np.pi)
+    smix = self.stheta
+    return -(
+        GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2
+    ) / (4096.0 * np.pi ** 9 * (-1 + smix ** 2))
 
 
 # =======================
@@ -230,41 +158,29 @@ def width_nu_pi_pi(self):
     width: float
         Partial decay with for N -> nu + pi^+ + pi^-.
     """
-    MN = self.mx
-    stheta = self.stheta
-    if MN < 2.0 * mpi:
+    mx = self.mx
+    smix = self.stheta
+    if mx < 2.0 * mpi:
         return 0.0
     return (
         GF ** 2
-        * stheta ** 2
-        * (-1 + stheta ** 2)
-        * (1 - 2 * sw ** 2) ** 2
+        * (-1 + smix ** 2)
+        * (smix - 2 * smix * sw ** 2) ** 2
         * (
-            np.sqrt(MN ** 4 - 4 * MN ** 2 * mpi ** 2)
+            mx ** 2
+            * np.sqrt(1 - (4 * mpi ** 2) / mx ** 2)
             * (
-                MN ** 6
-                + 24 * MN ** 4 * mpi ** 2
-                - 10 * MN ** 2 * mpi ** 4
+                mx ** 6
+                + 24 * mx ** 4 * mpi ** 2
+                - 10 * mx ** 2 * mpi ** 4
                 + 12 * mpi ** 6
             )
-            + 6
+            - 24
             * mpi ** 2
-            * (MN ** 6 + 2 * MN ** 2 * mpi ** 4 - 2 * mpi ** 6)
-            * np.log(
-                (
-                    MN ** 4
-                    + 2 * mpi ** 4
-                    + 2 * mpi ** 2 * np.sqrt(MN ** 4 - 4 * MN ** 2 * mpi ** 2)
-                    - MN ** 2
-                    * (
-                        4 * mpi ** 2
-                        + np.sqrt(MN ** 4 - 4 * MN ** 2 * mpi ** 2)
-                    )
-                )
-                / (2.0 * mpi ** 4)
-            )
+            * (mx ** 6 + 2 * mx ** 2 * mpi ** 4 - 2 * mpi ** 6)
+            * np.arctanh(np.sqrt(1 - (4 * mpi ** 2) / mx ** 2))
         )
-    ) / (768.0 * MN ** 3 * np.pi ** 3 * (-1 + sw ** 2))
+    ) / (768.0 * mx ** 3 * np.pi ** 3 * (-1 + sw ** 2))
 
 
 def width_l_pi_pi0(self):
@@ -280,95 +196,68 @@ def width_l_pi_pi0(self):
     """
     # TODO: Get Mathematica to compute width analytically.
 
-    MN = self.mx
-    Ml = self.ml
+    mx = self.mx
+    ml = self.ml
     smix = self.stheta
 
-    if MN < Ml + mpi + mpi0:
+    if mx < ml + mpi + mpi0:
         return 0.0
 
     def integrand(s):
-        """
-        Returns the squared matrix element integrated over the Mandelstam
-        variable t.
-        """
+        """Returns the integrand s integral"""
         return (
             -2
             * GF ** 2
             * np.sqrt(
-                Ml ** 4 + (MN ** 2 - s) ** 2 - 2 * Ml ** 2 * (MN ** 2 + s)
-            )
-            * np.sqrt(
-                mpi ** 4
-                + (mpi0 ** 2 - s) ** 2
-                - 2 * mpi ** 2 * (mpi0 ** 2 + s)
-            )
-            * (
-                MN ** 2
-                * s
-                * (
-                    -2 * mpi ** 4
-                    - 2 * mpi0 ** 4
-                    + mpi ** 2 * (4 * mpi0 ** 2 - 2 * s)
-                    - 2 * mpi0 ** 2 * s
-                    + s ** 2
-                )
-                - 2
-                * s ** 2
+                (ml ** 4 + (mx ** 2 - s) ** 2 - 2 * ml ** 2 * (mx ** 2 + s))
                 * (
                     mpi ** 4
                     + (mpi0 ** 2 - s) ** 2
                     - 2 * mpi ** 2 * (mpi0 ** 2 + s)
                 )
-                + Ml ** 4
+            )
+            * (
+                ml ** 4
                 * (
-                    4 * mpi ** 4
-                    + 4 * mpi0 ** 4
-                    - 2 * mpi0 ** 2 * s
-                    + s ** 2
-                    - 2 * mpi ** 2 * (4 * mpi0 ** 2 + s)
+                    -4 * (mpi ** 2 - mpi0 ** 2) ** 2
+                    + 2 * (mpi ** 2 + mpi0 ** 2) * s
+                    - s ** 2
                 )
-                + MN ** 4
-                * (
-                    4 * mpi ** 4
-                    + 4 * mpi0 ** 4
-                    - 2 * mpi0 ** 2 * s
-                    + s ** 2
-                    - 2 * mpi ** 2 * (4 * mpi0 ** 2 + s)
-                )
-                + Ml ** 2
+                + ml ** 2
                 * (
                     s
                     * (
-                        -2 * mpi ** 4
-                        - 2 * mpi0 ** 4
-                        + mpi ** 2 * (4 * mpi0 ** 2 - 2 * s)
-                        - 2 * mpi0 ** 2 * s
-                        + s ** 2
+                        2 * (mpi ** 2 - mpi0 ** 2) ** 2
+                        + 2 * (mpi ** 2 + mpi0 ** 2) * s
+                        - s ** 2
                     )
-                    - 2
-                    * MN ** 2
+                    + 2
+                    * mx ** 2
                     * (
-                        4 * mpi ** 4
-                        + 4 * mpi0 ** 4
-                        - 2 * mpi0 ** 2 * s
+                        4 * (mpi ** 2 - mpi0 ** 2) ** 2
+                        - 2 * (mpi ** 2 + mpi0 ** 2) * s
                         + s ** 2
-                        - 2 * mpi ** 2 * (4 * mpi0 ** 2 + s)
                     )
+                )
+                - (mx ** 2 - s)
+                * (
+                    mx ** 2
+                    * (
+                        4 * (mpi ** 2 - mpi0 ** 2) ** 2
+                        - 2 * (mpi ** 2 + mpi0 ** 2) * s
+                        + s ** 2
+                    )
+                    + 2 * s * (mpi ** 4 + (mpi0 ** 2 - s) ** 2)
                 )
             )
             * smix ** 2
             * Vud ** 2
         ) / (3.0 * s ** 3)
 
-    # Measure associated with ds*dt
-    measure = 1.0 / (16.0 * MN ** 2 * (2.0 * np.pi) ** 3)
-    width_pre = 1.0 / (2.0 * MN) * measure
-    # Integration bounds
-    ub = (MN - Ml) ** 2
-    lb = (mpi + mpi0) ** 2
+    lb, ub = (mpi + mpi0) ** 2, (ml - mx) ** 2
+    pre = 1 / (256.0 * mx ** 3 * np.pi ** 3)
 
-    return -width_pre * quad(integrand, lb, ub)[0]
+    return pre * quad(integrand, lb, ub)[0]
 
 
 def width_nu_nu_nu(self):
@@ -380,9 +269,9 @@ def width_nu_nu_nu(self):
     width: float
         Partial width for N -> 3nu.
     """
-    MN = self.mx
-    stheta = self.stheta
-    return -(GF ** 2 * MN ** 5 * stheta ** 2 * (-1 + stheta ** 2) ** 3) / (
+    mx = self.mx
+    smix = self.stheta
+    return -(GF ** 2 * mx ** 5 * smix ** 2 * (-1 + smix ** 2) ** 3) / (
         32.0 * np.pi ** 3
     )
 
@@ -397,57 +286,52 @@ def width_nu_l_l(self):
     width: float
         Partial width for N -> nu + l + l.
     """
-    MN = self.mx
-    Ml = self.ml
+    mx = self.mx
+    ml = self.ml
 
-    if MN < 2.0 * Ml:
+    if mx < 2.0 * ml:
         return 0.0
 
-    stheta = self.stheta
+    smix = self.stheta
 
-    width = (
-        GF ** 2
-        * stheta ** 2
-        * (-1 + stheta ** 2)
+    return (
+        -(GF ** 2)
+        * smix ** 2
         * (
-            MN
-            * np.sqrt(-4 * Ml ** 2 + MN ** 2)
+            mx
+            * np.sqrt(-4 * ml ** 2 + mx ** 2)
             * (
-                -(MN ** 6 * (1 + 4 * sw ** 2 + 8 * sw ** 4))
-                + 12 * Ml ** 6 * (1 + 12 * sw ** 2 + 24 * sw ** 4)
-                + 2 * Ml ** 2 * MN ** 4 * (7 + 20 * sw ** 2 + 40 * sw ** 4)
-                - 2 * Ml ** 4 * MN ** 2 * (-1 + 36 * sw ** 2 + 72 * sw ** 4)
+                -(mx ** 6 * (1 + 4 * sw ** 2 + 8 * sw ** 4))
+                + 12 * ml ** 6 * (1 + 12 * sw ** 2 + 24 * sw ** 4)
+                + 2 * ml ** 2 * mx ** 4 * (7 + 20 * sw ** 2 + 40 * sw ** 4)
+                - 2 * ml ** 4 * mx ** 2 * (-1 + 36 * sw ** 2 + 72 * sw ** 4)
             )
-            + 12
-            * Ml ** 4
-            * MN ** 4
-            * np.log(
-                1
-                + (MN ** 3 * (MN - np.sqrt(-4 * Ml ** 2 + MN ** 2)))
-                / (2.0 * Ml ** 4)
-                + (MN * (-2 * MN + np.sqrt(-4 * Ml ** 2 + MN ** 2))) / Ml ** 2
-                + 0.0j
-            )
-            + 12
-            * Ml ** 6
+            - 48
             * (
-                -8 * MN ** 2 * sw ** 2 * (1 + 2 * sw ** 2)
-                + Ml ** 2 * (1 + 12 * sw ** 2 + 24 * sw ** 4)
+                -(ml ** 4 * mx ** 4)
+                - 8 * ml ** 6 * mx ** 2 * sw ** 2 * (1 + 2 * sw ** 2)
+                + ml ** 8 * (1 + 12 * sw ** 2 + 24 * sw ** 4)
             )
-            * np.log(
-                (2 * Ml ** 4)
-                / (
-                    2 * Ml ** 4
-                    + MN ** 3 * (MN - np.sqrt(-4 * Ml ** 2 + MN ** 2))
-                    + 2
-                    * Ml ** 2
-                    * MN
-                    * (-2 * MN + np.sqrt(-4 * Ml ** 2 + MN ** 2))
-                )
-                + 0.0j
-            )
+            * np.log((2 * ml) / (mx + np.sqrt(-4 * ml ** 2 + mx ** 2)))
         )
-    ) / (384.0 * MN ** 3 * np.pi ** 3)
+    ) / (192.0 * mx ** 3 * np.pi ** 3)
 
-    return np.real(width)
 
+def width_nu_g_g(self):
+    """
+    Compute the width for a right-handed neutrino to decay into an active
+    neutrino and an off-shell pion which decays into two photons.
+    """
+    mx = self.mx
+
+    # Return zero if we can go into an on-shell pion
+    if mx > mpi0:
+        return 0.0
+
+    smix = self.stheta
+
+    return (GF ** 2 * mx ** 11 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)) / (
+        245760.0 * mpi0 ** 6 * np.pi ** 7 * (-1 + sw ** 2)
+    ) + (GF ** 2 * mx ** 9 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)) / (
+        245760.0 * mpi0 ** 4 * np.pi ** 7 * (-1 + sw ** 2)
+    )

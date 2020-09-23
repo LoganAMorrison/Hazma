@@ -68,20 +68,26 @@ class RHNeutrino(TheoryDec):
         width_l_pi_pi0,
         width_nu_nu_nu,
         width_nu_l_l,
+        width_nu_g_g,
     )
 
     from ._rh_neutrino_matrix_elements import (
         msqrd_nu_l_l,
         msqrd_nu_l_l_g,
-        msqrd_pi_pi0_l,
-        msqrd_pi_pi0_l_g,
+        msqrd_l_pi_pi0,
+        msqrd_l_pi_pi0_g,
+        msqrd_nu_pi_pi,
+        msqrd_nu_pi_pi_g,
     )
 
     from ._rh_neutrino_fsr import (
+        _dnde_pi_l_fsr,
         dnde_pi_l_fsr,
+        _dnde_k_l_fsr,
         dnde_k_l_fsr,
         dnde_nu_l_l_fsr,
-        dnde_pi_pi0_l_fsr,
+        dnde_l_pi_pi0_fsr,
+        dnde_nu_pi_pi_fsr,
     )
 
     from ._rh_neutrino_spectra import (
@@ -89,8 +95,11 @@ class RHNeutrino(TheoryDec):
         dnde_pi_l,
         dnde_k_l,
         dnde_nu_l_l,
-        dnde_pi_pi0_l,
+        dnde_l_pi_pi0,
+        dnde_nu_pi_pi,
+        dnde_nu_g_g,
     )
+
     from ._rh_neutrino_positron_spectrum import dnde_pos_pi_l
 
     def __init__(self, mx, stheta, lepton="e", include_3body=False):
@@ -114,11 +123,11 @@ class RHNeutrino(TheoryDec):
         self._mx = mx
         self.include_3body = include_3body
 
-        self.lepton = lepton
+        self._lepton = lepton
         if lepton == "e":
-            self.ml = me
+            self._ml = me
         elif lepton == "mu":
-            self.ml = mmu
+            self._ml = mmu
         else:
             raise ValueError(
                 "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
@@ -126,7 +135,7 @@ class RHNeutrino(TheoryDec):
 
     def list_decay_final_states(self):
         """
-        Returns a list of the 
+        Returns a list of the availible final states.
         """
         return ["pi l", "pi0 nu", "k l"]
 
@@ -138,11 +147,12 @@ class RHNeutrino(TheoryDec):
             "pi l": self.width_pi_l(),
             "pi0 nu": self.width_pi0_nu(),
             "k l": self.width_k_l(),
-            "pi pi nu": self.width_nu_pi_pi(),
-            "pi pi0 l": self.width_l_pi_pi0(),
+            "nu pi pi": self.width_nu_pi_pi(),
+            "l pi pi0": self.width_l_pi_pi0(),
             "nu nu nu": self.width_nu_nu_nu(),
             "nu l l": self.width_nu_l_l(),
             "nu g": self.width_nu_gamma(),
+            "nu g g": self.width_nu_g_g(),
         }
 
     def _spectrum_funcs(self):
@@ -150,28 +160,14 @@ class RHNeutrino(TheoryDec):
         Gets a function taking a photon energy and returning the continuum
         gamma ray spectrum dN/dE for each relevant decay final state.
         """
-
-        def dnde_pi_l(es):
-            return self.dnde_pi_l(es)
-
-        def dnde_pi0_nu(es):
-            return self.dnde_nu_pi0(es)
-
-        def dnde_k_l(es):
-            return self.dnde_k_l(es)
-
-        def dnde_nu_l_l(es):
-            return self.dnde_nu_l_l(es)
-
-        def dnde_pi_pi0_l(es):
-            return self.dnde_pi_pi0_l(es)
-
         return {
-            "pi l": dnde_pi_l,
-            "pi0 nu": dnde_pi0_nu,
-            "k l": dnde_k_l,
-            "nu l l": dnde_nu_l_l,
-            "pi pi0 l": dnde_pi_pi0_l,
+            "pi l": self.dnde_pi_l,
+            "pi0 nu": self.dnde_nu_pi0,
+            "k l": self.dnde_k_l,
+            "nu l l": self.dnde_nu_l_l,
+            "l pi pi0": self.dnde_l_pi_pi0,
+            "nu pi pi": self.dnde_nu_pi_pi,
+            "nu g g": self.dnde_nu_g_g,
         }
 
     def _gamma_ray_line_energies(self):
@@ -214,6 +210,7 @@ class RHNeutrino(TheoryDec):
         val: float
             New right-handed neutrino mass.
         """
+        self._recompute_widths = True
         self._mx = val
 
     @property
@@ -235,3 +232,43 @@ class RHNeutrino(TheoryDec):
             New mixing angle.
         """
         self._stheta = val
+
+    @property
+    def lepton(self):
+        """
+        Return a string specifying the lepton flavor which the RH-neutrino
+        mixes with.
+        """
+        return self._lepton
+
+    @lepton.setter
+    def lepton(self, val):
+        """
+        Specify the lepton flavor which the RH-neutrino mixes with. Options
+        are "e" or "mu".
+
+        Parameters
+        ----------
+        val: str
+           Lepton flavor. Options are "e" or "mu".
+        """
+        if val in ["e", "mu"]:
+            self._lepton = val
+            self._ml = me if val == "e" else mmu
+        else:
+            raise ValueError(f"Invalid lepton {val}. Use 'e' or 'mu'")
+
+    @property
+    def ml(self):
+        """
+        Return the mass of the lepton associated with the neutrino the RH
+        neutrino mixes with.
+        """
+        return self._ml
+
+    @ml.setter
+    def ml(self, val):
+        raise ValueError(
+            "Cannot set the lepton mass. Specify 'lepton' instead."
+        )
+

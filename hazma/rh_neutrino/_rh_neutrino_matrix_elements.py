@@ -12,493 +12,625 @@ from hazma.parameters import (
     sin_theta_weak as sw,
     charged_pion_mass as mpi,
     neutral_pion_mass as mpi0,
+    vh as vev,
 )
-from hazma.field_theory_helper_functions.common_functions import (
-    minkowski_dot as MDot,
-)
+from hazma.field_theory_helper_functions.common_functions import minkowski_dot as LDot
+
+MW = 80.379e3
+MH = 125.10e3
 
 
-def msqrd_pi_pi0_l(self, momenta):
+def msqrd_nu_pi_pi(self, momenta):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
-    charged pion, a neutral pion and a charged-lepton at leading order in the
-    Fermi constant.
+    neutrino and two charged pions at leading order in the Fermi constant.
+    Momenta are ordered as follows: {nu,pi+,pi-}.
 
     Parameters
     ----------
     momenta: List
-        List of NumPy arrays storing the four-momenta of the charged pion,
-        neutral pion and charged lepton.
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
 
     Returns
     -------
     msqrd: float
-        The matrix element for N->pi + pi^0 + l for the given model and
+        The matrix element for N -> nu + pi + pi for the given model and
+        four-momenta.
+    """
+    smix = self.stheta
+    mx = self.mx
+
+    pnu = momenta[0]
+    ppip = momenta[1]
+    ppim = momenta[2]
+    P = pnu + ppim + ppip
+
+    s = LDot(P - pnu, P - pnu)
+    t = LDot(P - ppip, P - ppip)
+
+    return (
+        qe ** 4
+        * (-1 + smix ** 2)
+        * (smix - 2 * smix * sw ** 2) ** 2
+        * (
+            mx ** 4
+            - mx ** 2 * (s + 4 * t)
+            + 4 * (mpi ** 4 - 2 * mpi ** 2 * t + t * (s + t))
+        )
+    ) / (16.0 * MW ** 4 * sw ** 4 * (-1 + sw ** 2))
+
+
+def msqrd_nu_pi_pi_g(self, momenta):
+    """
+    Compute the squared matrix-element for a RH neutrino decaying into a
+    neutrino, two charged pions and a photon at leading order in the Fermi
+    constant. Momenta are ordered as follows: {nu,pi+,pi-,photon}.
+
+    Parameters
+    ----------
+    momenta: List
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
+
+    Returns
+    -------
+    msqrd: float
+        The matrix element for N -> nu + pi + pi + gamma for the given model
+        and four-momenta.
+    """
+    k1 = momenta[0]
+    k2 = momenta[1]
+    k3 = momenta[2]
+    k4 = momenta[3]
+
+    smix = self.stheta
+
+    return (
+        -16
+        * GF ** 2
+        * qe ** 2
+        * (-1 + smix ** 2)
+        * (smix - 2 * smix * sw ** 2) ** 2
+        * (
+            LDot(k1, k2) ** 2
+            * (
+                mpi ** 2 * LDot(k2, k4) ** 2
+                - 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
+                + mpi ** 2 * LDot(k3, k4) ** 2
+            )
+            + LDot(k1, k3) ** 2
+            * (
+                mpi ** 2 * LDot(k2, k4) ** 2
+                - 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
+                + mpi ** 2 * LDot(k3, k4) ** 2
+            )
+            + LDot(k1, k2)
+            * (
+                mpi ** 2 * LDot(k2, k4) ** 3
+                + mpi ** 2
+                * LDot(k3, k4) ** 2
+                * (
+                    -(mpi ** 2)
+                    - 2 * LDot(k1, k3)
+                    + 2 * LDot(k1, k4)
+                    + LDot(k2, k3)
+                    + LDot(k3, k4)
+                )
+                - LDot(k2, k4) ** 2
+                * (
+                    mpi ** 4
+                    + 2 * mpi ** 2 * LDot(k1, k3)
+                    + 2 * mpi ** 2 * LDot(k1, k4)
+                    - mpi ** 2 * LDot(k2, k3)
+                    + 3 * mpi ** 2 * LDot(k3, k4)
+                    + 2 * LDot(k2, k3) * LDot(k3, k4)
+                )
+                + LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    -2 * LDot(k2, k3) ** 2
+                    + mpi ** 2 * LDot(k3, k4)
+                    + 2 * LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k1, k3) + LDot(k3, k4))
+                )
+            )
+            + LDot(k1, k4)
+            * (
+                mpi ** 2 * LDot(k2, k4) ** 3
+                + mpi ** 2
+                * LDot(k3, k4) ** 2
+                * (-(mpi ** 2) + LDot(k1, k4) + LDot(k2, k3) + LDot(k3, k4))
+                + LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    -2 * LDot(k2, k3) ** 2
+                    + mpi ** 2 * LDot(k3, k4)
+                    + 2 * LDot(k2, k3) * (mpi ** 2 + LDot(k1, k4) + LDot(k3, k4))
+                )
+                + LDot(k2, k4) ** 2
+                * (
+                    -(mpi ** 4)
+                    + mpi ** 2 * LDot(k1, k4)
+                    + mpi ** 2 * LDot(k3, k4)
+                    + LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k3, k4))
+                )
+            )
+            + LDot(k1, k3)
+            * (
+                mpi ** 2 * LDot(k2, k4) ** 3
+                + mpi ** 2
+                * LDot(k3, k4) ** 2
+                * (-(mpi ** 2) - 2 * LDot(k1, k4) + LDot(k2, k3) + LDot(k3, k4))
+                - LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    2 * LDot(k2, k3) ** 2
+                    - 2 * LDot(k2, k3) * (mpi ** 2 - LDot(k3, k4))
+                    + 3 * mpi ** 2 * LDot(k3, k4)
+                )
+                + LDot(k2, k4) ** 2
+                * (
+                    -(mpi ** 4)
+                    + 2 * mpi ** 2 * LDot(k1, k4)
+                    + mpi ** 2 * LDot(k3, k4)
+                    + LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k3, k4))
+                )
+            )
+        )
+    ) / ((-1 + sw ** 2) * LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
+
+
+def msqrd_l_pi_pi0(self, momenta):
+    """
+    Compute the squared matrix-element for a RH neutrino decaying into a
+    charged lepton, neutral pion and a charged pion at leading order in the
+    Fermi constant. Momenta are ordered as follows: {l+,pi-,pi0}
+
+    Parameters
+    ----------
+    momenta: List
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
+
+    Returns
+    -------
+    msqrd: float
+        The matrix element for N -> l + pi0 + pi for the given model and
         four-momenta.
     """
     pl = momenta[0]
     ppi = momenta[1]
     ppi0 = momenta[2]
     P = pl + ppi + ppi0
-    s = MDot(P - pl, P - pl)
-    t = MDot(P - ppi, P - ppi)
-    mvr = self.mx
+    s = LDot(P - pl, P - pl)
+    t = LDot(P - ppi, P - ppi)
+
     ml = self.ml
-    stheta = self.stheta
+    mx = self.mx
+    smix = self.stheta
 
     return (
         2
         * GF ** 2
-        * stheta ** 2
+        * smix ** 2
         * (
             ml ** 4
-            + mvr ** 4
-            - mvr ** 2 * s
-            + ml ** 2 * (2 * mvr ** 2 - s - 4 * t)
+            + mx ** 4
+            + ml ** 2 * (2 * mx ** 2 - s - 4 * t)
             + 4 * mpi ** 2 * (mpi0 ** 2 - t)
-            - 4 * mpi0 ** 2 * t
-            - 4 * mvr ** 2 * t
-            + 4 * s * t
-            + 4 * t ** 2
+            + 4 * t * (-(mpi0 ** 2) + s + t)
+            - mx ** 2 * (s + 4 * t)
         )
         * Vud ** 2
     )
 
 
-def msqrd_pi_pi0_l_g(self, momenta):
+def msqrd_l_pi_pi0_g(self, momenta):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
-    charged pion, a neutral pion, a charged-lepton and a photon at leading
-    order in the Fermi constant.
+    charged lepton, neutral pion, a charged pion and a photon at leading order
+    in the Fermi constant. Momenta are ordered as follows: {l-,pi+,pi0,photon}.
 
     Parameters
     ----------
     momenta: List
-        List of NumPy arrays storing the four-momenta of the charged pion,
-        neutral pion, charged lepton and the photon.
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
 
     Returns
     -------
     msqrd: float
-        The matrix element for N->pi + pi^0 + l + photon for the given model
+        The matrix element for N -> l + pi + pi0 + gamma for the given model
         and four-momenta.
     """
-    pl = momenta[0]
-    ppi = momenta[1]
-    ppi0 = momenta[2]
-    k = momenta[3]
+    k1 = momenta[0]
+    k2 = momenta[1]
+    k3 = momenta[2]
+    k4 = momenta[3]
 
-    Ml = self.ml
     smix = self.stheta
+    ml = self.ml
 
     return (
-        -4
+        -8
         * GF ** 2
         * qe ** 2
         * smix ** 2
         * Vud ** 2
         * (
-            2 * mpi ** 2 * MDot(k, pl) ** 4
-            + MDot(k, pl) ** 3
+            2 * mpi ** 2 * LDot(k1, k4) ** 4
+            + LDot(k1, k4) ** 3
             * (
-                -2 * MDot(k, ppi) ** 2
-                + MDot(k, ppi)
-                * (4 * mpi ** 2 - 4 * MDot(pl, ppi) - 6 * MDot(ppi, ppi0))
-                + mpi ** 2
-                * (
-                    mpi ** 2
-                    - 3 * mpi0 ** 2
-                    + 2 * MDot(k, ppi0)
-                    + 4 * MDot(pl, ppi)
-                    - 4 * MDot(pl, ppi0)
-                    + 2 * MDot(ppi, ppi0)
-                )
+                mpi ** 4
+                - 3 * mpi ** 2 * mpi0 ** 2
+                - 4 * mpi ** 2 * LDot(k1, k3)
+                + 2 * mpi ** 2 * LDot(k2, k3)
+                + 4 * LDot(k1, k2) * (mpi ** 2 - LDot(k2, k4))
+                + 4 * mpi ** 2 * LDot(k2, k4)
+                - 6 * LDot(k2, k3) * LDot(k2, k4)
+                - 2 * LDot(k2, k4) ** 2
+                + 2 * mpi ** 2 * LDot(k3, k4)
             )
-            + Ml ** 2
-            * MDot(k, ppi) ** 2
+            + ml ** 2
+            * LDot(k2, k4) ** 2
             * (
-                2 * MDot(k, ppi) ** 2
-                + 2 * MDot(k, ppi0) ** 2
-                + mpi ** 2 * MDot(pl, ppi)
-                - 3 * mpi0 ** 2 * MDot(pl, ppi)
-                + 2 * MDot(pl, ppi) ** 2
-                - 3 * mpi ** 2 * MDot(pl, ppi0)
-                + mpi0 ** 2 * MDot(pl, ppi0)
-                - 4 * MDot(pl, ppi) * MDot(pl, ppi0)
-                + 2 * MDot(pl, ppi0) ** 2
-                - Ml ** 2 * (mpi ** 2 + mpi0 ** 2 - 2 * MDot(ppi, ppi0))
-                + 2 * (MDot(pl, ppi) + MDot(pl, ppi0)) * MDot(ppi, ppi0)
-                + MDot(k, ppi)
+                -(ml ** 2 * mpi ** 2)
+                - ml ** 2 * mpi0 ** 2
+                + 2 * LDot(k1, k2) ** 2
+                + 2 * LDot(k1, k3) ** 2
+                + 2 * ml ** 2 * LDot(k2, k3)
+                + mpi ** 2 * LDot(k2, k4)
+                - 3 * mpi0 ** 2 * LDot(k2, k4)
+                + 2 * LDot(k2, k3) * LDot(k2, k4)
+                + 2 * LDot(k2, k4) ** 2
+                + LDot(k1, k2)
                 * (
                     mpi ** 2
                     - 3 * mpi0 ** 2
-                    - 4 * MDot(k, ppi0)
-                    + 4 * MDot(pl, ppi)
-                    - 4 * MDot(pl, ppi0)
-                    + 2 * MDot(ppi, ppi0)
+                    - 4 * LDot(k1, k3)
+                    + 2 * LDot(k2, k3)
+                    + 4 * LDot(k2, k4)
+                    - 4 * LDot(k3, k4)
                 )
-                + MDot(k, ppi0)
+                - 3 * mpi ** 2 * LDot(k3, k4)
+                + mpi0 ** 2 * LDot(k3, k4)
+                + 2 * LDot(k2, k3) * LDot(k3, k4)
+                - 4 * LDot(k2, k4) * LDot(k3, k4)
+                + 2 * LDot(k3, k4) ** 2
+                + LDot(k1, k3)
                 * (
                     -3 * mpi ** 2
                     + mpi0 ** 2
-                    - 4 * MDot(pl, ppi)
-                    + 4 * MDot(pl, ppi0)
-                    + 2 * MDot(ppi, ppi0)
+                    + 2 * LDot(k2, k3)
+                    - 4 * LDot(k2, k4)
+                    + 4 * LDot(k3, k4)
                 )
             )
-            - MDot(k, pl)
-            * MDot(k, ppi)
+            + LDot(k1, k4) ** 2
             * (
-                2 * MDot(k, ppi) ** 3
-                + MDot(k, ppi) ** 2
+                -(ml ** 2 * mpi ** 4)
+                - ml ** 2 * mpi ** 2 * mpi0 ** 2
+                + 2 * mpi ** 2 * LDot(k1, k3) ** 2
+                + 2 * ml ** 2 * mpi ** 2 * LDot(k2, k3)
+                + 2 * LDot(k1, k2) ** 2 * (mpi ** 2 - 4 * LDot(k2, k4))
+                + mpi ** 4 * LDot(k2, k4)
+                - 3 * mpi ** 2 * mpi0 ** 2 * LDot(k2, k4)
+                - 2 * ml ** 2 * LDot(k2, k3) * LDot(k2, k4)
+                - mpi ** 2 * LDot(k2, k3) * LDot(k2, k4)
+                + mpi0 ** 2 * LDot(k2, k3) * LDot(k2, k4)
+                + 2 * LDot(k2, k3) ** 2 * LDot(k2, k4)
+                + mpi ** 2 * LDot(k2, k4) ** 2
+                + 3 * mpi0 ** 2 * LDot(k2, k4) ** 2
+                - 8 * LDot(k2, k3) * LDot(k2, k4) ** 2
+                - 4 * LDot(k2, k4) ** 3
+                + 2 * ml ** 2 * mpi ** 2 * LDot(k3, k4)
+                + 2 * mpi ** 2 * LDot(k2, k4) * LDot(k3, k4)
+                + 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
+                + 4 * LDot(k2, k4) ** 2 * LDot(k3, k4)
+                + LDot(k1, k2)
                 * (
-                    -2 * Ml ** 2
-                    + mpi ** 2
+                    mpi ** 4
+                    - 3 * mpi ** 2 * mpi0 ** 2
+                    + 2 * LDot(k2, k3) * (mpi ** 2 - 5 * LDot(k2, k4))
+                    - 4 * LDot(k1, k3) * (mpi ** 2 - 2 * LDot(k2, k4))
+                    + 2 * mpi ** 2 * LDot(k2, k4)
+                    + 6 * mpi0 ** 2 * LDot(k2, k4)
+                    - 10 * LDot(k2, k4) ** 2
+                    + 2 * mpi ** 2 * LDot(k3, k4)
+                    + 2 * LDot(k2, k4) * LDot(k3, k4)
+                )
+                + LDot(k1, k3)
+                * (
+                    -4 * mpi ** 2 * LDot(k2, k4)
+                    + 4 * LDot(k2, k4) ** 2
+                    + 2 * LDot(k2, k3) * (mpi ** 2 + LDot(k2, k4))
+                    + mpi ** 2 * (-3 * mpi ** 2 + mpi0 ** 2 + 2 * LDot(k3, k4))
+                )
+            )
+            - LDot(k1, k4)
+            * LDot(k2, k4)
+            * (
+                4 * LDot(k1, k2) ** 3
+                + 2
+                * LDot(k1, k2) ** 2
+                * (
+                    mpi ** 2
                     - 3 * mpi0 ** 2
-                    - 4 * MDot(k, ppi0)
-                    + 6 * MDot(pl, ppi)
-                    - 4 * MDot(pl, ppi0)
-                    + 2 * MDot(ppi, ppi0)
+                    - 4 * LDot(k1, k3)
+                    + 2 * LDot(k2, k3)
+                    + 4 * LDot(k2, k4)
+                    - LDot(k3, k4)
                 )
-                + MDot(k, ppi)
+                + LDot(k1, k2)
                 * (
-                    -(Ml ** 2 * (mpi ** 2 - 3 * mpi0 ** 2))
-                    + 2 * MDot(k, ppi0) ** 2
-                    + 8 * MDot(pl, ppi) ** 2
-                    + MDot(pl, ppi0)
-                    * (
-                        2 * Ml ** 2
-                        - 3 * mpi ** 2
-                        + mpi0 ** 2
-                        + 2 * MDot(pl, ppi0)
-                    )
-                    + 2 * (-(Ml ** 2) + MDot(pl, ppi0)) * MDot(ppi, ppi0)
+                    -2 * ml ** 2 * mpi ** 2
+                    - 2 * ml ** 2 * mpi0 ** 2
+                    + 4 * LDot(k1, k3) ** 2
+                    - 4 * ml ** 2 * LDot(k2, k4)
+                    + 2 * mpi ** 2 * LDot(k2, k4)
+                    - 6 * mpi0 ** 2 * LDot(k2, k4)
+                    + 6 * LDot(k2, k4) ** 2
+                    + 2 * ml ** 2 * LDot(k3, k4)
+                    - 3 * mpi ** 2 * LDot(k3, k4)
+                    + mpi0 ** 2 * LDot(k3, k4)
+                    - 8 * LDot(k2, k4) * LDot(k3, k4)
+                    + 2 * LDot(k3, k4) ** 2
+                    + 2 * LDot(k2, k3) * (2 * ml ** 2 + 2 * LDot(k2, k4) + LDot(k3, k4))
                     + 2
-                    * MDot(pl, ppi)
-                    * (
-                        -2 * Ml ** 2
-                        + mpi ** 2
-                        - 3 * mpi0 ** 2
-                        - 7 * MDot(pl, ppi0)
-                        + 2 * MDot(ppi, ppi0)
-                    )
-                    + MDot(k, ppi0)
-                    * (
-                        2 * Ml ** 2
-                        - 3 * mpi ** 2
-                        + mpi0 ** 2
-                        - 8 * MDot(pl, ppi)
-                        + 4 * MDot(pl, ppi0)
-                        + 2 * MDot(ppi, ppi0)
-                    )
-                )
-                + MDot(pl, ppi)
-                * (
-                    2 * MDot(k, ppi0) ** 2
-                    + 4 * MDot(pl, ppi) ** 2
-                    - 2
-                    * Ml ** 2
-                    * (mpi ** 2 + mpi0 ** 2 - 2 * MDot(ppi, ppi0))
-                    + 2
-                    * MDot(pl, ppi)
-                    * (
-                        mpi ** 2
-                        - 3 * mpi0 ** 2
-                        - 4 * MDot(pl, ppi0)
-                        + 2 * MDot(ppi, ppi0)
-                    )
-                    + 2
-                    * MDot(pl, ppi0)
+                    * LDot(k1, k3)
                     * (
                         -3 * mpi ** 2
                         + mpi0 ** 2
-                        + 2 * MDot(pl, ppi0)
-                        + 2 * MDot(ppi, ppi0)
+                        + 2 * LDot(k2, k3)
+                        - 7 * LDot(k2, k4)
+                        + 3 * LDot(k3, k4)
                     )
-                    + MDot(k, ppi0)
+                )
+                + LDot(k2, k4)
+                * (
+                    -(ml ** 2 * mpi ** 2)
+                    + 3 * ml ** 2 * mpi0 ** 2
+                    + 2 * LDot(k1, k3) ** 2
+                    - 2 * ml ** 2 * LDot(k2, k4)
+                    + mpi ** 2 * LDot(k2, k4)
+                    - 3 * mpi0 ** 2 * LDot(k2, k4)
+                    + 2 * LDot(k2, k4) ** 2
+                    + 2 * ml ** 2 * LDot(k3, k4)
+                    - 3 * mpi ** 2 * LDot(k3, k4)
+                    + mpi0 ** 2 * LDot(k3, k4)
+                    - 4 * LDot(k2, k4) * LDot(k3, k4)
+                    + 2 * LDot(k3, k4) ** 2
+                    + 2 * LDot(k2, k3) * (-(ml ** 2) + LDot(k2, k4) + LDot(k3, k4))
+                    + LDot(k1, k3)
                     * (
-                        2 * Ml ** 2
+                        2 * ml ** 2
                         - 3 * mpi ** 2
                         + mpi0 ** 2
-                        - 2 * MDot(pl, ppi)
-                        + 6 * MDot(pl, ppi0)
-                        + 2 * MDot(ppi, ppi0)
-                    )
-                )
-            )
-            + MDot(k, pl) ** 2
-            * (
-                -4 * MDot(k, ppi) ** 3
-                + MDot(k, ppi) ** 2
-                * (
-                    mpi ** 2
-                    + 3 * mpi0 ** 2
-                    + 4 * MDot(k, ppi0)
-                    - 10 * MDot(pl, ppi)
-                    + 4 * MDot(pl, ppi0)
-                    - 8 * MDot(ppi, ppi0)
-                )
-                + MDot(k, ppi)
-                * (
-                    (mpi ** 2 - 2 * MDot(pl, ppi))
-                    * (
-                        mpi ** 2
-                        - 3 * mpi0 ** 2
-                        + 4 * MDot(pl, ppi)
-                        - 4 * MDot(pl, ppi0)
-                    )
-                    + (
-                        -2 * Ml ** 2
-                        - mpi ** 2
-                        + mpi0 ** 2
-                        - 10 * MDot(pl, ppi)
-                        + 2 * MDot(pl, ppi0)
-                    )
-                    * MDot(ppi, ppi0)
-                    + 2 * MDot(ppi, ppi0) ** 2
-                    + 2
-                    * MDot(k, ppi0)
-                    * (mpi ** 2 + MDot(pl, ppi) + MDot(ppi, ppi0))
-                )
-                + mpi ** 2
-                * (
-                    -(Ml ** 2 * (mpi ** 2 + mpi0 ** 2))
-                    + (mpi ** 2 - 3 * mpi0 ** 2) * MDot(pl, ppi)
-                    + (-3 * mpi ** 2 + mpi0 ** 2) * MDot(pl, ppi0)
-                    + 2
-                    * (
-                        (MDot(pl, ppi) - MDot(pl, ppi0)) ** 2
-                        + MDot(k, ppi0)
-                        * (Ml ** 2 + MDot(pl, ppi) + MDot(pl, ppi0))
-                        + (Ml ** 2 + MDot(pl, ppi) + MDot(pl, ppi0))
-                        * MDot(ppi, ppi0)
+                        + 2 * LDot(k2, k3)
+                        - 4 * LDot(k2, k4)
+                        + 4 * LDot(k3, k4)
                     )
                 )
             )
         )
-    ) / (MDot(k, pl) ** 2 * MDot(k, ppi) ** 2)
+    ) / (LDot(k1, k4) ** 2 * LDot(k2, k4) ** 2)
 
 
 def msqrd_nu_l_l(self, momenta):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
-    active neutrino, and two charged-leptons at leading order in the Fermi
-    constant.
+    neutrino and two charged leptons at leading order in the Fermi constant.
+    Momenta are ordered as follows: {nu,l+,l-}.
 
     Parameters
     ----------
     momenta: List
-        List of NumPy arrays storing the four-momenta of the active neutino,
-        and charged leptons.
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
 
     Returns
     -------
     msqrd: float
-        The matrix element for N-> nu+ l + lbar for the given model and
+        The matrix element for N -> nu + l + l for the given model and
         four-momenta.
     """
     pnu = momenta[0]
-    pl = momenta[1]
-    plb = momenta[2]
-    P = pnu + pl + plb
-    s = MDot(P - pl, P - pl)
-    t = MDot(P - plb, P - plb)
+    plp = momenta[1]
+    plm = momenta[2]
+    P = pnu + plp + plm
+    s = LDot(P - pnu, P - pnu)
+    t = LDot(P - plp, P - plp)
 
-    mvr = self.mx
+    smix = self.stheta
     ml = self.ml
-    stheta = self.stheta
-    ctheta = np.sqrt(1.0 - stheta ** 2)
-
+    mx = self.mx
     return (
-        -4
-        * ctheta ** 2
+        8
         * GF ** 2
-        * stheta ** 2
+        * smix ** 2
+        * (-1 + smix ** 2)
         * (
-            ml ** 4
-            * (
-                2
-                + 8 * cw ** 8
-                - 24 * sw ** 2
-                + 48 * sw ** 4
-                + 8 * cw ** 4 * (-1 + 6 * sw ** 2)
-            )
-            - (
-                1
-                + 4 * cw ** 8
-                - 4 * sw ** 2
-                + 8 * sw ** 4
-                + cw ** 4 * (-4 + 8 * sw ** 2)
-            )
-            * (-(s ** 2) - t ** 2 + mvr ** 2 * (s + t))
-            + 2
-            * ml ** 2
-            * (
-                mvr ** 2
-                * (
-                    1
-                    + 4 * cw ** 8
-                    - 4 * sw ** 2
-                    + 8 * sw ** 4
-                    + cw ** 4 * (-4 + 8 * sw ** 2)
-                )
-                - (-1 + 2 * cw ** 4 + 4 * sw ** 2) ** 2 * (s + t)
-            )
+            2 * ml ** 4 * (1 + 4 * sw ** 2 + 8 * sw ** 4)
+            + 2 * ml ** 2 * (mx ** 2 - s - 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * t)
+            + (1 + 4 * sw ** 2 + 8 * sw ** 4)
+            * (s ** 2 + 2 * s * t + 2 * t ** 2 - mx ** 2 * (s + 2 * t))
         )
-    ) / cw ** 8
+    )
 
 
 def msqrd_nu_l_l_g(self, momenta):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
-    active neutrino, two charged-leptons and a photon at leading order in the
-    Fermi constant.
+    neutrino, two charged leptons and a photon at leading order in the
+    Fermi constant. Momenta are ordered as follows: {nu, l+, l-, photon}.
 
     Parameters
     ----------
     momenta: List
-        List of NumPy arrays storing the four-momenta of the active neutino,
-        charged leptons and the photon.
+        List of NumPy arrays storing the four-momenta of the final state
+        particles.
 
     Returns
     -------
     msqrd: float
-        The matrix element for N-> nu + l + lbar + photon for the given model
-        and four-momenta.
+        The matrix element for N -> nu + l + l + gamma for the given model and
+        four-momenta.
     """
-    pnu = momenta[0]
-    pl = momenta[1]
-    plb = momenta[2]
-    k = momenta[3]
+    k1 = momenta[0]
+    k2 = momenta[1]
+    k3 = momenta[2]
+    k4 = momenta[3]
 
-    mvr = self.mx
+    smix = self.stheta
     ml = self.ml
-    stheta = self.stheta
-    ctheta = np.sqrt(1.0 - stheta ** 2)
 
-    return 0.0
-
-
-def msqrd_nu_pi_pi_g(self, momenta):
-
-    pnu = momenta[0]
-    ppim = momenta[1]
-    ppip = momenta[2]
-    k = momenta[3]
-
-    stheta = self.stheta
     return (
-        -8
+        16
         * GF ** 2
         * qe ** 2
-        * (-1 + stheta)
-        * stheta ** 2
-        * (1 + stheta)
-        * (1 - 2 * sw ** 2) ** 2
+        * smix ** 2
+        * (-1 + smix ** 2)
         * (
-            mpi ** 2 * MDot(k, ppim) ** 3 * (MDot(pnu, ppim) + MDot(pnu, ppip))
-            + MDot(k, pnu) ** 2
+            2
+            * (1 + 4 * sw ** 2 + 8 * sw ** 4)
+            * LDot(k1, k3) ** 2
+            * LDot(k2, k4) ** 2
+            * LDot(k3, k4)
+            + 2
+            * (1 + 4 * sw ** 2 + 8 * sw ** 4)
+            * LDot(k1, k2) ** 2
+            * LDot(k2, k4)
+            * LDot(k3, k4) ** 2
+            + LDot(k1, k4)
             * (
-                mpi ** 2 * MDot(k, ppim) ** 2
-                + mpi ** 2 * MDot(k, ppip) ** 2
-                + 2 * MDot(k, ppim) * MDot(k, ppip) * MDot(ppim, ppip)
-            )
-            + mpi ** 2
-            * MDot(k, ppip) ** 2
-            * (
-                MDot(pnu, ppim) ** 2
-                + MDot(pnu, ppim)
+                (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                * LDot(k2, k4) ** 3
+                * (ml ** 2 - LDot(k3, k4))
+                + ml ** 2
+                * LDot(k3, k4) ** 2
                 * (
-                    -(mpi ** 2)
-                    + MDot(k, ppip)
-                    - 2 * MDot(pnu, ppip)
-                    + MDot(ppim, ppip)
+                    (ml + 4 * ml * sw ** 2) ** 2
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3)
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
                 )
-                + MDot(pnu, ppip)
+                + LDot(k2, k4) ** 2
                 * (
-                    -(mpi ** 2)
-                    + MDot(k, ppip)
-                    + MDot(pnu, ppip)
-                    + MDot(ppim, ppip)
-                )
-            )
-            + MDot(k, ppim) ** 2
-            * (
-                mpi ** 2 * MDot(pnu, ppim) ** 2
-                + MDot(pnu, ppim)
-                * (
-                    -4 * MDot(k, ppip) ** 2
-                    + MDot(k, ppip)
-                    * (mpi ** 2 + 4 * MDot(pnu, ppip) - 2 * MDot(ppim, ppip))
-                    + mpi ** 2
-                    * (-(mpi ** 2) - 2 * MDot(pnu, ppip) + MDot(ppim, ppip))
-                )
-                + MDot(pnu, ppip)
-                * (
-                    -4 * MDot(k, ppip) ** 2
-                    + MDot(k, ppip)
-                    * (mpi ** 2 - 4 * MDot(pnu, ppip) - 2 * MDot(ppim, ppip))
-                    + mpi ** 2
-                    * (-(mpi ** 2) + MDot(pnu, ppip) + MDot(ppim, ppip))
-                )
-            )
-            + MDot(k, ppim)
-            * MDot(k, ppip)
-            * (
-                MDot(k, ppip)
-                * (
-                    -4 * MDot(pnu, ppim) ** 2
-                    + MDot(pnu, ppip) * (mpi ** 2 - 2 * MDot(ppim, ppip))
-                    + MDot(pnu, ppim)
-                    * (mpi ** 2 + 4 * MDot(pnu, ppip) - 2 * MDot(ppim, ppip))
-                )
-                - 2
-                * MDot(ppim, ppip)
-                * (
-                    MDot(pnu, ppim) ** 2
-                    + MDot(pnu, ppim)
-                    * (-(mpi ** 2) - 2 * MDot(pnu, ppip) + MDot(ppim, ppip))
-                    + MDot(pnu, ppip)
-                    * (-(mpi ** 2) + MDot(pnu, ppip) + MDot(ppim, ppip))
-                )
-            )
-            + MDot(k, pnu)
-            * (
-                mpi ** 2 * MDot(k, ppim) ** 3
-                + mpi ** 2
-                * MDot(k, ppip) ** 2
-                * (
-                    -(mpi ** 2)
-                    + MDot(k, ppip)
-                    + 2 * MDot(pnu, ppim)
-                    - 2 * MDot(pnu, ppip)
-                    + MDot(ppim, ppip)
-                )
-                + MDot(k, ppim)
-                * MDot(k, ppip)
-                * (
-                    MDot(k, ppip)
-                    * (mpi ** 2 - 4 * MDot(pnu, ppim) - 2 * MDot(ppim, ppip))
-                    + 2 * (mpi ** 2 - MDot(ppim, ppip)) * MDot(ppim, ppip)
-                )
-                - MDot(k, ppim) ** 2
-                * (
-                    4 * MDot(k, ppip) ** 2
-                    + mpi ** 2
+                    (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                    * LDot(k2, k3)
+                    * (ml ** 2 - 2 * LDot(k3, k4))
+                    + ml ** 2
                     * (
-                        mpi ** 2
-                        + 2 * MDot(pnu, ppim)
-                        - 2 * MDot(pnu, ppip)
-                        - MDot(ppim, ppip)
+                        (ml + 4 * ml * sw ** 2) ** 2
+                        + (-1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
                     )
-                    + MDot(k, ppip)
+                )
+                - LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    -8 * ml ** 2 * sw ** 2 * (1 + 2 * sw ** 2) * LDot(k1, k4)
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3) ** 2
+                    + 2
+                    * LDot(k2, k3)
                     * (
-                        -(mpi ** 2)
-                        + 4 * MDot(pnu, ppip)
-                        + 2 * MDot(ppim, ppip)
+                        (ml + 4 * ml * sw ** 2) ** 2
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                    )
+                    + LDot(k3, k4)
+                    * (
+                        ml ** 2 * (1 - 4 * sw ** 2 - 8 * sw ** 4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                    )
+                )
+            )
+            + LDot(k1, k3)
+            * (
+                (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                * LDot(k2, k4) ** 3
+                * (ml ** 2 - LDot(k3, k4))
+                + ml ** 2
+                * LDot(k3, k4) ** 2
+                * (
+                    (ml + 4 * ml * sw ** 2) ** 2
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k4)
+                    + LDot(k2, k3)
+                    + LDot(k3, k4)
+                    + 4 * sw ** 2 * (1 + 2 * sw ** 2) * (LDot(k2, k3) + LDot(k3, k4))
+                )
+                + LDot(k2, k4) ** 2
+                * (
+                    ml ** 4 * (1 + 4 * sw ** 2) ** 2
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                    * (
+                        LDot(k2, k3) * (ml ** 2 - 2 * LDot(k3, k4))
+                        + ml ** 2 * LDot(k3, k4)
+                    )
+                )
+                - LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3) ** 2
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                    * LDot(k3, k4)
+                    * (-(ml ** 2) + 2 * LDot(k1, k4) + LDot(k3, k4))
+                    + 2
+                    * LDot(k2, k3)
+                    * (
+                        (ml + 4 * ml * sw ** 2) ** 2
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                    )
+                )
+            )
+            + LDot(k1, k2)
+            * (
+                (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                * LDot(k2, k4) ** 3
+                * (ml ** 2 - LDot(k3, k4))
+                + LDot(k2, k4)
+                * LDot(k3, k4)
+                * (
+                    -2
+                    * LDot(k2, k3)
+                    * (
+                        (ml + 4 * ml * sw ** 2) ** 2
+                        + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k3)
+                        + LDot(k1, k4)
+                        + LDot(k2, k3)
+                        + 4
+                        * sw ** 2
+                        * (1 + 2 * sw ** 2)
+                        * (LDot(k1, k4) + LDot(k2, k3))
+                    )
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                    * (ml ** 2 - 2 * LDot(k1, k3) - 2 * LDot(k2, k3))
+                    * LDot(k3, k4)
+                    - (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4) ** 2
+                )
+                + ml ** 2
+                * LDot(k3, k4) ** 2
+                * (
+                    (ml + 4 * ml * sw ** 2) ** 2
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k3)
+                    + LDot(k2, k3)
+                    + LDot(k3, k4)
+                    + 4 * sw ** 2 * (1 + 2 * sw ** 2) * (LDot(k2, k3) + LDot(k3, k4))
+                )
+                + LDot(k2, k4) ** 2
+                * (
+                    ml ** 4 * (1 + 4 * sw ** 2) ** 2
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4)
+                    * (
+                        ml ** 2 * (2 * (LDot(k1, k3) + LDot(k1, k4)) + LDot(k2, k3))
+                        + (
+                            ml ** 2
+                            - 2 * LDot(k1, k3)
+                            - 2 * LDot(k1, k4)
+                            - 2 * LDot(k2, k3)
+                        )
+                        * LDot(k3, k4)
                     )
                 )
             )
         )
-    ) / ((-1 + sw ** 2) * MDot(k, ppim) ** 2 * MDot(k, ppip) ** 2)
+    ) / (LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
 
