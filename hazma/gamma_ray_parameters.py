@@ -31,6 +31,10 @@ A_eff_adept_rf = resource_filename(__name__, gr_data_dir + "adept_effective_area
 A_eff_amego_rf = resource_filename(__name__, gr_data_dir + "amego_effective_area.dat")
 A_eff_mast_rf = resource_filename(__name__, gr_data_dir + "mast_effective_area.dat")
 A_eff_pangu_rf = resource_filename(__name__, gr_data_dir + "pangu_effective_area.dat")
+A_eff_grams_rf = resource_filename(__name__, gr_data_dir + "grams_effective_area.dat")
+A_eff_grams_upgrade_rf = resource_filename(
+    __name__, gr_data_dir + "grams_upgrade_effective_area.dat"
+)
 
 e_astrogam_energy_res_rf = resource_filename(
     __name__, gr_data_dir + ("e-astrogam_energy_resolution.dat")
@@ -131,7 +135,7 @@ gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
 # EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
 # the lowest energy for which e-ASTROGAM has nonzero effective area.
-default_bg_model = BackgroundModel([0., 10.0e3], lambda e: 2.74e-3 / e ** 2)
+default_bg_model = BackgroundModel([0.0, 10.0e3], lambda e: 2.74e-3 / e ** 2)
 
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
@@ -170,6 +174,7 @@ gc_targets_optimistic = {
 
 # Observing regions for various experiments. Same NFW profile as above.
 comptel_diffuse_target = TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433)
+comptel_diffuse_target_optimistic = TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433)
 egret_diffuse_target = TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585)
 fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
 
@@ -209,6 +214,32 @@ A_eff_adept = load_interp(A_eff_adept_rf)  #: AdEPT effective area function
 A_eff_amego = load_interp(A_eff_amego_rf)  #: AMEGO effective area function
 A_eff_mast = load_interp(A_eff_mast_rf)  #: MAST effective area function
 A_eff_pangu = load_interp(A_eff_pangu_rf)  #: PANGU effective area function
+A_eff_grams = load_interp(A_eff_grams_rf)  #: GRAMS effective area function
+A_eff_grams_upgrade = load_interp(
+    A_eff_grams_upgrade_rf
+)  #: Upgraded GRAMS effective area function
+
+
+def energy_res_grams_upgrade(e):
+    """
+    GRAMS upgrade approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    """
+
+    def _res(e):
+        return 0.05
+
+    return np.vectorize(_res)(e)
+
+
+def energy_res_grams(e):
+    """
+    GRAMS approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    """
+
+    def _res(e):
+        return 0.05
+
+    return np.vectorize(_res)(e)
 
 
 def energy_res_adept(e):
@@ -290,6 +321,9 @@ T_obs_e_astrogam = 365.0 * 24.0 * 60.0 ** 2
 #: COMPTEL diffuse gamma-ray flux measurements
 comptel_diffuse = FluxMeasurement(
     comptel_obs_rf, energy_res_comptel, comptel_diffuse_target
+)
+comptel_diffuse_optimistic = FluxMeasurement(
+    comptel_obs_rf, energy_res_comptel, comptel_diffuse_target_optimistic
 )
 #: EGRET diffuse gamma-ray flux measurements
 egret_diffuse = FluxMeasurement(egret_obs_rf, energy_res_egret, egret_diffuse_target)
