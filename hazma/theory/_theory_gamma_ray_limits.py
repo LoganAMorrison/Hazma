@@ -28,7 +28,7 @@ class TheoryGammaRayLimits:
         """
         return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k, ext=ext)
 
-    def binned_limit(self, measurement, n_sigma=2.0):
+    def binned_limit(self, measurement, n_sigma=2.0, method="1bin"):
         r"""
         Determines the limit on :math:`<sigma v>` from gamma-ray data.
 
@@ -120,59 +120,11 @@ class TheoryGammaRayLimits:
         ):
             sv_lims.append(bin_lim(e_low, e_high, phi, sigma))
 
-        # Return the most stringent limit
-        return np.min(sv_lims)
-
-    def __f_jac_lim(self, e_ab, integrand_S, integrand_B, debug_msgs):
-        """Computes signal-to-noise ratio and Jacobian for an energy window.
-
-        Notes
-        -----
-        This is only used by :func:`unbinned_limit`.
-
-        Parameters
-        ----------
-        e_ab : (float, float)
-            Lower and upper boundaries for energy window.
-        integrand_S : InterpolatedUnivariateSpline
-            The part of the DM spectrum times effective area dependent on
-            photon energy.
-        integrand_B : InterpolatedUnivariateSpline
-            The part of the background spectrum times effective area dependent
-            on photon energy.
-
-        Returns
-        -------
-        f, jac : float, float
-            Negative one times the signal-to-noise ratio (up to factors
-            independent of the energy window) and f's Jacobian with respect to
-            the window boundaries.
-        """
-        e_a, e_b = e_ab.min(), e_ab.max()
-
-        if e_a == e_b:
-            return 0.0, 0.0
+        if method == "1bin":
+            # Return the most stringent limit
+            return np.min(sv_lims)
         else:
-            I_S_val = integrand_S.integral(e_a, e_b)
-            I_B_val = integrand_B.integral(e_a, e_b)
-
-            if debug_msgs and I_S_val / np.sqrt(I_B_val) < 0:
-                print("I_S_val, I_B_val:", I_S_val, I_B_val)
-
-            # Jacobian
-            df_de_a = (
-                1.0
-                / np.sqrt(I_B_val)
-                * (integrand_S(e_a) - 0.5 * I_S_val / I_B_val * integrand_B(e_a))
-            )
-            df_de_b = (
-                -1.0
-                / np.sqrt(I_B_val)
-                * (integrand_S(e_b) - 0.5 * I_S_val / I_B_val * integrand_B(e_b))
-            )
-            jac_val = np.array([df_de_a, df_de_b]).T
-
-            return -I_S_val / np.sqrt(I_B_val), jac_val
+            raise NotImplementedError()
 
     def unbinned_limit(
         self,
@@ -181,7 +133,8 @@ class TheoryGammaRayLimits:
         T_obs,
         target,
         bg_model,
-        e_window_0=None,
+        e_grid=None,
+        n_grid=20,
         n_sigma=5.0,
         debug_msgs=False,
     ):
@@ -240,50 +193,6 @@ class TheoryGammaRayLimits:
         elif self.kind == "dec":
             dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, energy_res)
 
-        # Use initial energy window if provided. Otherwise, use heuristics...
-        if e_window_0 is not None:
-            e_a_0, e_b_0 = e_window_0
-            if e_a_0 > e_max:
-                return np.inf
-            elif e_b_0 < e_min:
-                return np.inf
-        else:
-            # Find energy at which spectrum peaks
-            e_grid = np.geomspace(e_min, e_max, 5)
-            idx_e_dnde_max = np.argmax(dnde_conv(e_grid))
-            e_dnde_max = e_grid[idx_e_dnde_max]
-
-            # If there's a peak, include it in the initial energy window.
-            if np.isclose(e_dnde_max, e_min, atol=0, rtol=1e-5) or np.isclose(
-                e_dnde_max, e_max, atol=0, rtol=1e-5
-            ):
-                e_a_0 = 10.0 ** (0.5 * (np.log10(e_dnde_max) + np.log10(e_min)))
-                e_b_0 = 10.0 ** (0.5 * (np.log10(e_max) + np.log10(e_dnde_max)))
-            else:
-                e_a_0 = 10.0 ** (0.15 * np.log10(e_max) + 0.85 * np.log10(e_min))
-                e_b_0 = 10.0 ** (0.85 * np.log10(e_max) + 0.15 * np.log10(e_min))
-
-        # Integrating these gives the number of signal and background photons
-        integrand_S = self._get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
-        integrand_B = self._get_product_spline(
-            bg_model.dPhi_dEdOmega, A_eff, dnde_conv.get_knots()
-        )
-
-        # Optimize upper and lower bounds for energy window
-        limit_obj = optimize.minimize(
-            self.__f_jac_lim,
-            [e_a_0, e_b_0],
-            args=(integrand_S, integrand_B, debug_msgs),
-            bounds=2 * [[(1 + 1e-7) * e_min, (1 - 1e-7) * e_max]],
-            constraints=({"type": "ineq", "fun": lambda x: x[1] - x[0]}),
-            jac=True,
-            options={"ftol": 1e-7, "eps": 1e-10},
-            method="SLSQP",
-        )
-
-        if debug_msgs:
-            print(f"\te_a, e_b = {limit_obj.x[0]}, {limit_obj.x[1]}; {limit_obj.fun}")
-
         # Insert appropriate prefactors to convert result to <sigma v>_tot. The
         # factor of 2 is from the DM not being self-conjugate.
         if self.kind == "ann":
@@ -301,11 +210,30 @@ class TheoryGammaRayLimits:
             )
         )
 
-        assert -limit_obj.fun > 0 or np.isclose(
-            -limit_obj.fun, 0, atol=1e-10, rtol=1e-100
-        ), "optimization failed: -limit_obj.fun"
+        # Integrating these gives the number of signal and background photons,
+        # up to normalization
+        integrand_S = self._get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
+        integrand_B = self._get_product_spline(
+            bg_model.dPhi_dEdOmega, A_eff, dnde_conv.get_knots()
+        )
 
-        if -limit_obj.fun == 0:
+        # Optimize energy window
+        if e_grid is None:
+            e_grid = np.geomspace(e_min, e_max, n_grid)
+
+        snrs = []
+        for i, e_low in enumerate(e_grid[:-1]):
+            for e_high in e_grid[i + 1 :]:
+                assert e_low < e_high, (e_low, ", ", e_high)
+                I_S_val = integrand_S.integral(e_low, e_high)
+                I_B_val = integrand_B.integral(e_low, e_high)
+                snrs.append([e_low, e_high, I_S_val / np.sqrt(I_B_val)])
+
+        snrs = np.stack(snrs)
+
+        # Find best energy window
+        try:
+            bound = prefactor * n_sigma / np.nanmax(snrs[:, 2])
+            return bound
+        except:
             return np.inf
-
-        return prefactor * n_sigma / (-limit_obj.fun)
