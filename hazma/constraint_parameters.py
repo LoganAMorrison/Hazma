@@ -11,12 +11,6 @@ from hazma.parameters import (
 )
 
 
-# Conversion factors
-cm_to_inv_MeV = 5.08e10  # MeV^-1 cm^-1
-
-# Convert <sigma v> from MeV^2
-sv_inv_MeV_to_cm3_per_s = 1.0 / cm_to_inv_MeV ** 2 * 3e10  # cm^3/s * MeV^2
-
 # Transverse extents of detectors in cm
 # arxiv:0709
 r_det_E949 = 145.0

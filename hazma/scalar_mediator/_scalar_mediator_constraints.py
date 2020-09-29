@@ -14,6 +14,7 @@ from hazma.parameters import (
     Vts,
     Vtb,
     Vtd,
+    cm_to_inv_MeV,
 )
 from hazma.constraint_parameters import (
     B_k_invis_obs,
@@ -25,7 +26,6 @@ from hazma.constraint_parameters import (
     k_width,
     kl_width,
     B_width,
-    cm_to_inv_MeV,
     bd_charm,
 )
 
