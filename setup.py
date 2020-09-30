@@ -65,8 +65,9 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(decay_pack + ".decay_muon",
-              sources=[decay_dir + "decay_muon.pyx"])
+    Extension(
+        decay_pack + ".decay_muon", sources=[decay_dir + "decay_muon.pyx"]
+    )
 ]
 extensions += [
     Extension(
@@ -76,19 +77,32 @@ extensions += [
 ]
 extensions += [
     Extension(
-        decay_pack + ".decay_long_kaon", sources=[decay_dir + "decay_long_kaon.pyx"]
+        decay_pack + ".decay_long_kaon",
+        sources=[decay_dir + "decay_long_kaon.pyx"],
     )
 ]
 extensions += [
     Extension(
-        decay_pack + ".decay_short_kaon", sources=[decay_dir + "decay_short_kaon.pyx"]
+        decay_pack + ".decay_short_kaon",
+        sources=[decay_dir + "decay_short_kaon.pyx"],
     )
 ]
 
 # Gamma-Ray Helper functions extensions
 extensions += [
     Extension(
-        gr_pack + ".gamma_ray_generator", sources=[gr_dir + "gamma_ray_generator.pyx"]
+        gr_pack + ".gamma_ray_generator",
+        sources=[gr_dir + "gamma_ray_generator.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
+]
+extensions += [
+    Extension(
+        gr_pack + ".gamma_ray_fsr",
+        sources=[gr_dir + "gamma_ray_fsr.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
     )
 ]
 
@@ -120,13 +134,19 @@ extensions += [
 
 # Field Theory helper functions extensions
 extensions += [
-    Extension(ft_pack + ".common_functions",
-              sources=[ft_dir + "common_functions.pyx"])
+    Extension(
+        ft_pack + ".common_functions",
+        sources=[ft_dir + "common_functions.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
 ]
 extensions += [
     Extension(
         ft_pack + ".three_body_phase_space",
         sources=[ft_dir + "three_body_phase_space.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
     )
 ]
 
@@ -138,12 +158,14 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(pos_pack + ".positron_muon",
-              sources=[pos_dir + "positron_muon.pyx"])
+    Extension(
+        pos_pack + ".positron_muon", sources=[pos_dir + "positron_muon.pyx"]
+    )
 ]
 extensions += [
-    Extension(pos_pack + ".positron_decay",
-              sources=[pos_dir + "positron_decay.pyx"])
+    Extension(
+        pos_pack + ".positron_decay", sources=[pos_dir + "positron_decay.pyx"]
+    )
 ]
 
 # Scalar mediator
@@ -185,6 +207,16 @@ extensions += [
     )
 ]
 
+# RH-neutrino
+extensions += [
+    Extension(
+        "hazma.rh_neutrino._rh_neutrino_fsr_four_body",
+        sources=["hazma/rh_neutrino/_rh_neutrino_fsr_four_body.pyx"],
+        extra_compile_args=["-g", "-std=c++11"],
+        language="c++",
+    )
+]
+
 
 setup(
     name="hazma",
@@ -204,10 +236,12 @@ setup(
         np.get_include(),
         "hazma/decay_helper_functions",
         "hazma/positron_helper_functions",
+        "hazma/gamma_ray_helper_functions",
     ],
     package_data={
         "hazma/decay_helper_functions": ["*.pxd"],
         "hazma/positron_helper_functions": ["*.pxd"],
+        "hazma/gamma_ray_helper_functions": ["*.pxd"],
     },
     setup_requires=["pytest-runner"],
     install_requires=[

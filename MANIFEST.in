@@ -6,4 +6,3 @@ include hazma/decay_helper_functions/interpolation_data/lkaon/*.dat
 include hazma/gamma_ray_data/*.dat
 include hazma/cmb_data/*.dat
 include hazma/relic_density/*.dat
-include hazma/rh_neutrino/*.csv

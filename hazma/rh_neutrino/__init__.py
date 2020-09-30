@@ -71,13 +71,10 @@ class RHNeutrino(TheoryDec):
         width_nu_g_g,
     )
 
-    from ._rh_neutrino_matrix_elements import (
-        msqrd_nu_l_l,
-        msqrd_nu_l_l_g,
-        msqrd_l_pi_pi0,
-        msqrd_l_pi_pi0_g,
-        msqrd_nu_pi_pi,
-        msqrd_nu_pi_pi_g,
+    from ._rh_neutrino_fsr_four_body import (
+        dnde_nu_l_l_fsr as _dnde_nu_l_l_fsr,
+        dnde_l_pi_pi0_fsr as _dnde_l_pi_pi0_fsr,
+        dnde_nu_pi_pi_fsr as _dnde_nu_pi_pi_fsr,
     )
 
     from ._rh_neutrino_fsr import (
@@ -85,9 +82,6 @@ class RHNeutrino(TheoryDec):
         dnde_pi_l_fsr,
         _dnde_k_l_fsr,
         dnde_k_l_fsr,
-        dnde_nu_l_l_fsr,
-        dnde_l_pi_pi0_fsr,
-        dnde_nu_pi_pi_fsr,
     )
 
     from ._rh_neutrino_spectra import (
@@ -132,6 +126,24 @@ class RHNeutrino(TheoryDec):
             raise ValueError(
                 "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
             )
+
+    def dnde_nu_l_l_fsr(self, photon_energies):
+        width = self.width_nu_l_l()
+        return self._dnde_nu_l_l_fsr(
+            photon_energies, self.mx, self.stheta, self.ml, width
+        )
+
+    def dnde_l_pi_pi0_fsr(self, photon_energies):
+        width = self.width_l_pi_pi0()
+        return self._dnde_l_pi_pi0_fsr(
+            photon_energies, self.mx, self.stheta, self.ml, width
+        )
+
+    def dnde_nu_pi_pi_fsr(self, photon_energies):
+        width = self.width_nu_pi_pi()
+        return self._dnde_nu_pi_pi_fsr(
+            photon_energies, self.mx, self.stheta, self.ml, width
+        )
 
     def list_decay_final_states(self):
         """

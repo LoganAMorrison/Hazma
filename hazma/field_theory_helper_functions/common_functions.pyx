@@ -8,14 +8,22 @@ Module containing common field theory functions.
 import numpy as np
 cimport numpy as np
 import cython
-
-cdef np.ndarray metric_diag = np.array([1.0, -1.0, -1.0, -1.0])
+from libc.math cimport M_PI, sqrt, cos, sin
+from libcpp.vector cimport vector
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def minkowski_dot(np.ndarray[double, ndim=1] fv1,
-                  np.ndarray[double, ndim=1] fv2):
+cdef double c_minkowski_dot(const vector[double] &fv1,const vector[double] &fv2):
+    return fv1[0] * fv2[0] - fv1[1] * fv2[1] - fv1[2] * fv2[2] - fv1[3] * fv2[3]
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def minkowski_dot(
+    np.ndarray[double, ndim=1] fv1,
+    np.ndarray[double, ndim=1] fv2
+):
     """
     Returns the dot product of two four vectors using the west coast metric.
 
@@ -31,8 +39,25 @@ def minkowski_dot(np.ndarray[double, ndim=1] fv1,
     dot_product : double
         Returns fv1 * fv2.
     """
-    return np.sum(metric_diag[:] * fv1[:] * fv2[:])
+    return c_minkowski_dot(fv1, fv2)
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double c_cross_section_prefactor(double m1, double m2, double cme):
+    cdef double E1 = (cme**2 + m1**2 - m2**2) / (2. * cme)
+    cdef double E2 = (cme**2 + m2**2 - m1**2) / (2. * cme)
+
+    cdef double p = sqrt((m1 - m2 - cme) * (m1 + m2 - cme) *
+                         (m1 - m2 + cme) * (m1 + m2 + cme)) / (2. * cme)
+
+    cdef double v1 = p / E1
+    cdef double v2 = p / E2
+
+    cdef double vrel = v1 + v2
+
+    return 1.0 / (2.0 * E1) / (2.0 * E2) / vrel
 
 
 @cython.boundscheck(False)
@@ -56,15 +81,4 @@ def cross_section_prefactor(double m1, double m2, double cme):
     prefactor : double
         Returns 1 / ((2 E1) (2 E2) |v1 - v2|)
     """
-    cdef double E1 = (cme**2 + m1**2 - m2**2) / (2. * cme)
-    cdef double E2 = (cme**2 + m2**2 - m1**2) / (2. * cme)
-
-    cdef double p = np.sqrt((m1 - m2 - cme) * (m1 + m2 - cme) *
-                            (m1 - m2 + cme) * (m1 + m2 + cme)) / (2. * cme)
-
-    cdef double v1 = p / E1
-    cdef double v2 = p / E2
-
-    cdef double vrel = v1 + v2
-
-    return 1.0 / (2.0 * E1) / (2.0 * E2) / vrel
+    return c_cross_section_prefactor(m1, m2, cme)

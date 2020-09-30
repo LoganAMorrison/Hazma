@@ -11,8 +11,6 @@ from libc.math cimport log, M_PI, sqrt, tgamma, fabs, pow, cos, sin
 from libcpp cimport bool
 import cython
 
-
-
 cdef extern from "<random>" namespace "std":
     cdef cppclass mt19937 nogil:
         mt19937() nogil

@@ -1,67 +1,37 @@
 """
-This file contains matrix elements for various 3- and 4-body decays of the
-right-handed neutrino for use with RAMBO.
+This file contains cythonized functions for computing gamma-ray spectra
+from 4-body final states occuring in the right-handed neutrino model.
 """
-import numpy as np
+from hazma.gamma_ray_helper_functions.gamma_ray_fsr cimport c_gamma_ray_fsr
+from libcpp.vector cimport vector
+from libcpp.functional cimport function
+from libc.math cimport sqrt, M_PI
+import cython
 
-from hazma.parameters import (
-    qe,
-    GF,
-    Vud,
-    cos_theta_weak as cw,
-    sin_theta_weak as sw,
-    charged_pion_mass as mpi,
-    neutral_pion_mass as mpi0,
-    vh as vev,
-)
-from hazma.field_theory_helper_functions.common_functions import minkowski_dot as LDot
-
-MW = 80.379e3
-MH = 125.10e3
-
-
-def msqrd_nu_pi_pi(self, momenta):
-    """
-    Compute the squared matrix-element for a RH neutrino decaying into a
-    neutrino and two charged pions at leading order in the Fermi constant.
-    Momenta are ordered as follows: {nu,pi+,pi-}.
-
-    Parameters
-    ----------
-    momenta: List
-        List of NumPy arrays storing the four-momenta of the final state
-        particles.
-
-    Returns
-    -------
-    msqrd: float
-        The matrix element for N -> nu + pi + pi for the given model and
-        four-momenta.
-    """
-    smix = self.stheta
-    mx = self.mx
-
-    pnu = momenta[0]
-    ppip = momenta[1]
-    ppim = momenta[2]
-    P = pnu + ppim + ppip
-
-    s = LDot(P - pnu, P - pnu)
-    t = LDot(P - ppip, P - ppip)
-
-    return (
-        qe ** 4
-        * (-1 + smix ** 2)
-        * (smix - 2 * smix * sw ** 2) ** 2
-        * (
-            mx ** 4
-            - mx ** 2 * (s + 4 * t)
-            + 4 * (mpi ** 4 - 2 * mpi ** 2 * t + t * (s + t))
-        )
-    ) / (16.0 * MW ** 4 * sw ** 4 * (-1 + sw ** 2))
+cdef double MW = 80.379e3
+cdef double MH = 125.10e3
+cdef double mpi0 = 134.9766    # neutral pion
+cdef double mpi = 139.57018    # Charged pion
+cdef double alpha_em = 1.0 / 137.04  # fine structure constant.
+cdef double GF = 1.1663787e-11  # Fermi constant in MeV**-2
+cdef double vh = 246.22795e3  # Higgs VEV in MeV
+cdef double qe = sqrt(4.0 * M_PI * alpha_em)
+cdef double sw2 = 0.22290
+cdef double sw = sqrt(sw2)
+cdef double cw = sqrt(1.0 - sw2)
+cdef double Vud = 0.974267
 
 
-def msqrd_nu_pi_pi_g(self, momenta):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef double LDot(vector[double] &fv1,vector[double] &fv2):
+    return fv1[0] * fv2[0] - fv1[1] * fv2[1] - fv1[2] * fv2[2] - fv1[3] * fv2[3]
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double msqrd_nu_pi_pi_g(vector[vector[double]] &momenta, vector[double]&params):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
     neutrino, two charged pions and a photon at leading order in the Fermi
@@ -69,9 +39,16 @@ def msqrd_nu_pi_pi_g(self, momenta):
 
     Parameters
     ----------
-    momenta: List
+    momenta: np.ndarray
         List of NumPy arrays storing the four-momenta of the final state
         particles.
+    mx: double
+        Mass of the right-handed neutrino
+    smix: double
+        Right-handed neutrino mixing angle.
+    ml: double
+        Mass of the lepton corresponding the neutrino flavor which RH neutrino
+        mixes with.
 
     Returns
     -------
@@ -79,12 +56,13 @@ def msqrd_nu_pi_pi_g(self, momenta):
         The matrix element for N -> nu + pi + pi + gamma for the given model
         and four-momenta.
     """
-    k1 = momenta[0]
-    k2 = momenta[1]
-    k3 = momenta[2]
-    k4 = momenta[3]
-
-    smix = self.stheta
+    cdef double mx = params[0]
+    cdef double smix = params[1]
+    cdef double ml = params[2]
+    cdef vector[double] k1 = momenta[0]
+    cdef vector[double] k2 = momenta[1]
+    cdef vector[double] k3 = momenta[2]
+    cdef vector[double] k4 = momenta[3]
 
     return (
         -16
@@ -131,7 +109,9 @@ def msqrd_nu_pi_pi_g(self, momenta):
                 * (
                     -2 * LDot(k2, k3) ** 2
                     + mpi ** 2 * LDot(k3, k4)
-                    + 2 * LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k1, k3) + LDot(k3, k4))
+                    + 2
+                    * LDot(k2, k3)
+                    * (mpi ** 2 + 2 * LDot(k1, k3) + LDot(k3, k4))
                 )
             )
             + LDot(k1, k4)
@@ -145,7 +125,9 @@ def msqrd_nu_pi_pi_g(self, momenta):
                 * (
                     -2 * LDot(k2, k3) ** 2
                     + mpi ** 2 * LDot(k3, k4)
-                    + 2 * LDot(k2, k3) * (mpi ** 2 + LDot(k1, k4) + LDot(k3, k4))
+                    + 2
+                    * LDot(k2, k3)
+                    * (mpi ** 2 + LDot(k1, k4) + LDot(k3, k4))
                 )
                 + LDot(k2, k4) ** 2
                 * (
@@ -160,7 +142,12 @@ def msqrd_nu_pi_pi_g(self, momenta):
                 mpi ** 2 * LDot(k2, k4) ** 3
                 + mpi ** 2
                 * LDot(k3, k4) ** 2
-                * (-(mpi ** 2) - 2 * LDot(k1, k4) + LDot(k2, k3) + LDot(k3, k4))
+                * (
+                    -(mpi ** 2)
+                    - 2 * LDot(k1, k4)
+                    + LDot(k2, k3)
+                    + LDot(k3, k4)
+                )
                 - LDot(k2, k4)
                 * LDot(k3, k4)
                 * (
@@ -180,52 +167,10 @@ def msqrd_nu_pi_pi_g(self, momenta):
     ) / ((-1 + sw ** 2) * LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
 
 
-def msqrd_l_pi_pi0(self, momenta):
-    """
-    Compute the squared matrix-element for a RH neutrino decaying into a
-    charged lepton, neutral pion and a charged pion at leading order in the
-    Fermi constant. Momenta are ordered as follows: {l+,pi-,pi0}
-
-    Parameters
-    ----------
-    momenta: List
-        List of NumPy arrays storing the four-momenta of the final state
-        particles.
-
-    Returns
-    -------
-    msqrd: float
-        The matrix element for N -> l + pi0 + pi for the given model and
-        four-momenta.
-    """
-    pl = momenta[0]
-    ppi = momenta[1]
-    ppi0 = momenta[2]
-    P = pl + ppi + ppi0
-    s = LDot(P - pl, P - pl)
-    t = LDot(P - ppi, P - ppi)
-
-    ml = self.ml
-    mx = self.mx
-    smix = self.stheta
-
-    return (
-        2
-        * GF ** 2
-        * smix ** 2
-        * (
-            ml ** 4
-            + mx ** 4
-            + ml ** 2 * (2 * mx ** 2 - s - 4 * t)
-            + 4 * mpi ** 2 * (mpi0 ** 2 - t)
-            + 4 * t * (-(mpi0 ** 2) + s + t)
-            - mx ** 2 * (s + 4 * t)
-        )
-        * Vud ** 2
-    )
-
-
-def msqrd_l_pi_pi0_g(self, momenta):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double msqrd_l_pi_pi0_g(vector[vector[double]] &momenta, vector[double]& params):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
     charged lepton, neutral pion, a charged pion and a photon at leading order
@@ -243,13 +188,13 @@ def msqrd_l_pi_pi0_g(self, momenta):
         The matrix element for N -> l + pi + pi0 + gamma for the given model
         and four-momenta.
     """
-    k1 = momenta[0]
-    k2 = momenta[1]
-    k3 = momenta[2]
-    k4 = momenta[3]
-
-    smix = self.stheta
-    ml = self.ml
+    cdef double mx = params[0]
+    cdef double smix = params[1]
+    cdef double ml = params[2]
+    cdef vector[double] k1 = momenta[0]
+    cdef vector[double] k2 = momenta[1]
+    cdef vector[double] k3 = momenta[2]
+    cdef vector[double] k4 = momenta[3]
 
     return (
         -8
@@ -375,7 +320,9 @@ def msqrd_l_pi_pi0_g(self, momenta):
                     + mpi0 ** 2 * LDot(k3, k4)
                     - 8 * LDot(k2, k4) * LDot(k3, k4)
                     + 2 * LDot(k3, k4) ** 2
-                    + 2 * LDot(k2, k3) * (2 * ml ** 2 + 2 * LDot(k2, k4) + LDot(k3, k4))
+                    + 2
+                    * LDot(k2, k3)
+                    * (2 * ml ** 2 + 2 * LDot(k2, k4) + LDot(k3, k4))
                     + 2
                     * LDot(k1, k3)
                     * (
@@ -400,7 +347,9 @@ def msqrd_l_pi_pi0_g(self, momenta):
                     + mpi0 ** 2 * LDot(k3, k4)
                     - 4 * LDot(k2, k4) * LDot(k3, k4)
                     + 2 * LDot(k3, k4) ** 2
-                    + 2 * LDot(k2, k3) * (-(ml ** 2) + LDot(k2, k4) + LDot(k3, k4))
+                    + 2
+                    * LDot(k2, k3)
+                    * (-(ml ** 2) + LDot(k2, k4) + LDot(k3, k4))
                     + LDot(k1, k3)
                     * (
                         2 * ml ** 2
@@ -416,49 +365,10 @@ def msqrd_l_pi_pi0_g(self, momenta):
     ) / (LDot(k1, k4) ** 2 * LDot(k2, k4) ** 2)
 
 
-def msqrd_nu_l_l(self, momenta):
-    """
-    Compute the squared matrix-element for a RH neutrino decaying into a
-    neutrino and two charged leptons at leading order in the Fermi constant.
-    Momenta are ordered as follows: {nu,l+,l-}.
-
-    Parameters
-    ----------
-    momenta: List
-        List of NumPy arrays storing the four-momenta of the final state
-        particles.
-
-    Returns
-    -------
-    msqrd: float
-        The matrix element for N -> nu + l + l for the given model and
-        four-momenta.
-    """
-    pnu = momenta[0]
-    plp = momenta[1]
-    plm = momenta[2]
-    P = pnu + plp + plm
-    s = LDot(P - pnu, P - pnu)
-    t = LDot(P - plp, P - plp)
-
-    smix = self.stheta
-    ml = self.ml
-    mx = self.mx
-    return (
-        8
-        * GF ** 2
-        * smix ** 2
-        * (-1 + smix ** 2)
-        * (
-            2 * ml ** 4 * (1 + 4 * sw ** 2 + 8 * sw ** 4)
-            + 2 * ml ** 2 * (mx ** 2 - s - 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * t)
-            + (1 + 4 * sw ** 2 + 8 * sw ** 4)
-            * (s ** 2 + 2 * s * t + 2 * t ** 2 - mx ** 2 * (s + 2 * t))
-        )
-    )
-
-
-def msqrd_nu_l_l_g(self, momenta):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double msqrd_nu_l_l_g(vector[vector[double]] &momenta, vector[double]& params):
     """
     Compute the squared matrix-element for a RH neutrino decaying into a
     neutrino, two charged leptons and a photon at leading order in the
@@ -476,13 +386,13 @@ def msqrd_nu_l_l_g(self, momenta):
         The matrix element for N -> nu + l + l + gamma for the given model and
         four-momenta.
     """
-    k1 = momenta[0]
-    k2 = momenta[1]
-    k3 = momenta[2]
-    k4 = momenta[3]
-
-    smix = self.stheta
-    ml = self.ml
+    cdef double mx = params[0]
+    cdef double smix = params[1]
+    cdef double ml = params[2]
+    cdef vector[double] k1 = momenta[0]
+    cdef vector[double] k2 = momenta[1]
+    cdef vector[double] k3 = momenta[2]
+    cdef vector[double] k4 = momenta[3]
 
     return (
         16
@@ -554,7 +464,10 @@ def msqrd_nu_l_l_g(self, momenta):
                     + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k4)
                     + LDot(k2, k3)
                     + LDot(k3, k4)
-                    + 4 * sw ** 2 * (1 + 2 * sw ** 2) * (LDot(k2, k3) + LDot(k3, k4))
+                    + 4
+                    * sw ** 2
+                    * (1 + 2 * sw ** 2)
+                    * (LDot(k2, k3) + LDot(k3, k4))
                 )
                 + LDot(k2, k4) ** 2
                 * (
@@ -613,14 +526,18 @@ def msqrd_nu_l_l_g(self, momenta):
                     + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k3)
                     + LDot(k2, k3)
                     + LDot(k3, k4)
-                    + 4 * sw ** 2 * (1 + 2 * sw ** 2) * (LDot(k2, k3) + LDot(k3, k4))
+                    + 4
+                    * sw ** 2
+                    * (1 + 2 * sw ** 2)
+                    * (LDot(k2, k3) + LDot(k3, k4))
                 )
                 + LDot(k2, k4) ** 2
                 * (
                     ml ** 4 * (1 + 4 * sw ** 2) ** 2
                     + (1 + 4 * sw ** 2 + 8 * sw ** 4)
                     * (
-                        ml ** 2 * (2 * (LDot(k1, k3) + LDot(k1, k4)) + LDot(k2, k3))
+                        ml ** 2
+                        * (2 * (LDot(k1, k3) + LDot(k1, k4)) + LDot(k2, k3))
                         + (
                             ml ** 2
                             - 2 * LDot(k1, k3)
@@ -634,3 +551,117 @@ def msqrd_nu_l_l_g(self, momenta):
         )
     ) / (LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
 
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def dnde_nu_l_l_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    an active neutrino and two charged leptons.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    cdef vector[double] isp_masses = [mx]
+    cdef vector[double] fsp_masses = [0.0, ml, ml]
+    cdef vector[double] params = [mx, smix, ml]
+    cdef int nevents = 10000
+
+    return c_gamma_ray_fsr(
+        photon_energies,
+        mx,
+        isp_masses,
+        fsp_masses,
+        width,
+        msqrd_nu_l_l_g,
+        nevents,
+        params,
+    ).first
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def dnde_l_pi_pi0_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    a neutral pion, charged pion and charged lepton.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    cdef vector[double] isp_masses = [mx]
+    cdef vector[double] fsp_masses = [ml, mpi, mpi0]
+    cdef vector[double] params = [mx, smix, ml]
+    cdef int nevents = 5000
+
+    return c_gamma_ray_fsr(
+        photon_energies,
+        mx,
+        isp_masses,
+        fsp_masses,
+        width,
+        msqrd_l_pi_pi0_g,
+        nevents,
+        params,
+    ).first
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.cdivision(True)
+def dnde_nu_pi_pi_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    an active neutrino and two charged pions.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    cdef vector[double] isp_masses = [mx]
+    cdef vector[double] fsp_masses = [0.0, mpi, mpi]
+    cdef vector[double] params = [mx, smix, ml]
+    cdef int nevents = 1000
+
+    return c_gamma_ray_fsr(
+        photon_energies,
+        mx,
+        isp_masses,
+        fsp_masses,
+        width,
+        msqrd_nu_pi_pi_g,
+        nevents,
+        params,
+    ).first

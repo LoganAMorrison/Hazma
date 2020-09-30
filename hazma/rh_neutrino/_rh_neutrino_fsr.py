@@ -160,8 +160,7 @@ def dnde_pi_l_fsr(self, photon_energies):
     """
     if hasattr(photon_energies, "__len__"):
         return np.array([self._dnde_pi_l_fsr(e) for e in photon_energies])
-    else:
-        return self._dnde_pi_l_fsr(photon_energies)
+    return self._dnde_pi_l_fsr(photon_energies)
 
 
 def _dnde_k_l_fsr(self, photon_eng):
@@ -286,95 +285,5 @@ def dnde_k_l_fsr(self, photon_energies):
     """
     if hasattr(photon_energies, "__len__"):
         return np.array([self._dnde_k_l_fsr(e) for e in photon_energies])
-    else:
-        return self._dnde_k_l_fsr(photon_energies)
+    return self._dnde_k_l_fsr(photon_energies)
 
-
-def dnde_nu_l_l_fsr(self, photon_energies):
-    """
-    Compute the FSR spectra from a right-handed neutrino decaying into
-    an active neutrino and two charged leptons.
-
-    Parameters
-    ----------
-    self: object
-        Instance of the `RHNeutrino` class. (see
-        `hazma.rh_neutrino.__init__.py`)
-    photon_energies: float or np.array
-       The energy of the final state photon in MeV.
-
-    Returns
-    -------
-    dnde: float or np.array
-        Photon spectrum.
-    """
-    spectrum = gamma_ray_fsr(
-        photon_energies,
-        self.mx,
-        np.array([self.mx]),
-        np.array([0.0, self.ml, self.ml]),
-        self.width_nu_l_l(),
-        self.msqrd_nu_l_l_g,
-        nevents=1000,
-    )
-    return np.array([spec[0] for spec in spectrum])
-
-
-def dnde_l_pi_pi0_fsr(self, photon_energies):
-    """
-    Compute the FSR spectra from a right-handed neutrino decaying into
-    a neutral pion, charged pion and charged lepton.
-
-    Parameters
-    ----------
-    self: object
-        Instance of the `RHNeutrino` class. (see
-        `hazma.rh_neutrino.__init__.py`)
-    photon_energies: float or np.array
-       The energy of the final state photon in MeV.
-
-    Returns
-    -------
-    dnde: float or np.array
-        Photon spectrum.
-    """
-    spectrum = gamma_ray_fsr(
-        photon_energies,
-        self.mx,
-        np.array([self.mx]),
-        np.array([self.ml, mpi, mpi0]),
-        self.width_l_pi_pi0(),
-        self.msqrd_l_pi_pi0_g,
-        nevents=1000,
-    )
-    return np.array([spec[0] for spec in spectrum])
-
-
-def dnde_nu_pi_pi_fsr(self, photon_energies):
-    """
-    Compute the FSR spectra from a right-handed neutrino decaying into
-    an active neutrino and two charged pions.
-
-    Parameters
-    ----------
-    self: object
-        Instance of the `RHNeutrino` class. (see
-        `hazma.rh_neutrino.__init__.py`)
-    photon_energies: float or np.array
-       The energy of the final state photon in MeV.
-
-    Returns
-    -------
-    dnde: float or np.array
-        Photon spectrum.
-    """
-    spectrum = gamma_ray_fsr(
-        photon_energies,
-        self.mx,
-        np.array([self.mx]),
-        np.array([0.0, mpi, mpi]),
-        self.width_nu_pi_pi(),
-        self.msqrd_nu_pi_pi_g,
-        nevents=1000,
-    )
-    return np.array([spec[0] for spec in spectrum])
