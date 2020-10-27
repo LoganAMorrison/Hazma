@@ -219,6 +219,9 @@ A_eff_grams_upgrade = load_interp(
     A_eff_grams_upgrade_rf
 )  #: Upgraded GRAMS effective area function
 
+# Multiplicative factor to convert FWHM into standard deviations, assuming
+# energy resolution function is a Gaussian
+fwhm_factor = 1 / (2 * np.sqrt(2 * np.log(2)))
 
 def energy_res_grams_upgrade(e):
     """
@@ -249,7 +252,7 @@ def energy_res_adept(e):
     """
 
     def _res(e):
-        return 0.3
+        return 0.3 * fwhm_factor
 
     return np.vectorize(_res)(e)
 
@@ -269,12 +272,13 @@ def energy_res_pangu(e):
 def energy_res_comptel(e):
     """COMPTEL energy resolution :math:`\Delta E / E`.
 
-    Taken from `ch. II, page 11
-    <http://wwwgro.unh.edu/users/ckappada/thesis_stuff/thesis.html>`_.
+    This is the most optimistic value, taken from `ch. II, page 11
+    <https://scholars.unh.edu/dissertation/2045/>`_. The
+    energy resolution at 1 MeV is 10% (FWHM).
     """
 
     def _res(e):
-        return 0.05
+        return 0.05 * fwhm_factor
 
     return np.vectorize(_res)(e)
 
@@ -287,7 +291,8 @@ def energy_res_egret(e):
     """
 
     def _res(e):
-        return 0.18
+        # Convert FWHM into standard deviation
+        return 0.18 * fwhm_factor
 
     return np.vectorize(_res)(e)
 
