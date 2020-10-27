@@ -40,8 +40,11 @@ class PBH(TheoryDec):
             raise ValueError("invalid spectrum_kind")
 
         def to_float(s):
-            sig, exponent = s.split("e")
-            return float(sig) * 10 ** float(exponent)
+            try:
+                return float(s)
+            except ValueError:
+                sig, exponent = s.split("e")
+                return float(sig) * 10 ** float(exponent)
 
         df = pd.read_csv(fname)
         self._mxs = df.columns[2:].map(to_float).values * g_to_MeV
