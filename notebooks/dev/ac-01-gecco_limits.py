@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -16,7 +16,7 @@
 # %% [markdown]
 # This notebook makes projections for the Gecco telescope.
 
-# %%
+# %% init_cell=true
 %load_ext autoreload
 %autoreload 2
 
@@ -49,7 +49,7 @@ from hazma.scalar_mediator import HiggsPortal, HeavyQuark
 from hazma.vector_mediator import KineticMixing, QuarksOnly
 from hazma.single_channel import SingleChannelAnn, SingleChannelDec
 
-# %%
+# %% init_cell=true
 mpl_colors = 2*[c["color"] for c in plt.rcParams["axes.prop_cycle"]]
 beeper = jupyter_beeper.Beeper()
 
@@ -57,17 +57,17 @@ def beep():
     return beeper.beep(frequency=900, secs=0.7, blocking=True)
 
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Setup and utils
 
-# %% {"hidden": true}
+# %% init_cell=true hidden=true
 # This is approximately the same as `gc_bg_model`, but does not constrain
 # the input energies.
 gc_bg_model_approx = BackgroundModel(
     [0, 1e5], lambda e: 7 * default_bg_model.dPhi_dEdOmega(e)
 )
 
-# %% {"code_folding": [7, 17, 28, 88, 93, 117, 126, 133, 147], "hidden": true}
+# %% code_folding=[7, 17, 28, 88, 93, 117, 126, 133, 147] init_cell=true hidden=true
 # Other constants
 # T_obs_nt = 1e6  # s. From Alex.
 T_obs_nt = 1e8  # s (~3 yr). Used in PBH paper.
@@ -241,13 +241,13 @@ def get_formatted_fig(nrows, ncols, figsize, xlim, ylim):
     return fig, axes
 
 
-# %% [markdown]
+# %% [markdown] heading_collapsed=true
 # # PBH constraints
 
-# %% [markdown]
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Setup
 
-# %% {"code_folding": [6]}
+# %% code_folding=[6] hidden=true
 bounds = [
     "INTEGRAL", "CMBevap", "EDGESevap", "Voyager", "511keV", "EGRB_full", "LeoTevap"
 ]
@@ -302,26 +302,21 @@ def plot_bounds(
             color=color, label=label, alpha=a_p, linewidth=1.5,
         )
 
-# %% [markdown]
+
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Compute bounds
 
-# %%
+# %% hidden=true
 pbh = PBH(1e15 * g_to_MeV, spectrum_kind="primary", bh_secondary=False)
 f_pbh_constraints = get_constraints(pbh, pbh._mxs, debug_msgs=False)
 
 m_pbhs = pbh._mxs * MeV_to_g
 
-# %%
-list(f_pbh_constraints.keys())
-
-# %%
-pbh._mxs * MeV_to_g * 5.03e-34
-
-# %%
+# %% hidden=true
 for k, f in f_pbh_constraints.items():
     print(k.replace("optimistic", "ein"))
 
-# %% {"code_folding": []}
+# %% code_folding=[] hidden=true
 plt.figure(figsize=(4, 3.5))
 
 bounds = [
@@ -367,7 +362,7 @@ elif pbh.spectrum_kind == "primary":
 else:
     plt.savefig("figures/pbh_bounds_comptel_bh.pdf")
 
-# %% {"code_folding": [6, 28]}
+# %% code_folding=[6, 28] hidden=true
 fig, axes = plt.subplots(2, 2, figsize=(8, 6.25))
 
 # GC (Ein)
@@ -468,7 +463,7 @@ elif pbh.spectrum_kind == "primary":
 else:
     fig.savefig("figures/pbh_bounds_bh_T=1e8s.pdf")
 
-# %%
+# %% hidden=true
 plt.figure(figsize=(4, 3.5))
 
 for color, (key, f_pbhs) in zip(cycle(mpl_colors), f_pbh_constraints.items()):
@@ -509,25 +504,25 @@ elif pbh.spectrum_kind == "primary":
 else:
     plt.savefig("figures/pbh_bounds_gecco_bh.pdf")
 
-# %%
+# %% hidden=true
 beep()
 
-# %%
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Redoing constraints
 
-# %% {"hidden": true}
+# %% hidden=true
 pbh = PBH(1e15 * g_to_MeV, spectrum_kind="secondary", bh_secondary=False)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Spectrum sanity check
 
-# %% {"hidden": true}
+# %% hidden=true
 pbh_p = PBH(1e15 * g_to_MeV, spectrum_kind="primary")
 pbh_bhs = PBH(1e15 * g_to_MeV, spectrum_kind="secondary", bh_secondary=True)
 pbh_s = PBH(1e15 * g_to_MeV, spectrum_kind="secondary")
@@ -564,7 +559,7 @@ plt.ylabel(r"$\frac{d^2N}{dE_\gamma\, dt}$ [GeV$^{-1}$ s$^{-1}$]")
 plt.title(r"$M=10^{%i}\, \mathrm{g},\, T = %g\, \mathrm{GeV}$" % (np.log10(m_pbh), 0.0106 / (m_pbh / 1e15)))
 plt.legend()
 
-# %% {"hidden": true}
+# %% hidden=true
 pbh_p = PBH(1e15 * g_to_MeV, spectrum_kind="primary")
 pbh_bhs = PBH(1e15 * g_to_MeV, spectrum_kind="secondary", bh_secondary=True)
 pbh_s = PBH(1e15 * g_to_MeV, spectrum_kind="secondary")
@@ -598,12 +593,12 @@ plt.ylabel(r"$\frac{d^2N}{dE_\gamma\, dt}$ [MeV^${-1}$ s$^{-1}$]")
 plt.legend()
 
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## NuSTAR limits
 
-# %% {"hidden": true}
+# %% hidden=true
 def energy_res_nustar(e_gam):
     e_a, res_a = 5e-3, 0.4 / 5
     e_b, res_b = 60e-3, 0.9 / 60
@@ -619,11 +614,11 @@ def energy_res_nustar(e_gam):
     return np.vectorize(helper)(e_gam)
 
 
-# %% {"hidden": true}
+# %% hidden=true
 mxs_ns, Gammas_ns = np.loadtxt("data/nustar_limits.csv", unpack=True, delimiter=",")
 mxs_ns *= 1e-3
 
-# %% {"hidden": true}
+# %% hidden=true
 nustar_constraints = np.zeros_like(pbh._mxs)
 
 for i, mx in enumerate(pbh._mxs):
@@ -633,18 +628,18 @@ for i, mx in enumerate(pbh._mxs):
         for mx_ns, Gamma_ns in zip(mxs_ns, Gammas_ns)
     ])
 
-# %% {"hidden": true}
+# %% hidden=true
 plt.loglog(pbh._mxs * MeV_to_g, nustar_constraints)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Model-independent constraints
 
-# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Annihilation constraints
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 fss = ["e e", "g g", "mu mu", "pi pi"]
 n_mxs = 100
 mxs_light = np.geomspace(0.5, 250, n_mxs)
@@ -661,7 +656,7 @@ y_lims = {
     "pi0 g": (1e-30, 1e-22),
 }
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 sc_constraints = {}
 
 for fs in fss:
@@ -669,21 +664,21 @@ for fs in fss:
     model = SingleChannelAnn(1., fs, 1.)
     sc_constraints[fs] = get_constraints(model, mxs[fs])
 
-# %% {"hidden": true}
+# %% hidden=true
 # # Save constraints
 # np.savez("data/sv_constraints_single_channels.npz", **sc_constraints)
 
-# %% {"hidden": true}
+# %% hidden=true
 beep()
 
-# %% {"hidden": true}
+# %% hidden=true
 # # Unpack carefully...
 # sc_constraints = dict(
 #     np.load("data/sv_constraints_single_channels.npz", allow_pickle=True)
 # )
 # sc_constraints = {k: v.item() for k, v in sc_constraints.items()}
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 fig, axes = get_formatted_fig(2, 2, (4 * 2, 7), (0.5, 1e3), (1e-35, 1e-23))
 
 for fs, ax in zip(fss, axes.flatten()):
@@ -740,15 +735,15 @@ axes[-1, -1].legend(
 
 # fig.savefig("figures/gecco/single_channel_sigmav_limits.pdf", bbox_inches="tight")
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Decay constraints
 
-# %% [markdown] {"hidden": true}
+# %% [markdown] hidden=true
 # This is a hack for now. The decaying DM's mass is equal to `2 mx`!
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 fss = ["e e", "g g", "mu mu", "pi pi"]
 n_mxs = 100
 mxs_light = np.geomspace(1, 1e3, n_mxs)
@@ -763,7 +758,7 @@ y_lims = {
     "pi pi": (1e22, 1e28),
 }
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 sc_constraints = {}
 
 for fs in fss:
@@ -771,21 +766,21 @@ for fs in fss:
     model = SingleChannelDec(1., fs, 1.)
     sc_constraints[fs] = get_constraints(model, mxs[fs])
 
-# %% {"hidden": true}
+# %% hidden=true
 # Save constraints
 np.savez("data/gamma_constraints_single_channels.npz", **sc_constraints)
 
-# %% {"hidden": true}
+# %% hidden=true
 beep()
 
-# %% {"hidden": true}
+# %% hidden=true
 # # Unpack carefully...
 # sc_constraints = dict(
 #     np.load("data/gamma_constraints_single_channels.npz", allow_pickle=True)
 # )
 # sc_constraints = {k: v.item() for k, v in sc_constraints.items()}
 
-# %% {"code_folding": [2], "hidden": true}
+# %% code_folding=[2] hidden=true
 fig, axes = get_formatted_fig(2, 2, (4 * 2, 7), (0.5, 1e3), (1e20, 1e32))
 
 for fs, ax in zip(fss, axes.flatten()):
@@ -829,20 +824,20 @@ axes[-1, -1].legend(
 
 fig.savefig("figures/gecco/single_channel_lifetime_limits.pdf", bbox_inches="tight")
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Higgs portal model
 
-# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Pheno constraints
 
-# %% {"hidden": true}
+# %% hidden=true
 constr_gamma = sm.constrain_binned_gamma(
     "ms", mss, "stheta", sthetas, egret_diffuse,# "image"
 )
 
-# %% {"hidden": true}
+# %% hidden=true
 plt.contourf(
     mss, sthetas, constr_gamma, levels=[-1e100, 0], colors=[color],
     linewidths=[1], alpha=0.3
@@ -855,16 +850,16 @@ plt.ylabel(r"$\sin \theta$")
 # plt.legend()
 plt.title(r"$m_\chi = %i$ MeV" % sm.mx)
 
-# %% {"hidden": true}
+# %% hidden=true
 sm = HiggsPortal(mx=200, ms=1e3, gsxx=1., stheta=0.1)
 mss = np.linspace(100, 1e3, 60)
 sthetas = np.geomspace(1e-5, 1e0, 50)
 
-# %% {"hidden": true}
+# %% hidden=true
 constrs = sm.constrain("ms", mss, "stheta", sthetas, "image")
 
 
-# %% {"hidden": true}
+# %% hidden=true
 def get_constr_label(name):
     name = f"${name}$"
     label = name.replace("->", "\\to")
@@ -879,7 +874,7 @@ def get_constr_label(name):
     return label
 
 
-# %% {"hidden": true}
+# %% hidden=true
 for (name, constr), color in zip(constrs.items(), colors):
     plt.contourf(
         mss, sthetas, constr, levels=[-1e100, 0], colors=[color], linewidths=[1],
@@ -898,12 +893,12 @@ plt.ylabel(r"$\sin \theta$")
 plt.legend(fontsize=8, loc="lower right")
 plt.title(r"$m_\chi = %i$ MeV" % sm.mx)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Gamma-ray constraints
 
-# %% {"hidden": true}
+# %% hidden=true
 mxs = np.geomspace(0.5, 250, 20)
 mss = mxs / 3
 
@@ -913,12 +908,12 @@ SMs = np.array([[HiggsPortal]])
 sms = np.vectorize(lambda SM, kwargs: SM(**kwargs))(SMs, sm_args)
 
 
-# %% {"hidden": true}
+# %% hidden=true
 def set_m_med(sm, ms):
     sm.ms = ms
 
 
-# %% {"hidden": true}
+# %% hidden=true
 # Recompute constraints
 sv_constraints_sms = np.empty_like(sms)
 for i in range(len(sms)):
@@ -936,7 +931,7 @@ for i in range(len(sms)):
 #     "data/sv_constraints_sms.npz", allow_pickle=True
 # )["sv_constraints_sms"]
 
-# %% {"hidden": true}
+# %% hidden=true
 def get_svs(model, mxs, stheta, vx=1e-3, mss=None):
     svs = []
     for i in range(len(mxs)):
@@ -951,7 +946,7 @@ def get_svs(model, mxs, stheta, vx=1e-3, mss=None):
     return np.array(svs)
 
 
-# %% {"code_folding": [], "hidden": true}
+# %% code_folding=[] hidden=true
 fig, axes = get_formatted_fig(
     *sms.shape, (4 * sms.shape[1], 2.5 * sms.shape[0]),
     mxs[[0, -1]], (1e-35, 1e-20)
@@ -1003,15 +998,15 @@ axes[-1, -1].legend(
 
 # fig.savefig("figures/gecco/sm_comptel.png", bbox_inches="tight")
 
-# %% {"hidden": true}
+# %% hidden=true
 beep()
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true, "hidden": true}
+# %% [markdown] heading_collapsed=true hidden=true
 # ## Understanding gap in heavy quark model
 
-# %% {"hidden": true}
+# %% hidden=true
 mxs = np.geomspace(mx_min, mx_max, 100)
 
 sv_gecco = np.zeros(len(mxs))
@@ -1025,7 +1020,7 @@ for i, mx in enumerate(mxs):
         default_bg_model, debug_msgs=True
     )
 
-# %% {"hidden": true}
+# %% hidden=true
 plt.loglog(mxs, sv_gecco)
 plt.xlim(mxs[[0, -1]])
 plt.ylim(1e-35, 1e-23)
@@ -1034,16 +1029,16 @@ plt.axvline(7.98/2)
 plt.axvline(7.98)
 plt.axvline(135)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Vector
 
-# %% {"hidden": true}
+# %% hidden=true
 mvs = [200, 1000]
 
 vm_args = np.array([
@@ -1061,7 +1056,7 @@ VMs = np.array([
 # Instantiate all the models
 vms = np.vectorize(lambda VM, args: VM(**args))(VMs, vm_args)
 
-# %% {"hidden": true}
+# %% hidden=true
 # Recompute constraints
 sv_constraints_vms = np.empty_like(vms)
 for i in range(len(vms)):
@@ -1078,7 +1073,7 @@ np.savez(
 #     "data/sv_constraints_vms.npz", allow_pickle=True
 # )["sv_constraints_vms"]
 
-# %% {"hidden": true}
+# %% hidden=true
 fig, axes = get_formatted_fig(
     *vms.shape, (4 * vms.shape[1], 2.5 * vms.shape[0]),
     mxs[[0, -1]], (1e-31, 1e-20)
@@ -1121,18 +1116,18 @@ axes[-1, -1].legend(
 
 fig.savefig("figures/gecco/vm_comptel.png", bbox_inches="tight")
 
-# %% {"hidden": true}
+# %% hidden=true
 T_obs_nt / 1e6
 
-# %% {"hidden": true}
+# %% hidden=true
 beeper.beep(frequency=900, secs=0.7, blocking=True)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Debugging model-independent class
 
-# %% {"hidden": true}
+# %% hidden=true
 mx = 75
 sm = HiggsPortal(mx, 1e3, 1, 0.1)
 sc_pi0_g = SingleChannel(mx, "pi0 g", 1)
@@ -1140,17 +1135,17 @@ sc_pi_pi = SingleChannel(mx, "pi pi", 1)
 sc_mu_mu = SingleChannel(mx, "mu mu", 1)
 sc_e_e = SingleChannel(mx, "e e", 1)
 
-# %% {"hidden": true}
+# %% hidden=true
 e_gams = np.geomspace(5e0, 3e2, 1000)
 e_cm = 2 * mx * (1 + 1e-3**2)
 
-# %% {"hidden": true}
+# %% hidden=true
 sc_pi0_g.sigma(e_cm)
 
-# %% {"hidden": true}
+# %% hidden=true
 sc_pi0_g.annihilation_cross_sections(e_cm)
 
-# %% {"hidden": true}
+# %% hidden=true
 plt.loglog(e_gams, sm.total_spectrum(e_gams, e_cm))
 # plt.loglog(e_gams, sc_pi_pi.total_spectrum(e_gams, e_cm) * 1/3 + sc_pi0_pi0.total_spectrum(e_gams, e_cm) * 1/5)
 plt.loglog(e_gams, sc_pi0_g.total_spectrum(e_gams, e_cm))
@@ -1162,12 +1157,12 @@ except KeyError:
 plt.xlim(e_gams[[0, -1]])
 plt.ylim(1e-5, 1e0)
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Background models
 
-# %% {"hidden": true}
+# %% hidden=true
 e_gams = np.geomspace(0.3, 3e3, 500)
 
 plt.loglog(e_gams, e_gams**2 * gc_bg_model.dPhi_dEdOmega(e_gams), label="GC (1703.02546)")
@@ -1181,12 +1176,12 @@ plt.legend(fontsize=10)
 
 plt.savefig("figures/gecco/bg_models.png")
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Effective areas
 
-# %% {"hidden": true}
+# %% hidden=true
 plt.figure(figsize=(4, 2.25))
 
 e_gams = np.geomspace(0.1, 1e3, 2000)
@@ -1229,7 +1224,7 @@ plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=7)
 
 plt.savefig("figures/a_effs.pdf", bbox_inches="tight")
 
-# %% {"hidden": true}
+# %% hidden=true
 mxs = np.geomspace(1e15, 1e18, 61) * g_to_MeV
 
 for mx, color in zip(mxs[::20], mpl_colors):
@@ -1254,7 +1249,7 @@ ax.set_xlabel(r"$E_\gamma$ [MeV]")
 ax.set_ylabel(r"$\frac{d^2N}{dE_\gamma\, dt}$ [MeV$^{-1}$ s$^{-1}$]")
 plt.legend()
 
-# %% {"hidden": true}
+# %% hidden=true
 # # Energy resolutions
 # plt.subplot(1, 2, 2)
 # plt.plot(A_eff_adept.x, 100 * energy_res_adept(A_eff_adept.x), "--", label="AdEPT")
@@ -1276,12 +1271,12 @@ plt.legend()
 # plt.ylim(0, 50)
 # plt.xscale("log")
 
-# %% {"hidden": true}
+# %% hidden=true
 
-# %% [markdown] {"heading_collapsed": true}
+# %% [markdown] heading_collapsed=true
 # # Energy resolution
 
-# %% {"hidden": true}
+# %% hidden=true
 e_gams = np.geomspace(0.2, 3e3, 500)
 
 plt.plot(e_gams, energy_res_comptel(e_gams) * np.ones(len(e_gams)), label="COMPTEL")
@@ -1300,4 +1295,4 @@ plt.title("Telescope energy resolution")
 plt.tight_layout()
 plt.savefig("figures/gecco/energy_res.png")
 
-# %% {"hidden": true}
+# %% hidden=true

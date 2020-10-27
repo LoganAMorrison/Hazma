@@ -90,7 +90,9 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return {fs: 0.0 for fs in cs if fs != "total"}
         else:
             return {
-                fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"
+                fs: sigma / cs["total"]
+                for fs, sigma in cs.items()
+                if fs != "total"
             }
 
     @abstractmethod
@@ -492,15 +494,14 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         widths = self.decay_widths()
         dndes_wrapped = {}
 
+        def dnde_null(e_gams):
+            return np.zeros_like(e_gams)
+
         for fs, dnde in self._spectrum_funcs().items():
-
-            def dnde_wrapped(e_gams):
-                if widths[fs] > 0:
-                    return dnde(e_gams)
-                else:
-                    return np.zeros_like(e_gams)
-
-            dndes_wrapped[fs] = dnde_wrapped
+            if widths[fs] > 0.0:
+                dndes_wrapped[fs] = dnde
+            else:
+                dndes_wrapped[fs] = dnde_null
 
         return dndes_wrapped
 
@@ -541,7 +542,9 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         return lines
 
-    def total_conv_spectrum_fn(self, e_gam_min, e_gam_max, energy_res, n_pts=1000):
+    def total_conv_spectrum_fn(
+        self, e_gam_min, e_gam_max, energy_res, n_pts=1000
+    ):
         return convolved_spectrum_fn(
             e_gam_min,
             e_gam_max,

@@ -25,10 +25,11 @@ from hazma.decay import short_kaon as dsk
 include "../decay_helper_functions/parameters.pxd"
 
 cdef spec_dict = {'muon': dm, 'electron': de, 'neutral_pion': dnp,
+                  'neutrino': de,
                   'charged_pion': dcp, 'charged_kaon': dck,
                   'long_kaon': dlk, 'short_kaon': dsk}
 
-cdef mass_dict = {'muon': MASS_MU, 'electron': MASS_E,
+cdef mass_dict = {'muon': MASS_MU, 'electron': MASS_E, 'neutrino': 0.0,
                   'neutral_pion': MASS_PI0, 'charged_pion': MASS_PI, 'charged_kaon': MASS_K, 'long_kaon': MASS_K0,
                   'short_kaon': MASS_K0}
 

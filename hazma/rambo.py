@@ -19,7 +19,9 @@ import warnings
 
 from hazma.hazma_errors import RamboCMETooSmall
 
-from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
+from hazma.field_theory_helper_functions.common_functions import (
+    cross_section_prefactor,
+)
 
 
 def generate_phase_space_point(masses, cme):
@@ -110,19 +112,20 @@ def generate_phase_space(
         if num_cpus > mp.cpu_count():
             num_cpus = int(np.floor(mp.cpu_count() * 0.75))
             warnings.warn(
-                """You only have {] cpus.
-                          Using {] cpus instead.
+                """You only have {} cpus.
+                          Using {} cpus instead.
                           """.format(
                     mp.cpu_count(), num_cpus
                 )
             )
-    if num_cpus is None:
+    else:
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))
         # If user wants a number of phase space points which is less
         # than the number of cpus available, use num_ps_pts cpus instead.
         if num_cpus > num_ps_pts:
             num_cpus = num_ps_pts
+
     # Instantiate `num_cpus` number of workers and divide num_ps_pts among the
     # the workers to speed up phase space generation.
     pool = mp.Pool(num_cpus)
@@ -136,7 +139,8 @@ def generate_phase_space(
     for i in range(num_cpus):
         job_results.append(
             pool.apply_async(
-                generator.generate_space, (num_ps_pts_per_cpu, masses, cme, num_fsp)
+                generator.generate_space,
+                (num_ps_pts_per_cpu, masses, cme, num_fsp),
             )
         )
     # Close the pool and wait for results to finish
@@ -147,7 +151,9 @@ def generate_phase_space(
     # Flatten the outer axis to have a list of phase space points.
     points = points.reshape(actual_num_ps_pts, 4 * num_fsp + 1)
     # Resize the weights to have the correct cross section.
-    points = apply_matrix_elem(points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
+    points = apply_matrix_elem(
+        points, actual_num_ps_pts, num_fsp, mat_elem_sqrd
+    )
 
     return points
 
@@ -221,7 +227,9 @@ def generate_energy_histogram(
 
     num_fsp = len(masses)
 
-    pts = generate_phase_space(masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
+    pts = generate_phase_space(
+        masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus
+    )
 
     actual_num_ps_pts = pts.shape[0]
 
@@ -231,7 +239,11 @@ def generate_energy_histogram(
 
 
 def integrate_over_phase_space(
-    fsp_masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda momenta: 1, num_cpus=None
+    fsp_masses,
+    cme,
+    num_ps_pts=10000,
+    mat_elem_sqrd=lambda momenta: 1,
+    num_cpus=None,
 ):
     """
     Returns the integral over phase space given a squared matrix element, a
@@ -260,13 +272,15 @@ def integrate_over_phase_space(
 
     """
     if not hasattr(fsp_masses, "__len__"):
-        fsp_masses = [fsp_masses]
+        fsp_masses = np.array([fsp_masses])
 
-    if cme < sum(fsp_masses):
+    if cme < np.sum(fsp_masses):
         raise RamboCMETooSmall()
 
     num_fsp = len(fsp_masses)
-    points = generate_phase_space(fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
+    points = generate_phase_space(
+        fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus
+    )
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
     weights = points[:, 4 * num_fsp]
     integral = np.average(weights)
@@ -366,7 +380,11 @@ def compute_annihilation_cross_section(
 
 
 def compute_decay_width(
-    fsp_masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda momenta: 1, num_cpus=None
+    fsp_masses,
+    cme,
+    num_ps_pts=10000,
+    mat_elem_sqrd=lambda momenta: 1,
+    num_cpus=None,
 ):
     r"""
     Computes the decay width for a given process.

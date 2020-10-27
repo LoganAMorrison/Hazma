@@ -5,8 +5,13 @@
 # date : December 2017
 
 from hazma import rambo
-from hazma.gamma_ray_helper_functions.gamma_ray_generator import gamma, gamma_point
-from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
+from hazma.gamma_ray_helper_functions.gamma_ray_generator import (
+    gamma,
+    gamma_point,
+)
+from hazma.field_theory_helper_functions.common_functions import (
+    cross_section_prefactor,
+)
 import numpy as np
 
 
@@ -101,137 +106,158 @@ def gamma_ray_decay(
     )
 
 
-def gamma_ray_fsr(
-    isp_masses,
-    fsp_masses,
-    cme,
-    mat_elem_sqrd_tree=lambda k_list: 1.0,
-    mat_elem_sqrd_rad=lambda k_list: 1.0,
-    num_ps_pts=1000,
-    num_bins=25,
+def __gamma_ray_fsr(
+    photon_energy, cme, isp_masses, fsp_masses, non_rad, msqrd, nevents=1000
 ):
-    r"""Returns the FSR spectrum for a user-specified particle physics process.
-
-    This is done by first running a Monte Carlo to compute the non-radiative
-    cross cross_section, :math:`\sigma(I \to F)` from the non-radiative squared
-    matrix element: :math:`|M(I \to F)|^2`. The differential radiative cross
-    section, :math:`\frac{d\sigma(I \to F + \gamma)}{dE_{\gamma}}`, is then
-    computed using a Monte Carlo using the radiative squared matrix element
-    :math:`|M(I \to F + \gamma)|^2`. The spectrum is then
-
-    .. math:: \frac{dN}{dE_{\gamma}} = \frac{1}{\sigma(I \to F)}
-        \frac{d\sigma(I \to F + \gamma)}{dE_{\gamma}}
+    """
+    Compute the gamma-ray spectrum for a given process at specified photon
+    energies.
 
     Parameters
     ----------
-    isp_masses : np.ndarray[double, ndim=1]
-        Array of masses of the initial state particles.
-    fsp_masses : np.ndarray[double, ndim=1]
-        Array of masses of the final state particles. Note that the photon
-        should be the last mass.
-    cme : double
-        Center of mass energy of the process.
-    mat_elem_sqrd_tree : double(*)(np.ndarray[double, ndim=1])
-        Tree level squared matrix element.
-    mat_elem_sqrd_rad : double(*)(np.ndarray[double, ndim=1])
-        Radiative squared matrix element.
-    num_ps_pts : int
-        Number of Monte Carlo events to generate.
-    num_bins : int
-        Number of gamma ray energies to use.
+    photon_energy: float
+        Energy of the photon.
+    cme: float
+        Center-of-mass energy. This will be ignored in the case where
+        `len(isp_masses) == 1` (i.e. for the decay of a particle.)
+    isp_masses: array
+        List of the initial state particle masses.
+    fsp_masses: array
+        List of the final state particle masses excluding the photon.
+    non_rad: float
+        The non-radiative cross-section or width.
+    msqrd: callable
+        Function to compute the squared and averaged cross-section or width.
+        The signature must be `msqrd(momenta)`, where `momenta` is a list of
+        four-momenta of the final state particles. `momenta` must be ordered
+        such that the momentum of particle `i` has mass equal to
+        `fsp_masses[i]` (except the photon.) The photon momentum must be the
+        last momentum in the list, i.e. at `momentum[len(fsp_masses)]`.
+    nevents: int, optional
+        Number of events to use for computing the dnde.
 
     Returns
     -------
-    photon_energies : np.ndarray[double, ndim=1]
-        Array of the gamma ray energies.
-    spectrum : np.ndarray[double, ndim=1]
-        Array of the spectrum values evaluated at the gamma ray energies.
-
-    Examples
-    --------
-
-    Compute spectrum from dark matter annihilating into a pair of charged
-    pion through via an effective operator:
-
-        .. math:: \frac{c_1}{\Lambda}\chi\bar{\chi}\pi^{+}\pi^{-}
-
-    Step up a class to compute the tree and radiative matrix elements. We could
-    just specify the functions, but we would have to use globals to specify
-    parameters. We find a class easier::
-
-
-        from hazma.gamma_ray import gamma_ray_fsr
-        from hazma.parameters import charged_pion_mass as mpi
-        from hazma.parameters import qe # electric charge
-        from hazma.field_theory_helper_functions.common_functions \
-            import minkowski_dot as MDot
-        class Msqrds:
-            def __init__(self, mx, c1, lam):
-                self.mx = mx
-                self.c1 = c1
-                self.lam = lam
-            def tree(self, momenta):
-                ppi1 = momenta[0] # first charged pion four-momentum
-                ppi2 = momenta[1] # second charged pion four-momentum
-                cme = ppi1[0] + ppi2[0] # center-of-mass energy
-                return c1**2 * (cme**2 - 4 * self.mx**2) / (2 * self.lam**2)
-            def radiative(self, momenta):
-                ppi1 = momenta[0] # first charged pion four-momentum
-                ppi2 = momenta[1] # second charged pion four-momentum
-                k = momenta[2] # photon four-momentum
-                Q = ppi1[0] + ppi2[0] + k[0] # center-of-mass energy
-                mux = self.mx / Q
-                mupi = mpi / Q
-                s = MDot(ppi1 + ppi2, ppi1 + ppi2)
-                t = MDot(ppi1 + k, ppi1 + k)
-                u = MDot(ppi2 + k, ppi2 + k)
-                return ((2 * self.c1**2 * (-1 + 4*mux**2) * Q**2 * qe**2 *
-                        (s * (-(mupi**2 * Q**2) + t) * (mupi**2 * Q**2 - u) +
-                        (-2 * mupi**3 * Q**3 + mupi * Q * (t + u))**2)) /
-                        (self.lam**2 * (-(mupi**2 * Q**2) + t)**2 *
-                        (-(mupi**2 * Q**2) + u)**2)
-
-    Now we instantiate an object for the matrix elements, specify the
-    parameters to pass to ``gamma_ray_fsr`` and compute spectra::
-
-        msqrds = Msqrds(mx=200.0, c1=1.0, lam=1e6)
-        num_ps_pts = 10**6
-        isp_masses = np.array([msqrds.mx, msqrds.mx])
-        fsp_masses = np.array([mpi, mpi, 0.0])
-        cme = 2.0 * msqrds.mx * (1 + 0.5 * 1e-6)
-        num_bins = 150
-        gamma_ray_fsr(isp_masses, fsp_masses, cme, msqrds.tree,
-                      msqrds.radiative, num_ps_pts, num_bins)
-
+    dnde: tuple of floats
+        The photon spectrum at `photon_energy` and the error estimate.
     """
+    _cme = cme if len(isp_masses) == 2 else isp_masses[0]
+
+    if _cme * (_cme - 2 * photon_energy) < np.sum(fsp_masses) ** 2:
+        return (0.0, 0.0)
+
+    # Energy of the photon in the rest frame where final state particles
+    # (excluding the photon)
+    e_gamma = (photon_energy * _cme) / np.sqrt(
+        _cme * (-2 * photon_energy + _cme)
+    )
+    # Total energy of the final state particles (excluding the photon) in their
+    # rest frame
+    _cme_rf = np.sqrt(_cme * (-2 * photon_energy + _cme))
+    # Number of final state particles
+    nfsp = len(fsp_masses)
+    # Generate events for the final state particles in their rest frame
+    events = rambo.generate_phase_space(fsp_masses, _cme_rf, nevents)
+
+    # Photon momenta in N + photon rest frame
+    phis = np.random.rand(nevents) * 2.0 * np.pi
+    cts = 2.0 * np.random.rand(nevents) - 1.0
+    g_momenta = [
+        np.array(
+            [
+                e_gamma,
+                e_gamma * np.cos(phi) * np.sqrt(1 - ct ** 2),
+                e_gamma * np.sin(phi) * np.sqrt(1 - ct ** 2),
+                e_gamma * ct,
+            ]
+        )
+        for phi, ct in zip(phis, cts)
+    ]
+
+    # momenta in the rest frame of N + photon
+    fsp_momenta = [
+        np.append(event[:-1], pg) for event, pg in zip(events, g_momenta)
+    ]
+
+    weights = [event[-1] for event in events]
+
+    terms = [
+        weight * msqrd(ps_fps.reshape((nfsp + 1, 4)))
+        for ps_fps, weight in zip(fsp_momenta, weights)
+    ]
+    res = np.average(terms)
+    std = np.std(terms) / np.sqrt(nevents)
+    pre = 1.0 / non_rad * photon_energy / (16 * np.pi ** 3) * (4.0 * np.pi)
+
     if len(isp_masses) == 1:
-        cross_section = rambo.compute_decay_width(
-            num_ps_pts, fsp_masses[0:-1], cme, mat_elem_sqrd=mat_elem_sqrd_tree
-        )[0]
-
-        pre_factor = 1.0 / (2.0 * cme)
+        pre *= 1.0 / (2.0 * isp_masses[0])
     else:
-        cross_section = rambo.compute_annihilation_cross_section(
-            isp_masses,
-            fsp_masses[0:-1],
-            cme,
-            num_ps_pts=num_ps_pts,
-            mat_elem_sqrd=mat_elem_sqrd_tree,
-        )[0]
+        pre *= cross_section_prefactor(isp_masses[0], isp_masses[1], cme)
 
-        m1 = isp_masses[0]
-        m2 = isp_masses[1]
-        pre_factor = cross_section_prefactor(m1, m2, cme)
+    return pre * res, pre * std
 
-    eng_hists = rambo.generate_energy_histogram(
-        fsp_masses,
+
+def gamma_ray_fsr(
+    photon_energies, cme, isp_masses, fsp_masses, non_rad, msqrd, nevents=1000
+):
+    """
+    Compute the gamma-ray spectrum for a given process at specified photon
+    energies.
+
+    Parameters
+    ----------
+    photon_energies: float or np.array
+        Energy of the photon.
+    cme: float
+        Center-of-mass energy. This will be ignored in the case where
+        `len(isp_masses) == 1` (i.e. for the decay of a particle.)
+    isp_masses: array
+        List of the initial state particle masses.
+    fsp_masses: array
+        List of the final state particle masses excluding the photon.
+    non_rad: float
+        The non-radiative cross-section or width.
+    msqrd: callable
+        Function to compute the squared and averaged cross-section or width.
+        The signature must be `msqrd(momenta)`, where `momenta` is a list of
+        four-momenta of the final state particles. `momenta` must be ordered
+        such that the momentum of particle `i` has mass equal to
+        `fsp_masses[i]` (except the photon.) The photon momentum must be the
+        last momentum in the list, i.e. at `momentum[len(fsp_masses)]`.
+    nevents: int, optional
+        Number of events to use for computing the dnde.
+
+    Returns
+    -------
+    dnde: array of (float, float)
+        The photon spectrum at `photon_energy` and the error estimate.
+    """
+    assert hasattr(isp_masses, "__len__"), "`isp_masses` must be a list."
+    assert hasattr(fsp_masses, "__len__"), "`fsp_masses` must be a list."
+    assert len(isp_masses) in [1, 2], "`isp_masses` must be of length 1 or 2."
+
+    if hasattr(photon_energies, "__len__"):
+        return np.array(
+            [
+                __gamma_ray_fsr(
+                    e,
+                    cme,
+                    isp_masses,
+                    fsp_masses,
+                    non_rad,
+                    msqrd,
+                    nevents=nevents,
+                )
+                for e in photon_energies
+            ]
+        )
+    return __gamma_ray_fsr(
+        photon_energies,
         cme,
-        num_ps_pts=num_ps_pts,
-        mat_elem_sqrd=mat_elem_sqrd_rad,
-        num_bins=num_bins,
-    )[0]
+        isp_masses,
+        fsp_masses,
+        non_rad,
+        msqrd,
+        nevents=nevents,
+    )
 
-    photon_energies = eng_hists[-1, 0]
-    spectrum = eng_hists[-1, 1] * pre_factor / cross_section
-
-    return photon_energies, spectrum
