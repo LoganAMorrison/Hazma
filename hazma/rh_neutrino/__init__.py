@@ -22,9 +22,9 @@ See Also
 `hazma.theory`
 
 """
+
 __all__ = ["RHNeutrino"]
 
-import numpy as np
 
 from hazma.theory import TheoryDec
 from hazma.parameters import (
@@ -123,23 +123,63 @@ class RHNeutrino(TheoryDec):
         elif lepton == "mu":
             self._ml = mmu
         else:
-            raise ValueError(
-                "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
-            )
+            raise ValueError("Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton))
 
     def dnde_nu_l_l_fsr(self, photon_energies):
+        """
+        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
+        right-handed neutrino into an active neutrino and two charged leptons.
+
+        Parameters
+        ----------
+        photon_energies: float or array-like
+            Photon energies where the spectrum should be computed.
+
+        Returns
+        -------
+        spectrum: float or array-like
+            Gamma-ray spectrum.
+        """
         width = self.width_nu_l_l()
         return self._dnde_nu_l_l_fsr(
             photon_energies, self.mx, self.stheta, self.ml, width
         )
 
     def dnde_l_pi_pi0_fsr(self, photon_energies):
+        """
+        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
+        right-handed neutrino a charged lepton, charged pion and neutral pion.
+
+        Parameters
+        ----------
+        photon_energies: float or array-like
+            Photon energies where the spectrum should be computed.
+
+        Returns
+        -------
+        spectrum: float or array-like
+            Gamma-ray spectrum.
+        """
         width = self.width_l_pi_pi0()
         return self._dnde_l_pi_pi0_fsr(
             photon_energies, self.mx, self.stheta, self.ml, width
         )
 
     def dnde_nu_pi_pi_fsr(self, photon_energies):
+        """
+        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
+        right-handed neutrino into an active neutrino and two charged pions.
+
+        Parameters
+        ----------
+        photon_energies: float or array-like
+            Photon energies where the spectrum should be computed.
+
+        Returns
+        -------
+        spectrum: float or array-like
+            Gamma-ray spectrum.
+        """
         width = self.width_nu_pi_pi()
         return self._dnde_nu_pi_pi_fsr(
             photon_energies, self.mx, self.stheta, self.ml, width
@@ -201,9 +241,7 @@ class RHNeutrino(TheoryDec):
         return {"pi l": dnde_pi_l}
 
     def _positron_line_energies(self):
-        return {
-            "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2) / (2.0 * self.mx)
-        }
+        return {"pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2) / (2.0 * self.mx)}
 
     @property
     def mx(self):
@@ -222,7 +260,6 @@ class RHNeutrino(TheoryDec):
         val: float
             New right-handed neutrino mass.
         """
-        self._recompute_widths = True
         self._mx = val
 
     @property
@@ -277,10 +314,3 @@ class RHNeutrino(TheoryDec):
         neutrino mixes with.
         """
         return self._ml
-
-    @ml.setter
-    def ml(self, val):
-        raise ValueError(
-            "Cannot set the lepton mass. Specify 'lepton' instead."
-        )
-

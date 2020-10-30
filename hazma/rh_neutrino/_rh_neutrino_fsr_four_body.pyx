@@ -2,6 +2,7 @@
 This file contains cythonized functions for computing gamma-ray spectra
 from 4-body final states occuring in the right-handed neutrino model.
 """
+
 from hazma.gamma_ray_helper_functions.gamma_ray_fsr cimport c_gamma_ray_fsr
 from libcpp.vector cimport vector
 from libcpp.functional cimport function
@@ -10,11 +11,11 @@ import cython
 
 cdef double MW = 80.379e3
 cdef double MH = 125.10e3
-cdef double mpi0 = 134.9766    # neutral pion
-cdef double mpi = 139.57018    # Charged pion
-cdef double alpha_em = 1.0 / 137.04  # fine structure constant.
-cdef double GF = 1.1663787e-11  # Fermi constant in MeV**-2
-cdef double vh = 246.22795e3  # Higgs VEV in MeV
+cdef double mpi0 = 134.9766
+cdef double mpi = 139.57018
+cdef double alpha_em = 1.0 / 137.04
+cdef double GF = 1.1663787e-11
+cdef double vh = 246.22795e3
 cdef double qe = sqrt(4.0 * M_PI * alpha_em)
 cdef double sw2 = 0.22290
 cdef double sw = sqrt(sw2)
@@ -24,7 +25,20 @@ cdef double Vud = 0.974267
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef double LDot(vector[double] &fv1,vector[double] &fv2):
+cdef double ldot(vector[double] &fv1,vector[double] &fv2):
+    """
+    Compute the scalar product between two four-vectors.
+
+    Parameters
+    ----------
+    fv1, fv2: vector[double]
+       Four-vectors to compute scalar product of.
+
+    Returns
+    -------
+    dot: double
+        The scalar-product of `fv1` and `fv2`.
+    """
     return fv1[0] * fv2[0] - fv1[1] * fv2[1] - fv1[2] * fv2[2] - fv1[3] * fv2[3]
 
 
@@ -71,100 +85,100 @@ cdef double msqrd_nu_pi_pi_g(vector[vector[double]] &momenta, vector[double]&par
         * (-1 + smix ** 2)
         * (smix - 2 * smix * sw ** 2) ** 2
         * (
-            LDot(k1, k2) ** 2
+            ldot(k1, k2) ** 2
             * (
-                mpi ** 2 * LDot(k2, k4) ** 2
-                - 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
-                + mpi ** 2 * LDot(k3, k4) ** 2
+                mpi ** 2 * ldot(k2, k4) ** 2
+                - 2 * ldot(k2, k3) * ldot(k2, k4) * ldot(k3, k4)
+                + mpi ** 2 * ldot(k3, k4) ** 2
             )
-            + LDot(k1, k3) ** 2
+            + ldot(k1, k3) ** 2
             * (
-                mpi ** 2 * LDot(k2, k4) ** 2
-                - 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
-                + mpi ** 2 * LDot(k3, k4) ** 2
+                mpi ** 2 * ldot(k2, k4) ** 2
+                - 2 * ldot(k2, k3) * ldot(k2, k4) * ldot(k3, k4)
+                + mpi ** 2 * ldot(k3, k4) ** 2
             )
-            + LDot(k1, k2)
+            + ldot(k1, k2)
             * (
-                mpi ** 2 * LDot(k2, k4) ** 3
+                mpi ** 2 * ldot(k2, k4) ** 3
                 + mpi ** 2
-                * LDot(k3, k4) ** 2
+                * ldot(k3, k4) ** 2
                 * (
                     -(mpi ** 2)
-                    - 2 * LDot(k1, k3)
-                    + 2 * LDot(k1, k4)
-                    + LDot(k2, k3)
-                    + LDot(k3, k4)
+                    - 2 * ldot(k1, k3)
+                    + 2 * ldot(k1, k4)
+                    + ldot(k2, k3)
+                    + ldot(k3, k4)
                 )
-                - LDot(k2, k4) ** 2
+                - ldot(k2, k4) ** 2
                 * (
                     mpi ** 4
-                    + 2 * mpi ** 2 * LDot(k1, k3)
-                    + 2 * mpi ** 2 * LDot(k1, k4)
-                    - mpi ** 2 * LDot(k2, k3)
-                    + 3 * mpi ** 2 * LDot(k3, k4)
-                    + 2 * LDot(k2, k3) * LDot(k3, k4)
+                    + 2 * mpi ** 2 * ldot(k1, k3)
+                    + 2 * mpi ** 2 * ldot(k1, k4)
+                    - mpi ** 2 * ldot(k2, k3)
+                    + 3 * mpi ** 2 * ldot(k3, k4)
+                    + 2 * ldot(k2, k3) * ldot(k3, k4)
                 )
-                + LDot(k2, k4)
-                * LDot(k3, k4)
+                + ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
-                    -2 * LDot(k2, k3) ** 2
-                    + mpi ** 2 * LDot(k3, k4)
+                    -2 * ldot(k2, k3) ** 2
+                    + mpi ** 2 * ldot(k3, k4)
                     + 2
-                    * LDot(k2, k3)
-                    * (mpi ** 2 + 2 * LDot(k1, k3) + LDot(k3, k4))
+                    * ldot(k2, k3)
+                    * (mpi ** 2 + 2 * ldot(k1, k3) + ldot(k3, k4))
                 )
             )
-            + LDot(k1, k4)
+            + ldot(k1, k4)
             * (
-                mpi ** 2 * LDot(k2, k4) ** 3
+                mpi ** 2 * ldot(k2, k4) ** 3
                 + mpi ** 2
-                * LDot(k3, k4) ** 2
-                * (-(mpi ** 2) + LDot(k1, k4) + LDot(k2, k3) + LDot(k3, k4))
-                + LDot(k2, k4)
-                * LDot(k3, k4)
+                * ldot(k3, k4) ** 2
+                * (-(mpi ** 2) + ldot(k1, k4) + ldot(k2, k3) + ldot(k3, k4))
+                + ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
-                    -2 * LDot(k2, k3) ** 2
-                    + mpi ** 2 * LDot(k3, k4)
+                    -2 * ldot(k2, k3) ** 2
+                    + mpi ** 2 * ldot(k3, k4)
                     + 2
-                    * LDot(k2, k3)
-                    * (mpi ** 2 + LDot(k1, k4) + LDot(k3, k4))
+                    * ldot(k2, k3)
+                    * (mpi ** 2 + ldot(k1, k4) + ldot(k3, k4))
                 )
-                + LDot(k2, k4) ** 2
+                + ldot(k2, k4) ** 2
                 * (
                     -(mpi ** 4)
-                    + mpi ** 2 * LDot(k1, k4)
-                    + mpi ** 2 * LDot(k3, k4)
-                    + LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k3, k4))
+                    + mpi ** 2 * ldot(k1, k4)
+                    + mpi ** 2 * ldot(k3, k4)
+                    + ldot(k2, k3) * (mpi ** 2 + 2 * ldot(k3, k4))
                 )
             )
-            + LDot(k1, k3)
+            + ldot(k1, k3)
             * (
-                mpi ** 2 * LDot(k2, k4) ** 3
+                mpi ** 2 * ldot(k2, k4) ** 3
                 + mpi ** 2
-                * LDot(k3, k4) ** 2
+                * ldot(k3, k4) ** 2
                 * (
                     -(mpi ** 2)
-                    - 2 * LDot(k1, k4)
-                    + LDot(k2, k3)
-                    + LDot(k3, k4)
+                    - 2 * ldot(k1, k4)
+                    + ldot(k2, k3)
+                    + ldot(k3, k4)
                 )
-                - LDot(k2, k4)
-                * LDot(k3, k4)
+                - ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
-                    2 * LDot(k2, k3) ** 2
-                    - 2 * LDot(k2, k3) * (mpi ** 2 - LDot(k3, k4))
-                    + 3 * mpi ** 2 * LDot(k3, k4)
+                    2 * ldot(k2, k3) ** 2
+                    - 2 * ldot(k2, k3) * (mpi ** 2 - ldot(k3, k4))
+                    + 3 * mpi ** 2 * ldot(k3, k4)
                 )
-                + LDot(k2, k4) ** 2
+                + ldot(k2, k4) ** 2
                 * (
                     -(mpi ** 4)
-                    + 2 * mpi ** 2 * LDot(k1, k4)
-                    + mpi ** 2 * LDot(k3, k4)
-                    + LDot(k2, k3) * (mpi ** 2 + 2 * LDot(k3, k4))
+                    + 2 * mpi ** 2 * ldot(k1, k4)
+                    + mpi ** 2 * ldot(k3, k4)
+                    + ldot(k2, k3) * (mpi ** 2 + 2 * ldot(k3, k4))
                 )
             )
         )
-    ) / ((-1 + sw ** 2) * LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
+    ) / ((-1 + sw ** 2) * ldot(k2, k4) ** 2 * ldot(k3, k4) ** 2)
 
 
 @cython.boundscheck(False)
@@ -203,166 +217,166 @@ cdef double msqrd_l_pi_pi0_g(vector[vector[double]] &momenta, vector[double]& pa
         * smix ** 2
         * Vud ** 2
         * (
-            2 * mpi ** 2 * LDot(k1, k4) ** 4
-            + LDot(k1, k4) ** 3
+            2 * mpi ** 2 * ldot(k1, k4) ** 4
+            + ldot(k1, k4) ** 3
             * (
                 mpi ** 4
                 - 3 * mpi ** 2 * mpi0 ** 2
-                - 4 * mpi ** 2 * LDot(k1, k3)
-                + 2 * mpi ** 2 * LDot(k2, k3)
-                + 4 * LDot(k1, k2) * (mpi ** 2 - LDot(k2, k4))
-                + 4 * mpi ** 2 * LDot(k2, k4)
-                - 6 * LDot(k2, k3) * LDot(k2, k4)
-                - 2 * LDot(k2, k4) ** 2
-                + 2 * mpi ** 2 * LDot(k3, k4)
+                - 4 * mpi ** 2 * ldot(k1, k3)
+                + 2 * mpi ** 2 * ldot(k2, k3)
+                + 4 * ldot(k1, k2) * (mpi ** 2 - ldot(k2, k4))
+                + 4 * mpi ** 2 * ldot(k2, k4)
+                - 6 * ldot(k2, k3) * ldot(k2, k4)
+                - 2 * ldot(k2, k4) ** 2
+                + 2 * mpi ** 2 * ldot(k3, k4)
             )
             + ml ** 2
-            * LDot(k2, k4) ** 2
+            * ldot(k2, k4) ** 2
             * (
                 -(ml ** 2 * mpi ** 2)
                 - ml ** 2 * mpi0 ** 2
-                + 2 * LDot(k1, k2) ** 2
-                + 2 * LDot(k1, k3) ** 2
-                + 2 * ml ** 2 * LDot(k2, k3)
-                + mpi ** 2 * LDot(k2, k4)
-                - 3 * mpi0 ** 2 * LDot(k2, k4)
-                + 2 * LDot(k2, k3) * LDot(k2, k4)
-                + 2 * LDot(k2, k4) ** 2
-                + LDot(k1, k2)
+                + 2 * ldot(k1, k2) ** 2
+                + 2 * ldot(k1, k3) ** 2
+                + 2 * ml ** 2 * ldot(k2, k3)
+                + mpi ** 2 * ldot(k2, k4)
+                - 3 * mpi0 ** 2 * ldot(k2, k4)
+                + 2 * ldot(k2, k3) * ldot(k2, k4)
+                + 2 * ldot(k2, k4) ** 2
+                + ldot(k1, k2)
                 * (
                     mpi ** 2
                     - 3 * mpi0 ** 2
-                    - 4 * LDot(k1, k3)
-                    + 2 * LDot(k2, k3)
-                    + 4 * LDot(k2, k4)
-                    - 4 * LDot(k3, k4)
+                    - 4 * ldot(k1, k3)
+                    + 2 * ldot(k2, k3)
+                    + 4 * ldot(k2, k4)
+                    - 4 * ldot(k3, k4)
                 )
-                - 3 * mpi ** 2 * LDot(k3, k4)
-                + mpi0 ** 2 * LDot(k3, k4)
-                + 2 * LDot(k2, k3) * LDot(k3, k4)
-                - 4 * LDot(k2, k4) * LDot(k3, k4)
-                + 2 * LDot(k3, k4) ** 2
-                + LDot(k1, k3)
+                - 3 * mpi ** 2 * ldot(k3, k4)
+                + mpi0 ** 2 * ldot(k3, k4)
+                + 2 * ldot(k2, k3) * ldot(k3, k4)
+                - 4 * ldot(k2, k4) * ldot(k3, k4)
+                + 2 * ldot(k3, k4) ** 2
+                + ldot(k1, k3)
                 * (
                     -3 * mpi ** 2
                     + mpi0 ** 2
-                    + 2 * LDot(k2, k3)
-                    - 4 * LDot(k2, k4)
-                    + 4 * LDot(k3, k4)
+                    + 2 * ldot(k2, k3)
+                    - 4 * ldot(k2, k4)
+                    + 4 * ldot(k3, k4)
                 )
             )
-            + LDot(k1, k4) ** 2
+            + ldot(k1, k4) ** 2
             * (
                 -(ml ** 2 * mpi ** 4)
                 - ml ** 2 * mpi ** 2 * mpi0 ** 2
-                + 2 * mpi ** 2 * LDot(k1, k3) ** 2
-                + 2 * ml ** 2 * mpi ** 2 * LDot(k2, k3)
-                + 2 * LDot(k1, k2) ** 2 * (mpi ** 2 - 4 * LDot(k2, k4))
-                + mpi ** 4 * LDot(k2, k4)
-                - 3 * mpi ** 2 * mpi0 ** 2 * LDot(k2, k4)
-                - 2 * ml ** 2 * LDot(k2, k3) * LDot(k2, k4)
-                - mpi ** 2 * LDot(k2, k3) * LDot(k2, k4)
-                + mpi0 ** 2 * LDot(k2, k3) * LDot(k2, k4)
-                + 2 * LDot(k2, k3) ** 2 * LDot(k2, k4)
-                + mpi ** 2 * LDot(k2, k4) ** 2
-                + 3 * mpi0 ** 2 * LDot(k2, k4) ** 2
-                - 8 * LDot(k2, k3) * LDot(k2, k4) ** 2
-                - 4 * LDot(k2, k4) ** 3
-                + 2 * ml ** 2 * mpi ** 2 * LDot(k3, k4)
-                + 2 * mpi ** 2 * LDot(k2, k4) * LDot(k3, k4)
-                + 2 * LDot(k2, k3) * LDot(k2, k4) * LDot(k3, k4)
-                + 4 * LDot(k2, k4) ** 2 * LDot(k3, k4)
-                + LDot(k1, k2)
+                + 2 * mpi ** 2 * ldot(k1, k3) ** 2
+                + 2 * ml ** 2 * mpi ** 2 * ldot(k2, k3)
+                + 2 * ldot(k1, k2) ** 2 * (mpi ** 2 - 4 * ldot(k2, k4))
+                + mpi ** 4 * ldot(k2, k4)
+                - 3 * mpi ** 2 * mpi0 ** 2 * ldot(k2, k4)
+                - 2 * ml ** 2 * ldot(k2, k3) * ldot(k2, k4)
+                - mpi ** 2 * ldot(k2, k3) * ldot(k2, k4)
+                + mpi0 ** 2 * ldot(k2, k3) * ldot(k2, k4)
+                + 2 * ldot(k2, k3) ** 2 * ldot(k2, k4)
+                + mpi ** 2 * ldot(k2, k4) ** 2
+                + 3 * mpi0 ** 2 * ldot(k2, k4) ** 2
+                - 8 * ldot(k2, k3) * ldot(k2, k4) ** 2
+                - 4 * ldot(k2, k4) ** 3
+                + 2 * ml ** 2 * mpi ** 2 * ldot(k3, k4)
+                + 2 * mpi ** 2 * ldot(k2, k4) * ldot(k3, k4)
+                + 2 * ldot(k2, k3) * ldot(k2, k4) * ldot(k3, k4)
+                + 4 * ldot(k2, k4) ** 2 * ldot(k3, k4)
+                + ldot(k1, k2)
                 * (
                     mpi ** 4
                     - 3 * mpi ** 2 * mpi0 ** 2
-                    + 2 * LDot(k2, k3) * (mpi ** 2 - 5 * LDot(k2, k4))
-                    - 4 * LDot(k1, k3) * (mpi ** 2 - 2 * LDot(k2, k4))
-                    + 2 * mpi ** 2 * LDot(k2, k4)
-                    + 6 * mpi0 ** 2 * LDot(k2, k4)
-                    - 10 * LDot(k2, k4) ** 2
-                    + 2 * mpi ** 2 * LDot(k3, k4)
-                    + 2 * LDot(k2, k4) * LDot(k3, k4)
+                    + 2 * ldot(k2, k3) * (mpi ** 2 - 5 * ldot(k2, k4))
+                    - 4 * ldot(k1, k3) * (mpi ** 2 - 2 * ldot(k2, k4))
+                    + 2 * mpi ** 2 * ldot(k2, k4)
+                    + 6 * mpi0 ** 2 * ldot(k2, k4)
+                    - 10 * ldot(k2, k4) ** 2
+                    + 2 * mpi ** 2 * ldot(k3, k4)
+                    + 2 * ldot(k2, k4) * ldot(k3, k4)
                 )
-                + LDot(k1, k3)
+                + ldot(k1, k3)
                 * (
-                    -4 * mpi ** 2 * LDot(k2, k4)
-                    + 4 * LDot(k2, k4) ** 2
-                    + 2 * LDot(k2, k3) * (mpi ** 2 + LDot(k2, k4))
-                    + mpi ** 2 * (-3 * mpi ** 2 + mpi0 ** 2 + 2 * LDot(k3, k4))
+                    -4 * mpi ** 2 * ldot(k2, k4)
+                    + 4 * ldot(k2, k4) ** 2
+                    + 2 * ldot(k2, k3) * (mpi ** 2 + ldot(k2, k4))
+                    + mpi ** 2 * (-3 * mpi ** 2 + mpi0 ** 2 + 2 * ldot(k3, k4))
                 )
             )
-            - LDot(k1, k4)
-            * LDot(k2, k4)
+            - ldot(k1, k4)
+            * ldot(k2, k4)
             * (
-                4 * LDot(k1, k2) ** 3
+                4 * ldot(k1, k2) ** 3
                 + 2
-                * LDot(k1, k2) ** 2
+                * ldot(k1, k2) ** 2
                 * (
                     mpi ** 2
                     - 3 * mpi0 ** 2
-                    - 4 * LDot(k1, k3)
-                    + 2 * LDot(k2, k3)
-                    + 4 * LDot(k2, k4)
-                    - LDot(k3, k4)
+                    - 4 * ldot(k1, k3)
+                    + 2 * ldot(k2, k3)
+                    + 4 * ldot(k2, k4)
+                    - ldot(k3, k4)
                 )
-                + LDot(k1, k2)
+                + ldot(k1, k2)
                 * (
                     -2 * ml ** 2 * mpi ** 2
                     - 2 * ml ** 2 * mpi0 ** 2
-                    + 4 * LDot(k1, k3) ** 2
-                    - 4 * ml ** 2 * LDot(k2, k4)
-                    + 2 * mpi ** 2 * LDot(k2, k4)
-                    - 6 * mpi0 ** 2 * LDot(k2, k4)
-                    + 6 * LDot(k2, k4) ** 2
-                    + 2 * ml ** 2 * LDot(k3, k4)
-                    - 3 * mpi ** 2 * LDot(k3, k4)
-                    + mpi0 ** 2 * LDot(k3, k4)
-                    - 8 * LDot(k2, k4) * LDot(k3, k4)
-                    + 2 * LDot(k3, k4) ** 2
+                    + 4 * ldot(k1, k3) ** 2
+                    - 4 * ml ** 2 * ldot(k2, k4)
+                    + 2 * mpi ** 2 * ldot(k2, k4)
+                    - 6 * mpi0 ** 2 * ldot(k2, k4)
+                    + 6 * ldot(k2, k4) ** 2
+                    + 2 * ml ** 2 * ldot(k3, k4)
+                    - 3 * mpi ** 2 * ldot(k3, k4)
+                    + mpi0 ** 2 * ldot(k3, k4)
+                    - 8 * ldot(k2, k4) * ldot(k3, k4)
+                    + 2 * ldot(k3, k4) ** 2
                     + 2
-                    * LDot(k2, k3)
-                    * (2 * ml ** 2 + 2 * LDot(k2, k4) + LDot(k3, k4))
+                    * ldot(k2, k3)
+                    * (2 * ml ** 2 + 2 * ldot(k2, k4) + ldot(k3, k4))
                     + 2
-                    * LDot(k1, k3)
+                    * ldot(k1, k3)
                     * (
                         -3 * mpi ** 2
                         + mpi0 ** 2
-                        + 2 * LDot(k2, k3)
-                        - 7 * LDot(k2, k4)
-                        + 3 * LDot(k3, k4)
+                        + 2 * ldot(k2, k3)
+                        - 7 * ldot(k2, k4)
+                        + 3 * ldot(k3, k4)
                     )
                 )
-                + LDot(k2, k4)
+                + ldot(k2, k4)
                 * (
                     -(ml ** 2 * mpi ** 2)
                     + 3 * ml ** 2 * mpi0 ** 2
-                    + 2 * LDot(k1, k3) ** 2
-                    - 2 * ml ** 2 * LDot(k2, k4)
-                    + mpi ** 2 * LDot(k2, k4)
-                    - 3 * mpi0 ** 2 * LDot(k2, k4)
-                    + 2 * LDot(k2, k4) ** 2
-                    + 2 * ml ** 2 * LDot(k3, k4)
-                    - 3 * mpi ** 2 * LDot(k3, k4)
-                    + mpi0 ** 2 * LDot(k3, k4)
-                    - 4 * LDot(k2, k4) * LDot(k3, k4)
-                    + 2 * LDot(k3, k4) ** 2
+                    + 2 * ldot(k1, k3) ** 2
+                    - 2 * ml ** 2 * ldot(k2, k4)
+                    + mpi ** 2 * ldot(k2, k4)
+                    - 3 * mpi0 ** 2 * ldot(k2, k4)
+                    + 2 * ldot(k2, k4) ** 2
+                    + 2 * ml ** 2 * ldot(k3, k4)
+                    - 3 * mpi ** 2 * ldot(k3, k4)
+                    + mpi0 ** 2 * ldot(k3, k4)
+                    - 4 * ldot(k2, k4) * ldot(k3, k4)
+                    + 2 * ldot(k3, k4) ** 2
                     + 2
-                    * LDot(k2, k3)
-                    * (-(ml ** 2) + LDot(k2, k4) + LDot(k3, k4))
-                    + LDot(k1, k3)
+                    * ldot(k2, k3)
+                    * (-(ml ** 2) + ldot(k2, k4) + ldot(k3, k4))
+                    + ldot(k1, k3)
                     * (
                         2 * ml ** 2
                         - 3 * mpi ** 2
                         + mpi0 ** 2
-                        + 2 * LDot(k2, k3)
-                        - 4 * LDot(k2, k4)
-                        + 4 * LDot(k3, k4)
+                        + 2 * ldot(k2, k3)
+                        - 4 * ldot(k2, k4)
+                        + 4 * ldot(k3, k4)
                     )
                 )
             )
         )
-    ) / (LDot(k1, k4) ** 2 * LDot(k2, k4) ** 2)
+    ) / (ldot(k1, k4) ** 2 * ldot(k2, k4) ** 2)
 
 
 @cython.boundscheck(False)
@@ -403,153 +417,153 @@ cdef double msqrd_nu_l_l_g(vector[vector[double]] &momenta, vector[double]& para
         * (
             2
             * (1 + 4 * sw ** 2 + 8 * sw ** 4)
-            * LDot(k1, k3) ** 2
-            * LDot(k2, k4) ** 2
-            * LDot(k3, k4)
+            * ldot(k1, k3) ** 2
+            * ldot(k2, k4) ** 2
+            * ldot(k3, k4)
             + 2
             * (1 + 4 * sw ** 2 + 8 * sw ** 4)
-            * LDot(k1, k2) ** 2
-            * LDot(k2, k4)
-            * LDot(k3, k4) ** 2
-            + LDot(k1, k4)
+            * ldot(k1, k2) ** 2
+            * ldot(k2, k4)
+            * ldot(k3, k4) ** 2
+            + ldot(k1, k4)
             * (
                 (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                * LDot(k2, k4) ** 3
-                * (ml ** 2 - LDot(k3, k4))
+                * ldot(k2, k4) ** 3
+                * (ml ** 2 - ldot(k3, k4))
                 + ml ** 2
-                * LDot(k3, k4) ** 2
+                * ldot(k3, k4) ** 2
                 * (
                     (ml + 4 * ml * sw ** 2) ** 2
-                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3)
-                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k2, k3)
+                    + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4)
                 )
-                + LDot(k2, k4) ** 2
+                + ldot(k2, k4) ** 2
                 * (
                     (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                    * LDot(k2, k3)
-                    * (ml ** 2 - 2 * LDot(k3, k4))
+                    * ldot(k2, k3)
+                    * (ml ** 2 - 2 * ldot(k3, k4))
                     + ml ** 2
                     * (
                         (ml + 4 * ml * sw ** 2) ** 2
-                        + (-1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                        + (-1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4)
                     )
                 )
-                - LDot(k2, k4)
-                * LDot(k3, k4)
+                - ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
-                    -8 * ml ** 2 * sw ** 2 * (1 + 2 * sw ** 2) * LDot(k1, k4)
-                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3) ** 2
+                    -8 * ml ** 2 * sw ** 2 * (1 + 2 * sw ** 2) * ldot(k1, k4)
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k2, k3) ** 2
                     + 2
-                    * LDot(k2, k3)
+                    * ldot(k2, k3)
                     * (
                         (ml + 4 * ml * sw ** 2) ** 2
-                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4)
                     )
-                    + LDot(k3, k4)
+                    + ldot(k3, k4)
                     * (
                         ml ** 2 * (1 - 4 * sw ** 2 - 8 * sw ** 4)
-                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4)
                     )
                 )
             )
-            + LDot(k1, k3)
+            + ldot(k1, k3)
             * (
                 (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                * LDot(k2, k4) ** 3
-                * (ml ** 2 - LDot(k3, k4))
+                * ldot(k2, k4) ** 3
+                * (ml ** 2 - ldot(k3, k4))
                 + ml ** 2
-                * LDot(k3, k4) ** 2
+                * ldot(k3, k4) ** 2
                 * (
                     (ml + 4 * ml * sw ** 2) ** 2
-                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k4)
-                    + LDot(k2, k3)
-                    + LDot(k3, k4)
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k1, k4)
+                    + ldot(k2, k3)
+                    + ldot(k3, k4)
                     + 4
                     * sw ** 2
                     * (1 + 2 * sw ** 2)
-                    * (LDot(k2, k3) + LDot(k3, k4))
+                    * (ldot(k2, k3) + ldot(k3, k4))
                 )
-                + LDot(k2, k4) ** 2
+                + ldot(k2, k4) ** 2
                 * (
                     ml ** 4 * (1 + 4 * sw ** 2) ** 2
                     + (1 + 4 * sw ** 2 + 8 * sw ** 4)
                     * (
-                        LDot(k2, k3) * (ml ** 2 - 2 * LDot(k3, k4))
-                        + ml ** 2 * LDot(k3, k4)
+                        ldot(k2, k3) * (ml ** 2 - 2 * ldot(k3, k4))
+                        + ml ** 2 * ldot(k3, k4)
                     )
                 )
-                - LDot(k2, k4)
-                * LDot(k3, k4)
+                - ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
-                    2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k2, k3) ** 2
+                    2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k2, k3) ** 2
                     + (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                    * LDot(k3, k4)
-                    * (-(ml ** 2) + 2 * LDot(k1, k4) + LDot(k3, k4))
+                    * ldot(k3, k4)
+                    * (-(ml ** 2) + 2 * ldot(k1, k4) + ldot(k3, k4))
                     + 2
-                    * LDot(k2, k3)
+                    * ldot(k2, k3)
                     * (
                         (ml + 4 * ml * sw ** 2) ** 2
-                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k4)
-                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k1, k4)
+                        + (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4)
                     )
                 )
             )
-            + LDot(k1, k2)
+            + ldot(k1, k2)
             * (
                 (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                * LDot(k2, k4) ** 3
-                * (ml ** 2 - LDot(k3, k4))
-                + LDot(k2, k4)
-                * LDot(k3, k4)
+                * ldot(k2, k4) ** 3
+                * (ml ** 2 - ldot(k3, k4))
+                + ldot(k2, k4)
+                * ldot(k3, k4)
                 * (
                     -2
-                    * LDot(k2, k3)
+                    * ldot(k2, k3)
                     * (
                         (ml + 4 * ml * sw ** 2) ** 2
-                        + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k3)
-                        + LDot(k1, k4)
-                        + LDot(k2, k3)
+                        + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k1, k3)
+                        + ldot(k1, k4)
+                        + ldot(k2, k3)
                         + 4
                         * sw ** 2
                         * (1 + 2 * sw ** 2)
-                        * (LDot(k1, k4) + LDot(k2, k3))
+                        * (ldot(k1, k4) + ldot(k2, k3))
                     )
                     + (1 + 4 * sw ** 2 + 8 * sw ** 4)
-                    * (ml ** 2 - 2 * LDot(k1, k3) - 2 * LDot(k2, k3))
-                    * LDot(k3, k4)
-                    - (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k3, k4) ** 2
+                    * (ml ** 2 - 2 * ldot(k1, k3) - 2 * ldot(k2, k3))
+                    * ldot(k3, k4)
+                    - (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k3, k4) ** 2
                 )
                 + ml ** 2
-                * LDot(k3, k4) ** 2
+                * ldot(k3, k4) ** 2
                 * (
                     (ml + 4 * ml * sw ** 2) ** 2
-                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * LDot(k1, k3)
-                    + LDot(k2, k3)
-                    + LDot(k3, k4)
+                    + 2 * (1 + 4 * sw ** 2 + 8 * sw ** 4) * ldot(k1, k3)
+                    + ldot(k2, k3)
+                    + ldot(k3, k4)
                     + 4
                     * sw ** 2
                     * (1 + 2 * sw ** 2)
-                    * (LDot(k2, k3) + LDot(k3, k4))
+                    * (ldot(k2, k3) + ldot(k3, k4))
                 )
-                + LDot(k2, k4) ** 2
+                + ldot(k2, k4) ** 2
                 * (
                     ml ** 4 * (1 + 4 * sw ** 2) ** 2
                     + (1 + 4 * sw ** 2 + 8 * sw ** 4)
                     * (
                         ml ** 2
-                        * (2 * (LDot(k1, k3) + LDot(k1, k4)) + LDot(k2, k3))
+                        * (2 * (ldot(k1, k3) + ldot(k1, k4)) + ldot(k2, k3))
                         + (
                             ml ** 2
-                            - 2 * LDot(k1, k3)
-                            - 2 * LDot(k1, k4)
-                            - 2 * LDot(k2, k3)
+                            - 2 * ldot(k1, k3)
+                            - 2 * ldot(k1, k4)
+                            - 2 * ldot(k2, k3)
                         )
-                        * LDot(k3, k4)
+                        * ldot(k3, k4)
                     )
                 )
             )
         )
-    ) / (LDot(k2, k4) ** 2 * LDot(k3, k4) ** 2)
+    ) / (ldot(k2, k4) ** 2 * ldot(k3, k4) ** 2)
 
 
 

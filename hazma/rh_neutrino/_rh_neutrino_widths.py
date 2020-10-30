@@ -2,6 +2,9 @@
 This file contains the mixin class which implements the partial widths of the
 right-handed neutrino.
 """
+from scipy.integrate import quad
+import numpy as np
+
 from hazma.parameters import (
     qe,
     GF,
@@ -14,9 +17,6 @@ from hazma.parameters import (
     sin_theta_weak as sw,
     cos_theta_weak as cw,
 )
-from scipy.integrate import quad
-import numpy as np
-import mpmath as mp
 
 
 # =======================
@@ -39,11 +39,7 @@ def width_pi0_nu(self):
     if mx < mpi0:
         return 0.0
     return (
-        fpi ** 2
-        * GF ** 2
-        * (mx ** 2 - mpi0 ** 2) ** 2
-        * smix ** 2
-        * (-1 + smix ** 2)
+        fpi ** 2 * GF ** 2 * (mx ** 2 - mpi0 ** 2) ** 2 * smix ** 2 * (-1 + smix ** 2)
     ) / (8.0 * mx * np.pi * (-1 + sw ** 2))
 
 
@@ -67,12 +63,7 @@ def width_pi_l(self):
     return (
         fpi ** 2
         * GF ** 2
-        * np.sqrt(
-            (ml - mx - mpi)
-            * (ml + mx - mpi)
-            * (ml - mx + mpi)
-            * (ml + mx + mpi)
-        )
+        * np.sqrt((ml - mx - mpi) * (ml + mx - mpi) * (ml - mx + mpi) * (ml + mx + mpi))
         * ((ml ** 2 - mx ** 2) ** 2 - (ml ** 2 + mx ** 2) * mpi ** 2)
         * smix ** 2
         * Vud ** 2
@@ -100,9 +91,7 @@ def width_k_l(self):
     return (
         fpi ** 2
         * GF ** 2
-        * np.sqrt(
-            (mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx)
-        )
+        * np.sqrt((mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx))
         * ((ml ** 2 - mx ** 2) ** 2 - mk ** 2 * (ml ** 2 + mx ** 2))
         * smix ** 2
         * Vus ** 2
@@ -122,9 +111,9 @@ def width_nu_gamma(self):
     """
     mx = self.mx
     smix = self.stheta
-    return -(
-        GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2
-    ) / (4096.0 * np.pi ** 9 * (-1 + smix ** 2))
+    return -(GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2) / (
+        4096.0 * np.pi ** 9 * (-1 + smix ** 2)
+    )
 
 
 # =======================
@@ -210,11 +199,7 @@ def width_l_pi_pi0(self):
             * GF ** 2
             * np.sqrt(
                 (ml ** 4 + (mx ** 2 - s) ** 2 - 2 * ml ** 2 * (mx ** 2 + s))
-                * (
-                    mpi ** 4
-                    + (mpi0 ** 2 - s) ** 2
-                    - 2 * mpi ** 2 * (mpi0 ** 2 + s)
-                )
+                * (mpi ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mpi ** 2 * (mpi0 ** 2 + s))
             )
             * (
                 ml ** 4
