@@ -82,6 +82,19 @@ class ScalarMediator(
         self.vs = self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
+    def __repr__(self):
+        return (
+            f"ScalarMediator(\n"
+            f"\tmx={self.mx} MeV,\n"
+            f"\tms={self.ms} MeV,\n"
+            f"\tgsxx={self.gsxx},\n"
+            f"\tgsff={self.gsff},\n"
+            f"\tgsGG={self.gsGG},\n"
+            f"\tgsFF={self.gsFF},\n"
+            f"\tlam={self.lam} MeV,\n"
+            ")"
+        )
+
     @property
     def mx(self):
         return self._mx
@@ -268,6 +281,9 @@ class HiggsPortal(ScalarMediator):
             mx, ms, gsxx, stheta, 3.0 * stheta, -5.0 * stheta / 6.0, vh
         )
 
+    def __repr__(self):
+        return f"HiggsPortal(mx={self.mx} MeV, ms={self.ms} MeV, gsxx={self.gsxx}, stheta={self.stheta})"
+
     @property
     def stheta(self):
         return self._stheta
@@ -334,6 +350,9 @@ class HeavyQuark(ScalarMediator):
         super(HeavyQuark, self).__init__(
             mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ ** 2, mQ
         )
+
+    def __repr__(self):
+        return f"HeavyQuark(mx={self.mx} MeV, ms={self.ms} MeV, gsxx={self.gsxx}, gsQ={self.gsQ}, mQ={self.mQ} MeV, QQ={self.QQ})"
 
     @staticmethod
     def list_annihilation_final_states():

@@ -59,6 +59,20 @@ class VectorMediator(
         self._gvmumu = gvmumu
         self.compute_width_v()
 
+    def __repr__(self):
+        return (
+            f"VectorMediator(\n"
+            f"\tmx={self.mx} MeV,\n"
+            f"\tmv={self.mv} MeV,\n"
+            f"\tgvxx={self.gvxx},\n"
+            f"\tgvuu={self.gvuu},\n"
+            f"\tgvdd={self.gvdd},\n"
+            f"\tgvss={self.gvss},\n"
+            f"\tgvee={self.gvee},\n"
+            f"\tgvmumu={self.gvmumu}\n"
+            ")"
+        )
+
     @property
     def mx(self):
         return self._mx
@@ -196,6 +210,9 @@ class KineticMixing(VectorMediator):
             -Qe * eps * qe,
         )
 
+    def __repr__(self):
+        return f"KineticMixing(mx={self.mx} MeV, mv={self.mv} MeV, gvxx={self.gvxx}, eps={self.eps})"
+
     @property
     def eps(self):
         return self._eps
@@ -254,6 +271,9 @@ class QuarksOnly(VectorMediator):
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
         super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
+
+    def __repr__(self):
+        return f"QuarksOnly(mx={self.mx} MeV, mv={self.mv} MeV, gvxx={self.gvxx}, gvuu={self.gvuu}, gvdd={self.gvdd}, gvss={self.gvss})"
 
     @staticmethod
     def list_annihilation_final_states():

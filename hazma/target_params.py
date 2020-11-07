@@ -20,3 +20,6 @@ class TargetParams:
         self.D = D
         self.dOmega = dOmega
         self.vx = vx
+
+    def __repr__(self):
+        return f"TargetParams(J={self.J:.3e}, D={self.D:.3e}, dOmega={self.dOmega:.3e}, vx={self.vx:.3e})"

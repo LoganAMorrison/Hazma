@@ -23,6 +23,9 @@ class SingleChannelAnn(TheoryAnn):
         self.sigma = sigma
         self.setup()
 
+    def __repr__(self):
+        return f"SingleChannelAnn(mx={self._mx} MeV, final state='{self._fs}', sigma={self.sigma} MeV^-1)"
+
     @property
     def fs(self):
         return self._fs
@@ -198,6 +201,9 @@ class SingleChannelDec(TheoryDec):
         self._fs = fs
         self.width = width
         self.setup()
+
+    def __repr__(self):
+        return f"SingleChannelDec(mx={self._mx} MeV, final state='{self._fs}', width={self.width} MeV)"
 
     @property
     def fs(self):

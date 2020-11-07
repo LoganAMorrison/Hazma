@@ -3,7 +3,7 @@ import pandas as pd
 from pkg_resources import resource_filename
 from scipy.interpolate import interp1d
 
-from hazma.parameters import g_to_MeV
+from hazma.parameters import g_to_MeV, MeV_to_g
 from hazma.theory import TheoryDec
 
 
@@ -25,6 +25,9 @@ class PBH(TheoryDec):
         self._bh_secondary = bh_secondary
         self._load_spec_data()
         self.mx = mx
+
+    def __repr__(self):
+        return f"PBH(m={self.mx * MeV_to_g} g, f={self.f_pbh_dummy})"
 
     def _load_spec_data(self):
         """
