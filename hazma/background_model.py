@@ -3,6 +3,7 @@ import warnings
 
 class BackgroundModel(object):
     """
+
     Represents a gamma ray background model, which is required for computing
     projected limits for planned gamma-ray detectors.
 
@@ -14,11 +15,16 @@ class BackgroundModel(object):
     dPhi_dEdOmega : np.array
         Background gamma ray flux (MeV^-1 sr^-1 cm^-2 s^-1) as a function of
         photon energy (MeV). This function must be vectorized.
+
     """
 
     def __init__(self, e_range, dPhi_dEdOmega):
         self.e_range = e_range
         self.__dPhi_dEdOmega = dPhi_dEdOmega
+
+    @classmethod
+    def from_interp(cls, interp):
+        return cls(interp.x[[0, -1]], interp)
 
     def dPhi_dEdOmega(self, es):
         """Computes this background model's gamma ray flux.

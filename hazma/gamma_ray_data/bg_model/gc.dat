@@ -1,7 +1,7 @@
 # Background model from arXiv:1703.02546 for the diffuse gamma ray spectrum
 # from the inner 10deg x 10deg (|b| < 5deg, |l| < 5deg) region of the Milky
 # Way.
-# Columns: E (MeV), E^2 d^2Phi / dE dOmega (MeV cm^-2 s^-1 sr^-1)
+# Columns: E [MeV], d^2Phi / dE dOmega [MeV^-1 sr^-1 cm^-2 s^-1]
 2.017168542313730328e-01,2.899213723814400567e-01
 4.248554087420071679e-01,7.638326335941868217e-02
 1.016709968597614200e+00,1.597696341507149481e-02

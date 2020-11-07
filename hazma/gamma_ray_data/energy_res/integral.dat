@@ -1,0 +1,8 @@
+# INTEGRAL (SPI) energy resolution (FWHM). From tab. 2 in
+# http://integral.esac.esa.int/AO13/AO13_SPI_ObsMan.pdf.
+# Columns: energy (MeV), FWHM energy resolution
+0.05,0.0006497
+0.1,0.0006625
+0.5,0.0008196
+1.0,0.0009385
+5.0,0.0015373

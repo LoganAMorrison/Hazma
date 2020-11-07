@@ -3,6 +3,7 @@ import numpy as np
 
 class FluxMeasurement:
     """
+
     Container for all information about a completed gamma ray analysis.
 
     Attributes
@@ -24,14 +25,25 @@ class FluxMeasurement:
         photon energy.
     target : TargetParams
         Information about the target observed for this measurement.
+
     """
 
-    def __init__(self, obs_rf, energy_res, target, power=2):
+    def __init__(
+        self,
+        e_lows,
+        e_highs,
+        fluxes,
+        upper_errors,
+        lower_errors,
+        energy_res,
+        target,
+        power=2,
+    ):
         """Constructor.
 
         Parameters
         ----------
-        obs_rf : str
+        fname : str
             Name of file containing observation information. The columns of
             this file must be:
 
@@ -48,9 +60,11 @@ class FluxMeasurement:
         target : TargetParams
             The target of the analysis
         """
-        self.e_lows, self.e_highs, self.fluxes, self.upper_errors, self.lower_errors = np.loadtxt(
-            obs_rf, delimiter=","
-        ).T
+        self.e_lows = e_lows
+        self.e_highs = e_highs
+        self.fluxes = fluxes
+        self.upper_errors = upper_errors
+        self.lower_errors = lower_errors
 
         # Get bin central values
         self._e_bins = 0.5 * (self.e_lows + self.e_highs)
@@ -67,3 +81,23 @@ class FluxMeasurement:
 
         # Store analysis region
         self.target = target
+
+    @classmethod
+    def from_file(cls, fname, energy_res, target, power=2):
+        (
+            e_lows,
+            e_highs,
+            fluxes,
+            upper_errors,
+            lower_errors,
+        ) = np.loadtxt(fname, delimiter=",").T
+        return cls(
+            e_lows,
+            e_highs,
+            fluxes,
+            upper_errors,
+            lower_errors,
+            energy_res,
+            target,
+            power,
+        )

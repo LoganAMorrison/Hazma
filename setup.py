@@ -6,8 +6,7 @@ VERSION = "1.1"
 
 
 def long_description():
-    """Remove first four lines from the README for PyPI.
-    """
+    """Remove first four lines from the README for PyPI."""
     with open("README.md", encoding="utf-8") as f:
         ld = f.read()
     return "\n".join([str(l) for l in ld.split("\n")[4:]])
@@ -65,9 +64,7 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(
-        decay_pack + ".decay_muon", sources=[decay_dir + "decay_muon.pyx"]
-    )
+    Extension(decay_pack + ".decay_muon", sources=[decay_dir + "decay_muon.pyx"])
 ]
 extensions += [
     Extension(
@@ -158,14 +155,10 @@ extensions += [
     )
 ]
 extensions += [
-    Extension(
-        pos_pack + ".positron_muon", sources=[pos_dir + "positron_muon.pyx"]
-    )
+    Extension(pos_pack + ".positron_muon", sources=[pos_dir + "positron_muon.pyx"])
 ]
 extensions += [
-    Extension(
-        pos_pack + ".positron_decay", sources=[pos_dir + "positron_decay.pyx"]
-    )
+    Extension(pos_pack + ".positron_decay", sources=[pos_dir + "positron_decay.pyx"])
 ]
 
 # Scalar mediator
@@ -254,7 +247,9 @@ setup(
         "scikit-image",
         "setuptools",
         "flake8",
+        "importlib_resources ; python_version<'3.7'",
     ],
+    python_requires=">=3",
     tests_require=["pytest>=3.2.5"],
     zip_safe=False,
     include_package_data=True,
