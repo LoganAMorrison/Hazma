@@ -17,7 +17,9 @@ _sm_heff = _sm_data[2]
 
 
 # Interpolating function for SM's sqrt(g_star)
-_sm_sqrt_gstar = UnivariateSpline(_sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3)
+_sm_sqrt_gstar = UnivariateSpline(
+    _sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3
+)
 # Interpolating function for SM d.o.f. stored in entropy: h_eff
 _sm_heff = UnivariateSpline(_sm_tempetatures, _sm_heff, s=0, ext=3)
 # derivative of SM d.o.f. in entropy w.r.t temperature
@@ -182,7 +184,11 @@ def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
             if hasattr(Ts, "__len__")
             else np.array([1, 2, 3, 4, 5])
         )
-        dnbar = xs ** 2 * np.sum(eta ** ns * k1(ns * xs), axis=0) / (2.0 * np.pi ** 2)
+        dnbar = (
+            xs ** 2
+            * np.sum(eta ** ns * k1(ns * xs), axis=0)
+            / (2.0 * np.pi ** 2)
+        )
         nbar = (
             xs ** 2
             * np.sum(eta ** (ns + 1) / ns * kn(2, ns * xs), axis=0)
@@ -363,16 +369,13 @@ def thermal_cross_section(x, model):
     # ss = np.linspace(2.0, 150, 500)
     # return simps(integrand(ss), ss) * numpf / den
 
-    return (
-        pf
-        * quad(
-            thermal_cross_section_integrand,
-            2.0,
-            50.0 / x,
-            args=(x, model),
-            points=[2.0],
-        )[0]
-    )
+    return pf * quad(
+        thermal_cross_section_integrand,
+        2.0,
+        50.0 / x,
+        args=(x, model),
+        points=[2.0],
+    )[0]
 
 
 # ----------------------------------------------- #
@@ -445,7 +448,9 @@ def jacobian_boltzmann_eqn(logx, w, model):
     return np.array([[pf * sv * (np.exp(w[0]) + np.exp(2.0 * _weq - w[0]))]])
 
 
-def solve_boltzmann(model, x0=1.0, xf=None, method="Radau", rtol=1e-5, atol=1e-3):
+def solve_boltzmann(
+    model, x0=1.0, xf=None, method="Radau", rtol=1e-5, atol=1e-3
+):
     """
     Solve the Boltzmann equation for the log of the dark matter
     comoving number density as a function of `logx` - which is the
@@ -494,7 +499,9 @@ def solve_boltzmann(model, x0=1.0, xf=None, method="Radau", rtol=1e-5, atol=1e-3
     def jac(logx, w):
         return jacobian_boltzmann_eqn(logx, w, model)
 
-    return solve_ivp(f, (logx0, logxf), [w0], method=method, jac=jac, vectorized=True)
+    return solve_ivp(
+        f, (logx0, logxf), [w0], method=method, jac=jac, vectorized=True
+    )
 
 
 # ----------------------------------------------------------- #
@@ -560,7 +567,9 @@ def compute_xstar(model, delta=None):
     xstar: float
         Value of mass / temperature at which DM begins to freeze-out.
     """
-    return root_scalar(xstar_root_eqn, bracket=(0.01, 100.0), args=(model, delta)).root
+    return root_scalar(
+        xstar_root_eqn, bracket=(0.01, 100.0), args=(model, delta)
+    ).root
 
 
 def compute_alpha(model, xstar):
@@ -579,7 +588,11 @@ def compute_alpha(model, xstar):
     pf = np.sqrt(np.pi / 45.0) * model.mx * plank_mass
 
     def integrand(x):
-        return sm_sqrt_gstar(model.mx / x) * thermal_cross_section(x, model) / x ** 2
+        return (
+            sm_sqrt_gstar(model.mx / x)
+            * thermal_cross_section(x, model)
+            / x ** 2
+        )
 
     return pf * quad(integrand, xstar, 100 * xstar)[0]
 
@@ -639,7 +652,9 @@ def relic_density(model, semi_analytic=True, **kwargs):
             warnings.filterwarnings(
                 "ignore", r"divide by zero encountered in double_scalars"
             )
-            warnings.filterwarnings("ignore", r"overflow encountered in double_scalars")
+            warnings.filterwarnings(
+                "ignore", r"overflow encountered in double_scalars"
+            )
             delta = kwargs["delta"] if ("delta" in kwargs) else None
             xstar = compute_xstar(model, delta=delta)
             alpha = compute_alpha(model, xstar)
@@ -651,7 +666,9 @@ def relic_density(model, semi_analytic=True, **kwargs):
         method = kwargs["method"] if ("method" in kwargs) else "Radau"
         rtol = kwargs["rtol"] if ("rtol" in kwargs) else 1e-5
         atol = kwargs["atol"] if ("atol" in kwargs) else 1e-3
-        sol = solve_boltzmann(model, x0=x0, xf=xf, method=method, rtol=rtol, atol=atol)
+        sol = solve_boltzmann(
+            model, x0=x0, xf=xf, method=method, rtol=rtol, atol=atol
+        )
 
         Y0 = np.exp(sol.y[0, -1])
 

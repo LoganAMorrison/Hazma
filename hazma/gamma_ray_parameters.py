@@ -1,6 +1,5 @@
 import os
 import importlib.resources as pkg_resources
-from collections import namedtuple
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -18,7 +17,9 @@ Parameters relevant to computing constraints from gamma ray experiments.
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
 # Additional factor of two due to uncertainty about radioactive and
 # instrumental backgrounds.
-gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2)
+gecco_bg_model = BackgroundModel(
+    [0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2
+)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
@@ -103,7 +104,9 @@ gc_targets_optimistic = {
 
 # Observing regions for various experiments. Same NFW profile as above.
 comptel_diffuse_target = TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433)
-comptel_diffuse_target_optimistic = TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433)
+comptel_diffuse_target_optimistic = TargetParams(
+    J=1.751e29, D=5.541e25, dOmega=1.433
+)
 egret_diffuse_target = TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585)
 fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
 integral_diffuse_target = TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421)
@@ -198,33 +201,39 @@ def energy_res_fermi(e):
 # Effective areas, cm^2
 a_eff_prefix = "A_eff"
 a_eff_pkg = "hazma.gamma_ray_data." + a_eff_prefix
-a_eff_rf_names = [n for n in pkg_resources.contents(a_eff_pkg) if n.endswith(".dat")]
+a_eff_rf_names = [
+    n for n in pkg_resources.contents(a_eff_pkg) if n.endswith(".dat")
+]
 for name in a_eff_rf_names:
     with pkg_resources.path(a_eff_pkg, name) as path:
         var_name = a_eff_prefix + "_" + os.path.splitext(name)[0]
         var_val = interp1d(
             *np.loadtxt(path, delimiter=",", unpack=True),
             bounds_error=False,
-            fill_value=0.0
+            fill_value=0.0,
         )
         globals()[var_name] = var_val
 
 # Energy resolutions, Delta E / E
 e_res_prefix = "energy_res"
 e_res_pkg = "hazma.gamma_ray_data." + e_res_prefix
-e_res_rf_names = [n for n in pkg_resources.contents(e_res_pkg) if n.endswith(".dat")]
+e_res_rf_names = [
+    n for n in pkg_resources.contents(e_res_pkg) if n.endswith(".dat")
+]
 for name in e_res_rf_names:
     with pkg_resources.path(e_res_pkg, name) as path:
         var_name = e_res_prefix + "_" + os.path.splitext(name)[0]
         var_val = interp1d(
             *np.loadtxt(path, delimiter=",", unpack=True),
-            fill_value="extrapolate"
+            fill_value="extrapolate",
         )
         globals()[var_name] = var_val
 
 # Package the measurements
 obs_pkg = "hazma.gamma_ray_data.obs"
-obs_rf_names = [n for n in pkg_resources.contents(obs_pkg) if n.endswith(".dat")]
+obs_rf_names = [
+    n for n in pkg_resources.contents(obs_pkg) if n.endswith(".dat")
+]
 for name in obs_rf_names:
     with pkg_resources.path(obs_pkg, name) as path:
         obs = os.path.splitext(name)[0]
@@ -251,7 +260,44 @@ for name in bg_rf_names:
             interp1d(
                 *np.loadtxt(path, delimiter=",", unpack=True),
                 bounds_error=True,
-                fill_value=np.nan
+                fill_value=np.nan,
             )
         )
         globals()[var_name] = var_val
+
+
+def _load_resource(ty, name):
+    if ty in ["A_eff", "energy_res", "bg_model"]:
+        data_dir = os.path.join(os.path.split(__file__)[0], "gamma_ray_data")
+        filename = os.path.join(data_dir, ty, name + ".dat")
+        data = np.genfromtxt(filename, delimiter=",", unpack=True)
+        interp = interp1d(*data, bounds_error=True, fill_value=np.nan)
+        if ty == "bg_model":
+            return BackgroundModel.from_interp(interp)
+        return interp
+    raise ValueError(f"Invalid type: ty = {ty}")
+
+
+# Load the effective areas
+A_EFF_ADEPT = _load_resource("A_eff", "adept")
+A_EFF_AMEGO = _load_resource("A_eff", "amego")
+A_EFF_COMPTEL = _load_resource("A_eff", "comptel")
+A_EFF_E_ASTROGAM = _load_resource("A_eff", "e_astrogam")
+A_EFF_EGRET = _load_resource("A_eff", "egret")
+A_EFF_FERMI = _load_resource("A_eff", "fermi")
+A_EFF_GECCO = _load_resource("A_eff", "gecco")
+A_EFF_GRAMS_UPGRADE = _load_resource("A_eff", "grams_upgrade")
+A_EFF_GRAMS = _load_resource("A_eff", "grams")
+A_EFF_MAST = _load_resource("A_eff", "mast")
+A_EFF_PANGU = _load_resource("A_eff", "pangu")
+
+# Load the background models
+BG_MODEL_GC = _load_resource("bg_model", "gc")
+
+# Load the energy resolutions
+ENERGY_RES_AMEGO = _load_resource("energy_res", "amego")
+ENERGY_RES_E_ASTROGAM = _load_resource("energy_res", "e_astrogam")
+ENERGY_RES_GECCO_LARGE = _load_resource("energy_res", "gecco_large")
+ENERGY_RES_GECCO = _load_resource("energy_res", "gecco")
+ENERGY_RES_INTEGRAL = _load_resource("energy_res", "integral")
+ENERGY_RES_MAST = _load_resource("energy_res", "mast")
