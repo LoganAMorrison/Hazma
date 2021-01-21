@@ -171,7 +171,14 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         specs = {}
 
         for fs, dnde_func in self.spectrum_funcs().items():
-            specs[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
+            # Only compute the spectrum if the channel is accessible
+            if bfs[fs] != 0:
+                specs[fs] = bfs[fs] * dnde_func(e_gams, e_cm)
+            else:
+                if type(e_gams) == float:
+                    specs[fs] = 0
+                else:
+                    specs[fs] = np.zeros(e_gams.shape)
 
         specs["total"] = sum(specs.values())
 
