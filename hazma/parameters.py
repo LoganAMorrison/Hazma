@@ -7,6 +7,7 @@ Physics constants and utility functions.
 """
 
 # Masses (MeV)
+higgs_mass = 125.1e3
 electron_mass = 0.510998928  # electron
 muon_mass = 105.6583715  # muon
 neutral_pion_mass = 134.9766  # neutral pion

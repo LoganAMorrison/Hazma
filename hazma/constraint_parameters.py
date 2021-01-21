@@ -10,6 +10,10 @@ from hazma.parameters import (
     kl_width,
 )
 
+# Higgs decay information
+higgs_width = 3.2  # MeV
+# From CMS 2019 (https://arxiv.org/abs/1809.05937)
+br_higgs_invis = 0.19
 
 # Transverse extents of detectors in cm
 # arxiv:0709
