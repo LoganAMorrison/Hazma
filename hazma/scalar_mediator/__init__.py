@@ -274,7 +274,6 @@ class HiggsPortal(ScalarMediator):
     """
 
     def __init__(self, mx, ms, gsxx, stheta):
-        self._lam = vh
         self._stheta = stheta
 
         super(HiggsPortal, self).__init__(

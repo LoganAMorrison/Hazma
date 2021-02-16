@@ -129,7 +129,6 @@ cdef double __sigma_xx_to_s_to_pipi(double e_cm, double mx, double ms,
     )
 
 
-
 @cython.cdivision(True)
 cdef double __sigma_xx_to_ss(double e_cm, double mx, double ms, double gsxx,
                       double gsff, double gsGG, double gsFF, double lam,
@@ -178,6 +177,51 @@ cdef double __sigma_xx_to_ss(double e_cm, double mx, double ms, double gsxx,
 
 
 @cython.cdivision(True)
+cdef double __sigma_ss_to_xx(double e_cm, double mx, double ms, double gsxx,
+                             double gsff, double gsGG, double gsFF, double lam,
+                             double width_s, double vs):
+    if e_cm < 2 * mx or e_cm < 2 * ms:
+        return 0.0
+
+    cdef double rs = ms / e_cm
+    cdef double rx = mx / e_cm
+    return (
+        gsxx ** 4
+        * (
+            (
+                -2
+                * sqrt((1 - 4 * rs ** 2) * (1 - 4 * rx ** 2))
+                * (3 * rs ** 4 + 2 * (1 - 8 * rs ** 2) * rx ** 2 + 16 * rx ** 4)
+            )
+            / (rs ** 4 + rx ** 2 - 4 * rs ** 2 * rx ** 2)
+            + (
+                (
+                    1
+                    + 6 * rs ** 4
+                    + 16 * rx ** 2
+                    - 32 * rx ** 4
+                    - 4 * rs ** 2 * (1 + 4 * rx ** 2)
+                )
+                * 2
+                * (
+                    log(
+                        1
+                        - 2 * rs ** 2
+                        + sqrt((1 - 4 * rs ** 2) * (1 - 4 * rx ** 2))
+                    )
+                    - log(
+                        1
+                        - 2 * rs ** 2
+                        - sqrt((1 - 4 * rs ** 2) * (1 - 4 * rx ** 2))
+                    )
+                )
+            )
+            / (1 - 2 * rs ** 2)
+        )
+    ) / (8 * e_cm ** 2 * M_PI * (1 - 4 * rs ** 2))
+
+
+@cython.cdivision(True)
 cdef double __sigma_xx_to_all(double e_cm, double mx, double ms, double gsxx,
                               double gsff, double gsGG, double gsFF, double lam,
                               double width_s, double vs):
@@ -196,6 +240,25 @@ cdef double __sigma_xx_to_all(double e_cm, double mx, double ms, double gsxx,
         e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
 
     return sig_e + sig_mu + sig_g + sig_pi0 + sig_pi + sig_s
+
+
+@cython.cdivision(True)
+cdef double __sigma_xx_to_sm(double e_cm, double mx, double ms, double gsxx,
+                              double gsff, double gsGG, double gsFF, double lam,
+                              double width_s, double vs):
+
+    cdef double sig_e = __sigma_xx_to_s_to_ff(
+        e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs, me)
+    cdef double sig_mu = __sigma_xx_to_s_to_ff(
+        e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs, mmu)
+    cdef double sig_g = __sigma_xx_to_s_to_gg(
+        e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
+    cdef double sig_pi0 = __sigma_xx_to_s_to_pi0pi0(
+        e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
+    cdef double sig_pi = __sigma_xx_to_s_to_pipi(
+        e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
+
+    return sig_e + sig_mu + sig_g + sig_pi0 + sig_pi
 
 
 @cython.cdivision(True)
@@ -575,6 +638,25 @@ cdef np.ndarray[np.float64_t, ndim=1] __vec_sigma_xx_to_ss(
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
+cdef np.ndarray[np.float64_t, ndim=1] __vec_sigma_ss_to_xx(
+    np.ndarray[np.float64_t, ndim=1] e_cms, double mx, double ms, double gsxx,
+    double gsff, double gsGG, double gsFF, double lam, double width_s,
+    double vs):
+
+    cdef int num_es = e_cms.shape[0]
+    cdef np.ndarray[np.float64_t, ndim=1] sigs = np.zeros(num_es, np.float64)
+
+    cdef int i
+    for i in range(num_es):
+        sigs[i] = __sigma_ss_to_xx(e_cms[i], mx, ms, gsxx, gsff, gsGG,
+                                   gsFF, lam, width_s, vs)
+
+    return sigs
+
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cdef np.ndarray[np.float64_t, ndim=1] __vec_sigma_xx_to_all(
     np.ndarray[np.float64_t, ndim=1] e_cms, double mx, double ms, double gsxx,
     double gsff, double gsGG, double gsFF, double lam, double width_s,
@@ -945,6 +1027,23 @@ def sigma_xx_to_ss(e_cms, double mx, double ms, double gsxx,
     return __sigma_xx_to_ss(e_cm, mx, ms, gsxx, gsff, gsGG,
                             gsFF, lam, width_s, vs)
 
+@cython.cdivision(True)
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def sigma_ss_to_xx(e_cms, double mx, double ms, double gsxx,
+                   double gsff, double gsGG, double gsFF, double lam,
+                   double width_s, double vs):
+    if hasattr(e_cms, '__len__') and e_cms.ndim > 0:
+        return __vec_sigma_ss_to_xx(
+            np.array(e_cms), mx, ms, gsxx, gsff, gsGG,
+            gsFF, lam, width_s, vs)
+
+    # e_cms is either a 0-d array or a scalar
+    e_cm = e_cms.item() if hasattr(e_cms, "__len__") else e_cms
+
+    return __sigma_ss_to_xx(e_cm, mx, ms, gsxx, gsff, gsGG,
+                            gsFF, lam, width_s, vs)
+
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
@@ -1297,8 +1396,8 @@ def thermal_cross_section(double x, double mx, double ms, double gsxx,
     tcs: float
         Thermally average cross section.
     """
-
     # If x is really large, we will get divide by zero errors
+    # TODO: p-wave expansion for low T!
     if x > 300:
         return 0.0
 
@@ -1308,7 +1407,200 @@ def thermal_cross_section(double x, double mx, double ms, double gsxx,
     #   1. endpoint
     #   2. when ss final state is accessible => z = 2 ms / mx
     #   3. when we hit mediator resonance => z = ms / mx
+    # TODO: other thresholds!
     return pf * quad(__thermal_cross_section_integrand, 2.0,
                      max(50.0 / x, 100.0),
                      args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
                      points=[2.0, ms / mx, 2.0 * ms / mx])[0]
+
+
+@cython.cdivision(True)
+cdef double __thermal_cross_section_integrand_ss(
+    double z, double x, double mx, double ms, double gsxx, double gsff,
+    double gsGG, double gsFF, double lam, double width_s, double vs
+):
+        cdef double sig = __sigma_xx_to_ss(
+            mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+        )
+        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+
+
+@cython.cdivision(True)
+def thermal_cross_section_xx_to_ss(double x, double mx, double ms, double gsxx,
+                             double gsff, double gsGG, double gsFF,
+                             double lam, double width_s, double vs):
+    """
+    Compute the thermally average cross section for scalar mediator model.
+
+    Parameters
+    ----------
+    x: float
+        Mass of the dark matter divided by its temperature.
+    mx: double
+        Dark matter mass
+    ms: double
+        Scalar mediator mass.
+    gsxx: double
+        Coupling of DM to scalar mediator.
+    gsff: double
+        Coupling of scalar mediator to fermions.
+    gsGG: double
+        Effective coupling of the scalar mediator to gluons.
+    gsFF: double
+        Effective coupling of the scalar mediator to photons.
+    lam: double
+        Cut-off scale of the SGG and SFF interactions.
+    width_s: double
+        Full decay width of the scalar mediator.
+    vs: double
+        Scalar mediator VEV.
+
+    Returns
+    -------
+    tcs: float
+        Thermally average cross section.
+    """
+    # If x is really large, we will get divide by zero errors
+    # TODO: p-wave expansion for low T!
+    if x > 300:
+        return 0.0
+
+    cdef double pf = x / (2.0 * kn(2, x))**2
+
+    # points at which integrand may have trouble are:
+    #   1. endpoint
+    #   2. when ss final state is accessible => z = 2 ms / mx
+    #   3. when we hit mediator resonance => z = ms / mx
+    # TODO: other thresholds!
+    return pf * quad(__thermal_cross_section_integrand_ss, 2.0,
+                     max(50.0 / x, 100.0),
+                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+                     points=[2.0, ms / mx, 2.0 * ms / mx])[0]
+
+
+@cython.cdivision(True)
+cdef double __thermal_cross_section_integrand_sm(
+    double z, double x, double mx, double ms, double gsxx, double gsff,
+    double gsGG, double gsFF, double lam, double width_s, double vs
+):
+        cdef double sig = __sigma_xx_to_sm(
+            mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+        )
+        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+
+
+@cython.cdivision(True)
+def thermal_cross_section_xx_to_sm(double x, double mx, double ms, double gsxx,
+                             double gsff, double gsGG, double gsFF,
+                             double lam, double width_s, double vs):
+    """
+    Compute the thermally average cross section for scalar mediator model.
+
+    Parameters
+    ----------
+    x: float
+        Mass of the dark matter divided by its temperature.
+    mx: double
+        Dark matter mass
+    ms: double
+        Scalar mediator mass.
+    gsxx: double
+        Coupling of DM to scalar mediator.
+    gsff: double
+        Coupling of scalar mediator to fermions.
+    gsGG: double
+        Effective coupling of the scalar mediator to gluons.
+    gsFF: double
+        Effective coupling of the scalar mediator to photons.
+    lam: double
+        Cut-off scale of the SGG and SFF interactions.
+    width_s: double
+        Full decay width of the scalar mediator.
+    vs: double
+        Scalar mediator VEV.
+
+    Returns
+    -------
+    tcs: float
+        Thermally average cross section.
+    """
+    # If x is really large, we will get divide by zero errors
+    # TODO: p-wave expansion for low T!
+    if x > 300:
+        return 0.0
+
+    cdef double pf = x / (2.0 * kn(2, x))**2
+
+    # points at which integrand may have trouble are:
+    #   1. endpoint
+    #   2. when ss final state is accessible => z = 2 ms / mx
+    #   3. when we hit mediator resonance => z = ms / mx
+    # TODO: other thresholds!
+    return pf * quad(__thermal_cross_section_integrand_sm, 2.0,
+                     max(50.0 / x, 100.0),
+                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+                     points=[2.0, ms / mx, 2.0 * ms / mx])[0]
+
+
+@cython.cdivision(True)
+cdef double __thermal_cross_section_integrand_ss_to_xx(
+    double z, double x, double mx, double ms, double gsxx, double gsff,
+    double gsGG, double gsFF, double lam, double width_s, double vs
+):
+        cdef double sig = __sigma_ss_to_xx(
+            ms * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+        )
+        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+
+
+@cython.cdivision(True)
+def thermal_cross_section_ss_to_xx(double x, double mx, double ms, double gsxx,
+                             double gsff, double gsGG, double gsFF,
+                             double lam, double width_s, double vs):
+    """
+    Compute the thermally average cross section for scalar mediator
+    annihilating into DM.
+
+    Parameters
+    ----------
+    x: float
+        Mass of the scalar mediator divided by its temperature.
+    mx: double
+        Dark matter mass
+    ms: double
+        Scalar mediator mass.
+    gsxx: double
+        Coupling of DM to scalar mediator.
+    gsff: double
+        Coupling of scalar mediator to fermions.
+    gsGG: double
+        Effective coupling of the scalar mediator to gluons.
+    gsFF: double
+        Effective coupling of the scalar mediator to photons.
+    lam: double
+        Cut-off scale of the SGG and SFF interactions.
+    width_s: double
+        Full decay width of the scalar mediator.
+    vs: double
+        Scalar mediator VEV.
+
+    Returns
+    -------
+    tcs: float
+        Thermally average cross section.
+    """
+    # If x is really large, we will get divide by zero errors
+    # TODO: p-wave expansion for low T!
+    if x > 300:
+        return 0.0
+
+    cdef double pf = x / (2.0 * kn(2, x))**2
+
+    # points at which integrand may have trouble are:
+    #   1. endpoint
+    #   2. when ss final state is accessible => z = 2 mx / ms
+    # TODO: other thresholds!
+    return pf * quad(__thermal_cross_section_integrand_ss_to_xx, 2.0,
+                     max(50.0 / x, 100.0),
+                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+                     points=[2.0, 2.0 * mx / ms])[0]

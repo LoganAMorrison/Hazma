@@ -1,6 +1,8 @@
+from math import sqrt, pi
 import numpy as np
-from scipy import optimize
+from scipy.optimize import root_scalar
 from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.stats import chi2, norm
 
 
 class TheoryGammaRayLimits:
@@ -59,7 +61,6 @@ class TheoryGammaRayLimits:
             Largest allowed thermally averaged total cross section in cm^3 / s
 
         """
-        # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
 
         # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
@@ -69,7 +70,7 @@ class TheoryGammaRayLimits:
             dm_flux_factor = (
                 measurement.target.J
                 * measurement.target.dOmega
-                / (2.0 * f_dm * self.mx ** 2 * 4.0 * np.pi)
+                / (2.0 * f_dm * self.mx ** 2 * 4.0 * pi)
             )
 
             # TODO: this should depend on the target!
@@ -80,49 +81,53 @@ class TheoryGammaRayLimits:
         elif self.kind == "dec":
             # e_cm = self.mx
             dm_flux_factor = (
-                measurement.target.D
-                * measurement.target.dOmega
-                / (self.mx * 4.0 * np.pi)
+                measurement.target.D * measurement.target.dOmega / (self.mx * 4.0 * pi)
             )
             dnde_conv = self.total_conv_spectrum_fn(
                 e_min, e_max, measurement.energy_res
             )
 
-        def bin_lim(e_low, e_high, phi, sigma):
-            """Subroutine to compute limit in a single bin."""
-            # Compute integrated flux from DM annihilation
-            phi_dm = dm_flux_factor * dnde_conv.integral(e_low, e_high)
-
-            # If flux is finite and nonzero, set a limit
-            if not np.isnan(phi_dm) and phi_dm > 0:
-                # Compute maximum allow integrated flux
-                phi_max = (
-                    measurement.target.dOmega
-                    * (e_high - e_low)
-                    * (n_sigma * sigma + phi)
-                )
-
-                assert phi_max > 0
-
-                # Find limit on <sigma v>
-                return phi_max / phi_dm
-            else:
-                return np.inf
-
-        # Compute limits for each bin
-        sv_lims = []
-
-        for (e_low, e_high, phi, sigma) in zip(
-            measurement.e_lows,
-            measurement.e_highs,
-            measurement.fluxes,
-            measurement.upper_errors,
-        ):
-            sv_lims.append(bin_lim(e_low, e_high, phi, sigma))
+        # Integrated flux (excluding <sigma v>) from DM processes in each bin
+        Phi_dms_un = []
+        for e_low, e_high in zip(measurement.e_lows, measurement.e_highs):
+            Phi_dms_un.append(dm_flux_factor * dnde_conv.integral(e_low, e_high))
+        Phi_dms_un = np.array(Phi_dms_un)
 
         if method == "1bin":
+            # Maximum allowed integrated flux in each bin
+            Phi_maxs = (
+                measurement.target.dOmega
+                * (measurement.e_highs - measurement.e_lows)
+                * (n_sigma * measurement.upper_errors + measurement.fluxes)
+            )
+
             # Return the most stringent limit
+            sv_lims = Phi_maxs / Phi_dms_un
+            sv_lims[np.isnan(sv_lims) | (Phi_dms_un <= 0)] = np.inf
             return np.min(sv_lims)
+        elif method == "chi2":
+            # Observed integrated fluxes
+            Phi_obss = (
+                measurement.target.dOmega
+                * (measurement.e_highs - measurement.e_lows)
+                * measurement.fluxes
+            )
+            # Errors on integrated fluxes
+            Sigmas = (
+                measurement.target.dOmega
+                * (measurement.e_highs - measurement.e_lows)
+                * measurement.upper_errors
+            )
+
+            chi2_obs = np.sum(np.maximum(Phi_dms_un - Phi_obss, 0) ** 2 / Sigmas ** 2)
+
+            if chi2_obs == 0:
+                return np.inf
+            else:
+                # Convert n_sigma to chi^2 critical value
+                p_val = norm.cdf(n_sigma)
+                chi2_crit = chi2.ppf(p_val, df=len(Phi_dms_un))
+                return sqrt(chi2_crit / chi2_obs)
         else:
             raise NotImplementedError()
 
@@ -203,7 +208,7 @@ class TheoryGammaRayLimits:
 
         prefactor *= (
             4.0
-            * np.pi
+            * pi
             / (
                 np.sqrt(T_obs * target.dOmega)
                 * (target.J if self.kind == "ann" else target.D)

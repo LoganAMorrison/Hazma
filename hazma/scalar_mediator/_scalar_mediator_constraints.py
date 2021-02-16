@@ -1,33 +1,32 @@
 import numpy as np
-from hazma.parameters import (
-    charged_B_mass as mB,
-    charged_kaon_mass as mk,
-    charged_pion_mass as mpi,
-    down_quark_mass as mdq,
-    bottom_quark_mass as mbq,
-    strange_quark_mass as msq,
-    long_kaon_mass as mkl,
-    top_quark_mass as mtq,
-    neutral_pion_mass as mpi0,
-    GF,
-    vh,
-    Vts,
-    Vtb,
-    Vtd,
-    cm_to_inv_MeV,
-)
+
 from hazma.constraint_parameters import (
-    B_k_invis_obs,
-    k_pi_invis_obs,
-    kl_pi0_mu_mu_obs,
-    kl_pi0_e_e_obs,
-    B_k_mu_mu_obs,
     B_k_e_e_obs,
-    k_width,
-    kl_width,
+    B_k_invis_obs,
+    B_k_mu_mu_obs,
     B_width,
     bd_charm,
+    br_higgs_invis,
+    higgs_width,
+    k_pi_invis_obs,
+    k_width,
+    kl_pi0_e_e_obs,
+    kl_pi0_mu_mu_obs,
+    kl_width,
 )
+from hazma.parameters import GF, Vtb, Vtd, Vts
+from hazma.parameters import bottom_quark_mass as mbq
+from hazma.parameters import charged_B_mass as mB
+from hazma.parameters import charged_kaon_mass as mk
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import cm_to_inv_MeV
+from hazma.parameters import down_quark_mass as mdq
+from hazma.parameters import higgs_mass as m_higgs
+from hazma.parameters import long_kaon_mass as mkl
+from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.parameters import strange_quark_mass as msq
+from hazma.parameters import top_quark_mass as mtq
+from hazma.parameters import vh
 
 # TODO
 # * 3-body phase space integration for s -> x x contribution to invisible
@@ -346,6 +345,28 @@ class ScalarMediatorConstraints:
 
         return bd_params.n_dec - n_dec_th
 
+    def width_h_invis(self):
+        """
+        Returns the partial decay width of the Higgs decaying into two DM
+        particles.
+        """
+        if m_higgs > 2.0 * self.mx:
+            coupling = self.gsxx * self.stheta / np.sqrt(1 - self.stheta**2)
+
+            val = (
+                (coupling ** 2 * (m_higgs ** 2 - 4 * self.mx ** 2) ** 1.5)
+                / (8.0 * m_higgs ** 2 * np.pi)
+            ).real
+
+            assert val >= 0
+
+            return val
+        else:
+            return 0.0
+
+    def constraint_higgs_invis(self):
+        return higgs_width * br_higgs_invis - self.width_h_invis()
+
     def constraints(self):
         return {
             "B -> k invis": self.constraint_B_k_invis,
@@ -354,5 +375,6 @@ class ScalarMediatorConstraints:
             "k -> pi invis": self.constraint_k_pi_invis,
             "kl -> pi0 mu mu": self.constraint_kl_pi0_mu_mu,
             "kl -> pi0 e e": self.constraint_kl_pi0_e_e,
+            "higgs -> invis": self.constraint_higgs_invis,
             "CHARM": self.constrain_beam_dump,
         }
