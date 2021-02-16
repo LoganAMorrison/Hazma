@@ -39,7 +39,11 @@ def width_pi0_nu(self):
     if mx < mpi0:
         return 0.0
     return (
-        fpi ** 2 * GF ** 2 * (mx ** 2 - mpi0 ** 2) ** 2 * smix ** 2 * (-1 + smix ** 2)
+        fpi ** 2
+        * GF ** 2
+        * (mx ** 2 - mpi0 ** 2) ** 2
+        * smix ** 2
+        * (-1 + smix ** 2)
     ) / (8.0 * mx * np.pi * (-1 + sw ** 2))
 
 
@@ -63,7 +67,12 @@ def width_pi_l(self):
     return (
         fpi ** 2
         * GF ** 2
-        * np.sqrt((ml - mx - mpi) * (ml + mx - mpi) * (ml - mx + mpi) * (ml + mx + mpi))
+        * np.sqrt(
+            (ml - mx - mpi)
+            * (ml + mx - mpi)
+            * (ml - mx + mpi)
+            * (ml + mx + mpi)
+        )
         * ((ml ** 2 - mx ** 2) ** 2 - (ml ** 2 + mx ** 2) * mpi ** 2)
         * smix ** 2
         * Vud ** 2
@@ -91,7 +100,9 @@ def width_k_l(self):
     return (
         fpi ** 2
         * GF ** 2
-        * np.sqrt((mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx))
+        * np.sqrt(
+            (mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx)
+        )
         * ((ml ** 2 - mx ** 2) ** 2 - mk ** 2 * (ml ** 2 + mx ** 2))
         * smix ** 2
         * Vus ** 2
@@ -111,9 +122,9 @@ def width_nu_gamma(self):
     """
     mx = self.mx
     smix = self.stheta
-    return -(GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2) / (
-        4096.0 * np.pi ** 9 * (-1 + smix ** 2)
-    )
+    return -(
+        GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2
+    ) / (4096.0 * np.pi ** 9 * (-1 + smix ** 2))
 
 
 # =======================
@@ -199,7 +210,11 @@ def width_l_pi_pi0(self):
             * GF ** 2
             * np.sqrt(
                 (ml ** 4 + (mx ** 2 - s) ** 2 - 2 * ml ** 2 * (mx ** 2 + s))
-                * (mpi ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mpi ** 2 * (mpi0 ** 2 + s))
+                * (
+                    mpi ** 4
+                    + (mpi0 ** 2 - s) ** 2
+                    - 2 * mpi ** 2 * (mpi0 ** 2 + s)
+                )
             )
             * (
                 ml ** 4
@@ -257,7 +272,7 @@ def width_nu_nu_nu(self):
     mx = self.mx
     smix = self.stheta
     return -(GF ** 2 * mx ** 5 * smix ** 2 * (-1 + smix ** 2) ** 3) / (
-        32.0 * np.pi ** 3
+        96.0 * np.pi ** 3
     )
 
 
@@ -315,8 +330,10 @@ def width_nu_g_g(self):
 
     smix = self.stheta
 
-    return (GF ** 2 * mx ** 11 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)) / (
-        245760.0 * mpi0 ** 6 * np.pi ** 7 * (-1 + sw ** 2)
-    ) + (GF ** 2 * mx ** 9 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)) / (
+    return 0.5 * (
+        GF ** 2 * mx ** 11 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)
+    ) / (245760.0 * mpi0 ** 6 * np.pi ** 7 * (-1 + sw ** 2)) + (
+        GF ** 2 * mx ** 9 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)
+    ) / (
         245760.0 * mpi0 ** 4 * np.pi ** 7 * (-1 + sw ** 2)
     )

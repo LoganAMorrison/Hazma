@@ -4,6 +4,10 @@ include hazma/decay_helper_functions/interpolation_data/ckaon/*.dat
 include hazma/decay_helper_functions/interpolation_data/skaon/*.dat
 include hazma/decay_helper_functions/interpolation_data/lkaon/*.dat
 include hazma/gamma_ray_data/*.dat
+include hazma/gamma_ray_data/A_eff/*.dat
+include hazma/gamma_ray_data/bg_model/*.dat
+include hazma/gamma_ray_data/energy_res/*.dat
+include hazma/gamma_ray_data/obs/*.dat
 include hazma/pbh_data/*.csv
 include hazma/cmb_data/*.dat
 include hazma/relic_density/*.dat

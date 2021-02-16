@@ -457,14 +457,16 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
     @staticmethod
     @abstractmethod
     def list_decay_final_states():
-        pass
+        """
+        Returns a list of the availible final states which particle can decay
+        to.
+        """
 
     @abstractmethod
     def _decay_widths(self):
         """
         Decay width into each final state.
         """
-        pass
 
     def decay_widths(self):
         """
@@ -482,12 +484,11 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         if widths["total"] == 0:
             return {fs: 0.0 for fs in widths if fs != "total"}
-        else:
-            return {
-                fs: width / widths["total"]
-                for fs, width in widths.items()
-                if fs != "total"
-            }
+        return {
+            fs: width / widths["total"]
+            for fs, width in widths.items()
+            if fs != "total"
+        }
 
     @abstractmethod
     def _spectrum_funcs(self):
@@ -495,9 +496,11 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Gets a function taking a photon energy and returning the continuum
         gamma ray spectrum dN/dE for each relevant decay final state.
         """
-        pass
 
     def spectrum_funcs(self):
+        """
+        Return a dictionary of functions to compute gamma-ray spectra.
+        """
         widths = self.decay_widths()
         dndes_wrapped = {}
 
@@ -514,7 +517,18 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     def spectra(self, e_gams):
         """
-        Computes spectra for each final state at the provided photon energies.
+        Computes the gamma-ray spectrum for each final state weighted by their
+        branching-fractions at the provided photon energies.
+
+        Parameters
+        ----------
+        e_gams: float or array-like
+           Photon energies where the spectrum should be computed.
+
+        Returns
+        -------
+        spectrum: float or array-like
+            Gamma-ray spectrum evaluated the the given photon energies.
         """
         bfs = self.decay_branching_fractions()
         specs = {}
@@ -527,6 +541,20 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         return specs
 
     def total_spectrum(self, e_gams):
+        """
+        Compute the gamma-ray spectrum from all decays weighted by the
+        branching-fractions.
+
+        Parameters
+        ----------
+        e_gams: float or array-like
+           Photon energies where the spectrum should be computed.
+
+        Returns
+        -------
+        spectrum: float or array-like
+            Total gamma-ray spectrum evaluated the the given photon energies.
+        """
         if hasattr(e_gams, "__len__"):
             return self.spectra(e_gams)["total"]
         else:
@@ -538,7 +566,6 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Returns dict of final states and photon energies for final states
         containing monochromatic gamma ray lines.
         """
-        pass
 
     def gamma_ray_lines(self):
         bfs = self.decay_branching_fractions()
@@ -567,7 +594,6 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Returns functions `float -> float` giving the continuum positron
         spectrum for each final state.
         """
-        pass
 
     def positron_spectrum_funcs(self):
         widths = self.decay_widths()

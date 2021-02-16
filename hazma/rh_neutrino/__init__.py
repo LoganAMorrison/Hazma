@@ -30,6 +30,7 @@ from hazma.theory import TheoryDec
 from hazma.parameters import (
     electron_mass as me,
     charged_pion_mass as mpi,
+    charged_kaon_mass as mk,
     muon_mass as mmu,
 )
 
@@ -123,7 +124,9 @@ class RHNeutrino(TheoryDec):
         elif lepton == "mu":
             self._ml = mmu
         else:
-            raise ValueError("Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton))
+            raise ValueError(
+                "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
+            )
 
     def dnde_nu_l_l_fsr(self, photon_energies):
         """
@@ -189,7 +192,17 @@ class RHNeutrino(TheoryDec):
         """
         Returns a list of the availible final states.
         """
-        return ["pi l", "pi0 nu", "k l"]
+        return [
+            "pi l",
+            "pi0 nu",
+            "k l",
+            "nu pi pi",
+            "l pi pi0",
+            "nu nu nu",
+            "nu l l",
+            "nu g",
+            "nu g g",
+        ]
 
     def _decay_widths(self):
         """
@@ -241,7 +254,15 @@ class RHNeutrino(TheoryDec):
         return {"pi l": dnde_pi_l}
 
     def _positron_line_energies(self):
-        return {"pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2) / (2.0 * self.mx)}
+        # TODO: Add the 3-body final states
+        if self.lepton == "e":
+            return {
+                "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2)
+                / (2.0 * self.mx),
+                "k l": (self.mx ** 2 + self.ml ** 2 - mk ** 2)
+                / (2.0 * self.mx),
+            }
+        return {}
 
     @property
     def mx(self):
