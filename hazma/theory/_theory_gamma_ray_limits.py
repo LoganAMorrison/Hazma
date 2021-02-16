@@ -106,13 +106,21 @@ class TheoryGammaRayLimits:
             sv_lims[np.isnan(sv_lims) | (Phi_dms_un <= 0)] = np.inf
             return np.min(sv_lims)
         elif method == "chi2":
+            # Observed integrated fluxes
+            Phi_obss = (
+                measurement.target.dOmega
+                * (measurement.e_highs - measurement.e_lows)
+                * measurement.fluxes
+            )
             # Errors on integrated fluxes
             Sigmas = (
                 measurement.target.dOmega
                 * (measurement.e_highs - measurement.e_lows)
                 * measurement.upper_errors
             )
-            chi2_obs = np.sum(Phi_dms_un ** 2 / Sigmas ** 2)
+
+            chi2_obs = np.sum(np.maximum(Phi_dms_un - Phi_obss, 0) ** 2 / Sigmas ** 2)
+
             if chi2_obs == 0:
                 return np.inf
             else:
