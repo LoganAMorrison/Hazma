@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 import importlib.resources as pkg_resources
 
@@ -8,11 +9,24 @@ from hazma.background_model import BackgroundModel
 from hazma.flux_measurement import FluxMeasurement
 from hazma.target_params import TargetParams
 
+
 """
 
 Parameters relevant to computing constraints from gamma ray experiments.
 
 """
+
+# Directory of this file
+_dir = Path(__file__).parent.absolute()
+# Directory to gamma_ray_data
+grd_dir = os.path.join(_dir, "gamma_ray_data")
+
+
+def _generate_interp(subdir, filename, fill_value=np.nan, bounds_error=True):
+    path = os.path.join(grd_dir, subdir, filename)
+    data = np.genfromtxt(path, delimiter=",", unpack=True)
+    return interp1d(*data, bounds_error=bounds_error, fill_value=fill_value)
+
 
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
 # Additional factor of two due to uncertainty about radioactive and
@@ -73,6 +87,10 @@ def solid_angle_rect(l_max, b_min, b_max):
         * (np.sin(b_max * deg_to_rad) - np.sin(b_min * deg_to_rad))
     )
 
+
+# ==================
+# ---- Targets -----
+# ==================
 
 # Several different GC targets. Halo parameters are from the DM fit using
 # baryonic model B2 in https://arxiv.org/abs/1906.06133 (table III).
@@ -135,169 +153,300 @@ fornax_targets = {
     },
 }
 
+
+# =========================
+# ---- Effective Areas ----
+# =========================
+
+# Construct interpolating functions for effective areas
+effective_area_adept = _generate_interp(
+    "A_eff", "adept.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_amego = _generate_interp(
+    "A_eff", "amego.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_comptel = _generate_interp(
+    "A_eff", "comptel.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_e_astrogam = _generate_interp(
+    "A_eff", "e_astrogam.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_egret = _generate_interp(
+    "A_eff", "egret.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_fermi = _generate_interp(
+    "A_eff", "fermi.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_gecco = _generate_interp(
+    "A_eff", "gecco.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_grams = _generate_interp(
+    "A_eff", "grams.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_grams_upgrade = _generate_interp(
+    "A_eff", "grams_upgrade.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_mast = _generate_interp(
+    "A_eff", "mast.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_pangu = _generate_interp(
+    "A_eff", "pangu.dat", fill_value=0.0, bounds_error=False
+)
+
+
+# These are for backwards compatability
+A_eff_adept = effective_area_adept
+A_eff_amego = effective_area_amego
+A_eff_comptel = effective_area_comptel
+A_eff_e_astrogam = effective_area_e_astrogam
+A_eff_egret = effective_area_egret
+A_eff_fermi = effective_area_fermi
+A_eff_gecco = effective_area_gecco
+A_eff_grams = effective_area_grams
+A_eff_grams_upgrade = effective_area_grams_upgrade
+A_eff_mast = effective_area_mast
+A_eff_pangu = effective_area_pangu
+
+
+# ============================
+# ---- Energy Resolutions ----
+# ============================
+
 # Multiplicative factor to convert FWHM into standard deviations, assuming
 # energy resolution function is a Gaussian
 fwhm_factor = 1 / (2 * np.sqrt(2 * np.log(2)))
 
+# Construct interpolating functions for energy resolutions
+_e_res_amego_interp = _generate_interp(
+    "energy_res", "amego.dat", fill_value="extrapolate"
+)
+_e_res_e_astrogam_interp = _generate_interp(
+    "energy_res",
+    "e_astrogam.dat",
+    fill_value="extrapolate",
+)
+_e_res_gecco_large_interp = _generate_interp(
+    "energy_res",
+    "gecco_large.dat",
+    fill_value="extrapolate",
+)
+_e_res_gecco_interp = _generate_interp(
+    "energy_res", "gecco.dat", fill_value="extrapolate"
+)
+_e_res_integral_interp = _generate_interp(
+    "energy_res", "integral.dat", fill_value="extrapolate"
+)
+_e_res_mast_interp = _generate_interp(
+    "energy_res", "mast.dat", fill_value="extrapolate"
+)
 
-def energy_res_grams_upgrade(e):
-    """
-    GRAMS upgrade approximate energy resolution. See https://arxiv.org/abs/1901.03430.
-    """
-    return np.vectorize(lambda e: 0.05)(e)
 
-
-def energy_res_grams(e):
-    """
-    GRAMS approximate energy resolution. See https://arxiv.org/abs/1901.03430.
-    """
-    return np.vectorize(lambda e: 0.05)(e)
-
-
-def energy_res_adept(e):
+def energy_res_adept(energy):
     """
     AdEPT energy resolution. See arXiv1311.2059. The energy dependence is not
     given.
     """
-    return np.vectorize(lambda e: 0.3 * fwhm_factor)(e)
+    return np.vectorize(lambda e: 0.3 * fwhm_factor)(energy)
 
 
-def energy_res_pangu(e):
+def energy_res_amego(energy):
     """
-    PANGU energy resolution. https://doi.org/10.22323/1.246.0069. There is not
-    much energy dependence.
+    Energy resolution of AMEGO.
     """
-    return np.vectorize(lambda e: 0.4)(e)
+    return _e_res_amego_interp(energy)
 
 
-def energy_res_comptel(e):
-    """COMPTEL energy resolution :math:`\Delta E / E`.
+def energy_res_comptel(energy):
+    r"""
+    COMPTEL energy resolution :math:`\Delta E / E`.
 
     This is the most optimistic value, taken from `ch. II, page 11
     <https://scholars.unh.edu/dissertation/2045/>`_. The
     energy resolution at 1 MeV is 10% (FWHM).
     """
-    return np.vectorize(lambda e: 0.05 * fwhm_factor)(e)
+    return np.vectorize(lambda e: 0.05 * fwhm_factor)(energy)
 
 
-def energy_res_egret(e):
-    """EGRET's energy resolution :math:`\Delta E / E`.
+def energy_res_e_astrogam(energy):
+    """
+    Energy resolution of E-Astrogam.
+    """
+    return _e_res_e_astrogam_interp(energy)
+
+
+def energy_res_egret(energy):
+    """
+    EGRET's energy resolution :math:`\\Delta E / E`.
 
     This is the most optimistic value, taken from
     `sec. 4.3.3 <http://adsabs.harvard.edu/doi/10.1086/191793>`_.
     """
-    return np.vectorize(lambda e: 0.18 * fwhm_factor)(e)
+    return np.vectorize(lambda e: 0.18 * fwhm_factor)(energy)
 
 
-def energy_res_fermi(e):
+def energy_res_fermi(energy):
     """Fermi-LAT's energy resolution :math:`\Delta E / E`.
 
     This is the average of the most optimistic normal and 60deg off-axis values
     from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
     """
-    return np.vectorize(lambda e: 0.075)(e)
+    return np.vectorize(lambda e: 0.075)(energy)
 
 
-# Effective areas, cm^2
-a_eff_prefix = "A_eff"
-a_eff_pkg = "hazma.gamma_ray_data." + a_eff_prefix
-a_eff_rf_names = [
-    n for n in pkg_resources.contents(a_eff_pkg) if n.endswith(".dat")
-]
-for name in a_eff_rf_names:
-    with pkg_resources.path(a_eff_pkg, name) as path:
-        var_name = a_eff_prefix + "_" + os.path.splitext(name)[0]
-        var_val = interp1d(
-            *np.loadtxt(path, delimiter=",", unpack=True),
-            bounds_error=False,
-            fill_value=0.0,
-        )
-        globals()[var_name] = var_val
+def energy_res_gecco(energy):
+    """
+    Energy resolution of E-Astrogam.
+    """
+    return _e_res_gecco_interp(energy)
 
-# Energy resolutions, Delta E / E
-e_res_prefix = "energy_res"
-e_res_pkg = "hazma.gamma_ray_data." + e_res_prefix
-e_res_rf_names = [
-    n for n in pkg_resources.contents(e_res_pkg) if n.endswith(".dat")
-]
-for name in e_res_rf_names:
-    with pkg_resources.path(e_res_pkg, name) as path:
-        var_name = e_res_prefix + "_" + os.path.splitext(name)[0]
-        var_val = interp1d(
-            *np.loadtxt(path, delimiter=",", unpack=True),
-            fill_value="extrapolate",
-        )
-        globals()[var_name] = var_val
 
-# Package the measurements
-obs_pkg = "hazma.gamma_ray_data.obs"
-obs_rf_names = [
-    n for n in pkg_resources.contents(obs_pkg) if n.endswith(".dat")
-]
-for name in obs_rf_names:
-    with pkg_resources.path(obs_pkg, name) as path:
-        obs = os.path.splitext(name)[0]
-        telescope = "_".join(obs.split("_")[:-1])
-        var_val = FluxMeasurement.from_file(
-            path, eval("energy_res_" + telescope), eval(obs + "_target")
-        )
-        globals()[obs] = var_val
+def energy_res_gecco_large(energy):
+    """
+    Energy resolution of E-Astrogam.
+    """
+    return _e_res_gecco_large_interp(energy)
 
-        if obs == "comptel_diffuse":
-            comptel_diffuse_optimistic = FluxMeasurement.from_file(
-                path, energy_res_comptel, comptel_diffuse_target_optimistic
-            )
+
+def energy_res_grams_upgrade(energy):
+    """
+    GRAMS upgrade approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    """
+    return np.vectorize(lambda e: 0.05)(energy)
+
+
+def energy_res_grams(energy):
+    """
+    GRAMS approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    """
+    return np.vectorize(lambda e: 0.05)(energy)
+
+
+def energy_res_integral(energy):
+    """
+    Energy resolution of integral.
+    """
+    return _e_res_integral_interp(energy)
+
+
+def energy_res_mast(energy):
+    """
+    Energy resolution of E-Astrogam.
+    """
+    return _e_res_mast_interp(energy)
+
+
+def energy_res_pangu(energy):
+    """
+    PANGU energy resolution. https://doi.org/10.22323/1.246.0069. There is not
+    much energy dependence.
+    """
+    return np.vectorize(lambda e: 0.4)(energy)
+
+
+# ==========================
+# ---- Flux Measurments ----
+# ==========================
+
+
+def _generate_flux_measurement(subdir, filename, energy_res, target):
+    path = os.path.join(grd_dir, subdir, filename)
+    return FluxMeasurement.from_file(path, energy_res, target)
+
+
+comptel_diffuse = _generate_flux_measurement(
+    "obs",
+    "comptel_diffuse.dat",
+    energy_res_comptel,
+    comptel_diffuse_target_optimistic,
+)
+egret_diffuse = _generate_flux_measurement(
+    "obs", "egret_diffuse.dat", energy_res_egret, egret_diffuse_target
+)
+fermi_diffuse = _generate_flux_measurement(
+    "obs", "fermi_diffuse.dat", energy_res_fermi, fermi_diffuse_target
+)
+integral_diffuse = _generate_flux_measurement(
+    "obs", "integral_diffuse.dat", energy_res_integral, integral_diffuse_target
+)
+
+# ===========================
+# ---- Background Models ----
+# ===========================
+
+
+def _generate_background_model(subdir, filename):
+    interp = _generate_interp(subdir, filename)
+    return BackgroundModel.from_interp(interp)
+
 
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
-bg_suffix = "bg_model"
-bg_pkg = "hazma.gamma_ray_data." + bg_suffix
-bg_rf_names = [n for n in pkg_resources.contents(bg_pkg) if n.endswith(".dat")]
-for name in bg_rf_names:
-    with pkg_resources.path(bg_pkg, name) as path:
-        var_name = os.path.splitext(name)[0] + "_" + bg_suffix
-        var_val = BackgroundModel.from_interp(
-            interp1d(
-                *np.loadtxt(path, delimiter=",", unpack=True),
-                bounds_error=True,
-                fill_value=np.nan,
-            )
-        )
-        globals()[var_name] = var_val
+gc_bg_model = _generate_background_model("bg_model", "gc.dat")
 
 
-def _load_resource(ty, name):
-    if ty in ["A_eff", "energy_res", "bg_model"]:
-        data_dir = os.path.join(os.path.split(__file__)[0], "gamma_ray_data")
-        filename = os.path.join(data_dir, ty, name + ".dat")
-        data = np.genfromtxt(filename, delimiter=",", unpack=True)
-        interp = interp1d(*data, bounds_error=True, fill_value=np.nan)
-        if ty == "bg_model":
-            return BackgroundModel.from_interp(interp)
-        return interp
-    raise ValueError(f"Invalid type: ty = {ty}")
+# Effective areas, cm^2
+# a_eff_prefix = "A_eff"
+# a_eff_pkg = "hazma.gamma_ray_data." + a_eff_prefix
+# a_eff_rf_names = [
+#   n for n in pkg_resources.contents(a_eff_pkg) if n.endswith(".dat")
+# ]
+# for name in a_eff_rf_names:
+#   with pkg_resources.path(a_eff_pkg, name) as path:
+#       var_name = a_eff_prefix + "_" + os.path.splitext(name)[0]
+#       var_val = interp1d(
+#           *np.loadtxt(path, delimiter=",", unpack=True),
+#           bounds_error=False,
+#           fill_value=0.0,
+#       )
+#       globals()[var_name] = var_val
 
+# Energy resolutions, Delta E / E
+# e_res_prefix = "energy_res"
+# e_res_pkg = "hazma.gamma_ray_data." + e_res_prefix
+# e_res_rf_names = [
+#   n for n in pkg_resources.contents(e_res_pkg) if n.endswith(".dat")
+# ]
+# for name in e_res_rf_names:
+#    with pkg_resources.path(e_res_pkg, name) as path:
+#       var_name = e_res_prefix + "_" + os.path.splitext(name)[0]
+#       var_val = interp1d(
+#           *np.loadtxt(path, delimiter=",", unpack=True),
+#           fill_value="extrapolate",
+#       )
+#       globals()[var_name] = var_val
 
-# Load the effective areas
-A_EFF_ADEPT = _load_resource("A_eff", "adept")
-A_EFF_AMEGO = _load_resource("A_eff", "amego")
-A_EFF_COMPTEL = _load_resource("A_eff", "comptel")
-A_EFF_E_ASTROGAM = _load_resource("A_eff", "e_astrogam")
-A_EFF_EGRET = _load_resource("A_eff", "egret")
-A_EFF_FERMI = _load_resource("A_eff", "fermi")
-A_EFF_GECCO = _load_resource("A_eff", "gecco")
-A_EFF_GRAMS_UPGRADE = _load_resource("A_eff", "grams_upgrade")
-A_EFF_GRAMS = _load_resource("A_eff", "grams")
-A_EFF_MAST = _load_resource("A_eff", "mast")
-A_EFF_PANGU = _load_resource("A_eff", "pangu")
+# Package the measurements
+# obs_pkg = "hazma.gamma_ray_data.obs"
+# obs_rf_names = [
+#   n for n in pkg_resources.contents(obs_pkg) if n.endswith(".dat")
+# ]
+# for name in obs_rf_names:
+#   with pkg_resources.path(obs_pkg, name) as path:
+#       obs = os.path.splitext(name)[0]
+#       telescope = "_".join(obs.split("_")[:-1])
+#       var_val = FluxMeasurement.from_file(
+#           path, eval("energy_res_" + telescope), eval(obs + "_target")
+#       )
+#       globals()[obs] = var_val
+#
+#       if obs == "comptel_diffuse":
+#           comptel_diffuse_optimistic = FluxMeasurement.from_file(
+#               path, energy_res_comptel, comptel_diffuse_target_optimistic
+#           )
 
-# Load the background models
-BG_MODEL_GC = _load_resource("bg_model", "gc")
-
-# Load the energy resolutions
-ENERGY_RES_AMEGO = _load_resource("energy_res", "amego")
-ENERGY_RES_E_ASTROGAM = _load_resource("energy_res", "e_astrogam")
-ENERGY_RES_GECCO_LARGE = _load_resource("energy_res", "gecco_large")
-ENERGY_RES_GECCO = _load_resource("energy_res", "gecco")
-ENERGY_RES_INTEGRAL = _load_resource("energy_res", "integral")
-ENERGY_RES_MAST = _load_resource("energy_res", "mast")
+# This is the more complex background model from arXiv:1703.02546. Note that it
+# is only applicable to the inner 10deg x 10deg region of the Milky Way.
+# bg_suffix = "bg_model"
+# bg_pkg = "hazma.gamma_ray_data." + bg_suffix
+# bg_rf_names = [n for n in pkg_resources.contents(bg_pkg) if n.endswith(".dat")]
+# for name in bg_rf_names:
+#    with pkg_resources.path(bg_pkg, name) as path:
+#        var_name = os.path.splitext(name)[0] + "_" + bg_suffix
+#        var_val = BackgroundModel.from_interp(
+#            interp1d(
+#                *np.loadtxt(path, delimiter=",", unpack=True),
+#                bounds_error=True,
+#                fill_value=np.nan,
+#            )
+#        )
+#        globals()[var_name] = var_val
