@@ -45,6 +45,7 @@ plank_mass = 1.22091e22  # MeV
 rho_crit = 1.05375e-2  # Critical energy density in units of h^2 MeV / cm^3
 sm_entropy_density_today = 2891.2  # Entropy density today in units of cm^-3
 omega_h2_cdm = 0.1198  # Dark matter energy fraction times h^2
+dimensionless_hubble_constant = 0.6774  # H0 = h * (100 km / s / Mpc), Planck 2015
 sin_theta_weak_sqrd = 0.22290
 sin_theta_weak = np.sqrt(sin_theta_weak_sqrd)
 cos_theta_weak = np.sqrt(1.0 - sin_theta_weak_sqrd)
