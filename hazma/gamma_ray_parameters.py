@@ -117,11 +117,47 @@ gc_targets_optimistic = {
 }
 
 # Observing regions for various experiments. Same NFW profile as above.
+# For backwards compatability
 comptel_diffuse_target = TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433)
 comptel_diffuse_target_optimistic = TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433)
 egret_diffuse_target = TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585)
 fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
 integral_diffuse_target = TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421)
+
+# New interface
+comptel_diffuse_targets = {
+    "nfw": TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433),
+    "ein": TargetParams(J=7.412e27, D=1.292e25, dOmega=1.433),
+}
+comptel_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=1.53e29, D=5.571e25, dOmega=1.433),
+    "ein": TargetParams(J=1.387e28, D=1.544e25, dOmega=1.433),
+}
+egret_diffuse_targets = {
+    "nfw": TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585),
+    "ein": TargetParams(J=8.426e26, D=8.559e24, dOmega=6.585),
+}
+egret_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=1.511e28, D=3.523e25, dOmega=6.585),
+    "ein": TargetParams(J=1.084e27, D=9.065e24, dOmega=6.585),
+}
+fermi_diffuse_targets = {
+    "nfw": TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82),
+    "ein": TargetParams(J=1.189e27, D=8.967e24, dOmega=10.82),
+}
+fermi_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=2.213e28, D=3.708e25, dOmega=10.82),
+    "ein": TargetParams(J=1.691e27, D=9.618e24, dOmega=10.82),
+}
+integral_diffuse_targets = {
+    "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
+    "ein": TargetParams(J=1.694e28, D=1.979e25, dOmega=0.5421),
+}
+integral_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
+    "ein": TargetParams(J=1.694e28, D=1.979e25, dOmega=0.5421),
+}
+
 
 # Draco dwarf.
 draco_targets = {
