@@ -1,18 +1,12 @@
-"""
-This module constains various parameters relevant to computing constraints 
-from gamma ray experiments.
-"""
-
-from pathlib import Path
+import importlib.resources as pkg_resources
 import os
+from pathlib import Path
 
 import numpy as np
-from scipy.interpolate import interp1d
-
 from hazma.background_model import BackgroundModel
 from hazma.flux_measurement import FluxMeasurement
 from hazma.target_params import TargetParams
-
+from scipy.interpolate import interp1d
 
 # Directory of this file
 _dir = Path(__file__).parent.absolute()
@@ -30,9 +24,7 @@ def _generate_interp(subdir, filename, fill_value=np.nan, bounds_error=True):
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
 # Additional factor of two due to uncertainty about radioactive and
 # instrumental backgrounds.
-gecco_bg_model = BackgroundModel(
-    [0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2
-)
+gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
@@ -98,11 +90,13 @@ gc_targets = {
         "1 arcmin cone": TargetParams(J=6.972e32, D=4.84e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=1.782e30, D=1.597e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=7.458e29, D=1.214e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=2.879e30, D=1.955e26, dOmega=0.03042),
     },
     "ein": {
         "1 arcmin cone": TargetParams(J=1.724e32, D=5.413e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=4.442e30, D=2.269e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.706e30, D=1.615e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=3.99e31, D=3.974e26, dOmega=0.03042),
     },
 }
 # +/- 1 sigma
@@ -111,22 +105,58 @@ gc_targets_optimistic = {
         "1 arcmin cone": TargetParams(J=1.415e33, D=6.666e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=3.372e30, D=2.058e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.355e30, D=1.522e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=2.879e30, D=1.955e26, dOmega=0.03042),
     },
     "ein": {
         "1 arcmin cone": TargetParams(J=5.987e34, D=4.179e27, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=4.965e31, D=4.345e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.404e31, D=2.62e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=3.99e31, D=3.974e26, dOmega=0.03042),
     },
 }
 
 # Observing regions for various experiments. Same NFW profile as above.
+# For backwards compatability
 comptel_diffuse_target = TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433)
-comptel_diffuse_target_optimistic = TargetParams(
-    J=1.751e29, D=5.541e25, dOmega=1.433
-)
+comptel_diffuse_target_optimistic = TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433)
 egret_diffuse_target = TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585)
 fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
 integral_diffuse_target = TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421)
+
+# New interface
+comptel_diffuse_targets = {
+    "nfw": TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433),
+    "ein": TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433),
+}
+comptel_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=1.53e29, D=5.571e25, dOmega=1.433),
+    "ein": TargetParams(J=1.04e30, D=7.098e25, dOmega=1.433),
+}
+egret_diffuse_targets = {
+    "nfw": TargetParams(J=6.265e27, D=1.71e25, dOmega=6.585),
+    "ein": TargetParams(J=6.994e27, D=1.738e25, dOmega=6.585),
+}
+egret_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=7.556e27, D=1.761e25, dOmega=6.585),
+    "ein": TargetParams(J=9.062e27, D=1.952e25, dOmega=6.585),
+}
+fermi_diffuse_targets = {
+    "nfw": TargetParams(J=8.475e27, D=1.782e25, dOmega=10.82),
+    "ein": TargetParams(J=1.058e28, D=1.832e25, dOmega=10.82),
+}
+fermi_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=1.106e28, D=1.854e25, dOmega=10.82),
+    "ein": TargetParams(J=1.601e28, D=2.084e25, dOmega=10.82),
+}
+integral_diffuse_targets = {
+    "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
+    "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
+}
+integral_diffuse_targets_optimistic = {
+    "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
+    "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
+}
+
 
 # Draco dwarf.
 draco_targets = {
@@ -167,7 +197,10 @@ __effective_area_amego = _generate_interp(
 __effective_area_comptel = _generate_interp(
     "A_eff", "comptel.dat", fill_value=0.0, bounds_error=False
 )
-__effective_area_e_astrogam = _generate_interp(
+effective_area_all_sky_astrogam = _generate_interp(
+    "A_eff", "all_sky_astrogam.dat", fill_value=0.0, bounds_error=False
+)
+effective_area_e_astrogam = _generate_interp(
     "A_eff", "e_astrogam.dat", fill_value=0.0, bounds_error=False
 )
 __effective_area_egret = _generate_interp(
@@ -415,6 +448,7 @@ effective_area_pangu.__dict__ = __effective_area_pangu.__dict__.copy()
 A_eff_adept = effective_area_adept
 A_eff_amego = effective_area_amego
 A_eff_comptel = effective_area_comptel
+A_eff_all_sky_astrogam = effective_area_all_sky_astrogam
 A_eff_e_astrogam = effective_area_e_astrogam
 A_eff_egret = effective_area_egret
 A_eff_fermi = effective_area_fermi
@@ -437,17 +471,14 @@ fwhm_factor = 1 / (2 * np.sqrt(2 * np.log(2)))
 _e_res_amego_interp = _generate_interp(
     "energy_res", "amego.dat", fill_value="extrapolate", bounds_error=False
 )
+_e_res_all_sky_astrogam_interp = _generate_interp(
+    "energy_res", "e_astrogam.dat", fill_value="extrapolate", bounds_error=False
+)
 _e_res_e_astrogam_interp = _generate_interp(
-    "energy_res",
-    "e_astrogam.dat",
-    fill_value="extrapolate",
-    bounds_error=False,
+    "energy_res", "e_astrogam.dat", fill_value="extrapolate", bounds_error=False
 )
 _e_res_gecco_large_interp = _generate_interp(
-    "energy_res",
-    "gecco_large.dat",
-    fill_value="extrapolate",
-    bounds_error=False,
+    "energy_res", "gecco_large.dat", fill_value="extrapolate", bounds_error=False
 )
 _e_res_gecco_interp = _generate_interp(
     "energy_res", "gecco.dat", fill_value="extrapolate", bounds_error=False
@@ -484,6 +515,13 @@ def energy_res_comptel(energy):
     energy resolution at 1 MeV is 10% (FWHM).
     """
     return np.vectorize(lambda e: 0.05 * fwhm_factor)(energy)
+
+
+def energy_res_all_sky_astrogam(energy):
+    """
+    Energy resolution of E-Astrogam.
+    """
+    return _e_res_all_sky_astrogam_interp(energy)
 
 
 def energy_res_e_astrogam(energy):
@@ -576,7 +614,7 @@ comptel_diffuse = _generate_flux_measurement(
     "obs",
     "comptel_diffuse.dat",
     energy_res_comptel,
-    comptel_diffuse_target_optimistic,
+    comptel_diffuse_target,
 )
 egret_diffuse = _generate_flux_measurement(
     "obs", "egret_diffuse.dat", energy_res_egret, egret_diffuse_target
@@ -601,72 +639,3 @@ def _generate_background_model(subdir, filename):
 # This is the more complex background model from arXiv:1703.02546. Note that it
 # is only applicable to the inner 10deg x 10deg region of the Milky Way.
 gc_bg_model = _generate_background_model("bg_model", "gc.dat")
-
-
-# import importlib.resources as pkg_resources
-# Effective areas, cm^2
-# a_eff_prefix = "A_eff"
-# a_eff_pkg = "hazma.gamma_ray_data." + a_eff_prefix
-# a_eff_rf_names = [
-#   n for n in pkg_resources.contents(a_eff_pkg) if n.endswith(".dat")
-# ]
-# for name in a_eff_rf_names:
-#   with pkg_resources.path(a_eff_pkg, name) as path:
-#       var_name = a_eff_prefix + "_" + os.path.splitext(name)[0]
-#       var_val = interp1d(
-#           *np.loadtxt(path, delimiter=",", unpack=True),
-#           bounds_error=False,
-#           fill_value=0.0,
-#       )
-#       globals()[var_name] = var_val
-
-# Energy resolutions, Delta E / E
-# e_res_prefix = "energy_res"
-# e_res_pkg = "hazma.gamma_ray_data." + e_res_prefix
-# e_res_rf_names = [
-#   n for n in pkg_resources.contents(e_res_pkg) if n.endswith(".dat")
-# ]
-# for name in e_res_rf_names:
-#    with pkg_resources.path(e_res_pkg, name) as path:
-#       var_name = e_res_prefix + "_" + os.path.splitext(name)[0]
-#       var_val = interp1d(
-#           *np.loadtxt(path, delimiter=",", unpack=True),
-#           fill_value="extrapolate",
-#       )
-#       globals()[var_name] = var_val
-
-# Package the measurements
-# obs_pkg = "hazma.gamma_ray_data.obs"
-# obs_rf_names = [
-#   n for n in pkg_resources.contents(obs_pkg) if n.endswith(".dat")
-# ]
-# for name in obs_rf_names:
-#   with pkg_resources.path(obs_pkg, name) as path:
-#       obs = os.path.splitext(name)[0]
-#       telescope = "_".join(obs.split("_")[:-1])
-#       var_val = FluxMeasurement.from_file(
-#           path, eval("energy_res_" + telescope), eval(obs + "_target")
-#       )
-#       globals()[obs] = var_val
-#
-#       if obs == "comptel_diffuse":
-#           comptel_diffuse_optimistic = FluxMeasurement.from_file(
-#               path, energy_res_comptel, comptel_diffuse_target_optimistic
-#           )
-
-# This is the more complex background model from arXiv:1703.02546. Note that it
-# is only applicable to the inner 10deg x 10deg region of the Milky Way.
-# bg_suffix = "bg_model"
-# bg_pkg = "hazma.gamma_ray_data." + bg_suffix
-# bg_rf_names = [n for n in pkg_resources.contents(bg_pkg) if n.endswith(".dat")]
-# for name in bg_rf_names:
-#    with pkg_resources.path(bg_pkg, name) as path:
-#        var_name = os.path.splitext(name)[0] + "_" + bg_suffix
-#        var_val = BackgroundModel.from_interp(
-#            interp1d(
-#                *np.loadtxt(path, delimiter=",", unpack=True),
-#                bounds_error=True,
-#                fill_value=np.nan,
-#            )
-#        )
-#        globals()[var_name] = var_val
