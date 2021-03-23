@@ -95,11 +95,13 @@ gc_targets = {
         "1 arcmin cone": TargetParams(J=6.972e32, D=4.84e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=1.782e30, D=1.597e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=7.458e29, D=1.214e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=2.879e30, D=1.955e26, dOmega=0.03042),
     },
     "ein": {
         "1 arcmin cone": TargetParams(J=1.724e32, D=5.413e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=4.442e30, D=2.269e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.706e30, D=1.615e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=3.99e31, D=3.974e26, dOmega=0.03042),
     },
 }
 # +/- 1 sigma
@@ -108,11 +110,13 @@ gc_targets_optimistic = {
         "1 arcmin cone": TargetParams(J=1.415e33, D=6.666e26, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=3.372e30, D=2.058e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.355e30, D=1.522e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=2.879e30, D=1.955e26, dOmega=0.03042),
     },
     "ein": {
         "1 arcmin cone": TargetParams(J=5.987e34, D=4.179e27, dOmega=2.66e-7),
         "5 deg cone": TargetParams(J=4.965e31, D=4.345e26, dOmega=0.0239),
         "10 deg cone": TargetParams(J=1.404e31, D=2.62e26, dOmega=0.0955),
+        "10x10 deg box": TargetParams(J=3.99e31, D=3.974e26, dOmega=0.03042),
     },
 }
 
@@ -127,35 +131,35 @@ integral_diffuse_target = TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421)
 # New interface
 comptel_diffuse_targets = {
     "nfw": TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433),
-    "ein": TargetParams(J=7.412e27, D=1.292e25, dOmega=1.433),
+    "ein": TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433),
 }
 comptel_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=1.53e29, D=5.571e25, dOmega=1.433),
-    "ein": TargetParams(J=1.387e28, D=1.544e25, dOmega=1.433),
+    "ein": TargetParams(J=1.04e30, D=7.098e25, dOmega=1.433),
 }
 egret_diffuse_targets = {
-    "nfw": TargetParams(J=1.253e28, D=3.42e25, dOmega=6.585),
-    "ein": TargetParams(J=8.426e26, D=8.559e24, dOmega=6.585),
+    "nfw": TargetParams(J=6.265e27, D=1.71e25, dOmega=6.585),
+    "ein": TargetParams(J=6.994e27, D=1.738e25, dOmega=6.585),
 }
 egret_diffuse_targets_optimistic = {
-    "nfw": TargetParams(J=1.511e28, D=3.523e25, dOmega=6.585),
-    "ein": TargetParams(J=1.084e27, D=9.065e24, dOmega=6.585),
+    "nfw": TargetParams(J=7.556e27, D=1.761e25, dOmega=6.585),
+    "ein": TargetParams(J=9.062e27, D=1.952e25, dOmega=6.585),
 }
 fermi_diffuse_targets = {
-    "nfw": TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82),
-    "ein": TargetParams(J=1.189e27, D=8.967e24, dOmega=10.82),
+    "nfw": TargetParams(J=8.475e27, D=1.782e25, dOmega=10.82),
+    "ein": TargetParams(J=1.058e28, D=1.832e25, dOmega=10.82),
 }
 fermi_diffuse_targets_optimistic = {
-    "nfw": TargetParams(J=2.213e28, D=3.708e25, dOmega=10.82),
-    "ein": TargetParams(J=1.691e27, D=9.618e24, dOmega=10.82),
+    "nfw": TargetParams(J=1.106e28, D=1.854e25, dOmega=10.82),
+    "ein": TargetParams(J=1.601e28, D=2.084e25, dOmega=10.82),
 }
 integral_diffuse_targets = {
     "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
-    "ein": TargetParams(J=1.694e28, D=1.979e25, dOmega=0.5421),
+    "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
 }
 integral_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
-    "ein": TargetParams(J=1.694e28, D=1.979e25, dOmega=0.5421),
+    "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
 }
 
 
@@ -397,7 +401,7 @@ comptel_diffuse = _generate_flux_measurement(
     "obs",
     "comptel_diffuse.dat",
     energy_res_comptel,
-    comptel_diffuse_target_optimistic,
+    comptel_diffuse_target,
 )
 egret_diffuse = _generate_flux_measurement(
     "obs", "egret_diffuse.dat", energy_res_egret, egret_diffuse_target
