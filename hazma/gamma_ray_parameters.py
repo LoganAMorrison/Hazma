@@ -1,6 +1,10 @@
+"""
+This module constains various parameters relevant to computing constraints 
+from gamma ray experiments.
+"""
+
 from pathlib import Path
 import os
-import importlib.resources as pkg_resources
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -10,14 +14,9 @@ from hazma.flux_measurement import FluxMeasurement
 from hazma.target_params import TargetParams
 
 
-"""
-
-Parameters relevant to computing constraints from gamma ray experiments.
-
-"""
-
 # Directory of this file
 _dir = Path(__file__).parent.absolute()
+
 # Directory to gamma_ray_data
 grd_dir = os.path.join(_dir, "gamma_ray_data")
 
@@ -159,40 +158,258 @@ fornax_targets = {
 # =========================
 
 # Construct interpolating functions for effective areas
-effective_area_adept = _generate_interp(
+__effective_area_adept = _generate_interp(
     "A_eff", "adept.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_amego = _generate_interp(
+__effective_area_amego = _generate_interp(
     "A_eff", "amego.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_comptel = _generate_interp(
+__effective_area_comptel = _generate_interp(
     "A_eff", "comptel.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_e_astrogam = _generate_interp(
+__effective_area_e_astrogam = _generate_interp(
     "A_eff", "e_astrogam.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_egret = _generate_interp(
+__effective_area_egret = _generate_interp(
     "A_eff", "egret.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_fermi = _generate_interp(
+__effective_area_fermi = _generate_interp(
     "A_eff", "fermi.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_gecco = _generate_interp(
+__effective_area_gecco = _generate_interp(
     "A_eff", "gecco.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_grams = _generate_interp(
+__effective_area_grams = _generate_interp(
     "A_eff", "grams.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_grams_upgrade = _generate_interp(
+__effective_area_grams_upgrade = _generate_interp(
     "A_eff", "grams_upgrade.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_mast = _generate_interp(
+__effective_area_mast = _generate_interp(
     "A_eff", "mast.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_pangu = _generate_interp(
+__effective_area_pangu = _generate_interp(
     "A_eff", "pangu.dat", fill_value=0.0, bounds_error=False
 )
 
+
+def effective_area_adept(energies):
+    """
+    Compute the effective area of the AdEPT telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_adept(energies)
+
+
+def effective_area_amego(energies):
+    """
+    Compute the effective area of the AMEGO telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_amego(energies)
+
+
+def effective_area_comptel(energies):
+    """
+    Compute the effective area of the COMPTEL telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_comptel(energies)
+
+
+def effective_area_e_astrogam(energies):
+    """
+    Compute the effective area of the e-ASTROGAM telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_e_astrogam(energies)
+
+
+def effective_area_egret(energies):
+    """
+    Compute the effective area of the egret telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_egret(energies)
+
+
+def effective_area_fermi(energies):
+    """
+    Compute the effective area of the FERMI telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_fermi(energies)
+
+
+def effective_area_gecco(energies):
+    """
+    Compute the effective area of the GECCO telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_gecco(energies)
+
+
+def effective_area_grams(energies):
+    """
+    Compute the effective area of the GRAMS telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_grams(energies)
+
+
+def effective_area_grams_upgrade(energies):
+    """
+    Compute the effective area of the GRAMS telescope upgrade in cm^2 for a
+    given energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_grams_upgrade(energies)
+
+
+def effective_area_mast(energies):
+    """
+    Compute the effective area of the MAST telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_mast(energies)
+
+
+def effective_area_pangu(energies):
+    """
+    Compute the effective area of the PANGU telescope in cm^2 for a given
+    energy in MeV.
+
+    Parameters
+    ----------
+    energies: array-like
+        Energies in MeV.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective areas in cm^2.
+    """
+    return __effective_area_pangu(energies)
+
+
+# Copy the attributes from the interpolating function to the function
+# operational function since some of Hazma's internal functions need access
+# to the inter1d object's attributes.
+
+effective_area_adept.__dict__ = __effective_area_adept.__dict__.copy()
+effective_area_amego.__dict__ = __effective_area_amego.__dict__.copy()
+effective_area_comptel.__dict__ = __effective_area_comptel.__dict__.copy()
+effective_area_e_astrogam.__dict__ = (
+    __effective_area_e_astrogam.__dict__.copy()
+)
+effective_area_egret.__dict__ = __effective_area_egret.__dict__.copy()
+effective_area_fermi.__dict__ = __effective_area_fermi.__dict__.copy()
+effective_area_gecco.__dict__ = __effective_area_gecco.__dict__.copy()
+effective_area_grams_upgrade.__dict__ = (
+    __effective_area_grams_upgrade.__dict__.copy()
+)
+effective_area_grams.__dict__ = __effective_area_grams.__dict__.copy()
+effective_area_mast.__dict__ = __effective_area_mast.__dict__.copy()
+effective_area_pangu.__dict__ = __effective_area_pangu.__dict__.copy()
 
 # These are for backwards compatability
 A_eff_adept = effective_area_adept
@@ -218,26 +435,28 @@ fwhm_factor = 1 / (2 * np.sqrt(2 * np.log(2)))
 
 # Construct interpolating functions for energy resolutions
 _e_res_amego_interp = _generate_interp(
-    "energy_res", "amego.dat", fill_value="extrapolate"
+    "energy_res", "amego.dat", fill_value="extrapolate", bounds_error=False
 )
 _e_res_e_astrogam_interp = _generate_interp(
     "energy_res",
     "e_astrogam.dat",
     fill_value="extrapolate",
+    bounds_error=False,
 )
 _e_res_gecco_large_interp = _generate_interp(
     "energy_res",
     "gecco_large.dat",
     fill_value="extrapolate",
+    bounds_error=False,
 )
 _e_res_gecco_interp = _generate_interp(
-    "energy_res", "gecco.dat", fill_value="extrapolate"
+    "energy_res", "gecco.dat", fill_value="extrapolate", bounds_error=False
 )
 _e_res_integral_interp = _generate_interp(
-    "energy_res", "integral.dat", fill_value="extrapolate"
+    "energy_res", "integral.dat", fill_value="extrapolate", bounds_error=False
 )
 _e_res_mast_interp = _generate_interp(
-    "energy_res", "mast.dat", fill_value="extrapolate"
+    "energy_res", "mast.dat", fill_value="extrapolate", bounds_error=False
 )
 
 
@@ -285,7 +504,7 @@ def energy_res_egret(energy):
 
 
 def energy_res_fermi(energy):
-    """Fermi-LAT's energy resolution :math:`\Delta E / E`.
+    r"""Fermi-LAT's energy resolution :math:`\Delta E / E`.
 
     This is the average of the most optimistic normal and 60deg off-axis values
     from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
@@ -384,6 +603,7 @@ def _generate_background_model(subdir, filename):
 gc_bg_model = _generate_background_model("bg_model", "gc.dat")
 
 
+# import importlib.resources as pkg_resources
 # Effective areas, cm^2
 # a_eff_prefix = "A_eff"
 # a_eff_pkg = "hazma.gamma_ray_data." + a_eff_prefix
