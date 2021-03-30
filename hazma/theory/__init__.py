@@ -90,9 +90,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return {fs: 0.0 for fs in cs if fs != "total"}
         else:
             return {
-                fs: sigma / cs["total"]
-                for fs, sigma in cs.items()
-                if fs != "total"
+                fs: sigma / cs["total"] for fs, sigma in cs.items() if fs != "total"
             }
 
     @abstractmethod
@@ -259,7 +257,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         energy_res : float -> float
             The detector's energy resolution (Delta E / E) as a function of
             photon energy in MeV.
-        n_pts : float
+        n_pts : int
             Number of points to use to create resulting interpolating function.
             More points gives higher accuracy at the cost of computing time,
             but is necessary if the continuum spectrum contains very sharp
@@ -332,7 +330,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         Returns
         -------
-        specs : dict(str, float)
+        specs : dict(str, float or float numpy.array)
             Contribution to :math:`dN/dE_\gamma` at the given positron energies
             and center-of-mass energy for each relevant final state. More
             specifically, this is the spectrum for annihilation into each
@@ -440,7 +438,6 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         return convolved_spectrum_fn(
             e_p_min,
             e_p_max,
-            e_cm,
             energy_res,
             lambda e_ps: self.total_positron_spectrum(e_ps, e_cm),
             self.positron_lines(e_cm),
@@ -461,12 +458,14 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Returns a list of the availible final states which particle can decay
         to.
         """
+        pass
 
     @abstractmethod
     def _decay_widths(self):
         """
         Decay width into each final state.
         """
+        pass
 
     def decay_widths(self):
         """
@@ -485,9 +484,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         if widths["total"] == 0:
             return {fs: 0.0 for fs in widths if fs != "total"}
         return {
-            fs: width / widths["total"]
-            for fs, width in widths.items()
-            if fs != "total"
+            fs: width / widths["total"] for fs, width in widths.items() if fs != "total"
         }
 
     @abstractmethod
@@ -496,6 +493,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Gets a function taking a photon energy and returning the continuum
         gamma ray spectrum dN/dE for each relevant decay final state.
         """
+        pass
 
     def spectrum_funcs(self):
         """
@@ -566,6 +564,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Returns dict of final states and photon energies for final states
         containing monochromatic gamma ray lines.
         """
+        pass
 
     def gamma_ray_lines(self):
         bfs = self.decay_branching_fractions()
@@ -576,9 +575,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         return lines
 
-    def total_conv_spectrum_fn(
-        self, e_gam_min, e_gam_max, energy_res, n_pts=1000
-    ):
+    def total_conv_spectrum_fn(self, e_gam_min, e_gam_max, energy_res, n_pts=1000):
         return convolved_spectrum_fn(
             e_gam_min,
             e_gam_max,
@@ -594,6 +591,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         Returns functions `float -> float` giving the continuum positron
         spectrum for each final state.
         """
+        pass
 
     def positron_spectrum_funcs(self):
         widths = self.decay_widths()
@@ -641,9 +639,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         return lines
 
-    def total_conv_positron_spectrum_fn(
-        self, e_p_min, e_p_max, energy_res, n_pts=1000
-    ):
+    def total_conv_positron_spectrum_fn(self, e_p_min, e_p_max, energy_res, n_pts=1000):
         return convolved_spectrum_fn(
             e_p_min,
             e_p_max,
