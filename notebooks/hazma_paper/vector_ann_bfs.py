@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -23,7 +23,7 @@ from hazma.scalar_mediator import ScalarMediator
 
 from utilities import get_color, get_tex_label, latex_text_width_1col
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 # DM masses
 mxs = np.logspace(np.log10(50), np.log10(250), 500)
 # Mediator masses
@@ -52,7 +52,7 @@ for mx in mxs:
     for (fs, bf) in cur_bfs.items():
         branching_fracts[fs].append(bf)
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 fig, axes = plt.subplots(
     3,
     2,

@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -65,7 +65,7 @@ ms_labels = np.array(
     ]
 )
 
-# %% {"code_folding": [0, 38, 42]}
+# %% code_folding=[0, 38, 42]
 fig, axes = plt.subplots(
     n_subplot_rows,
     n_subplot_cols,

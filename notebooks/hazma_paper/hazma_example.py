@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -66,7 +66,7 @@ from hazma.parameters import qe
 from hazma.positron_spectra import charged_pion as pspec_charged_pion
 from hazma.decay import neutral_pion, charged_pion
 
-from hazma.theory import Theory
+from hazma.theory import TheoryAnn
 from hazma.gamma_ray_parameters import (
     energy_res_fermi,
     energy_res_e_astrogam,
@@ -75,10 +75,10 @@ from hazma.gamma_ray_parameters import (
     egret_diffuse,
     fermi_diffuse,
     comptel_diffuse,
-    gc_target,
+    gc_targets,
     gc_bg_model,
-    solid_angle,
-    T_obs_e_astrogam,
+    solid_angle_cone,
+    solid_angle_rect,
 )
 
 # We will ignore warnings since they aren't important for this example
@@ -108,7 +108,7 @@ warnings.filterwarnings("ignore")
 #
 # First, we implement cross section mixin class:
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 class HazmaExampleCrossSection:
     def sigma_xx_to_pipi(self, Q):
         mupi = mpi / Q
@@ -149,7 +149,7 @@ class HazmaExampleCrossSection:
 # %% [markdown]
 # Next we define the total spectrum class. This class will implement the total gamma-ray spectrum from both $\bar{\chi}\chi\to\pi^{+}\pi^{-}$ and $\bar{\chi}\chi\to\pi^{0}\pi^{0}$, including FSR and decays:
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 class HazmaExampleSpectra:
     def dnde_pi0pi0(self, e_gams, e_cm):
         return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
@@ -191,7 +191,7 @@ class HazmaExampleSpectra:
 # %% [markdown]
 # Finally we define the positron/electron spectra from $\bar{\chi}\chi\to\pi^{+}\pi^{-}$ (note that $\bar{\chi}\chi\to\pi^{0}\pi^{0}$ does not contribute to the positron spectrum.)
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 class HazmaExamplePositronSpectra:
     def dnde_pos_pipi(self, e_ps, e_cm):
         return pspec_charged_pion(e_ps, e_cm / 2.0)
@@ -204,11 +204,11 @@ class HazmaExamplePositronSpectra:
 
 
 # %% [markdown]
-# Lastly, we combine all the mixins into a master class. In the master class, we set the attributes of the model via and ``__init__``.
+# Lastly, we combine all the mixins into a master class. In the master class, we set the attributes of the model via and ``__init__``. Since this is a theory with annihilating dark matter, we subclass `TheoryAnn`. Theories where the dark matter instead decays should subclass `TheoryDec`.
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 class HazmaExample(
-    HazmaExampleCrossSection, HazmaExamplePositronSpectra, HazmaExampleSpectra, Theory
+    HazmaExampleCrossSection, HazmaExamplePositronSpectra, HazmaExampleSpectra, TheoryAnn
 ):
     def __init__(self, mx, c1, c2, lam):
         self.mx = mx
@@ -332,6 +332,7 @@ plt.legend()
 # Below we compute the limits on $\langle\sigma v\rangle$ for different dark matter masses from MeV gamma-ray telescopes using EGRET data and projecting limits for e-ASTROGAM observations of the Galactic Center. This code should run in under one minute.
 
 # %%
+T_obs = 3.14e7  # ~ 1 yr
 mxs = np.linspace(mpi0, 250.0, num=100)
 limits = {"e-ASTROGAM": np.zeros_like(mxs), "EGRET": np.zeros_like(mxs)}
 
@@ -340,8 +341,8 @@ for i, mx in enumerate(mxs):
     limits["e-ASTROGAM"][i] = model.unbinned_limit(
         A_eff_e_astrogam,
         energy_res_e_astrogam,
-        T_obs_e_astrogam,
-        gc_target,
+        T_obs,
+        gc_targets["nfw"]["1 arcmin cone"],
         gc_bg_model,
     )
     limits["EGRET"][i] = model.binned_limit(egret_diffuse)

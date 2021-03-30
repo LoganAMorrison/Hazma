@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -23,8 +23,8 @@ from hazma.scalar_mediator import ScalarMediator, HiggsPortal, HeavyQuark
 from hazma.vector_mediator import VectorMediator, KineticMixing, QuarksOnly
 
 # %%
-mxs = np.geomspace(0.1, 250, 300)  # DM masses
-m_meds = np.array([50, 175, 500])  # mediator masses
+mxs = np.geomspace(0.1, 250, 20)  # DM masses
+m_meds = np.array([50, 175])  # mediator masses
 x_kd = 1e-6  # 1e-4 gives weaker CMB limits for the scalar models
 
 # Models
@@ -61,7 +61,7 @@ titles = np.array(
 
 n_subplot_rows, n_subplot_cols = models.shape
 
-# %% {"code_folding": [0]}
+# %% code_folding=[]
 fig, axes = plt.subplots(
     n_subplot_rows,
     n_subplot_cols,
@@ -123,7 +123,7 @@ axes[1, 1].text(
     275, 0.5, "Scalar\nmodels", ha="center", va="center", fontsize=10, rotation=-90
 )
 
-fig.savefig("figures/f_eff.pdf", bbox_inches="tight")
+# fig.savefig("figures/f_eff.pdf", bbox_inches="tight")
 plt.show()
 
 # %%
