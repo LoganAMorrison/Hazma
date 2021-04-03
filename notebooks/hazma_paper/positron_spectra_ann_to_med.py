@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -25,7 +25,7 @@ from utilities import colors, latex_text_width_1col
 # %% [markdown]
 # **Plots $e^+$ annihilation spectra for the scalar and vector models for annihilation into mediators.**
 
-# %% {"code_folding": [20]}
+# %% code_folding=[20]
 # Dark matter masses
 mxs = np.array([100.0, 250.0, 600.0])
 # Mediator masses
@@ -61,7 +61,7 @@ def cmap(mM):
     return colors[np.where(mMs == mM)[0][0]]
 
 
-# %% {"code_folding": [0]}
+# %% code_folding=[0]
 fig, axes = plt.subplots(
     n_subplot_rows,
     n_subplot_cols,

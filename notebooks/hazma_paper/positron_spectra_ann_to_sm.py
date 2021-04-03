@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -25,7 +25,7 @@ from utilities import get_color, get_tex_label, latex_text_width_1col
 # %% [markdown]
 # **Plots $e^+$ annihilation spectra for the scalar and vector models in the case $m_\chi < m_S,\, m_V$.**
 
-# %% {"code_folding": [20]}
+# %% code_folding=[20]
 # Dark matter masses
 mxs = np.array([100.0, 110.0, 140.0, 250.0])
 # Mediator mass
@@ -55,7 +55,7 @@ fs_labels = np.array(
     ]
 )
 
-# %% {"code_folding": [0, 7, 39, 43]}
+# %% code_folding=[43]
 fig, axes = plt.subplots(
     n_subplot_rows,
     n_subplot_cols,

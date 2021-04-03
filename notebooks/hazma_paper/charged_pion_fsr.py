@@ -5,8 +5,8 @@
 #     text_representation:
 #       extension: .py
 #       format_name: hydrogen
-#       format_version: '1.2'
-#       jupytext_version: 1.1.5
+#       format_version: '1.3'
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -27,7 +27,7 @@ from utilities import latex_text_width_1col
 # %% [markdown]
 # **Generates plots of the pion FSR spectrum for the scalar and vector-mediator models.**
 
-# %% {"code_folding": []}
+# %% code_folding=[]
 def dnde_ap(e_gam, mass, e_cm):
     """Altarelli-Parisi approximation of FSR spectrum.
     

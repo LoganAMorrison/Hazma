@@ -50,33 +50,33 @@ def solid_angle_cone(radius):
     return 4 * np.pi * np.sin(radius * np.pi / 180 / 2) ** 2
 
 
-def solid_angle_rect(l_max, b_min, b_max):
-    """
-    Returns solid angle subtended for a rectangular target region centered on
-    the galactic center.
-
-    Parameters
-    ----------
-    l_max : float
-        Maximum value of galactic longitude in deg. Note that :math:`l` must
-        lie in the interval :math:`[-180, 180]`.
-    b_min, b_max : float, float
-        Minimum and maximum values for :math:`b` in deg. Note that :math:`b`
-        must lie in the interval :math:`[-90, 90]`, with the equator at
-        :math:`b = 0`.
-
-    Returns
-    -------
-    Omega : float
-        Solid angle subtended by the region in sr.
-    """
-    deg_to_rad = np.pi / 180.0
-    return (
-        4.0
-        * l_max
-        * deg_to_rad
-        * (np.sin(b_max * deg_to_rad) - np.sin(b_min * deg_to_rad))
-    )
+# def solid_angle_rect(l_max, b_min, b_max):
+#     """
+#     Returns solid angle subtended for a rectangular target region centered on
+#     the galactic center.
+#
+#     Parameters
+#     ----------
+#     l_max : float
+#         Maximum value of galactic longitude in deg. Note that :math:`l` must
+#         lie in the interval :math:`[-180, 180]`.
+#     b_min, b_max : float, float
+#         Minimum and maximum values for :math:`b` in deg. Note that :math:`b`
+#         must lie in the interval :math:`[-90, 90]`, with the equator at
+#         :math:`b = 0`.
+#
+#     Returns
+#     -------
+#     Omega : float
+#         Solid angle subtended by the region in sr.
+#     """
+#     deg_to_rad = np.pi / 180.0
+#     return (
+#         4.0
+#         * l_max
+#         * deg_to_rad
+#         * (np.sin(b_max * deg_to_rad) - np.sin(b_min * deg_to_rad))
+#     )
 
 
 # ==================
