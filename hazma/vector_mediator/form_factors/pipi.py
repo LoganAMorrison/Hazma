@@ -1,27 +1,18 @@
 """
 Module for computing the vector form factor for pi+pi.
 """
-from typing import List, Dict
+from typing import Dict, List
 
 import numpy as np  # type:ignore
 from scipy.special import gamma  # type:ignore
 
-from hazma.parameters import (
-    neutral_pion_mass as mpi0,
-    charged_pion_mass as mpi,
-    Qu,
-    Qd,
-    Qe,
-    qe,
-)
-
-from hazma.vector_mediator.form_factors.utils import (
-    hhat,
-    dhhatds,
-    h,
-    breit_wigner_gs,
-    breit_wigner_fw,
-)
+from hazma.parameters import Qd, Qe, Qu
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.parameters import qe
+from hazma.vector_mediator.form_factors.utils import (breit_wigner_fw,
+                                                      breit_wigner_gs, dhhatds,
+                                                      h, hhat)
 
 # Pion mass in GeV
 _MPI = 0.13957018
@@ -32,13 +23,20 @@ class FormFactorPiPi:
     Class for computing the pi-pi-vector form-factor.
     """
 
-    def __init__(self, ci0: float, ci1: float) -> None:
+    def __init__(self, gu: float, gd: float) -> None:
         """
-        Initialize the vector form-factor for.
+        Initialize the two-pion vector form-factor.
+
+        Parameters
+        ----------
+        gu: float
+            Coupling of the vector to the up-quark.
+        gd: float
+            Coupling of the vector to the dow-quark.
         """
 
-        self._ci0: float = ci0
-        self._ci1: float = ci1
+        self._ci0: float = gu
+        self._ci1: float = gd
 
         # truncation parameter
         self._n_max: int = 2000
@@ -96,7 +94,8 @@ class FormFactorPiPi:
             self._rho["wgt"].append(mag * np.exp(1j * phase))
             if ix > 0:
                 rho_sum += self._rho["wgt"][ix]
-        self._omega_wgt = self._omega["mag"] * np.exp(1j * self._omega["phase"])
+        self._omega_wgt = self._omega["mag"] * \
+            np.exp(1j * self._omega["phase"])
         # set up the masses and widths of the rho resonances
         gam_b = gamma(2.0 - self._beta)
         cwgt = 0.0
@@ -119,9 +118,11 @@ class FormFactorPiPi:
             # set the masses and widths
             # calc for higher resonances
             if ix >= len(self._rho["mass"]):
-                self._mass.append(self._rho["mass"][0] * np.sqrt(1.0 + 2.0 * float(ix)))
+                self._mass.append(
+                    self._rho["mass"][0] * np.sqrt(1.0 + 2.0 * float(ix)))
                 self._width.append(
-                    self._rho["width"][0] / self._rho["mass"][0] * self._mass[-1]
+                    self._rho["width"][0] /
+                    self._rho["mass"][0] * self._mass[-1]
                 )
             # input for lower ones
             else:
@@ -135,11 +136,12 @@ class FormFactorPiPi:
                     self._mass[-1] ** 2,
                     self._mass[-1],
                     self._width[-1],
-                    self._mpi,
-                    self._mpi,
+                    _MPI,
+                    _MPI,
                 )
             )
-            self._dh.append(dhhatds(self._mass[-1], self._width[-1], _MPI, _MPI))
+            self._dh.append(
+                dhhatds(self._mass[-1], self._width[-1], _MPI, _MPI))
             self._h0.append(
                 h(
                     0.0,

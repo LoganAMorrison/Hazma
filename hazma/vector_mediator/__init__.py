@@ -1,18 +1,22 @@
+from typing import Optional
+
+import numpy as np
+
+from hazma.parameters import Qd, Qe, Qu
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.parameters import qe
 from hazma.theory import TheoryAnn
-
-from hazma.vector_mediator._vector_mediator_cross_sections import (
-    VectorMediatorCrossSections,
-)
+from hazma.vector_mediator._vector_mediator_cross_sections import \
+    VectorMediatorCrossSections
 from hazma.vector_mediator._vector_mediator_fsr import VectorMediatorFSR
-from hazma.vector_mediator._vector_mediator_positron_spectra import (
-    VectorMediatorPositronSpectra,
-)
-from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
+from hazma.vector_mediator._vector_mediator_positron_spectra import \
+    VectorMediatorPositronSpectra
+from hazma.vector_mediator._vector_mediator_spectra import \
+    VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
-from ..parameters import qe, Qu, Qd, Qe
-
-from scipy.integrate import quad
-from scipy.special import k1, kn
+from hazma.vector_mediator.form_factors.pi_gamma import FormFactorPiGamma
+from hazma.vector_mediator.form_factors.pipi import FormFactorPiPi
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
@@ -270,7 +274,8 @@ class QuarksOnly(VectorMediator):
     """
 
     def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss):
-        super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
+        super(QuarksOnly, self).__init__(
+            mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
 
     def __repr__(self):
         return f"QuarksOnly(mx={self.mx} MeV, mv={self.mv} MeV, gvxx={self.gvxx}, gvuu={self.gvuu}, gvdd={self.gvdd}, gvss={self.gvss})"
@@ -287,3 +292,147 @@ class QuarksOnly(VectorMediator):
     @VectorMediator.gvmumu.setter
     def gvmumu(self, gvmumu):
         raise AttributeError("Cannot set gvmumu")
+
+
+class VectorMediatorGeV(VectorMediator):
+    """
+    A generic dark matter model where interactions with the SM are mediated via
+    an s-channel vector mediator. This model is valid for dark-matter masses
+    up to 1 GeV.
+    """
+
+    def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu):
+        """
+        Create a `VectorMediatorGeV` object.
+
+        Parameters
+        ----------
+        mx : float
+            Mass of the dark matter.
+        mv : float
+            Mass of the vector mediator.
+        gvxx : float
+            Coupling of vector mediator to dark matter.
+        gvuu : float
+            Coupling of vector mediator to the up quark.
+        gvdd : float
+            Coupling of vector mediator to the down quark.
+        gvss : float
+            Coupling of vector mediator to the strange quark.
+        gvee : float
+            Coupling of vector mediator to the electron.
+        gvmumu : float
+            Coupling of vector mediator to the muon.
+        """
+
+        self._form_factor_pipi_obj = FormFactorPiPi(gvuu, gvdd)
+        self._form_factor_pigamma_obj = FormFactorPiGamma(gvuu, gvdd, gvss)
+
+        super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
+
+    def _reset_state(self):
+        """
+        Function to reset the state of the derived quantities such as the
+        vector width and form-factors.
+        """
+        self._form_factor_pipi_obj = FormFactorPiPi(self._gvuu, self._gvdd)
+
+    def _form_factor_pipi(self, s: float, imode: Optional[int] = 1) -> complex:
+        """
+        Compute the pi-pi-V form factor.
+
+        Parameters
+        ----------
+        s: float
+            Square of the center-of-mass energy in MeV.
+        imode: Optional[int]
+            Iso-spin channel. Default is 1.
+
+        Returns
+        -------
+        ff: float
+            Form factor from pi-pi-V.
+        """
+        sgev = s * 1e-6  # Convert to GeV
+        return self._form_factor_pipi_obj(sgev, imode=imode)
+
+    def _form_factor_pi0g(self, s: float) -> complex:
+        """
+        Compute the pi-pi-V form factor for a give squared CME.
+
+        Parameters
+        ----------
+        s: float
+            Square of the center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: float
+            Form factor from pi0-gamma-V.
+        """
+        sgev = s * 1e-6  # Convert s to GeV
+        return self._form_factor_pigamma_obj(sgev)
+
+    def width_v_to_pipi(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        charged pions.
+        """
+        if self._mv < 2 * mpi0:
+            return 0.0
+        ff = self._form_factor_pipi(self._mv**2)
+        return (
+            1.0
+            / 48.0
+            / np.pi
+            * self._mv
+            * (1 - 4 * mpi0 ** 2 / self._mv ** 2) ** 1.5
+            * abs(ff) ** 2
+        )
+
+    def width_v_to_pi0g(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a neutral pion and photon.
+        """
+        if self._mv < mpi:
+            return 0.0
+        ff = self._form_factor_pi0g(self._mv**2)
+        return (
+            self._mv
+            * abs(ff) ** 2
+            * (1.0 - (mpi / self._mv) ** 2) ** 3
+            / (6.0 * np.pi)
+        )
+
+    def sigma_xx_to_v_to_pipi(self, e_cm: float) -> float:
+        """
+        Compute the dark matter annihilation cross section into two charged
+        pions.
+
+        Parameters
+        ----------
+        e_cm: float
+            Center-of-mass energy.
+
+        Returns
+        -------
+        sigma: float
+            Cross section for chi + chibar -> pi + pi.
+        """
+        gamv = self.width_v
+        mv = self.mv
+        mx = self.mx
+        if e_cm < 2.0 * mx or e_cm < 2.0 * mpi:
+            return 0.0
+
+        s = e_cm**2
+        # Compute
+        ff = self._form_factor_pipi(s)
+        num = self.gvxx**2 * abs(ff)**2 * (s - 4 * mpi **
+                                           2)**1.5 * (2.0 * mx**2 + s)
+        den = 48.0 * np.pi * s * \
+            np.sqrt(s - 4.0 * mx**2) * \
+            (mv**2 * (gamv**2 - 2.0 * s) + mv**4 + s**2)
+
+        return num / den
