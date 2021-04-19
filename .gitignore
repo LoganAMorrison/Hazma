@@ -29,3 +29,5 @@ manual/*.pdf
 .eggs/*
 .python-version
 .pytest_cache/
+
+notebooks/dev/extending_to_gev/testing.ipynb
