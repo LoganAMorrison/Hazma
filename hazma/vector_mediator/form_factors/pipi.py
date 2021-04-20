@@ -104,7 +104,7 @@ def compute_pipi_form_factor_parameters(
     # fix up the early weights
     cwgt = np.sum(coup[1:len(rho_wgt)])
     rho_sum = np.sum(rho_wgt[1:])
-    coup[1:len(rho_wgt) + 1] = rho_wgt * cwgt / rho_sum
+    coup[1:len(rho_wgt)] = rho_wgt[1:] * cwgt / rho_sum
 
     return FormFactorPiPiParameters(
         omega_mag,
