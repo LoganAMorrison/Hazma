@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 
+
 #energy range SM
 low_lim = 2.*FK.mK0
 upp_lim = 2.0
@@ -59,10 +60,10 @@ while energy < upp_lim :
 while mDM < upp_lim :
     energy = 2*mDM+0.0001
     xDP.append(energy)
-    wMed = FK.GammaDM(mMed,1)
+    wMed = FK.GammaDM(mMed,0)
     FK.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
     sigmaN = FK.sigmaDM0(energy**2)
-    wMed = FK.GammaDM(mMed,2)
+    wMed = FK.GammaDM(mMed,1)
     FK.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
     sigmaP = FK.sigmaDMP(energy**2)
     y_sigmaDP00.append(sigmaN)
@@ -80,10 +81,10 @@ cMed_s = 1./3.
 while mDM < upp_lim :
     energy = 2*mDM+0.0001
     xBL.append(energy)
-    wMed = FK.GammaDM(mMed,1)
+    wMed = FK.GammaDM(mMed,0)
     FK.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
     sigmaN = FK.sigmaDM0(energy**2)
-    wMed = FK.GammaDM(mMed,2)
+    wMed = FK.GammaDM(mMed,1)
     FK.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
     sigmaP = FK.sigmaDMP(energy**2)
     y_sigmaBL00.append(sigmaN)
@@ -121,9 +122,9 @@ plt.cla()
 plt.close()
 
 
-plt.plot(xSM,y_sigmaSMpm,color="blue",label="SM")
-plt.plot(xDP,y_sigmaDPpm,color="red",label="DP")
-plt.plot(xBL,y_sigmaBLpm,color="green",label="BL")
+plt.plot(xSM,y_sigmaSM00,color="blue",label="SM")
+plt.plot(xDP,y_sigmaDP00,color="red",label="DP")
+plt.plot(xBL,y_sigmaBL00,color="green",label="BL")
 plt.yscale("log")
 plt.xlabel("$\\sqrt{s}$/GeV")
 plt.ylabel("$\\sigma$/nb")
