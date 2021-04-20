@@ -1,15 +1,14 @@
-from setuptools import setup, Extension, find_packages
-
 import numpy as np
+from setuptools import Extension, find_packages, setup  # type: ignore
 
-VERSION = "1.1.1"
+VERSION = "2.0.0-alpha"
 
 
 def long_description():
     """Remove first four lines from the README for PyPI."""
     with open("README.md", encoding="utf-8") as f:
         ld = f.read()
-    return "\n".join([str(l) for l in ld.split("\n")[4:]])
+    return "\n".join([str(line) for line in ld.split("\n")[4:]])
 
 
 decay_dir = "hazma/decay_helper_functions/"
@@ -225,7 +224,8 @@ setup(
     maintainer="Logan Morrison",
     maintainer_email="loanmorr@ucsc.edu",
     url="http://hazma.readthedocs.io",
-    description="Python package for computing indirect detection constraints on sub-GeV dark matter.",
+    description=("Python package for computing indirect detection constraints"
+                 + " on sub-GeV dark matter."),
     long_description=long_description(),
     long_description_content_type="text/markdown",
     keywords="dark-matter mev-dark-matter gamma-ray-spectra",
