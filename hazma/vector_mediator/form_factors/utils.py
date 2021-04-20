@@ -387,6 +387,6 @@ def gamma_generator(
     yield val
     n = 1
     while n < nmax:
-        val *= ((1.0 - beta + n)) / n
+        val *= (1.0 - beta + n) / n
         n += 1
         yield val

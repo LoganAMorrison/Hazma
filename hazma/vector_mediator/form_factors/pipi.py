@@ -43,7 +43,6 @@ def compute_pipi_form_factor_parameters(
 
     Returns
     -------
-    parameters: FormFactorPiPiParameters
     """
     # Set up the parameters.
     omega_mag = 0.00187 + 0j
@@ -69,13 +68,13 @@ def compute_pipi_form_factor_parameters(
     rho_wgt = rho_mag * np.exp(1j * rho_phase)
 
     beta = 2.148
-    gam_0 = gamma(2.0 - beta)
 
     # Compute the two of couplings
-    omega_wgt = (omega_mag * np.exp(1j * omega_phase))
+    omega_wgt = omega_mag * np.exp(1j * omega_phase)
     # set up the masses and widths of the rho resonances
     ixs = np.arange(n_max)
     gam_b = np.array([val for val in gamma_generator(beta, n_max)])
+    gam_0 = gamma(beta - 0.5)
 
     coup = (
         gam_0
