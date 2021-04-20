@@ -1,7 +1,7 @@
-from Resonance import *
+from .Resonance import *
 from math import pi
 import math,scipy,scipy.special
-import alpha
+from . import alpha
 
 # PDG mass values
 mK0=0.497611
@@ -51,8 +51,6 @@ crhoextra_ = 0.
 comegaextra_ = 0.
 cphiextra_ = 0.
 c_extra_ =[]
-etaPhis_ = [1.0,1.0]
-etaRho3_ =1.
 
 mtau = 1.77686
 vud  = 0.97420
@@ -105,9 +103,9 @@ def findBeta(c0) :
         elif(c0>=cmax) :
             betamax *=2.
         else :
-            print 'bisect fails',betamin,betamid,betamax,c0
-            print 'bisect fails',cmin,cmid,cmax,c0
-            quit()
+            print('bisect fails',betamin,betamid,betamax,c0)
+            print('bisect fails',cmin,cmid,cmax,c0)
+            raise RuntimeError('bad')
         betamid=0.5*(betamin+betamax)
     return betamid
     
@@ -273,60 +271,62 @@ def initialize() :
     cphiextra_ = 1. - total + coup_[2][len(phiWgt_)]
     c_extra_ = [crhoextra_,comegaextra_,cphiextra_]
     
-# calculate the form factor
-def Fkaon(q2,imode,ma,mb) :
+# calculate the form factor for 2Kaons, imode=0: neutral, imode=1: charged
+def Fkaon(q2,imode) :
+    if imode==0: mK=mK0
+    if imode==1: mK=mKp
     FK = complex(0.,0.)
+    #termrho = 0j
+    #termomg = 0j
+    #termphi = 0j
     for ix in range(0,nMax_):
         # rho exchange
         term = cI1_*coup_[0][ix]*BreitWignerGS(q2,mass_[0][ix],width_[0][ix],
                                           mpi_,mpi_,h0_[ix],dh_[ix],hres_[ix])
-        if(ix==3):
-            term *= etaRho3_
-        if(imode!=1) :
+        if(imode!=0) :
             FK += 0.5*term
+            #termrho += 0.5*term
         else :
             FK -= 0.5*term
-        if(imode==0) : continue
+            #termrho -= 0.5*term
         # omega exchange
         term = cI0_*coup_[1][ix]*BreitWignerFW(q2,mass_[1][ix],width_[1][ix])
         FK += 1./6.*term
+        #termomg += 1./6.*term
         # phi exchange
-        term = cS_*coup_[2][ix]*BreitWignerPWave(q2,mass_[2][ix],width_[2][ix],ma,mb)
-        #if(ix==0 and imode==1) : term *=etaPhi_
-        if(imode==1 and ix < 3):
-            if(ix==0):
-                term *=etaPhi_
-            else:
-                term *=etaPhis_[ix-1]
+        term = cS_*coup_[2][ix]*BreitWignerPWave(q2,mass_[2][ix],width_[2][ix],mK,mK)
+        if(ix==0 and imode==0): term *=etaPhi_
         FK += term/3.
+        #termphi += term/3.
+    #print(f"rho = {termrho}, omg = {termomg}, rho = {termphi}")
     # factor for cc mode
-    if(imode==0) :
-        FK *= math.sqrt(2.0)
+    #if(imode==0) :
+    #    FK *= math.sqrt(2.0)
     return FK
 
-# Decay rate of mediator-> 2Kaons, imode=1: neutral, imode=2: charged
+# Decay rate of mediator-> 2Kaons, imode=0: neutral, imode=1: charged
 def GammaDM(medMass,imode):
     mK = 0.
-    if imode==1:
+    if imode==0:
         if medMass<2*mK0: return 0
         mK = mK0
-        temp = Fkaon(medMass,imode,mK,mK)
-    if imode==2:
+        temp = Fkaon(medMass,imode)
+    if imode==1:
         if medMass<2*mKp: return 0
         mK = mKp
-        temp = Fkaon(medMass**2,imode,mK,mK)
+        temp = Fkaon(medMass**2,imode)
     return 1./48./math.pi*medMass*(1-4*mK**2/medMass**2)**1.5*abs(temp)**2*gev2nb
 
 # SM cross section for e+e- annihilation to neutral Kaon production
 def sigmaSM0(Q2) :
     alphaEM = alpha.alphaEM(Q2)
-    temp = Fkaon(Q2,1,mK0,mK0)
+    temp = Fkaon(Q2,0)
     return 1./3.*math.pi*alphaEM**2/Q2*(1.-4.*mK0**2/Q2)**1.5*abs(temp)**2*gev2nb
 
 # SM cross section for e+e- annihilation to charged Kaon production
 def sigmaSMP(Q2) :
     alphaEM = alpha.alphaEM(Q2)
-    temp = Fkaon(Q2,2,mKp,mKp)
+    temp = Fkaon(Q2,1)
     return 1./3.*math.pi*alphaEM**2/Q2*(1.-4.*mKp**2/Q2)**1.5*abs(temp)**2*gev2nb
 
 # cross section for DM annihilations to two neutral Kaons
@@ -335,7 +335,7 @@ def sigmaDM0(Q2) :
     cDM = gDM_
     DMmed = cDM/(Q2-mMed_**2+complex(0.,1.)*mMed_*wMed_)
     DMmed2 = abs(DMmed)**2
-    temp = Fkaon(Q2,1,mK0,mK0)
+    temp = Fkaon(Q2,0)
     return 1/48./math.pi*DMmed2*Q2*(1+2*mDM_**2/Q2)*(1.-4.*mK0**2/Q2)**1.5*abs(temp)**2*gev2nb
 
 # cross section for DM annihilations to two charged Kaons
@@ -344,5 +344,5 @@ def sigmaDMP(Q2) :
     cDM = gDM_
     DMmed = cDM/(Q2-mMed_**2+complex(0.,1.)*mMed_*wMed_)
     DMmed2 = abs(DMmed)**2
-    temp = Fkaon(Q2,2,mKp,mKp)
+    temp = Fkaon(Q2,1)
     return 1/48./math.pi*DMmed2*Q2*(1+2*mDM_**2/Q2)*(1.-4.*mKp**2/Q2)**1.5*abs(temp)**2*gev2nb

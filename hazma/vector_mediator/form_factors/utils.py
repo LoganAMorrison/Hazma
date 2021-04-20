@@ -5,6 +5,10 @@ from scipy.special import gamma  # type:ignore
 
 # Pion mass in GeV
 MPI_GEV = 0.13957018
+# Neutral Kaon mass in GeV
+MK0_GEV = 0.497611
+# Charged Kaon mass in GeV
+MKP_GEV = 0.493677
 
 
 def beta2(
@@ -338,6 +342,7 @@ def breit_wigner_fw(
         s: Union[float, np.ndarray],
         mres: Union[float, complex, np.ndarray],
         gamma: Union[float, complex, np.ndarray],
+        reshape: Optional[bool] = False,
 ) -> Union[complex, np.ndarray]:
     """
     Compute the standard Breit-Wigner with a constant width. See
@@ -351,6 +356,10 @@ def breit_wigner_fw(
         Mass of the resonance.
     gamma: Union[float, np.ndarray]
         Width of the resonance.
+    reshape: Optional[bool]
+        If true, a different value is computed for each `s`. This is useful
+        for computing form-factors for many squared center-of-mass energies at
+        once.
 
     Returns
     -------
@@ -358,7 +367,36 @@ def breit_wigner_fw(
         The Breit-Wigner function.
     """
     mr2 = mres ** 2
+    if hasattr(s, '__len__') and reshape:
+        ss = np.array(s)
+        return mr2 / (mr2 - ss[:, np.newaxis] - 1j * mres * gamma)
     return mr2 / (mr2 - s - 1j * mres * gamma)
+
+
+def breit_wigner_pwave(
+        s: Union[float, np.ndarray],
+        mres: Union[float, complex, np.ndarray],
+        gamma: Union[float, complex, np.ndarray],
+        m1: float,
+        m2: float,
+        reshape: Optional[bool] = False,
+):
+    mr2 = mres**2
+    if hasattr(s, '__len__') and reshape:
+        ss = np.array(s)
+        return mr2 / (
+            mr2
+            - ss[:, np.newaxis]
+            - 1j * np.sqrt(ss)[:, np.newaxis]
+            * gamma_p(ss, mres, gamma, m1, m2, reshape=True)  # type:ignore
+        )
+    return mr2 / (
+        mr2
+        - s
+        - 1j
+        * np.sqrt(s)
+        * gamma_p(s, mres, gamma, m1, m2)  # type:ignore
+    )
 
 
 def gamma_generator(

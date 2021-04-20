@@ -40,9 +40,12 @@ def compute_pipi_form_factor_parameters(
     Parameters
     ----------
     n_max: int
+        Number of resonances to include.
 
     Returns
     -------
+    params: FormFactorPiPiParameters
+        Parameters of the resonances for the V-pi-pi form factor.
     """
     # Set up the parameters.
     omega_mag = 0.00187 + 0j
