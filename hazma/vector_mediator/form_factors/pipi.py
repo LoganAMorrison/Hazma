@@ -98,9 +98,9 @@ def compute_pipi_form_factor_parameters(
     width[:len(rho_widths)] = rho_widths
 
     # parameters for the gs propagators
-    hres = hhat(mass ** 2, mass, width, MPI_GEV, MPI_GEV)
-    dh = dhhatds(mass, width, MPI_GEV, MPI_GEV)
-    h0 = h(0.0, mass, width, MPI_GEV, MPI_GEV, dh, hres)
+    hres = hhat(mass ** 2, mass, width, MPI_GEV, MPI_GEV)  # type: ignore
+    dh = dhhatds(mass, width, MPI_GEV, MPI_GEV)  # type: ignore
+    h0 = h(0.0, mass, width, MPI_GEV, MPI_GEV, dh, hres)  # type: ignore
 
     # fix up the early weights
     cwgt = np.sum(coup[1:len(rho_wgt)])
@@ -128,8 +128,13 @@ def form_factor_pipi(
         ci1: float,
         imode: Optional[int] = 1
 ):
+    if hasattr(s, '__len__'):
+        ss = np.array(s)
+    else:
+        ss = np.array([s])
+
     ff = ci1 * params.coup * breit_wigner_gs(
-        s,
+        ss,
         params.mass,
         params.width,
         MPI_GEV,
@@ -137,24 +142,29 @@ def form_factor_pipi(
         params.h0,
         params.dh,
         params.hres,
+        reshape=True,
     )
 
     # include rho-omega if needed
     if imode != 0:
-        ff[0] *= (
+        ff[:, 0] *= (
             1.0
             / (1.0 + params.omega_weight)
             * (
                 1.0
                 + params.omega_weight
                 * breit_wigner_fw(
-                    s, params.omega_mass, params.omega_weight
+                    s,
+                    params.omega_mass,
+                    params.omega_weight
                 )
             )
         )
     # sum
-    ff = np.sum(ff)
+    ff = np.sum(ff, axis=1)
     # factor for cc mode
     if imode == 0:
         ff *= np.sqrt(2.0)
+    if len(ff) == 1:
+        return ff[0]
     return ff
