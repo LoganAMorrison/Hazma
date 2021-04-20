@@ -4,6 +4,7 @@ Tests for the vector form factors.
 
 import pytest
 
+from hazma.vector_mediator.form_factors.eta_gamma import form_factor_eta_gamma
 from hazma.vector_mediator.form_factors.kk import (
     compute_kk_form_factor_parameters, form_factor_kk)
 from hazma.vector_mediator.form_factors.pi_gamma import form_factor_pi_gamma
@@ -28,26 +29,8 @@ def test_ff_pipi_hazma_vs_herwig4dm(pipi_ff_parameters):
 
     hazma = form_factor_pipi(1.0, pipi_ff_parameters, F2pi.cI1_, imode=1)
     herwig = F2pi.Fpi(1.0, 1)
-    re_diff = abs(hazma.real - herwig.real) / herwig.real * 100
-    im_diff = abs(hazma.imag - herwig.imag) / herwig.imag * 100
-
-    assert re_diff <= 1.0
-    assert im_diff <= 1.0
-
-
-def test_ff_pigamma_hazma_vs_herwig4dm():
-    """
-    Test that the `hazma` and `herwig4DM` implementations of the V-pi-gamma
-    form factor agree at 1.0 GeV.
-    """
-    from herwig4dm import FPiGamma  # type:ignore
-    gvuu, gvdd, gvss = 1.0, -1.0, 1.0
-    FPiGamma.resetParameters(1.0, 1.0, 2.0, 1e-3, gvuu, gvdd, gvss)
-
-    hazma = form_factor_pi_gamma(1.0, gvuu, gvdd, gvss)
-    herwig = FPiGamma.FPiGamma(1.0)
-    re_diff = abs(hazma.real - herwig.real) / herwig.real * 100
-    im_diff = abs(hazma.imag - herwig.imag) / herwig.imag * 100
+    re_diff = abs((hazma.real - herwig.real) / herwig.real) * 100
+    im_diff = abs((hazma.imag - herwig.imag) / herwig.imag) * 100
 
     assert re_diff <= 1.0
     assert im_diff <= 1.0
@@ -67,8 +50,8 @@ def test_ff_kk_hazma_vs_herwig4dm_I0():
 
     hazma = form_factor_kk(1.0, params, gvuu, gvdd, gvss, imode)
     herwig = FK.Fkaon(1.0, imode)
-    re_diff = abs(hazma.real - herwig.real) / herwig.real * 100
-    im_diff = abs(hazma.imag - herwig.imag) / herwig.imag * 100
+    re_diff = abs((hazma.real - herwig.real) / herwig.real) * 100
+    im_diff = abs((hazma.imag - herwig.imag) / herwig.imag) * 100
 
     assert re_diff <= 1.0
     assert im_diff <= 1.0
@@ -88,8 +71,44 @@ def test_ff_kk_hazma_vs_herwig4dm_I1():
 
     hazma = form_factor_kk(1.0, params, gvuu, gvdd, gvss, imode)
     herwig = FK.Fkaon(1.0, imode)
-    re_diff = abs(hazma.real - herwig.real) / herwig.real * 100
-    im_diff = abs(hazma.imag - herwig.imag) / herwig.imag * 100
+    re_diff = abs((hazma.real - herwig.real) / herwig.real) * 100
+    im_diff = abs((hazma.imag - herwig.imag) / herwig.imag) * 100
+
+    assert re_diff <= 1.0
+    assert im_diff <= 1.0
+
+
+def test_ff_pi_gamma_hazma_vs_herwig4dm():
+    """
+    Test that the `hazma` and `herwig4DM` implementations of the V-pi-gamma
+    form factor agree at 1.0 GeV.
+    """
+    from herwig4dm import FPiGamma  # type:ignore
+    gvuu, gvdd, gvss = 1.0, -1.0, 1.0
+    FPiGamma.resetParameters(1.0, 1.0, 2.0, 1e-3, gvuu, gvdd, gvss)
+
+    hazma = form_factor_pi_gamma(1.0, gvuu, gvdd, gvss)
+    herwig = FPiGamma.FPiGamma(1.0)
+    re_diff = abs((hazma.real - herwig.real) / herwig.real) * 100
+    im_diff = abs((hazma.imag - herwig.imag) / herwig.imag) * 100
+
+    assert re_diff <= 1.0
+    assert im_diff <= 1.0
+
+
+def test_ff_eta_gamma_hazma_vs_herwig4dm():
+    """
+    Test that the `hazma` and `herwig4DM` implementations of the V-eta-gamma
+    form factor agree at 1.0 GeV.
+    """
+    from herwig4dm import FEtaGamma  # type:ignore
+    gvuu, gvdd, gvss = 1.0, -1.0, 1.0
+    FEtaGamma.resetParameters(1.0, 1.0, 2.0, 1e-3, gvuu, gvdd, gvss)
+
+    hazma = form_factor_eta_gamma(1.0, gvuu, gvdd, gvss)
+    herwig = FEtaGamma.FEtaGamma(1.0)
+    re_diff = abs((hazma.real - herwig.real) / herwig.real) * 100
+    im_diff = abs((hazma.imag - herwig.imag) / herwig.imag) * 100
 
     assert re_diff <= 1.0
     assert im_diff <= 1.0

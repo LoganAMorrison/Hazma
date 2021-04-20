@@ -9,6 +9,8 @@ MPI_GEV = 0.13957018
 MK0_GEV = 0.497611
 # Charged Kaon mass in GeV
 MKP_GEV = 0.493677
+# Charged Kaon mass in GeV
+META_GEV = 0.547862
 
 
 def beta2(
