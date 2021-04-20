@@ -1,8 +1,16 @@
 import numpy as np
+from scipy.special import gamma  # type:ignore
+
+# Pion mass in GeV
+MPI_GEV = 0.13957018
 
 
 def beta2(s, m1, m2):
-    return max(0.0, (1.0 - (m1 + m2) ** 2 / s) * (1.0 - (m1 - m2) ** 2 / s))
+    return np.clip(
+        (1.0 - (m1 + m2) ** 2 / s) * (1.0 - (m1 - m2) ** 2 / s),
+        0.0,
+        None
+    )
 
 
 def beta(s, m1, m2):
@@ -70,3 +78,18 @@ def breit_wigner_gs(s, mRes, gamma, m1, m2, H0, dH, Hres):
 def breit_wigner_fw(s, mRes, gamma):
     mR2 = mRes ** 2
     return mR2 / (mR2 - s - 1j * mRes * gamma)
+
+
+def gamma_generator(beta, nmax):
+    """
+    Generator to efficiently compute gamma(2 - beta + n) / gamma(1 + n) for
+    values of n less than a specified maximum value. This is done recurrsively
+    to avoid roundoff errors.
+    """
+    val = gamma(2.0 - beta)
+    yield val
+    n = 1
+    while n < nmax:
+        val *= ((1.0 - beta + n)) / n
+        n += 1
+        yield val

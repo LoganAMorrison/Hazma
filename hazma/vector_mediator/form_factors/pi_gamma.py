@@ -1,56 +1,75 @@
+from typing import Union
+
 import numpy as np
 
+from hazma.vector_mediator.form_factors.utils import MPI_GEV
 
-class FormFactorPiGamma:
-    def __init__(self, gvuu, gvdd, gvss):
+# Constant parameters for the V-pi-gamma form factor.
+_res_masses = np.array([0.77526, 0.78284, 1.01952, 1.45, 1.70])
+_res_widths = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
+_amps = np.array([0.0426, 0.0434, 0.00303, 0.00523, 0.0])
+_phases = np.array([-12.7, 0.0, 158.0, 180.0, 0.0])
 
-        self._ci0 = 3.0 * (gvuu + gvdd)
-        self._ci1 = gvuu - gvdd
-        self._cs = -3.0 * gvss
 
-        self._res_masses = [0.77526, 0.78284, 1.01952, 1.45, 1.70]
-        self._res_widths = [0.1491, 0.00868, 0.00421, 0.40, 0.30]
-        self._amp = [0.0426, 0.0434, 0.00303, 0.00523, 0.0]
-        self._phase = [-12.7, 0.0, 158.0, 180.0, 0.0]
-        self._mpi = 0.13957061
+def form_factor_pi_gamma(
+        s: Union[float, np.ndarray],
+        gvuu: float,
+        gvdd: float,
+        gvss: float
+) -> Union[complex, np.ndarray]:
+    """
+    Compute the form factor for V-gamma-pi at given squared center of mass
+    energ(ies).
 
-        self._c_rho = 1.0
-        self._c_omega = 1.0
-        self._c_phi = 1.0
-        self._c_rho_om_phi = [
-            self._ci1,
-            self._ci0,
-            self._cs,
-            self._ci0,
-            self._ci0
-        ]
+    Parameters
+    ----------
+    s: Union[float, np.ndarray]
+        Array of squared center-of-mass energies or a single value.
+    gvuu : float
+        Coupling of vector mediator to the up quark.
+    gvdd : float
+        Coupling of vector mediator to the down quark.
+    gvss : float
+        Coupling of vector mediator to the strange quark.
 
-    def _widths(self, q2, ix):
-        if ix == 0:
-            widths = (
-                self._res_widths[0]
-                * self._res_masses[0] ** 2
-                / q2
-                * (
-                    (q2 - 4.0 * self._mpi ** 2)
-                    / (self._res_masses[0] ** 2 - 4.0 * self._mpi ** 2)
-                )**1.5
-            )
-        else:
-            widths = self._res_widths[ix]
-        return widths
+    Returns
+    -------
+    ff: Union[float, np.ndarray]
+        The form factors.
+    """
 
-    def __call__(self, q2):
-        Q = np.sqrt(q2)
-        ii = 0.0 + 1.0j
-        form = 0.0
-        for i in range(0, len(self._res_masses)):
-            Di = self._res_masses[i] ** 2 - q2 - ii * Q * self._widths(q2, i)
-            form += (
-                self._c_rho_om_phi[i]
-                * self._amp[i]
-                * self._res_masses[i] ** 2
-                * np.exp(ii * np.radians(self._phase[i]))
-                / Di
-            )
-        return form
+    ci0 = 3.0 * (gvuu + gvdd)
+    ci1 = gvuu - gvdd
+    cs = -3.0 * gvss
+
+    c_rho_om_phi = np.array([ci1, ci0, cs, ci0, ci0])
+
+    if hasattr(s, '__len__'):
+        ss = np.array(s)
+    else:
+        ss = np.array([s])
+
+    q = np.sqrt(ss)
+    di = _res_masses ** 2 - ss[:, np.newaxis] - \
+        1j * q[:, np.newaxis] * _res_widths
+    di[:, 0] = (_res_masses[0] ** 2 - s - 1j * q * (
+        _res_widths[0]
+        * _res_masses[0] ** 2
+        / s
+        * (
+            (s - 4.0 * MPI_GEV ** 2)
+            / (_res_masses[0] ** 2 - 4.0 * MPI_GEV ** 2)
+        )**1.5
+    ))
+
+    ff = np.sum(
+        c_rho_om_phi
+        * _amps
+        * _res_masses ** 2
+        * np.exp(1j * np.radians(_phases))
+        / di,
+        axis=1
+    )
+    if type(s) == float:
+        return ff[0]
+    return ff

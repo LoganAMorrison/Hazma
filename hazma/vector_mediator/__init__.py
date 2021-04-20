@@ -15,8 +15,11 @@ from hazma.vector_mediator._vector_mediator_positron_spectra import \
 from hazma.vector_mediator._vector_mediator_spectra import \
     VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
-from hazma.vector_mediator.form_factors.pi_gamma import FormFactorPiGamma
-from hazma.vector_mediator.form_factors.pipi import FormFactorPiPi
+# Functions for computing the V-pi-gamma form-factor
+from hazma.vector_mediator.form_factors.pi_gamma import form_factor_pi_gamma
+# Functions for computing the V-pi-pi form-factor
+from hazma.vector_mediator.form_factors.pipi import (
+    compute_pipi_form_factor_parameters, form_factor_pipi)
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
@@ -325,17 +328,54 @@ class VectorMediatorGeV(VectorMediator):
             Coupling of vector mediator to the muon.
         """
 
-        self._form_factor_pipi_obj = FormFactorPiPi(gvuu, gvdd)
-        self._form_factor_pigamma_obj = FormFactorPiGamma(gvuu, gvdd, gvss)
+        self._form_factor_pipi_params = compute_pipi_form_factor_parameters(
+            2000
+        )
 
         super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
 
-    def _reset_state(self):
+    @property
+    def gvuu(self) -> float:
+        """
+        Coupling of vector mediator to the up quark.
+        """
+        return self._gvuu
+
+    @gvuu.setter
+    def gvuu(self, val: float) -> None:
+        self._gvuu = val
+        self._reset_state()
+
+    @property
+    def gvdd(self) -> float:
+        """
+        Coupling of vector mediator to the down quark.
+        """
+        return self._gvdd
+
+    @gvdd.setter
+    def gvdd(self, val: float) -> None:
+        self._gvdd = val
+        self._reset_state()
+
+    @property
+    def gvss(self) -> float:
+        """
+        Coupling of vector mediator to the down quark.
+        """
+        return self._gvss
+
+    @gvss.setter
+    def gvss(self, val: float) -> None:
+        self._gvss = val
+        self._reset_state()
+
+    def _reset_state(self) -> None:
         """
         Function to reset the state of the derived quantities such as the
         vector width and form-factors.
         """
-        self._form_factor_pipi_obj = FormFactorPiPi(self._gvuu, self._gvdd)
+        pass
 
     def _form_factor_pipi(self, s: float, imode: Optional[int] = 1) -> complex:
         """
@@ -350,13 +390,14 @@ class VectorMediatorGeV(VectorMediator):
 
         Returns
         -------
-        ff: float
+        ff: complex
             Form factor from pi-pi-V.
         """
         sgev = s * 1e-6  # Convert to GeV
-        return self._form_factor_pipi_obj(sgev, imode=imode)
+        ci1 = self._gvuu - self._gvdd
+        return form_factor_pipi(sgev, self._form_factor_pipi_params, ci1)
 
-    def _form_factor_pi0g(self, s: float) -> complex:
+    def _form_factor_pi0g(self, s):
         """
         Compute the pi-pi-V form factor for a give squared CME.
 
@@ -367,11 +408,11 @@ class VectorMediatorGeV(VectorMediator):
 
         Returns
         -------
-        ff: float
+        ff: complex
             Form factor from pi0-gamma-V.
         """
         sgev = s * 1e-6  # Convert s to GeV
-        return self._form_factor_pigamma_obj(sgev)
+        return form_factor_pi_gamma(sgev, self._gvuu, self._gvdd, self._gvss)
 
     def width_v_to_pipi(self):
         """
