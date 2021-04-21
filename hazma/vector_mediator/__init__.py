@@ -1,10 +1,13 @@
-from typing import Optional
+from typing import Union
 
 import numpy as np
 
 from hazma.parameters import Qd, Qe, Qu
-from hazma.parameters import charged_pion_mass as mpi
-from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.parameters import charged_kaon_mass as _MK
+from hazma.parameters import charged_pion_mass as _MPI
+from hazma.parameters import eta_mass as _META
+from hazma.parameters import neutral_kaon_mass as _MK0
+from hazma.parameters import neutral_pion_mass as _MPI0
 from hazma.parameters import qe
 from hazma.theory import TheoryAnn
 from hazma.vector_mediator._vector_mediator_cross_sections import \
@@ -15,15 +18,15 @@ from hazma.vector_mediator._vector_mediator_positron_spectra import \
 from hazma.vector_mediator._vector_mediator_spectra import \
     VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
-# Functions for computing the V-pi-gamma form-factor
-from hazma.vector_mediator.form_factors.pi_gamma import form_factor_pi_gamma
-# Functions for computing the V-pi-pi form-factor
-from hazma.vector_mediator.form_factors.pipi import (
-    compute_pipi_form_factor_parameters, form_factor_pipi)
-
+from hazma.vector_mediator.form_factors.kk import \
+    compute_kk_form_factor_parameters as __compute_ff_params_kk
+from hazma.vector_mediator.form_factors.pipi import \
+    compute_pipi_form_factor_parameters as __compute_ff_params_pipi
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
+
+
 class VectorMediator(
     VectorMediatorCrossSections,
     VectorMediatorFSR,
@@ -328,11 +331,17 @@ class VectorMediatorGeV(VectorMediator):
             Coupling of vector mediator to the muon.
         """
 
-        self._form_factor_pipi_params = compute_pipi_form_factor_parameters(
-            2000
-        )
+        # Compute and store the parameters needed to compute form factors.
+        self._ff_pipi_params = __compute_ff_params_pipi(2000)
+        self._ff_kk_params = __compute_ff_params_kk(200)
 
         super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
+
+    # Import the form factors
+    from hazma.vector_mediator.form_factors import (_form_factor_eta_gamma,
+                                                    _form_factor_kk,
+                                                    _form_factor_pi_gamma,
+                                                    _form_factor_pipi)
 
     @property
     def gvuu(self) -> float:
@@ -377,58 +386,91 @@ class VectorMediatorGeV(VectorMediator):
         """
         pass
 
-    def _form_factor_pipi(self, s: float, imode: Optional[int] = 1) -> complex:
+    def _width_v_to_mm(
+            self,
+            mass: float,
+            form_factor: complex,
+            symmetry: float = 1.0
+    ):
         """
-        Compute the pi-pi-V form factor.
+        Compute the partial width for the decay of the vector mediator into two
+        mesons.
 
         Parameters
         ----------
-        s: float
-            Square of the center-of-mass energy in MeV.
-        imode: Optional[int]
-            Iso-spin channel. Default is 1.
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+        symmetry: float
+            Symmetry factor. If the final state mesons are identical, then this
+            should be 1/2. Default is 1.0
 
         Returns
         -------
-        ff: complex
-            Form factor from pi-pi-V.
+        gamma: float
+            Partial width for the vector to decay into two mesons.
         """
-        sgev = s * 1e-6  # Convert to GeV
-        ci1 = self._gvuu - self._gvdd
-        return form_factor_pipi(sgev, self._form_factor_pipi_params, ci1)
-
-    def _form_factor_pi0g(self, s):
-        """
-        Compute the pi-pi-V form factor for a give squared CME.
-
-        Parameters
-        ----------
-        s: float
-            Square of the center-of-mass energy in MeV.
-
-        Returns
-        -------
-        ff: complex
-            Form factor from pi0-gamma-V.
-        """
-        sgev = s * 1e-6  # Convert s to GeV
-        return form_factor_pi_gamma(sgev, self._gvuu, self._gvdd, self._gvss)
+        if self._mv < 2 * mass:
+            return 0.0
+        return (
+            symmetry
+            / 48.0
+            / np.pi
+            * self._mv
+            * (1 - 4 * mass ** 2 / self._mv ** 2) ** 1.5
+            * abs(form_factor) ** 2
+        )
 
     def width_v_to_pipi(self):
         """
         Compute the partial width for the decay of the vector mediator into two
         charged pions.
         """
-        if self._mv < 2 * mpi0:
-            return 0.0
-        ff = self._form_factor_pipi(self._mv**2)
+        mass = _MPI
+        form_factor = self._form_factor_pipi(self._mv**2)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def width_v_to_k0k0(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        neutral kaons.
+        """
+        mass = _MK0
+        form_factor = self._form_factor_kk(self._mv**2, imode=0)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def width_v_to_kk(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        charged kaons.
+        """
+        mass = _MK
+        form_factor = self._form_factor_kk(self._mv**2, imode=1)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def _width_v_to_mg(self, mass, form_factor):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a meson and photon.
+
+        Parameters
+        ----------
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+
+        Returns
+        -------
+        gamma: float
+            Partial width for the vector to decay into a meson and photon.
+        """
         return (
-            1.0
-            / 48.0
-            / np.pi
-            * self._mv
-            * (1 - 4 * mpi0 ** 2 / self._mv ** 2) ** 1.5
-            * abs(ff) ** 2
+            self._mv
+            * abs(form_factor) ** 2
+            * (1.0 - (mass / self._mv) ** 2) ** 3
+            / (6.0 * np.pi)
         )
 
     def width_v_to_pi0g(self):
@@ -436,44 +478,101 @@ class VectorMediatorGeV(VectorMediator):
         Compute the partial width for the decay of the vector mediator
         into a neutral pion and photon.
         """
-        if self._mv < mpi:
-            return 0.0
-        ff = self._form_factor_pi0g(self._mv**2)
-        return (
-            self._mv
-            * abs(ff) ** 2
-            * (1.0 - (mpi / self._mv) ** 2) ** 3
-            / (6.0 * np.pi)
-        )
+        mass = _MPI0
+        form_factor = self._form_factor_pi_gamma(self._mv**2)
+        return self._width_v_to_mg(mass, form_factor)
 
-    def sigma_xx_to_v_to_pipi(self, e_cm: float) -> float:
+    def width_v_to_etag(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into an eta and photon.
+        """
+        mass = _META
+        form_factor = self._form_factor_eta_gamma(self._mv**2)
+        return self._width_v_to_mg(mass, form_factor)
+
+    def _sigma_xx_to_v_to_mm(
+            self,
+            e_cm: Union[float, np.ndarray],
+            mass: float,
+            form_factor: Union[complex, np.ndarray],
+            symmetry: float = 1.0
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the dark matter annihilation cross section into mesons.
+
+        Parameters
+        ----------
+        e_cm: Union[float, np.ndarray]
+            Center-of-mass energy.
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+        symmetry: float
+            Symmetry factor. If the final state mesons are identical, then this
+            should be 1/2. Default is 1.0
+
+        Returns
+        -------
+        sigma: Union[float, np.ndarray]
+            Cross section for chi + chibar -> pi + pi.
+        """
+        gamv = self.width_v
+        mv = self.mv
+        mx = self.mx
+        if e_cm < 2.0 * mx or e_cm < 2.0 * mass:
+            return 0.0
+
+        s = e_cm**2
+        num = self.gvxx**2 * np.abs(form_factor)**2 * \
+            (s - 4 * mass ** 2)**1.5 * (2.0 * mx**2 + s)
+        den = 48.0 * np.pi * s * \
+            np.sqrt(s - 4.0 * mx**2) * \
+            (mv**2 * (gamv**2 - 2.0 * s) + mv**4 + s**2)
+
+        return symmetry * num / den
+
+    def sigma_xx_to_v_to_pipi(
+            self,
+            e_cm: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
         """
         Compute the dark matter annihilation cross section into two charged
         pions.
 
         Parameters
         ----------
-        e_cm: float
+        e_cm: Union[float, np.ndarray]
             Center-of-mass energy.
 
         Returns
         -------
-        sigma: float
+        sigma: Union[float, np.ndarray]
             Cross section for chi + chibar -> pi + pi.
         """
-        gamv = self.width_v
-        mv = self.mv
-        mx = self.mx
-        if e_cm < 2.0 * mx or e_cm < 2.0 * mpi:
-            return 0.0
+        mass = _MPI
+        form_factor = self._form_factor_pipi(e_cm**2)
+        return self._sigma_xx_to_v_to_mm(e_cm, mass, form_factor)
 
-        s = e_cm**2
-        # Compute
-        ff = self._form_factor_pipi(s)
-        num = self.gvxx**2 * abs(ff)**2 * (s - 4 * mpi **
-                                           2)**1.5 * (2.0 * mx**2 + s)
-        den = 48.0 * np.pi * s * \
-            np.sqrt(s - 4.0 * mx**2) * \
-            (mv**2 * (gamv**2 - 2.0 * s) + mv**4 + s**2)
+    def sigma_xx_to_v_to_kk(
+            self,
+            e_cm: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the dark matter annihilation cross section into two charged
+        pions.
 
-        return num / den
+        Parameters
+        ----------
+        e_cm: Union[float, np.ndarray]
+            Center-of-mass energy.
+
+        Returns
+        -------
+        sigma: Union[float, np.ndarray]
+            Cross section for chi + chibar -> pi + pi.
+        """
+        mass = _MK
+        form_factor = self._form_factor_kk(e_cm**2)
+        return self._sigma_xx_to_v_to_mm(e_cm, mass, form_factor)

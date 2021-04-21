@@ -2,7 +2,7 @@
 Module for computing the vector form factor for pi+pi.
 """
 from dataclasses import dataclass
-from typing import Optional
+from typing import Union
 
 import numpy as np  # type:ignore
 from scipy.special import gamma  # type:ignore
@@ -125,11 +125,15 @@ def compute_pipi_form_factor_parameters(
 
 
 def form_factor_pipi(
-        s: float,
+        s: Union[float, np.ndarray],
         params: FormFactorPiPiParameters,
-        ci1: float,
-        imode: Optional[int] = 1
-):
+        gvuu: float,
+        gvdd: float,
+        imode: int = 1
+) -> Union[complex, np.ndarray]:
+    # Convert gvuu and gvdd to iso-spin couplings
+    ci1 = gvuu - gvdd
+
     if hasattr(s, '__len__'):
         ss = np.array(s)
     else:
