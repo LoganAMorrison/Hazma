@@ -56,5 +56,17 @@ If you use Hazma in your own research, please cite [our paper](https://arxiv.org
       primaryClass   = "hep-ph"
 }
 ```
+If you use any of the models we've included that rely on chiral perturbation theory, please also cite [the paper](https://arxiv.org/abs/2104.06168) explaining how they were constructed:
+```
+@article{Coogan:2021sjs,
+    author = "Coogan, Adam and Morrison, Logan and Profumo, Stefano",
+    title = "{Precision Gamma-Ray Constraints for Sub-GeV Dark Matter Models}",
+    eprint = "2104.06168",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    month = "4",
+    year = "2021"
+}
+```
 
 Logo design: David Reiman and Adam Coogan; icon from Freepik from [flaticon.com](https://www.flaticon.com/).
