@@ -1414,193 +1414,193 @@ def thermal_cross_section(double x, double mx, double ms, double gsxx,
                      points=[2.0, ms / mx, 2.0 * ms / mx])[0]
 
 
-@cython.cdivision(True)
-cdef double __thermal_cross_section_integrand_ss(
-    double z, double x, double mx, double ms, double gsxx, double gsff,
-    double gsGG, double gsFF, double lam, double width_s, double vs
-):
-        cdef double sig = __sigma_xx_to_ss(
-            mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
-        )
-        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+# @cython.cdivision(True)
+# cdef double __thermal_cross_section_integrand_ss(
+#     double z, double x, double mx, double ms, double gsxx, double gsff,
+#     double gsGG, double gsFF, double lam, double width_s, double vs
+# ):
+#         cdef double sig = __sigma_xx_to_ss(
+#             mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+#         )
+#         return sig * z**2 * (z**2 - 4.0) * k1(x * z)
 
 
-@cython.cdivision(True)
-def thermal_cross_section_xx_to_ss(double x, double mx, double ms, double gsxx,
-                             double gsff, double gsGG, double gsFF,
-                             double lam, double width_s, double vs):
-    """
-    Compute the thermally average cross section for scalar mediator model.
-
-    Parameters
-    ----------
-    x: float
-        Mass of the dark matter divided by its temperature.
-    mx: double
-        Dark matter mass
-    ms: double
-        Scalar mediator mass.
-    gsxx: double
-        Coupling of DM to scalar mediator.
-    gsff: double
-        Coupling of scalar mediator to fermions.
-    gsGG: double
-        Effective coupling of the scalar mediator to gluons.
-    gsFF: double
-        Effective coupling of the scalar mediator to photons.
-    lam: double
-        Cut-off scale of the SGG and SFF interactions.
-    width_s: double
-        Full decay width of the scalar mediator.
-    vs: double
-        Scalar mediator VEV.
-
-    Returns
-    -------
-    tcs: float
-        Thermally average cross section.
-    """
-    # If x is really large, we will get divide by zero errors
-    # TODO: p-wave expansion for low T!
-    if x > 300:
-        return 0.0
-
-    cdef double pf = x / (2.0 * kn(2, x))**2
-
-    # points at which integrand may have trouble are:
-    #   1. endpoint
-    #   2. when ss final state is accessible => z = 2 ms / mx
-    #   3. when we hit mediator resonance => z = ms / mx
-    # TODO: other thresholds!
-    return pf * quad(__thermal_cross_section_integrand_ss, 2.0,
-                     max(50.0 / x, 100.0),
-                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
-                     points=[2.0, ms / mx, 2.0 * ms / mx])[0]
-
-
-@cython.cdivision(True)
-cdef double __thermal_cross_section_integrand_sm(
-    double z, double x, double mx, double ms, double gsxx, double gsff,
-    double gsGG, double gsFF, double lam, double width_s, double vs
-):
-        cdef double sig = __sigma_xx_to_sm(
-            mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
-        )
-        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+# @cython.cdivision(True)
+# def thermal_cross_section_xx_to_ss(double x, double mx, double ms, double gsxx,
+#                              double gsff, double gsGG, double gsFF,
+#                              double lam, double width_s, double vs):
+#     """
+#     Compute the thermally average cross section for scalar mediator model.
+# 
+#     Parameters
+#     ----------
+#     x: float
+#         Mass of the dark matter divided by its temperature.
+#     mx: double
+#         Dark matter mass
+#     ms: double
+#         Scalar mediator mass.
+#     gsxx: double
+#         Coupling of DM to scalar mediator.
+#     gsff: double
+#         Coupling of scalar mediator to fermions.
+#     gsGG: double
+#         Effective coupling of the scalar mediator to gluons.
+#     gsFF: double
+#         Effective coupling of the scalar mediator to photons.
+#     lam: double
+#         Cut-off scale of the SGG and SFF interactions.
+#     width_s: double
+#         Full decay width of the scalar mediator.
+#     vs: double
+#         Scalar mediator VEV.
+# 
+#     Returns
+#     -------
+#     tcs: float
+#         Thermally average cross section.
+#     """
+#     # If x is really large, we will get divide by zero errors
+#     # TODO: p-wave expansion for low T!
+#     if x > 300:
+#         return 0.0
+# 
+#     cdef double pf = x / (2.0 * kn(2, x))**2
+# 
+#     # points at which integrand may have trouble are:
+#     #   1. endpoint
+#     #   2. when ss final state is accessible => z = 2 ms / mx
+#     #   3. when we hit mediator resonance => z = ms / mx
+#     # TODO: other thresholds!
+#     return pf * quad(__thermal_cross_section_integrand_ss, 2.0,
+#                      max(50.0 / x, 100.0),
+#                      args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+#                      points=[2.0, ms / mx, 2.0 * ms / mx])[0]
 
 
-@cython.cdivision(True)
-def thermal_cross_section_xx_to_sm(double x, double mx, double ms, double gsxx,
-                             double gsff, double gsGG, double gsFF,
-                             double lam, double width_s, double vs):
-    """
-    Compute the thermally average cross section for scalar mediator model.
-
-    Parameters
-    ----------
-    x: float
-        Mass of the dark matter divided by its temperature.
-    mx: double
-        Dark matter mass
-    ms: double
-        Scalar mediator mass.
-    gsxx: double
-        Coupling of DM to scalar mediator.
-    gsff: double
-        Coupling of scalar mediator to fermions.
-    gsGG: double
-        Effective coupling of the scalar mediator to gluons.
-    gsFF: double
-        Effective coupling of the scalar mediator to photons.
-    lam: double
-        Cut-off scale of the SGG and SFF interactions.
-    width_s: double
-        Full decay width of the scalar mediator.
-    vs: double
-        Scalar mediator VEV.
-
-    Returns
-    -------
-    tcs: float
-        Thermally average cross section.
-    """
-    # If x is really large, we will get divide by zero errors
-    # TODO: p-wave expansion for low T!
-    if x > 300:
-        return 0.0
-
-    cdef double pf = x / (2.0 * kn(2, x))**2
-
-    # points at which integrand may have trouble are:
-    #   1. endpoint
-    #   2. when ss final state is accessible => z = 2 ms / mx
-    #   3. when we hit mediator resonance => z = ms / mx
-    # TODO: other thresholds!
-    return pf * quad(__thermal_cross_section_integrand_sm, 2.0,
-                     max(50.0 / x, 100.0),
-                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
-                     points=[2.0, ms / mx, 2.0 * ms / mx])[0]
+# @cython.cdivision(True)
+# cdef double __thermal_cross_section_integrand_sm(
+#     double z, double x, double mx, double ms, double gsxx, double gsff,
+#     double gsGG, double gsFF, double lam, double width_s, double vs
+# ):
+#         cdef double sig = __sigma_xx_to_sm(
+#             mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+#         )
+#         return sig * z**2 * (z**2 - 4.0) * k1(x * z)
 
 
-@cython.cdivision(True)
-cdef double __thermal_cross_section_integrand_ss_to_xx(
-    double z, double x, double mx, double ms, double gsxx, double gsff,
-    double gsGG, double gsFF, double lam, double width_s, double vs
-):
-        cdef double sig = __sigma_ss_to_xx(
-            ms * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
-        )
-        return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+# @cython.cdivision(True)
+# def thermal_cross_section_xx_to_sm(double x, double mx, double ms, double gsxx,
+#                              double gsff, double gsGG, double gsFF,
+#                              double lam, double width_s, double vs):
+#     """
+#     Compute the thermally average cross section for scalar mediator model.
+# 
+#     Parameters
+#     ----------
+#     x: float
+#         Mass of the dark matter divided by its temperature.
+#     mx: double
+#         Dark matter mass
+#     ms: double
+#         Scalar mediator mass.
+#     gsxx: double
+#         Coupling of DM to scalar mediator.
+#     gsff: double
+#         Coupling of scalar mediator to fermions.
+#     gsGG: double
+#         Effective coupling of the scalar mediator to gluons.
+#     gsFF: double
+#         Effective coupling of the scalar mediator to photons.
+#     lam: double
+#         Cut-off scale of the SGG and SFF interactions.
+#     width_s: double
+#         Full decay width of the scalar mediator.
+#     vs: double
+#         Scalar mediator VEV.
+# 
+#     Returns
+#     -------
+#     tcs: float
+#         Thermally average cross section.
+#     """
+#     # If x is really large, we will get divide by zero errors
+#     # TODO: p-wave expansion for low T!
+#     if x > 300:
+#         return 0.0
+# 
+#     cdef double pf = x / (2.0 * kn(2, x))**2
+# 
+#     # points at which integrand may have trouble are:
+#     #   1. endpoint
+#     #   2. when ss final state is accessible => z = 2 ms / mx
+#     #   3. when we hit mediator resonance => z = ms / mx
+#     # TODO: other thresholds!
+#     return pf * quad(__thermal_cross_section_integrand_sm, 2.0,
+#                      max(50.0 / x, 100.0),
+#                      args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+#                      points=[2.0, ms / mx, 2.0 * ms / mx])[0]
 
 
-@cython.cdivision(True)
-def thermal_cross_section_ss_to_xx(double x, double mx, double ms, double gsxx,
-                             double gsff, double gsGG, double gsFF,
-                             double lam, double width_s, double vs):
-    """
-    Compute the thermally average cross section for scalar mediator
-    annihilating into DM.
-
-    Parameters
-    ----------
-    x: float
-        Mass of the scalar mediator divided by its temperature.
-    mx: double
-        Dark matter mass
-    ms: double
-        Scalar mediator mass.
-    gsxx: double
-        Coupling of DM to scalar mediator.
-    gsff: double
-        Coupling of scalar mediator to fermions.
-    gsGG: double
-        Effective coupling of the scalar mediator to gluons.
-    gsFF: double
-        Effective coupling of the scalar mediator to photons.
-    lam: double
-        Cut-off scale of the SGG and SFF interactions.
-    width_s: double
-        Full decay width of the scalar mediator.
-    vs: double
-        Scalar mediator VEV.
-
-    Returns
-    -------
-    tcs: float
-        Thermally average cross section.
-    """
-    # If x is really large, we will get divide by zero errors
-    # TODO: p-wave expansion for low T!
-    if x > 300:
-        return 0.0
-
-    cdef double pf = x / (2.0 * kn(2, x))**2
-
-    # points at which integrand may have trouble are:
-    #   1. endpoint
-    #   2. when ss final state is accessible => z = 2 mx / ms
-    # TODO: other thresholds!
-    return pf * quad(__thermal_cross_section_integrand_ss_to_xx, 2.0,
-                     max(50.0 / x, 100.0),
-                     args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
-                     points=[2.0, 2.0 * mx / ms])[0]
+# @cython.cdivision(True)
+# cdef double __thermal_cross_section_integrand_ss_to_xx(
+#     double z, double x, double mx, double ms, double gsxx, double gsff,
+#     double gsGG, double gsFF, double lam, double width_s, double vs
+# ):
+#         cdef double sig = __sigma_ss_to_xx(
+#             ms * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs
+#         )
+#         return sig * z**2 * (z**2 - 4.0) * k1(x * z)
+# 
+# 
+# @cython.cdivision(True)
+# def thermal_cross_section_ss_to_xx(double x, double mx, double ms, double gsxx,
+#                              double gsff, double gsGG, double gsFF,
+#                              double lam, double width_s, double vs):
+#     """
+#     Compute the thermally average cross section for scalar mediator
+#     annihilating into DM.
+# 
+#     Parameters
+#     ----------
+#     x: float
+#         Mass of the scalar mediator divided by its temperature.
+#     mx: double
+#         Dark matter mass
+#     ms: double
+#         Scalar mediator mass.
+#     gsxx: double
+#         Coupling of DM to scalar mediator.
+#     gsff: double
+#         Coupling of scalar mediator to fermions.
+#     gsGG: double
+#         Effective coupling of the scalar mediator to gluons.
+#     gsFF: double
+#         Effective coupling of the scalar mediator to photons.
+#     lam: double
+#         Cut-off scale of the SGG and SFF interactions.
+#     width_s: double
+#         Full decay width of the scalar mediator.
+#     vs: double
+#         Scalar mediator VEV.
+# 
+#     Returns
+#     -------
+#     tcs: float
+#         Thermally average cross section.
+#     """
+#     # If x is really large, we will get divide by zero errors
+#     # TODO: p-wave expansion for low T!
+#     if x > 300:
+#         return 0.0
+# 
+#     cdef double pf = x / (2.0 * kn(2, x))**2
+# 
+#     # points at which integrand may have trouble are:
+#     #   1. endpoint
+#     #   2. when ss final state is accessible => z = 2 mx / ms
+#     # TODO: other thresholds!
+#     return pf * quad(__thermal_cross_section_integrand_ss_to_xx, 2.0,
+#                      max(50.0 / x, 100.0),
+#                      args=(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs),
+#                      points=[2.0, 2.0 * mx / ms])[0]

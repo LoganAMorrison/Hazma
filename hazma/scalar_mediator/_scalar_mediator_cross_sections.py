@@ -11,10 +11,9 @@ from hazma.scalar_mediator._c_scalar_mediator_cross_sections import (
     sigma_xg_to_xg as sig_xg,
     sigma_xs_to_xs as sig_xs,
     thermal_cross_section as tcs,
-    thermal_cross_section_xx_to_ss as tcs_xx_to_ss,
-    thermal_cross_section_xx_to_sm as tcs_xx_to_sm,
-    thermal_cross_section_ss_to_xx as tcs_ss_to_xx,
-    thermal_cross_section_ff_to_xx as tcs_ff_to_xx,
+    # thermal_cross_section_xx_to_ss as tcs_xx_to_ss,
+    # thermal_cross_section_xx_to_sm as tcs_xx_to_sm,
+    # thermal_cross_section_ss_to_xx as tcs_ss_to_xx,
 )
 
 from hazma.parameters import muon_mass as mmu
@@ -455,78 +454,78 @@ class ScalarMediatorCrossSection:
             self.vs,
         )
 
-    def thermal_cross_section_ss(self, x):
-        """
-        Compute the thermally average cross section for annihilation into
-        mediators.
+    # def thermal_cross_section_ss(self, x):
+    #     """
+    #     Compute the thermally average cross section for annihilation into
+    #     mediators.
 
-        Parameters
-        ----------
-        x: float
-            Mass of the dark matter divided by its temperature.
+    #     Parameters
+    #     ----------
+    #     x: float
+    #         Mass of the dark matter divided by its temperature.
 
-        Returns
-        -------
-        tcs: float
-            Thermally average cross section.
-        """
-        return tcs_xx_to_ss(
-            x,
-            self.mx,
-            self.ms,
-            self.gsxx,
-            self.gsff,
-            self.gsGG,
-            self.gsFF,
-            self.lam,
-            self.width_s,
-            self.vs,
-        )
+    #     Returns
+    #     -------
+    #     tcs: float
+    #         Thermally average cross section.
+    #     """
+    #     return tcs_xx_to_ss(
+    #         x,
+    #         self.mx,
+    #         self.ms,
+    #         self.gsxx,
+    #         self.gsff,
+    #         self.gsGG,
+    #         self.gsFF,
+    #         self.lam,
+    #         self.width_s,
+    #         self.vs,
+    #     )
 
-    def thermal_cross_section_sm(self, x):
-        """
-        Thermally-averaged cross section for DM annihilation into SM particles.
-        """
-        return tcs_xx_to_sm(
-            x,
-            self.mx,
-            self.ms,
-            self.gsxx,
-            self.gsff,
-            self.gsGG,
-            self.gsFF,
-            self.lam,
-            self.width_s,
-            self.vs,
-        )
+    # def thermal_cross_section_sm(self, x):
+    #     """
+    #     Thermally-averaged cross section for DM annihilation into SM particles.
+    #     """
+    #     return tcs_xx_to_sm(
+    #         x,
+    #         self.mx,
+    #         self.ms,
+    #         self.gsxx,
+    #         self.gsff,
+    #         self.gsGG,
+    #         self.gsFF,
+    #         self.lam,
+    #         self.width_s,
+    #         self.vs,
+    #     )
 
-    def thermal_cross_section_ss_to_xx(self, x):
-        """
-        Compute the thermally average cross section for scalar mediators
-        annihilating into dark matter.
+    # def thermal_cross_section_ss_to_xx(self, x):
+    #     """
+    #     Compute the thermally average cross section for scalar mediators
+    #     annihilating into dark matter.
 
-        Parameters
-        ----------
-        x: float
-            Mass of the mediator divided by its temperature.
+    #     Parameters
+    #     ----------
+    #     x: float
+    #         Mass of the mediator divided by its temperature.
 
-        Returns
-        -------
-        tcs: float
-            Thermally average cross section.
-        """
-        return tcs_ss_to_xx(
-            x,
-            self.mx,
-            self.ms,
-            self.gsxx,
-            self.gsff,
-            self.gsGG,
-            self.gsFF,
-            self.lam,
-            self.width_s,
-            self.vs,
-        )
+    #     Returns
+    #     -------
+    #     tcs: float
+    #         Thermally average cross section.
+    #     """
+    #     return tcs_ss_to_xx(
+    #         x,
+    #         self.mx,
+    #         self.ms,
+    #         self.gsxx,
+    #         self.gsff,
+    #         self.gsGG,
+    #         self.gsFF,
+    #         self.lam,
+    #         self.width_s,
+    #         self.vs,
+    #     )
 
     def annihilation_cross_section_funcs(self):
         return {
