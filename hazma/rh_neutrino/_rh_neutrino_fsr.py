@@ -4,16 +4,10 @@ This file contains implemenations of the FSR spectra from RH neutrino decays.
 
 import numpy as np
 from hazma.parameters import (
-    fpi,
-    GF,
     qe,
-    Vud,
     charged_pion_mass as mpi,
     charged_kaon_mass as mk,
-    neutral_pion_mass as mpi0,
 )
-from hazma.gamma_ray import gamma_ray_fsr
-from scipy.interpolate import UnivariateSpline
 
 
 def _dnde_pi_l_fsr(self, photon_eng):
@@ -55,12 +49,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
                     + s ** 2
                 )
                 + mvr ** 2
-                * (
-                    2 * mpi ** 4
-                    + mvr ** 4
-                    + s ** 2
-                    - 2 * mpi ** 2 * (mvr ** 2 + s)
-                )
+                * (2 * mpi ** 4 + mvr ** 4 + s ** 2 - 2 * mpi ** 2 * (mvr ** 2 + s))
             )
             * np.log(
                 (
@@ -68,9 +57,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
                     - mpi ** 2
                     + s
                     + np.sqrt(
-                        ml ** 4
-                        + (mpi ** 2 - s) ** 2
-                        - 2 * ml ** 2 * (mpi ** 2 + s)
+                        ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
                     )
                 )
                 / (
@@ -78,9 +65,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
                     - mpi ** 2
                     + s
                     - np.sqrt(
-                        ml ** 4
-                        + (mpi ** 2 - s) ** 2
-                        - 2 * ml ** 2 * (mpi ** 2 + s)
+                        ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
                     )
                 )
             )
@@ -93,11 +78,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
             )
             * (
                 -2
-                * np.sqrt(
-                    ml ** 4
-                    + (mpi ** 2 - s) ** 2
-                    - 2 * ml ** 2 * (mpi ** 2 + s)
-                )
+                * np.sqrt(ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s))
                 + (ml ** 2 + mpi ** 2 - s)
                 * np.log(
                     (
@@ -105,9 +86,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
                         + mpi ** 2
                         + s
                         - np.sqrt(
-                            ml ** 4
-                            + (mpi ** 2 - s) ** 2
-                            - 2 * ml ** 2 * (mpi ** 2 + s)
+                            ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
                         )
                     )
                     / (
@@ -115,9 +94,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
                         + mpi ** 2
                         + s
                         + np.sqrt(
-                            ml ** 4
-                            + (mpi ** 2 - s) ** 2
-                            - 2 * ml ** 2 * (mpi ** 2 + s)
+                            ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
                         )
                     )
                 )
@@ -125,10 +102,7 @@ def _dnde_pi_l_fsr(self, photon_eng):
         )
     ) / (
         8.0
-        * np.sqrt(
-            -(ml ** 2)
-            + (ml ** 2 - mpi ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
-        )
+        * np.sqrt(-(ml ** 2) + (ml ** 2 - mpi ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2))
         * (
             ml ** 4
             - mpi ** 2 * mvr ** 2
@@ -192,9 +166,7 @@ def _dnde_k_l_fsr(self, photon_eng):
         * (
             4
             * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
-            * np.sqrt(
-                mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
-            )
+            * np.sqrt(mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s))
             - 2
             * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
             * (mk ** 2 + ml ** 2 - s)
@@ -204,9 +176,7 @@ def _dnde_k_l_fsr(self, photon_eng):
                     - ml ** 2
                     + s
                     - np.sqrt(
-                        mk ** 4
-                        + (ml ** 2 - s) ** 2
-                        - 2 * mk ** 2 * (ml ** 2 + s)
+                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
                     )
                 )
                 / (
@@ -214,9 +184,7 @@ def _dnde_k_l_fsr(self, photon_eng):
                     - ml ** 2
                     + s
                     + np.sqrt(
-                        mk ** 4
-                        + (ml ** 2 - s) ** 2
-                        - 2 * mk ** 2 * (ml ** 2 + s)
+                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
                     )
                 )
             )
@@ -236,9 +204,7 @@ def _dnde_k_l_fsr(self, photon_eng):
                     + ml ** 2
                     + s
                     + np.sqrt(
-                        mk ** 4
-                        + (ml ** 2 - s) ** 2
-                        - 2 * mk ** 2 * (ml ** 2 + s)
+                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
                     )
                 )
                 / (
@@ -246,9 +212,7 @@ def _dnde_k_l_fsr(self, photon_eng):
                     + ml ** 2
                     + s
                     - np.sqrt(
-                        mk ** 4
-                        + (ml ** 2 - s) ** 2
-                        - 2 * mk ** 2 * (ml ** 2 + s)
+                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
                     )
                 )
             )
@@ -257,8 +221,7 @@ def _dnde_k_l_fsr(self, photon_eng):
         8.0
         * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
         * np.sqrt(
-            -(ml ** 2)
-            + (-(mk ** 2) + ml ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
+            -(ml ** 2) + (-(mk ** 2) + ml ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
         )
         * np.pi ** 2
         * (mvr ** 2 - s)
@@ -286,4 +249,3 @@ def dnde_k_l_fsr(self, photon_energies):
     if hasattr(photon_energies, "__len__"):
         return np.array([self._dnde_k_l_fsr(e) for e in photon_energies])
     return self._dnde_k_l_fsr(photon_energies)
-

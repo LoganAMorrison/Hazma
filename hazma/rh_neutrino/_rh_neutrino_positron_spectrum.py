@@ -24,4 +24,3 @@ def dnde_pos_pi_l(self, positron_energies):
     """
     epi = (self.mx ** 2 + mpi ** 2 - self.ml ** 2) / (2.0 * self.mx)
     return pspec_charged_pion(positron_energies, epi)
-

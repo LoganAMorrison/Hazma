@@ -14,10 +14,7 @@ _phases = np.array([0.0, 11.3, 170.0, 61.0, 0.0])
 
 
 def form_factor_eta_gamma(
-        s: Union[float, np.ndarray],
-        gvuu: float,
-        gvdd: float,
-        gvss: float
+    s: Union[float, np.ndarray], gvuu: float, gvdd: float, gvss: float
 ) -> Union[complex, np.ndarray]:
     """
     Compute the form factor for V-eta-gamma at given squared center of mass
@@ -43,40 +40,35 @@ def form_factor_eta_gamma(
     ci1 = gvuu - gvdd
     cs = -3.0 * gvss
 
-    # TODO This was different for Pi-Gamma. Typo?
     c_rho_om_phi = np.array([ci1, ci0, cs, ci1, cs])
 
-    if hasattr(s, '__len__'):
+    if hasattr(s, "__len__"):
         ss = np.array(s)
     else:
         ss = np.array([s])
 
     q = np.sqrt(ss)
-    di = (
-        _res_masses ** 2
-        - ss[:, np.newaxis]
-        - 1j * q[:, np.newaxis]
-        * _res_widths
-    )
+    di = _res_masses ** 2 - ss[:, np.newaxis] - 1j * q[:, np.newaxis] * _res_widths
     di[:, 0] = (
         _res_masses[0] ** 2
         - ss[:, np.newaxis]
-        - 1j * q[:, np.newaxis] * (
+        - 1j
+        * q[:, np.newaxis]
+        * (
             _res_widths[0]
             * _res_masses[0] ** 2
-            / ss[:, np.newaxis] * (
+            / ss[:, np.newaxis]
+            * (
                 (ss[:, np.newaxis] - 4.0 * MPI_GEV ** 2)
                 / (_res_masses[0] ** 2 - 4.0 * MPI_GEV ** 2)
-            )**1.5
-        ))
+            )
+            ** 1.5
+        )
+    )
 
     ff = np.sum(
-        c_rho_om_phi
-        * _amps
-        * _res_masses ** 2
-        * np.exp(1j * np.radians(_phases))
-        / di,
-        axis=1
+        c_rho_om_phi * _amps * _res_masses ** 2 * np.exp(1j * np.radians(_phases)) / di,
+        axis=1,
     )
 
     if len(ss) == 1:

@@ -22,6 +22,10 @@ cdef double sw = sqrt(sw2)
 cdef double cw = sqrt(1.0 - sw2)
 cdef double Vud = 0.974267
 
+cdef double electron_mass = 0.510998928
+cdef double muon_mass = 105.6583715
+cdef double tau_mass = 1776.86
+cdef vector[double] lepton_masses = [electron_mass, muon_mass, tau_mass]
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -570,7 +574,7 @@ cdef double msqrd_nu_l_l_g(vector[vector[double]] &momenta, vector[double]& para
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def dnde_nu_l_l_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+def _dnde_nu_l_l_fsr(vector[double] photon_energies, double mx, double smix, double width, int genv, int genl1, int genl2):
     """
     Compute the FSR spectra from a right-handed neutrino decaying into
     an active neutrino and two charged leptons.
@@ -608,7 +612,7 @@ def dnde_nu_l_l_fsr(vector[double] photon_energies, double mx, double smix, doub
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def dnde_l_pi_pi0_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+def _dnde_l_pi_pi0_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
     """
     Compute the FSR spectra from a right-handed neutrino decaying into
     a neutral pion, charged pion and charged lepton.
@@ -646,7 +650,7 @@ def dnde_l_pi_pi0_fsr(vector[double] photon_energies, double mx, double smix, do
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-def dnde_nu_pi_pi_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
+def _dnde_nu_pi_pi_fsr(vector[double] photon_energies, double mx, double smix, double ml, double width):
     """
     Compute the FSR spectra from a right-handed neutrino decaying into
     an active neutrino and two charged pions.
@@ -679,3 +683,66 @@ def dnde_nu_pi_pi_fsr(vector[double] photon_energies, double mx, double smix, do
         nevents,
         params,
     ).first
+
+
+def dnde_nu_l_l_fsr(self, photon_energies, width, gens=None):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    an active neutrino and two charged leptons.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    return _dnde_nu_l_l_fsr(photon_energies, self.mx, self.theta, self.ml, width)
+
+
+def dnde_l_pi_pi0_fsr(self, photon_energies, width):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    a neutral pion, charged pion and charged lepton.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    return _dnde_l_pi_pi0_fsr(photon_energies, self.mx, self.theta, self.ml, width)
+
+
+def dnde_nu_pi_pi_fsr(self, photon_energies,width):
+    """
+    Compute the FSR spectra from a right-handed neutrino decaying into
+    an active neutrino and two charged pions.
+
+    Parameters
+    ----------
+    self: object
+        Instance of the `RHNeutrino` class. (see
+        `hazma.rh_neutrino.__init__.py`)
+    photon_energies: float or np.array
+       The energy of the final state photon in MeV.
+
+    Returns
+    -------
+    dnde: float or np.array
+        Photon spectrum.
+    """
+    return _dnde_nu_pi_pi_fsr(photon_energies, self.mx, self.theta, self.ml, width)

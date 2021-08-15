@@ -33,10 +33,16 @@ from hazma.parameters import (
     charged_kaon_mass as mk,
     muon_mass as mmu,
 )
+from ._rh_neutrino_fsr_four_body import (
+    dnde_nu_l_l_fsr as _dnde_nu_l_l_fsr,
+    dnde_l_pi_pi0_fsr as _dnde_l_pi_pi0_fsr,
+    dnde_nu_pi_pi_fsr as _dnde_nu_pi_pi_fsr,
+)
 
 
 class RHNeutrino(TheoryDec):
-    """Model containing an unstable, right-handed (RH), neutrino as the dark
+    """
+    Model containing an unstable, right-handed (RH), neutrino as the dark
     matter.
 
     This model assume that the RH neutrino mixes with a single active neutrino
@@ -49,7 +55,7 @@ class RHNeutrino(TheoryDec):
     ----------
     mx: float
         The mass of the RH-neutrino.
-    stheta: float
+    theta: float
         Mixing angle between active-neutron and the RH neutrino.
     lepton: str
         String specifying which flavor of neutrino the RH neutrino mixes with.
@@ -60,22 +66,15 @@ class RHNeutrino(TheoryDec):
     """
 
     from ._rh_neutrino_widths import (
-        width_pi_l,
-        width_k_l,
-        width_pi0_nu,
+        width_l_pi,
+        width_l_k,
+        width_nu_pi0,
         width_nu_gamma,
-        width_nu_pi0_pi0,
         width_nu_pi_pi,
         width_l_pi_pi0,
         width_nu_nu_nu,
         width_nu_l_l,
         width_nu_g_g,
-    )
-
-    from ._rh_neutrino_fsr_four_body import (
-        dnde_nu_l_l_fsr as _dnde_nu_l_l_fsr,
-        dnde_l_pi_pi0_fsr as _dnde_l_pi_pi0_fsr,
-        dnde_nu_pi_pi_fsr as _dnde_nu_pi_pi_fsr,
     )
 
     from ._rh_neutrino_fsr import (
@@ -97,7 +96,7 @@ class RHNeutrino(TheoryDec):
 
     from ._rh_neutrino_positron_spectrum import dnde_pos_pi_l
 
-    def __init__(self, mx, stheta, lepton="e", include_3body=False):
+    def __init__(self, mx, theta, lepton="e", include_3body=False):
         """
         Generate an MeV right-handed object.
 
@@ -105,7 +104,7 @@ class RHNeutrino(TheoryDec):
         ----------
         rhn_mass: float
             Right-handed neutrino mass in MeV.
-        stheta: float
+        theta: float
             Mixing angle between the right-handed neutrino and active neutrino.
         lepton: str, optional
             String specifying which flavor of active neutrino the RH neutrino
@@ -114,24 +113,25 @@ class RHNeutrino(TheoryDec):
             Flag specifying if 3-body final states should be consider (i.e.
             N->nu+nu+nu, N->nu+l+lbar, etc.). Default is False.
         """
-        self._stheta = stheta
+        self._theta = theta
         self._mx = mx
         self.include_3body = include_3body
 
         self._lepton = lepton
         if lepton == "e":
             self._ml = me
+            self._gen = 1
         elif lepton == "mu":
             self._ml = mmu
+            self._gen = 2
         else:
-            raise ValueError(
-                "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
-            )
+            raise ValueError(f"Lepton {lepton} is invalid. Use 'e' or 'mu'.")
 
     def dnde_nu_l_l_fsr(self, photon_energies):
         """
-        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
-        right-handed neutrino into an active neutrino and two charged leptons.
+        Compute the FSR contribution to the gamma-ray spectrum fom the decay of
+        a right-handed neutrino into an active neutrino and two charged
+        leptons.
 
         Parameters
         ----------
@@ -144,9 +144,7 @@ class RHNeutrino(TheoryDec):
             Gamma-ray spectrum.
         """
         width = self.width_nu_l_l()
-        return self._dnde_nu_l_l_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
+        return _dnde_nu_l_l_fsr(self, photon_energies, width)
 
     def dnde_l_pi_pi0_fsr(self, photon_energies):
         """
@@ -164,9 +162,7 @@ class RHNeutrino(TheoryDec):
             Gamma-ray spectrum.
         """
         width = self.width_l_pi_pi0()
-        return self._dnde_l_pi_pi0_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
+        return _dnde_l_pi_pi0_fsr(self, photon_energies, width)
 
     def dnde_nu_pi_pi_fsr(self, photon_energies):
         """
@@ -184,9 +180,7 @@ class RHNeutrino(TheoryDec):
             Gamma-ray spectrum.
         """
         width = self.width_nu_pi_pi()
-        return self._dnde_nu_pi_pi_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
+        return _dnde_nu_pi_pi_fsr(self, photon_energies, width)
 
     def list_decay_final_states(self):
         """
@@ -209,9 +203,9 @@ class RHNeutrino(TheoryDec):
         Decay width into each final state.
         """
         return {
-            "pi l": self.width_pi_l(),
-            "pi0 nu": self.width_pi0_nu(),
-            "k l": self.width_k_l(),
+            "pi l": self.width_l_pi(),
+            "pi0 nu": self.width_nu_pi0(),
+            "k l": self.width_l_k(),
             "nu pi pi": self.width_nu_pi_pi(),
             "l pi pi0": self.width_l_pi_pi0(),
             "nu nu nu": self.width_nu_nu_nu(),
@@ -257,10 +251,8 @@ class RHNeutrino(TheoryDec):
         # TODO: Add the 3-body final states
         if self.lepton == "e":
             return {
-                "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2)
-                / (2.0 * self.mx),
-                "k l": (self.mx ** 2 + self.ml ** 2 - mk ** 2)
-                / (2.0 * self.mx),
+                "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2) / (2.0 * self.mx),
+                "k l": (self.mx ** 2 + self.ml ** 2 - mk ** 2) / (2.0 * self.mx),
             }
         return {}
 
@@ -284,14 +276,14 @@ class RHNeutrino(TheoryDec):
         self._mx = val
 
     @property
-    def stheta(self):
+    def theta(self):
         """
         Get the mixing angle between right-handed neutrino and active neutrino.
         """
-        return self._stheta
+        return self._theta
 
-    @stheta.setter
-    def stheta(self, val):
+    @theta.setter
+    def theta(self, val):
         """
         Set the mixing angle between the right-handed neutrino and active
         neutrino.
@@ -301,7 +293,7 @@ class RHNeutrino(TheoryDec):
         val: float
             New mixing angle.
         """
-        self._stheta = val
+        self._theta = val
 
     @property
     def lepton(self):

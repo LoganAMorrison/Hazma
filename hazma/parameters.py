@@ -8,18 +8,22 @@ Physics constants and utility functions.
 
 # Masses (MeV)
 higgs_mass = 125.1e3
-electron_mass = 0.510998928  # electron
-muon_mass = 105.6583715  # muon
-neutral_pion_mass = 134.9766  # neutral pion
-charged_pion_mass = 139.57018  # charged pion
-neutral_kaon_mass = 497.61  # neutral kaon
+
+electron_mass = 0.510998928
+muon_mass = 105.6583715
+tau_mass = 1776.86
+lepton_masses = [electron_mass, muon_mass, tau_mass]
+
+neutral_pion_mass = 134.9766
+charged_pion_mass = 139.57018
+neutral_kaon_mass = 497.61
 long_kaon_mass = 497.614
-charged_kaon_mass = 493.68  # charged Kaon
-eta_mass = 547.86  # eta
-eta_prime_mass = 957.8  # eta prime
-rho_mass = 775.3  # rho
-omega_mass = 782.7  # omega
-charged_B_mass = 5279.29  # B^+ meson
+charged_kaon_mass = 493.68
+eta_mass = 547.86
+eta_prime_mass = 957.8
+rho_mass = 775.3
+omega_mass = 782.7
+charged_B_mass = 5279.29
 pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.0
 kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.0
 
@@ -162,8 +166,7 @@ def load_interp(rf_name, bounds_error=False, fill_value=0.0):
 
 
 def spec_res_fn(ep, e, energy_res):
-    """Get the spectral resolution function.
-    """
+    """Get the spectral resolution function."""
     sigma = e * energy_res(e)
 
     if sigma == 0:
@@ -224,9 +227,7 @@ def convolved_spectrum_fn(
                 """
                 spec_res_fn_vals = spec_res_fn(es_padded, e, energy_res)
                 integrand_vals = (
-                    dnde_src
-                    * spec_res_fn_vals
-                    / trapz(spec_res_fn_vals, es_padded)
+                    dnde_src * spec_res_fn_vals / trapz(spec_res_fn_vals, es_padded)
                 )
 
                 return trapz(integrand_vals, es_padded)
