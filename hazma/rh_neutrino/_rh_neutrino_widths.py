@@ -176,6 +176,9 @@ def width_nu_pi_pi(self):
     width: float
         Partial decay with for N -> nu + pi^+ + pi^-.
     """
+    if self.mx < 2 * mpi:
+        return 0.0
+
     temp1 = self.mx ** 2
     temp2 = mpi ** 2
     temp3 = temp2 ** 3

@@ -592,8 +592,11 @@ def _dnde_nu_l_l_fsr(vector[double] photon_energies, double mx, double smix, dou
     dnde: float or np.array
         Photon spectrum.
     """
+    ml1 = lepton_masses[genl1]
+    ml2 = lepton_masses[genl2]
+
     cdef vector[double] isp_masses = [mx]
-    cdef vector[double] fsp_masses = [0.0, ml, ml]
+    cdef vector[double] fsp_masses = [0.0, ml1, ml1]
     cdef vector[double] params = [mx, smix, ml]
     cdef int nevents = 10000
 

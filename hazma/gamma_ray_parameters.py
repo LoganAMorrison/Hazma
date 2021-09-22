@@ -1,4 +1,3 @@
-import importlib.resources as pkg_resources
 import os
 from pathlib import Path
 
@@ -200,7 +199,7 @@ __effective_area_comptel = _generate_interp(
 effective_area_all_sky_astrogam = _generate_interp(
     "A_eff", "all_sky_astrogam.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_e_astrogam = _generate_interp(
+__effective_area_e_astrogam = _generate_interp(
     "A_eff", "e_astrogam.dat", fill_value=0.0, bounds_error=False
 )
 __effective_area_egret = _generate_interp(
@@ -496,7 +495,7 @@ def energy_res_adept(energy):
     AdEPT energy resolution. See arXiv1311.2059. The energy dependence is not
     given.
     """
-    return np.vectorize(lambda e: 0.3 * fwhm_factor)(energy)
+    return np.vectorize(lambda _: 0.3 * fwhm_factor)(energy)
 
 
 def energy_res_amego(energy):
@@ -514,7 +513,7 @@ def energy_res_comptel(energy):
     <https://scholars.unh.edu/dissertation/2045/>`_. The
     energy resolution at 1 MeV is 10% (FWHM).
     """
-    return np.vectorize(lambda e: 0.05 * fwhm_factor)(energy)
+    return np.vectorize(lambda _: 0.05 * fwhm_factor)(energy)
 
 
 def energy_res_all_sky_astrogam(energy):
@@ -538,7 +537,7 @@ def energy_res_egret(energy):
     This is the most optimistic value, taken from
     `sec. 4.3.3 <http://adsabs.harvard.edu/doi/10.1086/191793>`_.
     """
-    return np.vectorize(lambda e: 0.18 * fwhm_factor)(energy)
+    return np.vectorize(lambda _: 0.18 * fwhm_factor)(energy)
 
 
 def energy_res_fermi(energy):
@@ -547,7 +546,7 @@ def energy_res_fermi(energy):
     This is the average of the most optimistic normal and 60deg off-axis values
     from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
     """
-    return np.vectorize(lambda e: 0.075)(energy)
+    return np.vectorize(lambda _: 0.075)(energy)
 
 
 def energy_res_gecco(energy):
@@ -568,14 +567,14 @@ def energy_res_grams_upgrade(energy):
     """
     GRAMS upgrade approximate energy resolution. See https://arxiv.org/abs/1901.03430.
     """
-    return np.vectorize(lambda e: 0.05)(energy)
+    return np.vectorize(lambda _: 0.05)(energy)
 
 
 def energy_res_grams(energy):
     """
     GRAMS approximate energy resolution. See https://arxiv.org/abs/1901.03430.
     """
-    return np.vectorize(lambda e: 0.05)(energy)
+    return np.vectorize(lambda _: 0.05)(energy)
 
 
 def energy_res_integral(energy):
@@ -597,7 +596,7 @@ def energy_res_pangu(energy):
     PANGU energy resolution. https://doi.org/10.22323/1.246.0069. There is not
     much energy dependence.
     """
-    return np.vectorize(lambda e: 0.4)(energy)
+    return np.vectorize(lambda _: 0.4)(energy)
 
 
 # ==========================
