@@ -1,9 +1,7 @@
-from hazma.decay_helper_functions.decay_charged_pion \
-    cimport CSpectrum as cp_spec
-from hazma.decay_helper_functions.decay_neutral_pion \
-    cimport CSpectrum as np_spec
-from hazma.decay_helper_functions.decay_neutral_pion cimport CSpectrumPoint
-from hazma.decay_helper_functions.decay_muon cimport CSpectrum as mu_spec
+from hazma.decay_helper_functions.decay_charged_pion cimport c_charged_pion_decay_spectrum_array
+from hazma.decay_helper_functions.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_array
+from hazma.decay_helper_functions.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_point
+from hazma.decay_helper_functions.decay_muon cimport c_muon_decay_spectrum_array
 
 import cython
 import numpy as np
@@ -22,9 +20,7 @@ cdef double qe = sqrt(4. * M_PI * ALPHA_EM)
 ctypedef np.ndarray ndarray
 
 cdef int n_interp_pts = 500
-
 cdef np.ndarray __e_gams = np.zeros((n_interp_pts,), dtype=np.float64)
-
 cdef np.ndarray __spec_cp = np.zeros((n_interp_pts,), dtype=np.float64)
 cdef np.ndarray __spec_mu = np.zeros((n_interp_pts,), dtype=np.float64)
 
@@ -33,10 +29,10 @@ cdef double __set_spectra(double mv):
     global __spec_cp
     global __spec_mu
 
-    __e_gams = np.logspace(-1., np.log10(mv / 2.), num=n_interp_pts)
+    __e_gams = np.logspace(-1.0, log10(mv / 2.0), num=n_interp_pts)
 
-    __spec_cp = cp_spec(__e_gams, mv / 2., "total")
-    __spec_mu = mu_spec(__e_gams, mv / 2.)
+    __spec_cp = c_charged_pion_decay_spectrum_array(__e_gams, mv / 2.0, 7)
+    __spec_mu = c_muon_decay_spectrum_array(__e_gams, mv / 2.0)
 
 cdef double __interp_spec(double eng_gam, str mode):
     """
@@ -159,7 +155,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_v,
 
     # Neutral pion energy is:
     cdef double e_pi0 = 0.5 * (mpi0**2 + mv**2) / mv
-    cdef double dnde_np_d = pwpi0g * CSpectrumPoint(eng_gam_vrf, e_pi0)
+    cdef double dnde_np_d = pwpi0g * c_neutral_pion_decay_spectrum_point(eng_gam_vrf, e_pi0)
 
     cdef double dnde_mu_d = 2. * pwmumu * __interp_spec(eng_gam_vrf, "mu")
 
