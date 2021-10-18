@@ -2,9 +2,8 @@
 Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
-@date: January 2018
-
 """
+from warnings import warn
 import numpy as np
 from hazma.decay_helper_functions import decay_long_kaon
 from hazma.decay_helper_functions import decay_charged_pion
@@ -12,6 +11,33 @@ from hazma.decay_helper_functions import decay_charged_kaon
 from hazma.decay_helper_functions import decay_muon
 from hazma.decay_helper_functions import decay_neutral_pion
 from hazma.decay_helper_functions import decay_short_kaon
+
+
+def __mode_deprecation_warning():
+    msg = "Using a single item from `modes` is deprecated."
+    msg += " Use a list of modes instead. E.g. modes=[mode1,mode2,...]"
+    warn(msg)
+
+
+def __mode_deprecation_convert(modes, availible):
+    if modes is None:
+        return availible
+    elif isinstance(modes, str):
+        # For backwards compatiblity
+        __mode_deprecation_warning()
+        if modes == "total":
+            return availible
+        else:
+            return [modes]
+    else:
+        return modes
+
+
+def __check_modes(modes, availible):
+    for mode in modes:
+        assert (
+            mode in availible
+        ), f"Invalid mode {mode} specified. The availible modes are: {availible}"
 
 
 def muon(photon_energies, muon_energy):
@@ -48,10 +74,7 @@ def muon(photon_energies, muon_energy):
         muon_energy = 1000.
         decay.muon(photon_energies, muon_energy)
     """
-    # mu = decay_muon.Muon()
-    if hasattr(photon_energies, "__len__"):
-        return decay_muon.Spectrum(photon_energies, muon_energy)
-    return decay_muon.SpectrumPoint(photon_energies, muon_energy)
+    return decay_muon.muon_decay_spectrum(photon_energies, muon_energy)
 
 
 def neutral_pion(photon_energies, pion_energy):
@@ -88,12 +111,13 @@ def neutral_pion(photon_energies, pion_energy):
         pion_energy = 1000.
         decay.neutral_pion(photon_energies, pion_energy)
     """
-    if hasattr(photon_energies, "__len__"):
-        return decay_neutral_pion.Spectrum(photon_energies, pion_energy)
-    return decay_neutral_pion.SpectrumPoint(photon_energies, pion_energy)
+    return decay_neutral_pion.neutral_pion_decay_spectrum(photon_energies, pion_energy)
 
 
-def charged_pion(photon_energies, pion_energy, mode="total"):
+__CHG_PI_MODES = ["munu", "munug", "enug"]
+
+
+def charged_pion(photon_energies, pion_energy, modes=None):
     r"""Compute gamma-ray spectrum from the charged pion decay :math:`\pi^{\pm}
     \to \mu^{\pm} \nu_{\mu} \to e^{\pm} \nu_{e} \nu_{\mu} \gamma`.
 
@@ -103,9 +127,9 @@ def charged_pion(photon_energies, pion_energy, mode="total"):
         Photon energy(ies) in laboratory frame.
     pion_energy : double
         Charged pion energy in laboratory frame.
-    mode : str {"total"}
-        The mode the user would like to have returned. The options are "total",
-        "munu", "munug" and "enug".
+    modes : List[str], optional
+        A list modes the user would like include. The availible entries
+        are: "munu", "munug" and "enug". Default is all of these.
 
     Returns
     -------
@@ -129,20 +153,18 @@ def charged_pion(photon_energies, pion_energy, mode="total"):
         pion_energy = 1000.
         decay.charged_pion(photon_energies, pion_energy)
     """
+    modes_ = __mode_deprecation_convert(modes, __CHG_PI_MODES)
+    __check_modes(modes_, __CHG_PI_MODES)
 
-    if mode != "total" and mode != "munu" and mode != "munug" and mode != "enug":
-        val_err_mess = (
-            "mode '{}'' is not availible. Please use 'total'"
-            + "'munu', 'munug' or 'enug'.".format(mode)
-        )
-        raise ValueError(val_err_mess)
-
-    if hasattr(photon_energies, "__len__"):
-        return decay_charged_pion.Spectrum(photon_energies, pion_energy, mode)
-    return decay_charged_pion.SpectrumPoint(photon_energies, pion_energy, mode)
+    return decay_charged_pion.charged_pion_decay_spectrum(
+        photon_energies, pion_energy, modes_
+    )
 
 
-def charged_kaon(photon_energies, kaon_energy, mode="total"):
+__CHG_K_MODES = ["0enu", "0munu", "00p", "mmug", "munu", "p0", "p0g", "ppm"]
+
+
+def charged_kaon(photon_energies, kaon_energy, modes=None):
     r"""Compute gamma-ray spectrum from charged kaon decay into various final states.
 
     Parameters
@@ -151,10 +173,11 @@ def charged_kaon(photon_energies, kaon_energy, mode="total"):
         Photon energy(ies) in laboratory frame.
     kaon_energy : float
         Charged kaon energy in laboratory frame.
-    mode : str {"total"}
-        The mode the user would like to have returned. The options are "total",
+    modes : List[str], optional
+        A list modes the user would like to have included. The availible entries are:
         "0enu", "0munu", "00p", "mmug", "munu", "p0", "p0g" and "ppm". Here
-        "p" stands for pi plus, "m" stands for pi minus and "0" stands pi 0.
+        "p" stands for pi plus, "m" stands for pi minus and "0" stands pi 0. The default
+        is all of the modes.
 
     Returns
     -------
@@ -195,31 +218,18 @@ def charged_kaon(photon_energies, kaon_energy, mode="total"):
         kaon_energy = 1000.
         decay.charged_kaon(photon_energies, kaon_energy)
     """
+    modes_ = __mode_deprecation_convert(modes, __CHG_K_MODES)
+    __check_modes(modes_, __CHG_K_MODES)
 
-    if (
-        mode != "total"
-        and mode != "0enu"
-        and mode != "0munu"
-        and mode != "00p"
-        and mode != "mmug"
-        and mode != "munu"
-        and mode != "p0"
-        and mode != "p0g"
-        and mode != "ppm"
-    ):
-        val_err_mess = (
-            "mode '{}'' is not availible. Please use 'total'"
-            + "'0enu', '0munu', '00p', 'mmug', 'munu', 'p0',"
-            + " 'p0g' or 'ppm'.".format(mode)
-        )
-        raise ValueError(val_err_mess)
-
-    if hasattr(photon_energies, "__len__"):
-        return decay_charged_kaon.Spectrum(photon_energies, kaon_energy, mode)
-    return decay_charged_kaon.SpectrumPoint(photon_energies, kaon_energy, mode)
+    return decay_charged_kaon.charged_kaon_decay_spectrum(
+        photon_energies, kaon_energy, modes_
+    )
 
 
-def short_kaon(photon_energies, kaon_energy, mode="total"):
+__SHORT_K_MODES = ["00", "pm", "pmg"]
+
+
+def short_kaon(photon_energies, kaon_energy, modes=None):
     r"""Compute gamma-ray spectrum from short kaon decay into various final states.
 
     Parameters
@@ -264,19 +274,18 @@ def short_kaon(photon_energies, kaon_energy, mode="total"):
         kaon_energy = 1000.
         decay.short_kaon(photon_energies, kaon_energy)
     """
-    if mode != "total" and mode != "00" and mode != "pm" and mode != "pmg":
-        val_err_mess = (
-            "mode '{}'' is not available. Please use 'total'"
-            + "'00', 'pm' or 'pmg'.".format(mode)
-        )
-        raise ValueError(val_err_mess)
+    modes_ = __mode_deprecation_convert(modes, __SHORT_K_MODES)
+    __check_modes(modes_, __SHORT_K_MODES)
 
-    if hasattr(photon_energies, "__len__"):
-        return decay_short_kaon.Spectrum(photon_energies, kaon_energy, mode)
-    return decay_short_kaon.SpectrumPoint(photon_energies, kaon_energy, mode)
+    return decay_short_kaon.short_kaon_decay_spectrum(
+        photon_energies, kaon_energy, modes_
+    )
 
 
-def long_kaon(photon_energies, kaon_energy, mode="total"):
+__LONG_K_MODES = ["000", "penu", "penug", "pm0", "pm0g", "pmunu", "pmunug"]
+
+
+def long_kaon(photon_energies, kaon_energy, modes=None):
     r"""Compute gamma-ray spectrum from long kaon decay into various final
     states.
 
@@ -326,29 +335,15 @@ def long_kaon(photon_energies, kaon_energy, mode="total"):
     .. math:: K_{L} \to \pi^{+} \pi^{-} \pi^{0}
 
     """
-    if (
-        mode != "total"
-        and mode != "000"
-        and mode != "penu"
-        and mode != "penug"
-        and mode != "pm0"
-        and mode != "pm0g"
-        and mode != "pmunu"
-        and mode != "pmunug"
-    ):
-        val_err_mess = (
-            "mode '{}'' is not availible. Please use 'total'"
-            + "'000', 'penu', 'penug', 'pm0', 'pm0g',"
-            + "'pmunu' or 'pmunug'.".format(mode)
-        )
-        raise ValueError(val_err_mess)
+    modes_ = __mode_deprecation_convert(modes, __LONG_K_MODES)
+    __check_modes(modes_, __LONG_K_MODES)
 
-    if hasattr(photon_energies, "__len__"):
-        return decay_long_kaon.Spectrum(photon_energies, kaon_energy, mode)
-    return decay_long_kaon.SpectrumPoint(photon_energies, kaon_energy, mode)
+    return decay_long_kaon.long_kaon_decay_spectrum(
+        photon_energies, kaon_energy, modes_
+    )
 
 
-def electron(photon_energies, electron_energy):
+def electron(photon_energies, _):
     r"""Compute gamma-ray spectrum from electron decay (returns zero).
 
     The purpose of this function is so we can use the electron as a final

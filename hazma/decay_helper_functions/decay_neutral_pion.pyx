@@ -2,15 +2,15 @@ from libc.math cimport sqrt
 import numpy as np
 cimport numpy as np
 import cython
+include "common.pxd"
 
-include "parameters.pxd"
 
 """
 Module for computing the decay spectrum from neutral pion.
 """
 
 @cython.cdivision(True)
-cdef double CSpectrumPoint(double eng_gam, double eng_pi):
+cdef double c_neutral_pion_decay_spectrum_point(double eng_gam, double eng_pi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
@@ -26,30 +26,34 @@ cdef double CSpectrumPoint(double eng_gam, double eng_pi):
     return ret_val
 
 @cython.cdivision(True)
-cdef np.ndarray CSpectrum(np.ndarray eng_gam, double eng_pi):
+cdef np.ndarray[np.float64_t,ndim=1] c_neutral_pion_decay_spectrum_array(np.ndarray[np.float64_t,ndim=1] egams, double epi):
     """
     Returns decay spectrum for pi0 -> g g.
     """
-
-    cdef int num_pts = len(eng_gam)
-    cdef np.ndarray spec = np.zeros(num_pts, dtype=np.float64)
-    cdef int i
-
-    for i in range(num_pts):
-        spec[i] = CSpectrumPoint(eng_gam[i], eng_pi)
-
+    cdef int npts = egams.shape[0]
+    cdef np.ndarray[np.float64_t,ndim=1] spec = np.zeros_like(egams)
+    for i in range(npts):
+        spec[i] = c_neutral_pion_decay_spectrum_point(egams[i], epi)
     return spec
 
-@cython.cdivision(True)
-def SpectrumPoint(double eng_gam, double eng_pi):
-    """
-    Returns decay spectrum for pi0 -> g g.
-    """
-    return CSpectrumPoint(eng_gam, eng_pi)
 
 @cython.cdivision(True)
-def Spectrum(np.ndarray eng_gam, double eng_pi):
+@cython.boundscheck(True)
+@cython.wraparound(False)
+def neutral_pion_decay_spectrum(egams, epi):
     """
-    Returns decay spectrum for pi0 -> g g.
+    Compute the photon spectrum dN/dE from the decay of a neutral pion.
+
+    Paramaters
+    ----------
+    egam: float or array-like
+        Photon energy.
+    epi: float 
+        Energy of the pion.
     """
-    return CSpectrum(eng_gam, eng_pi)
+    if hasattr(egams, '__len__'):
+        energies = np.array(egams)
+        assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
+        return c_neutral_pion_decay_spectrum_array(energies, epi)
+    else:
+        return c_neutral_pion_decay_spectrum_point(egams, epi)
