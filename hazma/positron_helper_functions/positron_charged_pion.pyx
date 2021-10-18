@@ -1,11 +1,11 @@
-from hazma.positron_helper_functions.positron_muon cimport CSpectrum as muspec
+from hazma.positron_helper_functions.positron_muon cimport c_muon_positron_spectrum_array as muspec
 from scipy.integrate import quad
 from libc.math cimport sqrt, pow, log10
 import numpy as np
 cimport numpy as np
 import cython
 
-include "parameters.pxd"
+include "../decay_helper_functions/common.pxd"
 
 cdef double mmu = MASS_MU
 cdef double mpi = MASS_PI
@@ -19,45 +19,23 @@ cdef double gamma_mu = eng_mu_pi_rf / mmu
 cdef double eng_p_max_mu_rf = (me * me + mmu * mmu) / (2.0 * mmu)
 cdef double eng_p_max_pi_rf = eng_p_max_mu_rf * gamma_mu * (1.0 + beta_mu)
 
-# TODO: Really?? 10000 pts?
-eng_ps_mu = np.logspace(log10(me), log10(eng_p_max_pi_rf), num=500, dtype=np.float64)
-
+cdef np.ndarray eng_ps_mu = np.logspace(log10(me), log10(eng_p_max_pi_rf), num=500, dtype=np.float64)
 cdef np.ndarray __muspec = muspec(eng_ps_mu, eng_mu_pi_rf)
 
+
+@cython.boundscheck(True)
+@cython.wraparound(False)
+@cython.cdivision(True)
 cdef double __muon_spectrum(double eng_p):
-    """
-    Returns the muon spectrum in the pion rest frame.
-
-    Parameters
-    ----------
-    eng_p : double
-        Energy of the positron.
-
-    Returns
-    -------
-    dnde_mu : double
-        Value of muon positron spectrum at an positron energy of `eng_p`
-    """
+    """Returns the muon spectrum in the pion rest frame."""
     return np.interp(eng_p, eng_ps_mu, __muspec)
 
+
+@cython.boundscheck(True)
+@cython.wraparound(False)
 @cython.cdivision(True)
 cdef double __integrand(double cl, double eng_p, double eng_pi):
-    """
-    Returns the integrand of the boost integral at a given angle.
-
-    Parameters
-    ----------
-    eng_p : double
-        Energy of the positron.
-    eng_pi : double
-        Energy of the pion.
-
-    Returns
-    -------
-    integrand : double
-        Integrand of the boost integral at angle `cl`, positron energy `eng_p`
-        and pion energy `eng_pi`.
-    """
+    """Returns the integrand of the boost integral at a given angle."""
     if eng_p < me:
         return 0.0
     cdef double p = sqrt(eng_p * eng_p - me * me)
@@ -67,31 +45,14 @@ cdef double __integrand(double cl, double eng_p, double eng_pi):
                                      (1 + beta * beta * (-1 + cl * cl)) *
                                      me * me -
                                      2 * beta * cl * eng_p * p) * gamma)
-
     cdef double eng_p_pi_rf = gamma * (eng_p - p * beta * cl)
-
     return BR_PI_TO_MUNU * jac * __muon_spectrum(eng_p_pi_rf)
 
-cdef double CSpectrumPoint(double eng_p, double eng_pi):
-    """
-    Cythonized version of SpectrumPoint.
 
-    Returns the positron spectrum from a charged pion for a single positron
-    energy.
-
-    Parameters
-    ----------
-    eng_p : double
-        Energy of the positron.
-    eng_pi : double
-        Energy of the pion.
-
-    Returns
-    -------
-    dnde_cpi : double
-        Positron spectrum from a charged pion given positron energy `eng_p`
-        and pion energy `eng_pi`.
-    """
+@cython.boundscheck(True)
+@cython.wraparound(False)
+@cython.cdivision(True)
+cdef double c_charged_pion_positron_spectrum_point(double eng_p, double eng_pi):
     if eng_pi < mpi:
         return 0.0
 
@@ -100,73 +61,34 @@ cdef double CSpectrumPoint(double eng_p, double eng_pi):
 
 @cython.boundscheck(True)
 @cython.wraparound(False)
-cdef np.ndarray CSpectrum(np.ndarray eng_ps, double eng_pi):
-    """
-    Cythonized version of Spectrum.
-
-    Returns the positron spectrum from a charged pion for many positron
-    energies.
-
-    Parameters
-    ----------
-    eng_ps : numpy.array
-        Energies of the positron.
-    eng_pi : double
-        Energy of the pion.
-
-    Returns
-    -------
-    dnde_cpi : double
-        Positron spectrum from a charged pion given positron energies `engs_p`
-        and pion energy `eng_pi`.
-    """
-    cdef int num_pts = len(eng_ps)
-    cdef np.ndarray spec = np.zeros(num_pts, dtype=np.float64)
-    cdef int i = 0
-
-    for i in range(num_pts):
-        spec[i] = CSpectrumPoint(eng_ps[i], eng_pi)
-
+@cython.cdivision(True)
+cdef np.ndarray[np.float64_t,ndim=1] c_charged_pion_positron_spectrum_array(np.ndarray[np.float64_t,ndim=1] eng_ps, double eng_pi):
+    """Returns the positron spectrum from a charged pion for many positron energies."""
+    cdef int npts = eng_ps.shape[0]
+    cdef np.ndarray[np.float64_t,ndim=1] spec = np.zeros_like(eng_ps)
+    for i in range(npts):
+        spec[i] = c_charged_pion_positron_spectrum_point(eng_ps[i], eng_pi)
     return spec
 
-def SpectrumPoint(double eng_p, double eng_pi):
-    """
-    Returns the positron spectrum from a charged pion for a single positron
-    energy.
 
-    Parameters
+# ===================================================================
+# ---- Python API ---------------------------------------------------
+# ===================================================================
+
+def charged_pion_positron_spectrum(epos, epi):
+    """
+    Compute the positron spectrum dN/dE from the decay of a charged pion.
+
+    Paramaters
     ----------
-    eng_p : double
-        Energy of the positron.
-    eng_pi : double
+    epos: float or array-like
+        Positron energy.
+    epi: float 
         Energy of the pion.
-
-    Returns
-    -------
-    dnde_cpi : double
-        Positron spectrum from a charged pion given positron energy `eng_p`
-        and pion energy `eng_pi`.
     """
-    return CSpectrum(eng_p, eng_pi)
-
-@cython.boundscheck(True)
-@cython.wraparound(False)
-def Spectrum(np.ndarray eng_ps, double eng_pi):
-    """
-    Returns the positron spectrum from a charged pion for many positron
-    energies.
-
-    Parameters
-    ----------
-    eng_ps : numpy.array
-        Energies of the positron.
-    eng_pi : double
-        Energy of the pion.
-
-    Returns
-    -------
-    dnde_cpi : double
-        Positron spectrum from a charged pion given positron energies `engs_p`
-        and pion energy `eng_pi`.
-    """
-    return CSpectrum(eng_ps, eng_pi)
+    if hasattr(epos, '__len__'):
+        energies = np.array(epos)
+        assert len(energies.shape) == 1, "Positron energies must be 0 or 1-dimensional."
+        return c_charged_pion_positron_spectrum_array(energies, epi)
+    else:
+        return c_charged_pion_positron_spectrum_point(epos, epi)
