@@ -1,5 +1,15 @@
-from hazma.theory import TheoryAnn
+from typing import Union
 
+import numpy as np
+
+from hazma.parameters import Qd, Qe, Qu
+from hazma.parameters import charged_kaon_mass as _MK
+from hazma.parameters import charged_pion_mass as _MPI
+from hazma.parameters import eta_mass as _META
+from hazma.parameters import neutral_kaon_mass as _MK0
+from hazma.parameters import neutral_pion_mass as _MPI0
+from hazma.parameters import qe
+from hazma.theory import TheoryAnn
 from hazma.vector_mediator._vector_mediator_cross_sections import (
     VectorMediatorCrossSections,
 )
@@ -9,10 +19,12 @@ from hazma.vector_mediator._vector_mediator_positron_spectra import (
 )
 from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
-from ..parameters import qe, Qu, Qd, Qe
-
-from scipy.integrate import quad
-from scipy.special import k1, kn
+from hazma.vector_mediator.form_factors.kk import (
+    compute_kk_form_factor_parameters as __compute_ff_params_kk,
+)
+from hazma.vector_mediator.form_factors.pipi import (
+    compute_pipi_form_factor_parameters as __compute_ff_params_pipi,
+)
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
@@ -211,7 +223,13 @@ class KineticMixing(VectorMediator):
         )
 
     def __repr__(self):
-        return f"KineticMixing(mx={self.mx} MeV, mv={self.mv} MeV, gvxx={self.gvxx}, eps={self.eps})"
+        repr_ = "KineticMixing("
+        repr_ += f"mx={self.mx} [MeV], "
+        repr_ += f"mv={self.mv} [MeV], "
+        repr_ += f"gvxx={self.gvxx}, "
+        repr_ += f"eps={self.eps}"
+        repr_ += ")"
+        return repr_
 
     @property
     def eps(self):
@@ -229,23 +247,23 @@ class KineticMixing(VectorMediator):
 
     # Hide underlying properties' setters
     @VectorMediator.gvuu.setter
-    def gvuu(self, gvuu):
+    def gvuu(self, _):
         raise AttributeError("Cannot set gvuu")
 
     @VectorMediator.gvdd.setter
-    def gvdd(self, gvdd):
+    def gvdd(self, _):
         raise AttributeError("Cannot set gvdd")
 
     @VectorMediator.gvss.setter
-    def gvss(self, gvss):
+    def gvss(self, _):
         raise AttributeError("Cannot set gvss")
 
     @VectorMediator.gvee.setter
-    def gvee(self, gvee):
+    def gvee(self, _):
         raise AttributeError("Cannot set gvee")
 
     @VectorMediator.gvmumu.setter
-    def gvmumu(self, gvmumu):
+    def gvmumu(self, _):
         raise AttributeError("Cannot set gvmumu")
 
 
@@ -273,7 +291,15 @@ class QuarksOnly(VectorMediator):
         super(QuarksOnly, self).__init__(mx, mv, gvxx, gvuu, gvdd, gvss, 0.0, 0.0)
 
     def __repr__(self):
-        return f"QuarksOnly(mx={self.mx} MeV, mv={self.mv} MeV, gvxx={self.gvxx}, gvuu={self.gvuu}, gvdd={self.gvdd}, gvss={self.gvss})"
+        repr_ = "QuarksOnly("
+        repr_ += f"mx={self.mx} [MeV], "
+        repr_ += f"mv={self.mv} [MeV], "
+        repr_ += f"gvxx={self.gvxx}, "
+        repr_ += f"gvuu={self.gvuu}"
+        repr_ += f"gvdd={self.gvdd}"
+        repr_ += f"gvss={self.gvss}"
+        repr_ += ")"
+        return repr_
 
     @staticmethod
     def list_annihilation_final_states():
@@ -281,9 +307,290 @@ class QuarksOnly(VectorMediator):
 
     # Hide underlying properties' setters
     @VectorMediator.gvee.setter
-    def gvee(self, gvee):
+    def gvee(self, _):
         raise AttributeError("Cannot set gvee")
 
     @VectorMediator.gvmumu.setter
-    def gvmumu(self, gvmumu):
+    def gvmumu(self, _):
         raise AttributeError("Cannot set gvmumu")
+
+
+class VectorMediatorGeV(VectorMediator):
+    """
+    A generic dark matter model where interactions with the SM are mediated via
+    an s-channel vector mediator. This model is valid for dark-matter masses
+    up to 1 GeV.
+    """
+
+    def __init__(self, mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu):
+        """
+        Create a `VectorMediatorGeV` object.
+
+        Parameters
+        ----------
+        mx : float
+            Mass of the dark matter.
+        mv : float
+            Mass of the vector mediator.
+        gvxx : float
+            Coupling of vector mediator to dark matter.
+        gvuu : float
+            Coupling of vector mediator to the up quark.
+        gvdd : float
+            Coupling of vector mediator to the down quark.
+        gvss : float
+            Coupling of vector mediator to the strange quark.
+        gvee : float
+            Coupling of vector mediator to the electron.
+        gvmumu : float
+            Coupling of vector mediator to the muon.
+        """
+
+        # Compute and store the parameters needed to compute form factors.
+        self._ff_pipi_params = __compute_ff_params_pipi(2000)
+        self._ff_kk_params = __compute_ff_params_kk(200)
+
+        super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
+
+    # Import the form factors
+    from hazma.vector_mediator.form_factors import (
+        _form_factor_eta_gamma,
+        _form_factor_kk,
+        _form_factor_pi_gamma,
+        _form_factor_pipi,
+    )
+
+    @property
+    def gvuu(self) -> float:
+        """
+        Coupling of vector mediator to the up quark.
+        """
+        return self._gvuu
+
+    @gvuu.setter
+    def gvuu(self, val: float) -> None:
+        self._gvuu = val
+        self._reset_state()
+
+    @property
+    def gvdd(self) -> float:
+        """
+        Coupling of vector mediator to the down quark.
+        """
+        return self._gvdd
+
+    @gvdd.setter
+    def gvdd(self, val: float) -> None:
+        self._gvdd = val
+        self._reset_state()
+
+    @property
+    def gvss(self) -> float:
+        """
+        Coupling of vector mediator to the down quark.
+        """
+        return self._gvss
+
+    @gvss.setter
+    def gvss(self, val: float) -> None:
+        self._gvss = val
+        self._reset_state()
+
+    def _reset_state(self) -> None:
+        """
+        Function to reset the state of the derived quantities such as the
+        vector width and form-factors.
+        """
+        pass
+
+    def _width_v_to_mm(self, mass: float, form_factor: complex, symmetry: float = 1.0):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        mesons.
+
+        Parameters
+        ----------
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+        symmetry: float
+            Symmetry factor. If the final state mesons are identical, then this
+            should be 1/2. Default is 1.0
+
+        Returns
+        -------
+        gamma: float
+            Partial width for the vector to decay into two mesons.
+        """
+        if self._mv < 2 * mass:
+            return 0.0
+        return (
+            symmetry
+            / 48.0
+            / np.pi
+            * self._mv
+            * (1 - 4 * mass ** 2 / self._mv ** 2) ** 1.5
+            * abs(form_factor) ** 2
+        )
+
+    def width_v_to_pipi(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        charged pions.
+        """
+        mass = _MPI
+        form_factor = self._form_factor_pipi(self._mv ** 2)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def width_v_to_k0k0(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        neutral kaons.
+        """
+        mass = _MK0
+        form_factor = self._form_factor_kk(self._mv ** 2, imode=0)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def width_v_to_kk(self):
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        charged kaons.
+        """
+        mass = _MK
+        form_factor = self._form_factor_kk(self._mv ** 2, imode=1)
+        return self._width_v_to_mm(mass, form_factor)
+
+    def _width_v_to_mg(self, mass, form_factor):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a meson and photon.
+
+        Parameters
+        ----------
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+
+        Returns
+        -------
+        gamma: float
+            Partial width for the vector to decay into a meson and photon.
+        """
+        return (
+            self._mv
+            * abs(form_factor) ** 2
+            * (1.0 - (mass / self._mv) ** 2) ** 3
+            / (6.0 * np.pi)
+        )
+
+    def width_v_to_pi0g(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a neutral pion and photon.
+        """
+        mass = _MPI0
+        form_factor = self._form_factor_pi_gamma(self._mv ** 2)
+        return self._width_v_to_mg(mass, form_factor)
+
+    def width_v_to_etag(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into an eta and photon.
+        """
+        mass = _META
+        form_factor = self._form_factor_eta_gamma(self._mv ** 2)
+        return self._width_v_to_mg(mass, form_factor)
+
+    def _sigma_xx_to_v_to_mm(
+        self,
+        e_cm: Union[float, np.ndarray],
+        mass: float,
+        form_factor: Union[complex, np.ndarray],
+        symmetry: float = 1.0,
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the dark matter annihilation cross section into mesons.
+
+        Parameters
+        ----------
+        e_cm: Union[float, np.ndarray]
+            Center-of-mass energy.
+        mass: float
+            Mass of the final state meson.
+        form_factor: complex
+            Vector form factor for the V-meson-meson vertex.
+        symmetry: float
+            Symmetry factor. If the final state mesons are identical, then this
+            should be 1/2. Default is 1.0
+
+        Returns
+        -------
+        sigma: Union[float, np.ndarray]
+            Cross section for chi + chibar -> pi + pi.
+        """
+        gamv = self.width_v
+        mv = self.mv
+        mx = self.mx
+        if e_cm < 2.0 * mx or e_cm < 2.0 * mass:
+            return 0.0
+
+        s = e_cm ** 2
+        num = (
+            self.gvxx ** 2
+            * np.abs(form_factor) ** 2
+            * (s - 4 * mass ** 2) ** 1.5
+            * (2.0 * mx ** 2 + s)
+        )
+        den = (
+            48.0
+            * np.pi
+            * s
+            * np.sqrt(s - 4.0 * mx ** 2)
+            * (mv ** 2 * (gamv ** 2 - 2.0 * s) + mv ** 4 + s ** 2)
+        )
+
+        return symmetry * num / den
+
+    def sigma_xx_to_v_to_pipi(
+        self, e_cm: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the dark matter annihilation cross section into two charged
+        pions.
+
+        Parameters
+        ----------
+        e_cm: Union[float, np.ndarray]
+            Center-of-mass energy.
+
+        Returns
+        -------
+        sigma: Union[float, np.ndarray]
+            Cross section for chi + chibar -> pi + pi.
+        """
+        mass = _MPI
+        form_factor = self._form_factor_pipi(e_cm ** 2)
+        return self._sigma_xx_to_v_to_mm(e_cm, mass, form_factor)
+
+    def sigma_xx_to_v_to_kk(
+        self, e_cm: Union[float, np.ndarray]
+    ) -> Union[float, np.ndarray]:
+        """
+        Compute the dark matter annihilation cross section into two charged
+        pions.
+
+        Parameters
+        ----------
+        e_cm: Union[float, np.ndarray]
+            Center-of-mass energy.
+
+        Returns
+        -------
+        sigma: Union[float, np.ndarray]
+            Cross section for chi + chibar -> pi + pi.
+        """
+        mass = _MK
+        form_factor = self._form_factor_kk(e_cm ** 2)
+        return self._sigma_xx_to_v_to_mm(e_cm, mass, form_factor)
