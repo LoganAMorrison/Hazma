@@ -13,8 +13,6 @@ from hazma.parameters import (
     neutral_pion_mass as mpi0,
     charged_pion_mass as mpi,
     charged_kaon_mass as mk,
-    electron_mass as me,
-    muon_mass as mmu,
 )
 from hazma.gamma_ray import gamma_ray_decay
 
@@ -52,9 +50,7 @@ def dnde_nu_pi0(self, photon_energies, spectrum_type="all"):
         return decay_pi0(photon_energies, epi)
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -89,14 +85,10 @@ def dnde_pi_l(self, photon_energies, spectrum_type="all"):
         if self.lepton == "e":
             return decay_pi(photon_energies, epi)
         elif self.lepton == "mu":
-            return decay_pi(photon_energies, epi) + decay_mu(
-                photon_energies, el
-            )
+            return decay_pi(photon_energies, epi) + decay_mu(photon_energies, el)
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -134,9 +126,7 @@ def dnde_k_l(self, photon_energies, spectrum_type="all"):
             return decay_k(photon_energies, ek) + decay_mu(photon_energies, el)
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -178,9 +168,7 @@ def dnde_nu_l_l(self, photon_energies, spectrum_type="all"):
 
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -228,9 +216,7 @@ def dnde_l_pi_pi0(self, photon_energies, spectrum_type="all"):
 
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -274,9 +260,7 @@ def dnde_nu_pi_pi(self, photon_energies, spectrum_type="all"):
 
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
 
 
@@ -317,7 +301,5 @@ def dnde_nu_g_g(self, photon_energies, spectrum_type="all"):
 
     else:
         raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(
-                spectrum_type
-            )
+            "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
         )
