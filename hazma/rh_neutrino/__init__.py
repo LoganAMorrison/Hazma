@@ -25,7 +25,6 @@ See Also
 
 __all__ = ["RHNeutrino"]
 
-import numpy as np
 
 from hazma.theory import TheoryDec
 from hazma.parameters import (
@@ -129,21 +128,36 @@ class RHNeutrino(TheoryDec):
         else:
             raise ValueError("Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton))
 
+    def __nu_l_l_final_states(self):
+        i = self._gen
+        ll = "e" if i == 1 else "mu"
+        lp = "mu" if i == 1 else "e"
+
+        return [f"nu{ll} {ll} {ll}", f"nu{ll} {lp} {lp}", f"nu{lp} {ll} {lp}"]
+
+    def __nu_nu_nu_final_states(self):
+        i = self._gen
+        ll = "e" if i == 1 else "mu"
+        lp = "mu" if i == 1 else "e"
+
+        return [f"nu{ll} nu{ll} nu{ll}", f"nu{ll} nu{lp} nu{lp}", f"nu{ll} nutau nutau"]
+
     def list_decay_final_states(self):
         """
         Returns a list of the availible final states.
         """
-        return [
+        fstates = [
             "pi l",
             "pi0 nu",
             "k l",
             "nu pi pi",
             "l pi pi0",
-            "nu nu nu",
-            "nu l l",
             "nu g",
-            "nu g g",
+            # "nu g g",
         ]
+        fstates = fstates + self.__nu_l_l_final_states()
+        fstates = fstates + self.__nu_nu_nu_final_states()
+        return fstates
 
     def _decay_widths(self):
         """
@@ -156,7 +170,7 @@ class RHNeutrino(TheoryDec):
             "nu pi pi": self.width_nu_pi_pi(),
             "l pi pi0": self.width_l_pi_pi0(),
             "nu g": self.width_nu_gamma(),
-            "nu g g": self.width_nu_g_g(),
+            # "nu g g": self.width_nu_g_g(),
         }
         i = self._gen
         lep = self._lepton
@@ -179,15 +193,24 @@ class RHNeutrino(TheoryDec):
         Gets a function taking a photon energy and returning the continuum
         gamma ray spectrum dN/dE for each relevant decay final state.
         """
-        return {
+        funcs = {
             "pi l": self.dnde_pi_l,
             "pi0 nu": self.dnde_nu_pi0,
             "k l": self.dnde_k_l,
             "l pi pi0": self.dnde_l_pi_pi0,
             "nu pi pi": self.dnde_nu_pi_pi,
-            "nu g g": self.dnde_nu_g_g,
+            # "nu g g": self.dnde_nu_g_g,
         }
-        # "nu l l": self.dnde_nu_l_l,
+
+        i = self._gen
+        j = 2 if i == 1 else 1
+        ll = "e" if i == 1 else "mu"
+        lp = "mu" if i == 1 else "e"
+        funcs[f"nu{ll} {ll} {ll}"] = lambda es: self.dnde_nu_l_l(es, i, i, i)
+        funcs[f"nu{ll} {lp} {lp}"] = lambda es: self.dnde_nu_l_l(es, i, j, j)
+        funcs[f"nu{lp} {ll} {lp}"] = lambda es: 2.0 * self.dnde_nu_l_l(es, j, i, j)
+
+        return funcs
 
     def _gamma_ray_line_energies(self):
         """

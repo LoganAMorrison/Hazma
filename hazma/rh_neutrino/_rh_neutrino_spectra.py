@@ -13,10 +13,9 @@ from hazma.decay import (
 from hazma.parameters import (
     GF,
     Vud,
+    lepton_masses,
     sin_theta_weak as sw,
     cos_theta_weak as cw,
-    electron_mass as me,
-    muon_mass as mmu,
     neutral_pion_mass as mpi0,
     charged_pion_mass as mpi,
     charged_kaon_mass as mk,
@@ -142,8 +141,8 @@ def __lnorm_sqr(p):
 
 
 def __msqrd_nu_l_l(momenta, mx, tmix, ml):
-    s = __lnorm_sqr(momenta[0] + momenta[3])
-    t = __lnorm_sqr(momenta[1] + momenta[3])
+    s = __lnorm_sqr(momenta[0] + momenta[2])
+    t = __lnorm_sqr(momenta[1] + momenta[2])
     return -(
         (
             GF ** 2
@@ -188,8 +187,8 @@ def __msqrd_nu_l_l(momenta, mx, tmix, ml):
 
 
 def __msqrd_nu_lp_lp(momenta, mx, tmix, ml):
-    s = __lnorm_sqr(momenta[0] + momenta[3])
-    t = __lnorm_sqr(momenta[1] + momenta[3])
+    s = __lnorm_sqr(momenta[0] + momenta[2])
+    t = __lnorm_sqr(momenta[1] + momenta[2])
     return -(
         (
             GF ** 2
@@ -212,7 +211,7 @@ def __msqrd_nu_lp_lp(momenta, mx, tmix, ml):
 
 
 def __msqrd_nup_l_lp(momenta, mx, tmix, mli, mlk):
-    t = __lnorm_sqr(momenta[1] + momenta[3])
+    t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
         -16
         * GF ** 2
@@ -225,10 +224,9 @@ def __msqrd_nup_l_lp(momenta, mx, tmix, mli, mlk):
 def __dnde_nu_l_l_decay(self, photon_energies, j, n, m):
     i = self._gen
     leps = ["electron", "muon"]
-    lep_masses = [me, mmu]
 
     if self.include_3body and (n == 2 or m == 2):
-        fs = ["neutrino", leps[n], leps[m]]
+        fs = ["neutrino", leps[n - 1], leps[m - 1]]
         if i == j == n == m:
 
             def msqrd_nu_l_l(momenta):
@@ -238,7 +236,9 @@ def __dnde_nu_l_l_decay(self, photon_energies, j, n, m):
         if (i == j) and (n == m):
 
             def msqrd_nu_lp_lp(momenta):
-                return __msqrd_nu_lp_lp(momenta, self.mx, self.theta, lep_masses[n])
+                return __msqrd_nu_lp_lp(
+                    momenta, self.mx, self.theta, lepton_masses[n - 1]
+                )
 
             return gamma_ray_decay(fs, self.mx, photon_energies, msqrd_nu_lp_lp)
         if ((i == n) and (j == m)) or ((i == m) and (j == n)):
@@ -248,8 +248,8 @@ def __dnde_nu_l_l_decay(self, photon_energies, j, n, m):
                     momenta,
                     self.mx,
                     self.theta,
-                    lep_masses[n],
-                    lep_masses[m],
+                    lepton_masses[n - 1],
+                    lepton_masses[m - 1],
                 )
 
             return gamma_ray_decay(fs, self.mx, photon_energies, msqrd_nup_l_lp)
@@ -270,12 +270,12 @@ def dnde_nu_l_l(self, photon_energies, j, n, m, spectrum_type="all"):
         String specifying which spectrum component should be computed.
         Options are: "all", "decay" or "fsr"
     """
+    accessable = self.mx > lepton_masses[n - 1] + lepton_masses[m - 1]
 
-    if self.mx < 2.0 * self.ml:
+    if not accessable:
         if hasattr(photon_energies, "__len__"):
             return np.zeros_like(photon_energies)
-        else:
-            return 0.0
+        return 0.0
 
     if spectrum_type == "all":
         return self.dnde_nu_l_l(photon_energies, j, n, m, "fsr") + self.dnde_nu_l_l(
@@ -296,8 +296,8 @@ def dnde_nu_l_l(self, photon_energies, j, n, m, spectrum_type="all"):
 
 
 def __msqrd_l_pi_pi0(momenta, mx, tmix, ml):
-    s = __lnorm_sqr(momenta[0] + momenta[3])
-    t = __lnorm_sqr(momenta[1] + momenta[3])
+    s = __lnorm_sqr(momenta[0] + momenta[2])
+    t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
         2
         * GF ** 2
@@ -350,7 +350,7 @@ def dnde_l_pi_pi0(self, photon_energies, spectrum_type="all"):
                 lepton = "muon"
 
             def msqrd(momenta):
-                return __msqrd_l_pi_pi0(momenta, self.mx, self.tmix, self.ml)
+                return __msqrd_l_pi_pi0(momenta, self.mx, self.theta, self.ml)
 
             return gamma_ray_decay(
                 [lepton, "charged_pion", "neutral_pion"],
@@ -368,8 +368,8 @@ def dnde_l_pi_pi0(self, photon_energies, spectrum_type="all"):
 
 
 def __msqrd_nu_pi_pi(momenta, mx, tmix):
-    s = __lnorm_sqr(momenta[0] + momenta[3])
-    t = __lnorm_sqr(momenta[1] + momenta[3])
+    s = __lnorm_sqr(momenta[0] + momenta[2])
+    t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
         GF ** 2
         * (1 - 2 * sw ** 2) ** 2

@@ -1,37 +1,15 @@
-from hazma.theory import TheoryAnn
+import numpy as np
 
+from hazma.theory import TheoryAnn
 from hazma.parameters import up_quark_mass as muq
 from hazma.parameters import down_quark_mass as mdq
 from hazma.parameters import strange_quark_mass as msq
 from hazma.parameters import fpi, b0, vh
 
-from hazma.scalar_mediator._scalar_mediator_constraints import ScalarMediatorConstraints
-from hazma.scalar_mediator._scalar_mediator_cross_sections import (
-    ScalarMediatorCrossSection,
-)
-from hazma.scalar_mediator._scalar_mediator_fsr import ScalarMediatorFSR
-from hazma.scalar_mediator._scalar_mediator_positron_spectra import (
-    ScalarMediatorPositronSpectra,
-)
-from hazma.scalar_mediator._scalar_mediator_spectra import ScalarMediatorSpectra
-from hazma.scalar_mediator._scalar_mediator_widths import ScalarMediatorWidths
-
-import numpy as np
-from scipy.integrate import quad
-from scipy.special import k1, kn
-
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
-class ScalarMediator(
-    ScalarMediatorConstraints,
-    ScalarMediatorCrossSection,
-    ScalarMediatorFSR,
-    ScalarMediatorPositronSpectra,
-    ScalarMediatorSpectra,
-    ScalarMediatorWidths,
-    TheoryAnn,
-):
+class ScalarMediator(TheoryAnn):
     r"""
     Create a scalar mediator model object.
 
@@ -69,6 +47,68 @@ class ScalarMediator(
     lam : float
         Mass scale in scalar's interactions with photons and gluons.
     """
+
+    from ._scalar_mediator_spectra import (
+        dnde_ee,  # pylint: disable
+        dnde_mumu,
+        dnde_pi0pi0,
+        dnde_pipi,
+        dnde_ss,
+        spectrum_funcs,
+        gamma_ray_lines,
+    )
+    from ._scalar_mediator_widths import (
+        width_s_to_gg,
+        width_s_to_pi0pi0,
+        width_s_to_pipi,
+        width_s_to_xx,
+        width_s_to_ff,
+        partial_widths,
+    )
+    from ._scalar_mediator_positron_spectra import (
+        dnde_pos_pipi,
+        dnde_pos_mumu,
+        dnde_pos_ss,
+        positron_spectrum_funcs,
+        positron_lines,
+    )
+    from ._scalar_mediator_fsr import (
+        dnde_xx_to_s_to_ffg,
+        dnde_xx_to_s_to_pipig,
+    )
+    from ._scalar_mediator_cross_sections import (
+        sigma_xx_to_s_to_ff,
+        sigma_xx_to_s_to_gg,
+        sigma_xx_to_s_to_pi0pi0,
+        sigma_xx_to_s_to_pipi,
+        sigma_xx_to_ss,
+        sigma_xx_to_s_to_xx,
+        sigma_xpi_to_xpi,
+        sigma_xpi0_to_xpi0,
+        sigma_xl_to_xl,
+        sigma_xg_to_xg,
+        sigma_xs_to_xs,
+        sigma_ss_to_xx,
+        thermal_cross_section,
+        annihilation_cross_section_funcs,
+        elastic_scattering_cross_sections,
+    )
+    from ._scalar_mediator_constraints import (
+        width_B_k_s,
+        constraint_B_k_invis,
+        constraint_B_k_mu_mu,
+        constraint_B_k_e_e,
+        width_k_pi_s,
+        constraint_k_pi_invis,
+        width_kl_pi0_s,
+        constraint_kl_pi0_mu_mu,
+        constraint_kl_pi0_e_e,
+        width_B_xs_s,
+        constrain_beam_dump,
+        width_h_invis,
+        constraint_higgs_invis,
+        constraints,
+    )
 
     def __init__(self, mx, ms, gsxx, gsff, gsGG, gsFF, lam):
         self._mx = mx
@@ -200,18 +240,15 @@ class ScalarMediator(
         return vs
 
     def compute_width_s(self):
-        """Updates the scalar's total width.
-        """
+        """Updates the scalar's total width."""
         self.width_s = self.partial_widths()["total"]
 
     def __fpiT(self, vs):
-        """Returns the Lagrangian parameter __fpiT.
-        """
+        """Returns the Lagrangian parameter __fpiT."""
         return fpi / np.sqrt(1.0 + 4.0 * self._gsGG * vs / (9.0 * vh))
 
     def __b0T(self, vs, fpiT):
-        """Returns the Lagrangian parameter __b0T.
-        """
+        """Returns the Lagrangian parameter __b0T."""
         return (
             b0
             * (fpi / fpiT) ** 2
@@ -219,8 +256,7 @@ class ScalarMediator(
         )
 
     def __msT(self, fpiT, b0T):
-        """Returns the Lagrangian parameter __msT.
-        """
+        """Returns the Lagrangian parameter __msT."""
         trM = muq + mdq + msq
 
         return np.sqrt(
@@ -281,7 +317,13 @@ class HiggsPortal(ScalarMediator):
         )
 
     def __repr__(self):
-        return f"HiggsPortal(mx={self.mx} MeV, ms={self.ms} MeV, gsxx={self.gsxx}, stheta={self.stheta})"
+        repr_ = "HiggsPortal("
+        repr_ += f"mx={self.mx} [MeV], "
+        repr_ += f"ms={self.ms} [MeV], "
+        repr_ += f"gsxx={self.gsxx}, "
+        repr_ += f"stheta={self.stheta}"
+        repr_ += ")"
+        return repr_
 
     @property
     def stheta(self):
@@ -298,15 +340,15 @@ class HiggsPortal(ScalarMediator):
 
     # Hide underlying properties' setters
     @ScalarMediator.gsff.setter
-    def gsff(self, gsff):
+    def gsff(self, _):
         raise AttributeError("Cannot set gsff")
 
     @ScalarMediator.gsGG.setter
-    def gsGG(self, gsGG):
+    def gsGG(self, _):
         raise AttributeError("Cannot set gsGG")
 
     @ScalarMediator.gsFF.setter
-    def gsFF(self, gsFF):
+    def gsFF(self, _):
         raise AttributeError("Cannot set gsFF")
 
 
@@ -351,7 +393,15 @@ class HeavyQuark(ScalarMediator):
         )
 
     def __repr__(self):
-        return f"HeavyQuark(mx={self.mx} MeV, ms={self.ms} MeV, gsxx={self.gsxx}, gsQ={self.gsQ}, mQ={self.mQ} MeV, QQ={self.QQ})"
+        repr_ = "HeavyQuark("
+        repr_ += f"mx={self.mx} [MeV], "
+        repr_ += f"ms={self.ms} [MeV], "
+        repr_ += f"gsxx={self.gsxx}, "
+        repr_ += f"gsQ={self.gsQ}, "
+        repr_ += f"mQ={self.mQ} [MeV], "
+        repr_ += f"QQ={self.QQ}"
+        repr_ += ")"
+        return repr_
 
     @staticmethod
     def list_annihilation_final_states():
@@ -393,13 +443,13 @@ class HeavyQuark(ScalarMediator):
 
     # Hide underlying properties' setters
     @ScalarMediator.gsff.setter
-    def gsff(self, gsff):
+    def gsff(self, _):
         raise AttributeError("Cannot set gsff")
 
     @ScalarMediator.gsGG.setter
-    def gsGG(self, gsGG):
+    def gsGG(self, _):
         raise AttributeError("Cannot set gsGG")
 
     @ScalarMediator.gsFF.setter
-    def gsFF(self, gsFF):
+    def gsFF(self, _):
         raise AttributeError("Cannot set gsFF")

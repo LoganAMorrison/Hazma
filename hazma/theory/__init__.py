@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
+from typing import Dict, Callable, Union
 
 import numpy as np
+import numpy.typing as npt
 
 from hazma.parameters import convolved_spectrum_fn
 from hazma.theory._theory_cmb import TheoryCMB
@@ -33,7 +35,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
-    def annihilation_cross_section_funcs(self):
+    def annihilation_cross_section_funcs(self) -> Dict[str, Callable[[float], float]]:
         r"""
         Gets functions to compute annihilation cross sections.
 
@@ -48,7 +50,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    def annihilation_cross_sections(self, e_cm):
+    def annihilation_cross_sections(self, e_cm: float) -> Dict[str, float]:
         r"""
         Computes annihilation cross sections.
 
@@ -70,7 +72,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         sigmas["total"] = sum(sigmas.values())
         return sigmas
 
-    def annihilation_branching_fractions(self, e_cm):
+    def annihilation_branching_fractions(self, e_cm: float) -> Dict[str, float]:
         r"""
         Computes annihilation branching fractions.
 
@@ -94,7 +96,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             }
 
     @abstractmethod
-    def partial_widths(self):
+    def partial_widths(self) -> Dict[str, float]:
         """
         Computes mediator decay widths.
 
@@ -108,7 +110,9 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
-    def _spectrum_funcs(self):
+    def _spectrum_funcs(
+        self,
+    ) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
         r"""
         Gets a function computing the continuum gamma-ray spectrum for
         annihilations into each relevant final state.
@@ -124,7 +128,9 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    def spectrum_funcs(self):
+    def spectrum_funcs(
+        self,
+    ) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
         """
         Wraps _spectrum_functions so the function for a final state returns
         zero when annihilation into that state is not permitted.
@@ -144,7 +150,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         return dndes_wrapped
 
-    def spectra(self, e_gams, e_cm):
+    def spectra(self, e_gams, e_cm) -> Dict[str, Union[float, npt.NDArray[np.float64]]]:
         r"""
         Gets the contributions to the continuum gamma-ray annihilation spectrum
         for each final state.
@@ -182,7 +188,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
         return specs
 
-    def total_spectrum(self, e_gams, e_cm):
+    def total_spectrum(self, e_gams, e_cm) -> Union[float, npt.NDArray[np.float64]]:
         r"""
         Computes total continuum gamma-ray spectrum.
 
@@ -204,7 +210,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.spectra(np.array([e_gams]), e_cm)["total"]
 
     @abstractmethod
-    def _gamma_ray_line_energies(self, e_cm):
+    def _gamma_ray_line_energies(self, e_cm) -> Dict[str, float]:
         r"""
         Gets information about annihilation into gamma-ray lines.
 
@@ -223,7 +229,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         pass
 
-    def gamma_ray_lines(self, e_cm):
+    def gamma_ray_lines(self, e_cm) -> Dict[str, Dict[str, float]]:
         """
         Returns
         -------
@@ -280,7 +286,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         )
 
     @abstractmethod
-    def _positron_spectrum_funcs(self):
+    def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
         r"""
         Gets a function computing the continuum positron spectrum for
         annihilations into each relevant final state.
@@ -369,7 +375,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.positron_spectra(np.array([e_ps]), e_cm)["total"]
 
     @abstractmethod
-    def _positron_line_energies(self, e_cm):
+    def _positron_line_energies(self, e_cm) -> Dict[str, float]:
         r"""
         Gets information about annihilation into monochromatic positrons.
 
@@ -461,7 +467,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         pass
 
     @abstractmethod
-    def _decay_widths(self):
+    def _decay_widths(self) -> Dict[str, float]:
         """
         Decay width into each final state.
         """
@@ -488,7 +494,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         }
 
     @abstractmethod
-    def _spectrum_funcs(self):
+    def _spectrum_funcs(self) -> Dict[str, Callable]:
         """
         Gets a function taking a photon energy and returning the continuum
         gamma ray spectrum dN/dE for each relevant decay final state.
@@ -559,7 +565,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.spectra(np.array([e_gams]))["total"]
 
     @abstractmethod
-    def _gamma_ray_line_energies(self):
+    def _gamma_ray_line_energies(self) -> Dict[str, float]:
         """
         Returns dict of final states and photon energies for final states
         containing monochromatic gamma ray lines.
@@ -586,7 +592,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         )
 
     @abstractmethod
-    def _positron_spectrum_funcs(self):
+    def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
         """
         Returns functions `float -> float` giving the continuum positron
         spectrum for each final state.
@@ -627,7 +633,7 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
             return self.positron_spectra(np.array([e_ps]))["total"]
 
     @abstractmethod
-    def _positron_line_energies(self):
+    def _positron_line_energies(self) -> Dict[str, float]:
         pass
 
     def positron_lines(self):

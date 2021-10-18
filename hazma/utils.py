@@ -16,7 +16,7 @@ def __dnde_altarelli_parisi(eng, cme, mass, splitting):
 
     def f(e):
         x = 2 * e / cme
-        if x < 1 - np.exp(1) * mu ** 2:
+        if x > 1 - np.exp(1) * mu ** 2:
             return 0.0
         return (
             2

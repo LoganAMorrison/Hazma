@@ -31,6 +31,9 @@ charm_quark_mass = 1.275e3
 bottom_quark_mass = 4.18e3
 top_quark_mass = 160.0e3
 
+# Collections of masses
+lepton_masses = [electron_mass, muon_mass]
+
 # Convert <sigma v> from MeV^2
 cm_to_inv_MeV = 5.08e10  # MeV^-1 cm^-1
 sv_inv_MeV_to_cm3_per_s = 1.0 / cm_to_inv_MeV ** 2 * 3e10  # cm^3/s * MeV^2
@@ -162,8 +165,7 @@ def load_interp(rf_name, bounds_error=False, fill_value=0.0):
 
 
 def spec_res_fn(ep, e, energy_res):
-    """Get the spectral resolution function.
-    """
+    """Get the spectral resolution function."""
     sigma = e * energy_res(e)
 
     if sigma == 0:
@@ -224,9 +226,7 @@ def convolved_spectrum_fn(
                 """
                 spec_res_fn_vals = spec_res_fn(es_padded, e, energy_res)
                 integrand_vals = (
-                    dnde_src
-                    * spec_res_fn_vals
-                    / trapz(spec_res_fn_vals, es_padded)
+                    dnde_src * spec_res_fn_vals / trapz(spec_res_fn_vals, es_padded)
                 )
 
                 return trapz(integrand_vals, es_padded)

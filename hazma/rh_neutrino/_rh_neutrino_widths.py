@@ -37,7 +37,7 @@ def width_pi0_nu(self):
         Partial width for N -> pi^0 + nu.
     """
     mx = self.mx
-    smix = self.stheta
+    smix = np.sin(self.theta)
     if mx < mpi0:
         return 0.0
     return (
@@ -57,7 +57,7 @@ def width_pi_l(self):
         Partial width for N -> pi + l.
     """
     mx = self.mx
-    smix = self.stheta
+    smix = np.sin(self.theta)
     ml = self.ml
 
     if mx < mpi + ml:
@@ -84,7 +84,7 @@ def width_k_l(self):
         Partial width for N -> K + l.
     """
     mx = self.mx
-    smix = self.stheta
+    smix = np.sin(self.theta)
     ml = self.ml
 
     if mx < mk + ml:
@@ -112,7 +112,7 @@ def width_nu_gamma(self):
 
     """
     mx = self.mx
-    smix = self.stheta
+    smix = np.sin(self.theta)
     return -(GF ** 2 * mx ** 5 * qe ** 2 * smix ** 2 * (6 - 5 * smix ** 2) ** 2) / (
         4096.0 * np.pi ** 9 * (-1 + smix ** 2)
     )
@@ -123,7 +123,7 @@ def width_nu_gamma(self):
 # =======================
 
 
-def width_nu_pi0_pi0(self):
+def width_nu_pi0_pi0(_):
     """
     Compute the width for a right-handed neutrino to decay into an active
     neutrino and two neutral pion. (NOTE: The amplitude for this process is
@@ -150,7 +150,7 @@ def width_nu_pi_pi(self):
         Partial decay with for N -> nu + pi^+ + pi^-.
     """
     mx = self.mx
-    smix = self.stheta
+    smix = np.sin(self.theta)
     if mx < 2.0 * mpi:
         return 0.0
     return (
@@ -189,7 +189,7 @@ def width_l_pi_pi0(self):
 
     mx = self.mx
     ml = self.ml
-    smix = self.stheta
+    smix = np.sin(self.theta)
 
     if mx < ml + mpi + mpi0:
         return 0.0
@@ -470,7 +470,7 @@ def width_nu_g_g(self):
     if mx > mpi0:
         return 0.0
 
-    smix = self.stheta
+    smix = self.theta
 
     return 0.5 * (GF ** 2 * mx ** 11 * qe ** 4 * smix ** 2 * (-1 + smix ** 2)) / (
         245760.0 * mpi0 ** 6 * np.pi ** 7 * (-1 + sw ** 2)
