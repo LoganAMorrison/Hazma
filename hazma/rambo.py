@@ -151,9 +151,7 @@ def generate_phase_space(
     # Flatten the outer axis to have a list of phase space points.
     points = points.reshape(actual_num_ps_pts, 4 * num_fsp + 1)
     # Resize the weights to have the correct cross section.
-    points = apply_matrix_elem(
-        points, actual_num_ps_pts, num_fsp, mat_elem_sqrd
-    )
+    points = apply_matrix_elem(points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
 
     return points
 
@@ -227,9 +225,7 @@ def generate_energy_histogram(
 
     num_fsp = len(masses)
 
-    pts = generate_phase_space(
-        masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus
-    )
+    pts = generate_phase_space(masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
 
     actual_num_ps_pts = pts.shape[0]
 
@@ -278,9 +274,7 @@ def integrate_over_phase_space(
         raise RamboCMETooSmall()
 
     num_fsp = len(fsp_masses)
-    points = generate_phase_space(
-        fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus
-    )
+    points = generate_phase_space(fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
     weights = points[:, 4 * num_fsp]
     integral = np.average(weights)
