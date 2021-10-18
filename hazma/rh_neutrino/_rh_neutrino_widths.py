@@ -18,6 +18,7 @@ from hazma.parameters import (
     cos_theta_weak as cw,
     electron_mass as me,
     muon_mass as mmu,
+    lepton_masses,
 )
 
 
@@ -278,16 +279,12 @@ def width_nu_nu_nu(self, j, n, m):
     return 0.0
 
 
-def __width_nu_l_l(self):
+def __width_nu_l_l(mx, tmix, ml):
     """nuR_i -> nuL_j + l_n + l_m, with i=j=n=m."""
-    mx = self.mx
-    ml = self.ml
-    r = self.ml / self.mx
+    r = ml / mx
 
     if mx < 2.0 * ml:
         return 0.0
-
-    tmix = self.theta
 
     return (
         GF ** 2
@@ -315,17 +312,13 @@ def __width_nu_l_l(self):
     ) / (1536.0 * np.pi ** 3 * (-1 + sw ** 2) ** 2)
 
 
-def __width_nu_lp_lp(self):
+def __width_nu_lp_lp(mx, tmix, ml):
     """nuR_i -> nuL_i + l_j + l_j, with i!=j"""
-    mx = self.mx
-    ml = self.ml
-    r = self.ml / self.mx
 
     if mx < 2.0 * ml:
         return 0.0
 
-    tmix = self.theta
-
+    r = ml / mx
     return (
         GF ** 2
         * mx ** 5
@@ -352,22 +345,13 @@ def __width_nu_lp_lp(self):
     ) / (1536.0 * np.pi ** 3 * (-1 + sw ** 2) ** 2)
 
 
-def __width_nup_l_lp(self, k):
-    """nuR_i -> nuL_j + l_j + l_i, with i!=j"""
-    mx = self.mx
-    ml = self.ml
-    ri = self.ml / self.mx
-    if k == 1:
-        rk = me / self.mx
-    elif k == 2:
-        rk = mmu / self.mx
-    else:
-        return 0.0
+def __width_nup_l_lp(mx, tmix, mli, mlk):
+    """nuR_i -> nuL_k + l_i + l_k, with i!=j"""
+    ri = mli / mx
+    rk = mlk / mx
 
-    if mx < 2.0 * ml:
+    if mx < mli + mlk:
         return 0.0
-
-    tmix = self.theta
 
     return (
         GF ** 2
@@ -446,15 +430,18 @@ def width_nu_l_l(self, j: int, n: int, m: int):
         Partial width for N -> nu_j + l_n + l_m.
     """
     i = self._gen
+    mx, theta = self.mx, self.theta
+    mln = lepton_masses[n - 1]
+    mlm = lepton_masses[m - 1]
 
     if j == i and n == i and m == i:
-        return __width_nu_l_l(self)
+        return __width_nu_l_l(mx, theta, mln)
     elif j == i and n == m:
-        return __width_nu_lp_lp(self)
+        return __width_nu_lp_lp(mx, theta, mln)
     elif j == n and i == m:
-        return __width_nup_l_lp(self, j)
+        return __width_nup_l_lp(mx, theta, mlm, mln)
     elif j == m and i == n:
-        return __width_nup_l_lp(self, j)
+        return __width_nup_l_lp(mx, theta, mln, mlm)
     else:
         return 0.0
 
