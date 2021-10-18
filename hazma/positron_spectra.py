@@ -1,14 +1,12 @@
 """
 Module for computing positron spectra.
-
 @author: Logan Morrison and Adam Coogan
-@date: May 2018
 """
 
 import numpy as np
 
 from hazma.positron_helper_functions import positron_charged_pion, positron_muon
-from hazma.positron_helper_functions.positron_decay import positron, positron_point
+from hazma.positron_helper_functions.positron_decay import positron
 
 
 def muon(positron_energies, muon_energy):
@@ -28,9 +26,7 @@ def muon(positron_energies, muon_energy):
         The value of the spectrum given a positron energy(ies)
         ``positron_energies`` and muon energy ``muon_energy``.
     """
-    if hasattr(positron_energies, "__len__"):
-        return positron_muon.Spectrum(positron_energies, muon_energy)
-    return positron_muon.SpectrumPoint(positron_energies, muon_energy)
+    return positron_muon.muon_positron_spectrum(positron_energies, muon_energy)
 
 
 def charged_pion(positron_energies, pion_energy):
@@ -50,19 +46,18 @@ def charged_pion(positron_energies, pion_energy):
         The value of the spectrum given a positron energy(ies)
         ``positron_energies`` and charged pion energy ``pion_energy``.
     """
-    if hasattr(positron_energies, "__len__"):
-        return positron_charged_pion.Spectrum(positron_energies, pion_energy)
-    return positron_charged_pion.SpectrumPoint(positron_energies, pion_energy)
+    return positron_charged_pion.charged_pion_positron_spectrum(
+        positron_energies, pion_energy
+    )
 
 
 def positron_decay(
     particles,
     cme,
     positron_energies,
-    mat_elem_sqrd=lambda k_list: 1.0,
+    mat_elem_sqrd=lambda _: 1.0,
     num_ps_pts=1000,
     num_bins=25,
-    verbose=False,
 ):
     r"""Returns total gamma ray spectrum from a set of particles.
 
@@ -83,9 +78,6 @@ def positron_decay(
         Number of phase space points to use.
     num_bins : int {25}, optional
         Number of bins to use.
-    verbose: Bool
-        If True, then addition information about the runtime progress and state
-        are displayed.
 
     Returns
     -------
@@ -122,21 +114,14 @@ def positron_decay(
         positron_decay(particles, cme, positron_energies)
 
     """
-    if type(particles) == str:
+    if isinstance(particles, str):
         particles = [particles]
-
     particles = np.array(particles)
-
-    if hasattr(positron_energies, "__len__"):
-        return positron(
-            particles,
-            cme,
-            positron_energies,
-            mat_elem_sqrd=mat_elem_sqrd,
-            num_ps_pts=num_ps_pts,
-            num_bins=num_bins,
-            verbose=verbose,
-        )
-    return positron_point(
-        particles, cme, positron_energies, mat_elem_sqrd, num_ps_pts, num_bins
+    return positron(
+        particles,
+        cme,
+        positron_energies,
+        mat_elem_sqrd=mat_elem_sqrd,
+        num_ps_pts=num_ps_pts,
+        num_bins=num_bins,
     )
