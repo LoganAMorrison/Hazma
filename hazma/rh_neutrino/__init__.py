@@ -25,6 +25,7 @@ See Also
 
 __all__ = ["RHNeutrino"]
 
+import numpy as np
 
 from hazma.theory import TheoryDec
 from hazma.parameters import (
@@ -49,7 +50,7 @@ class RHNeutrino(TheoryDec):
     ----------
     mx: float
         The mass of the RH-neutrino.
-    stheta: float
+    theta: float
         Mixing angle between active-neutron and the RH neutrino.
     lepton: str
         String specifying which flavor of neutrino the RH neutrino mixes with.
@@ -72,17 +73,17 @@ class RHNeutrino(TheoryDec):
         width_nu_g_g,
     )
 
-    from ._rh_neutrino_fsr_four_body import (
-        dnde_nu_l_l_fsr as _dnde_nu_l_l_fsr,
-        dnde_l_pi_pi0_fsr as _dnde_l_pi_pi0_fsr,
-        dnde_nu_pi_pi_fsr as _dnde_nu_pi_pi_fsr,
-    )
+    # TODO: These need to be fixed before they can be used.
+    # from ._rh_neutrino_fsr_four_body import dnde_nu_l_l_fsr as _dnde_nu_l_l_fsr
+    # from ._rh_neutrino_fsr_four_body import dnde_l_pi_pi0_fsr as _dnde_l_pi_pi0_fsr
+    # from ._rh_neutrino_fsr_four_body import dnde_nu_pi_pi_fsr as _dnde_nu_pi_pi_fsr
 
     from ._rh_neutrino_fsr import (
-        _dnde_pi_l_fsr,
         dnde_pi_l_fsr,
-        _dnde_k_l_fsr,
         dnde_k_l_fsr,
+        dnde_nu_l_l_fsr,
+        dnde_l_pi_pi0_fsr,
+        dnde_nu_pi_pi_fsr,
     )
 
     from ._rh_neutrino_spectra import (
@@ -97,7 +98,7 @@ class RHNeutrino(TheoryDec):
 
     from ._rh_neutrino_positron_spectrum import dnde_pos_pi_l
 
-    def __init__(self, mx, stheta, lepton="e", include_3body=False):
+    def __init__(self, mx, theta, lepton="e", include_3body=False):
         """
         Generate an MeV right-handed object.
 
@@ -105,7 +106,7 @@ class RHNeutrino(TheoryDec):
         ----------
         rhn_mass: float
             Right-handed neutrino mass in MeV.
-        stheta: float
+        theta: float
             Mixing angle between the right-handed neutrino and active neutrino.
         lepton: str, optional
             String specifying which flavor of active neutrino the RH neutrino
@@ -114,79 +115,19 @@ class RHNeutrino(TheoryDec):
             Flag specifying if 3-body final states should be consider (i.e.
             N->nu+nu+nu, N->nu+l+lbar, etc.). Default is False.
         """
-        self._stheta = stheta
+        self._theta = theta
         self._mx = mx
         self.include_3body = include_3body
 
         self._lepton = lepton
         if lepton == "e":
             self._ml = me
+            self._gen = 1
         elif lepton == "mu":
             self._ml = mmu
+            self._gen = 2
         else:
-            raise ValueError(
-                "Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton)
-            )
-
-    def dnde_nu_l_l_fsr(self, photon_energies):
-        """
-        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
-        right-handed neutrino into an active neutrino and two charged leptons.
-
-        Parameters
-        ----------
-        photon_energies: float or array-like
-            Photon energies where the spectrum should be computed.
-
-        Returns
-        -------
-        spectrum: float or array-like
-            Gamma-ray spectrum.
-        """
-        width = self.width_nu_l_l()
-        return self._dnde_nu_l_l_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
-
-    def dnde_l_pi_pi0_fsr(self, photon_energies):
-        """
-        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
-        right-handed neutrino a charged lepton, charged pion and neutral pion.
-
-        Parameters
-        ----------
-        photon_energies: float or array-like
-            Photon energies where the spectrum should be computed.
-
-        Returns
-        -------
-        spectrum: float or array-like
-            Gamma-ray spectrum.
-        """
-        width = self.width_l_pi_pi0()
-        return self._dnde_l_pi_pi0_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
-
-    def dnde_nu_pi_pi_fsr(self, photon_energies):
-        """
-        Compute the FSR contribution to the gamma-ray spectrum fom the decay of a
-        right-handed neutrino into an active neutrino and two charged pions.
-
-        Parameters
-        ----------
-        photon_energies: float or array-like
-            Photon energies where the spectrum should be computed.
-
-        Returns
-        -------
-        spectrum: float or array-like
-            Gamma-ray spectrum.
-        """
-        width = self.width_nu_pi_pi()
-        return self._dnde_nu_pi_pi_fsr(
-            photon_energies, self.mx, self.stheta, self.ml, width
-        )
+            raise ValueError("Lepton {} is invalid. Use 'e' or 'mu'.".format(lepton))
 
     def list_decay_final_states(self):
         """
@@ -208,17 +149,30 @@ class RHNeutrino(TheoryDec):
         """
         Decay width into each final state.
         """
-        return {
+        widths = {
             "pi l": self.width_pi_l(),
             "pi0 nu": self.width_pi0_nu(),
             "k l": self.width_k_l(),
             "nu pi pi": self.width_nu_pi_pi(),
             "l pi pi0": self.width_l_pi_pi0(),
-            "nu nu nu": self.width_nu_nu_nu(),
-            "nu l l": self.width_nu_l_l(),
             "nu g": self.width_nu_gamma(),
             "nu g g": self.width_nu_g_g(),
         }
+        i = self._gen
+        lep = self._lepton
+
+        j = 2 if i == 1 else 1
+        lepp = "e" if j == 1 else "mu"
+
+        widths[f"nu{lep} nu{lep} nu{lep}"] = self.width_nu_nu_nu(i, i, i)
+        widths[f"nu{lep} nu{lepp} nu{lepp}"] = self.width_nu_nu_nu(i, j, j)
+        widths[f"nu{lep} nutau nutau"] = self.width_nu_nu_nu(i, 3, 3)
+
+        widths[f"nu{lep} {lep} {lep}"] = self.width_nu_l_l(i, i, i)
+        widths[f"nu{lep} {lepp} {lepp}"] = self.width_nu_l_l(i, j, j)
+        widths[f"nu{lepp} {lep} {lepp}"] = 2 * self.width_nu_l_l(j, i, j)
+
+        return widths
 
     def _spectrum_funcs(self):
         """
@@ -229,11 +183,11 @@ class RHNeutrino(TheoryDec):
             "pi l": self.dnde_pi_l,
             "pi0 nu": self.dnde_nu_pi0,
             "k l": self.dnde_k_l,
-            "nu l l": self.dnde_nu_l_l,
             "l pi pi0": self.dnde_l_pi_pi0,
             "nu pi pi": self.dnde_nu_pi_pi,
             "nu g g": self.dnde_nu_g_g,
         }
+        # "nu l l": self.dnde_nu_l_l,
 
     def _gamma_ray_line_energies(self):
         """
@@ -257,10 +211,8 @@ class RHNeutrino(TheoryDec):
         # TODO: Add the 3-body final states
         if self.lepton == "e":
             return {
-                "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2)
-                / (2.0 * self.mx),
-                "k l": (self.mx ** 2 + self.ml ** 2 - mk ** 2)
-                / (2.0 * self.mx),
+                "pi l": (self.mx ** 2 + self.ml ** 2 - mpi ** 2) / (2.0 * self.mx),
+                "k l": (self.mx ** 2 + self.ml ** 2 - mk ** 2) / (2.0 * self.mx),
             }
         return {}
 
@@ -284,14 +236,14 @@ class RHNeutrino(TheoryDec):
         self._mx = val
 
     @property
-    def stheta(self):
+    def theta(self):
         """
         Get the mixing angle between right-handed neutrino and active neutrino.
         """
-        return self._stheta
+        return self._theta
 
-    @stheta.setter
-    def stheta(self, val):
+    @theta.setter
+    def theta(self, val):
         """
         Set the mixing angle between the right-handed neutrino and active
         neutrino.
@@ -301,7 +253,7 @@ class RHNeutrino(TheoryDec):
         val: float
             New mixing angle.
         """
-        self._stheta = val
+        self._theta = val
 
     @property
     def lepton(self):
@@ -322,9 +274,14 @@ class RHNeutrino(TheoryDec):
         val: str
            Lepton flavor. Options are "e" or "mu".
         """
-        if val in ["e", "mu"]:
-            self._lepton = val
-            self._ml = me if val == "e" else mmu
+        if val == "e":
+            self._lepton = "e"
+            self._ml = me
+            self._gen = 1
+        elif val == "mu":
+            self._lepton = "mu"
+            self._ml = mmu
+            self._gen = 2
         else:
             raise ValueError(f"Invalid lepton {val}. Use 'e' or 'mu'")
 
