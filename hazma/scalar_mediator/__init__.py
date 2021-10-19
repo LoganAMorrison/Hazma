@@ -94,6 +94,7 @@ class ScalarMediator(TheoryAnn):
         elastic_scattering_cross_sections,
     )
     from ._scalar_mediator_constraints import (
+        _lambda_ps,
         width_B_k_s,
         constraint_B_k_invis,
         constraint_B_k_mu_mu,
