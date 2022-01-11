@@ -12,6 +12,7 @@ from hazma.parameters import (
     Vud,
     Vus,
     neutral_pion_mass as mpi0,
+    eta_mass as meta,
     charged_pion_mass as mpi,
     charged_kaon_mass as mk,
     sin_theta_weak as sw,
@@ -27,6 +28,27 @@ from hazma.parameters import (
 # =======================
 
 
+def __width_m0_nu(model, m0):
+    """
+    Computes the width of the right-handed neutrino into a neutral meson and
+    active neutrino.
+
+    Returns
+    -------
+    width: float
+        Partial width for N -> meson + nu.
+    """
+    mx = model.mx
+    b = mx / m0
+    if b >= 1:
+        return 0.0
+    return (
+        mx ** 3
+        * (fpi * GF * np.sin(2.0 * model.theta) * (1.0 - b ** 2)) ** 2
+        / (32.0 * np.pi * cw ** 4)
+    )
+
+
 def width_pi0_nu(self):
     """
     Computes the width of the right-handed neutrino into a neutral pion and
@@ -37,13 +59,47 @@ def width_pi0_nu(self):
     width: float
         Partial width for N -> pi^0 + nu.
     """
-    mx = self.mx
-    smix = np.sin(self.theta)
-    if mx < mpi0:
+    return __width_m0_nu(self, mpi0)
+
+
+def width_eta_nu(self):
+    """
+    Computes the width of the right-handed neutrino into a neutral pion and
+    active neutrino.
+
+    Returns
+    -------
+    width: float
+        Partial width for N -> pi^0 + nu.
+    """
+    return __width_m0_nu(self, meta) / 3.0
+
+
+def __width_m_l(model, mm, ckm):
+    """
+    Computes the width of the right-handed neutrino into a charged meson and
+    a lepton. This only includes the contribution from one charge
+    configuration (i.e. N -> m^+ + e^-).
+
+    Returns
+    -------
+    width: float
+        Partial width for N -> m + l.
+    """
+    mx = model.mx
+    ml = model.ml
+
+    if mx <= mm + ml:
         return 0.0
+
     return (
-        fpi ** 2 * GF ** 2 * (mx ** 2 - mpi0 ** 2) ** 2 * smix ** 2 * (-1 + smix ** 2)
-    ) / (8.0 * mx * np.pi * (-1 + sw ** 2))
+        fpi ** 2
+        * GF ** 2
+        * np.sqrt((ml - mx - mm) * (ml + mx - mm) * (ml - mx + mm) * (ml + mx + mm))
+        * ((ml ** 2 - mx ** 2) ** 2 - (ml ** 2 + mx ** 2) * mm ** 2)
+        * np.sin(model.theta)
+        * ckm ** 2
+    ) / (8.0 * mx ** 3 * np.pi)
 
 
 def width_pi_l(self):
@@ -57,20 +113,7 @@ def width_pi_l(self):
     width: float
         Partial width for N -> pi + l.
     """
-    mx = self.mx
-    smix = np.sin(self.theta)
-    ml = self.ml
-
-    if mx < mpi + ml:
-        return 0.0
-    return (
-        fpi ** 2
-        * GF ** 2
-        * np.sqrt((ml - mx - mpi) * (ml + mx - mpi) * (ml - mx + mpi) * (ml + mx + mpi))
-        * ((ml ** 2 - mx ** 2) ** 2 - (ml ** 2 + mx ** 2) * mpi ** 2)
-        * smix ** 2
-        * Vud ** 2
-    ) / (8.0 * mx ** 3 * np.pi)
+    return __width_m_l(self, mpi, Vud)
 
 
 def width_k_l(self):
@@ -84,21 +127,7 @@ def width_k_l(self):
     width: float
         Partial width for N -> K + l.
     """
-    mx = self.mx
-    smix = np.sin(self.theta)
-    ml = self.ml
-
-    if mx < mk + ml:
-        return 0.0
-
-    return (
-        fpi ** 2
-        * GF ** 2
-        * np.sqrt((mk - ml - mx) * (mk + ml - mx) * (mk - ml + mx) * (mk + ml + mx))
-        * ((ml ** 2 - mx ** 2) ** 2 - mk ** 2 * (ml ** 2 + mx ** 2))
-        * smix ** 2
-        * Vus ** 2
-    ) / (8.0 * mx ** 3 * np.pi)
+    return __width_m_l(self, mk, Vus)
 
 
 def width_nu_gamma(self):

@@ -42,18 +42,14 @@ def dnde_nu_pi0(self, photon_energies, spectrum_type="all"):
         else:
             return 0.0
 
-    if spectrum_type == "all":
-        return self.dnde_nu_pi0(photon_energies, "fsr") + self.dnde_nu_pi0(
-            photon_energies, "decay"
-        )
+    if spectrum_type in ["all", "decay"]:
+        epi = (self.mx ** 2 + mpi0 ** 2) / (2.0 * self.mx)
+        return decay_pi0(photon_energies, epi)
     elif spectrum_type == "fsr":
         if hasattr(photon_energies, "__len__"):
             return np.array([0.0 for _ in photon_energies])
         else:
             return 0.0
-    elif spectrum_type == "decay":
-        epi = (self.mx ** 2 + mpi0 ** 2) / (2.0 * self.mx)
-        return decay_pi0(photon_energies, epi)
     else:
         raise ValueError(
             "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)

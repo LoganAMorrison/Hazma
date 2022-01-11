@@ -164,13 +164,12 @@ class RHNeutrino(TheoryDec):
         Decay width into each final state.
         """
         widths = {
-            "pi l": self.width_pi_l(),
+            "pi l": 2 * self.width_pi_l(),
             "pi0 nu": self.width_pi0_nu(),
-            "k l": self.width_k_l(),
+            "k l": 2 * self.width_k_l(),
             "nu pi pi": self.width_nu_pi_pi(),
-            "l pi pi0": self.width_l_pi_pi0(),
+            "l pi pi0": 2 * self.width_l_pi_pi0(),
             "nu g": self.width_nu_gamma(),
-            # "nu g g": self.width_nu_g_g(),
         }
         i = self._gen
         lep = self._lepton
@@ -194,10 +193,10 @@ class RHNeutrino(TheoryDec):
         gamma ray spectrum dN/dE for each relevant decay final state.
         """
         funcs = {
-            "pi l": self.dnde_pi_l,
+            "pi l": lambda e: 2 * self.dnde_pi_l(e),  # type: ignore
             "pi0 nu": self.dnde_nu_pi0,
-            "k l": self.dnde_k_l,
-            "l pi pi0": self.dnde_l_pi_pi0,
+            "k l": lambda e: self.dnde_k_l(e),  # type: ignore
+            "l pi pi0": lambda e: 2 * self.dnde_l_pi_pi0(e),  # type: ignore
             "nu pi pi": self.dnde_nu_pi_pi,
             # "nu g g": self.dnde_nu_g_g,
         }
