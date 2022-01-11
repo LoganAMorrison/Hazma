@@ -1,4 +1,5 @@
 from cmath import sqrt, pi
+import numpy as np
 
 from hazma.parameters import (
     charged_pion_mass as mpi,
@@ -16,13 +17,10 @@ class VectorMediatorWidths:
         mv = self.mv
 
         if mv > 2.0 * mpi:
-            val = (
-                ((self.gvdd - self.gvuu) ** 2 * (-4 * mpi ** 2 + mv ** 2) ** 1.5)
-                / (48.0 * mv ** 2 * pi)
-            ).real
-
+            g2 = (self.gvdd - self.gvuu) ** 2
+            b = mpi / mv
+            val = mv * g2 * (1.0 - 4.0 * b ** 2) ** 1.5 / (48.0 * np.pi)
             assert val >= 0
-
             return val
         else:
             return 0.0
@@ -32,13 +30,11 @@ class VectorMediatorWidths:
 
         if mv > mpi0:
             val = (
-                (
-                    alpha_em
-                    * (self.gvdd + 2 * self.gvuu) ** 2
-                    * (-mpi0 ** 2 + mv ** 2) ** 3
-                )
-                / (3456.0 * fpi ** 2 * mv ** 3 * pi ** 4)
-            ).real
+                mv ** 3
+                * alpha_em
+                * (self.gvdd + 2 * self.gvuu) ** 2
+                * (1 - (mpi0 / mv) ** 2) ** 3
+            ) / (384.0 * fpi ** 2 * pi ** 4)
 
             assert val >= 0
 

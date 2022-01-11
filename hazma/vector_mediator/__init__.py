@@ -20,10 +20,10 @@ from hazma.vector_mediator._vector_mediator_positron_spectra import (
 from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from hazma.vector_mediator.form_factors.kk import (
-    compute_kk_form_factor_parameters as __compute_ff_params_kk,
+    compute_kk_form_factor_parameters as _compute_ff_params_kk,
 )
 from hazma.vector_mediator.form_factors.pipi import (
-    compute_pipi_form_factor_parameters as __compute_ff_params_pipi,
+    compute_pipi_form_factor_parameters as _compute_ff_params_pipi,
 )
 
 
@@ -347,8 +347,8 @@ class VectorMediatorGeV(VectorMediator):
         """
 
         # Compute and store the parameters needed to compute form factors.
-        self._ff_pipi_params = __compute_ff_params_pipi(2000)
-        self._ff_kk_params = __compute_ff_params_kk(200)
+        self._ff_pipi_params = _compute_ff_params_pipi(2000)
+        self._ff_kk_params = _compute_ff_params_kk(200)
 
         super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
 
@@ -478,11 +478,12 @@ class VectorMediatorGeV(VectorMediator):
         gamma: float
             Partial width for the vector to decay into a meson and photon.
         """
+        # Note: form-factor has units of 1/GeV
         return (
-            self._mv
-            * abs(form_factor) ** 2
+            self._mv ** 3
+            * abs(form_factor * 1e-3) ** 2
             * (1.0 - (mass / self._mv) ** 2) ** 3
-            / (6.0 * np.pi)
+            / (96.0 * np.pi)
         )
 
     def width_v_to_pi0g(self):
