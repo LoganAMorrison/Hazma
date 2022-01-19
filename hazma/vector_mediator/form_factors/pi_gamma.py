@@ -1,71 +1,79 @@
-from typing import Union
+from dataclasses import dataclass
 
 import numpy as np
 
 from hazma.vector_mediator.form_factors.utils import MPI_GEV
-
-# Constant parameters for the V-pi-gamma form factor.
-_res_masses = np.array([0.77526, 0.78284, 1.01952, 1.45, 1.70])
-_res_widths = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
-_amps = np.array([0.0426, 0.0434, 0.00303, 0.00523, 0.0])
-_phases = np.array([-12.7, 0.0, 158.0, 180.0, 0.0])
+from hazma.vector_mediator.form_factors.utils import RealArray
+from hazma.vector_mediator.form_factors.utils import ComplexArray
 
 
-def form_factor_pi_gamma(
-    s: Union[float, np.ndarray], gvuu: float, gvdd: float, gvss: float
-) -> Union[complex, np.ndarray]:
-    """
-    Compute the form factor for V-gamma-pi at given squared center of mass
-    energ(ies).
+@dataclass
+class FormFactorPiGamma:
 
-    Parameters
-    ----------
-    s: Union[float, np.ndarray]
-        Array of squared center-of-mass energies or a single value.
-    gvuu : float
-        Coupling of vector mediator to the up quark.
-    gvdd : float
-        Coupling of vector mediator to the down quark.
-    gvss : float
-        Coupling of vector mediator to the strange quark.
+    masses: RealArray = np.array([0.77526, 0.78284, 1.01952, 1.45, 1.70])
+    widths: RealArray = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
+    amps: RealArray = np.array([0.0426, 0.0434, 0.00303, 0.00523, 0.0])
+    phases: RealArray = np.array([-12.7, 0.0, 158.0, 180.0, 0.0]) * np.pi / 180.0
 
-    Returns
-    -------
-    ff: Union[float, np.ndarray]
-        The form factors.
-    """
+    def form_factor(
+        self, s: RealArray, gvuu: float, gvdd: float, gvss: float
+    ) -> ComplexArray:
+        """
+        Compute the form factor for V-gamma-pi at given squared center of mass
+        energ(ies).
 
-    ci0 = 3.0 * (gvuu + gvdd)
-    ci1 = gvuu - gvdd
-    cs = -3.0 * gvss
+        Parameters
+        ----------
+        s: NDArray[float]
+            Array of squared center-of-mass energies or a single value.
+        gvuu : float
+            Coupling of vector mediator to the up quark.
+        gvdd : float
+            Coupling of vector mediator to the down quark.
+        gvss : float
+            Coupling of vector mediator to the strange quark.
 
-    c_rho_om_phi = np.array([ci1, ci0, cs, ci0, ci0])
+        Returns
+        -------
+        ff: NDArray[complex]
+            The form factors.
+        """
 
-    if hasattr(s, "__len__"):
-        ss = np.array(s)
-    else:
-        ss = np.array([s])
+        ci0 = 3.0 * (gvuu + gvdd)
+        ci1 = gvuu - gvdd
+        cs = -3.0 * gvss
 
-    q = np.sqrt(ss)
-    di = _res_masses ** 2 - ss[:, np.newaxis] - 1j * q[:, np.newaxis] * _res_widths
-    di[:, 0] = (
-        _res_masses[0] ** 2
-        - s
-        - 1j
-        * q
-        * (
-            _res_widths[0]
-            * _res_masses[0] ** 2
-            / s
-            * ((s - 4.0 * MPI_GEV ** 2) / (_res_masses[0] ** 2 - 4.0 * MPI_GEV ** 2))
-            ** 1.5
+        c_rho_om_phi = np.array([ci1, ci0, cs, ci0, ci0])
+        ss = s[:, np.newaxis]
+
+        q = np.sqrt(ss)
+
+        dens = self.masses ** 2 - ss - 1j * q * self.widths
+
+        dens[:, 0:1] = (
+            self.masses[0] ** 2
+            - ss
+            - 1j
+            * q
+            * (
+                self.widths[0]
+                * self.masses[0] ** 2
+                / ss
+                * np.clip(
+                    (ss - 4 * MPI_GEV ** 2) / (self.masses[0] ** 2 - 4 * MPI_GEV ** 2),
+                    0.0,
+                    np.inf,
+                )
+                ** 1.5
+            )
         )
-    )
 
-    ff = np.sum(
-        c_rho_om_phi * _amps * _res_masses ** 2 * np.exp(1j * np.radians(_phases)) / di,
-        axis=1,
-    )
-    if type(s) == float:
-        return ff[0]
-    return ff
+        return np.sum(
+            c_rho_om_phi
+            * self.amps
+            * self.masses ** 2
+            * np.exp(1j * self.phases)
+            / dens
+            * np.sqrt(ss),
+            axis=1,
+        )

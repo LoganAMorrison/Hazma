@@ -12,6 +12,13 @@ def kinematically_accessable(etot, masses):
     return etot > sum(masses)
 
 
+def kallen_lambda(a, b, c):
+    """
+    Returns the Källén kinematic (triangle) polynomial.
+    """
+    return a ** 2 + b ** 2 + c ** 2 - 2 * a * b - 2 * a * c - 2 * b * c
+
+
 # ===================================================================
 # ---- Altarelli-Parisi ---------------------------------------------
 # ===================================================================

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Callable, Union
+from typing import Dict, Callable, Union, List
 
 import numpy as np
 import numpy.typing as npt
@@ -21,7 +21,7 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     @staticmethod
     @abstractmethod
-    def list_annihilation_final_states():
+    def list_annihilation_final_states() -> List[str]:
         r"""
         Lists annihilation final states.
 

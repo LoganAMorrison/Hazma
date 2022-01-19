@@ -4,14 +4,46 @@ import numpy as np
 import numpy.typing as npt
 from scipy.special import gamma  # type:ignore
 
-# Pion mass in GeV
-MPI_GEV = 0.13957018
+from hazma.parameters import (
+    omega_mass as __omega_mass,
+    rho_mass as __rho_mass,
+    eta_mass as __eta_mass,
+    charged_pion_mass as __charged_pion_mass,
+    neutral_pion_mass as __neutral_pion_mass,
+    charged_kaon_mass as __charged_kaon_mass,
+    neutral_kaon_mass as __neutral_kaon_mass,
+    eta_prime_mass as __eta_prime_mass,
+    phi_mass as __phi_mass,
+    fpi as __fpi,
+)
+
+RealArray = npt.NDArray[np.float64]
+ComplexArray = npt.NDArray[np.complex128]
+
+RealOrRealArray = Union[float, RealArray]
+ComplexOrComplexArray = Union[complex, ComplexArray]
+
+
+# Charged Pion mass in GeV
+MPI0_GEV = __neutral_pion_mass * 1e-3
+# Charged Pion mass in GeV
+MPI_GEV = __charged_pion_mass * 1e-3
 # Neutral Kaon mass in GeV
-MK0_GEV = 0.497611
+MK0_GEV = __neutral_kaon_mass * 1e-3
 # Charged Kaon mass in GeV
-MKP_GEV = 0.493677
+MK_GEV = __charged_kaon_mass * 1e-3
 # Charged Kaon mass in GeV
-META_GEV = 0.547862
+META_GEV = __eta_mass * 1e-3
+# Rho mass in GeV
+MRHO_GEV = __rho_mass * 1e-3
+# Omega mass in GeV
+MOMEGA_GEV = __omega_mass * 1e-3
+# Eta' mass in GeV
+METAP_GEV = __eta_prime_mass * 1e-3
+# Phi mass in GeV
+MPHI_GEV = __phi_mass * 1e-3
+# Phi mass in GeV
+FPI_GEV = __fpi * 1e-3
 
 
 def beta2(
@@ -270,8 +302,8 @@ def gamma_p(
 
 def breit_wigner_gs(
     s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, npt.NDArray[np.float64]],
-    gamma: Union[float, npt.NDArray[np.float64]],
+    mass: Union[float, npt.NDArray[np.float64]],
+    width: Union[float, npt.NDArray[np.float64]],
     m1: float,
     m2: float,
     h0: Union[float, npt.NDArray[np.float64]],
@@ -312,32 +344,32 @@ def breit_wigner_gs(
     bw: Union[float, npt.NDArray]
         The Breit-Wigner function.
     """
-    mr2 = mres ** 2
+    mr2 = mass ** 2
 
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
         return (mr2 + h0) / (
             mr2
             - ss[:, np.newaxis]
-            + h(ss, mres, gamma, m1, m2, dh, hres, reshape=True)
+            + h(ss, mass, width, m1, m2, dh, hres, reshape=True)
             - 1j
             * np.sqrt(ss)[:, np.newaxis]
-            * gamma_p(ss, mres, gamma, m1, m2, reshape=True)
+            * gamma_p(ss, mass, width, m1, m2, reshape=True)
         )
     return (mr2 + h0) / (
         mr2
         - s
-        + h(s, mres, gamma, m1, m2, dh, hres)
-        - 1j * np.sqrt(s) * gamma_p(s, mres, gamma, m1, m2)
+        + h(s, mass, width, m1, m2, dh, hres)
+        - 1j * np.sqrt(s) * gamma_p(s, mass, width, m1, m2)
     )
 
 
 def breit_wigner_fw(
-    s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, complex, npt.NDArray[np.float64]],
-    gamma: Union[float, complex, npt.NDArray[np.float64]],
+    s: RealOrRealArray,
+    mass: RealOrRealArray,
+    width: RealOrRealArray,
     reshape: Optional[bool] = False,
-) -> Union[complex, npt.NDArray[np.complex128]]:
+) -> ComplexOrComplexArray:
     """
     Compute the standard Breit-Wigner with a constant width. See
     ArXiv:1002.0279 Eqn.(8) for details.
@@ -346,9 +378,9 @@ def breit_wigner_fw(
     ----------
     s: Union[float, npt.NDArray]
         Center-of-mass energy squared.
-    mres: Union[float, npt.NDArray]
+    mass: Union[float, npt.NDArray]
         Mass of the resonance.
-    gamma: Union[float, npt.NDArray]
+    width: Union[float, npt.NDArray]
         Width of the resonance.
     reshape: Optional[bool]
         If true, a different value is computed for each `s`. This is useful
@@ -360,17 +392,17 @@ def breit_wigner_fw(
     bw: Union[float, npt.NDArray]
         The Breit-Wigner function.
     """
-    mr2 = mres ** 2
+    mr2 = mass ** 2
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
-        return mr2 / (mr2 - ss[:, np.newaxis] - 1j * mres * gamma)
-    return mr2 / (mr2 - s - 1j * mres * gamma)
+        return mr2 / (mr2 - ss[:, np.newaxis] - 1j * mass * width)
+    return mr2 / (mr2 - s - 1j * mass * width)
 
 
 def breit_wigner_pwave(
     s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, complex, npt.NDArray[np.complex128]],
-    gamma: Union[float, complex, npt.NDArray[np.complex128]],
+    mres: Union[float, complex, npt.NDArray[np.float64], npt.NDArray[np.complex128]],
+    gamma: Union[float, complex, npt.NDArray[np.float64], npt.NDArray[np.complex128]],
     m1: float,
     m2: float,
     reshape: Optional[bool] = False,
