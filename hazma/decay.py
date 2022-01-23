@@ -148,14 +148,14 @@ def charged_pion_decay_modes() -> List[str]:
 
 @overload
 def charged_pion(
-    photon_energies: float, pion_energy: float, modes: Optional[List[str]]
+    photon_energies: float, pion_energy: float, modes: Optional[List[str]] = None
 ) -> float:
     ...
 
 
 @overload
 def charged_pion(
-    photon_energies: RealArray, pion_energy: float, modes: Optional[List[str]]
+    photon_energies: RealArray, pion_energy: float, modes: Optional[List[str]] = None
 ) -> RealArray:
     ...
 

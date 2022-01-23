@@ -132,7 +132,7 @@ cdef np.ndarray[np.float64_t,ndim=1] c_positron_array(
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def positron(particles, cme, eng_ps, mat_elem_sqrd=lambda k_list: 1.0, num_ps_pts=10000, num_bins=25):
+def positron(particles, double cme, eng_ps, mat_elem_sqrd=lambda k_list: 1.0, int num_ps_pts=10000, int num_bins=25):
     """Returns total gamma ray spectrum from final state particles.
 
     Parameters

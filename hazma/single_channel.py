@@ -1,3 +1,5 @@
+from typing import Callable
+
 import numpy as np
 
 from hazma.theory import TheoryAnn, TheoryDec
@@ -14,6 +16,7 @@ from hazma.decay import (
     charged_pion as dnde_g_pi,
 )
 from hazma.positron_spectra import charged_pion as dnde_p_pi, muon as dnde_p_mu
+from hazma.utils import RealOrRealArray
 
 
 class SingleChannelAnn(TheoryAnn):
@@ -21,10 +24,22 @@ class SingleChannelAnn(TheoryAnn):
         self._mx = mx
         self._fs = fs
         self.sigma = sigma
+
+        self.fs_mass: float = 0.0
+        self._spectrum_funcs: Callable[[], dict] = lambda: dict()
+        self._gamma_ray_line_energies: Callable[[float], dict] = lambda _: dict()
+        self._positron_spectrum_funcs: Callable[[], dict] = lambda: dict()
+        self._positron_line_energies: Callable[[float], dict] = lambda _: dict()
+
         self.setup()
 
     def __repr__(self):
-        return f"SingleChannelAnn(mx={self._mx} MeV, final state='{self._fs}', sigma={self.sigma} MeV^-1)"
+        args = [
+            f"mx={self._mx} MeV",
+            f"fs='{self._fs}'",
+            f"sigma={self.sigma} MeV^-2",
+        ]
+        return "SingleChannelAnn(" + ", ".join(args) + ")"
 
     @property
     def fs(self):
@@ -78,83 +93,76 @@ class SingleChannelAnn(TheoryAnn):
         elif self.fs == "pi0 g":
             self.fs_mass = m_pi0
 
-    def set_spectrum_funcs(self):
+    def __dnde_photon_ee(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        return self._dnde_ap_fermion(eg, ecm, m_e)
+
+    def __dnde_photon_mumu(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        return 2 * dnde_g_mu(eg, ecm / 2) + self._dnde_ap_fermion(eg, ecm, m_mu)
+
+    def __dnde_photon_pi0pi0(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        return 2 * dnde_g_pi0(eg, ecm / 2)
+
+    def __dnde_photon_pi0g(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        return dnde_g_pi0(eg, (ecm ** 2 + m_pi0 ** 2) / (2.0 * ecm))
+
+    def __dnde_photon_pipi(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        return 2 * dnde_g_pi(eg, ecm / 2) + self._dnde_ap_scalar(eg, ecm, m_pi)
+
+    def set_spectrum_funcs(self) -> None:
         """
         Sets gamma ray spectrum functions.
         """
+        funcs = dict()
+
         if self.fs == "e e":
-
-            def dnde_g(e_g, e_cm):
-                return self._dnde_ap_fermion(e_g, e_cm, m_e)
-
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_ee(eg, ecm)
         elif self.fs == "mu mu":
-
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_mu(e_g, e_cm / 2) + self._dnde_ap_fermion(
-                    e_g, e_cm, m_mu
-                )
-
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_mumu(eg, ecm)
         elif self.fs == "pi0 pi0":
-
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_pi0(e_g, e_cm / 2)
-
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pi0pi0(eg, ecm)
         elif self.fs == "pi0 g":
-
-            def dnde_g(e_g, e_cm):
-                return dnde_g_pi0(e_g, (e_cm ** 2 + m_pi0 ** 2) / (2.0 * e_cm))
-
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pi0g(eg, ecm)
         elif self.fs == "pi pi":
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pipi(eg, ecm)
 
-            def dnde_g(e_g, e_cm):
-                return 2 * dnde_g_pi(e_g, e_cm / 2) + self._dnde_ap_scalar(
-                    e_g, e_cm, m_pi
-                )
+        self._spectrum_funcs = lambda: funcs
 
-        else:
-            # Final state produces no photons
-            self._spectrum_funcs = lambda: {}
-            return
-
-        self._spectrum_funcs = lambda: {self.fs: dnde_g}
-
-    def set_gamma_ray_line_energies(self):
+    def set_gamma_ray_line_energies(self) -> None:
         if self.fs == "g g":
             self._gamma_ray_line_energies = lambda e_cm: {"g g": e_cm / 2}
+
         elif self.fs == "pi0 g":
             self._gamma_ray_line_energies = lambda e_cm: {
                 "pi0 g": (e_cm ** 2 - m_pi0 ** 2) / (2.0 * e_cm)
             }
         else:
-            self._gamma_ray_line_energies = lambda e_cm: {}
+            self._gamma_ray_line_energies = lambda _: {}
+
+    def __dnde_positron_mumu(self, ep: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        if ecm < self.fs_mass:
+            return 0.0
+        return dnde_p_mu(ep, ecm / 2.0)
+
+    def __dnde_positron_pipi(self, ep: RealOrRealArray, ecm: float) -> RealOrRealArray:
+        if ecm < self.fs_mass:
+            return 0.0
+        return dnde_p_pi(ep, ecm / 2.0)
 
     def set_positron_spectrum_funcs(self):
+        funcs = dict()
+
         if self.fs == "mu mu":
-
-            def dnde_p(e_p, e_cm):
-                if e_cm < self.fs_mass:
-                    return 0.0
-                return dnde_p_mu(e_p, e_cm / 2.0)
-
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_mumu(eg, ecm)
         elif self.fs == "pi pi":
+            funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_pipi(eg, ecm)
 
-            def dnde_p(e_p, e_cm):
-                if e_cm < self.fs_mass:
-                    return 0.0
-                return dnde_p_pi(e_p, e_cm / 2.0)
-
-        else:
-            # Final state produces no positrons
-            self._positron_spectrum_funcs = lambda: {}
-            return
-
-        self._positron_spectrum_funcs = lambda: {self.fs: dnde_p}
+        self._positron_spectrum_funcs = lambda: funcs
 
     def set_positron_line_energies(self):
         if self.fs == "e e":
             self._positron_line_energies = lambda e_cm: {"e e": e_cm / 2.0}
         else:
-            self._positron_line_energies = lambda e_cm: {}
+            self._positron_line_energies = lambda _: {}
 
     def _dnde_ap_scalar(self, e_g, e_cm, m_scalar):
         def fn(e_g):
@@ -200,10 +208,22 @@ class SingleChannelDec(TheoryDec):
         self._mx = mx
         self._fs = fs
         self.width = width
+
+        self._spectrum_funcs: Callable[[], dict] = lambda: dict()
+        self._gamma_ray_line_energies: Callable[[], dict] = lambda: dict()
+        self._positron_spectrum_funcs: Callable[[], dict] = lambda: dict()
+        self._positron_line_energies: Callable[[], dict] = lambda: dict()
+
         self.setup()
 
     def __repr__(self):
-        return f"SingleChannelDec(mx={self._mx} MeV, final state='{self._fs}', width={self.width} MeV)"
+
+        args = [
+            f"mx={self._mx} MeV",
+            f"fs='{self._fs}'",
+            f"width={self.width} MeV",
+        ]
+        return "SingleChannelDec(" + ", ".join(args) + ")"
 
     @property
     def fs(self):
@@ -251,81 +271,77 @@ class SingleChannelDec(TheoryDec):
         elif self.fs == "pi0 g":
             self.fs_mass = m_pi0
 
+    def __dnde_photon_ee(self, eg):
+        return self._dnde_ap_fermion(eg, m_e)
+
+    def __dnde_photon_mumu(self, eg):
+        return 2 * dnde_g_mu(eg, self.mx / 2) + self._dnde_ap_fermion(eg, m_mu)
+
+    def __dnde_photon_pi0pi0(self, eg):
+        return 2 * dnde_g_pi0(eg, self.mx / 2)
+
+    def __dnde_photon_pi0g(self, eg):
+        return dnde_g_pi0(eg, (self.mx ** 2 + m_pi0 ** 2) / (2.0 * self.mx))
+
+    def __dnde_photon_pipi(self, eg):
+        return 2 * dnde_g_pi(eg, self.mx / 2) + self._dnde_ap_scalar(eg, m_pi)
+
     def set_spectrum_funcs(self):
         """
         Sets gamma ray spectrum functions.
         """
+        funcs = dict()
+
         if self.fs == "e e":
-
-            def dnde_g(e_g):
-                return self._dnde_ap_fermion(e_g, m_e)
-
+            funcs[self.fs] = lambda eg: self.__dnde_photon_ee(eg)
         elif self.fs == "mu mu":
-
-            def dnde_g(e_g):
-                return 2 * dnde_g_mu(e_g, self.mx / 2) + self._dnde_ap_fermion(
-                    e_g, m_mu
-                )
-
+            funcs[self.fs] = lambda eg: self.__dnde_photon_mumu(eg)
         elif self.fs == "pi0 pi0":
-
-            def dnde_g(e_g):
-                return 2 * dnde_g_pi0(e_g, self.mx / 2)
-
+            funcs[self.fs] = lambda eg: self.__dnde_photon_pi0pi0(eg)
         elif self.fs == "pi0 g":
-
-            def dnde_g(e_g):
-                return dnde_g_pi0(e_g, (self.mx ** 2 + m_pi0 ** 2) / (2.0 * self.mx))
-
+            funcs[self.fs] = lambda eg: self.__dnde_photon_pi0g(eg)
         elif self.fs == "pi pi":
+            funcs[self.fs] = lambda eg: self.__dnde_photon_pipi(eg)
 
-            def dnde_g(e_g):
-                return 2 * dnde_g_pi(e_g, self.mx / 2) + self._dnde_ap_scalar(e_g, m_pi)
-
-        else:
-            # Final state produces no photons
-            self._spectrum_funcs = lambda: {}
-            return
-
-        self._spectrum_funcs = lambda: {self.fs: dnde_g}
+        self._spectrum_funcs = lambda: funcs
 
     def set_gamma_ray_line_energies(self):
+        lines = dict()
+
         if self.fs == "g g":
-            self._gamma_ray_line_energies = lambda: {"g g": self.mx / 2}
+            lines[self.fs] = self.mx / 2
         elif self.fs == "pi0 g":
-            self._gamma_ray_line_energies = lambda: {
-                "pi0 g": (self.mx ** 2 - m_pi0 ** 2) / (2.0 * self.mx)
-            }
-        else:
-            self._gamma_ray_line_energies = lambda: {}
+            lines[self.fs] = (self.mx ** 2 - m_pi0 ** 2) / (2.0 * self.mx)
+
+        self._gamma_ray_line_energies = lambda: lines
+
+    def __dnde_positron_mumu(self, ep):
+        if self.mx < self.fs_mass:
+            return 0.0
+        return dnde_p_mu(ep, self.mx / 2.0)
+
+    def __dnde_positron_pipi(self, ep):
+        if self.mx < self.fs_mass:
+            return 0.0
+        return dnde_p_pi(ep, self.mx / 2.0)
 
     def set_positron_spectrum_funcs(self):
+        funcs = dict()
+
         if self.fs == "mu mu":
-
-            def dnde_p(e_p):
-                if self.mx < self.fs_mass:
-                    return 0.0
-                return dnde_p_mu(e_p, self.mx / 2.0)
-
+            funcs[self.fs] = lambda ep: self.__dnde_positron_mumu(ep)
         elif self.fs == "pi pi":
+            funcs[self.fs] = lambda ep: self.__dnde_positron_pipi(ep)
 
-            def dnde_p(e_p):
-                if self.mx < self.fs_mass:
-                    return 0.0
-                return dnde_p_pi(e_p, self.mx / 2.0)
-
-        else:
-            # Final state produces no positrons
-            self._positron_spectrum_funcs = lambda: {}
-            return
-
-        self._positron_spectrum_funcs = lambda: {self.fs: dnde_p}
+        self._positron_spectrum_funcs = lambda: funcs
 
     def set_positron_line_energies(self):
+        lines = dict()
+
         if self.fs == "e e":
-            self._positron_line_energies = lambda: {"e e": self.mx / 2.0}
-        else:
-            self._positron_line_energies = lambda: {}
+            lines[self.fs] = self.mx / 2.0
+
+        self._positron_line_energies = lambda: lines
 
     def _dnde_ap_scalar(self, e_g, m_scalar):
         def fn(e_g):

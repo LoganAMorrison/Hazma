@@ -4,6 +4,11 @@
 # author : Logan Morrison and Adam Coogan
 # date : December 2017
 
+from typing import Union, List, Callable, Optional, overload
+
+import numpy as np
+from numpy.typing import NDArray
+
 from hazma import rambo
 from hazma._gamma_ray.gamma_ray_generator import (
     gamma,
@@ -12,18 +17,50 @@ from hazma._gamma_ray.gamma_ray_generator import (
 from hazma.field_theory_helper_functions.common_functions import (
     cross_section_prefactor,
 )
-import numpy as np
+from hazma.utils import RealArray, RealOrRealArray
+
+SquaredMatrixElement = Callable[[RealArray], float]
+
+
+def __flat_squared_matrix_element(_: RealArray) -> float:
+    return 1.0
+
+
+@overload
+def gamma_ray_decay(
+    particles: Union[List[str], NDArray[np.str_]],
+    cme: float,
+    photon_energies: float,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_ps_pts: int = 1000,
+    num_bins: int = 25,
+    verbose: bool = False,
+) -> float:
+    ...
+
+
+@overload
+def gamma_ray_decay(
+    particles: Union[List[str], NDArray[np.str_]],
+    cme: float,
+    photon_energies: RealArray,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_ps_pts: int = 1000,
+    num_bins: int = 25,
+    verbose: bool = False,
+) -> RealArray:
+    ...
 
 
 def gamma_ray_decay(
-    particles,
-    cme,
-    photon_energies,
-    mat_elem_sqrd=lambda k_list: 1.0,
-    num_ps_pts=1000,
-    num_bins=25,
-    verbose=False,
-):
+    particles: Union[List[str], NDArray[np.str_]],
+    cme: float,
+    photon_energies: RealOrRealArray,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_ps_pts: int = 1000,
+    num_bins: int = 25,
+    verbose: bool = False,
+) -> RealOrRealArray:
     r"""Returns gamma ray spectrum from the decay of a set of particles.
 
     This function works by running the Monte-Carlo algorithm RAMBO on the
@@ -86,7 +123,12 @@ def gamma_ray_decay(
         gamma_ray_decay(particles, cme, photon_energies)
 
     """
-    if type(particles) == str:
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
+
+    if isinstance(particles, str):
         particles = [particles]
 
     particles = np.array(particles)
@@ -95,19 +137,28 @@ def gamma_ray_decay(
         return gamma(
             particles,
             cme,
-            photon_energies,
-            mat_elem_sqrd=mat_elem_sqrd,
+            np.array(photon_energies),
+            mat_elem_sqrd=msqrd,
             num_ps_pts=num_ps_pts,
             num_bins=num_bins,
             verbose=verbose,
         )
-    return gamma_point(
-        particles, cme, photon_energies, mat_elem_sqrd, num_ps_pts, num_bins
-    )
+    elif isinstance(photon_energies, float):
+        return gamma_point(particles, cme, photon_energies, msqrd, num_ps_pts, num_bins)
+    else:
+        raise ValueError(
+            f"Invalid type for 'photon_energies': {type(photon_energies)}."
+        )
 
 
 def __gamma_ray_fsr(
-    photon_energy, cme, isp_masses, fsp_masses, non_rad, msqrd, nevents=1000
+    photon_energy: float,
+    cme: float,
+    isp_masses: Union[List[float], RealArray],
+    fsp_masses: Union[List[float], RealArray],
+    non_rad: float,
+    msqrd: Callable[[RealArray], float],
+    nevents: int = 1000,
 ):
     """
     Compute the gamma-ray spectrum for a given process at specified photon
@@ -194,7 +245,13 @@ def __gamma_ray_fsr(
 
 
 def gamma_ray_fsr(
-    photon_energies, cme, isp_masses, fsp_masses, non_rad, msqrd, nevents=1000
+    photon_energies: Union[float, List[float], RealArray],
+    cme: float,
+    isp_masses: Union[List[float], RealArray],
+    fsp_masses: Union[List[float], RealArray],
+    non_rad: float,
+    msqrd: Callable[[RealArray], float],
+    nevents: int = 1000,
 ):
     """
     Compute the gamma-ray spectrum for a given process at specified photon
@@ -232,7 +289,7 @@ def gamma_ray_fsr(
     assert hasattr(fsp_masses, "__len__"), "`fsp_masses` must be a list."
     assert len(isp_masses) in [1, 2], "`isp_masses` must be of length 1 or 2."
 
-    if hasattr(photon_energies, "__len__"):
+    if isinstance(photon_energies, np.ndarray) or isinstance(photon_energies, list):
         return np.array(
             [
                 __gamma_ray_fsr(
@@ -247,12 +304,17 @@ def gamma_ray_fsr(
                 for e in photon_energies
             ]
         )
-    return __gamma_ray_fsr(
-        photon_energies,
-        cme,
-        isp_masses,
-        fsp_masses,
-        non_rad,
-        msqrd,
-        nevents=nevents,
-    )
+    elif isinstance(photon_energies, float):
+        return __gamma_ray_fsr(
+            photon_energies,
+            cme,
+            isp_masses,
+            fsp_masses,
+            non_rad,
+            msqrd,
+            nevents=nevents,
+        )
+    else:
+        raise ValueError(
+            f"Invalid type for 'photon_energies': {type(photon_energies)}."
+        )

@@ -2,14 +2,30 @@
 Module for computing positron spectra.
 @author: Logan Morrison and Adam Coogan
 """
-
-import numpy as np
+from typing import overload, Union, Callable, List, Optional
 
 from hazma._positron import positron_charged_pion, positron_muon
 from hazma._positron.positron_decay import positron
+from hazma.utils import RealArray, RealOrRealArray
+
+SquaredMatrixElement = Callable[[RealArray], float]
 
 
-def muon(positron_energies, muon_energy):
+def __flat_squared_matrix_element(_: RealArray) -> float:
+    return 1.0
+
+
+@overload
+def muon(positron_energies: float, muon_energy: float) -> float:
+    ...
+
+
+@overload
+def muon(positron_energies: RealArray, muon_energy: float) -> RealArray:
+    ...
+
+
+def muon(positron_energies: RealOrRealArray, muon_energy: float) -> RealOrRealArray:
     """
     Returns the positron spectrum from muon decay.
 
@@ -29,7 +45,19 @@ def muon(positron_energies, muon_energy):
     return positron_muon.muon_positron_spectrum(positron_energies, muon_energy)
 
 
-def charged_pion(positron_energies, pion_energy):
+@overload
+def charged_pion(positron_energies: float, pion_energy: float) -> float:
+    ...
+
+
+@overload
+def charged_pion(positron_energies: RealArray, pion_energy: float) -> RealArray:
+    ...
+
+
+def charged_pion(
+    positron_energies: RealOrRealArray, pion_energy: float
+) -> RealOrRealArray:
     """
     Returns the positron spectrum from the decay of a charged pion.
 
@@ -52,13 +80,13 @@ def charged_pion(positron_energies, pion_energy):
 
 
 def positron_decay(
-    particles,
-    cme,
-    positron_energies,
-    mat_elem_sqrd=lambda _: 1.0,
-    num_ps_pts=1000,
-    num_bins=25,
-):
+    particles: List[str],
+    cme: float,
+    positron_energies: Union[List[float], RealArray],
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_ps_pts: int = 1000,
+    num_bins: int = 25,
+) -> RealArray:
     r"""Returns total gamma ray spectrum from a set of particles.
 
     Parameters
@@ -114,14 +142,18 @@ def positron_decay(
         positron_decay(particles, cme, positron_energies)
 
     """
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
+
     if isinstance(particles, str):
         particles = [particles]
-    particles = np.array(particles)
     return positron(
         particles,
         cme,
         positron_energies,
-        mat_elem_sqrd=mat_elem_sqrd,
+        mat_elem_sqrd=msqrd,
         num_ps_pts=num_ps_pts,
         num_bins=num_bins,
     )

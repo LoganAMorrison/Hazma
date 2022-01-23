@@ -1,16 +1,21 @@
-from typing import Any
+from typing import Callable
+from numpy.typing import NDArray
+import numpy as np
 
-compute_annihilation_cross_section: function
-compute_decay_width: function
-dck: function
-dcp: function
-de: function
-dlk: function
-dm: function
-dnp: function
-dsk: function
-
-def __gen_spec(*args, **kwargs) -> Any: ...
-def __gen_spec_2body(*args, **kwargs) -> Any: ...
-def gamma(*args, **kwargs) -> Any: ...
-def gamma_point(*args, **kwargs) -> Any: ...
+def gamma_point(
+    particles: NDArray[np.str_],
+    cme: float,
+    eng_gam: float,
+    mat_elem_sqrd: Callable[[NDArray[np.float64]], float] = ...,
+    num_ps_pts: int = ...,
+    num_bins: int = ...,
+) -> float: ...
+def gamma(
+    particles: NDArray[np.str_],
+    cme: float,
+    eng_gams: NDArray[np.float64],
+    mat_elem_sqrd: Callable[[NDArray[np.float64]], float] = ...,
+    num_ps_pts: int = ...,
+    num_bins: int = ...,
+    verbose: bool = ...,
+) -> NDArray[np.float64]: ...
