@@ -10,21 +10,32 @@ TODO: Code up specific functions for cross-section
       functions for 2->3 processes.
 
 """
-from hazma.phase_space_helper_functions import generator
-from hazma.phase_space_helper_functions import histogram
-from hazma.phase_space_helper_functions.modifiers import apply_matrix_elem
-import numpy as np
-import multiprocessing as mp
+from typing import Union, List, Optional, Callable
 import warnings
+import multiprocessing as mp
+
+import numpy as np
+
+from hazma._phase_space import generator
+from hazma._phase_space import histogram
+from hazma._phase_space.modifiers import apply_matrix_elem
 
 from hazma.hazma_errors import RamboCMETooSmall
 
 from hazma.field_theory_helper_functions.common_functions import (
     cross_section_prefactor,
 )
+from hazma.utils import RealArray
+
+MassList = Union[List[float], RealArray]
+SquaredMatrixElement = Callable[[RealArray], float]
 
 
-def generate_phase_space_point(masses, cme):
+def __flat_squared_matrix_element(_: RealArray) -> float:
+    return 1.0
+
+
+def generate_phase_space_point(masses: MassList, cme: float):
     """
     Generate a phase space point given a set of final state particles and a
     given center of mass energy.
@@ -45,16 +56,19 @@ def generate_phase_space_point(masses, cme):
             [ke1, kx1, ky1, kz1, ..., keN, kxN, kyN, kzN, weight]
 
     """
-
     if not hasattr(masses, "__len__"):
-        masses = [masses]
+        masses = [masses]  # type: ignore
 
     masses = np.array(masses)
     return generator.generate_point(masses, cme, len(masses))
 
 
 def generate_phase_space(
-    masses, cme, num_ps_pts=10000, mat_elem_sqrd=lambda klist: 1, num_cpus=None
+    masses: MassList,
+    cme: float,
+    num_ps_pts: int = 10000,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_cpus: Optional[int] = None,
 ):
     """
     Generate a specified number of phase space points given a set of
@@ -69,7 +83,7 @@ def generate_phase_space(
         Center-of-mass-energy of the process.
     num_ps_pts : int {10000]
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1]
+    mat_elem_sqrd : optional, Callable[[np.ndarray], float]
         Function for the matrix element squared.
     num_cpus : int {None]
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -98,7 +112,7 @@ def generate_phase_space(
 
     """
     if not hasattr(masses, "__len__"):
-        masses = [masses]
+        masses = [masses]  # type: ignore
 
     if cme < sum(masses):
         raise RamboCMETooSmall()
@@ -136,7 +150,7 @@ def generate_phase_space(
     # Create a container to store the results from the workers
     job_results = []
     # Run the jobs on 75% of the cpus.
-    for i in range(num_cpus):
+    for _ in range(num_cpus):
         job_results.append(
             pool.apply_async(
                 generator.generate_space,
@@ -151,19 +165,23 @@ def generate_phase_space(
     # Flatten the outer axis to have a list of phase space points.
     points = points.reshape(actual_num_ps_pts, 4 * num_fsp + 1)
     # Resize the weights to have the correct cross section.
-    points = apply_matrix_elem(points, actual_num_ps_pts, num_fsp, mat_elem_sqrd)
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
+    points = apply_matrix_elem(points, actual_num_ps_pts, num_fsp, msqrd)
 
     return points
 
 
 def generate_energy_histogram(
-    masses,
-    cme,
-    num_ps_pts=10000,
-    mat_elem_sqrd=lambda klist: 1,
-    num_bins=25,
-    num_cpus=None,
-    density=False,
+    masses: MassList,
+    cme: float,
+    num_ps_pts: int = 10000,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_bins: int = 25,
+    num_cpus: Optional[int] = None,
+    density: bool = False,
 ):
     """
     Generate energy histograms for each of the final state particles.
@@ -176,7 +194,7 @@ def generate_energy_histogram(
         List of masses of the final state particles.
     cme : double
         Center-of-mass-energy of the process.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda klist: 1]
+    mat_elem_sqrd : optional, Callable[[np.ndarray], float]
         Function for the matrix element squared.
     num_bins : int
         Number of energy bins to use for each of the final state particles.
@@ -218,14 +236,19 @@ def generate_energy_histogram(
 
     """
     if not hasattr(masses, "__len__"):
-        masses = [masses]
+        masses = [masses]  # type: ignore
 
     if cme < sum(masses):
         raise RamboCMETooSmall()
 
     num_fsp = len(masses)
 
-    pts = generate_phase_space(masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
+
+    pts = generate_phase_space(masses, cme, num_ps_pts, msqrd, num_cpus)
 
     actual_num_ps_pts = pts.shape[0]
 
@@ -235,11 +258,11 @@ def generate_energy_histogram(
 
 
 def integrate_over_phase_space(
-    fsp_masses,
-    cme,
-    num_ps_pts=10000,
-    mat_elem_sqrd=lambda momenta: 1,
-    num_cpus=None,
+    fsp_masses: MassList,
+    cme: float,
+    num_ps_pts: int = 10000,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_cpus: Optional[int] = None,
 ):
     """
     Returns the integral over phase space given a squared matrix element, a
@@ -253,7 +276,7 @@ def integrate_over_phase_space(
         Center-of-mass-energy of the process.
     num_ps_pts : int {10000]
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1]
+    mat_elem_sqrd : optional, Callable[[np.ndarray], float]
         Function for the matrix element squared.
     num_cpus : int {None]
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -274,7 +297,11 @@ def integrate_over_phase_space(
         raise RamboCMETooSmall()
 
     num_fsp = len(fsp_masses)
-    points = generate_phase_space(fsp_masses, cme, num_ps_pts, mat_elem_sqrd, num_cpus)
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
+    points = generate_phase_space(fsp_masses, cme, num_ps_pts, msqrd, num_cpus)
     actual_num_ps_pts = len(points[:, 4 * num_fsp])
     weights = points[:, 4 * num_fsp]
     integral = np.average(weights)
@@ -284,12 +311,12 @@ def integrate_over_phase_space(
 
 
 def compute_annihilation_cross_section(
-    isp_masses,
-    fsp_masses,
-    cme,
-    num_ps_pts=10000,
-    mat_elem_sqrd=lambda momenta: 1,
-    num_cpus=None,
+    isp_masses: MassList,
+    fsp_masses: MassList,
+    cme: float,
+    num_ps_pts: int = 10000,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_cpus: Optional[int] = None,
 ):
     """
     Computes the cross section for a given process.
@@ -304,7 +331,7 @@ def compute_annihilation_cross_section(
         Center-of-mass-energy of the process.
     num_ps_pts : int
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1]
+    mat_elem_sqrd : optional, Callable[[np.ndarray], float]
         Function for the matrix element squared.
     num_cpus : int {None]
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -356,11 +383,15 @@ def compute_annihilation_cross_section(
             isp_masses, fsp_masses, cme, num_ps_pts=5000, mat_elem_sqrd=msqrd)
 
     """
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
     integral, std = integrate_over_phase_space(
         fsp_masses,
         cme,
         num_ps_pts=num_ps_pts,
-        mat_elem_sqrd=mat_elem_sqrd,
+        mat_elem_sqrd=msqrd,
         num_cpus=num_cpus,
     )
 
@@ -374,11 +405,11 @@ def compute_annihilation_cross_section(
 
 
 def compute_decay_width(
-    fsp_masses,
-    cme,
-    num_ps_pts=10000,
-    mat_elem_sqrd=lambda momenta: 1,
-    num_cpus=None,
+    fsp_masses: MassList,
+    cme: float,
+    num_ps_pts: int = 10000,
+    mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
+    num_cpus: Optional[int] = None,
 ):
     r"""
     Computes the decay width for a given process.
@@ -391,7 +422,7 @@ def compute_decay_width(
         Center-of-mass-energy of the process.
     num_ps_pts : int
         Total number of phase space points to generate.
-    mat_elem_sqrd : (double)(numpy.ndarray) {lambda momenta: 1]
+    mat_elem_sqrd : optional, Callable[[np.ndarray], float]
         Function for the matrix element squared.
     num_cpus : int {None]
         Number of cpus to use in parallel with rambo. If not specified, 75% of
@@ -434,15 +465,19 @@ def compute_decay_width(
         cme = mmu
         compute_decay_width(fsp_masses, cme, mat_elem_sqrd=msqrd)
     """
+    if mat_elem_sqrd is None:
+        msqrd = __flat_squared_matrix_element
+    else:
+        msqrd = mat_elem_sqrd
     integral, std = integrate_over_phase_space(
         fsp_masses,
         cme,
         num_ps_pts=num_ps_pts,
-        mat_elem_sqrd=mat_elem_sqrd,
+        mat_elem_sqrd=msqrd,
         num_cpus=num_cpus,
     )
 
-    cross_section = integral / (2.0 * cme)
+    width = integral / (2.0 * cme)
     error = std / (2.0 * cme)
 
-    return cross_section, error
+    return width, error

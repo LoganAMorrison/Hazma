@@ -1,0 +1,3 @@
+from typing import Any
+
+def gamma_ray_fsr(*args, **kwargs) -> Any: ...

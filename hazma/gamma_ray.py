@@ -5,7 +5,7 @@
 # date : December 2017
 
 from hazma import rambo
-from hazma.gamma_ray_helper_functions.gamma_ray_generator import (
+from hazma._gamma_ray.gamma_ray_generator import (
     gamma,
     gamma_point,
 )
@@ -148,9 +148,7 @@ def __gamma_ray_fsr(
 
     # Energy of the photon in the rest frame where final state particles
     # (excluding the photon)
-    e_gamma = (photon_energy * _cme) / np.sqrt(
-        _cme * (-2 * photon_energy + _cme)
-    )
+    e_gamma = (photon_energy * _cme) / np.sqrt(_cme * (-2 * photon_energy + _cme))
     # Total energy of the final state particles (excluding the photon) in their
     # rest frame
     _cme_rf = np.sqrt(_cme * (-2 * photon_energy + _cme))
@@ -175,9 +173,7 @@ def __gamma_ray_fsr(
     ]
 
     # momenta in the rest frame of N + photon
-    fsp_momenta = [
-        np.append(event[:-1], pg) for event, pg in zip(events, g_momenta)
-    ]
+    fsp_momenta = [np.append(event[:-1], pg) for event, pg in zip(events, g_momenta)]
 
     weights = [event[-1] for event in events]
 
@@ -260,4 +256,3 @@ def gamma_ray_fsr(
         msqrd,
         nevents=nevents,
     )
-

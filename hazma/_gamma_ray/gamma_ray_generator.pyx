@@ -22,7 +22,7 @@ from hazma.decay import charged_kaon as dck
 from hazma.decay import long_kaon as dlk
 from hazma.decay import short_kaon as dsk
 
-include "../decay_helper_functions/parameters.pxd"
+include "../_decay/parameters.pxd"
 
 cdef spec_dict = {'muon': dm, 'electron': de, 'neutral_pion': dnp,
                   'neutrino': de,

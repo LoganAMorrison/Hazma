@@ -1,7 +1,15 @@
 import numpy as np
+import numpy.typing as npt
+from typing import Union
 
 from .parameters import alpha_em
 
+# ===================================================================
+# ---- Types --------------------------------------------------------
+# ===================================================================
+
+RealArray = npt.NDArray[np.float64]
+RealOrRealArray = Union[float, RealArray]
 
 # ===================================================================
 # ---- Kinematics ---------------------------------------------------

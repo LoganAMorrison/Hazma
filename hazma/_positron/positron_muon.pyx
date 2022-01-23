@@ -4,7 +4,7 @@ import cython
 from libc.math cimport sqrt
 from scipy.integrate import quad
 
-include "../decay_helper_functions/common.pxd"
+include "../_decay/common.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E

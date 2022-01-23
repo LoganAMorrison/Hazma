@@ -4,13 +4,16 @@ Module for computing decay spectra from a muon and light mesons.
 @author: Logan Morrison and Adam Coogan
 """
 from warnings import warn
+from typing import overload, Optional, List
+
 import numpy as np
-from hazma.decay_helper_functions import decay_long_kaon
-from hazma.decay_helper_functions import decay_charged_pion
-from hazma.decay_helper_functions import decay_charged_kaon
-from hazma.decay_helper_functions import decay_muon
-from hazma.decay_helper_functions import decay_neutral_pion
-from hazma.decay_helper_functions import decay_short_kaon
+from hazma._decay import decay_long_kaon
+from hazma._decay import decay_charged_pion
+from hazma._decay import decay_charged_kaon
+from hazma._decay import decay_muon
+from hazma._decay import decay_neutral_pion
+from hazma._decay import decay_short_kaon
+from hazma.utils import RealArray, RealOrRealArray
 
 
 def __mode_deprecation_warning():
@@ -40,7 +43,17 @@ def __check_modes(modes, availible):
         ), f"Invalid mode {mode} specified. The availible modes are: {availible}"
 
 
-def muon(photon_energies, muon_energy):
+@overload
+def muon(photon_energies: float, muon_energy: float) -> float:
+    ...
+
+
+@overload
+def muon(photon_energies: RealArray, muon_energy: float) -> RealArray:
+    ...
+
+
+def muon(photon_energies: RealOrRealArray, muon_energy: float) -> RealOrRealArray:
     r"""Compute gamma-ray decay spectrum from the muon decay
     :math:`\mu^{\pm} \to e^{\pm} \nu_{e} \nu_{\mu}`.
 
@@ -77,7 +90,19 @@ def muon(photon_energies, muon_energy):
     return decay_muon.muon_decay_spectrum(photon_energies, muon_energy)
 
 
-def neutral_pion(photon_energies, pion_energy):
+@overload
+def neutral_pion(photon_energies: float, pion_energy: float) -> float:
+    ...
+
+
+@overload
+def neutral_pion(photon_energies: RealArray, pion_energy: float) -> RealArray:
+    ...
+
+
+def neutral_pion(
+    photon_energies: RealOrRealArray, pion_energy: float
+) -> RealOrRealArray:
     r"""Compute gamma-ray spectrum from the neutral pion decay
     :math:`\pi^{0} \to \gamma \gamma`.
 
@@ -114,10 +139,32 @@ def neutral_pion(photon_energies, pion_energy):
     return decay_neutral_pion.neutral_pion_decay_spectrum(photon_energies, pion_energy)
 
 
-__CHG_PI_MODES = ["munu", "munug", "enug"]
+def charged_pion_decay_modes() -> List[str]:
+    """
+    Return a list of implemented charged pion radiative decay modes.
+    """
+    return ["munu", "munug", "enug"]
 
 
-def charged_pion(photon_energies, pion_energy, modes=None):
+@overload
+def charged_pion(
+    photon_energies: float, pion_energy: float, modes: Optional[List[str]]
+) -> float:
+    ...
+
+
+@overload
+def charged_pion(
+    photon_energies: RealArray, pion_energy: float, modes: Optional[List[str]]
+) -> RealArray:
+    ...
+
+
+def charged_pion(
+    photon_energies: RealOrRealArray,
+    pion_energy: float,
+    modes: Optional[List[str]] = None,
+) -> RealOrRealArray:
     r"""Compute gamma-ray spectrum from the charged pion decay :math:`\pi^{\pm}
     \to \mu^{\pm} \nu_{\mu} \to e^{\pm} \nu_{e} \nu_{\mu} \gamma`.
 
@@ -153,18 +200,41 @@ def charged_pion(photon_energies, pion_energy, modes=None):
         pion_energy = 1000.
         decay.charged_pion(photon_energies, pion_energy)
     """
-    modes_ = __mode_deprecation_convert(modes, __CHG_PI_MODES)
-    __check_modes(modes_, __CHG_PI_MODES)
+    availible = charged_pion_decay_modes()
+    modes_ = __mode_deprecation_convert(modes, availible)
+    __check_modes(modes_, availible)
 
     return decay_charged_pion.charged_pion_decay_spectrum(
         photon_energies, pion_energy, modes_
     )
 
 
-__CHG_K_MODES = ["0enu", "0munu", "00p", "mmug", "munu", "p0", "p0g", "ppm"]
+def charged_kaon_decay_modes() -> List[str]:
+    """
+    Return a list of implemented charged kaon radiative decay modes.
+    """
+    return ["0enu", "0munu", "00p", "mmug", "munu", "p0", "p0g", "ppm"]
 
 
-def charged_kaon(photon_energies, kaon_energy, modes=None):
+@overload
+def charged_kaon(
+    photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
+) -> float:
+    ...
+
+
+@overload
+def charged_kaon(
+    photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
+) -> RealArray:
+    ...
+
+
+def charged_kaon(
+    photon_energies: RealOrRealArray,
+    kaon_energy: float,
+    modes: Optional[List[str]] = None,
+) -> RealOrRealArray:
     r"""Compute gamma-ray spectrum from charged kaon decay into various final states.
 
     Parameters
@@ -218,18 +288,41 @@ def charged_kaon(photon_energies, kaon_energy, modes=None):
         kaon_energy = 1000.
         decay.charged_kaon(photon_energies, kaon_energy)
     """
-    modes_ = __mode_deprecation_convert(modes, __CHG_K_MODES)
-    __check_modes(modes_, __CHG_K_MODES)
+    availible = charged_kaon_decay_modes()
+    modes_ = __mode_deprecation_convert(modes, availible)
+    __check_modes(modes_, availible)
 
     return decay_charged_kaon.charged_kaon_decay_spectrum(
         photon_energies, kaon_energy, modes_
     )
 
 
-__SHORT_K_MODES = ["00", "pm", "pmg"]
+def short_kaon_decay_modes() -> List[str]:
+    """
+    Return a list of implemented short kaon radiative decay modes.
+    """
+    return ["00", "pm", "pmg"]
 
 
-def short_kaon(photon_energies, kaon_energy, modes=None):
+@overload
+def short_kaon(
+    photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
+) -> float:
+    ...
+
+
+@overload
+def short_kaon(
+    photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
+) -> RealArray:
+    ...
+
+
+def short_kaon(
+    photon_energies: RealOrRealArray,
+    kaon_energy: float,
+    modes: Optional[List[str]] = None,
+) -> RealOrRealArray:
     r"""Compute gamma-ray spectrum from short kaon decay into various final states.
 
     Parameters
@@ -274,18 +367,41 @@ def short_kaon(photon_energies, kaon_energy, modes=None):
         kaon_energy = 1000.
         decay.short_kaon(photon_energies, kaon_energy)
     """
-    modes_ = __mode_deprecation_convert(modes, __SHORT_K_MODES)
-    __check_modes(modes_, __SHORT_K_MODES)
+    availible = short_kaon_decay_modes()
+    modes_ = __mode_deprecation_convert(modes, availible)
+    __check_modes(modes_, availible)
 
     return decay_short_kaon.short_kaon_decay_spectrum(
         photon_energies, kaon_energy, modes_
     )
 
 
-__LONG_K_MODES = ["000", "penu", "penug", "pm0", "pm0g", "pmunu", "pmunug"]
+def long_kaon_decay_modes() -> List[str]:
+    """
+    Return a list of implemented long kaon radiative decay modes.
+    """
+    return ["000", "penu", "penug", "pm0", "pm0g", "pmunu", "pmunug"]
 
 
-def long_kaon(photon_energies, kaon_energy, modes=None):
+@overload
+def long_kaon(
+    photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
+) -> float:
+    ...
+
+
+@overload
+def long_kaon(
+    photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
+) -> RealArray:
+    ...
+
+
+def long_kaon(
+    photon_energies: RealOrRealArray,
+    kaon_energy: float,
+    modes: Optional[List[str]] = None,
+) -> RealOrRealArray:
     r"""Compute gamma-ray spectrum from long kaon decay into various final
     states.
 
@@ -335,15 +451,16 @@ def long_kaon(photon_energies, kaon_energy, modes=None):
     .. math:: K_{L} \to \pi^{+} \pi^{-} \pi^{0}
 
     """
-    modes_ = __mode_deprecation_convert(modes, __LONG_K_MODES)
-    __check_modes(modes_, __LONG_K_MODES)
+    availible = long_kaon_decay_modes()
+    modes_ = __mode_deprecation_convert(modes, availible)
+    __check_modes(modes_, availible)
 
     return decay_long_kaon.long_kaon_decay_spectrum(
         photon_energies, kaon_energy, modes_
     )
 
 
-def electron(photon_energies, _):
+def electron(photon_energies, _: float):
     r"""Compute gamma-ray spectrum from electron decay (returns zero).
 
     The purpose of this function is so we can use the electron as a final

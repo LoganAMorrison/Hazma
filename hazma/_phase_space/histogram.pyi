@@ -1,0 +1,3 @@
+from typing import Any
+
+def space_to_energy_hist(*args, **kwargs) -> Any: ...

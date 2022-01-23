@@ -1,0 +1,3 @@
+from typing import Any
+
+def apply_matrix_elem(*args, **kwargs) -> Any: ...

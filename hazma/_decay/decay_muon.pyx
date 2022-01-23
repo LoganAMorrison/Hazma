@@ -9,9 +9,9 @@ import numpy as np
 cimport numpy as np
 from scipy.integrate import quad
 from libc.math cimport exp, log, M_PI, log10, sqrt
+from libc.float cimport DBL_EPSILON
 from scipy.special.cython_special cimport spence
 import cython
-from functools import partial
 include "common.pxd"
 
 
@@ -19,6 +19,35 @@ include "common.pxd"
 # ===================================================================
 # ---- Pure Cython API functions ------------------------------------
 # ===================================================================
+
+# Computes the muon decay spectrum dN/dE into photons for a muon at 
+# rest.
+
+@cython.cdivision(True)
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef double c_muon_decay_spectrum_point_rest(double egam):
+    cdef double y
+    cdef double r
+    cdef double pre
+    cdef double ym
+    cdef double poly1
+    cdef double poly2
+
+    # Rescaled variables
+    y = 2 * egam / MASS_MU
+    r = (MASS_E / MASS_MU)**2 
+
+    if y <= 0.0 or y >= 1.0 - MASS_E / MASS_MU:
+        return 0.0
+
+    pre = ALPHA_EM / (3.0 * M_PI * y * MASS_MU) 
+
+    ym = 1.0 - y
+    poly1 = -102.0 + 46.0 * y - 101.0 * y**2 + 55.0 * y**3
+    poly2 = 3.0 - 5.0 * y + 6.0 * y**2 - 6.0 * y**3 + 2.0 * y**4
+
+    return pre * (poly1 * ym / 12.0 + poly2 * log(ym / r))
 
 # Computes the muon decay spectrum dN/dE into photons for a boosted
 # muon.
@@ -40,6 +69,11 @@ cdef double c_muon_decay_spectrum_point(double egam, double emu):
 
     if emu < MASS_MU:
         return 0.0
+
+    # If we are sufficiently close to the muon rest-frame, use the 
+    # rest-frame result.
+    if emu - MASS_MU < DBL_EPSILON:
+        return c_muon_decay_spectrum_point_rest(egam)
 
     gamma = emu / MASS_MU
     beta = sqrt(1.0 - (MASS_MU / emu)**2)

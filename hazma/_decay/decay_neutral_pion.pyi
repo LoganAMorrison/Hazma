@@ -1,0 +1,3 @@
+from typing import Any
+
+def neutral_pion_decay_spectrum(*args, **kwargs) -> Any: ...

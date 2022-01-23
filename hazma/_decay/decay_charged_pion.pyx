@@ -1,4 +1,4 @@
-from hazma.decay_helper_functions.decay_muon cimport c_muon_decay_spectrum_point
+from hazma._decay.decay_muon cimport c_muon_decay_spectrum_point
 import numpy as np
 cimport numpy as np
 from scipy.integrate import quad

@@ -1,8 +1,8 @@
 global-include *.txt *.rst *.pyx *.pxd *.c *.md
 include MANIFEST.in
-include hazma/decay_helper_functions/interpolation_data/ckaon/*.dat
-include hazma/decay_helper_functions/interpolation_data/skaon/*.dat
-include hazma/decay_helper_functions/interpolation_data/lkaon/*.dat
+include hazma/_decay/interpolation_data/ckaon/*.dat
+include hazma/_decay/interpolation_data/skaon/*.dat
+include hazma/_decay/interpolation_data/lkaon/*.dat
 include hazma/gamma_ray_data/*.dat
 include hazma/gamma_ray_data/A_eff/*.dat
 include hazma/gamma_ray_data/bg_model/*.dat

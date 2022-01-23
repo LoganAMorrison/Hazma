@@ -11,12 +11,12 @@ import multiprocessing as mp
 from hazma import rambo
 from hazma.rambo import compute_annihilation_cross_section
 from hazma.rambo import compute_decay_width
-from hazma.positron_helper_functions.positron_muon cimport c_muon_positron_spectrum_array
-from hazma.positron_helper_functions.positron_muon cimport c_muon_positron_spectrum_point
-from hazma.positron_helper_functions.positron_charged_pion cimport c_charged_pion_positron_spectrum_array
-from hazma.positron_helper_functions.positron_charged_pion cimport c_charged_pion_positron_spectrum_point
+from hazma._positron.positron_muon cimport c_muon_positron_spectrum_array
+from hazma._positron.positron_muon cimport c_muon_positron_spectrum_point
+from hazma._positron.positron_charged_pion cimport c_charged_pion_positron_spectrum_array
+from hazma._positron.positron_charged_pion cimport c_charged_pion_positron_spectrum_point
 
-include "../decay_helper_functions/common.pxd"
+include "../_decay/common.pxd"
 
 
 cdef int ID_MU = 0

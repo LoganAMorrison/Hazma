@@ -5,8 +5,8 @@ Module for computing positron spectra.
 
 import numpy as np
 
-from hazma.positron_helper_functions import positron_charged_pion, positron_muon
-from hazma.positron_helper_functions.positron_decay import positron
+from hazma._positron import positron_charged_pion, positron_muon
+from hazma._positron.positron_decay import positron
 
 
 def muon(positron_energies, muon_energy):

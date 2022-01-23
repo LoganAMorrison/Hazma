@@ -1,5 +1,5 @@
-from hazma.positron_helper_functions.positron_muon cimport c_muon_positron_spectrum_array
-from hazma.positron_helper_functions.positron_charged_pion cimport c_charged_pion_positron_spectrum_array
+from hazma._positron.positron_muon cimport c_muon_positron_spectrum_array
+from hazma._positron.positron_charged_pion cimport c_charged_pion_positron_spectrum_array
 
 import cython
 import numpy as np
@@ -8,7 +8,7 @@ from scipy.integrate import quad
 
 from libc.math cimport M_PI, sqrt, pow, log10
 
-include "../decay_helper_functions/parameters.pxd"
+include "../_decay/parameters.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E

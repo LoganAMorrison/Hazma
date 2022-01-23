@@ -1,7 +1,7 @@
-from hazma.decay_helper_functions.decay_charged_pion cimport c_charged_pion_decay_spectrum_array
-from hazma.decay_helper_functions.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_array
-from hazma.decay_helper_functions.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_point
-from hazma.decay_helper_functions.decay_muon cimport c_muon_decay_spectrum_array
+from hazma._decay.decay_charged_pion cimport c_charged_pion_decay_spectrum_array
+from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_array
+from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_point
+from hazma._decay.decay_muon cimport c_muon_decay_spectrum_array
 
 import cython
 import numpy as np
@@ -10,7 +10,7 @@ from scipy.integrate import quad
 
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 
-include "../decay_helper_functions/parameters.pxd"
+include "../_decay/parameters.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E

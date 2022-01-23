@@ -34,7 +34,7 @@ EXTENSIONS = []
 
 # Decay helper
 EXTENSIONS += make_extensions(
-    "decay_helper_functions",
+    "_decay",
     [
         "decay_charged_pion",
         "decay_neutral_pion",
@@ -48,12 +48,12 @@ EXTENSIONS += make_extensions(
 
 # Gamma-Ray Helper
 EXTENSIONS += make_extensions(
-    "gamma_ray_helper_functions", ["gamma_ray_generator", "gamma_ray_fsr"], cpp=True
+    "_gamma_ray", ["gamma_ray_generator", "gamma_ray_fsr"], cpp=True
 )
 
 # Phase space
 EXTENSIONS += make_extensions(
-    "phase_space_helper_functions", ["generator", "histogram", "modifiers"], cpp=True
+    "_phase_space", ["generator", "histogram", "modifiers"], cpp=True
 )
 
 # Field Theory helper
@@ -63,9 +63,9 @@ EXTENSIONS += make_extensions(
     cpp=True,
 )
 
-# Positron Helper
+# Positron
 EXTENSIONS += make_extensions(
-    "positron_helper_functions",
+    "_positron",
     ["positron_muon", "positron_charged_pion", "positron_decay"],
 )
 
@@ -119,15 +119,15 @@ setup(
     ext_modules=EXTENSIONS,
     include_dirs=[
         np.get_include(),
-        "hazma/decay_helper_functions",
-        "hazma/positron_helper_functions",
-        "hazma/gamma_ray_helper_functions",
+        "hazma/_decay",
+        "hazma/_positron",
+        "hazma/_gamma_ray",
     ],
     package_data={
         "hazma/cython_utils": ["*.pxd"],
-        "hazma/decay_helper_functions": ["*.pxd"],
-        "hazma/positron_helper_functions": ["*.pxd"],
-        "hazma/gamma_ray_helper_functions": ["*.pxd"],
+        "hazma/_decay": ["*.pxd"],
+        "hazma/_positron": ["*.pxd"],
+        "hazma/_gamma_ray": ["*.pxd"],
     },
     setup_requires=["pytest-runner"],
     install_requires=[

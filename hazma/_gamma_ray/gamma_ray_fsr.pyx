@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 import cython
-from hazma.phase_space_helper_functions.generator cimport c_generate_space
+from hazma._phase_space.generator cimport c_generate_space
 from libc.math cimport M_PI, sqrt, cos, sin
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair

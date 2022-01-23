@@ -1,11 +1,11 @@
-from hazma.positron_helper_functions.positron_muon cimport c_muon_positron_spectrum_array as muspec
+from hazma._positron.positron_muon cimport c_muon_positron_spectrum_array as muspec
 from scipy.integrate import quad
 from libc.math cimport sqrt, pow, log10
 import numpy as np
 cimport numpy as np
 import cython
 
-include "../decay_helper_functions/common.pxd"
+include "../_decay/common.pxd"
 
 cdef double mmu = MASS_MU
 cdef double mpi = MASS_PI

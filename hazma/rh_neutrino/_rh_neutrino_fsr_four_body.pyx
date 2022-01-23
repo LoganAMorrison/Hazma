@@ -3,7 +3,7 @@ This file contains cythonized functions for computing gamma-ray spectra
 from 4-body final states occuring in the right-handed neutrino model.
 """
 
-from hazma.gamma_ray_helper_functions.gamma_ray_fsr cimport c_gamma_ray_fsr
+from hazma._gamma_ray.gamma_ray_fsr cimport c_gamma_ray_fsr
 from libcpp.vector cimport vector
 from libcpp.functional cimport function
 from libc.math cimport sqrt, M_PI
