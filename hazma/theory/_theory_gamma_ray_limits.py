@@ -1,8 +1,9 @@
 from math import sqrt, pi
 import numpy as np
-from scipy.optimize import root_scalar
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import chi2, norm
+
+# from scipy.optimize import root_scalar
 
 
 class TheoryGammaRayLimits:
@@ -65,32 +66,38 @@ class TheoryGammaRayLimits:
 
         # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
         # self-conjugate.
-        if self.kind == "ann":
+        if self.kind == "ann":  # type: ignore
             f_dm = 2.0
             dm_flux_factor = (
                 measurement.target.J
                 * measurement.target.dOmega
-                / (2.0 * f_dm * self.mx ** 2 * 4.0 * pi)
+                / (2.0 * f_dm * self.mx ** 2 * 4.0 * pi)  # type: ignore
             )
 
             # TODO: this should depend on the target!
-            e_cm = 2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx ** 2)
-            dnde_conv = self.total_conv_spectrum_fn(
+            e_cm = (
+                2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx ** 2)  # type: ignore
+            )
+            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, e_cm, measurement.energy_res
             )
-        elif self.kind == "dec":
+        elif self.kind == "dec":  # type: ignore
             # e_cm = self.mx
             dm_flux_factor = (
-                measurement.target.D * measurement.target.dOmega / (self.mx * 4.0 * pi)
+                measurement.target.D
+                * measurement.target.dOmega
+                / (self.mx * 4.0 * pi)  # type: ignore
             )
-            dnde_conv = self.total_conv_spectrum_fn(
+            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, measurement.energy_res
             )
 
         # Integrated flux (excluding <sigma v>) from DM processes in each bin
         Phi_dms_un = []
         for e_low, e_high in zip(measurement.e_lows, measurement.e_highs):
-            Phi_dms_un.append(dm_flux_factor * dnde_conv.integral(e_low, e_high))
+            Phi_dms_un.append(
+                dm_flux_factor * dnde_conv.integral(e_low, e_high)  # type: ignore
+            )
         Phi_dms_un = np.array(Phi_dms_un)
 
         if method == "1bin":
@@ -188,38 +195,48 @@ class TheoryGammaRayLimits:
             Smallest-detectable thermally averaged total cross section in units
             of cm^3 / s.
         """
+        debug_msgs  # To make linter shut up
+
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
 
-        if self.kind == "ann":
+        if self.kind == "ann":  # type: ignore
             # TODO: this should depend on the target!
-            e_cm = 2.0 * self.mx * (1.0 + 0.5 * target.vx ** 2)
-            dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, e_cm, energy_res)
-        elif self.kind == "dec":
-            dnde_conv = self.total_conv_spectrum_fn(e_min, e_max, energy_res)
+            e_cm = 2.0 * self.mx * (1.0 + 0.5 * target.vx ** 2)  # type: ignore
+            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
+                e_min, e_max, e_cm, energy_res
+            )
+        elif self.kind == "dec":  # type: ignore
+            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
+                e_min, e_max, energy_res
+            )
 
         # Insert appropriate prefactors to convert result to <sigma v>_tot. The
         # factor of 2 is from the DM not being self-conjugate.
-        if self.kind == "ann":
+        if self.kind == "ann":  # type: ignore
             f_dm = 2.0  # TODO: refactor
-            prefactor = 2.0 * f_dm * self.mx ** 2
+            prefactor = 2.0 * f_dm * self.mx ** 2  # type: ignore
         else:
-            prefactor = self.mx
+            prefactor = self.mx  # type: ignore
 
         prefactor *= (
             4.0
             * pi
             / (
                 np.sqrt(T_obs * target.dOmega)
-                * (target.J if self.kind == "ann" else target.D)
+                * (target.J if self.kind == "ann" else target.D)  # type: ignore
             )
         )
 
         # Integrating these gives the number of signal and background photons,
         # up to normalization
-        integrand_S = self._get_product_spline(dnde_conv, A_eff, dnde_conv.get_knots())
+        integrand_S = self._get_product_spline(
+            dnde_conv,  # type: ignore
+            A_eff,
+            dnde_conv.get_knots(),  # type: ignore
+        )
         integrand_B = self._get_product_spline(
-            bg_model.dPhi_dEdOmega, A_eff, dnde_conv.get_knots()
+            bg_model.dPhi_dEdOmega, A_eff, dnde_conv.get_knots()  # type: ignore
         )
 
         # Optimize energy window
@@ -228,7 +245,8 @@ class TheoryGammaRayLimits:
 
         snrs = []
         for i, e_low in enumerate(e_grid[:-1]):
-            for e_high in e_grid[i + 1 :]:
+            j = i + 1
+            for e_high in e_grid[j:]:
                 assert e_low < e_high, (e_low, ", ", e_high)
                 I_S_val = integrand_S.integral(e_low, e_high)
                 I_B_val = integrand_B.integral(e_low, e_high)
@@ -240,5 +258,5 @@ class TheoryGammaRayLimits:
         try:
             bound = prefactor * n_sigma / np.nanmax(snrs[:, 2])
             return bound
-        except:
+        finally:
             return np.inf

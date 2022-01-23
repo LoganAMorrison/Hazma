@@ -41,7 +41,7 @@ class TheoryCMB:
         # else:
         #     factor = 0.5
 
-        return p_ann * self.mx / self.f_eff(x_kd)
+        return p_ann * self.mx / self.f_eff(x_kd)  # type: ignore
 
     def _f_eff_helper(self, fs, x_kd=1e-4, mode="quad"):
         """Computes f_eff^gg or f_eff^ep for DM annihilation.
@@ -68,18 +68,18 @@ class TheoryCMB:
 
         if fs == "g g":
             f_eff_base = f_eff_g
-            lines = self.gamma_ray_lines(e_cm)
-            spec_fn = self.total_spectrum
+            lines = self.gamma_ray_lines(e_cm)  # type: ignore
+            spec_fn = self.total_spectrum  # type: ignore
         elif fs == "e e":
             f_eff_base = f_eff_ep
-            lines = self.positron_lines(e_cm)
+            lines = self.positron_lines(e_cm)  # type: ignore
 
             def spec_fn(es, e_cm):
-                return 2.0 * self.total_positron_spectrum(es, e_cm)
+                return 2.0 * self.total_positron_spectrum(es, e_cm)  # type: ignore
 
         # Lower bound on integrals. Upper bound is many GeV, so we don't need
         # to do error checking.
-        e_min = f_eff_base.x[0]
+        e_min = f_eff_base.x[0]  # type: ignore
 
         # Continuum contributions from photons. Create an interpolator to avoid
         # recomputing spectrum.
@@ -88,33 +88,39 @@ class TheoryCMB:
             # time-consuming to try integrating the spectrum function. Instead,
             # simultaneously compute the spectrum over a grid of points.
             es = np.geomspace(e_min, e_cm / 2, 1000)
-            dnde_tot = spec_fn(es, e_cm)
+            dnde_tot = spec_fn(es, e_cm)  # type: ignore
             spec_interp = interp1d(es, dnde_tot, bounds_error=False, fill_value=0.0)
 
             def integrand(e):
-                return e * spec_interp(e) * f_eff_base(e)
+                return e * spec_interp(e) * f_eff_base(e)  # type: ignore
 
             f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0, epsrel=1e-3)[0] / e_cm
         elif mode == "quad":
             # If RAMBO is not needed to compute the spectrum, this will give
             # much cleaner results.
             def integrand(e):
-                return e * spec_fn(e, e_cm) * f_eff_base(e)
+                return e * spec_fn(e, e_cm) * f_eff_base(e)  # type: ignore
 
             f_eff_dm = quad(integrand, e_min, e_cm / 2, epsabs=0, epsrel=1e-3)[0] / e_cm
 
         # Sum up line contributions
         f_eff_line_dm = 0.0
-        for ch, line in lines.items():
+        for ch, line in lines.items():  # type: ignore
             energy = line["energy"]
 
             # Make sure the base f_eff is defined at this energy
             if energy > e_min:
                 bf = line["bf"]
                 multiplicity = 2.0 if ch == fs else 1.0
-                f_eff_line_dm += energy * bf * f_eff_base(energy) * multiplicity / e_cm
+                f_eff_line_dm += (
+                    energy
+                    * bf
+                    * f_eff_base(energy)  # type: ignore
+                    * multiplicity
+                    / e_cm
+                )
 
-        return f_eff_dm + f_eff_line_dm
+        return f_eff_dm + f_eff_line_dm  # type: ignore
 
     def f_eff_g(self, x_kd=1e-4):
         return self._f_eff_helper("g g", x_kd, "quad")
@@ -123,7 +129,7 @@ class TheoryCMB:
         return self._f_eff_helper("e e", x_kd, "quad")
 
     def f_eff(self, x_kd=1.0e-4):
-        """
+        r"""
         Computes :math:`f_{\mathrm{eff}}` the efficiency with which dark matter
         annihilations around recombination inject energy into the thermal
         plasma.

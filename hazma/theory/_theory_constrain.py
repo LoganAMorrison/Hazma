@@ -116,21 +116,24 @@ class TheoryConstrain:
         """
         e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
 
-        if self.kind == "ann":
-            e_cm = 2 * self.mx * (1 + 0.5 * measurement.target.vx ** 2)
+        if self.kind == "ann":  # type: ignore
+            e_cm = 2 * self.mx * (1 + 0.5 * measurement.target.vx ** 2)  # type: ignore
             f_dm = 2.0
             # Approximate <sigma v> ~ sigma * v
-            sv = self.annihilation_cross_sections(e_cm)["total"] * measurement.target.vx
+            sv = (
+                self.annihilation_cross_sections(e_cm)["total"]  # type: ignore
+                * measurement.target.vx
+            )
             dm_flux_factor = (
                 sv
                 * measurement.target.J
                 * measurement.target.dOmega
-                / (2 * f_dm * self.mx ** 2 * 4 * np.pi)
+                / (2 * f_dm * self.mx ** 2 * 4 * np.pi)  # type: ignore
             )
-            dnde_conv = self.total_conv_spectrum_fn(
+            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, e_cm, measurement.energy_res
             )
-        elif self.kind == "dec":
+        elif self.kind == "dec":  # type: ignore
             raise NotImplementedError()
 
         def bin_constraint(e_low, e_high, phi, sigma):
@@ -178,9 +181,10 @@ class TheoryConstrain:
         method="1bin",
         ls_or_img="image",
     ):
-        """Computes constraints from gamma ray experiments in the p1-p2 plane.
-        """
+        """Computes constraints from gamma ray experiments in the p1-p2 plane."""
         img = np.zeros([len(p2_vals), len(p1_vals)])
+
+        ls_or_img  # making linter shut up
 
         # Loop over the parameter values
         for idx_p1, p1_val in np.ndenumerate(p1_vals):
@@ -196,8 +200,7 @@ class TheoryConstrain:
         return img
 
     def _img_to_ls(self, p1_vals, p2_vals, img):
-        """Finds levels sets for an image.
-        """
+        """Finds levels sets for an image."""
         contours_raw = measure.find_contours(img, level=0)
         contours = []
 
