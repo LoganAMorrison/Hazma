@@ -13,10 +13,26 @@ class PBH(TheoryDec):
     """
 
     def __init__(
-        self, mx, f_pbh_dummy=1, spectrum_kind="secondary", bh_secondary=False
-    ):
+        self,
+        mx: float,
+        f_pbh_dummy=1,
+        spectrum_kind: str = "secondary",
+        bh_secondary: bool = False,
+    ) -> None:
         """
-        :param mx: PBH mass in MeV
+        Create a PBH object used to constrain the fraction PBHs make of DM.
+
+        Parameters
+        ----------
+        mx: float
+            PBH mass in MeV
+        f_pbh_dummy: float
+            Fraction of PBH in DM ?
+        spectrum_kind: str
+            Type of radiation spectrum used for PBH evaporation. Options are
+            'primary' or 'secondary'.
+        bh_secondary: bool
+            If true, BlackHawk v1 secondary is used.
         """
         self.f_pbh_dummy = f_pbh_dummy
 
@@ -50,16 +66,18 @@ class PBH(TheoryDec):
                 return float(sig) * 10 ** float(exponent)
 
         df = pd.read_csv(fname)
-        self._mxs = df.columns[2:].map(to_float).values * g_to_MeV
-        self._e_gams = df.iloc[:, 1].values * 1e3  # GeV -> MeV
-        self._d2n_dedt = df.iloc[:, 2:].values * 1e-3  # 1/GeV -> 1/MeV
+        self._mxs = df.columns[2:].map(to_float).values * g_to_MeV  # type:ignore
+        # GeV -> MeV
+        self._e_gams = df.iloc[:, 1].values * 1e3  # type:ignore
+        # 1/GeV -> 1/MeV
+        self._d2n_dedt = df.iloc[:, 2:].values * 1e-3  # type:ignore
 
     @property
     def bh_secondary(self):
         return self._bh_secondary
 
     @bh_secondary.setter
-    def bh_secondary(self, bhs):
+    def bh_secondary(self, _):
         raise RuntimeError("cannot set bh_secondary")
 
     @property
@@ -67,7 +85,7 @@ class PBH(TheoryDec):
         return self._spectrum_kind
 
     @spectrum_kind.setter
-    def spectrum_kind(self, sk):
+    def spectrum_kind(self, _):
         raise RuntimeError("cannot set spectrum_kind")
 
     @property
