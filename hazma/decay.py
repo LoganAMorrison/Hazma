@@ -22,7 +22,7 @@ def __mode_deprecation_warning():
     warn(msg)
 
 
-def __mode_deprecation_convert(modes, availible):
+def __mode_deprecation_convert(modes, availible: List[str]) -> List[str]:
     if modes is None:
         return availible
     elif isinstance(modes, str):

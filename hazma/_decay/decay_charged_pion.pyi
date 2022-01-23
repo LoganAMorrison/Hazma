@@ -1,5 +1,12 @@
-from typing import Any
+from typing import overload, List
+from numpy.typing import NDArray
+import numpy as np
 
-quad: function
-
-def charged_pion_decay_spectrum(*args, **kwargs) -> Any: ...
+@overload
+def charged_pion_decay_spectrum(
+    egam: float, epi: float, modes: List[str] = ...
+) -> float: ...
+@overload
+def charged_pion_decay_spectrum(
+    egam: NDArray[np.float64], epi: float, modes: List[str] = ...
+) -> NDArray[np.float64]: ...

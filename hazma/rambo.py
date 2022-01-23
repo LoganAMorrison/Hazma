@@ -10,7 +10,7 @@ TODO: Code up specific functions for cross-section
       functions for 2->3 processes.
 
 """
-from typing import Union, List, Optional, Callable
+from typing import Union, List, Optional, Callable, Tuple
 import warnings
 import multiprocessing as mp
 
@@ -35,7 +35,7 @@ def __flat_squared_matrix_element(_: RealArray) -> float:
     return 1.0
 
 
-def generate_phase_space_point(masses: MassList, cme: float):
+def generate_phase_space_point(masses: MassList, cme: float) -> RealArray:
     """
     Generate a phase space point given a set of final state particles and a
     given center of mass energy.
@@ -69,7 +69,7 @@ def generate_phase_space(
     num_ps_pts: int = 10000,
     mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
     num_cpus: Optional[int] = None,
-):
+) -> RealArray:
     """
     Generate a specified number of phase space points given a set of
     final state particles and a given center of mass energy.
@@ -263,7 +263,7 @@ def integrate_over_phase_space(
     num_ps_pts: int = 10000,
     mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
     num_cpus: Optional[int] = None,
-):
+) -> Tuple[float, float]:
     """
     Returns the integral over phase space given a squared matrix element, a
     set of final state particle masses and a given energy.
@@ -307,7 +307,7 @@ def integrate_over_phase_space(
     integral = np.average(weights)
     std = np.std(weights) / np.sqrt(actual_num_ps_pts)
 
-    return integral, std
+    return integral, std  # type: ignore
 
 
 def compute_annihilation_cross_section(
@@ -317,7 +317,7 @@ def compute_annihilation_cross_section(
     num_ps_pts: int = 10000,
     mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
     num_cpus: Optional[int] = None,
-):
+) -> Tuple[float, float]:
     """
     Computes the cross section for a given process.
 
@@ -410,7 +410,7 @@ def compute_decay_width(
     num_ps_pts: int = 10000,
     mat_elem_sqrd: Optional[SquaredMatrixElement] = None,
     num_cpus: Optional[int] = None,
-):
+) -> Tuple[float, float]:
     r"""
     Computes the decay width for a given process.
 
