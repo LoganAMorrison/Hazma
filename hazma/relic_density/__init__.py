@@ -1,12 +1,17 @@
+import os
+import warnings
+from typing import overload, Optional
+
 import numpy as np
 from scipy.special import kn, k1
-from scipy.integrate import quad  # simps
+from scipy.integrate import quad
+from scipy.integrate._ivp.ivp import OdeResult
 from scipy.interpolate import UnivariateSpline
 from scipy.integrate import solve_ivp
 from scipy.optimize import root_scalar
+
 from hazma.parameters import plank_mass, rho_crit, sm_entropy_density_today
-import os
-import warnings
+from hazma.utils import RealArray, RealOrRealArray
 
 _this_dir, _ = os.path.split(__file__)
 _fname_sm_data = os.path.join(_this_dir, "smdof.dat")
@@ -17,16 +22,24 @@ _sm_heff = _sm_data[2]
 
 
 # Interpolating function for SM's sqrt(g_star)
-_sm_sqrt_gstar = UnivariateSpline(
-    _sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3
-)
+_sm_sqrt_gstar = UnivariateSpline(_sm_tempetatures, _sm_sqrt_gstars, s=0, ext=3)
 # Interpolating function for SM d.o.f. stored in entropy: h_eff
 _sm_heff = UnivariateSpline(_sm_tempetatures, _sm_heff, s=0, ext=3)
 # derivative of SM d.o.f. in entropy w.r.t temperature
 _sm_heff_deriv = _sm_heff.derivative(n=1)
 
 
-def sm_dof_entropy(T):
+@overload
+def sm_dof_entropy(T: float) -> float:
+    ...
+
+
+@overload
+def sm_dof_entropy(T: RealArray) -> RealArray:
+    ...
+
+
+def sm_dof_entropy(T: RealOrRealArray) -> RealOrRealArray:
     """
     Compute the d.o.f. stored in entropy of the Standard Model.
 
@@ -40,10 +53,20 @@ def sm_dof_entropy(T):
     heff: float
         d.o.f. stored in entropy
     """
-    return _sm_heff(T)
+    return _sm_heff(T)  # type: ignore
 
 
-def sm_sqrt_gstar(T):
+@overload
+def sm_sqrt_gstar(T: float) -> float:
+    ...
+
+
+@overload
+def sm_sqrt_gstar(T: RealArray) -> RealArray:
+    ...
+
+
+def sm_sqrt_gstar(T: RealOrRealArray) -> RealOrRealArray:
     """
     Compute the square-root of g-star of the Standard Model.
 
@@ -57,10 +80,20 @@ def sm_sqrt_gstar(T):
     sqrt_gstar: float
         square-root of g-star of the Standard Model
     """
-    return _sm_sqrt_gstar(T)
+    return _sm_sqrt_gstar(T)  # type: ignore
 
 
-def sm_entropy_density(T):
+@overload
+def sm_entropy_density(T: float) -> float:
+    ...
+
+
+@overload
+def sm_entropy_density(T: RealArray) -> RealArray:
+    ...
+
+
+def sm_entropy_density(T: RealOrRealArray) -> RealOrRealArray:
     """
     Compute the entropy density of the Standard Model.
 
@@ -77,19 +110,29 @@ def sm_entropy_density(T):
     return 2.0 * np.pi ** 2 / 45.0 * sm_dof_entropy(T) * T ** 3
 
 
-def sm_entropy_density_deriv(T):
+@overload
+def sm_entropy_density_deriv(T: float) -> float:
+    ...
+
+
+@overload
+def sm_entropy_density_deriv(T: RealArray) -> RealArray:
+    ...
+
+
+def sm_entropy_density_deriv(T: RealOrRealArray) -> RealOrRealArray:
     """
     Compute the derivative of the entropy density of the Standard Model w.r.t.
     temperature.
 
     Parameters
     ----------
-    T: float
+    T: float or array
         Standard Model temperature.
 
     Returns
     -------
-    ds: float
+    ds: float or array
         derivative of the entropy density of the Standard Model w.r.t
         temperature.
     """
@@ -97,12 +140,26 @@ def sm_entropy_density_deriv(T):
         2.0
         * np.pi ** 2
         / 45.0
-        * (_sm_heff_deriv(T) * T + 3.0 * sm_dof_entropy(T))
+        * (_sm_heff_deriv(T) * T + 3.0 * sm_dof_entropy(T))  # type: ignore
         * T ** 2
     )
 
 
-def neq(Ts, mass, g=2.0, is_fermion=True):
+@overload
+def neq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def neq(
+    Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray:
+    ...
+
+
+def neq(
+    Ts: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the equilibrium number density of a particle.
 
@@ -146,7 +203,21 @@ def neq(Ts, mass, g=2.0, is_fermion=True):
     return g * nbar * Ts ** 3
 
 
-def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
+@overload
+def neq_deriv(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def neq_deriv(
+    Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray:
+    ...
+
+
+def neq_deriv(
+    Ts: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the derivative of the equilibrium number density of a particle
     w.r.t. its temperature.
@@ -184,11 +255,7 @@ def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
             if hasattr(Ts, "__len__")
             else np.array([1, 2, 3, 4, 5])
         )
-        dnbar = (
-            xs ** 2
-            * np.sum(eta ** ns * k1(ns * xs), axis=0)
-            / (2.0 * np.pi ** 2)
-        )
+        dnbar = xs ** 2 * np.sum(eta ** ns * k1(ns * xs), axis=0) / (2.0 * np.pi ** 2)
         nbar = (
             xs ** 2
             * np.sum(eta ** (ns + 1) / ns * kn(2, ns * xs), axis=0)
@@ -198,7 +265,21 @@ def neq_deriv(Ts, mass, g=2.0, is_fermion=True):
     return g * Ts * (3.0 * Ts * nbar - mass * dnbar)
 
 
-def yeq(T, mass, g=2.0, is_fermion=True):
+@overload
+def yeq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def yeq(
+    Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray:
+    ...
+
+
+def yeq(
+    Ts: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the equilibrium value of `Y`, the comoving number density
     `neq / s` where `s` is the SM entropy density.
@@ -220,13 +301,27 @@ def yeq(T, mass, g=2.0, is_fermion=True):
     yeq: float or array-like
         Equilibrium number density divided by the SM entropy density.
     """
-    Ts = np.array(T) if hasattr(T, "__len__") else T
+    Ts = np.array(Ts) if hasattr(Ts, "__len__") else Ts
     s = sm_entropy_density(Ts)
     _neq = neq(Ts, mass, g=g, is_fermion=is_fermion)
     return _neq / s
 
 
-def yeq_deriv(T, mass, g=2.0, is_fermion=True):
+@overload
+def yeq_deriv(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def yeq_deriv(
+    Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray:
+    ...
+
+
+def yeq_deriv(
+    Ts: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the derivative of of `yeq` w.r.t. temperature.
 
@@ -247,7 +342,7 @@ def yeq_deriv(T, mass, g=2.0, is_fermion=True):
     dyeq: float or array-like
         Derivative of `yeq` w.r.t. temperature.
     """
-    Ts = np.array(T) if hasattr(T, "__len__") else T
+    Ts = np.array(Ts) if hasattr(Ts, "__len__") else Ts
     s = sm_entropy_density(Ts)
     ds = sm_entropy_density_deriv(Ts)
     _neq = neq(Ts, mass, g=g, is_fermion=is_fermion)
@@ -255,7 +350,21 @@ def yeq_deriv(T, mass, g=2.0, is_fermion=True):
     return (_dneq * s - ds * _neq) / s ** 2
 
 
-def yeq_derivx(x, mass, g=2.0, is_fermion=True):
+@overload
+def yeq_derivx(x: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def yeq_derivx(
+    x: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray:
+    ...
+
+
+def yeq_derivx(
+    x: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the derivative of of `yeq` w.r.t. x = `mass/temperature`.
 
@@ -280,7 +389,19 @@ def yeq_derivx(x, mass, g=2.0, is_fermion=True):
     return -mass * dyeq / x ** 2
 
 
-def weq(T, mass, g=2.0, is_fermion=True):
+@overload
+def weq(T: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
+    ...
+
+
+@overload
+def weq(T: RealArray, mass: float, g: float = ..., is_fermion: bool = ...) -> RealArray:
+    ...
+
+
+def weq(
+    T: RealOrRealArray, mass: float, g: float = 2.0, is_fermion: bool = True
+) -> RealOrRealArray:
     """
     Compute the equilibrium value of `W`, the natural log of the
     comoving number density `Y` = `neq / s` where `s` is the
@@ -309,7 +430,7 @@ def weq(T, mass, g=2.0, is_fermion=True):
     return np.log(_neq / s) if _neq > 0.0 else -np.inf
 
 
-def thermal_cross_section_integrand(z, x, model):
+def thermal_cross_section_integrand(z: float, x: float, model) -> float:
     """
     Compute the integrand of the thermally average cross section for the dark
     matter particle of the given model.
@@ -334,7 +455,7 @@ def thermal_cross_section_integrand(z, x, model):
     return sig * kernal
 
 
-def thermal_cross_section(x, model):
+def thermal_cross_section(x: float, model) -> float:
     """
     Compute the thermally average cross section for the dark
     matter particle of the given model.
@@ -384,7 +505,7 @@ def thermal_cross_section(x, model):
 # ------------------------------- --------------- #
 
 
-def boltzmann_eqn(logx, w, model):
+def boltzmann_eqn(logx: float, w: RealArray, model) -> RealArray:
     """
     Compute the RHS of the Boltzmann equation. Here the RHS is
     given by dW/dlogx, with W = log(neq / sm_entropy_density).
@@ -416,7 +537,7 @@ def boltzmann_eqn(logx, w, model):
     return np.array([pf * sv * (np.exp(w[0]) - np.exp(2.0 * _weq - w[0]))])
 
 
-def jacobian_boltzmann_eqn(logx, w, model):
+def jacobian_boltzmann_eqn(logx, w: RealArray, model) -> RealArray:
     """
     Compute the Jacobian of the RHS of the Boltzmann equation with
     respect to the log of the comoving equilibrium number density.
@@ -449,8 +570,13 @@ def jacobian_boltzmann_eqn(logx, w, model):
 
 
 def solve_boltzmann(
-    model, x0=1.0, xf=None, method="Radau", rtol=1e-5, atol=1e-3
-):
+    model,
+    x0: float = 1.0,
+    xf: Optional[float] = None,
+    method: str = "Radau",
+    rtol: float = 1e-5,
+    atol: float = 1e-3,
+) -> OdeResult:
     """
     Solve the Boltzmann equation for the log of the dark matter
     comoving number density as a function of `logx` - which is the
@@ -500,7 +626,14 @@ def solve_boltzmann(
         return jacobian_boltzmann_eqn(logx, w, model)
 
     return solve_ivp(
-        f, (logx0, logxf), [w0], method=method, jac=jac, vectorized=True
+        f,
+        (logx0, logxf),
+        [w0],
+        method=method,
+        jac=jac,
+        vectorized=True,
+        rtol=rtol,
+        atol=atol,
     )
 
 
@@ -510,7 +643,7 @@ def solve_boltzmann(
 # ----------------------------------------------------------- #
 
 
-def xstar_root_eqn(xstar, model, delta=None):
+def xstar_root_eqn(xstar: float, model, delta: Optional[float] = None) -> float:
     """
     Returns residual of root equation used to solve for x_star.
 
@@ -546,7 +679,7 @@ def xstar_root_eqn(xstar, model, delta=None):
     return xstar ** 2 * dyeq + lam * deltabar * tcs * _yeq ** 2
 
 
-def compute_xstar(model, delta=None):
+def compute_xstar(model, delta: Optional[float] = None) -> float:
     """
     Computes to value of `xstar`: the value of dm_mass / temperature such that
     the DM begins to freeze out.
@@ -567,12 +700,10 @@ def compute_xstar(model, delta=None):
     xstar: float
         Value of mass / temperature at which DM begins to freeze-out.
     """
-    return root_scalar(
-        xstar_root_eqn, bracket=(0.01, 100.0), args=(model, delta)
-    ).root
+    return root_scalar(xstar_root_eqn, bracket=(0.01, 100.0), args=(model, delta)).root
 
 
-def compute_alpha(model, xstar):
+def compute_alpha(model, xstar: float) -> float:
     """
     Computes the value of the integral of RHS of the Boltzmann equation with
     Yeq set to zero from x_{\\star} to x_{\\mathrm{f.o.}}.
@@ -588,16 +719,21 @@ def compute_alpha(model, xstar):
     pf = np.sqrt(np.pi / 45.0) * model.mx * plank_mass
 
     def integrand(x):
-        return (
-            sm_sqrt_gstar(model.mx / x)
-            * thermal_cross_section(x, model)
-            / x ** 2
-        )
+        return sm_sqrt_gstar(model.mx / x) * thermal_cross_section(x, model) / x ** 2
 
     return pf * quad(integrand, xstar, 100 * xstar)[0]
 
 
-def relic_density(model, semi_analytic=True, **kwargs):
+def relic_density(
+    model,
+    semi_analytic: bool = True,
+    delta: Optional[float] = None,
+    x0: float = 1.0,
+    xf: Optional[float] = None,
+    method: str = "Radau",
+    rtol: float = 1e-5,
+    atol: float = 1e-3,
+) -> float:
     """
     Solves the Boltzmann equation and returns the relic density
     computed from the final dark matter comoving number density.
@@ -614,31 +750,34 @@ def relic_density(model, semi_analytic=True, **kwargs):
     semi_analytic: bool
         If `True`, the relic density is computed using semi-analyticall
         methods, otherwise the Boltzmann equation is numerically solved.
-    kwargs: dict
-        If `semi_analtyical` is `True`, the accepted kwargs are:
-            delta: float, optional
-                Value of `delta` assumed for when DM begins to freeze out.
-                Default value is the solution to
-                delta * (2 + delta) / (1 + delta) = 1, i.e.,
-                delta = (sqrt(5) - 1) / 2 = 0.618033988749895. See Eqn.(13) of
-                arXiv:1204.3622v3 for details and other used values of delta.
-                Value of xstar is logarithmically sensitive to this number.
-
-        If `semi_analytical` is `False`, accepted kwargs are:
-            x0: float, optional
-                Initial value of x = mass / temperature. Default is `1.0`.
-            xf: float, optional
-                Final value of x = mass / temperature. Default is `1000`
-                times the initial starting value.
-            method: string, optional
-                Method used to solve the Boltzmann equation. Default is
-                'Radau'.
-            rtol: float, optional
-                Relative tolerance used to solve the Boltzmann equation.
-                Default is `1e-3`.
-            atol: float, optional
-                Absolute tolerance used to solve the Boltzmann equation.
-                Default is `1e-6`.
+    delta: float, optional
+        Ignored if 'semi_analytic' is True.
+        Value of `delta` assumed for when DM begins to freeze out.
+        Default value is the solution to:
+            delta * (2 + delta) / (1 + delta) = 1,
+        i.e.,
+            delta = (sqrt(5) - 1) / 2 = 0.618033988749895.
+        See Eqn.(13) of arXiv:1204.3622v3 for details and other used values of delta.
+        Note: value of xstar is logarithmically sensitive to this number.
+    x0: float, optional
+        Initial value of x = mass / temperature. Default is `1.0`.
+        Ignored if 'semi_analytic' is True.
+    xf: float, optional
+        Final value of x = mass / temperature. Default is `1000`
+        times the initial starting value.
+        Ignored if 'semi_analytic' is True.
+    method: string, optional
+        Method used to solve the Boltzmann equation. Default is
+        'Radau'.
+        Ignored if 'semi_analytic' is True.
+    rtol: float, optional
+        Relative tolerance used to solve the Boltzmann equation.
+        Default is `1e-3`.
+        Ignored if 'semi_analytic' is True.
+    atol: float, optional
+        Absolute tolerance used to solve the Boltzmann equation.
+        Default is `1e-6`.
+        Ignored if 'semi_analytic' is True.
 
     Returns
     -------
@@ -652,24 +791,13 @@ def relic_density(model, semi_analytic=True, **kwargs):
             warnings.filterwarnings(
                 "ignore", r"divide by zero encountered in double_scalars"
             )
-            warnings.filterwarnings(
-                "ignore", r"overflow encountered in double_scalars"
-            )
-            delta = kwargs["delta"] if ("delta" in kwargs) else None
+            warnings.filterwarnings("ignore", r"overflow encountered in double_scalars")
             xstar = compute_xstar(model, delta=delta)
             alpha = compute_alpha(model, xstar)
         ystar = yeq(model.mx / xstar, model.mx)
         Y0 = ystar / (1 + ystar * alpha)
     else:
-        x0 = kwargs["x0"] if ("x0" in kwargs) else 1.0
-        xf = kwargs["xf"] if ("xf" in kwargs) else None
-        method = kwargs["method"] if ("method" in kwargs) else "Radau"
-        rtol = kwargs["rtol"] if ("rtol" in kwargs) else 1e-5
-        atol = kwargs["atol"] if ("atol" in kwargs) else 1e-3
-        sol = solve_boltzmann(
-            model, x0=x0, xf=xf, method=method, rtol=rtol, atol=atol
-        )
-
+        sol = solve_boltzmann(model, x0=x0, xf=xf, method=method, rtol=rtol, atol=atol)
         Y0 = np.exp(sol.y[0, -1])
 
     return Y0 * model.mx * sm_entropy_density_today / rho_crit
