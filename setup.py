@@ -31,6 +31,8 @@ def make_extensions(module, names, cpp=False):
 
 EXTENSIONS = []
 
+# Cython utilities
+EXTENSIONS += make_extensions("_utils", ["boost", "kinematics"])
 
 # Decay helper
 EXTENSIONS += make_extensions(
@@ -68,6 +70,13 @@ EXTENSIONS += make_extensions(
     "_positron",
     ["positron_muon", "positron_charged_pion", "positron_decay"],
 )
+
+# Neutrino
+EXTENSIONS += make_extensions(
+    "_neutrino",
+    ["neutrino", "muon", "charged_pion"],
+)
+
 
 # Scalar mediator
 EXTENSIONS += make_extensions(
@@ -119,14 +128,17 @@ setup(
     ext_modules=EXTENSIONS,
     include_dirs=[
         np.get_include(),
+        "hazma/_utils",
         "hazma/_decay",
         "hazma/_positron",
+        "hazma/_neutrino",
         "hazma/_gamma_ray",
     ],
     package_data={
-        "hazma/cython_utils": ["*.pxd"],
+        "hazma/_utils": ["*.pxd"],
         "hazma/_decay": ["*.pxd"],
         "hazma/_positron": ["*.pxd"],
+        "hazma/_neutrino": ["*.pxd"],
         "hazma/_gamma_ray": ["*.pxd"],
     },
     setup_requires=["pytest-runner"],
