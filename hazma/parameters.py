@@ -8,21 +8,24 @@ Physics constants and utility functions.
 
 # Masses (MeV)
 higgs_mass = 125.1e3
-electron_mass = 0.510998928  # electron
-muon_mass = 105.6583715  # muon
-neutral_pion_mass = 134.9766  # neutral pion
-charged_pion_mass = 139.57018  # charged pion
-neutral_kaon_mass = 497.611  # neutral kaon
-long_kaon_mass = 497.614
-charged_kaon_mass = 493.677  # charged Kaon
-eta_mass = 547.862  # eta
-eta_prime_mass = 957.78  # eta prime
-rho_mass = 775.26  # rho
-omega_mass = 782.66
-phi_mass = 1019.461  # phi
+electron_mass = 0.5109989461  # m[e-] = 0.5109989461 ± 3.1e-09
+muon_mass = 105.6583745  # m[mu-] = 105.6583745 ± 2.4e-06
+tau_mass = 1776.86  # m[tau-] = 1776.86 ± 0.12
+neutral_pion_mass = 134.9768  # m[pi0] = 134.9768 ± 0.0005
+charged_pion_mass = 139.57039  # m[pi+] = 139.57039 ± 0.00018
+eta_mass = 547.862  # m[eta] = 547.862 ± 0.017
+eta_prime_mass = 957.78  # m[eta'(958)] = 957.78 ± 0.06
+charged_kaon_mass = 493.677  # m[K+] = 493.677 ± 0.016
+neutral_kaon_mass = 497.611  # m[K0] = 497.611 ± 0.013
+long_kaon_mass = 497.611  # m[K(L)0] = 497.611 ± 0.013
+short_kaon_mass = 497.611  # m[K(S)0] = 497.611 ± 0.013
+rho_mass = 775.26  # m[rho(770)0] = 775.26 ± 0.23
+omega_mass = 782.66  # m[omega(782)] = 782.66 ± 0.13
+phi_mass = 1019.461  # m[phi(1020)] = 1019.461 ± 0.016
 charged_B_mass = 5279.29  # B^+ meson
 pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.0
 kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.0
+
 
 # Quark masses in MS-bar scheme
 up_quark_mass = 2.3
