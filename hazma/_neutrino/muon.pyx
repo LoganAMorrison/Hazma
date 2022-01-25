@@ -7,7 +7,8 @@ cimport numpy as np
 import cython
 from libc.math cimport log, sqrt
 from libc.float cimport DBL_EPSILON
-include "../_decay/common.pxd"
+from hazma._neutrino.neutrino cimport NeutrinoSpectrumPoint, new_neutrino_spectrum_point
+include "../_utils/constants.pxd"  
 
 
 # ===================================================================
@@ -17,7 +18,7 @@ include "../_decay/common.pxd"
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef double c_muon_decay_spectrum_point_rest(double enu):
+cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point_rest(double enu):
     """
     Compute the muon decay spectrum into a single neutrino (either an
     electron or muon neutrino) from a muon at rest.
@@ -34,14 +35,16 @@ cdef double c_muon_decay_spectrum_point_rest(double enu):
     """
     cdef double num
     cdef double den
+    cdef double dnde
     cdef double y
     cdef double r
+    cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
 
     y = 2.0 * enu / MASS_MU
     r = MASS_E / MASS_MU
 
     if y <= 0.0 or y >= 1 - r**2:
-        return 0.0
+        return result
 
     num = 24.0 * y ** 2 * (-1.0 + r ** 2 + y) ** 2
     den = (
@@ -49,14 +52,19 @@ cdef double c_muon_decay_spectrum_point_rest(double enu):
         * (-1.0 + y)
         * (-1.0 + 8.0 * r ** 2 - 8.0 * r ** 6 + r ** 8 + 12.0 * r ** 4 * log(r ** 2))
     )
+    
+    dnde = num / den
 
-    return num / den
+    result.electron = dnde
+    result.muon = dnde
+
+    return result
 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef double c_muon_decay_spectrum_point(double enu, double emu):
+cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point(double enu, double emu):
     """
     Compute the boosted muon decay spectrum into a single neutrino (either an
     electron or muon neutrino) given the neutrino energy and muon energy.
@@ -76,10 +84,12 @@ cdef double c_muon_decay_spectrum_point(double enu, double emu):
     """
     cdef double num
     cdef double den
+    cdef double dnde
     cdef double y
     cdef double r
     cdef double wp
     cdef double g
+    cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
 
 
     # If we are sufficiently close to the muon rest-frame, use the 
@@ -94,7 +104,7 @@ cdef double c_muon_decay_spectrum_point(double enu, double emu):
     
     # Bounds on the neutrino energy
     if y <= 0.0 or y >= (1 - r**2) * (1.0 + b):
-        return 0.0
+        return result
 
     # Upper bound on the angular integration variable depends on the
     # neutrino energy.
@@ -119,13 +129,18 @@ cdef double c_muon_decay_spectrum_point(double enu, double emu):
 
     den = b * (-1.0 + 8.0 * r ** 2 - 8.0 * r ** 6 + r ** 8 + 12.0 * r ** 4 * log(r ** 2))
 
-    return (2.0 / MASS_MU) * num / den
+    dnde = (2.0 / MASS_MU) * num / den
+
+    result.electron = dnde
+    result.muon = dnde
+
+    return result
 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray[np.float64_t,ndim=1] c_muon_decay_spectrum_array(double[:] energies, double emu):
+cdef np.ndarray[np.float64_t,ndim=2] c_muon_decay_spectrum_array(double[:] energies, double emu):
     """
     Compute the boosted muon decay spectrum into a single neutrino (either an
     electron or muon neutrino) given array of neutrino energies and muon energy.
@@ -144,11 +159,15 @@ cdef np.ndarray[np.float64_t,ndim=1] c_muon_decay_spectrum_array(double[:] energ
         energies `energies`.
     """
     cdef int npts = energies.shape[0]
-    spec = np.zeros((npts), dtype=np.float64)
-    cdef double[:] spec_view = spec
+    spec = np.zeros((3, npts), dtype=np.float64)
+    cdef double[:,:] spec_view = spec
+    cdef NeutrinoSpectrumPoint res
 
     for i in range(npts):
-        spec_view[i] = c_muon_decay_spectrum_point(energies[i], emu)
+        res = c_muon_decay_spectrum_point(energies[i], emu)
+        spec_view[0][i] = res.electron
+        spec_view[1][i] = res.muon
+        spec_view[2][i] = res.tau
 
     return spec
 
@@ -157,7 +176,7 @@ cdef np.ndarray[np.float64_t,ndim=1] c_muon_decay_spectrum_array(double[:] energ
 # ---- Python API ---------------------------------------------------
 # ===================================================================
 
-def muon_decay_spectrum(egam, double emu):
+def muon_neutrino_spectrum(egam, double emu):
     """
     Compute the neutrino spectrum dN/dE from the decay of a muon into an electron,
     and two neutrinos.
@@ -169,9 +188,12 @@ def muon_decay_spectrum(egam, double emu):
     emu: float 
         Energy of the muon.
     """
+    cdef NeutrinoSpectrumPoint res
+
     if hasattr(egam, '__len__'):
         energies = np.array(egam)
         assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
         return c_muon_decay_spectrum_array(energies, emu)
     else:
-        return c_muon_decay_spectrum_point(egam, emu)
+        res = c_muon_decay_spectrum_point(egam, emu)
+        return (res.electron, res.muon, res.tau)
