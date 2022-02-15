@@ -5,15 +5,21 @@ Module for computing the neutrino spectrum from a muon decay.
 import numpy as np
 cimport numpy as np
 import cython
-from libc.math cimport log, sqrt
+from libc.math cimport log, sqrt, fmin
 from libc.float cimport DBL_EPSILON
 from hazma._neutrino.neutrino cimport NeutrinoSpectrumPoint, new_neutrino_spectrum_point
-include "../_utils/constants.pxd"  
-
+include "../_utils/constants.pxd"
 
 # ===================================================================
 # ---- Pure Cython API functions ------------------------------------
 # ===================================================================
+
+DEF R = MASS_E / MASS_MU
+DEF R2 = R * R
+DEF R4 = R2 * R2
+DEF R6 = R4 * R2
+# 1 / (1 - 8 r^2 + 8 r^6 - r^8 - 12 r^2 ln(r^2))
+DEF R_FACTOR = 1.0001870858234163 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
@@ -33,30 +39,28 @@ cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point_rest(double enu):
     dnde: double
         Spectrum given a muon at rest and neutrino with energy `enu`.
     """
-    cdef double num
-    cdef double den
-    cdef double dnde
-    cdef double y
-    cdef double r
+    cdef double pre
+    cdef double dndxe
+    cdef double dndxm
+    cdef double common
+    cdef double x
+    cdef double xm
     cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
 
-    y = 2.0 * enu / MASS_MU
-    r = MASS_E / MASS_MU
+    pre = 2.0 / MASS_MU
+    x = pre * enu
 
-    if y <= 0.0 or y >= 1 - r**2:
+    if x <= 0.0 or x >= 1 - R**2:
         return result
 
-    num = 24.0 * y ** 2 * (-1.0 + r ** 2 + y) ** 2
-    den = (
-        MASS_MU
-        * (-1.0 + y)
-        * (-1.0 + 8.0 * r ** 2 - 8.0 * r ** 6 + r ** 8 + 12.0 * r ** 4 * log(r ** 2))
-    )
-    
-    dnde = num / den
+    xm = 1.0 - x
+    common = R_FACTOR * x**2 * (1.0 - R**2 - x)**2 / xm
 
-    result.electron = dnde
-    result.muon = dnde
+    dndxe = 12.0 * common
+    dndxm = 2.0 * common * (3.0 + R2 * (3.0 - x) - 5.0 * x + 2.0 * x**2) / xm**2
+
+    result.electron = pre * dndxe
+    result.muon = pre * dndxm
 
     return result
 
@@ -82,57 +86,61 @@ cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point(double enu, double emu):
         Spectrum given a boosted muon with energy `emu` and neutrino with
         energy `enu`.
     """
-    cdef double num
-    cdef double den
-    cdef double dnde
-    cdef double y
-    cdef double r
-    cdef double wp
-    cdef double g
-    cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
-
+    cdef:
+        double e_to_x
+        double pre
+        double xm, xp
+        double xmm, xpm
+        double xmax_rf
+        double x
+        double gam, beta
+        NeutrinoSpectrumPoint result
 
     # If we are sufficiently close to the muon rest-frame, use the 
     # rest-frame result.
     if emu - MASS_MU < DBL_EPSILON:
         return c_muon_decay_spectrum_point_rest(enu)
 
-    y = 2.0 * enu / MASS_MU
-    r = MASS_E / MASS_MU
-    g = emu / MASS_MU
-    b = sqrt(1.0 - (MASS_MU / emu)**2) 
+    result = new_neutrino_spectrum_point()
+
+    # dN/dE = (2 / Q) * dN/dx
+    e_to_x = 2.0 / emu
+
+    x = e_to_x * enu
+    gam = emu / MASS_MU
+    beta = sqrt(1.0 - (MASS_MU / emu)**2)
+    pre = R_FACTOR * e_to_x / (2.0 * beta)
+   
+    # Maximum x in the muon rest-frame
+    xmax_rf = 1 - R**2
     
     # Bounds on the neutrino energy
-    if y <= 0.0 or y >= (1 - r**2) * (1.0 + b):
+    if x <= 0.0 or (1.0 + beta) * xmax_rf <= x:
         return result
 
-    # Upper bound on the angular integration variable depends on the
-    # neutrino energy.
-    if y > (1.0 - r**2) * (1.0 - b):
-        wp = (1.0 - r**2) / (g**2 * y)
-    else:
-        wp = 1.0 + b
+    # Upper and lower bounds on energy integral
+    xm = gam ** 2 * x * (1.0 - beta)
+    xp = fmin(xmax_rf, gam ** 2 * x * (1.0 + beta))
 
-    num = g ** 2 * (-1.0 + b + wp) * y * (
-        6.0 * r ** 4
-        + 6.0 * g ** 2 * r ** 2 * (1.0 - b + wp) * y
-        + g ** 2
-        * y
-        * (
-            -3.0
-            + 3.0 * b
-            - 2.0 * y
-            + (2.0 * (2.0 + wp) * y) / (1.0 + b)
-            + wp * (-3.0 + 2.0 * g ** 2 * wp * y)
-        )
-    ) + 6.0 * r ** 4 * log(((1.0 + b) * (-1.0 + g ** 2 * wp * y)) / (-1.0 - b + y))
+    xmm = 1.0 - xm
+    xpm = 1.0 - xp
+    
+    result.electron = pre * (
+        xm ** 3 * (-4.0 + 3 * xm)
+        + (4 - 3 * xp) * xp ** 3
+        + 6 * R4 * (xm - xp) * (2 + xm + xp)
+        + 8 * R2 * (xm ** 3 - xp ** 3)
+        - 12 * R4 * log(xpm / xmm)
+    )
 
-    den = b * (-1.0 + 8.0 * r ** 2 - 8.0 * r ** 6 + r ** 8 + 12.0 * r ** 4 * log(r ** 2))
-
-    dnde = (2.0 / MASS_MU) * num / den
-
-    result.electron = dnde
-    result.muon = dnde
+    result.muon = pre * (
+        (-2.0 + xm) * xm ** 3
+        - (-2.0 + xp) * xp ** 3
+        + 2.0 * R2 * (xm ** 3 - xp ** 3)
+        + 2.0 * R6 * (-(xm ** 3 / xmm ** 2) + xp ** 3 / xpm ** 2)
+        - (6.0 * R4 * (xm - xp) * (-2 + xp + xm * xpm)) / (xmm * xpm)
+        - 12.0 * R4 * log(xpm / xmm)
+    )
 
     return result
 

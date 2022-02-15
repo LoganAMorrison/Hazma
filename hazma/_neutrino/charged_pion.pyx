@@ -1,5 +1,9 @@
 """
-Module for computing the neutrino spectrum from a muon decay.
+Module for computing the neutrino spectrum from a charged pion decay.
+
+The charged pion decays through:
+    π⁺ -> μ⁺ + νμ
+    π⁺ -> e⁺ + νe
 """
 
 import numpy as np
@@ -22,42 +26,38 @@ include "../_utils/constants.pxd"
 @cython.cdivision(True)
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef double c_integrand_dnde_mu_numu(double z, double enu, double epi):
+cdef double c_integrand_dnde_mu_numu(double e1, int gen):
     """
     Compute the integrand of boost integral for pi -> mu + numu.
 
     Parameters
     ----------
-    z: double
-        Angle muon makes with the z-axis.
-    enu: double
-        Energy of the neutrino.
+    e1: double
+        Neutrino energy in original frame.
+    e2: double
+        Neutrino energy in boosted frame.
     epi: double
         Energy of the pion.
+    gen: int
+        If 1, electron-neutrino contribution is returned. If 2,
+        muon-neutrino contribution is returned.
 
     Returns
     -------
     integrand: double
         The integrand for the boost integral.
     """
-    cdef double b
-    cdef double g
-    cdef double er
-    cdef double r
-    cdef double emu
-    cdef double jac
-    cdef NeutrinoSpectrumPoint res
+    cdef:
+        double emu
+        NeutrinoSpectrumPoint res
 
-    g = boost_gamma(epi, MASS_PI)
-    b = boost_beta(epi, MASS_PI)
     emu = two_body_energy(MASS_PI, MASS_MU, 0.0)
+    res = c_muon_decay_spectrum_point(e1, emu)
 
-    er = g * enu * (1 - b * z)
-    jac = 1.0 / (2.0 * g * (1.0 - b * z))
-
-    res = c_muon_decay_spectrum_point(er, emu)
-
-    return res.muon * jac
+    if gen == 1:
+        return res.electron / e1
+    else:
+        return res.muon / e1
 
 
 @cython.cdivision(True)
@@ -79,45 +79,49 @@ cdef NeutrinoSpectrumPoint c_dnde_mu_numu_point(double enu, double epi):
     dnde: NeutrinoSpectrumPoint
         Structure containing the electron, muon and tau spectra.
     """
-    cdef double emu_rf
-    cdef double enu_rf
-    cdef double b
-    cdef double delta
-    cdef double muon_contrib
-    cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
+    cdef:
+        double emu_rf
+        double enu_rf
+        double beta
+        double gamma
+        double delta
+        double muon_contrib
+        double k
+        # double ep, em
+        double emin, emax
+        double pre
+        NeutrinoSpectrumPoint result
 
     if epi < MASS_PI:
         return result
 
-    emu_rf = two_body_energy(MASS_PI, MASS_MU, 0.0)
-    enu_rf = two_body_energy(MASS_PI, 0.0, MASS_MU)
-
     if epi - MASS_PI < DBL_EPSILON:
+        emu_rf = two_body_energy(MASS_PI, MASS_MU, 0.0)
         result = c_muon_decay_spectrum_point(enu, emu_rf)
-        result.electron = BR_PI_TO_MU_NUMU * result.electron  # electron-neutrino
-        result.muon = BR_PI_TO_MU_NUMU * result.muon
-        result.tau = 0.0
-        return result
+    else:
+        result = new_neutrino_spectrum_point()
 
-    b = boost_beta(epi, MASS_PI)
+        beta = boost_beta(epi, MASS_PI)
+        gamma = 1.0 / sqrt(1.0 - beta * beta)
 
-    # Contribution from pi -> nu_mu + mu
-    delta = boost_delta_function(enu_rf, enu, 0.0, b)
+        # Contribution from pi -> nu_mu + mu
+        enu_rf = two_body_energy(MASS_PI, 0.0, MASS_MU)
+        delta = boost_delta_function(enu_rf, enu, 0.0, beta)
 
-    # Contribution from pi -> nu_mu + (mu -> nu_mu + nu_e + e)
-    muon_contrib = quad(
-        c_integrand_dnde_mu_numu,
-        -1.0,
-        1.0,
-        points=[-1.0, 1.0],
-        args=(enu, epi),
-        epsabs=1e-10,
-        epsrel=1e-5
-    )[0]
+        # Contribution from pi -> nu_mu + (mu -> nu_mu + nu_e + e)
+        emin = enu * gamma * (1.0 - beta)
+        emax = enu * gamma * (1.0 + beta)
 
-    result.electron = BR_PI_TO_MU_NUMU * muon_contrib  # electron-neutrino
-    result.muon = BR_PI_TO_MU_NUMU * (delta + muon_contrib)
-    result.tau = 0.0
+        pre = 0.5 / (gamma * beta)
+
+        muon_contrib_nue = pre * quad(c_integrand_dnde_mu_numu, emin, emax, args=(1,))[0]
+        muon_contrib_numu = pre * quad(c_integrand_dnde_mu_numu, emin, emax, args=(2,))[0]
+
+        result.electron = muon_contrib_nue  # electron-neutrino
+        result.muon = delta + muon_contrib_numu
+
+    result.electron *= BR_PI_TO_MU_NUMU
+    result.muon *= BR_PI_TO_MU_NUMU
 
     return result
 
@@ -141,17 +145,18 @@ cdef NeutrinoSpectrumPoint c_dnde_e_nue_point(double enu, double epi):
     dnde: NeutrinoSpectrumPoint
         Structure containing the electron, muon and tau spectra.
     """
-    cdef double b
-    cdef double enu_rf
-    cdef NeutrinoSpectrumPoint res = new_neutrino_spectrum_point()
+    cdef:
+        double beta
+        double enu_rf
+        NeutrinoSpectrumPoint res = new_neutrino_spectrum_point()
 
     if epi < MASS_PI:
         return res
 
-    b = sqrt(1.0 - (MASS_PI / epi) ** 2)
-    enu_rf = (MASS_PI**2 - MASS_MU**2) / (2.0 * MASS_PI)
+    beta = sqrt(1.0 - (MASS_PI / epi) ** 2)
+    enu_rf = (MASS_PI**2 - MASS_E**2) / (2.0 * MASS_PI)
 
-    res.electron = BR_PI_TO_E_NUE * boost_delta_function(enu_rf, enu, 0.0, b)
+    res.electron = BR_PI_TO_E_NUE * boost_delta_function(enu_rf, enu, 0.0, beta)
 
     return res
 
@@ -180,13 +185,11 @@ cdef NeutrinoSpectrumPoint c_charged_pion_decay_spectrum_point(double enu, doubl
     cdef NeutrinoSpectrumPoint e_nu
     cdef NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
 
-    
     mu_nu = c_dnde_mu_numu_point(enu, epi)
     e_nu = c_dnde_e_nue_point(enu, epi)
 
     result.electron = mu_nu.electron + e_nu.electron
     result.muon = mu_nu.muon + e_nu.muon
-    result.tau = mu_nu.tau + e_nu.tau
 
     return result
 

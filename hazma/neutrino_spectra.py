@@ -3,30 +3,34 @@ Module for computing neutrino spectra.
 @author: Logan Morrison and Adam Coogan
 """
 
-from typing import overload, Optional
+from typing import overload, Optional, Tuple, Union
 
 from hazma._neutrino import muon as __muon
 from hazma._neutrino import charged_pion as __charged_pion
 from hazma.utils import RealArray, RealOrRealArray
 
 
+RealOrTupleOrRealArray = Union[float, Tuple[float, float, float], RealArray]
+RealOrTuple = Union[float, Tuple[float, float, float]]
+
+
 @overload
 def muon(
     neutrino_energies: float, muon_energy: float, flavor: Optional[str] = ...
-) -> float:
+) -> RealOrTuple:
     ...
 
 
 @overload
 def muon(
     neutrino_energies: RealArray, muon_energy: float, flavor: Optional[str] = ...
-) -> RealArray:
+) -> RealOrTupleOrRealArray:
     ...
 
 
 def muon(
     neutrino_energies: RealOrRealArray, muon_energy: float, flavor: Optional[str] = None
-) -> RealOrRealArray:
+) -> RealOrTupleOrRealArray:
     """
     Returns the neutrino spectrum from muon decay.
 
@@ -62,7 +66,7 @@ def muon(
 @overload
 def charged_pion(
     neutrino_energies: float, pion_energy: float, flavor: Optional[str] = ...
-) -> float:
+) -> RealOrTuple:
     ...
 
 
@@ -75,7 +79,7 @@ def charged_pion(
 
 def charged_pion(
     neutrino_energies: RealOrRealArray, pion_energy: float, flavor: Optional[str] = None
-) -> RealOrRealArray:
+) -> RealOrTupleOrRealArray:
     """
     Returns the neutrino spectrum from the decay of a charged pion.
 
