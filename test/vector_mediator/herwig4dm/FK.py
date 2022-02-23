@@ -1,11 +1,25 @@
-from .Resonance import *
-from math import pi
-import math, scipy, scipy.special
+import math
+
+from scipy import special
+import numpy as np
+
+from .Resonance import (
+    MeV,
+    Hhat,
+    H,
+    dHhatds,
+    BreitWignerFW,
+    BreitWignerGS,
+    BreitWignerPWave,
+    gev2nb,
+)
 from . import alpha
+from .masses import mpi, mk0, mk
+
 
 # PDG mass values
-mK0 = 0.497611
-mKp = 0.493677
+# mk0 = 0.497611
+# mk = 0.493677
 
 # parametrization, taken from arXiv:1002.0279 with own fit values
 
@@ -102,20 +116,20 @@ cS_ = 1.0
 
 def spectral(Q):
     Q2 = Q ** 2
-    fk = Fkaon(Q2, 0, mK0, mKp)
+    fk = Fkaon(Q2, 0, mk0, mk)
     return (
         1.0
         / 24.0
-        / pi
-        * (1.0 - (mK0 - mKp) ** 2 / Q2) ** 1.5
-        * (1.0 - (mK0 + mKp) ** 2 / Q2) ** 1.5
+        / np.pi
+        * (1.0 - (mk0 - mk) ** 2 / Q2) ** 1.5
+        * (1.0 - (mk0 + mk) ** 2 / Q2) ** 1.5
         * (fk * fk.conjugate()).real
     )
 
 
 def dBR(Q):
     Q2 = Q ** 2
-    pcm = math.sqrt(0.25 / Q2 * (Q2 - (mK0 + mKp) ** 2) * (Q2 - (mK0 - mKp) ** 2))
+    pcm = math.sqrt(0.25 / Q2 * (Q2 - (mk0 + mk) ** 2) * (Q2 - (mk0 - mk) ** 2))
     pre = (
         brmu
         * 0.5
@@ -126,17 +140,17 @@ def dBR(Q):
         * (2.0 * pcm / Q) ** 2
         * Q
     )
-    fk = Fkaon(Q2, 0, mK0, mKp)
+    fk = Fkaon(Q2, 0, mk0, mk)
     return pre * (fk * fk.conjugate()).real
 
 
 def c_0(b0):
-    ratio = 2.0 / math.sqrt(pi)
+    ratio = 2.0 / math.sqrt(np.pi)
     b1 = b0
     while b1 > 2.0:
         ratio *= (b1 - 1.5) / (b1 - 2.0)
         b1 -= 1.0
-    ratio *= scipy.special.gamma(b1 - 0.5) / scipy.special.gamma(b1 - 1.0)
+    ratio *= special.gamma(b1 - 0.5) / special.gamma(b1 - 1.0)
     return ratio
 
 
@@ -230,7 +244,7 @@ def initialize():
             * (math.cos(phiPhase_[ix]) + complex(0.0, 1.0) * math.sin(phiPhase_[ix]))
         )
     # rho masses and couplings
-    gamB = scipy.special.gamma(2.0 - betaRho_)
+    gamB = special.gamma(2.0 - betaRho_)
     # masses in vectors
     mass_ = [[], [], []]
     width_ = [[], [], []]
@@ -251,11 +265,11 @@ def initialize():
         if ix > 0:
             gamB *= ((1.0 - betaRho_ + float(ix))) / float(ix)
         c_n = (
-            scipy.special.gamma(betaRho_ - 0.5)
+            special.gamma(betaRho_ - 0.5)
             / (0.5 + float(ix))
-            / math.sqrt(pi)
-            * math.sin(pi * (betaRho_ - 1.0 - float(ix)))
-            / pi
+            / math.sqrt(np.pi)
+            * math.sin(np.pi * (betaRho_ - 1.0 - float(ix)))
+            / np.pi
             * gamB
         )
         if ix % 2 != 0:
@@ -269,9 +283,9 @@ def initialize():
             mass_[0].append(rhoMasses_[0] * math.sqrt(1.0 + 2.0 * float(ix)))
             width_[0].append(rhoWidths_[0] / rhoMasses_[0] * mass_[0][-1])
         # parameters for the gs propagators
-        hres_.append(Hhat(mass_[0][-1] ** 2, mass_[0][-1], width_[0][-1], mpi_, mpi_))
-        dh_.append(dHhatds(mass_[0][-1], width_[0][-1], mpi_, mpi_))
-        h0_.append(H(0.0, mass_[0][-1], width_[0][-1], mpi_, mpi_, dh_[-1], hres_[-1]))
+        hres_.append(Hhat(mass_[0][-1] ** 2, mass_[0][-1], width_[0][-1], mpi, mpi))
+        dh_.append(dHhatds(mass_[0][-1], width_[0][-1], mpi, mpi))
+        h0_.append(H(0.0, mass_[0][-1], width_[0][-1], mpi, mpi, dh_[-1], hres_[-1]))
     # reset the parameters for the low lying resonances
     # set the masses and widths
     # couplings
@@ -282,7 +296,7 @@ def initialize():
     coup_[0][len(rhoWgt_)] = 1.0 - total + coup_[0][len(rhoWgt_)]
     crhoextra_ = 1.0 - total + coup_[0][len(rhoWgt_)]
     # omega masses and couplings
-    gamB = scipy.special.gamma(2.0 - betaOmega_)
+    gamB = special.gamma(2.0 - betaOmega_)
     for ix in range(0, nMax_):
         if cI0_ == 0:
             coup_[1] = [0.0] * nMax_
@@ -293,11 +307,11 @@ def initialize():
         if ix > 0:
             gamB *= ((1.0 - betaOmega_ + float(ix))) / float(ix)
         c_n = (
-            scipy.special.gamma(betaOmega_ - 0.5)
+            special.gamma(betaOmega_ - 0.5)
             / (0.5 + float(ix))
-            / math.sqrt(pi)
-            * math.sin(pi * (betaOmega_ - 1.0 - float(ix)))
-            / pi
+            / math.sqrt(np.pi)
+            * math.sin(np.pi * (betaOmega_ - 1.0 - float(ix)))
+            / np.pi
             * gamB
         )
         if ix % 2 != 0:
@@ -319,7 +333,7 @@ def initialize():
     coup_[1][len(omegaWgt_)] = 1.0 - total + coup_[1][len(omegaWgt_)]
     comegaextra_ = 1.0 - total + coup_[1][len(omegaWgt_)]
     # phi masses and couplings
-    gamB = scipy.special.gamma(2.0 - betaPhi_)
+    gamB = special.gamma(2.0 - betaPhi_)
     for ix in range(0, nMax_):
         if cS_ == 0:
             coup_[2] = [0.0] * nMax_
@@ -330,11 +344,11 @@ def initialize():
         if ix > 0:
             gamB *= ((1.0 - betaPhi_ + float(ix))) / float(ix)
         c_n = (
-            scipy.special.gamma(betaPhi_ - 0.5)
+            special.gamma(betaPhi_ - 0.5)
             / (0.5 + float(ix))
-            / math.sqrt(pi)
-            * math.sin(pi * (betaPhi_ - 1.0 - float(ix)))
-            / pi
+            / math.sqrt(np.pi)
+            * math.sin(np.pi * (betaPhi_ - 1.0 - float(ix)))
+            / np.pi
             * gamB
         )
         if ix % 2 != 0:
@@ -362,11 +376,9 @@ def initialize():
 # calculate the form factor for 2Kaons, imode=0: neutral, imode=1: charged
 def Fkaon(q2, imode):
     if imode == 0:
-        mK = mK0
-    elif imode == 1:
-        mK = mKp
-    else:
-        raise ValueError(f"Invalid imode {imode}, {type(imode)}")
+        mK = mk0
+    if imode == 1:
+        mK = mk
     FK = complex(0.0, 0.0)
     for ix in range(0, nMax_):
         # rho exchange
@@ -374,7 +386,7 @@ def Fkaon(q2, imode):
             cI1_
             * coup_[0][ix]
             * BreitWignerGS(
-                q2, mass_[0][ix], width_[0][ix], mpi_, mpi_, h0_[ix], dh_[ix], hres_[ix]
+                q2, mass_[0][ix], width_[0][ix], mpi, mpi, h0_[ix], dh_[ix], hres_[ix]
             )
         )
         if imode != 0:
@@ -403,14 +415,14 @@ def Fkaon(q2, imode):
 def GammaDM(medMass, imode):
     mK = 0.0
     if imode == 0:
-        if medMass < 2 * mK0:
+        if medMass < 2 * mk0:
             return 0
-        mK = mK0
+        mK = mk0
         temp = Fkaon(medMass, imode)
     if imode == 1:
-        if medMass < 2 * mKp:
+        if medMass < 2 * mk:
             return 0
-        mK = mKp
+        mK = mk
         temp = Fkaon(medMass ** 2, imode)
     return (
         1.0
@@ -419,6 +431,7 @@ def GammaDM(medMass, imode):
         * medMass
         * (1 - 4 * mK ** 2 / medMass ** 2) ** 1.5
         * abs(temp) ** 2
+        * gev2nb
     )
 
 
@@ -432,8 +445,9 @@ def sigmaSM0(Q2):
         * math.pi
         * alphaEM ** 2
         / Q2
-        * (1.0 - 4.0 * mK0 ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk0 ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
+        * gev2nb
     )
 
 
@@ -447,7 +461,7 @@ def sigmaSMP(Q2):
         * math.pi
         * alphaEM ** 2
         / Q2
-        * (1.0 - 4.0 * mKp ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
@@ -455,7 +469,7 @@ def sigmaSMP(Q2):
 
 # cross section for DM annihilations to two neutral Kaons
 def sigmaDM0(Q2):
-    if Q2 < 2 * mKp ** 2:
+    if Q2 < 2 * mk ** 2:
         return 0
     cDM = gDM_
     DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
@@ -468,7 +482,7 @@ def sigmaDM0(Q2):
         * DMmed2
         * Q2
         * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mK0 ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk0 ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
@@ -476,7 +490,7 @@ def sigmaDM0(Q2):
 
 # cross section for DM annihilations to two charged Kaons
 def sigmaDMP(Q2):
-    if Q2 < 4 * mKp ** 2:
+    if Q2 < 4 * mk ** 2:
         return 0
     cDM = gDM_
     DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
@@ -489,7 +503,7 @@ def sigmaDMP(Q2):
         * DMmed2
         * Q2
         * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mKp ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )

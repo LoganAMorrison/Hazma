@@ -32,7 +32,7 @@ def make_extensions(module, names, cpp=False):
 EXTENSIONS = []
 
 # Cython utilities
-EXTENSIONS += make_extensions("_utils", ["boost", "kinematics"])
+EXTENSIONS += make_extensions("_utils", ["boost"])
 
 # Decay helper
 EXTENSIONS += make_extensions(

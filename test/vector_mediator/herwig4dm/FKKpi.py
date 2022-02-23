@@ -1,8 +1,14 @@
 # Library to load
-import scipy.integrate as integrate
-import Resonance, alpha, cmath, math
-from scipy.interpolate import interp1d
+from pathlib import Path
+import math
+import cmath
+
+from scipy import integrate
+from scipy import interpolate
 import numpy as np
+
+from . import Resonance
+from . import alpha
 
 
 # masses and width from PDG
@@ -70,20 +76,22 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
     readHadronic_Current()
 
 
-###############################
-### Phase Space Calculation ###
-###############################
-# To check form of integral see eg. PDG eq. (49.22)
-# in Kinematics review of https://pdg.lbl.gov/2021/reviews/contents_sports.html
-# check also eq. (139) of low_energy.pdf notes
+"""
+Phase Space Calculation
 
-# The tricky part is that KKpi consists of several contribution,
-# e.g. K+K0pi- could come from K+(K*- -> K0 pi-) or K0 (K*0 -> K+ pi-)
-# Hence, we cannot simply integrate over the phase space due to the intermediate K* structure,
-# and we have to consider interference terms between both contributions
+To check form of integral see eg. PDG eq. (49.22)
+in Kinematics review of https://pdg.lbl.gov/2021/reviews/contents_sports.html
+check also eq. (139) of low_energy.pdf notes
 
-# low integrand limit on m_23^2
+The tricky part is that KKpi consists of several contribution,
+e.g. K+K0pi- could come from K+(K*- -> K0 pi-) or K0 (K*0 -> K+ pi-)
+Hence, we cannot simply integrate over the phase space due to the intermediate K*
+structure, and we have to consider interference terms between both contributions
+"""
+
+
 def m23_2_low(m12_2):
+    """low integrand limit on m_23^2"""
     m12 = math.sqrt(m12_2)
     E2s = 0.5 * (m12_2 - m1 ** 2 + m2 ** 2) / m12
     E3s = 0.5 * (M ** 2 - m12_2 - m3 ** 2) / m12
@@ -103,8 +111,9 @@ def m23_2_upp(m12_2):
 
 
 # the square of the numerator piece times the phase-space prefactors, see PDG (49.22)
-# the numerator is the contracted Levi-Civita tensor as in eq. (138) of the low_energy.pdf notes
-# it will be useful for the interference term where we cannot simply integrate over one m_ij^2
+# the numerator is the contracted Levi-Civita tensor as in eq. (138) of the
+# low_energy.pdf notes it will be useful for the interference term where we cannot
+# simply integrate over one m_ij^2
 def phase_space(m212, m223):
     num = 0.25 * (
         -(M ** 4 * m2 ** 2)
@@ -228,13 +237,16 @@ def isoSpinAmplitudes(shat):
     return (A0, A1)
 
 
-######################
-### CROSS SECTIONS ###
-######################
+"""
+CROSS SECTIONS
+"""
 
-# cross section for subprocess K* K,
-# either isospin 0 or 1 can be chosen
+
 def sigmaKK(sHat, isospin):
+    """
+    cross section for subprocess K* K,
+    either isospin 0 or 1 can be chosen
+    """
     ecms = math.sqrt(sHat)
     A0, A1 = isoSpinAmplitudes(sHat)
     pre = 0.0
@@ -247,11 +259,11 @@ def sigmaKK(sHat, isospin):
     output = 2.0 * pcm ** 3 / 8.0 / math.pi / ecms * abs(pre) ** 2 / 3
     # initial-state factors
     output *= 32.0 * math.pi ** 2 / sHat * alpha.alphaEM(sHat) ** 2
-    return output * Resonance.gev2nb
+    return output
 
 
 # cross section for KKpi process, phase space integral is input
-def sigmaKKPi(shat, imode, I):
+def sigmaKKPi(shat, imode, ints):
     # prefactor of leptonic current
     pre = 16.0 * math.pi ** 2 * alpha.alphaEM(shat) ** 2 / 3.0 / shat
     # the rest is the hadronic current
@@ -260,7 +272,8 @@ def sigmaKKPi(shat, imode, I):
     A0, A1 = isoSpinAmplitudes(shat)
     amp_12 = 0.0
     amp_23 = 0.0
-    # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's take care of sign
+    # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's
+    # take care of sign
     # K_L K_S pi0
     if imode == 0:
         # amp_12  = 1./math.sqrt(6.)*(A0-A1)
@@ -279,22 +292,26 @@ def sigmaKKPi(shat, imode, I):
         amp_23 = 1.0 / math.sqrt(6.0) * (A0 - A1)
     # put everything together
     Itotal = (
-        I[0] * abs(amp_12) ** 2
-        + I[1] * abs(amp_23) ** 2
-        + 2.0 * (I[2] * amp_12 * amp_23.conjugate()).real
+        ints[0] * abs(amp_12) ** 2
+        + ints[1] * abs(amp_23) ** 2
+        + 2.0 * (ints[2] * amp_12 * amp_23.conjugate()).real
     )
-    return pre * Itotal * Resonance.gev2nb
+    return pre * Itotal
 
 
-################################################
-### cross sections with precalculated values ###
-################################################
+"""
+cross sections with precalculated values
+"""
 
-# use precalculated values to speed up calculation
+
 def readHadronic_Current():
+    """
+    use precalculated values to speed up calculation
+    """
     for imode in range(0, 3):
+        path = Path(__file__).parent.joinpath("KKpi")
         [energies, integral_values] = np.load(
-            "KKpi/KKpi_coefficients_%d.npy" % imode, allow_pickle=True
+            path.joinpath("KKpi_coefficients_{}.npy".format(imode)), allow_pickle=True
         )
         integrals = {}
         for xen in range(0, len(energies)):
@@ -304,13 +321,14 @@ def readHadronic_Current():
         for energy in energies:
             x.append(energy)
             s = energy ** 2
-            I = integrals[energy]
+            ints = integrals[energy]
             pre = 4.0 * g2 ** 2
             # amplitudes
             A0, A1 = isoSpinAmplitudes(s)
             amp_12 = 0.0
             amp_23 = 0.0
-            # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's take care of sign
+            # Used A0, A1 relations like in 1010.4180, although irrelevant since
+            # I1_amp's take care of sign
             # K_L K_S pi0
             if imode == 0:
                 # amp_12  = 1./math.sqrt(6.)*(A0-A1)
@@ -329,156 +347,172 @@ def readHadronic_Current():
                 amp_23 = 1.0 / math.sqrt(6.0) * (A0 - A1)
             # put everything together
             Itotal = (
-                I[0] * abs(amp_12) ** 2
-                + I[1] * abs(amp_23) ** 2
-                + 2.0 * (I[2] * amp_12 * amp_23.conjugate()).real
+                ints[0] * abs(amp_12) ** 2
+                + ints[1] * abs(amp_23) ** 2
+                + 2.0 * (ints[2] * amp_12 * amp_23.conjugate()).real
             )
             y.append(pre * Itotal)
         global hadronic_interpolator_0, hadronic_interpolator_1, hadronic_interpolator_2
         if imode == 0:
-            hadronic_interpolator_0 = interp1d(
+            hadronic_interpolator_0 = interpolate.interp1d(
                 x, y, kind="cubic", fill_value="extrapolate"
             )
         if imode == 1:
-            hadronic_interpolator_1 = interp1d(
+            hadronic_interpolator_1 = interpolate.interp1d(
                 x, y, kind="cubic", fill_value="extrapolate"
             )
         if imode == 2:
-            hadronic_interpolator_2 = interp1d(
+            hadronic_interpolator_2 = interpolate.interp1d(
                 x, y, kind="cubic", fill_value="extrapolate"
             )
 
 
 # SM cross section, e+e- -> KKpi
-def sigmaSM(s, imode):
-    if s <= (2 * mK0 + mpip) ** 2:
-        return 0
-    en = math.sqrt(s)
-    # leptonic initial current contracted
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
-    pre *= 1.0 / math.sqrt(s)
-    if imode == 0:
-        had = abs(hadronic_interpolator_0(en))
-    if imode == 1:
-        had = abs(hadronic_interpolator_1(en))
-    if imode == 2:
-        had = abs(hadronic_interpolator_2(en))
-    return pre * had * Resonance.gev2nb
+# def sigmaSM(s, imode):
+#     if s <= (2 * mK0 + mpip) ** 2:
+#         return 0
+#     en = math.sqrt(s)
+#     # leptonic initial current contracted
+#     pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
+#     pre *= 1.0 / math.sqrt(s)
+#     if imode == 0:
+#         had = abs(hadronic_interpolator_0(en))
+#     if imode == 1:
+#         had = abs(hadronic_interpolator_1(en))
+#     if imode == 2:
+#         had = abs(hadronic_interpolator_2(en))
+#     return pre * had * Resonance.gev2nb
 
 
 # DM DM -> KK pi
-def sigmaDM(s, imode):
-    if s <= (2 * mK0 + mpip) ** 2:
-        return 0
-    en = math.sqrt(s)
-    # Dark prefactor
-    cDM = gDM_
-    DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
-    DMmed2 = abs(DMmed) ** 2
-    pre = DMmed2 * s * (1 + 2 * mDM_ ** 2 / s) / 3.0
-    # phase space
-    pre *= 1.0 / math.sqrt(s)
-    if imode == 0:
-        had = abs(hadronic_interpolator_0(en))
-    if imode == 1:
-        had = abs(hadronic_interpolator_1(en))
-    if imode == 2:
-        had = abs(hadronic_interpolator_2(en))
-    return pre * had * Resonance.gev2nb
+# def sigmaDM(s, imode):
+#     if s <= (2 * mK0 + mpip) ** 2:
+#         return 0
+#     en = math.sqrt(s)
+#     # Dark prefactor
+#     cDM = gDM_
+#     DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+#     DMmed2 = abs(DMmed) ** 2
+#     pre = DMmed2 * s * (1 + 2 * mDM_ ** 2 / s) / 3.0
+#     # phase space
+#     pre *= 1.0 / math.sqrt(s)
+#     if imode == 0:
+#         had = abs(hadronic_interpolator_0(en))
+#     if imode == 1:
+#         had = abs(hadronic_interpolator_1(en))
+#     if imode == 2:
+#         had = abs(hadronic_interpolator_2(en))
+#     return pre * had * Resonance.gev2nb
 
 
 # Mediator -> KK pi
-def GammaDM(mMed, imode):
-    if mMed ** 2 <= (2 * mK0 + mpip) ** 2:
-        return 0
-    # vector spin average
-    pre = 1 / 3.0
-    # phase space
-    pre *= 1.0
-    if imode == 0:
-        had = abs(hadronic_interpolator_0(mMed))
-    if imode == 1:
-        had = abs(hadronic_interpolator_1(mMed))
-    if imode == 2:
-        had = abs(hadronic_interpolator_2(mMed))
-    return pre * had
+# def GammaDM(mMed, imode):
+#     if mMed ** 2 <= (2 * mK0 + mpip) ** 2:
+#         return 0
+#     # vector spin average
+#     pre = 1 / 3.0
+#     # phase space
+#     pre *= 1.0
+#     if imode == 0:
+#         had = abs(hadronic_interpolator_0(mMed))
+#     if imode == 1:
+#         had = abs(hadronic_interpolator_1(mMed))
+#     if imode == 2:
+#         had = abs(hadronic_interpolator_2(mMed))
+#     return pre * had
 
 
 ##########################################################
 # cross sections where we don't use precalculated values #
 ##########################################################
 
-# # cross-section for several modes, mode 0: KSKLpi0, mode 1: KpKmpi0 , mode 2: Kp pi- K0/Km pi+ K0
-# def sigmaSM(shat,imode) :
-#     I = calculateIntegrals(shat,imode)
-#     return sigmaKKPi(shat,imode,I)
-
-# def GammaDM(mMed, imode) :
-#     if mMed**2<=(2*mK0+mpip)**2: return 0
-#     I = calculateIntegrals(mMed**2,imode)
-#     # vector spin average
-#     pre = 1/3.
-#     #phase space
-#     pre *= (4.*g2**2/mMed)*mMed
-#     # amplitudes
-#     A0,A1 = isoSpinAmplitudes(mMed**2)
-#     amp_12  = 0.
-#     amp_23  = 0.
-#     # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's take care of sign
-#     # K_L K_S pi0
-#     if(imode==0) :
-#         #amp_12  = 1./math.sqrt(6.)*(A0-A1)
-#         amp_12  = 1./math.sqrt(6.)*(A0+A1)
-#         amp_23  = amp_12
-#     # K+ K- pi0
-#     elif(imode==1) :
-#         #amp_12  = 1./math.sqrt(6.)*(A0+A1)
-#         amp_12  = 1./math.sqrt(6.)*(A0-A1)
-#         amp_23  = amp_12
-#     # K+pi-K0
-#     elif(imode==2) :
-#         # as two charge modes
-#         pre *=2
-#         amp_12 = 1./math.sqrt(6.)*(A0+A1)
-#         amp_23 = 1./math.sqrt(6.)*(A0-A1)
-#     # put everything together
-#     Itotal = I[0]*abs(amp_12)**2+I[1]*abs(amp_23)**2+2.*(I[2]*amp_12*amp_23.conjugate()).real
-#     return pre*Itotal*Resonance.gev2nb
+# cross-section for several modes,
+# mode 0: KSKLpi0,
+# mode 1: KpKmpi0,
+# mode 2: Kp pi- K0/Km pi+ K0
+def sigmaSM(shat, imode):
+    ints = calculateIntegrals(shat, imode)
+    return sigmaKKPi(shat, imode, ints)
 
 
-# def sigmaDM(shat,imode) :
-#     I = calculateIntegrals(shat,imode)
-#     return sigmaKKPiDM(shat,imode,I)
+def GammaDM(mMed, imode):
+    if mMed ** 2 <= (2 * mK0 + mpip) ** 2:
+        return 0
+    ints = calculateIntegrals(mMed ** 2, imode)
+    # vector spin average
+    pre = 1 / 3.0
+    # phase space
+    pre *= (4.0 * g2 ** 2 / mMed) * mMed
+    # amplitudes
+    A0, A1 = isoSpinAmplitudes(mMed ** 2)
+    amp_12 = 0.0
+    amp_23 = 0.0
+    # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's
+    # take care of sign
+    # K_L K_S pi0
+    if imode == 0:
+        # amp_12  = 1./math.sqrt(6.)*(A0-A1)
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 + A1)
+        amp_23 = amp_12
+    # K+ K- pi0
+    elif imode == 1:
+        # amp_12  = 1./math.sqrt(6.)*(A0+A1)
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 - A1)
+        amp_23 = amp_12
+    # K+pi-K0
+    elif imode == 2:
+        # as two charge modes
+        pre *= 2
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 + A1)
+        amp_23 = 1.0 / math.sqrt(6.0) * (A0 - A1)
+    # put everything together
+    Itotal = (
+        ints[0] * abs(amp_12) ** 2
+        + ints[1] * abs(amp_23) ** 2
+        + 2.0 * (ints[2] * amp_12 * amp_23.conjugate()).real
+    )
+    return pre * Itotal
 
-# def sigmaKKPiDM(shat,imode,I) :
-#     # Dark prefactor
-#     cDM = gDM_
-#     DMmed = cDM/(shat-mMed_**2+complex(0.,1.)*mMed_*wMed_)
-#     DMmed2 = abs(DMmed)**2
-#     pre = DMmed2*shat*(1+2*mDM_**2/shat)/3.
-#     #phase space
-#     pre *= 4.*g2**2/math.sqrt(shat)
-#     # amplitudes
-#     A0,A1 = isoSpinAmplitudes(shat)
-#     amp_12  = 0.
-#     amp_23  = 0.
-#     # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's take care of sign
-#     # K_L K_S pi0
-#     if(imode==0) :
-#         #amp_12  = 1./math.sqrt(6.)*(A0-A1)
-#         amp_12  = 1./math.sqrt(6.)*(A0+A1)
-#         amp_23  = amp_12
-#     # K+ K- pi0
-#     elif(imode==1) :
-#         #amp_12  = 1./math.sqrt(6.)*(A0+A1)
-#         amp_12  = 1./math.sqrt(6.)*(A0-A1)
-#         amp_23  = amp_12
-#     # K+pi-K0
-#     elif(imode==2) :
-#         # as two charge modes
-#         pre *=2
-#         amp_12 = 1./math.sqrt(6.)*(A0+A1)
-#         amp_23 = 1./math.sqrt(6.)*(A0-A1)
-#     # put everything together
-#     Itotal = I[0]*abs(amp_12)**2+I[1]*abs(amp_23)**2+2.*(I[2]*amp_12*amp_23.conjugate()).real
-#     return pre*Itotal*Resonance.gev2nb
+
+def sigmaDM(shat, imode):
+    ints = calculateIntegrals(shat, imode)
+    return sigmaKKPiDM(shat, imode, ints)
+
+
+def sigmaKKPiDM(shat, imode, ints):
+    # Dark prefactor
+    cDM = gDM_
+    DMmed = cDM / (shat - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed2 = abs(DMmed) ** 2
+    pre = DMmed2 * shat * (1 + 2 * mDM_ ** 2 / shat) / 3.0
+    # phase space
+    pre *= 4.0 * g2 ** 2 / math.sqrt(shat)
+    # amplitudes
+    A0, A1 = isoSpinAmplitudes(shat)
+    amp_12 = 0.0
+    amp_23 = 0.0
+    # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's take
+    # care of sign
+    # K_L K_S pi0
+    if imode == 0:
+        # amp_12  = 1./math.sqrt(6.)*(A0-A1)
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 + A1)
+        amp_23 = amp_12
+    # K+ K- pi0
+    elif imode == 1:
+        # amp_12  = 1./math.sqrt(6.)*(A0+A1)
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 - A1)
+        amp_23 = amp_12
+    # K+pi-K0
+    elif imode == 2:
+        # as two charge modes
+        pre *= 2
+        amp_12 = 1.0 / math.sqrt(6.0) * (A0 + A1)
+        amp_23 = 1.0 / math.sqrt(6.0) * (A0 - A1)
+    # put everything together
+    Itotal = (
+        ints[0] * abs(amp_12) ** 2
+        + ints[1] * abs(amp_23) ** 2
+        + 2.0 * (ints[2] * amp_12 * amp_23.conjugate()).real
+    )
+    return pre * Itotal

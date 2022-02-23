@@ -1,16 +1,23 @@
 # Load libraries that we need
-from .Resonance import *
-from math import pi
-import math, scipy, scipy.special
-from . import alpha
+import math
 
-##
-## Parameter set for hadronic current, parametrization taken from arXiv:1002.0279
-##
+import numpy as np
+import scipy
+import scipy.integrate
+import scipy.special
+
+from . import alpha
+from .Resonance import Hhat, dHhatds, H, BreitWignerGS, BreitWignerFW, gev2nb
+from .masses import mpi
+
+"""
+Parameter set for hadronic current, parametrization taken from arXiv:1002.0279
+"""
 
 # truncation parameter
 nMax_ = 2000
-# omega parameters, relevant for the rho-omega mixing in the 0th order rho resonance
+# omega parameters, relevant for the rho-omega mixing in the 0th order rho
+# resonance
 omegaMag_ = 0.00187
 omegaPhase_ = 0.106
 omegaMass_ = 0.7824
@@ -52,7 +59,9 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
     mMed_ = mMed
     wMed_ = wMed
     cI1_ = cMedu - cMedd
-    # taken out since omega mixes with rho and omega and phi are not coupling to dark mediator
+    # taken out since omega mixes with rho and omega and phi are not coupling
+    # to dark mediator
+
     # cI0_ = 3*(cMedu+cMedd)
     # cS_ = -3*cMeds
     # omegaMag_ =0.001867242111672990*cI0_
@@ -99,9 +108,9 @@ def initialize():
         c_n = (
             scipy.special.gamma(beta_ - 0.5)
             / (0.5 + float(ix))
-            / math.sqrt(pi)
-            * math.sin(pi * (beta_ - 1.0 - float(ix)))
-            / pi
+            / math.sqrt(np.pi)
+            * math.sin(np.pi * (beta_ - 1.0 - float(ix)))
+            / np.pi
             * gamB
         )
         if ix % 2 != 0:
@@ -121,9 +130,9 @@ def initialize():
         if ix > 0 and ix < len(rhoWgt_):
             cwgt += c_n
         # parameters for the gs propagators
-        hres_.append(Hhat(mass_[-1] ** 2, mass_[-1], width_[-1], mpi_, mpi_))
-        dh_.append(dHhatds(mass_[-1], width_[-1], mpi_, mpi_))
-        h0_.append(H(0.0, mass_[-1], width_[-1], mpi_, mpi_, dh_[-1], hres_[-1]))
+        hres_.append(Hhat(mass_[-1] ** 2, mass_[-1], width_[-1], mpi, mpi))
+        dh_.append(dHhatds(mass_[-1], width_[-1], mpi, mpi))
+        h0_.append(H(0.0, mass_[-1], width_[-1], mpi, mpi, dh_[-1], hres_[-1]))
         coup_.append(cI1_ * c_n)
     # fix up the early weights
     for ix in range(1, len(rhoWgt_)):
@@ -137,7 +146,7 @@ def Fpi(q2, imode):
     # print coup_[0]
     for ix in range(0, nMax_):
         term = coup_[ix] * BreitWignerGS(
-            q2, mass_[ix], width_[ix], mpi_, mpi_, h0_[ix], dh_[ix], hres_[ix]
+            q2, mass_[ix], width_[ix], mpi, mpi, h0_[ix], dh_[ix], hres_[ix]
         )
         # include rho-omega if needed
         if ix == 0 and imode != 0:
@@ -156,7 +165,7 @@ def Fpi(q2, imode):
 
 # Decay rate of mediator-> 2pions
 def GammaDM(medMass):
-    if medMass < 2 * mpi_:
+    if medMass < 2 * mpi:
         return 0
     temp = Fpi(medMass ** 2, 1)
     return (
@@ -164,15 +173,16 @@ def GammaDM(medMass):
         / 48.0
         / math.pi
         * medMass
-        * (1 - 4 * mpi_ ** 2 / medMass ** 2) ** 1.5
+        * (1 - 4 * mpi ** 2 / medMass ** 2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
 
 
-# cross-section for e+e- -> pi+pi-, see cross-section formula eq. (6) and eq. (28) in low_energy.pdf
+# cross-section for e+e- -> pi+pi-, see cross-section formula eq. (6) and eq. (28) in
+# low_energy.pdf
 def sigmaSM(Q2):
-    if Q2 < 4 * mpi_ ** 2:
+    if Q2 < 4 * mpi ** 2:
         return 0
     alphaEM = alpha.alphaEM(Q2)
     temp = Fpi(Q2, 1)
@@ -182,15 +192,16 @@ def sigmaSM(Q2):
         * math.pi
         * alphaEM ** 2
         / Q2
-        * (1.0 - 4.0 * mpi_ ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mpi ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
 
 
-# cross section for DM annihilations, see cross-section formula eq. (6) and eq. (28) in low_energy.pdf
+# cross section for DM annihilations, see cross-section formula eq. (6) and eq. (28) in
+# low_energy.pdf
 def sigmaDM(Q2):
-    if Q2 < 4 * mpi_ ** 2:
+    if Q2 < 4 * mpi ** 2:
         return 0
     cDM = gDM_
     DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
@@ -203,7 +214,7 @@ def sigmaDM(Q2):
         * DMmed2
         * Q2
         * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mpi_ ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mpi ** 2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )

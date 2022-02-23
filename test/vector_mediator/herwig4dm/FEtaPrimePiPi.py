@@ -1,10 +1,14 @@
 # Libraries to Load
 import math
-import scipy.integrate
 import cmath
-from . import alpha, Resonance
-import os
-import matplotlib.pyplot as plt
+
+import scipy
+import scipy.integrate
+
+from . import Resonance
+from . import alpha
+from .masses import mpi, metap, fpi
+
 
 ii = complex(0.0, 1.0)
 gev2nb = 389379.3656
@@ -23,10 +27,9 @@ a3 = 0.02
 phi1 = 3.14
 phi2 = 3.14
 phi3 = 3.14
-mEta_ = 0.95778
-mPi_ = 0.13957018
-# fPi_ = 0.0933
-fPi_ = 0.0922138
+# metap = 0.95778
+# mpi = 0.13957018
+# fpi = 0.0933
 mRho_ = [0.77549, 1.54, 1.76, 2.11]
 gRho_ = [0.1494, 0.356, 0.113, 0.176]
 amp_ = [1.0, 0.0, 0.0, 0.02]
@@ -77,7 +80,7 @@ def gammaRho(i, Q2):
             gRho_[0]
             * mRho_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mPi_ ** 2) / (mRho_[0] ** 2 - 4.0 * mPi_ ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mpi ** 2) / (mRho_[0] ** 2 - 4.0 * mpi ** 2)) ** 1.5
         )
     else:
         return gRho_[i] * Q2 / mRho_[i] ** 2
@@ -105,7 +108,7 @@ def pcm(m02, m12, m22):
 
 def FEtaPrimePiPi(s, Q2):
     form = 0.0
-    pre = 0.25 * math.sqrt(2) / math.sqrt(3) / math.pi ** 2 / fPi_ ** 3
+    pre = 0.25 * math.sqrt(2) / math.sqrt(3) / math.pi ** 2 / fpi ** 3
     for i in range(0, len(camp_)):
         form += BW(i, s) * camp_[i] * cI1_
     form *= BW(0, Q2)
@@ -119,8 +122,8 @@ def integrand(rho, s):
         # Q2 is momentum squared of the rho of rho->pipi
         Q2 = mRho_[0] * gRho_[0] * math.tan(val) + mRho_[0] ** 2
         # momentum dependence after one phase space integration (see eq.139 notes)
-        peta = pcm(s, mEta_ ** 2, Q2)
-        ppi = pcm(Q2, mPi_ ** 2, mPi_ ** 2)
+        peta = pcm(s, metap ** 2, Q2)
+        ppi = pcm(Q2, mpi ** 2, mpi ** 2)
         Q = math.sqrt(Q2)
         # 'Jabobi' due to change of variables in integration
         pre = (
@@ -134,8 +137,8 @@ def integrand(rho, s):
 
 def phase(s):
     # integration limits
-    upp = (math.sqrt(s) - mEta_) ** 2
-    low = 4.0 * mPi_ ** 2
+    upp = (math.sqrt(s) - metap) ** 2
+    low = 4.0 * mpi ** 2
     if upp <= low:
         return 0.0
     # transform to new variables
@@ -148,7 +151,7 @@ def phase(s):
 
 # partial decay width for Eta Pi Pi
 def GammaDM(mMed):
-    if mMed ** 2 < (2 * mPi_ + mEta_) ** 2:
+    if mMed ** 2 < (2 * mpi + metap) ** 2:
         return 0
     if cI1_ == 0:
         return 0
@@ -161,7 +164,7 @@ def GammaDM(mMed):
 
 # DM annihilation
 def sigmaDM(s):
-    if s < (2 * mPi_ + mEta_) ** 2:
+    if s < (2 * mpi + metap) ** 2:
         return 0
     if cI1_ == 0:
         return 0
@@ -176,7 +179,7 @@ def sigmaDM(s):
 
 # cross-section for e+e- -> Eta' Pi Pi
 def sigmaSM(s):
-    if cI1_ == 0 or s < (mEta_ + 2 * mPi_) ** 2:
+    if cI1_ == 0 or s < (metap + 2 * mpi) ** 2:
         return 0
     pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
     # coming from phase space (see eq.139 notes)

@@ -4,6 +4,7 @@ cimport numpy as np
 from scipy.integrate import quad
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 import cython
+from hazma._utils.boost cimport boost_beta, boost_gamma
 include "common.pxd"
 
 
@@ -115,6 +116,22 @@ cdef double integrand(double cl, double eng_gam, double eng_pi, int bitflag):
 
     return result
 
+# @cython.cdivision(True)
+# cdef double integrand2(double e1, double epi, int bitflag):
+#     cdef double result
+#     result = 0.0
+
+#     if bitflag & 1:
+#         result += BR_PI_TO_MUNU * c_muon_decay_spectrum_point(e1, ENG_MU_PIRF)
+
+#     if bitflag & 2:
+#         result += BR_PI_TO_MUNU * dnde_pi_to_lnug(e1, MMU)
+
+#     if bitflag & 4:
+#         result += BR_PI_TO_ENU * dnde_pi_to_lnug(e1, ME)
+
+#     return result / e1
+
 cdef double c_charged_pion_decay_spectrum_point(double eng_gam, double eng_pi, int mode):
     """
     Returns the radiative spectrum value from charged pion given a gamma
@@ -134,6 +151,24 @@ cdef double c_charged_pion_decay_spectrum_point(double eng_gam, double eng_pi, i
                    epsrel=1e-5)[0]
 
 
+# cdef double c_charged_pion_decay_spectrum_point2(double e, double epi, int mode):
+#     cdef:
+#         double beta
+#         double gamma
+#         double emin, emax
+
+#     if epi < MASS_PI:
+#         return 0.0
+
+#     beta = boost_beta(epi, MASS_PI)
+#     gamma = boost_gamma(epi, MASS_PI)
+#     
+#     emin = e * gamma * (1.0 - beta)
+#     emax = e * gamma * (1.0 + beta)
+
+#     return quad(integrand2, emin, emax, args=(epi, mode))[0] / (2.0 * beta * gamma)
+
+
 @cython.boundscheck(True)
 @cython.wraparound(False)
 cdef np.ndarray[np.float64_t,ndim=1] c_charged_pion_decay_spectrum_array(np.ndarray[np.float64_t,ndim=1] egams, double epi, int mode):
@@ -143,6 +178,16 @@ cdef np.ndarray[np.float64_t,ndim=1] c_charged_pion_decay_spectrum_array(np.ndar
     for i in range(npts):
         spec[i] = c_charged_pion_decay_spectrum_point(egams[i], epi, mode)
     return spec
+
+# @cython.boundscheck(True)
+# @cython.wraparound(False)
+# cdef np.ndarray[np.float64_t,ndim=1] c_charged_pion_decay_spectrum_array2(np.ndarray[np.float64_t,ndim=1] egams, double epi, int mode):
+#     cdef int npts = egams.shape[0]
+#     cdef np.ndarray[np.float64_t,ndim=1] spec = np.zeros_like(egams)
+
+#     for i in range(npts):
+#         spec[i] = c_charged_pion_decay_spectrum_point2(egams[i], epi, mode)
+#     return spec
 
 
 @cython.boundscheck(True)
@@ -179,3 +224,39 @@ def charged_pion_decay_spectrum(egams, epi, modes=["munu", "munug", "enug"]):
         return c_charged_pion_decay_spectrum_array(energies, epi, bitflag)
     else:
         return c_charged_pion_decay_spectrum_point(egams, epi, bitflag)
+
+
+# @cython.boundscheck(True)
+# @cython.wraparound(False)
+# def charged_pion_decay_spectrum2(egams, epi, modes=["munu", "munug", "enug"]):
+#     """
+#     Compute the photon spectrum dN/dE from the decay of a charged pion.
+
+#     Paramaters
+#     ----------
+#     egam: float or array-like
+#         Photon energy.
+#     epi: float 
+#         Energy of the pion.
+#     mode: optional, List 
+#         List of modes to compute spectrum for. Entries can be:
+#         "munu", "munug" and "enug". Default is all of these.
+#     """
+#     cdef int bitflag = 0
+
+#     if "munu" in modes:
+#         bitflag += 1
+#     if "munug" in modes:
+#         bitflag += 2
+#     if "enug" in modes:
+#         bitflag += 4
+
+#     if bitflag == 0:
+#         raise ValueError("Invalid modes specified.") 
+#     
+#     if hasattr(egams, '__len__'):
+#         energies = np.array(egams)
+#         assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
+#         return c_charged_pion_decay_spectrum_array2(energies, epi, bitflag)
+#     else:
+#         return c_charged_pion_decay_spectrum_point2(egams, epi, bitflag)

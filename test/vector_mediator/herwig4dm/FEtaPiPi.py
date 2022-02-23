@@ -1,20 +1,21 @@
 # Libraries to load
 import math
 import cmath
+
+import scipy
 import scipy.integrate
-from . import alpha, Resonance
-import os
-import matplotlib.pyplot as plt
-import random
-import statistics
+
+from . import Resonance
+from . import alpha
+from .masses import mpi, meta, fpi
+
 
 ii = complex(0.0, 1.0)
 
 # parametrization taken from arXiv:1306.1985 with own fit values
-mEta_ = 0.547862
-mPi_ = 0.13957018
-# fPi_ = 0.0933
-fPi_ = 0.0922138
+# meta = 0.547862
+# mpi = 0.13957018
+# fpi = 0.0933
 mRho_ = [0.77549, 1.54, 1.76, 2.15]
 gRho_ = [0.1494, 0.356, 0.113, 0.32]
 amp_ = [1.0, 0.326, 0.0115, 0.0]
@@ -48,14 +49,17 @@ for i in range(0, len(amp_)):
         amp_[i] * cmath.exp(ii * phase_[i])
     )  # [1.,a1*cmath.exp(ii*phi1),a2*cmath.exp(ii*phi2),a3*cmath.exp(ii*phi3)]
 
-# rho width within the propagator
+
 def gammaRho(i, Q2):
+    """
+    rho width within the propagator
+    """
     if i == 0:
         return (
             gRho_[0]
             * mRho_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mPi_ ** 2) / (mRho_[0] ** 2 - 4.0 * mPi_ ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mpi ** 2) / (mRho_[0] ** 2 - 4.0 * mpi ** 2)) ** 1.5
         )
     else:
         return gRho_[i] * Q2 / mRho_[i] ** 2
@@ -68,8 +72,11 @@ def BW(i, Q2):
     return mr2 / (mr2 - Q2 - ii * math.sqrt(Q2) * gam)
 
 
-# momentum as in eq. (48.17) in https://pdg.lbl.gov/2020/reviews/rpp2020-rev-kinematics.pdf
 def pcm(m02, m12, m22):
+    """
+    momentum as in eq. (48.17) in:
+        https://pdg.lbl.gov/2020/reviews/rpp2020-rev-kinematics.pdf
+    """
     return 0.5 * math.sqrt(
         (
             m02 ** 2
@@ -90,7 +97,7 @@ def FEtaPiPi(s, Q2):
     for i in range(0, len(camp_)):
         camp_[i] /= total
     form = 0.0
-    pre = 0.25 / math.sqrt(3.0) / math.pi ** 2 / fPi_ ** 3
+    pre = 0.25 / math.sqrt(3.0) / math.pi ** 2 / fpi ** 3
     for i in range(0, len(camp_)):
         form += BW(i, s) * camp_[i] * cI1_
     form *= BW(0, Q2)
@@ -105,8 +112,8 @@ def integrand(rho, s):
         # Q2 is momentum squared of the rho of rho->pipi
         Q2 = mRho_[0] * gRho_[0] * math.tan(val) + mRho_[0] ** 2
         # momentum dependence after one phase space integration (see eq.139 notes)
-        peta = pcm(s, mEta_ ** 2, Q2)
-        ppi = pcm(Q2, mPi_ ** 2, mPi_ ** 2)
+        peta = pcm(s, meta ** 2, Q2)
+        ppi = pcm(Q2, mpi ** 2, mpi ** 2)
         Q = math.sqrt(Q2)
         # 'Jabobi' due to change of variables in integration
         pre = (
@@ -121,8 +128,8 @@ def integrand(rho, s):
 # phase space integration
 def phase(s):
     # integration limits
-    upp = (math.sqrt(s) - mEta_) ** 2
-    low = 4.0 * mPi_ ** 2
+    upp = (math.sqrt(s) - meta) ** 2
+    low = 4.0 * mpi ** 2
     # transform to new variables
     upp = math.atan((upp - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
     low = math.atan((low - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
@@ -133,7 +140,7 @@ def phase(s):
 
 # partial decay width for Eta Pi Pi
 def GammaDM(mMed):
-    if mMed ** 2 < (2 * mPi_ + mEta_) ** 2:
+    if mMed ** 2 < (2 * mpi + meta) ** 2:
         return 0
     if cI1_ == 0:
         return 0
@@ -145,7 +152,7 @@ def GammaDM(mMed):
 
 
 def sigmaDM(s):
-    if s < (2 * mPi_ + mEta_) ** 2:
+    if s < (2 * mpi + meta) ** 2:
         return 0
     if cI1_ == 0:
         return 0
@@ -160,7 +167,7 @@ def sigmaDM(s):
 
 # cross section for Eta Pi Pi
 def sigmaSM(s):
-    if s < (2 * mPi_ + mEta_) ** 2:
+    if s < (2 * mpi + meta) ** 2:
         return 0
     if cI1_ == 0:
         return 0

@@ -1,6 +1,10 @@
 # Libraries to load
-import math, cmath
-from . import alpha, Resonance
+import math
+import cmath
+
+from . import Resonance
+from . import alpha
+
 
 # parametrization based on arXiv: 1601.08061
 
@@ -9,8 +13,7 @@ ResMasses_ = [0.77526, 0.78284, 1.01952, 1.45, 1.70]
 ResWidths_ = [0.1491, 0.00868, 0.00421, 0.40, 0.30]
 Amp_ = [0.0426, 0.0434, 0.00303, 0.00523, 0.0]
 Phase_ = [-12.7, 0.0, 158.0, 180.0, 0.0]
-mPi_ = 0.13957018
-# mPi_ = 0.1349766
+mPi_ = 0.13957061
 
 cRho_ = 1.0
 cOmega_ = 1.0
@@ -28,8 +31,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global cRhoOmPhi_
     global gDM_, mDM_, mMed_, wMed_
@@ -43,17 +49,19 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
     cRhoOmPhi_ = [cI1_, cI0_, cS_, cI0_, cI0_]
 
 
-# Width of the intermediate vector meson
+# Width of the intermediate vector meson, see e.g. 1002.0279 eq.(6)
 def Widths(Q2, ix):
-    Q = math.sqrt(Q2)
     if ix == 0:
-        pcm = 0.5 * (Q2 - mPi_ ** 2) / Q
-        resWidths = (
-            ResWidths_[0]
-            * ResMasses_[0] ** 2
-            / Q2
-            * ((Q2 - 4.0 * mPi_ ** 2) / (ResMasses_[0] ** 2 - 4.0 * mPi_ ** 2)) ** 1.5
-        )
+        if Q2 > 4 * mPi_ ** 2:
+            resWidths = (
+                ResWidths_[0]
+                * ResMasses_[0] ** 2
+                / Q2
+                * ((Q2 - 4.0 * mPi_ ** 2) / (ResMasses_[0] ** 2 - 4.0 * mPi_ ** 2))
+                ** 1.5
+            )
+        else:
+            resWidths = 0.0
     else:
         resWidths = ResWidths_[ix]
     return resWidths
@@ -78,7 +86,7 @@ def FPiGamma(Q2):
 # Decay rate of the dark mediator into PiGamma
 def GammaDM(mMed):
     Q2 = mMed ** 2
-    if mMed > 2 * mPi_:
+    if mMed > mPi_:
         pcm = 0.5 * (Q2 - mPi_ ** 2) / mMed
     else:
         return 0.0
@@ -88,7 +96,7 @@ def GammaDM(mMed):
 # cross section for Pi Gamma
 def sigmaSMPiGamma(Q2):
     Q = math.sqrt(Q2)
-    if Q > 2 * mPi_:
+    if Q > mPi_:
         pcm = 0.5 * (Q2 - mPi_ ** 2) / Q
     else:
         return 0.0
@@ -108,7 +116,7 @@ def sigmaSMPiGamma(Q2):
 # cross section for Pi Gamma
 def sigmaDMPiGamma(Q2):
     Q = math.sqrt(Q2)
-    if Q > 2 * mPi_:
+    if Q > mPi_:
         pcm = 0.5 * (Q2 - mPi_ ** 2) / Q
     else:
         return 0.0

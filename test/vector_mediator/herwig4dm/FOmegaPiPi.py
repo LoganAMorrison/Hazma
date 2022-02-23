@@ -1,9 +1,11 @@
 import math
-import scipy.integrate
-from . import alpha
 import cmath
-import os
-import matplotlib.pyplot as plt
+
+import scipy
+import scipy.integrate
+
+from . import alpha
+
 
 ii = complex(0.0, 1.0)
 gev2nb = 389379.3656

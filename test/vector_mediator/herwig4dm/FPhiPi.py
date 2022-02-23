@@ -1,6 +1,9 @@
 # Libraries to load
-import cmath, math
-from . import Resonance, alpha
+import math
+import cmath
+
+from . import Resonance
+from . import alpha
 
 # own parametrization, see arXiv:1911.11147
 
@@ -29,8 +32,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global gDM_, mDM_, mMed_, wMed_
     global wgts
@@ -63,7 +69,6 @@ def GammaDM(M):
         form += wgts[ix] * mR2 / (mR2 - sHat - complex(0.0, 1.0) * ecms * wid)
     pcm = 0.5 * ecms * Resonance.beta(sHat, mPhi, mpi)
     output = 1 / 12.0 / math.pi * pcm ** 3 * abs(form) ** 2
-    # return output * Resonance.gev2nb
     return output
 
 

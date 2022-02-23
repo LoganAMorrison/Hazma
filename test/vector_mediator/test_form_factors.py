@@ -3,6 +3,7 @@ Tests for the vector form factors.
 """
 # from typing import
 from typing import NamedTuple, Tuple
+import unittest
 
 import pytest
 from pytest import approx
@@ -11,6 +12,7 @@ import numpy as np
 from hazma.vector_mediator import VectorMediatorGeV
 from hazma.parameters import Qd, Qe, Qu
 from hazma.parameters import qe
+from hazma.vector_mediator.form_factors import utils as ff_utils
 
 
 class HazmaFunction(NamedTuple):
@@ -83,12 +85,17 @@ def synchronize_herwig(model: VectorMediatorGeV, module) -> None:
 
 
 def compare_widths(
-    model: VectorMediatorGeV, func: str, herwig_module, reltol=1e-4, abstol=0.0
+    model: VectorMediatorGeV,
+    func: str,
+    herwig_module,
+    reltol=1e-4,
+    abstol=0.0,
+    herwig_args=tuple(),
 ):
     mvgev = model.mv * 1e-3
     synchronize_herwig(model, herwig_module)
     hazma = getattr(model, func)() / model.mv
-    herwig = herwig_module.GammaDM(mvgev) / mvgev
+    herwig = herwig_module.GammaDM(mvgev, *herwig_args) / mvgev
     assert hazma == approx(herwig, rel=reltol, abs=abstol)
 
 
@@ -112,13 +119,6 @@ def test_form_factor_pipi(model1: VectorMediatorGeV):
     form factor agree for the input model.
     """
     from herwig4dm import F2pi
-
-    # model = model1
-    # synchronize_herwig(model, F2pi)
-    # hazma = model.form_factor_pipi(model.mv ** 2)
-    # herwig = F2pi.Fpi(1e-6 * model.mv ** 2, 1)
-    # assert np.real(hazma) == approx(np.real(herwig), rel=1e-4, abs=0.0)
-    # assert np.imag(hazma) == approx(np.imag(herwig), rel=1e-4, abs=0.0)
 
     hazma = HazmaFunction(model1, "form_factor_pipi", (1,))
     herwig = ModuleFunction(F2pi, "Fpi", (1,))
@@ -265,10 +265,58 @@ def test_width_pi_pi_eta(model1: VectorMediatorGeV):
 def test_width_pi_pi_etap(model1: VectorMediatorGeV):
     from herwig4dm import FEtaPrimePiPi
 
-    compare_widths(model1, "width_v_to_pi_pi_etap", FEtaPrimePiPi)
+    compare_widths(model1, "width_v_to_pi_pi_etap", FEtaPrimePiPi, reltol=1e-2)
 
 
 def test_width_pi_pi_omega(model1: VectorMediatorGeV):
     from herwig4dm import FOmegaPiPi
 
     compare_widths(model1, "width_v_to_pi_pi_omega", FOmegaPiPi)
+
+
+def test_width_pi0_k0_k0(model1: VectorMediatorGeV):
+    from herwig4dm import FKKpi
+
+    # compare_widths(model1, "width_v_to_pi0_k0_k0", FKKpi, herwig_args=(0,))
+
+    mvgev = model1.mv * 1e-3
+    synchronize_herwig(model1, FKKpi)
+    hazma = model1.width_v_to_pi0_k0_k0() / model1.mv
+    herwig = FKKpi.GammaDM(mvgev, imode=0) / mvgev
+    assert hazma == approx(herwig, rel=1e-3, abs=1e-10)
+
+
+def test_width_v_to_pi0_k_k(model1: VectorMediatorGeV):
+    from herwig4dm import FKKpi
+
+    # compare_widths(model1, "width_v_to_pi0_k_k", FKKpi, herwig_args=(1,))
+
+    mvgev = model1.mv * 1e-3
+    synchronize_herwig(model1, FKKpi)
+    hazma = model1.width_v_to_pi0_k0_k0() / model1.mv
+    herwig = FKKpi.GammaDM(mvgev, imode=1) / mvgev
+    assert hazma == approx(herwig, rel=1e-3, abs=1e-10)
+
+
+def test_width_v_to_pi_k_k0(model1: VectorMediatorGeV):
+    from herwig4dm import FKKpi
+
+    # compare_widths(model1, "width_v_to_pi0_k_k", FKKpi, herwig_args=(1,))
+
+    mvgev = model1.mv * 1e-3
+    synchronize_herwig(model1, FKKpi)
+    hazma = model1.width_v_to_pi_k_k0() / model1.mv
+    # herwig4dm includes both charged modes so divide by 2
+    herwig = FKKpi.GammaDM(mvgev, imode=2) / mvgev / 2
+    assert hazma == approx(herwig, rel=1e-3, abs=1e-10)
+
+
+# def test_width_v_to_pi_k_k0(model1: VectorMediatorGeV):
+#     from herwig4dm import FKKpi
+
+#     compare_widths(model1, "width_v_to_pi_k_k0", FKKpi, herwig_args=(2,))
+
+
+# class TestFormFactorUtils(unittest.TestCase):
+#     def test_integral_power_div_simple_monomial(self):
+#         ff_utils.integral_power_div_simple_monomial(1, 2, 0, 1)

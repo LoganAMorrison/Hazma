@@ -1,32 +1,30 @@
 # Libraries to load
-import alpha,math,Resonance,cmath
-import FEtaPrimePiPi
-import os
 import matplotlib.pyplot as plt
-import numpy 
+
+from . import FEtaPrimePiPi
 
 
-xSM=[]
-ySM=[]
-xDP=[]
-yDP=[]
-xBL=[]
-yBL=[]
+xSM = []
+ySM = []
+xDP = []
+yDP = []
+xBL = []
+yBL = []
 
 # SM case
-scale = FEtaPrimePiPi.mEta_+2*FEtaPrimePiPi.mPi_+0.1
-while scale < 4.0 :
-    Q2 = scale**2
+scale = FEtaPrimePiPi.mEta_ + 2 * FEtaPrimePiPi.mPi_ + 0.1
+while scale < 4.0:
+    Q2 = scale ** 2
     xSM.append(scale)
     ySM.append(FEtaPrimePiPi.sigmaSM(Q2))
-    scale+=0.01
+    scale += 0.01
 
 
 # set DM parameters
 # DM to mediator coupling
-gDM = 1.
-#DM mass
-mDM = 0.25#F3pi.mPi_
+gDM = 1.0
+# DM mass
+mDM = 0.25  # F3pi.mPi_
 # mediator mass
 mMed = 5
 # mediator width, file with total width will be added (work in progress)
@@ -35,19 +33,19 @@ mMed = 5
 
 # Dark Photon case
 # couplings of mediator to quarks
-cMed_u = 2./3.
-cMed_d = -1./3.
-cMed_s = -1./3.
+cMed_u = 2.0 / 3.0
+cMed_d = -1.0 / 3.0
+cMed_s = -1.0 / 3.0
 
-while mDM < 2.0 :
-    energy = 2*mDM+0.0001
-    Q2 = energy**2
+while mDM < 2.0:
+    energy = 2 * mDM + 0.0001
+    Q2 = energy ** 2
     xDP.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaPrimePiPi.GammaDM(mMed)
-    FEtaPrimePiPi.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
+    FEtaPrimePiPi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
     yDP.append(FEtaPrimePiPi.sigmaDM(Q2))
-    mDM+=0.01
+    mDM += 0.01
 
 # xDPm=[]
 # wDP= []
@@ -67,30 +65,27 @@ while mDM < 2.0 :
 
 # B-L model
 # couplings of mediator to quarks
-cMed_u = 1./3.
-cMed_d = 1./3.
-cMed_s = 1./3.
+cMed_u = 1.0 / 3.0
+cMed_d = 1.0 / 3.0
+cMed_s = 1.0 / 3.0
 
 # reset DM mass
-mDM = 0.25#F2pi.mpi_
-while mDM < 2.0 :
-    energy = 2*mDM+0.0001
-    Q2 = energy**2
+mDM = 0.25  # F2pi.mpi_
+while mDM < 2.0:
+    energy = 2 * mDM + 0.0001
+    Q2 = energy ** 2
     xBL.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaPrimePiPi.GammaDM(mMed)
-    FEtaPrimePiPi.resetParameters(gDM,mDM,mMed,wMed,cMed_u,cMed_d,cMed_s)
+    FEtaPrimePiPi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
     yBL.append(FEtaPrimePiPi.sigmaDM(Q2))
-    mDM+=0.01
+    mDM += 0.01
 
-plt.plot(xSM,ySM,color="blue",label="SM")
-plt.plot(xDP,yDP,color="red",label="DP")
-plt.plot(xBL,yBL,color="green",label="BL")
+plt.plot(xSM, ySM, color="blue", label="SM")
+plt.plot(xDP, yDP, color="red", label="DP")
+plt.plot(xBL, yBL, color="green", label="BL")
 plt.legend()
 plt.yscale("log")
 plt.xlabel("$\\sqrt{s}$/GeV")
 plt.ylabel("$\\sigma$/nb")
 plt.savefig("plots/EtaPrimePiPi.pdf")
-
-
-

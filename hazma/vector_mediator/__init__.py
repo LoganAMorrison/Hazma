@@ -30,8 +30,6 @@ from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 from hazma.vector_mediator.form_factors.utils import RealArray
 from hazma.vector_mediator.form_factors.utils import ComplexArray
 
-from hazma.rambo import compute_decay_width
-
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
@@ -318,6 +316,7 @@ class QuarksOnly(VectorMediator):
         repr_ += f"gvdd={self.gvdd}"
         repr_ += f"gvss={self.gvss}"
         repr_ += ")"
+
         return repr_
 
     @staticmethod
@@ -380,6 +379,9 @@ class VectorMediatorGeV(VectorMediator):
         from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
         from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
         from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
+        from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPi0K0K0
+        from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPi0KpKm
+        from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPiKK0
 
         # Compute and store the parameters needed to compute form factors.
         # self._ff_pipi_params = _compute_ff_params_pipi(2000)
@@ -390,6 +392,9 @@ class VectorMediatorGeV(VectorMediator):
         self._ff_pi_pi_eta = FormFactorPiPiEta()
         self._ff_pi_pi_etap = FormFactorPiPiEtaP()
         self._ff_pi_pi_omega = FormFactorPiPiOmega()
+        self._ff_pi0_k0_k0 = FormFactorPi0K0K0()
+        self._ff_pi0_k_k = FormFactorPi0KpKm()
+        self._ff_pi_k_k0 = FormFactorPiKK0()
 
         super().__init__(mx, mv, gvxx, gvuu, gvdd, gvss, gvee, gvmumu)
 
@@ -752,6 +757,45 @@ class VectorMediatorGeV(VectorMediator):
             mvgev, self.gvuu, self.gvdd, 0
         )
         return integral / (2 * mvgev) * 1e3
+
+    def width_v_to_pi0_k0_k0(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a neutral pion and two neutral kaons.
+        """
+        if self.mv < _MPI0 + 2 * _MK0:
+            return 0.0
+        mvgev = self.mv * 1e-3
+        integral = self._ff_pi0_k0_k0.integrated_form_factor(
+            mvgev, self.gvuu, self.gvdd, self.gvss
+        )
+        return integral / (6.0 * mvgev) * 1e3
+
+    def width_v_to_pi0_k_k(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a neutral pion and two charged kaons.
+        """
+        if self.mv < _MPI0 + 2 * _MK:
+            return 0.0
+        mvgev = self.mv * 1e-3
+        integral = self._ff_pi0_k_k.integrated_form_factor(
+            mvgev, self.gvuu, self.gvdd, self.gvss
+        )
+        return integral / (6.0 * mvgev) * 1e3
+
+    def width_v_to_pi_k_k0(self):
+        """
+        Compute the partial width for the decay of the vector mediator
+        into a neutral pion and two charged kaons.
+        """
+        if self.mv < _MPI + _MK + _MK0:
+            return 0.0
+        mvgev = self.mv * 1e-3
+        integral = self._ff_pi_k_k0.integrated_form_factor(
+            mvgev, self.gvuu, self.gvdd, self.gvss
+        )
+        return integral / (6.0 * mvgev) * 1e3
 
     def width_v_to_xx(self):
         """

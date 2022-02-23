@@ -125,21 +125,21 @@ cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point(double enu, double emu):
     xmm = 1.0 - xm
     xpm = 1.0 - xp
     
-    result.electron = pre * (
-        xm ** 3 * (-4.0 + 3 * xm)
-        + (4 - 3 * xp) * xp ** 3
-        + 6 * R4 * (xm - xp) * (2 + xm + xp)
-        + 8 * R2 * (xm ** 3 - xp ** 3)
-        - 12 * R4 * log(xpm / xmm)
+    result.electron = 2 * pre * (
+        (xm - xp)
+        * (
+            -3.0 * (xm + xp)
+            + 2 * (3 * R4 + xm ** 2 + xm * xp + xp ** 2 + 3 * R2 * (xm + xp))
+        )
+        - 6 * R4 * log(xpm / xmm)
     )
 
     result.muon = pre * (
-        (-2.0 + xm) * xm ** 3
-        - (-2.0 + xp) * xp ** 3
-        + 2.0 * R2 * (xm ** 3 - xp ** 3)
-        + 2.0 * R6 * (-(xm ** 3 / xmm ** 2) + xp ** 3 / xpm ** 2)
-        - (6.0 * R4 * (xm - xp) * (-2 + xp + xm * xpm)) / (xmm * xpm)
-        - 12.0 * R4 * log(xpm / xmm)
+        3 * R2 * (xm - xp) * (xm + xp)
+        + (xm ** 2 * (-9.0 + 4.0 * xm) + (9.0 - 4 * xp) * xp ** 2) / 3.0
+        + R6 * ((-2.0 * xm) / xmm ** 2 + (2.0 * xp) / xpm ** 2)
+        + 6 * R4 * (1.0 / xmm - 1.0 / xpm)
+        + 2 * R4 * (-3 + R2) * log(xpm / xmm)
     )
 
     return result

@@ -1,7 +1,10 @@
 # Libraries to load
-import math, cmath
-import numpy, scipy
-from . import alpha, Resonance, FK
+import math
+import cmath
+
+from . import Resonance
+from . import alpha
+
 
 # own parametrization as in 1911.11147
 # parameters from fit
@@ -26,8 +29,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global gDM_, mDM_, mMed_, wMed_
     gDM_ = gDM
@@ -63,7 +69,6 @@ def GammaDM(mMed):
         complex(0.0, phi_Phi_pp_)
     )
     amp *= cS_
-    # return 1 / 12.0 / math.pi * pcm ** 3 * abs(amp) ** 2 * Resonance.gev2nb
     return 1 / 12.0 / math.pi * pcm ** 3 * abs(amp) ** 2
 
 

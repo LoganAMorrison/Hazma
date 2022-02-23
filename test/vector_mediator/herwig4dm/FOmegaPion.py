@@ -1,12 +1,15 @@
 # Libraries to load
 import math
 import cmath
-from . import alpha, Resonance
+
+from . import Resonance
+from . import alpha
+from .masses import mpi0, momega
 
 ii = complex(0.0, 1.0)
 
 # set of parameters, taken from arXiv:1610.00235
-gRhoOmPi_ = 15.9
+gRhoOmpi0 = 15.9
 Amp_ = [1.0, 0.175, 0.014]
 Phase_ = [0.0, 124.0, -63.0]
 rhoMasses_ = [0.77526, 1.510, 1.720]
@@ -15,8 +18,6 @@ fRho_ = (
     5.06325  # alphaEM evaluated (with alpha.alphaEM() fct) at energy that is considered
 )
 # taken from PDG
-mOmega_ = 0.78266
-mPi_ = 0.1349766
 # brPi0Gamma_ = 0.0888
 brPi0Gamma_ = 0.0828
 
@@ -30,8 +31,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global gDM_, mDM_, mMed_, wMed_
     gDM_ = gDM
@@ -52,20 +56,20 @@ def gRhos(Q2, ix):
             / Q
             * math.sqrt(
                 Q2 ** 2
-                + mPi_ ** 4
-                + mOmega_ ** 4
-                - 2.0 * Q2 * mOmega_ ** 2
-                - 2.0 * Q2 * mPi_ ** 2
-                - 2.0 * mOmega_ ** 2 * mPi_ ** 2
+                + mpi0 ** 4
+                + momega ** 4
+                - 2.0 * Q2 * momega ** 2
+                - 2.0 * Q2 * mpi0 ** 2
+                - 2.0 * momega ** 2 * mpi0 ** 2
             )
         )
         gRho = (
             rhoWidths_[0]
             * rhoMasses_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mPi_ ** 2) / (rhoMasses_[0] ** 2 - 4.0 * mPi_ ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mpi0 ** 2) / (rhoMasses_[0] ** 2 - 4.0 * mpi0 ** 2)) ** 1.5
         )
-        gRho += gRhoOmPi_ ** 2 * pOm ** 3 / 12.0 / math.pi
+        gRho += gRhoOmpi0 ** 2 * pOm ** 3 / 12.0 / math.pi
     else:
         gRho = rhoWidths_[ix]
     return gRho
@@ -81,29 +85,28 @@ def FOmPiGamma(Q2):
             Amp_[i] * cmath.exp(ii * math.radians(Phase_[i])) * rhoMasses_[i] ** 2 / Di
         )
         # form+=Amp_[i]*cmath.exp(ii*Phase_[i]*2*math.pi/360.)*rhoMasses_[i]**2/Di
-    form *= gRhoOmPi_ * cI1_ / fRho_
+    form *= gRhoOmpi0 * cI1_ / fRho_
     return form
 
 
 def GammaDM(mMed):
     Q = mMed
     Q2 = Q ** 2
-    if Q2 > (mOmega_ + mPi_) ** 2 and cI1_ != 0:
+    if Q2 > (momega + mpi0) ** 2 and cI1_ != 0:
         pcm = (
             0.5
             / Q
             * math.sqrt(
                 Q2 ** 2
-                + mPi_ ** 4
-                + mOmega_ ** 4
-                - 2.0 * Q2 * mOmega_ ** 2
-                - 2.0 * Q2 * mPi_ ** 2
-                - 2.0 * mOmega_ ** 2 * mPi_ ** 2
+                + mpi0 ** 4
+                + momega ** 4
+                - 2.0 * Q2 * momega ** 2
+                - 2.0 * Q2 * mpi0 ** 2
+                - 2.0 * momega ** 2 * mpi0 ** 2
             )
         )
     else:
         return 0.0
-    # return 1 / 12.0 / math.pi * pcm ** 3 * abs(FOmPiGamma(Q2)) ** 2 * Resonance.gev2nb
     return 1 / 12.0 / math.pi * pcm ** 3 * abs(FOmPiGamma(Q2)) ** 2
 
 
@@ -111,17 +114,17 @@ def GammaDM(mMed):
 def sigmaSMOmegaPion(Q2):
     Q = math.sqrt(Q2)
     # print "alpha: ", alpha.alphaEM(Q2), "at ", Q, " GeV"
-    if Q > mOmega_ + mPi_:
+    if Q > momega + mpi0:
         pcm = (
             0.5
             / Q
             * math.sqrt(
                 Q2 ** 2
-                + mPi_ ** 4
-                + mOmega_ ** 4
-                - 2.0 * Q2 * mOmega_ ** 2
-                - 2.0 * Q2 * mPi_ ** 2
-                - 2.0 * mOmega_ ** 2 * mPi_ ** 2
+                + mpi0 ** 4
+                + momega ** 4
+                - 2.0 * Q2 * momega ** 2
+                - 2.0 * Q2 * mpi0 ** 2
+                - 2.0 * momega ** 2 * mpi0 ** 2
             )
         )
     else:
@@ -143,17 +146,17 @@ def sigmaSMOmegaPion(Q2):
 def sigmaDMOmegaPion(Q2):
     Q = math.sqrt(Q2)
     # print "alpha: ", alpha.alphaEM(Q2), "at ", Q, " GeV"
-    if Q > mOmega_ + mPi_:
+    if Q > momega + mpi0:
         pcm = (
             0.5
             / Q
             * math.sqrt(
                 Q2 ** 2
-                + mPi_ ** 4
-                + mOmega_ ** 4
-                - 2.0 * Q2 * mOmega_ ** 2
-                - 2.0 * Q2 * mPi_ ** 2
-                - 2.0 * mOmega_ ** 2 * mPi_ ** 2
+                + mpi0 ** 4
+                + momega ** 4
+                - 2.0 * Q2 * momega ** 2
+                - 2.0 * Q2 * mpi0 ** 2
+                - 2.0 * momega ** 2 * mpi0 ** 2
             )
         )
     else:

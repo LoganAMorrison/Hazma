@@ -1,6 +1,11 @@
 # Libraries to load
-import math, cmath
-from . import alpha, Resonance
+import math
+import cmath
+
+
+from . import Resonance
+from . import alpha
+
 
 # parametrization based on hep-ex/0605109
 
@@ -30,8 +35,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global cRhoOmPhi_
     global gDM_, mDM_, mMed_, wMed_
@@ -45,8 +53,10 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
     cRhoOmPhi_ = [cI1_, cI0_, cS_, cI1_, cS_]
 
 
-# width of the intermediate vector mesons
 def Widths(Q2, ix):
+    """
+    width of the intermediate vector mesons
+    """
     Q = math.sqrt(Q2)
     if ix == 0:
         pcm = 0.5 * (Q2 - mEta_ ** 2) / Q
@@ -84,8 +94,7 @@ def GammaDM(mMed):
         pcm = 0.5 * (Q2 - mEta_ ** 2) / mMed
     else:
         return 0.0
-    # return 1.0 / 12.0 / math.pi * pcm ** 3 * abs(FEtaGamma(Q2)) ** 2 * Resonance.gev2nb
-    return 1.0 / 12.0 / math.pi * pcm ** 3 * abs(FEtaGamma(Q2)) ** 2
+    return 1.0 / 12.0 / math.pi * pcm ** 3 * abs(FEtaGamma(Q2)) ** 2 * Resonance.gev2nb
 
 
 # SM cross section for Eta Gamma

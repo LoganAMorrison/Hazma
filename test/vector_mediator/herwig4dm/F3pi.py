@@ -1,10 +1,11 @@
 # Libraries to load
-from . import alpha, Resonance
 import math
-import cmath
-from scipy.interpolate import interp1d
+
 from scipy import integrate
-import numpy as np
+
+from . import Resonance
+from . import alpha
+
 
 ii = complex(0.0, 1.0)
 gev2nb = 389379.3656
@@ -90,12 +91,13 @@ def Hrho(Qp2, Qm2, Q02, mRho, gRho):
     )
 
 
-#########################
-### Form Factors ########
-#########################
+"""
+Form Factors
+"""
 
-# I=0 component
+
 def F0(Q2, Qp2, Qm2, Q02):
+    """I=0 component"""
     if cI0_ == 0 and cS_ == 0:
         return 0
     c0 = 0.0
@@ -171,11 +173,14 @@ def F3pi(Q2, Qp2, Qm2, Q02):
     return F0(Q2, Qp2, Qm2, Q02) + F1(Q2, Q02)
 
 
-#######################################################################
-### Contract hadronic current and integrate over phase space....#######
-#######################################################################
+"""
+Contract hadronic current and integrate over phase space....
+"""
 
-# Lorentz contraction of Lorentz part in eq.(1) of hep-ph/0512180, assuming that mpi+ = mpi- = mpi0
+# Lorentz contraction of Lorentz part in eq.(1) of hep-ph/0512180, assuming that
+# mpi+ = mpi- = mpi0
+
+
 def Lcontracted(Qp2, Qm2, Q02, s):
     return (
         1.0
@@ -225,12 +230,13 @@ def int_current(s):
     return integrate.nquad(Integrand, [bounds_Qp, bounds_Qm], args=(s,))[0]
 
 
-###############################################################
-#### Functions for mediator decay rate and cross-sections #####
-###############################################################
+"""
+Functions for mediator decay rate and cross-sections
+"""
 
-# Decay rate of mediator-> 3pions
+
 def GammaDM(medMass):
+    """Decay rate of mediator-> 3pions"""
     if medMass < 3 * mPi_:
         return 0
     pre = medMass / 3.0

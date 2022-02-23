@@ -10,7 +10,7 @@ from hazma.vector_mediator.form_factors.utils import RealArray
 from hazma.vector_mediator.form_factors.utils import ComplexArray
 
 
-@dataclass
+@dataclass(slots=True)
 class FormFactorEtaGamma:
     masses: RealArray = np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
     widths: RealArray = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])

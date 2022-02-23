@@ -1,8 +1,9 @@
 # libraries to load
-from . import alpha, Resonance, FK
-import math, cmath
-import numpy, scipy
+import math
+import cmath
 
+from . import Resonance
+from . import alpha
 
 # own fit values and parametrization, taken from 1911.11147
 mOmega_p_ = 1.43
@@ -26,8 +27,11 @@ cI1_ = 1.0
 cI0_ = 1.0
 cS_ = 1.0
 
-# change rho, omega, phi contributions
+
 def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
+    """
+    change rho, omega, phi contributions
+    """
     global cI1_, cI0_, cS_
     global gDM_, mDM_, mMed_, wMed_
     gDM_ = gDM

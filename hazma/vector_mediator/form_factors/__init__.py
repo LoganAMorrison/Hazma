@@ -16,6 +16,9 @@ from hazma.vector_mediator.form_factors.omega_pi import FormFactorOmegaPi0
 from hazma.vector_mediator.form_factors.phi_pi import FormFactorPhiPi0
 from hazma.vector_mediator.form_factors.eta_phi import FormFactorEtaPhi
 from hazma.vector_mediator.form_factors.eta_omega import FormFactorEtaOmega
+from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPi0K0K0
+from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPi0KpKm
+from hazma.vector_mediator.form_factors.pi_k_k import FormFactorPiKK0
 from hazma.vector_mediator.form_factors.utils import RealArray, ComplexArray
 from hazma.vector_mediator.form_factors.utils import (
     MPI0_GEV,
