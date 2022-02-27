@@ -338,14 +338,14 @@ def energy_res_fermi(energy):
 
 def energy_res_gecco(energy):
     """
-    Energy resolution of E-Astrogam.
+    Energy resolution of GECCO.
     """
-    return _e_res_gecco_interp(energy)
+    return _e_res_gecco_interp(energy) * fwhm_factor
 
 
 def energy_res_gecco_large(energy):
     """
-    Energy resolution of E-Astrogam.
+    Energy resolution of GECCO.
     """
     return _e_res_gecco_large_interp(energy)
 

@@ -1,9 +1,6 @@
-# Gecco's measured energy resolution Delta E / E, after all corrections. Taken
-# from slides from Alexander Moiseev.
-# Columns: energy (MeV), Delta E / E
-0.3,0.01798013245033112
-0.6628919689400063,0.008002207505518764
-2.003514584782924,0.005485651214128033
-5.0032251318178576,0.005
-7.984168553362056,0.0049999999999999956
-0.999953564848113,0.006986754966887414
+# From Alexander Moiseev Febuary, 2022
+# Columns: energy (MeV), Resolution (FWHM)
+0.2, 2e-2
+0.5, 1e-2
+2.6, 0.5e-2
+5, 0.5e-2
