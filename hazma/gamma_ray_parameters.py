@@ -170,11 +170,11 @@ draco_targets = {
     },
 }
 
-# Andromeda. See https://arxiv.org/abs/1009.5988.
+# Andromeda. See Sofue 2015, https://arxiv.org/abs/1504.05368.
 m31_targets = {
     "nfw": {
-        "1 arcmin cone": TargetParams(J=1.496e31, D=3.297e26, dOmega=2.66e-7),
-        "5 deg cone": TargetParams(J=1.479e27, D=4.017e24, dOmega=0.0239),
+        "1 arcmin cone": TargetParams(J=7.116e29, D=9.449e25, dOmega=2.66e-7),
+        "5 deg cone": TargetParams(J=2.639e26, D=5.507e24, dOmega=0.0239),
     },
 }
 
