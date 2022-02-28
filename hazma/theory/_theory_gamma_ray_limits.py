@@ -258,5 +258,6 @@ class TheoryGammaRayLimits:
         try:
             bound = prefactor * n_sigma / np.nanmax(snrs[:, 2])
             return bound
-        finally:
+        except Exception as e:
+            print(f"Error in unbinned_limit: {repr(e)}")
             return np.inf
