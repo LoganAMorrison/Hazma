@@ -951,7 +951,7 @@ def F4pi(Q2, p1, p2, p3, p4):
             f1 = (
                 c_omega
                 * Frho(Q2, beta1_omega, beta2_omega, beta3_omega)
-                * Jomega(Q2, p1, p2, p3, p4)
+                * Jomega(p1, p2, p3, p4)
             )
         elif i == 2:
             f1 = c_f0 * Frho(Q2, beta1_f0, beta2_f0, beta3_f0) * Jf0(Q2, p1, p2, p3, p4)
@@ -969,7 +969,7 @@ def F4pi(Q2, p1, p2, p3, p4):
                 f2 = (
                     c_omega
                     * Frho(Q2, beta1_omega, beta2_omega, beta3_omega)
-                    * Jomega(Q2, p1, p2, p3, p4)
+                    * Jomega(p1, p2, p3, p4)
                 )
             elif j == 2:
                 f2 = (
