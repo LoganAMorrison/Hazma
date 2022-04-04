@@ -13,6 +13,7 @@ from hazma._decay import decay_charged_kaon
 from hazma._decay import decay_muon
 from hazma._decay import decay_neutral_pion
 from hazma._decay import decay_short_kaon
+from hazma._decay import decay_rho
 from hazma.utils import RealArray, RealOrRealArray
 
 
@@ -481,3 +482,63 @@ def electron(photon_energies, _: float):
     if hasattr(photon_energies, "__len__"):
         return np.array([0.0 for _ in photon_energies])
     return 0.0
+
+
+@overload
+def neutral_rho(photon_energies: float, rho_energy: float) -> float:
+    ...
+
+
+@overload
+def neutral_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
+    ...
+
+
+def neutral_rho(photon_energies: RealOrRealArray, rho_energy: float) -> RealOrRealArray:
+    r"""Compute gamma-ray decay spectrum from the charged rho decay
+    :math:`\rho \to \pi^{\pm} + \pi^{\mp}`.
+
+    Parameters
+    ----------
+    photon_energies : float or numpy.ndarray
+        Photon energy(ies) in laboratory frame.
+    rho_energy : double
+        Rho energy in laboratory frame.
+
+    Returns
+    -------
+    spec : numpy.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at
+        ``photon_energies`` given rho energy ``rho_energy``.
+    """
+    return decay_rho.neutral_rho_decay_spectrum(photon_energies, rho_energy)
+
+
+@overload
+def charged_rho(photon_energies: float, rho_energy: float) -> float:
+    ...
+
+
+@overload
+def charged_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
+    ...
+
+
+def charged_rho(photon_energies: RealOrRealArray, rho_energy: float) -> RealOrRealArray:
+    r"""Compute gamma-ray decay spectrum from the rho decay
+    :math:`\rho^{\pm} \to \pi^{\pm} + \pi^{0}`.
+
+    Parameters
+    ----------
+    photon_energies : float or numpy.ndarray
+        Photon energy(ies) in laboratory frame.
+    rho_energy : double
+        Rho energy in laboratory frame.
+
+    Returns
+    -------
+    spec : numpy.ndarray
+        List of gamma ray spectrum values, dNdE, evaluated at
+        ``photon_energies`` given rho energy ``rho_energy``.
+    """
+    return decay_rho.charged_rho_decay_spectrum(photon_energies, rho_energy)
