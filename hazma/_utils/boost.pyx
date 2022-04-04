@@ -86,18 +86,24 @@ cdef double boost_delta_function(double e0, double e, double m, double beta):
     beta: double
         Boost velocity of the decaying particle
     """
-    cdef double gaminv
+    cdef double gamma
+    cdef double k
+    cdef double eminus
+    cdef double eplus
     cdef double k0
 
-    if beta > 1.0 or beta <= 0.0:
+    if beta > 1.0 or beta <= 0.0 or e < m:
         return 0.0
 
-    gaminv = sqrt(1.0 - beta ** 2)
-    k0 = e0 * sqrt(1.0 - (m / e0)**2)
+    gamma = 1.0 / sqrt(1.0 - beta ** 2)
+    k = sqrt(e ** 2 - m ** 2)
+    eminus = gamma * (e - beta * k)
+    eplus = gamma * (e + beta * k)
 
     # - b * k0 < (e/g) - e0 < b * k0
-    if fabs(e * gaminv - e0) < beta * k0:
-        return gaminv / (2 * beta * e0)
+    if eminus < e0 and e0 < eplus:
+        k0 = sqrt(e0 ** 2 - m ** 2)
+        return 1.0 / (2.0 * gamma * beta * k0)
 
     return 0.0
 

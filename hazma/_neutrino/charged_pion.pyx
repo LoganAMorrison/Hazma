@@ -9,7 +9,7 @@ The charged pion decays through:
 import numpy as np
 cimport numpy as np
 import cython
-from libc.math cimport log, sqrt, fabs
+from libc.math cimport log, sqrt, fabs, fmax, fmin
 from libc.float cimport DBL_EPSILON
 from scipy.integrate import quad
 from hazma._neutrino.muon cimport c_muon_decay_spectrum_point 
@@ -84,13 +84,14 @@ cdef NeutrinoSpectrumPoint c_dnde_mu_numu_point(double enu, double epi):
         double enu_rf
         double beta
         double gamma
-        double delta
+        double delta_e
+        double delta_m
         double muon_contrib
         double k
         # double ep, em
         double emin, emax
         double pre
-        NeutrinoSpectrumPoint result
+        NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
 
     if epi < MASS_PI:
         return result
@@ -98,30 +99,35 @@ cdef NeutrinoSpectrumPoint c_dnde_mu_numu_point(double enu, double epi):
     if epi - MASS_PI < DBL_EPSILON:
         emu_rf = two_body_energy(MASS_PI, MASS_MU, 0.0)
         result = c_muon_decay_spectrum_point(enu, emu_rf)
+        result.electron *= BR_PI_TO_MU_NUMU
+        result.muon *= BR_PI_TO_MU_NUMU
     else:
-        result = new_neutrino_spectrum_point()
-
         beta = boost_beta(epi, MASS_PI)
-        gamma = 1.0 / sqrt(1.0 - beta * beta)
-
-        # Contribution from pi -> nu_mu + mu
-        enu_rf = two_body_energy(MASS_PI, 0.0, MASS_MU)
-        delta = boost_delta_function(enu_rf, enu, 0.0, beta)
-
-        # Contribution from pi -> nu_mu + (mu -> nu_mu + nu_e + e)
-        emin = enu * gamma * (1.0 - beta)
-        emax = enu * gamma * (1.0 + beta)
+        gamma = 1.0 / sqrt(1.0 - beta ** 2)
 
         pre = 0.5 / (gamma * beta)
 
-        muon_contrib_nue = pre * quad(c_integrand_dnde_mu_numu, emin, emax, args=(1,))[0]
-        muon_contrib_numu = pre * quad(c_integrand_dnde_mu_numu, emin, emax, args=(2,))[0]
+        # Contribution from pi -> nu_e + e
+        enu_rf = two_body_energy(MASS_PI, 0.0, MASS_E)
+        delta_e = BR_PI_TO_E_NUE * boost_delta_function(enu_rf, enu, 0.0, beta)
+        
+        # Contribution from pi -> nu_mu + mu
+        enu_rf = two_body_energy(MASS_PI, 0.0, MASS_MU)
+        delta_m = BR_PI_TO_MU_NUMU * boost_delta_function(enu_rf, enu, 0.0, beta)
 
-        result.electron = muon_contrib_nue  # electron-neutrino
-        result.muon = delta + muon_contrib_numu
+        # Contribution from pi -> nu_mu + (mu -> nu_mu + nu_e + e)
+        emin = fmax(0.0, enu * gamma * (1.0 - beta))
+        emax = enu * gamma * (1.0 + beta)
 
-    result.electron *= BR_PI_TO_MU_NUMU
-    result.muon *= BR_PI_TO_MU_NUMU
+        muon_contrib_nue = pre * BR_PI_TO_MU_NUMU * quad(
+                c_integrand_dnde_mu_numu, emin, emax, args=(1,)
+        )[0]
+        muon_contrib_numu = pre * BR_PI_TO_MU_NUMU * quad(
+                c_integrand_dnde_mu_numu, emin, emax, args=(2,)
+        )[0]
+
+        result.electron = delta_e + muon_contrib_nue  # electron-neutrino
+        result.muon = delta_m + muon_contrib_numu
 
     return result
 

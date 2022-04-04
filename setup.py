@@ -44,6 +44,7 @@ EXTENSIONS += make_extensions(
         "decay_charged_kaon",
         "decay_long_kaon",
         "decay_short_kaon",
+        "decay_rho",
     ],
     cpp=True,
 )
