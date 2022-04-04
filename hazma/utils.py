@@ -24,7 +24,58 @@ def kallen_lambda(a, b, c):
     """
     Returns the Källén kinematic (triangle) polynomial.
     """
-    return a ** 2 + b ** 2 + c ** 2 - 2 * a * b - 2 * a * c - 2 * b * c
+    return a**2 + b**2 + c**2 - 2 * a * b - 2 * a * c - 2 * b * c
+
+
+def cross_section_prefactor(m1, m2, cme):
+    p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+    return 1.0 / (4.0 * p * cme)
+
+
+def ldot(lv1: np.ndarray, lv2: np.ndarray, axis: int = 0) -> np.ndarray:
+    """
+    Compute the Lorenzian scalar product of the arrays.
+
+    Parameters
+    ----------
+    lv1, lv2: np.ndarray
+        Arrays to compute scalar product from.
+    axis: int, optional
+        Axes containing the four-vectors. The specified axis must be of
+        shape 4 for both `lv1` and `lv2`.
+    """
+    assert (
+        lv1.shape[axis] == 4 and lv2.shape[axis] == 4
+    ), "Specified axis must be 4-dimenstional."
+
+    return (
+        lv1.take(0, axis=axis) * lv2.take(0, axis=axis)
+        - lv1.take(1, axis=axis) * lv2.take(1, axis=axis)
+        - lv1.take(2, axis=axis) * lv2.take(2, axis=axis)
+        - lv1.take(3, axis=axis) * lv2.take(3, axis=axis)
+    )
+
+
+def lnorm_sqr(lv: np.ndarray, axis: int = 0) -> np.ndarray:
+    """
+    Compute the Lorenzian squared-norm of an array.
+
+    Parameters
+    ----------
+    lv: np.ndarray
+        Array to compute Lorenzian norm off.
+    axis: int, optional
+        Axes containing the four-vectors. The specified axis must be of
+        shape 4. Default is 0.
+    """
+    assert lv.shape[axis] == 4, "Specified axis must be 4-dimenstional."
+
+    return (
+        np.square(lv.take(0, axis=axis))
+        - np.square(lv.take(1, axis=axis))
+        - np.square(lv.take(2, axis=axis))
+        - np.square(lv.take(3, axis=axis))
+    )
 
 
 # ===================================================================
@@ -45,14 +96,14 @@ def __dnde_altarelli_parisi(eng, cme, mass, splitting):
 
     def f(e):
         x = 2 * e / cme
-        if x > 1 - np.exp(1) * mu ** 2:
+        if x > 1 - np.exp(1) * mu**2:
             return 0.0
         return (
             2
             * alpha_em
             / (np.pi * cme)
             * splitting(x)
-            * (np.log((1 - x) / mu ** 2) - 1)
+            * (np.log((1 - x) / mu**2) - 1)
         )
 
     if hasattr(eng, "__len__"):
