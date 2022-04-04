@@ -109,7 +109,7 @@ def form_factor_pi_gamma(
             return np.zeros_like(q)
         qq = 1e-3 * np.array(q)
         return ff.form_factor(
-            qq ** 2,
+            qq**2,
             self._gvuu,
             self._gvdd,
             self._gvss,
@@ -119,7 +119,7 @@ def form_factor_pi_gamma(
             return 0.0
         qq = 1e-3 * np.array([q])
         return ff.form_factor(
-            qq ** 2,
+            qq**2,
             self._gvuu,
             self._gvdd,
             self._gvss,
@@ -149,7 +149,7 @@ def form_factor_eta_gamma(
             return np.zeros_like(q)
         qq = 1e-3 * np.array(q)
         return ff.form_factor(
-            qq ** 2,
+            qq**2,
             self._gvuu,
             self._gvdd,
             self._gvss,
@@ -159,7 +159,7 @@ def form_factor_eta_gamma(
             return 0.0
         qq = 1e-3 * np.array([q])
         return ff.form_factor(
-            qq ** 2,
+            qq**2,
             self._gvuu,
             self._gvdd,
             self._gvss,
@@ -188,12 +188,12 @@ def form_factor_omega_pi(
         if self.mv < MOMEGA_GEV + MPI0_GEV:
             return np.zeros_like(q)
         qq = 1e-3 * np.array(q)
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)
+        return ff.form_factor(qq**2, self._gvuu, self._gvdd)
     else:
         if self.mv < MOMEGA_GEV + MPI0_GEV:
             return 0.0
         qq = 1e-3 * np.array([q])
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)[0]
+        return ff.form_factor(qq**2, self._gvuu, self._gvdd)[0]
 
 
 def form_factor_phi_pi(
@@ -214,16 +214,10 @@ def form_factor_phi_pi(
         Form factor from V-phi-pi.
     """
     ff = FormFactorPhiPi0()
-    if hasattr(q, "__len__"):
-        if self.mv < MPHI_GEV + MPI0_GEV:
-            return np.zeros_like(q)
-        qq = 1e-3 * np.array(q)
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)
-    else:
-        if self.mv < MPHI_GEV + MPI0_GEV:
-            return 0.0
-        qq = 1e-3 * np.array([q])
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)[0]
+    if self.mv < MPHI_GEV + MPI0_GEV:
+        return np.zeros_like(q)
+    qq = 1e-3 * q
+    return ff.form_factor(qq**2, self._gvuu, self._gvdd)
 
 
 def form_factor_eta_phi(
@@ -248,12 +242,12 @@ def form_factor_eta_phi(
         if self.mv < META_GEV + MPHI_GEV:
             return np.zeros_like(q)
         qq = 1e-3 * np.array(q)
-        return ff.form_factor(qq ** 2, self._gvss)
+        return ff.form_factor(qq**2, self._gvss)
     else:
         if self.mv < META_GEV + MPHI_GEV:
             return 0.0
         qq = 1e-3 * np.array([q])
-        return ff.form_factor(qq ** 2, self._gvss)[0]
+        return ff.form_factor(qq**2, self._gvss)[0]
 
 
 def form_factor_eta_omega(
@@ -278,9 +272,9 @@ def form_factor_eta_omega(
         if self.mv < META_GEV + MOMEGA_GEV:
             return np.zeros_like(q)
         qq = 1e-3 * np.array(q)
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)
+        return ff.form_factor(qq**2, self._gvuu, self._gvdd)
     else:
         if self.mv < META_GEV + MOMEGA_GEV:
             return 0.0
         qq = 1e-3 * np.array([q])
-        return ff.form_factor(qq ** 2, self._gvuu, self._gvdd)[0]
+        return ff.form_factor(qq**2, self._gvuu, self._gvdd)[0]

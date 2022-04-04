@@ -5,18 +5,7 @@ import numpy.typing as npt
 from scipy.special import gamma  # type:ignore
 from scipy import special
 
-from hazma.parameters import (
-    omega_mass as __omega_mass,
-    rho_mass as __rho_mass,
-    eta_mass as __eta_mass,
-    charged_pion_mass as __charged_pion_mass,
-    neutral_pion_mass as __neutral_pion_mass,
-    charged_kaon_mass as __charged_kaon_mass,
-    neutral_kaon_mass as __neutral_kaon_mass,
-    eta_prime_mass as __eta_prime_mass,
-    phi_mass as __phi_mass,
-    fpi as __fpi,
-)
+from hazma import parameters
 from hazma.utils import kallen_lambda
 
 RealArray = npt.NDArray[np.float64]
@@ -27,25 +16,25 @@ ComplexOrComplexArray = Union[complex, ComplexArray]
 
 
 # Charged Pion mass in GeV
-MPI0_GEV = __neutral_pion_mass * 1e-3
+MPI0_GEV = parameters.neutral_pion_mass * 1e-3
 # Charged Pion mass in GeV
-MPI_GEV = __charged_pion_mass * 1e-3
+MPI_GEV = parameters.charged_pion_mass * 1e-3
 # Neutral Kaon mass in GeV
-MK0_GEV = __neutral_kaon_mass * 1e-3
+MK0_GEV = parameters.neutral_kaon_mass * 1e-3
 # Charged Kaon mass in GeV
-MK_GEV = __charged_kaon_mass * 1e-3
+MK_GEV = parameters.charged_kaon_mass * 1e-3
 # Charged Kaon mass in GeV
-META_GEV = __eta_mass * 1e-3
+META_GEV = parameters.eta_mass * 1e-3
 # Rho mass in GeV
-MRHO_GEV = __rho_mass * 1e-3
+MRHO_GEV = parameters.rho_mass * 1e-3
 # Omega mass in GeV
-MOMEGA_GEV = __omega_mass * 1e-3
+MOMEGA_GEV = parameters.omega_mass * 1e-3
 # Eta' mass in GeV
-METAP_GEV = __eta_prime_mass * 1e-3
+METAP_GEV = parameters.eta_prime_mass * 1e-3
 # Phi mass in GeV
-MPHI_GEV = __phi_mass * 1e-3
-# Phi mass in GeV
-FPI_GEV = __fpi * 1e-3
+MPHI_GEV = parameters.phi_mass * 1e-3
+# fpi in GeV
+FPI_GEV = parameters.fpi * 1e-3
 
 
 def beta2(
@@ -130,9 +119,9 @@ def dhhatds(
         The value of the the derivative of Hhat(s) evaluated at the resonance
         mass.
     """
-    v2 = beta2(mres ** 2, m1, m2)
+    v2 = beta2(mres**2, m1, m2)
     v = np.sqrt(v2)
-    r = (m1 ** 2 + m2 ** 2) / mres ** 2
+    r = (m1**2 + m2**2) / mres**2
     return (
         gamma
         / np.pi
@@ -179,7 +168,7 @@ def hhat(
     hhat: Union[float, npt.NDArray]
         The value of the Hhat(s) function.
     """
-    vr = beta(mres ** 2, m1, m2)
+    vr = beta(mres**2, m1, m2)
     v = beta(s, m1, m2)
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
@@ -240,16 +229,16 @@ def h(
         return (
             hhat(ss, mres, gamma, m1, m2, reshape=True)
             - hres
-            - (ss[:, np.newaxis] - mres ** 2) * dh
+            - (ss[:, np.newaxis] - mres**2) * dh
         )
 
     if s != 0.0:
-        return hhat(s, mres, gamma, m1, m2) - hres - (s - mres ** 2) * dh
+        return hhat(s, mres, gamma, m1, m2) - hres - (s - mres**2) * dh
     else:
         return (
-            -2.0 * (m1 + m2) ** 2 / np.pi * gamma / mres / beta(mres ** 2, m1, m2) ** 3
+            -2.0 * (m1 + m2) ** 2 / np.pi * gamma / mres / beta(mres**2, m1, m2) ** 3
             - hres
-            + mres ** 2 * dh
+            + mres**2 * dh
         )
 
 
@@ -288,7 +277,7 @@ def gamma_p(
         The s-dependent width.
     """
     v2 = beta2(s, m1, m2)
-    vr2 = beta2(mres ** 2, m1, m2)
+    vr2 = beta2(mres**2, m1, m2)
     if hasattr(s, "__len__") and reshape:
         rp = np.sqrt(
             np.clip(
@@ -297,9 +286,9 @@ def gamma_p(
                 None,
             )
         )
-        return np.sqrt(s)[:, np.newaxis] / mres * rp ** 3 * gamma
+        return np.sqrt(s)[:, np.newaxis] / mres * rp**3 * gamma
     rp = np.where(vr2 == 0.0, vr2, np.sqrt(np.clip(v2 / vr2, 0.0, None)))
-    return np.sqrt(s) / mres * rp ** 3 * gamma
+    return np.sqrt(s) / mres * rp**3 * gamma
 
 
 def breit_wigner_gs(
@@ -346,7 +335,7 @@ def breit_wigner_gs(
     bw: Union[float, npt.NDArray]
         The Breit-Wigner function.
     """
-    mr2 = mass ** 2
+    mr2 = mass**2
 
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
@@ -394,7 +383,7 @@ def breit_wigner_fw(
     bw: Union[float, npt.NDArray]
         The Breit-Wigner function.
     """
-    mr2 = mass ** 2
+    mr2 = mass**2
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
         return mr2 / (mr2 - ss[:, np.newaxis] - 1j * mass * width)
@@ -409,7 +398,7 @@ def breit_wigner_pwave(
     m2: float,
     reshape: Optional[bool] = False,
 ):
-    mr2 = mres ** 2
+    mr2 = mres**2
     if hasattr(s, "__len__") and reshape:
         ss = np.array(s)
         return mr2 / (
@@ -470,7 +459,7 @@ def msqrd_lorentz_p_p(s, m1, m2):
     m2: float
         Mass of 2nd pseudo-scalar.
     """
-    return s - 2 * (m1 ** 2 + m2 ** 2)
+    return s - 2 * (m1**2 + m2**2)
 
 
 def msqrd_lorentz_p_v(s, mp, mv):
@@ -494,7 +483,7 @@ def msqrd_lorentz_p_v(s, mp, mv):
     mv: float
         Mass of the vector meson.
     """
-    return 0.5 * kallen_lambda(s, mp ** 2, mv ** 2)
+    return 0.5 * kallen_lambda(s, mp**2, mv**2)
 
 
 def msqrd_lorentz_p_p_p(s, t, m, m1, m2, m3):
@@ -524,19 +513,19 @@ def msqrd_lorentz_p_p_p(s, t, m, m1, m2, m3):
         Mass of 3rd meson.
     """
     return (
-        -(m1 ** 4 * m2 ** 2)
-        - m ** 4 * m3 ** 2
-        + m ** 2
+        -(m1**4 * m2**2)
+        - m**4 * m3**2
+        + m**2
         * (
-            -(m3 ** 4)
-            + m1 ** 2 * (m2 ** 2 + m3 ** 2 - s)
-            + m3 ** 2 * s
-            + m2 ** 2 * (m3 ** 2 - t)
-            + m3 ** 2 * t
+            -(m3**4)
+            + m1**2 * (m2**2 + m3**2 - s)
+            + m3**2 * s
+            + m2**2 * (m3**2 - t)
+            + m3**2 * t
             + s * t
         )
-        - s * (m2 ** 2 * (m3 ** 2 - t) + t * (-(m3 ** 2) + s + t))
-        + m1 ** 2 * (-(m2 ** 4) + (-(m3 ** 2) + s) * t + m2 ** 2 * (m3 ** 2 + s + t))
+        - s * (m2**2 * (m3**2 - t) + t * (-(m3**2) + s + t))
+        + m1**2 * (-(m2**4) + (-(m3**2) + s) * t + m2**2 * (m3**2 + s + t))
     ) / 4.0
 
 
@@ -563,15 +552,15 @@ def msqrd_lorentz_p_p_p_t_coeffs(s, m, m1, m2, m3):
         -(
             (m1 * m2 - m * m3)
             * (m1 * m2 + m * m3)
-            * (-(m ** 2) + m1 ** 2 + m2 ** 2 - m3 ** 2)
+            * (-(m**2) + m1**2 + m2**2 - m3**2)
         )
         + (-m + m2) * (m + m2) * (m1 - m3) * (m1 + m3) * s
     ) / 4.0
 
     t1 = (
         -((m - m1) * (m + m1) * (m2 - m3) * (m2 + m3))
-        + (m ** 2 + m1 ** 2 + m2 ** 2 + m3 ** 2) * s
-        - s ** 2
+        + (m**2 + m1**2 + m2**2 + m3**2) * s
+        - s**2
     ) / 4.0
     t2 = -s / 4.0
     return [t0, t1, t2]
@@ -587,14 +576,14 @@ def integral_power_div_simple_monomial(n, z, lb, ub):
         if n == 0:
             return np.log(ub / lb)
         p = n - 1
-        return (ub ** p - lb ** p) / p
+        return (ub**p - lb**p) / p
 
     zu = ub - z
     zl = lb - z
 
-    return z ** n * np.log(zu / zl) + sum(
+    return z**n * np.log(zu / zl) + sum(
         [
-            special.binom(n, k) * z ** (n - k) * (zu ** k - zl ** k) / k
+            special.binom(n, k) * z ** (n - k) * (zu**k - zl**k) / k
             for k in range(1, n + 1)
         ]
     )
@@ -610,11 +599,11 @@ def integral_power_div_monomial(n, m, z, lb, ub):
         if n == m - 1:
             return np.log(ub / lb)
         p = n - m + 1
-        return (ub ** p - lb ** p) / p
+        return (ub**p - lb**p) / p
 
     def term(k):
         if k == m - 1:
-            return z ** n * np.log((ub - z) / (lb - z))
+            return z**n * np.log((ub - z) / (lb - z))
         return (
             special.binom(n, k)
             * z ** (n - k)

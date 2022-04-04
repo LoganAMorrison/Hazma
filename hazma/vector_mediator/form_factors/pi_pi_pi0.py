@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 
+from hazma.utils import lnorm_sqr
 from hazma.vector_mediator.form_factors.utils import (
     MPI_GEV,
     MPI0_GEV,
@@ -10,7 +11,7 @@ from hazma.vector_mediator.form_factors.utils import (
     RealArray,
 )
 
-from hazma.rambo import generate_phase_space
+from hazma.rambo import PhaseSpace
 
 
 @dataclass
@@ -35,16 +36,16 @@ class FormFactorPiPiPi0:
         # p-wave width
         return (
             width
-            * mass ** 2
+            * mass**2
             / s
-            * ((s - (mj + mk) ** 2) / (mass ** 2 - (mj + mk) ** 2)) ** 1.5
+            * ((s - (mj + mk) ** 2) / (mass**2 - (mj + mk) ** 2)) ** 1.5
         )
 
     def __bw_rho(self, Qi2, mRho, gRho, mj, mk):
         # Breit-Wigner for rhos
-        return mRho ** 2 / (
+        return mRho**2 / (
             Qi2
-            - mRho ** 2
+            - mRho**2
             + 1j * np.sqrt(Qi2) * self.__gamma_rho(Qi2, mRho, gRho, mj, mk)
         )
 
@@ -103,7 +104,7 @@ class FormFactorPiPiPi0:
             ci1
             * gw
             * breit_wigner_fw(q2, self.mass_omega_i1, self.width_omega_i1)
-            / self.mass_omega_i1 ** 2
+            / self.mass_omega_i1**2
         )
         return f1
 
@@ -132,7 +133,7 @@ class FormFactorPiPiPi0:
         )
 
     def integrated_form_factor(
-        self, q2: float, gvuu: float, gvdd: float, gvss: float, num_pts: int = 10000
+        self, q2: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
     ) -> Tuple[float, float]:
         """
         Compute the form factor for a vector decaying into two charged pions and
@@ -144,41 +145,35 @@ class FormFactorPiPiPi0:
             Square of the center-of-mass energy in GeV.
         """
         cme = np.sqrt(q2)
-        space = generate_phase_space(
-            np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), cme, num_ps_pts=num_pts
-        )
-        momenta = space[:, :-1].reshape((len(space), 3, 4))
-        wgts = space[:, -1]
+        phase_space = PhaseSpace(cme, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]))
+        ps, ws = phase_space.generate(npts)
 
-        p1 = momenta[:, 0]
-        p2 = momenta[:, 1]
-        p3 = momenta[:, 2]
+        p1 = ps[:, 0]
+        p2 = ps[:, 1]
+        p3 = ps[:, 2]
 
-        s = (p1[:, 0] - cme) * (p1[:, 0] - cme) - (
-            p1[:, 1] * p1[:, 1] + p1[:, 2] * p1[:, 2] + p1[:, 3] * p1[:, 3]
-        )
-        t = (p2[:, 0] - cme) * (p2[:, 0] - cme) - (
-            p2[:, 1] * p2[:, 1] + p2[:, 2] * p2[:, 2] + p2[:, 3] * p2[:, 3]
-        )
-        u = (p3[:, 0] - cme) * (p3[:, 0] - cme) - (
-            p3[:, 1] * p3[:, 1] + p3[:, 2] * p3[:, 2] + p3[:, 3] * p3[:, 3]
-        )
+        s = lnorm_sqr(p2 + p3)
+        t = lnorm_sqr(p1 + p3)
+        u = lnorm_sqr(p1 + p2)
 
-        vals = wgts * (
+        ws = ws * (
             np.abs(self.form_factor(q2, s, t, u, gvuu, gvdd, gvss)) ** 2
             * (
-                -(MPI_GEV ** 4 * s)
-                + MPI_GEV ** 2
+                -(MPI_GEV**4 * s)
+                + MPI_GEV**2
                 * (
-                    -(MPI0_GEV ** 4)
-                    - q2 ** 2
+                    -(MPI0_GEV**4)
+                    - q2**2
                     + q2 * s
-                    + MPI0_GEV ** 2 * (2 * q2 + s)
+                    + MPI0_GEV**2 * (2 * q2 + s)
                     + 2 * s * t
                 )
-                - s * (MPI0_GEV ** 2 * (q2 - t) + t * (-q2 + s + t))
+                - s * (MPI0_GEV**2 * (q2 - t) + t * (-q2 + s + t))
             )
             / 12.0
         )
 
-        return np.average(vals), np.std(vals) / np.sqrt(len(vals))
+        avg: float = np.average(ws)  # type: ignore
+        error: float = np.std(ws, ddof=1) / np.sqrt(npts)
+
+        return avg, error

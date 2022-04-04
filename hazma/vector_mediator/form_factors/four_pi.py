@@ -77,7 +77,7 @@ class FormFactorPiPiPiPi:
         """
         Compute the generic Breit-Wigner propagator.
         """
-        return mass ** 2 / (mass ** 2 - s - 1j * mass * width)
+        return mass**2 / (mass**2 - s - 1j * mass * width)
 
     def _clip_pos(self, x):
         """
@@ -96,14 +96,14 @@ class FormFactorPiPiPiPi:
         """
         a1, a0, am1, am2 = 1.623, 10.38, -9.32, 0.65
         c3, c4, c5 = 4.1, -3.3, 5.8
-        m2 = M_A1 ** 2
+        m2 = M_A1**2
 
         def g(x):
-            y = x - 9 * M_PI ** 2
+            y = x - 9 * M_PI**2
             return np.where(
                 x > 0.838968432668,  # (M_A1 + M_PI) ** 2,
-                a1 * x + a0 + am1 / x + am2 / x ** 2,
-                c3 * y ** 3 * (1.0 + c4 * y + c5 * y ** 2),
+                a1 * x + a0 + am1 / x + am2 / x**2,
+                c3 * y**3 * (1.0 + c4 * y + c5 * y**2),
             )
 
         return self._breit_wigner(s, M_A1, G_A1 * g(s) / g(m2))
@@ -117,8 +117,8 @@ class FormFactorPiPiPiPi:
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        mf2 = M_F0 ** 2
-        mu = 4.0 * M_PI ** 2
+        mf2 = M_F0**2
+        mu = 4.0 * M_PI**2
         width = mf2 / s * (s - mu) / (mf2 - mu)
         # width = G_F0 * np.where(width > 0, 1.0, -1.0) * np.sqrt(np.abs(width))
         width = G_F0 * np.sqrt(self._clip_pos(mf2 / s * (s - mu) / (mf2 - mu)))
@@ -152,8 +152,8 @@ class FormFactorPiPiPiPi:
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        prop1 = self._breit_wigner3(s, M_RHO, G_RHO) / M_RHO ** 2
-        prop2 = self._breit_wigner3(s, M_RHO1, G_RHO1) / M_RHO1 ** 2
+        prop1 = self._breit_wigner3(s, M_RHO, G_RHO) / M_RHO**2
+        prop2 = self._breit_wigner3(s, M_RHO1, G_RHO1) / M_RHO1**2
         return prop1 - prop2
 
     def _propagator_rho_f(self, s, b1, b2, b3):
@@ -187,8 +187,8 @@ class FormFactorPiPiPiPi:
         width: float
             Width of the resonance.
         """
-        m2 = mass ** 2
-        mu = 4.0 * M_PI ** 2
+        m2 = mass**2
+        mu = 4.0 * M_PI**2
         gt = self._clip_pos(m2 / s * ((s - mu) / (m2 - mu)) ** 3)
         # gt = m2 / s * ((s - mu) / (m2 - mu)) ** 3
         gt = np.where(gt > 0.0, 1.0, -1.0) * np.sqrt(np.abs(gt))
@@ -335,7 +335,7 @@ class FormFactorPiPiPiPi:
         See ArXiv:0804.0359 Eqn.(A.8).
         """
         coupling = (
-            self.coupling_rho * self.coupling_rho_pi_pi ** 3 * self.coupling_rho_gamma
+            self.coupling_rho * self.coupling_rho_pi_pi**3 * self.coupling_rho_gamma
         )
 
         prop = self._propagator_rho_double(Q2)
@@ -458,7 +458,7 @@ class FormFactorPiPiPiPi:
         jj = np.real(ldot(current, np.conj(current)))
         jq = np.abs(ldot(Q, np.conj(current))) ** 2
 
-        wgts = weights * (-jj + jq / mass ** 2)
+        wgts = weights * (-jj + jq / mass**2)
 
         if neutral:
             pre = 1.0 / (6.0 * mass) / 2.0
@@ -472,8 +472,11 @@ class FormFactorPiPiPiPi:
 
     def decay_width(
         self,
+        *,
         mv: float,
-        n: int,
+        gvuu: float,
+        gvdd: float,
+        npts: int,
         neutral: bool,
         contributions: List[str] = ["a1", "f0", "omega", "rho"],
     ) -> Tuple[float, float]:
@@ -488,11 +491,15 @@ class FormFactorPiPiPiPi:
         if mv < np.sum(masses):
             return 0.0, 0.0
 
+        c1 = gvuu - gvdd
+
         phase_space = PhaseSpace(mv, masses)
-        momenta, weights = phase_space.generate(n)
-        return self._width(
+        momenta, weights = phase_space.generate(npts)
+        width, error = self._width(
             mv, momenta, weights, neutral=neutral, contributions=contributions
         )
+
+        return c1**2 * width, c1**2 * error
 
     # ============================================================================
     # ---- Cross Sections --------------------------------------------------------
@@ -521,7 +528,7 @@ class FormFactorPiPiPiPi:
         q4 = momenta[:, 3, :]
 
         ex = cme / 2
-        px = np.sqrt(ex ** 2 - mx ** 2)
+        px = np.sqrt(ex**2 - mx**2)
         p1 = np.array([ex, 0.0, 0.0, px])
         p2 = np.array([ex, 0.0, 0.0, -px])
 
@@ -532,17 +539,17 @@ class FormFactorPiPiPiPi:
 
         jc = np.conj(j)
 
-        s = cme ** 2
+        s = cme**2
         # Coefficient of (JC.J)
-        coeff_jc_j = 2 * mv ** 4 * mx ** 2 - 0.5 * mv ** 4 * s
+        coeff_jc_j = 2 * mv**4 * mx**2 - 0.5 * mv**4 * s
         # Coefficient of (JC.p1) * (JC.p2)
-        coeff_jcp1_jp2 = mv ** 4 - 4 * mv ** 2 * mx ** 2 + 2 * mx ** 2 * s
+        coeff_jcp1_jp2 = mv**4 - 4 * mv**2 * mx**2 + 2 * mx**2 * s
         # Coefficient of (JC.p2) * (JC.p2)
-        coeff_jcp2_jp2 = -4 * mv ** 2 * mx ** 2 + 4 * mx ** 2 * s
+        coeff_jcp2_jp2 = -4 * mv**2 * mx**2 + 4 * mx**2 * s
         # Coefficient of (JC.p1) * (JC.p1)
-        coeff_jcp1_jp1 = -4 * mv ** 2 * mx ** 2 + 4 * mx ** 2 * s
+        coeff_jcp1_jp1 = -4 * mv**2 * mx**2 + 4 * mx**2 * s
         # Coefficient of (JC.p2) * (JC.p1)
-        coeff_jcp2_jp1 = mv ** 4 - 4 * mv ** 2 * mx ** 2 + 4 * mx ** 2 * s
+        coeff_jcp2_jp1 = mv**4 - 4 * mv**2 * mx**2 + 4 * mx**2 * s
 
         msqrd_jc_j = np.real(ldot(j, jc))
         msqrd_jcp1_jp2 = ldot(jc, p1) * ldot(j, p2)
@@ -550,7 +557,7 @@ class FormFactorPiPiPiPi:
         msqrd_jcp1_jp1 = ldot(jc, p1) * ldot(j, p1)
         msqrd_jcp2_jp1 = ldot(jc, p2) * ldot(j, p1)
 
-        den = mv ** 4 * (mv ** 2 - s) ** 2 + mv ** 6 * widthv ** 2
+        den = mv**4 * (mv**2 - s) ** 2 + mv**6 * widthv**2
 
         msqrd = (
             msqrd_jc_j * coeff_jc_j
@@ -569,7 +576,16 @@ class FormFactorPiPiPiPi:
         return width, error
 
     def cross_section(
-        self, cme: float, mx: float, mv: float, widthv: float, n: int, neutral: bool
+        self,
+        *,
+        cme: float,
+        mx: float,
+        mv: float,
+        gvuu: float,
+        gvdd: float,
+        widthv: float,
+        npts: int,
+        neutral: bool,
     ) -> Tuple[float, float]:
         """
         Compute the cross-section for x + xbar -> 4pi.
@@ -588,5 +604,9 @@ class FormFactorPiPiPiPi:
             masses = np.array([M_PI, M_PI, M_PI, M_PI])
 
         phase_space = PhaseSpace(cme, masses)
-        momenta, weights = phase_space.generate(n)
-        return self._cross_section(cme, mx, mv, widthv, momenta, weights, neutral)
+        momenta, weights = phase_space.generate(npts)
+        cs, error = self._cross_section(cme, mx, mv, widthv, momenta, weights, neutral)
+
+        c1 = gvuu - gvdd
+
+        return c1**2 * cs, c1**2 * error
