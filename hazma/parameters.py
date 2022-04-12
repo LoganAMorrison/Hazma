@@ -7,40 +7,76 @@ Physics constants and utility functions.
 """
 
 # Masses (MeV)
+
+#: Higgs mass in MeV
 higgs_mass = 125.1e3
+#: Electron mass in MeV
 electron_mass = 0.5109989461  # m[e-] = 0.5109989461 ± 3.1e-09
+#: Muon mass in MeV
 muon_mass = 105.6583745  # m[mu-] = 105.6583745 ± 2.4e-06
+#: Tau mass in MeV
 tau_mass = 1776.86  # m[tau-] = 1776.86 ± 0.12
+#: Neutral pion mass in MeV
 neutral_pion_mass = 134.9768  # m[pi0] = 134.9768 ± 0.0005
+#: Charged pion mass in MeV
 charged_pion_mass = 139.57039  # m[pi+] = 139.57039 ± 0.00018
+#: Eta mass in MeV
 eta_mass = 547.862  # m[eta] = 547.862 ± 0.017
+#: Eta' mass in MeV
 eta_prime_mass = 957.78  # m[eta'(958)] = 957.78 ± 0.06
+#: Charged kaon mass in MeV
 charged_kaon_mass = 493.677  # m[K+] = 493.677 ± 0.016
+#: Neutral kaon mass in MeV
 neutral_kaon_mass = 497.611  # m[K0] = 497.611 ± 0.013
+#: Long kaon mass in MeV
 long_kaon_mass = 497.611  # m[K(L)0] = 497.611 ± 0.013
+#: Short kaon mass in MeV
 short_kaon_mass = 497.611  # m[K(S)0] = 497.611 ± 0.013
+#: Rho mass in MeV
 rho_mass = 775.26  # m[rho(770)0] = 775.26 ± 0.23
+#: Omega mass in MeV
 omega_mass = 782.66  # m[omega(782)] = 782.66 ± 0.13
+#: Phi mass in MeV
 phi_mass = 1019.461  # m[phi(1020)] = 1019.461 ± 0.016
+#: Charged B mass in MeV
 charged_B_mass = 5279.29  # B^+ meson
+#: Pion mass in MeV (chiral-limit)
 pion_mass_chiral_limit = (neutral_pion_mass + charged_pion_mass) / 2.0
+#: Kaon mass in MeV (chiral-limit)
 kaon_mass_chiral_limit = (neutral_kaon_mass + charged_kaon_mass) / 2.0
 
 
 # Quark masses in MS-bar scheme
+#: Up-quark mass in MeV
 up_quark_mass = 2.3
+#: Down-quark mass in MeV
 down_quark_mass = 4.8
+#: Strange-quark mass in MeV
 strange_quark_mass = 95.0
+#: Charm-quark mass in MeV
 charm_quark_mass = 1.275e3
+#: Bottom-quark mass in MeV
 bottom_quark_mass = 4.18e3
+#: Top-quark mass in MeV
 top_quark_mass = 160.0e3
 
 # Collections of masses
 lepton_masses = [electron_mass, muon_mass]
 
-# Convert <sigma v> from MeV^2
+
+#: Convert :math:`\mathrm{cm}` to :math:`\mathrm{MeV}^{-1}`
 cm_to_inv_MeV = 5.08e10  # MeV^-1 cm^-1
-sv_inv_MeV_to_cm3_per_s = 1.0 / cm_to_inv_MeV ** 2 * 3e10  # cm^3/s * MeV^2
+#: Convert :math:`\expval{\sigma v}` from
+#: :math:`\mathrm{MeV}^{-2}` to :math:`\mathrm{cm}^{3}/\mathrm{s}`
+sv_inv_MeV_to_cm3_per_s = 1.0 / cm_to_inv_MeV**2 * 3e10  # cm^3/s * MeV^2
+#: Convert :math:`\mathrm{grams}` to :math:`\mathrm{MeV}`
+g_to_MeV = 5.61e26
+#: Convert :math:`\mathrm{MeV}` to :math:`\mathrm{grams}`
+MeV_to_g = 1 / g_to_MeV
+#: Solar mass to grams
+Msun_to_g = 1.988e33
+#: Gram to solar mass
+g_to_Msun = 1 / Msun_to_g
 
 # Miscellaneous
 alpha_em = 1.0 / 137.04  # fine structure constant.
@@ -57,11 +93,6 @@ sin_theta_weak_sqrd = 0.22290
 sin_theta_weak = np.sqrt(sin_theta_weak_sqrd)
 cos_theta_weak = np.sqrt(1.0 - sin_theta_weak_sqrd)
 
-g_to_MeV = 5.61e26
-MeV_to_g = 1 / g_to_MeV
-Msun_to_g = 1.988e33
-g_to_Msun = 1 / Msun_to_g
-
 # Charges
 Qu = 2.0 / 3.0
 Qd = -1.0 / 3.0
@@ -71,7 +102,7 @@ Qe = -1.0
 fpi0 = 91.924  # Neutral pion decay constant
 fpi = 92.2138  # Charged pion decay constant
 fk = 110.379  # Charged kaon decay constant
-b0 = pion_mass_chiral_limit ** 2 / (up_quark_mass + down_quark_mass)
+b0 = pion_mass_chiral_limit**2 / (up_quark_mass + down_quark_mass)
 G8 = 5.47
 G27 = 0.392
 gv = 67.0
@@ -180,8 +211,8 @@ def spec_res_fn(ep, e, energy_res):
     else:
         return (
             1.0
-            / np.sqrt(2.0 * np.pi * sigma ** 2)
-            * np.exp(-((ep - e) ** 2) / (2.0 * sigma ** 2))
+            / np.sqrt(2.0 * np.pi * sigma**2)
+            * np.exp(-((ep - e) ** 2) / (2.0 * sigma**2))
         )
 
 
