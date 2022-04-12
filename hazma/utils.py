@@ -1,6 +1,7 @@
+from typing import Union
+
 import numpy as np
 import numpy.typing as npt
-from typing import Union
 
 from .parameters import alpha_em
 
@@ -27,14 +28,27 @@ def kallen_lambda(a, b, c):
     return a**2 + b**2 + c**2 - 2 * a * b - 2 * a * c - 2 * b * c
 
 
-def cross_section_prefactor(m1, m2, cme):
+def cross_section_prefactor(m1: float, m2: float, cme: float) -> float:
+    """
+    Returns the prefactor to convert an integral over
+    Lorentz-invariant phase-space to a cross section.
+
+    Parameters
+    ----------
+    m1: float
+        Mass of the first incoming particle.
+    m2: float
+        Mass of the second incoming particle.
+    cme: float
+        Center-of-mass energy.
+    """
     p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
     return 1.0 / (4.0 * p * cme)
 
 
 def ldot(lv1: np.ndarray, lv2: np.ndarray, axis: int = 0) -> np.ndarray:
     """
-    Compute the Lorenzian scalar product of the arrays.
+    Compute the Lorenzian scalar product of two arrays.
 
     Parameters
     ----------
@@ -42,7 +56,7 @@ def ldot(lv1: np.ndarray, lv2: np.ndarray, axis: int = 0) -> np.ndarray:
         Arrays to compute scalar product from.
     axis: int, optional
         Axes containing the four-vectors. The specified axis must be of
-        shape 4 for both `lv1` and `lv2`.
+        shape 4 for both `lv1` and `lv2`. Default is 0.
     """
     assert (
         lv1.shape[axis] == 4 and lv2.shape[axis] == 4
