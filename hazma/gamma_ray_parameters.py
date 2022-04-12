@@ -1,17 +1,17 @@
+"""Parameters relevant to computing constraints from gamma ray experiments.
+
+"""
+
+
 import os
 from pathlib import Path
 
 import numpy as np
+from scipy.interpolate import interp1d
+
 from hazma.background_model import BackgroundModel
 from hazma.flux_measurement import FluxMeasurement
 from hazma.target_params import TargetParams
-from scipy.interpolate import interp1d
-
-"""
-
-Parameters relevant to computing constraints from gamma ray experiments.
-
-"""
 
 # Directory of this file
 _dir = Path(__file__).parent.absolute()
@@ -28,13 +28,13 @@ def _generate_interp(subdir, filename, fill_value=np.nan, bounds_error=True):
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
 # Additional factor of two due to uncertainty about radioactive and
 # instrumental backgrounds.
-gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam ** 2)
+gecco_bg_model = BackgroundModel([0.2, 4e3], lambda e_gam: 2 * 4e-3 / e_gam**2)
 
 # This is the background model from arXiv:1504.04024, eq. 14. It was derived
 # by performing a simple power law fit to COMPTEL data from 0.8 - 30 MeV and
 # EGRET data from 30 MeV - 10 GeV. We take the lower range of validity to be
 # the lowest energy for which e-ASTROGAM has nonzero effective area.
-default_bg_model = BackgroundModel([0.0, 10.0e3], lambda e: 2.74e-3 / e ** 2)
+default_bg_model = BackgroundModel([0.0, 10.0e3], lambda e: 2.74e-3 / e**2)
 
 
 def solid_angle_cone(radius):
@@ -87,8 +87,8 @@ def solid_angle_cone(radius):
 # ---- Targets -----
 # ==================
 
-# Several different GC targets. Halo parameters are from the DM fit using
-# baryonic model B2 in https://arxiv.org/abs/1906.06133 (table III).
+#: Several different GC targets. Halo parameters are from the DM fit using
+#: baryonic model B2 in https://arxiv.org/abs/1906.06133 (table III).
 gc_targets = {
     "nfw": {
         "1 arcmin cone": TargetParams(J=6.972e32, D=4.84e26, dOmega=2.66e-7),
@@ -128,41 +128,50 @@ fermi_diffuse_target = TargetParams(J=1.695e28, D=3.563e25, dOmega=10.82)
 integral_diffuse_target = TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421)
 
 # New interface
+
+#: COMPTEL diffuse targets
 comptel_diffuse_targets = {
     "nfw": TargetParams(J=9.308e28, D=4.866e25, dOmega=1.433),
     "ein": TargetParams(J=1.751e29, D=5.541e25, dOmega=1.433),
 }
+#: COMPTEL diffuse targets with optimistic parameters
 comptel_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=1.53e29, D=5.571e25, dOmega=1.433),
     "ein": TargetParams(J=1.04e30, D=7.098e25, dOmega=1.433),
 }
+#: EGRET diffuse targets
 egret_diffuse_targets = {
     "nfw": TargetParams(J=6.265e27, D=1.71e25, dOmega=6.585),
     "ein": TargetParams(J=6.994e27, D=1.738e25, dOmega=6.585),
 }
+#: EGRET diffuse targets with optimistic parameters
 egret_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=7.556e27, D=1.761e25, dOmega=6.585),
     "ein": TargetParams(J=9.062e27, D=1.952e25, dOmega=6.585),
 }
+#: Fermi-LAT diffuse targets
 fermi_diffuse_targets = {
     "nfw": TargetParams(J=8.475e27, D=1.782e25, dOmega=10.82),
     "ein": TargetParams(J=1.058e28, D=1.832e25, dOmega=10.82),
 }
+#: Fermi-LAT diffuse targets with optimistic parameters
 fermi_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=1.106e28, D=1.854e25, dOmega=10.82),
     "ein": TargetParams(J=1.601e28, D=2.084e25, dOmega=10.82),
 }
+#: INTEGRAL diffuse targets
 integral_diffuse_targets = {
     "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
     "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
 }
+#: INTEGRAL diffuse targets with optimistic parameters
 integral_diffuse_targets_optimistic = {
     "nfw": TargetParams(J=2.086e29, D=7.301e25, dOmega=0.5421),
     "ein": TargetParams(J=4.166e29, D=8.76e25, dOmega=0.5421),
 }
 
 
-# Draco dwarf.
+#: Draco dwarf
 draco_targets = {
     "nfw": {
         "1 arcmin cone": TargetParams(J=3.418e30, D=5.949e25, dOmega=2.66e-7),
@@ -170,7 +179,8 @@ draco_targets = {
     },
 }
 
-# Andromeda. See Sofue 2015, https://arxiv.org/abs/1504.05368.
+#: Andromeda target.
+#: See Sofue 2015, https://arxiv.org/abs/1504.05368
 m31_targets = {
     "nfw": {
         "1 arcmin cone": TargetParams(J=7.116e29, D=9.449e25, dOmega=2.66e-7),
@@ -178,7 +188,8 @@ m31_targets = {
     },
 }
 
-# Fornax cluster. See https://arxiv.org/abs/1009.5988.
+#: Fornax cluster.
+#: See https://arxiv.org/abs/1009.5988.
 fornax_targets = {
     "nfw": {
         "1 arcmin cone": TargetParams(J=5.316e29, D=2.898e26, dOmega=2.66e-7),
@@ -192,57 +203,342 @@ fornax_targets = {
 # =========================
 
 # Construct interpolating functions for effective areas
-effective_area_adept = _generate_interp(
+__effective_area_adept = _generate_interp(
     "A_eff", "adept.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_amego = _generate_interp(
+__effective_area_amego = _generate_interp(
     "A_eff", "amego.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_comptel = _generate_interp(
+__effective_area_comptel = _generate_interp(
     "A_eff", "comptel.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_all_sky_astrogam = _generate_interp(
+__effective_area_all_sky_astrogam = _generate_interp(
     "A_eff", "all_sky_astrogam.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_e_astrogam = _generate_interp(
+__effective_area_e_astrogam = _generate_interp(
     "A_eff", "e_astrogam.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_egret = _generate_interp(
+__effective_area_egret = _generate_interp(
     "A_eff", "egret.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_fermi = _generate_interp(
+__effective_area_fermi = _generate_interp(
     "A_eff", "fermi.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_gecco = _generate_interp(
+__effective_area_gecco = _generate_interp(
     "A_eff", "gecco.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_grams = _generate_interp(
+__effective_area_grams = _generate_interp(
     "A_eff", "grams.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_grams_upgrade = _generate_interp(
+__effective_area_grams_upgrade = _generate_interp(
     "A_eff", "grams_upgrade.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_mast = _generate_interp(
+__effective_area_mast = _generate_interp(
     "A_eff", "mast.dat", fill_value=0.0, bounds_error=False
 )
-effective_area_pangu = _generate_interp(
+__effective_area_pangu = _generate_interp(
     "A_eff", "pangu.dat", fill_value=0.0, bounds_error=False
 )
 
+# https://arxiv.org/abs/1107.0200
+
+
+def effective_area_amego(energy):
+    """
+    Compute the effective area of the All-sky Medium Energy Gamma-ray
+    Observatory (AMEGO) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] McEnery, Julie, et al. "All-sky medium energy gamma-ray observatory:
+    exploring the extreme multimessenger universe." arXiv preprint
+    arXiv:1907.07558 (2019).
+    """
+    return __effective_area_amego(energy)
+
+
+def effective_area_comptel(energy):
+    """
+    Compute the effective area of the COMPTEL telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Denherder, J. W., et al. "COMPTEL: Instrument description and
+    performance." NASA. Goddard Space Flight Center, The Compton Observatory
+    Science Workshop. 1992.
+    """
+    return __effective_area_comptel(energy)
+
+
+def effective_area_egret(energy):
+    """
+    Compute the effective area of the EGRET telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Strong, Andrew W., Igor V. Moskalenko, and Olaf Reimer. "Diffuse
+    galactic continuum gamma rays: a model compatible with EGRET data and
+    cosmic-ray measurements." The Astrophysical Journal 613.2 (2004): 962.
+    """
+    return __effective_area_egret(energy)
+
+
+def effective_area_fermi(energy):
+    """
+    Compute the effective area of the Fermi telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Ackermann, Markus, et al. "Fermi-LAT observations of the diffuse
+    γ-ray emission: implications for cosmic rays and the interstellar medium."
+    The Astrophysical Journal 750.1 (2012): 3.
+    """
+    return __effective_area_fermi(energy)
+
+
+def effective_area_adept(energy):
+    """
+    Compute the effective area of the proposed Advanced Energetic Pair
+    Telescope (AdEPT) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Hunter, Stanley D., et al. "Development of the Advance Energetic
+    Pair Telescope (AdEPT) for medium-energy gamma-ray astronomy." Space
+    Telescopes and Instrumentation 2010: Ultraviolet to Gamma Ray. Vol. 7732.
+    SPIE, 2010.
+    """
+    return __effective_area_adept(energy)
+
+
+def effective_area_all_sky_astrogam(energy):
+    """
+    Compute the effective area of the proposed All-Sky-ASTROGAM telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Mallamaci, Manuela, et al. "All-Sky-ASTROGAM: a MeV Companion for
+    Multimessenger Astrophysics." 36th International Cosmic Ray Conference
+    (ICRC2019). Vol. 36. 2019.
+    """
+    return __effective_area_all_sky_astrogam(energy)
+
+
+def effective_area_e_astrogam(energy):
+    """
+    Compute the effective area of the proposed e-ASTROGAM telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] De Angelis, Alejandro, et al. "Science with e-ASTROGAM: A space
+    mission for MeV–GeV gamma-ray astrophysics." Journal of High Energy
+    Astrophysics 19 (2018): 1-106.
+    """
+    return __effective_area_e_astrogam(energy)
+
+
+def effective_area_gecco(energy):
+    """
+    Compute the effective area of proposed Galactic Explorer with a Coded
+    Aperture Mask Compton Telescope (GECCO) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Orlando, Elena, et al. "Exploring the MeV Sky with a Combined Coded
+    Mask and Compton Telescope: The Galactic Explorer with a Coded Aperture
+    Mask Compton Telescope (GECCO)." arXiv preprint arXiv:2112.07190 (2021).
+    """
+    return __effective_area_gecco(energy)
+
+
+def effective_area_grams(energy):
+    """
+    Compute the effective area of the proposed Dual MeV Gamma-Ray and Dark
+    Matter Observator (GRAMS) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Aramaki, Tsuguo, et al. "Dual MeV gamma-ray and dark matter
+    observatory-GRAMS Project." Astroparticle Physics 114 (2020): 107-114.
+    """
+    return __effective_area_grams(energy)
+
+
+def effective_area_grams_upgrade(energy):
+    """
+    Compute the effective area of the proposed Dual MeV Gamma-Ray and Dark
+    Matter Observator (GRAMS) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Aramaki, Tsuguo, et al. "Snowmass 2021 Letter of Interest: The GRAMS
+    Project: MeV Gamma-Ray Observations and Antimatter-Based Dark Matter
+    Searches." arXiv preprint arXiv:2009.03754 (2020).
+    """
+    return __effective_area_grams_upgrade(energy)
+
+
+def effective_area_mast(energy):
+    """
+    Compute the effective area of the proposed Massive Argon Space Telescope
+    (MAST) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Dzhatdoev, Timur, and Egor Podlesnyi. "Massive Argon Space Telescope
+    (MAST): A concept of heavy time projection chamber for γ-ray astronomy in
+    the 100 MeV–1 TeV energy range." Astroparticle Physics 112 (2019): 1-7.
+    """
+    return __effective_area_mast(energy)
+
+
+def effective_area_pangu(energy):
+    """
+    Compute the effective area of proposed PAir-productioN Gamma-ray Unit
+    (PANGU) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the effective area should be evaluated.
+
+    Returns
+    -------
+    a_eff: array-like
+        Effective area Aeff(E).
+
+    References
+    ----------
+    .. [1] Wu, Xin, et al. "PANGU: a high resolution gamma-ray space
+    telescope." Space Telescopes and Instrumentation 2014: Ultraviolet to Gamma
+    Ray. Vol. 9144. International Society for Optics and Photonics, 2014.
+    """
+    return __effective_area_pangu(energy)
+
 
 # These are for backwards compatability
-A_eff_adept = effective_area_adept
-A_eff_amego = effective_area_amego
-A_eff_comptel = effective_area_comptel
-A_eff_all_sky_astrogam = effective_area_all_sky_astrogam
-A_eff_e_astrogam = effective_area_e_astrogam
-A_eff_egret = effective_area_egret
-A_eff_fermi = effective_area_fermi
-A_eff_gecco = effective_area_gecco
-A_eff_grams = effective_area_grams
-A_eff_grams_upgrade = effective_area_grams_upgrade
-A_eff_mast = effective_area_mast
-A_eff_pangu = effective_area_pangu
+A_eff_adept = __effective_area_adept
+A_eff_amego = __effective_area_amego
+A_eff_comptel = __effective_area_comptel
+A_eff_all_sky_astrogam = __effective_area_all_sky_astrogam
+A_eff_e_astrogam = __effective_area_e_astrogam
+A_eff_egret = __effective_area_egret
+A_eff_fermi = __effective_area_fermi
+A_eff_gecco = __effective_area_gecco
+A_eff_grams = __effective_area_grams
+A_eff_grams_upgrade = __effective_area_grams_upgrade
+A_eff_mast = __effective_area_mast
+A_eff_pangu = __effective_area_pangu
 
 
 # ============================
@@ -255,133 +551,396 @@ fwhm_factor = 1 / (2 * np.sqrt(2 * np.log(2)))
 
 # Construct interpolating functions for energy resolutions
 _e_res_amego_interp = _generate_interp(
-    "energy_res", "amego.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "amego.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_all_sky_astrogam_interp = _generate_interp(
-    "energy_res", "e_astrogam.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "e_astrogam.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_e_astrogam_interp = _generate_interp(
-    "energy_res", "e_astrogam.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "e_astrogam.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_gecco_large_interp = _generate_interp(
-    "energy_res", "gecco_large.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "gecco_large.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_gecco_interp = _generate_interp(
-    "energy_res", "gecco.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "gecco.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_integral_interp = _generate_interp(
-    "energy_res", "integral.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "integral.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 _e_res_mast_interp = _generate_interp(
-    "energy_res", "mast.dat", fill_value="extrapolate", bounds_error=False
+    "energy_res",
+    "mast.dat",
+    fill_value="extrapolate",  # type: ignore
+    bounds_error=False,
 )
 
 
 def energy_res_adept(energy):
-    """
-    AdEPT energy resolution. See arXiv1311.2059. The energy dependence is not
-    given.
+    r"""Energy resolution for the AdEPT telescope [1]_ [2]_.
+
+    Note that the energy dependence fro AdEPT was not specified. We thus take
+    it to be constant.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Hunter, Stanley D., et al. "Development of the Advance Energetic
+    Pair Telescope (AdEPT) for medium-energy gamma-ray astronomy." Space
+    Telescopes and Instrumentation 2010: Ultraviolet to Gamma Ray. Vol. 7732.
+    SPIE, 2010.
+
+    .. [2] Hunter, Stanley D., et al. "A pair production telescope for
+    medium-energy gamma-ray polarimetry." Astroparticle physics 59 (2014):
+    18-28.
     """
     return np.vectorize(lambda _: 0.3 * fwhm_factor)(energy)
 
 
 def energy_res_amego(energy):
-    """
-    Energy resolution of AMEGO.
+    r"""Compute the energy resolution of the All-sky Medium Energy Gamma-ray
+    Observatory (AMEGO) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] McEnery, Julie, et al. "All-sky medium energy gamma-ray observatory:
+    exploring the extreme multimessenger universe." arXiv preprint
+    arXiv:1907.07558 (2019).
     """
     return _e_res_amego_interp(energy)
 
 
 def energy_res_comptel(energy):
-    r"""
-    COMPTEL energy resolution :math:`\Delta E / E`.
+    r"""Compute the energy resolution :math:`\Delta E / E` of the COMPTEL [1]_.
 
-    This is the most optimistic value, taken from `ch. II, page 11
-    <https://scholars.unh.edu/dissertation/2045/>`_. The
-    energy resolution at 1 MeV is 10% (FWHM).
+    This is the most optimistic value, taken from chapter II, page 11 of [2]_.
+    The energy resolution at 1 MeV is 10% (FWHM).
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Denherder, J. W., et al. "COMPTEL: Instrument description and
+    performance." NASA. Goddard Space Flight Center, The Compton Observatory
+    Science Workshop. 1992.
+
+    .. [2] Kappadath, Srinivas Cheenu. Measurement of the cosmic diffuse
+    gamma-ray spectrum from 800 keV to 30 MeV. University of New Hampshire,
+    1998.
     """
     return np.vectorize(lambda _: 0.05 * fwhm_factor)(energy)
 
 
 def energy_res_all_sky_astrogam(energy):
-    """
-    Energy resolution of E-Astrogam.
+    r"""Compute the energy resolution of the proposed All-Sky-ASTROGAM
+    telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Mallamaci, Manuela, et al. "All-Sky-ASTROGAM: a MeV Companion for
+    Multimessenger Astrophysics." 36th International Cosmic Ray Conference
+    (ICRC2019). Vol. 36. 2019.
     """
     return _e_res_all_sky_astrogam_interp(energy)
 
 
 def energy_res_e_astrogam(energy):
-    """
-    Energy resolution of E-Astrogam.
+    r"""Compute the energy resoluton of the proposed e-ASTROGAM telescope [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] De Angelis, Alejandro, et al. "Science with e-ASTROGAM: A space
+    mission for MeV–GeV gamma-ray astrophysics." Journal of High Energy
+    Astrophysics 19 (2018): 1-106.
     """
     return _e_res_e_astrogam_interp(energy)
 
 
 def energy_res_egret(energy):
-    """
-    EGRET's energy resolution :math:`\\Delta E / E`.
+    r"""Compute the energy resoluton :math:`\Delta E / E` of the EGRET
+    telescope [1]_.
 
-    This is the most optimistic value, taken from
-    `sec. 4.3.3 <http://adsabs.harvard.edu/doi/10.1086/191793>`_.
+    This is the most optimistic value, taken from section 4.3.3 of [2]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Strong, Andrew W., Igor V. Moskalenko, and Olaf Reimer. "Diffuse
+    galactic continuum gamma rays: a model compatible with EGRET data and
+    cosmic-ray measurements." The Astrophysical Journal 613.2 (2004): 962.
+
+    .. [2] Thompson, D. J., et al. "Calibration of the energetic gamma-ray
+    experiment telescope (EGRET) for the Compton gamma-ray observatory." The
+    astrophysical Journal supplement series 86 (1993): 629-656.
     """
     return np.vectorize(lambda _: 0.18 * fwhm_factor)(energy)
 
 
 def energy_res_fermi(energy):
-    r"""Fermi-LAT's energy resolution :math:`\Delta E / E`.
+    r"""Compute the energy resolution :math:`\Delta E / E` of the Fermi-LAT
+    telescope.
 
     This is the average of the most optimistic normal and 60deg off-axis values
-    from `fig. 18 <https://arxiv.org/abs/0902.1089>`_.
+    from Fig. (18) of [2]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Ackermann, Markus, et al. "Fermi-LAT observations of the diffuse
+    γ-ray emission: implications for cosmic rays and the interstellar medium."
+    The Astrophysical Journal 750.1 (2012): 3.
+
+    .. [2] Atwood, W. B., et al. "The large area telescope on the Fermi
+    gamma-ray space telescope mission." The Astrophysical Journal 697.2 (2009):
+    1071.
     """
     return np.vectorize(lambda _: 0.075)(energy)
 
 
 def energy_res_gecco(energy):
-    """
-    Energy resolution of GECCO.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of proposed Galactic
+    Explorer with a Coded Aperture Mask Compton Telescope (GECCO) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Orlando, Elena, et al. "Exploring the MeV Sky with a Combined Coded
+    Mask and Compton Telescope: The Galactic Explorer with a Coded Aperture
+    Mask Compton Telescope (GECCO)." arXiv preprint arXiv:2112.07190 (2021).
     """
     return _e_res_gecco_interp(energy) * fwhm_factor
 
 
 def energy_res_gecco_large(energy):
-    """
-    Energy resolution of GECCO.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of proposed Galactic
+    Explorer with a Coded Aperture Mask Compton Telescope (GECCO).
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Orlando, Elena, et al. "Exploring the MeV Sky with a Combined Coded
+    Mask and Compton Telescope: The Galactic Explorer with a Coded Aperture
+    Mask Compton Telescope (GECCO)." arXiv preprint arXiv:2112.07190 (2021).
     """
     return _e_res_gecco_large_interp(energy)
 
 
 def energy_res_grams_upgrade(energy):
-    """
-    GRAMS upgrade approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of the proposed GRAMS
+    upgrade [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Aramaki, Tsuguo, et al. "Snowmass 2021 Letter of Interest: The GRAMS
+    Project: MeV Gamma-Ray Observations and Antimatter-Based Dark Matter
+    Searches." arXiv preprint arXiv:2009.03754 (2020).
     """
     return np.vectorize(lambda _: 0.05)(energy)
 
 
 def energy_res_grams(energy):
-    """
-    GRAMS approximate energy resolution. See https://arxiv.org/abs/1901.03430.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of GRAMS [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Aramaki, Tsuguo, et al. "Dual MeV gamma-ray and dark matter
+    observatory-GRAMS Project." Astroparticle Physics 114 (2020): 107-114.
     """
     return np.vectorize(lambda _: 0.05)(energy)
 
 
 def energy_res_integral(energy):
-    """
-    Energy resolution of integral.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of INTEGRAL.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Bouchet, Laurent, et al. "Diffuse emission measurement with the
+    spectrometer on INTEGRAL as an indirect probe of cosmic-ray electrons and
+    positrons." The Astrophysical Journal 739.1 (2011): 29.
     """
     return _e_res_integral_interp(energy)
 
 
 def energy_res_mast(energy):
-    """
-    Energy resolution of E-Astrogam.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of the proposed Massive
+    Argon Space Telescope (MAST) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Dzhatdoev, Timur, and Egor Podlesnyi. "Massive Argon Space Telescope
+    (MAST): A concept of heavy time projection chamber for γ-ray astronomy in
+    the 100 MeV–1 TeV energy range." Astroparticle Physics 112 (2019): 1-7.
     """
     return _e_res_mast_interp(energy)
 
 
 def energy_res_pangu(energy):
-    """
-    PANGU energy resolution. https://doi.org/10.22323/1.246.0069. There is not
-    much energy dependence.
+    r"""
+    Compute the energy resolution :math:`\Delta E / E` of proposed
+    PAir-productioN Gamma-ray Unit (PANGU) [1]_.
+
+    Parameters
+    ----------
+    energy: array-like
+        Energy where the energy resoltuon should be evaluated.
+
+    Returns
+    -------
+    e_res: array-like
+        Energy resoluton delta_e(e) / e.
+
+    References
+    ----------
+    .. [1] Wu, Xin, et al. "PANGU: a high resolution gamma-ray space telescope."
+    Space Telescopes and Instrumentation 2014: Ultraviolet to Gamma Ray. Vol.
+    9144. International Society for Optics and Photonics, 2014.
     """
     return np.vectorize(lambda _: 0.4)(energy)
 
@@ -422,6 +981,6 @@ def _generate_background_model(subdir, filename):
     return BackgroundModel.from_interp(interp)
 
 
-# This is the more complex background model from arXiv:1703.02546. Note that it
-# is only applicable to the inner 10deg x 10deg region of the Milky Way.
+#: This is the more complex background model from arXiv:1703.02546. Note that it
+#: is only applicable to the inner 10deg x 10deg region of the Milky Way.
 gc_bg_model = _generate_background_model("bg_model", "gc.dat")
