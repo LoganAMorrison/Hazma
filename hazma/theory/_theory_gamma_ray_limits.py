@@ -1,4 +1,5 @@
-from math import sqrt, pi
+from math import pi, sqrt
+
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import chi2, norm
@@ -71,12 +72,12 @@ class TheoryGammaRayLimits:
             dm_flux_factor = (
                 measurement.target.J
                 * measurement.target.dOmega
-                / (2.0 * f_dm * self.mx ** 2 * 4.0 * pi)  # type: ignore
+                / (2.0 * f_dm * self.mx**2 * 4.0 * pi)  # type: ignore
             )
 
             # TODO: this should depend on the target!
             e_cm = (
-                2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx ** 2)  # type: ignore
+                2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx**2)  # type: ignore
             )
             dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, e_cm, measurement.energy_res
@@ -126,7 +127,7 @@ class TheoryGammaRayLimits:
                 * measurement.upper_errors
             )
 
-            chi2_obs = np.sum(np.maximum(Phi_dms_un - Phi_obss, 0) ** 2 / Sigmas ** 2)
+            chi2_obs = np.sum(np.maximum(Phi_dms_un - Phi_obss, 0) ** 2 / Sigmas**2)
 
             if chi2_obs == 0:
                 return np.inf
@@ -202,7 +203,7 @@ class TheoryGammaRayLimits:
 
         if self.kind == "ann":  # type: ignore
             # TODO: this should depend on the target!
-            e_cm = 2.0 * self.mx * (1.0 + 0.5 * target.vx ** 2)  # type: ignore
+            e_cm = 2.0 * self.mx * (1.0 + 0.5 * target.vx**2)  # type: ignore
             dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, e_cm, energy_res
             )
@@ -215,7 +216,7 @@ class TheoryGammaRayLimits:
         # factor of 2 is from the DM not being self-conjugate.
         if self.kind == "ann":  # type: ignore
             f_dm = 2.0  # TODO: refactor
-            prefactor = 2.0 * f_dm * self.mx ** 2  # type: ignore
+            prefactor = 2.0 * f_dm * self.mx**2  # type: ignore
         else:
             prefactor = self.mx  # type: ignore
 
