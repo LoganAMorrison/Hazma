@@ -3,17 +3,20 @@ Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
 """
+from typing import List, Optional, overload
 from warnings import warn
-from typing import overload, Optional, List
 
 import numpy as np
-from hazma._decay import decay_long_kaon
-from hazma._decay import decay_charged_pion
-from hazma._decay import decay_charged_kaon
-from hazma._decay import decay_muon
-from hazma._decay import decay_neutral_pion
-from hazma._decay import decay_short_kaon
-from hazma._decay import decay_rho
+
+from hazma._decay import (
+    decay_charged_kaon,
+    decay_charged_pion,
+    decay_long_kaon,
+    decay_muon,
+    decay_neutral_pion,
+    decay_rho,
+    decay_short_kaon,
+)
 from hazma.utils import RealArray, RealOrRealArray
 
 
@@ -176,14 +179,14 @@ def charged_pion(
     pion_energy : double
         Charged pion energy in laboratory frame.
     modes : List[str], optional
-        A list modes the user would like include. The availible entries
-        are: "munu", "munug" and "enug". Default is all of these.
+        A list modes the user would like include. The availible entries are:
+        "munu", "munug" and "enug". Default is all of these.
 
     Returns
     -------
-    spec : double np.ndarray
-        List of gamma ray spectrum values, dNdE, evaluated at `photon_energies`
-        given charged pion energy `eng_pi`.
+    spec : Union[float, np.ndarray]
+        List of gamma ray spectrum values, :math:`dN/dE`, evaluated at
+        `photon_energies` given charged pion energy `eng_pi`.
 
     Examples
     --------
