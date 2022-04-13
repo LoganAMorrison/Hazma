@@ -1,0 +1,6 @@
+font.family: serif
+font.serif: CMU Serif
+axes.prop_cycle: cycler('color', ['steelblue', 'firebrick', 'goldenrod', 'mediumorchid', 'darkslateblue', 'DarkSalmon', 'LightSkyBlue', 'Navy', 'Peru'])
+
+text.usetex: true
+text.latex.preamble: \usepackage{physics} \usepackage{amsmath} \usepackage{bm}
