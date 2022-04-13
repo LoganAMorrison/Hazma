@@ -14,7 +14,7 @@ from hazma.utils import kallen_lambda, lnorm_sqr
 
 T = TypeVar("T")
 
-BinType = npt.NDArray[np.float64] | int
+BinType = Union[npt.NDArray[np.float64], int]
 
 ME = 0.5109989461  # m[e-] = 0.5109989461 ± 3.1e-09
 MMU = 105.6583745  # m[mu-] = 105.6583745 ± 2.4e-06
@@ -45,11 +45,11 @@ qualitative = [
 
 
 def two_body_three_momentum(cme, m1, m2):
-    return np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+    return np.sqrt(kallen_lambda(cme ** 2, m1 ** 2, m2 ** 2)) / (2 * cme)
 
 
 def energy_one_cme(cme, m1, m2):
-    return (cme**2 + m1**2 - m2**2) / (2 * cme)
+    return (cme ** 2 + m1 ** 2 - m2 ** 2) / (2 * cme)
 
 
 class ParticleType(Enum):
@@ -59,23 +59,23 @@ class ParticleType(Enum):
 
 
 def _dndx_photon_fsr(x, s, m, q=1.0, ty: ParticleType = ParticleType.Fermion):
-    pre = q**2 * parameters.alpha_em / (2.0 * np.pi)
+    pre = q ** 2 * parameters.alpha_em / (2.0 * np.pi)
     xm = 1.0 - x
     kernel = np.zeros_like(x)
 
     if ty == ParticleType.Scalar:
-        mask = s * xm / m**2 > np.e
-        kernel[mask] = 2.0 * xm[mask] / x[mask] * (np.log(s * xm[mask] / m**2) - 1.0)
+        mask = s * xm / m ** 2 > np.e
+        kernel[mask] = 2.0 * xm[mask] / x[mask] * (np.log(s * xm[mask] / m ** 2) - 1.0)
     elif ty == ParticleType.Fermion:
-        mask = s * xm / m**2 > np.e
+        mask = s * xm / m ** 2 > np.e
         kernel[mask] = (
-            (1.0 + xm[mask] ** 2) / x[mask] * (np.log(s * xm[mask] / m**2) - 1.0)
+            (1.0 + xm[mask] ** 2) / x[mask] * (np.log(s * xm[mask] / m ** 2) - 1.0)
         )
     else:
-        mask = s * xm**2 / (4.0 * m**2) > 0
-        y = s * xm[mask] ** 2 / (4.0 * m**2)
+        mask = s * xm ** 2 / (4.0 * m ** 2) > 0
+        y = s * xm[mask] ** 2 / (4.0 * m ** 2)
         lf1 = np.log(y) + 2.0 * np.log(1.0 - np.sqrt(1.0 - 1.0 / y))
-        lf2 = np.log(s / m**2)
+        lf2 = np.log(s / m ** 2)
         kernel[mask] = 2.0 * (
             x[mask] / xm[mask] * lf1
             + xm[mask] / x[mask] * lf2
@@ -142,8 +142,8 @@ def invariant_mass_distribution_analytic(
     m0: float, m1: float, m2: float, m3: float
 ) -> Callable[[T], T]:
     def unnormalized(s):
-        p1 = kallen_lambda(s, m0**2, m1**2)
-        p2 = kallen_lambda(s, m2**2, m3**2)
+        p1 = kallen_lambda(s, m0 ** 2, m1 ** 2)
+        p2 = kallen_lambda(s, m2 ** 2, m3 ** 2)
         return np.sqrt(p1 * p2) / s
 
     lb = (m2 + m3) ** 2
@@ -252,6 +252,46 @@ class _ShortKaon(Particle):
 
 
 @dataclasses.dataclass(frozen=True)
+class _Eta(Particle):
+    name: str = "eta"
+    mass: float = META
+    ty: ParticleType = ParticleType.Scalar
+    charge: float = 0.0
+
+
+@dataclasses.dataclass(frozen=True)
+class _EtaPrime(Particle):
+    name: str = "etap"
+    mass: float = METAP
+    ty: ParticleType = ParticleType.Scalar
+    charge: float = 0.0
+
+
+@dataclasses.dataclass(frozen=True)
+class _Omega(Particle):
+    name: str = "omega"
+    mass: float = MOMEGA
+    ty: ParticleType = ParticleType.Vector
+    charge: float = 0.0
+
+
+@dataclasses.dataclass(frozen=True)
+class _NeutralRho(Particle):
+    name: str = "rho0"
+    mass: float = MRHO
+    ty: ParticleType = ParticleType.Vector
+    charge: float = 0.0
+
+
+@dataclasses.dataclass(frozen=True)
+class _ChargedRho(Particle):
+    name: str = "rho"
+    mass: float = MRHO
+    ty: ParticleType = ParticleType.Vector
+    charge: float = 1.0
+
+
+@dataclasses.dataclass(frozen=True)
 class _Photon(Particle):
     name: str = "a"
     mass: float = 0.0
@@ -266,6 +306,11 @@ neutral_pion = _NeutralPion()
 charged_kaon = _ChargedKaon()
 long_kaon = _LongKaon()
 short_kaon = _ShortKaon()
+eta = _Eta()
+eta_prime = _EtaPrime()
+omega = _Omega()
+neutral_rho = _NeutralRho()
+charged_rho = _ChargedRho()
 neutrino = Particle(mass=0.0, ty=ParticleType.Fermion, charge=0.0, name="nu")
 photon = _Photon()
 
@@ -291,7 +336,7 @@ class ThreeBodyPhaseSpace:
 
         def bounds(m1, m2, m3):
             emin = m1
-            emax = (m0**2 + m1**2 - (m2 + m3) ** 2) / (2 * m0)
+            emax = (m0 ** 2 + m1 ** 2 - (m2 + m3) ** 2) / (2 * m0)
             return (emin, emax)
 
         return [
@@ -327,11 +372,7 @@ class ThreeBodyPhaseSpace:
         return np.array([p1s, p2s, p3s])
 
     def __invariant_mass_probabilities(
-        self,
-        i: int,
-        j: int,
-        bins: BinType,
-        npts: int = 10000,
+        self, i: int, j: int, bins: BinType, npts: int = 10000,
     ) -> npt.NDArray[np.float64]:
         assert i in [0, 1, 2], f"Invalid index i={i}. Must be 0, 1, or 2"
         assert j in [0, 1, 2], f"Invalid index j={j}. Must be 0, 1, or 2"
@@ -412,7 +453,7 @@ class ThreeBodyPhaseSpace:
             ]
 
             def dnde(e, dnds, m):
-                s = m0**2 + m**2 - 2 * m * e
+                s = m0 ** 2 + m ** 2 - 2 * m * e
                 return dnds(s) / (2 * m0)
 
             return [(c, dnde(c, dnds, m)) for c, dnds, m in zip(cs, dndss, ms)]
@@ -481,7 +522,7 @@ class DecayProcess:
                 (np.array([e2]), np.array([1.0])),
             ]
             self.invariant_mass_distributions = {
-                (0, 1): (np.array([self.parent.mass**2]), np.array([1.0]))
+                (0, 1): (np.array([self.parent.mass ** 2]), np.array([1.0]))
             }
         elif len(self.final_states) == 3:
             m1 = self.final_states[0].mass
