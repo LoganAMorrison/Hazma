@@ -1,5 +1,6 @@
 import numpy as np
 from setuptools import Extension, find_packages, setup  # type: ignore
+from Cython.Build import cythonize
 
 VERSION = "2.0.0-alpha"
 
@@ -32,22 +33,12 @@ def make_extensions(module, names, cpp=False):
 EXTENSIONS = []
 
 # Cython utilities
-EXTENSIONS += make_extensions("_utils", ["boost"])
+for file in ["boost"]:
+    mod = "hazma._utils." + file
+    srcs = ["hazma/_utils/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
 
-# Decay helper
-EXTENSIONS += make_extensions(
-    "_decay",
-    [
-        "decay_charged_pion",
-        "decay_neutral_pion",
-        "decay_muon",
-        "decay_charged_kaon",
-        "decay_long_kaon",
-        "decay_short_kaon",
-        "decay_rho",
-    ],
-    cpp=True,
-)
 
 # Gamma-Ray Helper
 EXTENSIONS += make_extensions(
@@ -66,48 +57,57 @@ EXTENSIONS += make_extensions(
     cpp=True,
 )
 
-# Positron
-EXTENSIONS += make_extensions(
-    "_positron",
-    ["positron_muon", "positron_charged_pion", "positron_decay"],
-)
+# Decay Spectra
+for file in ["_muon", "_pion", "_rho", "_kaon", "_eta", "_omega", "_eta_prime"]:
+    mod = "hazma.spectra._photon." + file
+    srcs = ["hazma/spectra/_photon/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
 
-# Neutrino
-EXTENSIONS += make_extensions(
-    "_neutrino",
-    ["neutrino", "muon", "charged_pion"],
-)
+for file in ["_muon", "_pion"]:
+    mod = "hazma.spectra._positron." + file
+    srcs = ["hazma/spectra/_positron/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
+
+for file in ["_muon", "_pion", "_neutrino"]:
+    mod = "hazma.spectra._neutrino." + file
+    srcs = ["hazma/spectra/_neutrino/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
 
 
 # Scalar mediator
-EXTENSIONS += make_extensions(
-    "scalar_mediator",
-    [
-        "scalar_mediator_decay_spectrum",
-        "scalar_mediator_positron_spec",
-        "_c_scalar_mediator_cross_sections",
-    ],
-)
+for file in [
+    "scalar_mediator_decay_spectrum",
+    "scalar_mediator_positron_spec",
+    "_c_scalar_mediator_cross_sections",
+]:
+    mod = "hazma.scalar_mediator." + file
+    srcs = ["hazma/scalar_mediator/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
 
 # Vector mediator
-EXTENSIONS += make_extensions(
-    "vector_mediator",
-    [
-        "vector_mediator_decay_spectrum",
-        "vector_mediator_positron_spec",
-        "_c_vector_mediator_cross_sections",
-    ],
-)
+for file in [
+    "vector_mediator_decay_spectrum",
+    "vector_mediator_positron_spec",
+    "_c_vector_mediator_cross_sections",
+]:
+    mod = "hazma.vector_mediator." + file
+    srcs = ["hazma/vector_mediator/" + file + ".pyx"]
+    for ext in cythonize(Extension(mod, srcs)):
+        EXTENSIONS.append(ext)
 
 # RH-neutrino
-EXTENSIONS += [
-    Extension(
-        "hazma.rh_neutrino._rh_neutrino_fsr_four_body",
-        sources=["hazma/rh_neutrino/_rh_neutrino_fsr_four_body.pyx"],
-        extra_compile_args=["-g", "-std=c++11"],
-        language="c++",
-    )
-]
+# EXTENSIONS += [
+#     Extension(
+#         "hazma.rh_neutrino._rh_neutrino_fsr_four_body",
+#         sources=["hazma/rh_neutrino/_rh_neutrino_fsr_four_body.pyx"],
+#         extra_compile_args=["-g", "-std=c++11"],
+#         language="c++",
+#     )
+# ]
 
 
 setup(
@@ -130,17 +130,23 @@ setup(
     include_dirs=[
         np.get_include(),
         "hazma/_utils",
-        "hazma/_decay",
-        "hazma/_positron",
-        "hazma/_neutrino",
+        # "hazma/_decay",
+        # "hazma/_positron",
+        # "hazma/_neutrino",
         "hazma/_gamma_ray",
+        "hazma/decay/_photon",
+        "hazma/decay/_positron",
+        "hazma/decay/_neutrino",
     ],
     package_data={
         "hazma/_utils": ["*.pxd"],
-        "hazma/_decay": ["*.pxd"],
-        "hazma/_positron": ["*.pxd"],
-        "hazma/_neutrino": ["*.pxd"],
         "hazma/_gamma_ray": ["*.pxd"],
+        # "hazma/_decay": ["*.pxd"],
+        # "hazma/_positron": ["*.pxd"],
+        # "hazma/_neutrino": ["*.pxd"],
+        "hazma/decay/_photon": ["*.pxd"],
+        "hazma/decay/_positron": ["*.pxd"],
+        "hazma/decay/_neutrino": ["*.pxd"],
     },
     setup_requires=["pytest-runner"],
     install_requires=[
