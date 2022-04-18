@@ -1,7 +1,6 @@
 import numpy as np
 
-from hazma.decay import muon
-from hazma.decay import neutral_pion, charged_pion
+from hazma import spectra
 
 from hazma.parameters import neutral_pion_mass as mpi0
 
@@ -13,7 +12,7 @@ from hazma.vector_mediator.vector_mediator_decay_spectrum import (
 
 class VectorMediatorSpectra:
     def dnde_ee(self, e_gams, e_cm, spectrum_type="all"):
-        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)
+        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)  # type: ignore
 
         if spectrum_type == "all":
             return self.dnde_ee(e_gams, e_cm, "fsr") + self.dnde_ee(
@@ -32,8 +31,9 @@ class VectorMediatorSpectra:
             )
 
     def dnde_mumu(self, e_gams, e_cm, spectrum_type="all"):
-        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)  # todo: this line
-        decay = np.vectorize(muon)
+        # todo: this line
+        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)  # type: ignore
+        decay = np.vectorize(spectra.dnde_photon_muon)
 
         if spectrum_type == "all":
             return self.dnde_mumu(e_gams, e_cm, "fsr") + self.dnde_mumu(
@@ -60,9 +60,9 @@ class VectorMediatorSpectra:
             return np.array([0.0 for _ in range(len(e_gams))])
         elif spectrum_type == "decay":
             # Neutral pion's energy
-            e_pi0 = (e_cm ** 2 + mpi0 ** 2) / (2.0 * e_cm)
+            e_pi0 = (e_cm**2 + mpi0**2) / (2.0 * e_cm)
 
-            return neutral_pion(e_gams, e_pi0)
+            return spectra.dnde_photon_neutral_pion(e_gams, e_pi0)
         else:
             raise ValueError(
                 "Type {} is invalid. Use 'all', 'fsr' or \
@@ -77,9 +77,9 @@ class VectorMediatorSpectra:
                 e_gams, e_cm, "decay"
             )
         elif spectrum_type == "fsr":
-            return self.dnde_xx_to_v_to_pipig(e_gams, e_cm)
+            return self.dnde_xx_to_v_to_pipig(e_gams, e_cm)  # type: ignore
         elif spectrum_type == "decay":
-            return 2.0 * charged_pion(e_gams, e_cm / 2.0)
+            return 2.0 * spectra.dnde_photon_charged_pion(e_gams, e_cm / 2.0)
         else:
             raise ValueError(
                 "Type {} is invalid. Use 'all', 'fsr' or \
@@ -93,8 +93,8 @@ class VectorMediatorSpectra:
         Helper function for computing the spectrum from V decaying with
         arbitrary boost.
         """
-        mv = self.mv
-        pws = self.partial_widths()
+        mv = self.mv  # type: ignore
+        pws = self.partial_widths()  # type: ignore
         pw_array = np.zeros(5, dtype=float)
 
         # Check is the decay width of the vector is zero.
@@ -114,10 +114,10 @@ class VectorMediatorSpectra:
         return dnde_decay_v_pt(e_gams, e_v, mv, pw_array, fs)
 
     def dnde_pi0v(self, e_gams, e_cm):
-        e_pi0 = (e_cm ** 2 + mpi0 ** 2 - self.mv ** 2) / (2 * e_cm)
-        pi0_spec = neutral_pion(e_gams, e_pi0)
+        e_pi0 = (e_cm**2 + mpi0**2 - self.mv**2) / (2 * e_cm)  # type: ignore
+        pi0_spec = spectra.dnde_photon_neutral_pion(e_gams, e_pi0)
 
-        e_v = (e_cm ** 2 - mpi0 ** 2 + self.mv ** 2) / (2 * e_cm)
+        e_v = (e_cm**2 - mpi0**2 + self.mv**2) / (2 * e_cm)  # type: ignore
         v_spec = self.__dnde_v(e_gams, e_v, fs="total")
 
         return pi0_spec + v_spec
@@ -152,6 +152,6 @@ class VectorMediatorSpectra:
         }
 
     def gamma_ray_lines(self, e_cm):
-        bf = self.annihilation_branching_fractions(e_cm)["pi0 g"]
+        bf = self.annihilation_branching_fractions(e_cm)["pi0 g"]  # type: ignore
 
-        return {"pi0 g": {"energy": (e_cm ** 2 - mpi0 ** 2) / (2.0 * e_cm), "bf": bf}}
+        return {"pi0 g": {"energy": (e_cm**2 - mpi0**2) / (2.0 * e_cm), "bf": bf}}

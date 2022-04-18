@@ -1,8 +1,6 @@
 import numpy as np
 
-from hazma.decay import muon
-from hazma.decay import neutral_pion, charged_pion
-
+from hazma import spectra
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
 
@@ -38,7 +36,7 @@ def dnde_mumu(self, e_gams, e_cm, spectrum_type="all"):
     elif spectrum_type == "fsr":
         return self.dnde_xx_to_s_to_ffg(e_gams, e_cm, mmu)
     elif spectrum_type == "decay":
-        return 2.0 * muon(e_gams, e_cm / 2.0)
+        return 2.0 * spectra.dnde_photon_muon(e_gams, e_cm / 2.0)
     else:
         raise ValueError(
             "Type {} is invalid. Use 'all', 'fsr' or \
@@ -56,7 +54,7 @@ def dnde_pi0pi0(self, e_gams, e_cm, spectrum_type="all"):
     if spectrum_type == "fsr":
         return np.array([0.0 for _ in range(len(e_gams))])
     if spectrum_type == "decay":
-        return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
+        return 2.0 * spectra.dnde_photon_neutral_pion(e_gams, e_cm / 2.0)
     else:
         raise ValueError(
             "Type {} is invalid. Use 'all', 'fsr' or \
@@ -74,7 +72,7 @@ def dnde_pipi(self, e_gams, e_cm, spectrum_type="all"):
     elif spectrum_type == "fsr":
         return self.dnde_xx_to_s_to_pipig(e_gams, e_cm)
     elif spectrum_type == "decay":
-        return 2.0 * charged_pion(e_gams, e_cm / 2.0)
+        return 2.0 * spectra.dnde_photon_charged_pion(e_gams, e_cm / 2.0)
     else:
         raise ValueError(
             "Type {} is invalid. Use 'all', 'fsr' or \

@@ -1,5 +1,5 @@
-from hazma._positron.positron_muon cimport c_muon_positron_spectrum_array
-from hazma._positron.positron_charged_pion cimport c_charged_pion_positron_spectrum_array
+from hazma.spectra._positron._muon cimport dnde_positron_muon_array
+from hazma.spectra._positron._pion cimport dnde_positron_charged_pion_array
 
 import cython
 import numpy as np
@@ -70,8 +70,8 @@ cdef void __set_spectra(double ms):
     global __spec_mu
 
     __e_ps = np.logspace(log10(me), log10(ms / 2.), num=n_interp_pts)
-    __spec_cp = c_charged_pion_positron_spectrum_array(__e_ps, ms / 2.)
-    __spec_mu = c_muon_positron_spectrum_array(__e_ps, ms / 2.)
+    __spec_cp = dnde_positron_charged_pion_array(__e_ps, ms / 2.)
+    __spec_mu = dnde_positron_muon_array(__e_ps, ms / 2.)
 
 cdef double __interp_spec(double eng_p, str fs):
     """

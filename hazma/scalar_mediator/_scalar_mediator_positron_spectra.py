@@ -1,7 +1,6 @@
 import numpy as np
 
-from hazma.positron_spectra import charged_pion as pspec_charged_pion
-from hazma.positron_spectra import muon as pspec_muon
+from hazma import spectra
 from hazma.scalar_mediator.scalar_mediator_positron_spec import dnde_decay_s
 
 
@@ -22,7 +21,7 @@ def dnde_pos_pipi(_, positron_energies, cme):
     dnde: float or np.array
         Positron spectrum evaluated at the `positron_energies`.
     """
-    return pspec_charged_pion(positron_energies, cme / 2.0)
+    return spectra.dnde_positron_charged_pion(positron_energies, cme / 2.0)
 
 
 def dnde_pos_mumu(_, positron_energies, cme):
@@ -41,7 +40,7 @@ def dnde_pos_mumu(_, positron_energies, cme):
     dnde: float or np.array
         Positron spectrum evaluated at the `positron_energies`.
     """
-    return pspec_muon(positron_energies, cme / 2.0)
+    return spectra.dnde_positron_muon(positron_energies, cme / 2.0)
 
 
 def dnde_pos_ss(self, positron_energies, cme, fs="total"):

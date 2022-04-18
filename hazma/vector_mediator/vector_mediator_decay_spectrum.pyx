@@ -1,7 +1,3 @@
-from hazma._decay.decay_charged_pion cimport c_charged_pion_decay_spectrum_array
-from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_array
-from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_point
-from hazma._decay.decay_muon cimport c_muon_decay_spectrum_array
 
 import cython
 import numpy as np
@@ -9,6 +5,11 @@ cimport numpy as np
 from scipy.integrate import quad
 
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
+
+from hazma.spectra._photon._muon cimport dnde_photon_muon_array
+from hazma.spectra._photon._pion cimport dnde_photon_charged_pion_array
+from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_array
+from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_point
 
 include "../_decay/parameters.pxd"
 
@@ -31,8 +32,8 @@ cdef double __set_spectra(double mv):
 
     __e_gams = np.logspace(-1.0, log10(mv / 2.0), num=n_interp_pts)
 
-    __spec_cp = c_charged_pion_decay_spectrum_array(__e_gams, mv / 2.0, 7)
-    __spec_mu = c_muon_decay_spectrum_array(__e_gams, mv / 2.0)
+    __spec_cp = dnde_photon_charged_pion_array(__e_gams, mv / 2.0)
+    __spec_mu = dnde_photon_muon_array(__e_gams, mv / 2.0)
 
 cdef double __interp_spec(double eng_gam, str mode):
     """
@@ -155,7 +156,7 @@ cdef double __integrand(double cl, double eng_gam, double eng_v,
 
     # Neutral pion energy is:
     cdef double e_pi0 = 0.5 * (mpi0**2 + mv**2) / mv
-    cdef double dnde_np_d = pwpi0g * c_neutral_pion_decay_spectrum_point(eng_gam_vrf, e_pi0)
+    cdef double dnde_np_d = pwpi0g * dnde_photon_neutral_pion_point(eng_gam_vrf, e_pi0)
 
     cdef double dnde_mu_d = 2. * pwmumu * __interp_spec(eng_gam_vrf, "mu")
 

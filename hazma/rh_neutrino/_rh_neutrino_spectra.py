@@ -3,11 +3,11 @@ This file contains the decay spectra from a right-handed neutrino at rest.
 """
 import numpy as np
 
-from hazma.decay import (
-    neutral_pion as decay_pi0,
-    charged_pion as decay_pi,
-    charged_kaon as decay_k,
-    muon as decay_mu,
+from hazma.spectra import (
+    dnde_photon_neutral_pion as decay_pi0,
+    dnde_photon_charged_pion as decay_pi,
+    dnde_photon_charged_kaon as decay_k,
+    dnde_photon_muon as decay_mu,
 )
 
 from hazma.parameters import (
@@ -43,7 +43,7 @@ def dnde_nu_pi0(self, photon_energies, spectrum_type="all"):
             return 0.0
 
     if spectrum_type in ["all", "decay"]:
-        epi = (self.mx ** 2 + mpi0 ** 2) / (2.0 * self.mx)
+        epi = (self.mx**2 + mpi0**2) / (2.0 * self.mx)
         return decay_pi0(photon_energies, epi)
     elif spectrum_type == "fsr":
         if hasattr(photon_energies, "__len__"):
@@ -82,8 +82,8 @@ def dnde_pi_l(self, photon_energies, spectrum_type="all"):
     elif spectrum_type == "fsr":
         return self.dnde_pi_l_fsr(photon_energies)
     elif spectrum_type == "decay":
-        epi = (self.mx ** 2 + mpi ** 2 - self.ml ** 2) / (2.0 * self.mx)
-        el = (self.mx ** 2 - mpi ** 2 + self.ml ** 2) / (2.0 * self.mx)
+        epi = (self.mx**2 + mpi**2 - self.ml**2) / (2.0 * self.mx)
+        el = (self.mx**2 - mpi**2 + self.ml**2) / (2.0 * self.mx)
         if self.lepton == "e":
             return decay_pi(photon_energies, epi)
         elif self.lepton == "mu":
@@ -120,8 +120,8 @@ def dnde_k_l(self, photon_energies, spectrum_type="all"):
     elif spectrum_type == "fsr":
         return self.dnde_k_l_fsr(photon_energies)
     elif spectrum_type == "decay":
-        ek = (self.mx ** 2 + mk ** 2 - self.ml ** 2) / (2.0 * self.mx)
-        el = (self.mx ** 2 - mk ** 2 + self.ml ** 2) / (2.0 * self.mx)
+        ek = (self.mx**2 + mk**2 - self.ml**2) / (2.0 * self.mx)
+        el = (self.mx**2 - mk**2 + self.ml**2) / (2.0 * self.mx)
         if self.lepton == "e":
             return decay_k(photon_energies, ek)
         elif self.lepton == "mu":
@@ -141,44 +141,44 @@ def __msqrd_nu_l_l(momenta, mx, tmix, ml):
     t = __lnorm_sqr(momenta[1] + momenta[2])
     return -(
         (
-            GF ** 2
+            GF**2
             * (
                 2
-                * ml ** 4
+                * ml**4
                 * (
                     1
-                    + 4 * cw ** 4
-                    - 4 * sw ** 2
-                    + 8 * sw ** 4
-                    + cw ** 2 * (-4 + 8 * sw ** 2)
+                    + 4 * cw**4
+                    - 4 * sw**2
+                    + 8 * sw**4
+                    + cw**2 * (-4 + 8 * sw**2)
                 )
                 - 2
-                * ml ** 2
+                * ml**2
                 * (
-                    -((1 - 2 * cw ** 2) ** 2 * mx ** 2)
-                    + (1 - 2 * cw ** 2) ** 2 * s
+                    -((1 - 2 * cw**2) ** 2 * mx**2)
+                    + (1 - 2 * cw**2) ** 2 * s
                     + 2
                     * (
                         1
-                        + 4 * cw ** 4
-                        - 4 * sw ** 2
-                        + 8 * sw ** 4
-                        + cw ** 2 * (-4 + 8 * sw ** 2)
+                        + 4 * cw**4
+                        - 4 * sw**2
+                        + 8 * sw**4
+                        + cw**2 * (-4 + 8 * sw**2)
                     )
                     * t
                 )
                 + (
                     1
-                    + 4 * cw ** 4
-                    - 4 * sw ** 2
-                    + 8 * sw ** 4
-                    + cw ** 2 * (-4 + 8 * sw ** 2)
+                    + 4 * cw**4
+                    - 4 * sw**2
+                    + 8 * sw**4
+                    + cw**2 * (-4 + 8 * sw**2)
                 )
-                * (s ** 2 + 2 * s * t + 2 * t ** 2 - mx ** 2 * (s + 2 * t))
+                * (s**2 + 2 * s * t + 2 * t**2 - mx**2 * (s + 2 * t))
             )
             * np.sin(2 * tmix) ** 2
         )
-        / cw ** 4
+        / cw**4
     )
 
 
@@ -187,22 +187,22 @@ def __msqrd_nu_lp_lp(momenta, mx, tmix, ml):
     t = __lnorm_sqr(momenta[1] + momenta[2])
     return -(
         (
-            GF ** 2
+            GF**2
             * (
-                2 * ml ** 4 * (1 - 4 * sw ** 2 + 8 * sw ** 4) * np.sin(2 * tmix) ** 2
-                + (1 - 4 * sw ** 2 + 8 * sw ** 4)
-                * (s ** 2 + 2 * s * t + 2 * t ** 2 - mx ** 2 * (s + 2 * t))
+                2 * ml**4 * (1 - 4 * sw**2 + 8 * sw**4) * np.sin(2 * tmix) ** 2
+                + (1 - 4 * sw**2 + 8 * sw**4)
+                * (s**2 + 2 * s * t + 2 * t**2 - mx**2 * (s + 2 * t))
                 * np.sin(2 * tmix) ** 2
                 - 2
-                * ml ** 2
+                * ml**2
                 * (
-                    -(mx ** 2 * np.sin(2 * tmix) ** 2)
-                    + (s + 2 * (1 - 4 * sw ** 2 + 8 * sw ** 4) * t)
+                    -(mx**2 * np.sin(2 * tmix) ** 2)
+                    + (s + 2 * (1 - 4 * sw**2 + 8 * sw**4) * t)
                     * np.sin(2 * tmix) ** 2
                 )
             )
         )
-        / cw ** 4
+        / cw**4
     )
 
 
@@ -210,9 +210,9 @@ def __msqrd_nup_l_lp(momenta, mx, tmix, mli, mlk):
     t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
         -16
-        * GF ** 2
-        * (-(mli ** 2) + t)
-        * (-(mlk ** 2) - mx ** 2 + t)
+        * GF**2
+        * (-(mli**2) + t)
+        * (-(mlk**2) - mx**2 + t)
         * np.sin(tmix) ** 2
     )
 
@@ -296,15 +296,15 @@ def __msqrd_l_pi_pi0(momenta, mx, tmix, ml):
     t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
         2
-        * GF ** 2
-        * Vud ** 2
+        * GF**2
+        * Vud**2
         * (
-            ml ** 4
-            + mx ** 4
-            + 4 * mpi ** 2 * (mpi0 ** 2 - t)
-            + 4 * t * (-(mpi0 ** 2) + s + t)
-            - mx ** 2 * (s + 4 * t)
-            - ml ** 2 * (-2 * mx ** 2 + s + 4 * t)
+            ml**4
+            + mx**4
+            + 4 * mpi**2 * (mpi0**2 - t)
+            + 4 * t * (-(mpi0**2) + s + t)
+            - mx**2 * (s + 4 * t)
+            - ml**2 * (-2 * mx**2 + s + 4 * t)
         )
         * np.sin(tmix) ** 2
     )
@@ -367,17 +367,17 @@ def __msqrd_nu_pi_pi(momenta, mx, tmix):
     s = __lnorm_sqr(momenta[0] + momenta[2])
     t = __lnorm_sqr(momenta[1] + momenta[2])
     return (
-        GF ** 2
-        * (1 - 2 * sw ** 2) ** 2
+        GF**2
+        * (1 - 2 * sw**2) ** 2
         * (
-            4 * mpi ** 4
-            + mx ** 4
-            - 8 * mpi ** 2 * t
+            4 * mpi**4
+            + mx**4
+            - 8 * mpi**2 * t
             + 4 * t * (s + t)
-            - mx ** 2 * (s + 4 * t)
+            - mx**2 * (s + 4 * t)
         )
         * np.sin(2 * tmix) ** 2
-    ) / (2.0 * cw ** 4)
+    ) / (2.0 * cw**4)
 
 
 def dnde_nu_pi_pi(self, photon_energies, spectrum_type="all"):
@@ -450,12 +450,12 @@ def dnde_nu_g_g(self, photon_energies, spectrum_type="all"):
 
     spec = (
         32
-        * photon_energies ** 3
+        * photon_energies**3
         * (
             6 * photon_energies * mx * (-8 * photon_energies + 5 * mx)
-            + 5 * (-3 * photon_energies + 2 * mx) * mpi0 ** 2
+            + 5 * (-3 * photon_energies + 2 * mx) * mpi0**2
         )
-    ) / (mx ** 5 * (mx ** 2 + mpi0 ** 2))
+    ) / (mx**5 * (mx**2 + mpi0**2))
 
     if spectrum_type == "all":
         return spec

@@ -1,7 +1,8 @@
-from hazma._decay.decay_charged_pion cimport c_charged_pion_decay_spectrum_array
-from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_array
-from hazma._decay.decay_neutral_pion cimport c_neutral_pion_decay_spectrum_point
-from hazma._decay.decay_muon cimport c_muon_decay_spectrum_point
+from hazma.spectra._photon._muon cimport dnde_photon_muon_point
+from hazma.spectra._photon._pion cimport dnde_photon_charged_pion_point
+from hazma.spectra._photon._pion cimport dnde_photon_charged_pion_array
+from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_array
+from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_point
 
 import cython
 import numpy as np
@@ -42,7 +43,7 @@ cdef double __set_spectra(double ms):
     global e_gams
     global spec_cp
     e_gams = np.logspace(-1.0, np.log10(ms / 2.0), num=n_interp_pts)
-    spec_cp = c_charged_pion_decay_spectrum_array(e_gams, ms / 2.0, 7)
+    spec_cp = dnde_photon_charged_pion_array(e_gams, ms / 2.0)
 
 
 # Use interpolating function to compute charged pion spectrum.
@@ -145,11 +146,11 @@ cdef double integrand(
     if bitflag & BITFLAG_PP:
         result += 2. * pwpipi * interp_spec_cp(eng_gam_srf)
     if bitflag & BITFLAG_P0P0:
-        result += 2. * pwpi0pi0 * c_neutral_pion_decay_spectrum_point(eng_gam_srf, ms / 2.0)
+        result += 2. * pwpi0pi0 * dnde_photon_neutral_pion_point(eng_gam_srf, ms / 2.0)
     if bitflag & BITFLAG_MMG:
         result += pwmumu * dnde_fsr_l_srf(eng_gam_srf, mmu, ms)
     if bitflag & BITFLAG_MM:
-        result += 2. * pwmumu * c_muon_decay_spectrum_point(eng_gam_srf, ms / 2.0)
+        result += 2. * pwmumu * dnde_photon_muon_point(eng_gam_srf, ms / 2.0)
 
     return jac * result
 
