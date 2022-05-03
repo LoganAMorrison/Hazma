@@ -1,5 +1,7 @@
-import numpy as np
+from typing import List
 from setuptools import Extension, find_packages, setup  # type: ignore
+
+import numpy as np
 from Cython.Build import cythonize
 
 VERSION = "2.0.0-alpha"
@@ -12,92 +14,86 @@ def long_description():
     return "\n".join([str(line) for line in ld.split("\n")[4:]])
 
 
-def make_extension(module, name, cpp=False):
-    package = ".".join(["hazma", module, name])
-    sources = ["/".join(["hazma", module, name]) + ".pyx"]
-    if cpp:
-        return Extension(
-            package, sources, extra_compile_args=["-g", "-std=c++11"], language="c++"
-        )
-    else:
-        return Extension(package, sources)
+def make_extension(module: List[str], sources: List[str], cpp=False):
+    package = ".".join(["hazma", *module])
+    path = "/".join(["hazma", *module])
 
-
-def make_extensions(module, names, cpp=False):
     extensions = []
-    for name in names:
-        extensions += [make_extension(module, name, cpp)]
+    for src in sources:
+        m = package + "." + src
+        p = [path + "/" + src + ".pyx"]
+        if cpp:
+            exts = Extension(m, p, extra_compile_args=["-std=c++11"], language="c++")
+        else:
+            exts = Extension(m, p)
+        for ext in cythonize(exts):
+            extensions.append(ext)
     return extensions
 
 
 EXTENSIONS = []
 
-# Cython utilities
-for file in ["boost"]:
-    mod = "hazma._utils." + file
-    srcs = ["hazma/_utils/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
 
+# Cython utilities
+EXTENSIONS += make_extension(["_utils"], ["boost"])
 
 # Gamma-Ray Helper
-EXTENSIONS += make_extensions(
-    "_gamma_ray", ["gamma_ray_generator", "gamma_ray_fsr"], cpp=True
+EXTENSIONS += make_extension(
+    ["_gamma_ray"], ["gamma_ray_generator", "gamma_ray_fsr"], cpp=True
 )
 
 # Phase space
-EXTENSIONS += make_extensions(
-    "_phase_space", ["generator", "histogram", "modifiers"], cpp=True
+EXTENSIONS += make_extension(
+    ["_phase_space"], ["generator", "histogram", "modifiers"], cpp=True
 )
 
 # Field Theory helper
-EXTENSIONS += make_extensions(
-    "field_theory_helper_functions",
+EXTENSIONS += make_extension(
+    ["field_theory_helper_functions"],
     ["common_functions", "three_body_phase_space"],
     cpp=True,
 )
 
+# Positron
+EXTENSIONS += make_extension(
+    ["_positron"], ["positron_muon", "positron_charged_pion", "positron_decay"]
+)
+# Neutrino
+EXTENSIONS += make_extension(["_neutrino"], ["charged_pion", "muon"])
+
 # Decay Spectra
-for file in ["_muon", "_pion", "_rho", "_kaon", "_eta", "_omega", "_eta_prime"]:
-    mod = "hazma.spectra._photon." + file
-    srcs = ["hazma/spectra/_photon/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
-
-for file in ["_muon", "_pion"]:
-    mod = "hazma.spectra._positron." + file
-    srcs = ["hazma/spectra/_positron/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
-
-for file in ["_muon", "_pion", "_neutrino"]:
-    mod = "hazma.spectra._neutrino." + file
-    srcs = ["hazma/spectra/_neutrino/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
-
+EXTENSIONS += make_extension(
+    ["spectra", "_photon"],
+    ["_muon", "_pion", "_rho", "_kaon", "_eta", "_omega", "_eta_prime", "_phi"],
+)
+EXTENSIONS += make_extension(
+    ["spectra", "_positron"],
+    ["_muon", "_pion"],
+)
+EXTENSIONS += make_extension(
+    ["spectra", "_neutrino"],
+    ["_muon", "_pion", "_neutrino"],
+)
 
 # Scalar mediator
-for file in [
-    "scalar_mediator_decay_spectrum",
-    "scalar_mediator_positron_spec",
-    "_c_scalar_mediator_cross_sections",
-]:
-    mod = "hazma.scalar_mediator." + file
-    srcs = ["hazma/scalar_mediator/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
+EXTENSIONS += make_extension(
+    ["scalar_mediator"],
+    [
+        "scalar_mediator_decay_spectrum",
+        "scalar_mediator_positron_spec",
+        "_c_scalar_mediator_cross_sections",
+    ],
+)
 
 # Vector mediator
-for file in [
-    "vector_mediator_decay_spectrum",
-    "vector_mediator_positron_spec",
-    "_c_vector_mediator_cross_sections",
-]:
-    mod = "hazma.vector_mediator." + file
-    srcs = ["hazma/vector_mediator/" + file + ".pyx"]
-    for ext in cythonize(Extension(mod, srcs)):
-        EXTENSIONS.append(ext)
+EXTENSIONS += make_extension(
+    ["vector_mediator"],
+    [
+        "vector_mediator_decay_spectrum",
+        "vector_mediator_positron_spec",
+        "_c_vector_mediator_cross_sections",
+    ],
+)
 
 # RH-neutrino
 # EXTENSIONS += [
