@@ -12,20 +12,18 @@ from hazma import rambo
 from hazma.rambo import compute_annihilation_cross_section
 from hazma.rambo import compute_decay_width
 
-from hazma.decay import muon as dm
-from hazma.decay import electron as de
+from hazma.spectra import dnde_photon_muon as dm
 
-from hazma.decay import neutral_pion as dnp
-from hazma.decay import charged_pion as dcp
+from hazma.spectra import dnde_photon_neutral_pion as dnp
+from hazma.spectra import dnde_photon_charged_pion as dcp
 
-from hazma.decay import charged_kaon as dck
-from hazma.decay import long_kaon as dlk
-from hazma.decay import short_kaon as dsk
+from hazma.spectra import dnde_photon_charged_kaon as dck
+from hazma.spectra import dnde_photon_long_kaon as dlk
+from hazma.spectra import dnde_photon_short_kaon as dsk
 
 include "../_decay/parameters.pxd"
 
-cdef spec_dict = {'muon': dm, 'electron': de, 'neutral_pion': dnp,
-                  'neutrino': de,
+cdef spec_dict = {'muon': dm, 'neutral_pion': dnp,
                   'charged_pion': dcp, 'charged_kaon': dck,
                   'long_kaon': dlk, 'short_kaon': dsk}
 
@@ -141,6 +139,8 @@ def gamma(np.ndarray particles, double cme,
     for i in range(num_bins):
         for j in range(num_fsp):
             part = particles[j]  # particle name
+            if part == "electron" or part == "neutrino":
+                continue
             part_eng = hist[j, 0, i]  # particle energy
 
             # Normalize spectrum: Need to multiply by the probability of

@@ -10,12 +10,15 @@ from hazma.parameters import (
     electron_mass as m_e,
     muon_mass as m_mu,
 )
-from hazma.decay import (
-    muon as dnde_g_mu,
-    neutral_pion as dnde_g_pi0,
-    charged_pion as dnde_g_pi,
+from hazma.spectra import (
+    dnde_photon_muon as dnde_g_mu,
+    dnde_photon_neutral_pion as dnde_g_pi0,
+    dnde_photon_charged_pion as dnde_g_pi,
 )
-from hazma.positron_spectra import charged_pion as dnde_p_pi, muon as dnde_p_mu
+from hazma.spectra import (
+    dnde_positron_charged_pion as dnde_p_pi,
+    dnde_positron_muon as dnde_p_mu,
+)
 from hazma.utils import RealOrRealArray
 
 
@@ -103,7 +106,7 @@ class SingleChannelAnn(TheoryAnn):
         return 2 * dnde_g_pi0(eg, ecm / 2)
 
     def __dnde_photon_pi0g(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return dnde_g_pi0(eg, (ecm ** 2 + m_pi0 ** 2) / (2.0 * ecm))
+        return dnde_g_pi0(eg, (ecm**2 + m_pi0**2) / (2.0 * ecm))
 
     def __dnde_photon_pipi(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
         return 2 * dnde_g_pi(eg, ecm / 2) + self._dnde_ap_scalar(eg, ecm, m_pi)
@@ -133,7 +136,7 @@ class SingleChannelAnn(TheoryAnn):
 
         elif self.fs == "pi0 g":
             self._gamma_ray_line_energies = lambda e_cm: {
-                "pi0 g": (e_cm ** 2 - m_pi0 ** 2) / (2.0 * e_cm)
+                "pi0 g": (e_cm**2 - m_pi0**2) / (2.0 * e_cm)
             }
         else:
             self._gamma_ray_line_energies = lambda _: {}
@@ -174,7 +177,7 @@ class SingleChannelAnn(TheoryAnn):
                 * alpha_em
                 / (np.pi * e_cm)
                 * P_g_scalar
-                * (np.log((1 - x) / mu ** 2) - 1)
+                * (np.log((1 - x) / mu**2) - 1)
             )
             if not np.isnan(res) and res >= 0:
                 return res
@@ -193,7 +196,7 @@ class SingleChannelAnn(TheoryAnn):
                 * alpha_em
                 / (np.pi * e_cm)
                 * P_g_fermion
-                * (np.log((1 - x) / mu ** 2) - 1)
+                * (np.log((1 - x) / mu**2) - 1)
             )
             if not np.isnan(res) and res >= 0:
                 return res
@@ -281,7 +284,7 @@ class SingleChannelDec(TheoryDec):
         return 2 * dnde_g_pi0(eg, self.mx / 2)
 
     def __dnde_photon_pi0g(self, eg):
-        return dnde_g_pi0(eg, (self.mx ** 2 + m_pi0 ** 2) / (2.0 * self.mx))
+        return dnde_g_pi0(eg, (self.mx**2 + m_pi0**2) / (2.0 * self.mx))
 
     def __dnde_photon_pipi(self, eg):
         return 2 * dnde_g_pi(eg, self.mx / 2) + self._dnde_ap_scalar(eg, m_pi)
@@ -311,7 +314,7 @@ class SingleChannelDec(TheoryDec):
         if self.fs == "g g":
             lines[self.fs] = self.mx / 2
         elif self.fs == "pi0 g":
-            lines[self.fs] = (self.mx ** 2 - m_pi0 ** 2) / (2.0 * self.mx)
+            lines[self.fs] = (self.mx**2 - m_pi0**2) / (2.0 * self.mx)
 
         self._gamma_ray_line_energies = lambda: lines
 
@@ -353,7 +356,7 @@ class SingleChannelDec(TheoryDec):
                 * alpha_em
                 / (np.pi * self.mx)
                 * P_g_scalar
-                * (np.log((1 - x) / mu ** 2) - 1)
+                * (np.log((1 - x) / mu**2) - 1)
             )
             if not np.isnan(res) and res >= 0:
                 return res
@@ -372,7 +375,7 @@ class SingleChannelDec(TheoryDec):
                 * alpha_em
                 / (np.pi * self.mx)
                 * P_g_fermion
-                * (np.log((1 - x) / mu ** 2) - 1)
+                * (np.log((1 - x) / mu**2) - 1)
             )
             if not np.isnan(res) and res >= 0:
                 return res

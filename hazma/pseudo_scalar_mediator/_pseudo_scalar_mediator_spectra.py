@@ -1,6 +1,6 @@
 import numpy as np
 
-from hazma.decay import muon
+from hazma.spectra import dnde_photon_muon as muon
 
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import electron_mass as me
@@ -22,8 +22,7 @@ class PseudoScalarMediatorSpectra:
         pass
 
     def dnde_ee(self, egams, cme, spectrum_type="all"):
-        """Computes spectrum from DM annihilation into electrons.
-        """
+        """Computes spectrum from DM annihilation into electrons."""
         if spectrum_type == "all":
             return self.dnde_ee(egams, cme, "fsr") + self.dnde_ee(egams, cme, "decay")
         elif spectrum_type == "fsr":
@@ -39,8 +38,7 @@ class PseudoScalarMediatorSpectra:
             )
 
     def dnde_mumu(self, egams, cme, spectrum_type="all"):
-        """Computes spectrum from DM annihilation into muons.
-        """
+        """Computes spectrum from DM annihilation into muons."""
         if spectrum_type == "all":
             return self.dnde_mumu(egams, cme, "fsr") + self.dnde_mumu(
                 egams, cme, "decay"

@@ -1,4 +1,6 @@
-"""Parameters relevant to computing constraints from gamma ray experiments.
+"""
+Parameters relevant to computing constraints from gamma ray experiments.
+
 
 """
 

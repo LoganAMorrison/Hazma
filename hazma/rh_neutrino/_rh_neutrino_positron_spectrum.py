@@ -3,7 +3,7 @@ This file contains function for computing the positron spectrum from
 right-handed neutrino decays.
 """
 
-from hazma.positron_spectra import charged_pion as pspec_charged_pion
+from hazma.spectra import dnde_positron_charged_pion as pspec_charged_pion
 from hazma.parameters import charged_pion_mass as mpi
 
 
@@ -22,6 +22,5 @@ def dnde_pos_pi_l(self, positron_energies):
     spec: float or np.array
         Positron spectrum.
     """
-    epi = (self.mx ** 2 + mpi ** 2 - self.ml ** 2) / (2.0 * self.mx)
+    epi = (self.mx**2 + mpi**2 - self.ml**2) / (2.0 * self.mx)
     return pspec_charged_pion(positron_energies, epi)
-
