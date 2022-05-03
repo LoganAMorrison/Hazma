@@ -1,21 +1,12 @@
 import math
 
-from scipy import special
 import numpy as np
+from scipy import special
 
-from .Resonance import (
-    MeV,
-    Hhat,
-    H,
-    dHhatds,
-    BreitWignerFW,
-    BreitWignerGS,
-    BreitWignerPWave,
-    gev2nb,
-)
 from . import alpha
-from .masses import mpi, mk0, mk
-
+from .masses import mk, mk0, mpi
+from .Resonance import (BreitWignerFW, BreitWignerGS, BreitWignerPWave, H,
+                        Hhat, MeV, dHhatds, gev2nb)
 
 # PDG mass values
 # mk0 = 0.497611
@@ -115,7 +106,7 @@ cS_ = 1.0
 
 
 def spectral(Q):
-    Q2 = Q ** 2
+    Q2 = Q**2
     fk = Fkaon(Q2, 0, mk0, mk)
     return (
         1.0
@@ -128,15 +119,15 @@ def spectral(Q):
 
 
 def dBR(Q):
-    Q2 = Q ** 2
+    Q2 = Q**2
     pcm = math.sqrt(0.25 / Q2 * (Q2 - (mk0 + mk) ** 2) * (Q2 - (mk0 - mk) ** 2))
     pre = (
         brmu
         * 0.5
-        * vud ** 2
-        / mtau ** 2
-        * (1 + 2.0 * Q2 / mtau ** 2)
-        * (1 - Q2 / mtau ** 2) ** 2
+        * vud**2
+        / mtau**2
+        * (1 + 2.0 * Q2 / mtau**2)
+        * (1 - Q2 / mtau**2) ** 2
         * (2.0 * pcm / Q) ** 2
         * Q
     )
@@ -423,15 +414,14 @@ def GammaDM(medMass, imode):
         if medMass < 2 * mk:
             return 0
         mK = mk
-        temp = Fkaon(medMass ** 2, imode)
+        temp = Fkaon(medMass**2, imode)
     return (
         1.0
         / 48.0
         / math.pi
         * medMass
-        * (1 - 4 * mK ** 2 / medMass ** 2) ** 1.5
+        * (1 - 4 * mK**2 / medMass**2) ** 1.5
         * abs(temp) ** 2
-        * gev2nb
     )
 
 
@@ -443,9 +433,9 @@ def sigmaSM0(Q2):
         1.0
         / 3.0
         * math.pi
-        * alphaEM ** 2
+        * alphaEM**2
         / Q2
-        * (1.0 - 4.0 * mk0 ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk0**2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
@@ -459,9 +449,9 @@ def sigmaSMP(Q2):
         1.0
         / 3.0
         * math.pi
-        * alphaEM ** 2
+        * alphaEM**2
         / Q2
-        * (1.0 - 4.0 * mk ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mk**2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
@@ -469,10 +459,10 @@ def sigmaSMP(Q2):
 
 # cross section for DM annihilations to two neutral Kaons
 def sigmaDM0(Q2):
-    if Q2 < 2 * mk ** 2:
+    if Q2 < 2 * mk**2:
         return 0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     temp = Fkaon(Q2, 0)
     return (
@@ -481,19 +471,18 @@ def sigmaDM0(Q2):
         / math.pi
         * DMmed2
         * Q2
-        * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mk0 ** 2 / Q2) ** 1.5
+        * (1 + 2 * mDM_**2 / Q2)
+        * (1.0 - 4.0 * mk0**2 / Q2) ** 1.5
         * abs(temp) ** 2
-        * gev2nb
     )
 
 
 # cross section for DM annihilations to two charged Kaons
 def sigmaDMP(Q2):
-    if Q2 < 4 * mk ** 2:
+    if Q2 < 4 * mk**2:
         return 0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     temp = Fkaon(Q2, 1)
     return (
@@ -502,8 +491,7 @@ def sigmaDMP(Q2):
         / math.pi
         * DMmed2
         * Q2
-        * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mk ** 2 / Q2) ** 1.5
+        * (1 + 2 * mDM_**2 / Q2)
+        * (1.0 - 4.0 * mk**2 / Q2) ** 1.5
         * abs(temp) ** 2
-        * gev2nb
     )

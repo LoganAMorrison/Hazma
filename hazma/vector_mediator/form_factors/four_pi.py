@@ -1,10 +1,9 @@
-from typing import Tuple, List
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import numpy as np
 
 from hazma.rambo import PhaseSpace
-from hazma.utils import RealArray
 
 M_PI = 0.13957061
 M_PI0 = 0.1349770
@@ -20,10 +19,6 @@ M_F0 = 1.35
 G_F0 = 0.2
 M_OMEGA = 0.78265
 G_OMEGA = 0.00849
-
-# TODO: Should the BW propagators with square roots be clipped at zero?
-#       (e.g. in a1, f0, BW3)
-# TODO: Check minus signs in F0, rho currents
 
 
 def lnorm_sqr(q):
@@ -427,20 +422,24 @@ class FormFactorPiPiPiPi:
 
         return j1 + j2 + j3 + j4
 
-    # ============================================================================
-    # ---- Widths ----------------------------------------------------------------
-    # ============================================================================
-
-    def _width(
-        self,
-        mass: float,
-        momenta: RealArray,
-        weights: RealArray,
-        neutral: bool,
-        contributions: List[str] = ["a1", "f0", "omega", "rho"],
-    ) -> Tuple[float, float]:
+    def msqrd(self, momenta, gvuu: float, gvdd: float, neutral: bool):
         """
-        Compute the width.
+        Compute the squared matrix element.
+
+        Parameters
+        ----------
+        momenta: np.ndarray
+            Four-momenta of the final-state pions.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        neutral: bool
+            If true, form-factor for pi-pi-pi0-pi0 is returned.
+
+        Returns
+        -------
+        msqrd: np.ndarray
         """
         Q = np.sum(momenta, axis=1)
         Q2 = lnorm_sqr(Q)
@@ -451,26 +450,72 @@ class FormFactorPiPiPiPi:
         q4 = momenta[:, 3, :]
 
         if neutral:
-            current = self._current_neutral(Q, Q2, q1, q2, q3, q4, contributions)
+            current = self._current_neutral(Q, Q2, q1, q2, q3, q4)
         else:
-            current = self._current_charged(Q, Q2, q1, q2, q3, q4, contributions)
+            current = self._current_charged(Q, Q2, q1, q2, q3, q4)
 
-        jj = np.real(ldot(current, np.conj(current)))
-        jq = np.abs(ldot(Q, np.conj(current))) ** 2
+        j = -np.real(ldot(current, np.conj(current)))
+        weights = j / (3.0 * Q2)
 
-        wgts = weights * (-jj + jq / mass**2)
+        c1 = gvuu - gvdd
+        if neutral:
+            pre = c1**2 / 2.0
+        else:
+            pre = c1**2 / 4.0
+
+        return pre * weights
+
+    def form_factor(
+        self, *, s: float, gvuu: float, gvdd: float, neutral: bool, npts: int
+    ):
+        """
+        Compute the form-factor for a four-pion final-state.
+
+        Parameters
+        ----------
+        s: float
+            Squared center-of-mass energy in units of MeV^2.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        neutral: bool
+            If true, form-factor for pi-pi-pi0-pi0 is returned.
+        npts: int
+            Number of Monte-Carlo phase-space points to use.
+
+        Returns
+        -------
+        form_factor: float
+            Form factor.
+        error: float
+            Estimated error.
+        """
+        qq = np.sqrt(s) * 1e-3
 
         if neutral:
-            pre = 1.0 / (6.0 * mass) / 2.0
+            masses = np.array([M_PI0, M_PI0, M_PI, M_PI])
         else:
-            pre = 1.0 / (6.0 * mass) / 4.0
+            masses = np.array([M_PI, M_PI, M_PI, M_PI])
 
-        width = pre * np.nanmean(wgts)
-        error = pre * np.nanstd(wgts) / np.sqrt(momenta.shape[-1])
+        if qq < np.sum(masses):
+            return 0.0, 0.0
 
-        return width, error
+        phase_space = PhaseSpace(qq, masses)
+        momenta, weights = phase_space.generate(npts)
 
-    def decay_width(
+        weights = weights * self.msqrd(momenta, gvuu=gvuu, gvdd=gvdd, neutral=neutral)
+
+        ff_avg = np.nanmean(weights)
+        ff_err = np.nanstd(weights) / np.sqrt(momenta.shape[-1])
+
+        return ff_avg, ff_err
+
+    # ============================================================================
+    # ---- Widths ----------------------------------------------------------------
+    # ============================================================================
+
+    def width(
         self,
         *,
         mv: float,
@@ -478,102 +523,38 @@ class FormFactorPiPiPiPi:
         gvdd: float,
         npts: int,
         neutral: bool,
-        contributions: List[str] = ["a1", "f0", "omega", "rho"],
     ) -> Tuple[float, float]:
         """
         Compute the decay width into four pions.
+
+        Parameters
+        ----------
+        mv: float
+            Vector mediator mass in MeV.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        neutral: bool
+            If true, form-factor for pi-pi-pi0-pi0 is returned.
+        npts: int
+            Number of Monte-Carlo phase-space points to use.
+
+        Returns
+        -------
+        width: float
+            Decay width for V -> 4pi
+        error: float
+            Estimated error.
         """
-        if neutral:
-            masses = np.array([M_PI0, M_PI0, M_PI, M_PI])
-        else:
-            masses = np.array([M_PI, M_PI, M_PI, M_PI])
-
-        if mv < np.sum(masses):
-            return 0.0, 0.0
-
-        c1 = gvuu - gvdd
-
-        phase_space = PhaseSpace(mv, masses)
-        momenta, weights = phase_space.generate(npts)
-        width, error = self._width(
-            mv, momenta, weights, neutral=neutral, contributions=contributions
+        ff = self.form_factor(
+            s=mv**2, gvuu=gvuu, gvdd=gvdd, neutral=neutral, npts=npts
         )
-
-        return c1**2 * width, c1**2 * error
+        return ff[0] * mv / 2.0, ff[1] * mv / 2.0
 
     # ============================================================================
     # ---- Cross Sections --------------------------------------------------------
     # ============================================================================
-
-    def _cross_section(
-        self,
-        cme: float,
-        mx: float,
-        mv: float,
-        widthv: float,
-        momenta: RealArray,
-        weights: RealArray,
-        neutral: bool,
-    ) -> Tuple[float, float]:
-        """
-        Compute the cross section for x + xbar -> 4pi
-        """
-
-        Q = np.sum(momenta, axis=1)
-        Q2 = lnorm_sqr(Q)
-
-        q1 = momenta[:, 0, :]
-        q2 = momenta[:, 1, :]
-        q3 = momenta[:, 2, :]
-        q4 = momenta[:, 3, :]
-
-        ex = cme / 2
-        px = np.sqrt(ex**2 - mx**2)
-        p1 = np.array([ex, 0.0, 0.0, px])
-        p2 = np.array([ex, 0.0, 0.0, -px])
-
-        if neutral:
-            j = self._current_neutral(Q, Q2, q1, q2, q3, q4)
-        else:
-            j = self._current_charged(Q, Q2, q1, q2, q3, q4)
-
-        jc = np.conj(j)
-
-        s = cme**2
-        # Coefficient of (JC.J)
-        coeff_jc_j = 2 * mv**4 * mx**2 - 0.5 * mv**4 * s
-        # Coefficient of (JC.p1) * (JC.p2)
-        coeff_jcp1_jp2 = mv**4 - 4 * mv**2 * mx**2 + 2 * mx**2 * s
-        # Coefficient of (JC.p2) * (JC.p2)
-        coeff_jcp2_jp2 = -4 * mv**2 * mx**2 + 4 * mx**2 * s
-        # Coefficient of (JC.p1) * (JC.p1)
-        coeff_jcp1_jp1 = -4 * mv**2 * mx**2 + 4 * mx**2 * s
-        # Coefficient of (JC.p2) * (JC.p1)
-        coeff_jcp2_jp1 = mv**4 - 4 * mv**2 * mx**2 + 4 * mx**2 * s
-
-        msqrd_jc_j = np.real(ldot(j, jc))
-        msqrd_jcp1_jp2 = ldot(jc, p1) * ldot(j, p2)
-        msqrd_jcp2_jp2 = ldot(jc, p2) * ldot(j, p2)
-        msqrd_jcp1_jp1 = ldot(jc, p1) * ldot(j, p1)
-        msqrd_jcp2_jp1 = ldot(jc, p2) * ldot(j, p1)
-
-        den = mv**4 * (mv**2 - s) ** 2 + mv**6 * widthv**2
-
-        msqrd = (
-            msqrd_jc_j * coeff_jc_j
-            + msqrd_jcp1_jp2 * coeff_jcp1_jp2
-            + msqrd_jcp2_jp2 * coeff_jcp2_jp2
-            + msqrd_jcp1_jp1 * coeff_jcp1_jp1
-            + msqrd_jcp2_jp1 * coeff_jcp2_jp1
-        )
-
-        wgts = weights * msqrd / den
-
-        pre = 1.0 / (4.0 * px * cme)
-        width = pre * np.nanmean(wgts)
-        error = pre * np.nanstd(wgts) / np.sqrt(Q.shape[-1])
-
-        return width, error
 
     def cross_section(
         self,
@@ -584,29 +565,98 @@ class FormFactorPiPiPiPi:
         gvuu: float,
         gvdd: float,
         widthv: float,
-        npts: int,
         neutral: bool,
+        npts: int,
     ) -> Tuple[float, float]:
         """
         Compute the cross-section for x + xbar -> 4pi.
-        """
-        if neutral:
-            accessable = (cme > 2 * mx) and (cme > 2 * M_PI0 + 2 * M_PI)
-        else:
-            accessable = (cme > 2 * mx) and (cme > 4 * M_PI)
 
-        if not accessable:
+        Parameters
+        ----------
+        cme: float
+            Center-of-mass energy in MeV.
+        mx: float
+            Dark matter mass in MeV.
+        mv: float
+            Vector mediator mass in MeV.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        widthv: float
+            Decay width of the vector in MeV.
+        neutral: bool
+            If true, form-factor for pi-pi-pi0-pi0 is returned.
+        npts: int
+            Number of Monte-Carlo phase-space points to use.
+
+        Returns
+        -------
+        cross_section: float
+            Cross-section for DM+DM -> 4pi
+        error: float
+            Estimated error.
+        """
+        if cme < 2.0 * mx:
             return 0.0, 0.0
+        s = cme**2
+        ff = self.form_factor(s=s, gvuu=gvuu, gvdd=gvdd, neutral=neutral, npts=npts)
+        prop = (s - mv**2) ** 2 + mv**2 * widthv**2
+        pre = s * (s + 2 * mx**2) / (prop * np.sqrt(s * (s - 4 * mx**2)))
+        return pre * ff[0], pre * ff[1]
+
+    def energy_distributions(
+        self,
+        *,
+        cme: float,
+        gvuu: float,
+        gvdd: float,
+        neutral: bool,
+        npts: int = 10000,
+        nbins: int = 25,
+    ):
+        def msqrd(momenta):
+            return self.msqrd(momenta, gvuu=gvuu, gvdd=gvdd, neutral=neutral)
 
         if neutral:
             masses = np.array([M_PI0, M_PI0, M_PI, M_PI])
         else:
             masses = np.array([M_PI, M_PI, M_PI, M_PI])
 
-        phase_space = PhaseSpace(cme, masses)
-        momenta, weights = phase_space.generate(npts)
-        cs, error = self._cross_section(cme, mx, mv, widthv, momenta, weights, neutral)
+        phase_space = PhaseSpace(cme * 1e-3, np.array(masses), msqrd=msqrd)
+        dists = phase_space.energy_distributions(n=npts, nbins=nbins)
 
-        c1 = gvuu - gvdd
+        for i in range(len(dists)):
+            ps, es = dists[i]
+            dists[i] = (ps * 1e-3, es * 1e3)
+        return dists
 
-        return c1**2 * cs, c1**2 * error
+    def invariant_mass_distributions(
+        self,
+        *,
+        cme: float,
+        gvuu: float,
+        gvdd: float,
+        neutral: bool,
+        npts: int = 10000,
+        nbins: int = 25,
+        pairs: Optional[List[Tuple[int, int]]] = None,
+    ):
+        def msqrd(momenta):
+            return self.msqrd(momenta, gvuu=gvuu, gvdd=gvdd, neutral=neutral)
+
+        if neutral:
+            masses = np.array([M_PI0, M_PI0, M_PI, M_PI])
+        else:
+            masses = np.array([M_PI, M_PI, M_PI, M_PI])
+
+        phase_space = PhaseSpace(cme * 1e-3, np.array(masses), msqrd=msqrd)
+        dists = phase_space.invariant_mass_distributions(
+            n=npts, nbins=nbins, pairs=pairs
+        )
+
+        for pair in dists.keys():
+            ps, es = dists[pair]
+            dists[pair] = (ps * 1e-3, es * 1e3)
+
+        return dists

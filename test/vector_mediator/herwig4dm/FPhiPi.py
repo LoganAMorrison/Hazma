@@ -1,9 +1,8 @@
 # Libraries to load
-import math
 import cmath
+import math
 
-from . import Resonance
-from . import alpha
+from . import Resonance, alpha
 
 # own parametrization, see arXiv:1911.11147
 
@@ -127,5 +126,4 @@ def sigmaDMPhiPi(sHat):
         * (1 + 2 * mDM_**2 / sHat)
         * pcm**3
         * abs(form) ** 2
-        * Resonance.gev2nb
     )

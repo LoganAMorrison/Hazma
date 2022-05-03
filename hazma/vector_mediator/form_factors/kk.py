@@ -3,26 +3,19 @@ Module for computing the V-K-K form factor.
 """
 
 
-from dataclasses import dataclass, field, InitVar
-from typing import Optional, Tuple, Union, NamedTuple
+from dataclasses import InitVar, dataclass, field
+from typing import NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 from scipy.special import gamma  # type:ignore
 
-from hazma.vector_mediator.form_factors.utils import (
-    MK0_GEV,
-    MK_GEV,
-    MPI_GEV,
-    breit_wigner_fw,
-    breit_wigner_gs,
-    breit_wigner_pwave,
-    dhhatds,
-    gamma_generator,
-    h,
-    hhat,
-    RealArray,
-    ComplexArray,
-)
+from hazma import parameters
+
+from .cross_sections import cross_section_x_x_to_p_p
+from .utils import (MK0_GEV, MK_GEV, MPI_GEV, ComplexArray, RealArray,
+                    breit_wigner_fw, breit_wigner_gs, breit_wigner_pwave,
+                    dhhatds, gamma_generator, h, hhat)
+from .widths import width_v_to_p_p
 
 
 class VectorMesonParameters(NamedTuple):
@@ -174,7 +167,7 @@ def _compute_h_parameters(
         Widths of the resonances.
     m: float
     """
-    hres = np.array(hhat(mass ** 2, mass, width, m, m))
+    hres = np.array(hhat(mass**2, mass, width, m, m))
     dh = np.array(dhhatds(mass, width, m, m))
     h0 = np.array(h(0.0, mass, width, m, m, dh, hres))
     return hres, dh, h0
@@ -322,7 +315,7 @@ class FormFactorKK:
         self.phi_width = phi_params.width
         self.phi_coup = phi_params.coup
 
-    def form_factor(
+    def __form_factor(
         self,
         s: RealArray,
         gvuu: float,
@@ -414,238 +407,65 @@ class FormFactorKK:
 
         return np.sum(fk, axis=1)
 
+    def form_factor(
+        self, *, q: Union[float, RealArray], gvuu, gvdd, gvss, imode: int = 1
+    ) -> Union[complex, ComplexArray]:
+        """
+        Compute the pi-pi-V form factor.
 
-@dataclass(frozen=True)
-class FormFactorKKParameters:
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-K-K.
-    """
+        Parameters
+        ----------
+        s: Union[float,RealArray
+            Center-of-mass energy in MeV.
+        imode: Optional[int]
+            Iso-spin channel. Default is 1.
 
-    rho_mass: RealArray
-    rho_width: RealArray
-    rho_coup: ComplexArray
+        Returns
+        -------
+        ff: Union[complex,ComplexArray]
+            Form factor from pi-pi-V.
+        """
+        if imode == 0:
+            mk = parameters.neutral_kaon_mass
+        elif imode == 1:
+            mk = parameters.charged_kaon_mass
+        else:
+            raise ValueError(f"Invalid iso-spin {imode}")
 
-    hres: RealArray
-    h0: RealArray
-    dh: RealArray
+        if hasattr(q, "__len__"):
+            qq = 1e-3 * np.array(q)
+        else:
+            qq = 1e-3 * np.array([q])
 
-    omega_mass: RealArray
-    omega_width: RealArray
-    omega_coup: ComplexArray
+        mask = qq > 2 * mk * 1e-3
+        ff = np.zeros_like(qq, dtype=np.complex128)
 
-    phi_mass: RealArray
-    phi_width: RealArray
-    phi_coup: ComplexArray
+        if len(qq[mask]) > 0:
+            ff[mask] = self.__form_factor(
+                qq[mask] ** 2,
+                gvuu,
+                gvdd,
+                gvss,
+                imode=imode,
+            )
 
+        if len(ff) == 1:
+            return ff[0]
+        return ff
 
-def compute_kk_form_factor_parameters(n_max: int = 200) -> FormFactorKKParameters:
-    """
-    Compute the parameters needed for computing the V-K-K form factor.
+    def width(self, *, mv, gvuu, gvdd, gvss, imode):
+        ff = self.form_factor(q=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss, imode=imode)
+        if imode == 0:
+            mp = parameters.neutral_kaon_mass
+        else:
+            mp = parameters.charged_kaon_mass
+        return width_v_to_p_p(mv, mp, ff)
 
-    Parameters
-    ----------
-    n_max: int
-        Number of resonances to include.
-
-    Returns
-    -------
-    params: FormFactorKKParameters
-        Parameters of the resonances for the V-K-K form factor.
-    """
-    # initial parameters for the model
-    # beta_rho = 2.1968
-    # beta_omega = 2.6936
-    # beta_phi = 1.9452
-    gamma_omega = 0.5
-    gamma_phi = 0.2
-
-    # rho parameters
-    rho_mag = np.array(
-        [
-            1.1148916618504967,
-            -0.050374779737077324,
-            -0.014908906283692132,
-            -0.03902475997619905,
-            -0.038341465215871416,
-        ]
-    )
-    rho_phase = np.zeros(5, np.float64)
-    rho_masses = np.array(
-        [0.77549, 1.5206995754050117, 1.7409719246639341, 1.9922811314327789]
-    )
-    rho_widths = np.array(
-        [0.1494, 0.21341728317817743, 0.08412224414791908, 0.2899733272437917]
-    )
-    # omega parameters
-    omega_mag = np.array(
-        [
-            1.3653229680598022,
-            -0.02775156567495144,
-            -0.32497165559032715,
-            1.3993153161869765,
-        ]
-    )
-    omega_phase = np.zeros(len(omega_mag), np.float64)
-    omega_masses = np.array([0.78265, 1.4144344268685891, 1.655375231284883])
-    omega_widths = np.array([8.49e-3, 0.0854413887755723, 0.16031760444832305])
-    # phi parameters
-    phi_mag = np.array(
-        [
-            0.965842498579515,
-            -0.002379766320723148,
-            -0.1956211640216197,
-            0.16527771485190898,
-        ]
-    )
-    phi_phase = np.zeros(len(phi_mag), np.float64)
-    phi_masses = np.array([1.0194209171596993, 1.594759278457624, 2.156971341201067])
-    phi_widths = np.array(
-        [4.252653332329334e-3, 0.028741821847408196, 0.6737556174184005]
-    )
-
-    rho_params = _compute_masses_width_couplings(
-        rho_masses,
-        rho_widths,
-        rho_mag,
-        rho_phase,
-        n_max,
-    )
-    hres, dh, h0 = _compute_h_parameters(
-        rho_params["mass"],
-        rho_params["width"],
-        MPI_GEV,
-    )
-
-    omega_params = _compute_masses_width_couplings(
-        omega_masses,
-        omega_widths,
-        omega_mag,
-        omega_phase,
-        n_max,
-        gam=gamma_omega,
-    )
-
-    phi_params = _compute_masses_width_couplings(
-        phi_masses,
-        phi_widths,
-        phi_mag,
-        phi_phase,
-        n_max,
-        gam=gamma_phi,
-    )
-
-    return FormFactorKKParameters(
-        rho_params["mass"],
-        rho_params["width"],
-        rho_params["coup"],
-        hres,
-        h0,
-        dh,
-        omega_params["mass"],
-        omega_params["width"],
-        omega_params["coup"],
-        phi_params["mass"],
-        phi_params["width"],
-        phi_params["coup"],
-    )
-
-
-def form_factor_kk(
-    s: Union[float, RealArray],
-    params: FormFactorKKParameters,
-    gvuu: float,
-    gvdd: float,
-    gvss: float,
-    imode: int,
-) -> Union[complex, np.ndarray]:
-    """
-    Compute the form factor for the V-K-K interaction.
-
-    Parameters
-    ----------
-    s: Union[float, np.ndarray]
-        Center-of-mass energies squared.
-    params: FormFactorKKParameters
-        Parameters for computing the V-K-K form factor.
-    gvuu: float
-        Coupling of the vector to up-quarks.
-    gvdd: float
-        Coupling of the vector to down-quarks.
-    gvss: float
-        Coupling of the vector to strange-quarks.
-    imode: int
-        If imode = 0, the form factor is for V-K0-K0 and if imode = 1 then
-        the form factor is for V-Kp-Km.
-
-    Returns
-    -------
-    fk: Union[complex, np.ndarray]
-        Form factor for V-K-K.
-    """
-    mk = MK0_GEV if imode == 0 else MK_GEV
-    eta_phi = 1.055
-
-    # TODO Check these couplings. They look wrong.
-    ci0 = 3.0 * (gvuu + gvdd)
-    ci1 = gvuu - gvdd
-    cs = -3.0 * gvss
-
-    # Force s into an array. This makes vectorization in the case where s is
-    # an array easier.
-    if hasattr(s, "__len__"):
-        ss = np.array(s)
-    else:
-        ss = np.array([s])
-
-    # Rho exchange
-    fk = (
-        ci1
-        * params.rho_coup
-        * breit_wigner_gs(
-            ss,
-            params.rho_mass,
-            params.rho_width,
-            MPI_GEV,
-            MPI_GEV,
-            params.h0,
-            params.dh,
-            params.hres,
-            reshape=True,
-        )
-    )
-    fk *= 0.5 * (-1.0 if imode == 0 else 1.0)
-
-    # Omega exchange
-    fk += (
-        1.0
-        / 6.0
-        * ci0
-        * params.omega_coup
-        * breit_wigner_fw(
-            ss,
-            params.omega_mass,
-            params.omega_width,
-            reshape=True,
-        )
-    )
-
-    # Phi-exchange
-    bwp = breit_wigner_pwave(
-        ss,
-        params.phi_mass,
-        params.phi_width,
-        mk,
-        mk,
-        reshape=True,
-    )
-
-    phi_terms = 1.0 / 3.0 * cs * params.phi_coup * bwp
-    phi_terms[0] *= eta_phi if imode == 0 else 1.0
-    fk += phi_terms
-
-    fk = np.sum(fk, axis=1)
-
-    if len(fk) == 1:
-        return fk[0]
-    return fk
+    def cross_section(self, *, cme, mx, mv, gvuu, gvdd, gvss, gamv, imode):
+        ff = self.form_factor(q=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss, imode=imode)
+        if imode == 0:
+            mp = parameters.neutral_kaon_mass
+        else:
+            mp = parameters.charged_kaon_mass
+        s = cme**2
+        return cross_section_x_x_to_p_p(s, mx, mp, ff, mv, gamv)

@@ -1,4 +1,6 @@
-from dataclasses import dataclass, field, InitVar, KW_ONLY
+import abc
+from dataclasses import KW_ONLY, InitVar, dataclass, field
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -6,7 +8,6 @@ from hazma.rambo import PhaseSpace
 from hazma.utils import lnorm_sqr
 from hazma.vector_mediator.form_factors import utils
 from hazma.vector_mediator.form_factors.utils import RealArray
-
 
 KS_MASS_GEV = 0.8956  # KStar mass
 KS_WIDTH_GEV = 0.047  # KStar width
@@ -59,7 +60,9 @@ ISO_VECTOR_PHASES = np.array([0, 0.317, 2.57])  # * np.pi / 180.0
 
 
 @dataclass
-class FormFactorPiKKBase:
+class FormFactorPiKKBase(abc.ABC):
+    fsp_masses: Tuple[float, float, float]
+
     _: KW_ONLY
     iso_scalar_masses: RealArray = ISO_SCALAR_MASSES
     iso_scalar_widths: RealArray = ISO_SCALAR_WIDTHS
@@ -121,7 +124,7 @@ class FormFactorPiKKBase:
             / KS_MASS_GEV**2
         )
 
-    def lorentz_structure(self, s, t, m, m1, m2, m3):
+    def lorentz_structure(self, s, t, m):
         """
         Returns the Lorentz part of the matrix element.
 
@@ -129,6 +132,7 @@ class FormFactorPiKKBase:
             s = (P - p1)^2 = (p2 + p3)^2 = invariant mass of 2 and 3
             t = (P - p2)^2 = (p1 + p3)^2 = invariant mass of 1 and 3
         """
+        m1, m2, m3 = self.fsp_masses
         return (
             -(
                 (m1 * m2 - m * m3)
@@ -142,15 +146,71 @@ class FormFactorPiKKBase:
             - s * t**2
         ) / 4.0
 
+    @abc.abstractmethod
+    def _integrand(self, s, t, m, gvuu, gvdd, gvss) -> float:
+        pass
 
+    def _integrated_form_factor(
+        self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int
+    ) -> float:
+        if m < sum(self.fsp_masses):
+            return 0.0
+
+        m1, m2, m3 = self.fsp_masses
+        ss, ts, ws = generate_mandelstam_invariants_st(m, m1, m2, m3, npts)
+        ws = ws * self._integrand(ss, ts, m, gvuu, gvdd, gvss)
+        return np.average(ws)  # type: ignore
+
+    def integrated_form_factor(
+        self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int
+    ) -> float:
+        if m < sum(self.fsp_masses):
+            return 0.0
+
+        mgev = m * 1e-3
+        integral = self._integrated_form_factor(
+            m=mgev, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts
+        )
+        # gev^2 -> mev^2
+        return integral * 1e6
+
+    def width(self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int):
+        integral = self.integrated_form_factor(
+            m=m, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts
+        )
+        return integral / (6.0 * m)
+
+    def energy_distributions(
+        self,
+        *,
+        m: float,
+        gvuu: float,
+        gvdd: float,
+        gvss: float,
+        npts: int,
+        nbins: int = 25
+    ):
+        def _msqrd(momenta):
+            s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
+            t = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
+            return self._integrand(s, t, m, gvuu, gvdd, gvss)
+
+        m1, m2, m3 = self.fsp_masses
+        phase_space = PhaseSpace(m, masses=np.array([m1, m2, m3]), msqrd=_msqrd)
+        return phase_space.energy_distributions(n=npts, nbins=nbins)
+
+
+@dataclass
 class FormFactorPi0K0K0(FormFactorPiKKBase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._fsp_masses = [utils.MK0_GEV, utils.MK0_GEV, utils.MPI0_GEV]
+    fsp_masses: Tuple[float, float, float] = (
+        utils.MK0_GEV,
+        utils.MK0_GEV,
+        utils.MPI0_GEV,
+    )
 
-    def __integrand(self, s, t, m, gvuu, gvdd, gvss):
+    def _integrand(self, s, t, m, gvuu, gvdd, gvss) -> float:
         a0, a1 = self.iso_spin_amplitudes(m, gvuu, gvdd, gvss)
-        m1, m2, m3 = self._fsp_masses
+        m1, m2, m3 = self.fsp_masses
 
         coeff = (a0 + a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
 
@@ -158,25 +218,20 @@ class FormFactorPi0K0K0(FormFactorPiKKBase):
             self.kstar_propagator(s, m2, m3) + self.kstar_propagator(t, m1, m3)
         )
 
-        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m, m1, m2, m3)
-
-    def integrated_form_factor(
-        self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int
-    ) -> float:
-        m1, m2, m3 = self._fsp_masses
-        ss, ts, ws = generate_mandelstam_invariants_st(m, m1, m2, m3, npts)
-        ws = ws * self.__integrand(ss, ts, m, gvuu, gvdd, gvss)
-        return np.average(ws)  # type:ignore
+        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m)
 
 
+@dataclass
 class FormFactorPi0KpKm(FormFactorPiKKBase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._fsp_masses = [utils.MK_GEV, utils.MK_GEV, utils.MPI0_GEV]
+    fsp_masses: Tuple[float, float, float] = (
+        utils.MK_GEV,
+        utils.MK_GEV,
+        utils.MPI0_GEV,
+    )
 
-    def __integrand(self, s, t, m, gvuu, gvdd, gvss):
+    def _integrand(self, s, t, m, gvuu, gvdd, gvss) -> float:
         a0, a1 = self.iso_spin_amplitudes(m, gvuu, gvdd, gvss)
-        m1, m2, m3 = self._fsp_masses
+        m1, m2, m3 = self.fsp_masses
 
         coeff = (a0 - a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
 
@@ -184,25 +239,20 @@ class FormFactorPi0KpKm(FormFactorPiKKBase):
             self.kstar_propagator(s, m2, m3) + self.kstar_propagator(t, m1, m3)
         )
 
-        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m, m1, m2, m3)
-
-    def integrated_form_factor(
-        self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int
-    ) -> float:
-        m1, m2, m3 = self._fsp_masses
-        ss, ts, ws = generate_mandelstam_invariants_st(m, m1, m2, m3, npts)
-        ws = ws * self.__integrand(ss, ts, m, gvuu, gvdd, gvss)
-        return np.average(ws)  # type:ignore
+        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m)
 
 
+@dataclass
 class FormFactorPiKK0(FormFactorPiKKBase):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._fsp_masses = [utils.MK0_GEV, utils.MK_GEV, utils.MPI_GEV]
+    fsp_masses: Tuple[float, float, float] = (
+        utils.MK0_GEV,
+        utils.MK_GEV,
+        utils.MPI_GEV,
+    )
 
-    def __integrand(self, s, t, m, gvuu, gvdd, gvss):
+    def _integrand(self, s, t, m, gvuu, gvdd, gvss) -> float:
         a0, a1 = self.iso_spin_amplitudes(m, gvuu, gvdd, gvss)
-        m1, m2, m3 = self._fsp_masses
+        m1, m2, m3 = self.fsp_masses
 
         cs = (a0 + a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
         ct = (a0 - a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
@@ -211,12 +261,4 @@ class FormFactorPiKK0(FormFactorPiKKBase):
             t, m1, m3
         )
 
-        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m, m1, m2, m3)
-
-    def integrated_form_factor(
-        self, *, m: float, gvuu: float, gvdd: float, gvss: float, npts: int
-    ) -> float:
-        m1, m2, m3 = self._fsp_masses
-        ss, ts, ws = generate_mandelstam_invariants_st(m, m1, m2, m3, npts)
-        ws = ws * self.__integrand(ss, ts, m, gvuu, gvdd, gvss)
-        return np.average(ws)  # type: ignore
+        return np.abs(f) ** 2 * self.lorentz_structure(s, t, m)

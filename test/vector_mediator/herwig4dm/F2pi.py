@@ -7,8 +7,8 @@ import scipy.integrate
 import scipy.special
 
 from . import alpha
-from .Resonance import Hhat, dHhatds, H, BreitWignerGS, BreitWignerFW, gev2nb
 from .masses import mpi
+from .Resonance import BreitWignerFW, BreitWignerGS, H, Hhat, dHhatds, gev2nb
 
 """
 Parameter set for hadronic current, parametrization taken from arXiv:1002.0279
@@ -167,22 +167,21 @@ def Fpi(q2, imode):
 def GammaDM(medMass):
     if medMass < 2 * mpi:
         return 0
-    temp = Fpi(medMass ** 2, 1)
+    temp = Fpi(medMass**2, 1)
     return (
         1.0
         / 48.0
         / math.pi
         * medMass
-        * (1 - 4 * mpi ** 2 / medMass ** 2) ** 1.5
+        * (1 - 4 * mpi**2 / medMass**2) ** 1.5
         * abs(temp) ** 2
-        * gev2nb
     )
 
 
 # cross-section for e+e- -> pi+pi-, see cross-section formula eq. (6) and eq. (28) in
 # low_energy.pdf
 def sigmaSM(Q2):
-    if Q2 < 4 * mpi ** 2:
+    if Q2 < 4 * mpi**2:
         return 0
     alphaEM = alpha.alphaEM(Q2)
     temp = Fpi(Q2, 1)
@@ -190,9 +189,9 @@ def sigmaSM(Q2):
         1.0
         / 3.0
         * math.pi
-        * alphaEM ** 2
+        * alphaEM**2
         / Q2
-        * (1.0 - 4.0 * mpi ** 2 / Q2) ** 1.5
+        * (1.0 - 4.0 * mpi**2 / Q2) ** 1.5
         * abs(temp) ** 2
         * gev2nb
     )
@@ -201,10 +200,10 @@ def sigmaSM(Q2):
 # cross section for DM annihilations, see cross-section formula eq. (6) and eq. (28) in
 # low_energy.pdf
 def sigmaDM(Q2):
-    if Q2 < 4 * mpi ** 2:
+    if Q2 < 4 * mpi**2:
         return 0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     temp = Fpi(Q2, 1)
     return (
@@ -213,8 +212,7 @@ def sigmaDM(Q2):
         / math.pi
         * DMmed2
         * Q2
-        * (1 + 2 * mDM_ ** 2 / Q2)
-        * (1.0 - 4.0 * mpi ** 2 / Q2) ** 1.5
+        * (1 + 2 * mDM_**2 / Q2)
+        * (1.0 - 4.0 * mpi**2 / Q2) ** 1.5
         * abs(temp) ** 2
-        * gev2nb
     )

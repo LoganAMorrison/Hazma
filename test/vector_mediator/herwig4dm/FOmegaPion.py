@@ -1,10 +1,9 @@
 # Libraries to load
-import math
 import cmath
+import math
 
-from . import Resonance
-from . import alpha
-from .masses import mpi0, momega
+from . import Resonance, alpha
+from .masses import momega, mpi0
 
 ii = complex(0.0, 1.0)
 
@@ -55,21 +54,21 @@ def gRhos(Q2, ix):
             0.5
             / Q
             * math.sqrt(
-                Q2 ** 2
-                + mpi0 ** 4
-                + momega ** 4
-                - 2.0 * Q2 * momega ** 2
-                - 2.0 * Q2 * mpi0 ** 2
-                - 2.0 * momega ** 2 * mpi0 ** 2
+                Q2**2
+                + mpi0**4
+                + momega**4
+                - 2.0 * Q2 * momega**2
+                - 2.0 * Q2 * mpi0**2
+                - 2.0 * momega**2 * mpi0**2
             )
         )
         gRho = (
             rhoWidths_[0]
             * rhoMasses_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mpi0 ** 2) / (rhoMasses_[0] ** 2 - 4.0 * mpi0 ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mpi0**2) / (rhoMasses_[0] ** 2 - 4.0 * mpi0**2)) ** 1.5
         )
-        gRho += gRhoOmpi0 ** 2 * pOm ** 3 / 12.0 / math.pi
+        gRho += gRhoOmpi0**2 * pOm**3 / 12.0 / math.pi
     else:
         gRho = rhoWidths_[ix]
     return gRho
@@ -91,23 +90,23 @@ def FOmPiGamma(Q2):
 
 def GammaDM(mMed):
     Q = mMed
-    Q2 = Q ** 2
+    Q2 = Q**2
     if Q2 > (momega + mpi0) ** 2 and cI1_ != 0:
         pcm = (
             0.5
             / Q
             * math.sqrt(
-                Q2 ** 2
-                + mpi0 ** 4
-                + momega ** 4
-                - 2.0 * Q2 * momega ** 2
-                - 2.0 * Q2 * mpi0 ** 2
-                - 2.0 * momega ** 2 * mpi0 ** 2
+                Q2**2
+                + mpi0**4
+                + momega**4
+                - 2.0 * Q2 * momega**2
+                - 2.0 * Q2 * mpi0**2
+                - 2.0 * momega**2 * mpi0**2
             )
         )
     else:
         return 0.0
-    return 1 / 12.0 / math.pi * pcm ** 3 * abs(FOmPiGamma(Q2)) ** 2
+    return 1 / 12.0 / math.pi * pcm**3 * abs(FOmPiGamma(Q2)) ** 2
 
 
 # cross section for Omega Pion
@@ -119,12 +118,12 @@ def sigmaSMOmegaPion(Q2):
             0.5
             / Q
             * math.sqrt(
-                Q2 ** 2
-                + mpi0 ** 4
-                + momega ** 4
-                - 2.0 * Q2 * momega ** 2
-                - 2.0 * Q2 * mpi0 ** 2
-                - 2.0 * momega ** 2 * mpi0 ** 2
+                Q2**2
+                + mpi0**4
+                + momega**4
+                - 2.0 * Q2 * momega**2
+                - 2.0 * Q2 * mpi0**2
+                - 2.0 * momega**2 * mpi0**2
             )
         )
     else:
@@ -133,12 +132,11 @@ def sigmaSMOmegaPion(Q2):
         4.0
         * math.pi
         * alpha.alphaEM(Q2) ** 2
-        * pcm ** 3
+        * pcm**3
         / 3.0
         / Q
         / Q2
         * abs(FOmPiGamma(Q2)) ** 2
-        * Resonance.gev2nb
     )
 
 
@@ -151,26 +149,25 @@ def sigmaDMOmegaPion(Q2):
             0.5
             / Q
             * math.sqrt(
-                Q2 ** 2
-                + mpi0 ** 4
-                + momega ** 4
-                - 2.0 * Q2 * momega ** 2
-                - 2.0 * Q2 * mpi0 ** 2
-                - 2.0 * momega ** 2 * mpi0 ** 2
+                Q2**2
+                + mpi0**4
+                + momega**4
+                - 2.0 * Q2 * momega**2
+                - 2.0 * Q2 * mpi0**2
+                - 2.0 * momega**2 * mpi0**2
             )
         )
     else:
         return 0.0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     return (
         DMmed2
         / 12.0
         / math.pi
         * Q
-        * (1 + 2 * mDM_ ** 2 / Q2)
-        * pcm ** 3
+        * (1 + 2 * mDM_**2 / Q2)
+        * pcm**3
         * abs(FOmPiGamma(Q2)) ** 2
-        * Resonance.gev2nb
     )

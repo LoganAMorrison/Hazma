@@ -1,20 +1,18 @@
 """
 Tests for the vector form factors.
 """
-# from typing import
-from typing import NamedTuple, Tuple, Union, List
 import unittest
+# from typing import
+from typing import List, NamedTuple, Tuple, Union
 
+import numpy as np
 import pytest
 from pytest import approx
-import numpy as np
 
-from hazma.vector_mediator import VectorMediatorGeV, KineticMixingGeV, BLGeV
 from hazma import parameters
-from hazma.parameters import Qd, Qe, Qu
-from hazma.parameters import qe
+from hazma.parameters import Qd, Qe, Qu, qe
+from hazma.vector_mediator import BLGeV, KineticMixingGeV, VectorMediatorGeV
 from hazma.vector_mediator.form_factors import utils as ff_utils
-
 
 VectorModel = Union[VectorMediatorGeV, KineticMixingGeV, BLGeV]
 
@@ -86,7 +84,7 @@ def synchronize_herwig(model: VectorModel, module) -> None:
         model.gvxx,
         model.mx * 1e-3,
         model.mv * 1e-3,
-        np.nan,
+        model.width_v() * 1e-3,
         model.gvuu,
         model.gvdd,
         model.gvss,
@@ -122,6 +120,11 @@ def compare_form_factors(
     assert np.imag(hazma_val) == approx(np.imag(herwig_val), rel=reltol, abs=0.0)
 
 
+# ===============================================================================
+# ---- Test Form-Factors --------------------------------------------------------
+# ===============================================================================
+
+
 def test_form_factor_pi_pi(models: List[VectorModel]):
     """
     Test that the `hazma` and `herwig4DM` implementations of the V-pi-pi
@@ -143,22 +146,21 @@ def test_form_factor_pi_gamma(models: List[VectorModel]):
     from herwig4dm import FPiGamma
 
     for model in models:
-        hazma = HazmaFunction(model, "_form_factor_pi_gamma", tuple())
+        hazma = HazmaFunction(model, "form_factor_pi_gamma", tuple())
         herwig = ModuleFunction(FPiGamma, "FPiGamma", tuple())
         compare_form_factors(hazma, herwig)
 
 
-def test_form_factor_eta_gamma(models: List[VectorModel]):
+def test_form_factor_pi_omega(models: List[VectorModel]):
     """
-    Test that the `hazma` and `herwig4DM` implementations of the V-eta-gamma
+    Test that the `hazma` and `herwig4DM` implementations of the V-omega-pi
     form factor agree for the input model.
     """
-    from herwig4dm import FEtaGamma
+    from herwig4dm import FOmegaPion
 
     for model in models:
-        hazma = HazmaFunction(model, "_form_factor_eta_gamma", tuple())
-        herwig = ModuleFunction(FEtaGamma, "FEtaGamma", tuple())
-
+        hazma = HazmaFunction(model, "form_factor_pi_omega", tuple())
+        herwig = ModuleFunction(FOmegaPion, "FOmPiGamma", tuple())
         compare_form_factors(hazma, herwig)
 
 
@@ -188,17 +190,53 @@ def test_form_factor_kk(models: List[VectorModel]):
         compare_form_factors(hazma, herwig, 0)
 
 
-def test_form_factor_pi_omega(models: List[VectorModel]):
+def test_form_factor_eta_gamma(models: List[VectorModel]):
     """
-    Test that the `hazma` and `herwig4DM` implementations of the V-omega-pi
+    Test that the `hazma` and `herwig4DM` implementations of the V-eta-gamma
     form factor agree for the input model.
     """
-    from herwig4dm import FOmegaPion
+    from herwig4dm import FEtaGamma
 
     for model in models:
-        hazma = HazmaFunction(model, "_form_factor_pi_omega", tuple())
-        herwig = ModuleFunction(FOmegaPion, "FOmPiGamma", tuple())
+        hazma = HazmaFunction(model, "form_factor_eta_gamma", tuple())
+        herwig = ModuleFunction(FEtaGamma, "FEtaGamma", tuple())
+
         compare_form_factors(hazma, herwig)
+
+
+# ===============================================================================
+# ---- Test Widths --------------------------------------------------------------
+# ===============================================================================
+
+
+def test_width_pi_pi(models: List[VectorModel]):
+    from herwig4dm import FOmegaPion as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        mvgev = model.mv * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.width_v_to_pi_pi() / model.mv
+        herwig = herwig_module.GammaDM(mvgev) / mvgev
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_width_k0_k0(models: List[VectorModel]):
+    from herwig4dm import FOmegaPion as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        mvgev = model.mv * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.width_v_to_k0_k0() / model.mv
+        herwig = herwig_module.GammaDM(mvgev) / mvgev
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
 
 
 def test_width_pi0_omega(models: List[VectorModel]):
@@ -287,7 +325,22 @@ def test_width_pi_pi_omega(models: List[VectorModel]):
     from herwig4dm import FOmegaPiPi
 
     for model in models:
-        compare_widths(model, "width_v_to_pi_pi_omega", FOmegaPiPi)
+        mvgev = model.mv * 1e-3
+        synchronize_herwig(model, FOmegaPiPi)
+        hazma = model.width_v_to_pi_pi_omega() / model.mv
+        herwig = FOmegaPiPi.GammaDM(mvgev, mode=1) / mvgev
+        assert hazma == approx(herwig, rel=1e-1, abs=1e-10)
+
+
+def test_width_pi0_pi0_omega(models: List[VectorModel]):
+    from herwig4dm import FOmegaPiPi
+
+    for model in models:
+        mvgev = model.mv * 1e-3
+        synchronize_herwig(model, FOmegaPiPi)
+        hazma = model.width_v_to_pi0_pi0_omega() / model.mv
+        herwig = FOmegaPiPi.GammaDM(mvgev, mode=0) / mvgev
+        assert hazma == approx(herwig, rel=1e-1, abs=1e-10)
 
 
 def test_width_pi0_k0_k0(models: List[VectorModel]):
@@ -303,7 +356,7 @@ def test_width_pi0_k0_k0(models: List[VectorModel]):
         assert hazma == approx(herwig, rel=1e-1, abs=1e-10)
 
 
-def test_width_v_to_pi0_k_k(models: List[VectorModel]):
+def test_width_pi0_k_k(models: List[VectorModel]):
     from herwig4dm import FKKpi
 
     # compare_widths(model1, "width_v_to_pi0_k_k", FKKpi, herwig_args=(1,))
@@ -316,7 +369,7 @@ def test_width_v_to_pi0_k_k(models: List[VectorModel]):
         assert hazma == approx(herwig, rel=1e-1, abs=1e-10)
 
 
-def test_width_v_to_pi_k_k0(models: List[VectorModel]):
+def test_width_pi_k_k0(models: List[VectorModel]):
     from herwig4dm import FKKpi
 
     # compare_widths(model1, "width_v_to_pi0_k_k", FKKpi, herwig_args=(1,))
@@ -357,3 +410,120 @@ def test_width_v_to_pi_pi_pi0_pi0(models: List[VectorModel]):
         hazma = model.width_v_to_pi_pi_pi0_pi0(npts=1 << 15) / mvmev
         herwig = F4pi.GammaDM(mvgev, "neutral") / mvgev
         assert hazma == approx(herwig, rel=1e-1, abs=0.0)
+
+
+# ===============================================================================
+# ---- Test Cross Sections ------------------------------------------------------
+# ===============================================================================
+
+
+def test_cross_section_pi_pi(models: List[VectorModel]):
+    """
+    Test that the `hazma` and `herwig4DM` implementations of the V-phi-pi
+    widths agree for the input model.
+    """
+    from herwig4dm import F2pi as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_pi_pi(cme) * cme**2
+        herwig = herwig_module.sigmaDM(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_cross_section_k0_k0(models: List[VectorModel]):
+    """
+    Test that the `hazma` and `herwig4DM` implementations of the V-phi-pi
+    widths agree for the input model.
+    """
+    from herwig4dm import FK as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_k0_k0(cme) * cme**2
+        herwig = herwig_module.sigmaDM0(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_cross_section_k_k(models: List[VectorModel]):
+    """
+    Test that the `hazma` and `herwig4DM` implementations of the V-phi-pi
+    widths agree for the input model.
+    """
+    from herwig4dm import FK as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        # compare_widths(model, "width_v_to_pi0_phi", FPhiPi)
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_k_k(cme) * cme**2
+        herwig = herwig_module.sigmaDMP(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_cross_section_pi_phi(models: List[VectorModel]):
+    from herwig4dm import FPhiPi as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        # compare_widths(model, "width_v_to_pi0_phi", FPhiPi)
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_pi0_phi(cme) * cme**2
+        herwig = herwig_module.sigmaDMPhiPi(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_cross_section_pi_omega(models: List[VectorModel]):
+    from herwig4dm import FOmegaPion as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        # compare_widths(model, "width_v_to_pi0_phi", FPhiPi)
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_pi0_omega(cme) * cme**2
+        herwig = herwig_module.sigmaDMOmegaPion(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )
+
+
+def test_cross_section_eta_phi(models: List[VectorModel]):
+    from herwig4dm import FEtaPhi as herwig_module
+
+    model_names = ["model1", "model2", "km", "bl"]
+
+    for i, model in enumerate(models):
+        # compare_widths(model, "width_v_to_pi0_phi", FPhiPi)
+        cme = 4 * model.mx
+        cmegev = cme * 1e-3
+        synchronize_herwig(model, herwig_module)
+        hazma = model.sigma_xx_to_v_to_eta_phi(cme) * cme**2
+        herwig = herwig_module.sigmaDMEtaPhi(cmegev**2) * cmegev**2
+        assert hazma == approx(herwig, rel=1e-4, abs=0.0), error_msg(
+            hazma, herwig, model_names[i]
+        )

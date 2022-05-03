@@ -1,17 +1,14 @@
 from dataclasses import dataclass
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
-from hazma.utils import lnorm_sqr
-from hazma.vector_mediator.form_factors.utils import (
-    MPI_GEV,
-    MPI0_GEV,
-    breit_wigner_fw,
-    RealArray,
-)
-
+from hazma import parameters
 from hazma.rambo import PhaseSpace
+from hazma.utils import lnorm_sqr
+from hazma.vector_mediator.form_factors.utils import (MPI0_GEV, MPI_GEV,
+                                                      RealArray,
+                                                      breit_wigner_fw)
 
 
 @dataclass
@@ -108,7 +105,7 @@ class FormFactorPiPiPi0:
         )
         return f1
 
-    def form_factor(self, q2, s, t, u, gvuu, gvdd, gvss):
+    def __form_factor(self, q2, s, t, u, gvuu, gvdd, gvss):
         """
         Compute the form factor for a vector decaying into two charged pions and
         a neutral pion.
@@ -132,32 +129,17 @@ class FormFactorPiPiPi0:
             q2, s, ci1
         )
 
-    def integrated_form_factor(
-        self, q2: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
-    ) -> Tuple[float, float]:
-        """
-        Compute the form factor for a vector decaying into two charged pions and
-        a neutral pion integrated over the three-body phase-space.
-
-        Parameters
-        ----------
-        q2:
-            Square of the center-of-mass energy in GeV.
-        """
-        cme = np.sqrt(q2)
-        phase_space = PhaseSpace(cme, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]))
-        ps, ws = phase_space.generate(npts)
-
-        p1 = ps[:, 0]
-        p2 = ps[:, 1]
-        p3 = ps[:, 2]
+    def __msqrd(self, momenta, q2: float, gvuu: float, gvdd: float, gvss: float):
+        p1 = momenta[:, 0]
+        p2 = momenta[:, 1]
+        p3 = momenta[:, 2]
 
         s = lnorm_sqr(p2 + p3)
         t = lnorm_sqr(p1 + p3)
         u = lnorm_sqr(p1 + p2)
 
-        ws = ws * (
-            np.abs(self.form_factor(q2, s, t, u, gvuu, gvdd, gvss)) ** 2
+        return (
+            np.abs(self.__form_factor(q2, s, t, u, gvuu, gvdd, gvss)) ** 2
             * (
                 -(MPI_GEV**4 * s)
                 + MPI_GEV**2
@@ -173,7 +155,108 @@ class FormFactorPiPiPi0:
             / 12.0
         )
 
+    def __integrated_form_factor(
+        self, *, q2: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
+    ) -> Tuple[float, float]:
+        """
+        Compute the form factor for a vector decaying into two charged pions and
+        a neutral pion integrated over the three-body phase-space.
+
+        Parameters
+        ----------
+        q2:
+            Square of the center-of-mass energy in GeV.
+        """
+        if q2 < MPI0_GEV + 2 * MPI_GEV:
+            return (0.0, 0.0)
+
+        cme = np.sqrt(q2)
+        phase_space = PhaseSpace(cme, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]))
+        ps, ws = phase_space.generate(npts)
+
+        ws = ws * self.__msqrd(ps, q2, gvuu, gvdd, gvss)
+
         avg: float = np.average(ws)  # type: ignore
         error: float = np.std(ws, ddof=1) / np.sqrt(npts)
 
         return avg, error
+
+    def integrated_form_factor(
+        self, *, q2: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
+    ) -> Tuple[float, float]:
+        """
+        Compute the form factor for a vector decaying into two charged pions and
+        a neutral pion integrated over the three-body phase-space.
+
+        Parameters
+        ----------
+        q2:
+            Square of the center-of-mass energy in GeV.
+        """
+        q2_gev = q2 * 1e-6
+        integral, error = self.__integrated_form_factor(
+            q2=q2_gev, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts
+        )
+        return integral * 1e6, error * 1e6
+
+    def width(
+        self, *, mv: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
+    ) -> float:
+        mpi0 = parameters.neutral_pion_mass
+        mpi = parameters.charged_pion_mass
+        if mv < 2 * mpi + mpi0:
+            return 0.0
+        integral, _ = self.integrated_form_factor(
+            q2=mv**2, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts
+        )
+        return integral / (2 * mv)
+
+    def energy_distributions(
+        self,
+        *,
+        cme: float,
+        gvuu: float,
+        gvdd: float,
+        gvss: float,
+        npts: int = 10000,
+        nbins: int = 25,
+    ):
+        q = cme * 1e-3
+
+        def msqrd(momenta):
+            return self.__msqrd(momenta, q**2, gvuu, gvdd, gvss)
+
+        phase_space = PhaseSpace(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
+        dist = phase_space.energy_distributions(npts, nbins)
+
+        # e, and dp/de have units of GeV and GeV^-1. Convert to MeV:
+        for i in range(len(dist)):
+            dpde, e = dist[i]
+            dist[i] = (dpde * 1e-3, e * 1e3)
+        return dist
+
+    def invariant_mass_distributions(
+        self,
+        *,
+        cme: float,
+        gvuu: float,
+        gvdd: float,
+        gvss: float,
+        npts: int = 10000,
+        nbins: int = 25,
+        pairs: Optional[List[Tuple[int, int]]] = None,
+    ):
+        q = cme * 1e-3
+
+        def msqrd(momenta):
+            return self.__msqrd(momenta, q**2, gvuu, gvdd, gvss)
+
+        phase_space = PhaseSpace(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
+        dist = phase_space.invariant_mass_distributions(
+            n=npts, nbins=nbins, pairs=pairs
+        )
+        # e, and dp/de have units of GeV and GeV^-1. Convert to MeV:
+        for key, val in dist.items():
+            dpde, e = val
+            dist[key] = (dpde * 1e-3, e * 1e3)
+        return dist

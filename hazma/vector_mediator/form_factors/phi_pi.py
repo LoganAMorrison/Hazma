@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, overload
 
 import numpy as np
-import numpy.typing as npt
 
-from hazma.vector_mediator.form_factors.utils import MPI0_GEV
-from hazma.utils import RealArray
+from hazma import parameters
 
-
-ComplexArray = npt.NDArray[np.complex128]
+from .cross_sections import cross_section_x_x_to_p_v
+from .utils import MPI0_GEV, ComplexArray, RealArray
+from .widths import width_v_to_v_p
 
 # old fit values
 # amp = [0.045, 0.0315, 0.0]
@@ -36,8 +35,8 @@ class FormFactorPhiPi0:
     rho_widths: RealArray = np.array([0.1491, 0.203, 0.048])
     br4pi: RealArray = np.array([0.0, 0.33, 0.0])
 
-    def form_factor(
-        self, s: Union[RealArray, float], gvuu: float, gvdd: float
+    def __form_factor(
+        self, *, s: Union[RealArray, float], gvuu: float, gvdd: float
     ) -> Union[ComplexArray, complex]:
         """
         Compute the V-phi-pi form-factor.
@@ -82,7 +81,58 @@ class FormFactorPhiPi0:
         )
         # NOTE: This is a rescaled-version of the form factor defined
         # in arXiv:2201.01788. (multipled by s to make it unitless)
-        return np.sqrt(s) * np.sum(
+        res = np.sqrt(s) * np.sum(
             amps * ms**2 / (ms**2 - s - 1j * np.sqrt(s) * ws),
             axis=0,
         )
+        return res.squeeze()
+
+    @overload
+    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex:
+        ...
+
+    @overload
+    def form_factor(self, *, q: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
+        ...
+
+    def form_factor(
+        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float
+    ) -> Union[complex, ComplexArray]:
+        """
+        Compute the V-phi-pi form factor.
+
+        Parameters
+        ----------
+        q: Union[float,npt.NDArray[np.float64]
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: Union[complex,npt.NDArray[np.complex128]]
+            Form factor from V-phi-pi.
+        """
+        if hasattr(q, "__len__"):
+            qq = 1e-3 * np.array(q)
+        else:
+            qq = 1e-3 * np.array([q])
+
+        mask = qq > (parameters.neutral_pion_mass + parameters.phi_mass) * 1e-3
+        ff = np.zeros_like(qq, dtype=np.complex128)
+        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvuu=gvuu, gvdd=gvdd)
+
+        if len(ff) == 1 and not hasattr(q, "__len__"):
+            return ff[0]
+        return ff
+
+    def width(self, *, mv, gvuu, gvdd):
+        ff = self.form_factor(q=mv, gvuu=gvuu, gvdd=gvdd)
+        mvector = parameters.phi_mass
+        mscalar = parameters.neutral_pion_mass
+        return width_v_to_v_p(mv, ff, mvector, mscalar)
+
+    def cross_section(self, *, cme, mx, mv, gvuu, gvdd, gamv):
+        ff = self.form_factor(q=cme, gvuu=gvuu, gvdd=gvdd)
+        mvector = parameters.phi_mass
+        mscalar = parameters.neutral_pion_mass
+        s = cme**2
+        return cross_section_x_x_to_p_v(s, mx, mscalar, mvector, ff, mv, gamv)

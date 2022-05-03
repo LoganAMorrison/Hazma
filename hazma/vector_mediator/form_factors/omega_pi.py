@@ -1,10 +1,15 @@
 from dataclasses import dataclass
+from typing import Union, overload
 
 import numpy as np
 import numpy.typing as npt
 
+from hazma import parameters
 from hazma.utils import kallen_lambda
-from hazma.vector_mediator.form_factors.utils import MPI0_GEV, MOMEGA_GEV
+
+from .cross_sections import cross_section_x_x_to_p_v
+from .utils import MOMEGA_GEV, MPI0_GEV, ComplexArray, RealArray
+from .widths import width_v_to_v_p
 
 
 @dataclass(frozen=True)
@@ -30,17 +35,17 @@ class FormFactorOmegaPi0:
             ]
         )
 
-        mu2p = MPI0_GEV ** 2 / s
-        mu2w = MOMEGA_GEV ** 2 / s
+        mu2p = MPI0_GEV**2 / s
+        mu2w = MOMEGA_GEV**2 / s
         mu2r = self.rho_masses[0] ** 2 / s
         p = 0.5 * q * np.sqrt(kallen_lambda(1.0, mu2p, mu2w))
         widths[0] = (
             widths[0] * mu2r * ((1.0 - 4.0 * mu2p) / (mu2r - 4.0 * mu2p)) ** 1.5
-        ) + self.g_rho_omega_pi ** 2 * p ** 3 / (12.0 * np.pi)
+        ) + self.g_rho_omega_pi**2 * p**3 / (12.0 * np.pi)
         return widths
 
-    def form_factor(
-        self, s: npt.NDArray[np.float64], gvuu: float, gvdd: float
+    def __form_factor(
+        self, *, s: npt.NDArray[np.float64], gvuu: float, gvdd: float
     ) -> npt.NDArray[np.complex128]:
         """
         Compute the V-omega-pi form-factor.
@@ -68,6 +73,56 @@ class FormFactorOmegaPi0:
         phases = self.phases[:, np.newaxis]
         ss = s[np.newaxis, :]
 
-        dens = masses ** 2 - ss - 1j * np.sqrt(ss) * widths
-        amps = self.amps[:, np.newaxis] * np.exp(1j * phases) * masses ** 2 / dens
+        dens = masses**2 - ss - 1j * np.sqrt(ss) * widths
+        amps = self.amps[:, np.newaxis] * np.exp(1j * phases) * masses**2 / dens
         return self.g_rho_omega_pi * ci1 / self.frho * np.sum(amps, axis=0) * np.sqrt(s)
+
+    @overload
+    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex:
+        ...
+
+    @overload
+    def form_factor(self, *, q: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
+        ...
+
+    def form_factor(
+        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float
+    ) -> Union[complex, ComplexArray]:
+        """
+        Compute the V-omega-pi form factor.
+
+        Parameters
+        ----------
+        q: Union[float,npt.NDArray[np.float64]
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: Union[complex,npt.NDArray[np.complex128]]
+            Form factor from V-omega-pi.
+        """
+        if hasattr(q, "__len__"):
+            qq = 1e-3 * np.array(q)
+        else:
+            qq = 1e-3 * np.array([q])
+
+        mask = qq > (parameters.eta_mass + parameters.phi_mass) * 1e-3
+        ff = np.zeros_like(qq, dtype=np.complex128)
+        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvuu=gvuu, gvdd=gvdd)
+
+        if len(ff) == 1 and not hasattr(q, "__len__"):
+            return ff[0]
+        return ff
+
+    def width(self, mv, gvuu, gvdd):
+        ff = self.form_factor(q=mv, gvuu=gvuu, gvdd=gvdd)
+        mvector = parameters.omega_mass
+        mscalar = parameters.neutral_pion_mass
+        return width_v_to_v_p(mv, ff, mvector, mscalar)
+
+    def cross_section(self, cme, mx, mv, gvuu, gvdd, gamv):
+        ff = self.form_factor(q=cme, gvuu=gvuu, gvdd=gvdd)
+        mvector = parameters.omega_mass
+        mscalar = parameters.neutral_pion_mass
+        s = cme**2
+        return cross_section_x_x_to_p_v(s, mx, mscalar, mvector, ff, mv, gamv)
