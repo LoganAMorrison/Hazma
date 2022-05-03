@@ -65,7 +65,7 @@ cdef double __interp_spec(double eng_gam, int bitflags):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef double __integrand(double cl, double eng_gam, double eng_k, str mode):
+cdef double __integrand(double cl, double eng_gam, double eng_k, int mode):
     cdef double gamma_k = eng_k / MASS_K
     cdef double beta_k = sqrt(1.0 - (MASS_K / eng_k)**2)
     cdef double eng_gam_k_rf = eng_gam * gamma_k * (1.0 - beta_k * cl)

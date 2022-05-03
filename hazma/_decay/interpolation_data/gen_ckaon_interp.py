@@ -1,4 +1,8 @@
-from hazma.decay import charged_pion, muon, neutral_pion
+from hazma.spectra import (
+    dnde_photon_charged_pion as charged_pion,
+    dnde_photon_muon as muon,
+    dnde_photon_neutral_pion as neutral_pion,
+)
 
 from hazma.field_theory_helper_functions.common_functions import minkowski_dot as MDot
 
@@ -28,17 +32,17 @@ bfs = {
 # ############################
 
 # Constants for weak hadronic matrix elements
-alpha1 = 93.16 * 10 ** -8.0
-alpha3 = -6.72 * 10 ** -8.0
-beta1 = -27.06 * 10 ** -8.0
-beta3 = -2.22 * 10 ** -8.0
-gamma3 = 2.95 * 10 ** -8.0
-zeta1 = -0.40 * 10 ** -8.0
-zeta3 = -0.09 * 10 ** -8.0
-xi1 = -1.83 * 10 ** -8.0
-xi3 = -0.17 * 10 ** -8.0
-xi3p = -0.56 * 10 ** -8.0
-A2 = 0.0212 * 10 ** -3.0
+alpha1 = 93.16 * 10**-8.0
+alpha3 = -6.72 * 10**-8.0
+beta1 = -27.06 * 10**-8.0
+beta3 = -2.22 * 10**-8.0
+gamma3 = 2.95 * 10**-8.0
+zeta1 = -0.40 * 10**-8.0
+zeta3 = -0.09 * 10**-8.0
+xi1 = -1.83 * 10**-8.0
+xi3 = -0.17 * 10**-8.0
+xi3p = -0.56 * 10**-8.0
+A2 = 0.0212 * 10**-3.0
 lamp = 0.034
 lam0 = 0.025
 
@@ -60,20 +64,16 @@ def amp_L000(moms):
 
     k = p1 + p2 + p3
 
-    s0 = (1.0 / 3.0) * (mk0 ** 2 + 3 * mpi0 ** 2)
+    s0 = (1.0 / 3.0) * (mk0**2 + 3 * mpi0**2)
     s1 = MDot(k - p1, k - p1)
     s2 = MDot(k - p2, k - p2)
     s3 = MDot(k - p3, k - p3)
 
-    x = (s2 - s1) / mpi ** 2
-    y = (s3 - s0) / mpi ** 2
+    x = (s2 - s1) / mpi**2
+    y = (s3 - s0) / mpi**2
 
     return 3.0 * (alpha1 + alpha3) + -3.0 * (zeta1 - 2.0 * zeta3) * (
-        y ** 2 + x ** 2 / 3.0
-    )
-
-    return 3.0 * (alpha1 + alpha3) + -3.0 * (zeta1 - 2.0 * zeta3) * (
-        y ** 2 + x ** 2 / 3.0
+        y**2 + x**2 / 3.0
     )
 
 
@@ -94,19 +94,19 @@ def amp_Lpm0(moms):
 
     k = p1 + p2 + p3
 
-    s0 = (1.0 / 3.0) * (mk0 ** 2 + 2 * mpi ** 2 + mpi0 ** 2)
+    s0 = (1.0 / 3.0) * (mk0**2 + 2 * mpi**2 + mpi0**2)
     s1 = MDot(k - p1, k - p1)
     s2 = MDot(k - p2, k - p2)
     s3 = MDot(k - p3, k - p3)
 
-    x = (s2 - s1) / mpi ** 2
-    y = (s3 - s0) / mpi ** 2
+    x = (s2 - s1) / mpi**2
+    y = (s3 - s0) / mpi**2
 
     return (
         (alpha1 + alpha3)
         - (beta1 + beta3) * y
-        + (zeta1 - 2.0 * zeta3) * (y ** 2 + x ** 2 / 3.0)
-        + (xi1 - 2.0 * xi3) * (y ** 2 - x ** 2 / 3.0)
+        + (zeta1 - 2.0 * zeta3) * (y**2 + x**2 / 3.0)
+        + (xi1 - 2.0 * xi3) * (y**2 - x**2 / 3.0)
     )
 
 
@@ -127,13 +127,13 @@ def amp_Spm0(moms):
 
     k = p1 + p2 + p3
 
-    s0 = (1.0 / 3.0) * (mk0 ** 2 + 2 * mpi ** 2 + mpi0 ** 2)
+    s0 = (1.0 / 3.0) * (mk0**2 + 2 * mpi**2 + mpi0**2)
     s1 = MDot(k - p1, k - p1)
     s2 = MDot(k - p2, k - p2)
     s3 = MDot(k - p3, k - p3)
 
-    x = (s2 - s1) / mpi ** 2
-    y = (s3 - s0) / mpi ** 2
+    x = (s2 - s1) / mpi**2
+    y = (s3 - s0) / mpi**2
 
     return (2.0 / 3.0) * np.sqrt(3) * gamma3 * x - (4.0 / 3.0) * xi3p * x * y
 
@@ -155,19 +155,19 @@ def amp_00p(moms):
 
     k = p1 + p2 + p3
 
-    s0 = (1.0 / 3.0) * (mk0 ** 2 + 2 * mpi0 ** 2 + mpi ** 2)
+    s0 = (1.0 / 3.0) * (mk0**2 + 2 * mpi0**2 + mpi**2)
     s1 = MDot(k - p1, k - p1)
     s2 = MDot(k - p2, k - p2)
     s3 = MDot(k - p3, k - p3)
 
-    x = (s2 - s1) / mpi ** 2
-    y = (s3 - s0) / mpi ** 2
+    x = (s2 - s1) / mpi**2
+    y = (s3 - s0) / mpi**2
 
     return (
         -0.5 * (2.0 * alpha1 - alpha3)
         + (beta1 - 0.5 * beta3 - np.sqrt(3) * gamma3) * y
-        - (zeta1 + zeta3) * (y ** 2 + x ** 2 / 3.0)
-        - (xi1 + xi3 + xi3p) * (y ** 2 - x ** 2 / 3.0)
+        - (zeta1 + zeta3) * (y**2 + x**2 / 3.0)
+        - (xi1 + xi3 + xi3p) * (y**2 - x**2 / 3.0)
     )
 
 
@@ -188,19 +188,19 @@ def amp_ppm(moms):
 
     k = p1 + p2 + p3
 
-    s0 = (1.0 / 3.0) * (mk ** 2 + 3 * mpi ** 2)
+    s0 = (1.0 / 3.0) * (mk**2 + 3 * mpi**2)
     s1 = MDot(k - p1, k - p1)
     s2 = MDot(k - p2, k - p2)
     s3 = MDot(k - p3, k - p3)
 
-    x = (s2 - s1) / mpi ** 2
-    y = (s3 - s0) / mpi ** 2
+    x = (s2 - s1) / mpi**2
+    y = (s3 - s0) / mpi**2
 
     return (
         (2.0 * alpha1 - alpha3)
         + (beta1 - 0.5 * beta3 + np.sqrt(3) * gamma3) * y
-        - 2.0 * (zeta1 + zeta3) * (y ** 2 + x ** 2 / 3.0)
-        - (xi1 + xi3 - xi3p) * (y ** 2 - x ** 2 / 3.0)
+        - 2.0 * (zeta1 + zeta3) * (y**2 + x**2 / 3.0)
+        - (xi1 + xi3 - xi3p) * (y**2 - x**2 / 3.0)
     )
 
 
@@ -285,17 +285,17 @@ def msqrd_pilnu(moms, ml):
         * (mk + mpi) ** 2
         * MDot(pl, pn)
         * (
-            -mk ** 2
-            + 2 * ml ** 2
-            + mpi ** 2
+            -(mk**2)
+            + 2 * ml**2
+            + mpi**2
             + 2 * MDot(pl, pn)
             + 2 * MDot(pl, pp)
             + 2 * MDot(pp, pn)
         )
         - (
-            lamp * mk ** 2
-            + mpi ** 2
-            - lamp * mpi ** 2
+            lamp * mk**2
+            + mpi**2
+            - lamp * mpi**2
             - 2 * lamp * MDot(pl, pp)
             - 2 * lamp * MDot(pp, pn)
         )
@@ -304,13 +304,13 @@ def msqrd_pilnu(moms, ml):
             -2 * MDot(pl, pn) ** 2
             + MDot(pl, pn)
             * (
-                mk ** 2
-                - 2 * ml ** 2
-                + 3 * mpi ** 2
+                mk**2
+                - 2 * ml**2
+                + 3 * mpi**2
                 - 2 * MDot(pl, pp)
                 - 2 * MDot(pp, pn)
             )
-            - 4 * (ml ** 2 + 2 * MDot(pl, pp)) * MDot(pp, pn)
+            - 4 * (ml**2 + 2 * MDot(pl, pp)) * MDot(pp, pn)
         )
         - (lam0 - lamp)
         * (mk - mpi)
@@ -318,29 +318,35 @@ def msqrd_pilnu(moms, ml):
         * (
             -2 * MDot(pl, pn) ** 2
             + MDot(pl, pn)
-            * (mk ** 2 - 2 * ml ** 2 - mpi ** 2 - 2 * MDot(pl, pp) - 2 * MDot(pp, pn))
-            - 2 * ml ** 2 * MDot(pp, pn)
+            * (mk**2 - 2 * ml**2 - mpi**2 - 2 * MDot(pl, pp) - 2 * MDot(pp, pn))
+            - 2 * ml**2 * MDot(pp, pn)
         )
         * (
-            lamp * mk ** 2
-            + (1 + lamp) * mpi ** 2
-            - 2 * lamp * (mpi ** 2 + MDot(pl, pp) + MDot(pp, pn))
+            lamp * mk**2
+            + (1 + lamp) * mpi**2
+            - 2 * lamp * (mpi**2 + MDot(pl, pp) + MDot(pp, pn))
         )
         - (lam0 - lamp)
         * (-mk + mpi)
         * (mk + mpi)
         * (
-            lamp * mk ** 2
-            + (1 + lamp) * mpi ** 2
-            - 2 * lamp * (mpi ** 2 + MDot(pl, pp) + MDot(pp, pn))
+            lamp * mk**2
+            + (1 + lamp) * mpi**2
+            - 2 * lamp * (mpi**2 + MDot(pl, pp) + MDot(pp, pn))
         )
         * (
             2 * MDot(pl, pn) ** 2
-            + 2 * ml ** 2 * MDot(pp, pn)
+            + 2 * ml**2 * MDot(pp, pn)
             + MDot(pl, pn)
-            * (-mk ** 2 + 2 * ml ** 2 + mpi ** 2 + 2 * MDot(pl, pp) + 2 * MDot(pp, pn))
+            * (
+                -(mk**2)
+                + 2 * ml**2
+                + mpi**2
+                + 2 * MDot(pl, pp)
+                + 2 * MDot(pp, pn)
+            )
         )
-    ) / mpi ** 4
+    ) / mpi**4
 
 
 def msqrd_pienu(moms):
@@ -355,7 +361,7 @@ def msqrd_pimunu(moms):
 # #### Create Probability Arrays #####
 # ####################################
 
-npts = 10 ** 6
+npts = 10**6
 nbins = 25
 
 m_vecs = {
@@ -407,9 +413,9 @@ neng_gams = 1000
 eng_gams = np.logspace(-5.0, 4.0, num=1000, dtype=np.float64)
 
 # Two body decays
-spec_munu = muon(eng_gams, (mk ** 2 - mmu ** 2) / (2.0 * mk))
-spec_p0 = charged_pion(eng_gams, (mk ** 2 - mpi ** 2 + mpi0 ** 2) / (2.0 * mk))
-spec_p0 += neutral_pion(eng_gams, (mk ** 2 + mpi ** 2 - mpi0 ** 2) / (2.0 * mk))
+spec_munu = muon(eng_gams, (mk**2 - mmu**2) / (2.0 * mk))
+spec_p0 = charged_pion(eng_gams, (mk**2 - mpi**2 + mpi0**2) / (2.0 * mk))
+spec_p0 += neutral_pion(eng_gams, (mk**2 + mpi**2 - mpi0**2) / (2.0 * mk))
 
 # Three body decays
 spec_ppm = np.zeros(neng_gams, dtype=np.float64)
