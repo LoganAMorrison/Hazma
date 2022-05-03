@@ -1,5 +1,7 @@
 import cython
 from libc.math cimport sqrt
+import numpy as np
+cimport numpy as np
 
 ctypedef double(*boost_integrand)(double, void*)
 
@@ -36,4 +38,6 @@ cdef double boost_jac(double, double, double, double, double)
 cdef double boost_eng(double, double, double, double, double)
 
 cdef double boost_delta_function(double, double, double, double)
+
+cdef double boost_integrate_linear_interp(double, double, np.ndarray[np.float64_t, ndim=1], np.ndarray[np.float64_t, ndim=1])
 
