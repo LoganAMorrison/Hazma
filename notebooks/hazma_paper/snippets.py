@@ -180,7 +180,7 @@ dnde_conv.integral(25.0, 85.0)
 # ## Section 6: Electron and Positron Spectra from DM annihilation
 
 # %% hidden=true
-from hazma.positron_spectra import muon as dnde_p_mu
+from hazma.__positron_spectra import muon as dnde_p_mu
 
 e_mu = 150.0  # muon energy
 e_p = np.array([1.0, 10.0, 100.0])  # positron energies
@@ -188,7 +188,7 @@ dnde_p_mu(e_p, e_mu)
 # array([4.86031362e-05, 4.56232320e-03, 4.45753994e-03])
 
 # %% hidden=true
-from hazma.positron_spectra import charged_pion as dnde_p_pi
+from hazma.__positron_spectra import charged_pion as dnde_p_pi
 
 e_pi = 150.0  # charged pion energy
 e_p = np.array([1.0, 10.0, 100.0])  # positron energies
@@ -261,7 +261,7 @@ sm.unbinned_limit(
 # %% hidden=true
 from hazma.scalar_mediator import HiggsPortal
 
-sm = HiggsPortal(mx=150.0, ms=1.5*150, gsxx=1.0, stheta=0.1)
+sm = HiggsPortal(mx=150.0, ms=1.5 * 150, gsxx=1.0, stheta=0.1)
 x_kd = 1e-6
 sm.f_eff(x_kd), sm.f_eff_ep(x_kd), sm.f_eff_g(x_kd)
 # (0.4234440957173111, 0.18622537016754176, 0.23721872554976936)
@@ -273,7 +273,7 @@ from hazma.scalar_mediator import HiggsPortal
 p_ann
 # 3.5e-31  # cm^3 / MeV / s
 x_kd = 1e-6
-sm = HiggsPortal(mx=150.0, ms=1.5*150, gsxx=1.0, stheta=0.1)
+sm = HiggsPortal(mx=150.0, ms=1.5 * 150, gsxx=1.0, stheta=0.1)
 sm.cmb_limit(x_kd, p_ann)
 # 1.2398330861377438e-28  # cm^3 / s
 
@@ -405,12 +405,13 @@ for i, mx in enumerate(mxs):
 from hazma.scalar_mediator import ScalarMediator
 from hazma.parameters import vh
 
+
 class HiggsPortal(ScalarMediator):
     def __init__(self, mx, ms, gsxx, stheta):
         self._lam = vh
         self._stheta = stheta
         super(HiggsPortal, self).__init__(
-            mx, ms, gsxx, stheta, 3.*stheta, -5.*stheta/6., vh
+            mx, ms, gsxx, stheta, 3.0 * stheta, -5.0 * stheta / 6.0, vh
         )
 
     @property
@@ -421,8 +422,8 @@ class HiggsPortal(ScalarMediator):
     def stheta(self, stheta):
         self._stheta = stheta
         self.gsff = stheta
-        self.gsGG = 3. * stheta
-        self.gsFF = - 5. * stheta / 6.
+        self.gsGG = 3.0 * stheta
+        self.gsFF = -5.0 * stheta / 6.0
 
     # Hide underlying properties' setters
     @ScalarMediator.gsff.setter
@@ -449,7 +450,7 @@ tp = TargetParams(J=1e29, dOmega=0.1)
 # %% hidden=true
 from hazma.background_model import BackgroundModel
 
-bg = BackgroundModel(e_range=[0.5, 1e4], dPhi_dEdOmega=lambda e: 2.7e-3 / e ** 2)
+bg = BackgroundModel(e_range=[0.5, 1e4], dPhi_dEdOmega=lambda e: 2.7e-3 / e**2)
 
 # %% [markdown] hidden=true
 # See the notebook ``hazma_example.ipynb`` for the custom model implementation.

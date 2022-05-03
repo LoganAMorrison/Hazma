@@ -62,9 +62,7 @@ from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
 from hazma.parameters import qe
-
-from hazma.positron_spectra import charged_pion as pspec_charged_pion
-from hazma.decay import neutral_pion, charged_pion
+from hazma import spectra
 
 from hazma.theory import TheoryAnn
 from hazma.gamma_ray_parameters import (
@@ -116,10 +114,10 @@ class HazmaExampleCrossSection:
 
         if Q > 2 * self.mx and Q > 2 * mpi:
             sigma = (
-                self.c1 ** 2
-                * np.sqrt(1 - 4 * mupi ** 2)
-                * np.sqrt(1 - 4 * mux ** 2) ** 2
-                / (32.0 * self.lam ** 2 * np.pi)
+                self.c1**2
+                * np.sqrt(1 - 4 * mupi**2)
+                * np.sqrt(1 - 4 * mux**2) ** 2
+                / (32.0 * self.lam**2 * np.pi)
             )
         else:
             sigma = 0.0
@@ -132,10 +130,10 @@ class HazmaExampleCrossSection:
 
         if Q > 2 * self.mx and Q > 2 * mpi0:
             sigma = (
-                self.c2 ** 2
-                * np.sqrt(1 - 4 * mux ** 2)
-                * np.sqrt(1 - 4 * mupi0 ** 2)
-                / (8.0 * self.lam ** 2 * np.pi)
+                self.c2**2
+                * np.sqrt(1 - 4 * mux**2)
+                * np.sqrt(1 - 4 * mupi0**2)
+                / (8.0 * self.lam**2 * np.pi)
             )
         else:
             sigma = 0.0
@@ -152,34 +150,34 @@ class HazmaExampleCrossSection:
 # %% code_folding=[]
 class HazmaExampleSpectra:
     def dnde_pi0pi0(self, e_gams, e_cm):
-        return 2.0 * neutral_pion(e_gams, e_cm / 2.0)
+        return 2.0 * spectra.dnde_photon_neutral_pion(e_gams, e_cm / 2.0)
 
     def __dnde_xx_to_pipig(self, e_gam, Q):
         # Unvectorized function for computing FSR spectrum
         mupi = mpi / Q
         mux = self.mx / Q
         x = 2.0 * e_gam / Q
-        if 0.0 < x and x < 1.0 - 4.0 * mupi ** 2:
+        if 0.0 < x and x < 1.0 - 4.0 * mupi**2:
             dnde = (
-                qe ** 2
+                qe**2
                 * (
-                    2 * np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi ** 2 - x)
-                    + (-1 + 2 * mupi ** 2 + x)
+                    2 * np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi**2 - x)
+                    + (-1 + 2 * mupi**2 + x)
                     * np.log(
-                        (-1 + np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi ** 2 - x) + x) ** 2
-                        / (1 + np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi ** 2 - x) - x) ** 2
+                        (-1 + np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi**2 - x) + x) ** 2
+                        / (1 + np.sqrt(1 - x) * np.sqrt(1 - 4 * mupi**2 - x) - x) ** 2
                     )
                 )
-            ) / (Q * 2.0 * np.sqrt(1 - 4 * mupi ** 2) * np.pi ** 2 * x)
+            ) / (Q * 2.0 * np.sqrt(1 - 4 * mupi**2) * np.pi**2 * x)
         else:
             dnde = 0
 
         return dnde
 
     def dnde_pipi(self, e_gams, e_cm):
-        return np.vectorize(self.__dnde_xx_to_pipig)(e_gams, e_cm) + 2.0 * charged_pion(
-            e_gams, e_cm / 2.0
-        )
+        return np.vectorize(self.__dnde_xx_to_pipig)(
+            e_gams, e_cm
+        ) + 2.0 * spectra.dnde_photon_charged_pion(e_gams, e_cm / 2.0)
 
     def spectrum_funcs(self):
         return {"pi0 pi0": self.dnde_pi0pi0, "pi pi": self.dnde_pipi}
@@ -194,7 +192,7 @@ class HazmaExampleSpectra:
 # %% code_folding=[]
 class HazmaExamplePositronSpectra:
     def dnde_pos_pipi(self, e_ps, e_cm):
-        return pspec_charged_pion(e_ps, e_cm / 2.0)
+        return spectra.dnde_positron_charged_pion(e_ps, e_cm / 2.0)
 
     def positron_spectrum_funcs(self):
         return {"pi pi": self.dnde_pos_pipi}
@@ -208,7 +206,10 @@ class HazmaExamplePositronSpectra:
 
 # %% code_folding=[]
 class HazmaExample(
-    HazmaExampleCrossSection, HazmaExamplePositronSpectra, HazmaExampleSpectra, TheoryAnn
+    HazmaExampleCrossSection,
+    HazmaExamplePositronSpectra,
+    HazmaExampleSpectra,
+    TheoryAnn,
 ):
     def __init__(self, mx, c1, c2, lam):
         self.mx = mx
