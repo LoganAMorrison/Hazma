@@ -13,7 +13,8 @@ Module for working with Lorentz-invariant phase-space.
 import math
 import multiprocessing as mp
 import warnings
-from typing import Callable, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (Callable, Dict, Iterable, List, Optional, Sequence, Tuple,
+                    Union)
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +25,7 @@ from hazma._phase_space.modifiers import apply_matrix_elem
 from hazma.field_theory_helper_functions.common_functions import \
     cross_section_prefactor
 from hazma.hazma_errors import RamboCMETooSmall
-from hazma.utils import RealArray, kallen_lambda
+from hazma.utils import RealArray, kallen_lambda, lnorm_sqr
 
 MassList = Union[List[float], RealArray]
 SquaredMatrixElement = Callable[[RealArray], float]
@@ -535,7 +536,7 @@ class PhaseSpace:
         """
         Masses of the final state particles.
         """
-        return self.__masses
+        return self.__masses.squeeze()
 
     @masses.setter
     def masses(self, masses: npt.NDArray) -> None:
@@ -990,3 +991,180 @@ class PhaseSpace:
         error = pre * std
 
         return cross_section, error
+
+    def energy_distributions(
+        self,
+        n: int,
+        nbins: int,
+        batch_size: Optional[int] = None,
+        seed: Optional[int] = None,
+        dtype=np.float64,
+        keep_edges: bool = False,
+    ) -> List[Tuple[RealArray, RealArray]]:
+        """
+        Generate energy distributions of the final state particles.
+
+        Parameters
+        ----------
+        n: int
+            Number of phase space points used in generating the distributions.
+        nbins: int
+            Number of bins to use for the distributions.
+        batch_size: int, optional
+            If not None, the phase-space integration will be broken up into
+            batches, processing `batch_size` points at a time. Default is None.
+        seed: int, optional
+            Seed used for numpy random number generator.
+        dtype: DTypeLike, optional
+            Type used for generation of momenta and weights.
+
+        Returns
+        -------
+        distributions: List[Tuple[np.ndarray, np.ndarray]]
+            The energy distributions. Each entry in the returned list is a
+            tuple with the first item the probability distribution
+            (shape=(nbins,)) and the second the energy bin edges
+            (shape=(nbins+1,)).
+        """
+        cme = self.cme
+        mass_sum = np.sum(self.masses)
+
+        def bounds(m):
+            msum = mass_sum - m
+            emin = m
+            emax = (cme**2 + m**2 - msum**2) / (2 * cme)
+            return emin, emax
+
+        def normalize(probabilities, edges):
+            norm = np.sum(
+                [p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)]
+            )
+            return probabilities / norm
+
+        ebounds = [bounds(m) for m in self.masses]
+        bins = [np.linspace(emin, emax, nbins + 1) for emin, emax in ebounds]
+
+        distributions = [
+            np.histogram(np.zeros(nbins, dtype=np.float64), bins=b)[0] for b in bins
+        ]
+
+        if batch_size is not None and not batch_size == n:
+            # Build up the distributions from batches
+            for ps, ws in self.generator(n, batch_size, seed, dtype):
+                for i in range(len(self.masses)):
+                    d = np.histogram(ps[0, i], bins=bins[i], weights=ws)[0]
+                    distributions[i] += d
+        else:
+            ps, ws = self.generate(n, seed=seed, dtype=dtype)
+            for i in range(len(self.masses)):
+                distributions[i] = np.histogram(ps[0, i], bins=bins[i], weights=ws)[0]
+
+        for i in range(len(self.masses)):
+            distributions[i] = normalize(distributions[i], bins[i])
+
+        if keep_edges:
+            return [(dpde, e) for dpde, e in zip(distributions, bins)]
+
+        centers = [0.5 * (b[1:] + b[:-1]) for b in bins]
+        return [(dpde, c) for dpde, c in zip(distributions, centers)]
+
+    def invariant_mass_distributions(
+        self,
+        n: int,
+        nbins: int,
+        pairs: Optional[List[Tuple[int, int]]] = None,
+        batch_size: Optional[int] = None,
+        seed: Optional[int] = None,
+        dtype=np.float64,
+        keep_edges: bool = False,
+    ) -> Dict[Tuple[int, int], Tuple[RealArray, RealArray]]:
+        """
+        Generate invariant mass distributions of the final state particles.
+
+        The invariant masses are defined as sqrt((pi + pj)^2), where pi and pj
+        are the four-momenta of the ith and jth particles.
+
+        Parameters
+        ----------
+        n: int
+            Number of phase space points used in generating the distributions.
+        nbins: int
+            Number of bins to use for the distributions.
+        batch_size: int, optional
+            If not None, the phase-space integration will be broken up into
+            batches, processing `batch_size` points at a time. Default is None.
+        seed: int, optional
+            Seed used for numpy random number generator.
+        dtype: DTypeLike, optional
+            Type used for generation of momenta and weights.
+
+        Returns
+        -------
+        distributions: Dict[Tuple[int,int], Tuple[np.ndarray, np.ndarray]]
+            The invariant mass distributions. Each entry in the returned
+            dictionary is a tuple with the first item the probability
+            distribution (shape=(nbins,)) and the second the bin edges
+            (shape=(nbins+1,)). The keys are the pairs of indices specifying
+            which two particles the invariant mass-squared distribution
+            corresponds to.
+        """
+        cme = self.cme
+        masses = self.masses
+        mass_sum = np.sum(masses)
+        nfsp = len(masses)
+
+        if pairs is None:
+            pairs_: List[Tuple[int, int]] = []
+            for i in range(nfsp):
+                for j in range(i + 1, nfsp):
+                    pairs_.append((i, j))
+        else:
+            pairs_ = pairs
+
+        def bounds(m1, m2):
+            msum = mass_sum - m1 - m2
+            mmin = m1 + m2
+            mmax = cme - msum
+            return mmin, mmax
+
+        def normalize(probabilities, edges):
+            norm = np.sum(
+                [p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)]
+            )
+            return probabilities / norm
+
+        def make_bins(pair):
+            mmin, mmax = bounds(masses[pair[0]], masses[pair[1]])
+            return np.linspace(mmin, mmax, nbins + 1)
+
+        def inv_mass(ps, pair):
+            i, j = pair
+            return np.sqrt(np.abs(lnorm_sqr(ps[:, i] + ps[:, j])))
+
+        bins = [make_bins(pair) for pair in pairs_]
+
+        distributions = [
+            np.histogram(np.zeros(nbins, dtype=np.float64), bins=b)[0] for b in bins
+        ]
+
+        if batch_size is not None and not batch_size == n:
+            # Build up the distributions from batches
+            for ps, ws in self.generator(n, batch_size, seed, dtype):
+                for i, pair in enumerate(pairs_):
+                    d = np.histogram(inv_mass(ps, pair), bins=bins[i], weights=ws)[0]
+                    distributions[i] += d
+        else:
+            ps, ws = self.generate(n, seed=seed, dtype=dtype)
+            for i, pair in enumerate(pairs_):
+                distributions[i] = np.histogram(
+                    inv_mass(ps, pair), bins=bins[i], weights=ws
+                )[0]
+
+        for i in range(len(pairs_)):
+            distributions[i] = normalize(distributions[i], bins[i])
+
+        if keep_edges:
+            return {pair: (distributions[i], bins[i]) for i, pair in enumerate(pairs_)}
+
+        centers = [0.5 * (b[1:] + b[:-1]) for b in bins]
+        return {pair: (distributions[i], centers[i]) for i, pair in enumerate(pairs_)}
