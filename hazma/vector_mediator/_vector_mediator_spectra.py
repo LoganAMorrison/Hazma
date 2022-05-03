@@ -1,9 +1,9 @@
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from hazma import spectra
-
 from hazma.parameters import neutral_pion_mass as mpi0
-
 from hazma.vector_mediator.vector_mediator_decay_spectrum import (
     dnde_decay_v,
     dnde_decay_v_pt,
@@ -12,7 +12,7 @@ from hazma.vector_mediator.vector_mediator_decay_spectrum import (
 
 class VectorMediatorSpectra:
     def dnde_ee(self, e_gams, e_cm, spectrum_type="all"):
-        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)  # type: ignore
+        fsr = np.vectorize(self.dnde_xx_to_v_to_ffg)
 
         if spectrum_type == "all":
             return self.dnde_ee(e_gams, e_cm, "fsr") + self.dnde_ee(
@@ -24,10 +24,7 @@ class VectorMediatorSpectra:
             return np.array([0.0 for _ in range(len(e_gams))])
         else:
             raise ValueError(
-                "Type {} is invalid. Use 'all', 'fsr' or \
-                             'decay'".format(
-                    spectrum_type
-                )
+                "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
             )
 
     def dnde_mumu(self, e_gams, e_cm, spectrum_type="all"):
@@ -45,10 +42,7 @@ class VectorMediatorSpectra:
             return 2.0 * decay(e_gams, e_cm / 2.0)
         else:
             raise ValueError(
-                "Type {} is invalid. Use 'all', 'fsr' or \
-                             'decay'".format(
-                    spectrum_type
-                )
+                "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
             )
 
     def dnde_pi0g(self, e_gams, e_cm, spectrum_type="all"):
@@ -65,10 +59,7 @@ class VectorMediatorSpectra:
             return spectra.dnde_photon_neutral_pion(e_gams, e_pi0)
         else:
             raise ValueError(
-                "Type {} is invalid. Use 'all', 'fsr' or \
-                             'decay'".format(
-                    spectrum_type
-                )
+                "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
             )
 
     def dnde_pipi(self, e_gams, e_cm, spectrum_type="all"):
@@ -82,10 +73,7 @@ class VectorMediatorSpectra:
             return 2.0 * spectra.dnde_photon_charged_pion(e_gams, e_cm / 2.0)
         else:
             raise ValueError(
-                "Type {} is invalid. Use 'all', 'fsr' or \
-                             'decay'".format(
-                    spectrum_type
-                )
+                "Type {} is invalid. Use 'all', 'fsr' or 'decay'".format(spectrum_type)
             )
 
     def __dnde_v(self, e_gams, e_v, fs="total"):
