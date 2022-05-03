@@ -55,6 +55,7 @@ from libc.float cimport DBL_EPSILON
 
 from hazma.spectra._photon.path import DATA_DIR
 from hazma._utils.boost cimport boost_beta, boost_gamma, boost_delta_function
+from hazma._utils.boost cimport boost_integrate_linear_interp
 
 include "../../_utils/constants.pxd"
 
@@ -141,12 +142,39 @@ cdef double dnde_photon_charged_kaon_rest_frame(double photon_energy):
         charged_kaon_data_emax,
     )
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef double integrand_charged_kaon(double photon_energy):
-    return dnde_photon_charged_kaon_rest_frame(photon_energy) / photon_energy
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double integrand_charged_kaon(double photon_energy):
+#     return dnde_photon_charged_kaon_rest_frame(photon_energy) / photon_energy
 
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double dnde_photon_charged_kaon_point(double photon_energy, double kaon_energy):
+#     cdef double gamma
+#     cdef double beta
+#     cdef double pre
+#     cdef double emin
+#     cdef double emax
+#     cdef double res
+
+#     if kaon_energy < MASS_K:
+#         return 0.0
+
+#     if kaon_energy - MASS_K < DBL_EPSILON:
+#         return dnde_photon_charged_kaon_rest_frame(photon_energy)
+
+#     gamma = boost_gamma(kaon_energy, MASS_K)
+#     beta = boost_beta(kaon_energy, MASS_K)
+#     pre = 0.5 / (gamma * beta)
+#     emin = gamma * photon_energy * (1.0 - beta)
+#     emax = gamma * photon_energy * (1.0 + beta)
+#     res = 0.0
+
+#     res = quad(integrand_charged_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+#     return pre * res 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -154,9 +182,6 @@ cdef double integrand_charged_kaon(double photon_energy):
 cdef double dnde_photon_charged_kaon_point(double photon_energy, double kaon_energy):
     cdef double gamma
     cdef double beta
-    cdef double pre
-    cdef double emin
-    cdef double emax
     cdef double res
 
     if kaon_energy < MASS_K:
@@ -167,13 +192,8 @@ cdef double dnde_photon_charged_kaon_point(double photon_energy, double kaon_ene
 
     gamma = boost_gamma(kaon_energy, MASS_K)
     beta = boost_beta(kaon_energy, MASS_K)
-    pre = 0.5 / (gamma * beta)
-    emin = gamma * photon_energy * (1.0 - beta)
-    emax = gamma * photon_energy * (1.0 + beta)
-    res = 0.0
-
-    res = quad(integrand_charged_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
-    return pre * res 
+    res = boost_integrate_linear_interp(photon_energy, beta, charged_kaon_data_energies, charged_kaon_data_dnde)
+    return res 
 
 
 @cython.boundscheck(False)
@@ -225,12 +245,40 @@ cdef double dnde_photon_long_kaon_rest_frame(double photon_energy):
     )
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef double integrand_long_kaon(double photon_energy):
-    return dnde_photon_long_kaon_rest_frame(photon_energy) / photon_energy
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double integrand_long_kaon(double photon_energy):
+#     return dnde_photon_long_kaon_rest_frame(photon_energy) / photon_energy
 
+
+# @cython.cdivision(True)
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# cdef double dnde_photon_long_kaon_point(double photon_energy, double kaon_energy):
+#     cdef double gamma
+#     cdef double beta
+#     cdef double pre
+#     cdef double emin
+#     cdef double emax
+#     cdef double res
+
+#     if kaon_energy < MASS_K0:
+#         return 0.0
+
+#     if kaon_energy - MASS_K0 < DBL_EPSILON:
+#         return dnde_photon_long_kaon_rest_frame(photon_energy)
+
+#     gamma = boost_gamma(kaon_energy, MASS_K0)
+#     beta = boost_beta(kaon_energy, MASS_K0)
+#     pre = 0.5 / (gamma * beta)
+#     emin = gamma * photon_energy * (1.0 - beta)
+#     emax = gamma * photon_energy * (1.0 + beta)
+#     res = 0.0
+
+#     res = pre * quad(integrand_long_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+#     res += 2 * BR_KL_TO_A_A * boost_delta_function(MASS_K0 / 2.0, photon_energy, 0.0, beta)
+#     return res 
 
 @cython.cdivision(True)
 @cython.boundscheck(False)
@@ -238,9 +286,6 @@ cdef double integrand_long_kaon(double photon_energy):
 cdef double dnde_photon_long_kaon_point(double photon_energy, double kaon_energy):
     cdef double gamma
     cdef double beta
-    cdef double pre
-    cdef double emin
-    cdef double emax
     cdef double res
 
     if kaon_energy < MASS_K0:
@@ -251,14 +296,9 @@ cdef double dnde_photon_long_kaon_point(double photon_energy, double kaon_energy
 
     gamma = boost_gamma(kaon_energy, MASS_K0)
     beta = boost_beta(kaon_energy, MASS_K0)
-    pre = 0.5 / (gamma * beta)
-    emin = gamma * photon_energy * (1.0 - beta)
-    emax = gamma * photon_energy * (1.0 + beta)
-    res = 0.0
-
-    res = quad(integrand_long_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+    res = boost_integrate_linear_interp(photon_energy, beta, long_kaon_data_energies, long_kaon_data_dnde)
     res += 2 * BR_KL_TO_A_A * boost_delta_function(MASS_K0 / 2.0, photon_energy, 0.0, beta)
-    return pre * res 
+    return res 
 
 
 @cython.boundscheck(False)
@@ -311,12 +351,41 @@ cdef double dnde_photon_short_kaon_rest_frame(double photon_energy):
         short_kaon_data_emax,
     )
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef double integrand_short_kaon(double photon_energy):
-    return dnde_photon_short_kaon_rest_frame(photon_energy) / photon_energy
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double integrand_short_kaon(double photon_energy):
+#     return dnde_photon_short_kaon_rest_frame(photon_energy) / photon_energy
 
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double dnde_photon_short_kaon_point(double photon_energy, double kaon_energy):
+#     cdef double gamma
+#     cdef double beta
+#     cdef double pre
+#     cdef double emin
+#     cdef double emax
+#     cdef double res
+
+#     if kaon_energy < MASS_K0:
+#         return 0.0
+
+#     if kaon_energy - MASS_K0 < DBL_EPSILON:
+#         return dnde_photon_short_kaon_rest_frame(photon_energy)
+
+#     gamma = boost_gamma(kaon_energy, MASS_K0)
+#     beta = boost_beta(kaon_energy, MASS_K0)
+#     pre = 0.5 / (gamma * beta)
+#     emin = gamma * photon_energy * (1.0 - beta)
+#     emax = gamma * photon_energy * (1.0 + beta)
+#     res = 0.0
+
+#     res = pre * quad(integrand_short_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+#     res += 2 * BR_KS_TO_A_A * boost_delta_function(MASS_K0 / 2.0, photon_energy, 0.0, beta)
+
+#     return res 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -324,9 +393,6 @@ cdef double integrand_short_kaon(double photon_energy):
 cdef double dnde_photon_short_kaon_point(double photon_energy, double kaon_energy):
     cdef double gamma
     cdef double beta
-    cdef double pre
-    cdef double emin
-    cdef double emax
     cdef double res
 
     if kaon_energy < MASS_K0:
@@ -337,15 +403,9 @@ cdef double dnde_photon_short_kaon_point(double photon_energy, double kaon_energ
 
     gamma = boost_gamma(kaon_energy, MASS_K0)
     beta = boost_beta(kaon_energy, MASS_K0)
-    pre = 0.5 / (gamma * beta)
-    emin = gamma * photon_energy * (1.0 - beta)
-    emax = gamma * photon_energy * (1.0 + beta)
-    res = 0.0
-
-    res = quad(integrand_short_kaon, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+    res = boost_integrate_linear_interp(photon_energy, beta, short_kaon_data_energies, short_kaon_data_dnde)
     res += 2 * BR_KS_TO_A_A * boost_delta_function(MASS_K0 / 2.0, photon_energy, 0.0, beta)
-
-    return pre * res 
+    return res 
 
 
 @cython.boundscheck(False)

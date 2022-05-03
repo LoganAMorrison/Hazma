@@ -11,6 +11,7 @@ from libc.float cimport DBL_EPSILON
 
 from hazma.spectra._photon.path import DATA_DIR
 from hazma._utils.boost cimport boost_beta, boost_gamma, boost_delta_function
+from hazma._utils.boost cimport boost_integrate_linear_interp
 
 include "../../_utils/constants.pxd"
 
@@ -47,12 +48,43 @@ cdef double dnde_photon_eta_prime_rest_frame(double photon_energy):
         return np.interp(photon_energy, eta_prime_data_energies, eta_prime_data_dnde)
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef double integrand_eta_prime(double photon_energy):
-    return dnde_photon_eta_prime_rest_frame(photon_energy) / photon_energy
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double integrand_eta_prime(double photon_energy):
+#     return dnde_photon_eta_prime_rest_frame(photon_energy) / photon_energy
 
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double dnde_photon_eta_prime_point(double photon_energy, double eta_prime_energy):
+#     cdef double gamma
+#     cdef double beta
+#     cdef double pre
+#     cdef double emin
+#     cdef double emax
+#     cdef double res
+#     cdef double eng_a_w_to_pi0_a
+
+#     if eta_prime_energy < MASS_ETAP:
+#         return 0.0
+
+#     if eta_prime_energy - MASS_ETAP < DBL_EPSILON:
+#         return dnde_photon_eta_prime_rest_frame(photon_energy)
+
+#     gamma = boost_gamma(eta_prime_energy, MASS_ETAP)
+#     beta = boost_beta(eta_prime_energy, MASS_ETAP)
+#     pre = 0.5 / (gamma * beta)
+#     emin = gamma * photon_energy * (1.0 - beta)
+#     emax = gamma * photon_energy * (1.0 + beta)
+#     res = 0.0
+
+#     res = pre * quad(integrand_eta_prime, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+
+#     res +=  BR_ETAP_TO_A_A * boost_delta_function(MASS_ETAP / 2.0, photon_energy, 0.0, beta)
+
+#     return res 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -60,9 +92,6 @@ cdef double integrand_eta_prime(double photon_energy):
 cdef double dnde_photon_eta_prime_point(double photon_energy, double eta_prime_energy):
     cdef double gamma
     cdef double beta
-    cdef double pre
-    cdef double emin
-    cdef double emax
     cdef double res
     cdef double eng_a_w_to_pi0_a
 
@@ -74,16 +103,9 @@ cdef double dnde_photon_eta_prime_point(double photon_energy, double eta_prime_e
 
     gamma = boost_gamma(eta_prime_energy, MASS_ETAP)
     beta = boost_beta(eta_prime_energy, MASS_ETAP)
-    pre = 0.5 / (gamma * beta)
-    emin = gamma * photon_energy * (1.0 - beta)
-    emax = gamma * photon_energy * (1.0 + beta)
-    res = 0.0
-
-    res = quad(integrand_eta_prime, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
-
+    res = boost_integrate_linear_interp(photon_energy, beta, eta_prime_data_energies, eta_prime_data_dnde)
     res +=  BR_ETAP_TO_A_A * boost_delta_function(MASS_ETAP / 2.0, photon_energy, 0.0, beta)
-
-    return pre * res 
+    return res 
 
 
 @cython.boundscheck(False)

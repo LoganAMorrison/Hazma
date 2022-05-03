@@ -3,40 +3,22 @@ Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
 """
-from typing import List, Optional, overload
+from typing import List, overload
 from warnings import warn
 
 import numpy as np
 
-from hazma.spectra._photon import _muon, _pion, _rho, _kaon, _eta, _omega, _eta_prime
+from hazma.spectra._photon import (
+    _muon,
+    _pion,
+    _rho,
+    _kaon,
+    _eta,
+    _omega,
+    _eta_prime,
+    _phi,
+)
 from hazma.utils import RealArray, RealOrRealArray
-
-
-def __mode_deprecation_warning():
-    msg = "Using a single item from `modes` is deprecated."
-    msg += " Use a list of modes instead. E.g. modes=[mode1,mode2,...]"
-    warn(msg)
-
-
-def __mode_deprecation_convert(modes, availible: List[str]) -> List[str]:
-    if modes is None:
-        return availible
-    elif isinstance(modes, str):
-        # For backwards compatiblity
-        __mode_deprecation_warning()
-        if modes == "total":
-            return availible
-        else:
-            return [modes]
-    else:
-        return modes
-
-
-def __check_modes(modes, availible):
-    for mode in modes:
-        assert (
-            mode in availible
-        ), f"Invalid mode {mode} specified. The availible modes are: {availible}"
 
 
 @overload
@@ -73,17 +55,17 @@ def dnde_photon_muon(
 
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energy, muon_energy = 200., 1000.
-        decay.muon(photon_energy, muon_energy)
+        spectra.dnde_photon_muon(photon_energy, muon_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         muon_energy = 1000.
-        decay.muon(photon_energies, muon_energy)
+        spectra.dnde_photon_muon(photon_energies, muon_energy)
     """
     return _muon.dnde_photon(photon_energies, muon_energy)
 
@@ -124,17 +106,17 @@ def dnde_photon_neutral_pion(
 
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energies, pion_energy = 200., 1000.
-        decay.neutral_pion(photon_energies, pion_energy)
+        spectra.dnde_photon_neutral_pion(photon_energies, pion_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         pion_energy = 1000.
-        decay.neutral_pion(photon_energies, pion_energy)
+        spectra.dnde_photon_neutral_pion(photon_energies, pion_energy)
     """
     return _pion.dnde_photon_neutral_pion(photon_energies, pion_energy)
 
@@ -172,17 +154,17 @@ def dnde_photon_charged_pion(
     --------
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energies, pion_energy = 200., 1000.
-        decay.charged_pion(photon_energies, pion_energy)
+        spectra.dnde_photon_charged_pion(photon_energies, pion_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         pion_energy = 1000.
-        decay.charged_pion(photon_energies, pion_energy)
+        spectra.dnde_photon_charged_pion(photon_energies, pion_energy)
     """
     return _pion.dnde_photon_charged_pion(photon_energy, pion_energy)
 
@@ -236,17 +218,17 @@ def dnde_photon_charged_kaon(
 
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energies, kaon_energy = 200., 1000.
-        decay.charged_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_charged_kaon(photon_energies, kaon_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         kaon_energy = 1000.
-        decay.charged_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_charged_kaon(photon_energies, kaon_energy)
     """
     return _kaon.dnde_photon_charged_kaon(photon_energy, kaon_energy)
 
@@ -292,17 +274,17 @@ def dnde_photon_short_kaon(
 
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energies, kaon_energy = 200., 1000.
-        decay.short_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_short_kaon(photon_energies, kaon_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         kaon_energy = 1000.
-        decay.short_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_short_kaon(photon_energies, kaon_energy)
     """
     return _kaon.dnde_photon_short_kaon(photon_energy, kaon_energy)
 
@@ -340,17 +322,17 @@ def dnde_photon_long_kaon(
     --------
     Calculate spectrum for single gamma ray energy::
 
-        from hazma import decay
+        from hazma import spectra
         photon_energies, kaon_energy = 200., 1000.
-        decay.long_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_long_kaon(photon_energies, kaon_energy)
 
     Calculate spectrum for array of gamma ray energies::
 
-        from hazma import decay
+        from hazma import spectra
         import numpy as np
         photon_energies = np.logspace(0.0, 3.0, num=200, dtype=float)
         kaon_energy = 1000.
-        decay.long_kaon(photon_energies, kaon_energy)
+        spectra.dnde_photon_long_kaon(photon_energies, kaon_energy)
 
     Notes
     -----
@@ -545,6 +527,37 @@ def dnde_photon_eta_prime(
     -------
     spec : numpy.ndarray
         Array of gamma ray spectrum values, dNdE, evaluated at
-        ``photon_energy`` given omega energy ``omega_energy``.
+        ``photon_energy`` given eta' energy ``eta_prime_energy``.
     """
     return _eta_prime.dnde_photon_eta_prime(photon_energy, eta_prime_energy)
+
+
+@overload
+def dnde_photon_phi(photon_energy: float, phi_energy: float) -> float:
+    ...
+
+
+@overload
+def dnde_photon_phi(photon_energy: RealArray, phi_energy: float) -> RealArray:
+    ...
+
+
+def dnde_photon_phi(
+    photon_energy: RealOrRealArray, phi_energy: float
+) -> RealOrRealArray:
+    r"""Compute gamma-ray decay spectrum from the decay of the phi(1020).
+
+    Parameters
+    ----------
+    photon_energy : float or numpy.ndarray
+        Photon energy(ies) in laboratory frame.
+    phi_energy : double
+        Phi energy in laboratory frame.
+
+    Returns
+    -------
+    spec : numpy.ndarray
+        Array of gamma ray spectrum values, dNdE, evaluated at
+        ``photon_energy`` given phi energy ``phi_energy``.
+    """
+    return _phi.dnde_photon_phi(photon_energy, phi_energy)

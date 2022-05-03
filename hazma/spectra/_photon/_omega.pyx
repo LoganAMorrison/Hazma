@@ -5,12 +5,13 @@ import cython
 
 import numpy as np
 cimport numpy as np
-from scipy.integrate import quad
+# from scipy.integrate import quad
 from libc.math cimport sqrt
 from libc.float cimport DBL_EPSILON
 
 from hazma.spectra._photon.path import DATA_DIR
 from hazma._utils.boost cimport boost_beta, boost_gamma, boost_delta_function
+from hazma._utils.boost cimport boost_integrate_linear_interp
 
 include "../../_utils/constants.pxd"
 
@@ -47,12 +48,46 @@ cdef double dnde_photon_omega_rest_frame(double photon_energy):
         return np.interp(photon_energy, omega_data_energies, omega_data_dnde)
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cdef double integrand_omega(double photon_energy):
-    return dnde_photon_omega_rest_frame(photon_energy) / photon_energy
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double integrand_omega(double photon_energy):
+#     return dnde_photon_omega_rest_frame(photon_energy) / photon_energy
 
+
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+# @cython.cdivision(True)
+# cdef double dnde_photon_omega_point(double photon_energy, double omega_energy):
+#     cdef double gamma
+#     cdef double beta
+#     cdef double pre
+#     cdef double emin
+#     cdef double emax
+#     cdef double res
+#     cdef double eng_a_w_to_pi0_a
+
+#     if omega_energy < MASS_OMEGA:
+#         return 0.0
+
+#     if omega_energy - MASS_OMEGA < DBL_EPSILON:
+#         return dnde_photon_omega_rest_frame(photon_energy)
+
+#     gamma = boost_gamma(omega_energy, MASS_OMEGA)
+#     beta = boost_beta(omega_energy, MASS_OMEGA)
+#     pre = 0.5 / (gamma * beta)
+#     emin = gamma * photon_energy * (1.0 - beta)
+#     emax = gamma * photon_energy * (1.0 + beta)
+#     res = 0.0
+
+#     res = quad(integrand_omega, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+
+#     eng_a_w_to_pi0_a = (MASS_OMEGA**2 - MASS_PI0**2) / (2 * MASS_OMEGA)
+#     eng_a_w_to_eta_a = (MASS_OMEGA**2 - MASS_ETA**2) / (2 * MASS_OMEGA)
+#     res +=  BR_OMEGA_TO_PI0_A * boost_delta_function(eng_a_w_to_pi0_a, photon_energy, 0.0, beta)
+#     res +=  BR_OMEGA_TO_ETA_A * boost_delta_function(eng_a_w_to_eta_a, photon_energy, 0.0, beta)
+
+#     return pre * res 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -60,9 +95,6 @@ cdef double integrand_omega(double photon_energy):
 cdef double dnde_photon_omega_point(double photon_energy, double omega_energy):
     cdef double gamma
     cdef double beta
-    cdef double pre
-    cdef double emin
-    cdef double emax
     cdef double res
     cdef double eng_a_w_to_pi0_a
 
@@ -74,19 +106,14 @@ cdef double dnde_photon_omega_point(double photon_energy, double omega_energy):
 
     gamma = boost_gamma(omega_energy, MASS_OMEGA)
     beta = boost_beta(omega_energy, MASS_OMEGA)
-    pre = 0.5 / (gamma * beta)
-    emin = gamma * photon_energy * (1.0 - beta)
-    emax = gamma * photon_energy * (1.0 + beta)
-    res = 0.0
-
-    res = quad(integrand_omega, emin, emax, epsabs=1e-10, epsrel=1e-4)[0]
+    res = boost_integrate_linear_interp(photon_energy, beta, omega_data_energies, omega_data_dnde)
 
     eng_a_w_to_pi0_a = (MASS_OMEGA**2 - MASS_PI0**2) / (2 * MASS_OMEGA)
     eng_a_w_to_eta_a = (MASS_OMEGA**2 - MASS_ETA**2) / (2 * MASS_OMEGA)
-    res +=  BR_OMEGA_TO_PI0_A * boost_delta_function(eng_a_w_to_pi0_a, photon_energy, 0.0, beta)
-    res +=  BR_OMEGA_TO_ETA_A * boost_delta_function(eng_a_w_to_eta_a, photon_energy, 0.0, beta)
+    res += BR_OMEGA_TO_PI0_A * boost_delta_function(eng_a_w_to_pi0_a, photon_energy, 0.0, beta)
+    res += BR_OMEGA_TO_ETA_A * boost_delta_function(eng_a_w_to_eta_a, photon_energy, 0.0, beta)
 
-    return pre * res 
+    return res 
 
 
 @cython.boundscheck(False)
