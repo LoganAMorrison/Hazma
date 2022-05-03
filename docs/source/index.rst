@@ -15,6 +15,8 @@ Welcome to Hazma's documentation!
    positron
    decay
    rambo
+   utils
+   parameters
 
 
 

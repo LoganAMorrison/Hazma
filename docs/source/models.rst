@@ -12,3 +12,4 @@ This page contains the documentation for the models built into ``hazma``.
 
    scalar_mediator
    vector_mediator
+   vector_mediator_form_factors
