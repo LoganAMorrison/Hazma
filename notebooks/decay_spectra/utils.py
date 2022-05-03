@@ -2,13 +2,23 @@ import abc
 import dataclasses
 import functools
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    NamedTuple,
+)
 
 import numpy as np
 import numpy.typing as npt
 from scipy import integrate
 
-from hazma import decay, parameters
+from hazma import spectra, parameters
 from hazma.rambo import PhaseSpace
 from hazma.utils import kallen_lambda, lnorm_sqr
 
@@ -45,11 +55,11 @@ qualitative = [
 
 
 def two_body_three_momentum(cme, m1, m2):
-    return np.sqrt(kallen_lambda(cme ** 2, m1 ** 2, m2 ** 2)) / (2 * cme)
+    return np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
 
 
 def energy_one_cme(cme, m1, m2):
-    return (cme ** 2 + m1 ** 2 - m2 ** 2) / (2 * cme)
+    return (cme**2 + m1**2 - m2**2) / (2 * cme)
 
 
 class ParticleType(Enum):
@@ -59,28 +69,33 @@ class ParticleType(Enum):
 
 
 def _dndx_photon_fsr(x, s, m, q=1.0, ty: ParticleType = ParticleType.Fermion):
-    pre = q ** 2 * parameters.alpha_em / (2.0 * np.pi)
+    pre = q**2 * parameters.alpha_em / (2.0 * np.pi)
     xm = 1.0 - x
     kernel = np.zeros_like(x)
 
     if ty == ParticleType.Scalar:
-        mask = s * xm / m ** 2 > np.e
-        kernel[mask] = 2.0 * xm[mask] / x[mask] * (np.log(s * xm[mask] / m ** 2) - 1.0)
+        mask = s * xm / m**2 > np.e
+        kernel[mask] = 2.0 * xm[mask] / x[mask] * (np.log(s * xm[mask] / m**2) - 1.0)
     elif ty == ParticleType.Fermion:
-        mask = s * xm / m ** 2 > np.e
+        mask = s * xm / m**2 > np.e
         kernel[mask] = (
-            (1.0 + xm[mask] ** 2) / x[mask] * (np.log(s * xm[mask] / m ** 2) - 1.0)
+            (1.0 + xm[mask] ** 2) / x[mask] * (np.log(s * xm[mask] / m**2) - 1.0)
         )
     else:
-        mask = s * xm ** 2 / (4.0 * m ** 2) > 0
-        y = s * xm[mask] ** 2 / (4.0 * m ** 2)
+        mask = x < 1 - 2 * m / np.sqrt(s)
+
+        y = s * xm[mask] ** 2 / (4.0 * m**2)
+
+        x_mask = x[mask]
+        xm_mask = xm[mask]
+
         lf1 = np.log(y) + 2.0 * np.log(1.0 - np.sqrt(1.0 - 1.0 / y))
-        lf2 = np.log(s / m ** 2)
+        lf2 = np.log(s / m**2)
+
         kernel[mask] = 2.0 * (
-            x[mask] / xm[mask] * lf1
-            + xm[mask] / x[mask] * lf2
-            + x[mask] * xm[mask] * lf2
+            x_mask / xm_mask * lf1 + xm_mask / x_mask * lf2 + x_mask * xm_mask * lf2
         )
+        kernel = np.clip(kernel, 0.0, None)
 
     return pre * kernel
 
@@ -142,8 +157,8 @@ def invariant_mass_distribution_analytic(
     m0: float, m1: float, m2: float, m3: float
 ) -> Callable[[T], T]:
     def unnormalized(s):
-        p1 = kallen_lambda(s, m0 ** 2, m1 ** 2)
-        p2 = kallen_lambda(s, m2 ** 2, m3 ** 2)
+        p1 = kallen_lambda(s, m0**2, m1**2)
+        p2 = kallen_lambda(s, m2**2, m3**2)
         return np.sqrt(p1 * p2) / s
 
     lb = (m2 + m3) ** 2
@@ -152,6 +167,25 @@ def invariant_mass_distribution_analytic(
 
     def dist(s):
         return unnormalized(s) / norm
+
+    return dist
+
+
+def energy_distribution_analytic(
+    m0: float, m1: float, m2: float, m3: float
+) -> Callable[[T], T]:
+    def unnormalized(e):
+        s = m0**2 + m1**2 - 2 * m0 * e
+        p1 = kallen_lambda(s, m0**2, m1**2)
+        p2 = kallen_lambda(s, m2**2, m3**2)
+        return np.sqrt(p1 * p2) / s
+
+    lb = m1
+    ub = (m0**2 + m1**2 - (m2 + m3) ** 2) / (2 * m0)
+    norm: float = integrate.quad(unnormalized, lb, ub)[0]
+
+    def dist(e):
+        return unnormalized(e) / norm
 
     return dist
 
@@ -182,6 +216,12 @@ class Particle:
     def dnde_photon_decay(self, photon_energy, _):
         return np.zeros_like(photon_energy)
 
+    def dnde_positron_decay(self, positron_energy, _):
+        return np.zeros_like(positron_energy)
+
+    def dnde_neutrino_decay(self, neutrino_energy, _):
+        return np.zeros_like(neutrino_energy)
+
     def dnde_photon_fsr(self, photon_energy, s):
         return self._dnde_photon_fsr_fn(photon_energy, s)
 
@@ -194,7 +234,7 @@ class _NeutralPion(Particle):
     charge: float = 0.0
 
     def dnde_photon_decay(self, photon_energy, self_energy):
-        return decay.neutral_pion(photon_energy, self_energy)
+        return spectra.dnde_photon_neutral_pion(photon_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -205,7 +245,13 @@ class _ChargedPion(Particle):
     charge: float = 1.0
 
     def dnde_photon_decay(self, photon_energy, self_energy):
-        return decay.charged_pion(photon_energy, self_energy)
+        return spectra.dnde_photon_charged_pion(photon_energy, self_energy)
+
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_charged_pion(positron_energy, self_energy)
+
+    def dnde_neutrino_decay(self, positron_energy, self_energy):
+        return spectra.dnde_neutrino_charged_pion(positron_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -216,7 +262,13 @@ class _Muon(Particle):
     charge: float = -1.0
 
     def dnde_photon_decay(self, photon_energy, self_energy):
-        return decay.muon(photon_energy, self_energy)
+        return spectra.dnde_photon_muon(photon_energy, self_energy)
+
+    def dnde_positron_decay(self, photon_energy, self_energy):
+        return spectra.dnde_positron_muon(photon_energy, self_energy)
+
+    def dnde_neutrino_decay(self, photon_energy, self_energy):
+        return spectra.dnde_neutrino_muon(photon_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -234,6 +286,9 @@ class _ChargedKaon(Particle):
     ty: ParticleType = ParticleType.Scalar
     charge: float = 1.0
 
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_charged_kaon(photon_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _LongKaon(Particle):
@@ -241,6 +296,9 @@ class _LongKaon(Particle):
     mass: float = MK0
     ty: ParticleType = ParticleType.Scalar
     charge: float = 0.0
+
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_long_kaon(photon_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -250,6 +308,9 @@ class _ShortKaon(Particle):
     ty: ParticleType = ParticleType.Scalar
     charge: float = 0.0
 
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_short_kaon(photon_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _Eta(Particle):
@@ -257,6 +318,9 @@ class _Eta(Particle):
     mass: float = META
     ty: ParticleType = ParticleType.Scalar
     charge: float = 0.0
+
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_eta(photon_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -274,6 +338,9 @@ class _Omega(Particle):
     ty: ParticleType = ParticleType.Vector
     charge: float = 0.0
 
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_omega(photon_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _NeutralRho(Particle):
@@ -282,6 +349,9 @@ class _NeutralRho(Particle):
     ty: ParticleType = ParticleType.Vector
     charge: float = 0.0
 
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_neutral_rho(photon_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _ChargedRho(Particle):
@@ -289,6 +359,20 @@ class _ChargedRho(Particle):
     mass: float = MRHO
     ty: ParticleType = ParticleType.Vector
     charge: float = 1.0
+
+    def dnde_photon_decay(self, photon_energy, self_energy):
+        return spectra.dnde_photon_charged_rho(photon_energy, self_energy)
+
+    def dnde_photon_fsr(self, photon_energy, _):
+        return np.zeros_like(photon_energy)
+
+
+@dataclasses.dataclass(frozen=True)
+class _Phi(Particle):
+    name: str = "phi"
+    mass: float = MPHI
+    ty: ParticleType = ParticleType.Vector
+    charge: float = 0.0
 
 
 @dataclasses.dataclass(frozen=True)
@@ -313,6 +397,7 @@ neutral_rho = _NeutralRho()
 charged_rho = _ChargedRho()
 neutrino = Particle(mass=0.0, ty=ParticleType.Fermion, charge=0.0, name="nu")
 photon = _Photon()
+phi = _Phi()
 
 
 class ThreeBodyPhaseSpace:
@@ -322,22 +407,22 @@ class ThreeBodyPhaseSpace:
         m1: float,
         m2: float,
         m3: float,
-        msqrd: Optional[Callable[[T, T], T]],
+        msqrd: Optional[Callable],
     ) -> None:
         self.m0 = m0
         self.m1 = m1
         self.m2 = m2
         self.m3 = m3
-        self.msqrd = msqrd
-        self.phase_space = PhaseSpace(m0, np.array([m1, m2, m3]))
+        self.has_msqrd = msqrd is not None
+        self.phase_space = PhaseSpace(m0, np.array([m1, m2, m3]), msqrd=msqrd)
 
     def _energy_bounds(self) -> List[Tuple[float, float]]:
         m0 = self.m0
 
         def bounds(m1, m2, m3):
             emin = m1
-            emax = (m0 ** 2 + m1 ** 2 - (m2 + m3) ** 2) / (2 * m0)
-            return (emin, emax)
+            emax = (m0**2 + m1**2 - (m2 + m3) ** 2) / (2 * m0)
+            return emin, emax
 
         return [
             bounds(self.m1, self.m2, self.m3),
@@ -348,8 +433,6 @@ class ThreeBodyPhaseSpace:
     def __energy_probabilities(
         self, bins: tuple[BinType, BinType, BinType], npts=10000
     ) -> npt.NDArray[np.float64]:
-        assert self.msqrd is not None
-
         momenta, weights = self.phase_space.generate(npts)
 
         p1 = momenta[:, 0]
@@ -360,11 +443,6 @@ class ThreeBodyPhaseSpace:
         e2s = p2[0]
         e3s = p3[0]
 
-        s = lnorm_sqr(p2 + p3)
-        t = lnorm_sqr(p1 + p3)
-
-        weights = weights * self.msqrd(s, t)
-
         p1s, _ = np.histogram(e1s, bins=bins[0], weights=weights, density=True)
         p2s, _ = np.histogram(e2s, bins=bins[1], weights=weights, density=True)
         p3s, _ = np.histogram(e3s, bins=bins[2], weights=weights, density=True)
@@ -372,26 +450,24 @@ class ThreeBodyPhaseSpace:
         return np.array([p1s, p2s, p3s])
 
     def __invariant_mass_probabilities(
-        self, i: int, j: int, bins: BinType, npts: int = 10000,
+        self,
+        i: int,
+        j: int,
+        bins: BinType,
+        npts: int = 10000,
     ) -> npt.NDArray[np.float64]:
         assert i in [0, 1, 2], f"Invalid index i={i}. Must be 0, 1, or 2"
         assert j in [0, 1, 2], f"Invalid index j={j}. Must be 0, 1, or 2"
-        assert self.msqrd is not None
 
         momenta, weights = self.phase_space.generate(npts)
 
         sij = lnorm_sqr(momenta[:, i] + momenta[:, j])
-        s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
-        t = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
-
-        weights = weights * self.msqrd(s, t)
-
         probs = np.histogram(sij, bins=bins, weights=weights, density=True)[0]
 
         return probs
 
+    @staticmethod
     def __update_distribution(
-        self,
         dist: npt.NDArray[np.float64],
         ctor: Callable[[], npt.NDArray[np.float64]],
         batchsize: int,
@@ -442,21 +518,15 @@ class ThreeBodyPhaseSpace:
         )
         cs = tuple((bins[i][1:] + bins[i][:-1]) / 2 for i in range(3))
 
-        if self.msqrd is None:
+        if not self.has_msqrd:
             m0 = self.m0
-            ms = [self.m1, self.m2, self.m3]
-            m1, m2, m3 = ms
-            dndss = [
-                invariant_mass_distribution_analytic(m0, m1, m2, m3),
-                invariant_mass_distribution_analytic(m0, m2, m1, m3),
-                invariant_mass_distribution_analytic(m0, m3, m1, m2),
+            dndes = [
+                energy_distribution_analytic(m0, self.m1, self.m2, self.m3),
+                energy_distribution_analytic(m0, self.m2, self.m1, self.m3),
+                energy_distribution_analytic(m0, self.m3, self.m1, self.m2),
             ]
 
-            def dnde(e, dnds, m):
-                s = m0 ** 2 + m ** 2 - 2 * m * e
-                return dnds(s) / (2 * m0)
-
-            return [(c, dnde(c, dnds, m)) for c, dnds, m in zip(cs, dndss, ms)]
+            return [(c, dnde(c)) for c, dnde in zip(cs, dndes)]
 
         def ctor():
             return self.__energy_probabilities(bins)
@@ -478,14 +548,14 @@ class ThreeBodyPhaseSpace:
         bins: npt.NDArray[np.float64] = np.linspace(smin, smax, nbins + 1)
         cs = (bins[1:] + bins[:-1]) / 2
 
-        if self.msqrd is None:
+        if not self.has_msqrd:
             m0 = self.m0
             m1 = ms[k]
             m2 = ms[i]
             m3 = ms[j]
             dist = invariant_mass_distribution_analytic(m0, m1, m2, m3)
             ps = dist(cs)
-            return (cs, ps)
+            return cs, ps
 
         def ctor():
             return self.__invariant_mass_probabilities(i, j, nbins)
@@ -493,7 +563,7 @@ class ThreeBodyPhaseSpace:
         ps = np.zeros(nbins, dtype=np.float64)
         ps = self.__build_distribution(ps, ctor, eps, maxiter, batchsize)
 
-        return (cs, ps)
+        return cs, ps
 
 
 @dataclasses.dataclass
@@ -502,6 +572,7 @@ class DecayProcess:
     final_states: List[Particle] = dataclasses.field()
     branching_fraction: float = dataclasses.field()
     msqrd: Optional[Callable] = dataclasses.field(default=None, repr=False)
+    nbins: int = dataclasses.field(default=25, repr=False)
 
     energy_distributions: List[Tuple[np.ndarray, np.ndarray]] = dataclasses.field(
         init=False, repr=False
@@ -522,7 +593,7 @@ class DecayProcess:
                 (np.array([e2]), np.array([1.0])),
             ]
             self.invariant_mass_distributions = {
-                (0, 1): (np.array([self.parent.mass ** 2]), np.array([1.0]))
+                (0, 1): (np.array([self.parent.mass**2]), np.array([1.0]))
             }
         elif len(self.final_states) == 3:
             m1 = self.final_states[0].mass
@@ -530,12 +601,20 @@ class DecayProcess:
             m3 = self.final_states[2].mass
             tbps = ThreeBodyPhaseSpace(self.parent.mass, m1, m2, m3, self.msqrd)
 
-            self.energy_distributions = tbps.energy_distributions(25, maxiter=1000)
+            self.energy_distributions = tbps.energy_distributions(
+                self.nbins, maxiter=1000
+            )
 
             self.invariant_mass_distributions = {
-                (1, 2): tbps.invariant_mass_distribution(1, 2, 25, maxiter=1000),
-                (0, 2): tbps.invariant_mass_distribution(0, 2, 25, maxiter=1000),
-                (0, 1): tbps.invariant_mass_distribution(0, 1, 25, maxiter=1000),
+                (1, 2): tbps.invariant_mass_distribution(
+                    1, 2, self.nbins, maxiter=1000
+                ),
+                (0, 2): tbps.invariant_mass_distribution(
+                    0, 2, self.nbins, maxiter=1000
+                ),
+                (0, 1): tbps.invariant_mass_distribution(
+                    0, 1, self.nbins, maxiter=1000
+                ),
             }
         else:
             raise NotImplementedError()
@@ -545,6 +624,13 @@ class DecayProcess:
 class DecayProcesses:
     parent: Particle
     processes: Dict[str, DecayProcess]
+
+
+@dataclasses.dataclass
+class DecayProcessInfo:
+    final_states: List[Particle] = dataclasses.field()
+    branching_fraction: float = dataclasses.field()
+    msqrd: Optional[Callable] = dataclasses.field(default=None, repr=False)
 
 
 def __dnde_photon_process(
@@ -591,3 +677,171 @@ def dnde_photon(
             name: __dnde_photon_process(photon_energy, proc, apply_branching_fraction)
             for name, proc in process.processes.items()
         }
+
+
+def __dnde_positron_process(
+    positron_energy, process: DecayProcess, apply_branching_fraction: bool = True
+):
+    # Decay spectrum
+    dnde = np.zeros_like(positron_energy)
+    for particle, dist in zip(process.final_states, process.energy_distributions):
+        dnde += convolve(
+            positron_energy, particle.dnde_positron_decay, dist[0], dist[1]
+        )
+
+    if apply_branching_fraction:
+        dnde *= process.branching_fraction
+
+    return dnde
+
+
+def dnde_positron(
+    positron_energy,
+    process: Union[DecayProcess, DecayProcesses],
+    apply_branching_fraction: bool = True,
+):
+    if isinstance(process, DecayProcess):
+        return __dnde_positron_process(positron_energy, process)
+    elif isinstance(process, DecayProcesses):
+        return {
+            name: __dnde_positron_process(
+                positron_energy, proc, apply_branching_fraction
+            )
+            for name, proc in process.processes.items()
+        }
+
+
+def make_processes(
+    parent,
+    processes: List[DecayProcessInfo],
+    include_all_two_body: bool = True,
+    threshold=0.01,
+    nbins=25,
+) -> DecayProcesses:
+    procs: Dict[str, DecayProcess] = dict()
+    for process in processes:
+        name = " ".join(map(lambda s: s.name, process.final_states))
+        include = process.branching_fraction > threshold
+        include = include or (len(process.final_states) == 2 and include_all_two_body)
+        if include:
+            procs[name] = DecayProcess(
+                parent=parent,
+                final_states=process.final_states,
+                msqrd=process.msqrd,
+                branching_fraction=process.branching_fraction,
+                nbins=nbins,
+            )
+
+    return DecayProcesses(parent=parent, processes=procs)
+
+
+_KAON = Union[_ChargedKaon, _ShortKaon, _LongKaon]
+
+
+def make_msqrd_k_to_pi_l_nu(
+    kaon: _KAON,
+    ml: float,
+    lam_p: float,
+    lam_0: float,
+    pi: Union[_NeutralPion, _ChargedPion],
+):
+    mk2 = kaon.mass**2
+    mpi2 = charged_pion.mass**2
+
+    def fp(s):
+        return 1.0 + lam_p * s / mpi2
+
+    def fm(_):
+        return (mk2 - mpi2) / mpi2 * (lam_0 - lam_p)
+
+    def msqrd(momenta):
+        s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
+        t = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
+        return -4 * (
+            (ml**4 - ml**2 * s) * fm(s) ** 2
+            + 2 * ml**2 * (ml**2 + 2 * pi.mass**2 - s - 2 * t) * fm(s) * fp(s)
+            + (
+                ml**4
+                + 4 * mk2 * (pi.mass**2 - t)
+                + 4 * t * (-(pi.mass**2) + s + t)
+                - ml**2 * (s + 4 * t)
+            )
+            * fp(s) ** 2
+        )
+
+    return msqrd
+
+
+def make_msqrd_k_to_ppp(
+    kaon: _KAON,
+    masses: List[float],
+    g: float,
+    h: float,
+    k: float,
+):
+    """
+    Construct the squared matrix element for K -> pi_1 + pi_2 + pi_3.
+
+    Parameters
+    ----------
+    kaon:
+        The decaying kaon.
+    masses:
+        Final state particle masses.
+    g: float
+        Linear coefficient. See particle listing for charged kaon.
+    h, k: float
+        Quadratic coefficent.  See particle listing for charged kaon.
+
+    Returns
+    -------
+    msqrd: Callable[[Any,Any], Any]
+        Squared matrix element.
+    """
+    s0 = (kaon.mass**2 + sum(map(lambda m: m**2, masses))) / 3.0
+
+    def msqrd(momenta):
+        s1 = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
+        s2 = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
+        s3 = 3.0 * s0 - s1 - s2
+        x = (s3 - s0) / charged_pion.mass**2
+        y = (s2 - s1) / charged_pion.mass**2  # type: ignore
+        return 1.0 + g * x + h * x**2 + k * y**2
+
+    return msqrd
+
+
+STATE_TO_LATEX = {
+    "mu": r"$\mu^{\mp}$",
+    "mubar": r"$\mu^{\pm}$",
+    "e": r"$e^{\mp}$",
+    "ebar": r"$e^{\pm}$",
+    "nu": r"$\nu$",
+    "pi": r"$\pi^{\pm}$",
+    "pibar": r"$\pi^{\mp}$",
+    "pi0": r"$\pi^{0}$",
+    "a": r"$\gamma$",
+    "k": r"$K^{\pm}$",
+    "kbar": r"$K^{\mp}$",
+    "kL": r"$K_{L}$",
+    "kS": r"$K_{S}$",
+    "k0": r"$K^{0}$",
+    "k0bar": r"$\bar{K}^{0}$",
+    "eta": r"$\eta$",
+    "etap": r"$\eta'$",
+    "rho": r"$\rho^{\pm}$",
+    "rhobar": r"$\rho^{\mp}$",
+    "rho0": r"$\rho^{0}$",
+    "omega": r"$\omega$",
+    "phi": r"$\phi$",
+}
+
+
+def process_string_to_latex(process: str):
+    states: List[str] = process.split(" ")
+    assert (
+        len(states) > 1
+    ), f"Invalid process string {process}. Found less than 2 states."
+
+    latex = map(lambda s: STATE_TO_LATEX[s], states)
+    return " + ".join(latex)
