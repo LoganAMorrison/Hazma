@@ -7,18 +7,18 @@ from typing import (
     Callable,
     Dict,
     List,
+    NamedTuple,
     Optional,
     Tuple,
     TypeVar,
     Union,
-    NamedTuple,
 )
 
 import numpy as np
 import numpy.typing as npt
-from scipy import integrate
+from scipy import integrate, interpolate
 
-from hazma import spectra, parameters
+from hazma import parameters, spectra
 from hazma.rambo import PhaseSpace
 from hazma.utils import kallen_lambda, lnorm_sqr
 
@@ -289,6 +289,9 @@ class _ChargedKaon(Particle):
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_charged_kaon(photon_energy, self_energy)
 
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_charged_kaon(positron_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _LongKaon(Particle):
@@ -299,6 +302,9 @@ class _LongKaon(Particle):
 
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_long_kaon(photon_energy, self_energy)
+
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_long_kaon(positron_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -311,6 +317,9 @@ class _ShortKaon(Particle):
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_short_kaon(photon_energy, self_energy)
 
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_short_kaon(positron_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _Eta(Particle):
@@ -321,6 +330,9 @@ class _Eta(Particle):
 
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_eta(photon_energy, self_energy)
+
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_eta(positron_energy, self_energy)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -341,6 +353,9 @@ class _Omega(Particle):
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_omega(photon_energy, self_energy)
 
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_omega(positron_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _NeutralRho(Particle):
@@ -352,6 +367,9 @@ class _NeutralRho(Particle):
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_neutral_rho(photon_energy, self_energy)
 
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_neutral_rho(positron_energy, self_energy)
+
 
 @dataclasses.dataclass(frozen=True)
 class _ChargedRho(Particle):
@@ -362,6 +380,9 @@ class _ChargedRho(Particle):
 
     def dnde_photon_decay(self, photon_energy, self_energy):
         return spectra.dnde_photon_charged_rho(photon_energy, self_energy)
+
+    def dnde_positron_decay(self, positron_energy, self_energy):
+        return spectra.dnde_positron_charged_rho(positron_energy, self_energy)
 
     def dnde_photon_fsr(self, photon_energy, _):
         return np.zeros_like(photon_energy)

@@ -24,7 +24,7 @@ def dnde_neutrino_muon(
 @overload
 def dnde_neutrino_muon(
     neutrino_energies: RealArray, muon_energy: float, flavor: Optional[str] = ...
-) -> RealOrTupleOrRealArray:
+) -> RealArray:
     ...
 
 

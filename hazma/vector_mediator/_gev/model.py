@@ -21,6 +21,7 @@ from hazma.utils import kallen_lambda
 from hazma.vector_mediator.form_factors.utils import ComplexArray, RealArray
 
 from . import spectra as gev_spectra
+from . import positron as gev_positron_spectra
 
 
 def with_cache(*, cache_name: str, name: str):
@@ -94,29 +95,23 @@ class VectorMediatorGeV(TheoryAnn):
         gvvtvt : float
             Coupling of vector mediator to the tau-neutrino.
         """
-        from hazma.vector_mediator.form_factors.eta_gamma import \
-            FormFactorEtaGamma
-        from hazma.vector_mediator.form_factors.eta_omega import \
-            FormFactorEtaOmega
+        from hazma.vector_mediator.form_factors.eta_gamma import FormFactorEtaGamma
+        from hazma.vector_mediator.form_factors.eta_omega import FormFactorEtaOmega
         from hazma.vector_mediator.form_factors.eta_phi import FormFactorEtaPhi
-        from hazma.vector_mediator.form_factors.four_pi import \
-            FormFactorPiPiPiPi
+        from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
         from hazma.vector_mediator.form_factors.kk import FormFactorKK
-        from hazma.vector_mediator.form_factors.omega_pi import \
-            FormFactorOmegaPi0
+        from hazma.vector_mediator.form_factors.omega_pi import FormFactorOmegaPi0
         from hazma.vector_mediator.form_factors.phi_pi import FormFactorPhiPi0
-        from hazma.vector_mediator.form_factors.pi_gamma import \
-            FormFactorPiGamma
+        from hazma.vector_mediator.form_factors.pi_gamma import FormFactorPiGamma
         from hazma.vector_mediator.form_factors.pi_k_k import (
-            FormFactorPi0K0K0, FormFactorPi0KpKm, FormFactorPiKK0)
-        from hazma.vector_mediator.form_factors.pi_pi_eta import \
-            FormFactorPiPiEta
-        from hazma.vector_mediator.form_factors.pi_pi_etap import \
-            FormFactorPiPiEtaP
-        from hazma.vector_mediator.form_factors.pi_pi_omega import \
-            FormFactorPiPiOmega
-        from hazma.vector_mediator.form_factors.pi_pi_pi0 import \
-            FormFactorPiPiPi0
+            FormFactorPi0K0K0,
+            FormFactorPi0KpKm,
+            FormFactorPiKK0,
+        )
+        from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
+        from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
+        from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
+        from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
         from hazma.vector_mediator.form_factors.pipi import FormFactorPiPi
 
         # Compute and store the parameters needed to compute form factors.
@@ -1180,7 +1175,118 @@ class VectorMediatorGeV(TheoryAnn):
         }
 
     def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
-        raise NotImplementedError()
+        def dnde_e_e(e, cme: float):
+            return gev_positron_spectra.dnde_positron_e_e(self, e, cme)
+
+        def dnde_mu_mu(e, cme: float):
+            return gev_positron_spectra.dnde_positron_mu_mu(self, e, cme)
+
+        def dnde_pi_pi(e, cme: float):
+            return gev_positron_spectra.dnde_positron_pi_pi(self, e, cme)
+
+        def dnde_k0_k0(e, cme: float):
+            return gev_positron_spectra.dnde_positron_k0_k0(self, e, cme)
+
+        def dnde_k_k(e, cme: float):
+            return gev_positron_spectra.dnde_positron_k_k(self, e, cme)
+
+        def dnde_pi0_gamma(e, cme: float):
+            return gev_positron_spectra.dnde_positron_pi0_gamma(self, e, cme)
+
+        def dnde_eta_gamma(e, cme: float):
+            return gev_positron_spectra.dnde_positron_eta_gamma(self, e, cme)
+
+        def dnde_pi0_phi(e, cme: float):
+            return gev_positron_spectra.dnde_positron_pi0_phi(self, e, cme)
+
+        def dnde_eta_phi(e, cme: float):
+            return gev_positron_spectra.dnde_positron_eta_phi(self, e, cme)
+
+        def dnde_eta_omega(e, cme: float):
+            return gev_positron_spectra.dnde_positron_eta_omega(self, e, cme)
+
+        def dnde_pi0_pi0_gamma(e, cme: float):
+            return gev_positron_spectra.dnde_positron_pi0_pi0_gamma(self, e, cme)
+
+        def dnde_pi_pi_pi0(e, cme: float, *, npts: int = 1 << 14, nbins: int = 25):
+            return gev_positron_spectra.dnde_positron_pi_pi_pi0(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_pi_pi_eta(e, cme: float, *, nbins: int = 25):
+            return gev_positron_spectra.dnde_positron_pi_pi_eta(
+                self, e, cme, nbins=nbins
+            )
+
+        def dnde_pi_pi_etap(e, cme: float, *, nbins: int = 25):
+            return gev_positron_spectra.dnde_positron_pi_pi_etap(
+                self, e, cme, nbins=nbins
+            )
+
+        def dnde_pi_pi_omega(e, cme: float, *, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi_pi_omega(
+                self, e, cme, nbins=nbins
+            )
+
+        def dnde_pi0_pi0_omega(e, cme: float, *, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi0_pi0_omega(
+                self, e, cme, nbins=nbins
+            )
+
+        def dnde_pi0_k0_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi0_k0_k0(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_pi0_k_k(e, cme: float, *, npts: int = 1 << 14, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi0_k_k(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_pi_k_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi_k_k0(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_pi_pi_pi_pi(e, cme: float, *, npts=1 << 14, nbins=25):
+            return gev_positron_spectra.dnde_positron_pi_pi_pi_pi(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_pi_pi_pi0_pi0(e, cme: float, *, npts: int = 1 << 15, nbins: int = 30):
+            return gev_positron_spectra.dnde_positron_pi_pi_pi0_pi0(
+                self, e, cme, npts=npts, nbins=nbins
+            )
+
+        def dnde_zero(e, _: float):
+            return np.zeros_like(e)
+
+        return {
+            "e e": dnde_e_e,
+            "mu mu": dnde_mu_mu,
+            "ve ve": dnde_zero,
+            "vt vt": dnde_zero,
+            "vm vm": dnde_zero,
+            "pi pi": dnde_pi_pi,
+            "k0 k0": dnde_k0_k0,
+            "k k": dnde_k_k,
+            "pi0 gamma": dnde_pi0_gamma,
+            "eta gamma": dnde_eta_gamma,
+            "pi0 phi": dnde_pi0_phi,
+            "eta phi": dnde_eta_phi,
+            "eta omega": dnde_eta_omega,
+            "pi0 pi0 gamma": dnde_pi0_pi0_gamma,
+            "pi pi pi0": dnde_pi_pi_pi0,
+            "pi pi eta": dnde_pi_pi_eta,
+            "pi pi etap": dnde_pi_pi_etap,
+            "pi pi omega": dnde_pi_pi_omega,
+            "pi0 pi0 omega": dnde_pi0_pi0_omega,
+            "pi0 k0 k0": dnde_pi0_k0_k0,
+            "pi0 k k": dnde_pi0_k_k,
+            "pi k k0": dnde_pi_k_k0,
+            "pi pi pi pi": dnde_pi_pi_pi_pi,
+            "pi pi pi0 pi0": dnde_pi_pi_pi0_pi0,
+        }
 
     def _positron_line_energies(self, e_cm) -> Dict[str, float]:
         return {

@@ -128,6 +128,56 @@ cdef double boost_delta_function(double e0, double e, double m, double beta):
 #     emin = fmax(em, erf_min)
 #     emax = fmin(ep, erf_max)
 
+
+cdef double integrate_linear_interp_edge(double x, double x1, double x2, double y1, double y2, int left):
+    cdef double dx = x2 - x1
+    cdef double m = (y2 - y1) / dx
+    cdef double b = (x2 * y1 - x1 * y2) / dx
+
+    if left == 1:
+        return (x - x1) * (0.5 * m * (x + x1) + b)
+    else:
+        return (x2 - x) * (0.5 * m * (x2 + x) + b)
+
+
+cdef (double, double) integration_bounds(double energy, double mass, double beta, double emax = -1.0):
+    """
+    Compute the integration bounds for the boost integral. If the arguments are invalid kinematically, 
+    -1 is returned for both the upper and lower bounds.
+    
+    Parameters
+    ----------
+    energy:
+        Energy of the product.
+    mass
+        Mass of the product.
+    beta
+        Boost velocity.
+    emax: double, optional
+        Maximum energy.
+
+    Returns
+    -------
+    lb, ub: double
+        Lower and upper bounds.
+    """
+    cdef double mu
+    cdef double lb = -1.0
+    cdef double ub = -1.0
+    cdef double gamma = 1.0
+
+    if mass < energy and 0.0 <= beta < 1.0:
+        mu = mass / energy
+        gamma = 1.0 / sqrt(1.0 - beta * beta)
+        lb = fmax(gamma * energy * (1.0 - beta * sqrt(1.0 - mu * mu)), mass)
+        ub = gamma * energy * (1.0 + beta * sqrt(1.0 - mu * mu))
+
+        if emax > 0.0:
+            ub = fmin(ub, emax)
+
+    return lb, ub
+
+
 @cython.cdivision(True)
 @cython.wraparound(False)
 cdef double boost_integrate_linear_interp(double photon_energy, double beta, np.ndarray[np.float64_t, ndim=1] x, np.ndarray[np.float64_t, ndim=1] y):
@@ -237,5 +287,175 @@ cdef double boost_integrate_linear_interp(double photon_energy, double beta, np.
         b = y1 - m * x1
 
         integral += (ub - x1) * (0.5 * m * (ub + x1) + b)
+
+    return integral / (2.0 * gamma * beta)
+
+
+
+
+@cython.cdivision(True)
+@cython.wraparound(False)
+cdef double boost_integrate_linear_interp_massive(
+        double energy,
+        double mass,
+        double beta,
+        np.ndarray[np.float64_t, ndim=1] x,
+        np.ndarray[np.float64_t, ndim=1] y,
+):
+    """
+    Perform the boost integral given rest-frame spectrum data.
+
+    Parameters
+    ----------
+    energy:
+        Energy to evaluate boosted spectrum at.
+    mass:
+        Mass of the product.
+    beta:
+        Boost velocity.
+    x: np.ndarray
+        Energies of the rest-frame spectrum.
+    y: np.ndarray
+        Spectrum values of the rest-frame spectrum.
+
+    Returns
+    -------
+    boosted: double
+        The boosted spectrum evaluated at `photon_energy`.
+    """
+
+    cdef Py_ssize_t npts
+
+    cdef double x1
+    cdef double x2
+    cdef double y2
+    cdef double y1
+    cdef double m
+    cdef double b
+
+    assert 0.0 <= beta < 1.0
+
+    cdef double gamma = 1.0 / sqrt(1.0 - beta * beta)
+
+    npts = len(x)
+    assert npts == len(y)
+
+    if energy < mass:
+        return 0.0
+
+    cdef double xmax = x[npts - 1]
+    cdef double x0 = x[0]
+    cdef double y0 = y[0]
+
+    cdef double lb
+    cdef double ub
+    lb, ub = integration_bounds(energy, mass, beta, xmax)
+
+    if lb < 0.0 or ub < 0.0:
+        return 0.0
+
+    if lb > xmax or ub < x0:
+        return 0.0
+
+    cdef double integral = 0.0
+    cdef Py_ssize_t il = 0
+    cdef Py_ssize_t ih = npts - 1
+    cdef Py_ssize_t ii = 0
+    cdef int found_low = False
+    cdef int found_high = False
+    cdef int do_low = False
+    cdef int do_high = False
+
+    # Find il and ih
+    for ii in range(npts - 1):
+        x1 = x[ii]
+        x2 = x[ii + 1]
+
+        # In these checks, if lb or ub is sufficiently close to an interpolation point,
+        # we use the main trapezoidal rule to integrate. Sufficiently close is such
+        # that 1 / diff would yield a nan.
+        # In other cases, we set il to index such that x[i] > a and ih s.t. x[j] > b
+
+        if x1 <= lb < x2:
+            if fabs(x1 / lb - 1.0) < DBL_EPSILON:
+                il = ii
+            elif fabs(x2 / lb - 1.0) < DBL_EPSILON:
+                il = ii + 1
+            else:
+                il = ii + 1
+                do_low = True
+            found_low = True
+
+        if x1 < ub <= x2:
+            if fabs(x1 / ub - 1.0) < DBL_EPSILON:
+                ih = ii + 1
+            elif fabs(x2 / ub - 1.0) < DBL_EPSILON:
+                ih = ii + 2
+            else:
+                ih = ii + 1
+                do_high = True
+            found_high = True
+
+        if found_low and found_high:
+            break
+
+    # Edge cases: ih == il
+    # If ih == il, then a and b are in the same interval. Use trapezoid rule
+    # with special care to interval size: ub - lb = 2 * gamma * beta * k.
+    # Thus, we can remove the 2 * gamma * beta since it is divided out by the
+    # normalization.
+    if ih == il or (il == 0 and ih == 1) or (il == npts - 2 and ih == npts - 1):
+        x1 = x[il-1]
+        x2 = x[il]
+        y1 = y[il-1] / sqrt(x1**2 - mass**2)
+        y2 = y[il] / sqrt(x2**2 - mass**2)
+
+        m = (y2 - y1) / (x2 - x1)
+        b = (x2 * y1 - x1 * y2) / (x2 - x1)
+        k = sqrt(energy * energy - mass * mass)
+
+        return k * (m * gamma * energy + b)
+
+    # Edge case: ih == il + 1
+    # In this case, we use Simpson's rule so that we can handle potentially
+    # small (ub-lb).
+    if ih == il + 1:
+        x0 = lb
+        x1 = x[il]
+        x2 = ub
+
+        y0 = y[il-1] / sqrt(x0**2 - mass**2)
+        y1 = y[il] / sqrt(x1**2 - mass**2)
+        y2 = y[il + 1] / sqrt(x2**2 - mass**2)
+
+        k = sqrt(energy * energy - mass * mass)
+        return k / 6.0 * (y2 + y0 + 4 * y1)
+
+
+    # Perform bulk integral using trapezoid rule.
+    for ii in range(il, ih):
+        x0 = x[ii]
+        x1 = x[ii + 1]
+        y0 = y[ii] / sqrt(x0**2 - mass**2)
+        y1 = y[ii + 1] / sqrt(x1**2 - mass**2)
+        integral = integral + 0.5 * (x1 - x0) * (y1 + y0)
+
+    # Handle left piece
+    if do_low:
+        x0 = x[il - 1]
+        x1 = x[il]
+        y0 = y[il] / sqrt(x0**2 - mass**2)
+        y1 = y[il + 1] / sqrt(x1**2 - mass**2)
+
+        integral = integral + integrate_linear_interp_edge(lb, x0, x1, y0, y1, True)
+
+    # Handle right piece
+    if do_high:
+        x0 = x[ih - 1]
+        x1 = x[ih]
+        y0 = y[ih] / sqrt(x0**2 - mass**2)
+        y1 = y[ih + 1] / sqrt(x1**2 - mass**2)
+
+        integral = integral + integrate_linear_interp_edge(ub, x0, x1, y0, y1, False)
 
     return integral / (2.0 * gamma * beta)
