@@ -136,19 +136,18 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         zero when annihilation into that state is not permitted.
         """
         sigma_ann_fns = self.annihilation_cross_section_funcs()
-        dndes_wrapped = {}
+        spectrum_funcs = self._spectrum_funcs()
 
-        for fs, dnde in self._spectrum_funcs().items():
-
+        def make_dnde_wrapped(fs):
             def dnde_wrapped(e_gams, e_cm):
                 if sigma_ann_fns[fs](e_cm) > 0:
-                    return dnde(e_gams, e_cm)
+                    return spectrum_funcs[fs](e_gams, e_cm)
                 else:
                     return np.zeros_like(e_gams)
 
-            dndes_wrapped[fs] = dnde_wrapped
+            return dnde_wrapped
 
-        return dndes_wrapped
+        return {fs: make_dnde_wrapped(fs) for fs in sigma_ann_fns.keys()}
 
     def spectra(self, e_gams, e_cm) -> Dict[str, Union[float, npt.NDArray[np.float64]]]:
         r"""
@@ -308,19 +307,18 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         returns zero when annihilation into that state is not permitted.
         """
         sigma_ann_fns = self.annihilation_cross_section_funcs()
-        dndes_wrapped = {}
+        spectrum_funcs = self._positron_spectrum_funcs()
 
-        for fs, dnde in self._positron_spectrum_funcs().items():
-
-            def dnde_wrapped(e_ps, e_cm):
+        def make_dnde_wrapped(fs):
+            def dnde_wrapped(e_gams, e_cm):
                 if sigma_ann_fns[fs](e_cm) > 0:
-                    return dnde(e_ps, e_cm)
+                    return spectrum_funcs[fs](e_gams, e_cm)
                 else:
-                    return np.zeros_like(e_ps)
+                    return np.zeros_like(e_gams)
 
-            dndes_wrapped[fs] = dnde_wrapped
+            return dnde_wrapped
 
-        return dndes_wrapped
+        return {fs: make_dnde_wrapped(fs) for fs in sigma_ann_fns.keys()}
 
     def positron_spectra(self, e_ps, e_cm):
         r"""
