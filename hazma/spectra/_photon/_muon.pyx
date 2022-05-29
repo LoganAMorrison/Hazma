@@ -47,7 +47,7 @@ cdef double dnde_photon_muon_rest_frame(double egam):
     poly1 = -102.0 + 46.0 * y - 101.0 * y**2 + 55.0 * y**3
     poly2 = 3.0 - 5.0 * y + 6.0 * y**2 - 6.0 * y**3 + 2.0 * y**4
 
-    return pre * (poly1 * ym / 12.0 + poly2 * log(ym / r))
+    return 2.0 * pre * (poly1 * ym / 12.0 + poly2 * log(ym / r))
 
 # Computes the muon decay spectrum dN/dE into photons for a boosted
 # muon.
