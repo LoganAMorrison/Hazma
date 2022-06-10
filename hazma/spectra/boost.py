@@ -1,4 +1,14 @@
-from typing import Callable, Optional, Tuple
+"""
+==================================
+Boost (:mod:`hazma.spectra.boost`)
+==================================
+
+.. versionadded:: 2.0
+
+Utilities for boosting differential energy spectra.
+"""
+
+from typing import Callable, Tuple
 from inspect import signature
 import warnings
 
@@ -118,16 +128,17 @@ def dnde_boost_array(dnde, energies, beta: float, mass: float = 0.0):
     gamma = 1.0 / np.sqrt(1 - beta**2)
 
     boosted = np.zeros_like(energies)
-    mask = energies < mass
+    mask = energies > mass
     es = energies[mask]
     k = np.sqrt(es**2 - mass**2)
     emax = gamma * (es + beta * k)
     emin = gamma * (es - beta * k)
 
     integrand = dnde[mask] / k
+    # print(integrand)
     pre = 0.5 / (2 * beta * gamma)
 
-    spline = interpolate.UnivariateSpline(es, integrand, ext=1, k=1)
+    spline = interpolate.InterpolatedUnivariateSpline(es, integrand, ext=1, k=1)
     boosted[mask] = np.array([spline.integral(a, b) for a, b in zip(emin, emax)])
 
     return pre * boosted
@@ -291,7 +302,7 @@ def make_boost_function(fn: Callable):
             else:
                 integrator = integrate.simpson
 
-            boosted[mask] = integrator(integrands, es)
+            boosted[mask] = integrator(integrands, es, axis=0)
 
         return 0.5 * boosted / (beta * gamma)
 
