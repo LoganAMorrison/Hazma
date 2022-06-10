@@ -1,31 +1,30 @@
-import warnings
-from typing import Callable, Dict, List, Union
+# pyright: basic, reportUnusedImport=false
+
+from typing import Callable, Dict, List, Union, TypeVar
+from functools import wraps
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma.parameters import Qd, Qe, Qu
-from hazma.parameters import charged_kaon_mass as _MK
 from hazma.parameters import charged_pion_mass as _MPI
 from hazma.parameters import electron_mass as _ME
 from hazma.parameters import eta_mass as _META
-from hazma.parameters import eta_prime_mass as _METAP
 from hazma.parameters import muon_mass as _MMU
-from hazma.parameters import neutral_kaon_mass as _MK0
 from hazma.parameters import neutral_pion_mass as _MPI0
-from hazma.parameters import omega_mass as _MOMEGA
-from hazma.parameters import phi_mass as _MPHI
 from hazma.parameters import qe
 from hazma.theory import TheoryAnn
-from hazma.utils import kallen_lambda
 from hazma.vector_mediator.form_factors.utils import ComplexArray, RealArray
 
 from . import spectra as gev_spectra
 from . import positron as gev_positron_spectra
 
+T = TypeVar("T", float, npt.NDArray[np.float_])
+
 
 def with_cache(*, cache_name: str, name: str):
     def decorator(f):
+        @wraps(f)
         def wrapper(*args, **kwargs):
             cache = getattr(args[0], cache_name)
             assert name in cache
@@ -52,6 +51,35 @@ class VectorMediatorGeV(TheoryAnn):
     an s-channel vector mediator. This model is valid for dark-matter masses
     up to 1 GeV.
     """
+
+    from .cross_sections import (
+        sigma_xx_to_v_v,
+        sigma_xx_to_e_e,
+        sigma_xx_to_mu_mu,
+        sigma_xx_to_ve_ve,
+        sigma_xx_to_vm_vm,
+        sigma_xx_to_vt_vt,
+        sigma_xx_to_pi_pi,
+        sigma_xx_to_k0_k0,
+        sigma_xx_to_k_k,
+        sigma_xx_to_pi0_gamma,
+        sigma_xx_to_eta_gamma,
+        sigma_xx_to_pi0_phi,
+        sigma_xx_to_eta_phi,
+        sigma_xx_to_eta_omega,
+        sigma_xx_to_pi0_pi0_gamma,
+        sigma_xx_to_pi_pi_pi0,
+        sigma_xx_to_pi_pi_eta,
+        sigma_xx_to_pi_pi_etap,
+        sigma_xx_to_pi_pi_omega,
+        sigma_xx_to_pi0_pi0_omega,
+        sigma_xx_to_pi0_k0_k0,
+        sigma_xx_to_pi0_k_k,
+        sigma_xx_to_pi_k_k0,
+        sigma_xx_to_pi_pi_pi_pi,
+        sigma_xx_to_pi_pi_pi0_pi0,
+        annihilation_cross_section_funcs,
+    )
 
     def __init__(
         self,
@@ -201,7 +229,7 @@ class VectorMediatorGeV(TheoryAnn):
     @property
     def gvxx(self) -> float:
         """Coupling of vector mediator to the dark matter."""
-        return self._gvuu
+        return self._gvxx
 
     @property
     def gvuu(self) -> float:
@@ -414,7 +442,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         electron-neutrinos [νe νe].
         """
-        return self.__width_v_to_f_f(0.0, self.gvveve)
+        return self.__width_v_to_f_f(0.0, self.gvveve) / 2.0
 
     @with_cache(cache_name="_width_cache", name="vm vm")
     def width_v_to_vm_vm(self) -> float:
@@ -422,7 +450,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         muon-neutrinos [νμ νμ].
         """
-        return self.__width_v_to_f_f(0.0, self.gvvmvm)
+        return self.__width_v_to_f_f(0.0, self.gvvmvm) / 2.0
 
     @with_cache(cache_name="_width_cache", name="vt vt")
     def width_v_to_vt_vt(self) -> float:
@@ -430,7 +458,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         tau-neutrinos [ντ ντ].
         """
-        return self.__width_v_to_f_f(0.0, self.gvvtvt)
+        return self.__width_v_to_f_f(0.0, self.gvvtvt) / 2.0
 
     @with_cache(cache_name="_width_cache", name="x x")
     def width_v_to_x_x(self) -> float:
@@ -713,350 +741,6 @@ class VectorMediatorGeV(TheoryAnn):
             "pi pi pi0 pi0",
         ]
 
-    def annihilation_cross_section_funcs(
-        self,
-    ) -> Dict[str, Callable[[float | RealArray], float | RealArray]]:
-        return {
-            "e e": self.sigma_xx_to_e_e,
-            "mu mu": self.sigma_xx_to_mu_mu,
-            "ve ve": self.sigma_xx_to_ve_ve,
-            "vt vt": self.sigma_xx_to_vt_vt,
-            "vm vm": self.sigma_xx_to_vm_vm,
-            "pi pi": self.sigma_xx_to_pi_pi,
-            "k0 k0": self.sigma_xx_to_k0_k0,
-            "k k": self.sigma_xx_to_k_k,
-            "pi0 gamma": self.sigma_xx_to_pi0_gamma,
-            "eta gamma": self.sigma_xx_to_eta_gamma,
-            "pi0 phi": self.sigma_xx_to_pi0_phi,
-            "eta phi": self.sigma_xx_to_eta_phi,
-            "eta omega": self.sigma_xx_to_eta_omega,
-            "pi0 pi0 gamma": self.sigma_xx_to_pi0_pi0_gamma,
-            "pi pi pi0": self.sigma_xx_to_pi_pi_pi0,
-            "pi pi eta": self.sigma_xx_to_pi_pi_eta,
-            "pi pi etap": self.sigma_xx_to_pi_pi_etap,
-            "pi pi omega": self.sigma_xx_to_pi_pi_omega,
-            "pi0 pi0 omega": self.sigma_xx_to_pi0_pi0_omega,
-            "pi0 k0 k0": self.sigma_xx_to_pi0_k0_k0,
-            "pi0 k k": self.sigma_xx_to_pi0_k_k,
-            "pi k k0": self.sigma_xx_to_pi_k_k,
-            "pi pi pi pi": self.sigma_xx_to_pi_pi_pi_pi,
-            "pi pi pi0 pi0": self.sigma_xx_to_pi_pi_pi0_pi0,
-        }
-
-    def sigma_xx_to_e_e(self, e_cm):
-        s = e_cm**2
-        gvff = self.gvee
-        gvxx = self.gvxx
-        mf = _ME
-        return (
-            gvff**2
-            * gvxx**2
-            * np.sqrt(s * (-4 * mf**2 + s))
-            * (2 * mf**2 + s)
-            * (2 * self.mx**2 + s)
-        ) / (
-            12.0
-            * np.pi
-            * s
-            * np.sqrt(s * (-4 * self.mx**2 + s))
-            * (self.mv**4 + s**2 + self.mv**2 * (-2 * s + self.width_v() ** 2))
-        )
-
-    def sigma_xx_to_mu_mu(self, e_cm):
-        s = e_cm**2
-        gvff = self.gvmumu
-        gvxx = self.gvxx
-        mf = _MMU
-        return (
-            gvff**2
-            * gvxx**2
-            * np.sqrt(s * (-4 * mf**2 + s))
-            * (2 * mf**2 + s)
-            * (2 * self.mx**2 + s)
-        ) / (
-            12.0
-            * np.pi
-            * s
-            * np.sqrt(s * (-4 * self.mx**2 + s))
-            * (self.mv**4 + s**2 + self.mv**2 * (-2 * s + self.width_v() ** 2))
-        )
-
-    def sigma_xx_to_ve_ve(self, e_cm):
-        s = e_cm**2
-        gvff = self.gvveve
-        gvxx = self.gvxx
-        return (gvff**2 * gvxx**2 * s * (2 * self.mx**2 + s)) / (
-            24.0
-            * np.pi
-            * np.sqrt(s * (-4 * self.mx**2 + s))
-            * (self.mv**4 + s**2 + self.mv**2 * (-2 * s + self.width_v() ** 2))
-        )
-
-    def sigma_xx_to_vm_vm(self, e_cm):
-        s = e_cm**2
-        gvff = self.gvvmvm
-        gvxx = self.gvxx
-        return (gvff**2 * gvxx**2 * s * (2 * self.mx**2 + s)) / (
-            24.0
-            * np.pi
-            * np.sqrt(s * (-4 * self.mx**2 + s))
-            * (self.mv**4 + s**2 + self.mv**2 * (-2 * s + self.width_v() ** 2))
-        )
-
-    def sigma_xx_to_vt_vt(self, e_cm):
-        s = e_cm**2
-        gvff = self.gvvtvt
-        gvxx = self.gvxx
-        return (gvff**2 * gvxx**2 * s * (2 * self.mx**2 + s)) / (
-            24.0
-            * np.pi
-            * np.sqrt(s * (-4 * self.mx**2 + s))
-            * (self.mv**4 + s**2 + self.mv**2 * (-2 * s + self.width_v() ** 2))
-        )
-
-    def sigma_xx_to_pi_pi(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        """
-        Compute the dark matter annihilation cross section into two charged
-        pions.
-
-        Parameters
-        ----------
-        e_cm: Union[float, np.ndarray]
-            Center-of-mass energy.
-
-        Returns
-        -------
-        sigma: Union[float, np.ndarray]
-            Cross section for chi + chibar -> pi + pi.
-        """
-        return self.gvxx**2 * self._ff_pi_pi.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gamv=self.width_v(),
-            imode=1,
-        )
-
-    def sigma_xx_to_k_k(self, e_cm: Union[float, RealArray]) -> Union[float, RealArray]:
-        """
-        Compute the dark matter annihilation cross section into two charged
-        pions.
-
-        Parameters
-        ----------
-        e_cm: Union[float, np.ndarray]
-            Center-of-mass energy.
-
-        Returns
-        -------
-        sigma: Union[float, np.ndarray]
-            Cross section for chi + chibar -> pi + pi.
-        """
-        return self.gvxx**2 * self._ff_k_k.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gvss=self.gvss,
-            gamv=self.width_v(),
-            imode=1,
-        )
-
-    def sigma_xx_to_k0_k0(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_k_k.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gvss=self.gvss,
-            gamv=self.width_v(),
-            imode=0,
-        )
-
-    def sigma_xx_to_pi0_gamma(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_pi_gamma.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gvss=self.gvss,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_pi0_phi(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_pi_phi.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_pi0_omega(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_pi_omega.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_eta_gamma(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_eta_gamma.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gvss=self.gvss,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_eta_phi(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_eta_phi.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvss=self.gvss,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_eta_omega(
-        self, e_cm: Union[float, RealArray]
-    ) -> Union[float, RealArray]:
-        return self.gvxx**2 * self._ff_eta_omega.cross_section(
-            cme=e_cm,
-            mx=self.mx,
-            mv=self.mv,
-            gvuu=self.gvuu,
-            gvdd=self.gvdd,
-            gamv=self.width_v(),
-        )
-
-    def sigma_xx_to_pi_pi_pi0_pi0(
-        self, e_cm: Union[float, RealArray], npts=1 << 14
-    ) -> Union[float, RealArray]:
-        def cross_section(q: float):
-            return (
-                self.gvxx**2
-                * self._ff_four_pi.cross_section(
-                    cme=q,
-                    mx=self.mx,
-                    mv=self.mv,
-                    gvuu=self.gvuu,
-                    gvdd=self.gvdd,
-                    widthv=self.width_v(),
-                    neutral=True,
-                    npts=npts,
-                )[0]
-            )
-
-        if isinstance(e_cm, float):
-            return cross_section(e_cm)
-        else:
-            return np.array([cross_section(q) for q in e_cm])
-
-    def __width_to_cs(self, cme):
-        """
-        (
-            gvxx**2 * (2 * mx**2 + s)
-        )/(
-            np.sqrt(1 - (4 * mx**2)/s) * cme * ((M**2 - s)**2 + mv**2 * widthv**2)
-        )
-        """
-
-        gvxx = self.gvxx
-        mux2 = (self.mx / cme) ** 2
-        mug2 = (self.width_v() / cme) ** 2
-        muv2 = (self.mv / cme) ** 2
-
-        num = gvxx**2 * (1 + 2 * mux2)
-        den = (
-            (1 + (mug2 - 2) * muv2 + muv2**2) * np.sqrt(1.0 - 4.0 * mux2) * cme**1.5
-        )
-        return num / den
-
-    def sigma_xx_to_pi0_pi0_gamma(self, e_cm):
-        r = self.__width_to_cs(e_cm)
-        pi0_omega = self._ff_pi_omega.width(mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd)
-        br_omega_to_pi0_gamma = 8.34e-2
-
-        return r * br_omega_to_pi0_gamma * pi0_omega
-
-    def sigma_xx_to_pi_pi_pi0(self, e_cm, *, npts=10_000):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_pi_pi0.width(
-            mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    def sigma_xx_to_pi_pi_eta(self, e_cm):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_pi_eta.width(mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    def sigma_xx_to_pi_pi_etap(self, e_cm):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_pi_etap.width(mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    def sigma_xx_to_pi_pi_omega(self, e_cm):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_pi_omega.width(
-            mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, imode=1
-        )
-
-    def sigma_xx_to_pi0_pi0_omega(self, e_cm):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_pi_omega.width(
-            mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, imode=0
-        )
-
-    def sigma_xx_to_pi0_k0_k0(self, e_cm, *, npts=1 << 14):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi0_k0_k0.width(
-            m=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    def sigma_xx_to_pi0_k_k(self, e_cm, *, npts=1 << 14):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi0_k_k.width(
-            m=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    def sigma_xx_to_pi_k_k(self, e_cm, *, npts=1 << 14):
-        r = self.__width_to_cs(e_cm)
-        return r * self._ff_pi_k_k0.width(
-            m=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    def sigma_xx_to_pi_pi_pi_pi(self, e_cm, *, npts=1 << 14):
-        r = self.__width_to_cs(e_cm)
-        if self.mv < 4 * _MPI:
-            return 0.0
-        width, _ = self._ff_four_pi.width(
-            mv=e_cm, gvuu=self.gvuu, gvdd=self.gvdd, npts=npts, neutral=False
-        )
-        return r * width
-
     # ========================================================================
     # ---- Spectra -----------------------------------------------------------
     # ========================================================================
@@ -1064,106 +748,7 @@ class VectorMediatorGeV(TheoryAnn):
     def _spectrum_funcs(
         self,
     ) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
-        def dnde_e_e(e, cme: float):
-            return gev_spectra.dnde_photon_e_e(self, e, cme)
-
-        def dnde_mu_mu(e, cme: float):
-            return gev_spectra.dnde_photon_mu_mu(self, e, cme)
-
-        def dnde_pi_pi(e, cme: float):
-            return gev_spectra.dnde_photon_pi_pi(self, e, cme)
-
-        def dnde_k0_k0(e, cme: float):
-            return gev_spectra.dnde_photon_k0_k0(self, e, cme)
-
-        def dnde_k_k(e, cme: float):
-            return gev_spectra.dnde_photon_k_k(self, e, cme)
-
-        def dnde_pi0_gamma(e, cme: float):
-            return gev_spectra.dnde_photon_pi0_gamma(self, e, cme)
-
-        def dnde_eta_gamma(e, cme: float):
-            return gev_spectra.dnde_photon_eta_gamma(self, e, cme)
-
-        def dnde_pi0_phi(e, cme: float):
-            return gev_spectra.dnde_photon_pi0_phi(self, e, cme)
-
-        def dnde_eta_phi(e, cme: float):
-            return gev_spectra.dnde_photon_eta_phi(self, e, cme)
-
-        def dnde_eta_omega(e, cme: float):
-            return gev_spectra.dnde_photon_eta_omega(self, e, cme)
-
-        def dnde_pi0_pi0_gamma(e, cme: float):
-            return gev_spectra.dnde_photon_pi0_pi0_gamma(self, e, cme)
-
-        def dnde_pi_pi_pi0(e, cme: float, *, npts: int = 1 << 14, nbins: int = 25):
-            return gev_spectra.dnde_photon_pi_pi_pi0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_pi_eta(e, cme: float, *, nbins: int = 25):
-            return gev_spectra.dnde_photon_pi_pi_eta(self, e, cme, nbins=nbins)
-
-        def dnde_pi_pi_etap(e, cme: float, *, nbins: int = 25):
-            return gev_spectra.dnde_photon_pi_pi_etap(self, e, cme, nbins=nbins)
-
-        def dnde_pi_pi_omega(e, cme: float, *, nbins=25):
-            return gev_spectra.dnde_photon_pi_pi_omega(self, e, cme, nbins=nbins)
-
-        def dnde_pi0_pi0_omega(e, cme: float, *, nbins=25):
-            return gev_spectra.dnde_photon_pi0_pi0_omega(self, e, cme, nbins=nbins)
-
-        def dnde_pi0_k0_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_spectra.dnde_photon_pi0_k0_k0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi0_k_k(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_spectra.dnde_photon_pi0_k_k(self, e, cme, npts=npts, nbins=nbins)
-
-        def dnde_pi_k_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_spectra.dnde_photon_pi_k_k0(self, e, cme, npts=npts, nbins=nbins)
-
-        def dnde_pi_pi_pi_pi(e, cme: float, *, npts=1 << 14, nbins=25):
-            return gev_spectra.dnde_photon_pi_pi_pi_pi(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_pi_pi0_pi0(e, cme: float, *, npts: int = 1 << 15, nbins: int = 30):
-            return gev_spectra.dnde_photon_pi_pi_pi0_pi0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_zero(e, _: float):
-            return np.zeros_like(e)
-
-        return {
-            "e e": dnde_e_e,
-            "mu mu": dnde_mu_mu,
-            "ve ve": dnde_zero,
-            "vt vt": dnde_zero,
-            "vm vm": dnde_zero,
-            "pi pi": dnde_pi_pi,
-            "k0 k0": dnde_k0_k0,
-            "k k": dnde_k_k,
-            "pi0 gamma": dnde_pi0_gamma,
-            "eta gamma": dnde_eta_gamma,
-            "pi0 phi": dnde_pi0_phi,
-            "eta phi": dnde_eta_phi,
-            "eta omega": dnde_eta_omega,
-            "pi0 pi0 gamma": dnde_pi0_pi0_gamma,
-            "pi pi pi0": dnde_pi_pi_pi0,
-            "pi pi eta": dnde_pi_pi_eta,
-            "pi pi etap": dnde_pi_pi_etap,
-            "pi pi omega": dnde_pi_pi_omega,
-            "pi0 pi0 omega": dnde_pi0_pi0_omega,
-            "pi0 k0 k0": dnde_pi0_k0_k0,
-            "pi0 k k": dnde_pi0_k_k,
-            "pi k k0": dnde_pi_k_k0,
-            "pi pi pi pi": dnde_pi_pi_pi_pi,
-            "pi pi pi0 pi0": dnde_pi_pi_pi0_pi0,
-        }
+        return gev_spectra.dnde_photon_spectrum_fns(self)
 
     def _gamma_ray_line_energies(self, e_cm) -> Dict[str, float]:
         def photon_energy(mass):
@@ -1175,118 +760,7 @@ class VectorMediatorGeV(TheoryAnn):
         }
 
     def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
-        def dnde_e_e(e, cme: float):
-            return gev_positron_spectra.dnde_positron_e_e(self, e, cme)
-
-        def dnde_mu_mu(e, cme: float):
-            return gev_positron_spectra.dnde_positron_mu_mu(self, e, cme)
-
-        def dnde_pi_pi(e, cme: float):
-            return gev_positron_spectra.dnde_positron_pi_pi(self, e, cme)
-
-        def dnde_k0_k0(e, cme: float):
-            return gev_positron_spectra.dnde_positron_k0_k0(self, e, cme)
-
-        def dnde_k_k(e, cme: float):
-            return gev_positron_spectra.dnde_positron_k_k(self, e, cme)
-
-        def dnde_pi0_gamma(e, cme: float):
-            return gev_positron_spectra.dnde_positron_pi0_gamma(self, e, cme)
-
-        def dnde_eta_gamma(e, cme: float):
-            return gev_positron_spectra.dnde_positron_eta_gamma(self, e, cme)
-
-        def dnde_pi0_phi(e, cme: float):
-            return gev_positron_spectra.dnde_positron_pi0_phi(self, e, cme)
-
-        def dnde_eta_phi(e, cme: float):
-            return gev_positron_spectra.dnde_positron_eta_phi(self, e, cme)
-
-        def dnde_eta_omega(e, cme: float):
-            return gev_positron_spectra.dnde_positron_eta_omega(self, e, cme)
-
-        def dnde_pi0_pi0_gamma(e, cme: float):
-            return gev_positron_spectra.dnde_positron_pi0_pi0_gamma(self, e, cme)
-
-        def dnde_pi_pi_pi0(e, cme: float, *, npts: int = 1 << 14, nbins: int = 25):
-            return gev_positron_spectra.dnde_positron_pi_pi_pi0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_pi_eta(e, cme: float, *, nbins: int = 25):
-            return gev_positron_spectra.dnde_positron_pi_pi_eta(
-                self, e, cme, nbins=nbins
-            )
-
-        def dnde_pi_pi_etap(e, cme: float, *, nbins: int = 25):
-            return gev_positron_spectra.dnde_positron_pi_pi_etap(
-                self, e, cme, nbins=nbins
-            )
-
-        def dnde_pi_pi_omega(e, cme: float, *, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi_pi_omega(
-                self, e, cme, nbins=nbins
-            )
-
-        def dnde_pi0_pi0_omega(e, cme: float, *, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi0_pi0_omega(
-                self, e, cme, nbins=nbins
-            )
-
-        def dnde_pi0_k0_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi0_k0_k0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi0_k_k(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi0_k_k(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_k_k0(e, cme: float, *, npts: int = 1 << 14, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi_k_k0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_pi_pi_pi(e, cme: float, *, npts=1 << 14, nbins=25):
-            return gev_positron_spectra.dnde_positron_pi_pi_pi_pi(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_pi_pi_pi0_pi0(e, cme: float, *, npts: int = 1 << 15, nbins: int = 30):
-            return gev_positron_spectra.dnde_positron_pi_pi_pi0_pi0(
-                self, e, cme, npts=npts, nbins=nbins
-            )
-
-        def dnde_zero(e, _: float):
-            return np.zeros_like(e)
-
-        return {
-            "e e": dnde_e_e,
-            "mu mu": dnde_mu_mu,
-            "ve ve": dnde_zero,
-            "vt vt": dnde_zero,
-            "vm vm": dnde_zero,
-            "pi pi": dnde_pi_pi,
-            "k0 k0": dnde_k0_k0,
-            "k k": dnde_k_k,
-            "pi0 gamma": dnde_pi0_gamma,
-            "eta gamma": dnde_eta_gamma,
-            "pi0 phi": dnde_pi0_phi,
-            "eta phi": dnde_eta_phi,
-            "eta omega": dnde_eta_omega,
-            "pi0 pi0 gamma": dnde_pi0_pi0_gamma,
-            "pi pi pi0": dnde_pi_pi_pi0,
-            "pi pi eta": dnde_pi_pi_eta,
-            "pi pi etap": dnde_pi_pi_etap,
-            "pi pi omega": dnde_pi_pi_omega,
-            "pi0 pi0 omega": dnde_pi0_pi0_omega,
-            "pi0 k0 k0": dnde_pi0_k0_k0,
-            "pi0 k k": dnde_pi0_k_k,
-            "pi k k0": dnde_pi_k_k0,
-            "pi pi pi pi": dnde_pi_pi_pi_pi,
-            "pi pi pi0 pi0": dnde_pi_pi_pi0_pi0,
-        }
+        return gev_positron_spectra.dnde_positron_spectrum_fns(self)
 
     def _positron_line_energies(self, e_cm) -> Dict[str, float]:
         return {
@@ -1417,33 +891,37 @@ class BLGeV(VectorMediatorGeV):
         Mass of the dark matter.
     mv : float
         Mass of the vector mediator.
-    gvxx : float
-        Coupling of vector mediator to dark matter.
+    g : float
+        Coupling strength of the U(1) B-L interaction.
+    qx : float
+        Charge of DM under B-L.
     """
 
-    def __init__(self, mx: float, mv: float, gvxx: float) -> None:
+    def __init__(self, mx: float, mv: float, gvxx: float, g: float) -> None:
         gq = 1.0 / 3.0
         gl = -1.0
+        self._g = g
 
         super().__init__(
             mx=mx,
             mv=mv,
             gvxx=gvxx,
-            gvuu=gq,
-            gvdd=gq,
-            gvss=gq,
-            gvee=gl,
-            gvmumu=gl,
-            gvveve=gl,
-            gvvmvm=gl,
-            gvvtvt=gl,
+            gvuu=g * gq,
+            gvdd=g * gq,
+            gvss=g * gq,
+            gvee=g * gl,
+            gvmumu=g * gl,
+            gvveve=g * gl,
+            gvvmvm=g * gl,
+            gvvtvt=g * gl,
         )
 
     def __repr__(self) -> str:
-        return f"""KineticMixingGeV(
+        return f"""BLGeV(
             mx={self.mx} [MeV],
             mv={self.mv} [MeV],
-            gvxx={self.gvxx} [MeV],
+            gvxx={self.gvxx},
+            g={self.g},
         )
         """
 
@@ -1453,6 +931,28 @@ class BLGeV(VectorMediatorGeV):
         Cannot set {param}. Instead use the 'VectorMediatorGeV'
         for more a general coupling structure."""
         )
+
+    def _update_charges(self) -> None:
+        gq = 1.0 / 3.0
+        gl = -1.0
+        self._gvuu = self._g * gq
+        self._gvdd = self._g * gq
+        self._gvss = self._g * gq
+        self._gvee = self._g * gl
+        self._gvmumu = self._g * gl
+        self._gvveve = self._g * gl
+        self._gvvmvm = self._g * gl
+        self._gvvtvt = self._g * gl
+
+    @property
+    def g(self) -> float:
+        """Coupling strength of the U(1) B-L gauge group."""
+        return self._g
+
+    @g.setter
+    def g(self, g: float) -> None:
+        self._g = g
+        self._update_charges()
 
     # Hide underlying properties' setters
     @VectorMediatorGeV.gvuu.setter
