@@ -1,10 +1,356 @@
+from typing import Callable, Any, Optional
 from math import pi, sqrt
 
 import numpy as np
+import numpy.typing as npt
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import chi2, norm
 
-# from scipy.optimize import root_scalar
+from hazma.flux_measurement import FluxMeasurement
+from hazma.background_model import BackgroundModel
+from hazma.target_params import TargetParams
+
+EnergyResolution = Callable[[Any], Any]
+EffectiveArea = Callable[[Any], Any]
+
+
+def _get_product_spline(f1, f2, grid, k=1, ext="raise"):
+    """Returns a spline representing the product of two functions.
+
+    Parameters
+    ----------
+    f1, f2 : float -> float
+        The two functions to multiply.
+    grid : numpy.array
+        The grid used to create the product spline.
+    k : int
+        Degree of returned spline, 1 <= k <= 5.
+    ext : string or int
+        Extrapolation method. See documentation for
+        `InterpolatedUnivariateSpline`.
+
+    Returns
+    -------
+    spl : InterpolatedUnivariateSpline
+        A degree k spline created using grid for the x array and
+        f1(grid)*f2(grid) for the y array, with the specified extrapolation
+        method.
+    """
+    return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k, ext=ext)
+
+
+def constrain_one_bin(phi, measurement: FluxMeasurement, n_sigma: float):
+    """Compute test statistic using maximum flux in single bin.
+
+    Parameters
+    ----------
+    phi: array
+        Array of the predicted fluxes in each bin.
+    measurement: FluxMeasurement
+        Measurement to compare with.
+    n_sigma:
+        Number of standard deviations.
+
+    Returns
+    -------
+    sv: float
+        Maximum allowed annihilation cross section.
+    """
+    dw = measurement.target.dOmega
+    de = measurement.e_highs - measurement.e_lows
+    phi_obs = measurement.fluxes
+    dphi_obs = n_sigma * measurement.upper_errors
+
+    # Maximum allowed integrated flux in each bin
+    phi_max = dw * de * (phi_obs + dphi_obs)
+
+    # Return the most stringent limit
+    sv_lims = np.ones_like(phi) * np.inf
+    mask = phi > 0.0
+    if np.any(mask):
+        sv_lims[mask] = phi_max[mask] / phi[mask]
+
+    return np.min(sv_lims)
+
+
+def constrain_chi_squared(phi, measurement: FluxMeasurement, n_sigma: float):
+    dw = measurement.target.dOmega
+    de = measurement.e_highs - measurement.e_lows
+
+    # Observed integrated fluxes
+    phi_obs = dw * de * measurement.fluxes
+    # Errors on integrated fluxes
+    uncertainty = dw * de * measurement.upper_errors
+
+    chi2_obs = np.sum(np.maximum(phi - phi_obs, 0) ** 2 / uncertainty**2)
+
+    if chi2_obs == 0:
+        return np.inf
+
+    # Convert n_sigma to chi^2 critical value
+    p_val = norm.cdf(n_sigma)
+    chi2_crit = chi2.ppf(p_val, df=len(phi))
+    return sqrt(chi2_crit / chi2_obs)
+
+
+def _differential_background_flux(
+    background_model: BackgroundModel,
+    energies,
+    effective_area,
+    target: TargetParams,
+    tobs,
+    k: int = 1,
+    ext: str = "raise",
+):
+    """
+    Compute the expected differential background flux that would be observed by
+    a given telescope looking a a target assuming a background model.
+
+    Parameters
+    ----------
+    background_model: BackgroundModel
+        Model for the background flux.
+    energies: array
+        Array of energies used to construct the interpolating function.
+    effective_area: Callable
+        Effective area of the observing telescope.
+    target: TargetParams
+        Target the telescope is observing.
+    tobs: float
+        Observing time in seconds.
+    k: int, optional
+        Order of the underlying interpolating function. Default is 1 (linear).
+    ext: str, optional
+        String specifying how the interpolating function should handle energies
+        outside the interval of the input energies. Default is 'raise'.
+
+    Returns
+    -------
+    dphi/dE: InterpolatedUnivariateSpline
+        Interpolating function used to compute the expected differential
+        background flux.
+    """
+
+    def phi_b(e):
+        return (
+            tobs
+            * background_model.dPhi_dEdOmega(e)
+            * effective_area(e)
+            * target.dOmega,
+        )
+
+    return InterpolatedUnivariateSpline(energies, phi_b(energies), k=k, ext=ext)
+
+
+def _differential_signal_flux_prefactor(
+    model,
+    target: TargetParams,
+    tobs: float,
+    self_conjugate: bool = False,
+) -> float:
+    def errmsg(name, var):
+        return (
+            f"Found None for {name} `{var}` of input target."
+            f"The {name} is required to compute DM flux."
+        )
+
+    mx = model.mx
+    rfac: float = 1.0  # rate prefactor
+
+    assert target.dOmega is not None, errmsg("solid angle", "dOmega")
+    dw: float = target.dOmega
+
+    if model.kind == "ann":
+        assert target.J is not None, errmsg("J-factor", "J")
+        f_dm = 1.0 if self_conjugate else 2.0
+        jfac = target.J
+        a = 2
+        rfac = 1.0 / (2.0 * f_dm)
+
+    elif model.kind == "dec":
+        assert target.D is not None, errmsg("J-factor", "D")
+        jfac = target.D
+        a = 1
+    else:
+        raise ValueError(f"Encountered model with invalid `kind`: {model.kind}")
+
+    return tobs * dw / (4.0 * np.pi * mx**a) * jfac * rfac
+
+
+def _differential_signal_flux(
+    model,
+    energies,
+    effective_area: EffectiveArea,
+    energy_res: EnergyResolution,
+    target: TargetParams,
+    tobs: float,
+    self_conjugate: bool = False,
+    scale: Optional[float] = None,
+    vx: float = 1e-3,
+    k: int = 1,
+    ext: str = "raise",
+):
+    """
+    Compute the expected differential signal flux that would be observed by
+    a given telescope looking a a target assuming a dark matter model.
+
+    Parameters
+    ----------
+    model: Theory
+        Dark matter model.
+    energies: array
+        Array of energies used to construct the interpolating function.
+    effective_area: Callable
+        Effective area of the observing telescope.
+    energy_res: Callable
+        Energy resolution of the telescope.
+    target: TargetParams
+        Target the telescope is observing.
+    tobs: float
+        Observing time in seconds.
+    self_conjugate: bool, optional
+        If True, DM is assumed to be self-conjugate. Default is False.
+    scale: float
+        Central value of the annihilation cross-section. Default is 3e-26.
+    vx: float, optional
+        Dark matter velocity. Default is 1e-3.
+    k: int, optional
+        Order of the underlying interpolating function. Default is 1 (linear).
+    ext: str, optional
+        String specifying how the interpolating function should handle energies
+        outside the interval of the input energies. Default is 'raise'.
+
+    Returns
+    -------
+    dphi/dE: InterpolatedUnivariateSpline
+        Interpolating function used to compute the expected differential
+        signal flux.
+    """
+    emin = np.min(energies)
+    emax = np.max(energies)
+
+    if model.kind == "ann":
+        cme = 2.0 * model.mx * (1.0 + 0.5 * vx**2)
+        dnde_conv = model.total_conv_spectrum_fn(emin, emax, cme, energy_res)
+    elif model.kind == "dec":
+        dnde_conv = model.total_conv_spectrum_fn(emin, emax, energy_res)
+    else:
+        raise ValueError(f"Encountered model with invalid `kind`: {model.kind}")
+
+    scale = 1.0 if scale is None else scale
+    prefactor = scale * _differential_signal_flux_prefactor(
+        model=model, target=target, tobs=tobs, self_conjugate=self_conjugate
+    )
+
+    def phi_s(e):
+        return prefactor * effective_area(e) * dnde_conv(e)
+
+    return InterpolatedUnivariateSpline(energies, phi_s(energies), k=k, ext=ext)
+
+
+def constrain_fisher(
+    model,
+    effective_area: EffectiveArea,
+    energy_res: EnergyResolution,
+    target: TargetParams,
+    background_model: BackgroundModel,
+    tobs: float,
+    vx: float = 1e-3,
+    n_sigma: float = 5.0,
+    n_grid: int = 20,
+    e_grid: Optional[npt.NDArray[np.float_]] = None,
+    k: int = 1,
+    ext: str = "raise",
+):
+    """Compute prospective constraints on a model using the Fisher information
+    matrix.
+
+    Parameters
+    ----------
+    model: Theory
+        Dark matter model.
+    effective_area: Callable
+        Effective area of the observing telescope.
+    energy_res: Callable
+        Energy resolution of the telescope.
+    target: TargetParams
+        Target the telescope is observing.
+    background_model: BackgroundModel
+        Model for the background flux.
+    tobs: float
+        Observing time in seconds.
+    vx: float, optional
+        Dark matter velocity. Default is 1e-3.
+    n_sigma: int, optional
+        Number of standard deviations used for confidence interval. Default is
+        5.
+    n_grid: int, optional
+        Number of grid points used for generation of interpolating splines.
+        Default is 20. Ignored if `e_grid` is not None.
+    e_grid: array, optional
+        Energy grid used for generation of interpolating splines. Default is
+        None.
+    k: int, optional
+        Order of the underlying interpolating function. Default is 1 (linear).
+    ext: str, optional
+        String specifying how the interpolating function should handle energies
+        outside the interval of the input energies. Default is 'raise'.
+
+    Returns
+    -------
+    rate: float
+        The constrained rate in units of cm^3/s for annihilating DM and 1/s for
+        decaying DM.
+    """
+    if model.kind == "ann":
+        scale = 3e-26
+    elif model.kind == "dec":
+        # TODO: Come up with a better natural scale for decaying DM.
+        scale = 1e-24
+    else:
+        raise ValueError(f"Encountered model with invalid `kind`: {model.kind}")
+
+    e_min, e_max = effective_area.x[[0, -1]]
+    if e_grid is not None:
+        energies = e_grid
+    else:
+        energies = np.geomspace(e_min, e_max, n_grid)
+
+    phi_s = _differential_signal_flux(
+        model=model,
+        energies=energies,
+        effective_area=effective_area,
+        energy_res=energy_res,
+        target=target,
+        tobs=tobs,
+        vx=vx,
+        scale=scale,
+        k=k,
+        ext=ext,
+    )
+    phi_b = _differential_background_flux(
+        background_model=background_model,
+        energies=energies,
+        effective_area=effective_area,
+        target=target,
+        tobs=tobs,
+        k=k,
+        ext=ext,
+    )
+
+    phi_s_sqr = _get_product_spline(phi_s, phi_s, energies)
+    phi_s_sqr_phi_b = _get_product_spline(
+        phi_s_sqr, lambda e: 1.0 / phi_b(e), energies  # type: ignore
+    )
+
+    a = phi_s_sqr_phi_b.integral(e_min, e_max)
+    b = phi_s.integral(e_min, e_max)
+    c = phi_b.integral(e_min, e_max)
+
+    inv11 = np.sqrt(c / (a * c - b**2))
+    rate = norm.ppf(norm.cdf(n_sigma)) * inv11 * scale
+
+    return rate
 
 
 class TheoryGammaRayLimits:
@@ -30,7 +376,39 @@ class TheoryGammaRayLimits:
             f1(grid)*f2(grid) for the y array, with the specified extrapolation
             method.
         """
-        return InterpolatedUnivariateSpline(grid, f1(grid) * f2(grid), k=k, ext=ext)
+        return _get_product_spline(f1, f2, grid, k=k, ext=ext)
+
+    def _compute_fluxes(self, measurement: FluxMeasurement):
+        """Compute the predicted fluxes given the current measurement."""
+        e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
+        args = (e_min, e_max)
+        mx = self.mx  # type: ignore
+
+        # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
+        # self-conjugate.
+        dm_flux_factor = measurement.target.dOmega / (4.0 * np.pi * mx)
+        if self.kind == "ann":  # type: ignore
+            f_dm = 2.0
+            dm_flux_factor *= measurement.target.J / (2.0 * f_dm * mx)
+            e_cm = 2.0 * mx * (1.0 + 0.5 * measurement.target.vx**2)  # type: ignore
+            args += (e_cm,)
+
+        elif self.kind == "dec":  # type: ignore
+            dm_flux_factor *= measurement.target.D
+
+        else:
+            raise ValueError(
+                "Invalid 'kind' encountered: {kind}. Expected 'ann' or 'dec'."
+            )
+
+        args += (measurement.energy_res,)
+        dnde_conv = self.total_conv_spectrum_fn(*args)  # type: ignore
+
+        # Integrated flux (excluding <sigma v>) from DM processes in each bin
+        bounds = zip(measurement.e_lows, measurement.e_highs)
+        return np.array(
+            [dm_flux_factor * dnde_conv.integral(el, eh) for el, eh in bounds]
+        )
 
     def binned_limit(self, measurement, n_sigma=2.0, method="1bin"):
         r"""
@@ -63,81 +441,17 @@ class TheoryGammaRayLimits:
             Largest allowed thermally averaged total cross section in cm^3 / s
 
         """
-        e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
-
-        # Factor to convert dN/dE to Phi. Factor of 2 comes from DM not being
-        # self-conjugate.
-        if self.kind == "ann":  # type: ignore
-            f_dm = 2.0
-            dm_flux_factor = (
-                measurement.target.J
-                * measurement.target.dOmega
-                / (2.0 * f_dm * self.mx**2 * 4.0 * pi)  # type: ignore
-            )
-
-            # TODO: this should depend on the target!
-            e_cm = (
-                2.0 * self.mx * (1.0 + 0.5 * measurement.target.vx**2)  # type: ignore
-            )
-            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
-                e_min, e_max, e_cm, measurement.energy_res
-            )
-        elif self.kind == "dec":  # type: ignore
-            # e_cm = self.mx
-            dm_flux_factor = (
-                measurement.target.D
-                * measurement.target.dOmega
-                / (self.mx * 4.0 * pi)  # type: ignore
-            )
-            dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
-                e_min, e_max, measurement.energy_res
-            )
-
-        # Integrated flux (excluding <sigma v>) from DM processes in each bin
-        Phi_dms_un = []
-        for e_low, e_high in zip(measurement.e_lows, measurement.e_highs):
-            Phi_dms_un.append(
-                dm_flux_factor * dnde_conv.integral(e_low, e_high)  # type: ignore
-            )
-        Phi_dms_un = np.array(Phi_dms_un)
+        phi = self._compute_fluxes(measurement)
 
         if method == "1bin":
-            # Maximum allowed integrated flux in each bin
-            Phi_maxs = (
-                measurement.target.dOmega
-                * (measurement.e_highs - measurement.e_lows)
-                * (n_sigma * measurement.upper_errors + measurement.fluxes)
-            )
+            constrainer = constrain_one_bin
 
-            # Return the most stringent limit
-            sv_lims = Phi_maxs / Phi_dms_un
-            sv_lims[np.isnan(sv_lims) | (Phi_dms_un <= 0)] = np.inf
-            return np.min(sv_lims)
         elif method == "chi2":
-            # Observed integrated fluxes
-            Phi_obss = (
-                measurement.target.dOmega
-                * (measurement.e_highs - measurement.e_lows)
-                * measurement.fluxes
-            )
-            # Errors on integrated fluxes
-            Sigmas = (
-                measurement.target.dOmega
-                * (measurement.e_highs - measurement.e_lows)
-                * measurement.upper_errors
-            )
-
-            chi2_obs = np.sum(np.maximum(Phi_dms_un - Phi_obss, 0) ** 2 / Sigmas**2)
-
-            if chi2_obs == 0:
-                return np.inf
-            else:
-                # Convert n_sigma to chi^2 critical value
-                p_val = norm.cdf(n_sigma)
-                chi2_crit = chi2.ppf(p_val, df=len(Phi_dms_un))
-                return sqrt(chi2_crit / chi2_obs)
+            constrainer = constrain_chi_squared
         else:
             raise NotImplementedError()
+
+        return constrainer(phi, measurement, n_sigma)
 
     def unbinned_limit(
         self,
@@ -149,6 +463,7 @@ class TheoryGammaRayLimits:
         e_grid=None,
         n_grid=20,
         n_sigma=5.0,
+        method: Optional[str] = None,
         debug_msgs=False,
     ):
         r"""
@@ -187,6 +502,10 @@ class TheoryGammaRayLimits:
         n_sigma : float
             Number of standard deviations the signal must be above the
             background to be considered detectable
+        method: str, optional
+            If not None, the method can be "fisher" to use a Fisher information
+            matrix to compute constraints. Otherwise, we employ the method
+            described above.
         debug_msgs : bool
             If True, the energy window found by the optimizer will be printed.
 
@@ -196,7 +515,22 @@ class TheoryGammaRayLimits:
             Smallest-detectable thermally averaged total cross section in units
             of cm^3 / s.
         """
-        debug_msgs  # To make linter shut up
+        # debug_msgs  # To make linter shut up
+        if method == "fisher":
+            return constrain_fisher(
+                model=self,
+                effective_area=A_eff,
+                energy_res=energy_res,
+                target=target,
+                background_model=bg_model,
+                tobs=T_obs,
+                vx=1e-3,
+                n_sigma=n_sigma,
+                n_grid=n_grid,
+                e_grid=e_grid,
+                k=1,
+                ext="raise",
+            )
 
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
