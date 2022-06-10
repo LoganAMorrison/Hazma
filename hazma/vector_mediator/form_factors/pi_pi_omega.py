@@ -5,8 +5,7 @@ from scipy.integrate import quad
 
 from hazma import parameters
 from hazma.utils import kallen_lambda
-from hazma.vector_mediator.form_factors.utils import (MOMEGA_GEV, MPI_GEV,
-                                                      RealArray)
+from hazma.vector_mediator.form_factors.utils import MOMEGA_GEV, MPI_GEV, RealArray
 
 
 @dataclass
@@ -68,7 +67,7 @@ class FormFactorPiPiOmega:
         return integral * 1e6 / cme**2
 
     def width(self, *, mv: float, gvuu: float, gvdd: float, imode: int) -> float:
-        if mv < 2 * MPI_GEV + MOMEGA_GEV:
+        if mv < 2 * parameters.charged_pion_mass + parameters.omega_mass:
             return 0.0
         ff = self.form_factor(cme=mv, gvuu=gvuu, gvdd=gvdd, imode=imode)
         return ff * mv / 2

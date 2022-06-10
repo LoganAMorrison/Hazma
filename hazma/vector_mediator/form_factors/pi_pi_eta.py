@@ -14,10 +14,14 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.integrate import quad
 
-from hazma import parameters
+from .cross_sections import width_to_cs
 from hazma.utils import kallen_lambda
-from hazma.vector_mediator.form_factors.utils import (FPI_GEV, META_GEV,
-                                                      MPI_GEV, RealArray)
+from hazma.vector_mediator.form_factors.utils import (
+    FPI_GEV,
+    META_GEV,
+    MPI_GEV,
+    RealArray,
+)
 
 META = META_GEV * 1e3
 MPI = MPI_GEV * 1e3
@@ -114,6 +118,19 @@ class FormFactorPiPiEta:
             return 0.0
         integral = self.integrated_form_factor(cme=mv, gvuu=gvuu, gvdd=gvdd)
         return integral / (2 * mv)
+
+    def cross_section(
+        self,
+        *,
+        cme,
+        mx: float,
+        mv: float,
+        gvuu: float,
+        gvdd: float,
+        gamv: float,
+    ):
+        rescale = width_to_cs(cme=cme, mx=mx, mv=mv, wv=gamv)
+        return rescale * self.width(mv=cme, gvuu=gvuu, gvdd=gvdd)
 
     def energy_distributions(self, cme, gvuu, gvdd, nbins):
         if cme < 2 * MPI + META:

@@ -5,7 +5,7 @@ import numpy as np
 
 from hazma import parameters
 
-from .cross_sections import cross_section_x_x_to_p_a
+from .cross_sections import width_to_cs
 from .utils import MPI_GEV, ComplexArray, RealArray
 from .widths import width_v_to_p_a
 
@@ -129,7 +129,5 @@ class FormFactorPiGamma:
         return width_v_to_p_a(mv, mp, ff)
 
     def cross_section(self, *, cme, mx, mv, gvuu, gvdd, gvss, gamv):
-        mp = parameters.neutral_pion_mass
-        ff = self.form_factor(q=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
-        s = cme**2
-        return cross_section_x_x_to_p_a(s, mx, mp, ff, mv, gamv)
+        rescale = width_to_cs(cme=cme, mx=mx, mv=mv, wv=gamv)
+        return rescale * self.width(mv=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss)

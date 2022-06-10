@@ -6,9 +6,13 @@ import numpy as np
 from hazma import parameters
 from hazma.rambo import PhaseSpace
 from hazma.utils import lnorm_sqr
-from hazma.vector_mediator.form_factors.utils import (MPI0_GEV, MPI_GEV,
-                                                      RealArray,
-                                                      breit_wigner_fw)
+from .cross_sections import width_to_cs
+from hazma.vector_mediator.form_factors.utils import (
+    MPI0_GEV,
+    MPI_GEV,
+    RealArray,
+    breit_wigner_fw,
+)
 
 
 @dataclass
@@ -210,6 +214,21 @@ class FormFactorPiPiPi0:
             q2=mv**2, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts
         )
         return integral / (2 * mv)
+
+    def cross_section(
+        self,
+        *,
+        cme,
+        mx: float,
+        mv: float,
+        gvuu: float,
+        gvdd: float,
+        gvss: float,
+        gamv: float,
+        npts: int = 10_000,
+    ):
+        rescale = width_to_cs(cme=cme, mx=mx, mv=mv, wv=gamv)
+        return rescale * self.width(mv=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss, npts=npts)
 
     def energy_distributions(
         self,

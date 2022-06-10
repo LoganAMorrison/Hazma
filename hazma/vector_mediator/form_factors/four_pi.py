@@ -350,16 +350,7 @@ class FormFactorPiPiPiPi:
 
         return coupling * prop * lorentz
 
-    def _current_neutral(
-        self,
-        Q,
-        Q2,
-        q1,
-        q2,
-        q3,
-        q4,
-        contributions: List[str] = ["a1", "f0", "omega", "rho"],
-    ):
+    def _current_neutral(self, Q, Q2, q1, q2, q3, q4):
         """
         Compute the total hadronic current for <pi^+,pi^-,pi^0,pi^0|J|0>.
         See ArXiv:0804.0359 Eqn.(3) and Eqn.(A.1).
@@ -376,27 +367,14 @@ class FormFactorPiPiPiPi:
             Momenta of the charged pions.
         """
         result = np.zeros_like(q1, dtype=np.complex128)
-        if "a1" in contributions:
-            result += self._current_a1(Q, Q2, q1, q2, q3, q4)
-        if "f0" in contributions:
-            result += self._current_f0(Q, Q2, q1, q2, q3, q4)
-        if "omega" in contributions:
-            result += self._current_omega(Q, Q2, q1, q2, q3, q4)
-        if "rho" in contributions:
-            result += self._current_rho(Q, Q2, q1, q2, q3, q4)
+        result += self._current_a1(Q, Q2, q1, q2, q3, q4)
+        result += self._current_f0(Q, Q2, q1, q2, q3, q4)
+        result += self._current_omega(Q, Q2, q1, q2, q3, q4)
+        result += self._current_rho(Q, Q2, q1, q2, q3, q4)
 
         return result  # / np.sqrt(2)
 
-    def _current_charged(
-        self,
-        Q,
-        Q2,
-        q1,
-        q2,
-        q3,
-        q4,
-        contributions: List[str] = ["a1", "f0", "omega", "rho"],
-    ):
+    def _current_charged(self, Q, Q2, q1, q2, q3, q4):
         """
         Compute the total hadronic current for <pi^+,pi^+,pi^-,pi^-|J|0>.
         See ArXiv:0804.0359 Eqn.(3) and Eqn.(A.1).
@@ -415,10 +393,10 @@ class FormFactorPiPiPiPi:
         # p2+ == p2p == q3
         # p2- == p2m == q4
 
-        j1 = self._current_neutral(Q, Q2, q3, q4, q1, q2, contributions)
-        j2 = self._current_neutral(Q, Q2, q1, q4, q3, q2, contributions)
-        j3 = self._current_neutral(Q, Q2, q3, q2, q1, q4, contributions)
-        j4 = self._current_neutral(Q, Q2, q1, q2, q3, q4, contributions)
+        j1 = self._current_neutral(Q, Q2, q3, q4, q1, q2)
+        j2 = self._current_neutral(Q, Q2, q1, q4, q3, q2)
+        j3 = self._current_neutral(Q, Q2, q3, q2, q1, q4)
+        j4 = self._current_neutral(Q, Q2, q1, q2, q3, q4)
 
         return j1 + j2 + j3 + j4
 

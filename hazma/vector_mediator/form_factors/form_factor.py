@@ -19,9 +19,22 @@ class FormFactor(ABC):
     def width(self, *, mv, gvuu, gvdd, gvss, **kwargs):
         pass
 
-    @abstractmethod
-    def cross_section(self, *, cme, mx, mv, gvuu, gvdd, gvss, **kwargs):
-        pass
+    def cross_section(self, *, cme, mx, mv, width_v, gvxx, gvuu, gvdd, gvss, **kwargs):
+        gvxx = gvxx
+        mux2 = (mx / cme) ** 2
+        mug2 = (width_v / cme) ** 2
+        muv2 = (mv / cme) ** 2
+
+        num = gvxx**2 * (1 + 2 * mux2)
+        den = (
+            (1 + (mug2 - 2) * muv2 + muv2**2) * np.sqrt(1.0 - 4.0 * mux2) * cme**1.5
+        )
+        # Factor to transform width to cross section
+        fact = num / den / cme**1.5
+
+        partial_width = self.width(mv=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss, **kwargs)
+
+        return partial_width * fact
 
     def energy_distributions(
         self,
