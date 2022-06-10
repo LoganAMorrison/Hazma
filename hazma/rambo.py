@@ -13,8 +13,8 @@ Module for working with Lorentz-invariant phase-space.
 import math
 import multiprocessing as mp
 import warnings
-from typing import (Callable, Dict, Iterable, List, Optional, Sequence, Tuple,
-                    Union)
+import logging
+from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -22,8 +22,7 @@ from scipy import integrate
 
 from hazma._phase_space import generator, histogram
 from hazma._phase_space.modifiers import apply_matrix_elem
-from hazma.field_theory_helper_functions.common_functions import \
-    cross_section_prefactor
+from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
 from hazma.hazma_errors import RamboCMETooSmall
 from hazma.utils import RealArray, kallen_lambda, lnorm_sqr
 
@@ -33,6 +32,16 @@ SquaredMatrixElement = Callable[[RealArray], float]
 
 def __flat_squared_matrix_element(_: RealArray) -> float:
     return 1.0
+
+
+def normalize_distribution(probabilities, edges):
+    norm = np.sum([p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)])
+    if norm <= 0.0:
+        if np.min(probabilities) < 0.0:
+            logging.warning(f"Negative probabilities encountered: {probabilities}")
+            return np.ones_like(probabilities) * np.nan
+        return probabilities
+    return probabilities / norm
 
 
 def generate_phase_space_point(masses: MassList, cme: float) -> RealArray:
@@ -1035,12 +1044,6 @@ class PhaseSpace:
             emax = (cme**2 + m**2 - msum**2) / (2 * cme)
             return emin, emax
 
-        def normalize(probabilities, edges):
-            norm = np.sum(
-                [p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)]
-            )
-            return probabilities / norm
-
         ebounds = [bounds(m) for m in self.masses]
         bins = [np.linspace(emin, emax, nbins + 1) for emin, emax in ebounds]
 
@@ -1060,7 +1063,7 @@ class PhaseSpace:
                 distributions[i] = np.histogram(ps[0, i], bins=bins[i], weights=ws)[0]
 
         for i in range(len(self.masses)):
-            distributions[i] = normalize(distributions[i], bins[i])
+            distributions[i] = normalize_distribution(distributions[i], bins[i])
 
         if keep_edges:
             return [(dpde, e) for dpde, e in zip(distributions, bins)]
@@ -1127,12 +1130,6 @@ class PhaseSpace:
             mmax = cme - msum
             return mmin, mmax
 
-        def normalize(probabilities, edges):
-            norm = np.sum(
-                [p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)]
-            )
-            return probabilities / norm
-
         def make_bins(pair):
             mmin, mmax = bounds(masses[pair[0]], masses[pair[1]])
             return np.linspace(mmin, mmax, nbins + 1)
@@ -1161,7 +1158,7 @@ class PhaseSpace:
                 )[0]
 
         for i in range(len(pairs_)):
-            distributions[i] = normalize(distributions[i], bins[i])
+            distributions[i] = normalize_distribution(distributions[i], bins[i])
 
         if keep_edges:
             return {pair: (distributions[i], bins[i]) for i, pair in enumerate(pairs_)}
