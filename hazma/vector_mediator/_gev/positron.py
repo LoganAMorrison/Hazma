@@ -1,6 +1,9 @@
+import functools
+
 import numpy as np
 
 from hazma import spectra
+from hazma.spectra import boost
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
@@ -414,3 +417,87 @@ def dnde_positron_pi_pi_pi0_pi0(
     dnde = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dnde
+
+
+def dnde_positron_v_v(
+    self, positron_energies, cme, *, method="quad", npts=1 << 15, nbins=30
+):
+    gamma = 2.0 * self.mv / cme
+    if gamma < 1.0:
+        return np.zeros_like(positron_energies)
+
+    beta = np.sqrt(1.0 - gamma**-2)
+
+    kwargs = {"npts": npts, "nbins": nbins}
+    kwargs2 = {"nbins": nbins}
+
+    def dnde(es):
+        args = (es, cme)
+        spec = np.zeros_like(es)
+        spec += dnde_positron_e_e(self, *args)
+        spec += dnde_positron_mu_mu(self, *args)
+        spec += dnde_positron_pi_pi(self, *args)
+        spec += dnde_positron_k0_k0(self, *args)
+        spec += dnde_positron_k_k(self, *args)
+        spec += dnde_positron_pi0_gamma(self, *args)
+        spec += dnde_positron_eta_gamma(self, *args)
+        spec += dnde_positron_pi0_phi(self, *args)
+        spec += dnde_positron_eta_phi(self, *args)
+        spec += dnde_positron_eta_omega(self, *args)
+        spec += dnde_positron_pi0_pi0_gamma(self, *args)
+        spec += dnde_positron_pi_pi_pi0(self, *args, **kwargs)
+        spec += dnde_positron_pi_pi_eta(self, *args, **kwargs2)
+        spec += dnde_positron_pi_pi_etap(self, *args, **kwargs2)
+        spec += dnde_positron_pi_pi_omega(self, *args, **kwargs2)
+        spec += dnde_positron_pi0_pi0_omega(self, *args, **kwargs2)
+        spec += dnde_positron_pi0_k0_k0(self, *args, **kwargs)
+        spec += dnde_positron_pi0_k_k(self, *args, **kwargs)
+        spec += dnde_positron_pi_k_k0(self, *args, **kwargs)
+        spec += dnde_positron_pi_pi_pi_pi(self, *args, **kwargs)
+        spec += dnde_positron_pi_pi_pi0_pi0(self, *args, **kwargs)
+
+        return spec
+
+    return boost.make_boost_function(dnde)(
+        positron_energies, beta, mass=me, method=method
+    )
+
+
+def dnde_positron_spectrum_fns(self):
+    def dnde_zero(e, _: float):
+        return np.zeros_like(e)
+
+    def wrap(f):
+        @functools.wraps(f)
+        def fnew(*args, **kwargs):
+            return f(self, *args, **kwargs)
+
+        return fnew
+
+    return {
+        "e e": wrap(dnde_positron_e_e),
+        "mu mu": wrap(dnde_positron_mu_mu),
+        "ve ve": dnde_zero,
+        "vt vt": dnde_zero,
+        "vm vm": dnde_zero,
+        "pi pi": wrap(dnde_positron_pi_pi),
+        "k0 k0": wrap(dnde_positron_k0_k0),
+        "k k": wrap(dnde_positron_k_k),
+        "pi0 gamma": wrap(dnde_positron_pi0_gamma),
+        "eta gamma": wrap(dnde_positron_eta_gamma),
+        "pi0 phi": wrap(dnde_positron_pi0_phi),
+        "eta phi": wrap(dnde_positron_eta_phi),
+        "eta omega": wrap(dnde_positron_eta_omega),
+        "pi0 pi0 gamma": wrap(dnde_positron_pi0_pi0_gamma),
+        "pi pi pi0": wrap(dnde_positron_pi_pi_pi0),
+        "pi pi eta": wrap(dnde_positron_pi_pi_eta),
+        "pi pi etap": wrap(dnde_positron_pi_pi_etap),
+        "pi pi omega": wrap(dnde_positron_pi_pi_omega),
+        "pi0 pi0 omega": wrap(dnde_positron_pi0_pi0_omega),
+        "pi0 k0 k0": wrap(dnde_positron_pi0_k0_k0),
+        "pi0 k k": wrap(dnde_positron_pi0_k_k),
+        "pi k k0": wrap(dnde_positron_pi_k_k0),
+        "pi pi pi pi": wrap(dnde_positron_pi_pi_pi_pi),
+        "pi pi pi0 pi0": wrap(dnde_positron_pi_pi_pi0_pi0),
+        "v v": wrap(dnde_positron_v_v),
+    }
