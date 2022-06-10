@@ -1,6 +1,11 @@
+from typing import Callable, Dict, Union
+import functools
+
 import numpy as np
+import numpy.typing as npt
 
 from hazma import spectra
+from hazma.spectra import boost
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
@@ -23,6 +28,8 @@ from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
 from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
 from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
 from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
+
+DndeFn = Callable[[Union[float, npt.NDArray[np.float64]], float], float]
 
 
 def make_spectrum_n_body_decay(photon_energies, energy_distributions, dnde_decays):
@@ -500,3 +507,135 @@ def dnde_photon_pi_pi_pi0_pi0(
     dnde += np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
     return dnde
+
+
+def _dnde_photon_v_v_rest_frame(self, photon_energies, *, npts=1 << 15, nbins=30):
+
+    if self.mv < 2 * me:
+        return np.zeros_like(photon_energies)
+
+    pws = self.partial_widths()
+    pw = sum(pws.values())
+    pws = {key: val / pw for key, val in pws.items()}
+
+    kwargs = {"npts": npts, "nbins": nbins}
+    kwargs2 = {"nbins": nbins}
+
+    pw_ee = pws["e e"]
+    pw_mm = pws["mu mu"]
+    pw_pp = pws["pi pi"]
+    pw_k0k0 = pws["k0 k0"]
+    pw_kk = pws["k k"]
+    pw_0a = pws["pi0 gamma"]
+    pw_na = pws["eta gamma"]
+    pw_0f = pws["pi0 phi"]
+    pw_nf = pws["eta phi"]
+    pw_nw = pws["eta omega"]
+    pw_00a = pws["pi0 pi0 gamma"]
+    pw_pp0 = pws["pi pi pi0"]
+    pw_ppn = pws["pi pi eta"]
+    pw_ppnp = pws["pi pi etap"]
+    pw_ppw = pws["pi pi omega"]
+    pw_00w = pws["pi0 pi0 omega"]
+    pw_0k0k0 = pws["pi0 k0 k0"]
+    pw_0kk = pws["pi0 k k"]
+    pw_pkk0 = pws["pi k k0"]
+    pw_pppp = pws["pi pi pi pi"]
+    pw_pp00 = pws["pi pi pi0 pi0"]
+
+    # Factor of 2 for 2 vectors
+    args = (photon_energies, self.mv)
+    return 2 * (
+        pw_ee * dnde_photon_e_e(self, *args)
+        + pw_mm * dnde_photon_mu_mu(self, *args)
+        + pw_pp * dnde_photon_pi_pi(self, *args)
+        + pw_k0k0 * dnde_photon_k0_k0(self, *args)
+        + pw_kk * dnde_photon_k_k(self, *args)
+        + pw_0a * dnde_photon_pi0_gamma(self, *args)
+        + pw_na * dnde_photon_eta_gamma(self, *args)
+        + pw_0f * dnde_photon_pi0_phi(self, *args)
+        + pw_nf * dnde_photon_eta_phi(self, *args)
+        + pw_nw * dnde_photon_eta_omega(self, *args)
+        + pw_00a * dnde_photon_pi0_pi0_gamma(self, *args)
+        + pw_pp0 * dnde_photon_pi_pi_pi0(self, *args, **kwargs)
+        + pw_ppn * dnde_photon_pi_pi_eta(self, *args, **kwargs2)
+        + pw_ppnp * dnde_photon_pi_pi_etap(self, *args, **kwargs2)
+        + pw_ppw * dnde_photon_pi_pi_omega(self, *args, **kwargs2)
+        + pw_00w * dnde_photon_pi0_pi0_omega(self, *args, **kwargs2)
+        + pw_0k0k0 * dnde_photon_pi0_k0_k0(self, *args, **kwargs)
+        + pw_0kk * dnde_photon_pi0_k_k(self, *args, **kwargs)
+        + pw_pkk0 * dnde_photon_pi_k_k0(self, *args, **kwargs)
+        + pw_pppp * dnde_photon_pi_pi_pi_pi(self, *args, **kwargs)
+        + pw_pp00 * dnde_photon_pi_pi_pi0_pi0(self, *args, **kwargs)
+    )
+
+
+def dnde_photon_v_v(
+    self, photon_energies, cme, *, method="simpson", npts=1 << 15, nbins=30
+):
+    ev = 0.5 * cme
+    mv = self.mv
+    gamma = ev / mv
+    if gamma < 1.0:
+        return np.zeros_like(photon_energies)
+
+    beta = np.sqrt(1.0 - gamma**-2)
+
+    # def dnde(es):
+    #     return _dnde_photon_v_v_rest_frame(self, es, npts=npts, nbins=nbins)
+
+    # boosted = boost.make_boost_function(dnde)(
+    #     photon_energies, beta=beta, mass=0.0, method=method
+    # )
+    dnde = _dnde_photon_v_v_rest_frame(self, photon_energies, npts=npts, nbins=nbins)
+    boosted = boost.dnde_boost_array(dnde, photon_energies, beta)
+
+    # Factor of 2 for 2 vectors
+    e0pi = 0.5 * (mv - mpi**2 / mv)
+    boosted += 2 * boost_delta_function(photon_energies, e0pi, 0.0, beta)
+    e0eta = 0.5 * (mv - meta**2 / mv)
+    boosted += 2 * boost_delta_function(photon_energies, e0eta, 0.0, beta)
+
+    return boosted
+
+
+def dnde_photon_spectrum_fns(
+    self,
+) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
+    def dnde_zero(e, _: float):
+        return np.zeros_like(e)
+
+    def wrap(f):
+        @functools.wraps(f)
+        def fnew(*args, **kwargs):
+            return f(self, *args, **kwargs)
+
+        return fnew
+
+    return {
+        "e e": wrap(dnde_photon_e_e),
+        "mu mu": wrap(dnde_photon_mu_mu),
+        "ve ve": dnde_zero,
+        "vt vt": dnde_zero,
+        "vm vm": dnde_zero,
+        "pi pi": wrap(dnde_photon_pi_pi),
+        "k0 k0": wrap(dnde_photon_k0_k0),
+        "k k": wrap(dnde_photon_k_k),
+        "pi0 gamma": wrap(dnde_photon_pi0_gamma),
+        "eta gamma": wrap(dnde_photon_eta_gamma),
+        "pi0 phi": wrap(dnde_photon_pi0_phi),
+        "eta phi": wrap(dnde_photon_eta_phi),
+        "eta omega": wrap(dnde_photon_eta_omega),
+        "pi0 pi0 gamma": wrap(dnde_photon_pi0_pi0_gamma),
+        "pi pi pi0": wrap(dnde_photon_pi_pi_pi0),
+        "pi pi eta": wrap(dnde_photon_pi_pi_eta),
+        "pi pi etap": wrap(dnde_photon_pi_pi_etap),
+        "pi pi omega": wrap(dnde_photon_pi_pi_omega),
+        "pi0 pi0 omega": wrap(dnde_photon_pi0_pi0_omega),
+        "pi0 k0 k0": wrap(dnde_photon_pi0_k0_k0),
+        "pi0 k k": wrap(dnde_photon_pi0_k_k),
+        "pi k k0": wrap(dnde_photon_pi_k_k0),
+        "pi pi pi pi": wrap(dnde_photon_pi_pi_pi_pi),
+        "pi pi pi0 pi0": wrap(dnde_photon_pi_pi_pi0_pi0),
+        "v v": wrap(dnde_photon_v_v),
+    }
