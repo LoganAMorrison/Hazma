@@ -1,5 +1,8 @@
-from typing import Callable, Any, Optional
+from typing import Callable, Any, Optional, List, NamedTuple
+from collections import OrderedDict
 from math import pi, sqrt
+import logging
+import functools
 
 import numpy as np
 import numpy.typing as npt
@@ -7,7 +10,7 @@ from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.stats import chi2, norm
 
 from hazma.flux_measurement import FluxMeasurement
-from hazma.background_model import BackgroundModel
+from hazma.background_model import ParametricBackgroundModel, BackgroundModel
 from hazma.target_params import TargetParams
 
 EnergyResolution = Callable[[Any], Any]
@@ -94,11 +97,9 @@ def constrain_chi_squared(phi, measurement: FluxMeasurement, n_sigma: float):
 
 
 def _differential_background_flux(
-    background_model: BackgroundModel,
+    background_model: ParametricBackgroundModel,
     energies,
-    effective_area,
     target: TargetParams,
-    tobs,
     k: int = 1,
     ext: str = "raise",
 ):
@@ -132,21 +133,13 @@ def _differential_background_flux(
     """
 
     def phi_b(e):
-        return (
-            tobs
-            * background_model.dPhi_dEdOmega(e)
-            * effective_area(e)
-            * target.dOmega,
-        )
+        return background_model.dPhi_dEdOmega(e) * target.dOmega
 
     return InterpolatedUnivariateSpline(energies, phi_b(energies), k=k, ext=ext)
 
 
 def _differential_signal_flux_prefactor(
-    model,
-    target: TargetParams,
-    tobs: float,
-    self_conjugate: bool = False,
+    model, target: TargetParams, self_conjugate: bool = False
 ) -> float:
     def errmsg(name, var):
         return (
@@ -174,16 +167,14 @@ def _differential_signal_flux_prefactor(
     else:
         raise ValueError(f"Encountered model with invalid `kind`: {model.kind}")
 
-    return tobs * dw / (4.0 * np.pi * mx**a) * jfac * rfac
+    return dw / (4.0 * np.pi * mx**a) * jfac * rfac
 
 
 def _differential_signal_flux(
     model,
     energies,
-    effective_area: EffectiveArea,
     energy_res: EnergyResolution,
     target: TargetParams,
-    tobs: float,
     self_conjugate: bool = False,
     scale: Optional[float] = None,
     vx: float = 1e-3,
@@ -239,31 +230,47 @@ def _differential_signal_flux(
 
     scale = 1.0 if scale is None else scale
     prefactor = scale * _differential_signal_flux_prefactor(
-        model=model, target=target, tobs=tobs, self_conjugate=self_conjugate
+        model=model, target=target, self_conjugate=self_conjugate
     )
 
     def phi_s(e):
-        return prefactor * effective_area(e) * dnde_conv(e)
+        return prefactor * dnde_conv(e)
 
     return InterpolatedUnivariateSpline(energies, phi_s(energies), k=k, ext=ext)
 
 
-def constrain_fisher(
+class FisherResults(NamedTuple):
+    fisher_matrix: np.matrix
+    params: OrderedDict[str, float]
+
+    def limit(self, sigma, key: str = "rate", log: bool = False) -> float:
+        """Compute the limit on the parameter corresponding to the specified key."""
+        idx = {k: i for i, k in enumerate(self.params.keys())}[key]
+        try:
+            inv = np.linalg.inv(self.fisher_matrix)
+        except np.linalg.LinAlgError as e:
+            if log:
+                logging.warning(f"LinAlgError: {str(e)}.")
+            n = len(self.params)
+            inv = np.full((n, n), np.nan)
+
+        return norm.ppf(norm.cdf(sigma)) * np.sqrt(inv[idx, idx])
+
+
+def fisher(
     model,
     effective_area: EffectiveArea,
     energy_res: EnergyResolution,
     target: TargetParams,
-    background_model: BackgroundModel,
+    background_model: ParametricBackgroundModel,
     tobs: float,
     vx: float = 1e-3,
-    n_sigma: float = 5.0,
     n_grid: int = 20,
     e_grid: Optional[npt.NDArray[np.float_]] = None,
     k: int = 1,
     ext: str = "raise",
-):
-    """Compute prospective constraints on a model using the Fisher information
-    matrix.
+) -> FisherResults:
+    """Compute the Fisher matrix.
 
     Parameters
     ----------
@@ -298,15 +305,19 @@ def constrain_fisher(
 
     Returns
     -------
-    rate: float
-        The constrained rate in units of cm^3/s for annihilating DM and 1/s for
-        decaying DM.
+    results: FisherResults
+        NamedTuple containing:
+
+        fisher: np.matrix
+            Full Fisher matrix. The limit is obtained using: results.limit().
+        params: Dict[str, float]
+            Dictionary of the fiducial parameters.
     """
     if model.kind == "ann":
-        scale = 3e-26
+        scale = 1.0  # 3e-26
     elif model.kind == "dec":
         # TODO: Come up with a better natural scale for decaying DM.
-        scale = 1e-24
+        scale = 1.0  # 1e-24
     else:
         raise ValueError(f"Encountered model with invalid `kind`: {model.kind}")
 
@@ -319,38 +330,50 @@ def constrain_fisher(
     phi_s = _differential_signal_flux(
         model=model,
         energies=energies,
-        effective_area=effective_area,
         energy_res=energy_res,
         target=target,
-        tobs=tobs,
         vx=vx,
         scale=scale,
         k=k,
         ext=ext,
     )
-    phi_b = _differential_background_flux(
-        background_model=background_model,
-        energies=energies,
-        effective_area=effective_area,
-        target=target,
-        tobs=tobs,
-        k=k,
-        ext=ext,
+
+    params = OrderedDict(background_model.params.copy())
+    params["rate"] = 0.0
+    params.move_to_end("rate", last=False)
+
+    assert target.dOmega is not None
+    dOmega: float = target.dOmega
+
+    def phi_b(energy):
+        return background_model.dPhi_dEdOmega(energy) * dOmega
+
+    def dphi_b(energy, key):
+        return background_model.derivatives(energy)[key]
+
+    dphi = {key: functools.partial(dphi_b, key=key) for key in background_model.params}
+    dphi["rate"] = lambda e: phi_s(e)  # type: ignore
+
+    def fisher_matrix_element(k1, k2):
+        dphi1 = dphi[k1](energies)
+        dphi2 = dphi[k2](energies)
+        phib = phi_b(energies)
+        aeff = effective_area(energies)
+
+        integrand = dphi1 * dphi2 / phib * aeff * tobs
+        interp = InterpolatedUnivariateSpline(energies, integrand, ext=ext, k=k)
+        return interp.integral(e_min, e_max)
+
+    fisher = np.matrix(
+        np.array(
+            [
+                [fisher_matrix_element(k1, k2) for k1 in params.keys()]
+                for k2 in params.keys()
+            ]
+        )
     )
 
-    phi_s_sqr = _get_product_spline(phi_s, phi_s, energies)
-    phi_s_sqr_phi_b = _get_product_spline(
-        phi_s_sqr, lambda e: 1.0 / phi_b(e), energies  # type: ignore
-    )
-
-    a = phi_s_sqr_phi_b.integral(e_min, e_max)
-    b = phi_s.integral(e_min, e_max)
-    c = phi_b.integral(e_min, e_max)
-
-    inv11 = np.sqrt(c / (a * c - b**2))
-    rate = norm.ppf(norm.cdf(n_sigma)) * inv11 * scale
-
-    return rate
+    return FisherResults(fisher_matrix=fisher, params=params)
 
 
 class TheoryGammaRayLimits:
@@ -455,16 +478,15 @@ class TheoryGammaRayLimits:
 
     def unbinned_limit(
         self,
-        A_eff,
-        energy_res,
-        T_obs,
-        target,
-        bg_model,
+        A_eff: EffectiveArea,
+        energy_res: EnergyResolution,
+        T_obs: float,
+        target: TargetParams,
+        bg_model: BackgroundModel,
         e_grid=None,
-        n_grid=20,
-        n_sigma=5.0,
-        method: Optional[str] = None,
-        debug_msgs=False,
+        n_grid: int = 20,
+        n_sigma: float = 5.0,
+        _: bool = False,  # debug_msgs
     ):
         r"""
         Computes smallest-detectable value of <sigma v> for given target and
@@ -502,10 +524,6 @@ class TheoryGammaRayLimits:
         n_sigma : float
             Number of standard deviations the signal must be above the
             background to be considered detectable
-        method: str, optional
-            If not None, the method can be "fisher" to use a Fisher information
-            matrix to compute constraints. Otherwise, we employ the method
-            described above.
         debug_msgs : bool
             If True, the energy window found by the optimizer will be printed.
 
@@ -515,22 +533,6 @@ class TheoryGammaRayLimits:
             Smallest-detectable thermally averaged total cross section in units
             of cm^3 / s.
         """
-        # debug_msgs  # To make linter shut up
-        if method == "fisher":
-            return constrain_fisher(
-                model=self,
-                effective_area=A_eff,
-                energy_res=energy_res,
-                target=target,
-                background_model=bg_model,
-                tobs=T_obs,
-                vx=1e-3,
-                n_sigma=n_sigma,
-                n_grid=n_grid,
-                e_grid=e_grid,
-                k=1,
-                ext="raise",
-            )
 
         # Convolve the spectrum with the detector's spectral resolution
         e_min, e_max = A_eff.x[[0, -1]]
@@ -554,6 +556,7 @@ class TheoryGammaRayLimits:
         else:
             prefactor = self.mx  # type: ignore
 
+        assert target.dOmega is not None
         prefactor *= (
             4.0
             * pi
@@ -596,3 +599,76 @@ class TheoryGammaRayLimits:
         except Exception as e:
             print(f"Error in unbinned_limit: {repr(e)}")
             return np.inf
+
+    def fisher_limit(
+        self,
+        effective_area: EffectiveArea,
+        energy_res: EnergyResolution,
+        target: TargetParams,
+        background_model: ParametricBackgroundModel,
+        tobs: float,
+        vx: float = 1e-3,
+        sigma_levels: List[float] = [5.0],
+        n_grid: int = 2000,
+        e_grid: Optional[npt.NDArray[np.float_]] = None,
+        k: int = 1,
+        ext: str = "raise",
+    ) -> List[float]:
+        """Compute prospective constraints on a model using the Fisher information
+        matrix.
+
+        Parameters
+        ----------
+        model: Theory
+            Dark matter model.
+        effective_area: Callable
+            Effective area of the observing telescope.
+        energy_res: Callable
+            Energy resolution of the telescope.
+        target: TargetParams
+            Target the telescope is observing.
+        background_model: BackgroundModel
+            Model for the background flux.
+        tobs: float
+            Observing time in seconds.
+        vx: float, optional
+            Dark matter velocity. Default is 1e-3.
+        sigma_levels: List[float], optional
+            List of the desired number of standard deviations to compute limits at.
+            For example, if [3, 5] is used, the returned limits will be evaluated
+            at 3 and 4 standard deviations. Default is [5.0].
+        n_grid: int, optional
+            Number of grid points used for generation of interpolating splines.
+            Default is 20. Ignored if `e_grid` is not None.
+        e_grid: array, optional
+            Energy grid used for generation of interpolating splines. Default is
+            None.
+        k: int, optional
+            Order of the underlying interpolating function. Default is 1 (linear).
+        ext: str, optional
+            String specifying how the interpolating function should handle energies
+            outside the interval of the input energies. Default is 'raise'.
+
+        Returns
+        -------
+        limits: float
+            The limits on the rate at each sigma level specified. The limits have units
+            of:
+                annihilating DM : [cm^3/s]
+                decaying DM: [1/s]
+        """
+        result = fisher(
+            model=self,
+            effective_area=effective_area,
+            energy_res=energy_res,
+            target=target,
+            background_model=background_model,
+            tobs=tobs,
+            vx=vx,
+            n_grid=n_grid,
+            e_grid=e_grid,
+            k=k,
+            ext=ext,
+        )
+
+        return [result.limit(sigma, key="rate") for sigma in sigma_levels]

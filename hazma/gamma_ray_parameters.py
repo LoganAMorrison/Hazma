@@ -7,11 +7,13 @@ Parameters relevant to computing constraints from gamma ray experiments.
 
 import os
 from pathlib import Path
+from typing import Tuple, Dict, Any
 
 import numpy as np
+from scipy import interpolate
 from scipy.interpolate import interp1d
 
-from hazma.background_model import BackgroundModel
+from hazma.background_model import BackgroundModel, ParametricBackgroundModel
 from hazma.flux_measurement import FluxMeasurement
 from hazma.target_params import TargetParams
 
@@ -529,6 +531,21 @@ def effective_area_pangu(energy):
 
 
 # These are for backwards compatability
+effective_area_adept.x = __effective_area_adept.x
+effective_area_amego.x = __effective_area_amego.x
+effective_area_comptel.x = __effective_area_comptel.x
+effective_area_all_sky_astrogam.x = __effective_area_all_sky_astrogam.x
+effective_area_e_astrogam.x = __effective_area_e_astrogam.x
+effective_area_egret.x = __effective_area_egret.x
+effective_area_fermi.x = __effective_area_fermi.x
+effective_area_gecco.x = __effective_area_gecco.x
+effective_area_grams.x = __effective_area_grams.x
+effective_area_grams_upgrade.x = __effective_area_grams_upgrade.x
+effective_area_mast.x = __effective_area_mast.x
+effective_area_pangu.x = __effective_area_pangu.x
+
+
+# These are for backwards compatability
 A_eff_adept = __effective_area_adept
 A_eff_amego = __effective_area_amego
 A_eff_comptel = __effective_area_comptel
@@ -986,3 +1003,314 @@ def _generate_background_model(subdir, filename):
 #: This is the more complex background model from arXiv:1703.02546. Note that it
 #: is only applicable to the inner 10deg x 10deg region of the Milky Way.
 gc_bg_model = _generate_background_model("bg_model", "gc.dat")
+
+
+class GalacticCenterBackgroundModel(ParametricBackgroundModel):
+    """Model for the Galactic astrophysical background.
+
+    The total background flux is modeled using:
+        phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+    where the parameters of the model are:
+        - Ag: Amplitude of the Galactic astrophysical background
+          [MeV^-1 cm^-2 s^-1 sr^-1]
+        - a_g: Power-law index of the Galactic astrophysical background,
+        - Ec: Exponential cutoff energy of the Galactic astrophysical background
+          [MeV],
+        - gam: Exponential power-law index of the Galactic astrophysical background,
+        - Aeg: Amplitude of the extra-Galactic astrophysical background
+          [MeV^-1 cm^-2 s^-1 sr^-1],
+        - a_eg: Power-law index of the extra-Galactic astrophysical background.
+    This model is valid for energies between [0.15 MeV, 5.0 MeV] and
+    for |l| <= 5 deg, |b| <= 5 deg.
+
+    See arXiv: 2102.06714 for details.
+
+    """
+
+    def __init__(
+        self,
+        galactic_amplitude: float = 0.013,
+        galactic_power_law_index: float = 1.8,
+        galactic_exponential_cutoff: float = 20.0,
+        galactic_exponential_index: float = 2.0,
+        extra_galactic_amplitude: float = 0.004135,
+        extra_galactic_power_law_index: float = 2.8956,
+    ):
+        """
+        Parameters
+        ----------
+        galactic_amplitude: float
+            Amplitude of the Galactic astrophysical background.
+            Default is 0.013 [MeV^-1 cm^-2 s^-1 sr^-1].
+        galactic_power_law_index: float
+            Power-law index of the Galactic astrophysical background.
+            Default is 1.8.
+        galactic_exponential_cutoff: float
+            Exponential cutoff energy of the Galactic astrophysical background.
+            Default is 20.0 [MeV].
+        galactic_exponential_index: float
+            Exponential power-law index of the Galactic astrophysical background.
+            Default is 2.0.
+        extra_galactic_amplitude: float
+            Amplitude of the extra-Galactic astrophysical background.
+            Default is 0.004135 [MeV^-1 cm^-2 s^-1 sr^-1].
+        extra_galactic_power_law_index: float
+            Power-law index of the extra-Galactic astrophysical background.
+            Default is 2.8956.
+        """
+        self._galactic_amplitude = galactic_amplitude
+        self._galactic_power_law_index = galactic_power_law_index
+        self._galactic_exponential_cutoff = galactic_exponential_cutoff
+        self._galactic_exponential_index = galactic_exponential_index
+        self._extra_galactic_amplitude = extra_galactic_amplitude
+        self._extra_galactic_power_law_index = extra_galactic_power_law_index
+        self._energy_bounds = (0.15, 5.0)
+
+    @property
+    def galactic_amplitude(self) -> float:
+        """Amplitude of the Galactic astrophysical background in
+        units of MeV^-1 cm^-2 s^-1 sr^-1.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                 ^--^
+        with `Ag` the galactic amplitude.
+        """
+        return self._galactic_amplitude
+
+    @property
+    def galactic_power_law_index(self) -> float:
+        """Power-law index of the Galactic astrophysical background.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                      ^------------------^
+        with `alpha` the power-law index.
+        """
+        return self._galactic_power_law_index
+
+    @property
+    def galactic_exponential_cutoff(self) -> float:
+        """Exponential cutoff of the Galactic astrophysical background.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                                            ^--------------^
+        with `Ec` the exponential cutoff.
+        """
+        return self._galactic_exponential_cutoff
+
+    @property
+    def galactic_exponential_index(self) -> float:
+        """Power-law index of the exponential cutoff of the
+        Galactic astrophysical background.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                                            ^--------------^
+        with `gam` the exponential index.
+        """
+        return self._galactic_exponential_index
+
+    @property
+    def extra_galactic_amplitude(self) -> float:
+        """Amplitude of the Extra-Galactic astrophysical background in
+        units of MeV^-1 cm^-2 s^-1 sr^-1.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                                                               ^-^
+        with `Aeg` the extra-galactic amplitude.
+        """
+        return self._extra_galactic_amplitude
+
+    @property
+    def extra_galactic_power_law_index(self) -> float:
+        """Power-law index of the Extra-Galactic astrophysical background.
+
+        The total background flux is
+            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+                                                                     ^-----------------^
+        with `a_eg` the extra-galactic power-law index.
+        """
+        return self._extra_galactic_power_law_index
+
+    @property
+    def e_bounds(self) -> Tuple[float, float]:
+        """Energy bounds of the model."""
+        return self._energy_bounds
+
+    @property
+    def energy_bounds(self) -> Tuple[float, float]:
+        """Energy bounds of the model."""
+        return self._energy_bounds
+
+    @property
+    def params(self) -> Dict[str, float]:
+        """Model parameters."""
+        return {
+            "galactic_amplitude": self._galactic_amplitude,
+            "galactic_power_law_index": self._galactic_power_law_index,
+            "galactic_exponential_cutoff": self._galactic_exponential_cutoff,
+            "galactic_exponential_index": self._galactic_exponential_cutoff,
+            "extra_galactic_amplitude": self._extra_galactic_amplitude,
+            "extra_galactic_power_law_index": self._extra_galactic_power_law_index,
+        }
+
+    def dPhi_dEdOmega(self, energy):
+        """Compute the differential flux from the background model.
+
+        Parameters
+        ----------
+        energy: float or array-like
+           Energy (in MeV).
+
+        Returns
+        -------
+        dphi/dE dOmega: dict
+            Differential flux.
+        """
+        amp_g = self.galactic_amplitude
+        alpha_g = self.galactic_power_law_index
+        gamma = self.galactic_exponential_index
+        ec = self.galactic_exponential_cutoff
+
+        amp_eg = self.extra_galactic_amplitude
+        alpha_eg = self.extra_galactic_power_law_index
+
+        f_g = amp_g * energy ** (-alpha_g) * np.exp(-((energy / ec) ** gamma))
+        f_eg = amp_eg * energy ** (-alpha_eg)
+
+        return f_g + f_eg
+
+    def derivatives(self, energy) -> Dict[str, Any]:
+        """Compute the derivatives of the background model with respect to the
+        parameters of the model.
+
+        Parameters
+        ----------
+        energy: float or array-like
+           Energy (in MeV).
+
+        Returns
+        -------
+        deriv: dict
+            Dictionary of containing the derivatives.
+        """
+        amp_g = self.galactic_amplitude
+        alpha_g = self.galactic_power_law_index
+        gamma = self.galactic_exponential_index
+        ec = self.galactic_exponential_cutoff
+
+        amp_eg = self.extra_galactic_amplitude
+        alpha_eg = self.extra_galactic_power_law_index
+
+        eec = energy / ec
+        f_g = amp_g * energy ** (-alpha_g) * np.exp(-((eec) ** gamma))
+        f_eg = amp_eg * energy ** (-alpha_eg)
+
+        dn_g = f_g / amp_g
+        da_g = -f_g * np.log(energy)
+        dg_g = -f_g * np.log(eec) * eec**gamma
+        dec_g = f_g * (eec**gamma) * gamma / ec
+
+        dn_eg = f_eg / amp_eg
+        da_eg = -f_eg * np.log(energy)
+
+        return {
+            "galactic_amplitude": dn_g,
+            "galactic_power_law_index": da_g,
+            "galactic_exponential_cutoff": dec_g,
+            "galactic_exponential_index": dg_g,
+            "extra_galactic_amplitude": dn_eg,
+            "extra_galactic_power_law_index": da_eg,
+        }
+
+
+class GeccoBackgroundModel:
+    def __init__(self, amplitude: float = 2 * 4e-3, power_law_index: float = 2.0):
+        self._amplitude = amplitude
+        self._power_law_index = power_law_index
+        self._energy_bounds = (0.2, 4e3)
+
+    @property
+    def amplitude(self) -> float:
+        """Amplitude of the Galactic astrophysical background in
+        units of MeV^-1 cm^-2 s^-1 sr^-1.
+
+        The total background flux is
+            phi = A * (E / 1 MeV)^(-alpha)
+                 ^-^
+        with `A` the galactic amplitude.
+        """
+        return self._amplitude
+
+    @property
+    def power_law_index(self) -> float:
+        """Power-law index of the Galactic astrophysical background in
+        units of MeV^-1 cm^-2 s^-1 sr^-1.
+
+        The total background flux is
+            phi = A * (E / 1 MeV)^(-alpha)
+                      ^------------------^
+        with `alpha` the power-law index.
+        """
+        return self._power_law_index
+
+    @property
+    def e_bounds(self) -> Tuple[float, float]:
+        """Energy bounds of the model."""
+        return self._energy_bounds
+
+    @property
+    def energy_bounds(self) -> Tuple[float, float]:
+        """Energy bounds of the model."""
+        return self._energy_bounds
+
+    @property
+    def params(self) -> Dict[str, float]:
+        """Model parameters."""
+        return {
+            "amplitude": self.amplitude,
+            "power_law_index": self.power_law_index,
+        }
+
+    def dPhi_dEdOmega(self, energy):
+        """Compute the differential flux from the background model.
+
+        Parameters
+        ----------
+        energy: float or array-like
+           Energy (in MeV).
+
+        Returns
+        -------
+        dphi/dE dOmega: dict
+            Differential flux.
+        """
+        amp = self.amplitude
+        alpha = self.power_law_index
+        f = amp * energy ** (-alpha)
+        return f
+
+    def derivatives(self, energy):
+        """Compute the derivatives of the background model with respect to the
+        parameters of the model.
+
+        Parameters
+        ----------
+        energy: float or array-like
+           Energy (in MeV).
+
+        Returns
+        -------
+        deriv: dict
+            Dictionary of containing the derivatives.
+        """
+        amp = self.amplitude
+        alpha = self.power_law_index
+
+        dn = energy ** (-alpha)
+        da = amp * energy ** (-alpha) * np.log(energy)
+
+        return {"amplitude": dn, "power_law_index": da}

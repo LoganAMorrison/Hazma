@@ -1,7 +1,11 @@
+import abc
 import warnings
+from typing import Tuple, Dict, Any
+
+import numpy as np
 
 
-class BackgroundModel(object):
+class BackgroundModel:
     """
 
     Represents a gamma ray background model, which is required for computing
@@ -46,14 +50,47 @@ class BackgroundModel(object):
 
             if len(es_out_of_bounds) > 0:
                 warnings.warn(
-                    "The gamma ray background model is not applicable for energy %f MeV."
-                    % es_out_of_bounds[0]
+                    "The gamma ray background model is not"
+                    " applicable for energy %f MeV." % es_out_of_bounds[0]
                 )
             return self.__dPhi_dEdOmega(es)
         else:
             if es < self.e_range[0] or es > self.e_range[1]:
                 warnings.warn(
-                    "The gamma ray background model is not applicable for energy %f MeV."
-                    % es
+                    "The gamma ray background model is not"
+                    " applicable for energy %f MeV." % es
                 )
             return self.__dPhi_dEdOmega(es)
+
+
+class ParametricBackgroundModel(abc.ABC):
+    def __init__(self):
+        pass
+
+    @abc.abstractmethod
+    def derivatives(self, energy) -> Dict[str, Any]:
+        raise NotImplementedError(
+            "The 'ParametricBackgroundModel' requires the"
+            " derivatives to be implemented."
+        )
+
+    @abc.abstractmethod
+    def dPhi_dEdOmega(self, energy):
+        raise NotImplementedError(
+            "The 'ParametricBackgroundModel' requires the"
+            " 'dPhi_dEdOmega' to be implemented."
+        )
+
+    @property
+    @abc.abstractmethod
+    def params(self) -> Dict[str, float]:
+        raise NotImplementedError(
+            "The 'ParametricBackgroundModel' requires the"
+            " 'params' to be implemented."
+        )
+
+    def energy_bounds(self) -> Tuple[float, float]:
+        return (0.0, np.inf)
+
+    def n_params(self) -> int:
+        return len(self.params)
