@@ -127,6 +127,8 @@ class SingleChannelAnn(TheoryAnn):
             funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pi0g(eg, ecm)
         elif self.fs == "pi pi":
             funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pipi(eg, ecm)
+        else:
+            funcs[self.fs] = lambda eg, ecm: np.zeros_like(eg)
 
         self._spectrum_funcs = lambda: funcs
 
@@ -158,6 +160,8 @@ class SingleChannelAnn(TheoryAnn):
             funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_mumu(eg, ecm)
         elif self.fs == "pi pi":
             funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_pipi(eg, ecm)
+        else:
+            funcs[self.fs] = lambda eg, ecm: np.zeros_like(eg)
 
         self._positron_spectrum_funcs = lambda: funcs
 
