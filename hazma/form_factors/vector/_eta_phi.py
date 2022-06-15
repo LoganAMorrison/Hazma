@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union, overload
+from dataclasses import dataclass, field
+from typing import Union, overload, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -9,6 +9,9 @@ from hazma import parameters
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
 from ._base import VectorFormFactorPV
 
+META = parameters.eta_mass
+MPHI = parameters.phi_mass
+
 
 @dataclass
 class VectorFormFactorEtaPhi(VectorFormFactorPV):
@@ -16,6 +19,8 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
     Class for storing the parameters needed to compute the form factor for
     V-eta-omega. See arXiv:1911.11147 for details on the default values.
     """
+
+    fsp_masses: Tuple[float, float] = field(init=False, default=(META, MPHI))
 
     masses: npt.NDArray[np.float64] = np.array([1.67, 2.14])
     widths: npt.NDArray[np.float64] = np.array([0.122, 0.0435])
@@ -90,5 +95,4 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         return ff * 1e-3
 
     def width(self, mv, gvss):
-        fsp_masses = parameters.eta_mass, parameters.phi_mass
-        return self._width(mv=mv, fsp_masses=fsp_masses, gvss=gvss)
+        return self._width(mv=mv, gvss=gvss)

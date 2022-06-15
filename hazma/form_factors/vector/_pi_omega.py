@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union, overload
+from dataclasses import dataclass, field
+from typing import Union, overload, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -10,6 +10,9 @@ from hazma.utils import kallen_lambda
 from ._utils import MOMEGA_GEV, MPI0_GEV, ComplexArray, RealArray
 from ._base import VectorFormFactorPV
 
+MPI0 = MPI0_GEV * 1e3
+MOMEGA = MOMEGA_GEV * 1e3
+
 
 @dataclass
 class VectorFormFactorPi0Omega(VectorFormFactorPV):
@@ -17,6 +20,8 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
     Class for computing the form factor for V-omega-pi0. See arXiv:1303.5198 for details
     on the default fit values.
     """
+
+    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, MOMEGA))
 
     g_rho_omega_pi: float = 15.9  # units of GeV^-1
     amps: npt.NDArray[np.float64] = np.array([1.0, 0.175, 0.014])
@@ -116,5 +121,4 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         return ff * 1e-3
 
     def width(self, mv, gvuu, gvdd):
-        fsp_masses = parameters.neutral_pion_mass, parameters.omega_mass
-        return self._width(mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)

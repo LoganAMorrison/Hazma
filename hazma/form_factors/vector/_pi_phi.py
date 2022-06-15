@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union, overload
+from dataclasses import dataclass, field
+from typing import Union, overload, Tuple
 
 import numpy as np
 
@@ -7,6 +7,9 @@ from hazma import parameters
 
 from ._utils import MPI0_GEV, ComplexArray, RealArray
 from ._base import VectorFormFactorPV
+
+MPI0 = parameters.neutral_pion_mass
+MPHI = parameters.phi_mass
 
 # old fit values
 # amp = [0.045, 0.0315, 0.0]
@@ -27,6 +30,8 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
     Class for storing the parameters needed to compute the form factor for
     V-phi-pi. See arXiv:1911.11147 for details on the default values.
     """
+
+    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, MPHI))
 
     amps: RealArray = np.array([0.177522453644825, 0.023840592398187477, 0.0])
     phases: RealArray = np.array([0.0, 123.82008351626034, 0.0]) * np.pi / 180.0
@@ -124,5 +129,4 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
         return ff * 1e-3
 
     def width(self, mv, gvuu, gvdd):
-        fsp_masses = parameters.neutral_pion_mass, parameters.phi_mass
-        return self._width(mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)

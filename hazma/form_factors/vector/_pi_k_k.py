@@ -4,10 +4,14 @@ import abc
 
 import numpy as np
 
-from hazma.vector_mediator.form_factors import utils
-from hazma.vector_mediator.form_factors.utils import RealArray
-
+from . import _utils
+from ._utils import RealArray
 from ._base import VectorFormFactorPPP
+
+MK = _utils.MK_GEV * 1e3
+MK0 = _utils.MK0_GEV * 1e3
+MPI = _utils.MPI_GEV * 1e3
+MPI0 = _utils.MPI0_GEV * 1e3
 
 KS_MASS_GEV = 0.8956  # KStar mass
 KS_WIDTH_GEV = 0.047  # KStar width
@@ -27,7 +31,8 @@ ISO_VECTOR_PHASES = np.array([0, 0.317, 2.57])  # * np.pi / 180.0
 
 @dataclass
 class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
-    fsp_masses: Tuple[float, float, float]
+    fsp_masses: Tuple[float, float, float] = field(init=False)
+    _fsp_masses: Tuple[float, float, float] = field(init=False)
 
     iso_scalar_masses: RealArray = ISO_SCALAR_MASSES
     iso_scalar_widths: RealArray = ISO_SCALAR_WIDTHS
@@ -49,6 +54,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
     ):
         self.__iso_scalar_amps = iso_scalar_amps * np.exp(1j * iso_scalar_phases)
         self.__iso_vector_amps = iso_vector_amps * np.exp(1j * iso_vector_phases)
+        self._fsp_masses = tuple(m * 1e-3 for m in self.fsp_masses)
 
     def _iso_spin_amplitudes(self, m, gvuu, gvdd, gvss):
         """
@@ -61,12 +67,12 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         a0 = np.sum(
             cs
             * self.__iso_scalar_amps
-            * utils.breit_wigner_fw(s, self.iso_scalar_masses, self.iso_scalar_widths)
+            * _utils.breit_wigner_fw(s, self.iso_scalar_masses, self.iso_scalar_widths)
         )
         a1 = np.sum(
             ci1
             * self.__iso_vector_amps
-            * utils.breit_wigner_fw(s, self.iso_vector_masses, self.iso_vector_widths)
+            * _utils.breit_wigner_fw(s, self.iso_vector_masses, self.iso_vector_widths)
         )
 
         return (a0, a1)
@@ -85,7 +91,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         """
 
         return (
-            utils.breit_wigner_pwave(s, KS_MASS_GEV, KS_WIDTH_GEV, m1, m2)
+            _utils.breit_wigner_pwave(s, KS_MASS_GEV, KS_WIDTH_GEV, m1, m2)
             / KS_MASS_GEV**2
         )
 
@@ -109,29 +115,18 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         method: str = "rambo",
         npts: int = 1 << 14,
     ) -> Union[float, RealArray]:
-        fsp_masses = [m * 1e3 for m in self.fsp_masses]
         return self._width(
-            mv=mv,
-            fsp_masses=fsp_masses,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
-            method=method,
-            npts=npts,
+            mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
         )
 
 
 @dataclass
 class VectorFormFactorPi0K0K0(_VectorFormFactorPiKKBase):
-    fsp_masses: Tuple[float, float, float] = (
-        utils.MK0_GEV,
-        utils.MK0_GEV,
-        utils.MPI0_GEV,
-    )
+    fsp_masses: Tuple[float, float, float] = (MK0, MK0, MPI0)
 
     def _form_factor(self, q, s, t, gvuu, gvdd, gvss) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, gvuu, gvdd, gvss)
-        m1, m2, m3 = self.fsp_masses
+        m1, m2, m3 = self._fsp_masses
         coeff = (a0 + a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
         return coeff * (
             self._kstar_propagator(s, m2, m3) + self._kstar_propagator(t, m1, m3)
@@ -140,15 +135,11 @@ class VectorFormFactorPi0K0K0(_VectorFormFactorPiKKBase):
 
 @dataclass
 class VectorFormFactorPi0KpKm(_VectorFormFactorPiKKBase):
-    fsp_masses: Tuple[float, float, float] = (
-        utils.MK_GEV,
-        utils.MK_GEV,
-        utils.MPI0_GEV,
-    )
+    fsp_masses: Tuple[float, float, float] = (MK, MK, MPI0)
 
     def _form_factor(self, q, s, t, gvuu, gvdd, gvss) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, gvuu, gvdd, gvss)
-        m1, m2, m3 = self.fsp_masses
+        m1, m2, m3 = self._fsp_masses
         coeff = (a0 - a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
         return coeff * (
             self._kstar_propagator(s, m2, m3) + self._kstar_propagator(t, m1, m3)
@@ -157,15 +148,11 @@ class VectorFormFactorPi0KpKm(_VectorFormFactorPiKKBase):
 
 @dataclass
 class VectorFormFactorPiKK0(_VectorFormFactorPiKKBase):
-    fsp_masses: Tuple[float, float, float] = (
-        utils.MK0_GEV,
-        utils.MK_GEV,
-        utils.MPI_GEV,
-    )
+    fsp_masses: Tuple[float, float, float] = (MK0, MK, MPI)
 
     def _form_factor(self, q, s, t, gvuu, gvdd, gvss) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, gvuu, gvdd, gvss)
-        m1, m2, m3 = self.fsp_masses
+        m1, m2, m3 = self._fsp_masses
         cs = (a0 + a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
         ct = (a0 - a1) / np.sqrt(6.0) * 2 * self.g_ks_k_pi
         return ct * self._kstar_propagator(s, m2, m3) + cs * self._kstar_propagator(

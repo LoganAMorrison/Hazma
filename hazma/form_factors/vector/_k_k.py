@@ -191,7 +191,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     """
 
     _imode: int
-    _fsp_masses: Tuple[float, float] = field(init=False)
+    fsp_masses: Tuple[float, float] = field(init=False)
 
     rho_mass: RealArray = field(init=False)
     rho_width: RealArray = field(init=False)
@@ -253,9 +253,9 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             Parameters of the resonances for the V-K-K form factor.
         """
         if self._imode == 0:
-            self._fsp_masses = (MK0_GEV, MK0_GEV)
+            self.fsp_masses = (MK0_GEV * 1e3, MK0_GEV * 1e3)
         else:
-            self._fsp_masses = (MK_GEV, MK_GEV)
+            self.fsp_masses = (MK_GEV * 1e3, MK_GEV * 1e3)
 
         # initial parameters for the model
         # beta_rho = 2.1968
@@ -364,7 +364,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         fk: Union[complex, np.ndarray]
             Form factor for V-K-K.
         """
-        mk = self._fsp_masses[0]
+        mk = self.fsp_masses[0] * 1e-3
         eta_phi = 1.055
 
         ci0 = 3.0 * (gvuu + gvdd)
@@ -445,7 +445,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
 
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
-        mask = qq > sum(self._fsp_masses)
+        mask = qq > sum(self.fsp_masses) * 1e-3
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         if np.any(mask):
@@ -463,10 +463,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     def width(
         self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
-        fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
-        return self._width(
-            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, gvss=gvss
-        )
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
 
 
 @dataclass

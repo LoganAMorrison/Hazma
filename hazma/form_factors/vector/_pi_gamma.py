@@ -1,5 +1,5 @@
-from dataclasses import dataclass
-from typing import Union, overload
+from dataclasses import dataclass, field
+from typing import Union, overload, Tuple
 
 import numpy as np
 
@@ -9,9 +9,12 @@ from ._utils import ComplexArray, RealArray
 from ._base import VectorFormFactorPA
 from ._alpha import alpha_em
 
+MPI0 = parameters.neutral_pion_mass
+
 
 @dataclass
 class VectorFormFactorPiGamma(VectorFormFactorPA):
+    fsp_masses: Tuple[float] = field(init=False, default=(MPI0,))
 
     fpi: float = 0.09266
     amplitude0: float = 0.007594981126020603
@@ -102,7 +105,7 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
         """
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
-        mask = qq > 1e-3 * parameters.neutral_pion_mass
+        mask = qq > 1e-3 * sum(self.fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         ff[mask] = self.__form_factor(
@@ -120,7 +123,4 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
     def width(
         self, mv: Union[float, RealArray], gvuu, gvdd, gvss
     ) -> Union[complex, ComplexArray]:
-        fsp_masses = parameters.neutral_pion_mass
-        return self._width(
-            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, gvss=gvss
-        )
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)

@@ -31,6 +31,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
 
     _imode: int
     _fsp_masses: Tuple[float, float] = field(init=False)
+    fsp_masses: Tuple[float, float] = field(init=False)
 
     omega_mag: float = field(default=0.00187)
     omega_phase: float = field(default=0.106)
@@ -59,6 +60,8 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             self._fsp_masses = (MPI0_GEV, MPI0_GEV)
         else:
             self._fsp_masses = (MPI_GEV, MPI_GEV)
+
+        self.fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
 
         # Set the rho-parameters
         rho_mag = np.array([1.0, 1.0, 0.59, 4.8e-2, 0.40, 0.43], dtype=np.float64)
@@ -188,8 +191,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     def width(
         self, mv: Union[float, RealArray], gvuu, gvdd
     ) -> Union[complex, ComplexArray]:
-        fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
-        return self._width(mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
 
 
 @dataclass

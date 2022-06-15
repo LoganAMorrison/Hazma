@@ -1,8 +1,8 @@
 """
 Module for computing the form factor V-eta-gamma.
 """
-from dataclasses import dataclass
-from typing import Union, overload
+from dataclasses import dataclass, field
+from typing import Union, overload, Tuple
 
 import numpy as np
 
@@ -14,6 +14,8 @@ from ._base import VectorFormFactorPA
 
 @dataclass(slots=True)
 class VectorFormFactorEtaGamma(VectorFormFactorPA):
+    fsp_masses: Tuple[float] = field(init=False, default=(parameters.eta_mass,))
+
     masses: RealArray = np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
     widths: RealArray = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
     amps: RealArray = np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
@@ -122,7 +124,4 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
     def width(
         self, mv: Union[float, RealArray], gvuu, gvdd, gvss
     ) -> Union[complex, ComplexArray]:
-        fsp_masses = parameters.eta_mass
-        return self._width(
-            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, gvss=gvss
-        )
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
