@@ -5,8 +5,9 @@ from typing import Tuple
 import numpy as np
 from scipy import integrate
 
-from hazma.utils import kallen_lambda
+from hazma.utils import kallen_lambda, lnorm_sqr
 from hazma.utils import RealArray
+from hazma.rambo import PhaseSpace
 
 
 @dataclass
@@ -219,7 +220,34 @@ class VectorFormFactorPPP(VectorFormFactor):
         """Compute the squared matrix element."""
         raise NotImplementedError()
 
-    def _integrated_form_factor(
+    def _make_phase_space_integrand(self, q, fsp_masses, **kwargs):
+
+        m1, m2, m3 = fsp_masses
+        mu1 = m1 / q
+        mu2 = m2 / q
+        mu3 = m3 / q
+        s = q**2
+
+        def integrand(s1, s2):
+            x = (s - s1 + m1**2) / s
+            y = (s - s2 + m2**2) / s
+            ff = self.form_factor(s=s1, t=s2, **kwargs)
+            ff2 = np.abs(ff) ** 2
+            return ff2 * (
+                -(y**2 * (1 + mu1**2))
+                + x**2 * (-1 + y - mu2**2)
+                + 2 * y * (1 + mu1**2 + mu2**2 - mu3**2)
+                - (1 + (mu1 - mu2) ** 2 - mu3**2) * (1 + (mu1 + mu2) ** 2 - mu3**2)
+                + x * (-2 + y) * (-1 + y - mu1**2 - mu2**2 + mu3**2)
+            )
+
+        return integrand
+
+    def _make_phase_space(self, q, fsp_masses, **kwargs):
+        msqrd = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
+        return PhaseSpace(q, masses=np.array(fsp_masses), msqrd=msqrd)  # type: ignore
+
+    def _integrated_form_factor_dblquad(
         self, *, q, fsp_masses: Tuple[float, float, float], **kwargs
     ):
         """Compute the integrated from factor for a three pseudo-scalar meson
@@ -238,18 +266,7 @@ class VectorFormFactorPPP(VectorFormFactor):
 
         pre = s**3 / (1536.0 * np.pi**3)
 
-        def integrand(s1, s2):
-            x = (s - s1 + m1**2) / s
-            y = (s - s2 + m2**2) / s
-            ff = self.form_factor(s=s1, t=s2, **kwargs)
-            ff2 = np.abs(ff) ** 2
-            return ff2 * (
-                -(y**2 * (1 + mu1**2))
-                + x**2 * (-1 + y - mu2**2)
-                + 2 * y * (1 + mu1**2 + mu2**2 - mu3**2)
-                - (1 + (mu1 - mu2) ** 2 - mu3**2) * (1 + (mu1 + mu2) ** 2 - mu3**2)
-                + x * (-2 + y) * (-1 + y - mu1**2 - mu2**2 + mu3**2)
-            )
+        integrand = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
 
         def f1(x):
             return (2 - x) * (1 - x + mu1**2 + mu2**2 - mu3**2)
@@ -270,3 +287,52 @@ class VectorFormFactorPPP(VectorFormFactor):
         xmax = mu1**2 + (1.0 - (mu2 + mu3) ** 2)
 
         return pre * integrate.dblquad(integrand, xmin, xmax, ymin, ymax)[0]
+
+    def _integrated_form_factor_rambo(
+        self, *, q, fsp_masses: Tuple[float, float, float], npts: int, **kwargs
+    ):
+        s = q**2
+        pre = s**3 / (1536.0 * np.pi**3)
+        phase_space = self._make_phase_space(q, fsp_masses, **kwargs)
+        return pre * phase_space.integrate(n=npts)[0]
+
+    def _integrated_form_factor(
+        self, *, q, fsp_masses: Tuple[float, float, float], method: str, **kwargs
+    ):
+        """Compute the integrated from factor for a three pseudo-scalar meson
+        final-state.
+
+        Parameters
+        ----------
+        s: float or array-like
+            Squared center of mass energy.
+        """
+        if method == "quad":
+            return self._integrated_form_factor_dblquad(
+                q=q, fsp_masses=fsp_masses, **kwargs
+            )
+        return self._integrated_form_factor_rambo(q=q, fsp_masses=fsp_masses, **kwargs)
+
+    def _energy_distributions(
+        self,
+        *,
+        q,
+        fsp_masses: Tuple[float, float, float],
+        npts: int,
+        nbins: int,
+        **kwargs
+    ):
+        phase_space = self._make_phase_space(q, fsp_masses, **kwargs)
+        return phase_space.energy_distributions(n=npts, nbins=nbins)
+
+    def _invariant_mass_distributions(
+        self,
+        *,
+        q,
+        fsp_masses: Tuple[float, float, float],
+        npts: int,
+        nbins: int,
+        **kwargs
+    ):
+        phase_space = self._make_phase_space(q, fsp_masses, **kwargs)
+        return phase_space.invariant_mass_distributions(n=npts, nbins=nbins)

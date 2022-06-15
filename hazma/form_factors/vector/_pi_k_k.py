@@ -13,40 +13,6 @@ KS_MASS_GEV = 0.8956  # KStar mass
 KS_WIDTH_GEV = 0.047  # KStar width
 
 
-def generate_mandelstam_invariants_st(m, m1, m2, m3, n=10000):
-    """
-    Generate mandelstam invariants s and t and phase-space weights from a 3-body process
-    assuming a flat squared matrix element.
-
-    Parameters
-    ----------
-    m: float
-        Total energy of the process or mass of decaying parent particle.
-    m1,m2,m3: float
-        Masses of the 3 final state particles.
-    n: int, optional
-        Number of invariants and weights to generate.
-
-    Returns
-    -------
-    s,t: np.ndarray
-        Mandelstam invariants.
-    ws: np.ndarray
-        Phase-space weights.
-    """
-    phase_space = PhaseSpace(m, np.array([m1, m2, m3]))
-    ps, ws = phase_space.generate(n)
-
-    p1 = ps[:, 0]
-    p2 = ps[:, 1]
-    p3 = ps[:, 2]
-
-    s = lnorm_sqr(p2 + p3)
-    t = lnorm_sqr(p1 + p3)
-
-    return s, t, ws
-
-
 ISO_SCALAR_MASSES = np.array([1019.461e-3, 1633.4e-3, 1957e-3])
 ISO_SCALAR_WIDTHS = np.array([4.249e-3, 218e-3, 267e-3])
 ISO_SCALAR_AMPS = np.array([0.0, 0.233, 0.0405])
@@ -157,7 +123,13 @@ class FormFactorPiKKBase(abc.ABC):
             return 0.0
 
         m1, m2, m3 = self.fsp_masses
-        ss, ts, ws = generate_mandelstam_invariants_st(m, m1, m2, m3, npts)
+
+        phase_space = PhaseSpace(m, np.array([m1, m2, m3]))
+        ps, ws = phase_space.generate(npts)
+
+        ss = lnorm_sqr(ps[:, 1] + ps[:, 2])
+        ts = lnorm_sqr(ps[:, 0] + ps[:, 2])
+
         ws = ws * self._integrand(ss, ts, m, gvuu, gvdd, gvss)
         return np.average(ws)  # type: ignore
 
