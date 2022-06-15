@@ -38,7 +38,7 @@ def width_v_to_p_p(
         / 48.0
         / np.pi
         * mv
-        * (1 - 4 * mu**2) ** 1.5
+        * (1.0 - 4.0 * mu**2) ** 1.5
         * np.abs(form_factor) ** 2
     )
 

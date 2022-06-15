@@ -106,7 +106,7 @@ class FormFactorOmegaPi0:
         else:
             qq = 1e-3 * np.array([q])
 
-        mask = qq > (parameters.eta_mass + parameters.phi_mass) * 1e-3
+        mask = qq > (parameters.neutral_pion_mass + parameters.omega_mass) * 1e-3
         ff = np.zeros_like(qq, dtype=np.complex128)
         ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvuu=gvuu, gvdd=gvdd)
 
