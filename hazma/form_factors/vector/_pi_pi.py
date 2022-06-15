@@ -2,15 +2,14 @@
 Module for computing the vector form factor for pi+pi.
 """
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
-from scipy.special import gamma  # type:ignore
-
-from hazma import parameters
+from scipy.special import gamma
 
 from ._base import VectorFormFactorPP
 from ._utils import (
+    MPI0_GEV,
     MPI_GEV,
     ComplexArray,
     RealArray,
@@ -24,11 +23,14 @@ from ._utils import (
 
 
 @dataclass
-class VectorFormFactorPiPi(VectorFormFactorPP):
+class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     """
     Class for storing the parameters needed to compute the form factor for
     V-pi-pi.
     """
+
+    _imode: int
+    _fsp_masses: Tuple[float, float] = field(init=False)
 
     omega_mag: float = field(default=0.00187)
     omega_phase: float = field(default=0.106)
@@ -52,6 +54,11 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         self.hres = np.zeros(self.n_max, dtype=np.float64)
         self.h0 = np.zeros(self.n_max, dtype=np.float64)
         self.dh = np.zeros(self.n_max, dtype=np.float64)
+
+        if self._imode == 0:
+            self._fsp_masses = (MPI0_GEV, MPI0_GEV)
+        else:
+            self._fsp_masses = (MPI_GEV, MPI_GEV)
 
         # Set the rho-parameters
         rho_mag = np.array([1.0, 1.0, 0.59, 4.8e-2, 0.40, 0.43], dtype=np.float64)
@@ -108,9 +115,7 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         rho_sum = np.sum(rho_wgt[1:])
         self.coup[1:nrhowgt] = rho_wgt[1:] * cwgt / rho_sum
 
-    def __form_factor(
-        self, *, s: RealArray, gvuu: float, gvdd: float, imode: int = 1
-    ) -> ComplexArray:
+    def __form_factor(self, *, s: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
         # Convert gvuu and gvdd to iso-spin couplings
         ci1 = gvuu - gvdd
 
@@ -129,7 +134,7 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         ff = ci1 * self.coup * bw
 
         # include rho-omega if needed
-        if imode != 0:
+        if self._imode != 0:
             ff[:, 0] *= (
                 1.0
                 / (1.0 + self.omega_weight)
@@ -142,12 +147,12 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         # sum
         ff = np.sum(ff, axis=1)
         # factor for cc mode
-        if imode == 0:
+        if self._imode == 0:
             ff *= np.sqrt(2.0)
         return ff
 
     def form_factor(
-        self, *, q: Union[float, RealArray], gvuu, gvdd, imode: int = 1
+        self, *, q: Union[float, RealArray], gvuu, gvdd
     ) -> Union[complex, ComplexArray]:
         """
         Compute the pi-pi-V form factor.
@@ -164,23 +169,16 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         ff: Union[complex,ComplexArray]
             Form factor from pi-pi-V.
         """
-        if imode == 0:
-            mp = parameters.neutral_pion_mass
-        elif imode == 1:
-            mp = parameters.charged_pion_mass
-        else:
-            raise ValueError(f"Invalid iso-spin {imode}")
 
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
-        mask = qq > 2 * 1e-3 * mp
+        mask = qq > sum(self._fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         ff[mask] = self.__form_factor(
             s=qq[mask] ** 2,
             gvuu=gvuu,
             gvdd=gvdd,
-            imode=imode,
         )
 
         if single:
@@ -188,13 +186,27 @@ class VectorFormFactorPiPi(VectorFormFactorPP):
         return ff
 
     def width(
-        self, mv: Union[float, RealArray], gvuu, gvdd, imode: int = 1
+        self, mv: Union[float, RealArray], gvuu, gvdd
     ) -> Union[complex, ComplexArray]:
-        if imode == 0:
-            mp = parameters.neutral_pion_mass
-        else:
-            mp = parameters.charged_pion_mass
-        fsp_masses = (mp, mp)
-        return self._width(
-            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, imode=imode
-        )
+        fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
+        return self._width(mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd)
+
+
+@dataclass
+class VectorFormFactorPiPi(_VectorFormFactorPiPiBase):
+    """
+    Class for storing the parameters needed to compute the form factor for
+    V-pi-pi.
+    """
+
+    _imode: int = 1
+
+
+@dataclass
+class VectorFormFactorPi0Pi0(_VectorFormFactorPiPiBase):
+    """
+    Class for storing the parameters needed to compute the form factor for
+    V-pi-pi.
+    """
+
+    _imode: int = 0

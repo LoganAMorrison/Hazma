@@ -184,11 +184,14 @@ def _compute_h_parameters(
 
 
 @dataclass
-class VectorFormFactorKK(VectorFormFactorPP):
+class _VectorFormFactorKKBase(VectorFormFactorPP):
     """
     Class for storing the parameters needed to compute the form factor for
     V-K-K.
     """
+
+    _imode: int
+    _fsp_masses: Tuple[float, float] = field(init=False)
 
     rho_mass: RealArray = field(init=False)
     rho_width: RealArray = field(init=False)
@@ -249,6 +252,11 @@ class VectorFormFactorKK(VectorFormFactorPP):
         params: FormFactorKKParameters
             Parameters of the resonances for the V-K-K form factor.
         """
+        if self._imode == 0:
+            self._fsp_masses = (MK0_GEV, MK0_GEV)
+        else:
+            self._fsp_masses = (MK_GEV, MK_GEV)
+
         # initial parameters for the model
         # beta_rho = 2.1968
         # beta_omega = 2.6936
@@ -331,7 +339,6 @@ class VectorFormFactorKK(VectorFormFactorPP):
         gvuu: float,
         gvdd: float,
         gvss: float,
-        imode: int,
     ) -> ComplexArray:
         """
         Compute the form factor for the V-K-K interaction.
@@ -357,7 +364,7 @@ class VectorFormFactorKK(VectorFormFactorPP):
         fk: Union[complex, np.ndarray]
             Form factor for V-K-K.
         """
-        mk = MK0_GEV if imode == 0 else MK_GEV
+        mk = self._fsp_masses[0]
         eta_phi = 1.055
 
         ci0 = 3.0 * (gvuu + gvdd)
@@ -369,7 +376,7 @@ class VectorFormFactorKK(VectorFormFactorPP):
         ss = np.array(s)
 
         # Rho exchange
-        rho_pre = -0.5 if imode == 0 else 0.5
+        rho_pre = -0.5 if self._imode == 0 else 0.5
         fk = rho_pre * (
             ci1
             * self.rho_coup
@@ -411,14 +418,14 @@ class VectorFormFactorKK(VectorFormFactorPP):
         )
 
         phi_terms = 1.0 / 3.0 * cs * self.phi_coup * bwp
-        if imode == 0:
+        if self._imode == 0:
             phi_terms[0] *= eta_phi
         fk += phi_terms
 
         return np.sum(fk, axis=1)
 
     def form_factor(
-        self, *, q: Union[float, RealArray], gvuu, gvdd, gvss, imode: int = 1
+        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
         """
         Compute the pi-pi-V form factor.
@@ -435,16 +442,10 @@ class VectorFormFactorKK(VectorFormFactorPP):
         ff: Union[complex,ComplexArray]
             Form factor from pi-pi-V.
         """
-        if imode == 0:
-            mk = MK0_GEV
-        elif imode == 1:
-            mk = MK_GEV
-        else:
-            raise ValueError(f"Invalid iso-spin {imode}")
 
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
-        mask = qq > 2 * mk
+        mask = qq > sum(self._fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         if np.any(mask):
@@ -453,7 +454,6 @@ class VectorFormFactorKK(VectorFormFactorPP):
                 gvuu=gvuu,
                 gvdd=gvdd,
                 gvss=gvss,
-                imode=imode,
             )
 
         if single:
@@ -461,15 +461,29 @@ class VectorFormFactorKK(VectorFormFactorPP):
         return ff
 
     def width(
-        self, mv: Union[float, RealArray], gvuu, gvdd, gvss, imode: int = 1
+        self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
-        if imode == 0:
-            mk = MK0_GEV * 1e3
-        elif imode == 1:
-            mk = MK_GEV * 1e3
-        else:
-            raise ValueError(f"Invalid iso-spin {imode}")
-        fsp_masses = (mk, mk)
+        fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
         return self._width(
-            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, gvss=gvss, imode=imode
+            mv=mv, fsp_masses=fsp_masses, gvuu=gvuu, gvdd=gvdd, gvss=gvss
         )
+
+
+@dataclass
+class VectorFormFactorK0K0(_VectorFormFactorKKBase):
+    """
+    Class for storing the parameters needed to compute the form factor for
+    V-K-K.
+    """
+
+    _imode: int = 0
+
+
+@dataclass
+class VectorFormFactorKK(_VectorFormFactorKKBase):
+    """
+    Class for storing the parameters needed to compute the form factor for
+    V-K-K.
+    """
+
+    _imode: int = 1
