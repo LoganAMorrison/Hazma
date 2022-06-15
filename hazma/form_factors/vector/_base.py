@@ -216,40 +216,49 @@ class VectorFormFactorPPP(VectorFormFactor):
     """
 
     @abc.abstractmethod
-    def form_factor(self, *, s, t, **kwargs):
+    def form_factor(self, q, s, t, **kwargs):
         """Compute the squared matrix element."""
         raise NotImplementedError()
 
     def _make_phase_space_integrand(self, q, fsp_masses, **kwargs):
-
         m1, m2, m3 = fsp_masses
-        mu1 = m1 / q
-        mu2 = m2 / q
-        mu3 = m3 / q
-        s = q**2
 
-        def integrand(s1, s2):
-            x = (s - s1 + m1**2) / s
-            y = (s - s2 + m2**2) / s
-            ff = self.form_factor(s=s1, t=s2, **kwargs)
+        def integrand(s, t):
+            ff = self.form_factor(q, s, t, **kwargs)
             ff2 = np.abs(ff) ** 2
-            return ff2 * (
-                -(y**2 * (1 + mu1**2))
-                + x**2 * (-1 + y - mu2**2)
-                + 2 * y * (1 + mu1**2 + mu2**2 - mu3**2)
-                - (1 + (mu1 - mu2) ** 2 - mu3**2) * (1 + (mu1 + mu2) ** 2 - mu3**2)
-                + x * (-2 + y) * (-1 + y - mu1**2 - mu2**2 + mu3**2)
+            lor = (
+                -(
+                    (m1 * m2 - q * m3)
+                    * (m1 * m2 + q * m3)
+                    * (-(q**2) + m1**2 + m2**2 - m3**2)
+                )
+                - (q - m1) * (q + m1) * (m2 - m3) * (m2 + m3) * t
+                - s**2 * t
+                + s
+                * (
+                    -((q - m2) * (q + m2) * (m1 - m3) * (m1 + m3))
+                    + (q**2 + m1**2 + m2**2 + m3**2) * t
+                    - t**2
+                )
             )
+
+            return ff2 * lor / (12.0 * q**2)
 
         return integrand
 
     def _make_phase_space(self, q, fsp_masses, **kwargs):
-        msqrd = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
+        msqrd_ = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
+
+        def msqrd(momenta):
+            s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
+            t = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
+            return msqrd_(s, t)
+
         return PhaseSpace(q, masses=np.array(fsp_masses), msqrd=msqrd)  # type: ignore
 
     def _integrated_form_factor_dblquad(
-        self, *, q, fsp_masses: Tuple[float, float, float], **kwargs
-    ):
+        self, *, q: float, fsp_masses: Tuple[float, float, float], **kwargs
+    ) -> float:
         """Compute the integrated from factor for a three pseudo-scalar meson
         final-state.
 
@@ -259,45 +268,53 @@ class VectorFormFactorPPP(VectorFormFactor):
             Squared center of mass energy.
         """
         m1, m2, m3 = fsp_masses
-        mu1 = m1 / q
-        mu2 = m2 / q
-        mu3 = m3 / q
-        s = q**2
-
-        pre = s**3 / (1536.0 * np.pi**3)
-
+        pre = 1.0 / (128.0 * np.pi**3 * q**2)
         integrand = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
 
-        def f1(x):
-            return (2 - x) * (1 - x + mu1**2 + mu2**2 - mu3**2)
-
-        def f2(x):
-            return np.sqrt(
-                kallen_lambda(1, mu1**2, 1 - x + mu1**2)
-                * kallen_lambda(mu2**2, mu3**2, 1 - x + mu1**2)
+        def f1(s):
+            return (
+                -((q**2 - m1**2) * (m2**2 - m3**2))
+                + (q**2 + m1**2 + m2**2 + m3**2) * s
+                - s**2
             )
 
-        def ymin(x):
-            return (f1(x) - f2(x)) / (2 * (1.0 - x + mu1**2))
+        def f2(s):
+            return np.sqrt(
+                kallen_lambda(s, q**2, m1**2) * kallen_lambda(s, m2**2, m3**2)
+            )
 
-        def ymax(x):
-            return (f1(x) + f2(x)) / (2 * (1.0 - x + mu1**2))
+        def tmin(s):
+            return (f1(s) - f2(s)) / (2 * s)
 
-        xmin = 2.0 * mu1
-        xmax = mu1**2 + (1.0 - (mu2 + mu3) ** 2)
+        def tmax(s):
+            return (f1(s) + f2(s)) / (2 * s)
 
-        return pre * integrate.dblquad(integrand, xmin, xmax, ymin, ymax)[0]
+        smin = (m2 + m3) ** 2
+        smax = (q - m1) ** 2
+
+        return pre * integrate.dblquad(integrand, smin, smax, tmin, tmax)[0]
 
     def _integrated_form_factor_rambo(
-        self, *, q, fsp_masses: Tuple[float, float, float], npts: int, **kwargs
-    ):
-        s = q**2
-        pre = s**3 / (1536.0 * np.pi**3)
-        phase_space = self._make_phase_space(q, fsp_masses, **kwargs)
-        return pre * phase_space.integrate(n=npts)[0]
+        self, *, q: float, fsp_masses: Tuple[float, float, float], npts: int, **kwargs
+    ) -> float:
+
+        msqrd = self._make_phase_space_integrand(q, fsp_masses, **kwargs)
+
+        phase_space = PhaseSpace(q, masses=np.array(fsp_masses))
+        ps, ws = phase_space.generate(npts)
+        s = lnorm_sqr(ps[:, 1] + ps[:, 2])
+        t = lnorm_sqr(ps[:, 0] + ps[:, 2])
+        avg = np.nanmean(ws * msqrd(s, t))
+
+        return avg
 
     def _integrated_form_factor(
-        self, *, q, fsp_masses: Tuple[float, float, float], method: str, **kwargs
+        self,
+        *,
+        q,
+        fsp_masses: Tuple[float, float, float],
+        method: str = "rambo",
+        **kwargs
     ):
         """Compute the integrated from factor for a three pseudo-scalar meson
         final-state.
@@ -308,10 +325,27 @@ class VectorFormFactorPPP(VectorFormFactor):
             Squared center of mass energy.
         """
         if method == "quad":
-            return self._integrated_form_factor_dblquad(
-                q=q, fsp_masses=fsp_masses, **kwargs
-            )
-        return self._integrated_form_factor_rambo(q=q, fsp_masses=fsp_masses, **kwargs)
+
+            def f(qq):
+                return self._integrated_form_factor_dblquad(
+                    q=qq, fsp_masses=fsp_masses, **kwargs
+                )
+
+        else:
+
+            def f(qq):
+                return self._integrated_form_factor_rambo(
+                    q=qq, fsp_masses=fsp_masses, **kwargs
+                )
+
+        msum = sum(fsp_masses)
+
+        def integrator(qq):
+            if qq < msum:
+                return 0.0
+            return f(qq)
+
+        return np.array([integrator(qq) for qq in q])
 
     def _energy_distributions(
         self,
