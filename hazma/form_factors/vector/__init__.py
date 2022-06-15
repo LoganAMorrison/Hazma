@@ -11,6 +11,7 @@ from ._pi_k_k import (
     VectorFormFactorPi0KpKm,
     VectorFormFactorPiKK0,
 )
+from ._pi_pi_eta import VectorFormFactorPiPiEta
 
 __all__ = [
     "VectorFormFactorPiPi",
@@ -26,4 +27,5 @@ __all__ = [
     "VectorFormFactorPi0K0K0",
     "VectorFormFactorPi0KpKm",
     "VectorFormFactorPiKK0",
+    "VectorFormFactorPiPiEta",
 ]
