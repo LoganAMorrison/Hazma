@@ -18,6 +18,7 @@ from hazma.vector_mediator.form_factors.utils import ComplexArray, RealArray
 
 from . import spectra as gev_spectra
 from . import positron as gev_positron_spectra
+from . import neutrino as gev_neutrino_spectra
 
 T = TypeVar("T", float, npt.NDArray[np.float_])
 
@@ -80,6 +81,7 @@ class VectorMediatorGeV(TheoryAnn):
         sigma_xx_to_pi_pi_pi0_pi0,
         annihilation_cross_section_funcs,
     )
+    from .thermal_cross_section import relic_density
 
     def __init__(
         self,
@@ -766,6 +768,109 @@ class VectorMediatorGeV(TheoryAnn):
         return {
             "e e": e_cm / 2.0,
         }
+
+    def _neutrino_spectrum_funcs(self) -> Dict[str, Callable]:
+        return gev_neutrino_spectra.dnde_neutrino_spectrum_fns(self)
+
+    def _neutrino_line_energies(self, e_cm, flavor: str) -> Dict[str, float]:
+        if flavor == "e":
+            return {"ve ve": e_cm / 2.0}
+        elif flavor == "mu":
+            return {"vm vm": e_cm / 2.0}
+        elif flavor == "tau":
+            return {"vt vt": e_cm / 2.0}
+        else:
+            raise ValueError(f"Invlid flavor {flavor}")
+
+    def neutrino_lines(self, e_cm, flavor: str) -> Dict[str, Dict[str, float]]:
+        """
+        Returns
+        -------
+        lines : dict(str, dict(str, float))
+            For each final state containing a monochromatic photon, gives the
+            energy of the photon and branching fraction into that final state.
+        """
+        bfs = self.annihilation_branching_fractions(e_cm)
+        lines = dict()
+
+        for fs, e in self._neutrino_line_energies(e_cm, flavor).items():
+            lines[fs] = {"energy": e, "bf": bfs[fs]}
+
+        return lines
+
+    def neutrino_spectrum_funcs(self, flavor: str):
+        """
+        Wraps _positron_spectrum_functions so the function for a final state
+        returns zero when annihilation into that state is not permitted.
+        """
+        sigma_ann_fns = self.annihilation_cross_section_funcs()
+        spectrum_funcs = self._neutrino_spectrum_funcs()
+
+        def make_dnde_wrapped(fs):
+            def dnde_wrapped(energies, e_cm):
+                if sigma_ann_fns[fs](e_cm) > 0:
+                    return spectrum_funcs[fs](energies, e_cm, flavor=flavor)
+                else:
+                    return np.zeros_like(energies)
+
+            return dnde_wrapped
+
+        return {fs: make_dnde_wrapped(fs) for fs in sigma_ann_fns.keys()}
+
+    def neutrino_spectra(self, energies, e_cm, flavor: str):
+        r"""
+        Gets the contributions to the continuum neutrino annihilation spectrum
+        for each final state.
+
+        Parameters
+        ---------
+        energies: float or array
+            Neutrino energy or energies at which to compute the spectrum.
+        e_cm : float
+            Center of mass energy for the annihilation in MeV.
+        flavor: str, optional
+            The flavor of neutrino. If None, results for each flavor are returned.
+
+        Returns
+        -------
+        specs : dict(str, float or float numpy.array)
+            Contribution to :math:`dN/dE_\gamma` at the given neutrino energies
+            and center-of-mass energy for each relevant final state. More
+            specifically, this is the spectrum for annihilation into each
+            channel rescaled by the corresponding branching fraction into that
+            channel.
+        """
+        bfs = self.annihilation_branching_fractions(e_cm)
+        specs = dict()
+
+        for fs, dnde_fn in self.neutrino_spectrum_funcs(flavor).items():
+            specs[fs] = bfs[fs] * dnde_fn(energies, e_cm)
+
+        specs["total"] = sum(specs.values())
+
+        return specs
+
+    def total_neutrino_spectrum(self, energies, e_cm, flavor: str):
+        r"""
+        Computes the total positron ray spectrum.
+
+        Parameters
+        ----------
+        e_ps : float or float numpy.array
+            Positron energy or energies at which to compute the spectrum.
+        e_cm : float
+            Annihilation center of mass energy.
+
+        Returns
+        -------
+        spec : float numpy.array
+            Array containing the total annihilation positron spectrum.
+        """
+
+        if hasattr(energies, "__len__"):
+            return self.neutrino_spectra(energies, e_cm, flavor=flavor)
+        else:
+            return self.neutrino_spectra(np.array([energies]), e_cm, flavor=flavor)
 
 
 class KineticMixingGeV(VectorMediatorGeV):

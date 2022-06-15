@@ -27,18 +27,17 @@ from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
 from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
 
 
-def make_zeros(neutrino_energies, flavor: Optional[str] = None):
+def make_zeros(neutrino_energies):
     dtype = neutrino_energies.dtype
     shape = neutrino_energies.shape
-    if flavor is None:
-        return np.zeros((3,) + shape, dtype=dtype)
     return np.zeros(shape, dtype=dtype)
 
 
 def make_spectrum_n_body_decay(
-    neutrino_energies, energy_distributions, dnde_decays, flavor: Optional[str] = None
+    neutrino_energies, energy_distributions, dnde_decays, flavor: str
 ):
-    dnde = np.zeros_like(neutrino_energies)
+
+    dnde = np.zeros(neutrino_energies.shape)
 
     for i, (probs, bins) in enumerate(energy_distributions):
         dec = np.array([dnde_decays[i](neutrino_energies, e, flavor) for e in bins])
@@ -48,10 +47,10 @@ def make_spectrum_n_body_decay(
 
 
 def _dnde_neutrino_two_body(
-    neutrino_energies, *, cme, m1, m2, dnde1, dnde2, flavor: Optional[str] = None
+    neutrino_energies, *, cme, m1, m2, dnde1, dnde2, flavor: str
 ):
     if cme < m1 + m2:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     e1 = (cme**2 + m1**2 - m2**2) / (2.0 * cme)
     e2 = (cme**2 - m1**2 + m2**2) / (2.0 * cme)
@@ -59,7 +58,7 @@ def _dnde_neutrino_two_body(
 
 
 def _dnde_neutrino_zero(neutrino_energies, *_):
-    return make_zeros(neutrino_energies, flavor)
+    return make_zeros(neutrino_energies)
 
 
 # =============================================================================
@@ -67,15 +66,13 @@ def _dnde_neutrino_zero(neutrino_energies, *_):
 # =============================================================================
 
 
-def dnde_neutrino_e_e(self, neutrino_energies, cme: float):
-    return make_zeros(neutrino_energies, flavor)
+def dnde_neutrino_e_e(self, neutrino_energies, cme: float, flavor: str):
+    return make_zeros(neutrino_energies)
 
 
-def dnde_neutrino_mu_mu(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_mu_mu(self, neutrino_energies, cme: float, flavor: str):
     if cme < 2 * mmu:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     dec = 2 * spectra.dnde_neutrino_muon(neutrino_energies, cme / 2.0, flavor)
     return dec
@@ -86,34 +83,34 @@ def dnde_neutrino_mu_mu(
 # =============================================================================
 
 
-def dnde_neutrino_pi_pi(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_pi_pi(self, neutrino_energies, cme: float, flavor: str):
     if cme < 2 * mpi:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
-    dec = 2 * spectra.dnde_neutrino_charged_pion(neutrino_energies, cme / 2.0)
+    dec = 2 * spectra.dnde_neutrino_charged_pion(
+        neutrino_energies, cme / 2.0, flavor=flavor
+    )
     return dec
 
 
-def dnde_neutrino_k0_k0(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_k0_k0(self, neutrino_energies, cme: float, flavor: str):
     if cme < 2 * mk0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
-    dec_l = spectra.dnde_neutrino_long_kaon(neutrino_energies, cme / 2.0)
-    dec_s = spectra.dnde_neutrino_short_kaon(neutrino_energies, cme / 2.0)
+    dec_l = spectra.dnde_neutrino_long_kaon(neutrino_energies, cme / 2.0, flavor=flavor)
+    dec_s = spectra.dnde_neutrino_short_kaon(
+        neutrino_energies, cme / 2.0, flavor=flavor
+    )
     return dec_l + dec_s
 
 
-def dnde_neutrino_k_k(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_k_k(self, neutrino_energies, cme: float, flavor: str):
     if cme < 2 * mk:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
-    dec = spectra.dnde_neutrino_charged_kaon(neutrino_energies, cme / 2.0)
+    dec = spectra.dnde_neutrino_charged_kaon(
+        neutrino_energies, cme / 2.0, flavor=flavor
+    )
     return dec
 
 
@@ -122,24 +119,20 @@ def dnde_neutrino_k_k(
 # =============================================================================
 
 
-def _dnde_neutrino_m_gamma(
-    neutrino_energies, cme, mass, dnde, flavor: Optional[str] = None
-):
+def _dnde_neutrino_m_gamma(neutrino_energies, cme, mass, dnde, flavor: str):
     if cme < mass:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
     eng = (cme**2 + mass**2) / (2.0 * cme)
-    return dnde(neutrino_energies, eng)
+    return dnde(neutrino_energies, eng, flavor=flavor)
 
 
-def dnde_neutrino_pi0_gamma(self, neutrino_energies, cme: float):
-    return make_zeros(neutrino_energies, flavor)
+def dnde_neutrino_pi0_gamma(self, neutrino_energies, cme: float, flavor: str):
+    return make_zeros(neutrino_energies)
 
 
-def dnde_neutrino_eta_gamma(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_eta_gamma(self, neutrino_energies, cme: float, flavor: str):
     return _dnde_neutrino_m_gamma(
-        neutrino_energies, cme, meta, spectra.dnde_neutrino_eta
+        neutrino_energies, cme, meta, spectra.dnde_neutrino_eta, flavor=flavor
     )
 
 
@@ -148,30 +141,34 @@ def dnde_neutrino_eta_gamma(
 # =============================================================================
 
 
-def _dnde_neutrino_m_phi(
-    neutrino_energies, *, cme, mass, dnde, flavor: Optional[str] = None
-):
+def _dnde_neutrino_m_phi(neutrino_energies, *, cme, mass, dnde, flavor: str):
     if cme < mass + mphi:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
     dnde_phi = spectra.dnde_neutrino_phi
     return _dnde_neutrino_two_body(
-        neutrino_energies, cme=cme, m1=mass, m2=mphi, dnde1=dnde, dnde2=dnde_phi
+        neutrino_energies,
+        cme=cme,
+        m1=mass,
+        m2=mphi,
+        dnde1=dnde,
+        dnde2=dnde_phi,
+        flavor=flavor,
     )
 
 
-def dnde_neutrino_pi0_phi(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_pi0_phi(self, neutrino_energies, cme: float, flavor: str):
     return _dnde_neutrino_m_phi(
-        neutrino_energies, cme=cme, mass=mpi0, dnde=_dnde_neutrino_zero
+        neutrino_energies, cme=cme, mass=mpi0, dnde=_dnde_neutrino_zero, flavor=flavor
     )
 
 
-def dnde_neutrino_eta_phi(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_eta_phi(self, neutrino_energies, cme: float, flavor: str):
     return _dnde_neutrino_m_phi(
-        neutrino_energies, cme=cme, mass=meta, dnde=spectra.dnde_neutrino_eta
+        neutrino_energies,
+        cme=cme,
+        mass=meta,
+        dnde=spectra.dnde_neutrino_eta,
+        flavor=flavor,
     )
 
 
@@ -180,15 +177,19 @@ def dnde_neutrino_eta_phi(
 # =============================================================================
 
 
-def dnde_neutrino_eta_omega(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
+def dnde_neutrino_eta_omega(self, neutrino_energies, cme: float, flavor: str):
     if cme < meta + momega:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
     dnde1 = spectra.dnde_neutrino_eta
     dnde2 = spectra.dnde_neutrino_omega
     return _dnde_neutrino_two_body(
-        neutrino_energies, cme=cme, m1=meta, m2=momega, dnde1=dnde1, dnde2=dnde2
+        neutrino_energies,
+        cme=cme,
+        m1=meta,
+        m2=momega,
+        dnde1=dnde1,
+        dnde2=dnde2,
+        flavor=flavor,
     )
 
 
@@ -197,23 +198,21 @@ def dnde_neutrino_eta_omega(
 # =============================================================================
 
 
-def dnde_neutrino_pi0_pi0_gamma(
-    self, neutrino_energies, cme: float, flavor: Optional[str] = None
-):
-    return make_zeros(neutrino_energies, flavor)
+def dnde_neutrino_pi0_pi0_gamma(self, neutrino_energies, cme: float, flavor: str):
+    return make_zeros(neutrino_energies)
 
 
 def dnde_neutrino_pi_pi_pi0(
     self,
     neutrino_energies,
     cme: float,
+    flavor: str,
     *,
     npts: int = 1 << 14,
     nbins: int = 25,
-    flavor: Optional[str] = None
 ):
     if cme < 2 * mpi + mpi0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiPi0 = self._ff_pi_pi_pi0
 
@@ -230,21 +229,18 @@ def dnde_neutrino_pi_pi_pi0(
         nbins=nbins,
         npts=npts,
     )
-    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dnde = make_spectrum_n_body_decay(
+        neutrino_energies, dists, dnde_decays, flavor=flavor
+    )
 
     return dnde
 
 
 def dnde_neutrino_pi_pi_eta(
-    self,
-    neutrino_energies,
-    cme: float,
-    *,
-    nbins: int = 25,
-    flavor: Optional[str] = None
+    self, neutrino_energies, cme: float, flavor: str, *, nbins: int = 25
 ):
     if cme < 2 * mpi + meta:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiEta = self._ff_pi_pi_eta
 
@@ -257,21 +253,16 @@ def dnde_neutrino_pi_pi_eta(
         cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi_pi_etap(
-    self,
-    neutrino_energies,
-    cme: float,
-    *,
-    nbins: int = 25,
-    flavor: Optional[str] = None
+    self, neutrino_energies, cme: float, flavor: str, *, nbins: int = 25
 ):
     if cme < 2 * mpi + metap:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiEtaP = self._ff_pi_pi_etap
 
@@ -284,16 +275,16 @@ def dnde_neutrino_pi_pi_etap(
         cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi_pi_omega(
-    self, neutrino_energies, cme: float, *, nbins=25, flavor: Optional[str] = None
+    self, neutrino_energies, cme: float, flavor: str, *, nbins=25
 ):
     if cme < 2 * mpi + momega:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
 
@@ -308,16 +299,16 @@ def dnde_neutrino_pi_pi_omega(
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi0_pi0_omega(
-    self, neutrino_energies, cme: float, *, nbins=25, flavor: Optional[str] = None
+    self, neutrino_energies, cme: float, flavor: str, *, nbins=25
 ):
     if cme < 2 * mpi0 + momega:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
 
@@ -332,7 +323,7 @@ def dnde_neutrino_pi0_pi0_omega(
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
@@ -341,13 +332,13 @@ def dnde_neutrino_pi0_k0_k0(
     self,
     neutrino_energies,
     cme: float,
+    flavor: str,
     *,
     npts: int = 1 << 14,
     nbins=25,
-    flavor: Optional[str] = None
 ):
     if cme < mpi0 + 2 * mk0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPi0K0K0 = self._ff_pi0_k0_k0
 
@@ -365,22 +356,16 @@ def dnde_neutrino_pi0_k0_k0(
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi0_k_k(
-    self,
-    neutrino_energies,
-    cme: float,
-    *,
-    npts: int = 1 << 14,
-    nbins=25,
-    flavor: Optional[str] = None
+    self, neutrino_energies, cme: float, flavor: str, *, npts: int = 1 << 14, nbins=25
 ):
     if cme < mpi0 + 2 * mk:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPi0KpKm = self._ff_pi0_k_k
 
@@ -398,7 +383,7 @@ def dnde_neutrino_pi0_k_k(
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
@@ -407,13 +392,13 @@ def dnde_neutrino_pi_k_k0(
     self,
     neutrino_energies,
     cme: float,
+    flavor: str,
     *,
     npts: int = 1 << 14,
     nbins=25,
-    flavor: Optional[str] = None
 ):
     if cme < mpi + mk + mk0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiKK0 = self._ff_pi_k_k0
 
@@ -431,7 +416,7 @@ def dnde_neutrino_pi_k_k0(
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
@@ -445,13 +430,13 @@ def dnde_neutrino_pi_pi_pi_pi(
     self,
     neutrino_energies,
     cme: float,
+    flavor: str,
     *,
     npts=1 << 14,
     nbins=25,
-    flavor: Optional[str] = None
 ):
     if cme < 4 * mpi:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiPiPi = self._ff_four_pi
 
@@ -470,7 +455,7 @@ def dnde_neutrino_pi_pi_pi_pi(
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dnde
 
@@ -479,13 +464,13 @@ def dnde_neutrino_pi_pi_pi0_pi0(
     self,
     neutrino_energies,
     cme: float,
+    flavor: str,
     *,
     npts: int = 1 << 15,
     nbins: int = 30,
-    flavor: Optional[str] = None
 ):
     if cme < 2 * mpi + 2 * mpi0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     ff: FormFactorPiPiPiPi = self._ff_four_pi
 
@@ -504,7 +489,7 @@ def dnde_neutrino_pi_pi_pi0_pi0(
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays)
+    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dnde
 
@@ -513,15 +498,15 @@ def dnde_neutrino_v_v(
     self,
     neutrino_energies,
     cme,
+    flavor: str,
     *,
     method="quad",
     npts=1 << 15,
     nbins=30,
-    flavor: Optional[str] = None
 ):
     gamma = 2.0 * self.mv / cme
     if gamma < 1.0:
-        return make_zeros(neutrino_energies, flavor)
+        return make_zeros(neutrino_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
 
@@ -529,7 +514,7 @@ def dnde_neutrino_v_v(
     kwargs2 = {"nbins": nbins}
 
     def dnde(es):
-        args = (es, cme)
+        args = (es, cme, flavor)
         spec = np.zeros_like(es)
         spec += dnde_neutrino_e_e(self, *args)
         spec += dnde_neutrino_mu_mu(self, *args)
@@ -561,8 +546,8 @@ def dnde_neutrino_v_v(
 
 
 def dnde_neutrino_spectrum_fns(self):
-    def dnde_zero(e, _: float, flavor: Optional[str] = None):
-        return make_zeros(e, flavor)
+    def dnde_zero(e, _: float, flavor: str):
+        return make_zeros(e)
 
     def wrap(f):
         @functools.wraps(f)
