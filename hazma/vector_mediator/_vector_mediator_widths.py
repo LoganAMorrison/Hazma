@@ -19,7 +19,7 @@ class VectorMediatorWidths:
         if mv > 2.0 * mpi:
             g2 = (self.gvdd - self.gvuu) ** 2
             b = mpi / mv
-            val = mv * g2 * (1.0 - 4.0 * b ** 2) ** 1.5 / (48.0 * np.pi)
+            val = mv * g2 * (1.0 - 4.0 * b**2) ** 1.5 / (48.0 * np.pi)
             assert val >= 0
             return val
         else:
@@ -30,11 +30,11 @@ class VectorMediatorWidths:
 
         if mv > mpi0:
             val = (
-                mv ** 3
+                mv**3
                 * alpha_em
                 * (self.gvdd + 2 * self.gvuu) ** 2
                 * (1 - (mpi0 / mv) ** 2) ** 3
-            ) / (384.0 * fpi ** 2 * pi ** 4)
+            ) / (384.0 * fpi**2 * pi**4)
 
             assert val >= 0
 
@@ -48,8 +48,8 @@ class VectorMediatorWidths:
 
         if mv > 2.0 * mx:
             val = (
-                (self.gvxx ** 2 * sqrt(mv ** 2 - 4 * mx ** 2) * (mv ** 2 + 2 * mx ** 2))
-                / (12.0 * mv ** 2 * pi)
+                (self.gvxx**2 * sqrt(mv**2 - 4 * mx**2) * (mv**2 + 2 * mx**2))
+                / (12.0 * mv**2 * pi)
             ).real
 
             assert val >= 0
@@ -72,8 +72,8 @@ class VectorMediatorWidths:
 
         if mv > 2.0 * mf:
             val = (
-                (gvll ** 2 * sqrt(-4 * mf ** 2 + mv ** 2) * (2 * mf ** 2 + mv ** 2))
-                / (12.0 * mv ** 2 * pi)
+                (gvll**2 * sqrt(-4 * mf**2 + mv**2) * (2 * mf**2 + mv**2))
+                / (12.0 * mv**2 * pi)
             ).real
 
             assert val >= 0
