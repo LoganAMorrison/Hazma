@@ -208,7 +208,7 @@ class VectorFormFactorPiPi(_VectorFormFactorPiPiBase):
 class VectorFormFactorPi0Pi0(_VectorFormFactorPiPiBase):
     """
     Class for storing the parameters needed to compute the form factor for
-    V-pi-pi.
+    V-pi0-pi0.
     """
 
     _imode: int = 0
