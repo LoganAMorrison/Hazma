@@ -102,6 +102,7 @@ Qe = -1.0
 fpi0 = 91.924  # Neutral pion decay constant
 fpi = 92.2138  # Charged pion decay constant
 fk = 110.379  # Charged kaon decay constant
+feta = 57.8
 b0 = pion_mass_chiral_limit**2 / (up_quark_mass + down_quark_mass)
 G8 = 5.47
 G27 = 0.392
