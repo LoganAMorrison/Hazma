@@ -144,8 +144,8 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
 
         Parameters
         ----------
-        q2:
-            Square of the center-of-mass energy in GeV.
+        q:
+            Center-of-mass energy in MeV.
         s:
             Mandelstam variable s = (P - p^{0})^2
         t:
