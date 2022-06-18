@@ -14,8 +14,8 @@ Functions required for computing CMB limits and related quantities.
 """
 
 # Get paths to files inside the module
-_f_eff_ep_ref = importlib_resources.files("hazma.cmb_data") / "f_eff_ep.dat"
-_f_eff_g_ref = importlib_resources.files("hazma.cmb_data") / "f_eff_g.dat"
+_f_eff_ep_ref = importlib_resources.files("hazma.limits.data") / "f_eff_ep.dat"
+_f_eff_g_ref = importlib_resources.files("hazma.limits.data") / "f_eff_g.dat"
 
 # Load f_eff^{e+ e-}
 with importlib_resources.as_file(_f_eff_ep_ref) as path:
@@ -39,28 +39,8 @@ p_ann_planck_temp_pol_lensing = 3.3e-31  # temp + pol + lensing
 p_ann_planck_temp_pol_lensing_bao = 3.2e-31  # temp + pol + lensing + BAO
 
 
-def vx_cmb(mx, x_kd):
-    """Computes the DM relative velocity at CMB using eq. 28 from `this
-    reference <https://arxiv.org/abs/1309.4091>`_.
-
-    Parameters
-    ----------
-    mx : float
-        Dark matter mass in MeV.
-    x_kd: float
-        T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
-        temperature.
-
-    Returns
-    -------
-    v_x : float
-        The DM relative velocity at the time of CMB formation.
-    """
-    return 2.0e-4 * 10e6 * temp_cmb_formation / mx * np.sqrt(1.0e-4 / x_kd)
-
-
 class CMBLimit(AbstractLimit):
-    def __init__(self, x_kd=1e-6, p_ann=p_ann_planck_temp_pol):
+    def __init__(self, x_kd=1e-4, p_ann=p_ann_planck_temp_pol):
         super().__init__()
         self._x_kd = x_kd
         self._p_ann = p_ann
@@ -80,6 +60,26 @@ class CMBLimit(AbstractLimit):
     @property
     def name(self):
         return "cmb"
+
+    @staticmethod
+    def vx_cmb(mx, x_kd):
+        """Computes the DM relative velocity at CMB using eq. 28 from `this
+        reference <https://arxiv.org/abs/1309.4091>`_.
+
+        Parameters
+        ----------
+        mx : float
+            Dark matter mass in MeV.
+        x_kd: float
+            T_kd / m_x, where T_kd is the dark matter's kinetic decoupling
+            temperature.
+
+        Returns
+        -------
+        v_x : float
+            The DM relative velocity at the time of CMB formation.
+        """
+        return 2.0e-4 * 10e6 * temp_cmb_formation / mx * np.sqrt(1.0e-4 / x_kd)
 
     def _constrain(self, model):
         r"""
@@ -111,7 +111,7 @@ class CMBLimit(AbstractLimit):
         """
         return self.p_ann * model.mx / self.f_eff(self.x_kd)  # type: ignore
 
-    def _f_eff_helper(self, model, fs, x_kd=1e-4, mode="quad"):
+    def _f_eff_helper(self, model, fs, mode="quad"):
         """Computes f_eff^gg or f_eff^ep for DM annihilation.
 
         Parameters
@@ -132,7 +132,8 @@ class CMBLimit(AbstractLimit):
             f_eff for photons or electrons and positrons.
         """
         # Center of mass energy
-        e_cm = 2.0 * model.mx * (1.0 + 0.5 * vx_cmb(model.mx, x_kd) ** 2)
+        vx = self.vx_cmb(model.mx, self.x_kd) ** 2
+        e_cm = 2.0 * model.mx * (1.0 + 0.5 * vx**2)
 
         if fs == "g g":
             f_eff_base = f_eff_g
@@ -194,16 +195,16 @@ class CMBLimit(AbstractLimit):
 
         return f_eff_dm + f_eff_line_dm  # type: ignore
 
-    def f_eff_g(self, model, x_kd=1e-4):
-        return self._f_eff_helper(model, "g g", x_kd, "quad")
+    def f_eff_g(self, model):
+        return self._f_eff_helper(model, "g g", "quad")
 
-    def f_eff_ep(self, model, x_kd=1e-4):
-        return self._f_eff_helper(model, "e e", x_kd, "quad")
+    def f_eff_ep(self, model):
+        return self._f_eff_helper(model, "e e", "quad")
 
-    def f_eff(self, model, x_kd=1.0e-4):
+    def f_eff(self, model):
         r"""
         Computes :math:`f_{\mathrm{eff}}` the efficiency with which dark matter
         annihilations around recombination inject energy into the thermal
         plasma.
         """
-        return self.f_eff_ep(model, x_kd) + self.f_eff_g(model, x_kd)
+        return self.f_eff_ep(model) + self.f_eff_g(model)
