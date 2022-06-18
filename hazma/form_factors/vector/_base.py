@@ -360,3 +360,26 @@ class VectorFormFactorPPP(VectorFormFactor):
     def _invariant_mass_distributions(self, *, q, npts: int, nbins: int, **kwargs):
         phase_space = self._make_phase_space(q, **kwargs)
         return phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
+
+
+@dataclass
+class VectorFormFactorPPPP(VectorFormFactor):
+    """Form Factor for a four psuedo-scalar meson final-state."""
+
+    fsp_masses: Tuple[float, float, float, float]
+
+    @abc.abstractmethod
+    def form_factor(self, momenta, **kwargs):
+        """Compute the squared matrix element."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def integrated_form_factor(self, q, **kwargs):
+        """Compute the form-factor integrated over phase space.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy.
+        """
+        raise NotImplementedError()
