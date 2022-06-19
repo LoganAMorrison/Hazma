@@ -184,30 +184,27 @@ def _compute_h_parameters(
 
 
 @dataclass
-class _VectorFormFactorKKBase(VectorFormFactorPP):
+class VectorFormFactorKKFitData:
     """
     Class for storing the parameters needed to compute the form factor for
     V-K-K.
     """
 
-    _imode: int
-    fsp_masses: Tuple[float, float] = field(init=False)
+    rho_mass: RealArray = field(init=False, repr=False)
+    rho_width: RealArray = field(init=False, repr=False)
+    rho_coup: ComplexArray = field(init=False, repr=False)
 
-    rho_mass: RealArray = field(init=False)
-    rho_width: RealArray = field(init=False)
-    rho_coup: ComplexArray = field(init=False)
+    hres: RealArray = field(init=False, repr=False)
+    h0: RealArray = field(init=False, repr=False)
+    dh: RealArray = field(init=False, repr=False)
 
-    hres: RealArray = field(init=False)
-    h0: RealArray = field(init=False)
-    dh: RealArray = field(init=False)
+    omega_mass: RealArray = field(init=False, repr=False)
+    omega_width: RealArray = field(init=False, repr=False)
+    omega_coup: ComplexArray = field(init=False, repr=False)
 
-    omega_mass: RealArray = field(init=False)
-    omega_width: RealArray = field(init=False)
-    omega_coup: ComplexArray = field(init=False)
-
-    phi_mass: RealArray = field(init=False)
-    phi_width: RealArray = field(init=False)
-    phi_coup: ComplexArray = field(init=False)
+    phi_mass: RealArray = field(init=False, repr=False)
+    phi_width: RealArray = field(init=False, repr=False)
+    phi_coup: ComplexArray = field(init=False, repr=False)
 
     n_max: int = field(default=200)
 
@@ -252,10 +249,6 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         params: FormFactorKKParameters
             Parameters of the resonances for the V-K-K form factor.
         """
-        if self._imode == 0:
-            self.fsp_masses = (MK0_GEV * 1e3, MK0_GEV * 1e3)
-        else:
-            self.fsp_masses = (MK_GEV * 1e3, MK_GEV * 1e3)
 
         # initial parameters for the model
         # beta_rho = 2.1968
@@ -333,6 +326,41 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         self.phi_width = phi_params.width
         self.phi_coup = phi_params.coup
 
+
+@dataclass
+class _VectorFormFactorKKBase(VectorFormFactorPP):
+    """
+    Class for storing the parameters needed to compute the form factor for
+    V-K-K.
+    """
+
+    _imode: int = field(repr=False)
+    fsp_masses: Tuple[float, float] = field(init=False)
+
+    n_max: int = field(default=200)
+    fit_data: VectorFormFactorKKFitData = field(init=False)
+
+    def __post_init__(self) -> None:
+        """
+        Compute the parameters needed for computing the V-K-K form factor.
+
+        Parameters
+        ----------
+        n_max: int
+            Number of resonances to include.
+
+        Returns
+        -------
+        params: FormFactorKKParameters
+            Parameters of the resonances for the V-K-K form factor.
+        """
+        if self._imode == 0:
+            self.fsp_masses = (MK0_GEV * 1e3, MK0_GEV * 1e3)
+        else:
+            self.fsp_masses = (MK_GEV * 1e3, MK_GEV * 1e3)
+
+        self.fit_data = VectorFormFactorKKFitData(n_max=self.n_max)
+
     def __form_factor(
         self,
         s: RealArray,
@@ -379,16 +407,16 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         rho_pre = -0.5 if self._imode == 0 else 0.5
         fk = rho_pre * (
             ci1
-            * self.rho_coup
+            * self.fit_data.rho_coup
             * breit_wigner_gs(
                 ss,
-                self.rho_mass,
-                self.rho_width,
+                self.fit_data.rho_mass,
+                self.fit_data.rho_width,
                 MPI_GEV,
                 MPI_GEV,
-                self.h0,
-                self.dh,
-                self.hres,
+                self.fit_data.h0,
+                self.fit_data.dh,
+                self.fit_data.hres,
                 reshape=True,
             )
         )
@@ -398,11 +426,11 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             1.0
             / 6.0
             * ci0
-            * self.omega_coup
+            * self.fit_data.omega_coup
             * breit_wigner_fw(
                 ss,
-                self.omega_mass,
-                self.omega_width,
+                self.fit_data.omega_mass,
+                self.fit_data.omega_width,
                 reshape=True,
             )
         )
@@ -410,14 +438,14 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         # Phi-exchange
         bwp = breit_wigner_pwave(
             ss,
-            self.phi_mass,
-            self.phi_width,
+            self.fit_data.phi_mass,
+            self.fit_data.phi_width,
             mk,
             mk,
             reshape=True,
         )
 
-        phi_terms = 1.0 / 3.0 * cs * self.phi_coup * bwp
+        phi_terms = 1.0 / 3.0 * cs * self.fit_data.phi_coup * bwp
         if self._imode == 0:
             phi_terms[0] *= eta_phi
         fk += phi_terms
@@ -427,20 +455,23 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     def form_factor(
         self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
-        """
-        Compute the pi-pi-V form factor.
+        """Compute the kaon-kaon form factor.
 
         Parameters
         ----------
-        s: Union[float,RealArray
-            Center-of-mass energy in MeV.
-        imode: Optional[int]
-            Iso-spin channel. Default is 1.
+        q: float or array-like
+            Center of mass energy.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        gvss: float
+            Coupling of vector to strange-quarks.
 
         Returns
         -------
-        ff: Union[complex,ComplexArray]
-            Form factor from pi-pi-V.
+        ff: float or array-like
+            Form-factor.
         """
 
         single = np.isscalar(q)
@@ -463,24 +494,136 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     def width(
         self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
+        r"""Compute the partial decay width of a massive vector into two kaons.
+
+        Parameters
+        ----------
+        mv: float
+            Mass of the vector.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        width: float
+            Decay width of vector into two kaons.
+        """
         return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+
+    def cross_section(
+        self,
+        *,
+        q,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        gvuu: float,
+        gvdd: float,
+        gvss: float,
+    ):
+        r"""Compute the cross section for dark matter annihilating into two
+        kaons.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        mx: float
+            Mass of the dark matter in MeV.
+        mv: float
+            Mass of the vector mediator in MeV.
+        gvxx: float
+            Coupling of vector to dark matter.
+        wv: float
+            Width of the vector in MeV.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into two kaons.
+        """
+        return self._cross_section(
+            q=q,
+            mx=mx,
+            mv=mv,
+            gvxx=gvxx,
+            wv=wv,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+        )
 
 
 @dataclass
 class VectorFormFactorK0K0(_VectorFormFactorKKBase):
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-K-K.
+    r"""Class for computing the form factor into two neutral kaons.
+
+    Parameters
+    ----------
+    n_max: int
+        Maximum number of resonances. Default is 2000.
+
+    Attributes
+    ----------
+    fsp_masses: (float, float)
+        Masses of the final-state particles.
+    fit_data: VectorFormFactorKKFitData
+        Stored data used to compute form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into two neutral kaons.
+    integrated_form_factor
+        Compute the form-factor into two neutral kaons integrated over
+        phase-space.
+    width
+        Compute the decay width of a vector into two neutral kaons.
+    cross_section
+        Compute the dark matter annihilation cross section into two neutral kaons.
     """
 
-    _imode: int = 0
+    _imode: int = field(init=False, repr=False, default=0)
 
 
 @dataclass
 class VectorFormFactorKK(_VectorFormFactorKKBase):
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-K-K.
+    r"""Class for computing the form factor into two charged kaons.
+
+    Parameters
+    ----------
+    n_max: int
+        Maximum number of resonances. Default is 2000.
+
+    Attributes
+    ----------
+    fsp_masses: (float, float)
+        Masses of the final-state particles.
+    fit_data: VectorFormFactorKKFitData
+        Stored data used to compute form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into two charged kaons.
+    integrated_form_factor
+        Compute the form-factor into two charged kaons integrated over
+        phase-space.
+    width
+        Compute the decay width of a vector into two charged kaons.
+    cross_section
+        Compute the dark matter annihilation cross section into two charged kaons.
     """
 
-    _imode: int = 1
+    _imode: int = field(init=False, repr=False, default=1)
