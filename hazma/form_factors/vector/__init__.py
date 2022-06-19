@@ -12,7 +12,7 @@ from ._pi_k_k import (
     VectorFormFactorPiKK0,
 )
 from ._pi_pi_eta import VectorFormFactorPiPiEta
-from ._pi_pi_etap import VectorFormFactorPiPiEtaP
+from ._pi_pi_etap import VectorFormFactorPiPiEtaPrime
 from ._pi_pi_omega import VectorFormFactorPiPiOmega, VectorFormFactorPi0Pi0Omega
 from ._pi_pi_pi0 import VectorFormFactorPiPiPi0
 from ._pi_pi_pi_pi import VectorFormFactorPiPiPi0Pi0, VectorFormFactorPiPiPiPi
@@ -32,7 +32,7 @@ __all__ = [
     "VectorFormFactorPi0KpKm",
     "VectorFormFactorPiKK0",
     "VectorFormFactorPiPiEta",
-    "VectorFormFactorPiPiEtaP",
+    "VectorFormFactorPiPiEtaPrime",
     "VectorFormFactorPiPiOmega",
     "VectorFormFactorPi0Pi0Omega",
     "VectorFormFactorPiPiPi0",

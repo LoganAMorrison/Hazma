@@ -1,10 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Tuple, Union, overload
 
 import numpy as np
 from scipy.integrate import quad
 
-from hazma.utils import kallen_lambda
+from hazma.utils import RealOrRealArray, kallen_lambda
 
 from ._utils import FPI_GEV, METAP_GEV, MPI_GEV, RealArray
 from ._base import VectorFormFactorPPP
@@ -14,22 +14,80 @@ MPI = MPI_GEV * 1e3
 
 
 @dataclass
-class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
-    fsp_masses: Tuple[float, float, float] = field(
-        init=False, default=(MPI, MPI, METAP)
-    )
-    _fsp_masses: Tuple[float, float, float] = field(
-        init=False, default=(MPI_GEV, MPI_GEV, METAP_GEV)
-    )
+class VectorFormFactorPiPiEtaPrimeFitData:
+    """Storage class for the fit parameters of the pi-pi-eta' vector
+    form-factor.
+
+    Attributes
+    ----------
+    masses: RealArray
+        VMD resonance masses.
+    widths: RealArray
+        VMD resonance widths.
+    amps: RealArray
+        VMD resonance amplitudes.
+    phases: RealArray
+        VMD resonance phases.
+    """
 
     masses: RealArray = np.array([0.77549, 1.54, 1.76, 2.11])
     widths: RealArray = np.array([0.1494, 0.356, 0.113, 0.176])
     amps: RealArray = np.array([1.0, 0.0, 0.0, 0.02])
     phases: RealArray = np.array([0, np.pi, np.pi, np.pi])
 
+
+@dataclass
+class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP):
+    r"""Class for computing the pi-pi-eta' vector form-factor.
+
+    Attributes
+    ----------
+    fsp_masses: (float,float,float)
+        Masses of the final state particles.
+    fit_data: VectorFormFactorPiPiEtaPrimeFitData
+        Fitted parameters for the pion-pion-eta vector form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor.
+    integrated_form_factor
+        Compute the form-factor integrated over phase-space.
+    width
+        Compute the decay width of a vector into pi-pi-eta'.
+    cross_section
+        Compute the dark matter annihilation cross section into pi-pi-eta'.
+    """
+    fsp_masses: Tuple[float, float, float] = field(
+        init=False, default=(METAP, MPI, MPI)
+    )
+    _fsp_masses: Tuple[float, float, float] = field(
+        init=False, default=(METAP_GEV, MPI_GEV, MPI_GEV)
+    )
+    fit_data: VectorFormFactorPiPiEtaPrimeFitData = field(init=False)
+
+    masses: InitVar[RealArray] = np.array([0.77549, 1.54, 1.76, 2.11])
+    widths: InitVar[RealArray] = np.array([0.1494, 0.356, 0.113, 0.176])
+    amps: InitVar[RealArray] = np.array([1.0, 0.0, 0.0, 0.02])
+    phases: InitVar[RealArray] = np.array([0.0, np.pi, np.pi, np.pi])
+
+    def __post_init__(
+        self,
+        masses: RealArray,
+        widths: RealArray,
+        amps: RealArray,
+        phases: RealArray,
+    ):
+        self.fit_data = VectorFormFactorPiPiEtaPrimeFitData(
+            masses=masses,
+            widths=widths,
+            amps=amps,
+            phases=phases,
+        )
+
     def __bw0(self, s):
-        m0 = self.masses[0]
-        w0 = self.widths[0]
+        m0 = self.fit_data.masses[0]
+        w0 = self.fit_data.widths[0]
         w = (
             w0
             * m0**2
@@ -39,8 +97,10 @@ class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
         return m0**2 / (m0**2 - s - 1j * np.sqrt(s) * w)
 
     def __bw(self, s):
-        w = self.widths * s / self.masses**2
-        bw = self.masses**2 / (self.masses**2 - s - 1j * np.sqrt(s) * w)
+        w = self.fit_data.widths * s / self.fit_data.masses**2
+        bw = self.fit_data.masses**2 / (
+            self.fit_data.masses**2 - s - 1j * np.sqrt(s) * w
+        )
         bw[0] = self.__bw0(s)
         return bw
 
@@ -52,20 +112,25 @@ class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
         pre = np.sqrt(2.0) / (4.0 * np.sqrt(3.0) * np.pi**2 * FPI_GEV**3)
         ci1 = gvuu - gvdd
 
-        amps = self.amps * np.exp(1j * self.phases)
+        amps = self.fit_data.amps * np.exp(1j * self.fit_data.phases)
         amps /= np.sum(amps)
 
         return pre * ci1 * self.__bw0(s) * np.sum(amps * self.__bw(q**2))
 
     def form_factor(self, q, s, _, gvuu, gvdd):
-        """
-        Compute the form factor for a vector decaying into two charged pions and
-        an eta.
+        r"""Compute the form factor for a vector decaying into two pions and an
+        eta'.
 
         Parameters
         ----------
-        q2:
-            Square of the center-of-mass energy in GeV.
+        q:
+            Center-of-mass energy in MeV.
+        s: float
+            Squared invariant mass of the pions s = (p2+p3)^2.
+        t: float
+            Squared invariant mass of the eta' and last pion t=(p1+p3)^2.
+        gvuu, gvdd: float
+            Coupling of vector to up-quarks and down-quarks.
         """
         qq = q * 1e-3
         ss = s * 1e-6
@@ -115,10 +180,8 @@ class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
         ----------
         q: float or array-like
             Center-of-mass energy in MeV.
-        gvuu: float
-            Vector coupling to up-quarks.
-        gvdd: float
-            Vector coupling to down-quarks.
+        gvuu, gvdd: float
+            Vector coupling to up-quarks and down-quarks.
         """
         scalar = np.isscalar(q)
         qq = np.atleast_1d(q) * 1e-3
@@ -143,6 +206,21 @@ class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
     def width(
         self, mv: Union[float, RealArray], *, gvuu: float, gvdd: float
     ) -> Union[float, RealArray]:
+        r"""Compute the partial decay width of a massive vector into an eta' and
+        two pions.
+
+        Parameters
+        ----------
+        mv: float
+            Mass of the vector.
+        gvuu, gvdd: float
+            Coupling of vector to up-quarks and down-quarks.
+
+        Returns
+        -------
+        width: float
+            Decay width of vector into an eta' and two pions.
+        """
         return 0.5 * mv * self.integrated_form_factor(q=mv, gvuu=gvuu, gvdd=gvdd)
 
     @overload
@@ -176,15 +254,37 @@ class VectorFormFactorPiPiEtaP(VectorFormFactorPPP):
     def cross_section(
         self,
         *,
-        q: Union[float, RealArray],
+        q: RealOrRealArray,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
         gvuu: float,
         gvdd: float
-    ) -> Union[float, RealArray]:
-        """Compute the cross-section of dark matter annihilation."""
+    ) -> RealOrRealArray:
+        r"""Compute the cross section for dark matter annihilating into an eta'
+        and two pions.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        mx: float
+            Mass of the dark matter in MeV.
+        mv: float
+            Mass of the vector mediator in MeV.
+        gvxx: float
+            Coupling of vector to dark matter.
+        wv: float
+            Width of the vector in MeV.
+        gvuu, gvdd: float
+            Coupling of vector to up-quarks and down-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into an eta' and two pions.
+        """
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64)
 

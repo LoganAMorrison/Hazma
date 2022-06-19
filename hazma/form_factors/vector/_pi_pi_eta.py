@@ -54,7 +54,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
     ----------
     fsp_masses: (float,float,float)
         Masses of the final state particles.
-    fit_data: VectorFormFactorPiPiEta
+    fit_data: VectorFormFactorPiPiEtaFitData
         Fitted parameters for the pion-pion-eta vector form-factor.
 
     Methods
