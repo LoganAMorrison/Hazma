@@ -140,15 +140,20 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         ...
 
     def form_factor(
-        self, *, q: Union[float, RealArray], gvuu, gvdd, gvss
+        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
     ) -> Union[complex, ComplexArray]:
-        """
-        Compute the eta-gamma-V form factor.
+        r"""Compute the eta-photon form factor.
 
         Parameters
         ----------
-        s: Union[float,npt.NDArray[np.float64]
-            Square of the center-of-mass energy in MeV.
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        gvss: float
+            Coupling of vector to strange-quarks.
 
         Returns
         -------
