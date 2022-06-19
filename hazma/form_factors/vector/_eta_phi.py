@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Union, overload, Tuple
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
+from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
 from ._base import VectorFormFactorPV
@@ -14,18 +15,62 @@ MPHI = parameters.phi_mass
 
 
 @dataclass
-class VectorFormFactorEtaPhi(VectorFormFactorPV):
+class VectorFormFactorEtaPhiFitData:
+    r"""Storage class for the parameters needed to compute the form factor into
+    an eta and phi. See arXiv:1911.11147 for details on the default values.
     """
-    Class for storing the parameters needed to compute the form factor for
-    V-eta-omega. See arXiv:1911.11147 for details on the default values.
+
+    masses: RealArray = field(repr=False)
+    widths: RealArray = field(repr=False)
+    amps: RealArray = field(repr=False)
+    phases: ComplexArray = field(repr=False)
+
+
+@dataclass
+class VectorFormFactorEtaPhi(VectorFormFactorPV):
+    r"""Class for computiing the vector form factor into and eta and phi.
+
+    Attributes
+    ----------
+    fsp_masses: Tuple[float, float]
+        Final state particle masses.
+    fit_data: VectorFormFactorEtaPhiFitData
+        Fit information used to compute the form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into an eta and phi.
+    integrated_form_factor
+        Compute the form-factor into an eta and phi integrated over
+        phase-space.
+    width
+        Compute the decay width of a vector into an eta and phi.
+    cross_section
+        Compute the dark matter annihilation cross section into an eta and phi.
     """
 
     fsp_masses: Tuple[float, float] = field(init=False, default=(META, MPHI))
+    fit_data: VectorFormFactorEtaPhiFitData = field(init=False)
 
-    masses: npt.NDArray[np.float64] = np.array([1.67, 2.14])
-    widths: npt.NDArray[np.float64] = np.array([0.122, 0.0435])
-    amps: npt.NDArray[np.float64] = np.array([0.175, 0.00409])
-    phase_factors: npt.NDArray[np.complex128] = np.exp(1j * np.array([0.0, 2.19]))
+    masses: InitVar[RealArray] = np.array([1.67, 2.14])
+    widths: InitVar[RealArray] = np.array([0.122, 0.0435])
+    amps: InitVar[RealArray] = np.array([0.175, 0.00409])
+    phases: InitVar[RealArray] = np.array([0.0, 2.19])
+
+    def __post_init__(
+        self,
+        masses: RealArray,
+        widths: RealArray,
+        amps: RealArray,
+        phases: RealArray,
+    ):
+        self.fit_data = VectorFormFactorEtaPhiFitData(
+            masses=masses,
+            widths=widths,
+            amps=amps,
+            phases=np.exp(1j * phases),
+        )
 
     def __form_factor(
         self,
@@ -49,9 +94,11 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         """
         cs = -3.0 * gvss
         return cs * np.sum(
-            self.amps
-            * self.phase_factors
-            * breit_wigner_fw(s, self.masses, self.widths, reshape=True),
+            self.fit_data.amps
+            * self.fit_data.phases
+            * breit_wigner_fw(
+                s, self.fit_data.masses, self.fit_data.widths, reshape=True
+            ),
             axis=1,
         )
 
@@ -66,18 +113,19 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
     def form_factor(
         self, *, q: Union[float, RealArray], gvss: float
     ) -> Union[complex, ComplexArray]:
-        """
-        Compute the V-eta-phi form factor.
+        """Compute the eta-phi vector form-factor.
 
         Parameters
         ----------
-        q: Union[float,npt.NDArray[np.float64]
-            Center-of-mass energy in MeV.
+        q: float or array-like
+            Center of mass energy.
+        gvss: float
+            Coupling of vector to strange-quarks.
 
         Returns
         -------
-        ff: Union[complex,npt.NDArray[np.complex128]]
-            Form factor from V-eta-phi.
+        ff: complex or array-like
+            Form-factor.
         """
         me = parameters.eta_mass
         mf = parameters.phi_mass
@@ -94,5 +142,62 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
 
         return ff * 1e-3
 
-    def width(self, mv, gvss):
+    def width(self, mv: RealOrRealArray, gvss: float) -> RealOrRealArray:
+        r"""Compute the partial decay width of a massive vector into an eta and
+        phi.
+
+        Parameters
+        ----------
+        mv: float
+            Mass of the vector.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        width: float
+            Decay width of vector into an eta and phi.
+        """
         return self._width(mv=mv, gvss=gvss)
+
+    def cross_section(
+        self,
+        *,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        gvss: float,
+    ) -> RealOrRealArray:
+        r"""Compute the cross section for dark matter annihilating into an eta
+        and phi.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        mx: float
+            Mass of the dark matter in MeV.
+        mv: float
+            Mass of the vector mediator in MeV.
+        gvxx: float
+            Coupling of vector to dark matter.
+        wv: float
+            Width of the vector in MeV.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into an eta and phi.
+        """
+        return self._cross_section(
+            q=q,
+            mx=mx,
+            mv=mv,
+            gvxx=gvxx,
+            wv=wv,
+            gvss=gvss,
+        )

@@ -280,25 +280,26 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
 
 @dataclass
 class VectorFormFactorPiPi(_VectorFormFactorPiPiBase):
-    r"""Class for storing the parameters needed to compute the form factor for
-    V-pi-pi.
+    r"""Class for computing the vector form-factor into two charged pions.
 
     Attributes
     ----------
-    n_max: int
-        Maximum number of resonances. Default is 2000.
+    fsp_masses: Tuple[float, float]
+        Final state particle masses.
+    fit_data: VectorFormFactorPiPiFitData
+        Fit information used to compute the form-factor.
 
     Methods
     -------
     form_factor
-        Compute the un-integrated form-factor into two-charged pions.
+        Compute the un-integrated form-factor into two charged pions.
     integrated_form_factor
-        Compute the form-factor into two-charged pions integrated over
+        Compute the form-factor into two charged pions integrated over
         phase-space.
     width
-        Compute the decay width of a vector into two-charged pions.
+        Compute the decay width of a vector into two charged pions.
     cross_section
-        Compute the dark matter annihilation cross section into two-charged pions.
+        Compute the dark matter annihilation cross section into two charged pions.
     """
 
     _imode: int = field(init=False, default=1, repr=False)
@@ -306,13 +307,14 @@ class VectorFormFactorPiPi(_VectorFormFactorPiPiBase):
 
 @dataclass
 class VectorFormFactorPi0Pi0(_VectorFormFactorPiPiBase):
-    r"""Class for storing the parameters needed to compute the form factor for
-    V-pi0-pi0.
+    r"""Class for computing the vector form-factor into two neutral pions.
 
     Attributes
     ----------
-    n_max: int
-        Maximum number of resonances. Default is 2000.
+    fsp_masses: Tuple[float, float]
+        Final state particle masses.
+    fit_data: VectorFormFactorPiPiFitData
+        Fit information used to compute the form-factor.
 
     Methods
     -------
