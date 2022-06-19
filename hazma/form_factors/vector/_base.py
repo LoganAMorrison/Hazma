@@ -1,14 +1,24 @@
 from dataclasses import dataclass, field, InitVar
 import abc
-from typing import Tuple, Sequence
-import functools as ft
+from typing import Tuple, Sequence, Union, overload
 
 import numpy as np
-from scipy import integrate
 
-from hazma.utils import kallen_lambda, lnorm_sqr
+from hazma.utils import kallen_lambda
 from hazma.utils import RealArray
-from hazma.rambo import PhaseSpace
+from hazma.phase_space import integrate_three_body
+from hazma.phase_space import energy_distributions_three_body
+from hazma.phase_space import invariant_mass_distributions_three_body
+
+
+def _normalize(xs, ps, axis=0):
+    assert np.shape(xs) == np.shape(ps), "Invalid shapes."
+    norm = np.trapz(ps, xs, axis=axis)
+    if norm > 0.0:
+        newps = ps / norm
+    else:
+        newps = np.zeros_like(ps)
+    return newps
 
 
 @dataclass
@@ -66,6 +76,11 @@ class VectorFormFactor(abc.ABC):
     fsp_masses: Sequence[float]
 
     @abc.abstractmethod
+    def form_factor(self, *args, **kwargs):
+        """Compute the squared matrix element."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def integrated_form_factor(self, *, q, **kwargs):
         r"""Compute the form-factor as a function of the center-of-mass energy.
 
@@ -83,11 +98,6 @@ class VectorFormFactor(abc.ABC):
             J_{\mathcal{H}}^{\mu} = \bra{0}J_{\mu}\ket{\mathcal{H}}
 
         """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def form_factor(self, *args, **kwargs):
-        """Compute the squared matrix element."""
         raise NotImplementedError()
 
     def _width(self, *, mv, **kwargs):
@@ -241,125 +251,195 @@ class VectorFormFactorPPP(VectorFormFactor):
         """Compute the squared matrix element."""
         raise NotImplementedError()
 
-    def _make_phase_space_integrand(self, q, **kwargs):
+    def __phase_space_integrand(self, q, s, t, **kwargs):
+        r"""Compute the integrand of the three-body phase-space."""
         m1, m2, m3 = self.fsp_masses
+
+        ff = self.form_factor(q, s, t, **kwargs)
+        ff2 = np.abs(ff) ** 2
+        lor = (
+            -(
+                (m1 * m2 - q * m3)
+                * (m1 * m2 + q * m3)
+                * (-(q**2) + m1**2 + m2**2 - m3**2)
+            )
+            - (q - m1) * (q + m1) * (m2 - m3) * (m2 + m3) * t
+            - s**2 * t
+            + s
+            * (
+                -((q - m2) * (q + m2) * (m1 - m3) * (m1 + m3))
+                + (q**2 + m1**2 + m2**2 + m3**2) * t
+                - t**2
+            )
+        )
+
+        return ff2 * lor / (12.0 * q**2)
+
+    @overload
+    def _integrated_form_factor(
+        self, *, q: float, method: str = "rambo", npts: int = 10000, **kwargs
+    ) -> float:
+        ...
+
+    @overload
+    def _integrated_form_factor(
+        self, *, q: RealArray, method: str = "rambo", npts: int = 10000, **kwargs
+    ) -> RealArray:
+        ...
+
+    def _integrated_form_factor(
+        self,
+        *,
+        q: Union[float, RealArray],
+        method: str = "quad",
+        npts: int = 10000,
+        **kwargs,
+    ) -> Union[float, RealArray]:
+        """Compute the integrated from factor for a three pseudo-scalar meson
+        final-state.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center of mass energy.
+        method: str, optional
+            Method used to integrate. Default is 'quad'. Options are 'quad' or
+            'rambo'.
+        npts: int, optional
+            Number of phase-space points to use in integration. Ignored is
+            method isn't 'rambo'. Default is 10_000.
+
+        Returns
+        -------
+        ff: float or array-like
+            Integrated form-factor.
+        """
+
+        def integrate_(q_):
+            return integrate_three_body(
+                lambda s, t: self.__phase_space_integrand(q_, s, t, **kwargs),
+                q_,
+                self.fsp_masses,
+                method=method,
+                npts=npts,
+            )[0]
+
+        scalar = np.isscalar(q)
+        qs = np.atleast_1d(q)
+
+        res = np.array([integrate_(q_) for q_ in qs])
+
+        if scalar:
+            return res[0]
+        return res
+
+    def _energy_distributions(
+        self,
+        *,
+        q: float,
+        nbins: int,
+        method: str = "quad",
+        npts: int = 10000,
+        **kwargs,
+    ):
+        r"""Compute the energy distributions of the final state particles.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy in MeV.
+        method: str
+            Method used to generate energy distributions. Can be 'quad' or
+            'rambo'. Default is 'quad'.
+        nbins: int
+            Number of bins for the distributions.
+        npts: int
+            Number of phase-space points used to generate distributions. Only
+            used if method is 'rambo'. Default is 10_000.
+
+        Returns
+        -------
+        dist1, dist2, dist3: (array, array)
+            Three tuples containing the probabilities and energies for each
+            final state particle.
+        """
 
         def integrand(s, t):
-            ff = self.form_factor(q, s, t, **kwargs)
-            ff2 = np.abs(ff) ** 2
-            lor = (
-                -(
-                    (m1 * m2 - q * m3)
-                    * (m1 * m2 + q * m3)
-                    * (-(q**2) + m1**2 + m2**2 - m3**2)
-                )
-                - (q - m1) * (q + m1) * (m2 - m3) * (m2 + m3) * t
-                - s**2 * t
-                + s
-                * (
-                    -((q - m2) * (q + m2) * (m1 - m3) * (m1 + m3))
-                    + (q**2 + m1**2 + m2**2 + m3**2) * t
-                    - t**2
-                )
-            )
+            return self.__phase_space_integrand(q, s, t, **kwargs)
 
-            return ff2 * lor / (12.0 * q**2)
+        return energy_distributions_three_body(
+            integrand, q, self.fsp_masses, method=method, nbins=nbins, npts=npts
+        )
 
-        return integrand
-
-    def _make_phase_space(self, q, **kwargs):
-        msqrd_ = self._make_phase_space_integrand(q, **kwargs)
-
-        def msqrd(momenta):
-            s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])
-            t = lnorm_sqr(momenta[:, 0] + momenta[:, 2])
-            return msqrd_(s, t)
-
-        return PhaseSpace(q, masses=np.array(self.fsp_masses), msqrd=msqrd)
-
-    def _integrated_form_factor_dblquad(self, *, q: float, **kwargs) -> float:
-        """Compute the integrated from factor for a three pseudo-scalar meson
-        final-state.
+    def _invariant_mass_distributions(
+        self, *, q: float, method: str, nbins: int, npts: int = 10000, **kwargs
+    ):
+        r"""Compute the invariant-mass distributions of the final state
+        particles.
 
         Parameters
         ----------
-        s: float or array-like
-            Squared center of mass energy.
+        q: float
+            Center-of-mass energy in MeV.
+        method: str
+            Method used to generate energy distributions. Can be 'quad' or
+            'rambo'. Default is 'quad'.
+        nbins: int
+            Number of bins for the distributions.
+        npts: int
+            Number of phase-space points used to generate distributions. Only
+            used if method is 'rambo'. Default is 10_000.
+
+        Returns
+        -------
+        dist1, dist2, dist3: (array, array)
+            Three tuples containing the probabilities and invariant massses for
+            each final state particle.
+
+        Other Parameters
+        ----------------
         """
-        m1, m2, m3 = self.fsp_masses
-        pre = 1.0 / (128.0 * np.pi**3 * q**2)
-        integrand = self._make_phase_space_integrand(q, **kwargs)
 
-        def f1(s):
-            return (
-                -((q**2 - m1**2) * (m2**2 - m3**2))
-                + (q**2 + m1**2 + m2**2 + m3**2) * s
-                - s**2
-            )
+        def integrand(s, t):
+            return self.__phase_space_integrand(q, s, t, **kwargs)
 
-        def f2(s):
-            return np.sqrt(
-                kallen_lambda(s, q**2, m1**2) * kallen_lambda(s, m2**2, m3**2)
-            )
+        return invariant_mass_distributions_three_body(
+            integrand, q, self.fsp_masses, method=method, nbins=nbins, npts=npts
+        )
 
-        def tmin(s):
-            return (f1(s) - f2(s)) / (2 * s)
+    def _width(self, *, mv, method: str = "quad", npts: int = 10000, **kwargs):
+        """Compute the partial width of a vector decay."""
+        single = np.isscalar(mv)
+        q = np.atleast_1d(mv).astype(np.float64)
+        w = (
+            0.5
+            * q
+            * self.integrated_form_factor(q=q, method=method, npts=npts, **kwargs)
+        )
 
-        def tmax(s):
-            return (f1(s) + f2(s)) / (2 * s)
+        if single:
+            return w[0]
+        return w
 
-        smin = (m2 + m3) ** 2
-        smax = (q - m1) ** 2
+    def _cross_section(
+        self, *, q, mx, mv, gvxx, wv, method="quad", npts: int = 10000, **kwargs
+    ):
+        """Compute the cross-section of dark matter annihilation."""
+        single = np.isscalar(q)
+        qq = np.atleast_1d(q).astype(np.float64)
 
-        return pre * integrate.dblquad(integrand, smin, smax, tmin, tmax)[0]
+        s = qq**2
+        pre = (
+            gvxx**2
+            * (s + 2 * mx**2)
+            / (np.sqrt(s - 4 * mx**2) * ((s - mv**2) ** 2 + (mv * wv) ** 2))
+        )
+        pre = pre * 0.5 * qq
+        cs = pre * self.integrated_form_factor(q=q, method=method, npts=npts, **kwargs)
 
-    def _integrated_form_factor_rambo(self, *, q: float, npts: int, **kwargs) -> float:
-
-        msqrd = self._make_phase_space_integrand(q, **kwargs)
-
-        phase_space = PhaseSpace(q, masses=np.array(self.fsp_masses))
-        ps, ws = phase_space.generate(npts)
-        s = lnorm_sqr(ps[:, 1] + ps[:, 2])
-        t = lnorm_sqr(ps[:, 0] + ps[:, 2])
-        avg = np.nanmean(ws * msqrd(s, t))
-
-        return avg
-
-    def integrated_form_factor(self, *, q, method: str = "rambo", **kwargs):
-        """Compute the integrated from factor for a three pseudo-scalar meson
-        final-state.
-
-        Parameters
-        ----------
-        s: float or array-like
-            Squared center of mass energy.
-        """
-        methods = {
-            "quad": ft.partial(self._integrated_form_factor_dblquad, **kwargs),
-            "rambo": ft.partial(self._integrated_form_factor_rambo, **kwargs),
-        }
-        if methods.get(method) is None:
-            ms = " ".join(methods.keys())
-            raise ValueError(
-                f"Invalid method {method}. Using one of the following: {ms}"
-            )
-
-        msum = sum(self.fsp_masses)
-
-        def integrator(qq):
-            if qq < msum:
-                return 0.0
-            return methods[method](q=qq)
-
-        return np.array([integrator(qq) for qq in q])
-
-    def _energy_distributions(self, *, q, npts: int, nbins: int, **kwargs):
-        phase_space = self._make_phase_space(q, **kwargs)
-        return phase_space.energy_distributions(n=npts, nbins=nbins)
-
-    def _invariant_mass_distributions(self, *, q, npts: int, nbins: int, **kwargs):
-        phase_space = self._make_phase_space(q, **kwargs)
-        return phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
+        if single:
+            return cs[0]
+        return cs
 
 
 @dataclass
