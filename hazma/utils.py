@@ -9,8 +9,10 @@ from .parameters import alpha_em
 # ---- Types --------------------------------------------------------
 # ===================================================================
 
-RealArray = npt.NDArray[np.float64]
+RealArray = npt.NDArray[np.float_]
 RealOrRealArray = Union[float, RealArray]
+ComplexArray = npt.NDArray[np.complex_]
+ComplexOrComplexArray = Union[complex, ComplexArray]
 
 # ===================================================================
 # ---- Kinematics ---------------------------------------------------
@@ -90,6 +92,63 @@ def lnorm_sqr(lv: np.ndarray, axis: int = 0) -> np.ndarray:
         - np.square(lv.take(2, axis=axis))
         - np.square(lv.take(3, axis=axis))
     )
+
+
+def three_body_integration_bounds_t(s, m, m1, m2, m3):
+    """Compute the integrate bounds on the 'Mandelstam' variable t = (p1 + p3)^2
+    for a three-body final state.
+
+    Parameters
+    ----------
+    s: float
+        Invariant mass of particles 2 and 3.
+    m: float
+        Center-of-mass energy.
+    m1, m2, m3: float
+        Masses of the three final state particles.
+
+    Returns
+    -------
+    lb: float
+        Lower integration bound.
+    ub: float
+        Upper integration bound.
+    """
+    msqr = m**2
+    m12 = m1**2
+    m22 = m2**2
+    m32 = m3**2
+
+    pfac = -(msqr - m12) * (m22 - m32) + (msqr + m12 + m22 + m32) * s - s**2
+    sfac = np.sqrt(kallen_lambda(s, m12, m22) * kallen_lambda(s, m22, m32))
+
+    lb = 0.5 * (pfac - sfac) / s
+    ub = 0.5 * (pfac + sfac) / s
+
+    return lb, ub
+
+
+def three_body_integration_bounds_s(m, m1, m2, m3):
+    """Compute the integrate bounds on the 'Mandelstam' variable s = (p2 + p3)^2
+    for a three-body final state.
+
+    Parameters
+    ----------
+    m: float
+        Center-of-mass energy.
+    m1, m2, m3: float
+        Masses of the three final state particles.
+
+    Returns
+    -------
+    lb: float
+        Lower integration bound.
+    ub: float
+        Upper integration bound.
+    """
+    lb = (m2 + m3) ** 2
+    ub = (m - m1) ** 2
+    return lb, ub
 
 
 # ===================================================================
