@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Union, overload, Tuple
 
 import numpy as np
@@ -13,20 +13,66 @@ META = parameters.eta_mass
 MOMEGA = parameters.omega_mass
 
 
+@dataclass(frozen=True)
+class VectorFormFactorEtaOmegaFitData:
+    r"""Storage class for the eta-omega vector form-factor. See arXiv:1911.11147
+    for details on the default values.
+    """
+
+    # w', w''' parameters
+    masses: RealArray = field(repr=False)
+    widths: RealArray = field(repr=False)
+    amps: RealArray = field(repr=False)
+    phases: RealArray = field(repr=False)
+
+
 @dataclass
 class VectorFormFactorEtaOmega(VectorFormFactorPV):
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-eta-omega. See arXiv:1911.11147 for details on the default values.
+    r"""Class for computing the eta-omega vector form-factor.
+
+    Attributes
+    ----------
+    fsp_masses: (float, float)
+        Masses of the final-state particles.
+    fit_data: VectorFormFactorEtaOmegaFitData
+        Stored data used to compute form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into an eta and omega.
+    integrated_form_factor
+        Compute the form-factor into an eta and omega integrated over
+        phase-space.
+    width
+        Compute the decay width of a vector into an eta and omega.
+    cross_section
+        Compute the dark matter annihilation cross section into an eta and
+        omega.
     """
 
     fsp_masses: Tuple[float, float] = field(init=False, default=(META, MOMEGA))
+    fit_data: VectorFormFactorEtaOmegaFitData = field(init=False)
 
     # w', w''' parameters
-    masses: npt.NDArray[np.float64] = np.array([1.43, 1.67])
-    widths: npt.NDArray[np.float64] = np.array([0.215, 0.113])
-    amps: npt.NDArray[np.float64] = np.array([0.0862, 0.0648])
-    phase_factors: npt.NDArray[np.complex128] = np.exp(1j * np.array([0.0, np.pi]))
+    masses: InitVar[RealArray] = np.array([1.43, 1.67])
+    widths: InitVar[RealArray] = np.array([0.215, 0.113])
+    amps: InitVar[RealArray] = np.array([0.0862, 0.0648])
+    phases: InitVar[RealArray] = np.exp(1j * np.array([0.0, np.pi]))
+
+    def __post_init__(
+        self,
+        masses: RealArray,
+        widths: RealArray,
+        amps: RealArray,
+        phases: RealArray,
+    ):
+        self.fit_data = VectorFormFactorEtaOmegaFitData(
+            masses=masses,
+            widths=widths,
+            amps=amps,
+            phases=phases,
+        )
 
     def __form_factor(
         self,
@@ -55,9 +101,11 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         # arXiv:2201.01788. (multipled by energy to make it unitless)
         ci0 = 3 * (gvuu + gvdd)
         return ci0 * np.sum(
-            self.amps
-            * self.phase_factors
-            * breit_wigner_fw(s, self.masses, self.widths, reshape=True),
+            self.fit_data.amps
+            * self.fit_data.phases
+            * breit_wigner_fw(
+                s, self.fit_data.masses, self.fit_data.widths, reshape=True
+            ),
             axis=1,
         )
 
