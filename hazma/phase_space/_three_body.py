@@ -263,6 +263,11 @@ def _partial_integration(
     return res
 
 
+# =============================================================================
+# ---- Full Phase Space Integrate ---------------------------------------------
+# =============================================================================
+
+
 def _integrate_three_body_quad(
     msqrd: ThreeBodyMsqrd, q: float, masses: Tuple[float, float, float]
 ) -> Tuple[float, float]:
@@ -387,6 +392,11 @@ def integrate_three_body(
     return meth(msqrd, q, masses)
 
 
+# =============================================================================
+# ---- Energy Distributions ---------------------------------------------------
+# =============================================================================
+
+
 def _energy_distributions_quad(
     *,
     msqrd: ThreeBodyMsqrd,
@@ -469,6 +479,11 @@ def energy_distributions_three_body(
         raise ValueError(f"Invalid method: {method}. Use one of the following: {ms}.")
 
     return meth(msqrd=msqrd, q=q, masses=masses, nbins=nbins)
+
+
+# =============================================================================
+# ---- Invariant Mass Distributions -------------------------------------------
+# =============================================================================
 
 
 def _invariant_mass_distributions_quad(

@@ -4,6 +4,8 @@ import itertools
 
 import numpy as np
 
+from hazma.utils import kallen_lambda
+
 
 def normalize_distribution(probabilities, edges):
     norm = np.sum([p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)])
@@ -75,3 +77,24 @@ def invariant_mass_limits(
         limits[(i, j)] = (mmin, mmax)
 
     return limits
+
+
+def two_body_phase_space_prefactor(q, m1: float, m2: float):
+    r"""Compute the pre-factor of the two-body final-state phase-space integral.
+
+    Parameters
+    ----------
+    q: float or array-like
+        Center-of-mass energy.
+    m1, m2: float
+        Masses of the final state particles.
+
+    Returns
+    -------
+    pre: float or array-like
+        The prefactor with same shape as `q`.
+    """
+    s = q**2
+    return np.sqrt(np.clip(kallen_lambda(s, m1**2, m2**2), 0.0, None)) / (
+        8 * np.pi * s
+    )
