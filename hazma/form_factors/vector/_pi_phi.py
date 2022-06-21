@@ -7,7 +7,7 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import MPI0_GEV, ComplexArray, RealArray
-from ._base import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV
 
 MPI0 = parameters.neutral_pion_mass
 MPHI = parameters.phi_mass
@@ -179,6 +179,26 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
             return ff[0]
 
         return ff * 1e-3
+
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    ) -> RealOrRealArray:
+        r"""Compute the partial decay width of a massive vector into a pion and
+        phi.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        iff: float or array-like
+            Integrated pion-phi form-factor.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
 
     def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a pion and

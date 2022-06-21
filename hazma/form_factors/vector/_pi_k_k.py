@@ -9,7 +9,7 @@ from hazma.utils import RealOrRealArray, ComplexOrComplexArray
 
 from . import _utils
 from ._utils import RealArray
-from ._base import VectorFormFactorPPP
+from ._three_body import VectorFormFactorPPP
 
 MK = _utils.MK_GEV * 1e3
 MK0 = _utils.MK0_GEV * 1e3
@@ -128,6 +128,10 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
             g_ks_k_pi=g_ks_k_pi,
         )
 
+    @abc.abstractmethod
+    def _form_factor(self, q, s, t, gvuu, gvdd, gvss) -> float:
+        raise NotImplementedError()
+
     def _iso_spin_amplitudes(
         self, m: RealOrRealArray, gvuu: float, gvdd: float, gvss: float
     ) -> Tuple[ComplexOrComplexArray, ComplexOrComplexArray]:
@@ -169,10 +173,6 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
             _utils.breit_wigner_pwave(s, KS_MASS_GEV, KS_WIDTH_GEV, m1, m2)
             / KS_MASS_GEV**2
         )
-
-    @abc.abstractmethod
-    def _form_factor(self, q, s, t, gvuu, gvdd, gvss) -> float:
-        raise NotImplementedError()
 
     def form_factor(self, q, s, t, gvuu: float, gvdd: float, gvss: float) -> float:
         r"""Compute the vector form-factor for a pion and two kaons.

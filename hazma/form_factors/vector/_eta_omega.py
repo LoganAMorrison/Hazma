@@ -5,9 +5,10 @@ import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
+from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
-from ._base import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV
 
 META = parameters.eta_mass
 MOMEGA = parameters.omega_mass
@@ -148,5 +149,83 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
 
         return ff * 1e-3
 
-    def width(self, mv, gvuu, gvdd):
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    ) -> RealOrRealArray:
+        r"""Compute the eta-omega form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        gvuu, gvdd: float
+            Coupling of vector to up and down-quarks.
+
+        Returns
+        -------
+        iff: float
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+
+    def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
+        r"""Compute the partial decay width of a massive vector into an eta and
+        omega.
+
+        Parameters
+        ----------
+        mv: float
+            Mass of the vector.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        width: float
+            Decay width of vector into an eta and omega.
+        """
         return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
+
+    def cross_section(
+        self,
+        *,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        gvuu: float,
+        gvdd: float,
+    ) -> RealOrRealArray:
+        r"""Compute the cross section for dark matter annihilating into an eta
+        and omega.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        mx: float
+            Mass of the dark matter in MeV.
+        mv: float
+            Mass of the vector mediator in MeV.
+        gvxx: float
+            Coupling of vector to dark matter.
+        wv: float
+            Width of the vector in MeV.
+        gvuu, gvdd: float
+            Coupling of vector to up and down-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into an eta and omega.
+        """
+        return self._cross_section(
+            q=q,
+            mx=mx,
+            mv=mv,
+            gvxx=gvxx,
+            wv=wv,
+            gvuu=gvuu,
+            gvdd=gvdd,
+        )

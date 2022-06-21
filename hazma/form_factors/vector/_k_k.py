@@ -7,10 +7,12 @@ from dataclasses import InitVar, dataclass, field
 from typing import NamedTuple, Optional, Tuple, Union
 
 import numpy as np
-from scipy.special import gamma  # type:ignore
+from scipy.special import gamma
+
+from hazma.utils import RealOrRealArray  # type:ignore
 
 
-from ._base import VectorFormFactorPP
+from ._two_body import VectorFormFactorPP
 
 from ._utils import (
     MK0_GEV,
@@ -491,9 +493,28 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             return ff[0]
         return ff
 
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu: float, gvdd: float, gvss: float
+    ) -> RealOrRealArray:
+        r"""Compute kaon-kaon form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy in MeV.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, down-, and strange-quarks.
+
+        Returns
+        -------
+        iff: float
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+
     def width(
-        self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
-    ) -> Union[complex, ComplexArray]:
+        self, mv: RealOrRealArray, gvuu: float, gvdd: float, gvss: float
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into two kaons.
 
         Parameters

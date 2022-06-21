@@ -1,150 +1,139 @@
-from dataclasses import dataclass, field
-from typing import Union, Tuple, overload
+from dataclasses import InitVar, dataclass, field
+from typing import Union, Tuple, List, Dict, overload
 
 import numpy as np
-from scipy.integrate import quad
 
-from hazma.utils import kallen_lambda
+from hazma.phase_space import PhaseSpaceDistribution1D
 
 from ._utils import MOMEGA_GEV, MPI_GEV, MPI0_GEV, RealArray
-from ._base import VectorFormFactorPPP
+from ._three_body import VectorFormFactorPPV
+
+
+@dataclass(frozen=True)
+class VectorFormFactorPiPiOmegaFitData:
+    r"""Storage class for the fit-data needed to compute pion-pion-omega
+    form-factor.
+
+    Attributes
+    ----------
+    masses: RealArray
+        VMD resonance masses.
+    widths: RealArray
+        VMD resonance widths.
+    amps: RealArray
+        VMD resonance amplitudes.
+    phases: RealArray
+        VMD resonance phases.
+    """
+
+    masses: RealArray = field(repr=False)
+    widths: RealArray = field(repr=False)
+    amps: RealArray = field(repr=False)
+    phases: RealArray = field(repr=False)
 
 
 @dataclass
-class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPP):
+class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
     _imode: int
 
     _fsp_masses: Tuple[float, float, float] = field(init=False)
     fsp_masses: Tuple[float, float, float] = field(init=False)
+    fit_data: VectorFormFactorPiPiOmegaFitData = field(init=False)
 
-    masses: RealArray = np.array([0.783, 1.420, 1.6608543573197])
-    widths: RealArray = np.array([0.00849, 0.315, 0.3982595005228462])
-    amps: RealArray = np.array([0.0, 0.0, 2.728870588760009])
-    phases: RealArray = np.array([0.0, np.pi, 0.0])
+    masses: InitVar[RealArray] = np.array([0.783, 1.420, 1.6608543573197])
+    widths: InitVar[RealArray] = np.array([0.00849, 0.315, 0.3982595005228462])
+    amps: InitVar[RealArray] = np.array([0.0, 0.0, 2.728870588760009])
+    phases: InitVar[RealArray] = np.array([0.0, np.pi, 0.0])
 
-    def __post_init__(self):
+    def __post_init__(
+        self,
+        masses: RealArray,
+        widths: RealArray,
+        amps: RealArray,
+        phases: RealArray,
+    ):
         if self._imode == 0:
-            self._fsp_masses = (MPI0_GEV, MPI0_GEV, MOMEGA_GEV)
+            self._fsp_masses = (MOMEGA_GEV, MPI0_GEV, MPI0_GEV)
         elif self._imode == 1:
-            self._fsp_masses = (MPI_GEV, MPI_GEV, MOMEGA_GEV)
+            self._fsp_masses = (MOMEGA_GEV, MPI_GEV, MPI_GEV)
         self.fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
 
-    def _form_factor(self, *, q, gvuu, gvdd):
+        self.fit_data = VectorFormFactorPiPiOmegaFitData(
+            masses=masses,
+            widths=widths,
+            amps=amps,
+            phases=phases,
+        )
+
+    def _form_factor(self, q, *, gvuu, gvdd):
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta-prime.
         """
         ci0 = 3 * (gvuu + gvdd)
         return ci0 * np.sum(
-            self.amps
-            * np.exp(1j * self.phases)
-            * self.masses**2
-            / ((self.masses**2 - q**2) - 1j * q * self.widths)
+            self.fit_data.amps
+            * np.exp(1j * self.fit_data.phases)
+            * self.fit_data.masses**2
+            / ((self.fit_data.masses**2 - q**2) - 1j * q * self.fit_data.widths)
         )
 
-    def form_factor(self, *, q, gvuu, gvdd):
+    def form_factor(self, q, *, gvuu, gvdd):
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta-prime.
         """
-        return self._form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
-
-    def _integrated_form_factor(self, *, q: float, gvuu: float, gvdd: float) -> float:
-        """
-        Compute the form factor for a vector decaying into two charged pions and
-        an eta-prime integrated over the three-body phase-space.
-        """
-        if sum(self._fsp_masses) > q:
-            return 0.0
-
-        mup = self._fsp_masses[0] / q
-        muo = self._fsp_masses[2] / q
-        jac = 1.0 / (1536.0 * np.pi**3 * muo**2)
-        f2 = np.abs(self._form_factor(q=q, gvuu=gvuu, gvdd=gvdd)) ** 2
-
-        def integrand(z):
-            k1 = kallen_lambda(z, mup**2, mup**2)
-            k2 = kallen_lambda(1, z, muo**2)
-            p = (1 + 10 * muo**2 + muo**4 - 2 * (1 + muo**2) * z + z**2) / z
-            return p * np.sqrt(k1 * k2) * f2
-
-        lb = (2 * mup) ** 2
-        ub = (1.0 - muo) ** 2
-        res = jac * quad(integrand, lb, ub)[0]
-
-        if self._imode == 0:
-            return res / 2.0
-        return res
+        return self._form_factor(q=q * 1e-3, gvuu=gvuu, gvdd=gvdd)
 
     @overload
-    def integrated_form_factor(self, *, q: float, gvuu: float, gvdd: float) -> float:
+    def integrated_form_factor(self, q: float, *, gvuu: float, gvdd: float) -> float:
         ...
 
     @overload
     def integrated_form_factor(
-        self, *, q: RealArray, gvuu: float, gvdd: float
+        self, q: RealArray, *, gvuu: float, gvdd: float
     ) -> RealArray:
         ...
 
     def integrated_form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float
+        self, q: Union[float, RealArray], *, gvuu: float, gvdd: float
     ) -> Union[float, RealArray]:
+        """Compute the pion-pion-omega form factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center of mass energy.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        ff: float or array-like
+            Integrated form-factor.
         """
-        Compute the form factor for a vector decaying into two charged pions and
-        an eta-prime integrated over the three-body phase-space.
-        """
-        scalar = np.isscalar(q)
-        qq = np.atleast_1d(q) * 1e-3
-
-        integral = np.array(
-            [self._integrated_form_factor(q=q_, gvuu=gvuu, gvdd=gvdd) for q_ in qq]
-        )
-
-        if scalar:
-            return integral[0]
-
-        return integral
-
-    @overload
-    def width(self, mv: float, *, gvuu: float, gvdd: float) -> float:
-        ...
-
-    @overload
-    def width(self, mv: RealArray, *, gvuu: float, gvdd: float) -> RealArray:
-        ...
+        pre = 0.5 if self._imode == 0 else 1.0
+        return pre * self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
 
     def width(
         self, mv: Union[float, RealArray], *, gvuu: float, gvdd: float
     ) -> Union[float, RealArray]:
-        return 0.5 * mv * self.integrated_form_factor(q=mv, gvuu=gvuu, gvdd=gvdd)
+        r"""Compute the partial decay width of a massive vector into two pions and
+        an omega.
 
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: float,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float
-    ) -> float:
-        ...
+        Parameters
+        ----------
+        mv: float or array-like
+            Mass of the vector.
+        gvuu, gvdd: float
+            Coupling of vector to up-, and down-quarks.
 
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: RealArray,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float
-    ) -> RealArray:
-        ...
+        Returns
+        -------
+        width: float or array-like
+            Decay width of vector into two pions and an omega.
+        """
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
 
     def cross_section(
         self,
@@ -157,29 +146,105 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPP):
         gvuu: float,
         gvdd: float
     ) -> Union[float, RealArray]:
-        """Compute the cross-section of dark matter annihilation."""
-        single = np.isscalar(q)
-        qq = np.atleast_1d(q).astype(np.float64)
+        r"""Compute the cross section for dark matter annihilating into two
+        pions and an omega.
 
-        s = qq**2
-        pre = (
-            gvxx**2
-            * (s + 2 * mx**2)
-            / (np.sqrt(s - 4 * mx**2) * ((s - mv**2) ** 2 + (mv * wv) ** 2))
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy.
+        mx: float
+            Mass of the dark matter in MeV.
+        mv: float
+            Mass of the vector mediator in MeV.
+        gvxx: float
+            Coupling of vector to dark matter.
+        wv: float
+            Width of the vector in MeV.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into a pion and two kaons.
+        """
+        return self._cross_section(
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, gvuu=gvuu, gvdd=gvdd
         )
-        pre = pre * 0.5 * qq
-        cs = pre * self.integrated_form_factor(q=qq, gvuu=gvuu, gvdd=gvdd)
 
-        if single:
-            return cs[0]
-        return cs
+    def energy_distributions(
+        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    ) -> List[PhaseSpaceDistribution1D]:
+        r"""Compute the energy distributions of the final omega and pions.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center of mass energy.
+        nbins: int
+            Number of bins for the distributions.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        dist_om, dist_pi1, dist_pi2: (array, array)
+            Three tuples containing the probabilities and energies for each
+            final state particle.
+        """
+        return self._energy_distributions(q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd)
+
+    def invariant_mass_distributions(
+        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+        r"""Compute the invariant-mass distributions of the final state
+        omega and pions.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center of mass energy.
+        nbins: int
+            Number of bins for the distributions.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        dist_om, dist_pi1, dist_pi2: (array, array)
+            Three tuples containing the probabilities and energies for each
+            final state particle.
+        """
+        return self._invariant_mass_distributions(
+            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd
+        )
 
 
 @dataclass
 class VectorFormFactorPi0Pi0Omega(_VectorFormFactorPiPiOmegaBase):
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-pi0-pi0-omega.
+    r"""Class for computing the pi0-pi0-omega vector form factor.
+
+    Attributes
+    ----------
+    fsp_masses: (float, float, float)
+        Masses of the final-state particles.
+    fit_data: VectorFormFactorPiPiOmegaFitData
+        Stored data used to compute form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into two neutral pions and an
+        omega.
+    integrated_form_factor
+        Compute the form-factor into two neutral pions and an omega integrated
+        over phase-space.
+    width
+        Compute the decay width of a vector into two neutral pions and an omega.
+    cross_section
+        Compute the dark matter annihilation cross section into two neutral
+        pions and an omega.
     """
 
     _imode: int = 0
@@ -187,9 +252,28 @@ class VectorFormFactorPi0Pi0Omega(_VectorFormFactorPiPiOmegaBase):
 
 @dataclass
 class VectorFormFactorPiPiOmega(_VectorFormFactorPiPiOmegaBase):
-    """
-    Class for storing the parameters needed to compute the form factor for
-    V-pi-pi-omega.
+    r"""Class for computing the pi-pi-omega vector form factor.
+
+    Attributes
+    ----------
+    fsp_masses: (float, float, float)
+        Masses of the final-state particles.
+    fit_data: VectorFormFactorPiPiOmegaFitData
+        Stored data used to compute form-factor.
+
+    Methods
+    -------
+    form_factor
+        Compute the un-integrated form-factor into two charged pions and an
+        omega.
+    integrated_form_factor
+        Compute the form-factor into two charged pions and an omega integrated
+        over phase-space.
+    width
+        Compute the decay width of a vector into two charged pions and an omega.
+    cross_section
+        Compute the dark matter annihilation cross section into two charged
+        pions and an omega.
     """
 
     _imode: int = 1

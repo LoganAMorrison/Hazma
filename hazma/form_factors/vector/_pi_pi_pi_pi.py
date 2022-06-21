@@ -1,12 +1,12 @@
-from dataclasses import dataclass, field
-from typing import Tuple, overload, Union
+from dataclasses import dataclass, field, InitVar
+from typing import Tuple, List, Union
 
 import numpy as np
 
-from hazma.rambo import PhaseSpace
-from hazma.utils import RealArray
+from hazma.phase_space import Rambo, PhaseSpaceDistribution1D
+from hazma.utils import RealArray, lnorm_sqr, ldot
 
-from ._base import VectorFormFactorPPPP
+from ._four_body import VectorFormFactorPPPP
 
 MPI_GEV = 0.13957061
 MPI0_GEV = 0.1349770
@@ -27,12 +27,75 @@ MPI = MPI_GEV
 MPI0 = MPI0_GEV
 
 
-def lnorm_sqr(q):
-    return q[0] ** 2 - q[1] ** 2 - q[2] ** 2 - q[3] ** 2
+ThreeTup = Tuple[float, float, float]
 
 
-def ldot(p, k):
-    return p[0] * k[0] - p[1] * k[1] - p[2] * k[2] - p[3] * k[3]
+@dataclass(frozen=True)
+class VectorFormFactorPiPiPiPiFitData:
+    r"""Storage class for the parameters used to compute the 4-pion vector form
+    factors. See ArXiv:0804.0359 for details on the parameterization.
+
+    Attributes
+    ----------
+    mass_rho_bar_1, mass_rho_bar_1, mass_rho_bar_2: float
+        Fitted rho masses from ArXiv:0804.0359 Eqn.(A.11).
+    width_rho_bar_1, width_rho_bar_2, width_rho_bar_3: float
+        Fitted rho widths from ArXiv:0804.0359 Eqn.(A.11).
+    beta_a1_1, beta_a1_2, beta_a1_3: float
+        Beta components for the A1 (see ArXiv:0804.0359 Eqn.[A.3])
+    beta_f0_1, beta_f0_2, beta_f0_3: float
+        Beta components for the f0 (see ArXiv:0804.0359 Eqn.[A.4])
+    beta_omega_1, beta_omega_2, beta_omega_3: float
+        Beta components for the omega (see ArXiv:0804.0359 Eqn.[A.6])
+    beta_b_rho, beta_b_rho1, beta_b_rho2: float
+        Beta components for the rho (see ArXiv:0804.0359 Eqn.[A.11])
+    coupling_f0: float
+        f0 coupling (see ArXiv:0804.0359 Eqn.[A.4])
+    coupling_a1: float
+        a1 coupling (see ArXiv:0804.0359 Eqn.[A.3])
+    coupling_rho: float
+        Rho coupling (see ArXiv:0804.0359 Eqn.[A.8])
+    coupling_omega: float
+        Omega coupling (see ArXiv:0804.0359 Eqn.[A.6])
+    coupling_rho_gamma: float
+        Rho-photon coupling (see ArXiv:0804.0359 Eqn.[A.8])
+    coupling_rho_pi_pi: float
+        Rho-pi-pi coupling (see ArXiv:0804.0359 Eqn.[A.6] and Eqn.[A.8])
+    coupling_omega_pi_rho: float
+        Rho-pi-pi coupling (see ArXiv:0804.0359 Eqn.[A.6])
+    """
+    mass_rho_bar_1: float
+    mass_rho_bar_2: float
+    mass_rho_bar_3: float
+
+    width_rho_bar_1: float
+    width_rho_bar_2: float
+    width_rho_bar_3: float
+
+    beta_a1_1: float
+    beta_a1_2: float
+    beta_a1_3: float
+
+    beta_f0_1: float
+    beta_f0_2: float
+    beta_f0_3: float
+
+    beta_omega_1: float
+    beta_omega_2: float
+    beta_omega_3: float
+
+    beta_b_rho: float
+    beta_t_rho1: float
+    beta_t_rho2: float
+
+    coupling_f0: float
+    coupling_a1: float
+    coupling_rho: float
+    coupling_omega: float
+
+    coupling_rho_gamma: float
+    coupling_rho_pi_pi: float
+    coupling_omega_pi_rho: float
 
 
 @dataclass
@@ -40,41 +103,52 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     _imode: int = field()
     _fsp_masses: Tuple[float, float, float, float] = field(init=False)
     fsp_masses: Tuple[float, float, float, float] = field(init=False)
+    fit_data: VectorFormFactorPiPiPiPiFitData = field(init=False)
 
-    mass_rho_bar_1: float = field(default=1.437)
-    mass_rho_bar_2: float = field(default=1.738)
-    mass_rho_bar_3: float = field(default=2.12)
+    mass_rho_bars: InitVar[ThreeTup] = field(default=(1.437, 1.738, 2.12))
 
-    width_rho_bar_1: float = field(default=0.6784824438511003)
-    width_rho_bar_2: float = field(default=0.8049287553822373)
-    width_rho_bar_3: float = field(default=0.20919646790795576)
+    width_rho_bars: InitVar[ThreeTup] = field(
+        default=(0.6784824438511003, 0.8049287553822373, 0.20919646790795576)
+    )
 
-    beta_a1_1: float = field(default=-0.051871563361440096)  # unitless
-    beta_a1_2: float = field(default=-0.041610293030827125)  # unitless
-    beta_a1_3: float = field(default=-0.0018934309483457441)  # unitless
+    beta_a1s: InitVar[ThreeTup] = field(
+        default=(-0.051871563361440096, -0.041610293030827125, -0.0018934309483457441)
+    )
 
-    beta_f0_1: float = field(default=73860.28659732222)
-    beta_f0_2: float = field(default=-26182.725634782986)
-    beta_f0_3: float = field(default=333.6314358023821)
+    beta_f0s: InitVar[ThreeTup] = field(
+        default=(73860.28659732222, -26182.725634782986, 333.6314358023821)
+    )
 
-    beta_omega_1: float = field(default=-0.36687866443745953)
-    beta_omega_2: float = field(default=0.036253295280213906)
-    beta_omega_3: float = field(default=-0.004717302695776386)
+    beta_omegas: InitVar[ThreeTup] = field(
+        default=(-0.36687866443745953, 0.036253295280213906, -0.004717302695776386)
+    )
 
-    beta_b_rho: float = field(default=-0.145)
-    beta_t_rho1: float = field(default=0.08)
-    beta_t_rho2: float = field(default=-0.0075)
+    beta_b_rhos: InitVar[ThreeTup] = field(default=(-0.145, 0.08, -0.0075))
 
-    coupling_f0: float = field(default=124.10534971287902)
-    coupling_a1: float = field(default=-201.79098091602876)
-    coupling_rho: float = field(default=-2.3089567893904537)
-    coupling_omega: float = field(default=-1.5791482789120541)
+    coupling_f0: InitVar[float] = field(default=124.10534971287902)
+    coupling_a1: InitVar[float] = field(default=-201.79098091602876)
+    coupling_rho: InitVar[float] = field(default=-2.3089567893904537)
+    coupling_omega: InitVar[float] = field(default=-1.5791482789120541)
+    coupling_rho_gamma: InitVar[float] = field(default=0.1212)  # GeV^2
+    coupling_rho_pi_pi: InitVar[float] = field(default=5.997)
+    coupling_omega_pi_rho: InitVar[float] = field(default=42.3)  # GeV^-5
 
-    coupling_rho_gamma: float = field(default=0.1212)  # GeV^2
-    coupling_rho_pi_pi: float = field(default=5.997)
-    coupling_omega_pi_rho: float = field(default=42.3)  # GeV^-5
-
-    def __post_init__(self):
+    def __post_init__(
+        self,
+        mass_rho_bars: ThreeTup,
+        width_rho_bars: ThreeTup,
+        beta_a1s: ThreeTup,
+        beta_f0s: ThreeTup,
+        beta_omegas: ThreeTup,
+        beta_b_rhos: ThreeTup,
+        coupling_f0: float,
+        coupling_a1: float,
+        coupling_rho: float,
+        coupling_omega: float,
+        coupling_rho_gamma: float,
+        coupling_rho_pi_pi: float,
+        coupling_omega_pi_rho: float,
+    ):
         if self._imode == 0:
             self._fsp_masses = (MPI_GEV, MPI_GEV, MPI0_GEV, MPI0_GEV)
         elif self._imode == 1:
@@ -82,6 +156,34 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         else:
             raise ValueError(f"Invalid _imode = {self._imode}. Must be 0 or 1.")
         self.fsp_masses = tuple(m * 1e3 for m in self._fsp_masses)
+
+        self.fit_data = VectorFormFactorPiPiPiPiFitData(
+            mass_rho_bar_1=mass_rho_bars[0],
+            mass_rho_bar_2=mass_rho_bars[1],
+            mass_rho_bar_3=mass_rho_bars[2],
+            width_rho_bar_1=width_rho_bars[0],
+            width_rho_bar_2=width_rho_bars[1],
+            width_rho_bar_3=width_rho_bars[2],
+            beta_a1_1=beta_a1s[0],
+            beta_a1_2=beta_a1s[1],
+            beta_a1_3=beta_a1s[2],
+            beta_f0_1=beta_f0s[0],
+            beta_f0_2=beta_f0s[1],
+            beta_f0_3=beta_f0s[2],
+            beta_omega_1=beta_omegas[0],
+            beta_omega_2=beta_omegas[1],
+            beta_omega_3=beta_omegas[2],
+            beta_b_rho=beta_b_rhos[0],
+            beta_t_rho1=beta_b_rhos[1],
+            beta_t_rho2=beta_b_rhos[1],
+            coupling_f0=coupling_f0,
+            coupling_a1=coupling_a1,
+            coupling_rho=coupling_rho,
+            coupling_omega=coupling_omega,
+            coupling_rho_gamma=coupling_rho_gamma,
+            coupling_rho_pi_pi=coupling_rho_pi_pi,
+            coupling_omega_pi_rho=coupling_omega_pi_rho,
+        )
 
     # ============================================================================
     # ---- Propagators -----------------------------------------------------------
@@ -182,9 +284,15 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             Scaling factors of propagators 1, 2, and 3.
         """
         prop0 = self._breit_wigner3(s, MRHO_GEV, GRHO_GEV)
-        prop1 = self._breit_wigner3(s, self.mass_rho_bar_1, self.width_rho_bar_1)
-        prop2 = self._breit_wigner3(s, self.mass_rho_bar_2, self.width_rho_bar_2)
-        prop3 = self._breit_wigner3(s, self.mass_rho_bar_3, self.width_rho_bar_3)
+        prop1 = self._breit_wigner3(
+            s, self.fit_data.mass_rho_bar_1, self.fit_data.width_rho_bar_1
+        )
+        prop2 = self._breit_wigner3(
+            s, self.fit_data.mass_rho_bar_2, self.fit_data.width_rho_bar_2
+        )
+        prop3 = self._breit_wigner3(
+            s, self.fit_data.mass_rho_bar_3, self.fit_data.width_rho_bar_3
+        )
 
         return (prop0 + b1 * prop1 + b2 * prop2 + b3 * prop3) / (1.0 + b1 + b2 + b3)
 
@@ -218,7 +326,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        b1 = self.beta_b_rho
+        b1 = self.fit_data.beta_b_rho
         prop0 = self._breit_wigner3(s, MRHO_GEV, GRHO_GEV)
         prop1 = self._breit_wigner3(s, M_RHO1, G_RHO1)
 
@@ -233,7 +341,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        b1, b2 = self.beta_t_rho1, self.beta_t_rho2
+        b1, b2 = self.fit_data.beta_t_rho1, self.fit_data.beta_t_rho2
         prop0 = self._breit_wigner3(s, MRHO_GEV, GRHO_GEV)
         prop1 = self._breit_wigner3(s, M_RHO1, G_RHO1)
         prop2 = self._breit_wigner3(s, M_RHO2, G_RHO2)
@@ -276,9 +384,13 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         """
         qmq1_sqr = lnorm_sqr(Q - q1)
 
-        coupling = self.coupling_a1
+        coupling = self.fit_data.coupling_a1
 
-        b1, b2, b3 = self.beta_a1_1, self.beta_a1_2, self.beta_a1_3
+        b1, b2, b3 = (
+            self.fit_data.beta_a1_1,
+            self.fit_data.beta_a1_2,
+            self.fit_data.beta_a1_3,
+        )
         prop0 = self._propagator_rho_f(Q2, b1, b2, b3)
         prop1 = self._propagator_a1(qmq1_sqr)
         prop2 = self._propagator_rho_b(lnorm_sqr(q3 + q4))
@@ -294,9 +406,13 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Compute the hadronic current contribution from the omega meson.
         See ArXiv:0804.0359 Eqn.(A.4).
         """
-        coupling = self.coupling_f0
+        coupling = self.fit_data.coupling_f0
 
-        b1, b2, b3 = self.beta_f0_1, self.beta_f0_2, self.beta_f0_3
+        b1, b2, b3 = (
+            self.fit_data.beta_f0_1,
+            self.fit_data.beta_f0_2,
+            self.fit_data.beta_f0_3,
+        )
         prop0 = self._propagator_rho_f(Q2, b1, b2, b3)
         prop1 = self._propagator_rho_t(lnorm_sqr(q3 + q4))
         prop2 = self._propagator_f0(lnorm_sqr(q1 + q2))
@@ -322,12 +438,16 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         """
         coupling = (
             2
-            * self.coupling_omega
-            * self.coupling_omega_pi_rho
-            * self.coupling_rho_pi_pi
+            * self.fit_data.coupling_omega
+            * self.fit_data.coupling_omega_pi_rho
+            * self.fit_data.coupling_rho_pi_pi
         )
 
-        b1, b2, b3 = self.beta_omega_1, self.beta_omega_2, self.beta_omega_3
+        b1, b2, b3 = (
+            self.fit_data.beta_omega_1,
+            self.fit_data.beta_omega_2,
+            self.fit_data.beta_omega_3,
+        )
         prop0 = self._propagator_rho_f(Q2, b1, b2, b3)
         prop1 = self._propagator_omega(lnorm_sqr(Q - q1))
         prop2 = self._propagator_rho_h(
@@ -349,7 +469,9 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         See ArXiv:0804.0359 Eqn.(A.8).
         """
         coupling = (
-            self.coupling_rho * self.coupling_rho_pi_pi**3 * self.coupling_rho_gamma
+            self.fit_data.coupling_rho
+            * self.fit_data.coupling_rho_pi_pi**3
+            * self.fit_data.coupling_rho_gamma
         )
 
         prop = self._propagator_rho_double(Q2)
@@ -507,7 +629,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         if q < np.sum(self._fsp_masses):
             return 0.0, 0.0
 
-        phase_space = PhaseSpace(q, self._fsp_masses)
+        phase_space = Rambo(q, self._fsp_masses)
         momenta, weights = phase_space.generate(npts)
 
         weights = weights * self._msqrd(momenta, gvuu=gvuu, gvdd=gvdd)
@@ -516,18 +638,6 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         ff_err = np.nanstd(weights) / np.sqrt(momenta.shape[-1])
 
         return ff_avg, ff_err
-
-    @overload
-    def integrated_form_factor(
-        self, *, q: float, gvuu: float, gvdd: float, npts: int
-    ) -> float:
-        ...
-
-    @overload
-    def integrated_form_factor(
-        self, *, q: RealArray, gvuu: float, gvdd: float, npts: int
-    ) -> RealArray:
-        ...
 
     def integrated_form_factor(
         self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, npts: int
@@ -572,14 +682,6 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     # ---- Widths ----------------------------------------------------------------
     # ============================================================================
 
-    @overload
-    def width(self, mv: float, *, gvuu: float, gvdd: float, npts: int) -> float:
-        ...
-
-    @overload
-    def width(self, mv: RealArray, *, gvuu: float, gvdd: float, npts: int) -> RealArray:
-        ...
-
     def width(
         self,
         mv: Union[float, RealArray],
@@ -615,36 +717,6 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     # ============================================================================
     # ---- Cross Sections --------------------------------------------------------
     # ============================================================================
-
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: float,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float,
-        npts: int,
-    ) -> float:
-        ...
-
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: RealArray,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float,
-        npts: int,
-    ) -> RealArray:
-        ...
 
     def cross_section(
         self,
@@ -700,6 +772,85 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             return cs[0]
         return cs
 
+    # ============================================================================
+    # ---- Distributions ---------------------------------------------------------
+    # ============================================================================
+
+    def energy_distributions(
+        self, q, nbins: int, *, gvuu: float, gvdd: float, npts: int = 1 << 15
+    ) -> List[PhaseSpaceDistribution1D]:
+        r"""Compute the energy distributions of the four final state pions.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy (energies) in MeV.
+        gvuu, gvdd: float
+            Coupling of the vector to up- and down-quarks.
+        gvdd: float
+            Coupling of the vector to down-quarks.
+        npts: int, optional
+            Number of Monte-Carlo phase-space points to use in integration.
+            Default is 2^15.
+
+        Returns
+        -------
+        dists: list[PhaseSpaceDistribution1D]
+            List of the energy distributions.
+        """
+
+        def msqrd(momenta):
+            return self._msqrd(momenta, gvuu=gvuu, gvdd=gvdd)
+
+        def correct_units(dist: PhaseSpaceDistribution1D):
+            bins = dist.bins * 1e3
+            probs = dist.probabilities * 1e-3
+            return PhaseSpaceDistribution1D(bins, probs)
+
+        phase_space = Rambo(q * 1e-3, self._fsp_masses, msqrd=msqrd)
+        dists = phase_space.energy_distributions(n=npts, nbins=nbins)
+
+        return [correct_units(dist) for dist in dists]
+
+    def invariant_mass_distributions(
+        self, q, nbins: int, *, gvuu: float, gvdd: float, npts: int = 1 << 15
+    ):
+        r"""Compute the invariant-mass distributions of each pair of final state
+        particles.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy (energies) in MeV.
+        gvuu, gvdd: float
+            Coupling of the vector to up- and down-quarks.
+        gvdd: float
+            Coupling of the vector to down-quarks.
+        npts: int, optional
+            Number of Monte-Carlo phase-space points to use in integration.
+            Default is 2^15.
+
+        Returns
+        -------
+        dists: dict[(int,int), PhaseSpaceDistribution1D]
+            Dictionary of the invariant mass distributions. Each key specifies
+            the pair of particles the distributions corresponds to. For example,
+            `(i,j)` corresponds to the invariant mass `sqrt((p[i] + p[j])^2)`
+        """
+
+        def msqrd(momenta):
+            return self._msqrd(momenta, gvuu=gvuu, gvdd=gvdd)
+
+        def correct_units(dist: PhaseSpaceDistribution1D):
+            bins = dist.bins * 1e3
+            probs = dist.probabilities * 1e-3
+            return PhaseSpaceDistribution1D(bins, probs)
+
+        phase_space = Rambo(q * 1e-3, self._fsp_masses, msqrd=msqrd)
+        dists = phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
+
+        return {key: correct_units(dist) for key, dist in dists.items()}
+
 
 @dataclass
 class VectorFormFactorPiPiPi0Pi0(_VectorFormFactorPiPiPiPiBase):
@@ -709,30 +860,6 @@ class VectorFormFactorPiPiPi0Pi0(_VectorFormFactorPiPiPiPiBase):
 
     _imode: int = 0
 
-    def _current(self, Q, Q2, q1, q2, q3, q4):
-        """
-        Compute the total hadronic current for <pi^+,pi^-,pi^0,pi^0|J|0>.
-        See ArXiv:0804.0359 Eqn.(3) and Eqn.(A.1).
-
-        Parameters
-        ----------
-        Q: ndarray
-            Total momentum of the system.
-        Q2: ndarray
-            Squared center-of-mass energy.
-        q1, q2: ndarray
-            Momenta of the neutral pions.
-        q3, q4: ndarray
-            Momenta of the charged pions.
-        """
-        result = np.zeros_like(q1, dtype=np.complex128)
-        result += self._current_a1(Q, Q2, q1, q2, q3, q4)
-        result += self._current_f0(Q, Q2, q1, q2, q3, q4)
-        result += self._current_omega(Q, Q2, q1, q2, q3, q4)
-        result += self._current_rho(Q, Q2, q1, q2, q3, q4)
-
-        return result  # / np.sqrt(2)
-
 
 @dataclass
 class VectorFormFactorPiPiPiPi(_VectorFormFactorPiPiPiPiBase):
@@ -741,29 +868,3 @@ class VectorFormFactorPiPiPiPi(_VectorFormFactorPiPiPiPiBase):
     """
 
     _imode: int = 1
-
-    def _current(self, Q, Q2, q1, q2, q3, q4):
-        """
-        Compute the total hadronic current for <pi^+,pi^+,pi^-,pi^-|J|0>.
-        See ArXiv:0804.0359 Eqn.(3) and Eqn.(A.1).
-
-        Parameters
-        ----------
-        Q: ndarray
-            Total momentum of the system.
-        Q2: ndarray
-            Squared center-of-mass energy.
-        q1, q2, q3, q4: ndarray
-            Momenta of the charged pions.
-        """
-        # p1+ == p1p == q1
-        # p1- == p1m == q2
-        # p2+ == p2p == q3
-        # p2- == p2m == q4
-
-        j1 = self._current_neutral(Q, Q2, q3, q4, q1, q2)
-        j2 = self._current_neutral(Q, Q2, q1, q4, q3, q2)
-        j3 = self._current_neutral(Q, Q2, q3, q2, q1, q4)
-        j4 = self._current_neutral(Q, Q2, q1, q2, q3, q4)
-
-        return j1 + j2 + j3 + j4

@@ -4,9 +4,10 @@ from typing import Union, overload, Tuple
 import numpy as np
 
 from hazma import parameters
+from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray
-from ._base import VectorFormFactorPA
+from ._two_body import VectorFormFactorPA
 from ._alpha import alpha_em
 
 MPI0 = parameters.neutral_pion_mass
@@ -57,7 +58,7 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
         photon.
     """
 
-    fsp_masses: Tuple[float] = field(init=False, default=(MPI0,))
+    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, 0.0))
     fit_data: VectorFormFactorPiGammaFitData = field(init=False)
 
     fpi: InitVar[float] = 0.09266
@@ -197,9 +198,26 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
 
         return ff * 1e-3
 
-    def width(
-        self, mv: Union[float, RealArray], gvuu, gvdd, gvss
-    ) -> Union[complex, ComplexArray]:
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu, gvdd, gvss
+    ) -> RealOrRealArray:
+        r"""Compute the pion-photon form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy in MeV.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, down-, and strange-quarks.
+
+        Returns
+        -------
+        iff: float
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+
+    def width(self, mv: RealOrRealArray, gvuu, gvdd, gvss) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a neutral
         pion and photon.
 

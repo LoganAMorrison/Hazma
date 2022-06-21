@@ -1,13 +1,16 @@
 """
 Module for computing the vector form factor for pi+pi.
 """
+
 from dataclasses import dataclass, field, InitVar
 from typing import Union, Tuple
 
 import numpy as np
 from scipy.special import gamma
 
-from ._base import VectorFormFactorPP
+from hazma.utils import RealOrRealArray
+
+from ._two_body import VectorFormFactorPP
 from ._utils import (
     MPI0_GEV,
     MPI_GEV,
@@ -210,9 +213,26 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             return ff[0]
         return ff
 
-    def width(
-        self, mv: Union[float, RealArray], gvuu: float, gvdd: float
-    ) -> Union[complex, ComplexArray]:
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    ) -> RealOrRealArray:
+        r"""Compute the pion-pion form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy in MeV.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        iff: float
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+
+    def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into two pions.
 
         Parameters

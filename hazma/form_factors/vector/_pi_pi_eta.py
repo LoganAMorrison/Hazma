@@ -10,15 +10,14 @@ Z = a0*e^{i*p0} + a1*e^{i*p1} + a2*e^{i*p2}
 
 
 from dataclasses import dataclass, field, InitVar
-from typing import Tuple, Union, overload
+from typing import Tuple, Union, List, Dict
 
 import numpy as np
-from scipy.integrate import quad
 
-from hazma.utils import kallen_lambda
+from hazma.phase_space import PhaseSpaceDistribution1D
 
 from ._utils import FPI_GEV, META_GEV, MPI_GEV, RealArray
-from ._base import VectorFormFactorPPP
+from ._three_body import VectorFormFactorPPP2
 
 META = META_GEV * 1e3
 MPI = MPI_GEV * 1e3
@@ -47,7 +46,7 @@ class VectorFormFactorPiPiEtaFitData:
 
 
 @dataclass
-class VectorFormFactorPiPiEta(VectorFormFactorPPP):
+class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
     r"""Class for computing the pi-pi-eta vector form-factor.
 
     Attributes
@@ -70,9 +69,6 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
     """
 
     fsp_masses: Tuple[float, float, float] = field(init=False, default=(META, MPI, MPI))
-    __fsp_masses: Tuple[float, float, float] = field(
-        init=False, default=(META_GEV, MPI_GEV, MPI_GEV)
-    )
     fit_data: VectorFormFactorPiPiEtaFitData = field(init=False)
 
     masses: InitVar[RealArray] = field(default=np.array([0.77549, 1.54, 1.76, 2.15]))
@@ -131,7 +127,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
 
         return pre * ci1 * self.__bw0(s) * np.sum(amps * self.__bw(cme**2))
 
-    def form_factor(self, q, s, _, gvuu, gvdd):
+    def form_factor(self, q, s, gvuu, gvdd):
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta.
@@ -154,50 +150,8 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
 
         qq = q * 1e-3
         ss = s * 1e-6
-        ff = self._form_factor(qq, ss, gvuu, gvdd)
+        ff = self._form_factor(qq, ss, gvuu, gvdd) * 1e-9
         return ff
-
-    def _integrated_form_factor(self, *, q: float, gvuu: float, gvdd: float) -> float:
-        """
-        Compute the form factor for a vector decaying into two charged pions and
-        an eta integrated over the three-body phase-space.
-
-        Parameters
-        ----------
-        q2:
-            Center-of-mass energy in MeV.
-        gvuu: float
-            Coupling of vector to up-quarks.
-        gvdd: float
-            Coupling of vector to down-quarks.
-        """
-        if q < sum(self.__fsp_masses):
-            return 0.0
-
-        mpi = MPI_GEV
-        meta = META_GEV
-
-        jac = 1 / (128.0 * np.pi**3 * q**4)
-
-        def integrand(s):
-            f2 = np.abs(self._form_factor(q, s, gvuu, gvdd)) ** 2
-            k1 = kallen_lambda(s, q**2, meta**2)
-            k2 = kallen_lambda(s, mpi**2, mpi**2)
-            return (k1 * k2) ** 1.5 * f2 / (72 * s**2)
-
-        lb = (2 * mpi) ** 2
-        ub = (q - meta) ** 2
-        return jac * quad(integrand, lb, ub)[0]
-
-    @overload
-    def integrated_form_factor(self, *, q: float, gvuu: float, gvdd: float) -> float:
-        ...
-
-    @overload
-    def integrated_form_factor(
-        self, *, q: RealArray, gvuu: float, gvdd: float
-    ) -> RealArray:
-        ...
 
     def integrated_form_factor(
         self, q: Union[float, RealArray], *, gvuu: float, gvdd: float
@@ -215,25 +169,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
         gvdd: float
             Vector coupling to down-quarks.
         """
-        scalar = np.isscalar(q)
-        qq = np.atleast_1d(q) * 1e-3
-
-        integral = np.array(
-            [self._integrated_form_factor(q=q_, gvuu=gvuu, gvdd=gvdd) for q_ in qq]
-        )
-
-        if scalar:
-            return integral[0]
-
-        return integral
-
-    @overload
-    def width(self, mv: float, *, gvuu: float, gvdd: float) -> float:
-        ...
-
-    @overload
-    def width(self, mv: RealArray, *, gvuu: float, gvdd: float) -> RealArray:
-        ...
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
 
     def width(
         self, mv: Union[float, RealArray], *, gvuu: float, gvdd: float
@@ -255,35 +191,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
         width: float
             Decay width of vector into an eta and two pions.
         """
-        return 0.5 * mv * self.integrated_form_factor(q=mv, gvuu=gvuu, gvdd=gvdd)
-
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: float,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float
-    ) -> float:
-        ...
-
-    @overload
-    def cross_section(
-        self,
-        *,
-        q: RealArray,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float
-    ) -> RealArray:
-        ...
+        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
 
     def cross_section(
         self,
@@ -321,18 +229,52 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP):
         cs: float or array-like
             Annihilation cross section into an eta and two pions.
         """
-        single = np.isscalar(q)
-        qq = np.atleast_1d(q).astype(np.float64)
-
-        s = qq**2
-        pre = (
-            gvxx**2
-            * (s + 2 * mx**2)
-            / (np.sqrt(s - 4 * mx**2) * ((s - mv**2) ** 2 + (mv * wv) ** 2))
+        return self._cross_section(
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, gvuu=gvuu, gvdd=gvdd
         )
-        pre = pre * 0.5 * qq
-        cs = pre * self.integrated_form_factor(q=qq, gvuu=gvuu, gvdd=gvdd)
 
-        if single:
-            return cs[0]
-        return cs
+    def energy_distributions(
+        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    ) -> List[PhaseSpaceDistribution1D]:
+        r"""Compute the energy distributions of the final state pions and eta.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        nbins: float
+            Number of bins used to generate distribution.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        dists: List[PhaseSpaceDistribution1D]
+            List of the energy distributions.
+        """
+        return self._energy_distributions(q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd)
+
+    def invariant_mass_distributions(
+        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+        r"""Compute the invariant-mass distributions of the all pairs of the
+        final-state particles.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        nbins: float
+            Number of bins used to generate distribution.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        dists: Dict[(int,int), PhaseSpaceDistribution1D]
+            Dictionary of the invariant-mass distributions. Keys specify the
+            pair of particles the distribution represents.
+        """
+        return self._invariant_mass_distributions(
+            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd
+        )

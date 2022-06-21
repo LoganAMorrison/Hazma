@@ -8,7 +8,7 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
-from ._base import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV
 
 META = parameters.eta_mass
 MPHI = parameters.phi_mass
@@ -127,12 +127,9 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         ff: complex or array-like
             Form-factor.
         """
-        me = parameters.eta_mass
-        mf = parameters.phi_mass
-
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
-        mask = qq > 1e-3 * (me + mf)
+        mask = qq > 1e-3 * sum(self.fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvss=gvss)
@@ -141,6 +138,25 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
             return ff[0]
 
         return ff * 1e-3
+
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvss: float
+    ) -> RealOrRealArray:
+        r"""Compute the eta-phi form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float
+            Center-of-mass energy.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        iff: float
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvss=gvss)
 
     def width(self, mv: RealOrRealArray, gvss: float) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and

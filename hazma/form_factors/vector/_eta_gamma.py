@@ -1,6 +1,7 @@
 """
 Module for computing the form factor V-eta-gamma.
 """
+
 from dataclasses import dataclass, field, InitVar
 from typing import Union, overload, Tuple
 
@@ -10,7 +11,7 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import MPI_GEV, ComplexArray, RealArray
-from ._base import VectorFormFactorPA
+from ._two_body import VectorFormFactorPA
 
 
 @dataclass(frozen=True)
@@ -48,7 +49,9 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         photon.
 
     """
-    fsp_masses: Tuple[float] = field(init=False, default=(parameters.eta_mass,))
+    fsp_masses: Tuple[float, float] = field(
+        init=False, default=(parameters.eta_mass, 0.0)
+    )
     fit_data: VectorFormFactorEtaGammaFitData = field(init=False)
 
     masses: InitVar[RealArray] = field(
@@ -177,9 +180,32 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
 
         return ff
 
+    def integrated_form_factor(
+        self, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
+    ) -> RealOrRealArray:
+        r"""Compute the eta-photon form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy.
+        gvuu: float
+            Coupling of vector to up-quarks.
+        gvdd: float
+            Coupling of vector to down-quarks.
+        gvss: float
+            Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        iff: float or array-like
+            Integrated eta-photon form-factor.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+
     def width(
         self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
-    ) -> Union[complex, ComplexArray]:
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and
         photon.
 

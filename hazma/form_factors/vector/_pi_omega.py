@@ -8,7 +8,7 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray, kallen_lambda
 
 from ._utils import MOMEGA_GEV, MPI0_GEV, ComplexArray, RealArray
-from ._base import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV
 
 MPI0 = MPI0_GEV * 1e3
 MOMEGA = MOMEGA_GEV * 1e3
@@ -178,6 +178,25 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
             return ff[0]
 
         return ff * 1e-3
+
+    def integrated_form_factor(
+        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    ) -> RealOrRealArray:
+        r"""Compute the pion-omega form-factor integrated over phase-space.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy.
+        gvuu, gvdd: float
+            Coupling of vector to up- and down-quarks.
+
+        Returns
+        -------
+        iff: float or array-like
+            Form-factor integrated over phase-space.
+        """
+        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
 
     def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a pion and

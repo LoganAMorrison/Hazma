@@ -13,6 +13,7 @@ RealArray = npt.NDArray[np.float_]
 RealOrRealArray = Union[float, RealArray]
 ComplexArray = npt.NDArray[np.complex_]
 ComplexOrComplexArray = Union[complex, ComplexArray]
+RealOrComplexArray = npt.NDArray[np.float_ | np.complex_]
 
 # ===================================================================
 # ---- Kinematics ---------------------------------------------------
@@ -48,7 +49,7 @@ def cross_section_prefactor(m1: float, m2: float, cme: float) -> float:
     return 1.0 / (4.0 * p * cme)
 
 
-def ldot(lv1: np.ndarray, lv2: np.ndarray, axis: int = 0) -> np.ndarray:
+def ldot(lv1, lv2, axis: int = 0):
     """
     Compute the Lorenzian scalar product of two arrays.
 
@@ -64,12 +65,12 @@ def ldot(lv1: np.ndarray, lv2: np.ndarray, axis: int = 0) -> np.ndarray:
         lv1.shape[axis] == 4 and lv2.shape[axis] == 4
     ), "Specified axis must be 4-dimenstional."
 
-    return (
-        lv1.take(0, axis=axis) * lv2.take(0, axis=axis)
-        - lv1.take(1, axis=axis) * lv2.take(1, axis=axis)
-        - lv1.take(2, axis=axis) * lv2.take(2, axis=axis)
-        - lv1.take(3, axis=axis) * lv2.take(3, axis=axis)
-    )
+    p0 = lv1.take(0, axis=axis) * lv2.take(0, axis=axis)
+    p1 = lv1.take(1, axis=axis) * lv2.take(1, axis=axis)
+    p2 = lv1.take(2, axis=axis) * lv2.take(2, axis=axis)
+    p3 = lv1.take(3, axis=axis) * lv2.take(3, axis=axis)
+
+    return p0 - p1 - p2 - p3  # type: ignore
 
 
 def lnorm_sqr(lv: np.ndarray, axis: int = 0) -> np.ndarray:
