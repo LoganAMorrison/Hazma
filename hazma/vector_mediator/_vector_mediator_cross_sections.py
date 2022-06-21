@@ -199,50 +199,50 @@ class VectorMediatorCrossSections:
 
             def msqrd(z):
                 return (
-                    gvxx ** 4
+                    gvxx**4
                     * (
                         9
-                        - 56 * rx ** 2
+                        - 56 * rx**2
                         + 2
                         * (
-                            9 * rv ** 2 * (-1 + rv ** 2 + rwv ** 2)
-                            + 4 * rv ** 2 * (11 + 2 * rv ** 2 + 2 * rwv ** 2) * rx ** 2
+                            9 * rv**2 * (-1 + rv**2 + rwv**2)
+                            + 4 * rv**2 * (11 + 2 * rv**2 + 2 * rwv**2) * rx**2
                             + 8
-                            * (7 + 6 * rv ** 2 * (-4 + rv ** 2 + rwv ** 2))
-                            * rx ** 4
-                            + 64 * rx ** 6
+                            * (7 + 6 * rv**2 * (-4 + rv**2 + rwv**2))
+                            * rx**4
+                            + 64 * rx**6
                         )
                         - 2
-                        * (-1 + 4 * rx ** 2)
+                        * (-1 + 4 * rx**2)
                         * (
-                            3 * rv ** 2 * (-3 + 2 * rv ** 2 + 2 * rwv ** 2)
+                            3 * rv**2 * (-3 + 2 * rv**2 + 2 * rwv**2)
                             + 4
-                            * (3 + 6 * rv ** 4 + 2 * rv ** 2 * (-7 + 3 * rwv ** 2))
-                            * rx ** 2
-                            - 32 * (-2 + rv ** 2) * rx ** 4
+                            * (3 + 6 * rv**4 + 2 * rv**2 * (-7 + 3 * rwv**2))
+                            * rx**2
+                            - 32 * (-2 + rv**2) * rx**4
                         )
                         * z
                         + 2
-                        * (3 * rv ** 2 - 4 * rx ** 2)
-                        * (-1 + 4 * rx ** 2) ** 3
-                        * z ** 3
-                        + (1 - 4 * rx ** 2) ** 4 * z ** 4
+                        * (3 * rv**2 - 4 * rx**2)
+                        * (-1 + 4 * rx**2) ** 3
+                        * z**3
+                        + (1 - 4 * rx**2) ** 4 * z**4
                         + 2
                         * (
                             3
-                            + 5 * rv ** 4
-                            + 12 * rx ** 2
-                            + 8 * rx ** 4
-                            + rv ** 2 * (-3 + 5 * rwv ** 2 - 20 * rx ** 2)
+                            + 5 * rv**4
+                            + 12 * rx**2
+                            + 8 * rx**4
+                            + rv**2 * (-3 + 5 * rwv**2 - 20 * rx**2)
                         )
-                        * (z - 4 * rx ** 2 * z) ** 2
+                        * (z - 4 * rx**2 * z) ** 2
                     )
                 ) / (
-                    (1 + rv ** 4 + rv ** 2 * (-2 + rwv ** 2))
+                    (1 + rv**4 + rv**2 * (-2 + rwv**2))
                     * (
-                        4 * rv ** 4
-                        + 4 * rv ** 2 * (rwv ** 2 + (-1 + 4 * rx ** 2) * (-1 + z))
-                        + (1 - 4 * rx ** 2) ** 2 * (-1 + z) ** 2
+                        4 * rv**4
+                        + 4 * rv**2 * (rwv**2 + (-1 + 4 * rx**2) * (-1 + z))
+                        + (1 - 4 * rx**2) ** 2 * (-1 + z) ** 2
                     )
                 )
 
@@ -261,7 +261,7 @@ class VectorMediatorCrossSections:
         if (
             e_cm > 2.0 * mpi + mpi0
             and e_cm > 2.0 * mx
-            and 4.0 * mpi ** 2 < s < (e_cm - mpi0) ** 2
+            and 4.0 * mpi**2 < s < (e_cm - mpi0) ** 2
         ):
             gvuu = self.gvuu
             gvdd = self.gvdd
@@ -273,53 +273,53 @@ class VectorMediatorCrossSections:
                 3.0
                 * (
                     (gvdd + gvuu) ** 2
-                    * gvxx ** 2
-                    * sqrt(s * (-4.0 * mpi ** 2 + s))
-                    * sqrt(
-                        e_cm ** 4
-                        + (mpi0 ** 2 - s) ** 2
-                        - 2.0 * e_cm ** 2 * (mpi0 ** 2 + s)
+                    * gvxx**2
+                    * np.sqrt(s * (-4.0 * mpi**2 + s))
+                    * np.sqrt(
+                        e_cm**4
+                        + (mpi0**2 - s) ** 2
+                        - 2.0 * e_cm**2 * (mpi0**2 + s)
                     )
                     * (
-                        -24.0 * mpi ** 6 * s
-                        + mpi ** 4
-                        * (-2.0 * mpi0 ** 4 + 28.0 * mpi0 ** 2 * s + 22.0 * s ** 2)
-                        + 2.0 * mpi ** 2 * (mpi0 ** 6 - 4.0 * s ** 3)
+                        -24.0 * mpi**6 * s
+                        + mpi**4
+                        * (-2.0 * mpi0**4 + 28.0 * mpi0**2 * s + 22.0 * s**2)
+                        + 2.0 * mpi**2 * (mpi0**6 - 4.0 * s**3)
                         + s
                         * (
-                            -2.0 * mpi0 ** 6
-                            - 4.0 * mpi0 ** 4 * s
-                            - mpi0 ** 2 * s ** 2
-                            + s ** 3
+                            -2.0 * mpi0**6
+                            - 4.0 * mpi0**4 * s
+                            - mpi0**2 * s**2
+                            + s**3
                         )
-                        + e_cm ** 4
+                        + e_cm**4
                         * (
-                            -2.0 * mpi ** 4
-                            + 2.0 * mpi ** 2 * (mpi0 ** 2 - s)
-                            + s * (-2.0 * mpi0 ** 2 + s)
+                            -2.0 * mpi**4
+                            + 2.0 * mpi**2 * (mpi0**2 - s)
+                            + s * (-2.0 * mpi0**2 + s)
                         )
-                        + e_cm ** 2
+                        + e_cm**2
                         * (
-                            4.0 * mpi ** 4 * (mpi0 ** 2 + s)
-                            + s * (4.0 * mpi0 ** 4 + 5.0 * mpi0 ** 2 * s - 2.0 * s ** 2)
+                            4.0 * mpi**4 * (mpi0**2 + s)
+                            + s * (4.0 * mpi0**4 + 5.0 * mpi0**2 * s - 2.0 * s**2)
                             - 4.0
-                            * mpi ** 2
-                            * (mpi0 ** 4 + 3.0 * mpi0 ** 2 * s - s ** 2)
+                            * mpi**2
+                            * (mpi0**4 + 3.0 * mpi0**2 * s - s**2)
                         )
                     )
                 )
                 / (
                     294912.0
-                    * fpi ** 6
-                    * pi ** 7
-                    * sqrt(e_cm ** 2)
-                    * sqrt(-4.0 * mx ** 2 + e_cm ** 2)
-                    * s ** 2
+                    * fpi**6
+                    * np.pi**7
+                    * np.sqrt(e_cm**2)
+                    * np.sqrt(-4.0 * mx**2 + e_cm**2)
+                    * s**2
                     * (
-                        mv ** 4
-                        - 2.0 * mv ** 2 * e_cm ** 2
-                        + e_cm ** 4
-                        + mv ** 2 * width_v ** 2
+                        mv**4
+                        - 2.0 * mv**2 * e_cm**2
+                        + e_cm**4
+                        + mv**2 * width_v**2
                     )
                 )
             )
@@ -333,7 +333,7 @@ class VectorMediatorCrossSections:
 
     def sigma_xx_to_v_to_pi0pipi(self, e_cm):
         if e_cm > 2.0 * mpi + mpi0 and e_cm > 2.0 * self.mx:
-            s_min = 4.0 * mpi ** 2
+            s_min = 4.0 * mpi**2
             s_max = (e_cm - mpi0) ** 2
 
             ret_val = quad(
