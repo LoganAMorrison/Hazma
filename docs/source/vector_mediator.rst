@@ -6,8 +6,7 @@ Overview
 
 The ``vector_mediator`` module contains two models for which dark
 matter interacts with the Standard Model through a vector mediator. For
-energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian can for
-this theory is given by:
+energies :math:`\mu\gg 1~\mathrm{GeV}`, the interaction Lagrangian is:
 
 .. math::
 
@@ -71,3 +70,5 @@ Classes
 .. autoclass:: hazma.vector_mediator.KineticMixing
 
 .. autoclass:: hazma.vector_mediator.QuarksOnly
+
+..  LocalWords:  Chiral MeV

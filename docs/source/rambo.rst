@@ -210,7 +210,7 @@ To compute this, we use the following:
 
    The :doc:`utils` module contains a couple of functions useful for dealing
    with four-vectors, namely, :py:func:`hazma.utils.ldot` for computing scalar
-   products and :py:func:`hazma.utils.lnorm_sqr` for computing the the squared
+   products and :py:func:`hazma.utils.lnorm_sqr` for computing the squared
    norm.
 
 

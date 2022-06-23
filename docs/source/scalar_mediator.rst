@@ -46,7 +46,7 @@ In addition to the generic scalar mediator mode, ``hazma`` also contains
 specialized models for realizations of the Higgs-portal and Heavy-quark
 theories. In the Higgs-portal model, we assume that the scalar mediator
 doesn't directly interact with the standard model particles aside from the
-Higgs. We assume the the scalar mixes with the Higgs and inherits all its
+Higgs. We assume the scalar mixes with the Higgs and inherits all its
 interactions to the Standard model through the mixing. The Higgs-portal
 model contains the following parameters:
 
@@ -63,7 +63,7 @@ following relationships:
     g_{Sf} = \sin\theta,  g_{SG} = 3\sin\theta, g_{SF} = -\frac{5}{6}\sin\theta,  \Lambda = v_{h}.
 
 The Heavy-quark model assumes that there exists a new heavy quark and that
-the scalar mediator only couples the the heavy quark. The parameters of this
+the scalar mediator only couples the heavy quark. The parameters of this
 model are:
 
 1. :math:`m_{\chi}`: dark matter mass,

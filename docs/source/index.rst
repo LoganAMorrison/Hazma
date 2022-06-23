@@ -7,6 +7,8 @@ Welcome to Hazma's documentation!
 
    installation
    usage
+   spectra
+   phase_space
    models
    gamma_ray_limits
    cmb
@@ -14,7 +16,6 @@ Welcome to Hazma's documentation!
    gamma_ray
    positron
    decay
-   rambo
    utils
    parameters
 
