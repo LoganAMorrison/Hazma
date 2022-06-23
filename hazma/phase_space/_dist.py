@@ -43,6 +43,9 @@ class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
         r"""Return the limits on the independent variables."""
         return np.min(self._bins), np.max(self._bins)
 
+    def __len__(self) -> int:
+        return len(self._probabilities)
+
     @property
     def bin_centers(self) -> RealArray:
         """Return the central values of the bins."""
