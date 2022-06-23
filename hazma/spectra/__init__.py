@@ -16,7 +16,6 @@ Altarelli-parisi
 ----------------
 
 .. autosummary::
-    :toctree:
 
     dnde_photon_ap_fermion -- Approximate FSR from fermion.
     dnde_photon_ap_scalar  -- Approximate FSR from scalar.
@@ -40,6 +39,8 @@ Photon
 .. autosummary::
     :toctree:
 
+    dnde_photon              -- Photon spectrum from decay/FSR of n-body final
+                                states.
     dnde_photon_muon         -- Photon spectrum from decay of muon.
     dnde_photon_neutral_pion -- Photon spectrum from decay of neutral pion.
     dnde_photon_charged_pion -- Photon spectrum from decay of charged pion.
@@ -59,6 +60,8 @@ Positron
 .. autosummary::
     :toctree:
 
+    dnde_positron              -- Positron spectrum from decay of n-body final
+                                  states.
     dnde_positron_muon         -- Positron spectrum from decay of muon.
     dnde_positron_neutral_pion -- Positron spectrum from decay of neutral pion.
     dnde_positron_charged_pion -- Positron spectrum from decay of charged pion.
@@ -78,6 +81,8 @@ Neutrino
 .. autosummary::
     :toctree:
 
+    dnde_neutrino              -- Neutrino spectrum from decay of n-body final
+                                  states.
     dnde_neutrino_muon         -- Neutrino spectrum from decay of muon.
     dnde_neutrino_neutral_pion -- Neutrino spectrum from decay of neutral pion.
     dnde_neutrino_charged_pion -- Neutrino spectrum from decay of charged pion.
@@ -94,6 +99,8 @@ Neutrino
 """
 
 from .altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_ap_scalar
+
+from ._nbody import dnde_photon, dnde_positron, dnde_neutrino
 
 from .boost import (
     boost_delta_function,
@@ -147,6 +154,7 @@ from ._neutrino import (
 
 __all__ = [
     # Photon
+    "dnde_photon",
     "dnde_photon_muon",
     "dnde_photon_neutral_pion",
     "dnde_photon_charged_pion",
@@ -160,6 +168,7 @@ __all__ = [
     "dnde_photon_eta_prime",
     "dnde_photon_phi",
     # Positron
+    "dnde_positron",
     "dnde_positron_muon",
     "dnde_positron_charged_pion",
     "dnde_positron_charged_kaon",
@@ -172,6 +181,7 @@ __all__ = [
     "dnde_positron_eta_prime",
     "dnde_positron_phi",
     # Neutrino
+    "dnde_neutrino",
     "dnde_neutrino_muon",
     "dnde_neutrino_charged_pion",
     "dnde_neutrino_charged_kaon",
