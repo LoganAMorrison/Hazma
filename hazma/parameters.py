@@ -63,6 +63,33 @@ top_quark_mass = 160.0e3
 # Collections of masses
 lepton_masses = [electron_mass, muon_mass]
 
+standard_model_masses = {
+    "e": electron_mass,
+    "mu": muon_mass,
+    "tau": tau_mass,
+    "ve": 0.0,
+    "vm": 0.0,
+    "vt": 0.0,
+    "u": up_quark_mass,
+    "c": charm_quark_mass,
+    "t": top_quark_mass,
+    "d": down_quark_mass,
+    "s": strange_quark_mass,
+    "b": bottom_quark_mass,
+    "h": higgs_mass,
+    "pi": charged_pion_mass,
+    "pi0": neutral_pion_mass,
+    "k": charged_kaon_mass,
+    "k0": neutral_kaon_mass,
+    "kl": long_kaon_mass,
+    "ks": short_kaon_mass,
+    "eta": eta_mass,
+    "etap": eta_prime_mass,
+    "rho": rho_mass,
+    "omega": omega_mass,
+    "phi": phi_mass,
+}
+
 
 #: Convert :math:`\mathrm{cm}` to :math:`\mathrm{MeV}^{-1}`
 cm_to_inv_MeV = 5.08e10  # MeV^-1 cm^-1
