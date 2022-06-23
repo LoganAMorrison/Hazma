@@ -6,9 +6,7 @@ import numpy as np
 from scipy import integrate
 
 from hazma.utils import RealArray, kallen_lambda
-from hazma.phase_space import integrate_three_body
-from hazma.phase_space import energy_distributions_three_body
-from hazma.phase_space import invariant_mass_distributions_three_body
+from hazma.phase_space import ThreeBody
 from hazma.phase_space._utils import energy_limits
 from hazma.phase_space import PhaseSpaceDistribution1D
 
@@ -215,13 +213,12 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         """
 
         def integrate_(q_):
-            return integrate_three_body(
-                lambda s, t: self.__phase_space_integrand(q_, s, t, **kwargs),
-                q_,
-                self.fsp_masses,
-                method=method,
-                npts=npts,
-            )[0]
+            tb = ThreeBody(
+                cme=q_,
+                masses=self.fsp_masses,
+                msqrd=lambda s, t: self.__phase_space_integrand(q_, s, t, **kwargs),
+            )
+            return tb.integrate(method=method, npts=npts)[0]
 
         scalar = np.isscalar(q)
         qs = np.atleast_1d(q)
@@ -269,8 +266,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         def integrand(s, t):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
-        return energy_distributions_three_body(
-            integrand, q, self.fsp_masses, method=method, nbins=nbins, npts=npts
+        return ThreeBody(q, self.fsp_masses, msqrd=integrand).energy_distributions(
+            nbins=nbins, npts=npts, method=method
         )
 
     def _invariant_mass_distributions(
@@ -305,9 +302,9 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         def integrand(s, t):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
-        return invariant_mass_distributions_three_body(
-            integrand, q, self.fsp_masses, method=method, nbins=nbins, npts=npts
-        )
+        return ThreeBody(
+            q, self.fsp_masses, msqrd=integrand
+        ).invariant_mass_distributions(nbins=nbins, npts=npts, method=method)
 
     def _width(self, *, mv, method: str = "quad", npts: int = 10000, **kwargs):
         """Compute the partial width of a vector decay."""
@@ -510,8 +507,8 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         def integrand(s, t):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
-        return energy_distributions_three_body(
-            integrand, q, self.fsp_masses, nbins=nbins, method="quad"
+        return ThreeBody(q, self.fsp_masses, msqrd=integrand).energy_distributions(
+            nbins=nbins, method="quad"
         )
 
     def _invariant_mass_distributions(self, *, q: float, nbins: int, **kwargs):
@@ -541,9 +538,9 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         def integrand(s, t):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
-        return invariant_mass_distributions_three_body(
-            integrand, q, self.fsp_masses, nbins=nbins, method="quad"
-        )
+        return ThreeBody(
+            q, self.fsp_masses, msqrd=integrand
+        ).invariant_mass_distributions(nbins=nbins, method="quad")
 
 
 # =============================================================================
