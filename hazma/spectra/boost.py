@@ -136,7 +136,7 @@ def dnde_boost_array(dnde, energies, beta: float, mass: float = 0.0):
 
     integrand = dnde[mask] / k
     # print(integrand)
-    pre = 0.5 / (2 * beta * gamma)
+    pre = 1.0 / (2 * beta * gamma)
 
     spline = interpolate.InterpolatedUnivariateSpline(es, integrand, ext=1, k=1)
     boosted[mask] = np.array([spline.integral(a, b) for a, b in zip(emin, emax)])
