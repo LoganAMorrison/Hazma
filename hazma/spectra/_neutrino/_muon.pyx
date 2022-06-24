@@ -95,14 +95,15 @@ cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point(double enu, double emu):
         double xmax_rf
         double x
         double gam, beta
-        NeutrinoSpectrumPoint result
+        NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
+
+    if emu < MASS_MU:
+        return result
 
     # If we are sufficiently close to the muon rest-frame, use the 
     # rest-frame result.
     if emu - MASS_MU < DBL_EPSILON:
         return c_muon_decay_spectrum_point_rest(enu)
-
-    result = new_neutrino_spectrum_point()
 
     # dN/dE = (2 / Q) * dN/dx
     e_to_x = 2.0 / emu
