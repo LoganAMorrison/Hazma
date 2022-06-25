@@ -9,13 +9,9 @@ Welcome to Hazma's documentation!
    usage
    spectra
    phase_space
+   form_factors
    models
-   gamma_ray_limits
-   cmb
-   particle_physics
-   gamma_ray
-   positron
-   decay
+   limits
    utils
    parameters
 

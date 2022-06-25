@@ -1,9 +1,13 @@
-hazma.parameters
-================
+Parameters (:mod:`hazma.parameters`)
+====================================
+
+``hazma``'s collection of physical constants.
 
 
 Masses
 ------
+
+All masses are in MeV.
 
 .. autodata:: hazma.parameters.higgs_mass
 .. autodata:: hazma.parameters.electron_mass

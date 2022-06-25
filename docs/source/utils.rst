@@ -1,5 +1,5 @@
-`hazma.utils`
-=============
+Utilities (:mod:`hazma.utils`)
+==============================
 
 
 API Reference
@@ -12,7 +12,3 @@ API Reference
 .. autofunction:: hazma.utils.ldot
 
 .. autofunction:: hazma.utils.lnorm_sqr
-
-.. autofunction:: hazma.utils.dnde_altarelli_parisi_fermion
-
-.. autofunction:: hazma.utils.dnde_altarelli_parisi_scalar
