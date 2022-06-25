@@ -64,7 +64,8 @@ class TheoryCMB:
             f_eff for photons or electrons and positrons.
         """
         # Center of mass energy
-        e_cm = 2.0 * self.mx * (1.0 + 0.5 * vx_cmb(self.mx, x_kd) ** 2)
+        mx = self.mx  # type: ignore
+        e_cm = 2.0 * mx * (1.0 + 0.5 * vx_cmb(mx, x_kd) ** 2)
 
         if fs == "g g":
             f_eff_base = f_eff_g
