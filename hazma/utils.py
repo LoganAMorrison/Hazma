@@ -1,9 +1,51 @@
-from typing import Union
+from typing import Union, Optional
+import functools as ft
+import warnings
 
 import numpy as np
 import numpy.typing as npt
 
 from .parameters import alpha_em
+
+
+# ===================================================================
+# ---- Deprecation --------------------------------------------------
+# ===================================================================
+#
+
+
+def _force_deprecation_warning(message):
+    warnings.simplefilter("always", DeprecationWarning)  # turn off filter
+    warnings.warn(message, category=DeprecationWarning, stacklevel=2)
+    warnings.simplefilter("default", DeprecationWarning)  # reset filter
+
+
+def warn_deprecated_module(module: str, alternative: Optional[str] = None):
+    r"""Decorator used to raise warning for calling a deprecated function."""
+
+    message = "{} is deprecated.".format(module)
+
+    if alternative is not None:
+        message = "{} Use {} instead.".format(message, alternative)
+
+    _force_deprecation_warning(message)
+
+
+def deprecate_fn(fn, alternative: Optional[str] = None):
+    r"""Decorator used to raise warning for calling a deprecated function."""
+
+    message = "{} is deprecated.".format(fn.__name__)
+
+    if alternative is not None:
+        message = "{} Use {} instead.".format(message, alternative)
+
+    @ft.wraps(fn)
+    def wrapped(*args, **kwargs):
+        _force_deprecation_warning(message)
+        return fn(*args, **kwargs)
+
+    return wrapped
+
 
 # ===================================================================
 # ---- Types --------------------------------------------------------
@@ -95,63 +137,6 @@ def lnorm_sqr(lv: np.ndarray, axis: int = 0) -> np.ndarray:
     )
 
 
-def three_body_integration_bounds_t(s, m, m1, m2, m3):
-    """Compute the integrate bounds on the 'Mandelstam' variable t = (p1 + p3)^2
-    for a three-body final state.
-
-    Parameters
-    ----------
-    s: float
-        Invariant mass of particles 2 and 3.
-    m: float
-        Center-of-mass energy.
-    m1, m2, m3: float
-        Masses of the three final state particles.
-
-    Returns
-    -------
-    lb: float
-        Lower integration bound.
-    ub: float
-        Upper integration bound.
-    """
-    msqr = m**2
-    m12 = m1**2
-    m22 = m2**2
-    m32 = m3**2
-
-    pfac = -(msqr - m12) * (m22 - m32) + (msqr + m12 + m22 + m32) * s - s**2
-    sfac = np.sqrt(kallen_lambda(s, m12, m22) * kallen_lambda(s, m22, m32))
-
-    lb = 0.5 * (pfac - sfac) / s
-    ub = 0.5 * (pfac + sfac) / s
-
-    return lb, ub
-
-
-def three_body_integration_bounds_s(m, m1, m2, m3):
-    """Compute the integrate bounds on the 'Mandelstam' variable s = (p2 + p3)^2
-    for a three-body final state.
-
-    Parameters
-    ----------
-    m: float
-        Center-of-mass energy.
-    m1, m2, m3: float
-        Masses of the three final state particles.
-
-    Returns
-    -------
-    lb: float
-        Lower integration bound.
-    ub: float
-        Upper integration bound.
-    """
-    lb = (m2 + m3) ** 2
-    ub = (m - m1) ** 2
-    return lb, ub
-
-
 # ===================================================================
 # ---- Altarelli-Parisi ---------------------------------------------
 # ===================================================================
@@ -185,6 +170,7 @@ def __dnde_altarelli_parisi(eng, cme, mass, splitting):
     return f(eng)
 
 
+@ft.partial(deprecate_fn, alternative="hazma.spectra.dnde_photon_ap_fermion")
 def dnde_altarelli_parisi_fermion(energies, cme: float, mf: float):
     """
     Compute the photon spectrum from radiation off a final-state fermion using the
@@ -207,6 +193,7 @@ def dnde_altarelli_parisi_fermion(energies, cme: float, mf: float):
     return __dnde_altarelli_parisi(energies, cme, mf, __fermion_splitting)
 
 
+@ft.partial(deprecate_fn, alternative="hazma.spectra.dnde_photon_ap_scalar")
 def dnde_altarelli_parisi_scalar(energies, cme: float, ms: float):
     """
     Compute the photon spectrum from radiation off a final-state scalar using the
