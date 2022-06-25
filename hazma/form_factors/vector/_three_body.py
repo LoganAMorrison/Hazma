@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import abc
-from typing import Tuple, Union, Dict, List
+from typing import Tuple, Union, Dict, List, Optional
 
 import numpy as np
 from scipy import integrate
@@ -190,6 +190,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         q: Union[float, RealArray],
         method: str = "quad",
         npts: int = 10000,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
         **kwargs,
     ) -> Union[float, RealArray]:
         """Compute the integrated from factor for a three pseudo-scalar meson
@@ -205,6 +207,12 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         npts: int, optional
             Number of phase-space points to use in integration. Ignored is
             method isn't 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -218,7 +226,9 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
                 masses=self.fsp_masses,
                 msqrd=lambda s, t: self.__phase_space_integrand(q_, s, t, **kwargs),
             )
-            return tb.integrate(method=method, npts=npts)[0]
+            return tb.integrate(method=method, npts=npts, epsabs=epsabs, epsrel=epsrel)[
+                0
+            ]
 
         scalar = np.isscalar(q)
         qs = np.atleast_1d(q)
@@ -239,6 +249,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         nbins: int,
         method: str = "quad",
         npts: int = 10000,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
         **kwargs,
     ):
         r"""Compute the energy distributions of the final state particles.
@@ -255,6 +267,12 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         npts: int
             Number of phase-space points used to generate distributions. Only
             used if method is 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -267,11 +285,19 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
         return ThreeBody(q, self.fsp_masses, msqrd=integrand).energy_distributions(
-            nbins=nbins, npts=npts, method=method
+            nbins=nbins, npts=npts, method=method, epsrel=epsrel, epsabs=epsabs
         )
 
     def _invariant_mass_distributions(
-        self, *, q: float, method: str, nbins: int, npts: int = 10000, **kwargs
+        self,
+        *,
+        q: float,
+        method: str,
+        nbins: int,
+        npts: int = 10000,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
+        **kwargs,
     ):
         r"""Compute the invariant-mass distributions of the final state
         particles.
@@ -288,6 +314,12 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         npts: int
             Number of phase-space points used to generate distributions. Only
             used if method is 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -304,18 +336,51 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
 
         return ThreeBody(
             q, self.fsp_masses, msqrd=integrand
-        ).invariant_mass_distributions(nbins=nbins, npts=npts, method=method)
+        ).invariant_mass_distributions(
+            nbins=nbins, npts=npts, method=method, epsabs=epsabs, epsrel=epsrel
+        )
 
-    def _width(self, *, mv, method: str = "quad", npts: int = 10000, **kwargs):
+    def _width(
+        self,
+        *,
+        mv,
+        method: str = "quad",
+        npts: int = 10000,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
+        **kwargs,
+    ):
         """Compute the partial width of a vector decay."""
-        return super()._width(mv=mv, method=method, npts=npts, **kwargs)
+        return super()._width(
+            mv=mv, method=method, npts=npts, epsabs=epsabs, epsrel=epsrel, **kwargs
+        )
 
     def _cross_section(
-        self, *, q, mx, mv, gvxx, wv, method="quad", npts: int = 10000, **kwargs
+        self,
+        *,
+        q,
+        mx,
+        mv,
+        gvxx,
+        wv,
+        method="quad",
+        npts: int = 10000,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
+        **kwargs,
     ):
         """Compute the cross-section of dark matter annihilation."""
         return super()._cross_section(
-            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, method=method, npts=npts, **kwargs
+            q=q,
+            mx=mx,
+            mv=mv,
+            gvxx=gvxx,
+            wv=wv,
+            method=method,
+            npts=npts,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            **kwargs,
         )
 
 
@@ -441,6 +506,8 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         self,
         *,
         q: Union[float, RealArray],
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
         **kwargs,
     ) -> Union[float, RealArray]:
         """Compute the integrated from factor for a three pseudo-scalar meson
@@ -450,6 +517,12 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         ----------
         q: float or array-like
             Center of mass energy.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
         kwargs: dict
             Keyword arguments to pass to underlying `form_factor`.
 
@@ -460,6 +533,11 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         """
 
         m1, m2, m3 = self.fsp_masses
+        quad_kwargs = dict()
+        if epsrel is not None:
+            quad_kwargs["epsrel"] = epsrel
+        if epsabs is not None:
+            quad_kwargs["epsabs"] = epsabs
 
         def integrand(x, q_):
             s = q_**2 * (1.0 - x + (m1 / q_) ** 2)
@@ -469,7 +547,12 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
             mu1, mu2, mu3 = m1 / q_, m2 / q_, m3 / q_
             xmin = 2.0 * mu1
             xmax = mu1**2 + (1.0 - (mu2 + mu3) ** 2)
-            return q_**2 * integrate.quad(lambda x: integrand(x, q_), xmin, xmax)[0]
+            return (
+                q_**2
+                * integrate.quad(lambda x: integrand(x, q_), xmin, xmax, **quad_kwargs)[
+                    0
+                ]
+            )
 
         scalar = np.isscalar(q)
         qs = np.atleast_1d(q)
@@ -483,7 +566,15 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
             return res[0]
         return res
 
-    def _energy_distributions(self, *, q: float, nbins: int, **kwargs):
+    def _energy_distributions(
+        self,
+        *,
+        q: float,
+        nbins: int,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
+        **kwargs,
+    ):
         r"""Compute the energy distributions of the final state particles.
 
         Parameters
@@ -492,6 +583,12 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
             Center-of-mass energy in MeV.
         nbins: int
             Number of bins for the distributions.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
         kwargs: dict
             Keyword arguments to pass to underlying `form_factor`.
 
@@ -508,10 +605,21 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
             return self.__phase_space_integrand(q, s, t, **kwargs)
 
         return ThreeBody(q, self.fsp_masses, msqrd=integrand).energy_distributions(
-            nbins=nbins, method="quad"
+            nbins=nbins,
+            method="quad",
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
-    def _invariant_mass_distributions(self, *, q: float, nbins: int, **kwargs):
+    def _invariant_mass_distributions(
+        self,
+        *,
+        q: float,
+        nbins: int,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
+        **kwargs,
+    ):
         r"""Compute the invariant-mass distributions of the final state
         particles.
 
@@ -521,6 +629,12 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
             Center-of-mass energy in MeV.
         nbins: int
             Number of bins for the distributions.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
         kwargs: dict
             Keyword arguments to pass to underlying `form_factor`.
 
@@ -540,7 +654,9 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
 
         return ThreeBody(
             q, self.fsp_masses, msqrd=integrand
-        ).invariant_mass_distributions(nbins=nbins, method="quad")
+        ).invariant_mass_distributions(
+            nbins=nbins, method="quad", epsrel=epsrel, epsabs=epsabs
+        )
 
 
 # =============================================================================
@@ -671,6 +787,8 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
         self,
         *,
         q: Union[float, RealArray],
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
         **kwargs,
     ) -> Union[float, RealArray]:
         """Compute the integrated from factor for a three pseudo-scalar meson
@@ -680,6 +798,14 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
         ----------
         q: float or array-like
             Center of mass energy.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        kwargs: dict
+            Keyword arguments to pass to underlying `form_factor` function.
 
         Returns
         -------
@@ -687,6 +813,11 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
             Integrated form-factor.
         """
         mv, m1, m2 = self.fsp_masses
+        quad_kwargs = dict()
+        if epsrel is not None:
+            quad_kwargs["epsrel"] = epsrel
+        if epsabs is not None:
+            quad_kwargs["epsabs"] = epsabs
 
         def integrand(x, q_):
             mv, m1, m2 = self.fsp_masses
@@ -704,7 +835,12 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
             xmax = muv**2 + (1.0 - (mu1 + mu2) ** 2)
             ff = self.form_factor(q_, **kwargs)
             pre = np.abs(ff) ** 2 / (1536.0 * np.pi**3 * muv**2)
-            return pre * integrate.quad(lambda x: integrand(x, q_), xmin, xmax)[0]
+            return (
+                pre
+                * integrate.quad(lambda x: integrand(x, q_), xmin, xmax, **quad_kwargs)[
+                    0
+                ]
+            )
 
         scalar = np.isscalar(q)
         qs = np.atleast_1d(q)

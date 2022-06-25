@@ -293,13 +293,15 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
 
     def integrated_form_factor(
         self,
-        *,
         q: Union[float, RealArray],
+        *,
         gvuu: float,
         gvdd: float,
         gvss: float,
         method: str = "rambo",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> Union[float, RealArray]:
         """Compute the three pion form-factor integrated over phase-space.
 
@@ -309,20 +311,34 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             Center of mass energy.
         gvuu, gvdd, gvss: float
             Coupling of vector to up-, down-, and strange-quarks.
+
+        Returns
+        -------
+        iff: float or array-like
+            Integrated form-factor.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate. Default is 'quad'. Options are 'quad' or
             'rambo'.
         npts: int, optional
             Number of phase-space points to use in integration. Ignored is
             method isn't 'rambo'. Default is 10_000.
-
-        Returns
-        -------
-        ff: float or array-like
-            Integrated form-factor.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._integrated_form_factor(
-            q=q, method=method, npts=npts, gvuu=gvuu, gvdd=gvdd, gvss=gvss
+            q=q,
+            method=method,
+            npts=npts,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def width(
@@ -334,6 +350,8 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         gvss: float,
         method: str = "rambo",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> Union[float, RealArray]:
         r"""Compute the partial decay width of a massive vector into three pions.
 
@@ -343,39 +361,52 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             Mass of the vector.
         gvuu, gvdd, gvss: float
             Coupling of vector to up-, donw-, and strange-quarks.
-        nbins: float
-            Number of bins used to generate distribution.
-        method: str, optional
-            Method used to integrate over phase-space.
-            See `hazma.phase_space.energy_distributions_three_body`
-            for availible methods.
-        npts: int, optional
-            Number of phase-space points to use in integration. Only used if
-            `method='rambo'`. Default is 2^14.
 
         Returns
         -------
         width: float or array-like
             Decay width of vector into three pions.
+
+        Other Parameters
+        ----------------
+        method: str, optional
+            Method used to integrate. Default is 'quad'. Options are 'quad' or
+            'rambo'.
+        npts: int, optional
+            Number of phase-space points to use in integration. Ignored is
+            method isn't 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
 
         return self._width(
-            mv=mv, method=method, npts=npts, gvuu=gvuu, gvdd=gvdd, gvss=gvss
+            mv=mv,
+            method=method,
+            npts=npts,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def cross_section(
         self,
-        *,
         q: Union[float, RealArray],
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
+        *,
         gvuu: float,
         gvdd: float,
         gvss: float,
         method: str = "rambo",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> Union[float, RealArray]:
         r"""Compute the cross section for dark matter annihilating into three pions.
 
@@ -393,20 +424,24 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             Width of the vector in MeV.
         gvuu, gvdd, gvss: float
             Coupling of vector to up-, donw- and strange-quarks.
-        nbins: float
-            Number of bins used to generate distribution.
-        method: str, optional
-            Method used to integrate over phase-space. Default is "rambo".  See
-            `hazma.phase_space.energy_distributions_three_body` for availible
-            methods.
-        npts: int, optional
-            Number of phase-space points to use in integration. Only used if
-            `method='rambo'`. Default is 2^14.
 
         Returns
         -------
         cs: float or array-like
             Annihilation cross section into three pions.
+
+        Other Parameters
+        ----------------
+        method: str, optional
+            Method used to integrate. Default is 'quad'. Options are 'quad' or
+            'rambo'.
+        npts: int, optional
+            Number of phase-space points to use in integration. Ignored is
+            method isn't 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._cross_section(
             q=q,
@@ -419,6 +454,8 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             gvuu=gvuu,
             gvdd=gvdd,
             gvss=gvss,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def energy_distributions(
@@ -431,6 +468,8 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> List[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state pions.
 
@@ -442,21 +481,35 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             Number of bins used to generate distribution.
         gvuu, gvdd, gvss: float
             Coupling of vector to up-, down-, and strange-quarks.
-        method: str, optional
-            Method used to integrate over phase-space. Default is "rambo".  See
-            `hazma.phase_space.energy_distributions_three_body` for availible
-            methods.
-        npts: int, optional
-            Number of phase-space points to use in integration. Only used if
-            `method='rambo'`. Default is 2^14.
 
         Returns
         -------
         dists: List[PhaseSpaceDistribution1D]
             List of the energy distributions.
+
+        Other Parameters
+        ----------------
+        method: str, optional
+            Method used to integrate. Default is 'quad'. Options are 'quad' or
+            'rambo'.
+        npts: int, optional
+            Number of phase-space points to use in integration. Ignored is
+            method isn't 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._energy_distributions(
-            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
+            q=q,
+            nbins=nbins,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            method=method,
+            npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def invariant_mass_distributions(
@@ -469,6 +522,8 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the all pairs of the
         final-state particles.
@@ -481,94 +536,34 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             Number of bins used to generate distribution.
         gvuu, gvdd, gvss: float
             Coupling of vector to up-, down-, and strange-quarks.
-        method: str, optional
-            Method used to integrate over phase-space. Default is "rambo".  See
-            `hazma.phase_space.energy_distributions_three_body` for availible
-            methods.
-        npts: int, optional
-            Number of phase-space points to use in integration. Only used if
-            `method='rambo'`. Default is 2^14.
 
         Returns
         -------
         dists: Dict[(int,int), PhaseSpaceDistribution1D]
             Dictionary of the invariant-mass distributions. Keys specify the
+
+        Other Parameters
+        ----------------
+        method: str, optional
+            Method used to integrate. Default is 'quad'. Options are 'quad' or
+            'rambo'.
+        npts: int, optional
+            Number of phase-space points to use in integration. Ignored is
+            method isn't 'rambo'. Default is 10_000.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
             pair of particles the distribution represents.
         """
         return self._invariant_mass_distributions(
-            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
+            q=q,
+            nbins=nbins,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            method=method,
+            npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
-
-    # def __msqrd(self, momenta, q2: float, gvuu: float, gvdd: float, gvss: float):
-    #     p1 = momenta[:, 0]
-    #     p2 = momenta[:, 1]
-    #     p3 = momenta[:, 2]
-
-    #     s = lnorm_sqr(p2 + p3)
-    #     t = lnorm_sqr(p1 + p3)
-    #     u = lnorm_sqr(p1 + p2)
-
-    #     return (
-    #         np.abs(self.__form_factor(q2, s, t, u, gvuu, gvdd, gvss)) ** 2
-    #         * (
-    #             -(MPI_GEV**4 * s)
-    #             + MPI_GEV**2
-    #             * (
-    #                 -(MPI0_GEV**4)
-    #                 - q2**2
-    #                 + q2 * s
-    #                 + MPI0_GEV**2 * (2 * q2 + s)
-    #                 + 2 * s * t
-    #             )
-    #             - s * (MPI0_GEV**2 * (q2 - t) + t * (-q2 + s + t))
-    #         )
-    #         / 12.0
-    #     )
-
-    # def _msqrd(self, q: float, s_, t_, gvuu: float, gvdd: float, gvss: float):
-    #     qq = q * 1e-3
-    #     ss = s_ * 1e-6
-    #     tt = t_ * 1e-6
-    #     uu = q**2 + sum(self._fsp_masses) - ss - tt
-
-    #     return (
-    #         np.abs(self.__form_factor(qq**2, ss, tt, uu, gvuu, gvdd, gvss)) ** 2
-    #         * (
-    #             -(MPI_GEV**4 * ss)
-    #             + MPI_GEV**2
-    #             * (
-    #                 -(MPI0_GEV**4)
-    #                 - qq**4
-    #                 + qq**2 * ss
-    #                 + MPI0_GEV**2 * (2 * qq**2 + ss)
-    #                 + 2 * ss * tt
-    #             )
-    #             - ss * (MPI0_GEV**2 * (qq**2 - tt) + tt * (-(qq**2) + ss + tt))
-    #         )
-    #         / 12.0
-    #     )
-
-    # def _integrated_form_factor(
-    #     self, *, q: float, gvuu: float, gvdd: float, gvss: float, npts: int = 10000
-    # ) -> float:
-    #     """
-    #     Compute the form factor for a vector decaying into two charged pions and
-    #     a neutral pion integrated over the three-body phase-space.
-
-    #     Parameters
-    #     ----------
-    #     q: float
-    #         Center-of-mass energy in GeV.
-    #     """
-    #     if q < MPI0_GEV + 2 * MPI_GEV:
-    #         return 0.0
-
-    #     phase_space = PhaseSpace(q, np.array(self._fsp_masses))
-    #     ps, ws = phase_space.generate(npts)
-
-    #     ws = ws * self.__msqrd(ps, q**2, gvuu, gvdd, gvss)
-
-    #     avg: float = np.average(ws)  # type: ignore
-    #     # error: float = np.std(ws, ddof=1) / np.sqrt(npts)
-
-    #     return avg / q**2

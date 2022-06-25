@@ -640,7 +640,12 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         return ff_avg, ff_err
 
     def integrated_form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, npts: int
+        self,
+        q: Union[float, RealArray],
+        *,
+        gvuu: float,
+        gvdd: float,
+        npts: int = 1 << 15,
     ) -> Union[float, RealArray]:
         """
         Compute the form-factor integrated over phase-space for a four-pion final-state.
@@ -654,7 +659,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         gvdd: float
             Coupling of vector to down-quarks.
         npts: int
-            Number of Monte-Carlo phase-space points to use.
+            Number of Monte-Carlo phase-space points to use. Default is 2^15.
 
         Returns
         -------
@@ -688,7 +693,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         *,
         gvuu: float,
         gvdd: float,
-        npts: int = 10000,
+        npts: int = 1 << 15,
     ) -> Union[float, RealArray]:
         r"""Compute the decay width of a massive vector into 4-pions.
 
@@ -720,15 +725,15 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
 
     def cross_section(
         self,
-        *,
         q: Union[float, RealArray],
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
+        *,
         gvuu: float,
         gvdd: float,
-        npts: int = 10_000,
+        npts: int = 1 << 15,
     ) -> Union[float, RealArray]:
         r"""Compute the decay width of a massive vector into 4-pions.
 

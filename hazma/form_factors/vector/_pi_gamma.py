@@ -14,7 +14,7 @@ MPI0 = parameters.neutral_pion_mass
 
 
 @dataclass(frozen=True)
-class VectorFormFactorPiGammaFitData:
+class VectorFormFactorPi0GammaFitData:
     """Data for the pion-photon vector form-factor."""
 
     fpi: float
@@ -34,7 +34,7 @@ class VectorFormFactorPiGammaFitData:
 
 
 @dataclass
-class VectorFormFactorPiGamma(VectorFormFactorPA):
+class VectorFormFactorPi0Gamma(VectorFormFactorPA):
     """Class for computing the pion-photon vector form-factor.
 
     Attributes
@@ -59,7 +59,7 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
     """
 
     fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, 0.0))
-    fit_data: VectorFormFactorPiGammaFitData = field(init=False)
+    fit_data: VectorFormFactorPi0GammaFitData = field(init=False)
 
     fpi: InitVar[float] = 0.09266
     amplitude0: InitVar[float] = 0.007594981126020603
@@ -89,7 +89,7 @@ class VectorFormFactorPiGamma(VectorFormFactorPA):
         width_omega,
         width_phi,
     ):
-        self.fit_data = VectorFormFactorPiGammaFitData(
+        self.fit_data = VectorFormFactorPi0GammaFitData(
             fpi=fpi,
             amplitude0=amplitude0,
             amplitude_rho=amplitude_rho,

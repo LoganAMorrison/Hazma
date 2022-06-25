@@ -1,5 +1,5 @@
 from dataclasses import InitVar, dataclass, field
-from typing import Tuple, List, Dict
+from typing import Optional, Tuple, List, Dict
 import abc
 
 import numpy as np
@@ -201,13 +201,14 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
 
     def integrated_form_factor(
         self,
-        *,
         q: RealOrRealArray,
         gvuu: float,
         gvdd: float,
         gvss: float,
         method: str = "quad",
         npts: int = 10000,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> RealOrRealArray:
         """Compute the pion-kaon-kaon form factor integrated over phase-space.
 
@@ -221,21 +222,35 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
             Coupling of vector to down-quarks.
         gvss: float
             Coupling of vector to strange-quarks.
+
+        Returns
+        -------
+        iff: float or array-like
+            Integrated form-factor.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate. Default is 'quad'. Options are 'quad' or
             'rambo'.
         npts: int, optional
             Number of phase-space points to use in integration. Ignored is
             method isn't 'rambo'. Default is 10_000.
-
-        Returns
-        -------
-        ff: float or array-like
-            Integrated form-factor.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
 
         return self._integrated_form_factor(
-            q=q, method=method, npts=npts, gvuu=gvuu, gvdd=gvdd, gvss=gvss
+            q=q,
+            method=method,
+            npts=npts,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def width(
@@ -246,6 +261,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a pion and
         two kaons.
@@ -254,14 +271,18 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         ----------
         mv: float or array-like
             Mass of the vector.
-        gvuu: float
-            Coupling of vector to up-quarks.
-        gvdd: float
-            Coupling of vector to down-quarks.
-        gvss: float
-            Coupling of vector to strange-quarks.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, donw- and strange-quarks.
         nbins: float
             Number of bins used to generate distribution.
+
+        Returns
+        -------
+        width: float or array-like
+            Decay width of vector into a pion and two kaons.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate over phase-space.
             See `hazma.phase_space.energy_distributions_three_body`
@@ -269,19 +290,24 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int, optional
             Number of phase-space points to use in integration. Only used if
             `method='rambo'`. Default is 2^14.
-
-        Returns
-        -------
-        width: float or array-like
-            Decay width of vector into a pion and two kaons.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._width(
-            mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
+            mv=mv,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            method=method,
+            npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def cross_section(
         self,
-        *,
         q: RealOrRealArray,
         mx: float,
         mv: float,
@@ -292,6 +318,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into a pion
         and two kaons.
@@ -308,14 +336,16 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
             Coupling of vector to dark matter.
         wv: float
             Width of the vector in MeV.
-        gvuu: float
-            Coupling of vector to up-quarks.
-        gvdd: float
-            Coupling of vector to down-quarks.
-        gvss: float
-            Coupling of vector to strange-quarks.
-        nbins: float
-            Number of bins used to generate distribution.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, donw- and strange-quarks.
+
+        Returns
+        -------
+        cs: float or array-like
+            Annihilation cross section into a pion and two kaons.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate over phase-space.
             See `hazma.phase_space.energy_distributions_three_body`
@@ -323,11 +353,10 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int, optional
             Number of phase-space points to use in integration. Only used if
             `method='rambo'`. Default is 2^14.
-
-        Returns
-        -------
-        cs: float or array-like
-            Annihilation cross section into a pion and two kaons.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._cross_section(
             q=q,
@@ -340,6 +369,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
             gvss=gvss,
             method=method,
             npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def energy_distributions(
@@ -351,6 +382,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         nbins: int,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> List[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state pion, and kaons.
 
@@ -358,14 +391,18 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         ----------
         q: float
             Center-of-mass energy.
-        gvuu: float
-            Coupling of vector to up-quarks.
-        gvdd: float
-            Coupling of vector to down-quarks.
-        gvss: float
-            Coupling of vector to strange-quarks.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, donw- and strange-quarks.
         nbins: float
             Number of bins used to generate distribution.
+
+        Returns
+        -------
+        dists: List[PhaseSpaceDistribution1D]
+            List of the energy distributions.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate over phase-space.
             See `hazma.phase_space.energy_distributions_three_body`
@@ -373,14 +410,21 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int, optional
             Number of phase-space points to use in integration. Only used if
             `method='rambo'`.
-
-        Returns
-        -------
-        dists: List[PhaseSpaceDistribution1D]
-            List of the energy distributions.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._energy_distributions(
-            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
+            q=q,
+            nbins=nbins,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            method=method,
+            npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
     def invariant_mass_distributions(
@@ -392,6 +436,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         nbins: int,
         method: str = "quad",
         npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
     ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the all pairs of the
         final-state particles.
@@ -400,14 +446,19 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         ----------
         q: float
             Center-of-mass energy.
-        gvuu: float
-            Coupling of vector to up-quarks.
-        gvdd: float
-            Coupling of vector to down-quarks.
-        gvss: float
-            Coupling of vector to strange-quarks.
+        gvuu, gvdd, gvss: float
+            Coupling of vector to up-, donw- and strange-quarks.
         nbins: float
             Number of bins used to generate distribution.
+
+        Returns
+        -------
+        dists: Dict[(int,int), PhaseSpaceDistribution1D]
+            Dictionary of the invariant-mass distributions. Keys specify the
+            pair of particles the distribution represents.
+
+        Other Parameters
+        ----------------
         method: str, optional
             Method used to integrate over phase-space.
             See `hazma.phase_space.energy_distributions_three_body`
@@ -415,15 +466,21 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int, optional
             Number of phase-space points to use in integration. Only used if
             `method='rambo'`.
-
-        Returns
-        -------
-        dists: Dict[(int,int), PhaseSpaceDistribution1D]
-            Dictionary of the invariant-mass distributions. Keys specify the
-            pair of particles the distribution represents.
+        epsrel: float, optional
+            Relative error tolerance. Default is 1e-3.
+        epsabs: float, optional
+            Absolute error tolerance. Default is 0.0.
         """
         return self._invariant_mass_distributions(
-            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd, gvss=gvss, method=method, npts=npts
+            q=q,
+            nbins=nbins,
+            gvuu=gvuu,
+            gvdd=gvdd,
+            gvss=gvss,
+            method=method,
+            npts=npts,
+            epsrel=epsrel,
+            epsabs=epsabs,
         )
 
 
