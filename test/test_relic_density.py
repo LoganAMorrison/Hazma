@@ -3,7 +3,6 @@ from numpy.testing import assert_allclose
 import warnings
 from hazma.parameters import omega_h2_cdm
 from hazma.relic_density import relic_density
-import unittest
 
 warnings.filterwarnings("ignore")
 
@@ -13,7 +12,7 @@ class ToyModel(object):
         self.mx = mx
         self.sigmav = sigmav
 
-    def thermal_cross_section(self, x):
+    def thermal_cross_section(self, _):
         """
         Compute the dark matter thermal cross section for a given
         ratio of mass to temperature.
