@@ -50,20 +50,22 @@ def _dnde_neutrino_point(
     return interp.integral(lb, ub) / (2 * beta * gamma)
 
 
-def _dnde_neutrino_array(
+def _dnde_neutrino(
     *,
     neutrino_energy: RealArray,
     parent_energy: float,
     parent_mass: float,
     interp: interpolate.InterpolatedUnivariateSpline,
 ) -> RealArray:
-    eps = np.finfo(neutrino_energy.dtype).eps
+    if parent_energy < parent_mass:
+        return np.zeros_like(neutrino_energy)
 
     if parent_energy < parent_mass:
         return np.zeros_like(neutrino_energy)
 
+    eps = np.finfo(neutrino_energy.dtype).eps
     if parent_energy - parent_mass < eps:
-        return interp(neutrino_energy) * neutrino_energy
+        return interp(neutrino_energy) * neutrino_energy  # type: ignore
 
     return np.array(
         [
@@ -78,39 +80,6 @@ def _dnde_neutrino_array(
     )
 
 
-def _dnde_neutrino(
-    *,
-    neutrino_energy: Union[RealArray, float],
-    parent_energy: float,
-    parent_mass: float,
-    interp: interpolate.InterpolatedUnivariateSpline,
-) -> Union[RealArray, float]:
-    if parent_energy < parent_mass:
-        if isinstance(neutrino_energy, float):
-            return 0.0
-        return np.zeros_like(neutrino_energy)
-
-    if isinstance(neutrino_energy, float):
-        return _dnde_neutrino_point(
-            neutrino_energy=neutrino_energy,
-            parent_energy=parent_energy,
-            parent_mass=parent_mass,
-            interp=interp,
-        )
-
-    assert hasattr(neutrino_energy, "__len__"), (
-        "Invalid type for neutrino_energy."
-        + f"Expected float or numpy array, got: {type(neutrino_energy)}"
-    )
-
-    return _dnde_neutrino_array(
-        neutrino_energy=neutrino_energy,
-        parent_energy=parent_energy,
-        parent_mass=parent_mass,
-        interp=interp,
-    )
-
-
 def dnde_neutrino(
     *,
     neutrino_energy: Union[RealArray, float],
@@ -121,38 +90,28 @@ def dnde_neutrino(
     flavor: Optional[str] = None,
 ) -> Union[RealArray, float]:
 
-    if isinstance(neutrino_energy, float):
-        shape = tuple()
-    else:
-        shape = neutrino_energy.shape
-
-    dnde = np.zeros((3,) + shape, dtype=np.float64)
-
-    if flavor is None or flavor == "e":
-        dnde_e = _dnde_neutrino(
-            neutrino_energy=neutrino_energy,
-            parent_energy=parent_energy,
-            parent_mass=parent_mass,
-            interp=interp_e,
-        )
-        if flavor == "e":
-            return dnde[0]
-        else:
-            dnde[0] = dnde_e
-
-    if flavor is None or flavor == "mu":
-        dnde_mu = _dnde_neutrino(
-            neutrino_energy=neutrino_energy,
-            parent_energy=parent_energy,
-            parent_mass=parent_mass,
-            interp=interp_mu,
-        )
-        if flavor == "mu":
-            return dnde[1]
-        else:
-            dnde[1] = dnde_mu
+    scalar = np.isscalar(neutrino_energy)
+    enu = np.atleast_1d(neutrino_energy).astype(np.float64)
+    dnde = np.zeros((3, *enu.shape), dtype=enu.dtype)
 
     if flavor == "tau":
-        return 0.0
+        return dnde[2]
+
+    for i, flav, inter in [(0, "e", interp_e), (1, "mu", interp_mu)]:
+        if not flavor or flavor == flav:
+            dnde_ = _dnde_neutrino(
+                neutrino_energy=enu,
+                parent_energy=parent_energy,
+                parent_mass=parent_mass,
+                interp=inter,
+            )
+
+            if flavor == flav:
+                return dnde_
+            else:
+                dnde[i] = dnde_
+
+    if scalar:
+        return dnde[..., 0]
 
     return dnde
