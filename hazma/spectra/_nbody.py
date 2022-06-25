@@ -412,7 +412,8 @@ def _dnde_two_body(
     e1 = (cme**2 + m1**2 - m2**2) / (2.0 * cme)
     e2 = (cme**2 - m1**2 + m2**2) / (2.0 * cme)
 
-    dnde = np.zeros_like(product_energies)
+    shape = ((3,) if product == "neutrino" else tuple()) + product_energies.shape
+    dnde = np.zeros(shape, dtype=product_energies.dtype)
 
     if s1 in dnde_fn:
         dnde += dnde_fn[s1](product_energies, e1)
@@ -422,7 +423,7 @@ def _dnde_two_body(
 
     if product == "photon":
         if s1 in dnde_fsr:
-            dnde += dnde_fsr[s2](product_energies, cme**2)
+            dnde += dnde_fsr[s1](product_energies, cme**2)
         if s2 in dnde_fsr:
             dnde += dnde_fsr[s2](product_energies, cme**2)
 
