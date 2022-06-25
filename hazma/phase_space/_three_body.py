@@ -1,4 +1,5 @@
 from typing import Callable, Any, Optional, Sequence, Tuple, Dict, List
+import inspect
 
 import numpy as np
 from scipy import integrate
@@ -13,6 +14,13 @@ from ._base import AbstractPhaseSpaceIntegrator
 ThreeBodyMsqrd = Callable[[Any, Any], Any]
 ThreeBodyMasses = Tuple[float, float, float]
 InvariantMassDists = Dict[Tuple[int, int], PhaseSpaceDistribution1D]
+
+
+# Default parameters for quad
+_quad_defaults = {
+    key: param.default
+    for key, param in inspect.signature(integrate.quad).parameters.items()
+}
 
 
 def _msqrd_flat(s, t):
@@ -87,7 +95,7 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         self.__masses = (masses[0], masses[1], masses[2])
 
     @property
-    def msqrd(self) -> Optional[ThreeBodyMsqrd]:
+    def msqrd(self) -> ThreeBodyMsqrd:
         """
         Squared matrix element of the proccess.
         """
@@ -103,7 +111,14 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         fs = np.array([fn(x) for x in xs])
         return integrate.simps(fs, xs)
 
-    def __quad(self, fn, a: float, b: float, epsabs: float, epsrel: float):
+    def __quad(
+        self,
+        fn,
+        a: float,
+        b: float,
+        epsabs: float = _quad_defaults["epsabs"],
+        epsrel: float = _quad_defaults["epsrel"],
+    ):
         return integrate.quad(fn, a, b, epsabs=epsabs, epsrel=epsrel)[0]
 
     def __integrate_fn(
@@ -113,15 +128,20 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         b: float,
         method: str,
         npts: int,
-        epsabs: float,
-        epsrel: float,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
     ):
         if method == "trapz":
             return self.__trapz(fn, a, b, npts)
         if method == "simps":
             return self.__simps(fn, a, b, npts)
         if method == "quad":
-            return self.__quad(fn, a, b, epsabs=epsabs, epsrel=epsrel)
+            quad_kwargs = dict()
+            if epsabs is not None:
+                quad_kwargs["epsabs"] = epsabs
+            if epsrel is not None:
+                quad_kwargs["epsrel"] = epsrel
+            return self.__quad(fn, a, b, **quad_kwargs)
         raise ValueError(f"Invalid method {method}.")
 
     def _integration_bounds_t(self, s, masses: Optional[Sequence[float]] = None):
@@ -229,8 +249,8 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         i: int,
         method: str = "quad",
         npts: int = 100,
-        epsabs: float = 1.49e-8,
-        epsrel: float = 1.49e-8,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
     ):
         r"""Compute the integral of the squared matrix element over the scaled
         energy of particle 2: y = 2 * E2 / q.
@@ -240,22 +260,28 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         msqrd: callable
             Binary function taking in the squared invariant masses s=(p2+p3)^2, and
             t=(p1+p3)^2.
-            q: float
-        Center-of-mass energy.
+        q: float
+            Center-of-mass energy.
         e: float or array-like
-        Energy of particle 1.
+            Energy of particle 1.
         masses: (float, float, float)
-        Masses of the final state particles.
+            Masses of the final state particles.
         i: int
-        Final state particle to integrate over.
+            Final state particle to integrate over.
         method: str
-        Method used to integrate. Can be 'trapz', 'simps' or 'quad'. Default is
-        'quad'.
+            Method used to integrate. Can be 'trapz', 'simps' or 'quad'. Default is
+            'quad'.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
         dI/de: float
-        Differential phase-space density with respect to the energy of particle 1.
+            Differential phase-space density with respect to the energy of particle 1.
         """
         assert 0 <= i <= 2, f"Invalid argument i = {i}. Must be 0,1 or 2."
 
@@ -321,7 +347,7 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         return res
 
     def _integrate_quad(
-        self, *, epsabs: float = 1.49e-8, epsrel: float = 1.49e-8
+        self, *, epsabs: Optional[float] = None, epsrel: Optional[float] = None
     ) -> Tuple[float, float]:
         r"""Compute the integral of the squared matrix element over three-body phase
         space.
@@ -350,9 +376,12 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
             return self.__msqrd(s, t)
 
         xmin, xmax = self._integration_bounds_x()
-        res = integrate.dblquad(
-            integrand, xmin, xmax, ymin, ymax, epsabs=epsabs, epsrel=epsrel
-        )
+        kwargs = dict()
+        if epsabs is not None:
+            kwargs["epsabs"] = epsabs
+        if epsrel is not None:
+            kwargs["epsrel"] = epsrel
+        res = integrate.dblquad(integrand, xmin, xmax, ymin, ymax, **kwargs)
         return pre * res[0], pre * res[1]
 
     def _msqrd_rambo(self, momenta: RealArray):
@@ -367,12 +396,12 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         Parameters
         ----------
         msqrd: callable
-        Binary function taking in the squared invariant masses s=(p2+p3)^2, and
-        t=(p1+p3)^2.
+            Binary function taking in the squared invariant masses s=(p2+p3)^2, and
+            t=(p1+p3)^2.
         q: float
-        Center-of-mass energy.
+            Center-of-mass energy.
         masses: (float, float, float)
-        Masses of the final state particles.
+            Masses of the final state particles.
         """
         masses = self.__masses
         q = self.__cme
@@ -388,21 +417,28 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         self,
         method: str = "quad",
         npts: int = 10000,
-        epsrel: float = 1.49e-8,
-        epsabs: float = 1.49e-8,
+        epsrel: Optional[float] = None,
+        epsabs: Optional[float] = None,
     ) -> Tuple[float, float]:
         r"""Compute the integral of the squared matrix element over the squared
         invariant mass of particles 2 and 3.
 
         Parameters
         ----------
-        method: str
+        method: str, optional
             Method used to integrate over phase space. Can be:
-                'quad': Numerical quadrature using scipy's 'dblquad',
-                'rambo': Monte-Carlo integration.
-        npts: int
+                * 'quad': Numerical quadrature using scipy's 'dblquad',
+                * 'rambo': Monte-Carlo integration.
+            Default is 'quad'.
+        npts: int, optional
             Number of phase-space points to use to integrate squared matrix
             element. Ignored unless method is 'rambo'. Default is 10000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -432,7 +468,11 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         return meth()
 
     def _energy_distributions_quad(
-        self, nbins: int, *, epsabs: float = 1.49e-8, epsrel: float = 1.49e-8
+        self,
+        nbins: int,
+        *,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
     ):
         """Compute energy distributions using numerical integration."""
 
@@ -461,19 +501,30 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         return phase_space.energy_distributions(n=npts, nbins=nbins)
 
     def energy_distributions(
-        self, nbins: int, method: str = "quad", npts: int = 10000
+        self,
+        nbins: int,
+        method: str = "quad",
+        npts: int = 10000,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
     ) -> List[PhaseSpaceDistribution1D]:
-        """Compute the energy distributions of the three final-state particles.
+        r"""Compute the energy distributions of the three final-state particles.
 
         Parameters
         ----------
         method: str
             Method used to integrate over phase space. Can be:
-                'quad': Numerical quadrature using scipy's 'quad',
-                'rambo': Monte-Carlo integration.
+                * 'quad': Numerical quadrature using scipy's 'quad',
+                * 'rambo': Monte-Carlo integration.
         npts: int
             Number of phase-space points to use to integrate squared matrix
             element. Ignored unless method is 'rambo'. Default is 10000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -481,7 +532,9 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
             Distributions of the final-state particles.
         """
         methods = {
-            "quad": lambda: self._energy_distributions_quad(nbins=nbins),
+            "quad": lambda: self._energy_distributions_quad(
+                nbins=nbins, epsrel=epsrel, epsabs=epsabs
+            ),
             "rambo": lambda: self._energy_distributions_rambo(nbins=nbins, npts=npts),
         }
 
@@ -494,18 +547,24 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
 
         return meth()
 
-    def _invariant_mass_distributions_quad(self, nbins: int) -> InvariantMassDists:
+    def _invariant_mass_distributions_quad(
+        self,
+        nbins: int,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
+    ) -> InvariantMassDists:
         """Compute invariant-mass distributions using numerical integration."""
         q = self.__cme
         masses = self.__masses
 
         def integral(e, i):
-            return self._partial_integration(e, i)
+            return self._partial_integration(e, i, epsrel=epsrel, epsabs=epsabs)
 
         invmass_lims = invariant_mass_limits(q, masses)
         dists: Dict[Tuple[int, int], PhaseSpaceDistribution1D] = dict()
 
-        for i, ((j, k), (mmin, mmax)) in enumerate(invmass_lims.items()):
+        for (j, k), (mmin, mmax) in invmass_lims.items():
+            i = tuple({0, 1, 2}.symmetric_difference({j, k}))[0]
             m1 = masses[i]
 
             mbins = np.linspace(mmin, mmax, nbins)
@@ -529,7 +588,12 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         return phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
 
     def invariant_mass_distributions(
-        self, nbins: int, method: str = "quad", npts: int = 10000
+        self,
+        nbins: int,
+        method: str = "quad",
+        npts: int = 10000,
+        epsabs: Optional[float] = None,
+        epsrel: Optional[float] = None,
     ) -> InvariantMassDists:
         r"""Compute the invariant-mass distributions of the three pairs of
         final-state particles.
@@ -538,13 +602,20 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         ----------
         method: str
             Method used to integrate over phase space. Can be:
-                'quad': Numerical quadrature using scipy's 'quad',
-                'trapz': Trapiziod rule using scipy's 'trapz',
-                'simps': Simpson's rule using scipy's 'simps',
-                'rambo': Monte-Carlo integration.
+
+                * 'quad': Numerical quadrature using scipy's 'quad',
+                * 'trapz': Trapiziod rule using scipy's 'trapz',
+                * 'simps': Simpson's rule using scipy's 'simps',
+                * 'rambo': Monte-Carlo integration.
         npts: int
             Number of phase-space points to use to integrate squared matrix
             element. Ignored unless method is 'rambo'. Default is 10000.
+        epsrel: float, optional
+            Relative error tolerance. If None, then the `scipy` default is used.
+            Default is None.
+        epsabs: float, optional
+            Absolute error tolerance. If None, then the `scipy` default is used.
+            Default is None.
 
         Returns
         -------
@@ -561,14 +632,17 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         masses = self.__masses
 
         methods = {
-            "quad": lambda: self._invariant_mass_distributions_quad(nbins=nbins),
+            "quad": lambda: self._invariant_mass_distributions_quad(
+                nbins=nbins, epsabs=epsabs, epsrel=epsrel
+            ),
             "rambo": lambda: self._invariant_mass_distributions_rambo(
                 nbins=nbins, npts=npts
             ),
         }
         if q < sum(masses):
             raise ValueError(
-                "Center of mass energy is less than the sum of final-state particle masses."
+                "Center of mass energy is less than the sum of"
+                " final-state particle masses."
             )
 
         meth = methods.get(method)

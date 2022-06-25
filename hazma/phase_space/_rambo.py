@@ -456,15 +456,15 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
                 errors.append(std)
 
             # Average of averages okay since all samples are same size
-            integral: float = np.nanmean(integrals)
+            integral: float = np.nanmean(integrals, dtype=float)
             # Combined error estimate using quadrature
             error: float = np.sqrt(np.nansum(np.square(errors))) / len(errors)
 
             return integral, error
 
         _, weights = self.generate(n, seed=seed, dtype=dtype)
-        integral = np.nanmean(weights, dtype=np.float64)
-        error = np.nanstd(weights, dtype=np.float64, ddof=1) / np.sqrt(n)
+        integral = np.nanmean(weights, dtype=float)
+        error = np.nanstd(weights, dtype=float, ddof=1) / np.sqrt(n)
 
         return integral, error
 
