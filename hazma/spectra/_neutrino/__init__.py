@@ -32,6 +32,10 @@ _eta_prime_integrand_interp_e = _load_interp("eta_prime_neutrino_e.csv")
 _eta_prime_integrand_interp_mu = _load_interp("eta_prime_neutrino_mu.csv")
 _phi_integrand_interp_e = _load_interp("phi_neutrino_e.csv")
 _phi_integrand_interp_mu = _load_interp("phi_neutrino_mu.csv")
+_charged_rho_integrand_interp_e = _load_interp("charged_rho_neutrino_e.csv")
+_charged_rho_integrand_interp_mu = _load_interp("charged_rho_neutrino_mu.csv")
+_neutral_rho_integrand_interp_e = _load_interp("neutral_rho_neutrino_e.csv")
+_neutral_rho_integrand_interp_mu = _load_interp("neutral_rho_neutrino_mu.csv")
 
 
 @overload
@@ -372,7 +376,19 @@ def dnde_neutrino_neutral_rho(
     rho_energy: float,
     flavor: Optional[str] = None,
 ) -> Union[RealArray, float]:
-    return np.zeros_like(neutrino_energy)
+    interp_e = _neutral_rho_integrand_interp_e
+    interp_mu = _neutral_rho_integrand_interp_mu
+    parent_mass = parameters.rho_mass
+    parent_energy = rho_energy
+
+    return _dnde_neutrino(
+        neutrino_energy=neutrino_energy,
+        parent_energy=parent_energy,
+        parent_mass=parent_mass,
+        interp_e=interp_e,
+        interp_mu=interp_mu,
+        flavor=flavor,
+    )
 
 
 @overload
@@ -394,7 +410,19 @@ def dnde_neutrino_charged_rho(
     rho_energy: float,
     flavor: Optional[str] = None,
 ) -> Union[RealArray, float]:
-    return dnde_neutrino_neutral_rho(neutrino_energy, rho_energy, flavor)
+    interp_e = _charged_rho_integrand_interp_e
+    interp_mu = _charged_rho_integrand_interp_mu
+    parent_mass = parameters.rho_mass
+    parent_energy = rho_energy
+
+    return _dnde_neutrino(
+        neutrino_energy=neutrino_energy,
+        parent_energy=parent_energy,
+        parent_mass=parent_mass,
+        interp_e=interp_e,
+        interp_mu=interp_mu,
+        flavor=flavor,
+    )
 
 
 @overload
