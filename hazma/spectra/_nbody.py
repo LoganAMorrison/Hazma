@@ -554,7 +554,7 @@ def _dnde_nbody(
             )
 
     if scalar:
-        return dnde[0]
+        return np.take(dnde, 0, axis=-1)
     return dnde
 
 
