@@ -26,6 +26,10 @@ from hazma.field_theory_helper_functions.common_functions import cross_section_p
 from hazma.hazma_errors import RamboCMETooSmall
 from hazma.utils import RealArray, kallen_lambda, lnorm_sqr
 
+from hazma.utils import warn_deprecated_module
+
+warn_deprecated_module("hazma.rambo", alternative="hazma.phase_space")
+
 MassList = Union[List[float], RealArray]
 SquaredMatrixElement = Callable[[RealArray], float]
 
@@ -909,20 +913,20 @@ class PhaseSpace:
             integrals = []
             errors = []
             for _, ws in self.generator(n, batch_size, seed, dtype):
-                avg = np.nanmean(ws, dtype=np.float64)
-                std = np.nanstd(ws, dtype=np.float64, ddof=1) / np.sqrt(batch_size)
+                avg = np.nanmean(ws, dtype=float)
+                std = np.nanstd(ws, dtype=float, ddof=1) / np.sqrt(batch_size)
                 integrals.append(avg)
                 errors.append(std)
 
             # Average of averages okay since all samples are same size
-            integral: float = np.nanmean(integrals)
+            integral: float = np.nanmean(integrals, dtype=float)
             # Combined error estimate using quadrature
             error: float = np.sqrt(np.nansum(np.square(errors))) / len(errors)
 
             return integral, error
 
         _, weights = self.generate(n, seed=seed, dtype=dtype)
-        integral = np.nanmean(weights, dtype=np.float64)
+        integral = np.nanmean(weights, dtype=float)
         error = np.nanstd(weights, dtype=np.float64, ddof=1) / np.sqrt(n)
 
         return integral, error
