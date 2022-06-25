@@ -149,6 +149,7 @@ from ._neutrino import (
     dnde_neutrino_omega,
     dnde_neutrino_eta_prime,
     dnde_neutrino_charged_rho,
+    dnde_neutrino_neutral_rho,
     dnde_neutrino_phi,
 )
 
@@ -191,7 +192,7 @@ __all__ = [
     "dnde_neutrino_omega",
     "dnde_neutrino_eta_prime",
     "dnde_neutrino_charged_rho",
-    "dnde_neutrino_charged_rho",
+    "dnde_neutrino_neutral_rho",
     "dnde_neutrino_phi",
     # Altarelli-Parisi
     "dnde_photon_ap_fermion",
