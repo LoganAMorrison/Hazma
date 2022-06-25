@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 
 from hazma import parameters
-from hazma.rambo import PhaseSpace
+from hazma.phase_space import Rambo, PhaseSpaceDistribution1D
 from hazma.utils import lnorm_sqr
 from .cross_sections import width_to_cs
 from hazma.vector_mediator.form_factors.utils import (
@@ -175,7 +175,7 @@ class FormFactorPiPiPi0:
             return (0.0, 0.0)
 
         cme = np.sqrt(q2)
-        phase_space = PhaseSpace(cme, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]))
+        phase_space = Rambo(cme, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]))
         ps, ws = phase_space.generate(npts)
 
         ws = ws * self.__msqrd(ps, q2, gvuu, gvdd, gvss)
@@ -245,13 +245,14 @@ class FormFactorPiPiPi0:
         def msqrd(momenta):
             return self.__msqrd(momenta, q**2, gvuu, gvdd, gvss)
 
-        phase_space = PhaseSpace(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
+        phase_space = Rambo(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
         dist = phase_space.energy_distributions(npts, nbins)
 
         # e, and dp/de have units of GeV and GeV^-1. Convert to MeV:
         for i in range(len(dist)):
-            dpde, e = dist[i]
-            dist[i] = (dpde * 1e-3, e * 1e3)
+            dist[i] = PhaseSpaceDistribution1D(
+                dist[i].bins * 1e-3, dist[i].probabilities * 1e3
+            )
         return dist
 
     def invariant_mass_distributions(
@@ -263,19 +264,17 @@ class FormFactorPiPiPi0:
         gvss: float,
         npts: int = 10000,
         nbins: int = 25,
-        pairs: Optional[List[Tuple[int, int]]] = None,
     ):
         q = cme * 1e-3
 
         def msqrd(momenta):
             return self.__msqrd(momenta, q**2, gvuu, gvdd, gvss)
 
-        phase_space = PhaseSpace(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
-        dist = phase_space.invariant_mass_distributions(
-            n=npts, nbins=nbins, pairs=pairs
-        )
+        phase_space = Rambo(q, np.array([MPI0_GEV, MPI_GEV, MPI_GEV]), msqrd=msqrd)
+        dist = phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
         # e, and dp/de have units of GeV and GeV^-1. Convert to MeV:
         for key, val in dist.items():
-            dpde, e = val
-            dist[key] = (dpde * 1e-3, e * 1e3)
+            dist[key] = PhaseSpaceDistribution1D(
+                val.bins * 1e-3, val.probabilities * 1e3
+            )
         return dist

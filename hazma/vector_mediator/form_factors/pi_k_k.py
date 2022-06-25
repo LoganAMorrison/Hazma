@@ -4,7 +4,7 @@ from typing import Tuple, Union
 
 import numpy as np
 
-from hazma.rambo import PhaseSpace
+from hazma.phase_space import Rambo
 from hazma.utils import lnorm_sqr
 from hazma.vector_mediator.form_factors import utils
 from hazma.vector_mediator.form_factors.utils import RealArray
@@ -34,7 +34,7 @@ def generate_mandelstam_invariants_st(m, m1, m2, m3, n=10000):
     ws: np.ndarray
         Phase-space weights.
     """
-    phase_space = PhaseSpace(m, np.array([m1, m2, m3]))
+    phase_space = Rambo(m, np.array([m1, m2, m3]))
     ps, ws = phase_space.generate(n)
 
     p1 = ps[:, 0]
@@ -196,7 +196,7 @@ class FormFactorPiKKBase(abc.ABC):
             return self._integrand(s, t, m, gvuu, gvdd, gvss)
 
         m1, m2, m3 = self.fsp_masses
-        phase_space = PhaseSpace(m, masses=np.array([m1, m2, m3]), msqrd=_msqrd)
+        phase_space = Rambo(m, masses=np.array([m1, m2, m3]), msqrd=_msqrd)
         return phase_space.energy_distributions(n=npts, nbins=nbins)
 
 

@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from hazma.rambo import PhaseSpace
+from hazma.phase_space import Rambo
 
 
 class FormFactor(ABC):
@@ -49,5 +49,5 @@ class FormFactor(ABC):
         def msqrd(momenta):
             return self.msqrd(momenta, cme=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
 
-        phase_space = PhaseSpace(cme, masses=np.array(self.fsp_masses), msqrd=msqrd)
+        phase_space = Rambo(cme, masses=np.array(self.fsp_masses), msqrd=msqrd)
         return phase_space.energy_distributions(n=npts, nbins=nbins)

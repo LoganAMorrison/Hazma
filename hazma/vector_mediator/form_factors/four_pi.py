@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-from hazma.rambo import PhaseSpace
+from hazma.phase_space import Rambo, PhaseSpaceDistribution1D
 
 M_PI = 0.13957061
 M_PI0 = 0.1349770
@@ -479,7 +479,7 @@ class FormFactorPiPiPiPi:
         if qq < np.sum(masses):
             return 0.0, 0.0
 
-        phase_space = PhaseSpace(qq, masses)
+        phase_space = Rambo(qq, masses)
         momenta, weights = phase_space.generate(npts)
 
         weights = weights * self.msqrd(momenta, gvuu=gvuu, gvdd=gvdd, neutral=neutral)
@@ -601,12 +601,14 @@ class FormFactorPiPiPiPi:
         else:
             masses = np.array([M_PI, M_PI, M_PI, M_PI])
 
-        phase_space = PhaseSpace(cme * 1e-3, np.array(masses), msqrd=msqrd)
+        phase_space = Rambo(cme * 1e-3, np.array(masses), msqrd=msqrd)
         dists = phase_space.energy_distributions(n=npts, nbins=nbins)
 
-        for i in range(len(dists)):
-            ps, es = dists[i]
-            dists[i] = (ps * 1e-3, es * 1e3)
+        for i, dist in enumerate(dists):
+            dists[i] = PhaseSpaceDistribution1D(
+                dist.bins * 1e-3, dist.probabilities * 1e3
+            )
+
         return dists
 
     def invariant_mass_distributions(
@@ -618,7 +620,6 @@ class FormFactorPiPiPiPi:
         neutral: bool,
         npts: int = 10000,
         nbins: int = 25,
-        pairs: Optional[List[Tuple[int, int]]] = None,
     ):
         def msqrd(momenta):
             return self.msqrd(momenta, gvuu=gvuu, gvdd=gvdd, neutral=neutral)
@@ -628,13 +629,12 @@ class FormFactorPiPiPiPi:
         else:
             masses = np.array([M_PI, M_PI, M_PI, M_PI])
 
-        phase_space = PhaseSpace(cme * 1e-3, np.array(masses), msqrd=msqrd)
-        dists = phase_space.invariant_mass_distributions(
-            n=npts, nbins=nbins, pairs=pairs
-        )
+        phase_space = Rambo(cme * 1e-3, np.array(masses), msqrd=msqrd)
+        dists = phase_space.invariant_mass_distributions(n=npts, nbins=nbins)
 
         for pair in dists.keys():
-            ps, es = dists[pair]
-            dists[pair] = (ps * 1e-3, es * 1e3)
+            dists[pair] = PhaseSpaceDistribution1D(
+                dists[pair].bins * 1e-3, dists[pair].probabilities * 1e3
+            )
 
         return dists
