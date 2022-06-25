@@ -5,7 +5,7 @@ Module for computing the neutrino spectrum from a muon decay.
 import numpy as np
 cimport numpy as np
 import cython
-from libc.math cimport log, sqrt, fmin
+from libc.math cimport log, sqrt, fmin, fabs
 from libc.float cimport DBL_EPSILON
 from hazma._neutrino.neutrino cimport NeutrinoSpectrumPoint, new_neutrino_spectrum_point
 include "../_utils/constants.pxd"
@@ -94,14 +94,16 @@ cdef NeutrinoSpectrumPoint c_muon_decay_spectrum_point(double enu, double emu):
         double xmax_rf
         double x
         double gam, beta
-        NeutrinoSpectrumPoint result
+        NeutrinoSpectrumPoint result = new_neutrino_spectrum_point()
+
+    if emu < MASS_MU:
+        return result
 
     # If we are sufficiently close to the muon rest-frame, use the 
     # rest-frame result.
-    if emu - MASS_MU < DBL_EPSILON:
+    if fabs(emu - MASS_MU) < DBL_EPSILON:
         return c_muon_decay_spectrum_point_rest(enu)
 
-    result = new_neutrino_spectrum_point()
 
     # dN/dE = (2 / Q) * dN/dx
     e_to_x = 2.0 / emu
