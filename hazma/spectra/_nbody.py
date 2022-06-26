@@ -32,15 +32,10 @@ def _dnde_zero_nu(product_energies, _, flavor: Optional[str] = None):
 
 
 def _make_fsr(mass, charge, scalar):
-    if scalar:
+    ap = _ap_scalar if scalar else _ap_fermion
 
-        def fsr(energies, sqrts):
-            return _ap_scalar(energies, sqrts**2, mass=mass, charge=charge)
-
-    else:
-
-        def fsr(energies, sqrts):
-            return _ap_fermion(energies, sqrts**2, mass=mass, charge=charge)
+    def fsr(energies, sqrts):
+        return ap(energies, sqrts**2, mass=mass, charge=charge)
 
     return fsr
 
@@ -165,6 +160,7 @@ def _make_energy_distributions(
     npts: int,
     nbins: int,
     three_body_integrator: str,
+    msqrd_signature: Optional[str],
 ):
     r"""Use Monte-Carlo to generate energy distributions for each final-state particle.
 
@@ -187,16 +183,18 @@ def _make_energy_distributions(
     dists: List[PhaseSpaceDistribution1D]
         List containing the energy distributions of the final-state particles.
     """
-    masses = _get_masses(final_states)
-    if three_body_integrator in ["quad", "trapz", "simps"]:
-        return ThreeBody(cme, masses, msqrd=msqrd).energy_distributions(nbins=nbins)
-    elif three_body_integrator == "rambo":
-        return Rambo(cme, masses, msqrd=msqrd).energy_distributions(n=npts, nbins=nbins)
-
-    raise ValueError(
+    assert three_body_integrator in ["quad", "trapz", "simps", "rambo"], (
         f"Invalid value for 'three_body_integrator': {three_body_integrator}."
         "Use 'quad', 'trapz', 'simps', or 'rambo'."
     )
+
+    masses = _get_masses(final_states)
+    if len(final_states) == 3 and three_body_integrator in ["quad", "trapz", "simps"]:
+        return ThreeBody(
+            cme, masses, msqrd=msqrd, msqrd_signature=msqrd_signature
+        ).energy_distributions(nbins=nbins)
+
+    return Rambo(cme, masses, msqrd=msqrd).energy_distributions(n=npts, nbins=nbins)
 
 
 def _make_invariant_mass_distributions(
@@ -206,6 +204,7 @@ def _make_invariant_mass_distributions(
     npts: int,
     nbins: int,
     three_body_integrator: str,
+    msqrd_signature: Optional[str],
 ):
     r"""Use Monte-Carlo to generate invariant-mass distributions for each pair
     of final-state particles.
@@ -230,19 +229,20 @@ def _make_invariant_mass_distributions(
         Dictionary containing the distributions. They keys represent the pair
         the distribution corresponds to.
     """
-    masses = _get_masses(final_states)
-    if three_body_integrator in ["quad", "trapz", "simps"]:
-        return ThreeBody(cme, masses, msqrd=msqrd).invariant_mass_distributions(
-            nbins=nbins
-        )
-    elif three_body_integrator == "rambo":
-        return Rambo(cme, masses, msqrd=msqrd).invariant_mass_distributions(
-            n=npts, nbins=nbins
-        )
-
-    raise ValueError(
+    assert three_body_integrator in ["quad", "trapz", "simps", "rambo"], (
         f"Invalid value for 'three_body_integrator': {three_body_integrator}."
         "Use 'quad', 'trapz', 'simps', or 'rambo'."
+    )
+
+    masses = _get_masses(final_states)
+
+    if len(final_states) == 3 and three_body_integrator in ["quad", "trapz", "simps"]:
+        return ThreeBody(
+            cme, masses, msqrd=msqrd, msqrd_signature=msqrd_signature
+        ).invariant_mass_distributions(nbins=nbins)
+
+    return Rambo(cme, masses, msqrd=msqrd).invariant_mass_distributions(
+        n=npts, nbins=nbins
     )
 
 
@@ -301,6 +301,7 @@ def _dnde_photon_fsr(
     final_states: Sequence[str],
     msqrd: Optional[MSqrd],
     three_body_integrator: str,
+    msqrd_signature: Optional[str],
     npts: int,
     nbins: int,
     average_fsr: bool,
@@ -346,6 +347,7 @@ def _dnde_photon_fsr(
             npts=npts,
             nbins=nbins,
             three_body_integrator=three_body_integrator,
+            msqrd_signature=msqrd_signature,
         )
 
         # Use a counter to determine how many times a spectrum has been
@@ -383,7 +385,11 @@ def _dnde_photon_fsr(
 
 
 def _dnde_two_body(
-    product_energies: RealArray, cme: float, states: Tuple[str, str], product: str
+    product_energies: RealArray,
+    cme: float,
+    states: Tuple[str, str],
+    product: str,
+    include_fsr: bool,
 ) -> RealArray:
     r"""Compute the differential energy spectrum of a product from the decays and FSR
     of a two-body final state.
@@ -421,7 +427,7 @@ def _dnde_two_body(
     if s2 in dnde_fn:
         dnde += dnde_fn[s2](product_energies, e2)
 
-    if product == "photon":
+    if product == "photon" and include_fsr:
         if s1 in dnde_fsr:
             dnde += dnde_fsr[s1](product_energies, cme**2)
         if s2 in dnde_fsr:
@@ -437,7 +443,8 @@ def _dnde_multi_particle(
     product: str,
     msqrd: Optional[MSqrd],
     *,
-    three_body_integrator: str,
+    three_body_integrator: Optional[str],
+    msqrd_signature: Optional[str],
     npts: int,
     nbins: int,
     include_fsr: bool,
@@ -462,11 +469,17 @@ def _dnde_multi_particle(
     dnde: np.ndarray
         The combined spectrum.
     """
+    if three_body_integrator is None:
+        tbi = "quad"
+    else:
+        tbi = three_body_integrator
+
     edists = _make_energy_distributions(
         cme=cme,
         final_states=final_states,
         msqrd=msqrd,
-        three_body_integrator=three_body_integrator,
+        three_body_integrator=tbi,
+        msqrd_signature=msqrd_signature,
         npts=npts,
         nbins=nbins,
     )
@@ -492,7 +505,8 @@ def _dnde_multi_particle(
             photon_energies=product_energies,
             cme=cme,
             final_states=final_states,
-            three_body_integrator=three_body_integrator,
+            three_body_integrator=tbi,
+            msqrd_signature=msqrd_signature,
             msqrd=msqrd,
             npts=npts,
             nbins=nbins,
@@ -509,7 +523,8 @@ def _dnde_nbody(
     product: str,
     *,
     msqrd: Optional[MSqrd],
-    three_body_integrator: str,
+    three_body_integrator: Optional[str],
+    msqrd_signature: Optional[str],
     npts: int,
     nbins: int,
     include_fsr: bool,
@@ -539,7 +554,13 @@ def _dnde_nbody(
     else:
         if len(final_states) == 2:
             s1, s2 = final_states[0], final_states[1]
-            dnde = _dnde_two_body(es, cme, (s1, s2), product)
+            dnde = _dnde_two_body(
+                product_energies=es,
+                cme=cme,
+                states=(s1, s2),
+                product=product,
+                include_fsr=include_fsr,
+            )
         else:
             dnde = _dnde_multi_particle(
                 product_energies=es,
@@ -548,6 +569,7 @@ def _dnde_nbody(
                 product=product,
                 msqrd=msqrd,
                 three_body_integrator=three_body_integrator,
+                msqrd_signature=msqrd_signature,
                 npts=npts,
                 nbins=nbins,
                 include_fsr=include_fsr,
@@ -565,7 +587,8 @@ def dnde_photon(
     final_states: Union[str, Sequence[str]],
     *,
     msqrd: Optional[MSqrd] = None,
-    three_body_integrator: str = "quad",
+    three_body_integrator: Optional[str] = None,
+    msqrd_signature: Optional[str] = None,
     npts: int = 1 << 14,
     nbins: int = 25,
     include_fsr: bool = True,
@@ -597,6 +620,10 @@ def dnde_photon(
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.
+    msqrd_signature: str, optional
+        Signature of the squared matrix element. Default is 'momenta' when
+        `len(final_states) > 3` and 'st' when `len(final_states)==3`. See
+        `hazma.phase_space.ThreeBody` for information.
     npts: int, optional
         Number of Monte-Carlo phase-space points used to generate
         energy/invariant mass distributions. Only used if the number of final
@@ -651,6 +678,7 @@ def dnde_photon(
         product="photon",
         msqrd=msqrd,
         three_body_integrator=three_body_integrator,
+        msqrd_signature=msqrd_signature,
         npts=npts,
         nbins=nbins,
         include_fsr=include_fsr,
@@ -667,7 +695,8 @@ def dnde_positron(
     final_states: Union[str, Sequence[str]],
     msqrd: Optional[MSqrd] = None,
     *,
-    three_body_integrator: str = "quad",
+    three_body_integrator: Optional[str] = None,
+    msqrd_signature: Optional[str] = None,
     npts: int = 1 << 14,
     nbins: int = 25,
 ):
@@ -697,6 +726,10 @@ def dnde_positron(
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.
+    msqrd_signature: str, optional
+        Signature of the squared matrix element. Default is 'momenta' when
+        `len(final_states) > 3` and 'st' when `len(final_states)==3`. See
+        `hazma.phase_space.ThreeBody` for information.
     npts: int, optional
         Number of Monte-Carlo phase-space points used to generate
         energy/invariant mass distributions. Only used if the number of final
@@ -732,6 +765,7 @@ def dnde_positron(
         product="positron",
         msqrd=msqrd,
         three_body_integrator=three_body_integrator,
+        msqrd_signature=msqrd_signature,
         npts=npts,
         nbins=nbins,
         include_fsr=False,
@@ -748,7 +782,8 @@ def dnde_neutrino(
     final_states: Union[str, Sequence[str]],
     msqrd: Optional[MSqrd] = None,
     *,
-    three_body_integrator: str = "quad",
+    three_body_integrator: Optional[str] = None,
+    msqrd_signature: Optional[str] = None,
     npts: int = 1 << 14,
     nbins: int = 25,
     flavor: Optional[str] = None,
@@ -779,6 +814,10 @@ def dnde_neutrino(
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.
+    msqrd_signature: str, optional
+        Signature of the squared matrix element. Default is 'momenta' when
+        `len(final_states) > 3` and 'st' when `len(final_states)==3`. See
+        `hazma.phase_space.ThreeBody` for information.
     npts: int, optional
         Number of Monte-Carlo phase-space points used to generate
         energy/invariant mass distributions. Only used if the number of final
@@ -829,6 +868,7 @@ def dnde_neutrino(
         product=product,
         msqrd=msqrd,
         three_body_integrator=three_body_integrator,
+        msqrd_signature=msqrd_signature,
         npts=npts,
         nbins=nbins,
         include_fsr=False,
