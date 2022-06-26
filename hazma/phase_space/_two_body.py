@@ -80,3 +80,30 @@ class TwoBody(AbstractPhaseSpaceIntegrator):
         integral, error = integrate.quad(integrand, -1.0, 1.0)
 
         return integral * pre, error * pre
+
+    def __integrate_angle(self):
+        r"""Integrate over phase space assuming msqrd take the angle as
+        argument.
+        """
+        cme = self.cme
+        m1, m2 = self.masses
+
+        p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+        pre = 1.0 / (8.0 * np.pi) * p / cme
+
+        integral, error = integrate.quad(self.__msqrd, -1.0, 1.0)
+        return integral * pre, error * pre
+
+    def integrate(self):
+        r"""Integrate over phase space.
+
+        Returns
+        -------
+        integral: float
+            Value of the phase space integration.
+        error_estimate: float
+            Estimation of the error.
+        """
+        if self.__msqrd_signature_z:
+            return self.__integrate_angle()
+        return self.__integrate_momenta()
