@@ -2,7 +2,7 @@
 Module for integrating two-body phase space.
 """
 
-from typing import Sequence, Tuple, Callable, Any
+from typing import Sequence, Tuple, Callable, Any, Optional
 
 import numpy as np
 from scipy import integrate
@@ -12,17 +12,94 @@ from hazma.utils import kallen_lambda
 from ._base import AbstractPhaseSpaceIntegrator
 
 
+def _msqrd_flat(z):
+    if np.isscalar(z):
+        return 1.0
+
+    return np.zeros_like(z)
+
+
+def _z_to_momenta(z, q: float, masses: Tuple[float, float]):
+    r"""Convert the angle into 4-momenta of the final state particles. We align
+    the particles such that the cosine of the angle they make with the z-axis is
+    `z`.
+    """
+    m1, m2 = masses
+
+    p = np.sqrt(kallen_lambda(q**2, m1**2, m2**2)) / (2 * q)
+
+    e1 = np.sqrt(p**2 + m1**2)
+    e2 = np.sqrt(p**2 + m2**2)
+    sz = np.sqrt(1 - z**2)
+
+    zs = np.zeros_like(z)
+    return np.array(
+        [
+            # p1, p2
+            [e1, e2],
+            [p * sz, -p * sz],
+            [zs, zs],
+            [p * z, -p * z],
+        ]
+    )
+
+
+def _convert_msqrd_to_z_signature(msqrd, q: float, masses: Tuple[float, float]):
+    def new_msqrd(z):
+        momenta = _z_to_momenta(z, q, masses)
+        return msqrd(momenta)
+
+    return new_msqrd
+
+
 class TwoBody(AbstractPhaseSpaceIntegrator):
     def __init__(
-        self, cme: float, masses: Sequence[float], msqrd: Callable[[Any], Any]
+        self,
+        cme: float,
+        masses: Sequence[float],
+        msqrd: Optional[Callable[..., Any]] = None,
+        msqrd_signature: Optional[str] = None,
     ):
+        """
+        Parameters
+        ----------
+        cme: float
+            Center-of-mass energy.
+        masses: sequence float
+            The two final state particle masses.
+        msqrd: callable, optional
+            Function to compute squared matrix element. The signature of the
+            function depends on the value of `msqrd_signature`. If no matrix
+            element is passed, it is taken to be flat (i.e. |M|^2 = 1).
+        msqrd_signature: str, optional
+            Signature of squared matrix element. If 'momenta', then the function
+            is assumed to take in a NumPy array containing the momenta of the
+            final state particles. If 'z', then it is assumed to take in
+            the angle between the 3-momenta of the two final state particles.
+            Default is 'z'.
+        """
         assert (
             len(masses) == 2
         ), f"Expected 'masses' to have length 2, found {len(masses)}."
 
         self.__cme = cme
         self.__masses = (masses[0], masses[1])
-        self.__msqrd = msqrd
+
+        if msqrd is not None:
+            assert callable(msqrd), "The squared matrix element must be callable."
+
+        self.__msqrd_signature_z = True
+        if msqrd_signature is not None:
+            assert msqrd_signature in ["momenta", "z"], (
+                f"Invalid 'msqrd_signature' {msqrd_signature}." "Use 'momenta' or 'z'."
+            )
+            if msqrd_signature == "momenta":
+                self.__msqrd_signature_z = False
+
+        if msqrd is None:
+            self.__msqrd = _msqrd_flat
+        else:
+            self.__msqrd = msqrd
 
     @property
     def cme(self) -> float:
@@ -51,15 +128,14 @@ class TwoBody(AbstractPhaseSpaceIntegrator):
         r"""Squared matrix element of the proccess."""
         return self.__msqrd
 
-    def integrate(self):
-        r"""Integrate over phase space.
+    @msqrd.setter
+    def msqrd(self, fn) -> None:
+        r"""Squared matrix element of the proccess."""
+        self.__msqrd = fn
 
-        Returns
-        -------
-        integral: float
-            Value of the phase space integration.
-        error_estimate: float
-            Estimation of the error.
+    def __integrate_momenta(self):
+        r"""Integrate over phase space assuming msqrd take the final-state
+        particle momenta as its argument.
         """
         cme = self.cme
         m1, m2 = self.masses

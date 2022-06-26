@@ -1,3 +1,7 @@
+"""
+Module for integrating three-body phase space.
+"""
+
 from typing import Callable, Any, Optional, Sequence, Tuple, Dict, List
 import inspect
 
@@ -36,6 +40,50 @@ def _msqrd_flat(s, t):
     return np.zeros_like(s)
 
 
+def _mandelstam_to_momenta(s, t, q: float, masses: Tuple[float, float, float]):
+    r"""Convert the invariant masses s, t into 4-momenta. This function aligns
+    particle 1 along the z-axis and particle 2 along the x-z axis. This is okay
+    so long as the matrix element is summed over spins, i.e. has no prefered
+    direction.
+    """
+    m1, m2, m3 = masses
+    m1_2, m2_2, m3_2 = m1**2, m2**2, m3**2
+    q_2 = q**2
+
+    e1 = (q_2 + m1_2 - s) / (2.0 * q)
+    e2 = (q_2 + m2_2 - t) / (2.0 * q)
+    p1 = np.sqrt(e1**2 - m1_2)
+    p2 = np.sqrt(e2**2 - m2_2)
+
+    u = q_2 + m1_2 + m2_2 + m3_2 - s - t
+
+    # p1.p2 = E1*E2 - |p1| |p2| z == 1/2 (u - m1^2 - m2^2)
+    ct = (e1 * e2 - 0.5 * (u - m1_2 - m2_2)) / (p1 * p2)
+    st = np.sqrt(1.0 - ct**2)
+
+    p2z = p2 * ct
+    p2x = p2 * st
+
+    zs = np.zeros_like(e1)
+    return np.array(
+        [
+            # p1, p2, p3
+            [e1, e2, q - e1 - e2],
+            [zs, p2x, -p2x],
+            [zs, zs, zs],
+            [p1, p2z, -p2z - p1],
+        ]
+    )
+
+
+def _convert_msqrd_to_st_signature(msqrd, q: float, masses: Tuple[float, float, float]):
+    def new_msqrd(s, t):
+        momenta = _mandelstam_to_momenta(s, t, q, masses)
+        return msqrd(momenta)
+
+    return new_msqrd
+
+
 class ThreeBody(AbstractPhaseSpaceIntegrator):
     r"""Class for computing various aspects of three-body phase-space."""
 
@@ -43,7 +91,8 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         self,
         cme: float,
         masses: Sequence[float],
-        msqrd: Optional[ThreeBodyMsqrd] = None,
+        msqrd: Optional[Callable[..., Any]] = None,
+        msqrd_signature: Optional[str] = None,
     ):
         """
         Parameters
@@ -52,9 +101,16 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
             Center-of-mass energy.
         masses: sequence float
             The three final state particle masses.
-        msqrd: callable
-            Binary function taking in the squared invariant masses s=(p2+p3)^2,
-            and t=(p1+p3)^2.
+        msqrd: callable, optional
+            Function to compute squared matrix element. The signature of the
+            function depends on the value of `msqrd_signature`. If no matrix
+            element is passed, it is taken to be flat (i.e. |M|^2 = 1).
+        msqrd_signature: str, optional
+            Signature of squared matrix element. If 'momenta', then the function
+            is assumed to take in a NumPy array containing the momenta of the
+            final state particles. If 'st', then it is assumed to take in
+            mandelstam variables s = (p2+p3)^2 and t = (p1+p3)^2.
+            Default is 'st'.
         """
         assert (
             len(masses) == 3
@@ -63,27 +119,44 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         self.__cme = cme
         self.__masses: Tuple[float, float, float] = (masses[0], masses[1], masses[2])
 
+        if msqrd is not None:
+            assert callable(msqrd), "The squared matrix element must be callable."
+
+        if msqrd_signature is not None:
+            assert msqrd_signature in ["momenta", "st"], (
+                f"Invalid 'msqrd_signature' {msqrd_signature}." "Use 'momenta' or 'st'."
+            )
+
+        self.__original_msqrd = None
         if msqrd is None:
             self.__msqrd = _msqrd_flat
+        elif msqrd_signature == "momenta":
+            self.__original_msqrd = msqrd
+            self.__msqrd = _convert_msqrd_to_st_signature(
+                msqrd, self.__cme, self.__masses
+            )
         else:
             self.__msqrd = msqrd
 
+    def __update_msqrd(self):
+        if self.__original_msqrd is not None:
+            self.__msqrd = _convert_msqrd_to_st_signature(
+                self.__original_msqrd, self.__cme, self.__masses
+            )
+
     @property
     def cme(self) -> float:
-        """
-        Center-of-mass energy of the proccess.
-        """
+        r"""Center-of-mass energy of the proccess."""
         return self.__cme
 
     @cme.setter
     def cme(self, val) -> None:
         self.__cme = val
+        self.__update_msqrd()
 
     @property
     def masses(self) -> Tuple[float, float, float]:
-        """
-        Masses of the final state particles.
-        """
+        r"""Masses of the final state particles."""
         return self.__masses
 
     @masses.setter
@@ -93,13 +166,18 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
         ), f"Expected 'masses' to have length 3, found {len(masses)}."
 
         self.__masses = (masses[0], masses[1], masses[2])
+        self.__update_msqrd()
 
     @property
     def msqrd(self) -> ThreeBodyMsqrd:
-        """
-        Squared matrix element of the proccess.
-        """
+        r"""Squared matrix element of the proccess."""
         return self.__msqrd
+
+    @msqrd.setter
+    def msqrd(self, fn) -> None:
+        r"""Squared matrix element of the proccess."""
+        self.__msqrd = fn
+        self.__update_msqrd()
 
     def __trapz(self, fn, a: float, b: float, npts: int):
         xs = np.linspace(a, b, npts)
