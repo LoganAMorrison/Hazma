@@ -7,11 +7,28 @@ from scipy import integrate
 from hazma import parameters
 from hazma.utils import kallen_lambda
 from hazma.form_factors.vector import VectorFormFactorPiPi
+from hazma.phase_space import ThreeBody
 
 from ._proto import SingleRhNeutrinoModel
 
-_lepton_masses = [parameters.electron_mass, parameters.muon_mass, parameters.tau_mass]
+_lepton_masses = {
+    "e": parameters.electron_mass,
+    0: parameters.electron_mass,
+    "mu": parameters.muon_mass,
+    1: parameters.muon_mass,
+    "tau": parameters.tau_mass,
+    2: parameters.tau_mass,
+}
 _flavor_gen = {"e": 1, "mu": 2, "tau": 3}
+
+MPI = parameters.charged_pion_mass
+MPI0 = parameters.neutral_pion_mass
+GF = parameters.GF
+VUD = parameters.Vud
+SW = parameters.sin_theta_weak
+CW = parameters.cos_theta_weak
+GVUU = 2.0 / 3.0
+GVDD = -1.0 / 3.0
 
 
 # ============================================================================
@@ -64,7 +81,7 @@ def _width_l_hp(model: SingleRhNeutrinoModel, ml, mh, fh, ckm):
     xl = ml / mx
     u = 0.5 * np.tan(2 * model.theta)
 
-    pre = u**2 * parameters.GF**2 * ckm**2 * fh**2 * mx**3 / (32 * np.pi)
+    pre = u**2 * parameters.GF**2 * abs(ckm) ** 2 * fh**2 * mx**3 / (32 * np.pi)
 
     return (
         pre
@@ -94,7 +111,7 @@ def width_l_k(model: SingleRhNeutrinoModel, ml):
 # ============================================================================
 
 
-def _width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
+def width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     mx = model.mx
     xh = mh / mx
     xl = ml / mx
@@ -116,7 +133,7 @@ def _width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     )
 
 
-def _width_v_hv(model: SingleRhNeutrinoModel, mh, kh, gr):
+def width_v_hv(model: SingleRhNeutrinoModel, mh, kh, gr):
     mx = model.mx
     xh = mh / mx
     u = 0.5 * np.tan(2 * model.theta)
@@ -126,103 +143,172 @@ def _width_v_hv(model: SingleRhNeutrinoModel, mh, kh, gr):
 
 
 # ============================================================================
+# ---- N -> l + meson + meson -----------------------------------------------
+# ============================================================================
+
+
+def msqrd_l_pi0_pi(
+    s, t, model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi
+):
+    """Squared matrix element for N -> l + pi0 + pi.
+
+    Parameters
+    ----------
+    s: float or array-like
+        Invariant mass of the pions.
+    t: float or array-like
+        Invariant mass of the lepton and one of the pions.
+    form_factor: VectorFormFactorPiPi
+        Pion electromagnetic form factor.
+    """
+    mx = model.mx
+    ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+    ml = _lepton_masses[model.flavor]
+    ckm = abs(VUD) ** 2
+    u = 0.5 * np.tan(2 * model.theta)
+
+    return (
+        2
+        * ckm
+        * u**2
+        * GF**2
+        * (
+            4 * MPI**4
+            + (ml**2 + mx**2) * (ml**2 + mx**2 - s)
+            - 4 * (ml**2 + mx**2 + 2 * MPI**2 - s) * t
+            + 4 * t**2
+        )
+        * np.abs(ff) ** 2
+    )
+
+
+def energy_distributions_l_pi0_pi(
+    model: SingleRhNeutrinoModel,
+    form_factor: VectorFormFactorPiPi,
+    nbins: int,
+    method: str = "quad",
+):
+    def msqrd(s, t):
+        return msqrd_l_pi0_pi(s, t, model, form_factor)
+
+    ml = _lepton_masses[model.flavor]
+    tb = ThreeBody(model.mx, (ml, MPI, MPI), msqrd=msqrd)
+    return tb.energy_distributions(nbins=nbins, method=method)
+
+
+def invariant_mass_distributions_l_pi0_pi(
+    model: SingleRhNeutrinoModel,
+    form_factor: VectorFormFactorPiPi,
+    nbins: int,
+    method: str = "quad",
+):
+    def msqrd(s, t):
+        return msqrd_l_pi0_pi(s, t, model, form_factor)
+
+    ml = _lepton_masses[model.flavor]
+    tb = ThreeBody(model.mx, (ml, MPI, MPI), msqrd=msqrd)
+    return tb.invariant_mass_distributions(nbins=nbins, method=method)
+
+
+def width_l_pi0_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi):
+    """Partial decay width into a lepton, a charged pion and a neutral pion."""
+    mx = model.mx
+    ml = _lepton_masses[model.flavor]
+    if mx < ml + 2 * MPI:
+        return 0.0
+
+    xl2 = (ml / mx) ** 2
+    u = 0.5 * np.tan(2 * model.theta)
+
+    def integrand(s):
+        z = s / mx**2
+        poly = (1 - xl2) ** 2 + z * (1 + xl2) - 2 * z**2
+        ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+        beta = (1.0 - 4 * MPI**2 / s) ** 1.5
+        p = np.sqrt(kallen_lambda(1.0, z, xl2))
+        return poly * np.abs(ff) ** 2 * p * beta
+
+    pre = u**2 * np.abs(VUD) ** 2 * GF**2 * mx**3 / (384.0 * np.pi**3)
+    return pre * integrate.quad(integrand, 4 * MPI**2, (mx - ml) ** 2)[0]
+
+
+# ============================================================================
 # ---- N -> nu + meson + meson -----------------------------------------------
 # ============================================================================
 
 
-def invariant_mass_distribution_l_pi0_pi(
-    model: SingleRhNeutrinoModel, s, ml: float, ff: VectorFormFactorPiPi
+def msqrd_v_pi_pi(
+    s, t, model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi
 ):
-    """Partial decay width into a charged lepton, a neutral pion and a charged
-    pion."""
+    """Squared matrix element for N -> l + pi0 + pi.
+
+    Parameters
+    ----------
+    s: float or array-like
+        Invariant mass of the pions.
+    t: float or array-like
+        Invariant mass of the lepton and one of the pions.
+    form_factor: VectorFormFactorPiPi
+        Pion electromagnetic form factor.
+    """
     mx = model.mx
-    mpi = parameters.charged_pion_mass
-
-    xl = ml / mx
-
+    ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
     u = 0.5 * np.tan(2 * model.theta)
-    vud2 = np.abs(parameters.Vud) ** 2
-    pre = parameters.GF**2 * mx**3 * vud2 * u**2 / (384 * np.pi**3)
-    gvuu = parameters.qe * parameters.Qu
-    gvdd = parameters.qe * parameters.Qd
 
-    single = np.isscalar(s)
-    ss = np.atleast_1d(s).astype(np.float64)
-    dist = np.zeros_like(ss)
-    mask = (ss > 4 * mpi**2) & (ss < (mx - ml) ** 2)
-    sm = ss[mask]
-
-    qq = sm / mx**2
-    t1 = (1 - xl**2) ** 2 + qq * (1 + xl**2) - 2 * qq**2
-    t2 = np.sqrt(kallen_lambda(1.0, qq, xl**2))
-    t3 = np.sqrt(1 - 4.0 * mpi**2 / sm) ** 3
-    t4 = np.real(np.abs(ff.form_factor(q=np.sqrt(sm), gvuu=gvuu, gvdd=gvdd)) ** 2)
-
-    dist[mask] = pre * t1 * t2 * t3 * t4
-
-    if single:
-        return dist[0]
-    return dist
-
-
-def width_l_pi0_pi(model: SingleRhNeutrinoModel, ml, ff: VectorFormFactorPiPi):
-    """Partial decay width into a lepton, a charged pion and a neutral pion."""
-    mx = model.mx
-    mpi = parameters.charged_pion_mass
-    if mx < ml + 2 * mpi:
-        return 0.0
-
-    def integrand(s):
-        return invariant_mass_distribution_l_pi0_pi(model, s, ml, ff)
-
-    return integrate.quad(integrand, 4 * mpi**2, (mx - ml) ** 2)[0]
-
-
-def invariant_mass_distribution_v_pi_pi(
-    model: SingleRhNeutrinoModel, s, ff: VectorFormFactorPiPi
-):
-    """Partial decay width into a neutrino and two charged pions."""
-    mx = model.mx
-    mpi = parameters.charged_pion_mass
-
-    u = 0.5 * np.tan(2 * model.theta)
-    sw = parameters.sin_theta_weak
-    pre = (
-        parameters.GF**2
-        * mx**3
-        * u**2
-        / (768 * np.pi**3)
-        * (1 - 2 * sw**2) ** 2
+    return (
+        u**2
+        * GF**2
+        * (1 - 2 * SW**2) ** 2
+        * (
+            mx**4
+            + 4 * MPI**4
+            + 4 * t * (-2 * MPI**2 + s + t)
+            - mx**2 * (s + 4 * t)
+        )
+        * np.abs(ff) ** 2
     )
-    gvuu = parameters.qe * parameters.Qu
-    gvdd = parameters.qe * parameters.Qd
-
-    single = np.isscalar(s)
-    ss = np.atleast_1d(s).astype(np.float64)
-    dist = np.zeros_like(ss)
-    mask = (ss > 4.0 * mpi**2) & (ss < mx**2)
-    sm = ss[mask]
-
-    qq = sm / mx**2
-    t1 = (1.0 - qq) ** 2 * (1.0 + 2.0 * qq)
-    t2 = np.sqrt(1.0 - 4.0 * mpi**2 / sm) ** 3
-    t3 = np.abs(ff.form_factor(q=np.sqrt(sm), gvuu=gvuu, gvdd=gvdd)) ** 2
-    dist[mask] = pre * t1 * t2 * np.real(t3)
-
-    if single:
-        return dist[0]
-    return dist
 
 
-def width_v_pi_pi(model: SingleRhNeutrinoModel, ff: VectorFormFactorPiPi):
+def energy_distributions_v_pi_pi(
+    model: SingleRhNeutrinoModel,
+    form_factor: VectorFormFactorPiPi,
+    nbins: int,
+    method: str = "quad",
+):
+    def msqrd(s, t):
+        return msqrd_v_pi_pi(s, t, model, form_factor)
+
+    tb = ThreeBody(model.mx, (0.0, MPI, MPI), msqrd=msqrd)
+    return tb.energy_distributions(nbins=nbins, method=method)
+
+
+def invariant_mass_distributions_v_pi_pi(
+    model: SingleRhNeutrinoModel,
+    form_factor: VectorFormFactorPiPi,
+    nbins: int,
+    method: str = "quad",
+):
+    def msqrd(s, t):
+        return msqrd_v_pi_pi(s, t, model, form_factor)
+
+    tb = ThreeBody(model.mx, (0.0, MPI, MPI), msqrd=msqrd)
+    return tb.invariant_mass_distributions(nbins=nbins, method=method)
+
+
+def width_v_pi_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi):
     """Partial decay width into a neutrino and two charged pions."""
     mx = model.mx
-    mpi = parameters.charged_pion_mass
+    u = 0.5 * np.tan(2 * model.theta)
 
     def integrand(s):
-        return invariant_mass_distribution_v_pi_pi(model, s, ff)
+        z = s / mx**2
+        ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+        beta = (1.0 - 4 * MPI**2 / s) ** 1.5
+        poly = (1 - z) ** 2 * (1 + 2 * z)
+        return np.abs(ff) ** 2 * beta * poly
 
-    return integrate.quad(integrand, 4 * mpi**2, mx**2)[0]
+    pre = u**2 * GF**2 * mx**3 * (1 - 2 * SW**2) ** 2 / (768 * np.pi**3)
+    return pre * integrate.quad(integrand, 4 * MPI**2, mx**2)[0]
 
 
 # ============================================================================
@@ -235,10 +321,6 @@ def invariant_mass_distribution_v_f_f(model: SingleRhNeutrinoModel, s, mf: float
     z = 1 - s / mx**2
     x = mf / mx
 
-    sw = parameters.sin_theta_weak
-    cw = parameters.cos_theta_weak
-    GF = parameters.GF
-
     return (
         GF**2
         * mx**3
@@ -249,21 +331,21 @@ def invariant_mass_distribution_v_f_f(model: SingleRhNeutrinoModel, s, mf: float
             - 5 * z
             + 2 * x**2 * z
             + 2 * z**2
-            + 4 * sw**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
-            - 8 * sw**4 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
-            + 4 * cw**4 * (3 + (-5 + 2 * x**2) * z + 2 * z**2)
+            + 4 * SW**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
+            - 8 * SW**4 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
+            + 4 * CW**4 * (3 + (-5 + 2 * x**2) * z + 2 * z**2)
             - 4
-            * cw**2
+            * CW**2
             * (
                 3
                 - 5 * z
                 + 2 * x**2 * z
                 + 2 * z**2
-                + 2 * sw**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
+                + 2 * SW**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
             )
         )
         * np.sin(2 * model.theta) ** 2
-    ) / (768.0 * cw**4 * np.pi**3 * (-1 + z) ** 2)
+    ) / (768.0 * CW**4 * np.pi**3 * (-1 + z) ** 2)
 
 
 def _width_v_f_f(model: SingleRhNeutrinoModel, mf, nc, c1f, c2f):
