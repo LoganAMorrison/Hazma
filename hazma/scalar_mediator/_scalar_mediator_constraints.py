@@ -33,34 +33,29 @@ from hazma.parameters import vh
 #   decays
 
 
-def _lambda_ps(_, a, b, c):
-    """Phase space factor."""
-    return (a - b - c) ** 2 - 4.0 * b * c
-
-
 def width_B_k_s(self):
     if self.ms <= mB - mk:
-        f0B = 0.33 / (1.0 - self.ms ** 2 / (38.0e3) ** 2)
+        f0B = 0.33 / (1.0 - self.ms**2 / (38.0e3) ** 2)
         # FCNC couplings
         hSsb = (
             3.0
             * np.sqrt(2)
             * (msq + mbq)
             * GF
-            * mtq ** 2
+            * mtq**2
             * Vts.conjugate()
             * Vtb
-            / (32.0 * np.pi ** 2 * vh)
+            / (32.0 * np.pi**2 * vh)
         )
 
         return (
             1.0
-            / (16.0 * np.pi * mB ** 3)
-            * ((mB ** 2 - mk ** 2) / (mbq - msq)) ** 2
-            * f0B ** 2
+            / (16.0 * np.pi * mB**3)
+            * ((mB**2 - mk**2) / (mbq - msq)) ** 2
+            * f0B**2
             * abs(hSsb) ** 2
-            * self.gsff ** 2
-            * np.sqrt(self._lambda_ps(mB ** 2, mk ** 2, self.ms ** 2))
+            * self.gsff**2
+            * np.sqrt(self._lambda_ps(mB**2, mk**2, self.ms**2))
         )
     else:
         return 0.0
@@ -72,7 +67,7 @@ def constraint_B_k_invis(self):
     width_contr = 0.0
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in B_k_invis_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in B_k_invis_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
         width_s_sm = width_s - widths_s["x x"]  # Gamma_{S->SM}
@@ -98,7 +93,7 @@ def constraint_B_k_mu_mu(self):
     width_contr = 0.0
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in B_k_mu_mu_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in B_k_mu_mu_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
 
@@ -124,7 +119,7 @@ def constraint_B_k_e_e(self):
     width_contr = 0.0
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in B_k_e_e_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in B_k_e_e_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
 
@@ -149,19 +144,19 @@ def width_k_pi_s(self):
             * np.sqrt(2)
             * (msq + mdq)
             * GF
-            * mtq ** 2
+            * mtq**2
             * Vts.conjugate()
             * Vtd
-            / (32.0 * np.pi ** 2 * vh)
+            / (32.0 * np.pi**2 * vh)
         )
 
         return (
             1.0
-            / (16.0 * np.pi * mk ** 3)
-            * ((mk ** 2 - mpi ** 2) / (msq - mdq)) ** 2
+            / (16.0 * np.pi * mk**3)
+            * ((mk**2 - mpi**2) / (msq - mdq)) ** 2
             * abs(hSsd) ** 2
-            * self.gsff ** 2
-            * np.sqrt(self._lambda_ps(mk ** 2, mpi ** 2, self.ms ** 2))
+            * self.gsff**2
+            * np.sqrt(self._lambda_ps(mk**2, mpi**2, self.ms**2))
         )
     else:
         return 0.0
@@ -173,7 +168,7 @@ def constraint_k_pi_invis(self):
     ms = self.ms
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in k_pi_invis_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in k_pi_invis_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
         width_s_sm = width_s - widths_s["x x"]  # Gamma_{S->SM}
@@ -201,19 +196,19 @@ def width_kl_pi0_s(self):
             * np.sqrt(2)
             * (msq + mdq)
             * GF
-            * mtq ** 2
+            * mtq**2
             * Vts.conjugate()
             * Vtd
-            / (32.0 * np.pi ** 2 * vh)
+            / (32.0 * np.pi**2 * vh)
         )
 
         return (
             1.0
-            / (16.0 * np.pi * mkl ** 3)
-            * ((mkl ** 2 - mpi0 ** 2) / (msq - mdq)) ** 2
-            * hSsd.imag ** 2
-            * self.gsff ** 2
-            * np.sqrt(self._lambda_ps(mkl ** 2, mpi0 ** 2, self.ms ** 2))
+            / (16.0 * np.pi * mkl**3)
+            * ((mkl**2 - mpi0**2) / (msq - mdq)) ** 2
+            * hSsd.imag**2
+            * self.gsff**2
+            * np.sqrt(self._lambda_ps(mkl**2, mpi0**2, self.ms**2))
         )
     else:
         return 0.0
@@ -225,7 +220,7 @@ def constraint_kl_pi0_mu_mu(self):
     ms = self.ms
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in kl_pi0_mu_mu_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in kl_pi0_mu_mu_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
 
@@ -253,7 +248,7 @@ def constraint_kl_pi0_e_e(self):
     ms = self.ms
 
     # Make sure scalar mass doesn't fall outside of kinematic bounds
-    if np.any([s[0] <= ms ** 2 <= s[1] for s in kl_pi0_e_e_obs.s_bounds]):
+    if np.any([s[0] <= ms**2 <= s[1] for s in kl_pi0_e_e_obs.s_bounds]):
         widths_s = self.partial_widths()
         width_s = widths_s["total"]
 
@@ -280,19 +275,19 @@ def width_B_xs_s(self):
             * np.sqrt(2)
             * (msq + mbq)
             * GF
-            * mtq ** 2
+            * mtq**2
             * Vts.conjugate()
             * Vtb
-            / (32.0 * np.pi ** 2 * vh)
+            / (32.0 * np.pi**2 * vh)
         )
 
         val = (
             1.0
             / (8.0 * np.pi)
-            * (mbq ** 2 - self.ms ** 2) ** 2
-            / mbq ** 3
+            * (mbq**2 - self.ms**2) ** 2
+            / mbq**3
             * abs(hSsb) ** 2
-            * self.gsff ** 2
+            * self.gsff**2
         )
 
         return val
@@ -354,11 +349,11 @@ def width_h_invis(self):
     particles.
     """
     if m_higgs > 2.0 * self.mx:
-        coupling = self.gsxx * self.stheta / np.sqrt(1 - self.stheta ** 2)
+        coupling = self.gsxx * self.stheta / np.sqrt(1 - self.stheta**2)
 
         val = (
-            (coupling ** 2 * (m_higgs ** 2 - 4 * self.mx ** 2) ** 1.5)
-            / (8.0 * m_higgs ** 2 * np.pi)
+            (coupling**2 * (m_higgs**2 - 4 * self.mx**2) ** 1.5)
+            / (8.0 * m_higgs**2 * np.pi)
         ).real
 
         assert val >= 0
