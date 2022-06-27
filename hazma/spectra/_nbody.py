@@ -1,3 +1,7 @@
+"""
+Module implementing spectrum generations from n-body final states.
+"""
+
 from typing import List, Tuple, Sequence, Optional, Callable, Any, Union, Dict
 import functools as ft
 from collections import defaultdict
@@ -5,6 +9,7 @@ from collections import defaultdict
 import numpy as np
 import numpy.typing as npt
 
+from hazma.utils import RealArray, RealOrRealArray
 from hazma.phase_space import Rambo, ThreeBody, PhaseSpaceDistribution1D
 from hazma.parameters import standard_model_masses as sm_masses
 from . import _photon
@@ -14,7 +19,6 @@ from .altarelli_parisi import (
     dnde_photon_ap_scalar as _ap_scalar,
     dnde_photon_ap_fermion as _ap_fermion,
 )
-from hazma.utils import RealArray, RealOrRealArray
 
 
 MSqrd = Union[Callable[[Any], Any], Callable[[Any, Any], Any]]
@@ -27,8 +31,7 @@ def _dnde_zero(product_energies, _):
 def _dnde_zero_nu(product_energies, _, flavor: Optional[str] = None):
     if flavor is None:
         return np.zeros((3, *product_energies.shape), dtype=product_energies.dtype)
-    else:
-        return np.zeros_like(product_energies)
+    return np.zeros_like(product_energies)
 
 
 def _make_fsr(mass, charge, scalar):
@@ -145,11 +148,11 @@ def _get_masses(final_states: Sequence[str]) -> List[float]:
         List containing the masses of the final-state particles.
     """
     masses: List[float] = []
-    for s in final_states:
-        m = sm_masses.get(s)
-        if m is None:
-            raise ValueError(f"Encountered unknown particle {s}.")
-        masses.append(m)
+    for state in final_states:
+        mass = sm_masses.get(state)
+        if mass is None:
+            raise ValueError(f"Encountered unknown particle {state}.")
+        masses.append(mass)
     return masses
 
 
@@ -337,7 +340,7 @@ def _dnde_photon_fsr(
     dnde = np.zeros_like(photon_energies)
     dnde_fns = _spectra_dict["fsr"]
 
-    has_fsr = any([s in dnde_fns for s in final_states])
+    has_fsr = any(s in dnde_fns for s in final_states)
     if has_fsr:
         # Compute FSR convolved with invariant-mass distributions
         dists = _make_invariant_mass_distributions(
@@ -410,6 +413,7 @@ def _dnde_two_body(
     dnde: np.ndarray
         The combined spectrum.
     """
+    assert len(states) == 2
     s1, s2 = states
     dnde_fn = _spectra_dict[product]
     dnde_fsr = _spectra_dict["fsr"]
@@ -469,10 +473,7 @@ def _dnde_multi_particle(
     dnde: np.ndarray
         The combined spectrum.
     """
-    if three_body_integrator is None:
-        tbi = "quad"
-    else:
-        tbi = three_body_integrator
+    tbi = "quad" if three_body_integrator is None else three_body_integrator
 
     edists = _make_energy_distributions(
         cme=cme,
@@ -483,7 +484,9 @@ def _dnde_multi_particle(
         npts=npts,
         nbins=nbins,
     )
+
     dnde = np.zeros_like(product_energies)
+
     for dist, state in zip(edists, final_states):
         dnde = dnde + _conv_dnde_dist(product_energies, dist, state, product)
 
@@ -686,7 +689,7 @@ def dnde_photon(
     )
 
 
-dnde_photon.availible_final_states = {key for key in _spectra_dict["photon"].keys()}
+dnde_photon.availible_final_states = set(_spectra_dict["photon"].keys())
 
 
 def dnde_positron(
@@ -773,7 +776,7 @@ def dnde_positron(
     )
 
 
-dnde_positron.availible_final_states = {key for key in _spectra_dict["positron"].keys()}
+dnde_positron.availible_final_states = set(_spectra_dict["positron"].keys())
 
 
 def dnde_neutrino(
@@ -876,4 +879,4 @@ def dnde_neutrino(
     )
 
 
-dnde_neutrino.availible_final_states = {key for key in _spectra_dict["neutrino"].keys()}
+dnde_neutrino.availible_final_states = set(_spectra_dict["neutrino"].keys())
