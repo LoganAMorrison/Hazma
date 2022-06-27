@@ -1,4 +1,5 @@
 import unittest
+import functools as ft
 
 from pytest import approx
 
@@ -7,35 +8,44 @@ from numpy import testing as np_testing
 
 from hazma.parameters import standard_model_masses as sm_masses
 from hazma import spectra
+from hazma.utils import lnorm_sqr
 
-"""
 
-    neutrino_energies: npt.ArrayLike,
-    cme: float,
-    final_states: Union[str, Sequence[str]],
-    msqrd: Optional[MSqrd] = None,
-    *,
-    three_body_integrator: str = "quad",
-    npts: int = 1 << 14,
-    nbins: int = 25,
-    flavor: Optional[str] = None,
+def dnde_zero_factory(neutrino: bool):
+    shape = (3,) if neutrino else tuple()
 
-"""
+    def dnde_zero(energies, _):
+        scalar = np.isscalar(energies)
+        es = np.atleast_1d(energies).astype(float)
+        zs = np.zeros(shape + es.shape, dtype=es.dtype)
+
+        if scalar:
+            return np.take(zs, 0, axis=-1)
+        return zs
+
+    return dnde_zero
 
 
 photon_spectra_dict = {
-    "k": spectra.dnde_photon_charged_kaon,
-    "pi": spectra.dnde_photon_charged_pion,
-    "rho": spectra.dnde_photon_charged_rho,
-    "eta": spectra.dnde_photon_eta,
-    "etap": spectra.dnde_photon_eta_prime,
-    "kl": spectra.dnde_photon_long_kaon,
     "mu": spectra.dnde_photon_muon,
     "pi0": spectra.dnde_photon_neutral_pion,
+    "pi": spectra.dnde_photon_charged_pion,
+    "eta": spectra.dnde_photon_eta,
+    "etap": spectra.dnde_photon_eta_prime,
+    "k": spectra.dnde_photon_charged_kaon,
+    "kl": spectra.dnde_photon_long_kaon,
+    "ks": spectra.dnde_photon_short_kaon,
+    "rho": spectra.dnde_photon_charged_rho,
     "rho0": spectra.dnde_photon_neutral_rho,
     "omega": spectra.dnde_photon_omega,
     "phi": spectra.dnde_photon_phi,
-    "ks": spectra.dnde_photon_short_kaon,
+}
+
+fsr_dict = {
+    "e": ft.partial(spectra.dnde_photon_ap_fermion, mass=sm_masses["e"], charge=-1.0),
+    "mu": ft.partial(spectra.dnde_photon_ap_fermion, mass=sm_masses["mu"], charge=-1.0),
+    "pi": ft.partial(spectra.dnde_photon_ap_scalar, mass=sm_masses["pi"], charge=1.0),
+    "k": ft.partial(spectra.dnde_photon_ap_scalar, mass=sm_masses["k"], charge=1.0),
 }
 
 positron_spectra_dict = {
@@ -151,6 +161,10 @@ class TestIndividualSpectra(unittest.TestCase):
 
 
 class TestNBodySpectra(unittest.TestCase):
+    r"""Tests for hazma.spectra.dnde_photon, hazma.spectra.dnde_positron,
+    hazma.spectra.dnde_neutrino.
+    """
+
     def setUp(self):
         self.dnde_dict = {
             "photon": spectra.dnde_photon,
@@ -174,7 +188,7 @@ class TestNBodySpectra(unittest.TestCase):
         }
 
     def test_single_state(self):
-        """Test the passing a single state works."""
+        """Test that passing a single state works."""
 
         for state in self.states:
             for product, dnde_fn in self.dnde_dict.items():
@@ -186,3 +200,75 @@ class TestNBodySpectra(unittest.TestCase):
                         assert nbody[i] == approx(single[i], rel=1e-2, abs=1e-2)
                 else:
                     assert nbody == approx(single, rel=1e-2, abs=1e-2)
+
+    def test_two_body_final_state(self):
+        """Test that passing two states works."""
+
+        for s1 in self.states:
+            for s2 in self.states:
+                for product, dnde_fn in self.dnde_dict.items():
+                    sd = spectra_dict[product]
+                    m1 = sm_masses[s1]
+                    m2 = sm_masses[s2]
+                    cme = (m1 + m2) * 1.1
+                    eprod = 1.0
+                    if product == "photon":
+                        nbody = dnde_fn(eprod, cme, (s1, s2), include_fsr=False)
+                    else:
+                        nbody = dnde_fn(eprod, cme, (s1, s2))
+
+                    e1 = (cme**2 + m1**2 - m2**2) / (2 * cme)
+                    e2 = (cme**2 - m1**2 + m2**2) / (2 * cme)
+                    single = sd[s1](eprod, e1) + sd[s2](eprod, e2)
+
+                    if product == "neutrino":
+                        for i in range(3):
+                            assert nbody[i] == approx(single[i], rel=1e-2, abs=1e-2)
+                    else:
+                        assert nbody == approx(single, rel=1e-2, abs=1e-2)
+
+    def test_n_body_final_state_no_msqrd(self):
+        """Just check that n-body final state work."""
+
+        final_states = [
+            ("omega", "phi", "rho"),
+            ("pi0", "k", "pi", "e"),
+            ("mu", "mu", "e", "e", "eta"),
+        ]
+
+        for fs in final_states:
+            for _, dnde_fn in self.dnde_dict.items():
+                masses = [sm_masses[s] for s in fs]
+                cme = 2.0 * sum(masses)
+                eprod = 2.0
+                dnde_fn(eprod, cme, fs)
+
+    def test_n_body_final_state_msqrd(self):
+        """Just check that n-body final states work (n=3,4,5)."""
+
+        final_states = [
+            ("omega", "phi", "rho"),
+            ("pi0", "k", "pi", "e"),
+            ("mu", "mu", "e", "e", "eta"),
+        ]
+
+        def msqrd3(s, t):
+            return s * t
+
+        # Test matrix elements
+        def msqrd(momenta):
+            m2 = np.ones_like(momenta[0, 0, ...])
+            for i in range(momenta.shape[1]):
+                for j in range(momenta.shape[1]):
+                    m2 *= lnorm_sqr(momenta[:, i] + momenta[:, j])
+            return m2
+
+        for fs in final_states:
+            for _, dnde_fn in self.dnde_dict.items():
+                masses = [sm_masses[s] for s in fs]
+                cme = 2.0 * sum(masses)
+                eprod = 2.0
+                if len(fs) == 3:
+                    dnde_fn(eprod, cme, fs, msqrd=msqrd3)
+                else:
+                    dnde_fn(eprod, cme, fs, msqrd=msqrd)
