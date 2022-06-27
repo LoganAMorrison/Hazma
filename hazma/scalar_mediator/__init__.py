@@ -94,7 +94,6 @@ class ScalarMediator(TheoryAnn):
         elastic_scattering_cross_sections,
     )
     from ._scalar_mediator_constraints import (
-        _lambda_ps,
         width_B_k_s,
         constraint_B_k_invis,
         constraint_B_k_mu_mu,
@@ -261,12 +260,12 @@ class ScalarMediator(TheoryAnn):
         trM = muq + mdq + msq
 
         return np.sqrt(
-            self._ms ** 2
+            self._ms**2
             - 16.0
             * self._gsGG
             * b0T
-            * fpiT ** 2
-            / (81.0 * vh ** 2)
+            * fpiT**2
+            / (81.0 * vh**2)
             * (2.0 * self._gsGG - 9.0 * self._gsff)
             * trM
         )
@@ -390,7 +389,7 @@ class HeavyQuark(ScalarMediator):
         self._QQ = QQ
 
         super(HeavyQuark, self).__init__(
-            mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ ** 2, mQ
+            mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ**2, mQ
         )
 
     def __repr__(self):
@@ -416,7 +415,7 @@ class HeavyQuark(ScalarMediator):
     def gsQ(self, gsQ):
         self._gsQ = gsQ
         self._gsGG = gsQ
-        self._gsFF = 2.0 * gsQ * self._QQ ** 2
+        self._gsFF = 2.0 * gsQ * self._QQ**2
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
@@ -438,7 +437,7 @@ class HeavyQuark(ScalarMediator):
     @QQ.setter
     def QQ(self, QQ):
         self._QQ = QQ
-        self._gsFF = 2.0 * self._gsQ * QQ ** 2
+        self._gsFF = 2.0 * self._gsQ * QQ**2
         self.compute_vs()
         self.compute_width_s()  # vs MUST be computed first
 
