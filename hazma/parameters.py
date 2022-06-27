@@ -348,10 +348,6 @@ LECS: Dict[str, float] = {
     "SU2_Gr": Gr,
 }
 
-# SU(2) LECs
-Er: float = 0.029
-Gr: float = 0.0073
-
 
 def convert_sigmav(sv, target):
     """Changes the units of <sigma v>.
