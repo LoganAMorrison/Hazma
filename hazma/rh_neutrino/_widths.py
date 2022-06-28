@@ -1,5 +1,6 @@
 """Partial decay widths of a RH-neutrino.
 """
+from typing import Tuple
 
 import numpy as np
 from scipy import integrate
@@ -7,20 +8,17 @@ from scipy import integrate
 from hazma import parameters
 from hazma.utils import kallen_lambda
 from hazma.form_factors.vector import VectorFormFactorPiPi
-from hazma.phase_space import ThreeBody
+from hazma.phase_space import ThreeBody, PhaseSpaceDistribution1D
 
-from ._proto import SingleRhNeutrinoModel
+from ._proto import SingleRhNeutrinoModel, Generation
 
-_lepton_masses = {
-    "e": parameters.electron_mass,
-    0: parameters.electron_mass,
-    "mu": parameters.muon_mass,
-    1: parameters.muon_mass,
-    "tau": parameters.tau_mass,
-    2: parameters.tau_mass,
-}
-_flavor_gen = {"e": 1, "mu": 2, "tau": 3}
+_lepton_masses = [
+    parameters.electron_mass,
+    parameters.muon_mass,
+    parameters.tau_mass,
+]
 
+ALPHA_EM = parameters.alpha_em
 MPI = parameters.charged_pion_mass
 MPI0 = parameters.neutral_pion_mass
 GF = parameters.GF
@@ -163,7 +161,7 @@ def msqrd_l_pi0_pi(
     """
     mx = model.mx
     ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
-    ml = _lepton_masses[model.flavor]
+    ml = _lepton_masses[model.gen]
     ckm = abs(VUD) ** 2
     u = 0.5 * np.tan(2 * model.theta)
 
@@ -191,7 +189,7 @@ def energy_distributions_l_pi0_pi(
     def msqrd(s, t):
         return msqrd_l_pi0_pi(s, t, model, form_factor)
 
-    ml = _lepton_masses[model.flavor]
+    ml = _lepton_masses[model.gen]
     tb = ThreeBody(model.mx, (ml, MPI, MPI), msqrd=msqrd)
     return tb.energy_distributions(nbins=nbins, method=method)
 
@@ -205,7 +203,7 @@ def invariant_mass_distributions_l_pi0_pi(
     def msqrd(s, t):
         return msqrd_l_pi0_pi(s, t, model, form_factor)
 
-    ml = _lepton_masses[model.flavor]
+    ml = _lepton_masses[model.gen]
     tb = ThreeBody(model.mx, (ml, MPI, MPI), msqrd=msqrd)
     return tb.invariant_mass_distributions(nbins=nbins, method=method)
 
@@ -213,7 +211,7 @@ def invariant_mass_distributions_l_pi0_pi(
 def width_l_pi0_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi):
     """Partial decay width into a lepton, a charged pion and a neutral pion."""
     mx = model.mx
-    ml = _lepton_masses[model.flavor]
+    ml = _lepton_masses[model.gen]
     if mx < ml + 2 * MPI:
         return 0.0
 
@@ -312,40 +310,90 @@ def width_v_pi_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiP
 
 
 # ============================================================================
-# ---- N -> nu + f + f -------------------------------------------------------
+# ---- N -> v + l + l --------------------------------------------------------
 # ============================================================================
 
+# ---- N -> l + u + d --------------------------------------------------------
+# For us, we are interested in the case where u = neutrino and d = charged
+# lepton. These functions are valid when u and d have the same generation and
+# when their generation is different from the RHN neutrino. Additionally, l must
+# have the same generation as the RHN. Other cases are handled below.
 
-def invariant_mass_distribution_v_f_f(model: SingleRhNeutrinoModel, s, mf: float):
+
+def _msqrd_l_u_d(s, t, model: SingleRhNeutrinoModel, mu, md, ml, ckm):
+    r"""Squared matrix element for N -> l + u + d, where u = (nu, up-type-quark)
+    and d=(lep,down-type-quark). If u = nu and d=lep, they must have a different
+    generation than l and N.
+    """
     mx = model.mx
-    z = 1 - s / mx**2
-    x = mf / mx
+    u = 0.5 * np.tan(2 * model.theta)
+    return (
+        16.0
+        * GF**2
+        * (ml**2 + mx**2 - s - t)
+        * (s + t - mu**2 - md**2)
+        * u**2
+        * abs(ckm) ** 2
+    )
+
+
+def _width_l_u_d(model: SingleRhNeutrinoModel, mu, md, ml, nw):
+    r"""Partial width for N -> l + u + d, where u = (nu, up-type-quark)
+    and d=(lep,down-type-quark). If u = nu and d=lep, they must have a different
+    generation than l and N.
+    """
+    mx = model.mx
+
+    if mx < ml + mu + md:
+        return 0.0
+
+    u = 0.5 * np.tan(2 * model.theta)
+
+    pre = nw * parameters.GF**2 * mx**5 / (192 * np.pi**3) * u**2
+    xl = ml / mx
+    xu = mu / mx
+    xd = md / mx
+
+    def integrand(x):
+        return (
+            12.0
+            / x
+            * (x - xl**2 - xd**2)
+            * (1 + xu**2 - x)
+            * np.sqrt(kallen_lambda(x, xl**2, xd**2) * kallen_lambda(1, x, xu**2))
+        )
+
+    lb = (xd + xl) ** 2
+    ub = (1.0 - xu) ** 2
+
+    return pre * integrate.quad(integrand, lb, ub)[0]
+
+
+# ---- N -> v + f + f --------------------------------------------------------
+# For us, we are interested in the case where f = charged lepton.  These
+# functions are valid when f has a generation different from the RHN neutrino.
+# `v` must have the same generation as the RHN. The last case is handled below.
+
+
+def _msqrd_v_f_f(s, t, model: SingleRhNeutrinoModel, mf: float):
+    r"""Squared matrix element for N -> v + f + f. In the case where f is a
+    charged lepton, the generation is assumed to differ from the RHN and LHN
+    generations.
+    """
+    mx = model.mx
+    u = 0.5 * np.tan(2 * model.theta)
 
     return (
-        GF**2
-        * mx**3
-        * z**2
-        * np.sqrt(np.clip((1 - z) * (1 - 4 * x**2 - z), 0.0, None))
+        -2
+        * u**2
+        * GF**2
         * (
-            3
-            - 5 * z
-            + 2 * x**2 * z
-            + 2 * z**2
-            + 4 * SW**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
-            - 8 * SW**4 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
-            + 4 * CW**4 * (3 + (-5 + 2 * x**2) * z + 2 * z**2)
-            - 4
-            * CW**2
-            * (
-                3
-                - 5 * z
-                + 2 * x**2 * z
-                + 2 * z**2
-                + 2 * SW**2 * (1 + 2 * x**2 - z) * (-3 + 2 * z)
-            )
+            2 * mf**4 * (1 - 4 * SW**2 + 8 * SW**4)
+            + 2 * mf**2 * (mx**2 - s - 2 * (1 - 4 * SW**2 + 8 * SW**4) * t)
+            + (1 - 4 * SW**2 + 8 * SW**4)
+            * (s**2 + 2 * s * t + 2 * t**2 - mx**2 * (s + 2 * t))
         )
-        * np.sin(2 * model.theta) ** 2
-    ) / (768.0 * CW**4 * np.pi**3 * (-1 + z) ** 2)
+    )
 
 
 def _width_v_f_f(model: SingleRhNeutrinoModel, mf, nc, c1f, c2f):
@@ -376,114 +424,323 @@ def _width_v_f_f(model: SingleRhNeutrinoModel, mf, nc, c1f, c2f):
     return pre * (c1f * t1 + 4 * c2f * t2)
 
 
-def _width_v_l_l(model: SingleRhNeutrinoModel, i, j):
+# ---- N -> v + l + l --------------------------------------------------------
+# Case where all particles belong to the same generation.
+
+
+def _msqrd_v_l_l(s, t, model: SingleRhNeutrinoModel, ml: float):
+    r"""Squared matrix element for N -> v + l + l, where all leptons have the
+    same generation as the RHN.
+    """
+    mx = model.mx
+    u = 0.5 * np.tan(2 * model.theta)
+    return (
+        -2
+        * u**2
+        * GF**2
+        * (
+            2 * ml**4 * (1 + 4 * SW**2 + 8 * SW**4)
+            + 2 * ml**2 * (mx**2 - s - 2 * (1 + 4 * SW**2 + 8 * SW**4) * t)
+            + (1 + 4 * SW**2 + 8 * SW**4)
+            * (s**2 + 2 * s * t + 2 * t**2 - mx**2 * (s + 2 * t))
+        )
+    )
+
+
+def _width_v_l_l(model: SingleRhNeutrinoModel, genl: Generation):
     """Partial decay width into a neutrino and two charged leptons."""
+
     sw = parameters.sin_theta_weak
-    if i == j:
+    if model.gen == genl:
         c1f = 0.25 * (1 + 4 * sw**2 + 8 * sw**4)
         c2f = 0.5 * sw**2 * (2 * sw**2 + 1)
     else:
         c1f = 0.25 * (1 - 4 * sw**2 + 8 * sw**4)
         c2f = 0.5 * sw**2 * (2 * sw**2 - 1)
 
-    if j == 1:
-        ml = parameters.electron_mass
-    elif j == 2:
-        ml = parameters.muon_mass
-    elif j == 3:
-        ml = parameters.tau_mass
-    else:
-        raise ValueError(f"Invalid value j = {j}. Must be 1, 2, or 3.")
-
+    ml = _lepton_masses[genl]
     return _width_v_f_f(model, ml, 1.0, c1f, c2f)
 
 
-def width_v_v_v(model: SingleRhNeutrinoModel, i: int, j: int):
-    """Partial decay width into three neutrinos."""
-    mx = model.mx
-    u = 0.5 * np.tan(2 * model.theta)
-    w = parameters.GF**2 * mx**5 / (768 * np.pi**3) * u**2
-
-    if i == j:
-        w = 2 * w
-
-    return w
+# ---- Remaining implementation using the above -------------------------------
 
 
-# ============================================================================
-# ---- N -> l + u + d -----------------------------------------------------
-# ============================================================================
+def _make_msqrd_and_masses_v_l_l(
+    model: SingleRhNeutrinoModel, genv: Generation, genl1: Generation, genl2: Generation
+):
+    r"""Construct the matrix element function and a tuple of the masses given the
+    final state generations.
+    """
+
+    genn = model.gen
+    ml1 = _lepton_masses[genl1]
+    ml2 = _lepton_masses[genl2]
+
+    if genn == genv == genl1 == genl2:
+        masses = (0.0, ml1, ml1)
+
+        def msqrd(s, t):
+            return _msqrd_v_l_l(s, t, model, ml1)
+
+    elif (genn == genv) and (genl1 == genl2):
+        masses = (0.0, ml1, ml1)
+
+        def msqrd(s, t):
+            return _msqrd_v_f_f(s, t, model, ml1)
+
+    elif (genn == genl1) and (genv == genl2):
+        mu, md, ml = 0.0, ml2, ml1
+        masses = (mu, md, ml)
+
+        def msqrd(s, t):
+            return _msqrd_l_u_d(s, t, model, mu, md, ml, 1.0)
+
+    elif (genn == genl2) and (genv == genl1):
+        mu, md, ml = 0.0, ml1, ml2
+        masses = (mu, md, ml)
+
+        def msqrd(s, t):
+            return _msqrd_l_u_d(s, t, model, mu, md, ml, 1.0)
+
+    else:
+        masses = (0.0, ml1, ml2)
+
+        def msqrd(s, t):
+            return np.zeros_like(s)
+
+    return msqrd, masses
 
 
-def _width_l_u_d(model: SingleRhNeutrinoModel, nw, ml, mu, md):
-    mx = model.mx
+def energy_distributions_v_l_l(
+    model: SingleRhNeutrinoModel,
+    genv: Generation,
+    genl1: Generation,
+    genl2: Generation,
+    nbins: int,
+    method: str = "quad",
+):
+    """Generate the energy distributions of the final states from N -> v + l + l.
 
-    if mx < ml + mu + md:
-        return 0.0
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generation of the final state left-handed neutrino.
+    genl1, genl2: Generation
+        Generations of the final state charged leptons.
+    nbins: int
+        Number of bins used to construct the distributions.
+    method: str = "quad"
+        Method used to integrate the squared matrix element.
 
-    u = 0.5 * np.tan(2 * model.theta)
-
-    pre = nw * parameters.GF**2 * mx**5 / (192 * np.pi**3) * u**2
-    xl = ml / mx
-    xu = mu / mx
-    xd = md / mx
-
-    def integrand(x):
-        return (
-            1.0
-            / x
-            * (x - xl**2 - xd**2)
-            * (1 + xu**2 - x)
-            * np.sqrt(kallen_lambda(x, xl**2, xd**2) * kallen_lambda(1, x, xu**2))
-        )
-
-    lb = (xd + xl) ** 2
-    ub = (1 - xu) ** 2
-
-    return pre * integrate.quad(integrand, lb, ub)[0]
+    Returns
+    -------
+    dnde_v, dnde_l1, dnde_l2: PhaseSpaceDistribution1D
+        The energy distributions of the final states.
+    """
+    msqrd, masses = _make_msqrd_and_masses_v_l_l(model, genv, genl1, genl2)
+    tb = ThreeBody(model.mx, masses, msqrd=msqrd)
+    return tb.energy_distributions(nbins=nbins, method=method)
 
 
-def _width_l_v_l(model: SingleRhNeutrinoModel, i, j):
-    ml = _lepton_masses[i - 1]
-    nw = 1.0
+def invariant_mass_distributions_v_l_l(
+    model: SingleRhNeutrinoModel,
+    genv: Generation,
+    genl1: Generation,
+    genl2: Generation,
+    nbins: int,
+    method: str = "quad",
+):
+    r"""Generate the invariant-mass distributions of the final states
+    from N -> v + l + l.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generation of the final state left-handed neutrino.
+    genl1, genl2: Generation
+        Generations of the final state charged leptons.
+    nbins: int
+        Number of bins used to construct the distributions.
+    method: str = "quad"
+        Method used to integrate the squared matrix element.
+
+    Returns
+    -------
+    dists: Dict[Tuple[int,int], PhaseSpaceDistribution1D]
+        Dictionary containing the invariant-mass distributions of each pair of
+        final state particles.
+    """
+    msqrd, masses = _make_msqrd_and_masses_v_l_l(model, genv, genl1, genl2)
+    tb = ThreeBody(model.mx, masses, msqrd=msqrd)
+    return tb.invariant_mass_distributions(nbins=nbins, method=method)
+
+
+def width_v_l_l(
+    model: SingleRhNeutrinoModel, genv: Generation, genl1: Generation, genl2: Generation
+):
+    r"""Partial decay width into a neutrino and two charged leptons.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generation of the final state left-handed neutrino.
+    genl1, genl2: Generation
+        Generations of the final state charged leptons.
+
+    Returns
+    -------
+    pw: float
+        Partial width for N -> v + l + l.
+    """
+    genn = model.gen
+
+    if genn == genv:
+        return _width_v_l_l(model, genl1)
+
     mu = 0.0
-    md = _lepton_masses[j - 1]
-    return _width_l_u_d(model, nw, ml, mu, md)
+    md = _lepton_masses[genl2]
+    ml = _lepton_masses[genl1]
 
+    if (genn == genl1) and (genv == genl2):
+        return _width_l_u_d(model, mu, md, ml, 1.0)
 
-def width_v_l_l(model: SingleRhNeutrinoModel, i, j, k):
-    """Partial decay width into a neutrino and two charged leptons."""
-    gn = _flavor_gen[model.flavor]
-
-    if gn == i:
-        if j == k:
-            return _width_v_l_l(model, i, j)
-        return 0.0
-
-    if gn == j:
-        if i == k:
-            return _width_l_v_l(model, j, k)
-        return 0.0
-
-    if gn == k:
-        if i == j:
-            return _width_l_v_l(model, k, j)
-        return 0.0
+    if (genn == genl2) and (genv == genl1):
+        md, ml = ml, md
+        return _width_l_u_d(model, mu, md, ml, 1.0)
 
     return 0.0
 
 
 # ============================================================================
-# ---- N -> l + u + d -----------------------------------------------------
+# ---- N -> nu + nu + nu -----------------------------------------------------
+# ============================================================================
+
+
+def msqrd_v_v_v(s, t, model: SingleRhNeutrinoModel, gen: Generation):
+    mx = model.mx
+    u = 0.5 * np.tan(2 * model.theta)
+    pre = 2.0 if gen == model.gen else 1.0
+    return -pre * 16 * GF**2 * (s**2 + s * t + t**2 - mx**2 * (s + t)) * u
+
+
+def energy_distributions_v_v_v(
+    model: SingleRhNeutrinoModel,
+    genv: Generation,
+    nbins: int,
+):
+    r"""Generate the energy distributions of the final states
+    from N -> v + v + v.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generations of the final state neutrinos 2 and 3. Generation of the
+        first neutrino is assumed to be equal to the generation of the RHN.
+    nbins: int
+        Number of bins used to construct the distributions.
+
+    Returns
+    -------
+    dists: Dict[Tuple[int,int], PhaseSpaceDistribution1D]
+        Dictionary containing the invariant-mass distributions of each pair of
+        final state particles.
+    """
+
+    def msqrd(s, t):
+        return msqrd_v_v_v(s, t, model, genv)
+
+    tb = ThreeBody(model.mx, (0, 0, 0), msqrd=msqrd)
+    return tb.energy_distributions(nbins=nbins)
+
+
+def invariant_mass_distributions_v_v_v(
+    model: SingleRhNeutrinoModel,
+    genv: Generation,
+    nbins: int,
+):
+    r"""Generate the invariant-mass distributions of the final states
+    from N -> v + l + l.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generations of the final state neutrinos 2 and 3. Generation of the
+        first neutrino is assumed to be equal to the generation of the RHN.
+    nbins: int
+        Number of bins used to construct the distributions.
+
+    Returns
+    -------
+    dists: Dict[Tuple[int,int], PhaseSpaceDistribution1D]
+        Dictionary containing the invariant-mass distributions of each pair of
+        final state particles.
+    """
+
+    def msqrd(s, t):
+        return msqrd_v_v_v(s, t, model, genv)
+
+    tb = ThreeBody(model.mx, (0, 0, 0), msqrd=msqrd)
+    return tb.invariant_mass_distributions(nbins=nbins)
+
+
+def width_v_v_v(model: SingleRhNeutrinoModel, genv: Generation):
+    r"""Compute the partial width for N -> v + v + v.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    genv: Generation
+        Generations of the final state neutrinos 2 and 3. Generation of the
+        first neutrino is assumed to be equal to the generation of the RHN.
+
+    Returns
+    -------
+    pw: float
+        The partial width for N -> v + v + v.
+    """
+    mx = model.mx
+    u = 0.5 * np.tan(2 * model.theta)
+    w = parameters.GF**2 * mx**5 / (768 * np.pi**3) * u**2
+    pre = 2 if genv == model.gen else 1.0
+    return pre * w
+
+
+# ============================================================================
+# ---- N -> v + a ------------------------------------------------------------
 # ============================================================================
 
 
 def width_v_a(model: SingleRhNeutrinoModel) -> float:
-    return (
-        9
-        * parameters.alpha_em
-        * parameters.GF**2
-        / (1024 * np.pi**4)
-        * model.mx**5
-        * np.sin(2 * model.theta) ** 2
-    )
+    r"""Compute the partial width for the decay of a RHN into a left-handed
+    neutrin and a photon N -> v + a.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+
+    Returns
+    -------
+    pw: float
+        The partial width for N -> v + a.
+    """
+    u = 0.5 * np.tan(2 * model.theta)
+    return 9 * ALPHA_EM * GF**2 / (256 * np.pi**4) * model.mx**5 * u**2

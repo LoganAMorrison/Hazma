@@ -276,4 +276,6 @@ class RHNeutrino(SingleRhNeutrinoModel, TheoryDec):
         function that is positive when the constraint is satisfied and negative
         when it is not.
         """
-        return {}
+        raise NotImplementedError(
+            "Constraints have not been implemented for the RH-neutrino model."
+        )
