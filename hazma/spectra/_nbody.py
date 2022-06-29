@@ -23,6 +23,16 @@ from .altarelli_parisi import (
 
 MSqrd = Union[Callable[[Any], Any], Callable[[Any, Any], Any]]
 
+# Currently implemented backend integrators
+_INTEGRATORS = ["quad", "trapz", "simps", "rambo"]
+
+
+def _check_integrator(integrator: str):
+    assert integrator in _INTEGRATORS, (
+        f"Invalid value for 'three_body_integrator': {integrator}."
+        f"Use one of the following: [{','.join(_INTEGRATORS)}]."
+    )
+
 
 def _dnde_zero(product_energies, _):
     return np.zeros_like(product_energies)
@@ -37,6 +47,8 @@ def _dnde_zero_nu(product_energies, _, flavor: Optional[str] = None):
 def _make_fsr(mass, charge, scalar):
     ap = _ap_scalar if scalar else _ap_fermion
 
+    # Our invariant mass distributions are distributions in sqrt(s) rather than
+    # s. The AP functions take in `s`, so we wrap the function to convert.
     def fsr(energies, sqrts):
         return ap(energies, sqrts**2, mass=mass, charge=charge)
 
@@ -186,10 +198,7 @@ def _make_energy_distributions(
     dists: List[PhaseSpaceDistribution1D]
         List containing the energy distributions of the final-state particles.
     """
-    assert three_body_integrator in ["quad", "trapz", "simps", "rambo"], (
-        f"Invalid value for 'three_body_integrator': {three_body_integrator}."
-        "Use 'quad', 'trapz', 'simps', or 'rambo'."
-    )
+    _check_integrator(three_body_integrator)
 
     masses = _get_masses(final_states)
     if len(final_states) == 3 and three_body_integrator in ["quad", "trapz", "simps"]:
@@ -232,10 +241,7 @@ def _make_invariant_mass_distributions(
         Dictionary containing the distributions. They keys represent the pair
         the distribution corresponds to.
     """
-    assert three_body_integrator in ["quad", "trapz", "simps", "rambo"], (
-        f"Invalid value for 'three_body_integrator': {three_body_integrator}."
-        "Use 'quad', 'trapz', 'simps', or 'rambo'."
-    )
+    _check_integrator(three_body_integrator)
 
     masses = _get_masses(final_states)
 
@@ -433,9 +439,9 @@ def _dnde_two_body(
 
     if product == "photon" and include_fsr:
         if s1 in dnde_fsr:
-            dnde += dnde_fsr[s1](product_energies, cme**2)
+            dnde += dnde_fsr[s1](product_energies, cme)
         if s2 in dnde_fsr:
-            dnde += dnde_fsr[s2](product_energies, cme**2)
+            dnde += dnde_fsr[s2](product_energies, cme)
 
     return dnde
 
