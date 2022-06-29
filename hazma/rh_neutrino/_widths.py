@@ -1,6 +1,6 @@
 """Partial decay widths of a RH-neutrino.
 """
-from typing import Tuple
+from typing import Tuple, NamedTuple
 
 import numpy as np
 from scipy import integrate
@@ -19,14 +19,38 @@ _lepton_masses = [
 ]
 
 ALPHA_EM = parameters.alpha_em
-MPI = parameters.charged_pion_mass
-MPI0 = parameters.neutral_pion_mass
 GF = parameters.GF
 VUD = parameters.Vud
 SW = parameters.sin_theta_weak
 CW = parameters.cos_theta_weak
 GVUU = 2.0 / 3.0
 GVDD = -1.0 / 3.0
+
+MPI = parameters.charged_pion_mass
+MPI0 = parameters.neutral_pion_mass
+MRHO = parameters.rho_mass
+MOMEGA = parameters.omega_mass
+MPHI = parameters.phi_mass
+
+
+# See arXiv:1805.08567
+_neutrino_vector_meson_constants = {
+    "rho": dict(
+        g=0.162e6,  # MeV^2
+    ),
+    "rho0": dict(
+        g=0.162e6,  # MeV^2
+        k=1.0 - 2 * SW**2,
+    ),
+    "omega": dict(
+        g=0.153e6,  # MeV^2
+        k=4 / 3.0 * SW**2,
+    ),
+    "phi": dict(
+        g=0.234e6,  # MeV^2
+        k=4 / 3.0 * SW**2 - 1,
+    ),
+}
 
 
 # ============================================================================
@@ -88,29 +112,34 @@ def _width_l_hp(model: SingleRhNeutrinoModel, ml, mh, fh, ckm):
     )
 
 
-def width_l_pi(model: SingleRhNeutrinoModel, ml):
+def width_l_pi(model: SingleRhNeutrinoModel):
     """Partial decay width into a lepton and charged pion."""
     mh = parameters.charged_pion_mass
     fh = parameters.fpi
     ckm = parameters.Vud
+    ml = _lepton_masses[model.gen]
     return _width_l_hp(model, ml, mh, fh, ckm)
 
 
-def width_l_k(model: SingleRhNeutrinoModel, ml):
+def width_l_k(model: SingleRhNeutrinoModel):
     """Partial decay width into a lepton and charged kaon."""
     mh = parameters.charged_kaon_mass
     fh = parameters.fk
     ckm = parameters.Vus
+    ml = _lepton_masses[model.gen]
     return _width_l_hp(model, ml, mh, fh, ckm)
 
 
 # ============================================================================
-# ---- N -> nu + charged-vector-meson ----------------------------------------
+# ---- N -> ell + charged-vector-meson ---------------------------------------
 # ============================================================================
 
 
-def width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
+def _width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     mx = model.mx
+    if mx < mh + ml:
+        return 0.0
+
     xh = mh / mx
     xl = ml / mx
     u = 0.5 * np.tan(2 * model.theta)
@@ -131,13 +160,58 @@ def width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     )
 
 
-def width_v_hv(model: SingleRhNeutrinoModel, mh, kh, gr):
+def width_l_rho(model: SingleRhNeutrinoModel):
+    r"""Compute the partial width for the decay of a right-handed neutrino into
+    a charged lepton and charged rho.
+    """
+    ml = _lepton_masses[model.gen]
+    params = _neutrino_vector_meson_constants["rho"]
+    g = params["g"]
+    return _width_ell_hv(model, ml, MRHO, g, abs(VUD))
+
+
+# ============================================================================
+# ---- N -> nu + neutral-vector-meson ----------------------------------------
+# ============================================================================
+
+
+def _width_v_hv(model: SingleRhNeutrinoModel, mh, kh, gr):
     mx = model.mx
+    if mx < mh:
+        return 0.0
+
     xh = mh / mx
     u = 0.5 * np.tan(2 * model.theta)
 
-    pre = (parameters.GF**2 * kh * gr * u / mh) ** 2 * mx**3 / (32 * np.pi)
+    pre = (parameters.GF * kh * gr * u / mh) ** 2 * mx**3 / (32 * np.pi)
     return pre * (1 + 2 * xh**2) * (1 - xh**2) ** 2
+
+
+def width_v_rho(model: SingleRhNeutrinoModel):
+    r"""Compute the partial width for the decay of a right-handed neutrino into
+    a neutrino and rho.
+    """
+    params = _neutrino_vector_meson_constants["rho0"]
+    k, g = params["k"], params["g"]
+    return _width_v_hv(model, MRHO, k, g)
+
+
+def width_v_omega(model: SingleRhNeutrinoModel):
+    r"""Compute the partial width for the decay of a right-handed neutrino into
+    a neutrino and omega.
+    """
+    params = _neutrino_vector_meson_constants["omega"]
+    k, g = params["k"], params["g"]
+    return _width_v_hv(model, MOMEGA, k, g)
+
+
+def width_v_phi(model: SingleRhNeutrinoModel):
+    r"""Compute the partial width for the decay of a right-handed neutrino into
+    a neutrino and phi.
+    """
+    params = _neutrino_vector_meson_constants["phi"]
+    k, g = params["k"], params["g"]
+    return _width_v_hv(model, MPHI, k, g)
 
 
 # ============================================================================
