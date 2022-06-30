@@ -130,6 +130,8 @@ standard_model_masses: Dict[str, float] = {
     "rho0": rho_mass,
     "omega": omega_mass,
     "phi": phi_mass,
+    "photon": 0.0,
+    "a": 0.0,
 }
 
 # ==============================================================================
