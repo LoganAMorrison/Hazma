@@ -1031,7 +1031,7 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         self,
         galactic_amplitude: float = 0.013,
         galactic_power_law_index: float = 1.8,
-        galactic_exponential_cutoff: float = 20.0,
+        galactic_exponential_cutoff: float = 2.0,
         galactic_exponential_index: float = 2.0,
         extra_galactic_amplitude: float = 0.004135,
         extra_galactic_power_law_index: float = 2.8956,
@@ -1047,7 +1047,7 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
             Default is 1.8.
         galactic_exponential_cutoff: float
             Exponential cutoff energy of the Galactic astrophysical background.
-            Default is 20.0 [MeV].
+            Default is 2.0 [MeV].
         galactic_exponential_index: float
             Exponential power-law index of the Galactic astrophysical background.
             Default is 2.0.
