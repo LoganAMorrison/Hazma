@@ -1,6 +1,6 @@
 """Partial decay widths of a RH-neutrino.
 """
-from typing import Tuple, NamedTuple
+from typing import Optional, Tuple, NamedTuple
 
 import numpy as np
 from scipy import integrate
@@ -51,6 +51,27 @@ _neutrino_vector_meson_constants = {
         k=4 / 3.0 * SW**2 - 1,
     ),
 }
+
+
+def _get_quad_kwargs(**kwargs):
+    quad_keys = [
+        "args",
+        "full_output",
+        "epsabs",
+        "epsrel",
+        "limit",
+        "points",
+        "weight",
+        "wvar",
+        "wopts",
+        "maxp1",
+        "limlst",
+    ]
+    quad_kwargs = {}
+    for key in quad_keys:
+        if kwargs.get(key) is not None:
+            quad_kwargs[key] = kwargs[key]
+    return quad_kwargs
 
 
 # ============================================================================
@@ -147,7 +168,7 @@ def _width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     pre = (
         u**2
         * parameters.GF**2
-        * ckm**2
+        * abs(ckm) ** 2
         * gh**2
         * mx**3
         / (16 * np.pi * mh**2)
@@ -167,7 +188,7 @@ def width_l_rho(model: SingleRhNeutrinoModel):
     ml = _lepton_masses[model.gen]
     params = _neutrino_vector_meson_constants["rho"]
     g = params["g"]
-    return _width_ell_hv(model, ml, MRHO, g, abs(VUD))
+    return _width_ell_hv(model, ml, MRHO, g, VUD)
 
 
 # ============================================================================
@@ -282,8 +303,24 @@ def invariant_mass_distributions_l_pi0_pi(
     return tb.invariant_mass_distributions(nbins=nbins, method=method)
 
 
-def width_l_pi0_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi):
-    """Partial decay width into a lepton, a charged pion and a neutral pion."""
+def width_l_pi0_pi(
+    model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi, **kwargs
+):
+    r"""Partial decay width into a lepton, a charged pion and a neutral pion.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    form_factor: VectorFormFactorPiPi
+        Pion electromagnetic form-factor.
+
+    Returns
+    -------
+    width: float
+        Partial width into a lepton, charged pion and neutral pion.
+    """
     mx = model.mx
     ml = _lepton_masses[model.gen]
     if mx < ml + 2 * MPI:
@@ -301,7 +338,10 @@ def width_l_pi0_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPi
         return poly * np.abs(ff) ** 2 * p * beta
 
     pre = u**2 * np.abs(VUD) ** 2 * GF**2 * mx**3 / (384.0 * np.pi**3)
-    return pre * integrate.quad(integrand, 4 * MPI**2, (mx - ml) ** 2)[0]
+    quad_kwargs = _get_quad_kwargs(**kwargs)
+    return (
+        pre * integrate.quad(integrand, 4 * MPI**2, (mx - ml) ** 2, **quad_kwargs)[0]
+    )
 
 
 # ============================================================================
@@ -367,9 +407,28 @@ def invariant_mass_distributions_v_pi_pi(
     return tb.invariant_mass_distributions(nbins=nbins, method=method)
 
 
-def width_v_pi_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi):
-    """Partial decay width into a neutrino and two charged pions."""
+def width_v_pi_pi(
+    model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiPi, **kwargs
+):
+    """Partial decay width into a neutrino and two charged pions.
+
+    Parameters
+    ----------
+    model: SingleRhNeutrinoModel
+        Object containing the model parameters. Should implement the
+        `SingleRhNeutrinoModel` protocol.
+    form_factor: VectorFormFactorPiPi
+        Pion electromagnetic form-factor.
+
+    Returns
+    -------
+    width: float
+        Partial width into a neutrino and two charged pions.
+    """
     mx = model.mx
+    if mx < 2.0 * MPI:
+        return 0.0
+
     u = 0.5 * np.tan(2 * model.theta)
 
     def integrand(s):
@@ -380,7 +439,8 @@ def width_v_pi_pi(model: SingleRhNeutrinoModel, form_factor: VectorFormFactorPiP
         return np.abs(ff) ** 2 * beta * poly
 
     pre = u**2 * GF**2 * mx**3 * (1 - 2 * SW**2) ** 2 / (768 * np.pi**3)
-    return pre * integrate.quad(integrand, 4 * MPI**2, mx**2)[0]
+    quad_kwargs = _get_quad_kwargs(**kwargs)
+    return pre * integrate.quad(integrand, 4 * MPI**2, mx**2, **quad_kwargs)[0]
 
 
 # ============================================================================
@@ -411,7 +471,7 @@ def _msqrd_l_u_d(s, t, model: SingleRhNeutrinoModel, mu, md, ml, ckm):
     )
 
 
-def _width_l_u_d(model: SingleRhNeutrinoModel, mu, md, ml, nw):
+def _width_l_u_d(model: SingleRhNeutrinoModel, mu, md, ml, nw, **kwargs):
     r"""Partial width for N -> l + u + d, where u = (nu, up-type-quark)
     and d=(lep,down-type-quark). If u = nu and d=lep, they must have a different
     generation than l and N.
@@ -440,7 +500,8 @@ def _width_l_u_d(model: SingleRhNeutrinoModel, mu, md, ml, nw):
     lb = (xd + xl) ** 2
     ub = (1.0 - xu) ** 2
 
-    return pre * integrate.quad(integrand, lb, ub)[0]
+    quad_kwargs = _get_quad_kwargs(**kwargs)
+    return pre * integrate.quad(integrand, lb, ub, **quad_kwargs)[0]
 
 
 # ---- N -> v + f + f --------------------------------------------------------

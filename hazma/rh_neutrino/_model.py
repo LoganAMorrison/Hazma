@@ -2,7 +2,7 @@
 Core implementation of the RH-Neutrino model.
 """
 
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Sequence, Union
 
 from hazma.theory import TheoryDec
 from hazma.parameters import standard_model_masses as sm_masses
@@ -134,6 +134,16 @@ class RHNeutrino(SingleRhNeutrinoModel, TheoryDec):
         r"""Returns a list of the availible final states."""
         return list(self._config.keys())
 
+    def _decay_width(self, final_state: str) -> float:
+        """
+        Decay width into each final state.
+        """
+        if not final_state in self._config:
+            raise KeyError(f"Invalid final_state {final_state}.")
+
+        pre = 1.0 if self._config[final_state].self_conjugate else 2.0
+        return pre * self._config[final_state].width()
+
     def _decay_widths(self) -> Dict[str, float]:
         """
         Decay width into each final state.
@@ -147,6 +157,39 @@ class RHNeutrino(SingleRhNeutrinoModel, TheoryDec):
             for key, val in self._config.items()
         }
 
+    def decay_width(self, final_states: Union[str, Sequence[str]]):
+        r"""Compute a partial decay width of the right-handed neutrino into one
+        or more specified final states.
+
+        Parameters
+        ----------
+        final_states: str or seq of strs
+            All final states to compute partial decay widths for.
+
+        Returns
+        -------
+        partial_widths: dict[str, float]
+            Dictionary of the partial decay widths.
+
+        Raises
+        ------
+        KeyError
+            If one of the final states doesn't exist, a KeyError is raised.
+        """
+        return {fs: self._decay_width(fs) for fs in final_states}
+
+    def decay_widths(self) -> Dict[str, float]:
+        r"""Compute the all decay widths of the right-handed neutrino.
+
+        Returns
+        -------
+        widths: dict[str, float]
+            Dictionary containing all the partial decay widths and the total decay width.
+        """
+        widths = {fs: width for fs, width in self._decay_widths().items()}
+        widths["total"] = sum(widths.values())
+        return widths
+
     def __spectrum_funcs(self, product: str) -> Dict[str, Callable]:
         """
         Gets a function taking a photon energy and returning the continuum
@@ -158,18 +201,18 @@ class RHNeutrino(SingleRhNeutrinoModel, TheoryDec):
         def pre(self_conjugate):
             return 1.0 if self_conjugate else conjfactor
 
-        def mk_dnde(dnde, self_conjugate):
-            def new_dnde(energies):
+        def mk_dnde(key):
+            dnde = self._config[key].dnde
+            self_conjugate = self._config[key].self_conjugate
+
+            def new_dnde(energies, **kwargs):
                 return pre(self_conjugate) * dnde(
-                    product_energies=energies, product=product
+                    product_energies=energies, product=product, **kwargs
                 )
 
             return new_dnde
 
-        return {
-            key: mk_dnde(val.dnde, val.self_conjugate)
-            for key, val in self._config.items()
-        }
+        return {key: mk_dnde(key) for key in self._config.keys()}
 
     def _spectrum_funcs(self) -> Dict[str, Callable]:
         """

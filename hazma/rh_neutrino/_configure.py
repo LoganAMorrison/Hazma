@@ -11,7 +11,6 @@ from ._proto import SingleRhNeutrinoModel, Generation
 from . import _spectra as rhn_spectra
 from . import _widths as rhn_widths
 from ._utils import three_lepton_fs_generations
-from ._utils import three_lepton_fs_strings
 
 _LEP_STRS = ["e", "mu", "tau"]
 _NU_STRS = ["ve", "vm", "vt"]
@@ -148,13 +147,17 @@ def configure(
     )
     fns[f"{vv} pi pi"] = RHNFinalStateAttrs(
         dnde=mk_dnde_3body(rhn_spectra.dnde_v_pi_pi, form_factor=ff),
-        width=mk_width_fn(rhn_widths.width_v_pi_pi, form_factor=ff),
+        width=mk_width_fn(
+            rhn_widths.width_v_pi_pi, form_factor=ff, epsabs=0.0, epsrel=1e-3
+        ),
         self_conjugate=True,
         masses=(0.0, sm_masses["pi"], sm_masses["pi"]),
     )
     fns[f"{ll} pi pi0"] = RHNFinalStateAttrs(
         dnde=mk_dnde_3body(rhn_spectra.dnde_l_pi0_pi, form_factor=ff),
-        width=mk_width_fn(rhn_widths.width_l_pi0_pi, form_factor=ff),
+        width=mk_width_fn(
+            rhn_widths.width_l_pi0_pi, form_factor=ff, epsabs=0.0, epsrel=1e-3
+        ),
         self_conjugate=False,
         masses=(sm_masses[ll], sm_masses["pi"], sm_masses["pi0"]),
     )
