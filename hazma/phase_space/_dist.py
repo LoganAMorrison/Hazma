@@ -1,3 +1,7 @@
+"""
+Implementation of phase-space distribution objects.
+"""
+
 from typing import Tuple, Callable
 import logging
 
@@ -10,17 +14,41 @@ from ._base import AbstractPhaseSpaceDistribution
 
 
 def normalize_distribution(probabilities, edges):
+    """Normalize a probability density function.
+
+    Parameters
+    ----------
+    probabilities: array-like
+        The probabilities at each bin center.
+    edges:
+        The bin edges.
+
+    Returns
+    -------
+    normalized: ndarray
+        The normalized probabilities.
+    """
     norm = np.sum([p * (edges[i + 1] - edges[i]) for i, p in enumerate(probabilities)])
     if norm <= 0.0:
         if np.min(probabilities) < 0.0:
-            logging.warning(f"Negative probabilities encountered: {probabilities}")
+            logging.warning("Negative probabilities encountered: %s", probabilities)
             return np.ones_like(probabilities) * np.nan
         return probabilities
     return probabilities / norm
 
 
 class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
+    r"""Class for storing 1D probability distributions."""
+
     def __init__(self, x, y):
+        """
+        Parameters
+        ----------
+        x: array-like
+            Independent variables.
+        y: array-like
+            The values of the distribution.
+        """
         shape_x = np.shape(x)
         shape_y = np.shape(y)
 
@@ -106,7 +134,7 @@ class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
         methods = {
             "trapz": lambda f: self._expect_fixed(f, np.trapz),
             "simps": lambda f: self._expect_fixed(f, integrate.simps),
-            "quad": lambda f: self._expect_quad(f),
+            "quad": self._expect_quad,
         }
 
         meth = methods.get(method)
