@@ -27,6 +27,7 @@ from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import strange_quark_mass as msq
 from hazma.parameters import top_quark_mass as mtq
 from hazma.parameters import vh
+from hazma.utils import kallen_lambda
 
 # TODO
 # * 3-body phase space integration for s -> x x contribution to invisible
@@ -55,7 +56,7 @@ def width_B_k_s(self):
             * f0B**2
             * abs(hSsb) ** 2
             * self.gsff**2
-            * np.sqrt(self._lambda_ps(mB**2, mk**2, self.ms**2))
+            * np.sqrt(kallen_lambda(mB**2, mk**2, self.ms**2))
         )
     else:
         return 0.0
@@ -156,7 +157,7 @@ def width_k_pi_s(self):
             * ((mk**2 - mpi**2) / (msq - mdq)) ** 2
             * abs(hSsd) ** 2
             * self.gsff**2
-            * np.sqrt(self._lambda_ps(mk**2, mpi**2, self.ms**2))
+            * np.sqrt(kallen_lambda(mk**2, mpi**2, self.ms**2))
         )
     else:
         return 0.0
@@ -208,7 +209,7 @@ def width_kl_pi0_s(self):
             * ((mkl**2 - mpi0**2) / (msq - mdq)) ** 2
             * hSsd.imag**2
             * self.gsff**2
-            * np.sqrt(self._lambda_ps(mkl**2, mpi0**2, self.ms**2))
+            * np.sqrt(kallen_lambda(mkl**2, mpi0**2, self.ms**2))
         )
     else:
         return 0.0
