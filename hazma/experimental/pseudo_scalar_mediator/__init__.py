@@ -34,6 +34,11 @@ from hazma.hazma_errors import PreAlphaWarning
 
 import numpy as np
 
+# TODO(Logan): I don't understand the 'shifted' pion mass. We know what the pion
+# mass is from experiment. For the model to make any sense, the parameters must
+# give the correct pion mass. Seems like it would be more appropriate to enfore
+# the correct mass and fix other parameters based on this requirement.
+
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
 # since they furnish definitions of the abstract methods in Theory.
@@ -178,10 +183,10 @@ class PseudoScalarMediator(
 
         # Mixing angle between pi0 and p. Here I have assumed that the pi0 mass
         # is given by leading order chiPT.
-        self.beta = eps / (self.mp ** 2 - mpi0 ** 2)
+        self.beta = eps / (self.mp**2 - mpi0**2)
 
         # Shifted mass of neutral pion
-        mpi0Sqrd = mpi0 ** 2 - eps * self.beta
+        mpi0Sqrd = mpi0**2 - eps * self.beta
 
         if mpi0Sqrd < 0:  # mixing is way too big if this fails
             print(
@@ -198,8 +203,7 @@ class PseudoScalarMediator(
             )
 
     def compute_width_p(self):
-        """Updates the pseudoscalar's total width.
-        """
+        """Updates the pseudoscalar's total width."""
         self.width_p = self.partial_widths()["total"]
 
     def description(self):
@@ -223,8 +227,7 @@ class PseudoScalarMediator(
 
 
 class PseudoScalarMFV(PseudoScalarMediator):
-    """MFV version of the pseudoscalar model.
-    """
+    """MFV version of the pseudoscalar model."""
 
     def __init__(self, mx, mp, gpxx, gpup, gpdown, gpll):
         self._gpup = gpup
