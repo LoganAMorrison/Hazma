@@ -19,40 +19,9 @@ def _msqrd_flat(z):
     return np.zeros_like(z)
 
 
-def _z_to_momenta(z, q: float, masses: Tuple[float, float]):
-    r"""Convert the angle into 4-momenta of the final state particles. We align
-    the particles such that the cosine of the angle they make with the z-axis is
-    `z`.
-    """
-    m1, m2 = masses
-
-    p = np.sqrt(kallen_lambda(q**2, m1**2, m2**2)) / (2 * q)
-
-    e1 = np.sqrt(p**2 + m1**2)
-    e2 = np.sqrt(p**2 + m2**2)
-    sz = np.sqrt(1 - z**2)
-
-    zs = np.zeros_like(z)
-    return np.array(
-        [
-            # p1, p2
-            [e1, e2],
-            [p * sz, -p * sz],
-            [zs, zs],
-            [p * z, -p * z],
-        ]
-    )
-
-
-def _convert_msqrd_to_z_signature(msqrd, q: float, masses: Tuple[float, float]):
-    def new_msqrd(z):
-        momenta = _z_to_momenta(z, q, masses)
-        return msqrd(momenta)
-
-    return new_msqrd
-
-
 class TwoBody(AbstractPhaseSpaceIntegrator):
+    r"""Class for working with 2-body phase space."""
+
     def __init__(
         self,
         cme: float,
@@ -170,7 +139,7 @@ class TwoBody(AbstractPhaseSpaceIntegrator):
         integral, error = integrate.quad(self.__msqrd, -1.0, 1.0)
         return integral * pre, error * pre
 
-    def integrate(self):
+    def integrate(self):  # pylint: disable=arguments-differ
         r"""Integrate over phase space.
 
         Returns
