@@ -10,7 +10,7 @@ from scipy.special import gamma
 
 from hazma.utils import RealOrRealArray
 
-from ._two_body import VectorFormFactorPP
+from ._two_body import VectorFormFactorPP, Couplings
 from ._utils import (
     MPI0_GEV,
     MPI_GEV,
@@ -26,7 +26,7 @@ from ._utils import (
 
 
 @dataclass
-class VectorFormFactorPiPiFitData:
+class VectorFormFactorPiPiFitData:  # pylint: disable=too-many-instance-attributes
     r"""Class for storing parameters used to compute vector form-factor into two pions.
 
     Parameters
@@ -73,7 +73,7 @@ class VectorFormFactorPiPiFitData:
         self.omega_weight = self.omega_mag * np.exp(1j * self.omega_phase)
         # set up the masses and widths of the rho resonances
         ixs = np.arange(self.n_max)
-        gam_b = np.array([val for val in gamma_generator(beta, self.n_max)])
+        gam_b = np.array(list(gamma_generator(beta, self.n_max)))
         gam_0 = gamma(beta - 0.5)
 
         self.coup = (
@@ -140,9 +140,9 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
 
         self.fsp_masses = tuple(m * 1e3 for m in self.__fsp_masses)
 
-    def __form_factor(self, *, s: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
+    def __form_factor(self, *, s: RealArray, couplings: Couplings) -> ComplexArray:
         # Convert gvuu and gvdd to iso-spin couplings
-        ci1 = gvuu - gvdd
+        ci1 = couplings[0] - couplings[1]
 
         bw = breit_wigner_gs(
             s,
@@ -178,8 +178,8 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             ff *= np.sqrt(2.0)
         return ff
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu, gvdd
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """Compute the pion-pion form factor.
 
@@ -203,18 +203,14 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         mask = qq > sum(self.__fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = self.__form_factor(
-            s=qq[mask] ** 2,
-            gvuu=gvuu,
-            gvdd=gvdd,
-        )
+        ff[mask] = self.__form_factor(s=qq[mask] ** 2, couplings=couplings)
 
         if single:
             return ff[0]
         return ff
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the pion-pion form-factor integrated over phase-space.
 
@@ -230,9 +226,11 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         iff: float
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into two pions.
 
         Parameters
@@ -249,18 +247,10 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         width: float
             Decay width of vector into two pions.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
-        self,
-        *,
-        q,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float,
+    def cross_section(  # pylint: disable=arguments-differ
+        self, *, q, mx: float, mv: float, gvxx: float, wv: float, couplings: Couplings
     ):
         r"""Compute the cross section for dark matter annihilating into two
         pions.
@@ -288,13 +278,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             Annihilation cross section into two pions.
         """
         return self._cross_section(
-            q=q,
-            mx=mx,
-            mv=mv,
-            gvxx=gvxx,
-            wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings
         )
 
 

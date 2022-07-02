@@ -1,6 +1,10 @@
+"""
+Module for describing the high-level behavior of a vector form factor.
+"""
+
 from dataclasses import dataclass, field, InitVar
 import abc
-from typing import Sequence
+from typing import Sequence, NamedTuple
 
 import numpy as np
 
@@ -55,6 +59,32 @@ class VMDAmplitudeGS:
         return np.zeros_like(s)
 
 
+class VectorFormFactorCouplings(NamedTuple):
+    r"""Named tuple to hold quark vector couplings.
+
+    Attributes
+    ----------
+    gvuu: float
+        Up-quark vector coupling.
+    gvdd: float
+        Down-quark vector coupling.
+    gvss: float
+        Strange-quark vector coupling.
+    """
+
+    gvuu: float
+    gvdd: float
+    gvss: float
+
+
+def vector_couplings_to_isospin(gvuu: float, gvdd: float, gvss: float):
+    """Convert the vector couplings to isospin couplings."""
+    ci0 = 3.0 * (gvuu + gvdd)
+    ci1 = gvuu - gvdd
+    cs = -3.0 * gvss
+    return ci0, ci1, cs
+
+
 @dataclass
 class VectorFormFactor(abc.ABC):
     """Base class for vector form factors."""
@@ -67,7 +97,7 @@ class VectorFormFactor(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def integrated_form_factor(self, *, q, **kwargs):
+    def integrated_form_factor(self, q, couplings: Sequence[float], **kwargs):
         r"""Compute the form-factor as a function of the center-of-mass energy.
 
         Notes
@@ -87,11 +117,13 @@ class VectorFormFactor(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def width(self, *, mv, **kwargs):
+    def width(self, mv, couplings: Sequence[float], **kwargs):
+        r"""Compute the partial decay width of a massive vector."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def cross_section(self, *, q, mx, mv, gvxx, wv, **kwargs):
+        r"""Compute the partial annihilation cross sectrion of dark matter."""
         raise NotImplementedError()
 
     def _width(self, *, mv, **kwargs):

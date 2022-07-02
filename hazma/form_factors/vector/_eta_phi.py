@@ -1,3 +1,7 @@
+"""
+Implementation of the eta-phi form factor.
+"""
+
 from dataclasses import InitVar, dataclass, field
 from typing import Union, overload, Tuple
 
@@ -8,7 +12,7 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
-from ._two_body import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV, Couplings
 
 META = parameters.eta_mass
 MPHI = parameters.phi_mass
@@ -103,15 +107,19 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         )
 
     @overload
-    def form_factor(self, *, q: float, gvss: float) -> complex:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: float, couplings: Couplings
+    ) -> complex:
         ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvss: float) -> ComplexArray:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
         ...
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvss: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """Compute the eta-phi vector form-factor.
 
@@ -132,15 +140,15 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         mask = qq > 1e-3 * sum(self.fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvss=gvss)
+        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvss=couplings[2])
 
         if single:
             return ff[0]
 
         return ff * 1e-3
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvss: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the eta-phi form-factor integrated over phase-space.
 
@@ -156,9 +164,11 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         iff: float
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvss=gvss)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(self, mv: RealOrRealArray, gvss: float) -> RealOrRealArray:
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and
         phi.
 
@@ -174,9 +184,9 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         width: float
             Decay width of vector into an eta and phi.
         """
-        return self._width(mv=mv, gvss=gvss)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    def cross_section(  # pylint: disable=arguments-differ
         self,
         *,
         q: RealOrRealArray,
@@ -184,7 +194,7 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         mv: float,
         gvxx: float,
         wv: float,
-        gvss: float,
+        couplings: Couplings,
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into an eta
         and phi.
@@ -215,5 +225,5 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
             mv=mv,
             gvxx=gvxx,
             wv=wv,
-            gvss=gvss,
+            couplings=couplings,
         )

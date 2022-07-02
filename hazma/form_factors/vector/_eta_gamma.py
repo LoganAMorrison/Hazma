@@ -11,7 +11,8 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import MPI_GEV, ComplexArray, RealArray
-from ._two_body import VectorFormFactorPA
+from ._two_body import VectorFormFactorPA, Couplings
+from ._base import vector_couplings_to_isospin
 
 
 @dataclass(frozen=True)
@@ -72,9 +73,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
             masses=masses, widths=widths, amps=amps, phases=phases
         )
 
-    def __form_factor(
-        self, s: RealArray, gvuu: float, gvdd: float, gvss: float
-    ) -> ComplexArray:
+    def __form_factor(self, s: RealArray, couplings: Couplings) -> ComplexArray:
         """
         Compute the form factor for V-eta-gamma at given squared center of mass
         energ(ies).
@@ -95,10 +94,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         ff: Union[float, np.ndarray]
             The form factors.
         """
-        ci0 = 3.0 * (gvuu + gvdd)
-        ci1 = gvuu - gvdd
-        cs = -3.0 * gvss
-
+        ci0, ci1, cs = vector_couplings_to_isospin(*couplings)
         c_rho_om_phi = np.array([ci1, ci0, cs, ci1, cs])
 
         ss = s[:, np.newaxis]
@@ -131,19 +127,19 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         )
 
     @overload
-    def form_factor(
-        self, *, q: float, gvuu: float, gvdd: float, gvss: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: float, couplings: Couplings
     ) -> complex:
         ...
 
     @overload
-    def form_factor(
-        self, *, q: RealArray, gvuu: float, gvdd: float, gvss: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: RealArray, couplings: Couplings
     ) -> ComplexArray:
         ...
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         r"""Compute the eta-photon form factor.
 
@@ -168,20 +164,15 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         mask = qq > 1e-3 * parameters.eta_mass
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = 1e-3 * self.__form_factor(
-            qq[mask] ** 2,
-            gvuu,
-            gvdd,
-            gvss,
-        )
+        ff[mask] = 1e-3 * self.__form_factor(qq[mask] ** 2, couplings)
 
         if single:
             return ff[0]
 
         return ff
 
-    def integrated_form_factor(
-        self, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: Union[float, RealArray], couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the eta-photon form-factor integrated over phase-space.
 
@@ -201,10 +192,10 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         iff: float or array-like
             Integrated eta-photon form-factor.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(
-        self, mv: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
+    def width(  # pylint: disable=arguments-differ
+        self, mv: Union[float, RealArray], couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and
         photon.
@@ -225,9 +216,9 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         width: float or array-like
             Decay width of vector into an eta and photon.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    def cross_section(  # pylint: disable=arguments-differ
         self,
         *,
         q: RealOrRealArray,
@@ -235,9 +226,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         mv: float,
         gvxx: float,
         wv: float,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
+        couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into an eta
         and a photon.
@@ -272,7 +261,5 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
             mv=mv,
             gvxx=gvxx,
             wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
         )

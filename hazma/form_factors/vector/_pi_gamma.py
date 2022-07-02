@@ -1,3 +1,7 @@
+"""
+Implementation of the pi-gamma form factor.
+"""
+
 from dataclasses import dataclass, field, InitVar
 from typing import Union, overload, Tuple
 
@@ -6,15 +10,16 @@ import numpy as np
 from hazma import parameters
 from hazma.utils import RealOrRealArray
 
+from ._base import vector_couplings_to_isospin
 from ._utils import ComplexArray, RealArray
-from ._two_body import VectorFormFactorPA
+from ._two_body import VectorFormFactorPA, Couplings
 from ._alpha import alpha_em
 
 MPI0 = parameters.neutral_pion_mass
 
 
 @dataclass(frozen=True)
-class VectorFormFactorPi0GammaFitData:
+class VectorFormFactorPi0GammaFitData:  # pylint: disable=too-many-instance-attributes
     """Data for the pion-photon vector form-factor."""
 
     fpi: float
@@ -75,7 +80,7 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
     width_omega: InitVar[float] = 0.00849
     width_phi: InitVar[float] = 0.004247
 
-    def __post_init__(
+    def __post_init__(  # pylint: disable=too-many-arguments
         self,
         fpi,
         amplitude0,
@@ -103,8 +108,8 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
             width_phi=width_phi,
         )
 
-    def __form_factor(
-        self, *, q: RealArray, gvuu: float, gvdd: float, gvss: float
+    def __form_factor(  # pylint: disable=too-many-locals
+        self, *, q: RealArray, couplings: Couplings
     ) -> ComplexArray:
         """
         Compute the form factor for V-gamma-pi at given squared center of mass
@@ -132,10 +137,8 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         def amp(c, m, w):
             return c / (s - m**2 + 1j * q * w)
 
-        ci0 = 3.0 * (gvuu + gvdd)
-        ci1 = gvuu - gvdd
-        cs = -3.0 * gvss
-        cd = 2 * gvuu + gvdd
+        ci0, ci1, cs = vector_couplings_to_isospin(*couplings)
+        cd = 2 * couplings[0] + couplings[1]
 
         fpi = self.fit_data.fpi
 
@@ -153,15 +156,19 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         return np.sqrt(4 * np.pi * alpha_em(s)) * form
 
     @overload
-    def form_factor(self, *, q: float, gvuu, gvdd, gvss) -> complex:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: float, couplings: Couplings
+    ) -> complex:
         ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvuu, gvdd, gvss) -> ComplexArray:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
         ...
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu, gvdd, gvss
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """Compute the pion-photon vector form factor.
 
@@ -186,20 +193,15 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         mask = qq > 1e-3 * sum(self.fsp_masses)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = self.__form_factor(
-            q=qq[mask],
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
-        )
+        ff[mask] = self.__form_factor(q=qq[mask], couplings=couplings)
 
         if single:
             return ff[0]
 
         return ff * 1e-3
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvuu, gvdd, gvss
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the pion-photon form-factor integrated over phase-space.
 
@@ -215,9 +217,11 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         iff: float
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(self, mv: RealOrRealArray, gvuu, gvdd, gvss) -> RealOrRealArray:
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a neutral
         pion and photon.
 
@@ -237,19 +241,10 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         width: float
             Decay width of vector into a pion and photon.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
-        self,
-        *,
-        q,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
+    def cross_section(  # pylint: disable=arguments-differ
+        self, *, q, mx: float, mv: float, gvxx: float, wv: float, couplings: Couplings
     ):
         r"""Compute the cross section for dark matter annihilating into a pion
         and a photon.
@@ -284,7 +279,5 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
             mv=mv,
             gvxx=gvxx,
             wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
         )

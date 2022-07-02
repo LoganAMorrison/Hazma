@@ -9,10 +9,11 @@ from typing import NamedTuple, Optional, Tuple, Union
 import numpy as np
 from scipy.special import gamma
 
-from hazma.utils import RealOrRealArray  # type:ignore
+from hazma.utils import RealOrRealArray
 
 
-from ._two_body import VectorFormFactorPP
+from ._base import vector_couplings_to_isospin
+from ._two_body import VectorFormFactorPP, Couplings
 
 from ._utils import (
     MK0_GEV,
@@ -31,6 +32,8 @@ from ._utils import (
 
 
 class VectorMesonParameters(NamedTuple):
+    """Parameters of a vector meson"""
+
     mass: RealArray
     width: RealArray
     coup: ComplexArray
@@ -102,9 +105,9 @@ def _find_beta(c0: float):
         cmin = c_0(betamin)
         cmax = c_0(betamax)
         cmid = c_0(betamid)
-        if c0 > cmin and c0 < cmid:
+        if cmin < c0 < cmid:
             betamax = betamid
-        elif c0 > cmid and c0 < cmax:
+        elif cmid < c0 < cmax:
             betamin = betamid
         elif c0 >= cmax:
             betamax *= 2.0
@@ -116,7 +119,7 @@ def _find_beta(c0: float):
     return betamid
 
 
-def _compute_masses_width_couplings(
+def _compute_masses_width_couplings(  # pylint: disable=too-many-arguments
     masses: RealArray,
     widths: RealArray,
     magnitudes: RealArray,
@@ -132,7 +135,7 @@ def _compute_masses_width_couplings(
 
     # compute the couplings
     ixs = np.arange(n_max)
-    gam_b = np.array([val for val in gamma_generator(beta, n_max)])
+    gam_b = np.array(list(gamma_generator(beta, n_max)))
     gam_0 = gamma(beta - 0.5)
 
     coup = (
@@ -186,7 +189,7 @@ def _compute_h_parameters(
 
 
 @dataclass
-class VectorFormFactorKKFitData:
+class VectorFormFactorKKFitData:  # pylint: disable=too-many-instance-attributes
     """
     Class for storing the parameters needed to compute the form factor for
     V-K-K.
@@ -223,7 +226,7 @@ class VectorFormFactorKKFitData:
     phi_masses: InitVar[Optional[RealArray]] = None
     phi_widths: InitVar[Optional[RealArray]] = None
 
-    def __post_init__(
+    def __post_init__(  # pylint: disable=too-many-locals,too-many-arguments
         self,
         rho_mag: Optional[RealArray],
         rho_phase: Optional[RealArray],
@@ -363,13 +366,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
 
         self.fit_data = VectorFormFactorKKFitData(n_max=self.n_max)
 
-    def __form_factor(
-        self,
-        s: RealArray,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
-    ) -> ComplexArray:
+    def __form_factor(self, s: RealArray, couplings: Couplings) -> ComplexArray:
         """
         Compute the form factor for the V-K-K interaction.
 
@@ -396,10 +393,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         """
         mk = self.fsp_masses[0] * 1e-3
         eta_phi = 1.055
-
-        ci0 = 3.0 * (gvuu + gvdd)
-        ci1 = gvuu - gvdd
-        cs = -3.0 * gvss
+        ci0, ci1, cs = vector_couplings_to_isospin(*couplings)
 
         # Force s into an array. This makes vectorization in the case where s is
         # an array easier.
@@ -454,8 +448,8 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
 
         return np.sum(fk, axis=1)
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float, gvss: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """Compute the kaon-kaon form factor.
 
@@ -482,19 +476,14 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         ff = np.zeros_like(qq, dtype=np.complex128)
 
         if np.any(mask):
-            ff[mask] = self.__form_factor(
-                s=qq[mask] ** 2,
-                gvuu=gvuu,
-                gvdd=gvdd,
-                gvss=gvss,
-            )
+            ff[mask] = self.__form_factor(s=qq[mask] ** 2, couplings=couplings)
 
         if single:
             return ff[0]
         return ff
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvuu: float, gvdd: float, gvss: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute kaon-kaon form-factor integrated over phase-space.
 
@@ -510,10 +499,10 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         iff: float
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(
-        self, mv: RealOrRealArray, gvuu: float, gvdd: float, gvss: float
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into two kaons.
 
@@ -533,9 +522,9 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         width: float
             Decay width of vector into two kaons.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd, gvss=gvss)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    def cross_section(  # pylint: disable=arguments-differ
         self,
         *,
         q,
@@ -543,9 +532,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         mv: float,
         gvxx: float,
         wv: float,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
+        couplings: Couplings,
     ):
         r"""Compute the cross section for dark matter annihilating into two
         kaons.
@@ -575,14 +562,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             Annihilation cross section into two kaons.
         """
         return self._cross_section(
-            q=q,
-            mx=mx,
-            mv=mv,
-            gvxx=gvxx,
-            wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings
         )
 
 

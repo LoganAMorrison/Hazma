@@ -1,12 +1,19 @@
+"""
+Base classes for two-body final state form factors.
+"""
+
 from dataclasses import dataclass
 import abc
-from typing import Tuple
+from typing import Tuple, Union, Sequence
 
 import numpy as np
 
 from hazma.phase_space._utils import two_body_phase_space_prefactor
 
 from ._base import VectorFormFactor
+from ._base import VectorFormFactorCouplings
+
+Couplings = Union[VectorFormFactorCouplings, Sequence[float]]
 
 
 @dataclass
@@ -16,11 +23,14 @@ class VectorFormFactorTwoBody(VectorFormFactor):
     fsp_masses: Tuple[float, float]
 
     @abc.abstractmethod
-    def form_factor(self, *, q, **kwargs):
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q, couplings: Couplings
+    ):
         raise NotImplementedError()
 
     @abc.abstractmethod
     def squared_lorentz_structure(self, q):
+        r"""Compute the value of the Lorentz structure of the amplitude."""
         raise NotImplementedError()
 
     def _integrated_form_factor(self, q, **kwargs):
@@ -41,9 +51,9 @@ class VectorFormFactorPP(VectorFormFactorTwoBody):
 
         J_{\mu} = -(p_{1}^{\mu} - p_{2}^{\mu}) F_{PP}(q^2)
 
-    where :math:`F_{PP}(q^2)` is the form factor, :math:`q=p_{1}+p_{2}` and :math:`p_{1}`
-    and :math:`p_{2}` the momenta of the meson and
-    photon, respectively.
+    where :math:`F_{PP}(q^2)` is the form factor, :math:`q=p_{1}+p_{2}` and
+    :math:`p_{1}` and :math:`p_{2}` the momenta of the meson and photon,
+    respectively.
     """
 
     fsp_masses: Tuple[float, float]

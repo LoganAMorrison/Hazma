@@ -1,3 +1,7 @@
+"""
+Implementation of the eta-omega form factor.
+"""
+
 from dataclasses import InitVar, dataclass, field
 from typing import Union, overload, Tuple
 
@@ -8,7 +12,8 @@ from hazma import parameters
 from hazma.utils import RealOrRealArray
 
 from ._utils import ComplexArray, RealArray, breit_wigner_fw
-from ._two_body import VectorFormFactorPV
+from ._two_body import VectorFormFactorPV, Couplings
+from ._base import vector_couplings_to_isospin
 
 META = parameters.eta_mass
 MOMEGA = parameters.omega_mass
@@ -76,11 +81,7 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         )
 
     def __form_factor(
-        self,
-        *,
-        s: Union[float, npt.NDArray[np.float64]],
-        gvuu: float,
-        gvdd: float,
+        self, *, s: Union[float, npt.NDArray[np.float64]], couplings: Couplings
     ):
         """
         Compute the V-eta-omega form-factor.
@@ -100,7 +101,7 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         """
         # NOTE: This is a rescaled-version of the form factor defined in
         # arXiv:2201.01788. (multipled by energy to make it unitless)
-        ci0 = 3 * (gvuu + gvdd)
+        ci0 = vector_couplings_to_isospin(*couplings)[0]
         return ci0 * np.sum(
             self.fit_data.amps
             * self.fit_data.phases
@@ -111,15 +112,19 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         )
 
     @overload
-    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: float, couplings: Couplings
+    ) -> complex:
         ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
         ...
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float
+    def form_factor(  # pylint: disable=arguments-differ
+        self, *, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """
         Compute the V-eta-omega form factor.
@@ -142,15 +147,15 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         mask = qq > 1e-3 * (me + mw)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvuu=gvuu, gvdd=gvdd)
+        ff[mask] = self.__form_factor(s=qq[mask] ** 2, couplings=couplings)
 
         if single:
             return ff[0]
 
         return ff * 1e-3
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the eta-omega form-factor integrated over phase-space.
 
@@ -166,9 +171,11 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         iff: float
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and
         omega.
 
@@ -184,9 +191,9 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         width: float
             Decay width of vector into an eta and omega.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    def cross_section(  # pylint: disable=arguments-differ
         self,
         *,
         q: RealOrRealArray,
@@ -194,8 +201,7 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         mv: float,
         gvxx: float,
         wv: float,
-        gvuu: float,
-        gvdd: float,
+        couplings: Couplings,
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into an eta
         and omega.
@@ -226,6 +232,5 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
             mv=mv,
             gvxx=gvxx,
             wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
+            couplings=couplings,
         )
