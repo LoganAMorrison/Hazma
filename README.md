@@ -1,3 +1,5 @@
+# Hazma
+
 ![Logo](docs/source/_static/img/hazma_logo_large.png)
 
 ---
@@ -28,15 +30,21 @@ Hazma comes with [several](https://hazma.readthedocs.io/en/latest/models.html) s
 
 Hazma can be installed from PyPI using:
 
-    pip install hazma
+```shell
+pip install hazma
+```
 
 Alternatively, you can download Hazma directly from this page, navigate to the package directory using the command line and run
 
-    pip install .
+```shell
+pip install .
+```
 
 or
 
-    python setup.py install
+```shell
+python setup.py install
+```
 
 Since Hazma utilizes C to rapidly compute gamma ray, electron and positron spectra, you will need to have [Cython](https://github.com/cython/cython)
 and a c/c++ compiler installed.
@@ -69,7 +77,13 @@ dnde = spectra.dnde_photon(
 By replacing `dnde_photon` with `dnde_positron` or `dnde_neutrino`, you can
 compute the positron or neutrino spectra.
 
-You can supply a squared matrix element to improve the accuracy when there are more than 2 final state particles. For example, suppose you want to compute the muon decay spectrum into photons (`hazma` has built-in functions for computing the analytic result, so this is simply for demonstration.) By default, for a three-body final state, the matrix element is assumed to accept two invariant masses: `s = (p2 + p3)^2` and `t=(p1+p3)^2`. The user can change this assumption by using `msqrd_signature`. To compute the muon decay spectrum, use:
+You can supply a squared matrix element to improve the accuracy when there are
+more than 2 final state particles. For example, suppose you want to compute the
+muon decay spectrum into photons (`hazma` has built-in functions for computing
+the analytic result, so this is simply for demonstration.) By default, for a
+three-body final state, the matrix element is assumed to accept two invariant
+masses: `s = (p2 + p3)^2` and `t=(p1+p3)^2`. The user can change this assumption
+by using `msqrd_signature`. To compute the muon decay spectrum, use:
 
 ```python
 import numpy as np
@@ -98,16 +112,20 @@ dnde = spectra.dnde_photon(
 )
 ```
 
-The `dnde_photon` (and sibling functions) can also be used to compute spectra from a single final state. For example, `dnde_positron(positron_energies, cme, "phi")` will compute the positron spectrum from a `phi` vector meson.
-
+The `dnde_photon` (and sibling functions) can also be used to compute spectra
+from a single final state. For example, `dnde_positron(positron_energies, cme,
+"phi")` will compute the positron spectrum from a `phi` vector meson.
 
 ### Working with Lorentz Invariant Phase Space
 
-`hazma` include several functions to integrate over Lorentz invariant phase space. Notably, `hazma` can integrate over N-body phase space using the `RAMBO` algorithm. There is also special code for computing three-body phase space integrals.
+`hazma` include several functions to integrate over Lorentz invariant phase
+space. Notably, `hazma` can integrate over N-body phase space using the `RAMBO`
+algorithm. There is also special code for computing three-body phase space
+integrals.
 
 To demonstrate, let's consider a silly squared matrix element of a 5 body final
 state. We take the squared matrix element to be the product of pairs of final
-state momenta. 
+state momenta.
 
 Before we do so, we need to mention how `hazma` treats four-momenta. For-momenta
 are taken to be NumPy arrays with the first-axis containing the energy,
@@ -145,7 +163,9 @@ def msqrd(momenta):
     return np.prod(ldot(p1s, p2s), axis=0)
 ```
 
-To integrate over phase space, we create a `Rambo` object from `hazma.phase_space`. We then call `integrate`, specifying how many Monte-Carlo points should be used to compute the integral:
+To integrate over phase space, we create a `Rambo` object from
+`hazma.phase_space`. We then call `integrate`, specifying how many Monte-Carlo
+points should be used to compute the integral:
 
 ```python
 from hazma import phase_space
@@ -194,7 +214,7 @@ ff_pikk.energy_distributions(q=1000.0, gvuu=2.0/3.0, gvdd=-1.0/3.0, gvss=-1.0/3.
 
 If you use Hazma in your own research, please cite [our paper](https://arxiv.org/abs/1907.11846):
 
-```
+```bibtex
 @article{Coogan:2019qpu,
       author         = "Coogan, Adam and Morrison, Logan and Profumo, Stefano",
       title          = "{Hazma: A Python Toolkit for Studying Indirect Detection
@@ -206,9 +226,11 @@ If you use Hazma in your own research, please cite [our paper](https://arxiv.org
 }
 ```
 
-If you use any of the models we've included that rely on chiral perturbation theory, please also cite [the paper](https://arxiv.org/abs/2104.06168) explaining how they were constructed:
+If you use any of the models we've included that rely on chiral perturbation
+theory, please also cite [the paper](https://arxiv.org/abs/2104.06168)
+explaining how they were constructed:
 
-```
+```bibtex
 @article{Coogan:2021sjs,
     author = "Coogan, Adam and Morrison, Logan and Profumo, Stefano",
     title = "{Precision Gamma-Ray Constraints for Sub-GeV Dark Matter Models}",
@@ -226,4 +248,5 @@ If you use any of the models we've included that rely on chiral perturbation the
 - [![arXiv](https://img.shields.io/badge/arXiv-2101.10370-B31B1B.svg?style=plastic)](https://arxiv.org/abs/2101.10370)
 - [![arXiv](https://img.shields.io/badge/arXiv-2104.06168-B31B1B.svg?style=plastic)](https://arxiv.org/abs/2104.06168)
 
-Logo design: David Reiman and Adam Coogan; icon from Freepik from [flaticon.com](https://www.flaticon.com/).
+Logo design: David Reiman and Adam Coogan; icon from Freepik from
+[flaticon.com](https://www.flaticon.com/).
