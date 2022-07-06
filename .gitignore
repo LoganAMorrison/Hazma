@@ -530,3 +530,4 @@ hazma/_phase_space/stubgen.sh
 hazma/_positron/stubgen.sh
 notebooks/decay_spectra
 notebooks/dev/gev/
+scripts/
