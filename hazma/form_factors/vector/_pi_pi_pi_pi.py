@@ -1,12 +1,18 @@
+"""
+Implementation of the 4-pion form factors.
+"""
+# pylint:disable=too-many-arguments,too-many-instance-attributes
+# pylint:disable=arguments-differ
+
 from dataclasses import dataclass, field, InitVar
-from typing import Tuple, List, Union
+from typing import Tuple, List, overload
 
 import numpy as np
 
 from hazma.phase_space import Rambo, PhaseSpaceDistribution1D
-from hazma.utils import RealArray, lnorm_sqr, ldot
+from hazma.utils import RealArray, RealOrRealArray, lnorm_sqr, ldot
 
-from ._four_body import VectorFormFactorPPPP
+from ._four_body import VectorFormFactorPPPP, Couplings
 
 MPI_GEV = 0.13957061
 MPI0_GEV = 0.1349770
@@ -133,7 +139,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     coupling_rho_pi_pi: InitVar[float] = field(default=5.997)
     coupling_omega_pi_rho: InitVar[float] = field(default=42.3)  # GeV^-5
 
-    def __post_init__(
+    def __post_init__(  # pylint:disable=too-many-arguments
         self,
         mass_rho_bars: ThreeTup,
         width_rho_bars: ThreeTup,
@@ -189,19 +195,22 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     # ---- Propagators -----------------------------------------------------------
     # ============================================================================
 
-    def _breit_wigner(self, s, mass, width):
+    @staticmethod
+    def _breit_wigner(s, mass, width):
         """
         Compute the generic Breit-Wigner propagator.
         """
         return mass**2 / (mass**2 - s - 1j * mass * width)
 
-    def _clip_pos(self, x):
+    @staticmethod
+    def _clip_pos(x):
         """
         Return an array with all negative values set to zero.
         """
         return np.clip(x, 0.0, None)
 
-    def _propagator_a1(self, s):
+    @staticmethod
+    def _propagator_a1(s):
         """
         Compute the Breit-Wigner a1 propagator from ArXiv:0804.0359 Eqn.(A.16).
 
@@ -222,9 +231,10 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
                 c3 * y**3 * (1.0 + c4 * y + c5 * y**2),
             )
 
-        return self._breit_wigner(s, M_A1, G_A1 * g(s) / g(m2))
+        return _VectorFormFactorPiPiPiPiBase._breit_wigner(s, M_A1, G_A1 * g(s) / g(m2))
 
-    def _propagator_f0(self, s):
+    @staticmethod
+    def _propagator_f0(s):
         """
         Compute the Breit-Wigner f0 propagator from ArXiv:0804.0359 Eqn.(A.21).
 
@@ -237,10 +247,13 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         mu = 4.0 * MPI_GEV**2
         width = mf2 / s * (s - mu) / (mf2 - mu)
         # width = G_F0 * np.where(width > 0, 1.0, -1.0) * np.sqrt(np.abs(width))
-        width = G_F0 * np.sqrt(self._clip_pos(mf2 / s * (s - mu) / (mf2 - mu)))
-        return self._breit_wigner(s, M_F0, width)
+        width = G_F0 * np.sqrt(
+            _VectorFormFactorPiPiPiPiBase._clip_pos(mf2 / s * (s - mu) / (mf2 - mu))
+        )
+        return _VectorFormFactorPiPiPiPiBase._breit_wigner(s, M_F0, width)
 
-    def _propagator_omega(self, s):
+    @staticmethod
+    def _propagator_omega(s):
         """
         Compute the Breit-Wigner omega propagator from ArXiv:0804.0359 Eqn.(A.24).
 
@@ -249,17 +262,23 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        return self._breit_wigner(s, M_OMEGA, G_OMEGA)
+        return _VectorFormFactorPiPiPiPiBase._breit_wigner(s, M_OMEGA, G_OMEGA)
 
-    def _propagator_rho_g(self, q1, q2, q3, q4):
+    @staticmethod
+    def _propagator_rho_g(q1, q2, q3, q4):
         """
         Compute the Breit-Wigner-G rho propagator from ArXiv:0804.0359 Eqn.(A.9).
         """
-        prop13 = self._propagator_rho_double(lnorm_sqr(q1 + q3))
-        prop24 = self._propagator_rho_double(lnorm_sqr(q2 + q4))
+        prop13 = _VectorFormFactorPiPiPiPiBase._propagator_rho_double(
+            lnorm_sqr(q1 + q3)
+        )
+        prop24 = _VectorFormFactorPiPiPiPiBase._propagator_rho_double(
+            lnorm_sqr(q2 + q4)
+        )
         return q1 * prop13 * (prop24 * ldot(q1 + q2 + 3 * q3 + q4, q2 - q4) + 2)
 
-    def _propagator_rho_double(self, s):
+    @staticmethod
+    def _propagator_rho_double(s):
         """
         Compute the double Breit-Wigner rho propagator from ArXiv:0804.0359 Eqn.(A.10).
 
@@ -268,8 +287,14 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         s: ndarray
             Squared momentum flowing through propagator.
         """
-        prop1 = self._breit_wigner3(s, MRHO_GEV, GRHO_GEV) / MRHO_GEV**2
-        prop2 = self._breit_wigner3(s, M_RHO1, G_RHO1) / M_RHO1**2
+        prop1 = (
+            _VectorFormFactorPiPiPiPiBase._breit_wigner3(s, MRHO_GEV, GRHO_GEV)
+            / MRHO_GEV**2
+        )
+        prop2 = (
+            _VectorFormFactorPiPiPiPiBase._breit_wigner3(s, M_RHO1, G_RHO1)
+            / M_RHO1**2
+        )
         return prop1 - prop2
 
     def _propagator_rho_f(self, s, b1, b2, b3):
@@ -296,7 +321,8 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
 
         return (prop0 + b1 * prop1 + b2 * prop2 + b3 * prop3) / (1.0 + b1 + b2 + b3)
 
-    def _breit_wigner3(self, s, mass, width):
+    @staticmethod
+    def _breit_wigner3(s, mass, width):
         """
         Compute the Breit-Wigner-3 propagator from ArXiv:0804.0359 Eqn.(A.12).
 
@@ -311,11 +337,13 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         """
         m2 = mass**2
         mu = 4.0 * MPI_GEV**2
-        gt = self._clip_pos(m2 / s * ((s - mu) / (m2 - mu)) ** 3)
+        gt = _VectorFormFactorPiPiPiPiBase._clip_pos(
+            m2 / s * ((s - mu) / (m2 - mu)) ** 3
+        )
         # gt = m2 / s * ((s - mu) / (m2 - mu)) ** 3
         gt = np.where(gt > 0.0, 1.0, -1.0) * np.sqrt(np.abs(gt))
 
-        return self._breit_wigner(s, mass, width * gt)
+        return _VectorFormFactorPiPiPiPiBase._breit_wigner(s, mass, width * gt)
 
     def _propagator_rho_b(self, s):
         """
@@ -371,6 +399,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Compute the hadronic current contribution from A1 meson.
         See ArXiv:0804.0359 Eqn.(A.2).
         """
+        # pylint: disable=arguments-out-of-order
         cur = self._current_a1_t(Q, Q2, q3, q2, q1, q4)
         cur += self._current_a1_t(Q, Q2, q3, q1, q2, q4)
         cur -= self._current_a1_t(Q, Q2, q4, q2, q1, q3)
@@ -382,6 +411,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Components of the hadronic current contribution from A1 meson.
         See ArXiv:0804.0359 Eqn.(A.3).
         """
+        # pylint: disable=too-many-locals
         qmq1_sqr = lnorm_sqr(Q - q1)
 
         coupling = self.fit_data.coupling_a1
@@ -406,6 +436,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Compute the hadronic current contribution from the omega meson.
         See ArXiv:0804.0359 Eqn.(A.4).
         """
+        # pylint: disable=too-many-locals
         coupling = self.fit_data.coupling_f0
 
         b1, b2, b3 = (
@@ -427,6 +458,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Compute the hadronic current contribution from the omega meson.
         See ArXiv:0804.0359 Eqn.(A.5).
         """
+        # pylint: disable=arguments-out-of-order
         return self._current_omega_t(Q, Q2, q1, q2, q3, q4) + self._current_omega_t(
             Q, Q2, q2, q1, q3, q4
         )
@@ -436,6 +468,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         Components the hadronic current contribution from the omega meson from
         rho -> pi + [omega -> 3pi]. See ArXiv:0804.0359 Eqn.(A.6).
         """
+        # pylint: disable=too-many-locals
         coupling = (
             2
             * self.fit_data.coupling_omega
@@ -476,6 +509,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
 
         prop = self._propagator_rho_double(Q2)
 
+        # pylint: disable=arguments-out-of-order
         gnu = (
             self._propagator_rho_g(q1, q2, q3, q4)
             + self._propagator_rho_g(q4, q1, q2, q3)
@@ -534,6 +568,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         # p2+ == p2p == q3
         # p2- == p2m == q4
 
+        # pylint: disable=arguments-out-of-order
         j1 = self._current_neutral(Q, Q2, q3, q4, q1, q2)
         j2 = self._current_neutral(Q, Q2, q1, q4, q3, q2)
         j3 = self._current_neutral(Q, Q2, q3, q2, q1, q4)
@@ -639,14 +674,33 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
 
         return ff_avg, ff_err
 
+    @overload
     def integrated_form_factor(
         self,
-        q: Union[float, RealArray],
+        q: float,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
+        npts: int = ...,
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(
+        self,
+        q: RealArray,
+        couplings: Couplings,
+        *,
+        npts: int = ...,
+    ) -> RealArray:
+        ...
+
+    def integrated_form_factor(
+        self,
+        q: RealOrRealArray,
+        couplings: Couplings,
+        *,
         npts: int = 1 << 15,
-    ) -> Union[float, RealArray]:
+    ) -> RealOrRealArray:
         """
         Compute the form-factor integrated over phase-space for a four-pion final-state.
 
@@ -670,7 +724,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         """
         scalar = np.isscalar(q)
         qq = np.atleast_1d(q) * 1e-3
-
+        gvuu, gvdd, _ = couplings
         integral = np.array(
             [
                 self._integrated_form_factor(q=q_, gvuu=gvuu, gvdd=gvdd, npts=npts)[0]
@@ -687,14 +741,33 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     # ---- Widths ----------------------------------------------------------------
     # ============================================================================
 
+    @overload
     def width(
         self,
-        mv: Union[float, RealArray],
+        mv: float,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
+        npts: ...,
+    ) -> float:
+        ...
+
+    @overload
+    def width(
+        self,
+        mv: RealArray,
+        couplings: Couplings,
+        *,
+        npts: ...,
+    ) -> RealOrRealArray:
+        ...
+
+    def width(
+        self,
+        mv: RealOrRealArray,
+        couplings: Couplings,
+        *,
         npts: int = 1 << 15,
-    ) -> Union[float, RealArray]:
+    ) -> RealOrRealArray:
         r"""Compute the decay width of a massive vector into 4-pions.
 
         Parameters
@@ -714,27 +787,52 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             Decay width of vector into 4-pions.
         """
         return (
-            0.5
-            * mv
-            * self.integrated_form_factor(q=mv, gvuu=gvuu, gvdd=gvdd, npts=npts)
+            0.5 * mv * self.integrated_form_factor(q=mv, couplings=couplings, npts=npts)
         )
 
     # ============================================================================
     # ---- Cross Sections --------------------------------------------------------
     # ============================================================================
 
+    @overload
     def cross_section(
         self,
-        q: Union[float, RealArray],
+        q: float,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
+        npts: int = ...,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+        *,
+        npts: int = ...,
+    ) -> RealArray:
+        ...
+
+    def cross_section(
+        self,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+        *,
         npts: int = 1 << 15,
-    ) -> Union[float, RealArray]:
+    ) -> RealOrRealArray:
         r"""Compute the decay width of a massive vector into 4-pions.
 
         Parameters
@@ -771,7 +869,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             / (np.sqrt(s - 4 * mx**2) * ((s - mv**2) ** 2 + (mv * wv) ** 2))
         )
         pre = pre * 0.5 * qq
-        cs = pre * self.integrated_form_factor(q=qq, gvuu=gvuu, gvdd=gvdd, npts=npts)
+        cs = pre * self.integrated_form_factor(q=qq, couplings=couplings, npts=npts)
 
         if single:
             return cs[0]
@@ -782,7 +880,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     # ============================================================================
 
     def energy_distributions(
-        self, q, nbins: int, *, gvuu: float, gvdd: float, npts: int = 1 << 15
+        self, q, nbins: int, couplings: Couplings, *, npts: int = 1 << 15
     ) -> List[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the four final state pions.
 
@@ -803,6 +901,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         dists: list[PhaseSpaceDistribution1D]
             List of the energy distributions.
         """
+        gvuu, gvdd, _ = couplings
 
         def msqrd(momenta):
             return self._msqrd(momenta, gvuu=gvuu, gvdd=gvdd)
@@ -818,7 +917,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         return [correct_units(dist) for dist in dists]
 
     def invariant_mass_distributions(
-        self, q, nbins: int, *, gvuu: float, gvdd: float, npts: int = 1 << 15
+        self, q, nbins: int, couplings: Couplings, *, npts: int = 1 << 15
     ):
         r"""Compute the invariant-mass distributions of each pair of final state
         particles.
@@ -842,6 +941,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             the pair of particles the distributions corresponds to. For example,
             `(i,j)` corresponds to the invariant mass `sqrt((p[i] + p[j])^2)`
         """
+        gvuu, gvdd, _ = couplings
 
         def msqrd(momenta):
             return self._msqrd(momenta, gvuu=gvuu, gvdd=gvdd)

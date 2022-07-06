@@ -1,12 +1,17 @@
+"""
+Module implementing the pi-pi-omega form factor.
+"""
+
 from dataclasses import InitVar, dataclass, field
-from typing import Union, Tuple, List, Dict, overload
+from typing import Tuple, List, Dict, overload
 
 import numpy as np
 
 from hazma.phase_space import PhaseSpaceDistribution1D
+from hazma.utils import RealArray, RealOrRealArray, ComplexArray, ComplexOrComplexArray
 
-from ._utils import MOMEGA_GEV, MPI_GEV, MPI0_GEV, RealArray
-from ._three_body import VectorFormFactorPPV
+from ._utils import MOMEGA_GEV, MPI_GEV, MPI0_GEV
+from ._three_body import VectorFormFactorPPV, Couplings
 
 
 @dataclass(frozen=True)
@@ -65,12 +70,12 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             phases=phases,
         )
 
-    def _form_factor(self, q, *, gvuu, gvdd):
+    def _form_factor(self, q, *, couplings: Couplings):
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta-prime.
         """
-        ci0 = 3 * (gvuu + gvdd)
+        ci0 = 3 * (couplings[0] + couplings[1])
         return ci0 * np.sum(
             self.fit_data.amps
             * np.exp(1j * self.fit_data.phases)
@@ -78,26 +83,42 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             / ((self.fit_data.masses**2 - q**2) - 1j * q * self.fit_data.widths)
         )
 
-    def form_factor(self, q, *, gvuu, gvdd):
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> complex:
+        ...
+
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
+        ...
+
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
+    ) -> ComplexOrComplexArray:
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta-prime.
         """
-        return self._form_factor(q=q * 1e-3, gvuu=gvuu, gvdd=gvdd)
+        return self._form_factor(q=q * 1e-3, couplings=couplings)
 
     @overload
-    def integrated_form_factor(self, q: float, *, gvuu: float, gvdd: float) -> float:
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
         ...
 
     @overload
-    def integrated_form_factor(
-        self, q: RealArray, *, gvuu: float, gvdd: float
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
     ) -> RealArray:
         ...
 
-    def integrated_form_factor(
-        self, q: Union[float, RealArray], *, gvuu: float, gvdd: float
-    ) -> Union[float, RealArray]:
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         """Compute the pion-pion-omega form factor integrated over phase-space.
 
         Parameters
@@ -113,11 +134,23 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             Integrated form-factor.
         """
         pre = 0.5 if self._imode == 0 else 1.0
-        return pre * self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+        return pre * self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(
-        self, mv: Union[float, RealArray], *, gvuu: float, gvdd: float
-    ) -> Union[float, RealArray]:
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into two pions and
         an omega.
 
@@ -133,19 +166,41 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
         width: float or array-like
             Decay width of vector into two pions and an omega.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        *,
-        q: Union[float, RealArray],
+        q: float,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
-        gvuu: float,
-        gvdd: float
-    ) -> Union[float, RealArray]:
+        couplings: Couplings,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into two
         pions and an omega.
 
@@ -170,11 +225,11 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             Annihilation cross section into a pion and two kaons.
         """
         return self._cross_section(
-            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, gvuu=gvuu, gvdd=gvdd
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings
         )
 
-    def energy_distributions(
-        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    def energy_distributions(  # pylint: disable=arguments-differ
+        self, q: float, nbins: int, *, couplings: Couplings
     ) -> List[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final omega and pions.
 
@@ -193,10 +248,10 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             Three tuples containing the probabilities and energies for each
             final state particle.
         """
-        return self._energy_distributions(q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd)
+        return self._energy_distributions(q=q, nbins=nbins, couplings=couplings)
 
-    def invariant_mass_distributions(
-        self, q: float, nbins: int, *, gvuu: float, gvdd: float
+    def invariant_mass_distributions(  # pylint: disable=arguments-differ
+        self, q: float, nbins: int, *, couplings: Couplings
     ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the final state
         omega and pions.
@@ -216,9 +271,7 @@ class _VectorFormFactorPiPiOmegaBase(VectorFormFactorPPV):
             Three tuples containing the probabilities and energies for each
             final state particle.
         """
-        return self._invariant_mass_distributions(
-            q=q, nbins=nbins, gvuu=gvuu, gvdd=gvdd
-        )
+        return self._invariant_mass_distributions(q=q, nbins=nbins, couplings=couplings)
 
 
 @dataclass

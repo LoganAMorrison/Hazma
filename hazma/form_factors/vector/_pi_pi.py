@@ -3,12 +3,12 @@ Module for computing the vector form factor for pi+pi.
 """
 
 from dataclasses import dataclass, field, InitVar
-from typing import Union, Tuple
+from typing import Tuple, overload
 
 import numpy as np
 from scipy.special import gamma
 
-from hazma.utils import RealOrRealArray
+from hazma.utils import RealOrRealArray, ComplexOrComplexArray
 
 from ._two_body import VectorFormFactorPP, Couplings
 from ._utils import (
@@ -178,9 +178,21 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             ff *= np.sqrt(2.0)
         return ff
 
+    @overload
     def form_factor(  # pylint: disable=arguments-differ
-        self, *, q: Union[float, RealArray], couplings: Couplings
-    ) -> Union[complex, ComplexArray]:
+        self, q: float, couplings: Couplings
+    ) -> complex:
+        ...
+
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
+        ...
+
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
+    ) -> ComplexOrComplexArray:
         """Compute the pion-pion form factor.
 
         Parameters
@@ -209,6 +221,18 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             return ff[0]
         return ff
 
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
@@ -227,6 +251,18 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
             Form-factor integrated over phase-space.
         """
         return self._integrated_form_factor(q=q, couplings=couplings)
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -249,8 +285,32 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         """
         return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(  # pylint: disable=arguments-differ
-        self, *, q, mx: float, mv: float, gvxx: float, wv: float, couplings: Couplings
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: float,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self, q, mx: float, mv: float, gvxx: float, wv: float, couplings: Couplings
     ):
         r"""Compute the cross section for dark matter annihilating into two
         pions.

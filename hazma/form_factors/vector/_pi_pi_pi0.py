@@ -1,19 +1,25 @@
+"""
+Module implementing the pi-pi-pi0 form factor.
+"""
+
 from dataclasses import InitVar, dataclass, field
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, Union, List, Dict, overload
 
 import numpy as np
 
 from hazma.phase_space import PhaseSpaceDistribution1D
+from hazma.utils import RealOrRealArray, RealArray, ComplexArray, ComplexOrComplexArray
 
-from ._utils import MPI0_GEV, MPI_GEV, RealArray, breit_wigner_fw
-from ._three_body import VectorFormFactorPPP
+from ._utils import MPI0_GEV, MPI_GEV, breit_wigner_fw
+from ._three_body import VectorFormFactorPPP, Couplings
+from ._base import vector_couplings_to_isospin
 
 MPI0 = MPI0_GEV * 1e3
 MPI = MPI_GEV * 1e3
 
 
 @dataclass(frozen=True)
-class VectorFormFactorPiPiPi0FitData:
+class VectorFormFactorPiPiPi0FitData:  # pylint:disable=too-many-instance-attributes
     r"""Storage class for parameters used to compute the pi-pi-pi vector
     form-factor.
 
@@ -112,7 +118,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
     coupling_omega_pi_pi: InitVar[float] = field(default=0.185)
     sigma: InitVar[float] = field(default=-0.1)
 
-    def __post_init__(
+    def __post_init__(  # pylint: disable=too-many-arguments
         self,
         masses: RealArray,
         widths: RealArray,
@@ -144,29 +150,36 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             sigma=sigma,
         )
 
-    def __gamma_rho(self, s, mass, width, mj, mk):
+    @staticmethod
+    def __gamma_rho(s, mass, width, mj, mk):
         # p-wave width
         m2 = mass**2
         msum2 = (mj + mk) ** 2
         rat = (s - msum2) / (m2 - msum2)
         return width * m2 / s * rat**1.5
 
-    def __bw_rho(self, Qi2, mRho, gRho, mj, mk):
+    @staticmethod
+    def __bw_rho(Qi2, mRho, gRho, mj, mk):
         # Breit-Wigner for rhos
         return mRho**2 / (
             Qi2
             - mRho**2
-            + 1j * np.sqrt(Qi2) * self.__gamma_rho(Qi2, mRho, gRho, mj, mk)
+            + 1j
+            * np.sqrt(Qi2)
+            * VectorFormFactorPiPiPi0.__gamma_rho(Qi2, mRho, gRho, mj, mk)
         )
 
-    def __hrho(self, s, t, u, mRho, gRho):
+    @staticmethod
+    def __hrho(s, t, u, mRho, gRho):
         return (
-            self.__bw_rho(s, mRho, gRho, MPI_GEV, MPI_GEV)
-            + self.__bw_rho(t, mRho, gRho, MPI0_GEV, MPI_GEV)
-            + self.__bw_rho(u, mRho, gRho, MPI0_GEV, MPI_GEV)
+            VectorFormFactorPiPiPi0.__bw_rho(s, mRho, gRho, MPI_GEV, MPI_GEV)
+            + VectorFormFactorPiPiPi0.__bw_rho(t, mRho, gRho, MPI0_GEV, MPI_GEV)
+            + VectorFormFactorPiPiPi0.__bw_rho(u, mRho, gRho, MPI0_GEV, MPI_GEV)
         )
 
-    def __iso_spin_zero(self, q2, s, t, u, ci0, cs):
+    def __iso_spin_zero(  # pylint: disable=too-many-arguments
+        self, q2, s, t, u, ci0, cs
+    ):
         coups = np.full_like(self.fit_data.couplings, ci0)
         coups[1] = cs
         c0 = np.sum(
@@ -236,7 +249,9 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         )
         return f1
 
-    def __form_factor(self, q2, s, t, u, gvuu, gvdd, gvss):
+    def __form_factor(  # pylint: disable=too-many-arguments
+        self, q2, s, t, u, couplings: Couplings
+    ):
         """
         Compute the form factor for a vector decaying into two charged pions and
         a neutral pion.
@@ -252,15 +267,26 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         u:
             Mandelstam variable t = (P - p^{-})^2
         """
-        ci1 = gvuu - gvdd
-        ci0 = 3 * (gvuu + gvdd)
-        cs = -3 * gvss
-
+        ci0, ci1, cs = vector_couplings_to_isospin(*couplings)
         return self.__iso_spin_zero(q2, s, t, u, ci0, cs) + self.__iso_spin_one(
             q2, s, ci1
         )
 
-    def form_factor(self, q, s, t, *, gvuu: float, gvdd: float, gvss: float):
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: float, s: float, t: float, couplings: Couplings
+    ) -> complex:
+        ...
+
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: float, s: RealArray, t: RealArray, couplings: Couplings
+    ) -> ComplexArray:
+        ...
+
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: float, s: RealOrRealArray, t: RealOrRealArray, couplings: Couplings
+    ) -> ComplexOrComplexArray:
         """
         Compute the form factor for a vector decaying into two charged pions and
         a neutral pion.
@@ -286,18 +312,40 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         tt = t * 1e-6
         uu = q2 + MPI0_GEV**2 + 2 * MPI_GEV**2 - ss - tt
 
-        ff = self.__form_factor(
-            q2=q2, s=ss, t=tt, u=uu, gvuu=gvuu, gvdd=gvdd, gvss=gvss
-        )
+        ff = self.__form_factor(q2=q2, s=ss, t=tt, u=uu, couplings=couplings)
         return ff * 1e-9
 
-    def integrated_form_factor(
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self,
+        q: float,
+        couplings: Couplings,
+        *,
+        method: str = "rambo",
+        npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self,
+        q: RealArray,
+        couplings: Couplings,
+        *,
+        method: str = "rambo",
+        npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
+    ) -> RealArray:
+        ...
+
+    def integrated_form_factor(  # pylint: disable=arguments-differ
         self,
         q: Union[float, RealArray],
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
         method: str = "rambo",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
@@ -334,25 +382,47 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             q=q,
             method=method,
             npts=npts,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
             epsrel=epsrel,
             epsabs=epsabs,
         )
 
-    def width(
+    @overload
+    def width(  # pylint: disable=arguments-differ
         self,
-        mv: Union[float, RealArray],
+        mv: float,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
         method: str = "rambo",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> Union[float, RealArray]:
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self,
+        mv: RealArray,
+        couplings: Couplings,
+        *,
+        method: str = "rambo",
+        npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
+    ) -> RealArray:
+        ...
+
+    def width(  # pylint: disable=arguments-differ
+        self,
+        mv: RealOrRealArray,
+        couplings: Couplings,
+        *,
+        method: str = "rambo",
+        npts: int = 1 << 14,
+        epsrel: float = 1e-3,
+        epsabs: float = 0.0,
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into three pions.
 
         Parameters
@@ -385,29 +455,59 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             mv=mv,
             method=method,
             npts=npts,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
             epsrel=epsrel,
             epsabs=epsabs,
         )
 
-    def cross_section(
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        q: Union[float, RealArray],
+        q: float,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
+        method: str = ...,
+        npts: int = ...,
+        epsrel: float = ...,
+        epsabs: float = ...,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+        *,
+        method: str = ...,
+        npts: int = ...,
+        epsrel: float = ...,
+        epsabs: float = ...,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+        *,
         method: str = "rambo",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> Union[float, RealArray]:
+    ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into three pions.
 
         Parameters
@@ -451,21 +551,17 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
             wv=wv,
             method=method,
             npts=npts,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
             epsrel=epsrel,
             epsabs=epsabs,
         )
 
-    def energy_distributions(
+    def energy_distributions(  # pylint: disable=arguments-differ
         self,
         q: float,
         nbins: int,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
@@ -503,23 +599,19 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         return self._energy_distributions(
             q=q,
             nbins=nbins,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
             method=method,
             npts=npts,
             epsrel=epsrel,
             epsabs=epsabs,
         )
 
-    def invariant_mass_distributions(
+    def invariant_mass_distributions(  # pylint: disable=arguments-differ
         self,
         q: float,
         nbins: int,
+        couplings: Couplings,
         *,
-        gvuu: float,
-        gvdd: float,
-        gvss: float,
         method: str = "quad",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
@@ -559,9 +651,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         return self._invariant_mass_distributions(
             q=q,
             nbins=nbins,
-            gvuu=gvuu,
-            gvdd=gvdd,
-            gvss=gvss,
+            couplings=couplings,
             method=method,
             npts=npts,
             epsrel=epsrel,

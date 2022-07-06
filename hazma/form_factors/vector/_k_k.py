@@ -4,7 +4,7 @@ Module for computing the V-K-K form factor.
 
 
 from dataclasses import InitVar, dataclass, field
-from typing import NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Tuple, Union, overload
 
 import numpy as np
 from scipy.special import gamma
@@ -448,8 +448,20 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
 
         return np.sum(fk, axis=1)
 
+    @overload
     def form_factor(  # pylint: disable=arguments-differ
-        self, *, q: Union[float, RealArray], couplings: Couplings
+        self, q: float, couplings: Couplings
+    ) -> complex:
+        ...
+
+    @overload
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
+        ...
+
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: Union[float, RealArray], couplings: Couplings
     ) -> Union[complex, ComplexArray]:
         """Compute the kaon-kaon form factor.
 
@@ -482,6 +494,18 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             return ff[0]
         return ff
 
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
@@ -500,6 +524,18 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
             Form-factor integrated over phase-space.
         """
         return self._integrated_form_factor(q=q, couplings=couplings)
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -524,16 +560,39 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         """
         return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(  # pylint: disable=arguments-differ
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        *,
-        q,
+        q: float,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ):
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into two
         kaons.
 

@@ -1,6 +1,10 @@
+"""
+Base classes for 3-body final states.
+"""
+
 from dataclasses import dataclass
 import abc
-from typing import Tuple, Union, Dict, List, Optional
+from typing import Tuple, Union, Dict, List, Optional, Sequence
 
 import numpy as np
 from scipy import integrate
@@ -11,9 +15,14 @@ from hazma.phase_space._utils import energy_limits
 from hazma.phase_space import PhaseSpaceDistribution1D
 
 from ._base import VectorFormFactor
+from ._base import VectorFormFactorCouplings
+
+Couplings = Union[VectorFormFactorCouplings, Sequence[float]]
 
 
-def __squared_lorentz_structure_ppp(q, s, t, m1, m2, m3):
+def __squared_lorentz_structure_ppp(  # pylint: disable=too-many-arguments
+    q, s, t, m1, m2, m3
+):
     q2 = q**2
     num = (
         -(m1**4 * m2**2)
@@ -28,7 +37,9 @@ def __squared_lorentz_structure_ppp(q, s, t, m1, m2, m3):
     return num / den
 
 
-def _squared_lorentz_structure_ppp(q, s, t, m1, m2, m3):
+def _squared_lorentz_structure_ppp(  # pylint: disable=too-many-arguments
+    q, s, t, m1, m2, m3
+):
     scalar_q = np.isscalar(q)
     scalar_s = np.isscalar(s)
     scalar_t = np.isscalar(t)
@@ -45,7 +56,8 @@ def _squared_lorentz_structure_ppp(q, s, t, m1, m2, m3):
 
     if scalar_q:
         return res[0]
-    elif scalar_t and scalar_s:
+
+    if scalar_t and scalar_s:
         return res[:, 0]
 
     return res
@@ -71,19 +83,24 @@ class VectorFormFactorThreeBody(VectorFormFactor):
     fsp_masses: Tuple[float, float, float]
 
     @abc.abstractmethod
-    def form_factor(self, q, *args, **kwargs):
+    def form_factor(self, q, *args, **kwargs):  # pylint: disable=arguments-differ
         raise NotImplementedError()
 
     @abc.abstractmethod
     def squared_lorentz_structure(self, q, s, t):
+        r"""Compute the value of the Lorentz structure of the amplitude."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def energy_distributions(self, q: float, nbins: int, **kwargs):
+        r"""Compute the energy distributions of the final states."""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def invariant_mass_distributions(self, q: float, nbins: int, **kwargs):
+        r"""Compute the invariant-mass distributions of all pairs of final
+        state particles.
+        """
         raise NotImplementedError()
 
 
@@ -120,7 +137,7 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
     fsp_masses: Tuple[float, float, float]
 
     @abc.abstractmethod
-    def form_factor(self, q, s, t, **kwargs):
+    def form_factor(self, q, s, t, **kwargs):  # pylint: disable=arguments-differ
         """Compute the squared matrix element."""
         raise NotImplementedError()
 
@@ -416,7 +433,7 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
     fsp_masses: Tuple[float, float, float]
 
     @abc.abstractmethod
-    def form_factor(self, q, s, **kwargs):
+    def form_factor(self, q, s, **kwargs):  # pylint: disable=arguments-differ
         """Compute the squared matrix element."""
         raise NotImplementedError()
 
@@ -533,7 +550,7 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         """
 
         m1, m2, m3 = self.fsp_masses
-        quad_kwargs = dict()
+        quad_kwargs = {}
         if epsrel is not None:
             quad_kwargs["epsrel"] = epsrel
         if epsabs is not None:
@@ -692,7 +709,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
     fsp_masses: Tuple[float, float, float]
 
     @abc.abstractmethod
-    def form_factor(self, q, **kwargs):
+    def form_factor(self, q, **kwargs):  # pylint: disable=arguments-differ
         raise NotImplementedError()
 
     def __squared_lorentz_structure(self, q, s, t):
@@ -752,12 +769,15 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
 
         if scalar_q:
             return res[0]
-        elif scalar_t and scalar_s:
+
+        if scalar_t and scalar_s:
             return res[:, 0]
 
         return res
 
-    def _partially_integrated_form_factor(self, q, s, **kwargs):
+    def _partially_integrated_form_factor(  # pylint: disable=too-many-locals
+        self, q, s, **kwargs
+    ):
         r"""Computes the form-factor integrated over one of the invariant
         masses, namely, t = (pv + p2)^2.
 
@@ -813,7 +833,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
             Integrated form-factor.
         """
         mv, m1, m2 = self.fsp_masses
-        quad_kwargs = dict()
+        quad_kwargs = {}
         if epsrel is not None:
             quad_kwargs["epsrel"] = epsrel
         if epsabs is not None:
@@ -854,7 +874,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
             return res[0]
         return res
 
-    def _energy_distributions(
+    def _energy_distributions(  # pylint: disable=too-many-locals
         self, *, q: float, nbins: int, **kwargs
     ) -> List[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state particles.

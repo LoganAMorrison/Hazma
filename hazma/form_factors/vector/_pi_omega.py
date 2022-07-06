@@ -1,3 +1,7 @@
+"""
+Implementation of the pi0-omega form factor.
+"""
+
 from dataclasses import dataclass, field, InitVar
 from typing import Union, overload, Tuple
 
@@ -5,10 +9,16 @@ import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
-from hazma.utils import RealOrRealArray, kallen_lambda
+from hazma.utils import (
+    ComplexOrComplexArray,
+    RealOrRealArray,
+    kallen_lambda,
+    ComplexArray,
+    RealArray,
+)
 
-from ._utils import MOMEGA_GEV, MPI0_GEV, ComplexArray, RealArray
-from ._two_body import VectorFormFactorPV
+from ._utils import MOMEGA_GEV, MPI0_GEV
+from ._two_body import VectorFormFactorPV, Couplings
 
 MPI0 = MPI0_GEV * 1e3
 MOMEGA = MOMEGA_GEV * 1e3
@@ -64,7 +74,7 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
     rho_widths: InitVar[RealArray] = field(default=np.array([0.1491, 0.44, 0.25]))
     frho: InitVar[float] = field(default=5.06325)
 
-    def __post_init__(
+    def __post_init__(  # pylint: disable=too-many-arguments
         self,
         g_rho_omega_pi: float,
         amps: RealArray,
@@ -141,16 +151,20 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         )
 
     @overload
-    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> complex:
         ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> ComplexArray:
         ...
 
-    def form_factor(
-        self, *, q: Union[float, RealArray], gvuu: float, gvdd: float
-    ) -> Union[complex, ComplexArray]:
+    def form_factor(  # pylint: disable=arguments-differ
+        self, q: Union[float, RealArray], couplings: Couplings
+    ) -> ComplexOrComplexArray:
         """
         Compute the V-omega-pi form factor.
 
@@ -172,15 +186,29 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         mask = qq > 1e-3 * (mp + mw)
         ff = np.zeros_like(qq, dtype=np.complex128)
 
-        ff[mask] = self.__form_factor(s=qq[mask] ** 2, gvuu=gvuu, gvdd=gvdd)
+        ff[mask] = self.__form_factor(
+            s=qq[mask] ** 2, gvuu=couplings[0], gvdd=couplings[1]
+        )
 
         if single:
             return ff[0]
 
         return ff * 1e-3
 
-    def integrated_form_factor(
-        self, q: RealOrRealArray, gvuu: float, gvdd: float
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the pion-omega form-factor integrated over phase-space.
 
@@ -196,9 +224,23 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         iff: float or array-like
             Form-factor integrated over phase-space.
         """
-        return self._integrated_form_factor(q=q, gvuu=gvuu, gvdd=gvdd)
+        return self._integrated_form_factor(q=q, couplings=couplings)
 
-    def width(self, mv: RealOrRealArray, gvuu: float, gvdd: float) -> RealOrRealArray:
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealOrRealArray, couplings: Couplings
+    ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into a pion and
         omega meson.
 
@@ -216,18 +258,40 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         width: float or array-like
             Decay width of vector into two kaons.
         """
-        return self._width(mv=mv, gvuu=gvuu, gvdd=gvdd)
+        return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        *,
+        q: float,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
         q: RealOrRealArray,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
-        gvuu: float,
-        gvdd: float,
+        couplings: Couplings,
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into two
         kaons.
@@ -257,11 +321,5 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
             Annihilation cross section into two kaons.
         """
         return self._cross_section(
-            q=q,
-            mx=mx,
-            mv=mv,
-            gvxx=gvxx,
-            wv=wv,
-            gvuu=gvuu,
-            gvdd=gvdd,
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings
         )

@@ -9,9 +9,9 @@ import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
-from hazma.utils import RealOrRealArray
+from hazma.utils import RealOrRealArray, RealArray, ComplexArray, ComplexOrComplexArray
 
-from ._utils import ComplexArray, RealArray, breit_wigner_fw
+from ._utils import breit_wigner_fw
 from ._two_body import VectorFormFactorPV, Couplings
 
 META = parameters.eta_mass
@@ -120,7 +120,7 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
 
     def form_factor(  # pylint: disable=arguments-differ
         self, *, q: Union[float, RealArray], couplings: Couplings
-    ) -> Union[complex, ComplexArray]:
+    ) -> ComplexOrComplexArray:
         """Compute the eta-phi vector form-factor.
 
         Parameters
@@ -147,6 +147,18 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
 
         return ff * 1e-3
 
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
     ) -> RealOrRealArray:
@@ -165,6 +177,18 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
             Form-factor integrated over phase-space.
         """
         return self._integrated_form_factor(q=q, couplings=couplings)
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -186,9 +210,32 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         """
         return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(  # pylint: disable=arguments-differ
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        *,
+        q: float,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
         q: RealOrRealArray,
         mx: float,
         mv: float,

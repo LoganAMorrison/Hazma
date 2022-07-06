@@ -171,6 +171,18 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
 
         return ff
 
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def integrated_form_factor(  # pylint: disable=arguments-differ
+        self, q: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
+
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: Union[float, RealArray], couplings: Couplings
     ) -> RealOrRealArray:
@@ -193,6 +205,18 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
             Integrated eta-photon form-factor.
         """
         return self._integrated_form_factor(q=q, couplings=couplings)
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: float, couplings: Couplings
+    ) -> float:
+        ...
+
+    @overload
+    def width(  # pylint: disable=arguments-differ
+        self, mv: RealArray, couplings: Couplings
+    ) -> RealArray:
+        ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: Union[float, RealArray], couplings: Couplings
@@ -218,15 +242,38 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         """
         return self._width(mv=mv, couplings=couplings)
 
-    def cross_section(  # pylint: disable=arguments-differ
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
-        *,
+        q: float,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> float:
+        ...
+
+    @overload
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
+        q: RealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: Couplings,
+    ) -> RealArray:
+        ...
+
+    def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
+        self,
         q: RealOrRealArray,
         mx: float,
         mv: float,
         gvxx: float,
         wv: float,
-        couplings: Couplings
+        couplings: Couplings,
     ) -> RealOrRealArray:
         r"""Compute the cross section for dark matter annihilating into an eta
         and a photon.
