@@ -221,7 +221,8 @@ ipython_config.py
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -527,3 +528,5 @@ hazma/_decay/stubgen.sh
 hazma/_gamma_ray/stubgen.sh
 hazma/_phase_space/stubgen.sh
 hazma/_positron/stubgen.sh
+notebooks/decay_spectra
+notebooks/dev/gev/
