@@ -11,7 +11,6 @@ from typing import Tuple, Dict, Any
 
 import numpy as np
 from scipy import interpolate
-from scipy.interpolate import interp1d
 
 from hazma.background_model import BackgroundModel, ParametricBackgroundModel
 from hazma.flux_measurement import FluxMeasurement
@@ -26,7 +25,7 @@ grd_dir = os.path.join(_dir, "gamma_ray_data")
 def _generate_interp(subdir, filename, fill_value=np.nan, bounds_error=True):
     path = os.path.join(grd_dir, subdir, filename)
     data = np.genfromtxt(path, delimiter=",", unpack=True)
-    return interp1d(*data, bounds_error=bounds_error, fill_value=fill_value)
+    return interpolate.interp1d(*data, bounds_error=bounds_error, fill_value=fill_value)
 
 
 # From Alex Moiseev's slides. Ref: G. Weidenspointner et al, AIP 510, 467, 2000.
@@ -1009,17 +1008,17 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
     """Model for the Galactic astrophysical background.
 
     The total background flux is modeled using:
-        phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
+        ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
     where the parameters of the model are:
         - Ag: Amplitude of the Galactic astrophysical background
-          [MeV^-1 cm^-2 s^-1 sr^-1]
-        - a_g: Power-law index of the Galactic astrophysical background,
+          [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹]
+        - ɑ_g: Power-law index of the Galactic astrophysical background,
         - Ec: Exponential cutoff energy of the Galactic astrophysical background
           [MeV],
         - gam: Exponential power-law index of the Galactic astrophysical background,
         - Aeg: Amplitude of the extra-Galactic astrophysical background
-          [MeV^-1 cm^-2 s^-1 sr^-1],
-        - a_eg: Power-law index of the extra-Galactic astrophysical background.
+          [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹],
+        - ɑ_eg: Power-law index of the extra-Galactic astrophysical background.
     This model is valid for energies between [0.15 MeV, 5.0 MeV] and
     for |l| <= 5 deg, |b| <= 5 deg.
 
@@ -1041,7 +1040,7 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         ----------
         galactic_amplitude: float
             Amplitude of the Galactic astrophysical background.
-            Default is 0.013 [MeV^-1 cm^-2 s^-1 sr^-1].
+            Default is 0.013 [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
         galactic_power_law_index: float
             Power-law index of the Galactic astrophysical background.
             Default is 1.8.
@@ -1053,11 +1052,12 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
             Default is 2.0.
         extra_galactic_amplitude: float
             Amplitude of the extra-Galactic astrophysical background.
-            Default is 0.004135 [MeV^-1 cm^-2 s^-1 sr^-1].
+            Default is 0.004135 [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
         extra_galactic_power_law_index: float
             Power-law index of the extra-Galactic astrophysical background.
             Default is 2.8956.
         """
+        super().__init__()
         self._galactic_amplitude = galactic_amplitude
         self._galactic_power_law_index = galactic_power_law_index
         self._galactic_exponential_cutoff = galactic_exponential_cutoff
@@ -1069,11 +1069,11 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
     @property
     def galactic_amplitude(self) -> float:
         """Amplitude of the Galactic astrophysical background in
-        units of MeV^-1 cm^-2 s^-1 sr^-1.
+        units of [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                 ^--^
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+               ^--^
         with `Ag` the galactic amplitude.
         """
         return self._galactic_amplitude
@@ -1083,9 +1083,9 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         """Power-law index of the Galactic astrophysical background.
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                      ^------------------^
-        with `alpha` the power-law index.
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+                     ^----------------^
+        with `ɑ_g` the power-law index.
         """
         return self._galactic_power_law_index
 
@@ -1094,8 +1094,8 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         """Exponential cutoff of the Galactic astrophysical background.
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                                            ^--------------^
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+                                          ^------------^
         with `Ec` the exponential cutoff.
         """
         return self._galactic_exponential_cutoff
@@ -1106,20 +1106,20 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         Galactic astrophysical background.
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                                            ^--------------^
-        with `gam` the exponential index.
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+                                          ^------------^
+        with `Ɣ` the exponential index.
         """
         return self._galactic_exponential_index
 
     @property
     def extra_galactic_amplitude(self) -> float:
         """Amplitude of the Extra-Galactic astrophysical background in
-        units of MeV^-1 cm^-2 s^-1 sr^-1.
+        units of [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                                                               ^-^
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+                                                           ^-^
         with `Aeg` the extra-galactic amplitude.
         """
         return self._extra_galactic_amplitude
@@ -1129,9 +1129,9 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
         """Power-law index of the Extra-Galactic astrophysical background.
 
         The total background flux is
-            phi = Ag * (E / 1 MeV)^(-a_g) * exp(-(E/Ec)^gam) + Aeg * (E / 1 MeV)^(-a_eg)
-                                                                     ^-----------------^
-        with `a_eg` the extra-galactic power-law index.
+            ɸ = Ag * (E / 1 MeV)^(-ɑ_g) * exp(-(E/Ec)^Ɣ) + Aeg * (E / 1 MeV)^(-ɑ_eg)
+                                                                 ^-----------------^
+        with `ɑ_eg` the extra-galactic power-law index.
         """
         return self._extra_galactic_power_law_index
 
@@ -1167,7 +1167,7 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
 
         Returns
         -------
-        dphi/dE dOmega: dict
+        d²ɸ/dEdΩ : dict
             Differential flux.
         """
         amp_g = self.galactic_amplitude
@@ -1228,7 +1228,22 @@ class GalacticCenterBackgroundModel(ParametricBackgroundModel):
 
 
 class GeccoBackgroundModel:
+    r"""Fiducial extra-galactic background model used for projecting GECCO's
+    sensitivity.
+    """
+
     def __init__(self, amplitude: float = 2 * 4e-3, power_law_index: float = 2.0):
+        """
+        Parameters
+        ----------
+        amplitude: float
+            Amplitude of the Galactic astrophysical background.
+
+            Default is 0.013 [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
+        power_law_index: float
+            Power-law index of the Galactic astrophysical background.
+            Default is 2.0.
+        """
         self._amplitude = amplitude
         self._power_law_index = power_law_index
         self._energy_bounds = (0.2, 4e3)
@@ -1236,24 +1251,23 @@ class GeccoBackgroundModel:
     @property
     def amplitude(self) -> float:
         """Amplitude of the Galactic astrophysical background in
-        units of MeV^-1 cm^-2 s^-1 sr^-1.
+        units of [MeV⁻¹ cm⁻² s⁻¹ sr⁻¹].
 
         The total background flux is
-            phi = A * (E / 1 MeV)^(-alpha)
-                 ^-^
+            ɸ = A * (E / 1 MeV)^(-ɑ)
+               ^-^
         with `A` the galactic amplitude.
         """
         return self._amplitude
 
     @property
     def power_law_index(self) -> float:
-        """Power-law index of the Galactic astrophysical background in
-        units of MeV^-1 cm^-2 s^-1 sr^-1.
+        """Power-law index of the background model.
 
         The total background flux is
-            phi = A * (E / 1 MeV)^(-alpha)
-                      ^------------------^
-        with `alpha` the power-law index.
+            ɸ = A * (E / 1 MeV)^(-ɑ)
+                   ^----------------^
+        with `ɑ` the power-law index.
         """
         return self._power_law_index
 
@@ -1285,7 +1299,7 @@ class GeccoBackgroundModel:
 
         Returns
         -------
-        dphi/dE dOmega: dict
+        d²ɸ/dEdΩ : dict
             Differential flux.
         """
         amp = self.amplitude
