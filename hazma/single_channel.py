@@ -1,389 +1,242 @@
-from typing import Callable
+"""
+Implementation of dark matter models annihilating into a single final state.
+"""
 
-import numpy as np
+from typing import Callable, Dict, List
+import functools as ft
 
 from hazma.theory import TheoryAnn, TheoryDec
-from hazma.parameters import (
-    neutral_pion_mass as m_pi0,
-    charged_pion_mass as m_pi,
-    alpha_em,
-    electron_mass as m_e,
-    muon_mass as m_mu,
-)
-from hazma.spectra import (
-    dnde_photon_muon as dnde_g_mu,
-    dnde_photon_neutral_pion as dnde_g_pi0,
-    dnde_photon_charged_pion as dnde_g_pi,
-)
-from hazma.spectra import (
-    dnde_positron_charged_pion as dnde_p_pi,
-    dnde_positron_muon as dnde_p_mu,
-)
-from hazma.utils import RealOrRealArray
+from hazma.parameters import standard_model_masses as sm_masses
+from hazma import spectra
 
 
 class SingleChannelAnn(TheoryAnn):
-    def __init__(self, mx, fs, sigma):
+    """Model with dark matter annihilating into a single final state."""
+
+    def __init__(self, mx: float, fs: str, sigma: float) -> None:
         self._mx = mx
         self._fs = fs
         self.sigma = sigma
+        self._final_states = fs.split(" ")
+        self._fs_masses = list(map(lambda s: sm_masses[s], self._final_states))
 
-        self.fs_mass: float = 0.0
-        self._spectrum_funcs: Callable[[], dict] = lambda: dict()
-        self._gamma_ray_line_energies: Callable[[float], dict] = lambda _: dict()
-        self._positron_spectrum_funcs: Callable[[], dict] = lambda: dict()
-        self._positron_line_energies: Callable[[float], dict] = lambda _: dict()
-
-        self.setup()
-
-    def __repr__(self):
-        args = [
-            f"mx={self._mx} MeV",
-            f"fs='{self._fs}'",
-            f"sigma={self.sigma} MeV^-2",
-        ]
-        return "SingleChannelAnn(" + ", ".join(args) + ")"
+    def __repr__(self) -> str:
+        return (
+            "SingleChannelAnn("
+            + f"mx={self._mx} MeV"
+            + f"fs='{self._fs}'"
+            + f"sigma={self.sigma} MeV^-2"
+            + ")"
+        )
 
     @property
-    def fs(self):
+    def fs(self) -> str:
+        """The final state."""
         return self._fs
 
     @fs.setter
-    def fs(self, fs):
+    def fs(self, fs) -> None:
         self._fs = fs
-        self.setup()
+        self._final_states = fs.split(" ")
+        self._fs_masses = list(map(lambda s: sm_masses[s], self._final_states))
 
     @property
-    def mx(self):
+    def mx(self) -> float:
+        """Dark matter mass in MeV."""
         return self._mx
 
     @mx.setter
-    def mx(self, mx):
+    def mx(self, mx) -> None:
         self._mx = mx
-        self.setup()
 
-    def annihilation_cross_section_funcs(self):
+    @property
+    def fs_mass(self) -> float:
+        """Return the threshold for annihilation."""
+        return sum(map(lambda s: sm_masses[s], self._final_states))
+
+    def annihilation_cross_section_funcs(self) -> Dict[str, Callable]:
         def xsec(e_cm):
             if e_cm < 2 * self.mx or e_cm < self.fs_mass:
                 return 0.0
-            else:
-                return self.sigma
+            return self.sigma
 
         return {self.fs: xsec}
 
-    def list_annihilation_final_states(self):
+    def list_annihilation_final_states(  # pylint: disable=arguments-differ
+        self,
+    ) -> List[str]:
+        r"""Return a list of the final state particles DM can annihilate into."""
         return [self.fs]
 
-    def setup(self):
-        self.set_fs_mass()
-        self.set_spectrum_funcs()
-        self.set_gamma_ray_line_energies()
-        self.set_positron_spectrum_funcs()
-        self.set_positron_line_energies()
-
-    def set_fs_mass(self):
-        # Sets kinematic threshold for DM annihilations/decays
-        if self.fs == "g g":
-            self.fs_mass = 0.0
-        elif self.fs == "e e":
-            self.fs_mass = 2 * m_e
-        elif self.fs == "mu mu":
-            self.fs_mass = 2 * m_mu
-        elif self.fs == "pi pi":
-            self.fs_mass = 2 * m_pi
-        elif self.fs == "pi0 pi0":
-            self.fs_mass = 2 * m_pi0
-        elif self.fs == "pi0 g":
-            self.fs_mass = m_pi0
-
-    def __dnde_photon_ee(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return self._dnde_ap_fermion(eg, ecm, m_e)
-
-    def __dnde_photon_mumu(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return 2 * dnde_g_mu(eg, ecm / 2) + self._dnde_ap_fermion(eg, ecm, m_mu)
-
-    def __dnde_photon_pi0pi0(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return 2 * dnde_g_pi0(eg, ecm / 2)
-
-    def __dnde_photon_pi0g(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return dnde_g_pi0(eg, (ecm**2 + m_pi0**2) / (2.0 * ecm))
-
-    def __dnde_photon_pipi(self, eg: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        return 2 * dnde_g_pi(eg, ecm / 2) + self._dnde_ap_scalar(eg, ecm, m_pi)
-
-    def set_spectrum_funcs(self) -> None:
-        """
-        Sets gamma ray spectrum functions.
-        """
-        funcs = dict()
-
-        if self.fs == "e e":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_ee(eg, ecm)
-        elif self.fs == "mu mu":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_mumu(eg, ecm)
-        elif self.fs == "pi0 pi0":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pi0pi0(eg, ecm)
-        elif self.fs == "pi0 g":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pi0g(eg, ecm)
-        elif self.fs == "pi pi":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_photon_pipi(eg, ecm)
+    def __spectrum_func(self, product: str) -> Callable:
+        final_states = self.fs.split(" ")
+        if product == "photon":
+            dnde_fn = spectra.dnde_photon
+        elif product == "positron":
+            dnde_fn = spectra.dnde_positron
+        elif product in ["neutrino", "ve", "vm", "vt"]:
+            dnde_fn = spectra.dnde_neutrino
         else:
-            funcs[self.fs] = lambda eg, ecm: np.zeros_like(eg)
+            raise ValueError(f"Invalid product {product}")
 
-        self._spectrum_funcs = lambda: funcs
+        return ft.partial(dnde_fn, final_states=final_states)
 
-    def set_gamma_ray_line_energies(self) -> None:
-        if self.fs == "g g":
-            self._gamma_ray_line_energies = lambda e_cm: {"g g": e_cm / 2}
+    def _spectrum_funcs(self) -> Dict[str, Callable]:
+        return {self.fs: self.__spectrum_func("photon")}
 
-        elif self.fs == "pi0 g":
-            self._gamma_ray_line_energies = lambda e_cm: {
-                "pi0 g": (e_cm**2 - m_pi0**2) / (2.0 * e_cm)
-            }
-        else:
-            self._gamma_ray_line_energies = lambda _: {}
+    def _gamma_ray_line_energies(self, e_cm) -> Dict:
+        lines = {}
+        if len(self._final_states) == 2:
+            s1, s2 = self._final_states
+            m1, m2 = self._fs_masses
+            energies = [
+                (e_cm**2 + m1**2 - m2**2) / (2 * e_cm),
+                (e_cm**2 - m1**2 + m2**2) / (2 * e_cm),
+            ]
 
-    def __dnde_positron_mumu(self, ep: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        if ecm < self.fs_mass:
-            return 0.0
-        return dnde_p_mu(ep, ecm / 2.0)
+            if s1 == "g" and s2 == "g":
+                lines[self.fs] = {"g g": energies[0]}
+            elif s1 == "g":
+                lines[self.fs] = {"g g": energies[0]}
+            elif s2 == "g":
+                lines[self.fs] = {"g g": energies[1]}
 
-    def __dnde_positron_pipi(self, ep: RealOrRealArray, ecm: float) -> RealOrRealArray:
-        if ecm < self.fs_mass:
-            return 0.0
-        return dnde_p_pi(ep, ecm / 2.0)
+        return lines
 
-    def set_positron_spectrum_funcs(self):
-        funcs = dict()
+    def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
+        return {self.fs: self.__spectrum_func("positron")}
 
-        if self.fs == "mu mu":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_mumu(eg, ecm)
-        elif self.fs == "pi pi":
-            funcs[self.fs] = lambda eg, ecm: self.__dnde_positron_pipi(eg, ecm)
-        else:
-            funcs[self.fs] = lambda eg, ecm: np.zeros_like(eg)
+    def _positron_line_energies(self, e_cm) -> Dict[str, float]:
+        lines = {}
+        if len(self._final_states) == 2:
+            s1, s2 = self._final_states
+            m1, m2 = self._fs_masses
+            energies = [
+                (e_cm**2 + m1**2 - m2**2) / (2 * e_cm),
+                (e_cm**2 - m1**2 + m2**2) / (2 * e_cm),
+            ]
 
-        self._positron_spectrum_funcs = lambda: funcs
+            if s1 == "e":
+                lines[self.fs] = {self.fs: energies[0]}
+            elif s2 == "e":
+                lines[self.fs] = {self.fs: energies[1]}
 
-    def set_positron_line_energies(self):
-        if self.fs == "e e":
-            self._positron_line_energies = lambda e_cm: {"e e": e_cm / 2.0}
-        else:
-            self._positron_line_energies = lambda _: {}
+        return lines
 
-    def _dnde_ap_scalar(self, e_g, e_cm, m_scalar):
-        def fn(e_g):
-            mu = m_scalar / e_cm
-            x = 2 * e_g / e_cm
-            P_g_scalar = 2 * (1 - x) / x
-            res = (
-                2
-                * alpha_em
-                / (np.pi * e_cm)
-                * P_g_scalar
-                * (np.log((1 - x) / mu**2) - 1)
-            )
-            if not np.isnan(res) and res >= 0:
-                return res
-            else:
-                return 0
-
-        return np.vectorize(fn)(e_g)
-
-    def _dnde_ap_fermion(self, e_g, e_cm, m_fermion):
-        def fn(e_g):
-            mu = m_fermion / e_cm
-            x = 2 * e_g / e_cm
-            P_g_fermion = (1 + (1 - x) ** 2) / x
-            res = (
-                2
-                * alpha_em
-                / (np.pi * e_cm)
-                * P_g_fermion
-                * (np.log((1 - x) / mu**2) - 1)
-            )
-            if not np.isnan(res) and res >= 0:
-                return res
-            else:
-                return 0
-
-        return np.vectorize(fn)(e_g)
+    def partial_widths(self):
+        raise NotImplementedError(
+            "partial_widths is not implimented for the SingleChannelAnn model."
+        )
 
 
 class SingleChannelDec(TheoryDec):
-    def __init__(self, mx, fs, width):
+    r"""Model with dark matter decaying into a single final state."""
+
+    def __init__(self, mx: float, fs: str, width: float) -> None:
         self._mx = mx
         self._fs = fs
         self.width = width
+        self._final_states = fs.split(" ")
+        self._fs_masses = list(map(lambda s: sm_masses[s], self._final_states))
 
-        self._spectrum_funcs: Callable[[], dict] = lambda: dict()
-        self._gamma_ray_line_energies: Callable[[], dict] = lambda: dict()
-        self._positron_spectrum_funcs: Callable[[], dict] = lambda: dict()
-        self._positron_line_energies: Callable[[], dict] = lambda: dict()
-
-        self.setup()
-
-    def __repr__(self):
-
-        args = [
-            f"mx={self._mx} MeV",
-            f"fs='{self._fs}'",
-            f"width={self.width} MeV",
-        ]
-        return "SingleChannelDec(" + ", ".join(args) + ")"
+    def __repr__(self) -> str:
+        return (
+            "SingleChannelDec("
+            + f"mx={self._mx} MeV"
+            + f"fs='{self._fs}'"
+            + f"width={self.width} MeV"
+            + ")"
+        )
 
     @property
-    def fs(self):
+    def fs(self) -> str:
+        """The final state."""
         return self._fs
 
     @fs.setter
-    def fs(self, fs):
+    def fs(self, fs: str) -> None:
         self._fs = fs
-        self.setup()
 
     @property
-    def mx(self):
+    def mx(self) -> float:
+        """Dark matter mass in MeV."""
         return self._mx
 
     @mx.setter
-    def mx(self, mx):
+    def mx(self, mx: float) -> None:
         self._mx = mx
-        self.setup()
 
-    def list_decay_final_states(self):
+    @property
+    def fs_mass(self) -> float:
+        """Return the threshold for annihilation."""
+        return sum(map(lambda s: sm_masses[s], self._final_states))
+
+    def list_decay_final_states(self) -> List[str]:  # pylint: disable=arguments-differ
+        r"""Return a list of the final state particles DM can decay into."""
         return [self.fs]
 
-    def _decay_widths(self):
+    def _decay_widths(self) -> Dict[str, float]:
         return {self.fs: self.width}
 
-    def setup(self):
-        self.set_fs_mass()
-        self.set_spectrum_funcs()
-        self.set_gamma_ray_line_energies()
-        self.set_positron_spectrum_funcs()
-        self.set_positron_line_energies()
+    def __spectrum_func(self, product: str) -> Callable:
+        final_states = self.fs.split(" ")
+        if product == "photon":
+            dnde_fn = spectra.dnde_photon
+        elif product == "positron":
+            dnde_fn = spectra.dnde_positron
+        elif product in ["neutrino", "ve", "vm", "vt"]:
+            dnde_fn = spectra.dnde_neutrino
+        else:
+            raise ValueError(f"Invalid product {product}")
 
-    def set_fs_mass(self):
-        # Sets kinematic threshold for DM annihilations/decays
-        if self.fs == "g g":
-            self.fs_mass = 0.0
-        elif self.fs == "e e":
-            self.fs_mass = 2 * m_e
-        elif self.fs == "mu mu":
-            self.fs_mass = 2 * m_mu
-        elif self.fs == "pi pi":
-            self.fs_mass = 2 * m_pi
-        elif self.fs == "pi0 pi0":
-            self.fs_mass = 2 * m_pi0
-        elif self.fs == "pi0 g":
-            self.fs_mass = m_pi0
+        def dnde(product_energies):
+            return dnde_fn(product_energies, self.mx, final_states=final_states)
 
-    def __dnde_photon_ee(self, eg):
-        return self._dnde_ap_fermion(eg, m_e)
+        return dnde
 
-    def __dnde_photon_mumu(self, eg):
-        return 2 * dnde_g_mu(eg, self.mx / 2) + self._dnde_ap_fermion(eg, m_mu)
+    def _spectrum_funcs(self) -> Dict[str, Callable]:
+        return {self.fs: self.__spectrum_func("photon")}
 
-    def __dnde_photon_pi0pi0(self, eg):
-        return 2 * dnde_g_pi0(eg, self.mx / 2)
+    def _gamma_ray_line_energies(self) -> Dict[str, float]:
+        mx = self.mx
+        lines = {}
+        if len(self._final_states) == 2:
+            s1, s2 = self._final_states
+            m1, m2 = self._fs_masses
+            energies = [
+                (mx**2 + m1**2 - m2**2) / (2 * mx),
+                (mx**2 - m1**2 + m2**2) / (2 * mx),
+            ]
 
-    def __dnde_photon_pi0g(self, eg):
-        return dnde_g_pi0(eg, (self.mx**2 + m_pi0**2) / (2.0 * self.mx))
+            if s1 == "g" and s2 == "g":
+                lines[self.fs] = {"g g": energies[0]}
+            elif s1 == "g":
+                lines[self.fs] = {"g g": energies[0]}
+            elif s2 == "g":
+                lines[self.fs] = {"g g": energies[1]}
 
-    def __dnde_photon_pipi(self, eg):
-        return 2 * dnde_g_pi(eg, self.mx / 2) + self._dnde_ap_scalar(eg, m_pi)
+        return lines
 
-    def set_spectrum_funcs(self):
-        """
-        Sets gamma ray spectrum functions.
-        """
-        funcs = dict()
+    def _positron_spectrum_funcs(self) -> Dict[str, Callable]:
+        return {self.fs: self.__spectrum_func("positron")}
 
-        if self.fs == "e e":
-            funcs[self.fs] = lambda eg: self.__dnde_photon_ee(eg)
-        elif self.fs == "mu mu":
-            funcs[self.fs] = lambda eg: self.__dnde_photon_mumu(eg)
-        elif self.fs == "pi0 pi0":
-            funcs[self.fs] = lambda eg: self.__dnde_photon_pi0pi0(eg)
-        elif self.fs == "pi0 g":
-            funcs[self.fs] = lambda eg: self.__dnde_photon_pi0g(eg)
-        elif self.fs == "pi pi":
-            funcs[self.fs] = lambda eg: self.__dnde_photon_pipi(eg)
+    def _positron_line_energies(self) -> Dict[str, float]:
+        mx = self.mx
+        lines = {}
+        if len(self._final_states) == 2:
+            s1, s2 = self._final_states
+            m1, m2 = self._fs_masses
+            energies = [
+                (mx**2 + m1**2 - m2**2) / (2 * mx),
+                (mx**2 - m1**2 + m2**2) / (2 * mx),
+            ]
 
-        self._spectrum_funcs = lambda: funcs
+            if s1 == "e":
+                lines[self.fs] = {self.fs: energies[0]}
+            elif s2 == "e":
+                lines[self.fs] = {self.fs: energies[1]}
 
-    def set_gamma_ray_line_energies(self):
-        lines = dict()
+        return lines
 
-        if self.fs == "g g":
-            lines[self.fs] = self.mx / 2
-        elif self.fs == "pi0 g":
-            lines[self.fs] = (self.mx**2 - m_pi0**2) / (2.0 * self.mx)
-
-        self._gamma_ray_line_energies = lambda: lines
-
-    def __dnde_positron_mumu(self, ep):
-        if self.mx < self.fs_mass:
-            return 0.0
-        return dnde_p_mu(ep, self.mx / 2.0)
-
-    def __dnde_positron_pipi(self, ep):
-        if self.mx < self.fs_mass:
-            return 0.0
-        return dnde_p_pi(ep, self.mx / 2.0)
-
-    def set_positron_spectrum_funcs(self):
-        funcs = dict()
-
-        if self.fs == "mu mu":
-            funcs[self.fs] = lambda ep: self.__dnde_positron_mumu(ep)
-        elif self.fs == "pi pi":
-            funcs[self.fs] = lambda ep: self.__dnde_positron_pipi(ep)
-
-        self._positron_spectrum_funcs = lambda: funcs
-
-    def set_positron_line_energies(self):
-        lines = dict()
-
-        if self.fs == "e e":
-            lines[self.fs] = self.mx / 2.0
-
-        self._positron_line_energies = lambda: lines
-
-    def _dnde_ap_scalar(self, e_g, m_scalar):
-        def fn(e_g):
-            mu = m_scalar / self.mx
-            x = 2 * e_g / self.mx
-            P_g_scalar = 2 * (1 - x) / x
-            res = (
-                2
-                * alpha_em
-                / (np.pi * self.mx)
-                * P_g_scalar
-                * (np.log((1 - x) / mu**2) - 1)
-            )
-            if not np.isnan(res) and res >= 0:
-                return res
-            else:
-                return 0
-
-        return np.vectorize(fn)(e_g)
-
-    def _dnde_ap_fermion(self, e_g, m_fermion):
-        def fn(e_g):
-            mu = m_fermion / self.mx
-            x = 2 * e_g / self.mx
-            P_g_fermion = (1 + (1 - x) ** 2) / x
-            res = (
-                2
-                * alpha_em
-                / (np.pi * self.mx)
-                * P_g_fermion
-                * (np.log((1 - x) / mu**2) - 1)
-            )
-            if not np.isnan(res) and res >= 0:
-                return res
-            else:
-                return 0
-
-        return np.vectorize(fn)(e_g)
+    def constraints(self):
+        raise NotImplementedError("Constraints are not implimented.")
