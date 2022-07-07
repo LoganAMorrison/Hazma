@@ -255,7 +255,7 @@ def msqrd_l_pi0_pi(
         Pion electromagnetic form factor.
     """
     mx = model.mx
-    ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+    ff = form_factor.form_factor(q=np.sqrt(s), couplings=(GVUU, GVDD))
     ml = _lepton_masses[model.gen]
     ckm = abs(VUD) ** 2
     u = 0.5 * np.tan(2 * model.theta)
@@ -332,7 +332,7 @@ def width_l_pi0_pi(
     def integrand(s):
         z = s / mx**2
         poly = (1 - xl2) ** 2 + z * (1 + xl2) - 2 * z**2
-        ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+        ff = form_factor.form_factor(q=np.sqrt(s), couplings=(GVUU, GVDD))
         beta = (1.0 - 4 * MPI**2 / s) ** 1.5
         p = np.sqrt(kallen_lambda(1.0, z, xl2))
         return poly * np.abs(ff) ** 2 * p * beta
@@ -364,7 +364,7 @@ def msqrd_v_pi_pi(
         Pion electromagnetic form factor.
     """
     mx = model.mx
-    ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+    ff = form_factor.form_factor(q=np.sqrt(s), couplings=(GVUU, GVDD))
     u = 0.5 * np.tan(2 * model.theta)
 
     return (
@@ -433,7 +433,7 @@ def width_v_pi_pi(
 
     def integrand(s):
         z = s / mx**2
-        ff = form_factor.form_factor(q=np.sqrt(s), gvuu=GVUU, gvdd=GVDD)
+        ff = form_factor.form_factor(q=np.sqrt(s), couplings=(GVUU, GVDD))
         beta = (1.0 - 4 * MPI**2 / s) ** 1.5
         poly = (1 - z) ** 2 * (1 + 2 * z)
         return np.abs(ff) ** 2 * beta * poly
