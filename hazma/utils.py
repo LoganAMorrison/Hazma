@@ -55,7 +55,7 @@ RealArray = npt.NDArray[np.float_]
 RealOrRealArray = Union[float, RealArray]
 ComplexArray = npt.NDArray[np.complex_]
 ComplexOrComplexArray = Union[complex, ComplexArray]
-RealOrComplexArray = npt.NDArray[np.float_ | np.complex_]
+RealOrComplexArray = npt.NDArray[Union[np.float_, np.complex_]]
 
 # ===================================================================
 # ---- Kinematics ---------------------------------------------------
