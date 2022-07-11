@@ -135,7 +135,7 @@ setup(
         "hazma/decay/_neutrino",
     ],
     package_data={
-        "*": ["*.dat", ".csv", "*.pxd"]
+        "*": ["*.dat", "*.csv", "*.pxd"]
         # "hazma/": [],
         # "hazma/_utils": ["*.pxd"],
         # "hazma/_gamma_ray": ["*.pxd"],
