@@ -16,7 +16,7 @@ def long_description():
 
 def make_extension(module: List[str], sources: List[str], cpp=False):
     package = ".".join(["hazma", *module])
-    path = "/".join(["hazma", *module])
+    path = "/".join(["src", "hazma", *module])
 
     extensions = []
     for src in sources:
@@ -52,6 +52,19 @@ EXTENSIONS += make_extension(
     ["field_theory_helper_functions"],
     ["common_functions", "three_body_phase_space"],
     cpp=True,
+)
+
+EXTENSIONS += make_extension(
+    ["_decay"],
+    [
+        "decay_charged_kaon",
+        "decay_charged_pion",
+        "decay_long_kaon",
+        "decay_muon",
+        "decay_neutral_pion",
+        "decay_rho",
+        "decay_short_kaon",
+    ],
 )
 
 # Positron
@@ -109,8 +122,8 @@ EXTENSIONS += make_extension(
 setup(
     name="hazma",
     version=VERSION,
-    author="Logan Morrison and Adam Coogan",
-    author_email="loanmorr@ucsc.edu",
+    author="Logan Morrison, Adam Coogan",
+    author_email="loanmorr@ucsc.edu, dr.adam.coogan@gmail.com",
     maintainer="Logan Morrison",
     maintainer_email="loanmorr@ucsc.edu",
     url="http://hazma.readthedocs.io",
@@ -120,49 +133,35 @@ setup(
     ),
     long_description=long_description(),
     long_description_content_type="text/markdown",
-    keywords="dark-matter mev-dark-matter gamma-ray-spectra",
-    packages=find_packages(),
+    keywords="dark matter, MeV dark matter, gamma ray spectra",
     ext_modules=EXTENSIONS,
     include_dirs=[
         np.get_include(),
-        "hazma/_utils",
-        # "hazma/_decay",
-        # "hazma/_positron",
-        # "hazma/_neutrino",
-        "hazma/_gamma_ray",
-        "hazma/decay/_photon",
-        "hazma/decay/_positron",
-        "hazma/decay/_neutrino",
+        "src/hazma/_utils",
+        "src/hazma/_decay",
+        # "hazma/_gamma_ray",
     ],
-    package_data={
-        "*": ["*.dat", "*.csv", "*.pxd"]
-        # "hazma/": [],
-        # "hazma/_utils": ["*.pxd"],
-        # "hazma/_gamma_ray": ["*.pxd"],
-        # # "hazma/_decay": ["*.pxd"],
-        # # "hazma/_positron": ["*.pxd"],
-        # # "hazma/_neutrino": ["*.pxd"],
-        # "hazma/decay/_photon": ["*.pxd"],
-        # "hazma/decay/_positron": ["*.pxd"],
-        # "hazma/decay/_neutrino": ["*.pxd"],
-    },
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    package_data={"": ["*.dat", "*.csv", "*.pxd"]},
     setup_requires=["pytest-runner"],
     install_requires=[
-        "pip",
-        "matplotlib",
-        "scipy",
-        "numpy",
         "cython",
-        "numpydoc",
-        "scikit-image",
-        "setuptools",
         "flake8",
         "importlib_resources ; python_version<'3.7'",
+        "matplotlib",
+        "numpy",
+        "numpydoc",
+        "pandas",
+        "pip",
+        "setuptools",
+        "scipy",
+        "scikit-image",
+        "typing_extensions",
     ],
     python_requires=">=3",
     tests_require=["pytest>=3.2.5"],
     zip_safe=False,
-    include_package_data=True,
     license="gpl-3.0",
     platforms="MacOS and Linux",
     download_url="https://github.com/LoganAMorrison/Hazma",

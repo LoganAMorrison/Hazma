@@ -3,12 +3,11 @@ Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
 """
-from typing import List, overload
-from warnings import warn
+from typing import overload
 
 import numpy as np
 
-from hazma.spectra._photon import (
+from . import (
     _muon,
     _pion,
     _rho,

@@ -4,5 +4,6 @@ __all__ = [
     "decay_long_kaon",
     "decay_muon",
     "decay_neutral_pion",
+    "decay_rho",
     "decay_short_kaon",
 ]

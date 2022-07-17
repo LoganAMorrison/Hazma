@@ -6,11 +6,21 @@ from typing import Callable, Union, Optional, List
 import numpy as np
 from numpy.testing import assert_allclose
 
+# TODO: refactor
 from hazma.decay import muon, neutral_pion
 from hazma.decay import charged_pion, charged_pion_decay_modes
 from hazma.decay import charged_kaon, charged_kaon_decay_modes
 from hazma.decay import short_kaon, short_kaon_decay_modes
 from hazma.decay import long_kaon, long_kaon_decay_modes
+# New imports:
+# from hazma.spectra import (
+#         dnde_photon_muon,
+#         dnde_photon_neutral_pion,
+#         dnde_photon_charged_pion,
+#         dnde_photon_charged_kaon,
+#         dnde_photon_long_kaon,
+#         dnde_photon_short_kaon,
+# )
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import neutral_pion_mass as mpi0

@@ -6,7 +6,7 @@ include "parameters.pxd"
 cdef double CSpectrumPoint(double eng_gam, double eng_e):
     """
     Compute dN_{\gamma}/dE_{\gamma} from mu -> e nu nu gamma in the
-    laborartory frame.
+    laboratory frame.
 
     Keyword arguments::
         eng_gam (float) -- Gamma ray energy in laboratory frame.
@@ -23,7 +23,7 @@ cdef double CSpectrumPoint(double eng_gam, double eng_e):
 @cython.cdivision(True)
 cdef np.ndarray CSpectrum(np.ndarray eng_gams, double eng_e):
     """
-    Compute dN/dE from mu -> e nu nu gamma in the laborartory frame.
+    Compute dN/dE from mu -> e nu nu gamma in the laboratory frame.
 
     Paramaters
     ----------
