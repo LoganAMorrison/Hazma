@@ -11,6 +11,6 @@ include hazma/gamma_ray_data/obs/*.dat
 include hazma/pbh_data/*.csv
 include hazma/cmb_data/*.dat
 include hazma/relic_density/*.dat
-include hazma/spectra/_photon/*.csv
-include hazma/spectra/_positron/*.csv
-include hazma/spectra/_neutrino/*.csv
+include hazma/spectra/_photon/data/*.csv
+include hazma/spectra/_positron/data/*.csv
+include hazma/spectra/_neutrino/data/*.csv
