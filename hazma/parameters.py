@@ -473,4 +473,4 @@ def convolved_spectrum_fn(
                 * (2.0 if ch == "g g" else 1.0)
             )
 
-    return InterpolatedUnivariateSpline(es, dnde_conv, k=1, ext="raise")
+    return InterpolatedUnivariateSpline(es, dnde_conv, k=1, ext="raise")  # type: ignore
