@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from pkg_resources import resource_filename
 from scipy.interpolate import interp1d
 
@@ -58,19 +57,31 @@ class PBH(TheoryDec):
         else:
             raise ValueError("invalid spectrum_kind")
 
-        def to_float(s):
+        def parse_float(s):
             try:
                 return float(s)
             except ValueError:
                 sig, exponent = s.split("e")
                 return float(sig) * 10 ** float(exponent)
 
-        df = pd.read_csv(fname)
-        self._mxs = df.columns[2:].map(to_float).values * g_to_MeV  # type:ignore
+        def parse_line(line: str):
+            # Skip first value (it's the row index)
+            return list(map(float, line.split(",")[1:]))
+
+        with open(fname, "r") as f:
+            # Header has the format: ,photon_energies,1e15.0,1e15.05,1e15.1,...
+            # We don't need the first to entries after split on ',', then we
+            # need to parser the weird floats.
+            masses = np.array(list(map(parse_float, f.readline().split(",")[2:])))
+            # Read the remaining lines, which have format: i,e1,e2,e3,... where
+            # 'i' is the row index and the rest are the values we want.
+            data = np.array(list(map(parse_line, f.readlines())))
+
+        self._mxs = masses * g_to_MeV
         # GeV -> MeV
-        self._e_gams = df.iloc[:, 1].values * 1e3  # type:ignore
+        self._e_gams = data[:, 0] * 1e3
         # 1/GeV -> 1/MeV
-        self._d2n_dedt = df.iloc[:, 2:].values * 1e-3  # type:ignore
+        self._d2n_dedt = data[:, 1:] * 1e-3  # type:ignore
 
     @property
     def bh_secondary(self):
