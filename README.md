@@ -34,16 +34,12 @@ Hazma can be installed from PyPI using:
 pip install hazma
 ```
 
-Alternatively, you can download Hazma directly from this page, navigate to the package directory using the command line and run
+Alternatively, you can clone the Hazma repo and build from source:
 
 ```shell
+git clone https://github.com/LoganAMorrison/Hazma.git
+cd Hazma
 pip install .
-```
-
-or
-
-```shell
-python setup.py install
 ```
 
 Since Hazma utilizes C to rapidly compute gamma ray, electron and positron spectra, you will need to have [Cython](https://github.com/cython/cython)
