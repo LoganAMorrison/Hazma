@@ -1,13 +1,10 @@
 import unittest
 
-from pytest import approx
-
+# import pytest
 import numpy as np
-from numpy import testing as np_testing
 
 from hazma.parameters import standard_model_masses as sm_masses
 from hazma import rh_neutrino
-from hazma.utils import lnorm_sqr
 
 ME = sm_masses["e"]
 MMU = sm_masses["mu"]
@@ -91,7 +88,7 @@ class TestWidths(unittest.TestCase):
     def test_dnde_photon(self):
         """Test RHNeutrino.decay_widths"""
 
-        for key, models in self.models.items():
+        for _, models in self.models.items():
             for model in models:
                 es = np.geomspace(1e-2, 1, 5) * model.mx
                 model.spectra(es)

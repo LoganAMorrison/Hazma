@@ -17,8 +17,7 @@ if __name__ == "__main__":
 
     mxs = np.logspace(np.log10(0.1), np.log10(1e3), NPTS)
     widths = {
-        key: np.zeros(NPTS, dtype=np.float64)
-        for key in model.decay_widths().keys()
+        key: np.zeros(NPTS, dtype=np.float64) for key in model.decay_widths().keys()
     }
 
     for i, mx in enumerate(mxs):

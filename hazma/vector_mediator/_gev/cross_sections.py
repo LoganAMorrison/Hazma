@@ -1,10 +1,10 @@
-from typing import TypeVar, Callable, List, Union, Dict
+from typing import Callable, Dict, Sequence
 
 import numpy as np
-import numpy.typing as npt
 
 from hazma import parameters
 from hazma.utils import RealArray
+import hazma.form_factors.vector as vff
 
 
 ME = parameters.electron_mass
@@ -19,9 +19,16 @@ MPHI = parameters.phi_mass
 MOMEGA = parameters.omega_mass
 
 
-CMEType = Union[float, npt.NDArray[np.float_]]
-
-T = TypeVar("T", float, npt.NDArray[np.float64])
+def _sigma_xx_to_call_wrapper(self, q, form_factor, **kwargs):
+    return form_factor.cross_section(
+        q=q,
+        mx=self.mx,
+        mv=self.mv,
+        gvxx=self.gvxx,
+        wv=self.width_v(),
+        couplings=self._couplings,
+        **kwargs,
+    )
 
 
 def cross_section_x_x_to_p_p(s, mx, mp, ff, mv, gamv):
@@ -68,7 +75,7 @@ def __width_to_cs(self, cme):
     return num / den
 
 
-def __sigma_from_width_fn(self, width: Callable, e_cm, fsp_masses: List[float]):
+def __sigma_from_width_fn(self, width: Callable, e_cm, fsp_masses: Sequence[float]):
     """
     Compute the DM annihilation cross section given a function to compute the
     vector mediator partial width.
@@ -239,12 +246,8 @@ def sigma_xx_to_pi_pi(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MPI]
-
-    def width(cme):
-        return self._ff_pi_pi.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, imode=1)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPi = self._ff_pi_pi
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_k0_k0(self, e_cm):
@@ -257,14 +260,8 @@ def sigma_xx_to_k0_k0(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MK0, MK0]
-
-    def width(cme):
-        return self._ff_k_k.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, imode=0
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorK0K0 = self._ff_k0_k0
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_k_k(self, e_cm):
@@ -277,14 +274,8 @@ def sigma_xx_to_k_k(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MK, MK]
-
-    def width(cme):
-        return self._ff_k_k.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, imode=1
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorKK = self._ff_k_k
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi0_gamma(self, e_cm):
@@ -297,14 +288,8 @@ def sigma_xx_to_pi0_gamma(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI0, 0.0]
-
-    def width(cme):
-        return self._ff_pi_gamma.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPi0Gamma = self._ff_pi0_gamma
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_eta_gamma(self, e_cm):
@@ -317,14 +302,8 @@ def sigma_xx_to_eta_gamma(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [META, 0.0]
-
-    def width(cme):
-        return self._ff_eta_gamma.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorEtaGamma = self._ff_eta_gamma
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi0_phi(self, e_cm):
@@ -337,12 +316,8 @@ def sigma_xx_to_pi0_phi(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI0, MPHI]
-
-    def width(cme):
-        return self._ff_pi_phi.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPi0Phi = self._ff_pi0_phi
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_eta_phi(self, e_cm):
@@ -355,12 +330,8 @@ def sigma_xx_to_eta_phi(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [META, MPHI]
-
-    def width(cme):
-        return self._ff_eta_phi.width(mv=cme, gvss=self.gvss)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorEtaPhi = self._ff_eta_phi
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_eta_omega(self, e_cm):
@@ -373,12 +344,8 @@ def sigma_xx_to_eta_omega(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [META, MOMEGA]
-
-    def width(cme):
-        return self._ff_eta_omega.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorEtaOmega = self._ff_eta_omega
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi0_pi0_gamma(self, e_cm):
@@ -391,10 +358,11 @@ def sigma_xx_to_pi0_pi0_gamma(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
+    ff: vff.VectorFormFactorPi0Omega = self._ff_pi0_omega
     fsp_masses = [MPI0, MPI0, 0.0]
 
     def width(cme):
-        pi0_omega = self._ff_pi_omega.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd)
+        pi0_omega = ff.width(mv=cme, couplings=self._couplings)
         br_omega_to_pi0_gamma = 8.34e-2
 
         return br_omega_to_pi0_gamma * pi0_omega
@@ -412,14 +380,8 @@ def sigma_xx_to_pi_pi_pi0(self, e_cm, *, npts=10_000):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MPI, MPI0]
-
-    def width(cme):
-        return self._ff_pi_pi_pi0.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiPi0 = self._ff_pi_pi_pi0
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def sigma_xx_to_pi_pi_eta(self, e_cm):
@@ -432,12 +394,8 @@ def sigma_xx_to_pi_pi_eta(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MPI, META]
-
-    def width(cme):
-        return self._ff_pi_pi_eta.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiEta = self._ff_pi_pi_eta
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi_pi_etap(self, e_cm):
@@ -450,12 +408,8 @@ def sigma_xx_to_pi_pi_etap(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MPI, METAP]
-
-    def width(cme):
-        return self._ff_pi_pi_etap.width(mv=cme, gvuu=self.gvuu, gvdd=self.gvdd)
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiEtaPrime = self._ff_pi_pi_etap
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi_pi_omega(self, e_cm):
@@ -468,14 +422,8 @@ def sigma_xx_to_pi_pi_omega(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MPI, MOMEGA]
-
-    def width(cme):
-        return self._ff_pi_pi_omega.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, imode=1
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiOmega = self._ff_pi_pi_omega
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi0_pi0_omega(self, e_cm):
@@ -488,14 +436,8 @@ def sigma_xx_to_pi0_pi0_omega(self, e_cm):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI0, MPI0, MOMEGA]
-
-    def width(cme):
-        return self._ff_pi_pi_omega.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, imode=0
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPi0Pi0Omega = self._ff_pi0_pi0_omega
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff)
 
 
 def sigma_xx_to_pi0_k0_k0(self, e_cm, *, npts: int = 50_000):
@@ -508,14 +450,8 @@ def sigma_xx_to_pi0_k0_k0(self, e_cm, *, npts: int = 50_000):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI0, MK0, MK0]
-
-    def width(cme):
-        return self._ff_pi0_k0_k0.width(
-            m=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPi0K0K0 = self._ff_pi0_k0_k0
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def sigma_xx_to_pi0_k_k(self, e_cm, *, npts: int = 50_000):
@@ -528,14 +464,8 @@ def sigma_xx_to_pi0_k_k(self, e_cm, *, npts: int = 50_000):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI0, MK, MK]
-
-    def width(cme):
-        return self._ff_pi0_k_k.width(
-            m=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPi0KpKm = self._ff_pi0_k_k
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def sigma_xx_to_pi_k_k0(self, e_cm, *, npts: int = 50_000):
@@ -548,14 +478,8 @@ def sigma_xx_to_pi_k_k0(self, e_cm, *, npts: int = 50_000):
     e_cm: float or array like
         Center of mass energy.
     """
-    fsp_masses = [MPI, MK, MK0]
-
-    def width(cme):
-        return self._ff_pi_k_k0.width(
-            m=cme, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiKK0 = self._ff_pi_k_k0
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def sigma_xx_to_pi_pi_pi_pi(self, e_cm, *, npts=1 << 14):
@@ -570,14 +494,8 @@ def sigma_xx_to_pi_pi_pi_pi(self, e_cm, *, npts=1 << 14):
         Number of points to use for Monte-Carlo integration. Default
         is 1<<14 ~ 16_000.
     """
-    fsp_masses = [MPI, MPI, MPI, MPI]
-
-    def width(cme):
-        return self._ff_four_pi.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, npts=npts, neutral=False
-        )[0]
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiPiPi = self._ff_pi_pi_pi_pi
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def sigma_xx_to_pi_pi_pi0_pi0(self, e_cm, *, npts: int = 1 << 14):
@@ -593,14 +511,8 @@ def sigma_xx_to_pi_pi_pi0_pi0(self, e_cm, *, npts: int = 1 << 14):
         Number of points to use for Monte-Carlo integration. Default
         is 1<<14 ~ 16_000.
     """
-    fsp_masses = [MPI, MPI, MPI0, MPI0]
-
-    def width(cme):
-        return self._ff_four_pi.width(
-            mv=cme, gvuu=self.gvuu, gvdd=self.gvdd, npts=npts, neutral=True
-        )[0]
-
-    return __sigma_from_width_fn(self, width, e_cm, fsp_masses)
+    ff: vff.VectorFormFactorPiPiPi0Pi0 = self._ff_pi_pi_pi0_pi0
+    return _sigma_xx_to_call_wrapper(self, e_cm, ff, npts=npts)
 
 
 def annihilation_cross_section_funcs(

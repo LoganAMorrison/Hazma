@@ -4,6 +4,7 @@ Test module for the scalar mediator model.
 
 import unittest
 
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -17,6 +18,7 @@ vm5_dir = "test/vector_mediator/data/vm_5/"
 vm6_dir = "test/vector_mediator/data/vm_6/"
 
 
+@pytest.mark.skip(reason="Needs to be updated")
 class TestVectorMediator(unittest.TestCase):
     def setUp(self):
         self.load_vm1_data()

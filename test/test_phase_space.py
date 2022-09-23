@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -13,6 +14,27 @@ from hazma.utils import ldot
 
 mw = parameters.wboson_mass
 mz = parameters.zboson_mass
+
+
+class TestRamboProperties(unittest.TestCase):
+    def setUp(self):
+        self.masses = [1.0, 2.0, 3.0, 4.0]
+        self.cme = sum(self.masses) * 2
+        self.phase_space = Rambo(cme=self.cme, masses=self.masses)
+
+    def test_momenta(self):
+        """Test that total momenta sum to (cme, 0, 0, 0)."""
+        momenta, _ = self.phase_space.generate(100, seed=1)
+        # Note: shape is (4, #fsp, #batch-size)
+        # np.sum -> (4, #batch-size)
+        # np.transpose -> (#batch-size, 4)
+        total_momenta = np.transpose(np.sum(momenta, axis=1), (1, 0))
+
+        for tot in total_momenta:
+            assert tot[0] == pytest.approx(self.cme)
+            assert tot[1] == pytest.approx(0.0, abs=1e-8)
+            assert tot[2] == pytest.approx(0.0, abs=1e-8)
+            assert tot[3] == pytest.approx(0.0, abs=1e-8)
 
 
 class TestRambo(unittest.TestCase):

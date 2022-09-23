@@ -1,5 +1,6 @@
-from typing import Dict, NamedTuple, Tuple
-from typing_extensions import Protocol
+from typing import Dict, NamedTuple, Tuple, Protocol
+
+# from typing_extensions import Protocol
 
 import numpy as np
 

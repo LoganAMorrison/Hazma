@@ -1,12 +1,14 @@
 from hazma import gamma_ray
 import warnings
 import numpy as np
+import pytest
 
 import unittest
 
 warnings.filterwarnings("ignore")
 
 
+@pytest.mark.skip(reason="Deprecated")
 class TestGammaRay(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

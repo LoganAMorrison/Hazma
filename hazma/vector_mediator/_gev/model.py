@@ -1,7 +1,11 @@
+"""
+Py
+"""
+
 # pyright: basic, reportUnusedImport=false
 
 from typing import Callable, Dict, List, Union, TypeVar
-from functools import wraps
+import functools as ft
 
 import numpy as np
 import numpy.typing as npt
@@ -14,7 +18,11 @@ from hazma.parameters import muon_mass as _MMU
 from hazma.parameters import neutral_pion_mass as _MPI0
 from hazma.parameters import qe
 from hazma.theory import TheoryAnn
+from hazma.utils import RealOrRealArray
 from hazma.vector_mediator.form_factors.utils import ComplexArray, RealArray
+import hazma.form_factors.vector as vff
+from hazma.form_factors.vector import VectorFormFactorCouplings
+from hazma.form_factors.vector._base import VectorFormFactor
 
 from . import spectra as gev_spectra
 from . import positron as gev_positron_spectra
@@ -25,7 +33,6 @@ T = TypeVar("T", float, npt.NDArray[np.float_])
 
 def with_cache(*, cache_name: str, name: str):
     def decorator(f):
-        @wraps(f)
         def wrapper(*args, **kwargs):
             cache = getattr(args[0], cache_name)
             assert name in cache
@@ -44,6 +51,55 @@ def with_cache(*, cache_name: str, name: str):
         return wrapper
 
     return decorator
+
+
+class _VectorFormFactorWrapper:
+    def __init__(self, form_factor: VectorFormFactor):
+        self.form_factor = form_factor
+
+    @ft.lru_cache
+    def __width(self, mv: float, couplings: VectorFormFactorCouplings, **kwargs):
+        return self.form_factor.width(mv, couplings=couplings, **kwargs)
+
+    @ft.lru_cache
+    def __cross_section(
+        self,
+        q: float,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: VectorFormFactorCouplings,
+        **kwargs,
+    ):
+        return self.form_factor.cross_section(
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
+        )
+
+    def width(
+        self, mv: RealOrRealArray, couplings: VectorFormFactorCouplings, **kwargs
+    ):
+        if isinstance(mv, float | int):
+            return self.__width(mv, couplings, **kwargs)
+        return self.form_factor.width(mv, couplings=couplings, **kwargs)
+
+    def cross_section(
+        self,
+        q: RealOrRealArray,
+        mx: float,
+        mv: float,
+        gvxx: float,
+        wv: float,
+        couplings: VectorFormFactorCouplings,
+        **kwargs,
+    ):
+        if isinstance(mv, float | int):
+            return self.__cross_section(
+                q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
+            )
+        return self.form_factor.cross_section(
+            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
+        )
 
 
 class VectorMediatorGeV(TheoryAnn):
@@ -125,45 +181,30 @@ class VectorMediatorGeV(TheoryAnn):
         gvvtvt : float
             Coupling of vector mediator to the tau-neutrino.
         """
-        from hazma.vector_mediator.form_factors.eta_gamma import FormFactorEtaGamma
-        from hazma.vector_mediator.form_factors.eta_omega import FormFactorEtaOmega
-        from hazma.vector_mediator.form_factors.eta_phi import FormFactorEtaPhi
-        from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
-        from hazma.vector_mediator.form_factors.kk import FormFactorKK
-        from hazma.vector_mediator.form_factors.omega_pi import FormFactorOmegaPi0
-        from hazma.vector_mediator.form_factors.phi_pi import FormFactorPhiPi0
-        from hazma.vector_mediator.form_factors.pi_gamma import FormFactorPiGamma
-        from hazma.vector_mediator.form_factors.pi_k_k import (
-            FormFactorPi0K0K0,
-            FormFactorPi0KpKm,
-            FormFactorPiKK0,
-        )
-        from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
-        from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
-        from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
-        from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
-        from hazma.vector_mediator.form_factors.pipi import FormFactorPiPi
 
         # Compute and store the parameters needed to compute form factors.
-        # self._ff_pipi_params = _compute_ff_params_pipi(2000)
-        self._ff_pi_pi = FormFactorPiPi()
-        # self._ff_kk_params = _compute_ff_params_kk(200)
-        self._ff_k_k = FormFactorKK()
-        self._ff_eta_gamma = FormFactorEtaGamma()
-        self._ff_eta_omega = FormFactorEtaOmega()
-        self._ff_eta_phi = FormFactorEtaPhi()
-        self._ff_pi_gamma = FormFactorPiGamma()
-        self._ff_pi_omega = FormFactorOmegaPi0()
-        self._ff_pi_phi = FormFactorPhiPi0()
+        # pylint: disable=E1120
+        self._ff_pi_pi = vff.VectorFormFactorPiPi()
+        self._ff_pi0_pi0 = vff.VectorFormFactorPi0Pi0()
+        self._ff_k_k = vff.VectorFormFactorKK()
+        self._ff_k0_k0 = vff.VectorFormFactorK0K0()
+        self._ff_eta_gamma = vff.VectorFormFactorEtaGamma()
+        self._ff_eta_omega = vff.VectorFormFactorEtaOmega()
+        self._ff_eta_phi = vff.VectorFormFactorEtaPhi()
+        self._ff_pi0_gamma = vff.VectorFormFactorPi0Gamma()
+        self._ff_pi0_omega = vff.VectorFormFactorPi0Omega()
+        self._ff_pi0_phi = vff.VectorFormFactorPi0Phi()
 
-        self._ff_pi_pi_pi0 = FormFactorPiPiPi0()
-        self._ff_pi_pi_eta = FormFactorPiPiEta()
-        self._ff_pi_pi_etap = FormFactorPiPiEtaP()
-        self._ff_pi_pi_omega = FormFactorPiPiOmega()
-        self._ff_pi0_k0_k0 = FormFactorPi0K0K0()
-        self._ff_pi0_k_k = FormFactorPi0KpKm()
-        self._ff_pi_k_k0 = FormFactorPiKK0()
-        self._ff_four_pi = FormFactorPiPiPiPi()
+        self._ff_pi_pi_pi0 = vff.VectorFormFactorPiPiPi0()
+        self._ff_pi_pi_eta = vff.VectorFormFactorPiPiEta()
+        self._ff_pi_pi_etap = vff.VectorFormFactorPiPiEtaPrime()
+        self._ff_pi_pi_omega = vff.VectorFormFactorPiPiOmega()
+        self._ff_pi0_pi0_omega = vff.VectorFormFactorPi0Pi0Omega()
+        self._ff_pi0_k0_k0 = vff.VectorFormFactorPi0K0K0()
+        self._ff_pi0_k_k = vff.VectorFormFactorPi0KpKm()
+        self._ff_pi_k_k0 = vff.VectorFormFactorPiKK0()
+        self._ff_pi_pi_pi_pi = vff.VectorFormFactorPiPiPiPi()
+        self._ff_pi_pi_pi0_pi0 = vff.VectorFormFactorPiPiPi0Pi0()
 
         self._mx = mx
         self._mv = mv
@@ -176,13 +217,13 @@ class VectorMediatorGeV(TheoryAnn):
         self._gvveve = gvveve
         self._gvvmvm = gvvmvm
         self._gvvtvt = gvvtvt
+        self._couplings = VectorFormFactorCouplings(self._gvuu, self._gvdd, self._gvss)
 
         final_states = self.list_annihilation_final_states()
         self._width_cache = {
-            name: {"value": 0.0, "valid": False, "kwargs": dict()}
-            for name in final_states
+            name: {"value": 0.0, "valid": False, "kwargs": {}} for name in final_states
         }
-        self._width_cache["x x"] = {"value": 0.0, "valid": False, "kwargs": dict()}
+        self._width_cache["x x"] = {"value": 0.0, "valid": False, "kwargs": {}}
 
     # ========================================================================
     # ---- Cache Control -----------------------------------------------------
@@ -199,6 +240,12 @@ class VectorMediatorGeV(TheoryAnn):
 
         self._width_cache[name]["valid"] = True
         self._width_cache[name]["value"] = val
+
+    def _call_width_cache(self, name, fn, **kwargs):
+        if not self._width_cache[name]["valid"]:
+            self._width_cache[name]["value"] = fn(self, **kwargs)
+
+        return self._width_cache[name]["value"]
 
     # ========================================================================
     # ---- Masses ------------------------------------------------------------
@@ -281,19 +328,19 @@ class VectorMediatorGeV(TheoryAnn):
     @gvuu.setter
     def gvuu(self, val: float) -> None:
         self._gvuu = val
-        self._reset_state()
+        self._couplings = VectorFormFactorCouplings(self._gvuu, self._gvdd, self._gvss)
         self._invalidate_width_cache()
 
     @gvdd.setter
     def gvdd(self, val: float) -> None:
         self._gvdd = val
-        self._reset_state()
+        self._couplings = VectorFormFactorCouplings(self._gvuu, self._gvdd, self._gvss)
         self._invalidate_width_cache()
 
     @gvss.setter
     def gvss(self, val: float) -> None:
         self._gvss = val
-        self._reset_state()
+        self._couplings = VectorFormFactorCouplings(self._gvuu, self._gvdd, self._gvss)
         self._invalidate_width_cache()
 
     @gvee.setter
@@ -321,94 +368,317 @@ class VectorMediatorGeV(TheoryAnn):
         self._gvvtvt = val
         self._update_width_cache("vt vt", self.width_v_to_vt_vt())
 
-    def _reset_state(self) -> None:
-        """
-        Function to reset the state of the derived quantities such as the
-        vector width and form-factors.
-        """
-        pass
-
     # ========================================================================
     # ---- Form Factors ------------------------------------------------------
     # ========================================================================
 
-    def form_factor_pi_pi(
-        self, q: Union[float, RealArray], imode: int = 1
-    ) -> Union[complex, ComplexArray]:
-        """
-        Compute the pi-pi-V form factor.
+    def form_factor(self, q):
+        r"""Compute the π⁺π⁻ form factor.
 
         Parameters
         ----------
-        q: Union[float,RealArray
+        q: float or array-like
             Center-of-mass energy in MeV.
-        imode: Optional[int]
-            Iso-spin channel. Default is 1.
 
         Returns
         -------
-        ff: Union[complex,ComplexArray]
-            Form factor from pi-pi-V.
+        ff: complex or ndarray[complex]
+            Form factor for π⁺π⁻.
         """
-        return self._ff_pi_pi.form_factor(
-            q=q, gvuu=self.gvuu, gvdd=self.gvdd, imode=imode
-        )
+        pass
 
-    def form_factor_k_k(
-        self, q: Union[float, RealArray], imode: int = 1
-    ) -> Union[complex, ComplexArray]:
-        """
-        Compute the pi-pi-V form factor.
+    def form_factor_pi_pi(self, q):
+        r"""Compute the π⁺π⁻ form factor.
 
         Parameters
         ----------
-        s: Union[float,RealArray
+        q: float or array-like
             Center-of-mass energy in MeV.
-        imode: Optional[int]
-            Iso-spin channel. Default is 1.
 
         Returns
         -------
-        ff: Union[complex,ComplexArray]
-            Form factor from pi-pi-V.
+        ff: complex or ndarray[complex]
+            Form factor for π⁺π⁻.
         """
-        return self._ff_k_k.form_factor(
-            q=q, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, imode=imode
-        )
+        return self._ff_pi_pi.form_factor(q=q, couplings=self._couplings)
 
-    def form_factor_pi_gamma(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_pi_gamma.form_factor(
-            q=q, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
+    def form_factor_pi0_pi0(self, q):
+        r"""Compute the π⁰π⁰ form factor.
 
-    def form_factor_pi_omega(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_pi_omega.form_factor(q=q, gvuu=self.gvuu, gvdd=self.gvdd)
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
 
-    def form_factor_pi_phi(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_pi_phi.form_factor(q=q, gvuu=self.gvuu, gvdd=self.gvdd)
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰π⁰.
+        """
+        return self._ff_pi0_pi0.form_factor(q=q, couplings=self._couplings)
 
-    def form_factor_eta_gamma(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_eta_gamma.form_factor(
-            q=q, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
+    def form_factor_k_k(self, q):
+        r"""Compute the K⁺K⁻ form factor.
 
-    def form_factor_eta_phi(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_eta_phi.form_factor(q=q, gvss=self.gvss)
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
 
-    def form_factor_eta_omega(
-        self, q: Union[float, RealArray]
-    ) -> Union[complex, ComplexArray]:
-        return self._ff_eta_omega.form_factor(q=q, gvuu=self.gvuu, gvdd=self.gvdd)
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for K⁺K⁻.
+        """
+        return self._ff_k_k.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_k0_k0(self, q):
+        """
+        Compute the K⁰K̅⁰ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for K⁰K̅⁰.
+        """
+        return self._ff_k0_k0.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_pi0_gamma(self, q):
+        r"""Compute the π⁰Ɣ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰Ɣ.
+        """
+        return self._ff_pi0_gamma.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_pi0_omega(self, q):
+        r"""Compute the π⁰ω form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰-ω.
+        """
+        return self._ff_pi0_omega.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_pi0_phi(self, q):
+        r"""Compute the π⁰ɸ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰-ɸ.
+        """
+        return self._ff_pi0_phi.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_eta_gamma(self, q):
+        r"""Compute the ηƔ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for η-Ɣ.
+        """
+        return self._ff_eta_gamma.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_eta_phi(self, q):
+        r"""Compute the ηɸ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for ηɸ.
+        """
+        return self._ff_eta_phi.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_eta_omega(self, q):
+        r"""Compute the ηω form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for ηω.
+        """
+        return self._ff_eta_omega.form_factor(q=q, couplings=self._couplings)
+
+    def form_factor_pi_pi_pi0(self, q, s, t):
+        r"""Compute the π⁺π⁻π⁰ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pπ⁺ + pπ⁻)^2.
+        t: float or array-like
+            Mandelstam variable t=(pπ⁺ + pπ⁰)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁺π⁻π⁰.
+        """
+        return self._ff_pi_pi_pi0.form_factor(q, s, t, couplings=self._couplings)
+
+    def form_factor_pi_pi_eta(self, q, s):
+        r"""Compute the ηπ⁺π⁻ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pη + pπ⁺)^2.
+        t: float or array-like
+            Mandelstam variable t=(pη + pπ⁻)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for ηπ⁺π⁻.
+        """
+        return self._ff_pi_pi_eta.form_factor(q, s, couplings=self._couplings)
+
+    def form_factor_pi_pi_etap(self, q, s):
+        r"""Compute the η'π⁺π⁻ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pη' + pπ⁺)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for η'π⁺π⁻.
+        """
+        return self._ff_pi_pi_etap.form_factor(q, s, couplings=self._couplings)
+
+    def form_factor_pi_pi_omega(self, q):
+        r"""Compute the ωπ⁺π⁻ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for ωπ⁺π⁻.
+        """
+        return self._ff_pi_pi_omega.form_factor(q, couplings=self._couplings)
+
+    def form_factor_pi0_pi0_omega(self, q):
+        r"""Compute the ωπ⁰π⁰ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for ωπ⁰π⁰.
+        """
+        return self._ff_pi0_pi0_omega.form_factor(q, couplings=self._couplings)
+
+    def form_factor_pi0_k0_k0(self, q, s, t):
+        r"""Compute the π⁰K⁰K̅⁰ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pπ⁰ + pK⁰)^2.
+        t: float or array-like
+            Mandelstam variable t=(pπ⁰ + pK̅⁰)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰K⁰K̅⁰.
+        """
+        return self._ff_pi0_k0_k0.form_factor(q, s, t, couplings=self._couplings)
+
+    def form_factor_pi0_k_k(self, q, s, t):
+        r"""Compute the π⁰K⁺K⁻ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pπ⁰ + pK⁺)^2.
+        t: float or array-like
+            Mandelstam variable t=(pπ⁰ + pK⁻)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁰K⁺K⁻.
+        """
+        return self._ff_pi0_k_k.form_factor(q, s, t, couplings=self._couplings)
+
+    def form_factor_pi_k_k0(self, q, s, t):
+        r"""Compute the π⁺K⁺K⁰ form factor.
+
+        Parameters
+        ----------
+        q: float or array-like
+            Center-of-mass energy in MeV.
+        s: float or array-like
+            Mandelstam variable s=(pπ⁰ + pK⁺)^2.
+        t: float or array-like
+            Mandelstam variable t=(pπ⁰ + pK⁰)^2.
+
+        Returns
+        -------
+        ff: complex or ndarray[complex]
+            Form factor for π⁺K⁺K⁰.
+        """
+        return self._ff_pi_k_k0.form_factor(q, s, t, couplings=self._couplings)
 
     # ========================================================================
     # ---- Partial Widths ----------------------------------------------------
@@ -476,7 +746,15 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         charged pions [𝜋⁺ 𝜋⁻].
         """
-        return self._ff_pi_pi.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, imode=1)
+        return self._ff_pi_pi.width(mv=self.mv, couplings=self._couplings)
+
+    @with_cache(cache_name="_width_cache", name="pi0 pi0")
+    def width_v_to_pi0_pi0(self) -> float:
+        """
+        Compute the partial width for the decay of the vector mediator into two
+        charged pions [𝜋⁺ 𝜋⁻].
+        """
+        return self._ff_pi0_pi0.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="k0 k0")
     def width_v_to_k0_k0(self) -> float:
@@ -484,9 +762,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         neutral kaons [K⁰ K⁰].
         """
-        return self._ff_k_k.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, imode=0
-        )
+        return self._ff_k0_k0.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="k k")
     def width_v_to_k_k(self) -> float:
@@ -494,9 +770,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator into two
         charged kaons [K⁺ K⁻].
         """
-        return self._ff_k_k.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, imode=1
-        )
+        return self._ff_k_k.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi0 gamma")
     def width_v_to_pi0_gamma(self) -> float:
@@ -504,9 +778,8 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into a neutral pion [𝜋⁰] and photon [𝛾].
         """
-        return self._ff_pi_gamma.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
+        mv: float = self.mv
+        return self._ff_pi0_gamma.width(mv=mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="eta gamma")
     def width_v_to_eta_gamma(self) -> float:
@@ -514,9 +787,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into a neutral pion [𝜋⁰] and photon [𝛾].
         """
-        return self._ff_eta_gamma.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss
-        )
+        return self._ff_eta_gamma.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi0 phi")
     def width_v_to_pi0_phi(self) -> float:
@@ -524,7 +795,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into an phi [𝜙(1020)] and neutral pion [𝜋⁰].
         """
-        return self._ff_pi_phi.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd)
+        return self._ff_pi0_phi.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="eta phi")
     def width_v_to_eta_phi(self) -> float:
@@ -532,7 +803,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into an eta [𝜂] and phi [𝜙(1020)].
         """
-        return self._ff_eta_phi.width(mv=self.mv, gvss=self.gvss)
+        return self._ff_eta_phi.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="eta omega")
     def width_v_to_eta_omega(self) -> float:
@@ -540,7 +811,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into an eta [𝜂] and omega [𝜔(782)].
         """
-        return self._ff_eta_omega.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd)
+        return self._ff_eta_omega.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi0 pi0 gamma")
     def width_v_to_pi0_pi0_gamma(self) -> float:
@@ -548,7 +819,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into two neutral pions and a photon [𝜋⁰ 𝜋⁰ 𝛾].
         """
-        pi0_omega = self._ff_pi_omega.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd)
+        pi0_omega = self._ff_pi0_omega.width(mv=self.mv, couplings=self._couplings)
         br_omega_to_pi0_gamma = 8.34e-2
 
         return br_omega_to_pi0_gamma * pi0_omega
@@ -560,7 +831,7 @@ class VectorMediatorGeV(TheoryAnn):
         into two charged pions and a neutral pion.
         """
         return self._ff_pi_pi_pi0.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
+            mv=self.mv, couplings=self._couplings, npts=npts
         )
 
     @with_cache(cache_name="_width_cache", name="pi pi eta")
@@ -569,7 +840,8 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into two charged pions and an eta.
         """
-        return self._ff_pi_pi_eta.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd)
+        mv: float = self.mv
+        return self._ff_pi_pi_eta.width(mv=mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi pi etap")
     def width_v_to_pi_pi_etap(self) -> float:
@@ -577,7 +849,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into two charged pions and an eta-prime.
         """
-        return self._ff_pi_pi_etap.width(mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd)
+        return self._ff_pi_pi_etap.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi pi omega")
     def width_v_to_pi_pi_omega(self) -> float:
@@ -585,9 +857,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into two charged pions and an eta-prime.
         """
-        return self._ff_pi_pi_omega.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, imode=1
-        )
+        return self._ff_pi_pi_omega.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi0 pi0 omega")
     def width_v_to_pi0_pi0_omega(self) -> float:
@@ -595,9 +865,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into two charged pions and an eta-prime.
         """
-        return self._ff_pi_pi_omega.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, imode=0
-        )
+        return self._ff_pi0_pi0_omega.width(mv=self.mv, couplings=self._couplings)
 
     @with_cache(cache_name="_width_cache", name="pi0 k0 k0")
     def width_v_to_pi0_k0_k0(self, *, npts: int = 50_000) -> float:
@@ -606,7 +874,7 @@ class VectorMediatorGeV(TheoryAnn):
         into a neutral pion and two neutral kaons.
         """
         return self._ff_pi0_k0_k0.width(
-            m=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
+            mv=self.mv, couplings=self._couplings, npts=npts
         )
 
     @with_cache(cache_name="_width_cache", name="pi0 k k")
@@ -615,9 +883,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into a neutral pion and two charged kaons.
         """
-        return self._ff_pi0_k_k.width(
-            m=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
+        return self._ff_pi0_k_k.width(mv=self.mv, couplings=self._couplings, npts=npts)
 
     @with_cache(cache_name="_width_cache", name="pi k k0")
     def width_v_to_pi_k_k0(self, *, npts: int = 50_000) -> float:
@@ -625,9 +891,7 @@ class VectorMediatorGeV(TheoryAnn):
         Compute the partial width for the decay of the vector mediator
         into a neutral pion and two charged kaons.
         """
-        return self._ff_pi_k_k0.width(
-            m=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, gvss=self.gvss, npts=npts
-        )
+        return self._ff_pi_k_k0.width(mv=self.mv, couplings=self._couplings, npts=npts)
 
     @with_cache(cache_name="_width_cache", name="pi pi pi pi")
     def width_v_to_pi_pi_pi_pi(self, *, npts=1 << 14) -> float:
@@ -643,10 +907,9 @@ class VectorMediatorGeV(TheoryAnn):
         """
         if self.mv < 4 * _MPI:
             return 0.0
-        width, _ = self._ff_four_pi.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, npts=npts, neutral=False
+        return self._ff_pi_pi_pi_pi.width(
+            mv=self.mv, couplings=self._couplings, npts=npts
         )
-        return width
 
     @with_cache(cache_name="_width_cache", name="pi pi pi0 pi0")
     def width_v_to_pi_pi_pi0_pi0(self, *, npts: int = 1 << 14) -> float:
@@ -662,10 +925,9 @@ class VectorMediatorGeV(TheoryAnn):
         """
         if self.mv < 2 * _MPI + 2 * _MPI0:
             return 0.0
-        width, _ = self._ff_four_pi.width(
-            mv=self.mv, gvuu=self.gvuu, gvdd=self.gvdd, npts=npts, neutral=True
+        return self._ff_pi_pi_pi0_pi0.width(
+            mv=self.mv, couplings=self._couplings, npts=npts
         )
-        return width
 
     def partial_widths(self, *, npts=50_000) -> Dict[str, float]:
         """
@@ -707,7 +969,8 @@ class VectorMediatorGeV(TheoryAnn):
     # ---- Cross Sections ----------------------------------------------------
     # ========================================================================
 
-    def list_annihilation_final_states(self) -> List[str]:
+    @staticmethod
+    def list_annihilation_final_states() -> List[str]:
         r"""
         Lists annihilation final states.
 
@@ -775,12 +1038,11 @@ class VectorMediatorGeV(TheoryAnn):
     def _neutrino_line_energies(self, e_cm, flavor: str) -> Dict[str, float]:
         if flavor == "e":
             return {"ve ve": e_cm / 2.0}
-        elif flavor == "mu":
+        if flavor == "mu":
             return {"vm vm": e_cm / 2.0}
-        elif flavor == "tau":
+        if flavor == "tau":
             return {"vt vt": e_cm / 2.0}
-        else:
-            raise ValueError(f"Invlid flavor {flavor}")
+        raise ValueError(f"Invlid flavor {flavor}")
 
     def neutrino_lines(self, e_cm, flavor: str) -> Dict[str, Dict[str, float]]:
         """
@@ -791,7 +1053,7 @@ class VectorMediatorGeV(TheoryAnn):
             energy of the photon and branching fraction into that final state.
         """
         bfs = self.annihilation_branching_fractions(e_cm)
-        lines = dict()
+        lines = {}
 
         for fs, e in self._neutrino_line_energies(e_cm, flavor).items():
             lines[fs] = {"energy": e, "bf": bfs[fs]}
@@ -810,12 +1072,11 @@ class VectorMediatorGeV(TheoryAnn):
             def dnde_wrapped(energies, e_cm):
                 if sigma_ann_fns[fs](e_cm) > 0:
                     return spectrum_funcs[fs](energies, e_cm, flavor=flavor)
-                else:
-                    return np.zeros_like(energies)
+                return np.zeros_like(energies)
 
             return dnde_wrapped
 
-        return {fs: make_dnde_wrapped(fs) for fs in sigma_ann_fns.keys()}
+        return {fs: make_dnde_wrapped(fs) for fs in sigma_ann_fns}
 
     def neutrino_spectra(self, energies, e_cm, flavor: str):
         r"""
@@ -841,7 +1102,7 @@ class VectorMediatorGeV(TheoryAnn):
             channel.
         """
         bfs = self.annihilation_branching_fractions(e_cm)
-        specs = dict()
+        specs = {}
 
         for fs, dnde_fn in self.neutrino_spectrum_funcs(flavor).items():
             specs[fs] = bfs[fs] * dnde_fn(energies, e_cm)
@@ -869,8 +1130,7 @@ class VectorMediatorGeV(TheoryAnn):
 
         if hasattr(energies, "__len__"):
             return self.neutrino_spectra(energies, e_cm, flavor=flavor)
-        else:
-            return self.neutrino_spectra(np.array([energies]), e_cm, flavor=flavor)
+        return self.neutrino_spectra(np.array([energies]), e_cm, flavor=flavor)
 
 
 class KineticMixingGeV(VectorMediatorGeV):
