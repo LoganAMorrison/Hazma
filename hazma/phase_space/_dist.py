@@ -2,8 +2,10 @@
 Implementation of phase-space distribution objects.
 """
 
-from typing import Tuple, Callable
+# pylint: disable=invalid-name
+
 import logging
+from typing import Callable, Tuple
 
 import numpy as np
 from scipy import integrate
@@ -59,7 +61,7 @@ class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
             len(shape_y) == 1
         ), f"Expected 1D array for probabilities. Got shape {shape_x}."
         assert shape_x[0] == shape_y[0] + 1, (
-            "Expected independent variables to have one more value than probabilites. "
+            "Expected independent variables to have one more value than probabilities. "
             f"Found shapes {shape_x} and {shape_y}."
         )
 

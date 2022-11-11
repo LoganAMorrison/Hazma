@@ -2,14 +2,18 @@
 Py
 """
 
+# pylint: disable=invalid-name
 # pyright: basic, reportUnusedImport=false
 
-from typing import Callable, Dict, List, Union, TypeVar
 import functools as ft
+from typing import Callable, Dict, List, TypeVar, Union
 
 import numpy as np
 import numpy.typing as npt
 
+import hazma.form_factors.vector as vff
+from hazma.form_factors.vector import VectorFormFactorCouplings
+from hazma.form_factors.vector._base import VectorFormFactor
 from hazma.parameters import Qd, Qe, Qu
 from hazma.parameters import charged_pion_mass as _MPI
 from hazma.parameters import electron_mass as _ME
@@ -19,14 +23,10 @@ from hazma.parameters import neutral_pion_mass as _MPI0
 from hazma.parameters import qe
 from hazma.theory import TheoryAnn
 from hazma.utils import RealOrRealArray
-from hazma.vector_mediator.form_factors.utils import ComplexArray, RealArray
-import hazma.form_factors.vector as vff
-from hazma.form_factors.vector import VectorFormFactorCouplings
-from hazma.form_factors.vector._base import VectorFormFactor
 
-from . import spectra as gev_spectra
-from . import positron as gev_positron_spectra
 from . import neutrino as gev_neutrino_spectra
+from . import positron as gev_positron_spectra
+from . import spectra as gev_spectra
 
 T = TypeVar("T", float, npt.NDArray[np.float_])
 
@@ -109,34 +109,23 @@ class VectorMediatorGeV(TheoryAnn):
     up to 1 GeV.
     """
 
-    from .cross_sections import (
-        sigma_xx_to_v_v,
-        sigma_xx_to_e_e,
-        sigma_xx_to_mu_mu,
-        sigma_xx_to_ve_ve,
-        sigma_xx_to_vm_vm,
-        sigma_xx_to_vt_vt,
-        sigma_xx_to_pi_pi,
-        sigma_xx_to_k0_k0,
-        sigma_xx_to_k_k,
-        sigma_xx_to_pi0_gamma,
-        sigma_xx_to_eta_gamma,
-        sigma_xx_to_pi0_phi,
-        sigma_xx_to_eta_phi,
-        sigma_xx_to_eta_omega,
-        sigma_xx_to_pi0_pi0_gamma,
-        sigma_xx_to_pi_pi_pi0,
-        sigma_xx_to_pi_pi_eta,
-        sigma_xx_to_pi_pi_etap,
-        sigma_xx_to_pi_pi_omega,
-        sigma_xx_to_pi0_pi0_omega,
-        sigma_xx_to_pi0_k0_k0,
-        sigma_xx_to_pi0_k_k,
-        sigma_xx_to_pi_k_k0,
-        sigma_xx_to_pi_pi_pi_pi,
-        sigma_xx_to_pi_pi_pi0_pi0,
-        annihilation_cross_section_funcs,
-    )
+    from .cross_sections import (annihilation_cross_section_funcs,
+                                 sigma_xx_to_e_e, sigma_xx_to_eta_gamma,
+                                 sigma_xx_to_eta_omega, sigma_xx_to_eta_phi,
+                                 sigma_xx_to_k0_k0, sigma_xx_to_k_k,
+                                 sigma_xx_to_mu_mu, sigma_xx_to_pi0_gamma,
+                                 sigma_xx_to_pi0_k0_k0, sigma_xx_to_pi0_k_k,
+                                 sigma_xx_to_pi0_phi,
+                                 sigma_xx_to_pi0_pi0_gamma,
+                                 sigma_xx_to_pi0_pi0_omega,
+                                 sigma_xx_to_pi_k_k0, sigma_xx_to_pi_pi,
+                                 sigma_xx_to_pi_pi_eta, sigma_xx_to_pi_pi_etap,
+                                 sigma_xx_to_pi_pi_omega,
+                                 sigma_xx_to_pi_pi_pi0,
+                                 sigma_xx_to_pi_pi_pi0_pi0,
+                                 sigma_xx_to_pi_pi_pi_pi, sigma_xx_to_v_v,
+                                 sigma_xx_to_ve_ve, sigma_xx_to_vm_vm,
+                                 sigma_xx_to_vt_vt)
     from .thermal_cross_section import relic_density
 
     def __init__(
@@ -371,21 +360,6 @@ class VectorMediatorGeV(TheoryAnn):
     # ========================================================================
     # ---- Form Factors ------------------------------------------------------
     # ========================================================================
-
-    def form_factor(self, q):
-        r"""Compute the π⁺π⁻ form factor.
-
-        Parameters
-        ----------
-        q: float or array-like
-            Center-of-mass energy in MeV.
-
-        Returns
-        -------
-        ff: complex or ndarray[complex]
-            Form factor for π⁺π⁻.
-        """
-        pass
 
     def form_factor_pi_pi(self, q):
         r"""Compute the π⁺π⁻ form factor.
@@ -1042,7 +1016,7 @@ class VectorMediatorGeV(TheoryAnn):
             return {"vm vm": e_cm / 2.0}
         if flavor == "tau":
             return {"vt vt": e_cm / 2.0}
-        raise ValueError(f"Invlid flavor {flavor}")
+        raise ValueError(f"Invalid flavor {flavor}")
 
     def neutrino_lines(self, e_cm, flavor: str) -> Dict[str, Dict[str, float]]:
         """
@@ -1146,7 +1120,7 @@ class KineticMixingGeV(VectorMediatorGeV):
         gvmumu = Qe qe eps
 
     where Qu, Qd and Qe are the up-type quark, down-type quark and
-    lepton electic charges in units of the electric charge, qe is the
+    lepton electric charges in units of the electric charge, qe is the
     electric charge and eps is the kinetic mixing parameter.
 
     Parameters

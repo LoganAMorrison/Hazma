@@ -1,11 +1,24 @@
-from typing import Callable, Dict, Union
+"""Module for generating spectra from GeV vector bosons with couplings to quarks."""
+
+# pylint: disable=invalid-name,protected-access
+
 import functools
+from typing import Callable, Dict, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma import spectra
-from hazma.spectra import boost
+from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
+                                       VectorFormFactorPi0KpKm,
+                                       VectorFormFactorPi0Pi0Omega,
+                                       VectorFormFactorPiKK0,
+                                       VectorFormFactorPiPiEta,
+                                       VectorFormFactorPiPiEtaPrime,
+                                       VectorFormFactorPiPiOmega,
+                                       VectorFormFactorPiPiPi0,
+                                       VectorFormFactorPiPiPi0Pi0,
+                                       VectorFormFactorPiPiPiPi)
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
@@ -16,28 +29,30 @@ from hazma.parameters import neutral_kaon_mass as mk0
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
-from hazma.spectra.altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_ap_scalar
-from hazma.spectra.boost import boost_delta_function, double_boost_delta_function
-from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
-from hazma.vector_mediator.form_factors.pi_k_k import (
-    FormFactorPi0K0K0,
-    FormFactorPi0KpKm,
-    FormFactorPiKK0,
-)
-from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
-from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
-from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
-from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
+from hazma.phase_space import PhaseSpaceDistribution1D
+from hazma.spectra import boost
+from hazma.spectra.altarelli_parisi import (dnde_photon_ap_fermion,
+                                            dnde_photon_ap_scalar)
+from hazma.spectra.boost import (boost_delta_function,
+                                 double_boost_delta_function)
+from hazma.utils import RealArray
 
 DndeFn = Callable[[Union[float, npt.NDArray[np.float64]], float], float]
 
 
-def make_spectrum_n_body_decay(photon_energies, energy_distributions, dnde_decays):
+def _make_spectrum_n_body_decay(
+    photon_energies: RealArray,
+    energy_distributions: list[PhaseSpaceDistribution1D],
+    dnde_decays,
+):
+    """Helper function to construct n-boday spectra."""
     dnde = np.zeros_like(photon_energies)
 
-    for i, (probs, bins) in enumerate(energy_distributions):
-        dec = np.array([dnde_decays[i](photon_energies, e) for e in bins])
-        dnde += np.trapz(np.expand_dims(probs, 1) * dec, x=bins, axis=0)
+    for i, dist in enumerate(energy_distributions):
+        dec = np.array([dnde_decays[i](photon_energies, e) for e in dist.bin_centers])
+        dnde += np.trapz(
+            np.expand_dims(dist.probabilities, 1) * dec, x=dist.bin_centers, axis=0
+        )
 
     return dnde
 
@@ -55,14 +70,42 @@ def _dnde_photon_two_body(photon_energies, *, cme, m1, m2, dnde1, dnde2):
 # =============================================================================
 
 
-def dnde_photon_e_e(self, photon_energies, cme: float):
+def dnde_photon_e_e(_, photon_energies, cme: float):
+    """Generate the spectrum into two electrons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * me:
         return np.zeros_like(photon_energies)
 
     return dnde_photon_ap_fermion(photon_energies, cme**2, me, charge=-1.0)
 
 
-def dnde_photon_mu_mu(self, photon_energies, cme: float):
+def dnde_photon_mu_mu(_, photon_energies, cme: float):
+    """Generate the spectrum into two muons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mmu:
         return np.zeros_like(photon_energies)
 
@@ -76,7 +119,21 @@ def dnde_photon_mu_mu(self, photon_energies, cme: float):
 # =============================================================================
 
 
-def dnde_photon_pi_pi(self, photon_energies, cme: float):
+def dnde_photon_pi_pi(_, photon_energies, cme: float):
+    """Generate the spectrum into two pions.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi:
         return np.zeros_like(photon_energies)
 
@@ -85,7 +142,21 @@ def dnde_photon_pi_pi(self, photon_energies, cme: float):
     return fsr + dec
 
 
-def dnde_photon_k0_k0(self, photon_energies, cme: float):
+def dnde_photon_k0_k0(_, photon_energies, cme: float):
+    """Generate the spectrum into two neutral kaons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mk0:
         return np.zeros_like(photon_energies)
 
@@ -94,7 +165,21 @@ def dnde_photon_k0_k0(self, photon_energies, cme: float):
     return dec_l + dec_s
 
 
-def dnde_photon_k_k(self, photon_energies, cme: float):
+def dnde_photon_k_k(_, photon_energies, cme: float):
+    """Generate the spectrum into two charged kaons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mk:
         return np.zeros_like(photon_energies)
 
@@ -115,13 +200,41 @@ def _dnde_photon_m_gamma(photon_energies, cme, mass, dnde):
     return dnde(photon_energies, eng)
 
 
-def dnde_photon_pi0_gamma(self, photon_energies, cme: float):
+def dnde_photon_pi0_gamma(_, photon_energies, cme: float):
+    """Generate the spectrum into a neutral pion and photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_photon_m_gamma(
         photon_energies, cme, mpi0, spectra.dnde_photon_neutral_pion
     )
 
 
 def dnde_photon_eta_gamma(self, photon_energies, cme: float):
+    """Generate the spectrum into an eta and photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_photon_m_gamma(photon_energies, cme, meta, spectra.dnde_photon_eta)
 
 
@@ -139,13 +252,41 @@ def _dnde_photon_m_phi(photon_energies, *, cme, mass, dnde):
     )
 
 
-def dnde_photon_pi0_phi(self, photon_energies, cme: float):
+def dnde_photon_pi0_phi(_, photon_energies, cme: float):
+    """Generate the spectrum into a neutral pion and phi.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_photon_m_phi(
         photon_energies, cme=cme, mass=mpi0, dnde=spectra.dnde_photon_neutral_pion
     )
 
 
-def dnde_photon_eta_phi(self, photon_energies, cme: float):
+def dnde_photon_eta_phi(_, photon_energies, cme: float):
+    """Generate the spectrum into an eta and phi.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_photon_m_phi(
         photon_energies, cme=cme, mass=meta, dnde=spectra.dnde_photon_eta
     )
@@ -156,7 +297,21 @@ def dnde_photon_eta_phi(self, photon_energies, cme: float):
 # =============================================================================
 
 
-def dnde_photon_eta_omega(self, photon_energies, cme: float):
+def dnde_photon_eta_omega(_, photon_energies, cme: float):
+    """Generate the spectrum into an eta and omega.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < meta + momega:
         return np.zeros_like(photon_energies)
     dnde1 = spectra.dnde_photon_eta
@@ -171,7 +326,21 @@ def dnde_photon_eta_omega(self, photon_energies, cme: float):
 # =============================================================================
 
 
-def dnde_photon_pi0_pi0_gamma(self, photon_energies, cme: float):
+def dnde_photon_pi0_pi0_gamma(_, photon_energies, cme: float):
+    """Generate the spectrum into two neutral pions and a photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < mpi0 + momega:
         return np.zeros_like(photon_energies)
     # This final state comes from V -> pi0 + omega with the omega decaying into
@@ -214,36 +383,42 @@ def dnde_photon_pi0_pi0_gamma(self, photon_energies, cme: float):
 def dnde_photon_pi_pi_pi0(
     self, photon_energies, cme: float, *, npts: int = 1 << 14, nbins: int = 25
 ):
+    """Generate the spectrum into two charged pions and a neutral pion.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + mpi0:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiPi0 = self._ff_pi_pi_pi0
+    ff: VectorFormFactorPiPiPi0 = self._ff_pi_pi_pi0
+    couplings = (self.gvuu, self.gvdd, self.gvss)
 
     dnde_decays = [
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_neutral_pion,
     ]
-    dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
-        nbins=nbins,
-        npts=npts,
-    )
-    dnde = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dists = ff.energy_distributions(q=cme, couplings=couplings, nbins=nbins, npts=npts)
+    dnde = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     inv_mass_dist = ff.invariant_mass_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
-        nbins=nbins,
-        pairs=[(0, 1)],
+        q=cme, couplings=couplings, nbins=nbins
     )
 
-    ps, ms = inv_mass_dist[(0, 1)]
+    dist = inv_mass_dist[(0, 1)]
+    ps = dist.probabilities
+    ms = dist.bin_centers
+
     fsr = np.array(
         [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
     )
@@ -256,18 +431,15 @@ def dnde_photon_pi_pi_eta(self, photon_energies, cme: float, *, nbins: int = 25)
     if cme < 2 * mpi + meta:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiEta = self._ff_pi_pi_eta
+    ff: VectorFormFactorPiPiEta = self._ff_pi_pi_eta
 
     dnde_decays = [
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_eta,
     ]
-    dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
-    )
-
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dists = ff.energy_distributions(q=cme, couplings=self._couplings, nbins=nbins)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -276,18 +448,15 @@ def dnde_photon_pi_pi_etap(self, photon_energies, cme: float, *, nbins: int = 25
     if cme < 2 * mpi + metap:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiEtaP = self._ff_pi_pi_etap
+    ff: VectorFormFactorPiPiEtaPrime = self._ff_pi_pi_etap
 
     dnde_decays = [
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_eta_prime,
     ]
-    dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
-    )
-
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dists = ff.energy_distributions(q=cme, couplings=self._couplings, nbins=nbins)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -296,7 +465,7 @@ def dnde_photon_pi_pi_omega(self, photon_energies, cme: float, *, nbins=25):
     if cme < 2 * mpi + momega:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    ff: VectorFormFactorPiPiOmega = self._ff_pi_pi_omega
 
     dnde_decays = [
         spectra.dnde_photon_charged_pion,
@@ -304,12 +473,12 @@ def dnde_photon_pi_pi_omega(self, photon_energies, cme: float, *, nbins=25):
         spectra.dnde_photon_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=1,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -318,7 +487,7 @@ def dnde_photon_pi0_pi0_omega(self, photon_energies, cme: float, *, nbins=25):
     if cme < 2 * mpi0 + momega:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    ff: VectorFormFactorPi0Pi0Omega = self._ff_pi_pi_omega
 
     dnde_decays = [
         spectra.dnde_photon_neutral_pion,
@@ -326,12 +495,12 @@ def dnde_photon_pi0_pi0_omega(self, photon_energies, cme: float, *, nbins=25):
         spectra.dnde_photon_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=0,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -342,7 +511,7 @@ def dnde_photon_pi0_k0_k0(
     if cme < mpi0 + 2 * mk0:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPi0K0K0 = self._ff_pi0_k0_k0
+    ff: VectorFormFactorPi0K0K0 = self._ff_pi0_k0_k0
 
     dnde_decays = [
         spectra.dnde_photon_neutral_pion,
@@ -350,15 +519,10 @@ def dnde_photon_pi0_k0_k0(
         spectra.dnde_photon_short_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
-        npts=npts,
-        nbins=nbins,
+        q=cme, couplings=self._couplings, npts=npts, nbins=nbins
     )
 
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -369,7 +533,7 @@ def dnde_photon_pi0_k_k(
     if cme < mpi0 + 2 * mk:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPi0KpKm = self._ff_pi0_k_k
+    ff: VectorFormFactorPi0KpKm = self._ff_pi0_k_k
 
     dnde_decays = [
         spectra.dnde_photon_neutral_pion,
@@ -377,15 +541,10 @@ def dnde_photon_pi0_k_k(
         spectra.dnde_photon_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
-        npts=npts,
-        nbins=nbins,
+        q=cme, couplings=self._couplings, npts=npts, nbins=nbins
     )
 
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -396,7 +555,7 @@ def dnde_photon_pi_k_k0(
     if cme < mpi + mk + mk0:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiKK0 = self._ff_pi_k_k0
+    ff: VectorFormFactorPiKK0 = self._ff_pi_k_k0
 
     dnde_decays = [
         spectra.dnde_photon_neutral_pion,
@@ -404,15 +563,13 @@ def dnde_photon_pi_k_k0(
         spectra.dnde_photon_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     return dec
 
@@ -428,7 +585,7 @@ def dnde_photon_pi_pi_pi_pi(
     if cme < 4 * mpi:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    ff: VectorFormFactorPiPiPiPi = self._ff_four_pi
 
     dnde_decays = [
         spectra.dnde_photon_charged_kaon,
@@ -437,28 +594,25 @@ def dnde_photon_pi_pi_pi_pi(
         spectra.dnde_photon_charged_pion,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dnde = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
 
     pairs = [(0, 1), (1, 2), (2, 3)]
     inv_mass_dist = ff.invariant_mass_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
-        pairs=pairs,
     )
     for pair in pairs:
-        ps, ms = inv_mass_dist[pair]
+        dpdm = inv_mass_dist[pair]
+        ps = dpdm.probabilities
+        ms = dpdm.bin_centers
         fsr = np.array(
             [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
         )
@@ -474,7 +628,7 @@ def dnde_photon_pi_pi_pi0_pi0(
     if cme < 2 * mpi + 2 * mpi0:
         return np.zeros_like(photon_energies)
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    ff: VectorFormFactorPiPiPi0Pi0 = self._ff_four_pi
 
     dnde_decays = [
         spectra.dnde_photon_charged_kaon,
@@ -483,26 +637,23 @@ def dnde_photon_pi_pi_pi0_pi0(
         spectra.dnde_photon_neutral_pion,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
+    dnde = _make_spectrum_n_body_decay(photon_energies, dists, dnde_decays)
     inv_mass_dist = ff.invariant_mass_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
-        pairs=[(0, 1)],
     )
 
-    ps, ms = inv_mass_dist[(0, 1)]
+    dpdm = inv_mass_dist[(0, 1)]
+    ps = dpdm.probabilities
+    ms = dpdm.bin_centers
     fsr = np.array([dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms])
     dnde += np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
@@ -571,7 +722,13 @@ def _dnde_photon_v_v_rest_frame(self, photon_energies, *, npts=1 << 15, nbins=30
 
 
 def dnde_photon_v_v(
-    self, photon_energies, cme, *, method="simpson", npts=1 << 15, nbins=30
+    self,
+    photon_energies,
+    cme,
+    *,
+    method="simpson",
+    npts=1 << 15,
+    nbins=30,
 ):
     ev = 0.5 * cme
     mv = self.mv
