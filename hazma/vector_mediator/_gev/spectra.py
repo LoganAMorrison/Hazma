@@ -428,6 +428,20 @@ def dnde_photon_pi_pi_pi0(
 
 
 def dnde_photon_pi_pi_eta(self, photon_energies, cme: float, *, nbins: int = 25):
+    """Generate the spectrum into
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + meta:
         return np.zeros_like(photon_energies)
 
@@ -445,6 +459,20 @@ def dnde_photon_pi_pi_eta(self, photon_energies, cme: float, *, nbins: int = 25)
 
 
 def dnde_photon_pi_pi_etap(self, photon_energies, cme: float, *, nbins: int = 25):
+    """Generate the spectrum into
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + metap:
         return np.zeros_like(photon_energies)
 
@@ -462,6 +490,20 @@ def dnde_photon_pi_pi_etap(self, photon_energies, cme: float, *, nbins: int = 25
 
 
 def dnde_photon_pi_pi_omega(self, photon_energies, cme: float, *, nbins=25):
+    """Generate the spectrum into
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + momega:
         return np.zeros_like(photon_energies)
 
@@ -759,6 +801,15 @@ def dnde_photon_v_v(
 def dnde_photon_spectrum_fns(
     self,
 ) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
+    """Return a dictionary containing functions to generate photon spectra.
+
+
+    Returns
+    -------
+    dnde_fns: array
+        Dictionary containing functions to generate photon spectra.
+    """
+
     def dnde_zero(e, _: float):
         return np.zeros_like(e)
 

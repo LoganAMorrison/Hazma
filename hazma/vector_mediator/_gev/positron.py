@@ -1,9 +1,25 @@
+"""Module for generating postiron spectra from GeV vector bosons."""
+
+# pylint: disable=invalid-name,protected-access,too-many-lines,too-few-public-methods
+# pyright: reportUnusedVariable=false
+
 import functools
+from typing import Any, Callable, Protocol, TypedDict
 
 import numpy as np
 
 from hazma import spectra
-from hazma.spectra import boost
+from hazma.form_factors import vector as vff
+from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
+                                       VectorFormFactorPi0KpKm,
+                                       VectorFormFactorPi0Pi0Omega,
+                                       VectorFormFactorPiKK0,
+                                       VectorFormFactorPiPiEta,
+                                       VectorFormFactorPiPiEtaPrime,
+                                       VectorFormFactorPiPiOmega,
+                                       VectorFormFactorPiPiPi0,
+                                       VectorFormFactorPiPiPi0Pi0,
+                                       VectorFormFactorPiPiPiPi)
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
@@ -14,19 +30,38 @@ from hazma.parameters import neutral_kaon_mass as mk0
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
-from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
-from hazma.vector_mediator.form_factors.pi_k_k import (
-    FormFactorPi0K0K0,
-    FormFactorPi0KpKm,
-    FormFactorPiKK0,
-)
-from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
-from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
-from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
-from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
+from hazma.spectra import boost
+
+PositronDecaySpectrumFn = Callable[[Any, float], Any]
 
 
-def make_spectrum_n_body_decay(positron_energies, energy_distributions, dnde_decays):
+class _DecayDndePostiron(Protocol):
+    mv: float
+    _couplings: vff.VectorFormFactorCouplings
+    _ff_pi_pi: vff.VectorFormFactorPiPi
+    _ff_pi0_pi0: vff.VectorFormFactorPi0Pi0
+    _ff_k_k: vff.VectorFormFactorKK
+    _ff_k0_k0: vff.VectorFormFactorK0K0
+    _ff_eta_gamma: vff.VectorFormFactorEtaGamma
+    _ff_eta_omega: vff.VectorFormFactorEtaOmega
+    _ff_eta_phi: vff.VectorFormFactorEtaPhi
+    _ff_pi0_gamma: vff.VectorFormFactorPi0Gamma
+    _ff_pi0_omega: vff.VectorFormFactorPi0Omega
+    _ff_pi0_phi: vff.VectorFormFactorPi0Phi
+
+    _ff_pi_pi_pi0: vff.VectorFormFactorPiPiPi0
+    _ff_pi_pi_eta: vff.VectorFormFactorPiPiEta
+    _ff_pi_pi_etap: vff.VectorFormFactorPiPiEtaPrime
+    _ff_pi_pi_omega: vff.VectorFormFactorPiPiOmega
+    _ff_pi0_pi0_omega: vff.VectorFormFactorPi0Pi0Omega
+    _ff_pi0_k0_k0: vff.VectorFormFactorPi0K0K0
+    _ff_pi0_k_k: vff.VectorFormFactorPi0KpKm
+    _ff_pi_k_k0: vff.VectorFormFactorPiKK0
+    _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
+    _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
+
+
+def _make_spectrum_n_body_decay(positron_energies, energy_distributions, dnde_decays):
     dnde = np.zeros_like(positron_energies)
 
     for i, (probs, bins) in enumerate(energy_distributions):
@@ -53,11 +88,47 @@ def _dnde_positron_zero(positron_energies, *_):
 # =============================================================================
 
 
-def dnde_positron_e_e(self, positron_energies, cme: float):
+def dnde_positron_e_e(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two electrons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return np.zeros_like(positron_energies)
 
 
-def dnde_positron_mu_mu(self, positron_energies, cme: float):
+def dnde_positron_mu_mu(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two muons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mmu:
         return np.zeros_like(positron_energies)
 
@@ -70,7 +141,25 @@ def dnde_positron_mu_mu(self, positron_energies, cme: float):
 # =============================================================================
 
 
-def dnde_positron_pi_pi(self, positron_energies, cme: float):
+def dnde_positron_pi_pi(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two pions.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi:
         return np.zeros_like(positron_energies)
 
@@ -78,7 +167,25 @@ def dnde_positron_pi_pi(self, positron_energies, cme: float):
     return dec
 
 
-def dnde_positron_k0_k0(self, positron_energies, cme: float):
+def dnde_positron_k0_k0(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two neutral kaons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mk0:
         return np.zeros_like(positron_energies)
 
@@ -87,7 +194,25 @@ def dnde_positron_k0_k0(self, positron_energies, cme: float):
     return dec_l + dec_s
 
 
-def dnde_positron_k_k(self, positron_energies, cme: float):
+def dnde_positron_k_k(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two charged kaons.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mk:
         return np.zeros_like(positron_energies)
 
@@ -107,11 +232,47 @@ def _dnde_positron_m_gamma(positron_energies, cme, mass, dnde):
     return dnde(positron_energies, eng)
 
 
-def dnde_positron_pi0_gamma(self, positron_energies, cme: float):
+def dnde_positron_pi0_gamma(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into a neutral pion and photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_positron_zero(positron_energies)
 
 
-def dnde_positron_eta_gamma(self, positron_energies, cme: float):
+def dnde_positron_eta_gamma(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into an eta and photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_positron_m_gamma(
         positron_energies, cme, meta, spectra.dnde_positron_eta
     )
@@ -131,13 +292,49 @@ def _dnde_positron_m_phi(positron_energies, *, cme, mass, dnde):
     )
 
 
-def dnde_positron_pi0_phi(self, positron_energies, cme: float):
+def dnde_positron_pi0_phi(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into a neutral pion and phi.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_positron_m_phi(
         positron_energies, cme=cme, mass=mpi0, dnde=_dnde_positron_zero
     )
 
 
-def dnde_positron_eta_phi(self, positron_energies, cme: float):
+def dnde_positron_eta_phi(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into an eta and phi.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return _dnde_positron_m_phi(
         positron_energies, cme=cme, mass=meta, dnde=spectra.dnde_positron_eta
     )
@@ -148,7 +345,25 @@ def dnde_positron_eta_phi(self, positron_energies, cme: float):
 # =============================================================================
 
 
-def dnde_positron_eta_omega(self, positron_energies, cme: float):
+def dnde_positron_eta_omega(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into an eta and omega.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < meta + momega:
         return np.zeros_like(positron_energies)
     dnde1 = spectra.dnde_positron_eta
@@ -163,17 +378,54 @@ def dnde_positron_eta_omega(self, positron_energies, cme: float):
 # =============================================================================
 
 
-def dnde_positron_pi0_pi0_gamma(self, positron_energies, cme: float):
+def dnde_positron_pi0_pi0_gamma(
+    _: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+):
+    """Generate the spectrum into two neutral pions and a photon.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     return np.zeros_like(positron_energies)
 
 
 def dnde_positron_pi_pi_pi0(
-    self, positron_energies, cme: float, *, npts: int = 1 << 14, nbins: int = 25
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
+    """Generate the spectrum into two charged pions and a neutral pion.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + mpi0:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiPi0 = self._ff_pi_pi_pi0
+    ff: VectorFormFactorPiPiPi0 = self._ff_pi_pi_pi0
 
     dnde_decays = [
         spectra.dnde_positron_charged_pion,
@@ -181,23 +433,41 @@ def dnde_positron_pi_pi_pi0(
         _dnde_positron_zero,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
         npts=npts,
     )
-    dnde = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dnde = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dnde
 
 
-def dnde_positron_pi_pi_eta(self, positron_energies, cme: float, *, nbins: int = 25):
+def dnde_positron_pi_pi_eta(
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    nbins: int = 25,
+):
+    """Generate the spectrum into pi^+, pi^-, eta.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + meta:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiEta = self._ff_pi_pi_eta
+    ff: VectorFormFactorPiPiEta = self._ff_pi_pi_eta
 
     dnde_decays = [
         spectra.dnde_positron_charged_pion,
@@ -205,19 +475,41 @@ def dnde_positron_pi_pi_eta(self, positron_energies, cme: float, *, nbins: int =
         spectra.dnde_positron_eta,
     ]
     dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
+        q=cme,
+        couplings=self._couplings,
+        nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
-def dnde_positron_pi_pi_etap(self, positron_energies, cme: float, *, nbins: int = 25):
+def dnde_positron_pi_pi_etap(
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    nbins: int = 25,
+):
+    """Generate the spectrum into pi^+, pi^-, eta'.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + metap:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiEtaP = self._ff_pi_pi_etap
+    ff: VectorFormFactorPiPiEtaPrime = self._ff_pi_pi_etap
 
     dnde_decays = [
         spectra.dnde_positron_charged_pion,
@@ -225,19 +517,41 @@ def dnde_positron_pi_pi_etap(self, positron_energies, cme: float, *, nbins: int 
         spectra.dnde_positron_eta_prime,
     ]
     dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
+        q=cme,
+        couplings=self._couplings,
+        nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
-def dnde_positron_pi_pi_omega(self, positron_energies, cme: float, *, nbins=25):
+def dnde_positron_pi_pi_omega(
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    nbins: int = 25,
+):
+    """Generate the spectrum into pi^+, pi^-, omega.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + momega:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    ff: VectorFormFactorPiPiOmega = self._ff_pi_pi_omega
 
     dnde_decays = [
         spectra.dnde_positron_charged_pion,
@@ -245,21 +559,41 @@ def dnde_positron_pi_pi_omega(self, positron_energies, cme: float, *, nbins=25):
         spectra.dnde_positron_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=1,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
-def dnde_positron_pi0_pi0_omega(self, positron_energies, cme: float, *, nbins=25):
+def dnde_positron_pi0_pi0_omega(
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    nbins: int = 25,
+):
+    """Generate the spectrum into pi^0, pi^0, omega.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi0 + momega:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    ff: VectorFormFactorPi0Pi0Omega = self._ff_pi0_pi0_omega
 
     dnde_decays = [
         _dnde_positron_zero,
@@ -267,23 +601,42 @@ def dnde_positron_pi0_pi0_omega(self, positron_energies, cme: float, *, nbins=25
         spectra.dnde_positron_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=0,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
 def dnde_positron_pi0_k0_k0(
-    self, positron_energies, cme: float, *, npts: int = 1 << 14, nbins=25
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
+    """Generate the spectrum into pi^0, K^0, K^0.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < mpi0 + 2 * mk0:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPi0K0K0 = self._ff_pi0_k0_k0
+    ff: VectorFormFactorPi0K0K0 = self._ff_pi0_k0_k0
 
     dnde_decays = [
         _dnde_positron_zero,
@@ -291,26 +644,43 @@ def dnde_positron_pi0_k0_k0(
         spectra.dnde_positron_short_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
 def dnde_positron_pi0_k_k(
-    self, positron_energies, cme: float, *, npts: int = 1 << 14, nbins=25
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
+    """Generate the spectrum into pi^0, K^+, K^-.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < mpi0 + 2 * mk:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPi0KpKm = self._ff_pi0_k_k
+    ff: VectorFormFactorPi0KpKm = self._ff_pi0_k_k
 
     dnde_decays = [
         _dnde_positron_zero,
@@ -318,26 +688,43 @@ def dnde_positron_pi0_k_k(
         spectra.dnde_positron_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
 
 def dnde_positron_pi_k_k0(
-    self, positron_energies, cme: float, *, npts: int = 1 << 14, nbins=25
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
+    """Generate the spectrum into pi^+, K^-, K^0.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < mpi + mk + mk0:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiKK0 = self._ff_pi_k_k0
+    ff: VectorFormFactorPiKK0 = self._ff_pi_k_k0
 
     dnde_decays = [
         _dnde_positron_zero,
@@ -345,15 +732,13 @@ def dnde_positron_pi_k_k0(
         spectra.dnde_positron_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dec = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dec
 
@@ -364,12 +749,31 @@ def dnde_positron_pi_k_k0(
 
 
 def dnde_positron_pi_pi_pi_pi(
-    self, positron_energies, cme: float, *, npts=1 << 14, nbins=25
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts=1 << 14,
+    nbins: int = 25,
 ):
+    """Generate the spectrum into pi^+, pi^-, pi^+, pi^-.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 4 * mpi:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    ff: VectorFormFactorPiPiPiPi = self._ff_pi_pi_pi_pi
 
     dnde_decays = [
         spectra.dnde_positron_charged_kaon,
@@ -378,26 +782,43 @@ def dnde_positron_pi_pi_pi_pi(
         spectra.dnde_positron_charged_pion,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dnde = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dnde
 
 
 def dnde_positron_pi_pi_pi0_pi0(
-    self, positron_energies, cme: float, *, npts: int = 1 << 15, nbins: int = 30
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme: float,
+    *,
+    npts: int = 1 << 15,
+    nbins: int = 30,
 ):
+    """Generate the spectrum into pi^+, pi^-, pi^0, pi^0.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     if cme < 2 * mpi + 2 * mpi0:
         return np.zeros_like(positron_energies)
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    ff: VectorFormFactorPiPiPi0Pi0 = self._ff_pi_pi_pi0_pi0
 
     dnde_decays = [
         spectra.dnde_positron_charged_kaon,
@@ -406,22 +827,40 @@ def dnde_positron_pi_pi_pi0_pi0(
         _dnde_positron_zero,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
+    dnde = _make_spectrum_n_body_decay(positron_energies, dists, dnde_decays)
 
     return dnde
 
 
 def dnde_positron_v_v(
-    self, positron_energies, cme, *, method="quad", npts=1 << 15, nbins=30
+    self: _DecayDndePostiron,
+    positron_energies,
+    cme,
+    *,
+    method="quad",
+    npts: int = 1 << 15,
+    nbins: int = 30,
 ):
+    """Generate the spectrum into two vector mediators
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`.
+    """
     gamma = 2.0 * self.mv / cme
     if gamma < 1.0:
         return np.zeros_like(positron_energies)
@@ -458,12 +897,53 @@ def dnde_positron_v_v(
 
         return spec
 
-    return boost.make_boost_function(dnde)(
-        positron_energies, beta, mass=me, method=method
+    return boost.make_boost_function(dnde, mass=me)(
+        positron_energies, beta, method=method
     )
 
 
-def dnde_positron_spectrum_fns(self):
+PositronSpectrumFunctions = TypedDict(
+    "NeutrinoSpectrumFunctions",
+    {
+        "e e": PositronDecaySpectrumFn,
+        "mu mu": PositronDecaySpectrumFn,
+        "ve ve": PositronDecaySpectrumFn,
+        "vt vt": PositronDecaySpectrumFn,
+        "vm vm": PositronDecaySpectrumFn,
+        "pi pi": PositronDecaySpectrumFn,
+        "k0 k0": PositronDecaySpectrumFn,
+        "k k": PositronDecaySpectrumFn,
+        "pi0 gamma": PositronDecaySpectrumFn,
+        "eta gamma": PositronDecaySpectrumFn,
+        "pi0 phi": PositronDecaySpectrumFn,
+        "eta phi": PositronDecaySpectrumFn,
+        "eta omega": PositronDecaySpectrumFn,
+        "pi0 pi0 gamma": PositronDecaySpectrumFn,
+        "pi pi pi0": PositronDecaySpectrumFn,
+        "pi pi eta": PositronDecaySpectrumFn,
+        "pi pi etap": PositronDecaySpectrumFn,
+        "pi pi omega": PositronDecaySpectrumFn,
+        "pi0 pi0 omega": PositronDecaySpectrumFn,
+        "pi0 k0 k0": PositronDecaySpectrumFn,
+        "pi0 k k": PositronDecaySpectrumFn,
+        "pi k k0": PositronDecaySpectrumFn,
+        "pi pi pi pi": PositronDecaySpectrumFn,
+        "pi pi pi0 pi0": PositronDecaySpectrumFn,
+        "v v": PositronDecaySpectrumFn,
+    },
+)
+
+
+def dnde_positron_spectrum_fns(self) -> PositronSpectrumFunctions:
+    """Return a dictionary containing functions to generate positron spectra.
+
+
+    Returns
+    -------
+    dnde_fns: array
+        Dictionary containing functions to generate positron spectra.
+    """
+
     def dnde_zero(e, _: float):
         return np.zeros_like(e)
 
