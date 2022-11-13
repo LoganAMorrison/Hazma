@@ -1,12 +1,11 @@
-from typing import Union, Optional
 import functools as ft
 import warnings
+from typing import Literal, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from .parameters import alpha_em
-
 
 # ===================================================================
 # ---- Deprecation --------------------------------------------------
@@ -23,10 +22,10 @@ def _force_deprecation_warning(message):
 def warn_deprecated_module(module: str, alternative: Optional[str] = None):
     r"""Decorator used to raise warning for calling a deprecated function."""
 
-    message = "{} is deprecated.".format(module)
+    message = f"{module} is deprecated."
 
     if alternative is not None:
-        message = "{} Use {} instead.".format(message, alternative)
+        message = f"{message} Use {alternative} instead."
 
     _force_deprecation_warning(message)
 
@@ -34,10 +33,10 @@ def warn_deprecated_module(module: str, alternative: Optional[str] = None):
 def deprecate_fn(fn, alternative: Optional[str] = None):
     r"""Decorator used to raise warning for calling a deprecated function."""
 
-    message = "{} is deprecated.".format(fn.__name__)
+    message = f"{fn.__name__} is deprecated."
 
     if alternative is not None:
-        message = "{} Use {} instead.".format(message, alternative)
+        message = f"{message} Use {alternative} instead."
 
     @ft.wraps(fn)
     def wrapped(*args, **kwargs):
@@ -56,6 +55,12 @@ RealOrRealArray = Union[float, RealArray]
 ComplexArray = npt.NDArray[np.complex_]
 ComplexOrComplexArray = Union[complex, ComplexArray]
 RealOrComplexArray = npt.NDArray[Union[np.float_, np.complex_]]
+
+# ===================================================================
+# ---- Enums --------------------------------------------------------
+# ===================================================================
+
+NeutrinoFlavor = Literal["e", "mu", "tau"]
 
 # ===================================================================
 # ---- Kinematics ---------------------------------------------------

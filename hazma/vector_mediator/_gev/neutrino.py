@@ -1,13 +1,27 @@
+"""Module for generating neutrino spectra from GeV vector bosons."""
+
+# pylint: disable=invalid-name,protected-access,too-many-lines,too-few-public-methods
+# pyright: reportUnusedVariable=false
+
 import functools
-from typing import Optional
+from typing import Any, Callable, Protocol, TypedDict
 
 import numpy as np
 
 from hazma import spectra
-from hazma.spectra import boost
+from hazma.form_factors import vector as vff
+from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
+                                       VectorFormFactorPi0KpKm,
+                                       VectorFormFactorPi0Pi0Omega,
+                                       VectorFormFactorPiKK0,
+                                       VectorFormFactorPiPiEta,
+                                       VectorFormFactorPiPiEtaPrime,
+                                       VectorFormFactorPiPiOmega,
+                                       VectorFormFactorPiPiPi0,
+                                       VectorFormFactorPiPiPi0Pi0,
+                                       VectorFormFactorPiPiPiPi)
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
-from hazma.parameters import electron_mass as me
 from hazma.parameters import eta_mass as meta
 from hazma.parameters import eta_prime_mass as metap
 from hazma.parameters import muon_mass as mmu
@@ -15,26 +29,46 @@ from hazma.parameters import neutral_kaon_mass as mk0
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
-from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
-from hazma.vector_mediator.form_factors.pi_k_k import (
-    FormFactorPi0K0K0,
-    FormFactorPi0KpKm,
-    FormFactorPiKK0,
-)
-from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
-from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
-from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
-from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
+from hazma.spectra import boost
+from hazma.utils import NeutrinoFlavor
+
+NeutrinoDecaySpectrumFn = Callable[[Any, float, NeutrinoFlavor], Any]
 
 
-def make_zeros(neutrino_energies):
+class _DecayDndeNeutrino(Protocol):
+    mv: float
+    _couplings: vff.VectorFormFactorCouplings
+    _ff_pi_pi: vff.VectorFormFactorPiPi
+    _ff_pi0_pi0: vff.VectorFormFactorPi0Pi0
+    _ff_k_k: vff.VectorFormFactorKK
+    _ff_k0_k0: vff.VectorFormFactorK0K0
+    _ff_eta_gamma: vff.VectorFormFactorEtaGamma
+    _ff_eta_omega: vff.VectorFormFactorEtaOmega
+    _ff_eta_phi: vff.VectorFormFactorEtaPhi
+    _ff_pi0_gamma: vff.VectorFormFactorPi0Gamma
+    _ff_pi0_omega: vff.VectorFormFactorPi0Omega
+    _ff_pi0_phi: vff.VectorFormFactorPi0Phi
+
+    _ff_pi_pi_pi0: vff.VectorFormFactorPiPiPi0
+    _ff_pi_pi_eta: vff.VectorFormFactorPiPiEta
+    _ff_pi_pi_etap: vff.VectorFormFactorPiPiEtaPrime
+    _ff_pi_pi_omega: vff.VectorFormFactorPiPiOmega
+    _ff_pi0_pi0_omega: vff.VectorFormFactorPi0Pi0Omega
+    _ff_pi0_k0_k0: vff.VectorFormFactorPi0K0K0
+    _ff_pi0_k_k: vff.VectorFormFactorPi0KpKm
+    _ff_pi_k_k0: vff.VectorFormFactorPiKK0
+    _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
+    _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
+
+
+def _make_zeros(neutrino_energies):
     dtype = neutrino_energies.dtype
     shape = neutrino_energies.shape
     return np.zeros(shape, dtype=dtype)
 
 
-def make_spectrum_n_body_decay(
-    neutrino_energies, energy_distributions, dnde_decays, flavor: str
+def _make_spectrum_n_body_decay(
+    neutrino_energies, energy_distributions, dnde_decays, flavor: NeutrinoFlavor
 ):
 
     dnde = np.zeros(neutrino_energies.shape)
@@ -47,10 +81,10 @@ def make_spectrum_n_body_decay(
 
 
 def _dnde_neutrino_two_body(
-    neutrino_energies, *, cme, m1, m2, dnde1, dnde2, flavor: str
+    neutrino_energies, *, cme, m1, m2, dnde1, dnde2, flavor: NeutrinoFlavor
 ):
     if cme < m1 + m2:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     e1 = (cme**2 + m1**2 - m2**2) / (2.0 * cme)
     e2 = (cme**2 - m1**2 + m2**2) / (2.0 * cme)
@@ -58,21 +92,63 @@ def _dnde_neutrino_two_body(
 
 
 def _dnde_neutrino_zero(neutrino_energies, *_):
-    return make_zeros(neutrino_energies)
+    return _make_zeros(neutrino_energies)
 
 
 # =============================================================================
 # ---- 2-body Lepton ----------------------------------------------------------
 # =============================================================================
 
+# pylint: disable=unused-argument
+def dnde_neutrino_e_e(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into e^+,e^-.
 
-def dnde_neutrino_e_e(self, neutrino_energies, cme: float, flavor: str):
-    return make_zeros(neutrino_energies)
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    return _make_zeros(neutrino_energies)
 
 
-def dnde_neutrino_mu_mu(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_mu_mu(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into mu^+,mu^-.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     if cme < 2 * mmu:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     dec = 2 * spectra.dnde_neutrino_muon(neutrino_energies, cme / 2.0, flavor)
     return dec
@@ -83,9 +159,30 @@ def dnde_neutrino_mu_mu(self, neutrino_energies, cme: float, flavor: str):
 # =============================================================================
 
 
-def dnde_neutrino_pi_pi(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_pi_pi(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into pi^+,pi^-.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     if cme < 2 * mpi:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     dec = 2 * spectra.dnde_neutrino_charged_pion(
         neutrino_energies, cme / 2.0, flavor=flavor
@@ -93,9 +190,30 @@ def dnde_neutrino_pi_pi(self, neutrino_energies, cme: float, flavor: str):
     return dec
 
 
-def dnde_neutrino_k0_k0(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_k0_k0(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into k^0,k^0.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     if cme < 2 * mk0:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     dec_l = spectra.dnde_neutrino_long_kaon(neutrino_energies, cme / 2.0, flavor=flavor)
     dec_s = spectra.dnde_neutrino_short_kaon(
@@ -104,9 +222,30 @@ def dnde_neutrino_k0_k0(self, neutrino_energies, cme: float, flavor: str):
     return dec_l + dec_s
 
 
-def dnde_neutrino_k_k(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_k_k(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into k^+,k^-.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     if cme < 2 * mk:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     dec = spectra.dnde_neutrino_charged_kaon(
         neutrino_energies, cme / 2.0, flavor=flavor
@@ -119,18 +258,61 @@ def dnde_neutrino_k_k(self, neutrino_energies, cme: float, flavor: str):
 # =============================================================================
 
 
-def _dnde_neutrino_m_gamma(neutrino_energies, cme, mass, dnde, flavor: str):
+def _dnde_neutrino_m_gamma(neutrino_energies, cme, mass, dnde, flavor: NeutrinoFlavor):
     if cme < mass:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
     eng = (cme**2 + mass**2) / (2.0 * cme)
     return dnde(neutrino_energies, eng, flavor=flavor)
 
 
-def dnde_neutrino_pi0_gamma(self, neutrino_energies, cme: float, flavor: str):
-    return make_zeros(neutrino_energies)
+# pylint: disable=unused-argument
+def dnde_neutrino_pi0_gamma(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into pi^0,gamma.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    return _make_zeros(neutrino_energies)
 
 
-def dnde_neutrino_eta_gamma(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_eta_gamma(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into eta,gamma.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     return _dnde_neutrino_m_gamma(
         neutrino_energies, cme, meta, spectra.dnde_neutrino_eta, flavor=flavor
     )
@@ -141,9 +323,9 @@ def dnde_neutrino_eta_gamma(self, neutrino_energies, cme: float, flavor: str):
 # =============================================================================
 
 
-def _dnde_neutrino_m_phi(neutrino_energies, *, cme, mass, dnde, flavor: str):
+def _dnde_neutrino_m_phi(neutrino_energies, *, cme, mass, dnde, flavor: NeutrinoFlavor):
     if cme < mass + mphi:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
     dnde_phi = spectra.dnde_neutrino_phi
     return _dnde_neutrino_two_body(
         neutrino_energies,
@@ -156,13 +338,55 @@ def _dnde_neutrino_m_phi(neutrino_energies, *, cme, mass, dnde, flavor: str):
     )
 
 
-def dnde_neutrino_pi0_phi(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_pi0_phi(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into pi^0,phi.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     return _dnde_neutrino_m_phi(
         neutrino_energies, cme=cme, mass=mpi0, dnde=_dnde_neutrino_zero, flavor=flavor
     )
 
 
-def dnde_neutrino_eta_phi(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_eta_phi(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into eta,phi.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     return _dnde_neutrino_m_phi(
         neutrino_energies,
         cme=cme,
@@ -177,9 +401,30 @@ def dnde_neutrino_eta_phi(self, neutrino_energies, cme: float, flavor: str):
 # =============================================================================
 
 
-def dnde_neutrino_eta_omega(self, neutrino_energies, cme: float, flavor: str):
+def dnde_neutrino_eta_omega(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into eta,omega.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     if cme < meta + momega:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
     dnde1 = spectra.dnde_neutrino_eta
     dnde2 = spectra.dnde_neutrino_omega
     return _dnde_neutrino_two_body(
@@ -197,24 +442,61 @@ def dnde_neutrino_eta_omega(self, neutrino_energies, cme: float, flavor: str):
 # ---- 3-body -----------------------------------------------------------------
 # =============================================================================
 
+# pylint: disable=unused-argument
+def dnde_neutrino_pi0_pi0_gamma(
+    _: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+):
+    """Generate the spectrum into pi^0,pi^0,gamma.
 
-def dnde_neutrino_pi0_pi0_gamma(self, neutrino_energies, cme: float, flavor: str):
-    return make_zeros(neutrino_energies)
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    return _make_zeros(neutrino_energies)
 
 
 def dnde_neutrino_pi_pi_pi0(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme: float,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
     npts: int = 1 << 14,
     nbins: int = 25,
 ):
-    if cme < 2 * mpi + mpi0:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^+,pi^-,pi^0.
 
-    ff: FormFactorPiPiPi0 = self._ff_pi_pi_pi0
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi + mpi0:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiPi0 = self._ff_pi_pi_pi0
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_pion,
@@ -222,14 +504,12 @@ def dnde_neutrino_pi_pi_pi0(
         _dnde_neutrino_zero,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
         npts=npts,
     )
-    dnde = make_spectrum_n_body_decay(
+    dnde = _make_spectrum_n_body_decay(
         neutrino_energies, dists, dnde_decays, flavor=flavor
     )
 
@@ -237,12 +517,33 @@ def dnde_neutrino_pi_pi_pi0(
 
 
 def dnde_neutrino_pi_pi_eta(
-    self, neutrino_energies, cme: float, flavor: str, *, nbins: int = 25
+    self: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+    *,
+    nbins: int = 25,
 ):
-    if cme < 2 * mpi + meta:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^+,pi^-,eta.
 
-    ff: FormFactorPiPiEta = self._ff_pi_pi_eta
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi + meta:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiEta = self._ff_pi_pi_eta
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_pion,
@@ -250,21 +551,44 @@ def dnde_neutrino_pi_pi_eta(
         spectra.dnde_neutrino_eta,
     ]
     dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
+        q=cme,
+        couplings=self._couplings,
+        nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi_pi_etap(
-    self, neutrino_energies, cme: float, flavor: str, *, nbins: int = 25
+    self: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+    *,
+    nbins: int = 25,
 ):
-    if cme < 2 * mpi + metap:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^+,pi^-,eta'.
 
-    ff: FormFactorPiPiEtaP = self._ff_pi_pi_etap
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi + metap:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiEtaPrime = self._ff_pi_pi_etap
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_pion,
@@ -272,21 +596,44 @@ def dnde_neutrino_pi_pi_etap(
         spectra.dnde_neutrino_eta_prime,
     ]
     dists = ff.energy_distributions(
-        cme=cme, gvuu=self.gvuu, gvdd=self.gvdd, nbins=nbins
+        q=cme,
+        couplings=self._couplings,
+        nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi_pi_omega(
-    self, neutrino_energies, cme: float, flavor: str, *, nbins=25
+    self: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+    *,
+    nbins: int = 25,
 ):
-    if cme < 2 * mpi + momega:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^+,pi^-,omega.
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi + momega:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiOmega = self._ff_pi_pi_omega
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_pion,
@@ -294,23 +641,44 @@ def dnde_neutrino_pi_pi_omega(
         spectra.dnde_neutrino_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=1,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi0_pi0_omega(
-    self, neutrino_energies, cme: float, flavor: str, *, nbins=25
+    self: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+    *,
+    nbins: int = 25,
 ):
-    if cme < 2 * mpi0 + momega:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^0,pi^0,omega.
 
-    ff: FormFactorPiPiOmega = self._ff_pi_pi_omega
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi0 + momega:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPi0Pi0Omega = self._ff_pi0_pi0_omega
 
     dnde_decays = [
         _dnde_neutrino_zero,
@@ -318,29 +686,45 @@ def dnde_neutrino_pi0_pi0_omega(
         spectra.dnde_neutrino_omega,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        imode=0,
+        q=cme,
+        couplings=self._couplings,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi0_k0_k0(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme: float,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
     npts: int = 1 << 14,
-    nbins=25,
+    nbins: int = 25,
 ):
-    if cme < mpi0 + 2 * mk0:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^0,K^0,K^0.
 
-    ff: FormFactorPi0K0K0 = self._ff_pi0_k0_k0
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < mpi0 + 2 * mk0:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPi0K0K0 = self._ff_pi0_k0_k0
 
     dnde_decays = [
         _dnde_neutrino_zero,
@@ -348,26 +732,46 @@ def dnde_neutrino_pi0_k0_k0(
         spectra.dnde_neutrino_short_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi0_k_k(
-    self, neutrino_energies, cme: float, flavor: str, *, npts: int = 1 << 14, nbins=25
+    self: _DecayDndeNeutrino,
+    neutrino_energies,
+    cme: float,
+    flavor: NeutrinoFlavor,
+    *,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
-    if cme < mpi0 + 2 * mk:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^0,K^+,K^-.
 
-    ff: FormFactorPi0KpKm = self._ff_pi0_k_k
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < mpi0 + 2 * mk:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPi0KpKm = self._ff_pi0_k_k
 
     dnde_decays = [
         _dnde_neutrino_zero,
@@ -375,32 +779,46 @@ def dnde_neutrino_pi0_k_k(
         spectra.dnde_neutrino_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
 
 def dnde_neutrino_pi_k_k0(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme: float,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
     npts: int = 1 << 14,
-    nbins=25,
+    nbins: int = 25,
 ):
-    if cme < mpi + mk + mk0:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into pi^+,K^-,K^0.
 
-    ff: FormFactorPiKK0 = self._ff_pi_k_k0
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < mpi + mk + mk0:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiKK0 = self._ff_pi_k_k0
 
     dnde_decays = [
         _dnde_neutrino_zero,
@@ -408,15 +826,13 @@ def dnde_neutrino_pi_k_k0(
         spectra.dnde_neutrino_charged_kaon,
     ]
     dists = ff.energy_distributions(
-        m=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        gvss=self.gvss,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dec = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dec = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dec
 
@@ -427,18 +843,34 @@ def dnde_neutrino_pi_k_k0(
 
 
 def dnde_neutrino_pi_pi_pi_pi(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme: float,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
-    npts=1 << 14,
-    nbins=25,
+    npts: int = 1 << 14,
+    nbins: int = 25,
 ):
-    if cme < 4 * mpi:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into four charged pions.
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 4 * mpi:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiPiPi = self._ff_pi_pi_pi_pi
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_kaon,
@@ -447,32 +879,46 @@ def dnde_neutrino_pi_pi_pi_pi(
         spectra.dnde_neutrino_charged_pion,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dnde = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dnde
 
 
 def dnde_neutrino_pi_pi_pi0_pi0(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme: float,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
     npts: int = 1 << 15,
     nbins: int = 30,
 ):
-    if cme < 2 * mpi + 2 * mpi0:
-        return make_zeros(neutrino_energies)
+    """Generate the spectrum into two neutral and two charged pions.
 
-    ff: FormFactorPiPiPiPi = self._ff_four_pi
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
+    if cme < 2 * mpi + 2 * mpi0:
+        return _make_zeros(neutrino_energies)
+
+    ff: VectorFormFactorPiPiPi0Pi0 = self._ff_pi_pi_pi0_pi0
 
     dnde_decays = [
         spectra.dnde_neutrino_charged_kaon,
@@ -481,32 +927,46 @@ def dnde_neutrino_pi_pi_pi0_pi0(
         _dnde_neutrino_zero,
     ]
     dists = ff.energy_distributions(
-        cme=cme,
-        gvuu=self.gvuu,
-        gvdd=self.gvdd,
-        neutral=True,
+        q=cme,
+        couplings=self._couplings,
         npts=npts,
         nbins=nbins,
     )
 
-    dnde = make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
+    dnde = _make_spectrum_n_body_decay(neutrino_energies, dists, dnde_decays, flavor)
 
     return dnde
 
 
 def dnde_neutrino_v_v(
-    self,
+    self: _DecayDndeNeutrino,
     neutrino_energies,
     cme,
-    flavor: str,
+    flavor: NeutrinoFlavor,
     *,
-    method="quad",
-    npts=1 << 15,
-    nbins=30,
+    method: str = "quad",
+    npts: int = 1 << 15,
+    nbins: int = 30,
 ):
+    """Generate the spectrum into two vector mediators.
+
+    Parameters
+    ----------
+    neutrino_energies: array
+        Array of photon energies where the spectrum should be computed.
+    cme: float
+        Center-of-mass energy.
+    flavor: str
+        Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `neutrino_energies`.
+    """
     gamma = 2.0 * self.mv / cme
     if gamma < 1.0:
-        return make_zeros(neutrino_energies)
+        return _make_zeros(neutrino_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
 
@@ -540,14 +1000,54 @@ def dnde_neutrino_v_v(
 
         return spec
 
-    return boost.make_boost_function(dnde)(
-        neutrino_energies, beta, mass=me, method=method
-    )
+    booster = boost.make_boost_function(dnde, mass=0.0)
+    return booster(neutrino_energies, beta, method=method)
 
 
-def dnde_neutrino_spectrum_fns(self):
-    def dnde_zero(e, _: float, flavor: str):
-        return make_zeros(e)
+NeutrinoSpectrumFunctions = TypedDict(
+    "NeutrinoSpectrumFunctions",
+    {
+        "e e": NeutrinoDecaySpectrumFn,
+        "mu mu": NeutrinoDecaySpectrumFn,
+        "ve ve": NeutrinoDecaySpectrumFn,
+        "vt vt": NeutrinoDecaySpectrumFn,
+        "vm vm": NeutrinoDecaySpectrumFn,
+        "pi pi": NeutrinoDecaySpectrumFn,
+        "k0 k0": NeutrinoDecaySpectrumFn,
+        "k k": NeutrinoDecaySpectrumFn,
+        "pi0 gamma": NeutrinoDecaySpectrumFn,
+        "eta gamma": NeutrinoDecaySpectrumFn,
+        "pi0 phi": NeutrinoDecaySpectrumFn,
+        "eta phi": NeutrinoDecaySpectrumFn,
+        "eta omega": NeutrinoDecaySpectrumFn,
+        "pi0 pi0 gamma": NeutrinoDecaySpectrumFn,
+        "pi pi pi0": NeutrinoDecaySpectrumFn,
+        "pi pi eta": NeutrinoDecaySpectrumFn,
+        "pi pi etap": NeutrinoDecaySpectrumFn,
+        "pi pi omega": NeutrinoDecaySpectrumFn,
+        "pi0 pi0 omega": NeutrinoDecaySpectrumFn,
+        "pi0 k0 k0": NeutrinoDecaySpectrumFn,
+        "pi0 k k": NeutrinoDecaySpectrumFn,
+        "pi k k0": NeutrinoDecaySpectrumFn,
+        "pi pi pi pi": NeutrinoDecaySpectrumFn,
+        "pi pi pi0 pi0": NeutrinoDecaySpectrumFn,
+        "v v": NeutrinoDecaySpectrumFn,
+    },
+)
+
+
+def dnde_neutrino_spectrum_fns(self) -> NeutrinoSpectrumFunctions:
+    """Return a dictionary containing functions to generate neutrino spectra.
+
+
+    Returns
+    -------
+    dnde_fns: array
+        Dictionary containing functions to generate neutrino spectra.
+    """
+
+    def dnde_zero(e, _: float, flavor: NeutrinoFlavor):
+        return _make_zeros(e)
 
     def wrap(f):
         @functools.wraps(f)

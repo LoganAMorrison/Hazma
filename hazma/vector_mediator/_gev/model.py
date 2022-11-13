@@ -2,7 +2,7 @@
 Py
 """
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,import-outside-toplevel
 # pyright: basic, reportUnusedImport=false
 
 import functools as ft
@@ -32,6 +32,16 @@ T = TypeVar("T", float, npt.NDArray[np.float_])
 
 
 def with_cache(*, cache_name: str, name: str):
+    """Simple decorator to cache values into a class variable.
+
+    Parameters
+    ----------
+    cache_name: str
+        Name of the class cache variable.
+    name: str
+        Name of the variable to cache.
+    """
+
     def decorator(f):
         def wrapper(*args, **kwargs):
             cache = getattr(args[0], cache_name)
@@ -128,7 +138,7 @@ class VectorMediatorGeV(TheoryAnn):
                                  sigma_xx_to_vt_vt)
     from .thermal_cross_section import relic_density
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         mx: float,
         mv: float,
