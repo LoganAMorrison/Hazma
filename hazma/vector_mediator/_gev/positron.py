@@ -30,6 +30,7 @@ from hazma.parameters import neutral_kaon_mass as mk0
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
+from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
 
 PositronDecaySpectrumFn = Callable[[Any, float], Any]
@@ -61,10 +62,17 @@ class _DecayDndePostiron(Protocol):
     _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
 
 
-def _make_spectrum_n_body_decay(positron_energies, energy_distributions, dnde_decays):
+def _make_spectrum_n_body_decay(
+    positron_energies,
+    energy_distributions: list[PhaseSpaceDistribution1D],
+    dnde_decays,
+):
     dnde = np.zeros_like(positron_energies)
 
-    for i, (probs, bins) in enumerate(energy_distributions):
+    for i, dist in enumerate(energy_distributions):
+        probs = dist.probabilities
+        bins = dist.bin_centers
+
         dec = np.array([dnde_decays[i](positron_energies, e) for e in bins])
         dnde += np.trapz(np.expand_dims(probs, 1) * dec, x=bins, axis=0)
 

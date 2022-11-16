@@ -29,6 +29,7 @@ from hazma.parameters import neutral_kaon_mass as mk0
 from hazma.parameters import neutral_pion_mass as mpi0
 from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
+from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
 from hazma.utils import NeutrinoFlavor
 
@@ -68,12 +69,17 @@ def _make_zeros(neutrino_energies):
 
 
 def _make_spectrum_n_body_decay(
-    neutrino_energies, energy_distributions, dnde_decays, flavor: NeutrinoFlavor
+    neutrino_energies,
+    energy_distributions: list[PhaseSpaceDistribution1D],
+    dnde_decays,
+    flavor: NeutrinoFlavor,
 ):
 
     dnde = np.zeros(neutrino_energies.shape)
 
-    for i, (probs, bins) in enumerate(energy_distributions):
+    for i, dist in enumerate(energy_distributions):
+        bins = dist.bin_centers
+        probs = dist.probabilities
         dec = np.array([dnde_decays[i](neutrino_energies, e, flavor) for e in bins])
         dnde += np.trapz(np.expand_dims(probs, 1) * dec, x=bins, axis=0)
 

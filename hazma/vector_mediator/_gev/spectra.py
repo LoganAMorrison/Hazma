@@ -3,12 +3,13 @@
 # pylint: disable=invalid-name,protected-access
 
 import functools
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, Protocol, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma import spectra
+from hazma.form_factors import vector as vff
 from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
                                        VectorFormFactorPi0KpKm,
                                        VectorFormFactorPi0Pi0Omega,
@@ -38,6 +39,35 @@ from hazma.spectra.boost import (boost_delta_function,
 from hazma.utils import RealArray
 
 DndeFn = Callable[[Union[float, npt.NDArray[np.float64]], float], float]
+
+
+class _DecayDndePhoton(Protocol):
+    mv: float
+    _couplings: vff.VectorFormFactorCouplings
+    _ff_pi_pi: vff.VectorFormFactorPiPi
+    _ff_pi0_pi0: vff.VectorFormFactorPi0Pi0
+    _ff_k_k: vff.VectorFormFactorKK
+    _ff_k0_k0: vff.VectorFormFactorK0K0
+    _ff_eta_gamma: vff.VectorFormFactorEtaGamma
+    _ff_eta_omega: vff.VectorFormFactorEtaOmega
+    _ff_eta_phi: vff.VectorFormFactorEtaPhi
+    _ff_pi0_gamma: vff.VectorFormFactorPi0Gamma
+    _ff_pi0_omega: vff.VectorFormFactorPi0Omega
+    _ff_pi0_phi: vff.VectorFormFactorPi0Phi
+
+    _ff_pi_pi_pi0: vff.VectorFormFactorPiPiPi0
+    _ff_pi_pi_eta: vff.VectorFormFactorPiPiEta
+    _ff_pi_pi_etap: vff.VectorFormFactorPiPiEtaPrime
+    _ff_pi_pi_omega: vff.VectorFormFactorPiPiOmega
+    _ff_pi0_pi0_omega: vff.VectorFormFactorPi0Pi0Omega
+    _ff_pi0_k0_k0: vff.VectorFormFactorPi0K0K0
+    _ff_pi0_k_k: vff.VectorFormFactorPi0KpKm
+    _ff_pi_k_k0: vff.VectorFormFactorPiKK0
+    _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
+    _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
+
+    def partial_widths(self) -> dict[str, float]:
+        ...
 
 
 def _make_spectrum_n_body_decay(
@@ -220,7 +250,7 @@ def dnde_photon_pi0_gamma(_, photon_energies, cme: float):
     )
 
 
-def dnde_photon_eta_gamma(self, photon_energies, cme: float):
+def dnde_photon_eta_gamma(_: _DecayDndePhoton, photon_energies, cme: float):
     """Generate the spectrum into an eta and photon.
 
     Parameters
@@ -401,7 +431,7 @@ def dnde_photon_pi_pi_pi0(
         return np.zeros_like(photon_energies)
 
     ff: VectorFormFactorPiPiPi0 = self._ff_pi_pi_pi0
-    couplings = (self.gvuu, self.gvdd, self.gvss)
+    couplings = self._couplings
 
     dnde_decays = [
         spectra.dnde_photon_charged_pion,
@@ -427,7 +457,9 @@ def dnde_photon_pi_pi_pi0(
     return dnde
 
 
-def dnde_photon_pi_pi_eta(self, photon_energies, cme: float, *, nbins: int = 25):
+def dnde_photon_pi_pi_eta(
+    self: _DecayDndePhoton, photon_energies, cme: float, *, nbins: int = 25
+):
     """Generate the spectrum into
 
     Parameters
@@ -458,7 +490,9 @@ def dnde_photon_pi_pi_eta(self, photon_energies, cme: float, *, nbins: int = 25)
     return dec
 
 
-def dnde_photon_pi_pi_etap(self, photon_energies, cme: float, *, nbins: int = 25):
+def dnde_photon_pi_pi_etap(
+    self: _DecayDndePhoton, photon_energies, cme: float, *, nbins: int = 25
+):
     """Generate the spectrum into
 
     Parameters
@@ -489,7 +523,9 @@ def dnde_photon_pi_pi_etap(self, photon_energies, cme: float, *, nbins: int = 25
     return dec
 
 
-def dnde_photon_pi_pi_omega(self, photon_energies, cme: float, *, nbins=25):
+def dnde_photon_pi_pi_omega(
+    self: _DecayDndePhoton, photon_energies, cme: float, *, nbins=25
+):
     """Generate the spectrum into
 
     Parameters
@@ -525,11 +561,13 @@ def dnde_photon_pi_pi_omega(self, photon_energies, cme: float, *, nbins=25):
     return dec
 
 
-def dnde_photon_pi0_pi0_omega(self, photon_energies, cme: float, *, nbins=25):
+def dnde_photon_pi0_pi0_omega(
+    self: _DecayDndePhoton, photon_energies, cme: float, *, nbins=25
+):
     if cme < 2 * mpi0 + momega:
         return np.zeros_like(photon_energies)
 
-    ff: VectorFormFactorPi0Pi0Omega = self._ff_pi_pi_omega
+    ff: VectorFormFactorPi0Pi0Omega = self._ff_pi0_pi0_omega
 
     dnde_decays = [
         spectra.dnde_photon_neutral_pion,
@@ -627,7 +665,7 @@ def dnde_photon_pi_pi_pi_pi(
     if cme < 4 * mpi:
         return np.zeros_like(photon_energies)
 
-    ff: VectorFormFactorPiPiPiPi = self._ff_four_pi
+    ff: VectorFormFactorPiPiPiPi = self._ff_pi_pi_pi_pi
 
     dnde_decays = [
         spectra.dnde_photon_charged_kaon,
@@ -670,7 +708,7 @@ def dnde_photon_pi_pi_pi0_pi0(
     if cme < 2 * mpi + 2 * mpi0:
         return np.zeros_like(photon_energies)
 
-    ff: VectorFormFactorPiPiPi0Pi0 = self._ff_four_pi
+    ff: VectorFormFactorPiPiPi0Pi0 = self._ff_pi_pi_pi0_pi0
 
     dnde_decays = [
         spectra.dnde_photon_charged_kaon,
@@ -702,7 +740,9 @@ def dnde_photon_pi_pi_pi0_pi0(
     return dnde
 
 
-def _dnde_photon_v_v_rest_frame(self, photon_energies, *, npts=1 << 15, nbins=30):
+def _dnde_photon_v_v_rest_frame(
+    self: _DecayDndePhoton, photon_energies, *, npts=1 << 15, nbins=30
+):
 
     if self.mv < 2 * me:
         return np.zeros_like(photon_energies)
@@ -780,12 +820,6 @@ def dnde_photon_v_v(
 
     beta = np.sqrt(1.0 - gamma**-2)
 
-    # def dnde(es):
-    #     return _dnde_photon_v_v_rest_frame(self, es, npts=npts, nbins=nbins)
-
-    # boosted = boost.make_boost_function(dnde)(
-    #     photon_energies, beta=beta, mass=0.0, method=method
-    # )
     dnde = _dnde_photon_v_v_rest_frame(self, photon_energies, npts=npts, nbins=nbins)
     boosted = boost.dnde_boost_array(dnde, photon_energies, beta)
 

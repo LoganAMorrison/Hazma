@@ -27,6 +27,7 @@ from hazma.utils import RealOrRealArray
 from . import neutrino as gev_neutrino_spectra
 from . import positron as gev_positron_spectra
 from . import spectra as gev_spectra
+from . import types as gev_types
 
 T = TypeVar("T", float, npt.NDArray[np.float_])
 
@@ -61,55 +62,6 @@ def with_cache(*, cache_name: str, name: str):
         return wrapper
 
     return decorator
-
-
-class _VectorFormFactorWrapper:
-    def __init__(self, form_factor: VectorFormFactor):
-        self.form_factor = form_factor
-
-    @ft.lru_cache
-    def __width(self, mv: float, couplings: VectorFormFactorCouplings, **kwargs):
-        return self.form_factor.width(mv, couplings=couplings, **kwargs)
-
-    @ft.lru_cache
-    def __cross_section(
-        self,
-        q: float,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        couplings: VectorFormFactorCouplings,
-        **kwargs,
-    ):
-        return self.form_factor.cross_section(
-            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
-        )
-
-    def width(
-        self, mv: RealOrRealArray, couplings: VectorFormFactorCouplings, **kwargs
-    ):
-        if isinstance(mv, float | int):
-            return self.__width(mv, couplings, **kwargs)
-        return self.form_factor.width(mv, couplings=couplings, **kwargs)
-
-    def cross_section(
-        self,
-        q: RealOrRealArray,
-        mx: float,
-        mv: float,
-        gvxx: float,
-        wv: float,
-        couplings: VectorFormFactorCouplings,
-        **kwargs,
-    ):
-        if isinstance(mv, float | int):
-            return self.__cross_section(
-                q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
-            )
-        return self.form_factor.cross_section(
-            q=q, mx=mx, mv=mv, gvxx=gvxx, wv=wv, couplings=couplings, **kwargs
-        )
 
 
 class VectorMediatorGeV(TheoryAnn):
