@@ -2,17 +2,19 @@
 Module for computing the form factor V-eta-gamma.
 """
 
-from dataclasses import dataclass, field, InitVar
-from typing import Union, overload, Tuple
+# pylint: disable=invalid-name
+
+from dataclasses import InitVar, dataclass, field
+from typing import Tuple, Union, overload
 
 import numpy as np
 
 from hazma import parameters
 from hazma.utils import RealOrRealArray
 
-from ._utils import MPI_GEV, ComplexArray, RealArray
-from ._two_body import VectorFormFactorPA, Couplings
 from ._base import vector_couplings_to_isospin
+from ._two_body import Couplings, VectorFormFactorPA
+from ._utils import MPI_GEV, ComplexArray, RealArray
 
 
 @dataclass(frozen=True)
@@ -50,23 +52,13 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         photon.
 
     """
-    fsp_masses: Tuple[float, float] = field(
-        init=False, default=(parameters.eta_mass, 0.0)
-    )
+    fsp_masses: Tuple[float, float] = (parameters.eta_mass, 0.0)
     fit_data: VectorFormFactorEtaGammaFitData = field(init=False)
 
-    masses: InitVar[RealArray] = field(
-        default=np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
-    )
-    widths: InitVar[RealArray] = field(
-        default=np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
-    )
-    amps: InitVar[RealArray] = field(
-        default=np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
-    )
-    phases: InitVar[RealArray] = field(
-        default=np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
-    )
+    masses: InitVar[RealArray] = np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
+    widths: InitVar[RealArray] = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
+    amps: InitVar[RealArray] = np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
+    phases: InitVar[RealArray] = np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
 
     def __post_init__(self, masses, widths, amps, phases):
         self.fit_data = VectorFormFactorEtaGammaFitData(

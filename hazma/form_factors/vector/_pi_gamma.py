@@ -2,17 +2,20 @@
 Implementation of the pi-gamma form factor.
 """
 
-from dataclasses import dataclass, field, InitVar
-from typing import Union, overload, Tuple
+# pylint: disable=invalid-name
+
+from dataclasses import InitVar, dataclass, field
+from typing import Tuple, Union, overload
 
 import numpy as np
 
 from hazma import parameters
-from hazma.utils import ComplexOrComplexArray, RealOrRealArray, RealArray, ComplexArray
+from hazma.utils import (ComplexArray, ComplexOrComplexArray, RealArray,
+                         RealOrRealArray)
 
-from ._base import vector_couplings_to_isospin
-from ._two_body import VectorFormFactorPA, Couplings
 from ._alpha import alpha_em
+from ._base import vector_couplings_to_isospin
+from ._two_body import Couplings, VectorFormFactorPA
 
 MPI0 = parameters.neutral_pion_mass
 
@@ -62,7 +65,7 @@ class VectorFormFactorPi0Gamma(VectorFormFactorPA):
         photon.
     """
 
-    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, 0.0))
+    fsp_masses: Tuple[float, float] = (MPI0, 0.0)
     fit_data: VectorFormFactorPi0GammaFitData = field(init=False)
 
     fpi: InitVar[float] = 0.09266

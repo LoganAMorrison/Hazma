@@ -31,7 +31,7 @@ def real_pi(r):
 
     results = np.zeros_like(r)
 
-    # use assymptotic formula
+    # use asymptotic formula
     if np.any(m1):
         results[m1] = -fvthr - np.log(r[m1])
     if np.any(m2):
