@@ -1,7 +1,7 @@
-"""
-Module for working with Lorentz-invariant phase-space using the RAMBO algorithm.
+"""Module for working with Lorentz-invariant phase-space using the RAMBO algorithm."""
 
-"""
+# pylint: disable=invalid-name,too-many-arguments,too-many-locals
+# pylint: disable=too-many-instance-attributes
 
 
 # TODO: Code up specific functions for cross-section
@@ -11,19 +11,19 @@ Module for working with Lorentz-invariant phase-space using the RAMBO algorithm.
 
 
 import math
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import (Callable, Dict, Iterable, List, Optional, Sequence, Tuple,
+                    Union)
 
 import numpy as np
 import numpy.typing as npt
 from scipy import integrate
 
-from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
-from hazma.utils import RealArray, kallen_lambda, lnorm_sqr
+from hazma.utils import (RealArray, cross_section_prefactor, kallen_lambda,
+                         lnorm_sqr)
 
-from ._utils import energy_limits, invariant_mass_limits
-from ._base import AbstractPhaseSpaceGenerator
-from ._base import AbstractPhaseSpaceIntegrator
+from ._base import AbstractPhaseSpaceGenerator, AbstractPhaseSpaceIntegrator
 from ._dist import PhaseSpaceDistribution1D
+from ._utils import energy_limits, invariant_mass_limits
 
 MassList = Union[List[float], RealArray]
 SquaredMatrixElement = Callable[[RealArray], float]
@@ -48,11 +48,11 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
         Parameters
         ----------
         cme: float
-            Center-of-mass energy of the proccess.
+            Center-of-mass energy of the process.
         masses: array-like
             Array of the final state particle masses.
         msqrd: Callable[[ndarray], float], optional
-            Squared matrix element of the proccess.
+            Squared matrix element of the process.
         """
         ms = np.array(masses)
         n = len(ms)
@@ -72,7 +72,7 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
     @property
     def cme(self) -> float:
         """
-        Center-of-mass energy of the proccess.
+        Center-of-mass energy of the process.
         """
         return self.__cme
 
@@ -97,7 +97,7 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
     @property
     def msqrd(self) -> Optional[SquaredMatrixElement]:
         """
-        Squared matrix element of the proccess.
+        Squared matrix element of the process.
         """
         return self.__msqrd
 
@@ -166,7 +166,7 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
         Returns
         -------
         momenta: ndarray
-            Momenta in the center-of-mass frame. The shape is idential to
+            Momenta in the center-of-mass frame. The shape is identical to
             input shape.
         """
         sum_ps = np.sum(ps, axis=1)
@@ -341,7 +341,7 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
             yield (ps, ws)
 
     def generate(
-        self, n, seed: Optional[int] = None, dtype=np.float64
+        self, n: int, seed: Optional[int] = None, dtype=np.float64
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate four-momenta and weights distributed according to
