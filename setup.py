@@ -1,10 +1,14 @@
+"""Install script for Hazma."""
+
+# pylint: disable=invalid-name
+
 from typing import List
-from setuptools import Extension, find_packages, setup  # type: ignore
 
 import numpy as np
 from Cython.Build import cythonize
+from setuptools import Extension, find_packages, setup  # type: ignore
 
-VERSION = "2.0.0-alpha"
+VERSION = "2.0.0-rc1"
 
 
 def long_description():
@@ -15,6 +19,7 @@ def long_description():
 
 
 def make_extension(module: List[str], sources: List[str], cpp=False):
+    """Build a Cython extension module."""
     package = ".".join(["hazma", *module])
     path = "/".join(["hazma", *module])
 
