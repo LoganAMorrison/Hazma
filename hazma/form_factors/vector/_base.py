@@ -2,9 +2,11 @@
 Module for describing the high-level behavior of a vector form factor.
 """
 
-from dataclasses import dataclass, field, InitVar
+# pylint: disable=invalid-name
+
 import abc
-from typing import Sequence, NamedTuple
+from dataclasses import InitVar, dataclass, field
+from typing import NamedTuple, Sequence
 
 import numpy as np
 
