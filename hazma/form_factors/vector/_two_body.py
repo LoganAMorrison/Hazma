@@ -2,16 +2,17 @@
 Base classes for two-body final state form factors.
 """
 
-from dataclasses import dataclass
+# pylint: disable=invalid-name
+
 import abc
-from typing import Tuple, Union, Sequence
+from dataclasses import dataclass
+from typing import Sequence, Tuple, Union
 
 import numpy as np
 
 from hazma.phase_space._utils import two_body_phase_space_prefactor
 
-from ._base import VectorFormFactor
-from ._base import VectorFormFactorCouplings
+from ._base import VectorFormFactor, VectorFormFactorCouplings
 
 Couplings = Union[VectorFormFactorCouplings, Sequence[float]]
 
