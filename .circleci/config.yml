@@ -3,47 +3,71 @@
 # docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(pwd):$(pwd) -v ~/.circleci/:/root/.circleci --workdir $(pwd) circleci/picard circleci build
 
 version: 2
-jobs:
-  build-3.7: &build_template
-    working_directory: /hazma
-    docker:
-      - image: circleci/python:3.7
-        user: root
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /hazma
-      - run:
-          name: Setup SciKit-CI
-          command: |
-            pip install scikit-ci==0.13.0 scikit-ci-addons==0.11.0
-            ci_addons --install ../addons
-      - run:
-          name: Install
-          command: ci install
-      - run:
-          name: Test
-          command: ci test
-      - run:
-          name: Build Distribution
-          command: ci after_test
-      - persist_to_workspace:
-          root: .
-          paths: dist
+initialize-venv: &initialize-venv
+  name: Initialize Virtual Environment
+  command: |
+    python -m virtualenv ../venv || python -m venv ../venv
+    . ../venv/bin/activate
 
-  build-3.6:
-    <<: *build_template
+ci-steps: &ci-steps
+  steps:
+    - checkout
+    - run:
+        <<: *initialize-venv
+    - run:
+        name: Install scikit-ci
+        command: |
+          . ../venv/bin/activate
+          BOOTSTRAP_BRANCH=$CIRCLE_BRANCH
+          BOOTSTRAP_REPO_SLUG=$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+          if [[ $CIRCLE_PR_USERNAME != "" ]]; then
+            BOOTSTRAP_BRANCH=$(curl -s https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${CIRCLE_PR_NUMBER} | jq -r '.head.ref')
+            BOOTSTRAP_REPO_SLUG=$CIRCLE_PR_USERNAME/$CIRCLE_PR_REPONAME
+          fi
+          echo "BOOTSTRAP_BRANCH:$BOOTSTRAP_BRANCH"
+          echo "BOOTSTRAP_REPO_SLUG:$BOOTSTRAP_REPO_SLUG"
+          git clone git://github.com/$BOOTSTRAP_REPO_SLUG -b $BOOTSTRAP_BRANCH ../bootstrap-scikit-ci
+          pip install -U ../bootstrap-scikit-ci
+    - run:
+        name: Install dependencies
+        command: |
+          . ../venv/bin/activate
+          ci install
+    - run:
+        name: Flake8
+        command: |
+          . ../venv/bin/activate
+          ci before_build
+    - run:
+        name: Build
+        command: |
+          . ../venv/bin/activate
+          ci build
+    - run:
+        name: Test
+        command: |
+          . ../venv/bin/activate
+          ci test
+    - run:
+        name: Build Dist
+        command: |
+          . ../venv/bin/activate
+          ci after_test
+
+jobs:
+  python-3.9:
     docker:
-      - image: circleci/python:3.6
-        user: root
+      - image: circleci/python:3.9
+    <<: *ci-steps
+  python-3.10:
+    docker:
+      - image: circleci/python:3.10
+    <<: *ci-steps
 
 workflows:
   version: 2
-  build_and_deploy:
+  test-package-publish:
     jobs:
-      - build-3.7: &build_job_template
-          filters:
-            tags:
-              only: /[0-9]+(\.[0-9]+)*/
-      - build-3.6:
-          <<: *build_job_template
+      - python-3.9
+      - python-3.10
+
