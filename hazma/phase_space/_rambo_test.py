@@ -35,11 +35,8 @@ class TestRamboProperties(unittest.TestCase):
         self.masses = [1.0, 2.0, 3.0, 4.0]
         self.cme = sum(self.masses) * 2
         self.phase_space = Rambo(cme=self.cme, masses=self.masses)
-        self.seed = 0
         self.nevents = 100
-        self.momenta, self.weights = self.phase_space.generate(
-            self.nevents, seed=self.seed
-        )
+        self.momenta, self.weights = self.phase_space.generate(self.nevents, seed=SEED)
 
     def test_momenta(self):
         """Test that total momenta sum to (cme, 0, 0, 0)."""
@@ -103,7 +100,10 @@ class TestRamboCrossSections(unittest.TestCase):
         cme = 1000.0
 
         rambo = Rambo(cme, fsp_masses, msqrd=msqrd_ee_to_mumu).cross_section(
-            m1=ME, m2=ME, n=5000
+            m1=ME,
+            m2=ME,
+            n=5000,
+            seed=SEED,
         )
         analytic = 4.0 * np.pi * alpha_em**2 / (3.0 * cme**2)
         assert_allclose(rambo[0], analytic, rtol=5e-3)
@@ -130,7 +130,9 @@ class TestRamboDecayWidths(unittest.TestCase):
             return 64.0 * GF**2 * ldot(pe, pvmu) * ldot(pmu, pve)
 
         fsp_masses = np.array([ME, 0.0, 0.0])
-        rambo = Rambo(MMU, fsp_masses, msqrd=msqrd_mu_to_enunu).decay_width(n=50_000)
+        rambo = Rambo(MMU, fsp_masses, msqrd=msqrd_mu_to_enunu).decay_width(
+            n=50_000, seed=SEED
+        )
 
         r = ME**2 / MMU**2
         corr_fac = 1.0 - 8.0 * r + 8 * r**3 - r**4 - 12.0 * r**2 * np.log(r)
