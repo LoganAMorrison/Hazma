@@ -2,6 +2,8 @@
 Module for computing the V-K-K form factor.
 """
 
+# pylint: disable=invalid-name
+
 
 from dataclasses import InitVar, dataclass, field
 from typing import NamedTuple, Optional, Tuple, Union, overload
@@ -11,24 +13,11 @@ from scipy.special import gamma
 
 from hazma.utils import RealOrRealArray
 
-
 from ._base import vector_couplings_to_isospin
-from ._two_body import VectorFormFactorPP, Couplings
-
-from ._utils import (
-    MK0_GEV,
-    MK_GEV,
-    MPI_GEV,
-    ComplexArray,
-    RealArray,
-    breit_wigner_fw,
-    breit_wigner_gs,
-    breit_wigner_pwave,
-    dhhatds,
-    gamma_generator,
-    h,
-    hhat,
-)
+from ._two_body import Couplings, VectorFormFactorPP
+from ._utils import (MK0_GEV, MK_GEV, MPI_GEV, ComplexArray, RealArray,
+                     breit_wigner_fw, breit_wigner_gs, breit_wigner_pwave,
+                     dhhatds, gamma_generator, h, hhat)
 
 
 class VectorMesonParameters(NamedTuple):
@@ -654,7 +643,11 @@ class VectorFormFactorK0K0(_VectorFormFactorKKBase):
         Compute the dark matter annihilation cross section into two neutral kaons.
     """
 
-    _imode: int = field(init=False, repr=False, default=0)
+    _imode: int = 0
+
+    def __init__(self):
+        # This is a hack to make pylint happy. It doesn't understand `init=False`
+        super().__init__(_imode=self._imode)
 
 
 @dataclass
@@ -686,4 +679,8 @@ class VectorFormFactorKK(_VectorFormFactorKKBase):
         Compute the dark matter annihilation cross section into two charged kaons.
     """
 
-    _imode: int = field(init=False, repr=False, default=1)
+    _imode: int = 1
+
+    def __init__(self):
+        # This is a hack to make pylint happy. It doesn't understand `init=False`
+        super().__init__(_imode=self._imode)

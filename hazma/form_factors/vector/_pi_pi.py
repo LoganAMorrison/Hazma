@@ -2,27 +2,22 @@
 Module for computing the vector form factor for pi+pi.
 """
 
-from dataclasses import dataclass, field, InitVar
+# pylint: disable=invalid-name
+
+from dataclasses import InitVar, dataclass, field
 from typing import Tuple, overload
 
 import numpy as np
 from scipy.special import gamma
 
-from hazma.utils import RealOrRealArray, ComplexOrComplexArray
+from hazma.utils import ComplexOrComplexArray, RealOrRealArray
 
-from ._two_body import VectorFormFactorPP, Couplings
-from ._utils import (
-    MPI0_GEV,
-    MPI_GEV,
-    ComplexArray,
-    RealArray,
-    breit_wigner_fw,
-    breit_wigner_gs,
-    dhhatds,
-    gamma_generator,
-    h,
-    hhat,
-)
+from ._two_body import Couplings, VectorFormFactorPP
+from ._utils import (MPI0_GEV, MPI_GEV, ComplexArray, RealArray,
+                     breit_wigner_fw, breit_wigner_gs, dhhatds,
+                     gamma_generator, h, hhat)
+
+_DEFAULT_N_MAX = 2000
 
 
 @dataclass
@@ -34,7 +29,7 @@ class VectorFormFactorPiPiFitData:  # pylint: disable=too-many-instance-attribut
     n_max: int
         Maximum number of resonances.
     """
-    n_max: int = field(default=2000)
+    n_max: int = field(default=_DEFAULT_N_MAX)
     omega_mag: float = field(init=False, default=0.00187, repr=False)
     omega_phase: float = field(init=False, default=0.106, repr=False)
     omega_mass: float = field(init=False, default=0.7824, repr=False)
@@ -128,7 +123,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     fsp_masses: Tuple[float, float] = field(init=False)
     __fsp_masses: Tuple[float, float] = field(init=False, repr=False)
     fit_data: VectorFormFactorPiPiFitData = field(init=False)
-    n_max: InitVar[int] = 2000
+    n_max: InitVar[int] = _DEFAULT_N_MAX
 
     def __post_init__(self, n_max):
         self.fit_data = VectorFormFactorPiPiFitData(n_max)
@@ -366,7 +361,11 @@ class VectorFormFactorPiPi(_VectorFormFactorPiPiBase):
         Compute the dark matter annihilation cross section into two charged pions.
     """
 
-    _imode: int = field(init=False, default=1, repr=False)
+    _imode: int = 1
+
+    def __init__(self, n_max: int = _DEFAULT_N_MAX):
+        # This is a hack to make pylint happy. It doesn't understand `init=False`
+        super().__init__(_imode=self._imode, n_max=n_max)
 
 
 @dataclass
@@ -393,4 +392,8 @@ class VectorFormFactorPi0Pi0(_VectorFormFactorPiPiBase):
         Compute the dark matter annihilation cross section into two neutral pions.
     """
 
-    _imode: int = field(init=False, default=0, repr=False)
+    _imode: int = 0
+
+    def __init__(self, n_max: int = _DEFAULT_N_MAX):
+        # This is a hack to make pylint happy. It doesn't understand `init=False`
+        super().__init__(_imode=self._imode, n_max=n_max)
