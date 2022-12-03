@@ -97,9 +97,9 @@ top_quark_mass: float = 172.9e3
 # Vector Boson Masses
 
 #: W-Boson mass in MeV
-wboson_mass: float = 80.385003e-3
+wboson_mass: float = 80.385003e3
 #: Z-Boson mass in MeV
-zboson_mass: float = 91.18760e-3
+zboson_mass: float = 91.18760e3
 
 # Collections of masses
 lepton_masses: List[float] = [electron_mass, muon_mass]
