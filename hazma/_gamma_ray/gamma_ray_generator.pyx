@@ -131,7 +131,7 @@ def gamma(np.ndarray particles, double cme,
 
     hist = rambo.generate_energy_histogram(masses, cme, num_ps_pts, mat_elem_sqrd, num_bins, density=True)[0]
 
-    cpdef int num_cpus = int(np.floor(mp.cpu_count() * 0.75))
+    cdef int num_cpus = int(np.floor(mp.cpu_count() * 0.75))
 
     p = mp.Pool(num_cpus)
     specs = []
