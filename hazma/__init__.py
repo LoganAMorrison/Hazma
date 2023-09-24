@@ -1,3 +1,8 @@
+from typing import Final
+
+VERSION: Final[str] = "2.0.0"
+__version__ = VERSION
+
 # import warnings
 
 # from hazma import (

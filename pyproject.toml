@@ -1,6 +1,5 @@
 [project]
 name = "hazma"
-version = "2.0.0"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -11,6 +10,8 @@ maintainers = [{ name = "Logan A. Morrison", email = "loanmorr@ucsc.edu" }]
 keywords = ["dark-matter", "mev-dark-matter", "gamma-ray-spectra"]
 description = "Python package for computing indirect detection constraints on sub-GeV dark matter."
 classifiers = ["Programming Language :: Python"]
+
+dynamic = ["version"]
 
 [project.urls]
 Repository = "https://github.com/LoganAMorrison/Hazma"
@@ -26,13 +27,32 @@ requires = ["numpy", "cython", "setuptools", "scipy"]
 [tool.setuptools]
 py-modules = ["_build"]
 zip-safe = false
-include-package-data = true
+
+[tool.setuptools.package-data]
+"hazma.gamma_ray_data" = ["*.dat"]
+"hazma.gamma_ray_data.A_eff" = ["*.dat"]
+"hazma.gamma_ray_data.bg_model" = ["*.dat"]
+"hazma.gamma_ray_data.energy_res" = ["*.dat"]
+"hazma.gamma_ray_data.obs" = ["*.dat"]
+"hazma._decay.interpolation_data.ckaon" = ["*.dat"]
+"hazma._decay.interpolation_data.skaon" = ["*.dat"]
+"hazma._decay.interpolation_data.lkaon" = ["*.dat"]
+"hazma.pbh_data" = ["*.csv"]
+"hazma.cmb_data" = ["*.dat"]
+"hazma.relic_density" = ["*.dat"]
+"hazma.spectra._photon.data" = ["*.csv"]
+"hazma.spectra._positron.data" = ["*.csv"]
+"hazma.spectra._neutrino.data" = ["*.csv"]
+"hazma" = ["*.txt", "*.rst", "*.pyx", "*.pyd", "*.c", "*.md"]
 
 [tool.setuptools.cmdclass]
 build_py = "_build.build_py"
 
 [tool.setuptools.packages.find]
 where = [".", "hazma"]
+
+[tool.setuptools.dynamic]
+version = { attr = "hazma.VERSION" }
 
 [tool.black]
 target-version = ['py310']
