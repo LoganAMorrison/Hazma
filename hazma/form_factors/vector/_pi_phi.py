@@ -1,18 +1,19 @@
 """
 Implementation of the pi0-phi form factor.
 """
+
 # pylint: disable=too-many-arguments
 
 from dataclasses import InitVar, dataclass, field
-from typing import Union, overload, Tuple
+from typing import overload
 
 import numpy as np
 
 from hazma import parameters
-from hazma.utils import RealOrRealArray, ComplexOrComplexArray
+from hazma.utils import ComplexOrComplexArray, RealOrRealArray
 
+from ._two_body import Couplings, VectorFormFactorPV
 from ._utils import MPI0_GEV, ComplexArray, RealArray
-from ._two_body import VectorFormFactorPV, Couplings
 
 MPI0 = parameters.neutral_pion_mass
 MPHI = parameters.phi_mass
@@ -66,16 +67,18 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
         Compute the dark matter annihilation cross section into a pion and phi.
     """
 
-    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, MPHI))
+    fsp_masses: tuple[float, float] = field(init=False, default=(MPI0, MPHI))
     fit_data: VectorFormFactorPi0PhiFitData = field(init=False)
 
-    amps: InitVar[RealArray] = np.array([0.177522453644825, 0.023840592398187477, 0.0])
+    amps: InitVar[RealArray] = field(
+        default=np.array([0.177522453644825, 0.023840592398187477, 0.0])
+    )
     phases: InitVar[RealArray] = (
         np.array([0.0, 123.82008351626034, 0.0]) * np.pi / 180.0
     )
-    rho_masses: InitVar[RealArray] = np.array([0.77526, 1.593, 1.909])
-    rho_widths: InitVar[RealArray] = np.array([0.1491, 0.203, 0.048])
-    br4pi: InitVar[RealArray] = np.array([0.0, 0.33, 0.0])
+    rho_masses: InitVar[RealArray] = field(default=np.array([0.77526, 1.593, 1.909]))
+    rho_widths: InitVar[RealArray] = field(default=np.array([0.1491, 0.203, 0.048]))
+    br4pi: InitVar[RealArray] = field(default=np.array([0.0, 0.33, 0.0]))
 
     def __post_init__(  # pylint: disable=too-many-arguments
         self,
@@ -94,8 +97,8 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
         )
 
     def __form_factor(
-        self, *, s: Union[RealArray, float], gvuu: float, gvdd: float
-    ) -> Union[ComplexArray, complex]:
+        self, *, s: RealArray | float, gvuu: float, gvdd: float
+    ) -> ComplexArray | complex:
         """
         Compute the V-phi-pi form-factor.
 
@@ -146,14 +149,12 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -194,14 +195,12 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -226,14 +225,12 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -266,8 +263,7 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -278,8 +274,7 @@ class VectorFormFactorPi0Phi(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

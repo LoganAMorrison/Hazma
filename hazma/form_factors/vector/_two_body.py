@@ -5,8 +5,9 @@ Base classes for two-body final state form factors.
 # pylint: disable=invalid-name
 
 import abc
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence, Tuple, Union
+from typing import TypeAlias
 
 import numpy as np
 
@@ -14,14 +15,14 @@ from hazma.phase_space._utils import two_body_phase_space_prefactor
 
 from ._base import VectorFormFactor, VectorFormFactorCouplings
 
-Couplings = Union[VectorFormFactorCouplings, Sequence[float]]
+Couplings: TypeAlias = VectorFormFactorCouplings | Sequence[float]
 
 
 @dataclass
 class VectorFormFactorTwoBody(VectorFormFactor):
     r"""Vector form factor for a two meson final-state."""
 
-    fsp_masses: Tuple[float, float]
+    fsp_masses: tuple[float, float]
 
     @abc.abstractmethod
     def form_factor(  # pylint: disable=arguments-differ
@@ -57,7 +58,7 @@ class VectorFormFactorPP(VectorFormFactorTwoBody):
     respectively.
     """
 
-    fsp_masses: Tuple[float, float]
+    fsp_masses: tuple[float, float]
 
     @abc.abstractmethod
     def form_factor(self, *, q, **kwargs):
@@ -89,7 +90,7 @@ class VectorFormFactorPA(VectorFormFactorTwoBody):
     photon, respectively.
     """
 
-    fsp_masses: Tuple[float, float]
+    fsp_masses: tuple[float, float]
 
     @abc.abstractmethod
     def form_factor(self, *, q, **kwargs):
@@ -119,7 +120,7 @@ class VectorFormFactorPV(VectorFormFactorTwoBody):
     :math:`p` and :math:`k` the momenta of the meson and vector, respectively.
     """
 
-    fsp_masses: Tuple[float, float]
+    fsp_masses: tuple[float, float]
 
     @abc.abstractmethod
     def form_factor(self, *, q, **kwargs):

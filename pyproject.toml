@@ -127,7 +127,7 @@ exclude = [".vscode", "site-packages"]
 msg = "use numpy directly"
 
 [tool.ruff.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.pydocstringformatter]
 summary-quotes-same-line = true

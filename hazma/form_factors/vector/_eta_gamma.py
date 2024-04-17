@@ -1,11 +1,9 @@
-"""
-Module for computing the form factor V-eta-gamma.
-"""
+"""Module for computing the form factor V-eta-gamma."""
 
 # pylint: disable=invalid-name
 
 from dataclasses import InitVar, dataclass, field
-from typing import Tuple, Union, overload
+from typing import overload
 
 import numpy as np
 
@@ -17,23 +15,31 @@ from ._two_body import Couplings, VectorFormFactorPA
 from ._utils import MPI_GEV, ComplexArray, RealArray
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorEtaGammaFitData:
     r"""Storage class for the eta-photon form-factor."""
 
-    masses: RealArray = np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
-    widths: RealArray = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
-    amps: RealArray = np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
-    phases: RealArray = np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
+    masses: RealArray = field(
+        default_factory=lambda: np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
+    )
+    widths: RealArray = field(
+        default_factory=lambda: np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
+    )
+    amps: RealArray = field(
+        default_factory=lambda: np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
+    )
+    phases: RealArray = field(
+        default_factory=lambda: np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
+    )
 
 
 @dataclass
 class VectorFormFactorEtaGamma(VectorFormFactorPA):
-    r""" "Class for computing the eta-photon form factor.
+    """Class for computing the eta-photon form factor.
 
     Attributes
     ----------
-    fsp_masses: Tuple[float]
+    fsp_masses: tuple[float, float]
         Final state particle masses (only eta in this case.)
     fit_data: VectorFormFactorEtaGammaFitData
         Fit information used to compute the form-factor.
@@ -50,15 +56,23 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
     cross_section
         Compute the dark matter annihilation cross section into an eta and
         photon.
-
     """
-    fsp_masses: Tuple[float, float] = (parameters.eta_mass, 0.0)
+
+    fsp_masses: tuple[float, float] = (parameters.eta_mass, 0.0)
     fit_data: VectorFormFactorEtaGammaFitData = field(init=False)
 
-    masses: InitVar[RealArray] = np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
-    widths: InitVar[RealArray] = np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
-    amps: InitVar[RealArray] = np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
-    phases: InitVar[RealArray] = np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
+    masses: InitVar[RealArray] = field(
+        default=np.array([0.77526, 0.78284, 1.01952, 1.465, 1.70])
+    )
+    widths: InitVar[RealArray] = field(
+        default=np.array([0.1491, 0.00868, 0.00421, 0.40, 0.30])
+    )
+    amps: InitVar[RealArray] = field(
+        default=np.array([0.0861, 0.00824, 0.0158, 0.0147, 0.0])
+    )
+    phases: InitVar[RealArray] = field(
+        default=np.array([0.0, 11.3, 170.0, 61.0, 0.0]) * np.pi / 180.0
+    )
 
     def __post_init__(self, masses, widths, amps, phases):
         self.fit_data = VectorFormFactorEtaGammaFitData(
@@ -66,9 +80,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         )
 
     def __form_factor(self, s: RealArray, couplings: Couplings) -> ComplexArray:
-        """
-        Compute the form factor for V-eta-gamma at given squared center of mass
-        energ(ies).
+        """Compute the form factor for V-eta-gamma at given squared center of mass energ(ies).
 
         Parameters
         ----------
@@ -121,18 +133,16 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, *, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, *, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
-        self, *, q: Union[float, RealArray], couplings: Couplings
-    ) -> Union[complex, ComplexArray]:
+        self, *, q: float | RealArray, couplings: Couplings
+    ) -> complex | ComplexArray:
         r"""Compute the eta-photon form factor.
 
         Parameters
@@ -166,17 +176,15 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
-        self, q: Union[float, RealArray], couplings: Couplings
+        self, q: float | RealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the eta-photon form-factor integrated over phase-space.
 
@@ -201,17 +209,15 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
-        self, mv: Union[float, RealArray], couplings: Couplings
+        self, mv: float | RealArray, couplings: Couplings
     ) -> RealOrRealArray:
         r"""Compute the partial decay width of a massive vector into an eta and
         photon.
@@ -243,8 +249,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -255,8 +260,7 @@ class VectorFormFactorEtaGamma(VectorFormFactorPA):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

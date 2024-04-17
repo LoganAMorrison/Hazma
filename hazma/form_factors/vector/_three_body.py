@@ -2,20 +2,19 @@
 Base classes for 3-body final states.
 """
 
-from dataclasses import dataclass
 import abc
-from typing import Tuple, Union, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Union
 
 import numpy as np
 from scipy import integrate
 
-from hazma.utils import RealArray, kallen_lambda
-from hazma.phase_space import ThreeBody
+from hazma.phase_space import PhaseSpaceDistribution1D, ThreeBody
 from hazma.phase_space._utils import energy_limits
-from hazma.phase_space import PhaseSpaceDistribution1D
+from hazma.utils import RealArray, kallen_lambda
 
-from ._base import VectorFormFactor
-from ._base import VectorFormFactorCouplings
+from ._base import VectorFormFactor, VectorFormFactorCouplings
 
 Couplings = Union[VectorFormFactorCouplings, Sequence[float]]
 
@@ -28,8 +27,7 @@ def __squared_lorentz_structure_ppp(  # pylint: disable=too-many-arguments
         -(m1**4 * m2**2)
         + m2**2 * (q2 - s) * (m3**2 - t)
         - (m3**2 + q2 - s - t) * (m3**2 * q2 - s * t)
-        + m1**2
-        * (-(m2**4) + (m3**2 - s) * (q2 - t) + m2**2 * (m3**2 + q2 + s + t))
+        + m1**2 * (-(m2**4) + (m3**2 - s) * (q2 - t) + m2**2 * (m3**2 + q2 + s + t))
     )
 
     den = 12.0 * q**2
@@ -80,7 +78,7 @@ class VectorFormFactorThreeBody(VectorFormFactor):
       mass.
     """
 
-    fsp_masses: Tuple[float, float, float]
+    fsp_masses: tuple[float, float, float]
 
     @abc.abstractmethod
     def form_factor(self, q, *args, **kwargs):  # pylint: disable=arguments-differ
@@ -134,7 +132,7 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
     and :math:`p_{1},p_{2},p_{3}` are the momenta.
     """
 
-    fsp_masses: Tuple[float, float, float]
+    fsp_masses: tuple[float, float, float]
 
     @abc.abstractmethod
     def form_factor(self, q, s, t, **kwargs):  # pylint: disable=arguments-differ
@@ -204,13 +202,13 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
     def _integrated_form_factor(
         self,
         *,
-        q: Union[float, RealArray],
+        q: float | RealArray,
         method: str = "quad",
         npts: int = 10000,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
-    ) -> Union[float, RealArray]:
+    ) -> float | RealArray:
         """Compute the integrated from factor for a three pseudo-scalar meson
         final-state.
 
@@ -266,8 +264,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         nbins: int,
         method: str = "quad",
         npts: int = 10000,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         r"""Compute the energy distributions of the final state particles.
@@ -312,8 +310,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         method: str,
         nbins: int,
         npts: int = 10000,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         r"""Compute the invariant-mass distributions of the final state
@@ -363,8 +361,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         mv,
         method: str = "quad",
         npts: int = 10000,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         """Compute the partial width of a vector decay."""
@@ -382,8 +380,8 @@ class VectorFormFactorPPP(VectorFormFactorThreeBody):
         wv,
         method="quad",
         npts: int = 10000,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         """Compute the cross-section of dark matter annihilation."""
@@ -430,7 +428,7 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
     and :math:`p_{2},p_{3}` are the momenta of particles 2 and 3.
     """
 
-    fsp_masses: Tuple[float, float, float]
+    fsp_masses: tuple[float, float, float]
 
     @abc.abstractmethod
     def form_factor(self, q, s, **kwargs):  # pylint: disable=arguments-differ
@@ -522,11 +520,11 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
     def _integrated_form_factor(
         self,
         *,
-        q: Union[float, RealArray],
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        q: float | RealArray,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
-    ) -> Union[float, RealArray]:
+    ) -> float | RealArray:
         """Compute the integrated from factor for a three pseudo-scalar meson
         final-state.
 
@@ -548,7 +546,6 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         ff: float or array-like
             Integrated form-factor.
         """
-
         m1, m2, m3 = self.fsp_masses
         quad_kwargs = {}
         if epsrel is not None:
@@ -588,8 +585,8 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         *,
         q: float,
         nbins: int,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         r"""Compute the energy distributions of the final state particles.
@@ -633,8 +630,8 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         *,
         q: float,
         nbins: int,
-        epsrel: Optional[float] = None,
-        epsabs: Optional[float] = None,
+        epsrel: float | None = None,
+        epsabs: float | None = None,
         **kwargs,
     ):
         r"""Compute the invariant-mass distributions of the final state
@@ -664,6 +661,7 @@ class VectorFormFactorPPP2(VectorFormFactorThreeBody):
         Other Parameters
         ----------------
         """
+
         # TODO: Fix this, we can get an analytic result of dn/ds, figure out
         # what to do for t and u.
         def integrand(s, t):
@@ -706,7 +704,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
     and :math:`p_{1},p_{2},p_{3}` are the momenta.
     """
 
-    fsp_masses: Tuple[float, float, float]
+    fsp_masses: tuple[float, float, float]
 
     @abc.abstractmethod
     def form_factor(self, q, **kwargs):  # pylint: disable=arguments-differ
@@ -806,11 +804,11 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
     def _integrated_form_factor(
         self,
         *,
-        q: Union[float, RealArray],
-        epsabs: Optional[float] = None,
-        epsrel: Optional[float] = None,
+        q: float | RealArray,
+        epsabs: float | None = None,
+        epsrel: float | None = None,
         **kwargs,
-    ) -> Union[float, RealArray]:
+    ) -> float | RealArray:
         """Compute the integrated from factor for a three pseudo-scalar meson
         final-state.
 
@@ -876,7 +874,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
 
     def _energy_distributions(  # pylint: disable=too-many-locals
         self, *, q: float, nbins: int, **kwargs
-    ) -> List[PhaseSpaceDistribution1D]:
+    ) -> list[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state particles.
 
         Parameters
@@ -917,9 +915,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
                 np.sqrt(p12)
                 * (
                     96.0 * (1.0 - x + mu1**2) ** 2 * muv**2
-                    + 3.0
-                    * (-2.0 + x) ** 2
-                    * (1.0 - x + mu1**2 - mu2**2 + muv**2) ** 2
+                    + 3.0 * (-2.0 + x) ** 2 * (1.0 - x + mu1**2 - mu2**2 + muv**2) ** 2
                     + p12
                 )
             ) / (18432.0 * np.pi**3 * xx**3 * muv**2)
@@ -935,9 +931,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
                 np.sqrt(p12)
                 * (
                     96.0 * (1.0 - x + mu2**2) ** 2 * muv**2
-                    + 3.0
-                    * (-2.0 + x) ** 2
-                    * (1.0 - x - mu1**2 + mu2**2 + muv**2) ** 2
+                    + 3.0 * (-2.0 + x) ** 2 * (1.0 - x - mu1**2 + mu2**2 + muv**2) ** 2
                     + p12
                 )
             ) / (1.0 - x + mu2**2) ** 3
@@ -955,7 +949,7 @@ class VectorFormFactorPPV(VectorFormFactorThreeBody):
 
     def _invariant_mass_distributions(
         self, *, q: float, nbins: int, **kwargs
-    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+    ) -> dict[tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the final state
         particles.
 

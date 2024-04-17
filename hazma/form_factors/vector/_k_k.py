@@ -6,7 +6,7 @@ Module for computing the V-K-K form factor.
 
 
 from dataclasses import InitVar, dataclass, field
-from typing import NamedTuple, Optional, Tuple, Union, overload
+from typing import NamedTuple, overload
 
 import numpy as np
 from scipy.special import gamma
@@ -15,13 +15,24 @@ from hazma.utils import RealOrRealArray
 
 from ._base import vector_couplings_to_isospin
 from ._two_body import Couplings, VectorFormFactorPP
-from ._utils import (MK0_GEV, MK_GEV, MPI_GEV, ComplexArray, RealArray,
-                     breit_wigner_fw, breit_wigner_gs, breit_wigner_pwave,
-                     dhhatds, gamma_generator, h, hhat)
+from ._utils import (
+    MK0_GEV,
+    MK_GEV,
+    MPI_GEV,
+    ComplexArray,
+    RealArray,
+    breit_wigner_fw,
+    breit_wigner_gs,
+    breit_wigner_pwave,
+    dhhatds,
+    gamma_generator,
+    h,
+    hhat,
+)
 
 
 class VectorMesonParameters(NamedTuple):
-    """Parameters of a vector meson"""
+    """Parameters of a vector meson."""
 
     mass: RealArray
     width: RealArray
@@ -72,9 +83,7 @@ PHI_WIDTHS = np.array([4.252653332329334e-3, 0.028741821847408196, 0.67375561741
 
 
 def _find_beta(c0: float):
-    """
-    Find the beta parameter.
-    """
+    """Find the beta parameter."""
 
     def c_0(b0: float):
         ratio = 2.0 / np.sqrt(np.pi)
@@ -114,7 +123,7 @@ def _compute_masses_width_couplings(  # pylint: disable=too-many-arguments
     magnitudes: RealArray,
     phases: RealArray,
     n_max: int,
-    gam: Optional[float] = None,
+    gam: float | None = None,
 ) -> VectorMesonParameters:
     # Get beta
     beta = _find_beta(magnitudes[0])
@@ -157,9 +166,10 @@ def _compute_masses_width_couplings(  # pylint: disable=too-many-arguments
 
 def _compute_h_parameters(
     mass: RealArray, width: RealArray, m: float
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Compute Hhat, H(0) and the derivative of Hhat needed to compute the
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Returns the h parameters.
+
+    Computes Hhat, H(0) and the derivative of Hhat needed to compute the
     Gounaris-Sakurai Breit-Wigner function with pion loop corrections included.
     See ArXiv:1002.0279 Eqn.(2) for details.
 
@@ -202,33 +212,33 @@ class VectorFormFactorKKFitData:  # pylint: disable=too-many-instance-attributes
 
     n_max: int = field(default=200)
 
-    rho_mag: InitVar[Optional[RealArray]] = None
-    rho_phase: InitVar[Optional[RealArray]] = None
-    rho_masses: InitVar[Optional[RealArray]] = None
-    rho_widths: InitVar[Optional[RealArray]] = None
-    omega_mag: InitVar[Optional[RealArray]] = None
-    omega_phase: InitVar[Optional[RealArray]] = None
-    omega_masses: InitVar[Optional[RealArray]] = None
-    omega_widths: InitVar[Optional[RealArray]] = None
-    phi_mag: InitVar[Optional[RealArray]] = None
-    phi_phase: InitVar[Optional[RealArray]] = None
-    phi_masses: InitVar[Optional[RealArray]] = None
-    phi_widths: InitVar[Optional[RealArray]] = None
+    rho_mag: InitVar[RealArray | None] = None
+    rho_phase: InitVar[RealArray | None] = None
+    rho_masses: InitVar[RealArray | None] = None
+    rho_widths: InitVar[RealArray | None] = None
+    omega_mag: InitVar[RealArray | None] = None
+    omega_phase: InitVar[RealArray | None] = None
+    omega_masses: InitVar[RealArray | None] = None
+    omega_widths: InitVar[RealArray | None] = None
+    phi_mag: InitVar[RealArray | None] = None
+    phi_phase: InitVar[RealArray | None] = None
+    phi_masses: InitVar[RealArray | None] = None
+    phi_widths: InitVar[RealArray | None] = None
 
     def __post_init__(  # pylint: disable=too-many-locals,too-many-arguments
         self,
-        rho_mag: Optional[RealArray],
-        rho_phase: Optional[RealArray],
-        rho_masses: Optional[RealArray],
-        rho_widths: Optional[RealArray],
-        omega_mag: Optional[RealArray],
-        omega_phase: Optional[RealArray],
-        omega_masses: Optional[RealArray],
-        omega_widths: Optional[RealArray],
-        phi_mag: Optional[RealArray],
-        phi_phase: Optional[RealArray],
-        phi_masses: Optional[RealArray],
-        phi_widths: Optional[RealArray],
+        rho_mag: RealArray | None,
+        rho_phase: RealArray | None,
+        rho_masses: RealArray | None,
+        rho_widths: RealArray | None,
+        omega_mag: RealArray | None,
+        omega_phase: RealArray | None,
+        omega_masses: RealArray | None,
+        omega_widths: RealArray | None,
+        phi_mag: RealArray | None,
+        phi_phase: RealArray | None,
+        phi_masses: RealArray | None,
+        phi_widths: RealArray | None,
     ) -> None:
         """
         Compute the parameters needed for computing the V-K-K form factor.
@@ -243,7 +253,6 @@ class VectorFormFactorKKFitData:  # pylint: disable=too-many-instance-attributes
         params: FormFactorKKParameters
             Parameters of the resonances for the V-K-K form factor.
         """
-
         # initial parameters for the model
         # beta_rho = 2.1968
         # beta_omega = 2.6936
@@ -329,7 +338,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     """
 
     _imode: int = field(repr=False)
-    fsp_masses: Tuple[float, float] = field(init=False)
+    fsp_masses: tuple[float, float] = field(init=False)
 
     n_max: int = field(default=200)
     fit_data: VectorFormFactorKKFitData = field(init=False)
@@ -440,18 +449,16 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
-        self, q: Union[float, RealArray], couplings: Couplings
-    ) -> Union[complex, ComplexArray]:
+        self, q: float | RealArray, couplings: Couplings
+    ) -> complex | ComplexArray:
         """Compute the kaon-kaon form factor.
 
         Parameters
@@ -470,7 +477,6 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         ff: float or array-like
             Form-factor.
         """
-
         single = np.isscalar(q)
         qq = np.atleast_1d(q).astype(np.float64) * 1e-3
         mask = qq > sum(self.fsp_masses) * 1e-3
@@ -486,14 +492,12 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -517,14 +521,12 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -558,8 +560,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -570,8 +571,7 @@ class _VectorFormFactorKKBase(VectorFormFactorPP):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

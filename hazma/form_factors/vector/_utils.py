@@ -1,18 +1,16 @@
-from typing import Generator, Optional, Union
+from collections.abc import Generator
+from typing import TypeAlias
 
 import numpy as np
-import numpy.typing as npt
-from scipy.special import gamma  # type:ignore
-from scipy import special
+from scipy.special import gamma
 
 from hazma import parameters
-from hazma.utils import kallen_lambda
 
-RealArray = npt.NDArray[np.float64]
-ComplexArray = npt.NDArray[np.complex128]
+RealArray: TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.float64]]
+ComplexArray: TypeAlias = np.ndarray[tuple[int, ...], np.dtype[np.complex128]]
 
-RealOrRealArray = Union[float, RealArray]
-ComplexOrComplexArray = Union[complex, ComplexArray]
+RealOrRealArray: TypeAlias = float | RealArray
+ComplexOrComplexArray: TypeAlias = complex | ComplexArray
 
 
 # Charged Pion mass in GeV
@@ -38,10 +36,10 @@ FPI_GEV = parameters.fpi * 1e-3
 
 
 def beta2(
-    s: Union[float, npt.NDArray[np.float64]],
+    s: RealOrRealArray,
     m1: float,
     m2: float,
-) -> Union[float, npt.NDArray[np.float64]]:
+) -> RealOrRealArray:
     """
     Return the final state momentum times 4 / s.
 
@@ -59,13 +57,11 @@ def beta2(
     beta: Union[float, npt.NDArray]
         Final state momentum times 4 / s.
     """
-    return np.clip(
-        (1.0 - (m1 + m2) ** 2 / s) * (1.0 - (m1 - m2) ** 2 / s), 0.0, None
-    )  # type:ignore
+    return np.clip((1.0 - (m1 + m2) ** 2 / s) * (1.0 - (m1 - m2) ** 2 / s), 0.0, None)
 
 
 def beta(
-    s: Union[float, npt.NDArray[np.float64]],
+    s: float | RealArray,
     m1: float,
     m2: float,
 ):
@@ -90,11 +86,11 @@ def beta(
 
 
 def dhhatds(
-    mres: Union[float, npt.NDArray[np.float64]],
-    gamma: Union[float, npt.NDArray[np.float64]],
+    mres: float | RealArray,
+    gamma: float | RealArray,
     m1: float,
     m2: float,
-) -> Union[float, npt.NDArray[np.float64]]:
+) -> float | RealArray:
     """
     Compute the derivative of the Hhat(s) function for the Gounaris-Sakurai
     Breit-Wigner function evaluated at the resonance mass. See ArXiv:1002.0279
@@ -135,13 +131,13 @@ def dhhatds(
 
 
 def hhat(
-    s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, npt.NDArray[np.float64]],
-    gamma: Union[float, npt.NDArray[np.float64]],
+    s: float | RealArray,
+    mres: float | RealArray,
+    gamma: float | RealArray,
     m1: float,
     m2: float,
     reshape=False,
-) -> Union[float, npt.NDArray[np.float64]]:
+) -> float | RealArray:
     """
     Compute the Hhat(s) function for the Gounaris-Sakurai Breit-Wigner
     function. See ArXiv:1002.0279 Eqn.(4) for details.
@@ -184,15 +180,15 @@ def hhat(
 
 
 def h(
-    s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, npt.NDArray[np.float64]],
-    gamma: Union[float, npt.NDArray[np.float64]],
+    s: float | RealArray,
+    mres: float | RealArray,
+    gamma: float | RealArray,
     m1: float,
     m2: float,
-    dh: Union[float, npt.NDArray[np.float64]],
-    hres: Union[float, npt.NDArray[np.float64]],
+    dh: float | RealArray,
+    hres: float | RealArray,
     reshape=False,
-) -> Union[float, npt.NDArray[np.float64]]:
+) -> float | RealArray:
     """
     Compute the H(s) function for the Gounaris-Sakurai Breit-Wigner function.
     See ArXiv:1002.0279 Eqn.(3) for details.
@@ -243,13 +239,13 @@ def h(
 
 
 def gamma_p(
-    s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, npt.NDArray[np.float64]],
-    gamma: Union[float, npt.NDArray[np.float64]],
+    s: float | RealArray,
+    mres: float | RealArray,
+    gamma: float | RealArray,
     m1: float,
     m2: float,
-    reshape: Optional[bool] = False,
-) -> Union[float, npt.NDArray[np.float64]]:
+    reshape: bool | None = False,
+) -> float | RealArray:
     """
     Compute the s-dependent width of the resonance.
     See ArXiv:1002.0279 Eqn.(6) for details.
@@ -292,16 +288,16 @@ def gamma_p(
 
 
 def breit_wigner_gs(
-    s: Union[float, npt.NDArray[np.float64]],
-    mass: Union[float, npt.NDArray[np.float64]],
-    width: Union[float, npt.NDArray[np.float64]],
+    s: float | RealArray,
+    mass: float | RealArray,
+    width: float | RealArray,
     m1: float,
     m2: float,
-    h0: Union[float, npt.NDArray[np.float64]],
-    dh: Union[float, npt.NDArray[np.float64]],
-    hres: Union[float, npt.NDArray[np.float64]],
-    reshape: Optional[bool] = False,
-) -> Union[complex, npt.NDArray[np.complex128]]:
+    h0: float | RealArray,
+    dh: float | RealArray,
+    hres: float | RealArray,
+    reshape: bool | None = False,
+) -> complex | ComplexArray:
     """
     Compute the Gounaris-Sakurai Breit-Wigner function with pion loop
     corrections included. See ArXiv:1002.0279 Eqn.(2) for details.
@@ -359,7 +355,7 @@ def breit_wigner_fw(
     s: RealOrRealArray,
     mass: RealOrRealArray,
     width: RealOrRealArray,
-    reshape: Optional[bool] = False,
+    reshape: bool | None = False,
 ) -> ComplexOrComplexArray:
     """
     Compute the standard Breit-Wigner with a constant width. See
@@ -391,12 +387,12 @@ def breit_wigner_fw(
 
 
 def breit_wigner_pwave(
-    s: Union[float, npt.NDArray[np.float64]],
-    mres: Union[float, complex, npt.NDArray[np.float64], npt.NDArray[np.complex128]],
-    gamma: Union[float, complex, npt.NDArray[np.float64], npt.NDArray[np.complex128]],
+    s: float | RealArray,
+    mres: float | complex | RealArray | ComplexArray,
+    gamma: float | complex | RealArray | ComplexArray,
     m1: float,
     m2: float,
-    reshape: Optional[bool] = False,
+    reshape: bool | None = False,
 ):
     mr2 = mres**2
     if hasattr(s, "__len__") and reshape:

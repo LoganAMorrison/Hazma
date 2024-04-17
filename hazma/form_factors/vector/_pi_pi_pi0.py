@@ -3,22 +3,22 @@ Module implementing the pi-pi-pi0 form factor.
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Tuple, Union, List, Dict, overload
+from typing import overload
 
 import numpy as np
 
 from hazma.phase_space import PhaseSpaceDistribution1D
-from hazma.utils import RealOrRealArray, RealArray, ComplexArray, ComplexOrComplexArray
+from hazma.utils import ComplexArray, ComplexOrComplexArray, RealArray, RealOrRealArray
 
-from ._utils import MPI0_GEV, MPI_GEV, breit_wigner_fw
-from ._three_body import VectorFormFactorPPP, Couplings
 from ._base import vector_couplings_to_isospin
+from ._three_body import Couplings, VectorFormFactorPPP
+from ._utils import MPI0_GEV, MPI_GEV, breit_wigner_fw
 
 MPI0 = MPI0_GEV * 1e3
 MPI = MPI_GEV * 1e3
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorPiPiPi0FitData:  # pylint:disable=too-many-instance-attributes
     r"""Storage class for parameters used to compute the pi-pi-pi vector
     form-factor.
@@ -91,10 +91,10 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         Compute the dark matter annihilation cross section into pi-pi-pi0.
     """
 
-    _fsp_masses: Tuple[float, float, float] = field(
+    _fsp_masses: tuple[float, float, float] = field(
         init=False, default=(MPI0_GEV, MPI_GEV, MPI_GEV)
     )
-    fsp_masses: Tuple[float, float, float] = field(init=False, default=(MPI0, MPI, MPI))
+    fsp_masses: tuple[float, float, float] = field(init=False, default=(MPI0, MPI, MPI))
     fit_data: VectorFormFactorPiPiPi0FitData = field(init=False)
 
     masses: InitVar[RealArray] = field(
@@ -275,14 +275,12 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: float, t: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealArray, t: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealOrRealArray, t: RealOrRealArray, couplings: Couplings
@@ -325,8 +323,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
@@ -338,19 +335,18 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self,
-        q: Union[float, RealArray],
+        q: float | RealArray,
         couplings: Couplings,
         *,
         method: str = "rambo",
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> Union[float, RealArray]:
+    ) -> float | RealArray:
         """Compute the three pion form-factor integrated over phase-space.
 
         Parameters
@@ -397,8 +393,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
@@ -410,8 +405,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self,
@@ -450,7 +444,6 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         epsabs: float, optional
             Absolute error tolerance. Default is 0.0.
         """
-
         return self._width(
             mv=mv,
             method=method,
@@ -474,8 +467,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -491,8 +483,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
@@ -566,7 +557,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> List[PhaseSpaceDistribution1D]:
+    ) -> list[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state pions.
 
         Parameters
@@ -616,7 +607,7 @@ class VectorFormFactorPiPiPi0(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+    ) -> dict[tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the all pairs of the
         final-state particles.
 

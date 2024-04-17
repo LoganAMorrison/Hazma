@@ -8,9 +8,8 @@ import numpy as np
 from hazma.vector_mediator import KineticMixingGeV
 
 
-def photon_spectra(dm_mass: float, vm_mass: float, n: int):
+def photon_spectra(dm_mass: float, vm_mass: float, n: int) -> None:
     """Generate the photon spectrum."""
-
     model = KineticMixingGeV(
         mx=dm_mass,
         mv=vm_mass,
@@ -40,9 +39,8 @@ def photon_spectra(dm_mass: float, vm_mass: float, n: int):
     plt.show()
 
 
-def positron_spectra(dm_mass: float, vm_mass: float, n: int):
+def positron_spectra(dm_mass: float, vm_mass: float, n: int) -> None:
     """Generate the photon spectrum."""
-
     model = KineticMixingGeV(
         mx=dm_mass,
         mv=vm_mass,
@@ -72,9 +70,20 @@ def positron_spectra(dm_mass: float, vm_mass: float, n: int):
     plt.show()
 
 
-def neutrino_spectra(dm_mass: float, vm_mass: float, n: int, flavor: str):
-    """Generate the neutrino spectrum."""
+def neutrino_spectra(dm_mass: float, vm_mass: float, n: int, flavor: str) -> None:
+    """Generate the neutrino spectrum.
 
+    Parameters
+    ----------
+    dm_mass: float
+        Mass of the dark matter in MeV.
+    vm_mass: float
+        Mass of the vector mediator in MeV.
+    n: int
+        Number of photon energies between the minimum and maximum energies.
+    flavor: str
+        The neutrino flavor.
+    """
     model = KineticMixingGeV(
         mx=dm_mass,
         mv=vm_mass,

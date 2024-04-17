@@ -13,9 +13,18 @@ from scipy.special import gamma
 from hazma.utils import ComplexOrComplexArray, RealOrRealArray
 
 from ._two_body import Couplings, VectorFormFactorPP
-from ._utils import (MPI0_GEV, MPI_GEV, ComplexArray, RealArray,
-                     breit_wigner_fw, breit_wigner_gs, dhhatds,
-                     gamma_generator, h, hhat)
+from ._utils import (
+    MPI0_GEV,
+    MPI_GEV,
+    ComplexArray,
+    RealArray,
+    breit_wigner_fw,
+    breit_wigner_gs,
+    dhhatds,
+    gamma_generator,
+    h,
+    hhat,
+)
 
 _DEFAULT_N_MAX = 2000
 
@@ -29,6 +38,7 @@ class VectorFormFactorPiPiFitData:  # pylint: disable=too-many-instance-attribut
     n_max: int
         Maximum number of resonances.
     """
+
     n_max: int = field(default=_DEFAULT_N_MAX)
     omega_mag: float = field(init=False, default=0.00187, repr=False)
     omega_phase: float = field(init=False, default=0.106, repr=False)
@@ -176,14 +186,12 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -219,14 +227,12 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -250,14 +256,12 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -289,8 +293,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -301,8 +304,7 @@ class _VectorFormFactorPiPiBase(VectorFormFactorPP):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self, q, mx: float, mv: float, gvxx: float, wv: float, couplings: Couplings

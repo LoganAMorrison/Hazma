@@ -2,29 +2,29 @@
 Implementation of the pi0-omega form factor.
 """
 
-from dataclasses import dataclass, field, InitVar
-from typing import Union, overload, Tuple
+from dataclasses import InitVar, dataclass, field
+from typing import overload
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
 from hazma.utils import (
+    ComplexArray,
     ComplexOrComplexArray,
+    RealArray,
     RealOrRealArray,
     kallen_lambda,
-    ComplexArray,
-    RealArray,
 )
 
+from ._two_body import Couplings, VectorFormFactorPV
 from ._utils import MOMEGA_GEV, MPI0_GEV
-from ._two_body import VectorFormFactorPV, Couplings
 
 MPI0 = MPI0_GEV * 1e3
 MOMEGA = MOMEGA_GEV * 1e3
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorPi0OmegaFitData:
     r"""Storage class for the pion-omega form factor."""
 
@@ -62,7 +62,7 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         Compute the dark matter annihilation cross section into a pion and omega.
     """
 
-    fsp_masses: Tuple[float, float] = field(init=False, default=(MPI0, MOMEGA))
+    fsp_masses: tuple[float, float] = field(init=False, default=(MPI0, MOMEGA))
     fit_data: VectorFormFactorPi0OmegaFitData = field(init=False)
 
     g_rho_omega_pi: InitVar[float] = field(default=15.9)  # units of GeV^-1
@@ -153,17 +153,15 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
-        self, q: Union[float, RealArray], couplings: Couplings
+        self, q: float | RealArray, couplings: Couplings
     ) -> ComplexOrComplexArray:
         """
         Compute the V-omega-pi form factor.
@@ -198,14 +196,12 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -229,14 +225,12 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -269,8 +263,7 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -281,8 +274,7 @@ class VectorFormFactorPi0Omega(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

@@ -1,18 +1,16 @@
-"""
-Module implementing the pi-k-k form factors.
-"""
+"""Module implementing the pi-k-k form factors."""
 
-from dataclasses import InitVar, dataclass, field
-from typing import Tuple, List, Dict, overload
 import abc
+from dataclasses import InitVar, dataclass, field
+from typing import overload
 
 import numpy as np
 
 from hazma.phase_space import PhaseSpaceDistribution1D
-from hazma.utils import RealOrRealArray, ComplexOrComplexArray, RealArray, ComplexArray
+from hazma.utils import ComplexArray, ComplexOrComplexArray, RealArray, RealOrRealArray
 
 from . import _utils
-from ._three_body import VectorFormFactorPPP, Couplings
+from ._three_body import Couplings, VectorFormFactorPPP
 
 MK = _utils.MK_GEV * 1e3
 MK0 = _utils.MK0_GEV * 1e3
@@ -90,8 +88,8 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
     Implements the common functions between the three different final states.
     """
 
-    fsp_masses: Tuple[float, float, float] = field(init=False)
-    _fsp_masses: Tuple[float, float, float] = field(init=False)
+    fsp_masses: tuple[float, float, float] = field(init=False)
+    _fsp_masses: tuple[float, float, float] = field(init=False)
     fit_data: VectorFormFactorPiKKFitData = field(init=False)
 
     iso_scalar_masses: InitVar[RealArray] = field(default=ISO_SCALAR_MASSES)
@@ -137,7 +135,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
 
     def _iso_spin_amplitudes(
         self, m: RealOrRealArray, couplings: Couplings
-    ) -> Tuple[ComplexOrComplexArray, ComplexOrComplexArray]:
+    ) -> tuple[ComplexOrComplexArray, ComplexOrComplexArray]:
         r"""Compute the amplitude coefficients grouped in terms of iso-spin."""
         ci1 = couplings[0] - couplings[1]
         cs = -3 * couplings[2]
@@ -172,7 +170,6 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         m1, m2: float
             Masses of the particles the K^* transitions into.
         """
-
         return (
             _utils.breit_wigner_pwave(s, KS_MASS_GEV, KS_WIDTH_GEV, m1, m2)
             / KS_MASS_GEV**2
@@ -181,14 +178,12 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: float, t: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealArray, t: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q, s: RealOrRealArray, t: RealOrRealArray, couplings: Couplings
@@ -227,8 +222,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ,too-many-arguments
@@ -240,8 +234,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ,too-many-arguments
         self,
@@ -284,7 +277,6 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         epsabs: float, optional
             Absolute error tolerance. Default is 0.0.
         """
-
         return self._integrated_form_factor(
             q=q,
             method=method,
@@ -304,8 +296,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ,too-many-arguments
@@ -317,8 +308,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ,too-many-arguments
         self,
@@ -384,8 +374,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -401,8 +390,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = ...,
         epsrel: float = ...,
         epsabs: float = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
@@ -477,7 +465,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> List[PhaseSpaceDistribution1D]:
+    ) -> list[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state pion, and kaons.
 
         Parameters
@@ -528,7 +516,7 @@ class _VectorFormFactorPiKKBase(VectorFormFactorPPP):
         npts: int = 1 << 14,
         epsrel: float = 1e-3,
         epsabs: float = 0.0,
-    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+    ) -> dict[tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the all pairs of the
         final-state particles.
 
@@ -601,7 +589,7 @@ class VectorFormFactorPi0K0K0(_VectorFormFactorPiKKBase):
         and two neutral kaons.
     """
 
-    fsp_masses: Tuple[float, float, float] = field(init=False, default=(MK0, MK0, MPI0))
+    fsp_masses: tuple[float, float, float] = field(init=False, default=(MK0, MK0, MPI0))
 
     def _form_factor(self, q, s, t, couplings: Couplings) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, couplings)
@@ -641,7 +629,7 @@ class VectorFormFactorPi0KpKm(_VectorFormFactorPiKKBase):
         and two charged kaons.
     """
 
-    fsp_masses: Tuple[float, float, float] = field(init=False, default=(MK, MK, MPI0))
+    fsp_masses: tuple[float, float, float] = field(init=False, default=(MK, MK, MPI0))
 
     def _form_factor(self, q, s, t, couplings) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, couplings)
@@ -681,7 +669,7 @@ class VectorFormFactorPiKK0(_VectorFormFactorPiKKBase):
         a charged kaon, and a neutral kaon.
     """
 
-    fsp_masses: Tuple[float, float, float] = field(init=False, default=(MK0, MK, MPI))
+    fsp_masses: tuple[float, float, float] = field(init=False, default=(MK0, MK, MPI))
 
     def _form_factor(self, q, s, t, couplings: Couplings) -> float:
         a0, a1 = self._iso_spin_amplitudes(q, couplings)

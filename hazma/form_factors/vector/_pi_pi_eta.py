@@ -2,7 +2,6 @@
 Module implementing the pi-pi-eta form factor.
 """
 
-
 from dataclasses import dataclass, field, InitVar
 from typing import Tuple, Union, List, Dict, overload
 
@@ -18,7 +17,7 @@ META = META_GEV * 1e3
 MPI = MPI_GEV * 1e3
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorPiPiEtaFitData:
     r"""Class for computing the pi-pi-eta vector form-factor.
 
@@ -63,7 +62,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
         Compute the dark matter annihilation cross section into pi-pi-eta.
     """
 
-    fsp_masses: Tuple[float, float, float] = field(init=False, default=(META, MPI, MPI))
+    fsp_masses: tuple[float, float, float] = field(init=False, default=(META, MPI, MPI))
     fit_data: VectorFormFactorPiPiEtaFitData = field(init=False)
 
     masses: InitVar[RealArray] = field(default=np.array([0.77549, 1.54, 1.76, 2.15]))
@@ -125,14 +124,12 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealOrRealArray, couplings: Couplings
@@ -165,14 +162,12 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: Union[float, RealArray], couplings: Couplings
@@ -195,14 +190,12 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -235,8 +228,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -247,8 +239,7 @@ class VectorFormFactorPiPiEta(VectorFormFactorPPP2):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

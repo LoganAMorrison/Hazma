@@ -1,18 +1,19 @@
 """
 Implementation of the 4-pion form factors.
 """
+
 # pylint:disable=too-many-arguments,too-many-instance-attributes
 # pylint:disable=arguments-differ
 
-from dataclasses import dataclass, field, InitVar
-from typing import Tuple, List, overload
+from dataclasses import InitVar, dataclass, field
+from typing import overload
 
 import numpy as np
 
-from hazma.phase_space import Rambo, PhaseSpaceDistribution1D
-from hazma.utils import RealArray, RealOrRealArray, lnorm_sqr, ldot
+from hazma.phase_space import PhaseSpaceDistribution1D, Rambo
+from hazma.utils import RealArray, RealOrRealArray, ldot, lnorm_sqr
 
-from ._four_body import VectorFormFactorPPPP, Couplings
+from ._four_body import Couplings, VectorFormFactorPPPP
 
 MPI_GEV = 0.13957061
 MPI0_GEV = 0.1349770
@@ -33,10 +34,10 @@ MPI = MPI_GEV
 MPI0 = MPI0_GEV
 
 
-ThreeTup = Tuple[float, float, float]
+ThreeTup = tuple[float, float, float]
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorPiPiPiPiFitData:
     r"""Storage class for the parameters used to compute the 4-pion vector form
     factors. See ArXiv:0804.0359 for details on the parameterization.
@@ -70,6 +71,7 @@ class VectorFormFactorPiPiPiPiFitData:
     coupling_omega_pi_rho: float
         Rho-pi-pi coupling (see ArXiv:0804.0359 Eqn.[A.6])
     """
+
     mass_rho_bar_1: float
     mass_rho_bar_2: float
     mass_rho_bar_3: float
@@ -107,8 +109,8 @@ class VectorFormFactorPiPiPiPiFitData:
 @dataclass
 class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
     _imode: int = field()
-    _fsp_masses: Tuple[float, float, float, float] = field(init=False)
-    fsp_masses: Tuple[float, float, float, float] = field(init=False)
+    _fsp_masses: tuple[float, float, float, float] = field(init=False)
+    fsp_masses: tuple[float, float, float, float] = field(init=False)
     fit_data: VectorFormFactorPiPiPiPiFitData = field(init=False)
 
     mass_rho_bars: InitVar[ThreeTup] = field(default=(1.437, 1.738, 2.12))
@@ -292,8 +294,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
             / MRHO_GEV**2
         )
         prop2 = (
-            _VectorFormFactorPiPiPiPiBase._breit_wigner3(s, M_RHO1, G_RHO1)
-            / M_RHO1**2
+            _VectorFormFactorPiPiPiPiBase._breit_wigner3(s, M_RHO1, G_RHO1) / M_RHO1**2
         )
         return prop1 - prop2
 
@@ -681,8 +682,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: int = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(
@@ -691,8 +691,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: int = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(
         self,
@@ -748,8 +747,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(
@@ -758,8 +756,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: ...,
-    ) -> RealOrRealArray:
-        ...
+    ) -> RealOrRealArray: ...
 
     def width(
         self,
@@ -805,8 +802,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: int = ...,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(
@@ -819,8 +815,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
         couplings: Couplings,
         *,
         npts: int = ...,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(
         self,
@@ -881,7 +876,7 @@ class _VectorFormFactorPiPiPiPiBase(VectorFormFactorPPPP):
 
     def energy_distributions(
         self, q, nbins: int, couplings: Couplings, *, npts: int = 1 << 15
-    ) -> List[PhaseSpaceDistribution1D]:
+    ) -> list[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the four final state pions.
 
         Parameters

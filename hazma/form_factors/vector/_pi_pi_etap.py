@@ -3,15 +3,15 @@ Module implementing the pi-pi-eta' form factor.
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Tuple, Union, List, Dict, overload
+from typing import overload
 
 import numpy as np
 
-from hazma.utils import RealArray, ComplexArray, RealOrRealArray, ComplexOrComplexArray
 from hazma.phase_space import PhaseSpaceDistribution1D
+from hazma.utils import ComplexArray, ComplexOrComplexArray, RealArray, RealOrRealArray
 
+from ._three_body import Couplings, VectorFormFactorPPP2
 from ._utils import FPI_GEV, METAP_GEV, MPI_GEV
-from ._three_body import VectorFormFactorPPP2, Couplings
 
 METAP = METAP_GEV * 1e3
 MPI = MPI_GEV * 1e3
@@ -34,10 +34,16 @@ class VectorFormFactorPiPiEtaPrimeFitData:
         VMD resonance phases.
     """
 
-    masses: RealArray = np.array([0.77549, 1.54, 1.76, 2.11])
-    widths: RealArray = np.array([0.1494, 0.356, 0.113, 0.176])
-    amps: RealArray = np.array([1.0, 0.0, 0.0, 0.02])
-    phases: RealArray = np.array([0, np.pi, np.pi, np.pi])
+    masses: RealArray = field(
+        default_factory=lambda: np.array([0.77549, 1.54, 1.76, 2.11])
+    )
+    widths: RealArray = field(
+        default_factory=lambda: np.array([0.1494, 0.356, 0.113, 0.176])
+    )
+    amps: RealArray = field(default_factory=lambda: np.array([1.0, 0.0, 0.0, 0.02]))
+    phases: RealArray = field(
+        default_factory=lambda: np.array([0, np.pi, np.pi, np.pi])
+    )
 
 
 @dataclass
@@ -62,18 +68,19 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
     cross_section
         Compute the dark matter annihilation cross section into pi-pi-eta'.
     """
-    fsp_masses: Tuple[float, float, float] = field(
+
+    fsp_masses: tuple[float, float, float] = field(
         init=False, default=(METAP, MPI, MPI)
     )
-    _fsp_masses: Tuple[float, float, float] = field(
+    _fsp_masses: tuple[float, float, float] = field(
         init=False, default=(METAP_GEV, MPI_GEV, MPI_GEV)
     )
     fit_data: VectorFormFactorPiPiEtaPrimeFitData = field(init=False)
 
-    masses: InitVar[RealArray] = np.array([0.77549, 1.54, 1.76, 2.11])
-    widths: InitVar[RealArray] = np.array([0.1494, 0.356, 0.113, 0.176])
-    amps: InitVar[RealArray] = np.array([1.0, 0.0, 0.0, 0.02])
-    phases: InitVar[RealArray] = np.array([0.0, np.pi, np.pi, np.pi])
+    masses: InitVar[RealArray] = field(default=np.array([0.77549, 1.54, 1.76, 2.11]))
+    widths: InitVar[RealArray] = field(default=np.array([0.1494, 0.356, 0.113, 0.176]))
+    amps: InitVar[RealArray] = field(default=np.array([1.0, 0.0, 0.0, 0.02]))
+    phases: InitVar[RealArray] = field(default=np.array([0.0, np.pi, np.pi, np.pi]))
 
     def __post_init__(
         self,
@@ -124,14 +131,12 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, s: RealOrRealArray, couplings: Couplings
@@ -158,18 +163,16 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
-        self, q: Union[float, RealArray], couplings: Couplings
-    ) -> Union[float, RealArray]:
+        self, q: float | RealArray, couplings: Couplings
+    ) -> float | RealArray:
         """
         Compute the form factor for a vector decaying into two charged pions and
         an eta' integrated over the three-body phase-space.
@@ -186,18 +189,16 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
-        self, mv: Union[float, RealArray], couplings: Couplings
-    ) -> Union[float, RealArray]:
+        self, mv: float | RealArray, couplings: Couplings
+    ) -> float | RealArray:
         r"""Compute the partial decay width of a massive vector into an eta' and
         two pions.
 
@@ -224,8 +225,7 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -236,8 +236,7 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
@@ -281,7 +280,7 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
         nbins: int,
         *,
         couplings: Couplings,
-    ) -> List[PhaseSpaceDistribution1D]:
+    ) -> list[PhaseSpaceDistribution1D]:
         r"""Compute the energy distributions of the final state pions and eta'.
 
         Parameters
@@ -302,7 +301,7 @@ class VectorFormFactorPiPiEtaPrime(VectorFormFactorPPP2):
 
     def invariant_mass_distributions(  # pylint: disable=arguments-differ
         self, q: float, nbins: int, *, couplings: Couplings
-    ) -> Dict[Tuple[int, int], PhaseSpaceDistribution1D]:
+    ) -> dict[tuple[int, int], PhaseSpaceDistribution1D]:
         r"""Compute the invariant-mass distributions of the all pairs of the
         final-state particles.
 

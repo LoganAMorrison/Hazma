@@ -3,23 +3,13 @@
 # pylint: disable=invalid-name,protected-access
 
 import functools
-from typing import Callable, Dict, Protocol, Union
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
-import numpy.typing as npt
 
 from hazma import spectra
 from hazma.form_factors import vector as vff
-from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
-                                       VectorFormFactorPi0KpKm,
-                                       VectorFormFactorPi0Pi0Omega,
-                                       VectorFormFactorPiKK0,
-                                       VectorFormFactorPiPiEta,
-                                       VectorFormFactorPiPiEtaPrime,
-                                       VectorFormFactorPiPiOmega,
-                                       VectorFormFactorPiPiPi0,
-                                       VectorFormFactorPiPiPi0Pi0,
-                                       VectorFormFactorPiPiPiPi)
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import electron_mass as me
@@ -32,13 +22,25 @@ from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
 from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
-from hazma.spectra.altarelli_parisi import (dnde_photon_ap_fermion,
-                                            dnde_photon_ap_scalar)
-from hazma.spectra.boost import (boost_delta_function,
-                                 double_boost_delta_function)
+from hazma.spectra.altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_ap_scalar
+from hazma.spectra.boost import boost_delta_function, double_boost_delta_function
 from hazma.utils import RealArray
 
-DndeFn = Callable[[Union[float, npt.NDArray[np.float64]], float], float]
+if TYPE_CHECKING:
+    from hazma.form_factors.vector import (
+        VectorFormFactorPi0K0K0,
+        VectorFormFactorPi0KpKm,
+        VectorFormFactorPi0Pi0Omega,
+        VectorFormFactorPiKK0,
+        VectorFormFactorPiPiEta,
+        VectorFormFactorPiPiEtaPrime,
+        VectorFormFactorPiPiOmega,
+        VectorFormFactorPiPiPi0,
+        VectorFormFactorPiPiPi0Pi0,
+        VectorFormFactorPiPiPiPi,
+    )
+
+DndeFn = Callable[[float | np.ndarray[tuple[int], np.dtype[np.float64]], float], float]
 
 
 class _DecayDndePhoton(Protocol):
@@ -66,8 +68,7 @@ class _DecayDndePhoton(Protocol):
     _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
     _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
 
-    def partial_widths(self) -> dict[str, float]:
-        ...
+    def partial_widths(self) -> dict[str, float]: ...
 
 
 def _make_spectrum_n_body_decay(
@@ -743,7 +744,6 @@ def dnde_photon_pi_pi_pi0_pi0(
 def _dnde_photon_v_v_rest_frame(
     self: _DecayDndePhoton, photon_energies, *, npts=1 << 15, nbins=30
 ):
-
     if self.mv < 2 * me:
         return np.zeros_like(photon_energies)
 
@@ -834,7 +834,9 @@ def dnde_photon_v_v(
 
 def dnde_photon_spectrum_fns(
     self,
-) -> Dict[str, Callable[[Union[float, npt.NDArray[np.float64]], float], float]]:
+) -> dict[
+    str, Callable[[float | np.ndarray[tuple[int], np.dtype[np.float64]], float], float]
+]:
     """Return a dictionary containing functions to generate photon spectra.
 
 

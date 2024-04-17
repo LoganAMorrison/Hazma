@@ -3,16 +3,16 @@ Implementation of the eta-phi form factor.
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import Union, overload, Tuple
+from typing import overload
 
 import numpy as np
 import numpy.typing as npt
 
 from hazma import parameters
-from hazma.utils import RealOrRealArray, RealArray, ComplexArray, ComplexOrComplexArray
+from hazma.utils import ComplexArray, ComplexOrComplexArray, RealArray, RealOrRealArray
 
+from ._two_body import Couplings, VectorFormFactorPV
 from ._utils import breit_wigner_fw
-from ._two_body import VectorFormFactorPV, Couplings
 
 META = parameters.eta_mass
 MPHI = parameters.phi_mass
@@ -54,13 +54,13 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         Compute the dark matter annihilation cross section into an eta and phi.
     """
 
-    fsp_masses: Tuple[float, float] = field(init=False, default=(META, MPHI))
+    fsp_masses: tuple[float, float] = field(init=False, default=(META, MPHI))
     fit_data: VectorFormFactorEtaPhiFitData = field(init=False)
 
-    masses: InitVar[RealArray] = np.array([1.67, 2.14])
-    widths: InitVar[RealArray] = np.array([0.122, 0.0435])
-    amps: InitVar[RealArray] = np.array([0.175, 0.00409])
-    phases: InitVar[RealArray] = np.array([0.0, 2.19])
+    masses: InitVar[RealArray] = field(default=np.array([1.67, 2.14]))
+    widths: InitVar[RealArray] = field(default=np.array([0.122, 0.0435]))
+    amps: InitVar[RealArray] = field(default=np.array([0.175, 0.00409]))
+    phases: InitVar[RealArray] = field(default=np.array([0.0, 2.19]))
 
     def __post_init__(
         self,
@@ -109,17 +109,15 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, *, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, *, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
-        self, *, q: Union[float, RealArray], couplings: Couplings
+        self, *, q: float | RealArray, couplings: Couplings
     ) -> ComplexOrComplexArray:
         """Compute the eta-phi vector form-factor.
 
@@ -150,14 +148,12 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -181,14 +177,12 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -219,8 +213,7 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -231,8 +224,7 @@ class VectorFormFactorEtaPhi(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,

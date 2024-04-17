@@ -3,25 +3,26 @@ Implementation of the eta-omega form factor.
 """
 
 from dataclasses import InitVar, dataclass, field
-from typing import overload, Tuple
+from typing import overload
 
 import numpy as np
 
 from hazma import parameters
-from hazma.utils import RealOrRealArray, ComplexOrComplexArray, ComplexArray, RealArray
+from hazma.utils import ComplexArray, ComplexOrComplexArray, RealArray, RealOrRealArray
 
-from ._utils import breit_wigner_fw
-from ._two_body import VectorFormFactorPV, Couplings
 from ._base import vector_couplings_to_isospin
+from ._two_body import Couplings, VectorFormFactorPV
+from ._utils import breit_wigner_fw
 
 META = parameters.eta_mass
 MOMEGA = parameters.omega_mass
 
 
-@dataclass(frozen=True)
+@dataclass
 class VectorFormFactorEtaOmegaFitData:
-    r"""Storage class for the eta-omega vector form-factor. See arXiv:1911.11147
-    for details on the default values.
+    """Storage class for the eta-omega vector form-factor.
+
+    See arXiv:1911.11147 for details on the default values.
     """
 
     # w', w''' parameters
@@ -56,14 +57,14 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         omega.
     """
 
-    fsp_masses: Tuple[float, float] = field(init=False, default=(META, MOMEGA))
+    fsp_masses: tuple[float, float] = field(init=False, default=(META, MOMEGA))
     fit_data: VectorFormFactorEtaOmegaFitData = field(init=False)
 
     # w', w''' parameters
-    masses: InitVar[RealArray] = np.array([1.43, 1.67])
-    widths: InitVar[RealArray] = np.array([0.215, 0.113])
-    amps: InitVar[RealArray] = np.array([0.0862, 0.0648])
-    phases: InitVar[RealArray] = np.exp(1j * np.array([0.0, np.pi]))
+    masses: InitVar[RealArray] = field(default=np.array([1.43, 1.67]))
+    widths: InitVar[RealArray] = field(default=np.array([0.215, 0.113]))
+    amps: InitVar[RealArray] = field(default=np.array([0.0862, 0.0648]))
+    phases: InitVar[RealArray] = field(default=np.exp(1j * np.array([0.0, np.pi])))
 
     def __post_init__(
         self,
@@ -111,14 +112,12 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -154,14 +153,12 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def integrated_form_factor(  # pylint: disable=arguments-differ
         self, q: RealOrRealArray, couplings: Couplings
@@ -185,14 +182,12 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: float, couplings: Couplings
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def width(  # pylint: disable=arguments-differ
         self, mv: RealArray, couplings: Couplings
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def width(  # pylint: disable=arguments-differ
         self, mv: RealOrRealArray, couplings: Couplings
@@ -223,8 +218,7 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> float:
-        ...
+    ) -> float: ...
 
     @overload
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
@@ -235,8 +229,7 @@ class VectorFormFactorEtaOmega(VectorFormFactorPV):
         gvxx: float,
         wv: float,
         couplings: Couplings,
-    ) -> RealArray:
-        ...
+    ) -> RealArray: ...
 
     def cross_section(  # pylint: disable=arguments-differ,too-many-arguments
         self,
