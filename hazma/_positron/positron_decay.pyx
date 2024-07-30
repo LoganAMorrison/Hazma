@@ -18,6 +18,8 @@ from hazma._positron.positron_charged_pion cimport c_charged_pion_positron_spect
 
 include "../_decay/common.pxd"
 
+np.import_array()
+
 
 cdef int ID_MU = 0
 cdef int ID_PI = 1
@@ -44,7 +46,7 @@ cdef np.ndarray[np.float64_t,ndim=1] id_to_mass(int ident):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray[np.float64_t,ndim=1] id_to_masses(np.ndarray[np.int_t,ndim=1] ids):
+cdef np.ndarray[np.float64_t,ndim=1] id_to_masses(np.ndarray[np.int64_t, ndim=1] ids):
     cdef int size = ids.shape[0]
     cdef np.ndarray[np.float64_t,ndim=1] masses = np.zeros(size, dtype=np.float64)
     for i in range(size):
@@ -55,7 +57,7 @@ cdef np.ndarray[np.float64_t,ndim=1] id_to_masses(np.ndarray[np.int_t,ndim=1] id
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef np.ndarray[np.float64_t,ndim=1] c_positron_array_two_body(int id1, int id2, double cme, np.ndarray[np.int_t,ndim=1] eng_ps):
+cdef np.ndarray[np.float64_t,ndim=1] c_positron_array_two_body(int id1, int id2, double cme, np.ndarray[np.int64_t,ndim=1] eng_ps):
     cdef np.ndarray[np.float64_t,ndim=1] spec = np.zeros_like(eng_ps)
     cdef int npts = eng_ps.shape[0]
     cdef double m1 = id_to_mass(id1)
@@ -84,7 +86,7 @@ cdef np.ndarray[np.float64_t,ndim=1] c_positron_array_two_body(int id1, int id2,
 @cython.wraparound(False)
 @cython.cdivision(True)
 cdef np.ndarray[np.float64_t,ndim=1] c_positron_array(
-    np.ndarray[np.int_t,ndim=1] ids,
+    np.ndarray[np.int64_t,ndim=1] ids,
     double cme,
     np.ndarray[np.float64_t,ndim=1] eng_ps,
     mat_elem_sqrd,
@@ -158,7 +160,7 @@ def positron(particles, double cme, eng_ps, mat_elem_sqrd=lambda k_list: 1.0, in
     spec : np.ndarray
         1-D array of total gamma ray spectrum from all final state particles.
     """
-    cdef np.ndarray[np.int_t,ndim=1] ids = np.zeros((len(particles),), dtype=int)
+    cdef np.ndarray[np.int64_t,ndim=1] ids = np.zeros((len(particles),), dtype=int)
     cdef np.ndarray[np.float64_t,ndim=1] spec
     for i, particle in enumerate(particles):
         if particle == "muon":
