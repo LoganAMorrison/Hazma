@@ -18,7 +18,7 @@ Repository = "https://github.com/LoganAMorrison/Hazma"
 Documentation = "http://hazma.readthedocs.io"
 
 [project.optional-dependencies]
-dev = ["black~=23.3"]
+dev = ["black>=23.3,<25.0"]
 
 [build-system]
 build-backend = "setuptools.build_meta"
