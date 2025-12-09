@@ -8,6 +8,7 @@
 | [**Installation**](#installation)
 | [**Documentation**](https://hazma.readthedocs.io/en/latest/)
 | [**Usage**](#usage)
+| [**Community Extensions**](#extensions)
 | [**Citing Hazma**](#citing)
 
 [![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
@@ -203,6 +204,17 @@ ff_pipipi0.integrated_form_factor(q=energies, gvuu=2.0/3.0, gvdd=-1.0/3.0, gvss=
 ff_pikk = vff.VectorFormFactorPi0KpKm()
 ff_pikk.energy_distributions(q=1000.0, gvuu=2.0/3.0, gvdd=-1.0/3.0, gvss=-1.0/3.0, nbins=100)
 ```
+
+### Community Extensions<a id="extensions"></a>
+
+The flexibility of Hazma allows for the implementation of a wide variety of dark matter models. Below are extensions and model implementations developed by the community:
+
+- **Vector-Scalar Portal Dark Matter** ([dutramaira/VectorScalarPortal_Hazma](https://github.com/dutramaira/VectorScalarPortal_Hazma))  
+  *Description:* Implements a vector-scalar portal dark matter model for Hazma.  
+  *Paper:* [arXiv:2508.15891](http://arxiv.org/pdf/2508.15891).  
+  *Authors:* Maíra Dutra, Clarissa Siqueira, and Tonia Ventersa.
+
+If you have developed a public extension or model implementation using Hazma, feel free to open a pull request to add it to this list!
 
 ## Other information
 
