@@ -107,7 +107,7 @@ def sigmaOmega(Q2):
         alpha.alphaEM(Q2) ** 2
         * 2.0
         / 3.0
-        / Q2 ** 2
+        / Q2**2
         * (2.0 * math.pi) ** 6
         * Resonance.gev2nb
     )
@@ -124,35 +124,33 @@ def phaseSpace1(m0, m1, m2, m3, m4, M12, G12, M34, G34):
         # generate the mass of the 12 system
         m12min = m1 + m2
         m12max = m0 - m3 - m4
-        rhomin = math.atan2(m12min ** 2 - M12 ** 2, M12 * G12)
-        rhomax = math.atan2(m12max ** 2 - M12 ** 2, M12 * G12) - rhomin
+        rhomin = math.atan2(m12min**2 - M12**2, M12 * G12)
+        rhomax = math.atan2(m12max**2 - M12**2, M12 * G12) - rhomin
         rho = rhomin + rhomax * random.random()
-        m122 = max(
-            m12min ** 2, min(m12max ** 2, (M12) ** 2 + M12 * G12 * math.tan(rho))
-        )
+        m122 = max(m12min**2, min(m12max**2, (M12) ** 2 + M12 * G12 * math.tan(rho)))
         m12 = math.sqrt(m122)
         # generate the mass of the 34 system
         m34min = m3 + m4
         m34max = m0 - m12
-        rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-        rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
+        rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+        rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
         rho = rhomin + rhomax * random.random()
-        m342 = max(m34min ** 2, min(m34max ** 2, M34 ** 2 + M34 * G34 * math.tan(rho)))
+        m342 = max(m34min**2, min(m34max**2, M34**2 + M34 * G34 * math.tan(rho)))
         m34 = math.sqrt(m342)
     else:
         m34min = m3 + m4
         m34max = m0 - m1 - m2
-        rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-        rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
+        rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+        rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
         rho = rhomin + rhomax * random.random()
-        m342 = max(m34min ** 2, min(m34max ** 2, M34 ** 2 + M34 * G34 * math.tan(rho)))
+        m342 = max(m34min**2, min(m34max**2, M34**2 + M34 * G34 * math.tan(rho)))
         m34 = math.sqrt(m342)
         m12min = m1 + m2
         m12max = m0 - m34
-        rhomin = math.atan2(m12min ** 2 - M12 ** 2, M12 * G12)
-        rhomax = math.atan2(m12max ** 2 - M12 ** 2, M12 * G12) - rhomin
+        rhomin = math.atan2(m12min**2 - M12**2, M12 * G12)
+        rhomax = math.atan2(m12max**2 - M12**2, M12 * G12) - rhomin
         rho = rhomin + rhomax * random.random()
-        m122 = max(m12min ** 2, min(m12max ** 2, M12 ** 2 + M12 * G12 * math.tan(rho)))
+        m122 = max(m12min**2, min(m12max**2, M12**2 + M12 * G12 * math.tan(rho)))
         m12 = math.sqrt(m122)
     (q1, q2) = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m12, m34)
     (p1, p2) = twoBodyDecay(q1, m12, m1, m2)
@@ -164,51 +162,49 @@ def weight1(m0, m1, m2, m3, m4, m12, m34, M12, G12, M34, G34):
     # weight for 1st ordering
     m12min = m1 + m2
     m12max = m0 - m3 - m4
-    rhomin = math.atan2(m12min ** 2 - M12 ** 2, M12 * G12)
-    rhomax = math.atan2(m12max ** 2 - M12 ** 2, M12 * G12) - rhomin
-    wgt1 = M12 * G12 / rhomax / ((m12 ** 2 - M12 ** 2) ** 2 + G12 ** 2 * M12 ** 2)
+    rhomin = math.atan2(m12min**2 - M12**2, M12 * G12)
+    rhomax = math.atan2(m12max**2 - M12**2, M12 * G12) - rhomin
+    wgt1 = M12 * G12 / rhomax / ((m12**2 - M12**2) ** 2 + G12**2 * M12**2)
     m34min = m3 + m4
     m34max = m0 - m12
-    rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-    rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
-    wgt1 *= M34 * G34 / rhomax / ((m34 ** 2 - M34 ** 2) ** 2 + +(G34 ** 2) * M34 ** 2)
+    rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+    rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
+    wgt1 *= M34 * G34 / rhomax / ((m34**2 - M34**2) ** 2 + +(G34**2) * M34**2)
     # weight for second ordering
     m34min = m3 + m4
     m34max = m0 - m1 - m2
-    rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-    rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
-    wgt2 = M34 * G34 / rhomax / ((m34 ** 2 - M34 ** 2) ** 2 + +(G34 ** 2) * M34 ** 2)
+    rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+    rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
+    wgt2 = M34 * G34 / rhomax / ((m34**2 - M34**2) ** 2 + +(G34**2) * M34**2)
     m12min = m1 + m2
     m12max = m0 - m34
-    rhomin = math.atan2(m12min ** 2 - M12 ** 2, M12 * G12)
-    rhomax = math.atan2(m12max ** 2 - M12 ** 2, M12 * G12) - rhomin
-    wgt2 *= M12 * G12 / rhomax / ((m12 ** 2 - M12 ** 2) ** 2 + +(G12 ** 2) * M12 ** 2)
+    rhomin = math.atan2(m12min**2 - M12**2, M12 * G12)
+    rhomax = math.atan2(m12max**2 - M12**2, M12 * G12) - rhomin
+    wgt2 *= M12 * G12 / rhomax / ((m12**2 - M12**2) ** 2 + +(G12**2) * M12**2)
     # resonance piece of the weight
     wgt = 0.5 * (wgt1 + wgt2)
     # phase-space bits
-    wgt *= m0 * 8.0 * math.pi ** 2 / pStar(m0, m12, m34)
-    wgt *= m12 * 8.0 * math.pi ** 2 / pStar(m12, m1, m2)
-    wgt *= m34 * 8.0 * math.pi ** 2 / pStar(m34, m3, m4)
+    wgt *= m0 * 8.0 * math.pi**2 / pStar(m0, m12, m34)
+    wgt *= m12 * 8.0 * math.pi**2 / pStar(m12, m1, m2)
+    wgt *= m34 * 8.0 * math.pi**2 / pStar(m34, m3, m4)
     return wgt * (2.0 * math.pi) ** 3
 
 
 def phaseSpace2(m0, m1, m2, m3, m4, M234, G234, M34, G34):
     m234min = m2 + m3 + m4
     m234max = m0 - m1
-    rhomin = math.atan2(m234min ** 2 - M234 ** 2, M234 * G234)
-    rhomax = math.atan2(m234max ** 2 - M234 ** 2, M234 * G234) - rhomin
+    rhomin = math.atan2(m234min**2 - M234**2, M234 * G234)
+    rhomax = math.atan2(m234max**2 - M234**2, M234 * G234) - rhomin
     rho = rhomin + rhomax * random.random()
-    m2342 = max(
-        m234min ** 2, min(m234max ** 2, M234 ** 2 + M234 * G234 * math.tan(rho))
-    )
+    m2342 = max(m234min**2, min(m234max**2, M234**2 + M234 * G234 * math.tan(rho)))
     m234 = math.sqrt(m2342)
     (p1, q234) = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m1, m234)
     m34min = m3 + m4
     m34max = m234 - m2
-    rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-    rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
+    rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+    rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
     rho = rhomin + rhomax * random.random()
-    m342 = max(m34min ** 2, min(m34max ** 2, M34 ** 2 + M34 * G34 * math.tan(rho)))
+    m342 = max(m34min**2, min(m34max**2, M34**2 + M34 * G34 * math.tan(rho)))
     m34 = math.sqrt(m342)
     (p2, q34) = twoBodyDecay(q234, m234, m2, m34)
     (p3, p4) = twoBodyDecay(q34, m34, m3, m4)
@@ -219,40 +215,40 @@ def weight2(m0, m1, m2, m3, m4, m234, m34, M234, G234, M34, G34):
     # weight for 0 - > 1 (234)
     m234min = m2 + m3 + m4
     m234max = m0 - m1
-    rhomin = math.atan2(m234min ** 2 - M234 ** 2, M234 * G234)
-    rhomax = math.atan2(m234max ** 2 - M234 ** 2, M234 * G234) - rhomin
-    wgt = M234 * G234 / rhomax / ((m234 ** 2 - M234 ** 2) ** 2 + G234 ** 2 * M234 ** 2)
-    wgt *= m0 * 8.0 * math.pi ** 2 / pStar(m0, m1, m234)
+    rhomin = math.atan2(m234min**2 - M234**2, M234 * G234)
+    rhomax = math.atan2(m234max**2 - M234**2, M234 * G234) - rhomin
+    wgt = M234 * G234 / rhomax / ((m234**2 - M234**2) ** 2 + G234**2 * M234**2)
+    wgt *= m0 * 8.0 * math.pi**2 / pStar(m0, m1, m234)
     # weight for (234) -> 2 (34)
     m34min = m3 + m4
     m34max = m234 - m2
-    rhomin = math.atan2(m34min ** 2 - M34 ** 2, M34 * G34)
-    rhomax = math.atan2(m34max ** 2 - M34 ** 2, M34 * G34) - rhomin
-    wgt *= M34 * G34 / rhomax / ((m34 ** 2 - M34 ** 2) ** 2 + G34 ** 2 * M34 ** 2)
-    wgt *= m234 * 8.0 * math.pi ** 2 / pStar(m234, m2, m34)
+    rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
+    rhomax = math.atan2(m34max**2 - M34**2, M34 * G34) - rhomin
+    wgt *= M34 * G34 / rhomax / ((m34**2 - M34**2) ** 2 + G34**2 * M34**2)
+    wgt *= m234 * 8.0 * math.pi**2 / pStar(m234, m2, m34)
     # weight for (34) -> 3 4
-    wgt *= m34 * 8.0 * math.pi ** 2 / pStar(m34, m3, m4)
+    wgt *= m34 * 8.0 * math.pi**2 / pStar(m34, m3, m4)
     return wgt * (2.0 * math.pi) ** 3
 
 
 def pStar(m0, m1, m2):
-    return 0.5 / m0 * math.sqrt((m0 ** 2 - (m1 + m2) ** 2) * (m0 ** 2 - (m1 - m2) ** 2))
+    return 0.5 / m0 * math.sqrt((m0**2 - (m1 + m2) ** 2) * (m0**2 - (m1 - m2) ** 2))
 
 
 def twoBodyDecay(p0, m0, m1, m2):
     ctheta = 2.0 * random.random() - 1.0
-    stheta = math.sqrt(1.0 - ctheta ** 2)
+    stheta = math.sqrt(1.0 - ctheta**2)
     phi = math.pi * 2.0 * random.random()
     pcm = pStar(m0, m1, m2)
     p1 = numpy.array(
         [
-            math.sqrt(pcm ** 2 + m1 ** 2),
+            math.sqrt(pcm**2 + m1**2),
             pcm * math.cos(phi) * stheta,
             pcm * math.sin(phi) * stheta,
             pcm * ctheta,
         ]
     )
-    p2 = numpy.array([math.sqrt(pcm ** 2 + m2 ** 2), -p1[1], -p1[2], -p1[3]])
+    p2 = numpy.array([math.sqrt(pcm**2 + m2**2), -p1[1], -p1[2], -p1[3]])
     bv = numpy.array([p0[1], p0[2], p0[3]]) / p0[0]
     b2 = bv[0] ** 2 + bv[1] ** 2 + bv[2] ** 2
     if b2 == 0.0:
@@ -273,12 +269,12 @@ Function to implement the form factors
 
 
 def BW3(Q2, M, G):
-    return M ** 2 / complex(
-        M ** 2 - Q2,
+    return M**2 / complex(
+        M**2 - Q2,
         -G
-        * M ** 2
+        * M**2
         * math.sqrt(
-            max(0.0, ((Q2 - 4.0 * mpip ** 2) / (M ** 2 - 4.0 * mpip ** 2)) ** 3) / Q2
+            max(0.0, ((Q2 - 4.0 * mpip**2) / (M**2 - 4.0 * mpip**2)) ** 3) / Q2
         ),
     )
 
@@ -303,13 +299,11 @@ def Trho(Q2):
 
 
 def Bf0(Q2):
-    return mf0 ** 2 / complex(
-        mf0 ** 2 - Q2,
+    return mf0**2 / complex(
+        mf0**2 - Q2,
         -gf0
-        * mf0 ** 2
-        * math.sqrt(
-            max(0.0, ((Q2 - 4.0 * mpip ** 2) / (mf0 ** 2 - 4.0 * mpip ** 2))) / Q2
-        ),
+        * mf0**2
+        * math.sqrt(max(0.0, ((Q2 - 4.0 * mpip**2) / (mf0**2 - 4.0 * mpip**2))) / Q2),
     )
 
 
@@ -334,7 +328,7 @@ def m2(p):
 
 
 def BWRR(Q2):
-    return BW3(Q2, mRho, gRho) / mRho ** 2 - BW3(Q2, mRho1, gRho1) / mRho1 ** 2
+    return BW3(Q2, mRho, gRho) / mRho**2 - BW3(Q2, mRho1, gRho1) / mRho1**2
 
 
 def Grho(p1, p2, p3, p4):
@@ -415,7 +409,7 @@ def Jrho(Q2, p1, p2, p3, p4):
         - Grho(p3, p2, p1, p4)
     )
     d1 = dot(Q, c1) / Q2
-    return -(g_rho_pi_pi ** 3) * g_rho_gamma * BWRR(Q2) * (c1 - Q * d1)
+    return -(g_rho_pi_pi**3) * g_rho_gamma * BWRR(Q2) * (c1 - Q * d1)
 
 
 # resonant rho contribution of the form factor
@@ -994,19 +988,19 @@ def hadronic_current(Q2, npoints, wgt, wgt2, omegaOnly=False):
     if not omegaOnly:
         for i1 in range(0, 4):
             for i2 in range(0, 4):
-                total += cI1_ ** 2 * wgt[i1, i2] * coeffs[i1, i2]
+                total += cI1_**2 * wgt[i1, i2] * coeffs[i1, i2]
                 for j1 in range(0, 4):
                     for j2 in range(0, 4):
                         toterr += (
-                            cI1_ ** 4
+                            cI1_**4
                             * coeffs[i1, i2]
                             * coeffs[j1, j2]
                             * wgt2[i1, i2, j1, j2]
                         )
     else:
-        total += cI1_ ** 2 * wgt[1, 1] * coeffs[1, 1]
-        toterr += cI1_ ** 4 * coeffs[1, 1] * coeffs[1, 1] * wgt2[1, 1, 1, 1]
-    toterr = math.sqrt((toterr.real - total.real ** 2) / npoints)
+        total += cI1_**2 * wgt[1, 1] * coeffs[1, 1]
+        toterr += cI1_**4 * coeffs[1, 1] * coeffs[1, 1] * wgt2[1, 1, 1, 1]
+    toterr = math.sqrt((toterr.real - total.real**2) / npoints)
     return total, toterr
 
 
@@ -1020,9 +1014,9 @@ def readHadronic_Current():
     # neutral: pi+pi-2pi0
     x = []
     y = []
-    for (key, val) in sorted(coeffs_neutral.items()):
+    for key, val in sorted(coeffs_neutral.items()):
         en = key
-        s = en ** 2
+        s = en**2
         x.append(en)
         (npoints, wgt, wgt2) = val
         hadcurr, hadcurr_err = hadronic_current(s, npoints, wgt, wgt2, omegaOnly=False)
@@ -1031,9 +1025,9 @@ def readHadronic_Current():
     # charged: 2pi+2pi-
     x = []
     y = []
-    for (key, val) in sorted(coeffs_charged.items()):
+    for key, val in sorted(coeffs_charged.items()):
         en = key
-        s = en ** 2
+        s = en**2
         x.append(en)
         (npoints, wgt, wgt2) = val
         hadcurr, hadcurr_err = hadronic_current(s, npoints, wgt, wgt2, omegaOnly=False)
@@ -1085,9 +1079,9 @@ def sigmaDM(s, mode):
     # leptonic part contracted
     sqrts = math.sqrt(s)
     cDM = gDM_
-    DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (s - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
-    pre = DMmed2 * s * (1 + 2 * mDM_ ** 2 / s) / 3.0
+    pre = DMmed2 * s * (1 + 2 * mDM_**2 / s) / 3.0
     # prefactor of phase space
     pre *= (2.0 * math.pi) ** 4 / 2.0 / s * Resonance.gev2nb
     if mode == "neutral":
@@ -1110,7 +1104,7 @@ def sigmaSM(s, mode):
         return 0.0
     # leptonic part contracted
     sqrts = math.sqrt(s)
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
+    pre = 16.0 * math.pi**2 * alpha.alphaEM(s) ** 2 / 3.0 / s
     # prefactor of phase space
     pre *= (2.0 * math.pi) ** 4 / 2.0 / s * Resonance.gev2nb
     if mode == "neutral":

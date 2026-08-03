@@ -2,6 +2,7 @@
 This file contains the mixin class which implements the partial widths of the
 right-handed neutrino.
 """
+
 from scipy.integrate import quad
 import numpy as np
 
@@ -190,12 +191,7 @@ def width_nu_pi_pi(self):
         * (
             mx**2
             * np.sqrt(1 - (4 * mpi**2) / mx**2)
-            * (
-                mx**6
-                + 24 * mx**4 * mpi**2
-                - 10 * mx**2 * mpi**4
-                + 12 * mpi**6
-            )
+            * (mx**6 + 24 * mx**4 * mpi**2 - 10 * mx**2 * mpi**4 + 12 * mpi**6)
             - 24
             * mpi**2
             * (mx**6 + 2 * mx**2 * mpi**4 - 2 * mpi**6)
@@ -235,35 +231,19 @@ def width_l_pi_pi0(self):
             )
             * (
                 ml**4
-                * (
-                    -4 * (mpi**2 - mpi0**2) ** 2
-                    + 2 * (mpi**2 + mpi0**2) * s
-                    - s**2
-                )
+                * (-4 * (mpi**2 - mpi0**2) ** 2 + 2 * (mpi**2 + mpi0**2) * s - s**2)
                 + ml**2
                 * (
                     s
-                    * (
-                        2 * (mpi**2 - mpi0**2) ** 2
-                        + 2 * (mpi**2 + mpi0**2) * s
-                        - s**2
-                    )
+                    * (2 * (mpi**2 - mpi0**2) ** 2 + 2 * (mpi**2 + mpi0**2) * s - s**2)
                     + 2
                     * mx**2
-                    * (
-                        4 * (mpi**2 - mpi0**2) ** 2
-                        - 2 * (mpi**2 + mpi0**2) * s
-                        + s**2
-                    )
+                    * (4 * (mpi**2 - mpi0**2) ** 2 - 2 * (mpi**2 + mpi0**2) * s + s**2)
                 )
                 - (mx**2 - s)
                 * (
                     mx**2
-                    * (
-                        4 * (mpi**2 - mpi0**2) ** 2
-                        - 2 * (mpi**2 + mpi0**2) * s
-                        + s**2
-                    )
+                    * (4 * (mpi**2 - mpi0**2) ** 2 - 2 * (mpi**2 + mpi0**2) * s + s**2)
                     + 2 * s * (mpi**4 + (mpi0**2 - s) ** 2)
                 )
             )
@@ -405,9 +385,7 @@ def __width_nup_l_lp(mx, tmix, mli, mlk):
                     -1
                     + ri**2
                     + rk**2
-                    - np.sqrt(
-                        ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2)
-                    )
+                    - np.sqrt(ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2))
                 )
                 ** 2
             )
@@ -419,18 +397,14 @@ def __width_nup_l_lp(mx, tmix, mli, mlk):
                     + rk**2 * (-1 + rk**2)
                     - ri**2 * (1 + 2 * rk**2)
                     + (ri**2 - rk**2)
-                    * np.sqrt(
-                        ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2)
-                    )
+                    * np.sqrt(ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2))
                 )
                 ** 2
                 / (
                     -1
                     + ri**2
                     + rk**2
-                    - np.sqrt(
-                        ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2)
-                    )
+                    - np.sqrt(ri**4 + (-1 + rk**2) ** 2 - 2 * ri**2 * (1 + rk**2))
                 )
                 ** 2
             )

@@ -71,23 +71,34 @@ class VectorMediatorGeV(TheoryAnn):
     up to 1 GeV.
     """
 
-    from .cross_sections import (annihilation_cross_section_funcs,
-                                 sigma_xx_to_e_e, sigma_xx_to_eta_gamma,
-                                 sigma_xx_to_eta_omega, sigma_xx_to_eta_phi,
-                                 sigma_xx_to_k0_k0, sigma_xx_to_k_k,
-                                 sigma_xx_to_mu_mu, sigma_xx_to_pi0_gamma,
-                                 sigma_xx_to_pi0_k0_k0, sigma_xx_to_pi0_k_k,
-                                 sigma_xx_to_pi0_phi,
-                                 sigma_xx_to_pi0_pi0_gamma,
-                                 sigma_xx_to_pi0_pi0_omega,
-                                 sigma_xx_to_pi_k_k0, sigma_xx_to_pi_pi,
-                                 sigma_xx_to_pi_pi_eta, sigma_xx_to_pi_pi_etap,
-                                 sigma_xx_to_pi_pi_omega,
-                                 sigma_xx_to_pi_pi_pi0,
-                                 sigma_xx_to_pi_pi_pi0_pi0,
-                                 sigma_xx_to_pi_pi_pi_pi, sigma_xx_to_v_v,
-                                 sigma_xx_to_ve_ve, sigma_xx_to_vm_vm,
-                                 sigma_xx_to_vt_vt)
+    from .cross_sections import (
+        annihilation_cross_section_funcs,
+        sigma_xx_to_e_e,
+        sigma_xx_to_eta_gamma,
+        sigma_xx_to_eta_omega,
+        sigma_xx_to_eta_phi,
+        sigma_xx_to_k0_k0,
+        sigma_xx_to_k_k,
+        sigma_xx_to_mu_mu,
+        sigma_xx_to_pi0_gamma,
+        sigma_xx_to_pi0_k0_k0,
+        sigma_xx_to_pi0_k_k,
+        sigma_xx_to_pi0_phi,
+        sigma_xx_to_pi0_pi0_gamma,
+        sigma_xx_to_pi0_pi0_omega,
+        sigma_xx_to_pi_k_k0,
+        sigma_xx_to_pi_pi,
+        sigma_xx_to_pi_pi_eta,
+        sigma_xx_to_pi_pi_etap,
+        sigma_xx_to_pi_pi_omega,
+        sigma_xx_to_pi_pi_pi0,
+        sigma_xx_to_pi_pi_pi0_pi0,
+        sigma_xx_to_pi_pi_pi_pi,
+        sigma_xx_to_v_v,
+        sigma_xx_to_ve_ve,
+        sigma_xx_to_vm_vm,
+        sigma_xx_to_vt_vt,
+    )
     from .thermal_cross_section import relic_density
 
     def __init__(  # pylint: disable=too-many-arguments

@@ -3,6 +3,7 @@ Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
 """
+
 from typing import List, Optional, overload
 from warnings import warn
 
@@ -54,13 +55,11 @@ def __check_modes(modes, availible):
 
 
 @overload
-def muon(photon_energies: float, muon_energy: float) -> float:
-    ...
+def muon(photon_energies: float, muon_energy: float) -> float: ...
 
 
 @overload
-def muon(photon_energies: RealArray, muon_energy: float) -> RealArray:
-    ...
+def muon(photon_energies: RealArray, muon_energy: float) -> RealArray: ...
 
 
 def muon(photon_energies: RealOrRealArray, muon_energy: float) -> RealOrRealArray:
@@ -101,13 +100,11 @@ def muon(photon_energies: RealOrRealArray, muon_energy: float) -> RealOrRealArra
 
 
 @overload
-def neutral_pion(photon_energies: float, pion_energy: float) -> float:
-    ...
+def neutral_pion(photon_energies: float, pion_energy: float) -> float: ...
 
 
 @overload
-def neutral_pion(photon_energies: RealArray, pion_energy: float) -> RealArray:
-    ...
+def neutral_pion(photon_energies: RealArray, pion_energy: float) -> RealArray: ...
 
 
 def neutral_pion(
@@ -159,15 +156,13 @@ def charged_pion_decay_modes() -> List[str]:
 @overload
 def charged_pion(
     photon_energies: float, pion_energy: float, modes: Optional[List[str]] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def charged_pion(
     photon_energies: RealArray, pion_energy: float, modes: Optional[List[str]] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def charged_pion(
@@ -229,15 +224,13 @@ def charged_kaon_decay_modes() -> List[str]:
 @overload
 def charged_kaon(
     photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def charged_kaon(
     photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def charged_kaon(
@@ -317,15 +310,13 @@ def short_kaon_decay_modes() -> List[str]:
 @overload
 def short_kaon(
     photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def short_kaon(
     photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def short_kaon(
@@ -396,15 +387,13 @@ def long_kaon_decay_modes() -> List[str]:
 @overload
 def long_kaon(
     photon_energies: float, kaon_energy: float, modes: Optional[List[str]]
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def long_kaon(
     photon_energies: RealArray, kaon_energy: float, modes: Optional[List[str]]
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def long_kaon(
@@ -494,13 +483,11 @@ def electron(photon_energies, _: float):
 
 
 @overload
-def neutral_rho(photon_energies: float, rho_energy: float) -> float:
-    ...
+def neutral_rho(photon_energies: float, rho_energy: float) -> float: ...
 
 
 @overload
-def neutral_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
-    ...
+def neutral_rho(photon_energies: RealArray, rho_energy: float) -> RealArray: ...
 
 
 def neutral_rho(photon_energies: RealOrRealArray, rho_energy: float) -> RealOrRealArray:
@@ -524,13 +511,11 @@ def neutral_rho(photon_energies: RealOrRealArray, rho_energy: float) -> RealOrRe
 
 
 @overload
-def charged_rho(photon_energies: float, rho_energy: float) -> float:
-    ...
+def charged_rho(photon_energies: float, rho_energy: float) -> float: ...
 
 
 @overload
-def charged_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
-    ...
+def charged_rho(photon_energies: RealArray, rho_energy: float) -> RealArray: ...
 
 
 def charged_rho(photon_energies: RealOrRealArray, rho_energy: float) -> RealOrRealArray:

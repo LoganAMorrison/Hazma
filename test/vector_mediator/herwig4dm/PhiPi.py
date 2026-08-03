@@ -31,7 +31,7 @@ yBL = []
 energy = low_lim
 while energy < upp_lim:
     xSM.append(energy)
-    ySM.append(FPhiPi.sigmaSMPhiPi(energy ** 2))
+    ySM.append(FPhiPi.sigmaSMPhiPi(energy**2))
     energy += step_size
 
 with open("txt_files/PhiPi.txt", "w") as txtfile:
@@ -46,7 +46,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     wMed = FPhiPi.GammaDM(mMed)
     FPhiPi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
@@ -60,7 +60,7 @@ cMed_s = 1.0 / 3.0
 mDM = (FPhiPi.mpi + FPhiPi.mPhi) / 2.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     wMed = FPhiPi.GammaDM(mMed)
     FPhiPi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)

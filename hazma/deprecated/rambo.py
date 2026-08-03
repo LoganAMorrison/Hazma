@@ -3,7 +3,6 @@ Module for working with Lorentz-invariant phase-space.
 
 """
 
-
 # TODO: Code up specific functions for cross-section
 #       functions for 2->2 processes.
 # TODO: Code up specific functions for cross-section

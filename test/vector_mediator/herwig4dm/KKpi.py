@@ -31,7 +31,7 @@ FKKpi.readHadronic_Current()
 # SM case
 scale = low_lim
 while scale < upp_lim:
-    Q2 = scale ** 2
+    Q2 = scale**2
     xSM.append(scale)
     ySM_0.append(FKKpi.sigmaSM(Q2, 0))
     ySM_1.append(FKKpi.sigmaSM(Q2, 1) + br00 * FPhiPi.sigmaSMPhiPi(Q2))
@@ -61,7 +61,7 @@ cMed_s = -1.0 / 3.0
 # FKKpi.resetParameters(gDM,0.,0.,0.,cMed_u,cMed_d,cMed_s)
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     wMed_0 = FKKpi.GammaDM(mMed, 0)
     FKKpi.resetParameters(gDM, mDM, mMed, wMed_0, cMed_u, cMed_d, cMed_s)
@@ -88,7 +88,7 @@ mDM = 1.21 / 2
 
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     wMed_0 = FKKpi.GammaDM(mMed, 0)
     FKKpi.resetParameters(gDM, mDM, mMed, wMed_0, cMed_u, cMed_d, cMed_s)

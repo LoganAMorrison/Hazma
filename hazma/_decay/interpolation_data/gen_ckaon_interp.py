@@ -72,9 +72,7 @@ def amp_L000(moms):
     x = (s2 - s1) / mpi**2
     y = (s3 - s0) / mpi**2
 
-    return 3.0 * (alpha1 + alpha3) + -3.0 * (zeta1 - 2.0 * zeta3) * (
-        y**2 + x**2 / 3.0
-    )
+    return 3.0 * (alpha1 + alpha3) + -3.0 * (zeta1 - 2.0 * zeta3) * (y**2 + x**2 / 3.0)
 
 
 def amp_Lpm0(moms):
@@ -303,13 +301,7 @@ def msqrd_pilnu(moms, ml):
         * (
             -2 * MDot(pl, pn) ** 2
             + MDot(pl, pn)
-            * (
-                mk**2
-                - 2 * ml**2
-                + 3 * mpi**2
-                - 2 * MDot(pl, pp)
-                - 2 * MDot(pp, pn)
-            )
+            * (mk**2 - 2 * ml**2 + 3 * mpi**2 - 2 * MDot(pl, pp) - 2 * MDot(pp, pn))
             - 4 * (ml**2 + 2 * MDot(pl, pp)) * MDot(pp, pn)
         )
         - (lam0 - lamp)
@@ -338,13 +330,7 @@ def msqrd_pilnu(moms, ml):
             2 * MDot(pl, pn) ** 2
             + 2 * ml**2 * MDot(pp, pn)
             + MDot(pl, pn)
-            * (
-                -(mk**2)
-                + 2 * ml**2
-                + mpi**2
-                + 2 * MDot(pl, pp)
-                + 2 * MDot(pp, pn)
-            )
+            * (-(mk**2) + 2 * ml**2 + mpi**2 + 2 * MDot(pl, pp) + 2 * MDot(pp, pn))
         )
     ) / mpi**4
 

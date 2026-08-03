@@ -2,7 +2,6 @@
 Module for computing the V-K-K form factor.
 """
 
-
 from dataclasses import InitVar, dataclass, field
 from typing import NamedTuple, Optional, Tuple, Union
 
@@ -12,9 +11,20 @@ from scipy.special import gamma  # type:ignore
 from hazma import parameters
 
 from .cross_sections import cross_section_x_x_to_p_p
-from .utils import (MK0_GEV, MK_GEV, MPI_GEV, ComplexArray, RealArray,
-                    breit_wigner_fw, breit_wigner_gs, breit_wigner_pwave,
-                    dhhatds, gamma_generator, h, hhat)
+from .utils import (
+    MK0_GEV,
+    MK_GEV,
+    MPI_GEV,
+    ComplexArray,
+    RealArray,
+    breit_wigner_fw,
+    breit_wigner_gs,
+    breit_wigner_pwave,
+    dhhatds,
+    gamma_generator,
+    h,
+    hhat,
+)
 from .widths import width_v_to_p_p
 
 

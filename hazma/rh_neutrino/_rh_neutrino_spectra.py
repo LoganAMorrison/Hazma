@@ -1,6 +1,7 @@
 """
 This file contains the decay spectra from a right-handed neutrino at rest.
 """
+
 import numpy as np
 
 from hazma.spectra import (
@@ -145,35 +146,17 @@ def __msqrd_nu_l_l(momenta, mx, tmix, ml):
             * (
                 2
                 * ml**4
-                * (
-                    1
-                    + 4 * cw**4
-                    - 4 * sw**2
-                    + 8 * sw**4
-                    + cw**2 * (-4 + 8 * sw**2)
-                )
+                * (1 + 4 * cw**4 - 4 * sw**2 + 8 * sw**4 + cw**2 * (-4 + 8 * sw**2))
                 - 2
                 * ml**2
                 * (
                     -((1 - 2 * cw**2) ** 2 * mx**2)
                     + (1 - 2 * cw**2) ** 2 * s
                     + 2
-                    * (
-                        1
-                        + 4 * cw**4
-                        - 4 * sw**2
-                        + 8 * sw**4
-                        + cw**2 * (-4 + 8 * sw**2)
-                    )
+                    * (1 + 4 * cw**4 - 4 * sw**2 + 8 * sw**4 + cw**2 * (-4 + 8 * sw**2))
                     * t
                 )
-                + (
-                    1
-                    + 4 * cw**4
-                    - 4 * sw**2
-                    + 8 * sw**4
-                    + cw**2 * (-4 + 8 * sw**2)
-                )
+                + (1 + 4 * cw**4 - 4 * sw**2 + 8 * sw**4 + cw**2 * (-4 + 8 * sw**2))
                 * (s**2 + 2 * s * t + 2 * t**2 - mx**2 * (s + 2 * t))
             )
             * np.sin(2 * tmix) ** 2
@@ -197,8 +180,7 @@ def __msqrd_nu_lp_lp(momenta, mx, tmix, ml):
                 * ml**2
                 * (
                     -(mx**2 * np.sin(2 * tmix) ** 2)
-                    + (s + 2 * (1 - 4 * sw**2 + 8 * sw**4) * t)
-                    * np.sin(2 * tmix) ** 2
+                    + (s + 2 * (1 - 4 * sw**2 + 8 * sw**4) * t) * np.sin(2 * tmix) ** 2
                 )
             )
         )
@@ -208,13 +190,7 @@ def __msqrd_nu_lp_lp(momenta, mx, tmix, ml):
 
 def __msqrd_nup_l_lp(momenta, mx, tmix, mli, mlk):
     t = __lnorm_sqr(momenta[1] + momenta[2])
-    return (
-        -16
-        * GF**2
-        * (-(mli**2) + t)
-        * (-(mlk**2) - mx**2 + t)
-        * np.sin(tmix) ** 2
-    )
+    return -16 * GF**2 * (-(mli**2) + t) * (-(mlk**2) - mx**2 + t) * np.sin(tmix) ** 2
 
 
 def __dnde_nu_l_l_decay(self, photon_energies, j, n, m):
@@ -369,13 +345,7 @@ def __msqrd_nu_pi_pi(momenta, mx, tmix):
     return (
         GF**2
         * (1 - 2 * sw**2) ** 2
-        * (
-            4 * mpi**4
-            + mx**4
-            - 8 * mpi**2 * t
-            + 4 * t * (s + t)
-            - mx**2 * (s + 4 * t)
-        )
+        * (4 * mpi**4 + mx**4 - 8 * mpi**2 * t + 4 * t * (s + t) - mx**2 * (s + 4 * t))
         * np.sin(2 * tmix) ** 2
     ) / (2.0 * cw**4)
 

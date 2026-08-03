@@ -4,8 +4,7 @@
 
 import pytest
 
-from hazma.form_factors.vector import (VectorFormFactorPi0Pi0,
-                                       VectorFormFactorPiPi)
+from hazma.form_factors.vector import VectorFormFactorPi0Pi0, VectorFormFactorPiPi
 
 from .test_utils import FormFactorTestDataItem, load_test_data
 

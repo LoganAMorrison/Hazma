@@ -171,11 +171,11 @@ class TestScalarMediator(unittest.TestCase):
         spec2_new = self.sm2.spectra(self.egams2, self.e_cm2)
 
         for key in self.spec1_old.keys():
-            for (val1, val2) in zip(self.spec1_old[key], spec1_new[key]):
+            for val1, val2 in zip(self.spec1_old[key], spec1_new[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.spec2_old.keys():
-            for (val1, val2) in zip(self.spec2_old[key], spec2_new[key]):
+            for val1, val2 in zip(self.spec2_old[key], spec2_new[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_spectrum_funcs(self):
@@ -207,11 +207,11 @@ class TestScalarMediator(unittest.TestCase):
         pspec2_new = self.sm2.positron_spectra(self.eng_ps2, self.e_cm2)
 
         for key in self.pspec1_old.keys():
-            for (val1, val2) in zip(self.pspec1_old[key], pspec1_new[key]):
+            for val1, val2 in zip(self.pspec1_old[key], pspec1_new[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.pspec2_old.keys():
-            for (val1, val2) in zip(self.pspec2_old[key], pspec2_new[key]):
+            for val1, val2 in zip(self.pspec2_old[key], pspec2_new[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_positron_lines(self):

@@ -13,13 +13,11 @@ _eta_interp = load_interp("eta_positron.csv")
 
 
 @overload
-def dnde_positron_eta(positron_energy: float, eta_energy: float) -> float:
-    ...
+def dnde_positron_eta(positron_energy: float, eta_energy: float) -> float: ...
 
 
 @overload
-def dnde_positron_eta(positron_energy: RealArray, eta_energy: float) -> RealArray:
-    ...
+def dnde_positron_eta(positron_energy: RealArray, eta_energy: float) -> RealArray: ...
 
 
 def dnde_positron_eta(

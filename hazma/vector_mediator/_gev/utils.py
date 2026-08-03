@@ -54,8 +54,7 @@ def channel_open(
     state: str,
     extra_masses: Dict[str, float] = dict(),
     delimiter: str = " ",
-) -> bool:
-    ...
+) -> bool: ...
 
 
 @overload
@@ -64,8 +63,7 @@ def channel_open(
     state: str,
     extra_masses: Dict[str, float] = dict(),
     delimiter: str = " ",
-) -> BoolArray:
-    ...
+) -> BoolArray: ...
 
 
 def channel_open(

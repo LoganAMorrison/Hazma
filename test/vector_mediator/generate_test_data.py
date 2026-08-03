@@ -7,14 +7,12 @@ from os import path
 
 
 def e_cm_mw(mx, vrel=1e-3):
-    """Computes DM COM energy, assuming its velocity is much less than c.
-    """
-    return 2 * mx * (1 + 0.5 * vrel ** 2)
+    """Computes DM COM energy, assuming its velocity is much less than c."""
+    return 2 * mx * (1 + 0.5 * vrel**2)
 
 
 def save_data(params_list, Models):
-    """Generates and saves data for a set of scalar mediator models.
-    """
+    """Generates and saves data for a set of scalar mediator models."""
     # Make data directory
     data_dir = path.join(path.dirname(__file__), "data")
     if not path.exists(path.join(data_dir)):

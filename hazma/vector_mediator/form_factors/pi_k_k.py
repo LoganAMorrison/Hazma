@@ -188,7 +188,7 @@ class FormFactorPiKKBase(abc.ABC):
         gvdd: float,
         gvss: float,
         npts: int,
-        nbins: int = 25
+        nbins: int = 25,
     ):
         def _msqrd(momenta):
             s = lnorm_sqr(momenta[:, 1] + momenta[:, 2])

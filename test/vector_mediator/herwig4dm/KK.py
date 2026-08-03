@@ -52,8 +52,8 @@ FK.initialize()
 energy = low_lim
 while energy < upp_lim:
     xSM.append(energy)
-    sigmaN = FK.sigmaSM0(energy ** 2)
-    sigmaP = FK.sigmaSMP(energy ** 2)
+    sigmaN = FK.sigmaSM0(energy**2)
+    sigmaP = FK.sigmaSMP(energy**2)
     y_sigmaSM00.append(sigmaN)
     y_sigmaSMpm.append(sigmaP)
     energy += 0.001
@@ -66,10 +66,10 @@ while mDM < upp_lim:
     xDP.append(energy)
     wMed = FK.GammaDM(mMed, 0)
     FK.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
-    sigmaN = FK.sigmaDM0(energy ** 2)
+    sigmaN = FK.sigmaDM0(energy**2)
     wMed = FK.GammaDM(mMed, 1)
     FK.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
-    sigmaP = FK.sigmaDMP(energy ** 2)
+    sigmaP = FK.sigmaDMP(energy**2)
     y_sigmaDP00.append(sigmaN)
     y_sigmaDPpm.append(sigmaP)
     mDM += 0.0005
@@ -87,10 +87,10 @@ while mDM < upp_lim:
     xBL.append(energy)
     wMed = FK.GammaDM(mMed, 0)
     FK.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
-    sigmaN = FK.sigmaDM0(energy ** 2)
+    sigmaN = FK.sigmaDM0(energy**2)
     wMed = FK.GammaDM(mMed, 1)
     FK.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
-    sigmaP = FK.sigmaDMP(energy ** 2)
+    sigmaP = FK.sigmaDMP(energy**2)
     y_sigmaBL00.append(sigmaN)
     y_sigmaBLpm.append(sigmaP)
     mDM += 0.0005

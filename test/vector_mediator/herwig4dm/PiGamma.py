@@ -25,7 +25,7 @@ yBL = []
 energy = FPiGamma.mPi_
 while energy < 2.0:
     xSM.append(energy)
-    ySM.append(FPiGamma.sigmaSMPiGamma(energy ** 2))
+    ySM.append(FPiGamma.sigmaSMPiGamma(energy**2))
     energy += 0.001
 
 # couplings of mediator to quarks - Dark Photon case
@@ -34,7 +34,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FPiGamma.GammaDM(mMed)
@@ -49,7 +49,7 @@ cMed_s = 1.0 / 3.0
 mDM = FPiGamma.mPi_ / 2.0
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FPiGamma.GammaDM(mMed)

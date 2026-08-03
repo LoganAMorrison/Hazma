@@ -32,7 +32,7 @@ energy = low_lim
 while energy < upp_lim:
     xSM.append(energy)
     # resetParameters(mOmega_p,mOmega_pp,gOmega_p,gOmega_pp,a_Omega_p,a_Omega_pp,phi_Omega_p,phi_Omega_pp)
-    ySM.append(FEtaOmega.sigmaSMEtaOmega(energy ** 2))
+    ySM.append(FEtaOmega.sigmaSMEtaOmega(energy**2))
     energy += step_size
 
 with open("txt_files/EtaOmega.txt", "w") as txtfile:
@@ -47,7 +47,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     wMed = FEtaOmega.GammaDM(mMed)
     FEtaOmega.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
@@ -61,7 +61,7 @@ cMed_s = 1.0 / 3.0
 mDM = (FEtaOmega.mEta_ + FEtaOmega.mOmega_) / 2.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     wMed = FEtaOmega.GammaDM(mMed)
     FEtaOmega.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)

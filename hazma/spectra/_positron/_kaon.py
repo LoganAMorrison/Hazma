@@ -68,15 +68,13 @@ def _array(
 
 
 @overload
-def dnde_positron_charged_kaon(positron_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_positron_charged_kaon(positron_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
 def dnde_positron_charged_kaon(
     positron_energy: RealArray, kaon_energy: float
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_positron_charged_kaon(
@@ -100,15 +98,13 @@ def dnde_positron_charged_kaon(
 
 
 @overload
-def dnde_positron_long_kaon(positron_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_positron_long_kaon(positron_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
 def dnde_positron_long_kaon(
     positron_energy: RealArray, kaon_energy: float
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_positron_long_kaon(
@@ -132,15 +128,13 @@ def dnde_positron_long_kaon(
 
 
 @overload
-def dnde_positron_short_kaon(positron_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_positron_short_kaon(positron_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
 def dnde_positron_short_kaon(
     positron_energy: RealArray, kaon_energy: float
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_positron_short_kaon(

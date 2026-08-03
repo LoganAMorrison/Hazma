@@ -25,13 +25,11 @@ _sm_heff_deriv = _sm_heff.derivative(n=1)
 
 
 @overload
-def sm_dof_entropy(T: float) -> float:
-    ...
+def sm_dof_entropy(T: float) -> float: ...
 
 
 @overload
-def sm_dof_entropy(T: RealArray) -> RealArray:
-    ...
+def sm_dof_entropy(T: RealArray) -> RealArray: ...
 
 
 def sm_dof_entropy(T: RealOrRealArray) -> RealOrRealArray:
@@ -52,13 +50,11 @@ def sm_dof_entropy(T: RealOrRealArray) -> RealOrRealArray:
 
 
 @overload
-def sm_sqrt_gstar(T: float) -> float:
-    ...
+def sm_sqrt_gstar(T: float) -> float: ...
 
 
 @overload
-def sm_sqrt_gstar(T: RealArray) -> RealArray:
-    ...
+def sm_sqrt_gstar(T: RealArray) -> RealArray: ...
 
 
 def sm_sqrt_gstar(T: RealOrRealArray) -> RealOrRealArray:
@@ -79,13 +75,11 @@ def sm_sqrt_gstar(T: RealOrRealArray) -> RealOrRealArray:
 
 
 @overload
-def sm_entropy_density(T: float) -> float:
-    ...
+def sm_entropy_density(T: float) -> float: ...
 
 
 @overload
-def sm_entropy_density(T: RealArray) -> RealArray:
-    ...
+def sm_entropy_density(T: RealArray) -> RealArray: ...
 
 
 def sm_entropy_density(T: RealOrRealArray) -> RealOrRealArray:
@@ -106,13 +100,11 @@ def sm_entropy_density(T: RealOrRealArray) -> RealOrRealArray:
 
 
 @overload
-def sm_entropy_density_deriv(T: float) -> float:
-    ...
+def sm_entropy_density_deriv(T: float) -> float: ...
 
 
 @overload
-def sm_entropy_density_deriv(T: RealArray) -> RealArray:
-    ...
+def sm_entropy_density_deriv(T: RealArray) -> RealArray: ...
 
 
 def sm_entropy_density_deriv(T: RealOrRealArray) -> RealOrRealArray:
@@ -141,15 +133,13 @@ def sm_entropy_density_deriv(T: RealOrRealArray) -> RealOrRealArray:
 
 
 @overload
-def neq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def neq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float: ...
 
 
 @overload
 def neq(
     Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def neq(
@@ -199,15 +189,15 @@ def neq(
 
 
 @overload
-def neq_deriv(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def neq_deriv(
+    Ts: float, mass: float, g: float = ..., is_fermion: bool = ...
+) -> float: ...
 
 
 @overload
 def neq_deriv(
     Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def neq_deriv(
@@ -261,15 +251,13 @@ def neq_deriv(
 
 
 @overload
-def yeq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def yeq(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float: ...
 
 
 @overload
 def yeq(
     Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def yeq(
@@ -303,15 +291,15 @@ def yeq(
 
 
 @overload
-def yeq_deriv(Ts: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def yeq_deriv(
+    Ts: float, mass: float, g: float = ..., is_fermion: bool = ...
+) -> float: ...
 
 
 @overload
 def yeq_deriv(
     Ts: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def yeq_deriv(
@@ -346,15 +334,15 @@ def yeq_deriv(
 
 
 @overload
-def yeq_derivx(x: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def yeq_derivx(
+    x: float, mass: float, g: float = ..., is_fermion: bool = ...
+) -> float: ...
 
 
 @overload
 def yeq_derivx(
     x: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def yeq_derivx(
@@ -385,13 +373,13 @@ def yeq_derivx(
 
 
 @overload
-def weq(T: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float:
-    ...
+def weq(T: float, mass: float, g: float = ..., is_fermion: bool = ...) -> float: ...
 
 
 @overload
-def weq(T: RealArray, mass: float, g: float = ..., is_fermion: bool = ...) -> RealArray:
-    ...
+def weq(
+    T: RealArray, mass: float, g: float = ..., is_fermion: bool = ...
+) -> RealArray: ...
 
 
 def weq(

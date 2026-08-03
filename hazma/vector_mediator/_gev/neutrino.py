@@ -10,16 +10,18 @@ import numpy as np
 
 from hazma import spectra
 from hazma.form_factors import vector as vff
-from hazma.form_factors.vector import (VectorFormFactorPi0K0K0,
-                                       VectorFormFactorPi0KpKm,
-                                       VectorFormFactorPi0Pi0Omega,
-                                       VectorFormFactorPiKK0,
-                                       VectorFormFactorPiPiEta,
-                                       VectorFormFactorPiPiEtaPrime,
-                                       VectorFormFactorPiPiOmega,
-                                       VectorFormFactorPiPiPi0,
-                                       VectorFormFactorPiPiPi0Pi0,
-                                       VectorFormFactorPiPiPiPi)
+from hazma.form_factors.vector import (
+    VectorFormFactorPi0K0K0,
+    VectorFormFactorPi0KpKm,
+    VectorFormFactorPi0Pi0Omega,
+    VectorFormFactorPiKK0,
+    VectorFormFactorPiPiEta,
+    VectorFormFactorPiPiEtaPrime,
+    VectorFormFactorPiPiOmega,
+    VectorFormFactorPiPiPi0,
+    VectorFormFactorPiPiPi0Pi0,
+    VectorFormFactorPiPiPiPi,
+)
 from hazma.parameters import charged_kaon_mass as mk
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import eta_mass as meta
@@ -104,6 +106,7 @@ def _dnde_neutrino_zero(neutrino_energies, *_):
 # =============================================================================
 # ---- 2-body Lepton ----------------------------------------------------------
 # =============================================================================
+
 
 # pylint: disable=unused-argument
 def dnde_neutrino_e_e(
@@ -447,6 +450,7 @@ def dnde_neutrino_eta_omega(
 # =============================================================================
 # ---- 3-body -----------------------------------------------------------------
 # =============================================================================
+
 
 # pylint: disable=unused-argument
 def dnde_neutrino_pi0_pi0_gamma(

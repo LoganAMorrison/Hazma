@@ -1,5 +1,6 @@
 """Partial decay widths of a RH-neutrino.
 """
+
 from typing import Optional, Tuple, NamedTuple
 
 import numpy as np
@@ -86,14 +87,7 @@ def _width_v_hp(model: SingleRhNeutrinoModel, mp, fp):
 
     x = mp / mx
     u = 0.5 * np.tan(2 * model.theta)
-    return (
-        u**2
-        * parameters.GF**2
-        * fp**2
-        * mx**3
-        * (1.0 - x**2) ** 2
-        / (64.0 * np.pi)
-    )
+    return u**2 * parameters.GF**2 * fp**2 * mx**3 * (1.0 - x**2) ** 2 / (64.0 * np.pi)
 
 
 def width_v_pi0(model: SingleRhNeutrinoModel):
@@ -165,14 +159,7 @@ def _width_ell_hv(model: SingleRhNeutrinoModel, ml, mh, gh, ckm):
     xl = ml / mx
     u = 0.5 * np.tan(2 * model.theta)
 
-    pre = (
-        u**2
-        * parameters.GF**2
-        * abs(ckm) ** 2
-        * gh**2
-        * mx**3
-        / (16 * np.pi * mh**2)
-    )
+    pre = u**2 * parameters.GF**2 * abs(ckm) ** 2 * gh**2 * mx**3 / (16 * np.pi * mh**2)
 
     return (
         pre
@@ -339,9 +326,7 @@ def width_l_pi0_pi(
 
     pre = u**2 * np.abs(VUD) ** 2 * GF**2 * mx**3 / (384.0 * np.pi**3)
     quad_kwargs = _get_quad_kwargs(**kwargs)
-    return (
-        pre * integrate.quad(integrand, 4 * MPI**2, (mx - ml) ** 2, **quad_kwargs)[0]
-    )
+    return pre * integrate.quad(integrand, 4 * MPI**2, (mx - ml) ** 2, **quad_kwargs)[0]
 
 
 # ============================================================================
@@ -371,12 +356,7 @@ def msqrd_v_pi_pi(
         u**2
         * GF**2
         * (1 - 2 * SW**2) ** 2
-        * (
-            mx**4
-            + 4 * MPI**4
-            + 4 * t * (-2 * MPI**2 + s + t)
-            - mx**2 * (s + 4 * t)
-        )
+        * (mx**4 + 4 * MPI**4 + 4 * t * (-2 * MPI**2 + s + t) - mx**2 * (s + 4 * t))
         * np.abs(ff) ** 2
     )
 

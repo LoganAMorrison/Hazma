@@ -1,6 +1,7 @@
 """
 Module for computing the form factor V-eta-gamma.
 """
+
 from dataclasses import dataclass
 from typing import Union, overload
 
@@ -79,14 +80,12 @@ class FormFactorEtaGamma:
     @overload
     def form_factor(
         self, *, q: float, gvuu: float, gvdd: float, gvss: float
-    ) -> complex:
-        ...
+    ) -> complex: ...
 
     @overload
     def form_factor(
         self, *, q: RealArray, gvuu: float, gvdd: float, gvss: float
-    ) -> ComplexArray:
-        ...
+    ) -> ComplexArray: ...
 
     def form_factor(
         self, *, q: Union[float, RealArray], gvuu, gvdd, gvss

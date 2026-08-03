@@ -40,28 +40,30 @@ class VectorMediatorFSR:
         ret_val = 0.0
 
         if (
-            4.0 * mf ** 2 <= (Q ** 2 - 2.0 * Q * egam) <= Q ** 2
+            4.0 * mf**2 <= (Q**2 - 2.0 * Q * egam) <= Q**2
             and Q > 2.0 * mf
             and Q > 2.0 * self.mx
         ):
-            val = ((
-                2
-                * alpha_em
-                * (
-                    -(
-                        sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
-                        * (2 - 2 * x + x ** 2 - 4 * (-1 + x) * mu_l ** 2)
-                    )
-                    + (2 + (-2 + x) * x - 4 * x * mu_l ** 2 - 8 * mu_l ** 4)
-                    * log(
+            val = (
+                (
+                    2
+                    * alpha_em
+                    * (
                         -(
-                            (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
-                            / (-1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                            sqrt(1 + (4 * mu_l**2) / (-1 + x))
+                            * (2 - 2 * x + x**2 - 4 * (-1 + x) * mu_l**2)
+                        )
+                        + (2 + (-2 + x) * x - 4 * x * mu_l**2 - 8 * mu_l**4)
+                        * log(
+                            -(
+                                (1 + sqrt(1 + (4 * mu_l**2) / (-1 + x)))
+                                / (-1 + sqrt(1 + (4 * mu_l**2) / (-1 + x)))
+                            )
                         )
                     )
                 )
-            ) / (pi * Q * x * sqrt(1 - 4 * mu_l ** 2) * (1 + 2 * mu_l **
-                                                         2))).real
+                / (pi * Q * x * sqrt(1 - 4 * mu_l**2) * (1 + 2 * mu_l**2))
+            ).real
 
             assert val >= 0
             return val
@@ -101,27 +103,30 @@ class VectorMediatorFSR:
         mu_pi = mpi / Q
         x = 2.0 * egam / Q
         x_min = 0.0
-        x_max = 1 - 4.0 * mu_pi ** 2
+        x_max = 1 - 4.0 * mu_pi**2
 
         if x < x_min or x > x_max or Q < 2 * mpi or Q < 2.0 * mx:
             return 0.0
         else:
-            val = ((
-                4
-                * alpha_em
-                * (
-                    sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
-                    * (-1 + x + x ** 2 - 4 * (-1 + x) * mu_pi ** 2)
-                    + (-1 + x + 2 * mu_pi ** 2)
-                    * (-1 + 4 * mu_pi ** 2)
-                    * log(
-                        -(
-                            (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
-                            / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+            val = (
+                (
+                    4
+                    * alpha_em
+                    * (
+                        sqrt(1 + (4 * mu_pi**2) / (-1 + x))
+                        * (-1 + x + x**2 - 4 * (-1 + x) * mu_pi**2)
+                        + (-1 + x + 2 * mu_pi**2)
+                        * (-1 + 4 * mu_pi**2)
+                        * log(
+                            -(
+                                (1 + sqrt(1 + (4 * mu_pi**2) / (-1 + x)))
+                                / (-1 + sqrt(1 + (4 * mu_pi**2) / (-1 + x)))
+                            )
                         )
                     )
                 )
-            ) / (pi * Q * x * (1 - 4 * mu_pi ** 2) ** 1.5)).real
+                / (pi * Q * x * (1 - 4 * mu_pi**2) ** 1.5)
+            ).real
 
             assert val >= 0
             return val

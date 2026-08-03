@@ -4,6 +4,7 @@
 @data - December 2017
 
 """
+
 import numpy as np
 
 from cmath import sqrt, log, pi

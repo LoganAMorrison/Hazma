@@ -78,12 +78,12 @@ class FormFactorOmegaPi0:
         return self.g_rho_omega_pi * ci1 / self.frho * np.sum(amps, axis=0) * np.sqrt(s)
 
     @overload
-    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex:
-        ...
+    def form_factor(self, *, q: float, gvuu: float, gvdd: float) -> complex: ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvuu: float, gvdd: float) -> ComplexArray:
-        ...
+    def form_factor(
+        self, *, q: RealArray, gvuu: float, gvdd: float
+    ) -> ComplexArray: ...
 
     def form_factor(
         self, *, q: Union[float, RealArray], gvuu: float, gvdd: float

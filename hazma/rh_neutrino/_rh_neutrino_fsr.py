@@ -33,87 +33,67 @@ def _dnde_pi_l_fsr(self, photon_eng):
     """
     mvr = self.mx
     ml = self.ml
-    s = mvr ** 2 - 2.0 * mvr * photon_eng
-    if mvr < mpi + ml or (mpi + ml) ** 2 >= s or mvr ** 2 <= s:
+    s = mvr**2 - 2.0 * mvr * photon_eng
+    if mvr < mpi + ml or (mpi + ml) ** 2 >= s or mvr**2 <= s:
         return 0.0
 
     return (
-        qe ** 2
+        qe**2
         * (
             (
-                -2 * ml ** 6
-                + 2 * ml ** 4 * (2 * mvr ** 2 + s)
-                + ml ** 2
+                -2 * ml**6
+                + 2 * ml**4 * (2 * mvr**2 + s)
+                + ml**2
                 * (
-                    2 * mpi ** 4
-                    - mvr ** 4
-                    + mpi ** 2 * (6 * mvr ** 2 - 2 * s)
-                    - 6 * mvr ** 2 * s
-                    + s ** 2
+                    2 * mpi**4
+                    - mvr**4
+                    + mpi**2 * (6 * mvr**2 - 2 * s)
+                    - 6 * mvr**2 * s
+                    + s**2
                 )
-                + mvr ** 2
-                * (2 * mpi ** 4 + mvr ** 4 + s ** 2 - 2 * mpi ** 2 * (mvr ** 2 + s))
+                + mvr**2 * (2 * mpi**4 + mvr**4 + s**2 - 2 * mpi**2 * (mvr**2 + s))
             )
             * np.log(
                 (
-                    ml ** 2
-                    - mpi ** 2
+                    ml**2
+                    - mpi**2
                     + s
-                    + np.sqrt(
-                        ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
-                    )
+                    + np.sqrt(ml**4 + (mpi**2 - s) ** 2 - 2 * ml**2 * (mpi**2 + s))
                 )
                 / (
-                    ml ** 2
-                    - mpi ** 2
+                    ml**2
+                    - mpi**2
                     + s
-                    - np.sqrt(
-                        ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
-                    )
+                    - np.sqrt(ml**4 + (mpi**2 - s) ** 2 - 2 * ml**2 * (mpi**2 + s))
                 )
             )
             + 2
+            * (ml**4 - mpi**2 * mvr**2 + mvr**4 - ml**2 * (mpi**2 + 2 * mvr**2))
             * (
-                ml ** 4
-                - mpi ** 2 * mvr ** 2
-                + mvr ** 4
-                - ml ** 2 * (mpi ** 2 + 2 * mvr ** 2)
-            )
-            * (
-                -2
-                * np.sqrt(ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s))
-                + (ml ** 2 + mpi ** 2 - s)
+                -2 * np.sqrt(ml**4 + (mpi**2 - s) ** 2 - 2 * ml**2 * (mpi**2 + s))
+                + (ml**2 + mpi**2 - s)
                 * np.log(
                     (
-                        -(ml ** 2)
-                        + mpi ** 2
+                        -(ml**2)
+                        + mpi**2
                         + s
-                        - np.sqrt(
-                            ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
-                        )
+                        - np.sqrt(ml**4 + (mpi**2 - s) ** 2 - 2 * ml**2 * (mpi**2 + s))
                     )
                     / (
-                        -(ml ** 2)
-                        + mpi ** 2
+                        -(ml**2)
+                        + mpi**2
                         + s
-                        + np.sqrt(
-                            ml ** 4 + (mpi ** 2 - s) ** 2 - 2 * ml ** 2 * (mpi ** 2 + s)
-                        )
+                        + np.sqrt(ml**4 + (mpi**2 - s) ** 2 - 2 * ml**2 * (mpi**2 + s))
                     )
                 )
             )
         )
     ) / (
         8.0
-        * np.sqrt(-(ml ** 2) + (ml ** 2 - mpi ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2))
-        * (
-            ml ** 4
-            - mpi ** 2 * mvr ** 2
-            + mvr ** 4
-            - ml ** 2 * (mpi ** 2 + 2 * mvr ** 2)
-        )
-        * np.pi ** 2
-        * (mvr ** 2 - s)
+        * np.sqrt(-(ml**2) + (ml**2 - mpi**2 + mvr**2) ** 2 / (4.0 * mvr**2))
+        * (ml**4 - mpi**2 * mvr**2 + mvr**4 - ml**2 * (mpi**2 + 2 * mvr**2))
+        * np.pi**2
+        * (mvr**2 - s)
     )
 
 
@@ -160,74 +140,62 @@ def _dnde_k_l_fsr(self, photon_eng):
     """
     mvr = self.mx
     ml = self.ml
-    s = mvr ** 2 - 2.0 * mvr * photon_eng
-    if mvr < mk + ml or (mk + ml) ** 2 >= s or mvr ** 2 <= s:
+    s = mvr**2 - 2.0 * mvr * photon_eng
+    if mvr < mk + ml or (mk + ml) ** 2 >= s or mvr**2 <= s:
         return 0.0
 
     return -(
-        qe ** 2
+        qe**2
         * (
             4
-            * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
-            * np.sqrt(mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s))
+            * (-((ml**2 - mvr**2) ** 2) + mk**2 * (ml**2 + mvr**2))
+            * np.sqrt(mk**4 + (ml**2 - s) ** 2 - 2 * mk**2 * (ml**2 + s))
             - 2
-            * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
-            * (mk ** 2 + ml ** 2 - s)
+            * (-((ml**2 - mvr**2) ** 2) + mk**2 * (ml**2 + mvr**2))
+            * (mk**2 + ml**2 - s)
             * np.log(
                 (
-                    mk ** 2
-                    - ml ** 2
+                    mk**2
+                    - ml**2
                     + s
-                    - np.sqrt(
-                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
-                    )
+                    - np.sqrt(mk**4 + (ml**2 - s) ** 2 - 2 * mk**2 * (ml**2 + s))
                 )
                 / (
-                    mk ** 2
-                    - ml ** 2
+                    mk**2
+                    - ml**2
                     + s
-                    + np.sqrt(
-                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
-                    )
+                    + np.sqrt(mk**4 + (ml**2 - s) ** 2 - 2 * mk**2 * (ml**2 + s))
                 )
             )
             + (
-                -2 * ml ** 6
-                + 2 * mk ** 4 * (ml ** 2 + mvr ** 2)
-                + 2 * ml ** 4 * (2 * mvr ** 2 + s)
-                + mvr ** 2 * (mvr ** 4 + s ** 2)
-                + ml ** 2 * (-(mvr ** 4) - 6 * mvr ** 2 * s + s ** 2)
-                - 2
-                * mk ** 2
-                * (ml ** 2 * (-3 * mvr ** 2 + s) + mvr ** 2 * (mvr ** 2 + s))
+                -2 * ml**6
+                + 2 * mk**4 * (ml**2 + mvr**2)
+                + 2 * ml**4 * (2 * mvr**2 + s)
+                + mvr**2 * (mvr**4 + s**2)
+                + ml**2 * (-(mvr**4) - 6 * mvr**2 * s + s**2)
+                - 2 * mk**2 * (ml**2 * (-3 * mvr**2 + s) + mvr**2 * (mvr**2 + s))
             )
             * np.log(
                 (
-                    -(mk ** 2)
-                    + ml ** 2
+                    -(mk**2)
+                    + ml**2
                     + s
-                    + np.sqrt(
-                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
-                    )
+                    + np.sqrt(mk**4 + (ml**2 - s) ** 2 - 2 * mk**2 * (ml**2 + s))
                 )
                 / (
-                    -(mk ** 2)
-                    + ml ** 2
+                    -(mk**2)
+                    + ml**2
                     + s
-                    - np.sqrt(
-                        mk ** 4 + (ml ** 2 - s) ** 2 - 2 * mk ** 2 * (ml ** 2 + s)
-                    )
+                    - np.sqrt(mk**4 + (ml**2 - s) ** 2 - 2 * mk**2 * (ml**2 + s))
                 )
             )
         )
     ) / (
         8.0
-        * (-((ml ** 2 - mvr ** 2) ** 2) + mk ** 2 * (ml ** 2 + mvr ** 2))
-        * np.sqrt(
-            -(ml ** 2) + (-(mk ** 2) + ml ** 2 + mvr ** 2) ** 2 / (4.0 * mvr ** 2)
-        )
-        * np.pi ** 2
-        * (mvr ** 2 - s)
+        * (-((ml**2 - mvr**2) ** 2) + mk**2 * (ml**2 + mvr**2))
+        * np.sqrt(-(ml**2) + (-(mk**2) + ml**2 + mvr**2) ** 2 / (4.0 * mvr**2))
+        * np.pi**2
+        * (mvr**2 - s)
     )
 
 

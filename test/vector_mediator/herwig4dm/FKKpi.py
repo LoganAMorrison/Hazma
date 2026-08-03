@@ -93,20 +93,20 @@ structure, and we have to consider interference terms between both contributions
 def m23_2_low(m12_2):
     """low integrand limit on m_23^2"""
     m12 = math.sqrt(m12_2)
-    E2s = 0.5 * (m12_2 - m1 ** 2 + m2 ** 2) / m12
-    E3s = 0.5 * (M ** 2 - m12_2 - m3 ** 2) / m12
+    E2s = 0.5 * (m12_2 - m1**2 + m2**2) / m12
+    E3s = 0.5 * (M**2 - m12_2 - m3**2) / m12
     return (E2s + E3s) ** 2 - (
-        math.sqrt(E2s ** 2 - m2 ** 2) + math.sqrt(E3s ** 2 - m3 ** 2)
+        math.sqrt(E2s**2 - m2**2) + math.sqrt(E3s**2 - m3**2)
     ) ** 2
 
 
 # upper integrand limit on m_23^2
 def m23_2_upp(m12_2):
     m12 = math.sqrt(m12_2)
-    E2s = 0.5 * (m12_2 - m1 ** 2 + m2 ** 2) / m12
-    E3s = 0.5 * (M ** 2 - m12_2 - m3 ** 2) / m12
+    E2s = 0.5 * (m12_2 - m1**2 + m2**2) / m12
+    E3s = 0.5 * (M**2 - m12_2 - m3**2) / m12
     return (E2s + E3s) ** 2 - (
-        math.sqrt(E2s ** 2 - m2 ** 2) - math.sqrt(E3s ** 2 - m3 ** 2)
+        math.sqrt(E2s**2 - m2**2) - math.sqrt(E3s**2 - m3**2)
     ) ** 2
 
 
@@ -116,24 +116,20 @@ def m23_2_upp(m12_2):
 # simply integrate over one m_ij^2
 def phase_space(m212, m223):
     num = 0.25 * (
-        -(M ** 4 * m2 ** 2)
-        - m1 ** 4 * m3 ** 2
-        - m223 * (m212 * (m212 + m223 - m3 ** 2) + m2 ** 2 * (-m212 + m3 ** 2))
-        + m1 ** 2
+        -(M**4 * m2**2)
+        - m1**4 * m3**2
+        - m223 * (m212 * (m212 + m223 - m3**2) + m2**2 * (-m212 + m3**2))
+        + m1**2
+        * (m3**2 * (m223 - m3**2) + m2**2 * (-m212 + m3**2) + m212 * (m223 + m3**2))
+        + M**2
         * (
-            m3 ** 2 * (m223 - m3 ** 2)
-            + m2 ** 2 * (-m212 + m3 ** 2)
-            + m212 * (m223 + m3 ** 2)
-        )
-        + M ** 2
-        * (
-            -(m2 ** 4)
-            + m212 * (m223 - m3 ** 2)
-            + m1 ** 2 * (m2 ** 2 - m223 + m3 ** 2)
-            + m2 ** 2 * (m212 + m223 + m3 ** 2)
+            -(m2**4)
+            + m212 * (m223 - m3**2)
+            + m1**2 * (m2**2 - m223 + m3**2)
+            + m2**2 * (m212 + m223 + m3**2)
         )
     )
-    pre = 1.0 / (2.0 * math.pi) ** 3 / 32.0 / M ** 3
+    pre = 1.0 / (2.0 * math.pi) ** 3 / 32.0 / M**3
     return pre * num
 
 
@@ -144,9 +140,9 @@ def dsigma_int_re(m212, m223):
     out = (
         phase_space(m212, m223)
         * Resonance.BreitWignerPWave(m212, mKS, gKS, m1, m2)
-        / mKS ** 2
+        / mKS**2
         * Resonance.BreitWignerPWave(m223, mKS, gKS, m2, m3).conjugate()
-        / mKS ** 2
+        / mKS**2
     )
     return out.real
 
@@ -157,9 +153,9 @@ def dsigma_int_im(m212, m223):
     out = (
         phase_space(m212, m223)
         * Resonance.BreitWignerPWave(m212, mKS, gKS, m1, m2)
-        / mKS ** 2
+        / mKS**2
         * Resonance.BreitWignerPWave(m223, mKS, gKS, m2, m3).conjugate()
-        / mKS ** 2
+        / mKS**2
     )
     return out.imag
 
@@ -172,12 +168,12 @@ def I1(m122, m1, m2, m3):
         8.0
         / 3.0
         / m12
-        * M ** 3
-        * (0.5 * M * Resonance.beta(M ** 2, m12, m3)) ** 3
+        * M**3
+        * (0.5 * M * Resonance.beta(M**2, m12, m3)) ** 3
         * (0.5 * m12 * Resonance.beta(m122, m1, m2)) ** 3
     )
-    num *= abs(Resonance.BreitWignerPWave(m122, mKS, gKS, m1, m2) / mKS ** 2) ** 2
-    return 1.0 / (2.0 * math.pi) ** 3 / 32.0 / M ** 3 * num
+    num *= abs(Resonance.BreitWignerPWave(m122, mKS, gKS, m1, m2) / mKS**2) ** 2
+    return 1.0 / (2.0 * math.pi) ** 3 / 32.0 / M**3 * num
 
 
 # Calculate phase space integral
@@ -256,18 +252,18 @@ def sigmaKK(sHat, isospin):
         pre = A1
     pcm = 0.5 * ecms * Resonance.beta(sHat, mKS, mKp)
     # phase-space, |me|^2 factors
-    output = 2.0 * pcm ** 3 / 8.0 / math.pi / ecms * abs(pre) ** 2 / 3
+    output = 2.0 * pcm**3 / 8.0 / math.pi / ecms * abs(pre) ** 2 / 3
     # initial-state factors
-    output *= 32.0 * math.pi ** 2 / sHat * alpha.alphaEM(sHat) ** 2
+    output *= 32.0 * math.pi**2 / sHat * alpha.alphaEM(sHat) ** 2
     return output
 
 
 # cross section for KKpi process, phase space integral is input
 def sigmaKKPi(shat, imode, ints):
     # prefactor of leptonic current
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(shat) ** 2 / 3.0 / shat
+    pre = 16.0 * math.pi**2 * alpha.alphaEM(shat) ** 2 / 3.0 / shat
     # the rest is the hadronic current
-    pre *= 4.0 * g2 ** 2 / math.sqrt(shat)
+    pre *= 4.0 * g2**2 / math.sqrt(shat)
     # amplitudes
     A0, A1 = isoSpinAmplitudes(shat)
     amp_12 = 0.0
@@ -320,9 +316,9 @@ def readHadronic_Current():
         y = []
         for energy in energies:
             x.append(energy)
-            s = energy ** 2
+            s = energy**2
             ints = integrals[energy]
-            pre = 4.0 * g2 ** 2
+            pre = 4.0 * g2**2
             # amplitudes
             A0, A1 = isoSpinAmplitudes(s)
             amp_12 = 0.0
@@ -426,6 +422,7 @@ def readHadronic_Current():
 # cross sections where we don't use precalculated values #
 ##########################################################
 
+
 # cross-section for several modes,
 # mode 0: KSKLpi0,
 # mode 1: KpKmpi0,
@@ -436,15 +433,15 @@ def sigmaSM(shat, imode):
 
 
 def GammaDM(mMed, imode):
-    if mMed ** 2 <= (2 * mK0 + mpip) ** 2:
+    if mMed**2 <= (2 * mK0 + mpip) ** 2:
         return 0
-    ints = calculateIntegrals(mMed ** 2, imode)
+    ints = calculateIntegrals(mMed**2, imode)
     # vector spin average
     pre = 1 / 3.0
     # phase space
-    pre *= (4.0 * g2 ** 2 / mMed) * mMed
+    pre *= (4.0 * g2**2 / mMed) * mMed
     # amplitudes
-    A0, A1 = isoSpinAmplitudes(mMed ** 2)
+    A0, A1 = isoSpinAmplitudes(mMed**2)
     amp_12 = 0.0
     amp_23 = 0.0
     # Used A0, A1 relations like in 1010.4180, although irrelevant since I1_amp's
@@ -482,11 +479,11 @@ def sigmaDM(shat, imode):
 def sigmaKKPiDM(shat, imode, ints):
     # Dark prefactor
     cDM = gDM_
-    DMmed = cDM / (shat - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (shat - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
-    pre = DMmed2 * shat * (1 + 2 * mDM_ ** 2 / shat) / 3.0
+    pre = DMmed2 * shat * (1 + 2 * mDM_**2 / shat) / 3.0
     # phase space
-    pre *= 4.0 * g2 ** 2 / math.sqrt(shat)
+    pre *= 4.0 * g2**2 / math.sqrt(shat)
     # amplitudes
     A0, A1 = isoSpinAmplitudes(shat)
     amp_12 = 0.0

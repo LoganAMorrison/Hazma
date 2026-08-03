@@ -322,27 +322,27 @@ class TestVectorMediator(unittest.TestCase):
         spec6 = self.vm6.spectra(self.eng_gams6, self.cme6)
 
         for key in self.vm1_gam_spec.keys():
-            for (val1, val2) in zip(self.vm1_gam_spec[key], spec1[key]):
+            for val1, val2 in zip(self.vm1_gam_spec[key], spec1[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm2_gam_spec.keys():
-            for (val1, val2) in zip(self.vm2_gam_spec[key], spec2[key]):
+            for val1, val2 in zip(self.vm2_gam_spec[key], spec2[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm3_gam_spec.keys():
-            for (val1, val2) in zip(self.vm3_gam_spec[key], spec3[key]):
+            for val1, val2 in zip(self.vm3_gam_spec[key], spec3[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm4_gam_spec.keys():
-            for (val1, val2) in zip(self.vm4_gam_spec[key], spec4[key]):
+            for val1, val2 in zip(self.vm4_gam_spec[key], spec4[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm5_gam_spec.keys():
-            for (val1, val2) in zip(self.vm5_gam_spec[key], spec5[key]):
+            for val1, val2 in zip(self.vm5_gam_spec[key], spec5[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm6_gam_spec.keys():
-            for (val1, val2) in zip(self.vm6_gam_spec[key], spec6[key]):
+            for val1, val2 in zip(self.vm6_gam_spec[key], spec6[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_spectrum_funcs(self):
@@ -401,27 +401,27 @@ class TestVectorMediator(unittest.TestCase):
         pspec6 = self.vm6.positron_spectra(self.eng_ps6, self.cme6)
 
         for key in self.vm1_pos_spec.keys():
-            for (val1, val2) in zip(self.vm1_pos_spec[key], pspec1[key]):
+            for val1, val2 in zip(self.vm1_pos_spec[key], pspec1[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm2_pos_spec.keys():
-            for (val1, val2) in zip(self.vm2_pos_spec[key], pspec2[key]):
+            for val1, val2 in zip(self.vm2_pos_spec[key], pspec2[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm3_pos_spec.keys():
-            for (val1, val2) in zip(self.vm3_pos_spec[key], pspec3[key]):
+            for val1, val2 in zip(self.vm3_pos_spec[key], pspec3[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm4_pos_spec.keys():
-            for (val1, val2) in zip(self.vm4_pos_spec[key], pspec4[key]):
+            for val1, val2 in zip(self.vm4_pos_spec[key], pspec4[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm5_pos_spec.keys():
-            for (val1, val2) in zip(self.vm5_pos_spec[key], pspec5[key]):
+            for val1, val2 in zip(self.vm5_pos_spec[key], pspec5[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
         for key in self.vm6_pos_spec.keys():
-            for (val1, val2) in zip(self.vm6_pos_spec[key], pspec6[key]):
+            for val1, val2 in zip(self.vm6_pos_spec[key], pspec6[key]):
                 assert_allclose(val1, val2, rtol=1e-4, err_msg=key)
 
     def test_positron_lines(self):

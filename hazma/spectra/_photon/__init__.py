@@ -3,6 +3,7 @@ Module for computing decay spectra from a muon and light mesons.
 
 @author: Logan Morrison and Adam Coogan
 """
+
 from typing import List, overload
 from warnings import warn
 
@@ -22,13 +23,11 @@ from hazma.utils import RealArray, RealOrRealArray
 
 
 @overload
-def dnde_photon_muon(photon_energies: float, muon_energy: float) -> float:
-    ...
+def dnde_photon_muon(photon_energies: float, muon_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_muon(photon_energies: RealArray, muon_energy: float) -> RealArray:
-    ...
+def dnde_photon_muon(photon_energies: RealArray, muon_energy: float) -> RealArray: ...
 
 
 def dnde_photon_muon(
@@ -71,15 +70,13 @@ def dnde_photon_muon(
 
 
 @overload
-def dnde_photon_neutral_pion(photon_energies: float, pion_energy: float) -> float:
-    ...
+def dnde_photon_neutral_pion(photon_energies: float, pion_energy: float) -> float: ...
 
 
 @overload
 def dnde_photon_neutral_pion(
     photon_energies: RealArray, pion_energy: float
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_photon_neutral_pion(
@@ -122,13 +119,13 @@ def dnde_photon_neutral_pion(
 
 
 @overload
-def dnde_photon_charged_pion(photon_energy: float, pion_energy: float) -> float:
-    ...
+def dnde_photon_charged_pion(photon_energy: float, pion_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_charged_pion(photon_energy: RealArray, pion_energy: float) -> RealArray:
-    ...
+def dnde_photon_charged_pion(
+    photon_energy: RealArray, pion_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_charged_pion(
@@ -170,13 +167,13 @@ def dnde_photon_charged_pion(
 
 
 @overload
-def dnde_photon_charged_kaon(photon_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_photon_charged_kaon(photon_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_charged_kaon(photon_energy: RealArray, kaon_energy: float) -> RealArray:
-    ...
+def dnde_photon_charged_kaon(
+    photon_energy: RealArray, kaon_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_charged_kaon(
@@ -234,13 +231,13 @@ def dnde_photon_charged_kaon(
 
 
 @overload
-def dnde_photon_short_kaon(photon_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_photon_short_kaon(photon_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_short_kaon(photon_energy: RealArray, kaon_energy: float) -> RealArray:
-    ...
+def dnde_photon_short_kaon(
+    photon_energy: RealArray, kaon_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_short_kaon(
@@ -290,13 +287,13 @@ def dnde_photon_short_kaon(
 
 
 @overload
-def dnde_photon_long_kaon(photon_energy: float, kaon_energy: float) -> float:
-    ...
+def dnde_photon_long_kaon(photon_energy: float, kaon_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_long_kaon(photon_energy: RealArray, kaon_energy: float) -> RealArray:
-    ...
+def dnde_photon_long_kaon(
+    photon_energy: RealArray, kaon_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_long_kaon(
@@ -374,13 +371,13 @@ def electron(photon_energies, _: float):
 
 
 @overload
-def dnde_photon_neutral_rho(photon_energies: float, rho_energy: float) -> float:
-    ...
+def dnde_photon_neutral_rho(photon_energies: float, rho_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_neutral_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
-    ...
+def dnde_photon_neutral_rho(
+    photon_energies: RealArray, rho_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_neutral_rho(
@@ -406,13 +403,13 @@ def dnde_photon_neutral_rho(
 
 
 @overload
-def dnde_photon_charged_rho(photon_energies: float, rho_energy: float) -> float:
-    ...
+def dnde_photon_charged_rho(photon_energies: float, rho_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_charged_rho(photon_energies: RealArray, rho_energy: float) -> RealArray:
-    ...
+def dnde_photon_charged_rho(
+    photon_energies: RealArray, rho_energy: float
+) -> RealArray: ...
 
 
 def dnde_photon_charged_rho(
@@ -438,13 +435,11 @@ def dnde_photon_charged_rho(
 
 
 @overload
-def dnde_photon_eta(photon_energy: float, eta_energy: float) -> float:
-    ...
+def dnde_photon_eta(photon_energy: float, eta_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_eta(photon_energy: RealArray, eta_energy: float) -> RealArray:
-    ...
+def dnde_photon_eta(photon_energy: RealArray, eta_energy: float) -> RealArray: ...
 
 
 def dnde_photon_eta(
@@ -469,13 +464,11 @@ def dnde_photon_eta(
 
 
 @overload
-def dnde_photon_omega(photon_energy: float, omega_energy: float) -> float:
-    ...
+def dnde_photon_omega(photon_energy: float, omega_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_omega(photon_energy: RealArray, omega_energy: float) -> RealArray:
-    ...
+def dnde_photon_omega(photon_energy: RealArray, omega_energy: float) -> RealArray: ...
 
 
 def dnde_photon_omega(
@@ -500,15 +493,13 @@ def dnde_photon_omega(
 
 
 @overload
-def dnde_photon_eta_prime(photon_energy: float, eta_prime_energy: float) -> float:
-    ...
+def dnde_photon_eta_prime(photon_energy: float, eta_prime_energy: float) -> float: ...
 
 
 @overload
 def dnde_photon_eta_prime(
     photon_energy: RealArray, eta_prime_energy: float
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_photon_eta_prime(
@@ -533,13 +524,11 @@ def dnde_photon_eta_prime(
 
 
 @overload
-def dnde_photon_phi(photon_energy: float, phi_energy: float) -> float:
-    ...
+def dnde_photon_phi(photon_energy: float, phi_energy: float) -> float: ...
 
 
 @overload
-def dnde_photon_phi(photon_energy: RealArray, phi_energy: float) -> RealArray:
-    ...
+def dnde_photon_phi(photon_energy: RealArray, phi_energy: float) -> RealArray: ...
 
 
 def dnde_photon_phi(

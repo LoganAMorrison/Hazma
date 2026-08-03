@@ -549,11 +549,7 @@ def msqrd_lorentz_p_p_p_t_coeffs(s, m, m1, m2, m3):
         Mass of 3rd meson.
     """
     t0 = (
-        -(
-            (m1 * m2 - m * m3)
-            * (m1 * m2 + m * m3)
-            * (-(m**2) + m1**2 + m2**2 - m3**2)
-        )
+        -((m1 * m2 - m * m3) * (m1 * m2 + m * m3) * (-(m**2) + m1**2 + m2**2 - m3**2))
         + (-m + m2) * (m + m2) * (m1 - m3) * (m1 + m3) * s
     ) / 4.0
 

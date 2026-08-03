@@ -2,18 +2,18 @@ from typing import List
 
 from hazma.parameters import Qd, Qe, Qu, qe
 from hazma.theory import TheoryAnn
-from hazma.vector_mediator._vector_mediator_cross_sections import \
-    VectorMediatorCrossSections
+from hazma.vector_mediator._vector_mediator_cross_sections import (
+    VectorMediatorCrossSections,
+)
 from hazma.vector_mediator._vector_mediator_fsr import VectorMediatorFSR
-from hazma.vector_mediator._vector_mediator_positron_spectra import \
-    VectorMediatorPositronSpectra
-from hazma.vector_mediator._vector_mediator_spectra import \
-    VectorMediatorSpectra
+from hazma.vector_mediator._vector_mediator_positron_spectra import (
+    VectorMediatorPositronSpectra,
+)
+from hazma.vector_mediator._vector_mediator_spectra import VectorMediatorSpectra
 from hazma.vector_mediator._vector_mediator_widths import VectorMediatorWidths
 
 # flake8: noqa: F401
-from ._gev.model import (BLGeV, KineticMixingGeV,  # pyright: ignore
-                         VectorMediatorGeV)
+from ._gev.model import BLGeV, KineticMixingGeV, VectorMediatorGeV  # pyright: ignore
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,

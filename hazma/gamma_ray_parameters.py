@@ -4,7 +4,6 @@ Parameters relevant to computing constraints from gamma ray experiments.
 
 """
 
-
 import os
 from pathlib import Path
 from typing import Tuple, Dict, Any

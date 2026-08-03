@@ -70,7 +70,7 @@ def invariant_mass_limits(
     pairs = itertools.combinations(idxs, 2)
     limits = dict()
 
-    for (i, j) in pairs:
+    for i, j in pairs:
         msum = sum(masses[k] for k in idxs.symmetric_difference({i, j}))
         mmin = masses[i] + masses[j]
         mmax = q - msum
@@ -95,6 +95,4 @@ def two_body_phase_space_prefactor(q, m1: float, m2: float):
         The prefactor with same shape as `q`.
     """
     s = q**2
-    return np.sqrt(np.clip(kallen_lambda(s, m1**2, m2**2), 0.0, None)) / (
-        8 * np.pi * s
-    )
+    return np.sqrt(np.clip(kallen_lambda(s, m1**2, m2**2), 0.0, None)) / (8 * np.pi * s)

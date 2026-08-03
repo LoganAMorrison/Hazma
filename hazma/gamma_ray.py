@@ -1,6 +1,7 @@
 """Module for computing gamma ray spectra from a many-particle final state.
 
 """
+
 # author : Logan Morrison and Adam Coogan
 # date : December 2017
 
@@ -35,8 +36,7 @@ def gamma_ray_decay(
     num_ps_pts: int = 1000,
     num_bins: int = 25,
     verbose: bool = False,
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
@@ -48,8 +48,7 @@ def gamma_ray_decay(
     num_ps_pts: int = 1000,
     num_bins: int = 25,
     verbose: bool = False,
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def gamma_ray_decay(
@@ -215,8 +214,8 @@ def __gamma_ray_fsr(
         np.array(
             [
                 e_gamma,
-                e_gamma * np.cos(phi) * np.sqrt(1 - ct ** 2),
-                e_gamma * np.sin(phi) * np.sqrt(1 - ct ** 2),
+                e_gamma * np.cos(phi) * np.sqrt(1 - ct**2),
+                e_gamma * np.sin(phi) * np.sqrt(1 - ct**2),
                 e_gamma * ct,
             ]
         )
@@ -234,7 +233,7 @@ def __gamma_ray_fsr(
     ]
     res = np.average(terms)
     std = np.std(terms) / np.sqrt(nevents)
-    pre = 1.0 / non_rad * photon_energy / (16 * np.pi ** 3) * (4.0 * np.pi)
+    pre = 1.0 / non_rad * photon_energy / (16 * np.pi**3) * (4.0 * np.pi)
 
     if len(isp_masses) == 1:
         pre *= 1.0 / (2.0 * isp_masses[0])

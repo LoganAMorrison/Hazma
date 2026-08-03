@@ -20,11 +20,11 @@ class PseudoScalarMediatorWidths:
         mp = self.mp
 
         ret = -(
-            alpha_em ** 2
-            * mp ** 3
+            alpha_em**2
+            * mp**3
             * ((1 + beta) * fpi * gpFF - beta * vh)
             * ((-1 + beta) * fpi * gpFF + beta * vh)
-        ) / (128.0 * fpi ** 2 * np.pi ** 3 * vh ** 2)
+        ) / (128.0 * fpi**2 * np.pi**3 * vh**2)
 
         assert ret.imag == 0
         assert ret.real >= 0
@@ -37,7 +37,7 @@ class PseudoScalarMediatorWidths:
 
         if 2.0 * rx < 1:
             ret = -(
-                (-1 + self.beta ** 2) * self.gpxx ** 2 * mp * np.sqrt(1 - 4 * rx ** 2)
+                (-1 + self.beta**2) * self.gpxx**2 * mp * np.sqrt(1 - 4 * rx**2)
             ) / (32.0 * np.pi)
 
             assert ret.imag == 0
@@ -59,7 +59,7 @@ class PseudoScalarMediatorWidths:
 
         if 2.0 * rf < 1:
             ret = -(
-                (-1 + self.beta ** 2) * gpff ** 2 * mp * np.sqrt(1 - 4 * rf ** 2)
+                (-1 + self.beta**2) * gpff**2 * mp * np.sqrt(1 - 4 * rf**2)
             ) / (8.0 * np.pi)
 
             assert ret.imag == 0
@@ -80,24 +80,22 @@ class PseudoScalarMediatorWidths:
             beta = self.beta
 
             ret = -(
-                b0 ** 2
-                * np.sqrt(s * (-4 * mpi0 ** 2 + s))
-                * np.sqrt(
-                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
-                )
+                b0**2
+                * np.sqrt(s * (-4 * mpi0**2 + s))
+                * np.sqrt(mp**4 + (mpi0**2 - s) ** 2 - 2 * mp**2 * (mpi0**2 + s))
                 * (
-                    -(beta ** 2 * (mdq + muq) ** 2 * vh ** 2)
+                    -(beta**2 * (mdq + muq) ** 2 * vh**2)
                     + 2
                     * beta
                     * fpi
                     * (mdq + muq)
                     * vh
                     * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
-                    + (-1 + 10 * beta ** 2)
-                    * fpi ** 2
+                    + (-1 + 10 * beta**2)
+                    * fpi**2
                     * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
                 )
-            ) / (256.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
+            ) / (256.0 * fpi**4 * mp**3 * np.pi**3 * s * vh**2)
 
             assert ret.imag == 0
             assert ret.real >= 0
@@ -127,7 +125,7 @@ class PseudoScalarMediatorWidths:
         mpi0 = self.mpi0  # use shifted pion mass!
 
         smax = (mp - mpi0) ** 2
-        smin = 4.0 * mpi0 ** 2
+        smin = 4.0 * mpi0**2
 
         res = quad(self.dwidth_ds_p_to_pi0pi0pi0, smin, smax)
 
@@ -144,68 +142,64 @@ class PseudoScalarMediatorWidths:
             beta = self.beta
 
             ret = (
-                np.sqrt(s * (-4 * mpi ** 2 + s))
-                * np.sqrt(
-                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
-                )
+                np.sqrt(s * (-4 * mpi**2 + s))
+                * np.sqrt(mp**4 + (mpi0**2 - s) ** 2 - 2 * mp**2 * (mpi0**2 + s))
                 * (
-                    beta ** 2 * (2 * mpi ** 2 + mpi0 - 3 * s) ** 2 * vh ** 2
+                    beta**2 * (2 * mpi**2 + mpi0 - 3 * s) ** 2 * vh**2
                     + 2
                     * b0
                     * beta
-                    * (2 * mpi ** 2 + mpi0 - 3 * s)
+                    * (2 * mpi**2 + mpi0 - 3 * s)
                     * vh
                     * (
                         -(beta * (mdq + muq) * vh)
                         + fpi * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
                     )
-                    + b0 ** 2
+                    + b0**2
                     * (
-                        beta ** 2 * (mdq + muq) ** 2 * vh ** 2
+                        beta**2 * (mdq + muq) ** 2 * vh**2
                         - 2
                         * beta
                         * fpi
                         * (mdq + muq)
                         * vh
                         * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
-                        - (-1 + 4 * beta ** 2)
-                        * fpi ** 2
+                        - (-1 + 4 * beta**2)
+                        * fpi**2
                         * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
                     )
                 )
-            ) / (2304.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
+            ) / (2304.0 * fpi**4 * mp**3 * np.pi**3 * s * vh**2)
 
             ret = (
-                np.sqrt(s * (-4 * mpi ** 2 + s))
-                * np.sqrt(
-                    mp ** 4 + (mpi0 ** 2 - s) ** 2 - 2 * mp ** 2 * (mpi0 ** 2 + s)
-                )
+                np.sqrt(s * (-4 * mpi**2 + s))
+                * np.sqrt(mp**4 + (mpi0**2 - s) ** 2 - 2 * mp**2 * (mpi0**2 + s))
                 * (
-                    beta ** 2 * (2 * mpi ** 2 + mpi0 ** 2 - 3 * s) ** 2 * vh ** 2
+                    beta**2 * (2 * mpi**2 + mpi0**2 - 3 * s) ** 2 * vh**2
                     + 2
                     * b0
                     * beta
-                    * (2 * mpi ** 2 + mpi0 ** 2 - 3 * s)
+                    * (2 * mpi**2 + mpi0**2 - 3 * s)
                     * vh
                     * (
                         -(beta * (mdq + muq) * vh)
                         + fpi * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
                     )
-                    + b0 ** 2
+                    + b0**2
                     * (
-                        beta ** 2 * (mdq + muq) ** 2 * vh ** 2
+                        beta**2 * (mdq + muq) ** 2 * vh**2
                         - 2
                         * beta
                         * fpi
                         * (mdq + muq)
                         * vh
                         * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh)
-                        - (-1 + 4 * beta ** 2)
-                        * fpi ** 2
+                        - (-1 + 4 * beta**2)
+                        * fpi**2
                         * (gpGG * (mdq - muq) + (gpdd - gpuu) * vh) ** 2
                     )
                 )
-            ) / (2304.0 * fpi ** 4 * mp ** 3 * np.pi ** 3 * s * vh ** 2)
+            ) / (2304.0 * fpi**4 * mp**3 * np.pi**3 * s * vh**2)
 
             assert ret.imag == 0
             assert ret.real >= 0
@@ -235,7 +229,7 @@ class PseudoScalarMediatorWidths:
         mpi0 = self.mpi0  # use shifted pion mass!
 
         smax = (mp - mpi0) ** 2
-        smin = 4.0 * mpi ** 2
+        smin = 4.0 * mpi**2
 
         res = quad(self.dwidth_ds_p_to_pi0pipi, smin, smax)
 

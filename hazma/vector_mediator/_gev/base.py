@@ -68,29 +68,23 @@ class VectorMediatorGeVBase(TheoryAnn):
         gvvtvt : float
             Coupling of vector mediator to the tau-neutrino.
         """
-        from hazma.vector_mediator.form_factors.eta_gamma import \
-            FormFactorEtaGamma
-        from hazma.vector_mediator.form_factors.eta_omega import \
-            FormFactorEtaOmega
+        from hazma.vector_mediator.form_factors.eta_gamma import FormFactorEtaGamma
+        from hazma.vector_mediator.form_factors.eta_omega import FormFactorEtaOmega
         from hazma.vector_mediator.form_factors.eta_phi import FormFactorEtaPhi
-        from hazma.vector_mediator.form_factors.four_pi import \
-            FormFactorPiPiPiPi
+        from hazma.vector_mediator.form_factors.four_pi import FormFactorPiPiPiPi
         from hazma.vector_mediator.form_factors.kk import FormFactorKK
-        from hazma.vector_mediator.form_factors.omega_pi import \
-            FormFactorOmegaPi0
+        from hazma.vector_mediator.form_factors.omega_pi import FormFactorOmegaPi0
         from hazma.vector_mediator.form_factors.phi_pi import FormFactorPhiPi0
-        from hazma.vector_mediator.form_factors.pi_gamma import \
-            FormFactorPiGamma
+        from hazma.vector_mediator.form_factors.pi_gamma import FormFactorPiGamma
         from hazma.vector_mediator.form_factors.pi_k_k import (
-            FormFactorPi0K0K0, FormFactorPi0KpKm, FormFactorPiKK0)
-        from hazma.vector_mediator.form_factors.pi_pi_eta import \
-            FormFactorPiPiEta
-        from hazma.vector_mediator.form_factors.pi_pi_etap import \
-            FormFactorPiPiEtaP
-        from hazma.vector_mediator.form_factors.pi_pi_omega import \
-            FormFactorPiPiOmega
-        from hazma.vector_mediator.form_factors.pi_pi_pi0 import \
-            FormFactorPiPiPi0
+            FormFactorPi0K0K0,
+            FormFactorPi0KpKm,
+            FormFactorPiKK0,
+        )
+        from hazma.vector_mediator.form_factors.pi_pi_eta import FormFactorPiPiEta
+        from hazma.vector_mediator.form_factors.pi_pi_etap import FormFactorPiPiEtaP
+        from hazma.vector_mediator.form_factors.pi_pi_omega import FormFactorPiPiOmega
+        from hazma.vector_mediator.form_factors.pi_pi_pi0 import FormFactorPiPiPi0
         from hazma.vector_mediator.form_factors.pipi import FormFactorPiPi
 
         # Compute and store the parameters needed to compute form factors.

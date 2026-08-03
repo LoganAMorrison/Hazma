@@ -28,7 +28,7 @@ upp_lim = 2.000
 step_size = 0.005
 while energy < upp_lim:
     xSM.append(energy)
-    Q2 = energy ** 2
+    Q2 = energy**2
     ySM.append(FOmegaPion.sigmaSMOmegaPion(Q2))
     energy += step_size
 
@@ -43,7 +43,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     wMed = FOmegaPion.GammaDM(mMed)
     FOmegaPion.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
@@ -57,7 +57,7 @@ cMed_s = 1.0 / 3.0
 mDM = (FOmegaPion.mOmega_ + FOmegaPion.mPi_) / 2.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     wMed = FOmegaPion.GammaDM(mMed)
     FOmegaPion.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)

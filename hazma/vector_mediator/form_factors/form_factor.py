@@ -26,9 +26,7 @@ class FormFactor(ABC):
         muv2 = (mv / cme) ** 2
 
         num = gvxx**2 * (1 + 2 * mux2)
-        den = (
-            (1 + (mug2 - 2) * muv2 + muv2**2) * np.sqrt(1.0 - 4.0 * mux2) * cme**1.5
-        )
+        den = (1 + (mug2 - 2) * muv2 + muv2**2) * np.sqrt(1.0 - 4.0 * mux2) * cme**1.5
         # Factor to transform width to cross section
         fact = num / den / cme**1.5
 
@@ -44,7 +42,7 @@ class FormFactor(ABC):
         gvdd: float,
         gvss: float,
         npts: int,
-        nbins: int = 25
+        nbins: int = 25,
     ):
         def msqrd(momenta):
             return self.msqrd(momenta, cme=cme, gvuu=gvuu, gvdd=gvdd, gvss=gvss)

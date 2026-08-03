@@ -20,6 +20,7 @@ class VMDAmplitude:
     .. math::
         \sum_{k}a_{k} e^{i \phi_{k}} m^{2}_{i} / (m^{2}_{i} - s - i m^{2}_{k}\Gamma_{k})
     """
+
     _amplitudes: InitVar[RealArray]
     _phases: InitVar[RealArray]
 
@@ -47,6 +48,7 @@ class VMDAmplitudeGS:
     .. math::
         BW_{k}(s) = (m^{2}_{k} + H(0)) / (m^{2}_{i} - s + H(s) - i \sqrt{s}\Gamma_{k})
     """
+
     _amplitudes: InitVar[RealArray]
     _phases: InitVar[RealArray]
 

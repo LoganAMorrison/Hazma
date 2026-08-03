@@ -59,7 +59,7 @@ def gammaRho(i, Q2):
             gRho_[0]
             * mRho_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mpi ** 2) / (mRho_[0] ** 2 - 4.0 * mpi ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mpi**2) / (mRho_[0] ** 2 - 4.0 * mpi**2)) ** 1.5
         )
     else:
         return gRho_[i] * Q2 / mRho_[i] ** 2
@@ -78,14 +78,7 @@ def pcm(m02, m12, m22):
         https://pdg.lbl.gov/2020/reviews/rpp2020-rev-kinematics.pdf
     """
     return 0.5 * math.sqrt(
-        (
-            m02 ** 2
-            + m12 ** 2
-            + m22 ** 2
-            - 2.0 * m02 * m12
-            - 2.0 * m02 * m22
-            - 2.0 * m12 * m22
-        )
+        (m02**2 + m12**2 + m22**2 - 2.0 * m02 * m12 - 2.0 * m02 * m22 - 2.0 * m12 * m22)
         / m02
     )
 
@@ -97,7 +90,7 @@ def FEtaPiPi(s, Q2):
     for i in range(0, len(camp_)):
         camp_[i] /= total
     form = 0.0
-    pre = 0.25 / math.sqrt(3.0) / math.pi ** 2 / fpi ** 3
+    pre = 0.25 / math.sqrt(3.0) / math.pi**2 / fpi**3
     for i in range(0, len(camp_)):
         form += BW(i, s) * camp_[i] * cI1_
     form *= BW(0, Q2)
@@ -112,8 +105,8 @@ def integrand(rho, s):
         # Q2 is momentum squared of the rho of rho->pipi
         Q2 = mRho_[0] * gRho_[0] * math.tan(val) + mRho_[0] ** 2
         # momentum dependence after one phase space integration (see eq.139 notes)
-        peta = pcm(s, meta ** 2, Q2)
-        ppi = pcm(Q2, mpi ** 2, mpi ** 2)
+        peta = pcm(s, meta**2, Q2)
+        ppi = pcm(Q2, mpi**2, mpi**2)
         Q = math.sqrt(Q2)
         # 'Jabobi' due to change of variables in integration
         pre = (
@@ -129,7 +122,7 @@ def integrand(rho, s):
 def phase(s):
     # integration limits
     upp = (math.sqrt(s) - meta) ** 2
-    low = 4.0 * mpi ** 2
+    low = 4.0 * mpi**2
     # transform to new variables
     upp = math.atan((upp - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
     low = math.atan((low - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
@@ -140,7 +133,7 @@ def phase(s):
 
 # partial decay width for Eta Pi Pi
 def GammaDM(mMed):
-    if mMed ** 2 < (2 * mpi + meta) ** 2:
+    if mMed**2 < (2 * mpi + meta) ** 2:
         return 0
     if cI1_ == 0:
         return 0
@@ -148,7 +141,7 @@ def GammaDM(mMed):
     pre = 1 / 3.0
     # coming from phase space (see eq.139 notes)
     pre *= (1.0 / 12.0 / (2.0 * math.pi) ** 3 / mMed) * mMed
-    return pre * phase(mMed ** 2)
+    return pre * phase(mMed**2)
 
 
 def sigmaDM(s):
@@ -157,11 +150,11 @@ def sigmaDM(s):
     if cI1_ == 0:
         return 0
     cDM = gDM_
-    DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (s - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
-    pre = DMmed2 * s * (1 + 2 * mDM_ ** 2 / s) / 3.0
+    pre = DMmed2 * s * (1 + 2 * mDM_**2 / s) / 3.0
     # coming from phase space (see eq.139 notes)
-    pre *= 1.0 / 12.0 / (2 * math.pi) ** 3 / s ** 0.5
+    pre *= 1.0 / 12.0 / (2 * math.pi) ** 3 / s**0.5
     return pre * phase(s) * Resonance.gev2nb
 
 
@@ -171,7 +164,7 @@ def sigmaSM(s):
         return 0
     if cI1_ == 0:
         return 0
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
+    pre = 16.0 * math.pi**2 * alpha.alphaEM(s) ** 2 / 3.0 / s
     # coming from phase space (see eq.139 notes)
-    pre *= 1.0 / 12.0 / (2 * math.pi) ** 3 / s ** 0.5
+    pre *= 1.0 / 12.0 / (2 * math.pi) ** 3 / s**0.5
     return pre * phase(s) * Resonance.gev2nb
