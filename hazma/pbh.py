@@ -1,5 +1,6 @@
+import importlib.resources as importlib_resources
+
 import numpy as np
-from pkg_resources import resource_filename
 from scipy.interpolate import interp1d
 
 from hazma.parameters import g_to_MeV, MeV_to_g
@@ -48,12 +49,13 @@ class PBH(TheoryDec):
         """
         Load spectrum data tables
         """
+        pbh_data = importlib_resources.files("hazma") / "pbh_data"
         if self.spectrum_kind == "primary":
-            fname = resource_filename(__name__, "pbh_data/pbh_primary_spectra_bh.csv")
+            fname = str(pbh_data / "pbh_primary_spectra_bh.csv")
         elif self.spectrum_kind == "secondary" and self.bh_secondary:
-            fname = resource_filename(__name__, "pbh_data/pbh_secondary_spectra_bh.csv")
+            fname = str(pbh_data / "pbh_secondary_spectra_bh.csv")
         elif self.spectrum_kind == "secondary":
-            fname = resource_filename(__name__, "pbh_data/pbh_secondary_spectra.csv")
+            fname = str(pbh_data / "pbh_secondary_spectra.csv")
         else:
             raise ValueError("invalid spectrum_kind")
 

@@ -11,7 +11,7 @@
 | [**Community Extensions**](#extensions)
 | [**Citing Hazma**](#citing)
 
-[![CircleCI](https://circleci.com/gh/LoganAMorrison/Hazma.svg?style=svg)](https://circleci.com/gh/LoganAMorrison/Hazma)
+[![CI](https://github.com/LoganAMorrison/Hazma/actions/workflows/ci.yml/badge.svg)](https://github.com/LoganAMorrison/Hazma/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/hazma/badge/?version=latest)](https://hazma.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3347114.svg)](https://doi.org/10.5281/zenodo.3347114)
 [![arXiv](https://img.shields.io/badge/arXiv-1907.11846-b31b1b.svg?style=plastic)](https://arxiv.org/abs/1907.11846)

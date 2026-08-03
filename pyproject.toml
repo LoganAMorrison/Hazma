@@ -1,7 +1,10 @@
 [project]
 name = "hazma"
 readme = "README.md"
-requires-python = ">=3.10"
+# < 3.13: numpy < 2 (see dependencies) has no Python 3.13+ support, so pip
+# on newer Pythons would attempt a doomed NumPy 1.26 source build. Lift
+# together with the numpy/scipy caps.
+requires-python = ">=3.10,<3.13"
 authors = [
   { name = "Logan A. Morrison", email = "loanmorr@ucsc.edu" },
   { name = "Adam Coogan" },
@@ -13,6 +16,16 @@ classifiers = ["Programming Language :: Python"]
 
 dynamic = ["version"]
 
+# Upper bounds: hazma still uses APIs removed in NumPy 2.0 (np.trapz) and
+# SciPy 1.14 (scipy.integrate.trapz/simps). Lift these once the source is
+# migrated; NumPy < 2 also caps supported Python at 3.12.
+dependencies = [
+  "numpy>=1.16.2,<2",
+  "scipy>=1.2.1,<1.14",
+  "matplotlib>=2.2.3",
+  "scikit-image", # hazma.theory: skimage.measure.find_contours
+]
+
 [project.urls]
 Repository = "https://github.com/LoganAMorrison/Hazma"
 Documentation = "http://hazma.readthedocs.io"
@@ -22,10 +35,12 @@ dev = ["black>=23.3,<25.0"]
 
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["numpy", "cython", "setuptools", "scipy"]
+# scipy is pinned to the same range as the runtime dependency: the
+# extensions cimport scipy.special.cython_special, whose exported C symbols
+# must match between build and runtime scipy.
+requires = ["numpy", "cython", "setuptools", "scipy>=1.2.1,<1.14"]
 
 [tool.setuptools]
-py-modules = ["_build"]
 zip-safe = false
 
 [tool.setuptools.package-data]
@@ -38,6 +53,7 @@ zip-safe = false
 "hazma._decay.interpolation_data.skaon" = ["*.dat"]
 "hazma._decay.interpolation_data.lkaon" = ["*.dat"]
 "hazma.pbh_data" = ["*.csv"]
+"hazma.limits.data" = ["*.dat"]
 "hazma.cmb_data" = ["*.dat"]
 "hazma.relic_density" = ["*.dat"]
 "hazma.spectra._photon.data" = ["*.csv"]
@@ -45,11 +61,12 @@ zip-safe = false
 "hazma.spectra._neutrino.data" = ["*.csv"]
 "hazma" = ["*.txt", "*.rst", "*.pyx", "*.pyd", "*.c", "*.md"]
 
-[tool.setuptools.cmdclass]
-build_py = "_build.build_py"
-
 [tool.setuptools.packages.find]
-where = [".", "hazma"]
+# Only ship the hazma package. Namespace discovery (the pyproject default)
+# with an unrestricted `where` used to pull docs/, test/, notebooks/, and
+# top-level duplicates of every subpackage into the wheel.
+where = ["."]
+include = ["hazma", "hazma.*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "hazma.VERSION" }
