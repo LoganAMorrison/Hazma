@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""
-Resolve which phase of a phased project is eligible to start next and build a
-kickoff prompt for the next agent.
+"""Resolve which phase of a phased project is eligible to start next.
 
-This script is the readiness oracle for the ``begin-phase`` skill. It inspects
+Build a kickoff prompt for the next agent. This script is the readiness oracle
+for the agent-specific ``begin-phase`` skills. It inspects
 the frontmatter of each ``projects/<slug>/phases/phase-XX-*.md`` file plus the
 project's ``PLAN.md`` frontmatter, then emits JSON with one of three states:
 
@@ -25,25 +24,22 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
-
 
 # ---------------------------------------------------------------------------
 # Phase-id helpers
 
 
 def normalize_phase_id(value: str) -> str:
-    """Normalize a user-provided phase id like ``phase-03``, ``3.1``, or
-    ``8A`` into the canonical form used internally.
+    """Normalize a user-provided phase ID.
 
-    Canonical forms:
+    Accept ``phase-03``, ``3.1``, and ``8A``; canonical forms are:
       - ``"3"`` for major-only phases
       - ``"3.1"`` for decimal sub-phases
       - ``"8A"`` for letter-suffixed parallel phases
     """
-
     token = value.strip().lower()
     token = re.sub(r"^phase[\s_-]*", "", token)
     token = token.replace("_", ".").replace(" ", "")
@@ -66,9 +62,10 @@ def normalize_phase_id(value: str) -> str:
 
 
 def phase_id_from_prefix(prefix: str) -> str:
-    """Turn the ``XX`` (or ``XX_Y``, or ``XXa``) prefix of a phase filename
-    into the canonical id."""
+    """Return the canonical phase ID from a filename prefix.
 
+    Accept ``XX``, ``XX_Y``, and ``XXa`` prefixes.
+    """
     lower = prefix.lower()
     if lower and lower[-1].isalpha():
         return f"{int(lower[:-1])}{lower[-1].upper()}"
@@ -84,7 +81,6 @@ def phase_sort_key(phase_id: str) -> tuple[int, int, int, str]:
     Order: major phases < decimal sub-phases within a major < lettered
     parallel phases within a major.
     """
-
     if phase_id and phase_id[-1].isalpha():
         return (int(phase_id[:-1]), 2, 0, phase_id[-1])
     if "." in phase_id:
@@ -98,18 +94,17 @@ def phase_sort_key(phase_id: str) -> tuple[int, int, int, str]:
 
 
 _FRONTMATTER_RE = re.compile(r"\A---\n(?P<body>.*?)\n---\n?", re.S)
-_KEY_VALUE_RE = re.compile(
-    r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*(.+?)\s*$"
-)
+_KEY_VALUE_RE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_-]*)\s*:\s*(.+?)\s*$")
 _PHASE_NUMBER_RE = re.compile(
     r"Phase\s+(?P<id>[0-9]+(?:\.[0-9]+)?|[0-9]+[A-Za-z])",
     re.I,
 )
 _COMPLETE_MENTION_RE = re.compile(
-    r"Phase\s+(?P<id>[0-9]+(?:\.[0-9]+)?|[0-9]+[A-Za-z])"
-    r"\s+(?:is\s+)?complete",
+    r"Phase\s+(?P<id>[0-9]+(?:\.[0-9]+)?|[0-9]+[A-Za-z])" r"\s+(?:is\s+)?complete",
     re.I,
 )
+_MIN_QUOTED_VALUE_LENGTH = 2
+_REPO_ROOT_PARENT_DEPTH = 2
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -118,7 +113,6 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     We do not depend on a YAML library -- frontmatter in this repo is always
     simple ``key: value`` lines. Quoted values are unquoted.
     """
-
     match = _FRONTMATTER_RE.match(text)
     if not match:
         return {}
@@ -129,7 +123,11 @@ def parse_frontmatter(text: str) -> dict[str, str]:
         if not kv:
             continue
         value = kv.group(2).strip()
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        if (
+            len(value) >= _MIN_QUOTED_VALUE_LENGTH
+            and value[0] == value[-1]
+            and value[0] in ("'", '"')
+        ):
             value = value[1:-1]
         data[kv.group(1)] = value
     return data
@@ -153,9 +151,10 @@ def extract_phase_title(text: str, default: str) -> str:
 
 
 def extract_prerequisite_section(text: str) -> str:
-    """Return the body of the ``## Prerequisites`` block, or ``""`` if the
-    section is missing."""
+    """Return the body of the ``## Prerequisites`` block.
 
+    Return ``""`` if the section is missing.
+    """
     match = re.search(
         r"^## Prerequisites\s*\n(?P<body>.*?)(?=^## |\Z)",
         text,
@@ -167,8 +166,7 @@ def extract_prerequisite_section(text: str) -> str:
 
 
 def extract_prereq_phase_ids(prereq_text: str) -> tuple[tuple[str, ...], bool]:
-    """Extract machine-resolvable phase-id prerequisites from free-form
-    prose.
+    """Extract machine-resolvable phase-ID prerequisites from prose.
 
     Returns ``(ids, machine_resolvable)`` where ``machine_resolvable`` is:
       - ``True`` if the section is empty, or mentions no phases, or mentions
@@ -179,7 +177,6 @@ def extract_prereq_phase_ids(prereq_text: str) -> tuple[tuple[str, ...], bool]:
     We're intentionally strict: ambiguous prose is flagged rather than
     optimistically resolved.
     """
-
     stripped = prereq_text.strip()
     if not stripped:
         return (tuple(), True)
@@ -195,12 +192,7 @@ def extract_prereq_phase_ids(prereq_text: str) -> tuple[tuple[str, ...], bool]:
         # Some phase references don't have matching "complete" wording.
         # Return what we found but flag as not machine-resolvable.
         ids = tuple(
-            sorted(
-                {
-                    normalize_phase_id(m.group("id"))
-                    for m in complete_mentions
-                }
-            )
+            sorted({normalize_phase_id(m.group("id")) for m in complete_mentions})
         )
         return (ids, False)
 
@@ -264,18 +256,14 @@ def load_phase_records(project_dir: Path) -> dict[str, PhaseRecord]:
         status = frontmatter.get("status")
 
         prereq_section = extract_prerequisite_section(text)
-        prereq_ids, machine_resolvable = extract_prereq_phase_ids(
-            prereq_section
-        )
+        prereq_ids, machine_resolvable = extract_prereq_phase_ids(prereq_section)
 
         learnings_paths: tuple[Path, ...] = tuple()
         if learnings_dir.is_dir():
             pattern = f"phase-{prefix.lower()}-*.md"
             learnings_paths = tuple(
                 sorted(
-                    p
-                    for p in learnings_dir.glob(pattern)
-                    if not p.name.startswith("_")
+                    p for p in learnings_dir.glob(pattern) if not p.name.startswith("_")
                 )
             )
 
@@ -303,12 +291,11 @@ def relpath(repo_root: Path, path: Path) -> str:
         return str(path)
 
 
-def phase_closeout_issues(
-    repo_root: Path, record: PhaseRecord
-) -> list[str]:
-    """Reasons a phase is not considered fully closed out. Empty list means
-    the phase is closed out and its downstream dependents may proceed."""
+def phase_closeout_issues(repo_root: Path, record: PhaseRecord) -> list[str]:
+    """Return reasons a phase is not fully closed out.
 
+    An empty list allows downstream phases to proceed.
+    """
     issues: list[str] = []
     if not status_is_complete(record.status):
         issues.append(
@@ -335,7 +322,6 @@ def prerequisite_blockers(
     - ``unknown_prereqs`` -- raw prereq ids referenced but not present as
       phase files in the project.
     """
-
     record = phases[phase_id]
     blockers: list[dict[str, object]] = []
     unknown: list[str] = []
@@ -356,12 +342,11 @@ def prerequisite_blockers(
     return blockers, unknown
 
 
-def eligible_frontier(
-    repo_root: Path, phases: dict[str, PhaseRecord]
-) -> list[str]:
-    """Phases whose ``status: Not started`` and whose prerequisites are all
-    closed out and machine-resolvable."""
+def eligible_frontier(repo_root: Path, phases: dict[str, PhaseRecord]) -> list[str]:
+    """Return eligible not-started phases.
 
+    Every prerequisite must be closed out and machine-resolvable.
+    """
     frontier: list[str] = []
     for phase_id, record in sorted(
         phases.items(), key=lambda item: phase_sort_key(item[0])
@@ -371,9 +356,7 @@ def eligible_frontier(
         if not record.prereqs_machine_resolvable:
             # Don't silently promote prereqs-unknown phases to the frontier.
             continue
-        blockers, unknown = prerequisite_blockers(
-            repo_root, phases, phase_id
-        )
+        blockers, unknown = prerequisite_blockers(repo_root, phases, phase_id)
         if blockers or unknown:
             continue
         frontier.append(phase_id)
@@ -383,8 +366,7 @@ def eligible_frontier(
 def blocked_frontier_candidates(
     repo_root: Path, phases: dict[str, PhaseRecord]
 ) -> list[dict[str, object]]:
-    """Phases that look like the next candidates to start but are currently
-    blocked.
+    """Return not-started phases that are blocked.
 
     A phase makes the blocked-candidate list when its own status is
     ``Not started`` but one or more of the following is true:
@@ -410,9 +392,7 @@ def blocked_frontier_candidates(
             # Continue to also list any prereqs we *did* recognize so
             # the operator sees concrete context.
 
-        blockers, unknown = prerequisite_blockers(
-            repo_root, phases, phase_id
-        )
+        blockers, unknown = prerequisite_blockers(repo_root, phases, phase_id)
         for prereq_id in unknown:
             issues.append(
                 f"Phase {prereq_id} referenced as a prerequisite but "
@@ -458,18 +438,17 @@ def phase_summary(
         payload["reason"] = "No phase-level prerequisites."
     else:
         labels = [f"Phase {p}" for p in prereqs]
-        payload["reason"] = (
-            f"Prerequisites satisfied: {', '.join(labels)}."
-        )
+        payload["reason"] = f"Prerequisites satisfied: {', '.join(labels)}."
     return payload
 
 
-def build_prompt(
+def build_prompt(  # noqa: PLR0913, PLR0917
     project_slug: str,
     project_dir: Path,
     repo_root: Path,
     phases: dict[str, PhaseRecord],
     phase_id: str,
+    agent: str = "claude",
 ) -> str:
     record = phases[phase_id]
 
@@ -498,21 +477,20 @@ def build_prompt(
     rules_path = relpath(repo_root, project_dir / "rules.md")
     phase_path = relpath(repo_root, record.phase_file)
     recheck = (
-        f"python3 .claude/skills/begin-phase/scripts/resolve_phase.py "
-        f"--project {project_slug} --target-phase {phase_id}"
+        f"python3 scripts/agents/resolve_phase.py --project "
+        f"{project_slug} --agent {agent} --target-phase {phase_id}"
     )
 
     return (
-        f"Use the `/execute-single-task` skill.\n\n"
+        f"Use the `$execute-single-task` skill.\n\n"
         f"You are starting Phase {phase_id}: {record.title} for project "
         f"`{project_slug}` (root `{repo_root}`).\n\n"
         "Before editing:\n"
         f"1. Re-run `{recheck}` and refuse to proceed unless the result "
         f"is still `ready`.\n"
-        "2. Create your worktree as Step 3 of `/execute-single-task` "
-        "instructs -- path `.claude/worktrees/"
-        f"{project_slug}/<task-slug>/`, branch "
-        f"`claude/{project_slug}/<task-slug>`.\n\n"
+        "2. Create your worktree as Step 3 of `$execute-single-task` "
+        f"instructs -- path `.{agent}/worktrees/{project_slug}/"
+        f"<task-slug>/`, branch `{agent}/{project_slug}/<task-slug>`.\n\n"
         "Scope:\n"
         f"- Work only within Phase {phase_id}.\n"
         "- Do not start sibling or downstream phases.\n"
@@ -539,7 +517,7 @@ def build_prompt(
         f"{phase_id} task, if one exists\n\n"
         "Guardrails:\n"
         "- Avoid reading unrelated phase files.\n"
-        "- Follow `/execute-single-task` to keep scope to one task or "
+        "- Follow `$execute-single-task` to keep scope to one task or "
         "tightly related task cluster.\n"
         "- If prerequisite closeout or repo state has drifted since this "
         "prompt was generated, stop and report it instead of beginning "
@@ -558,23 +536,23 @@ def resolve_project_dir(
         return project_dir_arg.resolve()
     if project_arg is not None:
         return (repo_root / "projects" / project_arg).resolve()
-    raise ValueError(
-        "one of --project <slug> or --project-dir <path> is required"
-    )
+    raise ValueError("one of --project <slug> or --project-dir <path> is required")
 
 
-def resolve_phase(
+def resolve_phase(  # noqa: PLR0911, PLR0912, PLR0913, PLR0917
     repo_root: Path,
     project_slug: str,
     project_dir: Path,
     completed_phase: str | None = None,
     target_phase: str | None = None,
+    agent: str = "claude",
 ) -> dict[str, object]:
+    if agent not in {"claude", "codex"}:
+        raise ValueError(f"unsupported agent: {agent!r}")
     plan_path = project_dir / "PLAN.md"
     if not plan_path.exists():
         raise ValueError(
-            f"project PLAN not found at "
-            f"{relpath(repo_root, plan_path)}"
+            f"project PLAN not found at " f"{relpath(repo_root, plan_path)}"
         )
     plan_frontmatter = parse_frontmatter(plan_path.read_text())
     phased_flag = plan_frontmatter.get("phased", "").strip().lower()
@@ -616,9 +594,7 @@ def resolve_phase(
     normalized_completed = (
         normalize_phase_id(completed_phase) if completed_phase else None
     )
-    normalized_target = (
-        normalize_phase_id(target_phase) if target_phase else None
-    )
+    normalized_target = normalize_phase_id(target_phase) if target_phase else None
     if normalized_completed and normalized_completed not in phases:
         raise ValueError(f"unknown completed phase: {completed_phase}")
     if normalized_target and normalized_target not in phases:
@@ -651,8 +627,7 @@ def resolve_phase(
                 "status": "blocked",
                 "project": project_slug,
                 "message": (
-                    f"Phase {normalized_target} is not in the "
-                    "`Not started` state."
+                    f"Phase {normalized_target} is not in the " "`Not started` state."
                 ),
                 "eligible_frontier": frontier_payload,
                 "blockers": [
@@ -693,9 +668,7 @@ def resolve_phase(
                 "prompt": None,
             }
 
-        blockers, unknown = prerequisite_blockers(
-            repo_root, phases, normalized_target
-        )
+        blockers, unknown = prerequisite_blockers(repo_root, phases, normalized_target)
         for prereq_id in unknown:
             blockers.append(
                 {
@@ -734,6 +707,7 @@ def resolve_phase(
                 repo_root,
                 phases,
                 normalized_target,
+                agent,
             ),
         }
 
@@ -810,8 +784,7 @@ def resolve_phase(
             ),
             "eligible_frontier": frontier_payload,
             "choices": [
-                phase_summary(repo_root, phases, phase_id)
-                for phase_id in candidates
+                phase_summary(repo_root, phases, phase_id) for phase_id in candidates
             ],
             "notes": notes,
             "prompt": None,
@@ -826,7 +799,7 @@ def resolve_phase(
         "phase": phase_summary(repo_root, phases, phase_id),
         "notes": notes,
         "prompt": build_prompt(
-            project_slug, project_dir, repo_root, phases, phase_id
+            project_slug, project_dir, repo_root, phases, phase_id, agent
         ),
     }
 
@@ -838,14 +811,16 @@ def resolve_phase(
 def default_repo_root() -> Path:
     """Walk up from the script looking for a checkout root.
 
-    This script lives at
-    ``<repo>/.claude/skills/begin-phase/scripts/resolve_phase.py``, so the
-    repo root is four ``parents`` up. If that doesn't look like a checkout
-    (no ``projects/`` and no ``.git``), fall back to CWD.
+    This script lives at ``<repo>/scripts/agents/resolve_phase.py``, so the
+    repo root is two ``parents`` up. If that doesn't look like a checkout (no
+    ``projects/`` and no ``.git``), fall back to CWD.
     """
-
     here = Path(__file__).resolve()
-    candidate = here.parents[4] if len(here.parents) > 4 else here.parent
+    candidate = (
+        here.parents[_REPO_ROOT_PARENT_DEPTH]
+        if len(here.parents) > _REPO_ROOT_PARENT_DEPTH
+        else here.parent
+    )
     if (candidate / "projects").is_dir() or (candidate / ".git").exists():
         return candidate
     return Path.cwd()
@@ -890,6 +865,15 @@ def parse_args(argv: Iterable[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--agent",
+        choices=("claude", "codex"),
+        default="claude",
+        help=(
+            "Agent identity to embed in the generated kickoff prompt. "
+            "Defaults to claude for backward compatibility."
+        ),
+    )
+    parser.add_argument(
         "--repo-root",
         type=Path,
         default=None,
@@ -902,17 +886,13 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
 
     if args.project is None and args.project_dir is None:
-        sys.stderr.write(
-            "error: one of --project or --project-dir is required\n"
-        )
+        sys.stderr.write("error: one of --project or --project-dir is required\n")
         return 2
 
     repo_root = (args.repo_root or default_repo_root()).resolve()
 
     try:
-        project_dir = resolve_project_dir(
-            repo_root, args.project, args.project_dir
-        )
+        project_dir = resolve_project_dir(repo_root, args.project, args.project_dir)
         # Infer the slug if only --project-dir was supplied.
         project_slug = args.project or project_dir.name
         result = resolve_phase(
@@ -921,8 +901,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             project_dir=project_dir,
             completed_phase=args.completed_phase,
             target_phase=args.target_phase,
+            agent=args.agent,
         )
-    except Exception as exc:  # CLI error path
+    except (OSError, ValueError) as exc:
         payload = {
             "status": "error",
             "project": args.project,

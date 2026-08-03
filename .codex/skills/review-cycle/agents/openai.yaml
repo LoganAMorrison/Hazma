@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Cycle"
+  short_description: "Run a bounded multi-agent PR review loop."
+  default_prompt: "Use $review-cycle to review and converge on PR #123."

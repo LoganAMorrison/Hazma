@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Plan"
+  short_description: "Read-only review of a Hazma project plan."
+  default_prompt: "Use $review-plan to stress-test the plan for project my-project."

@@ -347,7 +347,8 @@ carve-out.
 
 ## Skills
 
-This repo defines Claude skills under `.claude/skills/`:
+This repo defines equivalent workflow skills under `.claude/skills/` and
+`.codex/skills/`:
 
 - `execute-single-task` — scoped implementation of one task.
 - `commit-and-pr` — commit, push, and open a PR following the guidelines.
@@ -362,7 +363,7 @@ This repo defines Claude skills under `.claude/skills/`:
 - `review-plan` — stress-test a project plan before implementation.
 
 Each skill expects the filesystem contract described above. Read the
-skill's `SKILL.md` for exact inputs, outputs, and reading order.
+active agent's `SKILL.md` for exact inputs, outputs, and reading order.
 
 ### Shared agent layer
 
@@ -375,8 +376,8 @@ This layer is the one-copy-per-invariant source of truth:
   reviewer roster and lens rubrics, environment/test-infra gotchas, and
   the review-lessons ledger.
 - [`scripts/agents/`](../scripts/agents/) — deterministic helper scripts
-  (preflight execution, PR title validation, task-worktree setup, task
-  resolution, doc-citation bounds checking) that skills shell out to
+  (preflight execution, PR title validation, task-worktree setup, task and
+  phase resolution, doc-citation bounds checking) that skills shell out to
   instead of re-deriving the logic inline.
 
 When a skill needs to state an invariant already captured under

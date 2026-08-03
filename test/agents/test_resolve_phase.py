@@ -1,7 +1,7 @@
-"""Regression tests for `.claude/skills/begin-phase/scripts/resolve_phase.py`.
+"""Regression tests for `scripts/agents/resolve_phase.py`.
 
 The agent-workflow helpers are not importable as a package (they live under
-`.claude/` and `scripts/`, outside `hazma`), so they are loaded by path.
+`scripts/`, outside `hazma`), so they are loaded by path.
 
 The bug these guard: `build_prompt` used to interpolate the *canonical* phase
 id into filesystem paths. `phase_id_from_prefix("02")` normalizes to `"2"`, so
@@ -17,6 +17,7 @@ import importlib.util
 import subprocess
 import sys
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -30,10 +31,11 @@ REPO_ROOT = Path(
     ).stdout.strip()
 )
 
-SCRIPT = REPO_ROOT / ".claude/skills/begin-phase/scripts/resolve_phase.py"
+SCRIPT = REPO_ROOT / "scripts/agents/resolve_phase.py"
+EXPECTED_PHASE_README_MENTIONS = 2
 
 
-def _load_module():
+def _load_module() -> ModuleType:
     spec = importlib.util.spec_from_file_location("resolve_phase", SCRIPT)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -46,7 +48,7 @@ pytestmark = pytest.mark.skipif(not SCRIPT.is_file(), reason=f"{SCRIPT} not pres
 
 
 @pytest.fixture(scope="module")
-def resolve_phase():
+def resolve_phase() -> ModuleType:
     return _load_module()
 
 
@@ -77,7 +79,7 @@ def _scaffold(tmp_path: Path, prefix: str, slug: str = "demo") -> Path:
     return project
 
 
-def test_phase_id_normalization_drops_zero_padding(resolve_phase):
+def test_phase_id_normalization_drops_zero_padding(resolve_phase: ModuleType) -> None:
     """The canonical id is unpadded -- this is what makes the bug possible."""
     assert resolve_phase.phase_id_from_prefix("02") == "2"
     assert resolve_phase.phase_id_from_prefix("2") == "2"
@@ -85,9 +87,13 @@ def test_phase_id_normalization_drops_zero_padding(resolve_phase):
 
 
 @pytest.mark.parametrize("prefix", ["01", "02", "09", "10"])
-def test_prompt_paths_use_the_filename_prefix(resolve_phase, tmp_path, prefix):
-    """Kickoff-prompt paths must match the on-disk directory, zero-padding
-    included -- not the normalized display id."""
+def test_prompt_paths_use_the_filename_prefix(
+    resolve_phase: ModuleType, tmp_path: Path, prefix: str
+) -> None:
+    """Use the filename prefix in kickoff-prompt paths.
+
+    Preserve zero padding rather than interpolating the normalized display ID.
+    """
     project = _scaffold(tmp_path, prefix)
     phases = resolve_phase.load_phase_records(project)
     phase_id = resolve_phase.phase_id_from_prefix(prefix)
@@ -101,7 +107,7 @@ def test_prompt_paths_use_the_filename_prefix(resolve_phase, tmp_path, prefix):
     )
 
     expected = f"task-notes/phase-{prefix}/README.md"
-    assert prompt.count(expected) == 2, (
+    assert prompt.count(expected) == EXPECTED_PHASE_README_MENTIONS, (
         f"expected both per-phase README references to use {expected!r}\n"
         f"prompt was:\n{prompt}"
     )
@@ -115,7 +121,9 @@ def test_prompt_paths_use_the_filename_prefix(resolve_phase, tmp_path, prefix):
         assert f"task-notes/phase-{phase_id}/" not in prompt
 
 
-def test_prompt_still_uses_the_canonical_id_for_display(resolve_phase, tmp_path):
+def test_prompt_still_uses_the_canonical_id_for_display(
+    resolve_phase: ModuleType, tmp_path: Path
+) -> None:
     """Display text keeps the unpadded id -- 'Phase 2', not 'Phase 02'."""
     project = _scaffold(tmp_path, "02")
     phases = resolve_phase.load_phase_records(project)
@@ -132,10 +140,33 @@ def test_prompt_still_uses_the_canonical_id_for_display(resolve_phase, tmp_path)
     assert "Work only within Phase 2." in prompt
 
 
+def test_prompt_uses_the_requested_agent_identity(
+    resolve_phase: ModuleType, tmp_path: Path
+) -> None:
+    """The shared readiness helper must generate a Codex-safe handoff."""
+    project = _scaffold(tmp_path, "02")
+    phases = resolve_phase.load_phase_records(project)
+
+    prompt = resolve_phase.build_prompt(
+        project_slug="demo",
+        project_dir=project,
+        repo_root=tmp_path,
+        phases=phases,
+        phase_id="2",
+        agent="codex",
+    )
+
+    assert "scripts/agents/resolve_phase.py" in prompt
+    assert "--agent codex" in prompt
+    assert ".codex/worktrees/demo/<task-slug>/" in prompt
+    assert "`codex/demo/<task-slug>`" in prompt
+
+
 @pytest.mark.parametrize("prefix", ["01", "02", "09", "10"])
-def test_resolve_task_agrees_on_the_phase_directory(tmp_path, prefix):
-    """The two helpers must derive the same per-phase directory, or a
-    begin-phase handoff points somewhere resolve_task cannot read.
+def test_resolve_task_agrees_on_the_phase_directory(
+    tmp_path: Path, prefix: str
+) -> None:
+    """Keep both helpers aligned on the per-phase directory.
 
     `resolve_task.resolve_phase()` is called directly rather than through the
     CLI: the CLI locates the project via `git rev-parse`, so it would look

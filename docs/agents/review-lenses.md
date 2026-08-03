@@ -13,30 +13,48 @@ file conflicts with a skill's inline prose, this file plus
 
 ## Reviewer roster
 
-Each reviewer's identity — letter, role, model, `--lens` flag, and when
-its lens is load-bearing — is fixed below. A single prompt template
-spawns the selected subset, substituting these fields.
+Each reviewer's identity — letter, role, agent-specific capability target, and
+`--lens` flag — is fixed below. A single prompt template spawns the selected
+subset, substituting these fields. The Model column applies to Claude; Codex
+inherits the active model.
 
-| ID | Role | Model | Effort | `--lens` | When this lens is useful |
-|----|------|-------|--------|----------|--------------------------|
-| A | Generalist | `sonnet` | medium | (none) | Almost always — a broad pass over completeness, correctness, numerics, and conventions. The default safety net when no other reviewer clearly owns a concern. |
-| B | Completeness | `sonnet` | medium | `completeness` | Task has explicit Exit / Acceptance Criteria, multi-bullet objectives, or a phase-file gate; the diff might under- or over-deliver against the spec. |
-| C | Logic | `sonnet` | high | `logic` | Diff changes runtime behavior — control flow, error handling, array broadcasting, interpolation, integration bounds, or non-trivial branching. Pure-doc / pure-fixture / pure-rename PRs usually do not need C. |
-| D | Doc Consistency & Canonical Contract | `sonnet` | medium | `doc-consistency` | Diff touches durable docs (task notes, working-memory READMEs, phase files, ADRs, learnings, README, CHANGELOG, follow-ups), edits any module/function docstring, or asserts numeric / command / identifier claims that must reproduce. |
-| E | Numerics & Performance | `opus` | high | `numerics` | **Any diff that can move a number** — physics formulas, constants, interpolation, integration, phase space, spectra, limits — or that touches a hot loop or the Cython boundary. This is a physics library: E is the lens most likely to catch the defect that matters. |
+|ID|Role|Model|Effort|Codex|Lens|
+|--|----|-----|------|-----|----|
+|A|Generalist|`sonnet`|medium|inherit|none|
+|B|Completeness|`sonnet`|medium|inherit|`completeness`|
+|C|Logic|`sonnet`|high|inherit|`logic`|
+|D|Doc consistency|`sonnet`|medium|inherit|`doc-consistency`|
+|E|Numerics|`opus`|high|inherit|`numerics`|
 
-**Models.** The roster is calibrated for the current generation:
+- **A — Generalist:** Use almost always as the broad safety net for
+  completeness, correctness, numerics, and conventions.
+- **B — Completeness:** Use for explicit Exit / Acceptance Criteria,
+  multi-bullet objectives, or a phase-file gate.
+- **C — Logic:** Use for runtime behavior, control flow, error handling,
+  broadcasting, interpolation, integration bounds, or non-trivial branching.
+  Pure docs, fixtures, and renames usually do not need C.
+- **D — Doc Consistency & Canonical Contract:** Use when a diff touches
+  durable docs, a public docstring, or claims that must reproduce.
+- **E — Numerics & Performance:** Use whenever a change can move a number or
+  touches a hot loop or Cython boundary. This is the highest-value physics
+  lens.
+
+**Agent models and effort.** The roster is calibrated for the current
+generation:
 
 - **A–D default to `sonnet`** (Sonnet 5). They are pattern-matching and
   cross-referencing passes; Sonnet handles them at full quality.
 - **E defaults to `opus`** (Opus 5). Deciding whether a spectrum is
   *right* — not merely finite — is the hardest judgment in this repo and
   the one worth the strongest model.
-- The orchestrator MAY upgrade **A** to `opus` for high-risk or
-  project-closing PRs, and MAY downgrade **D** to `haiku` for a
-  docs-only diff with no numeric claims.
-- The `review-respond` synthesis agent and any implementation subagent
-  are `opus`.
+- Claude's orchestrator MAY upgrade **A** to `opus` for high-risk or
+  project-closing PRs, and MAY downgrade **D** to `haiku` for a docs-only
+  diff with no numeric claims. Claude implementation and review-response
+  agents are `opus`.
+- Codex reviewers inherit the active Codex model unless the caller has
+  authorized an override. Use the table's effort target, and raise E to
+  `xhigh` for a changed published spectrum or limit. Codex implementation
+  and review-response agents use the active model with high effort.
 
 **Reasoning effort.** Pass the `Effort` column when the runner supports
 it. `high` for C and E, `medium` elsewhere; raise E to `xhigh` on a diff

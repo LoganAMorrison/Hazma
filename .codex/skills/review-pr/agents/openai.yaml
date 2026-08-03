@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Pull Request"
+  short_description: "Review one Hazma pull request by lens."
+  default_prompt: "Use $review-pr to review PR #123 with the numerics lens."

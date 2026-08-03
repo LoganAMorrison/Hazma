@@ -187,8 +187,9 @@ only in a PR description.
 
 ## Skills
 
-`.claude/skills/` holds the workflow skills that automate this loop:
-`execute-single-task`, `commit-and-pr`, `review-pr`, `review-respond`,
-`review-cycle`, `task-pipeline`, `begin-phase`, `review-plan`. Each
-expects the filesystem contract above and points into `docs/agents/` for
-shared rules. Read a skill's `SKILL.md` for its exact inputs and outputs.
+`.claude/skills/` and `.codex/skills/` hold parallel workflow skills for
+this loop: `execute-single-task`, `commit-and-pr`, `review-pr`,
+`review-respond`, `review-cycle`, `task-pipeline`, `begin-phase`, and
+`review-plan`. Each expects the filesystem contract above and points into
+`docs/agents/` for shared rules. Read the active agent's `SKILL.md` for
+its exact inputs and outputs.
