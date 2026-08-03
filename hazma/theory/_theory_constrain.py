@@ -117,7 +117,7 @@ class TheoryConstrain:
         e_min, e_max = measurement.e_lows[0], measurement.e_highs[-1]
 
         if self.kind == "ann":  # type: ignore
-            e_cm = 2 * self.mx * (1 + 0.5 * measurement.target.vx ** 2)  # type: ignore
+            e_cm = 2 * self.mx * (1 + 0.5 * measurement.target.vx**2)  # type: ignore
             f_dm = 2.0
             # Approximate <sigma v> ~ sigma * v
             sv = (
@@ -128,7 +128,7 @@ class TheoryConstrain:
                 sv
                 * measurement.target.J
                 * measurement.target.dOmega
-                / (2 * f_dm * self.mx ** 2 * 4 * np.pi)  # type: ignore
+                / (2 * f_dm * self.mx**2 * 4 * np.pi)  # type: ignore
             )
             dnde_conv = self.total_conv_spectrum_fn(  # type: ignore
                 e_min, e_max, e_cm, measurement.energy_res
@@ -157,7 +157,7 @@ class TheoryConstrain:
         # Compute limits for each bin
         bin_constraints = []
 
-        for (e_low, e_high, phi, sigma) in zip(
+        for e_low, e_high, phi, sigma in zip(
             measurement.e_lows,
             measurement.e_highs,
             measurement.fluxes,

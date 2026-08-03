@@ -59,12 +59,12 @@ def Widths(Q2, ix):
     """
     Q = math.sqrt(Q2)
     if ix == 0:
-        pcm = 0.5 * (Q2 - mEta_ ** 2) / Q
+        pcm = 0.5 * (Q2 - mEta_**2) / Q
         resWidths = (
             ResWidths_[0]
             * ResMasses_[0] ** 2
             / Q2
-            * ((Q2 - 4.0 * mPi_ ** 2) / (ResMasses_[0] ** 2 - 4.0 * mPi_ ** 2)) ** 1.5
+            * ((Q2 - 4.0 * mPi_**2) / (ResMasses_[0] ** 2 - 4.0 * mPi_**2)) ** 1.5
         )
     else:
         resWidths = ResWidths_[ix]
@@ -89,26 +89,26 @@ def FEtaGamma(Q2):
 
 # Decay rate of the dark mediator into EtaGamma
 def GammaDM(mMed):
-    Q2 = mMed ** 2
+    Q2 = mMed**2
     if mMed > mEta_:
-        pcm = 0.5 * (Q2 - mEta_ ** 2) / mMed
+        pcm = 0.5 * (Q2 - mEta_**2) / mMed
     else:
         return 0.0
-    return 1.0 / 12.0 / math.pi * pcm ** 3 * abs(FEtaGamma(Q2)) ** 2 * Resonance.gev2nb
+    return 1.0 / 12.0 / math.pi * pcm**3 * abs(FEtaGamma(Q2)) ** 2 * Resonance.gev2nb
 
 
 # SM cross section for Eta Gamma
 def sigmaSMEtaGamma(Q2):
     Q = math.sqrt(Q2)
     if Q > mEta_:
-        pcm = 0.5 * (Q2 - mEta_ ** 2) / Q
+        pcm = 0.5 * (Q2 - mEta_**2) / Q
     else:
         return 0.0
     return (
         4.0
         * math.pi
         * alpha.alphaEM(Q2) ** 2
-        * pcm ** 3
+        * pcm**3
         / 3.0
         / Q
         / Q2
@@ -121,11 +121,11 @@ def sigmaSMEtaGamma(Q2):
 def sigmaDMEtaGamma(Q2):
     Q = math.sqrt(Q2)
     if Q > mEta_:
-        pcm = 0.5 * (Q2 - mEta_ ** 2) / Q
+        pcm = 0.5 * (Q2 - mEta_**2) / Q
     else:
         return 0.0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     temp = FEtaGamma(Q2)
     return (
@@ -133,9 +133,9 @@ def sigmaDMEtaGamma(Q2):
         / 12
         / math.pi
         * DMmed2
-        * (1 + 2 * mDM_ ** 2 / Q2)
+        * (1 + 2 * mDM_**2 / Q2)
         * Q
-        * pcm ** 3
+        * pcm**3
         * abs(temp) ** 2
         * Resonance.gev2nb
     )

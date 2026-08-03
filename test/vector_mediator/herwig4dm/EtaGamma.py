@@ -29,7 +29,7 @@ upp_lim = 2.0
 energy = low_lim
 while energy < upp_lim:
     xSM.append(energy)
-    ySM.append(FEtaGamma.sigmaSMEtaGamma(energy ** 2))
+    ySM.append(FEtaGamma.sigmaSMEtaGamma(energy**2))
     energy += 0.005
 
 with open("txt_files/SMEtaGamma.txt", "w") as txtfile:
@@ -43,7 +43,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < 1.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaGamma.GammaDM(mMed)
@@ -57,7 +57,7 @@ cMed_s = 1.0 / 3.0
 mDM = FEtaGamma.mEta_ / 2.0
 while mDM < 1.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaGamma.GammaDM(mMed)

@@ -41,7 +41,7 @@ upp_lim = 4.0
 
 scale = low_lim
 while scale < upp_lim:
-    s = scale ** 2
+    s = scale**2
     xSM_neutral.append(scale)
     xSM_charged.append(scale)
     ySM_neutral.append(F4pi.sigmaSM(s, "neutral"))
@@ -60,7 +60,7 @@ F4pi.readHadronic_Current()
 mDM = 0.6125 / 2.0
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    s = energy ** 2
+    s = energy**2
     xDP_neutral.append(energy)
     xDP_charged.append(energy)
     wMed_n = F4pi.GammaDM(mMed, mode="neutral")
@@ -83,7 +83,7 @@ F4pi.readHadronic_Current()
 mDM = 0.6125 / 2.0
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    s = energy ** 2
+    s = energy**2
     xBL_neutral.append(energy)
     xBL_charged.append(energy)
     wMed_n = F4pi.GammaDM(mMed, mode="neutral")

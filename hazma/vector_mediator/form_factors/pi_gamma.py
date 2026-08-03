@@ -82,12 +82,10 @@ class FormFactorPiGamma:
         )
 
     @overload
-    def form_factor(self, *, q: float, gvuu, gvdd, gvss) -> complex:
-        ...
+    def form_factor(self, *, q: float, gvuu, gvdd, gvss) -> complex: ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvuu, gvdd, gvss) -> ComplexArray:
-        ...
+    def form_factor(self, *, q: RealArray, gvuu, gvdd, gvss) -> ComplexArray: ...
 
     def form_factor(
         self, *, q: Union[float, RealArray], gvuu, gvdd, gvss

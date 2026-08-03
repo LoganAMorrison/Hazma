@@ -22,7 +22,7 @@ yBL_n = []
 # SM case
 scale = FOmPiPi.mOm_ + 2 * FOmPiPi.mPi_[0] + 0.1
 while scale < 2.5:
-    Q2 = scale ** 2
+    Q2 = scale**2
     xSM.append(scale)
     ySM_n.append(FOmPiPi.sigmaSM(Q2, 0))
     ySM_c.append(FOmPiPi.sigmaSM(Q2, 1))
@@ -51,7 +51,7 @@ mDM = 0.58089518
 
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed_n = FOmPiPi.GammaDM(mMed, 0)

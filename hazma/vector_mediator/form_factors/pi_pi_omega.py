@@ -104,8 +104,7 @@ class FormFactorPiPiOmega:
             p1 = kallen_lambda(z, mup**2, 1.0)
             p2 = kallen_lambda(z, mup**2, muw**2)
             f = (
-                (z - mup**2) ** 2
-                * (1 + z + z**2 - 2 * (1 + z) * mup**2 + mup**4)
+                (z - mup**2) ** 2 * (1 + z + z**2 - 2 * (1 + z) * mup**2 + mup**4)
                 + (
                     z * (1 + z * (28 + z))
                     - 2 * (1 + 2 * z * (1 + z)) * mup**2
@@ -123,9 +122,7 @@ class FormFactorPiPiOmega:
 
             p1 = kallen_lambda(z, mup**2, mup**2)
             p2 = kallen_lambda(z, muw**2, 1.0)
-            f = ((-1 + z) ** 2 - 2 * (-5 + z) * muw**2 + muw**4) / (
-                6.0 * z * muw**2
-            )
+            f = ((-1 + z) ** 2 - 2 * (-5 + z) * muw**2 + muw**4) / (6.0 * z * muw**2)
 
             return f * np.sqrt(p1 * p2)
 

@@ -66,20 +66,21 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
 # necessary functions #
 ###########################
 
+
 # p-wave width
 def Gammarho(Qi2, mRho, gRho, mj, mk):
     return (
         gRho
-        * mRho ** 2
+        * mRho**2
         / Qi2
-        * ((Qi2 - (mj + mk) ** 2) / (mRho ** 2 - (mj + mk) ** 2)) ** 1.5
+        * ((Qi2 - (mj + mk) ** 2) / (mRho**2 - (mj + mk) ** 2)) ** 1.5
     )
 
 
 # Breit-Wigner for rhos
 def BWrho(Qi2, mRho, gRho, mj, mk):
-    return mRho ** 2 / (
-        Qi2 - mRho ** 2 + ii * math.sqrt(Qi2) * Gammarho(Qi2, mRho, gRho, mj, mk)
+    return mRho**2 / (
+        Qi2 - mRho**2 + ii * math.sqrt(Qi2) * Gammarho(Qi2, mRho, gRho, mj, mk)
     )
 
 
@@ -164,7 +165,7 @@ def F1(Q2, Q02):
     f1 = BWrho(Q02, mRhoI1_[0], gRhoI1_[0], mPi_, mPi_) / mRhoI1_[0] ** 2
     f1 += sigma_ * BWrho(Q02, mRhoI1_[1], gRhoI1_[1], mPi_, mPi_) / mRhoI1_[1] ** 2
     GW = GW_pre_ * mRhoI1_[0] ** 2 * g_omega_pi_pi_
-    f1 *= cI1_ * GW * Resonance.BreitWignerFW(Q2, mOmI1_, gOmI1_) / mOmI1_ ** 2
+    f1 *= cI1_ * GW * Resonance.BreitWignerFW(Q2, mOmI1_, gOmI1_) / mOmI1_**2
     return f1
 
 
@@ -186,16 +187,16 @@ def Lcontracted(Qp2, Qm2, Q02, s):
         1.0
         / 4.0
         * (
-            -(Qp2 ** 2) * Qm2
-            + Qp2 * Qm2 * (3 * mPi_ ** 2 - Qm2 + s)
-            - (mPi_ ** 3 - mPi_ * s) ** 2
+            -(Qp2**2) * Qm2
+            + Qp2 * Qm2 * (3 * mPi_**2 - Qm2 + s)
+            - (mPi_**3 - mPi_ * s) ** 2
         )
     )
 
 
 # Q02 expressed in other variables
 def QZero2(s, Qp2, Qm2):
-    return 3 * mPi_ ** 2 + s - Qm2 - Qp2
+    return 3 * mPi_**2 + s - Qm2 - Qp2
 
 
 def Integrand(Qp2, Qm2, s):
@@ -209,19 +210,19 @@ def Integrand(Qp2, Qm2, s):
 # bounds for Qm2
 def bounds_Qm(s):
     upp = (math.sqrt(s) - mPi_) ** 2
-    low = 4.0 * mPi_ ** 2
+    low = 4.0 * mPi_**2
     return (low, upp)
 
 
 # bounds for Qp2
 def bounds_Qp(Qm2, s):
     E2s = 0.5 * math.sqrt(Qm2)
-    E3s = 0.5 * (s - Qm2 - mPi_ ** 2) / math.sqrt(Qm2)
+    E3s = 0.5 * (s - Qm2 - mPi_**2) / math.sqrt(Qm2)
     low = (E2s + E3s) ** 2 - (
-        math.sqrt(E2s ** 2 - mPi_ ** 2) + math.sqrt(E3s ** 2 - mPi_ ** 2)
+        math.sqrt(E2s**2 - mPi_**2) + math.sqrt(E3s**2 - mPi_**2)
     ) ** 2
     upp = (E2s + E3s) ** 2 - (
-        math.sqrt(E2s ** 2 - mPi_ ** 2) - math.sqrt(E3s ** 2 - mPi_ ** 2)
+        math.sqrt(E2s**2 - mPi_**2) - math.sqrt(E3s**2 - mPi_**2)
     ) ** 2
     return (low, upp)
 
@@ -241,8 +242,8 @@ def GammaDM(medMass):
         return 0
     pre = medMass / 3.0
     # phase space prefactor
-    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / medMass ** 4
-    s = medMass ** 2
+    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / medMass**4
+    s = medMass**2
     form = integrate.nquad(Integrand, [bounds_Qp, bounds_Qm], args=(s,))[0]
     return pre * form
 
@@ -253,12 +254,12 @@ def sigmaDM(s):
         return 0
     en = math.sqrt(s)
     cDM = gDM_
-    DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (s - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     # DM initial current+ mediator propagator
-    pre = 1 / 3.0 * DMmed2 * s * (1 + 2 * mDM_ ** 2 / s)
+    pre = 1 / 3.0 * DMmed2 * s * (1 + 2 * mDM_**2 / s)
     # phase space prefactor
-    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / s ** 2
+    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / s**2
     form = integrate.nquad(Integrand, [bounds_Qp, bounds_Qm], args=(s,))[0]
     return pre * form * Resonance.gev2nb
 
@@ -268,9 +269,9 @@ def sigmaSM(s):
     if s < (3 * mPi_) ** 2:
         return 0
     # leptonic current +1/s photon propagator
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
+    pre = 16.0 * math.pi**2 * alpha.alphaEM(s) ** 2 / 3.0 / s
     # phase space prefactor
-    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / s ** 2
+    pre *= 1.0 / (2 * math.pi) ** 3 / 32.0 / s**2
     # form factor integration
     form = integrate.nquad(Integrand, [bounds_Qp, bounds_Qm], args=(s,))[0]
     return pre * form * Resonance.gev2nb

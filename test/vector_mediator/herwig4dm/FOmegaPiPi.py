@@ -57,31 +57,24 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
 
 
 def BWs(a, s, mMed, gMed):
-    return a * mMed ** 2 / ((mMed ** 2 - s) - ii * math.sqrt(s) * gMed)
+    return a * mMed**2 / ((mMed**2 - s) - ii * math.sqrt(s) * gMed)
 
 
 def BW(a, s, mMed, gMed):
-    return a * mMed ** 2 / ((mMed ** 2 - s) - ii * mMed * gMed)
+    return a * mMed**2 / ((mMed**2 - s) - ii * mMed * gMed)
 
 
 # momentum
 def pcm(m02, m12, m22):
     if (
-        (
-            m02 ** 2
-            + m12 ** 2
-            + m22 ** 2
-            - 2.0 * m02 * m12
-            - 2.0 * m02 * m22
-            - 2.0 * m12 * m22
-        )
+        (m02**2 + m12**2 + m22**2 - 2.0 * m02 * m12 - 2.0 * m02 * m22 - 2.0 * m12 * m22)
         / m02
     ) < 0:
         print(
             (
-                m02 ** 2
-                + m12 ** 2
-                + m22 ** 2
+                m02**2
+                + m12**2
+                + m22**2
                 - 2.0 * m02 * m12
                 - 2.0 * m02 * m22
                 - 2.0 * m12 * m22
@@ -92,14 +85,7 @@ def pcm(m02, m12, m22):
             m22,
         )
     return 0.5 * math.sqrt(
-        (
-            m02 ** 2
-            + m12 ** 2
-            + m22 ** 2
-            - 2.0 * m02 * m12
-            - 2.0 * m02 * m22
-            - 2.0 * m12 * m22
-        )
+        (m02**2 + m12**2 + m22**2 - 2.0 * m02 * m12 - 2.0 * m02 * m22 - 2.0 * m12 * m22)
         / m02
     )
 
@@ -122,8 +108,8 @@ def Integrand(mpp, s, mode):
         Q = math.sqrt(Q2)
         # see eq. (141) in low_energy.pdf notes
         P2 = pcm(Q2, mPi_[mode] ** 2, mPi_[mode] ** 2)
-        P3 = pcm(s, Q2, mOm_ ** 2)
-        mom_term = P2 * P3 / Q * (1 + P3 ** 2 / 3.0 / mOm_ ** 2)
+        P3 = pcm(s, Q2, mOm_**2)
+        mom_term = P2 * P3 / Q * (1 + P3**2 / 3.0 / mOm_**2)
         output.append(mom_term)
     return output
 
@@ -165,9 +151,9 @@ def sigmaSM(s, mode):
     if s <= (mOm_ + 2 * mPi_[1]) ** 2:
         return 0
     # initial leptonic current (e+e-)
-    pre = 16.0 * math.pi ** 2 * alpha.alphaEM(s) ** 2 / 3.0 / s
+    pre = 16.0 * math.pi**2 * alpha.alphaEM(s) ** 2 / 3.0 / s
     # coming from phase space, see eq. (141) in low_energy.pdf notes
-    pre *= 3 / 64.0 / math.pi ** 3 / s ** 1.5
+    pre *= 3 / 64.0 / math.pi**3 / s**1.5
     return pre * phase(s, mode) * gev2nb * abs(FOmegaPiPi(s)) ** 2
 
 
@@ -175,15 +161,15 @@ def sigmaSM(s, mode):
 
 
 def GammaDM(mMed, mode=1):
-    if mMed ** 2 <= (2 * mPi_[1] + mOm_) ** 2:
+    if mMed**2 <= (2 * mPi_[1] + mOm_) ** 2:
         return 0
     if cI0_ == 0:
         return 0
     # vector spin average
     pre = 1 / 3.0
     # coming from phase space, see eq. (141) in low_energy.pdf notes
-    pre *= 3 / 64.0 / math.pi ** 3 / mMed ** 2
-    return pre * phase(mMed ** 2, mode) * abs(FOmegaPiPi(mMed ** 2)) ** 2
+    pre *= 3 / 64.0 / math.pi**3 / mMed**2
+    return pre * phase(mMed**2, mode) * abs(FOmegaPiPi(mMed**2)) ** 2
 
 
 def sigmaDM(s, mode):
@@ -193,9 +179,9 @@ def sigmaDM(s, mode):
         return 0
     cDM = gDM_
     # initial DM current
-    DMmed = cDM / (s - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (s - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
-    pre = DMmed2 * s * (1 + 2 * mDM_ ** 2 / s) / 3.0
+    pre = DMmed2 * s * (1 + 2 * mDM_**2 / s) / 3.0
     # coming from phase space, see eq. (141) in low_energy.pdf notes
-    pre *= 3 / 64.0 / math.pi ** 3 / s ** 1.5
+    pre *= 3 / 64.0 / math.pi**3 / s**1.5
     return pre * phase(s, mode) * gev2nb * abs(FOmegaPiPi(s)) ** 2

@@ -52,7 +52,7 @@ class AxialVectorMediatorCrossSections:
         if (
             Q > 2.0 * mpi + mpi0
             and Q > 2.0 * mx
-            and s > 4.0 * mpi ** 2
+            and s > 4.0 * mpi**2
             and s < (Q - mpi0) ** 2
         ):
             # gauu = self.gauu
@@ -71,7 +71,7 @@ class AxialVectorMediatorCrossSections:
 
     def sigma_xx_to_a_to_pi0pipi(self, Q):
         if Q > 2.0 * mpi + mpi0 and Q > 2.0 * self.mx:
-            s_min = 4.0 * mpi ** 2
+            s_min = 4.0 * mpi**2
             s_max = (Q - mpi0) ** 2
 
             ret_val = quad(self.dsigma_ds_xx_to_a_to_pi0pipi, s_min, s_max, args=(Q))[0]

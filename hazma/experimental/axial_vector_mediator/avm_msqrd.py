@@ -3,6 +3,7 @@
 @author - Logan Morrison and Adam Coogan
 @date - December 2017
 """
+
 import numpy as np
 from hazma.field_theory_helper_functions.common_functions import minkowski_dot
 from hazma.parameters import alpha_em
@@ -44,7 +45,7 @@ def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
     Q = p3[0] + p4[0]
 
     E = Q / 2.0
-    p = np.sqrt(E ** 2 - mx ** 2)
+    p = np.sqrt(E**2 - mx**2)
 
     p1 = np.array([E, 0.0, 0.0, p])
     p2 = np.array([E, 0.0, 0.0, -p])
@@ -56,17 +57,17 @@ def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
 
     return (
         4
-        * cffa ** 2
-        * cxxa ** 2
+        * cffa**2
+        * cxxa**2
         * (
-            2 * mf ** 2 * mx ** 2
-            + 6 * mf ** 2 * mx ** 2
+            2 * mf**2 * mx**2
+            + 6 * mf**2 * mx**2
             + 2 * p1DOTp4 * p2DOTp3
             + 2 * p1DOTp3 * p2DOTp4
-            - mf ** 2 * Q ** 2
-            - mx ** 2 * Q ** 2
+            - mf**2 * Q**2
+            - mx**2 * Q**2
         )
-    ) / (-ma ** 2 + Q ** 2) ** 2
+    ) / (-(ma**2) + Q**2) ** 2
 
 
 def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
@@ -106,7 +107,7 @@ def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
     Q = p3[0] + p4[0] + k[0]
 
     E = Q / 2
-    p = np.sqrt(E ** 2 - mx ** 2)
+    p = np.sqrt(E**2 - mx**2)
 
     p1 = np.array([E, 0, 0, p])
     p2 = np.array([E, 0, 0, -p])
@@ -127,9 +128,9 @@ def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
 
     return (
         4
-        * cffa ** 2
-        * cxxa ** 2
-        * e ** 2
+        * cffa**2
+        * cxxa**2
+        * e**2
         * (
             2
             * kDOTp3
@@ -147,43 +148,43 @@ def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
                 * p3DOTp4
                 + kDOTp2
                 * (kDOTp3 * p1DOTp3 + kDOTp4 * p1DOTp4 + (p1DOTp3 + p1DOTp4) * p3DOTp4)
-                - mx ** 2
+                - mx**2
                 * (
-                    kDOTp3 ** 2
-                    + kDOTp4 ** 2
+                    kDOTp3**2
+                    + kDOTp4**2
                     + 2 * (kDOTp3 + kDOTp4) * p3DOTp4
-                    + 2 * p3DOTp4 ** 2
+                    + 2 * p3DOTp4**2
                 )
             )
-            + (kDOTp3 ** 2 + kDOTp4 ** 2) * mf ** 4 * (-6 * mx ** 2 + Q ** 2)
+            + (kDOTp3**2 + kDOTp4**2) * mf**4 * (-6 * mx**2 + Q**2)
             + 2
-            * mf ** 2
+            * mf**2
             * (
-                -(kDOTp2 * kDOTp3 ** 2 * p1DOTp3)
-                - kDOTp2 * kDOTp4 ** 2 * p1DOTp4
-                - kDOTp3 ** 2 * p1DOTp4 * p2DOTp3
-                - kDOTp4 ** 2 * p1DOTp4 * p2DOTp3
-                - kDOTp3 ** 2 * p1DOTp3 * p2DOTp4
-                - kDOTp4 ** 2 * p1DOTp3 * p2DOTp4
+                -(kDOTp2 * kDOTp3**2 * p1DOTp3)
+                - kDOTp2 * kDOTp4**2 * p1DOTp4
+                - kDOTp3**2 * p1DOTp4 * p2DOTp3
+                - kDOTp4**2 * p1DOTp4 * p2DOTp3
+                - kDOTp3**2 * p1DOTp3 * p2DOTp4
+                - kDOTp4**2 * p1DOTp3 * p2DOTp4
                 + kDOTp1
                 * (
                     2 * kDOTp2 * kDOTp3 * kDOTp4
-                    - kDOTp3 ** 2 * p2DOTp3
-                    - kDOTp4 ** 2 * p2DOTp4
+                    - kDOTp3**2 * p2DOTp3
+                    - kDOTp4**2 * p2DOTp4
                 )
-                + mx ** 2
+                + mx**2
                 * (
-                    kDOTp3 ** 3
-                    + kDOTp3 ** 2 * (kDOTp4 + p3DOTp4)
-                    + kDOTp4 ** 2 * (kDOTp4 + p3DOTp4)
+                    kDOTp3**3
+                    + kDOTp3**2 * (kDOTp4 + p3DOTp4)
+                    + kDOTp4**2 * (kDOTp4 + p3DOTp4)
                     + kDOTp3 * kDOTp4 * (kDOTp4 + 6 * p3DOTp4)
                 )
-                - kDOTp3 * kDOTp4 * p3DOTp4 * Q ** 2
+                - kDOTp3 * kDOTp4 * p3DOTp4 * Q**2
             )
         )
-        * qf ** 2
+        * qf**2
     ) / (
-        kDOTp3 ** 2
-        * kDOTp4 ** 2
-        * (ma ** 2 - 2 * mf ** 2 - 2 * (kDOTp3 + kDOTp4 + p3DOTp4)) ** 2
+        kDOTp3**2
+        * kDOTp4**2
+        * (ma**2 - 2 * mf**2 - 2 * (kDOTp3 + kDOTp4 + p3DOTp4)) ** 2
     )

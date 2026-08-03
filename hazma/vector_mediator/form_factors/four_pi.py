@@ -525,9 +525,7 @@ class FormFactorPiPiPiPi:
         error: float
             Estimated error.
         """
-        ff = self.form_factor(
-            s=mv**2, gvuu=gvuu, gvdd=gvdd, neutral=neutral, npts=npts
-        )
+        ff = self.form_factor(s=mv**2, gvuu=gvuu, gvdd=gvdd, neutral=neutral, npts=npts)
         return ff[0] * mv / 2.0, ff[1] * mv / 2.0
 
     # ============================================================================

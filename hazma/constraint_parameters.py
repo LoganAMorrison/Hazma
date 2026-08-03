@@ -58,7 +58,7 @@ br_B_k_invis_babar = 1.6e-5
 B_k_invis_obs = RareDecayObs(
     width_bound=(br_B_k_invis_babar - br_B_k_invis_SM) * B_width,
     r_max=r_det_babar,
-    s_bounds=[[0.0, 0.3 * mB ** 2]],
+    s_bounds=[[0.0, 0.3 * mB**2]],
 )
 
 # K^+ -> pi^+ invis, arxiv:0709.1000
@@ -70,10 +70,7 @@ k_pi_invis_obs = RareDecayObs(
     width_bound=(br_k_pi_invis_E949 - br_k_pi_invis_SM) * k_width,
     r_max=r_det_E949,
     s_bounds=[
-        [
-            max((mk ** 2 + mpi ** 2 - 2 * mk * np.sqrt(mpi ** 2 + p ** 2)), 0.0)
-            for p in p_pis
-        ]
+        [max((mk**2 + mpi**2 - 2 * mk * np.sqrt(mpi**2 + p**2)), 0.0) for p in p_pis]
         for p_pis in [[229.0, 211.0], [195.0, 140.0]]
     ],
 )
@@ -85,7 +82,7 @@ br_B_k_mu_mu_belle = (4.8 + 0.6) * 1.0e-7
 B_k_mu_mu_obs = RareDecayObs(
     width_bound=(br_B_k_mu_mu_belle - br_B_k_mu_mu_SM) * B_width,
     r_max=r_vert_belle,
-    s_bounds=[[4 * mmu ** 2, 8.68e6], [10.09e6, 12.86e6], [14.18e6, (mB - mk) ** 2]],
+    s_bounds=[[4 * mmu**2, 8.68e6], [10.09e6, 12.86e6], [14.18e6, (mB - mk) ** 2]],
 )
 
 # B^+ -> K^+ e^+ e^-, arXiv:hep-ph/0112300
@@ -105,7 +102,7 @@ br_kl_pi0_mu_mu_ktev = 3.8e-10
 kl_pi0_mu_mu_obs = RareDecayObs(
     width_bound=(br_kl_pi0_mu_mu_ktev - br_kl_pi0_mu_mu_SM) * kl_width,
     r_max=r_vert_ktev,
-    s_bounds=[[0.0, 350.0 ** 2]],
+    s_bounds=[[0.0, 350.0**2]],
 )
 
 # K_L -> pi^0 e^+ e^-, arxiv:hep-ph/0308008
@@ -115,7 +112,7 @@ br_kl_pi0_e_e_ktev = 2.8e-10
 kl_pi0_e_e_obs = RareDecayObs(
     width_bound=(br_kl_pi0_e_e_ktev - br_kl_pi0_e_e_SM) * kl_width,
     r_max=r_vert_ktev,
-    s_bounds=[[140.0 ** 2, 362.7 ** 2]],
+    s_bounds=[[140.0**2, 362.7**2]],
 )
 
 """Container for information about beam dump experiments.

@@ -41,15 +41,13 @@ _neutral_rho_integrand_interp_mu = _load_interp("neutral_rho_neutrino_mu.csv")
 @overload
 def dnde_neutrino_muon(
     neutrino_energies: float, muon_energy: float, flavor: Optional[str] = ...
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_muon(
     neutrino_energies: RealArray, muon_energy: float, flavor: Optional[str] = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_muon(
@@ -90,15 +88,13 @@ def dnde_neutrino_muon(
 @overload
 def dnde_neutrino_charged_pion(
     neutrino_energies: float, pion_energy: float, flavor: Optional[str] = ...
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_charged_pion(
     neutrino_energies: RealArray, pion_energy: float, flavor: Optional[str] = ...
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_charged_pion(
@@ -139,15 +135,13 @@ def dnde_neutrino_charged_pion(
 @overload
 def dnde_neutrino_charged_kaon(
     neutrino_energies: float, kaon_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_charged_kaon(
     neutrino_energies: RealArray, kaon_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_charged_kaon(
@@ -190,15 +184,13 @@ def dnde_neutrino_charged_kaon(
 @overload
 def dnde_neutrino_long_kaon(
     neutrino_energies: float, kaon_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_long_kaon(
     neutrino_energies: RealArray, kaon_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_long_kaon(
@@ -241,15 +233,13 @@ def dnde_neutrino_long_kaon(
 @overload
 def dnde_neutrino_short_kaon(
     neutrino_energies: float, kaon_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_short_kaon(
     neutrino_energies: RealArray, kaon_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_short_kaon(
@@ -292,15 +282,13 @@ def dnde_neutrino_short_kaon(
 @overload
 def dnde_neutrino_eta(
     neutrino_energy: float, eta_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_eta(
     neutrino_energy: RealArray, eta_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_eta(
@@ -326,15 +314,13 @@ def dnde_neutrino_eta(
 @overload
 def dnde_neutrino_omega(
     neutrino_energy: float, omega_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_omega(
     neutrino_energy: RealArray, omega_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_omega(
@@ -360,15 +346,13 @@ def dnde_neutrino_omega(
 @overload
 def dnde_neutrino_neutral_rho(
     neutrino_energy: float, rho_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_neutral_rho(
     neutrino_energy: RealArray, rho_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_neutral_rho(
@@ -394,15 +378,13 @@ def dnde_neutrino_neutral_rho(
 @overload
 def dnde_neutrino_charged_rho(
     neutrino_energy: float, rho_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_charged_rho(
     neutrino_energy: RealArray, rho_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_charged_rho(
@@ -428,15 +410,13 @@ def dnde_neutrino_charged_rho(
 @overload
 def dnde_neutrino_eta_prime(
     neutrino_energy: float, eta_prime_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_eta_prime(
     neutrino_energy: RealArray, eta_prime_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_eta_prime(
@@ -462,15 +442,13 @@ def dnde_neutrino_eta_prime(
 @overload
 def dnde_neutrino_phi(
     neutrino_energy: float, phi_energy: float, flavor: Optional[str] = None
-) -> float:
-    ...
+) -> float: ...
 
 
 @overload
 def dnde_neutrino_phi(
     neutrino_energy: RealArray, phi_energy: float, flavor: Optional[str] = None
-) -> RealArray:
-    ...
+) -> RealArray: ...
 
 
 def dnde_neutrino_phi(

@@ -52,13 +52,12 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
 # Width of the intermediate vector meson, see e.g. 1002.0279 eq.(6)
 def Widths(Q2, ix):
     if ix == 0:
-        if Q2 > 4 * mPi_ ** 2:
+        if Q2 > 4 * mPi_**2:
             resWidths = (
                 ResWidths_[0]
                 * ResMasses_[0] ** 2
                 / Q2
-                * ((Q2 - 4.0 * mPi_ ** 2) / (ResMasses_[0] ** 2 - 4.0 * mPi_ ** 2))
-                ** 1.5
+                * ((Q2 - 4.0 * mPi_**2) / (ResMasses_[0] ** 2 - 4.0 * mPi_**2)) ** 1.5
             )
         else:
             resWidths = 0.0
@@ -85,26 +84,26 @@ def FPiGamma(Q2):
 
 # Decay rate of the dark mediator into PiGamma
 def GammaDM(mMed):
-    Q2 = mMed ** 2
+    Q2 = mMed**2
     if mMed > mPi_:
-        pcm = 0.5 * (Q2 - mPi_ ** 2) / mMed
+        pcm = 0.5 * (Q2 - mPi_**2) / mMed
     else:
         return 0.0
-    return 1.0 / 12.0 / math.pi * pcm ** 3 * abs(FPiGamma(Q2)) ** 2 * Resonance.gev2nb
+    return 1.0 / 12.0 / math.pi * pcm**3 * abs(FPiGamma(Q2)) ** 2 * Resonance.gev2nb
 
 
 # cross section for Pi Gamma
 def sigmaSMPiGamma(Q2):
     Q = math.sqrt(Q2)
     if Q > mPi_:
-        pcm = 0.5 * (Q2 - mPi_ ** 2) / Q
+        pcm = 0.5 * (Q2 - mPi_**2) / Q
     else:
         return 0.0
     return (
         4.0
         * math.pi
         * alpha.alphaEM(Q2) ** 2
-        * pcm ** 3
+        * pcm**3
         / 3.0
         / Q
         / Q2
@@ -117,11 +116,11 @@ def sigmaSMPiGamma(Q2):
 def sigmaDMPiGamma(Q2):
     Q = math.sqrt(Q2)
     if Q > mPi_:
-        pcm = 0.5 * (Q2 - mPi_ ** 2) / Q
+        pcm = 0.5 * (Q2 - mPi_**2) / Q
     else:
         return 0.0
     cDM = gDM_
-    DMmed = cDM / (Q2 - mMed_ ** 2 + complex(0.0, 1.0) * mMed_ * wMed_)
+    DMmed = cDM / (Q2 - mMed_**2 + complex(0.0, 1.0) * mMed_ * wMed_)
     DMmed2 = abs(DMmed) ** 2
     temp = FPiGamma(Q2)
     return (
@@ -129,9 +128,9 @@ def sigmaDMPiGamma(Q2):
         / 12
         / math.pi
         * DMmed2
-        * (1 + 2 * mDM_ ** 2 / Q2)
+        * (1 + 2 * mDM_**2 / Q2)
         * Q
-        * pcm ** 3
+        * pcm**3
         * abs(temp) ** 2
         * Resonance.gev2nb
     )

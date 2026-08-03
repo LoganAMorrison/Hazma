@@ -104,9 +104,7 @@ class TestRambo(unittest.TestCase):
                     2 * (1 - 4 * sw**2 + 8 * sw**4) * MDot(p1, p2) ** 2
                     + 2 * (1 - 4 * sw**2 + 8 * sw**4) * me**4
                     + 12 * sw**2 * (-1 + 2 * sw**2) * me**2 * mz**2
-                    + (1 - 4 * sw**2 + 8 * sw**4)
-                    * MDot(p1, p2)
-                    * (4 * me**2 + mz**2)
+                    + (1 - 4 * sw**2 + 8 * sw**4) * MDot(p1, p2) * (4 * me**2 + mz**2)
                 )
             ) / (6.0 * cw**2 * sw**2 * mz**2)
 

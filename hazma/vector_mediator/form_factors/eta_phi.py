@@ -56,12 +56,10 @@ class FormFactorEtaPhi:
         )
 
     @overload
-    def form_factor(self, *, q: float, gvss: float) -> complex:
-        ...
+    def form_factor(self, *, q: float, gvss: float) -> complex: ...
 
     @overload
-    def form_factor(self, *, q: RealArray, gvss: float) -> ComplexArray:
-        ...
+    def form_factor(self, *, q: RealArray, gvss: float) -> ComplexArray: ...
 
     def form_factor(
         self, *, q: Union[float, RealArray], gvss: float

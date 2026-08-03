@@ -5,8 +5,16 @@ from scipy import special
 
 from . import alpha
 from .masses import mk, mk0, mpi
-from .Resonance import (BreitWignerFW, BreitWignerGS, BreitWignerPWave, H,
-                        Hhat, MeV, dHhatds, gev2nb)
+from .Resonance import (
+    BreitWignerFW,
+    BreitWignerGS,
+    BreitWignerPWave,
+    H,
+    Hhat,
+    MeV,
+    dHhatds,
+    gev2nb,
+)
 
 # PDG mass values
 # mk0 = 0.497611

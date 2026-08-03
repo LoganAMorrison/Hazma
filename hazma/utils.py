@@ -163,11 +163,7 @@ def __dnde_altarelli_parisi(eng, cme, mass, splitting):
         if x > 1 - np.exp(1) * mu**2:
             return 0.0
         return (
-            2
-            * alpha_em
-            / (np.pi * cme)
-            * splitting(x)
-            * (np.log((1 - x) / mu**2) - 1)
+            2 * alpha_em / (np.pi * cme) * splitting(x) * (np.log((1 - x) / mu**2) - 1)
         )
 
     if hasattr(eng, "__len__"):

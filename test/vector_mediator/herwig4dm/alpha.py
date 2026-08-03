@@ -49,9 +49,7 @@ def alphaEM(scale):
         return alem
     # leptonic component
     repigg = aempi * (
-        realPi(m_e ** 2 / scale)
-        + realPi(m_mu ** 2 / scale)
-        + realPi(m_tau ** 2 / scale)
+        realPi(m_e**2 / scale) + realPi(m_mu**2 / scale) + realPi(m_tau**2 / scale)
     )
     # Hadronic component from light quarks
     if scale < 9e-2:
@@ -63,6 +61,6 @@ def alphaEM(scale):
     else:
         repigg += a4 + b4 * math.log(1.0 + c4 * scale)
     # Top Contribution
-    repigg += aempi * realPi(m_top ** 2 / scale)
+    repigg += aempi * realPi(m_top**2 / scale)
     # return the answer
     return alem / (1.0 - repigg)

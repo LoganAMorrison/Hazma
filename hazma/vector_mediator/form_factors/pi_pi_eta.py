@@ -8,7 +8,6 @@ F_{eta,pi,pi} = (1/Z) * BW(s, 0) [
 Z = a0*e^{i*p0} + a1*e^{i*p1} + a2*e^{i*p2}
 """
 
-
 from dataclasses import dataclass
 
 import numpy as np

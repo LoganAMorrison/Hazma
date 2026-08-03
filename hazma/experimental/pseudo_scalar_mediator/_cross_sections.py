@@ -46,11 +46,7 @@ def sigma_xx_to_p_to_ff(model: PseudoScalarMediatorBase, Q, f):
 
     if 2.0 * rf < 1 and 2.0 * rx < 1:
         ret = (
-            (1 - 2 * beta**2)
-            * gpff**2
-            * gpxx**2
-            * Q**2
-            * np.sqrt(1 - 4 * rf**2)
+            (1 - 2 * beta**2) * gpff**2 * gpxx**2 * Q**2 * np.sqrt(1 - 4 * rf**2)
         ) / (
             16.0
             * np.pi

@@ -1,6 +1,7 @@
 """
 Module for computing the vector form factor for pi+pi.
 """
+
 from dataclasses import dataclass, field
 from typing import Union
 
@@ -10,8 +11,17 @@ from scipy.special import gamma  # type:ignore
 from hazma import parameters
 
 from .cross_sections import cross_section_x_x_to_p_p
-from .utils import (MPI_GEV, ComplexArray, RealArray, breit_wigner_fw,
-                    breit_wigner_gs, dhhatds, gamma_generator, h, hhat)
+from .utils import (
+    MPI_GEV,
+    ComplexArray,
+    RealArray,
+    breit_wigner_fw,
+    breit_wigner_gs,
+    dhhatds,
+    gamma_generator,
+    h,
+    hhat,
+)
 from .widths import width_v_to_p_p
 
 

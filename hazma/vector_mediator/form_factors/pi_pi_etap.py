@@ -5,8 +5,12 @@ from scipy.integrate import quad
 
 from hazma import parameters
 from hazma.utils import kallen_lambda
-from hazma.vector_mediator.form_factors.utils import (FPI_GEV, METAP_GEV,
-                                                      MPI_GEV, RealArray)
+from hazma.vector_mediator.form_factors.utils import (
+    FPI_GEV,
+    METAP_GEV,
+    MPI_GEV,
+    RealArray,
+)
 
 METAP = METAP_GEV * 1e3
 MPI = MPI_GEV * 1e3

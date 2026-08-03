@@ -20,13 +20,11 @@ _NU_STRS = ["ve", "vm", "vt"]
 class DndeFn(Protocol):
     def __call__(
         self, product_energies: RealOrRealArray, product: str, **kwargs
-    ) -> RealOrRealArray:
-        ...
+    ) -> RealOrRealArray: ...
 
 
 class WidthFn(Protocol):
-    def __call__(self) -> float:
-        ...
+    def __call__(self) -> float: ...
 
 
 class RHNFinalStateAttrs(NamedTuple):

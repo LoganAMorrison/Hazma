@@ -42,9 +42,7 @@ def _load_module():
     return module
 
 
-pytestmark = pytest.mark.skipif(
-    not SCRIPT.is_file(), reason=f"{SCRIPT} not present"
-)
+pytestmark = pytest.mark.skipif(not SCRIPT.is_file(), reason=f"{SCRIPT} not present")
 
 
 @pytest.fixture(scope="module")
@@ -117,9 +115,7 @@ def test_prompt_paths_use_the_filename_prefix(resolve_phase, tmp_path, prefix):
         assert f"task-notes/phase-{phase_id}/" not in prompt
 
 
-def test_prompt_still_uses_the_canonical_id_for_display(
-    resolve_phase, tmp_path
-):
+def test_prompt_still_uses_the_canonical_id_for_display(resolve_phase, tmp_path):
     """Display text keeps the unpadded id -- 'Phase 2', not 'Phase 02'."""
     project = _scaffold(tmp_path, "02")
     phases = resolve_phase.load_phase_records(project)

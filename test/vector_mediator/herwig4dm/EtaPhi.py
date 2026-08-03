@@ -31,7 +31,7 @@ step_size = 0.005
 energy = low_lim
 while energy < upp_lim:
     xSM.append(energy)
-    ySM.append(FEtaPhi.sigmaSMEtaPhi(energy ** 2))
+    ySM.append(FEtaPhi.sigmaSMEtaPhi(energy**2))
     energy += step_size
 
 with open("txt_files/EtaPhi.txt", "w") as txtfile:
@@ -45,7 +45,7 @@ cMed_d = -1.0 / 3.0
 cMed_s = -1.0 / 3.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     wMed = FEtaPhi.GammaDM(mMed)
     FEtaPhi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)
@@ -59,7 +59,7 @@ cMed_s = 1.0 / 3.0
 mDM = (FEtaPhi.mEta_ + FEtaPhi.mPhi_) / 2.0
 while mDM < upp_lim:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     wMed = FEtaPhi.GammaDM(mMed)
     FEtaPhi.resetParameters(gDM, mDM, mMed, wMed, cMed_u, cMed_d, cMed_s)

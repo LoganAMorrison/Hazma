@@ -16,7 +16,7 @@ yBL = []
 # SM case
 scale = FEtaPiPi.mEta_ + 2 * FEtaPiPi.mPi_ + 0.1
 while scale < 3.0:
-    Q2 = scale ** 2
+    Q2 = scale**2
     xSM.append(scale)
     ySM.append(FEtaPiPi.sigmaSM(Q2))
     scale += 0.01
@@ -41,7 +41,7 @@ cMed_s = -1.0 / 3.0
 
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xDP.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaPiPi.GammaDM(mMed)
@@ -77,7 +77,7 @@ cMed_s = 1.0 / 3.0
 mDM = 0.25  # F2pi.mpi_
 while mDM < 2.0:
     energy = 2 * mDM + 0.0001
-    Q2 = energy ** 2
+    Q2 = energy**2
     xBL.append(energy)
     # mediator width should be replaced by a function for the full decay width
     wMed = FEtaPiPi.GammaDM(mMed)

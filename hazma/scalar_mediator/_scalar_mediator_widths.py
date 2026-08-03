@@ -14,9 +14,7 @@ def width_s_to_gg(self):
     """
     Returns the partial decay width of the scalar decaying into photon.
     """
-    return (alpha_em ** 2 * self.gsFF ** 2 * self.ms ** 3) / (
-        64.0 * self.lam ** 2 * pi ** 3
-    )
+    return (alpha_em**2 * self.gsFF**2 * self.ms**3) / (64.0 * self.lam**2 * pi**3)
 
 
 def width_s_to_pi0pi0(self):
@@ -34,9 +32,9 @@ def width_s_to_pi0pi0(self):
 
         val = (
             (
-                sqrt(-4 * mpi0 ** 2 + ms ** 2)
+                sqrt(-4 * mpi0**2 + ms**2)
                 * (
-                    -162 * gsGG * lam ** 3 * (-2 * mpi0 ** 2 + ms ** 2) * vh ** 2
+                    -162 * gsGG * lam**3 * (-2 * mpi0**2 + ms**2) * vh**2
                     + b0
                     * (mdq + muq)
                     * (9 * lam + 4 * gsGG * vs)
@@ -48,14 +46,7 @@ def width_s_to_pi0pi0(self):
                 )
                 ** 2
             )
-            / (
-                209952.0
-                * lam ** 6
-                * ms ** 2
-                * pi
-                * vh ** 4
-                * (9 * lam + 4 * gsGG * vs) ** 2
-            )
+            / (209952.0 * lam**6 * ms**2 * pi * vh**4 * (9 * lam + 4 * gsGG * vs) ** 2)
         ).real
 
         assert val >= 0
@@ -80,9 +71,9 @@ def width_s_to_pipi(self):
 
         val = (
             (
-                sqrt(-4 * mpi ** 2 + ms ** 2)
+                sqrt(-4 * mpi**2 + ms**2)
                 * (
-                    -162 * gsGG * lam ** 3 * (-2 * mpi ** 2 + ms ** 2) * vh ** 2
+                    -162 * gsGG * lam**3 * (-2 * mpi**2 + ms**2) * vh**2
                     + b0
                     * (mdq + muq)
                     * (9 * lam + 4 * gsGG * vs)
@@ -94,14 +85,7 @@ def width_s_to_pipi(self):
                 )
                 ** 2
             )
-            / (
-                104976.0
-                * lam ** 6
-                * ms ** 2
-                * pi
-                * vh ** 4
-                * (9 * lam + 4 * gsGG * vs) ** 2
-            )
+            / (104976.0 * lam**6 * ms**2 * pi * vh**4 * (9 * lam + 4 * gsGG * vs) ** 2)
         ).real
 
         assert val >= 0
@@ -122,7 +106,7 @@ def width_s_to_xx(self):
     if ms > 2.0 * mx:
         gsxx = self.gsxx
 
-        val = ((gsxx ** 2 * (ms ** 2 - 4 * mx ** 2) ** 1.5) / (8.0 * ms ** 2 * pi)).real
+        val = ((gsxx**2 * (ms**2 - 4 * mx**2) ** 1.5) / (8.0 * ms**2 * pi)).real
 
         assert val >= 0
 
@@ -152,8 +136,8 @@ def width_s_to_ff(self, f):
 
     if ms > 2.0 * mf:
         val = (
-            (self.gsff ** 2 * mf ** 2 * (-4 * mf ** 2 + ms ** 2) ** 1.5)
-            / (8.0 * ms ** 2 * pi * vh ** 2)
+            (self.gsff**2 * mf**2 * (-4 * mf**2 + ms**2) ** 1.5)
+            / (8.0 * ms**2 * pi * vh**2)
         ).real
 
         assert val >= 0

@@ -2,6 +2,7 @@
 Module for computing positron spectra.
 @author: Logan Morrison and Adam Coogan
 """
+
 from typing import overload, Union, Callable, List, Optional
 import warnings
 
@@ -26,13 +27,11 @@ def __flat_squared_matrix_element(_: RealArray) -> float:
 
 
 @overload
-def muon(positron_energies: float, muon_energy: float) -> float:
-    ...
+def muon(positron_energies: float, muon_energy: float) -> float: ...
 
 
 @overload
-def muon(positron_energies: RealArray, muon_energy: float) -> RealArray:
-    ...
+def muon(positron_energies: RealArray, muon_energy: float) -> RealArray: ...
 
 
 def muon(positron_energies: RealOrRealArray, muon_energy: float) -> RealOrRealArray:
@@ -56,13 +55,11 @@ def muon(positron_energies: RealOrRealArray, muon_energy: float) -> RealOrRealAr
 
 
 @overload
-def charged_pion(positron_energies: float, pion_energy: float) -> float:
-    ...
+def charged_pion(positron_energies: float, pion_energy: float) -> float: ...
 
 
 @overload
-def charged_pion(positron_energies: RealArray, pion_energy: float) -> RealArray:
-    ...
+def charged_pion(positron_energies: RealArray, pion_energy: float) -> RealArray: ...
 
 
 def charged_pion(

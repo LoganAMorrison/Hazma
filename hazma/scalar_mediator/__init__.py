@@ -388,9 +388,7 @@ class HeavyQuark(ScalarMediator):
         self._mQ = mQ
         self._QQ = QQ
 
-        super(HeavyQuark, self).__init__(
-            mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ**2, mQ
-        )
+        super(HeavyQuark, self).__init__(mx, ms, gsxx, 0.0, gsQ, 2.0 * gsQ * QQ**2, mQ)
 
     def __repr__(self):
         repr_ = "HeavyQuark("

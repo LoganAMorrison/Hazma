@@ -6,11 +6,11 @@ from hazma.parameters import alpha_em, charged_pion_mass as mpi
 
 def __dnde_xx_to_s_to_ffg(self, photon_energy, Q, mf):
     """Unvectorized dnde_xx_to_s_to_ffg"""
-    s = Q ** 2 - 2.0 * Q * photon_energy
+    s = Q**2 - 2.0 * Q * photon_energy
 
     mx = self.mx
 
-    if 2.0 * mf < Q and 4.0 * mf ** 2 < s < Q ** 2 and 2.0 * mx < Q:
+    if 2.0 * mf < Q and 4.0 * mf**2 < s < Q**2 and 2.0 * mx < Q:
         x = 2 * photon_energy / Q
         mu_l = mf / Q
 
@@ -21,16 +21,16 @@ def __dnde_xx_to_s_to_ffg(self, photon_energy, Q, mf):
                 * (
                     -2
                     * (-1 + x)
-                    * (-1 + 4 * mu_l ** 2)
-                    * sqrt(1 + (4 * mu_l ** 2) / (-1 + x))
-                    + ((x + 4 * mu_l ** 2) ** 2 - 2 * (-1 + x + 6 * mu_l ** 2))
+                    * (-1 + 4 * mu_l**2)
+                    * sqrt(1 + (4 * mu_l**2) / (-1 + x))
+                    + ((x + 4 * mu_l**2) ** 2 - 2 * (-1 + x + 6 * mu_l**2))
                     * log(
-                        (1 + sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
-                        / (1 - sqrt(1 + (4 * mu_l ** 2) / (-1 + x)))
+                        (1 + sqrt(1 + (4 * mu_l**2) / (-1 + x)))
+                        / (1 - sqrt(1 + (4 * mu_l**2) / (-1 + x)))
                     )
                 )
             )
-            / (pi * Q * x * (1 - 4 * mu_l ** 2) ** 1.5)
+            / (pi * Q * x * (1 - 4 * mu_l**2) ** 1.5)
         ).real
 
         assert val >= 0
@@ -78,7 +78,7 @@ def __dnde_xx_to_s_to_pipig(self, photon_energy, Q):
     mu_pi = mpi / Q
     x = 2 * photon_energy / Q
 
-    if x < 0.0 or 1.0 - 4.0 * mu_pi ** 2 < x or 2.0 * self.mx > Q:
+    if x < 0.0 or 1.0 - 4.0 * mu_pi**2 < x or 2.0 * self.mx > Q:
         return 0.0
     else:
         val = (
@@ -86,17 +86,17 @@ def __dnde_xx_to_s_to_pipig(self, photon_energy, Q):
                 4
                 * alpha_em
                 * (
-                    (-1 + x) * sqrt(1 + (4 * mu_pi ** 2) / (-1 + x))
-                    - (-1 + x + 2 * mu_pi ** 2)
+                    (-1 + x) * sqrt(1 + (4 * mu_pi**2) / (-1 + x))
+                    - (-1 + x + 2 * mu_pi**2)
                     * log(
                         -(
-                            (1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
-                            / (-1 + sqrt(1 + (4 * mu_pi ** 2) / (-1 + x)))
+                            (1 + sqrt(1 + (4 * mu_pi**2) / (-1 + x)))
+                            / (-1 + sqrt(1 + (4 * mu_pi**2) / (-1 + x)))
                         )
                     )
                 )
             )
-            / (pi * Q * x * sqrt(1 - 4 * mu_pi ** 2))
+            / (pi * Q * x * sqrt(1 - 4 * mu_pi**2))
         ).real
 
         assert val >= 0

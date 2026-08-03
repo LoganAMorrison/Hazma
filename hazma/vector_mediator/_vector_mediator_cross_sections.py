@@ -207,9 +207,7 @@ class VectorMediatorCrossSections:
                         * (
                             9 * rv**2 * (-1 + rv**2 + rwv**2)
                             + 4 * rv**2 * (11 + 2 * rv**2 + 2 * rwv**2) * rx**2
-                            + 8
-                            * (7 + 6 * rv**2 * (-4 + rv**2 + rwv**2))
-                            * rx**4
+                            + 8 * (7 + 6 * rv**2 * (-4 + rv**2 + rwv**2)) * rx**4
                             + 64 * rx**6
                         )
                         - 2
@@ -222,10 +220,7 @@ class VectorMediatorCrossSections:
                             - 32 * (-2 + rv**2) * rx**4
                         )
                         * z
-                        + 2
-                        * (3 * rv**2 - 4 * rx**2)
-                        * (-1 + 4 * rx**2) ** 3
-                        * z**3
+                        + 2 * (3 * rv**2 - 4 * rx**2) * (-1 + 4 * rx**2) ** 3 * z**3
                         + (1 - 4 * rx**2) ** 4 * z**4
                         + 2
                         * (
@@ -276,22 +271,14 @@ class VectorMediatorCrossSections:
                     * gvxx**2
                     * np.sqrt(s * (-4.0 * mpi**2 + s))
                     * np.sqrt(
-                        e_cm**4
-                        + (mpi0**2 - s) ** 2
-                        - 2.0 * e_cm**2 * (mpi0**2 + s)
+                        e_cm**4 + (mpi0**2 - s) ** 2 - 2.0 * e_cm**2 * (mpi0**2 + s)
                     )
                     * (
                         -24.0 * mpi**6 * s
-                        + mpi**4
-                        * (-2.0 * mpi0**4 + 28.0 * mpi0**2 * s + 22.0 * s**2)
+                        + mpi**4 * (-2.0 * mpi0**4 + 28.0 * mpi0**2 * s + 22.0 * s**2)
                         + 2.0 * mpi**2 * (mpi0**6 - 4.0 * s**3)
                         + s
-                        * (
-                            -2.0 * mpi0**6
-                            - 4.0 * mpi0**4 * s
-                            - mpi0**2 * s**2
-                            + s**3
-                        )
+                        * (-2.0 * mpi0**6 - 4.0 * mpi0**4 * s - mpi0**2 * s**2 + s**3)
                         + e_cm**4
                         * (
                             -2.0 * mpi**4
@@ -302,9 +289,7 @@ class VectorMediatorCrossSections:
                         * (
                             4.0 * mpi**4 * (mpi0**2 + s)
                             + s * (4.0 * mpi0**4 + 5.0 * mpi0**2 * s - 2.0 * s**2)
-                            - 4.0
-                            * mpi**2
-                            * (mpi0**4 + 3.0 * mpi0**2 * s - s**2)
+                            - 4.0 * mpi**2 * (mpi0**4 + 3.0 * mpi0**2 * s - s**2)
                         )
                     )
                 )
@@ -315,12 +300,7 @@ class VectorMediatorCrossSections:
                     * np.sqrt(e_cm**2)
                     * np.sqrt(-4.0 * mx**2 + e_cm**2)
                     * s**2
-                    * (
-                        mv**4
-                        - 2.0 * mv**2 * e_cm**2
-                        + e_cm**4
-                        + mv**2 * width_v**2
-                    )
+                    * (mv**4 - 2.0 * mv**2 * e_cm**2 + e_cm**4 + mv**2 * width_v**2)
                 )
             )
 

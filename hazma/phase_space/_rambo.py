@@ -11,15 +11,13 @@
 
 
 import math
-from typing import (Callable, Dict, Iterable, List, Optional, Sequence, Tuple,
-                    Union)
+from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
 from scipy import integrate
 
-from hazma.utils import (RealArray, cross_section_prefactor, kallen_lambda,
-                         lnorm_sqr)
+from hazma.utils import RealArray, cross_section_prefactor, kallen_lambda, lnorm_sqr
 
 from ._base import AbstractPhaseSpaceGenerator, AbstractPhaseSpaceIntegrator
 from ._dist import PhaseSpaceDistribution1D

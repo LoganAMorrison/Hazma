@@ -1,6 +1,7 @@
 """
 This file contains the decay spectra from a right-handed neutrino at rest.
 """
+
 from typing import Callable, Tuple
 import logging
 

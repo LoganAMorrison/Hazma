@@ -157,10 +157,7 @@ def test_width_z_to_f_f(mf, ncf, t3f, qf):
 
     def msqrd_z_to_f_f(_):
         return (
-            ncf
-            * 2
-            / 3
-            * (6 * gl * gr * mf**2 + (gl**2 + gr**2) * (-(mf**2) + MZ**2))
+            ncf * 2 / 3 * (6 * gl * gr * mf**2 + (gl**2 + gr**2) * (-(mf**2) + MZ**2))
         )
 
     mr2 = (mf / MZ) ** 2
