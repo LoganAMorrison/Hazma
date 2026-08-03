@@ -1,0 +1,116 @@
+# Preflight gate
+
+The canonical gate to run **before every commit and before every PR**.
+Every implementing and review-response skill points here instead of
+restating it. The one-command form is
+[`scripts/agents/preflight.sh`](../../scripts/agents/preflight.sh); this
+document is the rationale and the manual fallback.
+
+## The gate
+
+Run these from the worktree root, in order. Each must pass on its own
+before you stage anything.
+
+1. **`black --check <paths>`** — the repo is black-formatted at 88
+   columns. If it fails, run `black <paths>` and re-run the check.
+   (`black` alone is not the gate; the `--check` is.)
+2. **`isort --check-only <paths>`** — black profile, configured in
+   `pyproject.toml`. Same rule: fix with `isort <paths>`, then re-check.
+3. **`ruff check <paths>`** — the configured rule set lives under
+   `[tool.ruff]` in `pyproject.toml`. `hazma/experimental/` and
+   `notebooks/` are outside the gate.
+4. **`pytest <targets>`** — **read the summary line.** `pytest` exits **5**
+   when it collects zero tests, and a wrapper that only checks "non-zero
+   exit" will happily treat a typo'd path as a failure while a
+   `-k` filter matching nothing exits 0 with `no tests ran`. Zero
+   collected means the gate FAILED, not passed. Name the real targets
+   (`pytest test/spectra`), not a filter you have not verified selects
+   something.
+5. **`python -c "import hazma"`** — the import smoke. Hazma ships Cython
+   extensions; a `.pyx` edit that was never rebuilt, or a rebuild against
+   a different interpreter, produces a tree that lints and formats
+   cleanly and fails at import. Run this after any change under
+   `_utils/`, `_decay/`, `_gamma_ray/`, `_positron/`, `_neutrino/`, or
+   `_phase_space/`, and after any `_build.py` change.
+6. **`markdownlint --dot <changed .md files>`** — when curated docs
+   changed. Word-diff after any `--fix`: it can corrupt code spans.
+7. **Version-bump check** — only when the diff flips a
+   `projects/<slug>/PLAN.md` `status:` to `Complete`.
+   `scripts/agents/preflight.sh --closing` verifies that `VERSION` in
+   `hazma/__init__.py` actually moved relative to the trunk and that
+   `CHANGELOG.md` carries a matching `## [X.Y.Z]` section. See
+   [`../versioning.md`](../versioning.md).
+8. **Forbidden-token scan** over the diff: `breakpoint()`,
+   `pdb.set_trace()`, `import pdb`, and stray `print()` added to library
+   code. Resolve or justify each hit. `git diff origin/master -- '*.py'`
+   is the surface.
+
+## Exit-code safety
+
+Never pipe a gate through `head`, `tail`, or `grep` — a pipeline reports
+the exit status of the **last** command, which masks the gate's own
+failure. Run each gate bare and read its status (and, for pytest, its
+summary line). If you must filter output, capture the exit code
+separately.
+
+## Sequential critical path
+
+The path from a finished edit to a landed commit is strictly sequential:
+
+```text
+edit → rebuild (if Cython) → run gates → read results → stage → commit → push → verify
+```
+
+**Never batch these steps into one parallel tool block.** A failure
+partway through a batch lands a half-done commit — the gates never ran,
+or ran against the wrong tree. Gate each step on the previous one's
+result. After pushing, verify the push landed: `git rev-parse HEAD` must
+equal `git rev-parse origin/<branch>`.
+
+## Branch and worktree assertion
+
+Immediately before `git commit`, confirm you are where you think you are:
+
+- `git rev-parse --abbrev-ref HEAD` is the intended branch — **never
+  `master`.** Direct commits to `master` are forbidden (see
+  [`AGENTS.md`](../../AGENTS.md)). Note the trunk here is `master`, not
+  `main`; an assertion written against `main` silently passes on a
+  `master` checkout and protects nothing.
+- `git rev-parse --show-toplevel` is the intended worktree, not the main
+  checkout.
+
+The Bash tool's cwd can reset between calls, so a bare `git commit` may
+run against the wrong tree. Prefer `git -C <worktree>` with an absolute
+path for every git write.
+
+## Do not trust hooks or CI for this list
+
+There is no committed `.pre-commit-config.yaml` in this repo. CI
+(`.github/workflows/ci.yml`) runs an import smoke test, `pytest` on
+Python 3.10–3.12, and a deliberately narrow lint pass —
+`ruff check --isolated --select E9,F63,F7,F82` — whose `--isolated` flag
+ignores `[tool.ruff]` in `pyproject.toml`. There is **no** formatting
+check in CI at all. So CI green means "no syntax errors, no undefined
+names, tests pass"; it says nothing about formatting, import order, or
+the configured lint rules. That is a floor, not this gate. Run this gate
+yourself.
+
+## One-command form
+
+[`scripts/agents/preflight.sh`](../../scripts/agents/preflight.sh) runs
+black, isort, ruff, pytest (with the zero-collection guard), the import
+smoke, and optionally markdownlint, the version-bump gate, and the
+forbidden-token scan:
+
+```bash
+scripts/agents/preflight.sh --paths "hazma/spectra test/spectra" --tests "test/spectra"
+```
+
+Add `--md "docs/agents/preflight.md"` when curated docs changed and
+`--closing` on a project-closing PR. It prints a PASS/FAIL/WARN/SKIP row
+per gate and exits non-zero on the first hard failure. A non-zero exit is
+a blocked commit — fix and re-run; do not commit around a red gate.
+
+A `WARN` row means a tool is not installed and its gate did **not** run —
+it is a hole in your coverage, not a pass. Install the tool
+(`pip install ruff isort`) rather than shipping on an unchecked gate.
