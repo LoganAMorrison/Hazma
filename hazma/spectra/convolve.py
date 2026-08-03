@@ -66,14 +66,14 @@ def make_marginal_fn(
     integrand = np.vectorize(dnde_fn, excluded=excluded)
 
     if method == "trapz":
-        integrator = np.trapz
+        integrator = np.trapezoid
     else:
         integrator = integrate.simpson
 
     def marginalize(product_energies):
         es = np.expand_dims(product_energies, 0)
         vals = probs_ * integrand(es, cmes_, *args)
-        return integrator(vals, cmes, axis=0)
+        return integrator(vals, x=cmes, axis=0)
 
     return marginalize
 

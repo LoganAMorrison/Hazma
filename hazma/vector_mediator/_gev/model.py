@@ -29,7 +29,7 @@ from . import positron as gev_positron_spectra
 from . import spectra as gev_spectra
 from . import types as gev_types
 
-T = TypeVar("T", float, npt.NDArray[np.float_])
+T = TypeVar("T", float, npt.NDArray[np.float64])
 
 
 def with_cache(*, cache_name: str, name: str):

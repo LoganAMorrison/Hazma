@@ -76,7 +76,7 @@ def _make_spectrum_n_body_decay(
         bins = dist.bin_centers
 
         dec = np.array([dnde_decays[i](positron_energies, e) for e in bins])
-        dnde += np.trapz(np.expand_dims(probs, 1) * dec, x=bins, axis=0)
+        dnde += np.trapezoid(np.expand_dims(probs, 1) * dec, x=bins, axis=0)
 
     return dnde
 

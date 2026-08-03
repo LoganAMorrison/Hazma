@@ -5,7 +5,7 @@ import numpy.typing as npt
 
 from hazma import parameters
 
-RealArray = npt.NDArray[np.float_]
+RealArray = npt.NDArray[np.float64]
 BoolArray = npt.NDArray[np.bool_]
 
 

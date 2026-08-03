@@ -182,12 +182,12 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
     def __trapz(self, fn, a: float, b: float, npts: int):
         xs = np.linspace(a, b, npts)
         fs = np.array([fn(x) for x in xs])
-        return integrate.trapz(fs, xs)
+        return integrate.trapezoid(fs, xs)
 
     def __simps(self, fn, a: float, b: float, npts: int):
         xs = np.linspace(a, b, npts)
         fs = np.array([fn(x) for x in xs])
-        return integrate.simps(fs, xs)
+        return integrate.simpson(fs, x=xs)
 
     def __quad(
         self,
@@ -682,8 +682,8 @@ class ThreeBody(AbstractPhaseSpaceIntegrator):
             Method used to integrate over phase space. Can be:
 
                 * 'quad': Numerical quadrature using scipy's 'quad',
-                * 'trapz': Trapiziod rule using scipy's 'trapz',
-                * 'simps': Simpson's rule using scipy's 'simps',
+                * 'trapz': Trapiziod rule using scipy's 'trapezoid',
+                * 'simps': Simpson's rule using scipy's 'simpson',
                 * 'rambo': Monte-Carlo integration.
         npts: int
             Number of phase-space points to use to integrate squared matrix

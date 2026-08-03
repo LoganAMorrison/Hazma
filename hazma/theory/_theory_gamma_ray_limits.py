@@ -266,7 +266,7 @@ def fisher(
     tobs: float,
     vx: float = 1e-3,
     n_grid: int = 20,
-    e_grid: Optional[npt.NDArray[np.float_]] = None,
+    e_grid: Optional[npt.NDArray[np.float64]] = None,
     k: int = 1,
     ext: str = "raise",
 ) -> FisherResults:
@@ -610,7 +610,7 @@ class TheoryGammaRayLimits:
         vx: float = 1e-3,
         sigma_levels: List[float] = [5.0],
         n_grid: int = 2000,
-        e_grid: Optional[npt.NDArray[np.float_]] = None,
+        e_grid: Optional[npt.NDArray[np.float64]] = None,
         k: int = 1,
         ext: str = "raise",
     ) -> List[float]:

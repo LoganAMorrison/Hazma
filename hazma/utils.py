@@ -50,11 +50,11 @@ def deprecate_fn(fn, alternative: Optional[str] = None):
 # ---- Types --------------------------------------------------------
 # ===================================================================
 
-RealArray = npt.NDArray[np.float_]
+RealArray = npt.NDArray[np.float64]
 RealOrRealArray = Union[float, RealArray]
-ComplexArray = npt.NDArray[np.complex_]
+ComplexArray = npt.NDArray[np.complex128]
 ComplexOrComplexArray = Union[complex, ComplexArray]
-RealOrComplexArray = npt.NDArray[Union[np.float_, np.complex_]]
+RealOrComplexArray = npt.NDArray[Union[np.float64, np.complex128]]
 
 # ===================================================================
 # ---- Enums --------------------------------------------------------

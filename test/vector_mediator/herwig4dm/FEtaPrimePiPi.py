@@ -137,8 +137,8 @@ def phase(s):
     # transform to new variables
     upp = math.atan((upp - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
     low = math.atan((low - mRho_[0] ** 2) / gRho_[0] / mRho_[0])
-    return scipy.integrate.quadrature(
-        integrand, low, upp, args=s, tol=1e-12, maxiter=200
+    return scipy.integrate.quad(
+        lambda x, s_: integrand([x], s_)[0], low, upp, args=(s,), epsabs=1e-12
     )[0]
 
 

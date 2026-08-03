@@ -1,10 +1,7 @@
 [project]
 name = "hazma"
 readme = "README.md"
-# < 3.13: numpy < 2 (see dependencies) has no Python 3.13+ support, so pip
-# on newer Pythons would attempt a doomed NumPy 1.26 source build. Lift
-# together with the numpy/scipy caps.
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 authors = [
   { name = "Logan A. Morrison", email = "loanmorr@ucsc.edu" },
   { name = "Adam Coogan" },
@@ -16,12 +13,12 @@ classifiers = ["Programming Language :: Python"]
 
 dynamic = ["version"]
 
-# Upper bounds: hazma still uses APIs removed in NumPy 2.0 (np.trapz) and
-# SciPy 1.14 (scipy.integrate.trapz/simps). Lift these once the source is
-# migrated; NumPy < 2 also caps supported Python at 3.12.
+# numpy >= 2.0: the source uses np.trapezoid, which NumPy 2.0 introduced as
+# the replacement for the removed np.trapz. scipy >= 1.13 is the first
+# series with NumPy 2 support.
 dependencies = [
-  "numpy>=1.16.2,<2",
-  "scipy>=1.2.1,<1.14",
+  "numpy>=2.0",
+  "scipy>=1.13",
   "matplotlib>=2.2.3",
   "scikit-image", # hazma.theory: skimage.measure.find_contours
 ]
@@ -35,10 +32,10 @@ dev = ["black>=23.3,<25.0"]
 
 [build-system]
 build-backend = "setuptools.build_meta"
-# scipy is pinned to the same range as the runtime dependency: the
-# extensions cimport scipy.special.cython_special, whose exported C symbols
-# must match between build and runtime scipy.
-requires = ["numpy", "cython", "setuptools", "scipy>=1.2.1,<1.14"]
+# scipy shares the runtime dependency's lower bound: the extensions cimport
+# scipy.special.cython_special, whose exported C symbols must match between
+# build and runtime scipy.
+requires = ["numpy", "cython", "setuptools", "scipy>=1.13"]
 
 [tool.setuptools]
 zip-safe = false

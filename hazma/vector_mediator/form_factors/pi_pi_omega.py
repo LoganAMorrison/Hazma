@@ -129,7 +129,7 @@ class FormFactorPiPiOmega:
         dist_p = dnde_pi(es_p)
         dist_w = dnde_omega(es_w)
 
-        dist_p = dist_p / np.trapz(dist_p, x=es_p)
-        dist_w = dist_w / np.trapz(dist_w, x=es_w)
+        dist_p = dist_p / np.trapezoid(dist_p, x=es_p)
+        dist_w = dist_w / np.trapezoid(dist_w, x=es_w)
 
         return [(es_p, dist_p), (es_p, dist_p), (es_w, dist_w)]

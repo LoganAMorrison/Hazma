@@ -7,7 +7,7 @@ from scipy import interpolate
 
 from hazma.parameters import electron_mass as me
 
-RealArray = npt.NDArray[np.float_]
+RealArray = npt.NDArray[np.float64]
 
 
 def load_interp(fname):

@@ -14,3 +14,4 @@ include hazma/relic_density/*.dat
 include hazma/spectra/_photon/data/*.csv
 include hazma/spectra/_positron/data/*.csv
 include hazma/spectra/_neutrino/data/*.csv
+include hazma/limits/data/*.dat
