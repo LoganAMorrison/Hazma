@@ -263,7 +263,7 @@ cdef double boost_integrate_linear_interp(double photon_energy, double beta, np.
             ihigh = ihigh - 1
 
     if ilow < ihigh:
-        integral += np.trapz(yy[ilow:ihigh], x=x[ilow:ihigh])
+        integral += np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])
 
     # Handle edges
     if ilow > 0 and fabs(x[ilow] - lb) > 1e-6:

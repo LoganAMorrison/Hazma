@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 
 from hazma.parameters import convolved_spectrum_fn, spec_res_fn
 
@@ -104,7 +104,7 @@ def test_convolution_conserves_photon_number():
         1e-1, 1e2, vectorized_energy_res, spec_fn=gaussian_line_source, n_pts=500
     )
 
-    assert trapz(dnde(energies), energies) == pytest.approx(1.0, rel=1e-3)
+    assert trapezoid(dnde(energies), energies) == pytest.approx(1.0, rel=1e-3)
 
 
 def test_spec_res_fn_arguments_are_not_interchangeable():

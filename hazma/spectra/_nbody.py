@@ -299,7 +299,7 @@ def _conv_dnde_dist(
     dndes = np.expand_dims(dist.probabilities, expand) * dndes
     # Integrate over leading axis. Result has shape (3, n) for neutrinos and
     # (n,) otherwise.
-    dnde = np.trapz(dndes, dist.bin_centers, axis=0)
+    dnde = np.trapezoid(dndes, dist.bin_centers, axis=0)
 
     return dnde
 
@@ -624,8 +624,8 @@ def dnde_photon(
         Type of integrator used for three body final-states. Can be:
 
             * 'quad': for `scipy.integrate.quad`,
-            * 'trapz': for `scipy.integrate.trapz`,
-            * 'simps': for `scipy.integrate.simps`,
+            * 'trapz': for `scipy.integrate.trapezoid`,
+            * 'simps': for `scipy.integrate.simpson`,
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.
@@ -730,8 +730,8 @@ def dnde_positron(
         Type of integrator used for three body final-states. Can be:
 
             * 'quad': for `scipy.integrate.quad`,
-            * 'trapz': for `scipy.integrate.trapz`,
-            * 'simps': for `scipy.integrate.simps`,
+            * 'trapz': for `scipy.integrate.trapezoid`,
+            * 'simps': for `scipy.integrate.simpson`,
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.
@@ -818,8 +818,8 @@ def dnde_neutrino(
         Type of integrator used for three body final-states. Can be:
 
             * 'quad': for `scipy.integrate.quad`,
-            * 'trapz': for `scipy.integrate.trapz`,
-            * 'simps': for `scipy.integrate.simps`,
+            * 'trapz': for `scipy.integrate.trapezoid`,
+            * 'simps': for `scipy.integrate.simpson`,
             * 'rambo': for `hazma.phase_space.Rambo`.
 
         Default is 'quad'.

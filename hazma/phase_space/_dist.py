@@ -101,7 +101,7 @@ class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
         else:
             integrands = ps * fs
 
-        expvals = method(integrands, xs, axis=0)
+        expvals = method(integrands, x=xs, axis=0)
         return expvals
 
     def _expect_quad(self, fn) -> RealArray:
@@ -134,8 +134,8 @@ class PhaseSpaceDistribution1D(AbstractPhaseSpaceDistribution):
         """
 
         methods = {
-            "trapz": lambda f: self._expect_fixed(f, np.trapz),
-            "simps": lambda f: self._expect_fixed(f, integrate.simps),
+            "trapz": lambda f: self._expect_fixed(f, np.trapezoid),
+            "simps": lambda f: self._expect_fixed(f, integrate.simpson),
             "quad": self._expect_quad,
         }
 

@@ -5,7 +5,7 @@ import numpy.typing as npt
 import pathlib
 from scipy import interpolate
 
-RealArray = npt.NDArray[np.float_]
+RealArray = npt.NDArray[np.float64]
 
 
 def load_interp(fname, k=2):

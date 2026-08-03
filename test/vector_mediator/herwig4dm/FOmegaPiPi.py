@@ -139,8 +139,12 @@ def phase(s, mode):
         pre /= 2.0
     return (
         pre
-        * scipy.integrate.quadrature(
-            Integrand, low, upp, args=(s, mode), tol=1e-10, maxiter=200
+        * scipy.integrate.quad(
+            lambda x, s_, mode_: Integrand([x], s_, mode_)[0],
+            low,
+            upp,
+            args=(s, mode),
+            epsabs=1e-10,
         )[0]
     )
 

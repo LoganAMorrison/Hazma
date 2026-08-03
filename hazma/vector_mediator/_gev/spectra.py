@@ -81,7 +81,7 @@ def _make_spectrum_n_body_decay(
 
     for i, dist in enumerate(energy_distributions):
         dec = np.array([dnde_decays[i](photon_energies, e) for e in dist.bin_centers])
-        dnde += np.trapz(
+        dnde += np.trapezoid(
             np.expand_dims(dist.probabilities, 1) * dec, x=dist.bin_centers, axis=0
         )
 
@@ -461,7 +461,7 @@ def dnde_photon_pi_pi_pi0(
     fsr = np.array(
         [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
     )
-    dnde += np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
+    dnde += np.trapezoid(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
     return dnde
 
@@ -706,7 +706,7 @@ def dnde_photon_pi_pi_pi_pi(
             [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
         )
         # 0.5 since each particle is counted twice
-        dnde += 0.5 * np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
+        dnde += 0.5 * np.trapezoid(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
     return dnde
 
@@ -748,7 +748,7 @@ def dnde_photon_pi_pi_pi0_pi0(
     fsr = np.array(
         [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
     )
-    dnde += np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
+    dnde += np.trapezoid(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
     return dnde
 

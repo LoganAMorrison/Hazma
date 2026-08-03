@@ -7,7 +7,7 @@ from hazma import parameters
 
 from ._utils import load_interp, dnde_positron_point, dnde_positron_array
 
-RealArray = npt.NDArray[np.float_]
+RealArray = npt.NDArray[np.float64]
 
 _eta_interp = load_interp("eta_positron.csv")
 

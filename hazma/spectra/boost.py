@@ -30,11 +30,6 @@ _integrate_defaults = {
         for key, p in inspect.signature(integrate.quad).parameters.items()
         if not p.default == p.empty
     },
-    "quadrature": {
-        key: p.default
-        for key, p in inspect.signature(integrate.quadrature).parameters.items()
-        if not p.default == p.empty
-    },
     "trapz": {
         key: p.default
         for key, p in inspect.signature(integrate.trapezoid).parameters.items()
@@ -46,6 +41,10 @@ _integrate_defaults = {
         if not p.default == p.empty
     },
 }
+
+# `scipy.integrate.quadrature` was removed in SciPy 1.15. The 'quadrature'
+# method is kept as an alias of 'quad' for backwards compatibility.
+_integrate_defaults["quadrature"] = _integrate_defaults["quad"]
 
 
 def _get_integrator_kwargs(method: str, **kwargs):
@@ -61,7 +60,7 @@ def _make_integrator(method, vectorized: bool, **kwargs):
     is_quadrature = method == "quadrature"
 
     if is_quad or is_quadrature:
-        integrator_ = integrate.quad if is_quad else integrate.quadrature
+        integrator_ = integrate.quad
 
         def quad(integrand, emin, emax):
             return np.array(
@@ -80,13 +79,13 @@ def _make_integrator(method, vectorized: bool, **kwargs):
         del integrate_kwargs["x"]
         integrate_kwargs["axis"] = 1
         npts = kwargs.get("npts", 100)
-        integrator_ = integrate.trapz if is_trapz else integrate.simps
+        integrator_ = integrate.trapezoid if is_trapz else integrate.simpson
 
         def fixed(f, a, b):
             es = np.array([np.linspace(a_, b_, npts) for a_, b_ in zip(a, b)])
             ff = f if vectorized else np.vectorize(f)
             integrands = np.array([ff(e) for e in es])
-            return integrator_(integrands, es, **integrate_kwargs)
+            return integrator_(integrands, x=es, **integrate_kwargs)
 
         return fixed
 
@@ -266,9 +265,10 @@ def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
             * `method`: Method used to integrate. Can be one of the following:
 
                 * 'quad': for adaptive quadrature using `scipy.integrate.quad`,
-                * 'quadrature': for adaptive quadrature using `scipy.integrate.quadrature`,
-                * 'trapz': trapizoid rule using `scipy.integrate.trapz`,
-                * 'simps': Simpson's rule using `scipy.integrate.simps`.
+                * 'quadrature': deprecated alias of 'quad'
+                  (`scipy.integrate.quadrature` was removed in SciPy 1.15),
+                * 'trapz': trapizoid rule using `scipy.integrate.trapezoid`,
+                * 'simps': Simpson's rule using `scipy.integrate.simpson`.
 
             * `kwargs`: Keyword arguments to pass to underlying method. See
               SciPy's quad available arguments. For `trapizoid` or `simpson`,
@@ -314,7 +314,7 @@ def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
     def fn_boosted(
         energies,
         beta: float,
-        method: str = "quadrature",
+        method: str = "quad",
         args: Tuple = tuple(),
         **kwargs,
     ):
@@ -327,8 +327,8 @@ def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
         beta: float
             Boost velocity. If beta < 0 or beta > 1, zeros are returned.
         method: str, optional
-            Method to use to integrate. Can be 'quad', 'trapizoid' or
-            'simpson'. Default is 'quadrature'.
+            Method to use to integrate. Can be 'quad', 'trapz' or
+            'simps'. Default is 'quad'.
         args: tuple, optional
             Additional arguments to pass to function.
 
@@ -346,8 +346,8 @@ def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
             Number of points to use in trapizoidal or simpson integration.
             Default is 100.
 
-        If method = 'quad' or 'quadrature, any keyword arguments compatible with
-        quad/quadrature can be specified.
+        If method = 'quad' (or its deprecated alias 'quadrature'), any keyword
+        arguments compatible with quad can be specified.
         """
         check_method(method)
         early = kinematic_early_return(energies, beta)
@@ -372,7 +372,7 @@ def dnde_boost(
     energies,
     beta: float,
     mass: float = 0.0,
-    method: str = "quadrature",
+    method: str = "quad",
     vectorized: bool = True,
     args: Tuple = tuple(),
     **kwargs,
@@ -388,8 +388,8 @@ def dnde_boost(
     mass: float, optional
         Mass of the product. Default is zero (i.e. for a photon.)
     method: str, optional
-        Method to use to integrate. Can be 'quad', 'trapizoid' or
-        'simpson'. Default is 'quadrature'.
+        Method to use to integrate. Can be 'quad', 'trapz' or
+        'simps'. Default is 'quad'.
     vectorized: bool, optional
        If True, `fn` is assumed to be vectorized. Default is True.
     args: tuple, optional

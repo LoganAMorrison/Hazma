@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 import numpy as np
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
 from scipy.interpolate import InterpolatedUnivariateSpline, interp1d
 
 """
@@ -525,7 +525,7 @@ def convolved_spectrum_fn(
                 # further normalization is applied here; doing so would not
                 # conserve the total number of photons.
                 response = spec_res_fn(e, es_padded, energy_res)
-                return trapz(dnde_src * response, es_padded)
+                return trapezoid(dnde_src * response, es_padded)
 
             dnde_conv += np.vectorize(integral)(es)
 

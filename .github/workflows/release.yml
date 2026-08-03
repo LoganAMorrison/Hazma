@@ -24,11 +24,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.1
         env:
-          # hazma still requires numpy < 2 at runtime (np.trapz,
-          # scipy.integrate.trapz/simps), which caps wheels at CPython 3.12.
-          CIBW_BUILD: "cp310-* cp311-* cp312-*"
-          # scipy < 1.14 ships no musllinux or i686 wheels, so testing there
-          # would compile scipy from source; not worth the build time.
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          # scipy ships no musllinux wheels, so testing there would compile
+          # scipy from source; not worth the build time.
           CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_MACOS: "arm64"
