@@ -15,7 +15,8 @@ Parameter set for hadronic current, parametrization taken from arXiv:1002.0279
 """
 
 # truncation parameter
-nMax_ = 2000
+nMaxDefault_ = 2000
+nMax_ = nMaxDefault_
 # omega parameters, relevant for the rho-omega mixing in the 0th order rho
 # resonance
 omegaMag_ = 0.00187
@@ -52,7 +53,7 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
     global rhoWgt_, beta_, nMax_
     global rhoMag_, rhoPhase_, rhoMasses_, rhoWidths_
     global omegaMag_, omegaPhase_, omegaMass_, omegaWidth_
-    global coup_
+    global mass_, width_, coup_, hres_, h0_, dh_
     global gDM_, mDM_, mMed_, wMed_, cI1_, cI0_
     gDM_ = gDM
     mDM_ = mDM
@@ -70,6 +71,9 @@ def resetParameters(gDM, mDM, mMed, wMed, cMedu, cMedd, cMeds):
         nMax_ = 1
         coup_ = [0] * nMax_
     else:
+        # restore the truncation in case a previous reset with cI1_ == 0
+        # shrank it to 1
+        nMax_ = nMaxDefault_
         # masses in vectors
         rhoWgt_ = []
         mass_ = []
