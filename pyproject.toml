@@ -20,7 +20,7 @@ dynamic = ["version"]
 # SciPy 1.14 (scipy.integrate.trapz/simps). Lift these once the source is
 # migrated; NumPy < 2 also caps supported Python at 3.12.
 dependencies = [
-  "numpy>=1.16.2,<2",
+  "numpy>=1.16.2,<3",
   "scipy>=1.2.1,<1.14",
   "matplotlib>=2.2.3",
   "scikit-image", # hazma.theory: skimage.measure.find_contours
