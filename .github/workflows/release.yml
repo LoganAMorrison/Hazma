@@ -1,0 +1,74 @@
+# Build wheels + sdist and publish to PyPI when a GitHub release is published.
+# Can also be run manually (workflow_dispatch) to test the build without
+# publishing.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-wheels:
+    name: Build wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v4.1.1
+        env:
+          # hazma still requires numpy < 2 at runtime (np.trapz,
+          # scipy.integrate.trapz/simps), which caps wheels at CPython 3.12.
+          CIBW_BUILD: "cp310-* cp311-* cp312-*"
+          # scipy < 1.14 ships no musllinux or i686 wheels, so testing there
+          # would compile scipy from source; not worth the build time.
+          CIBW_SKIP: "*-musllinux*"
+          CIBW_ARCHS_LINUX: "x86_64"
+          CIBW_ARCHS_MACOS: "arm64"
+          CIBW_TEST_COMMAND: python -c "import hazma"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  build-sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build sdist
+        run: |
+          python -m pip install build twine
+          python -m build --sdist
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish:
+    name: Publish to PyPI
+    # Only publish on an actual release; manual runs just exercise the build.
+    if: github.event_name == 'release'
+    needs: [build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
