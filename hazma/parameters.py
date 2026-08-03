@@ -395,6 +395,28 @@ def load_interp(rf_name, bounds_error=False, fill_value=0.0):
     return interp1d(xs, ys, bounds_error=bounds_error, fill_value=fill_value)
 
 
+def _eval_energy_res(energy_res, e):
+    r"""Evaluate an energy-resolution callback over one or many energies.
+
+    ``energy_res`` is documented as ``float -> float``. Interpolators and other
+    vectorized callbacks accept arrays directly, but a plain Python callback
+    such as ``lambda e: 0.1 if e < 10 else 0.2`` raises on array input, so fall
+    back to evaluating it element-wise. A callback returning a single value for
+    an array of energies is treated as a constant resolution.
+    """
+    e = np.asarray(e, dtype=float)
+
+    try:
+        res = np.asarray(energy_res(e), dtype=float)
+    except (ValueError, TypeError):
+        return np.vectorize(energy_res, otypes=[float])(e)
+
+    if res.shape != e.shape:
+        return np.broadcast_to(res, e.shape)
+
+    return res
+
+
 def spec_res_fn(ep, e, energy_res):
     r"""Get the spectral resolution function.
 
@@ -415,7 +437,8 @@ def spec_res_fn(ep, e, energy_res):
         The detector's energy resolution (Delta E / E) as a function of photon
         energy in MeV.
     """
-    sigma = np.asarray(e, dtype=float) * energy_res(e)
+    e = np.asarray(e, dtype=float)
+    sigma = e * _eval_energy_res(energy_res, e)
 
     with np.errstate(divide="ignore", invalid="ignore"):
         res = (
@@ -443,7 +466,7 @@ def _true_energy_grid(lo, hi, energy_res, n_pts):
     response.
     """
     grid = np.geomspace(lo, hi, n_pts)
-    res = np.asarray(energy_res(grid), dtype=float)
+    res = _eval_energy_res(energy_res, grid)
     res = res[res > 0.0]
 
     if res.size == 0:
@@ -486,9 +509,9 @@ def convolved_spectrum_fn(
     es = np.geomspace(e_min, e_max, n_pts)
     dnde_conv = np.zeros(es.shape)
 
-    # Pad energy grid to avoid edge effects
-    es_padded = _true_energy_grid(0.1 * e_min, 10 * e_max, energy_res, n_pts)
     if spec_fn is not None:
+        # Pad energy grid to avoid edge effects
+        es_padded = _true_energy_grid(0.1 * e_min, 10 * e_max, energy_res, n_pts)
         dnde_src = spec_fn(es_padded)
         if not np.all(dnde_src == 0):
 
