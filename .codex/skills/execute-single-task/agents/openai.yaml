@@ -1,0 +1,4 @@
+interface:
+  display_name: "Execute One Task"
+  short_description: "Implement one project task with gates."
+  default_prompt: "Use $execute-single-task to complete the next task for a Hazma project."

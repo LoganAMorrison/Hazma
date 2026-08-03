@@ -45,8 +45,8 @@ fixed when it isn't. Rebuild, then confirm.
 site-packages install shadows the checkout depending on cwd and how the
 env was set up. `python -c "import hazma; print(hazma.__file__)"` before
 trusting any result you attribute to your edit — especially inside a git
-worktree under `.claude/worktrees/`, which is a *different directory*
-from the checkout the editable install points at.
+worktree under `.claude/worktrees/` or `.codex/worktrees/`, which is a
+*different directory* from the checkout the editable install points at.
 
 **`pip install -e .` needs Cython, NumPy, and a C/C++ compiler.** A
 missing toolchain surfaces as a build error deep in `_gamma_ray`

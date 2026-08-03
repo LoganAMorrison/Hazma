@@ -1,0 +1,4 @@
+interface:
+  display_name: "Respond to Review"
+  short_description: "Assess review feedback and apply justified fixes."
+  default_prompt: "Use $review-respond to address the review feedback for PR #123."

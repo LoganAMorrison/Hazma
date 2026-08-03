@@ -2,8 +2,9 @@
 
 Agent-neutral, single-source guidance for any coding agent working in
 this repo — Claude Code, Codex, or otherwise. The skills under
-`.claude/skills/` are thin: they carry role, workflow, and gates, and
-they **point here** for the shared rules rather than restating them.
+`.claude/skills/` and `.codex/skills/` are thin: they carry role,
+workflow, and gates, and they **point here** for the shared rules rather
+than restating them.
 
 ## The contract
 
@@ -35,6 +36,7 @@ they **point here** for the shared rules rather than restating them.
 Deterministic helpers live under
 [`scripts/agents/`](../../scripts/agents/) — `preflight.sh`,
 `check_pr_title.py`, `setup_task_worktree.sh`, `resolve_task.py`,
+`resolve_phase.py`,
 `check_doc_citations.py`. They are the executable form of the rules in
 this layer; a skill calls the script rather than re-describing its steps.
 The same one-copy-per-invariant principle applies: the logic lives in the

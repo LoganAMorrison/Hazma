@@ -3,11 +3,12 @@ name: begin-phase
 description: Prepare a guarded, ready-to-paste kickoff prompt for the next eligible phase of a phased project, verifying strict prerequisite closeout first and refusing blocked or ambiguous phase starts.
 ---
 
-**Role:** Prepare a safe, ready-to-paste prompt for the next phase of a
-**phased** project without letting an agent start a blocked or ambiguous
-phase.
+# Begin Phase
 
-**When to use this skill**
+Prepare a safe, ready-to-paste prompt for the next phase of a **phased**
+project without letting an agent start a blocked or ambiguous phase.
+
+## When to use this skill
 
 - The user asks to begin the next phase of a phased project.
 - The user asks which phase is actually ready to start next.
@@ -17,7 +18,7 @@ This skill **prepares a handoff prompt only**. It does not start
 implementation or edit project files. First-task selection inside the
 chosen phase is delegated to `/execute-single-task`.
 
-**When NOT to use**
+## When not to use
 
 - Flat (non-phased) projects — refuse and point at
   `/execute-single-task` (see Step 2).
@@ -71,22 +72,21 @@ Map the user's request to helper arguments:
 
 ### Step 4: Run the shared helper
 
-The helper is at `.claude/skills/begin-phase/scripts/resolve_phase.py`.
+The shared helper is at `scripts/agents/resolve_phase.py`.
 **Run it from the repo root** — the Bash-tool cwd can reset between
 calls, so pass an absolute path or `cd` in the same command.
 
 ```sh
 # Current frontier:
-python3 .claude/skills/begin-phase/scripts/resolve_phase.py \
-  --project <slug>
+python3 scripts/agents/resolve_phase.py --project <slug> --agent claude
 
 # After a just-completed phase:
-python3 .claude/skills/begin-phase/scripts/resolve_phase.py \
-  --project <slug> --completed-phase 4
+python3 scripts/agents/resolve_phase.py --project <slug> --agent claude \
+  --completed-phase 4
 
 # Explicit target:
-python3 .claude/skills/begin-phase/scripts/resolve_phase.py \
-  --project <slug> --target-phase 6
+python3 scripts/agents/resolve_phase.py --project <slug> --agent claude \
+  --target-phase 6
 ```
 
 The helper emits JSON on stdout with `status`:

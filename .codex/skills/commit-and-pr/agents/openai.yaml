@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit and PR"
+  short_description: "Commit, push, and open a compliant PR."
+  default_prompt: "Use $commit-and-pr to ship the current Hazma change as a pull request."

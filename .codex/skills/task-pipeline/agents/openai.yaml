@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Pipeline"
+  short_description: "Implement, review, and ship one project task."
+  default_prompt: "Use $task-pipeline to implement and ship the next task in project my-project."

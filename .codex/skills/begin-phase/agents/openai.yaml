@@ -1,0 +1,4 @@
+interface:
+  display_name: "Begin Phase"
+  short_description: "Prepare a guarded kickoff for the next phase."
+  default_prompt: "Use $begin-phase to prepare the next eligible phase of project my-project."
