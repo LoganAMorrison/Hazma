@@ -530,4 +530,14 @@ hazma/_phase_space/stubgen.sh
 hazma/_positron/stubgen.sh
 notebooks/decay_spectra
 notebooks/dev/gev/
-scripts/
+# `scripts/` is local scratch and stays ignored, except the agent-workflow
+# helpers that `docs/agents/` and `.claude/skills/` shell out to.
+scripts/*
+!scripts/agents/
+
+# Agent-local state: per-session settings and task worktrees. The skills
+# under .claude/skills/ ARE tracked.
+.claude/settings.local.json
+.claude/worktrees/
+.codex/settings.local.json
+.codex/worktrees/

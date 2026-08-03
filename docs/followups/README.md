@@ -1,0 +1,32 @@
+# Follow-ups
+
+The durable backlog of ideas and deferred work that hasn't been promoted
+to a `projects/<slug>/` plan yet.
+
+Open items live in [`todo/`](todo/); resolved items move to
+[`done/`](done/), so `ls todo/` is the live backlog at a glance. Items
+move between the two directories; they are never deleted — the historical
+reasoning is worth keeping.
+
+The full lifecycle (create → resolve → repoint inbound links), when to
+add one, and why this is not GitHub issues, live in
+[`../workflow.md#follow-ups`](../workflow.md#follow-ups).
+
+## Creating one
+
+```sh
+cp docs/followups/_template.md docs/followups/todo/<slug>.md
+# fill in the fields, then add a row to the Open table below
+```
+
+## Open
+
+| Item | Added | Source | Scope |
+|------|-------|--------|-------|
+| _none yet_ | | | |
+
+## Promoted / Done / Pruned
+
+| Item | Status | Resolution |
+|------|--------|------------|
+| _none yet_ | | |
