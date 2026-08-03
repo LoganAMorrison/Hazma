@@ -119,7 +119,9 @@ def dnde_photon_e_e(_, photon_energies, cme: float):
     if cme < 2 * me:
         return np.zeros_like(photon_energies)
 
-    return dnde_photon_ap_fermion(photon_energies, cme**2, me, charge=-1.0)
+    # Factor of 2: the AP functions give the FSR off a single radiating
+    # particle, and both leptons radiate.
+    return 2.0 * dnde_photon_ap_fermion(photon_energies, cme**2, me, charge=-1.0)
 
 
 def dnde_photon_mu_mu(_, photon_energies, cme: float):
@@ -140,7 +142,9 @@ def dnde_photon_mu_mu(_, photon_energies, cme: float):
     if cme < 2 * mmu:
         return np.zeros_like(photon_energies)
 
-    fsr = dnde_photon_ap_fermion(photon_energies, cme**2, mmu, charge=-1.0)
+    # Factor of 2: the AP functions give the FSR off a single radiating
+    # particle, and both muons radiate.
+    fsr = 2.0 * dnde_photon_ap_fermion(photon_energies, cme**2, mmu, charge=-1.0)
     dec = 2 * spectra.dnde_photon_muon(photon_energies, cme / 2.0)
     return fsr + dec
 
@@ -168,7 +172,9 @@ def dnde_photon_pi_pi(_, photon_energies, cme: float):
     if cme < 2 * mpi:
         return np.zeros_like(photon_energies)
 
-    fsr = dnde_photon_ap_scalar(photon_energies, cme**2, mpi, charge=-1.0)
+    # Factor of 2: the AP functions give the FSR off a single radiating
+    # particle, and both pions radiate.
+    fsr = 2.0 * dnde_photon_ap_scalar(photon_energies, cme**2, mpi, charge=-1.0)
     dec = 2 * spectra.dnde_photon_charged_pion(photon_energies, cme / 2.0)
     return fsr + dec
 
@@ -214,8 +220,10 @@ def dnde_photon_k_k(_, photon_energies, cme: float):
     if cme < 2 * mk:
         return np.zeros_like(photon_energies)
 
-    fsr = dnde_photon_ap_scalar(photon_energies, cme**2, mk, charge=-1.0)
-    dec = spectra.dnde_photon_charged_kaon(photon_energies, cme / 2.0)
+    # Factor of 2: the AP functions give the FSR off a single radiating
+    # particle, and both kaons radiate.
+    fsr = 2.0 * dnde_photon_ap_scalar(photon_energies, cme**2, mk, charge=-1.0)
+    dec = 2 * spectra.dnde_photon_charged_kaon(photon_energies, cme / 2.0)
     return fsr + dec
 
 
@@ -712,8 +720,8 @@ def dnde_photon_pi_pi_pi0_pi0(
     ff: VectorFormFactorPiPiPi0Pi0 = self._ff_pi_pi_pi0_pi0
 
     dnde_decays = [
-        spectra.dnde_photon_charged_kaon,
-        spectra.dnde_photon_charged_kaon,
+        spectra.dnde_photon_charged_pion,
+        spectra.dnde_photon_charged_pion,
         spectra.dnde_photon_neutral_pion,
         spectra.dnde_photon_neutral_pion,
     ]
@@ -735,7 +743,11 @@ def dnde_photon_pi_pi_pi0_pi0(
     dpdm = inv_mass_dist[(0, 1)]
     ps = dpdm.probabilities
     ms = dpdm.bin_centers
-    fsr = np.array([dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms])
+    # Factor of 2: the AP functions give the FSR off a single radiating
+    # particle, and both charged pions radiate.
+    fsr = np.array(
+        [2.0 * dnde_photon_ap_scalar(photon_energies, m**2, mpi) for m in ms]
+    )
     dnde += np.trapz(np.expand_dims(ps, 1) * fsr, x=ms, axis=0)
 
     return dnde
