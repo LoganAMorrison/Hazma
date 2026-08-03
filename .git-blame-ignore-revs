@@ -1,0 +1,6 @@
+# Commits to ignore in git blame. Enable locally with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view picks this file up automatically.
+
+# Reformat hazma/ and test/ with black 24.10.0
+ea2d2167a8451f53f33b15e4cad4b2b8507fb1ac
