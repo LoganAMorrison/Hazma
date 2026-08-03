@@ -125,9 +125,9 @@ the tree you edited, not an installed copy.
 - **No bare `except:`.** Raise the errors in `hazma/hazma_errors.py`
   where they fit.
 - **`hazma/experimental/` and `notebooks/` are excluded from the lint
-  gate** (CI's flake8 invocation excludes them). Do not treat code there
-  as a pattern to copy, and do not import from `experimental/` in the
-  library.
+  gate** (CI's ruff step passes `--exclude` for both). Do not treat code
+  there as a pattern to copy, and do not import from `experimental/` in
+  the library.
 - **`hazma/deprecated/` stays importable.** Removing or changing anything
   there is a user-facing break — see `docs/versioning.md`.
 - **Never commit generated C/C++.** `_build.py` cythonizes on build; the

@@ -88,20 +88,32 @@ of [`AGENTS.md`](../../AGENTS.md).
 
 ## Lint and CI
 
-**CI's flake8 pass is not a lint gate.** `.github/workflows/python-package.yml`
-runs flake8 twice: once with `--select=E9,F63,F7,F82` (syntax errors and
-undefined names only) and once with `--exit-zero` (advisory). Neither
-enforces the `[tool.ruff]` config. Run `ruff check` locally; do not infer
-"CI would have caught it".
+**CI's lint job does not enforce the repo's own ruff config.**
+`.github/workflows/ci.yml` runs
+`ruff check --isolated --select E9,F63,F7,F82` — syntax errors, undefined
+names, and broken comparisons/f-strings. `--isolated` is the load-bearing
+flag: it deliberately ignores `[tool.ruff]` in `pyproject.toml`, so the
+stricter rule set you get from a bare local `ruff check` is **not** what
+CI runs. Green CI does not mean the tree satisfies the configured rules.
+Run `ruff check` locally; do not infer "CI would have caught it".
 
-**`hazma/experimental/` and `notebooks/` are excluded from CI lint.**
-Code there is not held to the repo's standard. Do not cite it as
-precedent, and do not import from `experimental/` in the library.
+**There is no formatting check in CI.** The lint job carries an explicit
+comment saying `black --check` was omitted because the tree is not
+black-clean (85+ files differ). So `black` is in this repo's preflight
+gate but not its CI — a formatting regression will not turn anything red.
+Do not reformat files your task does not touch just because `black`
+wants to; that is how an unrelated 85-file diff gets attached to a
+one-line change.
 
-**CI tests on Python 3.9 and 3.10 while `pyproject.toml` requires
-≥3.10.** The matrix and the declared floor disagree. Do not use syntax
-newer than the lower of the two without checking which is actually
-authoritative for the change you are making.
+**`hazma/experimental/` and `notebooks/` are excluded from CI lint**
+(`--exclude` flags on the ruff step). Code there is not held to the
+repo's standard. Do not cite it as precedent, and do not import from
+`experimental/` in the library.
+
+**The CI test matrix is Python 3.10 / 3.11 / 3.12**, matching
+`pyproject.toml`'s `requires-python = ">=3.10"`. CI also runs an import
+smoke test before the suite, so a broken Cython build fails there rather
+than as a confusing collection error.
 
 ## Git and orchestration
 
