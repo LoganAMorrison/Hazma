@@ -1,6 +1,7 @@
+import importlib.resources as importlib_resources
+
 from scipy.interpolate import interp1d
 import numpy as np
-from pkg_resources import resource_filename
 from hazma.parameters import temp_cmb_formation
 
 """
@@ -8,16 +9,18 @@ Functions required for computing CMB limits and related quantities.
 """
 
 # Get paths to files inside the module
-f_eff_ep_rf = resource_filename(__name__, "cmb_data/f_eff_ep.dat")
-f_eff_g_rf = resource_filename(__name__, "cmb_data/f_eff_g.dat")
+_f_eff_ep_ref = importlib_resources.files("hazma") / "cmb_data/f_eff_ep.dat"
+_f_eff_g_ref = importlib_resources.files("hazma") / "cmb_data/f_eff_g.dat"
 
 # Load f_eff^{e+ e-}
-f_eff_ep_data = np.loadtxt(f_eff_ep_rf, delimiter=",").T
-f_eff_ep = interp1d(f_eff_ep_data[0] / 1.0e6, f_eff_ep_data[1])  # eV -> MeV
+with importlib_resources.as_file(_f_eff_ep_ref) as path:
+    f_eff_ep_data = np.loadtxt(path, delimiter=",").T
+    f_eff_ep = interp1d(f_eff_ep_data[0] / 1.0e6, f_eff_ep_data[1])  # eV -> MeV
 
 # Load f_eff^{e+ e-}
-f_eff_g_data = np.loadtxt(f_eff_g_rf, delimiter=",").T
-f_eff_g = interp1d(f_eff_g_data[0] / 1.0e6, f_eff_g_data[1])  # eV -> MeV
+with importlib_resources.as_file(_f_eff_g_ref) as path:
+    f_eff_g_data = np.loadtxt(path, delimiter=",").T
+    f_eff_g = interp1d(f_eff_g_data[0] / 1.0e6, f_eff_g_data[1])  # eV -> MeV
 
 #: Planck 2018 95% upper limit on p_ann from temperature + polarization
 #: measurements, in cm^3 s^-1 MeV^-1

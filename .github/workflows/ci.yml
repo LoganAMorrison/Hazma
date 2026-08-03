@@ -61,5 +61,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -v .
           python -m pip install pytest
+      - name: Import smoke test
+        # The test suite only touches part of the public API; importing the
+        # main entry points catches missing dependencies, missing package
+        # data, and build/runtime scipy ABI mismatches. Run outside the repo
+        # so the installed package is imported, not the source tree.
+        working-directory: ${{ runner.temp }}
+        run: >-
+          python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,
+          hazma.scalar_mediator, hazma.vector_mediator,
+          hazma.spectra._photon._muon"
       - name: Run tests
         run: python -m pytest

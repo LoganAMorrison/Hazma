@@ -1,4 +1,4 @@
-import importlib_resources
+import importlib.resources as importlib_resources
 
 from scipy.interpolate import interp1d
 import numpy as np

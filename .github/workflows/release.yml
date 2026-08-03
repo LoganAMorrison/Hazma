@@ -32,7 +32,9 @@ jobs:
           CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_MACOS: "arm64"
-          CIBW_TEST_COMMAND: python -c "import hazma"
+          # Import a compiled extension module, not just the (pure-Python)
+          # top-level package, so a mistagged or broken wheel fails the build.
+          CIBW_TEST_COMMAND: python -c "import hazma.spectra._photon._muon"
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
