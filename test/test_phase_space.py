@@ -1,7 +1,7 @@
 import unittest
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 
 from hazma import parameters
@@ -72,7 +72,7 @@ class TestRambo(unittest.TestCase):
         cme = 1000.0
 
         rambo = Rambo(cme, fsp_masses, msqrd=msqrd_ee_to_mumu).cross_section(
-            m1=me, m2=me, n=5000
+            m1=me, m2=me, n=5000, seed=1234
         )
         analytic = 4.0 * np.pi * alpha_em**2 / (3.0 * cme**2)
         assert_allclose(rambo[0], analytic, rtol=5e-3)
@@ -95,7 +95,9 @@ class TestRambo(unittest.TestCase):
             return 64.0 * GF**2 * ldot(pe, pvmu) * ldot(pmu, pve)
 
         fsp_masses = np.array([me, 0.0, 0.0])
-        rambo = Rambo(mmu, fsp_masses, msqrd=msqrd_mu_to_enunu).decay_width(n=50_000)
+        rambo = Rambo(mmu, fsp_masses, msqrd=msqrd_mu_to_enunu).decay_width(
+            n=50_000, seed=1234
+        )
 
         r = me**2 / mmu**2
         corr_fac = 1.0 - 8.0 * r + 8 * r**3 - r**4 - 12.0 * r**2 * np.log(r)
@@ -125,7 +127,7 @@ class TestRambo(unittest.TestCase):
                 )
             ) / (6.0 * cw**2 * sw**2 * mz**2)
 
-        rambo = Rambo(mmu, fsp_masses, msqrd=msqrd_z_to_ee).decay_width(n=10)
+        rambo = Rambo(mz, fsp_masses, msqrd=msqrd_z_to_ee).decay_width(n=10, seed=1234)
 
         num = qe**2 * (8.0 * sw**4 - 4.0 * sw**2 + 1) * mz
         den = 96.0 * np.pi * cw**2 * sw**2
