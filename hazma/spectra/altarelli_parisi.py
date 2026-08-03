@@ -1,3 +1,16 @@
+r"""Approximate final-state radiation in the Altarelli-Parisi approximation.
+
+.. note::
+
+    The functions in this module give the FSR from a **single** radiating
+    particle, and so carry a prefactor of :math:`\alpha_{\mathrm{em}}/2\pi`.
+    Eq. (4.6) of the hazma paper (arXiv:1907.11846), and the deprecated
+    ``hazma.utils.dnde_altarelli_parisi_*`` functions, instead give the result
+    summed over a **pair** of oppositely-charged particles and carry
+    :math:`\alpha_{\mathrm{em}}/\pi`. To reproduce Eq. (4.6), add the spectrum
+    once per charged final-state particle, as ``hazma.spectra`` does.
+"""
+
 from typing import Any, Callable
 
 import numpy as np

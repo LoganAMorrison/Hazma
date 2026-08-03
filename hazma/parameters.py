@@ -395,21 +395,85 @@ def load_interp(rf_name, bounds_error=False, fill_value=0.0):
     return interp1d(xs, ys, bounds_error=bounds_error, fill_value=fill_value)
 
 
-def spec_res_fn(ep, e, energy_res):
-    """Get the spectral resolution function."""
-    sigma = e * energy_res(e)
+def _eval_energy_res(energy_res, e):
+    r"""Evaluate an energy-resolution callback over one or many energies.
 
-    if sigma == 0:
-        if hasattr(ep, "__len__"):
-            return np.zeros(ep.shape)
-        else:
-            return 0.0
-    else:
-        return (
+    ``energy_res`` is documented as ``float -> float``. Interpolators and other
+    vectorized callbacks accept arrays directly, but a plain Python callback
+    such as ``lambda e: 0.1 if e < 10 else 0.2`` raises on array input, so fall
+    back to evaluating it element-wise. A callback returning a single value for
+    an array of energies is treated as a constant resolution.
+    """
+    e = np.asarray(e, dtype=float)
+
+    try:
+        res = np.asarray(energy_res(e), dtype=float)
+    except (ValueError, TypeError):
+        return np.vectorize(energy_res, otypes=[float])(e)
+
+    if res.shape != e.shape:
+        return np.broadcast_to(res, e.shape)
+
+    return res
+
+
+def spec_res_fn(ep, e, energy_res):
+    r"""Get the spectral resolution function.
+
+    This is the probability density for a photon of *true* energy ``e`` to be
+    reconstructed at energy ``ep``. The two arguments are not interchangeable:
+    the width of the response is set by the true energy, :math:`\sigma = e
+    \times \Delta E/E(e)`. Evaluating the width at the reconstructed energy
+    instead lets a sharp spectral feature leak to arbitrarily high
+    reconstructed energies wherever the detector's resolution is poor.
+
+    Parameters
+    ----------
+    ep : float or array-like
+        Reconstructed (measured) photon energy.
+    e : float or array-like
+        True photon energy. Sets the width of the response.
+    energy_res : float -> float
+        The detector's energy resolution (Delta E / E) as a function of photon
+        energy in MeV.
+    """
+    e = np.asarray(e, dtype=float)
+    sigma = e * _eval_energy_res(energy_res, e)
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        res = (
             1.0
             / np.sqrt(2.0 * np.pi * sigma**2)
             * np.exp(-((ep - e) ** 2) / (2.0 * sigma**2))
         )
+
+    # A vanishing width carries no photons, matching the historical behavior.
+    return np.where(sigma == 0.0, 0.0, res)
+
+
+#: Hard cap on the number of true-energy points used by the convolution
+#: integral, to bound its runtime for very fine energy resolutions.
+_MAX_CONV_PTS = 200_000
+
+
+def _true_energy_grid(lo, hi, energy_res, n_pts):
+    r"""Build the grid of true photon energies used by the convolution integral.
+
+    The detector response has a width of :math:`\sigma(E) = E \times \Delta
+    E/E(E)`, so a logarithmic grid resolves it uniformly when its spacing
+    ``dlog`` satisfies ``dlog << min(Delta E / E)``. We target four points per
+    :math:`\sigma`; a grid that is too coarse silently under-integrates the
+    response.
+    """
+    grid = np.geomspace(lo, hi, n_pts)
+    res = _eval_energy_res(energy_res, grid)
+    res = res[res > 0.0]
+
+    if res.size == 0:
+        return grid
+
+    n_needed = int(np.ceil(4.0 * np.log(hi / lo) / np.min(res)))
+    return np.geomspace(lo, hi, int(np.clip(n_needed, n_pts, _MAX_CONV_PTS)))
 
 
 def convolved_spectrum_fn(
@@ -445,9 +509,9 @@ def convolved_spectrum_fn(
     es = np.geomspace(e_min, e_max, n_pts)
     dnde_conv = np.zeros(es.shape)
 
-    # Pad energy grid to avoid edge effects
-    es_padded = np.geomspace(0.1 * e_min, 10 * e_max, n_pts)
     if spec_fn is not None:
+        # Pad energy grid to avoid edge effects
+        es_padded = _true_energy_grid(0.1 * e_min, 10 * e_max, energy_res, n_pts)
         dnde_src = spec_fn(es_padded)
         if not np.all(dnde_src == 0):
 
@@ -455,12 +519,13 @@ def convolved_spectrum_fn(
                 """
                 Performs the integration at given photon energy.
                 """
-                spec_res_fn_vals = spec_res_fn(es_padded, e, energy_res)
-                integrand_vals = (
-                    dnde_src * spec_res_fn_vals / trapz(spec_res_fn_vals, es_padded)
-                )
-
-                return trapz(integrand_vals, es_padded)
+                # Integrate the source spectrum against the detector response
+                # R(e | e'), whose width is set by the *true* energy e'. The
+                # response is normalized over the reconstructed energy, so no
+                # further normalization is applied here; doing so would not
+                # conserve the total number of photons.
+                response = spec_res_fn(e, es_padded, energy_res)
+                return trapz(dnde_src * response, es_padded)
 
             dnde_conv += np.vectorize(integral)(es)
 
