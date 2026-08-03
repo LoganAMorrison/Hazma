@@ -35,5 +35,17 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 
 ## Ledger
 
-_Empty._ This ledger starts fresh with the agent workflow. The first
-entry lands the first time a review round catches something class-shaped.
+- [ported-file-stale-reference] A file copied in from another repo carries
+  that repo's references — workflow paths, CI actions, internal design docs
+  — and they read as authoritative here while pointing at infrastructure
+  that does not exist. Grep every ported file for paths and tool names and
+  confirm each resolves in *this* repo before shipping it (PR #18:
+  `check_pr_title.py` claimed to mirror `.github/workflows/pr_linter.yaml`,
+  which exists only upstream).
+- [normalized-id-in-path] An id that is normalized for display ("Phase 2")
+  must not be interpolated into a filesystem path when the on-disk name is
+  the un-normalized form (`phase-02/`). The two agree for most values and
+  diverge exactly at the padded ones, so a spot check passes and the bug
+  ships. When a value has both a display form and a path form, name them
+  separately and test a value where they differ (PR #18:
+  `resolve_phase.py`'s kickoff prompt sent agents to `task-notes/phase-2/`).

@@ -24,6 +24,11 @@ Validate a header deterministically rather than counting by hand:
 scripts/agents/check_pr_title.py "feat(spectra): add eta-prime photon channel"
 ```
 
+**This convention is not enforced by CI.** No workflow rejects a malformed
+title, so a green CI run says nothing about the title. The checker above and
+review are what uphold it — run the checker before opening a PR rather than
+assuming something downstream will catch a mistake.
+
 ## Scopes for hazma
 
 Use the most specific scope that applies. Common scopes (non-exhaustive):

@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """Validate a Conventional Commits PR-title / header string.
 
-Mirrors the enforced settings in .github/workflows/pr_linter.yaml
-(10XDev/pull-request-linter-action@v6) so agents can pre-check a title
-locally before opening a PR.
+A **local** validator, so an agent can deterministically pre-check a title
+instead of eyeballing a character count. The rules it enforces are the ones
+written down in docs/PR_GUIDELINES.md -- that document is authoritative and
+this script is its executable form. If the two ever disagree, the document
+wins and this script is the bug.
 
-Rules (see spec §8 in the skills-redesign design doc):
+There is **no CI job enforcing PR titles in this repo.** Nothing rejects a
+malformed title automatically; the convention is upheld by this checker and
+by review. Do not read a green CI run as a title that passed.
+
+Rules (see docs/PR_GUIDELINES.md "Title format"):
   - type   ∈ {feat fix chore ci docs test refactor perf style build revert}
   - scope  required; matches ^[a-z0-9-]+$; ≤10 chars; no leading/trailing
            hyphen; not equal to a type
   - header total length ≤69 chars
   - subject starts with an alphanumeric char; no trailing "." or space
 
-Deliberate divergence from the live workflow: the action sets
-`disallowTypesAsScopes: false`, but this checker rejects a scope equal to a
-type per the design spec (the stricter rule catches accidental
-`docs(docs):`-style titles). No real merged title uses a type as its scope.
+The "scope must not equal a type" rule is stricter than Conventional Commits
+itself requires; it catches accidental `docs(docs):`-style titles.
 
 Usage:
     check_pr_title.py "feat(lint): add a rule"   # title as argv

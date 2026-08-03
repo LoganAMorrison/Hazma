@@ -473,6 +473,16 @@ def build_prompt(
 ) -> str:
     record = phases[phase_id]
 
+    # `phase_id` is the *canonical display* id ("2"); `record.prefix` is the
+    # filename prefix ("02"). Working-memory directories are named after the
+    # filename prefix -- `projects/<slug>/task-notes/phase-02/` -- matching
+    # both the template and `scripts/agents/resolve_task.py`, which derives
+    # the directory from the phase filename. Interpolating `phase_id` into a
+    # path yields `phase-2/` and sends the next agent to a directory that
+    # does not exist, so every filesystem path below MUST use `dir_prefix`.
+    # Display text keeps `phase_id`.
+    dir_prefix = record.prefix.lower()
+
     prereq_learnings: list[str] = []
     for prereq_id in sorted(record.prerequisite_ids, key=phase_sort_key):
         prereq = phases.get(prereq_id)
@@ -509,7 +519,7 @@ def build_prompt(
         f"- Start with the next lowest-numbered unfinished task in "
         f"Phase {phase_id} -- read it from the live Tasks table in "
         f"`projects/{project_slug}/task-notes/phase-"
-        f"{phase_id}/README.md` (not `PLAN.md` or the phase file).\n\n"
+        f"{dir_prefix}/README.md` (not `PLAN.md` or the phase file).\n\n"
         "Read only:\n"
         f"1. `{plan_path}`\n"
         f"2. `projects/{project_slug}/task-notes/README.md` "
@@ -517,7 +527,7 @@ def build_prompt(
         f"3. `{rules_path}` (optional -- skip if missing)\n"
         f"4. `{phase_path}`\n"
         f"5. `projects/{project_slug}/task-notes/phase-"
-        f"{phase_id}/README.md` (per-phase working memory -- the live "
+        f"{dir_prefix}/README.md` (per-phase working memory -- the live "
         f"Tasks status table for Phase {phase_id})\n"
         f"6. The files listed under `## Prerequisites` in `{phase_path}`\n"
         "7. Relevant upstream learnings already closed out:\n"
