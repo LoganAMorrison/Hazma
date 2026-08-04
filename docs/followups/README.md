@@ -22,11 +22,11 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 ## Open
 
 | Item | Added | Source | Scope |
-|------|-------|--------|-------|
-| _none yet_ | | | |
+| --- | --- | --- | --- |
+| [markdownlint config for templates](todo/markdownlint-config-for-templates.md) | 2026-08-03 | cython-to-rust scaffolding | cross-cutting |
 
 ## Promoted / Done / Pruned
 
 | Item | Status | Resolution |
-|------|--------|------------|
+| --- | --- | --- |
 | _none yet_ | | |

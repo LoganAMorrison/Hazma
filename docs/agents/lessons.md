@@ -49,6 +49,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   ships. When a value has both a display form and a path form, name them
   separately and test a value where they differ (PR #18:
   `resolve_phase.py`'s kickoff prompt sent agents to `task-notes/phase-2/`).
+- [derived-count-not-rederived] A count that appears in a plan (extensions,
+  entry points, files) must be re-derived from source with a stated command
+  at write time, not carried over from analysis prose — three counts in one
+  plan drifted (32→"19" survivors vs 20 actual; "43" corpus entry points vs
+  41 consumed; "44 .pyx/.pxd" conflating 44 .pyx + 33 .pxd), and each read
+  as authoritative until review recounted (PR #35).
+- [wheel-tag-vs-extension-abi] A wheel's tag is per-distribution, not
+  per-extension: while any version-specific extension (e.g. Cython) remains
+  in the package, wheels stay CPython-tagged no matter how many extensions
+  use the limited API — claim abi3 *wheels* only after the last
+  version-specific extension is gone, and verify extension-level abi3 via
+  the `.abi3.so` filename instead (PR #35).
 - [stale-ci-capability-claim] A change to `.github/workflows/` silently
   falsifies every prose description of what CI does. Those descriptions
   live in `docs/agents/` and the skills, not next to the workflow, so
