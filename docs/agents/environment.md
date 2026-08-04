@@ -97,10 +97,9 @@ stricter rule set you get from a bare local `ruff check` is **not** what
 CI runs. Green CI does not mean the tree satisfies the configured rules.
 Run `ruff check` locally; do not infer "CI would have caught it".
 
-**There is no formatting check in CI.** The lint job carries an explicit
-comment saying `black --check` was omitted because the tree is not
-black-clean (85+ files differ). So `black` is in this repo's preflight
-gate but not its CI — a formatting regression will not turn anything red.
+**CI does check formatting.** The lint job runs
+`black --check --diff hazma test`, so a formatting regression turns CI
+red. `black` is in both this repo's preflight gate and its CI.
 Do not reformat files your task does not touch just because `black`
 wants to; that is how an unrelated 85-file diff gets attached to a
 one-line change.
@@ -110,8 +109,9 @@ one-line change.
 repo's standard. Do not cite it as precedent, and do not import from
 `experimental/` in the library.
 
-**The CI test matrix is Python 3.10 / 3.11 / 3.12**, matching
-`pyproject.toml`'s `requires-python = ">=3.10"`. CI also runs an import
+**The CI test matrix is Python 3.10 through 3.14 on Linux, plus macOS on
+3.14**, matching `pyproject.toml`'s `requires-python = ">=3.10"`. CI also
+runs an import
 smoke test before the suite, so a broken Cython build fails there rather
 than as a confusing collection error.
 

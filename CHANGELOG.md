@@ -14,7 +14,7 @@ signature did.
 
 Nothing yet.
 
-## [2.1.0]
+## [2.1.0] — 2026-08-03
 
 **This release changes numbers.** Gamma-ray spectra from the GeV
 vector-mediator models and every detector-convolved spectrum move. Plots
@@ -101,7 +101,7 @@ and limits produced with 2.0.2 will not reproduce exactly. Read the
 Thanks to Chris Cappiello for reporting the energy-resolution and
 Altarelli-Parisi issues.
 
-## [2.0.2]
+## [2.0.2] — 2024-07-30
 
 Baseline. This changelog was introduced after 2.0.2 shipped; earlier
 releases are not itemized here. See the

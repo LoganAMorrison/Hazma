@@ -49,3 +49,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   ships. When a value has both a display form and a path form, name them
   separately and test a value where they differ (PR #18:
   `resolve_phase.py`'s kickoff prompt sent agents to `task-notes/phase-2/`).
+- [stale-ci-capability-claim] A change to `.github/workflows/` silently
+  falsifies every prose description of what CI does. Those descriptions
+  live in `docs/agents/` and the skills, not next to the workflow, so
+  nothing fails when they rot — and agents then skip a gate CI no longer
+  covers, or run one it now does. After editing a workflow, grep the
+  Python versions, tool names, and "CI does/does not check X" claims out
+  of `docs/agents/` and `.claude/skills/` and re-derive each from the
+  workflow file (PR #33: the matrix had gone 3.10–3.12 → 3.10–3.14 and
+  `black --check` had been re-enabled, while three docs still said
+  otherwise).

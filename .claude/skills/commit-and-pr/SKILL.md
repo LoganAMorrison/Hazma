@@ -84,8 +84,9 @@ scripts/agents/preflight.sh --paths "<touched paths>" \
 See [`preflight.md`](../../../docs/agents/preflight.md) for the
 rationale, the zero-collection trap, and the manual fallback. There are
 no pre-commit hooks in this repo, and CI's lint pass is narrow
-(`ruff check --isolated --select E9,F63,F7,F82`, with no formatting check
-at all) — so this gate catches far more than CI will. A non-zero exit is
+(`black --check` plus `ruff check --isolated --select E9,F63,F7,F82`, so
+no import-order or configured-rule check) — this gate catches more than
+CI will. A non-zero exit is
 a blocked commit; a `WARN` row is an unrun gate, not a pass.
 
 If the diff touched `.pyx` / `.pxd` / `_build.py`, rebuild
