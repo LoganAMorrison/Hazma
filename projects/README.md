@@ -39,11 +39,11 @@ for why `_template.md` files stay in place after scaffolding.
 ## Active Projects
 
 | Slug | Deliverable | Phased | Started | Status |
-|------|-------------|--------|---------|--------|
-| _none yet_ | | | | |
+| --- | --- | --- | --- | --- |
+| [`cython-to-rust`](cython-to-rust/PLAN.md) | Compiled layer rebuilt in Rust (PyO3, abi3 `hazma._core`, maturin); zero Cython; permanent parity corpus | Yes (8) | 2026-08-03 | In Progress |
 
 ## Completed Projects
 
 | Slug | Deliverable | Phased | Started | Shipped |
-|------|-------------|--------|---------|---------|
+| --- | --- | --- | --- | --- |
 | _none yet_ | | | | |
