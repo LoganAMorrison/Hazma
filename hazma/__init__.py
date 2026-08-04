@@ -1,6 +1,6 @@
 from typing import Final
 
-VERSION: Final[str] = "2.0.2"
+VERSION: Final[str] = "2.1.0"
 __version__ = VERSION
 
 # import warnings

@@ -58,7 +58,8 @@ separately.
 The path from a finished edit to a landed commit is strictly sequential:
 
 ```text
-edit → rebuild (if Cython) → run gates → read results → stage → commit → push → verify
+edit → rebuild (if Cython) → run gates → read results
+     → stage → commit → push → verify
 ```
 
 **Never batch these steps into one parallel tool block.** A failure
@@ -87,13 +88,12 @@ path for every git write.
 
 There is no committed `.pre-commit-config.yaml` in this repo. CI
 (`.github/workflows/ci.yml`) runs an import smoke test, `pytest` on
-Python 3.10–3.12, and a deliberately narrow lint pass —
-`ruff check --isolated --select E9,F63,F7,F82` — whose `--isolated` flag
-ignores `[tool.ruff]` in `pyproject.toml`. There is **no** formatting
-check in CI at all. So CI green means "no syntax errors, no undefined
-names, tests pass"; it says nothing about formatting, import order, or
-the configured lint rules. That is a floor, not this gate. Run this gate
-yourself.
+Python 3.10–3.14, `black --check --diff hazma test`, and a deliberately
+narrow lint pass — `ruff check --isolated --select E9,F63,F7,F82` — whose
+`--isolated` flag ignores `[tool.ruff]` in `pyproject.toml`. So CI green
+means "no syntax errors, no undefined names, black-formatted, tests
+pass"; it says nothing about import order or the configured lint rules.
+That is a floor, not this gate. Run this gate yourself.
 
 ## One-command form
 
