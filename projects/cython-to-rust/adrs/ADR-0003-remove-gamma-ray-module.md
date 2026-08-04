@@ -30,10 +30,21 @@ incremental versioning cost.
 
 Delete `hazma/gamma_ray.py` in Phase 00 (Task 0.2, gated on this ADR's
 acceptance) along with the `hazma._gamma_ray` extensions. Do not ship
-a shim. The n-body photon-spectrum use case it once served is covered
-by the live, tested `hazma.spectra` machinery
-(`hazma/spectra/_nbody.py` over `hazma.phase_space`); docs that
-reference `hazma.gamma_ray` are updated to point there.
+a shim. The module's public API and its replacement status:
+
+- `gamma_ray_decay` — N-body decay photon spectrum: superseded by the
+  live, tested `hazma.spectra.dnde_photon`
+  (`hazma/spectra/_nbody.py` over `hazma.phase_space`).
+- `gamma_ray_fsr` — Monte-Carlo FSR spectrum from a user-supplied
+  matrix element: **removed without a direct replacement.** The
+  nearest live equivalents are the Altarelli–Parisi approximations
+  (`hazma.spectra.dnde_photon_ap_fermion` / `_ap_scalar`); a general
+  `msqrd`-driven FSR generator would be a new feature via
+  `docs/followups/`.
+
+(`gamma`/`gamma_point` are the compiled `_gamma_ray` names the module
+wraps, not its public surface.) Docs that reference `hazma.gamma_ray`
+are updated to point at `hazma.spectra`.
 
 ## Consequences
 
@@ -46,7 +57,9 @@ reference `hazma.gamma_ray` are updated to point there.
   *textually* imports it will fail at import with `ModuleNotFoundError`
   instead of today's confusing transitive error.
 - **Mitigation:** the project is `major` already (deprecated-module
-  deletion); the CHANGELOG names the removal and the `hazma.spectra`
-  replacement. If a maintained equivalent is ever wanted, it enters as
-  a designed feature via `docs/followups/` with its own validation
-  plan, not as part of this migration.
+  deletion); the CHANGELOG names both removed functions with their
+  replacement status (`gamma_ray_decay` → `hazma.spectra.dnde_photon`;
+  `gamma_ray_fsr` → none; nearest: the Altarelli–Parisi
+  approximations). If a maintained equivalent is ever wanted, it
+  enters as a designed feature via `docs/followups/` with its own
+  validation plan, not as part of this migration.

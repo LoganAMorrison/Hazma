@@ -110,9 +110,16 @@ Everything else is behavior-invisible.
   with no numerical oracle, since the module cannot run to produce a
   baseline; it would re-enter via `docs/followups/` with its own
   validation plan, not through this project).
-- Confirmed (and recorded in the task note) that `hazma.spectra`'s
-  n-body machinery (`spectra/_nbody.py` over `hazma.phase_space`)
-  covers the documented `gamma`/`gamma_point` use cases.
+- Replacement status of the module's actual public API confirmed and
+  recorded in the task note: `gamma_ray_decay` is superseded by
+  `hazma.spectra.dnde_photon` (the n-body path in `spectra/_nbody.py`
+  over `hazma.phase_space`); `gamma_ray_fsr` (Monte-Carlo FSR from a
+  user `msqrd`) has **no direct replacement** — the nearest live
+  equivalents are the Altarelli–Parisi approximations
+  (`hazma.spectra.dnde_photon_ap_{fermion,scalar}`), and the removal
+  is declared as replacement-free for the general-`msqrd` case in the
+  CHANGELOG. (`gamma`/`gamma_point` are the *compiled* names the
+  module wraps, not its public API.)
 - Docs referencing `hazma.gamma_ray` repointed to `hazma.spectra`.
 
 **Notes:** The module is broken on import today (transitively imports

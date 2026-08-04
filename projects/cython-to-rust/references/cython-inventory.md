@@ -141,7 +141,11 @@ after the foundation (Phase 05 needs only `k1`/`kn` + `qags`).
 
 `_utils/boost.pyx` (the compiled half: `boost_delta_function`,
 `boost_integrate_linear_interp`) stays compiled until the last Cython
-cimporter dies — that is the end of Phase 04.
+cimporter dies — that is **Phase 06 Task 6.4**, not Phase 04: the four
+capi-survivor extensions live through Phase 05/06, and one of them,
+`spectra/_positron/_pion.pyx:10`, cimports the *linked*
+`boost_delta_function` (not just the header-inline `boost_beta`/
+`boost_gamma`).
 
 ### Data files read by live compiled modules
 

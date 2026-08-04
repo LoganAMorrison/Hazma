@@ -103,6 +103,16 @@ this section — do not reconstruct it from memory.)
   (77 files). QAGP breakpoint preprocessing (endpoint-coincident and
   out-of-interval points both occur live) added to Task 3.3's exit
   criteria.
+- **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
+  inventory's boost-retirement claim corrected to Phase 06 Task 6.4
+  (capi survivor `spectra/_positron/_pion.pyx:10` cimports the
+  _linked_ `boost_delta_function`, so the compiled `_utils.boost`
+  extension must outlive Phase 04); Task 0.5/ADR-0003 now name the
+  module's real public API — `gamma_ray_decay` (superseded by
+  `hazma.spectra.dnde_photon`) and `gamma_ray_fsr` (removed with no
+  direct replacement; nearest are the Altarelli–Parisi
+  approximations) — instead of the wrapped compiled names
+  `gamma`/`gamma_point`.
 
 ## Files Changed
 
