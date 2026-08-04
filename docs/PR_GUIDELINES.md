@@ -33,24 +33,40 @@ assuming something downstream will catch a mistake.
 
 Use the most specific scope that applies. Common scopes (non-exhaustive):
 
-| Scope      | Area                                                        |
-| ---------- | ----------------------------------------------------------- |
-| `spectra`  | `hazma/spectra/` — photon / positron / neutrino spectra      |
-| `decay`    | `hazma/_decay/` Cython decay spectra and interpolation data  |
-| `phase`    | `hazma/phase_space/`, `hazma/_phase_space/` (RAMBO, N-body)  |
-| `theory`   | `hazma/theory/` — the model interface and its mixins         |
-| `models`   | `scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`, …    |
-| `limits`   | `hazma/limits/`, `gamma_ray.py`, gamma-ray limit machinery   |
-| `cmb`      | `hazma/cmb.py`, CMB constraints                              |
-| `relic`    | `hazma/relic_density/`                                       |
-| `form`     | `hazma/form_factors/`                                        |
-| `params`   | `hazma/parameters.py`, `gamma_ray_parameters.py`             |
-| `utils`    | `hazma/utils.py`, `hazma/_utils/` Cython helpers             |
-| `build`    | `_build.py`, Cython build wiring, packaging                  |
-| `ci`       | CI workflows and automation                                  |
-| `docs`     | Sphinx docs, README, `docs/`                                 |
-| `deps`     | dependency updates                                           |
-| `test`     | test-only changes                                            |
+| Scope       | Area                                                         |
+| ----------- | ------------------------------------------------------------ |
+| `spectra`   | `hazma/spectra/` — photon / positron / neutrino spectra      |
+| `decay`     | `hazma/_decay/` Cython decay spectra and interpolation data  |
+| `phase`     | `hazma/phase_space/`, `hazma/_phase_space/` (RAMBO, N-body)  |
+| `theory`    | `hazma/theory/` — the model interface and its mixins         |
+| `models`    | `scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`, …    |
+| `limits`    | `hazma/limits/`, `gamma_ray.py`, gamma-ray limit machinery   |
+| `cmb`       | `hazma/cmb.py`, CMB constraints                              |
+| `relic`     | `hazma/relic_density/`                                       |
+| `form`      | `hazma/form_factors/`                                        |
+| `params`    | `hazma/parameters.py`, `gamma_ray_parameters.py`             |
+| `utils`     | `hazma/utils.py`, `hazma/_utils/` Cython helpers             |
+| `packaging` | `_build.py`, Cython build wiring, `pyproject.toml`           |
+| `actions`   | `.github/workflows/` — CI and release automation             |
+| `sphinx`    | `docs/source/` — the published docs and their build          |
+| `readme`    | `README.md` and other top-level prose                        |
+| `agents`    | `AGENTS.md`, `docs/agents/`, and the agent skills            |
+| `deps`      | dependency updates                                           |
+| `suite`     | `test/` — suite-wide test infrastructure                     |
+
+**No scope may be a type name.** The Title format rule above forbids
+`feat`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor`, `perf`,
+`style`, `build`, and `revert` as scopes, and `check_pr_title.py` rejects
+them. That is why the rows above read `actions`, `packaging`, `sphinx`,
+and `suite` rather than the type names they would otherwise collide
+with — `ci(ci):` and `test(test):` are hard failures, not warnings.
+
+The scope names the *area*, so a `docs` or `test` change usually scopes
+to the area it touches rather than to a generic bucket:
+`docs(spectra): document the endpoint convention`,
+`test(phase): pin the rambo weight regression`. Reach for `sphinx`,
+`readme`, or `suite` when the change is to the docs or test machinery
+itself.
 
 If none fit, pick the closest module name truncated to 10 chars. Avoid
 inventing a scope that will only appear once.
@@ -64,16 +80,21 @@ inventing a scope that will only appear once.
 - `perf(phase): vectorize rambo momentum generation`
 - `docs(workflow): add project scaffolding guide`
 - `chore(deps): bump black to 24.x`
+- `ci(actions): publish to pypi via trusted publishing`
+- `test(suite): make monte-carlo tests deterministic`
 
 **Bad:**
 
 - `feat(spectra): Add the eta-prime photon channel spectrum` — uppercase
-  first subject word (convention), likely over 69 chars.
+  first subject word. A convention the checker does not enforce, so this
+  one is caught in review, not by a red exit code.
 - `fix(Decay): correct endpoint` — uppercase in scope.
 - `feat: add neutrino spectra` — missing scope.
 - `feat(spectra): add eta-prime channel.` — trailing `.`.
 - `feat(phase-space): vectorize rambo` — scope is 11 chars, rejected on
   length; use `phase`.
+- `ci(ci): publish to pypi via trusted publishing` — scope is a type
+  name; use `ci(actions)`.
 
 ## Description format
 
