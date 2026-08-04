@@ -24,6 +24,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | Item | Added | Source | Scope |
 | --- | --- | --- | --- |
 | [markdownlint config for templates](todo/markdownlint-config-for-templates.md) | 2026-08-03 | cython-to-rust scaffolding | cross-cutting |
+| [`WIDTH_K`/`WIDTH_PI` exponent bug](todo/legacy-parameters-width-exponent-bug.md) | 2026-08-04 | cython-to-rust Task 0.1 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

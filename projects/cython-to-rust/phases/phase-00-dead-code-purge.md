@@ -43,9 +43,19 @@ Everything else is behavior-invisible.
 
 - `hazma/_decay/parameters.pxd` moved verbatim (byte-identical values)
   to `hazma/_utils/legacy_parameters.pxd`.
-- The four live `include "../_decay/parameters.pxd"` sites (both
+- All five `include "../_decay/parameters.pxd"` sites in **built**
+  extensions repointed: the four live ones (both
   `scalar_mediator/*_spec*.pyx`, both `vector_mediator/*_spec*.pyx`)
-  repointed; `pip install -e .` rebuilds; import smoke passes.
+  plus `_gamma_ray/gamma_ray_generator.pyx`, which is a live
+  `Extension` in `setup.py` until Task 0.2 deletes it — skipping it
+  breaks the build immediately. The two unbuilt `_decay/*.pyx` sites
+  (`decay_electron.pyx`, `_decay_muon_bak.pyx`, spelled
+  `include "parameters.pxd"`) are repointed too so no `.pyx`/`.pxd` in
+  the tree carries a dangling include; `.pyx.bak` files are left alone.
+- `pip install -e .` rebuilds; import smoke passes. Note
+  `_gamma_ray.gamma_ray_generator` compiles but has never been
+  importable (`from hazma import rambo`), so it is excluded from the
+  smoke set — see ADR-0003.
 - Do **not** merge values into `_utils/constants.pxd` (rules.md rule 4).
 
 ### Task 0.2: Delete the phase-space / gamma-ray slice

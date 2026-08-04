@@ -5,7 +5,7 @@ from libc.math cimport exp, log, M_PI, log10, sqrt
 from scipy.special.cython_special cimport spence
 import cython
 from functools import partial
-include "parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 import warnings
 
 

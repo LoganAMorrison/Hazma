@@ -19,7 +19,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
-| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | Not started |
+| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1 done) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
@@ -65,16 +65,44 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   them. Zero compiled-layer pinned tests run anywhere today.
 - Local env fact: nothing is prebuilt on a fresh clone — build with uv
   (`uv venv`, `uv pip install -e .`) before preflight; expect preflight
-  red on a clean tree otherwise.
+  red on a clean tree otherwise. **And clean stale build artifacts
+  first** — `find hazma -name '*.c' -o -name '*.cpp' -o -name '*.so' |
+  xargs rm -f`. A worktree can inherit generated `.c`/`.cpp` produced
+  under a different NumPy; their mtimes suppress re-cythonization and
+  the build dies inside generated code with a misleading error
+  (Task 0.1). Clean, the tree builds on Cython 3.2.9 / NumPy 2.5.1.
+- **Preflight's Python gates are red on `origin/master` itself** —
+  measured at the trunk in Task 0.1: `black --check hazma test` wants to
+  reformat 34 files, `ruff check hazma test` reports 6844 errors, isort
+  errors on several `test/` files. Do not read these as your regression;
+  compare against the trunk baseline and judge only the delta. Two
+  invocation traps, both hit in Task 0.1: passing `--paths` a `.pxd`
+  makes black/ruff parse Cython as Python and fail, and passing it a
+  _directory_ drags in that directory's pre-existing unformatted `.py`.
+  Scope `--paths` to changed files, and omit it entirely when the diff
+  has no Python.
+- `hazma._gamma_ray.gamma_ray_generator` compiles but has never been
+  importable on `master` (`from hazma import rambo`; `hazma/rambo.py`
+  does not exist). It is still a live `Extension` in `setup.py`, so it
+  must keep _compiling_ until Task 0.2 deletes it — but it can never be
+  part of an import-smoke set.
 - cyphus-diffeq (Hairer ODE ports) noted as possible future interest if
   relic density ever moves to Rust — out of scope here, candidate
   follow-up seed at close.
 
 ## Numerical impact so far
 
-_No public code paths touched yet._ (Per-function drift lines land here
-as Phase 04–06 swaps merge; the Phase 07 CHANGELOG is assembled from
-this section — do not reconstruct it from memory.)
+- **Task 0.1 (constants-header relocation): no public value changes.**
+  All four mediator spectrum entry points and both model-level
+  `total_spectrum` / `total_positron_spectrum` wrappers evaluated over
+  `np.logspace(-2, 3, 200)` MeV at three mediator masses and every
+  final-state mode — 64 arrays — before and after, **bit-for-bit
+  identical** (max relative deviation 0.000e+00). Expected: `include`
+  is a textual paste and the values moved verbatim.
+
+(Per-function drift lines land here as Phase 04–06 swaps merge; the
+Phase 07 CHANGELOG is assembled from this section — do not reconstruct
+it from memory.)
 
 ## Decisions and Implementation Notes
 
@@ -103,6 +131,12 @@ this section — do not reconstruct it from memory.)
   (77 files). QAGP breakpoint preprocessing (endpoint-coincident and
   out-of-interval points both occur live) added to Task 3.3's exit
   criteria.
+- **Task 0.1 (2026-08-04)** patched the phase-00 file: its Task 0.1
+  exit criterion named "the four live include sites", but
+  `_gamma_ray/gamma_ray_generator.pyx:24` is a fifth site in a _built_
+  `Extension`, so skipping it breaks `pip install -e .` before Task 0.2
+  can delete the module. Criterion now names five built sites plus the
+  two unbuilt `_decay/` extras.
 - **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
   inventory's boost-retirement claim corrected to Phase 06 Task 6.4
   (capi survivor `spectra/_positron/_pion.pyx:10` cimports the
@@ -116,7 +150,13 @@ this section — do not reconstruct it from memory.)
 
 ## Files Changed
 
-_None yet — project scaffolding only (this PR)._
+### Phase 00
+
+- **Task 0.1** — `hazma/_decay/parameters.pxd` relocated to
+  `hazma/_utils/legacy_parameters.pxd`; include repointed in seven
+  `.pyx`; phase-00 file's Task 0.1 criterion corrected; follow-up filed
+  for the `WIDTH_K`/`WIDTH_PI` exponent bug. Full list in
+  [`phase-00/README.md`](phase-00/README.md).
 
 ## Verification
 
@@ -135,6 +175,9 @@ _None yet — project scaffolding only (this PR)._
   new feature via `docs/followups/`, not this project).
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
+- ~~Whether the mediator cross-section `.pyx` include a constants
+  header~~ — **closed by Task 0.1: they contain no `include` directive
+  at all.**
 
 ## Plan Impact
 
@@ -154,15 +197,16 @@ _None yet — project scaffolding only (this PR)._
 **Currently safe to assume:**
 
 - The dead-code map and entry-point inventory were verified against
-  2.1.0 (Aug 2026); the tree is unchanged since.
-- `test/` is green post-PR #31 (51 passed / 20 skipped) — merging the
-  suites in Task 1.3 is safe.
+  2.1.0 (Aug 2026); the tree is unchanged apart from Task 0.1's
+  header relocation.
+- `test/` is green (52 passed / 20 skipped as of Task 0.1, 2026-08-04;
+  51/20 at PR #31) — merging the suites in Task 1.3 is safe.
+- The legacy constants table now lives at
+  `hazma/_utils/legacy_parameters.pxd`; nothing under `hazma/_decay/`
+  is included by a built extension, so Task 0.3 can delete the
+  directory without include-path fallout.
 
 **Currently risky / unknown:**
 
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
-- Whether the scalar/vector cross-section `.pyx` textually include any
-  `_utils` constants header was not conclusively established in the
-  audit — Task 0.1/6.4 must `rg` for `include` sites rather than trust
-  the inventory's include list.

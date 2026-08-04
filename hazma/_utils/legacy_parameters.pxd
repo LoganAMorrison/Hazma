@@ -2,6 +2,13 @@
 This file contains parameters of the standard model for leptons and meson.
 
 NOTE: All dimensionful parameters are in MeV.
+
+PROVENANCE: relocated verbatim from ``hazma/_decay/parameters.pxd`` so the
+four mediator spectrum extensions that ``include`` it survive the deletion
+of ``hazma/_decay/``. Several values here diverge from the ones in the
+sibling ``constants.pxd``; the divergence is preserved deliberately, since
+merging the two tables would move published spectra. Consolidation is a
+separate, declared numerical change -- do not "fix" values in this file.
 """
 
 # MASSES (MeV)

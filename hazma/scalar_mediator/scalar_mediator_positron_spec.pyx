@@ -8,7 +8,7 @@ from scipy.integrate import quad
 
 from libc.math cimport M_PI, sqrt, pow, log10
 
-include "../_decay/parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E
