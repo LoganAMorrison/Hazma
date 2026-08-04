@@ -9,7 +9,7 @@ from scipy.integrate import quad
 from hazma.spectra._positron._muon cimport dnde_positron_muon_array
 from hazma.spectra._positron._pion cimport dnde_positron_charged_pion_array
 
-include "../_decay/parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E

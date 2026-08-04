@@ -11,7 +11,7 @@ from hazma.spectra._photon._pion cimport dnde_photon_charged_pion_array
 from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_array
 from hazma.spectra._photon._pion cimport dnde_photon_neutral_pion_point
 
-include "../_decay/parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef double mmu = MASS_MU
 cdef double me = MASS_E

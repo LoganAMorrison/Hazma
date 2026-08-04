@@ -11,7 +11,7 @@ from scipy.integrate import quad
 
 from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow
 
-include "../_decay/parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef int BITFLAG_PP = 1
 cdef int BITFLAG_MM = 2

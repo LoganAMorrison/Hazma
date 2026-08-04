@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 import cython
-include "parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef double CSpectrumPoint(double eng_gam, double eng_e):
     """

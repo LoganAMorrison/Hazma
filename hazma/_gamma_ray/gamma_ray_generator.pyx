@@ -21,7 +21,7 @@ from hazma.spectra import dnde_photon_charged_kaon as dck
 from hazma.spectra import dnde_photon_long_kaon as dlk
 from hazma.spectra import dnde_photon_short_kaon as dsk
 
-include "../_decay/parameters.pxd"
+include "../_utils/legacy_parameters.pxd"
 
 cdef spec_dict = {'muon': dm, 'neutral_pion': dnp,
                   'charged_pion': dcp, 'charged_kaon': dck,
