@@ -62,6 +62,14 @@ jobs:
     if: github.event_name == 'release'
     needs: [build-wheels, build-sdist]
     runs-on: ubuntu-latest
+    # Registered as the environment on PyPI's trusted publisher for hazma, so
+    # only this job can mint an upload token.  Its deployment rule restricts
+    # runs to tag refs matching *.* (the release tags: 2.0.2, 1.1, ...).
+    environment: pypi
+    permissions:
+      # Mint the OIDC token that PyPI exchanges for a short-lived, project-
+      # scoped upload token.  No PyPI credential is stored in this repo.
+      id-token: write
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -69,6 +77,3 @@ jobs:
           merge-multiple: true
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
