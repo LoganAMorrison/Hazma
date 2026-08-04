@@ -12,9 +12,15 @@ status: Not started
 
 Delete the ~6,500 lines of unbuilt, unimported, or broken-on-import
 Cython (and its data) so later phases port only live code. After this
-phase the build has ~19 extensions, zero C++, and no `.pyx` outside the
-live surface. No user-visible behavior changes except the resolved
-`hazma.gamma_ray` decision (Task 0.5).
+phase the build has 20 extensions (19 kernel modules + the C-level-only
+`_utils.boost`), zero C++, and no `.pyx` outside the live surface.
+
+This phase carries the project's two `major`-version removals (both
+covered by `PLAN.md` `version_bump: major`): `hazma/deprecated/rambo.py`
+(any removal from `hazma/deprecated/` is `major` per
+`docs/versioning.md`) and the broken-on-import `hazma.gamma_ray`
+module (ADR-0003, Proposed — Task 0.2 is gated on its acceptance).
+Everything else is behavior-invisible.
 
 ## Prerequisites
 
@@ -45,17 +51,17 @@ live surface. No user-visible behavior changes except the resolved
 ### Task 0.2: Delete the phase-space / gamma-ray slice
 
 **Task note:** [`../task-notes/phase-00/task-0.2-delete-mc-slice.md`](../task-notes/phase-00/task-0.2-delete-mc-slice.md)
-**Depends on:** Task 0.1, Task 0.5 (gamma_ray decision)
+**Depends on:** Task 0.1, ADR-0003 accepted (via Task 0.5)
 
 **Exit criteria:**
 
 - Deleted: `hazma/_phase_space/`, `hazma/_gamma_ray/`,
-  `hazma/deprecated/rambo.py`,
+  `hazma/deprecated/rambo.py`, `hazma/gamma_ray.py` (per ADR-0003),
   `hazma/rh_neutrino/_rh_neutrino_fsr_four_body.{pyx,pyi}`.
-- `hazma/gamma_ray.py` handled per Task 0.5's decision.
 - Importer check re-run at delete time and quoted in the PR body.
-- `versioning.md` call for the `deprecated/rambo.py` removal stated
-  explicitly in the PR body.
+- PR body states both `major` calls explicitly (`deprecated/rambo.py`
+  per `versioning.md`; `gamma_ray` per ADR-0003) and notes they are
+  absorbed by the project-level `version_bump: major`.
 
 ### Task 0.3: Delete superseded per-particle kernels and helpers
 
@@ -92,29 +98,35 @@ live surface. No user-visible behavior changes except the resolved
   deleted directories; sdist builds and contains no deleted paths.
 - CI green on the full matrix.
 
-### Task 0.5: Decide and execute the `hazma.gamma_ray` fate
+### Task 0.5: Ratify and execute ADR-0003 (`hazma.gamma_ray` removal)
 
 **Task note:** [`../task-notes/phase-00/task-0.5-gamma-ray-decision.md`](../task-notes/phase-00/task-0.5-gamma-ray-decision.md)
-**Depends on:** — (decision precedes Task 0.2's delete)
+**Depends on:** — (precedes Task 0.2's delete)
 
 **Exit criteria:**
 
-- Investigated whether `hazma.spectra` n-body machinery supersedes
-  `gamma_ray.gamma`/`gamma_point` for every documented use.
-- One of: (a) `hazma/gamma_ray.py` reimplemented over
-  `hazma.phase_space`/`hazma.spectra` (keeps project `version_bump:
-  minor`), or (b) module deleted with an ADR-0003 recording the
-  `major` implication, PLAN frontmatter updated accordingly.
-- Docs referencing the module updated either way.
+- ADR-0003 status flipped to Accepted by Logan (or, if rejected, the
+  phase halts and the plan is revised — a rebuild is a *new feature*
+  with no numerical oracle, since the module cannot run to produce a
+  baseline; it would re-enter via `docs/followups/` with its own
+  validation plan, not through this project).
+- Confirmed (and recorded in the task note) that `hazma.spectra`'s
+  n-body machinery (`spectra/_nbody.py` over `hazma.phase_space`)
+  covers the documented `gamma`/`gamma_point` use cases.
+- Docs referencing `hazma.gamma_ray` repointed to `hazma.spectra`.
 
-**Notes:** The module is broken on import today, so no working user
-exists; the decision is about the public-name contract, not behavior.
+**Notes:** The module is broken on import today (transitively imports
+the deleted `hazma.rambo`), so no working user exists and no
+behavior-preserving baseline can be captured — which is why rebuild is
+not offered as an in-project branch (plan-review round 1).
 
 ## Exit Criteria
 
 - All tasks complete; preflight green; CI green.
-- `find hazma -name "*.pyx"` lists only the live surface (19 modules +
-  `_utils/boost.pyx`).
+- `find hazma -name "*.pyx"` lists exactly the 20 surviving extension
+  sources (8 `spectra/_photon` + 2 `spectra/_positron` + 3
+  `spectra/_neutrino` + 6 mediator + `_utils/boost.pyx`), and a fresh
+  `pip install -e .` builds exactly 20 `.so`s.
 - No `language="c++"` extension remains; `git grep -l "std::"` over
   `hazma/` is empty.
 - Phase learnings written to `../learnings/phase-00-dead-code-purge.md`.

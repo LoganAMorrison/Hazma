@@ -5,8 +5,8 @@
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (**proposed — needs
-Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003 (conditional
-on Phase 00 Task 0.5)
+Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003
+(**proposed — needs Logan's sign-off before Phase 00 Task 0.2**)
 **Depends On:** none
 
 ## Objective
@@ -35,9 +35,10 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 ## Exit Criteria
 
-- All eight phases Complete; zero `.pyx`/`.pxd` in the tree; all 43
-  entry points served by `hazma._core`; maturin backend live.
-- ADR-0002 accepted (or superseded) and ADR-0003 resolved or moot.
+- All eight phases Complete; zero `.pyx`/`.pxd` in the tree; all 41
+  consumed entry points served by `hazma._core` (the 2 unconsumed
+  `sigma_xx_to_all` exports dropped in Phase 05); maturin backend live.
+- ADR-0002 and ADR-0003 accepted (or superseded).
 - Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug, with the aggregated drift table. See
@@ -88,6 +89,20 @@ this section — do not reconstruct it from memory.)
   `.pyx` cimport their `__pyx_capi__` symbols — recorded in the
   Phase 04 file's Goal block.
 - Constants bit-parity before consolidation → `../rules.md` rule 4.
+- **Plan-review round 1 (2026-08-03)** forced four canonical changes:
+  (1) `version_bump` → `major` (Phase 00 deletes
+  `hazma/deprecated/rambo.py`; any `deprecated/` removal is `major`
+  per versioning.md); (2) `hazma.gamma_ray` default is now _delete_
+  via ADR-0003 — the rebuild branch was dropped because the module
+  cannot run, so no behavior-preserving baseline exists; (3) hybrid
+  wheels stay CPython-tagged through Phases 02–06, only `hazma._core`
+  itself is abi3 (limited API); distribution-level abi3 tags are a
+  Phase 07 assertion; (4) counts re-derived from source: 20 surviving
+  extensions (not 19), 43 public defs / 41 consumed (corpus covers
+  41; 2 `sigma_xx_to_all` dropped in Phase 05), 44 `.pyx` + 33 `.pxd`
+  (77 files). QAGP breakpoint preprocessing (endpoint-coincident and
+  out-of-interval points both occur live) added to Task 3.3's exit
+  criteria.
 
 ## Files Changed
 
@@ -102,9 +117,12 @@ _None yet — project scaffolding only (this PR)._
 ## Open Questions
 
 - **ADR-0002 sign-off** (Logan): accept the license-clean-numerics
-  decision, or deliberately take the GPL route? Gates Phase 03.
-- **Task 0.5**: `hazma.gamma_ray` — reimplement over `hazma.phase_space`
-  (keeps `minor`) or delete (raises to `major`, needs ADR-0003)?
+  decision, or deliberately take the GPL route? Gates Phase 03
+  Tasks 3.2/3.3.
+- **ADR-0003 sign-off** (Logan): confirm deletion of the
+  broken-on-import `hazma.gamma_ray`. Gates Phase 00 Task 0.2; if
+  rejected, the phase halts for a plan revision (rebuild would be a
+  new feature via `docs/followups/`, not this project).
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
 

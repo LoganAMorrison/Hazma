@@ -5,7 +5,7 @@
 **Phase:** 00
 **Status:** Not started
 **Plan References:** `../../phases/phase-00-dead-code-purge.md`
-**Related ADRs:** ADR-0003 (conditional — created by Task 0.5 if deletion chosen)
+**Related ADRs:** ADR-0003 (proposed — Task 0.5 ratifies; gates Task 0.2)
 **Depends On:** none
 
 ## Objective
@@ -18,10 +18,10 @@ purge.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 0.1 | Relocate legacy constants header | — | Not started | [task-0.1-relocate-constants.md](task-0.1-relocate-constants.md) |
-| 0.2 | Delete phase-space / gamma-ray slice | 0.1, 0.5 | Not started | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
+| 0.2 | Delete phase-space / gamma-ray slice | 0.1, 0.5 (ADR-0003 accepted) | Not started | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
 | 0.3 | Delete superseded kernels + helpers | 0.1 | Not started | [task-0.3-delete-superseded.md](task-0.3-delete-superseded.md) |
 | 0.4 | Prune build and packaging config | 0.2, 0.3 | Not started | [task-0.4-prune-build.md](task-0.4-prune-build.md) |
-| 0.5 | `hazma.gamma_ray` decision | — | Not started | [task-0.5-gamma-ray-decision.md](task-0.5-gamma-ray-decision.md) |
+| 0.5 | Ratify + execute ADR-0003 (`gamma_ray`) | — | Not started | [task-0.5-gamma-ray-decision.md](task-0.5-gamma-ray-decision.md) |
 
 ## Exit Criteria
 
@@ -52,7 +52,8 @@ _None yet — phase not started._
 
 ## Open Questions
 
-- Task 0.5 outcome (see project-level Open Questions).
+- ADR-0003 sign-off (see project-level Open Questions) — required
+  before Task 0.2 deletes anything.
 
 ## Plan Impact
 

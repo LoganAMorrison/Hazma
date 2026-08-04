@@ -1,0 +1,52 @@
+# ADR 0003: Remove the broken `hazma.gamma_ray` module
+
+**Date:** 2026-08-03
+**Status:** Proposed (needs Logan's sign-off — it removes a public name)
+**Scope:** Project-scoped (applies only within `projects/cython-to-rust/`).
+
+## Context
+
+`hazma/gamma_ray.py` is a public-named module that cannot be imported:
+it (and the compiled `hazma._gamma_ray.gamma_ray_generator` it wraps)
+does `from hazma import rambo`, and `hazma/rambo.py` was deleted long
+ago (the export in `hazma/__init__.py` is commented out). Every current
+release ships it in this broken state, so no working user code can
+depend on it.
+
+The original plan let Phase 00 Task 0.5 choose between deletion and
+reimplementation over `hazma.phase_space`. Plan review (round 1)
+correctly observed the reimplementation branch has no numerical oracle:
+the module cannot run, so there is no behavior to pin a
+"behavior-preserving rebuild" against, and the Phase 01 corpus cannot
+supply a baseline because it postdates the deletion. A rebuild would
+therefore be a *new feature* with a fresh validation burden — outside
+this project's migration scope. Separately, the project's
+`version_bump` is `major` regardless, because Phase 00 also deletes
+`hazma/deprecated/rambo.py` and any removal from `hazma/deprecated/`
+is `major` per `docs/versioning.md` — so deletion carries no
+incremental versioning cost.
+
+## Decision
+
+Delete `hazma/gamma_ray.py` in Phase 00 (Task 0.2, gated on this ADR's
+acceptance) along with the `hazma._gamma_ray` extensions. Do not ship
+a shim. The n-body photon-spectrum use case it once served is covered
+by the live, tested `hazma.spectra` machinery
+(`hazma/spectra/_nbody.py` over `hazma.phase_space`); docs that
+reference `hazma.gamma_ray` are updated to point there.
+
+## Consequences
+
+- **Positive:** removes an unimportable public module instead of
+  shipping it broken again; Task 0.5 becomes an execution step rather
+  than an open design question; no unpinnable "rebuild" enters the
+  migration's parity scope.
+- **Negative:** the name `hazma.gamma_ray` disappears — formally a
+  breaking removal (`major`), and any downstream code that still
+  *textually* imports it will fail at import with `ModuleNotFoundError`
+  instead of today's confusing transitive error.
+- **Mitigation:** the project is `major` already (deprecated-module
+  deletion); the CHANGELOG names the removal and the `hazma.spectra`
+  replacement. If a maintained equivalent is ever wanted, it enters as
+  a designed feature via `docs/followups/` with its own validation
+  plan, not as part of this migration.

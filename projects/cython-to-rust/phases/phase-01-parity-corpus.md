@@ -11,8 +11,10 @@ status: Not started
 ## Goal
 
 Stand up the regression harness the repo currently lacks: pinned
-reference arrays for **all 43 live compiled entry points**, generated
-from the pre-port Cython, wired into pytest and CI. This is the gate
+reference arrays for **all 41 consumed compiled entry points** (of 43
+public defs — the two unimported `sigma_xx_to_all` exports are
+excluded here and dropped in Phase 05), generated from the pre-port
+Cython, wired into pytest and CI. This is the gate
 every later phase swaps against, and it doubles as the before/after
 evidence `docs/versioning.md` requires for numerical changes.
 
@@ -38,8 +40,11 @@ evidence `docs/versioning.md` requires for numerical changes.
 **Exit criteria:**
 
 - `test/parity/generate.py` produces `test/parity/data/*.npz` covering
-  every entry point in `../references/cython-inventory.md` ("Entry
-  points by module"): log-spaced energy grids bracketing thresholds and
+  every **consumed** entry point in `../references/cython-inventory.md`
+  ("Entry points by module" — 41 functions; the two unimported
+  `sigma_xx_to_all` are excluded, with the exclusion asserted by an
+  import re-check in the generator): log-spaced energy grids
+  bracketing thresholds and
   kinematic endpoints (`E → m/2`, table edges), ≥4 parent
   energies per spectrum (rest frame + ε, mildly and strongly boosted),
   and for the mediators ≥3 model-parameter points including a

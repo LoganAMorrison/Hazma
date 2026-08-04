@@ -66,13 +66,27 @@ uses it.
 - Finite-interval `qags` and `qagp` in `rust/src/quad.rs`, translated
   from netlib QUADPACK Fortran (provenance header per rules.md rule 5),
   closure-based API carrying `epsabs`/`epsrel`/`limit`/breakpoints.
+- **Breakpoint preprocessing contract, pinned empirically against
+  scipy** (do not design it from the QUADPACK docs alone): determine
+  by experiment what `scipy.integrate.quad(points=...)` does with
+  unsorted lists, duplicates, points coinciding with the endpoints,
+  and points outside `[a, b]` — then replicate that behavior
+  (including any raised errors) exactly. Both degenerate cases occur
+  live: the spectra calls pass `points=[-1, 1]` on the interval
+  `[-1, 1]` (all breakpoints endpoint-coincident), and the thermal
+  ⟨σv⟩ calls pass `[2, m_med/mx, 2·m_med/mx]` where the mediator
+  points can exceed the upper bound `max(50/x, 100|150)` for heavy
+  mediators (out-of-interval). Tests cover three parameter regimes per
+  thermal call: breakpoints interior (resonance active), breakpoints
+  at/near threshold, and breakpoints outside the interval (inactive).
 - Unit tests: QUADPACK's own reference problems, plus every live
   integrand *shape* from the call-site table in
   `../references/numerics-replacements.md`, compared against
   `scipy.integrate.quad` at matching settings — agreement within 10×
   the requested tolerance, and within 1e-12 rel on smooth cases.
 - Error/abnormal-termination behavior mapped (roundoff, max
-  subdivisions) — returns a Result, never panics across FFI.
+  subdivisions, invalid breakpoints) — returns a Result, never panics
+  across FFI.
 
 ### Task 3.4: Interpolation + boost kernels
 

@@ -19,9 +19,11 @@ cimports) already breaking unbuilt files; and no unit-test story for the
 compiled math outside Python.
 
 The August 2026 analysis (see `../references/cython-inventory.md`)
-established the live surface is small (~19 modules, 43 entry points,
-~2,500–3,000 lines of distinct logic), scalar float64 math with no
-OpenMP, no C++ classes, and no complex numbers — i.e. cheap to port.
+established the live surface is small (20 surviving extensions — 19
+kernel modules plus one C-level helper — exposing 43 public defs of
+which 41 are consumed, ~2,500–3,000 lines of distinct logic), scalar
+float64 math with no OpenMP, no C++ classes, and no complex numbers —
+i.e. cheap to port.
 Candidates evaluated: Rust + PyO3 + maturin, and pybind11 (+
 scikit-build-core). Estimated effort is comparable (21–32 focused days
 either way).

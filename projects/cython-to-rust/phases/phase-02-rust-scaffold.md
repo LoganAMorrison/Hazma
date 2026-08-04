@@ -48,7 +48,13 @@ yet: the walking skeleton proves the toolchain end to end.
 
 - CI installs the Rust toolchain on both OS matrices; full matrix
   green; wheel-build job (release.yml) still succeeds with the hybrid
-  build and wheels contain `hazma/_core.*.so` (abi3 tag verified).
+  build. **Hybrid wheels stay CPython-version-tagged** (the Cython
+  extensions force that; the 10-wheel matrix is unchanged until
+  Phase 07) — what is verified here is extension-level only: each
+  wheel contains `hazma/_core.abi3.so`, i.e. the Rust extension is
+  built against the limited API (`abi3-py310`). Distribution-level
+  abi3 wheel tags and the 2-wheel matrix are asserted in Phase 07,
+  never earlier.
 - `scripts/agents/preflight.sh` grows `cargo fmt --check`,
   `cargo clippy -- -D warnings`, `cargo test` (skipped gracefully when
   `rust/` absent, so pre-Phase-02 branches still preflight).
@@ -71,7 +77,8 @@ yet: the walking skeleton proves the toolchain end to end.
 
 ## Exit Criteria
 
-- All tasks complete; CI + preflight green; wheels build on both
-  platforms with the abi3 tag.
+- All tasks complete; CI + preflight green; hybrid (CPython-tagged)
+  wheels build on both platforms, each containing an
+  `hazma/_core.abi3.so` built against the limited API.
 - No public API change; `hazma._core` exists but nothing imports it yet.
 - Phase learnings written to `../learnings/phase-02-rust-scaffold.md`.

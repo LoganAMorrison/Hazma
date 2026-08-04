@@ -11,15 +11,20 @@ in code review — this file records a snapshot.
 
 ## Headline numbers
 
-- 44 `.pyx`/`.pxd` files, 11,613 lines total.
+- **44 `.pyx` + 33 `.pxd` files** (77 files; 11,613 lines combined,
+  counted by `find hazma -name "*.pyx"` / `-name "*.pxd"` — keep the
+  two counts separate so later zero-Cython checks stay auditable).
 - `setup.py` builds **32 extension modules** in 11 groups; 3 groups
   (`_gamma_ray`, `_phase_space`, `field_theory_helper_functions`) compile
   as C++ (`-std=c++11`), the rest as C.
 - **12 `.pyx` are never compiled** (all of `_decay/`,
   `_neutrino/neutrino.pyx`, `rh_neutrino/_rh_neutrino_fsr_four_body.pyx`,
   `spectra/_positron/_kaon.pyx`).
-- Live surface: **~19 modules, ~5,000 live lines, 43 public entry points,
-  behind 11 Python import statements.**
+- Live surface: **20 built extensions after the Phase 00 purge** (19
+  kernel modules with Python `def`s + the C-level-only `_utils.boost`),
+  ~5,000 live lines, **43 public `def`s of which 41 are consumed**
+  (the two `sigma_xx_to_all` exports have zero importers), behind 11
+  Python import statements.
 - Churn: 3 commits touched `.pyx`/`.pxd` in the 3 years to Aug 2026; two
   were toolchain-forced (NumPy 2.0 migration, build-system upgrade).
 
@@ -60,14 +65,15 @@ to `hazma/_utils/legacy_parameters.pxd`, repoint the four includes, then
 delete `_decay/`. `_decay/common.pxd` is included only by `_positron/`
 modules and dies with them.
 
-### `hazma.gamma_ray` decision (Phase 00, Task 0.5)
+### `hazma.gamma_ray` removal (Phase 00, Task 0.5 / ADR-0003)
 
 `hazma/gamma_ray.py` is a public-named module that cannot be imported
-today (transitively imports deleted `hazma.rambo`). Options:
-(a) rebuild its `gamma`/`gamma_point` over `hazma.phase_space` /
-`hazma.spectra` machinery (keeps `version_bump: minor`);
-(b) delete it (a `major` event per versioning.md, even though it is
-already broken). Decide in Task 0.5; record as ADR-0003 if (b).
+today (transitively imports deleted `hazma.rambo`). ADR-0003
+(Proposed) removes it: no working baseline exists to pin a rebuild
+against, and the n-body use case is covered by `hazma.spectra` +
+`hazma.phase_space`. The removal is `major` and is absorbed by the
+project-level `version_bump: major` (which Phase 00's
+`deprecated/rambo.py` deletion forces regardless).
 
 ## Live surface (the port targets)
 
@@ -90,6 +96,13 @@ already broken). Decide in Task 0.5; record as ADR-0003 if (b).
 | `vector_mediator/vector_mediator_decay_spectrum` | `dnde_decay_v`, `dnde_decay_v_pt` |
 | `vector_mediator/vector_mediator_positron_spec` | `dnde_decay_v`, `dnde_decay_v_pt` |
 <!-- markdownlint-enable MD013 -->
+
+Tally (source-verified 2026-08-03): 16 spectra + 7 mediator-spectrum +
+13 scalar-XS + 7 vector-XS = **43 public `def`s**. Consumed: 41 — the
+scalar wrapper imports 12 of 13 symbols and the vector wrapper 6 of 7;
+`sigma_xx_to_all` (both modules) has zero importers
+(`rg sigma_xx_to_all` outside the `_c_*` modules is empty) and is
+dropped in Phase 05 rather than ported.
 
 Python-side import sites (the wrapper layer to repoint during ports, one
 file each): `spectra/_photon/__init__.py:12`,
