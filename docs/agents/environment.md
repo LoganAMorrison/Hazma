@@ -57,28 +57,30 @@ Edit the `.pyx` and rebuild.
 
 ## Linters
 
-**`black` is pinned differently in `pyproject.toml` and in CI, and the
-difference changes formatting.** `pyproject.toml`'s `dev` extra allows
-`black>=23.3,<27.0`; `.github/workflows/ci.yml`'s Lint job installs
-`black>=23.3,<25.0`. Black's style changed across that boundary (a sole
-multiline string argument is "hugged" in 26.x, exploded in 24.x), so
-`pip install -e '.[dev]'` gives you a formatter that reformats files
-into a style CI rejects. Symptom: `black --check` clean locally, Lint
-red on the PR, on lines you never touched.
-
-Install CI's version before trusting any black result:
+**Install the linters from the `lint` dependency group, not by hand.**
+`pyproject.toml`'s `[dependency-groups]` is the only place the `black`,
+`isort`, and `ruff` pins live, and CI's Lint job installs that same
+group. Anything else risks a formatter that disagrees with CI:
 
 ```sh
-uv pip install "black>=23.3,<25.0"
+uv pip install --group lint     # or: pip install --group lint
 ```
 
-Corollary: **`black --check hazma test` is clean on `master`.** A run
-claiming it wants to reformat dozens of files is measuring a newer
-black, not a property of the repo — measured at `cd0be2b`, black 24.10.0
-reports `249 files would be left unchanged` while black 26.5.1 wants 34.
-`preflight.sh` invokes whatever is on `PATH`, so it inherits whichever
-you installed. Tracked in
-[`../followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../followups/todo/black-pin-divergence-pyproject-vs-ci.md).
+`--group dev` adds `pytest` on top, for the full preflight toolchain.
+Note these are PEP 735 groups, **not** extras — the old
+`pip install -e '.[dev]'` no longer resolves, and `--group` needs
+pip >= 25.1.
+
+This used to be a live trap and is worth knowing about because
+`preflight.sh` invokes whatever `black` is on `PATH`: until 2026-08-04
+the pin was written out twice, `black>=23.3,<27.0` in `pyproject.toml`
+against `black>=23.3,<25.0` in `.github/workflows/ci.yml`. Black's style
+changed across that boundary (a sole multiline string argument is
+"hugged" in 26.x, exploded in 24.x), so the documented dev setup
+installed a formatter whose output CI rejected — `black --check` clean
+locally, Lint red on the PR, on lines nobody touched. The repo is now
+formatted with black 26.x and the workflow carries no literal pin. Do
+not reintroduce one.
 
 **CI's ruff step is not the configured one.** Lint runs
 `ruff check --isolated --select E9,F63,F7,F82 --exclude hazma/experimental

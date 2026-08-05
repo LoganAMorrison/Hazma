@@ -1,5 +1,4 @@
-"""Partial decay widths of a RH-neutrino.
-"""
+"""Partial decay widths of a RH-neutrino."""
 
 from typing import Optional, Tuple, NamedTuple
 

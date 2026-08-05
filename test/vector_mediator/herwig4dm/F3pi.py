@@ -6,7 +6,6 @@ from scipy import integrate
 from . import Resonance
 from . import alpha
 
-
 ii = complex(0.0, 1.0)
 gev2nb = 389379.3656
 

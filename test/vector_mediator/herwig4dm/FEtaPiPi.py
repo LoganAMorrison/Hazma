@@ -9,7 +9,6 @@ from . import Resonance
 from . import alpha
 from .masses import mpi, meta, fpi
 
-
 ii = complex(0.0, 1.0)
 
 # parametrization taken from arXiv:1306.1985 with own fit values

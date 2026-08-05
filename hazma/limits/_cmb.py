@@ -8,7 +8,6 @@ from hazma.parameters import temp_cmb_formation
 
 from ._abstract import AbstractLimit
 
-
 """
 Functions required for computing CMB limits and related quantities.
 """

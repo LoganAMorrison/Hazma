@@ -8,7 +8,6 @@ from hazma.scalar_mediator.scalar_mediator_decay_spectrum import (
     scalar_mediator_decay_spectrum,
 )
 
-
 SM_DECAY_MODES = ["pi pi", "mu mu", "pi0 pi0", "g g", "e e g", "pi pi g", "mu mu g"]
 
 
@@ -20,12 +19,8 @@ def dnde_ee(self, e_gams, e_cm, spectrum_type="all"):
     elif spectrum_type == "decay":
         return np.array([0.0 for _ in range(len(e_gams))])
     else:
-        raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or \
-                            'decay'".format(
-                spectrum_type
-            )
-        )
+        raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                            'decay'".format(spectrum_type))
 
 
 def dnde_mumu(self, e_gams, e_cm, spectrum_type="all"):
@@ -38,12 +33,8 @@ def dnde_mumu(self, e_gams, e_cm, spectrum_type="all"):
     elif spectrum_type == "decay":
         return 2.0 * spectra.dnde_photon_muon(e_gams, e_cm / 2.0)
     else:
-        raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or \
-                            'decay'".format(
-                spectrum_type
-            )
-        )
+        raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                            'decay'".format(spectrum_type))
 
 
 def dnde_pi0pi0(self, e_gams, e_cm, spectrum_type="all"):
@@ -56,12 +47,8 @@ def dnde_pi0pi0(self, e_gams, e_cm, spectrum_type="all"):
     if spectrum_type == "decay":
         return 2.0 * spectra.dnde_photon_neutral_pion(e_gams, e_cm / 2.0)
     else:
-        raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or \
-                            'decay'".format(
-                spectrum_type
-            )
-        )
+        raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                            'decay'".format(spectrum_type))
 
 
 def dnde_pipi(self, e_gams, e_cm, spectrum_type="all"):
@@ -74,12 +61,8 @@ def dnde_pipi(self, e_gams, e_cm, spectrum_type="all"):
     elif spectrum_type == "decay":
         return 2.0 * spectra.dnde_photon_charged_pion(e_gams, e_cm / 2.0)
     else:
-        raise ValueError(
-            "Type {} is invalid. Use 'all', 'fsr' or \
-                            'decay'".format(
-                spectrum_type
-            )
-        )
+        raise ValueError("Type {} is invalid. Use 'all', 'fsr' or \
+                            'decay'".format(spectrum_type))
 
 
 def dnde_ss(self, e_gams, e_cm, modes=SM_DECAY_MODES):

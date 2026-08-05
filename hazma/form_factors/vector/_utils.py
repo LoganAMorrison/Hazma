@@ -277,7 +277,7 @@ def gamma_p(
     if hasattr(s, "__len__") and reshape:
         rp = np.sqrt(
             np.clip(
-                v2[:, np.newaxis] / vr2,  # type:ignore
+                v2[:, np.newaxis] / vr2,  # type: ignore
                 0.0,
                 None,
             )
@@ -402,10 +402,10 @@ def breit_wigner_pwave(
             - ss[:, np.newaxis]
             - 1j
             * np.sqrt(ss)[:, np.newaxis]
-            * gamma_p(ss, mres, gamma, m1, m2, reshape=True)  # type:ignore
+            * gamma_p(ss, mres, gamma, m1, m2, reshape=True)  # type: ignore
         )
     return mr2 / (
-        mr2 - s - 1j * np.sqrt(s) * gamma_p(s, mres, gamma, m1, m2)  # type:ignore
+        mr2 - s - 1j * np.sqrt(s) * gamma_p(s, mres, gamma, m1, m2)  # type: ignore
     )
 
 

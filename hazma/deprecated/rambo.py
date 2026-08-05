@@ -140,13 +140,9 @@ def generate_phase_space(
             num_cpus = num_ps_pts
         if num_cpus > mp.cpu_count():
             num_cpus = int(np.floor(mp.cpu_count() * 0.75))
-            warnings.warn(
-                """You only have {} cpus.
+            warnings.warn("""You only have {} cpus.
                           Using {} cpus instead.
-                          """.format(
-                    mp.cpu_count(), num_cpus
-                )
-            )
+                          """.format(mp.cpu_count(), num_cpus))
     else:
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))

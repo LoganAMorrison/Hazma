@@ -83,7 +83,7 @@ class PBH(TheoryDec):
         # GeV -> MeV
         self._e_gams = data[:, 0] * 1e3
         # 1/GeV -> 1/MeV
-        self._d2n_dedt = data[:, 1:] * 1e-3  # type:ignore
+        self._d2n_dedt = data[:, 1:] * 1e-3  # type: ignore
 
     @property
     def bh_secondary(self):

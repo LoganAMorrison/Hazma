@@ -113,5 +113,8 @@ per gate and exits non-zero on the first hard failure. A non-zero exit is
 a blocked commit — fix and re-run; do not commit around a red gate.
 
 A `WARN` row means a tool is not installed and its gate did **not** run —
-it is a hole in your coverage, not a pass. Install the tool
-(`pip install ruff isort`) rather than shipping on an unchecked gate.
+it is a hole in your coverage, not a pass. Install the toolchain
+(`pip install --group dev`, which pulls black, isort, ruff, and pytest at
+the versions CI uses) rather than shipping on an unchecked gate. Do not
+`pip install black` on its own: this script runs whatever is on `PATH`,
+so a hand-picked version silently formats the tree differently from CI.

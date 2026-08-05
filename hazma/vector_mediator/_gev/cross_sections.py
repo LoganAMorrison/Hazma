@@ -6,7 +6,6 @@ from hazma import parameters
 from hazma.utils import RealArray
 import hazma.form_factors.vector as vff
 
-
 ME = parameters.electron_mass
 MMU = parameters.muon_mass
 MPI0 = parameters.neutral_pion_mass

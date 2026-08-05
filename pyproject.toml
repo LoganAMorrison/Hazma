@@ -27,8 +27,22 @@ dependencies = [
 Repository = "https://github.com/LoganAMorrison/Hazma"
 Documentation = "http://hazma.readthedocs.io"
 
-[project.optional-dependencies]
-dev = ["black>=23.3,<27.0"]
+# PEP 735 dependency groups. These are the single source of truth for the
+# tooling pins — CI installs `--group lint` instead of repeating literal
+# versions in .github/workflows/ci.yml. Repeating them is how black ended
+# up pinned <27.0 here and <25.0 in CI, so the documented dev setup
+# reformatted files into a style CI rejected.
+#
+# `pip install --group lint` (pip >= 25.1) installs only these packages, so
+# the Lint job never builds the Cython extensions.
+#
+# The caps are major-version caps, not exact pins: a formatter major bump
+# reformats the whole repo, so it should land as a deliberate PR rather
+# than arrive silently in a CI run. `ruff` is capped the same way even
+# though CI only runs its `--isolated --select E9,F63,F7,F82` subset.
+[dependency-groups]
+lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
+dev = [{ include-group = "lint" }, "pytest>=7.0"]
 
 [build-system]
 build-backend = "setuptools.build_meta"

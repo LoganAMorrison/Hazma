@@ -10,7 +10,6 @@ import numpy as np
 from . import Resonance
 from . import alpha
 
-
 # masses and width from PDG
 mKp = 0.493677  # charged Kaon
 mK0 = 0.497648  # neutral Kaon

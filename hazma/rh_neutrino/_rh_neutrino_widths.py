@@ -23,7 +23,6 @@ from hazma.parameters import (
     lepton_masses,
 )
 
-
 # =======================
 # ---- 2-Body Widths ----
 # =======================

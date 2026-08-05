@@ -72,18 +72,19 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   the build dies inside generated code with a misleading error
   (Task 0.1). Clean, the tree builds on Cython 3.2.9 / NumPy 2.5.1.
 - **Preflight's black/isort verdict on `origin/master` — corrected in
-  Task 0.3.** Task 0.1 recorded "black wants to reformat 34 files, isort
-  errors on several `test/` files" as a property of the trunk. **It is
-  not.** That was an unpinned newer black: CI pins
-  `black>=23.3,<25.0` while `pyproject.toml`'s dev extra allows
-  `<27.0`, and the two majors format differently. At `cd0be2b`, black
-  **24.10.0** reports `249 files would be left unchanged` — CI's Lint
-  job is green on the trunk, and a reformat made with black 26 turns it
-  red (PR #37). Install CI's version
-  (`uv pip install "black>=23.3,<25.0"`) before trusting any black
-  result. Tracked in
-  [`../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md);
-  the class is `[unpinned-formatter-version]` in `docs/agents/lessons.md`.
+  Task 0.3, then resolved.** Task 0.1 recorded "black wants to reformat
+  34 files, isort errors on several `test/` files" as a property of the
+  trunk. **It was not.** That was an unpinned newer black: CI pinned
+  `black>=23.3,<25.0` while `pyproject.toml`'s dev extra allowed
+  `<27.0`, and the two majors format differently, so at `cd0be2b` black
+  24.10.0 called the trunk clean while black 26 wanted 33 files
+  (PR #37). The divergence is now fixed — one pin, in
+  `pyproject.toml`'s `[dependency-groups]` `lint` group, installed by CI
+  and by you (`pip install --group lint`), with the repo reformatted to
+  black 26.x. Install that group rather than a hand-picked version; see
+  [`../../../docs/followups/done/black-pin-divergence-pyproject-vs-ci.md`](../../../docs/followups/done/black-pin-divergence-pyproject-vs-ci.md).
+  The class is `[unpinned-formatter-version]` in
+  `docs/agents/lessons.md`.
 - **`ruff check hazma test` really is red on the trunk (6844 findings),
   and that does not block CI.** CI's ruff step is
   `ruff check --isolated --select E9,F63,F7,F82`, which deliberately
