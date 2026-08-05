@@ -60,6 +60,10 @@ _QUAD_LIMIT = 200
 _TWO_BODY = 2
 _THREE_BODY = 3
 
+# The one-sigma Monte-Carlo error is a ddof=1 sample estimate — undefined
+# for a single sample — so the rambo backend needs at least two points.
+_MIN_MC_NPTS = 2
+
 
 class FSRSpectrum(NamedTuple):
     r"""Photon spectrum with its integration-error estimate.
@@ -331,8 +335,10 @@ def dnde_photon_fsr(  # noqa: PLR0913 — the surface fixed by ADR-0001
     npts: int, optional
         Monte-Carlo phase-space points per photon energy (and for the
         non-radiative integral when four or more final-state particles
-        make it Monte-Carlo too). Ignored by the quadrature backend.
-        Default is ``2**14``.
+        make it Monte-Carlo too). Must be an integer of at least 2 —
+        the returned one-sigma error is a ``ddof=1`` sample estimate,
+        undefined for a single sample. Ignored by the quadrature
+        backend. Default is ``2**14``.
     seed: int, optional
         Seed for the Monte-Carlo backend. Each photon energy draws an
         independent substream, so results are deterministic for a fixed
@@ -362,8 +368,9 @@ def dnde_photon_fsr(  # noqa: PLR0913 — the surface fixed by ADR-0001
         If `cme` is below the sum of `final_state_masses`.
     ValueError
         If fewer than two final-state masses are given, if `method` is
-        unknown or inapplicable, or if the non-radiative integral is
-        not positive.
+        unknown or inapplicable, if the Monte-Carlo backend is selected
+        with a non-integral `npts` or ``npts < 2``, or if the
+        non-radiative integral is not positive.
 
     Notes
     -----
@@ -414,6 +421,16 @@ def dnde_photon_fsr(  # noqa: PLR0913 — the surface fixed by ADR-0001
         )
     if method not in ("quad", "rambo"):
         raise ValueError(f"Invalid method: {method}. Use 'auto', 'quad' or 'rambo'.")
+    if method == "rambo" and not (
+        isinstance(npts, (int, np.integer)) and npts >= _MIN_MC_NPTS
+    ):
+        # A single sample would yield a finite spectrum with error=nan,
+        # silently voiding the one-sigma contract of FSRSpectrum.error.
+        raise ValueError(
+            "The Monte-Carlo backend requires an integer 'npts' of at"
+            f" least {_MIN_MC_NPTS} (the one-sigma error is a ddof=1"
+            f" sample estimate); got npts={npts!r}."
+        )
 
     single = np.isscalar(photon_energies)
     energies = np.atleast_1d(np.asarray(photon_energies, dtype=np.float64))

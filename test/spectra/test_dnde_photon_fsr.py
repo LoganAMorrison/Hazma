@@ -544,3 +544,35 @@ class TestContract:
             dnde_photon_fsr(10.0, Q, [mmu, mmu], _flat, _flat, method="bogus")
         with pytest.raises(ValueError, match="not positive"):
             dnde_photon_fsr(10.0, Q, [mmu, mmu], _flat, lambda m: 0.0)
+
+    @pytest.mark.parametrize("npts", [1, 0, -3, 2.5, True])
+    def test_rambo_rejects_degenerate_npts(self, npts: object) -> None:
+        """The Monte-Carlo backend rejects npts < 2 and non-integral npts.
+
+        A single sample would return a finite spectrum with
+        ``error=nan`` (``ddof=1`` is undefined for one sample), silently
+        voiding the one-sigma contract of ``FSRSpectrum.error``; the
+        same validation guards the Monte-Carlo non-radiative integral of
+        four-or-more-body final states. Regression test for PR #41
+        review round 1.
+        """
+        with pytest.raises(ValueError, match="npts"):
+            dnde_photon_fsr(
+                10.0, Q, [mmu, mmu], _flat, _flat, method="rambo", npts=npts
+            )
+        with pytest.raises(ValueError, match="npts"):
+            dnde_photon_fsr(
+                10.0, Q, [0.0, 0.0, 0.0], _flat, _flat, method="rambo", npts=npts
+            )
+
+    def test_quad_ignores_npts(self) -> None:
+        """A value the Monte-Carlo backend rejects is accepted by quad.
+
+        npts is documented as ignored by the quadrature backend, and the
+        error field stays finite.
+        """
+        result = dnde_photon_fsr(
+            10.0, Q, [mmu, mmu], _flat, _flat, method="quad", npts=1
+        )
+        assert np.isfinite(result.dnde)
+        assert np.isfinite(result.error)
