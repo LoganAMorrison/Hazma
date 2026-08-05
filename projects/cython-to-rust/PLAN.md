@@ -154,7 +154,7 @@ against the post-cutover plumbing). See
   `hazma.gamma_ray` module — Task 0.5 executes the remaining steps
   (replacement status recorded, docs repointed); the replacement-free
   `gamma_ray_fsr` case is tracked at
-  [`../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../docs/followups/todo/msqrd-driven-fsr-generator.md).
+  [`../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../docs/followups/done/msqrd-driven-fsr-generator.md).
 - Possible: QUADPACK-port deviation record, if faithful translation
   proves impractical for `qelg` and a documented algorithmic
   substitution is made instead (would revise corpus budgets).

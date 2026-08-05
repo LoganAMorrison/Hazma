@@ -95,3 +95,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   workflow file (PR #33: the matrix had gone 3.10–3.12 → 3.10–3.14 and
   `black --check` had been re-enabled, while three docs still said
   otherwise).
+- [degenerate-sample-count] An API whose contract includes a statistical
+  error estimate must validate its sample-count input at the public entry
+  point: a `ddof=1` sample deviation is undefined below two samples, and a
+  degenerate count otherwise flows to *every* internal consumer — the
+  per-energy numerator and the Monte-Carlo non-radiative denominator alike —
+  as a finite value with `error=nan` plus a warning nobody reads. Validate
+  the type too: a non-integral count otherwise dies deep inside NumPy with
+  a message that names neither the argument nor the fix (PR #41).

@@ -5,7 +5,9 @@
   (Accepted 2026-08-04) — the ADR removes `hazma.gamma_ray.gamma_ray_fsr`
   and names this follow-up as the only route back
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done — implemented ad-hoc as `hazma.spectra.dnde_photon_fsr`
+  (design: [`docs/adrs/ADR-0001`](../../adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md);
+  [PR #41](https://github.com/LoganAMorrison/Hazma/pull/41))
 - **Triggers / blockers:** ripens when a user (or a model in this repo)
   actually needs FSR from a general squared matrix element and the
   Altarelli–Parisi approximations are not good enough. Technically
@@ -115,3 +117,44 @@ resolution.
   instead take the non-radiative process itself, and whether it should
   accept a `Theory` model directly, is an open design question that
   should be settled before any code is written.
+
+## Resolution (2026-08-04)
+
+Implemented ad-hoc rather than promoted to a project
+([PR #41](https://github.com/LoganAMorrison/Hazma/pull/41)): one PR
+carries the design ADR, the implementation, the validation corpus, and
+the docs. How each item of **What** was settled:
+
+1. **Surface:** `hazma.spectra.dnde_photon_fsr(photon_energies, cme,
+   final_state_masses, msqrd, msqrd_nonrad, *, method, npts, seed,
+   epsabs, epsrel)` returning an `FSRSpectrum` NamedTuple
+   `(dnde, error)` in MeV⁻¹. The interface-drift question is answered
+   by repo-wide
+   [`ADR-0001`](../../adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md):
+   the non-radiative process is supplied as a *matrix element*, not a
+   rate float and not a `Theory` — every initial-state factor cancels
+   in the ratio of phase-space integrals, which also removes
+   `isp_masses` and the decay/annihilation branch.
+2. **Built on `hazma.phase_space`:** RAMBO at the reduced invariant
+   mass `s' = s - 2*sqrt(s)*E` with the photon appended (the removed
+   kernel's fixed-photon-energy estimator, re-derived), plus a
+   deterministic Dalitz-strip quadrature backend for the dominant
+   2-body-plus-photon case; `ThreeBody` quadrature for 3-body
+   non-radiative integrals. No private phase-space code.
+3. **Validation plan first:** written into ADR-0001 and executed in
+   `test/spectra/test_dnde_photon_fsr.py` over a corpus of exact
+   tree-level matrix elements (`test/spectra/msqrd_corpus.py`,
+   numerical Dirac traces and scalar QED, self-checked by Ward
+   identities, soft-photon factorization, and the models' analytic
+   cross sections). Oracle (a): pinned against the closed-form
+   `dnde_xx_to_v_to_ffg`, `dnde_xx_to_s_to_ffg`, and
+   `dnde_xx_to_v_to_pipig` at `rtol=1e-5` (quadrature) and at fixed
+   seed within Monte-Carlo pulls < 4 (rambo). Oracle (b): matches
+   2× `dnde_photon_ap_fermion` to 1e-4 for electrons. Oracle (c): the
+   corpus factorizes onto the eikonal factor as `E_gamma -> 0`.
+4. **Statistical error is part of the API:** the error estimate is a
+   field of the return value, never discarded.
+5. **Kinematic edges:** threshold raises `RamboCMETooSmall`; energies
+   outside `(0, e_max)` (including the endpoint and NaN) return zero;
+   equal-mass, unequal-mass, massless, and 4-body cases are pinned
+   against analytic phase-space formulas.

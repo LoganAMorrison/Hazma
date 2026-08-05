@@ -166,7 +166,7 @@ purge.
   replacement status in the task note, repoint docs off
   `hazma.gamma_ray`). The replacement-free `gamma_ray_fsr` case now
   lives at
-  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
+  [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../../docs/followups/done/msqrd-driven-fsr-generator.md).
 - `WIDTH_K` / `WIDTH_PI` in the legacy tables are written with `**`
   where a decimal exponent was meant (no consumer today) — deferred to
   [`docs/followups/todo/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/todo/legacy-parameters-width-exponent-bug.md).
