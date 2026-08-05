@@ -82,8 +82,7 @@ elements. Note that these functions take in an array of four-momenta.
 
 .. code-block:: python
 
-    from hazma.field_theory_helper_functions.common_functions import \
-    minkowski_dot as MDot
+    from hazma.utils import minkowski_dot as MDot
 
     class Msqrd(object):
         def __init__(self, mx, c1, lam):

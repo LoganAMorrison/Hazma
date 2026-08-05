@@ -63,18 +63,19 @@ entry silently reduces the run to nothing. Read the summary line
 (`N passed`), not just the exit status.
 
 **`test/conftest.py` deliberately ignores part of the suite.** It builds
-a `collect_ignore` list that excludes `test/test_gamma_ray.py` and
-everything under `test/decay/`. A bare `pytest` therefore does **not**
-run those files, and "the full suite is green" does not cover them. If
-your change touches decay spectra or `gamma_ray.py`, run those paths
-explicitly and expect to deal with why they were parked.
+a `collect_ignore` list that excludes `test/test_gamma_ray.py`. A bare
+`pytest` therefore does **not** run that file, and "the full suite is
+green" does not cover it. If your change touches `gamma_ray.py`, run it
+explicitly and expect to deal with why it was parked. (`test/decay/` was
+a second entry until it was deleted alongside `hazma/_decay/` in
+cython-to-rust Task 0.3.)
 
 **The test tree does not mirror the package one-to-one.** `test/` has
-`decay/`, `positron/`, `rambo/`, `rh_neutrino/`, `scalar_mediator/`,
-`spectra/`, `vector_mediator/` plus a few loose `test_*.py`. There is no
-test package for several `hazma/` subpackages. Absence of a test
-directory is not evidence that an area is untested elsewhere, nor that it
-is covered — check before claiming either.
+`agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,
+`vector_mediator/` plus a few loose `test_*.py`. There is no test package
+for several `hazma/` subpackages. Absence of a test directory is not
+evidence that an area is untested elsewhere, nor that it is covered —
+check before claiming either.
 
 **Floating-point assertions need an explicit tolerance and a reason.**
 `np.isclose` defaults (`rtol=1e-5`) are generous enough to hide a real

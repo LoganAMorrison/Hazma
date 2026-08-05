@@ -9,10 +9,10 @@ Module for working with Lorentz-invariant phase-space.
 #       functions for 2->3 processes.
 
 
+import logging
 import math
 import multiprocessing as mp
 import warnings
-import logging
 from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -21,11 +21,14 @@ from scipy import integrate
 
 from hazma._phase_space import generator, histogram
 from hazma._phase_space.modifiers import apply_matrix_elem
-from hazma.field_theory_helper_functions.common_functions import cross_section_prefactor
 from hazma.hazma_errors import RamboCMETooSmall
-from hazma.utils import RealArray, kallen_lambda, lnorm_sqr
-
-from hazma.utils import warn_deprecated_module
+from hazma.utils import (
+    RealArray,
+    cross_section_prefactor,
+    kallen_lambda,
+    lnorm_sqr,
+    warn_deprecated_module,
+)
 
 warn_deprecated_module("hazma.rambo", alternative="hazma.phase_space")
 
@@ -137,13 +140,9 @@ def generate_phase_space(
             num_cpus = num_ps_pts
         if num_cpus > mp.cpu_count():
             num_cpus = int(np.floor(mp.cpu_count() * 0.75))
-            warnings.warn(
-                """You only have {} cpus.
+            warnings.warn("""You only have {} cpus.
                           Using {} cpus instead.
-                          """.format(
-                    mp.cpu_count(), num_cpus
-                )
-            )
+                          """.format(mp.cpu_count(), num_cpus))
     else:
         # Use 75% of the cpu power.
         num_cpus = int(np.floor(mp.cpu_count() * 0.75))

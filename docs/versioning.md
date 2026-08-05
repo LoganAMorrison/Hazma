@@ -40,7 +40,7 @@ A change is user-facing if it changes any of these:
 
 Explicitly **not** the public surface: `hazma/experimental/`, anything
 under a leading-underscore package that is not re-exported
-(`hazma/_decay/`, `hazma/_utils/`, …), `notebooks/`, `test/`, internal
+(`hazma/_utils/`, `hazma/_phase_space/`, …), `notebooks/`, `test/`, internal
 helper names, docstring wording, and performance characteristics.
 
 ## Choosing the bump

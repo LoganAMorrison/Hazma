@@ -5,8 +5,9 @@
 """
 
 import numpy as np
-from hazma.field_theory_helper_functions.common_functions import minkowski_dot
+
 from hazma.parameters import alpha_em
+from hazma.utils import minkowski_dot
 
 
 def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
