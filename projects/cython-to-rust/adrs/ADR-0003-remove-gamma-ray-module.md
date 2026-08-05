@@ -40,7 +40,7 @@ a shim. The module's public API and its replacement status:
   nearest live equivalents are the Altarelli–Parisi approximations
   (`hazma.spectra.dnde_photon_ap_fermion` / `_ap_scalar`); a general
   `msqrd`-driven FSR generator would be a new feature, tracked at
-  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
+  [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md).
 
 (`gamma`/`gamma_point` are the compiled `_gamma_ray` names the module
 wraps, not its public surface.) Docs that reference `hazma.gamma_ray`
@@ -62,5 +62,14 @@ are updated to point at `hazma.spectra`.
   `gamma_ray_fsr` → none; nearest: the Altarelli–Parisi
   approximations). If a maintained equivalent is ever wanted, it
   enters as a designed feature with its own validation plan —
-  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md)
+  [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md)
   — not as part of this migration.
+
+## Addendum (2026-08-04)
+
+The follow-up above has since been implemented, ad-hoc and outside this
+migration exactly as prescribed: `hazma.spectra.dnde_photon_fsr`
+(repo-wide ADR-0001, with its own validation corpus). The Phase 00
+CHANGELOG entry for this removal should therefore name
+`hazma.spectra.dnde_photon_fsr` as `gamma_ray_fsr`'s replacement
+instead of "none". The decision recorded here is unchanged.

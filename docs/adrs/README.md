@@ -45,5 +45,5 @@ Copy [`template.md`](template.md) and fill in the sections.
 ## Index
 
 | ADR | Title | Status | Date |
-|-----|-------|--------|------|
-| _none yet_ | | | |
+| --- | --- | --- | --- |
+| [ADR-0001](ADR-0001-fsr-generator-takes-both-matrix-elements.md) | The FSR generator takes both matrix elements | Proposed | 2026-08-04 |

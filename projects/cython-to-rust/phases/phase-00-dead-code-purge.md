@@ -138,7 +138,7 @@ Everything else is behavior-invisible.
   2026-08-04.** A rebuild stays out of scope (a *new feature* with no
   numerical oracle, since the module cannot run to produce a baseline);
   it re-enters with its own validation plan via
-  [`../../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md),
+  [`../../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md),
   filed 2026-08-04.
 - Replacement status of the module's actual public API confirmed and
   recorded in the task note: `gamma_ray_decay` is superseded by

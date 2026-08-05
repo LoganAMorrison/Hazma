@@ -21,6 +21,17 @@ Altarelli-parisi
     dnde_photon_ap_scalar  -- Approximate FSR from scalar.
 
 
+Final-state radiation
+---------------------
+
+.. autosummary::
+    :toctree:
+
+    dnde_photon_fsr -- Photon spectrum from a user-supplied radiative
+                       squared matrix element.
+    FSRSpectrum     -- Return type of dnde_photon_fsr: (dnde, error).
+
+
 Boost
 -----
 
@@ -98,18 +109,21 @@ Neutrino
 
 """
 
-from .altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_ap_scalar
-
-from ._nbody import dnde_photon, dnde_positron, dnde_neutrino
-
-from .boost import (
-    boost_delta_function,
-    double_boost_delta_function,
-    dnde_boost_array,
-    make_boost_function,
-    dnde_boost,
+from ._fsr import FSRSpectrum, dnde_photon_fsr
+from ._nbody import dnde_neutrino, dnde_photon, dnde_positron
+from ._neutrino import (
+    dnde_neutrino_charged_kaon,
+    dnde_neutrino_charged_pion,
+    dnde_neutrino_charged_rho,
+    dnde_neutrino_eta,
+    dnde_neutrino_eta_prime,
+    dnde_neutrino_long_kaon,
+    dnde_neutrino_muon,
+    dnde_neutrino_neutral_rho,
+    dnde_neutrino_omega,
+    dnde_neutrino_phi,
+    dnde_neutrino_short_kaon,
 )
-
 from ._photon import (
     dnde_photon_charged_kaon,
     dnde_photon_charged_pion,
@@ -124,33 +138,26 @@ from ._photon import (
     dnde_photon_phi,
     dnde_photon_short_kaon,
 )
-
 from ._positron import (
-    dnde_positron_charged_pion,
-    dnde_positron_muon,
     dnde_positron_charged_kaon,
-    dnde_positron_short_kaon,
-    dnde_positron_long_kaon,
-    dnde_positron_eta,
-    dnde_positron_omega,
-    dnde_positron_neutral_rho,
+    dnde_positron_charged_pion,
     dnde_positron_charged_rho,
+    dnde_positron_eta,
     dnde_positron_eta_prime,
+    dnde_positron_long_kaon,
+    dnde_positron_muon,
+    dnde_positron_neutral_rho,
+    dnde_positron_omega,
     dnde_positron_phi,
+    dnde_positron_short_kaon,
 )
-
-from ._neutrino import (
-    dnde_neutrino_charged_pion,
-    dnde_neutrino_muon,
-    dnde_neutrino_charged_kaon,
-    dnde_neutrino_long_kaon,
-    dnde_neutrino_short_kaon,
-    dnde_neutrino_eta,
-    dnde_neutrino_omega,
-    dnde_neutrino_eta_prime,
-    dnde_neutrino_charged_rho,
-    dnde_neutrino_neutral_rho,
-    dnde_neutrino_phi,
+from .altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_ap_scalar
+from .boost import (
+    boost_delta_function,
+    dnde_boost,
+    dnde_boost_array,
+    double_boost_delta_function,
+    make_boost_function,
 )
 
 __all__ = [
@@ -198,6 +205,9 @@ __all__ = [
     "dnde_photon_ap_fermion",
     "dnde_photon_ap_scalar",
     "altarelli_parisi",
+    # Final-state radiation
+    "dnde_photon_fsr",
+    "FSRSpectrum",
     # Boost
     "boost_delta_function",
     "double_boost_delta_function",

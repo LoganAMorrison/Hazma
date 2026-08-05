@@ -12,7 +12,29 @@ signature did.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **`hazma.spectra.dnde_photon_fsr` — exact FSR photon spectra from a
+  user-supplied squared matrix element.** The maintained replacement for
+  the removed `hazma.gamma_ray.gamma_ray_fsr` (cython-to-rust ADR-0003),
+  designed per [`docs/adrs/ADR-0001`](docs/adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md)
+  and resolving
+  [`docs/followups/done/msqrd-driven-fsr-generator.md`](docs/followups/done/msqrd-driven-fsr-generator.md).
+  The caller supplies the squared matrix elements of both the radiative
+  and the non-radiative process; every initial-state factor cancels in
+  the ratio, so there is no rate float, no `isp_masses`, and no
+  decay/annihilation branch. A two-body non-photon final state is
+  integrated by deterministic Dalitz-strip quadrature; higher
+  multiplicities run seeded RAMBO Monte Carlo at the reduced invariant
+  mass, built on `hazma.phase_space`. Returns the new
+  `hazma.spectra.FSRSpectrum` NamedTuple `(dnde, error)` in MeV⁻¹, with
+  the one-sigma integration error a first-class output. Validated in
+  `test/spectra/test_dnde_photon_fsr.py` against exact tree-level matrix
+  elements (numerical Dirac traces / scalar QED) pinned to the analytic
+  mediator-model spectra `dnde_xx_to_v_to_ffg`, `dnde_xx_to_s_to_ffg`,
+  and `dnde_xx_to_v_to_pipig` at `rtol=1e-5`, plus Ward-identity,
+  soft-photon, Altarelli-Parisi, and flat-matrix-element phase-space
+  checks.
 
 ## [2.1.0] — 2026-08-03
 

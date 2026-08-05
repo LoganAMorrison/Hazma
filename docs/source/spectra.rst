@@ -11,7 +11,8 @@ The :mod:`hazma.spectra` module contains functions for:
 * Computing photon,positron and neutrino spectra from the decays of individual SM particles,
 * Computing spectra from an :math:`N`-body final state,
 * Boosting spectra into new frames,
-* Computing FSR spectra using Altarelli-Parisi splitting functions.
+* Computing FSR spectra using Altarelli-Parisi splitting functions,
+* Computing exact FSR spectra from a user-supplied squared matrix element.
 
 Below, we demonstrate how each of these actions can be easily performed in ``hazma``.
 
@@ -474,6 +475,101 @@ demonstrate how to use these:
    plt.legend()
    plt.show()
 
+Exact FSR from a Squared Matrix Element
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the Altarelli-Parisi approximation is not accurate enough — away from
+the collinear regime, or for masses that are not small compared to the
+center-of-mass energy — :py:meth:`dnde_photon_fsr` computes the photon
+spectrum exactly from the squared matrix elements of the radiative process
+:math:`X \to f_1 \cdots f_n \gamma` and its non-radiative counterpart
+:math:`X \to f_1 \cdots f_n`:
+
+.. math::
+
+   \dv{N}{E_\gamma} = \frac{\dd{\Gamma}(X \to F\gamma)/\dd{E_\gamma}}
+   {\Gamma(X \to F)}
+
+Both squared matrix elements are supplied as callables over the final-state
+four-momenta, and every initial-state factor (couplings, propagators, flux,
+spin averages) cancels in the ratio — only factors unique to the radiative
+process, such as the electric charge, must be kept. For a two-body
+non-radiative final state the spectrum is computed by deterministic
+quadrature; for more final-state particles it is computed by Monte-Carlo
+integration over the reduced phase space (pass ``seed`` for
+reproducibility), and the returned :py:class:`FSRSpectrum` carries the
+one-sigma integration error alongside the spectrum.
+
+Below we compute the exact FSR spectrum for
+:math:`\chi\bar{\chi} \to V^* \to \pi^+\pi^-\gamma` (scalar QED with the
+seagull vertex required by gauge invariance, contracted with the
+beam-averaged dark-matter current) and compare it with the
+Altarelli-Parisi approximation:
+
+.. plot::
+   :include-source: True
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+   from hazma import spectra
+   from hazma.parameters import charged_pion_mass as MPI
+   from hazma.parameters import qe
+   from hazma.utils import ldot, lnorm_sqr
+
+   cme = 1000.0  # MeV
+
+
+   def msqrd_pipi(momenta):
+       """chi chibar -> V* -> pi+ pi-, common couplings dropped."""
+       pp, pm = momenta[:, 0], momenta[:, 1]
+       P = pp + pm
+       s = lnorm_sqr(P)
+       cur = pp - pm
+       # pion current contracted with the transverse projector
+       # P^mu P^nu / s - g^{mu nu} of the beam-averaged DM tensor
+       return ldot(P, cur) ** 2 / s - lnorm_sqr(cur)
+
+
+   def msqrd_pipig(momenta):
+       """chi chibar -> V* -> pi+ pi- gamma in scalar QED."""
+       pp, pm, k = momenta[:, 0], momenta[:, 1], momenta[:, 2]
+       P = pp + pm + k
+       s = lnorm_sqr(P)
+       # emission off pi+ and pi-, plus the gauge-fixing seagull:
+       # M^{mu a} = c1^mu d1^a - c2^mu d2^a - 2 g^{mu a}
+       c1, d1 = pp + k - pm, (2 * pp + k) / (2 * ldot(pp, k))
+       c2, d2 = pp - pm - k, (2 * pm + k) / (2 * ldot(pm, k))
+
+       def proj(a, b):
+           return ldot(P, a) * ldot(P, b) / s - ldot(a, b)
+
+       # -g_{ab} M^{mu a} M^{nu b} contracted with the projector
+       return qe**2 * (
+           -ldot(d1, d1) * proj(c1, c1)
+           + 2 * ldot(d1, d2) * proj(c1, c2)
+           - ldot(d2, d2) * proj(c2, c2)
+           + 4 * proj(c1, d1)
+           - 4 * proj(c2, d2)
+           + 12.0
+       )
+
+
+   es = np.geomspace(1.0, 460.0, 100)
+   dnde, error = spectra.dnde_photon_fsr(
+       es, cme, [MPI, MPI], msqrd_pipig, msqrd_pipi
+   )
+   dnde_ap = 2.0 * spectra.dnde_photon_ap_scalar(es, cme**2, MPI)
+
+   plt.figure(dpi=150)
+   plt.plot(es, dnde, label="exact")
+   plt.plot(es, dnde_ap, ls="--", label="Altarelli-Parisi")
+   plt.yscale("log")
+   plt.xscale("log")
+   plt.ylabel(r"$\dv{N}{E} \ [\mathrm{MeV}^{-1}]$", fontdict=dict(size=16))
+   plt.xlabel(r"$E \ [\mathrm{MeV}]$", fontdict=dict(size=16))
+   plt.legend()
+   plt.show()
+
 API Reference
 -------------
 
@@ -496,6 +592,26 @@ Functions for compute FSR spectra using the Altarelli-Parisi splitting functions
 
 .. autofunction:: dnde_photon_ap_fermion
 .. autofunction:: dnde_photon_ap_scalar
+
+
+Final-state radiation
+~~~~~~~~~~~~~~~~~~~~~
+
+Exact FSR spectra from user-supplied squared matrix elements:
+
+.. list-table ::
+    :header-rows: 1
+
+    * - Function
+      - Description
+
+    * - :meth:`~hazma.spectra.dnde_photon_fsr`
+      - Photon spectrum from a radiative squared matrix element.
+    * - :class:`~hazma.spectra.FSRSpectrum`
+      - Return type of ``dnde_photon_fsr``: ``(dnde, error)``.
+
+.. autofunction:: dnde_photon_fsr
+.. autoclass:: FSRSpectrum
 
 
 Boost
