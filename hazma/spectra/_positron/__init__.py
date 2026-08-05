@@ -3,17 +3,14 @@ Module for computing positron spectra.
 @author: Logan Morrison and Adam Coogan
 """
 
-from typing import overload, Union, Callable, List, Optional
+from typing import Callable, List, Optional, Union, overload
 
-# from hazma._positron.positron_decay import positron
 from hazma import parameters
 from hazma.utils import RealArray, RealOrRealArray
 
 from . import _muon, _pion
-from ._utils import (
-    load_interp as _load_interp,
-    dnde_positron as _dnde_positron,
-)
+from ._utils import dnde_positron as _dnde_positron
+from ._utils import load_interp as _load_interp
 
 SquaredMatrixElement = Callable[[RealArray], float]
 
@@ -370,7 +367,12 @@ def positron_decay(
     num_ps_pts: int = 1000,
     num_bins: int = 25,
 ) -> RealArray:
-    r"""Returns total gamma ray spectrum from a set of particles.
+    r"""Removed. Use :func:`hazma.spectra.dnde_positron` instead.
+
+    The signature is kept so existing imports do not break at import time,
+    but every call raises. The Monte-Carlo backend this wrapped
+    (``hazma._positron.positron_decay``) was deleted in the Cython-to-Rust
+    migration; the arguments below are accepted and ignored.
 
     Parameters
     ----------
@@ -390,24 +392,10 @@ def positron_decay(
     num_bins : int {25}, optional
         Number of bins to use.
 
-    Returns
-    -------
-    spec : np.ndarray
-        Total gamma ray spectrum from all final state particles.
-
-    Notes
-    -----
-    The total spectrum is computed using
-
-    .. math::
-        \frac{dN}{dE}(E_{e^{\pm}}) = \sum_{i,j}P_{i}(E_{j})
-        \frac{dN_i}{dE}(E_{e^{\pm}}, E_{j})
-
-    where :math:`i` runs over the final state particles, :math:`j` runs over
-    energies sampled from probability distributions. :math:`P_{i}(E_{j})` is
-    the probability that particle :math:`i` has energy :math:`E_{j}`. The
-    probabilities are computed using ``hazma.phase_space_generator.rambo``. The
-    total number of energies used is ``num_bins``.
+    Raises
+    ------
+    NotImplementedError
+        Always.
 
     Examples
     --------
@@ -415,14 +403,16 @@ def positron_decay(
     Generate spectrum from a muon, and two charged pions
     with total energy of 5 GeV::
 
-        from hazma.positron_spectra import positron_decay
+        from hazma.spectra import dnde_positron
         from hazma.parameters import electron_mass as me
         import numpy as np
-        particles = np.array(['muon', 'charged_pion', 'charged_pion'])
+        # `dnde_positron` uses its own short final-state names, listed in
+        # `dnde_positron.availible_final_states`.
+        particles = ['mu', 'pi', 'pi']
         cme = 5000.
         positron_energies = np.logspace(np.log10(me), np.log10(cme),
                                         num=200, dtype=np.float64)
-        positron_decay(particles, cme, positron_energies)
+        dnde_positron(positron_energies, cme, particles)
 
     """
     if mat_elem_sqrd is None:

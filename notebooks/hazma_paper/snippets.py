@@ -180,20 +180,20 @@ dnde_conv.integral(25.0, 85.0)
 # ## Section 6: Electron and Positron Spectra from DM annihilation
 
 # %% hidden=true
-from hazma.__positron_spectra import muon as dnde_p_mu
+from hazma.spectra import dnde_positron_muon as dnde_p_mu
 
 e_mu = 150.0  # muon energy
 e_p = np.array([1.0, 10.0, 100.0])  # positron energies
 dnde_p_mu(e_p, e_mu)
-# array([4.86031362e-05, 4.56232320e-03, 4.45753994e-03])
+# array([4.85940389e-05, 4.56146938e-03, 4.45669369e-03])
 
 # %% hidden=true
-from hazma.__positron_spectra import charged_pion as dnde_p_pi
+from hazma.spectra import dnde_positron_charged_pion as dnde_p_pi
 
 e_pi = 150.0  # charged pion energy
 e_p = np.array([1.0, 10.0, 100.0])  # positron energies
 dnde_p_pi(e_p, e_pi)
-# array([3.84163631e-05, 3.85242442e-03, 2.55578895e-05])
+# array([3.84113872e-05, 3.85195494e-03, 2.77683013e-05])
 
 # %% hidden=true
 from hazma.scalar_mediator import HiggsPortal

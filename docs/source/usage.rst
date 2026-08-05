@@ -474,9 +474,10 @@ We find it easiest to place all of these components is modular classes and then 
     from hazma.parameters import charged_pion_mass as mpi
     from hazma.parameters import qe # Electric charge
     # Positron spectra for neutral and charged pions
-    from hazma.positron_spectra import charged_pion as pspec_charged_pion
-    # Deay spectra for neutral and charged pions
-    from hazma.decay import neutral_pion, charged_pion
+    from hazma.spectra import dnde_positron_charged_pion as pspec_charged_pion
+    # Decay spectra for neutral and charged pions
+    from hazma.spectra import dnde_photon_neutral_pion as neutral_pion
+    from hazma.spectra import dnde_photon_charged_pion as charged_pion
     # The `Theory` class which we will ultimately inherit from
     from hazma.theory import Theory
 

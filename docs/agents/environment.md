@@ -55,6 +55,40 @@ missing toolchain surfaces as a build error deep in `_gamma_ray`
 **Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
 Edit the `.pyx` and rebuild.
 
+## Linters
+
+**`black` is pinned differently in `pyproject.toml` and in CI, and the
+difference changes formatting.** `pyproject.toml`'s `dev` extra allows
+`black>=23.3,<27.0`; `.github/workflows/ci.yml`'s Lint job installs
+`black>=23.3,<25.0`. Black's style changed across that boundary (a sole
+multiline string argument is "hugged" in 26.x, exploded in 24.x), so
+`pip install -e '.[dev]'` gives you a formatter that reformats files
+into a style CI rejects. Symptom: `black --check` clean locally, Lint
+red on the PR, on lines you never touched.
+
+Install CI's version before trusting any black result:
+
+```sh
+uv pip install "black>=23.3,<25.0"
+```
+
+Corollary: **`black --check hazma test` is clean on `master`.** A run
+claiming it wants to reformat dozens of files is measuring a newer
+black, not a property of the repo — measured at `cd0be2b`, black 24.10.0
+reports `249 files would be left unchanged` while black 26.5.1 wants 34.
+`preflight.sh` invokes whatever is on `PATH`, so it inherits whichever
+you installed. Tracked in
+[`../followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../followups/todo/black-pin-divergence-pyproject-vs-ci.md).
+
+**CI's ruff step is not the configured one.** Lint runs
+`ruff check --isolated --select E9,F63,F7,F82 --exclude hazma/experimental
+--exclude notebooks .` — syntax errors, undefined names, broken
+comparisons and f-strings only. It deliberately ignores the much stricter
+`[tool.ruff]` config in `pyproject.toml`, under which the repo carries
+thousands of findings. A red `ruff check hazma test` therefore says
+nothing about whether CI will pass; run the `--isolated` form to predict
+CI, and judge the configured form only as a delta against the trunk.
+
 ## Tests
 
 **pytest exit code 5 means zero tests collected.** It is not a pass. A
@@ -63,18 +97,19 @@ entry silently reduces the run to nothing. Read the summary line
 (`N passed`), not just the exit status.
 
 **`test/conftest.py` deliberately ignores part of the suite.** It builds
-a `collect_ignore` list that excludes `test/test_gamma_ray.py` and
-everything under `test/decay/`. A bare `pytest` therefore does **not**
-run those files, and "the full suite is green" does not cover them. If
-your change touches decay spectra or `gamma_ray.py`, run those paths
-explicitly and expect to deal with why they were parked.
+a `collect_ignore` list that excludes `test/test_gamma_ray.py`. A bare
+`pytest` therefore does **not** run that file, and "the full suite is
+green" does not cover it. If your change touches `gamma_ray.py`, run it
+explicitly and expect to deal with why it was parked. (`test/decay/` was
+a second entry until it was deleted alongside `hazma/_decay/` in
+cython-to-rust Task 0.3.)
 
 **The test tree does not mirror the package one-to-one.** `test/` has
-`decay/`, `positron/`, `rambo/`, `rh_neutrino/`, `scalar_mediator/`,
-`spectra/`, `vector_mediator/` plus a few loose `test_*.py`. There is no
-test package for several `hazma/` subpackages. Absence of a test
-directory is not evidence that an area is untested elsewhere, nor that it
-is covered — check before claiming either.
+`agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,
+`vector_mediator/` plus a few loose `test_*.py`. There is no test package
+for several `hazma/` subpackages. Absence of a test directory is not
+evidence that an area is untested elsewhere, nor that it is covered —
+check before claiming either.
 
 **Floating-point assertions need an explicit tolerance and a reason.**
 `np.isclose` defaults (`rtol=1e-5`) are generous enough to hide a real

@@ -55,20 +55,6 @@ extensions += make_extension(
     ["_phase_space"], ["generator", "histogram", "modifiers"], cpp=True
 )
 
-# Field Theory helper
-extensions += make_extension(
-    ["field_theory_helper_functions"],
-    ["common_functions", "three_body_phase_space"],
-    cpp=True,
-)
-
-# Positron
-extensions += make_extension(
-    ["_positron"], ["positron_muon", "positron_charged_pion", "positron_decay"]
-)
-# Neutrino
-extensions += make_extension(["_neutrino"], ["charged_pion", "muon"])
-
 # Decay Spectra
 extensions += make_extension(
     ["spectra", "_photon"],

@@ -91,6 +91,20 @@ Everything else is behavior-invisible.
 - `cross_section_prefactor` callers use `hazma.utils`;
   `minkowski_dot` given a pure-Python home and
   `hazma/experimental/axial_vector_mediator/avm_msqrd.py` repointed.
+  Note: `hazma.utils`'s `cross_section_prefactor` builds the incoming
+  momentum from `kallen_lambda`, which cancels at threshold, while the
+  Cython twin used the factored form. The swap is therefore a
+  **declared** numerical change near threshold (≤2.1e-7 relative within
+  1e-7 of it; ≤5e-15 at `cme ≥ 1.1 ×` threshold) — record it in
+  `task-notes/README.md` "Numerical impact so far", do not absorb it
+  silently.
+- The three config files that name the deleted sources are updated in
+  **this** task, because the build and the test collection break the
+  moment the sources go: `setup.py`'s `_positron` / `_neutrino` /
+  `field_theory_helper_functions` extension groups; `test/conftest.py`'s
+  unconditional `THIS_DIR.joinpath("decay").iterdir()`; and the three
+  `hazma._decay.interpolation_data.*` entries in `pyproject.toml` and
+  `MANIFEST.in`. Task 0.4 keeps the rest.
 - Import smoke (`hazma.theory`, `hazma.limits`, `hazma.cmb`,
   `hazma.pbh`, both mediators, `hazma.spectra._photon._muon`) passes.
 
@@ -103,9 +117,14 @@ Everything else is behavior-invisible.
 
 - `setup.py` extension list matches the survivors exactly (count the
   built `.so`s in a fresh `pip install -e .`); no `cpp=True` groups
-  remain.
+  remain. Tasks 0.2 and 0.3 each drop their own groups as they delete
+  the sources, so what remains here is the `_gamma_ray` /
+  `_phase_space` pair plus the final reconciliation against the
+  survivor count.
 - `pyproject.toml` package-data globs and `MANIFEST.in` no longer ship
   deleted directories; sdist builds and contains no deleted paths.
+  (Task 0.3 already removed the `hazma._decay.interpolation_data.*`
+  entries; this task confirms nothing else dangles and runs the sdist.)
 - CI green on the full matrix.
 
 ### Task 0.5: Ratify and execute ADR-0003 (`hazma.gamma_ray` removal)

@@ -25,6 +25,8 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | --- | --- | --- | --- |
 | [markdownlint config for templates](todo/markdownlint-config-for-templates.md) | 2026-08-03 | cython-to-rust scaffolding | cross-cutting |
 | [`WIDTH_K`/`WIDTH_PI` exponent bug](todo/legacy-parameters-width-exponent-bug.md) | 2026-08-04 | cython-to-rust Task 0.1 | cross-cutting |
+| [`cross_section_prefactor` threshold cancellation](todo/cross-section-prefactor-threshold-cancellation.md) | 2026-08-04 | cython-to-rust Task 0.3 | cross-cutting |
+| [`black` pin diverges between pyproject and CI](todo/black-pin-divergence-pyproject-vs-ci.md) | 2026-08-04 | cython-to-rust Task 0.3 (PR #37) | cross-cutting |
 
 ## Promoted / Done / Pruned
 
