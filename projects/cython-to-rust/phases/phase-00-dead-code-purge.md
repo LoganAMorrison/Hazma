@@ -19,7 +19,7 @@ This phase carries the project's two `major`-version removals (both
 covered by `PLAN.md` `version_bump: major`): `hazma/deprecated/rambo.py`
 (any removal from `hazma/deprecated/` is `major` per
 `docs/versioning.md`) and the broken-on-import `hazma.gamma_ray`
-module (ADR-0003, Proposed — Task 0.2 is gated on its acceptance).
+module (ADR-0003, Accepted 2026-08-04).
 Everything else is behavior-invisible.
 
 ## Prerequisites
@@ -61,7 +61,7 @@ Everything else is behavior-invisible.
 ### Task 0.2: Delete the phase-space / gamma-ray slice
 
 **Task note:** [`../task-notes/phase-00/task-0.2-delete-mc-slice.md`](../task-notes/phase-00/task-0.2-delete-mc-slice.md)
-**Depends on:** Task 0.1, ADR-0003 accepted (via Task 0.5)
+**Depends on:** Task 0.1 (ADR-0003 accepted 2026-08-04)
 
 **Exit criteria:**
 
@@ -127,18 +127,19 @@ Everything else is behavior-invisible.
   entries; this task confirms nothing else dangles and runs the sdist.)
 - CI green on the full matrix.
 
-### Task 0.5: Ratify and execute ADR-0003 (`hazma.gamma_ray` removal)
+### Task 0.5: Execute ADR-0003 (`hazma.gamma_ray` removal)
 
 **Task note:** [`../task-notes/phase-00/task-0.5-gamma-ray-decision.md`](../task-notes/phase-00/task-0.5-gamma-ray-decision.md)
 **Depends on:** — (precedes Task 0.2's delete)
 
 **Exit criteria:**
 
-- ADR-0003 status flipped to Accepted by Logan (or, if rejected, the
-  phase halts and the plan is revised — a rebuild is a *new feature*
-  with no numerical oracle, since the module cannot run to produce a
-  baseline; it would re-enter via `docs/followups/` with its own
-  validation plan, not through this project).
+- ~~ADR-0003 status flipped to Accepted by Logan~~ — **done
+  2026-08-04.** A rebuild stays out of scope (a *new feature* with no
+  numerical oracle, since the module cannot run to produce a baseline);
+  it re-enters with its own validation plan via
+  [`../../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md),
+  filed 2026-08-04.
 - Replacement status of the module's actual public API confirmed and
   recorded in the task note: `gamma_ray_decay` is superseded by
   `hazma.spectra.dnde_photon` (the n-body path in `spectra/_nbody.py`

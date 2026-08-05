@@ -5,8 +5,8 @@
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (**proposed — needs
-Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003
-(**proposed — needs Logan's sign-off before Phase 00 Task 0.2**)
+Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003 (accepted
+2026-08-04 — Task 0.2 no longer blocked on sign-off)
 **Depends On:** none
 
 ## Objective
@@ -19,7 +19,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
-| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.3 done; 0.2/0.4/0.5 all gated on ADR-0003) |
+| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.3 done; ADR-0003 accepted, so 0.2/0.4/0.5 are unblocked) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
@@ -38,7 +38,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - All eight phases Complete; zero `.pyx`/`.pxd` in the tree; all 41
   consumed entry points served by `hazma._core` (the 2 unconsumed
   `sigma_xx_to_all` exports dropped in Phase 05); maturin backend live.
-- ADR-0002 and ADR-0003 accepted (or superseded).
+- ADR-0002 accepted (or superseded); ADR-0003 accepted 2026-08-04.
 - Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug, with the aggregated drift table. See
@@ -219,12 +219,12 @@ it from memory.)
 - **ADR-0002 sign-off** (Logan): accept the license-clean-numerics
   decision, or deliberately take the GPL route? Gates Phase 03
   Tasks 3.2/3.3.
-- **ADR-0003 sign-off** (Logan): confirm deletion of the
-  broken-on-import `hazma.gamma_ray`. Gates Phase 00 Task 0.2; if
-  rejected, the phase halts for a plan revision (rebuild would be a
-  new feature via `docs/followups/`, not this project). **This is now
-  the only thing standing between Phase 00 and Phase 01** — Tasks 0.1
-  and 0.3 are done, and 0.2/0.4/0.5 all wait on it.
+- ~~**ADR-0003 sign-off** (Logan): confirm deletion of the
+  broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted.**
+  It was the last thing standing between Phase 00 and Phase 01; with
+  Tasks 0.1 and 0.3 already done, **Tasks 0.2, 0.4, and 0.5 are all
+  unblocked.** The replacement-free `gamma_ray_fsr` case is tracked at
+  [`../../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
 - `cross_section_prefactor`'s threshold cancellation (found in Task
   0.3, filed as a follow-up): fix it **after** the port rather than
   before, or Phase 01's corpus pins the cancelling values and the Rust
@@ -258,7 +258,7 @@ it from memory.)
   the inventory's dead-code table now describes work already done for
   every row except `_gamma_ray/`, `_phase_space/`,
   `deprecated/rambo.py`, and `rh_neutrino/_rh_neutrino_fsr_four_body.pyx`
-  (all Task 0.2's, all gated on ADR-0003).
+  (all Task 0.2's — no longer gated, ADR-0003 was accepted 2026-08-04).
 - **25 extensions, 26 `.pyx`, 19 `.pxd`** as of Task 0.3 — re-derive
   with `find hazma -name '*.so' | wc -l` rather than quoting this.
 - `test/` is green (68 passed / 20 skipped as of Task 0.3, 2026-08-04;

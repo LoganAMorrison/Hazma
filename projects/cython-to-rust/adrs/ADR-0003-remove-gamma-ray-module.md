@@ -1,7 +1,7 @@
 # ADR 0003: Remove the broken `hazma.gamma_ray` module
 
 **Date:** 2026-08-03
-**Status:** Proposed (needs Logan's sign-off — it removes a public name)
+**Status:** Accepted (signed off by Logan 2026-08-04)
 **Scope:** Project-scoped (applies only within `projects/cython-to-rust/`).
 
 ## Context
@@ -39,8 +39,8 @@ a shim. The module's public API and its replacement status:
   matrix element: **removed without a direct replacement.** The
   nearest live equivalents are the Altarelli–Parisi approximations
   (`hazma.spectra.dnde_photon_ap_fermion` / `_ap_scalar`); a general
-  `msqrd`-driven FSR generator would be a new feature via
-  `docs/followups/`.
+  `msqrd`-driven FSR generator would be a new feature, tracked at
+  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
 
 (`gamma`/`gamma_point` are the compiled `_gamma_ray` names the module
 wraps, not its public surface.) Docs that reference `hazma.gamma_ray`
@@ -61,5 +61,6 @@ are updated to point at `hazma.spectra`.
   replacement status (`gamma_ray_decay` → `hazma.spectra.dnde_photon`;
   `gamma_ray_fsr` → none; nearest: the Altarelli–Parisi
   approximations). If a maintained equivalent is ever wanted, it
-  enters as a designed feature via `docs/followups/` with its own
-  validation plan, not as part of this migration.
+  enters as a designed feature with its own validation plan —
+  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md)
+  — not as part of this migration.

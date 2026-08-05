@@ -69,8 +69,8 @@ modules and dies with them.
 
 `hazma/gamma_ray.py` is a public-named module that cannot be imported
 today (transitively imports deleted `hazma.rambo`). ADR-0003
-(Proposed) removes it: no working baseline exists to pin a rebuild
-against, and the n-body use case is covered by `hazma.spectra` +
+(Accepted 2026-08-04) removes it: no working baseline exists to pin a
+rebuild against, and the n-body use case is covered by `hazma.spectra` +
 `hazma.phase_space`. The removal is `major` and is absorbed by the
 project-level `version_bump: major` (which Phase 00's
 `deprecated/rambo.py` deletion forces regardless).
