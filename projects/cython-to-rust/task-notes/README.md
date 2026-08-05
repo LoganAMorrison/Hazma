@@ -4,8 +4,8 @@
 **Project:** cython-to-rust
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
-**Related ADRs:** ADR-0001 (accepted), ADR-0002 (**proposed — needs
-Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003 (accepted
+**Related ADRs:** ADR-0001 (accepted), ADR-0002 (accepted 2026-08-04 —
+Phase 03 Tasks 3.2/3.3 no longer gated), ADR-0003 (accepted
 2026-08-04 — Task 0.2 no longer blocked on sign-off)
 **Depends On:** none
 
@@ -38,7 +38,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - All eight phases Complete; zero `.pyx`/`.pxd` in the tree; all 41
   consumed entry points served by `hazma._core` (the 2 unconsumed
   `sigma_xx_to_all` exports dropped in Phase 05); maturin backend live.
-- ADR-0002 accepted (or superseded); ADR-0003 accepted 2026-08-04.
+- ADR-0002 and ADR-0003 both accepted 2026-08-04.
 - Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug, with the aggregated drift table. See
@@ -151,7 +151,7 @@ it from memory.)
 - No GSL-derived (GPL-3) code in tree or dependency graph; cephes
   lineage (`spec_math`) for specfun; netlib-QUADPACK translation for
   the integrator; cyphus crates as out-of-repo oracles only →
-  ADR-0002 (**Proposed**).
+  ADR-0002 (Accepted 2026-08-04 — Hazma stays MIT).
 - Capi-survivor exception: four spectra Cython extensions outlive their
   Phase 04 swap until Phase 06 Task 6.4, because the mediator spectrum
   `.pyx` cimport their `__pyx_capi__` symbols — recorded in the
@@ -216,9 +216,13 @@ it from memory.)
 
 ## Open Questions
 
-- **ADR-0002 sign-off** (Logan): accept the license-clean-numerics
-  decision, or deliberately take the GPL route? Gates Phase 03
-  Tasks 3.2/3.3.
+- ~~**ADR-0002 sign-off** (Logan): accept the license-clean-numerics
+  decision, or deliberately take the GPL route?~~ — **closed
+  2026-08-04: accepted.** Hazma stays MIT and no GPL-3 crate enters the
+  tree or the dependency graph, so **Phase 03 Tasks 3.2/3.3 are
+  unblocked**: `spec_math` (cephes lineage) for specfun, a fresh
+  netlib-QUADPACK translation for the integrator, cyphus as an
+  out-of-repo oracle only.
 - ~~**ADR-0003 sign-off** (Logan): confirm deletion of the
   broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted.**
   It was the last thing standing between Phase 00 and Phase 01; with
@@ -247,8 +251,8 @@ it from memory.)
    phase's `phase-XX/README.md`.
 2. Load the reference file(s) the phase's Prerequisites name — the
    references replace re-reading the Cython audit.
-3. Check Open Questions above; Phase 03 must not start Tasks 3.2/3.3
-   while ADR-0002 is unaccepted.
+3. Check Open Questions above. No ADR sign-off is outstanding — all
+   three project ADRs are Accepted, so no phase carries a decision gate.
 
 **Currently safe to assume:**
 
