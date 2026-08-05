@@ -4,9 +4,9 @@
 - **Source:** cython-to-rust Task 0.3 (PR #37 — CI Lint went red on a
   locally-black-clean tree)
 - **Scope:** cross-cutting
-- **Status:** done — resolved 2026-08-04 on
-  `claude/black-pin-divergence-pyproject-ci-4f5f38` (direction 2, see
-  [Resolution](#resolution)).
+- **Status:** done — resolved 2026-08-04 by
+  [PR #40](https://github.com/LoganAMorrison/Hazma/pull/40) (direction 2,
+  see [Resolution](#resolution)).
 - **Triggers / blockers:** none — but it silently breaks contributors
   today, so it ripens now.
 

@@ -32,4 +32,4 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 
 | Item | Status | Resolution |
 | --- | --- | --- |
-| [`black` pin diverges between pyproject and CI](done/black-pin-divergence-pyproject-vs-ci.md) | done | Pins moved to a single PEP 735 `lint` dependency group that CI installs; repo reformatted with black 26.x (33 files). |
+| [`black` pin diverges between pyproject and CI](done/black-pin-divergence-pyproject-vs-ci.md) | done | [PR #40](https://github.com/LoganAMorrison/Hazma/pull/40) — pins moved to a single PEP 735 `lint` dependency group that CI installs; repo reformatted with black 26.x (33 files). |
