@@ -367,7 +367,12 @@ def positron_decay(
     num_ps_pts: int = 1000,
     num_bins: int = 25,
 ) -> RealArray:
-    r"""Returns total gamma ray spectrum from a set of particles.
+    r"""Removed. Use :func:`hazma.spectra.dnde_positron` instead.
+
+    The signature is kept so existing imports do not break at import time,
+    but every call raises. The Monte-Carlo backend this wrapped
+    (``hazma._positron.positron_decay``) was deleted in the Cython-to-Rust
+    migration; the arguments below are accepted and ignored.
 
     Parameters
     ----------
@@ -387,31 +392,10 @@ def positron_decay(
     num_bins : int {25}, optional
         Number of bins to use.
 
-    Returns
-    -------
-    spec : np.ndarray
-        Total gamma ray spectrum from all final state particles.
-
-    Notes
-    -----
-    The total spectrum is computed using
-
-    .. math::
-        \frac{dN}{dE}(E_{e^{\pm}}) = \sum_{i,j}P_{i}(E_{j})
-        \frac{dN_i}{dE}(E_{e^{\pm}}, E_{j})
-
-    where :math:`i` runs over the final state particles, :math:`j` runs over
-    energies sampled from probability distributions. :math:`P_{i}(E_{j})` is
-    the probability that particle :math:`i` has energy :math:`E_{j}`. The
-    probabilities are computed using ``hazma.phase_space_generator.rambo``. The
-    total number of energies used is ``num_bins``.
-
     Raises
     ------
     NotImplementedError
-        Always. The Monte-Carlo backend this wrapped
-        (``hazma._positron.positron_decay``) was deleted; use
-        :func:`hazma.spectra.dnde_positron` instead.
+        Always.
 
     Examples
     --------

@@ -154,12 +154,24 @@ what was actually worked to.
   `hazma.spectra` kernels give different values than the legacy ones, so
   the comments were regenerated from the built tree rather than carried
   over — carrying them over would have shipped four wrong numbers.
-- **`positron_decay`'s docstring got a `Raises` section.** Its Examples
-  block imported `hazma.positron_spectra`; the function has raised
-  `NotImplementedError` unconditionally for some time. Repointing the
-  example without saying that would have documented a call that always
-  fails. The new example is `hazma.spectra.dnde_positron` and was run
-  before being written down (see Verification).
+- **`positron_decay`'s docstring rewritten as a removal stub.** Its
+  Examples block imported `hazma.positron_spectra`; the function has
+  raised `NotImplementedError` unconditionally for some time. Repointing
+  the example without saying that would have documented a call that
+  always fails. The new example is `hazma.spectra.dnde_positron` and was
+  run before being written down (see Verification).
+  **Review round 1** then caught that adding a `Raises: Always` section
+  left the docstring self-contradictory — its `Returns` and `Notes` still
+  described a spectrum it never produces. Both sections are now gone,
+  along with two pre-existing defects they carried: the summary and
+  `Returns` said "gamma ray spectrum" in the *positron* module (a
+  copy-paste from `gamma_ray.py`), and `Notes` cited
+  ``hazma.phase_space_generator.rambo``, a module path that has never
+  existed. Swept the class: of the 43 `raise NotImplementedError` sites
+  in `hazma/`, every other one is an abstract-base stub, so this was the
+  only concrete public function documenting a return it cannot deliver.
+  The one surviving `phase_space_generator` reference is
+  `hazma/gamma_ray.py:103`, in the module ADR-0003 deletes wholesale.
 - **Dropped `fmin`, `fmax`, and the whole `libc.float` cimport from
   `boost.pyx`.** They were used only by the deleted `integration_bounds`
   and `boost_integrate_linear_interp_massive`. `fmin`/`fmax` still appear
