@@ -6,7 +6,6 @@ import scipy.integrate
 
 from . import alpha
 
-
 ii = complex(0.0, 1.0)
 gev2nb = 389379.3656
 cF0_ = [0.165, 0.695]

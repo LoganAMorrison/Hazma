@@ -6,7 +6,6 @@ import cmath
 from . import Resonance
 from . import alpha
 
-
 # parametrization based on hep-ex/0605109
 
 # set of parameters

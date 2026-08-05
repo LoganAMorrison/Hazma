@@ -72,15 +72,19 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   defects, "gamma ray" prose in the positron module and a
   `hazma.phase_space_generator.rambo` path that never existed).
 - [unpinned-formatter-version] A formatter gate is only meaningful at the
-  version CI runs. `preflight.sh` invokes whatever `black` is on `PATH`, and
-  `pyproject.toml`'s dev extra (`<27.0`) admits a newer major than the Lint
-  job pins (`<25.0`) — so a locally-clean `black --check` can still fail CI,
-  on lines you never meant to touch, and a locally-red one can be a phantom.
-  Check the workflow's pin before trusting or reporting any black/ruff/isort
-  result, and reproduce a lint failure with CI's exact version before
-  "fixing" it (PR #37: black 26.5.1 reformatted a `warnings.warn` into a
-  style black 24.10.0 rejects; the same skew had earlier been recorded as
-  "preflight is red on master", which CI's black says it is not).
+  version CI runs, and `preflight.sh` invokes whatever `black` is on `PATH`.
+  A pin written down in two places will drift, and the drift is invisible:
+  `pyproject.toml`'s dev extra (`<27.0`) once admitted a newer major than
+  the Lint job's own literal pin (`<25.0`), so a locally-clean
+  `black --check` still failed CI on lines nobody meant to touch, and a
+  locally-red one could be a phantom (PR #37: black 26.5.1 reformatted a
+  `warnings.warn` into a style black 24.10.0 rejects; the same skew had
+  earlier been recorded as "preflight is red on master", which it was not).
+  Fixed by deleting the duplicate rather than syncing it — the pins live
+  only in `pyproject.toml`'s `[dependency-groups]`, and both CI and you
+  install `--group lint`. The lesson generalizes past black: a version a
+  gate depends on belongs in exactly one file, and a workflow that
+  re-states it is the bug.
 - [stale-ci-capability-claim] A change to `.github/workflows/` silently
   falsifies every prose description of what CI does. Those descriptions
   live in `docs/agents/` and the skills, not next to the workflow, so

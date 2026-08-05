@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 from . import F4pi
 
-
 br_omega_pi_gamma = 0.084
 
 F4pi.readHadronic_Current()

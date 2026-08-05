@@ -6,7 +6,7 @@ from dataclasses import InitVar, dataclass, field
 from typing import NamedTuple, Optional, Tuple, Union
 
 import numpy as np
-from scipy.special import gamma  # type:ignore
+from scipy.special import gamma  # type: ignore
 
 from hazma import parameters
 

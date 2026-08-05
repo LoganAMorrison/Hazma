@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 from . import FPhiPi
 
-
 # set DM parameters
 # DM to mediator coupling
 gDM = 1.0

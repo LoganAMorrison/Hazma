@@ -497,10 +497,14 @@ local venv repinned to `black>=23.3,<25.0`. This also **corrects a Task
 0.1 finding** that had entered `../README.md` as fact — "black wants to
 reformat 34 files on `origin/master`" was that same version skew; CI's
 black reports the trunk clean. Root cause filed as
-[`docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md),
+[`docs/followups/done/black-pin-divergence-pyproject-vs-ci.md`](../../../../docs/followups/done/black-pin-divergence-pyproject-vs-ci.md),
 class added to `docs/agents/lessons.md` as
 `[unpinned-formatter-version]`, trap documented in
-`docs/agents/environment.md`.
+`docs/agents/environment.md`. **Since resolved** (2026-08-04): the pin
+lives once, in `pyproject.toml`'s `[dependency-groups]` `lint` group,
+and the repo was reformatted to black 26.x — so the workaround recorded
+above (repin the local venv to `<25.0`) is obsolete. Install
+`--group lint`.
 
 isort was brought to green because every remaining complaint sat in a
 file this task already edits. Per-file ruff, branch vs trunk:

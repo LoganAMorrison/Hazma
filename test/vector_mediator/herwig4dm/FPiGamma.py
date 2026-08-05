@@ -5,7 +5,6 @@ import cmath
 from . import Resonance
 from . import alpha
 
-
 # parametrization based on arXiv: 1601.08061
 
 # Set of parameters obtained from the fit

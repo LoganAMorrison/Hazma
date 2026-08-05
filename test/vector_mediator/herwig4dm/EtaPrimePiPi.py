@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 
 from . import FEtaPrimePiPi
 
-
 xSM = []
 ySM = []
 xDP = []

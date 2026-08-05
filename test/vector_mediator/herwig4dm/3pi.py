@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 from . import F3pi
 
-
 ii = complex(0.0, 1.0)
 # from GeV to nb units for data comparison
 gev2nb = 389379.3656

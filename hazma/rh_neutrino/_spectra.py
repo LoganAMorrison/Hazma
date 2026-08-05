@@ -14,7 +14,6 @@ from hazma.parameters import standard_model_masses as sm_masses
 from ._proto import SingleRhNeutrinoModel, Generation
 from . import _widths as rhn_widths
 
-
 _LEPTON_STRS = ["e", "mu", "tau"]
 _NEUTRINO_STRS = ["ve", "vm", "vt"]
 

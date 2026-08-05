@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 
 from . import FK
 
-
 # energy range SM
 low_lim = 2.0 * FK.mK0
 upp_lim = 2.0

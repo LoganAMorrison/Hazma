@@ -4,7 +4,9 @@
 - **Source:** cython-to-rust Task 0.3 (PR #37 — CI Lint went red on a
   locally-black-clean tree)
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done — resolved 2026-08-04 on
+  `claude/black-pin-divergence-pyproject-ci-4f5f38` (direction 2, see
+  [Resolution](#resolution)).
 - **Triggers / blockers:** none — but it silently breaks contributors
   today, so it ripens now.
 
@@ -84,3 +86,60 @@ rule that updates the workflow pin alongside the pyproject one.
   fast-moving. The same class of drift applies to it, and CI's ruff step
   is `--isolated --select E9,F63,F7,F82`, so it is much less exposed —
   worth confirming rather than assuming while fixing this.
+
+## Resolution
+
+**Direction 2**, maintainer's call: CI moves to modern black and the
+repo is reformatted to match.
+
+The pins now live in exactly one place —
+`pyproject.toml`'s PEP 735 `[dependency-groups]`:
+
+<!-- markdownlint-disable MD013 -- pin strings -->
+```toml
+[dependency-groups]
+lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
+dev = [{ include-group = "lint" }, "pytest>=7.0"]
+```
+<!-- markdownlint-enable MD013 -->
+
+and `.github/workflows/ci.yml`'s Lint job installs that group
+(`python -m pip install --group lint`) instead of repeating a literal
+version. A group, not the `dev` extra: `--group` installs only those
+packages, so the Lint job still does not build the Cython extensions —
+`pip install -e '.[dev]'` would have made a formatting check compile 32
+extension modules. The old `[project.optional-dependencies] dev` extra
+is gone; the documented dev setup is now `pip install -e . --group dev`
+(pip >= 25.1), which also brings `pytest` for the preflight gate.
+
+`black hazma test` under black 26.5.1 then reformatted **33 files, +59
+/ −109 lines** — all formatting: `(a, b) = f()` → `a, b = f()`,
+`# type:ignore` → `# type: ignore`, one-line docstring collapse, blank
+lines after imports, and the "hug" of a sole multiline string argument
+that started this. Verified against the same tree, same commands:
+
+<!-- markdownlint-disable MD013 -- measurement table -->
+| Gate | Before | After |
+| --- | --- | --- |
+| `black --check hazma test` (26.5.1) | 33 reformat / 191 clean | **224 clean** |
+| `ruff check --isolated --select E9,F63,F7,F82` (CI's form) | passes | passes |
+| `isort --check-only hazma test` | 141 error lines | 134 |
+| `ruff check hazma test` (configured) | 6619 | 6611 |
+| `pytest` | 68 passed / 20 skipped | 68 passed / 20 skipped |
+<!-- markdownlint-enable MD013 -->
+
+isort and configured-ruff both improved because black collapsed
+constructs they were flagging; neither is a gate CI runs.
+
+Two things deliberately **not** done:
+
+- No `.github/dependabot.yml` `ignore` rule. Dependabot's unrestricted
+  `pip` rule is what widened the pyproject pin in PR #27, but with the
+  workflow no longer carrying a second pin there is nothing left to
+  desync — a future widening PR just moves the one pin, and its CI run
+  is an honest test of whether the new major reformats the repo.
+  Whether Dependabot reads PEP 735 groups at all is untested here; if it
+  stops proposing black bumps, that is a downgrade in nagging, not in
+  correctness.
+- No `CHANGELOG.md` entry. Nothing on the public Python API moved —
+  this is formatting and dev tooling only.

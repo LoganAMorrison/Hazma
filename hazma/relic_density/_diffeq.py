@@ -11,7 +11,6 @@ from ._thermal_functions import weq
 from ._thermal_functions import sm_sqrt_gstar
 from ._thermal_functions import thermal_cross_section
 
-
 # ----------------------------------------------- #
 # Functions for solving the Bolzmann equation     #
 # see arXiv:1204.3622v3 for detailed explaination #

@@ -20,7 +20,6 @@ from .altarelli_parisi import (
     dnde_photon_ap_fermion as _ap_fermion,
 )
 
-
 MSqrd = Union[Callable[[Any], Any], Callable[[Any, Any], Any]]
 
 # Currently implemented backend integrators

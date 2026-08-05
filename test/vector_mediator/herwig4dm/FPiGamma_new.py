@@ -4,7 +4,6 @@ import math
 from . import Resonance
 from . import alpha
 
-
 # parametrization losely based on https://arxiv.org/pdf/1711.00820.pdf
 
 # fpi_= 0.092663579634360449

@@ -1148,11 +1148,9 @@ class KineticMixingGeV(VectorMediatorGeV):
         self.gvmumu = -Qe * eps * qe
 
     def __cannot_set_error(self, param: str) -> AttributeError:
-        return AttributeError(
-            f"""
+        return AttributeError(f"""
         Cannot set {param}. Instead set 'eps' or use the 'VectorMediatorGeV'
-        for more a general coupling structure."""
-        )
+        for more a general coupling structure.""")
 
     # Hide underlying properties' setters
     @VectorMediatorGeV.gvuu.setter
@@ -1238,11 +1236,9 @@ class BLGeV(VectorMediatorGeV):
         """
 
     def __cannot_set_error(self, param: str) -> AttributeError:
-        return AttributeError(
-            f"""
+        return AttributeError(f"""
         Cannot set {param}. Instead use the 'VectorMediatorGeV'
-        for more a general coupling structure."""
-        )
+        for more a general coupling structure.""")
 
     def _update_charges(self) -> None:
         gq = 1.0 / 3.0

@@ -10,7 +10,6 @@ from scipy.interpolate import interp1d
 from . import Resonance
 from . import alpha
 
-
 """
 Parametrization taken from 0804.0359 with new fit values
 """
@@ -152,9 +151,9 @@ def phaseSpace1(m0, m1, m2, m3, m4, M12, G12, M34, G34):
         rho = rhomin + rhomax * random.random()
         m122 = max(m12min**2, min(m12max**2, M12**2 + M12 * G12 * math.tan(rho)))
         m12 = math.sqrt(m122)
-    (q1, q2) = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m12, m34)
-    (p1, p2) = twoBodyDecay(q1, m12, m1, m2)
-    (p3, p4) = twoBodyDecay(q2, m34, m3, m4)
+    q1, q2 = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m12, m34)
+    p1, p2 = twoBodyDecay(q1, m12, m1, m2)
+    p3, p4 = twoBodyDecay(q2, m34, m3, m4)
     return (p1, p2, p3, p4)
 
 
@@ -198,7 +197,7 @@ def phaseSpace2(m0, m1, m2, m3, m4, M234, G234, M34, G34):
     rho = rhomin + rhomax * random.random()
     m2342 = max(m234min**2, min(m234max**2, M234**2 + M234 * G234 * math.tan(rho)))
     m234 = math.sqrt(m2342)
-    (p1, q234) = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m1, m234)
+    p1, q234 = twoBodyDecay(numpy.array([m0, 0.0, 0.0, 0.0]), m0, m1, m234)
     m34min = m3 + m4
     m34max = m234 - m2
     rhomin = math.atan2(m34min**2 - M34**2, M34 * G34)
@@ -206,8 +205,8 @@ def phaseSpace2(m0, m1, m2, m3, m4, M234, G234, M34, G34):
     rho = rhomin + rhomax * random.random()
     m342 = max(m34min**2, min(m34max**2, M34**2 + M34 * G34 * math.tan(rho)))
     m34 = math.sqrt(m342)
-    (p2, q34) = twoBodyDecay(q234, m234, m2, m34)
-    (p3, p4) = twoBodyDecay(q34, m34, m3, m4)
+    p2, q34 = twoBodyDecay(q234, m234, m2, m34)
+    p3, p4 = twoBodyDecay(q34, m34, m3, m4)
     return (p1, p2, p3, p4)
 
 
@@ -434,61 +433,61 @@ functions for phase space calculation
 def generatepm00(rootS):
     rnd = random.random()
     if rnd < 0.25:
-        (p01, p02, pp, pm) = phaseSpace1(
+        p01, p02, pp, pm = phaseSpace1(
             rootS, mpi0, mpi0, mpip, mpip, mf0, gf0, mRho, gRho
         )
     elif rnd < 0.5:
         rnd = 4.0 * rnd - 1.0
         if rnd < 0.25:
-            (pm, p02, p01, pp) = phaseSpace2(
+            pm, p02, p01, pp = phaseSpace2(
                 rootS, mpip, mpi0, mpi0, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.5:
-            (pm, p01, p02, pp) = phaseSpace2(
+            pm, p01, p02, pp = phaseSpace2(
                 rootS, mpip, mpi0, mpi0, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.75:
-            (pp, p02, p01, pm) = phaseSpace2(
+            pp, p02, p01, pm = phaseSpace2(
                 rootS, mpip, mpi0, mpi0, mpip, ma1, ga1, mRho, gRho
             )
         else:
-            (pp, p01, p02, pm) = phaseSpace2(
+            pp, p01, p02, pm = phaseSpace2(
                 rootS, mpip, mpi0, mpi0, mpip, ma1, ga1, mRho, gRho
             )
     elif rnd < 0.75:
         rnd = 4.0 * rnd - 2.0
         if rnd < 0.5:
-            (p01, pm, p02, pp) = phaseSpace1(
+            p01, pm, p02, pp = phaseSpace1(
                 rootS, mpi0, mpip, mpi0, mpip, mRho, gRho, mRho, gRho
             )
         else:
-            (p02, pm, p01, pp) = phaseSpace1(
+            p02, pm, p01, pp = phaseSpace1(
                 rootS, mpi0, mpip, mpi0, mpip, mRho, gRho, mRho, gRho
             )
     else:
         rnd = 4.0 * rnd - 3.0
         if rnd < 1.0 / 6.0:
-            (p01, p02, pp, pm) = phaseSpace2(
+            p01, p02, pp, pm = phaseSpace2(
                 rootS, mpi0, mpi0, mpip, mpip, mOmega, gOmega, mRho, gRho
             )
         elif rnd < 1.0 / 3.0:
-            (p02, p01, pp, pm) = phaseSpace2(
+            p02, p01, pp, pm = phaseSpace2(
                 rootS, mpi0, mpi0, mpip, mpip, mOmega, gOmega, mRho, gRho
             )
         elif rnd < 0.5:
-            (p01, pp, p02, pm) = phaseSpace2(
+            p01, pp, p02, pm = phaseSpace2(
                 rootS, mpi0, mpip, mpi0, mpip, mOmega, gOmega, mRho, gRho
             )
         elif rnd < 2.0 / 3.0:
-            (p02, pp, p01, pm) = phaseSpace2(
+            p02, pp, p01, pm = phaseSpace2(
                 rootS, mpi0, mpip, mpi0, mpip, mOmega, gOmega, mRho, gRho
             )
         elif rnd < 5.0 / 6.0:
-            (p01, pm, p02, pp) = phaseSpace2(
+            p01, pm, p02, pp = phaseSpace2(
                 rootS, mpi0, mpip, mpi0, mpip, mOmega, gOmega, mRho, gRho
             )
         else:
-            (p02, pm, p01, pp) = phaseSpace2(
+            p02, pm, p01, pp = phaseSpace2(
                 rootS, mpi0, mpip, mpi0, mpip, mOmega, gOmega, mRho, gRho
             )
 
@@ -688,53 +687,53 @@ def generatepmpm(rootS):
     if rnd < 0.5:
         rnd *= 2.0
         if rnd < 0.25:
-            (pp1, pm1, pp2, pm2) = phaseSpace1(
+            pp1, pm1, pp2, pm2 = phaseSpace1(
                 rootS, mpip, mpip, mpip, mpip, mf0, gf0, mRho, gRho
             )
         elif rnd < 0.5:
-            (pp1, pm2, pp2, pm1) = phaseSpace1(
+            pp1, pm2, pp2, pm1 = phaseSpace1(
                 rootS, mpip, mpip, mpip, mpip, mf0, gf0, mRho, gRho
             )
         elif rnd < 0.75:
-            (pp2, pm1, pp1, pm2) = phaseSpace1(
+            pp2, pm1, pp1, pm2 = phaseSpace1(
                 rootS, mpip, mpip, mpip, mpip, mf0, gf0, mRho, gRho
             )
         else:
-            (pp2, pm2, pp1, pm1) = phaseSpace1(
+            pp2, pm2, pp1, pm1 = phaseSpace1(
                 rootS, mpip, mpip, mpip, mpip, mf0, gf0, mRho, gRho
             )
     else:
         rnd = 2.0 * rnd - 1.0
         if rnd < 0.125:
-            (pp1, pm1, pp2, pm2) = phaseSpace2(
+            pp1, pm1, pp2, pm2 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.25:
-            (pp1, pm2, pp2, pm1) = phaseSpace2(
+            pp1, pm2, pp2, pm1 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.375:
-            (pp2, pm1, pp1, pm2) = phaseSpace2(
+            pp2, pm1, pp1, pm2 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.5:
-            (pp2, pm2, pp1, pm1) = phaseSpace2(
+            pp2, pm2, pp1, pm1 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.625:
-            (pm1, pp1, pm2, pp2) = phaseSpace2(
+            pm1, pp1, pm2, pp2 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.75:
-            (pm1, pp2, pm2, pp1) = phaseSpace2(
+            pm1, pp2, pm2, pp1 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         elif rnd < 0.875:
-            (pm2, pp1, pm1, pp2) = phaseSpace2(
+            pm2, pp1, pm1, pp2 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
         else:
-            (pm2, pp2, pm1, pp1) = phaseSpace2(
+            pm2, pp2, pm1, pp1 = phaseSpace2(
                 rootS, mpip, mpip, mpip, mpip, ma1, ga1, mRho, gRho
             )
     wgt = 0.125 * (
@@ -1018,7 +1017,7 @@ def readHadronic_Current():
         en = key
         s = en**2
         x.append(en)
-        (npoints, wgt, wgt2) = val
+        npoints, wgt, wgt2 = val
         hadcurr, hadcurr_err = hadronic_current(s, npoints, wgt, wgt2, omegaOnly=False)
         y.append(abs(hadcurr))
     hadronic_interpolator_n = interp1d(x, y, kind="cubic", fill_value=(0.0, 0.0))
@@ -1029,7 +1028,7 @@ def readHadronic_Current():
         en = key
         s = en**2
         x.append(en)
-        (npoints, wgt, wgt2) = val
+        npoints, wgt, wgt2 = val
         hadcurr, hadcurr_err = hadronic_current(s, npoints, wgt, wgt2, omegaOnly=False)
         y.append(abs(hadcurr))
     hadronic_interpolator_c = interp1d(x, y, kind="cubic", fill_value=(0.0, 0.0))

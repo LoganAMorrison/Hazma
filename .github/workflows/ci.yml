@@ -21,7 +21,14 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install linters
-        run: python -m pip install "black>=23.3,<25.0" ruff
+        # The pins live in pyproject.toml's [dependency-groups] `lint`
+        # group, never here. A literal pin in this file is what drifted
+        # from the pyproject one and made Lint reject a locally-clean
+        # tree. `--group` needs pip >= 25.1 and installs only the group,
+        # so this job still does not build the Cython extensions.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --group lint
       - name: Check formatting with black
         run: black --check --diff hazma test
       - name: Lint with ruff (critical errors only)

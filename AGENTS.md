@@ -86,6 +86,7 @@ implementation*. Public callers go through `hazma.spectra`,
 
 ```sh
 pip install -e .          # build the Cython extensions in place
+pip install --group dev   # black, isort, ruff, pytest at their pinned versions
 pytest                    # full suite
 pytest test/spectra -q    # one area
 black hazma test          # format
@@ -112,7 +113,10 @@ the tree you edited, not an installed copy.
   annotations is supported (`runtime-typing = true`), so do not stringify
   annotations that users may resolve.
 - **Formatting is black (88 cols) + isort (black profile).** Do not
-  hand-format around them.
+  hand-format around them, and do not install them by hand — the pins
+  live once, in `pyproject.toml`'s `[dependency-groups]`, and CI
+  installs that same `lint` group. A version pinned in two places drifts
+  and turns CI red on lines nobody touched.
 - **Naming:** modules and functions `snake_case`, classes `UpperCamel`,
   constants `SCREAMING_SNAKE`. Physics symbols keep their conventional
   spelling in docstrings (`dN/dE`, `⟨σv⟩`), not in identifiers.
