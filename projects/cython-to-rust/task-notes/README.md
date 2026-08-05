@@ -5,8 +5,8 @@
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (**proposed — needs
-Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003
-(**proposed — needs Logan's sign-off before Phase 00 Task 0.2**)
+Logan's sign-off before Phase 03 Tasks 3.2/3.3**), ADR-0003 (accepted
+2026-08-04 — Task 0.2 no longer blocked on sign-off)
 **Depends On:** none
 
 ## Objective
@@ -38,7 +38,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - All eight phases Complete; zero `.pyx`/`.pxd` in the tree; all 41
   consumed entry points served by `hazma._core` (the 2 unconsumed
   `sigma_xx_to_all` exports dropped in Phase 05); maturin backend live.
-- ADR-0002 and ADR-0003 accepted (or superseded).
+- ADR-0002 accepted (or superseded); ADR-0003 accepted 2026-08-04.
 - Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug, with the aggregated drift table. See
@@ -169,10 +169,11 @@ it from memory.)
 - **ADR-0002 sign-off** (Logan): accept the license-clean-numerics
   decision, or deliberately take the GPL route? Gates Phase 03
   Tasks 3.2/3.3.
-- **ADR-0003 sign-off** (Logan): confirm deletion of the
-  broken-on-import `hazma.gamma_ray`. Gates Phase 00 Task 0.2; if
-  rejected, the phase halts for a plan revision (rebuild would be a
-  new feature via `docs/followups/`, not this project).
+- ~~**ADR-0003 sign-off** (Logan): confirm deletion of the
+  broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted.**
+  Task 0.2 is unblocked; the replacement-free `gamma_ray_fsr` case is
+  tracked at
+  [`../../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
 - ~~Whether the mediator cross-section `.pyx` include a constants

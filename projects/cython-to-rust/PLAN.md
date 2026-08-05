@@ -65,7 +65,7 @@ raises (behavior tightening at invalid inputs only).
 `version_bump: major` is driven by API removals, not by numbers:
 Phase 00 deletes `hazma/deprecated/rambo.py` (any removal from
 `hazma/deprecated/` is `major` per `docs/versioning.md` and
-`AGENTS.md`) and, per ADR-0003 (proposed), removes the
+`AGENTS.md`) and, per ADR-0003 (accepted), removes the
 broken-on-import `hazma.gamma_ray` module. The running numerical
 record lives in `task-notes/README.md` ("Numerical impact so far");
 the closing CHANGELOG aggregates it per function.
@@ -78,7 +78,7 @@ the closing CHANGELOG aggregates it per function.
 | [`references/numerics-replacements.md`](references/numerics-replacements.md) | quad call-site/tolerance table, specfun facts + conventions, `np.interp`/boost-integral specs, cyphus-crate assessment, dispatch contract |
 | [`adrs/ADR-0001-rust-pyo3-maturin-over-pybind11.md`](adrs/ADR-0001-rust-pyo3-maturin-over-pybind11.md) | Framework choice (Accepted) |
 | [`adrs/ADR-0002-license-clean-numerics.md`](adrs/ADR-0002-license-clean-numerics.md) | GSL/GPL boundary, cephes + netlib-QUADPACK provenance (**Proposed — sign-off gates Phase 03**) |
-| [`adrs/ADR-0003-remove-gamma-ray-module.md`](adrs/ADR-0003-remove-gamma-ray-module.md) | Remove broken `hazma.gamma_ray` (**Proposed — sign-off gates Task 0.2/0.5**) |
+| [`adrs/ADR-0003-remove-gamma-ray-module.md`](adrs/ADR-0003-remove-gamma-ray-module.md) | Remove broken `hazma.gamma_ray` (Accepted 2026-08-04 — Task 0.2 unblocked) |
 | [`rules.md`](rules.md) | Parity discipline, constants bit-parity, licensing, Rust conventions |
 
 ## Phases
@@ -133,9 +133,9 @@ task blocks here.
 See [`../../docs/workflow.md#adr-placement`](../../docs/workflow.md#adr-placement)
 for when to write an ADR and where it lives. Patch the affected
 `PLAN.md` / phase file / `rules.md` when canonical behavior changes —
-known pending: the status flips of ADR-0002 (license-clean numerics)
-and ADR-0003 (`hazma.gamma_ray` removal), both Proposed and awaiting
-sign-off.
+known pending: the status flip of ADR-0002 (license-clean numerics),
+still Proposed and awaiting sign-off. ADR-0003 (`hazma.gamma_ray`
+removal) was accepted 2026-08-04.
 
 ## Closing this project
 
@@ -150,8 +150,11 @@ against the post-cutover plumbing). See
 
 ### Anticipated ADRs
 
-- ADR-0003 (written, Proposed): removal of the broken-on-import
-  `hazma.gamma_ray` module — Task 0.5 executes it once accepted.
+- ADR-0003 (Accepted 2026-08-04): removal of the broken-on-import
+  `hazma.gamma_ray` module — Task 0.5 executes the remaining steps
+  (replacement status recorded, docs repointed); the replacement-free
+  `gamma_ray_fsr` case is tracked at
+  [`../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../docs/followups/todo/msqrd-driven-fsr-generator.md).
 - Possible: QUADPACK-port deviation record, if faithful translation
   proves impractical for `qelg` and a documented algorithmic
   substitution is made instead (would revise corpus budgets).

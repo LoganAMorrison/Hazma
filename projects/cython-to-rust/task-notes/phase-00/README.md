@@ -5,7 +5,8 @@
 **Phase:** 00
 **Status:** In Progress (Task 0.1 Complete)
 **Plan References:** `../../phases/phase-00-dead-code-purge.md`
-**Related ADRs:** ADR-0003 (proposed — Task 0.5 ratifies; gates Task 0.2)
+**Related ADRs:** ADR-0003 (accepted 2026-08-04 — Task 0.2 unblocked;
+Task 0.5 still owes the execution steps)
 **Depends On:** none
 
 ## Objective
@@ -18,10 +19,10 @@ purge.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 0.1 | Relocate legacy constants header | — | Complete | [task-0.1-relocate-constants.md](task-0.1-relocate-constants.md) |
-| 0.2 | Delete phase-space / gamma-ray slice | 0.1, 0.5 (ADR-0003 accepted) | Not started | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
+| 0.2 | Delete phase-space / gamma-ray slice | 0.1 (ADR-0003 accepted 2026-08-04) | Not started | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
 | 0.3 | Delete superseded kernels + helpers | 0.1 | Not started | [task-0.3-delete-superseded.md](task-0.3-delete-superseded.md) |
 | 0.4 | Prune build and packaging config | 0.2, 0.3 | Not started | [task-0.4-prune-build.md](task-0.4-prune-build.md) |
-| 0.5 | Ratify + execute ADR-0003 (`gamma_ray`) | — | Not started | [task-0.5-gamma-ray-decision.md](task-0.5-gamma-ray-decision.md) |
+| 0.5 | Execute ADR-0003 (`gamma_ray`) — ratified 2026-08-04 | — | In Progress (ADR accepted; docs repoint pending) | [task-0.5-gamma-ray-decision.md](task-0.5-gamma-ray-decision.md) |
 
 ## Exit Criteria
 
@@ -93,9 +94,12 @@ purge.
 
 ## Open Questions
 
-- ADR-0003 sign-off (see project-level Open Questions) — required
-  before Task 0.2 deletes anything. Task 0.3 is unblocked and does not
-  depend on it.
+- ~~ADR-0003 sign-off — required before Task 0.2 deletes anything~~ —
+  **closed 2026-08-04: accepted.** Task 0.2 is unblocked; what remains
+  in Task 0.5 is execution (record the replacement status in the task
+  note, repoint docs off `hazma.gamma_ray`). The replacement-free
+  `gamma_ray_fsr` case now lives at
+  [`docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
 - `WIDTH_K` / `WIDTH_PI` in the legacy tables are written with `**`
   where a decimal exponent was meant (no consumer today) — deferred to
   [`docs/followups/todo/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/todo/legacy-parameters-width-exponent-bug.md).
@@ -108,8 +112,10 @@ purge.
 
 **For the next agent working in Phase 00:** read `../../PLAN.md`, then
 `../README.md`, then this file, then the phase file. Task 0.1 is done.
-Next is **Task 0.3** (unblocked, depends only on 0.1) or **Task 0.5**
-(the ADR-0003 ratification that gates 0.2 — needs Logan, not code).
+ADR-0003 was accepted 2026-08-04, so **Task 0.2** is unblocked as well;
+**Task 0.3** (depends only on 0.1) and **Task 0.5**'s remaining
+execution steps (docs repoint, replacement status recorded) are also
+open.
 
 **Currently safe to assume:** the dead-code evidence table in the
 inventory reference was verified against 2.1.0. Nothing under
