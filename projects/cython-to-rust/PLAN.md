@@ -77,7 +77,7 @@ the closing CHANGELOG aggregates it per function.
 | [`references/cython-inventory.md`](references/cython-inventory.md) | Dead-code map with evidence, live surface + entry-point tables, C-level dependency DAG, data files, audit bug list |
 | [`references/numerics-replacements.md`](references/numerics-replacements.md) | quad call-site/tolerance table, specfun facts + conventions, `np.interp`/boost-integral specs, cyphus-crate assessment, dispatch contract |
 | [`adrs/ADR-0001-rust-pyo3-maturin-over-pybind11.md`](adrs/ADR-0001-rust-pyo3-maturin-over-pybind11.md) | Framework choice (Accepted) |
-| [`adrs/ADR-0002-license-clean-numerics.md`](adrs/ADR-0002-license-clean-numerics.md) | GSL/GPL boundary, cephes + netlib-QUADPACK provenance (**Proposed — sign-off gates Phase 03**) |
+| [`adrs/ADR-0002-license-clean-numerics.md`](adrs/ADR-0002-license-clean-numerics.md) | GSL/GPL boundary, cephes + netlib-QUADPACK provenance (Accepted 2026-08-04 — Phase 03 Tasks 3.2/3.3 unblocked) |
 | [`adrs/ADR-0003-remove-gamma-ray-module.md`](adrs/ADR-0003-remove-gamma-ray-module.md) | Remove broken `hazma.gamma_ray` (Accepted 2026-08-04 — Task 0.2 unblocked) |
 | [`rules.md`](rules.md) | Parity discipline, constants bit-parity, licensing, Rust conventions |
 
@@ -114,8 +114,8 @@ task blocks here.
 
 ## Dependencies
 
-- Requires: nothing upstream. ADR-0002 acceptance gates Phase 03
-  Tasks 3.2/3.3.
+- Requires: nothing upstream. ADR-0002 was accepted 2026-08-04, so
+  Phase 03 Tasks 3.2/3.3 carry no license gate.
 - External facts this plan leans on (re-verify if stale): `spec_math`
   0.1.6 (MIT OR Apache-2.0) provides `bessel_k1`/`bessel_kn`/`li2`;
   PyO3 abi3-py310 wheels cover CPython ≥3.10; the rust-cyphus crates
@@ -132,10 +132,10 @@ task blocks here.
 
 See [`../../docs/workflow.md#adr-placement`](../../docs/workflow.md#adr-placement)
 for when to write an ADR and where it lives. Patch the affected
-`PLAN.md` / phase file / `rules.md` when canonical behavior changes —
-known pending: the status flip of ADR-0002 (license-clean numerics),
-still Proposed and awaiting sign-off. ADR-0003 (`hazma.gamma_ray`
-removal) was accepted 2026-08-04.
+`PLAN.md` / phase file / `rules.md` when canonical behavior changes.
+All three project ADRs are Accepted: ADR-0001 (framework), ADR-0002
+(license-clean numerics, 2026-08-04) and ADR-0003 (`hazma.gamma_ray`
+removal, 2026-08-04). Nothing in this plan is awaiting a sign-off.
 
 ## Closing this project
 

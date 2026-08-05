@@ -1,8 +1,8 @@
 # ADR 0002: License-clean numerics — cephes in-tree, GSL-derived code out
 
 **Date:** 2026-08-03
-**Status:** Proposed (needs Logan's sign-off — it forecloses the
-"relicense Hazma to GPL" alternative)
+**Status:** Accepted (signed off by Logan 2026-08-04 — Hazma stays MIT;
+no GPL-3 crates)
 **Scope:** Project-scoped (applies only within `projects/cython-to-rust/`).
 
 ## Context
@@ -64,8 +64,9 @@ to the upstream QUADPACK sources or the published algorithms.
   zero live callers); the corpus and per-integrand scipy comparisons
   catch translation faults; cyphus-integration's passing test suite
   demonstrates the job is bounded and was done once by the same author.
-- **Foreclosed alternative (why sign-off is needed):** accepting GPL-3
+- **Foreclosed alternative (settled by the sign-off):** accepting GPL-3
   for the wheels and depending on modernized cyphus crates directly.
-  Rejected by default because it changes Hazma's license terms for
-  every downstream user and requires co-author agreement, to save at
-  most a few days of foundation work.
+  Rejected because it changes Hazma's license terms for every
+  downstream user and requires co-author agreement, to save at most a
+  few days of foundation work. Hazma stays MIT; revisiting this needs a
+  new ADR superseding this one, not a judgment call inside a task.

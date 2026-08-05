@@ -18,8 +18,9 @@ uses it.
 
 ## Prerequisites
 
-- Phase 02 complete; **ADR-0002 accepted** (gates Tasks 3.2/3.3 —
-  confirm status before starting them).
+- Phase 02 complete. **ADR-0002 is Accepted (2026-08-04)** — Tasks
+  3.2/3.3 are ungated, and their source provenance is fixed by it:
+  cephes lineage and netlib QUADPACK only, nothing GSL-derived.
 - Read `../references/numerics-replacements.md` in full.
 
 ## Tasks
