@@ -61,6 +61,26 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   use the limited API — claim abi3 *wheels* only after the last
   version-specific extension is gone, and verify extension-level abi3 via
   the `.abi3.so` filename instead (PR #35).
+- [docstring-section-not-reconciled] Adding a section to an existing
+  docstring (a `Raises`, a new parameter, a changed unit) without re-reading
+  the rest of it ships a self-contradictory doc — the new text is right and
+  the old sections still describe the previous behavior, which reads as
+  authoritative. Treat a docstring as one artifact: when a function's
+  contract changes, reconcile summary, `Parameters`, `Returns`, `Notes`, and
+  `Raises` together (PR #37: a `Raises: Always` was added to a removal stub
+  whose `Returns`/`Notes` still promised a spectrum — and carried two older
+  defects, "gamma ray" prose in the positron module and a
+  `hazma.phase_space_generator.rambo` path that never existed).
+- [unpinned-formatter-version] A formatter gate is only meaningful at the
+  version CI runs. `preflight.sh` invokes whatever `black` is on `PATH`, and
+  `pyproject.toml`'s dev extra (`<27.0`) admits a newer major than the Lint
+  job pins (`<25.0`) — so a locally-clean `black --check` can still fail CI,
+  on lines you never meant to touch, and a locally-red one can be a phantom.
+  Check the workflow's pin before trusting or reporting any black/ruff/isort
+  result, and reproduce a lint failure with CI's exact version before
+  "fixing" it (PR #37: black 26.5.1 reformatted a `warnings.warn` into a
+  style black 24.10.0 rejects; the same skew had earlier been recorded as
+  "preflight is red on master", which CI's black says it is not).
 - [stale-ci-capability-claim] A change to `.github/workflows/` silently
   falsifies every prose description of what CI does. Those descriptions
   live in `docs/agents/` and the skills, not next to the workflow, so

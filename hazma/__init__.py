@@ -31,15 +31,6 @@ __version__ = VERSION
 #     vector_mediator,
 # )
 
-# with warnings.catch_warnings():
-#     warnings.simplefilter("ignore", category=DeprecationWarning)
-#     # Import as the old names
-#     from hazma import (
-#         __decay as decay,
-#         __neutrino_spectra as neutrino_spectra,
-#         __positron_spectra as positron_spectra,
-#     )
-
 # __all__ = [
 #     "background_model",
 #     "cmb",
@@ -60,8 +51,4 @@ __version__ = VERSION
 #     "single_channel",
 #     "theory",
 #     "vector_mediator",
-#     # Deprecated
-#     "decay",
-#     "neutrino_spectra",
-#     "positron_spectra",
 # ]

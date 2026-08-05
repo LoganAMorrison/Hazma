@@ -19,7 +19,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
-| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1 done) |
+| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.3 done; ADR-0003 accepted, so 0.2/0.4/0.5 are unblocked) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
@@ -71,16 +71,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   under a different NumPy; their mtimes suppress re-cythonization and
   the build dies inside generated code with a misleading error
   (Task 0.1). Clean, the tree builds on Cython 3.2.9 / NumPy 2.5.1.
-- **Preflight's Python gates are red on `origin/master` itself** —
-  measured at the trunk in Task 0.1: `black --check hazma test` wants to
-  reformat 34 files, `ruff check hazma test` reports 6844 errors, isort
-  errors on several `test/` files. Do not read these as your regression;
-  compare against the trunk baseline and judge only the delta. Two
-  invocation traps, both hit in Task 0.1: passing `--paths` a `.pxd`
-  makes black/ruff parse Cython as Python and fail, and passing it a
-  _directory_ drags in that directory's pre-existing unformatted `.py`.
-  Scope `--paths` to changed files, and omit it entirely when the diff
-  has no Python.
+- **Preflight's black/isort verdict on `origin/master` — corrected in
+  Task 0.3.** Task 0.1 recorded "black wants to reformat 34 files, isort
+  errors on several `test/` files" as a property of the trunk. **It is
+  not.** That was an unpinned newer black: CI pins
+  `black>=23.3,<25.0` while `pyproject.toml`'s dev extra allows
+  `<27.0`, and the two majors format differently. At `cd0be2b`, black
+  **24.10.0** reports `249 files would be left unchanged` — CI's Lint
+  job is green on the trunk, and a reformat made with black 26 turns it
+  red (PR #37). Install CI's version
+  (`uv pip install "black>=23.3,<25.0"`) before trusting any black
+  result. Tracked in
+  [`../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md);
+  the class is `[unpinned-formatter-version]` in `docs/agents/lessons.md`.
+- **`ruff check hazma test` really is red on the trunk (6844 findings),
+  and that does not block CI.** CI's ruff step is
+  `ruff check --isolated --select E9,F63,F7,F82`, which deliberately
+  ignores `pyproject.toml`'s much stricter config. Judge the configured
+  form as a delta against the trunk; run the `--isolated` form to
+  predict CI.
+- Two `--paths` invocation traps, both hit in Task 0.1: passing it a
+  `.pxd` makes black/ruff parse Cython as Python and fail, and passing
+  it a _directory_ drags in that directory's pre-existing unformatted
+  `.py`. Scope `--paths` to changed files, and omit it entirely when the
+  diff has no Python.
 - `hazma._gamma_ray.gamma_ray_generator` compiles but has never been
   importable on `master` (`from hazma import rambo`; `hazma/rambo.py`
   does not exist). It is still a live `Extension` in `setup.py`, so it
@@ -99,6 +113,32 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   final-state mode — 64 arrays — before and after, **bit-for-bit
   identical** (max relative deviation 0.000e+00). Expected: `include`
   is a textual paste and the values moved verbatim.
+- **Task 0.3 (dead-code purge): compiled surface unchanged; two
+  declared drifts in the Cython→pure-Python helper swap.**
+  - _Compiled spectra and cross sections: no change._ Every
+    compiled-backed public entry point (12 `dnde_photon_*`, 2
+    `dnde_positron_*`, 2 `dnde_neutrino_*` × 3 flavors, plus both
+    models' `spectra` / `positron_spectra` /
+    `annihilation_cross_sections` / `thermal_cross_section`) over
+    `np.logspace(-2, 3, 200)` MeV — 171 arrays — **bit-for-bit
+    identical** across the deletion and a full clean rebuild.
+  - _`cross_section_prefactor` (Cython → `hazma.utils`):_ ≤**2.1e-7**
+    relative within 1e-7 of the 2-body threshold, falling to ≤5e-15 at
+    `cme ≥ 1.1 ×` threshold and ≤3.4e-16 well above it. Cause: the
+    `hazma.utils` form builds `p` from `kallen_lambda`, which cancels at
+    threshold; the deleted Cython twin used the factored product.
+    Affects `hazma.deprecated.rambo` (public per `versioning.md` §6) and
+    the broken-on-import `hazma.gamma_ray`. Seeded end-to-end check on
+    `PhaseSpace.cross_section`: bit-identical at ordinary kinematics,
+    1.8e-10 at threshold × (1+1e-7). Repair is deferred to
+    [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md).
+  - _`minkowski_dot` (Cython → `hazma.utils`):_ ≤**2.7e-14** relative
+    over 1998 random four-vector pairs (≤3.2e-15 on on-shell momenta).
+    Cause: the C compiler contracts `a*b - c*d` into an FMA. Only
+    in-library consumer is `hazma/experimental/`, which
+    `docs/versioning.md` excludes from the public surface.
+  - Neither drift changes the project's `version_bump: major`, which the
+    API removals already force.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -157,6 +197,16 @@ it from memory.)
   `.pyx`; phase-00 file's Task 0.1 criterion corrected; follow-up filed
   for the `WIDTH_K`/`WIDTH_PI` exponent bug. Full list in
   [`phase-00/README.md`](phase-00/README.md).
+- **Task 0.3** — deleted `hazma/_decay/`, `hazma/_positron/`,
+  `hazma/_neutrino/`, `hazma/field_theory_helper_functions/`, the three
+  `hazma/__*.py` legacy shims, `spectra/_positron/_kaon.pyx`,
+  `test/decay/`, and the dead half of `_utils/boost.pyx`;
+  `minkowski_dot` given a pure-Python home in `hazma/utils.py` and all
+  `common_functions` callers repointed there; `setup.py`,
+  `test/conftest.py`, `pyproject.toml`, `MANIFEST.in` updated; nine
+  durable docs swept; `test/test_utils.py` and a
+  `cross_section_prefactor` follow-up added. 135 files, −29,337 lines.
+  Full list in [`phase-00/README.md`](phase-00/README.md).
 
 ## Verification
 
@@ -171,9 +221,14 @@ it from memory.)
   Tasks 3.2/3.3.
 - ~~**ADR-0003 sign-off** (Logan): confirm deletion of the
   broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted.**
-  Task 0.2 is unblocked; the replacement-free `gamma_ray_fsr` case is
-  tracked at
+  It was the last thing standing between Phase 00 and Phase 01; with
+  Tasks 0.1 and 0.3 already done, **Tasks 0.2, 0.4, and 0.5 are all
+  unblocked.** The replacement-free `gamma_ray_fsr` case is tracked at
   [`../../../docs/followups/todo/msqrd-driven-fsr-generator.md`](../../../docs/followups/todo/msqrd-driven-fsr-generator.md).
+- `cross_section_prefactor`'s threshold cancellation (found in Task
+  0.3, filed as a follow-up): fix it **after** the port rather than
+  before, or Phase 01's corpus pins the cancelling values and the Rust
+  side inherits them. Decide when Phase 07 closes.
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
 - ~~Whether the mediator cross-section `.pyx` include a constants
@@ -198,16 +253,27 @@ it from memory.)
 **Currently safe to assume:**
 
 - The dead-code map and entry-point inventory were verified against
-  2.1.0 (Aug 2026); the tree is unchanged apart from Task 0.1's
-  header relocation.
-- `test/` is green (52 passed / 20 skipped as of Task 0.1, 2026-08-04;
-  51/20 at PR #31) — merging the suites in Task 1.3 is safe.
-- The legacy constants table now lives at
-  `hazma/_utils/legacy_parameters.pxd`; nothing under `hazma/_decay/`
-  is included by a built extension, so Task 0.3 can delete the
-  directory without include-path fallout.
+  2.1.0 (Aug 2026). **The tree has since moved:** Task 0.1 relocated
+  the constants header and Task 0.3 executed the bulk of the purge, so
+  the inventory's dead-code table now describes work already done for
+  every row except `_gamma_ray/`, `_phase_space/`,
+  `deprecated/rambo.py`, and `rh_neutrino/_rh_neutrino_fsr_four_body.pyx`
+  (all Task 0.2's — no longer gated, ADR-0003 was accepted 2026-08-04).
+- **25 extensions, 26 `.pyx`, 19 `.pxd`** as of Task 0.3 — re-derive
+  with `find hazma -name '*.so' | wc -l` rather than quoting this.
+- `test/` is green (68 passed / 20 skipped as of Task 0.3, 2026-08-04;
+  52/20 at Task 0.1; 51/20 at PR #31) — merging the suites in Task 1.3
+  is safe. `test/conftest.py` now ignores only `test_gamma_ray.py`.
+- The legacy constants table lives at
+  `hazma/_utils/legacy_parameters.pxd` and is now its **only** copy.
+  `hazma.utils` is the only home for `cross_section_prefactor` and
+  `minkowski_dot`.
 
 **Currently risky / unknown:**
 
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
+- Phase 01's corpus will capture `cross_section_prefactor`'s current
+  near-threshold cancellation as if it were intended behavior. That is
+  acceptable only because the repair is tracked as a follow-up — do not
+  let it become invisible.

@@ -1,11 +1,9 @@
-"""Module for computing gamma ray spectra from a many-particle final state.
-
-"""
+"""Module for computing gamma ray spectra from a many-particle final state."""
 
 # author : Logan Morrison and Adam Coogan
 # date : December 2017
 
-from typing import Union, List, Callable, Optional, overload
+from typing import Callable, List, Optional, Union, overload
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,10 +13,7 @@ from hazma._gamma_ray.gamma_ray_generator import (
     gamma,
     gamma_point,
 )
-from hazma.field_theory_helper_functions.common_functions import (
-    cross_section_prefactor,
-)
-from hazma.utils import RealArray, RealOrRealArray
+from hazma.utils import RealArray, RealOrRealArray, cross_section_prefactor
 
 SquaredMatrixElement = Callable[[RealArray], float]
 

@@ -7,9 +7,7 @@ from hazma.parameters import (
     qe,
     charged_pion_mass as mpi,
 )
-from hazma.field_theory_helper_functions.common_functions import (
-    minkowski_dot as LDot,
-)
+from hazma.utils import minkowski_dot as LDot
 from hazma.gamma_ray import gamma_ray_fsr
 import numpy as np
 import matplotlib.pyplot as plt

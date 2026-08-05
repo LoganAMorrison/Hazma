@@ -68,10 +68,10 @@ As part of (or immediately after) constants consolidation:
 
 - `hazma/_utils/legacy_parameters.pxd:63-64` — relocated in
   cython-to-rust Task 0.1; values kept verbatim for bit-parity.
-- `hazma/_decay/common.pxd:75-76` — second copy (deleted in
-  cython-to-rust Task 0.3).
-- `hazma/_positron/parameters.pxd:56-57` — third copy (deleted in
-  cython-to-rust Task 0.3).
+- ~~`hazma/_decay/common.pxd:75-76`~~ and
+  ~~`hazma/_positron/parameters.pxd:56-57`~~ — the second and third copies,
+  **deleted** in cython-to-rust Task 0.3. `legacy_parameters.pxd` is now
+  the only surviving copy of the bad literals.
 - `hazma/_utils/constants.pxd:321,324` — the correct, PDG-cited values.
 - Related project: `projects/cython-to-rust/` — see `rules.md`
   ("Constants" rule 1) and `references/cython-inventory.md` ("Bugs" §3)
@@ -79,9 +79,9 @@ As part of (or immediately after) constants consolidation:
 
 ## Risks / open questions
 
-- After cython-to-rust Tasks 0.3 and 6.4, only
-  `legacy_parameters.pxd` and `constants.pxd` survive, so the
-  consolidation surface shrinks — doing this *before* that purge means
-  editing files that are about to be deleted.
+- Task 0.3 has landed, so only `legacy_parameters.pxd` and
+  `constants.pxd` carry these constants now; Task 6.4 retires
+  `legacy_parameters.pxd` itself. The consolidation surface is already
+  down to two files.
 - The correct Γ[K+] must come from a PDG citation; do not back it out of
   the `3.3406` mantissa, whose provenance is unknown.

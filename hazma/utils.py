@@ -1,5 +1,6 @@
 import functools as ft
 import warnings
+from collections.abc import Sequence
 from typing import Literal, Optional, Union
 
 import numpy as np
@@ -118,6 +119,33 @@ def ldot(lv1, lv2, axis: int = 0):
     p3 = lv1.take(3, axis=axis) * lv2.take(3, axis=axis)
 
     return p0 - p1 - p2 - p3  # type: ignore
+
+
+def minkowski_dot(fv1: Sequence[float], fv2: Sequence[float]) -> float:
+    """
+    Compute the west-coast (+,-,-,-) scalar product of two four-vectors.
+
+    Parameters
+    ----------
+    fv1, fv2: array-like
+        Four-vectors of length 4, ordered (E, px, py, pz). The components
+        carry whatever units the caller uses (MeV throughout hazma); the
+        result carries their square.
+
+    Returns
+    -------
+    dot: float
+        ``fv1[0]*fv2[0] - fv1[1]*fv2[1] - fv1[2]*fv2[2] - fv1[3]*fv2[3]``.
+
+    Notes
+    -----
+    Pure-Python replacement for the Cython
+    ``hazma.field_theory_helper_functions.common_functions.minkowski_dot``
+    deleted in the Cython-to-Rust migration. `ldot` is the array-oriented
+    generalization of the same product; this keeps the scalar
+    four-vector spelling that squared-matrix-element code is written in.
+    """
+    return fv1[0] * fv2[0] - fv1[1] * fv2[1] - fv1[2] * fv2[2] - fv1[3] * fv2[3]
 
 
 def lnorm_sqr(lv: np.ndarray, axis: int = 0) -> np.ndarray:
