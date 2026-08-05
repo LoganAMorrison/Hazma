@@ -71,16 +71,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   under a different NumPy; their mtimes suppress re-cythonization and
   the build dies inside generated code with a misleading error
   (Task 0.1). Clean, the tree builds on Cython 3.2.9 / NumPy 2.5.1.
-- **Preflight's Python gates are red on `origin/master` itself** —
-  measured at the trunk in Task 0.1: `black --check hazma test` wants to
-  reformat 34 files, `ruff check hazma test` reports 6844 errors, isort
-  errors on several `test/` files. Do not read these as your regression;
-  compare against the trunk baseline and judge only the delta. Two
-  invocation traps, both hit in Task 0.1: passing `--paths` a `.pxd`
-  makes black/ruff parse Cython as Python and fail, and passing it a
-  _directory_ drags in that directory's pre-existing unformatted `.py`.
-  Scope `--paths` to changed files, and omit it entirely when the diff
-  has no Python.
+- **Preflight's black/isort verdict on `origin/master` — corrected in
+  Task 0.3.** Task 0.1 recorded "black wants to reformat 34 files, isort
+  errors on several `test/` files" as a property of the trunk. **It is
+  not.** That was an unpinned newer black: CI pins
+  `black>=23.3,<25.0` while `pyproject.toml`'s dev extra allows
+  `<27.0`, and the two majors format differently. At `cd0be2b`, black
+  **24.10.0** reports `249 files would be left unchanged` — CI's Lint
+  job is green on the trunk, and a reformat made with black 26 turns it
+  red (PR #37). Install CI's version
+  (`uv pip install "black>=23.3,<25.0"`) before trusting any black
+  result. Tracked in
+  [`../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md);
+  the class is `[unpinned-formatter-version]` in `docs/agents/lessons.md`.
+- **`ruff check hazma test` really is red on the trunk (6844 findings),
+  and that does not block CI.** CI's ruff step is
+  `ruff check --isolated --select E9,F63,F7,F82`, which deliberately
+  ignores `pyproject.toml`'s much stricter config. Judge the configured
+  form as a delta against the trunk; run the `--isolated` form to
+  predict CI.
+- Two `--paths` invocation traps, both hit in Task 0.1: passing it a
+  `.pxd` makes black/ruff parse Cython as Python and fail, and passing
+  it a _directory_ drags in that directory's pre-existing unformatted
+  `.py`. Scope `--paths` to changed files, and omit it entirely when the
+  diff has no Python.
 - `hazma._gamma_ray.gamma_ray_generator` compiles but has never been
   importable on `master` (`from hazma import rambo`; `hazma/rambo.py`
   does not exist). It is still a live `Extension` in `setup.py`, so it

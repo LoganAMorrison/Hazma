@@ -467,21 +467,38 @@ versions:
 
 | Gate | At `origin/master` | On this branch | Delta |
 | --- | --- | --- | --- |
-| `black --check` (the 8 shared files) | 2 would reformat | **0** | fixed |
-| `isort --check-only` (same 8) | 5 errors | **0** | fixed |
-| `ruff check` (same 8) | 269 errors | 263 (+0 from the new `test/test_utils.py`) | −6 |
+| `black --check hazma test` (CI's black 24.10.0) | clean, 249 files | **clean**, 224 files | unchanged |
+| `isort --check-only` (the 8 shared files) | 5 errors | **0** | fixed |
+| `ruff check` (same 8, configured) | 269 errors | 263 (+0 from the new `test/test_utils.py`) | −6 |
+| `ruff check hazma test` (configured, repo-wide) | 6844 | 6619 | −225 |
+| `ruff check --isolated --select E9,F63,F7,F82 .` (CI's) | clean | **clean** | unchanged |
 | `markdownlint docs/PR_GUIDELINES.md` | 10 | 10 | unchanged |
 | `markdownlint docs/versioning.md` | 15 | 15 | unchanged |
-| `markdownlint` (all 10 other touched/new docs) | 0 | **0** | clean |
+| `markdownlint` (all 11 other touched/new docs) | 0 | **0** | clean |
 
-black and isort were brought to green because every remaining complaint
-sat in a file this task already edits; the two black hunks
-(`gamma_ray.py`'s module docstring, `rambo.py`'s `warnings.warn`) are 16
-lines total and semantically inert. Per-file ruff, branch vs trunk:
+**Black must be run at CI's pinned version.** The first push of this
+branch turned CI Lint red: `pyproject.toml`'s dev extra allows
+`black<27.0` while `.github/workflows/ci.yml` pins `black<25.0`, and
+black 26.5.1 had reformatted `rambo.py`'s `warnings.warn` into a
+"hugged" style that black 24.10.0 rejects. Reverted to CI's form, and the
+local venv repinned to `black>=23.3,<25.0`. This also **corrects a Task
+0.1 finding** that had entered `../README.md` as fact — "black wants to
+reformat 34 files on `origin/master`" was that same version skew; CI's
+black reports the trunk clean. Root cause filed as
+[`docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md`](../../../../docs/followups/todo/black-pin-divergence-pyproject-vs-ci.md),
+class added to `docs/agents/lessons.md` as
+`[unpinned-formatter-version]`, trap documented in
+`docs/agents/environment.md`.
+
+isort was brought to green because every remaining complaint sat in a
+file this task already edits. Per-file ruff, branch vs trunk:
 `hazma/utils.py` 51 → 51, `spectra/_positron/__init__.py` 25 → 24,
 `test/conftest.py` 2 → 0, everything else unchanged; the new
-`test/test_utils.py` contributes **0**. The two markdownlint-red files
-fail on lines this task never touched (`PR_GUIDELINES.md` lines 14–19,
+`test/test_utils.py` contributes **0**. Note that CI's ruff step is
+`--isolated --select E9,F63,F7,F82`, not the configured one, and it
+passes; the 263/6619 figures are the stricter `pyproject.toml` config,
+which is red repo-wide on the trunk and does not gate CI. The two
+markdownlint-red files fail on lines this task never touched (`PR_GUIDELINES.md` lines 14–19,
 the commit-format block; `versioning.md` lines 117–127, a table) —
 fixing them means reflowing prose and realigning a table that has
 nothing to do with a dead-code purge.
