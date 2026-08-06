@@ -1,8 +1,9 @@
 # ADR 0001: The FSR generator takes both matrix elements
 
 **Date:** 2026-08-04
-**Status:** Proposed (acceptance rides on the review of the PR that
-implements it)
+**Status:** Accepted (the implementing PR,
+[#41](https://github.com/LoganAMorrison/Hazma/pull/41), merged
+2026-08-05 — acceptance rode on its review)
 
 ## Context
 

@@ -6,7 +6,8 @@
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (accepted 2026-08-04 —
 Phase 03 Tasks 3.2/3.3 no longer gated), ADR-0003 (accepted
-2026-08-04 — Task 0.2 no longer blocked on sign-off)
+2026-08-04 with an Addendum the same day; its non-deletion steps
+executed in Task 0.5 on 2026-08-05, leaving only Task 0.2's delete)
 **Depends On:** none
 
 ## Objective
@@ -19,7 +20,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
-| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.3 done; ADR-0003 accepted, so 0.2/0.4/0.5 are unblocked) |
+| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.3, 0.5 done; 0.2 is next, 0.4 follows it) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
@@ -104,6 +105,27 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - cyphus-diffeq (Hairer ODE ports) noted as possible future interest if
   relic density ever moves to Rust — out of scope here, candidate
   follow-up seed at close.
+- **`gamma_ray_fsr` is no longer replacement-free** (Task 0.5). ADR-0003
+  was written when the removal had no successor; its **Addendum
+  (2026-08-04)** records that
+  [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md)
+  resolved ad-hoc as `hazma.spectra.dnde_photon_fsr` (repo-wide
+  ADR-0001, PR #41, merged 2026-08-05). The settled replacement wording,
+  which Phase 00's CHANGELOG entry and the Phase 07 aggregate both
+  inherit: `gamma_ray_decay` → `hazma.spectra.dnde_photon`;
+  `gamma_ray_fsr` → `hazma.spectra.dnde_photon_fsr`; **neither a
+  drop-in** (`dnde_photon_fsr` takes the non-radiative *matrix element*
+  rather than a rate float and has no `isp_masses`). The ADR's Decision
+  body still reads "no direct replacement" by design — it is a dated
+  record amended by its Addendum, and the forward-looking gate text was
+  patched instead.
+- **Sphinx orphan pages are a live doc-sweep hazard** (Task 0.5).
+  `docs/source/index.rst` reaches nine documents; `limits.rst` and
+  `models.rst` nest four more. Every other `docs/source/*.rst` is in no
+  toctree — Sphinx still builds it, so an orphan is shipped-but-unlinked
+  rather than absent. Task 0.5 deleted `gamma_ray.rst` on that basis;
+  `rambo.rst` (documenting the long-gone `hazma.rambo.PhaseSpace`) is
+  the same shape and is left to Task 0.2.
 
 ## Numerical impact so far
 
@@ -158,6 +180,11 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   **Phase 01 corpus note:** this landed before the parity corpus is
   generated, so the corpus captures the fixed values and the Rust port
   must reproduce _these_, not the pre-fix ones.
+
+- **Task 0.5 (execute ADR-0003's non-deletion steps): no public value
+  changes.** The diff is durable docs plus one docstring hunk in
+  `hazma/spectra/_photon/__init__.py`; no code path, signature, or
+  constant is touched, so no grid evaluation applies.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -226,6 +253,14 @@ it from memory.)
   durable docs swept; `test/test_utils.py` and a
   `cross_section_prefactor` follow-up added. 135 files, −29,337 lines.
   Full list in [`phase-00/README.md`](phase-00/README.md).
+- **Task 0.5** — docs repointed off `hazma.gamma_ray` ahead of the
+  delete: `docs/source/gamma_ray.rst` deleted (orphan page),
+  `hazma/spectra/_photon/__init__.py`'s `electron` docstring repointed,
+  `docs/PR_GUIDELINES.md`'s `limits` scope row pruned, and the stale
+  "replacement-free" wording corrected in the phase file, `PLAN.md`, and
+  `docs/followups/done/msqrd-driven-fsr-generator.md`. Repo-wide
+  ADR-0001 flipped Proposed → Accepted (PR #41 merged). Full list in
+  [`phase-00/README.md`](phase-00/README.md).
 
 ## Verification
 
@@ -243,15 +278,19 @@ it from memory.)
   netlib-QUADPACK translation for the integrator, cyphus as an
   out-of-repo oracle only.
 - ~~**ADR-0003 sign-off** (Logan): confirm deletion of the
-  broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted.**
-  It was the last thing standing between Phase 00 and Phase 01; with
-  Tasks 0.1 and 0.3 already done, **Tasks 0.2, 0.4, and 0.5 are all
-  unblocked.** The replacement-free `gamma_ray_fsr` case is tracked at
+  broken-on-import `hazma.gamma_ray`~~ — **closed 2026-08-04: accepted**,
+  and its non-deletion steps **executed in Task 0.5 on 2026-08-05**
+  (replacement status recorded, docs repointed). With Tasks 0.1, 0.3,
+  and 0.5 done, **Tasks 0.2 and 0.4 are what remain in Phase 00.**
+  `gamma_ray_fsr`'s successor,
+  `hazma.spectra.dnde_photon_fsr`, shipped via
   [`../../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md).
-- `cross_section_prefactor`'s threshold cancellation (found in Task
-  0.3, filed as a follow-up): fix it **after** the port rather than
-  before, or Phase 01's corpus pins the cancelling values and the Rust
-  side inherits them. Decide when Phase 07 closes.
+- ~~`cross_section_prefactor`'s threshold cancellation (found in Task
+  0.3, filed as a follow-up): fix it **after** the port, or Phase 01's
+  corpus pins the cancelling values?~~ — **closed: the repair landed
+  out-of-band before Phase 01 started**, via `two_body_momentum`'s
+  factored form (see "Out-of-band" under "Numerical impact so far").
+  The question is moot; the corpus will pin the fixed values.
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
 - ~~Whether the mediator cross-section `.pyx` include a constants
@@ -291,12 +330,20 @@ it from memory.)
   `hazma/_utils/legacy_parameters.pxd` and is now its **only** copy.
   `hazma.utils` is the only home for `cross_section_prefactor` and
   `minkowski_dot`.
+- **No durable doc points a reader at `hazma.gamma_ray` as a live API**
+  (Task 0.5). The surviving mentions are dated records (ADRs,
+  follow-ups, task notes), library/test code that Task 0.2 deletes, and
+  agent docs describing today's tree. The replacement wording for the
+  eventual CHANGELOG entry is settled — see "Numerical impact so far"
+  and the phase-00 README.
 
 **Currently risky / unknown:**
 
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
-- Phase 01's corpus will capture `cross_section_prefactor`'s current
-  near-threshold cancellation as if it were intended behavior. That is
-  acceptable only because the repair is tracked as a follow-up — do not
-  let it become invisible.
+- ~~Phase 01's corpus will capture `cross_section_prefactor`'s
+  near-threshold cancellation as if it were intended behavior.~~ — no
+  longer a risk: the repair landed before Phase 01 (see "Out-of-band"
+  under "Numerical impact so far"). The live obligation is the mirror
+  image — **the corpus must pin the post-fix values, and the Rust port
+  must reproduce those, not the pre-fix ones.**

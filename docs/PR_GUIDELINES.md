@@ -39,7 +39,7 @@ Use the most specific scope that applies. Common scopes (non-exhaustive):
 | `phase`     | `hazma/phase_space/`, `hazma/_phase_space/` (RAMBO, N-body)  |
 | `theory`    | `hazma/theory/` — the model interface and its mixins         |
 | `models`    | `scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`, …    |
-| `limits`    | `hazma/limits/`, `gamma_ray.py`, gamma-ray limit machinery   |
+| `limits`    | `hazma/limits/`, gamma-ray limit machinery                   |
 | `cmb`       | `hazma/cmb.py`, CMB constraints                              |
 | `relic`     | `hazma/relic_density/`                                       |
 | `form`      | `hazma/form_factors/`                                        |

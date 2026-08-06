@@ -5,10 +5,11 @@
   `docs/source/utils.rst` omits `hazma.utils.minkowski_dot`
 - **Scope:** cross-cutting
 - **Status:** open
-- **Triggers / blockers:** ripens when cython-to-rust ADR-0003 deletes
-  `hazma/gamma_ray.py` and `docs/source/gamma_ray.rst` with it — that
-  removes `minkowski_dot`'s only public-docs reference. Both cleanups
-  are name removals, so they want the same major bump the
+- **Triggers / blockers:** **half-ripe as of 2026-08-05.**
+  cython-to-rust Phase 00 Task 0.5 deleted `docs/source/gamma_ray.rst`,
+  so `minkowski_dot` already has no public-docs reference at all; what
+  remains is Task 0.2's deletion of `hazma/gamma_ray.py` itself. Both
+  cleanups are name removals, so they want the same major bump the
   cython-to-rust project already carries.
 
 ## Why
@@ -40,8 +41,10 @@ and gave the name a pure-Python home so its callers kept working. Its
 one in-library consumer is
 `hazma/experimental/axial_vector_mediator/avm_msqrd.py`, and
 `docs/versioning.md` excludes `hazma/experimental/` from the public
-surface outright. Its one public-docs reference is a worked
-`gamma_ray_fsr` example — in the page ADR-0003 removes.
+surface outright. Its one public-docs reference was a worked
+`gamma_ray_fsr` example in `docs/source/gamma_ray.rst`, and that page
+was deleted on 2026-08-05 by cython-to-rust Task 0.5 — so the name is
+now public with no documentation anywhere.
 
 **`kinematically_accessable` is dead.** It has zero callers repo-wide,
 no docstring, no type annotations, and a misspelled name
@@ -78,8 +81,10 @@ drift.
 - `hazma/utils.py:191` — `ldot`, the survivor.
 - `hazma/utils.py:215` — `minkowski_dot`.
 - `docs/source/utils.rst` — the five-entry API Reference list.
-- `docs/source/gamma_ray.rst:85` — the sole public-docs reference,
-  inside the `gamma_ray_fsr` example.
+- ~~`docs/source/gamma_ray.rst:85` — the sole public-docs reference,
+  inside the `gamma_ray_fsr` example.~~ Page deleted 2026-08-05
+  (cython-to-rust Task 0.5); read it from git history if the example is
+  still wanted (`git show d81c267:docs/source/gamma_ray.rst`).
 - `hazma/experimental/axial_vector_mediator/avm_msqrd.py:10` — the sole
   in-library consumer (non-public per `docs/versioning.md`).
 - `test/test_utils.py:258-311` — the `minkowski_dot` block.
@@ -99,6 +104,7 @@ drift.
   `projects/cython-to-rust/task-notes/phase-00/README.md`). That drift
   is already absorbed and is not re-opened by this cleanup: collapsing
   onto `ldot` is exactly zero further change, per the bit-for-bit test.
-- Sequencing: doing this before ADR-0003 lands means editing a
-  `gamma_ray.rst` example that is about to be deleted anyway. After is
-  simpler and strictly less work.
+- ~~Sequencing: doing this before ADR-0003 lands means editing a
+  `gamma_ray.rst` example that is about to be deleted anyway.~~ Moot —
+  the page is gone (Task 0.5, 2026-08-05), so this cleanup no longer
+  has to touch it either way.
