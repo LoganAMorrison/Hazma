@@ -1,0 +1,60 @@
+// markdownlint configuration for the hazma repo.
+//
+// Picked up automatically by `markdownlint` (and by preflight gate 6,
+// which cd's to the repo root before running) — no --config flag is
+// needed. Every relaxation below is a rule that fights one of the
+// repo's own canonical shapes; everything else stays at its default,
+// including MD013's 80-column limit on prose.
+//
+// See docs/agents/preflight.md (gate 6) for the agent-facing summary.
+{
+  // Prose wraps at 80. Tables and code blocks do not.
+  //
+  // Grounded-fact tables (dead-code maps, call-site inventories,
+  // bump cheat sheets) are as wide as their content; wrapping a cell
+  // would destroy the alignment that makes the table readable, and
+  // padding every row to the widest cell is worse. Fenced blocks hold
+  // pasted commands and pasted output — rewrapping either falsifies
+  // the record of what was actually run.
+  "MD013": {
+    "line_length": 80,
+    "tables": false,
+    "code_blocks": false
+  },
+
+  // A phase file carries `title:` in frontmatter *and* an H1 in the
+  // body — that duplication is the schema
+  // (projects/_template/phases/_template.md), not a mistake. An empty
+  // front_matter_title turns off frontmatter-title detection, so the
+  // body H1 is the one and only top-level heading.
+  "MD025": {
+    "front_matter_title": ""
+  },
+
+  // `.claude/skills/*/SKILL.md` declares its title as frontmatter
+  // `name:` and opens the body with prose, not an H1 — that format is
+  // defined by the harness, not by us. Accept `name:` alongside
+  // `title:` as the document title.
+  "MD041": {
+    "front_matter_title": "^\\s*\"?(title|name)\"?\\s*[:=]"
+  },
+
+  // The repo's fill-in-the-blank notation is `<angle brackets>`
+  // (`<phase title>`, `<slug>`, `<YYYY-MM-DD>`), used in every template
+  // and in the prose that documents those templates. markdownlint
+  // cannot tell a placeholder from an HTML tag, and `allowed_elements`
+  // would need every placeholder word ever written.
+  "MD033": false,
+
+  // Two notations with two meanings: `*emphasis*` inline, and `_…_` for
+  // the standing "nothing here yet" markers a task note carries until
+  // its section fills in. MD049's per-file "consistent" check cannot
+  // express that split.
+  "MD049": false,
+
+  // Pipe alignment. A template's placeholder cells (`<phase title>`)
+  // change width the moment a project fills them in, so an aligned
+  // template is a misaligned copy. Nothing formats Markdown tables in
+  // this repo, so the rule only produces churn.
+  "MD060": false
+}

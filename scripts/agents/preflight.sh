@@ -216,10 +216,24 @@ fi
 
 if [[ -n "${MD_FILES}" ]]; then
     if have markdownlint; then
+        # markdownlint treats its arguments as globs: a path that matches
+        # nothing makes it print its usage banner and exit 0. A typo'd
+        # --md would therefore report PASS having linted nothing, the
+        # same false pass the pytest gate guards against. Check the paths
+        # exist before trusting the exit code.
+        MD_MISSING=""
+        # shellcheck disable=SC2086
+        for f in ${MD_FILES}; do
+            [[ -e "${f}" ]] || MD_MISSING="${MD_MISSING} ${f}"
+        done
         OUT="${TMPDIR_PF}/md.log"
         # shellcheck disable=SC2086
         capture "${OUT}" markdownlint --dot ${MD_FILES}
-        if [[ $? -eq 0 ]]; then
+        # Read the status now: the MD_MISSING test below overwrites `$?`.
+        MD_STATUS=$?
+        if [[ -n "${MD_MISSING}" ]]; then
+            row FAIL "markdownlint" "no such file(s):${MD_MISSING}"
+        elif [[ ${MD_STATUS} -eq 0 ]]; then
             row PASS "markdownlint" "${MD_FILES}"
         else
             row FAIL "markdownlint" "see output below"

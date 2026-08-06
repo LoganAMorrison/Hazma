@@ -55,8 +55,9 @@ guidance) lives in `../PLAN.md` under "Task Details" (flat) or in
 -->
 
 <!--
-Phased projects: delete the flat Tasks table above and use this
-instead. Per-task status lives in each `phase-XX/README.md`, not here.
+Phased projects: delete the flat Tasks table above and unfence the
+block below. Per-task status lives in each `phase-XX/README.md`, not
+here.
 
 This project-level README carries the Phases status table plus
 *cross-phase* findings, decisions, and handoff. Phase-scoped working
@@ -64,15 +65,21 @@ memory (per-task Tasks table, phase-scoped findings) belongs in
 `phase-XX/README.md` (one file per phase, copied from
 `phase-XX/README.md` template).
 
-| # | Phase              | Phase file                                     | Working memory                     | Status      |
-|---|--------------------|------------------------------------------------|------------------------------------|-------------|
-| 01 | <phase title>     | `../phases/phase-01-<slug>.md`                 | `phase-01/README.md`               | Not started |
-| 02 | <phase title>     | `../phases/phase-02-<slug>.md`                 | `phase-02/README.md`               | Not started |
+The phase-level status mirrors each phase file's frontmatter `status:`
+field. Phase frontmatter is authoritative for phase status; this table
+is a single-pane-of-glass for project-wide navigation.
 
-The phase-level status above mirrors each phase file's frontmatter
-`status:` field. Phase frontmatter is authoritative for phase status;
-this table is a single-pane-of-glass for project-wide navigation.
+The block is fenced rather than commented out so its rows stay outside
+MD013 — a wide table inside an HTML comment is not parsed as a table,
+so `.markdownlint.jsonc`'s `MD013 {tables: false}` cannot reach it.
 -->
+
+```markdown
+| # | Phase | Phase file | Working memory | Status |
+| --- | --- | --- | --- | --- |
+| 01 | <phase title> | `../phases/phase-01-<slug>.md` | `phase-01/README.md` | Not started |
+| 02 | <phase title> | `../phases/phase-02-<slug>.md` | `phase-02/README.md` | Not started |
+```
 
 ## Exit Criteria
 

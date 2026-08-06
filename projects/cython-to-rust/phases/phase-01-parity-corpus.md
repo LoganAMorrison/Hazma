@@ -4,8 +4,6 @@ title: Golden parity corpus
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 01: Golden parity corpus
 
 ## Goal

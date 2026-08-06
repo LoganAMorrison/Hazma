@@ -4,8 +4,6 @@ title: Mediator spectra
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 06: Mediator spectra
 
 ## Goal

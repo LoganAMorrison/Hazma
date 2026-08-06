@@ -13,7 +13,7 @@ type(scope): subject
 
 | Constraint        | Rule                                                        |
 | ----------------- | ----------------------------------------------------------- |
-| Max header length | 69 characters total (including `type(scope): `).            |
+| Max header length | 69 characters total, counting the `type(scope):` prefix and the space after it. |
 | Type              | Valid Conventional Commits type: `feat`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor`, `perf`, `style`, `build`, `revert`. |
 | Scope             | Required. Lowercase alphanumeric with optional hyphens (`^[a-z0-9-]+$`), max 10 chars, no leading or trailing hyphen. Must not be a type name. |
 | Subject           | Start with an alphanumeric character. No trailing `.` or space. Prefer a lowercase first word. |
