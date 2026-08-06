@@ -31,6 +31,16 @@
     "front_matter_title": ""
   },
 
+  // CHANGELOG.md follows Keep a Changelog, where every release repeats
+  // the same section headings (`### Added`, `### Changed`, …). Those are
+  // duplicates only across releases, never within one — which is exactly
+  // the split `siblings_only` expresses. Without it the rule fires the
+  // moment any release grows a section an earlier one already has, so it
+  // is latent in the format rather than in any one entry.
+  "MD024": {
+    "siblings_only": true
+  },
+
   // `.claude/skills/*/SKILL.md` declares its title as frontmatter
   // `name:` and opens the body with prose, not an H1 — that format is
   // defined by the harness, not by us. Accept `name:` alongside

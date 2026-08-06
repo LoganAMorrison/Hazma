@@ -25,8 +25,8 @@ from hazma.hazma_errors import RamboCMETooSmall
 from hazma.utils import (
     RealArray,
     cross_section_prefactor,
-    kallen_lambda,
     lnorm_sqr,
+    two_body_momentum,
     warn_deprecated_module,
 )
 
@@ -859,7 +859,7 @@ class PhaseSpace:
     def _integrate_two_body(self) -> Tuple[float, float]:
         cme = self.cme
         m1, m2 = self.masses
-        p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+        p = two_body_momentum(cme, m1, m2)
         e1 = np.hypot(m1, p)
         e2 = np.hypot(m2, p)
         ps = np.zeros((4, 2), dtype=np.float64)

@@ -106,7 +106,7 @@ purge.
   `hazma.phase_space.PhaseSpace.cross_section`, a live public API — a
   declared numerical change that does not belong inside a dead-code
   deletion. Filed as
-  [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md)
+  [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md)
   with the measured magnitudes.
 - Task 0.3's notebook boundary: repoint the references *this task* made
   dangle; leave the ~20 `hazma.decay` / `hazma.positron_spectra`
@@ -140,7 +140,7 @@ purge.
 - Config: `setup.py` (3 extension groups), `test/conftest.py`,
   `pyproject.toml` + `MANIFEST.in` (`_decay` package data).
 - `test/test_utils.py` added (16 pinned tests);
-  `docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`
+  `docs/followups/done/cross-section-prefactor-threshold-cancellation.md`
   filed; nine durable docs swept. Full list in the task note.
 
 ## Verification
@@ -173,7 +173,7 @@ purge.
   After Task 0.3 only `legacy_parameters.pxd` still carries the bad
   literals; the other two copies are gone.
 - `cross_section_prefactor`'s threshold cancellation — deferred to
-  [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md).
+  [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
   Sequencing matters: if Phase 01 captures the corpus first, the Rust
   port inherits the cancelling values by construction.
 

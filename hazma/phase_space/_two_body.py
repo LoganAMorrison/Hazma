@@ -2,12 +2,12 @@
 Module for integrating two-body phase space.
 """
 
-from typing import Sequence, Tuple, Callable, Any, Optional
+from typing import Any, Callable, Optional, Sequence, Tuple
 
 import numpy as np
 from scipy import integrate
 
-from hazma.utils import kallen_lambda
+from hazma.utils import two_body_momentum
 
 from ._base import AbstractPhaseSpaceIntegrator
 
@@ -109,7 +109,7 @@ class TwoBody(AbstractPhaseSpaceIntegrator):
         cme = self.cme
         m1, m2 = self.masses
 
-        p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+        p = two_body_momentum(cme, m1, m2)
         e1 = np.hypot(m1, p)
         e2 = np.hypot(m2, p)
         ps = np.zeros((4, 2), dtype=np.float64)
@@ -133,7 +133,7 @@ class TwoBody(AbstractPhaseSpaceIntegrator):
         cme = self.cme
         m1, m2 = self.masses
 
-        p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+        p = two_body_momentum(cme, m1, m2)
         pre = 1.0 / (8.0 * np.pi) * p / cme
 
         integral, error = integrate.quad(self.__msqrd, -1.0, 1.0)

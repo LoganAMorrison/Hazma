@@ -107,12 +107,15 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   puts **every** fact that doc cites into your PR's scope, however
   mechanical your own edit was. A diff that only stripped markdownlint
   pragmas from `references/cython-inventory.md` inherited a
-  `boost.pyx:427,447,456` citation into a file a later purge had cut from
-  461 to 241 lines — stale since `e94fb21`, caught by review, not by the
-  author. Run `check_doc_citations.py` over the docs you touched, not the
-  ones you wrote, and pin historical evidence to a commit
+  ``boost.pyx lines 427, 447, 456 as of `e94fb21^` `` citation into a file
+  a later purge had cut from 461 to 241 lines — stale since `e94fb21`,
+  and itself unpinned here until PR #43 tripped over it; caught by
+  review, not by the author. Run `check_doc_citations.py` over the docs
+  you touched, not the ones you wrote, and pin historical evidence to a commit
   (``lines 427, 447, 456 as of `e94fb21^` ``) so a later deletion cannot
-  falsify it (PR #42).
+  falsify it (PR #42, #43 — #43 ran the checker over only the two docs a
+  reviewer named; three further elisions in the same file resolved by
+  suffix and would have rotted later).
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs
   *committed* history, so running it on an uncommitted tree scans zero
   files and prints a success-shaped line — `check_doc_citations.py
@@ -121,3 +124,22 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   `markdownlint` exiting 0 on a glob that matches nothing. For any gate,
   confirm it reported a non-zero *scope* (docs scanned, tests collected,
   files linted) before believing its verdict (PR #42).
+- [sqrt-hides-factor-signs] Refactoring `sqrt(P)` into `sqrt(A*B)` for
+  conditioning silently widens the accepted domain: a product of two
+  negative factors is positive, so the root returns a plausible number
+  where the quantity is undefined. When the polynomial has more than one
+  real root, the region *outside* the outermost pair is exactly where
+  this hides — check the sign of every factor across the whole unphysical
+  domain, not only the interval you sampled. Pair each sign-changing
+  factor with a strictly positive partner so one root per boundary goes
+  NaN (PR #43: the Källén `λ(s, m1², m2²)` turns positive again below
+  `|m1 - m2|`, so `two_body_momentum(1.0, 10.0, 1.0)` returned 48.99
+  against a threshold of 11 — pre-existing, but a new docstring had just
+  promised NaN below threshold, converting it into a false contract).
+- [elided-doc-paths] A `.../foo.py` shorthand in a durable doc is not
+  mechanically resolvable and fails `scripts/agents/check_doc_citations.py`
+  the moment the basename is not unique in the repo — and the elision is
+  most tempting exactly where a doc lists many siblings from one package.
+  Write every citation as a full repository-relative path (PR #43:
+  `.../widths.py` and `.../utils.py` were ambiguous with 2 and 4
+  candidates). Pairs with [touched-doc-inherits-its-citations] above.
