@@ -44,7 +44,7 @@ in code review — this file records a snapshot.
 | `hazma/_decay/interpolation_data/` | ~1.05 MB | 21 `.dat` files + 3 stale top-level `.dat` + regen script, all serving the unbuilt `_decay` package. Shipped as package-data for nothing. |
 | `hazma/deprecated/rambo.py` | — | Unimported (no `hazma/deprecated/__init__.py` exports; grep finds zero importers). NOTE: `hazma/deprecated/` removal policy is `major` per versioning.md — deleting `rambo.py` specifically needs the versioning call made explicitly in the purge PR. |
 | `hazma/__decay.py`, `hazma/__positron_spectra.py`, `hazma/__neutrino_spectra.py` | — | Double-underscore legacy API shims; the `__init__.py` references are commented out. Verify zero external importers at delete time. |
-| `hazma/_utils/boost.pyx` internal dead half | ~165 | `boost_integrate_linear_interp_massive`, `integrate_linear_interp_edge`, `integration_bounds`: not in `.pxd`, no `def` wrapper, and contain real index-pairing bugs (`boost.pyx:427,447,456`). Delete, never port. |
+| `hazma/_utils/boost.pyx` internal dead half | ~165 | `boost_integrate_linear_interp_massive`, `integrate_linear_interp_edge`, `integration_bounds`: not in `.pxd`, no `def` wrapper, and contain real index-pairing bugs (`boost.pyx` lines 427, 447, 456 as of `e94fb21^`; deleted by `e94fb21`, which cut the file to 241 lines). Delete, never port. |
 | `hazma/_positron/parameters.pxd` | 67 | Orphan — nothing includes it. |
 
 ### Constants-header entanglement (must precede `_decay/` deletion)

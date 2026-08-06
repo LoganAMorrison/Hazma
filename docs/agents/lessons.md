@@ -103,3 +103,21 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   as a finite value with `error=nan` plus a warning nobody reads. Validate
   the type too: a non-integral count otherwise dies deep inside NumPy with
   a message that names neither the argument nor the fix (PR #41).
+- [touched-doc-inherits-its-citations] Editing *any* line of a durable doc
+  puts **every** fact that doc cites into your PR's scope, however
+  mechanical your own edit was. A diff that only stripped markdownlint
+  pragmas from `references/cython-inventory.md` inherited a
+  `boost.pyx:427,447,456` citation into a file a later purge had cut from
+  461 to 241 lines — stale since `e94fb21`, caught by review, not by the
+  author. Run `check_doc_citations.py` over the docs you touched, not the
+  ones you wrote, and pin historical evidence to a commit
+  (``lines 427, 447, 456 as of `e94fb21^` ``) so a later deletion cannot
+  falsify it (PR #42).
+- [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs
+  *committed* history, so running it on an uncommitted tree scans zero
+  files and prints a success-shaped line — `check_doc_citations.py
+  --changed-vs origin/master` answered "no docs to check" mid-session and
+  was read as a pass; the real run after committing failed. Same family as
+  `markdownlint` exiting 0 on a glob that matches nothing. For any gate,
+  confirm it reported a non-zero *scope* (docs scanned, tests collected,
+  files linted) before believing its verdict (PR #42).
