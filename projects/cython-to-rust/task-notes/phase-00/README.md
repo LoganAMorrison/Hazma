@@ -124,9 +124,9 @@ purge.
   `_decay/decay_electron`, `_decay/_decay_muon_bak`.
 - `projects/cython-to-rust/phases/phase-00-dead-code-purge.md` — Task
   0.1 exit criteria corrected (four → five built sites).
-- `docs/followups/legacy-parameters-width-exponent-bug.md` (+ index row
-  in `docs/followups/README.md`). Filed under `todo/`; since resolved
-  and moved to `done/`.
+- `docs/followups/done/legacy-parameters-width-exponent-bug.md` (+ index
+  row in `docs/followups/README.md`). Created under `todo/` by this task;
+  since resolved, so the live path is the `done/` one given here.
 
 ### Task 0.3
 

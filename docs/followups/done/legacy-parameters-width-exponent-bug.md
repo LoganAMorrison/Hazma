@@ -145,11 +145,12 @@ Two independent checks, both current as of this change:
   is why both checks are recorded.
 
 Neither check tells you the *outputs* did not move, so that was measured
-rather than argued. `origin/master` was extracted to a scratch tree and
-built into its own venv (its `legacy_parameters.pxd` still carrying
-`3.3406**-13.`), this branch was built into another, and both were
-driven through every public entry point of the four affected extensions
-— `scalar_mediator_decay_spectrum`, `dnde_decay_v` / `dnde_decay_v_pt`
+rather than argued. The baseline is `f125493` (`master` at the time of
+this branch's final rebase, its `legacy_parameters.pxd` still carrying
+`3.3406**-13.`); it was extracted to a scratch tree and built into its
+own venv, this branch was built into another, and both were driven
+through every public entry point of the four affected extensions —
+`scalar_mediator_decay_spectrum`, `dnde_decay_v` / `dnde_decay_v_pt`
 (photon), and `dnde_decay_s` / `dnde_decay_v` (positron), point and
 array forms, each mediator mass in {250, 500, 1000} MeV, each mode
 string the extensions accept, over `np.logspace(-2, 3, 200)` MeV:
@@ -159,9 +160,16 @@ arrays: 114  elements: 22800  nonzero elements in baseline: 14175
 arrays differing bit-for-bit: 0
 ```
 
+The same comparison was run twice, against `afa6e14` before the final
+rebase and against `f125493` after, with identical results. The baseline
+is pinned to a commit rather than to "`origin/master`" because `master`
+moved twice under this branch — and PR #43 landed real numerical changes
+to `hazma/utils.py` in between, so an unpinned baseline would make this
+block mean something different on each re-read.
+
 The fifth including extension, `_gamma_ray/gamma_ray_generator`, is
 covered by the compile check only: it raises `ImportError: cannot import
-name rambo` on `origin/master` as well, the known breakage recorded in
+name rambo` on `f125493` as well, the known breakage recorded in
 `references/cython-inventory.md`. It is not callable to compare.
 
 So the "declared numerical change" escape hatch in step 3 does not
@@ -176,12 +184,10 @@ The canonical values in `constants.pxd` were checked against PDG
 lifetimes rather than taken on trust (Γ = ħ/τ, ħ = 6.582119569e-22
 MeV·s):
 
-<!-- markdownlint-disable MD013 -- measurement table -->
 | Quantity | PDG τ | ħ/τ | `constants.pxd` | Deleted legacy literal |
 | --- | --- | --- | --- | --- |
 | Γ[π⁺] | 2.6033e-8 s | 2.52838e-14 MeV | 2.5284e-14 | `2.528511206475808**-14.` = 2.2903e-6 |
 | Γ[K⁺] | 1.2380e-8 s | 5.31674e-14 MeV | 5.317e-14 | `3.3406**-13.` = 1.5498e-7 |
-<!-- markdownlint-enable MD013 -->
 
 Both `constants.pxd` entries agree with ħ/τ to within the precision of
 the quoted mantissas (1e-5 and 5e-5 relative), so the canonical source
@@ -209,7 +215,21 @@ seven touched docs is clean (81 citations, 0 out of range).
 one settled exception to "verbatim"),
 `references/cython-inventory.md` ("Bugs" §3 marks the widths gone and
 the `MASS_E` / `BR_PI_TO_ENU` divergences still open),
-`task-notes/phase-00/README.md` (Open Question closed), and the Task 0.1
-and Task 0.3 notes' links to this file. The verbatim pasted-command
-blocks in the Task 0.1 note are left alone — they record paths as they
-were when that task ran.
+`task-notes/phase-00/README.md` (Open Question closed, Files Changed
+entry repointed), and the Task 0.1 and Task 0.3 notes' references to
+this file.
+
+Every live reference uses the `done/` path. A status-stripped
+`docs/followups/<slug>.md` form was tried first, to avoid asserting a
+path in a record of what a past task did; review (PR #44) correctly
+rejected it, since that form resolves to no file at all. The two records
+now give the `done/` path and say the `todo/` history in prose. The
+verbatim pasted-command blocks in the Task 0.1 note still contain the
+`todo/` path and are deliberately left alone — they are the output of
+commands run on 2026-08-04, and editing them would make them not that.
+Sweep for regressions with:
+
+```sh
+rg -oN --no-filename 'docs/followups/[A-Za-z0-9_./-]*\.md' -g '*.md' . \
+    | sort -u | while read -r p; do [ -e "$p" ] || echo "MISSING $p"; done
+```
