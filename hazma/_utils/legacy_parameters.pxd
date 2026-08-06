@@ -9,6 +9,9 @@ of ``hazma/_decay/``. Several values here diverge from the ones in the
 sibling ``constants.pxd``; the divergence is preserved deliberately, since
 merging the two tables would move published spectra. Consolidation is a
 separate, declared numerical change -- do not "fix" values in this file.
+
+The one departure from "verbatim" is the WIDTHS section: two malformed,
+never-referenced entries were removed there. See the note below it.
 """
 
 # MASSES (MeV)
@@ -60,8 +63,15 @@ cdef double BR_OMEGA_TO_PI0G = 0.0828     # omega -> pi0 + g
 cdef double BR_OMEGA_TO_2PI = 0.0153      # omega -> pi + pi
 
 # WIDTHS
-cdef double WIDTH_K = 3.3406**-13.
-cdef double WIDTH_PI = 2.528511206475808**-14.
+#
+# Deliberately empty. This table used to define WIDTH_K and WIDTH_PI with
+# `**` where a decimal exponent was meant -- `3.3406**-13.` is
+# exponentiation, evaluating to 1.5498e-7 rather than a width of order
+# 1e-13 MeV -- and no including module referenced either name. Deleted
+# rather than repaired: constants.pxd is the canonical source for decay
+# widths and carries both PDG-cited (Gamma[K+] = 5.317e-14 MeV,
+# Gamma[pi+] = 2.5284e-14 MeV). See
+# docs/followups/done/legacy-parameters-width-exponent-bug.md.
 
 # MISC.
 cdef double ALPHA_EM = 1.0 / 137.0  # Fine structure constant.

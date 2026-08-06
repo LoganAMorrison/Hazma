@@ -200,7 +200,12 @@ Live code:
    spellings (0.000123 / 1.2e-4 / 1.230e-4); `WIDTH_K = 3.3406**-13.`
    and `WIDTH_PI = 2.528511206475808**-14.` are `**` exponentiation
    where `e-` notation was meant (~10⁶ off; both currently unused).
-   Governed by the bit-parity rule in `../rules.md`.
+   Governed by the bit-parity rule in `../rules.md`. **The two widths
+   are gone as of 2026-08-05** — deleted rather than repaired, since
+   nothing read them
+   ([`docs/followups/done/legacy-parameters-width-exponent-bug.md`](../../../docs/followups/done/legacy-parameters-width-exponent-bug.md)).
+   The `MASS_E` and `BR_PI_TO_ENU` divergences are untouched and still
+   await consolidation.
 4. Unused cimports in mediator decay modules (safe to drop at port time):
    `dnde_photon_charged_pion_point` + `dnde_photon_neutral_pion_array`
    in the scalar module, `dnde_photon_neutral_pion_array` in the vector

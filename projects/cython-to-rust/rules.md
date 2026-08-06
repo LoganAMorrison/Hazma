@@ -30,7 +30,12 @@ see `AGENTS.md` and `docs/agents/`.
    `parameters.pxd` tables (see `references/cython-inventory.md`,
    "Bugs" §3). Consolidating to one table is a *separate, declared*
    numerical change after the port, not a silent side effect of it.
-   The relocated `legacy_parameters` header keeps its values verbatim.
+   The relocated `legacy_parameters` header keeps its values verbatim,
+   with one settled exception: its malformed `WIDTH_K` / `WIDTH_PI`
+   entries were deleted on 2026-08-05 because no module referenced
+   them, so there was no parity to preserve. Deleting a name nothing
+   reads is not a numerical change; changing a value something reads
+   still is, and this rule governs the latter.
 
 ## Licensing
 

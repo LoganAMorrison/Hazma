@@ -263,7 +263,8 @@ than something this task surfaced.
 
 - The `WIDTH_K` / `WIDTH_PI` `**`-vs-`e` exponent bug in the relocated
   header (see Decisions) is left as-is for bit-parity. Follow-up filed:
-  [`docs/followups/todo/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/todo/legacy-parameters-width-exponent-bug.md).
+  [`docs/followups/done/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/done/legacy-parameters-width-exponent-bug.md)
+  — resolved 2026-08-05 (both names deleted; nothing read them).
 
 ## Plan Impact
 

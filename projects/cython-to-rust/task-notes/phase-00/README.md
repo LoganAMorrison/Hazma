@@ -124,8 +124,9 @@ purge.
   `_decay/decay_electron`, `_decay/_decay_muon_bak`.
 - `projects/cython-to-rust/phases/phase-00-dead-code-purge.md` — Task
   0.1 exit criteria corrected (four → five built sites).
-- `docs/followups/todo/legacy-parameters-width-exponent-bug.md` (+
-  index row in `docs/followups/README.md`).
+- `docs/followups/done/legacy-parameters-width-exponent-bug.md` (+ index
+  row in `docs/followups/README.md`). Created under `todo/` by this task;
+  since resolved, so the live path is the `done/` one given here.
 
 ### Task 0.3
 
@@ -167,11 +168,13 @@ purge.
   `hazma.gamma_ray`). The replacement-free `gamma_ray_fsr` case now
   lives at
   [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../../docs/followups/done/msqrd-driven-fsr-generator.md).
-- `WIDTH_K` / `WIDTH_PI` in the legacy tables are written with `**`
-  where a decimal exponent was meant (no consumer today) — deferred to
-  [`docs/followups/todo/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/todo/legacy-parameters-width-exponent-bug.md).
-  After Task 0.3 only `legacy_parameters.pxd` still carries the bad
-  literals; the other two copies are gone.
+- ~~`WIDTH_K` / `WIDTH_PI` in the legacy tables are written with `**`
+  where a decimal exponent was meant (no consumer today)~~ — **closed
+  2026-08-05.** Task 0.3 left `legacy_parameters.pxd` as the only copy of
+  the bad literals; both names have since been deleted from it outright,
+  `constants.pxd` being the canonical PDG-cited source. No published
+  value moves. See
+  [`docs/followups/done/legacy-parameters-width-exponent-bug.md`](../../../../docs/followups/done/legacy-parameters-width-exponent-bug.md).
 - `cross_section_prefactor`'s threshold cancellation — deferred to
   [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
   Sequencing matters: if Phase 01 captures the corpus first, the Rust

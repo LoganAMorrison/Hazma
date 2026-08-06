@@ -95,6 +95,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   workflow file (PR #33: the matrix had gone 3.10–3.12 → 3.10–3.14 and
   `black --check` had been re-enabled, while three docs still said
   otherwise).
+- [status-encoding-path-reference] A `docs/followups/` path encodes the
+  item's status in a directory segment, so resolving one invalidates every
+  inbound reference. Stripping the segment to make the reference
+  status-neutral is not a fix — `docs/followups/<slug>.md` resolves to no
+  file at all, which is worse than the stale-but-real path it replaced.
+  Repoint to the new path and say the old one in prose if the history
+  matters. `check_doc_citations.py` will not catch this: it bounds-checks
+  `.py`/`.pyx`/`.pxd` line citations only, so nothing verifies that a
+  markdown path reference resolves. Sweep with
+  `rg -oN --no-filename 'docs/followups/[A-Za-z0-9_./-]*\.md' -g '*.md' .
+  | sort -u` and test each hit with `[ -e ]` (PR #44: two Phase-00
+  task-note records were left naming a status-stripped path).
 - [degenerate-sample-count] An API whose contract includes a statistical
   error estimate must validate its sample-count input at the public entry
   point: a `ddof=1` sample deviation is undefined below two samples, and a
