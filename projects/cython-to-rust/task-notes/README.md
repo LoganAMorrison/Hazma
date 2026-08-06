@@ -144,12 +144,16 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - **Out-of-band (`two_body_momentum`, resolves the Task 0.3 follow-up):
   the two-body momentum is now computed from the factored form.** This
   reverses the `cross_section_prefactor` drift recorded above and goes
-  past it: relative error against an exact-rational reference is ≤3e-16
+  past it: relative error against an exact-rational reference is ≤4.4e-16
   at every distance from threshold, versus 4e-2 at threshold for the
-  `kallen_lambda` form. Values move by ≤5e-16 at `cme ≥ 1.1 ×`
-  threshold, 2.0e-13 at `1.01 ×`, and 1.3e-4 within 1e-10 of threshold;
+  `kallen_lambda` form. Values move by ≤2e-15 at `cme ≥ 1.1 ×`
+  threshold (≤5e-16 at `≥ 2 ×`), 2.0e-13 at `1.01 ×`, and 1.3e-4 within
+  1e-10 of threshold;
   at threshold itself `cross_section_prefactor` now returns `+inf`
-  instead of a large finite number. Also repointed
+  instead of a large finite number, and the entire below-threshold
+  region is now NaN (λ turns positive again below `|m1 - m2|`, where
+  both the Källén form and the first factored draft returned a finite,
+  meaningless momentum). Also repointed
   `hazma.phase_space` two-body integration and `hazma.deprecated.rambo`.
   **Phase 01 corpus note:** this landed before the parity corpus is
   generated, so the corpus captures the fixed values and the Rust port

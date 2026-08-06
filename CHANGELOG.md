@@ -58,21 +58,28 @@ signature did.
   dominated by roundoff. All of these now call the new
   `hazma.utils.two_body_momentum`, whose factored form has no such
   cancellation. Measured over 21 mass pairs from {e, μ, π⁰, π±, K±, p},
-  `cross_section_prefactor` moves by ≤5e-16 relative at
-  `cme ≥ 1.1 ×` threshold, 2.0e-13 at `1.01 ×`, 1.3e-8 at
+  `cross_section_prefactor` moves by ≤2e-15 relative at
+  `cme ≥ 1.1 ×` threshold (≤5e-16 at `≥ 2 ×`), 2.0e-13 at `1.01 ×`, 1.3e-8 at
   `1 + 1e-6`, and 1.3e-4 within 1e-10 of threshold; `TwoBody.integrate`
   moves by ≤4e-15 at `1.01 ×` threshold and 2.7e-9 at `1 + 1e-10`. The
   new values are the accurate ones — relative error against an
-  exact-rational reference is ≤3e-16 everywhere, where the old form
-  reached 4e-2 at threshold. **Two behavior changes at the kinematic
-  edge:** exactly at threshold `cross_section_prefactor` now returns
-  `+inf` (the physical divergence of the flux factor as the relative
-  velocity vanishes) rather than a large finite number; and for unequal
-  masses, where `m1 + m2` rounds, the threshold is now resolved to the
-  last bit, so a `cme` that rounds just below it returns NaN instead of a
-  plausible-looking number. Every current caller integrates by Monte
-  Carlo with a percent-level statistical error, so no published result is
-  affected. Resolves
+  exact-rational reference is ≤4.4e-16 everywhere, where the old form
+  reached 4.0e-2 within 1e-12 of threshold. **Three behavior changes at
+  the edges of the physical domain:** (1) exactly at threshold `cross_section_prefactor`
+  now returns `+inf` (the physical divergence of the flux factor as the
+  relative velocity vanishes) rather than a large finite number; (2) for
+  unequal masses, where `m1 + m2` rounds, the threshold is now resolved
+  to the last bit, so a `cme` that rounds just below it returns NaN
+  instead of a plausible-looking number; and (3) **the whole
+  below-threshold region is now NaN.** `kallen_lambda` is negative only
+  *between* its two roots `|m1 - m2|` and `m1 + m2`, and turns positive
+  again below the lower one, so for `cme < |m1 - m2|` the old form
+  returned a finite, physically meaningless momentum — for example
+  `two_body_momentum(1.0, 10.0, 1.0)` would have given `48.98979…` and
+  `cross_section_prefactor(10.0, 1.0, 1.0)` `0.005103…`, despite a
+  threshold of 11. Both are NaN now. Every current caller integrates by
+  Monte Carlo with a percent-level statistical error and none evaluates
+  below threshold, so no published result is affected. Resolves
   [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
 
 ## [2.1.0] — 2026-08-03

@@ -19,8 +19,8 @@ larger than their sum, so the result is dominated by roundoff.
 The two-body-momentum spelling of that pattern,
 `sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)`, was fixed by
 `hazma.utils.two_body_momentum` — the factored form with the heavier mass
-subtracted first, which holds ≤3e-16 relative error all the way to
-threshold where the Källén form reaches 4e-2. The measurements and the
+subtracted first, which holds ≤4.4e-16 relative error all the way to
+threshold, where the Källén form reaches 4.0e-2. The measurements and the
 reasoning are in that follow-up.
 
 The same defect is still present at roughly 25 other call sites. They
@@ -67,9 +67,12 @@ Grouped as suggested commits:
   `hazma/form_factors/vector/_three_body.py:512-513,794-795,845-846,904-912,926-927`
 - **Legacy vector-mediator form factors:**
   `hazma/vector_mediator/form_factors/omega_pi.py:41`,
-  `.../widths.py:67,87`, `.../pi_pi_eta.py:93-94,142-143`,
-  `.../pi_pi_etap.py:73-74,101-110`, `.../pi_pi_omega.py:45-46,104-105,123-124`,
-  `.../utils.py:486`
+  `hazma/vector_mediator/form_factors/widths.py:67,87`,
+  `hazma/vector_mediator/form_factors/pi_pi_eta.py:93-94,142-143`,
+  `hazma/vector_mediator/form_factors/pi_pi_etap.py:73-74,101-110`,
+  `hazma/vector_mediator/form_factors/pi_pi_omega.py:45-46,104-105`,
+  `hazma/vector_mediator/form_factors/pi_pi_omega.py:123-124`,
+  `hazma/vector_mediator/form_factors/utils.py:486`
 - **RH neutrino widths:** `hazma/rh_neutrino/_widths.py:125,166,323,476`
 - **Scalar-mediator constraints:**
   `hazma/scalar_mediator/_scalar_mediator_constraints.py:59,160,212`

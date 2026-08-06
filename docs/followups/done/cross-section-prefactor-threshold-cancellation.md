@@ -113,13 +113,18 @@ is then of order `min(m1, m2)`, so the second subtraction is exact too.
 Relative error against an exact-rational (`fractions.Fraction`)
 reference over 21 mass pairs from {e, μ, π⁰, π±, K±, p}:
 
-| `cme / (m1+m2)` | Källén | factored | factored, heavier first |
+| `cme / (m1+m2)` | Källén | factored | shipped (heavier first, 2 roots) |
 | --- | --- | --- | --- |
-| 1 (threshold) | 4.0e-02 | 4.3e-05 | 2.2e-16 |
-| 1 + 1e-10 | 1.3e-04 | 4.3e-07 | 2.6e-16 |
-| 1 + 1e-7 | 1.3e-07 | 4.3e-10 | 3.4e-16 |
+| 1 + 1e-12 | 4.0e-02 | 4.3e-05 | 2.2e-16 |
+| 1 + 1e-10 | 1.3e-04 | 4.3e-07 | 2.5e-16 |
+| 1 + 1e-7 | 1.3e-07 | 4.3e-10 | 2.3e-16 |
 | 1 + 1e-3 | 3.6e-12 | 3.8e-14 | 2.2e-16 |
-| ≥ 1.1 | ≤2.0e-15 | ≤6.4e-16 | ≤2.6e-16 |
+| 1.01 | 2.0e-13 | 2.9e-15 | 4.1e-16 |
+| ≥ 1.1 | ≤3.0e-16 | ≤5.1e-16 | ≤4.4e-16 |
+
+Worst case for the shipped form over that whole grid: **4.4e-16**. Note
+the last row is the regime where all three agree to roundoff — the
+Källén form is only bad *near* threshold, which is the whole point.
 
 **The threshold is now resolved to the last bit**, which is a second
 behavior change at the edge. For unequal masses `m1 + m2` rounds, so a
@@ -129,6 +134,20 @@ NaN in the second — correct in both, but the old form could not tell the
 two apart because its own roundoff residue was larger than the distance
 being resolved. Equal masses are unaffected: `m + m = 2m` is exact, so
 `p` is exactly `0.0` and `cross_section_prefactor` returns `+inf`.
+
+**The four factors are grouped into two square roots, not one** — a
+third behavior change, and the one PR review caught. λ is negative only
+*between* its roots `|m1 - m2|` and `m1 + m2`; below the lower root it
+turns positive again, so a single square root over the whole product
+returns a finite, meaningless momentum for `cme < |m1 - m2|`. That was
+true of the Källén form too (`two_body_momentum(1.0, 10.0, 1.0)` and its
+Källén equivalent both gave `48.98979485566356`, despite a threshold of
+11), so it is a pre-existing defect rather than a regression — but the
+new docstring promised NaN below threshold, which made it a false
+contract. Pairing each sign-changing factor with a strictly positive
+partner makes the first root go NaN for `cme < m1 + m2` and the second
+for `cme < |m1 - m2|`, covering the whole unphysical domain. Costs one
+extra square root and no accuracy (still ≤4.4e-16 to threshold).
 
 The `test/test_utils.py` tests named in "What" were rewritten as
 promised: the cancellation test became

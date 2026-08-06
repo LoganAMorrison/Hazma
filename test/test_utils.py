@@ -109,7 +109,7 @@ def test_two_body_momentum_stable_near_threshold(
     This is the property the factored, heavier-mass-first form buys, and
     the reason it replaced ``sqrt(kallen_lambda(...))`` — see
     ``docs/followups/done/cross-section-prefactor-threshold-cancellation.md``.
-    `rel=1e-14` sits ~30x above the 3e-16 measured worst case over this
+    `rel=1e-14` sits ~20x above the 4.4e-16 measured worst case over this
     grid, which leaves room for a different libm sqrt without leaving room
     for a regression: the old form is off by 4e-5 at eps=1e-12 and 1e-7 at
     eps=1e-7, both of which blow straight through this bound.
@@ -197,23 +197,42 @@ def test_two_body_momentum_threshold_resolved_to_the_last_bit(
 
 
 @pytest.mark.parametrize(("m1", "m2"), MASS_PAIRS)
-def test_two_body_momentum_nan_below_threshold(m1: float, m2: float) -> None:
-    """Return NaN below threshold, where no two-body state exists.
+@pytest.mark.parametrize(
+    "fraction",
+    [0.999, 0.9, 0.5, 0.1, 1e-3, 1e-9],
+    ids=["thr999", "thr9", "thr5", "thr1", "thr1e-3", "thr1e-9"],
+)
+def test_two_body_momentum_nan_below_threshold(
+    m1: float, m2: float, fraction: float
+) -> None:
+    """Return NaN at every `cme` below threshold, where no state exists.
 
-    Unchanged from the Kaellen form, which also took the square root of a
-    negative number here. Pinned so the new factorization cannot quietly
-    turn an unphysical request into a plausible-looking number.
-
-    `cme` is placed halfway between the two roots of the Kaellen
-    polynomial, ``|m1 - m2|`` and ``m1 + m2``, since that is the only
-    interval where it is negative. A fixed fraction of threshold such as
-    ``0.99 * (m1 + m2)`` would fall through the lower root for the
-    lopsided pairs here and back into positive, physically meaningless
-    territory.
+    The fractions sweep the whole unphysical domain, not just the part
+    where the Kaellen polynomial happens to be negative. `lambda` has two
+    roots, ``|m1 - m2|`` and ``m1 + m2``, and is negative only *between*
+    them; below the lower root it turns positive again. A single square
+    root over the full product therefore returned a finite, meaningless
+    momentum down there — `two_body_momentum(1.0, 10.0, 1.0)` gave 48.99
+    despite a threshold of 11. The two-root grouping fixes that, and the
+    small fractions here are what pin it: `1e-9` is far below ``|m1 - m2|``
+    for every unequal pair in `MASS_PAIRS`.
     """
-    cme = max(m1, m2) + 0.5 * min(m1, m2)
     with np.errstate(invalid="ignore"):
-        assert np.isnan(two_body_momentum(cme, m1, m2))
+        assert np.isnan(two_body_momentum(fraction * (m1 + m2), m1, m2))
+
+
+def test_two_body_momentum_nan_below_lower_kallen_root() -> None:
+    """Pin the exact reviewer reproducer for the lower-root region.
+
+    Kept as a literal alongside the swept test above so the regression
+    that motivated the two-root grouping is named and reproducible rather
+    than only implied by a parametrization. Masses 10 and 1 put the
+    Kaellen roots at 9 and 11; `cme = 1` sits below both, where the old
+    single-root form returned 48.98979485566356.
+    """
+    with np.errstate(invalid="ignore"):
+        assert np.isnan(two_body_momentum(1.0, 10.0, 1.0))
+        assert np.isnan(cross_section_prefactor(10.0, 1.0, 1.0))
 
 
 def test_two_body_momentum_broadcasts_over_cme() -> None:

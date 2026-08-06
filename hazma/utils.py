@@ -88,7 +88,9 @@ def kallen_lambda(a, b, c):
     return a**2 + b**2 + c**2 - 2 * a * b - 2 * a * c - 2 * b * c
 
 
-def two_body_momentum(cme: float, m1: float, m2: float) -> float:
+def two_body_momentum(
+    cme: RealOrRealArray, m1: RealOrRealArray, m2: RealOrRealArray
+) -> RealOrRealArray:
     r"""
     Returns the magnitude of the common three-momentum of a two-body state.
 
@@ -105,8 +107,8 @@ def two_body_momentum(cme: float, m1: float, m2: float) -> float:
     -------
     p: float or array-like
         Magnitude of either particle's three-momentum in the center-of-mass
-        frame, in MeV. Zero at threshold and NaN below it, where no such
-        state exists. The threshold is resolved to the last bit: for
+        frame, in MeV. Zero at threshold and NaN everywhere below it, where
+        no such state exists. The threshold is resolved to the last bit: for
         unequal masses ``m1 + m2`` itself rounds, so passing that sum as
         `cme` gives an exact zero only when the sum is exact (as it is for
         ``m1 == m2``), and otherwise gives either a sub-ulp momentum or NaN
@@ -119,8 +121,8 @@ def two_body_momentum(cme: float, m1: float, m2: float) -> float:
 
     .. math::
 
-        p = \frac{\sqrt{(E - m_1 - m_2)(E - m_1 + m_2)
-                        (E + m_1 - m_2)(E + m_1 + m_2)}}{2 E}
+        p = \frac{\sqrt{(E - m_1 - m_2)(E + m_1 + m_2)}
+                  \sqrt{(E - m_1 + m_2)(E + m_1 - m_2)}}{2 E}
 
     with :math:`E` the center-of-mass energy. The two are algebraically
     identical and differ only in conditioning: `kallen_lambda` cancels to
@@ -134,15 +136,29 @@ def two_body_momentum(cme: float, m1: float, m2: float) -> float:
     so the second subtraction is exact too. Subtracting the lighter mass
     first instead leaves an ``ulp(cme)`` absolute error in a difference
     that tends to zero. Measured over 21 mass pairs from {e, mu, pi0, pi+,
-    K+, p}, the ordered form holds a relative error of 3e-16 all the way
-    to threshold, where the unordered factored form reaches 4e-5 and the
-    `kallen_lambda` form 4e-2.
+    K+, p}, the ordered form holds a relative error of 4.4e-16 all the way
+    down; within 1e-12 of threshold the unordered factored form reaches
+    4.3e-5 and the `kallen_lambda` form 4.0e-2.
+
+    The four factors are grouped into **two** square roots rather than one
+    so that the unphysical region is NaN throughout. :math:`\lambda` is
+    negative only between its roots :math:`|m_1 - m_2|` and
+    :math:`m_1 + m_2`; below the *lower* root it turns positive again, so a
+    single square root over the whole product returns a finite, meaningless
+    momentum for ``cme < |m1 - m2|``. Pairing each of the two
+    sign-changing factors with a strictly positive partner makes the first
+    root go NaN for ``cme < m1 + m2`` and the second for
+    ``cme < |m1 - m2|``, which covers the region between them and the
+    region below it. The grouping costs one extra square root and no
+    accuracy.
     """
     heavy = np.maximum(m1, m2)
     light = np.minimum(m1, m2)
-    lo = (cme - heavy - light) * (cme - heavy + light)
-    hi = (cme + heavy - light) * (cme + heavy + light)
-    return np.sqrt(lo * hi) / (2 * cme)
+    # Each root is negative in exactly one of the two unphysical regions;
+    # its partner factor is strictly positive, so neither sign is masked.
+    upper = np.sqrt((cme - heavy - light) * (cme + heavy + light))
+    lower = np.sqrt((cme - heavy + light) * (cme + heavy - light))
+    return upper * lower / (2 * cme)
 
 
 def cross_section_prefactor(m1: float, m2: float, cme: float) -> float:
@@ -165,8 +181,8 @@ def cross_section_prefactor(m1: float, m2: float, cme: float) -> float:
         The flux factor ``1 / (4 p cme)``, in MeV^-2, with `p` the
         center-of-mass momentum of the incoming pair. Diverges to positive
         infinity at threshold, where the relative velocity of the pair
-        vanishes, and is NaN below it. See `two_body_momentum` for how the
-        threshold itself is resolved.
+        vanishes, and is NaN everywhere below it. See `two_body_momentum`
+        for how the threshold itself is resolved.
     """
     p = two_body_momentum(cme, m1, m2)
     return 1.0 / (4.0 * p * cme)
