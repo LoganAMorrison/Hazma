@@ -23,7 +23,6 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 
 | Item | Added | Source | Scope |
 | --- | --- | --- | --- |
-| [`WIDTH_K`/`WIDTH_PI` exponent bug](todo/legacy-parameters-width-exponent-bug.md) | 2026-08-04 | cython-to-rust Task 0.1 | cross-cutting |
 | [Citation checker skips deleted in-repo files](todo/citation-checker-skips-deleted-inrepo-files.md) | 2026-08-05 | PR #42 review | cross-cutting |
 | [remaining `sqrt(kallen_lambda(...))` call sites](todo/kallen-under-sqrt-remaining-call-sites.md) | 2026-08-05 | carved out of the `cross_section_prefactor` fix | cross-cutting |
 
@@ -35,3 +34,4 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`black` pin diverges between pyproject and CI](done/black-pin-divergence-pyproject-vs-ci.md) | done | [PR #40](https://github.com/LoganAMorrison/Hazma/pull/40) — pins moved to a single PEP 735 `lint` dependency group that CI installs; repo reformatted with black 26.x (33 files). |
 | [`msqrd`-driven Monte-Carlo FSR generator](done/msqrd-driven-fsr-generator.md) | done | `hazma.spectra.dnde_photon_fsr` (ADR-0001, [PR #41](https://github.com/LoganAMorrison/Hazma/pull/41)) |
 | [`cross_section_prefactor` threshold cancellation](done/cross-section-prefactor-threshold-cancellation.md) | done | `hazma.utils.two_body_momentum` — factored Källén, heavier mass first; ≤4.4e-16 relative to threshold. Remaining λ-under-sqrt sites carved out to [their own follow-up](todo/kallen-under-sqrt-remaining-call-sites.md). |
+| [`WIDTH_K`/`WIDTH_PI` exponent bug](done/legacy-parameters-width-exponent-bug.md) | done | Both names deleted from `hazma/_utils/legacy_parameters.pxd` (no consumer; `constants.pxd` is canonical). No published value moves. |

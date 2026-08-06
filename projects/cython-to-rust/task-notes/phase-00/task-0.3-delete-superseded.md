@@ -269,8 +269,9 @@ what was actually worked to.
 - `docs/agents/review-lenses.md:132` — same `conftest.py` claim.
 - `docs/versioning.md:43` — the underscore-package example no longer
   names `hazma/_decay/`.
-- `docs/followups/todo/legacy-parameters-width-exponent-bug.md` — its two
+- `docs/followups/legacy-parameters-width-exponent-bug.md` — its two
   `_decay` / `_positron` entry points are now struck through as deleted.
+  (Was under `todo/` when this task ran; now `done/`.)
 
 ### Modified — notebooks
 
