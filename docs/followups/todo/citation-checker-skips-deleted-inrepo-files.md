@@ -16,10 +16,11 @@ exists at all it reports EXTERNAL and **skips** — correct for a
 file the repo *used to have* is indistinguishable from one into a
 third-party library.
 
-That is the gap the PR #42 review exposed from the other side.
-`boost.pyx:427` failed loudly because `hazma/_utils/boost.pyx` still
-exists and merely got shorter. Had the purge deleted the file outright,
-the same rotten citation would have been skipped in silence.
+That is the gap the PR #42 review exposed from the other side. The
+citation to ``boost.pyx line 427 as of `e94fb21^` `` failed loudly
+because `hazma/_utils/boost.pyx` still exists and merely got shorter.
+Had the purge deleted the file outright, the same rotten citation would
+have been skipped in silence.
 
 The dead-code purge makes this concrete: as of PR #42 the checker skips
 **25** citations, and the majority are not third-party at all — they
