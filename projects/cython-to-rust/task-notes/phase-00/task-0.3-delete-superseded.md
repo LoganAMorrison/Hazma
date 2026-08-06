@@ -85,7 +85,7 @@ what was actually worked to.
   threshold. Away from threshold they agree to roundoff (≤4.8e-15 at
   `cme ≥ 1.1 ×` threshold); within 1e-7 of threshold the difference
   reaches 2.1e-7 relative. Measured, declared, and filed as
-  [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md)
+  [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md)
   — full table in Verification.
 - **`minkowski_dot` is also not bit-identical**, for a different reason:
   the C compiler contracts `a*b - c*d` into an FMA, the Python version
@@ -250,7 +250,7 @@ what was actually worked to.
 
 - `test/test_utils.py` — 16 pinned tests for `minkowski_dot` and
   `cross_section_prefactor`.
-- `docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`
+- `docs/followups/done/cross-section-prefactor-threshold-cancellation.md`
   (+ index row in `docs/followups/README.md`).
 
 ### Modified — durable docs
@@ -541,7 +541,7 @@ pre-existing unformatted `.py`. Scope `--paths` to the files you changed.
 ## Open Questions
 
 - `cross_section_prefactor`'s threshold cancellation — filed as
-  [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md).
+  [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
   It is a declared numerical change to a live public API, so it is
   deliberately *not* bundled into a dead-code deletion.
 - `boost_jac` / `boost_eng` in `_utils/boost.pxd` have zero cimporters but
@@ -598,7 +598,7 @@ references, none is a live path:
 
 | File | Disposition |
 | --- | --- |
-| `docs/followups/todo/cross-section-prefactor-threshold-cancellation.md` | KEPT — cites the deleted `common_functions.pyx` as prior art for the factored form, with a `git show` recipe |
+| `docs/followups/todo/cross-section-prefactor-threshold-cancellation.md` (since resolved; now under `done/`) | KEPT — cites the deleted `common_functions.pyx` as prior art for the factored form, with a `git show` recipe |
 | `hazma/spectra/_positron/__init__.py` | KEPT — the new `Raises` section names `hazma._positron.positron_decay` as the removed backend |
 | `hazma/utils.py:143` | KEPT — provenance note on the relocated `minkowski_dot` |
 | `test/test_utils.py:4` | KEPT — module docstring records which deleted module these tests took over from |

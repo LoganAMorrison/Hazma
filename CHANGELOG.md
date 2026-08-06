@@ -14,6 +14,15 @@ signature did.
 
 ### Added
 
+- **`hazma.utils.two_body_momentum(cme, m1, m2)` — the common
+  center-of-mass three-momentum of a two-body state, in MeV.** Evaluates
+  the factored form of the Källén polynomial with the heavier mass
+  subtracted first, which is algebraically identical to
+  `sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)` but does not
+  cancel at threshold. Broadcasts over `cme` and the masses. This is now
+  the single definition of that momentum inside hazma; see `Changed`
+  below for the values it moves.
+
 - **`hazma.spectra.dnde_photon_fsr` — exact FSR photon spectra from a
   user-supplied squared matrix element.** The maintained replacement for
   the removed `hazma.gamma_ray.gamma_ray_fsr` (cython-to-rust ADR-0003),
@@ -35,6 +44,36 @@ signature did.
   and `dnde_xx_to_v_to_pipig` at `rtol=1e-5`, plus Ward-identity,
   soft-photon, Altarelli-Parisi, and flat-matrix-element phase-space
   checks.
+
+### Changed
+
+- **Two-body kinematics near threshold move; everything else moves by
+  roundoff at most.** `hazma.utils.cross_section_prefactor` and the
+  two-body branches of `hazma.phase_space` (`Rambo.cross_section`,
+  `Rambo.integrate`, `TwoBody.integrate`) and `hazma.deprecated.rambo`
+  built the incoming momentum as
+  `sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)`. The Källén
+  polynomial sums four terms of size `cme**4` that cancel to zero at the
+  threshold `cme = m1 + m2`, so close to threshold the result was
+  dominated by roundoff. All of these now call the new
+  `hazma.utils.two_body_momentum`, whose factored form has no such
+  cancellation. Measured over 21 mass pairs from {e, μ, π⁰, π±, K±, p},
+  `cross_section_prefactor` moves by ≤5e-16 relative at
+  `cme ≥ 1.1 ×` threshold, 2.0e-13 at `1.01 ×`, 1.3e-8 at
+  `1 + 1e-6`, and 1.3e-4 within 1e-10 of threshold; `TwoBody.integrate`
+  moves by ≤4e-15 at `1.01 ×` threshold and 2.7e-9 at `1 + 1e-10`. The
+  new values are the accurate ones — relative error against an
+  exact-rational reference is ≤3e-16 everywhere, where the old form
+  reached 4e-2 at threshold. **Two behavior changes at the kinematic
+  edge:** exactly at threshold `cross_section_prefactor` now returns
+  `+inf` (the physical divergence of the flux factor as the relative
+  velocity vanishes) rather than a large finite number; and for unequal
+  masses, where `m1 + m2` rounds, the threshold is now resolved to the
+  last bit, so a `cme` that rounds just below it returns NaN instead of a
+  plausible-looking number. Every current caller integrates by Monte
+  Carlo with a percent-level statistical error, so no published result is
+  affected. Resolves
+  [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
 
 ## [2.1.0] — 2026-08-03
 

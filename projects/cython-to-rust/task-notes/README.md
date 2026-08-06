@@ -131,8 +131,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     Affects `hazma.deprecated.rambo` (public per `versioning.md` §6) and
     the broken-on-import `hazma.gamma_ray`. Seeded end-to-end check on
     `PhaseSpace.cross_section`: bit-identical at ordinary kinematics,
-    1.8e-10 at threshold × (1+1e-7). Repair is deferred to
-    [`docs/followups/todo/cross-section-prefactor-threshold-cancellation.md`](../../../docs/followups/todo/cross-section-prefactor-threshold-cancellation.md).
+    1.8e-10 at threshold × (1+1e-7). Repair landed out-of-band —
+    see the `two_body_momentum` entry below.
+    [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../../../docs/followups/done/cross-section-prefactor-threshold-cancellation.md).
   - _`minkowski_dot` (Cython → `hazma.utils`):_ ≤**2.7e-14** relative
     over 1998 random four-vector pairs (≤3.2e-15 on on-shell momenta).
     Cause: the C compiler contracts `a*b - c*d` into an FMA. Only
@@ -140,6 +141,19 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     `docs/versioning.md` excludes from the public surface.
   - Neither drift changes the project's `version_bump: major`, which the
     API removals already force.
+- **Out-of-band (`two_body_momentum`, resolves the Task 0.3 follow-up):
+  the two-body momentum is now computed from the factored form.** This
+  reverses the `cross_section_prefactor` drift recorded above and goes
+  past it: relative error against an exact-rational reference is ≤3e-16
+  at every distance from threshold, versus 4e-2 at threshold for the
+  `kallen_lambda` form. Values move by ≤5e-16 at `cme ≥ 1.1 ×`
+  threshold, 2.0e-13 at `1.01 ×`, and 1.3e-4 within 1e-10 of threshold;
+  at threshold itself `cross_section_prefactor` now returns `+inf`
+  instead of a large finite number. Also repointed
+  `hazma.phase_space` two-body integration and `hazma.deprecated.rambo`.
+  **Phase 01 corpus note:** this landed before the parity corpus is
+  generated, so the corpus captures the fixed values and the Rust port
+  must reproduce _these_, not the pre-fix ones.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct

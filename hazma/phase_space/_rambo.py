@@ -17,7 +17,12 @@ import numpy as np
 import numpy.typing as npt
 from scipy import integrate
 
-from hazma.utils import RealArray, cross_section_prefactor, kallen_lambda, lnorm_sqr
+from hazma.utils import (
+    RealArray,
+    cross_section_prefactor,
+    lnorm_sqr,
+    two_body_momentum,
+)
 
 from ._base import AbstractPhaseSpaceGenerator, AbstractPhaseSpaceIntegrator
 from ._dist import PhaseSpaceDistribution1D
@@ -396,7 +401,7 @@ class Rambo(AbstractPhaseSpaceIntegrator, AbstractPhaseSpaceGenerator):
     def _integrate_two_body(self) -> Tuple[float, float]:
         cme = self.cme
         m1, m2 = self.masses
-        p = np.sqrt(kallen_lambda(cme**2, m1**2, m2**2)) / (2 * cme)
+        p = two_body_momentum(cme, m1, m2)
         e1 = np.hypot(m1, p)
         e2 = np.hypot(m2, p)
         ps = np.zeros((4, 2), dtype=np.float64)
