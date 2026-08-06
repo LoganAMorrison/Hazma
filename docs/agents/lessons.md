@@ -107,10 +107,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   puts **every** fact that doc cites into your PR's scope, however
   mechanical your own edit was. A diff that only stripped markdownlint
   pragmas from `references/cython-inventory.md` inherited a
-  `boost.pyx:427,447,456` citation into a file a later purge had cut from
-  461 to 241 lines — stale since `e94fb21`, caught by review, not by the
-  author. Run `check_doc_citations.py` over the docs you touched, not the
-  ones you wrote, and pin historical evidence to a commit
+  ``boost.pyx lines 427, 447, 456 as of `e94fb21^` `` citation into a file
+  a later purge had cut from 461 to 241 lines — stale since `e94fb21`,
+  and itself unpinned here until PR #43 tripped over it; caught by
+  review, not by the author. Run `check_doc_citations.py` over the docs
+  you touched, not the ones you wrote, and pin historical evidence to a commit
   (``lines 427, 447, 456 as of `e94fb21^` ``) so a later deletion cannot
   falsify it (PR #42, #43 — #43 ran the checker over only the two docs a
   reviewer named; three further elisions in the same file resolved by
