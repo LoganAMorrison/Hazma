@@ -4,8 +4,6 @@ title: Mediator cross sections
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 05: Mediator cross sections
 
 ## Goal

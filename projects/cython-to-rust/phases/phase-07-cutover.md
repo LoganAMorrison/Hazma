@@ -4,8 +4,6 @@ title: Packaging cutover and close
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 07: Packaging cutover and close
 
 ## Goal

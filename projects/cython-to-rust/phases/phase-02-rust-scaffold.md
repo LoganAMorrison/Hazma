@@ -4,8 +4,6 @@ title: Rust scaffold
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 02: Rust scaffold
 
 ## Goal

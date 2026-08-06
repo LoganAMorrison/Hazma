@@ -35,6 +35,17 @@ before you stage anything.
    `_build.py` change.
 6. **`markdownlint --dot <changed .md files>`** — when curated docs
    changed. Word-diff after any `--fix`: it can corrupt code spans.
+   Run it from the repo root: the committed
+   [`.markdownlint.jsonc`](../../.markdownlint.jsonc) is discovered
+   relative to the **current directory**, not to the linted file, so
+   the same file lints differently from a subdirectory. See
+   [Markdown rules](#markdown-rules) for what the config relaxes —
+   reach for an inline `<!-- markdownlint-disable -->` only after
+   confirming the config does not already cover your case. Arguments
+   are globs: one that matches nothing prints the usage banner and
+   exits **0**, so a typo'd path lints nothing and looks green.
+   `preflight.sh` checks the `--md` paths exist; a bare `markdownlint`
+   run does not.
 7. **Version-bump check** — only when the diff flips a
    `projects/<slug>/PLAN.md` `status:` to `Complete`.
    `scripts/agents/preflight.sh --closing` verifies that `VERSION` in
@@ -53,6 +64,37 @@ the exit status of the **last** command, which masks the gate's own
 failure. Run each gate bare and read its status (and, for pytest, its
 summary line). If you must filter output, capture the exit code
 separately.
+
+## Markdown rules
+
+Gate 6 runs against the committed
+[`.markdownlint.jsonc`](../../.markdownlint.jsonc) at the repo root.
+Everything not listed there is at its markdownlint default, including
+**MD013's 80-column limit on prose** — the config buys tables and code
+blocks room, not paragraphs. What it relaxes, and why:
+
+| Rule | Setting | Because |
+| --- | --- | --- |
+| MD013 line-length | `tables: false`, `code_blocks: false` | Grounded-fact tables are as wide as their content; rewrapping pasted commands or pasted output falsifies the record. |
+| MD025 single-title | `front_matter_title: ""` | A phase file carries `title:` in frontmatter *and* an H1 in the body — that is the schema. |
+| MD041 first-line-heading | `name:` accepted as the title | `SKILL.md` declares its title as frontmatter `name:` and opens with prose. |
+| MD033 no-inline-html | off | `<angle bracket>` placeholders are the repo's fill-in notation; markdownlint cannot tell one from an HTML tag. |
+| MD049 emphasis-style | off | `*emphasis*` inline and `_…_` for standing "nothing here yet" markers are two notations with two meanings. |
+| MD060 table-column-style | off | A template's placeholder cells change width once a project fills them in, so an aligned template is a misaligned copy. |
+
+One trap the config cannot cover: `tables: false` and
+`code_blocks: false` exempt **parsed** tables and fences, and nothing
+inside an HTML comment is parsed. A wide table commented out as a
+template alternative therefore trips MD013 anyway. Fence it as a
+```` ```markdown ```` block instead of commenting it out — that is why
+the phased block in
+[`task-notes/README.md`](../../projects/_template/task-notes/README.md)
+is a fence. Do not reach for a pragma there: a pragma in
+`projects/_template/` is copied into every project that follows.
+
+markdownlint is not pinned by this repo and its rule set grows between
+releases (MD060 is a recent addition). If a rule fires that nobody else
+sees, compare `markdownlint --version` before assuming the doc is wrong.
 
 ## Sequential critical path
 

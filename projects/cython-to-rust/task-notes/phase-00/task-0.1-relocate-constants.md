@@ -279,8 +279,6 @@ change to task ordering, scope, or any interface — `PLAN.md` needs no
 edit (it holds only the phase table, and this does not change the
 phase's deliverable).
 
-<!-- markdownlint-disable MD013 -- pasted command output and evidence tables; wrapping them would falsify the record -->
-
 ## Stale-state sweep
 
 Run against branch `claude/cython-to-rust/task-0.1-relocate-constants`
@@ -497,8 +495,6 @@ was frozen. The deterministic ones — `rg -c`, `diff`, `wc -l`,
 `check_doc_citations.py`, `git diff --stat`, the npz comparison —
 reproduced byte-identically; the two `rg -n` blocks reproduced the same
 rows under `sort`.
-
-<!-- markdownlint-enable MD013 -->
 
 ## Handoff to Next Task
 

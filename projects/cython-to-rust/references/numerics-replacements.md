@@ -10,13 +10,11 @@ any Phase 04–06 task that touches an integrand.
 
 Only three functions are cimported anywhere live:
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | Function | Live call sites | Math |
 | --- | --- | --- |
 | `spence` | `spectra/_photon/_muon.pyx:13,113` (`spence(xm) - spence(xp)`) | Dilogarithm. **Convention trap:** scipy's `spence(z)` = Li₂(1−z), not Li₂(z). |
 | `k1` | `_c_scalar_mediator_cross_sections.pyx:1361`, `_c_vector_mediator_cross_sections.pyx:606` (`k1(x*z)` in `__thermal_cross_section_integrand`) | Modified Bessel K₁ (Maxwell–Boltzmann weight). |
 | `kn` | scalar `:1404`, vector `:650` (`kn(2, x)` in the ⟨σv⟩ prefactor `x/(2*kn(2,x))**2`) | Modified Bessel K_n, integer order. |
-<!-- markdownlint-enable MD013 -->
 
 This cimport is why `pyproject.toml` pins `scipy>=1.13` in
 `[build-system].requires` (exported C symbols must ABI-match between
@@ -52,7 +50,6 @@ All live sites call `quad` from Cython with a `cdef`-function callback
 (Cython auto-wraps it as a Python callable → QUADPACK re-enters Python
 per node). Sites and their settings:
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | Call site | Interval | Settings |
 | --- | --- | --- |
 | `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` |
@@ -62,7 +59,6 @@ per node). Sites and their settings:
 | scalar `thermal_cross_section` (`:1370` region) | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2ms/mx]` (QAGP) |
 | vector `thermal_cross_section` (`:615` region) | z ∈ [2, max(50/x, 150)] | `points=[2, mv/mx, 2mv/mx]` (QAGP) |
 | 4 × mediator spectrum modules | cosθ ∈ [−1, 1] | `points=[-1,1]`, `epsabs=1e-10`, `epsrel=1e-5` |
-<!-- markdownlint-enable MD013 -->
 
 **Replacement decision (ADR-0002):** port finite-interval QUADPACK —
 `qk15`/`qk21` rules, the `qelg` ε-algorithm extrapolation, `qags`, and
@@ -131,14 +127,12 @@ form: `1/(2γβk₀)` inside the boosted support window, else 0.
 Logan's 2020–2022 GSL ports at github.com/rust-cyphus, evaluated for
 reuse. Test runs on rustc 1.96.0:
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | Crate | Verdict on quality | License | Reusable? |
 | --- | --- | --- | --- |
 | `cyphus-integration` (3.8k lines) | GSL `qag/qags/qagp/qagi` + `qk` + ε-table. After deleting a stale `#![feature(const_option)]` gate (stabilized since), **43/44 tests pass**; the one failure is doubly-infinite `qagi`, which Hazma never uses. Builder API (`epsabs/epsrel/limit/order/singular_points`) mirrors the scipy surface. | **GPL-3** (explicit GSL copyright headers — "Adapted from the GNU Scientific Library", Brian Gough copyright) | Not in-repo (license). See ADR-0002: manual dev-time cross-check oracle only. |
 | `cyphus-specfun` (20.8k lines) | Compiles clean; **99/102 tests pass** (failures: `cyl_bessel_yn_e`, `exprel_n_e`, `choose_e` — none needed here). Has `cyl_bessel_k*`; **no dilog/spence**. | **GPL-3** (GSL port) | Not in-repo. `spec_math` (cephes) is the better parity match for scipy anyway — scipy's k1/kn/spence are cephes, not GSL. |
 | `cyphus-interpolation` (2.8k lines) | FITPACK/dierckx curfit/splev port + GSL-style `interp1d` with accel. | No license file; mixed GSL-idiom provenance | Out of scope — Hazma's spline use is pure-Python scipy and stays. |
 | `cyphus-diffeq` (3.9k lines) | Hairer dopri5/dop853/radau/rodas ports. | No license file | Out of scope — relic-density ODEs are Python-level scipy and stay. Possible future interest if relic density ever moves to Rust. |
-<!-- markdownlint-enable MD013 -->
 
 Key conclusions: (1) GPL-3 provenance bars vendoring or linking any of
 it into MIT-licensed Hazma — Logan authored the ports but cannot

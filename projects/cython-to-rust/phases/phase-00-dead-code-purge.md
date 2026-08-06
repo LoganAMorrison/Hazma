@@ -4,8 +4,6 @@ title: Dead-code purge
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 00: Dead-code purge
 
 ## Goal

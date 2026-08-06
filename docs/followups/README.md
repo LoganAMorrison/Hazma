@@ -23,7 +23,6 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 
 | Item | Added | Source | Scope |
 | --- | --- | --- | --- |
-| [markdownlint config for templates](todo/markdownlint-config-for-templates.md) | 2026-08-03 | cython-to-rust scaffolding | cross-cutting |
 | [`WIDTH_K`/`WIDTH_PI` exponent bug](todo/legacy-parameters-width-exponent-bug.md) | 2026-08-04 | cython-to-rust Task 0.1 | cross-cutting |
 | [`cross_section_prefactor` threshold cancellation](todo/cross-section-prefactor-threshold-cancellation.md) | 2026-08-04 | cython-to-rust Task 0.3 | cross-cutting |
 
@@ -31,5 +30,6 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 
 | Item | Status | Resolution |
 | --- | --- | --- |
+| [markdownlint config for templates](done/markdownlint-config-for-templates.md) | done | Committed [`.markdownlint.jsonc`](../../.markdownlint.jsonc) encoding the repo's shapes (frontmatter-title phase files, `<placeholder>` notation, wide fact tables); all 18 inline pragmas removed. `docs/` + `projects/` errors 132 → 0. |
 | [`black` pin diverges between pyproject and CI](done/black-pin-divergence-pyproject-vs-ci.md) | done | [PR #40](https://github.com/LoganAMorrison/Hazma/pull/40) — pins moved to a single PEP 735 `lint` dependency group that CI installs; repo reformatted with black 26.x (33 files). |
 | [`msqrd`-driven Monte-Carlo FSR generator](done/msqrd-driven-fsr-generator.md) | done | `hazma.spectra.dnde_photon_fsr` (ADR-0001, [PR #41](https://github.com/LoganAMorrison/Hazma/pull/41)) |

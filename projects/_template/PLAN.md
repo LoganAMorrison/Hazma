@@ -27,7 +27,6 @@ Lowering it requires a one-line note in `task-notes/README.md`
 explaining why the change is no longer user-facing.
 -->
 
-
 # Project: <Title>
 
 **Structure:** Flat task list.
@@ -71,15 +70,11 @@ task in the "Task Details" section below; `task-notes/README.md` tracks
 their live *state*.
 
 <!--
-Phased projects: keep the PLAN pointer above, and use this Phases
-table in `task-notes/README.md` (mirroring each phase file's
-frontmatter `status:`):
-
-## Phases
-
-| # | Title              | File                                          | Status      |
-|---|--------------------|-----------------------------------------------|-------------|
-| 01 | <phase title>     | [`phases/phase-01-<slug>.md`](phases/phase-01-<slug>.md) | Not started |
+Phased projects: keep the PLAN pointer above, and add a `## Phases`
+table to `task-notes/README.md` mirroring each phase file's
+frontmatter `status:`. Its exact shape lives once, in the phased
+block of `projects/_template/task-notes/README.md` — copy it from
+there rather than from a second copy here.
 
 A phased project keeps a task breakdown inside each phase file's
 `## Tasks` section (canonical task shape) and a REQUIRED per-phase

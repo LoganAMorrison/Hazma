@@ -14,7 +14,8 @@
 -->
 
 - **Added:** YYYY-MM-DD
-- **Source:** <projects/<slug>/learnings/project-retrospective.md §5 | TODO at file:line | GH issue #N | conversation>
+- **Source:** <projects/<slug>/learnings/project-retrospective.md §5 |
+  TODO at file:line | GH issue #N | conversation>
 - **Scope:** <project | commit | cross-cutting>
 - **Status:** open
 - **Triggers / blockers:** <optional — when does this ripen? what must land first?>

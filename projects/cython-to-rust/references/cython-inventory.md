@@ -30,7 +30,6 @@ in code review — this file records a snapshot.
 
 ## Dead-code map (Phase 00 targets)
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | Target | Lines | Why it is safe to delete |
 | --- | --- | --- |
 | `hazma/_decay/*.pyx` + backups | ~1,850 | Not in `setup.py`; sole importer `hazma/__decay.py` is itself imported by nothing (the `hazma/__init__.py` block referencing it is commented out). `decay_charged_kaon.pyx` uses Cython-2 implicit relative cimports and cannot compile under Cython 3. **Keep** `parameters.pxd` until its includes are repointed (below). |
@@ -47,7 +46,6 @@ in code review — this file records a snapshot.
 | `hazma/__decay.py`, `hazma/__positron_spectra.py`, `hazma/__neutrino_spectra.py` | — | Double-underscore legacy API shims; the `__init__.py` references are commented out. Verify zero external importers at delete time. |
 | `hazma/_utils/boost.pyx` internal dead half | ~165 | `boost_integrate_linear_interp_massive`, `integrate_linear_interp_edge`, `integration_bounds`: not in `.pxd`, no `def` wrapper, and contain real index-pairing bugs (`boost.pyx:427,447,456`). Delete, never port. |
 | `hazma/_positron/parameters.pxd` | 67 | Orphan — nothing includes it. |
-<!-- markdownlint-enable MD013 -->
 
 ### Constants-header entanglement (must precede `_decay/` deletion)
 
@@ -79,7 +77,6 @@ project-level `version_bump: major` (which Phase 00's
 
 ### Entry points by module
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | Module | Entry points (all scalar-or-1D-array in/out, float64) |
 | --- | --- |
 | `spectra/_photon/_muon` | `dnde_photon(egam, emu)` |
@@ -95,7 +92,6 @@ project-level `version_bump: major` (which Phase 00's
 | `scalar_mediator/scalar_mediator_positron_spec` | `dnde_decay_s`, `dnde_decay_s_pt` |
 | `vector_mediator/vector_mediator_decay_spectrum` | `dnde_decay_v`, `dnde_decay_v_pt` |
 | `vector_mediator/vector_mediator_positron_spec` | `dnde_decay_v`, `dnde_decay_v_pt` |
-<!-- markdownlint-enable MD013 -->
 
 Tally (source-verified 2026-08-03): 16 spectra + 7 mediator-spectrum +
 13 scalar-XS + 7 vector-XS = **43 public `def`s**. Consumed: 41 — the
@@ -152,7 +148,6 @@ capi-survivor extensions live through Phase 05/06, and one of them,
 All in `hazma/spectra/_photon/data/`, loaded at module import via
 `np.loadtxt(..., delimiter=",")`, path via `spectra/_photon/path.py`:
 
-<!-- markdownlint-disable MD013 -- grounded-fact table; width is the content -->
 | File | Shape | Consumer |
 | --- | --- | --- |
 | `charged_kaon_photon.csv` | 501×8 | `_kaon.pyx` |
@@ -162,7 +157,6 @@ All in `hazma/spectra/_photon/data/`, loaded at module import via
 | `eta_prime_photon.csv` | 501×7 | `_eta_prime.pyx` |
 | `omega_photon.csv` | 501×7 | `_omega.pyx` |
 | `phi_photon.csv` | 501×11 | `_phi.pyx` |
-<!-- markdownlint-enable MD013 -->
 
 Pattern: transpose, column 0 = energies, dnde = sum of remaining
 channel columns, `emin`/`emax` from the grid ends. The

@@ -280,8 +280,6 @@ what was actually worked to.
   `notebooks/dev/K0_radiative_decay_4_24_18.ipynb` — `minkowski_dot`
   repointed.
 
-<!-- markdownlint-disable MD013 -- pasted command output and evidence tables; wrapping them would falsify the record -->
-
 ## Verification
 
 Environment: `uv venv --python 3.12` + `uv pip install -e .` in the
@@ -514,10 +512,11 @@ file this task already edits. Per-file ruff, branch vs trunk:
 `--isolated --select E9,F63,F7,F82`, not the configured one, and it
 passes; the 263/6619 figures are the stricter `pyproject.toml` config,
 which is red repo-wide on the trunk and does not gate CI. The two
-markdownlint-red files fail on lines this task never touched (`PR_GUIDELINES.md` lines 14–19,
-the commit-format block; `versioning.md` lines 117–127, a table) —
-fixing them means reflowing prose and realigning a table that has
-nothing to do with a dead-code purge.
+markdownlint-red files fail on lines this task never touched
+(`PR_GUIDELINES.md` lines 14–19, the commit-format block;
+`versioning.md` lines 117–127, a table) — fixing them means reflowing
+prose and realigning a table that has nothing to do with a dead-code
+purge.
 
 **Deferred:** the remaining repo-wide ruff debt (263 findings, all
 pre-existing, concentrated in `deprecated/rambo.py` (126) and
@@ -526,6 +525,13 @@ markdownlint-red docs above; and the ~20 pre-existing-broken
 `hazma.decay` / `hazma.positron_spectra` imports in `notebooks/` (see
 Decisions). None was surfaced by this task, so none is filed as a new
 follow-up — they are standing conditions of the tree.
+
+**Markdownlint since resolved** (2026-08-05): the repo now carries a
+committed [`.markdownlint.jsonc`](../../../../.markdownlint.jsonc)
+(follow-up
+[`markdownlint-config-for-templates`](../../../../docs/followups/done/markdownlint-config-for-templates.md)).
+Both docs above are green, and the MD013/MD025 pragmas this task's
+notes and the phase files carried are gone — the config covers them.
 
 Two invocation notes carried forward from Task 0.1 and re-confirmed:
 passing `--paths` a `.pxd` makes black and ruff parse Cython as Python
@@ -748,8 +754,6 @@ change to `PLAN.md` frontmatter.
 mapping rows satisfied; every path named in §Files Changed appears in
 `git diff --cached --name-status` or is created by this task; the phase
 README row and this note's status agree.
-
-<!-- markdownlint-enable MD013 -->
 
 ## Handoff to Next Task
 

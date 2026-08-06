@@ -14,12 +14,10 @@
 
 The two places that pin `black` disagree:
 
-<!-- markdownlint-disable MD013 -- pin strings -->
 | Location | Pin |
 | --- | --- |
 | `pyproject.toml:31` (the `dev` extra) | `black>=23.3,<27.0` |
 | `.github/workflows/ci.yml:24` (Lint job) | `black>=23.3,<25.0` |
-<!-- markdownlint-enable MD013 -->
 
 `pyproject.toml` was widened by
 [PR #27](https://github.com/LoganAMorrison/Hazma/pull/27) — "update black
@@ -95,13 +93,11 @@ repo is reformatted to match.
 The pins now live in exactly one place —
 `pyproject.toml`'s PEP 735 `[dependency-groups]`:
 
-<!-- markdownlint-disable MD013 -- pin strings -->
 ```toml
 [dependency-groups]
 lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
 dev = [{ include-group = "lint" }, "pytest>=7.0"]
 ```
-<!-- markdownlint-enable MD013 -->
 
 and `.github/workflows/ci.yml`'s Lint job installs that group
 (`python -m pip install --group lint`) instead of repeating a literal
@@ -118,7 +114,6 @@ is gone; the documented dev setup is now `pip install -e . --group dev`
 lines after imports, and the "hug" of a sole multiline string argument
 that started this. Verified against the same tree, same commands:
 
-<!-- markdownlint-disable MD013 -- measurement table -->
 | Gate | Before | After |
 | --- | --- | --- |
 | `black --check hazma test` (26.5.1) | 33 reformat / 191 clean | **224 clean** |
@@ -126,7 +121,6 @@ that started this. Verified against the same tree, same commands:
 | `isort --check-only hazma test` | 141 error lines | 134 |
 | `ruff check hazma test` (configured) | 6619 | 6611 |
 | `pytest` | 68 passed / 20 skipped | 68 passed / 20 skipped |
-<!-- markdownlint-enable MD013 -->
 
 isort and configured-ruff both improved because black collapsed
 constructs they were flagging; neither is a gate CI runs.

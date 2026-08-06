@@ -4,8 +4,6 @@ title: Numerics foundation
 status: Not started
 ---
 
-<!-- markdownlint-disable-file MD025 -- frontmatter title is the schema -->
-
 # Phase 03: Numerics foundation
 
 ## Goal
