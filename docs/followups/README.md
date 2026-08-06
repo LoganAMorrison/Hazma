@@ -25,6 +25,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | --- | --- | --- | --- |
 | [Citation checker skips deleted in-repo files](todo/citation-checker-skips-deleted-inrepo-files.md) | 2026-08-05 | PR #42 review | cross-cutting |
 | [remaining `sqrt(kallen_lambda(...))` call sites](todo/kallen-under-sqrt-remaining-call-sites.md) | 2026-08-05 | carved out of the `cross_section_prefactor` fix | cross-cutting |
+| [redundant `hazma.utils` helpers kept out of the public surface](todo/utils-public-surface-redundant-helpers.md) | 2026-08-05 | docs audit of `utils.rst` | cross-cutting |
 
 ## Promoted / Done / Pruned
 
