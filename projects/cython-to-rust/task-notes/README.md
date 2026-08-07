@@ -21,8 +21,8 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
-| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | In Progress (0.1, 0.2, 0.3, 0.5 done — every deletion has landed; only 0.4, build/packaging reconciliation, remains) |
-| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started |
+| 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
+| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started — **next**; unblocked by Phase 00 |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
@@ -87,8 +87,10 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   [`../../../docs/followups/done/black-pin-divergence-pyproject-vs-ci.md`](../../../docs/followups/done/black-pin-divergence-pyproject-vs-ci.md).
   The class is `[unpinned-formatter-version]` in
   `docs/agents/lessons.md`.
-- **`ruff check hazma test` really is red on the trunk (6844 findings),
-  and that does not block CI.** CI's ruff step is
+- **`ruff check hazma test` really is red on the trunk (6298 findings
+  under ruff 0.16.1; 6844 was the count under the version current at
+  Task 0.1 — the number tracks the linter, so re-measure rather than
+  quote), and that does not block CI.** CI's ruff step is
   `ruff check --isolated --select E9,F63,F7,F82`, which deliberately
   ignores `pyproject.toml`'s much stricter config. Judge the configured
   form as a delta against the trunk; run the `--isolated` form to
@@ -139,6 +141,26 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   body still reads "no direct replacement" by design — it is a dated
   record amended by its Addendum, and the forward-looking gate text was
   patched instead.
+- **A clean wheel is not evidence of a clean sdist** (Task 0.4). Wheel
+  contents come from `[tool.setuptools.packages.find]`, sdist contents
+  from `MANIFEST.in`, and fixing one has never fixed the other. The
+  sdist was shipping `.claude/`, `.codex/` and `projects/` — 101 files —
+  because `global-include *.md` is a repo-wide sweep. Pruned. **Phase 07
+  Task 7.1 inherits the general lesson:** maturin has its own
+  include/exclude machinery and reads neither of these files, so verify
+  the tarball's contents directly after the cutover instead of assuming
+  the wheel's cleanliness carries over.
+- **The sdist install-and-run check is the real packaging gate** (Task
+  0.4, new to this project): `uv build --sdist`, then
+  `uv pip install --no-binary hazma dist/*.tar.gz` into a fresh venv and
+  import-smoke from outside the repo. A path probe over `tar tzf` proves
+  nothing dangles by *name*; only a source install proves the build
+  works. Reuse it in Phase 07.
+- **`_build.py` does not exist and has not since 2026-08-02** (`7a817f9`
+  replaced it with `setup.py`). Thirteen durable docs still named it —
+  including `AGENTS.md` and the rebuild-awareness rules every review
+  skill points at — until Task 0.4 swept them. If a doc, skill or plan
+  mentions it again, that text predates the sweep.
 - **Sphinx orphan pages are a live doc-sweep hazard** (Task 0.5).
   `docs/source/index.rst` reaches nine documents; `limits.rst` and
   `models.rst` nest four more. Every other `docs/source/*.rst` is in no
@@ -220,6 +242,22 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   non-drop-in replacement) and `hazma.deprecated.rambo` are gone, and the
   `### Removed` block under `CHANGELOG.md`'s `[Unreleased]` is the
   settled wording for the Phase 07 aggregate.
+
+- **Task 0.4 (prune build and packaging config): no public value
+  changes.** 213 arrays — 12 `dnde_photon_*`, 12 `dnde_positron_*` and
+  12 `dnde_neutrino_*` over `np.logspace(-2, 3, 200)` MeV at parent
+  energies 150 / 500 / 1500 MeV, plus both models' `spectra()`,
+  `positron_spectra()`, `annihilation_cross_sections()` and
+  `thermal_cross_section()` at mediator masses 200 / 550 / 1200 MeV —
+  **bit-for-bit identical** across the change and a clean rebuild (max
+  relative deviation 0.000e+00). Expected, and the mechanism is
+  checkable rather than merely plausible: the only executable change is
+  the removal of an `if cpp:` branch no call site reaches, so every
+  `Extension` object `setup.py` builds is unchanged and the compiled
+  artifacts are identical. **Phase 00 therefore closes with the public
+  compiled surface exactly where it started**; the only declared drifts
+  in the whole phase are Task 0.3's two pure-Python helper swaps and the
+  out-of-band `two_body_momentum` repair, both above.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -303,6 +341,20 @@ it from memory.)
   (+816 / −4,413); under `hazma/` and `test/` alone, 25 files and
   **−4,023 lines against +6**. Full list in
   [`phase-00/README.md`](phase-00/README.md).
+- **Task 0.4** — build/packaging reconciliation, closing the phase.
+  `setup.py`'s `make_extension` lost its unreachable C++ branch (and,
+  on the same signature, `List[str]` → `list[str]` plus a return type,
+  taking the file from 5 configured-`ruff` findings to 0); `MANIFEST.in`
+  gained `prune .claude` / `.codex` / `projects`, which took the sdist
+  from 498 to 397 files; `pyproject.toml` audited and unchanged.
+  The thirteen durable docs that still named `_build.py` were swept —
+  twelve by rename, plus `docs/versioning.md`, whose sole occurrence sat
+  inside an obsolete blockquote that was deleted outright (its `VERSION`
+  snippet was re-derived at the same time). One follow-up filed
+  ([sdist payload](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md)).
+  Phase closed: learnings written, phase frontmatter
+  `status: Complete`, `PLAN.md` Phases row updated. Full list in
+  [`phase-00/README.md`](phase-00/README.md).
 - **Task 0.5** — docs repointed off `hazma.gamma_ray` ahead of the
   delete: `docs/source/gamma_ray.rst` deleted (orphan page),
   `hazma/spectra/_photon/__init__.py`'s `electron` docstring repointed,
@@ -316,7 +368,13 @@ it from memory.)
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
-- Later: per-phase Verification sections in `phase-XX/README.md`.
+- Per-phase Verification sections live in `phase-XX/README.md`.
+- **Phase 00 closing state (2026-08-06):** 20 `.pyx` ↔ 20 declared
+  `Extension`s ↔ 20 `.so`, verified as a set equality; zero C++;
+  `pytest -q test` → `244 passed, 20 skipped`, bare `pytest -q` →
+  `57 passed, 10 skipped`; sdist and wheel both build, and the sdist
+  installs and runs in a fresh venv from outside the repo. The public
+  compiled surface is unchanged from where the phase started.
 
 ## Open Questions
 
@@ -332,7 +390,7 @@ it from memory.)
   discharged.** Accepted 2026-08-04; non-deletion steps executed in
   Task 0.5 on 2026-08-05 (replacement status recorded, docs repointed);
   the deletion itself executed in Task 0.2 on 2026-08-06, with its
-  CHANGELOG entry. **Only Task 0.4 remains in Phase 00.**
+  CHANGELOG entry. **Phase 00 closed the same day.**
   `gamma_ray_fsr`'s successor, `hazma.spectra.dnde_photon_fsr`, shipped
   via
   [`../../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../../docs/followups/done/msqrd-driven-fsr-generator.md).
@@ -344,6 +402,14 @@ it from memory.)
   The question is moot; the corpus will pin the fixed values.
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
+- **The sdist payload** (opened by Task 0.4, the first task in the
+  project to build one): the tarball still ships 20 cythonized `*.c`,
+  `docs/`, `test/` and `notebooks/`, and `pyproject.toml`'s package-data
+  says `*.pyd` where `*.pxd` was surely meant. Deferred deliberately —
+  judgment calls, not defects — but **time-boxed to before Phase 07 Task
+  7.1**, because maturin does not read `MANIFEST.in` and the same
+  decisions cost more to express afterwards. Filed as
+  [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
 - ~~Whether the mediator cross-section `.pyx` include a constants
   header~~ — **closed by Task 0.1: they contain no `include` directive
   at all.**
@@ -375,10 +441,24 @@ it from memory.)
   `rh_neutrino/_rh_neutrino_fsr_four_body.pyx`. Read that file for the
   **live surface** and the cimport DAG, which Phases 04–06 still need;
   read its headline counts as history.
-- **20 extensions, 20 `.pyx`, 17 `.pxd`, zero C++** as of Task 0.2 —
-  re-derive with `find hazma -name '*.so' | wc -l` rather than quoting
-  this. That is the Phase 00 target the phase Exit Criteria name, hit
-  before Task 0.4 runs.
+- **20 extensions, 20 `.pyx`, 17 `.pxd`, zero C++**, and as of Task 0.4
+  `setup.py`'s declared list is *verified* to be that same set, not
+  merely the same size. Re-derive with the clean-then-rebuild recipe
+  rather than quoting this; a stale `.so` makes a wrong list look right.
+- **Phase 00 is Complete (2026-08-06).** Read
+  [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
+  rather than its five task notes — it is the distillation, they are
+  history. Phase 01 is next and carries no decision gate.
+- **The build entry point is `setup.py`.** `_build.py` was deleted in
+  `7a817f9` (2026-08-02) and Task 0.4 swept the thirteen durable docs
+  that still named it, so `AGENTS.md`, `docs/`, the skills, `.github/`
+  and the build config are all clean. The name still appears under
+  `projects/` — that is this phase's own record of the sweep, not a live
+  reference.
+- **The sdist and wheel both build, and the sdist installs and runs** in
+  a fresh venv from outside the repo (recipe in Task 0.4's note; reuse
+  it in Phase 07). Neither ships a deleted path; neither ships the agent
+  scaffolding any more.
 - `test/` is green (244 passed / 20 skipped as of Task 0.2, 2026-08-06;
   68/20 at Task 0.3; 52/20 at Task 0.1) — merging the suites in Task 1.3
   is safe, and simpler than planned: `test/conftest.py` now skips **no**
