@@ -36,7 +36,7 @@ file.** Edit the marked region by hand, then confirm zero markers remain
 ## Build and imports
 
 **Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel.**
-Cython sources are compiled at build time by `_build.py`. Until you
+Cython sources are compiled at build time by `setup.py`. Until you
 rebuild (`pip install -e .`), every import resolves the previously-built
 extension — so a change can look like it had no effect, or a bug can look
 fixed when it isn't. Rebuild, then confirm.
@@ -56,6 +56,24 @@ builds as C only.)
 
 **Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
 Edit the `.pyx` and rebuild.
+
+**A clean wheel is not evidence of a clean sdist.** They are built by
+different machinery and neither fix reaches the other: the wheel's
+contents come from `[tool.setuptools.packages.find]` in
+`pyproject.toml`, the sdist's from `MANIFEST.in`. `MANIFEST.in`'s
+`global-include` is a **repo-wide** sweep, so it happily picks up
+`.claude/`, `.codex/` and `projects/` — it did, unnoticed, for four
+months, because no one ran `build --sdist` (cython-to-rust Task 0.4).
+Check the artifact you actually changed. And when probing a `tar tzf`
+listing for paths that should be absent, **anchor the pattern** (`^…$`):
+an unanchored `_positron` or `gamma_ray` matches dozens of live paths
+and buries the real hit.
+
+**A path probe is not a build.** A tarball can list exactly the right
+files and still fail to install. The gate is
+`uv pip install --no-binary hazma dist/*.tar.gz` into a *fresh* venv,
+then import-smoke from outside the repo — `cd /tmp` first, or you will
+import the checkout instead of the installed package.
 
 ## Linters
 

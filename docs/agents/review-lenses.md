@@ -132,7 +132,7 @@ These apply regardless of lens.
 - **Empirical execution.** When the diff adds or edits a docstring
   example, a README snippet, or claims a user-visible behavior, RUN it
   and paste the output. Static review does not catch a wrong number.
-- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `_build.py`,
+- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `setup.py`,
   confirm the cited test results came from a tree that was rebuilt. A
   green run against a stale extension proves nothing.
 - **Read [`lessons.md`](lessons.md) first**, then check the diff against

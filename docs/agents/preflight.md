@@ -31,7 +31,7 @@ before you stage anything.
    a different interpreter, produces a tree that lints and formats
    cleanly and fails at import. Run this after any change under
    `_utils/`, or to the `.pyx` in `spectra/`, `scalar_mediator/`,
-   `vector_mediator/`, and after any `_build.py` change.
+   `vector_mediator/`, and after any `setup.py` change.
 6. **`markdownlint --dot <changed .md files>`** — when curated docs
    changed. Word-diff after any `--fix`: it can corrupt code spans.
    Run it from the repo root: the committed
