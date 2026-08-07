@@ -1,5 +1,15 @@
 global-include *.txt *.rst *.pyx *.pxd *.c *.md
 include MANIFEST.in
+
+# The global-include above is a repo-wide sweep, so it also picks up the
+# agent-workflow scaffolding: `.claude/` and `.codex/` skills, and the
+# `projects/` plans, task notes and ADRs. None of that belongs in a
+# published sdist. (The wheel is already clean — see
+# [tool.setuptools.packages.find] in pyproject.toml.)
+prune .claude
+prune .codex
+prune projects
+
 include hazma/gamma_ray_data/*.dat
 include hazma/gamma_ray_data/A_eff/*.dat
 include hazma/gamma_ray_data/bg_model/*.dat
