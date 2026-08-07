@@ -35,9 +35,12 @@ last two bullets were added *by* this task and are flagged as such.
 - [x] Phase closure: `../../learnings/phase-00-dead-code-purge.md`
   written, phase file frontmatter `status: Complete`, `PLAN.md` Phases
   table row updated.
-- [ ] CI green on the full matrix — cannot be checked pre-PR; verified
-  locally on CPython 3.12 (build, sdist, wheel, both suites) and left to
-  the PR run.
+- [x] CI green on the full matrix — **closed on
+  [PR #49](https://github.com/LoganAMorrison/Hazma/pull/49)** (run
+  31151019771): Lint plus all six test legs (ubuntu-latest py3.10–3.14,
+  macos-latest py3.14). This was the one criterion that could not close
+  from a worktree; local verification was CPython 3.12 / macOS arm64
+  only (build, sdist, wheel, both suites).
 
 ## Inputs Reviewed
 

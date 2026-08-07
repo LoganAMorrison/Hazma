@@ -36,9 +36,12 @@ purge.
 - The phase-file Exit Criteria are met too, all measured rather than
   asserted: 20 `.pyx` ↔ 20 declared `Extension`s ↔ 20 `.so` as a set
   equality; `git grep -l "std::" -- hazma/` empty; no `language="c++"`
-  anywhere in the build config. The one criterion that cannot close from
-  a worktree is **CI green on the full matrix** — local verification was
-  CPython 3.12 / macOS arm64 only.
+  anywhere in the build config.
+- **CI green on the full matrix** — the one criterion that could not
+  close from a worktree, closed on
+  [PR #49](https://github.com/LoganAMorrison/Hazma/pull/49) (run
+  31151019771): Lint plus ubuntu-latest py3.10–3.14 and macos-latest
+  py3.14, all passing.
 
 ## Inputs Reviewed
 
