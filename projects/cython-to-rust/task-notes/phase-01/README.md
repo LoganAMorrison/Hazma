@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 01
-**Status:** In Progress (Task 1.1 complete 2026-08-07)
+**Status:** In Progress (Tasks 1.1-1.2 complete 2026-08-07)
 **Plan References:** `../../phases/phase-01-parity-corpus.md`
 **Related ADRs:** none
 **Depends On:** Phase 00 complete
@@ -18,8 +18,8 @@ corpus.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 1.1 | Corpus specification + generator | — | **Complete (2026-08-07)** | [task-1.1-corpus-generator.md](task-1.1-corpus-generator.md) |
-| 1.2 | Pytest runner + tolerance budgets | 1.1 | Not started — **next** | [task-1.2-parity-runner.md](task-1.2-parity-runner.md) |
-| 1.3 | Wire both suites into one gate | 1.2 | Not started | [task-1.3-test-wiring.md](task-1.3-test-wiring.md) |
+| 1.2 | Pytest runner + tolerance budgets | 1.1 | **Complete (2026-08-07)** | [task-1.2-parity-runner.md](task-1.2-parity-runner.md) |
+| 1.3 | Wire both suites into one gate | 1.2 | Not started — **next** | [task-1.3-test-wiring.md](task-1.3-test-wiring.md) |
 | 1.4 | Retire/regenerate legacy `.npy` suites | 1.2 | Not started | [task-1.4-legacy-npy.md](task-1.4-legacy-npy.md) |
 
 ## Exit Criteria
@@ -75,6 +75,31 @@ corpus.
   outside `REPO_ROOT`, and the manifest records where `hazma` actually
   resolved from (`hazma_package`). Task 1.2's runner gets the guard for
   free — it goes through `resolve()`.
+- **Mechanism, not physics, sets a tolerance.** Task 1.2 classified all
+  41 entry points by reading the live `.pyx`: 19 closed-form (exact), 1
+  closed form through `spence` (1e-13), 7 tabulated boost integrals
+  (1e-12), 5 single-`quad` (1e-8), 9 nested-`quad` (1e-6) — counts
+  re-derived from `tolerances.BUDGETS`, not tallied by hand. Two of those
+  would have been misfiled from the import list alone —
+  `hazma/spectra/_photon/_muon.pyx` and
+  `hazma/spectra/_positron/_muon.pyx` both `import quad` and never call
+  it on the live path.
+- **The nested class is not just ρ.** All seven mediator-spectrum entry
+  points cimport a quad-backed pion kernel into a cos θ quad integrand,
+  so they share ρ's subdivision sensitivity and its 1e-6 budget.
+- **A budget is the wrong gate on the capturing tree.** There, the
+  corpus pins an implementation against itself, so any difference is a
+  regression and a 1e-8 budget would swallow it.
+  `tolerances.effective_budget` therefore demands bit-equality whenever
+  the kernel digest, toolchain and numerics libraries all match the
+  manifest, and falls back to the declared budgets otherwise — which is
+  also what keeps a Linux CI runner from failing an exactness claim it
+  was never positioned to meet.
+- **`spectra.photon.neutral_pion[rest]` has exactly one non-zero value
+  and it is `inf`** — the rest-frame two-body delta. Worth knowing
+  before using that block to check anything: a multiplicative
+  perturbation of `inf` is invisible (found while negative-testing the
+  runner, Task 1.2).
 
 ## Decisions and Implementation Notes
 
@@ -94,6 +119,27 @@ corpus.
 - Five parent energies per spectrum rather than the four required; the
   extra is `M·(1 + 1e-12)`, straddling the `E − M < DBL_EPSILON`
   rest-frame short-circuit — Task 1.1.
+- The runner evaluates through `generate.evaluate_block` — the same
+  function that produced the stored numbers — rather than its own loop,
+  so a harness difference cannot masquerade as an implementation
+  difference. The raise replay falls out of that: the function returns
+  the same `{"index", "argument", "type"}` records the manifest stores,
+  so one `==` catches both a swallowed raise and a new one — Task 1.2.
+- One test per block (623), not per case or per array: a block is one
+  grid at one fixed argument set, which is the granularity at which a
+  failure is diagnosable — Task 1.2.
+- `atol = 0.0` everywhere. One absolute floor cannot serve spectra at
+  ~1e-3 MeV⁻¹ and cross sections at ~1e-20 MeV⁻²; it is also
+  unnecessary, since the out-of-support regions return exactly `0.0`
+  — Task 1.2.
+- Abscissae (`grid`, `scalar_grid`) are compared exactly in **both**
+  modes. No tolerance on a value compensates for having moved where it
+  was measured — Task 1.2.
+- No measurement/reporting hook. `pytest_addoption` is only honored in
+  an *initial* conftest, which `test/parity/conftest.py` is not under
+  `pytest test`, and `assert_allclose` already prints the max relative
+  difference on breach — so Phase 03's tightening loop is "set the
+  budget you want and read the failure" — Task 1.2.
 
 ## Files Changed
 
@@ -112,6 +158,26 @@ corpus.
 
 Nothing under `hazma/` was touched.
 
+### Task 1.2
+
+- `test/parity/test_parity.py`, `test/parity/tolerances.py` — new.
+- `test/parity/cases.py` — `rust_core_available()` extracted from
+  `assert_no_rust_core`.
+- `test/parity/generate.py` — `load_manifest()` extracted from `check()`;
+  `_sweep_pointwise` now reports an all-points-raised block instead of
+  dying in `np.concatenate`.
+- `test/parity/README.md` — the runner and its two comparison modes.
+- `../../phases/phase-01-parity-corpus.md` — the Prerequisites context
+  bullet and Task 1.3's `pytest -q test` figure re-derived.
+- `task-1.1-corpus-generator.md` and
+  `../../learnings/phase-00-dead-code-purge.md` — one forward-looking
+  and one present-tense claim each, both falsified by this task,
+  annotated in place.
+- This file, `../README.md` and `task-1.2-parity-runner.md` — status
+  bookkeeping.
+
+Nothing under `hazma/` was touched.
+
 ## Verification
 
 - Task 1.1: `python test/parity/generate.py` → `41 cases / 623 blocks /
@@ -119,14 +185,29 @@ Nothing under `hazma/` was touched.
   existing suites unchanged from the Phase 00 baseline (`pytest -q` →
   `57 passed, 10 skipped`; `pytest -q test` → `244 passed, 20 skipped`).
   Full command log and the guard negative-tests are in the task note.
-- Remaining: bare `pytest` green incl. the parity suite (Tasks 1.2/1.3).
+- Task 1.2: `pytest -q test/parity` → `626 passed`, all in exact
+  (bit-equality) mode — the phase file's "running against unmodified
+  Cython passes bit-exact" criterion, now a standing gate rather than an
+  observation. Nine negative scenarios (behind three baselines) confirm
+  each assertion fires: swallowed raise, wholesale raise, single-point
+  raise, value shifts against both modes, grid drift, and the three
+  budget-table guards. Command log in the task note. Suites on the final
+  tree: `pytest -q test` → `870 passed, 20 skipped` (244 + 626, the
+  pre-existing suite untouched); bare `pytest -q` → `57 passed, 10
+  skipped`, unchanged because `testpaths = hazma` still scopes it.
+- Remaining: bare `pytest` green incl. the parity suite (Task 1.3).
 
 ## Open Questions
 
 - Whether every stored value is bit-reproducible on the Linux CI matrix
-  is **unverified** — the corpus was captured on macOS/arm64. Task 1.2
-  answers it when it sets per-function budgets, which is the right place
-  for the answer.
+  is still **unmeasured** — the corpus was captured on macOS/arm64 and
+  Task 1.2 had no Linux runner to answer on. It is no longer a *risk*,
+  though: a runner whose platform differs from the manifest drops to
+  budget mode by construction, so CI is gated on the declared budgets
+  rather than on an exactness claim nobody has evidence for. Task 1.3
+  wires CI and produces the first Linux numbers; the plausible outcome
+  is that the transcendental-libm kernels (`exp`/`log`/`spence`) differ
+  in the last ulp, well inside every declared budget.
 - Task 1.4's scope narrowed but is not decided: the 90 `.npy` arrays
   the two skipped mediator classes read overlap the cross-section and
   mediator-spectrum cases now pinned here, so the
@@ -138,37 +219,54 @@ Nothing under `hazma/` was touched.
 
 ## Plan Impact
 
-**Impact Level:** Update phase file (Task 1.1).
+**Impact Level:** Update phase file (Tasks 1.1 and 1.2).
 
-`../../phases/phase-01-parity-corpus.md`'s Task 1.2 exit criteria gained
-a bullet requiring the runner to replay the manifest's `raises` records
-rather than compare the stored `nan`. Patched in the task that found the
-need. Nothing else canonical moved.
+- Task 1.1: `../../phases/phase-01-parity-corpus.md`'s Task 1.2 exit
+  criteria gained a bullet requiring the runner to replay the manifest's
+  `raises` records rather than compare the stored `nan`.
+- Task 1.2: the same file's Prerequisites context bullet said "zero
+  pinned-value tests over compiled code execute anywhere ... Task 1.1
+  added `test/parity/` but no pytest module, so this still holds". Half
+  of that is now false — `pytest test` reaches the parity suite; CI does
+  not, which is Task 1.3's job. Re-derived along with Task 1.3's
+  `pytest -q test` figure, which this task moved.
+
+No ADR: nothing about the port's architecture, interfaces or ordering
+changed. The tolerance table is a new contract, but the phase file
+already specified it.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 01 (Task 1.2):** read
-`test/parity/README.md`, then `test/parity/cases.py`'s module docstring,
-then `task-1.1-corpus-generator.md`'s Findings and Handoff. The corpus
-manifest records the generating git SHA — rules.md rule 2 — and the
-`kernel_digest` that actually identifies the kernels.
+**For the next agent working in Phase 01 (Task 1.3):** read
+`test/parity/README.md` (now covers the runner and its two comparison
+modes), then `tolerances.py`'s module docstring, then
+`task-1.2-parity-runner.md`'s Findings and Handoff.
 
 **Currently safe to assume:**
 
-- `test/` is green post-PR #31 and unchanged by Task 1.1; merging the
-  suites in Task 1.3 is safe.
+- The corpus reproduces bit-exactly on the capturing environment:
+  `pytest -q test/parity` → `626 passed`, exact mode. Task 1.3 is
+  wiring, not repair.
 - Coverage of the 41 entry points does not need re-deriving —
-  `assert_full_coverage` does it on every generation.
-- `cases.py` is the single source of the call convention. Re-evaluate
-  `block.array_call` / `block.scalar_call` against the live
-  implementation rather than rebuilding argument tuples.
+  `assert_full_coverage` does it on every generation, and
+  `test_every_corpus_case_has_a_budget` does the same for the tolerance
+  table.
+- `cases.py` is the single source of the call convention, and
+  `generate.evaluate_block` the single source of the evaluation path.
+  Both are already reused by the runner; do not fork either.
 - The corpus pins the **post-fix** `two_body_momentum` values.
+- Widening a budget is a declared act, not a fix: `tolerances.py`'s
+  module docstring states rules 2 and 3 at the point of use.
 
 **Currently risky / unknown:**
 
-- Task 1.2 must replay the three `raises` blocks, now an exit criterion.
+- The parity suite costs ~4.6 min. Task 1.3 puts that on every CI matrix
+  entry; if that is unacceptable, the decision (marker, split job) is
+  Task 1.3's to make and to record — Task 1.2 deliberately did not
+  invent a policy.
 - Do not hoist `cases.py`'s deferred model imports.
 - Corpus grid density vs. repo-size budget is **settled**: 2.9 MiB
   against a ~10 MB ceiling, with `MAX_TOTAL_BYTES` failing generation
   above it.
-- Cross-platform bit-reproducibility, per Open Questions.
+- Cross-platform behavior, per Open Questions — expect budget mode and a
+  skipped `test_running_on_the_capturing_tree` on CI, not a failure.

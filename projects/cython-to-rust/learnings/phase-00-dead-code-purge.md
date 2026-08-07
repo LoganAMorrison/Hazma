@@ -147,6 +147,10 @@ Two more worth carrying:
   keeps a bare run inside the package. Cite the command, never "the full
   suite". **Zero compiled-layer pinned tests run anywhere** — that gap is
   exactly what Phase 01 exists to close.
+  _(Half-closed as of Phase 01 Task 1.2, 2026-08-07: `pytest test` now
+  runs `test/parity`'s 626 tests over all 41 compiled entry points, so
+  the figures above read `870 passed, 20 skipped`. Bare `pytest` — the
+  form CI runs — still collects neither, until Task 1.3.)_
 - **The phase's own regression harness is the before/after grid**, and it
   should be reused verbatim in Phases 04–06. Dump every compiled-backed
   public entry point over `np.logspace(-2, 3, 200)` MeV at three parent

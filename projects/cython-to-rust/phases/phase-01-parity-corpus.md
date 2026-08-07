@@ -21,14 +21,16 @@ evidence `docs/versioning.md` requires for numerical changes.
 - Phase 00 complete (corpus covers survivors only).
 - Read `../references/numerics-replacements.md` (call-site tolerances)
   and `../rules.md` rules 1–3.
-- Context: today **zero** pinned-value tests over compiled code execute
-  anywhere — CI's `pytest` collects only `hazma/**` (setup.cfg
-  `testpaths = hazma`), and every `.npy`-backed suite under `test/` is
-  either skipped or never collected (`test/spectra/integration.py`
-  matches no pytest filename pattern; `test/positron/test_positron.py`
-  is 0 bytes). Task 1.1 added `test/parity/` but no pytest module, so
-  this still holds; `collect_ignore` is no longer part of it —
-  `test/conftest.py` has listed only the repo's `setup.py` since
+- Context: when this phase was drafted, **zero** pinned-value tests over
+  compiled code executed anywhere — CI's `pytest` collects only
+  `hazma/**` (setup.cfg `testpaths = hazma`), and every `.npy`-backed
+  suite under `test/` is either skipped or never collected
+  (`test/spectra/integration.py` matches no pytest filename pattern;
+  `test/positron/test_positron.py` is 0 bytes). Task 1.2 ended the first
+  half of that: `test/parity/test_parity.py` runs under `pytest test`.
+  **CI still does not reach it** — `testpaths` is unchanged, which is
+  exactly what Task 1.3 fixes. `collect_ignore` is not part of any of
+  this; `test/conftest.py` has listed only the repo's `setup.py` since
   Task 0.2.
 
 ## Tasks
@@ -90,10 +92,14 @@ evidence `docs/versioning.md` requires for numerical changes.
 
 - pytest config moved to `pyproject.toml`
   (`[tool.pytest.ini_options]`), collecting `hazma` **and** `test`
-  (the `test/` suite is green: `pytest -q test` → 244 passed /
-  20 skipped as of 2026-08-07. It was 51/20 when this phase was
-  drafted, before PR #41 and Task 0.3 added cases — re-derive rather
-  than quoting either figure.)
+  (the `test/` suite is green: `pytest -q test` → 870 passed /
+  20 skipped as of 2026-08-07, on the capturing environment. It was
+  51/20 when this phase was drafted, then 244/20 after PR #41 and
+  Task 0.3, then +626 when Task 1.2 landed the parity suite —
+  re-derive rather than quoting any of them. Expect 869/21 off the
+  capturing environment: the parity suite skips its
+  `test_running_on_the_capturing_tree` marker there and enforces the
+  declared budgets instead.)
 - `test/spectra/integration.py` renamed to be collected; its property
   assertions pass.
 - CI and `scripts/agents/preflight.sh` run the same collection;
