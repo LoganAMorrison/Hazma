@@ -350,8 +350,10 @@ def dnde_photon_long_kaon(
 def electron(photon_energies, _: float):
     r"""Compute gamma-ray spectrum from electron decay (returns zero).
 
-    The purpose of this function is so we can use the electron as a final
-    state in `hazma.gamma_ray`.
+    This exists so an electron can appear in a final-state list handed to
+    a multi-particle spectrum routine. Nothing in hazma calls it: the
+    live n-body path behind `hazma.spectra.dnde_photon` carries its own
+    ``"e"`` zero entry (``_dnde_zero`` in ``hazma/spectra/_nbody.py``).
 
     Parameters
     ----------

@@ -99,8 +99,10 @@ resolution.
 - `hazma/spectra/_nbody.py`, `hazma/phase_space/` — the live n-body and
   RAMBO machinery any rebuild should sit on.
 - Related project: `projects/cython-to-rust/` — Phase 00 Task 0.5
-  executes ADR-0003; the CHANGELOG entry there declares
-  `gamma_ray_fsr` replacement-free and should link here.
+  executes ADR-0003. Because this follow-up resolved first, that
+  CHANGELOG entry names `hazma.spectra.dnde_photon_fsr` as
+  `gamma_ray_fsr`'s replacement and links here; it no longer declares
+  the removal replacement-free (ADR-0003 Addendum, 2026-08-04).
 
 ## Risks / open questions
 

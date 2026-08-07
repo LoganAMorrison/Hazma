@@ -1,7 +1,7 @@
 ---
 phase: 00
 title: Dead-code purge
-status: Not started
+status: In Progress
 ---
 
 # Phase 00: Dead-code purge
@@ -142,13 +142,22 @@ Everything else is behavior-invisible.
   recorded in the task note: `gamma_ray_decay` is superseded by
   `hazma.spectra.dnde_photon` (the n-body path in `spectra/_nbody.py`
   over `hazma.phase_space`); `gamma_ray_fsr` (Monte-Carlo FSR from a
-  user `msqrd`) has **no direct replacement** — the nearest live
-  equivalents are the Altarelli–Parisi approximations
-  (`hazma.spectra.dnde_photon_ap_{fermion,scalar}`), and the removal
-  is declared as replacement-free for the general-`msqrd` case in the
-  CHANGELOG. (`gamma`/`gamma_point` are the *compiled* names the
-  module wraps, not its public API.)
-- Docs referencing `hazma.gamma_ray` repointed to `hazma.spectra`.
+  user `msqrd`) is superseded by `hazma.spectra.dnde_photon_fsr`, which
+  landed ad-hoc *after* ADR-0003 was accepted (repo-wide
+  [`../../../docs/adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md`](../../../docs/adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md),
+  PR #41) — see ADR-0003's Addendum (2026-08-04), which supersedes the
+  "no direct replacement" wording this criterion originally carried.
+  Neither removal is replacement-free, so the CHANGELOG names a
+  replacement for both; because `dnde_photon_fsr` takes the
+  non-radiative *matrix element* rather than a rate float and drops
+  `isp_masses`, it is declared a replacement, not a drop-in.
+  (`gamma`/`gamma_point` are the *compiled* names the module wraps, not
+  its public API.)
+- Docs referencing `hazma.gamma_ray` repointed to `hazma.spectra`. The
+  only Sphinx page devoted to the module, `docs/source/gamma_ray.rst`,
+  is deleted rather than rewritten: it is in no toctree, and both
+  functions it documents are already covered by the published
+  `docs/source/spectra.rst`.
 
 **Notes:** The module is broken on import today (transitively imports
 the deleted `hazma.rambo`), so no working user exists and no

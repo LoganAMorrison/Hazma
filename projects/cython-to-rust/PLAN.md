@@ -151,10 +151,13 @@ against the post-cutover plumbing). See
 ### Anticipated ADRs
 
 - ADR-0003 (Accepted 2026-08-04): removal of the broken-on-import
-  `hazma.gamma_ray` module — Task 0.5 executes the remaining steps
-  (replacement status recorded, docs repointed); the replacement-free
-  `gamma_ray_fsr` case is tracked at
-  [`../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../docs/followups/done/msqrd-driven-fsr-generator.md).
+  `hazma.gamma_ray` module — Task 0.5 executed the remaining steps
+  (replacement status recorded, docs repointed) on 2026-08-05. Both
+  removed functions now have a named replacement: `gamma_ray_decay` →
+  `hazma.spectra.dnde_photon`, and `gamma_ray_fsr` →
+  `hazma.spectra.dnde_photon_fsr`, which closed
+  [`../../docs/followups/done/msqrd-driven-fsr-generator.md`](../../docs/followups/done/msqrd-driven-fsr-generator.md)
+  ad-hoc in PR #41. Task 0.2 still owes the deletion itself.
 - Possible: QUADPACK-port deviation record, if faithful translation
   proves impractical for `qelg` and a documented algorithmic
   substitution is made instead (would revise corpus budgets).
