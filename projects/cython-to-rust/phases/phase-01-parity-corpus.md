@@ -68,6 +68,14 @@ evidence `docs/versioning.md` requires for numerical changes.
   closed-form kernels against the capturing commit, documented budgets
   for quad-backed kernels (start 1e-8 rel, tighten after Phase 03
   measurement; nested-ρ gets its own line).
+- The manifest's per-block `raises` records are replayed, not skipped:
+  where the corpus says an entry point raised, the runner asserts the
+  live implementation raises the same exception type at the same
+  argument. (Task 1.1 found two —
+  `sigma_xx_to_v_to_pipi` and `sigma_xx_to_v_to_pi0v` raise `TypeError`
+  exactly at `e_cm = 2·mx`.) A runner that only compared the stored
+  `nan` would pass against an implementation that silently returned a
+  number there.
 - Running against unmodified Cython passes bit-exact.
 
 ### Task 1.3: Wire both suites into one gate
