@@ -55,6 +55,26 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   plan drifted (32→"19" survivors vs 20 actual; "43" corpus entry points vs
   41 consumed; "44 .pyx/.pxd" conflating 44 .pyx + 33 .pxd), and each read
   as authoritative until review recounted (PR #35).
+- [measurement-taken-before-the-task-ended] A number measured *correctly*,
+  with a real command, still goes stale if the task's own later output
+  changes what the command measures. Re-run every measurement against the
+  final tree before handing off, and measure both halves of a before/after
+  pair on the *same* tree — taking "before" early and "after" late compares
+  two different trees while looking rigorous. Watch for the self-referential
+  case in particular (PR #49: an sdist file count of `498 → 397` was taken
+  right after the `MANIFEST.in` fix, but the follow-up documenting the sdist
+  payload then landed under the un-pruned `docs/` and became part of that
+  payload; the true figures on the final tree were `501 → 398`). Distinct
+  from [derived-count-not-rederived] above, which is about numbers never
+  derived at all; this one is about a derivation that expired.
+- [artifact-inventory-depends-on-cwd-state] Any claim about what a built
+  artifact *contains* must state that it came from a clean tree. A
+  filesystem-walking packager (setuptools' sdist, Docker build context)
+  ships untracked junk that `.gitignore` hides from `git status`, so the
+  same commit yields different artifacts depending on what the working
+  directory has accumulated (PR #49: an identical tree produced 400 files
+  dirty and 398 clean, the difference being `.pytest_cache/README.md`
+  swept in by `global-include *.md` despite `.gitignore:526`).
 - [wheel-tag-vs-extension-abi] A wheel's tag is per-distribution, not
   per-extension: while any version-specific extension (e.g. Cython) remains
   in the package, wheels stay CPython-tagged no matter how many extensions

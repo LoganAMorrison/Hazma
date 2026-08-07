@@ -9,17 +9,13 @@ touch.
 
 ```python
 # hazma/__init__.py
-VERSION: Final[str] = "2.0.2"
+VERSION: Final[str] = "2.1.0"
 __version__ = VERSION
 ```
 
 `pyproject.toml` reads it dynamically (`version = { attr =
 "hazma.VERSION" }`), so there is exactly one number to edit. Do not add a
 second copy.
-
-> `_build.py` carries an unrelated, stale `VERSION` constant that is not
-> the package version and is not read by the build metadata. Leave it
-> alone; it is not part of a version bump.
 
 ## The public surface
 

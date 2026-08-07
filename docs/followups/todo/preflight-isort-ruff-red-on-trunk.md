@@ -64,6 +64,20 @@ Pick one of three, and record which in this file:
 Option 2 is the cheapest and is probably the right first move; option 1
 is the durable end state.
 
+**Add a fourth thing regardless of which is chosen: a way to say "this
+diff has no Python."** `preflight.sh:81` defaults `PATHS` to
+`hazma test` when `--paths` is empty, so a *docs-only* run silently
+widens from "nothing to check" to "check the two reddest paths in the
+repo" and reports `FAIL`. There is no flag that means no-Python — the
+only workaround is to pass some unrelated-but-clean file, which is
+exactly the kind of gaming that erodes a gate's meaning. cython-to-rust
+Task 0.4 hit this on a two-file markdown commit (the diff touched
+nothing under `hazma/` or `test/` at all, making the red rows provably
+pure trunk state) and had to re-run scoped to `setup.py` to get an
+honest green. An explicit `--no-python`, or treating an empty `--paths`
+as "skip gates 1–3" rather than as a wildcard, would remove the
+temptation.
+
 ## Entry points
 
 - `scripts/agents/preflight.sh` — gates 2 and 3.
@@ -77,6 +91,8 @@ is the durable end state.
   standing "ruff is red on the trunk and does not block CI" note.
 - `projects/cython-to-rust/task-notes/phase-00/task-0.5-gamma-ray-decision.md`
   §"Preflight disposition" — a worked example of the per-task cost.
+- `scripts/agents/preflight.sh:81` — the `PATHS="hazma test"` default
+  that turns a docs-only run into a trunk-wide lint run.
 
 ## Risks / open questions
 

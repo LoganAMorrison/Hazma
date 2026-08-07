@@ -117,7 +117,7 @@ in the response.
   re-check the PR body against the post-fix diff — a stale body is a
   blocking finding.
 - **Rebuild before gating** if you touched `.pyx` / `.pxd` /
-  `_build.py`: `pip install -e .`.
+  `setup.py`: `pip install -e .`.
 - **Run the preflight gate.** `scripts/agents/preflight.sh --paths
   "<touched>" --tests "<targets>"` (or the manual list in
   [`preflight.md`](../../../docs/agents/preflight.md)). Read the pytest

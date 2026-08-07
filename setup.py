@@ -8,15 +8,18 @@ wheel tags — otherwise wheels come out mistagged as py3-none-any.
 
 # pylint: disable=invalid-name
 
-from typing import List
-
 import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
 
 
-def make_extension(module: List[str], sources: List[str], cpp=False):
-    """Build a Cython extension module."""
+def make_extension(module: list[str], sources: list[str]) -> list[Extension]:
+    """Build a Cython extension module.
+
+    Every surviving extension compiles as C. The C++ ones went with
+    ``_gamma_ray/`` and ``_phase_space/`` in cython-to-rust Task 0.2, so
+    this helper no longer carries a C++ branch.
+    """
     package = ".".join(["hazma", *module])
     path = "/".join(["hazma", *module])
 
@@ -24,17 +27,7 @@ def make_extension(module: List[str], sources: List[str], cpp=False):
     for src in sources:
         m = package + "." + src
         p = [path + "/" + src + ".pyx"]
-        include_dirs = [numpy.get_include()]
-        if cpp:
-            exts = Extension(
-                m,
-                p,
-                extra_compile_args=["-std=c++11"],
-                language="c++",
-                include_dirs=include_dirs,
-            )
-        else:
-            exts = Extension(m, p, include_dirs=include_dirs)
+        exts = Extension(m, p, include_dirs=[numpy.get_include()])
         for ext in cythonize(exts):
             extensions.append(ext)
     return extensions

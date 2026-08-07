@@ -1,7 +1,7 @@
 ---
 phase: 00
 title: Dead-code purge
-status: In Progress
+status: Complete
 ---
 
 # Phase 00: Dead-code purge
@@ -143,6 +143,26 @@ Everything else is behavior-invisible.
   deleted directories; sdist builds and contains no deleted paths.
   (Task 0.3 already removed the `hazma._decay.interpolation_data.*`
   entries; this task confirms nothing else dangles and runs the sdist.)
+  The first sdist run in the project's history turned up a defect the
+  deletions did not cause and this criterion did not anticipate:
+  `MANIFEST.in`'s `global-include *.md` is a repo-wide sweep, so the
+  tarball shipped `.claude/`, `.codex/` and `projects/` — 103 files of
+  agent scaffolding (501 → 398 files, measured with and without the
+  `prune` lines on the same tree). `prune`d here rather than deferred,
+  on the Task 0.2 precedent (widen the task, amend the criterion in the
+  same PR). The
+  wheel was already clean; `test/`, `docs/` and the cythonized `*.c`
+  stay, and the case for dropping them is
+  [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
+- `_build.py` no longer exists — it was replaced by `setup.py` in
+  `7a817f9` (2026-08-02), *before* this project began, and thirteen
+  durable docs still named it as the build entry point (`AGENTS.md`,
+  four `docs/`, six `.claude/skills/`, one `.codex/skills/`, plus a
+  `docs/versioning.md` note warning about a stale `VERSION` constant
+  that died with the file). Swept here: this is the task that owns the
+  build entry point, and Phase 07 Task 7.3 — which nominally covers
+  these files — is six phases away, so the false statement would have
+  misled every agent in between.
 - CI green on the full matrix.
 
 ### Task 0.5: Execute ADR-0003 (`hazma.gamma_ray` removal)

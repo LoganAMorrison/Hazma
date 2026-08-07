@@ -130,7 +130,7 @@ not hunt outside your area — that is another reviewer's job.
   README snippet, or claims a user-visible behavior, RUN it and paste the
   output. Static review does not catch a wrong number.
 - **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` /
-  `_build.py`, confirm the cited results came from a rebuilt tree.
+  `setup.py`, confirm the cited results came from a rebuilt tree.
 
 The full baseline duties and the **per-lens FOCUS rubric** for your lens
 live in [`review-lenses.md`](../../../docs/agents/review-lenses.md) —

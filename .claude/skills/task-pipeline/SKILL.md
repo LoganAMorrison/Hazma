@@ -71,7 +71,7 @@ and `<BRANCH>` from Phase A.
 > by the pipeline orchestrator.
 >
 > Hazma ships Cython extensions. If your work touches `.pyx`, `.pxd`, or
-> `_build.py`, run `pip install -e .` inside this worktree before running
+> `setup.py`, run `pip install -e .` inside this worktree before running
 > tests, and confirm `python -c "import hazma; print(hazma.__file__)"`
 > resolves inside `<WT_PATH>` — otherwise every result you report comes
 > from a different tree.

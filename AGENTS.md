@@ -130,7 +130,7 @@ the tree you edited, not an installed copy.
   there is a user-facing break — see `docs/versioning.md`. The package is
   empty today (its last module went in cython-to-rust Task 0.2), so the
   rule binds the next module parked there.
-- **Never commit generated C/C++.** `_build.py` cythonizes on build; the
+- **Never commit generated C/C++.** `setup.py` cythonizes on build; the
   `.c` / `.cpp` output is not the source of truth.
 - **No `breakpoint()`, `pdb`, or stray `print()` in library code.** Use
   the returned value or a logger.
