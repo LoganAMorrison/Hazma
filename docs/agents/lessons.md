@@ -148,6 +148,19 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   `|m1 - m2|`, so `two_body_momentum(1.0, 10.0, 1.0)` returned 48.99
   against a threshold of 11 — pre-existing, but a new docstring had just
   promised NaN below threshold, converting it into a false contract).
+- [sibling-copies-of-a-fixed-claim] A repo-fact claim is usually written
+  down in more than one durable doc, and fixing the copy you happened to
+  open leaves the others reading as authoritative. The two shapes that
+  bite: a *list* whose head item you corrected while items 2–n still
+  describe the old tree, and a claim duplicated across
+  `docs/agents/` and `.claude/skills/*/SKILL.md`. Fix by re-reading the
+  whole enclosing artifact, then `rg` the claim's distinctive phrase
+  repo-wide — not just the file the reviewer cited (PR #48: `AGENTS.md`'s
+  Layering list had item 1 updated but items 2–6 still named the deleted
+  `gamma_ray.py` and `_decay`; and `test/conftest.py excludes
+  test_gamma_ray.py` was fixed in `docs/agents/review-lenses.md` while
+  three skills kept saying it). Generalizes
+  [stale-ci-capability-claim] from workflows to any repo fact.
 - [elided-doc-paths] A `.../foo.py` shorthand in a durable doc is not
   mechanically resolvable and fails `scripts/agents/check_doc_citations.py`
   the moment the basename is not unique in the repo — and the elision is

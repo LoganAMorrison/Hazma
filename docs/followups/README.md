@@ -27,6 +27,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [remaining `sqrt(kallen_lambda(...))` call sites](todo/kallen-under-sqrt-remaining-call-sites.md) | 2026-08-05 | carved out of the `cross_section_prefactor` fix | cross-cutting |
 | [redundant `hazma.utils` helpers kept out of the public surface](todo/utils-public-surface-redundant-helpers.md) | 2026-08-05 | docs audit of `utils.rst` | cross-cutting |
 | [`preflight.sh` isort/ruff gates are red on the trunk](todo/preflight-isort-ruff-red-on-trunk.md) | 2026-08-05 | cython-to-rust Task 0.5 | cross-cutting |
+| [markdownlint was never run over `.claude/skills/`](todo/markdownlint-skips-skill-file-shapes.md) | 2026-08-06 | PR #48 review round 1 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

@@ -45,16 +45,6 @@ extensions = []
 # Cython utilities
 extensions += make_extension(["_utils"], ["boost"])
 
-# Gamma-Ray Helper
-extensions += make_extension(
-    ["_gamma_ray"], ["gamma_ray_generator", "gamma_ray_fsr"], cpp=True
-)
-
-# Phase space
-extensions += make_extension(
-    ["_phase_space"], ["generator", "histogram", "modifiers"], cpp=True
-)
-
 # Decay Spectra
 extensions += make_extension(
     ["spectra", "_photon"],

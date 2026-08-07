@@ -113,9 +113,9 @@ rest — mark sampled rows as `Sampled` in the audit.
 command cited as an exit criterion or a "run this to verify" step,
 actually execute it. A command that exits **green while doing nothing** is
 a **Blocker**: `pytest` exits 5 on zero collected, a `-k` filter matching
-nothing exits 0 with `no tests ran`, and `test/conftest.py` silently
-excludes `test/decay/` and `test_gamma_ray.py` from a bare run. A plan
-gating a decay-spectra task on a bare `pytest` has a green-but-noop gate.
+nothing exits 0 with `no tests ran`, and a bare `pytest` never enters
+`test/` at all — `setup.cfg`'s `testpaths` scopes it to `hazma`. A plan
+gating a spectra task on a bare `pytest` has a green-but-noop gate.
 
 Every fact you check becomes a Grounded-facts audit row — and every
 **Verified: Yes** must cite its evidence (the matching `file:line`, grep
@@ -243,7 +243,8 @@ them. The hazma-specific points:
 #### 6. Additional dimensions (the "Other" row)
 
 - **Test strategy.** Every task has a test plan naming real pytest
-  targets, and it accounts for `conftest.py`'s exclusions.
+  targets, and it names the suite it means — `pytest test` and a bare
+  `pytest` collect different sets.
 - **Scope discipline.** "In scope" and "Out of scope" don't overlap.
   Nothing implicit is smuggled in. The out-of-scope list is honest about
   what the author *was* tempted to include.

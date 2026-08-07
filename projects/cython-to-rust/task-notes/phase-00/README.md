@@ -3,11 +3,12 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 00
-**Status:** In Progress (Tasks 0.1, 0.3, 0.5 Complete)
+**Status:** In Progress (Tasks 0.1, 0.2, 0.3, 0.5 Complete; only 0.4
+remains)
 **Plan References:** `../../phases/phase-00-dead-code-purge.md`
 **Related ADRs:** ADR-0003 (accepted 2026-08-04, with an Addendum the
-same day; Task 0.5 executed its non-deletion steps 2026-08-05, so what
-ADR-0003 still owes is Task 0.2's delete)
+same day; Task 0.5 executed its non-deletion steps 2026-08-05 and Task
+0.2 executed the deletion 2026-08-06 — **ADR-0003 is fully discharged**)
 **Depends On:** none
 
 ## Objective
@@ -20,7 +21,7 @@ purge.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 0.1 | Relocate legacy constants header | — | Complete | [task-0.1-relocate-constants.md](task-0.1-relocate-constants.md) |
-| 0.2 | Delete phase-space / gamma-ray slice | 0.1 (ADR-0003 accepted 2026-08-04) | Not started | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
+| 0.2 | Delete phase-space / gamma-ray slice | 0.1 (ADR-0003 accepted 2026-08-04) | Complete | [task-0.2-delete-mc-slice.md](task-0.2-delete-mc-slice.md) |
 | 0.3 | Delete superseded kernels + helpers | 0.1 | Complete | [task-0.3-delete-superseded.md](task-0.3-delete-superseded.md) |
 | 0.4 | Prune build and packaging config | 0.2, 0.3 | Not started | [task-0.4-prune-build.md](task-0.4-prune-build.md) |
 | 0.5 | Execute ADR-0003 (`gamma_ray`) — ratified 2026-08-04 | — | Complete | [task-0.5-gamma-ray-decision.md](task-0.5-gamma-ray-decision.md) |
@@ -84,27 +85,45 @@ purge.
   the trunk** — `from hazma.theory import Theory`, but `hazma.theory`
   exports `TheoryAnn` / `TheoryDec`. Pre-existing; exclude the package
   from import smoke and load `avm_msqrd.py` by path if you need it.
-- **Task 0.2 inherits four `gamma_ray` loose ends** (all found in Task
-  0.5, all still factually true until the delete lands):
-  1. `hazma/rh_neutrino/_rh_neutrino_spectra.py:24` —
-     `from hazma.gamma_ray import gamma_ray_decay`, the only live
-     in-library textual importer. Unreachable
-     (`hazma/rh_neutrino/__init__.py` imports only `._model`; the block
-     that would pull `._rh_neutrino_spectra` is commented out at
-     line 90), so it is not why the module is broken — but it dangles
-     the moment `hazma/gamma_ray.py` goes.
-  2. `hazma/spectra/_photon/electron` is dead: not re-exported by
-     `hazma/spectra/__init__.py`, no caller anywhere, and the live
-     n-body path has its own `"e": _dnde_zero`
-     (`hazma/spectra/_nbody.py:58`). Its docstring's stated purpose was
-     to serve `hazma.gamma_ray`. A deletion candidate for Task 0.2.
-  3. `docs/source/rambo.rst` is an orphan Sphinx page documenting the
-     long-gone `hazma.rambo.PhaseSpace`; it pairs with Task 0.2's
-     `hazma/deprecated/rambo.py` deletion. (`docs/source/gamma_ray.rst`,
-     the same shape, was deleted in Task 0.5.)
+- ~~**Task 0.2 inherits four `gamma_ray` loose ends**~~ — **all four
+  closed by Task 0.2 (2026-08-06).** For the record, and because the
+  first two were resolved by deletion rather than repointing:
+  1. `hazma/rh_neutrino/_rh_neutrino_spectra.py` line 24 as of
+     `c6991a6` — `from hazma.gamma_ray import gamma_ray_decay`, the only
+     live in-library textual importer. **Deleted**, not repointed: it is
+     the legacy twin of the live `hazma/rh_neutrino/_spectra.py` (which
+     already calls `hazma.spectra.dnde_photon`), it is reachable only
+     from the commented-out class body at
+     `hazma/rh_neutrino/__init__.py:90`, and porting its five call sites
+     to `dnde_photon` would have been an unoracled physics change in dead
+     code — the signatures, the FSR default, and the three-body `msqrd`
+     convention all differ.
+  2. `hazma/spectra/_photon/electron` — **deleted**, along with the
+     `numpy`, `List` and `warn` imports it orphaned in that live wrapper.
+     Confirmed callerless: not re-exported by `hazma/spectra/__init__.py`
+     (which names its imports explicitly), no star-importer, and the
+     compiled generator that nominally motivated it handled electrons
+     inline instead.
+  3. `docs/source/rambo.rst` — **deleted**, on Task 0.5's orphan-page
+     precedent.
   4. `test/conftest.py` and `docs/agents/{environment,preflight,
-     review-lenses}.md` all describe `test_gamma_ray.py` / `_gamma_ray/`
-     as present. Each goes stale with the delete.
+     review-lenses}.md` — all four **swept**. `conftest.py` now ignores
+     no test module at all; `environment.md`'s entry was rewritten to
+     name the real remaining difference between the two suites
+     (`setup.cfg`'s `testpaths`), not the retired `collect_ignore`.
+- **A `git stash` round-trip un-stages a deletion** (Task 0.2). Stashing
+  to baseline the linters against the trunk and popping restores the
+  removals as *unstaged*, so `git ls-files` still lists the deleted
+  paths — which then makes `scripts/agents/check_doc_citations.py`
+  traceback with `FileNotFoundError` on a tracked-but-absent file
+  instead of reporting it. `git add -A` after every pop. Recorded on
+  [`docs/followups/todo/citation-checker-skips-deleted-inrepo-files.md`](../../../../docs/followups/todo/citation-checker-skips-deleted-inrepo-files.md).
+- **Deleting a package's last module deletes the package** (Task 0.2).
+  `hazma/deprecated/` had no `__init__.py`, so removing `rambo.py` left
+  no importable `hazma.deprecated` at all. Two durable docs
+  (`AGENTS.md`, `docs/versioning.md` §6) asserted "it stays importable"
+  as a fact about the tree rather than as a policy about whatever lives
+  there; both were rescoped rather than dropped.
 - **`docs/source/` has orphan pages that no toctree reaches** — checked
   in Task 0.5: `index.rst` lists nine documents, `limits.rst` nests
   `gamma_ray_limits` + `cmb`, `models.rst` nests the two mediators.
@@ -154,6 +173,22 @@ purge.
 - Task 0.5 stopped at docs. The dangling `rh_neutrino` importer and the
   dead `_photon.electron` are library code — Task 0.2's shape, recorded
   in Findings rather than fixed opportunistically.
+- Task 0.2 deleted three things the phase file's Task 0.2 list did not
+  name (`_rh_neutrino_spectra.py`, the `electron` helper,
+  `test/test_gamma_ray.py`) and patched that list to name them, rather
+  than absorbing the widening into the diff. Precedent for the project:
+  a dependent that this task's delete would strand goes in this task's
+  scope, and the canonical exit criteria are amended in the same PR.
+- Task 0.2 patched **Task 0.4's** exit criteria too. They claimed the
+  `_gamma_ray` / `_phase_space` extension groups would still be waiting
+  for 0.4, in the same sentence that recorded why a deletion task cannot
+  defer its own groups. What is left for 0.4 is the survivor-count
+  reconciliation, the sdist, and `make_extension`'s now-unreachable
+  `cpp=True` branch.
+- Task 0.2 landed the `### Removed` CHANGELOG block under `[Unreleased]`
+  instead of deferring it to Phase 07: the replacement wording was
+  already settled by ADR-0003's Addendum, and `../README.md` forbids
+  reconstructing the closing entry from memory.
 
 ## Files Changed
 
@@ -185,6 +220,25 @@ purge.
 - `test/test_utils.py` added (16 pinned tests);
   `docs/followups/done/cross-section-prefactor-threshold-cancellation.md`
   filed; nine durable docs swept. Full list in the task note.
+
+### Task 0.2
+
+- Deleted `hazma/_gamma_ray/` (7 files), `hazma/_phase_space/` (9),
+  `hazma/gamma_ray.py`, `hazma/deprecated/rambo.py` (the package's last
+  module), `hazma/rh_neutrino/_rh_neutrino_fsr_four_body.{pyx,pyi}`,
+  `hazma/rh_neutrino/_rh_neutrino_spectra.py`, `test/test_gamma_ray.py`,
+  and `docs/source/rambo.rst`.
+- `hazma/spectra/_photon/__init__.py` — dead `electron` helper and three
+  orphaned imports removed. `setup.py` — two extension groups dropped.
+  `test/conftest.py` — `collect_ignore` reduced to `setup.py`.
+  `test/test_utils.py` — stale docstring sentence corrected.
+- `CHANGELOG.md` gained a `### Removed` block under `[Unreleased]`;
+  ten further durable docs swept — `AGENTS.md`, `docs/versioning.md`,
+  `docs/PR_GUIDELINES.md`, three `docs/agents/*.md`, and four
+  `docs/followups/` records, with every citation into a deleted file
+  pinned to `c6991a6`.
+- 43 files in total (+816 / −4,413); under `hazma/` and `test/` alone,
+  25 files and **−4,023 lines against +6**. Full list in the task note.
 
 ### Task 0.5
 
@@ -220,6 +274,14 @@ purge.
   `pytest -q` → `57 passed, 10 skipped`; 32 `.so` built; public
   spectra bit-for-bit unchanged over 64 arrays. Details in the task
   note.
+- Task 0.2: `pytest -q test` → `244 passed, 20 skipped`; bare `pytest -q`
+  → `57 passed, 10 skipped`; **20** `.so` built (25 → 20, the count the
+  phase Exit Criteria name), 20 `.pyx` / 17 `.pxd` remain,
+  `git grep -l 'std::' -- hazma/` empty. No coverage lost:
+  `pytest test --collect-only -q` reports 264 both on the branch and on
+  the stashed trunk. The 159-array public compiled surface is
+  bit-for-bit unchanged across the deletion and a clean rebuild. Details
+  in the task note.
 - Task 0.3: `pytest -q test` → `68 passed, 20 skipped` (52 + the 16 new
   `test/test_utils.py` cases); bare `pytest -q` → `57 passed, 10
   skipped`; **25** `.so` built (32 → 25; Task 0.2's five take it to the
@@ -236,10 +298,10 @@ purge.
 ## Open Questions
 
 - ~~ADR-0003 sign-off — required before Task 0.2 deletes anything~~ —
-  **closed 2026-08-04: accepted**, and its non-deletion steps **executed
-  in Task 0.5 on 2026-08-05**. Tasks 0.2 and (through it) 0.4 are
-  unblocked; the only step ADR-0003 still owes is Task 0.2's delete.
-  `gamma_ray_fsr` is **not** replacement-free: it is superseded by
+  **fully discharged.** Accepted 2026-08-04; non-deletion steps executed
+  in Task 0.5 on 2026-08-05; the deletion itself landed in Task 0.2 on
+  2026-08-06, with the `### Removed` CHANGELOG block. `gamma_ray_fsr` is
+  **not** replacement-free: it is superseded by
   `hazma.spectra.dnde_photon_fsr`, which closed
   [`docs/followups/done/msqrd-driven-fsr-generator.md`](../../../../docs/followups/done/msqrd-driven-fsr-generator.md)
   in PR #41 — see ADR-0003's Addendum (2026-08-04).
@@ -258,6 +320,15 @@ purge.
   they are pre-existing — `git stash` the change and re-run both
   commands. Filed as
   [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+  Task 0.2 confirmed it and added the recipe's missing step: `git add -A`
+  after the `git stash pop`, or the deletions come back unstaged. Its own
+  delta was `isort` red on the same one file both ways, and configured
+  `ruff` **down** 22 → 17 findings. It also narrowed the debt by one
+  file: `hazma/spectra/_photon/__init__.py` was the only file under
+  `hazma/` it edited, so its import block was sorted in-task and that
+  gate now passes. The `ruff` row stays red — those findings are `UP006`
+  / `ANN001` in `setup.py` and the test files, out of any single task's
+  scope.
 - ~~`cross_section_prefactor`'s threshold cancellation — deferred;
   sequencing matters, because if Phase 01 captures the corpus first the
   Rust port inherits the cancelling values~~ — **closed: repaired
@@ -270,37 +341,54 @@ purge.
 ## Plan Impact
 
 **Impact Level:** None (this file is metadata, not a canonical change).
-Tasks 0.1, 0.3, and 0.5 each patched canonical files; those patches are
-recorded in their own task notes' Plan Impact sections (0.5 also patched
-`../../PLAN.md`).
+Tasks 0.1, 0.2, 0.3, and 0.5 each patched canonical files; those patches
+are recorded in their own task notes' Plan Impact sections (0.5 also
+patched `../../PLAN.md`; 0.2 rewrote **Task 0.4's** exit criteria as well
+as its own).
 
 ## Handoff to Next Task
 
 **For the next agent working in Phase 00:** read `../../PLAN.md`, then
-`../README.md`, then this file, then the phase file. **Tasks 0.1, 0.3,
-and 0.5 are done — Task 0.2 is the next implementation work, and 0.4
-follows it.** No sign-off is outstanding anywhere in this phase.
+`../README.md`, then this file, then the phase file. **Tasks 0.1, 0.2,
+0.3 and 0.5 are done — Task 0.4 is all that remains, and it closes the
+phase.** No sign-off is outstanding anywhere in this phase; all three
+project ADRs are Accepted and ADR-0003 is fully discharged.
 
-Task 0.5 cleared the docs ahead of the delete, so Task 0.2 is now purely
-a code/config deletion. Before starting it, read this file's Findings
-bullet "Task 0.2 inherits four `gamma_ray` loose ends" — the
-`rh_neutrino` importer in particular will break the build's import smoke
-if it is deleted without a plan. The replacement wording Task 0.2's
-CHANGELOG entry must use is fixed and no longer negotiable:
-`gamma_ray_decay` → `hazma.spectra.dnde_photon`, `gamma_ray_fsr` →
-`hazma.spectra.dnde_photon_fsr`, neither a drop-in.
+**Every deletion in this phase has landed.** Task 0.4 is build and
+packaging reconciliation only, and it is smaller than the original phase
+text implied — Task 0.2 rewrote its exit criteria, so read them from the
+phase file rather than from memory. What is left:
 
-**Currently safe to assume:** the tree carries 25 extensions, 26 `.pyx`,
-and 19 `.pxd`. All dead Cython that could go without ADR-0003 is gone —
-what is left is exactly `_gamma_ray/` (2), `_phase_space/` (3),
-`rh_neutrino/_rh_neutrino_fsr_four_body.pyx`, and the 20 survivors.
+1. reconcile `setup.py`'s extension list against the survivor count
+   (20 `.so` from a clean `pip install -e .`);
+2. delete `make_extension`'s now-unreachable `cpp=True` parameter and
+   `language="c++"` branch (`setup.py:18,28-35`) — no caller passes it;
+3. confirm `pyproject.toml` package-data and `MANIFEST.in` dangle
+   nothing, and **run the sdist** — Task 0.2 did not, `build` was not in
+   the venv;
+4. write `../../learnings/phase-00-dead-code-purge.md` and flip the phase
+   file frontmatter to `status: Complete`.
+
+**Currently safe to assume:** the tree carries **20 extensions, 20
+`.pyx`, 17 `.pxd`**, zero C++ (`git grep -l 'std::' -- hazma/` is empty),
+and no `.pyx` outside the live surface — re-derive with
+`find hazma -name '*.so' | wc -l` rather than quoting this.
+`test/conftest.py` skips no test module at all; `collect_ignore` holds
+only the repo's `setup.py`. `hazma/deprecated/` no longer exists.
+`hazma.gamma_ray`, `hazma._gamma_ray`, `hazma._phase_space` and
+`hazma.rh_neutrino._rh_neutrino_spectra` all raise `ModuleNotFoundError`.
 `hazma.utils` is the single home for `cross_section_prefactor` and
-`minkowski_dot`. `test/conftest.py` ignores only `test_gamma_ray.py`.
-Clean stale `.c`/`.cpp`/`.so` before every rebuild, **and** `rm -rf` a
-package directory after `git rm -r` (see Findings).
+`minkowski_dot`. `CHANGELOG.md`'s `[Unreleased]` already carries the
+`### Removed` block for both `major` removals with their replacement
+wording — Phase 07 aggregates it, it does not rewrite it. Clean stale
+`.c`/`.cpp`/`.so` before every rebuild, `rm -rf` a package directory
+after `git rm -r`, and `git add -A` after any `git stash pop`
+(see Findings).
 
-**Currently risky / unknown:** whether external user code imported the
-double-underscore legacy shims. The verify-before-delete check found no
-in-repo importer outside the shims themselves and two notebook cells,
-but it cannot see downstream users — the removal rides the project's
-`version_bump: major` for exactly that reason.
+**Currently risky / unknown:** the sdist has not been built since the
+deletions — Task 0.4 owes it. And whether external user code imported
+the removed public names (`hazma.gamma_ray`, `hazma.deprecated.rambo`,
+the double-underscore legacy shims) is unknowable in-repo: the
+verify-before-delete checks found no in-repo importer that was not itself
+being deleted, but they cannot see downstream users. That is exactly what
+the project's `version_bump: major` is for.

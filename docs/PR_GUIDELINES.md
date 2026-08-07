@@ -36,7 +36,7 @@ Use the most specific scope that applies. Common scopes (non-exhaustive):
 | Scope       | Area                                                         |
 | ----------- | ------------------------------------------------------------ |
 | `spectra`   | `hazma/spectra/` — photon / positron / neutrino spectra      |
-| `phase`     | `hazma/phase_space/`, `hazma/_phase_space/` (RAMBO, N-body)  |
+| `phase`     | `hazma/phase_space/` (RAMBO, N-body)                         |
 | `theory`    | `hazma/theory/` — the model interface and its mixins         |
 | `models`    | `scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`, …    |
 | `limits`    | `hazma/limits/`, gamma-ray limit machinery                   |

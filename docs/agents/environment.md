@@ -48,9 +48,11 @@ trusting any result you attribute to your edit — especially inside a git
 worktree under `.claude/worktrees/` or `.codex/worktrees/`, which is a
 *different directory* from the checkout the editable install points at.
 
-**`pip install -e .` needs Cython, NumPy, and a C/C++ compiler.** A
-missing toolchain surfaces as a build error deep in `_gamma_ray`
-(compiled as C++), not as a clear "install Cython" message.
+**`pip install -e .` needs Cython, NumPy, and a C compiler.** A missing
+toolchain surfaces as a build error deep in a generated `.c` file, not as
+a clear "install Cython" message. (Every C++ extension went with
+`_gamma_ray/` and `_phase_space/` in cython-to-rust Task 0.2; the tree
+builds as C only.)
 
 **Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
 Edit the `.pyx` and rebuild.
@@ -98,13 +100,17 @@ mistyped path, a `-k` filter that matches nothing, or a `collect_ignore`
 entry silently reduces the run to nothing. Read the summary line
 (`N passed`), not just the exit status.
 
-**`test/conftest.py` deliberately ignores part of the suite.** It builds
-a `collect_ignore` list that excludes `test/test_gamma_ray.py`. A bare
-`pytest` therefore does **not** run that file, and "the full suite is
-green" does not cover it. If your change touches `gamma_ray.py`, run it
-explicitly and expect to deal with why it was parked. (`test/decay/` was
-a second entry until it was deleted alongside `hazma/_decay/` in
-cython-to-rust Task 0.3.)
+**`test/conftest.py` no longer ignores any test module.** Its
+`collect_ignore` list holds only the repo's `setup.py`, which is not a
+test module. Both entries that used to hide part of the suite are gone
+with the code they covered: `test/decay/` alongside `hazma/_decay/`
+(cython-to-rust Task 0.3) and `test/test_gamma_ray.py` alongside
+`hazma/gamma_ray.py` (Task 0.2). A bare `pytest` still runs a *different*
+suite from `pytest test`, but for an unrelated reason: `setup.cfg`'s
+`[tool:pytest] testpaths` is `hazma`, so a bare run collects the
+in-package `*_test.py` modules (`hazma/form_factors/`,
+`hazma/phase_space/`) and never enters `test/`. Cite the command you ran,
+not "the full suite".
 
 **The test tree does not mirror the package one-to-one.** `test/` has
 `agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,

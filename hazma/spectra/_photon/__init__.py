@@ -4,20 +4,17 @@ Module for computing decay spectra from a muon and light mesons.
 @author: Logan Morrison and Adam Coogan
 """
 
-from typing import List, overload
-from warnings import warn
-
-import numpy as np
+from typing import overload
 
 from hazma.spectra._photon import (
+    _eta,
+    _eta_prime,
+    _kaon,
     _muon,
+    _omega,
+    _phi,
     _pion,
     _rho,
-    _kaon,
-    _eta,
-    _omega,
-    _eta_prime,
-    _phi,
 )
 from hazma.utils import RealArray, RealOrRealArray
 
@@ -345,31 +342,6 @@ def dnde_photon_long_kaon(
 
     """
     return _kaon.dnde_photon_long_kaon(photon_energy, kaon_energy)
-
-
-def electron(photon_energies, _: float):
-    r"""Compute gamma-ray spectrum from electron decay (returns zero).
-
-    This exists so an electron can appear in a final-state list handed to
-    a multi-particle spectrum routine. Nothing in hazma calls it: the
-    live n-body path behind `hazma.spectra.dnde_photon` carries its own
-    ``"e"`` zero entry (``_dnde_zero`` in ``hazma/spectra/_nbody.py``).
-
-    Parameters
-    ----------
-    photon_energies : float or numpy.ndarray
-        Photon energy(ies) in laboratory frame.
-    electron_energy : double
-        Electron energy in laboratory frame.
-
-    Returns
-    -------
-    spec : numpy.ndarray
-        An array of zeros.
-    """
-    if hasattr(photon_energies, "__len__"):
-        return np.array([0.0 for _ in photon_energies])
-    return 0.0
 
 
 @overload

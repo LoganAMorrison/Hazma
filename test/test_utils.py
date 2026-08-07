@@ -4,7 +4,8 @@ These cover the two functions that took over from the deleted Cython module
 ``hazma.field_theory_helper_functions.common_functions`` in the
 Cython-to-Rust migration (project ``cython-to-rust``, Task 0.3):
 ``minkowski_dot`` (relocated here) and ``cross_section_prefactor`` (already
-present; ``hazma.deprecated.rambo`` and ``hazma.gamma_ray`` now call it),
+present; its two callers at the time, ``hazma.deprecated.rambo`` and
+``hazma.gamma_ray``, were repointed here before Task 0.2 deleted both),
 plus ``two_body_momentum``, the numerically stable momentum both
 ``cross_section_prefactor`` and the two-body phase-space integrators are
 built on.

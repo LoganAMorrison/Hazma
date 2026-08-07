@@ -66,6 +66,24 @@ Everything else is behavior-invisible.
 - Deleted: `hazma/_phase_space/`, `hazma/_gamma_ray/`,
   `hazma/deprecated/rambo.py`, `hazma/gamma_ray.py` (per ADR-0003),
   `hazma/rh_neutrino/_rh_neutrino_fsr_four_body.{pyx,pyi}`.
+- The three `gamma_ray` dependents this delete would otherwise strand go
+  with it (each recorded as a scope addition in the task note, all
+  evidenced callerless at delete time):
+  `hazma/rh_neutrino/_rh_neutrino_spectra.py`, the sole live importer of
+  `gamma_ray_decay` and the legacy twin of the live
+  `hazma/rh_neutrino/_spectra.py`; the `electron` helper in
+  `hazma/spectra/_photon/__init__.py`, which existed only so an electron
+  could appear in a `hazma.gamma_ray` final-state list; and
+  `test/test_gamma_ray.py`, which imports the removed module.
+  Porting the five `gamma_ray_decay` call sites to `dnde_photon` is
+  **not** in scope — signatures and FSR handling differ, so it would be
+  an unoracled physics change inside dead code (`PLAN.md` §Scope).
+- `setup.py` drops the `_gamma_ray` and `_phase_space` extension groups
+  in **this** task: `pip install -e .` fails immediately on an
+  `Extension` whose source is gone, exactly as in Tasks 0.1 and 0.3.
+  `test/conftest.py`'s `test_gamma_ray.py` ignore goes for the same
+  reason. Task 0.4 keeps the survivor-count reconciliation and the
+  now-unreachable `cpp=True` branch of `make_extension`.
 - Importer check re-run at delete time and quoted in the PR body.
 - PR body states both `major` calls explicitly (`deprecated/rambo.py`
   per `versioning.md`; `gamma_ray` per ADR-0003) and notes they are
@@ -114,11 +132,13 @@ Everything else is behavior-invisible.
 **Exit criteria:**
 
 - `setup.py` extension list matches the survivors exactly (count the
-  built `.so`s in a fresh `pip install -e .`); no `cpp=True` groups
-  remain. Tasks 0.2 and 0.3 each drop their own groups as they delete
-  the sources, so what remains here is the `_gamma_ray` /
-  `_phase_space` pair plus the final reconciliation against the
-  survivor count.
+  built `.so`s in a fresh `pip install -e .`). Tasks 0.2 and 0.3 each
+  dropped their own groups as they deleted the sources — a deletion task
+  cannot defer them, because the build fails on an `Extension` whose
+  source is gone — so no group is left to remove. What remains here is
+  the reconciliation against the survivor count and the now-unreachable
+  `cpp=True` parameter and `language="c++"` branch of `make_extension`,
+  which no caller passes since Task 0.2.
 - `pyproject.toml` package-data globs and `MANIFEST.in` no longer ship
   deleted directories; sdist builds and contains no deleted paths.
   (Task 0.3 already removed the `hazma._decay.interpolation_data.*`

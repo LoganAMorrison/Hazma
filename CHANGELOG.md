@@ -45,6 +45,34 @@ signature did.
   soft-photon, Altarelli-Parisi, and flat-matrix-element phase-space
   checks.
 
+### Removed
+
+- **`hazma.gamma_ray` — the whole module.** It could not be imported in
+  any released version (it transitively imported the long-deleted
+  `hazma.rambo`), so no working user code depended on it. Decided in
+  [`projects/cython-to-rust/adrs/ADR-0003`](projects/cython-to-rust/adrs/ADR-0003-remove-gamma-ray-module.md).
+  Both public functions have a named replacement, **neither a drop-in**:
+  - `gamma_ray_decay` → `hazma.spectra.dnde_photon`, the live n-body
+    path over `hazma.phase_space`. Argument order and keywords differ,
+    and it includes FSR by default (`include_fsr=True`).
+  - `gamma_ray_fsr` → `hazma.spectra.dnde_photon_fsr` (see `Added`
+    above). It takes the non-radiative squared *matrix element* rather
+    than a rate float, and has no `isp_masses`.
+
+- **`hazma.deprecated.rambo`.** The last module under
+  `hazma/deprecated/`, superseded by the pure-NumPy `hazma.phase_space`
+  it already warned users toward on import. Removing anything from
+  `hazma/deprecated/` is `major` per
+  [`docs/versioning.md`](docs/versioning.md); the package is now empty.
+
+- **The `hazma._gamma_ray` and `hazma._phase_space` Cython extensions**
+  (private, never re-exported, and the only C++ in the tree) and the
+  never-built `hazma/rh_neutrino/_rh_neutrino_fsr_four_body.pyx`. Wheels
+  now ship 20 extension modules instead of 25, all compiled as C.
+  No public value changes: every compiled-backed public entry point is
+  bit-for-bit identical across the deletion (159 arrays over
+  `np.logspace(-2, 3, 200)` MeV).
+
 ### Changed
 
 - **Two-body kinematics near threshold move; everything else moves by
