@@ -154,6 +154,18 @@ by this task — see §Plan Impact):
   follow-up records cited line numbers inside files this task deleted;
   each now reads "`<path>` line N **as of `c6991a6`**" with the
   `git show` command to retrieve it.
+- **Review round 1 (PR #48) caught a half-swept `AGENTS.md`.** The
+  first pass fixed the layout tree and item 1 of the Layering list but
+  did not re-read items 2–6 or the paragraph under them, leaving
+  `gamma_ray.py` named as an Analysis module and `_decay` as the example
+  private package. Fixed as a class, not a point: every path AGENTS.md
+  names is now confirmed to exist (27/27), and the same sweep found the
+  identical stale `test/conftest.py` claim in three
+  `.claude/skills/*/SKILL.md` files — siblings of the
+  `docs/agents/review-lenses.md` copy the first pass *did* fix. All four
+  now describe the real remaining difference between the suites
+  (`setup.cfg`'s `testpaths`). Ledger class:
+  `[sibling-copies-of-a-fixed-claim]`.
 - **CHANGELOG entry landed now, under `[Unreleased]`.** The removals are
   user-facing and the replacement wording was settled by ADR-0003's
   Addendum; deferring it to Phase 07 would mean reconstructing it from
@@ -374,6 +386,17 @@ beyond the no-change record.
   fix. (That follow-up also predicted this task would grow its skip
   list; it did not — every citation into a deleted file was pinned to
   `c6991a6` instead, and the sweep below reports zero unresolved.)
+- **`markdownlint` has never covered `.claude/skills/`.** Editing three
+  `SKILL.md` files in review round 1 put them into preflight gate 6's
+  scope for the first time, and they fail it — 9 errors across two files
+  (`MD036` on the bolded section labels every skill opens with, plus
+  `MD031`/`MD032` inside blockquoted examples), including four in
+  `task-pipeline/SKILL.md`, which this PR does not touch. All are
+  pre-existing: `.markdownlint.jsonc` was written against `docs/` and
+  `projects/` only. Deciding between a path-scoped relaxation and
+  restructuring the skill docs is an agent-tooling call, not a
+  dead-code-deletion one. Filed as
+  [`docs/followups/todo/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md).
 - **Already-dead-on-trunk references are left alone**, on Task 0.3's
   boundary rule: the ~20 `hazma.rambo` / `hazma.decay` imports in
   `notebooks/`, and the root `searchindex.js` — a committed Sphinx

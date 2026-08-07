@@ -69,11 +69,11 @@ The dependency direction is one-way; do not invert it.
    gamma-ray-limit, CMB, and constraint mixins.
 5. **Models** (`scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`,
    `single_channel.py`) — concrete `Theory` implementations.
-6. **Analysis** (`limits/`, `relic_density/`, `cmb.py`, `pbh.py`,
-   `gamma_ray.py`) — consumes models.
+6. **Analysis** (`limits/`, `relic_density/`, `cmb.py`, `pbh.py`) —
+   consumes models.
 
-A leading underscore on a package (`_decay`, `_utils`) means *private
-implementation*. Public callers go through `hazma.spectra`,
+A leading underscore on a package (`_utils`, `spectra/_photon`) means
+*private implementation*. Public callers go through `hazma.spectra`,
 `hazma.theory`, and the model packages.
 
 ## Commands

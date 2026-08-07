@@ -107,8 +107,9 @@ Common "diff omits" patterns in this repo:
 - Package data (`*.dat`, `*.csv`) added under `hazma/` but not registered
   in `[tool.setuptools.package-data]` in `pyproject.toml`, so it is
   missing from the installed wheel.
-- A new test file that `test/conftest.py`'s `collect_ignore` silently
-  excludes.
+- A new test file placed where the run that is cited as green never
+  collects it — `test/conftest.py`'s `collect_ignore`, or under `test/`
+  when only a bare `pytest` was run (`setup.cfg` scopes that to `hazma`).
 
 ### Step 5: Evaluate based on your assigned lens
 
@@ -122,8 +123,9 @@ not hunt outside your area — that is another reviewer's job.
   identifier in the body against today's diff.
 - **Zero-collection guard.** `pytest` exits 5 on zero tests collected;
   a `-k` filter matching nothing exits 0 with `no tests ran`. Read the
-  `N passed` line before trusting any cited green. `test/conftest.py`
-  excludes `test/decay/` and `test_gamma_ray.py` from a bare run.
+  `N passed` line before trusting any cited green. Note also that a bare
+  `pytest` collects a *different* suite from `pytest test`, because
+  `setup.cfg`'s `testpaths` is `hazma`.
 - **Empirical execution.** When the diff edits a docstring example, a
   README snippet, or claims a user-visible behavior, RUN it and paste the
   output. Static review does not catch a wrong number.

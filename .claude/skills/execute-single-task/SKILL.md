@@ -204,10 +204,10 @@ pytest test/spectra --collect-only -q | tail -n 1
 ```
 
 Guard against a false green: `pytest` exits **5** on zero collected, and
-a `-k` filter matching nothing exits 0 with `no tests ran`. Also note
-`test/conftest.py` excludes `test/decay/` and `test_gamma_ray.py` from a
-bare run — if your change touches those areas, run them explicitly.
-Record the real count in the task note.
+a `-k` filter matching nothing exits 0 with `no tests ran`. Also note a
+bare `pytest` never enters `test/` — `setup.cfg`'s `testpaths` scopes it
+to `hazma` — so run `pytest test` explicitly and cite the command you
+ran. Record the real count in the task note.
 
 **Correctness shapes to defend:** adding an entry to a dispatch table (a
 final-state → spectrum-function map, a channel list) requires sweeping
