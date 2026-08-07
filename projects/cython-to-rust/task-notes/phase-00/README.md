@@ -140,7 +140,7 @@ purge.
   are produced by different machinery: `7a817f9` scoped the *wheel* to
   `hazma*` via `[tool.setuptools.packages.find]`, but `MANIFEST.in`'s
   `global-include *.md` is a repo-wide sweep and kept putting `.claude/`
-  (18 files), `.codex/` (18) and `projects/` (65) into the *sdist*.
+  (18 files), `.codex/` (18) and `projects/` (67) into the *sdist*.
   Nobody noticed for four months because no task had run
   `build --sdist`. Task 0.4 was the first, and it is the only check in
   Phase 00 that could have caught this.
@@ -382,8 +382,10 @@ purge.
   verified **set equality**: 20 declared in `setup.py`, 20 `.pyx` on
   disk, 20 `.so` from a clean `pip install -e .`, all four symmetric
   differences empty; `git grep -l 'std::' -- hazma/` empty; no
-  `language=` / `c++` token anywhere in the build config. sdist 498 → 397
-  files (the 101 scaffolding files gone), **and it installs**: a fresh
+  `language=` / `c++` token anywhere in the build config. sdist
+  501 → 398 files with and without the `prune` lines, both measured on
+  the final tree (the 103 scaffolding files gone), **and it installs**:
+  a fresh
   venv with `uv pip install --no-binary hazma dist/hazma-2.1.0.tar.gz`
   imports every public entry point from outside the repo and reproduces
   the expected spectra. Wheel: 311 files, `hazma/` + dist-info only, 20

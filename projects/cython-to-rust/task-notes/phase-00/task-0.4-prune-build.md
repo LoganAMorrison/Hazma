@@ -74,11 +74,12 @@ last two bullets were added *by* this task and are flagged as such.
   (`find hazma -name '*.c' -o -name '*.cpp' -o -name '*.so' | xargs rm -f`)
   first, then compare the three sets, not the three counts.
 - **`MANIFEST.in`'s `global-include` is repo-wide, and nothing scoped
-  it.** The pre-task sdist carried 498 files, of which 101 were
-  `.claude/` (18), `.codex/` (18) and `projects/` (65) — the agent
-  skills, and this project's own plans, ADRs and task notes, inside a
-  publishable tarball. The wheel has been clean since `7a817f9`
-  restricted `[tool.setuptools.packages.find]` to `hazma*`; that fix
+  it.** Without the `prune` lines this task added, the sdist carries
+  **501** files, of which **103** are `.claude/` (18), `.codex/` (18)
+  and `projects/` (67) — the agent skills, and this project's own plans,
+  ADRs and task notes, inside a publishable tarball. The wheel has been
+  clean since `7a817f9` restricted
+  `[tool.setuptools.packages.find]` to `hazma*`; that fix
   never reached the sdist, because the two are built by different
   machinery. **A clean wheel is not evidence of a clean sdist.**
 - **The sdist had never been built in this project.** Task 0.2's handoff
@@ -137,6 +138,20 @@ last two bullets were added *by* this task and are flagged as such.
   dead-code-purge task is the wrong place to settle packaging policy.
   Follow-up filed with the measured inventories and a stated deadline —
   before Task 7.1, because maturin will not read `MANIFEST.in`.
+- **Review round 1 (PR #49) — the recorded sdist counts were stale.**
+  `498 → 397` was measured mid-task, before this task's own task note,
+  learnings file and follow-up existed; the follow-up lands under
+  `docs/`, which is not pruned, so it changed the very number it
+  documents. Re-derived both halves on the final tree with and without
+  the `prune` lines: **501 → 398**, 103 scaffolding files. The reviewer
+  cited three occurrences; the §11 sweep found **six** files carrying
+  the stale figures (`101`, `498`, `397`, plus the `projects/ (65)` and
+  `docs/ (46)` sub-counts), and all six were fixed together. Rebuilding
+  also exposed that a dirty tree yields **400** — setuptools' sdist
+  walks the filesystem, not the git index, so `.pytest_cache/README.md`
+  ships despite `.gitignore:526`. Added to the sdist follow-up as its
+  own item, since it is the mechanism behind the drift rather than a
+  separate defect.
 - **Left `requirements.txt` and `Dockerfile` alone** even though both
   contradict `pyproject.toml` today (`numpy>=1.16.2` vs `numpy>=2.0`).
   `phase-07-cutover.md` Task 7.3 already names both. Touching them here
@@ -246,11 +261,30 @@ That is the 20 the phase Exit Criteria name: 8 `spectra/_photon` + 2
 
 **sdist** (`uv build --sdist`), before and after the `MANIFEST.in` prune:
 
-| | before | after |
+Both columns are measured on **this branch's final tree** (`b193c22`,
+clean of build artifacts), by building the sdist with and without the
+three `prune` lines. An earlier draft of this table read `498 → 397`
+from a mid-task measurement and was **wrong by construction** — see the
+note below it.
+
+| | without `prune` | with `prune` |
 | --- | --- | --- |
-| files in tarball | 498 | 397 |
-| `.claude/` + `.codex/` + `projects/` | 101 | 0 |
+| files in tarball | 501 | 398 |
+| `.claude/` + `.codex/` + `projects/` | 103 (18 + 18 + 67) | 0 |
+| `docs/` | 47 | 47 |
 | deleted Phase-00 paths | 0 | 0 |
+
+**Why the first numbers were wrong, and why it matters beyond a typo.**
+The original `498 → 397` was taken right after the `MANIFEST.in` edit,
+*before* this task had written its own task note, its learnings file and
+`docs/followups/todo/sdist-ships-generated-c-and-docs.md`. Those three
+files then landed in the tree — two under the now-pruned `projects/`,
+but the follow-up under `docs/`, which is **not** pruned. So the
+follow-up documenting the sdist payload became part of the sdist
+payload, and the recorded "after" count was stale the moment it was
+written. A before/after pair is only meaningful when both halves are
+measured on the same tree; taking "before" early and "after" late
+silently compares two different trees. Caught in review.
 
 The deleted-path probe is an anchored alternation over every path Phase
 00 removed (`^hazma/_decay/`, `^hazma/_gamma_ray/`, `^hazma/_phase_space/`,

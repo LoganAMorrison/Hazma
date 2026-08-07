@@ -146,9 +146,11 @@ Everything else is behavior-invisible.
   The first sdist run in the project's history turned up a defect the
   deletions did not cause and this criterion did not anticipate:
   `MANIFEST.in`'s `global-include *.md` is a repo-wide sweep, so the
-  tarball shipped `.claude/`, `.codex/` and `projects/` — 101 files of
-  agent scaffolding. `prune`d here rather than deferred, on the Task 0.2
-  precedent (widen the task, amend the criterion in the same PR). The
+  tarball shipped `.claude/`, `.codex/` and `projects/` — 103 files of
+  agent scaffolding (501 → 398 files, measured with and without the
+  `prune` lines on the same tree). `prune`d here rather than deferred,
+  on the Task 0.2 precedent (widen the task, amend the criterion in the
+  same PR). The
   wheel was already clean; `test/`, `docs/` and the cythonized `*.c`
   stay, and the case for dropping them is
   [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).

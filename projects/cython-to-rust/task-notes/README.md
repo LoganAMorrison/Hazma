@@ -144,8 +144,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - **A clean wheel is not evidence of a clean sdist** (Task 0.4). Wheel
   contents come from `[tool.setuptools.packages.find]`, sdist contents
   from `MANIFEST.in`, and fixing one has never fixed the other. The
-  sdist was shipping `.claude/`, `.codex/` and `projects/` — 101 files —
-  because `global-include *.md` is a repo-wide sweep. Pruned. **Phase 07
+  sdist was shipping `.claude/`, `.codex/` and `projects/` — 103 files
+  on this branch's final tree — because `global-include *.md` is a
+  repo-wide sweep. Pruned: 501 → 398 files. **Phase 07
   Task 7.1 inherits the general lesson:** maturin has its own
   include/exclude machinery and reads neither of these files, so verify
   the tarball's contents directly after the cutover instead of assuming
@@ -346,7 +347,7 @@ it from memory.)
   on the same signature, `List[str]` → `list[str]` plus a return type,
   taking the file from 5 configured-`ruff` findings to 0); `MANIFEST.in`
   gained `prune .claude` / `.codex` / `projects`, which took the sdist
-  from 498 to 397 files; `pyproject.toml` audited and unchanged.
+  from 501 to 398 files; `pyproject.toml` audited and unchanged.
   The thirteen durable docs that still named `_build.py` were swept —
   twelve by rename, plus `docs/versioning.md`, whose sole occurrence sat
   inside an obsolete blockquote that was deleted outright (its `VERSION`

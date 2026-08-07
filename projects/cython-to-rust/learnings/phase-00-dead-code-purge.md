@@ -111,7 +111,7 @@ them:
   are built by different machinery: `[tool.setuptools.packages.find]`
   scoped the wheel to `hazma*` back in `7a817f9`, but `MANIFEST.in`'s
   `global-include *.md` kept sweeping `.claude/`, `.codex/` and
-  `projects/` — 101 files of agent scaffolding — into the tarball.
+  `projects/` — 103 files of agent scaffolding — into the tarball.
   Nobody noticed for four months because nobody ran `build --sdist`.
 - **An unanchored path probe over a tarball listing is useless.** Task
   0.4's first pass matched `_positron`, `rambo` and `gamma_ray` as bare
