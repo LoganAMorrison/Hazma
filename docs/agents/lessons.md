@@ -179,8 +179,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   Layering list had item 1 updated but items 2–6 still named the deleted
   `gamma_ray.py` and `_decay`; and `test/conftest.py excludes
   test_gamma_ray.py` was fixed in `docs/agents/review-lenses.md` while
-  three skills kept saying it). Generalizes
-  [stale-ci-capability-claim] from workflows to any repo fact.
+  three skills kept saying it; PR #50: a phase file's
+  `51 passed / 20 skipped` survived because Task 0.1 had fixed the
+  *sibling* copy in the project README and never swept the class, and a
+  single task note carried two different byte counts for the same
+  directory). Generalizes [stale-ci-capability-claim] from workflows to
+  any repo fact, and applies *within* one file as much as across
+  several.
 - [elided-doc-paths] A `.../foo.py` shorthand in a durable doc is not
   mechanically resolvable and fails `scripts/agents/check_doc_citations.py`
   the moment the basename is not unique in the repo — and the elision is
@@ -188,3 +193,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   Write every citation as a full repository-relative path (PR #43:
   `.../widths.py` and `.../utils.py` were ambiguous with 2 and 4
   candidates). Pairs with [touched-doc-inherits-its-citations] above.
+- [measured-tree-vs-imported-module] A tool that records provenance must
+  prove that what it *imports* and what it *measures* are the same tree,
+  or it will record a falsehood with full confidence. Import resolution
+  follows `sys.path`; a digest, a file walk, or a `REPO_ROOT` constant
+  follows the filesystem, and a site-packages install silently separates
+  the two. The failure is invisible precisely because every artifact
+  looks internally consistent. Tie them together in code — assert each
+  imported module's `__file__` lies under the measured root — and record
+  the resolved path in the output, so a *past* run stays auditable and
+  not just a future one guarded (PR #50: the parity-corpus generator
+  hashed every `.pyx` under the repo while importing `hazma` from the
+  environment, so a stale or Rust-enabled install could have produced
+  values that `kernel_digest` did not describe).

@@ -22,7 +22,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
-| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | Not started — **next**; unblocked by Phase 00 |
+| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **In Progress** — Task 1.1 complete (2026-08-07); 1.2 next |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
@@ -170,6 +170,43 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `rambo.rst` (documenting the long-gone `hazma.rambo.PhaseSpace`) is
   the same shape and is left to Task 0.2.
 
+- **The parity corpus is live and self-checking** (Task 1.1). 41 cases /
+  623 blocks / 1,580 arrays / 179,695 values, 2.9 MiB under
+  `test/parity/data/`, captured from the pre-port Cython identified by
+  kernel digest `f5e6e269be47`. The digest, not the manifest's git SHA,
+  is the provenance record — the SHA is whatever was HEAD at generation
+  time, always with `dirty: true`, whereas the digest certifies the
+  `.pyx`/`.pxd`/CSV bytes the values actually came from. Generation also
+  refuses to run unless every imported module resolves inside the
+  repository, so an installed `hazma` cannot supply values the digest
+  does not describe.
+  `python test/parity/generate.py --check` re-verifies it in under a
+  second **without a built tree**. Coverage of the 41 consumed entry
+  points is *derived* from the tree by `assert_full_coverage`, not
+  transcribed — so Phases 04–06 cannot delete a Cython module without
+  the corpus objecting, and no later task needs to re-count.
+- **Two live entry points raise instead of returning at threshold**
+  (Task 1.1, not in the inventory's bug list):
+  `sigma_xx_to_v_to_pipi` and `sigma_xx_to_v_to_pi0v` raise `TypeError`
+  at exactly `e_cm = 2·mx` (Cython refusing a complex `**0.5` result).
+  The scalar-mediator siblings do not. Pinned as `nan` plus a manifest
+  `raises` record; Phase 05 ports them as-is per rules.md rule 1, and
+  any repair is a separate declared change.
+- **The two `thermal_cross_section` implementations disagree above
+  `x = 300`** (Task 1.1): the scalar returns `0.0`
+  (`hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1401-1402`),
+  the vector clips to `xnew = 300` and keeps evaluating
+  (`hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:649`).
+  Both behaviors are pinned. **Phase 05 must reproduce both or declare
+  the unification** — a shared Rust helper is the obvious design and
+  would silently move published numbers.
+- **A worktree can inherit `.so` files whose source package is gone**
+  (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
+  extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
+  20. Same class as the stale generated `.c` already in
+  `docs/agents/environment.md`; the same clean-then-rebuild recipe
+  fixes it, and any "N extensions" claim must be taken after it.
+
 ## Numerical impact so far
 
 - **Task 0.1 (constants-header relocation): no public value changes.**
@@ -259,6 +296,19 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   compiled surface exactly where it started**; the only declared drifts
   in the whole phase are Task 0.3's two pure-Python helper swaps and the
   out-of-band `two_body_momentum` repair, both above.
+
+- **Task 1.1 (parity corpus generator): no public value changes**
+  (verified: `git diff origin/master -- hazma` is empty). The diff adds
+  only `test/parity/` and project bookkeeping, plus one bullet in the
+  Phase 01 file; no library module, signature, constant or build input
+  is touched, so no grid evaluation applies. Both suites reproduced the
+  Phase 00 closing counts exactly (`pytest -q` → 57 passed / 10 skipped;
+  `pytest -q test` → 244 passed / 20 skipped). What the task *did*
+  produce is the baseline every later drift is measured against: 179,695
+  pinned values across the 41 consumed entry points. Two pre-existing
+  behaviors it recorded — the `TypeError` at `e_cm = 2·mx` and the
+  `x > 300` thermal divergence — are observations, not drifts, and are
+  under Findings above.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -365,6 +415,16 @@ it from memory.)
   ADR-0001 flipped Proposed → Accepted (PR #41 merged). Full list in
   [`phase-00/README.md`](phase-00/README.md).
 
+### Phase 01
+
+- **Task 1.1** — new `test/parity/`: `cases.py` (the corpus
+  specification, 41 cases / 623 blocks, plus the three guards),
+  `generate.py` (generate / `--check`), `README.md`, and
+  `data/` (41 `.npz` + `manifest.json`, 2.9 MiB). One canonical patch:
+  `../phases/phase-01-parity-corpus.md`'s Task 1.2 exit criteria gained
+  the raise-replay bullet. Nothing under `hazma/` touched. Full list in
+  [`phase-01/README.md`](phase-01/README.md).
+
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
@@ -449,7 +509,14 @@ it from memory.)
 - **Phase 00 is Complete (2026-08-06).** Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
   rather than its five task notes — it is the distillation, they are
-  history. Phase 01 is next and carries no decision gate.
+  history. **Phase 01 is In Progress** — Task 1.1 landed the corpus on
+  2026-08-07, Task 1.2 (runner + tolerance budgets) is next. No phase
+  carries a decision gate.
+- **The parity corpus is the gate from here on.** `python
+  test/parity/generate.py --check` verifies it; `test/parity/cases.py`
+  is the single source of every entry point's call convention. Do not
+  regenerate it from a tree in which any kernel runs on Rust — rules.md
+  rule 2, now enforced in code by `assert_no_rust_core`.
 - **The build entry point is `setup.py`.** `_build.py` was deleted in
   `7a817f9` (2026-08-02) and Task 0.4 swept the thirteen durable docs
   that still named it, so `AGENTS.md`, `docs/`, the skills, `.github/`
@@ -487,3 +554,7 @@ it from memory.)
   under "Numerical impact so far"). The live obligation is the mirror
   image — **the corpus must pin the post-fix values, and the Rust port
   must reproduce those, not the pre-fix ones.**
+- **The corpus was captured on macOS/arm64** (numpy 2.5.1, scipy 1.18.0,
+  Cython 3.2.9 — all in the manifest). Whether every stored value is
+  bit-reproducible on the Linux CI matrix is unverified; Task 1.2
+  answers it when it sets per-function budgets.

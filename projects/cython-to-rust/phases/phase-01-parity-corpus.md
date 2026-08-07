@@ -1,7 +1,7 @@
 ---
 phase: 01
 title: Golden parity corpus
-status: Not started
+status: In Progress
 ---
 
 # Phase 01: Golden parity corpus
@@ -24,9 +24,12 @@ evidence `docs/versioning.md` requires for numerical changes.
 - Context: today **zero** pinned-value tests over compiled code execute
   anywhere — CI's `pytest` collects only `hazma/**` (setup.cfg
   `testpaths = hazma`), and every `.npy`-backed suite under `test/` is
-  skipped, collect_ignored, or never collected
-  (`test/spectra/integration.py` matches no pytest filename pattern;
-  `test/positron/test_positron.py` is 0 bytes).
+  either skipped or never collected (`test/spectra/integration.py`
+  matches no pytest filename pattern; `test/positron/test_positron.py`
+  is 0 bytes). Task 1.1 added `test/parity/` but no pytest module, so
+  this still holds; `collect_ignore` is no longer part of it —
+  `test/conftest.py` has listed only the repo's `setup.py` since
+  Task 0.2.
 
 ## Tasks
 
@@ -68,6 +71,14 @@ evidence `docs/versioning.md` requires for numerical changes.
   closed-form kernels against the capturing commit, documented budgets
   for quad-backed kernels (start 1e-8 rel, tighten after Phase 03
   measurement; nested-ρ gets its own line).
+- The manifest's per-block `raises` records are replayed, not skipped:
+  where the corpus says an entry point raised, the runner asserts the
+  live implementation raises the same exception type at the same
+  argument. (Task 1.1 found two —
+  `sigma_xx_to_v_to_pipi` and `sigma_xx_to_v_to_pi0v` raise `TypeError`
+  exactly at `e_cm = 2·mx`.) A runner that only compared the stored
+  `nan` would pass against an implementation that silently returned a
+  number there.
 - Running against unmodified Cython passes bit-exact.
 
 ### Task 1.3: Wire both suites into one gate
@@ -79,7 +90,10 @@ evidence `docs/versioning.md` requires for numerical changes.
 
 - pytest config moved to `pyproject.toml`
   (`[tool.pytest.ini_options]`), collecting `hazma` **and** `test`
-  (the `test/` suite is green post-PR #31: 51 passed / 20 skipped).
+  (the `test/` suite is green: `pytest -q test` → 244 passed /
+  20 skipped as of 2026-08-07. It was 51/20 when this phase was
+  drafted, before PR #41 and Task 0.3 added cases — re-derive rather
+  than quoting either figure.)
 - `test/spectra/integration.py` renamed to be collected; its property
   assertions pass.
 - CI and `scripts/agents/preflight.sh` run the same collection;
@@ -92,8 +106,10 @@ evidence `docs/versioning.md` requires for numerical changes.
 
 **Exit criteria:**
 
-- The skipped `test/scalar_mediator/` and `test/vector_mediator/`
-  classes (159 reference arrays, `skip("Needs to be updated")`) are
+- The skipped `TestScalarMediator` and `TestVectorMediator` classes
+  (`skip("Needs to be updated")`), which read 90 `.npy` reference
+  arrays from the eight `data/sm_*` and `data/vm_*` directories they
+  name, are
   either regenerated-and-unskipped or deleted with their intent
   explicitly mapped to corpus coverage in the task note.
 - `test/positron/test_positron.py` (0 bytes) deleted or filled.
