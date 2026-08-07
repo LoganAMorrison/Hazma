@@ -5,12 +5,12 @@
   `docs/source/utils.rst` omits `hazma.utils.minkowski_dot`
 - **Scope:** cross-cutting
 - **Status:** open
-- **Triggers / blockers:** **half-ripe as of 2026-08-05.**
-  cython-to-rust Phase 00 Task 0.5 deleted `docs/source/gamma_ray.rst`,
-  so `minkowski_dot` already has no public-docs reference at all; what
-  remains is Task 0.2's deletion of `hazma/gamma_ray.py` itself. Both
-  cleanups are name removals, so they want the same major bump the
-  cython-to-rust project already carries.
+- **Triggers / blockers:** **ripe as of 2026-08-06.** cython-to-rust
+  Phase 00 Task 0.5 deleted `docs/source/gamma_ray.rst`, so
+  `minkowski_dot` has no public-docs reference at all, and Task 0.2 has
+  since deleted `hazma/gamma_ray.py` itself. Both cleanups are name
+  removals, so they want the same major bump the cython-to-rust project
+  already carries.
 
 ## Why
 

@@ -70,10 +70,13 @@ Then update:
 
 - `hazma/utils.py` — `cross_section_prefactor` and `kallen_lambda`.
 - `hazma/phase_space/_rambo.py:537` — live public caller.
-- `hazma/deprecated/rambo.py:413-414,~1001` — deprecated public callers,
-  repointed here in cython-to-rust Task 0.3.
-- `hazma/gamma_ray.py:241` — caller in the broken-on-import module that
-  cython-to-rust ADR-0003 removes.
+- `hazma/deprecated/rambo.py` lines 413-414 and ~1001 **as of `c6991a6`**
+  — deprecated public callers, repointed here in cython-to-rust Task 0.3.
+  The module was deleted in Task 0.2; read it with
+  `git show c6991a6:hazma/deprecated/rambo.py`.
+- `hazma/gamma_ray.py` line 241 **as of `c6991a6`** — caller in the
+  broken-on-import module that cython-to-rust ADR-0003 removed in
+  Task 0.2 (`git show c6991a6:hazma/gamma_ray.py`).
 - Prior art (deleted): `hazma/field_theory_helper_functions/common_functions.pyx`
   at `origin/master`, `git show <pre-Task-0.3-sha>:...`.
 
@@ -159,10 +162,11 @@ test's floor moved from `1e-4` to `1e-12` above threshold.
 - **`hazma/_utils/kinematics.pxd::two_body_three_momentum`** carries the
   same Källén expression, but nothing `cimport`s it (only
   `two_body_energy` from that header is used). Dead code that
-  cython-to-rust Phase 00 deletes; editing it would force a rebuild for
-  no behavior change.
+  cython-to-rust retires with the rest of the `_utils` headers in Phase 06
+  Task 6.4; editing it would force a rebuild for no behavior change.
 - **`hazma/_gamma_ray/gamma_ray_fsr.pyx::c_cross_section_prefactor`** —
-  same expression, in the module cython-to-rust ADR-0003 removes.
+  same expression, in the module cython-to-rust ADR-0003 removed in
+  Task 0.2 (`git show c6991a6:hazma/_gamma_ray/gamma_ray_fsr.pyx`).
 - **The other ~25 `sqrt(kallen_lambda(...))` call sites** across
   `form_factors/`, `vector_mediator/`, `rh_neutrino/`,
   `scalar_mediator/`, `phase_space/_three_body.py`, and

@@ -34,13 +34,16 @@ A change is user-facing if it changes any of these:
 4. **Numerical output.** The values the library computes. A spectrum that
    moves is a user-facing change even when no signature changed.
 5. **Exception types.** What is raised, and when (`hazma/hazma_errors.py`).
-6. **`hazma/deprecated/`.** It stays importable; removing or changing
-   anything there is a break.
+6. **`hazma/deprecated/`.** Whatever lives there stays importable;
+   removing or changing anything there is a break. The package is
+   currently empty — its last module, `rambo.py`, was removed in
+   cython-to-rust Task 0.2 — so the rule binds the next module parked
+   there, not any module shipping today.
 7. **Supported Python versions** and required runtime dependencies.
 
 Explicitly **not** the public surface: `hazma/experimental/`, anything
 under a leading-underscore package that is not re-exported
-(`hazma/_utils/`, `hazma/_phase_space/`, …), `notebooks/`, `test/`, internal
+(`hazma/_utils/`, `hazma/spectra/_photon/`, …), `notebooks/`, `test/`, internal
 helper names, docstring wording, and performance characteristics.
 
 ## Choosing the bump

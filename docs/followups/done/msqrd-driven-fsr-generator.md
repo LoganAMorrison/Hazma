@@ -89,11 +89,11 @@ resolution.
 
 - `projects/cython-to-rust/adrs/ADR-0003-remove-gamma-ray-module.md` —
   the decision that created this gap, with the replacement-status table.
-- `hazma/gamma_ray.py` — the removed implementation; read it from git
-  history after `projects/cython-to-rust/` Phase 00 Task 0.2 deletes it
-  (`git show <pre-deletion-ref>:hazma/gamma_ray.py`), together with
-  `hazma/_gamma_ray/gamma_ray_generator.pyx`, which held the compiled
-  `gamma` / `gamma_point` kernels it wrapped.
+- `hazma/gamma_ray.py` — the removed implementation. `cython-to-rust`
+  Phase 00 Task 0.2 deleted it; read it from git history with
+  `git show c6991a6:hazma/gamma_ray.py`, together with
+  `git show c6991a6:hazma/_gamma_ray/gamma_ray_generator.pyx`, which held
+  the compiled `gamma` / `gamma_point` kernels it wrapped.
 - `hazma/spectra/altarelli_parisi.py` — the nearest live equivalents
   (`dnde_photon_ap_fermion`, `dnde_photon_ap_scalar`).
 - `hazma/spectra/_nbody.py`, `hazma/phase_space/` — the live n-body and

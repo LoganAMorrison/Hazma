@@ -42,17 +42,11 @@ hazma/
 ├── single_channel.py
 ├── form_factors/       # hadronic form factors
 ├── phase_space/        # RAMBO and friends
-├── _phase_space/       # Cython phase-space kernels
 ├── _utils/             # Cython helpers (boost.pyx, constants.pxd, …)
-├── _decay/             # Cython decay spectra + interpolation data
-├── _gamma_ray/         # Cython gamma-ray generators (C++)
-├── _positron/          # Cython positron spectra
-├── _neutrino/          # Cython neutrino spectra
 ├── limits/             # limit-setting machinery
 ├── relic_density/
-├── cmb.py, pbh.py, gamma_ray.py, parameters.py, utils.py
+├── cmb.py, pbh.py, parameters.py, utils.py
 ├── gamma_ray_data/     # detector response data (*.dat)
-├── deprecated/         # kept importable, not maintained
 └── experimental/       # excluded from lint gates; not a public surface
 test/                   # pytest suite, mirrors the package tree
 docs/source/            # Sphinx documentation (the published docs)
@@ -64,9 +58,9 @@ examples/
 
 The dependency direction is one-way; do not invert it.
 
-1. **Cython kernels** (`_utils/`, `_decay/`, `_gamma_ray/`, `_positron/`,
-   `_neutrino/`, `_phase_space/`) — numerics only. They import nothing
-   from the pure-Python layers above.
+1. **Cython kernels** (`_utils/` and the `.pyx` under `spectra/`,
+   `scalar_mediator/`, `vector_mediator/`) — numerics only. They import
+   nothing from the pure-Python layers above.
 2. **Primitives** (`parameters.py`, `utils.py`, `form_factors/`,
    `phase_space/`) — physical constants, kinematics, shared helpers.
 3. **Spectra** (`spectra/`) — builds on 1 and 2. This is the layer most
@@ -133,7 +127,9 @@ the tree you edited, not an installed copy.
   there as a pattern to copy, and do not import from `experimental/` in
   the library.
 - **`hazma/deprecated/` stays importable.** Removing or changing anything
-  there is a user-facing break — see `docs/versioning.md`.
+  there is a user-facing break — see `docs/versioning.md`. The package is
+  empty today (its last module went in cython-to-rust Task 0.2), so the
+  rule binds the next module parked there.
 - **Never commit generated C/C++.** `_build.py` cythonizes on build; the
   `.c` / `.cpp` output is not the source of truth.
 - **No `breakpoint()`, `pdb`, or stray `print()` in library code.** Use

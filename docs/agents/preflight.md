@@ -30,9 +30,8 @@ before you stage anything.
    extensions; a `.pyx` edit that was never rebuilt, or a rebuild against
    a different interpreter, produces a tree that lints and formats
    cleanly and fails at import. Run this after any change under
-   `_utils/`, `_gamma_ray/`, `_phase_space/`, or the `.pyx` in
-   `spectra/`, `scalar_mediator/`, `vector_mediator/`, and after any
-   `_build.py` change.
+   `_utils/`, or to the `.pyx` in `spectra/`, `scalar_mediator/`,
+   `vector_mediator/`, and after any `_build.py` change.
 6. **`markdownlint --dot <changed .md files>`** — when curated docs
    changed. Word-diff after any `--fix`: it can corrupt code spans.
    Run it from the repo root: the committed

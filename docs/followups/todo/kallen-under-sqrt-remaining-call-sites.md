@@ -78,8 +78,9 @@ Grouped as suggested commits:
   `hazma/scalar_mediator/_scalar_mediator_constraints.py:59,160,212`
 - **Dead / removed by cython-to-rust, skip:**
   `hazma/_utils/kinematics.pxd:15` (nothing `cimport`s
-  `two_body_three_momentum`), `hazma/_gamma_ray/gamma_ray_fsr.pyx:36`
-  (module removed by ADR-0003)
+  `two_body_three_momentum`), and `hazma/_gamma_ray/gamma_ray_fsr.pyx`
+  line 36 **as of `c6991a6`** — that module was removed by ADR-0003 in
+  Task 0.2, so the call site no longer exists.
 - Prior art and measurement recipe:
   [`docs/followups/done/cross-section-prefactor-threshold-cancellation.md`](../done/cross-section-prefactor-threshold-cancellation.md)
 

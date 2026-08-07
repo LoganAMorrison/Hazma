@@ -128,8 +128,7 @@ These apply regardless of lens.
   fetched ref.
 - **Zero-collection guard.** `pytest` exits 5 on zero tests collected,
   and a `-k` filter matching nothing exits 0 with `no tests ran`. Assert
-  a real `N passed` count before trusting a cited green. Remember
-  `test/conftest.py` excludes `test_gamma_ray.py` from a bare run.
+  a real `N passed` count before trusting a cited green.
 - **Empirical execution.** When the diff adds or edits a docstring
   example, a README snippet, or claims a user-visible behavior, RUN it
   and paste the output. Static review does not catch a wrong number.

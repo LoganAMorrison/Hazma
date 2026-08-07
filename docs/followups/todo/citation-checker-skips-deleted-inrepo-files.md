@@ -44,6 +44,26 @@ Decide the policy alongside it: a historical analysis doc *should* be
 allowed to cite code that no longer exists, so the fix is probably
 "require a commit pin", not "forbid the citation".
 
+### Second failure mode: it crashes on tracked-but-absent (2026-08-06)
+
+There is a state between "tracked" and "never existed" that the checker
+handles worse than either: a path git still has in the **index** but that
+is gone from the **working tree**. Resolution rule 1 matches it (the
+candidate list comes from `git ls-files`), so it falls straight through
+to `line_count(root / path)` and raises an unhandled
+`FileNotFoundError` — a traceback, not a finding, so the run produces no
+verdict at all.
+
+That state is not exotic. It is exactly what a `git stash -u` /
+`git stash pop` round-trip leaves after a deletion — the pop restores the
+files as *unstaged* removals — which is how cython-to-rust Task 0.2 hit
+it while baselining linters against the trunk. `git add -A` clears it,
+but a gate should report the condition, not die on it.
+
+Fix alongside the main item: resolution should confirm the candidate
+exists on disk before bounds-checking, and report a tracked-but-absent
+path in the deleted-path category proposed above.
+
 ## Entry points
 
 - `scripts/agents/check_doc_citations.py` (resolution order and the
