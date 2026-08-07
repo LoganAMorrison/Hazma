@@ -150,7 +150,10 @@ Plus the project rule this task is the first to be bound by:
   The manifest therefore also hashes every `.pyx`, `.pxd` and photon CSV
   in the tree (44 files). Here `git diff origin/master -- hazma` is
   empty, so digest `f5e6e269be47` corresponds exactly to the kernels at
-  `f025448`.
+  `origin/master` (`f025448`) — and still does after the round-1
+  regeneration, whose manifest records SHA `010747c`. A changed SHA with
+  an unchanged digest is exactly the signal the two-field design is meant
+  to give.
 - **Rule 2 is enforced in code, not only in prose.** `assert_no_rust_core`
   refuses to generate once `hazma._core` is importable.
 - **Coverage is derived, not asserted.** `assert_full_coverage` walks the
@@ -184,6 +187,16 @@ Plus the project rule this task is the first to be bound by:
   2.9 MiB total and duplicate their array-path siblings bit-for-bit, but
   they are distinct entry points in the 41 and a port can break one
   alone.
+- **Round-1 review: imports are now pinned to the repository tree.**
+  `kernel_digest` walks `REPO_ROOT`, but `importlib.import_module` follows
+  `sys.path`, so a site-packages install could have supplied the values
+  while the manifest described the checkout. `Case.resolve` now calls
+  `assert_module_is_repo_tree` on every module it loads, `generate()`
+  calls `hazma_package_path()` before anything else, and the manifest
+  records `hazma_package`. Putting the check inside `resolve()` rather
+  than only in `generate()` means Task 1.2's runner inherits it. The
+  regeneration that followed left **every per-case hash unchanged**, so
+  the guard is a provenance fix, not a numerical one.
 - **Exception messages are deliberately not recorded** in the `raises`
   entries — Cython rewords its errors between releases. The type and the
   argument are what a port must reproduce.
@@ -206,6 +219,9 @@ All new; no existing file under `hazma/` or `test/` was modified.
   exit criteria gained the raise-replay bullet (see Plan Impact).
 - `projects/cython-to-rust/task-notes/phase-01/README.md`,
   `projects/cython-to-rust/task-notes/README.md` — status bookkeeping.
+- `docs/agents/lessons.md` — one new class
+  ([measured-tree-vs-imported-module]) and PR #50 added to
+  [sibling-copies-of-a-fixed-claim]'s citations (round-1 review).
 
 ## Verification
 
@@ -219,14 +235,25 @@ wrote 41 cases / 623 blocks / 2937.3 KiB to test/parity/data
 
 $ .venv/bin/python test/parity/generate.py --check
 corpus OK: 41 cases / 1580 arrays match the manifest (generated at
-f025448ddaa7, kernel digest f5e6e269be47)
+010747c6125d, kernel digest f5e6e269be47)
 ```
+
+The recorded SHA is `010747c` (this task's own commit) with
+`dirty: true`, because the round-1 review fixes regenerated the corpus
+after that commit landed. The *kernel* digest is unchanged at
+`f5e6e269be47`: neither commit touches `hazma/`, so the captured values
+come from exactly the same kernels as before. That is precisely the
+property `kernel_digest` exists to make checkable, and why the SHA alone
+was never the provenance record.
 
 **Determinism** — two independent full runs on the same tree produced a
 byte-identical manifest (`diff manifest-run1.json
 test/parity/data/manifest.json` → no output). A third run after the lint
 refactor reproduced every hash (`diff` of both manifests with the `git`
-and `environment` blocks removed → no output).
+and `environment` blocks removed → no output). A fourth, after the
+round-1 repo-tree guard, reproduced **every per-case hash**: `diff` of
+the manifests' `cases` blocks before and after → no output, i.e. the
+guard moved no captured value.
 
 **Guards fire when they should** (each provoked deliberately, then
 reverted):
@@ -239,6 +266,9 @@ reverted):
 | `assert_full_coverage` | added a case naming a nonexistent `def` | `corpus cases with no public def: [('hazma.spectra._photon._phi', 'no_such_def')]` |
 | `assert_unconsumed_exports_are_unimported` | marked a *consumed* export as unconsumed | raised, naming the importers |
 | `assert_no_rust_core` | stubbed `find_spec("hazma._core")` | `hazma._core is importable: this tree runs Rust kernels…` |
+| `assert_module_is_repo_tree` | module `__file__` under `/usr/lib/.../site-packages` | `hazma.fake resolves to …, outside the repository at …` |
+| `assert_module_is_repo_tree` | module with `__file__ = None` (namespace pkg) | `hazma has no __file__, so it cannot be shown to come from …` |
+| `Case.resolve` | shadowed one entry point's module with an out-of-tree `.so` | `hazma.spectra._photon._muon resolves to /opt/site-packages/…, outside the repository at …` |
 
 **Specification and data round-trip.** Rebuilding the specification and
 comparing against the stored arrays: *623 blocks checked, 0 mismatches*
@@ -303,11 +333,11 @@ generation, so the table is checked rather than asserted.
 ## Open Questions
 
 - **Task 1.4 inherits a scope question the corpus now answers in part.**
-  The 159 skipped `.npy` reference arrays under
-  `test/scalar_mediator/` and `test/vector_mediator/` overlap the
-  cross-section and mediator-spectrum cases pinned here. Whether that
-  makes them redundant (delete) or complementary (regenerate) is Task
-  1.4's call; the corpus gives it a concrete comparison target.
+  The 90 `.npy` reference arrays the two skipped mediator classes read
+  overlap the cross-section and mediator-spectrum cases pinned here.
+  Whether that makes them redundant (delete) or complementary
+  (regenerate) is Task 1.4's call; the corpus gives it a concrete
+  comparison target.
 - **The `x > 300` divergence between the two `thermal_cross_section`
   implementations is pinned, not resolved.** Phase 05 must either
   reproduce both behaviors or declare the unification as a numerical
@@ -331,6 +361,17 @@ runner would pass against an implementation that silently returned a
 number at `e_cm = 2·mx`, which is precisely the regression the corpus
 exists to catch. This is a canonical-contract patch made in the same
 task that discovered the need, not deferred.
+
+Round-1 review added three more edits to the same file, all
+corrections of claims that were already stale when this task inherited
+them and that became this PR's responsibility the moment it touched the
+file: the frontmatter `status:` moved `Not started` -> `In Progress`;
+Task 1.3's parenthetical test count was re-derived (`51 passed / 20
+skipped` -> `244 passed / 20 skipped` as of 2026-08-07) and dated; the
+stale `collect_ignored` clause was dropped (`test/conftest.py` has
+listed only `setup.py` since Task 0.2); and Task 1.4's "159 reference
+arrays" was re-derived to **90** -- 159 was a collision with Task 0.2's
+unrelated 159-array impact check.
 
 Nothing else moved: no ADR, no `rules.md` change, no `PLAN.md` change
 (the phase table's Phase 01 row describes the phase, not its tasks). The
@@ -417,7 +458,7 @@ claim was introduced anywhere.
 | --- | --- | --- | --- |
 | "41 cases / 623 blocks" (this note, Verification) | `python test/parity/generate.py` | `41 cases / 623 blocks` | OK |
 | "1580 arrays" | `python test/parity/generate.py --check` | `1580 arrays` | OK |
-| "2.9 MiB", "≤ ~10 MB budget" | `du -sh test/parity/data` | `2.9M` (3,007,815 B) | OK |
+| "2.9 MiB", "≤ ~10 MB budget" | `du -sh test/parity/data`; byte sum over `data/` | `2.9M` (3,007,843 B) | OK |
 | "5 parent energies per spectrum" | `len(manifest[…]['spectra.photon.muon']['blocks'])` | `5` | OK |
 | "3 model points per cross section" | `len(manifest[…]['cross_sections.scalar.sigma_xx_to_ss']['blocks'])` | `3` | OK |
 | "16 + 12 + 6 + 7 = 41 entry points" | `assert_full_coverage` on the live tree | passes | OK |
@@ -459,7 +500,7 @@ between the two `thermal_cross_section` implementations.
 | ≥3 mediator parameter points incl. near-resonance | `_scalar_model_points` / `_vector_model_points`; `narrow_resonance` uses `stheta`/`eps` = 1e-4 with anchors at `m_med ± width` |
 | Thermal ⟨σv⟩ over an x grid spanning freeze-out | `_thermal_blocks`: `x ∈ [0.1, 1000]`, 95 points, anchored at 20, 0.5, 1/3, 1, 300, `m_med/mx`, `2m_med/mx` |
 | Manifest records git SHA, package versions, per-array hashes | `manifest.json` `git` / `environment` / per-block `arrays[*].sha256`; plus `kernel_digest` |
-| Total ≤ ~10 MB | 3,007,812 B = 2.9 MiB; `MAX_TOTAL_BYTES` fails generation above 10 MiB |
+| Total ≤ ~10 MB | 3,007,843 B = 2.9 MiB; `MAX_TOTAL_BYTES` fails generation above 10 MiB |
 | NaN/negative-prone edges included, values stored as-is | 26 negatives in `spectra.photon.muon`, 123 negatives + 5 infinities in `sigma_xl_to_xl`, `raises` records for the two `TypeError` points |
 | rules.md rule 2 enforced | `assert_no_rust_core`; negative-tested |
 

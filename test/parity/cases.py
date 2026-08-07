@@ -93,6 +93,9 @@ from hazma import parameters as params
 
 #: A live compiled entry point.
 EntryPoint = Callable[..., Any]
+#: An imported Python module. `types.ModuleType` would be exact, but naming
+#: it costs an import for a value only ever introspected for ``__file__``.
+Module = Any
 #: What an entry point returns: a float, a 1-D array, or -- for the neutrino
 #: kernels -- a 3-tuple or a ``(3, N)`` array.
 Result = Any
@@ -190,8 +193,21 @@ class Case:
         return f"{self.module}:{self.function}"
 
     def resolve(self) -> Callable[..., Any]:
-        """Import and return the live entry point."""
-        return getattr(importlib.import_module(self.module), self.function)
+        """Import and return the live entry point.
+
+        The module's file is checked to live inside `REPO_ROOT` before the
+        entry point is handed back. Import resolution follows `sys.path`,
+        which need not agree with the tree this module measures: a
+        site-packages install shadows the checkout depending on cwd and how
+        the environment was set up (`docs/agents/environment.md`, "You may
+        be importing an installed hazma, not the worktree"). Without this
+        check the corpus could be captured from one build while
+        `kernel_digest` described another, and the manifest would record
+        that falsehood as provenance.
+        """
+        module = importlib.import_module(self.module)
+        assert_module_is_repo_tree(module)
+        return getattr(module, self.function)
 
 
 # ===========================================================================
@@ -1129,6 +1145,47 @@ def build_cases() -> dict[str, Case]:
 # ===========================================================================
 # ---- Coverage and provenance guards ---------------------------------------
 # ===========================================================================
+
+
+def assert_module_is_repo_tree(module: Module) -> None:
+    """Fail unless `module` was loaded from inside `REPO_ROOT`.
+
+    Parameters
+    ----------
+    module : module
+        Any imported module. One without a ``__file__`` (a namespace
+        package) is rejected too — that is what a broken or partial
+        install looks like.
+    """
+    path = getattr(module, "__file__", None)
+    if path is None:
+        raise RuntimeError(
+            f"{module.__name__} has no __file__, so it cannot be shown to "
+            f"come from {REPO_ROOT}. Refusing to use it for the parity "
+            "corpus."
+        )
+    resolved = Path(path).resolve()
+    if not resolved.is_relative_to(REPO_ROOT):
+        raise RuntimeError(
+            f"{module.__name__} resolves to {resolved}, outside the "
+            f"repository at {REPO_ROOT}. The parity corpus would then be "
+            "captured from a different build than the one `kernel_digest` "
+            "describes. Install this checkout (`pip install -e .`) or run "
+            "from a shell whose sys.path reaches it."
+        )
+
+
+def hazma_package_path() -> Path:
+    """Where `hazma` actually resolves from, for the manifest record.
+
+    Imported here rather than at module scope for the same reason the
+    mediator models are: `generate.py --check` must keep working on an
+    unbuilt tree, and it never calls this.
+    """
+    import hazma  # noqa: PLC0415 (see docstring)
+
+    assert_module_is_repo_tree(hazma)
+    return Path(hazma.__file__).resolve().parent
 
 
 def assert_no_rust_core() -> None:

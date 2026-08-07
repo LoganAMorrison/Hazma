@@ -25327,8 +25327,9 @@
   "git": {
     "branch": "claude/cython-to-rust/task-1.1-corpus-generator",
     "dirty": true,
-    "sha": "f025448ddaa75a10b4dace3d25ddd0fd212b3807"
+    "sha": "010747c6125ddc980b4f6e060902b342a8187c0e"
   },
+  "hazma_package": "hazma",
   "kernel_digest": {
     "n_files": 44,
     "sha256": "f5e6e269be47580024e83850c0c8923d689b60d4be79595ec5e7050fb84b7537"

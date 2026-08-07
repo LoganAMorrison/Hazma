@@ -31,6 +31,12 @@ also carries ``kernel_digest``, a hash over every ``.pyx``, ``.pxd`` and
 photon data file in the tree. That digest, not the SHA, is what a later
 reader should compare when asking "was this corpus captured from these
 kernels?".
+
+The digest describes the *repository*, while ``import hazma`` resolves
+through ``sys.path`` and may reach an installed copy instead. Generation
+therefore refuses to run unless every module it imports resolves inside
+the repository (`cases.assert_module_is_repo_tree`), and the manifest
+records the path `hazma` actually resolved from under ``hazma_package``.
 """
 
 from __future__ import annotations
@@ -279,6 +285,9 @@ def evaluate_block(
 
 def generate() -> int:
     """Regenerate every ``.npz`` and the manifest. Returns a process exit code."""
+    # Order matters: prove we are about to measure the tree we are about
+    # to hash, before anything imports a kernel or reads a source file.
+    hazma_path = corpus.hazma_package_path()
     corpus.assert_no_rust_core()
     corpus.assert_unconsumed_exports_are_unimported()
 
@@ -294,6 +303,9 @@ def generate() -> int:
         "generated_by": "test/parity/generate.py",
         "git": git_provenance(),
         "kernel_digest": kernel_digest(),
+        # Recorded, not just asserted: it is what makes a *past* capture
+        # auditable rather than only a future one guarded.
+        "hazma_package": str(hazma_path.relative_to(REPO_ROOT)),
         "environment": environment(),
         "cases": {},
     }

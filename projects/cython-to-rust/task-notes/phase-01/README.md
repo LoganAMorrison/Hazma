@@ -37,7 +37,10 @@ corpus.
 
 - **The corpus exists and is self-checking.** 41 cases / 623 blocks /
   1,580 arrays / 179,695 pinned values, 2.9 MiB, generated from the
-  pre-port Cython at `f025448` (kernel digest `f5e6e269be47`).
+  pre-port Cython identified by kernel digest `f5e6e269be47` (the
+  manifest's recorded SHA is whichever commit was HEAD at generation —
+  `010747c` after the round-1 review fixes — but `hazma/` is byte-
+  identical to `origin/master`, which is what the digest certifies).
   `python test/parity/generate.py --check` re-verifies it in under a
   second and needs no built tree. Two full regenerations produced a
   byte-identical manifest.
@@ -61,9 +64,17 @@ corpus.
   Stored as returned; do not "fix" them during a port without declaring
   it.
 - **`--check`'s independence from a built tree is fragile.** It holds
-  only because `cases.py` imports `HiggsPortal` / `KineticMixing` inside
-  its factory functions. Hoisting those imports would silently make the
+  only because `cases.py` imports `HiggsPortal` / `KineticMixing` (and
+  `hazma` itself, in `hazma_package_path`) inside functions rather than
+  at module scope. Hoisting those imports would silently make the
   integrity check require a full build.
+- **`import hazma` and `REPO_ROOT` are independent, and were not tied
+  together until round-1 review.** The digest measures the repository;
+  imports resolve through `sys.path`, which a site-packages install can
+  shadow. `Case.resolve` now refuses any module whose `__file__` falls
+  outside `REPO_ROOT`, and the manifest records where `hazma` actually
+  resolved from (`hazma_package`). Task 1.2's runner gets the guard for
+  free — it goes through `resolve()`.
 
 ## Decisions and Implementation Notes
 
@@ -92,7 +103,11 @@ corpus.
   `test/parity/README.md` — new.
 - `test/parity/data/*.npz` (41) + `test/parity/data/manifest.json` — new.
 - `../../phases/phase-01-parity-corpus.md` — Task 1.2 exit criteria
-  gained the raise-replay bullet.
+  gained the raise-replay bullet; round-1 review also flipped its
+  frontmatter to `In Progress` and re-derived three stale claims
+  (test count, `collect_ignore`, and Task 1.4's array count 159 -> 90).
+- `docs/agents/lessons.md` — one new class, one citation added
+  (round-1 review).
 - This file and `../README.md` — status bookkeeping.
 
 Nothing under `hazma/` was touched.
@@ -112,11 +127,14 @@ Nothing under `hazma/` was touched.
   is **unverified** — the corpus was captured on macOS/arm64. Task 1.2
   answers it when it sets per-function budgets, which is the right place
   for the answer.
-- Task 1.4's scope narrowed but is not decided: the 159 skipped `.npy`
-  arrays under `test/scalar_mediator/` and `test/vector_mediator/`
-  overlap the cross-section and mediator-spectrum cases now pinned here,
-  so the redundant-vs-complementary call has a concrete comparison
-  target.
+- Task 1.4's scope narrowed but is not decided: the 90 `.npy` arrays
+  the two skipped mediator classes read overlap the cross-section and
+  mediator-spectrum cases now pinned here, so the
+  redundant-vs-complementary call has a concrete comparison target.
+  (The phase file said 159; that was a collision with Task 0.2's
+  unrelated 159-array impact check. Re-derived in the round-1 review
+  fixes — `find test/{scalar,vector}_mediator/data/{sm,vm}_* -name
+  '*.npy' | wc -l` → 90.)
 
 ## Plan Impact
 

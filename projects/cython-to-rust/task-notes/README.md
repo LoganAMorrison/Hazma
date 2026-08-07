@@ -172,8 +172,14 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 - **The parity corpus is live and self-checking** (Task 1.1). 41 cases /
   623 blocks / 1,580 arrays / 179,695 values, 2.9 MiB under
-  `test/parity/data/`, captured from the pre-port Cython at `f025448`
-  (kernel digest `f5e6e269be47`).
+  `test/parity/data/`, captured from the pre-port Cython identified by
+  kernel digest `f5e6e269be47`. The digest, not the manifest's git SHA,
+  is the provenance record — the SHA is whatever was HEAD at generation
+  time, always with `dirty: true`, whereas the digest certifies the
+  `.pyx`/`.pxd`/CSV bytes the values actually came from. Generation also
+  refuses to run unless every imported module resolves inside the
+  repository, so an installed `hazma` cannot supply values the digest
+  does not describe.
   `python test/parity/generate.py --check` re-verifies it in under a
   second **without a built tree**. Coverage of the 41 consumed entry
   points is *derived* from the tree by `assert_full_coverage`, not
