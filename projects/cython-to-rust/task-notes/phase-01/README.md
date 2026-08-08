@@ -492,11 +492,16 @@ Nothing under `hazma/` was touched.
   matplotlib plotting script with no assertions and was deleted.
   (`test/spectra/msqrd_corpus.py` remains deliberate — it is a fixture
   module `test_dnde_photon_fsr.py` imports by name.)
-- Five skips survive the phase with reasons outside Task 1.4's criterion:
-  three in `test/vector_mediator/test_form_factors.py` and two "Known to
-  be broken" form factors under `hazma/form_factors/vector/`. All are
-  pure-Python form-factor issues this project does not port. Recorded so
-  the silence is not mistaken for coverage.
+- Five skip **marker sites** survive the phase with reasons outside Task
+  1.4's criterion: three in `test/vector_mediator/test_form_factors.py`
+  (:137, :195, :230) and two "Known to be broken" under
+  `hazma/form_factors/vector/`. They account for all 13 skipped **tests**
+  the suite reports — 5 + 5 + 3, the `hazma/` pair sitting on
+  parametrized classes, so marker count and skip count are not the same
+  number. (`test/agents/test_resolve_phase.py:47`'s `skipif` does not
+  fire while its script is present.) All are pure-Python form-factor
+  issues this project does not port. Recorded so the silence is not
+  mistaken for coverage.
 
 ## Plan Impact
 
