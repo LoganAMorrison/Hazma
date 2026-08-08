@@ -221,3 +221,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   exactly one ulp and none of them on a value budget). The general
   shape: a gate whose strictest path is unreachable in the environment
   that wrote it buys no safety until something else runs it.
+- [gate-disabled-stays-green] Removing, narrowing, or conditionally
+  skipping a check cannot turn CI red, so a green run is not evidence the
+  check still runs. Verify a gate by observing it *execute* — the job's
+  collected/passed counts, or the env it echoed — not by observing the
+  absence of failure. Two traps land here together: GitHub Actions'
+  `&&`/`||` return values rather than booleans and treat `''` as falsy,
+  so `cond && '' || 'flag'` yields `'flag'` for **both** outcomes of
+  `cond` and the empty branch is unreachable; and a skip expressed as
+  `--ignore` disappears from the summary line entirely rather than
+  showing up as a skip count (PR #52 added
+  `PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}`
+  to scope the parity corpus to its capturing platform, which instead
+  disabled it on every entry including macOS; all seven checks passed for
+  two PRs, and PR #53 caught it only by noticing the job reported `380
+  passed` where a run including the corpus collects ~1019).

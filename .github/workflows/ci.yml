@@ -109,6 +109,13 @@ jobs:
         #
         # `--ignore` rather than a marker: it skips collection outright,
         # so the Linux entries also stop paying the corpus's ~9 minutes.
+        #
+        # The condition is inverted on purpose. Actions' `&&`/`||` return
+        # values and the empty string is falsy, so the natural spelling
+        # `runner.os == 'macOS' && '' || '--ignore=test/parity'` collapses
+        # to `'' || '--ignore=test/parity'` on macOS and skips the corpus
+        # everywhere — which is what it silently did from PR #52 until
+        # 2026-08-08. Keep the non-empty value on the true branch.
         env:
-          PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}
+          PARITY: ${{ runner.os != 'macOS' && '--ignore=test/parity' || '' }}
         run: python -m pytest $PARITY

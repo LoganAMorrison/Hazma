@@ -3,7 +3,8 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 01
-**Status:** In Progress (Tasks 1.1-1.3 complete 2026-08-07)
+**Status:** Complete (2026-08-08) — all four tasks landed; learnings at
+`../../learnings/phase-01-parity-corpus.md`
 **Plan References:** `../../phases/phase-01-parity-corpus.md`
 **Related ADRs:** none
 **Depends On:** Phase 00 complete
@@ -20,12 +21,15 @@ corpus.
 | 1.1 | Corpus specification + generator | — | **Complete (2026-08-07)** | [task-1.1-corpus-generator.md](task-1.1-corpus-generator.md) |
 | 1.2 | Pytest runner + tolerance budgets | 1.1 | **Complete (2026-08-07)** | [task-1.2-parity-runner.md](task-1.2-parity-runner.md) |
 | 1.3 | Wire both suites into one gate | 1.2 | **Complete (2026-08-07)** | [task-1.3-test-wiring.md](task-1.3-test-wiring.md) |
-| 1.4 | Retire/regenerate legacy `.npy` suites | 1.2 | Not started — **next** | [task-1.4-legacy-npy.md](task-1.4-legacy-npy.md) |
+| 1.4 | Retire/regenerate legacy `.npy` suites | 1.2 | **Complete (2026-08-08)** | [task-1.4-legacy-npy.md](task-1.4-legacy-npy.md) |
 
 ## Exit Criteria
 
-- All rows Complete; phase file frontmatter `status: Complete`.
-- Phase learnings at `../../learnings/phase-01-parity-corpus.md`.
+- ~~All rows Complete; phase file frontmatter `status: Complete`.~~ — met
+  2026-08-08.
+- ~~Phase learnings at `../../learnings/phase-01-parity-corpus.md`.~~ —
+  written 2026-08-08. **Read the learnings, not this file or the four task
+  notes**; they are history, it is the distillation.
 
 ## Inputs Reviewed
 
@@ -130,6 +134,28 @@ corpus.
   Tracked in
   [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
   which ripens **before Phase 04** (Task 1.3).
+- **The CI scoping added in Task 1.3 disabled the corpus everywhere, and
+  stayed green doing it** (found in Task 1.4 while reading the PR's own
+  job log). `PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}`
+  cannot select the macOS branch: Actions' `&&`/`||` return values, the
+  empty string is falsy, so `true && ''` collapses to `''` and the `||`
+  then yields `--ignore=test/parity`. Every entry, macOS included, skipped
+  `test/parity` from PR #52 until PR #53 fixed it. **Nothing went red,
+  because removing a gate never does** — the tell was the job reporting
+  `380 passed, 13 skipped` where a run including the corpus collects
+  ~1019. Keep the non-empty value on the true branch of an Actions
+  ternary, and verify a gate by watching it *run*, not by watching CI
+  stay green.
+- **The corpus passes on the macOS CI runner in budget mode** (Task 1.4,
+  the first time this has been observed — the Task 1.3 measurement below
+  predates the scoping commit). With `PARITY` empty the macOS entry
+  reports `1005 passed, 14 skipped` against 1006/13 locally: exactly one
+  test moves from passed to skipped, which is the documented budget-mode
+  signature (`test_running_on_the_capturing_tree` skips when the
+  toolchain differs from the manifest, and the declared per-function
+  budgets are enforced instead of bit-equality). The job log does not
+  print skip reasons, so that attribution is an inference from the
+  arithmetic and the mechanism, not a quoted reason.
 - **`EXACT_RTOL = 0.0` applies in budget mode too**, because
   `effective_budget` returns the *declared* budget off the capturing
   tree and the EXACT class declares zero. That is what turned 35 last-bit
@@ -143,7 +169,69 @@ corpus.
   together does not trip pytest's import-file-mismatch check only
   because `test/` has no `__init__.py` while the `hazma` copy sits in a
   real package. Adding one under `test/` would break the merged
-  collection (Task 1.3).
+  collection (Task 1.3). **Task 1.4 hit the other half of this:** two
+  files sharing a basename in different `test/` subdirectories *do*
+  collide, and the collision aborts the whole run at collection rather
+  than failing one module. `test/rh_neutrino/test_integration.py` had to
+  become `test_rh_neutrino_integration.py` because
+  `test/spectra/test_integration.py` already held the name.
+- **The legacy `.npy` suites were not merely stale — they were
+  structurally rotten** (Task 1.4), which is what settled the
+  regenerate-vs-delete call on evidence:
+  - Unskipped against the current tree, **11 of their 17 tests fail**.
+    The differences are structured, not noisy: six scalar cross sections
+    (`g g`, `pi0 pi0`, `pi pi`, `s s`, `total`) are off by *exactly* ×2,
+    `partial_widths["e e"]` by ×4 — a superseded identical-particle
+    symmetry-factor convention, not drift.
+  - `test_scalar_mediator.py`'s `load_sm2_data` reads `sm1_dir` for all
+    twelve arrays, so `sm_2` was never loaded and `sm2` was a duplicate
+    of `sm1`.
+  - The vector generator's `mvs = 2 * [125.0, 550.0]` makes `vm_5`/`vm_6`
+    exact duplicates of `vm_3`/`vm_4`. Eight directories, six distinct
+    parameter points, four distinct vector ones.
+  - Every loader docstring misdescribes its own point (all six vector
+    ones claim `mx = 250`, `eps = 0.1`; the stored params say
+    `mx = 125` and four of them are `VectorMediator`, not
+    `KineticMixing`). The scalar pair have their `ms` values swapped and
+    wrong.
+  - The generators still in the tree disagree with the data they
+    produced (`mx = 250.0` for the vector points vs `125.0` stored), and
+    write `gamma_ray_lines.npy` that no test reads.
+- **The corpus stops where Cython stops** (Task 1.4). Everything in
+  `hazma/theory/__init__.py` and the model packages — the dict assembly,
+  the `"total"` sums, the branching-fraction division, the
+  branching-fraction weighting of each spectrum, the line `bf` — is pure
+  Python, and no corpus case reaches it. That is the non-redundant half
+  of the deleted classes' intent and why `test/test_theory_aggregation.py`
+  exists.
+- **A total-is-the-sum check does not catch a lost weight** (Task 1.4,
+  found by negative-testing rather than by reading). Multiplying *every*
+  positron channel by `1.0` instead of its branching fraction leaves
+  `total == sum(channels)` true, so the first draft of the suite passed
+  the mutation. The per-channel `bf × kernel` identity is the assertion
+  that fires; the total-sum check is not a substitute for it.
+- **Both mediator positron kernels return `nan` at exactly `0.510998928`**
+  (Task 1.4) — the legacy `MASS_E` in
+  `hazma/_utils/legacy_parameters.pxd:18`, against `0.5109989461` in
+  `constants.pxd` and `hazma/parameters.py`. One point, not a window: a
+  2,000,001-point sweep of `[0.5109988, 0.5109990]` finds that single
+  value, with `0.0` on both sides, for the scalar *and* vector kernels.
+  The corpus does not pin it (zero `nan` across 19,610 pinned positron
+  values), so a Rust port can land anywhere there and still pass. The
+  constants divergence itself was already on the record
+  (`../../references/cython-inventory.md` §Bugs item 3); this consequence
+  was not. Filed as
+  [`../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md),
+  ripening **before Phase 05/06**.
+- **`Theory.spectra` and `Theory.positron_spectra` reject scalar
+  energies** (Task 1.4) despite documenting `float or float numpy.array`
+  and `AGENTS.md`'s arrays-in-arrays-out contract. Two causes:
+  `spectra` calls `len()` on a float in a channel wrapper
+  (`_scalar_mediator_spectra.py:20`), and `positron_spectra` hits the
+  compiled `np.ndarray` signature. `total_spectrum` and
+  `total_positron_spectrum` accept a scalar, which is why nobody has hit
+  it. Filed as
+  [`../../../../docs/followups/todo/model-spectra-reject-scalar-energies.md`](../../../../docs/followups/todo/model-spectra-reject-scalar-energies.md).
 
 ## Decisions and Implementation Notes
 
@@ -213,6 +301,32 @@ corpus.
   check of the installed distribution, and a missing
   `[tool.setuptools.package-data]` entry is invisible from the source
   tree — Task 1.3.
+- The legacy `.npy` suites are **deleted, not regenerated** — Task 1.4.
+  Regeneration would have minted a second golden corpus with no manifest,
+  no `--check`, no provenance and a 1e-4 tolerance, overlapping the real
+  corpus on everything compiled. The evidence for "rotted, not merely
+  stale" is under Findings; the two `generate_test_data.py` producers went
+  with their data, following Task 0.3's precedent for `test/decay/`.
+- The replacement (`test/test_theory_aggregation.py`) asserts
+  **identities, not stored values** — Task 1.4. `total` is the channel
+  sum; a branching fraction is a cross-section ratio; a spectrum is
+  `bf × kernel`; a line's `bf` is its channel's. Plus three two-body
+  kinematic closed forms (`e e` and `g g` at `e_cm/2`, `pi0 g` at
+  `(e_cm² − m_π0²)/(2 e_cm)`). Identities need no data files, so they
+  cannot rot the way the arrays did, and they hold bit-for-bit on every
+  platform — making this the one numerical gate in the repo that is *not*
+  scoped to the capturing platform. Re-pinning kernel numbers at a loose
+  tolerance was rejected: that is the corpus's job.
+- Sixteen of the suite's 21 test functions parametrize over four model
+  points
+  — Task 1.4 — two per model class straddling the mediator threshold
+  (`s s` / `v v` open vs closed), with `gvdd` flipped on the vector pair.
+  Deliberately *not* the eight the deleted data used: two of those were
+  duplicates and one was unreachable.
+- `test/rh_neutrino/widths.py` is **deleted, not renamed** — Task 1.4. It
+  is a matplotlib plotting script under `if __name__ == "__main__"` with
+  no assertions; renaming it into the collection would have imported
+  matplotlib (not a test dependency) to run nothing.
 
 ## Files Changed
 
@@ -274,6 +388,39 @@ Nothing under `hazma/` was touched.
 
 Nothing under `hazma/` was touched.
 
+### Task 1.4
+
+- Deleted, 96 files: `test/scalar_mediator/test_scalar_mediator.py` and
+  `test/vector_mediator/test_vector_mediator.py` (the two skipped
+  classes); their two `generate_test_data.py` producers;
+  `test/scalar_mediator/data/` (24 `.npy`) and
+  `test/vector_mediator/data/` (66 `.npy`) — the 90 arrays the phase file
+  names; `test/positron/test_positron.py` (0 bytes, taking its directory);
+  `test/rh_neutrino/widths.py` (a matplotlib plotting script, no
+  assertions).
+- Renamed: `test/rh_neutrino/integration.py` →
+  `test/rh_neutrino/test_rh_neutrino_integration.py` — *not*
+  `test_integration.py`, which collides with `test/spectra/`. No
+  assertion changed; the rename pulled the file into the lint gate, so
+  it also took the import reorder, two `-> None` annotations and two
+  corrected docstrings (7 configured-ruff findings → 0).
+- New: `test/test_theory_aggregation.py` — 21 test functions / 69
+  collected over the pure-Python aggregation layer.
+- New: `docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`
+  and `docs/followups/todo/model-spectra-reject-scalar-energies.md`, with
+  their two rows in `docs/followups/README.md`.
+- `../../phases/phase-01-parity-corpus.md` — frontmatter `status:
+  Complete`; Prerequisites re-derived; Task 1.4's exit criteria carry
+  their realized outcomes and the basename-collision constraint; the
+  phase Exit Criteria carry the realized suite counts.
+- `../../PLAN.md` — the Phases-table row for 01.
+- `../../learnings/phase-01-parity-corpus.md` — **new**, the phase
+  distillation.
+- This file, `../README.md` and `task-1.4-legacy-npy.md` — status
+  bookkeeping and phase closure.
+
+Nothing under `hazma/` was touched.
+
 ## Verification
 
 - Task 1.1: `python test/parity/generate.py` → `41 cases / 623 blocks /
@@ -299,7 +446,21 @@ Nothing under `hazma/` was touched.
   before the change (`pytest -q test` → `870 passed, 20 skipped`).
   `preflight.sh` with no `--tests` runs that same bare command; full log
   in the task note.
-- Remaining in the phase: Task 1.4.
+- Task 1.4 (2026-08-08): bare `pytest -q` → `1006 passed, 13 skipped in 582.63s`,
+  parity suite included and in exact mode. Roots reconcile:
+  `--collect-only -q` gives 1019 total, 67 from `hazma` and 952 from
+  `test`. Against Task 1.3's 935/30 the delta is +69 aggregation tests,
+  +2 from the `rh_neutrino` rename, and −17 skips (9 scalar + 8 vector)
+  as the legacy classes left; 935 + 71 = 1006 and 30 − 17 = 13. The new
+  suite alone: `pytest -q test/test_theory_aggregation.py` → `69 passed`
+  in 0.56s. Eleven implementation mutations confirm each assertion class
+  fires — one of them (dropping the positron branching-fraction weight)
+  passed against the first draft and is why the suite has a per-channel
+  positron identity as well as a total-is-the-sum check. `python
+  test/parity/generate.py --check` still reports `corpus OK: 41 cases /
+  1580 arrays`. Full tables in the task note.
+- **Phase closed 2026-08-08.** Read
+  `../../learnings/phase-01-parity-corpus.md`.
 
 ## Open Questions
 
@@ -315,24 +476,31 @@ Nothing under `hazma/` was touched.
   declared budget. Read the CI log for
   `test_running_on_the_capturing_tree`'s skip reason — that names what
   differed — before treating any Linux failure as a real drift.
-- Task 1.4's scope narrowed but is not decided: the 90 `.npy` arrays
-  the two skipped mediator classes read overlap the cross-section and
-  mediator-spectrum cases now pinned here, so the
-  redundant-vs-complementary call has a concrete comparison target.
-  (The phase file said 159; that was a collision with Task 0.2's
-  unrelated 159-array impact check. Re-derived in the round-1 review
-  fixes — `find test/{scalar,vector}_mediator/data/{sm,vm}_* -name
-  '*.npy' | wc -l` → 90.)
-- Two more uncollected modules surfaced in Task 1.3 and belong in Task
-  1.4's call rather than in a separate pass:
-  `test/rh_neutrino/integration.py` and `test/rh_neutrino/widths.py`
-  match no `python_files` pattern, so the merged collection still does
-  not reach them. (`test/spectra/msqrd_corpus.py` is deliberate — it is
-  a fixture module `test_dnde_photon_fsr.py` imports by name.)
+- ~~Task 1.4's scope narrowed but is not decided~~ — **closed
+  2026-08-08: deleted, not regenerated.** The overlap with the corpus was
+  the smaller half of the answer; what settled it was that the arrays
+  encode a superseded convention (six scalar cross sections off by
+  exactly ×2), `vm_5`/`vm_6` duplicate `vm_3`/`vm_4`, `sm_2` was never
+  loaded, and 11 of the 17 tests fail against the current tree. The
+  non-redundant half of their intent — the pure-Python aggregation layer
+  — moved to `test/test_theory_aggregation.py` as identities. Evidence in
+  `task-1.4-legacy-npy.md`.
+- ~~Two more uncollected modules surfaced in Task 1.3~~ — **closed
+  2026-08-08.** `test/rh_neutrino/integration.py` passes as-is and was
+  renamed into the collection as
+  `test_rh_neutrino_integration.py`; `test/rh_neutrino/widths.py` is a
+  matplotlib plotting script with no assertions and was deleted.
+  (`test/spectra/msqrd_corpus.py` remains deliberate — it is a fixture
+  module `test_dnde_photon_fsr.py` imports by name.)
+- Five skips survive the phase with reasons outside Task 1.4's criterion:
+  three in `test/vector_mediator/test_form_factors.py` and two "Known to
+  be broken" form factors under `hazma/form_factors/vector/`. All are
+  pure-Python form-factor issues this project does not port. Recorded so
+  the silence is not mistaken for coverage.
 
 ## Plan Impact
 
-**Impact Level:** Update phase file (Tasks 1.1, 1.2 and 1.3).
+**Impact Level:** Update phase file (Tasks 1.1, 1.2, 1.3 and 1.4).
 
 - Task 1.1: `../../phases/phase-01-parity-corpus.md`'s Task 1.2 exit
   criteria gained a bullet requiring the runner to replay the manifest's
@@ -343,8 +511,9 @@ Nothing under `hazma/` was touched.
   of that is now false — `pytest test` reaches the parity suite; CI does
   not, which is Task 1.3's job. Re-derived along with Task 1.3's
   `pytest -q test` figure, which this task moved.
-- Task 1.3: the Prerequisites bullet moved to past tense and now says
-  what is actually still open in the phase (Task 1.4). Its own exit
+- Task 1.3: the Prerequisites bullet moved to past tense and, at the
+  time, named Task 1.4 as what was still open (Task 1.4 has since closed
+  it). Its own exit
   criteria carry the realized counts (bare `pytest -q` → 935/30, and
   934/31 expected off the capturing environment, replacing the 870/20
   and 869/21 figures that described the `test/` root alone) and a new
@@ -353,29 +522,41 @@ Nothing under `hazma/` was touched.
   `cases.assert_module_is_repo_tree` insists on. That constraint was not
   in the plan.
 
+- Task 1.4: the phase file's frontmatter went `In Progress` →
+  `Complete`; the Prerequisites bullet's remaining present-tense claim
+  (`test/positron/test_positron.py` "is 0 bytes") and its "what is still
+  open" sentence were re-derived; Task 1.4's exit criteria gained their
+  realized outcomes, the two `rh_neutrino` modules Task 1.3 folded in,
+  and a constraint the plan did not anticipate — the rename cannot use
+  `test_integration.py`, because a duplicate basename across `test/`
+  subdirectories aborts the entire collection. The phase Exit Criteria's
+  first bullet carries the realized suite counts, and `../../PLAN.md`'s
+  Phases-table row for 01 is marked Complete.
+
 No ADR: nothing about the port's architecture, interfaces or ordering
 changed. The tolerance table is a new contract, but the phase file
 already specified it.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 01 (Task 1.4):** read
-`task-1.4-legacy-npy.md` if it exists, then the two skipped classes
-themselves (`test/scalar_mediator/test_scalar_mediator.py`,
-`test/vector_mediator/test_vector_mediator.py` — 9 and 8 skips, reason
-"Needs to be updated"), then `test/parity/cases.py`'s cross-section and
-mediator-spectrum cases, which are the comparison target for the
-redundant-vs-complementary call.
+**Phase 01 is Complete (2026-08-08). The next work is Phase 02, Task 2.1
+— the Rust scaffold.** Read
+[`../../learnings/phase-01-parity-corpus.md`](../../learnings/phase-01-parity-corpus.md)
+rather than this file or the four task notes: it is the distillation,
+they are history. Then `../../phases/phase-02-rust-scaffold.md` and
+`../../rules.md`.
 
 **Currently safe to assume:**
 
-- **One command is the suite.** Bare `pytest -q` → `935 passed, 30
-  skipped`; `preflight.sh` with no `--tests` runs exactly that, and so
-  does CI. Any narrower run you cite covers strictly less than the gate.
-  Build editable first (`uv pip install -e .`) — the parity suite
-  refuses a `hazma` resolving outside the repository.
-- The corpus reproduces bit-exactly on the capturing environment
-  (exact mode, inside that 935).
+- **One command is the suite.** Bare `pytest -q` → `1006 passed, 13
+  skipped` on the capturing environment (1019 collected: 67 `hazma` +
+  952 `test`); `preflight.sh` with no `--tests` runs exactly that, and so
+  does CI. Any narrower run covers strictly less than the gate. Build
+  editable first (`uv pip install -e .`) — the parity suite refuses a
+  `hazma` resolving outside the repository.
+- The corpus reproduces bit-exactly on the capturing environment (exact
+  mode, inside that 1006), and `python test/parity/generate.py --check`
+  re-verifies its integrity without a built tree.
 - Coverage of the 41 entry points does not need re-deriving —
   `assert_full_coverage` does it on every generation, and
   `test_every_corpus_case_has_a_budget` does the same for the tolerance
@@ -386,22 +567,40 @@ redundant-vs-complementary call.
 - The corpus pins the **post-fix** `two_body_momentum` values.
 - Widening a budget is a declared act, not a fix: `tolerances.py`'s
   module docstring states rules 2 and 3 at the point of use.
-- The parity suite's cost is **settled policy**: paid in full on every
-  CI matrix entry and every preflight run, no marker and no split job.
-  Task 1.2 left the question open; Task 1.3 closed it. Measured 8m58s
-  for the bare run on the capturing machine under concurrent load;
-  Task 1.2's 4m38s was `pytest test/parity` alone, measured idle.
-  Reopening the question needs a CI measurement, not a local one.
+- The parity suite's cost is **settled policy**: paid in full on every CI
+  matrix entry and every preflight run, no marker and no split job.
+  Task 1.2 left the question open; Task 1.3 closed it. Reopening it needs
+  a CI measurement, not a local one.
+- **`test/test_theory_aggregation.py` is the Phase 04–06 wiring gate**
+  and the corpus's complement: it fires on a lost branching-fraction
+  weight, a dropped channel, a detached line `bf` or a broken `total`,
+  none of which the corpus sees, and it costs 0.6s. Run it either side of
+  every kernel swap.
+- **No skipped test in the repo is waiting on this project.** The five
+  survivors are pure-Python form-factor issues the port does not touch.
+- **`test/` holds no golden `.npy` corpus for the mediator models any
+  more.** `test/parity/data/` is the only pinned-value store, and it has
+  a manifest and a `--check`.
 
 **Currently risky / unknown:**
 
+- **Read
+  [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  before Phase 04.** Six corpus blocks gate nothing for the port, not
+  just for CI, and off macOS the corpus is skipped outright
+  (`--ignore=test/parity`).
+- Two Task 1.4 follow-ups ripen inside this project: the
+  [`MASS_E` `nan`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  before Phases 05/06, and the
+  [scalar-energy contract](../../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
+  during 04–06.
 - Do not hoist `cases.py`'s deferred model imports.
-- Do not add an `__init__.py` under `test/`: `test_utils.py` exists in
-  both collected roots and only the missing package marker keeps their
-  module names distinct.
+- **Test-file basenames must be unique across `hazma/` and `test/`
+  together**, and do not add an `__init__.py` under `test/` to fix a
+  collision — that breaks the merged collection instead. Both halves were
+  measured (Tasks 1.3 and 1.4).
 - Corpus grid density vs. repo-size budget is **settled**: 2.9 MiB
   against a ~10 MB ceiling, with `MAX_TOTAL_BYTES` failing generation
   above it.
-- Cross-platform behavior, per Open Questions — expect budget mode and a
-  skipped `test_running_on_the_capturing_tree` on CI, not a failure.
-  Task 1.3's PR is the first run that produces Linux numbers at all.
+- The aggregation suite's four model points are a sample, not a sweep.
+  Widening it is one list (`_models()`) if a swap ever suggests the need.

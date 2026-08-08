@@ -3,8 +3,8 @@ import unittest
 # import pytest
 import numpy as np
 
-from hazma.parameters import standard_model_masses as sm_masses
 from hazma import rh_neutrino
+from hazma.parameters import standard_model_masses as sm_masses
 
 ME = sm_masses["e"]
 MMU = sm_masses["mu"]
@@ -75,9 +75,8 @@ class TestWidths(unittest.TestCase):
                     map(lambda s: sm_masses[s], states.split(" "))
                 )
 
-    def test_decay_widths(self):
-        """Test RHNeutrino.decay_widths"""
-
+    def test_decay_widths(self) -> None:
+        """Every channel below its threshold has exactly zero width."""
         for key, models in self.models.items():
             for model in models:
                 widths = model._decay_widths()
@@ -85,9 +84,8 @@ class TestWidths(unittest.TestCase):
                     if self.thresholds[key][states] > model.mx:
                         assert width == 0.0
 
-    def test_dnde_photon(self):
-        """Test RHNeutrino.decay_widths"""
-
+    def test_dnde_photon(self) -> None:
+        """``RHNeutrino.spectra`` evaluates at every mass without raising."""
         for _, models in self.models.items():
             for model in models:
                 es = np.geomspace(1e-2, 1, 5) * model.mx
