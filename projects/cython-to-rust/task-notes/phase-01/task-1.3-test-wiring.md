@@ -103,7 +103,7 @@ Copied from the phase file's Task 1.3 block:
 
 ## Files Changed
 
-22 files, taken from `git diff origin/master -M --stat --`.
+24 files, taken from `git diff origin/master -M --name-only --`.
 
 **The change itself (4 files):**
 
@@ -123,7 +123,7 @@ Copied from the phase file's Task 1.3 block:
   text, the zero-collection FAIL message, and `usage()`'s line range
   (it truncated the help mid-sentence once the header grew) follow.
 
-**Durable docs whose claims the change falsified (5):**
+**Durable docs whose claims the change falsified (7):**
 
 - `docs/agents/preflight.md` — gate 4 rewritten around the bare run; the
   one-command example no longer passes `--tests`; the "what CI does"
@@ -134,7 +134,15 @@ Copied from the phase file's Task 1.3 block:
   the four-step install/smoke/reinstall/test sequence.
 - `AGENTS.md` — the `pytest` line in Commands.
 - `test/parity/README.md` — the gate runs under a bare `pytest` and in
-  CI; editable-install note.
+  CI; editable-install note; the abscissa comparison is no longer
+  described as exact in both modes.
+- `test/parity/tolerances.py` — new `ABSCISSA_RTOL` and
+  `abscissa_budget()`, with the derivation in the module docstring.
+- `test/parity/test_parity.py` — both abscissa comparisons go through
+  `abscissa_budget` instead of `assert_array_equal`; module docstring and
+  the `ABSCISSAE` comment follow. **Both are Task 1.2 files**, edited
+  here because Task 1.3's own CI run is what falsified their premise —
+  see "Linux: the first run" in Verification.
 - `../../learnings/phase-00-dead-code-purge.md` — the "two disjoint
   suites remain" bullet, annotated in place as fully closed (Task 1.2
   had already annotated it as half-closed).
@@ -378,13 +386,101 @@ Two mechanical traps worth recording, both hit here:
   `docs/agents/lessons.md`. Explicit paths were passed instead, and
   `docs scanned: 17` is the proof of non-zero scope.
 
-### Not verified here
+### Linux: the first run, and what it forced
 
-Linux behavior. The corpus was captured on macOS/arm64 and this task had
-no Linux runner; the first Linux numbers come from this PR's own CI run.
-The expected outcome is budget mode with
-`test_running_on_the_capturing_tree` skipped — read that skip's reason
-before treating any Linux failure as a drift.
+Wiring CI is what produced the first Linux numbers for the corpus, and
+they were not green. PR #52 run 31237583365, `Test (ubuntu-latest,
+py3.12)`:
+
+```text
+===== 623 failed, 311 passed, 31 skipped, 2 warnings in 525.21s (0:08:45) ======
+```
+
+Budget mode engaged as designed — 31 skipped rather than 30, so
+`test_running_on_the_capturing_tree` skipped and the declared value
+budgets were in force. The failures were **not** value drift. Counted
+over the job log, all 623 are the abscissa assertion and **none** is a
+value budget:
+
+```text
+$ grep -c "no longer produces the grid" ci_py312.log   # x2 per test
+1246
+$ grep -c "moved beyond its budget" ci_py312.log
+0
+```
+
+Every value comparison was unreachable, because the grid assertion fires
+before them. The largest grid difference anywhere in the run:
+
+```text
+$ grep -o "Max relative difference among violations: [0-9.e-]*" ci_py312.log \
+    | sort -u | tail -1
+Max relative difference among violations: 2.21884187e-16
+```
+
+`2.219e-16` is exactly one ulp (`eps = 2.220446e-16`).
+
+**Cause.** Task 1.2 compared abscissae bit-exactly in *both* modes,
+reasoning that "grids are arithmetic on constants". They are not:
+`cases` builds every grid with `numpy.geomspace`, which evaluates
+`10 ** linspace(log10(lo), log10(hi))` — two transcendental calls into
+the platform libm, and glibc does not agree with macOS libm in the last
+bit. The premise held within a platform and could not hold across one,
+which is precisely why it survived Task 1.2 unchallenged: there was no
+second platform to test it on.
+
+**Fix.** Abscissae get their own budget, `tolerances.abscissa_budget` —
+bit-exact on the capturing tree, `ABSCISSA_RTOL = 1e-13` elsewhere. The
+bound is derived rather than fitted to the failure: `geomspace` carries
+≤1 ulp each from `log10`, the `linspace` arithmetic, and the final power;
+with `|x| <= 3.5` the exponent error is ~1.6e-15 absolute, amplified by
+`d(10**x)/10**x = ln(10)·dx` to ~3.6e-15 relative. Worst case ~4e-15, so
+1e-13 is ~25x headroom and still five decades tighter than the loosest
+value budget. Task 1.2's actual concern — that no tolerance on a value
+compensates for a *moved measurement point* — is untouched: a redesigned
+grid moves points by ≥1e-3 relative.
+
+**Negative-tested in both modes** before pushing, since a loosened
+tolerance that no longer catches anything is the failure mode here:
+
+```text
+perturbation                 exact  budget expected
+1 ulp (the Linux signature)  FAIL   PASS   FAIL/PASS
+point count 200 -> 201       FAIL   FAIL   FAIL/FAIL
+endpoint 1e-3 -> 1.1e-3      FAIL   FAIL   FAIL/FAIL
+uniform 1e-12 stretch        FAIL   FAIL   FAIL/FAIL
+```
+
+The last row is the useful one: a uniform stretch of 1e-12, only ten
+times the budget, still fails. The capturing tree still rejects a single
+ulp.
+
+### Still not verified here
+
+**Whether the EXACT-class values pass on Linux.** `EXACT_RTOL` is `0.0`
+and `effective_budget` returns the *declared* budget in budget mode, so
+the 19 closed-form entry points are held to bit-equality on Linux too.
+Whether `libc.math`'s `exp` / `log` / `atanh` agree between glibc and
+macOS libm at those arguments is **unmeasured** — the grid assertion
+short-circuited every one of those comparisons, so the first Linux run
+produced no evidence either way.
+
+The same run *did* settle the adjacent question, though: **budget mode
+itself works.** `Test (macos-latest, py3.14)` passed in 19m31s. That is
+budget mode — Python 3.14 against the corpus's 3.12, with different
+numpy and scipy — on a platform sharing the capturing libm. So the whole
+declared-budget path, including the 19 EXACT-class entry points at
+`rtol=0`, reproduces bit-for-bit across a Python and numerics-library
+change. What remains untested is specifically the *libm* axis.
+
+Deliberately not pre-emptively widened:
+`../../rules.md` rule 2 makes widening a declared act needing
+justification, and there is no measurement to justify one with yet. The
+next CI run is what answers it. If those cases fail, the question to
+settle is whether the EXACT class should distinguish "a different
+platform" (a fact, not a drift) from "a different implementation" (a
+drift to declare) — `provenance` already records `platform` and
+`machine` separately, so the information is there.
 
 ## Open Questions
 
@@ -456,6 +552,8 @@ AGENTS.md pyproject.toml setup.cfg scripts/`
 | `[tool.pytest.ini_options]` | `pyproject.toml` (definition), `setup.cfg`, `docs/agents/environment.md`, `phase-01-parity-corpus.md`, `phase-01/README.md`, this file (2) | New identifier; every occurrence is a deliberate reference. |
 | `assert_module_is_repo_tree` | `test/parity/cases.py` (3, the definition), `test/parity/generate.py` (1), `test/parity/README.md`, `docs/agents/environment.md`, `.github/workflows/ci.yml`, `phase-01-parity-corpus.md`, `phase-01/README.md` (2), `task-1.1-corpus-generator.md` (3), this file (2) | **EDITED — a real defect caught here.** This task first wrote the guard's name as `assert_from_repository`, which does not exist. Corrected in all seven new occurrences; the three in Task 1.1's note were already right. |
 | `test_integration.py` / `test/spectra/integration.py` | `phase-01/README.md` (2), this file (3), `phase-01-parity-corpus.md` (2), `.claude/skills/review-pr/SKILL.md` | EDITED — `review-pr`'s never-collected list no longer names the renamed file; it now names `test/rh_neutrino/{integration,widths}.py` and `test/spectra/msqrd_corpus.py`, all three verified to exist and to be uncollected. |
+| `abscissa_budget` / `ABSCISSA_RTOL` | `test/parity/tolerances.py` (definition + 3 doc refs), `test/parity/test_parity.py` (3), `test/parity/README.md` (1), this file (5) | New in the round-2 fix; every occurrence deliberate. `rg` over the repo finds no other. |
+| Falsified prose claim: abscissae compared `exact, always` / `exactly in both modes` | `test/parity/test_parity.py:28`, `test/parity/README.md:82`, `../README.md`'s Decisions bullet | EDITED — all three said Task 1.2's premise; all three now describe the two-mode budget and say why the premise failed. `rg 'exact, always\|exactly in \*\*both\*\* modes'` → no matches. |
 | Falsified prose claim: `scopes it to hazma` / `never enters test/` | `rg 'scopes (it\|that) to .hazma.\|never enters .test/.\|testpaths. is .hazma.\|testpaths = hazma' .claude/ .codex/ docs/ AGENTS.md README.md` → **no matches** | All live copies fixed. |
 
 ### Line-number citation sweep
@@ -471,9 +569,11 @@ in-repo citations checked: 9
 out-of-range or ambiguous: NONE
 ```
 
-This task adds exactly one `file:line` citation, and it is a `.toml`
-one, which `check_doc_citations.py` does not bounds-check (it covers
-`.py` / `.pyx` / `.pxd` only). Verified by hand:
+This task adds two `file:line` citations. `test/parity/test_parity.py:28`
+is bounds-checked by the tool (`in-repo citations checked: 1`,
+`resolved by exact: 1` when run over the three docs that carry it).
+`pyproject.toml:82` is not — the checker covers `.py` / `.pyx` / `.pxd`
+only — so it is verified by hand:
 
 ```text
 $ grep -n "tool.pytest.ini_options" pyproject.toml
@@ -509,7 +609,7 @@ their own sweep commands — KEPT as history.
 | Task note: `11` in `test/agents` (the 946 reconciliation) | `pytest --collect-only -q test/agents` | `11 tests collected in 0.02s` | OK — first written as 19, corrected here |
 | Phase README, project README: parity block count `626` | `pytest --collect-only -q test/parity` | `626 tests collected in 0.83s` | OK — unchanged by this task |
 | Baselines `57 / 10` and `870 / 20` | `pytest -q`; `pytest -q test -rs`, both pre-change on this tree | `57 passed, 10 skipped in 0.33s`; `870 passed, 20 skipped … (0:09:11)` | OK — reproduce Task 1.2's figures |
-| Task note, Files Changed: "22 files" | `git diff origin/master -M --name-only -- \| wc -l` | `22` | OK |
+| Task note, Files Changed: "24 files" | `git diff origin/master -M --name-only -- \| wc -l` | `24` | OK — was 22 before the round-2 abscissa fix |
 | Task note, doc gates: "17 changed markdown files" | `git diff origin/master -M --name-only -- \| grep -c '\.md$'` | `17` | OK |
 | Task note: editable rebuild costs ~40 s | `time python -m pip install -e .` in the CI simulation | `real 0m40.975s` | OK — first stated from a `uv` run (39.7 s), re-measured with pip |
 | Phase file: expect `934 / 31` off the capturing environment | not runnable here (no Linux runner) | — | **Derived, not measured** — 935/30 minus the one `test_running_on_the_capturing_tree` skip. Flagged as an expectation in the phase file too. |
@@ -546,7 +646,8 @@ unmoved, not merely an argument that it should be.
 - The phase file frontmatter stays `status: In Progress` — correct,
   Task 1.4 is open. `PLAN.md` untouched.
 - Every file named in §Files Changed appears in
-  `git diff origin/master -M --name-only --` (22 = 22), and every
+  `git diff origin/master -M --name-only --` (24 = 24, and the section
+  subtotals 4+1+7+7+5 sum to it), and every
   identifier named in §Findings / §Decisions resolves: `testpaths`,
   `[tool.pytest.ini_options]`, `assert_module_is_repo_tree`,
   `test_running_on_the_capturing_tree`, `assert_full_coverage`,

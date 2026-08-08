@@ -153,9 +153,14 @@ corpus.
   ~1e-3 MeV⁻¹ and cross sections at ~1e-20 MeV⁻²; it is also
   unnecessary, since the out-of-support regions return exactly `0.0`
   — Task 1.2.
-- Abscissae (`grid`, `scalar_grid`) are compared exactly in **both**
-  modes. No tolerance on a value compensates for having moved where it
-  was measured — Task 1.2.
+- Abscissae (`grid`, `scalar_grid`) get their own budget, not the
+  case's: no tolerance on a *value* compensates for having moved where it
+  was measured — Task 1.2. Exact in **both** modes originally; Task 1.3
+  split it to bit-exact on the capturing tree and 1e-13 elsewhere, after
+  the first Linux CI run failed all 623 blocks by exactly one ulp because
+  `numpy.geomspace` goes through the platform libm. The premise that
+  "grids are arithmetic on constants" held within a platform and not
+  across one.
 - No measurement/reporting hook. `pytest_addoption` is only honored in
   an *initial* conftest, which `test/parity/conftest.py` is not under
   `pytest test`, and `assert_allclose` already prints the max relative

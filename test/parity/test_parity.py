@@ -24,9 +24,13 @@ For every block:
    scalar probe drawn from it — against the ones stored in the corpus.
    `cases` is re-evaluated live, so a change to grid construction would
    otherwise silently move every sample point and leave the value
-   comparison comparing two differently-sampled functions. Exact in
-   either mode: grids are arithmetic on constants, and no tolerance on a
-   *value* can make up for having moved where it was measured.
+   comparison comparing two differently-sampled functions. Held to
+   `tolerances.abscissa_budget`: bit-exact on the capturing tree, one
+   ulp elsewhere. Task 1.2 made this exact in *both* modes on the premise
+   that grids are arithmetic on constants; `numpy.geomspace` reaches the
+   platform libm, so Task 1.3's first Linux CI run failed all 623 blocks
+   by exactly 1 ulp. The bound is still ten orders of magnitude tighter
+   than any redesigned grid, which is what the check is actually for.
 2. **The values**, array path and scalar path, within the budget
    `tolerances.effective_budget` selects — bit-equality on the capturing
    tree, the declared per-function budget anywhere else.
@@ -81,7 +85,8 @@ TREE = tolerances.provenance(MANIFEST)
 ArrayLoader = Callable[[str], dict[str, np.ndarray]]
 
 #: Block arrays that record *where* an entry point was sampled rather than
-#: what it returned. Always compared exactly, in either mode.
+#: what it returned. Compared against `tolerances.abscissa_budget`, not
+#: against the case's value budget.
 ABSCISSAE = frozenset({"grid", "scalar_grid"})
 
 
@@ -123,6 +128,7 @@ def test_entry_point_matches_corpus(
     block = case.blocks[block_index]
     arrays = stored_arrays(case_name)
     budget = tolerances.effective_budget(case_name, TREE)
+    grid_budget = tolerances.abscissa_budget(TREE)
 
     assert block.label == manifest_block["label"], (
         f"{case_name}: block {block_index} is {block.label!r} in cases.py but "
@@ -133,11 +139,13 @@ def test_entry_point_matches_corpus(
     # The specification must still produce the abscissae the values were
     # captured at, or the comparison below is between two different
     # functions sampled differently.
-    np.testing.assert_array_equal(
+    np.testing.assert_allclose(
         block.grid,
         arrays[manifest_block["arrays"]["grid"]["key"]],
+        rtol=grid_budget.rtol,
+        atol=grid_budget.atol,
         err_msg=f"{case_name}[{block.label}]: cases.py no longer produces the "
-        "grid the corpus was captured on",
+        f"grid the corpus was captured on ({grid_budget.why})",
     )
 
     actual, raised = corpus_generate.evaluate_block(case.resolve(), block)
@@ -164,11 +172,18 @@ def test_entry_point_matches_corpus(
         expected = arrays[entry["key"]]
         where = f"{case_name}[{block.label}].{suffix}"
         if suffix in ABSCISSAE:
-            # Where the values were sampled, not what came back. A budget
-            # would be meaningless here and actively harmful: comparing at
-            # drifted abscissae compares two different functions.
-            np.testing.assert_array_equal(
-                actual[suffix], expected, err_msg=f"{where} is not the pinned grid"
+            # Where the values were sampled, not what came back, so this
+            # gets the abscissa budget rather than the case's: bit-exact
+            # on the capturing tree, one-ulp-tolerant elsewhere because
+            # geomspace reaches the platform libm. Comparing at genuinely
+            # drifted abscissae would compare two different functions,
+            # which is what the tight bound still forbids.
+            np.testing.assert_allclose(
+                actual[suffix],
+                expected,
+                rtol=grid_budget.rtol,
+                atol=grid_budget.atol,
+                err_msg=f"{where} is not the pinned grid ({grid_budget.why})",
             )
             continue
         np.testing.assert_allclose(

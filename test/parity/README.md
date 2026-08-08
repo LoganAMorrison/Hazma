@@ -79,7 +79,8 @@ index, the argument and the exception type.
 ## What the gate compares
 
 Per block: the grid `cases.py` produces against the grid the values were
-captured on (exact, always); the values themselves against the budget
+captured on (bit-exact on the capturing tree, one ulp elsewhere — see
+`tolerances.abscissa_budget`); the values themselves against the budget
 [`tolerances.py`](tolerances.py) selects; and the manifest's `raises`
 records, **replayed** — the entry point must still raise the same type at
 the same argument, and must not raise anywhere new. Evaluation goes
