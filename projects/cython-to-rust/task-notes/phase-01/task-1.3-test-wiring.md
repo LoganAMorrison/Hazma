@@ -536,7 +536,9 @@ $ PARITY='' bash -c 'pytest --collect-only -q $PARITY | tail -1'
 965 tests collected in 0.80s
 ```
 
-`965 - 626 = 339`. The real fix is
+`965 - 626 = 339`. **Run 31240680710 on `35f2712` is green on all seven
+checks** — Lint, macOS py3.14, and Ubuntu 3.10/3.11/3.12/3.13/3.14 —
+which is what closes the review's blocking finding. The real fix is
 [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
 which ripens **before Phase 04** because that is when the false failures
 start landing on real ports.
