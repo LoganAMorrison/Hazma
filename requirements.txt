@@ -1,7 +1,7 @@
 matplotlib>=2.2.3
 numpy>=1.16.2
 scipy>=1.2.1
-Cython>=0.29.12
+Cython>=3.2.9
 numpydoc>=0.9.1
 flake8>=3.7.7
 jupyter>=1.0.0
