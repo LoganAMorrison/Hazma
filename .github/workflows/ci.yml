@@ -70,10 +70,30 @@ jobs:
         # main entry points catches missing dependencies, missing package
         # data, and build/runtime scipy ABI mismatches. Run outside the repo
         # so the installed package is imported, not the source tree.
+        #
+        # This step is the only thing in CI that exercises the *installed*
+        # distribution, which is why it runs before the editable reinstall
+        # below rather than after it. A missing entry in
+        # [tool.setuptools.package-data] is invisible from the source tree.
         working-directory: ${{ runner.temp }}
         run: >-
           python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,
           hazma.scalar_mediator, hazma.vector_mediator,
           hazma.spectra._photon._muon"
+      - name: Reinstall editable for the test run
+        # The golden parity corpus (test/parity/, cython-to-rust Phase 01)
+        # refuses to measure a hazma that resolves outside the repository —
+        # cases.assert_module_is_repo_tree. Running pytest from the repo root
+        # puts the source tree first on sys.path either way, so without an
+        # editable install the compiled extensions simply would not be
+        # there. Editable puts them in the tree the corpus is pinned to.
+        # Measured cost of the second build: ~40 s.
+        run: python -m pip install -v -e .
       - name: Run tests
+        # Bare `pytest`, so this is exactly the collection
+        # scripts/agents/preflight.sh runs: pyproject.toml's
+        # `testpaths = ["hazma", "test"]`. Expect the parity suite's
+        # `test_running_on_the_capturing_tree` to skip here and the
+        # declared per-function budgets in test/parity/tolerances.py to
+        # apply — the corpus was captured on macOS/arm64.
         run: python -m pytest

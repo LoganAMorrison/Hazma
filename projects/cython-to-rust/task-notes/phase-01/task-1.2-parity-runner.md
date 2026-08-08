@@ -339,6 +339,10 @@ the parity gate is additive. The 20 skips are the pre-existing ones (9 +
 owns the first two groups. Bare `pytest` is unchanged at 57/10 because
 `setup.cfg`'s `testpaths = hazma` still keeps it inside the package; CI
 runs that form, which is exactly the gap Task 1.3 closes.
+_(Closed 2026-08-07: Task 1.3 moved the config to `pyproject.toml` with
+`testpaths = ["hazma", "test"]`. There is one suite now — bare
+`pytest -q` → `935 passed, 30 skipped` — and the 57/10 figure above is
+history.)_
 
 ## Open Questions
 

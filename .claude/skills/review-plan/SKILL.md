@@ -112,10 +112,11 @@ rest — mark sampled rows as `Sampled` in the audit.
 **Run the commands the plan tells implementers to run.** For every
 command cited as an exit criterion or a "run this to verify" step,
 actually execute it. A command that exits **green while doing nothing** is
-a **Blocker**: `pytest` exits 5 on zero collected, a `-k` filter matching
-nothing exits 0 with `no tests ran`, and a bare `pytest` never enters
-`test/` at all — `setup.cfg`'s `testpaths` scopes it to `hazma`. A plan
-gating a spectra task on a bare `pytest` has a green-but-noop gate.
+a **Blocker**: `pytest` exits 5 on zero collected, and a `-k` filter
+matching nothing exits 0 with `no tests ran`. A bare `pytest` is the full
+suite (`pyproject.toml`'s `testpaths = ["hazma", "test"]`), so the
+opposite trap now applies: a plan citing it as a cheap per-step check has
+budgeted a multi-minute run.
 
 Every fact you check becomes a Grounded-facts audit row — and every
 **Verified: Yes** must cite its evidence (the matching `file:line`, grep

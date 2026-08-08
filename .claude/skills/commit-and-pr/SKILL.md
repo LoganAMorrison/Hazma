@@ -78,7 +78,7 @@ Run it **before** you stage anything:
 
 ```sh
 scripts/agents/preflight.sh --paths "<touched paths>" \
-    --tests "<test targets>" [--md "<changed .md files>"] [--closing]
+    [--tests "<narrow targets>"] [--md "<changed .md files>"] [--closing]
 ```
 
 See [`preflight.md`](../../../docs/agents/preflight.md) for the

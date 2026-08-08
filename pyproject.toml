@@ -79,6 +79,32 @@ include = ["hazma", "hazma.*"]
 [tool.setuptools.dynamic]
 version = { attr = "hazma.VERSION" }
 
+[tool.pytest.ini_options]
+# One suite, one collection. Both roots are listed so that a bare
+# `pytest` — what CI runs, what `scripts/agents/preflight.sh` runs, and
+# what a contributor types — collects the same thing everywhere:
+#
+#   hazma  the in-package `*_test.py` modules (form factors, phase space)
+#   test   the out-of-package suite, including the golden parity corpus
+#          under test/parity/ that gates the Cython-to-Rust port
+#
+# Until cython-to-rust Task 1.3 this lived in setup.cfg's `[tool:pytest]`
+# and listed `hazma` only, so a bare `pytest` never entered `test/` and
+# CI never ran the parity gate at all. Do not narrow it back: a run that
+# collects one root is not the suite, and the divergence is invisible
+# because both halves are green on their own.
+#
+# `test/parity/` dominates the runtime with nested adaptive
+# quadrature: 8m58s for the whole bare run measured on the corpus's
+# capturing machine under load, 4m38s for `pytest test/parity` alone
+# measured idle. That is the price of the gate, paid on every matrix
+# entry deliberately — see test/parity/README.md.
+testpaths = ["hazma", "test"]
+markers = [
+  "broken: mark a test as known to be broken",
+  "slow: mark a test as slow",
+]
+
 [tool.black]
 target-version = ['py310']
 

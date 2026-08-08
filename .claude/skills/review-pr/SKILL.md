@@ -108,8 +108,10 @@ Common "diff omits" patterns in this repo:
   in `[tool.setuptools.package-data]` in `pyproject.toml`, so it is
   missing from the installed wheel.
 - A new test file placed where the run that is cited as green never
-  collects it — `test/conftest.py`'s `collect_ignore`, or under `test/`
-  when only a bare `pytest` was run (`setup.cfg` scopes that to `hazma`).
+  collects it — `test/conftest.py`'s `collect_ignore`, or a filename
+  matching no `python_files` pattern (`test/rh_neutrino/integration.py`,
+  `test/rh_neutrino/widths.py` and `test/spectra/msqrd_corpus.py` all
+  sit under `test/` and are never collected).
 
 ### Step 5: Evaluate based on your assigned lens
 
@@ -123,9 +125,9 @@ not hunt outside your area — that is another reviewer's job.
   identifier in the body against today's diff.
 - **Zero-collection guard.** `pytest` exits 5 on zero tests collected;
   a `-k` filter matching nothing exits 0 with `no tests ran`. Read the
-  `N passed` line before trusting any cited green. Note also that a bare
-  `pytest` collects a *different* suite from `pytest test`, because
-  `setup.cfg`'s `testpaths` is `hazma`.
+  `N passed` line before trusting any cited green. A bare `pytest` is
+  the full suite (`pyproject.toml`'s `testpaths = ["hazma", "test"]`);
+  any narrower target cited as the gate covers strictly less than CI.
 - **Empirical execution.** When the diff edits a docstring example, a
   README snippet, or claims a user-visible behavior, RUN it and paste the
   output. Static review does not catch a wrong number.

@@ -1,13 +1,12 @@
-import unittest
 import functools as ft
-
-from pytest import approx
+import unittest
 
 import numpy as np
 from numpy import testing as np_testing
+from pytest import approx
 
-from hazma.parameters import standard_model_masses as sm_masses
 from hazma import spectra
+from hazma.parameters import standard_model_masses as sm_masses
 from hazma.utils import lnorm_sqr
 
 

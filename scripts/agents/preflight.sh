@@ -15,7 +15,11 @@
 #   --paths "a b"    Space-separated files/dirs your diff touched. The
 #                    formatters and linters run against these. Defaults
 #                    to `hazma test` when omitted.
-#   --tests "a b"    Space-separated pytest targets. Defaults to `test`.
+#   --tests "a b"    Space-separated pytest targets. Omit it and the gate
+#                    runs a bare `pytest -q`, which is the whole suite —
+#                    pyproject.toml's `testpaths = ["hazma", "test"]`, the
+#                    same collection CI runs. Narrow it only to iterate;
+#                    the final pre-commit run should be the bare one.
 #                    A run that collects ZERO tests FAILs the gate — a
 #                    green-but-nothing-ran run is a false pass.
 #   --md "a.md"      Also run `markdownlint --dot` on the given files
@@ -55,7 +59,12 @@ MD_FILES=""
 CLOSING=0
 
 usage() {
-    sed -n '3,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    # The header block, from the title line down to the last line before
+    # `# Design notes:` — those are for readers of the source, not users.
+    # Derived rather than hardcoded: a line range goes stale silently and
+    # truncates the help mid-sentence.
+    sed -n '3,/^# Design notes:/p' "${BASH_SOURCE[0]}" \
+        | sed '$d' | sed 's/^# \{0,1\}//'
 }
 
 while [[ $# -gt 0 ]]; do
@@ -79,7 +88,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -n "${PATHS}" ]] || PATHS="hazma test"
-[[ -n "${TESTS}" ]] || TESTS="test"
+# TESTS stays empty by default on purpose: `pytest -q` with no target
+# resolves `testpaths` from pyproject.toml, so the gate collects exactly
+# what CI collects. Naming a default here (it used to be `test`) makes
+# the two drift the moment testpaths changes.
 
 # --------------------------------------------------------------------------
 # Result table
@@ -186,7 +198,8 @@ if have pytest; then
     [[ -n "${SUMMARY}" ]] || SUMMARY="$(tail -n 1 "${OUT}")"
     if [[ ${STATUS} -eq 5 ]]; then
         # pytest exit 5 == no tests collected. Green-looking, ran nothing.
-        row FAIL "pytest" "ZERO tests collected for '${TESTS}' — false green"
+        row FAIL "pytest" \
+            "ZERO tests collected for '${TESTS:-<testpaths>}' — false green"
     elif [[ ${STATUS} -eq 0 ]]; then
         row PASS "pytest" "${SUMMARY}"
     else

@@ -22,16 +22,18 @@ evidence `docs/versioning.md` requires for numerical changes.
 - Read `../references/numerics-replacements.md` (call-site tolerances)
   and `../rules.md` rules 1–3.
 - Context: when this phase was drafted, **zero** pinned-value tests over
-  compiled code executed anywhere — CI's `pytest` collects only
+  compiled code executed anywhere — CI's `pytest` collected only
   `hazma/**` (setup.cfg `testpaths = hazma`), and every `.npy`-backed
-  suite under `test/` is either skipped or never collected
-  (`test/spectra/integration.py` matches no pytest filename pattern;
+  suite under `test/` was either skipped or never collected
+  (`test/spectra/integration.py` matched no pytest filename pattern;
   `test/positron/test_positron.py` is 0 bytes). Task 1.2 ended the first
-  half of that: `test/parity/test_parity.py` runs under `pytest test`.
-  **CI still does not reach it** — `testpaths` is unchanged, which is
-  exactly what Task 1.3 fixes. `collect_ignore` is not part of any of
-  this; `test/conftest.py` has listed only the repo's `setup.py` since
-  Task 0.2.
+  half of that: `test/parity/test_parity.py` ran under `pytest test`.
+  Task 1.3 ended the second — pytest is configured in `pyproject.toml`
+  with `testpaths = ["hazma", "test"]`, a bare `pytest` is the whole
+  suite, and CI runs it on every matrix entry. What is still open in this
+  phase is Task 1.4, the legacy `.npy` suites. `collect_ignore` is not
+  part of any of this; `test/conftest.py` has listed only the repo's
+  `setup.py` since Task 0.2.
 
 ## Tasks
 
@@ -92,18 +94,20 @@ evidence `docs/versioning.md` requires for numerical changes.
 
 - pytest config moved to `pyproject.toml`
   (`[tool.pytest.ini_options]`), collecting `hazma` **and** `test`
-  (the `test/` suite is green: `pytest -q test` → 870 passed /
-  20 skipped as of 2026-08-07, on the capturing environment. It was
-  51/20 when this phase was drafted, then 244/20 after PR #41 and
-  Task 0.3, then +626 when Task 1.2 landed the parity suite —
-  re-derive rather than quoting any of them. Expect 869/21 off the
-  capturing environment: the parity suite skips its
-  `test_running_on_the_capturing_tree` marker there and enforces the
-  declared budgets instead.)
+  (bare `pytest -q` → 935 passed / 30 skipped as of 2026-08-07, on the
+  capturing environment. The `test/` root alone was 51/20 when this
+  phase was drafted, then 244/20 after PR #41 and Task 0.3, then 870/20
+  once Task 1.2 landed the parity suite — re-derive rather than quoting
+  any of them. Expect 934/31 off the capturing environment: the parity
+  suite skips its `test_running_on_the_capturing_tree` marker there and
+  enforces the declared budgets instead.)
 - `test/spectra/integration.py` renamed to be collected; its property
   assertions pass.
 - CI and `scripts/agents/preflight.sh` run the same collection;
-  `docs/agents/` env notes updated.
+  `docs/agents/` env notes updated. Widening `testpaths` is not
+  sufficient on its own: CI's non-editable `pip install .` leaves no
+  extension inside the checkout, which `cases.assert_module_is_repo_tree`
+  refuses, so the test job reinstalls editable first.
 
 ### Task 1.4: Retire or regenerate the legacy `.npy` suites
 

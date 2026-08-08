@@ -21,7 +21,7 @@ branch and PR instead.
 
    ```sh
    scripts/agents/preflight.sh --paths "<touched paths>" \
-     --tests "<test targets>" [--md "<changed markdown>"] [--closing]
+     [--tests "<narrow targets>"] [--md "<changed markdown>"] [--closing]
    ```
 
    Treat a non-zero result or `WARN` gate as a blocker. Read the literal pytest

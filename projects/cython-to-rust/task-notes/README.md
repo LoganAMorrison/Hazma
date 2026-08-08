@@ -22,7 +22,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
-| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **In Progress** — Tasks 1.1–1.2 complete (2026-08-07); 1.3 next |
+| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **In Progress** — Tasks 1.1–1.3 complete (2026-08-07); 1.4 next |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
@@ -61,12 +61,16 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   points, cimport DAG, quad call sites, bugs) are **already promoted**
   into `../references/` — consult those, not this section, and
   re-verify line numbers at execution time (snapshot of 2.1.0).
-- Test-infra fact agents keep tripping on: bare `pytest` collects only
-  `hazma/**` (`setup.cfg` `testpaths`), while preflight runs
-  `pytest -q test` — two disjoint suites until Phase 01 Task 1.3 merges
-  them. Since Task 1.2 the compiled layer *is* pinned, but only in the
-  second of those suites: `pytest test` runs `test/parity` (626 tests),
-  bare `pytest` does not, and CI still runs the bare form.
+- Test-infra fact agents kept tripping on, **settled in Task 1.3**: bare
+  `pytest`, `preflight.sh`, and CI used to collect three different
+  things (`hazma/**` from `setup.cfg`'s `testpaths`, `pytest -q test`,
+  and the bare form respectively), so the parity corpus Task 1.2 landed
+  gated nothing. pytest is now configured in `pyproject.toml` with
+  `testpaths = ["hazma", "test"]` and all three run the bare command.
+  Two consequences worth carrying forward: the suite costs 8m58s on the
+  capturing machine under concurrent load because of `test/parity`, and
+  it needs `pip install -e .` — a non-editable install leaves no
+  extension in the tree the corpus insists on measuring.
 - Local env fact: nothing is prebuilt on a fresh clone — build with uv
   (`uv venv`, `uv pip install -e .`) before preflight; expect preflight
   red on a clean tree otherwise. **And clean stale build artifacts
@@ -312,11 +316,15 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `x > 300` thermal divergence — are observations, not drifts, and are
   under Findings above.
 
-- **Tasks 1.1–1.2 (parity corpus and its runner): no public value
-  changes** — neither task touched `hazma/`. Task 1.2 additionally
+- **Tasks 1.1–1.3 (parity corpus, its runner, and the wiring): no public
+  value changes** — none of the three touched `hazma/` (verified:
+  `git diff origin/master -- hazma` empty on each). Task 1.2 additionally
   *proves* it for the whole compiled surface: `pytest -q test/parity` →
   `626 passed` with every one of the 41 entry points held to
   bit-equality against the corpus, on the environment that captured it.
+  Task 1.3 re-ran that proof as part of the merged suite (bare
+  `pytest -q` → 935 passed / 30 skipped, parity in exact mode) and is
+  what makes it a standing gate rather than a manual run.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -517,9 +525,10 @@ it from memory.)
 - **Phase 00 is Complete (2026-08-06).** Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
   rather than its five task notes — it is the distillation, they are
-  history. **Phase 01 is In Progress** — Task 1.1 landed the corpus on
-  2026-08-07, Task 1.2 (runner + tolerance budgets) is next. No phase
-  carries a decision gate.
+  history. **Phase 01 is In Progress** — Tasks 1.1 (corpus), 1.2 (the
+  runner and its tolerance budgets) and 1.3 (one suite, one gate) all
+  landed 2026-08-07; Task 1.4 (the legacy `.npy` suites) is next. No
+  phase carries a decision gate.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it; `test/parity/cases.py`
   is the single source of every entry point's call convention. Do not
@@ -535,14 +544,12 @@ it from memory.)
   a fresh venv from outside the repo (recipe in Task 0.4's note; reuse
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
-- `test/` is green (870 passed / 20 skipped as of Task 1.2, 2026-08-07,
-  which added `test/parity`'s 626; 244/20 at Task 0.2; 68/20 at Task 0.3;
-  52/20 at Task 0.1) — merging the suites in Task 1.3 is safe, and
-  simpler than planned: `test/conftest.py` now skips **no** test module.
-  A bare `pytest` still differs from `pytest test`, but only because
-  `setup.cfg`'s `testpaths` is `hazma`. Off the corpus's capturing
-  environment expect 869/21 — the parity suite reports budget mode by
-  skipping one test rather than by failing.
+- **The suites are merged and green**: bare `pytest -q` → 935 passed /
+  30 skipped (Task 1.3, 2026-08-07, capturing environment). The `test/`
+  root alone was 870/20 at Task 1.2 — which added `test/parity`'s 626 —
+  and 244/20 at Task 0.2, 68/20 at Task 0.3, 52/20 at Task 0.1. Off the
+  corpus's capturing environment expect 934/31: the parity suite reports
+  budget mode by skipping one test rather than by failing.
 - The legacy constants table lives at
   `hazma/_utils/legacy_parameters.pxd` and is now its **only** copy.
   `hazma.utils` is the only home for `cross_section_prefactor` and
