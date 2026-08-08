@@ -134,6 +134,28 @@ corpus.
   Tracked in
   [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
   which ripens **before Phase 04** (Task 1.3).
+- **The CI scoping added in Task 1.3 disabled the corpus everywhere, and
+  stayed green doing it** (found in Task 1.4 while reading the PR's own
+  job log). `PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}`
+  cannot select the macOS branch: Actions' `&&`/`||` return values, the
+  empty string is falsy, so `true && ''` collapses to `''` and the `||`
+  then yields `--ignore=test/parity`. Every entry, macOS included, skipped
+  `test/parity` from PR #52 until PR #53 fixed it. **Nothing went red,
+  because removing a gate never does** — the tell was the job reporting
+  `380 passed, 13 skipped` where a run including the corpus collects
+  ~1019. Keep the non-empty value on the true branch of an Actions
+  ternary, and verify a gate by watching it *run*, not by watching CI
+  stay green.
+- **The corpus passes on the macOS CI runner in budget mode** (Task 1.4,
+  the first time this has been observed — the Task 1.3 measurement below
+  predates the scoping commit). With `PARITY` empty the macOS entry
+  reports `1005 passed, 14 skipped` against 1006/13 locally: exactly one
+  test moves from passed to skipped, which is the documented budget-mode
+  signature (`test_running_on_the_capturing_tree` skips when the
+  toolchain differs from the manifest, and the declared per-function
+  budgets are enforced instead of bit-equality). The job log does not
+  print skip reasons, so that attribution is an inference from the
+  arithmetic and the mechanism, not a quoted reason.
 - **`EXACT_RTOL = 0.0` applies in budget mode too**, because
   `effective_budget` returns the *declared* budget off the capturing
   tree and the EXACT class declares zero. That is what turned 35 last-bit

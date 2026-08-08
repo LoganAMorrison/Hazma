@@ -28,6 +28,17 @@ the symptom (`--ignore=test/parity` off the capturing platform); the fix is
 [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
 which **ripens before Phase 04**. Read it before writing any Rust.
 
+The phase also shipped that workaround broken and did not notice for two
+PRs. The Actions expression meant to scope the corpus to macOS instead
+disabled it on *every* entry, macOS included, from PR #52 until PR #53 —
+see the Actions-ternary entry under Quirk Log. With that fixed, the corpus
+now runs on the macOS entry and **passes in budget mode**: `1005 passed,
+14 skipped` against 1006/13 locally, the one-test delta being
+`test_running_on_the_capturing_tree` skipping because the runner's
+toolchain differs from the manifest. That is the first time the phase's
+"green in CI with the corpus included" claim has actually been observed
+rather than assumed.
+
 No ADR came out of the phase. Nothing about the port's architecture,
 interfaces or ordering changed; the tolerance table is a new contract, but
 the phase file already specified it.
@@ -107,6 +118,18 @@ the phase file already specified it.
   positron values), so a Rust port can land anywhere there and still pass.
   Filed as
   [`docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
+- **An Actions ternary cannot return the empty string on its true
+  branch.** `&&`/`||` yield values, not booleans, and `''` is falsy, so
+  `cond && '' || 'X'` evaluates to `'X'` for *both* outcomes of `cond`.
+  The corpus's macOS scoping was written that way and silently skipped
+  `test/parity` everywhere for two PRs. Keep the non-empty value on the
+  true branch (`cond != X && 'flag' || ''`).
+- **A change that removes a gate cannot turn CI red, so green proves
+  nothing about it.** The disabled corpus above was caught by comparing
+  the job's reported test count (`380 passed`) against what a run
+  including the suite collects (~1019), not by any check failing. After
+  enabling, disabling, or scoping a gate, read the run's counts or its
+  env echo and confirm the gate *ran*.
 - **`--check`'s independence from a built tree is fragile.** It holds only
   because `cases.py` imports `HiggsPortal` / `KineticMixing` (and `hazma`
   itself) *inside* functions. Hoisting those imports would silently make

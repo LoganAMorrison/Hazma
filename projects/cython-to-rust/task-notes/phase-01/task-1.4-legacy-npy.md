@@ -330,6 +330,46 @@ Nothing under `hazma/` was touched.
   `python -c "import hazma; print(hazma.__file__)"` resolves inside the
   worktree.
 
+### CI, and a gate that was not running
+
+Watching this task's PR (#53) surfaced a defect in the CI wiring Task 1.3
+landed. The first run passed all seven checks while the macOS job
+reported `380 passed, 13 skipped` — the same as Linux, where a run
+including `test/parity` collects ~1019. The job's env explained it:
+`PARITY: --ignore=test/parity` on macOS. The expression
+
+```yaml
+PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}
+```
+
+cannot select its macOS branch, because Actions' `&&`/`||` return values
+and `''` is falsy: `true && ''` is `''`, and `'' || '--ignore=...'` is
+`'--ignore=...'`. **The corpus therefore ran on no CI entry at all from
+PR #52 until this PR**, and nothing went red, because removing a gate
+never does.
+
+Fixed here by inverting the condition so the non-empty value sits on the
+true branch. The re-run gives the intended split and, for the first time,
+an actual observation of the phase's central claim:
+
+| Entry | `PARITY` | Result |
+| --- | --- | --- |
+| macOS py3.14 | *(empty)* | `1005 passed, 14 skipped` — corpus running |
+| Linux ×5 | `--ignore=test/parity` | `380 passed, 13 skipped` |
+
+macOS's 1005/14 against 1006/13 locally is the documented budget-mode
+signature: one test moves from passed to skipped, which is
+`test_running_on_the_capturing_tree` standing down because the runner's
+toolchain differs from the manifest, leaving the declared per-function
+budgets to do the gating. The job log does not print skip reasons, so
+that attribution is an inference from the arithmetic and the mechanism
+rather than a quoted reason — worth re-confirming with `-rs` if it ever
+matters.
+
+The Linux findings PR #52 recorded (~70–75 blocks failing, six flipping
+sign) are unaffected: they were measured before that step gained the
+`PARITY` env, when the corpus still ran on every entry.
+
 ### Numerical impact
 
 **No public value changes** (verified: `git diff origin/master -- hazma`
@@ -392,6 +432,7 @@ Each row is a command run against this branch, with its actual output.
 | Collection reconciles | `pytest --collect-only -q` (all / `hazma` / `test`) | `1019` = `67` + `952` |
 | **Numerical-impact statement** | `git diff origin/master -- hazma \| wc -l` | `0` — **no public value changes.** Nothing under `hazma/` is touched, so no grid evaluation applies. |
 | Preflight gate | `scripts/agents/preflight.sh --paths <2 test files> --md <9 docs>` | black / isort / ruff / pytest / import / markdownlint / forbidden-tokens all PASS |
+| CI actually runs the corpus | `gh run view <macos job> --log \| grep 'PARITY:\|passed'` | `PARITY:` empty, `1005 passed, 14 skipped` — was `--ignore=test/parity` / `380 passed` before the `ci.yml` fix in this PR |
 
 Bookkeeping consistency, checked by reading rather than by command: the
 Task 1.4 row in `README.md`, this note's `**Status:**` header, the phase
