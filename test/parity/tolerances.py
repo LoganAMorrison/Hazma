@@ -56,6 +56,34 @@ implementation does* rather than by what it computes:
     budget tracks the integrator's own accuracy claim rather than the
     resolution of the arithmetic.
 
+Abscissae are their own class
+-----------------------------
+The swept grid and the scalar probe say *where* an entry point was
+sampled, not what it returned, so they get `ABSCISSA_RTOL` rather than
+the case's value budget. Task 1.2 compared them bit-exactly in both
+modes, on the stated premise that "grids are arithmetic on constants".
+That premise is false across platforms: `cases` builds every grid with
+`numpy.geomspace`, which evaluates `10 ** linspace(log10(lo), log10(hi))`
+— two transcendental calls into the platform libm. Task 1.3's first CI
+run measured the consequence on Linux/glibc against the macOS/arm64
+corpus: **all 623 blocks** differed, every one of them by at most
+`2.219e-16` — one ulp — and not a single value comparison was reached
+because the grid assertion fires first.
+
+1e-13 is derived, not chosen to make that run pass. `geomspace` carries
+≤1 ulp from `log10`, ≤1 ulp from the `linspace` arithmetic, and ≤1 ulp
+from the final power. The exponent `x` spans about ±3.5 for these grids,
+so the absolute error in `x` is ~2·eps·3.5 ≈ 1.6e-15, amplified into the
+result by `d(10**x)/10**x = ln(10)·dx` ≈ 3.6e-15, plus the power's own
+ulp. Worst case ~4e-15; 1e-13 leaves ~25x headroom over that and is
+still five decades tighter than the loosest value budget.
+
+What it must not absorb is a *moved measurement point* — Task 1.2's
+actual concern, which stands. Changing a grid endpoint, its point count,
+or its spacing law moves abscissae by 1e-3 relative at the very least and
+usually by O(1), ten orders of magnitude outside this budget. On the
+capturing tree the comparison stays bit-exact, same as the values.
+
 `atol` is 0.0 everywhere
 ------------------------
 An absolute floor is scale-dependent — spectra run to ~1e-3 MeV^-1 and
@@ -96,6 +124,11 @@ SPECFUN_RTOL = 1e-13
 TABULATED_RTOL = 1e-12
 QUAD_RTOL = 1e-8
 NESTED_RTOL = 1e-6
+
+#: How far the *abscissae* may move off the capturing tree. Not a value
+#: budget: see "Abscissae are their own class" above for the derivation
+#: and for why bit-equality here was unreachable on any second platform.
+ABSCISSA_RTOL = 1e-13
 
 
 @dataclass(frozen=True)
@@ -519,3 +552,35 @@ def effective_budget(case_name: str, tree: Provenance) -> Budget:
             "implementation against itself",
         )
     return declared
+
+
+def abscissa_budget(tree: Provenance) -> Budget:
+    """How far a *sampling point* may move, given what tree we are on.
+
+    Separate from `effective_budget` because an abscissa is not a value:
+    it records where the entry point was probed, and every case is probed
+    on grids built the same way, so one budget covers all of them.
+
+    Bit-exact on the capturing tree, for the same reason the values are.
+    Off it, `ABSCISSA_RTOL` — the platform libm reaches `numpy.geomspace`
+    and moves the last ulp, which is not a moved measurement point.
+
+    Parameters
+    ----------
+    tree : Provenance
+        From `provenance`.
+    """
+    if tree.exact:
+        return Budget(
+            rtol=EXACT_RTOL,
+            atol=0.0,
+            why="running on the capturing tree, where the grid must "
+            "reproduce bit-for-bit",
+        )
+    return Budget(
+        rtol=ABSCISSA_RTOL,
+        atol=0.0,
+        why="geomspace goes through the platform libm (log10 then a "
+        "power); ~4e-15 is the worst this mechanism can produce, and a "
+        "genuinely redesigned grid moves points by >=1e-3 relative",
+    )

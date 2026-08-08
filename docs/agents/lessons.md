@@ -206,3 +206,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   hashed every `.pyx` under the repo while importing `hazma` from the
   environment, so a stale or Rust-enabled install could have produced
   values that `kernel_digest` did not describe).
+- [exactness-untestable-on-one-platform] A bit-equality assertion that
+  only ever runs on the machine it was written on is not a verified
+  invariant, it is an untested one, and the first CI matrix that reaches
+  it will fail wholesale rather than subtly. Before asserting exactness
+  on any derived quantity, ask which *libm* computed it: `numpy.geomspace`
+  and `logspace` go through `log10` and a `power`, so a grid built from
+  them is not "arithmetic on constants" across platforms even though it
+  is within one. Give such a quantity a tight, derived budget in the
+  off-platform mode and keep bit-equality only where the whole
+  environment matches (PR #52: the parity runner compared abscissae with
+  `assert_array_equal` in *both* modes on that premise; enabling the
+  suite in CI failed all 623 blocks on Linux/glibc, every one of them by
+  exactly one ulp and none of them on a value budget). The general
+  shape: a gate whose strictest path is unreachable in the environment
+  that wrote it buys no safety until something else runs it.

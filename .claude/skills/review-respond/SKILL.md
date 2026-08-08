@@ -119,7 +119,8 @@ in the response.
 - **Rebuild before gating** if you touched `.pyx` / `.pxd` /
   `setup.py`: `pip install -e .`.
 - **Run the preflight gate.** `scripts/agents/preflight.sh --paths
-  "<touched>" --tests "<targets>"` (or the manual list in
+  "<touched>"` — bare, so its pytest gate is the same collection CI runs
+  (or the manual list in
   [`preflight.md`](../../../docs/agents/preflight.md)). Read the pytest
   summary line — exit 5 is zero collected, a FAIL not a pass. Never
   silently revert a fix to make a gate pass; diagnose it.

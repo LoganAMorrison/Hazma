@@ -204,10 +204,12 @@ pytest test/spectra --collect-only -q | tail -n 1
 ```
 
 Guard against a false green: `pytest` exits **5** on zero collected, and
-a `-k` filter matching nothing exits 0 with `no tests ran`. Also note a
-bare `pytest` never enters `test/` — `setup.cfg`'s `testpaths` scopes it
-to `hazma` — so run `pytest test` explicitly and cite the command you
-ran. Record the real count in the task note.
+a `-k` filter matching nothing exits 0 with `no tests ran`. A bare
+`pytest` is the full suite — `pyproject.toml`'s
+`testpaths = ["hazma", "test"]`, the same collection CI runs — so that is
+the run that gates your commit, and it takes minutes rather than seconds
+because of the parity corpus. Cite the command you ran and record the
+real count in the task note.
 
 **Correctness shapes to defend:** adding an entry to a dispatch table (a
 final-state → spectrum-function map, a channel list) requires sweeping
@@ -309,7 +311,7 @@ follow-up.
 **Run the preflight gate:**
 
 ```sh
-scripts/agents/preflight.sh --paths "<touched paths>" --tests "<test targets>"
+scripts/agents/preflight.sh --paths "<touched paths>"
 ```
 
 Rationale and manual fallback:

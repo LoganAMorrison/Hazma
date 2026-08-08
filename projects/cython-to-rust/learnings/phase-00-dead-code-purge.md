@@ -151,6 +151,11 @@ Two more worth carrying:
   runs `test/parity`'s 626 tests over all 41 compiled entry points, so
   the figures above read `870 passed, 20 skipped`. Bare `pytest` — the
   form CI runs — still collects neither, until Task 1.3.)_
+  _(Fully closed as of Phase 01 Task 1.3, 2026-08-07: pytest moved to
+  `pyproject.toml` with `testpaths = ["hazma", "test"]`, so there is one
+  suite — bare `pytest -q` → `935 passed, 30 skipped` — and CI,
+  `preflight.sh` and a bare local run all collect it. "Two disjoint
+  suites" is history from here on.)_
 - **The phase's own regression harness is the before/after grid**, and it
   should be reused verbatim in Phases 04–06. Dump every compiled-backed
   public entry point over `np.logspace(-2, 3, 200)` MeV at three parent

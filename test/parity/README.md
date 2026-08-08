@@ -25,6 +25,13 @@ quadrature in the rho and mediator-spectrum kernels:
 pytest test/parity
 ```
 
+A bare `pytest` runs it too, and so does CI on every matrix entry —
+`pyproject.toml`'s `testpaths` is `["hazma", "test"]` (cython-to-rust
+Task 1.3). That runtime is the standing price of the gate. Note that
+the suite needs the extensions built **inside the repository**:
+`cases.assert_module_is_repo_tree` refuses a `hazma` resolving anywhere
+else, so `pip install -e .`, not `pip install .`.
+
 Verify the committed data is intact and complete. Imports no kernel and
 evaluates nothing, so it is fast and works on an unbuilt tree:
 
@@ -72,7 +79,8 @@ index, the argument and the exception type.
 ## What the gate compares
 
 Per block: the grid `cases.py` produces against the grid the values were
-captured on (exact, always); the values themselves against the budget
+captured on (bit-exact on the capturing tree, one ulp elsewhere — see
+`tolerances.abscissa_budget`); the values themselves against the budget
 [`tolerances.py`](tolerances.py) selects; and the manifest's `raises`
 records, **replayed** — the entry point must still raise the same type at
 the same argument, and must not raise anywhere new. Evaluation goes

@@ -123,12 +123,44 @@ entry silently reduces the run to nothing. Read the summary line
 test module. Both entries that used to hide part of the suite are gone
 with the code they covered: `test/decay/` alongside `hazma/_decay/`
 (cython-to-rust Task 0.3) and `test/test_gamma_ray.py` alongside
-`hazma/gamma_ray.py` (Task 0.2). A bare `pytest` still runs a *different*
-suite from `pytest test`, but for an unrelated reason: `setup.cfg`'s
-`[tool:pytest] testpaths` is `hazma`, so a bare run collects the
-in-package `*_test.py` modules (`hazma/form_factors/`,
-`hazma/phase_space/`) and never enters `test/`. Cite the command you ran,
-not "the full suite".
+`hazma/gamma_ray.py` (Task 0.2).
+
+**A bare `pytest` is now the whole suite, and it is slow.** pytest is
+configured in `pyproject.toml`'s `[tool.pytest.ini_options]` — not
+`setup.cfg`, which carries only a pointer comment — and `testpaths` is
+`["hazma", "test"]`. Before cython-to-rust Task 1.3 it was `hazma`
+alone, so a bare run collected the in-package `*_test.py` modules
+(`hazma/form_factors/`, `hazma/phase_space/`) and never entered `test/`;
+CI, `preflight.sh`, and a contributor typing `pytest` each ran a
+different subset. They now run the same one. The cost is the golden
+parity corpus and its nested adaptive quadrature under `test/parity/`.
+Budget minutes, not seconds — 8m58s measured for the bare run on
+macOS/arm64 under concurrent load, 4m38s for `pytest test/parity` alone
+measured idle (cython-to-rust Tasks 1.3 and 1.2). Narrow with an
+explicit target while iterating, but cite the command you ran — "the
+full suite" is only true of the bare form.
+
+**Running the parity suite needs an editable install, not just any
+install.** `test/parity/cases.py` refuses a `hazma` that resolves
+outside the repository (`cases.assert_module_is_repo_tree`), and running pytest
+from the repo root puts the source tree first on `sys.path` regardless,
+so a non-editable `pip install .` leaves the corpus looking at a tree
+with no compiled extensions in it. `pip install -e .`, then confirm with
+`python -c "import hazma.spectra._photon._muon as m; print(m.__file__)"`
+that the `.so` is inside your worktree. CI does the non-editable install
+first (that is what its outside-the-repo import smoke test checks) and
+reinstalls editable before the test step.
+
+**The parity corpus only reproduces on the platform that captured it
+(macOS/arm64).** On Linux/glibc roughly 70-75 of its 626 blocks fail
+against the same source: mostly last-bit `libc.math` differences, but
+six are catastrophic-cancellation points where the pinned value flips
+sign. CI therefore runs `pytest --ignore=test/parity` on every entry
+except macOS, and a bare local `pytest` on Linux will show those
+failures. They are not your change — check against
+[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+before spending time on them, and use `--ignore=test/parity` to see the
+rest of the suite.
 
 **The test tree does not mirror the package one-to-one.** `test/` has
 `agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,
@@ -171,10 +203,12 @@ repo's standard. Do not cite it as precedent, and do not import from
 `experimental/` in the library.
 
 **The CI test matrix is Python 3.10 through 3.14 on Linux, plus macOS on
-3.14**, matching `pyproject.toml`'s `requires-python = ">=3.10"`. CI also
-runs an import
-smoke test before the suite, so a broken Cython build fails there rather
-than as a confusing collection error.
+3.14**, matching `pyproject.toml`'s `requires-python = ">=3.10"`. Each
+entry installs non-editable, runs an import smoke test from outside the
+repo (so a broken Cython build or a missing package-data entry fails
+there rather than as a confusing collection error), reinstalls editable,
+and then runs the bare `pytest` — the parity corpus included, on every
+entry.
 
 ## Git and orchestration
 

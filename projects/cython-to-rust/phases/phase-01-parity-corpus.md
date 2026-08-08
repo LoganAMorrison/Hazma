@@ -22,16 +22,18 @@ evidence `docs/versioning.md` requires for numerical changes.
 - Read `../references/numerics-replacements.md` (call-site tolerances)
   and `../rules.md` rules 1–3.
 - Context: when this phase was drafted, **zero** pinned-value tests over
-  compiled code executed anywhere — CI's `pytest` collects only
+  compiled code executed anywhere — CI's `pytest` collected only
   `hazma/**` (setup.cfg `testpaths = hazma`), and every `.npy`-backed
-  suite under `test/` is either skipped or never collected
-  (`test/spectra/integration.py` matches no pytest filename pattern;
+  suite under `test/` was either skipped or never collected
+  (`test/spectra/integration.py` matched no pytest filename pattern;
   `test/positron/test_positron.py` is 0 bytes). Task 1.2 ended the first
-  half of that: `test/parity/test_parity.py` runs under `pytest test`.
-  **CI still does not reach it** — `testpaths` is unchanged, which is
-  exactly what Task 1.3 fixes. `collect_ignore` is not part of any of
-  this; `test/conftest.py` has listed only the repo's `setup.py` since
-  Task 0.2.
+  half of that: `test/parity/test_parity.py` ran under `pytest test`.
+  Task 1.3 ended the second — pytest is configured in `pyproject.toml`
+  with `testpaths = ["hazma", "test"]`, a bare `pytest` is the whole
+  suite, and CI runs it on every matrix entry. What is still open in this
+  phase is Task 1.4, the legacy `.npy` suites. `collect_ignore` is not
+  part of any of this; `test/conftest.py` has listed only the repo's
+  `setup.py` since Task 0.2.
 
 ## Tasks
 
@@ -92,18 +94,30 @@ evidence `docs/versioning.md` requires for numerical changes.
 
 - pytest config moved to `pyproject.toml`
   (`[tool.pytest.ini_options]`), collecting `hazma` **and** `test`
-  (the `test/` suite is green: `pytest -q test` → 870 passed /
-  20 skipped as of 2026-08-07, on the capturing environment. It was
-  51/20 when this phase was drafted, then 244/20 after PR #41 and
-  Task 0.3, then +626 when Task 1.2 landed the parity suite —
-  re-derive rather than quoting any of them. Expect 869/21 off the
-  capturing environment: the parity suite skips its
-  `test_running_on_the_capturing_tree` marker there and enforces the
-  declared budgets instead.)
+  (bare `pytest -q` → 935 passed / 30 skipped as of 2026-08-07, on the
+  capturing environment. The `test/` root alone was 51/20 when this
+  phase was drafted, then 244/20 after PR #41 and Task 0.3, then 870/20
+  once Task 1.2 landed the parity suite — re-derive rather than quoting
+  any of them. Expect 934/31 off the capturing environment: the parity
+  suite skips its `test_running_on_the_capturing_tree` marker there and
+  enforces the declared budgets instead.)
 - `test/spectra/integration.py` renamed to be collected; its property
   assertions pass.
-- CI and `scripts/agents/preflight.sh` run the same collection;
-  `docs/agents/` env notes updated.
+- CI and `scripts/agents/preflight.sh` run the same collection **on the
+  capturing platform**; `docs/agents/` env notes updated. Two things the
+  plan did not anticipate, both measured in Task 1.3:
+  - Widening `testpaths` is not sufficient on its own: CI's non-editable
+    `pip install .` leaves no extension inside the checkout, which
+    `cases.assert_module_is_repo_tree` refuses, so the test job
+    reinstalls editable first.
+  - The corpus does not survive a change of libm. Enabling it in CI
+    measured that for the first time: Linux/glibc fails ~70-75 of the
+    626 blocks, six of them at cancellation points where the pinned
+    value flips sign (`sigma_xl_to_xl[closed_resonance.mu]`: -1.504e-02
+    on macOS, +5.624e-07 on Linux). The Linux entries therefore run
+    `pytest --ignore=test/parity`, and making the corpus
+    platform-robust — which is also what the Rust port will need — is
+    [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
 
 ### Task 1.4: Retire or regenerate the legacy `.npy` suites
 
@@ -124,7 +138,13 @@ evidence `docs/versioning.md` requires for numerical changes.
 ## Exit Criteria
 
 - All tasks complete; `pytest` (bare) runs unit + property + parity
-  suites and is green in CI on all matrix entries.
+  suites and is green in CI. The parity portion runs on the **capturing
+  platform** only — the other matrix entries run the rest of the suite
+  and skip `test/parity`. That is a Task 1.3 amendment to this
+  criterion, not the original intent: the corpus pins six
+  cancellation-dominated points that no tolerance can carry across a
+  libm change, so "green on all matrix entries" is unreachable until
+  the follow-up above lands. Restore this bullet when it does.
 - Corpus regeneration is documented and reproducible
   (`python test/parity/generate.py --check` verifies hashes).
 - Phase learnings written to `../learnings/phase-01-parity-corpus.md`.

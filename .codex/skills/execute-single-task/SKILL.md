@@ -82,7 +82,7 @@ phase or project closeout bookkeeping, including the version bump and
 `CHANGELOG.md`, when this is the final task. Run the mandatory gate:
 
 ```sh
-scripts/agents/preflight.sh --paths "<touched paths>" --tests "<test targets>"
+scripts/agents/preflight.sh --paths "<touched paths>"
 ```
 
 Add the `## Stale-state sweep` evidence block required by the doc-consistency

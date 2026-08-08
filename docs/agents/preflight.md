@@ -19,12 +19,22 @@ before you stage anything.
 3. **`ruff check <paths>`** — the configured rule set lives under
    `[tool.ruff]` in `pyproject.toml`. `hazma/experimental/` and
    `notebooks/` are outside the gate.
-4. **`pytest <targets>`** — **read the summary line.** `pytest` exits **5**
-   when it collects zero tests, and a wrapper that only checks "non-zero
-   exit" will happily treat a typo'd path as a failure while a
-   `-k` filter matching nothing exits 0 with `no tests ran`. Zero
-   collected means the gate FAILED, not passed. Name the real targets
-   (`pytest test/spectra`), not a filter you have not verified selects
+4. **`pytest`** — bare, with no target. `testpaths` in
+   `pyproject.toml` is `["hazma", "test"]`, so a bare run is the whole
+   suite: the in-package `*_test.py` modules, the `test/` tree, and the
+   golden parity corpus under `test/parity/`. That is deliberately the
+   same collection `.github/workflows/ci.yml` runs, so a green gate here
+   predicts a green CI. Narrowing to a target (`pytest test/spectra`) is
+   for iterating; run it bare before you commit. Budget minutes, not
+   seconds — nearly all of it the parity corpus's nested adaptive
+   quadrature (8m58s measured for the bare run on macOS/arm64 under
+   concurrent load, cython-to-rust Task 1.3).
+
+   **Read the summary line.** `pytest` exits **5** when it collects zero
+   tests, and a wrapper that only checks "non-zero exit" will happily
+   treat a typo'd path as a failure while a `-k` filter matching nothing
+   exits 0 with `no tests ran`. Zero collected means the gate FAILED, not
+   passed. Name real targets, not a filter you have not verified selects
    something.
 5. **`python -c "import hazma"`** — the import smoke. Hazma ships Cython
    extensions; a `.pyx` edit that was never rebuilt, or a rebuild against
@@ -129,8 +139,9 @@ path for every git write.
 ## Do not trust hooks or CI for this list
 
 There is no committed `.pre-commit-config.yaml` in this repo. CI
-(`.github/workflows/ci.yml`) runs an import smoke test, `pytest` on
-Python 3.10–3.14, `black --check --diff hazma test`, and a deliberately
+(`.github/workflows/ci.yml`) runs an import smoke test, a bare `pytest`
+on Python 3.10–3.14 (the same collection gate 4 runs, parity corpus
+included), `black --check --diff hazma test`, and a deliberately
 narrow lint pass — `ruff check --isolated --select E9,F63,F7,F82` — whose
 `--isolated` flag ignores `[tool.ruff]` in `pyproject.toml`. So CI green
 means "no syntax errors, no undefined names, black-formatted, tests
@@ -145,8 +156,13 @@ smoke, and optionally markdownlint, the version-bump gate, and the
 forbidden-token scan:
 
 ```bash
-scripts/agents/preflight.sh --paths "hazma/spectra test/spectra" --tests "test/spectra"
+scripts/agents/preflight.sh --paths "hazma/spectra test/spectra"
 ```
+
+Omitting `--tests` is the normal case: the pytest gate then runs bare and
+picks up `testpaths`, matching CI. `--tests "test/spectra"` narrows it
+while you iterate, at the cost of no longer predicting CI — the run that
+gates your commit should be the bare one.
 
 Add `--md "docs/agents/preflight.md"` when curated docs changed and
 `--closing` on a project-closing PR. It prints a PASS/FAIL/WARN/SKIP row
