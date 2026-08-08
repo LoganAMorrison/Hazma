@@ -207,6 +207,14 @@ def _sweep_pointwise(
         exception *message* is deliberately not recorded — Cython rewords
         its errors between releases, and it is the fact of the raise and
         its type that a port has to reproduce.
+
+    Raises
+    ------
+    RuntimeError
+        If no point evaluated. The fill shape is read off a successful
+        result, so with none there is nothing to shape the ``nan`` to —
+        and a kernel that raises everywhere is a breakage to report, not
+        a block to record.
     """
     results: list[np.ndarray | None] = []
     raises: list[dict[str, Any]] = []
@@ -219,7 +227,15 @@ def _sweep_pointwise(
             )
             results.append(None)
 
-    shape = next((r.shape for r in results if r is not None), ())
+    if raises and len(raises) == len(results):
+        kinds = sorted({record["type"] for record in raises})
+        raise RuntimeError(
+            f"every one of the {len(results)} grid points raised "
+            f"({', '.join(kinds)}); the entry point is broken, not merely "
+            "singular at an edge"
+        )
+
+    shape = next(r.shape for r in results if r is not None)
     filled = [np.full(shape, np.nan) if r is None else r for r in results]
     return filled, raises
 
@@ -401,6 +417,15 @@ def _check_case(
     return failures, n_arrays
 
 
+def load_manifest() -> dict[str, Any]:
+    """Read the committed manifest.
+
+    Shared with the parity test suite so there is one spelling of where
+    the manifest lives and how it is parsed.
+    """
+    return json.loads(MANIFEST_PATH.read_text())
+
+
 def check() -> int:
     """Re-hash the stored corpus against the manifest. Returns an exit code.
 
@@ -412,7 +437,7 @@ def check() -> int:
         print(f"ERROR: no manifest at {MANIFEST_PATH}", file=sys.stderr)
         return 1
 
-    manifest = json.loads(MANIFEST_PATH.read_text())
+    manifest = load_manifest()
     if manifest.get("schema") != SCHEMA_VERSION:
         print(
             f"ERROR: manifest schema {manifest.get('schema')} != "

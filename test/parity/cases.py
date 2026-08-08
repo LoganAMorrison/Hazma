@@ -1188,6 +1188,16 @@ def hazma_package_path() -> Path:
     return Path(hazma.__file__).resolve().parent
 
 
+def rust_core_available() -> bool:
+    """Whether this tree has a Rust extension, i.e. the port has started.
+
+    Used two ways: `assert_no_rust_core` refuses to regenerate the corpus
+    once it is true, and the parity runner stops demanding bit-equality
+    (`tolerances.provenance`).
+    """
+    return importlib.util.find_spec("hazma._core") is not None
+
+
 def assert_no_rust_core() -> None:
     """Refuse to touch the corpus if any kernel already runs on Rust.
 
@@ -1195,7 +1205,7 @@ def assert_no_rust_core() -> None:
     pre-port Cython. Once ``hazma._core`` exists, a regenerated corpus
     would pin the port against itself.
     """
-    if importlib.util.find_spec("hazma._core") is not None:
+    if rust_core_available():
         raise RuntimeError(
             "hazma._core is importable: this tree runs Rust kernels. "
             "The parity corpus must only ever be generated from pre-port "

@@ -562,3 +562,9 @@ module docstring (grid design), then this note's Findings.
   Task 1.2 will find out when it sets tolerances, and that is the right
   place for the answer, since it is exactly what the budget per function
   has to absorb.
+  _(Task 1.2, 2026-08-07: it did not — no Linux runner was available.
+  What it did instead is make the question harmless: the runner demands
+  bit-equality only when the manifest's platform, toolchain and kernel
+  digest all match, and enforces the declared budgets otherwise, so a
+  Linux runner cannot fail an exactness claim nobody has evidence for.
+  The measurement itself moves to Task 1.3, which wires CI.)_
