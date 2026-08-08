@@ -1,7 +1,7 @@
 ---
 phase: 01
 title: Golden parity corpus
-status: In Progress
+status: Complete
 ---
 
 # Phase 01: Golden parity corpus
@@ -26,13 +26,13 @@ evidence `docs/versioning.md` requires for numerical changes.
   `hazma/**` (setup.cfg `testpaths = hazma`), and every `.npy`-backed
   suite under `test/` was either skipped or never collected
   (`test/spectra/integration.py` matched no pytest filename pattern;
-  `test/positron/test_positron.py` is 0 bytes). Task 1.2 ended the first
+  `test/positron/test_positron.py` was 0 bytes). Task 1.2 ended the first
   half of that: `test/parity/test_parity.py` ran under `pytest test`.
   Task 1.3 ended the second — pytest is configured in `pyproject.toml`
   with `testpaths = ["hazma", "test"]`, a bare `pytest` is the whole
-  suite, and CI runs it on every matrix entry. What is still open in this
-  phase is Task 1.4, the legacy `.npy` suites. `collect_ignore` is not
-  part of any of this; `test/conftest.py` has listed only the repo's
+  suite, and CI runs it on every matrix entry. Task 1.4 closed the phase
+  by retiring the legacy `.npy` suites themselves. `collect_ignore` is
+  not part of any of this; `test/conftest.py` has listed only the repo's
   `setup.py` since Task 0.2.
 
 ## Tasks
@@ -132,15 +132,43 @@ evidence `docs/versioning.md` requires for numerical changes.
   name, are
   either regenerated-and-unskipped or deleted with their intent
   explicitly mapped to corpus coverage in the task note.
+  **Realized: deleted**, with their two `generate_test_data.py` producers.
+  Regeneration was rejected on evidence, not preference — the arrays
+  encode a superseded convention (six scalar cross sections differ from
+  the current tree by exactly ×2), `vm_5`/`vm_6` duplicate `vm_3`/`vm_4`
+  by a generator bug, the scalar class loaded `sm_1` twice so `sm_2` was
+  never read, and 11 of the 17 tests fail against the current tree. The
+  non-redundant half of their intent — the pure-Python aggregation in
+  `hazma/theory/`, which no corpus case reaches — moved to
+  `test/test_theory_aggregation.py` as identities rather than as a second
+  set of golden arrays.
 - `test/positron/test_positron.py` (0 bytes) deleted or filled.
+  **Realized: deleted.**
 - No `@pytest.mark.skip` remains whose reason is "needs update".
+  Three unrelated skips survive (two "Known to be broken" form factors in
+  `hazma/`, three in `test/vector_mediator/test_form_factors.py`); they
+  are outside this criterion and untouched.
+- Folded in from Task 1.3's Open Questions: `test/rh_neutrino/integration.py`
+  and `test/rh_neutrino/widths.py` matched no `python_files` pattern.
+  **Realized:** the first is a real suite and was renamed to
+  `test/rh_neutrino/test_rh_neutrino_integration.py` (2 tests, collected);
+  the second is a matplotlib plotting script under `if __name__ ==
+  "__main__"`, not a test, and was deleted. The rename cannot use the
+  obvious `test_integration.py`: `test/spectra/test_integration.py`
+  already holds that basename, and with no `__init__.py` under `test/`
+  the two collide on pytest's import-file-mismatch check.
 
 ## Exit Criteria
 
 - All tasks complete; `pytest` (bare) runs unit + property + parity
-  suites and is green in CI. The parity portion runs on the **capturing
-  platform** only — the other matrix entries run the rest of the suite
-  and skip `test/parity`. That is a Task 1.3 amendment to this
+  suites and is green in CI. Realized on the capturing environment at
+  Task 1.4: `1006 passed, 13 skipped` from 1019 collected (67 from
+  `hazma`, 952 from `test`), against Task 1.3's 935/30 — the delta is
+  +69 aggregation tests, +2 from the `rh_neutrino` rename, and −17
+  skips as the two legacy mediator classes left. Re-derive rather than
+  quoting. The parity portion runs on the **capturing platform** only —
+  the other matrix entries run the rest of the suite and skip
+  `test/parity`. That is a Task 1.3 amendment to this
   criterion, not the original intent: the corpus pins six
   cancellation-dominated points that no tolerance can carry across a
   libm change, so "green on all matrix entries" is unreachable until

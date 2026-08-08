@@ -22,7 +22,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | # | Phase | Phase file | Working memory | Status |
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
-| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **In Progress** — Tasks 1.1–1.3 complete (2026-08-07); 1.4 next |
+| 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
@@ -206,6 +206,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   Both behaviors are pinned. **Phase 05 must reproduce both or declare
   the unification** — a shared Rust helper is the obvious design and
   would silently move published numbers.
+- **The corpus stops where Cython stops** (Task 1.4). Everything above
+  the compiled boundary — `hazma/theory/__init__.py`'s dict assembly, the
+  `"total"` sums, the branching-fraction division, the
+  branching-fraction weighting of each spectrum, the line `bf`, plus both
+  models' `partial_widths` — is pure Python, and no corpus case reaches
+  it by construction (`cases.py` enumerates top-level `def`s in surviving
+  `.pyx`). **A Phases 04–06 swap that repoints a kernel correctly but
+  loses a branching-fraction weight passes the corpus and moves every
+  published spectrum.** `test/test_theory_aggregation.py` is the gate for
+  that layer: 21 identity-based tests, 0.6s, platform-independent. Run it
+  either side of every swap.
+- **Both mediator positron kernels return `nan` at exactly
+  `0.510998928`** (Task 1.4) — the legacy `MASS_E` in
+  `hazma/_utils/legacy_parameters.pxd:18`, against `0.5109989461` in
+  `_utils/constants.pxd:5` and `hazma/parameters.py:50`. One point, not a
+  window: a 2,000,001-point sweep of `[0.5109988, 0.5109990]` finds that
+  single value with `0.0` on both sides, and the scalar and vector
+  kernels agree. The corpus does **not** pin it (zero `nan` across 19,610
+  pinned positron values), so a Rust port can land anywhere there and
+  still pass. The constants divergence itself was already recorded
+  (`../references/cython-inventory.md` §Bugs item 3); this consequence
+  was not. **Phases 05/06 must reproduce the `nan` or declare the
+  consolidation** —
+  [`../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -326,6 +350,21 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `pytest -q` → 935 passed / 30 skipped, parity in exact mode) and is
   what makes it a standing gate rather than a manual run.
 
+- **Task 1.4, 2026-08-08 (retire the legacy `.npy` suites): no public value
+  changes** (verified: `git diff origin/master -- hazma` is empty — 0
+  lines). The diff touches only `test/`, `docs/followups/` and
+  `projects/`; no library module, signature, constant or build input is
+  reachable from it, so no grid evaluation applies. What the task did
+  produce is a *second* gate beside the corpus:
+  `test/test_theory_aggregation.py` pins the pure-Python aggregation as
+  identities (`total` is the channel sum, a branching fraction is a
+  cross-section ratio, a spectrum is `bf × kernel`, a line's `bf` is its
+  channel's) plus three two-body closed forms. Eleven implementation
+  mutations confirm each class fires. Two pre-existing behaviors it
+  *measured* — the `nan` at the legacy `MASS_E` and the rejected scalar
+  energies — are observations, not drifts, and are under Findings and
+  Open Questions.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -440,12 +479,36 @@ it from memory.)
   `../phases/phase-01-parity-corpus.md`'s Task 1.2 exit criteria gained
   the raise-replay bullet. Nothing under `hazma/` touched. Full list in
   [`phase-01/README.md`](phase-01/README.md).
+- **Tasks 1.2–1.3** — the runner (`test/parity/test_parity.py`,
+  `tolerances.py`) and the wiring that made one bare `pytest` the whole
+  gate (`pyproject.toml`'s `[tool.pytest.ini_options]`, the CI editable
+  reinstall, `preflight.sh`'s empty `--tests` default). Nothing under
+  `hazma/` touched. Full list in
+  [`phase-01/README.md`](phase-01/README.md).
+- **Task 1.4** — phase closure. Deleted 96 files: both skipped mediator
+  test classes, their two `generate_test_data.py` producers, the 90
+  `.npy` arrays under `test/{scalar,vector}_mediator/data/`, the 0-byte
+  `test/positron/test_positron.py`, and `test/rh_neutrino/widths.py` (a
+  matplotlib script). Renamed `test/rh_neutrino/integration.py` →
+  `test_rh_neutrino_integration.py`. Added
+  `test/test_theory_aggregation.py` (21 tests / 69 collected) and two
+  `docs/followups/todo/` entries. Phase closed: learnings written, phase
+  frontmatter `status: Complete`, `PLAN.md` Phases row updated. Nothing
+  under `hazma/` touched. Full list in
+  [`phase-01/README.md`](phase-01/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - Per-phase Verification sections live in `phase-XX/README.md`.
+- **Phase 01 closing state (2026-08-08):** bare `pytest -q` →
+  `1006 passed, 13 skipped` on the capturing environment (1019 collected:
+  67 `hazma` + 952 `test`), parity suite included and in exact mode;
+  `python test/parity/generate.py --check` → `corpus OK: 41 cases / 1580
+  arrays`. Off macOS, CI runs `pytest --ignore=test/parity`. No skip
+  anywhere in the repo is waiting on this project. The public compiled
+  surface is still exactly where Phase 00 left it.
 - **Phase 00 closing state (2026-08-06):** 20 `.pyx` ↔ 20 declared
   `Extension`s ↔ 20 `.so`, verified as a set equality; zero C++;
   `pytest -q test` → `244 passed, 20 skipped`, bare `pytest -q` →
@@ -522,13 +585,14 @@ it from memory.)
   `setup.py`'s declared list is *verified* to be that same set, not
   merely the same size. Re-derive with the clean-then-rebuild recipe
   rather than quoting this; a stale `.so` makes a wrong list look right.
-- **Phase 00 is Complete (2026-08-06).** Read
+- **Phases 00 and 01 are both Complete** (2026-08-06 and 2026-08-08).
+  Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
-  rather than its five task notes — it is the distillation, they are
-  history. **Phase 01 is In Progress** — Tasks 1.1 (corpus), 1.2 (the
-  runner and its tolerance budgets) and 1.3 (one suite, one gate) all
-  landed 2026-08-07; Task 1.4 (the legacy `.npy` suites) is next. No
-  phase carries a decision gate.
+  and
+  [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md)
+  rather than their nine task notes — the learnings are the
+  distillation, the notes are history. **Phase 02 (the Rust scaffold) is
+  next.** No phase carries a decision gate.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it; `test/parity/cases.py`
   is the single source of every entry point's call convention. Do not
@@ -545,12 +609,18 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → 935 passed / 30 skipped (Task 1.3, 2026-08-07). Forcing
-  budget mode there gives 934/31 — measured, not derived: the parity
-  suite reports budget mode by skipping one test rather than by failing.
-  The `test/` root alone was 870/20 at Task 1.2 — which added
-  `test/parity`'s 626 — and 244/20 at Task 0.2, 68/20 at Task 0.3, 52/20
-  at Task 0.1.
+  `pytest -q` → 1006 passed / 13 skipped at Phase 01 close (Task 1.4,
+  2026-08-08), from 935/30 at Task 1.3. Task 1.4's delta: +69 aggregation
+  tests, +2 from the `rh_neutrino` rename, −17 skips as the two legacy
+  mediator classes left. Forcing budget mode drops one test to a skip
+  rather than failing — the parity suite reports its mode that way.
+  Re-derive rather than quoting; the historical series is in
+  [`phase-01/README.md`](phase-01/README.md).
+- **`test/test_theory_aggregation.py` is the model-layer gate the corpus
+  cannot be** (Task 1.4): identities over `hazma/theory/`'s pure-Python
+  aggregation, no golden data, 0.6s, and the only numerical gate in the
+  repo that is not scoped to the capturing platform. **Phases 04–06 run
+  it either side of every kernel swap.**
 - **Off macOS the corpus does not reproduce**, so CI runs
   `pytest --ignore=test/parity` on every entry except macOS (339
   collected there vs 965). Linux fails ~70-75 blocks: mostly last-bit
@@ -581,7 +651,16 @@ it from memory.)
   under "Numerical impact so far"). The live obligation is the mirror
   image — **the corpus must pin the post-fix values, and the Rust port
   must reproduce those, not the pre-fix ones.**
-- **The corpus was captured on macOS/arm64** (numpy 2.5.1, scipy 1.18.0,
-  Cython 3.2.9 — all in the manifest). Whether every stored value is
-  bit-reproducible on the Linux CI matrix is unverified; Task 1.2
-  answers it when it sets per-function budgets.
+- ~~**The corpus was captured on macOS/arm64** ... whether every stored
+  value is bit-reproducible on the Linux CI matrix is unverified~~ —
+  **measured in Task 1.3: it is not.** See the "Off macOS the corpus does
+  not reproduce" bullet above; the corpus is scoped to its capturing
+  platform until its follow-up lands.
+- **Two Task 1.4 follow-ups ripen inside this project.** The
+  [`MASS_E` `nan`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  before Phases 05/06 — `rules.md` rule 4 makes it a declared numerical
+  change either way, and deciding after the swap costs a second one. The
+  [scalar-energy contract](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
+  during 04–06 — `Theory.spectra` and `Theory.positron_spectra` reject the
+  scalar energies their docstrings advertise, and the compiled half of
+  that resolves itself if the port normalizes at the public boundary.

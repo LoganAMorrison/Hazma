@@ -30,6 +30,8 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [markdownlint was never run over `.claude/skills/`](todo/markdownlint-skips-skill-file-shapes.md) | 2026-08-06 | PR #48 review round 1 | cross-cutting |
 | [sdist ships cythonized `*.c`, `docs/`, `test/`](todo/sdist-ships-generated-c-and-docs.md) | 2026-08-06 | cython-to-rust Task 0.4 | cross-cutting |
 | [parity corpus pins ill-conditioned points](todo/parity-corpus-pins-ill-conditioned-points.md) | 2026-08-07 | cython-to-rust Task 1.3 (PR #52) | project |
+| [model spectrum dicts reject scalar energies](todo/model-spectra-reject-scalar-energies.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
+| [positron spectra return `nan` at the legacy `MASS_E`](todo/positron-spectrum-nan-at-legacy-electron-mass.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
 
 ## Promoted / Done / Pruned
 
