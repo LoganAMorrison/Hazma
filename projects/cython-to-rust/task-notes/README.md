@@ -544,12 +544,21 @@ it from memory.)
   a fresh venv from outside the repo (recipe in Task 0.4's note; reuse
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
-- **The suites are merged and green**: bare `pytest -q` → 935 passed /
-  30 skipped (Task 1.3, 2026-08-07, capturing environment). The `test/`
-  root alone was 870/20 at Task 1.2 — which added `test/parity`'s 626 —
-  and 244/20 at Task 0.2, 68/20 at Task 0.3, 52/20 at Task 0.1. Off the
-  corpus's capturing environment expect 934/31: the parity suite reports
-  budget mode by skipping one test rather than by failing.
+- **The suites are merged and green on the capturing platform**: bare
+  `pytest -q` → 935 passed / 30 skipped (Task 1.3, 2026-08-07). Forcing
+  budget mode there gives 934/31 — measured, not derived: the parity
+  suite reports budget mode by skipping one test rather than by failing.
+  The `test/` root alone was 870/20 at Task 1.2 — which added
+  `test/parity`'s 626 — and 244/20 at Task 0.2, 68/20 at Task 0.3, 52/20
+  at Task 0.1.
+- **Off macOS the corpus does not reproduce**, so CI runs
+  `pytest --ignore=test/parity` on every entry except macOS (339
+  collected there vs 965). Linux fails ~70-75 blocks: mostly last-bit
+  libm noise, but six are cancellation points where the pinned value
+  flips sign. That is a corpus defect, it blocks the Phase 04-06 port
+  gate as much as CI, and it is tracked in
+  [`../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  — **read it before Phase 04**.
 - The legacy constants table lives at
   `hazma/_utils/legacy_parameters.pxd` and is now its **only** copy.
   `hazma.utils` is the only home for `cross_section_prefactor` and

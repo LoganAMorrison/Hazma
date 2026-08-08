@@ -103,11 +103,21 @@ evidence `docs/versioning.md` requires for numerical changes.
   enforces the declared budgets instead.)
 - `test/spectra/integration.py` renamed to be collected; its property
   assertions pass.
-- CI and `scripts/agents/preflight.sh` run the same collection;
-  `docs/agents/` env notes updated. Widening `testpaths` is not
-  sufficient on its own: CI's non-editable `pip install .` leaves no
-  extension inside the checkout, which `cases.assert_module_is_repo_tree`
-  refuses, so the test job reinstalls editable first.
+- CI and `scripts/agents/preflight.sh` run the same collection **on the
+  capturing platform**; `docs/agents/` env notes updated. Two things the
+  plan did not anticipate, both measured in Task 1.3:
+  - Widening `testpaths` is not sufficient on its own: CI's non-editable
+    `pip install .` leaves no extension inside the checkout, which
+    `cases.assert_module_is_repo_tree` refuses, so the test job
+    reinstalls editable first.
+  - The corpus does not survive a change of libm. Enabling it in CI
+    measured that for the first time: Linux/glibc fails ~70-75 of the
+    626 blocks, six of them at cancellation points where the pinned
+    value flips sign (`sigma_xl_to_xl[closed_resonance.mu]`: -1.504e-02
+    on macOS, +5.624e-07 on Linux). The Linux entries therefore run
+    `pytest --ignore=test/parity`, and making the corpus
+    platform-robust — which is also what the Rust port will need — is
+    [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
 
 ### Task 1.4: Retire or regenerate the legacy `.npy` suites
 
@@ -128,7 +138,13 @@ evidence `docs/versioning.md` requires for numerical changes.
 ## Exit Criteria
 
 - All tasks complete; `pytest` (bare) runs unit + property + parity
-  suites and is green in CI on all matrix entries.
+  suites and is green in CI. The parity portion runs on the **capturing
+  platform** only — the other matrix entries run the rest of the suite
+  and skip `test/parity`. That is a Task 1.3 amendment to this
+  criterion, not the original intent: the corpus pins six
+  cancellation-dominated points that no tolerance can carry across a
+  libm change, so "green on all matrix entries" is unreachable until
+  the follow-up above lands. Restore this bullet when it does.
 - Corpus regeneration is documented and reproducible
   (`python test/parity/generate.py --check` verifies hashes).
 - Phase learnings written to `../learnings/phase-01-parity-corpus.md`.

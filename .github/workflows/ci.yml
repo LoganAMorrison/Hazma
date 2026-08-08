@@ -90,10 +90,25 @@ jobs:
         # Measured cost of the second build: ~40 s.
         run: python -m pip install -v -e .
       - name: Run tests
-        # Bare `pytest`, so this is exactly the collection
-        # scripts/agents/preflight.sh runs: pyproject.toml's
-        # `testpaths = ["hazma", "test"]`. Expect the parity suite's
-        # `test_running_on_the_capturing_tree` to skip here and the
-        # declared per-function budgets in test/parity/tolerances.py to
-        # apply — the corpus was captured on macOS/arm64.
-        run: python -m pytest
+        # Bare `pytest` on the capturing platform, so that entry runs
+        # exactly the collection scripts/agents/preflight.sh runs:
+        # pyproject.toml's `testpaths = ["hazma", "test"]`.
+        #
+        # Everywhere else the parity corpus is skipped, because it is
+        # pinned to the platform that captured it (macOS/arm64) and does
+        # not survive a change of libm. Enabling it here measured that
+        # for the first time: on Linux/glibc ~70-75 of the 626 blocks
+        # fail, and they are two different populations. Most are last-bit
+        # noise, but six are catastrophic-cancellation points where the
+        # corpus pinned one platform's rounding — `sigma_xl_to_xl` at
+        # `closed_resonance.mu` is -1.504e-02 on macOS and +5.624e-07 on
+        # Linux. No tolerance can absorb a sign flip, and those points
+        # cannot gate the Rust port on any platform either, so the fix is
+        # to the corpus, not to this matrix:
+        # docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md.
+        #
+        # `--ignore` rather than a marker: it skips collection outright,
+        # so the Linux entries also stop paying the corpus's ~9 minutes.
+        env:
+          PARITY: ${{ runner.os == 'macOS' && '' || '--ignore=test/parity' }}
+        run: python -m pytest $PARITY

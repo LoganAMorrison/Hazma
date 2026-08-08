@@ -100,10 +100,22 @@ Copied from the phase file's Task 1.3 block:
   that must be opted into is a gate nobody runs, and a separate job
   breaks the "CI and preflight run the same collection" criterion this
   task exists to satisfy.
+- **Review round 1** reviewed head `6ad1ea3` and raised one blocking
+  finding — Linux CI red on the parity gate, caused by the unconditional
+  exact grid comparison — which had already been diagnosed from the same
+  CI run and fixed in `cff5b02` before the review arrived. Independent
+  agreement on both the cause and the prescription ("make grid
+  comparison platform-aware while preserving detection of genuine
+  specification changes"), which is what `abscissa_budget` does. Two
+  details of the diagnosis were off and are corrected in the record: the
+  grids come from `numpy.geomspace` (`cases.py:247`), not `np.logspace`
+  directly, and the drift is one ulp (0.9993 eps), not sub-ulp. Neither
+  changes the conclusion. The round's cross-cutting note about the
+  `934/31` prediction is answered under Verification.
 
 ## Files Changed
 
-24 files, taken from `git diff origin/master -M --name-only --`.
+27 files, taken from `git diff origin/master -M --name-only --`.
 
 **The change itself (4 files):**
 
@@ -114,8 +126,9 @@ Copied from the phase file's Task 1.3 block:
   (`git mv`, plus the eight-line `isort` reorder the preflight gate asked
   for; `--summary` reports `rename … (99%)`).
 - `.github/workflows/ci.yml` — a `Reinstall editable for the test run`
-  step between the import smoke test and `Run tests`; comments on why
-  the smoke test must run first and what the bare `pytest` now collects.
+  step between the import smoke test and `Run tests`, and the `PARITY`
+  env on `Run tests` that scopes the corpus to the capturing platform
+  (round 2).
 
 **The gate script (1):**
 
@@ -123,7 +136,21 @@ Copied from the phase file's Task 1.3 block:
   text, the zero-collection FAIL message, and `usage()`'s line range
   (it truncated the help mid-sentence once the header grew) follow.
 
-**Durable docs whose claims the change falsified (7):**
+**The parity harness, whose premise the CI run falsified (3):**
+
+- `test/parity/tolerances.py` — new `ABSCISSA_RTOL` and
+  `abscissa_budget()`, with the derivation in the module docstring.
+- `test/parity/test_parity.py` — both abscissa comparisons go through
+  `abscissa_budget` instead of `assert_array_equal`; module docstring and
+  the `ABSCISSAE` comment follow.
+- `test/parity/README.md` — the gate runs under a bare `pytest` and in
+  CI; editable-install note; the abscissa comparison is no longer
+  described as exact in both modes.
+
+These are Task 1.2 files, edited here because Task 1.3's own CI run is
+what falsified their premise — see rounds 1 and 2 in Verification.
+
+**Durable docs whose claims the change falsified (5):**
 
 - `docs/agents/preflight.md` — gate 4 rewritten around the bare run; the
   one-command example no longer passes `--tests`; the "what CI does"
@@ -133,16 +160,8 @@ Copied from the phase file's Task 1.3 block:
   requirement for `test/parity/`), and the CI-matrix entry now describes
   the four-step install/smoke/reinstall/test sequence.
 - `AGENTS.md` — the `pytest` line in Commands.
-- `test/parity/README.md` — the gate runs under a bare `pytest` and in
-  CI; editable-install note; the abscissa comparison is no longer
-  described as exact in both modes.
-- `test/parity/tolerances.py` — new `ABSCISSA_RTOL` and
-  `abscissa_budget()`, with the derivation in the module docstring.
-- `test/parity/test_parity.py` — both abscissa comparisons go through
-  `abscissa_budget` instead of `assert_array_equal`; module docstring and
-  the `ABSCISSAE` comment follow. **Both are Task 1.2 files**, edited
-  here because Task 1.3's own CI run is what falsified their premise —
-  see "Linux: the first run" in Verification.
+- `docs/agents/lessons.md` — one new class,
+  `[exactness-untestable-on-one-platform]`.
 - `../../learnings/phase-00-dead-code-purge.md` — the "two disjoint
   suites remain" bullet, annotated in place as fully closed (Task 1.2
   had already annotated it as half-closed).
@@ -156,6 +175,12 @@ Copied from the phase file's Task 1.3 block:
   and `.codex/skills/{execute-single-task,commit-and-pr}/SKILL.md` — the
   prescribed `preflight.sh` invocation no longer passes `--tests`, so the
   run these skills tell an agent to make is the one CI makes.
+
+**The follow-up (2):**
+
+- `docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md` —
+  new; the corpus defect round 2 measured.
+- `docs/followups/README.md` — its row under Open.
 
 **Project bookkeeping (5):**
 
@@ -455,18 +480,88 @@ The last row is the useful one: a uniform stretch of 1e-12, only ten
 times the budget, still fails. The capturing tree still rejects a single
 ulp.
 
+### Round 2: the grid fix exposed the real problem
+
+Re-running the matrix on `cff5b02` moved the grid failures from 623 to
+**0** — the abscissa fix works. What it uncovered is that the corpus does
+not survive a change of libm at all. Run 31238785136: **macOS py3.14
+passes; all five Linux entries fail**, consistently (py3.10 → 70 failed /
+864 passed / 31 skipped; py3.11 → 75 / 859 / 31).
+
+Classifying every raised assertion in the py3.11 log by magnitude
+separates two unrelated populations:
+
+| Max relative difference | Count | What it is |
+| --- | --- | --- |
+| ≤ 4.5 ulp | 35 | `libc.math` last-bit differences, glibc vs macOS libm |
+| 1e-15 – 1e-12 | 20 | the same, through longer expressions |
+| 1e-12 – 1e-6 | 14 | the same, amplified by conditioning |
+| **≈ 1.0** | **6** | **catastrophic cancellation — not absorbable** |
+
+The first three groups are what a derived off-platform budget for the
+EXACT class would handle. The last six are not, and they are the finding
+that matters. `cross_sections.scalar.sigma_xl_to_xl[closed_resonance.mu]`,
+scalar probe index 5, from identical Cython:
+
+```text
+macOS/arm64 (what the corpus pinned): -1.504080817723100e-02
+Linux/glibc:                          +5.624212846110624e-07
+```
+
+A sign flip and seven orders of magnitude. Five of the six are
+`closed_resonance` blocks of scalar cross sections; the sixth is
+`spectra.photon.eta[boosted_strong]`. This is the region the phase
+working memory already recorded as holding "123 negatives + 5
+infinities" in `sigma_xl_to_xl` and called branch behavior — which
+understated it: the corpus pinned one platform's cancellation residue.
+
+**Why this is not a tolerance problem.** No budget absorbs a sign flip,
+and widening one until it did would make the gate vacuous exactly where
+the numerics are most fragile. More importantly the cross-platform
+failure is only the symptom: a faithful Rust reimplementation with a
+different instruction order will also land elsewhere in that cancellation
+region, so those six blocks cannot gate Phases 04-06 on *any* platform.
+
+**Decision (user's call, taken 2026-08-07).** Scope the parity suite to
+the capturing platform and fix the corpus separately. The `Run tests`
+step gains a `PARITY` env — empty on macOS, `--ignore=test/parity`
+elsewhere — so the macOS entry runs the full 965 and the Linux entries
+run 339. `--ignore` rather than a marker, so Linux also stops paying the
+corpus's ~9 minutes. Verified both branches locally:
+
+```text
+$ PARITY='--ignore=test/parity' bash -c 'pytest --collect-only -q $PARITY | tail -1'
+339 tests collected in 0.56s
+$ PARITY='' bash -c 'pytest --collect-only -q $PARITY | tail -1'
+965 tests collected in 0.80s
+```
+
+`965 - 626 = 339`. The real fix is
+[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
+which ripens **before Phase 04** because that is when the false failures
+start landing on real ports.
+
+This is an amendment to canonical gate text, so both the phase Exit
+Criteria and Task 1.3's own exit criteria were patched rather than left
+to be discovered — see Plan Impact.
+
 ### Still not verified here
 
-**Whether the EXACT-class values pass on Linux.** `EXACT_RTOL` is `0.0`
-and `effective_budget` returns the *declared* budget in budget mode, so
-the 19 closed-form entry points are held to bit-equality on Linux too.
-Whether `libc.math`'s `exp` / `log` / `atanh` agree between glibc and
-macOS libm at those arguments is **unmeasured** — the grid assertion
-short-circuited every one of those comparisons, so the first Linux run
-produced no evidence either way.
+**~~Whether the EXACT-class values pass on Linux.~~ Answered in round 2:
+they do not.** `EXACT_RTOL` is `0.0` and `effective_budget` returns the
+*declared* budget in budget mode, so the 19 closed-form entry points are
+held to bit-equality on Linux too, and 35 of them differ by up to ~4.5
+ulp. That part is a real gap in the budget design — `provenance` already
+records `platform` and `machine` separately from the kernel digest, so
+the EXACT class could distinguish "a different platform" (a fact) from
+"a different implementation" (a drift to declare). It is **not** fixed
+here: the six ill-conditioned points would still fail, so fixing it
+alone would not make Linux green, and it belongs with the corpus work in
+the follow-up.
 
-The same run *did* settle the adjacent question, though: **budget mode
-itself works.** `Test (macos-latest, py3.14)` passed in 19m31s. That is
+The adjacent question was settled in round 1 and still holds:
+**budget mode itself works.** `Test (macos-latest, py3.14)` passed in
+19m31s (and again in round 2). That is
 budget mode — Python 3.14 against the corpus's 3.12, with different
 numpy and scipy — on a platform sharing the capturing libm. So the whole
 declared-budget path, including the 19 EXACT-class entry points at
@@ -484,6 +579,12 @@ drift to declare) — `provenance` already records `platform` and
 
 ## Open Questions
 
+- **The corpus is not platform-portable, and six of its points are not
+  reproducible anywhere** — filed as
+  [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
+  Ripens before Phase 04. Task 1.3 scoped CI around the symptom; the
+  follow-up is the fix, and it carries the `EXACT_RTOL = 0.0`-in-budget-
+  mode gap with it.
 - **The red `ruff check` row is the already-tracked trunk condition**,
   not something this task introduced:
   [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
@@ -506,7 +607,7 @@ drift to declare) — `provenance` already records `platform` and
 
 ## Plan Impact
 
-**Impact Level:** Phase file patched.
+**Impact Level:** Phase file patched (twice) + follow-up filed.
 
 `../../phases/phase-01-parity-corpus.md` changed in two places:
 
@@ -524,11 +625,26 @@ drift to declare) — `provenance` already records `platform` and
    non-editable install leaves no extension in the tree
    `cases.assert_module_is_repo_tree` requires.
 
+3. **The phase Exit Criteria** said "`pytest` (bare) runs unit +
+   property + parity suites and is green in CI on all matrix entries".
+   That is unreachable: the corpus pins six cancellation-dominated points
+   that no tolerance carries across a libm change (see round 2 in
+   Verification). Amended to say the parity portion runs on the capturing
+   platform, that this is a Task 1.3 amendment rather than the original
+   intent, and that the bullet should be restored when
+   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+   lands. Task 1.3's own "CI and preflight run the same collection"
+   criterion gained the same qualifier.
+
 No ADR. Nothing about the port's architecture, interfaces, numerics or
-task ordering changed — this is test-infrastructure wiring the phase
-file already specified, and the one unplanned constraint (editable
-install) is an implementation fact about CI, not a decision with
-consequences past Phase 01.
+task ordering changed — this is test-infrastructure wiring the phase file
+already specified. The two unplanned constraints (editable install; the
+corpus's platform dependence) are facts the wiring uncovered, and both
+are recorded where the next agent will hit them. The corpus defect is a
+decision with consequences well past Phase 01 — it blocks the Phase 04-06
+port gate — but the decision it needs is *how to fix the corpus*, which
+belongs to the follow-up and to whoever schedules it, not to a wiring
+task.
 
 `PLAN.md` was not touched: its Phases-table row for Phase 01 is a
 one-line summary that is still accurate, and status lives in the
@@ -609,8 +725,8 @@ their own sweep commands — KEPT as history.
 | Task note: `11` in `test/agents` (the 946 reconciliation) | `pytest --collect-only -q test/agents` | `11 tests collected in 0.02s` | OK — first written as 19, corrected here |
 | Phase README, project README: parity block count `626` | `pytest --collect-only -q test/parity` | `626 tests collected in 0.83s` | OK — unchanged by this task |
 | Baselines `57 / 10` and `870 / 20` | `pytest -q`; `pytest -q test -rs`, both pre-change on this tree | `57 passed, 10 skipped in 0.33s`; `870 passed, 20 skipped … (0:09:11)` | OK — reproduce Task 1.2's figures |
-| Task note, Files Changed: "24 files" | `git diff origin/master -M --name-only -- \| wc -l` | `24` | OK — was 22 before the round-2 abscissa fix |
-| Task note, doc gates: "17 changed markdown files" | `git diff origin/master -M --name-only -- \| grep -c '\.md$'` | `17` | OK |
+| Task note, Files Changed: "27 files" | `git diff origin/master -M --name-only -- \| wc -l` | `27` | OK — 22 at commit 1, 24 after the abscissa fix, 27 after the round-2 CI scoping + follow-up |
+| Task note, doc gates: "20 changed markdown files" | `git diff origin/master -M --name-only -- \| grep -c '\.md$'` | `20` | OK — 17 before round 2; +lessons.md, +the follow-up, +its README row |
 | Task note: editable rebuild costs ~40 s | `time python -m pip install -e .` in the CI simulation | `real 0m40.975s` | OK — first stated from a `uv` run (39.7 s), re-measured with pip |
 | Phase file: expect `934 / 31` off the capturing environment | not runnable here (no Linux runner) | — | **Derived, not measured** — 935/30 minus the one `test_running_on_the_capturing_tree` skip. Flagged as an expectation in the phase file too. |
 | Doc runtime claims: "around five minutes" | `pytest -q` | `0:08:58` | **EDITED** — the five-minute figure was Task 1.2's idle `pytest test/parity` measurement (4m38s) and this task had propagated it to five new places as if it described the bare run. All replaced with both measured numbers and their conditions. |
@@ -646,8 +762,8 @@ unmoved, not merely an argument that it should be.
 - The phase file frontmatter stays `status: In Progress` — correct,
   Task 1.4 is open. `PLAN.md` untouched.
 - Every file named in §Files Changed appears in
-  `git diff origin/master -M --name-only --` (24 = 24, and the section
-  subtotals 4+1+7+7+5 sum to it), and every
+  `git diff origin/master -M --name-only --` (27 = 27, and the section
+  subtotals 4+1+3+5+7+2+5 sum to it), and every
   identifier named in §Findings / §Decisions resolves: `testpaths`,
   `[tool.pytest.ini_options]`, `assert_module_is_repo_tree`,
   `test_running_on_the_capturing_tree`, `assert_full_coverage`,

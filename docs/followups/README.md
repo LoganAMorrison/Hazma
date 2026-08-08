@@ -29,6 +29,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`preflight.sh` isort/ruff gates are red on the trunk](todo/preflight-isort-ruff-red-on-trunk.md) | 2026-08-05 | cython-to-rust Task 0.5 | cross-cutting |
 | [markdownlint was never run over `.claude/skills/`](todo/markdownlint-skips-skill-file-shapes.md) | 2026-08-06 | PR #48 review round 1 | cross-cutting |
 | [sdist ships cythonized `*.c`, `docs/`, `test/`](todo/sdist-ships-generated-c-and-docs.md) | 2026-08-06 | cython-to-rust Task 0.4 | cross-cutting |
+| [parity corpus pins ill-conditioned points](todo/parity-corpus-pins-ill-conditioned-points.md) | 2026-08-07 | cython-to-rust Task 1.3 (PR #52) | project |
 
 ## Promoted / Done / Pruned
 

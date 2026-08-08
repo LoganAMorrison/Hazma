@@ -151,6 +151,17 @@ that the `.so` is inside your worktree. CI does the non-editable install
 first (that is what its outside-the-repo import smoke test checks) and
 reinstalls editable before the test step.
 
+**The parity corpus only reproduces on the platform that captured it
+(macOS/arm64).** On Linux/glibc roughly 70-75 of its 626 blocks fail
+against the same source: mostly last-bit `libc.math` differences, but
+six are catastrophic-cancellation points where the pinned value flips
+sign. CI therefore runs `pytest --ignore=test/parity` on every entry
+except macOS, and a bare local `pytest` on Linux will show those
+failures. They are not your change — check against
+[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+before spending time on them, and use `--ignore=test/parity` to see the
+rest of the suite.
+
 **The test tree does not mirror the package one-to-one.** `test/` has
 `agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,
 `vector_mediator/` plus a few loose `test_*.py`. There is no test package

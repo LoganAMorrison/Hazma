@@ -115,6 +115,29 @@ corpus.
   `setup.cfg`, so a re-added `[tool:pytest]` section would be silently
   ignored rather than winning. Read the `configfile:` line in the pytest
   header to see which file is live (Task 1.3).
+- **The corpus does not survive a change of libm, and six of its points
+  are not reproducible anywhere.** Task 1.3 wired the suite into CI,
+  which ran the corpus off macOS/arm64 for the first time: macOS passes,
+  all five Linux entries fail ~70-75 of 626 blocks. Most of that is
+  last-bit `libc.math` noise (35 at ≤4.5 ulp), but **six are
+  catastrophic-cancellation points** where the pinned value is one
+  platform's rounding residue —
+  `cross_sections.scalar.sigma_xl_to_xl[closed_resonance.mu]` is
+  `-1.504e-02` on macOS and `+5.624e-07` on Linux, from identical
+  Cython. No tolerance absorbs a sign flip. **This blocks Phases 04-06,
+  not just CI**: a faithful Rust port with a different instruction order
+  will also land elsewhere in that region, so those blocks gate nothing.
+  Tracked in
+  [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
+  which ripens **before Phase 04** (Task 1.3).
+- **`EXACT_RTOL = 0.0` applies in budget mode too**, because
+  `effective_budget` returns the *declared* budget off the capturing
+  tree and the EXACT class declares zero. That is what turned 35 last-bit
+  differences into failures. `provenance` already separates `platform`
+  and `machine` from the kernel digest, so the class could tell "a
+  different platform" from "a different implementation" — deliberately
+  not changed in Task 1.3, since it would not have made Linux green on
+  its own (Task 1.3).
 - **`test_utils.py` exists in both roots** — `test/test_utils.py` and
   `hazma/form_factors/vector/test_utils.py` — and collecting them
   together does not trip pytest's import-file-mismatch check only
@@ -161,6 +184,13 @@ corpus.
   `numpy.geomspace` goes through the platform libm. The premise that
   "grids are arithmetic on constants" held within a platform and not
   across one.
+- Parity in CI is scoped to the **capturing platform**: the `Run tests`
+  step carries a `PARITY` env, empty on macOS and `--ignore=test/parity`
+  elsewhere. `--ignore` rather than a marker, so the Linux entries also
+  stop paying the corpus's ~9 minutes. A workaround for the symptom,
+  explicitly not a fix — the corpus follow-up is — and both the phase
+  Exit Criteria and Task 1.3's exit criteria were amended to say so
+  rather than left to be rediscovered — Task 1.3.
 - No measurement/reporting hook. `pytest_addoption` is only honored in
   an *initial* conftest, which `test/parity/conftest.py` is not under
   `pytest test`, and `assert_allclose` already prints the max relative
