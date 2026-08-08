@@ -209,6 +209,22 @@ finding Task 1.3 recorded. Renamed to
   with a pointer to its follow-up in `positron_energies`'s docstring.
   Adding a test that documents a defect as intended behavior is worse
   than the gap.
+- **Review round 1 (2026-08-08), both findings accepted.** (1) The phase
+  file said "Three unrelated skips survive" while enumerating five. The
+  underlying error was wider than the count: the note also attributed the
+  13 skipped *tests* to 2 + 3 markers plus a `skipif`, conflating marker
+  sites with skipped tests and crediting a `skipif` that does not fire
+  here. Re-derived with `pytest -rs` — 5 marker sites, 13 skipped tests
+  (5 + 5 + 3, the two `hazma/` markers sitting on parametrized classes),
+  and `test_resolve_phase.py:47`'s `skipif` contributing 0 — and fixed at
+  all four sites that stated it, not just the cited one. (2) The
+  stale-state sweep used placeholders (`<the 7 changed docs>`, `<2 test
+  files>`, `<9 docs>`, `<macos job>`), which defeats its purpose; every
+  row now carries the literal command, with the two long argument lists
+  named once as `$DOCS` / `$TESTS` above the table, and the whole block
+  was re-run rather than re-typed. Re-running it moved the citation count
+  27 → 29, because the sweep's own edits added citations — recorded at
+  the post-edit value and re-confirmed stable.
 - No ADR. Nothing about the port's architecture, interfaces or ordering
   changed.
 
@@ -274,11 +290,16 @@ Nothing under `hazma/` was touched.
     tests, **+2** from the `rh_neutrino` rename, **−17** skips
     (9 scalar and 8 vector) as the two legacy classes left.
     935 + 71 = 1006; 30 − 17 = 13. ✓
-  - The 13 survivors are unrelated to this task's criterion: 2
-    "Known to be broken" form factors under `hazma/`, 3 form-factor
-    skips in `test/vector_mediator/test_form_factors.py`, and the
-    `test_resolve_phase.py` `skipif`. `rg "mark.skip" test hazma` shows
-    **no remaining reason matching "needs update"**. ✓
+  - The 13 skipped **tests** are unrelated to this task's criterion, and
+    come from 5 marker **sites**: `pytest -rs` attributes them 5 to
+    `hazma/form_factors/vector/_eta_gamma_test.py:23`, 5 to
+    `_pi_gamma_test.py:23` (both "Known to be broken", both on
+    parametrized classes) and 3 to
+    `test/vector_mediator/test_form_factors.py` (:137, :195, :230).
+    `test/agents/test_resolve_phase.py:47` is a `skipif` that does not
+    fire here — the script it guards exists — so it contributes 0.
+    `rg -n "mark.skip" test hazma --type py | grep -ic "needs to be
+    updated"` → `0`. ✓
 - **The new suite alone:** `pytest -q test/test_theory_aggregation.py` →
   `69 passed, 2 warnings in 0.56s`. The 21 test functions by category — 4
   cross-section and branching-fraction identities (keys, total-is-the-sum,
@@ -385,10 +406,11 @@ not drifts it introduced.
   `(e_med, m_med, pw)` combinations is unswept — the mechanism is the
   shared constant, so it should not, but the fixing PR confirms rather
   than assumes. Tracked in the follow-up, not here.
-- `test/vector_mediator/test_form_factors.py` carries three skips with
-  substantive reasons ("Need to check why this form-factor seems to be
-  so wrong"), and `hazma/form_factors/vector/{_eta_gamma,_pi_gamma}_test.py`
-  two more marked "Known to be broken". All five are outside Task 1.4's
+- `test/vector_mediator/test_form_factors.py` carries three skip markers
+  with substantive reasons ("Need to check why this form-factor seems to
+  be so wrong"), and `hazma/form_factors/vector/{_eta_gamma,_pi_gamma}_test.py`
+  two more marked "Known to be broken" — five marker sites, 13 skipped
+  tests between them. All five are outside Task 1.4's
   criterion, which named only the "needs update" reason, and outside this
   project's scope — the form factors are pure Python and are not ported.
   Flagged so a later reader does not mistake the silence for coverage.
@@ -417,22 +439,40 @@ authorized both halves of.
 
 ## Stale-state sweep
 
-Each row is a command run against this branch, with its actual output.
+Every row is a command as actually run — no placeholders — against
+`a74f42c`, this PR's head. Two rows take the full set of docs this PR
+changes; that set is named once here so the commands stay readable and
+still copy-paste from the repo root (bash):
+
+```bash
+DOCS="projects/cython-to-rust/task-notes/phase-01/task-1.4-legacy-npy.md \
+projects/cython-to-rust/task-notes/phase-01/README.md \
+projects/cython-to-rust/task-notes/README.md \
+projects/cython-to-rust/learnings/phase-01-parity-corpus.md \
+projects/cython-to-rust/phases/phase-01-parity-corpus.md \
+projects/cython-to-rust/PLAN.md \
+docs/followups/README.md \
+docs/followups/todo/model-spectra-reject-scalar-energies.md \
+docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md \
+docs/agents/lessons.md"
+TESTS="test/test_theory_aggregation.py test/rh_neutrino/test_rh_neutrino_integration.py"
+```
 
 | Check | Command | Result |
 | --- | --- | --- |
 | Exit criterion: no "needs update" skip | `rg -n "mark.skip" test hazma --type py \| grep -ic "needs to be updated"` | `0` |
+| Skip inventory re-derived | `pytest -q --no-header -rs \| grep '^SKIPPED'` | 5 marker sites → 13 skipped tests: `_eta_gamma_test.py:23` [5], `_pi_gamma_test.py:23` [5], `test_form_factors.py` :137 [1] :195 [1] :230 [1] |
 | Deleted paths still referenced in code | `rg -l "scalar_mediator/data\|vector_mediator/data\|generate_test_data" --type py .` | no occurrences |
 | Deleted paths still referenced in docs | `rg -n "test/scalar_mediator/data\|test_scalar_mediator\|rh_neutrino/widths" .` | only dated records: the phase file's Task 1.4 spec, this note, the phase README, and the `MASS_E` follow-up's provenance sentence |
 | Task 1.4 still described as open | `rg -n "Task 1.4" projects/cython-to-rust --glob '!*task-1.4*'` | every hit reads Complete / closed / realized; no "next" or "not started" survives |
-| Doc citations resolve | `python scripts/agents/check_doc_citations.py <the 7 changed docs>` | `in-repo citations checked: 22 … out-of-range or ambiguous: NONE` |
-| Forbidden tokens in new code | `rg -n "TODO\|FIXME\|breakpoint()\|import pdb\|print(" <the two touched test files>` | none |
+| Doc citations resolve | `python scripts/agents/check_doc_citations.py $DOCS` | `docs scanned: 10` / `in-repo citations checked: 29` / `out-of-range or ambiguous: NONE` |
+| Forbidden tokens in new code | `rg -n "TODO\|FIXME\|breakpoint()\|import pdb\|print(" $TESTS` | no occurrences |
 | Corpus integrity unchanged | `python test/parity/generate.py --check` | `corpus OK: 41 cases / 1580 arrays match the manifest (generated at 010747c6125d, kernel digest f5e6e269be47)` |
-| Suite counts as claimed | `pytest -q` | `1006 passed, 13 skipped, 5 warnings in 551.04s` |
-| Collection reconciles | `pytest --collect-only -q` (all / `hazma` / `test`) | `1019` = `67` + `952` |
+| Suite counts as claimed | `pytest -q` | `1006 passed, 13 skipped, 5 warnings in 577.11s (0:09:37)` |
+| Collection reconciles | `pytest --collect-only -q`, then the same for `hazma` and `test` | `1019` = `67` + `952` |
 | **Numerical-impact statement** | `git diff origin/master -- hazma \| wc -l` | `0` — **no public value changes.** Nothing under `hazma/` is touched, so no grid evaluation applies. |
-| Preflight gate | `scripts/agents/preflight.sh --paths <2 test files> --md <9 docs>` | black / isort / ruff / pytest / import / markdownlint / forbidden-tokens all PASS |
-| CI actually runs the corpus | `gh run view <macos job> --log \| grep 'PARITY:\|passed'` | `PARITY:` empty, `1005 passed, 14 skipped` — was `--ignore=test/parity` / `380 passed` before the `ci.yml` fix in this PR |
+| Preflight gate | `scripts/agents/preflight.sh --paths "$TESTS" --md "$DOCS"` | black / isort / ruff / pytest / import / markdownlint / forbidden-tokens all PASS |
+| CI actually runs the corpus | `gh run view 31272431024 --log --job 93140536644 \| grep -E "PARITY:\|passed, "` | `PARITY:` (empty) and `1005 passed, 14 skipped, 6 warnings in 886.77s` — before the `ci.yml` fix in this PR the same grep on job `93131021984` gave `PARITY: --ignore=test/parity` and `380 passed, 13 skipped` |
 
 Bookkeeping consistency, checked by reading rather than by command: the
 Task 1.4 row in `README.md`, this note's `**Status:**` header, the phase

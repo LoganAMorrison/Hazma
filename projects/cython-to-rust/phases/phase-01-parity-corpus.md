@@ -145,9 +145,14 @@ evidence `docs/versioning.md` requires for numerical changes.
 - `test/positron/test_positron.py` (0 bytes) deleted or filled.
   **Realized: deleted.**
 - No `@pytest.mark.skip` remains whose reason is "needs update".
-  Three unrelated skips survive (two "Known to be broken" form factors in
-  `hazma/`, three in `test/vector_mediator/test_form_factors.py`); they
-  are outside this criterion and untouched.
+  **Five** unrelated marker sites survive — two "Known to be broken" in
+  `hazma/form_factors/vector/{_eta_gamma,_pi_gamma}_test.py` and three in
+  `test/vector_mediator/test_form_factors.py` — and they account for all
+  13 skipped tests the suite reports (5 + 5 + 3; the two `hazma/` markers
+  sit on parametrized classes). A sixth marker,
+  `test/agents/test_resolve_phase.py:47`, is a `skipif` that does not
+  fire while the script it guards is present. All are outside this
+  criterion and untouched.
 - Folded in from Task 1.3's Open Questions: `test/rh_neutrino/integration.py`
   and `test/rh_neutrino/widths.py` matched no `python_files` pattern.
   **Realized:** the first is a real suite and was renamed to

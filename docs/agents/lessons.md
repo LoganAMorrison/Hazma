@@ -236,3 +236,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   disabled it on every entry including macOS; all seven checks passed for
   two PRs, and PR #53 caught it only by noticing the job reported `380
   passed` where a run including the corpus collects ~1019).
+- [marker-count-vs-outcome-count] A count of *declaration sites* and a
+  count of *runtime outcomes* are different numbers, and prose that says
+  "N skips" silently picks one. A marker on a parametrized class yields
+  many skipped tests; a `skipif` whose condition is false yields none. Do
+  not derive either number by reading decorators — take outcomes from
+  `pytest -rs` and sites from `rg`, state which one you mean, and give
+  both when they differ (PR #53: a phase file claimed "three unrelated
+  skips survive" while enumerating five sites, and the task note
+  attributed 13 skipped tests to 5 sites plus a `skipif` that never
+  fired; the true split was 5 sites → 13 tests as 5 + 5 + 3).
