@@ -24,7 +24,7 @@
 //!   reviews are indexed at
 //!   <https://pdg.lbl.gov/2025/reviews/constants_atomic_and_related.html>.
 //!   Every mass in [`pdg`] is bit-equal to its counterpart in the
-//!   pure-Python `hazma/parameters.py` (checked, all twelve), which cites
+//!   pure-Python `hazma/parameters.py` (checked, all fourteen), which cites
 //!   "PDG March 2022"; several entries (m(tau) = 1776.86 +- 0.12 MeV, for
 //!   one) are older than the current edition. A handful of branching ratios
 //!   are marked in the source as taken from Pythia 8.306 rather than the
@@ -60,8 +60,10 @@
 
 /// `hazma/_utils/constants.pxd` — the PDG-era table.
 ///
-/// `include`d by all twelve `hazma/spectra/**` extensions. Its masses are
-/// bit-equal to `hazma/parameters.py`'s; its `ALPHA_EM` is not.
+/// `include`d by all twelve `hazma/spectra/**` extensions -- a different
+/// twelve from the fourteen masses below, which is a collision worth
+/// reading twice. All fourteen masses are bit-equal to
+/// `hazma/parameters.py`'s; its `ALPHA_EM` is not.
 pub mod pdg {
     // =========================================================
     // ---- Masses in MeV --------------------------------------
@@ -586,7 +588,7 @@ pub mod derived {
     ///
     /// Every value computed, so this module tracks [`pdg`](super::pdg)
     /// with nothing frozen. Note `ENG_MU_PI_RF` is the same physical
-    /// quantity as [`photon_pion::ENG_MU_PIRF`](photon_pion::ENG_MU_PIRF) and *not* the same
+    /// quantity as [`photon_pion::ENG_MU_PIRF`] and *not* the same
     /// number — different table, and the two spellings differ by an
     /// underscore.
     pub mod positron_pion {

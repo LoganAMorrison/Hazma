@@ -95,7 +95,7 @@ From the phase file, verbatim:
   revised α⁻¹ to 137.035999177(21) (arXiv:2409.03787, cross-checked
   against NIST). `legacy_parameters.pxd` has `1/137`.
   `hazma/parameters.py:205` has a third, `1/137.04`. By contrast **every
-  one of the twelve masses in `constants.pxd` is bit-equal to its
+  one of the fourteen masses in `constants.pxd` is bit-equal to its
   `hazma/parameters.py` counterpart** (checked, not assumed). All three
   αs are kept; the third is pure Python and outside this project's scope
   entirely, but it belongs in the same conversation as the table merge.
@@ -279,6 +279,30 @@ Four against the Rust unit tests, same method:
 
 Nothing deferred.
 
+### Review round 1 (PR #58)
+
+- **Blocking, accepted:** the mass count was wrong in five places — the
+  `constants.rs` header, this note twice, the working memory, and the PR
+  body all said "twelve". `constants.pxd` declares **fourteen** `MASS_*`,
+  and all fourteen are bit-equal to `hazma/parameters.py`'s. The original
+  check *ran*, but over a hand-typed 12-pair list that silently omitted
+  `MASS_KL` and `MASS_KS`; the wrong answer then agreed with the correct
+  count of twelve `include`-ing spectra extensions two paragraphs above,
+  so every internal cross-check looked consistent. Re-derived by
+  enumerating `^DEF MASS_` from the header and matching on bit pattern
+  instead of on typed names. New class in `docs/agents/lessons.md`:
+  `[hand-written-population-in-a-derived-check]`.
+- **Non-blocking, accepted:** `cargo doc` gained a fourth warning,
+  `redundant explicit link target` at `constants.rs:589` —
+  `[`photon_pion::ENG_MU_PIRF`](photon_pion::ENG_MU_PIRF)` where the
+  label already resolves. Simplified to `[`photon_pion::ENG_MU_PIRF`]`;
+  `cargo doc` is back to the three pre-existing `links to private item`
+  warnings in `lib.rs`. **This one was mine to have caught**: the
+  verification above grepped `^warning: unresolved`, which is a subset of
+  the warnings `cargo doc` emits, so "0 unresolved intra-doc links" was
+  true and yet read as "clean". The grep is now `^warning` with a
+  by-category count.
+
 ## Numerical Impact
 
 **No public value changes** (verified: `git diff origin/master -- hazma`
@@ -394,11 +418,20 @@ per module: pdg 151, legacy 48, photon_pion 8, photon_rho 3,
 19 shared names: 12 divergent, 7 identical
 13 WIDTH_* in pdg, 0 in legacy
 12 .pyx include ../../_utils/constants.pxd; 4 include legacy_parameters.pxd
-all 12 pdg masses bit-equal to hazma/parameters.py; ALPHA_EM is not
+14 MASS_* in constants.pxd, all bit-equal to hazma/parameters.py
+            (K0/KL/KS share 497.611 -> 14 names, 12 distinct values);
+            ALPHA_EM is not
 
-$ cargo doc --manifest-path rust/Cargo.toml --no-deps --no-default-features
-0 unresolved intra-doc links (3 pre-existing "links to private item"
- warnings in lib.rs, unchanged by this diff)
+$ cargo doc --no-deps --no-default-features 2>&1 | grep -E '^warning' \
+    | sort | uniq -c
+   1 warning: `hazma-core` (lib doc) generated 3 warnings
+   1 warning: public documentation for `_core` links to private item `dispatch`
+   2 warning: public documentation for `_core` links to private item `kernels`
+(all three pre-existing in lib.rs and untouched by this diff. Counting by
+ category, not grepping for one phrase -- the first pass here grepped
+ '^warning: unresolved' and so reported "0 unresolved links" while this
+ diff had in fact added a `redundant explicit link target`. Review round 1
+ caught it.)
 ```
 
 **Numerical-impact statement:** No public value changes (verified:

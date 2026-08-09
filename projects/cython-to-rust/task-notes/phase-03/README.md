@@ -56,6 +56,20 @@ foundation.
   term, but only `r^4` reproduces the digits. The number is right and
   the comment is wrong; the `.pyx` is left untouched and the correct
   formula is pinned in the test.
+- **Two different twelves live in this phase's docs, and conflating them
+  cost a review round** (Task 3.1, PR #58). `constants.pxd` is `include`d
+  by **12 spectra extensions** and declares **14 masses** — but only 12
+  *distinct* mass values, since `MASS_K0` / `MASS_KL` / `MASS_KS` all
+  carry 497.611. The task note first claimed "all twelve masses are
+  bit-equal to `hazma/parameters.py`'s"; the check behind that claim ran
+  a real script over a hand-typed 12-pair list that omitted `MASS_KL`
+  and `MASS_KS`, and the wrong answer matched the (correct) extension
+  count two paragraphs away, so nothing looked inconsistent. All 14 do
+  agree — re-derived by enumerating `^DEF MASS_` from the header and
+  matching on bit pattern rather than on a typed name pairing. **Any
+  count in this phase gets its population enumerated from source**, not
+  from a list someone wrote out; see
+  `docs/agents/lessons.md` `[hand-written-population-in-a-derived-check]`.
 - **Pin `numpy==2.5.1` when building an env for this phase** (Task 3.1).
   A fresh `uv pip install -e .` resolves 2.5.2, which puts the parity
   corpus into budget mode (`exact: False`, detail

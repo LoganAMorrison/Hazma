@@ -347,10 +347,13 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `_utils/constants.pxd` `1/137.035999084` (a pre-CODATA-2022 value —
   CODATA 2022 is 137.035999177(21), arXiv:2409.03787),
   `_utils/legacy_parameters.pxd` `1/137`, and `hazma/parameters.py:205`
-  `1/137.04`. The masses, by contrast, agree: all twelve in
+  `1/137.04`. The masses, by contrast, agree: all **fourteen** in
   `constants.pxd` are bit-equal to their `parameters.py` counterparts
-  (checked). The third α is pure Python and outside this project's
-  scope, but any future table-merge follow-up has to account for it.
+  (checked; `MASS_K0`/`MASS_KL`/`MASS_KS` share one value, so the
+  correspondence is 14 names onto 12 distinct numbers — see
+  [phase-03/README.md](phase-03/README.md) for why that count is a
+  trap). The third α is pure Python and outside this project's scope,
+  but any future table-merge follow-up has to account for it.
 - **One `.pyx` reads from *both* constant tables, and the port had to
   find that out rather than be told** (Task 3.1).
   `hazma/spectra/_photon/_pion.pyx` `include`s `constants.pxd`, so its
