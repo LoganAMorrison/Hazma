@@ -100,8 +100,8 @@ Common "diff omits" patterns in this repo:
 - A new final state / channel added to one dispatch table but not its
   siblings (photon but not positron; the function map but not the
   documented channel list).
-- A `.pyx` / `.pxd` change with no evidence of a rebuild, so the cited
-  test results came from the old extension.
+- A `.pyx` / `.pxd` / `rust/` change with no evidence of a rebuild, so
+  the cited test results came from the old extension.
 - A renamed or removed public object still referenced by `docs/source/`
   — the published Sphinx build breaks without any test failing.
 - Package data (`*.dat`, `*.csv`) added under `hazma/` but not registered
@@ -131,8 +131,9 @@ not hunt outside your area — that is another reviewer's job.
 - **Empirical execution.** When the diff edits a docstring example, a
   README snippet, or claims a user-visible behavior, RUN it and paste the
   output. Static review does not catch a wrong number.
-- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` /
-  `setup.py`, confirm the cited results came from a rebuilt tree.
+- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `rust/` /
+  `setup.py`, confirm the cited results came from a rebuilt tree —
+  including a `cargo`-only run cited as if it were a Python result.
 
 The full baseline duties and the **per-lens FOCUS rubric** for your lens
 live in [`review-lenses.md`](../../../docs/agents/review-lenses.md) —

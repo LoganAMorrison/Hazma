@@ -89,8 +89,10 @@ no import-order or configured-rule check) — this gate catches more than
 CI will. A non-zero exit is
 a blocked commit; a `WARN` row is an unrun gate, not a pass.
 
-If the diff touched `.pyx` / `.pxd` / `setup.py`, rebuild
-(`pip install -e .`) **before** the gate, not after.
+If the diff touched `.pyx` / `.pxd` / `rust/` / `setup.py`, rebuild
+(`pip install -e .`) **before** the gate, not after. `cargo build` is
+not that rebuild: it refreshes `rust/target/`, not the
+`hazma/_core.abi3.so` Python imports.
 
 ### Step 5: Stage and commit
 

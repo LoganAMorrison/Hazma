@@ -23,7 +23,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
-| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **In Progress** — Task 2.1 complete (2026-08-08); 2.2 and 2.3 open |
+| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **In Progress** — Tasks 2.1 and 2.2 complete (2026-08-08); 2.3 open |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
@@ -267,6 +267,26 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies". Two of
   the four become silent public-API narrowings if the port transcribes
   the design instead of the code. Task 3.5 decides each one.
+- **The Rust half of the build is now pinned rather than lucky** (Task
+  2.2). Until this task, CI had no toolchain step and passed anyway
+  because the GitHub-hosted images ship cargo — a dependency nothing in
+  the repo required and an image refresh could have removed from every
+  matrix entry at once. Every entry now installs one, CI grew a `rust`
+  job running the same three cargo gates as `preflight.sh`, and
+  `release.yml` grew a rustup step inside the manylinux container
+  (cibuildwheel builds Linux wheels in a container that cannot see a
+  host toolchain; macOS builds on the runner and uses the host one —
+  two artifacts, two mechanisms, exactly like `MANIFEST.in` vs the
+  wheel in Task 0.4).
+- **`cargo build` publishes nothing to Python** (Task 2.2). The crate
+  reaches an importable `hazma/_core.abi3.so` only through
+  `pip install -e .`; cargo works out of `rust/target/`. This is the
+  `.pyx`-rebuild trap with an extra step, since the fast iteration
+  command and the publishing command are now different commands. It is
+  written into `AGENTS.md`, `docs/agents/environment.md`,
+  `docs/agents/preflight.md`, and the rebuild-awareness bullet of all
+  seven review/commit skills, so Phases 03–06 inherit a reviewer who is
+  expected to challenge a cargo-only run quoted as a Python result.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -418,6 +438,21 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   task fixed the mode switch its own deliverable would otherwise have
   broken** — see the served-vs-importable finding above; shipped without
   it, this line could have claimed no better than 1e-8.
+
+- **Task 2.2, 2026-08-08 (CI, preflight, dev-loop docs): no public value
+  changes** (verified: `git diff origin/master -- hazma rust` is empty —
+  0 lines, and the tree was rebuilt from clean before anything was run).
+  The diff is workflows, `preflight.sh`, durable docs, skills and project
+  bookkeeping; no library module, kernel, signature, constant or build
+  *input* is reachable from it, so no grid evaluation applies. The
+  build's own inputs are untouched: `setup.py`, `pyproject.toml`,
+  `MANIFEST.in`, `rust/` and every `.pyx` are byte-identical to the
+  trunk, so the artifacts are too. Positive evidence rather than only
+  absence: a wheel built from this branch carries `hazma/_core.abi3.so`
+  inside a CPython-tagged wheel (`cp<XY>`, the interpreter that built
+  it — never `abi3`, and see `lessons.md`
+  `[wheel-tag-vs-extension-abi]`), which is Task 2.2's own
+  extension-level criterion measured on the final tree.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -571,12 +606,34 @@ it from memory.)
   `test/parity/{cases.py,tolerances.py,test_parity.py,README.md}`; and
   the two canonical doc patches above. 25 files: 12 modified, 13 added.
   Full list in [phase-02/README.md](phase-02/README.md).
+- **Task 2.2** — the Rust toolchain pinned in both workflows
+  (`.github/workflows/ci.yml` gains a `rust` job and a per-entry
+  toolchain step; `.github/workflows/release.yml` gains the host
+  toolchain for macOS, rustup-in-container for Linux, `hazma._core` in
+  the wheel test command, and a step asserting every wheel carries
+  `hazma/_core.abi3.so`); the three cargo gates in
+  `scripts/agents/preflight.sh`; the `.rs` dev loop in `AGENTS.md`,
+  `docs/agents/environment.md` and `docs/agents/preflight.md`; the
+  rebuild-awareness sweep across `docs/agents/{review-lenses,README}.md`
+  and seven skill files under `.claude/` and `.codex/`; two canonical
+  patches (the phase file's Task 2.2 exit criteria, `../rules.md` Rust
+  rule 1); and one struck-through risk bullet in Task 2.1's note.
+  21 files: 20 modified, 1 added. Nothing under `hazma/` or `rust/`.
+  Full list in [phase-02/README.md](phase-02/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - Per-phase Verification sections live in `phase-XX/README.md`.
+- **Phase 02 Task 2.2 state (2026-08-08):** `scripts/agents/preflight.sh`
+  RESULT: PASS across all eleven rows — the three cargo gates green,
+  `pytest` at `1009 passed, 13 skipped` (byte-identical to Task 2.1's, so
+  no test outcome moved) with the parity suite still in bit-equality
+  mode, markdownlint green over 16 changed docs. `git diff origin/master
+  -- hazma rust` and `-- setup.py pyproject.toml MANIFEST.in` are both
+  empty, so the compiled artifacts are the trunk's. `release.yml` is
+  wired but unexercised: it has no pull-request trigger.
 - **Phase 02 Task 2.1 state (2026-08-08):** bare `pytest -q` →
   `1009 passed, 13 skipped` in 569.45s on the capturing environment
   (1022 collected), parity suite in **bit-equality mode**;
@@ -680,7 +737,17 @@ it from memory.)
   3). The three cargo gates are `cargo fmt --check`,
   `cargo clippy --all-targets -- -D warnings` and
   `cargo test --no-default-features`; the last one's flag is load-bearing,
-  since `extension-module` leaves the test harness unlinkable.
+  since `extension-module` leaves the test harness unlinkable. **As of
+  Task 2.2 you no longer have to remember to run them**: they are gates
+  4–6 of `scripts/agents/preflight.sh` (ahead of pytest, since they cost
+  seconds and it costs minutes) and CI's `rust` job.
+- **A `.rs` edit needs `pip install -e .`, not `cargo build`** (Task
+  2.2). Cargo works out of `rust/target/`, which nothing Python imports;
+  the editable install is what re-links the crate as
+  `hazma/_core.abi3.so`. Iterate with
+  `cargo test --manifest-path rust/Cargo.toml --no-default-features`,
+  reinstall before quoting any pytest or parity number, and confirm with
+  `python -c "import hazma._core; print(hazma._core.__file__)"`.
 - **Phases 00 and 01 are both Complete** (2026-08-06 and 2026-08-08).
   Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
@@ -688,9 +755,9 @@ it from memory.)
   [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md)
   rather than their nine task notes — the learnings are the
   distillation, the notes are history. **Phase 02 is In Progress: Task
-  2.1 landed 2026-08-08; Tasks 2.2 (CI, preflight, dev-loop docs) and 2.3
-  (the plumbing test suite) are open and both depend only on 2.1.** No
-  phase carries a decision gate.
+  2.1 and Task 2.2 (CI, preflight, dev-loop docs) both landed
+  2026-08-08; Task 2.3 (the plumbing test suite) is the last one open,
+  and depends only on 2.1.** No phase carries a decision gate.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it (still, with `_core`
   present); `test/parity/cases.py` is the single source of every entry
@@ -745,14 +812,17 @@ it from memory.)
 
 **Currently risky / unknown:**
 
-- **CI has no Rust toolchain step** until Phase 02 Task 2.2 adds one, and
-  is green regardless on today's runner images — all seven checks passed
-  first try on PR #55 with the hybrid build, ubuntu py3.10–3.14 plus
-  macos py3.14. Unpinned, though: nothing in the repo requires the
-  images to keep shipping cargo, and losing it takes the whole matrix
-  down at once. `release.yml`'s cibuildwheel job will certainly need its
-  own toolchain inside the manylinux container and does not run on pull
-  requests, so it is still unexercised.
+- ~~**CI has no Rust toolchain step**~~ — **added by Task 2.2
+  (2026-08-08)**, in both workflows, along with the `rust` job that runs
+  the cargo gates. The measurement that made it urgent still stands as
+  history: all seven checks passed first try on PR #55 with no toolchain
+  step at all, on ubuntu py3.10–3.14 plus macos py3.14, because the
+  runner images happen to ship cargo. **`release.yml` remains
+  unexercised** — it does not run on pull requests, so its
+  container-side rustup and its new abi3 assertion have local evidence
+  and cibuildwheel's documented recipe behind them but no observed run.
+  One `workflow_dispatch` against the branch closes that; Phase 07
+  Task 7.1 rewrites the job for maturin either way.
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
 - ~~Phase 01's corpus will capture `cross_section_prefactor`'s

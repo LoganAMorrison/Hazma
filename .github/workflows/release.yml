@@ -21,6 +21,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        # macOS only in effect: cibuildwheel builds the macOS wheels on
+        # the runner itself, so the host toolchain is the one that builds
+        # hazma._core. The Linux wheels are built inside a manylinux
+        # container that cannot see this one — CIBW_BEFORE_ALL_LINUX
+        # below is their toolchain.
       - name: Build wheels
         uses: pypa/cibuildwheel@v4.1.1
         env:
@@ -30,9 +36,47 @@ jobs:
           CIBW_SKIP: "*-musllinux*"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_ARCHS_MACOS: "arm64"
+          # setuptools-rust needs cargo inside the manylinux container.
+          # This is cibuildwheel's documented recipe for Rust projects;
+          # CIBW_ENVIRONMENT_LINUX is what puts the freshly-installed
+          # toolchain on PATH for the build step that follows.
+          CIBW_BEFORE_ALL_LINUX: >-
+            curl -sSf https://sh.rustup.rs
+            | sh -s -- -y --profile minimal --default-toolchain stable
+          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH"'
           # Import a compiled extension module, not just the (pure-Python)
           # top-level package, so a mistagged or broken wheel fails the build.
-          CIBW_TEST_COMMAND: python -c "import hazma.spectra._photon._muon"
+          # Both toolchains are named: a Cython extension and the Rust one.
+          CIBW_TEST_COMMAND: >-
+            python -c "import hazma.spectra._photon._muon, hazma._core"
+      - name: Assert every wheel ships the Rust extension as abi3
+        # The wheels themselves stay CPython-tagged and will until the
+        # last Cython extension goes in Phase 06 — a wheel tag is a
+        # property of the distribution, not of one extension. What is
+        # checkable now is extension-level: PyO3's abi3-py310 feature
+        # makes setuptools-rust install the cdylib as `_core.abi3.so`,
+        # so that filename inside the archive *is* the limited-API
+        # assertion. A plain `_core.cpython-312-*.so` would mean the
+        # feature silently stopped applying.
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib, sys, zipfile
+
+          wheels = sorted(pathlib.Path("wheelhouse").glob("*.whl"))
+          if not wheels:
+              sys.exit("no wheels in wheelhouse/ — nothing was verified")
+          bad = []
+          for wheel in wheels:
+              names = zipfile.ZipFile(wheel).namelist()
+              ok = "hazma/_core.abi3.so" in names
+              print(f"{'ok  ' if ok else 'FAIL'} {wheel.name}")
+              if not ok:
+                  bad.append(wheel.name)
+          if bad:
+              sys.exit(f"missing hazma/_core.abi3.so in: {', '.join(bad)}")
+          print(f"{len(wheels)} wheel(s) carry hazma/_core.abi3.so")
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}
