@@ -14,7 +14,14 @@
 //! submodules are registration only. So "the PyO3 layer lives
 //! separately" (rules.md rule 8) is about keeping it out of [`kernels`],
 //! not about confining it to one file.
+//!
+//! [`constants`] sits below `kernels` in that stack and is `pub` while
+//! its neighbours are private — nothing in this crate reads it yet, and a
+//! private module of unread `const`s is a wall of `dead_code`. Publishing
+//! it is also honest: the tables are the crate's most reusable surface,
+//! and Phases 03–06 consume them from every kernel module.
 
+pub mod constants;
 mod dispatch;
 mod kernels;
 mod neutrino;

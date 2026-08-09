@@ -24,7 +24,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
-| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
+| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 done (2026-08-09), 3.2–3.5 open |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
@@ -311,6 +311,79 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   public-API narrowing waiting to be copied into every Phase 04–06
   wrapper. Fixed to `"(x)"` — the same thing `hazma/_core.pyi` already
   described.
+- **A fresh env drops the parity corpus out of bit-equality mode, and
+  the cause is a NumPy patch release** (Task 3.1). `uv pip install -e .`
+  on a new venv resolved NumPy **2.5.2**; the corpus manifest records
+  **2.5.1**, and `tolerances.provenance` compares the whole numerics
+  environment, not just the kernel digest and the served-kernel
+  predicate. Result: `exact: False`, detail `numpy '2.5.1' -> '2.5.2'`,
+  the budgets in force, and a bare suite reporting **14 skipped instead
+  of 13** — the corpus's own signal working exactly as Task 2.3
+  documented, but it costs a re-run if you notice it only at the end.
+  **Build the env with `numpy==2.5.1` pinned**, and rebuild
+  `--no-build-isolation` so the extensions compile against the same
+  headers:
+
+  ```sh
+  uv pip install --python .venv/bin/python "numpy==2.5.1" setuptools \
+      wheel "cython==3.2.9" setuptools-rust
+  uv pip install --python .venv/bin/python -e . --no-build-isolation
+  ```
+
+  Check before trusting any parity claim, in one second and without
+  running the suite:
+
+  ```sh
+  python -c "import json,sys; sys.path.insert(0,'test/parity'); \
+  import tolerances; \
+  print(tolerances.provenance(json.load(open('test/parity/data/manifest.json'))))"
+  ```
+
+  The digest and the served-kernel predicate were both clean here — it
+  was purely the dependency. This will recur for every Phase 03–06 task
+  that builds a fresh env, and it will recur harder as NumPy and SciPy
+  move on.
+- **Hazma holds three fine-structure constants** (Task 3.1):
+  `_utils/constants.pxd` `1/137.035999084` (a pre-CODATA-2022 value —
+  CODATA 2022 is 137.035999177(21), arXiv:2409.03787),
+  `_utils/legacy_parameters.pxd` `1/137`, and `hazma/parameters.py:205`
+  `1/137.04`. The masses, by contrast, agree: all twelve in
+  `constants.pxd` are bit-equal to their `parameters.py` counterparts
+  (checked). The third α is pure Python and outside this project's
+  scope, but any future table-merge follow-up has to account for it.
+- **One `.pyx` reads from *both* constant tables, and the port had to
+  find that out rather than be told** (Task 3.1).
+  `hazma/spectra/_photon/_pion.pyx` `include`s `constants.pxd`, so its
+  `MPI` / `ME` / `MMU` aliases are PDG values — but its five hard-coded
+  kinematic literals (`ENG_MU_PIRF`, `GAMMA_MU_PIRF`, `BETA_MU_PIRF`,
+  `ENG_GAM_MAX_MURF`, `ENG_GAM_MAX_PIRG`) reproduce **bit-exactly** from
+  `legacy_parameters.pxd`'s masses and from no other table — someone
+  evaluated the formulas once, against the older header, and pasted the
+  digits. Recomputing them from the header the file actually includes
+  moves `ENG_MU_PIRF` by 4.7e-5 MeV and every charged-pion photon
+  spectrum with it. The divergence recorded in
+  `../references/cython-inventory.md` §Bugs 3 was between two *files*;
+  this one is inside a single module, so "which header does this
+  extension include" is not enough to answer "which masses does it use".
+  **Phase 04 must not consolidate it**; `constants::derived::photon_pion`
+  carries both halves with the reasoning, and two tests in each language
+  fail if either half moves.
+- **A per-file bit-equality check cannot catch a consolidation**
+  (Task 3.1). Adopting one table's masses in the other passes every
+  file-by-file comparison — each side still matches *some* source. What
+  catches it is a literal roster of the 19 names the two `.pxd` share
+  and the 12 they disagree on, asserted as a partition
+  (`test_the_two_tables_diverge_on_exactly_the_recorded_names`). A
+  computed partition would have accepted any partition, which is the
+  general shape: rule 4's content is that a specific split does not move,
+  so the test has to name it.
+- **`R_FACTOR`'s Cython comment has an exponent typo** (Task 3.1). Both
+  muon kernels annotate the literal `1.0001870858234163` with a
+  `12 r^2 ln(r^2)` log term; only `r^4` reproduces the digits. The number
+  is right, the comment is wrong, and the `.pyx` is left untouched — but
+  a Phase 04 port that recomputes from the comment instead of copying the
+  number lands 0.3% away — `0.9972020119096803` against
+  `1.0001870858234163`. Pinned in `test_core_constants.py`.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -496,6 +569,26 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   change under `hazma/` across all three tasks is the non-executable
   `hazma/_core.pyi` stub.
 
+- **Task 3.1, 2026-08-09 (constants module): no public value changes**
+  (verified: `git diff origin/master -- hazma` is empty — 0 lines, on a
+  tree cleaned and rebuilt before anything was run). The diff is one new
+  Rust module that no Python imports and no Rust kernel calls, the
+  `pub mod` line that admits it, one new test module, and project
+  bookkeeping; no library module, kernel, signature, constant or build
+  *input* under `hazma/` is reachable from it. Measured rather than only
+  argued: the bare suite ran the parity corpus in **bit-equality mode** —
+  `rtol = 0` across all 41 consumed entry points, 179,695 pinned values —
+  and passed, at `1088 passed, 13 skipped` (+25 on Phase 02's 1063, all
+  of them the new module; the skip count is unchanged, which is what
+  proves the mode). What the task *did* produce is 224 constants that now
+  exist in two places at once, and the argument that the second copy is
+  bit-for-bit the first: 25 Python tests comparing source to source, five
+  `cargo test` units, and a thirteen-mutation validity campaign. **Every
+  Phase 04–06 drift line below this one is measured against Rust kernels
+  reading these tables**, so a wrong value here would surface as a kernel
+  bug rather than a constants bug — which is the whole reason the task
+  refuses to trust its own transcription.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -513,6 +606,14 @@ it from memory.)
   `.pyx` cimport their `__pyx_capi__` symbols — recorded in the
   Phase 04 file's Goal block.
 - Constants bit-parity before consolidation → `../rules.md` rule 4.
+  **Implemented in Task 3.1** as three namespaces mapped to sources:
+  `constants::pdg` ← `_utils/constants.pxd` (151), `constants::legacy` ←
+  `_utils/legacy_parameters.pxd` (48), `constants::derived::<source_pyx>`
+  ← the module-local `DEF`s of the five `.pyx` that declare any (25).
+  Every module-local `DEF` is carried, aliases included, so the coverage
+  check can rescan the tree rather than trust a transcribed list; the
+  module is `pub` in `lib.rs` where its neighbours are private, because
+  224 unread `const`s in a private module is a wall of `dead_code`.
 - **Plan-review round 1 (2026-08-03)** forced four canonical changes:
   (1) `version_bump` → `major` (Phase 00 deletes
   `hazma/deprecated/rambo.py`; any `deprecated/` removal is `major`
@@ -672,10 +773,28 @@ it from memory.)
   Phases row updated. Nothing under `hazma/`. Full list in
   [phase-02/README.md](phase-02/README.md).
 
+### Phase 03
+
+- **Task 3.1** — new `rust/src/constants.rs` (224 `pub const`s in
+  `pdg` / `legacy` / `derived::*`, a `# Sources` provenance header, and
+  five unit tests); `pub mod constants;` plus its rationale paragraph in
+  `rust/src/lib.rs`; new `test/test_core_constants.py` (25 tests). No
+  canonical patch — the phase file's three Task 3.1 criteria are
+  satisfied as written. Nothing under `hazma/`. Full list in
+  [phase-03/README.md](phase-03/README.md).
+
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 03 Task 3.1 state (2026-08-09):** bare `pytest -q` →
+  `1088 passed, 13 skipped` on the capturing environment, parity suite
+  included and in bit-equality mode;
+  `pytest test/test_core_constants.py -q` → `25 passed in 0.03s`;
+  `cargo test --no-default-features` → `7 passed` (5 new), clippy and
+  fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Thirteen
+  mutations — nine Python, four Rust — each caught by the test whose
+  name claimed it (table in the task note).
 - Per-phase Verification sections live in `phase-XX/README.md`.
 - **Phase 02 closing state (2026-08-09):** bare `pytest -q` →
   `1063 passed, 13 skipped` on the capturing environment (1076
@@ -818,8 +937,24 @@ it from memory.)
   and
   [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
   rather than their twelve task notes — the learnings are the
-  distillation, the notes are history. **The next task is Phase 03,
-  Task 3.1.** No phase carries a decision gate.
+  distillation, the notes are history. **Phase 03 is in progress:
+  Task 3.1 landed 2026-08-09, so the next task is 3.2, 3.3 or 3.5 (all
+  dependency-free) or 3.4 (unblocked by 3.1).** No phase carries a
+  decision gate.
+- **`hazma_core::constants` exists and is bit-equal to the Cython**
+  (Task 3.1). `constants::pdg` is `hazma/_utils/constants.pxd` (151
+  values), `constants::legacy` is `hazma/_utils/legacy_parameters.pxd`
+  (48), and `constants::derived::<source_pyx>` holds the module-local
+  `DEF`s of the five `.pyx` that declare any (25). When porting a
+  kernel, name the table its `.pyx` `include`s — `pdg` for everything
+  under `hazma/spectra/**`, `legacy` for the four mediator spectrum
+  extensions — **except** `derived::photon_pion`, which legitimately
+  reads both (see Findings). Two gates hold this:
+  `test/test_core_constants.py` (25 tests, 0.03s, needs no build, runs
+  on every platform) compares the Rust and Cython *sources* bit-for-bit,
+  and five `cargo test` units check the compiled side. Both die with the
+  Cython, and each says in its own text what to delete when a `.pyx`
+  goes.
 - **`test/test_core_dispatch.py` is the template every Phase 04–06 kernel
   swap copies** (Task 2.3; 54 tests, 0.27s, platform-independent). It
   pins every branch of `dispatch::map_unary` through
