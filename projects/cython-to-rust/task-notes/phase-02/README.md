@@ -3,7 +3,9 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 02
-**Status:** In Progress (Tasks 2.1 and 2.2 complete 2026-08-08)
+**Status:** Complete (2026-08-09 — Tasks 2.1 and 2.2 on 2026-08-08,
+Task 2.3 on 2026-08-09;
+[learnings](../../learnings/phase-02-rust-scaffold.md))
 **Plan References:** `../../phases/phase-02-rust-scaffold.md`
 **Related ADRs:** ADR-0001 (accepted)
 **Depends On:** Phase 01 complete
@@ -19,12 +21,14 @@ scaffold.
 | --- | ------ | ------------ | -------- | ----------- |
 | 2.1 | Crate + setuptools-rust integration | — | **Complete (2026-08-08)** | [task-2.1-crate-skeleton.md](task-2.1-crate-skeleton.md) |
 | 2.2 | CI, preflight, dev-loop docs | 2.1 | **Complete (2026-08-08)** | [task-2.2-ci-devloop.md](task-2.2-ci-devloop.md) |
-| 2.3 | Cross-language plumbing test | 2.1 | Not started | [task-2.3-plumbing-test.md](task-2.3-plumbing-test.md) |
+| 2.3 | Cross-language plumbing test | 2.1 | **Complete (2026-08-09)** | [task-2.3-plumbing-test.md](task-2.3-plumbing-test.md) |
 
 ## Exit Criteria
 
-- All rows Complete; phase file frontmatter `status: Complete`.
-- Phase learnings at `../../learnings/phase-02-rust-scaffold.md`.
+- ~~All rows Complete; phase file frontmatter `status: Complete`.~~ —
+  **met 2026-08-09.**
+- ~~Phase learnings at `../../learnings/phase-02-rust-scaffold.md`.~~ —
+  **written 2026-08-09.**
 
 ## Inputs Reviewed
 
@@ -119,6 +123,30 @@ scaffold.
   not this diff — so `--md` gets the six clean ones and the count
   comparison above is the evidence, rather than the file being quietly
   dropped.
+- **Three dispatch behaviors the reference prose did not state**, all
+  measured against the built extension in Task 2.3 and now pinned by
+  `test/test_core_dispatch.py`: (a) **rank is checked before dtype**, so
+  a 2-D int64 array reports `must be 0 or 1-dimensional.`; (b) **a 0-d
+  array still enforces dtype** where a Python `int` does not — the 0-d
+  path lives inside the array branch behind the typed view, so
+  `roundtrip(4)` is `4.0` and `roundtrip(np.array(4))` is a `ValueError`;
+  (c) **non-`float` NumPy scalars are accepted** (`np.float32`,
+  `np.int64`, `np.uint8`, `np.bool_`) via the `extract::<f64>` arm. A
+  Task 3.5 decision that changes any of them now turns a named test red.
+- **`text_signature` is a claim PyO3 does not enforce** (Task 2.3).
+  `roundtrip` advertised `(x, /)` while `roundtrip(x=1.5)` worked;
+  enforcing positional-only needs `#[pyo3(signature = (x, /))]`. The
+  Cython entry points are `def` functions that take keywords — measured,
+  `dnde_photon(egam=100.0, emu=200.0)` returns
+  `2.0036713127483527e-05` — so keyword-accepting is the target and the
+  `/` was a latent public-API narrowing waiting to be copied into every
+  Phase 04–06 wrapper. Fixed to `"(x)"`, which is what `hazma/_core.pyi`
+  already described.
+- **A "fresh" array from the `numpy` crate does not own its data** (Task
+  2.3). `roundtrip(a).flags.owndata` is `False` and `.base` is a
+  `PySliceContainer` wrapping the Rust `Vec`. Assert non-aliasing
+  (`is not`, `.base is not`, `np.shares_memory`, mutate-and-check) rather
+  than `owndata`, which is red on correct code.
 
 ## Decisions and Implementation Notes
 
@@ -186,6 +214,17 @@ and seven skill files; two canonical patches
 modified, 1 added. Nothing under `hazma/` or `rust/`. Full list in
 [task-2.2-ci-devloop.md](task-2.2-ci-devloop.md).
 
+### Task 2.3
+
+New `test/test_core_dispatch.py` (54 tests in six classes — the template
+every Phase 04–06 kernel swap copies); a one-line non-executable change
+in `rust/src/lib.rs` (`roundtrip`'s `text_signature` `"(x, /)"` → `"(x)"`
+plus the doc comment recording why); the phase-closure bookkeeping
+(`../../phases/phase-02-rust-scaffold.md` frontmatter and Task 2.3 exit
+criteria, `../../PLAN.md`'s Phases row, `../README.md`, this file) and
+`../../learnings/phase-02-rust-scaffold.md`. Nothing under `hazma/`.
+Full list in [task-2.3-plumbing-test.md](task-2.3-plumbing-test.md).
+
 ## Verification
 
 - Per-task verification lives in each task note. Task 2.1's closing
@@ -211,6 +250,20 @@ modified, 1 added. Nothing under `hazma/` or `rust/`. Full list in
   the assertion step as carrying the extension. PR #56's eight checks
   are green, including the new `rust` job at 30s. Full tables in the
   task note.
+- **Task 2.3 state (2026-08-09)**, same interpreter, tree cleaned (40
+  stale `.c`/`.so`) and rebuilt first, and rebuilt again after the
+  `lib.rs` edit: `test/test_core_dispatch.py` → `54 passed in 0.27s`;
+  bare `pytest -q` → `1063 passed, 13 skipped, 5 warnings in 552.68s`
+  (1076 collected, +54 on Task 2.2's 1022 — all of them the new module),
+  parity suite still in **bit-equality mode** (skip count unchanged at
+  13). The three cargo gates green. `scripts/agents/preflight.sh`
+  RESULT: PASS. The 54 assertions were validated by a **six-mutation
+  campaign** against `rust/src/{dispatch,lib}.rs` — text_signature
+  reverted, array path returning the input object, dtype checked before
+  rank, `{quantity}` dropped from a message, 0-d array rejected, array
+  path reading the raw buffer instead of the view — each applied,
+  rebuilt, run, reverted, and each caught by the test whose name claimed
+  it. Full tables in the task note.
 
 ## Open Questions
 
@@ -255,9 +308,12 @@ notes.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 02:** read `../../PLAN.md`,
-`../README.md`, this file, then the phase file. The extension's import
-path is final from day one: `hazma._core`.
+**Phase 02 is Complete (2026-08-09).** The next task is **Phase 03,
+Task 3.1**. Read
+[`../../learnings/phase-02-rust-scaffold.md`](../../learnings/phase-02-rust-scaffold.md)
+rather than this phase's three task notes — the learnings are the
+distillation, the notes are history. The extension's import path was
+final from day one: `hazma._core`.
 
 **Currently safe to assume:**
 
@@ -279,8 +335,17 @@ path is final from day one: `hazma._core`.
   rebuild-awareness bullet of every review skill — so a future reviewer
   is expected to challenge a cargo-only run cited as a Python result.
 - `dispatch::map_unary` is the one implementation of the entry-point
-  dispatch contract; Task 2.3's plumbing tests are written against
-  `hazma._core.roundtrip`, which exercises every branch of it.
+  dispatch contract, and as of Task 2.3 **every branch of it is pinned
+  from Python** by `test/test_core_dispatch.py` (54 tests, 0.27s,
+  platform-independent), written against `hazma._core.roundtrip`.
+- **That module is the template Phase 04–06 swaps copy.** Swap
+  `roundtrip` for the kernel and `QUANTITY` for the wording that kernel
+  passes to `map_unary`, keep every test, and add the kernel's numerical
+  tests *beside* them rather than merged in. The copy instructions are in
+  the module docstring so they travel with the file. It deliberately does
+  not re-pin values against Cython — that is the corpus's job.
+- **Do not assert `owndata` on a returned array**; it is `False` on
+  correct code. Non-aliasing is the assertable property.
 - The parity gate is in bit-equality mode again and stays there until a
   real kernel lands. Do not re-key it on `rust_core_available()`.
 
@@ -290,12 +355,15 @@ path is final from day one: `hazma._core`.
   and green in PR #56's review round 1 (see Open Questions). It stays
   invisible to PR checks, so any *future* change to it needs its own
   dispatch.
-- The reference's dispatch contract now records four measured
-  divergences from the live Cython. Task 2.3 asserts the *target*
-  contract on `roundtrip`; Task 3.5 has to decide, per divergence,
-  whether the ported entry points keep the Cython behavior or take the
-  declared change.
-- **Task 2.3 is the last open task in this phase**, and it depends only
-  on Task 2.1. Nothing Task 2.2 changed constrains it beyond the new
-  obligation every task now inherits: a `.rs` edit means an editable
+- The reference's dispatch contract records four measured divergences
+  from the live Cython. Task 2.3 asserted the *target* contract on
+  `roundtrip`, with a comment at each of the two that surface at this
+  layer (0-d array, Python list) naming Task 3.5 as the decision point.
+  **Task 3.5 still has to decide, per divergence**, whether the ported
+  entry points keep the Cython behavior or take the declared change —
+  what changed is that either answer now moves a named test rather than
+  passing unnoticed.
+- ~~**Task 2.3 is the last open task in this phase.**~~ — **closed
+  2026-08-09.** No task in Phase 02 remains open. The obligation every
+  later task inherits is unchanged: a `.rs` edit means an editable
   reinstall before any pytest number is quotable.

@@ -92,7 +92,7 @@ total landed at 21–32 days across ~33 tasks.
 | --- | ------- | ------ | ------ | ---------- |
 | 00 | Dead-code purge | [`phases/phase-00-dead-code-purge.md`](phases/phase-00-dead-code-purge.md) | 1–2 | **Complete (2026-08-06)** — 32→20 extensions, zero C++, `gamma_ray` removal (ADR-0003); [learnings](learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [`phases/phase-01-parity-corpus.md`](phases/phase-01-parity-corpus.md) | 2–3 | **Complete (2026-08-08)** — 41 entry points pinned, one pytest gate, legacy `.npy` suites retired; parity scoped to the capturing platform ([learnings](learnings/phase-01-parity-corpus.md)) |
-| 02 | Rust scaffold | [`phases/phase-02-rust-scaffold.md`](phases/phase-02-rust-scaffold.md) | 1–2 | `hazma._core` (abi3) building beside Cython via setuptools-rust |
+| 02 | Rust scaffold | [`phases/phase-02-rust-scaffold.md`](phases/phase-02-rust-scaffold.md) | 1–2 | **Complete (2026-08-09)** — `hazma._core` (abi3) building beside Cython via setuptools-rust, gated in CI and preflight, dispatch contract pinned from Python ([learnings](learnings/phase-02-rust-scaffold.md)) |
 | 03 | Numerics foundation | [`phases/phase-03-numerics-foundation.md`](phases/phase-03-numerics-foundation.md) | 3–5 | constants, spence/K-Bessels, QUADPACK port, interp, boost, dispatch |
 | 04 | Spectra kernels | [`phases/phase-04-spectra-kernels.md`](phases/phase-04-spectra-kernels.md) | 4–6 | 16 entry points swapped; twins deleted (4 capi survivors defer to 06) |
 | 05 | Mediator cross sections | [`phases/phase-05-mediator-cross-sections.md`](phases/phase-05-mediator-cross-sections.md) | 2–3 | 16 kernels + 2 thermal ⟨σv⟩ swapped, 2 dead exports dropped; relic validation |

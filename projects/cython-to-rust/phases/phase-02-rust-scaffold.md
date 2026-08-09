@@ -1,7 +1,7 @@
 ---
 phase: 02
 title: Rust scaffold
-status: Not started
+status: Complete
 ---
 
 # Phase 02: Rust scaffold
@@ -104,6 +104,17 @@ yet: the walking skeleton proves the toolchain end to end.
   and 2-D error paths raising `ValueError` with the contract message
   (see `../references/numerics-replacements.md`, dispatch contract).
 - The same test module is the template later kernel swaps copy.
+- **`roundtrip`'s advertised signature matches the one that works, and
+  matches the Cython convention it replaces.** Added by Task 2.3 on
+  2026-08-09, widening the task past "tests only" because the criterion
+  above is not satisfiable otherwise: `#[pyo3(text_signature = "(x, /)")]`
+  made `inspect.signature` report positional-only while `roundtrip(x=1.5)`
+  worked, and the Cython entry points are `def` functions that accept
+  keywords (measured: `dnde_photon(egam=…, emu=…)` returns a value). A
+  template that advertises a narrower signature than the API it replaces
+  propagates a public-API narrowing into every Phase 04–06 wrapper that
+  copies it. Fixed to `"(x)"`, which is also what `hazma/_core.pyi`
+  already described.
 
 ## Exit Criteria
 
