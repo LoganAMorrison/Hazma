@@ -16,7 +16,11 @@ yet: the walking skeleton proves the toolchain end to end.
 ## Prerequisites
 
 - Phase 01 complete (the corpus exists before any Rust lands).
-- ADR-0001 (accepted); `../rules.md` rules 6–8.
+- ADR-0001 (accepted); `../rules.md` rules 6–8 (Rust conventions 1–3:
+  edition 2024 and the cargo gates; one cdylib named `hazma._core` with
+  per-domain submodules; kernels are PyO3-free). Rule 9 (edge guards)
+  binds the porting phases, not the scaffold. See that file's numbering
+  key — the flat and per-section schemes are both in use.
 
 ## Tasks
 

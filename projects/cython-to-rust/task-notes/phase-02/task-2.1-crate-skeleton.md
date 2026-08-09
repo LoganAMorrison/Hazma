@@ -138,7 +138,13 @@ exact: True | detail: ''
   `_core.cpython-312-darwin.so`), and one such file built under CPython
   3.12.12 imports unchanged under 3.13.7 — see Verification. Per
   `lessons.md` `[wheel-tag-vs-extension-abi]` the *wheel* stays
-  CPython-tagged, and it does: `hazma-2.1.0-cp313-cp313-macosx_11_0_arm64.whl`.
+  CPython-tagged, and it does. **The tag names the building interpreter,
+  not the extension:** the same tree yields
+  `hazma-2.1.0-cp312-cp312-macosx_11_0_arm64.whl` from the 3.12.12 venv
+  and `…-cp313-cp313-…` from a 3.13.7 one, while the shared object inside
+  is `_core.abi3.so` in both. The invariant to check is therefore
+  "`cp<XY>`, not `abi3`" — quoting one interpreter's tag as *the* tag is
+  what let two different figures into this note's first draft.
 
 ### The live dispatch contract is not what the reference describes
 
@@ -180,11 +186,15 @@ criteria ask the plumbing suite to assert. Nothing in `hazma/` calls
 
 ## Decisions and Implementation Notes
 
-- **Crate layout mirrors `rules.md` rule 3.** `kernels.rs` is plain
-  GIL-free Rust with its own `#[cfg(test)]` tests; `dispatch.rs` is the
-  single PyO3 boundary; the five submodule files are registration only.
-  Phases 03–06 add kernels to `kernels.rs`-shaped modules and call
-  `dispatch::map_unary`, never PyO3 inside a kernel.
+- **Crate layout mirrors `rules.md` rule 8** (Rust conventions rule 3).
+  `kernels.rs` is plain GIL-free Rust with its own `#[cfg(test)]` tests
+  and no PyO3 types at all; everything PyO3 touches sits above it —
+  `dispatch.rs` owns argument conversion, array glue and error mapping,
+  `lib.rs` owns module registration, and the five submodule files are
+  registration only. The rule is that PyO3 stays *out of the kernels*,
+  not that it lives in exactly one file: `lib.rs` and the submodules
+  necessarily use it too. Phases 03–06 add kernels to `kernels.rs`-shaped
+  modules and call `dispatch::map_unary`, never PyO3 inside a kernel.
 - **Submodules are registered in `sys.modules`, not just attached.**
   `add_submodule` alone makes `from hazma._core import photon` work but
   leaves `from hazma._core.photon import dnde_photon_muon` an
@@ -204,6 +214,28 @@ criteria ask the plumbing suite to assert. Nothing in `hazma/` calls
 - **`Cargo.lock` is committed.** This crate builds a shipped binary
   artifact, so the resolved dependency graph is a build input, and the
   sdist carries it.
+- **Review round 1 (PR #55) landed three fixes**, all documentation
+  except one docstring. (1) The note quoted two different wheel tags —
+  `cp313` in Findings, `cp312` in Verification — because the first
+  measurement was taken before the venv was rebuilt on 3.12.12 for
+  bit-equality mode, and never swept. Fixed by stating the *invariant*
+  (`cp<XY>`, not `abi3`) with the mechanism, rather than picking a tag.
+  (2) `rules.md` numbers its rules per section while the plan and phase
+  files cite them flat, and that mapping was written down nowhere, so
+  "rules 6–8" read as a dangling reference; `rules.md` now carries the
+  key. (3) "`dispatch.rs` is the single PyO3 boundary" overstated it —
+  `lib.rs` and the submodules use PyO3 too. Corrected in the note *and*
+  in `rust/src/lib.rs`'s module doc, which carried the same wording.
+- **The reviewer's own run is the first off-capture measurement of the
+  new predicate, and it corroborates.** On CPython 3.13 they got
+  `1008 passed, 14 skipped` against this task's `1009 passed, 13 skipped`
+  on 3.12.12 — 1022 collected both ways, with exactly one test moving
+  from pass to skip. That test is `test_running_on_the_capturing_tree`,
+  which is precisely the designed behavior: an interpreter that is not
+  the capturing one drops the suite to declared budgets and *says so*.
+  Had `rust_core_kernels()` still keyed on importability, the 3.12.12 run
+  would have skipped it too and the two runs would have been
+  indistinguishable.
 - **`.gitignore` gained an explicit `rust/target/`.** The bare `target/`
   under the PyBuilder heading already matched it by accident; naming it
   means a later cleanup of that unrelated line cannot silently start
@@ -359,9 +391,22 @@ That run is also what caught the NumPy-capsule panic (see Findings); on
 the first attempt the same command aborted with
 `pyo3_runtime.PanicException: Failed to access NumPy array API capsule`.
 
-The wheel stays CPython-tagged, which is correct while Cython remains:
-`hazma-2.1.0-cp312-cp312-macosx_11_0_arm64.whl`, containing 21 `.so`
-(20 Cython + `hazma/_core.abi3.so`) and 15 `.pyi`.
+The wheel stays CPython-tagged, which is correct while Cython remains.
+Re-derived from the final tree on the 3.12.12 venv, reading the tag out
+of the archive rather than off the filename:
+
+```text
+$ uv build --wheel
+Successfully built dist/hazma-2.1.0-cp312-cp312-macosx_11_0_arm64.whl
+$ python -c "…read('hazma-2.1.0.dist-info/WHEEL')…"
+Root-Is-Purelib: false
+Tag: cp312-cp312-macosx_11_0_arm64
+```
+
+21 `.so` inside (20 Cython + `hazma/_core.abi3.so`) and 15 `.pyi`. Build
+the same tree on 3.13.7 and the tag reads `cp313-cp313-…` with the same
+`_core.abi3.so` inside — the tag follows the interpreter, the extension
+does not.
 
 ### Packaging
 

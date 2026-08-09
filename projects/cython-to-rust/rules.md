@@ -4,6 +4,23 @@ Rules every task in this project must follow. Repo-wide invariants
 (preflight gate, PR conventions, versioning) are not restated here —
 see `AGENTS.md` and `docs/agents/`.
 
+## How the rules are numbered
+
+Rules restart at 1 in each section below, but the plan, the phase files
+and the task notes cite them **flat** — "rule 8", not "Rust conventions
+rule 3". Both schemes are in use and both are load-bearing; this table is
+the key, added 2026-08-08 after a Task 2.1 review read a flat citation as
+a dangling reference. Prefer the annotated form
+(`rules 6–8 (Rust conventions 1–3)`) in new text.
+
+| Flat | Section | In-section |
+| --- | --- | --- |
+| 1–3 | Parity discipline | 1–3 |
+| 4 | Constants | 1 |
+| 5 | Licensing | 1 |
+| 6–9 | Rust conventions | 1–4 |
+| 10–12 | Process | 1–3 |
+
 ## Parity discipline
 
 1. **The corpus gates every swap.** A kernel's Python wrapper is

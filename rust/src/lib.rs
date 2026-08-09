@@ -8,8 +8,12 @@
 //! do (`projects/cython-to-rust/rules.md`, Rust conventions rule 2).
 //!
 //! Layering inside the crate mirrors that rule: [`kernels`] is plain
-//! GIL-free Rust, [`dispatch`] is the single PyO3 boundary, and the
-//! submodules are registration only.
+//! GIL-free Rust with no PyO3 types at all, and everything PyO3 touches
+//! sits above it — [`dispatch`] owns argument conversion, array glue and
+//! error mapping, this module owns registration, and the per-domain
+//! submodules are registration only. So "the PyO3 layer lives
+//! separately" (rules.md rule 8) is about keeping it out of [`kernels`],
+//! not about confining it to one file.
 
 mod dispatch;
 mod kernels;

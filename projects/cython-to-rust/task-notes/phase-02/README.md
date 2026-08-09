@@ -29,7 +29,8 @@ scaffold.
 ## Inputs Reviewed
 
 - `../../phases/phase-02-rust-scaffold.md`; `../README.md`;
-  `../../rules.md` rules 6–8.
+  `../../rules.md` rules 6–8 (Rust conventions 1–3; see that file's
+  numbering key).
 
 ## Findings
 
@@ -57,10 +58,13 @@ scaffold.
 - **abi3 is verifiable without CI.** The installed file is
   `hazma/_core.abi3.so`, and the exact file built under CPython 3.12.12
   loads and runs under 3.13.7 — in an interpreter with no NumPy
-  installed. The wheel stays CPython-tagged
-  (`hazma-2.1.0-cp313-cp313-macosx_11_0_arm64.whl`), which is correct
-  while Cython extensions remain (`lessons.md`
-  `[wheel-tag-vs-extension-abi]`).
+  installed. The wheel stays CPython-tagged, which is correct while
+  Cython extensions remain (`lessons.md`
+  `[wheel-tag-vs-extension-abi]`) — and the tag names the *building
+  interpreter*, so it is `cp312` from the 3.12.12 venv this task used and
+  `cp313` from a 3.13.7 one, with `_core.abi3.so` inside either way. The
+  invariant is "`cp<XY>`, not `abi3`"; do not quote one build's tag as
+  though it were fixed.
 - **The `numpy` crate panics, it does not raise, when NumPy is absent.**
   `cast::<PyUntypedArray>` reaches for the array-API capsule; without
   NumPy that is a `PanicException` across the FFI boundary. Found by the
