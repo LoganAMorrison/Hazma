@@ -96,9 +96,12 @@ scaffold.
   the step fails on an empty `wheelhouse/` as well as on a missing
   `.so`. A check that can verify nothing and still report success is
   `docs/agents/lessons.md` `[gate-disabled-stays-green]` waiting to
-  happen. Confirming the job itself stays green still needs a manual
-  `workflow_dispatch` run against the branch; it is not a PR check and
-  no amount of local work substitutes.
+  happen. **Confirming the job itself needs a manual dispatch, and no
+  amount of local work substitutes** — round 1 of PR #56's review made
+  exactly that call. `gh workflow run release.yml --ref <branch>` is the
+  command; verify the publishing job is gated on
+  `github.event_name == 'release'` first, so the dispatch builds without
+  publishing. Measured cost: ~17 min for both platforms.
 - **`cargo test` and `cargo build` are not rebuilds** (Task 2.2, now
   written into `AGENTS.md` and `docs/agents/environment.md`). They work
   out of `rust/target/`, which nothing Python imports; only
@@ -202,8 +205,12 @@ modified, 1 added. Nothing under `hazma/` or `rust/`. Full list in
   block (SKIP / WARN / FAIL / PASS) were forced and observed rather than
   reasoned about. The abi3 criterion was measured by running
   `release.yml`'s own assertion script against a real hybrid wheel
-  (`cp312`-tagged, `hazma/_core.abi3.so` inside). `release.yml` itself
-  is unexercised — it has no PR trigger. Full tables in the task note.
+  (`cp312`-tagged, `hazma/_core.abi3.so` inside). **Review round 1 then
+  ran `release.yml` for real** (dispatch → run 31297673951, `success`;
+  `publish` skipped): 10 wheels across both platforms, each reported by
+  the assertion step as carrying the extension. PR #56's eight checks
+  are green, including the new `rust` job at 30s. Full tables in the
+  task note.
 
 ## Open Questions
 
@@ -218,15 +225,21 @@ modified, 1 added. Nothing under `hazma/` or `rust/`. Full list in
   entry now installs `dtolnay/rust-toolchain@stable` before building,
   `release.yml` gained the container-side toolchain the cibuildwheel job
   needs, and a third job runs the cargo gates.
-- **`release.yml` is still unexercised, and cannot be exercised by a
-  PR.** It fires only on `release: published` and `workflow_dispatch`, so
-  the toolchain wiring and the new abi3 assertion step in `build-wheels`
-  have been reasoned from cibuildwheel's documented Rust recipe and
-  verified locally against a real hybrid wheel — not observed in the
-  manylinux container. Whoever lands this should trigger one manual
-  `workflow_dispatch` run against the branch before treating the
-  Task 2.2 exit criterion "wheel-build job still succeeds" as measured.
-  Phase 07 Task 7.1 rewrites this job for maturin regardless.
+- ~~**`release.yml` is still unexercised, and cannot be exercised by a
+  PR.**~~ — **closed in PR #56's review round 1.** A reviewer refused a
+  `Complete` status resting on an unrun exit criterion; the fix was to
+  run it, not to soften it. `gh workflow run release.yml --ref <branch>`
+  → run 31297673951, conclusion `success`: both `build-wheels` jobs and
+  `build-sdist` green, `publish` **skipped** because it is gated on
+  `github.event_name == 'release'` (so a dispatch is build-only — check
+  that gate before dispatching anything). The assertion step printed
+  `5 wheel(s) carry hazma/_core.abi3.so` on each platform: 10 wheels,
+  `cp310`–`cp314` × {macOS arm64, manylinux_2_28 x86_64}, the unchanged
+  CPython-tagged matrix. Phase 07 Task 7.1 rewrites this job for maturin
+  and inherits the same obligation — a workflow without a
+  pull-request trigger has to be dispatched deliberately or its criteria
+  stay unmeasured (`docs/agents/lessons.md`
+  `[unrun-workflow-cannot-close-a-criterion]`).
 - ~~setuptools-rust + editable-install rebuild ergonomics under uv~~ —
   **answered by Task 2.1**: `uv pip install -e .` builds Cython and Rust
   in one pass with no extra flags, and re-running it after a `.rs` edit
@@ -273,9 +286,10 @@ path is final from day one: `hazma._core`.
 
 **Currently risky / unknown:**
 
-- `release.yml` (see Open Questions): wired, locally evidenced, never
-  run. It needs one `workflow_dispatch` before anyone calls its half of
-  the Task 2.2 criteria measured.
+- ~~`release.yml`: wired, locally evidenced, never run.~~ — dispatched
+  and green in PR #56's review round 1 (see Open Questions). It stays
+  invisible to PR checks, so any *future* change to it needs its own
+  dispatch.
 - The reference's dispatch contract now records four measured
   divergences from the live Cython. Task 2.3 asserts the *target*
   contract on `roundtrip`; Task 3.5 has to decide, per divergence,

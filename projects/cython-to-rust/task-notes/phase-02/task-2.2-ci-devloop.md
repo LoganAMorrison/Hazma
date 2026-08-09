@@ -66,10 +66,14 @@ Copied from the phase file's Task 2.2 block:
   Task 0.4's wheel-vs-sdist lesson: two artifacts, two mechanisms, and
   fixing one has never fixed the other.
 - **`release.yml` cannot be verified by a pull request.** Its triggers
-  are `release: published` and `workflow_dispatch` only. So the exit
+  are `release: published` and `workflow_dispatch` only, so the exit
   criterion "wheel-build job still succeeds with the hybrid build" is
-  not observable from this branch's checks — see Open Questions for what
-  closes it, and Verification for what was measured locally instead.
+  invisible to this branch's checks however green they are. The
+  consequence, made concrete by review round 1: such a criterion has to
+  be closed by an explicit `gh workflow run … --ref <branch>`, which is
+  safe here only because `publish` is gated on
+  `github.event_name == 'release'` and therefore skips. §Verification
+  carries the run.
 - **`cargo build` publishes nothing to Python** — measured, not assumed.
   Cargo works out of `rust/target/`; the importable artifact is
   `hazma/_core.abi3.so`, and only `pip install -e .` puts it there.
@@ -145,9 +149,23 @@ Copied from the phase file's Task 2.2 block:
   the repo already pins actions by tag (`pypa/cibuildwheel@v4.1.1`,
   `actions/checkout@v7`). The `rust` job installs a Python for one
   reason: `cargo test --no-default-features` links libpython for real.
-- **No new `lessons.md` entry.** Its contract admits entries a *review*
-  caught, each citing a real PR; nothing here was caught by review, and
-  an uncited lesson is a guess wearing a citation's clothes.
+- **Review round 1 (PR #56) landed two fixes**, both accepted:
+  1. *An inserted gate renumbered the list and orphaned the prose that
+     pointed at it.* `docs/agents/preflight.md`'s "Markdown rules"
+     section still opened "Gate 6 runs against the committed
+     `.markdownlint.jsonc`" — true before this task inserted the cargo
+     gates, and pointing at `cargo test` after. The class fix went wider
+     than the cited line: `rg 'Gate [0-9]|gate [0-9]'` found six more
+     live references, and rather than re-pin them to numbers that will
+     shift again at the next insertion, the markdownlint ones are now
+     **named** (`the markdownlint gate`). New `lessons.md` entry
+     `[renumbered-list-orphans-its-references]`.
+  2. *A `Complete` status cannot sit on an unrun exit criterion.* The
+     evidence mapping said `release.yml` had never run; the status said
+     done. Resolved by running it — see §Verification — rather than by
+     softening either. The reviewer's alternative (leave the task
+     incomplete) was the right fallback and would have been taken had
+     the dispatch failed.
 
 ## Files Changed
 
@@ -191,7 +209,17 @@ Copied from the phase file's Task 2.2 block:
   bullet struck through and dated, since a bald present-tense claim in a
   Handoff section reads as current no matter which note it sits in.
 
-21 files: 20 modified, 1 added. Nothing under `hazma/` or `rust/`.
+Added in review round 1:
+
+- `docs/agents/lessons.md` — two entries,
+  `[renumbered-list-orphans-its-references]` and
+  `[unrun-workflow-cannot-close-a-criterion]`, both citing PR #56.
+- `docs/followups/todo/markdownlint-skips-skill-file-shapes.md` (3
+  occurrences) and `docs/followups/done/markdownlint-config-for-templates.md`
+  (2) — ordinal references to the markdownlint gate, now named rather
+  than numbered.
+
+24 files: 23 modified, 1 added. Nothing under `hazma/` or `rust/`.
 
 ## Verification
 
@@ -280,27 +308,58 @@ commands documented in the phase file, and the toolchain step precedes
 **Static checks on the changed non-Python files:**
 `shellcheck scripts/agents/preflight.sh` → 5 SC2181 (style) hits,
 **the same 5 as `origin/master`** — the new helper added none.
-`scripts/agents/check_doc_citations.py <18 docs>` → `docs scanned: 18`,
+`scripts/agents/check_doc_citations.py <21 docs>` → `docs scanned: 21`,
 `in-repo citations checked: 11`, `out-of-range or ambiguous: NONE`
 (non-zero scope, per `lessons.md` `[changed-vs-sees-only-commits]`).
 
-**Intentionally deferred / not verifiable here:** `release.yml` does not
-run on pull requests, so its container-side rustup, its extended test
-command and its assertion step have local evidence and cibuildwheel's
-documented Rust recipe behind them, but **no observed run**. Closing that
-needs one `workflow_dispatch` — see Open Questions. Likewise "full
-matrix green" is a post-push observation by construction.
+**`release.yml`, observed** (added in review round 1 — the reviewer was
+right that a Complete status could not sit on top of an unrun exit
+criterion). `gh workflow run release.yml --ref
+claude/cython-to-rust/task-2.2-ci-preflight-dev-loop-docs` →
+[run 31297673951](https://github.com/LoganAMorrison/Hazma/actions/runs/31297673951),
+**conclusion `success`**:
+
+| Job | Conclusion | Evidence |
+| --- | --- | --- |
+| Build sdist | success | no toolchain step, as designed — an sdist packages sources and compiles nothing |
+| Build wheels (macos-latest) | success | host `dtolnay/rust-toolchain` path |
+| Build wheels (ubuntu-latest) | success | container path — `Running before_all…` then `Rust is installed now. Great!` |
+| Publish to PyPI | **skipped** | `if: github.event_name == 'release'` held; a dispatch run publishes nothing |
+
+The assertion step printed real output on both platforms — 10 wheels, the
+unchanged CPython-tagged matrix the phase file predicts, each carrying
+the abi3 extension:
+
+```text
+ok   hazma-2.1.0-cp310-cp310-macosx_11_0_arm64.whl
+… cp311, cp312, cp313, cp314 …
+5 wheel(s) carry hazma/_core.abi3.so
+
+ok   hazma-2.1.0-cp310-cp310-manylinux_2_28_x86_64.whl
+… cp311, cp312, cp313, cp314 …
+5 wheel(s) carry hazma/_core.abi3.so
+```
+
+**"Full matrix green"** is likewise now observed rather than deferred:
+all eight checks on [PR #56](https://github.com/LoganAMorrison/Hazma/pull/56)
+passed — `Lint` 16s, `Rust (fmt, clippy, test)` 30s, and the six `Test`
+entries 11m52s–19m50s. The `rust` job passing is what settles the one
+risk this task could not test locally: `cargo test
+--no-default-features` links libpython for real, and whether
+`actions/setup-python`'s interpreter satisfies that on a runner was
+reasoned, not measured. It does.
 
 ## Open Questions
 
-- **`release.yml` has never run with any of this.** It is not a PR
-  check. Whoever lands this should fire one `workflow_dispatch` against
-  the branch and confirm `build-wheels` is green on both OSes and that
-  the new assertion step reports the wheel count it inspected. Until
-  then that half of the first exit criterion is *wired and locally
-  evidenced*, not *observed* — stated plainly rather than folded into a
-  green summary. Phase 07 Task 7.1 rewrites the job for maturin
-  regardless, so the window for this to matter is Phases 03–06.
+- ~~**`release.yml` has never run with any of this.**~~ — **closed in
+  review round 1**, which is where it belonged: a reviewer refused a
+  `Complete` status sitting on top of an unrun exit criterion, and was
+  right to. Dispatched run 31297673951 is green on both platforms with
+  `publish` skipped; details in §Verification. The general lesson is
+  worth keeping: a workflow with no pull-request trigger is invisible to
+  PR checks, so its criteria need an explicit dispatch, not an argument
+  from plausibility. Phase 07 Task 7.1 rewrites this job for maturin and
+  inherits the same obligation.
 - **The `Dockerfile` builds hazma from a fresh clone in an image with no
   cargo**, so it broke the moment Task 2.1 landed. No follow-up filed:
   `phases/phase-07-cutover.md` Task 7.3 already owns removing it
@@ -355,12 +414,12 @@ projects/…/task-2.2-ci-devloop.md:64,65,158            KEPT (this note)
 ```
 
 **Line-number citation sweep** — no `file:line` citation into code was
-added or invalidated; the mechanical check over all 18 touched docs,
+added or invalidated; the mechanical check over all 21 touched docs,
 re-run after the last prose edit:
 
 ```console
-$ scripts/agents/check_doc_citations.py <18 touched docs>
-docs scanned: 18
+$ scripts/agents/check_doc_citations.py <21 touched docs>
+docs scanned: 21
 in-repo citations checked: 11
   resolved by exact: 8
   resolved by suffix: 2
@@ -402,6 +461,50 @@ projects/…/task-2.2-ci-devloop.md:93,174    KEPT (this note describes the fix)
 docs/agents/preflight.md                    EDITED — both "parity corpus included" claims gone
 ```
 
+**Gate-ordinal sweep (review round 1).** Inserting the cargo gates as
+4–6 pushed markdownlint from gate 6 to gate 9, and prose elsewhere still
+pointed at the old ordinals. The renumbering *inside* the list was
+correct; what rotted were references from outside it.
+
+### Pre-fix occurrences
+
+```console
+$ rg -n 'Gate 6|gate 6' docs/ .claude/ .codex/ AGENTS.md projects/ scripts/
+docs/agents/preflight.md:106                      → markdownlint   EDITED
+docs/followups/todo/markdownlint-skips-skill-file-shapes.md:21     EDITED
+docs/followups/todo/markdownlint-skips-skill-file-shapes.md:68     EDITED
+docs/followups/todo/markdownlint-skips-skill-file-shapes.md:77     EDITED
+docs/followups/done/markdownlint-config-for-templates.md:48        EDITED
+docs/followups/done/markdownlint-config-for-templates.md:102       EDITED
+projects/…/phase-00/task-0.2-delete-mc-slice.md:390                KEPT
+projects/…/phase-01/task-1.3-test-wiring.md:405                    KEPT
+```
+
+The two `KEPT` hits are dated task-note records of what a *past* PR ran,
+not instructions to a future reader; the repo treats task notes as
+history (`../README.md`: "the learnings are the distillation, the notes
+are history"). Rewriting them would falsify the record. Everything
+prescriptive was fixed, including the `done/` follow-up, whose line 102
+made a present-tense claim about `preflight.sh`'s current behavior.
+
+Fixed by **naming** the gate rather than renumbering it, so the next
+insertion cannot rot the same text again.
+
+### Post-fix occurrences
+
+```console
+$ rg -n 'Gate 6|gate 6' docs/ .claude/ .codex/ AGENTS.md projects/ scripts/
+projects/…/phase-00/task-0.2-delete-mc-slice.md:390                KEPT
+projects/…/phase-01/task-1.3-test-wiring.md:405                    KEPT
+
+$ rg -n 'Gate [0-9]+|gate [0-9]+|Gates [0-9]' docs/agents/ docs/followups/ \
+    scripts/agents/preflight.sh
+scripts/agents/preflight.sh:138,156,174,192,243,268,281,317,364   1,2,3,4-6,7,8,9,10,11 — match the implementation
+docs/agents/preflight.md:106                       gate 9 = markdownlint ✓
+docs/agents/preflight.md:170                       gate 7 = pytest ✓
+docs/followups/todo/preflight-isort-ruff-red-on-trunk.md:20,24     gates 2,3 = isort, ruff ✓ (unmoved)
+```
+
 **Count sweep:**
 
 | Claim location | Command | Actual | Status |
@@ -411,10 +514,10 @@ docs/agents/preflight.md                    EDITED — both "parity corpus inclu
 | §Verification "2 passed" cargo tests | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `ok. 2 passed; 0 failed` | OK |
 | §Verification "5 SC2181, same as master" | `shellcheck … \| grep -c SC2181` on both trees | 5 and 5 | OK |
 | §Findings "nine sibling copies" | `rg` for the `.pyx`/`.pxd` triplet | 1 in `docs/agents/`, 7 under `.claude/skills/`, 1 under `.codex/skills/` = 9 | OK |
-| §Verification "18 docs scanned" | `check_doc_citations.py` summary, re-run last | `docs scanned: 18` | OK |
+| §Verification "21 docs scanned" | `check_doc_citations.py` summary, re-run last | `docs scanned: 21` | OK |
 | §Verification "13 paths under `rust/`" | `tar tzf … \| grep '^hazma-2.1.0/rust/'` | 13 (incl. 2 directory entries) | OK |
 | phase README "7 markdownlint errors, both trees" | `markdownlint --dot` on branch vs `origin/master` copy | 7 and 7 (task-pipeline only; other six 0/0) | OK |
-| §Files Changed file list | `git diff origin/master --name-status` | 21 files: 20 `M` + 1 `A` | OK |
+| §Files Changed file list | `git diff origin/master --name-status` | 24 files: 23 `M` + 1 `A` | OK |
 
 **Numerical-impact statement:** **No public value changes** (verified:
 `git diff origin/master -- hazma rust` → 0 lines, and
@@ -431,10 +534,10 @@ entry points and passed, and a wheel built from this branch carries
 | Exit-criterion bullet | Evidence | Status |
 | --- | --- | --- |
 | CI installs the Rust toolchain on both OS matrices | `ci.yml:88`, a step in the `test` job, which runs `ubuntu-latest` ×5 and `macos-latest` ×1; YAML parsed and step order confirmed | Done |
-| Full matrix green | Post-push observation by construction — not verifiable from an uncommitted tree | Deferred to the PR's checks |
-| `release.yml` wheel job still succeeds with the hybrid build | Wired (host toolchain + `CIBW_BEFORE_ALL_LINUX`); **not observed** — the job has no PR trigger. Needs one `workflow_dispatch` | Open Question |
-| Each wheel contains `hazma/_core.abi3.so` | New assertion step in `build-wheels`; its exact script run locally against a real `cp312` hybrid wheel → `1 wheel(s) carry hazma/_core.abi3.so`, and exit 1 on an empty `wheelhouse/` | Done |
-| Hybrid wheels stay CPython-tagged | Local wheel is `…-cp312-cp312-macosx_11_0_arm64.whl`; no wheel-tag claim added anywhere | Done |
+| Full matrix green | PR #56: all eight checks pass — `Lint` 16s, `Rust (fmt, clippy, test)` 30s, six `Test` entries 11m52s–19m50s | Done |
+| `release.yml` wheel job still succeeds with the hybrid build | Dispatched run 31297673951 → `success`; both `build-wheels` jobs and `build-sdist` green, `publish` skipped | Done |
+| Each wheel contains `hazma/_core.abi3.so` | The assertion step's own output on both platforms: `5 wheel(s) carry hazma/_core.abi3.so` ×2. Locally it also exits 1 on an empty `wheelhouse/` | Done |
+| Hybrid wheels stay CPython-tagged | All 10 released wheels are `cp310`–`cp314` × {`macosx_11_0_arm64`, `manylinux_2_28_x86_64`}; no `abi3` wheel tag anywhere | Done |
 | `preflight.sh` grows the three cargo gates | Gates 4–6; the gate run above shows three `PASS … rust/` rows | Done |
 | Skipped gracefully when `rust/` absent | Forced in a scratch tree → three `SKIP … no rust/ crate in this tree` rows | Done |
 | `docs/agents/` env notes document the rebuild loop | `docs/agents/environment.md` — four new Build-and-imports entries; `docs/agents/preflight.md` gates 4–6 and gate 8 | Done |
@@ -443,9 +546,10 @@ entry points and passed, and a wheel built from this branch carries
 **Task-note self-consistency:** `**Status:** Complete` matches the phase
 README's Tasks-table cell and the project README's Phases row; every
 file named in §Files Changed appears in `git diff origin/master
---name-status` (21 files: 20 modified, 1 added — this note); no
+--name-status` (24 files: 23 modified, 1 added — this note); no
 function, flag or identifier cited in §Findings or §Decisions is absent
-from the diff.
+from the diff. The `Complete` status now rests on an evidence mapping
+whose every row reads `Done` — which was review round 1's whole point.
 
 ## Handoff to Next Task
 
@@ -460,8 +564,10 @@ from the diff.
   `docs/agents/preflight.md` and every review skill. A future PR that
   cites `cargo test` output as evidence about Python behavior should now
   be challenged by the reviewer roster, not just by whoever remembers.
-- **Still risky:** `release.yml` is unexercised (Open Questions). And
-  the `rust` job's `cargo test` step links libpython through
-  `actions/setup-python`'s interpreter — sound in principle and green
-  locally, but the first push is the first time that specific
-  combination runs.
+- **Nothing left risky in this task.** Both items that were open at
+  hand-off closed with evidence: the `rust` job's `cargo test` step does
+  link libpython through `actions/setup-python`'s interpreter on a
+  runner (PR #56, 30s), and `release.yml` is green end to end on a
+  dispatched run. What survives is a habit, not a risk — a workflow
+  without a pull-request trigger has to be dispatched deliberately or
+  its exit criteria stay unmeasured.

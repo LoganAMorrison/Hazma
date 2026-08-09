@@ -103,7 +103,7 @@ separately.
 
 ## Markdown rules
 
-Gate 6 runs against the committed
+The markdownlint gate (gate 9 above) runs against the committed
 [`.markdownlint.jsonc`](../../.markdownlint.jsonc) at the repo root.
 Everything not listed there is at its markdownlint default, including
 **MD013's 80-column limit on prose** — the config buys tables and code

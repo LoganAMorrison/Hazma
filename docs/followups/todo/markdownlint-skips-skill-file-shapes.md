@@ -18,8 +18,8 @@ and `projects/` — the two trees that PR's sweep covered. The skills under
 config accommodates *their* shapes.
 
 PR #48 was the first PR to edit a skill file and therefore the first to
-pass one to preflight gate 6. It fails, and not because of anything that
-PR changed:
+pass one to preflight's markdownlint gate. It fails, and not because of
+anything that PR changed:
 
 ```text
 $ markdownlint --dot .claude/skills/*/SKILL.md .codex/skills/*/SKILL.md
@@ -65,8 +65,9 @@ Decide one of:
 Then bring the skill trees into the swept set for real: run
 `markdownlint --dot` over `.claude/skills/` and `.codex/skills/` once,
 fix or relax whatever else surfaces, and say in
-[`docs/agents/preflight.md`](../../agents/preflight.md) gate 6 that the
-skill trees are in scope — otherwise the next agent rediscovers this.
+[`docs/agents/preflight.md`](../../agents/preflight.md)'s markdownlint
+gate that the skill trees are in scope — otherwise the next agent
+rediscovers this.
 
 ## Entry points
 
@@ -74,7 +75,8 @@ skill trees are in scope — otherwise the next agent rediscovers this.
   skill-file-scoped relaxation)
 - `.claude/skills/review-plan/SKILL.md`,
   `.claude/skills/task-pipeline/SKILL.md`
-- `docs/agents/preflight.md` (gate 6, which documents what the gate covers)
+- `docs/agents/preflight.md` (the markdownlint gate, which documents
+  what the gate covers)
 - Prior art: [`markdownlint-config-for-templates`](../done/markdownlint-config-for-templates.md)
 
 ## Risks / open questions

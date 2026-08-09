@@ -632,8 +632,10 @@ it from memory.)
   no test outcome moved) with the parity suite still in bit-equality
   mode, markdownlint green over 16 changed docs. `git diff origin/master
   -- hazma rust` and `-- setup.py pyproject.toml MANIFEST.in` are both
-  empty, so the compiled artifacts are the trunk's. `release.yml` is
-  wired but unexercised: it has no pull-request trigger.
+  empty, so the compiled artifacts are the trunk's. PR #56's eight
+  checks are green (including the new `rust` job, 30s), and the
+  dispatched `release.yml` run 31297673951 is `success` on both
+  platforms with `publish` skipped.
 - **Phase 02 Task 2.1 state (2026-08-08):** bare `pytest -q` →
   `1009 passed, 13 skipped` in 569.45s on the capturing environment
   (1022 collected), parity suite in **bit-equality mode**;
@@ -817,12 +819,17 @@ it from memory.)
   the cargo gates. The measurement that made it urgent still stands as
   history: all seven checks passed first try on PR #55 with no toolchain
   step at all, on ubuntu py3.10–3.14 plus macos py3.14, because the
-  runner images happen to ship cargo. **`release.yml` remains
-  unexercised** — it does not run on pull requests, so its
-  container-side rustup and its new abi3 assertion have local evidence
-  and cibuildwheel's documented recipe behind them but no observed run.
-  One `workflow_dispatch` against the branch closes that; Phase 07
-  Task 7.1 rewrites the job for maturin either way.
+  runner images happen to ship cargo. **`release.yml` was dispatched and
+  is green too** (PR #56 review round 1, run 31297673951): both
+  `build-wheels` jobs plus `build-sdist` succeeded, `publish` skipped on
+  its `github.event_name == 'release'` gate, and the new assertion step
+  reported `5 wheel(s) carry hazma/_core.abi3.so` per platform — 10
+  CPython-tagged wheels, `cp310`–`cp314` × {macOS arm64,
+  manylinux_2_28 x86_64}. That job has **no pull-request trigger**, so
+  any future change to it needs its own dispatch to be measured at all
+  (`../../../docs/agents/lessons.md`
+  `[unrun-workflow-cannot-close-a-criterion]`). Phase 07 Task 7.1
+  rewrites it for maturin and inherits that.
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
 - ~~Phase 01's corpus will capture `cross_section_prefactor`'s
