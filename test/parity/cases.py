@@ -81,7 +81,9 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+import inspect
 import re
+import types
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -1189,25 +1191,77 @@ def hazma_package_path() -> Path:
 
 
 def rust_core_available() -> bool:
-    """Whether this tree has a Rust extension, i.e. the port has started.
+    """Whether this tree has a Rust extension at all.
 
-    Used two ways: `assert_no_rust_core` refuses to regenerate the corpus
-    once it is true, and the parity runner stops demanding bit-equality
-    (`tolerances.provenance`).
+    True from cython-to-rust Phase 02 on, when the crate is scaffolded.
+    It is **not** the question the corpus cares about — an extension that
+    serves no kernel changes no value. Use `rust_core_kernels` for that.
     """
     return importlib.util.find_spec("hazma._core") is not None
+
+
+#: Public names on ``hazma._core`` that are scaffolding rather than ported
+#: kernels: nothing in `hazma/` calls them and they compute no physics.
+#: `roundtrip` is Phase 02 Task 2.1's plumbing probe. Anything else public
+#: on the extension is a kernel by definition — a Phase 04-06 swap adds it
+#: precisely so a wrapper can call it.
+_CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
+
+
+def rust_core_kernels() -> list[str]:
+    """Fully-qualified names of the kernels ``hazma._core`` serves today.
+
+    Empty while the extension is a bare scaffold, non-empty from the
+    first Phase 04 swap. Discovered by walking the module rather than
+    from a hardcoded list, so a kernel added to a submodule this file has
+    never heard of still counts.
+
+    Returns
+    -------
+    list of str
+        Sorted, e.g. ``["hazma._core.photon.dnde_photon_muon"]``.
+    """
+    if not rust_core_available():
+        return []
+
+    core = importlib.import_module("hazma._core")
+    found: list[str] = []
+    seen: set[int] = set()
+
+    def walk(module: types.ModuleType, prefix: str) -> None:
+        if id(module) in seen:
+            return
+        seen.add(id(module))
+        for name in dir(module):
+            if name.startswith("_"):
+                continue
+            member = getattr(module, name)
+            if inspect.ismodule(member):
+                # Only into our own subtree: a submodule that imports
+                # numpy must not make numpy look like a ported kernel.
+                if getattr(member, "__name__", "").startswith("hazma._core"):
+                    walk(member, f"{prefix}.{name}")
+            elif callable(member) and name not in _CORE_SCAFFOLD_NAMES:
+                found.append(f"{prefix}.{name}")
+
+    walk(core, "hazma._core")
+    return sorted(found)
 
 
 def assert_no_rust_core() -> None:
     """Refuse to touch the corpus if any kernel already runs on Rust.
 
     ``rules.md`` rule 2: reference arrays are generated only from
-    pre-port Cython. Once ``hazma._core`` exists, a regenerated corpus
-    would pin the port against itself.
+    pre-port Cython, or a regenerated corpus would pin the port against
+    itself. The test is whether a kernel is *served*, which is what rule 2
+    says — the mere existence of the extension is not, and has not been
+    since Phase 02 scaffolded it.
     """
-    if rust_core_available():
+    served = rust_core_kernels()
+    if served:
         raise RuntimeError(
-            "hazma._core is importable: this tree runs Rust kernels. "
+            f"hazma._core serves {len(served)} kernel(s) "
+            f"({', '.join(served[:3])}...): this tree runs Rust kernels. "
             "The parity corpus must only ever be generated from pre-port "
             "Cython (projects/cython-to-rust/rules.md, rule 2)."
         )

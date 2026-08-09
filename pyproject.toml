@@ -49,7 +49,13 @@ build-backend = "setuptools.build_meta"
 # scipy shares the runtime dependency's lower bound: the extensions cimport
 # scipy.special.cython_special, whose exported C symbols must match between
 # build and runtime scipy.
-requires = ["numpy", "cython", "setuptools", "scipy>=1.13"]
+#
+# setuptools-rust builds the `hazma._core` Rust extension in the same pass
+# as the Cython ones (cython-to-rust ADR-0001). It needs a Rust toolchain
+# on PATH, which pip cannot install — a source build without cargo fails
+# here. Both this requirement and the Cython half go away at the Phase 07
+# maturin cutover.
+requires = ["numpy", "cython", "setuptools", "setuptools-rust", "scipy>=1.13"]
 
 [tool.setuptools]
 zip-safe = false

@@ -542,3 +542,12 @@ scripts/*
 .claude/worktrees/
 .codex/settings.local.json
 .codex/worktrees/
+
+### Rust ###
+# Cargo build output for the hazma._core crate. The bare `target/` under
+# the PyBuilder heading above already matches this by accident; naming it
+# here means a later cleanup of that line cannot silently start tracking
+# a multi-gigabyte build directory. Cargo.lock IS tracked — this crate
+# builds a shipped binary artifact, so the resolved graph is part of the
+# build input.
+rust/target/

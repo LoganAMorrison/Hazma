@@ -156,3 +156,43 @@ Every public function follows one shape; implement once as a helper:
   raises; note today's asserts vanish under `-O` — replicating them as
   unconditional checks is a (desirable, tiny) behavior tightening to
   note in the CHANGELOG.
+
+### What the Cython actually does today (measured, Task 2.1)
+
+The target shape above is a *design*, not a transcription. The live
+dispatch is `if hasattr(x, '__len__')` — 54 occurrences across 15 `.pyx`,
+with 17 `assert len(energies.shape) == 1` guards behind it, e.g.
+`hazma/spectra/_photon/_muon.pyx:148-153`. Measured on the built tree
+(`hazma.spectra._photon._muon.dnde_photon`,
+`hazma.spectra._positron._muon.dnde_positron_muon`,
+`hazma.spectra._neutrino._muon.dnde_neutrino_muon`), it diverges from the
+contract in four ways. Each is a call Task 3.5 must make on purpose,
+because three of them are user-visible:
+
+1. **A 0-d array raises**, it does not take the scalar path. `ndarray`
+   defines `__len__` on the type, so `hasattr` is true for every array;
+   the guard then sees `shape == ()` and fails with
+   `AssertionError: … must be 0 or 1-dimensional.` — a message that
+   names the shape it just rejected.
+2. **A Python list is accepted.** `np.array(egam)` converts it before
+   the memoryview cast, so `dnde_photon([10.0, 20.0], 200.0)` works
+   today. `PyReadonlyArray1<f64>` will not accept one, so a faithful
+   port must either call `np.asarray` at the boundary or declare the
+   narrowing.
+3. **Shape errors are `AssertionError`, not `ValueError`** (and vanish
+   under `python -O`). Dtype errors *are* `ValueError`, but with
+   Cython's own wording: `Buffer dtype mismatch, expected 'double' but
+   got 'long'`.
+4. **`hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies"**
+   where its sibling `hazma/spectra/_neutrino/_pion.pyx:261` says
+   "Neutrino energies" — a
+   copy-paste defect in a string the port would otherwise carry over
+   verbatim under `rules.md` rule 1.
+
+Items 1 and 2 are the same layer as
+[`docs/followups/todo/model-spectra-reject-scalar-energies.md`](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md),
+which records the model-level half (`Theory.spectra` and
+`Theory.positron_spectra` reject the scalar energies they document).
+Resolving that follow-up by normalizing at the public boundary also
+settles item 1 here; deciding them separately risks two different
+answers.

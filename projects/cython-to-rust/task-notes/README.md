@@ -23,7 +23,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
-| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | Not started |
+| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **In Progress** — Task 2.1 complete (2026-08-08); 2.2 and 2.3 open |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
@@ -230,6 +230,34 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   was not. **Phases 05/06 must reproduce the `nan` or declare the
   consolidation** —
   [`../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
+- **A predicate that means "the port has started" must ask whether a
+  kernel is *served*, not whether the extension exists** (Task 2.1). From
+  Phase 02 on, `hazma._core` is in every build while every value still
+  comes from Cython. `tolerances.provenance` keyed on
+  `find_spec("hazma._core") is not None`, so the scaffold alone would
+  have taken the corpus out of bit-equality mode into the 1e-8 budgets
+  for the whole of Phases 02–03, with nothing turning red
+  (`docs/agents/lessons.md` `[gate-disabled-stays-green]`). It now keys
+  on `cases.rust_core_kernels()`, and so does `assert_no_rust_core` —
+  which is also what keeps the corpus *repairable* until the first swap.
+  **Both flip permanently at the first Phase 04 kernel**, so the
+  ill-conditioned-points repair has to land before that swap.
+- **abi3 is verifiable on a laptop, and the check has a side benefit**
+  (Task 2.1). The exact `hazma/_core.abi3.so` built under CPython 3.12.12
+  loads and runs under 3.13.7. Doing it in an interpreter with no NumPy
+  installed is what exposed that the `numpy` crate **panics** rather than
+  raising when NumPy is missing — `cast::<PyUntypedArray>` reaches for
+  the array-API capsule. The dispatch helper takes a `PyFloat` fast path
+  first so a scalar never touches NumPy; every Phase 03–06 kernel
+  inherits that ordering.
+- **The live Cython dispatch is not the contract
+  `../references/numerics-replacements.md` described** (Task 2.1, now
+  written into that reference): a 0-d array raises rather than taking the
+  scalar path, a Python list is *accepted*, shape errors are
+  `AssertionError` not `ValueError`, and
+  `hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies". Two of
+  the four become silent public-API narrowings if the port transcribes
+  the design instead of the code. Task 3.5 decides each one.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -365,6 +393,23 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   energies — are observations, not drifts, and are under Findings and
   Open Questions.
 
+- **Task 2.1, 2026-08-08 (Rust crate + setuptools-rust): no public value
+  changes**, and for the first time in this project that is *measured at
+  bit-equality* rather than argued from the diff. `git diff origin/master
+  -- hazma` is one file, the non-executable `hazma/_core.pyi` (+19); the
+  one new runtime artifact, `hazma/_core.abi3.so`, is imported by nothing
+  under `hazma/`. The stronger statement: on the corpus's capturing
+  environment (CPython 3.12.12, macOS/arm64) the parity suite ran in
+  **bit-equality mode** — `rtol = 0` across all 41 consumed entry points,
+  626 blocks, 1,580 arrays, 179,695 pinned values — and passed, inside a
+  bare `pytest -q` of `1009 passed, 13 skipped` (1022 collected, +3 on
+  Phase 01's 1019; the skip count is unchanged, which is what proves the
+  mode). No ad-hoc grid sweep is reported because the corpus is a
+  stricter grid than any of them. **That evidence only exists because the
+  task fixed the mode switch its own deliverable would otherwise have
+  broken** — see the served-vs-importable finding above; shipped without
+  it, this line could have claimed no better than 1e-8.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -404,6 +449,13 @@ it from memory.)
   Criterion now names five built sites plus the two unbuilt `_decay/`
   extras. (Task 0.2 has since deleted that file; retrieve it with
   `git show c6991a6:hazma/_gamma_ray/gamma_ray_generator.pyx`.)
+- **Task 2.1 (2026-08-08)** patched two canonical documents in the same
+  PR as the code: the phase-02 file's Task 2.1 exit criteria gained a
+  "the parity gate still runs in bit-equality mode" bullet (the task was
+  widened past the plan's wording, so the plan now says so), and
+  `../references/numerics-replacements.md`'s dispatch-contract section
+  gained the measured live Cython behavior it was silent about. No ADR:
+  nothing revises ADR-0001, and this task is its first executable form.
 - **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
   inventory's boost-retirement claim corrected to Phase 06 Task 6.4
   (capi survivor `hazma/spectra/_positron/_pion.pyx:10` cimports the
@@ -497,11 +549,35 @@ it from memory.)
   under `hazma/` touched. Full list in
   [`phase-01/README.md`](phase-01/README.md).
 
+### Phase 02
+
+- **Task 2.1** — the `rust/` crate (`Cargo.toml` with an explicit empty
+  `[workspace]`, `Cargo.lock`, `build.rs`, and
+  `src/{lib,dispatch,kernels}.rs` plus the five per-domain registration
+  modules); build wiring in `setup.py` (`RustExtension("hazma._core",
+  …, py_limited_api=True)`), `pyproject.toml` (`setuptools-rust` in
+  `[build-system] requires`), `MANIFEST.in` (the crate, which no
+  `global-include` pattern reaches) and `.gitignore`; the new
+  `hazma/_core.pyi` stub; the served-kernel predicate across
+  `test/parity/{cases.py,tolerances.py,test_parity.py,README.md}`; and
+  the two canonical doc patches above. 25 files: 12 modified, 13 added.
+  Full list in [phase-02/README.md](phase-02/README.md).
+
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - Per-phase Verification sections live in `phase-XX/README.md`.
+- **Phase 02 Task 2.1 state (2026-08-08):** bare `pytest -q` →
+  `1009 passed, 13 skipped` in 569.45s on the capturing environment
+  (1022 collected), parity suite in **bit-equality mode**;
+  `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and
+  `cargo test --no-default-features` (2 unit tests) all green from
+  `rust/`; `python test/parity/generate.py --check` → `corpus OK: 41
+  cases / 1580 arrays`; wheel and sdist both build, the sdist installs
+  from source into a fresh venv on a *different* interpreter and runs
+  both toolchains from outside the repo. `scripts/agents/preflight.sh`
+  RESULT: PASS.
 - **Phase 01 closing state (2026-08-08):** bare `pytest -q` →
   `1006 passed, 13 skipped` on the capturing environment (1019 collected:
   67 `hazma` + 952 `test`), parity suite included and in exact mode;
@@ -585,19 +661,36 @@ it from memory.)
   `setup.py`'s declared list is *verified* to be that same set, not
   merely the same size. Re-derive with the clean-then-rebuild recipe
   rather than quoting this; a stale `.so` makes a wrong list look right.
+- **`hazma._core` exists, and nothing calls it** (Task 2.1). The crate
+  lives in `rust/`, `uv pip install -e .` builds Cython and Rust in one
+  pass, and the tree carries 21 `.so`: the 20 Cython extensions plus
+  `hazma/_core.abi3.so`. Its only public name is `roundtrip`, a plumbing
+  probe with no caller in `hazma/`. `dispatch::map_unary` is the single
+  implementation of the entry-point dispatch contract — Phases 03–06 call
+  it rather than touching PyO3 inside a kernel (`../rules.md` Rust rule
+  3). The three cargo gates are `cargo fmt --check`,
+  `cargo clippy --all-targets -- -D warnings` and
+  `cargo test --no-default-features`; the last one's flag is load-bearing,
+  since `extension-module` leaves the test harness unlinkable.
 - **Phases 00 and 01 are both Complete** (2026-08-06 and 2026-08-08).
   Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
   and
   [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md)
   rather than their nine task notes — the learnings are the
-  distillation, the notes are history. **Phase 02 (the Rust scaffold) is
-  next.** No phase carries a decision gate.
+  distillation, the notes are history. **Phase 02 is In Progress: Task
+  2.1 landed 2026-08-08; Tasks 2.2 (CI, preflight, dev-loop docs) and 2.3
+  (the plumbing test suite) are open and both depend only on 2.1.** No
+  phase carries a decision gate.
 - **The parity corpus is the gate from here on.** `python
-  test/parity/generate.py --check` verifies it; `test/parity/cases.py`
-  is the single source of every entry point's call convention. Do not
-  regenerate it from a tree in which any kernel runs on Rust — rules.md
-  rule 2, now enforced in code by `assert_no_rust_core`.
+  test/parity/generate.py --check` verifies it (still, with `_core`
+  present); `test/parity/cases.py` is the single source of every entry
+  point's call convention. Do not regenerate it from a tree in which any
+  kernel runs on Rust — rules.md rule 2, enforced in code by
+  `assert_no_rust_core`, which since Task 2.1 tests whether `hazma._core`
+  *serves* a kernel rather than whether it exists. Until the first
+  Phase 04 swap the corpus is therefore still repairable and the runner
+  is still in bit-equality mode; after it, neither.
 - **The build entry point is `setup.py`.** `_build.py` was deleted in
   `7a817f9` (2026-08-02) and Task 0.4 swept the thirteen durable docs
   that still named it, so `AGENTS.md`, `docs/`, the skills, `.github/`
@@ -643,6 +736,12 @@ it from memory.)
 
 **Currently risky / unknown:**
 
+- **CI has no Rust toolchain step** until Phase 02 Task 2.2 adds one.
+  `.github/workflows/ci.yml` relies on `ubuntu-latest` / `macos-latest`
+  shipping cargo, which they do today but which no local run can verify;
+  `release.yml`'s cibuildwheel job will certainly need one inside the
+  manylinux container, and does not run on pull requests. Treat a red
+  matrix on the Task 2.1 PR as Task 2.2's trigger, not a surprise.
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
 - ~~Phase 01's corpus will capture `cross_section_prefactor`'s

@@ -55,8 +55,15 @@ produce a byte-identical manifest.
 only from pre-port Cython.** Regenerating it from a tree in which any
 kernel already runs on Rust would pin the port against itself and the
 gate would pass vacuously. `generate.py` enforces this — it refuses to
-run once `hazma._core` is importable — but the rule matters beyond what
-the check can see. If a swap changes a number, the fix is a declared
+run once `hazma._core` *serves* a kernel — but the rule matters beyond
+what the check can see. The distinction is load-bearing from
+cython-to-rust Phase 02 on: the Rust extension exists in every build from
+Task 2.1, while every value still comes from Cython until the first
+Phase 04 swap, so keying on importability alone would both block a
+legitimate corpus repair and drop the runner out of bit-equality mode two
+phases early. `cases.rust_core_kernels()` is the predicate; it returns the
+kernels the extension actually exposes, ignoring the scaffold's
+`roundtrip` probe. If a swap changes a number, the fix is a declared
 tolerance in the parity suite plus an entry in the project's numerical
 record, never a regenerated array.
 

@@ -36,6 +36,16 @@ yet: the walking skeleton proves the toolchain end to end.
   `pip install -e .` (uv env) builds Cython + Rust in one pass;
   `python -c "import hazma._core"` works.
 - `hazma/_core.pyi` stub started; py.typed unaffected.
+- **The parity gate still runs in bit-equality mode.** Added by Task 2.1
+  on 2026-08-08, because the task's own deliverable would otherwise
+  silently switch it off: `test/parity/tolerances.provenance` counted
+  "`hazma._core` is importable" as a divergence, which is true from the
+  moment the scaffold exists and false as a statement about the values —
+  every kernel still runs on Cython through Phase 03. The predicate now
+  asks whether `hazma._core` *serves* a kernel
+  (`cases.rust_core_kernels`), which is what `rules.md` rule 2 says, and
+  `assert_no_rust_core` keys on the same thing so the corpus-repair
+  follow-up is not blocked by a scaffold.
 
 ### Task 2.2: CI, preflight, and dev-loop documentation
 
