@@ -23,7 +23,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | --- | ------- | ----------- | ---------------- | -------- |
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
-| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **In Progress** — Tasks 2.1 and 2.2 complete (2026-08-08); 2.3 open |
+| 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | Not started |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
@@ -287,6 +287,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `docs/agents/preflight.md`, and the rebuild-awareness bullet of all
   seven review/commit skills, so Phases 03–06 inherit a reviewer who is
   expected to challenge a cargo-only run quoted as a Python result.
+- **The dispatch contract is now pinned from Python, and three of its
+  behaviors were not in the prose** (Task 2.3).
+  `test/test_core_dispatch.py` holds every branch of
+  `dispatch::map_unary` through `hazma._core.roundtrip`: (a) **rank is
+  checked before dtype**, so a 2-D int64 array reports the dimension
+  message; (b) **a 0-d array still enforces dtype** where a Python `int`
+  does not, because the 0-d path lives inside the array branch behind the
+  typed view; (c) **non-`float` NumPy scalars are accepted**
+  (`np.float32`, `np.int64`, `np.uint8`, `np.bool_`) via the
+  `extract::<f64>` arm. **That module is the template Phases 04–06
+  copy** — swap the kernel and the `QUANTITY` wording, keep every test,
+  add the numerical tests beside rather than merged in. Two side facts
+  worth carrying: bit patterns survive intact (NaN payload included), so
+  the module argues about no tolerances; and a "fresh" array from the
+  `numpy` crate has `owndata == False` with a `PySliceContainer` base, so
+  **non-aliasing is the assertable property, never `owndata`**.
+- **`text_signature` is a claim PyO3 does not enforce** (Task 2.3).
+  `roundtrip` advertised `(x, /)` while `roundtrip(x=1.5)` worked;
+  enforcing positional-only takes `#[pyo3(signature = (x, /))]`. The
+  Cython entry points are `def` functions that accept keywords
+  (measured), so a `/` in a template's `text_signature` is a latent
+  public-API narrowing waiting to be copied into every Phase 04–06
+  wrapper. Fixed to `"(x)"` — the same thing `hazma/_core.pyi` already
+  described.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -454,6 +478,24 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `[wheel-tag-vs-extension-abi]`), which is Task 2.2's own
   extension-level criterion measured on the final tree.
 
+- **Task 2.3, 2026-08-09 (cross-language plumbing test): no public value
+  changes** (verified: `git diff origin/master -- hazma` is empty — 0
+  lines, on a tree cleaned and rebuilt before anything was run). The diff
+  is one new test module, one non-executable hunk in `rust/src/lib.rs`
+  (`roundtrip`'s advertised `text_signature`, on the scaffold probe
+  nothing under `hazma/` imports), and project bookkeeping; no library
+  module, kernel, signature, constant or build *input* is reachable from
+  it. Measured rather than only argued: the bare suite ran the parity
+  corpus in **bit-equality mode** — `rtol = 0` across all 41 consumed
+  entry points, 179,695 pinned values — and passed, at
+  `1063 passed, 13 skipped` (+54 on Task 2.2's 1009, all of them the new
+  module; the skip count is unchanged, which is what proves the mode).
+  No ad-hoc grid sweep is reported because the corpus is a stricter grid
+  than any of them. **Phase 02 therefore closes with the public compiled
+  surface exactly where Phase 00 left it** — the whole phase's only
+  change under `hazma/` across all three tasks is the non-executable
+  `hazma/_core.pyi` stub.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -620,12 +662,31 @@ it from memory.)
   rule 1); and one struck-through risk bullet in Task 2.1's note.
   21 files: 20 modified, 1 added. Nothing under `hazma/` or `rust/`.
   Full list in [phase-02/README.md](phase-02/README.md).
+- **Task 2.3** — phase closure. New `test/test_core_dispatch.py`
+  (54 tests in six classes, the template every Phase 04–06 kernel swap
+  copies); one non-executable hunk in `rust/src/lib.rs` (`roundtrip`'s
+  `text_signature` `"(x, /)"` → `"(x)"` plus the doc comment recording
+  why); one canonical patch (`../phases/phase-02-rust-scaffold.md`'s
+  Task 2.3 exit criteria gained the signature bullet). Phase closed:
+  learnings written, phase frontmatter `status: Complete`, `PLAN.md`
+  Phases row updated. Nothing under `hazma/`. Full list in
+  [phase-02/README.md](phase-02/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - Per-phase Verification sections live in `phase-XX/README.md`.
+- **Phase 02 closing state (2026-08-09):** bare `pytest -q` →
+  `1063 passed, 13 skipped` on the capturing environment (1076
+  collected), parity suite included and in **bit-equality mode**;
+  `scripts/agents/preflight.sh` RESULT: PASS across all eleven rows, the
+  three cargo gates green. `git diff origin/master -- hazma` is empty, so
+  the public compiled surface is exactly where Phase 00 left it — the
+  whole phase's only change under `hazma/` is the non-executable
+  `hazma/_core.pyi` stub. Task 2.3's 54 new tests were validated by a
+  six-mutation campaign against `rust/src/{dispatch,lib}.rs`, each
+  mutation rebuilt and caught by the test whose name claimed it.
 - **Phase 02 Task 2.2 state (2026-08-08):** `scripts/agents/preflight.sh`
   RESULT: PASS across all eleven rows — the three cargo gates green,
   `pytest` at `1009 passed, 13 skipped` (byte-identical to Task 2.1's, so
@@ -750,16 +811,25 @@ it from memory.)
   `cargo test --manifest-path rust/Cargo.toml --no-default-features`,
   reinstall before quoting any pytest or parity number, and confirm with
   `python -c "import hazma._core; print(hazma._core.__file__)"`.
-- **Phases 00 and 01 are both Complete** (2026-08-06 and 2026-08-08).
-  Read
-  [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md)
-  and
+- **Phases 00, 01 and 02 are all Complete** (2026-08-06, 2026-08-08 and
+  2026-08-09). Read
+  [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md),
   [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md)
-  rather than their nine task notes — the learnings are the
-  distillation, the notes are history. **Phase 02 is In Progress: Task
-  2.1 and Task 2.2 (CI, preflight, dev-loop docs) both landed
-  2026-08-08; Task 2.3 (the plumbing test suite) is the last one open,
-  and depends only on 2.1.** No phase carries a decision gate.
+  and
+  [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
+  rather than their twelve task notes — the learnings are the
+  distillation, the notes are history. **The next task is Phase 03,
+  Task 3.1.** No phase carries a decision gate.
+- **`test/test_core_dispatch.py` is the template every Phase 04–06 kernel
+  swap copies** (Task 2.3; 54 tests, 0.27s, platform-independent). It
+  pins every branch of `dispatch::map_unary` through
+  `hazma._core.roundtrip`. Copying it means: swap `roundtrip` for the
+  kernel and `QUANTITY` for the wording that kernel passes to
+  `map_unary`, keep every test, and add the kernel's numerical tests
+  *beside* them rather than merged in. The instructions are in the module
+  docstring so they travel with the file. It deliberately re-pins no
+  value against Cython — the corpus does that, at bit-equality, across
+  all 41 entry points.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it (still, with `_core`
   present); `test/parity/cases.py` is the single source of every entry
@@ -780,13 +850,17 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → 1006 passed / 13 skipped at Phase 01 close (Task 1.4,
-  2026-08-08), from 935/30 at Task 1.3. Task 1.4's delta: +69 aggregation
-  tests, +2 from the `rh_neutrino` rename, −17 skips as the two legacy
-  mediator classes left. Forcing budget mode drops one test to a skip
-  rather than failing — the parity suite reports its mode that way.
-  Re-derive rather than quoting; the historical series is in
-  [`phase-01/README.md`](phase-01/README.md).
+  `pytest -q` → 1063 passed / 13 skipped at Phase 02 close (Task 2.3,
+  2026-08-09), from 1006/13 at Phase 01 close and 935/30 at Task 1.3.
+  The Phase 02 deltas: +3 (Task 2.1's scaffold checks), 0 (Task 2.2,
+  byte-identical, which is what showed no test outcome moved), +54
+  (Task 2.3's plumbing module). **The skip count has not moved since
+  Phase 01 closed**, and that is the tell: forcing budget mode drops one
+  test to a skip rather than failing, so an unchanged 13 is how the
+  parity suite reports it is still in bit-equality mode. Re-derive rather
+  than quoting; the historical series is in
+  [`phase-01/README.md`](phase-01/README.md) and
+  [`phase-02/README.md`](phase-02/README.md).
 - **`test/test_theory_aggregation.py` is the model-layer gate the corpus
   cannot be** (Task 1.4): identities over `hazma/theory/`'s pure-Python
   aggregation, no golden data, 0.6s, and the only numerical gate in the

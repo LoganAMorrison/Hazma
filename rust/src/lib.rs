@@ -32,8 +32,14 @@ use pyo3::prelude::*;
 /// in / fresh 1-D array out, `ValueError` on everything else — without
 /// any physics to get wrong. Phase 02 Task 2.3's test module is written
 /// against it and is the template later kernel swaps copy.
+///
+/// The advertised signature is `(x)`, not `(x, /)`: `text_signature` is a
+/// claim PyO3 does not enforce, `roundtrip(x=1.5)` works, and the Cython
+/// entry points this crate replaces are `def` functions that accept their
+/// arguments by keyword. A positional-only claim would misdescribe this
+/// function and, copied into a Phase 04 wrapper, narrow the public API.
 #[pyfunction]
-#[pyo3(text_signature = "(x, /)")]
+#[pyo3(text_signature = "(x)")]
 fn roundtrip(x: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
     dispatch::map_unary(x, "Input values", kernels::roundtrip)
 }
