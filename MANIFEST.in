@@ -10,6 +10,16 @@ prune .claude
 prune .codex
 prune projects
 
+# The Rust crate that becomes hazma._core. An sdist is a *source*
+# distribution, so it has to carry what setuptools-rust will build:
+# the manifest, the lockfile, the build script and the sources. None of
+# them match the global-include patterns above. `target/` is build
+# output and is excluded by omission (recursive-include names only .rs).
+include rust/Cargo.toml
+include rust/Cargo.lock
+include rust/build.rs
+recursive-include rust/src *.rs
+
 include hazma/gamma_ray_data/*.dat
 include hazma/gamma_ray_data/A_eff/*.dat
 include hazma/gamma_ray_data/bg_model/*.dat

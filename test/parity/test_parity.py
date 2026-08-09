@@ -57,7 +57,9 @@ overhead — it is the same work `generate.py` does.
 
 from __future__ import annotations
 
+import importlib
 import sys
+import types
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -232,3 +234,84 @@ def test_every_budget_states_a_reason() -> None:
         name for name, budget in tolerances.BUDGETS.items() if not budget.why.strip()
     )
     assert not unjustified, f"budgets with no justification: {unjustified}"
+
+
+# ---------------------------------------------------------------------------
+# The "has the port started?" predicate.
+#
+# From cython-to-rust Phase 02 the `hazma._core` extension exists in every
+# build while every value still comes from Cython. Keying the mode switch on
+# its mere importability would have taken the gate out of bit-equality mode
+# for the whole of Phases 02-03 — the stretch where a one-ulp regression is
+# most worth catching and least expected. These pin the distinction.
+# ---------------------------------------------------------------------------
+
+
+def _fake_core_submodule(name: str, **members: object) -> types.ModuleType:
+    """A stand-in submodule, named as if it lived under `hazma._core`."""
+    module = types.ModuleType(name)
+    for attribute, value in members.items():
+        setattr(module, attribute, value)
+    return module
+
+
+@pytest.mark.skipif(
+    not corpus.rust_core_available(), reason="hazma._core is not built in this tree"
+)
+def test_scaffolded_core_serves_no_kernels() -> None:
+    """The Phase 02 scaffold must not read as a started port.
+
+    `roundtrip` is a plumbing probe with no caller in `hazma/`; the five
+    submodules are empty until Phase 04. If this fails, either a kernel
+    landed (in which case the corpus really should leave exact mode) or
+    something non-kernel became public on the extension and needs adding
+    to `cases._CORE_SCAFFOLD_NAMES`.
+    """
+    assert corpus.rust_core_kernels() == []
+    corpus.assert_no_rust_core()  # must not raise
+
+
+@pytest.mark.skipif(
+    not corpus.rust_core_available(), reason="hazma._core is not built in this tree"
+)
+def test_a_served_kernel_is_found_and_blocks_regeneration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One public callable under `hazma._core` is a started port."""
+    core = importlib.import_module("hazma._core")
+    monkeypatch.setattr(
+        core,
+        "photon",
+        _fake_core_submodule("hazma._core.photon", dnde_photon_muon=lambda e, m: 0.0),
+        raising=False,
+    )
+
+    assert corpus.rust_core_kernels() == ["hazma._core.photon.dnde_photon_muon"]
+    with pytest.raises(RuntimeError, match="serves 1 kernel"):
+        corpus.assert_no_rust_core()
+    assert not tolerances.provenance(MANIFEST).exact
+
+
+@pytest.mark.skipif(
+    not corpus.rust_core_available(), reason="hazma._core is not built in this tree"
+)
+def test_an_imported_third_party_module_is_not_a_kernel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The walk stays inside `hazma._core`.
+
+    A submodule that does `import numpy` exposes `numpy` as a public
+    attribute — and `numpy` is full of callables. Counting them would make
+    the very first kernel module look like hundreds of ported kernels, and
+    (worse) would fire before any port at all if the scaffold ever grew an
+    import.
+    """
+    core = importlib.import_module("hazma._core")
+    monkeypatch.setattr(
+        core,
+        "positron",
+        _fake_core_submodule("hazma._core.positron", np=np),
+        raising=False,
+    )
+
+    assert corpus.rust_core_kernels() == []

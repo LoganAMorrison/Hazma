@@ -66,7 +66,24 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   payload then landed under the un-pruned `docs/` and became part of that
   payload; the true figures on the final tree were `501 → 398`). Distinct
   from [derived-count-not-rederived] above, which is about numbers never
-  derived at all; this one is about a derivation that expired.
+  derived at all; this one is about a derivation that expired. A second
+  shape: the measurement expires because the *environment* changed, not the
+  tree — and then both figures are true, of different environments, which is
+  why neither looks wrong in isolation (PR #55: a wheel recorded as
+  `cp313-cp313-…` in one section and `cp312-cp312-…` in another, because the
+  venv was rebuilt on the corpus's capturing interpreter partway through).
+  When a measured artifact carries the environment in its name, record the
+  invariant and the mechanism (`cp<XY>`, never `abi3`, because a Cython
+  extension remains) rather than one run's value.
+- [flat-vs-sectioned-numbering] A document whose items restart numbering in
+  each section, cited elsewhere by a flat index, has two schemes and no key —
+  so a correct citation reads as a dangling one and a reviewer's "fix" breaks
+  the other twenty. Put the mapping in the cited document, and annotate new
+  citations with both forms (PR #55: `projects/cython-to-rust/rules.md` has
+  Parity 1–3, Constants 1, Licensing 1, Rust 1–4, Process 1–3, while the plan
+  and phase files cite `rule 4`, `rule 8`, `rule 10`, `rule 12`; the flat
+  scheme was documented only in a parenthetical inside one Phase 00 task
+  note). Applies to any ADR, checklist, or rules file with numbered sections.
 - [artifact-inventory-depends-on-cwd-state] Any claim about what a built
   artifact *contains* must state that it came from a clean tree. A
   filesystem-walking packager (setuptools' sdist, Docker build context)

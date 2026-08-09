@@ -1,0 +1,52 @@
+# An explicit empty workspace, not an oversight: without it cargo walks
+# up the filesystem looking for a workspace root and can be captured by
+# an unrelated Cargo.toml above the checkout (a stray one in a developer's
+# home directory is enough to make `cargo build` fail here).
+[workspace]
+
+[package]
+name = "hazma-core"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Compiled numerical kernels for the hazma Python package."
+repository = "https://github.com/LoganAMorrison/Hazma"
+publish = false
+
+[lib]
+# The cdylib's name fixes the module-init symbol PyO3 generates
+# (`PyInit__core`), which must match the Python import path `hazma._core`
+# that setuptools-rust installs it under. Renaming this without renaming
+# the `#[pymodule]` in src/lib.rs yields a shared object Python cannot
+# import.
+name = "_core"
+# `rlib` alongside `cdylib` so `cargo test` has a library to link the
+# test harness against; the wheel only ever ships the cdylib.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# abi3-py310 builds against CPython's limited API, so one shared object
+# serves every CPython >= 3.10 (pyproject.toml's `requires-python`).
+# Until the last Cython extension goes in Phase 06, the *wheels* stay
+# CPython-tagged regardless — abi3 here is an extension-level property,
+# verified by the `_core.abi3.so` filename, not a wheel tag.
+pyo3 = { version = "0.29.2", features = ["abi3-py310"] }
+numpy = "0.29.0"
+
+[features]
+default = ["extension-module"]
+# `extension-module` tells PyO3 to leave CPython's symbols undefined, to
+# be resolved by the interpreter that dlopens us. That is right for the
+# shared object and wrong for a test executable, which has no interpreter
+# to resolve them — so it is a feature rather than a hard dependency, and
+# the unit tests run as `cargo test --no-default-features`, which links
+# libpython instead. Phase 02 Task 2.2 wires that spelling into
+# scripts/agents/preflight.sh and the dev-loop docs.
+extension-module = ["pyo3/extension-module"]
+
+[profile.release]
+# The kernels this crate will hold are scalar float64 math; LTO and a
+# single codegen unit cost build time once and buy inlining across the
+# module boundary.
+lto = true
+codegen-units = 1

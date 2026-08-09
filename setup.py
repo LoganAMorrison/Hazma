@@ -1,9 +1,16 @@
-"""Build script declaring hazma's Cython extension modules.
+"""Build script declaring hazma's compiled extension modules.
 
 Project metadata lives in pyproject.toml; this file only declares
-ext_modules. They must be declared eagerly (not injected from a build_py
-subclass) so setuptools knows the distribution is impure before it picks
-wheel tags — otherwise wheels come out mistagged as py3-none-any.
+ext_modules and rust_extensions. They must be declared eagerly (not
+injected from a build_py subclass) so setuptools knows the distribution
+is impure before it picks wheel tags — otherwise wheels come out
+mistagged as py3-none-any.
+
+Two toolchains coexist here for the duration of the cython-to-rust
+migration (ADR-0001): the surviving Cython extensions, and the Rust
+crate in ``rust/`` that becomes ``hazma._core``. Phases 03-06 move
+kernels from the first to the second; Phase 07 deletes the Cython half
+and swaps the backend to maturin, at which point this file goes away.
 """
 
 # pylint: disable=invalid-name
@@ -11,6 +18,7 @@ wheel tags — otherwise wheels come out mistagged as py3-none-any.
 import numpy
 from Cython.Build import cythonize
 from setuptools import Extension, setup
+from setuptools_rust import Binding, RustExtension
 
 
 def make_extension(module: list[str], sources: list[str]) -> list[Extension]:
@@ -72,4 +80,18 @@ extensions += make_extension(
     ],
 )
 
-setup(ext_modules=extensions)
+# The Rust half. One cdylib, at its final import path from day one, built
+# against CPython's limited API so a single shared object serves every
+# supported interpreter. That is an *extension-level* property: the wheels
+# stay CPython-tagged while any Cython extension remains, and the abi3
+# claim is verified by the installed file being named `_core.abi3.so`.
+rust_extensions = [
+    RustExtension(
+        "hazma._core",
+        path="rust/Cargo.toml",
+        binding=Binding.PyO3,
+        py_limited_api=True,
+    )
+]
+
+setup(ext_modules=extensions, rust_extensions=rust_extensions)

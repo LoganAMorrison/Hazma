@@ -515,8 +515,14 @@ def provenance(manifest: dict[str, Any]) -> Provenance:
     if stored_digest != live_digest:
         differences.append(f"kernel digest {stored_digest[:12]} -> {live_digest[:12]}")
 
-    if corpus.rust_core_available():
-        differences.append("hazma._core is importable")
+    # A *served* kernel, not merely the extension's existence. From
+    # cython-to-rust Phase 02 the scaffold ships in every build while every
+    # value still comes from Cython, so keying on importability would drop
+    # the whole of Phases 02-03 out of bit-equality mode for no reason —
+    # exactly when the port most needs a gate that catches one ulp.
+    served = corpus.rust_core_kernels()
+    if served:
+        differences.append(f"hazma._core serves {len(served)} kernel(s)")
 
     return Provenance(exact=not differences, detail="; ".join(differences))
 
