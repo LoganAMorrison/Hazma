@@ -104,8 +104,17 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - Two `--paths` invocation traps, both hit in Task 0.1: passing it a
   `.pxd` makes black/ruff parse Cython as Python and fail, and passing
   it a _directory_ drags in that directory's pre-existing unformatted
-  `.py`. Scope `--paths` to changed files, and omit it entirely when the
-  diff has no Python.
+  `.py`. Scope `--paths` to changed files. **The advice that used to
+  close this bullet — "omit it entirely when the diff has no Python" —
+  was wrong, and Task 2.1 tripped over it.**
+  `scripts/agents/preflight.sh:90` is
+  `[[ -n "${PATHS}" ]] || PATHS="hazma test"`, so omitting `--paths`
+  selects the maximal *directory* form, which is the second trap in the
+  same sentence: a three-file markdown diff came back `FAIL isort` /
+  `FAIL ruff` over 98 files and 6,187 findings, none of them in the diff
+  ([`../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)).
+  On a docs-only diff, scope `--paths` to the branch's Python rather than
+  leaving it off.
 - ~~`hazma._gamma_ray.gamma_ray_generator` compiles but has never been
   importable on `master`~~ — **gone as of Task 0.2 (2026-08-06)**, with
   the rest of `_gamma_ray/` and `_phase_space/`. The tree now has no
@@ -736,12 +745,14 @@ it from memory.)
 
 **Currently risky / unknown:**
 
-- **CI has no Rust toolchain step** until Phase 02 Task 2.2 adds one.
-  `.github/workflows/ci.yml` relies on `ubuntu-latest` / `macos-latest`
-  shipping cargo, which they do today but which no local run can verify;
-  `release.yml`'s cibuildwheel job will certainly need one inside the
-  manylinux container, and does not run on pull requests. Treat a red
-  matrix on the Task 2.1 PR as Task 2.2's trigger, not a surprise.
+- **CI has no Rust toolchain step** until Phase 02 Task 2.2 adds one, and
+  is green regardless on today's runner images — all seven checks passed
+  first try on PR #55 with the hybrid build, ubuntu py3.10–3.14 plus
+  macos py3.14. Unpinned, though: nothing in the repo requires the
+  images to keep shipping cargo, and losing it takes the whole matrix
+  down at once. `release.yml`'s cibuildwheel job will certainly need its
+  own toolchain inside the manylinux container and does not run on pull
+  requests, so it is still unexercised.
 - `spec_math`'s `li2` argument convention vs scipy's `spence` is
   unverified — Task 3.2 pins it before anything depends on it.
 - ~~Phase 01's corpus will capture `cross_section_prefactor`'s

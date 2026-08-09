@@ -116,14 +116,17 @@ canonical doc patches (`../../phases/phase-02-rust-scaffold.md`,
 
 ## Open Questions
 
-- **CI has no Rust toolchain step yet** (Task 2.2 owns it).
-  `.github/workflows/ci.yml` relies on `ubuntu-latest` / `macos-latest`
-  shipping cargo, which they do today; that was not verifiable from a
-  local run, so treat a red matrix on the Task 2.1 PR as Task 2.2's
-  trigger rather than a surprise. `release.yml` does not run on pull
-  requests, so its cibuildwheel job — which will need a toolchain inside
-  the manylinux container — cannot redden that PR and is squarely
-  Task 2.2's.
+- **CI has no Rust toolchain step, and passes anyway on today's runner
+  images** (Task 2.2 still owns pinning it). Measured on PR #55: all
+  seven checks green first try, hybrid build included, on every matrix
+  entry — ubuntu py3.10–3.14 in 16m29s–19m59s and macos py3.14 in
+  16m49s. So the GitHub-hosted images ship a usable cargo and
+  setuptools-rust finds it unconfigured. **Nothing in the repo pins
+  that**, and an image refresh that dropped Rust would take the whole
+  matrix down at once, which is the argument for Task 2.2's explicit
+  step rather than against it. Untested either way: `release.yml`'s
+  cibuildwheel job, which does not run on pull requests and *will* need
+  a toolchain inside the manylinux container.
 - ~~setuptools-rust + editable-install rebuild ergonomics under uv~~ —
   **answered by Task 2.1**: `uv pip install -e .` builds Cython and Rust
   in one pass with no extra flags, and re-running it after a `.rs` edit

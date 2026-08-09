@@ -414,15 +414,22 @@ deletion.
 
 ## Open Questions
 
-- **Will CI stay green before Task 2.2 pins the toolchain?**
-  `.github/workflows/ci.yml` installs no Rust; it relies on
-  `ubuntu-latest` / `macos-latest` shipping cargo, which they do today.
-  I cannot verify a GitHub runner from here, so this is stated as a
-  dependency, not a prediction. Task 2.2 owns the explicit toolchain
-  step and is the fix if the PR goes red. `release.yml` does *not* run on
-  pull requests (release/`workflow_dispatch` only), so its cibuildwheel
-  job — which will need a toolchain inside the manylinux container — is
-  Task 2.2's problem and cannot redden this PR.
+- ~~**Will CI stay green before Task 2.2 pins the toolchain?**~~ —
+  **answered on PR #55, 2026-08-08: yes, on the runner images as they
+  stand today.** `.github/workflows/ci.yml` installs no Rust, so this was
+  filed as a dependency rather than a prediction; all seven checks passed
+  on the first run, hybrid build included, across every matrix entry
+  (`Lint` 19s; ubuntu py3.10/3.11/3.12/3.13/3.14 in 19m59s / 16m29s /
+  19m42s / 17m46s / 19m26s; macos py3.14 in 16m49s). So the GitHub-hosted
+  images do ship a usable cargo, and `setuptools-rust` finds it with no
+  configuration. **That is an observation about today's images, not a
+  guarantee** — nothing in the repo pins it, and an image refresh that
+  dropped Rust would take the whole matrix down at once. Task 2.2 still
+  owns the explicit toolchain step, and now has a measured baseline
+  (~16-20 min per entry) to compare its own runs against. `release.yml`
+  does *not* run on pull requests (release/`workflow_dispatch` only), so
+  its cibuildwheel job — which *will* need a toolchain inside the
+  manylinux container — is untested by this PR and remains Task 2.2's.
 - **The corpus-repair follow-up now has a deadline it did not have.**
   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
   was already "read it before Phase 04". Regeneration is still permitted
