@@ -291,3 +291,21 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   skips survive" while enumerating five sites, and the task note
   attributed 13 skipped tests to 5 sites plus a `skipif` that never
   fired; the true split was 5 sites → 13 tests as 5 + 5 + 3).
+- [hand-written-population-in-a-derived-check] A count can be *measured*
+  with a real command and still be wrong, because the command was run
+  against a hand-written list of what to measure rather than against the
+  population enumerated from source. Derive the population with the same
+  `rg`/parse step that produces the values, so the check cannot silently
+  under-enumerate; a pairing table typed by hand is the population, and
+  it is exactly as trustworthy as typing. The failure hides when the
+  wrong answer collides with a different, correct number nearby (PR #58:
+  "all twelve masses in `constants.pxd` are bit-equal to
+  `hazma/parameters.py`'s" was checked by a script — over a
+  hand-written 12-pair list that omitted `MASS_KL` and `MASS_KS`. There
+  are 14. Twelve was also the correct count of spectra extensions that
+  `include` the header, two paragraphs up, so every internal
+  cross-check agreed). Distinct from [derived-count-not-rederived],
+  where no derivation happened, and from
+  [measurement-taken-before-the-task-ended], where a correct derivation
+  expired: here the derivation ran, on the final tree, over the wrong
+  domain.
