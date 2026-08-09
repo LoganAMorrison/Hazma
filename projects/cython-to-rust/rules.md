@@ -67,7 +67,12 @@ a dangling reference. Prefer the annotated form
 1. Edition 2024; `cargo fmt --check` and `cargo clippy -- -D warnings`
    are part of the preflight gate from Phase 02 on; `cargo test` runs
    the kernel unit tests (analytic limits, edge cases) — the Python-side
-   corpus tests remain the cross-language gate.
+   corpus tests remain the cross-language gate. As of Task 2.2 all three
+   also run as CI's `rust` job, and the exact spellings (two carry a
+   load-bearing flag) are in
+   [`phases/phase-02-rust-scaffold.md`](phases/phase-02-rust-scaffold.md)'s
+   Task 2.2 exit criteria — quote from there rather than from this
+   sentence.
 2. **The extension is `hazma._core`** — one cdylib, PyO3 submodules per
    domain (`photon`, `positron`, `neutrino`, `scalar_mediator`,
    `vector_mediator`). Public Python import paths never change; wrapper

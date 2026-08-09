@@ -19,12 +19,35 @@ before you stage anything.
 3. **`ruff check <paths>`** — the configured rule set lives under
    `[tool.ruff]` in `pyproject.toml`. `hazma/experimental/` and
    `notebooks/` are outside the gate.
-4. **`pytest`** — bare, with no target. `testpaths` in
+4. **`cargo fmt --manifest-path rust/Cargo.toml --check`**
+5. **`cargo clippy --manifest-path rust/Cargo.toml --all-targets --
+   -D warnings`**
+6. **`cargo test --manifest-path rust/Cargo.toml --no-default-features`**
+   — the `hazma._core` crate's own gates, unaffected by `--paths` (the
+   crate is small and always checked whole). They run *before* pytest
+   because they cost seconds against the suite's minutes.
+
+   `--no-default-features` is load-bearing rather than tidy: the crate's
+   default `extension-module` feature leaves CPython's symbols for the
+   loading interpreter to resolve, and a test executable has none, so
+   with the feature on the harness does not link at all. `--manifest-path`
+   rather than a `cd` keeps every gate anchored to the same worktree
+   root.
+
+   Three absence rules, because this crate is younger than the gate:
+   no `rust/` directory is a **SKIP** (branches cut before cython-to-rust
+   Phase 02 must still preflight), a missing `cargo` with the crate
+   present is a **WARN** — the same unrun-gate hole as a missing isort,
+   not a pass — and anything else is a hard FAIL.
+7. **`pytest`** — bare, with no target. `testpaths` in
    `pyproject.toml` is `["hazma", "test"]`, so a bare run is the whole
    suite: the in-package `*_test.py` modules, the `test/` tree, and the
    golden parity corpus under `test/parity/`. That is deliberately the
-   same collection `.github/workflows/ci.yml` runs, so a green gate here
-   predicts a green CI. Narrowing to a target (`pytest test/spectra`) is
+   same collection `.github/workflows/ci.yml` runs — on macOS. Every
+   other matrix entry adds `--ignore=test/parity`, because the corpus
+   only reproduces on the platform that captured it, so a green gate here
+   predicts a green CI but not the reverse. Narrowing to a target
+   (`pytest test/spectra`) is
    for iterating; run it bare before you commit. Budget minutes, not
    seconds — nearly all of it the parity corpus's nested adaptive
    quadrature (8m58s measured for the bare run on macOS/arm64 under
@@ -36,13 +59,17 @@ before you stage anything.
    exits 0 with `no tests ran`. Zero collected means the gate FAILED, not
    passed. Name real targets, not a filter you have not verified selects
    something.
-5. **`python -c "import hazma"`** — the import smoke. Hazma ships Cython
-   extensions; a `.pyx` edit that was never rebuilt, or a rebuild against
-   a different interpreter, produces a tree that lints and formats
-   cleanly and fails at import. Run this after any change under
-   `_utils/`, or to the `.pyx` in `spectra/`, `scalar_mediator/`,
-   `vector_mediator/`, and after any `setup.py` change.
-6. **`markdownlint --dot <changed .md files>`** — when curated docs
+8. **`python -c "import hazma"`** — the import smoke. Hazma ships
+   compiled extensions; an edit that was never rebuilt, or a rebuild
+   against a different interpreter, produces a tree that lints and
+   formats cleanly and fails at import. Run this after any change under
+   `_utils/`, to the `.pyx` in `spectra/`, `scalar_mediator/`,
+   `vector_mediator/`, to anything under `rust/`, and after any
+   `setup.py` change. Note that the three cargo gates above do **not**
+   cover this: `cargo test` exercises `rust/target/`, while Python
+   imports the `hazma/_core.abi3.so` that only `pip install -e .` puts
+   there — so a `.rs` change can be cargo-green and stale in the tree.
+9. **`markdownlint --dot <changed .md files>`** — when curated docs
    changed. Word-diff after any `--fix`: it can corrupt code spans.
    Run it from the repo root: the committed
    [`.markdownlint.jsonc`](../../.markdownlint.jsonc) is discovered
@@ -55,13 +82,13 @@ before you stage anything.
    exits **0**, so a typo'd path lints nothing and looks green.
    `preflight.sh` checks the `--md` paths exist; a bare `markdownlint`
    run does not.
-7. **Version-bump check** — only when the diff flips a
+10. **Version-bump check** — only when the diff flips a
    `projects/<slug>/PLAN.md` `status:` to `Complete`.
    `scripts/agents/preflight.sh --closing` verifies that `VERSION` in
    `hazma/__init__.py` actually moved relative to the trunk and that
    `CHANGELOG.md` carries a matching `## [X.Y.Z]` section. See
    [`../versioning.md`](../versioning.md).
-8. **Forbidden-token scan** over the diff: `breakpoint()`,
+11. **Forbidden-token scan** over the diff: `breakpoint()`,
    `pdb.set_trace()`, `import pdb`, and stray `print()` added to library
    code. Resolve or justify each hit. `git diff origin/master -- '*.py'`
    is the surface.
@@ -76,7 +103,7 @@ separately.
 
 ## Markdown rules
 
-Gate 6 runs against the committed
+The markdownlint gate (gate 9 above) runs against the committed
 [`.markdownlint.jsonc`](../../.markdownlint.jsonc) at the repo root.
 Everything not listed there is at its markdownlint default, including
 **MD013's 80-column limit on prose** — the config buys tables and code
@@ -110,7 +137,7 @@ sees, compare `markdownlint --version` before assuming the doc is wrong.
 The path from a finished edit to a landed commit is strictly sequential:
 
 ```text
-edit → rebuild (if Cython) → run gates → read results
+edit → rebuild (if Cython or Rust) → run gates → read results
      → stage → commit → push → verify
 ```
 
@@ -139,21 +166,24 @@ path for every git write.
 ## Do not trust hooks or CI for this list
 
 There is no committed `.pre-commit-config.yaml` in this repo. CI
-(`.github/workflows/ci.yml`) runs an import smoke test, a bare `pytest`
-on Python 3.10–3.14 (the same collection gate 4 runs, parity corpus
-included), `black --check --diff hazma test`, and a deliberately
-narrow lint pass — `ruff check --isolated --select E9,F63,F7,F82` — whose
-`--isolated` flag ignores `[tool.ruff]` in `pyproject.toml`. So CI green
-means "no syntax errors, no undefined names, black-formatted, tests
-pass"; it says nothing about import order or the configured lint rules.
+(`.github/workflows/ci.yml`) runs an import smoke test and `pytest` on
+Python 3.10–3.14 plus macOS on 3.14 — the same collection gate 7 runs,
+but with `--ignore=test/parity` everywhere except macOS —
+`black --check --diff hazma test`, a deliberately narrow lint pass
+(`ruff check --isolated --select E9,F63,F7,F82`, whose `--isolated` flag
+ignores `[tool.ruff]` in `pyproject.toml`), and the same three cargo
+gates as 4–6 above in a dedicated `rust` job. So CI green means "no
+syntax errors, no undefined names, black-formatted, Rust formatted and
+clippy-clean, tests pass"; it says nothing about Python import order or
+the configured ruff rules, and off macOS nothing about the parity corpus.
 That is a floor, not this gate. Run this gate yourself.
 
 ## One-command form
 
 [`scripts/agents/preflight.sh`](../../scripts/agents/preflight.sh) runs
-black, isort, ruff, pytest (with the zero-collection guard), the import
-smoke, and optionally markdownlint, the version-bump gate, and the
-forbidden-token scan:
+black, isort, ruff, the three cargo gates, pytest (with the
+zero-collection guard), the import smoke, and optionally markdownlint,
+the version-bump gate, and the forbidden-token scan:
 
 ```bash
 scripts/agents/preflight.sh --paths "hazma/spectra test/spectra"
@@ -172,6 +202,8 @@ a blocked commit — fix and re-run; do not commit around a red gate.
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain
 (`pip install --group dev`, which pulls black, isort, ruff, and pytest at
-the versions CI uses) rather than shipping on an unchecked gate. Do not
+the versions CI uses; `cargo` is not in any Python group — get it from
+rustup, and note you need it to build hazma from source at all) rather
+than shipping on an unchecked gate. Do not
 `pip install black` on its own: this script runs whatever is on `PATH`,
 so a hand-picked version silently formats the tree differently from CI.

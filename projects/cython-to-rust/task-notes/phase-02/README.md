@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 02
-**Status:** In Progress (Task 2.1 complete 2026-08-08)
+**Status:** In Progress (Tasks 2.1 and 2.2 complete 2026-08-08)
 **Plan References:** `../../phases/phase-02-rust-scaffold.md`
 **Related ADRs:** ADR-0001 (accepted)
 **Depends On:** Phase 01 complete
@@ -18,7 +18,7 @@ scaffold.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 2.1 | Crate + setuptools-rust integration | — | **Complete (2026-08-08)** | [task-2.1-crate-skeleton.md](task-2.1-crate-skeleton.md) |
-| 2.2 | CI, preflight, dev-loop docs | 2.1 | Not started | [task-2.2-ci-devloop.md](task-2.2-ci-devloop.md) |
+| 2.2 | CI, preflight, dev-loop docs | 2.1 | **Complete (2026-08-08)** | [task-2.2-ci-devloop.md](task-2.2-ci-devloop.md) |
 | 2.3 | Cross-language plumbing test | 2.1 | Not started | [task-2.3-plumbing-test.md](task-2.3-plumbing-test.md) |
 
 ## Exit Criteria
@@ -79,6 +79,46 @@ scaffold.
   `../../references/numerics-replacements.md`; Task 3.5 implements from
   that section and two of the four are public-API narrowings if taken
   silently.
+- **The macOS wheels are built on the runner; the Linux wheels are not**
+  (Task 2.2). cibuildwheel runs the Linux builds inside a manylinux
+  container that cannot see a toolchain installed on the host, so a
+  `dtolnay/rust-toolchain` step in `release.yml` serves macOS *only* and
+  Linux needs `CIBW_BEFORE_ALL_LINUX` (rustup inside the container) plus
+  `CIBW_ENVIRONMENT_LINUX` to put it on `PATH`. Both are in the job now.
+  This is the same shape as the `MANIFEST.in`-vs-wheel lesson from
+  Task 0.4: two artifacts, two mechanisms, and fixing one has never
+  fixed the other.
+- **`release.yml` does not run on pull requests**, so nothing about it
+  is verifiable from a PR check (Task 2.2). Its `build-wheels` job fires
+  on `release: published` and `workflow_dispatch` only. That is why the
+  "each wheel contains `hazma/_core.abi3.so`" criterion became a **step
+  inside the job** rather than a one-time manual inspection — and why
+  the step fails on an empty `wheelhouse/` as well as on a missing
+  `.so`. A check that can verify nothing and still report success is
+  `docs/agents/lessons.md` `[gate-disabled-stays-green]` waiting to
+  happen. **Confirming the job itself needs a manual dispatch, and no
+  amount of local work substitutes** — round 1 of PR #56's review made
+  exactly that call. `gh workflow run release.yml --ref <branch>` is the
+  command; verify the publishing job is gated on
+  `github.event_name == 'release'` first, so the dispatch builds without
+  publishing. Measured cost: ~17 min for both platforms.
+- **`cargo test` and `cargo build` are not rebuilds** (Task 2.2, now
+  written into `AGENTS.md` and `docs/agents/environment.md`). They work
+  out of `rust/target/`, which nothing Python imports; only
+  `pip install -e .` re-links the crate into the tree as
+  `hazma/_core.abi3.so`. Measured:
+  `python -c "import hazma._core; print(hazma._core.__file__)"` resolves
+  to `<worktree>/hazma/_core.abi3.so`. The dev loop that follows is
+  cargo for iteration, editable install before any Python-side claim.
+- **Only one skill file is markdownlint-red, and it was already**
+  (Task 2.2). Of the seven skill files this task edited,
+  `.claude/skills/task-pipeline/SKILL.md` reports 7 errors (MD036,
+  MD032, MD031) on **both** `origin/master` and this branch; the other
+  six report 0. That is
+  [`../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md),
+  not this diff — so `--md` gets the six clean ones and the count
+  comparison above is the evidence, rather than the file being quietly
+  dropped.
 
 ## Decisions and Implementation Notes
 
@@ -93,6 +133,29 @@ scaffold.
   allocation is what proves the Rust actually ran.
 - `Cargo.lock` is committed and shipped in the sdist; `MANIFEST.in`
   carries the crate because `global-include` covers no Rust pattern.
+- **Task 2.2 widened its first two exit criteria, deliberately, and
+  patched the phase file to say so.** (a) The three cargo gates run in
+  CI as a `rust` job, not only in `preflight.sh` — a gate that lives
+  only in local discipline enforces nothing, and Phases 03–06 put the
+  entire numerics layer behind it. (b) The wheel/abi3 criterion is a
+  failing job step rather than an eyeball, because `release.yml` never
+  runs on a PR. Both are additions to what the criteria asked for, not
+  reinterpretations of them.
+- The cargo gates sit **before** pytest in `preflight.sh`: they cost
+  seconds and the bare suite costs minutes, so a rustfmt diff should not
+  wait behind the parity corpus. They ignore `--paths` (the crate is
+  small and always checked whole) and use `--manifest-path` rather than
+  `cd rust`, which would leak into the gates after it — the script
+  anchors everything to `REPO_ROOT` on purpose.
+- Absence rules for the cargo gates: no `rust/` → SKIP (branches cut
+  before this phase must still preflight), `rust/` present but no
+  `cargo` → WARN, matching how a missing isort is already reported.
+  Both branches were executed, not reasoned about — see Verification.
+- `cargo_gate()` reads its status with `if capture ...; then` rather
+  than the `$?` idiom its four Python-gate siblings use. Not a
+  divergence worth undoing: shellcheck flags the older form (SC2181,
+  style) and the counts are 5 on `origin/master` and 5 here, so the new
+  helper simply did not add a sixth.
 
 ## Files Changed
 
@@ -107,6 +170,22 @@ canonical doc patches (`../../phases/phase-02-rust-scaffold.md`,
 `../../references/numerics-replacements.md`). Full list in
 [task-2.1-crate-skeleton.md](task-2.1-crate-skeleton.md).
 
+### Task 2.2
+
+CI (`.github/workflows/ci.yml`: a `rust` job plus a toolchain step in the
+test matrix; `.github/workflows/release.yml`: a host toolchain for macOS,
+rustup-in-container for Linux, `hazma._core` added to the wheel test
+command, and the abi3 assertion step); the three cargo gates in
+`scripts/agents/preflight.sh`; the dev-loop documentation in `AGENTS.md`,
+`docs/agents/environment.md` and `docs/agents/preflight.md`; the
+rebuild-awareness sweep across `docs/agents/{review-lenses,README}.md`
+and seven skill files; two canonical patches
+(`../../phases/phase-02-rust-scaffold.md` Task 2.2 exit criteria,
+`../../rules.md` Rust rule 1); and one struck-through risk bullet in
+[task-2.1-crate-skeleton.md](task-2.1-crate-skeleton.md). 21 files: 20
+modified, 1 added. Nothing under `hazma/` or `rust/`. Full list in
+[task-2.2-ci-devloop.md](task-2.2-ci-devloop.md).
+
 ## Verification
 
 - Per-task verification lives in each task note. Task 2.1's closing
@@ -117,20 +196,50 @@ canonical doc patches (`../../phases/phase-02-rust-scaffold.md`,
   `cargo fmt --check` and `cargo clippy -- -D warnings` clean, and the
   sdist installs and runs both toolchains in a fresh venv from outside
   the repo. Numbers in the task note.
+- **Task 2.2 state (2026-08-08)**, same interpreter, tree cleaned and
+  rebuilt first: `scripts/agents/preflight.sh` **RESULT: PASS** across
+  all eleven rows, including the three new `PASS … rust/` ones and
+  `pytest` at `1009 passed, 13 skipped … 571.34s` — byte-identical to
+  Task 2.1's, which is what shows no test outcome moved, with the parity
+  suite still in bit-equality mode. All four branches of the new gate
+  block (SKIP / WARN / FAIL / PASS) were forced and observed rather than
+  reasoned about. The abi3 criterion was measured by running
+  `release.yml`'s own assertion script against a real hybrid wheel
+  (`cp312`-tagged, `hazma/_core.abi3.so` inside). **Review round 1 then
+  ran `release.yml` for real** (dispatch → run 31297673951, `success`;
+  `publish` skipped): 10 wheels across both platforms, each reported by
+  the assertion step as carrying the extension. PR #56's eight checks
+  are green, including the new `rust` job at 30s. Full tables in the
+  task note.
 
 ## Open Questions
 
-- **CI has no Rust toolchain step, and passes anyway on today's runner
-  images** (Task 2.2 still owns pinning it). Measured on PR #55: all
-  seven checks green first try, hybrid build included, on every matrix
-  entry — ubuntu py3.10–3.14 in 16m29s–19m59s and macos py3.14 in
-  16m49s. So the GitHub-hosted images ship a usable cargo and
-  setuptools-rust finds it unconfigured. **Nothing in the repo pins
-  that**, and an image refresh that dropped Rust would take the whole
-  matrix down at once, which is the argument for Task 2.2's explicit
-  step rather than against it. Untested either way: `release.yml`'s
-  cibuildwheel job, which does not run on pull requests and *will* need
-  a toolchain inside the manylinux container.
+- ~~**CI has no Rust toolchain step, and passes anyway on today's runner
+  images**~~ — **closed by Task 2.2 (2026-08-08).** The measurement that
+  opened it stands (PR #55: all seven checks green first try, hybrid
+  build included, ubuntu py3.10–3.14 in 16m29s–19m59s and macos py3.14
+  in 16m49s, with no toolchain step anywhere), and it was exactly the
+  argument for pinning: the images happened to ship cargo, nothing in
+  the repo required them to keep doing so, and an image refresh that
+  dropped Rust would have taken every matrix entry down at once. Every
+  entry now installs `dtolnay/rust-toolchain@stable` before building,
+  `release.yml` gained the container-side toolchain the cibuildwheel job
+  needs, and a third job runs the cargo gates.
+- ~~**`release.yml` is still unexercised, and cannot be exercised by a
+  PR.**~~ — **closed in PR #56's review round 1.** A reviewer refused a
+  `Complete` status resting on an unrun exit criterion; the fix was to
+  run it, not to soften it. `gh workflow run release.yml --ref <branch>`
+  → run 31297673951, conclusion `success`: both `build-wheels` jobs and
+  `build-sdist` green, `publish` **skipped** because it is gated on
+  `github.event_name == 'release'` (so a dispatch is build-only — check
+  that gate before dispatching anything). The assertion step printed
+  `5 wheel(s) carry hazma/_core.abi3.so` on each platform: 10 wheels,
+  `cp310`–`cp314` × {macOS arm64, manylinux_2_28 x86_64}, the unchanged
+  CPython-tagged matrix. Phase 07 Task 7.1 rewrites this job for maturin
+  and inherits the same obligation — a workflow without a
+  pull-request trigger has to be dispatched deliberately or its criteria
+  stay unmeasured (`docs/agents/lessons.md`
+  `[unrun-workflow-cannot-close-a-criterion]`).
 - ~~setuptools-rust + editable-install rebuild ergonomics under uv~~ —
   **answered by Task 2.1**: `uv pip install -e .` builds Cython and Rust
   in one pass with no extra flags, and re-running it after a `.rs` edit
@@ -141,7 +250,8 @@ canonical doc patches (`../../phases/phase-02-rust-scaffold.md`,
 ## Plan Impact
 
 **Impact Level:** None (this file is metadata, not a canonical change).
-Task 2.1's own canonical patches are recorded in its task note.
+Tasks 2.1's and 2.2's own canonical patches are recorded in their task
+notes.
 
 ## Handoff to Next Task
 
@@ -155,10 +265,19 @@ path is final from day one: `hazma._core`.
   `hazma/_core.abi3.so` beside the 20 Cython extensions (21 `.so` in the
   tree), `import hazma._core` works, and all five submodules are
   importable both as attributes and as `hazma._core.<name>`.
-- `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` and
-  `cargo test --no-default-features` are all green from `rust/`. Task 2.2
-  wires exactly those three spellings into `preflight.sh` — note the
-  `--no-default-features`, without which the test harness fails to link.
+- **The three cargo gates now run themselves, in two places** (Task
+  2.2). `scripts/agents/preflight.sh` runs them ahead of pytest, and
+  CI's `rust` job runs the same three; the exact spellings are in the
+  phase file's Task 2.2 exit criteria. Note `--no-default-features` on
+  the test one, without which the harness fails to link, and
+  `--manifest-path rust/Cargo.toml` so you can run them from the repo
+  root.
+- **`pip install -e .` is the only thing that republishes a `.rs` edit
+  to Python.** `cargo build` and `cargo test` work out of
+  `rust/target/`. Written into `AGENTS.md`,
+  `docs/agents/environment.md`, `docs/agents/preflight.md`, and the
+  rebuild-awareness bullet of every review skill — so a future reviewer
+  is expected to challenge a cargo-only run cited as a Python result.
 - `dispatch::map_unary` is the one implementation of the entry-point
   dispatch contract; Task 2.3's plumbing tests are written against
   `hazma._core.roundtrip`, which exercises every branch of it.
@@ -167,9 +286,16 @@ path is final from day one: `hazma._core`.
 
 **Currently risky / unknown:**
 
-- CI's Rust toolchain (see Open Questions) and the cibuildwheel job.
+- ~~`release.yml`: wired, locally evidenced, never run.~~ — dispatched
+  and green in PR #56's review round 1 (see Open Questions). It stays
+  invisible to PR checks, so any *future* change to it needs its own
+  dispatch.
 - The reference's dispatch contract now records four measured
   divergences from the live Cython. Task 2.3 asserts the *target*
   contract on `roundtrip`; Task 3.5 has to decide, per divergence,
   whether the ported entry points keep the Cython behavior or take the
   declared change.
+- **Task 2.3 is the last open task in this phase**, and it depends only
+  on Task 2.1. Nothing Task 2.2 changed constrains it beyond the new
+  obligation every task now inherits: a `.rs` edit means an editable
+  reinstall before any pytest number is quotable.

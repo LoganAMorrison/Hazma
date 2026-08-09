@@ -13,8 +13,10 @@
 #       [--tests "test/spectra"] [--md "a.md b.md"] [--closing]
 #
 #   --paths "a b"    Space-separated files/dirs your diff touched. The
-#                    formatters and linters run against these. Defaults
-#                    to `hazma test` when omitted.
+#                    Python formatters and linters run against these.
+#                    Defaults to `hazma test` when omitted. It does not
+#                    scope the cargo gates: the Rust crate is small and
+#                    always checked whole.
 #   --tests "a b"    Space-separated pytest targets. Omit it and the gate
 #                    runs a bare `pytest -q`, which is the whole suite —
 #                    pyproject.toml's `testpaths = ["hazma", "test"]`, the
@@ -27,9 +29,10 @@
 #   --closing        Also run the version-bump gate; pass this on a PR
 #                    that flips a project PLAN status to Complete.
 #
-# Gates, in order: black --check, isort --check-only, ruff check, pytest,
-# import smoke, markdownlint (with --md), version bump (with --closing),
-# and a forbidden-token scan of the diff against the trunk (WARN only).
+# Gates, in order: black --check, isort --check-only, ruff check, the
+# three cargo gates over rust/, pytest, import smoke, markdownlint (with
+# --md), version bump (with --closing), and a forbidden-token scan of the
+# diff against the trunk (WARN only).
 #
 # Design notes:
 #   - `set -uo pipefail` (NOT `-e`): every gate runs so the table is
@@ -186,7 +189,58 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 4: pytest (with the zero-collection guard)
+# Gates 4-6: the Rust crate — cargo fmt / clippy / test
+# --------------------------------------------------------------------------
+#
+# Ahead of pytest on purpose: these cost seconds, the bare suite costs
+# minutes, and a rustfmt diff should not wait behind the parity corpus.
+#
+# `--manifest-path` rather than `cd rust`: the script anchors itself to
+# REPO_ROOT so every gate runs against the worktree containing it, and a
+# `cd` inside one gate would leak into the ones after it.
+#
+# `--no-default-features` on the test gate is load-bearing, not tidiness.
+# `extension-module` is a default-on feature that tells PyO3 to leave
+# CPython's symbols undefined for the interpreter to resolve; a test
+# executable has no interpreter, so with it on the harness does not link.
+#
+# Absence rules follow the rest of the table: no `rust/` is a SKIP (the
+# crate arrived in cython-to-rust Phase 02 and older branches must still
+# preflight), while a missing `cargo` with the crate present is a WARN —
+# the same "the gate did not run" hole as a missing isort.
+
+cargo_gate() {
+    # cargo_gate <label> <logfile-stem> <cargo args...>
+    local label="$1" stem="$2"
+    shift 2
+    local out="${TMPDIR_PF}/${stem}.log"
+    if capture "${out}" cargo "$@"; then
+        row PASS "${label}" "rust/"
+    else
+        row FAIL "${label}" "see output below"
+        tail_of "${out}"
+    fi
+}
+
+if [[ ! -d rust ]]; then
+    row SKIP "cargo fmt --check" "no rust/ crate in this tree"
+    row SKIP "cargo clippy" "no rust/ crate in this tree"
+    row SKIP "cargo test" "no rust/ crate in this tree"
+elif ! have cargo; then
+    row WARN "cargo fmt --check" "cargo not installed — Rust format unchecked"
+    row WARN "cargo clippy" "cargo not installed — Rust lint unchecked"
+    row WARN "cargo test" "cargo not installed — Rust tests did not run"
+else
+    cargo_gate "cargo fmt --check" cargo-fmt \
+        fmt --manifest-path rust/Cargo.toml --check
+    cargo_gate "cargo clippy" cargo-clippy \
+        clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+    cargo_gate "cargo test" cargo-test \
+        test --manifest-path rust/Cargo.toml --no-default-features
+fi
+
+# --------------------------------------------------------------------------
+# Gate 7: pytest (with the zero-collection guard)
 # --------------------------------------------------------------------------
 
 if have pytest; then
@@ -211,7 +265,7 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 5: import smoke — the compiled extensions still load
+# Gate 8: import smoke — the compiled extensions still load
 # --------------------------------------------------------------------------
 
 OUT="${TMPDIR_PF}/import.log"
@@ -224,7 +278,7 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 6: markdownlint (only with --md)
+# Gate 9: markdownlint (only with --md)
 # --------------------------------------------------------------------------
 
 if [[ -n "${MD_FILES}" ]]; then
@@ -260,7 +314,7 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 7: version bump (only with --closing)
+# Gate 10: version bump (only with --closing)
 # --------------------------------------------------------------------------
 
 if [[ ${CLOSING} -eq 1 ]]; then
@@ -307,7 +361,7 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 8: forbidden tokens in the diff (advisory)
+# Gate 11: forbidden tokens in the diff (advisory)
 # --------------------------------------------------------------------------
 
 OUT="${TMPDIR_PF}/forbidden.log"

@@ -16,7 +16,12 @@ Hazma computes indirect-detection observables for sub-GeV dark matter:
 gamma-ray, electron/positron, and neutrino spectra from dark matter
 annihilation; limits from existing gamma-ray data; discovery reach for
 future detectors; and CMB constraints. It is a scientific Python library
-with performance-critical inner loops written in Cython.
+with performance-critical inner loops in compiled code — historically
+Cython, currently mid-migration to a single Rust extension
+(`hazma._core`) under the `cython-to-rust` project. Both toolchains build
+in the same `pip install -e .` pass and both are gated by
+[`scripts/agents/preflight.sh`](scripts/agents/preflight.sh); until that
+project closes, expect to meet either one.
 
 The user-facing surface is the **public Python API** — module paths,
 function and class names, keyword arguments, return shapes and units, and
@@ -48,6 +53,8 @@ hazma/
 ├── cmb.py, pbh.py, parameters.py, utils.py
 ├── gamma_ray_data/     # detector response data (*.dat)
 └── experimental/       # excluded from lint gates; not a public surface
+rust/                   # the hazma._core crate (PyO3); src/kernels.rs is
+                        #   PyO3-free, src/dispatch.rs is the PyO3 boundary
 test/                   # pytest suite, mirrors the package tree
 docs/source/            # Sphinx documentation (the published docs)
 notebooks/              # exploratory notebooks + spectrum-generation scripts
@@ -58,9 +65,10 @@ examples/
 
 The dependency direction is one-way; do not invert it.
 
-1. **Cython kernels** (`_utils/` and the `.pyx` under `spectra/`,
-   `scalar_mediator/`, `vector_mediator/`) — numerics only. They import
-   nothing from the pure-Python layers above.
+1. **Compiled kernels** — the `.pyx` under `_utils/`, `spectra/`,
+   `scalar_mediator/` and `vector_mediator/`, plus the `rust/` crate that
+   is replacing them. Numerics only; they import nothing from the
+   pure-Python layers above.
 2. **Primitives** (`parameters.py`, `utils.py`, `form_factors/`,
    `phase_space/`) — physical constants, kinematics, shared helpers.
 3. **Spectra** (`spectra/`) — builds on 1 and 2. This is the layer most
@@ -79,7 +87,7 @@ A leading underscore on a package (`_utils`, `spectra/_photon`) means
 ## Commands
 
 ```sh
-pip install -e .          # build the Cython extensions in place
+pip install -e .          # build the Cython + Rust extensions in place
 pip install --group dev   # black, isort, ruff, pytest at their pinned versions
 pytest                    # full suite (hazma + test; minutes, not seconds)
 pytest test/spectra -q    # one area
@@ -88,6 +96,20 @@ isort hazma test          # import order
 ruff check hazma test     # lint
 pyright hazma             # types (advisory)
 ```
+
+The Rust crate has its own three, all run from the repo root against
+`rust/Cargo.toml` (`preflight.sh` runs exactly these):
+
+```sh
+cargo fmt --manifest-path rust/Cargo.toml --check
+cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path rust/Cargo.toml --no-default-features
+```
+
+`--no-default-features` on the test command is load-bearing: the crate's
+default `extension-module` feature leaves CPython's symbols to be
+resolved by the interpreter that loads the shared object, and a test
+executable has no interpreter, so with it on the harness will not link.
 
 The one-command pre-commit gate is
 [`scripts/agents/preflight.sh`](scripts/agents/preflight.sh) — see
@@ -99,6 +121,21 @@ does not pick up Cython edits automatically on every setup — if a change
 to a kernel does not show up, rebuild explicitly and confirm with
 `python -c "import hazma; print(hazma.__file__)"` that you are importing
 the tree you edited, not an installed copy.
+
+**Editing a `.rs` requires the same rebuild, and `cargo build` is not
+it.** `cargo build` refreshes `rust/target/`, which nothing imports;
+`pip install -e .` is what re-links the crate into the tree as
+`hazma/_core.abi3.so`. So the loop is: iterate with
+`cargo test --no-default-features` (fast, needs no reinstall, and is
+where kernel unit tests belong), then re-run the editable install before
+any Python-side check — pytest, the parity corpus, an interactive
+`import hazma._core` — is worth believing. Confirm the same way as for
+Cython: `python -c "import hazma._core; print(hazma._core.__file__)"`
+must land inside your worktree.
+
+A source build now needs `cargo` on `PATH` at all: `pyproject.toml`'s
+`[build-system] requires` includes `setuptools-rust`, and pip cannot
+install a Rust toolchain for you.
 
 ## Conventions
 

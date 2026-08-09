@@ -54,6 +54,32 @@ a clear "install Cython" message. (Every C++ extension went with
 `_gamma_ray/` and `_phase_space/` in cython-to-rust Task 0.2; the tree
 builds as C only.)
 
+**It also needs `cargo` on `PATH`, and pip cannot supply it.**
+`pyproject.toml`'s `[build-system] requires` carries `setuptools-rust`
+(cython-to-rust Phase 02), which shells out to cargo to build the
+`hazma._core` extension in the same pass as the Cython ones. No
+toolchain, no build — of *any* extension, not just the Rust one. Install
+it from rustup; edition 2024 needs rustc ≥ 1.85. Both this requirement
+and the Cython half disappear at the Phase 07 maturin cutover.
+
+**Editing a `.rs` and re-running pytest tests the OLD extension, exactly
+like a `.pyx`.** And the trap has an extra step, because the fast
+iteration command is not the publishing one: `cargo build` and
+`cargo test` work out of `rust/target/`, which nothing Python imports.
+Only `pip install -e .` re-links the crate into the tree as
+`hazma/_core.abi3.so`. So iterate with
+`cargo test --manifest-path rust/Cargo.toml --no-default-features`, then
+reinstall before believing any Python-side result, and confirm with
+`python -c "import hazma._core; print(hazma._core.__file__)"` that the
+path is inside your worktree.
+
+**`cargo test` must be `--no-default-features`.** The crate's default
+`extension-module` feature tells PyO3 to leave CPython's symbols
+undefined for the interpreter that `dlopen`s the module. A test
+executable has no such interpreter, so with the feature on the harness
+fails to link — a wall of undefined `_Py*` symbols that reads like a
+broken toolchain rather than a wrong flag.
+
 **Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
 Edit the `.pyx` and rebuild.
 
@@ -204,11 +230,20 @@ repo's standard. Do not cite it as precedent, and do not import from
 
 **The CI test matrix is Python 3.10 through 3.14 on Linux, plus macOS on
 3.14**, matching `pyproject.toml`'s `requires-python = ">=3.10"`. Each
-entry installs non-editable, runs an import smoke test from outside the
-repo (so a broken Cython build or a missing package-data entry fails
-there rather than as a confusing collection error), reinstalls editable,
-and then runs the bare `pytest` — the parity corpus included, on every
-entry.
+entry installs a Rust toolchain (`dtolnay/rust-toolchain@stable`; without
+cargo nothing builds — see the `setuptools-rust` note above), installs
+hazma non-editable, runs an import smoke test from outside the repo (so a
+broken build or a missing package-data entry fails there rather than as a
+confusing collection error), reinstalls editable, and then runs `pytest`
+— bare on macOS, `--ignore=test/parity` everywhere else, per the
+capturing-platform bullet under Tests above.
+
+**CI has a third job, `rust`.** It runs the same three cargo gates
+`preflight.sh` does — `cargo fmt --check`,
+`cargo clippy --all-targets -- -D warnings`, and
+`cargo test --no-default-features` — on ubuntu only, since none of them
+is platform-sensitive. It installs a Python for the same reason the flag
+exists: the test harness links libpython for real.
 
 ## Git and orchestration
 

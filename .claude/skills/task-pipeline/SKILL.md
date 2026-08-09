@@ -70,9 +70,10 @@ and `<BRANCH>` from Phase A.
 > on branch `<BRANCH>`, branched from the trunk. This worktree is managed
 > by the pipeline orchestrator.
 >
-> Hazma ships Cython extensions. If your work touches `.pyx`, `.pxd`, or
-> `setup.py`, run `pip install -e .` inside this worktree before running
-> tests, and confirm `python -c "import hazma; print(hazma.__file__)"`
+> Hazma ships Cython and Rust extensions. If your work touches `.pyx`,
+> `.pxd`, `rust/`, or `setup.py`, run `pip install -e .` inside this
+> worktree before running tests — `cargo build` alone publishes nothing
+> to Python — and confirm `python -c "import hazma; print(hazma.__file__)"`
 > resolves inside `<WT_PATH>` — otherwise every result you report comes
 > from a different tree.
 

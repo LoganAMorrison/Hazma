@@ -29,9 +29,11 @@ change directly, then use `$commit-and-pr` when it is ready to ship.
    Run all later commands in the reported `wt_path`, preferably as
    `git -C <wt_path> ...`. If a pipeline already supplied its managed
    worktree, skip this creation step and use that exact path.
-4. If the task edits `.pyx`, `.pxd`, or `setup.py`, rebuild inside that
-   worktree and confirm `python -c "import hazma; print(hazma.__file__)"`
-   resolves there before trusting any result.
+4. If the task edits `.pyx`, `.pxd`, `rust/`, or `setup.py`, rebuild
+   inside that worktree (`pip install -e .` — not `cargo build`, which
+   publishes nothing to Python) and confirm
+   `python -c "import hazma; print(hazma.__file__)"` resolves there
+   before trusting any result.
 
 ## Read the task context
 

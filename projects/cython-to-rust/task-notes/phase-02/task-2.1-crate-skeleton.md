@@ -672,8 +672,10 @@ parallel.
 
 **Still risky / open:**
 
-- CI carries no Rust toolchain step (Task 2.2). See Open Questions —
-  a red matrix on this PR is that task's trigger, not a mystery.
+- ~~CI carries no Rust toolchain step (Task 2.2). See Open Questions —
+  a red matrix on this PR is that task's trigger, not a mystery.~~ —
+  **closed by Task 2.2 on 2026-08-08**: both workflows now install one,
+  and CI grew a `rust` job for the cargo gates.
 - The four measured divergences between the reference's dispatch contract
   and the live Cython are now written down but not decided. Task 3.5
   decides each; two are public-API narrowings if taken by default.

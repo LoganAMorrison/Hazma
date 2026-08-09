@@ -69,10 +69,28 @@ yet: the walking skeleton proves the toolchain end to end.
   never earlier.
 - `scripts/agents/preflight.sh` grows `cargo fmt --check`,
   `cargo clippy -- -D warnings`, `cargo test` (skipped gracefully when
-  `rust/` absent, so pre-Phase-02 branches still preflight).
+  `rust/` absent, so pre-Phase-02 branches still preflight). The
+  spellings that actually run — added by Task 2.2 on 2026-08-08, because
+  two of the three carry a load-bearing flag — are
+  `cargo fmt --manifest-path rust/Cargo.toml --check`,
+  `cargo clippy --manifest-path rust/Cargo.toml --all-targets --
+  -D warnings`, and
+  `cargo test --manifest-path rust/Cargo.toml --no-default-features`.
 - `docs/agents/` env notes + `AGENTS.md` Commands section document the
   rebuild loop (when a `.rs` edit requires re-running the editable
   install vs. plain `cargo test`).
+- **The cargo gates also run in CI, and the wheel assertion is a job
+  step rather than an eyeball.** Both added by Task 2.2 on 2026-08-08,
+  widening the first two bullets rather than reinterpreting them.
+  Reasons, in order: (1) `preflight.sh` is local discipline that nothing
+  enforces, and Phases 03–06 land the whole numerics layer in Rust, so
+  the gates belong somewhere that fails a PR — `ci.yml` gains a `rust`
+  job running the same three commands; (2) `release.yml` does not run on
+  pull requests, so "each wheel contains `hazma/_core.abi3.so`" could
+  otherwise only ever be checked by hand at release time — it is now a
+  step in `build-wheels` that fails the job, and it also fails when
+  `wheelhouse/` is empty, since a check that verifies nothing must not
+  look green.
 
 ### Task 2.3: Cross-language plumbing test
 

@@ -25,7 +25,7 @@ than restating them.
 
 | File | Purpose |
 | --- | --- |
-| [`preflight.md`](preflight.md) | The before-every-commit / before-every-PR gate: format, lint, tests, import smoke, the sequential critical path. |
+| [`preflight.md`](preflight.md) | The before-every-commit / before-every-PR gate: format, lint, the cargo gates, tests, import smoke, the sequential critical path. |
 | [`doc-consistency.md`](doc-consistency.md) | The canonical doc-consistency checklist — implementers run it pre-PR, Reviewer D verifies it. |
 | [`review-lenses.md`](review-lenses.md) | Reviewer roster, per-lens rubrics, selection rules, and the verdict rule. |
 | [`environment.md`](environment.md) | Environment and test-infra gotchas (fish shell, cwd resets, Cython rebuilds, pytest collection traps). |

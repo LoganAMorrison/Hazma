@@ -99,10 +99,13 @@ All edits and gates happen inside the worktree. The Bash-tool cwd can
 reset between calls — use `git -C <worktree>` with absolute paths (see
 [`environment.md`](../../../docs/agents/environment.md)).
 
-**If the task touches Cython** (`.pyx`, `.pxd`, `setup.py`), rebuild in
-the worktree before running anything: `pip install -e .`, then confirm
+**If the task touches compiled code** (`.pyx`, `.pxd`, `rust/`,
+`setup.py`), rebuild in the worktree before running anything:
+`pip install -e .`, then confirm
 `python -c "import hazma; print(hazma.__file__)"` points inside the
-worktree. A stale extension makes every later result meaningless.
+worktree. A stale extension makes every later result meaningless, and
+`cargo build` / `cargo test` do not count as the rebuild — they work out
+of `rust/target/`, which nothing Python imports.
 
 ### Step 4: Read only the required context
 

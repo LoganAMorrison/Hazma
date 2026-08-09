@@ -132,9 +132,12 @@ These apply regardless of lens.
 - **Empirical execution.** When the diff adds or edits a docstring
   example, a README snippet, or claims a user-visible behavior, RUN it
   and paste the output. Static review does not catch a wrong number.
-- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `setup.py`,
-  confirm the cited test results came from a tree that was rebuilt. A
-  green run against a stale extension proves nothing.
+- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `rust/` /
+  `setup.py`, confirm the cited test results came from a tree that was
+  rebuilt. A green run against a stale extension proves nothing — and on
+  the Rust side `cargo test` is not a rebuild, since it works out of
+  `rust/target/` while Python imports the `hazma/_core.abi3.so` that only
+  `pip install -e .` refreshes.
 - **Read [`lessons.md`](lessons.md) first**, then check the diff against
   each listed recurring class.
 - **Apply the verdict rule** (above), including the re-review vocabulary

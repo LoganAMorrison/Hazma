@@ -42,6 +42,31 @@ jobs:
           --exclude notebooks
           .
 
+  rust:
+    name: Rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-python@v7
+        # Not for the build: `cargo test` links libpython for real. The
+        # crate's `extension-module` feature is what lets a *wheel* leave
+        # CPython's symbols undefined, and the test harness has no
+        # interpreter to resolve them — hence --no-default-features
+        # below, and hence a Python on PATH here.
+        with:
+          python-version: "3.12"
+      - name: Check formatting with rustfmt
+        run: cargo fmt --manifest-path rust/Cargo.toml --check
+      - name: Lint with clippy
+        run: >-
+          cargo clippy --manifest-path rust/Cargo.toml
+          --all-targets -- -D warnings
+      - name: Run the crate's unit tests
+        run: cargo test --manifest-path rust/Cargo.toml --no-default-features
+
   test:
     name: Test (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
@@ -60,6 +85,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: pyproject.toml
+      - uses: dtolnay/rust-toolchain@stable
+        # pyproject.toml's [build-system] requires setuptools-rust, which
+        # shells out to cargo — so from cython-to-rust Phase 02 on, no
+        # cargo means no build at all, on either OS. The GitHub-hosted
+        # images happened to ship one already (measured on PR #55: the
+        # whole matrix went green with no toolchain step), but nothing in
+        # this repo required them to keep doing so, and an image refresh
+        # that dropped Rust would have taken every entry down at once.
       - name: Build and install hazma
         run: |
           python -m pip install --upgrade pip

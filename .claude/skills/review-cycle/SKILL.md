@@ -177,7 +177,8 @@ Agent(
 > append when a finding is class-shaped.
 >
 > **You MUST commit and push.** Stage only files you intentionally
-> changed. Rebuild first if you touched `.pyx` / `.pxd` / `setup.py`.
+> changed. Rebuild first (`pip install -e .`, never `cargo build` alone)
+> if you touched `.pyx` / `.pxd` / `rust/` / `setup.py`.
 > Run the preflight gate (`docs/agents/preflight.md`) before staging;
 > assert a real `N passed` count. Commit with a Conventional Commits
 > message (validate with `scripts/agents/check_pr_title.py`) and

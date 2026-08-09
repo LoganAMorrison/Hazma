@@ -253,6 +253,34 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   disabled it on every entry including macOS; all seven checks passed for
   two PRs, and PR #53 caught it only by noticing the job reported `380
   passed` where a run including the corpus collects ~1019).
+- [renumbered-list-orphans-its-references] Inserting an item into a numbered
+  list silently falsifies every prose reference to the items after it — and
+  those references live outside the list, often outside the file, so
+  renumbering the list itself looks like the whole job. Sweep
+  `rg -n '[Gg]ate [0-9]|[Ss]tep [0-9]|item [0-9]'` (or the local ordinal
+  noun) across `docs/`, `.claude/`, `.codex/` and `docs/followups/` after
+  any insertion, and prefer *naming* the target over re-pinning a number
+  that will shift again at the next insertion (PR #56: three cargo gates
+  inserted as 4–6 renumbered markdownlint from 6 to 9, leaving
+  `docs/agents/preflight.md`'s "Markdown rules" section opening "Gate 6
+  runs against the committed `.markdownlint.jsonc`" — pointing at
+  `cargo test` — plus three live references in an open follow-up and two
+  in a resolved one; caught by review, and the list renumbering itself had
+  been done correctly). Distinct from [flat-vs-sectioned-numbering], which
+  is about two schemes coexisting without a key; this is one scheme whose
+  indices moved.
+- [unrun-workflow-cannot-close-a-criterion] A workflow with no
+  `pull_request` trigger is invisible to PR checks, so an exit criterion
+  phrased against it stays unmeasured no matter how green the PR is —
+  and "wired, and the recipe is documented upstream" is an argument, not
+  evidence. Dispatch it (`gh workflow run <file> --ref <branch>`) and
+  paste the job conclusions; check first that any publishing job is gated
+  (`if: github.event_name == 'release'`) so the dispatch is build-only.
+  Never mark the task Complete over the gap (PR #56: `release.yml`'s
+  cibuildwheel job carried two of Task 2.2's exit criteria and had never
+  run; the dispatched run passed on both platforms with `publish`
+  skipped, and the assertion step reported `5 wheel(s) carry
+  hazma/_core.abi3.so` per OS).
 - [marker-count-vs-outcome-count] A count of *declaration sites* and a
   count of *runtime outcomes* are different numbers, and prose that says
   "N skips" silently picks one. A marker on a parametrized class yields

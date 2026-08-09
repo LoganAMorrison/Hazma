@@ -45,7 +45,7 @@ the config.
 ## Entry points
 
 - `scripts/agents/preflight.sh` (markdownlint gate, ~line 214)
-- `docs/agents/preflight.md` (gate 6)
+- `docs/agents/preflight.md` (the markdownlint gate)
 - `projects/_template/` (the shapes that must lint clean)
 - `projects/cython-to-rust/phases/*.md` (inline pragmas to remove)
 - `projects/cython-to-rust/references/*.md` (inline pragmas to remove)
@@ -99,7 +99,7 @@ been covering.
 One bug fell out of verifying the gate: `markdownlint` treats its
 arguments as globs, so a path matching nothing prints the usage banner
 and exits **0** — a typo'd `--md` reported `PASS markdownlint` having
-linted nothing. Gate 6 in
+linted nothing. The markdownlint gate in
 [`preflight.sh`](../../../scripts/agents/preflight.sh) now checks each
 `--md` path exists before trusting the exit code, the same
 false-pass guard the pytest gate already had.
