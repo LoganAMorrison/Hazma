@@ -208,7 +208,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   `51 passed / 20 skipped` survived because Task 0.1 had fixed the
   *sibling* copy in the project README and never swept the class, and a
   single task note carried two different byte counts for the same
-  directory). Generalizes [stale-ci-capability-claim] from workflows to
+  directory; PR #60: a wrong call-site count was swept by grepping the
+  *paired* phrases it usually appeared in — `eleven`, `six of the
+  eleven` — which fixed twelve copies and missed two more that carried
+  the bare number word alone, one of them in the same file's own
+  "all twelve occurrences were swept" record. Key the sweep on the
+  **claim** — every numeral or number word within N characters of
+  `call site`, in either order — not on the phrasing the number happened
+  to arrive in, and never let the sweep's own summary assert a
+  completeness its pattern cannot support).
+  Generalizes [stale-ci-capability-claim] from workflows to
   any repo fact, and applies *within* one file as much as across
   several.
 - [elided-doc-paths] A `.../foo.py` shorthand in a durable doc is not

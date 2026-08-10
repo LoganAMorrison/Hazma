@@ -304,7 +304,7 @@ class TestBreakPointPreprocessing:
     def test_an_empty_points_list_still_selects_qagp(self) -> None:
         # scipy dispatches on `points is None` *before* it filters, so an
         # empty-after-filtering list runs qagpe, not qagse. That is the
-        # branch all six `points=[-1, 1]` call sites take, and it is
+        # branch all five `points=[-1, 1]` call sites take, and it is
         # normally invisible: over 3,776 random (integrand, tolerance,
         # limit) combinations the two routines returned identical values,
         # identical `neval` and identical `last` in every case that
@@ -922,11 +922,43 @@ class TestErrorBehavior:
         with pytest.raises(ValueError):
             core_quad.quad(math.exp, 0.0, 1.0, epsabs=0.0, epsrel=0.0)
 
-    def test_a_zero_limit_raises_on_both_sides(self) -> None:
+    @pytest.mark.parametrize("limit", [0, -1, -100])
+    def test_a_limit_below_one_raises_value_error_on_both_sides(
+        self, limit: int
+    ) -> None:
+        # scipy rejects every `limit < 1` the same way ("there must be at
+        # least one subinterval"), negatives included. The port must not
+        # let PyO3's `usize` conversion turn a negative into an
+        # `OverflowError` — a different exception type for an input scipy
+        # treats identically to `limit = 0` (PR #60 review).
         with pytest.raises(ValueError):
-            si.quad(math.exp, 0.0, 1.0, limit=0)
+            si.quad(math.exp, 0.0, 1.0, limit=limit)
         with pytest.raises(ValueError):
-            core_quad.quad(math.exp, 0.0, 1.0, limit=0)
+            core_quad.quad(math.exp, 0.0, 1.0, limit=limit)
+
+    @pytest.mark.parametrize("limit", [2**31, 10**12])
+    def test_a_limit_past_c_int_range_overflows_on_both_sides(self, limit: int) -> None:
+        # The other half of scipy's `limit` contract: it converts the
+        # argument to a C `int` and raises `OverflowError` above INT_MAX.
+        # Matching it is also what keeps the `limit`-length workspace in
+        # `qagse`/`qagpe` from becoming a multi-terabyte allocation
+        # request — `limit = 10**12` was accepted before this guard, and
+        # whether that survives is a property of the platform's overcommit
+        # policy rather than of the code (PR #60 review).
+        with pytest.raises(OverflowError):
+            si.quad(math.exp, 0.0, 1.0, limit=limit)
+        with pytest.raises(OverflowError):
+            core_quad.quad(math.exp, 0.0, 1.0, limit=limit)
+
+    def test_the_largest_accepted_limit_is_not_rejected(self) -> None:
+        # The boundary itself: INT_MAX is legal on both sides, so
+        # narrowing the guard by one would not go unnoticed. Only the
+        # argument check is exercised — a smooth integrand converges on
+        # the first panel and never allocates the full workspace.
+        assert core_quad.quad(math.exp, 0.0, 1.0, limit=2**31 - 1)[4] == 0
+        assert si.quad(math.exp, 0.0, 1.0, limit=2**31 - 1)[0] == pytest.approx(
+            math.e - 1.0, rel=SMOOTH_RTOL
+        )
 
     def test_hitting_the_subdivision_limit_reports_and_returns(self) -> None:
         # int_0^1 dx/x diverges. scipy warns and hands back the partial

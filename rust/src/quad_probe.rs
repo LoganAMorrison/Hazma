@@ -17,7 +17,7 @@
 //! the Cython does today — `scipy.integrate.quad` re-enters Python once
 //! per node there too.
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyOverflowError, PyValueError};
 use pyo3::prelude::*;
 use std::cell::RefCell;
 
@@ -31,13 +31,19 @@ use crate::quad::{self, QuadOpts};
 /// reports the same number.
 ///
 /// Raises `ValueError` for exactly the inputs scipy raises `ValueError`
-/// for. An exception from `f` propagates unchanged: it is recorded on the
+/// for, and `OverflowError` for the one input scipy raises *that* for —
+/// a `limit` past C `int` range, which scipy rejects while converting the
+/// argument. Both are handled on `limit` below rather than left to PyO3's
+/// `usize` conversion, which would turn `limit = -1` into an
+/// `OverflowError` where scipy raises `ValueError`.
+///
+/// An exception from `f` propagates unchanged: it is recorded on the
 /// first occurrence, the integrand short-circuits to `NaN` for the rest of
 /// the run so no further Python code executes, and the original error is
 /// re-raised once QUADPACK returns.
 #[pyfunction]
 #[pyo3(name = "quad")]
-#[pyo3(signature = (f, a, b, epsabs=quad::DEFAULT_EPSABS, epsrel=quad::DEFAULT_EPSREL, limit=quad::DEFAULT_LIMIT, points=None))]
+#[pyo3(signature = (f, a, b, epsabs=quad::DEFAULT_EPSABS, epsrel=quad::DEFAULT_EPSREL, limit=quad::DEFAULT_LIMIT as i64, points=None))]
 #[pyo3(text_signature = "(f, a, b, epsabs=1.49e-8, epsrel=1.49e-8, limit=50, points=None)")]
 #[allow(
     clippy::too_many_arguments,
@@ -49,9 +55,30 @@ fn quad_py(
     b: f64,
     epsabs: f64,
     epsrel: f64,
-    limit: usize,
+    limit: i64,
     points: Option<Vec<f64>>,
 ) -> PyResult<(f64, f64, usize, usize, i32)> {
+    // `limit` is taken as a signed integer so this layer, not PyO3's
+    // `usize` conversion, decides what a bad one raises. scipy rejects
+    // `limit` twice over and with two different exceptions, and both are
+    // reproduced here:
+    //
+    //   * past C `int` range -> `OverflowError`, raised while converting
+    //     the argument. Also the guard that keeps the `limit`-length
+    //     workspace in `qagse`/`qagpe` from becoming a 16-bytes-per-entry
+    //     allocation request; `limit = 10**12` asks for 16 TB, which the
+    //     allocator may or may not refuse depending on the platform's
+    //     overcommit policy — a portability hazard, not just a slow path.
+    //   * below 1 -> `ValueError`. Folding negatives onto `0` sends them
+    //     down the same `QuadError::LimitTooSmall` path as an explicit
+    //     zero, so there is one message rather than two spellings of it.
+    if limit > i64::from(i32::MAX) {
+        return Err(PyOverflowError::new_err(
+            "signed integer is greater than maximum",
+        ));
+    }
+    let limit = usize::try_from(limit).unwrap_or(0);
+
     let failure: RefCell<Option<PyErr>> = RefCell::new(None);
 
     let mut integrand = |x: f64| -> f64 {

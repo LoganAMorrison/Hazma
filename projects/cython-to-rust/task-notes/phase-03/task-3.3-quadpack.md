@@ -177,6 +177,21 @@ into the phase file in this same PR (see `## Plan Impact`).
 
 ## Decisions and Implementation Notes
 
+- **Review round 1 (PR #60, 2026-08-10) — `limit` is validated at the
+  Python boundary, not by PyO3.** The probe took `limit: usize`, so
+  `limit = -1` died in PyO3's conversion with `OverflowError` where scipy
+  raises `ValueError` — the docstring's "raises `ValueError` for exactly
+  the inputs scipy raises `ValueError` for" was simply false. It now
+  takes `i64` and reproduces *both* of scipy's rejections: `< 1` folds
+  onto `0` and takes the existing `QuadError::LimitTooSmall` path (one
+  message, not two spellings), and `> i32::MAX` raises `OverflowError`
+  exactly as scipy's own C-`int` conversion does. That upper guard is
+  load-bearing beyond the contract: `limit` sizes the `qagse`/`qagpe`
+  workspace at 16 bytes an entry, so `limit = 10**12` was a 16 TB
+  allocation request that this machine happened to satisfy lazily —
+  whether it survives is a property of the platform's overcommit policy,
+  not of the code, and the exit criteria say "never panics across FFI".
+  Six new tests, each validity-checked against a mutation.
 - **Literal translation, 1-based indexing preserved.** Every array in
   `quad.rs` carries a dead element 0 so the Fortran's `alist(maxerr)`
   reads as `alist[maxerr]`, and every `go to` is a labelled `break`
@@ -392,8 +407,9 @@ four "criteria added during execution" bullets, for the same reason Task
 3.2's did: the criteria as written were satisfiable in a way that would
 have been wrong, and the shape of the answer belongs in the canonical
 document rather than only here. The breakpoint contract is scipy's
-rather than QUADPACK's and both live degeneracies are discards (so six
-call sites run `qagpe` with an empty list); only `qk21` is on the live
+rather than QUADPACK's and both live degeneracies are discards (so five
+of the twelve call sites run `qagpe` with an empty list); only `qk21` is
+on the live
 path; the agreement criterion is met with four orders of headroom and its
 boundary is `limit`; and the corpus's served-kernel predicate stays sound
 through the existing exemption.
@@ -472,13 +488,43 @@ success-shaped line for a zero-file scan (`docs/agents/lessons.md`,
 **Call-site count, re-derived rather than carried over.** Every prose
 copy of "eleven live call sites" and "six of the eleven" was wrong, in
 seven files, and had been copied from the reference's *seven-row table*
-rather than counted. `grep -rn --include='*.pyx' "quad(" hazma | grep -v
-'#'` → **12** live sites, of which **5** pass `points=[-1, 1]`. All
-twelve occurrences across `rust/src/quad.rs`, `test/test_core_quad.py`,
-this note, `phase-03/README.md`, `../README.md`,
-`../../references/numerics-replacements.md` and the phase file were
-swept — `docs/agents/lessons.md`, `[derived-count-not-rederived]` and
-`[sibling-copies-of-a-fixed-claim]`.
+rather than counted. Re-derived by classifying each match as live or
+commented:
+
+```sh
+grep -rn "quad(" --include='*.pyx' hazma \
+  | awk -F: '{l=$0; sub(/^[^:]*:[^:]*:/,"",l); gsub(/^[ \t]*/,"",l);
+              print (substr(l,1,1)=="#" ? "COMMENTED" : "LIVE"), $1":"$2}'
+```
+
+→ **12 live** sites and 11 commented ones, of which **5** live sites pass
+`points=[-1, 1]` (the sixth `points=[-1, 1]` match,
+`hazma/spectra/_positron/_muon.pyx:134`, is commented out).
+
+**The first pass of this sweep was itself incomplete, and review caught
+it** (PR #60). It grepped the *paired* phrases `eleven` and
+`six of the eleven` and fixed twelve occurrences across
+`rust/src/quad.rs`, `test/test_core_quad.py`, this note,
+`phase-03/README.md`, `../README.md`,
+`../../references/numerics-replacements.md` and the phase file — then
+recorded "all twelve occurrences were swept", which was a completeness
+claim the grep could not support. A thirteenth copy survived in this
+note's own `## Plan Impact` section, reading "so six call sites run
+`qagpe` with an empty list": the bare number word with no `eleven`
+anywhere near it, so the pattern never saw it.
+
+Re-sweeping with a pattern keyed on the *claim* rather than on the
+phrasing — every number word or numeral within 40 characters of
+`call site` / `live call` / `points=[-1` / `qagpe with an empty`, in
+either order — then turned up a **fourteenth**, in
+`test/test_core_quad.py:307` ("the branch all six `points=[-1, 1]` call
+sites take"). Both stragglers are the same shape as the twelve that were
+found: a count copied into prose that no longer sits beside the number it
+was copied from. **Sweep the bare numeral and the number word against the
+claim, not the phrase that happened to carry them** —
+`docs/agents/lessons.md`, `[sibling-copies-of-a-fixed-claim]` and
+`[derived-count-not-rederived]`. The final pattern, and its output, are
+in the review-response record below.
 
 **Stale-sibling sweep on the submodule prose** — `rg -n 'per-domain
 submodule|five per-domain|sixth submodule' rust/ test/ hazma/ docs/`:
