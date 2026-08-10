@@ -172,14 +172,57 @@ corpus's served-kernel predicate sound.
   written-out constants (`π²/6`, `π²/12`) are in test code at full
   double precision and are accepted.
 
+### Review round 1 (PR #59), 2026-08-10
+
+Two blocking findings, both valid, both fixed.
+
+- **`bessel_kn(n, -0.0)` returned `NaN` where scipy returns `+∞`.**
+  `-0.0 < 0.0` is false, so IEEE routes negative zero to each routine's
+  *zero* branch — cephes `k0`/`k1` return `+∞` there and so does scipy's
+  `kn`. The recurrence could not: with `+∞` seeds and a `2m/x` of `-∞`,
+  `∞ + -∞` is `NaN`. `bessel_kn` now short-circuits `x == 0.0` to `+∞`
+  before the match, which is correct at every order rather than only the
+  reported one.
+
+  Swept as a class rather than patched at the cited line: `±0.0` was
+  re-measured against scipy for **all three** functions and for `kn` at
+  orders 0–5. Only the recurrence arm (n ≥ 2) was ever wrong — `spence`,
+  `bessel_k1`, and the `kn` seed arms already matched. New tests:
+  `special::tests::negative_zero_is_zero_and_not_a_negative_argument`
+  and `TestSignedZero` (12 cases). Reverting just the guard fails 1
+  cargo test and 6 pytest cases, and orders 0–1 keep passing — which is
+  the shape the diagnosis predicts.
+
+- **Typed test counts, not derived ones.** The note claimed "53 tests in
+  7 classes" and "15 passed (7 new)"; the true pre-fix figures were 53
+  in **8** classes and **8** new Rust tests. Every count in this note,
+  `README.md` (phase) and `../README.md` (project) is now taken from a
+  command — `pytest --collect-only -q | awk -F'::' '{print $2}' |
+  sort | uniq -c` for the classes, `grep -c '^    #\[test\]'` for the
+  Rust tests — and the commands are quoted beside the numbers so the
+  next reader can re-run them. This is
+  `docs/agents/lessons.md` `[derived-count-not-rederived]`, in a note
+  that already cited its sibling class two sections up.
+
+  Note what the wrong number did *not* do: nothing failed, because a
+  count in prose gates nothing. It took a reviewer counting by hand.
+
+The reviewer's third observation — a full suite of `1141 passed, 14
+skipped` against this note's `1142 / 13` — is **not** a defect and needed
+no fix. Their environment resolved NumPy 2.5.2 where the corpus manifest
+records 2.5.1, which drops the parity runner into budget mode and turns
+one test into a skip; `1141 + 14 == 1142 + 13 == 1155`. That is the
+corpus's mode signal working exactly as `../README.md` documents, and it
+is why the recipe there pins `numpy==2.5.1`.
+
 ## Files Changed
 
 - `rust/src/special.rs` — **new.** `spence`, `bessel_k1`, `bessel_kn`
   over `spec_math`, with a `# Sources and licensing` provenance header,
   the call-site table, the `Li₂(1−z)` convention note, the `kn`
-  deviation rationale, and 7 unit tests (including an independent
-  `Iₙ` power series so the `K` Wronskian is not a restatement of the
-  recurrence).
+  deviation rationale, the `x == 0.0` guard, and 9 unit tests
+  (including an independent `Iₙ` power series so the `K` Wronskian is
+  not a restatement of the recurrence).
 - `rust/src/special_probe.rs` — **new.** Registration-only module
   exposing the three as `hazma._core.special` for the scipy sweep.
 - `rust/src/lib.rs` — `pub mod special;` + `mod special_probe;`, the
@@ -188,7 +231,7 @@ corpus's served-kernel predicate sound.
   "registration-only means per-domain".
 - `rust/Cargo.toml` — `spec_math = "0.1.6"` with the licensing/provenance
   comment; `rust/Cargo.lock` updated.
-- `test/test_core_special.py` — **new**, 53 tests in 7 classes.
+- `test/test_core_special.py` — **new**, 65 tests in 9 classes.
 - `test/parity/cases.py` — new `_CORE_TEST_ONLY_MODULES`; the
   served-kernel walk skips those submodules.
 - `test/parity/test_parity.py` — new
@@ -217,8 +260,12 @@ resolves inside the worktree; the tree was rebuilt with
 `uv pip install -e . --no-build-isolation` after the last `.rs` edit and
 after each mutation below.
 
-- `pytest test/test_core_special.py -q` → **`53 passed in 0.26s`**
-  (53 collected). Coverage by class:
+- `pytest test/test_core_special.py -q` → **`65 passed in 0.50s`**
+  (65 collected). Coverage by class — every count below is from
+  `pytest --collect-only -q | awk -F'::' '{print $2}' | sort | uniq -c`,
+  not from reading the file (PR #59 review round 1: the first version of
+  this note said "53 tests in 7 classes" against 53 in 8, because the
+  counts were typed rather than derived):
   - `TestOracleIdentity` (3) — the `cython_special` C symbols equal the
     `scipy.special` ufuncs, bit for bit, on each function's grid.
   - `TestSpenceConvention` (3) — closed forms at z = 0, 1, 2; the
@@ -231,15 +278,19 @@ after each mutation below.
     subnormal-before-zero property, edges, NaN.
   - `TestBesselKn` (13) — live-domain sweep, orders 0–5, negative-order
     folding, the cephes discriminator, edges, NaN.
+  - `TestSignedZero` (12) — **new in review round 1**: `-0.0` returns
+    what `+0.0` does, and what scipy does, for all three functions and
+    for `kn` at every order 0–5.
   - `TestBesselKnUnderflowTail` (4) — the declared divergence and both
     flush points.
   - `TestDispatch` (12) — array path equals scalar path bit for bit,
     scalar→float, empty array, 2-D `ValueError` wording.
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
-  **`15 passed`** (7 new in `special::tests`): `spence` closed forms,
-  `spence` reflection, `spence` edges, the `K₁` Wronskian, `k1` edges,
-  the `K` Wronskian at ν = 1 and ν = 2, `kn` at its seed orders, `kn`
-  edges.
+  **`16 passed`** (9 new in `special::tests`, counted with
+  `grep -c '^    #\[test\]' rust/src/special.rs`): `spence` closed
+  forms, `spence` reflection, `spence` edges, the `K₁` Wronskian, `k1`
+  edges, the `K` Wronskian at ν = 1 and ν = 2, `kn` at its seed orders,
+  `kn` edges, and the signed-zero test added in review round 1.
 - `cargo fmt --check` and
   `cargo clippy --all-targets -- -D warnings` — clean.
 - `black --check` / `isort --check-only` / `ruff check` (configured
@@ -247,8 +298,8 @@ after each mutation below.
   `test/parity/{cases,test_parity}.py` was clean on the trunk too
   (checked via `git stash`), so this is a zero-delta.
 - `scripts/agents/preflight.sh --paths "test/test_core_special.py
-  test/parity/cases.py test/parity/test_parity.py hazma/_core.pyi"
-  --md "<the six touched docs>"` on the final tree:
+  test/parity/cases.py test/parity/test_parity.py hazma/_core.pyi"`
+  after the review-round-1 fixes:
 
   ```text
   PASS   black --check           <the four Python files>
@@ -257,23 +308,26 @@ after each mutation below.
   PASS   cargo fmt --check       rust/
   PASS   cargo clippy            rust/
   PASS   cargo test              rust/
-  PASS   pytest                  1142 passed, 13 skipped, 5 warnings in 645.29s
+  PASS   pytest                  1154 passed, 13 skipped, 5 warnings in 578.91s
   PASS   import hazma            version 2.1.0
-  PASS   markdownlint            <the six touched docs>
+  SKIP   markdownlint            no --md files given
   SKIP   version bump            not a closing PR (pass --closing)
   PASS   forbidden tokens        none added
   RESULT: PASS
   ```
 
-  Two earlier runs came back `FAIL markdownlint` — first an over-long
-  line in `test/parity/README.md`, then hard tabs this note had picked
-  up from a pasted `git diff --numstat`. Both are fixed above.
+  `1154` is `1142 + 12`, the twelve `TestSignedZero` cases; **the skip
+  count is still 13**, which is what says the parity corpus stayed in
+  bit-equality mode across the fix.
 
-  The only file edited after that run is **this note**, to paste the row
-  table in; of the eleven gates only `markdownlint` reads it, and it was
-  re-run against the final note directly (clean). Nothing under
-  `hazma/`, `rust/` or `test/` moved, so the other ten rows still
-  describe the tree being handed off.
+  The `markdownlint` row is `SKIP` because that run was taken with the
+  code final and the durable docs still being rewritten — the ten
+  substantive gates read only `hazma/`, `rust/` and `test/`, none of
+  which moved afterwards. `markdownlint --dot` was then run directly
+  over the six touched docs in their final state (clean); its result is
+  quoted in the round-1 record below rather than inferred. Re-running
+  the whole ten-minute gate to re-lint prose it had already skipped
+  would measure nothing new.
 
 **Measured agreement with scipy** (the exit criteria, in numbers):
 
@@ -452,6 +506,34 @@ dated Phase 01/02 records and were left alone.
 rust/src/special.rs rust/src/special_probe.rs test/test_core_special.py`
 → no matches; preflight's own diff scan agrees (`PASS forbidden tokens
 — none added`).
+
+**Review round 1 count sweep.** `rg -n '7 new|7 classes|15 passed|\b1142\b|53
+passed|53 tests' projects/ docs/ test/ rust/`.
+
+### Pre-fix occurrences
+
+Eleven live claims across three files: `task-3.2-specfun.md` (`53 tests
+in 7 classes`, `53 passed in 0.26s`, `53 collected`, `15 passed` /
+`7 new`, `1142` in the preflight block), `phase-03/README.md` (the same
+five), and `../README.md` (`53 tests`, `53 passed`, `15 passed` /
+`7 new`, and `1142` in three places). Unrelated hits — `1.53` in
+`constants.rs`'s branching-ratio comment, PR #53 references in Phase
+01/02 records, `test/vector_mediator/**` data files — were left alone.
+
+### Post-fix occurrences
+
+Six, every one a *quoted historical value inside a correction*: three in
+this note (the round-1 record above, the coverage-by-class preamble, and
+the `1154 = 1142 + 12` arithmetic), one in `phase-03/README.md` naming
+the superseded triple, and two in `docs/agents/lessons.md`'s
+`[derived-count-not-rederived]` entry. No live claim carries an old
+number.
+
+Re-derived rather than copied from a sibling:
+`pytest --collect-only -q | awk -F'::' '{print $2}' | sort | uniq -c`
+(9 classes, 65 tests) and `grep -c '^    #\[test\]' rust/src/special.rs`
+(9). The full-suite figure came from the preflight run quoted above, not
+from adding 12 to the previous one — though it does equal that.
 
 **Measurement re-derivation.** The cephes-`kn` miss was first measured
 on an exploratory grid (5.176e-9 at x = 9.4925) and re-measured on the

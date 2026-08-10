@@ -169,6 +169,21 @@ KN_GRID = np.unique(
     )
 )
 
+#: The three bindings as one-argument callables, paired with the
+#: ``quantity`` wording each passes to ``dispatch::map_unary``. ``kn``'s
+#: order is bound rather than wrapped in a lambda so the parametrized
+#: ids below name real functions. Module scope rather than next to
+#: :class:`TestDispatch`, because ``parametrize`` reads it at
+#: class-definition time and :class:`TestSignedZero` comes first.
+PROBES: dict[str, tuple[Callable[..., object], str]] = {
+    "spence": (rust_special.spence, "Spence arguments"),
+    "bessel_k1": (rust_special.bessel_k1, "Bessel arguments"),
+    "bessel_kn": (
+        functools.partial(rust_special.bessel_kn, 2),
+        "Bessel arguments",
+    ),
+}
+
 
 class TestOracleIdentity:
     """``scipy.special.<f>`` is the same function the Cython cimports.
@@ -421,6 +436,46 @@ class TestBesselKn:
         assert np.isnan(float(sp.kn(2, x)))
 
 
+class TestSignedZero:
+    """Negative zero is a zero argument, not a negative one.
+
+    ``-0.0 < 0.0`` is false, so IEEE puts negative zero in each
+    routine's *zero* branch -- and scipy agrees, returning the same value
+    at ``-0.0`` as at ``+0.0`` for all three functions. The recurrence in
+    ``bessel_kn`` did not: its seeds are ``+inf`` there while ``2m/x`` is
+    ``-inf``, and ``inf + -inf`` is ``nan``, so every order from 2 up
+    returned ``nan`` where scipy returns ``+inf`` (PR #59 review).
+
+    Swept across all three functions and every order rather than only the
+    reported one, because the defect is a property of how a routine
+    branches on zero, not of ``kn(2, .)``.
+    """
+
+    @pytest.mark.parametrize("name", list(PROBES))
+    def test_matches_the_positive_zero_result(self, name: str) -> None:
+        call, _ = PROBES[name]
+        assert call(-0.0) == call(0.0)
+
+    @pytest.mark.parametrize("name", list(PROBES))
+    def test_matches_scipy_at_negative_zero(self, name: str) -> None:
+        call, _ = PROBES[name]
+        oracle = {
+            "spence": lambda: sp.spence(-0.0),
+            "bessel_k1": lambda: sp.k1(-0.0),
+            "bessel_kn": lambda: sp.kn(2, -0.0),
+        }[name]
+        assert call(-0.0) == float(oracle())
+
+    @pytest.mark.parametrize("order", [0, 1, 2, 3, 4, 5])
+    def test_bessel_kn_is_infinite_at_negative_zero_at_every_order(
+        self, order: int
+    ) -> None:
+        # Orders 0 and 1 return the cephes seeds directly and were always
+        # right; 2 and up go through the recurrence and were not.
+        assert rust_special.bessel_kn(order, -0.0) == np.inf
+        assert float(sp.kn(order, -0.0)) == np.inf
+
+
 class TestBesselKnUnderflowTail:
     """The one measured divergence from scipy, and its distance from hazma.
 
@@ -476,20 +531,6 @@ class TestBesselKnUnderflowTail:
             rust_special.bessel_kn(2, grid), np.zeros_like(grid)
         )
         np.testing.assert_array_equal(np.asarray(sp.kn(2, grid)), np.zeros_like(grid))
-
-
-#: The three bindings as one-argument callables, paired with the
-#: ``quantity`` wording each passes to ``dispatch::map_unary``. ``kn``'s
-#: order is bound rather than wrapped in a lambda so the parametrized
-#: ids below name real functions.
-PROBES: dict[str, tuple[Callable[..., object], str]] = {
-    "spence": (rust_special.spence, "Spence arguments"),
-    "bessel_k1": (rust_special.bessel_k1, "Bessel arguments"),
-    "bessel_kn": (
-        functools.partial(rust_special.bessel_kn, 2),
-        "Bessel arguments",
-    ),
-}
 
 
 class TestDispatch:

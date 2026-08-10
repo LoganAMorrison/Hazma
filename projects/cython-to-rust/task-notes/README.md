@@ -635,7 +635,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   served-kernel exemption. Measured rather than only argued: the bare
   suite ran the parity corpus in **bit-equality mode** — `rtol = 0`
   across all 41 consumed entry points, 179,695 pinned values — and
-  passed, at `1142 passed, 13 skipped` (+54 on Task 3.1's 1088, all of
+  passed, at `1154 passed, 13 skipped` (+66 on Task 3.1's 1088, all of
   them this task's tests; the skip count is unchanged, which is what
   proves the mode). **That evidence exists only because the task caught
   its own deliverable disabling the mode** — see the test-surface
@@ -866,10 +866,10 @@ it from memory.)
   [phase-03/README.md](phase-03/README.md).
 - **Task 3.2** — new `rust/src/special.rs` (`spence` / `bessel_k1` /
   `bessel_kn` over `spec_math`, a `# Sources and licensing` provenance
-  header, 7 unit tests) and `rust/src/special_probe.rs`
+  header, 9 unit tests) and `rust/src/special_probe.rs`
   (registration-only `hazma._core.special`); `rust/src/lib.rs` admits
   both; `rust/Cargo.toml` / `Cargo.lock` gain `spec_math = "0.1.6"`. New
-  `test/test_core_special.py` (53 tests).
+  `test/test_core_special.py` (65 tests).
   `test/parity/{cases.py,test_parity.py,README.md}` gain
   `_CORE_TEST_ONLY_MODULES` and its importer guard test.
   `hazma/_core.pyi` gains a comment — the only change under `hazma/`,
@@ -884,16 +884,18 @@ it from memory.)
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
-- **Phase 03 Task 3.2 state (2026-08-09):** bare `pytest -q` →
-  `1142 passed, 13 skipped` on the capturing environment, parity suite
+- **Phase 03 Task 3.2 state (2026-08-09; PR #59 review round 1,
+  2026-08-10):** bare `pytest -q` →
+  `1154 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13);
-  `pytest test/test_core_special.py -q` → `53 passed in 0.26s`;
-  `cargo test --no-default-features` → `15 passed` (7 new), clippy and
-  fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Ten mutations —
-  eight against `rust/src/special.rs`, two against the corpus's
-  served-kernel guard — each caught by the test whose name claimed it
-  (tables in the task note). One of them, dropping the recurrence's
-  order factor, passed `cargo test` on the first pass and is why the
+  `pytest test/test_core_special.py -q` → `65 passed in 0.50s`;
+  `cargo test --no-default-features` → `16 passed` (9 new), clippy and
+  fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Eleven
+  mutations — nine against `rust/src/special.rs`, two against the
+  corpus's served-kernel guard — each caught by the test whose name
+  claimed it (tables in the task note). One of them, dropping the
+  recurrence's order factor, passed `cargo test` on the first pass and
+  is why the
   Wronskian unit test now runs at ν = 2 as well as ν = 1.
 - **Phase 03 Task 3.1 state (2026-08-09):** bare `pytest -q` →
   `1088 passed, 13 skipped` on the capturing environment, parity suite
@@ -1097,13 +1099,15 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1142 passed / 13 skipped** as of Task 3.2
-  (2026-08-09), from 1088/13 at Task 3.1, 1063/13 at Phase 02 close,
+  `pytest -q` → **1154 passed / 13 skipped** as of Task 3.2
+  (2026-08-10, after PR #59 review round 1), from 1088/13 at Task 3.1,
+  1063/13 at Phase 02 close,
   1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
   +3 (Task 2.1's scaffold checks), 0 (Task 2.2, byte-identical, which is
   what showed no test outcome moved), +54 (Task 2.3's plumbing module);
-  Phase 03 so far: +25 (Task 3.1's constants), +54 (Task 3.2's specfun
-  module plus one corpus guard). **The skip count has not moved since
+  Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
+  module plus one corpus guard, of which +12 landed in review round 1).
+  **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the
   parity suite reports it is still in bit-equality mode. Re-derive rather

@@ -127,13 +127,25 @@ pub fn bessel_k1(x: f64) -> f64 {
 /// that widens the domain finds the divergence in a test rather than in
 /// a spectrum.
 pub fn bessel_kn(n: i32, x: f64) -> f64 {
+    // `Kₙ(0) = +∞` at every order, and cephes' `k0`/`k1` already say so
+    // — but the recurrence below cannot reach that answer from them at
+    // **negative** zero. IEEE puts `-0.0` here rather than in the
+    // negative branch (`-0.0 < 0.0` is false), so the seeds are `+∞`
+    // while `2m/x` is `-∞`, and `∞ + -∞` is `NaN`. scipy returns `+∞`
+    // for `kn(n, -0.0)` at every order; without this guard every order
+    // from 2 up returned `NaN` (PR #59 review).
+    if x == 0.0 {
+        return f64::INFINITY;
+    }
+
     match n.unsigned_abs() {
         0 => x.bessel_k0(),
         1 => x.bessel_k1(),
         order => {
-            // Non-finite and boundary inputs need no special-casing: the
-            // seeds already carry cephes' answers (+∞ at x = 0, NaN
-            // below it, 0 at +∞) and the recurrence propagates each one.
+            // The remaining boundary inputs need no special-casing: the
+            // seeds carry cephes' answers (NaN below zero, 0 at +∞) and
+            // the recurrence propagates each one, because `2m/x` is
+            // finite or zero for every `x` that reaches here.
             let mut lower = x.bessel_k0();
             let mut current = x.bessel_k1();
             for m in 1..order {
@@ -298,5 +310,25 @@ mod tests {
         assert!(bessel_kn(2, -1.0).is_nan());
         assert_eq!(bessel_kn(2, f64::INFINITY), 0.0);
         assert!(bessel_kn(2, f64::NAN).is_nan());
+    }
+
+    #[test]
+    fn negative_zero_is_zero_and_not_a_negative_argument() {
+        // `-0.0 < 0.0` is false, so IEEE puts negative zero in the
+        // *zero* branch of every one of these — which is where scipy
+        // puts it too. Checked at every order because only the
+        // recurrence arm (n ≥ 2) ever got it wrong: the seeds are `+∞`
+        // there while `2m/x` is `-∞`, and `∞ + -∞` is `NaN` (PR #59
+        // review).
+        assert_eq!(spence(-0.0), spence(0.0));
+        assert_eq!(bessel_k1(-0.0), f64::INFINITY);
+        for order in 0..6_i32 {
+            assert_eq!(
+                bessel_kn(order, -0.0),
+                f64::INFINITY,
+                "kn({order}, -0.0) must be +inf, as at +0.0"
+            );
+            assert_eq!(bessel_kn(order, -0.0), bessel_kn(order, 0.0));
+        }
     }
 }

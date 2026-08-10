@@ -107,6 +107,17 @@ foundation.
   of the three (`spence`, `kn`) are *fused-type* exports mangled
   `__pyx_fuse_<i><name>`, where `i` tracks declaration order — resolve
   them by the capsule's signature string, never by a hardcoded index.
+- **Negative zero is a zero argument, and a recurrence can lose that**
+  (Task 3.2, PR #59 review). `-0.0 < 0.0` is false, so IEEE routes `-0.0`
+  to a routine's *zero* branch — cephes and scipy both return `+∞` for
+  `kn(n, -0.0)`. A recurrence seeded on `k0`/`k1` cannot: the seeds are
+  `+∞` while `2m/x` is `-∞`, and `∞ + -∞` is `NaN`. Every order from 2
+  up returned `NaN`. Fixed with an `x == 0.0` short-circuit.
+  **The general shape for Phases 04–06: any kernel that divides by its
+  argument inherits a signed-zero case the underlying cephes routine
+  does not have**, and `+0.0` passing says nothing about `-0.0`. Sweep
+  both signs of zero against the oracle at every order or branch, not
+  just the one a reviewer names.
 - **A Python-visible test surface on `hazma._core` reads as a started
   port** (Task 3.2). Registering `hazma._core.special` flipped the
   parity corpus straight out of bit-equality mode
@@ -164,14 +175,14 @@ foundation.
 
 - `rust/src/special.rs` — **new**, `spence` / `bessel_k1` / `bessel_kn`
   over `spec_math`, a `# Sources and licensing` provenance header, the
-  `kn` deviation rationale, and 7 unit tests.
+  `kn` deviation rationale, the `x == 0.0` guard, and 9 unit tests.
 - `rust/src/special_probe.rs` — **new**, registration-only
   `hazma._core.special` for the scipy sweep.
 - `rust/src/lib.rs` — `pub mod special;` + `mod special_probe;`, the
   submodule registration, and the paragraph on why the probe is the
   exception to "registration-only means per-domain".
 - `rust/Cargo.toml` / `rust/Cargo.lock` — `spec_math = "0.1.6"`.
-- `test/test_core_special.py` — **new**, 53 tests in 7 classes.
+- `test/test_core_special.py` — **new**, 65 tests in 9 classes.
 - `test/parity/cases.py`, `test/parity/test_parity.py`,
   `test/parity/README.md` — `_CORE_TEST_ONLY_MODULES`, its importer
   guard test, and the reconciled prose.
@@ -183,20 +194,23 @@ foundation.
 
 ## Verification
 
-- **Task 3.2 (2026-08-09):** bare `pytest -q` →
-  `1142 passed, 13 skipped` on the capturing environment, parity suite
-  included and in bit-equality mode (skip count unchanged at 13, which is
-  what proves the mode; +54 on Task 3.1's 1088, all of them this task's
-  new tests). `pytest test/test_core_special.py -q` → `53 passed in
-  0.26s`; `cargo test --manifest-path rust/Cargo.toml
-  --no-default-features` → `15 passed` (7 new); clippy and fmt clean;
-  `scripts/agents/preflight.sh` RESULT: PASS. Ten mutations — eight
+- **Task 3.2 (2026-08-09; PR #59 review round 1, 2026-08-10):** bare
+  `pytest -q` → `1154 passed, 13 skipped` on the capturing environment,
+  parity suite included and in bit-equality mode (skip count unchanged
+  at 13, which is what proves the mode; +66 on Task 3.1's 1088, all of
+  them this task's new tests). `pytest test/test_core_special.py -q` →
+  `65 passed in 0.50s`; `cargo test --manifest-path rust/Cargo.toml
+  --no-default-features` → `16 passed` (9 new); clippy and fmt clean;
+  `scripts/agents/preflight.sh` RESULT: PASS. Eleven mutations — nine
   against `special.rs`, two against the corpus guard — each caught by
   the test whose name claims it (tables in the task note). Measured
   agreement with scipy: `spence` 2.425e-15, `k1` 1.215e-15 (3.078e-16
   through the underflow tail), `kn(2, ·)` 9.786e-16 over `x ≤ 300`,
   4.007e-15 worst across orders 0–5 — against 5.1e-9 for the cephes
-  `kn` that was rejected.
+  `kn` that was rejected. **Round 1 figures supersede the pre-review
+  ones** (`1142 / 53 / 15`), which were partly typed rather than
+  derived; every count here now comes from a command quoted in the task
+  note.
 - **Task 3.1 (2026-08-09):**
   `pytest test/test_core_constants.py -q` → `25 passed in 0.03s`;
   `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
