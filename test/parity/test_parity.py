@@ -259,16 +259,63 @@ def _fake_core_submodule(name: str, **members: object) -> types.ModuleType:
     not corpus.rust_core_available(), reason="hazma._core is not built in this tree"
 )
 def test_scaffolded_core_serves_no_kernels() -> None:
-    """The Phase 02 scaffold must not read as a started port.
+    """The pre-Phase-04 extension must not read as a started port.
 
     `roundtrip` is a plumbing probe with no caller in `hazma/`; the five
-    submodules are empty until Phase 04. If this fails, either a kernel
+    per-domain submodules are empty until Phase 04; and `special`
+    (Phase 03 Task 3.2) is a test-only shim exempted wholesale by
+    `cases._CORE_TEST_ONLY_MODULES`. If this fails, either a kernel
     landed (in which case the corpus really should leave exact mode) or
     something non-kernel became public on the extension and needs adding
-    to `cases._CORE_SCAFFOLD_NAMES`.
+    to `cases._CORE_SCAFFOLD_NAMES` (one name) or
+    `cases._CORE_TEST_ONLY_MODULES` (a whole submodule, and then also to
+    `test_test_only_core_submodules_have_no_importer`'s guarantee).
     """
     assert corpus.rust_core_kernels() == []
     corpus.assert_no_rust_core()  # must not raise
+
+
+def test_test_only_core_submodules_have_no_importer() -> None:
+    """The exemption in `cases._CORE_TEST_ONLY_MODULES` stays honest.
+
+    Exempting a submodule from the served-kernel walk is exactly the move
+    that could disable the corpus's bit-equality mode by hand, so the
+    exemption is conditional on a property of the tree rather than on
+    intent: nothing under `hazma/` may import an exempted submodule. The
+    day a wrapper does, it is a served kernel and this fails.
+
+    Text scan rather than an import graph on purpose — it covers the
+    `.pyx`/`.pxd` sources too, which no Python-level walk would see.
+    """
+    package = corpus.REPO_ROOT / "hazma"
+    sources = [
+        path
+        for suffix in ("*.py", "*.pyx", "*.pxd", "*.pyi")
+        for path in package.rglob(suffix)
+    ]
+    assert sources, "found no hazma sources to scan"
+
+    offenders = {
+        # `hazma/_core.pyi` documents why the module is unstubbed; a
+        # comment is not an import, so match the module path only where
+        # it could be one.
+        f"{path.relative_to(corpus.REPO_ROOT)}:{number}": line.strip()
+        for module in sorted(corpus._CORE_TEST_ONLY_MODULES)
+        for path in sources
+        for number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        )
+        if f"import {module}" in line
+        or f"from {module}" in line
+        or f"from {module.rpartition('.')[0]} import {module.rpartition('.')[2]}"
+        in line
+    }
+    assert not offenders, (
+        f"a test-only hazma._core submodule is imported by the library: "
+        f"{offenders}. Either the import is a mistake, or that submodule "
+        f"now serves a kernel and must come out of "
+        f"cases._CORE_TEST_ONLY_MODULES."
+    )
 
 
 @pytest.mark.skipif(

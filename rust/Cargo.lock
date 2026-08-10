@@ -14,6 +14,7 @@ version = "0.1.0"
 dependencies = [
  "numpy",
  "pyo3",
+ "spec_math",
 ]
 
 [[package]]
@@ -203,6 +204,12 @@ name = "rustc-hash"
 version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
+
+[[package]]
+name = "spec_math"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02ef091d4e8b981dbaa4cc17789d00b53d5d2c001ae689f14e6093f30c529036"
 
 [[package]]
 name = "syn"
