@@ -63,9 +63,15 @@ Phase 04 swap, so keying on importability alone would both block a
 legitimate corpus repair and drop the runner out of bit-equality mode two
 phases early. `cases.rust_core_kernels()` is the predicate; it returns the
 kernels the extension actually exposes, ignoring the scaffold's
-`roundtrip` probe. If a swap changes a number, the fix is a declared
-tolerance in the parity suite plus an entry in the project's numerical
-record, never a regenerated array.
+`roundtrip` probe and the test-only submodules listed in
+`cases._CORE_TEST_ONLY_MODULES` (today just `hazma._core.special`, the
+Phase 03 Task 3.2 specfun shim that `test/test_core_special.py` sweeps
+against scipy). That second exemption is held honest by
+`test_test_only_core_submodules_have_no_importer`, which fails the moment
+anything under `hazma/` imports one of them — at which point it is a
+served kernel and belongs back in the count. If a swap changes a number,
+the fix is a declared tolerance in the parity suite plus an entry in the
+project's numerical record, never a regenerated array.
 
 ## What the corpus pins
 

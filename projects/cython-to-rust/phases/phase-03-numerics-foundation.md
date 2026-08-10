@@ -55,6 +55,37 @@ uses it.
 - `k1`/`kn` swept vs scipy over the thermal domain incl. large-argument
   underflow region — rtol ≤ 1e-13.
 
+**Criteria added during execution** (2026-08-09; the gap the first
+bullet's parenthetical anticipated turned out to be in *scipy*, not in
+`spec_math`, so the shape of the answer had to be recorded here):
+
+- **`kn` is not `spec_math`'s `bessel_kn`, and the deviation is
+  declared.** `scipy.special.kn` dispatches integer orders to `kv`;
+  only `k0`/`k1` are still cephes there. Measured over
+  `x ∈ [1e-8, 300]`, cephes `kn(2, ·)` misses scipy by up to **5.1e-9**
+  relative — past this task's gate by four orders and inside the parity
+  corpus's 1e-8 budget for `thermal_cross_section`, whose prefactor
+  squares it. `Kₙ` is therefore built from the upward recurrence
+  `K_{m+1} = K_{m-1} + (2m/x)·K_m` seeded on cephes `k0`/`k1`, measured
+  at ≤ 3.4e-15 against scipy for every order n = 0..5.
+- **The `kn` underflow criterion is bounded at scipy's flush point.**
+  The 1e-13 gate holds for `k1` through the whole tail (both sides
+  reach zero together near `x = 742`), and for `kn` up to `x ≈ 698`,
+  where scipy flushes to zero while `K₂` is still `3.9e-305`. Above
+  that the two disagree wholesale by construction; hazma cannot reach
+  it (`thermal_cross_section` short-circuits above `x = 300`). The
+  boundary is pinned in `test/test_core_special.py`, not merely
+  documented.
+- **The corpus's served-kernel predicate stays sound.** Exposing the
+  shim to Python as `hazma._core.special` — needed because the oracle
+  is scipy, which lives in Python — otherwise reads as three ported
+  kernels and drops the parity corpus out of bit-equality mode for the
+  rest of the project. `cases._CORE_TEST_ONLY_MODULES` exempts the
+  submodule, and `test_test_only_core_submodules_have_no_importer`
+  makes the exemption conditional on nothing under `hazma/` importing
+  it. Task 2.1 fixed this same class once already
+  (`docs/agents/lessons.md`, `[gate-disabled-stays-green]`).
+
 ### Task 3.3: QUADPACK port (qk15, qk21, qelg, qags, qagp)
 
 **Task note:** [`../task-notes/phase-03/task-3.3-quadpack.md`](../task-notes/phase-03/task-3.3-quadpack.md)

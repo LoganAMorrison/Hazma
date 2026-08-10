@@ -15,11 +15,17 @@
 //! separately" (rules.md rule 8) is about keeping it out of [`kernels`],
 //! not about confining it to one file.
 //!
-//! [`constants`] sits below `kernels` in that stack and is `pub` while
-//! its neighbours are private — nothing in this crate reads it yet, and a
-//! private module of unread `const`s is a wall of `dead_code`. Publishing
-//! it is also honest: the tables are the crate's most reusable surface,
-//! and Phases 03–06 consume them from every kernel module.
+//! [`constants`] and [`special`] sit below `kernels` in that stack and
+//! are `pub` while their neighbours are private — no kernel reads either
+//! one yet, and a private module of unread items is a wall of
+//! `dead_code`. Publishing them is also honest: the constant tables and
+//! the cephes shim are the crate's most reusable surface, and Phases
+//! 03–06 consume them from every kernel module.
+//!
+//! [`special_probe`] is the exception to "registration only means
+//! per-domain": it registers a `special` submodule that exposes
+//! [`special`] to Python purely so `test/test_core_special.py` can sweep
+//! it against scipy. No hazma module imports it.
 
 pub mod constants;
 mod dispatch;
@@ -28,6 +34,8 @@ mod neutrino;
 mod photon;
 mod positron;
 mod scalar_mediator;
+pub mod special;
+mod special_probe;
 mod vector_mediator;
 
 use pyo3::prelude::*;
@@ -92,6 +100,7 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "neutrino", neutrino::register)?;
     add_submodule(module, "scalar_mediator", scalar_mediator::register)?;
     add_submodule(module, "vector_mediator", vector_mediator::register)?;
+    add_submodule(module, "special", special_probe::register)?;
 
     Ok(())
 }

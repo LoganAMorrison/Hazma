@@ -28,9 +28,9 @@ build and runtime). The pin disappears when these move to Rust.
 - `Polylog` trait: `li2` — which per its docs delegates to
   `cephes64::spence`.
 
-scipy's `spence`, `k1`, `kn` are themselves cephes wrappers, so this is
-algorithm-for-algorithm parity, not merely value parity. Two
-implementation-time checks are mandatory (Task 3.2):
+scipy's `spence` and `k1` are themselves cephes wrappers, so for those
+two this is algorithm-for-algorithm parity, not merely value parity.
+Two implementation-time checks were mandatory (Task 3.2):
 
 1. Pin the `li2`/`spence` argument convention against
    `scipy.special.spence` on a grid spanning (0, 1), (1, ∞), and the
@@ -43,6 +43,38 @@ Fallback if `spec_math` has a gap or a parity miss: vendor a direct Rust
 translation of the specific cephes routine (`spence.c` ≈ 100 lines,
 `k1.c`/`kn.c` similar; cephes licensing is permissive — scipy ships it
 under its BSD stack).
+
+**Measured, Task 3.2 (2026-08-09, scipy 1.18.0) — the third sentence
+above was wrong about `kn`.** Running check 2 is what found it:
+
+- `spence` and `k1` are the same cephes routine on both sides and agree
+  to a few ulp: max relative deviation **2.4e-15** over the `spence`
+  grid, **1.2e-15** over `k1`'s. `li2` does expose scipy's convention
+  (`Li₂(1−z)`), because it delegates to `cephes64::spence` — but the
+  *name* says the other one, which is why check 1 exists.
+- **`scipy.special.kn` is not cephes `kn`.** It dispatches integer
+  orders to `kv`, and only `k0`/`k1` remain cephes. `spec_math`'s
+  faithful cephes `kn` therefore misses scipy by up to **5.1e-9**
+  relative over `x ∈ [1e-8, 300]`, at `x = 9.531` — just below that
+  routine's own `x = 9.55` branch switch. The fix is not
+  the vendoring fallback above — a hand-translated cephes `kn` would
+  reproduce the same miss. `rust/src/special.rs` builds `Kₙ` from the
+  upward recurrence `K_{m+1} = K_{m-1} + (2m/x)·K_m` seeded on cephes
+  `k0`/`k1`, which tracks scipy to **≤ 3.4e-15** for every order
+  n = 0..5.
+- **Underflow is where the two `kn` part company.** scipy flushes to
+  zero from `x ≈ 698`, while `K₂(697.88)` is `3.9e-305` — a normal
+  double, not a lost one — and the recurrence keeps returning values
+  until its `exp(-x)` seeds die near `x = 742`. `k1` has no such split:
+  both sides decay into the subnormals and reach zero together.
+  Unreachable from hazma (`thermal_cross_section` short-circuits above
+  `x = 300`, where `K₂ ≈ 3.7e-132`) and pinned in
+  `test/test_core_special.py`.
+- **The `cython_special` C symbols and the `scipy.special` ufuncs return
+  bit-identical values** for all three (checked through `__pyx_capi__`
+  on the same grids), so a test may use the ufunc as the oracle for
+  what the `.pyx` actually calls. That equivalence is itself a test
+  (`TestOracleIdentity`) rather than an assumption.
 
 ### `scipy.integrate.quad` (QUADPACK) call sites
 

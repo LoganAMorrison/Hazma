@@ -54,7 +54,15 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   at write time, not carried over from analysis prose — three counts in one
   plan drifted (32→"19" survivors vs 20 actual; "43" corpus entry points vs
   41 consumed; "44 .pyx/.pxd" conflating 44 .pyx + 33 .pxd), and each read
-  as authoritative until review recounted (PR #35).
+  as authoritative until review recounted (PR #35). It applies just as
+  much to *your own* artifacts, where the temptation to count in your head
+  is strongest because you just wrote the thing: a task note claimed "53
+  tests in 7 classes" and "15 passed (7 new)" against 53 in 8 and 8 new,
+  copied into three durable docs and a PR body, all measured on the same
+  tree and all wrong, while the numbers they sat beside were correct
+  (PR #59). Quote the command next to the number — `pytest --collect-only
+  -q | awk -F'::' '{print $2}' | sort | uniq -c`, `grep -c '#\[test\]'` —
+  so the next reader re-runs it instead of trusting it.
 - [measurement-taken-before-the-task-ended] A number measured *correctly*,
   with a real command, still goes stale if the task's own later output
   changes what the command measures. Re-run every measurement against the
@@ -309,3 +317,17 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   [measurement-taken-before-the-task-ended], where a correct derivation
   expired: here the derivation ran, on the final tree, over the wrong
   domain.
+- [signed-zero-lost-by-a-derived-formula] A wrapper that reaches its answer
+  by *arithmetic on* an upstream routine's outputs, rather than by calling
+  it, inherits an argument case the upstream never had — and `-0.0` is the
+  one that hides, because `-0.0 < 0.0` is false, so IEEE routes it to the
+  *zero* branch and a `+0.0` test says nothing about it. Sweep both signs
+  of zero against the oracle, at every order or branch the formula runs,
+  not just the one a reviewer names (PR #59: `bessel_kn` built `Kₙ` from
+  the recurrence `K_{m-1} + (2m/x)·K_m` on cephes `k0`/`k1` seeds; at
+  `x = -0.0` the seeds are `+∞` and `2m/x` is `-∞`, so every order from 2
+  up returned `NaN` where scipy returns `+∞`. Orders 0 and 1 return the
+  seeds directly and were always right, which is exactly why the bug
+  survived an edge-case test that checked `+0.0` and `-1.0`). Generalizes
+  past zero: any guard the upstream applies *before* its arithmetic has to
+  be re-applied by a caller that does arithmetic *after* it.

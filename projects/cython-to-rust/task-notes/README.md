@@ -24,7 +24,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
-| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 done (2026-08-09), 3.2–3.5 open |
+| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 and 3.2 done (2026-08-09), 3.3–3.5 open |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
@@ -387,6 +387,39 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   a Phase 04 port that recomputes from the comment instead of copying the
   number lands 0.3% away — `0.9972020119096803` against
   `1.0001870858234163`. Pinned in `test_core_constants.py`.
+- **The plan's "scipy is cephes, so this is algorithm-for-algorithm
+  parity" is true for `spence` and `k1` and false for `kn`** (Task 3.2).
+  `scipy.special.kn` dispatches integer orders to `kv`; only `k0`/`k1`
+  are still cephes there. So the *faithful* cephes `kn` — `spec_math`'s,
+  and equally the plan's "vendor the cephes routine" fallback — misses
+  scipy by up to **5.1e-9** relative over `x ∈ [1e-8, 300]`, worst at
+  `x = 9.531`. That is not academic: the mediator prefactor is
+  `x/(2·kn(2,x))²`, so it enters `thermal_cross_section` **squared**,
+  right at the parity corpus's 1e-8 budget for that function — a Phase
+  05 swap could have shipped it inside budget and moved published
+  numbers. `crate::special::bessel_kn` builds `Kₙ` from the upward
+  recurrence `K_{m+1} = K_{m-1} + (2m/x)·K_m` on cephes `k0`/`k1` seeds
+  instead: ≤ 3.4e-15 vs scipy for orders 0–5. `../references/numerics-replacements.md`
+  was patched, since its own prose is what made cephes `kn` look safe.
+  **The general shape, and the one Task 3.3 should carry: the plan's
+  model of a third-party library is a hypothesis, and the sweep that
+  "confirms" it is the only thing that can refute it.**
+- **A Python-visible test surface on `hazma._core` reads as a started
+  port** (Task 3.2) — the second instance of
+  `docs/agents/lessons.md` `[gate-disabled-stays-green]` in this
+  project. `cases.rust_core_kernels()` counts every public callable
+  except the literal name `roundtrip`, so registering
+  `hazma._core.special` (needed because the oracle, scipy, lives in
+  Python) flipped the corpus to `exact=False, detail='hazma._core serves
+  3 kernel(s)'` for the rest of Phases 03–06 with nothing turning red.
+  Fixed with a **submodule**-level exemption
+  (`cases._CORE_TEST_ONLY_MODULES`) rather than a name-level one — a
+  name exemption would also cover a future real kernel of the same name
+  — and made conditional on a checkable property of the tree by
+  `test_test_only_core_submodules_have_no_importer`, which fails the
+  moment anything under `hazma/` imports an exempted module. **Any later
+  task putting a non-kernel on the extension inherits this mechanism and
+  must not widen the exemption to quiet a red mode check.**
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -592,6 +625,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   bug rather than a constants bug — which is the whole reason the task
   refuses to trust its own transcription.
 
+- **Task 3.2, 2026-08-09 (special functions): no public value changes**
+  (verified: `git diff origin/master -- hazma` is one file,
+  `hazma/_core.pyi`, and the hunk is a comment — no executable line under
+  `hazma/` is reachable from this diff, on a tree rebuilt before anything
+  was run). The rest is a new PyO3-free Rust module that no Python
+  imports and no Rust kernel yet calls, its registration-only Python
+  probe, two new test modules' worth of tests, and the parity corpus's
+  served-kernel exemption. Measured rather than only argued: the bare
+  suite ran the parity corpus in **bit-equality mode** — `rtol = 0`
+  across all 41 consumed entry points, 179,695 pinned values — and
+  passed, at `1154 passed, 13 skipped` (+66 on Task 3.1's 1088, all of
+  them this task's tests; the skip count is unchanged, which is what
+  proves the mode). **That evidence exists only because the task caught
+  its own deliverable disabling the mode** — see the test-surface
+  finding above; shipped unnoticed, every later Phase 03–06 line in this
+  section would have been measured at 1e-8 instead of bit-equality.
+  What the task *did* produce, numerically, is a Rust `spence`/`k1`/`kn`
+  that tracks `scipy.special` to ≤ 4.0e-15 over every domain hazma
+  reaches (per-sweep figures in the task note), against 5.1e-9 for the
+  cephes `kn` it rejected. **Phase 04's muon photon kernel and Phase
+  05's thermal ⟨σv⟩ are the first swaps whose drift lines will be
+  measured against these**, so a wrong choice here would surface as a
+  kernel bug rather than a specfun bug.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -604,6 +661,14 @@ it from memory.)
   lineage (`spec_math`) for specfun; netlib-QUADPACK translation for
   the integrator; cyphus crates as out-of-repo oracles only →
   ADR-0002 (Accepted 2026-08-04 — Hazma stays MIT).
+  **Implemented in Task 3.2** as `rust/src/special.rs` over
+  `spec_math` 0.1.6 (MIT OR Apache-2.0), with one deliberate departure
+  the ADR does not disturb: `bessel_kn` is an upward recurrence on
+  cephes `k0`/`k1` seeds rather than cephes' own `kn`, because scipy's
+  `kn` is `kv` and the faithful routine misses it by 5.1e-9. That is
+  original work over cephes seeds, so nothing GSL-derived enters the
+  graph — the ADR's fallback (vendor the cephes routine) would have
+  reproduced the miss instead of fixing it.
 - Capi-survivor exception: four spectra Cython extensions outlive their
   Phase 04 swap until Phase 06 Task 6.4, because the mediator spectrum
   `.pyx` cimport their `__pyx_capi__` symbols — recorded in the
@@ -646,6 +711,20 @@ it from memory.)
   `../references/numerics-replacements.md`'s dispatch-contract section
   gained the measured live Cython behavior it was silent about. No ADR:
   nothing revises ADR-0001, and this task is its first executable form.
+- **Task 3.2 (2026-08-09)** patched two canonical documents in the same
+  PR as the code, for the same reason. The phase-03 file's Task 3.2
+  block gained three "criteria added during execution" bullets: the
+  `kn` deviation and its measurement (the first criterion's fallback
+  clause prescribed a cephes translation that would not have worked),
+  the bound on where the underflow criterion can hold for `kn` (above
+  `x ≈ 698` scipy returns `0`, so the stated rtol is unachievable there
+  and always will be), and keeping the corpus's served-kernel predicate
+  sound. `../references/numerics-replacements.md` gained the measured
+  block, because its own sentence "scipy's `spence`, `k1`, `kn` are
+  themselves cephes wrappers" is what made the wrong choice look safe.
+  No ADR: nothing revises ADR-0002, no interface or ordering moves, and
+  the decision is a per-function implementation choice carried by the
+  code, the phase file and the task note.
 - **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
   inventory's boost-retirement claim corrected to Phase 06 Task 6.4
   (capi survivor `hazma/spectra/_positron/_pion.pyx:10` cimports the
@@ -785,11 +864,39 @@ it from memory.)
   canonical patch — the phase file's three Task 3.1 criteria are
   satisfied as written. Nothing under `hazma/`. Full list in
   [phase-03/README.md](phase-03/README.md).
+- **Task 3.2** — new `rust/src/special.rs` (`spence` / `bessel_k1` /
+  `bessel_kn` over `spec_math`, a `# Sources and licensing` provenance
+  header, 9 unit tests) and `rust/src/special_probe.rs`
+  (registration-only `hazma._core.special`); `rust/src/lib.rs` admits
+  both; `rust/Cargo.toml` / `Cargo.lock` gain `spec_math = "0.1.6"`. New
+  `test/test_core_special.py` (65 tests).
+  `test/parity/{cases.py,test_parity.py,README.md}` gain
+  `_CORE_TEST_ONLY_MODULES` and its importer guard test.
+  `hazma/_core.pyi` gains a comment — the only change under `hazma/`,
+  and non-executable. **Two canonical patches:** the phase file's Task
+  3.2 block gained three "criteria added during execution" bullets, and
+  [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
+  gained the measured block correcting its claim that scipy's `kn` is a
+  cephes wrapper. Full list in
+  [phase-03/README.md](phase-03/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 03 Task 3.2 state (2026-08-09; PR #59 review round 1,
+  2026-08-10):** bare `pytest -q` →
+  `1154 passed, 13 skipped` on the capturing environment, parity suite
+  included and in bit-equality mode (skip count unchanged at 13);
+  `pytest test/test_core_special.py -q` → `65 passed in 0.50s`;
+  `cargo test --no-default-features` → `16 passed` (9 new), clippy and
+  fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Eleven
+  mutations — nine against `rust/src/special.rs`, two against the
+  corpus's served-kernel guard — each caught by the test whose name
+  claimed it (tables in the task note). One of them, dropping the
+  recurrence's order factor, passed `cargo test` on the first pass and
+  is why the
+  Wronskian unit test now runs at ν = 2 as well as ν = 1.
 - **Phase 03 Task 3.1 state (2026-08-09):** bare `pytest -q` →
   `1088 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode;
@@ -912,11 +1019,15 @@ it from memory.)
   `setup.py`'s declared list is *verified* to be that same set, not
   merely the same size. Re-derive with the clean-then-rebuild recipe
   rather than quoting this; a stale `.so` makes a wrong list look right.
-- **`hazma._core` exists, and nothing calls it** (Task 2.1). The crate
-  lives in `rust/`, `uv pip install -e .` builds Cython and Rust in one
-  pass, and the tree carries 21 `.so`: the 20 Cython extensions plus
-  `hazma/_core.abi3.so`. Its only public name is `roundtrip`, a plumbing
-  probe with no caller in `hazma/`. `dispatch::map_unary` is the single
+- **`hazma._core` exists, and nothing under `hazma/` calls it** (Task
+  2.1; still true after Task 3.2). The crate lives in `rust/`,
+  `uv pip install -e .` builds Cython and Rust in one pass, and the tree
+  carries 21 `.so`: the 20 Cython extensions plus `hazma/_core.abi3.so`.
+  Its public surface is `roundtrip` — a plumbing probe — plus the
+  `special` submodule Task 3.2 added, which is a test surface reachable
+  only from `test/test_core_special.py`. Neither is a ported kernel, and
+  `cases.rust_core_kernels()` is the predicate that says so.
+  `dispatch::map_unary` is the single
   implementation of the entry-point dispatch contract — Phases 03–06 call
   it rather than touching PyO3 inside a kernel (`../rules.md` Rust rule
   3). The three cargo gates are `cargo fmt --check`,
@@ -941,8 +1052,8 @@ it from memory.)
   [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
   rather than their twelve task notes — the learnings are the
   distillation, the notes are history. **Phase 03 is in progress:
-  Task 3.1 landed 2026-08-09, so the next task is 3.2, 3.3 or 3.5 (all
-  dependency-free) or 3.4 (unblocked by 3.1).** No phase carries a
+  Tasks 3.1 and 3.2 both landed 2026-08-09, so the next task is 3.3 or
+  3.5 (dependency-free) or 3.4 (unblocked by 3.1).** No phase carries a
   decision gate.
 - **`hazma_core::constants` exists and is bit-equal to the Cython**
   (Task 3.1). `constants::pdg` is `hazma/_utils/constants.pxd` (151
@@ -988,11 +1099,15 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → 1063 passed / 13 skipped at Phase 02 close (Task 2.3,
-  2026-08-09), from 1006/13 at Phase 01 close and 935/30 at Task 1.3.
-  The Phase 02 deltas: +3 (Task 2.1's scaffold checks), 0 (Task 2.2,
-  byte-identical, which is what showed no test outcome moved), +54
-  (Task 2.3's plumbing module). **The skip count has not moved since
+  `pytest -q` → **1154 passed / 13 skipped** as of Task 3.2
+  (2026-08-10, after PR #59 review round 1), from 1088/13 at Task 3.1,
+  1063/13 at Phase 02 close,
+  1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
+  +3 (Task 2.1's scaffold checks), 0 (Task 2.2, byte-identical, which is
+  what showed no test outcome moved), +54 (Task 2.3's plumbing module);
+  Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
+  module plus one corpus guard, of which +12 landed in review round 1).
+  **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the
   parity suite reports it is still in bit-equality mode. Re-derive rather
@@ -1042,8 +1157,15 @@ it from memory.)
   (`../../../docs/agents/lessons.md`
   `[unrun-workflow-cannot-close-a-criterion]`). Phase 07 Task 7.1
   rewrites it for maturin and inherits that.
-- `spec_math`'s `li2` argument convention vs scipy's `spence` is
-  unverified — Task 3.2 pins it before anything depends on it.
+- ~~`spec_math`'s `li2` argument convention vs scipy's `spence` is
+  unverified — Task 3.2 pins it before anything depends on it.~~ —
+  **pinned in Task 3.2 (2026-08-09): the same convention, `Li₂(1−z)`,
+  because `li2`'s body is `cephes64::spence`.** What the same check
+  found instead was a divergence nobody had flagged: **`scipy.special.kn`
+  is not cephes**, and the faithful cephes `kn` misses it by 5.1e-9 in
+  the live domain. See Findings; the live obligation is that Phase 05
+  must not swap `crate::special::bessel_kn`'s recurrence back to
+  `spec_math`'s routine.
 - ~~Phase 01's corpus will capture `cross_section_prefactor`'s
   near-threshold cancellation as if it were intended behavior.~~ — no
   longer a risk: the repair landed before Phase 01 (see "Out-of-band"

@@ -1204,8 +1204,28 @@ def rust_core_available() -> bool:
 #: kernels: nothing in `hazma/` calls them and they compute no physics.
 #: `roundtrip` is Phase 02 Task 2.1's plumbing probe. Anything else public
 #: on the extension is a kernel by definition — a Phase 04-06 swap adds it
-#: precisely so a wrapper can call it.
+#: precisely so a wrapper can call it. See also
+#: :data:`_CORE_TEST_ONLY_MODULES`, which is the same exemption a whole
+#: submodule at a time.
 _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
+
+#: Submodules of ``hazma._core`` that exist only so a test can reach the
+#: Rust side. Their contents compute real numbers but serve no wrapper,
+#: so counting them would flip the corpus out of bit-equality mode for
+#: the rest of the port with nothing turning red — the failure Task 2.1
+#: fixed once already (``docs/agents/lessons.md``,
+#: ``[gate-disabled-stays-green]``).
+#:
+#: ``hazma._core.special`` is Phase 03 Task 3.2's ``spence``/``k1``/``kn``
+#: shim, exposed to Python only so ``test/test_core_special.py`` can sweep
+#: it against scipy; the kernels that will use it call the Rust side
+#: directly. What makes the exemption safe rather than convenient is that
+#: no module under `hazma/` may import these — asserted by
+#: ``test_test_only_core_submodules_have_no_importer`` in
+#: ``test_parity.py``, not left to this comment. **Do not add a submodule
+#: here to quiet a failing mode check**: a submodule a wrapper imports is
+#: a served kernel, whatever it is named.
+_CORE_TEST_ONLY_MODULES = frozenset({"hazma._core.special"})
 
 
 def rust_core_kernels() -> list[str]:
@@ -1239,7 +1259,13 @@ def rust_core_kernels() -> list[str]:
             if inspect.ismodule(member):
                 # Only into our own subtree: a submodule that imports
                 # numpy must not make numpy look like a ported kernel.
-                if getattr(member, "__name__", "").startswith("hazma._core"):
+                # And not into the test-only submodules, which are Rust
+                # that no wrapper calls.
+                qualified = getattr(member, "__name__", "")
+                if (
+                    qualified.startswith("hazma._core")
+                    and qualified not in _CORE_TEST_ONLY_MODULES
+                ):
                     walk(member, f"{prefix}.{name}")
             elif callable(member) and name not in _CORE_SCAFFOLD_NAMES:
                 found.append(f"{prefix}.{name}")
