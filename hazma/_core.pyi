@@ -7,13 +7,17 @@ import numpy as np
 # vector_mediator — exist but are empty until Phases 03-06 fill them;
 # each gets its own stub alongside its first kernel.
 #
-# There is a sixth submodule, `special` (cython-to-rust Task 3.2), and it
-# is deliberately not stubbed: it exposes `spence`, `bessel_k1` and
-# `bessel_kn` only so `test/test_core_special.py` can sweep them against
-# scipy. The kernels that will use them call the Rust side directly, and
-# nothing under `hazma/` imports it — a stub would advertise a surface
-# this package does not mean to offer. Its three functions follow the
-# same dispatch contract `roundtrip` documents below.
+# Two further submodules, `special` (cython-to-rust Task 3.2) and `quad`
+# (Task 3.3), are deliberately not stubbed. `special` exposes `spence`,
+# `bessel_k1` and `bessel_kn` only so `test/test_core_special.py` can
+# sweep them against scipy — its three functions follow the same dispatch
+# contract `roundtrip` documents below. `quad` exposes the QUADPACK port
+# only so `test/test_core_quad.py` can put one Python integrand through
+# both it and `scipy.integrate.quad`; it takes a callable rather than an
+# array and so has no dispatch contract to describe. The kernels that
+# will use either call the Rust side directly, and nothing under `hazma/`
+# imports them — a stub would advertise a surface this package does not
+# mean to offer.
 
 # `roundtrip` is the scaffold's plumbing probe, not physics. It follows
 # the dispatch contract every ported entry point uses: a Python float, a

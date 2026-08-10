@@ -24,7 +24,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
-| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 and 3.2 done (2026-08-09), 3.3–3.5 open |
+| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 and 3.2 done (2026-08-09), 3.3 done (2026-08-10), 3.4–3.5 open |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
@@ -420,6 +420,49 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   moment anything under `hazma/` imports an exempted module. **Any later
   task putting a non-kernel on the extension inherits this mechanism and
   must not widen the exemption to quiet a red mode check.**
+- **The quadrature break-point contract is scipy's, not QUADPACK's**
+  (Task 3.3), and the plan's own instruction to pin it empirically is
+  what surfaced that. `scipy.integrate.quad` filters `points` in Python
+  before `qagpe` ever sees them — `np.unique`, then strictly interior —
+  so the rule a documentation-driven port would implement (sort, and
+  `ier = 6` unless the extremes equal `a` and `b`) is unreachable, and
+  the five `points=[-1, 1]` call sites would have **errored** under it.
+  Both live degeneracies turn out to be discards, and the consequence is
+  a dispatch one: `points is None` selects `qagse`, "no break point
+  survived" does not, so five of the twelve live call sites run `qagpe`
+  with an *empty* list. This is the same shape as Task 3.2's `kn`
+  finding — the plan's model of a third-party library is a hypothesis,
+  and the sweep that "confirms" it is the only thing that can refute it.
+- **The QUADPACK port tracks scipy wherever QUADPACK converges, and only
+  there** (Task 3.3). Over 11,274 random (integrand, tolerance, limit,
+  points) combinations the 4,461 converged runs reproduced scipy's
+  `neval` and `last` on all but **5** (0.11%) and landed within 3.6e-2 of
+  the requested tolerance (8.2e-11 relative worst case); the 6,813 that
+  exhausted `limit` can separate without bound (4.5e-5 in that sweep, 11%
+  on a hand-picked case), because Wynn's ε-algorithm is chaotic on a
+  non-converging sequence. Termination flags agreed on all 11,274.
+  **Phases 04–06 inherit the obligation**: no live shape reaches the
+  second regime today, every one returns `ier = 0`, and
+  `test/test_core_quad.py` asserts it — a future kernel that does reach it
+  would be a silent change, since QUADPACK returns a number either way.
+  **The sweep's parameter space is part of its result:** an earlier
+  6,000-combination design capped at two break points reported *zero*
+  subdivision mismatches among converged runs, and the mismatches only
+  appeared once 9- and 39-point grids entered the draw.
+- **A mutation harness can poison its own baseline** (Task 3.3). Two
+  copies of the campaign ran concurrently, because the first was read as
+  having failed to start when it had not, so the second's "pristine"
+  source already carried the first's mutation and every result was
+  measured against a wrong Gauss–Kronrod table. The tell was easy to
+  rationalise — mutating a `qk15` weight reported `qk21` tests failing —
+  and what settled it was a check owing nothing to the crate: re-parsing
+  the Fortran `data` statements and comparing f64 bit patterns against the
+  Rust literals. **Assert a green baseline before a campaign and again
+  after it, and hold a lock.** Two smaller siblings worth carrying:
+  `cargo test`'s default parallelism interleaves `test NAME ... FAILED`
+  lines, so a scraped failure list names the wrong tests
+  (`-- --test-threads=1`); and a background job reported as failed may
+  still be running.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -649,6 +692,28 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   measured against these**, so a wrong choice here would surface as a
   kernel bug rather than a specfun bug.
 
+- **Task 3.3, 2026-08-10 (QUADPACK port): no public value changes**
+  (verified: `git diff origin/master -- hazma` is one file,
+  `hazma/_core.pyi`, and the hunk is a comment block — no executable line
+  under `hazma/` is reachable from this diff, on a tree rebuilt before
+  anything was run). The rest is a new PyO3-free Rust module that no
+  Python imports and no Rust kernel yet calls, its registration-only
+  Python probe, one new test module, and the parity corpus's served-kernel
+  exemption. Measured rather than only argued: the bare suite ran the
+  parity corpus in **bit-equality mode** — `rtol = 0` across all 41
+  consumed entry points, 179,695 pinned values — and passed, at
+  `1207 passed, 13 skipped` (+53 on Task 3.2's 1154, all of them this
+  task's tests; the skip count is unchanged, which is what proves the
+  mode). What the task *did* produce, numerically, is an integrator that
+  reproduces `scipy.integrate.quad`'s subdivision on 4,456 of 4,461
+  converged runs and its value to within 3.6e-2 of the requested
+  tolerance. **Phase 04's spectra kernels and Phase 05's thermal ⟨σv⟩ are
+  the first swaps whose drift lines will be measured against this**, so a
+  wrong choice here would surface as a kernel bug rather than a
+  quadrature bug — and the divergence regime (`limit` exhausted) is one
+  no live call site enters today, asserted in
+  `test/test_core_quad.py` rather than assumed.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -725,6 +790,19 @@ it from memory.)
   No ADR: nothing revises ADR-0002, no interface or ordering moves, and
   the decision is a per-function implementation choice carried by the
   code, the phase file and the task note.
+- **Task 3.3 (2026-08-10)** patched two canonical documents in the same
+  PR as the code, for the same reason as Task 3.2. The phase-03 file's
+  Task 3.3 block gained four "criteria added during execution" bullets:
+  the break-point contract is scipy's rather than QUADPACK's and both
+  live degeneracies are discards; only `qk21` is on the live path, so
+  `qk15` is a cross-check rather than production code; the agreement
+  criterion is met with two orders of headroom and its boundary is
+  `limit`; and two adaptive-loop heuristics needed purpose-built inputs.
+  `../references/numerics-replacements.md` gained the measured contract,
+  because its own sentence — "must be pinned *empirically*" — is the
+  instruction, and leaving the answer in a task note would make the next
+  reader re-derive it. No ADR: nothing revises ADR-0002 (the provenance
+  is exactly what it prescribes), and no interface or ordering moves.
 - **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
   inventory's boost-retirement claim corrected to Phase 06 Task 6.4
   (capi survivor `hazma/spectra/_positron/_pion.pyx:10` cimports the
@@ -880,10 +958,38 @@ it from memory.)
   cephes wrapper. Full list in
   [phase-03/README.md](phase-03/README.md).
 
+- **Task 3.3** — new `rust/src/quad.rs` (`qk15` / `qk21` / `qelg` /
+  `qpsrt` / `qagse` / `qagpe` plus the scipy-shaped `quad` driver and
+  `filter_points`, a `# Sources and licensing` provenance header, and 24
+  unit tests) and `rust/src/quad_probe.rs` (registration-only
+  `hazma._core.quad`, taking a Python callable so scipy and the port see
+  the same integrand); `rust/src/lib.rs` admits both. New
+  `test/test_core_quad.py` (53 tests in 8 classes).
+  `test/parity/{cases.py,test_parity.py,README.md}` gain the
+  `hazma._core.quad` exemption. `hazma/_core.pyi` gains a comment — the
+  only change under `hazma/`, and non-executable. **Two canonical
+  patches:** the phase file's Task 3.3 block gained four "criteria added
+  during execution" bullets, and
+  [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
+  gained the measured break-point contract. Full list in
+  [phase-03/README.md](phase-03/README.md).
+
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 03 Task 3.3 state (2026-08-10):** bare `pytest -q` →
+  `1207 passed, 13 skipped` on the capturing environment, parity suite
+  included and in bit-equality mode (skip count unchanged at 13);
+  `pytest test/test_core_quad.py -q` → `53 passed in 0.73s`;
+  `cargo test --no-default-features` → `40 passed` (24 new); clippy and
+  fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Seventeen
+  mutations against `rust/src/quad.rs`, 15 caught on the first pass and
+  the two survivors (`qagpe`'s `ndin`, `qagse`'s roundoff threshold)
+  covered by tests written afterwards against inputs found by searching
+  with each mutation in place. The Gauss–Kronrod literals are bit-equal
+  to the netlib Fortran (47 values, checked by a script that parses both
+  sides independently of the crate).
 - **Phase 03 Task 3.2 state (2026-08-09; PR #59 review round 1,
   2026-08-10):** bare `pytest -q` →
   `1154 passed, 13 skipped` on the capturing environment, parity suite
@@ -1052,9 +1158,9 @@ it from memory.)
   [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
   rather than their twelve task notes — the learnings are the
   distillation, the notes are history. **Phase 03 is in progress:
-  Tasks 3.1 and 3.2 both landed 2026-08-09, so the next task is 3.3 or
-  3.5 (dependency-free) or 3.4 (unblocked by 3.1).** No phase carries a
-  decision gate.
+  Tasks 3.1 and 3.2 landed 2026-08-09 and Task 3.3 on 2026-08-10, so the
+  next task is 3.5 (dependency-free) or 3.4 (unblocked by 3.1).** No
+  phase carries a decision gate.
 - **`hazma_core::constants` exists and is bit-equal to the Cython**
   (Task 3.1). `constants::pdg` is `hazma/_utils/constants.pxd` (151
   values), `constants::legacy` is `hazma/_utils/legacy_parameters.pxd`
@@ -1079,6 +1185,19 @@ it from memory.)
   docstring so they travel with the file. It deliberately re-pins no
   value against Cython — the corpus does that, at bit-equality, across
   all 41 entry points.
+- **Task 3.3 is done, so `hazma_core::quad` exists.** Call
+  `quad(&mut f, a, b, &QuadOpts { epsabs, epsrel, limit, points })` —
+  **not** `qagse`/`qagpe`, which skip the argument preprocessing every
+  `.pyx` inherits from `scipy.integrate.quad`. It returns
+  `Result<QuadOutcome, QuadError>`: `Err` only where scipy raises
+  `ValueError`, with `QuadOutcome::ier` carrying what scipy would have
+  warned about, because hazma's call sites read `quad(...)[0]` and never
+  see the warning. When porting a call site, copy its
+  `epsabs`/`epsrel`/`points` from the `.pyx` verbatim — the twelve sites
+  use five different tolerance combinations and two reach scipy's
+  defaults by passing no keyword at all. `hazma._core.quad` is a test
+  surface and must stay importer-free, or the parity corpus leaves
+  bit-equality mode.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it (still, with `_core`
   present); `test/parity/cases.py` is the single source of every entry
@@ -1099,14 +1218,15 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1154 passed / 13 skipped** as of Task 3.2
-  (2026-08-10, after PR #59 review round 1), from 1088/13 at Task 3.1,
+  `pytest -q` → **1207 passed / 13 skipped** as of Task 3.3
+  (2026-08-10), from 1154/13 at Task 3.2, 1088/13 at Task 3.1,
   1063/13 at Phase 02 close,
   1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
   +3 (Task 2.1's scaffold checks), 0 (Task 2.2, byte-identical, which is
   what showed no test outcome moved), +54 (Task 2.3's plumbing module);
   Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
-  module plus one corpus guard, of which +12 landed in review round 1).
+  module plus one corpus guard, of which +12 landed in review round 1),
+  +53 (Task 3.3's QUADPACK module).
   **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the

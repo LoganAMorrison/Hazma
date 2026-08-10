@@ -112,6 +112,38 @@ sorted/duplicate/endpoint-coincident/out-of-interval points must be
 pinned *empirically* and replicated exactly, errors included — do not
 derive the contract from QUADPACK documentation alone (Task 3.3).
 
+**Measured, 2026-08-10 (Task 3.3), against scipy 1.18.0.** The contract
+is not QUADPACK's at all — it is three lines of Python in
+`scipy/integrate/_quadpack_py.py`'s `_quad`: `np.unique(points)`, then
+`[a < p]`, then `[p < b]`, after `quad` has already ordered the limits
+(`flip, a, b = b < a, min(a, b), max(a, b)`) and with the result negated
+afterwards if it flipped. So: **sort ascending, drop duplicates, keep
+only strictly interior points.** Endpoint-coincident points, points
+outside `[a, b]` and `NaN` all vanish silently; `-0.0` and `0.0` collapse
+to one entry. The only errors are `ValueError`s raised from
+`quad`: an unattainable tolerance, and `limit <= npts` counted **after**
+filtering (scipy's message quotes the caller's unfiltered length, which
+is a message defect, not a contract).
+
+Two consequences the paragraph above did not anticipate:
+
+- **Both live degeneracies are discards.** `points=[-1, 1]` on `[-1, 1]`
+  leaves *zero* break points, and a heavy mediator drops both of the
+  thermal call's mediator entries. Five of the twelve live call sites
+  therefore run `qagpe` with an empty break-point list.
+- **`points is None` selects `qagse`, not "no break point survived".**
+  scipy dispatches before it filters, so those six sites run `qagpe`.
+  That matters rarely but not never: `qagpe` measures the "smallest
+  interval" by subdivision level and `qagse` by interval length, so
+  `qagpe` extrapolates one bisection earlier. Over 3,776 random
+  (integrand, tolerance, limit) combinations the two agreed on value,
+  `neval` and `last` in every run that converged, and differed in 45 —
+  all of them runs that exhausted `limit`.
+
+Also measured there, and worth carrying into Phases 04–06: only `qk21`
+is on the live path. `qagse` and `qagpe` both evaluate with the 21-point
+rule and nothing else, so `qk15` is reachable from no hazma call site.
+
 Oracle strategy: primary oracle is scipy itself, via (a) direct
 Python-side comparisons on each live integrand shape and (b) the Phase
 01 corpus. See ADR-0002 for what the cyphus crates may and may not be
