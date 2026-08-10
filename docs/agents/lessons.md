@@ -216,7 +216,17 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   **claim** — every numeral or number word within N characters of
   `call site`, in either order — not on the phrasing the number happened
   to arrive in, and never let the sweep's own summary assert a
-  completeness its pattern cannot support).
+  completeness its pattern cannot support. Round 2 of the same PR showed
+  that claim-keyed is still not enough while the pattern is *line*-keyed:
+  three more copies survived, two of them wrapped across a newline
+  (`the four\n  spectra/mediator-spectrum calls`) and one using a synonym
+  (`those six sites` where the anchor was `call site`) — including two in
+  the canonical reference the earlier round claimed to have swept, which
+  then held three different counts of the same thing. **Reflow the file to
+  one line before matching, and alternate the synonyms** —
+  `re.sub(r"\n\s*(//|#|\*)?\s*", " ", text)` then a single regex over the
+  result — because prose wraps wherever the formatter put it and a
+  line-oriented `rg` cannot see a claim that straddles the break).
   Generalizes [stale-ci-capability-claim] from workflows to
   any repo fact, and applies *within* one file as much as across
   several.
@@ -326,6 +336,22 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   [measurement-taken-before-the-task-ended], where a correct derivation
   expired: here the derivation ran, on the final tree, over the wrong
   domain.
+- [bound-parameter-sized-the-allocation] A parameter that *bounds* work is
+  not a prediction of it, so sizing a buffer by one turns a caller's
+  permissive input into an allocation request. `scipy.integrate.quad`
+  accepts `limit` up to `INT_MAX`; the QUADPACK port allocated its five
+  `limit`-length workspaces up front, so `limit = INT_MAX` reserved ~80 GiB
+  before the first panel was evaluated — and Rust **aborts** on allocation
+  failure rather than unwinding, so it can never surface as a Python
+  exception, against an exit criterion of "never panics across FFI"
+  (PR #60). Two traps around it: the eager allocation is *invisible* on a
+  platform whose allocator overcommits (peak RSS moved 18.2 → 18.6 MB on
+  macOS, so a passing test proved nothing), and a first-round fix that
+  merely rejects values *above* the range leaves the same hazard directly
+  below it. Grow on demand instead, and make the guard test ask for a size
+  no allocator can satisfy — a mutation reverting to eager sizing must
+  fail loudly (`memory allocation of 36028797018963976 bytes failed`,
+  SIGABRT) rather than depending on the host's memory policy.
 - [signed-zero-lost-by-a-derived-formula] A wrapper that reaches its answer
   by *arithmetic on* an upstream routine's outputs, rather than by calling
   it, inherits an argument case the upstream never had — and `-0.0` is the

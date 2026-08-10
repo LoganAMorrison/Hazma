@@ -279,7 +279,7 @@ foundation.
   same integrand).
 - `rust/src/lib.rs` — `pub mod quad;` + `mod quad_probe;`, the submodule
   registration, and the reconciled paragraphs on the two probe modules.
-- `test/test_core_quad.py` — **new**, 53 tests in 8 classes.
+- `test/test_core_quad.py` — **new**, 58 tests in 8 classes.
 - `test/parity/cases.py`, `test/parity/test_parity.py`,
   `test/parity/README.md` — `hazma._core.quad` added to
   `_CORE_TEST_ONLY_MODULES`, and the three places naming `special` alone
@@ -294,13 +294,13 @@ foundation.
 ## Verification
 
 - **Task 3.3 (2026-08-10):** bare `pytest -q` →
-  `1207 passed, 13 skipped` on the capturing environment, parity suite
+  `1212 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13, which is
-  what proves the mode; +53 on Task 3.2's 1154, all of them this task's
-  new tests). `pytest test/test_core_quad.py -q` → `53 passed in 0.73s`
+  what proves the mode; +58 on Task 3.2's 1154, all of them this task's
+  new tests). `pytest test/test_core_quad.py -q` → `58 passed in 5.10s`
   (8 classes, population derived by `--collect-only`);
   `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
-  `40 passed` (24 new); clippy and fmt clean;
+  `43 passed` (27 new); clippy and fmt clean;
   `scripts/agents/preflight.sh` RESULT: PASS. Seventeen mutations against
   `quad.rs`, each from a green baseline and reverted after — 15 caught on
   the first pass, and the two that were not (`ndin`, the roundoff

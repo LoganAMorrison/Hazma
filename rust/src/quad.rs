@@ -83,6 +83,35 @@ const OFLOW: f64 = f64::MAX;
 /// scipy's default subdivision limit, and hazma's at every call site.
 pub const DEFAULT_LIMIT: usize = 50;
 
+/// Subintervals the `limit`-indexed workspaces hold before they grow.
+///
+/// Comfortably above what any live call reaches — the hardest live shape
+/// converges in 13 subintervals — so the common case allocates once.
+const WORKSPACE_SEED: usize = 64;
+
+/// Initial length for the `limit`-indexed workspaces of [`qagse`] and
+/// [`qagpe`], holding at least `needed` subintervals.
+///
+/// These are **grown on demand rather than allocated at `limit`**, which
+/// is not an optimization. `limit` bounds the subdivisions a caller will
+/// *tolerate*, not the ones the integrand will need, and
+/// `scipy.integrate.quad` accepts it all the way to `i32::MAX`. Sized
+/// eagerly there, `qagse`'s five arrays come to ~80 GiB and `qagpe`'s six
+/// to ~88 GiB, reserved before the first panel is even evaluated. Rust
+/// aborts the process when an allocation fails rather than unwinding, so
+/// that can never surface as a Python exception — and "returns a Result,
+/// never panics across FFI" is one of this task's exit criteria. Whether
+/// the reservation succeeds is a property of the platform's overcommit
+/// policy, which is exactly the kind of thing not to leave to chance.
+fn workspace_len(limit: usize, needed: usize) -> usize {
+    needed.max(WORKSPACE_SEED).min(limit) + 2
+}
+
+/// Next workspace length: double, never past what `limit` can index.
+fn grown_workspace_len(current: usize, limit: usize) -> usize {
+    current.saturating_mul(2).min(limit + 2)
+}
+
 /// scipy's default absolute tolerance (`quad`'s `epsabs`).
 pub const DEFAULT_EPSABS: f64 = 1.49e-8;
 
@@ -707,11 +736,13 @@ where
         return Err(QuadError::ToleranceUnachievable);
     }
 
-    let mut alist = vec![0.0_f64; limit + 1];
-    let mut blist = vec![0.0_f64; limit + 1];
-    let mut rlist = vec![0.0_f64; limit + 1];
-    let mut elist = vec![0.0_f64; limit + 1];
-    let mut iord = vec![0_usize; limit + 2];
+    // Grown on demand; see [`workspace_len`] for why not `limit`.
+    let mut cap = workspace_len(limit, 1);
+    let mut alist = vec![0.0_f64; cap];
+    let mut blist = vec![0.0_f64; cap];
+    let mut rlist = vec![0.0_f64; cap];
+    let mut elist = vec![0.0_f64; cap];
+    let mut iord = vec![0_usize; cap];
     let mut rlist2 = [0.0_f64; 53];
     let mut res3la = [0.0_f64; 4];
 
@@ -784,6 +815,18 @@ where
 
     'mainloop: for last_index in 2..=limit {
         last = last_index;
+
+        // Every index below is at most `last` (`qpsrt`'s `jupbn` is
+        // `limit + 3 - last` only on the branch where that is smaller
+        // than `last`), so one slot of headroom is enough.
+        if last + 2 > cap {
+            cap = grown_workspace_len(cap, limit);
+            alist.resize(cap, 0.0);
+            blist.resize(cap, 0.0);
+            rlist.resize(cap, 0.0);
+            elist.resize(cap, 0.0);
+            iord.resize(cap, 0);
+        }
 
         // Bisect the subinterval with the nrmax-th largest error.
         let a1 = alist[maxerr];
@@ -1071,12 +1114,18 @@ where
         return Err(QuadError::ToleranceUnachievable);
     }
 
-    let mut alist = vec![0.0_f64; limit + 1];
-    let mut blist = vec![0.0_f64; limit + 1];
-    let mut rlist = vec![0.0_f64; limit + 1];
-    let mut elist = vec![0.0_f64; limit + 1];
-    let mut iord = vec![0_usize; limit + 2];
-    let mut level = vec![0_i32; limit + 1];
+    // Grown on demand; see [`workspace_len`] for why not `limit`. The
+    // seed has to cover the initial partition, which is `npts + 1`
+    // subintervals before the main loop runs at all. `ndin` and `pts` are
+    // sized by the caller's break-point count rather than by `limit`, so
+    // they carry no such hazard.
+    let mut cap = workspace_len(limit, npts + 1);
+    let mut alist = vec![0.0_f64; cap];
+    let mut blist = vec![0.0_f64; cap];
+    let mut rlist = vec![0.0_f64; cap];
+    let mut elist = vec![0.0_f64; cap];
+    let mut iord = vec![0_usize; cap];
+    let mut level = vec![0_i32; cap];
     let mut ndin = vec![0_i32; npts2 + 1];
     let mut pts = vec![0.0_f64; npts2 + 1];
     let mut rlist2 = [0.0_f64; 53];
@@ -1215,6 +1264,17 @@ where
 
     'mainloop: for last_index in npts2..=limit {
         last = last_index;
+
+        // As in `qagse`: every index below is at most `last`.
+        if last + 2 > cap {
+            cap = grown_workspace_len(cap, limit);
+            alist.resize(cap, 0.0);
+            blist.resize(cap, 0.0);
+            rlist.resize(cap, 0.0);
+            elist.resize(cap, 0.0);
+            iord.resize(cap, 0);
+            level.resize(cap, 0);
+        }
 
         let levcur = level[maxerr] + 1;
         let a1 = alist[maxerr];
@@ -1961,6 +2021,62 @@ mod tests {
         let out = quad(&mut f, 1.5, 1.5, &QuadOpts::default()).unwrap();
         assert_eq!(out.value, 0.0);
         assert_eq!(out.ier, Ier::Ok);
+    }
+
+    #[test]
+    fn an_enormous_limit_costs_nothing_on_a_one_panel_integrand() {
+        // `limit` bounds subdivisions; it must not size the workspace up
+        // front. Sized eagerly, this call would ask for roughly
+        // `40 * limit` bytes — here about 7e17 — and Rust *aborts* on
+        // allocation failure rather than unwinding, so the process would
+        // die instead of returning an error across the FFI boundary.
+        //
+        // The number is chosen to be unsatisfiable on any machine, so the
+        // test discriminates on every platform rather than only where the
+        // allocator declines to overcommit. A smooth integrand converges
+        // on the first panel, so with on-demand growth the run touches 66
+        // slots and never looks at `limit` again.
+        let limit = usize::MAX / 4096;
+        let mut f = |x: f64| x.exp();
+        let out = qagse(&mut f, 0.0, 1.0, 1e-10, 1e-10, limit).unwrap();
+        assert_eq!((out.neval, out.last, out.ier), (21, 1, Ier::Ok));
+        assert_close(
+            out.value,
+            std::f64::consts::E - 1.0,
+            SMOOTH_RTOL,
+            "huge-limit qagse",
+        );
+
+        // Same for `qagpe`, which carries a sixth `limit`-length array.
+        let mut g = |x: f64| x.exp();
+        let out = qagpe(&mut g, 0.0, 1.0, &[], 1e-10, 1e-10, limit).unwrap();
+        assert_eq!((out.neval, out.last, out.ier), (21, 1, Ier::Ok));
+    }
+
+    #[test]
+    fn the_workspace_grows_to_hold_every_subdivision_it_reaches() {
+        // The complement: a genuinely hard integrand must still be able to
+        // subdivide all the way to `limit`, so the growth path is
+        // exercised rather than merely present. `limit = 300` is well past
+        // the 66-slot seed, so this run resizes.
+        let mut f = |x: f64| if x == 0.0 { 0.0 } else { 1.0 / x };
+        let out = qagse(&mut f, 0.0, 1.0, 1e-10, 1e-10, 300).unwrap();
+        assert_eq!(out.last, 300, "expected the limit to be exhausted");
+        assert_ne!(out.ier, Ier::Ok);
+        assert!(out.value.is_finite());
+    }
+
+    #[test]
+    fn the_workspace_seed_covers_the_initial_partition() {
+        // `qagpe` writes `npts + 1` subintervals before the main loop
+        // runs, so a break-point list longer than the seed must be
+        // accommodated at construction, not on first growth.
+        let points: Vec<f64> = (1..200).map(|i| f64::from(i) / 200.0).collect();
+        let mut f = |x: f64| x * x;
+        let out = qagpe(&mut f, 0.0, 1.0, &points, 1e-10, 1e-10, 400).unwrap();
+        assert_eq!(out.ier, Ier::Ok);
+        assert_eq!(out.last, points.len() + 1);
+        assert_close(out.value, 1.0 / 3.0, 1e-13, "many break points");
     }
 
     #[test]

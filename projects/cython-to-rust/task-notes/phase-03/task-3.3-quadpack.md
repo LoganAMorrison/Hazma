@@ -136,7 +136,7 @@ into the phase file in this same PR (see `## Plan Impact`).
 - **Two adaptive-loop heuristics survive every test built from the spec.**
   `qagpe`'s `ndin` flag and `qagse`'s roundoff counters change only which
   subinterval is bisected next, so mutating either passed every test the
-  module held at the time — 51 of the eventual 53, the two additions
+  module held at the time — 51 of what were then 53, the two additions
   being the tests written to catch these — and all 24 `cargo` units
   besides. Inputs that expose them exist but had to be
   *searched for* with the mutation in place: `sin(293.25/x)` over a
@@ -177,6 +177,27 @@ into the phase file in this same PR (see `## Plan Impact`).
 
 ## Decisions and Implementation Notes
 
+- **Review round 2 (PR #60, 2026-08-10) — the `limit`-length workspaces
+  are grown on demand, not allocated at `limit`.** Round 1 capped `limit`
+  at `i32::MAX` to match scipy and called the hazard closed; it was not.
+  `qagse` allocates five `limit`-length arrays (40 bytes a subinterval)
+  and `qagpe` six (44), so a `limit` just *under* the new cap still
+  reserved ~80 GiB and ~88 GiB before the first panel was evaluated —
+  and Rust aborts the process on allocation failure rather than
+  unwinding, so it could never have become a Python exception. The
+  round-1 test even asserted the opposite ("never allocates the full
+  workspace"), which was false as written. The arrays now start at
+  `WORKSPACE_SEED = 64` subintervals (or the initial partition, whichever
+  is larger) and double, capped at `limit + 2`; every index in both
+  routines is at most `last`, which grows by one per iteration, so one
+  slot of headroom is sufficient. Three `cargo` tests cover it, and the
+  one that matters asks for `usize::MAX / 4096` — a size no allocator can
+  satisfy, so it discriminates on every platform rather than only where
+  the allocator declines to overcommit. Reverting to eager sizing dies
+  with `memory allocation of 36028797018963976 bytes failed` / SIGABRT.
+  **This is why the round-1 measurement was not evidence**: peak RSS went
+  18.2 → 18.6 MB at `limit = INT_MAX`, because macOS maps zero pages
+  lazily. The reservation was real and the test could not see it.
 - **Review round 1 (PR #60, 2026-08-10) — `limit` is validated at the
   Python boundary, not by PyO3.** The probe took `limit: usize`, so
   `limit = -1` died in PyO3's conversion with `OverflowError` where scipy
@@ -258,7 +279,7 @@ into the phase file in this same PR (see `## Plan Impact`).
 - `rust/src/lib.rs` — `pub mod quad;` + `mod quad_probe;`, the submodule
   registration, and the reconciled paragraphs on why the two probe
   modules are the exception to "registration only means per-domain".
-- `test/test_core_quad.py` — **new**, 53 tests in 8 classes.
+- `test/test_core_quad.py` — **new**, 58 tests in 8 classes.
 - `test/parity/cases.py`, `test/parity/README.md`,
   `test/parity/test_parity.py` — `hazma._core.quad` added to
   `_CORE_TEST_ONLY_MODULES`, and the three places that named `special`
@@ -281,12 +302,18 @@ the final tree.
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Rust units | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `40 passed` (24 new; `grep -c '#\[test\]' rust/src/quad.rs` → 24) |
+| Rust units | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `43 passed` (27 new; `grep -c '#\[test\]' rust/src/quad.rs` → 27) |
 | Rust format | `cargo fmt --manifest-path rust/Cargo.toml --check` | clean |
 | Rust lint | `cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings` | clean |
-| New module | `pytest test/test_core_quad.py -q` | `53 passed in 0.73s` |
-| Full suite | `pytest -q` (via preflight) | `1207 passed, 13 skipped` — see below |
+| New module | `pytest test/test_core_quad.py -q` | `58 passed in 5.10s` |
+| Full suite | `pytest -q` (via preflight) | `1212 passed, 13 skipped` — see below |
 | Full gate | `scripts/agents/preflight.sh --paths … --md …` | **RESULT: PASS** |
+
+**These are the round-2 figures and they supersede the pre-review ones**
+(`40` / `53` / `1207`, and `24` Rust units). Review round 1 added six
+Python tests and round 2 three Rust ones, so every count in this section
+had to be re-derived rather than adjusted — see the note under
+`### Validity` on why the arithmetic was not trusted.
 
 Test population, derived rather than counted by hand:
 
@@ -295,14 +322,14 @@ pytest test/test_core_quad.py --collect-only -q \
   | awk -F'::' '/::/{print $2}' | sort | uniq -c
 ```
 
-8 classes / 53 tests — `TestBreakPointPreprocessing` 8,
+8 classes / 58 tests — `TestBreakPointPreprocessing` 8,
 `TestReferenceProblems` 9, `TestLiveIntegrandShapes` 14,
 `TestKronrodRules` 5, `TestTerminationFlags` 6,
 `TestDivergenceRegime` 2, `TestAdaptiveHeuristics` 2,
-`TestErrorBehavior` 7.
+`TestErrorBehavior` 12.
 
-**The parity corpus ran in bit-equality mode.** `1207 passed, 13 skipped`
-is +53 on Task 3.2's `1154 passed, 13 skipped`, all of them this task's
+**The parity corpus ran in bit-equality mode.** `1212 passed, 13 skipped`
+is +58 on Task 3.2's `1154 passed, 13 skipped`, all of them this task's
 new tests, and **the skip count is unchanged** — which is what proves the
 mode, since forcing budget mode drops one test to a skip rather than
 failing. Confirmed independently before the run:
@@ -335,10 +362,12 @@ failing. Confirmed independently before the run:
   `full_output` appends.
 - **Divergence regime** (2) and **adaptive heuristics** (2): documented
   above.
-- **Error behavior** (7): invalid tolerances, `limit = 0`, the
-  subdivision limit, an exception raised by the integrand (propagated
-  unchanged, integrand called once), a non-float return, a `NaN`
-  integrand, and a zero-width interval.
+- **Error behavior** (12): invalid tolerances; every `limit < 1`
+  (`0`, `-1`, `-100`) raising `ValueError` as scipy does and every
+  `limit > i32::MAX` raising `OverflowError` as scipy does, plus the
+  largest accepted `limit`; the subdivision limit; an exception raised by
+  the integrand (propagated unchanged, integrand called once); a
+  non-float return; a `NaN` integrand; and a zero-width interval.
 
 ### Validity
 
@@ -465,7 +494,7 @@ unstubbed. No executable line under `hazma/` is reachable from this diff,
 so no grid evaluation applies. The positive evidence is the parity corpus
 running in **bit-equality mode** inside the bare suite — `rtol = 0`
 across all 41 consumed entry points and 179,695 pinned values, at
-`1207 passed, 13 skipped` with the skip count unchanged (see
+`1212 passed, 13 skipped` with the skip count unchanged (see
 `## Verification`).
 
 **Doc citations** — `scripts/agents/check_doc_citations.py <the six

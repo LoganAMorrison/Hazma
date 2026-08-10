@@ -233,9 +233,10 @@ class TestBreakPointPreprocessing:
         )
 
     def test_endpoint_coincident_break_points_are_dropped(self) -> None:
-        # The live shape: `points=[-1, 1]` on the interval [-1, 1], at four
-        # spectra call sites and both mediator spectrum modules. Nothing
-        # survives the filter, so QUADPACK starts from a single interval.
+        # The live shape: `points=[-1, 1]` on the interval [-1, 1], at five
+        # call sites — `spectra/_photon/_pion.pyx:123` plus the four
+        # mediator spectrum modules. Nothing survives the filter, so
+        # QUADPACK starts from a single interval.
         f = self.singular(0.0)
         with_points = core_quad.quad(
             f, -1.0, 1.0, points=[-1.0, 1.0], epsabs=1e-10, epsrel=1e-5
@@ -952,9 +953,15 @@ class TestErrorBehavior:
 
     def test_the_largest_accepted_limit_is_not_rejected(self) -> None:
         # The boundary itself: INT_MAX is legal on both sides, so
-        # narrowing the guard by one would not go unnoticed. Only the
-        # argument check is exercised — a smooth integrand converges on
-        # the first panel and never allocates the full workspace.
+        # narrowing the guard by one would not go unnoticed.
+        #
+        # This costs nothing only because the `limit`-length workspaces
+        # are grown on demand — sized at `limit`, they would be ~80 GiB
+        # here. An earlier revision of this comment claimed the one-panel
+        # case "never allocates the full workspace", which was false at
+        # the time and is enforced now by
+        # `quad.rs::an_enormous_limit_costs_nothing_on_a_one_panel_integrand`
+        # (PR #60 review round 2).
         assert core_quad.quad(math.exp, 0.0, 1.0, limit=2**31 - 1)[4] == 0
         assert si.quad(math.exp, 0.0, 1.0, limit=2**31 - 1)[0] == pytest.approx(
             math.e - 1.0, rel=SMOOTH_RTOL

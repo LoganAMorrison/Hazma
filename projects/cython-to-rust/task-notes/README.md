@@ -702,7 +702,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   exemption. Measured rather than only argued: the bare suite ran the
   parity corpus in **bit-equality mode** — `rtol = 0` across all 41
   consumed entry points, 179,695 pinned values — and passed, at
-  `1207 passed, 13 skipped` (+53 on Task 3.2's 1154, all of them this
+  `1212 passed, 13 skipped` (+58 on Task 3.2's 1154, all of them this
   task's tests; the skip count is unchanged, which is what proves the
   mode). What the task *did* produce, numerically, is an integrator that
   reproduces `scipy.integrate.quad`'s subdivision on 4,456 of 4,461
@@ -964,7 +964,7 @@ it from memory.)
   unit tests) and `rust/src/quad_probe.rs` (registration-only
   `hazma._core.quad`, taking a Python callable so scipy and the port see
   the same integrand); `rust/src/lib.rs` admits both. New
-  `test/test_core_quad.py` (53 tests in 8 classes).
+  `test/test_core_quad.py` (58 tests in 8 classes).
   `test/parity/{cases.py,test_parity.py,README.md}` gain the
   `hazma._core.quad` exemption. `hazma/_core.pyi` gains a comment — the
   only change under `hazma/`, and non-executable. **Two canonical
@@ -979,10 +979,10 @@ it from memory.)
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - **Phase 03 Task 3.3 state (2026-08-10):** bare `pytest -q` →
-  `1207 passed, 13 skipped` on the capturing environment, parity suite
+  `1212 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13);
-  `pytest test/test_core_quad.py -q` → `53 passed in 0.73s`;
-  `cargo test --no-default-features` → `40 passed` (24 new); clippy and
+  `pytest test/test_core_quad.py -q` → `58 passed in 5.10s`;
+  `cargo test --no-default-features` → `43 passed` (27 new); clippy and
   fmt clean; `scripts/agents/preflight.sh` RESULT: PASS. Seventeen
   mutations against `rust/src/quad.rs`, 15 caught on the first pass and
   the two survivors (`qagpe`'s `ndin`, `qagse`'s roundoff threshold)
@@ -1218,7 +1218,7 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1207 passed / 13 skipped** as of Task 3.3
+  `pytest -q` → **1212 passed / 13 skipped** as of Task 3.3
   (2026-08-10), from 1154/13 at Task 3.2, 1088/13 at Task 3.1,
   1063/13 at Phase 02 close,
   1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
@@ -1226,7 +1226,8 @@ it from memory.)
   what showed no test outcome moved), +54 (Task 2.3's plumbing module);
   Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
   module plus one corpus guard, of which +12 landed in review round 1),
-  +53 (Task 3.3's QUADPACK module).
+  +58 (Task 3.3's QUADPACK module, of which +6 landed in review
+  round 1).
   **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the

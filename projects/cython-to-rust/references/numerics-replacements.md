@@ -102,7 +102,7 @@ keeps corpus drift near zero, at ~1,500–2,500 lines of Rust. Infinite
 intervals (`qagi`) are not needed — every live integral is finite.
 
 **Breakpoint degeneracies present in the live calls** (they shape the
-Task 3.3 preprocessing contract): the four spectra/mediator-spectrum
+Task 3.3 preprocessing contract): the five spectra/mediator-spectrum
 `points=[-1, 1]` calls pass breakpoints that coincide with *both*
 integration endpoints; the thermal ⟨σv⟩ calls pass
 `[2, m_med/mx, 2·m_med/mx]`, whose lower entry equals the lower bound
@@ -132,7 +132,7 @@ Two consequences the paragraph above did not anticipate:
   thermal call's mediator entries. Five of the twelve live call sites
   therefore run `qagpe` with an empty break-point list.
 - **`points is None` selects `qagse`, not "no break point survived".**
-  scipy dispatches before it filters, so those six sites run `qagpe`.
+  scipy dispatches before it filters, so those five sites run `qagpe`.
   That matters rarely but not never: `qagpe` measures the "smallest
   interval" by subdivision level and `qagse` by interval length, so
   `qagpe` extrapolates one bisection earlier. Over 3,776 random
