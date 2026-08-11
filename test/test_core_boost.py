@@ -25,14 +25,30 @@ rather than ``CFUNCTYPE``: the latter releases the GIL, and
 name *is* the C signature, so :class:`TestOracle` checks it rather than
 trusting that the argument list has not changed.
 
-The bar is bit-equality
------------------------
+The bar is bit-equality, on a contracting platform
+--------------------------------------------------
 Not a tolerance. ``rust/src/boost.rs`` reproduces the shipped Cython's
 arithmetic exactly, fused multiply-adds included --
 :class:`TestFusedArithmetic` is the measurement that made that mandatory:
 written the obvious unfused way, the boost integral misses the corpus by
 up to 3.6e-12 relative on the corpus's own grids, against the 1e-12
 ``TABULATED`` budget in ``test/parity/tolerances.py``.
+
+But *whether* the Cython contracts is a property of the C compiler that
+built it, not of this port. On macOS/arm64 -- the platform the parity
+corpus was captured on, and whose numbers this port targets -- it does,
+and every comparison below is bit-exact. On a target without hardware
+FMA (baseline x86-64, which is what the Linux wheels are built for) the
+Cython computes the unfused values instead: measured here, that moves
+``boost_delta_function`` by up to 1.9e-13 relative and the tabulated
+integral by up to 9.9e-13, with no branch flip in 40,000 draws. So
+:data:`CYTHON_CONTRACTS` is measured at import and the
+cross-implementation tests skip where it is false -- the same scoping
+the parity corpus already has (CI runs ``pytest --ignore=test/parity``
+off macOS for the same reason). Everything platform-independent --
+the closed forms, the per-branch sensitivity checks, the dropped-cell
+pins, the trapezoid reduction, the error paths, dispatch -- runs
+everywhere.
 
 Lifetime
 --------
@@ -170,6 +186,74 @@ def photon_tables() -> dict[str, tuple[np.ndarray, np.ndarray, float]]:
 #: just off rest, near rest, mildly boosted, strongly boosted.
 BOOST_REGIMES = (1.000_000_001, 1.05, 1.5, 2.0, 3.0, 10.0)
 
+
+def unfused_delta_function(e0: float, e: float, m: float, beta: float) -> float:
+    """``boost_delta_function`` with no contraction anywhere.
+
+    Only used to decide whether the local Cython contracts; the port's
+    own reference implementation is
+    :meth:`TestFusedArithmetic.unfused_reference`.
+    """
+    if beta > 1.0 or beta <= 0.0 or e < m:
+        return 0.0
+    gamma = 1.0 / math.sqrt(1.0 - beta * beta)
+    k = math.sqrt(e * e - m * m)
+    if gamma * (e - beta * k) < e0 < gamma * (e + beta * k):
+        return 1.0 / (2.0 * gamma * beta * math.sqrt(e0 * e0 - m * m))
+    return 0.0
+
+
+def cython_contracts() -> bool:
+    """Whether the compiled Cython fuses its multiply-adds.
+
+    Draws until the two forms are distinguishable rather than trusting a
+    single point: most arguments round the same either way.
+    """
+    cython = cython_boost("boost_delta_function")
+    rng = np.random.default_rng(0)
+    for _ in range(2048):
+        beta = float(rng.uniform(0.05, 0.95))
+        e0 = float(10.0 ** rng.uniform(0.0, 3.0))
+        e = float(e0 * 10.0 ** rng.uniform(-0.2, 0.2))
+        m = 0.510_998_928
+        if cython(e0, e, m, beta) != unfused_delta_function(e0, e, m, beta):
+            return True
+    return False
+
+
+#: True where the compiled Cython contracts, i.e. where a bit-for-bit
+#: comparison against it is a statement about this port rather than
+#: about the platform's instruction selection.
+CYTHON_CONTRACTS = cython_contracts()
+
+
+def assert_matches_cython(got: float, want: float, what: str) -> None:
+    """Assert bit-equality with the Cython, where that means anything.
+
+    Where the local Cython does not contract it computes different
+    numbers than the build this port targets, so the claim is skipped
+    rather than weakened. Called *after* a test's platform-independent
+    assertions so those still run everywhere; the skip is visible in the
+    report rather than silently passing.
+    """
+    if not CYTHON_CONTRACTS:
+        pytest.skip(
+            f"{what}: this Cython build does not contract, so a bit-for-bit "
+            "comparison against it is not a statement about the port"
+        )
+    assert got == want, what
+
+
+requires_a_contracting_cython = pytest.mark.skipif(
+    not CYTHON_CONTRACTS,
+    reason=(
+        "this Cython build does not fuse its multiply-adds, so it computes "
+        "different values than the macOS/arm64 build this port targets; the "
+        "bit-for-bit comparison is scoped to a contracting platform exactly "
+        "as the parity corpus is"
+    ),
+)
+
 #: A flat toy table with ``y / x == 1`` everywhere, so every branch's
 #: contribution is a length and can be predicted by hand.
 FLAT_X = np.arange(1.0, 9.0)
@@ -277,6 +361,7 @@ class TestBoostParameters:
 class TestBoostDeltaFunction:
     """The boosted two-body line, branch by branch."""
 
+    @requires_a_contracting_cython
     def test_matches_the_cython_over_a_random_sweep(self) -> None:
         """40,000 draws at both live product masses, bit for bit.
 
@@ -300,6 +385,7 @@ class TestBoostDeltaFunction:
                 mismatched += 1
         assert mismatched == 0, f"{mismatched} of {total} draws differ from the Cython"
 
+    @requires_a_contracting_cython
     def test_the_window_edges_agree_with_the_cython(self) -> None:
         """Both edges, sampled just inside and just outside.
 
@@ -350,6 +436,7 @@ class TestBoostDeltaFunction:
             if (cython(e0, lo, m, beta) == 0.0) != (cython(e0, hi, m, beta) == 0.0)
         ]
 
+    @requires_a_contracting_cython
     def test_the_window_edges_sit_on_the_same_double_as_the_cython(self) -> None:
         """Both edges of the support, located to the last bit, 400 times.
 
@@ -436,8 +523,9 @@ class TestBoostIntegrateLinearInterp:
     def test_the_whole_window_above_the_table_is_zero(self) -> None:
         cython = cython_boost("boost_integrate_linear_interp")
         energy, beta = 1e6, 0.5
-        assert boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y) == 0.0
-        assert cython(energy, beta, FLAT_X, FLAT_Y) == 0.0
+        got = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
+        assert got == 0.0
+        assert_matches_cython(got, cython(energy, beta, FLAT_X, FLAT_Y), "clamp")
 
     def test_the_whole_window_below_the_table_is_the_analytic_tail(self) -> None:
         """``y0 * x0 / E``, a closed form no other branch can produce."""
@@ -445,7 +533,7 @@ class TestBoostIntegrateLinearInterp:
         energy, beta = 1e-6, 0.5
         got = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
         assert got == FLAT_Y[0] * FLAT_X[0] / energy
-        assert got == cython(energy, beta, FLAT_X, FLAT_Y)
+        assert_matches_cython(got, cython(energy, beta, FLAT_X, FLAT_Y), "tail")
 
     def test_a_window_straddling_the_table_floor_adds_the_tail(self) -> None:
         """`lb` below the table, `ub` inside it.
@@ -457,13 +545,14 @@ class TestBoostIntegrateLinearInterp:
         cython = cython_boost("boost_integrate_linear_interp")
         energy, beta = 1.4, 0.6
         base = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
-        assert base == cython(energy, beta, FLAT_X, FLAT_Y)
-
         bumped = FLAT_Y.copy()
         bumped[0] *= 2.0
         moved = boost_integrate_linear_interp(energy, beta, FLAT_X, bumped)
         assert moved != base
-        assert moved == cython(energy, beta, FLAT_X, bumped)
+        assert_matches_cython(base, cython(energy, beta, FLAT_X, FLAT_Y), "tail base")
+        assert_matches_cython(
+            moved, cython(energy, beta, FLAT_X, bumped), "tail bumped"
+        )
 
     def test_a_window_above_the_table_ceiling_clamps(self) -> None:
         """`ub` past the table's top, but `lb` inside it.
@@ -477,7 +566,7 @@ class TestBoostIntegrateLinearInterp:
         energy, beta = 5.0, 0.6
         got = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
         assert got != 0.0
-        assert got == cython(energy, beta, FLAT_X, FLAT_Y)
+        assert_matches_cython(got, cython(energy, beta, FLAT_X, FLAT_Y), "ceiling")
 
     @pytest.mark.parametrize("index", [0, 7])
     def test_both_partial_cells_are_integrated(self, index: int) -> None:
@@ -491,13 +580,14 @@ class TestBoostIntegrateLinearInterp:
         cython = cython_boost("boost_integrate_linear_interp")
         energy, beta = 3.7, 0.6
         base = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
-        assert base == cython(energy, beta, FLAT_X, FLAT_Y)
-
         bumped = FLAT_Y.copy()
         bumped[index] += 1.0
         moved = boost_integrate_linear_interp(energy, beta, FLAT_X, bumped)
         assert moved != base
-        assert moved == cython(energy, beta, FLAT_X, bumped)
+        assert_matches_cython(base, cython(energy, beta, FLAT_X, FLAT_Y), "edge base")
+        assert_matches_cython(
+            moved, cython(energy, beta, FLAT_X, bumped), "edge bumped"
+        )
 
     def test_the_interior_sum_is_integrated(self) -> None:
         """The trapezoidal sum contributes.
@@ -511,8 +601,11 @@ class TestBoostIntegrateLinearInterp:
         bumped[3] += 1.0
         moved = boost_integrate_linear_interp(energy, beta, FLAT_X, bumped)
         assert moved != base
-        assert moved == cython(energy, beta, FLAT_X, bumped)
+        assert_matches_cython(
+            moved, cython(energy, beta, FLAT_X, bumped), "interior sum"
+        )
 
+    @requires_a_contracting_cython
     @pytest.mark.parametrize("name", list(photon_tables()))
     def test_matches_the_cython_on_the_live_tables(self, name: str) -> None:
         """The seven shipped tables, bit for bit.
@@ -536,6 +629,7 @@ class TestBoostIntegrateLinearInterp:
         ), f"{name}: {mismatched} of {total} points differ from the Cython"
 
 
+@requires_a_contracting_cython
 class TestFusedArithmetic:
     """The fused multiply-adds are load-bearing, and this is the proof.
 
@@ -614,8 +708,9 @@ class TestFusedArithmetic:
                     differ += 1
                     worst = max(worst, abs(unfused - want) / abs(want))
         assert differ > 0, (
-            "the unfused form matched the Cython everywhere, so this "
-            "platform does not contract and the test proves nothing here"
+            "the unfused form matched the Cython everywhere; the class "
+            "guard says this platform contracts, so that is a contradiction "
+            "rather than a platform difference"
         )
         assert (
             worst > MIN_RECORDED_UNFUSED_MISS
@@ -646,9 +741,9 @@ class TestDroppedInteriorCell:
         """
         cython = cython_boost("boost_integrate_linear_interp")
         got = boost_integrate_linear_interp(2.2, 0.6, self.X, self.Y)
-        assert got == cython(2.2, 0.6, self.X, self.Y)
         assert got == pytest.approx(1.9 / 1.5, rel=1e-15)
         assert got != pytest.approx(2.9 / 1.5, rel=1e-3)
+        assert_matches_cython(got, cython(2.2, 0.6, self.X, self.Y), "dropped cell")
 
     def test_a_clamped_window_never_reads_the_tables_last_row(self) -> None:
         """The sharpest form of the drop.
@@ -664,7 +759,7 @@ class TestDroppedInteriorCell:
         spoiled[-1] = 1e6
         base = boost_integrate_linear_interp(2.2, 0.6, self.X, self.Y)
         assert boost_integrate_linear_interp(2.2, 0.6, self.X, spoiled) == base
-        assert cython(2.2, 0.6, self.X, spoiled) == base
+        assert cython(2.2, 0.6, self.X, spoiled) == cython(2.2, 0.6, self.X, self.Y)
 
 
 class TestTrapezoidSummation:

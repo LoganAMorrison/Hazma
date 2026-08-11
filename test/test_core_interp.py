@@ -12,16 +12,29 @@ arithmetic exactly, fused multiply-add included -- see
 :class:`TestFusedArithmetic` for the measurement that made the fused form
 mandatory rather than stylistic.
 
-Why bit-equality and not ``rtol``
----------------------------------
-``test/parity/tolerances.py`` budgets the tabulated spectra at 1e-12
-relative, and the unfused form's worst miss against NumPy measured here
-is 1.1e-13 -- inside that. It is the *boost integral* built on the same
-arithmetic that is not (3.6e-12, see ``test/test_core_boost.py``), and
-having one of the two hold to a tolerance while the other holds to the
-bit would make the pair impossible to reason about. Both are pinned at
-the bit, and any drift is a fact to explain rather than a budget to
-spend.
+The comparison is scoped to a contracting platform
+--------------------------------------------------
+Whether ``np.interp`` fuses ``slope * (x - xp[j]) + fp[j]`` is a property
+of *the NumPy binary that happens to be installed*, not of this port. On
+macOS/arm64 -- the platform the parity corpus was captured on, and whose
+numbers this port targets -- the C compiler contracts it and the
+comparison is bit-exact. On a target built without hardware FMA
+(baseline x86-64, which is what the Linux wheels are built for) NumPy
+computes the unfused values instead, and "does the Rust match the local
+NumPy bit-for-bit" stops being a question about the port.
+
+So :data:`NUMPY_CONTRACTS` is *measured at import* and the
+cross-implementation tests skip where it is false. That is the same
+scoping the parity corpus already has -- CI runs
+``pytest --ignore=test/parity`` off macOS for the same reason -- and it
+is preferred over loosening the assertion to a tolerance, because the
+worst *relative* gap between the two forms lands at a catastrophic
+cancellation point (the eta table's tail, where the interpolant is
+``2.4e-26`` against a table whose scale is ``0.2``, an absolute gap of
+``1.4e-30``). A tolerance wide enough to admit that point would be wide
+enough to hide a real defect. Everything platform-independent -- the
+clamping contract, NumPy's quirks, the error paths, dispatch -- runs
+everywhere.
 
 Lifetime
 --------
@@ -65,6 +78,38 @@ def photon_tables() -> dict[str, tuple[np.ndarray, np.ndarray]]:
     }
 
 
+def numpy_contracts() -> bool:
+    """Whether the installed NumPy fuses the interpolation step.
+
+    Compares ``np.interp`` against the unfused form on interior points
+    only, where the cell index is unambiguous and no clamp or node
+    short circuit is in play -- so a disagreement can only be the
+    contraction.
+    """
+    xp, fp = photon_tables()["eta"]
+    rng = np.random.default_rng(0)
+    x = rng.uniform(xp[0], xp[-1], 4096)
+    j = np.clip(np.searchsorted(xp, x, side="right") - 1, 0, xp.size - 2)
+    slope = (fp[j + 1] - fp[j]) / (xp[j + 1] - xp[j])
+    return bool(np.any(slope * (x - xp[j]) + fp[j] != np.interp(x, xp, fp)))
+
+
+#: True where the installed NumPy contracts, i.e. where a bit-for-bit
+#: comparison against it is a statement about this port rather than
+#: about the platform's instruction selection.
+NUMPY_CONTRACTS = numpy_contracts()
+
+requires_a_contracting_numpy = pytest.mark.skipif(
+    not NUMPY_CONTRACTS,
+    reason=(
+        "this NumPy does not fuse the interpolation step, so it computes "
+        "different values than the macOS/arm64 build this port targets; "
+        "the bit-for-bit comparison is scoped to a contracting platform "
+        "exactly as the parity corpus is"
+    ),
+)
+
+
 def sweep_abscissae(xp: np.ndarray, seed: int) -> np.ndarray:
     """Abscissae covering every branch of the interpolation.
 
@@ -86,8 +131,12 @@ def sweep_abscissae(xp: np.ndarray, seed: int) -> np.ndarray:
     )
 
 
+@requires_a_contracting_numpy
 class TestAgainstNumpy:
-    """Bit-equality with ``np.interp`` on every live table."""
+    """Bit-equality with ``np.interp`` on every live table.
+
+    Scoped to a contracting NumPy -- see the module docstring.
+    """
 
     @pytest.mark.parametrize("name", list(photon_tables()))
     def test_matches_numpy_bit_for_bit(self, name: str) -> None:
@@ -96,9 +145,14 @@ class TestAgainstNumpy:
         got = interp(x, xp, fp)
         want = np.interp(x, xp, fp)
         mismatched = int(np.count_nonzero(got != want))
+        # `want` is exactly zero past the spectrum endpoint, so the
+        # relative gap is reported against a floor rather than dividing
+        # by it -- otherwise the diagnostic reads `nan` precisely when
+        # it is needed.
+        scale = np.where(want == 0.0, 1.0, np.abs(want))
         assert mismatched == 0, (
             f"{name}: {mismatched} of {x.size} points differ from np.interp; "
-            f"worst relative {np.max(np.abs(got - want) / np.abs(want)):.3e}"
+            f"worst relative {np.max(np.abs(got - want) / scale):.3e}"
         )
 
     def test_matches_numpy_on_a_random_grid(self) -> None:
@@ -120,21 +174,20 @@ class TestAgainstNumpy:
             assert np.array_equal(interp(x, xp, fp), np.interp(x, xp, fp))
 
 
+@requires_a_contracting_numpy
 class TestFusedArithmetic:
     """The interpolation step is fused, and it has to be.
 
-    NumPy computes ``slope * (x - xp[j]) + fp[j]`` in C, where the
-    default ``-ffp-contract=on`` lets the compiler emit a fused
-    multiply-add -- and on this project's reference platform
-    (macOS/arm64) it does. Rust never contracts on its own, so
-    ``rust/src/interp.rs`` spells the fusion out with ``mul_add``.
+        NumPy computes ``slope * (x - xp[j]) + fp[j]`` in C, where the
+        default ``-ffp-contract=on`` lets the compiler emit a fused
+        multiply-add -- and on this project's reference platform
+        (macOS/arm64) it does. Rust never contracts on its own, so
+        ``rust/src/interp.rs`` spells the fusion out with ``mul_add``.
 
-    This class does not assume the platform: it computes the unfused
-    value in Python and asserts that where the two forms differ, the Rust
-    sides with NumPy. On a platform whose NumPy is *not* contracted the
-    two forms agree everywhere and the test passes trivially, which is
-    the correct outcome rather than a false green -- :class:`TestAgainstNumpy`
-    is what would fail there.
+    It computes the unfused value in Python and asserts that where the
+        two forms differ, the Rust sides with NumPy. The class only runs
+        where :data:`NUMPY_CONTRACTS`, so "the forms differ somewhere" is a
+        precondition rather than a hope.
     """
 
     def test_the_rust_sides_with_numpy_where_the_forms_differ(self) -> None:

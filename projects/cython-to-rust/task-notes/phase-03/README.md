@@ -316,11 +316,11 @@ foundation.
 ### Task 3.4
 
 - `rust/src/interp.rs` — **new**, `np.interp` with NumPy's full contract,
-  a `# Sources and licensing` header, the `mul_add` rationale and 10 unit
+  a `# Sources and licensing` header, the `mul_add` rationale and 11 unit
   tests.
 - `rust/src/boost.rs` — **new**, the four kernels plus `trapezoid` /
   `pairwise_sum`, `BoostError`, the contracted-site rationale, the
-  `# Faithfulness notes` on the preserved defects and 13 unit tests.
+  `# Faithfulness notes` on the four preserved defects and 13 unit tests.
 - `rust/src/interp_probe.rs`, `rust/src/boost_probe.rs` — **new**,
   registration-only `hazma._core.interp` and `hazma._core.boost`.
 - `rust/src/lib.rs` — four `mod` lines, two `add_submodule` calls, and the
@@ -526,6 +526,16 @@ Phases row.
   coverage **fails the gate**. Repair blocked until after Phase 06
   Task 6.4 —
   [`../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+- **A test that compares against a *locally compiled* oracle is scoped to
+  that build** (Task 3.4, PR #61 review round 1). Nineteen bit-equality
+  assertions against the Cython and NumPy passed on macOS/arm64 and failed
+  on Linux/x86-64, where neither contracts — the port was right and the
+  tests over-claimed. `CYTHON_CONTRACTS` / `NUMPY_CONTRACTS` are measured
+  at import and the comparisons skip where false, the same scoping
+  `test/parity` already has. **Phases 04–06 inherit this**: any kernel test
+  whose oracle is the Cython twin needs the same guard, and loosening to a
+  tolerance is the wrong fix — the worst relative gap sits at a
+  cancellation point where any admitting tolerance would hide real defects.
 - **An edge that only decides a branch needs a bisection test, not a
   grid** (Task 3.4). Three mutations survived a 40,000-draw sweep because
   they moved a support boundary by one double without touching any

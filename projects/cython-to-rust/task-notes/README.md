@@ -506,6 +506,19 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   *dead* `boost_integrate_linear_interp_massive`; the live twin was never
   flagged, which is worth remembering before trusting that audit's
   coverage of the surviving code.
+- **A test whose oracle is something *you compiled* is scoped to that
+  build** (Task 3.4, PR #61 review round 1). Nineteen bit-equality
+  assertions against the Cython and NumPy passed on macOS/arm64 and failed
+  on Linux/x86-64, because `-ffp-contract=on` is the C default and only a
+  target with hardware FMA actually contracts — so the assertion was a
+  statement about the platform, not about the port. The fix is to measure
+  the property at import and skip where it does not hold, which is what
+  `test/parity` already does (CI: `pytest --ignore=test/parity` off
+  macOS); loosening to a tolerance is wrong, because the worst relative
+  gap between two roundings lands at whatever cancellation point the
+  domain contains. **Every Phase 04–06 kernel test that uses the Cython
+  twin as its oracle inherits this** —
+  `docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]`.
 - **A `cdef` declared in a `.pxd` is callable from Python** (Task 3.4).
   Cython exports it through the module's `__pyx_capi__` as a `PyCapsule`,
   so `ctypes` can call the *live* kernel at arbitrary arguments — which
@@ -1082,12 +1095,12 @@ it from memory.)
   gained the measured break-point contract. Full list in
   [phase-03/README.md](phase-03/README.md).
 - **Task 3.4** — new `rust/src/interp.rs` (`np.interp` with NumPy's full
-  contract, a `# Sources and licensing` header and 10 unit tests) and
+  contract, a `# Sources and licensing` header and 11 unit tests) and
   `rust/src/boost.rs` (`boost_beta` / `boost_gamma` /
   `boost_delta_function` / `boost_integrate_linear_interp` plus
   `trapezoid` / `pairwise_sum` and `BoostError`, with the contracted-site
-  rationale, the `# Faithfulness notes` on the preserved defects, and 13
-  unit tests); `rust/src/{interp_probe,boost_probe}.rs` register the two
+  rationale, the `# Faithfulness notes` on the four preserved defects, and
+  13 unit tests); `rust/src/{interp_probe,boost_probe}.rs` register the two
   test-only submodules and `rust/src/lib.rs` admits all four. New
   `test/test_core_interp.py` and `test/test_core_boost.py` (the latter
   carries the `__pyx_capi__` ctypes oracle).

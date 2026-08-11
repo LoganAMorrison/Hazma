@@ -39,6 +39,8 @@ added there during execution:
 - `interp` carries NumPy's quirks (one-point-grid NaN, duplicate-node
   tie-break) as well as its documented contract.
 - The parity corpus's served-kernel predicate stays sound.
+- The bit-equality comparisons are scoped to a platform whose references
+  contract, and the suite is green where they do not (added in review).
 
 ## Inputs Reviewed
 
@@ -182,6 +184,22 @@ added there during execution:
   assert is unreachable from Python and every Rust call site keeps a plain
   `f64` return. Panicking across FFI is what Task 3.3 ruled out; this
   cannot reach FFI.
+- **The cross-implementation comparisons are scoped to a contracting
+  platform** (added in PR #61 review round 1, after CI caught it). Whether
+  the local Cython and NumPy fuse their multiply-adds is a property of the
+  compiler that built *them*, so on Linux/x86-64 the references compute the
+  unfused values and 19 bit-equality assertions failed — the port was
+  right, the tests over-claimed. `CYTHON_CONTRACTS` / `NUMPY_CONTRACTS` are
+  now measured at import and those comparisons skip where false, which is
+  the scoping the parity corpus already has (CI runs
+  `pytest --ignore=test/parity` off macOS for the same reason). Loosening
+  to a tolerance was rejected: the worst *relative* gap between the two
+  forms sits at a catastrophic-cancellation point (the eta tail, where the
+  interpolant is 2.4e-26 against a table of scale 0.2 — an absolute gap of
+  1.4e-30), so a tolerance admitting it would hide real defects. The
+  per-branch tests keep their platform-independent halves running
+  everywhere and route only the bit-equality claim through
+  `assert_matches_cython`, which skips mid-test *after* those have run.
 - **The QUADPACK-style literal-translation posture does not apply here.**
   `boost.pyx` is 90 lines of ordinary arithmetic, so the Rust reads as
   Rust (`Option` for the `-1` index sentinel, a closure for the `y / x`
@@ -191,11 +209,11 @@ added there during execution:
 ## Files Changed
 
 - `rust/src/interp.rs` — **new**, `np.interp` with NumPy's full contract,
-  a `# Sources and licensing` header, the `mul_add` rationale, and 10
+  a `# Sources and licensing` header, the `mul_add` rationale, and 11
   unit tests.
 - `rust/src/boost.rs` — **new**, the four kernels plus `trapezoid` /
   `pairwise_sum`, `BoostError`, the contracted-site rationale, the
-  `# Faithfulness notes` on the three preserved defects, and 13 unit
+  `# Faithfulness notes` on the four preserved defects, and 13 unit
   tests.
 - `rust/src/interp_probe.rs`, `rust/src/boost_probe.rs` — **new**,
   registration-only `hazma._core.interp` and `hazma._core.boost`.
@@ -228,7 +246,7 @@ anything was run:
 | `pytest -q` (bare, the gate) | `1314 passed, 13 skipped, 5 warnings in 596.25s` |
 | `pytest test/test_core_interp.py -q` | `33 passed in 0.46s` (6 classes) |
 | `pytest test/test_core_boost.py -q` | `69 passed in 0.91s` (9 classes) |
-| `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `67 passed` (24 new: 10 in `interp`, 14 in `boost`) |
+| `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `67 passed` (24 new: 11 in `interp`, 13 in `boost`) |
 | `cargo fmt --check` / `cargo clippy --all-targets -- -D warnings` | clean |
 | `markdownlint --dot` over the eight changed `.md` | clean |
 | `scripts/agents/preflight.sh --paths "…"` | **RESULT: PASS** |
@@ -361,11 +379,14 @@ Nothing moves in *this* task, because nothing calls the new code.
 Each command run against this branch on 2026-08-10.
 
 **Full change inventory** — `git status --short` plus
-`git diff origin/master --stat` after `git add -N .` (18 files,
-+3,265 / −49): four new `rust/src/*.rs`, `rust/src/lib.rs`, two new
-`test/test_core_*.py`, three `test/parity/*` sites, `hazma/_core.pyi`,
-two canonical patches, one follow-up + its index row, and three
-bookkeeping files. No untracked file is unaccounted for.
+`git diff origin/master --stat` after `git add -N .`, re-derived after
+the review round: **19 files, +3,539 / −49**. Four new `rust/src/*.rs`,
+`rust/src/lib.rs`, two new `test/test_core_*.py`, three `test/parity/*`
+sites, `hazma/_core.pyi`, two canonical patches, one follow-up + its
+index row, `docs/agents/lessons.md`, and three bookkeeping files. No
+untracked file is unaccounted for. (Round 1 recorded `18 files,
++3,265 / −49`, which was measured before the last documentation edits of
+that round — the number is now taken after every edit, not during.)
 
 **Numerical-impact statement** — `git diff origin/master -- hazma` is one
 file, `hazma/_core.pyi`, comment-only. Corpus in bit-equality mode:

@@ -366,3 +366,19 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   survived an edge-case test that checked `+0.0` and `-1.0`). Generalizes
   past zero: any guard the upstream applies *before* its arithmetic has to
   be re-applied by a caller that does arithmetic *after* it.
+- [platform-scoped-oracle-asserted-globally] A test that compares a port
+  against a *locally compiled* oracle — the Cython twin, NumPy, anything
+  the platform's C compiler built — is asserting a property of that
+  build, not only of the port. Fused multiply-add is the usual culprit:
+  `-ffp-contract=on` is the C default, so an oracle compiled for a target
+  with hardware FMA computes different numbers than one without, and a
+  bit-for-bit assertion that is exactly right on the reference platform
+  fails everywhere else (PR #61: 19 assertions in
+  `test/test_core_{interp,boost}.py` passed on macOS/arm64 and failed on
+  Linux/x86-64, where neither NumPy nor the Cython contracts). Measure
+  the platform property at import and skip the comparison where it does
+  not hold, as `test/parity` already does — do not loosen to a tolerance,
+  because the worst relative gap between two roundings lands at whatever
+  cancellation point the domain contains and a tolerance wide enough for
+  that hides real defects. The tell you are about to make this mistake:
+  the oracle is something you compiled rather than something you pinned.
