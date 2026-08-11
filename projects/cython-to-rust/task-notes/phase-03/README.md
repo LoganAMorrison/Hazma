@@ -3,7 +3,8 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 03
-**Status:** In Progress (Tasks 3.1 and 3.2 complete 2026-08-09)
+**Status:** In Progress (Tasks 3.1 and 3.2 complete 2026-08-09; Task 3.3
+complete 2026-08-10)
 **Plan References:** `../../phases/phase-03-numerics-foundation.md`
 **Related ADRs:** ADR-0002 (Accepted 2026-08-04 — governs the
 provenance of Tasks 3.2/3.3, no longer gates them)
@@ -20,7 +21,7 @@ foundation.
 | --- | ------ | ------------ | -------- | ----------- |
 | 3.1 | Constants module | — | **Complete (2026-08-09)** | [task-3.1-constants.md](task-3.1-constants.md) |
 | 3.2 | Special functions | — (ADR-0002 accepted) | **Complete (2026-08-09)** | [task-3.2-specfun.md](task-3.2-specfun.md) |
-| 3.3 | QUADPACK port (qk15/qk21/qelg/qags/qagp) | — (ADR-0002 accepted) | Not started | [task-3.3-quadpack.md](task-3.3-quadpack.md) |
+| 3.3 | QUADPACK port (qk15/qk21/qelg/qags/qagp) | — (ADR-0002 accepted) | **Complete (2026-08-10)** | [task-3.3-quadpack.md](task-3.3-quadpack.md) |
 | 3.4 | Interpolation + boost kernels | 3.1 | Not started | [task-3.4-interp-boost.md](task-3.4-interp-boost.md) |
 | 3.5 | Dispatch and error layer | — | Not started | [task-3.5-dispatch.md](task-3.5-dispatch.md) |
 
@@ -118,6 +119,56 @@ foundation.
   does not have**, and `+0.0` passing says nothing about `-0.0`. Sweep
   both signs of zero against the oracle at every order or branch, not
   just the one a reviewer names.
+- **The quadrature break-point contract belongs to scipy, not to
+  QUADPACK** (Task 3.3). `scipy.integrate.quad` filters `points` in
+  Python before `qagpe` sees them — `np.unique`, then strictly interior —
+  so the QUADPACK rule a doc-driven port would implement (sort, and
+  `ier = 6` unless the extremes equal `a` and `b`) is unreachable. Read
+  the wrong way round, the five `points=[-1, 1]` call sites would have
+  **errored**, because QUADPACK rejects a break point equal to an
+  endpoint and scipy silently drops it. Both live degeneracies are
+  discards: `points=[-1, 1]` on `[-1, 1]` leaves nothing, and the heavy
+  mediator's `m/mx`, `2 m/mx` fall outside `max(50/x, 100|150)`.
+- **`points is None` selects `qagse` — "no break point survived" does
+  not** (Task 3.3). scipy dispatches before it filters, so five of the
+  twelve live call sites run `qagpe` with an *empty* list. The two
+  routines are nearly indistinguishable (identical value, `neval` and
+  `last` across 3,776 random combinations that converged; differing on 45,
+  all of which exhausted `limit`), which is a trap for the test as much as
+  for the port: the obvious singular integrands cannot tell them apart, so
+  a test written on one would pass against either.
+- **The port tracks scipy wherever QUADPACK converges, and only there**
+  (Task 3.3). Over 11,274 random (integrand, tolerance, limit, points)
+  combinations: the 4,461 converged runs reproduced scipy's `neval` and
+  `last` on all but **5** (0.11%) and landed within 3.6e-2 of the
+  requested tolerance (8.2e-11 relative worst case); the 6,813 that
+  exhausted `limit` can separate without bound (4.5e-5 there, 11% on a
+  hand-picked case), because Wynn's ε-algorithm is chaotic on a
+  non-converging sequence. Termination flags agreed on all 11,274.
+  **Phases 04–06: no live shape reaches the second regime** — each
+  returns `ier = 0` and `test/test_core_quad.py` asserts it.
+  **A narrower sweep is what made this look cleaner than it is:** an
+  earlier 6,000-combination design using at most two break points found
+  *zero* subdivision mismatches among converged runs, and the mismatches
+  only appeared once 9- and 39-point grids went into the draw. A sweep's
+  parameter space is part of its result.
+- **Only `qk21` is on the live path** (Task 3.3): `qagse` and `qagpe` both
+  evaluate with the 21-point rule and nothing else, so `qk15` — named in
+  the exit criteria — is reachable from no hazma call site. Kept as an
+  independent second rule for the cross-checks, not as production code.
+- **A mutation harness can poison its own baseline** (Task 3.3). Two
+  copies of the campaign ran concurrently after the first was wrongly
+  read as failed to start, so the second's "pristine" source already
+  carried the first's mutation and every result was measured against a
+  wrong Gauss–Kronrod table. The tell was easy to rationalise — mutating a
+  `qk15` weight reported `qk21` tests failing — and what settled it was a
+  check owing nothing to the crate: re-parsing the Fortran `data`
+  statements and comparing f64 bit patterns. **Assert a green baseline
+  before a campaign and again after**, and hold a lock. Two smaller
+  siblings: `cargo test`'s default parallelism interleaves
+  `test NAME ... FAILED` lines so a scraped failure list names the wrong
+  tests (`-- --test-threads=1`), and a background job reported as failed
+  may still be running.
 - **A Python-visible test surface on `hazma._core` reads as a started
   port** (Task 3.2). Registering `hazma._core.special` flipped the
   parity corpus straight out of bit-equality mode
@@ -155,6 +206,31 @@ foundation.
   All three bindings route through `dispatch::map_unary`, so the sweeps
   run as arrays rather than as 25k-iteration Python loops — the kind of
   test that otherwise gets trimmed to a dozen points later.
+- **The QUADPACK translation is deliberately literal** (Task 3.3):
+  1-based indexing kept by giving every array a dead element 0, every
+  `go to` a labelled `break` carrying its Fortran statement number, same
+  variable names, same magic constants. Idiomatic Rust would read better
+  and be much harder to check against the source. The cost is three
+  module-level clippy `allow`s (`needless_range_loop`,
+  `explicit_counter_loop`, `int_plus_one`), each with its reason written
+  down.
+- **`quad` is the entry point Phases 04–06 call, not `qagse`/`qagpe`**
+  (Task 3.3) — it is the one that reproduces scipy's limit ordering and
+  break-point filtering, so twelve call sites do not each re-derive them.
+  `ier` rides along inside `Ok`; only the inputs scipy raises
+  `ValueError` for are `Err`, because hazma's call sites read
+  `quad(...)[0]` and never see scipy's warning.
+- **The Gauss–Kronrod tables were extracted by script, not typed**
+  (Task 3.3), and are pinned by **degree of exactness** (22 for `qk15`,
+  31 for `qk21`) plus a complement test that the next even degree is not
+  exact — a wrong digit breaks exactness, where a spot check against one
+  integral could be passed by a rule that is merely close.
+- **`quad_probe` takes a Python callable on purpose** (Task 3.3). A menu
+  of Rust integrands would compare a Rust integrand against a Python one
+  and blame the quadrature for the difference; with a callback the
+  integrand is byte-identical on both sides. Same shape as `special_probe`
+  and it inherits the same `_CORE_TEST_ONLY_MODULES` exemption and
+  importer guard rather than widening them.
 - **Only `n = 2` is live, but `bessel_kn` carries general `n`**
   (Task 3.2), because the recurrence is general and the order factor
   `2m/x` is *invisible* at n = 2 (it is `2/x` there). Both the ν = 2
@@ -192,8 +268,47 @@ foundation.
   (three Task 3.2 criteria added),
   `../../references/numerics-replacements.md` (the measured block).
 
+### Task 3.3
+
+- `rust/src/quad.rs` — **new**, 1,972 lines: `qk15`, `qk21`, `qelg`,
+  `qpsrt`, `qagse`, `qagpe`, the scipy-shaped `quad` driver and
+  `filter_points`, a `# Sources and licensing` provenance header, the
+  call-site table, and 24 unit tests.
+- `rust/src/quad_probe.rs` — **new**, registration-only
+  `hazma._core.quad` (a Python callable in, so scipy and the port see the
+  same integrand).
+- `rust/src/lib.rs` — `pub mod quad;` + `mod quad_probe;`, the submodule
+  registration, and the reconciled paragraphs on the two probe modules.
+- `test/test_core_quad.py` — **new**, 58 tests in 8 classes.
+- `test/parity/cases.py`, `test/parity/test_parity.py`,
+  `test/parity/README.md` — `hazma._core.quad` added to
+  `_CORE_TEST_ONLY_MODULES`, and the three places naming `special` alone
+  reconciled.
+- `hazma/_core.pyi` — the unstubbed-submodule comment now covers both
+  probes (the only change under `hazma/`, non-executable).
+- **Two canonical patches:** `../../phases/phase-03-numerics-foundation.md`
+  (four Task 3.3 criteria added during execution) and
+  `../../references/numerics-replacements.md` (the measured break-point
+  contract).
+
 ## Verification
 
+- **Task 3.3 (2026-08-10):** bare `pytest -q` →
+  `1212 passed, 13 skipped` on the capturing environment, parity suite
+  included and in bit-equality mode (skip count unchanged at 13, which is
+  what proves the mode; +58 on Task 3.2's 1154, all of them this task's
+  new tests). `pytest test/test_core_quad.py -q` → `58 passed in 5.10s`
+  (8 classes, population derived by `--collect-only`);
+  `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
+  `43 passed` (27 new); clippy and fmt clean;
+  `scripts/agents/preflight.sh` RESULT: PASS. Seventeen mutations against
+  `quad.rs`, each from a green baseline and reverted after — 15 caught on
+  the first pass, and the two that were not (`ndin`, the roundoff
+  threshold) are what `TestAdaptiveHeuristics` was written for, with both
+  re-run against the final tree. The Gauss–Kronrod literals are checked
+  against the netlib Fortran as f64 bit patterns (47 values,
+  `MISMATCHES: 0`) by a script independent of the crate — which is what
+  caught a poisoned mutation baseline. Tables in the task note.
 - **Task 3.2 (2026-08-09; PR #59 review round 1, 2026-08-10):** bare
   `pytest -q` → `1154 passed, 13 skipped` on the capturing environment,
   parity suite included and in bit-equality mode (skip count unchanged

@@ -15,17 +15,18 @@
 //! separately" (rules.md rule 8) is about keeping it out of [`kernels`],
 //! not about confining it to one file.
 //!
-//! [`constants`] and [`special`] sit below `kernels` in that stack and
-//! are `pub` while their neighbours are private — no kernel reads either
-//! one yet, and a private module of unread items is a wall of
-//! `dead_code`. Publishing them is also honest: the constant tables and
-//! the cephes shim are the crate's most reusable surface, and Phases
-//! 03–06 consume them from every kernel module.
+//! [`constants`], [`special`] and [`quad`] sit below `kernels` in that
+//! stack and are `pub` while their neighbours are private — no kernel
+//! reads any of them yet, and a private module of unread items is a wall
+//! of `dead_code`. Publishing them is also honest: the constant tables,
+//! the cephes shim and the QUADPACK port are the crate's most reusable
+//! surface, and Phases 03–06 consume them from every kernel module.
 //!
-//! [`special_probe`] is the exception to "registration only means
-//! per-domain": it registers a `special` submodule that exposes
-//! [`special`] to Python purely so `test/test_core_special.py` can sweep
-//! it against scipy. No hazma module imports it.
+//! [`special_probe`] and [`quad_probe`] are the exception to
+//! "registration only means per-domain": they register `special` and
+//! `quad` submodules that expose [`special`] and [`quad`] to Python purely
+//! so `test/test_core_special.py` and `test/test_core_quad.py` can compare
+//! them against scipy. No hazma module imports either.
 
 pub mod constants;
 mod dispatch;
@@ -33,6 +34,8 @@ mod kernels;
 mod neutrino;
 mod photon;
 mod positron;
+pub mod quad;
+mod quad_probe;
 mod scalar_mediator;
 pub mod special;
 mod special_probe;
@@ -101,6 +104,7 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "scalar_mediator", scalar_mediator::register)?;
     add_submodule(module, "vector_mediator", vector_mediator::register)?;
     add_submodule(module, "special", special_probe::register)?;
+    add_submodule(module, "quad", quad_probe::register)?;
 
     Ok(())
 }

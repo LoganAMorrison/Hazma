@@ -118,6 +118,54 @@ bullet's parenthetical anticipated turned out to be in *scipy*, not in
   subdivisions, invalid breakpoints) — returns a Result, never panics
   across FFI.
 
+**Criteria added during execution** (2026-08-10; the second bullet's
+"pin it empirically" instruction was right, and what it turned up
+reshapes the other three):
+
+- **The breakpoint contract belongs to scipy, not to QUADPACK, and both
+  live degeneracies are *discards*.** `scipy.integrate.quad` filters in
+  Python before `qagpe` ever sees the list — `np.unique`, then strictly
+  interior — so `points=[-1, 1]` on `[-1, 1]` leaves **zero** breakpoints
+  and the heavy-mediator thermal entries are dropped. Consequence: five of
+  the twelve live call sites run `qagpe` with an *empty* list, because
+  `points is None` — not "no breakpoint survived" — is what selects
+  `qagse`. The port therefore has to keep that dispatch distinction even
+  though it is almost never observable (measured: the two routines agree
+  on value, `neval` and `last` in every one of 3,776 random combinations
+  that converged, and differ only once `limit` is exhausted).
+- **Only `qk21` is on the live path.** Both `qagse` and `qagpe` evaluate
+  with the 21-point rule and nothing else, so `qk15` — which this task's
+  first criterion names — is reachable from no hazma call site. It is
+  ported anyway, and earns its place as an independent second rule for
+  the cross-checks rather than as production code.
+- **The agreement criterion is met with two orders of headroom, and its
+  boundary is `limit`.** Over 11,274 random (integrand, tolerance, limit,
+  points) combinations against scipy 1.18.0: the 4,461 runs that
+  converged reproduced scipy's `neval` and `last` on all but **5**
+  (0.11%), with the value within 3.6e-2 of the requested tolerance (the
+  criterion allows 10x) and 8.2e-11 relative at worst. The 6,813 that
+  exhausted `limit` can separate without bound — 4.5e-5 in that sweep,
+  11% on a hand-picked case — because Wynn's ε-algorithm is chaotic on a
+  sequence that is not converging; identical subdivision plus a few ulp
+  in the table is enough. Termination flags agreed on all 11,274. No live
+  integrand shape reaches the second regime — each returns `ier = 0`, and
+  `test/test_core_quad.py` asserts it rather than assuming it.
+- **Two heuristics inside the adaptive loop need purpose-built inputs.**
+  `qagpe`'s `ndin` flag and `qagse`'s roundoff counters change only
+  *which* subinterval is bisected next, so they survive every test built
+  from the reference problems and the live shapes — a mutation campaign
+  found both. The inputs that expose them were found by mutating and
+  searching (`sin(293.25/x)` over a 39-point grid moves by a factor of
+  48 without `ndin`; a near-delta spike at 0.16309 with `points=[0.5]`
+  moves by 2,800 when the 0.99 roundoff threshold is relaxed) and are
+  pinned in `TestAdaptiveHeuristics` at a deliberately coarse
+  `rtol = 1e-6`, both sitting in the limit-exhausted regime.
+- **The corpus's served-kernel predicate stays sound.** The scipy oracle
+  lives in Python, so the port is exposed as `hazma._core.quad` and joins
+  `hazma._core.special` in `cases._CORE_TEST_ONLY_MODULES`, under the
+  same importer guard Task 3.2 built. Same mechanism, not a widened
+  exemption.
+
 ### Task 3.4: Interpolation + boost kernels
 
 **Task note:** [`../task-notes/phase-03/task-3.4-interp-boost.md`](../task-notes/phase-03/task-3.4-interp-boost.md)
