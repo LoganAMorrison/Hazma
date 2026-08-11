@@ -186,6 +186,66 @@ uses a 1e-6 absolute tolerance; `assert 0.0 < beta < 1.0` guards the
 `boost_delta_function` (boosted Dirac δ for two-body lines) is closed
 form: `1/(2γβk₀)` inside the boosted support window, else 0.
 
+### Measured, Task 3.4 (2026-08-10): fused arithmetic, and a dropped cell
+
+Three facts the two sections above are silent about, each of which
+changes what the port has to be. All were measured against the live
+Cython through `hazma._utils.boost.__pyx_capi__` (the `cdef`s are
+declared in `boost.pxd`, so Cython exports them as capsules and `ctypes`
+can call them — with `PYFUNCTYPE`, since `CFUNCTYPE` drops the GIL and
+the integral calls back into NumPy).
+
+**1. The compiler contracts, and the port has to as well.** Clang's
+default is `-ffp-contract=on`, so `a*b + c` becomes a fused
+multiply-add. The corpus's capturing platform (macOS/arm64) contracts
+eight distinct expressions across these routines — `1 - β²` in both the
+integral and the line, `e² - m²` and `e0² - m²` and `e ∓ βk` in the line,
+and `y1 - m·x1`, `0.5·m·(x2 + lb) + b` and the accumulation itself in
+each partial cell (twelve `mul_add` call sites in the Rust) — plus
+`slope·(x - xp[j]) + fp[j]` inside NumPy's own `arr_interp`. Written
+unfused, the Rust port misses the corpus by up to
+**3.6e-12** relative on the corpus's own grids for the seven tabulated
+photon spectra, against the 1e-12 `TABULATED` budget; written with
+`f64::mul_add` at those sites it is **bit-equal at every point**. The
+sites were established twice over — by disassembling the shipped
+`hazma/_utils/boost.cpython-312-darwin.so` for `fmsub`/`fmadd`, and by
+bisecting all 16 on/off combinations against the live kernel (only the
+all-on combination reaches zero mismatches).
+
+The converse matters as much: `boost_beta` spells its square as
+`(mass/energy) ** 2`, whose rounded product completes before the
+subtraction, and **none** of its ten inlining call sites contract
+`1 - t` (checked in `_eta`, `_kaon`, `_positron/_pion`). Fusing it would
+move every boosted spectrum. "The compiler contracts" is a per-expression
+fact, not a per-file one.
+
+**2. `np.trapezoid` reduces pairwise, not sequentially.** The interior
+sum goes through `ndarray.sum`, which runs eight accumulators over
+128-element blocks and recurses above that. A sequential sum in Rust is a
+different number — up to 1.8e-15 relative on the 500-row tables. The port
+mirrors the blocking; the pin is a comparison against the live
+`np.trapezoid` rather than a comment.
+
+**3. The interior sum never covers its last cell.**
+`np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])` is exclusive at the top
+while the upper partial-cell term starts at `x[ihigh]`, so
+`[x[ihigh-1], x[ihigh]]` belongs to no term. When the window reaches past
+the table, `ihigh` is the last index and the upper term is skipped
+entirely, so the table's **final row contributes to nothing** — checked
+by replacing it with a value six orders larger and getting a bit-identical
+answer from both implementations. The error is systematic and one-signed:
+the boosted spectrum is always slightly low. Preserved per `rules.md`
+rule 1; repair tracked in
+[`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+
+Two smaller facts for Phase 04. The live tables are rows of a transposed
+`np.loadtxt` result, so they are **strided views, not contiguous
+buffers** — anything taking a `PyReadonlyArray1` must copy rather than
+`as_slice`. And `np.interp` has two behaviors the section above does not
+list: a one-point grid answers everything with `fp[0]`, NaN included
+(NumPy's NaN check lives on the multi-point path only), and duplicate
+abscissae resolve to the *last* matching node.
+
 ## The cyphus crates (assessed 2026-08-03)
 
 Logan's 2020–2022 GSL ports at github.com/rust-cyphus, evaluated for

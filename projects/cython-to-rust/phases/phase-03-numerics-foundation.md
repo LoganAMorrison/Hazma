@@ -182,6 +182,65 @@ reshapes the other three):
   above-table clamp, β→0 guard) pinned against the Cython originals
   via dedicated micro-fixtures captured in Phase 01.
 
+**Criteria added during execution** (2026-08-10; the second bullet's
+"micro-fixtures captured in Phase 01" turned out not to exist, and what
+replaced them changed what the other criteria could be held to):
+
+- **The oracle is the live Cython, not a fixture.** Phase 01's corpus
+  enumerates top-level `def`s in the surviving `.pyx`, and every routine
+  in this task is `cdef` — private to the C level and invisible to the
+  corpus by construction, so no micro-fixture was ever captured and none
+  could have been. `boost.pxd` declares the `cdef`s, which makes Cython
+  export them through `hazma._utils.boost.__pyx_capi__` as capsules, so
+  `test/test_core_boost.py` calls the *live* kernel through `ctypes` at
+  whatever arguments a test picks. Two mechanical constraints, both
+  found the hard way: the shim must use `ctypes.PYFUNCTYPE` rather than
+  `CFUNCTYPE`, because the latter releases the GIL and
+  `boost_integrate_linear_interp` calls `np.trapezoid` (a `CFUNCTYPE`
+  call segfaults); and the capsule's *name* is its C signature, so a
+  changed argument list is checkable rather than a stack corruption
+  waiting to happen.
+- **The port must reproduce the C compiler's fused multiply-adds, and
+  the criterion is bit-equality rather than a tolerance.** Clang
+  contracts `a*b + c` by default and the corpus's capturing platform
+  (macOS/arm64) does so at five sites in `boost.pyx` and one inside
+  NumPy's `arr_interp`. Written the obvious unfused way the port misses
+  the corpus by up to **3.6e-12** relative *on the corpus's own grids*
+  for the seven tabulated photon spectra — past the 1e-12 `TABULATED`
+  budget, so the Phase 04 swap would have failed its own gate. With the
+  contraction reproduced via `f64::mul_add` the port is bit-equal at
+  every one of those points. Each site was established twice, by
+  disassembling the shipped `.so` and by bisecting the 16 combinations
+  against the live kernel. **Where the Cython does not contract, the
+  port must not either:** `boost_beta` spells its square as
+  `(mass/energy) ** 2`, whose rounded product completes before the
+  subtraction, and none of its ten inlining call sites contract it.
+- **The interior sum drops a whole cell, and that is reproduced.**
+  `np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])` is exclusive at the
+  top while the upper partial-cell term starts at `x[ihigh]`, so
+  `[x[ihigh-1], x[ihigh]]` is covered by nothing — and when the window
+  reaches past the table the table's **final row contributes to no term
+  at all**. Systematic and one-signed (the boosted spectrum is always
+  slightly low). Preserved per rules.md rule 1 and pinned in both
+  languages; the repair is
+  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md),
+  blocked until after Phase 06 Task 6.4 because it needs a declared
+  corpus regeneration.
+- **`interp`'s contract is NumPy's, quirks included.** The exit
+  criterion names three behaviors; there are two more that a
+  spec-driven port would miss. A one-point grid answers *everything*
+  with `fp[0]`, NaN included, because NumPy's NaN check lives on the
+  multi-point path only; and duplicate abscissae resolve to the **last**
+  matching node, not the first. Both are pinned against `np.interp` in
+  the same assertion that pins them, so the pin cannot drift from the
+  thing it pins.
+- **The corpus's served-kernel predicate stays sound.** `interp` and
+  `boost` are exposed as `hazma._core.interp` and `hazma._core.boost`
+  because both oracles live in Python, and both join
+  `cases._CORE_TEST_ONLY_MODULES` under the importer guard Task 3.2
+  built — the same mechanism, not a widened exemption. Third instance of
+  `docs/agents/lessons.md` `[gate-disabled-stays-green]` in this project.
+
 ### Task 3.5: Dispatch and error layer
 
 **Task note:** [`../task-notes/phase-03/task-3.5-dispatch.md`](../task-notes/phase-03/task-3.5-dispatch.md)

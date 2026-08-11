@@ -463,6 +463,74 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   lines, so a scraped failure list names the wrong tests
   (`-- --test-threads=1`); and a background job reported as failed may
   still be running.
+- **The compiled Cython's arithmetic is fused, and the port had to match
+  it to pass the corpus** (Task 3.4). Clang defaults to
+  `-ffp-contract=on`, so `a*b + c` becomes a fused multiply-add; the
+  corpus's capturing platform (macOS/arm64) does it at eight distinct
+  expressions across `boost.pyx`, and NumPy's `arr_interp` does it too.
+  Written the obvious unfused way, the Rust misses the corpus by up to
+  **3.6e-12** relative *on the corpus's own grids* for the seven
+  tabulated photon spectra — past the 1e-12 `TABULATED` budget, so the
+  Phase 04 swap would have failed its own gate and the only alternatives
+  would have been widening a budget by three decades or shipping a
+  declared drift. With `f64::mul_add` at those sites the port is
+  bit-equal at every one of those points. The sites were established
+  twice over: `fmsub`/`fmadd` in the disassembled `.so`, and a
+  16-combination bisection against the live kernel in which only all-on
+  reaches zero mismatches (the next best leaves 115 of 2,462).
+  **The converse is the trap Phases 04–06 inherit:** `boost_beta` spells
+  its square as `(mass/energy) ** 2`, whose rounded product completes
+  before the subtraction, and *none* of its ten inlining call sites
+  contract it — fusing it would move every boosted spectrum. Contraction
+  is a per-expression fact, so measure each kernel rather than adopting a
+  house style. Same shape as Tasks 3.2 and 3.3: the model of the
+  third-party artifact is a hypothesis, and only the sweep can refute it.
+- **`boost_integrate_linear_interp` mis-covers its window at both ends,
+  and near threshold the public spectra are wrong by four orders of
+  magnitude** (Task 3.4). The interior sum's slice `yy[ilow:ihigh]` is
+  exclusive at the top while the upper partial-cell term starts at
+  `x[ihigh]`, so one cell is covered by nothing; and with both bounds
+  inside a single cell the two partial-cell terms **overlap**,
+  over-counting by (cell width)/(window width), which diverges as
+  `β → 0`. All seven tabulated photon spectra therefore blow up instead
+  of converging to their own rest-frame spectrum as the parent slows —
+  6,500× to 33,000× at one part in 1e12 above rest, measured through the
+  public API. This is a live defect in hazma 2.1.0, not something the
+  port introduced. Reproduced per rule 1, pinned in both languages, and
+  filed as
+  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md)
+  — blocked until after Phase 06 Task 6.4, because the repair needs a
+  declared corpus regeneration. **The corpus pins the wrong values by
+  design**, so a Phase 04 swap that "fixes" this fails the gate.
+  `../references/cython-inventory.md` §Bugs lists the same class in the
+  *dead* `boost_integrate_linear_interp_massive`; the live twin was never
+  flagged, which is worth remembering before trusting that audit's
+  coverage of the surviving code.
+- **A test whose oracle is something *you compiled* is scoped to that
+  build** (Task 3.4, PR #61 review round 1). Nineteen bit-equality
+  assertions against the Cython and NumPy passed on macOS/arm64 and failed
+  on Linux/x86-64, because `-ffp-contract=on` is the C default and only a
+  target with hardware FMA actually contracts — so the assertion was a
+  statement about the platform, not about the port. The fix is to measure
+  the property at import and skip where it does not hold, which is what
+  `test/parity` already does (CI: `pytest --ignore=test/parity` off
+  macOS); loosening to a tolerance is wrong, because the worst relative
+  gap between two roundings lands at whatever cancellation point the
+  domain contains. **Every Phase 04–06 kernel test that uses the Cython
+  twin as its oracle inherits this** —
+  `docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]`.
+- **A `cdef` declared in a `.pxd` is callable from Python** (Task 3.4).
+  Cython exports it through the module's `__pyx_capi__` as a `PyCapsule`,
+  so `ctypes` can call the *live* kernel at arbitrary arguments — which
+  is what stood in for the "micro-fixtures captured in Phase 01" the
+  phase file's Task 3.4 criterion named and that Phase 01 could never
+  have captured (the corpus enumerates top-level `def`s only). Two
+  constraints: use `ctypes.PYFUNCTYPE`, never `CFUNCTYPE`, because the
+  latter releases the GIL and anything calling back into Python
+  segfaults with no Python-level error; and the capsule's *name* is its C
+  signature string, so assert on it rather than trusting the argument
+  list. **Any later task needing an oracle for `cdef` code should reach
+  for this rather than adding a temporary shim to a `.pyx`.**
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -714,6 +782,41 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   no live call site enters today, asserted in
   `test/test_core_quad.py` rather than assumed.
 
+- **Task 3.4, 2026-08-10 (interpolation + boost kernels): no public value
+  changes** (verified: `git diff origin/master -- hazma` is one file,
+  `hazma/_core.pyi`, and every line of the hunk is comment text — no
+  executable line under `hazma/` is reachable from this diff, on a tree
+  rebuilt before anything was run). The rest is two PyO3-free Rust
+  modules that no Python imports and no Rust kernel yet calls, their
+  registration-only probes, two new test modules, the parity corpus's
+  served-kernel exemption, and one follow-up. Measured rather than only
+  argued: the bare suite ran the parity corpus in **bit-equality mode** —
+  `rtol = 0` across all 41 consumed entry points, 179,695 pinned values —
+  and passed, at `1314 passed, 13 skipped` (+102 on Task 3.3's 1212, all
+  of them this task's tests; skip count unchanged, and
+  `tolerances.provenance` → `exact=True` checked directly rather than
+  inferred).
+
+  What the task *did* produce, numerically, is a foundation that
+  reproduces the Cython **bit-for-bit** where the Cython is what the
+  corpus records: zero mismatches on all seven live tables across six
+  boost regimes × 400 energies, zero across 40,000 delta-function draws,
+  and zero on 20,204 `np.interp` abscissae per table. **Phase 04's
+  kaon/eta/omega/phi swaps are the first whose drift lines are measured
+  against this.**
+
+  **One drift is already known and lands with Phase 04, not here.** The
+  Rust is bit-equal to the *contracted* (macOS/arm64) Cython on every
+  platform, because `f64::mul_add` is fused unconditionally. On a target
+  whose C compiler does not contract — baseline x86-64, which is what the
+  Linux wheels are built for — today's Cython returns the unfused values,
+  which differ from these by up to **3.6e-12** relative on the corpus
+  grids. That is past rule 3's 1e-12 declaration threshold, so the Phase
+  04 swap PR must state it. Nothing moves in this task, because nothing
+  calls the new code. The alternative — plain arithmetic everywhere —
+  was rejected because it misses the corpus by that same 3.6e-12 on
+  *every* platform, which the 1e-12 `TABULATED` budget does not cover.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -803,6 +906,24 @@ it from memory.)
   instruction, and leaving the answer in a task note would make the next
   reader re-derive it. No ADR: nothing revises ADR-0002 (the provenance
   is exactly what it prescribes), and no interface or ordering moves.
+- **Task 3.4 (2026-08-10)** patched the same two canonical documents, for
+  the third time running and for the third distinct reason. The phase-03
+  file's Task 3.4 block gained five "criteria added during execution"
+  bullets: the oracle is the live Cython through `__pyx_capi__` rather
+  than the Phase 01 micro-fixtures the criterion named (they do not exist
+  and could not — the corpus sees only top-level `def`s); the port must
+  reproduce the compiler's fused multiply-adds where they occur and not
+  where they do not, held to bit-equality rather than a tolerance; the
+  interior sum's dropped cell is reproduced and filed; `interp` carries
+  NumPy's undocumented quirks as well as its contract; and the corpus's
+  served-kernel predicate stays sound with two more test-only submodules.
+  `../references/numerics-replacements.md` gained the measured block,
+  because its own three-bullet `np.interp` contract and its boost
+  paragraph are exactly what a next reader would port from, and both are
+  incomplete in ways that change the numbers. No ADR: the provenance is
+  original work plus NumPy's BSD-3-Clause behavior, which ADR-0002
+  permits (its rule is that nothing GSL-derived enters the tree), and no
+  interface or ordering outside Task 3.4 moves.
 - **Plan-review round 2 (2026-08-03)**, two completeness fixes: the
   inventory's boost-retirement claim corrected to Phase 06 Task 6.4
   (capi survivor `hazma/spectra/_positron/_pion.pyx:10` cimports the
@@ -973,11 +1094,49 @@ it from memory.)
   [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
   gained the measured break-point contract. Full list in
   [phase-03/README.md](phase-03/README.md).
+- **Task 3.4** — new `rust/src/interp.rs` (`np.interp` with NumPy's full
+  contract, a `# Sources and licensing` header and 11 unit tests) and
+  `rust/src/boost.rs` (`boost_beta` / `boost_gamma` /
+  `boost_delta_function` / `boost_integrate_linear_interp` plus
+  `trapezoid` / `pairwise_sum` and `BoostError`, with the contracted-site
+  rationale, the `# Faithfulness notes` on the four preserved defects, and
+  13 unit tests); `rust/src/{interp_probe,boost_probe}.rs` register the two
+  test-only submodules and `rust/src/lib.rs` admits all four. New
+  `test/test_core_interp.py` and `test/test_core_boost.py` (the latter
+  carries the `__pyx_capi__` ctypes oracle).
+  `test/parity/{cases.py,test_parity.py,README.md}` gain the
+  `hazma._core.{interp,boost}` exemptions. `hazma/_core.pyi` gains a
+  comment — the only change under `hazma/`, and non-executable. One
+  follow-up filed
+  ([the boost integral's window coverage](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md)).
+  **Two canonical patches:** the phase file's Task 3.4 block gained five
+  "criteria added during execution" bullets, and
+  [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
+  gained the measured fused-arithmetic block. Full list in
+  [phase-03/README.md](phase-03/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 03 Task 3.4 state (2026-08-10):** bare `pytest -q` →
+  `1314 passed, 13 skipped` on the capturing environment, parity suite
+  included and in bit-equality mode (skip count unchanged at 13, and
+  `tolerances.provenance` → `exact=True` checked directly);
+  `pytest test/test_core_interp.py -q` → `33 passed in 0.46s`;
+  `pytest test/test_core_boost.py -q` → `69 passed in 0.91s`;
+  `cargo test --no-default-features` → `67 passed` (24 new); clippy,
+  fmt and `markdownlint --dot` clean; `scripts/agents/preflight.sh`
+  RESULT: PASS. Twenty-one mutations against `rust/src/{interp,boost}.rs`,
+  run sequentially behind a lock with a green baseline asserted before
+  and after — 17 of the first 20 caught, and all 21 after two tests were
+  added. **The three survivors shared one shape**: each moved a *branch
+  boundary* by a single double without touching any value the function
+  returns, so no grid sample could see it. What catches that is
+  bisecting on the bit pattern (`test_the_window_edges_sit_on_the_same
+  _double_as_the_cython`) — and the parameter space matters as much as
+  the sampling, since with `m = 0` the fused and unfused momenta are
+  bit-identical and only massive-product draws can distinguish them.
 - **Phase 03 Task 3.3 state (2026-08-10):** bare `pytest -q` →
   `1212 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13);
@@ -1129,10 +1288,14 @@ it from memory.)
   2.1; still true after Task 3.2). The crate lives in `rust/`,
   `uv pip install -e .` builds Cython and Rust in one pass, and the tree
   carries 21 `.so`: the 20 Cython extensions plus `hazma/_core.abi3.so`.
-  Its public surface is `roundtrip` — a plumbing probe — plus the
-  `special` submodule Task 3.2 added, which is a test surface reachable
-  only from `test/test_core_special.py`. Neither is a ported kernel, and
-  `cases.rust_core_kernels()` is the predicate that says so.
+  Its public surface is `roundtrip` — a plumbing probe — plus four
+  test-surface submodules: `special` (Task 3.2), `quad` (3.3), and
+  `interp` and `boost` (3.4), each reachable only from its own
+  `test/test_core_*.py`. None is a ported kernel, and
+  `cases.rust_core_kernels()` is the predicate that says so —
+  `_CORE_TEST_ONLY_MODULES` exempts the four submodules, and
+  `test_test_only_core_submodules_have_no_importer` makes that exemption
+  conditional on nothing under `hazma/` importing them.
   `dispatch::map_unary` is the single
   implementation of the entry-point dispatch contract — Phases 03–06 call
   it rather than touching PyO3 inside a kernel (`../rules.md` Rust rule
@@ -1158,9 +1321,9 @@ it from memory.)
   [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
   rather than their twelve task notes — the learnings are the
   distillation, the notes are history. **Phase 03 is in progress:
-  Tasks 3.1 and 3.2 landed 2026-08-09 and Task 3.3 on 2026-08-10, so the
-  next task is 3.5 (dependency-free) or 3.4 (unblocked by 3.1).** No
-  phase carries a decision gate.
+  Tasks 3.1 and 3.2 landed 2026-08-09, Tasks 3.3 and 3.4 on 2026-08-10,
+  so only Task 3.5 (dependency-free) remains — and it closes the
+  phase.** No phase carries a decision gate.
 - **`hazma_core::constants` exists and is bit-equal to the Cython**
   (Task 3.1). `constants::pdg` is `hazma/_utils/constants.pxd` (151
   values), `constants::legacy` is `hazma/_utils/legacy_parameters.pxd`
@@ -1198,6 +1361,26 @@ it from memory.)
   defaults by passing no keyword at all. `hazma._core.quad` is a test
   surface and must stay importer-free, or the parity corpus leaves
   bit-equality mode.
+- **Task 3.4 is done, so `hazma_core::{interp, boost}` exist**, and both
+  are bit-equal to what they replace on the capturing platform.
+  `interp::interp(x, xp, fp)` is `np.interp` with NumPy's full contract
+  (clamping, node hits, NaN propagation, the one-point grid's NaN
+  asymmetry, the last-duplicate tie-break);
+  `boost::{boost_beta, boost_gamma, boost_delta_function,
+  boost_integrate_linear_interp}` are the four live routines of
+  `hazma/_utils/boost.pyx`, the last returning `Result<f64, BoostError>`
+  where the Cython asserts. **Two things a Phase 04 kernel must not
+  do.** First, do not touch the `mul_add`s: twelve expressions are fused
+  because the shipped Cython and NumPy contract them, unfusing misses the
+  corpus by up to 3.6e-12 (past the 1e-12 `TABULATED` budget), and
+  `boost_beta` is deliberately *un*fused because none of its ten call
+  sites contract — contraction is a per-expression fact, so measure,
+  don't pattern-match. Second, do not repair
+  `boost_integrate_linear_interp`'s window coverage, however obviously
+  wrong it looks; the corpus pins the wrong values and the repair is
+  [its own follow-up](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+  Both `hazma._core.interp` and `hazma._core.boost` are test surfaces and
+  must stay importer-free.
 - **The parity corpus is the gate from here on.** `python
   test/parity/generate.py --check` verifies it (still, with `_core`
   present); `test/parity/cases.py` is the single source of every entry
@@ -1218,8 +1401,8 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1212 passed / 13 skipped** as of Task 3.3
-  (2026-08-10), from 1154/13 at Task 3.2, 1088/13 at Task 3.1,
+  `pytest -q` → **1314 passed / 13 skipped** as of Task 3.4
+  (2026-08-10), from 1212/13 at Task 3.3, 1154/13 at Task 3.2, 1088/13 at Task 3.1,
   1063/13 at Phase 02 close,
   1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
   +3 (Task 2.1's scaffold checks), 0 (Task 2.2, byte-identical, which is
@@ -1227,7 +1410,7 @@ it from memory.)
   Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
   module plus one corpus guard, of which +12 landed in review round 1),
   +58 (Task 3.3's QUADPACK module, of which +6 landed in review
-  round 1).
+  round 1), +102 (Task 3.4's interpolation and boost modules).
   **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the
@@ -1298,6 +1481,20 @@ it from memory.)
   **measured in Task 1.3: it is not.** See the "Off macOS the corpus does
   not reproduce" bullet above; the corpus is scoped to its capturing
   platform until its follow-up lands.
+- **The seven tabulated photon spectra are wrong near threshold, by
+  three to four orders of magnitude** (Task 3.4), and the port
+  faithfully reproduces it. `boost_integrate_linear_interp` mis-covers
+  its integration window at both ends; the overlapping single-cell case
+  diverges as `β → 0`, so `dnde_photon_{eta, eta_prime, charged_kaon,
+  long_kaon, short_kaon, omega, phi}` blow up instead of converging to
+  their own rest-frame spectra as the parent slows. This is a live defect
+  in 2.1.0, not something the migration introduced, and the corpus pins
+  it by construction — its `rest_plus_eps` block sits in the divergent
+  regime. **Phases 04–06 must not fix it**; the repair needs a declared
+  corpus regeneration and is blocked until after Phase 06 Task 6.4
+  ([follow-up](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md)).
+  Worth flagging to the maintainer separately from this project's
+  schedule: it affects published numbers today.
 - **Two Task 1.4 follow-ups ripen inside this project.** The
   [`MASS_E` `nan`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
   before Phases 05/06 — `rules.md` rule 4 makes it a declared numerical

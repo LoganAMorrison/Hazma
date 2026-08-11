@@ -1220,15 +1220,26 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: shim, exposed to Python only so ``test/test_core_special.py`` can sweep
 #: it against scipy; ``hazma._core.quad`` is Task 3.3's QUADPACK port,
 #: exposed so ``test/test_core_quad.py`` can put one Python integrand
-#: through both it and ``scipy.integrate.quad``. In both cases the kernels
-#: that will use them call the Rust side directly, with a Rust closure,
-#: and never through Python. What makes the exemption safe rather than
+#: through both it and ``scipy.integrate.quad``; ``hazma._core.interp``
+#: and ``hazma._core.boost`` are Task 3.4's interpolation and boost
+#: foundation, exposed so ``test/test_core_interp.py`` can sweep against
+#: ``np.interp`` and ``test/test_core_boost.py`` against the Cython twin
+#: itself through ``hazma._utils.boost.__pyx_capi__``. In every case the
+#: kernels that will use them call the Rust side directly, in Rust, and
+#: never through Python. What makes the exemption safe rather than
 #: convenient is that no module under `hazma/` may import these — asserted
 #: by ``test_test_only_core_submodules_have_no_importer`` in
 #: ``test_parity.py``, not left to this comment. **Do not add a submodule
 #: here to quiet a failing mode check**: a submodule a wrapper imports is
 #: a served kernel, whatever it is named.
-_CORE_TEST_ONLY_MODULES = frozenset({"hazma._core.special", "hazma._core.quad"})
+_CORE_TEST_ONLY_MODULES = frozenset(
+    {
+        "hazma._core.special",
+        "hazma._core.quad",
+        "hazma._core.interp",
+        "hazma._core.boost",
+    }
+)
 
 
 def rust_core_kernels() -> list[str]:
