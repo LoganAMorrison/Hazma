@@ -15,21 +15,29 @@
 //! separately" (rules.md rule 8) is about keeping it out of [`kernels`],
 //! not about confining it to one file.
 //!
-//! [`constants`], [`special`] and [`quad`] sit below `kernels` in that
-//! stack and are `pub` while their neighbours are private — no kernel
-//! reads any of them yet, and a private module of unread items is a wall
-//! of `dead_code`. Publishing them is also honest: the constant tables,
-//! the cephes shim and the QUADPACK port are the crate's most reusable
-//! surface, and Phases 03–06 consume them from every kernel module.
+//! [`constants`], [`special`], [`quad`], [`interp`] and [`boost`] sit
+//! below `kernels` in that stack and are `pub` while their neighbours are
+//! private — no kernel reads any of them yet, and a private module of
+//! unread items is a wall of `dead_code`. Publishing them is also honest:
+//! the constant tables, the cephes shim, the QUADPACK port and the
+//! interpolation/boost foundation are the crate's most reusable surface,
+//! and Phases 03–06 consume them from every kernel module.
 //!
-//! [`special_probe`] and [`quad_probe`] are the exception to
-//! "registration only means per-domain": they register `special` and
-//! `quad` submodules that expose [`special`] and [`quad`] to Python purely
-//! so `test/test_core_special.py` and `test/test_core_quad.py` can compare
-//! them against scipy. No hazma module imports either.
+//! [`special_probe`], [`quad_probe`], [`interp_probe`] and [`boost_probe`]
+//! are the exception to "registration only means per-domain": they
+//! register `special`, `quad`, `interp` and `boost` submodules that expose
+//! the four foundation modules to Python purely so
+//! `test/test_core_special.py`, `test/test_core_quad.py`,
+//! `test/test_core_interp.py` and `test/test_core_boost.py` can compare
+//! them against their oracles — scipy, NumPy, and the Cython twin itself
+//! through `__pyx_capi__`. No hazma module imports any of them.
 
+pub mod boost;
+mod boost_probe;
 pub mod constants;
 mod dispatch;
+pub mod interp;
+mod interp_probe;
 mod kernels;
 mod neutrino;
 mod photon;
@@ -105,6 +113,8 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "vector_mediator", vector_mediator::register)?;
     add_submodule(module, "special", special_probe::register)?;
     add_submodule(module, "quad", quad_probe::register)?;
+    add_submodule(module, "interp", interp_probe::register)?;
+    add_submodule(module, "boost", boost_probe::register)?;
 
     Ok(())
 }

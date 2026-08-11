@@ -32,6 +32,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [parity corpus pins ill-conditioned points](todo/parity-corpus-pins-ill-conditioned-points.md) | 2026-08-07 | cython-to-rust Task 1.3 (PR #52) | project |
 | [model spectrum dicts reject scalar energies](todo/model-spectra-reject-scalar-energies.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
 | [positron spectra return `nan` at the legacy `MASS_E`](todo/positron-spectrum-nan-at-legacy-electron-mass.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
+| [the boost integral mis-covers its window at both ends](todo/boost-integral-drops-last-interior-cell.md) | 2026-08-10 | cython-to-rust Task 3.4 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

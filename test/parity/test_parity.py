@@ -263,8 +263,8 @@ def test_scaffolded_core_serves_no_kernels() -> None:
 
     `roundtrip` is a plumbing probe with no caller in `hazma/`; the five
     per-domain submodules are empty until Phase 04; and `special`
-    (Phase 03 Task 3.2) and `quad` (Task 3.3) are test-only shims
-    exempted wholesale by
+    (Phase 03 Task 3.2), `quad` (Task 3.3), `interp` and `boost`
+    (Task 3.4) are test-only shims exempted wholesale by
     `cases._CORE_TEST_ONLY_MODULES`. If this fails, either a kernel
     landed (in which case the corpus really should leave exact mode) or
     something non-kernel became public on the extension and needs adding
