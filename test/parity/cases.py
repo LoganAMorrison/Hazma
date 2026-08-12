@@ -1224,7 +1224,11 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: and ``hazma._core.boost`` are Task 3.4's interpolation and boost
 #: foundation, exposed so ``test/test_core_interp.py`` can sweep against
 #: ``np.interp`` and ``test/test_core_boost.py`` against the Cython twin
-#: itself through ``hazma._utils.boost.__pyx_capi__``. In every case the
+#: itself through ``hazma._utils.boost.__pyx_capi__``;
+#: ``hazma._core.dispatch`` is Task 3.5's argument-and-error layer,
+#: exposed so ``test/test_core_dispatch.py`` can render every error
+#: message with a caller-chosen quantity and compare it byte for byte
+#: against the strings extracted from the ``.pyx`` sources. In every case the
 #: kernels that will use them call the Rust side directly, in Rust, and
 #: never through Python. What makes the exemption safe rather than
 #: convenient is that no module under `hazma/` may import these — asserted
@@ -1238,6 +1242,7 @@ _CORE_TEST_ONLY_MODULES = frozenset(
         "hazma._core.quad",
         "hazma._core.interp",
         "hazma._core.boost",
+        "hazma._core.dispatch",
     }
 )
 

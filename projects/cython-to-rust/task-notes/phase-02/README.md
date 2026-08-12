@@ -133,6 +133,11 @@ scaffold.
   (c) **non-`float` NumPy scalars are accepted** (`np.float32`,
   `np.int64`, `np.uint8`, `np.bool_`) via the `extract::<f64>` arm. A
   Task 3.5 decision that changes any of them now turns a named test red.
+  **It did, and it did (2026-08-11):** Task 3.5 reversed (b) —
+  `roundtrip(np.array(4))` is now `4.0`, because a 0-d array *is* a
+  scalar and only a non-numeric dtype is rejected there — and the named
+  test turned red exactly as this bullet predicted. (a) and (c) stand.
+  See [`../../learnings/phase-03-numerics-foundation.md`](../../learnings/phase-03-numerics-foundation.md).
 - **`text_signature` is a claim PyO3 does not enforce** (Task 2.3).
   `roundtrip` advertised `(x, /)` while `roundtrip(x=1.5)` worked;
   enforcing positional-only needs `#[pyo3(signature = (x, /))]`. The
@@ -338,6 +343,10 @@ final from day one: `hazma._core`.
   dispatch contract, and as of Task 2.3 **every branch of it is pinned
   from Python** by `test/test_core_dispatch.py` (54 tests, 0.27s,
   platform-independent), written against `hazma._core.roundtrip`.
+  **Task 3.5 (2026-08-11) gave it two siblings** — `map_flavors` (the
+  neutrino 3-tuple / `(3, N)` return) and `require_vector`
+  (`partial_widths`) — over one shared classification, and grew the
+  module to 118 tests.
 - **That module is the template Phase 04–06 swaps copy.** Swap
   `roundtrip` for the kernel and `QUANTITY` for the wording that kernel
   passes to `map_unary`, keep every test, and add the kernel's numerical

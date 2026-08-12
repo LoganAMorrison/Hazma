@@ -8,6 +8,13 @@
   `positron_spectra` half is a *compiled* signature constraint, so the Rust
   port decides its fate either way — better to make the call deliberately than
   to inherit it.
+- **Update 2026-08-11 (cython-to-rust Task 3.5):** the compiled half is
+  decided. `rust/src/dispatch.rs` accepts a scalar, a 0-d array, and a list or
+  tuple on every ported entry point, so once Phases 04–06 repoint the wrappers
+  the "scalars broadcast" contract holds *below* `Theory`. What remains here is
+  the pure-Python half: `Theory.spectra`'s `type(e_gams) == float` branch
+  (which misses `np.float64`) and the channel wrappers that call
+  `len(e_gams)`.
 
 ## Why
 

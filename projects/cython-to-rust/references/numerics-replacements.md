@@ -268,6 +268,14 @@ than the GSL lineage. Formalized in ADR-0002.
 
 ## Entry-point dispatch contract (Phase 03, Task 3.5)
 
+> **Settled (Task 3.5, 2026-08-11).** The design sketch below was written
+> before the tree was measured and its premise — "every public function
+> follows one shape" — is false. Read
+> [**the settled contract**](#the-settled-contract-task-35-2026-08-11) at
+> the end of this section for what Phases 04–06 actually call; the sketch
+> and the Task 2.1 measurement are kept because they are what the decision
+> was made against.
+
 Every public function follows one shape; implement once as a helper:
 
 - Accept `Bound<'_, PyAny>`: `float`/0-d array → scalar path → Python
@@ -290,8 +298,9 @@ with 17 `assert len(energies.shape) == 1` guards behind it, e.g.
 (`hazma.spectra._photon._muon.dnde_photon`,
 `hazma.spectra._positron._muon.dnde_positron_muon`,
 `hazma.spectra._neutrino._muon.dnde_neutrino_muon`), it diverges from the
-contract in four ways. Each is a call Task 3.5 must make on purpose,
-because three of them are user-visible:
+contract in four ways. Each was a call Task 3.5 had to make on purpose,
+because three of them are user-visible; **all four are settled below**,
+under [The settled contract](#the-settled-contract-task-35-2026-08-11):
 
 1. **A 0-d array raises**, it does not take the scalar path. `ndarray`
    defines `__len__` on the type, so `hasattr` is true for every array;
@@ -320,3 +329,73 @@ which records the model-level half (`Theory.spectra` and
 Resolving that follow-up by normalizing at the public boundary also
 settles item 1 here; deciding them separately risks two different
 answers.
+
+### The settled contract (Task 3.5, 2026-08-11)
+
+**Four shapes, not one.** Classified from source over all 43 surviving
+top-level `def`s, then measured on the built tree:
+
+| # | Shape | Entry points | Dispatch | 0-d array | list / tuple |
+| --- | --- | --- | --- | --- | --- |
+| A | scalar-or-1D energies | 15 (12 photon, 2 positron, 1 mediator decay spectrum) | `hasattr(x, '__len__')` | `AssertionError` | accepted |
+| B | neutrino | 2 | as A, returns 3-tuple / `(3, N)` | `AssertionError` | accepted |
+| C | cross sections | 18 | `hasattr(...) and x.ndim > 0` | **accepted** (`.item()`) | `AttributeError` |
+| D | `partial_widths` | 1 argument | explicit `raise` + rank `assert` | `AssertionError` | accepted |
+
+The remaining 8 `def`s (`thermal_cross_section`, the four mediator
+`dnde_decay_*` pairs) take strictly typed `double` / `np.ndarray[double]`
+arguments and dispatch on nothing at all.
+
+**The rule that decides every divergence, stated once:** each exception
+the Cython raises *explicitly* keeps its type; only its `assert`s change
+type (`rules.md` rule 9 — today they vanish under `python -O`).
+
+Concretely, `rust/src/dispatch.rs` exposes three helpers over one
+classification, and no kernel re-derives any of it:
+
+- `map_unary(obj, quantity, kernel)` — shapes A and C. `float`, NumPy
+  scalar or 0-d **numeric** array → Python `float`; 1-D `float64` array,
+  or any object with `__len__` that `numpy.asarray` turns into one →
+  fresh `PyArray1<f64>`; rank > 1 or non-`float64` 1-D → `ValueError`;
+  neither number nor sequence → `TypeError`.
+- `map_flavors(obj, quantity, kernel)` — shape B. Same classification;
+  `kernel: Fn(f64) -> [f64; 3]` is called **once per energy**, and the
+  array result is `(3, N)` with rows electron, muon, tau.
+- `require_vector(obj, quantity)` — shape D. No `__len__` →
+  `ValueError("<quantity> must be a list or array.")`; rank ≠ 1 →
+  `ValueError("<quantity> must be 1-dimensional.")`; wrong dtype →
+  `ValueError`. Length is **not** checked here: the Cython's own `pws`
+  handling indexes seven entries and raises `IndexError` from the kernel,
+  so Phase 06 owns that.
+
+Three widenings ride along, none of which can break a working call:
+
+1. **A 0-d array takes the scalar path** for every shape — what the 18
+   shape-C entry points already do, and what shape A's own message
+   ("must be **0** or 1-dimensional") already promises. This also settles
+   item 1 of
+   [`../../../docs/followups/todo/model-spectra-reject-scalar-energies.md`](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
+   at the compiled boundary; its model-level half is still open.
+2. **A list or tuple is accepted** for every shape — what the 17 shape-A/B
+   entry points already do. Shape C gains it.
+3. **The dtype message names the dtype.** There is no single Cython string
+   to match: the spectra say `expected 'double'`, the mediator modules
+   `expected 'float64_t'`, for the same rejection, and both name a C type
+   rather than a dtype. The port says
+   `"<quantity> must be a float64 array; got dtype int64."` and keeps the
+   `ValueError`.
+
+Two traps the implementation records, both found by measurement:
+
+- **A 0-d array's `__float__` forwards to its element**, and `np.str_`
+  subclasses `str`, so `float(np.array("15.0"))` is `15.0`. The 0-d path
+  therefore checks the dtype's `kind` (`b`/`i`/`u`/`f`) instead of trying
+  the conversion — without it, `dnde_photon("15.0", 200.0)` would return a
+  number where the Cython raises.
+- **The `.pyx` message roster is the oracle, not a transcription.**
+  `test/test_core_dispatch.py` extracts every
+  `assert len(...) == 1, "..."` and `raise ValueError("...")` from the
+  surviving sources and renders each through the port. That is also what
+  keeps `hazma/spectra/_neutrino/_muon.pyx:205`'s "Photon energies"
+  copy-paste on the record: the port says `"Neutrino energies"` there, and
+  the roster test fails if the defect spreads or disappears unnoticed.

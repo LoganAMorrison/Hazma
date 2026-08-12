@@ -1,7 +1,7 @@
 ---
 phase: 03
 title: Numerics foundation
-status: Not started
+status: Complete
 ---
 
 # Phase 03: Numerics foundation
@@ -253,6 +253,55 @@ replaced them changed what the other criteria could be held to):
   including the neutrino tuple/`(3,N)` variant; kernel crates stay
   PyO3-free (rules.md rule 8).
 - Error messages byte-match the Cython ones the tests assert on.
+
+**Criteria added during execution** (2026-08-11; the reference's premise
+that "every public function follows one shape" is false, and what the
+measurement found reshapes both criteria above):
+
+- **There are four dispatch shapes across the 43 surviving top-level
+  `def`s, not one, and two of them disagree with each other.** Classified
+  from source and then measured on the built tree: 15 entry points
+  dispatch on `hasattr(x, '__len__')` and reject a 0-d array (12 photon,
+  2 positron, and `scalar_mediator_decay_spectrum`); 18 cross-section
+  entry points dispatch on `hasattr(...) and x.ndim > 0` and *accept* a
+  0-d array via `.item()` while rejecting a list with `AttributeError`;
+  the 2 neutrino entry points are the first shape with the 3-tuple /
+  `(3, N)` return; and `partial_widths` is a required-1-D argument with
+  its own two messages. The port therefore ships **three**
+  helpers — `map_unary`, `map_flavors`, `require_vector` — over one
+  classification, and Phase 05's cross sections use the same one as
+  Phase 04's spectra.
+- **The rule that decides every divergence, stated once: each exception
+  the Cython raises *explicitly* keeps its type, and only its `assert`s
+  change type** (rules.md rule 9). So a rank error becomes `ValueError`
+  carrying the assert's message verbatim, a dtype error stays
+  `ValueError`, a non-number stays `TypeError`, and `partial_widths`'
+  explicit `raise ValueError` keeps type and wording. Three widenings ride
+  along, none of which can break a working call: a 0-d array takes the
+  scalar path (what the 18 cross sections already do), a list or tuple is
+  accepted (what those same 17 already do), and the dtype message names
+  the dtype rather than a C type — the Cython has no one string to match
+  here, saying `expected 'double'` in the spectra and `expected
+  'float64_t'` in the mediator modules for the same rejection.
+- **`hazma/spectra/_neutrino/_muon.pyx:205`'s "Photon energies" is not
+  carried over.** The ported `dnde_neutrino_muon` passes `"Neutrino
+  energies"`, matching its `_pion.pyx` sibling: the string is reachable
+  only through an exception whose *type* is already changing, so nothing
+  that matches on it survives either way, and it names the wrong physical
+  quantity. `TestCythonMessageParity` pins the roster from source so the
+  anomaly cannot quietly reappear.
+- **Byte-matching is done against the `.pyx` sources, not against typed
+  copies.** `test/test_core_dispatch.py` scans the surviving `.pyx` for
+  every `assert len(...) == 1, "..."` and `raise ValueError("...")`,
+  asserts the roster is exactly the four-plus-one it expects, and renders
+  each message through the port with that quantity.
+- **The corpus's served-kernel predicate stays sound.**
+  `hazma._core.dispatch` — three probes taking the quantity wording as an
+  argument, which the fixed-wording `roundtrip` cannot — joins
+  `cases._CORE_TEST_ONLY_MODULES` under the importer guard Task 3.2
+  built. Fourth instance of `docs/agents/lessons.md`
+  `[gate-disabled-stays-green]` in this project; the mechanism is reused,
+  not widened.
 
 ## Exit Criteria
 
