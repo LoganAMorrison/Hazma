@@ -55,21 +55,27 @@ kernel ports.
   `1 − β²`, and any sum whose operand went through a division). Written
   from the map, the port was bit-equal on the first build — no
   bisection round, unlike Task 3.4.
-- **A platform-scoped guard can report the wrong platform, and that
-  disables it silently** (Task 4.1, caught by CI on Linux after a green
-  local run). The Python reference `cython_contracts()` compares the
-  compiled Cython against must reproduce the Cython's *associations*, not
-  just its operations — `pre * (num/den)` is not `pre * num / den`. Get it
-  wrong and the probe says "this build contracts" everywhere, so the
-  bit-equality class runs on a platform it was written to skip. Invisible
-  on macOS, where the answer is True either way. Pinned in both
-  directions now; **every task copying `test/test_core_positron_muon.py`
-  inherits both tests.**
+- **Scope a bit-equality-against-Cython class to the corpus's capturing
+  platform, never to a "does this compiler contract" probe** (Task 4.1,
+  learned from two CI failures after two green macOS runs). The probe
+  asks the wrong question: a compiler contracting a *different* set of
+  expressions, or a libm rounding one call differently, breaks the
+  comparison just as thoroughly, and no probe over one mechanism sees the
+  others. `test/test_core_positron_muon.py` now reads the platform out of
+  `test/parity/data/manifest.json`, which is the mechanism `test/parity`
+  and `ci.yml` already use. **Copy that, not a probe.**
+- **The capturing platform cannot see a bug in its own skip logic.** On
+  macOS the probe answered True whether or not it was right, so every
+  local run was green and no test in the module could tell a working
+  guard from a broken one. Expect to learn this class from CI, and read
+  a Linux failure in a bit-equality test as "the scope is wrong" before
+  "the port is wrong".
 - **A fused Python reference (correctly-rounded `fma` via `Fraction`)
-  reproduces the shipped Cython bit-for-bit** — 0 mismatches in 21,000
-  points for `_positron/_muon`, against 11,713 for the unfused form. This
-  is a second, disassembly-independent confirmation of an FMA map, and it
-  is cheap. Worth running for every kernel in this phase.
+  reproduces the shipped macOS Cython bit-for-bit** — 0 mismatches in
+  21,000 points for `_positron/_muon`, against 11,713 for the unfused
+  form. A cheap second confirmation of an FMA map, independent of the
+  disassembly. It says nothing about other platforms, which is exactly
+  why the scope above is a platform.
 - **Repointing the corpus case is part of the swap, not bookkeeping**
   (Task 4.1). `cases.py` names the `.pyx` module; leave it and the gate
   keeps calling the twin while the wrapper calls Rust — green and
@@ -97,9 +103,9 @@ kernel ports.
   (Task 4.1), reversing Task 2.3's instruction: since Task 3.5 the
   dispatch layer is three shared helpers, so those 118 tests cover code
   every kernel routes through unchanged. `test/test_core_positron_muon.py`
-  is the shape to copy — 47 tests, one per contract branch plus
-  bit-equality against the twin plus physics, plus the two that pin the
-  contraction probe in both directions.
+  is the shape to copy — 45 tests, one per contract branch plus
+  bit-equality against the twin (17, scoped to the capturing platform)
+  plus physics.
 
 ## Files Changed
 

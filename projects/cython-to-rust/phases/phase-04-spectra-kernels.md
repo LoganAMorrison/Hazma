@@ -56,8 +56,10 @@ in Phases 05–06. Steps 1 and 5 are the two most often skipped.
    `test/test_core_positron_muon.py`: the dispatch contract with this
    kernel's wording (one assertion per branch — the branch-by-branch
    argument stays in `test/test_core_dispatch.py`, which every kernel
-   now shares rather than copies), bit-equality against the twin scoped
-   to a contracting platform, and physics that outlives the Cython.
+   now shares rather than copies), the twin as a two-mode oracle
+   (bit-for-bit on the platform the parity corpus was captured on, a
+   budget scaled to the spectrum's peak elsewhere), and physics that
+   outlives the Cython.
 8. **Record the drift** in the task note and in `task-notes/README.md`'s
    "Numerical impact so far", per rules 2–3.
 

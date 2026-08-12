@@ -22,20 +22,71 @@ has three parts, and a later swap copies its *shape*:
    prove this entry point goes through ``map_unary`` with the wording its
    Cython twin used. Branch-by-branch reasoning about the helper itself stays
    in ``test/test_core_dispatch.py``.
-2. :class:`TestAgainstTheCythonTwin` -- bit-equality against the ``cdef``
+2. :class:`TestAgainstTheCythonTwin` -- the ``cdef``
    ``dnde_positron_muon_point`` that is still exported through
-   ``hazma/spectra/_positron/_muon.pyx``'s ``__pyx_capi__``. This is the
-   strongest available oracle and, like ``test/test_core_boost.py``'s, it is
-   **scoped to a platform whose C compiler contracts multiply-adds** -- the
-   Task 3.4 lesson ``[platform-scoped-oracle-asserted-globally]``. It dies
-   with the ``.pyx`` in Phase 06 Task 6.4.
+   ``hazma/spectra/_positron/_muon.pyx``'s ``__pyx_capi__``, which is the
+   strongest available oracle. It is compared **bit-for-bit on the platform
+   the parity corpus was captured on, and within a measured budget
+   everywhere else** -- see below. It dies with the ``.pyx`` in Phase 06
+   Task 6.4.
 3. :class:`TestPhysics` -- statements about the spectrum that owe nothing to
    the implementation being replaced: thresholds, support, the normalization,
    and the boost's conservation of positron number. These outlive the Cython.
 
-The parity corpus (``test/parity/``) is still the gate that governs the swap;
-it holds this entry point to ``rtol = 0`` against 179,695 pinned pre-port
-values. Nothing here duplicates that.
+Why the comparison has two modes
+--------------------------------
+Bit-equality against a *compiled* twin is a statement about the build that
+produced it, not about the port. The first version of this module tried to
+detect that condition instead of declaring it: it compared the compiled
+kernel against an unfused Python transcription and skipped where the two
+agreed, on the theory that a build which does not contract its
+multiply-adds is simply a different arithmetic. CI refuted it twice. On
+Linux/x86-64 -- with no ``-march`` flag, so none of the hardware FMA the
+probe went looking for -- the compiled kernel diverges from a faithful
+unfused reference anyway, and the mechanism was never localized. It does
+not need to be: a compiler contracting a different set of expressions, or
+a libm rounding one call differently, breaks bit-equality just as
+thoroughly, and no probe over one mechanism can see the others.
+
+So the *mode* is declared from the platform, and the divergence off it was
+**measured rather than assumed** (PR #63, run 31564747071; Linux/glibc,
+py3.10-3.14, 21,953 differing values decoded from the failure output):
+
+======================= ==================== ====================
+``emu`` / MeV           max relative         max ``|Δ|`` / peak
+======================= ==================== ====================
+105.6583745 (``m_mu``)  4.2e-16              3.7e-16
+105.658374501           6.0e-11              1.9e-11
+110                     2.7e-14              7.8e-16
+150                     3.7e-13              5.7e-16
+500                     6.4e-12              3.6e-15
+1500                    2.2e-11              3.0e-14
+100000                  1.5e-07              1.3e-10
+======================= ==================== ====================
+
+Median relative difference 7.2e-15; no sign flip, no NaN, no disagreement
+about support or zeros. This is rounding amplified by the kernel's own
+conditioning: both bad regimes -- ``beta -> 0`` just off rest, and
+``gamma >> 1`` -- form ``xm``/``xp`` as ``gamma**2 * (x -+ beta * root)``
+and then difference nearly-equal terms. The amplification belongs to the
+*formula*; two Cython builds would show the same spread.
+
+Which is why the off-platform budget is scaled to the **peak of the
+spectrum** and not applied pointwise. Pointwise, the worst case is 1.5e-7
+-- but it sits at a value 4.3e-4 of the peak, and a pointwise ``rtol`` loose
+enough to admit it (>=1e-6) would be loose enough to hide a real defect.
+Against the peak -- which is what a downstream integral or limit actually
+sees -- the worst disagreement anywhere is 1.3e-10, and 1.9e-11 within the
+sub-GeV domain this library is for. A wrong branch, a dropped term or a bad
+constant lands at O(1) against that, so the budget below still fails on
+anything structural.
+
+The parity corpus (``test/parity/``) is scoped by platform the same way
+(``.github/workflows/ci.yml`` passes ``--ignore=test/parity`` off the
+capturing platform), and :data:`CAPTURE_MACHINE` is read out of its manifest
+so the two scopes cannot drift apart. It remains the gate that governs the
+swap, holding this entry point to ``rtol = 0`` against 179,695 pinned
+pre-port values; nothing here duplicates that.
 
 The normalization defect
 ------------------------
@@ -51,8 +102,11 @@ tracks. Asserting the correct normalization here would contradict the corpus.
 from __future__ import annotations
 
 import ctypes
+import json
 import math
+import platform
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -65,6 +119,8 @@ from hazma.spectra._positron import _muon as cython_module
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 dnde = core_positron.dnde_positron_muon
 
@@ -85,11 +141,6 @@ R_FACTOR = 1.0001870858234163
 #: `cdef` prototype fails loudly rather than being called through the wrong
 #: ABI (the Task 3.4 constraint).
 _POINT_SIGNATURE = b"double (double, double)"
-
-#: The Cython's ``DBL_EPSILON``, which is the same double Rust spells
-#: ``f64::EPSILON``. Named because :func:`unfused_point` has to reproduce the
-#: near-rest branch guard exactly.
-DBL_EPSILON = sys.float_info.epsilon
 
 #: How far below 1 the shipped normalization sits: ``1 - 1/R_FACTOR**2``, or
 #: 3.74e-4. Named so the assertion that the integral is *not* 1 states the
@@ -116,121 +167,83 @@ def cython_point() -> Callable[[float, float], float]:
     return ctypes.PYFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(address)
 
 
-def unfused_point(e: float, emu: float) -> float:
-    """``dnde_positron_muon`` with no multiply-add contraction anywhere.
+#: The platform the parity corpus was captured on, read from its own
+#: manifest so the two can never drift apart. `test/parity` is scoped to
+#: this platform for exactly the reason below, and CI enforces it with
+#: `--ignore=test/parity` everywhere else (`.github/workflows/ci.yml`);
+#: this module is the same kind of oracle and carries the same scope.
+CAPTURE_MACHINE = json.loads(
+    (REPO_ROOT / "test" / "parity" / "data" / "manifest.json").read_text()
+)["environment"]["machine"]
 
-    Used only to decide whether the local Cython build fuses; the port's own
-    arithmetic is in ``rust/src/kernels/positron_muon.rs``.
-
-    **Every association here is the Cython's**, not merely every operation.
-    ``pre * (numerator / denominator)`` and ``pre * numerator / denominator``
-    are different doubles, and writing the second is what made this probe
-    report a *contracting* build on Linux, where nothing contracts: the
-    reference then differed from the Cython for a reason that was not
-    contraction, `cython_contracts` said True, and every assertion this guard
-    exists to skip ran and failed. `test_the_reference_is_the_cython_where_
-    nothing_contracts` is the assertion that now catches that directly.
-    """
-    r2 = R * R
-    two_r, one_plus_r2 = 2.0 * R, 1.0 + r2
-
-    def rest_frame(x: float) -> float:
-        if x <= two_r or x >= one_plus_r2:
-            return 0.0
-        root = math.sqrt(x * x - 4.0 * r2)
-        return -2.0 * root * (4.0 * r2 + x * (-3.0 - 3.0 * r2 + 2.0 * x)) / R_FACTOR
-
-    if emu < MASS_MU or e <= MASS_E:
-        return 0.0
-    if emu - MASS_MU < DBL_EPSILON:
-        pre = 2.0 / MASS_MU
-        return pre * rest_frame(pre * e)
-
-    beta = math.sqrt(1.0 - (MASS_MU / emu) ** 2)
-    pre = 2.0 / emu
-    x = pre * e
-    if beta < 0.0 or beta > 1.0:
-        return 0.0
-    gamma2 = 1.0 / (1.0 - beta**2)
-    r22 = 4.0 * r2 * (1.0 - beta**2)
-    root = math.sqrt(x * x - r22)
-    xm = max(gamma2 * (x - beta * root), two_r)
-    xp = min(gamma2 * (x + beta * root), one_plus_r2)
-    if xm > xp:
-        return 0.0
-    numerator = xm * (8.0 * r2 + xm * (-3.0 - 3.0 * r2 + (4.0 * xm) / 3.0)) + xp * (
-        -8.0 * r2 + (3.0 + 3.0 * r2 - (4.0 * xp) / 3.0) * xp
-    )
-    # The Cython divides inside `dndx_positron_muon` and multiplies by `pre`
-    # in its caller, so the division completes first. Folding the two into
-    # one expression moves the last bit.
-    dndx = numerator / (2.0 * beta * R_FACTOR)
-    return pre * dndx
-
-
-def cython_contracts() -> bool:
-    """Whether this build's Cython fuses its multiply-adds.
-
-    Drawn until the two forms are distinguishable rather than decided at one
-    point: at most arguments both roundings agree.
-    """
-    point = cython_point()
-    rng = np.random.default_rng(0)
-    for _ in range(4096):
-        emu = float(MASS_MU * 10.0 ** rng.uniform(0.001, 2.0))
-        e = float(emu * rng.uniform(0.01, 0.99))
-        if point(e, emu) != unfused_point(e, emu):
-            return True
-    return False
-
-
-CYTHON_CONTRACTS = cython_contracts()
-
-requires_a_contracting_cython = pytest.mark.skipif(
-    not CYTHON_CONTRACTS,
-    reason=(
-        "this Cython build does not fuse its multiply-adds, so it computes "
-        "different values than the macOS/arm64 build this port targets; the "
-        "bit-for-bit comparison is scoped to a contracting platform exactly "
-        "as the parity corpus is"
-    ),
+ON_THE_CAPTURING_PLATFORM = (
+    sys.platform == "darwin" and platform.machine() == CAPTURE_MACHINE
 )
 
+#: The off-platform budget, as a fraction of the peak of the spectrum being
+#: compared. Replaying every Linux array recovered from run 31564747071
+#: through the assertion below clears it by **84x at the tightest** (both
+#: `emu = 1e5` blocks; everything within the sub-GeV domain clears by 1e5x
+#: or more). That headroom is deliberate -- a libm this port has not met
+#: yet should not turn the suite red for rounding -- and it is still seven
+#: orders of magnitude tighter than any physically meaningful change.
+#: Applied as `assert_allclose`'s `atol`, with `rtol` at the same figure so
+#: a large value is held to the same standard.
+OFF_PLATFORM_BUDGET = 1e-8
 
-def test_the_reference_is_the_cython_where_nothing_contracts() -> None:
-    """`unfused_point` differs from the Cython *only* by contraction.
 
-    The other half of :data:`CYTHON_CONTRACTS`, and the one that catches a
-    mistake in the reference rather than in the port. Where the guard says
-    this build does not contract, the two must agree **bit for bit** at
-    every argument -- so any other divergence in `unfused_point` (a moved
-    association, a constant off by an ulp) turns this red instead of
-    silently flipping the guard to True and un-skipping
-    :class:`TestAgainstTheCythonTwin`.
+def assert_within_the_off_platform_budget(
+    got: np.ndarray, want: np.ndarray, context: str
+) -> None:
+    """Assert two spectra agree to :data:`OFF_PLATFORM_BUDGET` of the peak.
 
-    Vacuous on a contracting platform, which is why it is a plain
-    ``skipif`` rather than the negation of the class-level marker: there
-    the guard's *other* direction is what
-    :meth:`TestAgainstTheCythonTwin.test_the_unfused_form_actually_differs_somewhere`
-    checks. Between them the probe is pinned in both directions.
+    Split out from :func:`assert_matches_the_cython` so the budget can be
+    exercised on *every* platform, including the one where the caller would
+    otherwise take the bit-equality branch and leave this untested --
+    :func:`test_the_off_platform_budget_rejects_a_real_error`.
+
+    ``atol`` is scaled by the peak rather than left at zero because the
+    kernel's relative error is unbounded where it cancels: see "Why the
+    comparison has two modes".
     """
-    if CYTHON_CONTRACTS:
-        pytest.skip(
-            "this build contracts, so the unfused reference is expected to "
-            "differ; the contracting direction is checked inside "
-            "TestAgainstTheCythonTwin"
-        )
+    finite = np.isfinite(want)
+    peak = float(np.abs(want[finite]).max()) if finite.any() else 0.0
+    np.testing.assert_allclose(
+        got,
+        want,
+        rtol=OFF_PLATFORM_BUDGET,
+        atol=OFF_PLATFORM_BUDGET * peak,
+        err_msg=(
+            f"{context}: the port left the Cython's budget of "
+            f"{OFF_PLATFORM_BUDGET:.0e} x the spectrum peak ({peak:.6e}). "
+            f"Rounding between two builds was measured at 1.3e-10 x peak, so "
+            f"this is a defect, not a platform difference."
+        ),
+    )
 
+
+def assert_matches_the_cython(got: np.ndarray, want: np.ndarray, context: str) -> None:
+    """The oracle, in whichever of its two modes this platform gets.
+
+    Bit-for-bit where the corpus was captured -- the port was written
+    against *this* build's arithmetic and reproduces it exactly, which is a
+    far stronger statement than any tolerance. A budget elsewhere, because
+    off it the comparison measures the C library rather than the port.
+    """
+    if ON_THE_CAPTURING_PLATFORM:
+        assert got.tobytes() == want.tobytes(), (
+            f"{context}: not bit-equal to the Cython on the platform the "
+            f"corpus was captured on, where the port is written to reproduce "
+            f"it exactly"
+        )
+        return
+    assert_within_the_off_platform_budget(got, want, context)
+
+
+def cython_spectrum(emu: float, energies: np.ndarray) -> np.ndarray:
+    """The Cython twin evaluated pointwise over ``energies``."""
     point = cython_point()
-    rng = np.random.default_rng(7)
-    for emu in (MASS_MU, *MUON_ENERGIES[1:]):
-        for e in rng.uniform(0.0, emu * 1.1, 500):
-            got, want = point(float(e), emu), unfused_point(float(e), emu)
-            assert got == want, (
-                f"at e={e!r}, emu={emu!r} the unfused reference gives {want!r} "
-                f"and the Cython {got!r}, on a build the probe says does not "
-                "contract — so the reference has a bug that is not about FMA"
-            )
+    return np.array([point(float(e), emu) for e in energies])
 
 
 class TestDispatchWiring:
@@ -342,35 +355,34 @@ class TestWrapperAndPublicApi:
         assert get_name(capsule) == _POINT_SIGNATURE
 
 
-@requires_a_contracting_cython
 class TestAgainstTheCythonTwin:
-    """Bit-equality against the ``cdef`` the swap left behind.
+    """The ``cdef`` the swap left behind, as an oracle.
 
     The parity corpus pins 179,695 values at the grids it chose; this reaches
     the same kernel at arbitrary arguments, which is what lets the edges be
-    probed directly. Scoped to a contracting platform for the reason the class
-    docstring of ``test/test_core_boost.py`` gives at length.
+    probed directly. Bit-for-bit on the capturing platform and within
+    :data:`OFF_PLATFORM_BUDGET` elsewhere — "Why the comparison has two
+    modes" in the module docstring derives both.
     """
 
     @pytest.mark.parametrize("emu", MUON_ENERGIES)
-    def test_a_swept_grid_is_bit_equal(self, emu: float) -> None:
-        point = cython_point()
+    def test_a_swept_grid_matches(self, emu: float) -> None:
         energies = np.geomspace(MASS_E * 0.5, emu * 1.5, 2001)
-        assert dnde(energies, emu).tobytes() == (
-            np.array([point(float(e), emu) for e in energies]).tobytes()
+        assert_matches_the_cython(
+            dnde(energies, emu), cython_spectrum(emu, energies), f"swept grid, {emu=}"
         )
 
     @pytest.mark.parametrize("emu", MUON_ENERGIES)
-    def test_random_arguments_are_bit_equal(self, emu: float) -> None:
-        point = cython_point()
+    def test_random_arguments_match(self, emu: float) -> None:
         rng = np.random.default_rng(4)
         energies = rng.uniform(0.0, emu * 1.1, 4000)
-        assert dnde(energies, emu).tobytes() == (
-            np.array([point(float(e), emu) for e in energies]).tobytes()
+        assert_matches_the_cython(
+            dnde(energies, emu),
+            cython_spectrum(emu, energies),
+            f"random arguments, {emu=}",
         )
 
-    def test_the_kinematic_edges_are_bit_equal(self) -> None:
-        point = cython_point()
+    def test_the_kinematic_edges_match(self) -> None:
         for emu in (MASS_MU, MASS_MU * (1 + 1e-17), MASS_MU + 1e-16, 500.0, 1e9):
             edges = np.array(
                 [
@@ -386,9 +398,46 @@ class TestAgainstTheCythonTwin:
                     np.inf,
                 ]
             )
-            assert dnde(edges, emu).tobytes() == (
-                np.array([point(float(e), emu) for e in edges]).tobytes()
+            assert_matches_the_cython(
+                dnde(edges, emu),
+                cython_spectrum(emu, edges),
+                f"kinematic edges, {emu=}",
             )
+
+    def test_the_support_is_identical_everywhere(self) -> None:
+        """Which energies are *zero* is structural, so it holds on any build.
+
+        The budget above is a statement about rounding; this is the statement
+        rounding cannot excuse. A port that moved a threshold or a kinematic
+        limit by one grid point turns this red on every platform, including
+        the ones where the tolerance branch is in force.
+        """
+        for emu in MUON_ENERGIES:
+            energies = np.geomspace(MASS_E * 0.5, emu * 1.5, 2001)
+            got, want = dnde(energies, emu), cython_spectrum(emu, energies)
+            assert np.array_equal(got == 0.0, want == 0.0), (
+                f"the port and the Cython disagree about where the spectrum "
+                f"vanishes at {emu=}, which no rounding difference explains"
+            )
+
+    def test_the_off_platform_budget_rejects_a_real_error(self) -> None:
+        """The budget is not vacuous, asserted where the budget is not used.
+
+        On the capturing platform :func:`assert_matches_the_cython` takes its
+        bit-equality branch, so nothing else here would exercise the
+        tolerance at all and it could rot to `inf` unnoticed. A perturbation
+        of 1e-6 of the peak — four orders of magnitude above the largest
+        rounding difference ever measured between two builds, and still far
+        too small to see in a plot — must be rejected.
+        """
+        energies = np.geomspace(MASS_E * 0.5, 750.0, 2001)
+        want = cython_spectrum(500.0, energies)
+        nudged = want.copy()
+        nudged[nudged.argmax()] += 1e-6 * want.max()
+
+        assert_within_the_off_platform_budget(want, want, "unperturbed")
+        with pytest.raises(AssertionError):
+            assert_within_the_off_platform_budget(nudged, want, "perturbed")
 
     def test_a_nan_energy_does_not_propagate_and_both_agree_on_that(self) -> None:
         """A ``NaN`` energy comes back as a *number*, in both implementations.
@@ -404,7 +453,11 @@ class TestAgainstTheCythonTwin:
         point = cython_point()
         from_rust = dnde(float("nan"), 500.0)
         assert not math.isnan(from_rust)
-        assert from_rust == point(float("nan"), 500.0)
+        assert_matches_the_cython(
+            np.array([from_rust]),
+            np.array([point(float("nan"), 500.0)]),
+            "a NaN energy in the boosted branch",
+        )
 
         # The rest-frame branch has no fmax/fmin, so there a NaN does survive.
         assert math.isnan(dnde(float("nan"), MASS_MU))
@@ -414,22 +467,6 @@ class TestAgainstTheCythonTwin:
         point = cython_point()
         assert dnde(10.0, MASS_MU * 0.999_999) == 0.0
         assert point(10.0, MASS_MU * 0.999_999) == 0.0
-
-    def test_the_unfused_form_actually_differs_somewhere(self) -> None:
-        # Guards the guard: if `unfused_point` ever agreed with the Cython
-        # everywhere, `CYTHON_CONTRACTS` would read False on a contracting
-        # platform and every assertion in this class would skip silently.
-        point = cython_point()
-        rng = np.random.default_rng(11)
-        differ = sum(
-            point(e, emu) != unfused_point(e, emu)
-            for emu in (150.0, 500.0, 1500.0)
-            for e in rng.uniform(1.0, 400.0, 500)
-        )
-        assert differ > 0, (
-            "the unfused reference matches the Cython everywhere, so the "
-            "contraction probe cannot distinguish the two arithmetics"
-        )
 
 
 class TestPhysics:
