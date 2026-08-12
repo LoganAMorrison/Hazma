@@ -159,11 +159,17 @@ transcription, and it will survive contact with the artifact.**
 - **A test whose oracle is something you compiled is scoped to that
   build.** Nineteen bit-equality assertions against the Cython and NumPy
   passed on macOS/arm64 and failed on Linux/x86-64, because
-  `-ffp-contract=on` only bites on a target with hardware FMA. Measure the
-  property at import (`CYTHON_CONTRACTS`, `NUMPY_CONTRACTS`) and skip
-  where it does not hold; loosening to a tolerance is the wrong fix, since
-  the worst relative gap sits at a cancellation point where any admitting
-  tolerance would hide real defects
+  `-ffp-contract=on` only bites on a target with hardware FMA. **Declare
+  that scope from the platform and hold a measured budget off it** —
+  `ON_THE_CAPTURING_PLATFORM`, read from the corpus manifest, plus an
+  `assert_allclose` whose `atol` is scaled by the peak of the compared
+  array so the cancellation points do not force a loose pointwise `rtol`.
+  This phase's original remedy — probe the property at import
+  (`CYTHON_CONTRACTS`, `NUMPY_CONTRACTS`) and skip where false — is
+  retired: a probe sees one contraction mechanism and no others, so it
+  claims bit-equality where none holds *and* voids the comparison where it
+  does. `test_core_boost.py` was doing the latter on every non-macOS CI
+  entry until 2026-08-12
   (`docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]`).
 - **Mutation campaigns are this phase's standard gate** — 13 mutations in
   3.1, 11 in 3.2, 17 in 3.3, 21 in 3.4, 14 in 3.5, each run sequentially

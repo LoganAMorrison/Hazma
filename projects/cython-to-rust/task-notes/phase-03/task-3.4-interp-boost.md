@@ -200,6 +200,35 @@ added there during execution:
   per-branch tests keep their platform-independent halves running
   everywhere and route only the bit-equality claim through
   `assert_matches_cython`, which skips mid-test *after* those have run.
+
+  > **Superseded for `test/test_core_boost.py` on 2026-08-12.** The
+  > *diagnosis* above holds; the *remedy* does not. Task 4.1 showed the
+  > probe to be unsound (PR #63, runs 31562223329 and 31564747071): it
+  > tests one contraction mechanism and is therefore blind to the others,
+  > so it answers "contracts" where nothing does — and, as measured here,
+  > can answer "does not contract" and void the comparison entirely.
+  > `test/test_core_boost.py` was resolving the second way: the probe
+  > returned `False` on Linux/x86-64 and **all 19 of the module's
+  > cross-implementation claims skipped**, so that gate had been vacuous on
+  > every CI entry but macOS since PR #61. (19 = 11 tests carrying
+  > `requires_a_contracting_cython` + 8 reaching a mid-test
+  > `assert_matches_cython`. Confirmed two ways: directly, by building this
+  > worktree for linux/amd64 and reading `-rs`; and from CI, where the
+  > 2026-08-12 master run 31619425557 reports `767 passed, 41 skipped` on
+  > Linux against `1424 passed, 14 skipped` on macOS — a 28-skip excess
+  > once the corpus's own skip drops out with `--ignore=test/parity`, which
+  > is exactly this module's 19 plus `test_core_interp.py`'s 9. Do not read
+  > this 19 as the same 19 in the bullet above: that one is PR #61's count
+  > of *failing assertions* across both modules.) It
+  > now declares the mode from the platform (`ON_THE_CAPTURING_PLATFORM`,
+  > read from the corpus manifest) and applies a **measured** budget off
+  > it, exactly as `test/test_core_positron_muon.py` does. The
+  > cancellation-point argument above is why that budget is scaled to the
+  > *peak* of the compared array rather than applied pointwise — it is the
+  > reason the two-mode design works, not a reason to skip. `NUMPY_CONTRACTS`
+  > in `test/test_core_interp.py` still carries the retired mechanism and 9
+  > of its claims still skip off macOS; that is tracked in
+  > [`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md).
 - **The QUADPACK-style literal-translation posture does not apply here.**
   `boost.pyx` is 90 lines of ordinary arithmetic, so the Rust reads as
   Rust (`Option` for the `-1` index sentinel, a closure for the `y / x`
@@ -251,6 +280,11 @@ anything was run:
 | `markdownlint --dot` over the eight changed `.md` | clean |
 | `scripts/agents/preflight.sh --paths "…"` | **RESULT: PASS** |
 
+The table is this task's measurement and is left as taken. Re-running it
+today gives `81 passed` for `test/test_core_boost.py`, not 69: the
+2026-08-12 rewrite of its platform scoping (see §Findings) replaced 19
+probe-gated claims with two declared modes and added the budget guards.
+
 `+102` on Task 3.3's `1212 passed, 13 skipped`, and all 102 are this
 task's tests. **The skip count is unchanged at 13, which is what proves
 the parity corpus ran in bit-equality mode**; confirmed directly rather
@@ -264,8 +298,11 @@ than inferred —
 random interior points, every node, every node nudged ±1e-13, and four
 out-of-range; plus 50 random grids with cells of wildly unequal width);
 `TestFusedArithmetic` (the fused and unfused forms are shown to differ
-somewhere before the Rust is asserted to side with NumPy, so the test
-cannot pass vacuously on a non-contracting platform);
+somewhere before the Rust is asserted to side with NumPy — but that
+premise is false wherever NumPy does not contract, so the class is
+skipped rather than run there, and on Linux/x86-64 it always is; see the
+superseding note in §Findings and
+[`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md));
 `TestClamping`; `TestQuirks` (NaN propagation, the one-point grid's NaN
 asymmetry, the duplicate-node tie-break, both infinite-cell rescues, and
 the infinite-node short circuit); `TestErrors` (both `ValueError`s, each
@@ -284,7 +321,10 @@ both partial cells, the interior sum — each pinned by a closed form or by
 a sensitivity check on a table entry only that branch reads, and each
 bit-equal to the Cython; plus all seven live tables over six boost
 regimes × 400 energies); `TestFusedArithmetic` (an independent unfused
-reference, used as a discriminator); `TestDroppedInteriorCell`;
+reference, used as a discriminator — **rewritten on 2026-08-12** to
+discriminate against a *fused* Python reference instead of against the
+Cython, which makes the claim platform-independent and drops its skip);
+`TestDroppedInteriorCell`;
 `TestTrapezoidSummation` (five table sizes spanning NumPy's pairwise
 blocking, plus a check that a sequential sum really would differ);
 `TestErrors`; `TestDispatch`.
