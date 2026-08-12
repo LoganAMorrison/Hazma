@@ -34,20 +34,25 @@
 //! shipped NumPy computes. C compilers contract `a * b + c` into a fused
 //! multiply-add by default (`-ffp-contract=on`), and on the corpus's
 //! capturing platform — macOS/arm64 — NumPy's `arr_interp` does exactly
-//! that. Measured on the eta and charged-kaon tables over 20,000 random
-//! abscissae plus every node and every node nudged by one part in 1e13:
-//! the fused form is **bit-equal to `np.interp` at every point**, and the
-//! unfused form misses it at 1,549 of 20,204 points, by up to 1.1e-13
-//! relative (`test/test_core_interp.py::TestAgainstNumpy`).
+//! that. Measured on all seven live photon tables over 20,000 random
+//! abscissae each plus every node and every node nudged by one part in
+//! 1e13: `np.interp` is **bit-equal to a Python transcription of this
+//! function at every point**, and differs from the same transcription
+//! written unfused at 1,571 of 20,304 points on the eta table alone
+//! (`test/test_core_interp.py::TestFusedArithmetic`).
 //!
 //! That trade is worth stating, because it is not free. `mul_add` is a
 //! single instruction only where the target has hardware FMA; elsewhere
 //! it lowers to a libm `fma()` call. And a NumPy built for a target
-//! *without* FMA does not contract, so on such a platform this function
-//! would differ from its `np.interp` by that same ≤1.1e-13 — an order
-//! inside the 1e-12 budget `test/parity/tolerances.py` sets for the
-//! tabulated spectra, where the unfused form's error against the corpus
-//! is not (see [`crate::boost`]).
+//! *without* FMA does not contract: built for linux/amd64, `np.interp` is
+//! bit-equal to the **unfused** transcription on all seven tables, so
+//! this function differs from that platform's `np.interp` by up to 5.9e-5
+//! relative on the live tables — the gap lands where the interpolant
+//! cancels, and against the peak of the same array it is at most 1.4e-16
+//! there (2.2e-16 over the module's random grids), which is one ulp.
+//! `test/test_core_interp.py` records the full measurement and is
+//! the gate on it; the parity corpus does not see this, because it is
+//! skipped off the capturing platform.
 
 /// Linear interpolation on an ascending grid — `numpy.interp(x, xp, fp)`.
 ///

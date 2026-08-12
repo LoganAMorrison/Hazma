@@ -226,9 +226,12 @@ added there during execution:
   > cancellation-point argument above is why that budget is scaled to the
   > *peak* of the compared array rather than applied pointwise — it is the
   > reason the two-mode design works, not a reason to skip. `NUMPY_CONTRACTS`
-  > in `test/test_core_interp.py` still carries the retired mechanism and 9
-  > of its claims still skip off macOS; that is tracked in
-  > [`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md).
+  > in `test/test_core_interp.py` carried the retired mechanism for the rest
+  > of that day and 9 of its claims skipped off macOS; that was tracked in
+  > [`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md)
+  > and **resolved later the same day** — the module now declares its mode
+  > the same way and runs `42 passed, 0 skipped` on macOS/arm64 and on
+  > linux/amd64 alike, with a measured peak-scaled budget of `1e-12`.
 - **The QUADPACK-style literal-translation posture does not apply here.**
   `boost.pyx` is 90 lines of ordinary arithmetic, so the Rust reads as
   Rust (`Option` for the `-1` index sentinel, a closure for the `y / x`
@@ -328,9 +331,11 @@ out-of-range; plus 50 random grids with cells of wildly unequal width);
 `TestFusedArithmetic` (the fused and unfused forms are shown to differ
 somewhere before the Rust is asserted to side with NumPy — but that
 premise is false wherever NumPy does not contract, so the class is
-skipped rather than run there, and on Linux/x86-64 it always is; see the
-superseding note in §Findings and
-[`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md));
+skipped rather than run there, and on Linux/x86-64 it always is; both the
+skip and the NumPy premise were retired on 2026-08-12 — the class now
+discriminates against a Python transcription of `rust/src/interp.rs` and
+runs everywhere. See the superseding note in §Findings and
+[`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md));
 `TestClamping`; `TestQuirks` (NaN propagation, the one-point grid's NaN
 asymmetry, the duplicate-node tie-break, both infinite-cell rescues, and
 the infinite-node short circuit); `TestErrors` (both `ValueError`s, each

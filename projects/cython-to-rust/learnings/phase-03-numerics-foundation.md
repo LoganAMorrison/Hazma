@@ -156,7 +156,10 @@ transcription, and it will survive contact with the artifact.**
   `test_core_dispatch.py` (118, the `.pyx` sources' own error strings).
   `cargo test` carries 69 units — the foundation's, GIL-free.
   **Since phase close:** `test_core_boost.py` is **80**, the 2026-08-12
-  rescoping of its platform guard (+11, derived in that task note); and
+  rescoping of its platform guard (+11, derived in that task note);
+  `test_core_interp.py` is **42**, the same-day rescoping of *its* guard
+  (+9, `docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md`)
+  — and unlike the 33 above, all 42 now run off macOS too; and
   `cargo test` is **80**, Task 4.1's `positron_muon` kernel (+11), which
   are *not* foundation units and are why the 69 above is left as it
   stands. Every other count still reproduces on the current tree.
@@ -175,8 +178,9 @@ transcription, and it will survive contact with the artifact.**
   (`CYTHON_CONTRACTS`, `NUMPY_CONTRACTS`) and skip where false — is
   retired: a probe sees one contraction mechanism and no others, so it
   claims bit-equality where none holds *and* voids the comparison where it
-  does. `test_core_boost.py` was doing the latter on every non-macOS CI
-  entry until 2026-08-12
+  does. `test_core_boost.py` and `test_core_interp.py` were both doing
+  the latter on every non-macOS CI entry until 2026-08-12 — 19 and 9
+  claims respectively, silently — and both now declare the mode instead
   (`docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]`).
 - **Mutation campaigns are this phase's standard gate** — 13 mutations in
   3.1, 11 in 3.2, 17 in 3.3, 21 in 3.4, 14 in 3.5, each run sequentially
