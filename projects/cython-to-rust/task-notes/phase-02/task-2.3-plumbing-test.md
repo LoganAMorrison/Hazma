@@ -61,6 +61,10 @@ Copied from the phase file's Task 2.3 block:
     typed view, whereas an `int` reaches `extract::<f64>`. So
     `roundtrip(4)` is `4.0` and `roundtrip(np.array(4))` is a
     `ValueError`.
+    **Superseded by Task 3.5 (2026-08-11)**: a 0-d array of any *numeric*
+    dtype is now the scalar it holds, so `roundtrip(np.array(4))` is
+    `4.0`; only a non-numeric dtype (`<U4`, `object`) is rejected there.
+    See [`../../learnings/phase-03-numerics-foundation.md`](../../learnings/phase-03-numerics-foundation.md).
   - **Non-`float` NumPy scalars are accepted** (`np.float32`, `np.int64`,
     `np.uint8`, `np.bool_`). They are neither `float` subclasses nor
     ndarrays, so they fall past both fast paths to `extract::<f64>`,
@@ -319,7 +323,8 @@ sweep is reported because the corpus is a stricter grid than any of them.
   dtype, a 0-d array still enforces dtype where a Python `int` does not,
   and non-`float` NumPy scalars are accepted. A Task 3.5 decision that
   changes any of them will turn a named test red rather than passing
-  unnoticed.
+  unnoticed. **It did (2026-08-11): Task 3.5 reversed the middle one**,
+  and the named test turned red exactly as predicted.
 - **Do not assert `owndata` on a returned array.** It is `False` on
   correct code — the `numpy` crate's `Vec` wrapper owns the buffer.
   Non-aliasing is the assertable property.

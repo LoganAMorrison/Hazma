@@ -48,20 +48,45 @@ wrong?" before it is called done. Three of the three tasks here found a
   `from hazma._core.photon import <kernel>` work. Public Python import
   paths never change; wrappers re-export behind the existing names
   (`../rules.md` Rust rule 2).
-- **`dispatch::map_unary` is the single implementation of the
-  entry-point dispatch contract.** Phases 03–06 call it rather than
-  touching PyO3 inside a kernel (`../rules.md` Rust rule 3). Its measured
-  behavior, now pinned by `test/test_core_dispatch.py`:
-  - `float` / NumPy scalar / 0-d `float64` array → Python `float`;
-  - 1-D `float64` array → a **fresh, non-aliasing** 1-D `float64` array;
-  - anything else → `ValueError`, prefixed with the `quantity` string the
-    kernel passes.
+- **The PyO3 boundary is `rust/src/dispatch.rs`, and Phases 03–06 call
+  it rather than touching PyO3 inside a kernel** (`../rules.md` Rust
+  rule 3).
+
+  > **Superseded in part by Phase 03 Task 3.5 (2026-08-11).** This phase
+  > shipped `map_unary` as the *sole* helper and pinned the contract it
+  > implemented then. Task 3.5 measured all 43 surviving Cython entry
+  > points, found **four** dispatch shapes rather than one, and settled
+  > the contract accordingly — so three of the bullets below moved. The
+  > authority is
+  > [`phase-03-numerics-foundation.md`](phase-03-numerics-foundation.md)
+  > and the "settled contract" section of
+  > `../references/numerics-replacements.md`; what follows is the current
+  > state, with the Phase 02 reading noted where it differed.
+
+  - `float` / NumPy scalar / 0-d array of any **numeric** dtype → Python
+    `float`. *(Phase 02 accepted only a 0-d `float64` array; Task 3.5
+    widened it to every numeric dtype, which is what the 18 cross-section
+    entry points' `.item()` already did.)*
+  - 1-D `float64` array, or any object with `__len__` that
+    `numpy.asarray` turns into one → a **fresh, non-aliasing** 1-D
+    `float64` array. *(Phase 02 rejected sequences; Task 3.5 accepts
+    them, because the 17 `hasattr`-dispatching Cython entry points call
+    `np.array(...)` and rejecting a list would have been a narrowing.)*
+  - a higher-rank array, a 1-D array that is not `float64`, or a 0-d
+    array whose dtype is not numeric → `ValueError`, prefixed with the
+    `quantity` string the kernel passes.
+  - anything that is neither a real number nor a sequence → `TypeError`,
+    same prefix. *(Phase 02 raised `ValueError` here; Task 3.5 keeps the
+    `TypeError` CPython raises today when such a value reaches a
+    `cdef double` parameter.)*
   - **Rank is checked before dtype** — a 2-D int64 array reports the
-    dimension error.
-  - **A 0-d array still enforces dtype**, where a Python `int` does not:
-    the 0-d path is inside the array branch behind the typed view.
+    dimension error. *(Unchanged.)*
   - **Non-`float` NumPy scalars are accepted** (`np.float32`, `np.int64`,
-    `np.uint8`, `np.bool_`) via the `extract::<f64>` arm.
+    `np.uint8`, `np.bool_`) via the `extract::<f64>` arm. *(Unchanged.)*
+  - `map_unary` has two siblings over the same classification:
+    `map_flavors` (the neutrino 3-tuple / `(3, N)` return) and
+    `require_vector` (`partial_widths`, which must be 1-D and is never a
+    scalar). *(Both added by Task 3.5.)*
 - **The `PyFloat` fast path is ordered first on purpose.** The `numpy`
   crate *panics* rather than raising when NumPy cannot be imported —
   `cast::<PyUntypedArray>` reaches for the array-API capsule. Every

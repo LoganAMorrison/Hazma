@@ -290,21 +290,27 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   seven review/commit skills, so Phases 03–06 inherit a reviewer who is
   expected to challenge a cargo-only run quoted as a Python result.
 - **The dispatch contract is now pinned from Python, and three of its
-  behaviors were not in the prose** (Task 2.3).
-  `test/test_core_dispatch.py` holds every branch of
-  `dispatch::map_unary` through `hazma._core.roundtrip`: (a) **rank is
-  checked before dtype**, so a 2-D int64 array reports the dimension
-  message; (b) **a 0-d array still enforces dtype** where a Python `int`
-  does not, because the 0-d path lives inside the array branch behind the
-  typed view; (c) **non-`float` NumPy scalars are accepted**
-  (`np.float32`, `np.int64`, `np.uint8`, `np.bool_`) via the
-  `extract::<f64>` arm. **That module is the template Phases 04–06
-  copy** — swap the kernel and the `QUANTITY` wording, keep every test,
-  add the numerical tests beside rather than merged in. Two side facts
-  worth carrying: bit patterns survive intact (NaN payload included), so
-  the module argues about no tolerances; and a "fresh" array from the
-  `numpy` crate has `owndata == False` with a `PySliceContainer` base, so
-  **non-aliasing is the assertable property, never `owndata`**.
+  behaviors were not in the prose** (Task 2.3; **(b) superseded by Task
+  3.5, 2026-08-11**). `test/test_core_dispatch.py` holds every branch of
+  the contract: (a) **rank is checked before dtype**, so a 2-D int64
+  array reports the dimension message; (b) ~~a 0-d array still enforces
+  dtype where a Python `int` does not~~ — **a 0-d array of any numeric
+  dtype is now the scalar it holds**, and only a non-numeric dtype
+  (`<U4`, `object`) is rejected there, because a 0-d array *is* a scalar
+  and `np.int64(4)` was already accepted; (c) **non-`float` NumPy scalars
+  are accepted** (`np.float32`, `np.int64`, `np.uint8`, `np.bool_`) via
+  the `extract::<f64>` arm. **That module is the template Phases 04–06
+  copy** — swap the probe and the quantity wording, keep every test, add
+  the numerical tests beside rather than merged in. Two side facts worth
+  carrying: bit patterns survive intact (NaN payload included), so the
+  module argues about no tolerances; and a "fresh" array from the `numpy`
+  crate has `owndata == False` with a `PySliceContainer` base, so
+  **non-aliasing is the assertable property, never `owndata`**. The
+  settled contract — including the `TypeError` arm, sequence acceptance,
+  and the `map_flavors` / `require_vector` siblings — is the Task 3.5
+  bullet below and
+  [`../references/numerics-replacements.md`](../references/numerics-replacements.md)'s
+  "settled contract" section.
 - **`text_signature` is a claim PyO3 does not enforce** (Task 2.3).
   `roundtrip` advertised `(x, /)` while `roundtrip(x=1.5)` worked;
   enforcing positional-only takes `#[pyo3(signature = (x, /))]`. The

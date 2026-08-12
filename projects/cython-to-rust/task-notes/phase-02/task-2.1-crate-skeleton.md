@@ -254,7 +254,8 @@ criteria ask the plumbing suite to assert. Nothing in `hazma/` calls
 - `rust/src/lib.rs` — `#[pymodule] _core`, the `roundtrip` pyfunction, and
   `add_submodule` (attach + `sys.modules`).
 - `rust/src/dispatch.rs` — `map_unary`, the one implementation of the
-  entry-point dispatch contract.
+  entry-point dispatch contract. *(Task 3.5 gave it two siblings,
+  `map_flavors` and `require_vector`, over one shared classification.)*
 - `rust/src/kernels.rs` — `roundtrip` plus two `cargo test` unit tests.
 - `rust/src/{photon,positron,neutrino,scalar_mediator,vector_mediator}.rs`
   — empty `register` hooks.
@@ -665,6 +666,8 @@ parallel.
   into `AGENTS.md` and `docs/agents/`.
 - `dispatch::map_unary` is the single implementation of the dispatch
   contract, and `hazma._core.roundtrip` exercises every branch of it.
+  *(Task 3.5, 2026-08-11: three helpers over one classification —
+  `map_unary`, `map_flavors`, `require_vector`.)*
   Task 2.3's suite is written against `roundtrip` and the table in
   §Verification is the behavior to assert.
 - The parity gate is in bit-equality mode and stays there until a real

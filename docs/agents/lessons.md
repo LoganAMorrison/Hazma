@@ -382,3 +382,24 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   cancellation point the domain contains and a tolerance wide enough for
   that hides real defects. The tell you are about to make this mistake:
   the oracle is something you compiled rather than something you pinned.
+- [settling-a-deferral-has-two-sweeps] When a task *settles* something an
+  earlier task deferred, the stale text lives in two disjoint populations
+  and grepping one feels like finishing. The **pointers** say "Task N
+  decides this" and all carry the task id, so they sweep in one `rg`; the
+  **statements of the pre-decision behavior** carry no such token — they
+  are ordinary prose asserting the old contract as current fact, and they
+  are the ones a future reader will act on (PR #62: `Task 3.5 decides` was
+  swept across four durable docs and the phase file, while
+  `projects/cython-to-rust/learnings/phase-02-rust-scaffold.md` §2 and the
+  project working memory's Findings still said a 0-d array must be
+  `float64`, that everything invalid raises `ValueError`, and that
+  `map_unary` was the only helper — every one of which the same PR
+  changed). Sweep the **behavior words** as well as the task id: the
+  identifiers the settled thing is named by (`map_unary`), and the
+  distinctive phrases of the *superseded* rule (`still enforces dtype`,
+  `anything else → ValueError`). Note that a doc predicting its own
+  supersession ("a Task N decision that changes any of them turns a named
+  test red") is a pointer *and* a statement, and closing the loop on it is
+  cheap. Sibling of [sibling-copies-of-a-fixed-claim]; the difference is
+  that the two populations share no token, so one pattern cannot find
+  both.

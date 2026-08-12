@@ -180,6 +180,23 @@ Other decisions:
   row written twice would all satisfy a value assertion. Negation and
   reciprocal are both correctly rounded, so the Python-side reference is
   bit-exact and the test argues about no tolerance.
+- **Review round 1 (PR #62): the stale-state sweep had two populations
+  and only one was swept.** `Task 3.5 decides` — the *pointer* text —
+  was swept across the durable docs, but the **statements of the
+  pre-decision contract** carry no such token and were left asserting the
+  old rules as current fact: `../../learnings/phase-02-rust-scaffold.md`
+  §2 still said a 0-d array must be `float64`, that everything else
+  raises `ValueError`, and that `map_unary` was the sole helper, and
+  `../README.md`'s Task 2.3 finding said "a 0-d array still enforces
+  dtype". Fixed by re-sweeping on the *behavior* words rather than the
+  task id (`still enforces dtype`, `anything else → ValueError`,
+  `single implementation`) — seven live occurrences across five files,
+  each now either corrected or carrying a dated supersession note beside
+  it. Recorded in `docs/agents/lessons.md` as
+  `[settling-a-deferral-has-two-sweeps]`. The `phase-02` working memory
+  and Task 2.3's note had *predicted* this ("a Task 3.5 decision that
+  changes any of them now turns a named test red"), which made closing
+  the loop on them one line each.
 - **`dispatch.rs` has no `cargo test` units** and does not need any: every
   line of it is PyO3, so `cargo test --no-default-features` (which links
   libpython but attaches no interpreter) is the wrong harness. The phase
