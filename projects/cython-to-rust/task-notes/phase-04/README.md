@@ -103,9 +103,9 @@ kernel ports.
   (Task 4.1), reversing Task 2.3's instruction: since Task 3.5 the
   dispatch layer is three shared helpers, so those 118 tests cover code
   every kernel routes through unchanged. `test/test_core_positron_muon.py`
-  is the shape to copy — 45 tests, one per contract branch plus
-  bit-equality against the twin (17, scoped to the capturing platform)
-  plus physics.
+  is the shape to copy — 47 tests, one per contract branch plus the twin
+  as a two-mode oracle (bit-for-bit on the capturing platform, a
+  peak-scaled budget elsewhere, nothing skipped) plus physics.
 
 ## Files Changed
 

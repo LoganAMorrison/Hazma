@@ -341,16 +341,15 @@ quoted.
 - `pytest test/test_theory_aggregation.py -q` → `69 passed` (the
   platform-independent model-layer gate, run either side of the swap per the
   project handoff).
-- **Bare `pytest -q` → `1422 passed, 14 skipped in 551.70s`** on the
+- **Bare `pytest -q` → `1424 passed, 14 skipped in 555.96s`** on the
   capturing platform, against `1378 passed, 13 skipped` at Task 3.5. The
-  arithmetic closes exactly: `+45` passes for the new module, `−1` pass /
+  arithmetic closes exactly: `+47` passes for the new module, `−1` pass /
   `+1` skip for `test_running_on_the_capturing_tree`, which now skips
   because the corpus is in budget mode. **That skip is the designed signal
   that the corpus has left bit-equality mode**, and from this task on it is
-  permanent. Off the capturing platform 17 more skip and the parity suite
-  is ignored entirely. **That skip is the
-  designed signal that the corpus has left bit-equality mode**, and from
-  this task on it is permanent.
+  permanent. It is also the only skip this task adds: off the capturing
+  platform the module drops to its budget mode rather than skipping, and
+  the parity suite is ignored entirely.
 - Ad-hoc bit-equality sweep against the Cython `cdef` through
   `__pyx_capi__` before any wrapper was touched: **126,182 points across 14
   muon energies** (rest, `+1e-16`, `+1e-9`, mildly and strongly boosted,
@@ -374,10 +373,10 @@ in a module `pyproject.toml` marks `runtime-typing = true`, so
 "just autofix them" is a public-API change, not a cleanup. This is
 [`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
 exactly, and the documented handling is to scope `--paths` to the files
-whose verdict the diff can move. Re-run over the other four:
+whose verdict the diff can move. Re-run over the other five:
 **RESULT: PASS**, with `black`, `isort`, `ruff`, all three cargo gates,
-`pytest` (`1422 passed, 14 skipped in 584.61s`), `import hazma`,
-`markdownlint` over the six changed docs, and the forbidden-token scan
+`pytest` (`1424 passed, 14 skipped in 572.75s`), `import hazma`,
+`markdownlint` over the seven changed docs, and the forbidden-token scan
 all green.
 
 Intentionally deferred: nothing in this task's scope. The normalization
@@ -544,7 +543,7 @@ longer is.
 | 11 new Rust units | count of `kernels::positron_muon::tests` lines | 11 | OK |
 | 47 Python tests, no skips in either mode | `pytest -q`, then again under a forced `platform.machine` | `47 passed` both times | OK |
 | Budget clears the observed Linux data | replay the 15 decoded failure blocks of run 31564747071 through the shipped assertion | all PASS, tightest headroom 84× | OK |
-| Bare suite 1422 / 14 | `pytest -q` | `1422 passed, 14 skipped in 551.70s` | OK |
+| Bare suite 1424 / 14 | `pytest -q` | `1424 passed, 14 skipped in 555.96s` | OK |
 | Parity 629 / 1 | `pytest test/parity -q -rs` | `629 passed, 1 skipped in 310.99s` | OK |
 | Aggregation gate 69 | `pytest test/test_theory_aggregation.py -q` | `69 passed` | OK |
 | Nine FMA instructions | `objdump -d ... \| grep -cE 'fmadd\|fmsub'` | 9 | OK |

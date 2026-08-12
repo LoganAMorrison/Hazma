@@ -1386,14 +1386,14 @@ it from memory.)
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - **Phase 04 Task 4.1 state (2026-08-11) — first kernel swap:** bare
-  `pytest -q` → **`1422 passed, 14 skipped in 551.70s`** on the
-  capturing environment (from 1378/13 at Task 3.5: +45 passes for
+  `pytest -q` → **`1424 passed, 14 skipped in 555.96s`** on the
+  capturing environment (from 1378/13 at Task 3.5: +47 passes for
   `test/test_core_positron_muon.py`, and −1 pass / +1 skip for
   `test_running_on_the_capturing_tree`, which now skips because the
   corpus is in budget mode — **that is the designed signal, and the skip
   count does not go back down**). `pytest test/parity -q` →
   `629 passed, 1 skipped`; `pytest test/test_core_positron_muon.py -q` →
-  `45 passed`; `pytest test/test_theory_aggregation.py -q` → `69 passed`;
+  `47 passed`; `pytest test/test_theory_aggregation.py -q` → `69 passed`;
   `cargo test --no-default-features` → `80 passed` (11 new); clippy, fmt
   and `markdownlint` clean; `scripts/agents/preflight.sh` RESULT: PASS.
   **Eighteen mutations against `rust/src/kernels/positron_muon.rs`**, run
