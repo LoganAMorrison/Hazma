@@ -629,9 +629,16 @@ parallel.
   wrong for now** — the corpus pins those values, so a swap that repairs
   the coverage **fails the gate**. Blocked until after Phase 06 Task 6.4.
 - **A test whose oracle is something you compiled is scoped to that
-  build.** Any kernel test using the Cython twin as its oracle needs the
-  `CYTHON_CONTRACTS`-style import-time guard; loosening to a tolerance is
-  the wrong fix.
+  build.** Any kernel test using the Cython twin as its oracle needs that
+  scope **declared from the platform**, not probed for: read
+  `test/parity/data/manifest.json`'s `environment.machine`, compare
+  bit-for-bit there, and hold a **measured** budget elsewhere — the shape
+  `test/test_core_positron_muon.py` and `test/test_core_boost.py` both
+  carry. The `CYTHON_CONTRACTS`-style import-time guard this line used to
+  prescribe is retired: it probes one contraction mechanism and is blind
+  to the others, so it both over- and under-claims (Task 4.1 Findings; the
+  boost module was silently skipping all 19 of its claims off macOS until
+  2026-08-12).
 - **An edge that only decides a branch needs a bisection test, not a
   grid** — and check the sweep's parameter space reaches the branch at all.
 - **The two `thermal_cross_section` implementations disagree above

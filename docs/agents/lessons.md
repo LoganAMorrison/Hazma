@@ -82,7 +82,27 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   venv was rebuilt on the corpus's capturing interpreter partway through).
   When a measured artifact carries the environment in its name, record the
   invariant and the mechanism (`cp<XY>`, never `abi3`, because a Cython
-  extension remains) rather than one run's value.
+  extension remains) rather than one run's value. A third shape, and the
+  cheapest to hit: the number is a count of *your own* tests, taken while
+  the diff was still moving. PR #64 recorded a re-measured
+  `test/test_core_boost.py` at `81 passed` in a durable note, then dropped
+  two tests and added one during a later self-review pass and shipped 80 —
+  the note was written once and never re-derived, and review caught it.
+  Re-derive every count you wrote *after* your last code edit, not after
+  the edit that motivated the count.
+- [partial-historical-labeling] Annotating **one** measurement in a dated
+  section as historical silently upgrades every unlabeled measurement
+  beside it into a claim about the current tree. Label the *section*, not
+  the line. PR #64 footnoted a single row of a task note's `## Verification`
+  table as "left as taken" while the same section's mutation-campaign
+  baseline (`102 passed`) sat sixty lines below with no such marker, and
+  review read it as a live figure — correctly, because the neighbouring
+  footnote implied it. The reverse error is just as easy: a number that
+  looks stale can be *right* for what it claims, and blind number-chasing
+  breaks it — the same PR's `cargo test` "69 units" describes the
+  **foundation's** units, so "fixing" it to the current 80 would have
+  folded in a later phase's kernel and made a true sentence false. Decide
+  per claim what it is a statement *about*, then date the block.
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
   each section, cited elsewhere by a flat index, has two schemes and no key —
   so a correct citation reads as a dangling one and a reviewer's "fix" breaks
@@ -384,13 +404,30 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   bit-for-bit assertion that is exactly right on the reference platform
   fails everywhere else (PR #61: 19 assertions in
   `test/test_core_{interp,boost}.py` passed on macOS/arm64 and failed on
-  Linux/x86-64, where neither NumPy nor the Cython contracts). Measure
-  the platform property at import and skip the comparison where it does
-  not hold, as `test/parity` already does — do not loosen to a tolerance,
-  because the worst relative gap between two roundings lands at whatever
-  cancellation point the domain contains and a tolerance wide enough for
-  that hides real defects. The tell you are about to make this mistake:
-  the oracle is something you compiled rather than something you pinned.
+  Linux/x86-64, where neither NumPy nor the Cython contracts). **Declare
+  the scope from the platform; do not probe for it.** Read the capturing
+  platform out of `test/parity/data/manifest.json` so the scope cannot
+  drift from the corpus's, compare bit-for-bit there, and hold a measured
+  budget everywhere else. Probing — evaluate the compiled oracle against
+  an unfused transcription, conclude "this build contracts", skip where it
+  does not — is the trap this lesson used to recommend, and it fails in
+  both directions: a probe sees one contraction mechanism and is blind to
+  the rest, so it claims bit-equality on a build that diverges for another
+  reason (PR #63, `test_core_positron_muon.py`, twice) *and* silently
+  voids the whole comparison when the one mechanism it knows is absent
+  (`test_core_boost.py`, 19 claims skipped on every non-macOS CI entry
+  from PR #61 until 2026-08-12 — and the capturing platform cannot see
+  either failure, because there the probe answers correctly by accident).
+  Scale the off-platform budget to the **peak** of the compared array
+  rather than applying a pointwise `rtol`: the worst relative gap between
+  two roundings lands at whatever cancellation point the domain contains,
+  and an `rtol` wide enough for that hides real defects, while against the
+  peak a wrong branch or dropped term still lands at O(1). Measure the
+  budget — build the tree for the other platform and compare — rather than
+  guessing it, and give it a test that proves it still rejects a real
+  error, since on the capturing platform nothing else exercises it. The
+  tell you are about to make this mistake: the oracle is something you
+  compiled rather than something you pinned.
 - [settling-a-deferral-has-two-sweeps] When a task *settles* something an
   earlier task deferred, the stale text lives in two disjoint populations
   and grepping one feels like finishing. The **pointers** say "Task N

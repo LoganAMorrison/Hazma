@@ -146,24 +146,37 @@ transcription, and it will survive contact with the artifact.**
 ## 4. Test Infrastructure State
 
 - **Five Python test modules, all against a live oracle**, none of them
-  duplicating the parity corpus: `test/test_core_constants.py` (25 tests,
-  source-to-source text comparison, no build needed, 0.03s),
-  `test_core_special.py` (65, scipy), `test_core_quad.py` (58,
-  `scipy.integrate.quad` through a Python-callable probe),
-  `test_core_interp.py` (33, `np.interp`), `test_core_boost.py` (69, the
-  Cython twin via `__pyx_capi__`), `test_core_dispatch.py` (118, the
-  `.pyx` sources' own error strings). `cargo test` carries 69 units.
+  duplicating the parity corpus. Counts are **as Phase 03 closed**, which
+  is what this document records; later phases add to them.
+  `test/test_core_constants.py` (25 tests, source-to-source text
+  comparison, no build needed, 0.03s), `test_core_special.py` (65,
+  scipy), `test_core_quad.py` (58, `scipy.integrate.quad` through a
+  Python-callable probe), `test_core_interp.py` (33, `np.interp`),
+  `test_core_boost.py` (69, the Cython twin via `__pyx_capi__`),
+  `test_core_dispatch.py` (118, the `.pyx` sources' own error strings).
+  `cargo test` carries 69 units — the foundation's, GIL-free.
+  **Since phase close:** `test_core_boost.py` is **80**, the 2026-08-12
+  rescoping of its platform guard (+11, derived in that task note); and
+  `cargo test` is **80**, Task 4.1's `positron_muon` kernel (+11), which
+  are *not* foundation units and are why the 69 above is left as it
+  stands. Every other count still reproduces on the current tree.
 - **`test_core_dispatch.py` is the template Phases 04–06 copy** for a
   kernel swap: keep every test, swap the probe and the quantity wording,
   add the kernel's numerical tests *beside* rather than merged in.
 - **A test whose oracle is something you compiled is scoped to that
   build.** Nineteen bit-equality assertions against the Cython and NumPy
   passed on macOS/arm64 and failed on Linux/x86-64, because
-  `-ffp-contract=on` only bites on a target with hardware FMA. Measure the
-  property at import (`CYTHON_CONTRACTS`, `NUMPY_CONTRACTS`) and skip
-  where it does not hold; loosening to a tolerance is the wrong fix, since
-  the worst relative gap sits at a cancellation point where any admitting
-  tolerance would hide real defects
+  `-ffp-contract=on` only bites on a target with hardware FMA. **Declare
+  that scope from the platform and hold a measured budget off it** —
+  `ON_THE_CAPTURING_PLATFORM`, read from the corpus manifest, plus an
+  `assert_allclose` whose `atol` is scaled by the peak of the compared
+  array so the cancellation points do not force a loose pointwise `rtol`.
+  This phase's original remedy — probe the property at import
+  (`CYTHON_CONTRACTS`, `NUMPY_CONTRACTS`) and skip where false — is
+  retired: a probe sees one contraction mechanism and no others, so it
+  claims bit-equality where none holds *and* voids the comparison where it
+  does. `test_core_boost.py` was doing the latter on every non-macOS CI
+  entry until 2026-08-12
   (`docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]`).
 - **Mutation campaigns are this phase's standard gate** — 13 mutations in
   3.1, 11 in 3.2, 17 in 3.3, 21 in 3.4, 14 in 3.5, each run sequentially
