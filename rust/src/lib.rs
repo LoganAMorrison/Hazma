@@ -23,19 +23,21 @@
 //! interpolation/boost foundation are the crate's most reusable surface,
 //! and Phases 03–06 consume them from every kernel module.
 //!
-//! [`special_probe`], [`quad_probe`], [`interp_probe`] and [`boost_probe`]
-//! are the exception to "registration only means per-domain": they
-//! register `special`, `quad`, `interp` and `boost` submodules that expose
-//! the four foundation modules to Python purely so
-//! `test/test_core_special.py`, `test/test_core_quad.py`,
-//! `test/test_core_interp.py` and `test/test_core_boost.py` can compare
-//! them against their oracles — scipy, NumPy, and the Cython twin itself
-//! through `__pyx_capi__`. No hazma module imports any of them.
+//! [`special_probe`], [`quad_probe`], [`interp_probe`], [`boost_probe`]
+//! and [`dispatch_probe`] are the exception to "registration only means
+//! per-domain": they register `special`, `quad`, `interp`, `boost` and
+//! `dispatch` submodules that expose the foundation modules to Python
+//! purely so `test/test_core_special.py`, `test/test_core_quad.py`,
+//! `test/test_core_interp.py`, `test/test_core_boost.py` and
+//! `test/test_core_dispatch.py` can compare them against their oracles —
+//! scipy, NumPy, the Cython twin itself through `__pyx_capi__`, and the
+//! `.pyx` sources' own error strings. No hazma module imports any of them.
 
 pub mod boost;
 mod boost_probe;
 pub mod constants;
 mod dispatch;
+mod dispatch_probe;
 pub mod interp;
 mod interp_probe;
 mod kernels;
@@ -115,6 +117,7 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "quad", quad_probe::register)?;
     add_submodule(module, "interp", interp_probe::register)?;
     add_submodule(module, "boost", boost_probe::register)?;
+    add_submodule(module, "dispatch", dispatch_probe::register)?;
 
     Ok(())
 }

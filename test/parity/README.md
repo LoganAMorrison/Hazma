@@ -64,14 +64,17 @@ legitimate corpus repair and drop the runner out of bit-equality mode two
 phases early. `cases.rust_core_kernels()` is the predicate; it returns the
 kernels the extension actually exposes, ignoring the scaffold's
 `roundtrip` probe and the test-only submodules listed in
-`cases._CORE_TEST_ONLY_MODULES` (today four: `hazma._core.special`, the
+`cases._CORE_TEST_ONLY_MODULES` (today five: `hazma._core.special`, the
 Phase 03 Task 3.2 specfun shim that `test/test_core_special.py` sweeps
 against scipy; `hazma._core.quad`, the Task 3.3 QUADPACK port that
-`test/test_core_quad.py` compares against `scipy.integrate.quad`; and
+`test/test_core_quad.py` compares against `scipy.integrate.quad`;
 `hazma._core.interp` and `hazma._core.boost`, the Task 3.4 interpolation
 and boost foundation, swept by `test/test_core_interp.py` against
 `np.interp` and by `test/test_core_boost.py` against the Cython twin
-itself through `hazma._utils.boost.__pyx_capi__`). That
+itself through `hazma._utils.boost.__pyx_capi__`; and
+`hazma._core.dispatch`, the Task 3.5 argument-and-error layer, whose
+messages `test/test_core_dispatch.py` compares byte for byte against the
+strings it extracts from the `.pyx` sources). That
 second exemption is held honest by
 `test_test_only_core_submodules_have_no_importer`, which fails the moment
 anything under `hazma/` imports one of them — at which point it is a

@@ -3,8 +3,8 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 03
-**Status:** In Progress (Tasks 3.1 and 3.2 complete 2026-08-09; Tasks 3.3
-and 3.4 complete 2026-08-10)
+**Status:** Complete (2026-08-11) — Tasks 3.1 and 3.2 complete 2026-08-09;
+3.3 and 3.4 complete 2026-08-10; 3.5 complete 2026-08-11, closing the phase
 **Plan References:** `../../phases/phase-03-numerics-foundation.md`
 **Related ADRs:** ADR-0002 (Accepted 2026-08-04 — governs the
 provenance of Tasks 3.2/3.3, no longer gates them)
@@ -23,12 +23,16 @@ foundation.
 | 3.2 | Special functions | — (ADR-0002 accepted) | **Complete (2026-08-09)** | [task-3.2-specfun.md](task-3.2-specfun.md) |
 | 3.3 | QUADPACK port (qk15/qk21/qelg/qags/qagp) | — (ADR-0002 accepted) | **Complete (2026-08-10)** | [task-3.3-quadpack.md](task-3.3-quadpack.md) |
 | 3.4 | Interpolation + boost kernels | 3.1 | **Complete (2026-08-10)** | [task-3.4-interp-boost.md](task-3.4-interp-boost.md) |
-| 3.5 | Dispatch and error layer | — | Not started | [task-3.5-dispatch.md](task-3.5-dispatch.md) |
+| 3.5 | Dispatch and error layer | — | **Complete (2026-08-11)** | [task-3.5-dispatch.md](task-3.5-dispatch.md) |
 
 ## Exit Criteria
 
-- All rows Complete; phase file frontmatter `status: Complete`.
-- Phase learnings at `../../learnings/phase-03-numerics-foundation.md`.
+- ~~All rows Complete; phase file frontmatter `status: Complete`.~~
+  **Met 2026-08-11.**
+- ~~Phase learnings at `../../learnings/phase-03-numerics-foundation.md`.~~
+  **Written 2026-08-11** —
+  [phase-03-numerics-foundation.md](../../learnings/phase-03-numerics-foundation.md)
+  is now the file to read; this one is history.
 
 ## Inputs Reviewed
 
@@ -223,6 +227,45 @@ foundation.
   list is checkable rather than a silent stack corruption. **Any later
   task needing a `cdef` oracle should reach for this instead of adding a
   temporary shim to a `.pyx`.**
+- **There are four dispatch shapes in the surviving Cython, not one, and
+  two of them disagree about a 0-d array** (Task 3.5). Classified from
+  source over all 43 top-level `def`s and then measured on the built tree:
+  15 entry points dispatch on `hasattr(x, '__len__')` and raise
+  `AssertionError` on a 0-d array while accepting a list (12 photon, 2
+  positron, and `scalar_mediator_decay_spectrum`); the 18
+  cross-section entry points dispatch on
+  `hasattr(...) and x.ndim > 0`, *accept* a 0-d array via `.item()`, and
+  reject a list with `AttributeError` (no rank guard at all); the 2
+  neutrino ones are the first shape with the 3-tuple / `(3, N)` return;
+  and `partial_widths` is a required-1-D argument with its own two
+  messages. The reference's "every public function follows one shape" was
+  the design, not the code.
+- **The rule that decided every Task 3.5 divergence: each exception the
+  Cython raises *explicitly* keeps its type; only its `assert`s change
+  type** (rules.md rule 9). Rank errors become `ValueError` carrying the
+  assert's text verbatim; dtype errors stay `ValueError`; a non-number
+  stays `TypeError`; `partial_widths`' explicit `raise ValueError` keeps
+  type and wording. Three widenings ride along and none can break a
+  working call — 0-d takes the scalar path (the cross sections' own
+  behavior), a list or tuple is accepted (the spectra's own behavior), and
+  the dtype message names the dtype, because the Cython has **no single
+  string** to match: the spectra say `expected 'double'`, the mediator
+  modules `expected 'float64_t'`, for the same rejection.
+- **A 0-d array's `__float__` forwards to its element, and `np.str_`
+  subclasses `str`** (Task 3.5), so `float(np.array("15.0"))` is `15.0`.
+  A first draft that accepted a 0-d array by trying `extract::<f64>`
+  therefore returned a *number* for `dnde_photon("15.0", 200.0)` where the
+  Cython raises. The 0-d path asks the dtype's `kind` instead. **Any
+  Phase 04–06 argument check that means "is this numeric?" and answers it
+  by attempting a float conversion has this hole.**
+- **A mutation campaign can refute the implementation's own comment**
+  (Task 3.5). Thirteen of fourteen mutations were caught; the survivor
+  swapped the sequence branch ahead of the scalar fallback, which the code
+  comment claimed was load-bearing against the string bug above. It is
+  not — the only objects with both `__len__` and a working `__float__` are
+  0-d ndarrays, already taken by an earlier arm — so the ordering is
+  fidelity to the Cython and `has_numeric_dtype` is the actual guard. The
+  comment was corrected rather than the mutation dropped.
 - **A Python-visible test surface on `hazma._core` reads as a started
   port** (Task 3.2). Registering `hazma._core.special` flipped the
   parity corpus straight out of bit-equality mode
@@ -304,6 +347,30 @@ foundation.
   undefined; `interp` keeps a plain `f64` return because the probe raises
   `ValueError` with NumPy's own wording first, so the assert is
   unreachable from Python and no Rust call site has to unwrap.
+- **Three dispatch helpers over one classification, and the kernel stays
+  PyO3-free** (Task 3.5). `dispatch::map_unary` serves shapes A and C
+  (32 entry points), `map_flavors` shape B (2, `Fn(f64) -> [f64; 3]`,
+  called **once per energy** because the Cython computes the three
+  flavors from one shared kinematic evaluation), `require_vector` shape D.
+  `require_vector` checks rank and dtype and never length — the Cython's
+  `pws` handling indexes seven entries and raises `IndexError` from the
+  *kernel*, so Phase 06 owns that check rather than the dispatch layer.
+- **`dispatch_probe` is the fifth probe module, and it exists for the
+  wording** (Task 3.5). Every probe takes `quantity` as an argument, which
+  the top-level `roundtrip` (Phase 02's, wording fixed to `"Input
+  values"`) cannot — and a test that byte-matches
+  `"Photon energies must be 0 or 1-dimensional."` has to be able to ask
+  for that wording. `roundtrip` itself is left untouched, so Phase 02's
+  scaffold and its `_CORE_SCAFFOLD_NAMES` exemption keep working
+  unchanged.
+- **The `.pyx` sources are the message oracle, not a transcription**
+  (Task 3.5). `TestCythonMessageParity` scans the surviving `.pyx` for
+  every `assert len(...) == 1, "..."` and `raise ValueError("...")`,
+  asserts the roster is exactly the four-plus-one it expects, and renders
+  each through the port. That is also what keeps
+  `_neutrino/_muon.pyx:205`'s "Photon energies" copy-paste on the record:
+  the port says `"Neutrino energies"` there, and the roster test fails if
+  the defect spreads or vanishes unnoticed.
 - **Only `n = 2` is live, but `bessel_kn` carries general `n`**
   (Task 3.2), because the recurrence is general and the order factor
   `2m/x` is *invisible* at n = 2 (it is `2/x` there). Both the ν = 2
@@ -312,6 +379,40 @@ foundation.
   `cargo test` alone missed it.
 
 ## Files Changed
+
+### Task 3.5
+
+- `rust/src/dispatch.rs` — rewritten around a shared `classify`, plus
+  `map_flavors` (the neutrino 3-tuple / `(3, N)` shape) and
+  `require_vector` (`partial_widths`), the sequence branch, the
+  `has_numeric_dtype` guard, `TypeError` for non-numbers, and the
+  measured four-shape rationale in the module header.
+- `rust/src/dispatch_probe.rs` — **new**, registration-only
+  `hazma._core.dispatch`; three probes taking the quantity wording as an
+  argument, which the fixed-wording `roundtrip` cannot.
+- `rust/src/kernels.rs` — `roundtrip_flavors` (`[x, -x, 1/x]`, rows
+  pairwise distinguishable so a transpose cannot pass) and two units.
+- `rust/src/lib.rs` — `mod dispatch_probe;`, the submodule registration,
+  and the reconciled probe paragraph.
+- `test/test_core_dispatch.py` — 54 → 118 tests; new classes for the
+  sequence path, the flavor shape, `require_vector`, the source-derived
+  message parity, and each declared divergence asserted against **both**
+  implementations.
+- `test/parity/cases.py`, `test/parity/test_parity.py`,
+  `test/parity/README.md` — `hazma._core.dispatch` added to
+  `_CORE_TEST_ONLY_MODULES` and the three prose sites reconciled.
+- `hazma/_core.pyi` — the unstubbed-submodule comment now covers all five
+  probes, and `roundtrip`'s contract paragraph carries the settled rules
+  (the only change under `hazma/`, non-executable).
+- `docs/followups/todo/model-spectra-reject-scalar-energies.md` — the
+  compiled half recorded as decided; the pure-Python half stays open.
+- **Two canonical patches:** `../../phases/phase-03-numerics-foundation.md`
+  (five Task 3.5 criteria added during execution, plus
+  `status: Complete`) and `../../references/numerics-replacements.md`
+  (a "settled contract" section, and a pointer from the superseded
+  design sketch).
+- **Phase closure:** `../../learnings/phase-03-numerics-foundation.md`
+  (new), `../../PLAN.md` Phases row, `../README.md` Phases row.
 
 ### Task 3.4
 
@@ -391,6 +492,20 @@ foundation.
 
 ## Verification
 
+- **Task 3.5 (2026-08-11):** bare `pytest -q` →
+  `1378 passed, 13 skipped in 564.55s` on the capturing environment,
+  parity suite included and in bit-equality mode (skip count unchanged at
+  13, and `tolerances.provenance` → `exact=True` checked directly; +64 on
+  Task 3.4's 1314, which is exactly this module's growth from 54 to 118).
+  `pytest test/test_core_dispatch.py -q` → `118 passed in 4.19s`
+  (population from `--collect-only -q`);
+  `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
+  `69 passed` (2 new); clippy and fmt clean;
+  `scripts/agents/preflight.sh` RESULT: PASS. Fourteen mutations against
+  `dispatch.rs` and `kernels.rs`, sequential from a green baseline with
+  the baseline re-asserted after — **13 caught**, and the survivor is a
+  result rather than a hole (see Findings: it refuted a claim in the
+  implementation's own comment, which was corrected).
 - **Task 3.4 (2026-08-10):** bare `pytest -q` →
   `1314 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13, and
@@ -451,8 +566,12 @@ foundation.
   `1088 passed, 13 skipped` with the parity corpus in bit-equality mode
   (skip count unchanged at 13). Thirteen mutations, each caught by the
   test whose name claims it — table in the task note.
-- Remaining tasks: `cargo test` (foundation units); scipy-comparison
-  pytest suite green in CI.
+- ~~Remaining tasks: `cargo test` (foundation units); scipy-comparison
+  pytest suite green in CI.~~ **All five tasks verified; the phase's own
+  exit criteria are met** — `cargo test` covers the foundation GIL-free
+  (69 units), the scipy/NumPy/Cython comparison suites are part of the
+  bare `pytest` CI runs, and `hazma._core` is still referenced by no
+  wrapper (`cases.rust_core_kernels()` → `[]`).
 
 ## Open Questions
 
@@ -475,90 +594,51 @@ foundation.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 03:** read `../../PLAN.md`,
-`../README.md`, this file, then the phase file — whose Tasks 3.2, 3.3
-and 3.4 blocks all now carry criteria added during execution. **Only
-Task 3.5 (dispatch and error layer) remains**, and it closes the phase:
-synthesize `../../learnings/phase-03-numerics-foundation.md`, flip the
-phase file's frontmatter to `status: Complete`, and update the `PLAN.md`
-Phases row.
+**Phase 03 is closed (2026-08-11).** Read
+[`../../learnings/phase-03-numerics-foundation.md`](../../learnings/phase-03-numerics-foundation.md)
+first — it is the synthesized durable record and supersedes this file and
+the five task notes, which are history. Then the phase file for whichever
+of Phases 04 / 05 you are starting; the two share no files and may run in
+parallel.
 
 **Currently safe to assume:**
 
-- Every live integral is finite-interval — `qagi` is out of scope.
-- **Task 3.4 is done, so `hazma_core::{interp, boost}` exist.**
-  `interp::interp` is `np.interp` with NumPy's full contract;
-  `boost::{boost_beta, boost_gamma, boost_delta_function,
-  boost_integrate_linear_interp}` are the four live routines of
-  `hazma/_utils/boost.pyx`. Both are bit-equal to what they replace on
-  the capturing platform, PyO3-free, and already route through
-  `dispatch::map_unary` in their probes — so whatever Task 3.5 settles
-  about the four live dispatch behaviors applies to them for free.
-- **Task 3.1 is done, so `hazma_core::constants` exists and Task 3.4 is
-  unblocked.** `constants::{pdg, legacy}` are the two Cython tables and
-  `constants::derived::<source_pyx>` the module-local `DEF`s, all
-  bit-equal to the Cython and held there by
-  `test/test_core_constants.py` (25 tests, 0.03s, platform-independent)
-  and five `cargo test` units. Name the table the `.pyx` you are porting
-  `include`s: `pdg` for everything under `hazma/spectra/**`, `legacy`
-  for the four mediator spectrum extensions.
-- **Task 3.2 is done, so `hazma_core::special` exists.** `spence` (in
-  scipy's `Li₂(1−z)` convention), `bessel_k1` and `bessel_kn`, PyO3-free
-  and tracking `scipy.special` to ≤ 4.0e-15 over every domain hazma
-  reaches. Phase 04's muon photon kernel and Phase 05's thermal ⟨σv⟩
-  call these **directly in Rust**; `hazma._core.special` is a test
-  surface and must stay importer-free, or the parity corpus leaves
-  bit-equality mode.
+- **`hazma_core::{constants, special, quad, interp, boost, dispatch}` all
+  exist, are unit-tested, and serve no wrapper.**
+  `cases.rust_core_kernels()` is `[]` and the parity corpus is still in
+  bit-equality mode, so the first Phase 04 or 05 swap is what flips both —
+  and the ill-conditioned-points corpus repair has to land before it.
+- **The dispatch contract is settled**, in three helpers over one
+  classification (`map_unary`, `map_flavors`, `require_vector`), with the
+  quantity wording passed in per call site and every message byte-matched
+  against the `.pyx` sources. `test/test_core_dispatch.py` is the template
+  a swap copies: keep every test, swap the probe and the wording, add the
+  kernel's numerical tests beside rather than merged in.
+- **Constants, special functions, quadrature, interpolation and the boost
+  integrals are all bit-equal or measured against their oracle** on the
+  capturing platform. Name the constants table the `.pyx` you are porting
+  `include`s; call `quad::quad` rather than `qagse`/`qagpe`; do not
+  "simplify" `special::bessel_kn`.
 
 **Currently risky / unknown:**
 
-- **Do not "clean up" a `mul_add` in `boost.rs` or `interp.rs`, and do
-  not add one where they do not have it** (Task 3.4). Unfusing costs up
-  to 3.6e-12 against the corpus — past the 1e-12 `TABULATED` budget —
-  and fusing `boost_beta`, which the Cython does *not* contract at any
-  of its ten call sites, moves every boosted spectrum. Every Phase 04
-  kernel needs its own disassembly or bisection; there is no house style
-  to apply.
+- **Do not add or remove a `mul_add`.** Contraction is a per-expression
+  fact; every Phase 04 kernel needs its own disassembly or bisection, and
+  `boost_beta` is the counter-example that proves there is no house style.
 - **`boost_integrate_linear_interp` is wrong near threshold and stays
-  wrong for now** (Task 3.4): all seven tabulated photon spectra diverge
-  instead of converging to their rest-frame values as the parent slows.
-  The corpus pins those values, so a Phase 04 swap that repairs the
-  coverage **fails the gate**. Repair blocked until after Phase 06
-  Task 6.4 —
-  [`../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
-- **A test that compares against a *locally compiled* oracle is scoped to
-  that build** (Task 3.4, PR #61 review round 1). Nineteen bit-equality
-  assertions against the Cython and NumPy passed on macOS/arm64 and failed
-  on Linux/x86-64, where neither contracts — the port was right and the
-  tests over-claimed. `CYTHON_CONTRACTS` / `NUMPY_CONTRACTS` are measured
-  at import and the comparisons skip where false, the same scoping
-  `test/parity` already has. **Phases 04–06 inherit this**: any kernel test
-  whose oracle is the Cython twin needs the same guard, and loosening to a
-  tolerance is the wrong fix — the worst relative gap sits at a
-  cancellation point where any admitting tolerance would hide real defects.
+  wrong for now** — the corpus pins those values, so a swap that repairs
+  the coverage **fails the gate**. Blocked until after Phase 06 Task 6.4.
+- **A test whose oracle is something you compiled is scoped to that
+  build.** Any kernel test using the Cython twin as its oracle needs the
+  `CYTHON_CONTRACTS`-style import-time guard; loosening to a tolerance is
+  the wrong fix.
 - **An edge that only decides a branch needs a bisection test, not a
-  grid** (Task 3.4). Three mutations survived a 40,000-draw sweep because
-  they moved a support boundary by one double without touching any
-  returned value. Any Phase 04–06 kernel with a window, threshold or
-  piecewise switch inherits that — and check the sweep's *parameter*
-  space reaches the branch at all (with `m = 0` the fused and unfused
-  momenta are bit-identical, so only massive draws could see it).
-- `qelg` Fortran→Rust translation is the fiddliest item in the project;
-  budget review time accordingly.
-- **Task 3.3 inherits Task 3.2's central lesson**: do not design against
-  the documentation of what scipy is *supposed* to do — measure what it
-  does. Task 3.2 found `scipy.special.kn` is `kv` rather than cephes
-  only by running the sweep, and 3.3's breakpoint-preprocessing
-  criterion already says the same thing about `quad(points=...)`.
-  **Task 3.4 makes it three for three**, and widens it past scipy: the
-  compiled artifact's own arithmetic is a hypothesis too.
-- **Do not "simplify" `special::bessel_kn` to `spec_math`'s** — a
-  5.1e-9 miss that the corpus's 1e-8 `thermal_cross_section` budget
-  would absorb. `test_beats_cephes_kn_at_its_worst_argument` names the
-  exact substitution it guards against.
-- **`derived::photon_pion` deliberately mixes both tables** — PDG
-  aliases, legacy-frozen literals. Read that module's doc comment before
-  touching the charged-pion photon kernel in Phase 04.
-- `derived::positron_pion::ENG_MU_PI_RF` and
-  `derived::photon_pion::ENG_MU_PIRF` are the same physical quantity,
-  different numbers, one underscore apart.
+  grid** — and check the sweep's parameter space reaches the branch at all.
+- **The two `thermal_cross_section` implementations disagree above
+  `x = 300`** (scalar returns `0.0`, vector clips and keeps evaluating).
+  Phase 05 must reproduce both or declare the unification; a shared Rust
+  helper is the obvious design and would silently move published numbers.
+- **Both mediator positron kernels return `nan` at exactly `0.510998928`**
+  and the corpus does not pin it, so a port can land anywhere there and
+  still pass. Phases 05/06 must reproduce the `nan` or declare the
+  consolidation.

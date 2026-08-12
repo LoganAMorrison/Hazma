@@ -124,8 +124,11 @@ wrong?" before it is called done. Three of the three tasks here found a
   than taking the scalar path; a Python list is accepted; shape errors
   are `AssertionError` (and vanish under `python -O`), not `ValueError`;
   and `hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies".
-  **Task 3.5 decides each one**, and two of the four are user-visible
-  narrowings if transcribed from the design instead of the code.
+  Two of the four are user-visible narrowings if transcribed from the
+  design instead of the code. **Settled by Task 3.5 (2026-08-11)** — and
+  it found four *shapes* rather than four divergences from one shape; see
+  [`phase-03-numerics-foundation.md`](phase-03-numerics-foundation.md)
+  and the reference's "settled contract" section.
 
 ## 4. Test Infrastructure State
 

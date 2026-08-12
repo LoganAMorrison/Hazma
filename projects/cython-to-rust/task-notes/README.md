@@ -24,7 +24,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 00 | Dead-code purge | [phase-00-dead-code-purge.md](../phases/phase-00-dead-code-purge.md) | [phase-00/README.md](phase-00/README.md) | **Complete (2026-08-06)** — all five tasks done; [learnings](../learnings/phase-00-dead-code-purge.md) |
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
-| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | In Progress — 3.1 and 3.2 done (2026-08-09), 3.3 done (2026-08-10), 3.4–3.5 open |
+| 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
@@ -266,7 +266,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   `AssertionError` not `ValueError`, and
   `hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies". Two of
   the four become silent public-API narrowings if the port transcribes
-  the design instead of the code. Task 3.5 decides each one.
+  the design instead of the code. **Settled by Task 3.5 (2026-08-11)**,
+  which found the deeper problem: there are four dispatch *shapes*, not
+  one shape with four divergences — see the next Task 3.5 bullet below.
 - **The Rust half of the build is now pinned rather than lucky** (Task
   2.2). Until this task, CI had no toolchain step and passed anyway
   because the GitHub-hosted images ship cargo — a dependency nothing in
@@ -531,6 +533,48 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   signature string, so assert on it rather than trusting the argument
   list. **Any later task needing an oracle for `cdef` code should reach
   for this rather than adding a temporary shim to a `.pyx`.**
+- **The dispatch contract the reference described is not the dispatch the
+  Cython implements, and there are four shapes rather than one**
+  (Task 3.5, now written into that reference). Classified from source over
+  all 43 surviving top-level `def`s and then measured on the built tree:
+  15 entry points branch on `hasattr(x, '__len__')` and raise
+  `AssertionError` on a 0-d array while accepting a list (12 photon, 2
+  positron, and `scalar_mediator_decay_spectrum`); the 18
+  cross-section entry points branch on `hasattr(...) and x.ndim > 0`,
+  *accept* a 0-d array via `.item()`, carry no rank guard at all, and
+  reject a list with `AttributeError`; the 2 neutrino ones are the first
+  shape with a 3-tuple / `(3, N)` return; and `partial_widths` is a
+  required-1-D argument with its own two messages. The port is three
+  helpers over one classification — `dispatch::{map_unary, map_flavors,
+  require_vector}` — and **Phase 05's cross sections use the same one as
+  Phase 04's spectra**, which is what makes the two shapes agree for the
+  first time.
+- **The rule that settles every dispatch divergence, and the one Phases
+  04–06 should quote: each exception the Cython raises *explicitly* keeps
+  its type; only its `assert`s change type** (Task 3.5; rules.md rule 9).
+  That is what makes the answer checkable instead of a taste question —
+  rank errors become `ValueError` carrying the assert's message verbatim,
+  dtype errors stay `ValueError`, a non-number stays `TypeError`, and
+  `partial_widths`' explicit `raise ValueError` keeps type *and* wording.
+  The five resulting behavior changes are listed under "Numerical impact
+  so far" because the Phase 07 CHANGELOG is assembled from there.
+- **A 0-d array's `__float__` forwards to its element, and `np.str_`
+  subclasses `str`** (Task 3.5), so `float(np.array("15.0"))` is `15.0`.
+  A first draft that accepted a 0-d array by attempting the conversion
+  therefore returned a *number* for `dnde_photon("15.0", 200.0)` where the
+  Cython raises. The fix is to ask the dtype's `kind`. **Any Phase 04–06
+  check that means "is this numeric?" and answers it by trying a float
+  conversion has the same hole**, and PyO3's `extract::<f64>` goes through
+  `PyNumber_Float`, which is the conversion in question.
+- **A mutation campaign can refute the implementation's own comment**
+  (Task 3.5). Thirteen of fourteen mutations were caught; the survivor
+  swapped two arms of the classification that a code comment called
+  load-bearing against the string bug above. It is not — the only objects
+  with both `__len__` and a working `__float__` are 0-d ndarrays, taken by
+  an earlier arm — so the ordering is fidelity to the Cython and the dtype
+  check is the actual guard. **A survivor is a result to read, not a hole
+  to paper over**: Task 3.4's three survivors named the bisection tests it
+  needed, and this one named a false sentence.
 - **A worktree can inherit `.so` files whose source package is gone**
   (Task 1.1): this tree carried `_gamma_ray/` and `_phase_space/`
   extensions deleted in Task 0.2, giving 25 `.so` against `setup.py`'s
@@ -816,6 +860,43 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   calls the new code. The alternative — plain arithmetic everywhere —
   was rejected because it misses the corpus by that same 3.6e-12 on
   *every* platform, which the 1e-12 `TABULATED` budget does not cover.
+
+- **Task 3.5, 2026-08-11 (dispatch and error layer): no public value
+  changes** (verified: `git diff origin/master -- hazma` is one file,
+  `hazma/_core.pyi`, and every line of the hunk is comment text — no
+  executable line under `hazma/` is reachable from this diff, on a tree
+  rebuilt before anything was run). The rest is the PyO3 boundary module
+  that no Python imports and no Rust kernel yet calls, its
+  registration-only probe, one rewritten test module, the parity corpus's
+  served-kernel exemption, and bookkeeping. Measured rather than only
+  argued: the bare suite ran the parity corpus in **bit-equality mode** —
+  `rtol = 0` across all 41 consumed entry points, 179,695 pinned values —
+  and passed, at `1378 passed, 13 skipped` (+64 on Task 3.4's 1314, which
+  is exactly `test/test_core_dispatch.py` growing from 54 tests to 118;
+  skip count unchanged, and `tolerances.provenance` → `exact=True`
+  checked directly).
+
+  What the task *did* settle is a set of **user-visible behavior changes
+  that land with Phases 04–06, not here** — no value moves, but the
+  exception surface of 35 entry points does. Each is a widening or a
+  type-only change and none can break a call that works today, and all of
+  them belong in the Phase 07 CHANGELOG beside rule 9's assert
+  tightening:
+
+  - a 0-d array takes the scalar path everywhere (17 entry points raise
+    `AssertionError` today — the 16 under `hazma/spectra/` plus
+    `scalar_mediator_decay_spectrum`; the 18 cross sections already
+    return a float);
+  - a list or tuple is accepted everywhere (the 18 cross sections raise
+    `AttributeError` today);
+  - a rank error is a `ValueError` carrying the Cython assert's message
+    **verbatim**, rather than an `AssertionError` that vanishes under
+    `python -O`;
+  - a dtype error keeps its `ValueError` but names the dtype, because the
+    Cython has no single string to reproduce (`expected 'double'` in the
+    spectra, `expected 'float64_t'` in the mediator modules);
+  - `hazma/spectra/_neutrino/_muon.pyx:205`'s "Photon energies" becomes
+    "Neutrino energies".
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -1114,11 +1195,47 @@ it from memory.)
   [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
   gained the measured fused-arithmetic block. Full list in
   [phase-03/README.md](phase-03/README.md).
+- **Task 3.5** — `rust/src/dispatch.rs` rewritten around a shared
+  `classify` and grown by `map_flavors` (the neutrino 3-tuple / `(3, N)`
+  shape) and `require_vector` (`partial_widths`); new
+  `rust/src/dispatch_probe.rs` (registration-only `hazma._core.dispatch`,
+  three probes taking the quantity wording); `roundtrip_flavors` and two
+  units in `rust/src/kernels.rs`; `rust/src/lib.rs` admits the probe.
+  `test/test_core_dispatch.py` grew 54 → 118 tests; the parity corpus's
+  `_CORE_TEST_ONLY_MODULES` and its three prose sites gained
+  `hazma._core.dispatch`;
+  [`../../../docs/followups/todo/model-spectra-reject-scalar-energies.md`](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
+  records its compiled half as decided. **Two canonical patches:** the
+  phase file's Task 3.5 block gained five "criteria added during
+  execution" bullets, and
+  [`../references/numerics-replacements.md`](../references/numerics-replacements.md)
+  gained a "settled contract" section superseding its design sketch.
+  **Phase closed:** learnings written, phase frontmatter
+  `status: Complete`, `PLAN.md` Phases row updated. Across all five tasks
+  Phase 03 changed exactly one file under `hazma/` — the non-executable
+  `hazma/_core.pyi`, comments only. Full list in
+  [phase-03/README.md](phase-03/README.md).
 
 ## Verification
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 03 Task 3.5 state (2026-08-11) — phase closed:** bare
+  `pytest -q` → `1378 passed, 13 skipped in 564.55s` on the capturing
+  environment, parity suite included and in bit-equality mode (skip count
+  unchanged at 13, and `tolerances.provenance` → `exact=True` checked
+  directly); `pytest test/test_core_dispatch.py -q` →
+  `118 passed in 4.19s`;
+  `cargo test --manifest-path rust/Cargo.toml --no-default-features` →
+  `69 passed` (2 new); clippy, fmt and `markdownlint --dot` clean;
+  `scripts/agents/preflight.sh` RESULT: PASS. Fourteen mutations against
+  `rust/src/{dispatch,kernels}.rs`, sequential from a green baseline with
+  the baseline re-asserted after — **13 caught**. The survivor is the
+  interesting one: it swapped two arms of the classification that the
+  implementation's own comment called load-bearing, and left all 118
+  tests green — so the *comment* was wrong (the real guard against a
+  string parsing as a number is the 0-d dtype check), and it was
+  corrected rather than the mutation dropped.
 - **Phase 03 Task 3.4 state (2026-08-10):** bare `pytest -q` →
   `1314 passed, 13 skipped` on the capturing environment, parity suite
   included and in bit-equality mode (skip count unchanged at 13, and
@@ -1259,10 +1376,16 @@ it from memory.)
 
 ## Handoff to Next Task
 
+**Phases 00–03 are closed (2026-08-06, 08-08, 08-09, 08-11).** The next
+work is Phase 04 (spectra kernels) and/or Phase 05 (mediator cross
+sections); they share no files and may run in parallel. **The first swap
+in either flips the parity corpus out of bit-equality mode permanently**,
+so the ill-conditioned-points repair has to land before it.
+
 **For the next agent starting any task in this project:**
 
-1. Read `../PLAN.md` end-to-end, then this file, then the active
-   phase's `phase-XX/README.md`.
+1. Read `../PLAN.md` end-to-end, then this file, then the closed phases'
+   learnings (below), then the active phase's `phase-XX/README.md`.
 2. Load the reference file(s) the phase's Prerequisites name — the
    references replace re-reading the Cython audit.
 3. Check Open Questions above. No ADR sign-off is outstanding — all
@@ -1288,18 +1411,15 @@ it from memory.)
   2.1; still true after Task 3.2). The crate lives in `rust/`,
   `uv pip install -e .` builds Cython and Rust in one pass, and the tree
   carries 21 `.so`: the 20 Cython extensions plus `hazma/_core.abi3.so`.
-  Its public surface is `roundtrip` — a plumbing probe — plus four
-  test-surface submodules: `special` (Task 3.2), `quad` (3.3), and
-  `interp` and `boost` (3.4), each reachable only from its own
-  `test/test_core_*.py`. None is a ported kernel, and
+  Its public surface is `roundtrip` — a plumbing probe — plus five
+  test-surface submodules: `special` (Task 3.2), `quad` (3.3),
+  `interp` and `boost` (3.4), and `dispatch` (3.5), each reachable only
+  from its own `test/test_core_*.py`. None is a ported kernel, and
   `cases.rust_core_kernels()` is the predicate that says so —
-  `_CORE_TEST_ONLY_MODULES` exempts the four submodules, and
+  `_CORE_TEST_ONLY_MODULES` exempts the five submodules, and
   `test_test_only_core_submodules_have_no_importer` makes that exemption
   conditional on nothing under `hazma/` importing them.
-  `dispatch::map_unary` is the single
-  implementation of the entry-point dispatch contract — Phases 03–06 call
-  it rather than touching PyO3 inside a kernel (`../rules.md` Rust rule
-  3). The three cargo gates are `cargo fmt --check`,
+  The three cargo gates are `cargo fmt --check`,
   `cargo clippy --all-targets -- -D warnings` and
   `cargo test --no-default-features`; the last one's flag is load-bearing,
   since `extension-module` leaves the test harness unlinkable. **As of
@@ -1313,17 +1433,15 @@ it from memory.)
   `cargo test --manifest-path rust/Cargo.toml --no-default-features`,
   reinstall before quoting any pytest or parity number, and confirm with
   `python -c "import hazma._core; print(hazma._core.__file__)"`.
-- **Phases 00, 01 and 02 are all Complete** (2026-08-06, 2026-08-08 and
-  2026-08-09). Read
+- **Phases 00, 01, 02 and 03 are all Complete** (2026-08-06, 2026-08-08,
+  2026-08-09 and 2026-08-11). Read
   [`../learnings/phase-00-dead-code-purge.md`](../learnings/phase-00-dead-code-purge.md),
-  [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md)
-  and
+  [`../learnings/phase-01-parity-corpus.md`](../learnings/phase-01-parity-corpus.md),
   [`../learnings/phase-02-rust-scaffold.md`](../learnings/phase-02-rust-scaffold.md)
-  rather than their twelve task notes — the learnings are the
-  distillation, the notes are history. **Phase 03 is in progress:
-  Tasks 3.1 and 3.2 landed 2026-08-09, Tasks 3.3 and 3.4 on 2026-08-10,
-  so only Task 3.5 (dependency-free) remains — and it closes the
-  phase.** No phase carries a decision gate.
+  and
+  [`../learnings/phase-03-numerics-foundation.md`](../learnings/phase-03-numerics-foundation.md)
+  rather than their seventeen task notes — the learnings are the
+  distillation, the notes are history. No phase carries a decision gate.
 - **`hazma_core::constants` exists and is bit-equal to the Cython**
   (Task 3.1). `constants::pdg` is `hazma/_utils/constants.pxd` (151
   values), `constants::legacy` is `hazma/_utils/legacy_parameters.pxd`
@@ -1338,16 +1456,34 @@ it from memory.)
   and five `cargo test` units check the compiled side. Both die with the
   Cython, and each says in its own text what to delete when a `.pyx`
   goes.
+- **Task 3.5 is done, so the dispatch and error contract is settled** —
+  three helpers over one classification, and a Phase 04–06 wrapper writes
+  `dispatch::map_unary(x, "Photon energies", kernel)` and inherits every
+  message, return type and edge case. `map_unary` serves 33 of the 35
+  dispatching entry points (15 with a scalar-or-1D energy argument plus
+  the 18 cross sections); `map_flavors` serves the 2 neutrino ones
+  (`Fn(f64) -> [f64; 3]`, called **once per energy**, `(3, N)` rows
+  electron/muon/tau); `require_vector` serves `partial_widths` — rank and
+  dtype only, **never length**, because the Cython's own `pws` handling
+  indexes seven entries and raises `IndexError` from the *kernel*, which
+  Phase 06 must reproduce itself. The rule that decided every divergence:
+  **each exception the Cython raises explicitly keeps its type; only its
+  `assert`s change type** (`../rules.md` rule 9). Kernels stay PyO3-free
+  and pass their quantity wording in; `hazma._core.dispatch` is a test
+  surface and must stay importer-free.
 - **`test/test_core_dispatch.py` is the template every Phase 04–06 kernel
-  swap copies** (Task 2.3; 54 tests, 0.27s, platform-independent). It
-  pins every branch of `dispatch::map_unary` through
-  `hazma._core.roundtrip`. Copying it means: swap `roundtrip` for the
-  kernel and `QUANTITY` for the wording that kernel passes to
-  `map_unary`, keep every test, and add the kernel's numerical tests
-  *beside* them rather than merged in. The instructions are in the module
-  docstring so they travel with the file. It deliberately re-pins no
-  value against Cython — the corpus does that, at bit-equality, across
-  all 41 entry points.
+  swap copies** (Task 2.3, rewritten by 3.5; 118 tests, 1.6s,
+  platform-independent). It pins every branch of the contract through
+  probes that compute nothing. Copying it means: swap the probe for the
+  kernel and the quantity wording for the one that kernel passes, keep
+  every test, and add the kernel's numerical tests *beside* them rather
+  than merged in. The instructions are in the module docstring so they
+  travel with the file. It deliberately re-pins no value against Cython —
+  the corpus does that, at bit-equality, across all 41 entry points. One
+  class, `TestCythonMessageParity`, reads the error strings out of the
+  surviving `.pyx` themselves, so **a Phase 04–06 deletion that removes
+  the last site carrying a wording turns its roster assertion red** —
+  that is the test asking you to update its roster, not a defect.
 - **Task 3.3 is done, so `hazma_core::quad` exists.** Call
   `quad(&mut f, a, b, &QuadOpts { epsabs, epsrel, limit, points })` —
   **not** `qagse`/`qagpe`, which skip the argument preprocessing every
@@ -1401,8 +1537,9 @@ it from memory.)
   it in Phase 07). Neither ships a deleted path; neither ships the agent
   scaffolding any more.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1314 passed / 13 skipped** as of Task 3.4
-  (2026-08-10), from 1212/13 at Task 3.3, 1154/13 at Task 3.2, 1088/13 at Task 3.1,
+  `pytest -q` → **1378 passed / 13 skipped** as of Task 3.5
+  (2026-08-11), from 1314/13 at Task 3.4, 1212/13 at Task 3.3,
+  1154/13 at Task 3.2, 1088/13 at Task 3.1,
   1063/13 at Phase 02 close,
   1006/13 at Phase 01 close and 935/30 at Task 1.3. The Phase 02 deltas:
   +3 (Task 2.1's scaffold checks), 0 (Task 2.2, byte-identical, which is
@@ -1410,7 +1547,8 @@ it from memory.)
   Phase 03 so far: +25 (Task 3.1's constants), +66 (Task 3.2's specfun
   module plus one corpus guard, of which +12 landed in review round 1),
   +58 (Task 3.3's QUADPACK module, of which +6 landed in review
-  round 1), +102 (Task 3.4's interpolation and boost modules).
+  round 1), +102 (Task 3.4's interpolation and boost modules), +64
+  (Task 3.5, all of it `test/test_core_dispatch.py` growing 54 → 118).
   **The skip count has not moved since
   Phase 01 closed**, and that is the tell: forcing budget mode drops one
   test to a skip rather than failing, so an unchanged 13 is how the
@@ -1501,5 +1639,13 @@ it from memory.)
   change either way, and deciding after the swap costs a second one. The
   [scalar-energy contract](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
   during 04–06 — `Theory.spectra` and `Theory.positron_spectra` reject the
-  scalar energies their docstrings advertise, and the compiled half of
-  that resolves itself if the port normalizes at the public boundary.
+  scalar energies their docstrings advertise. **Task 3.5 settled the
+  compiled half**: a scalar, a 0-d array and a sequence are all accepted
+  below `Theory` from the first swap. What is left is pure Python —
+  `Theory.spectra`'s `type(e_gams) == float` branch (which misses
+  `np.float64`) and the channel wrappers' `len(e_gams)`.
+- **Phase 05 has to name the cross sections' `quantity` wording.** They
+  carry no dispatch message at all today, so the port invents it and it
+  is user-visible from the first swap. `"Center-of-mass energies"` is the
+  placeholder `test/test_core_dispatch.py` uses; nothing depends on the
+  choice yet.
