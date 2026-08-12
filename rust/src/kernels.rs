@@ -5,6 +5,12 @@
 //! project — it keeps `cargo test` free of the interpreter and keeps the
 //! math readable next to the Cython it replaces. The PyO3 layer lives in
 //! [`crate::dispatch`] and the per-domain submodules.
+//!
+//! One submodule per ported `.pyx`, named for it: [`positron_muon`] is
+//! `hazma/spectra/_positron/_muon.pyx`. The two `roundtrip` probes below
+//! stay at this level because they belong to no `.pyx` at all.
+
+pub mod positron_muon;
 
 /// Return `x` unchanged.
 ///

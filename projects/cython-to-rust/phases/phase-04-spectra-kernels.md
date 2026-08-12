@@ -1,7 +1,7 @@
 ---
 phase: 04
 title: Spectra kernels
-status: Not started
+status: In Progress
 ---
 
 # Phase 04: Spectra kernels
@@ -21,6 +21,45 @@ importable). They, the other spectra twins' shared `.pxd` headers, and
 `hazma/_utils/{boost,constants,kinematics}` are deleted in Phase 06
 Task 6.4 once the last cimporter is gone. All other twins (rho, kaon,
 eta family, neutrino pair) delete in their swap PR as usual.
+
+"Python-unreferenced" is literal, and Task 4.1 settled how: a survivor's
+top-level `def` is **deleted in the swap PR** while its `cdef`s stay, so
+no Python caller can reach the implementation the swap replaced. That is
+as close to rule 1 as the exception allows.
+
+## The per-kernel swap recipe
+
+Established by Task 4.1 and copied by every later task in this phase and
+in Phases 05–06. Steps 1 and 5 are the two most often skipped.
+
+1. **Map the FMAs before writing any Rust.** `objdump -d` the shipped
+   `.so` for `fmadd`/`fmsub`; clang contracts `a*b + c` by default and
+   the corpus was captured from a build that does. Which expressions
+   contract is a per-expression fact — Task 4.1 found three that look
+   fusable and are not — so read it, do not pattern-match. Task 3.4's
+   note has the method; `rust/src/boost.rs` has the rationale.
+2. **Port into `rust/src/kernels/<pyx name>.rs`**, PyO3-free, one
+   submodule per ported `.pyx`. Fold the same compile-time constants the
+   generated C folds and pin them against the disassembled immediates.
+3. **Register in the per-domain module** (`photon`, `positron`, …)
+   through `dispatch::map_unary` / `map_flavors`, passing the quantity
+   wording the twin's `assert` used.
+4. **Repoint the wrapper** in `hazma/spectra/**/__init__.py`.
+5. **Repoint the corpus case** in `test/parity/cases.py` from the `.pyx`
+   module to the wrapper, and add a `PORTED_ENTRY_POINTS` row recording
+   the origin. Without this the corpus keeps calling the twin and the
+   gate is vacuous. `assert_full_coverage` then also fails if the origin
+   still exports its `def`.
+6. **Delete the twin** — the whole `.pyx` where it is not a capi
+   survivor, its `def` where it is — plus any `.pyi` stub for it.
+7. **Add `test/test_core_<kernel>.py`**, shaped like
+   `test/test_core_positron_muon.py`: the dispatch contract with this
+   kernel's wording (one assertion per branch — the branch-by-branch
+   argument stays in `test/test_core_dispatch.py`, which every kernel
+   now shares rather than copies), bit-equality against the twin scoped
+   to a contracting platform, and physics that outlives the Cython.
+8. **Record the drift** in the task note and in `task-notes/README.md`'s
+   "Numerical impact so far", per rules 2–3.
 
 ## Prerequisites
 
