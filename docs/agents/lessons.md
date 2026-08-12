@@ -82,7 +82,27 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   venv was rebuilt on the corpus's capturing interpreter partway through).
   When a measured artifact carries the environment in its name, record the
   invariant and the mechanism (`cp<XY>`, never `abi3`, because a Cython
-  extension remains) rather than one run's value.
+  extension remains) rather than one run's value. A third shape, and the
+  cheapest to hit: the number is a count of *your own* tests, taken while
+  the diff was still moving. PR #64 recorded a re-measured
+  `test/test_core_boost.py` at `81 passed` in a durable note, then dropped
+  two tests and added one during a later self-review pass and shipped 80 —
+  the note was written once and never re-derived, and review caught it.
+  Re-derive every count you wrote *after* your last code edit, not after
+  the edit that motivated the count.
+- [partial-historical-labeling] Annotating **one** measurement in a dated
+  section as historical silently upgrades every unlabeled measurement
+  beside it into a claim about the current tree. Label the *section*, not
+  the line. PR #64 footnoted a single row of a task note's `## Verification`
+  table as "left as taken" while the same section's mutation-campaign
+  baseline (`102 passed`) sat sixty lines below with no such marker, and
+  review read it as a live figure — correctly, because the neighbouring
+  footnote implied it. The reverse error is just as easy: a number that
+  looks stale can be *right* for what it claims, and blind number-chasing
+  breaks it — the same PR's `cargo test` "69 units" describes the
+  **foundation's** units, so "fixing" it to the current 80 would have
+  folded in a later phase's kernel and made a true sentence false. Decide
+  per claim what it is a statement *about*, then date the block.
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
   each section, cited elsewhere by a flat index, has two schemes and no key —
   so a correct citation reads as a dangling one and a reviewer's "fix" breaks

@@ -146,13 +146,20 @@ transcription, and it will survive contact with the artifact.**
 ## 4. Test Infrastructure State
 
 - **Five Python test modules, all against a live oracle**, none of them
-  duplicating the parity corpus: `test/test_core_constants.py` (25 tests,
-  source-to-source text comparison, no build needed, 0.03s),
-  `test_core_special.py` (65, scipy), `test_core_quad.py` (58,
-  `scipy.integrate.quad` through a Python-callable probe),
-  `test_core_interp.py` (33, `np.interp`), `test_core_boost.py` (69, the
-  Cython twin via `__pyx_capi__`), `test_core_dispatch.py` (118, the
-  `.pyx` sources' own error strings). `cargo test` carries 69 units.
+  duplicating the parity corpus. Counts are **as Phase 03 closed**, which
+  is what this document records; later phases add to them.
+  `test/test_core_constants.py` (25 tests, source-to-source text
+  comparison, no build needed, 0.03s), `test_core_special.py` (65,
+  scipy), `test_core_quad.py` (58, `scipy.integrate.quad` through a
+  Python-callable probe), `test_core_interp.py` (33, `np.interp`),
+  `test_core_boost.py` (69, the Cython twin via `__pyx_capi__`),
+  `test_core_dispatch.py` (118, the `.pyx` sources' own error strings).
+  `cargo test` carries 69 units — the foundation's, GIL-free.
+  **Since phase close:** `test_core_boost.py` is **80**, the 2026-08-12
+  rescoping of its platform guard (+11, derived in that task note); and
+  `cargo test` is **80**, Task 4.1's `positron_muon` kernel (+11), which
+  are *not* foundation units and are why the 69 above is left as it
+  stands. Every other count still reproduces on the current tree.
 - **`test_core_dispatch.py` is the template Phases 04–06 copy** for a
   kernel swap: keep every test, swap the probe and the quantity wording,
   add the kernel's numerical tests *beside* rather than merged in.

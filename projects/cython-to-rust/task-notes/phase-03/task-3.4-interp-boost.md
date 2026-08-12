@@ -265,6 +265,16 @@ added there during execution:
 
 ## Verification
 
+> **Everything in this section is a dated record of what this task
+> measured on 2026-08-10, not a claim about the current tree**, and it is
+> left as taken. Two of its numbers have since moved and are reconciled
+> where they appear: `test/test_core_boost.py` (69 → 80, the 2026-08-12
+> rescoping in §Findings) and the mutation campaign's restored baseline
+> (102 → 113, the same 11 tests). Everything else — the bare-suite line,
+> `test_core_interp.py`, the `cargo test` count, the mutation tables —
+> reproduces only against this task's commit, which is the point of
+> recording it.
+
 **Commands and their real summary lines**, all on the corpus's capturing
 environment (CPython 3.12.12, NumPy 2.5.1, SciPy 1.18.0, macOS/arm64), on
 a tree rebuilt with `uv pip install -e . --no-build-isolation` before
@@ -280,10 +290,28 @@ anything was run:
 | `markdownlint --dot` over the eight changed `.md` | clean |
 | `scripts/agents/preflight.sh --paths "…"` | **RESULT: PASS** |
 
-The table is this task's measurement and is left as taken. Re-running it
-today gives `81 passed` for `test/test_core_boost.py`, not 69: the
-2026-08-12 rewrite of its platform scoping (see §Findings) replaced 19
-probe-gated claims with two declared modes and added the budget guards.
+Re-running the `test_core_boost.py` row against the 2026-08-12 rescoping
+(§Findings) gives **`80 passed`**, not 69. The `+11` is not the 19
+rescoped claims — those were re-gated, not added or removed — and comes
+entirely from two other changes, derived by diffing collected test ids
+rather than counted by hand:
+
+- `TestFusedArithmetic` 1 test → 9 (**+8**). It stopped discriminating
+  against the Cython and now discriminates against a *fused* Python
+  reference, which is a per-table claim:
+  - `test_the_tabulated_port_is_the_fused_reference`, parametrised over
+    all seven photon tables (**+7**);
+  - `test_the_delta_function_port_is_the_fused_reference` and
+    `test_the_unfused_tabulated_form_would_be_a_different_number`,
+    replacing the single
+    `test_the_unfused_form_misses_the_cython_and_the_rust_does_not`
+    (**+2 −1**).
+- `TestOffPlatformBudgets` is new (**+3**): one guard per budget plus the
+  mode-dispatch guard.
+
+`+12 −1 = +11`, and `69 + 11 = 80`. The five
+`test_gamma_matches_the_cython_bit_for_bit` ids and two window-edge ids
+also changed name, which moves no count.
 
 `+102` on Task 3.3's `1212 passed, 13 skipped`, and all 102 are this
 task's tests. **The skip count is unchanged at 13, which is what proves
@@ -349,7 +377,9 @@ height (`k0`): 3 of 4 caught, `k` still surviving because the first
 version of the edge test used three fixed parameter sets. Round 3, after
 widening that test to the random sweep: **1 mutation, 0 survived.**
 Final state: all 21 caught, baseline restored green
-(`RESTORED BASELINE: GREEN — 102 passed`).
+(`RESTORED BASELINE: GREEN — 102 passed`, this task's two modules as they
+stood on 2026-08-10; the same pair is `113 passed` today — see the note at
+the head of this section).
 
 **Deferred:** nothing. Two things are deliberately *not* done rather than
 deferred — the boost integral's window-coverage defect is preserved under
