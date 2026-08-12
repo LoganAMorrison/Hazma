@@ -121,6 +121,15 @@ def unfused_point(e: float, emu: float) -> float:
 
     Used only to decide whether the local Cython build fuses; the port's own
     arithmetic is in ``rust/src/kernels/positron_muon.rs``.
+
+    **Every association here is the Cython's**, not merely every operation.
+    ``pre * (numerator / denominator)`` and ``pre * numerator / denominator``
+    are different doubles, and writing the second is what made this probe
+    report a *contracting* build on Linux, where nothing contracts: the
+    reference then differed from the Cython for a reason that was not
+    contraction, `cython_contracts` said True, and every assertion this guard
+    exists to skip ran and failed. `test_the_reference_is_the_cython_where_
+    nothing_contracts` is the assertion that now catches that directly.
     """
     r2 = R * R
     two_r, one_plus_r2 = 2.0 * R, 1.0 + r2
@@ -152,7 +161,11 @@ def unfused_point(e: float, emu: float) -> float:
     numerator = xm * (8.0 * r2 + xm * (-3.0 - 3.0 * r2 + (4.0 * xm) / 3.0)) + xp * (
         -8.0 * r2 + (3.0 + 3.0 * r2 - (4.0 * xp) / 3.0) * xp
     )
-    return pre * numerator / (2.0 * beta * R_FACTOR)
+    # The Cython divides inside `dndx_positron_muon` and multiplies by `pre`
+    # in its caller, so the division completes first. Folding the two into
+    # one expression moves the last bit.
+    dndx = numerator / (2.0 * beta * R_FACTOR)
+    return pre * dndx
 
 
 def cython_contracts() -> bool:
@@ -182,6 +195,42 @@ requires_a_contracting_cython = pytest.mark.skipif(
         "as the parity corpus is"
     ),
 )
+
+
+def test_the_reference_is_the_cython_where_nothing_contracts() -> None:
+    """`unfused_point` differs from the Cython *only* by contraction.
+
+    The other half of :data:`CYTHON_CONTRACTS`, and the one that catches a
+    mistake in the reference rather than in the port. Where the guard says
+    this build does not contract, the two must agree **bit for bit** at
+    every argument -- so any other divergence in `unfused_point` (a moved
+    association, a constant off by an ulp) turns this red instead of
+    silently flipping the guard to True and un-skipping
+    :class:`TestAgainstTheCythonTwin`.
+
+    Vacuous on a contracting platform, which is why it is a plain
+    ``skipif`` rather than the negation of the class-level marker: there
+    the guard's *other* direction is what
+    :meth:`TestAgainstTheCythonTwin.test_the_unfused_form_actually_differs_somewhere`
+    checks. Between them the probe is pinned in both directions.
+    """
+    if CYTHON_CONTRACTS:
+        pytest.skip(
+            "this build contracts, so the unfused reference is expected to "
+            "differ; the contracting direction is checked inside "
+            "TestAgainstTheCythonTwin"
+        )
+
+    point = cython_point()
+    rng = np.random.default_rng(7)
+    for emu in (MASS_MU, *MUON_ENERGIES[1:]):
+        for e in rng.uniform(0.0, emu * 1.1, 500):
+            got, want = point(float(e), emu), unfused_point(float(e), emu)
+            assert got == want, (
+                f"at e={e!r}, emu={emu!r} the unfused reference gives {want!r} "
+                f"and the Cython {got!r}, on a build the probe says does not "
+                "contract — so the reference has a bug that is not about FMA"
+            )
 
 
 class TestDispatchWiring:

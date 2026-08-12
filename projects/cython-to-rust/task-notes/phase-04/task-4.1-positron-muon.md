@@ -100,6 +100,37 @@ gated at bit-equality, not at 1e-13.
   established). Both carry an `#[allow]` with the reason. The third finding
   — `xm > xp || xp < xm` — *was* redundant, and collapsing it to one
   comparison changes nothing including the `NaN` behavior.
+- **The platform guard's *reference* is as easy to get wrong as the port,
+  and getting it wrong disables the guard rather than failing it** — found
+  by CI on Linux/py3.11, after the local run was green (PR #63, run
+  31562223329). `unfused_point`, the Python transcription that
+  `cython_contracts()` compares the compiled Cython against, ended
+  `pre * numerator / denominator` where the Cython divides inside
+  `dndx_positron_muon` and multiplies by `pre` in its caller. Same
+  operations, different association, last bit different — so on Linux,
+  where nothing contracts and the two should have agreed exactly, the probe
+  concluded "this build contracts", un-skipped `TestAgainstTheCythonTwin`,
+  and its bit-equality assertions failed on a one-byte diff. **The failure
+  mode is the inverse of Task 3.4's**: there a platform-scoped claim was
+  asserted globally; here the scoping mechanism itself silently reported
+  the wrong platform, and on the capturing platform it is invisible because
+  the guard's answer is True either way. Fixed by matching the association,
+  and pinned in both directions —
+  `test_the_reference_is_the_cython_where_nothing_contracts` asserts
+  bit-equality wherever the probe says False, so any future non-contraction
+  divergence in the reference turns red instead of flipping the guard;
+  `test_the_unfused_form_actually_differs_somewhere` covers the other
+  direction. **Every Phase 04–06 task that copies this module inherits
+  both.**
+- **A fused Python reference reproduces the shipped Cython bit-for-bit,
+  which confirms the FMA map from outside the disassembly.** Built with a
+  correctly-rounded `fma` (`Fraction`-based, since `math.fma` needs 3.13
+  and the suite supports 3.10) at exactly the seven sites the Rust uses:
+  **0 mismatches in 21,000 points** across seven parent energies, against
+  11,713 mismatches for the unfused form on the same draw. Two facts for
+  the price of one — the `objdump` reading was right, and `unfused_point`
+  now differs from the Cython *only* by contraction, which is the property
+  the Linux skip depends on and which cannot be observed on macOS.
 - **The corpus case had to be repointed, or the gate would have measured the
   implementation the swap replaced.** `test/parity/cases.py` names the
   `.pyx` module for every entry point; leaving `spectra.positron.muon`
@@ -133,7 +164,7 @@ gated at bit-equality, not at 1e-13.
   per-kernel — which helper the wrapper reached for, which quantity wording
   it passed, one assertion per contract branch — and spends the rest on the
   two things only this kernel has: bit-equality against its own `cdef` twin,
-  and physics. 46 tests rather than ~160, and the ratio is the point.
+  and physics. 47 tests rather than ~160, and the ratio is the point.
 - **Bit-equality against the twin is scoped to a contracting platform**, the
   Task 3.4 lesson `[platform-scoped-oracle-asserted-globally]`. The probe is
   a 4,096-draw search for an argument where the compiled Cython and an
@@ -179,7 +210,7 @@ gated at bit-equality, not at 1e-13.
   and rejects a surviving Cython `def`.
 - `test/parity/test_parity.py` — the two served-kernel predicate tests
   rewritten for a non-empty roster.
-- `test/test_core_positron_muon.py` — **new**, 46 tests.
+- `test/test_core_positron_muon.py` — **new**, 47 tests.
 - `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md` —
   **new**, plus its index row in `docs/followups/README.md`.
 - `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` — the swap
@@ -233,7 +264,10 @@ quoted.
     produce such a `beta`, the smallest surviving one being
     `sqrt(2·eps/m_μ) ≈ 6.5e-9`. The guard is kept because the Cython has
     it, and is now pinned by a direct `dndx` test.
-- `pytest test/test_core_positron_muon.py -q` → `46 passed in 0.38s`.
+- `pytest test/test_core_positron_muon.py -q -rs` → `46 passed, 1 skipped
+  in 0.36s` (47 tests; the skip is
+  `test_the_reference_is_the_cython_where_nothing_contracts`, which is
+  vacuous on a contracting platform and is the *real* assertion on Linux).
   Covers: the eleven dispatch-contract branches with this kernel's wording;
   wrapper and `hazma.spectra` re-export identity; the removed `def` and the
   two surviving capsules (plus the capsule's C-signature name);
@@ -246,10 +280,12 @@ quoted.
 - `pytest test/test_theory_aggregation.py -q` → `69 passed` (the
   platform-independent model-layer gate, run either side of the swap per the
   project handoff).
-- **Bare `pytest -q -rs` → `1423 passed, 14 skipped in 603.92s`**, against
+- **Bare `pytest -q -rs` → `1423 passed, 15 skipped in 565.29s`**, against
   `1378 passed, 13 skipped` at Task 3.5. The arithmetic closes exactly:
-  `+46` for the new module, `−1` for `test_running_on_the_capturing_tree`
-  moving from pass to skip, `+1` skip for the same. **That skip is the
+  `+46` passes for the new module, `−1` for
+  `test_running_on_the_capturing_tree` moving from pass to skip, and `+2`
+  skips — that one plus the contraction-reference check, which skips on a
+  contracting platform. **That skip is the
   designed signal that the corpus has left bit-equality mode**, and from
   this task on it is permanent.
 - Ad-hoc bit-equality sweep against the Cython `cdef` through
@@ -443,8 +479,8 @@ longer is.
 | --- | --- | --- | --- |
 | `cargo test` → 80 | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `80 passed` | OK |
 | 11 new Rust units | count of `kernels::positron_muon::tests` lines | 11 | OK |
-| 46 Python tests | `pytest test/test_core_positron_muon.py --collect-only -q` | `46 tests collected` | OK |
-| Bare suite 1423 / 14 | `pytest -q -rs` | `1423 passed, 14 skipped in 603.92s` | OK |
+| 47 Python tests (46 pass, 1 skips on macOS) | `pytest test/test_core_positron_muon.py --collect-only -q` | `47 tests collected` | OK |
+| Bare suite 1423 / 15 | `pytest -q -rs` | `1423 passed, 15 skipped in 565.29s` | OK |
 | Parity 629 / 1 | `pytest test/parity -q -rs` | `629 passed, 1 skipped in 310.99s` | OK |
 | Aggregation gate 69 | `pytest test/test_theory_aggregation.py -q` | `69 passed` | OK |
 | Nine FMA instructions | `objdump -d ... \| grep -cE 'fmadd\|fmsub'` | 9 | OK |
@@ -454,6 +490,7 @@ longer is.
 | Bit-equality sweep 126,182 pts | ad-hoc `__pyx_capi__` comparison | `0 not bit-equal; worst rel 0.000e+00` | OK |
 | Mutation campaign 18 / 13 / 16 | sequential campaign + three re-runs | `caught=13 survived=5`, then 3 of the 5 caught after new tests | OK |
 | Deficit 0.0374% | `1 - 1/R_FACTOR**2` | `0.00037406666970341007` | OK |
+| Fused reference is the Cython | 21,000-point sweep, `Fraction`-rounded `fma` at the 7 sites | `fused != Cython: 0`, `unfused != Cython: 11713` | OK |
 | Wrapper ruff findings unchanged | `diff` of `ruff check --output-format concise` on the branch file vs `origin/master`'s | empty diff, 24 findings both sides | OK |
 
 ### Numerical-impact statement

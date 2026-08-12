@@ -55,6 +55,21 @@ kernel ports.
   `1 − β²`, and any sum whose operand went through a division). Written
   from the map, the port was bit-equal on the first build — no
   bisection round, unlike Task 3.4.
+- **A platform-scoped guard can report the wrong platform, and that
+  disables it silently** (Task 4.1, caught by CI on Linux after a green
+  local run). The Python reference `cython_contracts()` compares the
+  compiled Cython against must reproduce the Cython's *associations*, not
+  just its operations — `pre * (num/den)` is not `pre * num / den`. Get it
+  wrong and the probe says "this build contracts" everywhere, so the
+  bit-equality class runs on a platform it was written to skip. Invisible
+  on macOS, where the answer is True either way. Pinned in both
+  directions now; **every task copying `test/test_core_positron_muon.py`
+  inherits both tests.**
+- **A fused Python reference (correctly-rounded `fma` via `Fraction`)
+  reproduces the shipped Cython bit-for-bit** — 0 mismatches in 21,000
+  points for `_positron/_muon`, against 11,713 for the unfused form. This
+  is a second, disassembly-independent confirmation of an FMA map, and it
+  is cheap. Worth running for every kernel in this phase.
 - **Repointing the corpus case is part of the swap, not bookkeeping**
   (Task 4.1). `cases.py` names the `.pyx` module; leave it and the gate
   keeps calling the twin while the wrapper calls Rust — green and
@@ -82,8 +97,9 @@ kernel ports.
   (Task 4.1), reversing Task 2.3's instruction: since Task 3.5 the
   dispatch layer is three shared helpers, so those 118 tests cover code
   every kernel routes through unchanged. `test/test_core_positron_muon.py`
-  is the shape to copy — 46 tests, one per contract branch plus
-  bit-equality against the twin plus physics.
+  is the shape to copy — 47 tests, one per contract branch plus
+  bit-equality against the twin plus physics, plus the two that pin the
+  contraction probe in both directions.
 
 ## Files Changed
 

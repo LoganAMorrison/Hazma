@@ -615,6 +615,27 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   constants out of the `movk` immediates is worth doing too (the
   halfwords are little-endian, assembled high-last; transposing two is
   exactly what the resulting test catches).
+- **A platform-scoped guard can report the wrong platform, and then it
+  disables itself rather than failing** (Task 4.1, and only CI saw it).
+  `test/test_core_positron_muon.py` skips its bit-equality-against-Cython
+  class where the local build does not contract, deciding that by
+  comparing the compiled kernel against a Python transcription. That
+  transcription must match the Cython's **associations**, not merely its
+  operations: `pre * (num/den)` and `pre * num / den` differ in the last
+  bit, and with the second the probe concluded "contracts" on Linux, ran
+  the class it exists to skip, and failed on a one-byte diff. The
+  capturing platform cannot see this — the answer is True there either
+  way. Pinned in both directions now. **This is the mirror of Task 3.4's
+  `[platform-scoped-oracle-asserted-globally]`: the scoping mechanism is
+  as much a thing to test as the thing it scopes.**
+- **A fused Python reference reproduces the shipped Cython bit-for-bit,
+  and is a disassembly-independent check on an FMA map** (Task 4.1).
+  Built with a correctly-rounded `fma` (`Fraction`-based; `math.fma`
+  needs 3.13 and the suite supports 3.10) at exactly the sites the port
+  fuses: **0 mismatches in 21,000 points**, against 11,713 for the
+  unfused form on the same draw. Ten minutes of work, and it confirms
+  both the `objdump` reading and that the unfused reference differs from
+  the Cython by contraction alone.
 - **Repointing the corpus case is part of a swap, not bookkeeping**
   (Task 4.1). `test/parity/cases.py` names the `.pyx` module for every
   entry point, so a swap that repoints only the wrapper leaves the gate
@@ -1024,7 +1045,7 @@ it from memory.)
   `test/test_core_positron_muon.py` is the shape to copy: one assertion
   per contract branch with *this* kernel's wording, bit-equality against
   the twin scoped to a contracting platform, and physics that outlives
-  the Cython. 46 tests rather than ~160.
+  the Cython. 47 tests rather than ~160.
 - Rust + PyO3 + maturin over pybind11; single abi3 `hazma._core`;
   setuptools-rust coexistence during migration → ADR-0001 (Accepted).
 - No GSL-derived (GPL-3) code in tree or dependency graph; cephes
@@ -1354,14 +1375,16 @@ it from memory.)
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - **Phase 04 Task 4.1 state (2026-08-11) — first kernel swap:** bare
-  `pytest -q -rs` → **`1423 passed, 14 skipped in 603.92s`** on the
-  capturing environment (from 1378/13 at Task 3.5: +46 for
+  `pytest -q -rs` → **`1423 passed, 15 skipped in 565.29s`** on the
+  capturing environment (from 1378/13 at Task 3.5: +46 passes for
   `test/test_core_positron_muon.py`, −1 pass / +1 skip for
   `test_running_on_the_capturing_tree`, which now skips because the
   corpus is in budget mode — **that is the designed signal, and the skip
-  count stays at 14 from here on**). `pytest test/parity -q` →
-  `629 passed, 1 skipped`; `pytest test/test_core_positron_muon.py -q` →
-  `46 passed`; `pytest test/test_theory_aggregation.py -q` → `69 passed`;
+  count does not go back down** — plus one more skip for the
+  contraction-reference check, which is vacuous on a contracting
+  platform). `pytest test/parity -q` → `629 passed, 1 skipped`;
+  `pytest test/test_core_positron_muon.py -q -rs` → `46 passed, 1
+  skipped`; `pytest test/test_theory_aggregation.py -q` → `69 passed`;
   `cargo test --no-default-features` → `80 passed` (11 new); clippy, fmt
   and `markdownlint` clean; `scripts/agents/preflight.sh` RESULT: PASS.
   **Eighteen mutations against `rust/src/kernels/positron_muon.rs`**, run
