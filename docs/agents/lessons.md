@@ -226,7 +226,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   one line before matching, and alternate the synonyms** —
   `re.sub(r"\n\s*(//|#|\*)?\s*", " ", text)` then a single regex over the
   result — because prose wraps wherever the formatter put it and a
-  line-oriented `rg` cannot see a claim that straddles the break).
+  line-oriented `rg` cannot see a claim that straddles the break.
+  PR #63 adds the *temporal* shape: a later round of the same PR changed
+  a test count from 45 to 47, and the verification records written in the
+  earlier round — a phase README, two task notes, and the PR body — kept
+  reporting the superseded figure alongside its derived siblings
+  (`1422` full-suite passes, `+45`, `17 scoped`). **A count you change
+  mid-PR invalidates every number derived from it, not just its own
+  copies**, so sweep the arithmetic (baseline ± delta, per-mode splits)
+  and not only the digit; and treat the PR body as a durable record with
+  the rest, since review reads it as one).
   Generalizes [stale-ci-capability-claim] from workflows to
   any repo fact, and applies *within* one file as much as across
   several.

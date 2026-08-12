@@ -25,7 +25,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
-| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | Not started |
+| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | In Progress — Task 4.1 done (2026-08-11); 4.2–4.6 open |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
@@ -587,6 +587,89 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   20. Same class as the stale generated `.c` already in
   `docs/agents/environment.md`; the same clean-then-rebuild recipe
   fixes it, and any "N extensions" claim must be taken after it.
+- **The port has now surfaced two live 2.1.0 numerical defects, both by
+  writing an analytic test the original never had** (Tasks 3.4 and 4.1).
+  The second: `hazma/spectra/_positron/_muon.pyx` **divides** by the
+  Michel normalization where it should multiply, so every positron
+  spectrum is low by `1/R_FACTOR² = 0.9996259` — **0.0374%, uniformly**,
+  at every parent energy. The raw polynomial integrates to exactly
+  `1/R_FACTOR` (`scipy.integrate.quad` 0.999812949171142, closed form
+  0.9998129491711419, `1/R_FACTOR` 0.999812949171142 — all three to the
+  last digit), so normalizing means multiplying. **The sibling proves it
+  is an inversion and not a convention:**
+  `hazma/spectra/_neutrino/_muon.pyx:23` declares the identical constant
+  and `:58`/`:114` multiply by it. It propagates to
+  `dnde_positron_charged_pion` (∫ = 0.999623 at `E_π = 500 MeV`), both
+  mediator positron modules, and every positron-based limit. Reproduced
+  per rule 1, pinned in both languages, filed as
+  [`../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md)
+  and blocked behind Phase 06 Task 6.4 for the same corpus reason as its
+  Task 3.4 sibling. **Worth telling the maintainer separately from this
+  project's schedule; it affects published numbers today.**
+- **Disassemble the shipped `.so` before writing the Rust, and the port
+  lands bit-equal first try** (Task 4.1). Nine `fmadd`/`fmsub` in
+  `_positron/_muon`, all inlined into the point kernel; three expressions
+  that look fusable are not — `x² − 4r²`, `1 − β²`, and any sum whose
+  operand went through a division, which breaks the contraction. No
+  bisection round was needed, unlike Task 3.4's. Reading the folded
+  constants out of the `movk` immediates is worth doing too (the
+  halfwords are little-endian, assembled high-last; transposing two is
+  exactly what the resulting test catches).
+- **Scope a bit-equality-against-Cython test to the corpus's capturing
+  platform, not to a probe for the mechanism you think differs** (Task
+  4.1, and only CI could see it — two failures after two green macOS
+  runs). The first version of `test/test_core_positron_muon.py` skipped
+  its against-the-Cython class by comparing the compiled kernel against
+  an unfused Python transcription: agree ⇒ this build does not contract ⇒
+  skip. The transcription first got an *association* wrong
+  (`pre * (num/den)` is not `pre * num / den`), and once fixed, Linux
+  still disagreed — on a build with no `-march` flag and so no hardware
+  FMA for the probe's own mechanism to explain. **The cause was not
+  localized and does not need to be:** a compiler contracting a different
+  set of expressions, or a libm rounding one call differently, breaks the
+  comparison just as thoroughly, and a probe over one mechanism cannot
+  see the others. The scope is now read out of
+  `test/parity/data/manifest.json`, the same mechanism `test/parity` and
+  `.github/workflows/ci.yml` already use. **Mirror of Task 3.4's
+  `[platform-scoped-oracle-asserted-globally]`: there the claim was
+  asserted too widely; here the scoping mechanism itself was wrong, and
+  the capturing platform answers True either way so it could never tell.**
+  The mode is now *declared* from the platform and the off-platform
+  divergence measured, so the comparison degrades to a peak-scaled
+  budget rather than skipping: 47 tests, nothing skipped on any
+  platform.
+- **A fused Python reference reproduces the shipped macOS Cython
+  bit-for-bit, and is a disassembly-independent check on an FMA map**
+  (Task 4.1). Built with a correctly-rounded `fma` (`Fraction`-based;
+  `math.fma` needs 3.13 and the suite supports 3.10) at exactly the sites
+  the port fuses: **0 mismatches in 21,000 points**, against 11,713 for
+  the unfused form on the same draw. Cheap, and worth doing per kernel —
+  but note it confirms the map on *one* platform, which is why the scope
+  above is a platform rather than an arithmetic property.
+- **Repointing the corpus case is part of a swap, not bookkeeping**
+  (Task 4.1). `test/parity/cases.py` names the `.pyx` module for every
+  entry point, so a swap that repoints only the wrapper leaves the gate
+  calling the twin — green, and measuring the implementation the swap
+  replaced. The runner keys everything by *case name*, never by
+  `module:function`, so repointing disturbs no stored data.
+  `cases.PORTED_ENTRY_POINTS` records the `.pyx` origin, which keeps
+  `assert_full_coverage` balanced and now also makes it an error for a
+  ported entry point's `.pyx` to still export its `def` — rule 1's
+  no-drift-window, in code.
+- **A `NaN` energy does not propagate through a kernel that clips with
+  `fmax`/`fmin`** (Task 4.1), in either language: `fmaxnm`/`fminnm` and
+  Rust's `f64::max`/`min` both return the non-`NaN` operand, so the two
+  kinematic limits collapse onto the rest-frame support and a finite
+  number comes back. The corpus samples no `NaN`, so only a hand-written
+  test catches a port that differs here. Expect the same shape in every
+  boosted kernel.
+- **Two clippy lints fire on faithful guards and must be allowed, not
+  taken** (Task 4.1). `beta < 0.0 || beta > 1.0` is not
+  `!(0.0..=1.0).contains(&beta)` — `contains` is false for a `NaN`, so
+  the "simplification" would return `0.0` where the Cython falls through
+  to the arithmetic. `emu - MASS_MU < f64::EPSILON` trips
+  `float_equality_without_abs` while being a genuine one-sided threshold.
+  A third, `xm > xp || xp < xm`, really was redundant. Read each one.
 
 ## Numerical impact so far
 
@@ -904,12 +987,76 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   - `hazma/spectra/_neutrino/_muon.pyx:205`'s "Photon energies" becomes
     "Neutrino energies".
 
+- **Task 4.1, 2026-08-11 (`dnde_positron_muon` → Rust — the first kernel
+  swap): no public value changes.** The "before" is still in the tree:
+  the pre-port Cython `cdef` `dnde_positron_muon_point`, reached through
+  `_muon.pyx`'s `__pyx_capi__` now that its `def` is gone. Against it the
+  Rust is **bit-for-bit identical** — `np.logspace(-2, 3, 200)` MeV at
+  muon energies 150 / 500 / 1500 MeV (3 arrays, 600 values, max relative
+  deviation 0.000e+00), and a wider 126,182-point sweep over 14 parent
+  energies (rest, `+1e-16`, `+1e-9`, mildly and strongly boosted, `1e9`,
+  below threshold, zero) on geometric, linear, random and
+  edge-enumerated grids, **0 not bit-equal**. The corpus says it more
+  strictly still: `spectra.positron.muon`'s declared budget is
+  `EXACT_RTOL = 0.0`, so **the swap was gated at `rtol = 0` against its
+  pre-port pins** — the gate did not weaken for the entry point being
+  swapped. `git diff origin/master -- hazma` is four files, none of them
+  another kernel.
+
+  **What did change is the gate's mode, permanently.** From this swap
+  `tolerances.provenance` reports `exact=False` and `effective_budget`
+  returns the *declared* budget everywhere. Because the `EXACT` class's
+  declared budget is itself `0.0`, **19 of the 41 cases lose nothing**;
+  the other 22 loosen — `SPECFUN` (1) to 1e-13, `TABULATED` (7) to
+  1e-12, `QUAD` (5) to 1e-8, `NESTED` (9) to 1e-6 — plus the abscissa
+  comparison to 1e-13. All 41 still pass. **Two reasons are recorded in
+  the skip message and only one is the swap:** the kernel digest also
+  moved (`f5e6e269be47 -> fdbae2c19d87`), because removing a `def`
+  changes the `.pyx` bytes the digest covers. So the flip was
+  unavoidable in any task that touches a surviving `.pyx` at all. The
+  tell in the suite is the skip count: **13 → 14**, and it stays there.
+
+  Separately, and *not* a drift: this task **measured** that the shipped
+  `dnde_positron_muon` is 0.0374% low against its own analytic
+  normalization (see Findings). That is a pre-existing 2.1.0 defect the
+  port reproduces, so no value moved — but it is the first entry the
+  Phase 07 CHANGELOG will want to mention as a *known* wrong number
+  rather than a changed one.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
 
 ## Decisions and Implementation Notes
 
+- **The per-kernel swap recipe is canonical, and lives in the phase
+  file** (Task 4.1): map the FMAs out of the shipped `.so` first, port
+  into `rust/src/kernels/<pyx name>.rs`, register through
+  `dispatch::map_unary` with the twin's quantity wording, repoint the
+  wrapper, **repoint the corpus case and add a `PORTED_ENTRY_POINTS`
+  row**, delete the twin (the whole `.pyx`, or just its `def` for a capi
+  survivor), add a `test/test_core_<kernel>.py`, record the drift. Eight
+  steps in
+  [`../phases/phase-04-spectra-kernels.md`](../phases/phase-04-spectra-kernels.md)'s
+  Goal rather than an ADR, because it is procedure rather than
+  architecture.
+- **A capi survivor loses its Python `def`, not its file** (Task 4.1).
+  The phase Goal already said the four survivors would be
+  "Python-unreferenced"; deleting the `def` while keeping the `cdef`s
+  makes that literally true — the `__pyx_capi__` capsules the mediator
+  modules cimport are built from the `cdef`s — and is as close to rule 1
+  as the phase's own declared exception allows.
+- **Per-kernel test modules no longer copy `test/test_core_dispatch.py`,
+  reversing Task 2.3's instruction** (Task 4.1). That instruction was
+  written when the plan was one dispatch implementation per kernel;
+  Task 3.5 replaced it with three shared helpers, so those 118 tests now
+  cover code every kernel routes through unchanged and copying them
+  sixteen times would re-test one function sixteen times.
+  `test/test_core_positron_muon.py` is the shape to copy: one assertion
+  per contract branch with *this* kernel's wording, the twin as a
+  two-mode oracle (bit-for-bit on the capturing platform, a peak-scaled
+  budget elsewhere), and physics that outlives the Cython. 47 tests
+  rather than ~160.
 - Rust + PyO3 + maturin over pybind11; single abi3 `hazma._core`;
   setuptools-rust coexistence during migration → ADR-0001 (Accepted).
 - No GSL-derived (GPL-3) code in tree or dependency graph; cephes
@@ -1023,6 +1170,18 @@ it from memory.)
   `gamma`/`gamma_point`.
 
 ## Files Changed
+
+### Phase 04 (Task 4.1)
+
+- New: `rust/src/kernels/positron_muon.rs`,
+  `test/test_core_positron_muon.py`,
+  `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`.
+- Changed: `rust/src/{kernels,positron}.rs`,
+  `hazma/spectra/_positron/{__init__.py,_muon.pyx}`, `hazma/_core.pyi`,
+  `test/parity/{cases,test_parity}.py`, `docs/followups/README.md`,
+  `../phases/phase-04-spectra-kernels.md` (the swap recipe).
+- Deleted: `hazma/spectra/_positron/_muon.pyi`.
+- Full per-task list: [phase-04/README.md](phase-04/README.md).
 
 ### Phase 00
 
@@ -1226,6 +1385,30 @@ it from memory.)
 
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
+- **Phase 04 Task 4.1 state (2026-08-11) — first kernel swap:** bare
+  `pytest -q` → **`1424 passed, 14 skipped in 555.96s`** on the
+  capturing environment (from 1378/13 at Task 3.5: +47 passes for
+  `test/test_core_positron_muon.py`, and −1 pass / +1 skip for
+  `test_running_on_the_capturing_tree`, which now skips because the
+  corpus is in budget mode — **that is the designed signal, and the skip
+  count does not go back down**). `pytest test/parity -q` →
+  `629 passed, 1 skipped`; `pytest test/test_core_positron_muon.py -q` →
+  `47 passed`; `pytest test/test_theory_aggregation.py -q` → `69 passed`;
+  `cargo test --no-default-features` → `80 passed` (11 new); clippy, fmt
+  and `markdownlint` clean; `scripts/agents/preflight.sh` RESULT: PASS.
+  **Eighteen mutations against `rust/src/kernels/positron_muon.rs`**, run
+  sequentially from a green baseline with the baseline re-asserted after,
+  each gated by `cargo test` *and* a rebuild plus the Python module —
+  **13 caught, 16 after three tests were added, and the two that remain
+  are provably equivalent mutants** (`x.mul_add(2.0, C)` is bit-identical
+  to `x * 2.0 + C` because doubling is exact, which also means one of the
+  nine `fmadd` sites in the shipped object code is unobservable; and
+  `beta + beta` vs `2.0 * beta`, included as a control). The three caught
+  late all moved a **branch boundary** without moving a value — Task
+  3.4's shape exactly — and one of them exposed that `dndx`'s
+  `beta < DBL_EPSILON` short circuit is **unreachable from
+  `dnde_positron_muon`**, because the outer `E − m_μ < DBL_EPSILON` guard
+  already routes everything that could reach it.
 - **Phase 03 Task 3.5 state (2026-08-11) — phase closed:** bare
   `pytest -q` → `1378 passed, 13 skipped in 564.55s` on the capturing
   environment, parity suite included and in bit-equality mode (skip count
@@ -1364,6 +1547,28 @@ it from memory.)
   The question is moot; the corpus will pin the fixed values.
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide when Phase 04 starts, based on who's driving.
+  **Note as of Task 4.1:** the corpus's mode flip has already happened,
+  so Phase 05 no longer pays that cost by starting — but it *does* meet
+  five of the six ill-conditioned blocks (all scalar cross sections), so
+  the follow-up below gates it more tightly than it gates Phase 04.
+- **The ill-conditioned-points repair did not land before the first
+  swap**, which the project handoff had asked for (Task 4.1). It was not
+  blocking for `spectra.positron.muon` — none of the six affected blocks
+  is that entry point — but **corpus regeneration is closed from now
+  on**, so options 1 and 2 in
+  [`../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  have to work from a pre-Phase-04 checkout. **Task 4.2
+  (`spectra.photon.eta`) and all of Phase 05 (five scalar cross
+  sections) are the tasks that actually meet the six**; neither should
+  start until that follow-up is resolved or explicitly waived.
+- **Should the corpus mode switch become per-case?** Task 4.1 measured
+  what the global verdict costs: 22 of 41 cases now run at their declared
+  budget rather than `rtol = 0` (the 19 `EXACT`-class ones lose nothing).
+  Scoping the served-kernel half of `provenance` to
+  `cases.PORTED_ENTRY_POINTS` would keep unported kernels bit-exact for
+  the rest of Phases 04–06. Not done beside a kernel swap, and the kernel
+  digest half of the verdict would still fire; belongs with the
+  follow-up above.
 - **The sdist payload** (opened by Task 0.4, the first task in the
   project to build one): the tarball still ships 20 cythonized `*.c`,
   `docs/`, `test/` and `notebooks/`, and `pyproject.toml`'s package-data
@@ -1382,11 +1587,19 @@ it from memory.)
 
 ## Handoff to Next Task
 
-**Phases 00–03 are closed (2026-08-06, 08-08, 08-09, 08-11).** The next
-work is Phase 04 (spectra kernels) and/or Phase 05 (mediator cross
-sections); they share no files and may run in parallel. **The first swap
-in either flips the parity corpus out of bit-equality mode permanently**,
-so the ill-conditioned-points repair has to land before it.
+**Phases 00–03 are closed (2026-08-06, 08-08, 08-09, 08-11), and Phase 04
+is in progress — Task 4.1 landed 2026-08-11.** The next work is Task 4.2
+onward and/or Phase 05; they share no files and may run in parallel.
+
+**The parity corpus has now left bit-equality mode, permanently.**
+Task 4.1's swap did it, and so did its `.pyx` edit — the kernel digest
+moved too, so any task touching a surviving `.pyx` would have. What that
+costs is measured rather than feared: 19 of the 41 cases are `EXACT`
+class and still run at `rtol = 0`; the other 22 run at their declared
+budget. The ill-conditioned-points repair **did not** land first, and
+the consequence is that corpus *regeneration* is closed — see Open
+Questions, and read that follow-up before Task 4.2 or Phase 05, which
+are the tasks that actually meet the six affected blocks.
 
 **For the next agent starting any task in this project:**
 
@@ -1413,8 +1626,17 @@ so the ill-conditioned-points repair has to land before it.
   `setup.py`'s declared list is *verified* to be that same set, not
   merely the same size. Re-derive with the clean-then-rebuild recipe
   rather than quoting this; a stale `.so` makes a wrong list look right.
-- **`hazma._core` exists, and nothing under `hazma/` calls it** (Task
-  2.1; still true after Task 3.2). The crate lives in `rust/`,
+- **`hazma._core` now serves one kernel**, `positron.dnde_positron_muon`
+  (Task 4.1), and `hazma/spectra/_positron/__init__.py` calls it. It is
+  bit-equal to the `cdef` the mediator modules still cimport — 126,182
+  points across 14 parent energies, 0 mismatches — so Task 4.6 has a
+  verified Rust dependency to call natively. The swap recipe every later
+  task follows is the eight steps in
+  [`../phases/phase-04-spectra-kernels.md`](../phases/phase-04-spectra-kernels.md)'s
+  Goal, and `test/test_core_positron_muon.py` is the test module to copy
+  (**not** `test/test_core_dispatch.py` — see Decisions).
+- **`hazma._core` exists, and nothing else under `hazma/` calls it** (Task
+  2.1; amended by Task 4.1 above). The crate lives in `rust/`,
   `uv pip install -e .` builds Cython and Rust in one pass, and the tree
   carries 21 `.so`: the 20 Cython extensions plus `hazma/_core.abi3.so`.
   Its public surface is `roundtrip` — a plumbing probe — plus five

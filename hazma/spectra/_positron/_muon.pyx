@@ -149,20 +149,14 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_positron_muon_array(double[:] engs_p, 
 # ===================================================================
 # ---- Python API ---------------------------------------------------
 # ===================================================================
-
-def dnde_positron_muon(epos, emu):
-    """
-    Compute the positron spectrum dN/dE from the decay of a muon.
-    Paramaters
-    ----------
-    epos: float or array-like
-        Positron energy.
-    emu: float 
-        Energy of the muon.
-    """
-    if hasattr(epos, '__len__'):
-        energies = np.array(epos)
-        assert len(energies.shape) == 1, "Positron energies must be 0 or 1-dimensional."
-        return dnde_positron_muon_array(energies, emu)
-    else:
-        return dnde_positron_muon_point(epos, emu)
+#
+# There is none any longer. `dnde_positron_muon` moved to Rust in the
+# cython-to-rust project's Task 4.1: `hazma/spectra/_positron/__init__.py`
+# now calls `hazma._core.positron.dnde_positron_muon`, and this extension
+# is built solely so its `__pyx_capi__` capsules stay resolvable —
+# `hazma/spectra/_positron/_pion.pyx` and both mediator positron spectrum
+# modules still `cimport` the two `cdef` functions above.
+#
+# Phase 06 Task 6.4 deletes this file once the last cimporter is gone;
+# until then it is the phase file's declared exception to rules.md rule 1
+# ("the Cython twin is deleted in the same PR as the swap").

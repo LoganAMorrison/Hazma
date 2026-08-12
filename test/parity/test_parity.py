@@ -258,22 +258,45 @@ def _fake_core_submodule(name: str, **members: object) -> types.ModuleType:
 @pytest.mark.skipif(
     not corpus.rust_core_available(), reason="hazma._core is not built in this tree"
 )
-def test_scaffolded_core_serves_no_kernels() -> None:
-    """The pre-Phase-04 extension must not read as a started port.
+def test_the_served_roster_is_exactly_the_ported_entry_points() -> None:
+    """`hazma._core` serves the swapped kernels and nothing else.
 
-    `roundtrip` is a plumbing probe with no caller in `hazma/`; the five
-    per-domain submodules are empty until Phase 04; and `special`
-    (Phase 03 Task 3.2), `quad` (Task 3.3), `interp` and `boost`
-    (Task 3.4) and `dispatch` (Task 3.5) are test-only shims exempted
-    wholesale by `cases._CORE_TEST_ONLY_MODULES`. If this fails, either a kernel
-    landed (in which case the corpus really should leave exact mode) or
-    something non-kernel became public on the extension and needs adding
-    to `cases._CORE_SCAFFOLD_NAMES` (one name) or
+    Until cython-to-rust Task 4.1 this asserted the roster was *empty* —
+    `roundtrip` is a plumbing probe with no caller in `hazma/`, the five
+    per-domain submodules were unfilled, and `special` (Task 3.2), `quad`
+    (3.3), `interp` and `boost` (3.4) and `dispatch` (3.5) are test-only
+    shims exempted wholesale by `cases._CORE_TEST_ONLY_MODULES`. Phase 04
+    fills the per-domain submodules one kernel at a time, so the check
+    that survives is the roster's *agreement with the corpus*: exactly
+    one served kernel per `cases.PORTED_ENTRY_POINTS` row, matched by
+    name.
+
+    Compared on the leaf function name rather than the fully-qualified
+    one so the assertion says what it means — that the extension serves
+    the ported entry points — without also pinning which submodule each
+    lives in, which `hazma/spectra/**/__init__.py` already fixes by
+    importing it.
+
+    If this fails, either a swap landed without its `PORTED_ENTRY_POINTS`
+    row (add it; the corpus case must move to the wrapper in the same
+    change) or something non-kernel became public on the extension and
+    needs adding to `cases._CORE_SCAFFOLD_NAMES` (one name) or
     `cases._CORE_TEST_ONLY_MODULES` (a whole submodule, and then also to
     `test_test_only_core_submodules_have_no_importer`'s guarantee).
     """
-    assert corpus.rust_core_kernels() == []
-    corpus.assert_no_rust_core()  # must not raise
+    served = corpus.rust_core_kernels()
+    ported = {function for _, function in corpus.PORTED_ENTRY_POINTS.values()}
+
+    assert {name.rpartition(".")[2] for name in served} == ported
+    assert len(served) == len(corpus.PORTED_ENTRY_POINTS), (
+        f"hazma._core serves {served}, which is not one callable per "
+        f"ported entry point ({sorted(corpus.PORTED_ENTRY_POINTS)})"
+    )
+
+    # Regeneration is closed from the first swap: rules.md rule 2 allows
+    # corpus data to come only from pre-port Cython.
+    with pytest.raises(RuntimeError, match=r"serves \d+ kernel"):
+        corpus.assert_no_rust_core()
 
 
 def test_test_only_core_submodules_have_no_importer() -> None:
@@ -325,8 +348,15 @@ def test_test_only_core_submodules_have_no_importer() -> None:
 def test_a_served_kernel_is_found_and_blocks_regeneration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """One public callable under `hazma._core` is a started port."""
+    """One more public callable under `hazma._core` is one more kernel.
+
+    Measured as a *delta* on whatever the tree already serves, so the
+    test keeps working as Phase 04-06 fill the real submodules: the
+    fake `photon` kernel must appear on top of the live roster, not
+    instead of it.
+    """
     core = importlib.import_module("hazma._core")
+    baseline = corpus.rust_core_kernels()
     monkeypatch.setattr(
         core,
         "photon",
@@ -334,8 +364,10 @@ def test_a_served_kernel_is_found_and_blocks_regeneration(
         raising=False,
     )
 
-    assert corpus.rust_core_kernels() == ["hazma._core.photon.dnde_photon_muon"]
-    with pytest.raises(RuntimeError, match="serves 1 kernel"):
+    assert corpus.rust_core_kernels() == sorted(
+        [*baseline, "hazma._core.photon.dnde_photon_muon"]
+    )
+    with pytest.raises(RuntimeError, match=r"serves \d+ kernel"):
         corpus.assert_no_rust_core()
     assert not tolerances.provenance(MANIFEST).exact
 

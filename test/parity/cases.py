@@ -427,8 +427,12 @@ _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
         table_edges("phi_photon.csv"),
     ),
     (
+        # Ported: cython-to-rust Task 4.1. The module is the *wrapper*,
+        # not the `.pyx`, because that is where the value now comes from
+        # — see `PORTED_ENTRY_POINTS` for why the origin is still
+        # recorded and what `assert_full_coverage` does with it.
         "positron.muon",
-        "hazma.spectra._positron._muon",
+        "hazma.spectra._positron",
         "dnde_positron_muon",
         params.muon_mass,
         [params.electron_mass],
@@ -1346,6 +1350,28 @@ def assert_unconsumed_exports_are_unimported() -> None:
             )
 
 
+#: Case name -> the ``.pyx`` ``module:function`` the corpus values were
+#: captured from, for entry points now served by ``hazma._core``.
+#:
+#: A swap moves a `Case`'s `module` off the ``.pyx`` and onto the
+#: pure-Python wrapper, because the wrapper is where the value the user
+#: gets now comes from — pointing the case at the twin would leave the
+#: gate measuring the implementation the swap replaced. That move breaks
+#: the identity `assert_full_coverage` compares on, so the origin is
+#: recorded here instead of being lost: the walk still knows that
+#: ``spectra.positron.muon`` is the pin for what
+#: ``hazma/spectra/_positron/_muon.pyx`` used to export.
+#:
+#: One row per swapped entry point, added by the swapping task. Rows for
+#: a capi survivor (`hazma/spectra/_positron/_muon.pyx`, whose ``cdef``s
+#: outlive its ``def``) and for a fully deleted twin look the same; the
+#: difference is only whether the ``.pyx`` is still on disk.
+PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
+    # cython-to-rust Task 4.1.
+    "spectra.positron.muon": ("hazma.spectra._positron._muon", "dnde_positron_muon"),
+}
+
+
 def assert_full_coverage(cases: dict[str, Case]) -> None:
     """Check the corpus covers every consumed public ``def`` in the tree.
 
@@ -1354,17 +1380,35 @@ def assert_full_coverage(cases: dict[str, Case]) -> None:
     corpus declares. This is what keeps the corpus honest as the port
     deletes Cython modules: a `Case` naming a module that no longer
     exists, or a ``def`` nobody pinned, both fail here.
+
+    A case listed in `PORTED_ENTRY_POINTS` is compared on its recorded
+    ``.pyx`` origin rather than on its live module, so a swap neither
+    reads as a lost pin nor as a case pointing at nothing. It stays an
+    error for the origin to still export the ``def``: a swap that
+    repoints the wrapper but leaves the Cython entry point in place has
+    left two implementations reachable, which is the drift window
+    ``projects/cython-to-rust/rules.md`` rule 1 exists to close.
     """
-    covered = {(case.module, case.function) for case in cases.values()}
+    covered: set[tuple[str, str]] = set()
+    for name, case in cases.items():
+        covered.add(PORTED_ENTRY_POINTS.get(name, (case.module, case.function)))
+
     declared: set[tuple[str, str]] = set()
     for path in sorted((REPO_ROOT / "hazma").rglob("*.pyx")):
         module = ".".join(path.relative_to(REPO_ROOT).with_suffix("").parts)
         for match in re.finditer(r"^def\s+(\w+)\s*\(", path.read_text(), re.MULTILINE):
             declared.add((module, match.group(1)))
 
+    surviving_twins = sorted(set(PORTED_ENTRY_POINTS.values()) & declared)
+    if surviving_twins:
+        raise RuntimeError(
+            "these entry points are served by hazma._core but their Cython "
+            f"def is still exported: {surviving_twins}"
+        )
+
     excluded = set(UNCONSUMED_EXPORTS.items())
     missing = declared - covered - excluded
-    stale = covered - declared
+    stale = covered - declared - set(PORTED_ENTRY_POINTS.values())
     if missing or stale:
         raise RuntimeError(
             "parity corpus coverage mismatch.\n"

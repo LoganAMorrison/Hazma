@@ -4,8 +4,18 @@ import numpy as np
 
 # `hazma._core` is the Rust extension (cython-to-rust ADR-0001). Its
 # per-domain submodules — photon, positron, neutrino, scalar_mediator,
-# vector_mediator — exist but are empty until Phases 03-06 fill them;
-# each gets its own stub alongside its first kernel.
+# vector_mediator — are filled one kernel at a time by Phases 04-06;
+# `positron` carries the first, `dnde_positron_muon` (Task 4.1).
+#
+# They are deliberately unstubbed, and a stub file is not the cheap fix
+# it looks like: `_core` is a single extension, so a submodule stub needs
+# a `hazma/_core/` stub *package* (`__init__.pyi` plus one file per
+# submodule) that would then shadow this file. The typed surface users
+# see is the wrapper, not the extension — every ported entry point is
+# re-exported through an `@overload`-annotated function in
+# `hazma/spectra/**/__init__.py`, which is what a caller imports and what
+# `docs/versioning.md` defines the public API against. Phase 07 revisits
+# the packaging, and the stub layout belongs with it.
 #
 # Five further submodules — `special` (cython-to-rust Task 3.2), `quad`
 # (Task 3.3), `interp` and `boost` (Task 3.4), and `dispatch` (Task 3.5) —

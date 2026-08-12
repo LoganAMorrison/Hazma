@@ -264,9 +264,12 @@ BUDGETS: dict[str, Budget] = {
     "spectra.positron.muon": Budget(
         rtol=EXACT_RTOL,
         atol=0.0,
-        why="the boost integral is done analytically — closed-form "
-        "arithmetic only, no quad on the live path "
-        "(hazma/spectra/_positron/_muon.pyx:33-57).",
+        why="ported to Rust (Task 4.1) against this platform's arithmetic, "
+        "which it reproduces bit-for-bit; exact because that was achieved, "
+        "NOT because the closed form is well conditioned — it is not, and "
+        "off this platform the same kernel needs ~1e-8 "
+        "(test/test_core_positron_muon.py, 'Why the comparison has two "
+        "modes').",
     ),
     "spectra.positron.charged_pion": Budget(
         rtol=QUAD_RTOL,
