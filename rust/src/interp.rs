@@ -16,16 +16,19 @@
 //!
 //! # What calls this, and with what
 //!
-//! Five rest-frame photon spectra reach `np.interp` inside `cdef`
+//! Five rest-frame photon spectra reached `np.interp` inside `cdef`
 //! functions, always as `np.interp(energy, table_energies, table_dnde)`
 //! on an ascending 100- or 500-row table read from a shipped CSV:
 //! `hazma/spectra/_photon/_eta.pyx:44`, `_eta_prime.pyx:48`,
-//! `_kaon.pyx:127`, `_omega.pyx:48`, `_phi.pyx:47`. The four mediator
-//! spectrum modules call it the same way on their own tables
-//! (`hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx`,
-//! `*_positron_spec.pyx`). Every call site passes a scalar `x`, so the
-//! signature here is scalar-in / scalar-out and the array form lives in
-//! the probe.
+//! `_kaon.pyx:127`, `_omega.pyx:48`, `_phi.pyx:47` — all five deleted in
+//! Task 4.2, whose [`crate::kernels::photon_tables`] is now the only
+//! kernel that reaches this function, on the same tables and in the same
+//! way.
+//! The four mediator spectrum modules still call `np.interp` on their
+//! own tables (`hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx`,
+//! `*_positron_spec.pyx`) until Phase 06. Every call site passes a
+//! scalar `x`, so the signature here is scalar-in / scalar-out and the
+//! array form lives in the probe.
 //!
 //! # Why `mul_add`
 //!

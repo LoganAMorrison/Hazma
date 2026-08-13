@@ -378,50 +378,53 @@ _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
         [ENG_GAM_MAX_PIRG, params.neutral_pion_mass / 2.0],
     ),
     (
+        # Ported: cython-to-rust Task 4.2 -- this row and the six below.
+        # The module is the *wrapper* for the same reason the positron
+        # muon's is; see `PORTED_ENTRY_POINTS`.
         "photon.charged_kaon",
-        "hazma.spectra._photon._kaon",
+        "hazma.spectra._photon",
         "dnde_photon_charged_kaon",
         params.charged_kaon_mass,
         table_edges("charged_kaon_photon.csv"),
     ),
     (
         "photon.long_kaon",
-        "hazma.spectra._photon._kaon",
+        "hazma.spectra._photon",
         "dnde_photon_long_kaon",
         params.long_kaon_mass,
         table_edges("long_kaon_photon.csv"),
     ),
     (
         "photon.short_kaon",
-        "hazma.spectra._photon._kaon",
+        "hazma.spectra._photon",
         "dnde_photon_short_kaon",
         params.short_kaon_mass,
         table_edges("short_kaon_photon.csv"),
     ),
     (
         "photon.eta",
-        "hazma.spectra._photon._eta",
+        "hazma.spectra._photon",
         "dnde_photon_eta",
         params.eta_mass,
         table_edges("eta_photon.csv"),
     ),
     (
         "photon.eta_prime",
-        "hazma.spectra._photon._eta_prime",
+        "hazma.spectra._photon",
         "dnde_photon_eta_prime",
         params.eta_prime_mass,
         table_edges("eta_prime_photon.csv"),
     ),
     (
         "photon.omega",
-        "hazma.spectra._photon._omega",
+        "hazma.spectra._photon",
         "dnde_photon_omega",
         params.omega_mass,
         table_edges("omega_photon.csv"),
     ),
     (
         "photon.phi",
-        "hazma.spectra._photon._phi",
+        "hazma.spectra._photon",
         "dnde_photon_phi",
         params.phi_mass,
         table_edges("phi_photon.csv"),
@@ -1369,6 +1372,29 @@ def assert_unconsumed_exports_are_unimported() -> None:
 PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     # cython-to-rust Task 4.1.
     "spectra.positron.muon": ("hazma.spectra._positron._muon", "dnde_positron_muon"),
+    # cython-to-rust Task 4.2 -- the tabulated photon family. Unlike the
+    # entry above, these five ``.pyx`` are gone from the tree entirely
+    # rather than surviving as capi providers, so their rows here are the
+    # only record of where the pinned values came from.
+    "spectra.photon.charged_kaon": (
+        "hazma.spectra._photon._kaon",
+        "dnde_photon_charged_kaon",
+    ),
+    "spectra.photon.long_kaon": (
+        "hazma.spectra._photon._kaon",
+        "dnde_photon_long_kaon",
+    ),
+    "spectra.photon.short_kaon": (
+        "hazma.spectra._photon._kaon",
+        "dnde_photon_short_kaon",
+    ),
+    "spectra.photon.eta": ("hazma.spectra._photon._eta", "dnde_photon_eta"),
+    "spectra.photon.eta_prime": (
+        "hazma.spectra._photon._eta_prime",
+        "dnde_photon_eta_prime",
+    ),
+    "spectra.photon.omega": ("hazma.spectra._photon._omega", "dnde_photon_omega"),
+    "spectra.photon.phi": ("hazma.spectra._photon._phi", "dnde_photon_phi"),
 }
 
 

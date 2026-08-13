@@ -39,9 +39,15 @@ implementation does* rather than by what it computes:
     `np.trapezoid` across interior cells, closed-form partial cells at
     both edges, an analytic `1/E` tail below the table. A Rust rewrite
     keeps the algorithm and changes the summation order, so the drift is
-    accumulated rounding, not method error: the tables are 101 rows (eta)
-    or 501 (the other six), and 501 · 2^-52 is ~1.1e-13, so 1e-12 leaves
-    roughly a decade of headroom over the worst case.
+    accumulated rounding, not method error: the tables are 100 data rows
+    (eta) or 500 (the other six), and 500 · 2^-52 is ~1.1e-13, so 1e-12
+    leaves roughly a decade of headroom over the worst case. (The row
+    counts read 101/501 here until Task 4.2; those were the CSVs' line
+    counts, which include a `#` header `numpy.loadtxt` skips. The Rust
+    rewrite landed in that task and in the event reproduced the capturing
+    platform bit-for-bit, by also reproducing NumPy's summation order --
+    so the headroom went unused there, and stays declared for the
+    platforms where it will not.)
 ``QUAD`` (rtol 1e-8)
     One adaptive `scipy.integrate.quad` call. The numerics reference
     expects a faithful netlib-QUADPACK port to reproduce these to ~1e-12
@@ -221,7 +227,11 @@ BUDGETS: dict[str, Budget] = {
         atol=0.0,
         why="boost integral over the shipped CSV table "
         "(hazma/spectra/_photon/_kaon.pyx:57-58); drift is trapezoid "
-        "summation order, not method.",
+        "summation order, not method. Ported to Rust in Task 4.2, which "
+        "reproduces this platform bit-for-bit -- the class is kept rather "
+        "than tightened to EXACT because, unlike spectra.positron.muon, "
+        "the boost integral's summation order is a NumPy implementation "
+        "detail rather than an arithmetic identity.",
     ),
     "spectra.photon.long_kaon": Budget(
         rtol=TABULATED_RTOL,
@@ -240,7 +250,8 @@ BUDGETS: dict[str, Budget] = {
         atol=0.0,
         why="boost integral over eta_photon.csv "
         "(hazma/spectra/_photon/_eta.pyx:98), no quadrature on the live "
-        "path.",
+        "path. Ported to Rust in Task 4.2 alongside the kaons; see that "
+        "entry for why the class is kept rather than tightened.",
     ),
     "spectra.photon.eta_prime": Budget(
         rtol=TABULATED_RTOL,

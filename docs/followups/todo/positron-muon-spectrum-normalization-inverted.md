@@ -112,8 +112,14 @@ in `test/test_core_positron_muon.py`.
   that this is an inversion rather than a convention.
 - `test/parity/tolerances.py` — `spectra.positron.muon` is `EXACT`
   (`rtol = 0`), so nothing absorbs this quietly.
-- Sibling defect, same class and same blocker:
-  [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md).
+- Sibling defects, same class and same blocker:
+  [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md),
+  and the two the tabulated photon port surfaced in Task 4.2 —
+  [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md)
+  and
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md).
+  All four want one declared corpus regeneration after Phase 06
+  Task 6.4, not four.
 
 ## Risks / open questions
 

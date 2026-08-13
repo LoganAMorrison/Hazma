@@ -351,21 +351,29 @@ def test_a_served_kernel_is_found_and_blocks_regeneration(
     """One more public callable under `hazma._core` is one more kernel.
 
     Measured as a *delta* on whatever the tree already serves, so the
-    test keeps working as Phase 04-06 fill the real submodules: the
-    fake `photon` kernel must appear on top of the live roster, not
-    instead of it.
+    test keeps working as Phase 04-06 fill the real submodules: the fake
+    kernel must appear on top of the live roster, not instead of it.
+
+    The fake is attached under a name no domain will ever take, rather
+    than shadowing `photon` or `positron`. Shadowing a real submodule
+    subtracts its kernels from the roster while adding one, so the delta
+    stops being a delta the moment that submodule is filled — which is
+    exactly what happened when Task 4.2 put seven kernels behind
+    `photon`.
     """
     core = importlib.import_module("hazma._core")
     baseline = corpus.rust_core_kernels()
     monkeypatch.setattr(
         core,
-        "photon",
-        _fake_core_submodule("hazma._core.photon", dnde_photon_muon=lambda e, m: 0.0),
+        "not_a_real_domain",
+        _fake_core_submodule(
+            "hazma._core.not_a_real_domain", dnde_photon_muon=lambda e, m: 0.0
+        ),
         raising=False,
     )
 
     assert corpus.rust_core_kernels() == sorted(
-        [*baseline, "hazma._core.photon.dnde_photon_muon"]
+        [*baseline, "hazma._core.not_a_real_domain.dnde_photon_muon"]
     )
     with pytest.raises(RuntimeError, match=r"serves \d+ kernel"):
         corpus.assert_no_rust_core()
@@ -385,13 +393,18 @@ def test_an_imported_third_party_module_is_not_a_kernel(
     the very first kernel module look like hundreds of ported kernels, and
     (worse) would fire before any port at all if the scaffold ever grew an
     import.
+
+    Asserted against the live roster rather than against the empty list,
+    for the reason the test above gives: from Task 4.1 on, the roster is
+    never empty.
     """
     core = importlib.import_module("hazma._core")
+    baseline = corpus.rust_core_kernels()
     monkeypatch.setattr(
         core,
-        "positron",
-        _fake_core_submodule("hazma._core.positron", np=np),
+        "not_a_real_domain",
+        _fake_core_submodule("hazma._core.not_a_real_domain", np=np),
         raising=False,
     )
 
-    assert corpus.rust_core_kernels() == []
+    assert corpus.rust_core_kernels() == baseline

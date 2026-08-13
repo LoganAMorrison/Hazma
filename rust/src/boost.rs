@@ -14,10 +14,18 @@
 //!
 //! # What calls these, and with what
 //!
+//! The `.pyx` column is the pre-port record; Task 4.2 replaced the five
+//! tabulated photon files with [`crate::kernels::photon_tables`], which
+//! calls all four of these natively and is the only kernel that reaches
+//! [`boost_integrate_linear_interp`] at all. (The remaining `.pyx` in the
+//! table still `cimport` the Cython twin until Phase 06 Task 6.4, and
+//! [`crate::boost_probe`] exposes these to Python for
+//! `test/test_core_boost.py` only.)
+//!
 //! | Function | Cython call sites |
 //! | --- | --- |
 //! | [`boost_beta`] / [`boost_gamma`] | every `_photon`, `_positron` and `_neutrino` kernel that boosts out of a rest frame — `_photon/{_eta,_eta_prime,_kaon,_omega,_phi,_pion,_rho}.pyx`, `_positron/{_muon,_pion}.pyx`, `_neutrino/_pion.pyx` |
-//! | [`boost_delta_function`] | `_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx` (the `→ γγ` lines), `_positron/_pion.pyx`, `_neutrino/_pion.pyx` |
+//! | [`boost_delta_function`] | `_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx` (the line terms), `_positron/_pion.pyx`, `_neutrino/_pion.pyx` |
 //! | [`boost_integrate_linear_interp`] | `_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx` — seven tabulated spectra over 100- or 500-row CSVs |
 //!
 //! # Why `mul_add`, and where it is *not* used
@@ -229,6 +237,20 @@ pub fn boost_delta_function(e0: f64, e: f64, m: f64, beta: f64) -> f64 {
 ///   something different at 0.005 MeV than at 1000 MeV;
 /// * the below-table tail assumes `y ∝ 1/E` and is added whole, even when
 ///   `ub` also falls below the table (that case returns earlier).
+///
+/// One behavior is deliberately **not** reproduced. A `NaN`
+/// `photon_energy` makes both bounds `NaN`, every comparison below false,
+/// and the Cython's `np.flatnonzero(lb <= x)[0]` an index into an empty
+/// array — so `dnde_photon_eta(float('nan'), 1000.0)` raises `IndexError`
+/// on the shipped build (measured, cython-to-rust Task 4.2). There is no
+/// faithful way to carry that across: the port evaluates a grid element
+/// by element behind `dispatch::map_unary`, which has no per-element
+/// error channel, so reproducing it would mean panicking — a
+/// `PanicException` where Python could catch an `IndexError` today. This
+/// function answers `NaN` instead, which is what the same kernels' own
+/// rest-frame branch already does (`np.interp` propagates) and what the
+/// rest of the port does with a `NaN` energy. The parity corpus samples
+/// no `NaN` abscissa, so no pinned value moves.
 pub fn boost_integrate_linear_interp(
     photon_energy: f64,
     beta: f64,
@@ -257,6 +279,17 @@ pub fn boost_integrate_linear_interp(
     let gamma = 1.0 / (-beta).mul_add(beta, 1.0).sqrt();
     let mut lb = photon_energy * gamma * (1.0 - beta);
     let mut ub = photon_energy * gamma * (1.0 + beta);
+
+    // A `NaN` window: see the "Faithfulness notes" above for why this
+    // answers `NaN` rather than reproducing the Cython's `IndexError`.
+    // Checked on the bounds rather than on `photon_energy` because they
+    // are what the dead end below is reached through; with `beta` inside
+    // `(0, 1)` the two conditions coincide, since `1 - beta*beta` cannot
+    // round to zero for any representable `beta < 1` and so `gamma` is
+    // always finite.
+    if lb.is_nan() || ub.is_nan() {
+        return Ok(f64::NAN);
+    }
 
     // The whole boosted window sits above the table: nothing to integrate.
     if lb > xmax {
@@ -378,7 +411,12 @@ where
 /// differently. `test/test_core_boost.py::TestTrapezoid` compares against
 /// the live `np.trapezoid`, so the day that happens the test says so
 /// instead of the number drifting quietly.
-fn pairwise_sum(values: &[f64]) -> f64 {
+///
+/// Reused outside this module by
+/// [`crate::kernels::photon_tables`], whose CSV tables are summed across
+/// decay-mode columns with `numpy.sum(axis=0)` — the same reduction, and
+/// on the ten-column φ table the same non-sequential answer.
+pub(crate) fn pairwise_sum(values: &[f64]) -> f64 {
     /// NumPy's `PW_BLOCKSIZE`.
     const BLOCK: usize = 128;
 
@@ -538,6 +576,41 @@ mod tests {
         let got = boost_integrate_linear_interp(2.2, 0.6, &x, &y).unwrap();
         assert_eq!(got, 1.9 / 1.5);
         assert_ne!(got, 2.9 / 1.5);
+    }
+
+    /// A `NaN` energy propagates instead of panicking.
+    ///
+    /// The Cython raises `IndexError` here; reproducing that from inside
+    /// an element-wise map would mean a panic, so the port answers `NaN`
+    /// — see the function's "Faithfulness notes".
+    ///
+    /// The infinities are checked alongside because they look like the
+    /// same case and are not: they reach the window comparisons with a
+    /// definite answer, so they return a number rather than `NaN`, at
+    /// every `beta` the guard admits. `beta` one ulp below 1 is the
+    /// extreme, and shows `gamma` staying finite — `1 - beta*beta` is
+    /// 2.2e-16 there, not 0.
+    #[test]
+    fn a_nan_window_is_nan_rather_than_a_panic() {
+        let x = [1.0, 2.0, 3.0, 4.0];
+        let y = x;
+        let extreme = f64::from_bits(1.0_f64.to_bits() - 1);
+        for beta in [0.6, extreme] {
+            assert!(
+                boost_integrate_linear_interp(f64::NAN, beta, &x, &y)
+                    .unwrap()
+                    .is_nan(),
+                "beta = {beta}"
+            );
+            assert_eq!(
+                boost_integrate_linear_interp(f64::INFINITY, beta, &x, &y).unwrap(),
+                0.0
+            );
+            assert_eq!(
+                boost_integrate_linear_interp(f64::NEG_INFINITY, beta, &x, &y).unwrap(),
+                -0.0
+            );
+        }
     }
 
     #[test]
