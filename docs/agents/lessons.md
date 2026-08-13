@@ -102,7 +102,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   breaks it — the same PR's `cargo test` "69 units" describes the
   **foundation's** units, so "fixing" it to the current 80 would have
   folded in a later phase's kernel and made a true sentence false. Decide
-  per claim what it is a statement *about*, then date the block.
+  per claim what it is a statement *about*, then date the block. The
+  unlabeled-section form bites hardest on a task note's `## Files Changed`
+  and `## Numerical impact`, which describe *that task's* diff in the
+  present tense: PR #65 had a reviewer read Task 3.4's "one file,
+  `hazma/_core.pyi`, comment-only" as a claim about the branch in front of
+  them, which touched no `hazma/` file at all. Head those sections with
+  the task's own PR number (PR #64, #65).
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
   each section, cited elsewhere by a flat index, has two schemes and no key —
   so a correct citation reads as a dangling one and a reviewer's "fix" breaks
@@ -192,7 +198,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   (``lines 427, 447, 456 as of `e94fb21^` ``) so a later deletion cannot
   falsify it (PR #42, #43 — #43 ran the checker over only the two docs a
   reviewer named; three further elisions in the same file resolved by
-  suffix and would have rotted later).
+  suffix and would have rotted later). The sharpest case is a **resolved
+  follow-up**, whose §Entry points cite the very symbols the resolution
+  deletes: those citations are stale the instant the PR lands, not
+  "later", and `check_doc_citations.py` passes them because it
+  bounds-checks lines rather than resolving symbols (PR #65 — five
+  citations into `test/test_core_interp.py`, pinned to `707b07c` on
+  review). Pin the revision when you move a follow-up to `done/`.
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs
   *committed* history, so running it on an uncommitted tree scans zero
   files and prints a success-shaped line — `check_doc_citations.py

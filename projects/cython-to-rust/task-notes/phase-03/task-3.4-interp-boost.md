@@ -92,7 +92,13 @@ added there during execution:
   four sites against the live kernel over 2,462 corpus-grid points found
   exactly one combination at zero mismatches — all four on; the next best
   left 115. NumPy's `arr_interp` contracts too: unfused, `interp` misses
-  `np.interp` at 1,549 of 20,204 eta-table points by up to 1.1e-13.
+  `np.interp` at 1,549 of 20,304 eta-table points by up to 1.1e-13.
+  (Denominator corrected 2026-08-12 from a mis-stated `20,204`: the sweep
+  is `20,000 + 3n + 4`, which is 20,304 for the 100-row eta table. The
+  numerator was drawn with a `hash()`-seeded sweep, randomised per
+  process, so it is not reproducible as written; the seed is now
+  `zlib.crc32` and the same measurement gives **1,571**. See
+  `docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md`.)
 - **`boost_beta` must *not* be fused, and that is not symmetry-breaking
   for its own sake.** The Cython spells it `(mass / energy) ** 2`, whose
   rounded product completes before the subtraction; disassembling the
@@ -226,9 +232,12 @@ added there during execution:
   > cancellation-point argument above is why that budget is scaled to the
   > *peak* of the compared array rather than applied pointwise — it is the
   > reason the two-mode design works, not a reason to skip. `NUMPY_CONTRACTS`
-  > in `test/test_core_interp.py` still carries the retired mechanism and 9
-  > of its claims still skip off macOS; that is tracked in
-  > [`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md).
+  > in `test/test_core_interp.py` carried the retired mechanism for the rest
+  > of that day and 9 of its claims skipped off macOS; that was tracked in
+  > [`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md)
+  > and **resolved later the same day** — the module now declares its mode
+  > the same way and runs `42 passed, 0 skipped` on macOS/arm64 and on
+  > linux/amd64 alike, with a measured peak-scaled budget of `1e-12`.
 - **The QUADPACK-style literal-translation posture does not apply here.**
   `boost.pyx` is 90 lines of ordinary arithmetic, so the Rust reads as
   Rust (`Option` for the `-1` index sentinel, a closure for the `y / x`
@@ -322,15 +331,20 @@ than inferred —
 **What the tests cover**, by class rather than by count:
 
 *`test/test_core_interp.py`* — `TestAgainstNumpy` (bit-equality with
-`np.interp` on all seven live tables over 20,204 abscissae each: 20,000
-random interior points, every node, every node nudged ±1e-13, and four
-out-of-range; plus 50 random grids with cells of wildly unequal width);
+`np.interp` on all seven live tables over 20,304 abscissae for the
+100-row eta table and 21,504 for the six 500-row tables: 20,000 random
+interior points, every node, every node nudged ±1e-13, and four
+out-of-range — i.e. `20,000 + 3n + 4`, which the `20,204` recorded here
+until 2026-08-12 contradicted; plus 50 random grids with cells of wildly
+unequal width);
 `TestFusedArithmetic` (the fused and unfused forms are shown to differ
 somewhere before the Rust is asserted to side with NumPy — but that
 premise is false wherever NumPy does not contract, so the class is
-skipped rather than run there, and on Linux/x86-64 it always is; see the
-superseding note in §Findings and
-[`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/todo/interp-oracle-scoped-by-an-unsound-probe.md));
+skipped rather than run there, and on Linux/x86-64 it always is; both the
+skip and the NumPy premise were retired on 2026-08-12 — the class now
+discriminates against a Python transcription of `rust/src/interp.rs` and
+runs everywhere. See the superseding note in §Findings and
+[`interp-oracle-scoped-by-an-unsound-probe.md`](../../../../docs/followups/done/interp-oracle-scoped-by-an-unsound-probe.md));
 `TestClamping`; `TestQuirks` (NaN propagation, the one-point grid's NaN
 asymmetry, the duplicate-node tie-break, both infinite-cell rescues, and
 the infinite-node short circuit); `TestErrors` (both `ValueError`s, each
@@ -413,6 +427,12 @@ lead the next reader to the wrong port.
 
 ## Numerical impact
 
+*Scope: this section, §Files Changed and §Stale-state sweep below all
+describe **Task 3.4's own diff**, shipped as
+[PR #61](https://github.com/LoganAMorrison/Hazma/pull/61) on 2026-08-10 —
+19 files, `hazma/_core.pyi` among them. They are not a description of
+whatever branch you are reading this from.*
+
 **No public value changes** (verified: `git diff origin/master -- hazma`
 is one file, `hazma/_core.pyi`, and every line of the hunk is comment
 text — no executable line under `hazma/` is reachable from this diff, on
@@ -429,8 +449,9 @@ Measured rather than only argued: the bare suite ran the parity corpus in
 What the task *did* produce numerically is a foundation that reproduces
 the Cython **bit-for-bit** where the Cython is what the corpus records:
 zero mismatches on all seven live tables across six boost regimes × 400
-energies, zero across 40,000 delta-function draws, and zero on 20,204
-`np.interp` abscissae per table. **The Phase 04 drift line for the
+energies, zero across 40,000 delta-function draws, and zero on the
+`np.interp` sweep — 20,304 abscissae for eta, 21,504 for the six 500-row
+tables (recorded as `20,204` until 2026-08-12). **The Phase 04 drift line for the
 kaon/eta/omega/phi family will be measured against these**, so a wrong
 choice here would surface as a kernel bug rather than a foundation bug.
 

@@ -34,12 +34,12 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [positron spectra return `nan` at the legacy `MASS_E`](todo/positron-spectrum-nan-at-legacy-electron-mass.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
 | [the boost integral mis-covers its window at both ends](todo/boost-integral-drops-last-interior-cell.md) | 2026-08-10 | cython-to-rust Task 3.4 | cross-cutting |
 | [the muon positron spectrum divides by its normalization](todo/positron-muon-spectrum-normalization-inverted.md) | 2026-08-11 | cython-to-rust Task 4.1 | cross-cutting |
-| [`test_core_interp.py` still scopes its NumPy oracle with a probe](todo/interp-oracle-scoped-by-an-unsound-probe.md) | 2026-08-12 | cython-to-rust — the `test_core_boost.py` probe removal | cross-cutting |
 
 ## Promoted / Done / Pruned
 
 | Item | Status | Resolution |
 | --- | --- | --- |
+| [`test_core_interp.py` scoped its NumPy oracle with a probe](done/interp-oracle-scoped-by-an-unsound-probe.md) | done | Probe replaced by `ON_THE_CAPTURING_PLATFORM` + a measured, peak-scaled `OFF_PLATFORM_BUDGET = 1e-12`; `TestFusedArithmetic` rewritten against a full Python transcription of `rust/src/interp.rs`. Module goes from `24 passed, 9 skipped` to **`42 passed, 0 skipped`** on linux/amd64. |
 | [markdownlint config for templates](done/markdownlint-config-for-templates.md) | done | Committed [`.markdownlint.jsonc`](../../.markdownlint.jsonc) encoding the repo's shapes (frontmatter-title phase files, `<placeholder>` notation, wide fact tables); all 18 inline pragmas removed. `docs/` + `projects/` errors 132 → 0. |
 | [`black` pin diverges between pyproject and CI](done/black-pin-divergence-pyproject-vs-ci.md) | done | [PR #40](https://github.com/LoganAMorrison/Hazma/pull/40) — pins moved to a single PEP 735 `lint` dependency group that CI installs; repo reformatted with black 26.x (33 files). |
 | [`msqrd`-driven Monte-Carlo FSR generator](done/msqrd-driven-fsr-generator.md) | done | `hazma.spectra.dnde_photon_fsr` (ADR-0001, [PR #41](https://github.com/LoganAMorrison/Hazma/pull/41)) |
