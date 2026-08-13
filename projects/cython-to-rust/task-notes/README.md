@@ -934,7 +934,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   reproduces the Cython **bit-for-bit** where the Cython is what the
   corpus records: zero mismatches on all seven live tables across six
   boost regimes × 400 energies, zero across 40,000 delta-function draws,
-  and zero on 20,204 `np.interp` abscissae per table. **Phase 04's
+  and zero on the `np.interp` sweep — 20,304 abscissae for the 100-row
+  eta table, 21,504 for the six 500-row tables (recorded as `20,204`
+  until 2026-08-12; the sweep is `20,000 + 3n + 4`). **Phase 04's
   kaon/eta/omega/phi swaps are the first whose drift lines are measured
   against this.**
 

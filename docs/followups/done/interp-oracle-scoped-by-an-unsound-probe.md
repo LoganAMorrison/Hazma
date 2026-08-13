@@ -12,6 +12,9 @@
 
 ## Why
 
+*Written against `707b07c`; every line number below is that revision's.
+The §Resolution at the end records what replaced them.*
+
 `test/test_core_interp.py` decides whether to compare `hazma._core.interp`
 against `np.interp` bit-for-bit by *measuring* whether the installed NumPy
 fuses its interpolation step — `numpy_contracts()` at
@@ -79,6 +82,12 @@ supports, so "the port fuses here" becomes a platform-independent claim
 and the class stops needing a scope at all.
 
 ## Entry points
+
+The four `test/test_core_interp.py` line numbers below are **as of
+`707b07c`**, the revision this follow-up was written against; the symbols
+were removed by the resolution, so at any later revision those lines
+point into unrelated code. Read them with
+`git show 707b07c:test/test_core_interp.py`.
 
 - `test/test_core_interp.py:81` — `numpy_contracts()`
 - `test/test_core_interp.py:100` — `NUMPY_CONTRACTS`
@@ -218,10 +227,29 @@ The mutation was reverted and the tree rebuilt before the gate was run.
 | `markdownlint` over the four touched `.md` | clean |
 | **Numerical impact** | **none.** The diff is one test module, comment-only edits to `rust/src/interp.rs` (`git diff origin/master -- rust/src/interp.rs` filtered to non-`//!` lines is empty), and four docs. No public function changed; verified by `pytest` → `1444 passed, 14 skipped`, the same as master. |
 
-One thing left alone deliberately: `projects/cython-to-rust/task-notes/README.md`
-and `task-3.4-interp-boost.md` record the sweep as "20,204 abscissae per
-table", where the actual size is 20,304 (eta, 100 rows) or 21,504 (the
-500-row tables). Those are dated Task 3.4 verification records; the
-convention here is to supersede rather than rewrite them, and a note that
-size disproportionate to the error is not worth the noise. Flagged so the
-next reader does not take 20,204 as the sweep size.
+**A sweep-size slip corrected in the Task 3.4 records.** Those notes gave
+the sweep as "20,204 abscissae per table"; the sweep is
+`20,000 + 3n + 4`, so it is **20,304** for the 100-row eta table and
+**21,504** for the six 500-row tables. The number was wrong when written
+rather than changed since — `task-3.4-interp-boost.md`'s own enumeration
+("20,000 random interior points, every node, every node nudged ±1e-13,
+and four out-of-range") does not sum to 20,204 for any table. Re-derived
+from the live tree:
+
+```text
+eta            rows=100  sweep=20304
+eta_prime      rows=500  sweep=21504
+charged_kaon   rows=500  sweep=21504
+long_kaon      rows=500  sweep=21504
+short_kaon     rows=500  sweep=21504
+omega          rows=500  sweep=21504
+phi            rows=500  sweep=21504
+```
+
+Corrected in place at all three sites, each marked with the date and the
+old value, following the precedent of `c316afc`
+("docs(projects): re-derive the Task 4.1 verification counts"): an
+arithmetic slip is an error to fix, not a superseded decision to preserve.
+The companion `1,549` at `task-3.4-interp-boost.md:95` is annotated
+rather than replaced — it was drawn with a `hash()`-seeded sweep and so
+was never reproducible; the deterministic seed gives 1,571.
