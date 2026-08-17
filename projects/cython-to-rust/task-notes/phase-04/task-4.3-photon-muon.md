@@ -498,6 +498,9 @@ consumer**.
   the difference to a single term *before* touching a budget — here that
   turned a proposed 300x widening into a 60-line fix.
 - The off-platform budget in `test/test_core_photon_muon.py` is
-  **derived, not measured** (there is no Linux run of this kernel yet).
-  Task 4.1's was measured and this one reuses its figure; the first CI run
-  on Linux is the one that confirms or moves it.
+  **derived, not measured** — Task 4.1's was measured (PR #63) and this
+  one reuses its figure from a derivation. PR #67's CI **held it green on
+  Linux/glibc across py3.10–3.14**, so it is not too tight; that says
+  nothing about the margin, because the assertion reports nothing on
+  success. Task 4.1 got its number from an accidental failure. If a later
+  task wants the real Linux spread here it has to provoke one.

@@ -159,10 +159,15 @@ ON_THE_CAPTURING_PLATFORM = (
 )
 
 #: The off-platform budget, as a fraction of the peak of the spectrum being
-#: compared. **Derived** here rather than measured, unlike the same
-#: constant in ``test/test_core_positron_muon.py``, which carries a Linux
-#: measurement from PR #63 -- there is no Linux run of this kernel to quote
-#: yet. Two contributions, both bounded above:
+#: compared. **Derived** rather than measured, unlike the same constant in
+#: ``test/test_core_positron_muon.py``, which carries a Linux measurement
+#: from PR #63. The derivation below is what set the figure; PR #67's CI
+#: then **held it green on Linux/glibc across py3.10-3.14**, which
+#: confirms the budget is not too tight but measures no margin -- the
+#: assertion reports nothing on success. Someone wanting the actual Linux
+#: spread has to provoke a failure, as PR #63 did by accident.
+#:
+#: Two contributions, both bounded above:
 #:
 #: * ``spence``: off macOS/arm64 the C toolchain has no FMA to contract
 #:   into, so scipy's cephes runs unfused and differs from this one by
@@ -176,10 +181,9 @@ ON_THE_CAPTURING_PLATFORM = (
 #:
 #: 1e-8 of peak therefore leaves ~75x headroom over the larger of the two,
 #: and is the same figure the positron kernel uses, so the two do not need
-#: separate justification when a Linux run finally measures this one. It is
-#: still seven orders of magnitude tighter than any physically meaningful
-#: change: a wrong branch, a dropped term or a bad constant lands at O(1)
-#: against the peak.
+#: separate justification. It is still seven orders of magnitude tighter
+#: than any physically meaningful change: a wrong branch, a dropped term or
+#: a bad constant lands at O(1) against the peak.
 OFF_PLATFORM_BUDGET = 1e-8
 
 
