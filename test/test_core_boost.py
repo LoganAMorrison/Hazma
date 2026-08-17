@@ -143,7 +143,6 @@ from hazma.parameters import (
     omega_mass,
     phi_mass,
 )
-from hazma.spectra._photon import _eta, _eta_prime, _kaon, _omega, _phi
 
 boost_beta = core_boost.boost_beta
 boost_gamma = core_boost.boost_gamma
@@ -462,32 +461,53 @@ def integrate_reference(
 # --------------------------------------------------------------------------
 
 
+#: ``kernel name -> shipped CSV``. Until cython-to-rust Task 4.2 these
+#: tables were read off the ``.pyx`` modules' import-time globals
+#: (``_eta.eta_data_energies`` and friends); that task moved the parse
+#: into Rust and deleted the five extensions, so the tables are now read
+#: the way those modules read them — which is also what keeps this an
+#: oracle independent of the Rust that consumes it.
+PHOTON_CSVS = {
+    "eta": "eta_photon.csv",
+    "eta_prime": "eta_prime_photon.csv",
+    "charged_kaon": "charged_kaon_photon.csv",
+    "long_kaon": "long_kaon_photon.csv",
+    "short_kaon": "short_kaon_photon.csv",
+    "omega": "omega_photon.csv",
+    "phi": "phi_photon.csv",
+}
+
+PHOTON_DATA_DIR = REPO_ROOT / "hazma" / "spectra" / "_photon" / "data"
+
+
+def load_photon_table(csv: str) -> tuple[np.ndarray, np.ndarray]:
+    """``np.loadtxt(...).T`` then ``np.sum(rows[1:], axis=0)``.
+
+    The two lines every one of the five deleted ``.pyx`` files opened
+    with, reproduced verbatim so the tables are the same doubles they
+    always were.
+    """
+    data = np.loadtxt(PHOTON_DATA_DIR / csv, delimiter=",").T
+    return data[0], np.sum(data[1:], axis=0)
+
+
+#: ``kernel name -> parent mass in MeV``, the boost's second argument.
+PHOTON_MASSES = {
+    "eta": eta_mass,
+    "eta_prime": eta_prime_mass,
+    "charged_kaon": charged_kaon_mass,
+    "long_kaon": neutral_kaon_mass,
+    "short_kaon": neutral_kaon_mass,
+    "omega": omega_mass,
+    "phi": phi_mass,
+}
+
+
 def photon_tables() -> dict[str, tuple[np.ndarray, np.ndarray, float]]:
     """The seven live ``(energies, dnde, parent_mass)`` triples."""
     return {
-        "eta": (_eta.eta_data_energies, _eta.eta_data_dnde, eta_mass),
-        "eta_prime": (
-            _eta_prime.eta_prime_data_energies,
-            _eta_prime.eta_prime_data_dnde,
-            eta_prime_mass,
-        ),
-        "charged_kaon": (
-            _kaon.charged_kaon_data_energies,
-            _kaon.charged_kaon_data_dnde,
-            charged_kaon_mass,
-        ),
-        "long_kaon": (
-            _kaon.long_kaon_data_energies,
-            _kaon.long_kaon_data_dnde,
-            neutral_kaon_mass,
-        ),
-        "short_kaon": (
-            _kaon.short_kaon_data_energies,
-            _kaon.short_kaon_data_dnde,
-            neutral_kaon_mass,
-        ),
-        "omega": (_omega.omega_data_energies, _omega.omega_data_dnde, omega_mass),
-        "phi": (_phi.phi_data_energies, _phi.phi_data_dnde, phi_mass),
+        name: (*load_photon_table(csv), PHOTON_MASSES[name])
+        for name, csv in PHOTON_CSVS.items()
     }
 
 

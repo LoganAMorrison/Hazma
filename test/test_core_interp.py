@@ -1,10 +1,17 @@
 """``hazma._core.interp`` against ``numpy.interp``.
 
-Twelve ``cdef`` functions in the compiled layer call ``np.interp`` on a
+Twelve ``cdef`` functions in the compiled layer called ``np.interp`` on a
 shipped table: the five rest-frame photon spectra
 (``hazma/spectra/_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx``) and
 the four mediator spectrum modules. cython-to-rust Task 3.4 reimplements
 it in ``rust/src/interp.rs``, and this module is the gate on that.
+
+The first five were deleted by Task 4.2, which moved them to
+``rust/src/kernels/photon_tables.rs`` — so the seven tables below are now
+loaded from their CSVs here rather than read off those modules' globals,
+and the port itself is the only remaining in-tree consumer of this
+function. The four mediator modules still call ``np.interp`` until
+Phase 06.
 
 Why the comparison has two modes
 --------------------------------
@@ -126,7 +133,6 @@ import numpy as np
 import pytest
 
 from hazma._core import interp as core_interp
-from hazma.spectra._photon import _eta, _eta_prime, _kaon, _omega, _phi
 
 interp = core_interp.interp
 
@@ -137,23 +143,39 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MULTI_POINT = 2
 
 
+#: ``kernel name -> shipped CSV``. Until cython-to-rust Task 4.2 these
+#: tables were read off the ``.pyx`` modules' import-time globals
+#: (``_eta.eta_data_energies`` and friends); that task moved the parse
+#: into Rust and deleted the five extensions, so the tables are now read
+#: the way those modules read them — which is also what keeps this an
+#: oracle independent of the Rust that consumes it.
+PHOTON_CSVS = {
+    "eta": "eta_photon.csv",
+    "eta_prime": "eta_prime_photon.csv",
+    "charged_kaon": "charged_kaon_photon.csv",
+    "long_kaon": "long_kaon_photon.csv",
+    "short_kaon": "short_kaon_photon.csv",
+    "omega": "omega_photon.csv",
+    "phi": "phi_photon.csv",
+}
+
+PHOTON_DATA_DIR = REPO_ROOT / "hazma" / "spectra" / "_photon" / "data"
+
+
+def load_photon_table(csv: str) -> tuple[np.ndarray, np.ndarray]:
+    """``np.loadtxt(...).T`` then ``np.sum(rows[1:], axis=0)``.
+
+    The two lines every one of the five deleted ``.pyx`` files opened
+    with, reproduced verbatim so the tables are the same doubles they
+    always were.
+    """
+    data = np.loadtxt(PHOTON_DATA_DIR / csv, delimiter=",").T
+    return data[0], np.sum(data[1:], axis=0)
+
+
 def photon_tables() -> dict[str, tuple[np.ndarray, np.ndarray]]:
     """The live tables ``np.interp`` is called on, keyed by kernel."""
-    return {
-        "eta": (_eta.eta_data_energies, _eta.eta_data_dnde),
-        "eta_prime": (
-            _eta_prime.eta_prime_data_energies,
-            _eta_prime.eta_prime_data_dnde,
-        ),
-        "charged_kaon": (
-            _kaon.charged_kaon_data_energies,
-            _kaon.charged_kaon_data_dnde,
-        ),
-        "long_kaon": (_kaon.long_kaon_data_energies, _kaon.long_kaon_data_dnde),
-        "short_kaon": (_kaon.short_kaon_data_energies, _kaon.short_kaon_data_dnde),
-        "omega": (_omega.omega_data_energies, _omega.omega_data_dnde),
-        "phi": (_phi.phi_data_energies, _phi.phi_data_dnde),
-    }
+    return {name: load_photon_table(csv) for name, csv in PHOTON_CSVS.items()}
 
 
 # --------------------------------------------------------------------------

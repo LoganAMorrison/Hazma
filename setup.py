@@ -47,9 +47,12 @@ extensions = []
 extensions += make_extension(["_utils"], ["boost"])
 
 # Decay Spectra
+# The five tabulated photon extensions (_kaon, _eta, _omega, _eta_prime,
+# _phi) went to Rust in cython-to-rust Task 4.2; _muon, _pion and _rho
+# follow in Tasks 4.3-4.5.
 extensions += make_extension(
     ["spectra", "_photon"],
-    ["_muon", "_pion", "_rho", "_kaon", "_eta", "_omega", "_eta_prime", "_phi"],
+    ["_muon", "_pion", "_rho"],
 )
 extensions += make_extension(
     ["spectra", "_positron"],

@@ -122,6 +122,15 @@ allows).
   — how it was found and the numbers above.
 - `test/parity/tolerances.py` — the `TABULATED` budget class, which is
   what these seven cases are graded against.
+- `test/test_core_photon_tables.py::TestPhysics::test_the_boost_integral_still_diverges_near_threshold`
+  — the same defect pinned through a public entry point, added when the
+  seven tabulated spectra moved to Rust (Task 4.2).
+- Sibling defects, same class and same blocker:
+  [`positron-muon-spectrum-normalization-inverted.md`](positron-muon-spectrum-normalization-inverted.md),
+  [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md),
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md).
+  All four want one declared corpus regeneration after Phase 06
+  Task 6.4, not four.
 
 ## Risks / open questions
 

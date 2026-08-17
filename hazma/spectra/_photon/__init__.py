@@ -6,16 +6,8 @@ Module for computing decay spectra from a muon and light mesons.
 
 from typing import overload
 
-from hazma.spectra._photon import (
-    _eta,
-    _eta_prime,
-    _kaon,
-    _muon,
-    _omega,
-    _phi,
-    _pion,
-    _rho,
-)
+from hazma._core import photon as _core_photon
+from hazma.spectra._photon import _muon, _pion, _rho
 from hazma.utils import RealArray, RealOrRealArray
 
 
@@ -30,7 +22,8 @@ def dnde_photon_muon(photon_energies: RealArray, muon_energy: float) -> RealArra
 def dnde_photon_muon(
     photon_energies: RealOrRealArray, muon_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the muon decay
+    r"""Compute the gamma-ray decay spectrum from muon decay.
+
     :math:`\mu^{\pm} \to e^{\pm} \nu_{e} \nu_{\mu}`.
 
     Parameters
@@ -48,7 +41,6 @@ def dnde_photon_muon(
 
     Examples
     --------
-
     Calculate spectrum for single gamma ray energy::
 
         from hazma import spectra
@@ -79,7 +71,8 @@ def dnde_photon_neutral_pion(
 def dnde_photon_neutral_pion(
     photon_energies: RealOrRealArray, pion_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray spectrum from the neutral pion decay
+    r"""Compute the gamma-ray spectrum from neutral pion decay.
+
     :math:`\pi^{0} \to \gamma \gamma`.
 
     Parameters
@@ -97,7 +90,6 @@ def dnde_photon_neutral_pion(
 
     Examples
     --------
-
     Calculate spectrum for single gamma ray energy::
 
         from hazma import spectra
@@ -128,8 +120,10 @@ def dnde_photon_charged_pion(
 def dnde_photon_charged_pion(
     photon_energy: RealOrRealArray, pion_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray spectrum from the charged pion decay :math:`\pi^{\pm}
-    \to \mu^{\pm} \nu_{\mu} \to e^{\pm} \nu_{e} \nu_{\mu} \gamma`.
+    r"""Compute the gamma-ray spectrum from charged pion decay.
+
+    :math:`\pi^{\pm} \to \mu^{\pm} \nu_{\mu}
+    \to e^{\pm} \nu_{e} \nu_{\mu} \gamma`.
 
     Parameters
     ----------
@@ -180,7 +174,7 @@ def dnde_photon_charged_kaon(
 
     Parameters
     ----------
-    photon_energies : float or numpy.ndarray
+    photon_energy : float or numpy.ndarray
         Photon energy(ies) in laboratory frame.
     kaon_energy : float
         Charged kaon energy in laboratory frame.
@@ -189,7 +183,8 @@ def dnde_photon_charged_kaon(
     -------
     spec : np.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
-        ``photon_energies`` given Kaon energy ``kaon_energy``.
+        ``photon_energy`` given Kaon energy ``kaon_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``kaon_energy`` are both in MeV.
 
     Notes
     -----
@@ -209,7 +204,6 @@ def dnde_photon_charged_kaon(
 
     Examples
     --------
-
     Calculate spectrum for single gamma ray energy::
 
         from hazma import spectra
@@ -224,7 +218,7 @@ def dnde_photon_charged_kaon(
         kaon_energy = 1000.
         spectra.dnde_photon_charged_kaon(photon_energies, kaon_energy)
     """
-    return _kaon.dnde_photon_charged_kaon(photon_energy, kaon_energy)
+    return _core_photon.dnde_photon_charged_kaon(photon_energy, kaon_energy)
 
 
 @overload
@@ -244,16 +238,17 @@ def dnde_photon_short_kaon(
 
     Parameters
     ----------
-    photon_energies : float or numpy.ndarray
+    photon_energy : float or numpy.ndarray
         Photon energy(ies) in laboratory frame.
     kaon_energy : float
-        Charged kaon energy in laboratory frame.
+        Short kaon energy in laboratory frame.
 
     Returns
     -------
     spec : np.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
-        ``photon_energies`` given muon energy ``eng_mu``.
+        ``photon_energy`` given kaon energy ``kaon_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``kaon_energy`` are both in MeV.
 
     Notes
     -----
@@ -265,7 +260,6 @@ def dnde_photon_short_kaon(
 
     Examples
     --------
-
     Calculate spectrum for single gamma ray energy::
 
         from hazma import spectra
@@ -280,7 +274,7 @@ def dnde_photon_short_kaon(
         kaon_energy = 1000.
         spectra.dnde_photon_short_kaon(photon_energies, kaon_energy)
     """
-    return _kaon.dnde_photon_short_kaon(photon_energy, kaon_energy)
+    return _core_photon.dnde_photon_short_kaon(photon_energy, kaon_energy)
 
 
 @overload
@@ -296,21 +290,23 @@ def dnde_photon_long_kaon(
 def dnde_photon_long_kaon(
     photon_energy: RealOrRealArray, kaon_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray spectrum from long kaon decay into various final
-    states.
+    r"""Compute the gamma-ray spectrum from long kaon decay.
+
+    Sums over the various final states.
 
     Parameters
     ----------
-    photon_energies : float or numpy.ndarray
+    photon_energy : float or numpy.ndarray
         Photon energy(ies) in laboratory frame.
     kaon_energy : float
-        Charged kaon energy in laboratory frame.
+        Long kaon energy in laboratory frame.
 
     Returns
     -------
     spec : np.ndarray
-        List of gamma ray spectrum values, dNdE, evaluated at `photon_energies`
-        given muon energy `kaon_energy`.
+        List of gamma ray spectrum values, dNdE, evaluated at
+        ``photon_energy`` given kaon energy ``kaon_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``kaon_energy`` are both in MeV.
 
     Examples
     --------
@@ -341,7 +337,7 @@ def dnde_photon_long_kaon(
     .. math:: K_{L} \to \pi^{+} \pi^{-} \pi^{0}
 
     """
-    return _kaon.dnde_photon_long_kaon(photon_energy, kaon_energy)
+    return _core_photon.dnde_photon_long_kaon(photon_energy, kaon_energy)
 
 
 @overload
@@ -357,7 +353,8 @@ def dnde_photon_neutral_rho(
 def dnde_photon_neutral_rho(
     photon_energies: RealOrRealArray, rho_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the charged rho decay
+    r"""Compute the gamma-ray decay spectrum from neutral rho decay.
+
     :math:`\rho \to \pi^{\pm} + \pi^{\mp}`.
 
     Parameters
@@ -389,7 +386,8 @@ def dnde_photon_charged_rho(
 def dnde_photon_charged_rho(
     photon_energies: RealOrRealArray, rho_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the rho decay
+    r"""Compute the gamma-ray decay spectrum from charged rho decay.
+
     :math:`\rho^{\pm} \to \pi^{\pm} + \pi^{0}`.
 
     Parameters
@@ -419,7 +417,7 @@ def dnde_photon_eta(photon_energy: RealArray, eta_energy: float) -> RealArray: .
 def dnde_photon_eta(
     photon_energy: RealOrRealArray, eta_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the decay of the eta
+    r"""Compute the gamma-ray decay spectrum from eta decay.
 
     Parameters
     ----------
@@ -433,8 +431,9 @@ def dnde_photon_eta(
     spec : numpy.ndarray
         Array of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energy`` given eta energy ``eta_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``eta_energy`` are both in MeV.
     """
-    return _eta.dnde_photon_eta(photon_energy, eta_energy)
+    return _core_photon.dnde_photon_eta(photon_energy, eta_energy)
 
 
 @overload
@@ -462,8 +461,9 @@ def dnde_photon_omega(
     spec : numpy.ndarray
         Array of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energy`` given omega energy ``omega_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``omega_energy`` are both in MeV.
     """
-    return _omega.dnde_photon_omega(photon_energy, omega_energy)
+    return _core_photon.dnde_photon_omega(photon_energy, omega_energy)
 
 
 @overload
@@ -479,7 +479,7 @@ def dnde_photon_eta_prime(
 def dnde_photon_eta_prime(
     photon_energy: RealOrRealArray, eta_prime_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the decay of the omega.
+    r"""Compute the gamma-ray decay spectrum from eta-prime decay.
 
     Parameters
     ----------
@@ -493,8 +493,9 @@ def dnde_photon_eta_prime(
     spec : numpy.ndarray
         Array of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energy`` given eta' energy ``eta_prime_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``eta_prime_energy`` are both in MeV.
     """
-    return _eta_prime.dnde_photon_eta_prime(photon_energy, eta_prime_energy)
+    return _core_photon.dnde_photon_eta_prime(photon_energy, eta_prime_energy)
 
 
 @overload
@@ -522,5 +523,6 @@ def dnde_photon_phi(
     spec : numpy.ndarray
         Array of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energy`` given phi energy ``phi_energy``.
+        Units are MeV^-1; ``photon_energy`` and ``phi_energy`` are both in MeV.
     """
-    return _phi.dnde_photon_phi(photon_energy, phi_energy)
+    return _core_photon.dnde_photon_phi(photon_energy, phi_energy)
