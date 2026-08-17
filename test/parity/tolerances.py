@@ -33,7 +33,17 @@ implementation does* rather than by what it computes:
     relative is the acceptance figure the numerics reference already sets
     for that swap
     (`projects/cython-to-rust/references/numerics-replacements.md`,
-    "Special functions", Task 3.2 check 2).
+    "Special functions", Task 3.2 check 2). Task 4.3 swapped the class's
+    only member and found the budget was *not* enough: the kernel forms
+    `(5/beta) * (spence(xm) - spence(xp))` and this corpus samples
+    `beta = 1.4e-6`, so a two-ulp difference in `spence` arrives as a
+    3.2e-11 relative shift -- 320x this budget. The answer was to make
+    `spence` bit-equal to scipy rather than to widen the budget
+    (`rust/src/special.rs`), after which the port reproduced the Cython
+    exactly at 144,000 sampled points and the budget went unused. It is
+    kept rather than tightened for the same reason ``TABULATED`` is: it is
+    the right contract where scipy's cephes is compiled without FP
+    contraction, which is where it will be needed.
 ``TABULATED`` (rtol 1e-12)
     Driven by `boost_integrate_linear_interp` over a shipped CSV table:
     `np.trapezoid` across interior cells, closed-form partial cells at

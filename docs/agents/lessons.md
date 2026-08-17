@@ -89,7 +89,14 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   two tests and added one during a later self-review pass and shipped 80 —
   the note was written once and never re-derived, and review caught it.
   Re-derive every count you wrote *after* your last code edit, not after
-  the edit that motivated the count.
+  the edit that motivated the count. PR #67 hit the same shape twice in
+  one note: a `183 passed` for two test files, recorded before a third
+  test was added to one of them (`184`), and a "20 changed paths" taken
+  from a mid-session `git status` rather than from
+  `git diff origin/master --name-status` (21: 16 `M`, 4 `A`, 1 `D`).
+  Prefer the artifact under review as the source — the diff, not the
+  working tree, which carries staged deletions and scratch files the PR
+  will never contain.
 - [partial-historical-labeling] Annotating **one** measurement in a dated
   section as historical silently upgrades every unlabeled measurement
   beside it into a claim about the current tree. Label the *section*, not
@@ -204,7 +211,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   "later", and `check_doc_citations.py` passes them because it
   bounds-checks lines rather than resolving symbols (PR #65 — five
   citations into `test/test_core_interp.py`, pinned to `707b07c` on
-  review). Pin the revision when you move a follow-up to `done/`.
+  review). Pin the revision when you move a follow-up to `done/`. The
+  mirror-image case is a *code* edit that shortens a file other docs cite
+  into: deleting a `def` took `hazma/spectra/_photon/_muon.pyx` from 153
+  lines to 148 and left a `:148-153` citation in a reference doc the same
+  PR was already editing — out of range, and the author had read that
+  very paragraph while adding a staleness note two lines above it
+  (PR #67).
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs
   *committed* history, so running it on an uncommitted tree scans zero
   files and prints a success-shaped line — `check_doc_citations.py
@@ -277,7 +290,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   most tempting exactly where a doc lists many siblings from one package.
   Write every citation as a full repository-relative path (PR #43:
   `.../widths.py` and `.../utils.py` were ambiguous with 2 and 4
-  candidates). Pairs with [touched-doc-inherits-its-citations] above.
+  candidates; PR #67: six bare muon/pion `.pyx` citations carrying line
+  numbers, ambiguous across the three spectra packages that each ship a
+  file of that basename — a collision the port makes *more* likely, since
+  the surviving siblings are exactly the same-named files in the other two
+  packages). **Do not quote a bad citation in citation form**: the checker
+  parses your example and re-reports it, so a note explaining the fix
+  fails the check that motivated it — write the path and the line range in
+  separate spans (PR #67 tripped this twice, once in a task note and once
+  in this entry). Pairs with
+  [touched-doc-inherits-its-citations] above.
 - [measured-tree-vs-imported-module] A tool that records provenance must
   prove that what it *imports* and what it *measures* are the same tree,
   or it will record a falsehood with full confidence. Import resolution
@@ -467,3 +489,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   files are edited again. Measure with `--diff-filter=D`, and re-derive
   sub-counts from the corrected total rather than back-solving from the
   wrong one (PR #66).
+- [gate-green-is-not-citations-green] `scripts/agents/preflight.sh` does
+  not run `check_doc_citations.py` — no gate row covers citations, and
+  `markdownlint` checks prose shape, not whether a `file:line` resolves.
+  So a **RESULT: PASS** says nothing about the citations in the docs the
+  same PR touched, and reading it as coverage is how four citation
+  findings reach a reviewer behind an all-green gate (PR #67). Run
+  `scripts/agents/check_doc_citations.py --changed-vs origin/master`
+  yourself whenever the diff touches a `.md` — the checker is invoked by
+  [`doc-consistency.md`](doc-consistency.md) and by no gate. Note the
+  `--changed-vs` form takes its *file list* from committed history while
+  reading content from disk, so a doc you have edited but not yet
+  committed is silently skipped and the run still prints `NONE`
+  (PR #67: a fresh entry in this very file). Pass the paths explicitly
+  when fixes are still uncommitted — same family as
+  [changed-vs-sees-only-commits] above.

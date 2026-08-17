@@ -76,6 +76,32 @@ above was wrong about `kn`.** Running check 2 is what found it:
   what the `.pyx` actually calls. That equivalence is itself a test
   (`TestOracleIdentity`) rather than an assumption.
 
+**Measured, Task 4.3 (2026-08-16) — `spence` left `spec_math` too, and
+the first bullet above is the reason.** "A few ulp" is fine everywhere
+except in the kernel that consumes it. `spectra/_photon/_muon.pyx:113`
+forms `(5/β)·(spence(x₋) − spence(x₊))`, and the parity corpus samples
+`β = 1.4e-6`, so `1/β ≈ 3.5e6` turns that 2.4e-15 into a **3.15e-11**
+relative shift in `dnde_photon_muon` — 320x the `SPECFUN` budget the
+table below sets. So the **vendoring fallback named above was taken**,
+for `spence` rather than for `kn`, and for a reason the fallback text did
+not anticipate:
+
+- The two implementations run the *same* algorithm with the *same*
+  coefficients. What differs is **FP contraction**: scipy ships cephes
+  compiled by clang with `-ffp-contract=on`, so `polevl`'s Horner, the
+  reflection's `π²/6 − ln(x)·ln(1−x)` and the `1/x` arm's `−0.5·z·z − y`
+  are fused multiply-adds. `spec_math` writes all three unfused, and Rust
+  does not contract on its own.
+- `rust/src/special.rs` now transcribes cephes `spence.c` with that
+  contraction map. Measured against `scipy.special.spence` on 13,000
+  points across all four branches: **0 mismatches**, where `spec_math`
+  differed at 2289 of 8000 in the `(0, 1)` arm alone. `dnde_photon_muon`
+  is in turn bit-equal to its Cython twin at 144,000 points.
+- **The generalizable rule:** a special function's agreement budget is
+  meaningless without the amplification of the kernel that calls it. Two
+  of the three functions here now bypass `spec_math`, each for its own
+  measured reason; `bessel_k1` is the only one still delegating.
+
 ### `scipy.integrate.quad` (QUADPACK) call sites
 
 All live sites call `quad` from Cython with a `cdef`-function callback
@@ -292,15 +318,25 @@ Every public function follows one shape; implement once as a helper:
 ### What the Cython actually does today (measured, Task 2.1)
 
 The target shape above is a *design*, not a transcription. The live
-dispatch is `if hasattr(x, '__len__')` — 54 occurrences across 15 `.pyx`,
-with 17 `assert len(energies.shape) == 1` guards behind it, e.g.
-`hazma/spectra/_photon/_muon.pyx:148-153`. Measured on the built tree
-(`hazma.spectra._photon._muon.dnde_photon`,
-`hazma.spectra._positron._muon.dnde_positron_muon`,
-`hazma.spectra._neutrino._muon.dnde_neutrino_muon`), it diverges from the
-contract in four ways. Each was a call Task 3.5 had to make on purpose,
-because three of them are user-visible; **all four are settled below**,
-under [The settled contract](#the-settled-contract-task-35-2026-08-11):
+dispatch is `if hasattr(x, '__len__')` with an
+`assert len(energies.shape) == 1` guard behind it — for a surviving
+example, `hazma/spectra/_photon/_pion.pyx:154-156`.
+
+**The tallies in this section are a Task 2.1 snapshot and are now
+history.** At the time: 54 `hasattr` occurrences across 15 `.pyx` with 17
+guards, measured on the built tree through
+`hazma.spectra._photon._muon.dnde_photon`,
+`hazma.spectra._positron._muon.dnde_positron_muon` and
+`hazma.spectra._neutrino._muon.dnde_neutrino_muon`. The first two of
+those `def`s were deleted by Phase 04 Tasks 4.1 and 4.3, and the counts
+shrink with every swap — 27 across 8 `.pyx` with 9 guards as of Task 4.3.
+Re-derive rather than quote; **what survives the port is the list of
+divergences, not the tallies.**
+
+Those divergences are four, and each was a call Task 3.5 had to make on
+purpose, because three of them are user-visible; **all four are settled
+below**, under
+[The settled contract](#the-settled-contract-task-35-2026-08-11):
 
 1. **A 0-d array raises**, it does not take the scalar path. `ndarray`
    defines `__len__` on the type, so `hasattr` is true for every array;

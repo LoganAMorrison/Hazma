@@ -6,7 +6,8 @@ import numpy as np
 # per-domain submodules — photon, positron, neutrino, scalar_mediator,
 # vector_mediator — are filled one kernel at a time by Phases 04-06;
 # `positron` carries the first, `dnde_positron_muon` (Task 4.1), and
-# `photon` the seven tabulated meson spectra (Task 4.2).
+# `photon` the seven tabulated meson spectra (Task 4.2) plus the
+# radiative muon spectrum (Task 4.3).
 #
 # They are deliberately unstubbed, and a stub file is not the cheap fix
 # it looks like: `_core` is a single extension, so a submodule stub needs

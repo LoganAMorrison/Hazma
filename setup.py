@@ -48,8 +48,10 @@ extensions += make_extension(["_utils"], ["boost"])
 
 # Decay Spectra
 # The five tabulated photon extensions (_kaon, _eta, _omega, _eta_prime,
-# _phi) went to Rust in cython-to-rust Task 4.2; _muon, _pion and _rho
-# follow in Tasks 4.3-4.5.
+# _phi) went to Rust in cython-to-rust Task 4.2; _pion and _rho follow in
+# Tasks 4.4-4.5. _muon's Python entry point went in Task 4.3 but the
+# extension stays built: _pion.pyx and both mediator decay-spectrum
+# modules cimport its cdefs, and Phase 06 Task 6.4 is where the file goes.
 extensions += make_extension(
     ["spectra", "_photon"],
     ["_muon", "_pion", "_rho"],
