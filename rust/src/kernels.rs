@@ -7,13 +7,15 @@
 //! [`crate::dispatch`] and the per-domain submodules.
 //!
 //! One submodule per ported `.pyx`, named for it: [`positron_muon`] is
-//! `hazma/spectra/_positron/_muon.pyx`. [`photon_tables`] is the one
+//! `hazma/spectra/_positron/_muon.pyx` and [`photon_muon`] is
+//! `hazma/spectra/_photon/_muon.pyx`. [`photon_tables`] is the one
 //! exception and says so in its own docs — the five tabulated photon
 //! `.pyx` files were near-copies of one another, so they port to a single
 //! module parameterised by table, mass and line terms. The two
 //! `roundtrip` probes below stay at this level because they belong to no
 //! `.pyx` at all.
 
+pub mod photon_muon;
 pub mod photon_tables;
 pub mod positron_muon;
 

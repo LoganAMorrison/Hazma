@@ -50,7 +50,11 @@ from __future__ import annotations
 
 import ctypes
 import functools
+import json
 import math
+import platform
+import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -59,6 +63,21 @@ import scipy.special as sp
 import scipy.special.cython_special as cython_special
 
 from hazma._core import special as rust_special
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+#: The platform the parity corpus was captured on, read from its own
+#: manifest so the two scopes cannot drift apart -- the same mechanism
+#: ``test/test_core_photon_muon.py`` and ``ci.yml`` use. Only the
+#: bit-equality assertion below is scoped by it; every tolerance sweep in
+#: this module runs everywhere.
+CAPTURE_MACHINE = json.loads(
+    (REPO_ROOT / "test" / "parity" / "data" / "manifest.json").read_text()
+)["environment"]["machine"]
+
+ON_THE_CAPTURING_PLATFORM = (
+    sys.platform == "darwin" and platform.machine() == CAPTURE_MACHINE
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -331,6 +350,40 @@ class TestSpenceAgreement:
         # should be bit-equal rather than merely close.
         for x in (0.0, 1.0, 2.0):
             assert rust_special.spence(x) == float(sp.spence(x)), f"spence({x})"
+
+    @pytest.mark.skipif(
+        not ON_THE_CAPTURING_PLATFORM,
+        reason=(
+            "bit-equality with scipy's cephes needs a scipy built with FP "
+            "contraction, which is a property of that build; off the "
+            "capturing platform test_tracks_scipy is the gate"
+        ),
+    )
+    def test_is_bit_equal_to_scipy_on_the_capturing_platform(self) -> None:
+        """Not merely close -- *identical*, and one kernel depends on it.
+
+        ``rust/src/special.rs`` transcribes cephes ``spence`` with the
+        contraction scipy's C build uses, instead of calling
+        ``spec_math::Polylog::li2``, because
+        ``hazma._core.photon.dnde_photon_muon`` forms
+        ``(5/beta) * (spence(xm) - spence(xp))`` and the parity corpus
+        samples ``beta = 1.4e-6``. The ``1/beta`` turns a two-ulp
+        difference here into a 3.2e-11 relative difference in the spectrum,
+        320x that entry point's ``SPECFUN`` budget -- so bit-equality is the
+        only tolerance that survives the amplification, and it is what the
+        transcription delivers (cython-to-rust Task 4.3).
+
+        Scoped to the corpus's capturing platform for the reason the skip
+        says: contraction needs an FMA for the C compiler to contract into.
+        The tolerance sweep above still runs everywhere.
+        """
+        got = rust_special.spence(SPENCE_GRID)
+        want = sp.spence(SPENCE_GRID)
+        assert got.tobytes() == want.tobytes(), (
+            f"spence is no longer bit-equal to scipy: "
+            f"{int(np.sum(got.view(np.uint64) != want.view(np.uint64)))} of "
+            f"{SPENCE_GRID.size} points differ"
+        )
 
 
 class TestSpenceEdges:

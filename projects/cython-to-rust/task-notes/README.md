@@ -25,7 +25,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
-| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | In Progress — Tasks 4.1 (2026-08-11) and 4.2 (2026-08-12) done; 4.3–4.6 open |
+| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | In Progress — Tasks 4.1 (2026-08-11), 4.2 (2026-08-12) and 4.3 (2026-08-16) done; 4.4–4.6 open |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
@@ -691,7 +691,24 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     right, which is the control; the φ's local is even named `eng_eta`.
     Filed as
     [`../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md).
-  **Four blocked defects now share one eventual corpus regeneration.**
+  **Four blocked defects now share one eventual corpus regeneration** — a
+  fifth joined in Task 4.3, below.
+- **The port has now surfaced five live 2.1.0 defects, and the fifth was
+  found by an identity rather than a comparison** (Task 4.3).
+  `hazma/spectra/_photon/_muon.pyx:41` cuts the muon-**rest-frame** photon
+  spectrum at `y = 1 − √r` while the same file's in-flight branch (`:88`)
+  and `_photon/_pion.pyx:16`'s `ENG_GAM_MAX_MURF` both use `1 − r`, which
+  is the kinematic endpoint `(m_μ² − m_e²)/(2m_μ)`. So the spectrum is a
+  hard zero over the top **0.2543 MeV** (0.48%) of its support, where it
+  is still `5.34e-7 MeV⁻¹`, and it is **discontinuous in `E_μ` at rest**:
+  a muon one part in `10¹²` above rest returns `5.336e-7` where a muon
+  exactly at rest returns `0.0`. `5.45e-8` photons per decay are lost —
+  `1.1e-6` of the yield above 1 MeV. What found it was writing the
+  statement the original never made: *the in-flight closed form is the
+  boost integral of the rest-frame distribution*, which holds to machine
+  precision — but only when integrated to `1 − r`. Filed as
+  [`../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md).
+  **Five blocked defects now share one eventual corpus regeneration.**
 - **`numpy.sum(axis=0)` is pairwise above eight terms, and exactly one
   shipped table is wide enough to notice** (Task 4.2). The Cython built
   every tabulated rest-frame spectrum as
@@ -1125,6 +1142,54 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     but like Task 4.1's normalization finding they are entries the
     Phase 07 CHANGELOG will want to mention as *known wrong* numbers
     rather than changed ones.
+
+- **Task 4.3, 2026-08-16 (`dnde_photon_muon` → Rust, the only
+  `spence`-bearing kernel): no public value changes** — but the first
+  swap that had to *earn* that, and it moved a Phase 03 deliverable to do
+  it.
+  - _Against the Cython being replaced._ The pre-port `cdef`
+    `dnde_photon_muon_point` is still in the tree behind
+    `_muon.pyx`'s `__pyx_capi__` (capi survivor), and the Rust is
+    **bit-for-bit identical** to it over 144,000 points: nine parent
+    energies (`m_μ`, `m_μ(1+1e-12)`, `m_μ+1e-9`, 110, 150, 500, 1500,
+    `1e5`, `1e9` MeV) × two 8,000-point grids each, one geometric and one
+    uniform random. **0 mismatching doubles.** All five corpus blocks
+    likewise show a difference of exactly zero, so the `SPECFUN` budget
+    (1e-13) went unused.
+  - _The first build was not bit-equal, and the reason is worth the
+    space._ It differed at 11,306 of 70,000 points, max **3.15e-11**
+    relative, concentrated at `E_μ = m_μ(1+1e-12)` — and **every one of
+    the 24 failing corpus points was reproduced to a ratio of 1.000** by
+    `(5/β)·Δspence·α/(3π E_μ)` alone. The kernel forms
+    `(5/β)·(spence(x₋) − spence(x₊))` at `β = 1.4142764231806604e-06`, so
+    `1/β ≈ 3.5e6` amplifies `spec_math`'s ≤2.0e-15 disagreement with
+    `scipy.special.spence` by six orders of magnitude. The absolute size
+    never exceeded **1.15e-14** on a block whose peak is 17.2.
+  - _Fixed at the source, not at the budget._ `rust/src/special.rs` now
+    transcribes cephes `spence` in-tree with the FP contraction scipy's C
+    build uses (fused `polevl` Horner, fused
+    `π²/6 − ln(x)·ln(1−x)`, fused `−0.5·z·z − y`), instead of calling
+    `spec_math::Polylog::li2`. Same algorithm, same coefficients, fewer
+    roundings — **0 mismatches against `scipy.special.spence` at 13,000
+    points across all four branches**, where `spec_math` had 2289 of
+    8,000 in the `(0,1)` arm alone. `SPECFUN` stayed at 1e-13; no budget
+    was widened, so **rule 2 was not invoked**.
+  - _`spence`'s only consumer inside hazma is this kernel_
+    (`rg spence hazma/ rust/src` outside `special*.rs` returns
+    `_photon/_muon.pyx:113`), so nothing else could have moved with it;
+    `test/test_core_special.py`'s sweeps confirm the transcription tracks
+    scipy at least as closely as `spec_math` did on every branch.
+  - _No new behavior change._ The 0-d-array and rank-error divergences are
+    the dispatch contract's, already declared for Task 4.1.
+  - Separately, and *not* a drift: this task **measured** a fifth
+    pre-existing 2.1.0 defect — `_muon.pyx:41` cuts the muon-rest-frame
+    photon spectrum at `y = 1 − √r` where the kinematic endpoint (and the
+    file's own in-flight branch, and `_pion.pyx`'s `ENG_GAM_MAX_MURF`) is
+    `y = 1 − r`, leaving a hard zero over the top **0.2543 MeV** of the
+    support where the spectrum is `5.34e-7 MeV⁻¹`, and a
+    **discontinuity in `E_μ` at rest**. Reproduced, so no value moved —
+    another entry the Phase 07 CHANGELOG will want under *known wrong*
+    rather than *changed*.
 
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
@@ -1751,9 +1816,9 @@ it from memory.)
 ## Handoff to Next Task
 
 **Phases 00–03 are closed (2026-08-06, 08-08, 08-09, 08-11), and Phase 04
-is in progress — Task 4.1 landed 2026-08-11 and Task 4.2 on 2026-08-12.**
-The next work is Task 4.3 onward and/or Phase 05; they share no files and
-may run in parallel.
+is in progress — Task 4.1 landed 2026-08-11, Task 4.2 on 2026-08-12 and
+Task 4.3 on 2026-08-16.** The next work is Task 4.4 onward and/or
+Phase 05; they share no files and may run in parallel.
 
 **The parity corpus has now left bit-equality mode, permanently.**
 Task 4.1's swap did it, and so did its `.pyx` edit — the kernel digest
@@ -1765,7 +1830,11 @@ the consequence is that corpus *regeneration* is closed — see Open
 Questions. **Task 4.2 met the one affected block in Phase 04
 (`spectra.photon.eta`) and waived it on evidence** (bit-equal at 336,000
 points); the other five are scalar cross sections, so read that follow-up
-before Phase 05 rather than before Tasks 4.3–4.6.
+before Phase 05 rather than before Tasks 4.4–4.6. **Task 4.3 then hit the
+same class from the other side** — not one of the six named blocks, but a
+`β = 1.4e-6` probe where a two-ulp special-function difference arrives
+amplified by `5/β`. It was fixed at the source rather than by widening a
+budget; the general lesson is under Decisions.
 
 **For the next agent starting any task in this project:**
 
@@ -1793,15 +1862,17 @@ before Phase 05 rather than before Tasks 4.3–4.6.
   *verified* to be that same set, not merely the same size. Re-derive
   with the clean-then-rebuild recipe rather than quoting this; a stale
   `.so` makes a wrong list look right.
-- **`hazma._core` now serves eight kernels**:
-  `positron.dnde_positron_muon` (Task 4.1) and the seven
-  `photon.dnde_photon_*` tabulated meson spectra (Task 4.2), each called
-  by its wrapper in `hazma/spectra/_{positron,photon}/__init__.py`. The
-  positron one is bit-equal to the `cdef` the mediator modules still
-  cimport — 126,182 points across 14 parent energies, 0 mismatches — so
-  Task 4.6 has a verified Rust dependency to call natively; the seven
-  photon ones were bit-equal to their twins at 336,000 points before
-  those twins were deleted. The swap recipe every later task follows is
+- **`hazma._core` now serves nine kernels**:
+  `positron.dnde_positron_muon` (Task 4.1), the seven
+  `photon.dnde_photon_*` tabulated meson spectra (Task 4.2) and
+  `photon.dnde_photon_muon` (Task 4.3), each called by its wrapper in
+  `hazma/spectra/_{positron,photon}/__init__.py`. Two of them are
+  bit-equal to `cdef`s the still-Cython modules cimport — the positron
+  muon at 126,182 points across 14 parent energies and the photon muon at
+  144,000 across nine, both 0 mismatches — so Tasks 4.4 and 4.6 each have
+  a verified Rust dependency to call natively; the seven tabulated ones
+  were bit-equal to their twins at 336,000 points before those twins were
+  deleted. The swap recipe every later task follows is
   the eight steps in
   [`../phases/phase-04-spectra-kernels.md`](../phases/phase-04-spectra-kernels.md)'s
   Goal, and `test/test_core_positron_muon.py` is the test module to copy

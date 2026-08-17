@@ -1,6 +1,7 @@
 //! The three `scipy.special` functions hazma's compiled layer uses.
 //!
-//! A thin, PyO3-free shim over the [`spec_math`] crate
+//! A PyO3-free shim over the [`spec_math`] crate, plus two routines that
+//! deliberately do not use it
 //! (`projects/cython-to-rust/rules.md`, Rust conventions rule 3 — flat
 //! `fn(f64, ..) -> f64`, no PyO3 types, so `cargo test` needs no GIL).
 //! `crate::special_probe` is the Python-visible half.
@@ -9,16 +10,26 @@
 //!
 //! Upstream: `spec_math` 0.1.6 (crates.io, **MIT OR Apache-2.0**), a
 //! Rust re-implementation of the **cephes** library, Cephes Math Library
-//! Release 2.1 (1989), Copyright 1984–1992 Stephen L. Moshier. Nothing
-//! here is GSL-derived, which is what
+//! Release 2.1 (1989), Copyright 1984–1992 Stephen L. Moshier. The
+//! coefficient tables [`SPENCE_A`] / [`SPENCE_B`] are transcribed from
+//! the same cephes release, which ADR-0002 lists as permitted
+//! provenance. Nothing here is GSL-derived, which is what
 //! `projects/cython-to-rust/adrs/ADR-0002-license-clean-numerics.md`
 //! requires (`rules.md` rule 5 / Licensing 1).
 //!
 //! That lineage is the point rather than a coincidence: scipy's own
 //! `spence`, `k0` and `k1` are cephes wrappers too, so the port is
 //! algorithm-for-algorithm rather than merely value-for-value against
-//! them. `scipy.special.kn` is the exception — it is `kv`, not cephes,
-//! and [`bessel_kn`] documents what this module does about that.
+//! them.
+//!
+//! **Two of the three do not go through `spec_math` in the end**, and
+//! each says why at its own definition. [`bessel_kn`] does not because
+//! `scipy.special.kn` is not cephes `kn` (Task 3.2). [`spence`] does not
+//! because `spec_math` evaluates cephes' Horner unfused while the C
+//! scipy ships is contracted, and the one kernel that calls it amplifies
+//! the difference by `1/β` (Task 4.3). Same algorithm, same
+//! coefficients, different roundings — and the second is measurably the
+//! wrong answer for hazma.
 //!
 //! # What calls these, and with what
 //!
@@ -36,7 +47,56 @@
 //! the Python-level oracle in `test/test_core_special.py` is the same
 //! function the Cython actually calls.
 
-use spec_math::{Bessel, Polylog};
+use spec_math::Bessel;
+
+/// `π²/6`, the value of [`spence`] at `0` and the reflection constant.
+///
+/// Folded the way cephes' C folds `M_PI * M_PI / 6.0`; both round to the
+/// same double, which `the_reflection_constant_is_pi_squared_over_six`
+/// checks against the literal the closed-form tests use.
+const PI_SQ_OVER_SIX: f64 = std::f64::consts::PI * std::f64::consts::PI / 6.0;
+
+/// Numerator coefficients of cephes' rational approximation on
+/// `(0.5, 1.5)`. Cephes Math Library Release 2.1 (January 1989),
+/// `spence.c`, Copyright 1985–1989 Stephen L. Moshier — the same
+/// lineage the module docs cite, transcribed rather than depended upon
+/// for the reason [`spence`] gives.
+#[allow(clippy::excessive_precision)]
+const SPENCE_A: [f64; 8] = [
+    4.651_285_860_739_900_452_78E-5,
+    7.315_890_452_380_947_110_71E-3,
+    1.338_476_395_783_090_186_50E-1,
+    8.796_913_117_545_303_153_41E-1,
+    2.711_498_511_965_534_699_20E0,
+    4.256_971_560_081_217_557_24E0,
+    3.297_713_409_852_251_069_36E0,
+    1.000_000_000_000_000_001_26E0,
+];
+
+/// Denominator coefficients; see [`SPENCE_A`].
+#[allow(clippy::excessive_precision)]
+const SPENCE_B: [f64; 8] = [
+    6.909_904_889_125_532_769_99E-4,
+    2.540_437_639_325_443_791_13E-2,
+    2.829_748_606_025_680_899_43E-1,
+    1.411_725_977_518_310_696_17E0,
+    3.638_005_333_451_370_754_18E0,
+    5.032_788_801_433_169_903_90E0,
+    3.547_713_409_852_250_962_17E0,
+    9.999_999_999_999_999_987_40E-1,
+];
+
+/// Cephes' `polevl`: Horner, **fused**.
+///
+/// The fusion is the whole reason this function is in the tree — see
+/// [`spence`].
+fn polevl(x: f64, coefficients: &[f64; 8]) -> f64 {
+    let mut answer = coefficients[0];
+    for coefficient in &coefficients[1..] {
+        answer = answer.mul_add(x, *coefficient);
+    }
+    answer
+}
 
 /// Spence's integral, in **scipy's** argument convention.
 ///
@@ -54,16 +114,87 @@ use spec_math::{Bessel, Polylog};
 /// two of these (`spence(xm) - spence(xp)`), so the convention is pinned
 /// against scipy in `test/test_core_special.py` rather than trusted.
 ///
-/// The upstream spelling is `spec_math`'s `Polylog::li2`, whose *name*
-/// says `Li₂` and whose *body* is `cephes64::spence` — the convention
-/// trap one level down. Wrapping it under scipy's name here means no
-/// kernel has to remember which one it got.
+/// # Why this is transcribed and not `spec_math::Polylog::li2`
+///
+/// `spec_math` does have it, and its body *is* `cephes64::spence` — the
+/// convention trap one level down, since the method is named `li2`. What
+/// it does not have is the C build's **contraction**. scipy ships cephes
+/// compiled by clang with `-ffp-contract=on`, so `polevl`'s
+/// `ans = ans*x + c` and the reflection's `π²/6 − ln(x)·ln(1−x)` are
+/// fused multiply-adds; `spec_math` writes them unfused, and Rust does
+/// not contract. Measured against `scipy.special.spence` on 13,000
+/// points across all four branches (cython-to-rust Task 4.3):
+/// `spec_math` misses by up to **2.0e-15** relative, this transcription
+/// by **0** — bit-identical everywhere sampled.
+///
+/// That distinction would be cosmetic anywhere else and is not here.
+/// `crate::kernels::photon_muon` forms `(5/β)·(spence(x₋) − spence(x₊))`,
+/// and the parity corpus samples `β = 1.4e-6`, so the `1/β` turns a
+/// two-ulp difference in `spence` into a **3.2e-11** relative difference
+/// in the spectrum — 320x the `SPECFUN` budget. Bit-equality is the only
+/// tolerance that survives that amplification, so it is what this
+/// function delivers.
+///
+/// Fusing is also the *more* accurate Horner, so nothing is traded for
+/// the agreement. It is scoped to a platform only in the sense that the
+/// comparison is: a scipy built without contraction would move, and the
+/// `test/test_core_special.py` sweep is what would say so.
 ///
 /// Edge behavior, matching cephes and therefore scipy: `x < 0` and
 /// `x = ∞` give `NaN`, `x = 0` gives `π²/6`, `x = 1` gives `0`, and
 /// `NaN` propagates.
 pub fn spence(x: f64) -> f64 {
-    x.li2()
+    if x < 0.0 {
+        // Cephes raises a domain error and returns NaN. A `NaN` argument
+        // fails this comparison and falls through to the arithmetic
+        // below, where it propagates — as it does in cephes.
+        return f64::NAN;
+    }
+    if x == 1.0 {
+        return 0.0;
+    }
+    if x == 0.0 {
+        return PI_SQ_OVER_SIX;
+    }
+
+    let mut x = x;
+    // `flag` is cephes' own two-bit reflection record: bit 0 for the
+    // `1 − x` map, bit 1 for the `1/x` map. Both can be set.
+    let mut flag = 0_u8;
+
+    if x > 2.0 {
+        x = 1.0 / x;
+        flag |= 2;
+    }
+
+    let w = if x > 1.5 {
+        flag |= 2;
+        1.0 / x - 1.0
+    } else if x < 0.5 {
+        flag |= 1;
+        -x
+    } else {
+        x - 1.0
+    };
+
+    // The division breaks contraction on both sides, so this line is
+    // plain arithmetic in the C too.
+    let mut y = -w * polevl(w, &SPENCE_A) / polevl(w, &SPENCE_B);
+
+    if flag & 1 != 0 {
+        // `fnmsub`: the product of the two logarithms is fused into the
+        // subtraction from π²/6.
+        y = (-x.ln()).mul_add((1.0 - x).ln(), PI_SQ_OVER_SIX) - y;
+    }
+
+    if flag & 2 != 0 {
+        let z = x.ln();
+        // Likewise `-0.5·z·z − y`: the outer multiply-add is fused, the
+        // inner `0.5 * z` is not.
+        y = (-0.5 * z).mul_add(z, -y);
+    }
+
+    y
 }
 
 /// Modified Bessel function of the second kind, order one — `K₁(x)`.
@@ -212,6 +343,54 @@ mod tests {
             let rhs = PI_SQ_OVER_6 - (1.0 - x).ln() * x.ln();
             assert_close(lhs, rhs, "spence reflection");
         }
+    }
+
+    /// The rational approximation is evaluated **fused**, and that is
+    /// not cosmetic.
+    ///
+    /// The whole reason `spence` is transcribed here rather than taken
+    /// from `spec_math` (see its docs): scipy's cephes is compiled with
+    /// contraction on, so `polevl` is a chain of `fmadd`. A mutation to
+    /// plain `ans * x + c` leaves cephes' own accuracy claim intact and
+    /// would pass every identity above — but it moves `spence` by up to
+    /// 2.0e-15 relative against scipy, which
+    /// `crate::kernels::photon_muon` amplifies by `1/β` into a 3.2e-11
+    /// spectrum shift and the parity corpus then rejects. This test is
+    /// what keeps the fusion from being "simplified" away without that
+    /// failure being the first thing anyone sees.
+    ///
+    /// Asserted as a *difference* from the unfused evaluation, searched
+    /// for rather than assumed, so it cannot be satisfied by a lucky
+    /// argument.
+    #[test]
+    fn the_rational_approximation_is_evaluated_fused() {
+        fn unfused(x: f64, coefficients: &[f64; 8]) -> f64 {
+            let mut answer = coefficients[0];
+            for coefficient in &coefficients[1..] {
+                answer = answer * x + *coefficient;
+            }
+            answer
+        }
+
+        let mut differs = false;
+        let mut w: f64 = -0.4;
+        for _ in 0..4096 {
+            differs |= polevl(w, &SPENCE_A).to_bits() != unfused(w, &SPENCE_A).to_bits()
+                || polevl(w, &SPENCE_B).to_bits() != unfused(w, &SPENCE_B).to_bits();
+            w = f64::from_bits(w.to_bits() + 1);
+        }
+        assert!(
+            differs,
+            "fused and unfused Horner agreed at every sampled w, so this \
+             test can no longer tell the two evaluations apart"
+        );
+    }
+
+    /// `π²/6` folds to the same double as the literal the closed-form
+    /// tests use.
+    #[test]
+    fn the_reflection_constant_is_pi_squared_over_six() {
+        assert_eq!(PI_SQ_OVER_SIX.to_bits(), PI_SQ_OVER_6.to_bits());
     }
 
     #[test]

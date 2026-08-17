@@ -343,9 +343,12 @@ def _half_mass(mass: float) -> list[float]:
 #: parent listed here.
 _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
     (
+        # Ported: cython-to-rust Task 4.3. The module is the *wrapper*,
+        # not the `.pyx`, because that is where the value now comes from
+        # — see `PORTED_ENTRY_POINTS`.
         "photon.muon",
-        "hazma.spectra._photon._muon",
-        "dnde_photon",
+        "hazma.spectra._photon",
+        "dnde_photon_muon",
         params.muon_mass,
         [ENG_GAM_MAX_MURF],
     ),
@@ -1395,6 +1398,10 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     ),
     "spectra.photon.omega": ("hazma.spectra._photon._omega", "dnde_photon_omega"),
     "spectra.photon.phi": ("hazma.spectra._photon._phi", "dnde_photon_phi"),
+    # cython-to-rust Task 4.3. Like the positron muon above and unlike
+    # the tabulated family, this ``.pyx`` survives as a capi provider —
+    # its ``def`` is gone and its two ``cdef``s are not.
+    "spectra.photon.muon": ("hazma.spectra._photon._muon", "dnde_photon"),
 }
 
 

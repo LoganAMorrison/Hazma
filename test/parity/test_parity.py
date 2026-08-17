@@ -277,6 +277,12 @@ def test_the_served_roster_is_exactly_the_ported_entry_points() -> None:
     lives in, which `hazma/spectra/**/__init__.py` already fixes by
     importing it.
 
+    The names come from the *cases*, not from the `PORTED_ENTRY_POINTS`
+    values: those values record the `.pyx` origin, whose ``def`` need not
+    be named after the public entry point. Task 4.1's and 4.2's happened
+    to be; Task 4.3's is `hazma.spectra._photon._muon:dnde_photon`,
+    serving `dnde_photon_muon`.
+
     If this fails, either a swap landed without its `PORTED_ENTRY_POINTS`
     row (add it; the corpus case must move to the wrapper in the same
     change) or something non-kernel became public on the extension and
@@ -285,7 +291,7 @@ def test_the_served_roster_is_exactly_the_ported_entry_points() -> None:
     `test_test_only_core_submodules_have_no_importer`'s guarantee).
     """
     served = corpus.rust_core_kernels()
-    ported = {function for _, function in corpus.PORTED_ENTRY_POINTS.values()}
+    ported = {CASES[name].function for name in corpus.PORTED_ENTRY_POINTS}
 
     assert {name.rpartition(".")[2] for name in served} == ported
     assert len(served) == len(corpus.PORTED_ENTRY_POINTS), (

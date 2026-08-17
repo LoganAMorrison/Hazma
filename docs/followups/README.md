@@ -36,6 +36,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the muon positron spectrum divides by its normalization](todo/positron-muon-spectrum-normalization-inverted.md) | 2026-08-11 | cython-to-rust Task 4.1 | cross-cutting |
 | [the η′ two-photon line carries one photon instead of two](todo/eta-prime-two-photon-line-missing-factor-two.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
 | [the φ photon lines sit at the daughter meson's energy](todo/phi-photon-lines-use-the-daughter-meson-energy.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
+| [the muon photon spectrum's rest frame stops short of the endpoint](todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | 2026-08-16 | cython-to-rust Task 4.3 | commit |
 
 ## Promoted / Done / Pruned
 

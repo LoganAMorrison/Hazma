@@ -11,13 +11,15 @@
 //! `hazma/spectra/_photon/__init__.py` calls, so
 //! `test/parity/cases.py`'s `rust_core_kernels()` counts them.
 //!
-//! The seven tabulated spectra land here in Task 4.2. Tasks 4.3–4.5 add
-//! the muon, pion and rho kernels beside them.
+//! The seven tabulated spectra landed here in Task 4.2 and the radiative
+//! muon spectrum in Task 4.3. Tasks 4.4–4.5 add the pion and rho kernels
+//! beside them.
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::dispatch::map_unary;
+use crate::kernels::photon_muon;
 use crate::kernels::photon_tables::{self, Spectrum};
 
 /// Every tabulated entry point, over one implementation.
@@ -51,6 +53,28 @@ fn dnde_tabulated(
         .map_err(|err| PyValueError::new_err(err.to_string()))?;
     map_unary(photon_energies, "Photon energies", |energy| {
         photon_tables::dnde(energy, branch, spectrum)
+    })
+}
+
+/// The photon spectrum `dN/dE` in MeV⁻¹ from radiative muon decay.
+///
+/// `photon_energies` is the mapped argument — a float, a NumPy scalar, a
+/// 0-d numeric array, or a 1-D `float64` array (or a sequence that
+/// converts to one). `muon_energy` is the muon's total energy in MeV.
+///
+/// The quantity wording is `"Photon energies"`, which is the wording
+/// `hazma/spectra/_photon/_muon.pyx` used in the `assert` this replaces.
+/// Unlike the tabulated entry points above there is no parent-energy
+/// guard to resolve first: the kernel's own `emu < m_mu` short circuit
+/// returns zero, as the Cython does.
+///
+/// The advertised signature is not positional-only: the Cython entry
+/// point was a `def` and accepted both arguments by keyword.
+#[pyfunction]
+#[pyo3(text_signature = "(photon_energies, muon_energy)")]
+fn dnde_photon_muon(photon_energies: &Bound<'_, PyAny>, muon_energy: f64) -> PyResult<Py<PyAny>> {
+    map_unary(photon_energies, "Photon energies", |energy| {
+        photon_muon::dnde_photon_muon(energy, muon_energy)
     })
 }
 
@@ -117,6 +141,7 @@ fn dnde_photon_phi(photon_energies: &Bound<'_, PyAny>, phi_energy: f64) -> PyRes
 
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
+    module.add_function(wrap_pyfunction!(dnde_photon_muon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_charged_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_long_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_short_kaon, module)?)?;

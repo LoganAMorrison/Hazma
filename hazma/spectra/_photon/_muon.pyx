@@ -134,20 +134,15 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_photon_muon_array(double[:] energies, 
 # ---- Python API ---------------------------------------------------
 # ===================================================================
 
-def dnde_photon(egam, emu):
-    """
-    Compute the photon spectrum dN/dE from the decay of a muon into an electron,
-    two neutrinos and a photon.
-    Paramaters
-    ----------
-    egam: float or array-like
-        Photon energy.
-    emu: float 
-        Energy of the muon.
-    """
-    if hasattr(egam, '__len__'):
-        energies = np.array(egam)
-        assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
-        return dnde_photon_muon_array(energies, emu)
-    else:
-        return dnde_photon_muon_point(egam, emu)
+# The `def dnde_photon` that lived here was deleted by cython-to-rust
+# Task 4.3: `hazma/spectra/_photon/__init__.py` now calls
+# `hazma._core.photon.dnde_photon_muon`, and rules.md rule 1 forbids
+# leaving a second reachable implementation behind.
+#
+# The two `cdef`s above stay, and so does this file, because
+# `hazma/spectra/_photon/_pion.pyx` and
+# `hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx` still `cimport`
+# them through this module's `__pyx_capi__`. Phase 06 Task 6.4 deletes
+# the whole extension once the last cimporter is gone; until then this
+# is the capi-survivor exception in
+# `projects/cython-to-rust/phases/phase-04-spectra-kernels.md`.
