@@ -27,12 +27,14 @@ if y <= 0.0 or y >= 1.0 - MASS_E / MASS_MU:
 in the scaled variable `y = 2 E_γ / m_μ`. The kinematic endpoint of the
 radiative decay is `E_γ,max = (m_μ² − m_e²)/(2 m_μ)`, i.e. `y = 1 − r`
 with `r = (m_e/m_μ)²` — the very `r` the same function defines two lines
-above (`_muon.pyx:39`). The guard uses `1 − √r` instead.
+above (`hazma/spectra/_photon/_muon.pyx:39`). The guard uses `1 − √r`
+instead.
 
 Three independent statements inside hazma agree that `1 − r` is the right
 edge and the guard is the outlier:
 
-- `dnde_photon_muon_point` in the *same file* (`_muon.pyx:88`) tests
+- `dnde_photon_muon_point` in the *same file*
+  (`hazma/spectra/_photon/_muon.pyx:88`) tests
   `x >= (1.0 - r) / (1.0 - beta)`, so the in-flight branch already uses
   `1 − r`;
 - `hazma/spectra/_photon/_pion.pyx:16` hard-codes
@@ -121,7 +123,8 @@ the defect and must flip together with it.
   and this one. They should be priced and scheduled together rather than
   one at a time.
 - **This one reaches further than the rest-frame branch alone.** The
-  charged-pion photon spectrum (`_pion.pyx`) integrates the *point*
+  charged-pion photon spectrum (`hazma/spectra/_photon/_pion.pyx`)
+  integrates the *point*
   function over the boost cone, and the neutral-rho spectrum integrates
   that in turn, so the rest-frame branch is reachable from them wherever a
   muon lands within one `DBL_EPSILON` MeV of rest. Whether any live grid

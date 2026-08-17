@@ -38,6 +38,8 @@ def dnde_photon_muon(
     spec : numpy.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energies`` given muon energy ``eng_mu``.
+        Units are MeV^-1; ``photon_energies`` and ``muon_energy`` are both
+        in MeV.
 
     Examples
     --------

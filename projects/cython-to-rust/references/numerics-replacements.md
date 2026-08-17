@@ -318,18 +318,25 @@ Every public function follows one shape; implement once as a helper:
 ### What the Cython actually does today (measured, Task 2.1)
 
 The target shape above is a *design*, not a transcription. The live
-dispatch is `if hasattr(x, '__len__')` — 54 occurrences across 15 `.pyx`,
-with 17 `assert len(energies.shape) == 1` guards behind it, e.g.
-`hazma/spectra/_photon/_muon.pyx:148-153`. Measured on the built tree
-(`hazma.spectra._photon._muon.dnde_photon`,
-`hazma.spectra._positron._muon.dnde_positron_muon`,
-`hazma.spectra._neutrino._muon.dnde_neutrino_muon`) — **a Task 2.1
-snapshot; the first two of those three `def`s were deleted by Phase 04
-Tasks 4.1 and 4.3, and the counts shrink with every swap. Read the
-divergences, not the tallies** — it diverges from the
-contract in four ways. Each was a call Task 3.5 had to make on purpose,
-because three of them are user-visible; **all four are settled below**,
-under [The settled contract](#the-settled-contract-task-35-2026-08-11):
+dispatch is `if hasattr(x, '__len__')` with an
+`assert len(energies.shape) == 1` guard behind it — for a surviving
+example, `hazma/spectra/_photon/_pion.pyx:154-156`.
+
+**The tallies in this section are a Task 2.1 snapshot and are now
+history.** At the time: 54 `hasattr` occurrences across 15 `.pyx` with 17
+guards, measured on the built tree through
+`hazma.spectra._photon._muon.dnde_photon`,
+`hazma.spectra._positron._muon.dnde_positron_muon` and
+`hazma.spectra._neutrino._muon.dnde_neutrino_muon`. The first two of
+those `def`s were deleted by Phase 04 Tasks 4.1 and 4.3, and the counts
+shrink with every swap — 27 across 8 `.pyx` with 9 guards as of Task 4.3.
+Re-derive rather than quote; **what survives the port is the list of
+divergences, not the tallies.**
+
+Those divergences are four, and each was a call Task 3.5 had to make on
+purpose, because three of them are user-visible; **all four are settled
+below**, under
+[The settled contract](#the-settled-contract-task-35-2026-08-11):
 
 1. **A 0-d array raises**, it does not take the scalar path. `ndarray`
    defines `__len__` on the type, so `hasattr` is true for every array;

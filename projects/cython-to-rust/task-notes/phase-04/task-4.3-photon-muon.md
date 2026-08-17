@@ -136,7 +136,7 @@ lane transcribes to an ordinary `mul_add` chain — but a reader counting
 **once** (the `.pyx` calls it from one branch), unlike the positron
 sibling's twice.
 
-### A fourth live 2.1.0 defect: the rest-frame branch stops 0.25 MeV early
+### A fifth live 2.1.0 defect: the rest-frame branch stops 0.25 MeV early
 
 Found by writing the identity the original never asserted — that the
 in-flight closed form is the boost integral of the rest-frame
@@ -145,10 +145,12 @@ or exactly 0 wherever the boost window is not truncated) — but only when
 the rest-frame form is integrated to `y = 1 − r`. Against the shipped cut
 at `y = 1 − √r` the two disagree by 3.2e-6.
 
-`_muon.pyx:41` guards the rest frame with `y >= 1.0 - MASS_E / MASS_MU`
+`hazma/spectra/_photon/_muon.pyx:41` guards the rest frame with
+`y >= 1.0 - MASS_E / MASS_MU`
 while `r = (MASS_E/MASS_MU)**2` is defined two lines above and the
-in-flight branch (`_muon.pyx:88`) uses `(1.0 - r)`. The kinematic
-endpoint is `(m_μ² − m_e²)/(2m_μ)`, which `_pion.pyx:16` also hard-codes
+in-flight branch (`hazma/spectra/_photon/_muon.pyx:88`) uses
+`(1.0 - r)`. The kinematic endpoint is `(m_μ² − m_e²)/(2m_μ)`, which
+`hazma/spectra/_photon/_pion.pyx:16` also hard-codes
 as `ENG_GAM_MAX_MURF = 52.82795006985128`. So three places in hazma say
 `1 − r` and one says `1 − √r`.
 
@@ -235,6 +237,29 @@ clips here, so a `NaN` propagates on both branches.
   5e-3 of 1, so swapping them yields a spectrum that still looks like a
   spectrum; the separation is pinned in a `const` block (clippy refuses a
   runtime `assert!` on compile-time constants).
+- **Review round 1 (PR #67): four citation/count corrections, no code
+  change.** All four were valid and all four were mine. The mechanism
+  behind three of them is one thing: **`preflight.sh` has no gate row for
+  `check_doc_citations.py`**, so an all-green gate said nothing about the
+  citations in the six docs this PR touched, and I read it as coverage.
+  Fixed: the reference doc's `:148-153` line range into
+  `hazma/spectra/_photon/_muon.pyx` (deleting the `def` cut the file to
+  148 lines) now cites a surviving example instead — and note that
+  *quoting* the broken range in citation form reproduces the failure, so
+  it is written split here; six bare
+  `_muon.pyx` / `_pion.pyx` citations are full repository-relative paths
+  — that basename is ambiguous across all three spectra packages;
+  `183 passed` → `184` (recorded before the `spence` bit-equality test was
+  added to `test_core_special.py`); the sweep block's path count is
+  re-derived from `git diff --name-status` (21: 16 `M`, 4 `A`, 1 `D`)
+  rather than from a mid-session `git status`. Swept the same classes
+  across the whole diff, which also caught a "fourth live 2.1.0 defect"
+  heading that should have read "fifth". Lessons ledger updated.
+- **The public wrapper now states its units** — `MeV⁻¹`, both arguments in
+  `MeV` — matching the seven wrappers Task 4.2 annotated. Non-blocking
+  review point; in scope because the convention in that file is that the
+  task swapping a wrapper annotates it. `_pion` and `_rho` are Tasks
+  4.4–4.5's by the same rule.
 - **No new `constants::derived` submodule.** Unlike `_positron/_muon.pyx`,
   this `.pyx` declares no module-level constants — `r` is a function
   local — so the four folded values are `const` in the kernel module and
@@ -299,7 +324,7 @@ Rust edit (`hazma._core.__file__` confirmed inside the worktree).
 - `pytest -q test/test_core_special.py` → `66 passed` (65 before: +1, the
   bit-equality test; the other two new `special` tests are `cargo`).
 - `pytest -q test/test_core_dispatch.py test/test_core_special.py` →
-  `183 passed`.
+  `184 passed` (118 + 66).
 - `pytest -q test/parity` → `628 passed, 1 skipped` before the roster
   meta-test was repointed, `629 passed, 1 skipped` after; the
   `spectra.photon.muon` case is green at `SPECFUN` in all five blocks.
@@ -444,13 +469,14 @@ to reach for `spec_math::li2` is worse than no reference.
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Working tree inventory | `git status --short` | 20 paths (16 M/D + 4 untracked), each walked; one stray `-k` from the mutation harness found and removed |
-| Full diff read | `git diff origin/master --` | reviewed in full; the 4 untracked files walked as fresh creations |
+| Changed-path inventory | `git diff origin/master --name-status \| awk '{print $1}' \| uniq -c` | **21 paths: 16 `M`, 4 `A`, 1 `D`.** (An earlier draft said 20 — it counted a pre-commit `git status --short` in which the deletion was already staged and a stray `-k` from the mutation harness was still present. Re-derived from the diff, which is the artifact under review.) |
+| Full diff read | `git diff origin/master --` | reviewed in full; the 4 additions walked as fresh creations |
+| Citations resolve | `scripts/agents/check_doc_citations.py --changed-vs origin/master` | `docs scanned: 6`, `in-repo citations checked: 39`, **0 problems** |
 | `.pyx` `def` really gone | `rg -n "^def " hazma/spectra/_photon/_muon.pyx` | **no occurrences** |
 | No live caller of the deleted `def` | `rg -n "_muon\.dnde_photon\b" -g '!*.so' .` | 3 hits, **all prose**: `references/numerics-replacements.md:298` (Task 2.1 snapshot — marked stale in this task), this note, and `task-2.3-plumbing-test.md`. No code. |
-| `cimport`ers unbroken | `rg -n "_photon\._muon cimport" hazma/` | 3 — `_pion.pyx:9`, `scalar_mediator_decay_spectrum.pyx:1`, `vector_mediator_decay_spectrum.pyx:9`; all `cdef`s, all intact (and `test_the_cdef_capsules_the_cimporters_need_are_intact` asserts the capsule set) |
+| `cimport`ers unbroken | `rg -n "_photon\._muon cimport" hazma/` | 3 — `hazma/spectra/_photon/_pion.pyx:9`, `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx:1`, `hazma/vector_mediator/vector_mediator_decay_spectrum.pyx:9`; all `cdef`s, all intact (and `test_the_cdef_capsules_the_cimporters_need_are_intact` asserts the capsule set) |
 | Deleted stub not referenced | `rg -n "_photon/_muon\.pyi" .` | 2 hits, both this task's own bookkeeping; no build file or import |
-| Cited line numbers | `rg -n "MASS_E / MASS_MU\|1.0 - r\|spence" hazma/spectra/_photon/_muon.pyx`, `sed -n '16p' hazma/spectra/_photon/_pion.pyx` | `:41` is the rest-frame guard, `:88` the in-flight edge, `:113` the `spence` call, `_pion.pyx:16` is `ENG_GAM_MAX_MURF` — all four as cited (an earlier draft said `:37`; corrected) |
+| Cited line numbers | `rg -n "MASS_E / MASS_MU\|1.0 - r\|spence" hazma/spectra/_photon/_muon.pyx`, `sed -n '16p' hazma/spectra/_photon/_pion.pyx` | in `hazma/spectra/_photon/_muon.pyx`, `:41` is the rest-frame guard, `:88` the in-flight edge and `:113` the `spence` call; `hazma/spectra/_photon/_pion.pyx:16` is `ENG_GAM_MAX_MURF` — all four as cited (an earlier draft said `:37`; corrected) |
 | Public name unchanged in docs | `rg -n "dnde_photon_muon" docs/source/` | 10 hits in `spectra.rst`, all the **public** name, which this swap does not change — no edit needed |
 | `spec_math::Polylog` no longer used | `rg -n "Polylog\|li2" rust/src/` | 2 hits, both prose in `special.rs`'s "why this is transcribed and not" docs; **no `use`, no call** |
 | Blocked-defect count | `rg -n "blocked defects" projects/ docs/` | live working memory reads five in both READMEs and the two "four" sentences are now followed by "a fifth joined in Task 4.3"; `task-4.2-...md:598` keeps its historical "four" as that task's record |
@@ -468,9 +494,10 @@ consumer**.
 **Now safe to assume:**
 
 - `crate::kernels::photon_muon::{dnde_photon_muon, dnde_photon_muon_rest_frame}`
-  are `pub`, PyO3-free, and bit-equal to the `cdef` `_pion.pyx` still
-  cimports (144,000 points, 0 mismatches). Task 4.4 should call the Rust
-  `fn` directly as its integrand rather than going through Python.
+  are `pub`, PyO3-free, and bit-equal to the `cdef`
+  `hazma/spectra/_photon/_pion.pyx` still cimports (144,000 points, 0
+  mismatches). Task 4.4 should call the Rust `fn` directly as its
+  integrand rather than going through Python.
 - `crate::special::spence` is **bit-identical to `scipy.special.spence`**
   on the capturing platform (13,000 points, all four branches). Anything
   Phase 05 builds on `bessel_k1`/`bessel_kn` is untouched by that change.

@@ -188,9 +188,11 @@ kernel ports.
   the live cases' `function`. Tasks 4.4–4.6 inherit the fix.
 - **The port has now surfaced five live 2.1.0 defects**, the fifth found
   the same way as the rest: by asserting a property the original never
-  did. Task 4.3's is an endpoint. `_muon.pyx:41` cuts the *rest-frame*
-  spectrum at `y = 1 − √r` while the in-flight branch (`:88`) and
-  `_pion.pyx:16`'s `ENG_GAM_MAX_MURF` both use `1 − r`, which is the
+  did. Task 4.3's is an endpoint.
+  `hazma/spectra/_photon/_muon.pyx:41` cuts the *rest-frame* spectrum at
+  `y = 1 − √r` while the in-flight branch of the same file (`:88`) and
+  `hazma/spectra/_photon/_pion.pyx:16`'s `ENG_GAM_MAX_MURF` both use
+  `1 − r`, which is the
   kinematic endpoint `(m_μ² − m_e²)/(2m_μ)`. So `dnde_photon_muon(E, m_μ)`
   is a hard zero over the top **0.2543 MeV** (0.48%) of its support where
   the spectrum is still `5.34e-7 MeV⁻¹`, and the published spectrum is
@@ -387,7 +389,8 @@ imports.
   the mediator modules still cimport (126,182 points, 0 mismatches), so
   Task 4.6 has a verified Rust dependency to call natively.
 - **`kernels::photon_muon::{dnde_photon_muon, dnde_photon_muon_rest_frame}`
-  are `pub`, PyO3-free and bit-equal to the `cdef` `_pion.pyx` cimports**
+  are `pub`, PyO3-free and bit-equal to the `cdef`
+  `hazma/spectra/_photon/_pion.pyx` cimports**
   (144,000 points, 0 mismatches). Task 4.4 should call the Rust `fn`
   directly as its `qagp` integrand rather than routing through Python.
 - **`crate::special::spence` is bit-identical to `scipy.special.spence`**

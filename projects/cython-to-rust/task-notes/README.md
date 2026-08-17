@@ -1149,7 +1149,8 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   it.
   - _Against the Cython being replaced._ The pre-port `cdef`
     `dnde_photon_muon_point` is still in the tree behind
-    `_muon.pyx`'s `__pyx_capi__` (capi survivor), and the Rust is
+    `hazma/spectra/_photon/_muon.pyx`'s `__pyx_capi__` (capi survivor),
+    and the Rust is
     **bit-for-bit identical** to it over 144,000 points: nine parent
     energies (`m_μ`, `m_μ(1+1e-12)`, `m_μ+1e-9`, 110, 150, 500, 1500,
     `1e5`, `1e9` MeV) × two 8,000-point grids each, one geometric and one
@@ -1182,9 +1183,11 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   - _No new behavior change._ The 0-d-array and rank-error divergences are
     the dispatch contract's, already declared for Task 4.1.
   - Separately, and *not* a drift: this task **measured** a fifth
-    pre-existing 2.1.0 defect — `_muon.pyx:41` cuts the muon-rest-frame
+    pre-existing 2.1.0 defect — `hazma/spectra/_photon/_muon.pyx:41`
+    cuts the muon-rest-frame
     photon spectrum at `y = 1 − √r` where the kinematic endpoint (and the
-    file's own in-flight branch, and `_pion.pyx`'s `ENG_GAM_MAX_MURF`) is
+    file's own in-flight branch, and
+    `hazma/spectra/_photon/_pion.pyx`'s `ENG_GAM_MAX_MURF`) is
     `y = 1 − r`, leaving a hard zero over the top **0.2543 MeV** of the
     support where the spectrum is `5.34e-7 MeV⁻¹`, and a
     **discontinuity in `E_μ` at rest**. Reproduced, so no value moved —
