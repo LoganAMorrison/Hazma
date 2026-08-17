@@ -353,7 +353,7 @@ def dnde_photon_neutral_rho(
 def dnde_photon_neutral_rho(
     photon_energies: RealOrRealArray, rho_energy: float
 ) -> RealOrRealArray:
-    r"""Compute the gamma-ray decay spectrum from charged rho decay.
+    r"""Compute the gamma-ray decay spectrum from neutral rho decay.
 
     :math:`\rho \to \pi^{\pm} + \pi^{\mp}`.
 
@@ -386,7 +386,7 @@ def dnde_photon_charged_rho(
 def dnde_photon_charged_rho(
     photon_energies: RealOrRealArray, rho_energy: float
 ) -> RealOrRealArray:
-    r"""Compute the gamma-ray decay spectrum from rho decay.
+    r"""Compute the gamma-ray decay spectrum from charged rho decay.
 
     :math:`\rho^{\pm} \to \pi^{\pm} + \pi^{0}`.
 
@@ -479,7 +479,7 @@ def dnde_photon_eta_prime(
 def dnde_photon_eta_prime(
     photon_energy: RealOrRealArray, eta_prime_energy: float
 ) -> RealOrRealArray:
-    r"""Compute gamma-ray decay spectrum from the decay of the omega.
+    r"""Compute the gamma-ray decay spectrum from eta-prime decay.
 
     Parameters
     ----------

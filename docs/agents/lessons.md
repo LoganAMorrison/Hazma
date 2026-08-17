@@ -461,3 +461,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   cheap. Sibling of [sibling-copies-of-a-fixed-claim]; the difference is
   that the two populations share no token, so one pattern cannot find
   both.
+- [numstat-over-a-directory] A "lines deleted" claim measured with
+  `git diff --numstat -- '<dir>/'` counts edits to *surviving* files in
+  that directory too, so it overstates the deletion and drifts as those
+  files are edited again. Measure with `--diff-filter=D`, and re-derive
+  sub-counts from the corrected total rather than back-solving from the
+  wrong one (PR #66).

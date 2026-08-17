@@ -233,6 +233,27 @@ Copied from the phase file's Task 4.2 block:
   from the charged-kaon block above them. Corrected, along with adding the
   units sentence every one of the seven now carries (`AGENTS.md`:
   "units stated for every physical quantity").
+- **Review round 1 fixes (PR #66).** Two documentation findings, one
+  blocking:
+  - The deleted-line count read **1,037** where the 16 deleted files hold
+    **1,020**. Root cause, and the reason this was worth a blocking
+    finding rather than a typo fix:
+    `git diff --numstat -- '<directory>/'` sums *the directory*, so it
+    counted `__init__.py`'s deleted lines — a surviving file — and the
+    `.pxd` sub-count (27, really 31) was then back-solved from that wrong
+    total. The figure was also **unstable**: 1,037 when first measured,
+    and 1,060 as this round lands, because every later docstring edit to
+    `__init__.py` moves it — including this round's own. Corrected in all
+    three durable copies and in the PR body, and the sweep block's command
+    now carries `--diff-filter=D` so it measures what its sentence claims.
+  - `dnde_photon_eta_prime`'s summary said it computes the **omega**
+    spectrum. Sweeping that class across every `dnde_photon_*` docstring
+    in the file found a second instance the review did not flag:
+    `dnde_photon_neutral_rho`'s summary said "charged rho" while its own
+    `\rho \to \pi^{\pm}\pi^{\mp}` is the neutral decay, and
+    `dnde_photon_charged_rho`'s said only "rho". Both pre-date this task
+    (checked against `origin/master`), both are in the file this PR
+    already edits, and all twelve summaries now name their own function.
 
 ## Files Changed
 
@@ -487,9 +508,9 @@ is a Task 4.6 statement, not a Task 4.2 one — three photon modules and
 the neutrino trio are still to go.
 
 ```console
-$ git diff origin/master --numstat -- 'hazma/spectra/_photon/' \
-    | awk '{s+=$2} END {print s}'
-1037
+$ git diff origin/master --numstat --diff-filter=D \
+    -- 'hazma/spectra/_photon/' | awk '{d+=$2; n++} END {print n, d}'
+16 1020
 $ for f in _eta _eta_prime _kaon _omega _phi; do
       git show origin/master:hazma/spectra/_photon/$f.pyx \
         | grep -cE '^\s*#\s*(cdef|@cython|res|return|if |gamma|beta|pre|emin|emax|eng|#)'
@@ -500,9 +521,22 @@ $ cargo test --manifest-path rust/Cargo.toml --no-default-features 2>&1 \
 15
 ```
 
-1,037 deleted lines under `hazma/spectra/_photon/` — 977 of `.pyx`, of
+**1,020 deleted lines across the 16 deleted files** — 977 of `.pyx`, of
 which **204 are the commented-out `quad`-based bodies** the phase file
-estimated at "~170", plus 27 of `.pxd`, 7 of `.pyi` and 5 of `path.py`.
+estimated at "~170", plus 31 of `.pxd`, 7 of `.pyi` and 5 of `path.py`
+(977 + 31 + 7 + 5 = 1,020).
+
+This block first read **1,037**, and the review that caught it was right
+about more than the digit. `--numstat -- '<directory>/'` sums the whole
+directory, so it counted `__init__.py`'s deleted lines — a *surviving*
+file — alongside the deleted ones, and the `.pxd` sub-count was then
+back-solved from that wrong total. The figure was not merely wrong but
+**unstable**: it was 1,037 when first measured and is 1,060 as this round
+lands, because every later docstring edit to `__init__.py` moves it —
+this round's own fixes moved it again between drafting the correction and
+committing it, which is how the 1,059 in that first draft was already
+stale. `--diff-filter=D` is what makes the command measure the quantity
+the sentence claims, and is why 1,020 does not move.
 The replacement is 873 lines of `rust/src/kernels/photon_tables.rs`, of
 which 400 are the `#[cfg(test)]` module (it begins at line 473) — so the
 non-test implementation-plus-docs is 473 lines against 977, for five

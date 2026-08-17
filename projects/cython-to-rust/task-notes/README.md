@@ -1286,7 +1286,7 @@ it from memory.)
   `test/test_core_{boost,interp}.py`, `docs/followups/README.md` and two
   sibling follow-ups.
 - Deleted: `hazma/spectra/_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.{pyx,pxd,pyi}`
-  and `hazma/spectra/_photon/path.py` — 16 files, 1,037 lines, of which
+  and `hazma/spectra/_photon/path.py` — 16 files, 1,020 lines, of which
   204 were commented-out `quad`-based dead code.
 - Full per-task list: [phase-04/README.md](phase-04/README.md).
 

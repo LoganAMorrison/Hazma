@@ -213,7 +213,7 @@ kernel ports.
   `test/test_core_{boost,interp}.py`, `docs/followups/README.md`,
   `docs/followups/todo/{boost-integral-drops-last-interior-cell,positron-muon-spectrum-normalization-inverted}.md`.
 - Deleted: `hazma/spectra/_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.{pyx,pxd,pyi}`
-  and `hazma/spectra/_photon/path.py` — 16 files, 1,037 lines.
+  and `hazma/spectra/_photon/path.py` — 16 files, 1,020 lines.
 
 ## Verification
 
