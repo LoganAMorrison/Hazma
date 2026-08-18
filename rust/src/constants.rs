@@ -553,18 +553,6 @@ pub mod derived {
         pub const GAMMA_MU_PIRF: f64 = 1.0389919859434902;
     }
 
-    /// `hazma/spectra/_photon/_rho.pyx`. Three aliases, no arithmetic.
-    pub mod photon_rho {
-        use super::super::pdg;
-
-        /// Charged pion mass in MeV.
-        pub const MPI: f64 = pdg::MASS_PI;
-        /// Neutral pion mass in MeV.
-        pub const MPI0: f64 = pdg::MASS_PI0;
-        /// Rho(770) mass in MeV.
-        pub const MRHO: f64 = pdg::MASS_RHO;
-    }
-
     /// `hazma/spectra/_positron/_muon.pyx`.
     pub mod positron_muon {
         use super::super::pdg;

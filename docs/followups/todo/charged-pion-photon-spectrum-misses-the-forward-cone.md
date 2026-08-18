@@ -112,12 +112,45 @@ Points to settle before writing it:
    `69.783`. Using the widest as a single bound is correct and simplest;
    using three bounds as break points is tighter and needs an argument
    about `qagp` behaviour with interior points.
-3. **Everything downstream inherits it.** `hazma/spectra/_photon/_rho.pyx`
-   quadratures over this kernel, so its own spectrum carries the same
-   cliff one convolution further out, and both mediator decay-spectrum
-   modules (`hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx`) call
-   the charged-pion `cdef`s directly. Whether the ρ needs its own repair
-   or is fixed by this one has not been checked.
+3. **Everything downstream inherits it, and the ρ compounds it.** Both ρ
+   spectra quadrature over this kernel — in
+   `rust/src/kernels/photon_rho.rs` since cython-to-rust Task 4.5, in
+   `hazma/spectra/_photon/_rho.pyx` before it — and both mediator
+   decay-spectrum modules
+   (`hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx`) call the
+   charged-pion `cdef`s directly.
+
+   **Task 4.5 measured that repairing this kernel is necessary but not
+   sufficient for the ρ**, because the outer boost integral hits the same
+   QUADPACK failure a second time. A pure inheritance would preserve the
+   *fraction* of the endpoint at which the cliff sits — the boost maps
+   `E_onset` and the endpoint by the same `γ(1+β)`, since
+   `γ(1−β)·γ(1+β) = 1` — so the inner kernel's onset at 0.945 of its own
+   endpoint (at the ρ's daughter energy `E_π = 388.44` MeV, `γ_π = 2.78`)
+   should appear at 0.945 of the ρ's endpoint at *every* ρ energy. It does
+   not:
+
+   | `E_ρ` (MeV) | `γ_ρ` | charged-ρ onset / endpoint | neutral-ρ onset / endpoint |
+   | --- | --- | --- | --- |
+   | 814 | 1.05 | 0.9963 | 0.9420 |
+   | 1163 | 1.5 | 0.9866 | 0.9315 |
+   | 1551 | 2 | 0.9707 | 0.9185 |
+   | 2326 | 3 | 0.9326 | 0.8806 |
+   | 3876 | 5 | 0.8249 | 0.7803 |
+   | 7753 | 10 | 0.5366 | 0.5073 |
+
+   The mechanism is the one this file already describes, one level out:
+   the outer window `[γE(1−β), γE(1+β)]` spans decades while the
+   integrand is nonzero only near its lower end, so once that sub-window
+   is narrower than the 21-point Gauss–Kronrod spacing on the full
+   interval, every node returns zero. The repair therefore needs a
+   restricted outer interval (or break points) in
+   `rust/src/kernels/photon_rho.rs`'s `boosted` as well as the inner fix
+   here. Measured with
+   `projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md`'s
+   probe; the ρ's own corpus cases (`spectra.photon.charged_rho`,
+   `spectra.photon.neutral_rho`) pin the zeros, so the same regeneration
+   block applies.
 4. **The neutral pion is unaffected** — it is closed form, no quadrature.
 5. **The repair moves published numbers**, so it is `minor` at least under
    `docs/versioning.md`, needs a `CHANGELOG.md` entry stating the

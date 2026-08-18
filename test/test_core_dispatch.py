@@ -58,7 +58,7 @@ import pytest
 from hazma._core import dispatch as core_dispatch
 from hazma._core import roundtrip
 from hazma.scalar_mediator import _c_scalar_mediator_cross_sections as cython_xs
-from hazma.spectra._photon import _rho as cython_photon_rho
+from hazma.spectra._positron import _pion as cython_positron_pion
 
 # The `hazma._core.dispatch` probes, bound here so the tests below read like
 # ordinary calls. Each takes the quantity wording as an argument, which the
@@ -708,23 +708,29 @@ class TestDeclaredDivergencesFromCython:
     that a Phase 04-06 swap changing one of these fails here first.
 
     The spectra half of the oracle is whichever ``.pyx`` still exports a
-    ``def`` with the ``"Photon energies"`` wording. That was
-    ``_photon/_muon`` until cython-to-rust Task 4.3 swapped it, then
-    ``_photon/_pion`` until Task 4.4 swapped that; it is ``_photon/_rho``
-    now — the last photon ``.pyx`` with a Python entry point, and one
-    whose ``hasattr(__len__)`` / ``assert`` shape is identical to both
-    predecessors. **Task 4.5 swaps it in turn**, and there is no fourth
-    photon candidate: move the spectra assertions to a ``_positron`` or
-    ``_neutrino`` entry point (Task 4.6 deletes those too) or retire them.
-    By the end of Phase 04 the widening these tests describe stops having
-    a live Cython side outside ``cython_xs``.
+    ``def`` with the unary "scalar or 1-D array in, same out" shape. That
+    was ``_photon/_muon`` until cython-to-rust Task 4.3 swapped it, then
+    ``_photon/_pion`` until Task 4.4, then ``_photon/_rho`` until Task 4.5
+    exhausted the photon candidates. It is ``_positron/_pion`` now: the
+    same ``hasattr(__len__)`` / ``assert`` / array-return shape as all
+    three predecessors, differing only in the quantity its message names
+    (``"Positron energies"``), which these tests take from the source
+    rather than hard-code.
+
+    **Task 4.6 swaps that one too, and it is the last unary spectra
+    ``def`` in the tree** — the neutrino entry points survive it but
+    return a 3-tuple or a ``(3, N)`` array, so they do not fit these
+    assertions without rewriting them. At that point either rewrite them
+    around the neutrino shape or retire them; by the end of Phase 04 the
+    widening they describe stops having a live Cython side outside
+    ``cython_xs``.
     """
 
     def test_a_zero_dimensional_array_raises_in_cython_and_returns_in_rust(
         self,
     ) -> None:
         with pytest.raises(AssertionError):
-            cython_photon_rho.dnde_photon_charged_rho(np.array(15.0), 200.0)
+            cython_positron_pion.dnde_positron_charged_pion(np.array(15.0), 200.0)
         assert type(roundtrip(np.array(15.0))) is float
 
     def test_the_cross_sections_already_take_the_ported_zero_dimensional_path(
@@ -745,15 +751,15 @@ class TestDeclaredDivergencesFromCython:
         # downstream failure instead. The *message* is unchanged, which is
         # what `TestCythonMessageParity` checks.
         with pytest.raises(AssertionError) as cython_error:
-            cython_photon_rho.dnde_photon_charged_rho(np.ones((2, 2)), 200.0)
+            cython_positron_pion.dnde_positron_charged_pion(np.ones((2, 2)), 200.0)
         with pytest.raises(ValueError) as rust_error:
-            roundtrip_as(np.ones((2, 2)), "Photon energies")
+            roundtrip_as(np.ones((2, 2)), "Positron energies")
         assert str(cython_error.value) == str(rust_error.value)
 
     def test_a_sequence_is_accepted_by_the_spectra_and_by_the_port(self) -> None:
-        assert cython_photon_rho.dnde_photon_charged_rho([15.0, 25.0], 200.0).shape == (
-            2,
-        )
+        assert cython_positron_pion.dnde_positron_charged_pion(
+            [15.0, 25.0], 200.0
+        ).shape == (2,)
         assert roundtrip([15.0, 25.0]).shape == (2,)
 
     def test_a_sequence_is_refused_by_the_cross_sections_and_accepted_by_the_port(

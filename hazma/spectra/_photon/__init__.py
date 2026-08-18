@@ -7,7 +7,6 @@ Module for computing decay spectra from a muon and light mesons.
 from typing import overload
 
 from hazma._core import photon as _core_photon
-from hazma.spectra._photon import _rho
 from hazma.utils import RealArray, RealOrRealArray
 
 
@@ -375,8 +374,10 @@ def dnde_photon_neutral_rho(
     spec : numpy.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energies`` given rho energy ``rho_energy``.
+        Units are MeV^-1; ``photon_energies`` and ``rho_energy`` are both
+        in MeV.
     """
-    return _rho.dnde_photon_neutral_rho(photon_energies, rho_energy)
+    return _core_photon.dnde_photon_neutral_rho(photon_energies, rho_energy)
 
 
 @overload
@@ -408,8 +409,10 @@ def dnde_photon_charged_rho(
     spec : numpy.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
         ``photon_energies`` given rho energy ``rho_energy``.
+        Units are MeV^-1; ``photon_energies`` and ``rho_energy`` are both
+        in MeV.
     """
-    return _rho.dnde_photon_charged_rho(photon_energies, rho_energy)
+    return _core_photon.dnde_photon_charged_rho(photon_energies, rho_energy)
 
 
 @overload

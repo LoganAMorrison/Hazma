@@ -2,11 +2,11 @@
 //! `hazma/spectra/_photon/_pion.pyx`.
 //!
 //! PyO3-free (`projects/cython-to-rust/rules.md`, Rust conventions
-//! rule 3); [`crate::photon`] is the Python-visible half. Phase 04
-//! Task 4.5 (`_photon/_rho`) integrates [`dnde_photon_charged_pion`] and
-//! [`dnde_photon_neutral_pion`] over the ρ's two-body kinematics, the way
-//! its `.pyx` twin `cimport`s `dnde_photon_charged_pion_point` today,
-//! which is why both are `pub`.
+//! rule 3); [`crate::photon`] is the Python-visible half.
+//! [`super::photon_rho`] integrates [`dnde_photon_charged_pion`] and
+//! [`dnde_photon_neutral_pion`] over the ρ's two-body kinematics — the
+//! way `_rho.pyx` `cimport`ed the matching `*_point` `cdef`s before
+//! Phase 04 Task 4.5 deleted it — which is why both are `pub`.
 //!
 //! # The physics
 //!
