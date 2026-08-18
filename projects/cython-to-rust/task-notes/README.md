@@ -804,10 +804,20 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   above the corpus ceiling. But over an 11 × 8 grid reaching `E_π = 1e5`
   the port's `ier` **equals the flag scipy raises on the Cython twin at
   all 88 points**, including both `ier = 4` entries and the non-monotonic
-  pattern between them, with the values still agreeing to 2.8e-11.
-  Task 3.3's warning was that the two *may* separate without bound where
-  QUADPACK does not converge; on the only live shape that reaches that
-  regime, they do not.
+  pattern between them, with the values still agreeing to **2.8e-11** on
+  macOS/arm64. Task 3.3's warning was that the two *may* separate without
+  bound where QUADPACK does not converge; on the only live shape that
+  reaches that regime, they do not. **And that regime is the one place
+  where the platform shows through, which is the opposite of where a
+  reader would look for it** (PR #68's first CI run): in the *converged*
+  regime the port tracks the Cython to 1e-12 on Linux as well as macOS —
+  all three per-kernel sweep classes pass there — while the non-converged
+  separation is **6.2998e-10** on Linux/glibc, 23x the macOS figure and
+  the *same double* across py3.10–3.14, so a toolchain property rather
+  than noise. The budget for that one assertion is 1e-8 on both platforms
+  rather than platform-scoped: its subject is chaotic by construction, so
+  what it can certify is "still recognizably the same integral", and the
+  precision gate is the converged-regime classes.
 - **A mutation harness that reverts with `git checkout --` cannot revert a
   file git has never seen** (Task 4.4). The new kernel module was
   untracked, the restore step errored, the driver did not check, and five

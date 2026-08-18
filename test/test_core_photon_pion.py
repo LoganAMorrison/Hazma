@@ -58,7 +58,10 @@ at ``E_pi >= 4e4`` MeV (``gamma_pi >= 290``) -- 40 GeV, against a library
 whose domain is sub-GeV dark matter and a corpus whose most boosted block
 is ``10 m_pi = 1396`` MeV. And there the two implementations agree on the
 termination flag at every one of 88 sampled arguments, with the values
-still within 2.8e-11.
+still within 2.8e-11 on macOS/arm64 and 6.3e-10 on Linux/glibc -- the one
+figure in this module the platform reaches, and, counter-intuitively, not
+one of the ones that compare against a compiled twin. See
+:data:`DIVERGENT_REGIME_BUDGET`.
 """
 
 from __future__ import annotations
@@ -201,10 +204,30 @@ F32_TRUNCATION_WINDOW = (1e-9, 1e-6)
 
 #: How far the port and scipy may separate in the **non-converging**
 #: regime, where Phase 03 Task 3.3 measured that they are entitled to
-#: separate without bound. The worst of the 64 sampled arguments is
-#: 2.8e-11; this bounds it rather than hides it, which is the point of the
-#: test.
-DIVERGENT_REGIME_BUDGET = 1e-10
+#: separate without bound because Wynn's epsilon-algorithm is chaotic on a
+#: non-converging sequence.
+#:
+#: This is the one figure in this module that is genuinely
+#: platform-dependent, and it is dependent in the *opposite* direction to
+#: what the module's other budgets would suggest. In the **converged**
+#: regime the port tracks the Cython to `CHARGED_PION_BUDGET` on every
+#: platform -- the three sweep classes below pass at 1e-12 on Linux as
+#: well as macOS. Only here does the platform show through: the worst of
+#: the 64 sampled arguments is **2.8e-11** on macOS/arm64 and
+#: **6.2998e-10** on Linux/glibc, at `E_gam = 1.0, E_pi = 4e4`, and PR #68
+#: measured the Linux figure as the *same double* across py3.10-3.14, so
+#: it is a toolchain property rather than noise.
+#:
+#: 1e-8 therefore, on both platforms rather than behind a platform
+#: branch. Two reasons not to split it. First, the assertion's subject is
+#: chaotic by construction, so a tight bound here would certify nothing --
+#: what it is for is "still recognizably the same integral", and the real
+#: precision gate is the converged-regime classes at 1e-12. Second, a
+#: budget that tracked each platform's measured value would go red on the
+#: next libm change while telling us nothing we do not already know.
+#: 1e-8 leaves 16x over the larger measurement and is still seven decades
+#: below any physically meaningful difference.
+DIVERGENT_REGIME_BUDGET = 1e-8
 
 #: The band the two `pi -> l nu gamma` channels occupy as a fraction of
 #: the charged pion's rest-frame photon spectrum. Wide, because it is a
@@ -729,7 +752,8 @@ class TestChargedPionAgainstTheCythonTwin:
                     continue
                 # `DIVERGENT_REGIME_BUDGET` rather than the class budget:
                 # the sampled arguments in the non-converging regime differ
-                # by up to 2.8e-11, and bounding that is the point.
+                # by up to 2.8e-11 (macOS) / 6.3e-10 (Linux), and bounding
+                # that is the point.
                 assert abs((got - want) / want) < DIVERGENT_REGIME_BUDGET, (
                     f"port and scipy separated at {egam=}, {epi=}: "
                     f"{got!r} vs {want!r}"

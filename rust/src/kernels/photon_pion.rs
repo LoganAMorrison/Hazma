@@ -603,7 +603,10 @@ mod tests {
     /// reaching `E_π = 1e5` MeV the port's `ier` equals the flag scipy
     /// raises on the Cython twin at **all 88 points**, including both
     /// `ier = 4` entries and the non-monotonic pattern in between, with
-    /// the values still agreeing to 2.8e-11. `test/test_core_photon_pion.py`
+    /// the values still agreeing to 2.8e-11 on macOS/arm64 — and to
+    /// 6.3e-10 on Linux/glibc, which is the *only* place in this kernel
+    /// where the platform shows through: in the converged regime the port
+    /// tracks the Cython to 1e-12 on both. `test/test_core_photon_pion.py`
     /// carries that comparison, since it needs scipy.
     #[test]
     fn the_live_grid_never_leaves_the_converged_regime() {

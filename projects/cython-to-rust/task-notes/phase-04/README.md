@@ -266,9 +266,15 @@ kernel ports.
   decades above the corpus ceiling. Over an 11 × 8 grid reaching
   `E_π = 1e5` the port's `ier` **equals scipy's flag on the Cython twin at
   all 88 points**, including both `ier = 4` entries and the non-monotonic
-  pattern between them, with values agreeing to 2.8e-11. Task 3.3's
-  warning was that the two *may* separate without bound there; on the only
-  live shape that reaches it, they do not.
+  pattern between them, with values agreeing to **2.8e-11** on
+  macOS/arm64. Task 3.3's warning was that the two *may* separate without
+  bound there; on the only live shape that reaches it, they do not.
+  **This is also the one number in the kernel that the platform reaches**
+  (PR #68's first CI run): the converged regime holds at 1e-12 on Linux as
+  well, while the non-converged separation is **6.2998e-10** there — 23x,
+  and the same double across py3.10–3.14. Its budget is a flat 1e-8 rather
+  than a platform branch, because a tight bound on a chaotic quantity
+  certifies nothing.
 - **The `1/β` amplification Task 4.3 warned about does not reach `_pion`**
   (Task 4.4). `rest_plus_eps` is the *pion's* `β = 1.4e-6`, which enters as
   a Jacobian and a Doppler factor rather than a `1/β` prefactor — the muon
@@ -465,6 +471,13 @@ kernel ports.
   with **two survivors** — an FMA site inside the quadrature integrand and
   a one-ulp constant, both unobservable through the entry point for the
   same reason, both recorded in the source.
+- **CI round 1 on PR #68** surfaced one Linux failure across all five
+  ubuntu jobs and none on macOS: the divergent-regime assertion at
+  `E_γ = 1.0, E_π = 4e4`, measuring **6.2998e-10** against a 1e-10 budget
+  (2.8e-11 on macOS). Budget raised to a flat 1e-8 with both measurements
+  recorded. The converged-regime comparisons — the ones the phase's
+  history would have predicted as the casualty — passed on Linux at 1e-12
+  across py3.10–3.14.
 
 ## Open Questions
 

@@ -214,12 +214,39 @@ flag scipy raises on the Cython twin at all 88 points**, including both
 `ier = 4` (`NoConvergence`) entries and the non-monotonic pattern in
 between — the map is `ier = 5` at (1e-2, 6e4) but `0` at (1.0, 6e4), and
 both implementations agree on that too. Values in the divergent regime
-still agree to **2.8e-11** worst case.
+still agree to **2.8e-11** worst case on the capturing platform
+(6.2998e-10 on Linux/glibc — see below).
 
 The result is worth stating positively: Task 3.3's warning was that the
 two implementations *may* separate without bound where QUADPACK does not
 converge, and on the only live shape that reaches that regime, they do
 not.
+
+**And this is the one place in the kernel the platform reaches** — which
+is the opposite of where the phase's own history says to look. Tasks 4.1
+and 4.3 both learned `[platform-scoped-oracle-asserted-globally]` from a
+*bit-equality-against-a-compiled-twin* assertion, so going into CI the
+expected casualty here was `CHARGED_PION_BUDGET`, the flat 1e-12 this
+module holds the port to on every platform. It survived: all three
+converged-regime classes — swept grid, random arguments, kinematic edges,
+at seven parent energies each — pass on Linux/glibc across py3.10–3.14.
+The single Linux failure was the **divergent-regime** assertion, at
+`E_γ = 1.0, E_π = 4e4`, where the separation is **6.2998e-10** against
+2.8e-11 on macOS. Two things make it a clean reading rather than noise:
+all five Linux jobs reported the same double, so it is a toolchain
+property; and it lands exactly where Task 3.3 said the two are entitled to
+diverge, and nowhere else.
+
+`DIVERGENT_REGIME_BUDGET` is therefore **1e-8, flat**, rather than
+platform-scoped like `test/test_core_photon_muon.py`'s. The reasoning is
+the inverse of that module's: there the two modes exist because
+bit-equality is available on one platform and not the other, so scoping
+buys real strength on the capturing side. Here the assertion's subject is
+chaotic by construction — a tight bound certifies nothing on either
+platform, and one tracking each platform's measured value would go red on
+the next libm change while telling us what we already know. What it is for
+is "still recognizably the same integral"; the precision gate is the
+converged-regime classes at 1e-12, which are platform-independent.
 
 ### The tightening buys exactly one thing, and it is the one that nearly bit
 
@@ -358,6 +385,28 @@ needs, already written down in the file that has the defect.
   six magic values were fixed with named constants rather than silenced,
   which is what Task 4.2 decided the last time this module class tripped
   the same rule.
+
+### CI round 1 (PR #68, run 32084888951)
+
+`Lint` and `Rust (fmt, clippy, test)` green; `Test (macos-latest, py3.14)`
+green; **all five `Test (ubuntu-latest, py3.10–3.14)` red on exactly one
+test**, with the identical figure in each:
+
+```text
+FAILED test/test_core_photon_pion.py::TestChargedPionAgainstTheCythonTwin
+       ::test_the_termination_flag_agrees_with_scipy_across_the_divergent_regime
+AssertionError: port and scipy separated at egam=1.0, epi=40000.0:
+  -4.194057051835751e-06 vs -4.194057049193561e-06
+assert 6.299842019142071e-10 < 1e-10
+====== 1 failed, 1124 passed, 15 skipped, 9 warnings in 563.32s ======
+```
+
+Fixed by raising `DIVERGENT_REGIME_BUDGET` 1e-10 → 1e-8 with both
+platforms' measurements recorded beside it, not by scoping it — see
+"The divergent regime is reachable" above for why a flat budget is the
+right shape for a chaotic quantity. **No other test moved**, which is the
+substantive result: the flat `CHARGED_PION_BUDGET = 1e-12` holds on Linux
+across five interpreters.
 
 ### What the 73 per-kernel tests cover
 
