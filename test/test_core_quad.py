@@ -489,7 +489,10 @@ class TestLiveIntegrandShapes:
     @pytest.mark.parametrize(
         ("epsabs", "epsrel", "site"),
         [
-            (1e-10, 1e-5, "spectra/_photon/_rho.pyx:52,123"),
+            # Ported by cython-to-rust Task 4.5; the tolerances now live
+            # in `rust/src/kernels/photon_rho.rs`'s `RHO_QUAD` and the
+            # citation is where they came from.
+            (1e-10, 1e-5, "spectra/_photon/_rho.pyx:52,123 (ported)"),
             (1e-10, 1e-4, "spectra/_positron/_pion.pyx:58"),
             (1.49e-8, 1.49e-8, "spectra/_neutrino/_pion.pyx:124,127"),
         ],
@@ -520,10 +523,12 @@ class TestLiveIntegrandShapes:
         )
 
     def test_the_nested_rho_integral(self) -> None:
-        # `spectra/_photon/_rho.pyx` integrates a function that itself
-        # calls quad — the reference file calls it the stress test. Both
+        # `spectra/_photon/_rho.pyx` integrated a function that itself
+        # called quad — the reference file calls it the stress test. Both
         # levels run on the port here, which is the configuration the port
-        # will actually be in.
+        # is now actually in: Task 4.5 swapped that `.pyx` for
+        # `rust/src/kernels/photon_rho.rs`, whose outer `qags` evaluates
+        # `photon_pion`'s `qagp`.
         def inner_scipy(y: float) -> float:
             return si.quad(
                 lambda t: math.exp(-t * t), 0.0, y, epsabs=1e-10, epsrel=1e-5

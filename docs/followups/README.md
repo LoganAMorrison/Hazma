@@ -38,6 +38,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the φ photon lines sit at the daughter meson's energy](todo/phi-photon-lines-use-the-daughter-meson-energy.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
 | [the muon photon spectrum's rest frame stops short of the endpoint](todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | 2026-08-16 | cython-to-rust Task 4.3 | commit |
 | [the charged-pion photon spectrum returns zero in the forward cone](todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | 2026-08-17 | cython-to-rust Task 4.4 | cross-cutting |
+| [both rho photon spectra return the boost integrand at rest](todo/rho-rest-frame-branch-returns-the-integrand.md) | 2026-08-18 | cython-to-rust Task 4.5 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

@@ -8,8 +8,9 @@
 //!
 //! One submodule per ported `.pyx`, named for it: [`positron_muon`] is
 //! `hazma/spectra/_positron/_muon.pyx`, [`photon_muon`] is
-//! `hazma/spectra/_photon/_muon.pyx` and [`photon_pion`] is
-//! `hazma/spectra/_photon/_pion.pyx`. [`photon_tables`] is the one
+//! `hazma/spectra/_photon/_muon.pyx`, [`photon_pion`] is
+//! `hazma/spectra/_photon/_pion.pyx` and [`photon_rho`] is
+//! `hazma/spectra/_photon/_rho.pyx`. [`photon_tables`] is the one
 //! exception and says so in its own docs — the five tabulated photon
 //! `.pyx` files were near-copies of one another, so they port to a single
 //! module parameterised by table, mass and line terms. The two
@@ -18,6 +19,7 @@
 
 pub mod photon_muon;
 pub mod photon_pion;
+pub mod photon_rho;
 pub mod photon_tables;
 pub mod positron_muon;
 

@@ -73,6 +73,28 @@ reinstall before believing any Python-side result, and confirm with
 `python -c "import hazma._core; print(hazma._core.__file__)"` that the
 path is inside your worktree.
 
+**Deleting a `.pyx` does not make its module unimportable.** The built
+`_name.cpython-*.so` and the generated `_name.c` sit beside the source in
+the package directory, both are gitignored, and neither is removed by
+deleting the `.pyx`, by `git checkout`, or by `git stash`. Python imports
+the stale extension happily. So a test written as
+`pytest.raises(ImportError)` to prove a module was deleted is testing
+whoever last ran `pip install -e .`, not the change — assert on the
+source files and the `setup.py` entry instead
+(`test/test_core_photon_rho.py::test_the_cython_twin_is_gone_from_the_tree`
+is the worked example). And `rm` the orphaned `.so`/`.c` after any stash
+cycle that briefly restored the source, or the next build resurrects the
+extension.
+
+**`git checkout <path>` restores from the *index*, not from HEAD.** If
+you staged a file earlier with `git add -A` and have since edited it,
+`git checkout` on that path silently reverts to the staged version — it
+prints only `Updated 1 path from the index`. Mid-task this reads as "my
+edit vanished". Use `git checkout HEAD -- <path>` or
+`git restore --source=origin/master <path>` when you mean a specific
+revision, and re-inspect the file afterwards rather than trusting the
+message.
+
 **`cargo test` must be `--no-default-features`.** The crate's default
 `extension-module` feature tells PyO3 to leave CPython's symbols
 undefined for the interpreter that `dlopen`s the module. A test

@@ -12,8 +12,8 @@
 //! `test/parity/cases.py`'s `rust_core_kernels()` counts them.
 //!
 //! The seven tabulated spectra landed here in Task 4.2, the radiative
-//! muon spectrum in Task 4.3 and the two pion spectra in Task 4.4.
-//! Task 4.5 adds the rho kernels beside them.
+//! muon spectrum in Task 4.3, the two pion spectra in Task 4.4 and the
+//! two rho spectra in Task 4.5.
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -21,6 +21,7 @@ use pyo3::prelude::*;
 use crate::dispatch::map_unary;
 use crate::kernels::photon_muon;
 use crate::kernels::photon_pion;
+use crate::kernels::photon_rho;
 use crate::kernels::photon_tables::{self, Spectrum};
 
 /// Every tabulated entry point, over one implementation.
@@ -124,6 +125,53 @@ fn dnde_photon_neutral_pion(
     })
 }
 
+/// The photon spectrum `dN/dE` in MeV⁻¹ from neutral-rho decay.
+///
+/// `photon_energies` is the mapped argument — a float, a NumPy scalar, a
+/// 0-d numeric array, or a 1-D `float64` array (or a sequence that
+/// converts to one). `rho_energy` is the rho's total energy in MeV.
+///
+/// The quantity wording is `"Photon energies"`, the wording
+/// `hazma/spectra/_photon/_rho.pyx` used in the `assert` this replaces.
+/// Like the pion spectra and unlike the tabulated seven there is no
+/// parent-energy guard to resolve first: the kernel's own `erho < m_rho`
+/// short circuit returns zero, as the Cython does.
+///
+/// This is the crate's first *nested* quadrature entry point — the outer
+/// `qags` over the boost window evaluates
+/// [`photon_pion::dnde_photon_charged_pion`], which runs a `qagp` of its
+/// own per point.
+#[pyfunction]
+#[pyo3(text_signature = "(photon_energies, rho_energy)")]
+fn dnde_photon_neutral_rho(
+    photon_energies: &Bound<'_, PyAny>,
+    rho_energy: f64,
+) -> PyResult<Py<PyAny>> {
+    map_unary(photon_energies, "Photon energies", |energy| {
+        photon_rho::dnde_photon_neutral_rho(energy, rho_energy)
+    })
+}
+
+/// The photon spectrum `dN/dE` in MeV⁻¹ from charged-rho decay.
+///
+/// `photon_energies` is the mapped argument — a float, a NumPy scalar, a
+/// 0-d numeric array, or a 1-D `float64` array (or a sequence that
+/// converts to one). `rho_energy` is the rho's total energy in MeV.
+///
+/// The quantity wording and the guard structure are
+/// [`dnde_photon_neutral_rho`]'s; the two differ only in which daughter
+/// spectra the boosted integrand sums.
+#[pyfunction]
+#[pyo3(text_signature = "(photon_energies, rho_energy)")]
+fn dnde_photon_charged_rho(
+    photon_energies: &Bound<'_, PyAny>,
+    rho_energy: f64,
+) -> PyResult<Py<PyAny>> {
+    map_unary(photon_energies, "Photon energies", |energy| {
+        photon_rho::dnde_photon_charged_rho(energy, rho_energy)
+    })
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ from charged-kaon decay.
 #[pyfunction]
 #[pyo3(text_signature = "(photon_energies, kaon_energy)")]
@@ -190,6 +238,8 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(dnde_photon_muon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_charged_pion, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_neutral_pion, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_photon_charged_rho, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_photon_neutral_rho, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_charged_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_long_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_short_kaon, module)?)?;

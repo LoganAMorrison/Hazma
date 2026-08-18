@@ -79,14 +79,28 @@ implementation does* rather than by what it computes:
     ported case any more -- the reference values are stored, scipy no
     longer participates, and the remaining variation is the platform libm,
     which the corpus is scoped to anyway.
-``NESTED`` (rtol 1e-6)
+``NESTED`` (rtol 1e-6, or `PORTED_NESTED_RTOL` = 1e-9 once measured)
     An adaptive quadrature whose integrand is itself an adaptive
     quadrature. Subdivision is a discontinuous function of the integrand:
     a last-ulp change inside can move an outer bisection decision, and the
     outer call is then only as accurate as its own `epsrel`, which is
     1e-5 at every live site. 1e-6 sits one decade inside that, so the
-    budget tracks the integrator's own accuracy claim rather than the
-    resolution of the arithmetic.
+    opening budget tracks the integrator's own accuracy claim rather than
+    the resolution of the arithmetic.
+
+    Task 4.5 ported the class's first two members -- the project's
+    declared numerical stress test -- and measured that the fear was
+    priced too high. Over the 1,395 values the corpus pins for each,
+    `spectra.photon.charged_rho` moved by at most **1.5e-13** relative and
+    `spectra.photon.neutral_rho` by **3.2e-15**, with three quarters of
+    the points bit-equal; a denser off-corpus sweep (3,200 points,
+    parent energies the corpus does not sample) reached **2.5e-11**, at a
+    photon energy whose boost window straddles the pi0 box's upper edge,
+    where a jump discontinuity sits inside the interval and one bisection
+    decision can flip. Even there the difference is five decades below the
+    `abserr` the integrator itself reports. So the two rho cases take
+    `PORTED_NESTED_RTOL` and the seven unported mediator-spectrum cases
+    keep the opening figure until Phase 06 measures them.
 
 Abscissae are their own class
 -----------------------------
@@ -160,6 +174,12 @@ QUAD_RTOL = 1e-8
 #: measured 2.6e-15, and still four decades inside the opening figure.
 PORTED_QUAD_RTOL = 1e-12
 NESTED_RTOL = 1e-6
+#: The `NESTED` budget after a case has been ported and its drift
+#: measured. See the "Budget classes" section: 6,600x headroom over
+#: Task 4.5's worst pinned drift (1.5e-13) and 40x over the worst the same
+#: task found anywhere off-corpus (2.5e-11), while staying three decades
+#: inside the opening figure.
+PORTED_NESTED_RTOL = 1e-9
 
 #: How far the *abscissae* may move off the capturing tree. Not a value
 #: budget: see "Abscissae are their own class" above for the derivation
@@ -240,20 +260,23 @@ BUDGETS: dict[str, Budget] = {
         "`cdef float` beta and return value are part of the arithmetic.",
     ),
     "spectra.photon.charged_rho": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="quad at hazma/spectra/_photon/_rho.pyx:123 whose integrand "
         "calls the charged- and neutral-pion point kernels "
         "(hazma/spectra/_photon/_rho.pyx:10-11 and :95-96), the first of "
-        "which quads again — the nested case the phase file singles out.",
+        "which quads again — the nested case the phase file singles out. "
+        "Tightened from NESTED_RTOL by Task 4.5 on a measured worst 1.5e-13 "
+        "over these 1,395 pinned values.",
     ),
     "spectra.photon.neutral_rho": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="quad at hazma/spectra/_photon/_rho.pyx:52 over an integrand "
         "that calls the quad-backed charged-pion point kernel "
         "(hazma/spectra/_photon/_rho.pyx:26) — the second nested-rho "
-        "entry point.",
+        "entry point. Tightened from NESTED_RTOL by Task 4.5 on a measured "
+        "worst 3.2e-15 over these 1,395 pinned values.",
     ),
     "spectra.photon.charged_kaon": Budget(
         rtol=TABULATED_RTOL,

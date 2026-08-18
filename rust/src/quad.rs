@@ -35,7 +35,7 @@
 //! | Cython call site | Interval | Settings |
 //! | --- | --- | --- |
 //! | `hazma/spectra/_photon/_pion.pyx:123` | cos θ ∈ [−1, 1] | `points=[-1, 1]`, `epsabs=1e-10`, `epsrel=1e-5` |
-//! | `hazma/spectra/_photon/_rho.pyx:52`, `:123` | boosted energy | `epsabs=1e-10`, `epsrel=1e-5` |
+//! | `hazma/spectra/_photon/_rho.pyx:52`, `:123` (ported, Task 4.5 — now [`crate::kernels::photon_rho`]) | boosted energy | `epsabs=1e-10`, `epsrel=1e-5` |
 //! | `hazma/spectra/_positron/_pion.pyx:58` | boosted energy | `epsabs=1e-10`, `epsrel=1e-4` |
 //! | `hazma/spectra/_neutrino/_pion.pyx:124`, `:127` | boosted energy | scipy defaults |
 //! | `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1411` | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2·ms/mx]` |

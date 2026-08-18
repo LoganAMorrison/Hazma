@@ -370,15 +370,18 @@ _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
         [],
     ),
     (
+        # Ported: cython-to-rust Task 4.5 -- this row and the one below.
+        # The module is the *wrapper* for the same reason the photon
+        # muon's is; see `PORTED_ENTRY_POINTS`.
         "photon.charged_rho",
-        "hazma.spectra._photon._rho",
+        "hazma.spectra._photon",
         "dnde_photon_charged_rho",
         params.rho_mass,
         [ENG_GAM_MAX_PIRG, params.neutral_pion_mass / 2.0],
     ),
     (
         "photon.neutral_rho",
-        "hazma.spectra._photon._rho",
+        "hazma.spectra._photon",
         "dnde_photon_neutral_rho",
         params.rho_mass,
         [ENG_GAM_MAX_PIRG, params.neutral_pion_mass / 2.0],
@@ -1405,11 +1408,11 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     # the tabulated family, this ``.pyx`` survives as a capi provider —
     # its ``def`` is gone and its two ``cdef``s are not.
     "spectra.photon.muon": ("hazma.spectra._photon._muon", "dnde_photon"),
-    # cython-to-rust Task 4.4. Also a capi survivor, and the most
-    # depended-on one: `_photon/_rho.pyx` and *both* mediator
+    # cython-to-rust Task 4.4. Also a capi survivor: *both* mediator
     # decay-spectrum modules cimport its `cdef`s -- all four of them
-    # between the three -- so the file stays and only its two ``def``s
-    # went.
+    # between the two -- so the file stays and only its two ``def``s
+    # went. `_photon/_rho.pyx` was a third cimporter until Task 4.5
+    # deleted it.
     "spectra.photon.charged_pion": (
         "hazma.spectra._photon._pion",
         "dnde_photon_charged_pion",
@@ -1417,6 +1420,18 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     "spectra.photon.neutral_pion": (
         "hazma.spectra._photon._pion",
         "dnde_photon_neutral_pion",
+    ),
+    # cython-to-rust Task 4.5. Unlike the two rows above, nothing
+    # cimported `_rho.pyx`, so the whole file went in the swap PR and
+    # these rows are the only record of where the pinned values came
+    # from.
+    "spectra.photon.charged_rho": (
+        "hazma.spectra._photon._rho",
+        "dnde_photon_charged_rho",
+    ),
+    "spectra.photon.neutral_rho": (
+        "hazma.spectra._photon._rho",
+        "dnde_photon_neutral_rho",
     ),
 }
 

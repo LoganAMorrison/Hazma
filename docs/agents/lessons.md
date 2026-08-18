@@ -544,3 +544,23 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   name and member list out of `docs/agents/` and `AGENTS.md` and
   re-derive each claim (PR #69). Sibling of [stale-ci-capability-claim]:
   same rot, config group instead of workflow.
+- [sweep-excluded-the-canonical-directory] A stale-state sweep that
+  `--glob '!projects/**'`s the project tree — on the reasonable theory
+  that task notes are dated records and must not be rewritten — also
+  skips the two things in there that *are* live: `projects/<slug>/
+  references/*.md`, which `PLAN.md`'s Orientation table declares
+  canonical, and the working-memory `## Phases` table, which is live
+  status by the one status invariant. Both then contradict the change
+  that just landed. Sweep `projects/` *in*, and triage by file role
+  rather than by directory: a task note is history, a `references/` file
+  is spec unless it self-declares a snapshot (`cython-inventory.md` says
+  "this file records a snapshot" and is therefore exempt;
+  `numerics-replacements.md` says "Grounded facts + spec" and is not).
+  A canonical table that lists per-site status wants a **Status column**,
+  not prose — then a swap edits one cell instead of the next task
+  inventing wording (PR #70: the quad call-site table still listed the
+  deleted `_photon/_rho.pyx` as live under the heading "All live sites
+  call `quad` from Cython", and the project Phases table still read
+  "4.5–4.6 open" against a completed 4.5). Sibling of
+  [sibling-copies-of-a-fixed-claim]: there the sweep ran and missed a
+  copy, here the sweep never covered the directory.

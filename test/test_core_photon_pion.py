@@ -11,8 +11,9 @@ Four parts:
 1. :class:`TestDispatchWiring` -- one assertion per contract branch, for
    both entry points.
 2. :class:`TestWrapperAndPublicApi` -- the swap wired out to what users
-   import, plus the four ``cdef`` capsules ``_rho.pyx`` and both mediator
-   decay-spectrum modules still cimport.
+   import, plus the four ``cdef`` capsules both mediator decay-spectrum
+   modules still cimport. (``_rho.pyx`` was a third cimporter until
+   cython-to-rust Task 4.5 deleted it.)
 3. :class:`TestNeutralPionAgainstTheCythonTwin` and
    :class:`TestChargedPionAgainstTheCythonTwin` -- the two ``cdef``s the
    swap left behind, as oracles. They are separate classes because they
@@ -450,11 +451,13 @@ class TestWrapperAndPublicApi:
 
     def test_the_cdef_capsules_the_cimporters_need_are_intact(self) -> None:
         # Phase 06 Task 6.4 deletes these. Until then all four are live:
-        # `hazma/spectra/_photon/_rho.pyx` cimports both point functions,
-        # `hazma/vector_mediator/vector_mediator_decay_spectrum.pyx` both
-        # array functions plus the neutral point one, and
+        # `hazma/vector_mediator/vector_mediator_decay_spectrum.pyx`
+        # cimports both array functions plus the neutral point one, and
         # `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx` all
-        # four. Removing the `def`s must not have disturbed any of them.
+        # four. (`hazma/spectra/_photon/_rho.pyx` cimported both point
+        # functions until Task 4.5 deleted it, which is why the roster is
+        # still all four rather than three.) Removing the `def`s must not
+        # have disturbed any of them.
         assert set(cython_module.__pyx_capi__) == {
             "dnde_photon_charged_pion_point",
             "dnde_photon_charged_pion_array",

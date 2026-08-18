@@ -104,19 +104,27 @@ not anticipate:
 
 ### `scipy.integrate.quad` (QUADPACK) call sites
 
-All live sites call `quad` from Cython with a `cdef`-function callback
-(Cython auto-wraps it as a Python callable → QUADPACK re-enters Python
-per node). Sites and their settings:
+The **Call site** column is where each integral was found, in the
+pre-port Cython; the **Status** column is where it runs today. Sites
+still marked *Cython* call `quad` with a `cdef`-function callback, which
+Cython auto-wraps as a Python callable, so QUADPACK re-enters Python per
+node — that cost disappears with the port. Ported sites call
+`crate::quad::quad` (`rust/src/quad.rs`), which reproduces scipy's whole finite-interval
+path (`points` filtering included) so the settings transfer verbatim.
 
-| Call site | Interval | Settings |
-| --- | --- | --- |
-| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` |
-| `spectra/_photon/_rho.pyx:52,123` | cosθ | `epsabs=1e-10`, `epsrel=1e-5`; integrand itself calls `_pion`'s quad → **nested adaptive quadrature** |
-| `spectra/_positron/_pion.pyx:58` | cosθ | `epsabs=1e-10`, `epsrel=1e-4` |
-| `spectra/_neutrino/_pion.pyx:124,127` | energy-space | two quads, scipy default tolerances (`epsabs=1.49e-8`, `epsrel=1.49e-8`), integer selector via `args` |
-| scalar `thermal_cross_section` (`:1370` region) | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2ms/mx]` (QAGP) |
-| vector `thermal_cross_section` (`:615` region) | z ∈ [2, max(50/x, 150)] | `points=[2, mv/mx, 2mv/mx]` (QAGP) |
-| 4 × mediator spectrum modules | cosθ ∈ [−1, 1] | `points=[-1,1]`, `epsabs=1e-10`, `epsrel=1e-5` |
+Keep this table current as Phases 04–06 land: a swap updates its
+**Status** cell rather than deleting the row, so the settings stay
+citable after the `.pyx` is gone.
+
+| Call site (pre-port) | Interval | Settings | Status |
+| --- | --- | --- | --- |
+| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Task 4.4** — `kernels::photon_pion::CHARGED_PION_QUAD`. The `.pyx` survives as a capi provider and its `cdef` still runs this quad for the two mediator cimporters, so it is the one dual-implementation row until Phase 06 Task 6.4. |
+| `spectra/_photon/_rho.pyx:52,123` | boosted energy | `epsabs=1e-10`, `epsrel=1e-5`; integrand itself calls `_pion`'s quad → **nested adaptive quadrature** | **Ported, Task 4.5** — `kernels::photon_rho::RHO_QUAD`. The `.pyx` is **deleted**; nothing cimported it. No `points` keyword, so `qagse` rather than `qagpe`. |
+| `spectra/_positron/_pion.pyx:58` | cosθ | `epsabs=1e-10`, `epsrel=1e-4` | Cython — Task 4.6 |
+| `spectra/_neutrino/_pion.pyx:124,127` | energy-space | two quads, scipy default tolerances (`epsabs=1.49e-8`, `epsrel=1.49e-8`), integer selector via `args` | Cython — Task 4.6 |
+| scalar `thermal_cross_section` (`:1370` region) | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2ms/mx]` (QAGP) | Cython — Phase 05 |
+| vector `thermal_cross_section` (`:615` region) | z ∈ [2, max(50/x, 150)] | `points=[2, mv/mx, 2mv/mx]` (QAGP) | Cython — Phase 05 |
+| 4 × mediator spectrum modules | cosθ ∈ [−1, 1] | `points=[-1,1]`, `epsabs=1e-10`, `epsrel=1e-5` | Cython — Phase 06 |
 
 **Replacement decision (ADR-0002):** port finite-interval QUADPACK —
 `qk15`/`qk21` rules, the `qelg` ε-algorithm extrapolation, `qags`, and

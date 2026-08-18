@@ -82,7 +82,12 @@ CYTHON_TABLES = {
 #: cannot quietly appear or disappear from the list.
 DERIVED_SOURCES = {
     "derived::photon_pion": Path("hazma/spectra/_photon/_pion.pyx"),
-    "derived::photon_rho": Path("hazma/spectra/_photon/_rho.pyx"),
+    # `derived::photon_rho` was here until cython-to-rust Task 4.5 deleted
+    # `hazma/spectra/_photon/_rho.pyx`. Its three `DEF`s were bare aliases
+    # of `constants.pxd` masses with no arithmetic of their own, so the
+    # Rust submodule went with the file rather than outliving it as an
+    # unmoored copy; `rust/src/kernels/photon_rho.rs` reads
+    # `constants::pdg` directly.
     "derived::positron_muon": Path("hazma/spectra/_positron/_muon.pyx"),
     "derived::positron_pion": Path("hazma/spectra/_positron/_pion.pyx"),
     "derived::neutrino_muon": Path("hazma/spectra/_neutrino/_muon.pyx"),

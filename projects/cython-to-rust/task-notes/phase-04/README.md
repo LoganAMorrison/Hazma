@@ -21,7 +21,7 @@ kernel ports.
 | 4.2 | Photon table family (kaon + eta/omega/eta′/phi) | 4.1 | **Complete (2026-08-12)** | [task-4.2-photon-table-family.md](task-4.2-photon-table-family.md) |
 | 4.3 | `_photon/_muon` (spence) | 4.1 | **Complete (2026-08-16)** | [task-4.3-photon-muon.md](task-4.3-photon-muon.md) |
 | 4.4 | `_photon/_pion` | 4.3 | **Complete (2026-08-17)** | [task-4.4-photon-pion.md](task-4.4-photon-pion.md) |
-| 4.5 | `_photon/_rho` (nested quad) | 4.4 | Not started | [task-4.5-photon-rho.md](task-4.5-photon-rho.md) |
+| 4.5 | `_photon/_rho` (nested quad) | 4.4 | **Complete (2026-08-18)** | [task-4.5-photon-rho.md](task-4.5-photon-rho.md) |
 | 4.6 | `_positron/_pion` + neutrino pair | 4.1, 4.3 | Not started | [task-4.6-positron-pion-neutrino.md](task-4.6-positron-pion-neutrino.md) |
 
 ## Exit Criteria
@@ -381,11 +381,33 @@ kernel ports.
   depends only on the `const` options, never on the integrand. `NaN` is
   the shape Task 4.2 settled for a per-element error channel that does not
   exist.
-- **`test/test_core_dispatch.py`'s spectra oracle moved again**, to
-  `_photon/_rho` (Task 4.4). **Task 4.5 swaps that one too and there is no
-  fourth photon candidate** — the class docstring now names the two
-  remaining options (move to a `_positron`/`_neutrino` entry point, which
-  Task 4.6 then deletes, or retire the three spectra tests).
+- **`test/test_core_dispatch.py`'s spectra oracle is
+  `_positron/_pion`** (Task 4.5), having been `_photon/_muon` →
+  `_photon/_pion` → `_photon/_rho` across Tasks 4.3–4.4. The photon
+  candidates are exhausted; the positron one has the identical
+  `hasattr(__len__)` / `assert` / array-return shape and differs only in
+  saying `"Positron energies"`, which those tests read from source.
+  **Task 4.6 deletes that `def` too and there is no unary candidate after
+  it** — the neutrino entry points return a 3-tuple or a `(3, N)` array.
+  `TestCythonMessageParity` is unaffected either way: its
+  `"Photon energies"` roster entry lives in
+  `hazma/spectra/_neutrino/_muon.pyx:205`, the copy-paste defect Task 3.5
+  recorded, which survives Phase 04.
+- **The `.pyx` that boxes its locals contracts nothing** (Task 4.5).
+  `_rho.pyx`'s untyped `cdef beta/gamma/emin/emax/pre` make every
+  arithmetic operation a `PyNumber_*` call, so `objdump` finds **zero**
+  FMA instructions in the whole object — the only Phase 04 kernel where
+  that is true. Porting such a file means writing the arithmetic out
+  plainly; a `mul_add` would be the error. Check for untyped locals before
+  assuming a `.pyx` contracts anything.
+- **When a mutation survives, look for a seam before calling it
+  untestable** (Task 4.5). Its six-mutation campaign had one survivor —
+  fusing the boost window's `γ·E·(1−β)` — invisible to `cargo`, to 49
+  per-kernel tests and to 10 parity blocks, because the outer `epsrel` is
+  1e-5. Lifting the three lines into a `boost_window(e, erho)` `fn` and
+  pinning `(emin, emax, pre)` bit-for-bit closed it, at no cost to the
+  public surface. This is the answer to Task 4.4's open question about a
+  `hazma._core` kernel probe: not needed.
 
 ## Files Changed
 
@@ -435,6 +457,21 @@ kernel ports.
 - Deleted: `hazma/spectra/_photon/_pion.pyi`, and the two `def`s in
   `_pion.pyx` (42 lines — the file stays, capi survivor).
 
+### Task 4.5
+
+- New: `rust/src/kernels/photon_rho.rs`, `test/test_core_photon_rho.py`,
+  `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md`.
+- Changed: `rust/src/{kernels,photon,constants,quad}.rs`,
+  `rust/src/kernels/photon_pion.rs`,
+  `hazma/spectra/_photon/__init__.py` (both wrappers repointed, both
+  gained return units), `setup.py`, `test/parity/{cases,tolerances}.py`,
+  `test/test_core_{dispatch,constants,photon_pion,quad}.py`,
+  `docs/followups/README.md`,
+  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
+- Deleted: `hazma/spectra/_photon/_rho.{pyx,pxd,pyi}` — the whole module,
+  not just its `def`s: nothing cimported it, so the capi exception in the
+  phase Goal does not apply.
+
 ## Verification
 
 - Per task: corpus suite for the swapped entry points + full pytest +
@@ -472,6 +509,21 @@ kernel ports.
   with **two survivors** — an FMA site inside the quadrature integrand and
   a one-ulp constant, both unobservable through the entry point for the
   same reason, both recorded in the source.
+- **After Task 4.5 (2026-08-18):** bare `pytest -q` →
+  `1802 passed, 15 skipped, 6 warnings in 47.15s`, from `1755 / 15`
+  measured on the stashed pre-task tree — **+47**, being 49 new tests in
+  `test/test_core_photon_rho.py` less 2 parameterized rows retired from
+  `test/test_core_constants.py` with `derived::photon_rho`
+  (`test/test_core_dispatch.py` is unchanged at 118: the oracle module was
+  swapped, not the assertions). `pytest -q test/parity` →
+  `629 passed, 1 skipped`, both ρ cases green in all five blocks at the
+  **tightened** `PORTED_NESTED_RTOL` (1e-9) against a measured worst of
+  1.5e-13 (charged) and 3.2e-15 (neutral).
+  `cargo test --no-default-features` → `133 passed`, from 121 (+12, all
+  `kernels::photon_rho`). A **six-mutation** validity campaign is in the
+  task note with **one survivor**, and unlike Task 4.4's the survivor was
+  *fixed*: the arithmetic was lifted out of the integral into
+  `boost_window` and pinned bit-for-bit, so the campaign closes 6 / 6.
 - **CI rounds 1 and 2 on PR #68** both surfaced one Linux failure across
   all five ubuntu jobs and none on macOS, both in the same
   divergent-regime assertion and at *different* grid points: **6.2998e-10**
@@ -508,16 +560,24 @@ kernel ports.
   never within one `DBL_EPSILON` of rest — at every pion energy, so the
   truncated branch is unreachable from there. `_rho` boosts `_pion`, not
   the muon kernel, so the same argument covers Task 4.5.
-- **Nothing gates the FMA map of a quadrature integrand** (Task 4.4). A
-  `hazma._core` test-surface probe over `kernels::photon_pion` would fix
-  it, but it would widen `cases._CORE_TEST_ONLY_MODULES`, which Task 3.2
-  warned against doing to quiet a check. Left as a known limitation;
-  **Task 4.5 has the same shape one level deeper and is the right place to
-  decide whether the machinery is worth it.**
-- **Does the forward-cone defect reach `_photon/_rho`?** (Task 4.4.)
-  Almost certainly — the ρ quadratures over the charged pion — but
-  unmeasured, and whether the ρ's own quadrature compounds the loss is
-  open. Recorded on the follow-up; Task 4.5 is positioned to answer it.
+- ~~**Nothing gates the FMA map of a quadrature integrand** (Task 4.4).~~
+  **Decided by Task 4.5: no probe, and none needed.** Its mutation
+  campaign found the one survivor was arithmetic in the integration
+  *limits* rather than inside the integrand, so lifting it into a
+  `boost_window(e, erho) -> (emin, emax, pre)` `fn` and pinning the three
+  bits made it a plain `cargo` test — no `_CORE_TEST_ONLY_MODULES`
+  widening, no new public surface. The 15 sites *inside*
+  `dnde_pi_to_lnug` remain ungated and remain defended by disassembly and
+  review; that limitation stands, narrowed.
+- ~~**Does the forward-cone defect reach `_photon/_rho`?**~~ **Answered by
+  Task 4.5: yes, and it compounds.** A pure inheritance would preserve the
+  fraction of the endpoint at which the cliff sits, because
+  `γ(1−β)·γ(1+β) = 1`; the inner kernel's 0.945 should therefore appear at
+  every ρ energy. Measured, the charged ρ runs 0.9963 at `γ_ρ = 1.05` down
+  to **0.5366** at `γ_ρ = 10` (neutral: 0.9420 → 0.5073), because the
+  outer window spans decades while its integrand is nonzero only near the
+  bottom. **Repairing the charged-pion kernel is necessary but not
+  sufficient for the ρ.** Table and consequence recorded on the follow-up.
 - **Should the corpus's *budget granularity* become per-block?**
   (Task 4.3.) The `spectra.photon.muon` failure was a 1.15e-14 absolute
   difference on a block whose peak is 17.2 — a per-block `atol` would have
@@ -525,12 +585,11 @@ kernel ports.
   lever was a 300x `rtol` widening. Belongs with
   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
   alongside the per-case mode-switch question above.
-- **`dnde_photon_{charged,neutral}_rho` state no return units** — the
-  last two entry points in `hazma/spectra/_photon/__init__.py` that do
-  not, since Task 4.4 added them to the pion pair. `AGENTS.md` requires
-  units on every physical quantity, and every ported sibling now carries
-  `Units are MeV^-1; …`. **Task 4.5 should add them with its swap**
-  rather than leaving a lone exception behind (PR #68 review round 1).
+- ~~**`dnde_photon_{charged,neutral}_rho` state no return units**~~
+  **Done in Task 4.5' swap.** All **12** entry points in
+  `hazma/spectra/_photon/__init__.py` now carry
+  `Units are MeV^-1; … are both in MeV.`
+  (`grep -c 'Units are MeV' hazma/spectra/_photon/__init__.py` → 12).
 
 ## Plan Impact
 
@@ -540,79 +599,74 @@ kernel ports.
 
 **For the next agent working in Phase 04:** read `../../PLAN.md`,
 `../README.md`, this file, then the phase file — its Goal carries the
-eight-step swap recipe *and* the capi-survivor exception. **Task 4.5
-(`_photon/_rho`) is next**, and it is the phase's declared numerical
-stress test: a quadrature whose integrand is `_pion`'s quadrature, which
-is itself a quadrature over `_muon`. Its corpus class is `NESTED`
-(`rtol = 1e-6`) — the loosest budget in the file — so measure before
-touching it, and expect the two Task 4.4 findings below to apply one level
-deeper. `_rho.pyx` is **not** a capi survivor: no `.pyx` cimports it, so
-the whole file goes in the swap PR (check `rg` at execution time rather
-than trusting this sentence). Deleting the `_photon/_muon`,
-`_photon/_pion`, `_positron/_muon` or `_positron/_pion` extensions still
-breaks the mediator imports.
+eight-step swap recipe *and* the capi-survivor exception. **Task 4.6
+(`_positron/_pion` + the neutrino pair) is next and closes the phase.**
+Deleting the `_photon/_muon`, `_photon/_pion`, `_positron/_muon` or
+`_positron/_pion` extensions still breaks the mediator imports; Task 4.6
+removes `def`s, not files.
 
 **Currently safe to assume:**
 
 - The foundation (interp, boost, quad, dispatch, constants) is unit-tested
-  against scipy and NumPy, and Tasks 4.1–4.4 have exercised
+  against scipy and NumPy, and Tasks 4.1–4.5 have exercised
   `constants::{pdg,derived}`, all four `boost::*`, `interp::interp`,
-  `special::spence`, `quad::quad` and `dispatch::map_unary` through eleven
-  real kernels end to end.
+  `special::spence`, `quad::quad` (both `qagse` and `qagpe`) and
+  `dispatch::map_unary` through thirteen real kernels end to end.
+- **The photon domain is finished.** All 12 public
+  `hazma.spectra.dnde_photon_*` decay spectra come from `hazma._core`, and
+  `hazma/spectra/_photon/` holds no Cython Python entry point at all;
+  `_muon.pyx` and `_pion.pyx` survive there for their `cdef` capsules
+  alone, read now only by the two mediator decay-spectrum modules.
+  `cases.rust_core_kernels()` → **13**.
+- **14 `.pyx` and 11 `.pxd`** after Task 4.5, from 15/12 — the ρ was a
+  whole-file deletion, unlike Tasks 4.3/4.4. Re-derive with a clean
+  rebuild rather than quoting.
 - **`kernels::photon_pion::{dnde_photon_charged_pion,
   dnde_photon_neutral_pion, charged_pion_integrand, dnde_pi_to_lnug}` are
-  `pub` and PyO3-free.** The neutral one is **bit-equal** to the `cdef`
-  `_rho.pyx` cimports (9,000 points, 0 mismatches); the charged one agrees
-  to **6.5e-15** worst relative over 8,000 points, which is as close as two
-  independent adaptive quadratures get. Task 4.5 should call both Rust
-  `fn`s directly as its integrands rather than routing through Python.
-- **`crate::quad` is proven on a live shape.** Task 4.4 is its first real
-  consumer: `CHARGED_PION_QUAD` copies the `.pyx`'s
-  `epsabs=1e-10, epsrel=1e-5, points=[-1, 1]` verbatim, the break points
-  are both discarded by scipy's filter (so `qagpe` runs over an empty
-  list, exactly as Task 3.3 predicted), and the termination flag matches
-  scipy's at all 88 points of an 11 × 8 grid reaching `E_π = 1e5` MeV.
-- **`hazma._core.photon` serves ten kernels**: the seven tabulated meson
-  spectra (4.2), the radiative muon spectrum (4.3) and both pion spectra
-  (4.4). `rust/src/photon.rs` now shows three registration shapes — a
-  guard resolved once before any element is mapped (the tabulated seven),
-  a kernel that guards per element (the muon), and a kernel that runs a
-  quadrature per element (the charged pion).
-- **`test/test_core_photon_pion.py` is the module to copy when a kernel
-  has no bit-equality mode.** 73 tests, two oracle classes at two
-  standards, and the reasoning for the split in the module docstring.
-  `test/test_core_photon_muon.py` remains the copy for a kernel that
-  *does*, and `test/test_core_photon_tables.py` for one whose twin does
-  not survive the PR.
-- **`test/parity/tolerances.py` has a `PORTED_QUAD_RTOL = 1e-12`**, taken
-  by `spectra.photon.charged_pion` only. The other two `QUAD` cases keep
-  the 1e-8 opening figure until Task 4.6 measures them. `NESTED` is
-  untouched and Task 4.5 owns the same decision for it.
+  `pub` and PyO3-free**, and Task 4.5 consumed the first two natively as
+  its integrands — the pattern for any kernel that boosts another.
+- **`NESTED` is measured.** `test/parity/tolerances.py` has
+  `PORTED_NESTED_RTOL = 1e-9` taken by the two ρ cases; the seven
+  mediator-spectrum cases keep the 1e-6 opening figure for Phase 06.
+  `PORTED_QUAD_RTOL = 1e-12` is still `spectra.photon.charged_pion` only,
+  and the two unported `QUAD` cases keep 1e-8 until Task 4.6 measures
+  them. `dnde_neutrino_charged_pion` nests too — the ρ came in at 1.5e-13,
+  five decades inside its class — but **re-derive rather than inherit**:
+  three tasks running, the phase's prediction has been wrong in a
+  different direction each time.
+- **Four test-module shapes now, and the twin forces the choice.**
+  `test_core_positron_muon.py` / `test_core_photon_muon.py` for a kernel
+  whose twin survives *and* admits bit-equality;
+  `test_core_photon_pion.py` for one carrying two oracle classes at two
+  standards; `test_core_photon_tables.py` and, new in Task 4.5,
+  `test_core_photon_rho.py` for a kernel whose twin does **not** survive
+  the PR — there the substitute is an independent reference (a Python +
+  scipy transcription over the already-ported inner kernels) plus the
+  against-the-Cython numbers measured before the deletion.
+- **Run a mutation campaign, then interrogate the survivors.** Task 4.5's
+  six caught five, and the survivor was fixed by lifting the arithmetic
+  out of the integral into a testable `fn` rather than accepted.
+- `test/test_core_dispatch.py`'s spectra oracle is `_positron/_pion`,
+  whose `def` Task 4.6 deletes; there is no unary candidate after it. See
+  Decisions.
 - The corpus is in budget mode from Task 4.1 and **cannot be
-  regenerated**. `EXACT`-class cases are still `rtol = 0` — and
-  `spectra.photon.neutral_pion` now *passes* at `rtol = 0` on Rust.
-- `test/test_core_dispatch.py`'s spectra oracle is `_photon/_rho`, which
-  Task 4.5 deletes. There is no fourth photon candidate; see Decisions.
+  regenerated**. `EXACT`-class cases are still `rtol = 0`, and
+  `spectra.photon.neutral_pion` passes there on Rust.
 
 **Currently risky / unknown:**
 
-- **Six blocked defects now share one eventual corpus regeneration** —
+- **Seven blocked defects now share one eventual corpus regeneration** —
   the positron normalization (4.1), the boost integral (3.4), the η′ line
-  weight and the φ line energies (both 4.2), the muon photon spectrum's
-  rest-frame endpoint (4.3), and the charged pion's lost forward cone
-  (4.4). Do not "fix" any of them in passing; each fails the gate that
-  governs the remaining swaps.
-- **The forward-cone defect probably reaches the ρ** — the ρ quadratures
-  over the charged pion — and Task 4.5 is the task positioned to measure
-  it. See Open Questions.
-- **Nothing gates the FMA map of a quadrature integrand**, and the ρ's is
-  two integrations from anything observable. Read the disassembly, and do
-  not read a green suite as confirmation of the map.
-- **Do not inherit Task 4.3's `1/β` prediction unexamined.** It did not
-  apply to `_pion` (see Findings) — but the ρ *does* sweep the pion's own
-  `β`, so it may apply there. Re-derive.
-- Nested-ρ drift is the project's numerical stress test: attribute a
-  difference to a single term before touching any budget. Doing that in
-  4.3 turned a proposed 300x widening into a 60-line fix; doing it in 4.4
-  turned "the quadrature diverges" into "the quadrature diverges where
-  scipy does, and agrees with it there".
+  weight and the φ line energies (4.2), the muon photon spectrum's
+  rest-frame endpoint (4.3), the charged pion's lost forward cone (4.4),
+  and the ρ rest-frame branch returning its integrand (4.5). Do not "fix"
+  any in passing. **Worth telling the maintainer separately from this
+  project's schedule** — and the forward-cone entry now carries Task 4.5's
+  measurement that the ρ *compounds* rather than merely inherits it, which
+  changes the shape of that repair.
+- **Phase 05 has to name the cross sections' `quantity` wording**;
+  `"Center-of-mass energies"` is the placeholder
+  `test/test_core_dispatch.py` uses.
+- **Off macOS the corpus does not reproduce**, so CI runs
+  `pytest --ignore=test/parity` everywhere except macOS
+  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)).
