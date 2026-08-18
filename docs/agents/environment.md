@@ -112,7 +112,10 @@ group. Anything else risks a formatter that disagrees with CI:
 uv pip install --group lint     # or: pip install --group lint
 ```
 
-`--group dev` adds `pytest` on top, for the full preflight toolchain.
+`--group dev` adds `pytest` and `pytest-xdist` on top, for the full
+preflight toolchain. The plugin is not optional: `pyproject.toml`'s
+`addopts` passes `--numprocesses` to every run, and a pytest without
+xdist rejects that flag outright.
 Note these are PEP 735 groups, **not** extras — the old
 `pip install -e '.[dev]'` no longer resolves, and `--group` needs
 pip >= 25.1.

@@ -203,8 +203,10 @@ a blocked commit — fix and re-run; do not commit around a red gate.
 
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain
-(`pip install --group dev`, which pulls black, isort, ruff, and pytest at
-the versions CI uses; `cargo` is not in any Python group — get it from
+(`pip install --group dev`, which pulls black, isort, ruff, pytest, and
+pytest-xdist at the versions CI uses — the xdist plugin is required,
+since `pyproject.toml`'s `addopts` passes `--numprocesses` to every
+run; `cargo` is not in any Python group — get it from
 rustup, and note you need it to build hazma from source at all) rather
 than shipping on an unchecked gate. Do not
 `pip install black` on its own: this script runs whatever is on `PATH`,

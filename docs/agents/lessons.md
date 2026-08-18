@@ -533,3 +533,14 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   complete while the roster still claims the check. Sibling of
   [gate-disabled-stays-green]: there the gate silently stopped running,
   here it silently never started.
+- [stale-group-membership-claim] Adding a package to a
+  `[dependency-groups]` group silently falsifies every prose enumeration
+  of what that group installs — those live in `docs/agents/` and
+  `AGENTS.md`, not next to the group, so nothing fails when they rot,
+  and here the omission was load-bearing: `pytest-xdist` joined `dev`
+  because `addopts` passes `--numprocesses` to every run, so a reader
+  who installed "pytest" per the stale prose got a pytest that rejects
+  the repo's own default flags. After editing a group, `rg` the group's
+  name and member list out of `docs/agents/` and `AGENTS.md` and
+  re-derive each claim (PR #69). Sibling of [stale-ci-capability-claim]:
+  same rot, config group instead of workflow.
