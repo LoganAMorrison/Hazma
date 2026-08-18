@@ -724,13 +724,19 @@ class TestChargedPionAgainstTheCythonTwin:
         true of each half:
 
         * **converged** (scipy issues no ``IntegrationWarning``) -- 51 of
-          the 64 points, held to :data:`CHARGED_PION_BUDGET`, the same
-          1e-12 the swept-grid classes use. Measured worst on the
-          capturing platform: **2.22e-16**, i.e. one ulp, with ~4,500x
-          headroom. That headroom is not luck -- where QUADPACK converges
-          the two implementations subdivide identically, so the only
-          difference left is the integrand's own last bit accumulated over
-          a few hundred evaluations;
+          the 64 points, held to :data:`CHARGED_PION_BUDGET` on the
+          capturing platform and :data:`OFF_PLATFORM_BUDGET` elsewhere.
+          The scope is not decoration: this grid runs to ``E_pi = 1e5``
+          MeV, a decade past the swept-grid classes, and **the capturing
+          platform cannot measure what that costs off it** -- macOS/arm64
+          reports 2.22e-16 (one ulp) at *every* boost from 1e3 to 1e5,
+          while Linux/glibc reached **1.2916e-12** at
+          ``E_gam = 1e-3, E_pi = 3e4``. A flat 1e-12 passed macOS and
+          three-quarters of CI, which is exactly how this class of mistake
+          survives (``docs/agents/lessons.md``
+          ``[platform-scoped-oracle-asserted-globally]``). The swept-grid
+          classes keep their flat 1e-12 because they stop at
+          ``E_pi = 1e4``, where three CI rounds have held it;
         * **not converged** -- the other 13, held only to "the port has
           not wandered off": same sign, and within
           :data:`DIVERGENT_REGIME_FACTOR`. Measured worst on the capturing
@@ -749,11 +755,24 @@ class TestChargedPionAgainstTheCythonTwin:
         makes about widening until it passes). A bound the numerics do not
         support is not worth asserting; a sign-and-magnitude check is.
 
-        The Cython runs scipy and hazma reads ``quad(...)[0]``, so the
-        termination flag reaches Python only as a warning. The port's own
-        flag is asserted directly in ``rust/src/kernels/photon_pion.rs``,
-        where it equals scipy's code at all 88 points of this grid on the
-        capturing platform.
+        **This test does not compare termination flags, and an earlier
+        draft's name said it did** (PR #68 review round 1). It reads
+        scipy's warning only to choose which assertion to apply, and it
+        never sees the port's `Ier` -- `hazma._core.photon` returns the
+        value alone, exactly as the ``.pyx`` does, so no Python caller
+        can. A regression that changed the port's flag without changing
+        its value would pass here.
+
+        That half is gated where it is observable, in
+        ``rust/src/kernels/photon_pion.rs``: one test asserts the whole
+        live domain returns ``ier = 0``, a second asserts the other regime
+        is still reachable and the options never go invalid. What is
+        deliberately *not* gated anywhere is the point-by-point flag map
+        above the boundary -- measured once as equal to scipy's at all 88
+        points of an 11 x 8 grid, on the capturing platform, and left as a
+        measurement because the values there are demonstrably
+        platform-dependent and a flag is a discrete decision on the same
+        chaotic sequence.
         """
         point = cython_point("dnde_photon_charged_pion_point")
         pion_energies = (1e3, 1e4, 3e4, 4e4, 5e4, 6e4, 8e4, 1e5)
@@ -777,10 +796,18 @@ class TestChargedPionAgainstTheCythonTwin:
                 ratio = got / want
                 if quadrature_converged:
                     converged += 1
-                    assert abs(ratio - 1.0) < CHARGED_PION_BUDGET, (
+                    budget = (
+                        CHARGED_PION_BUDGET
+                        if ON_THE_CAPTURING_PLATFORM
+                        else OFF_PLATFORM_BUDGET
+                    )
+                    assert abs(ratio - 1.0) < budget, (
                         f"port and scipy disagree where QUADPACK *converged* "
                         f"at {egam=}, {epi=}: {got!r} vs {want!r}. This half "
-                        f"is a real precision claim -- do not widen it."
+                        f"is a real precision claim -- widen it only with a "
+                        f"measurement from the platform that failed, and "
+                        f"never the capturing one, which reports one ulp "
+                        f"here at every boost."
                     )
                 else:
                     diverged += 1

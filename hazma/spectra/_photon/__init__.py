@@ -89,6 +89,8 @@ def dnde_photon_neutral_pion(
     spec : np.ndarray
         List of gamma ray spectrum values, dNdE, evaluated at
         `photon_energies` given neutral pion energy `pion_energy`.
+        Units are MeV^-1; `photon_energies` and `pion_energy` are both
+        in MeV.
 
     Examples
     --------
@@ -138,7 +140,9 @@ def dnde_photon_charged_pion(
     -------
     spec : Union[float, np.ndarray]
         List of gamma ray spectrum values, :math:`dN/dE`, evaluated at
-        `photon_energies` given charged pion energy `eng_pi`.
+        `photon_energies` given charged pion energy `pion_energy`.
+        Units are MeV^-1; `photon_energy` and `pion_energy` are both
+        in MeV.
 
     Examples
     --------

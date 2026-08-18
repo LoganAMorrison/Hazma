@@ -599,18 +599,29 @@ mod tests {
     /// most boosted block is `10 m_π = 1396` MeV (`γ = 10`), so nothing
     /// hazma computes today is within an order of magnitude of it.
     ///
-    /// And the regime is not a cliff here anyway: over an 11 × 8 grid
-    /// reaching `E_π = 1e5` MeV the port's `ier` equals the flag scipy
-    /// raises on the Cython twin at **all 88 points**, including both
-    /// `ier = 4` entries and the non-monotonic pattern in between, with
-    /// the *flags* agreeing at all 88. The **values** in that regime are
-    /// another matter and are entitled to be: 2.8e-11 apart on
-    /// macOS/arm64, 6.3e-10 and 3.1e-08 at two different points on
-    /// Linux/glibc. Where QUADPACK converges, by contrast, the two agree
-    /// to one ulp on both platforms, because they subdivide identically
-    /// there. `test/test_core_photon_pion.py` partitions the grid by
-    /// scipy's own verdict and holds each half to what is true of it,
-    /// since that comparison needs scipy.
+    /// This test is where the port's **own** `ier` is observed. Nothing on
+    /// the Python side can see it — `hazma._core.photon` returns the
+    /// value alone, exactly as the `.pyx` does — so
+    /// `test/test_core_photon_pion.py` partitions its grid by *scipy's*
+    /// verdict and never inspects this one. Keeping the two halves of
+    /// that claim in the two places they are checkable is deliberate; a
+    /// Python test that recorded a scipy warning and then compared only
+    /// values would be claiming a flag comparison it never made (PR #68
+    /// review round 1).
+    ///
+    /// **What is gated here, and what is not.** Gated: every point below
+    /// the boundary converges, some point above it does not, and no point
+    /// anywhere returns [`Ier::InvalidInput`] — which would mean the
+    /// `const` options had gone bad. *Not* gated: the point-by-point flag
+    /// map above the boundary. It was measured once, on the capturing
+    /// platform, as equal to scipy's code at all 88 points of an 11 × 8
+    /// grid — but the **values** there are demonstrably platform-dependent
+    /// (2.8e-11 apart on macOS/arm64, 6.3e-10 and 3.1e-08 at two points on
+    /// Linux/glibc), and a flag is a discrete decision on the same chaotic
+    /// sequence, so pinning that map would assert as portable something
+    /// measured on one platform. Below the boundary the two subdivide
+    /// identically and agree to one ulp on both, which is why *that* half
+    /// is asserted without qualification.
     #[test]
     fn the_live_grid_never_leaves_the_converged_regime() {
         for epi in [MASS_PI, 150.0, 200.0, 500.0, 1500.0, 1e4, 3e4] {
@@ -625,6 +636,40 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// The boundary exists, and the options never go invalid.
+    ///
+    /// The companion to the test above: that one says the live domain
+    /// converges, this one says the *other* regime is real and reachable,
+    /// so "no live shape reaches it" stays a measured statement rather
+    /// than an artifact of a grid that never looked. Without this, a
+    /// change that made the quadrature converge everywhere — a widened
+    /// `limit`, a different rule — would leave the sibling green while
+    /// silently deleting the phenomenon Task 3.3 asked each consumer to
+    /// report on.
+    #[test]
+    fn the_non_converging_regime_is_reachable_and_the_options_stay_valid() {
+        let egams = [1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4];
+        let mut diverged = 0;
+        for epi in [1e3_f64, 3e4, 4e4, 6e4, 8e4, 1e5] {
+            for egam in egams {
+                let mut integrand = |cl: f64| charged_pion_integrand(cl, egam, epi);
+                let outcome =
+                    quad(&mut integrand, -1.0, 1.0, &CHARGED_PION_QUAD).expect("valid options");
+                // `InvalidInput` is never an outcome, only a `QuadError`,
+                // so seeing it would mean the const options had gone bad.
+                assert_ne!(outcome.ier, Ier::InvalidInput);
+                if outcome.ier != Ier::Ok {
+                    diverged += 1;
+                }
+            }
+        }
+        assert!(
+            diverged > 0,
+            "no sampled argument leaves ier = 0, so this kernel's \
+             divergent-regime reporting has nothing to describe"
+        );
     }
 
     /// At rest the pion's photon spectrum is the pion-rest-frame sum

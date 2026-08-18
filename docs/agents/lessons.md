@@ -96,7 +96,14 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   `git diff origin/master --name-status` (21: 16 `M`, 4 `A`, 1 `D`).
   Prefer the artifact under review as the source — the diff, not the
   working tree, which carries staged deletions and scratch files the PR
-  will never contain.
+  will never contain. A cheap self-check for the sub-case where a count
+  is broken out into parts: **make the parts sum**. PR #68 recorded an
+  FMA audit as "15 instructions (14 `fmadd`, 1 `fmsub`, 1 `fnmsub`)" —
+  the total and the grand total were both right, and only the breakdown
+  was wrong, so nothing downstream disagreed and a reviewer had to add
+  14+1+1 to find it. Derive the *breakdown* from the command
+  (`… | sort | uniq -c`), not the total alone, and the arithmetic checks
+  itself.
 - [partial-historical-labeling] Annotating **one** measurement in a dated
   section as historical silently upgrades every unlabeled measurement
   beside it into a claim about the current tree. Label the *section*, not
@@ -461,7 +468,15 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   guessing it, and give it a test that proves it still rejects a real
   error, since on the capturing platform nothing else exercises it. The
   tell you are about to make this mistake: the oracle is something you
-  compiled rather than something you pinned.
+  compiled rather than something you pinned. **A measurement is not
+  immunity** (PR #68): a flat 1e-12 there was derived from a real sweep
+  that reported one ulp at every argument — but the capturing platform
+  reports one ulp *whether or not* the other one does, so the measurement
+  could not have come out any other way and carried no information about
+  the scope. Linux then reported 1.29e-12 at the extreme end of the same
+  grid. Before asserting a budget globally, ask whether the platform you
+  measured on is capable of producing a number that would have stopped
+  you; if not, you measured the wrong thing, however carefully.
 - [settling-a-deferral-has-two-sweeps] When a task *settles* something an
   earlier task deferred, the stale text lives in two disjoint populations
   and grepping one feels like finishing. The **pointers** say "Task N
@@ -504,3 +519,17 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   (PR #67: a fresh entry in this very file). Pass the paths explicitly
   when fixes are still uncommitted — same family as
   [changed-vs-sees-only-commits] above.
+- [test-name-claims-an-unmade-assertion] A test that *captures* a signal
+  and then does not assert on it advertises a check it never performs,
+  and the name is what makes it dangerous — reviewers and future agents
+  read the roster, not the body. PR #68 had
+  `test_the_termination_flag_agrees_with_scipy_across_the_divergent_regime`
+  record scipy's `IntegrationWarning`, use it only to pick which
+  tolerance to apply, and compare values alone; the port's own `Ier` was
+  never observable from Python at all, so a flag regression would have
+  passed under a name promising flag agreement. When the signal is not
+  reachable from the layer the test lives in, say so in the docstring and
+  gate it where it *is* reachable — and rename, because the fix is not
+  complete while the roster still claims the check. Sibling of
+  [gate-disabled-stays-green]: there the gate silently stopped running,
+  here it silently never started.

@@ -102,7 +102,7 @@ not only the expressions.
 ### The FMA map: 19 sites, and 15 of them are untestable
 
 `objdump -d` the shipped `.so`: 15 fused instructions in `dnde_pi_to_lnug`
-(14 `fmadd`, 1 `fmsub`, 1 `fnmsub` — no vectorised `fmla` this time,
+(13 `fmadd`, 1 `fmsub`, 1 `fnmsub` — no vectorised `fmla` this time,
 unlike Task 4.3), 4 in `charged_pion_integrand` (1 `fmsub` for
 `1 − β cosθ` and 3 `fmadd` for the three-term accumulation onto a `0.0`
 seed), and **zero** in either point function. Two neighbours look fusable
@@ -361,6 +361,33 @@ needs, already written down in the file that has the defect.
 - **A mutation harness needs a guarded baseline, and this task proved it
   the hard way** — see Verification.
 
+- **Review round 1 fixes (PR #68).** Three findings, all valid:
+  - The FMA *breakdown* in Findings read `14 fmadd` where the object has
+    13, so its own parts summed to 16 and 20 against a true 15 and 19.
+    The totals were right, which is why nothing downstream disagreed and
+    only adding the parts finds it. Corrected, and the count sweep now
+    derives the breakdown per symbol rather than the grand total, so the
+    arithmetic checks itself. Folded into `docs/agents/lessons.md`
+    `[derived-count-not-rederived]`.
+  - **A test named for a comparison it never made.**
+    `test_the_termination_flag_agrees_with_scipy_across_the_divergent_regime`
+    captured scipy's `IntegrationWarning` but used it only to select a
+    tolerance, and the port's own `Ier` is not reachable from Python at
+    all — so a flag regression would have passed under that name. The
+    rename in the round-2 restructure had already removed the false
+    claim; this round closes the underlying gap by gating the flag where
+    it *is* observable (a second `cargo` test asserting the divergent
+    regime stays reachable and the options never go invalid) and by
+    stating in both docstrings what is measured-but-not-gated and why.
+    New ledger class `[test-name-claims-an-unmade-assertion]`.
+  - The two pion wrappers stated no units. Every other ported entry point
+    in that file does (`Units are MeV^-1; …`), so this was mine to fix
+    rather than a repo-wide gap; the charged-pion `Returns` also named a
+    parameter `eng_pi` that has been `pion_energy` for some time, fixed in
+    the same sentence. **`dnde_photon_{charged,neutral}_rho` are still
+    unit-less and deliberately untouched** — they are Task 4.5's, still on
+    Cython, and out of this diff.
+
 ## Files Changed
 
 *(This section describes **this task's** diff, on the branch
@@ -440,10 +467,39 @@ Resolved by restructuring the test to partition on scipy's convergence
 verdict rather than by widening a third time — see "The divergent regime
 is reachable" above.
 
-**Across both rounds no other test moved**, which is the substantive
-result: the flat `CHARGED_PION_BUDGET = 1e-12` holds on Linux across five
-interpreters, in the converged-regime sweep classes *and* in the converged
-half of this test.
+### CI round 3 (PR #68, run 32089162476)
+
+The partition held on its loose half and failed on its *tight* one:
+
+```text
+AssertionError: port and scipy disagree where QUADPACK *converged*
+  at egam=0.001, epi=30000.0: 18.307096346801323 vs 18.30709634682497
+assert 1.2916334668489071e-12 < 1e-12
+====== 1 failed, 1124 passed, 15 skipped, 9 warnings in 733.23s ======
+```
+
+**1.29x over the budget, and the capturing platform cannot see it at
+all.** macOS/arm64 reports `2.22e-16` — one ulp — at *every* boost from
+`E_pi = 1e3` to `1e5`; there is no local measurement that would have
+predicted 1.29e-12. This is
+`docs/agents/lessons.md` `[platform-scoped-oracle-asserted-globally]` in
+its subtlest form: the flat 1e-12 was not a guess, it was a *measurement*
+— just one taken where the phenomenon does not exist.
+
+Fixed by scoping that half the way every other against-the-Cython
+comparison in the module already is: `CHARGED_PION_BUDGET` on the
+capturing platform, `OFF_PLATFORM_BUDGET` (1e-8, ~7,700x the observed
+Linux value) elsewhere. **The three swept-grid classes keep their flat
+1e-12** and are right to: they stop at `E_pi = 1e4`, inside which three CI
+rounds have now held it. Only this grid runs to `1e5`, and only there does
+the integrand's off-platform difference survive the quadrature.
+
+**Across all three rounds the physical-domain claims never moved.** Every
+failure has been at `E_pi >= 3e4` MeV — 30 GeV, two decades past hazma's
+sub-GeV domain and past the parity corpus's `10 m_pi` ceiling — in a grid
+this task added specifically to probe the extreme. The corpus, the sweep
+classes, and the model-layer gate have been green on every platform in
+every round.
 
 ### What the 73 per-kernel tests cover
 
@@ -692,6 +748,7 @@ endpoint reaching `_pion`).
 | note + both READMEs: `cargo test` 120 | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `120 passed; 0 failed` | OK |
 | note + both READMEs: 73 per-kernel tests | `pytest --collect-only -q test/test_core_photon_pion.py` | `73 tests collected` | OK |
 | note: 19 FMA sites | `objdump -d hazma/spectra/_photon/_pion.cpython-312-darwin.so \| grep -cE 'fmadd\|fmsub\|fmla\|fnmadd\|fnmsub'` | `19` | OK |
+| note: the per-function FMA breakdown | the same `objdump`, sliced per symbol and piped to `sort \| uniq -c` | `dnde_pi_to_lnug` 13 `fmadd` + 1 `fmsub` + 1 `fnmsub` = 15; `charged_pion_integrand` 3 `fmadd` + 1 `fmsub` = 4; both point functions 0 | **CORRECTED** — the note read `14 fmadd`, which made its own subtotals sum to 16 and 20 against a true 15 and 19 (PR #68 review round 1). The totals were right and only the breakdown was wrong, which is exactly why the sweep now derives the breakdown rather than the total. |
 | note + phase README: 42 lines deleted from `_pion.pyx` | `git diff origin/master --numstat -- hazma/spectra/_photon/_pion.pyx` | `0  42` | OK |
 | note + both READMEs: bare suite | `pytest -q` (preflight's own run) | `1755 passed, 15 skipped, 8 warnings in 588.92s` | OK |
 | note + both READMEs: collection +73 | `pytest --collect-only -q` on both trees | `1697 → 1770` | OK |
@@ -735,6 +792,39 @@ block-by-block script in §Verification, and
 | Recipe step 6 — twin's `def`s deleted, `.pyi` gone | `TestWrapperAndPublicApi::test_the_cython_module_no_longer_exports_a_python_entry_point`; `git diff --numstat` shows `0 42` |
 | Recipe step 7 — `test/test_core_<kernel>.py` | `test/test_core_photon_pion.py`, 73 tests |
 | Recipe step 8 — drift recorded | this note, `../README.md`, `../../task-notes/README.md` |
+
+### Review round 1: stale-sibling sweep for the corrected FMA breakdown
+
+`rg -n '14 \`fmadd\`|14 fmadd' projects/ docs/ rust/ test/ README.md CHANGELOG.md`
+
+**Pre-fix:** one occurrence — this note's Findings section, line 105.
+The siblings that could have carried it (`rust/src/kernels/photon_pion.rs`'s
+"Nineteen FMA instructions" and "15 … and 4 …", and this note's own 19-site
+sweep row) were all **already correct**, which is precisely why nothing
+disagreed and the error survived to review: a wrong *breakdown* beside a
+right *total* contradicts nothing but itself.
+
+**Post-fix:** three occurrences, all deliberate records of the wrong value
+rather than live claims — `docs/agents/lessons.md`'s new citation, the
+review-fix bullet under Decisions, and the `**CORRECTED**` cell in the
+count-sweep table. Marked KEPT.
+
+**Re-derived from the object rather than from a neighbour**
+(`objdump -d`, sliced per symbol, `sort | uniq -c`):
+
+```text
+dnde_pi_to_lnug:          13 fmadd   1 fmsub   1 fnmsub     = 15
+charged_pion_integrand:    3 fmadd   1 fmsub                =  4
+both point functions:      0                                =  0
+                                                     total    19
+```
+
+### Review round 1: units sweep
+
+`hazma/spectra/_photon/__init__.py` now carries `Units are MeV^-1; …` on
+**10** of its 12 public entry points — every one that has been ported.
+The two exceptions are `dnde_photon_{charged,neutral}_rho`, still on
+Cython and out of this diff; recorded for Task 4.5 in the phase README.
 
 ### Task-note self-consistency
 

@@ -525,6 +525,12 @@ kernel ports.
   lever was a 300x `rtol` widening. Belongs with
   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
   alongside the per-case mode-switch question above.
+- **`dnde_photon_{charged,neutral}_rho` state no return units** — the
+  last two entry points in `hazma/spectra/_photon/__init__.py` that do
+  not, since Task 4.4 added them to the pion pair. `AGENTS.md` requires
+  units on every physical quantity, and every ported sibling now carries
+  `Units are MeV^-1; …`. **Task 4.5 should add them with its swap**
+  rather than leaving a lone exception behind (PR #68 review round 1).
 
 ## Plan Impact
 
