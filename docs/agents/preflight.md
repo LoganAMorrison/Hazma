@@ -48,10 +48,12 @@ before you stage anything.
    only reproduces on the platform that captured it, so a green gate here
    predicts a green CI but not the reverse. Narrowing to a target
    (`pytest test/spectra`) is
-   for iterating; run it bare before you commit. Budget minutes, not
-   seconds — nearly all of it the parity corpus's nested adaptive
-   quadrature (8m58s measured for the bare run on macOS/arm64 under
-   concurrent load, cython-to-rust Task 1.3).
+   for iterating; run it bare before you commit. The work is minutes of
+   CPU — nearly all of it the parity corpus's nested adaptive quadrature
+   (598s serial for the bare run, measured idle on macOS/arm64,
+   2026-08-17) — but the pytest-xdist `addopts` in `pyproject.toml`
+   spread it across cores, so a bare run's wall-clock is that divided by
+   the machine (45s at `-n 12` on the same hardware).
 
    **Read the summary line.** `pytest` exits **5** when it collects zero
    tests, and a wrapper that only checks "non-zero exit" will happily
@@ -201,8 +203,10 @@ a blocked commit — fix and re-run; do not commit around a red gate.
 
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain
-(`pip install --group dev`, which pulls black, isort, ruff, and pytest at
-the versions CI uses; `cargo` is not in any Python group — get it from
+(`pip install --group dev`, which pulls black, isort, ruff, pytest, and
+pytest-xdist at the versions CI uses — the xdist plugin is required,
+since `pyproject.toml`'s `addopts` passes `--numprocesses` to every
+run; `cargo` is not in any Python group — get it from
 rustup, and note you need it to build hazma from source at all) rather
 than shipping on an unchecked gate. Do not
 `pip install black` on its own: this script runs whatever is on `PATH`,

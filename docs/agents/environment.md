@@ -112,7 +112,10 @@ group. Anything else risks a formatter that disagrees with CI:
 uv pip install --group lint     # or: pip install --group lint
 ```
 
-`--group dev` adds `pytest` on top, for the full preflight toolchain.
+`--group dev` adds `pytest` and `pytest-xdist` on top, for the full
+preflight toolchain. The plugin is not optional: `pyproject.toml`'s
+`addopts` passes `--numprocesses` to every run, and a pytest without
+xdist rejects that flag outright.
 Note these are PEP 735 groups, **not** extras — the old
 `pip install -e '.[dev]'` no longer resolves, and `--group` needs
 pip >= 25.1.
@@ -160,11 +163,13 @@ alone, so a bare run collected the in-package `*_test.py` modules
 CI, `preflight.sh`, and a contributor typing `pytest` each ran a
 different subset. They now run the same one. The cost is the golden
 parity corpus and its nested adaptive quadrature under `test/parity/`.
-Budget minutes, not seconds — 8m58s measured for the bare run on
-macOS/arm64 under concurrent load, 4m38s for `pytest test/parity` alone
-measured idle (cython-to-rust Tasks 1.3 and 1.2). Narrow with an
-explicit target while iterating, but cite the command you ran — "the
-full suite" is only true of the bare form.
+The work is minutes of CPU — 598s serial for the bare run, measured
+idle on macOS/arm64 (2026-08-17) — but the pytest-xdist `addopts` in
+`pyproject.toml` spread it across cores: 45s wall at `-n 12` on the
+same machine, identical collection and outcomes. `pytest -n 0` restores
+the in-process run that `--pdb` and clean sequential output need.
+Narrow with an explicit target while iterating, but cite the command
+you ran — "the full suite" is only true of the bare form.
 
 **Running the parity suite needs an editable install, not just any
 install.** `test/parity/cases.py` refuses a `hazma` that resolves

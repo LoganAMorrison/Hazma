@@ -34,7 +34,14 @@ class ModuleFunction(NamedTuple):
         return func(val, *self.extra_args)
 
 
-@pytest.fixture
+# Module-scoped: `synchronize_herwig` calls `width_v()` on every model in
+# every test, and the first evaluation fills the model's `_width_cache`
+# with every partial width — among them two 4-body RAMBO integrations and
+# three 3-body ones at npts=50_000, ~2.7s per model. Function scope threw
+# those caches away between tests, which cost ~250s of this file's ~257s
+# (measured 2026-08-17). Sharing is safe: no test mutates the models, and
+# the cache invalidates itself on any parameter change.
+@pytest.fixture(scope="module")
 def models() -> List[VectorModel]:
     model1 = VectorMediatorGeV(
         mx=5e3,

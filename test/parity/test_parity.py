@@ -50,9 +50,11 @@ reports.
 
 Runtime
 -------
-Around five minutes, nearly all of it nested adaptive quadrature in the
-rho and mediator-spectrum kernels. That is the cost of the gate, not
-overhead — it is the same work `generate.py` does.
+Around five minutes of single-core work, nearly all of it nested
+adaptive quadrature in the rho and mediator-spectrum kernels. That is
+the cost of the gate, not overhead — it is the same work `generate.py`
+does. The pytest-xdist `addopts` in `pyproject.toml` spread it across
+workers, so the wall-clock is that cost divided by the machine.
 """
 
 from __future__ import annotations

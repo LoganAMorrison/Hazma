@@ -18,16 +18,21 @@ function's budget.
 ## Commands
 
 Run the gate. One test per corpus block (623 of them) plus three guards;
-takes around five minutes, nearly all of it the nested adaptive
-quadrature in the rho and mediator-spectrum kernels:
+around five minutes of single-core work, nearly all of it the nested
+adaptive quadrature in the rho and mediator-spectrum kernels. The
+pytest-xdist `addopts` in `pyproject.toml` spread it across cores, so
+the wall-clock is that cost divided by the machine:
 
 ```bash
 pytest test/parity
 ```
 
-A bare `pytest` runs it too, and so does CI on every matrix entry —
-`pyproject.toml`'s `testpaths` is `["hazma", "test"]` (cython-to-rust
-Task 1.3). That runtime is the standing price of the gate. Note that
+A bare `pytest` runs it too — `pyproject.toml`'s `testpaths` is
+`["hazma", "test"]` (cython-to-rust Task 1.3) — and in CI the macOS
+entry pays it while the Linux entries pass `--ignore=test/parity`, the
+corpus being pinned to the capturing platform's libm (see the comment in
+`.github/workflows/ci.yml`). That work is the standing price of the
+gate. Note that
 the suite needs the extensions built **inside the repository**:
 `cases.assert_module_is_repo_tree` refuses a `hazma` resolving anywhere
 else, so `pip install -e .`, not `pip install .`.

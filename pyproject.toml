@@ -40,9 +40,12 @@ Documentation = "http://hazma.readthedocs.io"
 # reformats the whole repo, so it should land as a deliberate PR rather
 # than arrive silently in a CI run. `ruff` is capped the same way even
 # though CI only runs its `--isolated --select E9,F63,F7,F82` subset.
+#
+# `pytest-xdist>=3.2` is the floor that ships `--dist=worksteal`, which
+# [tool.pytest.ini_options]'s `addopts` passes on every run.
 [dependency-groups]
 lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
-dev = [{ include-group = "lint" }, "pytest>=7.0"]
+dev = [{ include-group = "lint" }, "pytest>=7.0", "pytest-xdist>=3.2"]
 
 [build-system]
 build-backend = "setuptools.build_meta"
@@ -100,11 +103,17 @@ version = { attr = "hazma.VERSION" }
 # collects one root is not the suite, and the divergence is invisible
 # because both halves are green on their own.
 #
-# `test/parity/` dominates the runtime with nested adaptive
-# quadrature: 8m58s for the whole bare run measured on the corpus's
-# capturing machine under load, 4m38s for `pytest test/parity` alone
-# measured idle. That is the price of the gate, paid on every matrix
-# entry deliberately — see test/parity/README.md.
+# `test/parity/` dominates a serial run with nested adaptive
+# quadrature — 295s of a 598s bare run, measured idle on the corpus's
+# capturing machine (2026-08-17, 1697 tests). That work is the price of
+# the gate (see test/parity/README.md; in CI only the macOS entry pays
+# it, ci.yml ignoring the corpus elsewhere), so `addopts` spreads it
+# over every core instead of narrowing what is collected: same
+# collection, same assertions, 45s wall at `-n 12` on the same machine.
+# `worksteal` rebalances the corpus's heavy tail of mediator-spectrum
+# blocks. Debugging escape hatch: `pytest -n 0` runs in-process again
+# (`--pdb` needs it, and it serializes output).
+addopts = "--numprocesses=auto --dist=worksteal"
 testpaths = ["hazma", "test"]
 markers = [
   "broken: mark a test as known to be broken",
