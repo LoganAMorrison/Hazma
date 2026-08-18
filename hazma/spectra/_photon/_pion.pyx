@@ -138,27 +138,6 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_photon_charged_pion_array(double[:] eg
 
 
 
-@cython.boundscheck(True)
-@cython.wraparound(False)
-def dnde_photon_charged_pion(photon_energy, pion_energy):
-    """
-    Compute the photon spectrum dN/dE from the decay of a charged pion.
-
-    Paramaters
-    ----------
-    photon_energy: float or array-like
-        Photon energy.
-    pion_energy: float 
-        Energy of the pion.
-    """
-    if hasattr(photon_energy, '__len__'):
-        energies = np.array(photon_energy)
-        assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
-        return dnde_photon_charged_pion_array(energies, pion_energy)
-    else:
-        return dnde_photon_charged_pion_point(photon_energy, pion_energy)
-
-
 # ============================================================================
 # ---- Neutral Pion ----------------------------------------------------------
 # ============================================================================
@@ -190,24 +169,3 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_photon_neutral_pion_array(double[:] eg
     for i in range(npts):
         spec[i] = dnde_photon_neutral_pion_point(egams[i], epi)
     return spec
-
-
-@cython.cdivision(True)
-@cython.boundscheck(True)
-@cython.wraparound(False)
-def dnde_photon_neutral_pion(photon_energy, pion_energy):
-    """
-    Compute the photon spectrum dN/dE from the decay of a neutral pion.
-    Paramaters
-    ----------
-    photon_energy: float or array-like
-        Photon energy.
-    pion_energy: float 
-        Energy of the pion.
-    """
-    if hasattr(photon_energy, '__len__'):
-        energies = np.array(photon_energy)
-        assert len(energies.shape) == 1, "Photon energies must be 0 or 1-dimensional."
-        return dnde_photon_neutral_pion_array(energies, pion_energy)
-    else:
-        return dnde_photon_neutral_pion_point(photon_energy, pion_energy)

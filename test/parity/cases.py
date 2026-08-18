@@ -353,15 +353,18 @@ _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
         [ENG_GAM_MAX_MURF],
     ),
     (
+        # Ported: cython-to-rust Task 4.4 -- this row and the one below.
+        # The module is the *wrapper* for the same reason the photon
+        # muon's is; see `PORTED_ENTRY_POINTS`.
         "photon.charged_pion",
-        "hazma.spectra._photon._pion",
+        "hazma.spectra._photon",
         "dnde_photon_charged_pion",
         params.charged_pion_mass,
         [ENG_GAM_MAX_PIRG, ENG_GAM_MAX_MURF, ENG_MU_PIRF],
     ),
     (
         "photon.neutral_pion",
-        "hazma.spectra._photon._pion",
+        "hazma.spectra._photon",
         "dnde_photon_neutral_pion",
         params.neutral_pion_mass,
         [],
@@ -1402,6 +1405,19 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     # the tabulated family, this ``.pyx`` survives as a capi provider —
     # its ``def`` is gone and its two ``cdef``s are not.
     "spectra.photon.muon": ("hazma.spectra._photon._muon", "dnde_photon"),
+    # cython-to-rust Task 4.4. Also a capi survivor, and the most
+    # depended-on one: `_photon/_rho.pyx` and *both* mediator
+    # decay-spectrum modules cimport its `cdef`s -- all four of them
+    # between the three -- so the file stays and only its two ``def``s
+    # went.
+    "spectra.photon.charged_pion": (
+        "hazma.spectra._photon._pion",
+        "dnde_photon_charged_pion",
+    ),
+    "spectra.photon.neutral_pion": (
+        "hazma.spectra._photon._pion",
+        "dnde_photon_neutral_pion",
+    ),
 }
 
 

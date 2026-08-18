@@ -20,7 +20,7 @@ kernel ports.
 | 4.1 | `_positron/_muon` (template swap) | — | **Complete (2026-08-11)** | [task-4.1-positron-muon.md](task-4.1-positron-muon.md) |
 | 4.2 | Photon table family (kaon + eta/omega/eta′/phi) | 4.1 | **Complete (2026-08-12)** | [task-4.2-photon-table-family.md](task-4.2-photon-table-family.md) |
 | 4.3 | `_photon/_muon` (spence) | 4.1 | **Complete (2026-08-16)** | [task-4.3-photon-muon.md](task-4.3-photon-muon.md) |
-| 4.4 | `_photon/_pion` | 4.3 | Not started | [task-4.4-photon-pion.md](task-4.4-photon-pion.md) |
+| 4.4 | `_photon/_pion` | 4.3 | **Complete (2026-08-17)** | [task-4.4-photon-pion.md](task-4.4-photon-pion.md) |
 | 4.5 | `_photon/_rho` (nested quad) | 4.4 | Not started | [task-4.5-photon-rho.md](task-4.5-photon-rho.md) |
 | 4.6 | `_positron/_pion` + neutrino pair | 4.1, 4.3 | Not started | [task-4.6-positron-pion-neutrino.md](task-4.6-positron-pion-neutrino.md) |
 
@@ -210,6 +210,85 @@ kernel ports.
   `y**2` is an `fmul` — clang folds `pow(x, 2.0)` and refuses the cubic.
   `y*y*y` would have been a different double.
 
+- **Read the `cdef`s, not only the expressions** (Task 4.4).
+  `hazma/spectra/_photon/_pion.pyx`'s neutral-pion kernel declares
+  `cdef float beta` and `cdef float ret_val` in a file where every other
+  local is a `double`, and the shipped object confirms it with two
+  `fcvt s, d` / `fcvt d, s` round trips. A port that transcribes the
+  formula and not the declaration lands **8.5e-9** relative away, which
+  the corpus holds this entry point to `rtol = 0`. With `as f32 as f64`
+  at both sites it is bit-equal at 9,000 sampled points and all 1,305
+  pinned values. Third instance in this phase of a *declaration* carrying
+  numerics the expression does not — Task 3.1's mixed constant tables and
+  Task 4.3's `y**3`-is-a-`pow`-call are the other two.
+- **An FMA site inside a quadrature integrand cannot be gated** (Task
+  4.4, measured by mutation). Unfusing `F_A² + F_V²` in `dnde_pi_to_lnug`
+  leaves the worst corpus difference at **2.618e-15 — the same figure the
+  correct port produces** — with 120 `cargo` tests and 73 per-kernel tests
+  green. The integral does not carry the integrand's last bit out, and
+  unlike Task 4.3 there is no bit-equality mode to fall back on, because
+  the port replaces *scipy's* QUADPACK. The 4 sites in
+  `charged_pion_integrand`, outside the integrand's own arithmetic, *are*
+  caught. `rust/src/kernels/photon_pion.rs` states the limitation at the
+  top so the next reader does not assume a gate exists.
+  **Task 4.5 inherits it one integration deeper.**
+- **A module-level `cdef double` is the one constant `movk`-pinning
+  cannot reach** (Task 4.4). `FPI = DECAY_CONST_PI * M_SQRT1_2` is loaded
+  from memory, not folded into an immediate — and the two obvious Rust
+  spellings differ: `130.41 * FRAC_1_SQRT_2` is right,
+  `130.41 * (1.0/2.0_f64.sqrt())` is **one ulp low**, because `1/√2` by
+  division is not the correctly-rounded `√0.5`. Only a `cargo` test
+  catches it; like the FMA sites, one ulp in the integrand does not
+  survive the quadrature.
+- **The port has now surfaced six live 2.1.0 defects; the sixth is a
+  quadrature that loses its own support** (Task 4.4).
+  `hazma/spectra/_photon/_pion.pyx:123` integrates over the whole of
+  `cos θ`, but the integrand is nonzero only where the pion-rest-frame
+  photon energy stays under `ENG_GAM_MAX_PIRG = 69.783` MeV. As the lab
+  photon approaches the boosted endpoint that window narrows past
+  QUADPACK's largest first-rule abscissa (~0.9956), so **every node
+  returns zero, the error estimate is zero, and `qagp` terminates
+  successfully with `0.0`** where the spectrum is not zero. At
+  `E_π = 10 m_π` — the corpus's own most boosted block —
+  `dnde_photon_charged_pion(900, 1396)` is `0.0` against `3.586e-07`
+  MeV⁻¹, and the differential spectrum is a hard zero over roughly the
+  top quarter of its support. Integrated, the loss is 0.0054% at
+  `E_π = 1` GeV, 0.041% at 1396 MeV and 2.96% at 5 GeV, so it is a
+  **shape** defect rather than a yield defect at hazma's scales. The port
+  reproduces the zeros in exactly the same places. Filed as
+  [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md),
+  blocked behind Phase 06 Task 6.4. **Six blocked defects now share one
+  eventual corpus regeneration.**
+- **The divergent regime is reachable and the port agrees with scipy
+  inside it** (Task 4.4 — Phase 03 Task 3.3's obligation, discharged for
+  the project's first `qagp` consumer). The first non-`Ok` flag appears at
+  `E_π = 4e4` MeV (`γ_π ≈ 290`), 40 GeV against a sub-GeV library and two
+  decades above the corpus ceiling. Over an 11 × 8 grid reaching
+  `E_π = 1e5` the port's `ier` **equals scipy's flag on the Cython twin at
+  all 88 points**, including both `ier = 4` entries and the non-monotonic
+  pattern between them, with values agreeing to 2.8e-11. Task 3.3's
+  warning was that the two *may* separate without bound there; on the only
+  live shape that reaches it, they do not.
+- **The `1/β` amplification Task 4.3 warned about does not reach `_pion`**
+  (Task 4.4). `rest_plus_eps` is the *pion's* `β = 1.4e-6`, which enters as
+  a Jacobian and a Doppler factor rather than a `1/β` prefactor — the muon
+  kernel is always evaluated at the fixed `ENG_MU_PIRF = 109.78` MeV,
+  where `β = 0.27`. So this kernel never evaluates the muon spectrum near
+  its own rest frame, `rest_plus_eps` is no louder than any other block
+  (60/308 values not bit-equal, worst 2.98e-16), and the **Task 4.3 open
+  question "does the rest-frame endpoint defect reach `_pion`?" is
+  answered: no.** `_rho` boosts *this* kernel, not the muon kernel, so the
+  same argument covers Task 4.5 — but the ρ does sweep the pion's own `β`,
+  so re-derive rather than inherit.
+- **A mutation harness that reverts with `git checkout --` cannot revert a
+  file git has never seen** (Task 4.4). The new kernel module was
+  untracked, so the restore step errored, the driver did not check, and
+  five mutations accumulated while being read as five independent
+  measurements. Task 3.3's `[mutation-harness-poisons-its-own-baseline]`
+  in a new disguise, with the same tell — implausibly uniform failure
+  counts (`26 | 7` three times running). Snapshot to a file outside the
+  tree, `cmp` before each mutation, and verify the restore.
+
 ## Decisions and Implementation Notes
 
 - **The per-kernel swap recipe now lives in the phase file's Goal**
@@ -266,6 +345,41 @@ kernel ports.
   again or retire the class; by the end of this phase no spectra `.pyx`
   exports a Python entry point at all.
 
+- **Two oracle standards in one test module** (Task 4.4), and two classes
+  to make the asymmetry a decision rather than an inconsistency. The
+  neutral pion is closed form, so it gets the template's two-mode
+  comparison (bit-for-bit on the capturing platform, a peak-scaled budget
+  elsewhere). The charged pion replaces *scipy's* QUADPACK with the
+  in-tree one, and **two independent adaptive integrators are not
+  bit-equal on any platform** — so there is no capturing-platform branch
+  to take and it gets one measured budget everywhere.
+- **The `QUAD` budget is tightened per case, not class-wide** (Task 4.4).
+  `test/parity/tolerances.py` gains `PORTED_QUAD_RTOL = 1e-12`, which
+  `spectra.photon.charged_pion` takes; the two unported `QUAD` cases keep
+  `QUAD_RTOL = 1e-8` until Task 4.6 measures them, because 1e-8 was the
+  envelope over *arbitrary* integrands and each live shape lands far
+  inside it. What the tightening buys was measured rather than asserted:
+  most mutations are caught at either budget, and the one that
+  distinguishes them models Task 4.3's near-miss — perturbing
+  `dnde_photon_muon` (this kernel's integrand) by the 3.2e-11 that a
+  two-ulp `spence` produced moves the corpus by **3.199e-11**, silently
+  inside 1e-8 and loudly outside 1e-12.
+- **`spectra.photon.neutral_pion` keeps `EXACT`** (Task 4.4) — the mirror
+  image of Tasks 4.2/4.3 keeping a loose class. There bit-equality rested
+  on a build property, so the loose class was the right contract; here it
+  rests on IEEE arithmetic and an `f32` cast, which are portable, so there
+  is nothing to loosen *to*.
+- **`quad`'s `Err` arm returns `NaN` rather than panicking** (Task 4.4),
+  with a `cargo` test asserting the arm is unreachable: `QuadError`
+  depends only on the `const` options, never on the integrand. `NaN` is
+  the shape Task 4.2 settled for a per-element error channel that does not
+  exist.
+- **`test/test_core_dispatch.py`'s spectra oracle moved again**, to
+  `_photon/_rho` (Task 4.4). **Task 4.5 swaps that one too and there is no
+  fourth photon candidate** — the class docstring now names the two
+  remaining options (move to a `_positron`/`_neutrino` entry point, which
+  Task 4.6 then deletes, or retire the three spectra tests).
+
 ## Files Changed
 
 ### Task 4.1
@@ -303,6 +417,17 @@ kernel ports.
   `test/test_core_{dispatch,special}.py`, `docs/followups/README.md`.
 - Deleted: `hazma/spectra/_photon/_muon.pyi`.
 
+### Task 4.4
+
+- New: `rust/src/kernels/photon_pion.rs`, `test/test_core_photon_pion.py`,
+  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
+- Changed: `rust/src/{kernels,photon}.rs`,
+  `hazma/spectra/_photon/{__init__.py,_pion.pyx}`, `hazma/_core.pyi`,
+  `setup.py`, `test/parity/{cases,tolerances}.py`,
+  `test/test_core_dispatch.py`, `docs/followups/README.md`.
+- Deleted: `hazma/spectra/_photon/_pion.pyi`, and the two `def`s in
+  `_pion.pyx` (42 lines — the file stays, capi survivor).
+
 ## Verification
 
 - Per task: corpus suite for the swapped entry points + full pytest +
@@ -326,6 +451,20 @@ kernel ports.
   campaign is in the task note — **one of the five is invisible to the
   corpus and to `cargo`**, and only the per-kernel bit-equality sweep
   catches it.
+- **After Task 4.4 (2026-08-17):** bare `pytest -q` →
+  `1755 passed, 15 skipped, 8 warnings in 605.61s`; collection 1697 → 1770
+  against `origin/master`, **+73 and all of them
+  `test/test_core_photon_pion.py`**. `pytest -q test/parity` →
+  `629 passed, 1 skipped`, both pion cases green in all five blocks —
+  `spectra.photon.charged_pion` at 2.618e-15 worst relative against the
+  1e-12 budget this task tightened it to, `spectra.photon.neutral_pion`
+  **bit-equal** at all 1,305 values. `cargo test --no-default-features` →
+  `120 passed` (11 new, all `kernels::photon_pion`).
+  `pytest -q test/test_theory_aggregation.py` → `69 passed` either side of
+  the swap. An **eleven-mutation** validity campaign is in the task note,
+  with **two survivors** — an FMA site inside the quadrature integrand and
+  a one-ulp constant, both unobservable through the entry point for the
+  same reason, both recorded in the source.
 
 ## Open Questions
 
@@ -348,12 +487,22 @@ kernel ports.
   settled by Task 4.2 — recorded on
   [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md)
   for whoever repairs the line energies.
-- **Does the rest-frame endpoint defect reach `_pion` and `_rho`?**
-  (Task 4.3.) Their quadratures integrate `dnde_photon_muon_point` over
-  the boost cone, so the truncated branch is reachable only where a muon
-  lands within one `DBL_EPSILON` MeV of rest. Whether any live grid does
-  is unsettled; recorded on the follow-up. Tasks 4.4–4.5 are the ones
-  positioned to answer it.
+- ~~**Does the rest-frame endpoint defect reach `_pion` and `_rho`?**
+  (Task 4.3.)~~ **Answered by Task 4.4: no.** `_pion` evaluates the muon
+  kernel at the fixed `ENG_MU_PIRF = 109.78` MeV — 4.1 MeV above `m_μ`,
+  never within one `DBL_EPSILON` of rest — at every pion energy, so the
+  truncated branch is unreachable from there. `_rho` boosts `_pion`, not
+  the muon kernel, so the same argument covers Task 4.5.
+- **Nothing gates the FMA map of a quadrature integrand** (Task 4.4). A
+  `hazma._core` test-surface probe over `kernels::photon_pion` would fix
+  it, but it would widen `cases._CORE_TEST_ONLY_MODULES`, which Task 3.2
+  warned against doing to quiet a check. Left as a known limitation;
+  **Task 4.5 has the same shape one level deeper and is the right place to
+  decide whether the machinery is worth it.**
+- **Does the forward-cone defect reach `_photon/_rho`?** (Task 4.4.)
+  Almost certainly — the ρ quadratures over the charged pion — but
+  unmeasured, and whether the ρ's own quadrature compounds the loss is
+  open. Recorded on the follow-up; Task 4.5 is positioned to answer it.
 - **Should the corpus's *budget granularity* become per-block?**
   (Task 4.3.) The `spectra.photon.muon` failure was a 1.15e-14 absolute
   difference on a block whose peak is 17.2 — a per-block `atol` would have
@@ -370,71 +519,79 @@ kernel ports.
 
 **For the next agent working in Phase 04:** read `../../PLAN.md`,
 `../README.md`, this file, then the phase file — its Goal carries the
-eight-step swap recipe *and* the capi-survivor exception. Task 4.4
-(`_photon/_pion`) is next: it is a capi survivor too (delete its `def`,
-not its file) and it is the phase's **first `qagp` consumer**, so its
-exit criteria ask for a measured drift against the corpus and a tightened
-budget if warranted. Deleting the `_photon/_muon`, `_photon/_pion`,
-`_positron/_muon` or `_positron/_pion` extensions breaks the mediator
-imports.
+eight-step swap recipe *and* the capi-survivor exception. **Task 4.5
+(`_photon/_rho`) is next**, and it is the phase's declared numerical
+stress test: a quadrature whose integrand is `_pion`'s quadrature, which
+is itself a quadrature over `_muon`. Its corpus class is `NESTED`
+(`rtol = 1e-6`) — the loosest budget in the file — so measure before
+touching it, and expect the two Task 4.4 findings below to apply one level
+deeper. `_rho.pyx` is **not** a capi survivor: no `.pyx` cimports it, so
+the whole file goes in the swap PR (check `rg` at execution time rather
+than trusting this sentence). Deleting the `_photon/_muon`,
+`_photon/_pion`, `_positron/_muon` or `_positron/_pion` extensions still
+breaks the mediator imports.
 
 **Currently safe to assume:**
 
-- The foundation (interp, boost, quad, dispatch, constants) is
-  unit-tested against scipy and NumPy, and Tasks 4.1–4.3 have exercised
+- The foundation (interp, boost, quad, dispatch, constants) is unit-tested
+  against scipy and NumPy, and Tasks 4.1–4.4 have exercised
   `constants::{pdg,derived}`, all four `boost::*`, `interp::interp`,
-  `special::spence` and `dispatch::map_unary` through nine real kernels
-  end to end.
-- `hazma._core.positron.dnde_positron_muon` is bit-equal to the `cdef`
-  the mediator modules still cimport (126,182 points, 0 mismatches), so
-  Task 4.6 has a verified Rust dependency to call natively.
-- **`kernels::photon_muon::{dnde_photon_muon, dnde_photon_muon_rest_frame}`
-  are `pub`, PyO3-free and bit-equal to the `cdef`
-  `hazma/spectra/_photon/_pion.pyx` cimports**
-  (144,000 points, 0 mismatches). Task 4.4 should call the Rust `fn`
-  directly as its `qagp` integrand rather than routing through Python.
-- **`crate::special::spence` is bit-identical to `scipy.special.spence`**
-  on the capturing platform (13,000 points, all four branches), because
-  Task 4.3 transcribed cephes in-tree. `bessel_k1` / `bessel_kn` are
-  untouched by that change, so Phase 05 inherits what Task 3.2 measured.
-- `hazma._core.photon` serves eight kernels; `rust/src/photon.rs` shows
-  both registration shapes — a guard resolved once before any element is
-  mapped (the tabulated seven) and a kernel that guards per element (the
-  muon).
-- `boost::pairwise_sum` is `pub(crate)` and reproduces
-  `numpy.sum(axis=0)` for any column count;
-  `boost::boost_integrate_linear_interp` is total (a `NaN` window returns
-  `NaN` rather than panicking).
-- `test/test_core_{boost,interp}.py` load their photon tables from the
-  CSVs, so deleting further `.pyx` will not strand them again.
+  `special::spence`, `quad::quad` and `dispatch::map_unary` through eleven
+  real kernels end to end.
+- **`kernels::photon_pion::{dnde_photon_charged_pion,
+  dnde_photon_neutral_pion, charged_pion_integrand, dnde_pi_to_lnug}` are
+  `pub` and PyO3-free.** The neutral one is **bit-equal** to the `cdef`
+  `_rho.pyx` cimports (9,000 points, 0 mismatches); the charged one agrees
+  to **6.5e-15** worst relative over 8,000 points, which is as close as two
+  independent adaptive quadratures get. Task 4.5 should call both Rust
+  `fn`s directly as its integrands rather than routing through Python.
+- **`crate::quad` is proven on a live shape.** Task 4.4 is its first real
+  consumer: `CHARGED_PION_QUAD` copies the `.pyx`'s
+  `epsabs=1e-10, epsrel=1e-5, points=[-1, 1]` verbatim, the break points
+  are both discarded by scipy's filter (so `qagpe` runs over an empty
+  list, exactly as Task 3.3 predicted), and the termination flag matches
+  scipy's at all 88 points of an 11 × 8 grid reaching `E_π = 1e5` MeV.
+- **`hazma._core.photon` serves ten kernels**: the seven tabulated meson
+  spectra (4.2), the radiative muon spectrum (4.3) and both pion spectra
+  (4.4). `rust/src/photon.rs` now shows three registration shapes — a
+  guard resolved once before any element is mapped (the tabulated seven),
+  a kernel that guards per element (the muon), and a kernel that runs a
+  quadrature per element (the charged pion).
+- **`test/test_core_photon_pion.py` is the module to copy when a kernel
+  has no bit-equality mode.** 73 tests, two oracle classes at two
+  standards, and the reasoning for the split in the module docstring.
+  `test/test_core_photon_muon.py` remains the copy for a kernel that
+  *does*, and `test/test_core_photon_tables.py` for one whose twin does
+  not survive the PR.
+- **`test/parity/tolerances.py` has a `PORTED_QUAD_RTOL = 1e-12`**, taken
+  by `spectra.photon.charged_pion` only. The other two `QUAD` cases keep
+  the 1e-8 opening figure until Task 4.6 measures them. `NESTED` is
+  untouched and Task 4.5 owns the same decision for it.
 - The corpus is in budget mode from Task 4.1 and **cannot be
-  regenerated**. `EXACT`-class cases are still `rtol = 0`. Its
-  served-roster meta-test no longer assumes a ported `.pyx` `def` shares
-  its name with the public entry point (Task 4.3).
+  regenerated**. `EXACT`-class cases are still `rtol = 0` — and
+  `spectra.photon.neutral_pion` now *passes* at `rtol = 0` on Rust.
+- `test/test_core_dispatch.py`'s spectra oracle is `_photon/_rho`, which
+  Task 4.5 deletes. There is no fourth photon candidate; see Decisions.
 
 **Currently risky / unknown:**
 
-- **Five blocked defects now share one eventual corpus regeneration** —
+- **Six blocked defects now share one eventual corpus regeneration** —
   the positron normalization (4.1), the boost integral (3.4), the η′ line
-  weight and the φ line energies (both 4.2), and the muon photon
-  spectrum's rest-frame endpoint (4.3). Do not "fix" any of them in
-  passing; each fails the gate that governs the remaining swaps.
-- **`test/test_core_dispatch.py`'s spectra oracle is now
-  `_photon/_pion`, whose `def` Task 4.4 deletes.** Move it to the last
-  surviving spectra `def` (Task 4.6's) or retire
-  `TestDeclaredDivergencesFromCython`'s three spectra tests — by the end
-  of this phase their Cython side stops existing.
-- Nested-ρ drift (Task 4.5) is the project's numerical stress test —
-  measure before adjusting any budget.
-- **`1/β` amplification is a property of this family, not of `spence`**
-  (Task 4.3). `_pion` boosts the muon kernel and `_rho` boosts that, so
-  expect the `rest_plus_eps` blocks to be the loud ones again in 4.4–4.5.
-  When one fails, attribute the difference to a single term *before*
-  touching a budget: doing that in 4.3 turned a proposed 300x widening
-  into a 60-line fix.
-- ~~Task 4.3's `spence` is the first `SPECFUN`-class swap in this phase
-  (1e-13), and Task 3.2's finding stands: the plan's model of a
-  third-party library is a hypothesis, and only the sweep can refute
-  it.~~ **Refuted by Task 4.3, exactly as warned.** `spec_math`'s cephes
-  `spence` was not close enough at `β = 1.4e-6`; the fix was to
-  transcribe cephes in-tree with scipy's contraction map.
+  weight and the φ line energies (both 4.2), the muon photon spectrum's
+  rest-frame endpoint (4.3), and the charged pion's lost forward cone
+  (4.4). Do not "fix" any of them in passing; each fails the gate that
+  governs the remaining swaps.
+- **The forward-cone defect probably reaches the ρ** — the ρ quadratures
+  over the charged pion — and Task 4.5 is the task positioned to measure
+  it. See Open Questions.
+- **Nothing gates the FMA map of a quadrature integrand**, and the ρ's is
+  two integrations from anything observable. Read the disassembly, and do
+  not read a green suite as confirmation of the map.
+- **Do not inherit Task 4.3's `1/β` prediction unexamined.** It did not
+  apply to `_pion` (see Findings) — but the ρ *does* sweep the pion's own
+  `β`, so it may apply there. Re-derive.
+- Nested-ρ drift is the project's numerical stress test: attribute a
+  difference to a single term before touching any budget. Doing that in
+  4.3 turned a proposed 300x widening into a 60-line fix; doing it in 4.4
+  turned "the quadrature diverges" into "the quadrature diverges where
+  scipy does, and agrees with it there".

@@ -7,7 +7,7 @@ Module for computing decay spectra from a muon and light mesons.
 from typing import overload
 
 from hazma._core import photon as _core_photon
-from hazma.spectra._photon import _pion, _rho
+from hazma.spectra._photon import _rho
 from hazma.utils import RealArray, RealOrRealArray
 
 
@@ -106,7 +106,7 @@ def dnde_photon_neutral_pion(
         pion_energy = 1000.
         spectra.dnde_photon_neutral_pion(photon_energies, pion_energy)
     """
-    return _pion.dnde_photon_neutral_pion(photon_energies, pion_energy)
+    return _core_photon.dnde_photon_neutral_pion(photon_energies, pion_energy)
 
 
 @overload
@@ -156,7 +156,7 @@ def dnde_photon_charged_pion(
         pion_energy = 1000.
         spectra.dnde_photon_charged_pion(photon_energies, pion_energy)
     """
-    return _pion.dnde_photon_charged_pion(photon_energy, pion_energy)
+    return _core_photon.dnde_photon_charged_pion(photon_energy, pion_energy)
 
 
 @overload
