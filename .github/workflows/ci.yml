@@ -97,7 +97,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -v .
-          python -m pip install pytest
+          python -m pip install pytest pytest-xdist
       - name: Import smoke test
         # The test suite only touches part of the public API; importing the
         # main entry points catches missing dependencies, missing package
@@ -141,7 +141,10 @@ jobs:
         # docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md.
         #
         # `--ignore` rather than a marker: it skips collection outright,
-        # so the Linux entries also stop paying the corpus's ~9 minutes.
+        # so the Linux entries also stop paying the corpus's ~5 minutes
+        # of single-core quadrature (spread across the runner's cores by
+        # the pytest-xdist `addopts` in pyproject.toml, hence the
+        # pytest-xdist install above).
         #
         # The condition is inverted on purpose. Actions' `&&`/`||` return
         # values and the empty string is falsy, so the natural spelling

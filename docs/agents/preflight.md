@@ -48,10 +48,12 @@ before you stage anything.
    only reproduces on the platform that captured it, so a green gate here
    predicts a green CI but not the reverse. Narrowing to a target
    (`pytest test/spectra`) is
-   for iterating; run it bare before you commit. Budget minutes, not
-   seconds — nearly all of it the parity corpus's nested adaptive
-   quadrature (8m58s measured for the bare run on macOS/arm64 under
-   concurrent load, cython-to-rust Task 1.3).
+   for iterating; run it bare before you commit. The work is minutes of
+   CPU — nearly all of it the parity corpus's nested adaptive quadrature
+   (598s serial for the bare run, measured idle on macOS/arm64,
+   2026-08-17) — but the pytest-xdist `addopts` in `pyproject.toml`
+   spread it across cores, so a bare run's wall-clock is that divided by
+   the machine (45s at `-n 12` on the same hardware).
 
    **Read the summary line.** `pytest` exits **5** when it collects zero
    tests, and a wrapper that only checks "non-zero exit" will happily
