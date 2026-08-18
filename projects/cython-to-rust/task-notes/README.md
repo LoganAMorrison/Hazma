@@ -804,20 +804,23 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   above the corpus ceiling. But over an 11 × 8 grid reaching `E_π = 1e5`
   the port's `ier` **equals the flag scipy raises on the Cython twin at
   all 88 points**, including both `ier = 4` entries and the non-monotonic
-  pattern between them, with the values still agreeing to **2.8e-11** on
-  macOS/arm64. Task 3.3's warning was that the two *may* separate without
-  bound where QUADPACK does not converge; on the only live shape that
-  reaches that regime, they do not. **And that regime is the one place
-  where the platform shows through, which is the opposite of where a
-  reader would look for it** (PR #68's first CI run): in the *converged*
-  regime the port tracks the Cython to 1e-12 on Linux as well as macOS —
-  all three per-kernel sweep classes pass there — while the non-converged
-  separation is **6.2998e-10** on Linux/glibc, 23x the macOS figure and
-  the *same double* across py3.10–3.14, so a toolchain property rather
-  than noise. The budget for that one assertion is 1e-8 on both platforms
-  rather than platform-scoped: its subject is chaotic by construction, so
-  what it can certify is "still recognizably the same integral", and the
-  precision gate is the converged-regime classes.
+  pattern between them. **The flags agree; the values in that regime do
+  not have to, and two CI rounds on PR #68 proved they do not.** The
+  separation there is 2.8e-11 on macOS/arm64, **6.2998e-10** on
+  Linux/glibc at one point, and **3.0552e-08** at another — each time
+  bit-identical across py3.10–3.14, so a toolchain property rather than
+  noise, and each time revealed only by asserting a bound the numerics do
+  not support. Asserting 1e-10 failed; raising it to 1e-8 moved the
+  failure to the next-worst point. **The lesson is the one
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  already warns about, met from a new direction: widening a budget until
+  it passes is how a gate becomes vacuous — the fix was to stop asserting
+  a tolerance the regime cannot support.** The test now partitions its
+  grid by *scipy's own convergence verdict* and holds each half to what is
+  true of it: 1e-12 where QUADPACK converged (measured worst 2.22e-16 —
+  one ulp, because the two subdivide identically there), and sign plus a
+  factor of two where it did not. **Every quadrature-backed kernel from
+  here on should partition rather than pick one tolerance.**
 - **A mutation harness that reverts with `git checkout --` cannot revert a
   file git has never seen** (Task 4.4). The new kernel module was
   untracked, the restore step errored, the driver did not check, and five

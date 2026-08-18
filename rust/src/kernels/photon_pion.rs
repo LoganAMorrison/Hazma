@@ -603,11 +603,14 @@ mod tests {
     /// reaching `E_π = 1e5` MeV the port's `ier` equals the flag scipy
     /// raises on the Cython twin at **all 88 points**, including both
     /// `ier = 4` entries and the non-monotonic pattern in between, with
-    /// the values still agreeing to 2.8e-11 on macOS/arm64 — and to
-    /// 6.3e-10 on Linux/glibc, which is the *only* place in this kernel
-    /// where the platform shows through: in the converged regime the port
-    /// tracks the Cython to 1e-12 on both. `test/test_core_photon_pion.py`
-    /// carries that comparison, since it needs scipy.
+    /// the *flags* agreeing at all 88. The **values** in that regime are
+    /// another matter and are entitled to be: 2.8e-11 apart on
+    /// macOS/arm64, 6.3e-10 and 3.1e-08 at two different points on
+    /// Linux/glibc. Where QUADPACK converges, by contrast, the two agree
+    /// to one ulp on both platforms, because they subdivide identically
+    /// there. `test/test_core_photon_pion.py` partitions the grid by
+    /// scipy's own verdict and holds each half to what is true of it,
+    /// since that comparison needs scipy.
     #[test]
     fn the_live_grid_never_leaves_the_converged_regime() {
         for epi in [MASS_PI, 150.0, 200.0, 500.0, 1500.0, 1e4, 3e4] {

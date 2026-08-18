@@ -56,12 +56,14 @@ may separate without bound where it does not, so each consumer has to say
 whether any live shape reaches the second regime. This one does, but only
 at ``E_pi >= 4e4`` MeV (``gamma_pi >= 290``) -- 40 GeV, against a library
 whose domain is sub-GeV dark matter and a corpus whose most boosted block
-is ``10 m_pi = 1396`` MeV. And there the two implementations agree on the
-termination flag at every one of 88 sampled arguments, with the values
-still within 2.8e-11 on macOS/arm64 and 6.3e-10 on Linux/glibc -- the one
-figure in this module the platform reaches, and, counter-intuitively, not
-one of the ones that compare against a compiled twin. See
-:data:`DIVERGENT_REGIME_BUDGET`.
+is ``10 m_pi = 1396`` MeV. There the port's own termination flag equals
+scipy's at all 88 sampled arguments (asserted in the Rust), but the
+*values* are entitled to separate without bound -- so
+:meth:`TestChargedPionAgainstTheCythonTwin.test_the_two_regimes_behave_as_task_3_3_said_they_would`
+partitions the grid by scipy's verdict and holds each half to what is true
+of it: 1e-12 where QUADPACK converged, sign and order of magnitude where
+it did not. See :data:`DIVERGENT_REGIME_FACTOR` for why the loose half is
+loose, and what two CI rounds cost to establish it.
 """
 
 from __future__ import annotations
@@ -202,32 +204,24 @@ CHARGED_PION_BUDGET = 1e-12
 #: different formula" (>1e-6) both fail.
 F32_TRUNCATION_WINDOW = (1e-9, 1e-6)
 
-#: How far the port and scipy may separate in the **non-converging**
-#: regime, where Phase 03 Task 3.3 measured that they are entitled to
-#: separate without bound because Wynn's epsilon-algorithm is chaotic on a
-#: non-converging sequence.
+#: How far apart the port and scipy may be in the **non-converging**
+#: regime, as a ratio rather than a relative tolerance.
 #:
-#: This is the one figure in this module that is genuinely
-#: platform-dependent, and it is dependent in the *opposite* direction to
-#: what the module's other budgets would suggest. In the **converged**
-#: regime the port tracks the Cython to `CHARGED_PION_BUDGET` on every
-#: platform -- the three sweep classes below pass at 1e-12 on Linux as
-#: well as macOS. Only here does the platform show through: the worst of
-#: the 64 sampled arguments is **2.8e-11** on macOS/arm64 and
-#: **6.2998e-10** on Linux/glibc, at `E_gam = 1.0, E_pi = 4e4`, and PR #68
-#: measured the Linux figure as the *same double* across py3.10-3.14, so
-#: it is a toolchain property rather than noise.
+#: Phase 03 Task 3.3 measured that the two are entitled to separate
+#: *without bound* once QUADPACK stops converging, because Wynn's
+#: epsilon-algorithm is chaotic on a non-converging sequence. So there is
+#: no honest tolerance to assert there, and PR #68 proved it the hard way:
+#: 1e-10 (from a 2.8e-11 macOS measurement) failed on Linux at 6.2998e-10,
+#: and 1e-8 then failed at the *next* point, 3.0552e-08. Chasing that one
+#: measurement at a time is how a gate becomes vacuous.
 #:
-#: 1e-8 therefore, on both platforms rather than behind a platform
-#: branch. Two reasons not to split it. First, the assertion's subject is
-#: chaotic by construction, so a tight bound here would certify nothing --
-#: what it is for is "still recognizably the same integral", and the real
-#: precision gate is the converged-regime classes at 1e-12. Second, a
-#: budget that tracked each platform's measured value would go red on the
-#: next libm change while telling us nothing we do not already know.
-#: 1e-8 leaves 16x over the larger measurement and is still seven decades
-#: below any physically meaningful difference.
-DIVERGENT_REGIME_BUDGET = 1e-8
+#: A factor of 2 asserts the thing that is actually true and actually
+#: worth knowing: the port has not wandered off, it is still computing the
+#: same integral to the same size and sign. The precision claim lives in
+#: the converged half of the same test, at `CHARGED_PION_BUDGET`, and in
+#: the three sweep classes -- all of which hold at 1e-12 on Linux as well
+#: as macOS, which is the substantive result of those CI rounds.
+DIVERGENT_REGIME_FACTOR = 2.0
 
 #: The band the two `pi -> l nu gamma` channels occupy as a fraction of
 #: the charged pion's rest-frame photon spectrum. Wide, because it is a
@@ -714,51 +708,101 @@ class TestChargedPionAgainstTheCythonTwin:
             assert math.isnan(dnde_charged(float("nan"), 500.0))
             assert math.isnan(point(float("nan"), 500.0))
 
-    def test_the_termination_flag_agrees_with_scipy_across_the_divergent_regime(
-        self,
-    ) -> None:
+    def test_the_two_regimes_behave_as_task_3_3_said_they_would(self) -> None:
         """Phase 03 Task 3.3's obligation, discharged for the first `qagp`.
 
-        The port tracks scipy wherever QUADPACK converges and *only* there:
-        past that, Wynn's epsilon-algorithm is chaotic on a non-converging
-        sequence and the two can separate without bound. So each consumer
-        has to say whether a live shape reaches the second regime.
+        Task 3.3 measured that the QUADPACK port tracks scipy **wherever
+        QUADPACK converges, and only there**: past that, Wynn's
+        epsilon-algorithm is chaotic on a non-converging sequence and the
+        two can separate without bound. Each consumer has to say whether a
+        live shape reaches the second regime.
 
-        This one does -- at ``E_pi >= 4e4`` MeV, i.e. ``gamma_pi >= 290``,
-        two orders of magnitude above anything sub-GeV hazma computes and
-        far outside the corpus's ``10 m_pi`` ceiling. What this test pins is
-        that even there the two implementations *agree on the flag*, which
-        is the evidence that the port has not merely stopped converging
-        somewhere scipy still does.
+        This one does, far outside hazma's domain -- around ``E_pi = 4e4``
+        MeV (``gamma_pi ~ 290``), 40 GeV against a sub-GeV library and two
+        decades above the corpus's ``10 m_pi`` ceiling. So this test
+        partitions the grid by scipy's *own* verdict and asserts what is
+        true of each half:
 
-        The Cython twin runs scipy and hazma reads ``quad(...)[0]``, so the
-        flag reaches Python only as an ``IntegrationWarning``; the port's
-        own flag is asserted in ``rust/src/kernels/photon_pion.rs``. Here
-        the two are compared through the value agreement they imply.
+        * **converged** (scipy issues no ``IntegrationWarning``) -- 51 of
+          the 64 points, held to :data:`CHARGED_PION_BUDGET`, the same
+          1e-12 the swept-grid classes use. Measured worst on the
+          capturing platform: **2.22e-16**, i.e. one ulp, with ~4,500x
+          headroom. That headroom is not luck -- where QUADPACK converges
+          the two implementations subdivide identically, so the only
+          difference left is the integrand's own last bit accumulated over
+          a few hundred evaluations;
+        * **not converged** -- the other 13, held only to "the port has
+          not wandered off": same sign, and within
+          :data:`DIVERGENT_REGIME_FACTOR`. Measured worst on the capturing
+          platform: 2.75e-11, and see that constant for what Linux
+          reported.
+
+        The loose half is loose on purpose, and two CI rounds are why.
+        PR #68 first asserted 1e-10 there, having measured 2.8e-11 on
+        macOS/arm64; Linux reported **6.2998e-10** at ``E_gam = 1.0,
+        E_pi = 4e4``. Raising it to 1e-8 simply moved the failure to the
+        next-worst point -- **3.0552e-08** at ``E_gam = 0.01, E_pi = 6e4``.
+        That is the regime behaving exactly as Task 3.3 documented, and
+        chasing it one measurement at a time is how a gate becomes vacuous
+        (the warning
+        ``docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md``
+        makes about widening until it passes). A bound the numerics do not
+        support is not worth asserting; a sign-and-magnitude check is.
+
+        The Cython runs scipy and hazma reads ``quad(...)[0]``, so the
+        termination flag reaches Python only as a warning. The port's own
+        flag is asserted directly in ``rust/src/kernels/photon_pion.rs``,
+        where it equals scipy's code at all 88 points of this grid on the
+        capturing platform.
         """
         point = cython_point("dnde_photon_charged_pion_point")
         pion_energies = (1e3, 1e4, 3e4, 4e4, 5e4, 6e4, 8e4, 1e5)
         photon_energies = (1e-3, 1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4)
-        checked = 0
+
+        converged = diverged = 0
         for epi in pion_energies:
             for egam in photon_energies:
-                with warnings.catch_warnings(record=True):
+                with warnings.catch_warnings(record=True) as caught:
                     warnings.simplefilter("always")
                     want = point(egam, epi)
+                quadrature_converged = not caught
                 got = dnde_charged(egam, epi)
-                checked += 1
+
                 if want == 0.0:
-                    assert got == 0.0
+                    assert got == 0.0, f"port is nonzero at {egam=}, {epi=}"
+                    converged += quadrature_converged
+                    diverged += not quadrature_converged
                     continue
-                # `DIVERGENT_REGIME_BUDGET` rather than the class budget:
-                # the sampled arguments in the non-converging regime differ
-                # by up to 2.8e-11 (macOS) / 6.3e-10 (Linux), and bounding
-                # that is the point.
-                assert abs((got - want) / want) < DIVERGENT_REGIME_BUDGET, (
-                    f"port and scipy separated at {egam=}, {epi=}: "
-                    f"{got!r} vs {want!r}"
-                )
-        assert checked == len(pion_energies) * len(photon_energies)
+
+                ratio = got / want
+                if quadrature_converged:
+                    converged += 1
+                    assert abs(ratio - 1.0) < CHARGED_PION_BUDGET, (
+                        f"port and scipy disagree where QUADPACK *converged* "
+                        f"at {egam=}, {epi=}: {got!r} vs {want!r}. This half "
+                        f"is a real precision claim -- do not widen it."
+                    )
+                else:
+                    diverged += 1
+                    assert (
+                        1.0 / DIVERGENT_REGIME_FACTOR
+                        < ratio
+                        < (DIVERGENT_REGIME_FACTOR)
+                    ), (
+                        f"port and scipy are not even the same size where "
+                        f"QUADPACK did *not* converge, at {egam=}, {epi=}: "
+                        f"{got!r} vs {want!r}. Separation is licensed here, "
+                        f"but this much of it means the port stopped "
+                        f"computing the same integral."
+                    )
+
+        # Neither half may be empty, or the assertions above are vacuous --
+        # the whole point is that this kernel reaches both regimes.
+        assert converged > 0 and diverged > 0, (
+            f"the grid no longer spans both regimes ({converged=}, "
+            f"{diverged=}); it is meant to straddle E_pi ~ 4e4 MeV"
+        )
+        assert converged + diverged == len(pion_energies) * len(photon_energies)
 
 
 class TestPhysics:

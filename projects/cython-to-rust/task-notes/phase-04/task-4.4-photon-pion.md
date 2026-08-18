@@ -237,16 +237,39 @@ all five Linux jobs reported the same double, so it is a toolchain
 property; and it lands exactly where Task 3.3 said the two are entitled to
 diverge, and nowhere else.
 
-`DIVERGENT_REGIME_BUDGET` is therefore **1e-8, flat**, rather than
-platform-scoped like `test/test_core_photon_muon.py`'s. The reasoning is
-the inverse of that module's: there the two modes exist because
-bit-equality is available on one platform and not the other, so scoping
-buys real strength on the capturing side. Here the assertion's subject is
-chaotic by construction — a tight bound certifies nothing on either
-platform, and one tracking each platform's measured value would go red on
-the next libm change while telling us what we already know. What it is for
-is "still recognizably the same integral"; the precision gate is the
-converged-regime classes at 1e-12, which are platform-independent.
+**The first fix was wrong, and CI round 2 said so.** Raising the budget
+to a flat 1e-8 with both measurements recorded looked principled and was
+not: the assertion simply moved to the next-worst point, **3.0552e-08** at
+`E_γ = 0.01, E_π = 6e4`. Two rounds of that is the shape
+[`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+warns about — widening until it passes, in the one place the numerics are
+least able to support a bound. **There is no honest tolerance to assert
+in a chaotic regime, and the right move was to stop asserting one.**
+
+The test now partitions its 64-point grid by *scipy's own convergence
+verdict* — the `IntegrationWarning` the Cython raises — and holds each
+half to what is true of it:
+
+| Half | Points | Assertion | Measured worst (capturing platform) |
+| --- | --- | --- | --- |
+| QUADPACK converged | 51 | `CHARGED_PION_BUDGET`, 1e-12 | **2.22e-16** — one ulp |
+| did not converge | 13 | same sign, within a factor of 2 | 2.75e-11 |
+
+The converged half's headroom is not luck: where QUADPACK converges the
+two implementations subdivide *identically*, so the only difference left
+is the integrand's own last bit accumulated over a few hundred
+evaluations. That is why it holds at 1e-12 on Linux too, in both CI
+rounds, while the chaotic half moved by two orders of magnitude between
+grid points. A test that asserts one tolerance across both halves is
+asserting the wrong thing about one of them.
+
+Two guards keep the partition honest: neither half may be empty
+(`converged > 0 and diverged > 0`), and the two must sum to the grid — so
+a future change that pushes the whole grid into one regime fails loudly
+rather than silently reducing the test to its easy half. **Tasks 4.5–4.6
+and Phase 06 should partition the same way** rather than hunt for a single
+number; the ρ's nested quadrature will reach the chaotic regime sooner
+than this one does.
 
 ### The tightening buys exactly one thing, and it is the one that nearly bit
 
@@ -401,12 +424,26 @@ assert 6.299842019142071e-10 < 1e-10
 ====== 1 failed, 1124 passed, 15 skipped, 9 warnings in 563.32s ======
 ```
 
-Fixed by raising `DIVERGENT_REGIME_BUDGET` 1e-10 → 1e-8 with both
-platforms' measurements recorded beside it, not by scoping it — see
-"The divergent regime is reachable" above for why a flat budget is the
-right shape for a chaotic quantity. **No other test moved**, which is the
-substantive result: the flat `CHARGED_PION_BUDGET = 1e-12` holds on Linux
-across five interpreters.
+### CI round 2 (PR #68, run 32087037574)
+
+The round-1 fix — raising `DIVERGENT_REGIME_BUDGET` to 1e-8 — failed the
+same way at a different point:
+
+```text
+AssertionError: port and scipy separated at egam=0.01, epi=60000.0:
+  -6.903734330326644e-06 vs -6.903734541248649e-06
+assert 3.055187072594416e-08 < 1e-08
+====== 1 failed, 1124 passed, 15 skipped, 9 warnings in 793.74s ======
+```
+
+Resolved by restructuring the test to partition on scipy's convergence
+verdict rather than by widening a third time — see "The divergent regime
+is reachable" above.
+
+**Across both rounds no other test moved**, which is the substantive
+result: the flat `CHARGED_PION_BUDGET = 1e-12` holds on Linux across five
+interpreters, in the converged-regime sweep classes *and* in the converged
+half of this test.
 
 ### What the 73 per-kernel tests cover
 
