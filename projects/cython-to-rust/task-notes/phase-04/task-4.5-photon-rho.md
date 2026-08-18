@@ -315,6 +315,42 @@ fresh, so the row could not stay. Both went; the kernel reads
   recorded. Task 4.6 exhausts the unary candidates entirely; the class
   docstring now says so and names the choice it leaves.
 
+### Review round 1 (PR #70): the sweep excluded its own project tree
+
+Both blocking findings had one root cause. The Step-9 identifier sweep ran
+`rg ... --glob '!projects/**'`, on the reasonable theory that task notes
+are dated records that must not be rewritten — and that also skipped the
+two things under `projects/` that are **not** history:
+
+- `references/numerics-replacements.md`, which `PLAN.md`'s Orientation
+  table declares canonical and which self-declares
+  **"Nature: Grounded facts + spec"**. Its quad call-site table listed the
+  deleted `_photon/_rho.pyx` as live, under the lead sentence "All live
+  sites call `quad` from Cython" — false in two rows once Tasks 4.4/4.5
+  landed.
+- `task-notes/README.md`'s `## Phases` table, which is live status by the
+  one status invariant. Its Phase 04 row still read "4.5–4.6 open" while
+  `phase-04/README.md:24` said Task 4.5 was Complete.
+
+The distinction that resolves it is **file role, not directory**:
+`references/cython-inventory.md` carries "this file records a snapshot"
+and is legitimately historical (its headline "44 `.pyx` + 33 `.pxd`" has
+been wrong since Phase 00 by design); `numerics-replacements.md` carries
+no such disclaimer and must track the tree. Recorded as
+`[sweep-excluded-the-canonical-directory]` in
+[`lessons.md`](../../../../docs/agents/lessons.md).
+
+The fix is class-wide rather than the two cited lines: the quad table
+gained a **Status** column so a swap edits one cell instead of the next
+task inventing prose, and every row was re-derived — including that
+`_photon/_pion.pyx:123` is the one *dual* row (ported for the Python
+entry point, still live Cython inside the `cdef` the mediator modules
+cimport) and that both thermal ⟨σv⟩ sites are Phase 05, not 06.
+
+Checked and left alone, in the same class: the `spence`/`k1`/`kn` table
+above it is still accurate — `grep -n spence hazma/spectra/_photon/_muon.pyx`
+returns `13` and `113`, so that cimport survives in the capi provider.
+
 ## Files Changed
 
 | Path | Purpose |
@@ -341,6 +377,8 @@ fresh, so the row could not stay. Both went; the kernel reads
 | `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md` | the ρ compounds it — measured table + repair consequence |
 | `docs/followups/README.md` | index row for the new follow-up |
 | `docs/agents/environment.md` | two new traps: a deleted `.pyx` stays importable, and `git checkout` restores from the index |
+| `docs/agents/lessons.md` | review round 1: `[sweep-excluded-the-canonical-directory]` |
+| `projects/cython-to-rust/references/numerics-replacements.md` | review round 1: quad call-site table gains a Status column; lead sentence corrected |
 | `projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md` | **new** — this note |
 | `projects/cython-to-rust/task-notes/phase-04/README.md` | Task 4.5 status, findings, handoff |
 | `projects/cython-to-rust/task-notes/README.md` | numerical impact, findings, handoff |
@@ -624,6 +662,38 @@ RESULT: PASS
 Black, isort and ruff are clean on all nine changed `.py` files; the
 tree-wide ruff/isort debt is the trunk's and this branch reduces it (table
 under Verification). `markdownlint` is green on all six changed `.md`.
+
+### Review round 1: stale-sibling sweep for the excluded project tree
+
+Pre-fix (the two blocking findings, plus the lead sentence the class fix
+also reached):
+
+```console
+$ rg -n '4\.5–4\.6 open' projects/
+projects/cython-to-rust/task-notes/README.md:28
+$ rg -n '_rho\.pyx' projects/cython-to-rust/references/
+references/numerics-replacements.md:114   # listed as a live Cython site
+references/cython-inventory.md:84,117,122  # snapshot-declared, exempt
+$ rg -n 'All live sites' projects/
+references/numerics-replacements.md:107
+```
+
+Post-fix:
+
+```console
+$ rg -n '4\.5–4\.6 open|4\.5-4\.6 open' projects/ docs/
+(no occurrences)
+$ rg -n 'All live sites' projects/
+(no occurrences)
+$ rg -n '_rho\.pyx' projects/cython-to-rust/references/
+numerics-replacements.md:122   # row retained, Status = "Ported, Task 4.5 ... deleted"
+```
+
+Remaining `Tasks 4.5[–,] 4.6` hits are in **dated task notes**
+(`task-4.4-photon-pion.md` x4) and in two attributed Findings bullets
+that recorded Task 4.4's guidance; the guidance held, and the one place
+Task 4.5 *narrowed* it (the FMA-map limitation) now says so at
+`task-notes/README.md:796` and in that file's Open Questions.
 
 ### Numerical-impact statement
 

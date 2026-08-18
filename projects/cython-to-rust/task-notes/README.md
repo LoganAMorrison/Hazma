@@ -25,7 +25,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 01 | Golden parity corpus | [phase-01-parity-corpus.md](../phases/phase-01-parity-corpus.md) | [phase-01/README.md](phase-01/README.md) | **Complete (2026-08-08)** — all four tasks done; [learnings](../learnings/phase-01-parity-corpus.md) |
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
-| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | In Progress — Tasks 4.1 (2026-08-11), 4.2 (2026-08-12), 4.3 (2026-08-16) and 4.4 (2026-08-17) done; 4.5–4.6 open |
+| 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | In Progress — Tasks 4.1–4.5 done (2026-08-11, 08-12, 08-16, 08-17, 08-18); **only 4.6 remains**. The photon domain is finished. |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
@@ -796,7 +796,10 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   quadrature-backed kernel from here on inherits this** — Tasks 4.5, 4.6
   and the Phase 06 mediator spectra — so the FMA map is defended by the
   disassembly and by review, and the source says so rather than leaving a
-  reader to assume a gate exists.
+  reader to assume a gate exists. **Task 4.5 narrowed this**: arithmetic
+  in the integration *limits* can be lifted into its own `fn` and pinned,
+  and only arithmetic genuinely *inside* an integrand stays ungated. See
+  Open Questions.
 - **Phase 03 Task 3.3's divergent-regime obligation is discharged for the
   first `qagp` consumer, and the answer is reassuring** (Task 4.4). The
   charged pion's quadrature does leave `ier = 0` — first at `E_π = 4e4`
