@@ -11,15 +11,16 @@
 //! `hazma/spectra/_photon/__init__.py` calls, so
 //! `test/parity/cases.py`'s `rust_core_kernels()` counts them.
 //!
-//! The seven tabulated spectra landed here in Task 4.2 and the radiative
-//! muon spectrum in Task 4.3. Tasks 4.4–4.5 add the pion and rho kernels
-//! beside them.
+//! The seven tabulated spectra landed here in Task 4.2, the radiative
+//! muon spectrum in Task 4.3 and the two pion spectra in Task 4.4.
+//! Task 4.5 adds the rho kernels beside them.
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::dispatch::map_unary;
 use crate::kernels::photon_muon;
+use crate::kernels::photon_pion;
 use crate::kernels::photon_tables::{self, Spectrum};
 
 /// Every tabulated entry point, over one implementation.
@@ -75,6 +76,51 @@ fn dnde_tabulated(
 fn dnde_photon_muon(photon_energies: &Bound<'_, PyAny>, muon_energy: f64) -> PyResult<Py<PyAny>> {
     map_unary(photon_energies, "Photon energies", |energy| {
         photon_muon::dnde_photon_muon(energy, muon_energy)
+    })
+}
+
+/// The photon spectrum `dN/dE` in MeV⁻¹ from charged-pion decay.
+///
+/// `photon_energies` is the mapped argument — a float, a NumPy scalar, a
+/// 0-d numeric array, or a 1-D `float64` array (or a sequence that
+/// converts to one). `pion_energy` is the pion's total energy in MeV.
+///
+/// The quantity wording is `"Photon energies"`, which is the wording
+/// `hazma/spectra/_photon/_pion.pyx` used in the `assert` this replaces.
+/// Like the muon spectrum and unlike the tabulated seven there is no
+/// parent-energy guard to resolve first: the kernel's own `epi < m_pi`
+/// short circuit returns zero, as the Cython does.
+///
+/// This is the crate's first quadrature-backed entry point — one
+/// `qagp` over `cos θ` per photon energy, so an `N`-point grid runs `N`
+/// integrations exactly as the Cython's `for` loop did.
+#[pyfunction]
+#[pyo3(text_signature = "(photon_energies, pion_energy)")]
+fn dnde_photon_charged_pion(
+    photon_energies: &Bound<'_, PyAny>,
+    pion_energy: f64,
+) -> PyResult<Py<PyAny>> {
+    map_unary(photon_energies, "Photon energies", |energy| {
+        photon_pion::dnde_photon_charged_pion(energy, pion_energy)
+    })
+}
+
+/// The photon spectrum `dN/dE` in MeV⁻¹ from neutral-pion decay.
+///
+/// `photon_energies` is the mapped argument — a float, a NumPy scalar, a
+/// 0-d numeric array, or a 1-D `float64` array (or a sequence that
+/// converts to one). `pion_energy` is the pion's total energy in MeV.
+///
+/// The quantity wording is `"Photon energies"`, the wording
+/// `hazma/spectra/_photon/_pion.pyx` used in the `assert` this replaces.
+#[pyfunction]
+#[pyo3(text_signature = "(photon_energies, pion_energy)")]
+fn dnde_photon_neutral_pion(
+    photon_energies: &Bound<'_, PyAny>,
+    pion_energy: f64,
+) -> PyResult<Py<PyAny>> {
+    map_unary(photon_energies, "Photon energies", |energy| {
+        photon_pion::dnde_photon_neutral_pion(energy, pion_energy)
     })
 }
 
@@ -142,6 +188,8 @@ fn dnde_photon_phi(photon_energies: &Bound<'_, PyAny>, phi_energy: f64) -> PyRes
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(dnde_photon_muon, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_photon_charged_pion, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_photon_neutral_pion, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_charged_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_long_kaon, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_photon_short_kaon, module)?)?;

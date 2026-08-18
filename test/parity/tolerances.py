@@ -58,11 +58,27 @@ implementation does* rather than by what it computes:
     platform bit-for-bit, by also reproducing NumPy's summation order --
     so the headroom went unused there, and stays declared for the
     platforms where it will not.)
-``QUAD`` (rtol 1e-8)
+``QUAD`` (rtol 1e-8, or `PORTED_QUAD_RTOL` = 1e-12 once measured)
     One adaptive `scipy.integrate.quad` call. The numerics reference
     expects a faithful netlib-QUADPACK port to reproduce these to ~1e-12
     or better; the phase file sets the opening budget at 1e-8 and tightens
-    it once Phase 03 has measured the port.
+    it once Phase 03 has measured the port. Phase 03 Task 3.3 measured it
+    over 11,274 random (integrand, tolerance, limit, points) combinations:
+    the 4,461 that converged agreed with scipy to **8.2e-11** relative at
+    worst, and the rest can separate without bound because Wynn's
+    epsilon-algorithm is chaotic on a non-converging sequence.
+
+    The tightening is applied **per case as each is ported and measured**
+    rather than class-wide, because 8.2e-11 is the envelope over arbitrary
+    integrands and each live shape lands far inside it: Task 4.4 measured
+    `spectra.photon.charged_pion` at **2.6e-15** relative over its 1,500
+    pinned values (317 of them not bit-equal), i.e. a dozen ulp, which is
+    accumulated last-bit arithmetic rather than method error. So that case
+    takes `PORTED_QUAD_RTOL` and the two unported ones keep the opening
+    figure until Task 4.6 measures them. Nothing external moves under a
+    ported case any more -- the reference values are stored, scipy no
+    longer participates, and the remaining variation is the platform libm,
+    which the corpus is scoped to anyway.
 ``NESTED`` (rtol 1e-6)
     An adaptive quadrature whose integrand is itself an adaptive
     quadrature. Subdivision is a discontinuous function of the integrand:
@@ -139,6 +155,10 @@ EXACT_RTOL = 0.0
 SPECFUN_RTOL = 1e-13
 TABULATED_RTOL = 1e-12
 QUAD_RTOL = 1e-8
+#: The `QUAD` budget after a case has been ported and its drift measured.
+#: See the "Budget classes" section: 380x headroom over Task 4.4's
+#: measured 2.6e-15, and still four decades inside the opening figure.
+PORTED_QUAD_RTOL = 1e-12
 NESTED_RTOL = 1e-6
 
 #: How far the *abscissae* may move off the capturing tree. Not a value
@@ -203,18 +223,21 @@ BUDGETS: dict[str, Budget] = {
         "reference's own Task 3.2 acceptance check.",
     ),
     "spectra.photon.charged_pion": Budget(
-        rtol=QUAD_RTOL,
+        rtol=PORTED_QUAD_RTOL,
         atol=0.0,
         why="one QAGP over cos(theta) "
         "(hazma/spectra/_photon/_pion.pyx:123, epsabs=1e-10, epsrel=1e-5); "
         "the integrand is the spence-bearing muon spectrum, whose 1e-13 "
-        "class sits well inside the quadrature budget.",
+        "class sits well inside the quadrature budget. Tightened from "
+        "QUAD_RTOL by Task 4.4 on its own measurement -- 2.6e-15 worst "
+        "relative over the 1,500 pinned values, against 1e-12 here.",
     ),
     "spectra.photon.neutral_pion": Budget(
         rtol=EXACT_RTOL,
         atol=0.0,
         why="closed-form boosted box spectrum, arithmetic and branch "
-        "selection only (hazma/spectra/_photon/_pion.pyx:168-196).",
+        "selection only (hazma/spectra/_photon/_pion.pyx:147-171); the "
+        "`cdef float` beta and return value are part of the arithmetic.",
     ),
     "spectra.photon.charged_rho": Budget(
         rtol=NESTED_RTOL,
