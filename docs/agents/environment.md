@@ -212,7 +212,7 @@ where the pinned value flipped sign. CI skipped it off macOS. Three
 things fixed that and each names what it covers —
 `test/parity/stability.py` (494 stored positions that assert nothing),
 `tolerances.PLATFORM_EXACT_RTOL` (the `EXACT` class off the capturing
-libm) and `tolerances.zero_floor` (stored exact zeros). If a
+libm) and `tolerances.zero_floor` (four declared stored zeros). If a
 `test/parity` failure surfaces on a platform you have not seen it on,
 read
 [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../followups/done/parity-corpus-pins-ill-conditioned-points.md)

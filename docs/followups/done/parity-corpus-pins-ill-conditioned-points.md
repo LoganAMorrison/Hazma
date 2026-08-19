@@ -11,9 +11,10 @@
 - **Resolution:** `test/parity/stability.py` masks the 494 stored
   positions whose values are cancellation residue;
   `tolerances.PLATFORM_EXACT_RTOL` gives the `EXACT` class an off-libm
-  budget; `tolerances.zero_floor` handles stored exact zeros; CI's
+  budget; `tolerances.zero_floor` handles the four declared stored
+  zeros a change of libm moves; CI's
   `--ignore=test/parity` came out. `pytest test/parity` is
-  **635 passed, 1 skipped** on macOS/arm64, Linux/aarch64 and
+  **637 passed, 1 skipped** on macOS/arm64, Linux/aarch64 and
   Linux/x86_64. Full write-up:
   [`projects/cython-to-rust/task-notes/phase-01/followup-parity-corpus-stability.md`](../../../projects/cython-to-rust/task-notes/phase-01/followup-parity-corpus-stability.md).
 - **Triggers / blockers:** ripened **before Phase 04**, as filed. Phases

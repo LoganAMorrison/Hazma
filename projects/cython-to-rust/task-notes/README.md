@@ -1367,7 +1367,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   179,695 pinned values (0.27%, all in four scalar cross-section cases)
   stop being compared, because they are cancellation residue rather than
   numbers any implementation reproduces. Verified by the corpus itself —
-  `pytest test/parity -q` is `635 passed, 1 skipped` on the capturing
+  `pytest test/parity -q` is `637 passed, 1 skipped` on the capturing
   platform with the `EXACT` class still at `rtol = 0` there.
   **This is a debt made visible, not created**: those four entry points
   were already returning wrong numbers, and Phase 07's CHANGELOG should
@@ -2175,7 +2175,8 @@ exactly what it covers, so a `test/parity` failure on a new platform
 should be triaged into one of them rather than absorbed by a wider
 budget: `test/parity/stability.py`'s 494 unpinnable positions,
 `tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the capturing
-libm, and `tolerances.zero_floor` for stored exact zeros. **Phase 05 must
+libm, and `tolerances.zero_floor` for the four declared stored zeros a
+change of libm moves. **Phase 05 must
 read
 [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
 before porting the scalar cross sections** — 494 pinned positions in the
@@ -2307,7 +2308,8 @@ Re-derive.
   that true and each names what it covers:
   `test/parity/stability.py`'s 494 unpinnable positions,
   `tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the
-  capturing libm, and `tolerances.zero_floor` for stored exact zeros.
+  capturing libm, and `tolerances.zero_floor` for the four declared
+  stored zeros a change of libm moves.
   **Read
   [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
   before Phase 05** — 494 pinned positions in the four scalar elastic

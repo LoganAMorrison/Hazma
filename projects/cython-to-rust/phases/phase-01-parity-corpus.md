@@ -121,7 +121,8 @@ evidence `docs/versioning.md` requires for numerical changes.
     `test/parity/stability.py` masks the 494 stored positions whose
     values are cancellation residue, `tolerances.PLATFORM_EXACT_RTOL`
     gives the `EXACT` class an off-libm budget, and
-    `tolerances.zero_floor` handles stored exact zeros. The `--ignore`
+    `tolerances.zero_floor` handles the four declared stored zeros that
+    a change of libm moves. The `--ignore`
     came out with it — see
     [`../task-notes/phase-01/followup-parity-corpus-stability.md`](../task-notes/phase-01/followup-parity-corpus-stability.md).
 

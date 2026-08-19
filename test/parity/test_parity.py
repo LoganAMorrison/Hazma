@@ -111,6 +111,12 @@ ABSCISSAE = frozenset({"grid", "scalar_grid"})
 #: see `test_the_mask_is_a_small_fraction_of_the_corpus`.
 EXPECTED_MASKED_POSITIONS = 494
 
+#: How many stored zeros get an absolute floor instead of exact equality.
+#: Held as a literal for the same reason, and a stricter one: the first
+#: version of that exemption covered 66,840 positions, so its size is the
+#: number worth making somebody defend in a diff (PR #71 review round 1).
+EXPECTED_PORTABILITY_ZEROS = 4
+
 
 def _drop_unpinnable(
     live: np.ndarray,
@@ -134,6 +140,23 @@ def _drop_unpinnable(
         return live, pinned
     keep = np.setdiff1d(np.arange(pinned.shape[-1]), sorted(skip))
     return live[..., keep], pinned[..., keep]
+
+
+def _portability_zero_mask(
+    pinned: np.ndarray, case_name: str, block_label: str, suffix: str
+) -> np.ndarray:
+    """Boolean mask of the declared portability zeros in one block array.
+
+    All-``False`` for every array but the four
+    `stability.PORTABILITY_ZEROS` names, so the ordinary comparison —
+    including `atol = 0` against every other stored zero — is what runs
+    almost everywhere.
+    """
+    mask = np.zeros(pinned.shape, dtype=bool)
+    declared = stability.portability_zeros(case_name, block_label, suffix)
+    if declared:
+        mask[..., sorted(declared)] = True
+    return mask
 
 
 def _blocks() -> list[Any]:
@@ -235,29 +258,30 @@ def test_entry_point_matches_corpus(
         live, pinned = _drop_unpinnable(
             actual[suffix], expected, case_name, block.label, suffix
         )
-        floor = tolerances.zero_floor(pinned, case_name)
-        at_zero = pinned == 0.0
+        # The four positions `stability` declares are compared against an
+        # absolute floor; everything else -- including all 66,836 other
+        # stored zeros, which `atol = 0` holds to exact equality -- goes
+        # through the ordinary budget.
+        floored = _portability_zero_mask(pinned, case_name, block.label, suffix)
         np.testing.assert_allclose(
-            live[~at_zero],
-            pinned[~at_zero],
+            live[~floored],
+            pinned[~floored],
             rtol=budget.rtol,
             atol=budget.atol,
             equal_nan=True,
             err_msg=f"{where} moved beyond its budget ({budget.why})",
         )
-        # Where the corpus stored an exact zero there is no relative
-        # measure, so the block's own scale supplies an absolute one.
-        # Split out rather than passed as `atol` to the call above: a
-        # single `atol` would also loosen every small *non-zero* value in
-        # the same array, which is the objection `tolerances`'s "`atol` is
-        # 0.0 everywhere" section raises and which still stands.
-        np.testing.assert_array_less(
-            np.abs(live[at_zero]),
-            np.nextafter(floor, np.inf),
-            err_msg=f"{where} is non-zero where the corpus pinned exactly "
-            f"0.0, by more than {floor:.3e} "
-            f"({tolerances.ZERO_FLOOR_FRACTION:.0e} of the array's scale)",
-        )
+        if floored.any():
+            floor = tolerances.zero_floor(pinned)
+            np.testing.assert_array_less(
+                np.abs(live[floored]),
+                np.nextafter(floor, np.inf),
+                err_msg=f"{where}: a declared portability zero "
+                f"(stability.PORTABILITY_ZEROS) came back larger than "
+                f"{floor:.3e}, which is "
+                f"{tolerances.ZERO_FLOOR_FRACTION:.0e} of the array's median "
+                "non-zero magnitude",
+            )
 
 
 def test_running_on_the_capturing_tree() -> None:
@@ -341,6 +365,62 @@ def test_the_platform_branch_only_moves_the_exact_class() -> None:
     assert (
         tolerances.effective_budget(next(iter(exact_class)), off_platform).rtol
         == tolerances.PLATFORM_EXACT_RTOL
+    )
+
+
+def test_every_portability_zero_is_a_boundary_zero(
+    stored_arrays: ArrayLoader,
+) -> None:
+    """`stability.PORTABILITY_ZEROS` may only name support boundaries.
+
+    The exemption exists for one mechanism — a quadrature whose integrand
+    sits at *its own* threshold, so the weighted sum lands on ``0.0`` or
+    on a rounding residue depending on the libm. That can only happen at
+    the last zero before the support starts. Deeper below threshold the
+    integrand is identically zero at every node and the sum is exactly
+    zero everywhere, so a floor there would weaken the gate for nothing.
+
+    Asserting the shape rather than the list keeps the registry from
+    drifting into interior positions, which is the failure mode that
+    turned the first version of this fix into a floor over 66,840 stored
+    zeros (PR #71 review round 1).
+    """
+    for (
+        case_name,
+        block_label,
+        suffix,
+    ), positions in stability.PORTABILITY_ZEROS.items():
+        manifest_case = MANIFEST["cases"][case_name]
+        manifest_block = next(
+            block for block in manifest_case["blocks"] if block["label"] == block_label
+        )
+        stored = stored_arrays(case_name)[manifest_block["arrays"][suffix]["key"]]
+        for position in positions:
+            where = f"{case_name}[{block_label}].{suffix}[{position}]"
+            assert np.all(stored[..., position] == 0.0), (
+                f"{where} is not a stored zero, so it has no business in "
+                "PORTABILITY_ZEROS"
+            )
+            assert position + 1 < stored.shape[-1], f"{where} is the last position"
+            assert np.any(stored[..., position + 1] != 0.0), (
+                f"{where} is not the boundary: position {position + 1} is also "
+                "zero, so the integrand is identically zero here and the sum "
+                "is exact on every platform"
+            )
+
+
+def test_the_portability_floor_covers_only_four_positions() -> None:
+    """The exemption stays an allowlist rather than becoming a rule.
+
+    Pinned as a total for the same reason
+    `test_the_mask_is_a_small_fraction_of_the_corpus` is: widening it has
+    to show up in a diff and be argued for. A fifth platform disagreement
+    is expected to arrive as a *failure* somebody measures and declares,
+    not as something a general rule silently absorbs.
+    """
+    assert (
+        sum(len(v) for v in stability.PORTABILITY_ZEROS.values())
+        == EXPECTED_PORTABILITY_ZEROS
     )
 
 

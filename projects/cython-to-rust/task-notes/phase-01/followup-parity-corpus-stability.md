@@ -334,6 +334,9 @@ records the manifest's kernel digest and
   `ZERO_FLOOR_FRACTION`, `zero_floor()`, `_libm_identity()`,
   `Provenance.same_platform`, and the `effective_budget` platform
   branch.
+- `AGENTS.md`, `docs/agents/preflight.md` — both enumerate what
+  `pip install --group dev` pulls; `mpmath` added to each (review
+  round 1).
 - `test/parity/test_parity.py` — `_drop_unpinnable`, the split
   zero/non-zero comparison, and six new guards (four on the mask, two on
   the platform branch).
@@ -371,9 +374,9 @@ the capture's `numpy==2.5.1`, `scipy==1.18.0`, `cython==3.2.9`, so the
 libm is the only axis that moves) and run against the committed data.
 
 ```text
-macOS 26.6.1 / arm64   pytest test/parity -q   635 passed, 1 skipped in 43.92s
-Linux glibc / aarch64  pytest test/parity -q   635 passed, 1 skipped in 57.44s
-Linux glibc / x86_64   pytest test/parity -q   635 passed, 1 skipped in 91.16s
+macOS 26.6.1 / arm64   pytest test/parity -q   637 passed, 1 skipped in 29.42s
+Linux glibc / aarch64  pytest test/parity -q   637 passed, 1 skipped in 31.86s
+Linux glibc / x86_64   pytest test/parity -q   637 passed, 1 skipped in 67.66s
 ```
 
 x86_64 is the platform Task 1.3 measured at 70–75 failing blocks. The
@@ -435,13 +438,17 @@ worst 9.4e-09) and sit four decades inside `NESTED_RTOL`.
 
 Each of the three changes was reverted in place and the corpus re-run, on
 both Linux platforms (`pytest test/parity -q`; baseline
-`635 passed, 1 skipped` on each):
+`637 passed, 1 skipped` on each):
 
 | reverted | Linux/x86_64 | Linux/aarch64 |
 | --- | --- | --- |
 | `data/unpinnable.json` emptied | **13 failed** | **1 failed** |
 | the `PLATFORM_EXACT_RTOL` branch in `effective_budget` | **55 failed** | **34 failed** |
-| `ZERO_FLOOR_FRACTION` set to `0.0` | 635 passed | **4 failed** |
+| `stability.PORTABILITY_ZEROS` emptied | 635 passed | **4 failed** |
+
+(The `PORTABILITY_ZEROS` row runs with the two registry-integrity tests
+deselected, since emptying the registry is exactly what they forbid —
+hence 635 rather than 637 on the platform where nothing fails.)
 
 Two things worth keeping from this:
 
@@ -495,6 +502,44 @@ Both red rows come entirely from files this task does not touch
 (`hazma/experimental/`, `test/vector_mediator/herwig4dm/`, and the
 untyped legacy suites). `test/parity/` itself is clean on trunk and clean
 here, which is the only part this task could have regressed.
+
+### Review round 1 (PR #71)
+
+Four blocking findings; two accepted, one partially, one rejected. Detail
+in the response tables on the PR. The two that changed behaviour:
+
+- **The zero floor was applied far too broadly.** It floored every exact
+  zero in every non-`EXACT` array — **66,840 positions across 605
+  arrays** — to cover four measured ones, so
+  `spectra.photon.long_kaon[rest_plus_eps]` accepted 1.69e-07 where the
+  Cython returns exactly zero and a small below-threshold regression
+  would have passed. D5 below records the two narrowings I had already
+  made in self-review; both were about the *size* of the floor, and I
+  never questioned its *scope*. `stability.PORTABILITY_ZEROS` now names
+  the four positions, all at `E = m_e` in
+  `spectra.positron.charged_pion`, and the other 66,836 are back to the
+  exact-zero contract.
+
+  Re-measured to build the allowlist rather than assuming the four I had
+  already seen were all of them: the sweep over every array on
+  Linux/aarch64 returns exactly those four, each immediately followed by
+  the first non-zero stored value.
+  `test_every_portability_zero_is_a_boundary_zero` pins that shape, so
+  the registry cannot drift back into interior positions — deeper below
+  threshold the integrand is identically zero at every quadrature node
+  and the sum is exact on every platform, which is *why* the broad
+  version bought nothing.
+
+- **`pyproject.toml`'s `addopts` comment still said only macOS runs the
+  corpus.** I had spotted this mid-task, said I would fix it, moved on to
+  the `test/test_core_*.py` sweep, and never came back — and then the
+  Stale-state sweep block below listed it among the sites I had EDITED.
+  The miss is minor; **claiming a sweep hit I had not made is not**, and
+  it is the reason the block exists. Fixed, along with two siblings the
+  reviewer did not cite: `test/parity/README.md` still described the
+  floor as a fraction of the array's *maximum* (stale since I changed it
+  to the median in self-review), and seven other places described the
+  floor's scope without the "four declared" qualifier.
 
 ### Deferred
 
@@ -639,9 +684,11 @@ no occurrences
 | "494 positions masked" (this note, `test_parity`, `test/parity/README.md`, both follow-ups, working memory) | `python test/parity/stability.py` | `494 positions masked` | OK |
 | "12 blocks carry a mask" | `python -c` over `unpinnable.json` | 12 | OK |
 | "15 blocks / 4,675 grid values in `AFFECTED_CASES`" | `cases.build_cases()` | 15 blocks, 4,675 | OK |
-| "623 blocks plus 13 guards" (`test/parity/README.md`) | `pytest test/parity --collect-only -q` | 636 collected, 623 of them `test_entry_point_matches_corpus` | OK |
-| "635 passed, 1 skipped" (three platforms) | `pytest test/parity -q` | 635/1 on each | OK |
+| "623 blocks plus 15 guards" (`test/parity/README.md`) | `pytest test/parity --collect-only -q` | 638 collected, 623 of them `test_entry_point_matches_corpus` | OK |
+| "637 passed, 1 skipped" (three platforms) | `pytest test/parity -q` | 637/1 on each | OK |
 | "494 of the corpus's ~180k stored values" | value entries in `data/*.npz` | 181,191 value entries (0.27%) | OK |
+| "four declared portability zeros" (`stability`, `tolerances`, `test/parity/README.md`, ci.yml, docs) | `sum(len(v) for v in PORTABILITY_ZEROS.values())` | 4 | OK |
+| "66,840 stored zeros the first version floored" (review-round note, `stability`, `tolerances`) | pre-fix `zero_floor` sweep over every array | 66,840 across 605 arrays | OK |
 | "41 cases / 1580 arrays" (unchanged) | `python test/parity/generate.py --check` | `corpus OK: 41 cases / 1580 arrays` | OK |
 | "1,808 passed, 15 skipped" (bare suite) | `scripts/agents/preflight.sh` gate 7 | `1808 passed, 15 skipped` | OK |
 | "worst kept 9.4e-10, best masked 1.9e-9" | `python test/parity/stability.py --regenerate` | same | OK |
@@ -651,7 +698,7 @@ no occurrences
 
 **No public value changes (verified: `python test/parity/generate.py --check`
 → `corpus OK: 41 cases / 1580 arrays match the manifest`, and
-`pytest test/parity -q` → `635 passed, 1 skipped` on the capturing
+`pytest test/parity -q` → `637 passed, 1 skipped` on the capturing
 platform with the `EXACT` class still at `rtol = 0` there).** Nothing
 under `hazma/` is touched by this diff — `git diff origin/master --stat --
 hazma/` is empty — so no function the public API reaches can have moved.
@@ -667,7 +714,7 @@ numbers any implementation reproduces.
 | corpus stops asserting cancellation-dominated points, by a stated rule | `test/parity/stability.py` + `data/unpinnable.json`; `test_only_the_declared_cases_are_masked`, `test_the_mask_was_built_from_this_corpus`, `test_every_masked_index_addresses_a_real_stored_value`, `test_the_mask_is_a_small_fraction_of_the_corpus` |
 | the mechanism fixes the **port** gate, not just the platform symptom | the mask is defined against `reference.py`, not against platform disagreement (Finding 1, Finding 3); Phase 05 handoff says what it means for the swap |
 | `EXACT_RTOL = 0.0` no longer applies unchanged in budget mode | `tolerances.PLATFORM_EXACT_RTOL` + `_libm_identity`; `test_an_os_point_release_is_not_a_platform_change`, `test_the_platform_branch_only_moves_the_exact_class`; stash-proof B (55 / 34 failures without it) |
-| CI's `PARITY` env removed | `.github/workflows/ci.yml`; `635 passed, 1 skipped` on macOS/arm64, Linux/aarch64 and Linux/x86_64 |
+| CI's `PARITY` env removed | `.github/workflows/ci.yml`; `637 passed, 1 skipped` on macOS/arm64, Linux/aarch64 and Linux/x86_64 |
 | rules.md rule 2 respected | no `data/*.npz` in `git status`; `generate.py --check` passes against the unchanged manifest; the mask records the kernel digest and `test_the_mask_was_built_from_this_corpus` enforces it |
 
 ### Task-note self-consistency

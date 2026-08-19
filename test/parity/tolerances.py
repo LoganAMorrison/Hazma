@@ -213,43 +213,37 @@ PLATFORM_EXACT_RTOL = 1e-6
 #: and for why bit-equality here was unreachable on any second platform.
 ABSCISSA_RTOL = 1e-13
 
-#: Absolute floor allowed where the corpus stored an exact ``0.0``, as a
-#: fraction of the *median* non-zero magnitude in the same array -- and
-#: only for a case whose declared budget is not `EXACT_RTOL`.
+#: Absolute floor allowed at the positions `stability.PORTABILITY_ZEROS`
+#: declares, as a fraction of the median non-zero magnitude in the same
+#: array. **Only** at those positions: every other stored ``0.0`` keeps
+#: the exact-zero contract the section below argues for.
 #:
 #: "`atol` is 0.0 everywhere" below argues that a below-threshold region
 #: returns exactly zero, so ``|0 - 0| <= rtol * 0`` holds and no floor is
-#: needed. That is true of the closed-form kernels and false of the
-#: quadrature-backed ones: `spectra.positron.charged_pion` integrates the
-#: positron-muon spectrum over ``cos(theta)`` and at ``E = m_e`` the
-#: integrand vanishes only at the endpoint, so whether QUADPACK's weighted
-#: sum lands on exactly ``0.0`` or on 2.6e-13 is a property of the libm
-#: underneath. Four blocks do the latter on Linux/aarch64; with `atol` at
-#: zero that is an *infinite* relative error and the case's 1e-8 budget
-#: never gets a chance to speak.
+#: needed. That is true nearly everywhere, and false at exactly one kind
+#: of point: a quadrature whose integrand sits at *its* threshold.
+#: `spectra.positron.charged_pion` integrates the positron-muon spectrum
+#: over ``cos(theta)``, and at ``E = m_e`` whether QUADPACK's weighted sum
+#: lands on ``0.0`` or on 2.6e-13 is a property of the libm underneath.
+#: Four positions do the latter on Linux/aarch64; with `atol` at zero
+#: that is an *infinite* relative error and the case's 1e-8 budget never
+#: gets a chance to speak.
 #:
-#: Both restrictions exist because the obvious rule -- 1e-9 of the array
-#: maximum, every case -- was measured and is far too loose:
+#: The **scope** of that exemption is the whole design question, and the
+#: first version of this fix got it wrong: it floored every exact zero in
+#: every non-``EXACT`` array — 66,840 positions across 605 arrays — so
+#: `spectra.photon.long_kaon[rest_plus_eps]` would have accepted 1.69e-07
+#: where the Cython returns exactly zero. `stability.PORTABILITY_ZEROS`
+#: now names the four, and the other 66,836 are back to exact
+#: (PR #71 review round 1).
 #:
-#: - **`EXACT`-class cases are excluded** because a closed-form kernel's
-#:   zeros come from an explicit branch (``if e_cm < mx + ml: return
-#:   0.0``) which a port reproduces exactly, so there is nothing for a
-#:   floor to absorb. Leaving them in produced a floor of **10.42** on
-#:   `sigma_xl_to_xl[closed_resonance.mu]`, whose non-zero values all sit
-#:   near 4e9 -- a port could have returned 10 in its 192 sub-threshold
-#:   positions and passed. No `EXACT` block needs a floor on any of the
-#:   three platforms measured.
-#: - **The scale is the median, not the maximum**, because a block can
-#:   span nine decades: `spectra.photon.long_kaon[rest_plus_eps]` peaks
-#:   at 6.6e5 near the endpoint, and a fraction of *that* is a floor set
-#:   by the spike rather than by the function.
-#:
-#: On the four blocks that need it the floor lands between 8.8e-13 and
-#: 4.4e-12 against intrusions of 2.7e-14 to 2.6e-13 -- between 6x and 80x
-#: headroom, derived from each block's own scale rather than chosen. The
-#: loosest floor anywhere in the corpus is then 1.6e-6, on a
-#: `mediator_spectra.vector.positron` block whose own values there have a
-#: median of 1.6e3.
+#: The **size** is a fraction of the array's own median non-zero
+#: magnitude rather than of its maximum, because a block can span nine
+#: decades — `spectra.photon.long_kaon[rest_plus_eps]` peaks at 6.6e5 near
+#: its endpoint, and a fraction of *that* is a floor set by the spike. On
+#: the four declared positions the floor lands between 8.8e-13 and 4.4e-12
+#: against residues of 2.7e-14 to 2.6e-13: 6x to 80x headroom, derived
+#: from each block's own scale rather than chosen.
 ZERO_FLOOR_FRACTION = 1e-9
 
 
@@ -756,8 +750,11 @@ def effective_budget(case_name: str, tree: Provenance) -> Budget:
     return declared
 
 
-def zero_floor(expected: np.ndarray, case_name: str) -> float:
-    """The absolute floor allowed where one array stored an exact zero.
+def zero_floor(expected: np.ndarray) -> float:
+    """How large a `stability.PORTABILITY_ZEROS` position may come back.
+
+    The caller decides *where* this applies — only at the declared
+    positions — so this function answers only "how big is this array?".
 
     Parameters
     ----------
@@ -769,24 +766,14 @@ def zero_floor(expected: np.ndarray, case_name: str) -> float:
         sections pin ``+-inf`` at ``e_cm = 2 mx`` (all nine masked by
         `stability`, so they do not reach here). Neither says anything
         about how big the function is.
-    case_name : str
-        A `cases.build_cases()` key. Its **declared** class decides
-        whether a floor applies at all: an `EXACT` case gets none. The
-        declared class, not `effective_budget`'s answer -- off the
-        capturing platform that answer is `PLATFORM_EXACT_RTOL`, and
-        keying on it would hand the whole `EXACT` class a floor exactly
-        where the class is already at its most permissive.
 
     Returns
     -------
     float
         ``ZERO_FLOOR_FRACTION`` times the median non-zero magnitude, or
-        ``0.0`` for an `EXACT` case and for an array with no finite
-        non-zero value -- where there is no scale to be a fraction of,
-        exact zero remains the contract.
+        ``0.0`` for an array with no finite non-zero value -- where there
+        is no scale to be a fraction of, exact zero remains the contract.
     """
-    if budget_for(case_name).rtol == EXACT_RTOL:
-        return 0.0
     scale = np.abs(expected[np.isfinite(expected) & (expected != 0.0)])
     if scale.size == 0:
         return 0.0

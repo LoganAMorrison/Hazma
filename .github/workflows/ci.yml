@@ -135,8 +135,9 @@ jobs:
         # where the pinned value flipped sign. `test/parity/stability.py`
         # now masks the points that cancel, `tolerances.PLATFORM_EXACT_RTOL`
         # covers the last-bit libm differences the EXACT class used to
-        # reject, and `tolerances.zero_floor` covers the quadrature
-        # endpoints that return 2.6e-13 where macOS returns exactly 0.0.
+        # reject, and `tolerances.zero_floor` covers the four declared
+        # quadrature endpoints that return 2.6e-13 where macOS returns
+        # exactly 0.0.
         # Verified green on Linux/x86_64 and Linux/aarch64 before this
         # scoping came out; see
         # docs/followups/done/parity-corpus-pins-ill-conditioned-points.md.

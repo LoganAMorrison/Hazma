@@ -88,7 +88,7 @@ A leading underscore on a package (`_utils`, `spectra/_photon`) means
 
 ```sh
 pip install -e .          # build the Cython + Rust extensions in place
-pip install --group dev   # black, isort, ruff, pytest, pytest-xdist pins
+pip install --group dev   # black, isort, ruff, pytest, pytest-xdist, mpmath
 pytest                    # full suite (hazma + test), parallel via xdist
 pytest -n 0               # same suite in-process (--pdb needs this)
 pytest test/spectra -q    # one area

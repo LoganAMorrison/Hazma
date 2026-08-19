@@ -116,8 +116,9 @@ version = { attr = "hazma.VERSION" }
 # `test/parity/` dominates a serial run with nested adaptive
 # quadrature — 295s of a 598s bare run, measured idle on the corpus's
 # capturing machine (2026-08-17, 1697 tests). That work is the price of
-# the gate (see test/parity/README.md; in CI only the macOS entry pays
-# it, ci.yml ignoring the corpus elsewhere), so `addopts` spreads it
+# the gate, and every CI matrix entry pays it (see test/parity/README.md;
+# the `--ignore=test/parity` scoping came out on 2026-08-18 once the
+# corpus was platform-portable), so `addopts` spreads it
 # over every core instead of narrowing what is collected: same
 # collection, same assertions, 45s wall at `-n 12` on the same machine.
 # `worksteal` rebalances the corpus's heavy tail of mediator-spectrum

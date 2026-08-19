@@ -143,6 +143,74 @@ AFFECTED_CASES: dict[str, str] = {
 }
 
 
+#: Positions where the corpus stored an exact ``0.0`` that another libm
+#: does not reproduce, and which are therefore compared against an
+#: absolute floor rather than against zero. Keyed by
+#: ``(case name, block label, array suffix)``.
+#:
+#: **Declared, not generated, and deliberately tiny.** The mechanism is
+#: narrow: `spectra.positron.charged_pion` integrates the positron-muon
+#: spectrum over ``cos(theta)``, and at ``E = m_e`` the inner spectrum
+#: sits exactly at its own threshold, so whether QUADPACK's weighted sum
+#: lands on ``0.0`` or on a rounding residue is a property of the libm.
+#: *Below* that point the integrand is identically zero at every node and
+#: the sum is exactly zero on every platform -- there is nothing for a
+#: floor to absorb, and granting one would only weaken the gate.
+#:
+#: That is why the four rows below are an allowlist rather than a rule
+#: over every stored zero. The first version of this fix floored **every**
+#: exact zero in every non-``EXACT`` array: 66,840 positions across 605
+#: arrays, to cover these four. `spectra.photon.long_kaon[rest_plus_eps]`
+#: would have accepted 1.69e-07 where the Cython returns exactly zero, so
+#: a small below-threshold regression could have passed
+#: (PR #71 review round 1).
+#:
+#: Each row is one measured platform disagreement. Re-derive with
+#: ``test/parity`` on a second platform rather than trusting this list to
+#: be exhaustive: a fifth occurrence *should* arrive as a loud failure
+#: that somebody measures and adds here, which is what
+#: ``projects/cython-to-rust/rules.md`` rule 3 asks of any declared
+#: numerical difference.
+#:
+#: .. code-block:: text
+#:
+#:     block                  pos  abscissa       macOS/arm64  Linux/aarch64
+#:                                                x86_64
+#:     rest_plus_eps           95  m_e            0.0          2.686e-14
+#:     near_rest               95  m_e            0.0          2.908e-14
+#:     boosted_mild            91  m_e            0.0          5.510e-14
+#:     boosted_strong          84  m_e            0.0          2.605e-13
+#:
+#: ``m_e`` is 0.51099894609999996 MeV, the electron mass the corpus grids
+#: anchor on.
+PORTABILITY_ZEROS: dict[tuple[str, str, str], tuple[int, ...]] = {
+    ("spectra.positron.charged_pion", "rest_plus_eps", "values"): (95,),
+    ("spectra.positron.charged_pion", "near_rest", "values"): (95,),
+    ("spectra.positron.charged_pion", "boosted_mild", "values"): (91,),
+    ("spectra.positron.charged_pion", "boosted_strong", "values"): (84,),
+}
+
+
+def portability_zeros(
+    case_name: str, block_label: str, array_suffix: str
+) -> frozenset[int]:
+    """Declared positions of one block array that get an absolute floor.
+
+    Parameters
+    ----------
+    case_name, block_label, array_suffix : str
+        A `cases.build_cases()` key, one of its `cases.Block` labels, and
+        ``"values"`` or ``"scalar_values"``.
+
+    Returns
+    -------
+    frozenset of int
+        Empty for every array with no declared position, which is all but
+        four of them -- see `PORTABILITY_ZEROS`.
+    """
+    return frozenset(PORTABILITY_ZEROS.get((case_name, block_label, array_suffix), ()))
+
+
 def load_mask() -> dict[str, Any]:
     """The committed unpinnable-point mask.
 

@@ -20,7 +20,7 @@ function's budget.
 
 ## Commands
 
-Run the gate. One test per corpus block (623 of them) plus 13 guards;
+Run the gate. One test per corpus block (623 of them) plus 15 guards;
 around five minutes of single-core work, nearly all of it the nested
 adaptive quadrature in the rho and mediator-spectrum kernels. The
 pytest-xdist `addopts` in `pyproject.toml` spread it across cores, so
@@ -135,11 +135,13 @@ Two carve-outs, both narrow and both declared:
   rounding. [`stability.py`](stability.py) names them — 494 positions
   across 12 blocks, established against `reference.py` rather than
   guessed — and says why the obvious cheaper detectors do not work.
-- **Stored exact zeros get an absolute floor** rather than a relative
-  one, at `tolerances.ZERO_FLOOR_FRACTION` of the array's own maximum.
-  A quadrature whose integrand vanishes at the endpoint lands on exactly
-  `0.0` on one libm and on 2.6e-13 on another; with `atol` at zero that
-  reads as an infinite relative error.
+- **Four declared stored zeros get an absolute floor** rather than a
+  relative one, at `tolerances.ZERO_FLOOR_FRACTION` of the array's own
+  median non-zero magnitude. A quadrature whose integrand sits at *its*
+  threshold lands on exactly `0.0` on one libm and on 2.6e-13 on another;
+  with `atol` at zero that reads as an infinite relative error.
+  `stability.PORTABILITY_ZEROS` names the four — every other stored zero,
+  66,836 of them, keeps the exact-zero contract.
 
 The budget depends on which tree you are on. When the kernel digest, the
 toolchain and the numerics libraries all match what the manifest records,
