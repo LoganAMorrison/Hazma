@@ -43,7 +43,7 @@ Copied from the phase file's Task 4.2 block:
 - `rust/src/{boost,interp,dispatch,constants}.rs`; `rust/src/kernels.rs`
   and `rust/src/kernels/positron_muon.rs`.
 - The five `.pyx` and their `.pxd`/`.pyi` at `origin/master` (665aed5).
-- [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+- [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   — the phase README told this task to resolve or explicitly waive it
   before starting. **Waived, with the reason under "Decisions" below.**
 - `docs/agents/lessons.md`, `docs/agents/environment.md`.

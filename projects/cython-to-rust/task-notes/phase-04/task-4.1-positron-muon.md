@@ -38,7 +38,7 @@ gated at bit-equality, not at 1e-13.
 - `rust/src/{dispatch,boost,constants,kernels,positron}.rs`.
 - `test/parity/{cases,generate,tolerances,test_parity}.py`;
   `test/test_core_{dispatch,boost}.py`.
-- [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+- [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   — read before starting, per the project handoff.
 - `docs/agents/lessons.md`, `docs/agents/environment.md`.
 
@@ -156,7 +156,7 @@ gated at bit-equality, not at 1e-13.
   the port**: `β → 0` just off rest and `γ ≫ 1` both form `xm`/`xp` as
   `γ²(x ∓ β·root)` and then difference nearly-equal terms. Two Cython
   builds would show the same spread. This is the same population the
-  corpus's own `docs/followups/todo/parity-corpus-pins-ill-conditioned-
+  corpus's own `docs/followups/done/parity-corpus-pins-ill-conditioned-
   points.md` describes, one kernel further in.
 - **The corpus budget for `spectra.positron.muon` stayed at `rtol=0`,
   and finding out why is the reason to check before loosening.** Task 4.1
@@ -436,7 +436,7 @@ surviving `.pyx` at all, swap or no swap.
   difference scoped to `PORTED_ENTRY_POINTS` — would keep the unported
   kernels bit-exact for the rest of Phases 04–06. Not done here: it is a
   corpus-design change, it belongs with
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)'s
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)'s
   option 2 rather than beside a kernel swap, and the digest half of the
   verdict would still fire. Recorded there is the right home; recorded here
   is the measurement that says how much is at stake (22 of 41 cases).

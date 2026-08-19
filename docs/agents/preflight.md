@@ -43,10 +43,10 @@ before you stage anything.
    `pyproject.toml` is `["hazma", "test"]`, so a bare run is the whole
    suite: the in-package `*_test.py` modules, the `test/` tree, and the
    golden parity corpus under `test/parity/`. That is deliberately the
-   same collection `.github/workflows/ci.yml` runs — on macOS. Every
-   other matrix entry adds `--ignore=test/parity`, because the corpus
-   only reproduces on the platform that captured it, so a green gate here
-   predicts a green CI but not the reverse. Narrowing to a target
+   same collection `.github/workflows/ci.yml` runs, on every matrix
+   entry — the corpus stopped being scoped to its capturing platform on
+   2026-08-18, so a green gate here and a green CI now cover the same
+   assertions. Narrowing to a target
    (`pytest test/spectra`) is
    for iterating; run it bare before you commit. The work is minutes of
    CPU — nearly all of it the parity corpus's nested adaptive quadrature
@@ -170,14 +170,14 @@ path for every git write.
 There is no committed `.pre-commit-config.yaml` in this repo. CI
 (`.github/workflows/ci.yml`) runs an import smoke test and `pytest` on
 Python 3.10–3.14 plus macOS on 3.14 — the same collection gate 7 runs,
-but with `--ignore=test/parity` everywhere except macOS —
-`black --check --diff hazma test`, a deliberately narrow lint pass
+on every entry — `black --check --diff hazma test`, a deliberately narrow
+lint pass
 (`ruff check --isolated --select E9,F63,F7,F82`, whose `--isolated` flag
 ignores `[tool.ruff]` in `pyproject.toml`), and the same three cargo
 gates as 4–6 above in a dedicated `rust` job. So CI green means "no
 syntax errors, no undefined names, black-formatted, Rust formatted and
 clippy-clean, tests pass"; it says nothing about Python import order or
-the configured ruff rules, and off macOS nothing about the parity corpus.
+the configured ruff rules.
 That is a floor, not this gate. Run this gate yourself.
 
 ## One-command form
@@ -203,10 +203,12 @@ a blocked commit — fix and re-run; do not commit around a red gate.
 
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain
-(`pip install --group dev`, which pulls black, isort, ruff, pytest, and
-pytest-xdist at the versions CI uses — the xdist plugin is required,
-since `pyproject.toml`'s `addopts` passes `--numprocesses` to every
-run; `cargo` is not in any Python group — get it from
+(`pip install --group dev`, which pulls black, isort, ruff, pytest,
+pytest-xdist and mpmath at the versions CI uses — the xdist plugin is
+required, since `pyproject.toml`'s `addopts` passes `--numprocesses` to
+every run, while mpmath is needed only to regenerate
+`test/parity/data/unpinnable.json` and not to run the suite;
+`cargo` is not in any Python group — get it from
 rustup, and note you need it to build hazma from source at all) rather
 than shipping on an unchecked gate. Do not
 `pip install black` on its own: this script runs whatever is on `PATH`,

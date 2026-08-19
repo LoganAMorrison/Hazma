@@ -11,13 +11,16 @@ function's budget.
 | [`cases.py`](cases.py) | The specification — which entry points, on which grids, invoked how. No numbers. |
 | [`generate.py`](generate.py) | Evaluates the specification and writes `data/`; also verifies `data/` against its manifest. |
 | [`tolerances.py`](tolerances.py) | How far a replacement implementation may move each entry point, and why that far. |
+| [`stability.py`](stability.py) | Which pinned values are rounding residue rather than physics, and are therefore skipped. |
+| [`reference.py`](reference.py) | Arbitrary-precision copies of the four cancellation-prone kernels. Used only to rebuild the mask. |
 | [`test_parity.py`](test_parity.py) | The gate — re-evaluates every entry point and compares against `data/`. |
 | `data/*.npz` | One file per entry point. Reference arrays, stored exactly as the library returned them. |
 | `data/manifest.json` | Provenance and per-array hashes. |
+| `data/unpinnable.json` | The mask `stability.py` builds: 494 stored positions that assert nothing. |
 
 ## Commands
 
-Run the gate. One test per corpus block (623 of them) plus three guards;
+Run the gate. One test per corpus block (623 of them) plus 15 guards;
 around five minutes of single-core work, nearly all of it the nested
 adaptive quadrature in the rho and mediator-spectrum kernels. The
 pytest-xdist `addopts` in `pyproject.toml` spread it across cores, so
@@ -28,11 +31,13 @@ pytest test/parity
 ```
 
 A bare `pytest` runs it too — `pyproject.toml`'s `testpaths` is
-`["hazma", "test"]` (cython-to-rust Task 1.3) — and in CI the macOS
-entry pays it while the Linux entries pass `--ignore=test/parity`, the
-corpus being pinned to the capturing platform's libm (see the comment in
-`.github/workflows/ci.yml`). That work is the standing price of the
-gate. Note that
+`["hazma", "test"]` (cython-to-rust Task 1.3) — and every CI matrix
+entry pays it. Between PR #52 and 2026-08-18 the Linux entries passed
+`--ignore=test/parity` instead, because the corpus did not survive a
+change of libm; `stability.py`, `tolerances.PLATFORM_EXACT_RTOL`,
+`tolerances.PLATFORM_SPECFUN_RTOL` and `tolerances.zero_floor` are what
+took that scoping out again. That work
+is the standing price of the gate. Note that
 the suite needs the extensions built **inside the repository**:
 `cases.assert_module_is_repo_tree` refuses a `hazma` resolving anywhere
 else, so `pip install -e .`, not `pip install .`.
@@ -53,6 +58,14 @@ python test/parity/generate.py
 
 Generation is deterministic: two runs on the same tree and environment
 produce a byte-identical manifest.
+
+Rebuild the unpinnable-point mask. Reads the committed corpus and
+`reference.py` and touches no kernel, so it needs no build — but it does
+need `mpmath` from the `dev` group:
+
+```bash
+python test/parity/stability.py --regenerate
+```
 
 ## When *not* to regenerate
 
@@ -113,6 +126,23 @@ records, **replayed** — the entry point must still raise the same type at
 the same argument, and must not raise anywhere new. Evaluation goes
 through `generate.evaluate_block`, the same function that produced the
 stored numbers, so the kernel is the only thing that can differ.
+
+Two carve-outs, both narrow and both declared:
+
+- **Unpinnable positions are dropped** before the value comparison. Four
+  scalar elastic cross sections evaluate a difference of two `atan`s that
+  cancels every significant bit near `e_cm = 2 mx` and throughout
+  `closed_resonance`, so what the corpus stored there is one platform's
+  rounding. [`stability.py`](stability.py) names them — 494 positions
+  across 12 blocks, established against `reference.py` rather than
+  guessed — and says why the obvious cheaper detectors do not work.
+- **Four declared stored zeros get an absolute floor** rather than a
+  relative one, at `tolerances.ZERO_FLOOR_FRACTION` of the array's own
+  median non-zero magnitude. A quadrature whose integrand sits at *its*
+  threshold lands on exactly `0.0` on one libm and on 2.6e-13 on another;
+  with `atol` at zero that reads as an infinite relative error.
+  `stability.PORTABILITY_ZEROS` names the four — every other stored zero,
+  66,836 of them, keeps the exact-zero contract.
 
 The budget depends on which tree you are on. When the kernel digest, the
 toolchain and the numerics libraries all match what the manifest records,

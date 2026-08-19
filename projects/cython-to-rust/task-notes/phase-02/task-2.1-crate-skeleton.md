@@ -95,7 +95,7 @@ values that is not true.
 Same predicate, second consequence: `generate.assert_no_rust_core()`
 would refuse to regenerate the corpus at all. The corpus *does* need
 repair before Phase 04 — the ill-conditioned points in
-[`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+[`../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
 — so an over-strict guard here blocks a task the project has already
 committed to.
 
@@ -477,7 +477,7 @@ deletion.
   its cibuildwheel job — which *will* need a toolchain inside the
   manylinux container — is untested by this PR and remains Task 2.2's.
 - **The corpus-repair follow-up now has a deadline it did not have.**
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   was already "read it before Phase 04". Regeneration is still permitted
   after this task (that is what the `assert_no_rust_core` change buys),
   but it stops being permitted the moment the first Phase 04 kernel
@@ -683,5 +683,5 @@ parallel.
   and the live Cython are now written down but not decided. Task 3.5
   decides each; two are public-API narrowings if taken by default.
 - The corpus repair
-  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md))
+  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md))
   is still possible today and impossible from the first Phase 04 swap.

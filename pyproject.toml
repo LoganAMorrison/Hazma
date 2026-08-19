@@ -45,7 +45,17 @@ Documentation = "http://hazma.readthedocs.io"
 # [tool.pytest.ini_options]'s `addopts` passes on every run.
 [dependency-groups]
 lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
-dev = [{ include-group = "lint" }, "pytest>=7.0", "pytest-xdist>=3.2"]
+# mpmath is not a test dependency: `pytest` reads the committed
+# test/parity/data/unpinnable.json and imports neither mpmath nor
+# test/parity/reference.py. It is here for
+# `python test/parity/stability.py --regenerate`, which rebuilds that mask
+# by evaluating the affected closed forms at 60 decimal digits.
+dev = [
+    { include-group = "lint" },
+    "pytest>=7.0",
+    "pytest-xdist>=3.2",
+    "mpmath>=1.3",
+]
 
 [build-system]
 build-backend = "setuptools.build_meta"
@@ -106,8 +116,9 @@ version = { attr = "hazma.VERSION" }
 # `test/parity/` dominates a serial run with nested adaptive
 # quadrature — 295s of a 598s bare run, measured idle on the corpus's
 # capturing machine (2026-08-17, 1697 tests). That work is the price of
-# the gate (see test/parity/README.md; in CI only the macOS entry pays
-# it, ci.yml ignoring the corpus elsewhere), so `addopts` spreads it
+# the gate, and every CI matrix entry pays it (see test/parity/README.md;
+# the `--ignore=test/parity` scoping came out on 2026-08-18 once the
+# corpus was platform-portable), so `addopts` spreads it
 # over every core instead of narrowing what is collected: same
 # collection, same assertions, 45s wall at `-n 12` on the same machine.
 # `worksteal` rebalances the corpus's heavy tail of mediator-spectrum

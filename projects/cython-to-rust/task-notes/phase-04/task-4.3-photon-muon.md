@@ -48,7 +48,7 @@ added; drift recorded here and in the working-memory README.
 - `../../learnings/phase-03-numerics-foundation.md` §"`spec_math::Polylog::li2`
   *is* `scipy.special.spence`".
 - `task-4.1-positron-muon.md` (the template) and `task-4.2-photon-table-family.md`.
-- `docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md` — the
+- `docs/followups/done/parity-corpus-pins-ill-conditioned-points.md` — the
   follow-up that predicted the failure mode this task hit.
 - `docs/agents/lessons.md`, `docs/agents/environment.md`,
   `docs/agents/doc-consistency.md`.
@@ -426,7 +426,7 @@ rank error is a `ValueError` with the same message instead of an
   per-case? This task is the first evidence that the *budget* granularity
   matters too — a per-block `atol` would have absorbed the `spence` drift
   without a 300x rtol. Belongs with
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md).
 
 ## Plan Impact
 

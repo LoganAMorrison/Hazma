@@ -178,7 +178,7 @@ what falsified their premise — see rounds 1 and 2 in Verification.
 
 **The follow-up (2):**
 
-- `docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md` —
+- `docs/followups/done/parity-corpus-pins-ill-conditioned-points.md` —
   new; the corpus defect round 2 measured.
 - `docs/followups/README.md` — its row under Open.
 
@@ -539,7 +539,7 @@ $ PARITY='' bash -c 'pytest --collect-only -q $PARITY | tail -1'
 `965 - 626 = 339`. **Run 31240680710 on `35f2712` is green on all seven
 checks** — Lint, macOS py3.14, and Ubuntu 3.10/3.11/3.12/3.13/3.14 —
 which is what closes the review's blocking finding. The real fix is
-[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
+[`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md),
 which ripens **before Phase 04** because that is when the false failures
 start landing on real ports.
 
@@ -583,7 +583,7 @@ drift to declare) — `provenance` already records `platform` and
 
 - **The corpus is not platform-portable, and six of its points are not
   reproducible anywhere** — filed as
-  [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
+  [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md).
   Ripens before Phase 04. Task 1.3 scoped CI around the symptom; the
   follow-up is the fix, and it carries the `EXACT_RTOL = 0.0`-in-budget-
   mode gap with it.
@@ -634,7 +634,7 @@ drift to declare) — `provenance` already records `platform` and
    Verification). Amended to say the parity portion runs on the capturing
    platform, that this is a Task 1.3 amendment rather than the original
    intent, and that the bullet should be restored when
-   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+   [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
    lands. Task 1.3's own "CI and preflight run the same collection"
    criterion gained the same qualifier.
 

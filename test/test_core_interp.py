@@ -92,10 +92,11 @@ cell index, a wrong clamp or a dropped term fails there exactly,
 wherever it runs. The budget's job is the narrower one of catching gross
 divergence from the independent NumPy oracle.
 
-The parity corpus (``test/parity/``) is scoped by platform the same way
-(``.github/workflows/ci.yml`` passes ``--ignore=test/parity`` off the
-capturing platform), and :data:`CAPTURE_MACHINE` is read out of its
-manifest so the two scopes cannot drift apart.
+The parity corpus (``test/parity/``) draws the same line in the same
+place: its ``EXACT`` budget class is bit-equality on the capturing
+platform and :data:`tolerances.PLATFORM_EXACT_RTOL` once the libm
+changes. :data:`CAPTURE_MACHINE` is read out of the corpus manifest so
+the two scopes cannot drift apart.
 
 The quirks stay exact everywhere
 --------------------------------
@@ -183,11 +184,10 @@ def photon_tables() -> dict[str, tuple[np.ndarray, np.ndarray]]:
 # --------------------------------------------------------------------------
 
 #: The platform the parity corpus was captured on, read from its own
-#: manifest so the two can never drift apart. ``test/parity`` is scoped to
-#: this platform for exactly the reason in the module docstring, and CI
-#: enforces it with ``--ignore=test/parity`` everywhere else
-#: (``.github/workflows/ci.yml``); this module is the same kind of oracle
-#: and carries the same scope.
+#: manifest so the two can never drift apart. ``test/parity`` demands
+#: bit-equality of its ``EXACT`` class only on this platform, for exactly
+#: the reason in the module docstring; this module is the same kind of
+#: oracle and carries the same scope.
 CAPTURE_MACHINE = json.loads(
     (REPO_ROOT / "test" / "parity" / "data" / "manifest.json").read_text()
 )["environment"]["machine"]

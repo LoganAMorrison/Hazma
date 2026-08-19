@@ -33,7 +33,15 @@ For every block:
    than any redesigned grid, which is what the check is actually for.
 2. **The values**, array path and scalar path, within the budget
    `tolerances.effective_budget` selects — bit-equality on the capturing
-   tree, the declared per-function budget anywhere else.
+   tree, the declared per-function budget anywhere else, and
+   `tolerances.PLATFORM_EXACT_RTOL` for the ``EXACT`` class once the libm
+   itself has changed. Positions `stability` marks unpinnable are dropped
+   from this comparison first: four scalar elastic cross sections cancel
+   every significant bit out of a difference of two ``atan``s, and what
+   the corpus stored there is one platform's rounding, not a number any
+   reimplementation reproduces. Where the corpus stored an exact ``0.0``
+   the comparison is absolute instead of relative, against
+   `tolerances.zero_floor`.
 3. **The raises**, replayed rather than skipped. Three blocks record a
    `TypeError` at a kinematic edge (`sigma_xx_to_v_to_pipi` and
    `sigma_xx_to_v_to_pi0v` at ``e_cm = 2 mx``). The stored value there is
@@ -73,9 +81,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cases as corpus  # (imported after the sys.path entry above)
 import generate as corpus_generate
+import stability
 import tolerances
 
 MANIFEST = corpus_generate.load_manifest()
+
+#: Which stored positions assert nothing, from `stability`. Loaded once:
+#: it is a small JSON and every block consults it.
+UNPINNABLE = stability.load_mask()
 
 #: The live specification. Built once at import: `pytest.mark.parametrize`
 #: needs the block list at collection time, and constructing the mediator
@@ -92,6 +105,58 @@ ArrayLoader = Callable[[str], dict[str, np.ndarray]]
 #: what it returned. Compared against `tolerances.abscissa_budget`, not
 #: against the case's value budget.
 ABSCISSAE = frozenset({"grid", "scalar_grid"})
+
+#: How many stored positions `stability` currently declines to pin. Held
+#: as a literal so that regenerating the mask has to show up in a diff --
+#: see `test_the_mask_is_a_small_fraction_of_the_corpus`.
+EXPECTED_MASKED_POSITIONS = 494
+
+#: How many stored zeros get an absolute floor instead of exact equality.
+#: Held as a literal for the same reason, and a stricter one: the first
+#: version of that exemption covered 66,840 positions, so its size is the
+#: number worth making somebody defend in a diff (PR #71 review round 1).
+EXPECTED_PORTABILITY_ZEROS = 4
+
+
+def _drop_unpinnable(
+    live: np.ndarray,
+    pinned: np.ndarray,
+    case_name: str,
+    block_label: str,
+    suffix: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Remove the positions `stability` says are rounding residue.
+
+    Returns both arrays with the same positions deleted, so the caller
+    compares like with like. For an unaffected case -- every case outside
+    `stability.AFFECTED_CASES` -- this is the identity.
+
+    Deleting rather than masking keeps `numpy.testing.assert_allclose`'s
+    "max relative difference" line meaningful: a masked entry would still
+    print in the mismatch summary and read as a compared point.
+    """
+    skip = stability.unpinnable_indices(UNPINNABLE, case_name, block_label, suffix)
+    if not skip:
+        return live, pinned
+    keep = np.setdiff1d(np.arange(pinned.shape[-1]), sorted(skip))
+    return live[..., keep], pinned[..., keep]
+
+
+def _portability_zero_mask(
+    pinned: np.ndarray, case_name: str, block_label: str, suffix: str
+) -> np.ndarray:
+    """Boolean mask of the declared portability zeros in one block array.
+
+    All-``False`` for every array but the four
+    `stability.PORTABILITY_ZEROS` names, so the ordinary comparison —
+    including `atol = 0` against every other stored zero — is what runs
+    almost everywhere.
+    """
+    mask = np.zeros(pinned.shape, dtype=bool)
+    declared = stability.portability_zeros(case_name, block_label, suffix)
+    if declared:
+        mask[..., sorted(declared)] = True
+    return mask
 
 
 def _blocks() -> list[Any]:
@@ -190,14 +255,33 @@ def test_entry_point_matches_corpus(
                 err_msg=f"{where} is not the pinned grid ({grid_budget.why})",
             )
             continue
+        live, pinned = _drop_unpinnable(
+            actual[suffix], expected, case_name, block.label, suffix
+        )
+        # The four positions `stability` declares are compared against an
+        # absolute floor; everything else -- including all 66,836 other
+        # stored zeros, which `atol = 0` holds to exact equality -- goes
+        # through the ordinary budget.
+        floored = _portability_zero_mask(pinned, case_name, block.label, suffix)
         np.testing.assert_allclose(
-            actual[suffix],
-            expected,
+            live[~floored],
+            pinned[~floored],
             rtol=budget.rtol,
             atol=budget.atol,
             equal_nan=True,
             err_msg=f"{where} moved beyond its budget ({budget.why})",
         )
+        if floored.any():
+            floor = tolerances.zero_floor(pinned)
+            np.testing.assert_array_less(
+                np.abs(live[floored]),
+                np.nextafter(floor, np.inf),
+                err_msg=f"{where}: a declared portability zero "
+                f"(stability.PORTABILITY_ZEROS) came back larger than "
+                f"{floor:.3e}, which is "
+                f"{tolerances.ZERO_FLOOR_FRACTION:.0e} of the array's median "
+                "non-zero magnitude",
+            )
 
 
 def test_running_on_the_capturing_tree() -> None:
@@ -228,6 +312,214 @@ def test_every_corpus_case_has_a_budget() -> None:
         f"  cases with no budget: {sorted(corpus_cases - declared)}\n"
         f"  budgets with no case: {sorted(declared - corpus_cases)}"
     )
+
+
+def test_an_os_point_release_is_not_a_platform_change() -> None:
+    """The `EXACT` class does not quietly relax when macOS updates.
+
+    `tolerances._libm_identity` reads the OS family and the CPU
+    architecture out of the environment mapping, not the whole
+    `platform.platform()` string. The distinction is load-bearing and
+    invisible: the capturing machine has already moved from macOS 26.5.2
+    to 26.6.1, and a whole-string comparison would have taken the corpus
+    off bit-equality on the very host it was captured on -- passing, and
+    six decades weaker, with nothing in the output saying so.
+    """
+    capture = MANIFEST["environment"]
+    point_release = {**capture, "platform": "macOS-99.9.9-arm64-arm-64bit"}
+    other_arch = {**capture, "machine": "x86_64"}
+    other_os = {**capture, "platform": "Linux-6.8.0-x86_64-with-glibc2.39"}
+
+    identity = tolerances._libm_identity
+    assert identity(point_release) == identity(capture)
+    assert identity(other_arch) != identity(capture)
+    assert identity(other_os) != identity(capture)
+
+
+def test_the_platform_branch_moves_only_the_two_declared_classes() -> None:
+    """Off the capturing libm, only `EXACT` and `SPECFUN` change budget.
+
+    `TABULATED` and the two `PORTED_*` budgets are also tighter than
+    `PLATFORM_EXACT_RTOL`, and nothing measured says a change of libm
+    moves them. Relaxing them on the theory that it might is the
+    over-broad exemption this PR already had to undo once, so the branch
+    is a two-row table and a third class has to arrive as a measured
+    failure (PR #71).
+    """
+    off_platform = tolerances.Provenance(
+        exact=False, same_platform=False, detail="synthetic"
+    )
+    on_platform = tolerances.Provenance(
+        exact=False, same_platform=True, detail="synthetic"
+    )
+    moved = {
+        name
+        for name in tolerances.BUDGETS
+        if tolerances.effective_budget(name, off_platform).rtol
+        != tolerances.effective_budget(name, on_platform).rtol
+    }
+    declared = {
+        name
+        for name, budget in tolerances.BUDGETS.items()
+        if budget.rtol in (tolerances.EXACT_RTOL, tolerances.SPECFUN_RTOL)
+    }
+    assert moved == declared
+
+    exact_case = next(
+        name
+        for name, budget in tolerances.BUDGETS.items()
+        if budget.rtol == tolerances.EXACT_RTOL
+    )
+    specfun_case = next(
+        name
+        for name, budget in tolerances.BUDGETS.items()
+        if budget.rtol == tolerances.SPECFUN_RTOL
+    )
+    assert (
+        tolerances.effective_budget(exact_case, off_platform).rtol
+        == tolerances.PLATFORM_EXACT_RTOL
+    )
+    assert (
+        tolerances.effective_budget(specfun_case, off_platform).rtol
+        == tolerances.PLATFORM_SPECFUN_RTOL
+    )
+
+
+def test_every_portability_zero_is_a_boundary_zero(
+    stored_arrays: ArrayLoader,
+) -> None:
+    """`stability.PORTABILITY_ZEROS` may only name support boundaries.
+
+    The exemption exists for one mechanism — a quadrature whose integrand
+    sits at *its own* threshold, so the weighted sum lands on ``0.0`` or
+    on a rounding residue depending on the libm. That can only happen at
+    the last zero before the support starts. Deeper below threshold the
+    integrand is identically zero at every node and the sum is exactly
+    zero everywhere, so a floor there would weaken the gate for nothing.
+
+    Asserting the shape rather than the list keeps the registry from
+    drifting into interior positions, which is the failure mode that
+    turned the first version of this fix into a floor over 66,840 stored
+    zeros (PR #71 review round 1).
+    """
+    for (
+        case_name,
+        block_label,
+        suffix,
+    ), positions in stability.PORTABILITY_ZEROS.items():
+        manifest_case = MANIFEST["cases"][case_name]
+        manifest_block = next(
+            block for block in manifest_case["blocks"] if block["label"] == block_label
+        )
+        stored = stored_arrays(case_name)[manifest_block["arrays"][suffix]["key"]]
+        for position in positions:
+            where = f"{case_name}[{block_label}].{suffix}[{position}]"
+            assert np.all(stored[..., position] == 0.0), (
+                f"{where} is not a stored zero, so it has no business in "
+                "PORTABILITY_ZEROS"
+            )
+            assert position + 1 < stored.shape[-1], f"{where} is the last position"
+            assert np.any(stored[..., position + 1] != 0.0), (
+                f"{where} is not the boundary: position {position + 1} is also "
+                "zero, so the integrand is identically zero here and the sum "
+                "is exact on every platform"
+            )
+
+
+def test_the_portability_floor_covers_only_four_positions() -> None:
+    """The exemption stays an allowlist rather than becoming a rule.
+
+    Pinned as a total for the same reason
+    `test_the_mask_is_a_small_fraction_of_the_corpus` is: widening it has
+    to show up in a diff and be argued for. A fifth platform disagreement
+    is expected to arrive as a *failure* somebody measures and declares,
+    not as something a general rule silently absorbs.
+    """
+    assert (
+        sum(len(v) for v in stability.PORTABILITY_ZEROS.values())
+        == EXPECTED_PORTABILITY_ZEROS
+    )
+
+
+def test_only_the_declared_cases_are_masked() -> None:
+    """`stability`'s mask covers exactly the entry points it names.
+
+    The mask removes points from the gate, so the set it may remove them
+    from is a declaration rather than a consequence. A case that acquired
+    a mask without a row in `stability.AFFECTED_CASES` would be one
+    somebody quarantined without saying which mechanism made it
+    unpinnable.
+    """
+    masked = {name for name, blocks in UNPINNABLE["cases"].items() if blocks}
+    assert masked <= set(stability.AFFECTED_CASES), (
+        "masked cases with no AFFECTED_CASES row: "
+        f"{sorted(masked - set(stability.AFFECTED_CASES))}"
+    )
+    assert masked, "the mask is empty; regenerate it from the corpus"
+
+
+def test_the_mask_was_built_from_this_corpus() -> None:
+    """A mask built against other reference arrays would mask elsewhere.
+
+    The indices are positions in the stored arrays, so they only mean
+    anything against the corpus they were derived from. The manifest's
+    kernel digest is what identifies it.
+    """
+    assert UNPINNABLE["kernel_digest"] == MANIFEST["kernel_digest"]["sha256"], (
+        "data/unpinnable.json was built against kernel digest "
+        f"{UNPINNABLE['kernel_digest'][:12]} but the corpus manifest records "
+        f"{MANIFEST['kernel_digest']['sha256'][:12]}; regenerate with "
+        "`python test/parity/stability.py --regenerate`"
+    )
+
+
+def test_every_masked_index_addresses_a_real_stored_value(
+    stored_arrays: ArrayLoader,
+) -> None:
+    """No masked position is out of range, and none is a whole block.
+
+    Out-of-range would silently drop nothing (``setdiff1d`` ignores it),
+    which is the failure mode where the gate looks narrowed but is not.
+    A block masked in full is the opposite failure: it would pass
+    unconditionally, so it must be dropped from the corpus rather than
+    emptied in place.
+    """
+    for case_name, blocks in UNPINNABLE["cases"].items():
+        arrays = stored_arrays(case_name)
+        manifest_case = MANIFEST["cases"][case_name]
+        for block_label, masked in blocks.items():
+            manifest_block = next(
+                block
+                for block in manifest_case["blocks"]
+                if block["label"] == block_label
+            )
+            for suffix, indices in masked.items():
+                size = arrays[manifest_block["arrays"][suffix]["key"]].shape[-1]
+                where = f"{case_name}[{block_label}].{suffix}"
+                assert indices, f"{where}: an empty index list, not a mask"
+                assert min(indices) >= 0 and max(indices) < size, (
+                    f"{where}: masked indices {min(indices)}..{max(indices)} "
+                    f"outside the stored array of length {size}"
+                )
+                assert len(set(indices)) == len(indices), f"{where}: duplicates"
+                assert len(indices) < size, (
+                    f"{where}: every one of its {size} positions is masked, so "
+                    "the block asserts nothing. Remove the block from cases.py "
+                    "instead of emptying it here."
+                )
+
+
+def test_the_mask_is_a_small_fraction_of_the_corpus() -> None:
+    """The quarantine stays a quarantine.
+
+    494 of the corpus's ~180k stored values, in 12 of the 15 blocks the
+    four `stability.AFFECTED_CASES` entry points have. Pinned as a total
+    rather than as a bound so that regenerating the mask has to show up
+    in a diff and be argued for, which is what
+    ``projects/cython-to-rust/rules.md`` rule 2 asks of anything that
+    loosens the gate.
+    """
+    assert stability.total_masked(UNPINNABLE) == EXPECTED_MASKED_POSITIONS
 
 
 def test_every_budget_states_a_reason() -> None:

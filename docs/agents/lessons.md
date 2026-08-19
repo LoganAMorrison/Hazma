@@ -349,7 +349,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   to scope the parity corpus to its capturing platform, which instead
   disabled it on every entry including macOS; all seven checks passed for
   two PRs, and PR #53 caught it only by noticing the job reported `380
-  passed` where a run including the corpus collects ~1019).
+  passed` where a run including the corpus collects ~1019). The `PARITY`
+  env itself is gone as of 2026-08-18 — the corpus is platform-portable
+  and CI runs it everywhere — so the example is history; the two traps
+  are not.
 - [renumbered-list-orphans-its-references] Inserting an item into a numbered
   list silently falsifies every prose reference to the items after it — and
   those references live outside the list, often outside the file, so
@@ -542,7 +545,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   who installed "pytest" per the stale prose got a pytest that rejects
   the repo's own default flags. After editing a group, `rg` the group's
   name and member list out of `docs/agents/` and `AGENTS.md` and
-  re-derive each claim (PR #69). Sibling of [stale-ci-capability-claim]:
+  re-derive each claim (PR #69, PR #71 — `mpmath` joined `dev` for a
+  regeneration-only script and neither enumeration moved). Sibling of
+  [stale-ci-capability-claim]:
   same rot, config group instead of workflow.
 - [sweep-excluded-the-canonical-directory] A stale-state sweep that
   `--glob '!projects/**'`s the project tree — on the reasonable theory
@@ -564,3 +569,26 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   "4.5–4.6 open" against a completed 4.5). Sibling of
   [sibling-copies-of-a-fixed-claim]: there the sweep ran and missed a
   copy, here the sweep never covered the directory.
+- [exemption-wider-than-its-mechanism] A carve-out earned by a narrow
+  mechanism gets written as a rule over every position of the same
+  *shape*, and the gap between the two is invisible because the tests
+  still pass — the carve-out only ever loosens, so nothing turns red.
+  Scope it to the positions the mechanism actually reaches, and prefer a
+  declared allowlist with the measurement beside each row, so the fifth
+  occurrence arrives as a failure somebody measures rather than as
+  something a general rule silently absorbs. Then pin the *shape* of the
+  allowlist with a test, so it cannot drift back outward (PR #71: an
+  absolute floor for quadrature endpoints whose integrand sits at its own
+  threshold — four measured positions — was applied to every stored zero
+  in every non-`EXACT` array, 66,840 of them, so a block accepted 1.69e-07
+  where the kernel returns exactly zero; two rounds of self-review had
+  narrowed the floor's *size* twice without ever questioning its scope).
+- [sweep-block-written-from-intent] The stale-state sweep block is a
+  forcing function only if every row is re-derived at the time it is
+  written. A fix noticed mid-task, deferred to "after this next thing",
+  and then listed among the sweep's EDITED sites is worse than the miss
+  itself: the block is what a reviewer trusts instead of re-running the
+  greps. Write the block by pasting command output last, after every
+  prose edit is frozen, and treat "I remember fixing that" as a claim to
+  re-check rather than as evidence (PR #71: `pyproject.toml`'s `addopts`
+  comment was spotted, left, and then reported as swept).

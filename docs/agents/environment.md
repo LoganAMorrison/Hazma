@@ -204,16 +204,20 @@ that the `.so` is inside your worktree. CI does the non-editable install
 first (that is what its outside-the-repo import smoke test checks) and
 reinstalls editable before the test step.
 
-**The parity corpus only reproduces on the platform that captured it
-(macOS/arm64).** On Linux/glibc roughly 70-75 of its 626 blocks fail
-against the same source: mostly last-bit `libc.math` differences, but
-six are catastrophic-cancellation points where the pinned value flips
-sign. CI therefore runs `pytest --ignore=test/parity` on every entry
-except macOS, and a bare local `pytest` on Linux will show those
-failures. They are not your change — check against
-[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../followups/todo/parity-corpus-pins-ill-conditioned-points.md)
-before spending time on them, and use `--ignore=test/parity` to see the
-rest of the suite.
+**The parity corpus runs on every platform, and it did not always.**
+Until 2026-08-18 it only reproduced on the host that captured it
+(macOS/arm64): roughly 70-75 of its 626 blocks failed on Linux/glibc,
+mostly last-bit `libc.math` differences but some at cancellation points
+where the pinned value flipped sign. CI skipped it off macOS. Three
+things fixed that and each names what it covers —
+`test/parity/stability.py` (494 stored positions that assert nothing),
+`tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` (those
+two classes off the capturing libm) and `tolerances.zero_floor` (four
+declared stored zeros). If a `test/parity` failure surfaces on a
+platform you have not seen it on, read
+[`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../followups/done/parity-corpus-pins-ill-conditioned-points.md)
+and decide which of the three it belongs in before widening anything;
+none of them is a catch-all.
 
 **The test tree does not mirror the package one-to-one.** `test/` has
 `agents/`, `positron/`, `rh_neutrino/`, `scalar_mediator/`, `spectra/`,
@@ -261,9 +265,8 @@ entry installs a Rust toolchain (`dtolnay/rust-toolchain@stable`; without
 cargo nothing builds — see the `setuptools-rust` note above), installs
 hazma non-editable, runs an import smoke test from outside the repo (so a
 broken build or a missing package-data entry fails there rather than as a
-confusing collection error), reinstalls editable, and then runs `pytest`
-— bare on macOS, `--ignore=test/parity` everywhere else, per the
-capturing-platform bullet under Tests above.
+confusing collection error), reinstalls editable, and then runs a bare
+`pytest`, parity corpus included, on every entry.
 
 **CI has a third job, `rust`.** It runs the same three cargo gates
 `preflight.sh` does — `cargo fmt --check`,
