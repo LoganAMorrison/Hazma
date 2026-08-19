@@ -154,6 +154,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cases as corpus  # (imported after the sys.path entry above)
@@ -181,10 +183,74 @@ NESTED_RTOL = 1e-6
 #: inside the opening figure.
 PORTED_NESTED_RTOL = 1e-9
 
+#: What the ``EXACT`` class means once the **libm** changes. The class is
+#: bit-equality, and bit-equality against a different platform's `atan`,
+#: `log` and `exp` is unreachable: glibc and macOS libm are each
+#: correctly rounded to within 1-2 ulp of the true result but not to each
+#: other. The corpus's own sampling then sets the size. Its grids anchor
+#: at ``1 +- 1e-9`` times each threshold, and a closed-form cross section
+#: carries a ``sqrt(1 - 4 mx**2 / s)``-shaped factor whose relative error
+#: at a fractional distance ``d`` from threshold is ``eps / (2 d)``:
+#: ``2.2e-16 / 2e-9 = 1.1e-7``. So the sampling the phase file asks for
+#: implies a ~1e-7 floor, whatever the arithmetic does. 1e-6 sits one
+#: decade above that.
+#:
+#: Measured against it (`docs/followups/`... the parity-corpus follow-up,
+#: 2026-08-18): over the whole corpus on Linux/x86_64 and Linux/aarch64,
+#: with the `stability` mask applied, the worst any ``EXACT``-class block
+#: moves is 5.6e-8 -- `sigma_xx_to_ss[closed_resonance]` at exactly the
+#: ``2 mx`` anchor, i.e. the mechanism above, landing where the
+#: derivation says it should.
+#:
+#: This applies **only** when `Provenance.same_platform` is false. A port
+#: on the capturing platform is still held to `EXACT_RTOL`: Tasks 4.1-4.5
+#: each reproduced their kernel bit-for-bit there, so relaxing it would
+#: give up a gate that is demonstrably achievable.
+PLATFORM_EXACT_RTOL = 1e-6
+
 #: How far the *abscissae* may move off the capturing tree. Not a value
 #: budget: see "Abscissae are their own class" above for the derivation
 #: and for why bit-equality here was unreachable on any second platform.
 ABSCISSA_RTOL = 1e-13
+
+#: Absolute floor allowed where the corpus stored an exact ``0.0``, as a
+#: fraction of the *median* non-zero magnitude in the same array -- and
+#: only for a case whose declared budget is not `EXACT_RTOL`.
+#:
+#: "`atol` is 0.0 everywhere" below argues that a below-threshold region
+#: returns exactly zero, so ``|0 - 0| <= rtol * 0`` holds and no floor is
+#: needed. That is true of the closed-form kernels and false of the
+#: quadrature-backed ones: `spectra.positron.charged_pion` integrates the
+#: positron-muon spectrum over ``cos(theta)`` and at ``E = m_e`` the
+#: integrand vanishes only at the endpoint, so whether QUADPACK's weighted
+#: sum lands on exactly ``0.0`` or on 2.6e-13 is a property of the libm
+#: underneath. Four blocks do the latter on Linux/aarch64; with `atol` at
+#: zero that is an *infinite* relative error and the case's 1e-8 budget
+#: never gets a chance to speak.
+#:
+#: Both restrictions exist because the obvious rule -- 1e-9 of the array
+#: maximum, every case -- was measured and is far too loose:
+#:
+#: - **`EXACT`-class cases are excluded** because a closed-form kernel's
+#:   zeros come from an explicit branch (``if e_cm < mx + ml: return
+#:   0.0``) which a port reproduces exactly, so there is nothing for a
+#:   floor to absorb. Leaving them in produced a floor of **10.42** on
+#:   `sigma_xl_to_xl[closed_resonance.mu]`, whose non-zero values all sit
+#:   near 4e9 -- a port could have returned 10 in its 192 sub-threshold
+#:   positions and passed. No `EXACT` block needs a floor on any of the
+#:   three platforms measured.
+#: - **The scale is the median, not the maximum**, because a block can
+#:   span nine decades: `spectra.photon.long_kaon[rest_plus_eps]` peaks
+#:   at 6.6e5 near the endpoint, and a fraction of *that* is a floor set
+#:   by the spike rather than by the function.
+#:
+#: On the four blocks that need it the floor lands between 8.8e-13 and
+#: 4.4e-12 against intrusions of 2.7e-14 to 2.6e-13 -- between 6x and 80x
+#: headroom, derived from each block's own scale rather than chosen. The
+#: loosest floor anywhere in the corpus is then 1.6e-6, on a
+#: `mediator_spectra.vector.positron` block whose own values there have a
+#: median of 1.6e3.
+ZERO_FLOOR_FRACTION = 1e-9
 
 
 @dataclass(frozen=True)
@@ -214,6 +280,16 @@ class Provenance:
     exact : bool
         True when the kernels, the toolchain and the numerics libraries
         all match what the manifest records.
+    same_platform : bool
+        True when this host's `_libm_identity` -- OS family and CPU
+        architecture -- matches the manifest's. Tracked apart from
+        `exact` because it is the one
+        axis that moves a closed-form kernel without anybody having
+        changed an implementation: a different libm rounds `atan`, `log`
+        and `exp` differently in the last bit, which is a *fact about the
+        host* rather than a drift to declare under
+        ``projects/cython-to-rust/rules.md`` rule 3. `effective_budget`
+        is the only reader.
     detail : str
         Empty when `exact`; otherwise a human-readable list of what
         differs. Surfaced as the skip reason on
@@ -222,6 +298,7 @@ class Provenance:
     """
 
     exact: bool
+    same_platform: bool
     detail: str
 
 
@@ -552,6 +629,35 @@ _NUMERICS_ENVIRONMENT_KEYS = (
 )
 
 
+def _libm_identity(environment: dict[str, Any]) -> tuple[str, str]:
+    """Which libm an environment implies: OS family and CPU architecture.
+
+    Coarser than the `platform` key on purpose. `platform.platform()`
+    records the point release -- ``macOS-26.5.2-arm64-arm-64bit`` -- and
+    the capturing machine has since moved to 26.6.1. Comparing the whole
+    string would call that a platform change and drop the `EXACT` class
+    from bit-equality to `PLATFORM_EXACT_RTOL` on the very machine the
+    corpus was captured on, silently weakening the gate Tasks 4.1-4.5
+    rely on, on an OS update nobody connected to Hazma.
+
+    The first component and `machine` are what actually select an
+    implementation of `atan`. If a point release *does* move one, the
+    corpus fails loudly at ``rtol = 0`` and somebody looks -- which is
+    the outcome the ``EXACT`` class docstring asks for ("such a shift
+    should be measured and declared, not absorbed silently"), not the
+    one a version-string comparison would give.
+
+    Parameters
+    ----------
+    environment : dict
+        A `generate.environment()` mapping, live or from the manifest.
+    """
+    return (
+        str(environment.get("platform", "")).partition("-")[0],
+        str(environment.get("machine", "")),
+    )
+
+
 def provenance(manifest: dict[str, Any]) -> Provenance:
     """Decide whether this tree *is* the tree the corpus was captured from.
 
@@ -579,6 +685,7 @@ def provenance(manifest: dict[str, Any]) -> Provenance:
         for key in _NUMERICS_ENVIRONMENT_KEYS
         if stored_env.get(key) != live_env.get(key)
     )
+    same_platform = _libm_identity(stored_env) == _libm_identity(live_env)
 
     stored_digest = manifest["kernel_digest"]["sha256"]
     live_digest = corpus_generate.kernel_digest()["sha256"]
@@ -594,7 +701,11 @@ def provenance(manifest: dict[str, Any]) -> Provenance:
     if served:
         differences.append(f"hazma._core serves {len(served)} kernel(s)")
 
-    return Provenance(exact=not differences, detail="; ".join(differences))
+    return Provenance(
+        exact=not differences,
+        same_platform=same_platform,
+        detail="; ".join(differences),
+    )
 
 
 def effective_budget(case_name: str, tree: Provenance) -> Budget:
@@ -627,7 +738,59 @@ def effective_budget(case_name: str, tree: Provenance) -> Budget:
             why="running on the capturing tree, where the corpus pins this "
             "implementation against itself",
         )
+    if declared.rtol == EXACT_RTOL and not tree.same_platform:
+        # The one relaxation with a host, not an implementation, behind
+        # it. `EXACT` means "reaches only libc.math and must agree
+        # bit-for-bit"; off the capturing libm the second half of that is
+        # not something any implementation can deliver, so the class
+        # falls back to the figure the corpus's own threshold sampling
+        # implies. Every other class is already >= 1e-13 and needs no
+        # platform branch.
+        return Budget(
+            rtol=PLATFORM_EXACT_RTOL,
+            atol=0.0,
+            why=f"{declared.why} -- held to PLATFORM_EXACT_RTOL rather than "
+            "bit-equality because this is not the capturing platform, so "
+            "libc.math itself differs in the last ulp",
+        )
     return declared
+
+
+def zero_floor(expected: np.ndarray, case_name: str) -> float:
+    """The absolute floor allowed where one array stored an exact zero.
+
+    Parameters
+    ----------
+    expected : numpy.ndarray
+        The stored values of a single block array, with any `stability`
+        mask already applied. Non-finite entries are ignored when taking
+        the scale: three blocks pin a ``nan`` where the entry point
+        raised, and nine positions across the scalar elastic cross
+        sections pin ``+-inf`` at ``e_cm = 2 mx`` (all nine masked by
+        `stability`, so they do not reach here). Neither says anything
+        about how big the function is.
+    case_name : str
+        A `cases.build_cases()` key. Its **declared** class decides
+        whether a floor applies at all: an `EXACT` case gets none. The
+        declared class, not `effective_budget`'s answer -- off the
+        capturing platform that answer is `PLATFORM_EXACT_RTOL`, and
+        keying on it would hand the whole `EXACT` class a floor exactly
+        where the class is already at its most permissive.
+
+    Returns
+    -------
+    float
+        ``ZERO_FLOOR_FRACTION`` times the median non-zero magnitude, or
+        ``0.0`` for an `EXACT` case and for an array with no finite
+        non-zero value -- where there is no scale to be a fraction of,
+        exact zero remains the contract.
+    """
+    if budget_for(case_name).rtol == EXACT_RTOL:
+        return 0.0
+    scale = np.abs(expected[np.isfinite(expected) & (expected != 0.0)])
+    if scale.size == 0:
+        return 0.0
+    return float(ZERO_FLOOR_FRACTION * np.median(scale))
 
 
 def abscissa_budget(tree: Provenance) -> Budget:

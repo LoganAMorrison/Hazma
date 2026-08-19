@@ -241,7 +241,7 @@ diverge, and nowhere else.
 to a flat 1e-8 with both measurements recorded looked principled and was
 not: the assertion simply moved to the next-worst point, **3.0552e-08** at
 `E_γ = 0.01, E_π = 6e4`. Two rounds of that is the shape
-[`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+[`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
 warns about — widening until it passes, in the one place the numerics are
 least able to support a bound. **There is no honest tolerance to assert
 in a chaotic regime, and the right move was to stop asserting one.**

@@ -23,10 +23,21 @@ absorbs a sign flip.
 
 That is not a CI problem — it is a **gate** problem. A faithful Rust port
 with a different instruction order will land somewhere else in that region
-too, so those six blocks gate nothing for Phases 04–06. CI works around
-the symptom (`--ignore=test/parity` off the capturing platform); the fix is
-[`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
-which **ripens before Phase 04**. Read it before writing any Rust.
+too, so those blocks gate nothing for Phases 04–06. CI worked around the
+symptom (`--ignore=test/parity` off the capturing platform); the fix
+landed on 2026-08-18 as
+[`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md),
+and the `--ignore` came out with it.
+
+**Two things this section got wrong, worth knowing before you trust the
+rest of it.** "Six blocks" undercounted: the defect is in four entry
+points and reaches all 15 of their blocks, and which points *visibly*
+disagree depends on the libm code path — Linux/aarch64 reproduces
+macOS/arm64 bit-for-bit at the exemplar point. And both platforms were
+wrong at it; the Linux value quoted above is itself off by 10% from what
+the closed form is worth. The fix is at
+[`../task-notes/phase-01/followup-parity-corpus-stability.md`](../task-notes/phase-01/followup-parity-corpus-stability.md);
+read that before writing any Rust for Phase 05.
 
 The phase also shipped that workaround broken and did not notice for two
 PRs. The Actions expression meant to scope the corpus to macOS instead
@@ -218,12 +229,17 @@ the phase file already specified it.
 
 ## 5. Follow-on seeds
 
-- **The corpus pins six points nothing can reproduce** —
-  [`todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
-  Ripens **before Phase 04**: those blocks gate nothing for the port, not
-  just for CI, and the fix (re-siting or re-conditioning the abscissae) is
-  also what lets the phase's "green on all matrix entries" Exit Criterion
-  be restored.
+- ~~**The corpus pins six points nothing can reproduce**~~ —
+  [`done/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md).
+  **Closed 2026-08-18**, and the seed's guess at the fix was wrong:
+  re-siting the abscissae was not it. `test/parity/stability.py` declines
+  to pin the 494 positions whose values are cancellation residue,
+  established against a 60-digit evaluation of the same closed forms
+  rather than against which platforms disagree. The phase's "green on all
+  matrix entries" Exit Criterion is restored and CI's `--ignore` is gone.
+  What is left is the *kernel* defect underneath —
+  [`todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md`](../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md),
+  which ripens with Phase 05.
 
 - **Mediator positron spectra return `nan` at exactly the legacy
   `MASS_E`** —

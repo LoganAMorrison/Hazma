@@ -45,7 +45,17 @@ Documentation = "http://hazma.readthedocs.io"
 # [tool.pytest.ini_options]'s `addopts` passes on every run.
 [dependency-groups]
 lint = ["black>=23.3,<27.0", "isort>=5.12,<9.0", "ruff>=0.1,<1.0"]
-dev = [{ include-group = "lint" }, "pytest>=7.0", "pytest-xdist>=3.2"]
+# mpmath is not a test dependency: `pytest` reads the committed
+# test/parity/data/unpinnable.json and imports neither mpmath nor
+# test/parity/reference.py. It is here for
+# `python test/parity/stability.py --regenerate`, which rebuilds that mask
+# by evaluating the affected closed forms at 60 decimal digits.
+dev = [
+    { include-group = "lint" },
+    "pytest>=7.0",
+    "pytest-xdist>=3.2",
+    "mpmath>=1.3",
+]
 
 [build-system]
 build-backend = "setuptools.build_meta"

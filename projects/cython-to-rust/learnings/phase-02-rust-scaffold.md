@@ -104,7 +104,7 @@ wrong?" before it is called done. Three of the three tasks here found a
   first Phase 04 kernel is served. Do not re-key it on
   `rust_core_available()`. Both `tolerances.provenance` and
   `assert_no_rust_core` flip permanently at that first swap, so the
-  [ill-conditioned-points corpus repair](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [ill-conditioned-points corpus repair](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   must land **before** it.
 
 ## 3. Quirk Log & Edge Cases
@@ -200,7 +200,7 @@ closed two of its own open questions in-phase (CI's unpinned toolchain,
 `release.yml` unexercised). The live items this phase hands forward all
 predate it and are already tracked:
 
-- [parity corpus pins ill-conditioned points](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+- [parity corpus pins ill-conditioned points](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   — **read before Phase 04**, and land before the first swap, because
   that swap flips the corpus out of repairable, bit-equality mode
   permanently.

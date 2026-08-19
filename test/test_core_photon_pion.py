@@ -754,7 +754,7 @@ class TestChargedPionAgainstTheCythonTwin:
         That is the regime behaving exactly as Task 3.3 documented, and
         chasing it one measurement at a time is how a gate becomes vacuous
         (the warning
-        ``docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md``
+        ``docs/followups/done/parity-corpus-pins-ill-conditioned-points.md``
         makes about widening until it passes). A bound the numerics do not
         support is not worth asserting; a sign-and-magnitude check is.
 

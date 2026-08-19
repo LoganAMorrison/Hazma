@@ -521,7 +521,7 @@ scaffold). Read, in order:
 **Currently risky / unknown:**
 
 - **Read
-  [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   before Phase 04.** Six corpus blocks gate nothing for the port, not
   just for CI.
 - Two new follow-ups ripen inside this project:

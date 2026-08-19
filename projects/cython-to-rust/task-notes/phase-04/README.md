@@ -318,11 +318,14 @@ kernel ports.
   photon family, not resolved** (Task 4.2). The waiver rests on a
   measurement: the port is bit-equal to the Cython at all 336,000 sampled
   points, so on the capturing platform there is nothing for a
-  conditioning budget to absorb, and off it the parity suite does not run
-  (`ci.yml` passes `--ignore=test/parity`). The follow-up's prediction
-  that "every affected block will produce a false failure the moment a
-  Rust implementation lands" is **refuted for `spectra.photon.eta`**; it
-  stays open for the five cross-section blocks.
+  conditioning budget to absorb. (Off it the parity suite did not run at
+  the time; `ci.yml`'s `--ignore=test/parity` came out on 2026-08-18.)
+  The follow-up's prediction that "every affected block will produce a
+  false failure the moment a Rust implementation lands" is **refuted for
+  `spectra.photon.eta`** — and the closing measurement confirms it: the
+  ported eta is bit-identical on macOS/arm64, Linux/aarch64 and
+  Linux/x86_64, and carries no mask. The four *cross sections* were the
+  real population, and they are masked rather than budgeted.
 - **The `TABULATED` budget class is kept rather than tightened to
   `EXACT`** (Task 4.2), even though the port would pass `EXACT` today.
   Unlike `spectra.positron.muon`, bit-equality here rests on reproducing
@@ -336,7 +339,7 @@ kernel ports.
   `SPECFUN` would have had to go 1e-13 → 1e-10 to admit a two-ulp
   `spence`; that is the "widening until it passes makes the gate vacuous
   exactly where the numerics are most fragile" that
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   warns against. `special.rs`'s contract was already *match scipy* rather
   than *use `spec_math`* — Task 3.2 set that precedent when it dropped
   `spec_math`'s `bessel_kn`.
@@ -541,7 +544,7 @@ kernel ports.
   the cost of the global one: 22 of 41 cases now run at their declared
   budget rather than `rtol = 0`, though the 19 `EXACT`-class cases lose
   nothing. Belongs with
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md),
   not beside a kernel swap.
 - ~~**Task 4.2 is the first task that meets one of the six
   ill-conditioned corpus blocks** (`spectra.photon.eta`). Resolve or
@@ -583,7 +586,7 @@ kernel ports.
   difference on a block whose peak is 17.2 — a per-block `atol` would have
   absorbed it with no loss of gate strength, where the only available
   lever was a 300x `rtol` widening. Belongs with
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   alongside the per-case mode-switch question above.
 - ~~**`dnde_photon_{charged,neutral}_rho` state no return units**~~
   **Done in Task 4.5' swap.** All **12** entry points in
@@ -667,6 +670,8 @@ removes `def`s, not files.
 - **Phase 05 has to name the cross sections' `quantity` wording**;
   `"Center-of-mass energies"` is the placeholder
   `test/test_core_dispatch.py` uses.
-- **Off macOS the corpus does not reproduce**, so CI runs
-  `pytest --ignore=test/parity` everywhere except macOS
-  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)).
+- ~~**Off macOS the corpus does not reproduce**~~ — **fixed 2026-08-18**
+  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)).
+  CI runs the corpus on every matrix entry again; `test/parity` now
+  declines to pin 494 positions in the four scalar elastic cross
+  sections, which is Phase 05's business rather than Phase 04's.

@@ -4,7 +4,8 @@
 **Project:** cython-to-rust
 **Phase:** 01
 **Status:** Complete (2026-08-08) — all four tasks landed; learnings at
-`../../learnings/phase-01-parity-corpus.md`
+`../../learnings/phase-01-parity-corpus.md`. One follow-up against the
+phase's output has since landed: see the Follow-ups row below.
 **Plan References:** `../../phases/phase-01-parity-corpus.md`
 **Related ADRs:** none
 **Depends On:** Phase 00 complete
@@ -22,6 +23,14 @@ corpus.
 | 1.2 | Pytest runner + tolerance budgets | 1.1 | **Complete (2026-08-07)** | [task-1.2-parity-runner.md](task-1.2-parity-runner.md) |
 | 1.3 | Wire both suites into one gate | 1.2 | **Complete (2026-08-07)** | [task-1.3-test-wiring.md](task-1.3-test-wiring.md) |
 | 1.4 | Retire/regenerate legacy `.npy` suites | 1.2 | **Complete (2026-08-08)** | [task-1.4-legacy-npy.md](task-1.4-legacy-npy.md) |
+
+## Follow-ups against this phase's output
+
+Not plan tasks — the phase is complete and these repair its artifacts.
+
+| Item | Landed | Note |
+| --- | --- | --- |
+| [parity corpus pins ill-conditioned points](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md) | 2026-08-18 | [followup-parity-corpus-stability.md](followup-parity-corpus-stability.md) |
 
 ## Exit Criteria
 
@@ -132,7 +141,7 @@ corpus.
   not just CI**: a faithful Rust port with a different instruction order
   will also land elsewhere in that region, so those blocks gate nothing.
   Tracked in
-  [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md),
+  [`../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md),
   which ripens **before Phase 04** (Task 1.3).
 - **The CI scoping added in Task 1.3 disabled the corpus everywhere, and
   stayed green doing it** (found in Task 1.4 while reading the PR's own
@@ -272,13 +281,14 @@ corpus.
   `numpy.geomspace` goes through the platform libm. The premise that
   "grids are arithmetic on constants" held within a platform and not
   across one.
-- Parity in CI is scoped to the **capturing platform**: the `Run tests`
-  step carries a `PARITY` env, empty on macOS and `--ignore=test/parity`
+- Parity in CI was scoped to the **capturing platform**: the `Run tests`
+  step carried a `PARITY` env, empty on macOS and `--ignore=test/parity`
   elsewhere. `--ignore` rather than a marker, so the Linux entries also
-  stop paying the corpus's ~9 minutes. A workaround for the symptom,
-  explicitly not a fix — the corpus follow-up is — and both the phase
+  stopped paying the corpus's ~9 minutes. A workaround for the symptom,
+  explicitly not a fix — the corpus follow-up was — and both the phase
   Exit Criteria and Task 1.3's exit criteria were amended to say so
-  rather than left to be rediscovered — Task 1.3.
+  rather than left to be rediscovered — Task 1.3. **Reverted 2026-08-18**
+  when that follow-up landed; see the Follow-ups table above.
 - No measurement/reporting hook. `pytest_addoption` is only honored in
   an *initial* conftest, which `test/parity/conftest.py` is not under
   `pytest test`, and `assert_allclose` already prints the max relative
@@ -589,11 +599,13 @@ they are history. Then `../../phases/phase-02-rust-scaffold.md` and
 
 **Currently risky / unknown:**
 
-- **Read
-  [`../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
-  before Phase 04.** Six corpus blocks gate nothing for the port, not
-  just for CI, and off macOS the corpus is skipped outright
-  (`--ignore=test/parity`).
+- ~~**Read
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
+  before Phase 04.**~~ — **closed 2026-08-18.** Read
+  [`followup-parity-corpus-stability.md`](followup-parity-corpus-stability.md)
+  before Phase 05 instead: the affected blocks were four cross sections
+  rather than six assorted ones, they gate nothing for the port, and
+  `test/parity/stability.py` is what stops that reading as a regression.
 - Two Task 1.4 follow-ups ripen inside this project: the
   [`MASS_E` `nan`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
   before Phases 05/06, and the

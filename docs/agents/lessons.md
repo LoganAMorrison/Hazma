@@ -349,7 +349,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   to scope the parity corpus to its capturing platform, which instead
   disabled it on every entry including macOS; all seven checks passed for
   two PRs, and PR #53 caught it only by noticing the job reported `380
-  passed` where a run including the corpus collects ~1019).
+  passed` where a run including the corpus collects ~1019). The `PARITY`
+  env itself is gone as of 2026-08-18 — the corpus is platform-portable
+  and CI runs it everywhere — so the example is history; the two traps
+  are not.
 - [renumbered-list-orphans-its-references] Inserting an item into a numbered
   list silently falsifies every prose reference to the items after it — and
   those references live outside the list, often outside the file, so

@@ -538,7 +538,7 @@ both run with `hazma._core` registered and `_rho.pyx` still on disk.
   needs its own (Findings); the *shape* of the repair is left to the
   followup, which now carries the table. Blocked on the same corpus
   regeneration as the other six defects
-  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)).
+  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)).
 - **Seven blocked defects now share one regeneration**, up from six.
   Worth telling the maintainer separately from this project's schedule —
   three of the seven affect the *shape* of a spectrum rather than a

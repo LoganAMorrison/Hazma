@@ -7,11 +7,19 @@
   31238785136)
 - **Scope:** project (`cython-to-rust`, Phase 01; blocks the port gate
   from Phase 04 on)
-- **Status:** open
-- **Triggers / blockers:** ripens **before Phase 04**. Nothing blocks it.
-  Phases 04-06 swap kernels against this corpus, so every affected block
-  will produce a false failure the moment a Rust implementation lands,
-  whatever platform it runs on.
+- **Status:** done (2026-08-18)
+- **Resolution:** `test/parity/stability.py` masks the 494 stored
+  positions whose values are cancellation residue;
+  `tolerances.PLATFORM_EXACT_RTOL` gives the `EXACT` class an off-libm
+  budget; `tolerances.zero_floor` handles stored exact zeros; CI's
+  `--ignore=test/parity` came out. `pytest test/parity` is
+  **635 passed, 1 skipped** on macOS/arm64, Linux/aarch64 and
+  Linux/x86_64. Full write-up:
+  [`projects/cython-to-rust/task-notes/phase-01/followup-parity-corpus-stability.md`](../../../projects/cython-to-rust/task-notes/phase-01/followup-parity-corpus-stability.md).
+- **Triggers / blockers:** ripened **before Phase 04**, as filed. Phases
+  04-06 swap kernels against this corpus, so every affected block would
+  have produced a false failure the moment a Rust implementation landed,
+  whatever platform it ran on.
 
 ## Why
 
@@ -137,3 +145,45 @@ Whichever lands, also revisit two things Task 1.3 left standing:
   `phase-01-parity-corpus.md` singles out as must-sample.
 - Regenerating any part of the corpus is governed by rules.md rule 2 —
   pre-port Cython only, never from a tree where a kernel runs on Rust.
+
+## What was actually true (added on resolution, 2026-08-18)
+
+Three of the claims above did not survive measurement, and the next
+reader should have them:
+
+1. **"Identify and exclude … evaluate each in a perturbed arithmetic
+   (e.g. recompute with the inputs nudged by an ulp and compare)" does
+   not work.** That measures *conditioning*, and these points are well
+   conditioned — the true function is smooth through `e_cm = 2 mx` with
+   no pole at all. At the exemplar point a 1-ulp nudge of `e_cm` moves
+   the result by 1.6e-10 while the stored value is wrong by a factor of
+   2.4e4. What is broken is the *stability of the algorithm*, which no
+   input perturbation can see. Thresholding on the `atan` difference
+   itself does not separate either. The mask ended up being established
+   against a 60-digit evaluation of the same closed forms
+   (`test/parity/reference.py`).
+
+2. **"Six blocks" undercounted, and the six were not a stable set.** The
+   defect is in four entry points — `sigma_xl_to_xl`,
+   `sigma_xpi_to_xpi`, `sigma_xpi0_to_xpi0`, `sigma_xg_to_xg` — and
+   reaches **all 15** of their blocks, not six. Which points *visibly*
+   disagree depends on the libm code path: Linux/aarch64 reproduces
+   macOS/arm64 bit-for-bit at the exemplar point, and Linux/x86_64 under
+   SSE2 disagrees on a different subset than CI's AVX2 x86_64 did. That
+   is the sharpest statement of why the mask could not be defined by
+   platform archaeology.
+
+3. **`spectra.photon.eta[boosted_strong]`, the "sixth", fixed itself.**
+   Task 4.2 replaced the Cython boost integral with a Rust one that
+   reproduces NumPy's summation order deterministically. It is now
+   bit-identical on all three platforms and carries no mask.
+
+The open question above — "Does the instability indicate a bug in the
+kernels themselves?" — is answered **yes**, and carved out to
+[`todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md`](../todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md).
+At `mx = 300`, `ms = 200`, muon target, `sigma_xl_to_xl` returns
+`-1.504081e-02` where the formula is worth `+6.198557e-07`. Fixing it
+means rewriting the `atan` difference with the addition identity, which
+moves a published number and is therefore a separate, declared change —
+out of scope for a corpus repair and out of scope for this project
+(`projects/cython-to-rust/PLAN.md`, "Out of scope: any physics change").

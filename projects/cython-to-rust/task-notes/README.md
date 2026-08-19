@@ -521,8 +521,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   target with hardware FMA actually contracts — so the assertion was a
   statement about the platform, not about the port. The fix is to measure
   the property at import and skip where it does not hold, which is what
-  `test/parity` already does (CI: `pytest --ignore=test/parity` off
-  macOS); loosening to a tolerance is wrong, because the worst relative
+  `test/parity` already does, through
+  `tolerances.Provenance.same_platform`); loosening to a tolerance is
+  wrong, because the worst relative
   gap between two roundings lands at whatever cancellation point the
   domain contains. **Every Phase 04–06 kernel test that uses the Cython
   twin as its oracle inherits this** —
@@ -815,7 +816,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   noise, and each time revealed only by asserting a bound the numerics do
   not support. Asserting 1e-10 failed; raising it to 1e-8 moved the
   failure to the next-worst point. **The lesson is the one
-  [`parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   already warns about, met from a new direction: widening a budget until
   it passes is how a gate becomes vacuous — the fix was to stop asserting
   a tolerance the regime cannot support.** The test now partitions its
@@ -832,6 +833,30 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   in a new disguise, with the same tell (implausibly uniform failure
   counts). Snapshot outside the tree, `cmp` before each mutation, verify
   the restore.
+- **Part of the corpus was pinning numbers that are simply wrong, and
+  only a higher-precision oracle could say which** (parity-corpus
+  follow-up, 2026-08-18). Four scalar elastic cross sections —
+  `sigma_xl_to_xl`, `sigma_xpi_to_xpi`, `sigma_xpi0_to_xpi0`,
+  `sigma_xg_to_xg` — evaluate `P·atan(u) − P·atan(v)`, which cancels
+  completely near `e_cm = 2 mx` and throughout `closed_resonance`. At
+  `mx = 300`, muon target, the library returns `-1.504081e-02` where the
+  formula is worth `+6.198557e-07`, and the `-inf` at `e_cm = 2 mx` is a
+  removable 0/0 rather than a pole. **The follow-up's own proposed
+  detector — nudge the inputs by an ulp — cannot find these**: it
+  measures conditioning, and the points are well conditioned; what is
+  broken is the stability of the algorithm. Neither can "which platforms
+  disagree": the visible set is not stable even between x86_64 libm code
+  paths. `test/parity/reference.py` (the same closed forms at 60 digits)
+  is what settled it. **Reusable pattern**: when a pinned number comes
+  under suspicion, a verbatim `mpmath` copy of the `.pyx` body answers it
+  in an afternoon and needs no build.
+- **`atol = 0` everywhere assumed below-threshold regions return exactly
+  `0.0`, which is false of the quadrature-backed kernels** (same
+  follow-up). `spectra.positron.charged_pion` at `E = m_e` lands on
+  exactly zero on macOS/arm64 and x86_64 and on 2.6e-13 on
+  Linux/aarch64 — an *infinite* relative error against a stored zero.
+  Any future budget design should assume "returns exactly zero" is a
+  property of one libm, not of the mathematics.
 
 ## Numerical impact so far
 
@@ -1336,12 +1361,47 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     reproduced, also *known wrong* rather than *changed*, but the repair
     needs a restricted outer interval as well as the inner fix.
 
+- **Parity-corpus stability follow-up (2026-08-18): no public value
+  moves.** Nothing under `hazma/` changed; the diff is `test/parity/`,
+  CI, and docs. What changed is what the corpus *asserts*: 494 of its
+  179,695 pinned values (0.27%, all in four scalar cross-section cases)
+  stop being compared, because they are cancellation residue rather than
+  numbers any implementation reproduces. Verified by the corpus itself —
+  `pytest test/parity -q` is `635 passed, 1 skipped` on the capturing
+  platform with the `EXACT` class still at `rtol = 0` there.
+  **This is a debt made visible, not created**: those four entry points
+  were already returning wrong numbers, and Phase 07's CHANGELOG should
+  say so under *known wrong* alongside the rho and pion entries above.
+  The repair is
+  [`scalar-elastic-cross-sections-cancel-in-atan-difference.md`](../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md),
+  which moves published numbers and is therefore its own declared change.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
 
 ## Decisions and Implementation Notes
 
+- **The corpus may decline to pin a value, and says so in a file rather
+  than in a widened tolerance** (parity-corpus follow-up, 2026-08-18).
+  `test/parity/stability.py` names 494 stored positions whose values are
+  cancellation residue; `test_parity` deletes them from the comparison.
+  The alternative — a per-point tolerance, which is what the follow-up
+  proposed — would have needed `rtol = 1e+24` at the worst point, which
+  asserts nothing while looking like a budget. Membership is established
+  against `test/parity/reference.py` at a threshold (`1e-9`) placed at
+  the minimum of a measured bimodal histogram, and the total is pinned by
+  a test so that changing it has to show up in a diff. No ADR: it is a
+  testing contract inside `test/parity/`, and `../rules.md` rules 1–3
+  already govern it.
+- **The `EXACT` class distinguishes a changed host from a changed
+  implementation** (same follow-up). `PLATFORM_EXACT_RTOL = 1e-6` applies
+  only when `Provenance.same_platform` is false; a port on the capturing
+  platform is still held to bit-equality, which Tasks 4.1–4.5 all
+  achieved. `same_platform` is keyed on OS **family** and CPU
+  architecture, not `platform.platform()` — the capturing machine's macOS
+  point release had already moved, and the fine-grained comparison
+  silently dropped the gate on its own host.
 - **The per-kernel swap recipe is canonical, and lives in the phase
   file** (Task 4.1): map the FMAs out of the shipped `.so` first, port
   into `rust/src/kernels/<pyx name>.rs`, register through
@@ -1483,6 +1543,27 @@ it from memory.)
   `gamma`/`gamma_point`.
 
 ## Files Changed
+
+### Parity-corpus stability follow-up (2026-08-18)
+
+- `test/parity/reference.py`, `test/parity/stability.py`,
+  `test/parity/data/unpinnable.json` — new: the 60-digit oracle, the
+  unpinnable-point registry, and the mask it produces.
+- `test/parity/tolerances.py` — `PLATFORM_EXACT_RTOL`,
+  `ZERO_FLOOR_FRACTION`, `zero_floor()`, `_libm_identity()`,
+  `Provenance.same_platform`, the `effective_budget` platform branch.
+- `test/parity/test_parity.py` — `_drop_unpinnable`, the split
+  zero/non-zero comparison, six new guards.
+- `test/parity/README.md`, `.github/workflows/ci.yml` (the `PARITY` env
+  removed), `pyproject.toml` (`mpmath` in `dev`; the stale `addopts`
+  comment), `test/test_core_{positron_muon,interp,boost}.py` (six
+  sentences that claimed CI skips the corpus off-platform).
+- `projects/cython-to-rust/phases/phase-01-parity-corpus.md`,
+  `task-notes/phase-01/README.md`,
+  `task-notes/phase-01/followup-parity-corpus-stability.md`.
+- `docs/followups/` — the item moved to `done/`, a new `todo/` item for
+  the underlying kernel defect, the index, and 20-odd inbound links
+  repointed.
 
 ### Phase 04 (Task 4.5)
 
@@ -1920,7 +2001,9 @@ it from memory.)
   `1006 passed, 13 skipped` on the capturing environment (1019 collected:
   67 `hazma` + 952 `test`), parity suite included and in exact mode;
   `python test/parity/generate.py --check` → `corpus OK: 41 cases / 1580
-  arrays`. Off macOS, CI runs `pytest --ignore=test/parity`. No skip
+  arrays`. (Off macOS, CI ran `pytest --ignore=test/parity` from PR #52
+  until the parity-corpus stability follow-up landed on 2026-08-18; every
+  matrix entry runs the corpus now.) No skip
   anywhere in the repo is waiting on this project. The public compiled
   surface is still exactly where Phase 00 left it.
 - **Phase 00 closing state (2026-08-06):** 20 `.pyx` ↔ 20 declared
@@ -1954,6 +2037,16 @@ it from memory.)
   out-of-band before Phase 01 started**, via `two_body_momentum`'s
   factored form (see "Out-of-band" under "Numerical impact so far").
   The question is moot; the corpus will pin the fixed values.
+- **Are the other 37 corpus cases pinning correct numbers?** The
+  parity-corpus follow-up built a 60-digit reference for four entry
+  points and found part of what they pinned was wrong. The rest of the
+  corpus has no such oracle; "no platform disagreed with it" is weaker
+  evidence, and that follow-up's own Finding 3 is why. Nothing in the
+  three-platform sweep points at another case (next worst 5.6e-08, and
+  explained), so this is a standing doubt rather than a lead. The cheap
+  answer for any case that comes under suspicion is
+  `test/parity/reference.py`'s pattern: a verbatim `mpmath` copy of the
+  `.pyx` body, no build needed.
 - Phase 05 parallelism: run 05 alongside 04 (no shared files) or keep
   strictly serial? Decide based on who's driving.
   **Note as of Task 4.2:** the corpus's mode flip has already happened,
@@ -1974,7 +2067,7 @@ it from memory.)
   blocking for `spectra.positron.muon` — none of the six affected blocks
   is that entry point — but **corpus regeneration is closed from now
   on**, so options 1 and 2 in
-  [`../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
+  [`../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)
   have to work from a pre-Phase-04 checkout. **Task 4.2 met the sixth
   block (`spectra.photon.eta[boosted_strong]`) and explicitly waived it,
   on evidence**: the port is bit-equal at 336,000 sampled points, so on
@@ -2070,10 +2163,24 @@ positron entry point and three neutrino ones.
 
 **The parity corpus left bit-equality mode permanently in Task 4.1**, and
 corpus *regeneration* is closed (see Open Questions). 19 of the 41 cases
-are `EXACT` class and still run at `rtol = 0`; the rest run at their
-declared budget. **Two budgets have now been tightened rather than
-widened** — `PORTED_QUAD_RTOL = 1e-12` for `spectra.photon.charged_pion`
-(Task 4.4) and `PORTED_NESTED_RTOL = 1e-9` for both ρ cases (Task 4.5).
+are `EXACT` class and still run at `rtol = 0` **on the capturing
+platform**; the rest run at their declared budget. **Two budgets have now
+been tightened rather than widened** — `PORTED_QUAD_RTOL = 1e-12` for
+`spectra.photon.charged_pion` (Task 4.4) and `PORTED_NESTED_RTOL = 1e-9`
+for both ρ cases (Task 4.5).
+
+**The corpus is platform-portable as of 2026-08-18 and CI runs it on
+every matrix entry.** Three carve-outs make that true and each names
+exactly what it covers, so a `test/parity` failure on a new platform
+should be triaged into one of them rather than absorbed by a wider
+budget: `test/parity/stability.py`'s 494 unpinnable positions,
+`tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the capturing
+libm, and `tolerances.zero_floor` for stored exact zeros. **Phase 05 must
+read
+[`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
+before porting the scalar cross sections** — 494 pinned positions in the
+four it ports assert nothing, and a faithful Rust rewrite will disagree
+with the corpus there however faithful it is.
 
 **On inheriting a phase prediction: don't.** Four tasks running, the
 prediction has been wrong in a different direction each time. Task 4.3
@@ -2195,11 +2302,17 @@ Re-derive.
   aggregation, no golden data, and the only numerical gate in the repo
   that is not scoped to the capturing platform. **Phases 04–06 run it
   either side of every kernel swap** — `69 passed` as of Task 4.5.
-- **Off macOS the corpus does not reproduce**, so CI runs
-  `pytest --ignore=test/parity` on every entry except macOS. That is a
-  corpus defect and it is tracked in
-  [`../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md)
-  — **read it before Phase 05**.
+- ~~**Off macOS the corpus does not reproduce**~~ — **fixed 2026-08-18.**
+  CI runs the corpus on every matrix entry again. Three carve-outs make
+  that true and each names what it covers:
+  `test/parity/stability.py`'s 494 unpinnable positions,
+  `tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the
+  capturing libm, and `tolerances.zero_floor` for stored exact zeros.
+  **Read
+  [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
+  before Phase 05** — 494 pinned positions in the four scalar elastic
+  cross sections it ports assert nothing, and a faithful Rust rewrite
+  will disagree with the corpus there no matter how faithful it is.
 - **A `.rs` edit needs `pip install -e .`, not `cargo build`** (Task 2.2).
   Iterate with
   `cargo test --manifest-path rust/Cargo.toml --no-default-features`,

@@ -88,7 +88,7 @@ specific to the rho, not a convention the library shares.
 - `test/parity/data/` — the `rest` blocks of `spectra.photon.charged_rho`
   and `spectra.photon.neutral_rho`
 - Blocked on the same regeneration as
-  [`parity-corpus-pins-ill-conditioned-points.md`](parity-corpus-pins-ill-conditioned-points.md)
+  [`parity-corpus-pins-ill-conditioned-points.md`](../done/parity-corpus-pins-ill-conditioned-points.md)
 
 ## Risks / open questions
 

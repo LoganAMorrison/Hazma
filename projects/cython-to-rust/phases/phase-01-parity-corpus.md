@@ -110,14 +110,20 @@ evidence `docs/versioning.md` requires for numerical changes.
     `pip install .` leaves no extension inside the checkout, which
     `cases.assert_module_is_repo_tree` refuses, so the test job
     reinstalls editable first.
-  - The corpus does not survive a change of libm. Enabling it in CI
-    measured that for the first time: Linux/glibc fails ~70-75 of the
+  - The corpus did not survive a change of libm. Enabling it in CI
+    measured that for the first time: Linux/glibc failed ~70-75 of the
     626 blocks, six of them at cancellation points where the pinned
-    value flips sign (`sigma_xl_to_xl[closed_resonance.mu]`: -1.504e-02
-    on macOS, +5.624e-07 on Linux). The Linux entries therefore run
-    `pytest --ignore=test/parity`, and making the corpus
-    platform-robust — which is also what the Rust port will need — is
-    [`docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/todo/parity-corpus-pins-ill-conditioned-points.md).
+    value flipped sign (`sigma_xl_to_xl[closed_resonance.mu]`: -1.504e-02
+    on macOS, +5.624e-07 on Linux). Task 1.3 scoped the Linux entries to
+    `pytest --ignore=test/parity` as a workaround and filed the fix.
+    **Resolved 2026-08-18** by
+    [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md):
+    `test/parity/stability.py` masks the 494 stored positions whose
+    values are cancellation residue, `tolerances.PLATFORM_EXACT_RTOL`
+    gives the `EXACT` class an off-libm budget, and
+    `tolerances.zero_floor` handles stored exact zeros. The `--ignore`
+    came out with it — see
+    [`../task-notes/phase-01/followup-parity-corpus-stability.md`](../task-notes/phase-01/followup-parity-corpus-stability.md).
 
 ### Task 1.4: Retire or regenerate the legacy `.npy` suites
 
@@ -171,13 +177,13 @@ evidence `docs/versioning.md` requires for numerical changes.
   `hazma`, 952 from `test`), against Task 1.3's 935/30 — the delta is
   +69 aggregation tests, +2 from the `rh_neutrino` rename, and −17
   skips as the two legacy mediator classes left. Re-derive rather than
-  quoting. The parity portion runs on the **capturing platform** only —
-  the other matrix entries run the rest of the suite and skip
-  `test/parity`. That is a Task 1.3 amendment to this
-  criterion, not the original intent: the corpus pins six
-  cancellation-dominated points that no tolerance can carry across a
-  libm change, so "green on all matrix entries" is unreachable until
-  the follow-up above lands. Restore this bullet when it does.
+  quoting. The parity portion runs on **every** matrix entry, which is
+  this criterion's original intent. Task 1.3 amended it to
+  capturing-platform-only because the corpus pinned cancellation-
+  dominated points that no tolerance could carry across a libm change;
+  the amendment was reverted on 2026-08-18 when the follow-up above
+  landed, verified green on macOS/arm64, Linux/aarch64 and Linux/x86_64
+  before the CI scoping came out.
 - Corpus regeneration is documented and reproducible
   (`python test/parity/generate.py --check` verifies hashes).
 - Phase learnings written to `../learnings/phase-01-parity-corpus.md`.
