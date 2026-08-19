@@ -336,13 +336,15 @@ def test_an_os_point_release_is_not_a_platform_change() -> None:
     assert identity(other_os) != identity(capture)
 
 
-def test_the_platform_branch_only_moves_the_exact_class() -> None:
-    """Off the capturing libm, only `EXACT` cases change budget.
+def test_the_platform_branch_moves_only_the_two_declared_classes() -> None:
+    """Off the capturing libm, only `EXACT` and `SPECFUN` change budget.
 
-    Every other class is already >= 1e-13 and was written for a
-    replacement implementation, not for a replacement libm, so widening
-    them here would be a second, undeclared relaxation riding along with
-    the first.
+    `TABULATED` and the two `PORTED_*` budgets are also tighter than
+    `PLATFORM_EXACT_RTOL`, and nothing measured says a change of libm
+    moves them. Relaxing them on the theory that it might is the
+    over-broad exemption this PR already had to undo once, so the branch
+    is a two-row table and a third class has to arrive as a measured
+    failure (PR #71).
     """
     off_platform = tolerances.Provenance(
         exact=False, same_platform=False, detail="synthetic"
@@ -356,15 +358,30 @@ def test_the_platform_branch_only_moves_the_exact_class() -> None:
         if tolerances.effective_budget(name, off_platform).rtol
         != tolerances.effective_budget(name, on_platform).rtol
     }
-    exact_class = {
+    declared = {
+        name
+        for name, budget in tolerances.BUDGETS.items()
+        if budget.rtol in (tolerances.EXACT_RTOL, tolerances.SPECFUN_RTOL)
+    }
+    assert moved == declared
+
+    exact_case = next(
         name
         for name, budget in tolerances.BUDGETS.items()
         if budget.rtol == tolerances.EXACT_RTOL
-    }
-    assert moved == exact_class
+    )
+    specfun_case = next(
+        name
+        for name, budget in tolerances.BUDGETS.items()
+        if budget.rtol == tolerances.SPECFUN_RTOL
+    )
     assert (
-        tolerances.effective_budget(next(iter(exact_class)), off_platform).rtol
+        tolerances.effective_budget(exact_case, off_platform).rtol
         == tolerances.PLATFORM_EXACT_RTOL
+    )
+    assert (
+        tolerances.effective_budget(specfun_case, off_platform).rtol
+        == tolerances.PLATFORM_SPECFUN_RTOL
     )
 
 

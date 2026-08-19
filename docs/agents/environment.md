@@ -211,10 +211,10 @@ mostly last-bit `libc.math` differences but some at cancellation points
 where the pinned value flipped sign. CI skipped it off macOS. Three
 things fixed that and each names what it covers —
 `test/parity/stability.py` (494 stored positions that assert nothing),
-`tolerances.PLATFORM_EXACT_RTOL` (the `EXACT` class off the capturing
-libm) and `tolerances.zero_floor` (four declared stored zeros). If a
-`test/parity` failure surfaces on a platform you have not seen it on,
-read
+`tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` (those
+two classes off the capturing libm) and `tolerances.zero_floor` (four
+declared stored zeros). If a `test/parity` failure surfaces on a
+platform you have not seen it on, read
 [`docs/followups/done/parity-corpus-pins-ill-conditioned-points.md`](../followups/done/parity-corpus-pins-ill-conditioned-points.md)
 and decide which of the three it belongs in before widening anything;
 none of them is a catch-all.

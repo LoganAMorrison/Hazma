@@ -34,8 +34,9 @@ A bare `pytest` runs it too — `pyproject.toml`'s `testpaths` is
 `["hazma", "test"]` (cython-to-rust Task 1.3) — and every CI matrix
 entry pays it. Between PR #52 and 2026-08-18 the Linux entries passed
 `--ignore=test/parity` instead, because the corpus did not survive a
-change of libm; `stability.py`, `tolerances.PLATFORM_EXACT_RTOL` and
-`tolerances.zero_floor` are what took that scoping out again. That work
+change of libm; `stability.py`, `tolerances.PLATFORM_EXACT_RTOL`,
+`tolerances.PLATFORM_SPECFUN_RTOL` and `tolerances.zero_floor` are what
+took that scoping out again. That work
 is the standing price of the gate. Note that
 the suite needs the extensions built **inside the repository**:
 `cases.assert_module_is_repo_tree` refuses a `hazma` resolving anywhere

@@ -541,6 +541,45 @@ in the response tables on the PR. The two that changed behaviour:
   to the median in self-review), and seven other places described the
   floor's scope without the "four declared" qualifier.
 
+### CI round 1 (PR #71, run 32214081769)
+
+**The three-platform local matrix was not enough, and CI found the gap.**
+With the corpus enabled on every matrix entry, `ubuntu-latest/py3.12`
+failed exactly one assertion —
+`spectra.photon.muon[rest_plus_eps].scalar_values` at **1.85e-13**
+against its declared 1e-13 — while the other four Ubuntu entries, macOS,
+and all three local platforms passed.
+
+Not a regression, and nothing to do with the review fixes: it is the
+`SPECFUN` class meeting the same amplification the `EXACT` class already
+had a platform floor for. `tolerances`'s own class docstring records the
+mechanism from Task 4.3 — the kernel forms
+`(5/beta) * (spence(xm) - spence(xp))` and the corpus samples
+`beta = 1.4e-6` at this anchor, so a two-ulp difference arrives as
+3.2e-11. Task 4.3 held the class at 1e-13 by making `spence` bit-equal
+**to scipy**, which is a statement about one libm; off it the `log` and
+`sqrt` around the `spence` calls move instead.
+
+So my justification for scoping the platform branch to `EXACT` — "every
+other class is already >= 1e-13 and needs no platform branch" — was
+wrong, and wrong in a way three platforms could not show. `SPECFUN` gets
+`PLATFORM_SPECFUN_RTOL = 1e-9`: ~30x the documented 3.2e-11, three
+decades tighter than `PLATFORM_EXACT_RTOL`.
+
+Deliberately a two-row table rather than a blanket
+`max(declared, floor)`. `TABULATED` and both `PORTED_*` budgets are also
+tighter than `PLATFORM_EXACT_RTOL` and nothing measured says a change of
+libm moves them; widening them on the theory that it might would be the
+same over-broad exemption the zero floor just had to undo, in the same
+PR. A third class has to arrive as a measured failure.
+`test_the_platform_branch_moves_only_the_two_declared_classes` pins it.
+
+**Standing caveat this sharpens:** the local container matrix reproduces
+*a* second libm, not *every* libm. glibc dispatches `atan`/`log`/`exp`
+by CPU feature, so Rosetta's SSE2 path and a runner's AVX2 path are
+different implementations. Treat the containers as a fast pre-check and
+CI as the measurement.
+
 ### Deferred
 
 - **`sigma_xg_to_xg[narrow_resonance]` etc. are masked, not fixed.** The
@@ -713,7 +752,7 @@ numbers any implementation reproduces.
 | --- | --- |
 | corpus stops asserting cancellation-dominated points, by a stated rule | `test/parity/stability.py` + `data/unpinnable.json`; `test_only_the_declared_cases_are_masked`, `test_the_mask_was_built_from_this_corpus`, `test_every_masked_index_addresses_a_real_stored_value`, `test_the_mask_is_a_small_fraction_of_the_corpus` |
 | the mechanism fixes the **port** gate, not just the platform symptom | the mask is defined against `reference.py`, not against platform disagreement (Finding 1, Finding 3); Phase 05 handoff says what it means for the swap |
-| `EXACT_RTOL = 0.0` no longer applies unchanged in budget mode | `tolerances.PLATFORM_EXACT_RTOL` + `_libm_identity`; `test_an_os_point_release_is_not_a_platform_change`, `test_the_platform_branch_only_moves_the_exact_class`; stash-proof B (55 / 34 failures without it) |
+| `EXACT_RTOL = 0.0` no longer applies unchanged in budget mode | `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` + `_libm_identity`; `test_an_os_point_release_is_not_a_platform_change`, `test_the_platform_branch_moves_only_the_two_declared_classes`; stash-proof B (55 / 34 failures without it) |
 | CI's `PARITY` env removed | `.github/workflows/ci.yml`; `637 passed, 1 skipped` on macOS/arm64, Linux/aarch64 and Linux/x86_64 |
 | rules.md rule 2 respected | no `data/*.npz` in `git status`; `generate.py --check` passes against the unchanged manifest; the mask records the kernel digest and `test_the_mask_was_built_from_this_corpus` enforces it |
 

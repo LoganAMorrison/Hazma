@@ -2174,10 +2174,9 @@ every matrix entry.** Three carve-outs make that true and each names
 exactly what it covers, so a `test/parity` failure on a new platform
 should be triaged into one of them rather than absorbed by a wider
 budget: `test/parity/stability.py`'s 494 unpinnable positions,
-`tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the capturing
-libm, and `tolerances.zero_floor` for the four declared stored zeros a
-change of libm moves. **Phase 05 must
-read
+`tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` for those
+two classes off the capturing libm, and `tolerances.zero_floor` for the
+four declared stored zeros a change of libm moves. **Phase 05 must read
 [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
 before porting the scalar cross sections** — 494 pinned positions in the
 four it ports assert nothing, and a faithful Rust rewrite will disagree
@@ -2307,8 +2306,8 @@ Re-derive.
   CI runs the corpus on every matrix entry again. Three carve-outs make
   that true and each names what it covers:
   `test/parity/stability.py`'s 494 unpinnable positions,
-  `tolerances.PLATFORM_EXACT_RTOL` for the `EXACT` class off the
-  capturing libm, and `tolerances.zero_floor` for the four declared
+  `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` for those
+  two classes off the capturing libm, and `tolerances.zero_floor` for the four declared
   stored zeros a change of libm moves.
   **Read
   [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)

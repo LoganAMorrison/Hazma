@@ -10,9 +10,9 @@
 - **Status:** done (2026-08-18)
 - **Resolution:** `test/parity/stability.py` masks the 494 stored
   positions whose values are cancellation residue;
-  `tolerances.PLATFORM_EXACT_RTOL` gives the `EXACT` class an off-libm
-  budget; `tolerances.zero_floor` handles the four declared stored
-  zeros a change of libm moves; CI's
+  `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` give
+  those two classes an off-libm budget; `tolerances.zero_floor` handles
+  the four declared stored zeros a change of libm moves; CI's
   `--ignore=test/parity` came out. `pytest test/parity` is
   **637 passed, 1 skipped** on macOS/arm64, Linux/aarch64 and
   Linux/x86_64. Full write-up:

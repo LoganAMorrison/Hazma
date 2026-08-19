@@ -208,6 +208,29 @@ PORTED_NESTED_RTOL = 1e-9
 #: give up a gate that is demonstrably achievable.
 PLATFORM_EXACT_RTOL = 1e-6
 
+#: The same idea for the ``SPECFUN`` class, whose one member is
+#: `spectra.photon.muon`. Task 4.3 made `spence` bit-equal **to scipy**
+#: rather than widening the 1e-13 budget, and that is what holds the class
+#: at 1e-13 -- on the capturing libm. Off it the `log` and `sqrt` around
+#: the `spence` calls move in their last bit instead, and the class
+#: docstring's own mechanism amplifies them: the kernel forms
+#: ``(5/beta) * (spence(xm) - spence(xp))`` and the corpus samples
+#: ``beta = 1.4e-6`` at the `rest_plus_eps` anchor, so a two-ulp
+#: difference arrives as **3.2e-11** relative (measured in Task 4.3).
+#:
+#: 1e-9 is ~30x that documented worst case, and three decades tighter
+#: than both `PLATFORM_EXACT_RTOL` and the ``QUAD`` opening budget.
+#:
+#: Measured, and the reason this constant exists: PR #71's first CI run
+#: with the corpus enabled on every matrix entry failed exactly one
+#: assertion -- `spectra.photon.muon[rest_plus_eps].scalar_values` at
+#: **1.85e-13**, 1.85x the declared budget, on ubuntu-latest/py3.12 and on
+#: no other entry. Three local platforms (macOS/arm64, Linux/aarch64,
+#: Linux/x86_64 under Rosetta's SSE2 libm) had all passed, which is the
+#: same "which points visibly break depends on the libm code path" that
+#: `stability` documents, one class further out.
+PLATFORM_SPECFUN_RTOL = 1e-9
+
 #: How far the *abscissae* may move off the capturing tree. Not a value
 #: budget: see "Abscissae are their own class" above for the derivation
 #: and for why bit-equality here was unreachable on any second platform.
@@ -732,22 +755,39 @@ def effective_budget(case_name: str, tree: Provenance) -> Budget:
             why="running on the capturing tree, where the corpus pins this "
             "implementation against itself",
         )
-    if declared.rtol == EXACT_RTOL and not tree.same_platform:
-        # The one relaxation with a host, not an implementation, behind
-        # it. `EXACT` means "reaches only libc.math and must agree
+    if not tree.same_platform and declared.rtol in _PLATFORM_FLOORS:
+        # The relaxations with a host, not an implementation, behind
+        # them. `EXACT` means "reaches only libc.math and must agree
         # bit-for-bit"; off the capturing libm the second half of that is
         # not something any implementation can deliver, so the class
         # falls back to the figure the corpus's own threshold sampling
-        # implies. Every other class is already >= 1e-13 and needs no
-        # platform branch.
+        # implies. `SPECFUN` is held at 1e-13 by `spence` being bit-equal
+        # to scipy, which is likewise a statement about one libm.
+        #
+        # Deliberately a two-row table rather than
+        # `max(declared, some_floor)`: `TABULATED` and the two `PORTED_*`
+        # budgets are also tighter than `PLATFORM_EXACT_RTOL`, and
+        # nothing measured says they need relaxing. Widening them on the
+        # theory that they might is the same over-broad exemption the
+        # zero floor got wrong (PR #71 review round 1). A class that does
+        # need it should arrive as a loud failure somebody measures.
+        floor, name = _PLATFORM_FLOORS[declared.rtol]
         return Budget(
-            rtol=PLATFORM_EXACT_RTOL,
+            rtol=floor,
             atol=0.0,
-            why=f"{declared.why} -- held to PLATFORM_EXACT_RTOL rather than "
-            "bit-equality because this is not the capturing platform, so "
+            why=f"{declared.why} -- held to {name} rather than the declared "
+            "figure because this is not the capturing platform, so "
             "libc.math itself differs in the last ulp",
         )
     return declared
+
+
+#: Declared budget -> (budget off the capturing libm, its constant name).
+#: Only the two classes measured to need it; see `effective_budget`.
+_PLATFORM_FLOORS: dict[float, tuple[float, str]] = {
+    EXACT_RTOL: (PLATFORM_EXACT_RTOL, "PLATFORM_EXACT_RTOL"),
+    SPECFUN_RTOL: (PLATFORM_SPECFUN_RTOL, "PLATFORM_SPECFUN_RTOL"),
+}
 
 
 def zero_floor(expected: np.ndarray) -> float:
