@@ -9,14 +9,21 @@
 - **Scope:** cross-cutting (a published spectrum has a feature in the
   wrong place; the repair is gated by the `cython-to-rust` corpus)
 - **Status:** open
-- **Triggers / blockers:** **blocked until after `cython-to-rust` Phase 06
-  Task 6.4**, for the same reason as
-  [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md):
-  the parity corpus pins the shipped values by construction
-  (`projects/cython-to-rust/rules.md` rule 2), so a repair landed during
-  the port would fail the gate that governs every remaining swap.
-  Cheapest to fix in one declared regeneration together with its
-  siblings.
+- **Triggers / blockers:** **corpus re-pinning only** — no ordering
+  constraint against `cython-to-rust` Phase 06 Task 6.4. Task 6.4 deletes
+  the four surviving `.pyx`; this defect's twin,
+  `hazma/spectra/_photon/_phi.pyx`, is already gone, deleted in Task 4.2
+  in the same PR as the swap, so 6.4 takes away nothing this repair could
+  have used. What the corpus pins is still wrong and still has to move,
+  but the corrected values need no Cython oracle: both line energies are
+  closed forms, `(M_φ² − m²)/(2 M_φ)`, so the expected delta is the two
+  boosted line terms recomputed there minus the two the corpus stored,
+  and `hazma/_utils/boost.pyx` still supplies `boost_delta_function`.
+  So this repair is schedulable now, independently of the port's
+  remaining phases. Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 

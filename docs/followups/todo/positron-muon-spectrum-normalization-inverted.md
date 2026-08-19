@@ -8,15 +8,25 @@
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
 - **Status:** open
-- **Triggers / blockers:** **blocked until after `cython-to-rust` Phase 06
-  Task 6.4**, for the same reason as
-  [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md):
-  the parity corpus pins the wrong values by construction
-  (`projects/cython-to-rust/rules.md` rule 2 forbids regenerating it from
-  a tree where any kernel runs on Rust), so a repair landed during the
-  port would fail the gate that governs every remaining swap. Worth
-  telling the maintainer *now*, separately from that schedule — it
-  affects published numbers today.
+- **Triggers / blockers:** **fix BEFORE `cython-to-rust` Phase 06
+  Task 6.4** — the constraint is a deadline, not a wait, and this one
+  also affects published numbers today. The parity corpus does pin the
+  wrong values by construction, so the repair needs corrected reference
+  values before it can pass the gate that governs every remaining swap.
+  But Task 6.4 is where `hazma/spectra/_positron/_muon.pyx` is
+  **deleted**, and that twin is the only independent implementation a
+  corrected corpus case can be re-pinned from: fix the `.pyx`, drive it
+  through the `__pyx_capi__` capsules this file's "Entry points" section
+  already names, and the corrected
+  values come from a compiler and a source tree that both predate the
+  Rust port. After Task 6.4 the only remaining source of corrected values
+  is the fixed Rust itself, which pins the port against its own answer —
+  exactly the vacuous gate `projects/cython-to-rust/rules.md` rule 2
+  exists to prevent. The window is open today and closes at Task 6.4.
+  Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 

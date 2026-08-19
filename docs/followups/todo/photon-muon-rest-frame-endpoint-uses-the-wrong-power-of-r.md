@@ -8,11 +8,24 @@
   `the_in_flight_form_is_the_boost_integral_of_the_rest_frame_form`)
 - **Scope:** commit (one guard in one `.pyx`, plus the corpus block it pins)
 - **Status:** open
-- **Triggers / blockers:** **blocked behind cython-to-rust Phase 06
-  Task 6.4.** The parity corpus pins the truncated values, so repairing
-  the guard now fails the gate that governs the remaining kernel swaps
-  (`projects/cython-to-rust/rules.md` rules 1–2). This is the fifth defect
-  waiting on the same eventual corpus regeneration — see "Risks" below.
+- **Triggers / blockers:** **fix BEFORE cython-to-rust Phase 06
+  Task 6.4** — the constraint is a deadline, not a wait. The parity
+  corpus does pin the truncated values, so the repair needs corrected
+  reference values before it can pass the gate that governs the remaining
+  kernel swaps (`projects/cython-to-rust/rules.md` rules 1–2). But
+  Task 6.4 is where `hazma/spectra/_photon/_muon.pyx` is **deleted**, and
+  that twin is the only independent implementation a corrected corpus case
+  can be re-pinned from: fix the `.pyx`, drive it through its
+  `__pyx_capi__` capsules, and the corrected
+  values come from a compiler and a source tree that both predate the
+  Rust port. After Task 6.4 the only remaining source of corrected values
+  is the fixed Rust itself, which pins the port against its own answer —
+  exactly the vacuous gate `projects/cython-to-rust/rules.md` rule 2
+  exists to prevent. The window is open today and closes at Task 6.4.
+  Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 

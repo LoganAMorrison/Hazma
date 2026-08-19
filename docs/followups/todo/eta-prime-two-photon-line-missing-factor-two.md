@@ -9,18 +9,22 @@
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
 - **Status:** open
-- **Triggers / blockers:** **blocked until after `cython-to-rust` Phase 06
-  Task 6.4**, for the same reason as
-  [`positron-muon-spectrum-normalization-inverted.md`](positron-muon-spectrum-normalization-inverted.md)
-  and
-  [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md):
-  the parity corpus pins the shipped value by construction
-  (`projects/cython-to-rust/rules.md` rule 2 forbids regenerating it from
-  a tree where any kernel runs on Rust), so a repair landed during the
-  port would fail the gate that governs every remaining swap. Cheapest to
-  fix in one declared regeneration together with its two siblings and
-  with
-  [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md).
+- **Triggers / blockers:** **corpus re-pinning only** — no ordering
+  constraint against `cython-to-rust` Phase 06 Task 6.4. Task 6.4 deletes
+  the four surviving `.pyx`; this defect's twin,
+  `hazma/spectra/_photon/_eta_prime.pyx`, is already gone, deleted in
+  Task 4.2 in the same PR as the swap, so 6.4 takes away nothing this
+  repair could have used. What the corpus pins is still wrong and still
+  has to move, but the corrected values need no Cython oracle: the fix
+  adds a second copy of a line term the stored spectrum already carries
+  once, so the expected per-position delta is
+  `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)` — computable from a
+  constant and from `hazma/_utils/boost.pyx`, which is still live.
+  So this repair is schedulable now, independently of the port's
+  remaining phases. Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 

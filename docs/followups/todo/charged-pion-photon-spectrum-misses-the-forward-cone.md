@@ -4,16 +4,24 @@
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.4-photon-pion.md`
 - **Scope:** cross-cutting (public spectrum values)
 - **Status:** open
-- **Triggers / blockers:** **Blocked until after cython-to-rust Phase 06
-  Task 6.4.** The parity corpus pins the zeros by construction, so any
-  repair fails the gate that governs the remaining kernel swaps. Fixing it
-  needs a declared corpus regeneration, which is the same prerequisite the
-  five other blocked defects share
-  (`docs/followups/todo/boost-integral-drops-last-interior-cell.md`,
-  `positron-muon-spectrum-normalization-inverted.md`,
-  `eta-prime-two-photon-line-missing-factor-two.md`,
-  `phi-photon-lines-use-the-daughter-meson-energy.md`,
-  `photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`).
+- **Triggers / blockers:** **fix BEFORE cython-to-rust Phase 06
+  Task 6.4** — the constraint is a deadline, not a wait. The parity
+  corpus does pin the zeros by construction, so the repair needs
+  corrected reference values before it can pass the gate that governs the
+  remaining kernel swaps. But Task 6.4 is where
+  `hazma/spectra/_photon/_pion.pyx` is **deleted**, and that twin is the
+  only independent implementation a corrected corpus case can be re-pinned
+  from: fix the `.pyx`, drive it through its `__pyx_capi__` capsules, and
+  the corrected
+  values come from a compiler and a source tree that both predate the
+  Rust port. After Task 6.4 the only remaining source of corrected values
+  is the fixed Rust itself, which pins the port against its own answer —
+  exactly the vacuous gate `projects/cython-to-rust/rules.md` rule 2
+  exists to prevent. The window is open today and closes at Task 6.4.
+  Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 
