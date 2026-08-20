@@ -4,17 +4,21 @@
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md`
 - **Scope:** cross-cutting (public spectrum values)
 - **Status:** open
-- **Triggers / blockers:** **Blocked until after cython-to-rust Phase 06
-  Task 6.4.** The parity corpus pins the wrong values by construction —
-  both rho cases carry a `rest` block — so a repair fails the gate that
-  governs the remaining kernel swaps. Fixing it needs a declared corpus
-  regeneration, the same prerequisite the six other blocked defects share
-  (`charged-pion-photon-spectrum-misses-the-forward-cone.md`,
-  `boost-integral-drops-last-interior-cell.md`,
-  `positron-muon-spectrum-normalization-inverted.md`,
-  `eta-prime-two-photon-line-missing-factor-two.md`,
-  `phi-photon-lines-use-the-daughter-meson-energy.md`,
-  `photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`).
+- **Triggers / blockers:** **corpus re-pinning only** — no ordering
+  constraint against cython-to-rust Phase 06 Task 6.4. Task 6.4 deletes
+  the four surviving `.pyx`; this defect's twin,
+  `hazma/spectra/_photon/_rho.pyx`, is already gone, deleted in Task 4.5
+  in the same PR as the swap, so 6.4 takes away nothing this repair could
+  have used. What the corpus pins is still wrong — both rho cases carry a
+  `rest` block — but the corrected values need no Cython oracle at all:
+  the corrected `rest` value is the stored value times `E_γ` exactly, as
+  the ratio table below measures, so the expected delta is a closed-form
+  transform of the committed array.
+  So this repair is schedulable now, independently of the port's
+  remaining phases. Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
+  where a later section of this file still reads "after Task 6.4", that
+  wording is superseded and the plan is authoritative.
 
 ## Why
 

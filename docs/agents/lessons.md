@@ -103,7 +103,17 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   was wrong, so nothing downstream disagreed and a reviewer had to add
   14+1+1 to find it. Derive the *breakdown* from the command
   (`… | sort | uniq -c`), not the total alone, and the arithmetic checks
-  itself.
+  itself. The cheapest shape to miss is the one where **no number was
+  written at all**: a quantifier word stands in for the count, and
+  nothing can contradict it. PR #72 had a plan's exit criteria say "both
+  mediator photon cases" and "both mediator positron cases" against
+  populations of three and four, because the reference they quoted
+  brace-elided its lists (`mediator_spectra.vector.photon.{dnde_decay_v,
+  dnde_decay_v_pt}`) and "both" read naturally as "scalar and vector"
+  — while the same PR's own coverage arithmetic had 3 and 4 in it and
+  agreed with itself. Write a list a downstream gate will quote out in
+  full, give it an explicit count, and never let "both", "each", or "the
+  two" carry a population you have not enumerated.
 - [partial-historical-labeling] Annotating **one** measurement in a dated
   section as historical silently upgrades every unlabeled measurement
   beside it into a claim about the current tree. Label the *section*, not
@@ -592,3 +602,27 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   prose edit is frozen, and treat "I remember fixing that" as a claim to
   re-check rather than as evidence (PR #71: `pyproject.toml`'s `addopts`
   comment was spotted, left, and then reported as swept).
+- [sign-copied-from-a-defect-description] A displacement, ratio, or
+  offset quoted out of a bug report describes the **defect's** direction;
+  a plan or changelog describing the **repair** needs the opposite sign,
+  and the magnitude is identical either way, so nothing looks wrong. The
+  tell is a sentence that carries both the signed delta and the endpoint
+  values and disagrees with itself (PR #72: a plan said the φ photon
+  lines "move by +294.4 MeV and +899.8 MeV" — the follow-up's wording for
+  where the shipped lines sit above the correct ones — one clause before
+  saying the `η′γ` line "moves from 959.65 MeV to 59.82 MeV", which is
+  −899.8). Restate the endpoints rather than the delta when you copy a
+  magnitude across the fix boundary, or say "magnitude" explicitly.
+- [deadline-bound-to-the-wrong-artifact] When a deadline exists because a
+  *resource* is about to disappear, it binds on **capturing** that
+  resource, not on completing the work that consumes it — and writing it
+  the second way invents an urgency the schedule cannot satisfy, then
+  buries the step that actually has to happen first. Name the artifact
+  and the wave that strands it (PR #72: seven follow-ups were corrected
+  from "blocked until after Task 6.4" to "fix BEFORE Task 6.4", when what
+  Task 6.4 destroys is the *oracle* — the Cython twin a corrected value
+  is captured from. The repair itself is a declared delta, legal at any
+  time; the capture is not. Review caught that the two had been
+  collapsed). Pairs with [settling-a-deferral-has-two-sweeps]: correcting
+  a sequencing claim is only half done while the corrected version still
+  names the wrong unit of work.

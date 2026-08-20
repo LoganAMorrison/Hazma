@@ -8,15 +8,29 @@
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
 - **Status:** open
-- **Triggers / blockers:** **blocked until after `cython-to-rust` Phase 06
-  Task 6.4**, for the same reason as
-  [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md):
-  the parity corpus pins the wrong values by construction
-  (`projects/cython-to-rust/rules.md` rule 2 forbids regenerating it from
-  a tree where any kernel runs on Rust), so a repair landed during the
-  port would fail the gate that governs every remaining swap. Worth
-  telling the maintainer *now*, separately from that schedule — it
-  affects published numbers today.
+- **Triggers / blockers:** **capture the corrected values BEFORE the
+  deletion wave that strands them** — the deadline is on the oracle, not
+  on the fix, and this defect also affects published numbers today. The
+  parity corpus does pin the wrong values, and
+  `projects/cython-to-rust/rules.md` rule 2 does forbid regenerating them
+  from a tree with ported kernels, so the repair needs corrected
+  reference values from somewhere else.
+  `hazma/spectra/_positron/_muon.pyx` is that somewhere: fix the `.pyx`
+  in a scratch build, drive it through the `__pyx_capi__` capsules this
+  file's "Entry points" section already names, and the corrected values
+  come from a compiler and a source tree that both predate the Rust port.
+  **This one has the nearest deadline of the four**: the
+  `spectra.positron.charged_pion` composition dies at Task 4.6, the only
+  Phase 04 task still open. Task 6.4 then deletes the twin itself.
+  The repair itself has no deadline. Under the plan's mechanism it lands
+  as a *declared delta* against the committed corpus arrays rather than
+  as a regeneration, so it is legal on a tree with ported kernels and can
+  follow the capture by any interval. What cannot follow the deletion is
+  the capture. Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
+  — Task 2 (capture) and
+  Task 10 (repair); where a later section of this file still reads "after
+  Task 6.4", that wording is superseded and the plan is authoritative.
 
 ## Why
 

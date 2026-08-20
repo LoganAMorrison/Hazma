@@ -4,12 +4,28 @@
 - **Source:** cython-to-rust Task 3.4 (the interp + boost port)
 - **Scope:** cross-cutting
 - **Status:** open
-- **Triggers / blockers:** must land **after** Phase 06 Task 6.4 (the
-  last Cython deletion). Repairing it before then would put the Rust and
-  the Cython on different answers while both are alive, and the parity
-  corpus — which pins the *current* values — would have to be regenerated
-  in the same change, which `projects/cython-to-rust/rules.md` rule 2
-  forbids for a tree with ported kernels.
+- **Triggers / blockers:** **capture the corrected values BEFORE the
+  deletion wave that strands them** — the deadline is on the oracle, not
+  on the fix. The parity corpus does pin the current values, and
+  `projects/cython-to-rust/rules.md` rule 2 does forbid regenerating them
+  from a tree with ported kernels, so the repair needs corrected
+  reference values from somewhere else. `hazma/_utils/boost.pyx` is that
+  somewhere: fix the `.pyx` in a scratch build, drive it through the
+  `__pyx_capi__` capsules `test/test_core_boost.py` already uses as an
+  oracle, and the corrected values come from a compiler and a source tree
+  that both predate the Rust port. Phase 06 Task 6.4 deletes that twin,
+  and after it the only remaining source is the fixed Rust itself, which
+  pins the port against its own answer — the vacuous gate rule 2 exists
+  to prevent.
+  The repair itself has no deadline. Under the plan's mechanism it lands
+  as a *declared delta* against the committed corpus arrays rather than
+  as a regeneration, so it is legal on a tree with ported kernels and can
+  follow the capture by any interval. What cannot follow the deletion is
+  the capture. Sequenced in
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
+  — Task 2 (capture) and
+  Task 4 (repair); where a later section of this file still reads "after
+  Task 6.4", that wording is superseded and the plan is authoritative.
 
 ## Why
 
