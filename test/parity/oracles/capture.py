@@ -473,71 +473,110 @@ def capture(label: str) -> int:
 # ---------------------------------------------------------------------------
 
 
-def diff_against_corpus(label: str) -> dict[str, Any]:
-    """Measure each captured array against the corpus array it corrects.
+def summarize_case_diff(
+    blocks: list[dict[str, Any]],
+    oracle: np.lib.npyio.NpzFile,
+    corpus_arrays: dict[str, dict[str, np.ndarray]],
+) -> dict[str, Any]:
+    """Measure one case's captured blocks against the corpus arrays.
 
-    This is the deliverable the repair tasks consume: the first
-    measurement of each defect's size, taken from Cython rather than from
-    the Rust that will be repaired. Positions where both are ``nan`` are
-    equal for this purpose; a position where exactly one is ``nan`` counts
-    as moved, since the port has to reproduce which energies are
-    kinematically absent.
+    Positions where both sides are ``nan`` are equal for this purpose; a
+    position where exactly one is ``nan`` counts as moved, since the port
+    has to reproduce which energies are kinematically absent.
+
+    Split out from `diff_against_corpus` so the capture and
+    `test/parity/test_oracles.py` derive these numbers with one
+    implementation rather than two. The test re-runs it over the
+    *committed* arrays and requires the result to equal what the manifest
+    stores — which is what pins the manifest's numbers to the bytes
+    beside them.
+
+    Parameters
+    ----------
+    blocks : list of dict
+        A case's ``blocks`` entries, from the manifest or a part file.
+    oracle : numpy.lib.npyio.NpzFile
+        The defect's open ``.npz``.
+    corpus_arrays : dict
+        `load_corpus_arrays` output for the same case.
 
     Returns
     -------
     dict
-        Per case: how many values moved, out of how many, the largest
-        absolute and relative shift, the sign pattern, and how many of
-        the moved positions have no finite magnitude (a nan or an inf on
-        one side only).
+        How many values moved, out of how many, the largest absolute and
+        relative shift, the sign pattern, and how many of the moved
+        positions have no finite magnitude (a ``nan`` or an ``inf`` on one
+        side only).
+    """
+    moved = total = unmeasurable = 0
+    max_abs = max_rel = 0.0
+    up = down = 0
+    for block in blocks:
+        shipped = corpus_arrays[block["label"]]
+        for suffix, entry in block["arrays"].items():
+            got = oracle[entry["key"]]
+            want = shipped[suffix]
+            both_nan = np.isnan(got) & np.isnan(want)
+            differs = ~(both_nan | (got == want))
+            total += got.size
+            moved += int(differs.sum())
+            if not differs.any():
+                continue
+            delta = np.abs(got[differs] - want[differs])
+            # A position where exactly one side is nan counts as moved but
+            # has no finite magnitude, and so does one where either side is
+            # inf. Both are real findings and are counted separately rather
+            # than folded into a `max` that would come back nan and say
+            # nothing.
+            scale = np.abs(want[differs])
+            finite = np.isfinite(delta)
+            unmeasurable += int(np.sum(~finite))
+            if finite.any():
+                max_abs = max(max_abs, float(np.max(delta[finite])))
+            relative = finite & (scale > 0)
+            if relative.any():
+                max_rel = max(max_rel, float(np.max(delta[relative] / scale[relative])))
+            up += int(np.sum(got[differs] > want[differs]))
+            down += int(np.sum(got[differs] < want[differs]))
+    return {
+        "values_moved": moved,
+        "values_total": total,
+        "max_abs_shift": max_abs,
+        "max_rel_shift": max_rel,
+        "moved_up": up,
+        "moved_down": down,
+        "unmeasurable": unmeasurable,
+    }
+
+
+def summarize_defect_diff(defect: dict[str, Any]) -> dict[str, Any]:
+    """Re-derive one defect's whole `diff_against_corpus` from the arrays.
+
+    Every case, every block, every recorded field — the manifest's own
+    numbers are never read. `test/parity/test_oracles.py` compares the
+    result against what the manifest stores.
+    """
+    with np.load(DATA_DIR / defect["file"]) as oracle:
+        return {
+            name: summarize_case_diff(case["blocks"], oracle, load_corpus_arrays(name))
+            for name, case in defect["cases"].items()
+        }
+
+
+def diff_against_corpus(label: str) -> dict[str, Any]:
+    """Measure a freshly captured defect against the corpus it corrects.
+
+    This is the deliverable the repair tasks consume: the first
+    measurement of each defect's size, taken from Cython rather than from
+    the Rust that will be repaired. Reads the part file `capture` wrote,
+    since `assemble` has not built the manifest entry yet.
     """
     part = json.loads((DATA_DIR / f"{label}{PART_SUFFIX}").read_text())
-    summary: dict[str, Any] = {}
-    with np.load(DATA_DIR / f"{label}.npz") as stored_oracle:
-        for name, case in part["cases"].items():
-            corpus_arrays = load_corpus_arrays(name)
-            moved = total = unmeasurable = 0
-            max_abs = max_rel = 0.0
-            up = down = 0
-            for block in case["blocks"]:
-                shipped = corpus_arrays[block["label"]]
-                for suffix, entry in block["arrays"].items():
-                    got = stored_oracle[entry["key"]]
-                    want = shipped[suffix]
-                    both_nan = np.isnan(got) & np.isnan(want)
-                    differs = ~(both_nan | (got == want))
-                    total += got.size
-                    moved += int(differs.sum())
-                    if not differs.any():
-                        continue
-                    delta = np.abs(got[differs] - want[differs])
-                    # A position where exactly one side is nan counts as
-                    # moved but has no finite magnitude, and so does one
-                    # where either side is inf. Both are real findings and
-                    # are counted separately rather than folded into a
-                    # `max` that would come back nan and say nothing.
-                    scale = np.abs(want[differs])
-                    finite = np.isfinite(delta)
-                    unmeasurable += int(np.sum(~finite))
-                    if finite.any():
-                        max_abs = max(max_abs, float(np.max(delta[finite])))
-                    relative = finite & (scale > 0)
-                    if relative.any():
-                        max_rel = max(
-                            max_rel, float(np.max(delta[relative] / scale[relative]))
-                        )
-                    up += int(np.sum(got[differs] > want[differs]))
-                    down += int(np.sum(got[differs] < want[differs]))
-            summary[name] = {
-                "values_moved": moved,
-                "values_total": total,
-                "max_abs_shift": max_abs,
-                "max_rel_shift": max_rel,
-                "moved_up": up,
-                "moved_down": down,
-                "unmeasurable": unmeasurable,
-            }
-    return summary
+    with np.load(DATA_DIR / f"{label}.npz") as oracle:
+        return {
+            name: summarize_case_diff(case["blocks"], oracle, load_corpus_arrays(name))
+            for name, case in part["cases"].items()
+        }
 
 
 def assemble() -> int:

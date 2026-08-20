@@ -29,7 +29,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pytest
 
 HERE = Path(__file__).resolve().parent
@@ -204,38 +203,40 @@ def test_every_defect_moved_something(label: str, manifest: dict[str, Any]) -> N
     )
 
 
+@pytest.mark.parametrize("label", sorted(roster.DEFECTS))
 def test_the_recorded_diffs_agree_with_the_stored_arrays(
-    manifest: dict[str, Any],
+    label: str, manifest: dict[str, Any]
 ) -> None:
-    """Re-derive one case's moved-value count instead of trusting the manifest.
+    """Re-derive every recorded diff from the committed arrays.
 
     `docs/agents/lessons.md` ``[derived-count-not-rederived]``: a count
     written into a manifest and then quoted in a task note has been
-    measured once and repeated twice. This recomputes it from the
-    committed bytes, which is the only copy that cannot go stale.
+    measured once and repeated twice. These particular counts are the
+    deliverable — they are what `PLAN.md`'s Task 4, 7 and 8 gates and
+    `task-notes/README.md`'s "Numerical impact so far" quote — so nothing
+    may take them on trust.
 
-    One case per defect keeps the test cheap; the arrays it does not
-    re-derive are covered by the hash check above, which is what says the
-    bytes are the ones the count was taken from.
+    Every case, every block, every field, recomputed by
+    `capture.summarize_defect_diff` and compared whole. An earlier form
+    sampled one case per defect and argued the rest were "covered by the
+    hash check above"; that reasoning is wrong, because the hash check
+    pins the *arrays* and says nothing about numbers *derived* from them.
+    PR #73's review demonstrated the hole by editing a non-sampled case's
+    ``values_moved`` and watching all 18 tests pass.
     """
-    for label, defect in manifest["defects"].items():
-        name = next(iter(defect["cases"]))
-        recorded = defect["diff_against_corpus"][name]
-        corpus_arrays = oracles.load_corpus_arrays(name)
-        moved = total = 0
-        with np.load(oracles.DATA_DIR / defect["file"]) as stored:
-            for block in defect["cases"][name]["blocks"]:
-                shipped = corpus_arrays[block["label"]]
-                for suffix, entry in block["arrays"].items():
-                    got = stored[entry["key"]]
-                    want = shipped[suffix]
-                    both_nan = np.isnan(got) & np.isnan(want)
-                    moved += int(np.sum(~(both_nan | (got == want))))
-                    total += got.size
-        assert (moved, total) == (
-            recorded["values_moved"],
-            recorded["values_total"],
-        ), f"{label}/{name}: re-derived ({moved}, {total}), manifest {recorded}"
+    defect = manifest["defects"][label]
+    rederived = oracles.summarize_defect_diff(defect)
+    recorded = defect["diff_against_corpus"]
+
+    assert set(rederived) == set(recorded), (
+        f"{label}: cases in diff_against_corpus {sorted(set(rederived) ^ set(recorded))} "
+        "do not match the captured cases"
+    )
+    for name in sorted(rederived):
+        assert rederived[name] == recorded[name], (
+            f"{label}/{name}: re-derived {rederived[name]}, "
+            f"manifest records {recorded[name]}"
+        )
 
 
 def test_the_patches_are_the_ones_the_manifest_recorded(

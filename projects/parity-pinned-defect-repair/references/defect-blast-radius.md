@@ -54,10 +54,20 @@ Two facts the graph makes easy to get wrong:
   or neutrino paths — those use `boost_beta` / `boost_gamma` /
   `boost_delta_function`, which this project does not touch. So the
   boost-window repair does *not* move the mediator spectra.
-- The rho spectra reach the muon kernel *through* the charged pion, so
-  A2 and A3 both move both rho cases. Their declared positions will
-  overlap and must be handled as one composite declaration or as two
-  provably disjoint ones.
+- The rho spectra reach the muon kernel *through* the charged pion — and
+  that is **not** enough to put them in A2's radius. This bullet used to
+  conclude that it was, and Task 2 measured otherwise: A2's defect sits
+  behind a guard that fires only for a muon exactly at rest, and every
+  caller on that path boosts the muon first, so the edge exists and the
+  defect never travels it. A3 has no such guard and does move both rho
+  cases, which is why the overlap to manage is A3 against B3 (`rules.md`
+  rule 7), not A2 against A3.
+
+  The general form, since this file is a graph-derived prediction and
+  will mislead the same way again: **an edge in the graph is a path for a
+  *call*, not necessarily for a *defect*.** When the defect is inside a
+  branch, ask what argument each caller passes before putting its case in
+  the row.
 
 ## Per-defect blast radius
 

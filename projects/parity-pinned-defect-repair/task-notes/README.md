@@ -104,10 +104,13 @@ this project is time-critical.
   boost-window repair therefore does not touch the muon, pion, rho,
   positron, neutrino or mediator paths, which is narrower than the
   follow-up's "cross-cutting" scope line suggests.
-- **Two repair pairs land on the same arrays.** A2 and A3 both move both
+- **Two repair pairs land on the same arrays.** A3 and B3 both move both
   rho cases (the rho quads over the pion, which quads over the muon);
   A1 shares `spectra.photon.eta_prime` with B1 and `spectra.photon.phi`
   with B2. `../rules.md` rule 7 is the constraint that falls out of it.
+  This bullet named A2 and A3 as the first pair until Task 2 measured
+  A2's radius at a single case that is neither rho — its defect is behind
+  an at-rest guard no composed caller reaches. A2 now overlaps nothing.
 - **Lesson classes this project is most exposed to**, from
   `docs/agents/lessons.md`: `[exemption-wider-than-its-mechanism]` (a
   declaration written wider than the mechanism that earned it),

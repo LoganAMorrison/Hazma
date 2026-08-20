@@ -418,7 +418,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   where no derivation happened, and from
   [measurement-taken-before-the-task-ended], where a correct derivation
   expired: here the derivation ran, on the final tree, over the wrong
-  domain.
+  domain. A *sampled* domain is the same failure with a friendlier face:
+  a gate that re-derives one member per group pins that member and
+  nothing else, and the sampling is usually defended in the docstring by
+  an adjacent check that pins a different *kind* of thing (PR #73: a test
+  re-derived `diff_against_corpus` for `next(iter(defect["cases"]))` only
+  and argued the rest were "covered by the hash check above" — but hashes
+  pin the stored *arrays*, never numbers *derived* from them, so review
+  edited a non-sampled case's count and all 18 tests still passed). When
+  a check samples, say what the unsampled members are pinned by, and name
+  a check that pins the same kind of claim — or drop the sampling.
 - [bound-parameter-sized-the-allocation] A parameter that *bounds* work is
   not a prediction of it, so sizing a buffer by one turns a caller's
   permissive input into an allocation request. `scipy.integrate.quad`

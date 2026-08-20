@@ -324,6 +324,19 @@ is on the boost integral's path.
   capture drives `test/parity/cases.py`'s own `Block` objects, so the
   grids are byte-identical to the corpus's by construction and a second
   copy would only be something else to keep in sync.
+- **The recorded diffs are re-derived in full, not sampled** (PR #73
+  review). `test_the_recorded_diffs_agree_with_the_stored_arrays` first
+  re-derived one case per defect — `next(iter(defect["cases"]))` — and
+  defended the rest in its docstring as "covered by the hash check
+  above". That reasoning is wrong: the hash check pins the stored
+  *arrays*, and says nothing about numbers *derived* from them. Review
+  demonstrated it by editing a non-sampled case's `values_moved` and
+  watching all 18 tests pass. The derivation now lives in
+  `capture.summarize_case_diff`, called by both the capture and the test,
+  and the test compares every case's whole summary dict — so all seven
+  recorded fields are pinned, on every case. Verified by mutating each of
+  `values_moved`, `max_abs_shift`, `moved_up` and `unmeasurable` on a
+  non-first case: each turns the suite red.
 - **The oracle manifest carries the corpus manifest's hash.** Rule 1
   forbids rewriting the corpus, so it should never move; if it does,
   every recorded diff is against something that no longer exists, and
