@@ -267,24 +267,55 @@ def test_the_restored_sources_are_still_recoverable(
     the capture recorded. A rewritten history would break this, which is
     the point: the arrays would no longer have a provenance anyone could
     check.
+
+    Needs the history to be present, which is not everywhere.
+    ``actions/checkout`` clones at ``fetch-depth: 1`` by default, so on CI
+    the recorded revisions are simply absent and `git show` exits 128 —
+    that is a fact about the checkout, not about the capture, so it skips
+    rather than fails. The revision *resolving* and then hashing wrong is
+    a real failure and still is one.
     """
+    checked = 0
     for label, defect in manifest["defects"].items():
         for source in defect["restored_sources"]:
+            revision = source["revision"]
+            present = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(oracles.REPO_ROOT),
+                    "cat-file",
+                    "-e",
+                    f"{revision}^{{commit}}",
+                ],
+                capture_output=True,
+                check=False,
+            )
+            if present.returncode != 0:
+                pytest.skip(
+                    f"{revision} is not in this clone — a shallow checkout "
+                    "cannot answer whether the restored sources are still "
+                    "recoverable"
+                )
             blob = subprocess.run(
                 [
                     "git",
                     "-C",
                     str(oracles.REPO_ROOT),
                     "show",
-                    f"{source['revision']}:{source['path']}",
+                    f"{revision}:{source['path']}",
                 ],
                 check=True,
                 capture_output=True,
             ).stdout
             assert hashlib.sha256(blob).hexdigest() == source["sha256"], (
-                f"{label}: {source['revision']}:{source['path']} no longer "
+                f"{label}: {revision}:{source['path']} no longer "
                 "hashes to what the capture recorded"
             )
+            checked += 1
+    assert checked == sum(
+        len(d["restored_sources"]) for d in manifest["defects"].values()
+    )
 
 
 def test_the_capture_left_no_library_behavior_behind() -> None:

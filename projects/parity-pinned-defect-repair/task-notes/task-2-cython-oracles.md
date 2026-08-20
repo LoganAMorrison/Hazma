@@ -510,6 +510,18 @@ $ python -c "import hazma, hazma._core; print(hazma.__file__); print(hazma._core
 .../hazma-oracles-capture-027594/hazma/_core.abi3.so
 ```
 
+**One CI-only failure, found and fixed on PR #73's first run.**
+`test_the_restored_sources_are_still_recoverable` shells out to
+`git show <rev>:<path>`, and `actions/checkout` clones at
+`fetch-depth: 1`, so on CI the recorded revisions are simply absent and
+git exits 128. Reproduced locally with
+`git clone --depth 1 file://$(git rev-parse --show-toplevel)`, which is
+what turned it from a guess into a diagnosis. The test now probes
+`git cat-file -e <rev>^{commit}` first and skips with that reason when
+the history is not there; a revision that *does* resolve and then hashes
+wrong is still a failure. 18 passed on a full clone, 17 passed and 1
+skipped on a shallow one.
+
 **Docs.** `markdownlint --dot` clean over all seven touched markdown
 files; `scripts/agents/check_doc_citations.py` run separately over the
 same set (it is not in `preflight.sh` —
