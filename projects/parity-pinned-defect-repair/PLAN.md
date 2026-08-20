@@ -71,8 +71,9 @@ longer racing the port.
 
 **In scope:**
 
-- The seven defects listed in "The defects" below, each repaired in the
-  Rust kernel that now serves it.
+- The seven defects rostered in
+  [`references/defect-blast-radius.md`](references/defect-blast-radius.md),
+  each repaired in the Rust kernel that now serves it.
 - A delta-declaration layer under `test/parity/` that pins each repair's
   blast radius while leaving `test/parity/data/*.npz` untouched.
 - A committed, provenance-stamped oracle capture from the four live
@@ -108,8 +109,12 @@ measurements:
 
 - η′ photon yield rises 0.63%, all of it in a line at `M_η′/2 = 478.89`
   MeV.
-- φ: 0.60% of the photon yield relocates by +294.4 MeV and +899.8 MeV
-  in the φ rest frame.
+- φ: 0.60% of the photon yield relocates **down** by 294.4 MeV and
+  899.8 MeV in the φ rest frame — the repair moves each line from where
+  it ships to where it belongs (656.942 → 362.519 MeV for `φ → ηγ`,
+  959.646 → 59.815 MeV for `φ → η′γ`). The follow-up states the same two
+  magnitudes with a `+` sign because it describes the *defect's*
+  displacement, which runs the other way.
 - Charged-pion photon spectrum: a hard zero over roughly the top quarter
   of its support disappears; integrated, 0.0054% at `E_π = 1` GeV,
   0.041% at 1396 MeV, 2.96% at 5 GeV. A shape defect, not a yield
@@ -144,18 +149,13 @@ the canonical *shape* of each task below.
 
 ## The defects
 
-Group A still has a live Cython twin and is on the clock. Group B does
-not, and is unblocked.
-
-| # | Defect | Follow-up | Twin | Serving kernel |
-| --- | --- | --- | --- | --- |
-| A1 | Boost integral mis-covers its window at both ends | [`boost-integral-drops-last-interior-cell.md`](../../docs/followups/todo/boost-integral-drops-last-interior-cell.md) | `hazma/_utils/boost.pyx` (live) | `rust/src/boost.rs` |
-| A2 | Muon photon rest-frame branch stops short of the endpoint | [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | `hazma/spectra/_photon/_muon.pyx` (live) | `rust/src/kernels/photon_muon.rs` |
-| A3 | Charged-pion photon spectrum returns zero in the forward cone | [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | `hazma/spectra/_photon/_pion.pyx` (live) | `rust/src/kernels/photon_pion.rs` |
-| A4 | Muon positron spectrum divides by its normalization | [`positron-muon-spectrum-normalization-inverted.md`](../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md) | `hazma/spectra/_positron/_muon.pyx` (live) | `rust/src/kernels/positron_muon.rs` |
-| B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
-| B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
-| B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs` |
+Seven, labelled **A1–A4** (a live Cython twin, so an oracle capture is on
+the clock) and **B1–B3** (no twin, and no ordering constraint at all).
+The roster — each defect's follow-up, its twin's fate, the Rust kernel
+that serves it now, and the corpus cases it reaches — is one table, in
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md).
+It lives there rather than here so the labels, the case lists and the
+counts have exactly one home; the task gates below quote it by row.
 
 ## Task Details
 
@@ -268,9 +268,14 @@ it, per that module's own call-site table. Sequenced first because those
 seven tabulated photon cases are also where B1 and B2 land, and doing the
 primitive first means their deltas are measured once.
 
-**Deliverable / gate:** Declared deltas for the seven tabulated photon
-cases; the repaired value reproduces Task 2's Cython oracle within the
-function's existing budget; the sign is one-signed and upward at every
+**Deliverable / gate:** Declared deltas on all **7** cases the A1 row of
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md)
+names — `spectra.photon.eta`, `spectra.photon.eta_prime`,
+`spectra.photon.omega`, `spectra.photon.phi`,
+`spectra.photon.charged_kaon`, `spectra.photon.long_kaon`,
+`spectra.photon.short_kaon` — and on nothing else; the repaired value
+reproduces Task 2's Cython oracle within the function's existing
+budget; the sign is one-signed and upward at every
 declared position, which is the follow-up's own characterization and is
 asserted rather than asserted-about. Every other corpus case unchanged
 against its original stored array.
@@ -301,9 +306,9 @@ siblings that were already right — do not move.
 **Objective:** Place both φ lines at `(M_φ² − m²)/(2 M_φ)`.
 
 **Scope / implementation notes:** `rust/src/kernels/photon_tables.rs`.
-Depends on Task 4, same reason as Task 5. The two lines move by
-+294.4 MeV and +899.8 MeV in the φ rest frame; the `η′γ` line moves from
-959.65 MeV to 59.82 MeV, a factor of 16. Nothing raises and no kinematic
+Depends on Task 4, same reason as Task 5. The repair moves both lines
+**down**: `φ → ηγ` from 656.942 to 362.519 MeV (−294.4), and `φ → η′γ`
+from 959.646 to 59.815 MeV (−899.8), a factor of 16. Nothing raises and no kinematic
 guard fires either before or after, so the gate has to be a *position*
 assertion, not a "does it still return finite" one.
 
@@ -325,9 +330,16 @@ both mediator decay spectra), so it comes before Tasks 8 and 9. The Rust
 the repair reaches the mediator spectra whether or not Phase 06 has
 landed.
 
-**Deliverable / gate:** Declared deltas on `spectra.photon.muon`,
-`spectra.photon.charged_pion`, both rho cases and both mediator photon
-cases; the repaired value reproduces Task 2's oracle. The endpoint
+**Deliverable / gate:** Declared deltas on all **7** cases the A2 row of
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md)
+names — `spectra.photon.muon`, `spectra.photon.charged_pion`,
+`spectra.photon.charged_rho`, `spectra.photon.neutral_rho`,
+`mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum`,
+`mediator_spectra.vector.photon.dnde_decay_v`, and
+`mediator_spectra.vector.photon.dnde_decay_v_pt`. The `_pt` variants are
+separate corpus cases and are exactly what a "both mediators"
+enumeration drops; the count is the check. The repaired value reproduces
+Task 2's oracle. The endpoint
 invariant that Task 4.3 wrote —
 `the_in_flight_form_is_the_boost_integral_of_the_rest_frame_form` —
 must still hold, and now holds over the extra 0.25 MeV.
@@ -347,8 +359,14 @@ scipy's own convergence verdict rather than picking one tolerance —
 `projects/cython-to-rust/task-notes/README.md` records that lesson from
 this exact kernel, and PR #68's two CI rounds are why.
 
-**Deliverable / gate:** Declared deltas on `spectra.photon.charged_pion`,
-both rho cases and both mediator photon cases. The specific figure the
+**Deliverable / gate:** Declared deltas on all **6** cases the A3 row of
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md)
+names — `spectra.photon.charged_pion`, `spectra.photon.charged_rho`,
+`spectra.photon.neutral_rho`, and the same three mediator photon cases
+Task 7 lists. A3 is a strict subset of A2, so every case here is one
+Task 7 has already opened, and `rules.md` rule 7's no-overlap
+requirement binds on *positions* rather than on cases. The specific
+figure the
 follow-up pins: `dnde_photon_charged_pion(900, 1396)` moves from `0.0` to
 `3.586e-07` MeV⁻¹. A test that no stored zero in that case survives
 repair *except* the ones outside the kinematic support — the difference
@@ -367,13 +385,14 @@ of the rho-touching tasks because Tasks 7 and 8 also move those arrays;
 the branch fires only at `E_ρ == m_ρ` exactly, so its declared positions
 are disjoint from theirs and the two deltas must be shown not to overlap.
 
-**Deliverable / gate:** Declared delta on the `rest` block of
-`spectra.photon.charged_rho` and `spectra.photon.neutral_rho`, and
-nowhere else — the guard `E_ρ − m_ρ < DBL_EPSILON` is absolute and one
-ulp at 775.26 MeV is 1.14e-13, about 500× `DBL_EPSILON`, so no other
-double reaches it and a delta declared on any other block is a bug in the
-declaration. The ratio to the stored value is `E_γ` at every declared
-position, exactly.
+**Deliverable / gate:** Declared delta on the **2** cases the B3 row of
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md)
+names — the `rest` block of `spectra.photon.charged_rho` and of
+`spectra.photon.neutral_rho` — and nowhere else. The guard
+`E_ρ − m_ρ < DBL_EPSILON` is absolute and one ulp at 775.26 MeV is
+1.14e-13, about 500× `DBL_EPSILON`, so no other double reaches it, and a
+delta declared on any other block is a bug in the declaration. The ratio
+to the stored value is `E_γ` at every declared position, exactly.
 
 ### Task 10: Repair A4 — the muon positron normalization
 
@@ -381,12 +400,19 @@ position, exactly.
 
 **Scope / implementation notes:** `rust/src/kernels/positron_muon.rs`.
 Independent of Tasks 4–9 — a separate branch of the composition graph —
-so it may run in parallel with them. Blast radius is
-`spectra.positron.muon`, `spectra.positron.charged_pion` and both
-mediator positron cases.
+so it may run in parallel with them — A4's radius is disjoint from every
+other defect's, which is what makes that safe.
 
-**Deliverable / gate:** Declared deltas on those four cases; the repaired
-value reproduces Task 2's oracle. The analytic normalization test that
+**Deliverable / gate:** Declared deltas on all **6** cases the A4 row of
+[`references/defect-blast-radius.md`](references/defect-blast-radius.md)
+names — `spectra.positron.muon`, `spectra.positron.charged_pion`,
+`mediator_spectra.scalar.positron.dnde_decay_s`,
+`mediator_spectra.scalar.positron.dnde_decay_s_pt`,
+`mediator_spectra.vector.positron.dnde_decay_v`, and
+`mediator_spectra.vector.positron.dnde_decay_v_pt`. Four mediator cases,
+not two: each mediator ships both a `dnde_decay_*` and a
+`dnde_decay_*_pt` entry point. The repaired value reproduces Task 2's
+oracle. The analytic normalization test that
 found the defect (Task 4.1's) now passes against the corrected constant
 rather than recording the inversion, and the Michel spectrum integrates
 to 1 over its support to a stated tolerance.

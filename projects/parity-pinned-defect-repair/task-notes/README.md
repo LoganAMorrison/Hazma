@@ -138,6 +138,23 @@ the `CHANGELOG.md` entry — it does not reconstruct it.
   the correction and the plan that justifies it would land in one
   reviewable place first. Each corrected bullet says so and points here.
   Task 11 sweeps them.
+- **The Group A deadline binds on the oracle capture, not on the
+  repair** (PR #72 review round 1). The first draft of the four Group A
+  blocker bullets said "fix BEFORE Task 6.4", which reads as an
+  instruction to land the Cython fix, the Rust fix and the corpus change
+  together before the deletion — the thing this plan deliberately
+  decomposes. Under the delta mechanism the repair is legal on a tree
+  with ported kernels at any time; what cannot follow the deletion wave
+  is capturing the corrected values from the twin. The bullets now say
+  that, and point at Task 2 (capture) and the specific repair task
+  separately.
+- **`references/defect-blast-radius.md` is the canonical case
+  enumeration; `PLAN.md` quotes it by row** (same review). The reference
+  originally brace-elided its case lists, and the plan's gates then said
+  "both mediator photon cases" against a population of three and "both
+  mediator positron cases" against four — each mediator ships a
+  `dnde_decay_*` and a `dnde_decay_*_pt` entry point. Every list is now
+  written out with a count, and each repair gate names every case.
 
 ## Files Changed
 
