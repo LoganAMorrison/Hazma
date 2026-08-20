@@ -82,19 +82,43 @@ python3 -c "import json; m=json.load(open('test/parity/data/manifest.json')); \
 `spectra.photon.charged_kaon`, `spectra.photon.long_kaon`,
 `spectra.photon.short_kaon`.
 
-Blocks: all boosted blocks. Whether `rest` moves depends on whether the
-integral runs at β = 0 — **measure it**, do not assume.
+Blocks: the three boosted blocks and `rest_plus_eps`. **Measured by
+Task 2**, which is what the instruction below asked for: `rest` moves 0
+of its 1750 positions, because all seven callers short-circuit to the
+rest-frame spectrum before the integral and so it never runs at β = 0.
+The sign splits by block rather than being uniform — `rest_plus_eps`
+moves down at all 1156 positions, the boosted blocks up at 2997 of 2998.
+`../task-notes/task-2-cython-oracles.md` has the table.
 
-### A2 — muon photon rest-frame endpoint (7 cases)
+### A2 — muon photon rest-frame endpoint (1 case, predicted 7)
 
-`spectra.photon.muon`, `spectra.photon.charged_pion`,
-`spectra.photon.charged_rho`, `spectra.photon.neutral_rho`,
+**Measured by Task 2: `spectra.photon.muon` only, its `rest` block, four
+positions.** The other six this row predicted —
+`spectra.photon.charged_pion`, `spectra.photon.charged_rho`,
+`spectra.photon.neutral_rho`,
 `mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum`,
-`mediator_spectra.vector.photon.dnde_decay_v`,
-`mediator_spectra.vector.photon.dnde_decay_v_pt`.
+`mediator_spectra.vector.photon.dnde_decay_v` and
+`mediator_spectra.vector.photon.dnde_decay_v_pt` — move **0 values
+each**.
 
-Blocks: all. The moved region is the last 0.25 MeV below the endpoint in
-the muon rest frame, smeared by each boost.
+The prediction came from the composition graph, which is right about who
+calls the muon kernel and silent about *how*. The defective branch is
+guarded by `emu - MASS_MU < DBL_EPSILON`: it fires only for a muon
+exactly at rest. Every composed caller boosts the muon first — the
+charged pion evaluates it at `ENG_MU_PIRF = 109.778` MeV, both mediators
+at `m/2 ≥ 125` MeV — so no chain reaches the branch at all. "Smeared by
+each boost" was the wrong picture: there is nothing to smear.
+
+The general form, worth carrying to the other rows: **a composition edge
+in the graph above is not by itself a path to a defect.** If the defect
+sits behind a guard, ask what argument the caller passes.
+
+This one also cannot be read off the corpus in the obvious direction.
+All four moved positions go from a shipped `0.0` to a small *negative*
+value, because the corpus grid samples the top 0.0198 MeV of the
+regained window (where the O(α) formula is below zero) and none of the
+0.234 MeV of positive spectrum beneath it. See
+`../task-notes/task-2-cython-oracles.md`.
 
 ### A3 — charged-pion forward cone (6 cases)
 
@@ -150,29 +174,34 @@ capture; Group B does not, and has no ordering constraint at all.
 
 ## Coverage arithmetic
 
-The corpus has 41 cases. The rows above name 7 + 7 + 6 + 6 + 1 + 1 + 2
-= **30 case slots** across seven defects, but four of the seven sets are
+The corpus has 41 cases. The rows above name 7 + 1 + 6 + 6 + 1 + 1 + 2
+= **24 case slots** across seven defects, but three of the seven sets are
 wholly contained in another — derived, not eyeballed:
 
 ```text
-A3 ⊆ A2   B3 ⊆ A2   B1 ⊆ A1   B2 ⊆ A1     and A1, A2, A4 are pairwise disjoint
+B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3     and A1, A2, A3, A4 are pairwise disjoint
 ```
 
-So the union is exactly `|A1| + |A2| + |A4|` = 7 + 7 + 6 = **20**.
-Two consequences worth carrying into the tasks. Every case A3 touches,
-A2 touches first — so Task 8 declares nothing on a case Task 7 has not
-already opened, and `rules.md` rule 7's no-overlap requirement binds on
-*positions* there rather than on cases. And A4 is disjoint from
+So the union is exactly `|A1| + |A2| + |A3| + |A4|` = 7 + 1 + 6 + 6 =
+**20**. Two consequences worth carrying into the tasks. A2 and A3 are
+now *disjoint* — A2 reaches only `spectra.photon.muon`, A3 reaches
+exactly the six cases A2 was predicted to share with it — so Task 8
+opens six cases of its own rather than adding positions to ones Task 7
+already declared, and `rules.md` rule 7's no-overlap requirement binds
+between A3 and B3 rather than between A2 and A3. And A4 is disjoint from
 everything else, which is what makes Task 10 safe to run in parallel.
 
-Predicted untouched: **21** — the 18 `cross_sections.*`, the 2 `spectra.neutrino.*`
+Untouched: **21** — the 18 `cross_sections.*`, the 2 `spectra.neutrino.*`
 (no defect on their path; they use `boost_delta_function`, not the
 interpolating integral), and `spectra.photon.neutral_pion` (the π⁰ → γγ
 box reaches neither the muon kernel nor the boost integral). 20 + 21 = 41.
 
-That arithmetic is the cheapest check on this file: if a repair task's
-measured radius changes any row, redo the sum and make it come out to 41
-again rather than patching one cell.
+That arithmetic is the cheapest check on this file, and it has now done
+its job once: Task 2's measurement cut A2 from 7 cases to 1, the slot
+count fell from 30 to 24 and one containment (`A3 ⊆ A2`) inverted into a
+disjointness — but the union stayed at 20, because the six cases A2 lost
+are exactly the six A3 keeps. Redo the sum after any measured change and
+make it come out to 41 again rather than patching one cell.
 
 ## The deletion schedule this radius has to beat
 
@@ -189,3 +218,30 @@ From `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` Task
 Task 4.6 is the only task left in Phase 04, so the first of these
 windows is the one closing soonest. Nothing in Group B appears in this
 table — that is what "corpus re-pinning only" means for B1–B3.
+
+### Two windows that had already closed
+
+Added 2026-08-19 by Task 2, which found them by looking rather than by
+reading this table. The rows above are the waves still ahead; these two
+were behind, and the table as first written implied the whole schedule
+was in the future.
+
+| Task | Deleted | Group A chain it stranded |
+| --- | --- | --- |
+| 4.2 (`0954e5a`) | `hazma/spectra/_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx` | **all seven of A1's cases** |
+| 4.5 (`b5f7f90`) | `hazma/spectra/_photon/_rho.pyx` | A2's and A3's two rho cases |
+
+Neither contradicts the A1 row of the roster table: `hazma/_utils/boost.pyx`
+*is* live, and `boost_integrate_linear_interp` still evaluates. What died
+is every Cython caller of it — the composition graph above says
+`rust/src/kernels/photon_tables.rs` is now the only consumer — so no
+corpus case could be reached from Cython through the primitive alone. The
+same split holds for the rho: A3's pion kernel is live, the outer
+quadrature that makes it `spectra.photon.charged_rho` is not.
+
+Task 2 recovered both by rebuilding the deleted sources from git rather
+than capturing at the primitive boundary; `test/parity/oracles/defects.py`
+carries the file list and the revision each comes from, and
+`test/parity/oracles/README.md` carries the loop. The lesson for anything
+reading this file later: a twin listed as *live* is a statement about one
+`.pyx`, not about the chain from it to a corpus case. Check the chain.

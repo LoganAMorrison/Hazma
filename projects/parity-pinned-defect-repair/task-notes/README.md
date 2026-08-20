@@ -22,7 +22,7 @@ section tracks live *status*.
 | # | Task | Depends on | Status | Task Note |
 |---|------|------------|--------|-----------|
 | 1 | Delta-declaration layer | — | Not started | `task-1-delta-declarations.md` |
-| 2 | Capture the corrected-value oracles | — | Not started | `task-2-cython-oracles.md` |
+| 2 | Capture the corrected-value oracles | — | **Complete** | `task-2-cython-oracles.md` |
 | 3 | Closed-form delta models (B1–B3) | 1 | Not started | `task-3-closed-form-deltas.md` |
 | 4 | Repair A1 — boost integral window | 1, 2 | Not started | `task-4-boost-window.md` |
 | 5 | Repair B1 — η′ line weight | 3, 4 | Not started | `task-5-eta-prime-line.md` |
@@ -43,8 +43,11 @@ section tracks live *status*.
     └──► 10 ──────────────────┘
 ```
 
-Task 2 has no upstream dependency and a hard external deadline. Start
-there if only one task can run.
+Task 2 had no upstream dependency and the project's only hard external
+deadline. It is done: every Group A oracle is captured and committed
+under `test/parity/oracles/`, so `cython-to-rust` Tasks 4.6, 6.2, 6.3 and
+6.4 may now run in any order without stranding a repair. Nothing else in
+this project is time-critical.
 
 ## Exit Criteria
 
@@ -120,11 +123,48 @@ there if only one task can run.
 
 ## Numerical impact so far
 
-_No public code paths touched yet._ Tasks 1–3 are expected to stay at
-"no public value changes"; Tasks 4–10 each move a published spectrum by
-design, and each records the function, the grid and the max shift here in
-its own PR (`../rules.md` rule 10). Task 12 aggregates this section into
-the `CHANGELOG.md` entry — it does not reconstruct it.
+**No public value has moved yet.** Task 2 shipped no library behavior —
+its four `.pyx` patches exist only inside the capture and are reverted.
+What it produced is the *measurement* each of Tasks 4, 7, 8 and 10 will
+be judged against: how far the corrected value sits from the committed
+corpus array, taken from patched Cython rather than from the Rust that
+will be repaired. Full per-case table in
+`task-2-cython-oracles.md`; the headline per defect, on the corpus
+grids:
+
+| Defect | Repair task | Cases moved | Positions moved | Largest relative shift | Direction |
+| --- | --- | --- | --- | --- | --- |
+| A1 boost window | 4 | 7 of 7 predicted | 4154 | ~1.0 (shipped up to 9,800× high near threshold) | **both** — down in `rest_plus_eps`, up in the boosted blocks |
+| A2 muon endpoint | 7 | **1** of 7 predicted | 4 | n/a (`0.0` → negative) | down; all four values become negative |
+| A3 pion cone | 8 | 6 of 6 predicted | 6359 | 7.77 | both |
+| A4 positron norm | 10 | 6 of 6 predicted | 21,975 | `0.000374207` uniformly | up, at every position |
+
+Three things in there are corrections to the plan rather than
+confirmations of it, and Tasks 4, 7 and 8 inherit them: A1's sign is not
+one-signed, A2 reaches one corpus case instead of seven, and A2's whole
+delta is four negative values replacing zeros. `PLAN.md`'s Task 4, 7 and
+8 gates and `references/defect-blast-radius.md` have been patched to
+match; the task note carries the evidence.
+
+The physics invariants each patched build was asked for, while it still
+existed (`../rules.md` rule 4) — none of these is re-runnable, so they
+are recorded rather than re-derivable:
+
+- **A1**: both of the follow-up's hand-computable cases land on the
+  closed form (1.933333 and 3.500000, against shipped 1.266667 and
+  53.497500).
+- **A2**: the O(α) rest-frame formula's own zero is at 52.808176 MeV,
+  0.019774 MeV below the kinematic endpoint it is now guarded at.
+- **A3**: `dnde_photon_charged_pion(900, 1396)` = 3.585860e-07 MeV⁻¹
+  against the follow-up's predicted 3.586e-07; yield 0.0808/0.0807/0.0806
+  photons per decay at `E_π` = 1000/1396/5000 MeV.
+- **A4**: the Michel spectrum integrates to 1.000000000000 (one ulp) at
+  rest and at both boosts; shipped, 0.999625933330.
+
+Tasks 4–10 each move a published spectrum by design, and each records the
+function, the grid and the max shift here in its own PR (`../rules.md`
+rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
+it does not reconstruct it.
 
 ## Decisions and Implementation Notes
 

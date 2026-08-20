@@ -1,0 +1,13 @@
+diff --git a/hazma/spectra/_photon/_muon.pyx b/hazma/spectra/_photon/_muon.pyx
+index a1e3c2e..9575755 100644
+--- a/hazma/spectra/_photon/_muon.pyx
++++ b/hazma/spectra/_photon/_muon.pyx
+@@ -38,7 +38,7 @@ cdef double dnde_photon_muon_rest_frame(double egam):
+     y = 2 * egam / MASS_MU
+     r = (MASS_E / MASS_MU)**2 
+ 
+-    if y <= 0.0 or y >= 1.0 - MASS_E / MASS_MU:
++    if y <= 0.0 or y >= 1.0 - r:
+         return 0.0
+ 
+     pre = ALPHA_EM / (3.0 * M_PI * y * MASS_MU) 

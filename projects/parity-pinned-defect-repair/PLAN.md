@@ -275,10 +275,15 @@ names — `spectra.photon.eta`, `spectra.photon.eta_prime`,
 `spectra.photon.charged_kaon`, `spectra.photon.long_kaon`,
 `spectra.photon.short_kaon` — and on nothing else; the repaired value
 reproduces Task 2's Cython oracle within the function's existing
-budget; the sign is one-signed and upward at every
-declared position, which is the follow-up's own characterization and is
-asserted rather than asserted-about. Every other corpus case unchanged
-against its original stored array.
+budget. **The sign is not one-signed** — this paragraph said it was, on
+the follow-up's "systematically low" characterization, and Task 2
+measured otherwise. It splits by block, and the assertion is per block:
+`rest_plus_eps` moves **down** at all 1156 of its positions (the two
+partial-cell terms overlap there, and the shipped value is ~9,800× too
+high), `near_rest`, `boosted_mild` and `boosted_strong` move **up** at
+2997 of 2998, and `rest` does not move at all — no caller reaches the
+integral at β = 0. `task-notes/task-2-cython-oracles.md` has the table.
+Every other corpus case unchanged against its original stored array.
 
 ### Task 5: Repair B1 — the η′ two-photon line weight
 
@@ -330,19 +335,31 @@ both mediator decay spectra), so it comes before Tasks 8 and 9. The Rust
 the repair reaches the mediator spectra whether or not Phase 06 has
 landed.
 
-**Deliverable / gate:** Declared deltas on all **7** cases the A2 row of
+**Deliverable / gate:** A declared delta on **1** case —
+`spectra.photon.muon`, its `rest` block, four positions. The A2 row of
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
-names — `spectra.photon.muon`, `spectra.photon.charged_pion`,
-`spectra.photon.charged_rho`, `spectra.photon.neutral_rho`,
-`mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum`,
-`mediator_spectra.vector.photon.dnde_decay_v`, and
-`mediator_spectra.vector.photon.dnde_decay_v_pt`. The `_pt` variants are
-separate corpus cases and are exactly what a "both mediators"
-enumeration drops; the count is the check. The repaired value reproduces
-Task 2's oracle. The endpoint
-invariant that Task 4.3 wrote —
-`the_in_flight_form_is_the_boost_integral_of_the_rest_frame_form` —
-must still hold, and now holds over the extra 0.25 MeV.
+predicted seven; Task 2 measured the other six at zero moved values
+each, because the rest-frame branch is guarded by
+`emu - MASS_MU < DBL_EPSILON` and every composed caller boosts the muon
+first (the charged pion at `ENG_MU_PIRF = 109.778` MeV, both mediators at
+`m/2 ≥ 125` MeV), so no composition chain can reach it. Re-derive that
+against the *Rust* rather than inheriting it — Task 2 measured Cython —
+but expect one case, and treat six moving as a finding about
+`photon_muon.rs` rather than as the prediction being vindicated.
+
+**Settle the negative sliver before declaring anything.** All four
+positions that move go from a shipped `0.0` to a *negative* value
+(−2.92e-09 to −3.00e-09): the corpus grid puts no point in the 0.234 MeV
+of positive spectrum the repair regains, and four in the 0.0198 MeV at
+the top where the O(α) rest-frame formula evaluates below zero. So this
+task's entire numerical impact is the sign question, not the endpoint
+extension. `task-notes/task-2-cython-oracles.md` has the measurement and
+the three options.
+
+The endpoint invariant Task 4.3 wrote —
+`the_in_flight_form_is_the_boost_integral_of_the_rest_frame_form` — must
+still hold. Note it is an *in-flight* identity, so it is not what the
+four moved positions test.
 
 ### Task 8: Repair A3 — the charged-pion forward cone
 
@@ -351,9 +368,13 @@ every abscissa fell outside the integrand's support.
 
 **Scope / implementation notes:** `rust/src/kernels/photon_pion.rs`,
 `CHARGED_PION_QUAD`. The integrand is nonzero only where the
-pion-rest-frame photon energy stays under `ENG_GAM_MAX_PIRG = 69.783`
-MeV; the fix is to integrate over that window rather than over all of
-`cos θ` and hope the adaptive rule finds it. Depends on Task 7 (this
+pion-rest-frame photon energy stays under the widest of its three
+channel edges; the fix is to integrate over that window rather than over
+all of `cos θ` and hope the adaptive rule finds it. Task 2's oracle used
+`(m_π² − m_e²)/(2 m_π) = 69.784260` MeV rather than the
+`ENG_GAM_MAX_PIRG = 69.783458` literal this paragraph used to name: the
+literal is the *narrower* of the two by 8.0e-4 MeV and clips the last
+sliver of `π → eνγ`. Match it or re-derive the oracle. Depends on Task 7 (this
 kernel boosts the muon spectrum). Partition the verification grid by
 scipy's own convergence verdict rather than picking one tolerance —
 `projects/cython-to-rust/task-notes/README.md` records that lesson from
@@ -362,16 +383,22 @@ this exact kernel, and PR #68's two CI rounds are why.
 **Deliverable / gate:** Declared deltas on all **6** cases the A3 row of
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
 names — `spectra.photon.charged_pion`, `spectra.photon.charged_rho`,
-`spectra.photon.neutral_rho`, and the same three mediator photon cases
-Task 7 lists. A3 is a strict subset of A2, so every case here is one
-Task 7 has already opened, and `rules.md` rule 7's no-overlap
-requirement binds on *positions* rather than on cases. The specific
-figure the
-follow-up pins: `dnde_photon_charged_pion(900, 1396)` moves from `0.0` to
-`3.586e-07` MeV⁻¹. A test that no stored zero in that case survives
-repair *except* the ones outside the kinematic support — the difference
-between the two is the whole defect, and a declaration that covers both
-would hide it.
+`spectra.photon.neutral_rho`,
+`mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum`,
+`mediator_spectra.vector.photon.dnde_decay_v` and
+`mediator_spectra.vector.photon.dnde_decay_v_pt`. Task 2 measured all six
+moving, so this row stands. A3 was described here as a strict subset of
+A2; A2 measured at one case (`spectra.photon.muon`) and the two are now
+**disjoint**, so every case here is one Task 8 opens itself rather than
+one Task 7 has already touched, and `rules.md` rule 7's no-overlap
+requirement binds between this task and Task 9 (B3, the rho `rest`
+blocks) rather than against Task 7. The specific figure the follow-up
+pins is confirmed from Cython:
+`dnde_photon_charged_pion(900, 1396)` moves from `0.0` to
+`3.585860e-07` MeV⁻¹, against the `3.586e-07` predicted. A test that no
+stored zero in that case survives repair *except* the ones outside the
+kinematic support — the difference between the two is the whole defect,
+and a declaration that covers both would hide it.
 
 ### Task 9: Repair B3 — the rho rest-frame branch
 
