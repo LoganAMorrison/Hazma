@@ -17,6 +17,8 @@ function's budget.
 | `data/*.npz` | One file per entry point. Reference arrays, stored exactly as the library returned them. |
 | `data/manifest.json` | Provenance and per-array hashes. |
 | `data/unpinnable.json` | The mask `stability.py` builds: 494 stored positions that assert nothing. |
+| [`oracles/`](oracles/README.md) | A different set of arrays with the opposite purpose: the *corrected* value of the four defects the corpus pins, captured from patched Cython before the port deleted it. Never compared against by `test_parity.py`. |
+| [`test_oracles.py`](test_oracles.py) | The gate on that directory — integrity, platform scope, and that every captured array names a real corpus array. |
 
 ## Commands
 
@@ -99,6 +101,16 @@ anything under `hazma/` imports one of them — at which point it is a
 served kernel and belongs back in the count. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
+
+Seven of the values in here are, separately, *wrong* — filed under
+`docs/followups/todo/` and repaired by
+[`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
+That does not make them regenerable either: the committed arrays are the
+record of what 2.1.0 shipped, and a repair is expressed as a declared
+delta against them. [`oracles/`](oracles/README.md) holds what those
+positions *should* be, captured from the Cython twins before the port
+deleted them, and is the only place in this directory where a corrected
+number lives.
 
 ## What the corpus pins
 

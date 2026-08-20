@@ -1,0 +1,78 @@
+diff --git a/hazma/spectra/_photon/_pion.pyx b/hazma/spectra/_photon/_pion.pyx
+index d32a8aa..9ba5462 100644
+--- a/hazma/spectra/_photon/_pion.pyx
++++ b/hazma/spectra/_photon/_pion.pyx
+@@ -3,6 +3,7 @@ cimport numpy as np
+ 
+ from scipy.integrate import quad
+ from libc.math cimport exp, log, M_PI, log10, sqrt, abs, pow, M_SQRT1_2
++from libc.float cimport DBL_EPSILON
+ 
+ import cython
+ 
+@@ -23,6 +24,20 @@ DEF MMU = MASS_MU
+ DEF BETA_MU_PIRF = 0.27138337509758564
+ DEF GAMMA_MU_PIRF = 1.0389919859434902
+ 
++# The widest of `charged_pion_integrand`'s three support edges, in the pion
++# rest frame, and therefore the single bound that clips none of them:
++#
++#   pi -> mu nu gamma           (MPI^2 - MMU^2) / (2 MPI) = 29.792142
++#   the boosted muon spectrum   ENG_GAM_MAX_PIRG          = 69.783458
++#   pi -> e nu gamma            (MPI^2 - ME^2)  / (2 MPI) = 69.784260
++#
++# Derived from this file's own MPI and ME rather than typed, and 8.0e-4
++# MeV above ENG_GAM_MAX_PIRG -- close enough that the follow-up quotes
++# both as "69.783", far enough that using the legacy literal as the bound
++# would truncate the electron channel's last sliver. A bound wider than
++# the support only admits zeros; a narrower one silently drops physics.
++cdef double ENG_GAM_MAX_PIRF = (MPI * MPI - ME * ME) / (2.0 * MPI)
++
+ 
+ # ============================================================================
+ # ---- Charged Pion ----------------------------------------------------------
+@@ -107,6 +122,7 @@ cdef double charged_pion_integrand(double cl, double eng_gam, double eng_pi):
+     return result
+ 
+ 
++@cython.cdivision(True)
+ cdef double dnde_photon_charged_pion_point(double eng_gam, double eng_pi):
+     """
+     Returns the radiative spectrum value from charged pion given a gamma
+@@ -117,10 +133,35 @@ cdef double dnde_photon_charged_pion_point(double eng_gam, double eng_pi):
+         eng_gam: Energy of photon is laboratory frame.
+         eng_pi: Energy of charged pion in laboratory frame.
+     """
++    cdef double beta_pi
++    cdef double gamma_pi
++    cdef double cos_min
++
+     if eng_pi < MASS_PI:
+         return 0.0
+ 
+-    return quad(charged_pion_integrand, -1.0, 1.0, points=[-1.0, 1.0], \
++    # `charged_pion_integrand` is nonzero only where the pion-rest-frame
++    # photon energy `eng_gam * gamma_pi * (1 - beta_pi * cl)` stays under
++    # ENG_GAM_MAX_PIRF, which is a lower bound on `cl`. Integrating over
++    # all of [-1, 1] and leaving the adaptive rule to find that window is
++    # what makes the forward cone vanish: once the window is narrower than
++    # the spacing of the 21-point Gauss-Kronrod abscissae on the full
++    # interval, every node returns zero and `qagp` terminates
++    # successfully at 0.0.
++    if eng_pi - MASS_PI < DBL_EPSILON:
++        # At rest beta_pi is zero, the integrand does not depend on `cl`
++        # at all, and there is no window to restrict.
++        cos_min = -1.0
++    else:
++        gamma_pi = boost_gamma(eng_pi, MASS_PI)
++        beta_pi = boost_beta(eng_pi, MASS_PI)
++        cos_min = (1.0 - ENG_GAM_MAX_PIRF / (eng_gam * gamma_pi)) / beta_pi
++        if cos_min > 1.0:
++            return 0.0
++        if cos_min < -1.0:
++            cos_min = -1.0
++
++    return quad(charged_pion_integrand, cos_min, 1.0, points=[cos_min, 1.0], \
+                    args=(eng_gam, eng_pi), epsabs=1e-10, \
+                    epsrel=1e-5)[0]
+ 

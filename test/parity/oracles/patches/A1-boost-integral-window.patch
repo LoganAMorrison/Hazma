@@ -1,0 +1,35 @@
+diff --git a/hazma/_utils/boost.pyx b/hazma/_utils/boost.pyx
+index 5c94847..f8c40f8 100644
+--- a/hazma/_utils/boost.pyx
++++ b/hazma/_utils/boost.pyx
+@@ -212,8 +212,29 @@ cdef double boost_integrate_linear_interp(double photon_energy, double beta, np.
+         if fabs(x[ihigh] - ub) > 1e-6:
+             ihigh = ihigh - 1
+ 
++    if ilow > ihigh:
++        # Both bounds land inside the single cell [x[ihigh], x[ilow]]
++        # (ihigh is ilow - 1 here). Neither partial-cell term below may
++        # run: they would integrate [lb, x[ilow]] and [x[ihigh], ub],
++        # which overlap and between them cover about two whole cells
++        # instead of the sliver between the bounds. The answer is one
++        # linear interpolant integrated over [lb, ub].
++        x1 = x[ihigh]
++        x2 = x[ilow]
++        y1 = yy[ihigh]
++        y2 = yy[ilow]
++
++        m = (y2 - y1) / (x2 - x1)
++        b = y1 - m * x1
++
++        integral += (ub - lb) * (0.5 * m * (ub + lb) + b)
++        return integral / (2.0 * gamma * beta)
++
++    # Inclusive at the top: the cell ending at x[ihigh] belongs to the
++    # interior sum, and the upper partial cell below starts at x[ihigh]
++    # rather than at x[ihigh + 1], so the two meet without overlapping.
+     if ilow < ihigh:
+-        integral += np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])
++        integral += np.trapezoid(yy[ilow:ihigh + 1], x=x[ilow:ihigh + 1])
+ 
+     # Handle edges
+     if ilow > 0 and fabs(x[ilow] - lb) > 1e-6:

@@ -1,0 +1,22 @@
+diff --git a/hazma/spectra/_positron/_muon.pyx b/hazma/spectra/_positron/_muon.pyx
+index 4aea64a..4e6e01d 100644
+--- a/hazma/spectra/_positron/_muon.pyx
++++ b/hazma/spectra/_positron/_muon.pyx
+@@ -25,7 +25,7 @@ DEF R_FACTOR = 1.0001870858234163
+ cdef double dndx_positron_muon_rest_frame(double x):
+     if x <= 2 * R or x >= 1.0 + R2:
+         return 0.0
+-    return -2.0 * sqrt(x**2 - 4.0 * R2) * (4.0 * R2 + x * (-3.0 - 3.0 * R2 + 2.0 * x)) / R_FACTOR
++    return -2.0 * sqrt(x**2 - 4.0 * R2) * (4.0 * R2 + x * (-3.0 - 3.0 * R2 + 2.0 * x)) * R_FACTOR
+ 
+ 
+ @cython.boundscheck(True)
+@@ -54,7 +54,7 @@ cdef double dndx_positron_muon(double x, double beta):
+ 
+     return (xm * (8 * R2 + xm * (-3 - 3 * R2 + (4 * xm) / 3.0)) + xp * (
+         -8 * R2 + (3 + 3 * R2 - (4 * xp) / 3.0) * xp
+-    )) / (2 * beta * R_FACTOR)
++    )) * R_FACTOR / (2 * beta)
+ 
+ 
+ @cython.boundscheck(True)
