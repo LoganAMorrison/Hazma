@@ -41,6 +41,9 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [four scalar elastic cross sections cancel away every significant bit](todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md) | 2026-08-18 | closing the parity-corpus follow-up | cross-cutting |
 | [the review-lessons ledger is past its working-set cap](todo/lessons-ledger-over-its-working-set-cap.md) | 2026-08-19 | PR #72 review round 1 | cross-cutting |
 | [the charged pion's `pi -> e nu` neutrino line is added twice](todo/neutrino-pion-electron-line-counted-twice.md) | 2026-08-20 | cython-to-rust Task 4.6 | cross-cutting |
+| [two vector cross sections raise `TypeError` at `e_cm = 2 m_x`](todo/vector-cross-sections-raise-at-the-two-mx-threshold.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
+| [`thermal_cross_section` returns its integrator's initial estimate](todo/thermal-cross-section-quadrature-never-converges.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
+| [`pip install -e .` builds `hazma._core` unoptimized](todo/editable-installs-build-the-rust-extension-in-debug.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

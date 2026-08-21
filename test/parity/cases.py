@@ -17,9 +17,12 @@ compiled layer, enumerated in
 ``projects/cython-to-rust/references/cython-inventory.md`` ("Entry
 points by module"): 16 spectra kernels, 12 scalar-mediator and 6
 vector-mediator cross-section entry points, and 7 mediator-spectrum
-entry points. The two ``sigma_xx_to_all`` exports are excluded because
-nothing imports them; `assert_unconsumed_exports_are_unimported` proves
-that at generation time rather than trusting the inventory snapshot.
+entry points. Both cross-section modules also export a
+``sigma_xx_to_all``, and both are excluded because nothing imports them;
+`assert_unconsumed_exports_are_unimported` proves that at generation
+time rather than trusting the inventory snapshot. It has one row rather
+than two from cython-to-rust Task 5.1 on, because the check reads the
+live tree and the vector module is gone — see `UNCONSUMED_EXPORTS`.
 
 Grid design
 -----------
@@ -897,14 +900,26 @@ def _scalar_decay_spectrum_blocks(models: ModelPoints) -> list[Block]:
 
 #: Entry points that exist in the compiled layer but that nothing imports.
 #: `assert_unconsumed_exports_are_unimported` re-derives this at generation
-#: time; the plan drops them in Phase 05 rather than porting them.
+#: time; the plan drops each one in Phase 05 rather than porting it.
+#:
+#: The vector row went with its ``.pyx`` in cython-to-rust Task 5.1: the
+#: check below reads the *live* tree, and a module that no longer exists
+#: has no export to prove unimported. The port kept the sum as a private
+#: helper of the Rust thermal integrand, which is what the plan means by
+#: "dropped, not ported".
 UNCONSUMED_EXPORTS = {
     "hazma.scalar_mediator._c_scalar_mediator_cross_sections": "sigma_xx_to_all",
-    "hazma.vector_mediator._c_vector_mediator_cross_sections": "sigma_xx_to_all",
 }
 
 _SCALAR_XS_MODULE = "hazma.scalar_mediator._c_scalar_mediator_cross_sections"
-_VECTOR_XS_MODULE = "hazma.vector_mediator._c_vector_mediator_cross_sections"
+#: Ported: cython-to-rust Task 5.1. The module is the *wrapper*, not the
+#: ``.pyx``, because that is where the value now comes from — see
+#: `PORTED_ENTRY_POINTS`. Unlike the spectra wrappers this one defines no
+#: function of its own: its public surface is a mixin class whose methods
+#: take ``self``, so the six entry points it re-exports from
+#: ``hazma._core.vector_mediator`` under their own names are what the
+#: corpus can drive.
+_VECTOR_XS_MODULE = "hazma.vector_mediator._vector_mediator_cross_sections"
 
 
 def build_cases() -> dict[str, Case]:
@@ -1334,8 +1349,8 @@ def assert_no_rust_core() -> None:
 def assert_unconsumed_exports_are_unimported() -> None:
     """Prove the excluded entry points still have no importers.
 
-    The corpus deliberately omits the two ``sigma_xx_to_all`` exports
-    because nothing in `hazma` imports them, so there is no consumed
+    The corpus deliberately omits every ``sigma_xx_to_all`` export
+    because nothing in `hazma` imports one, so there is no consumed
     behavior to pin. That is a property of the tree, not a fact to
     inherit from the inventory snapshot, so it is re-derived here: if
     either name ever acquires an importer, generation fails and the
@@ -1451,6 +1466,37 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     "spectra.neutrino.charged_pion": (
         "hazma.spectra._neutrino._pion",
         "dnde_neutrino_charged_pion",
+    ),
+    # cython-to-rust Task 5.1, which opens Phase 05. Nothing cimported
+    # `_c_vector_mediator_cross_sections.pyx` -- it has no `.pxd` and
+    # exports no capsules -- so the whole file went in the swap PR and
+    # these rows are the only record of where the pinned values came
+    # from. Its seventh `def`, `sigma_xx_to_all`, is absent here because
+    # it was never in the corpus: `UNCONSUMED_EXPORTS` excluded it and
+    # the plan drops rather than ports it.
+    "cross_sections.vector.sigma_xx_to_v_to_ff": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "sigma_xx_to_v_to_ff",
+    ),
+    "cross_sections.vector.sigma_xx_to_v_to_pipi": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "sigma_xx_to_v_to_pipi",
+    ),
+    "cross_sections.vector.sigma_xx_to_v_to_pi0g": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "sigma_xx_to_v_to_pi0g",
+    ),
+    "cross_sections.vector.sigma_xx_to_v_to_pi0v": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "sigma_xx_to_v_to_pi0v",
+    ),
+    "cross_sections.vector.sigma_xx_to_vv": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "sigma_xx_to_vv",
+    ),
+    "cross_sections.vector.thermal_cross_section": (
+        "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "thermal_cross_section",
     ),
 }
 

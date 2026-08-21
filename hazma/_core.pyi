@@ -7,8 +7,10 @@ import numpy as np
 # vector_mediator — are filled one kernel at a time by Phases 04-06.
 # Phase 04 closed on 2026-08-20 having filled the first three: `photon`
 # carries all twelve public decay spectra, `positron` both of its
-# compiled ones, and `neutrino` both of its. `scalar_mediator` and
-# `vector_mediator` are still empty and are Phases 05-06's.
+# compiled ones, and `neutrino` both of its. Phase 05 Task 5.1 then
+# filled `vector_mediator` with the six consumed cross sections of
+# `_c_vector_mediator_cross_sections.pyx`; `scalar_mediator` is still
+# empty and is Task 5.2's, and both submodules grow again in Phase 06.
 #
 # The live roster is discovered rather than listed — `test/parity/
 # cases.py`'s `rust_core_kernels()` walks the extension — so this comment

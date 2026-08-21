@@ -26,7 +26,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
-| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | Not started |
+| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **In Progress** — Task 5.1 complete (2026-08-20); the six vector entry points on Rust and its `.pyx` deleted |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
@@ -203,10 +203,20 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - **Two live entry points raise instead of returning at threshold**
   (Task 1.1, not in the inventory's bug list):
   `sigma_xx_to_v_to_pipi` and `sigma_xx_to_v_to_pi0v` raise `TypeError`
-  at exactly `e_cm = 2·mx` (Cython refusing a complex `**0.5` result).
-  The scalar-mediator siblings do not. Pinned as `nan` plus a manifest
-  `raises` record; Phase 05 ports them as-is per rules.md rule 1, and
-  any repair is a separate declared change.
+  at exactly `e_cm = 2·mx`. The scalar-mediator siblings do not. Pinned
+  as `nan` plus a manifest `raises` record, which `test_parity.py`
+  **replays rather than skips**. **Task 5.1 ported them as-is per
+  rules.md rule 1 and measured the mechanism, which is not quite what
+  this bullet said before it:** the exponent is `** 1.5`, and Cython 3's
+  default `cpow` semantics compile the *whole enclosing expression* in
+  `double _Complex` — not just the power. At `e_cm = 2·mx` the
+  denominator is exactly zero, compiler-rt's `__divdc3` takes C99 Annex
+  G's zero-denominator recovery and returns `(±inf, nan)`, and
+  `__Pyx_SoftComplexToDouble` rejects the non-zero imaginary part. The
+  port reproduces the type and not the wording, and needed a new
+  dispatch shape (`map_unary_try`) to do it. Repair is filed as a
+  separate declared change:
+  [the `2 m_x` raise](../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md).
 - **The two `thermal_cross_section` implementations disagree above
   `x = 300`** (Task 1.1): the scalar returns `0.0`
   (`hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1401-1402`),
@@ -1440,6 +1450,41 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     sibling divides and is 0.0374% low (Task 4.1's defect). The two files
     really do disagree and only one of them is wrong.
 
+- **Task 5.1 (vector cross sections): five of six entry points
+  bit-equal; one moves by 2.06e-14.** The five closed forms —
+  `sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}` and `sigma_xx_to_vv` —
+  reproduce the Cython **exactly** at all 5,811 values the corpus
+  compares them on (5,814 stored, less 3 positions that stand in for a
+  pinned raise), on the capturing platform, at `rtol = 0`. That was not
+  free: two of them compiled through `double _Complex` (see Findings),
+  and a real-arithmetic transliteration would have missed by up to
+  9.0e-15.
+  `cross_sections.vector.thermal_cross_section` moves by at most
+  **2.0597e-14** relative over its 285 pinned values (64 bit-equal),
+  worst at `open_resonance`, `x = 0.298`
+  (`9.316997739611058e-08 → 9.316997739610866e-08`). The drift is the
+  Bessel prefactor and weight rather than the integrator —
+  `bessel_kn(2, ·)` agrees with scipy to 8.9e-16 and the prefactor
+  squares it. Below rule 3's 1e-12 threshold, so no CHANGELOG line of
+  its own. **Budget tightened, not widened:** that case goes from
+  `QUAD_RTOL` (1e-8) to `PORTED_QUAD_RTOL` (1e-12), 49x headroom.
+  - **A user-visible *string* change, and it is the only one:** the
+    `TypeError` both complex channels raise at `e_cm = 2 m_x` keeps its
+    type and loses Cython's wording, which advised
+    `use 'cython.cpow(True)'` — a compiler directive that will not exist
+    after Phase 07. The corpus records only the type.
+  - **An eighth and ninth *known wrong* entry for the Phase 07
+    CHANGELOG,** both filed and neither introduced here: two of the six
+    channels **raise** at the annihilation threshold while the other
+    four return `inf` or `nan`
+    ([the `2 m_x` raise](../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md)),
+    and `thermal_cross_section` returns its integrator's *initial
+    estimate* — 0.5%–5% off the true integral for every `x` above about
+    5, i.e. across the whole freeze-out region
+    ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
+    Both are reproduced under rule 1, so no value moves; the second is
+    the more consequential, because relic abundance goes as 1/⟨σv⟩.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)
@@ -2267,11 +2312,13 @@ it from memory.)
 
 ## Handoff to Next Task
 
-**Phases 00–04 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20).
-What remains is **Phase 05** (mediator cross sections), then **Phase 06**
-(mediator spectra), then **Phase 07** (cutover + close). 05 and 06 share
-no files with what Phase 04 touched; 06 depends on 04's kernels and on
-05 only for ordering.
+**Phases 00–04 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20)
+and **Phase 05 is open**: Task 5.1 landed the six vector cross sections
+on 2026-08-20 and deleted their `.pyx`, leaving **Task 5.2** (the twelve
+scalar ones) and **Task 5.3** (the thermal ⟨σv⟩ / relic sweep). After
+that come **Phase 06** (mediator spectra) and **Phase 07** (cutover +
+close). 05 and 06 share no files with what Phase 04 touched; 06 depends
+on 04's kernels and on 05 only for ordering.
 
 **Phase 04 delivered 16 entry points and `hazma/spectra/` now holds no
 Cython Python entry point of any kind.** Four `.pyx` survive there for
@@ -2332,12 +2379,21 @@ with the corpus there however faithful it is.
   snapshot. **Every row of its dead-code table is now done.** Read it for
   the **live surface** and the cimport DAG, which Phases 05–06 still need;
   read its headline counts as history.
-- **11 `.pyx` and 8 `.pxd` after Task 4.6** (14/11 before it — the three
-  neutrino extensions were whole-file deletions, unlike the `def`-only
-  removal from `_positron/_pion.pyx`). Zero C++. Re-derive with the
-  clean-then-rebuild recipe rather than quoting this; a stale `.so` makes
-  a wrong list look right.
-- **`hazma._core` serves sixteen kernels**:
+- **10 `.pyx` and 8 `.pxd` after Task 5.1** (11/8 after Task 4.6, 14/11
+  before it). The vector cross sections were a whole-file deletion —
+  nothing cimported them, and the module exported no capsules — unlike
+  the `def`-only removal from `_positron/_pion.pyx`. Zero C++.
+  Re-derive with the clean-then-rebuild recipe rather than quoting this;
+  a stale `.so` makes a wrong list look right.
+- **`hazma._core` serves twenty-two kernels.** The six added by
+  Task 5.1 are `vector_mediator.sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}`,
+  `vector_mediator.sigma_xx_to_vv` and
+  `vector_mediator.thermal_cross_section`, each called by
+  `hazma/vector_mediator/_vector_mediator_cross_sections.py`. Its
+  seventh `def`, `sigma_xx_to_all`, was **dropped rather than ported**
+  (the importer check was re-run and came back empty) and survives as a
+  private helper of the Rust thermal integrand. The sixteen from
+  Phase 04:
   `positron.dnde_positron_muon` (4.1), the seven
   `photon.dnde_photon_*` tabulated meson spectra (4.2),
   `photon.dnde_photon_muon` (4.3),
@@ -2400,11 +2456,30 @@ with the corpus there however faithful it is.
   `rust/src/kernels/neutrino_muon.rs` (Task 4.6 — they are arithmetic the
   kernel needs). `test/test_core_constants.py` scans the tree for the
   sources it maps, so the row must go with the file either way.
+- **A `.pyx` with a fractional exponent is not doing real
+  arithmetic** (Task 5.1). Cython 3's default `cpow` semantics compile
+  `double ** double` — and everything around it in the same expression —
+  in `double _Complex`, reaching `cpow` and compiler-rt's `__divdc3`
+  instead of `pow` and `/`. Neither agrees with its real spelling (up to
+  9.0e-15 and 4.0e-16 relative), so both must be reproduced:
+  `cpow(t + 0i, 1.5 + 0i)` is bit-for-bit `exp(1.5·ln t)` and `__divdc3`
+  is C99 Annex G's scaled quotient, both in
+  `rust/src/kernels/vector_xs.rs`. **`grep -c SoftComplexToDouble` on
+  the generated C before porting** — the scalar cross sections have
+  none; Phase 06's four modules are unchecked.
+- **`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1) —
+  `setuptools_rust` infers `debug = self.inplace or self.debug`. A
+  benchmark from an editable tree is ~20x pessimistic and inverts the
+  comparison against Cython. Filed rather than fixed
+  ([the debug editable build](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md));
+  until it is decided, take rule 12's benchmark from a release build and
+  say so.
 - **Task 3.5 is done, so the dispatch and error contract is settled** —
   a Phase 05–06 wrapper writes
-  `dispatch::map_unary(x, "<quantity>", kernel)` (or `map_flavors` for a
-  `(3, N)` return, which Task 4.6 exercised end to end) and inherits every
-  message, return type and edge case. The rule that decided every
+  `dispatch::map_unary(x, "<quantity>", kernel)`, `map_flavors` for a
+  `(3, N)` return (Task 4.6), or **`map_unary_try` for a kernel that
+  raises at some arguments** (Task 5.1, the fourth live shape) and
+  inherits every message, return type and edge case. The rule that decided every
   divergence: **each exception the Cython raises explicitly keeps its
   type; only its `assert`s change type** (`../rules.md` rule 9).
 - **`test/test_core_dispatch.py`'s spectra oracle is now
