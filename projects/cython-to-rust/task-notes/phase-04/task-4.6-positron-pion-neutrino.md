@@ -646,8 +646,8 @@ $ find hazma -name '*.pyx' | wc -l ; find hazma -name '*.pxd' | wc -l
        8
 $ python -c "import sys; sys.path.insert(0,'test/parity'); import cases; print(len(cases.rust_core_kernels()))"
 16
-$ scripts/agents/check_doc_citations.py --changed-vs origin/master
-docs scanned: 10
+$ scripts/agents/check_doc_citations.py --changed-vs origin/master  # post-commit
+docs scanned: 11
 in-repo citations checked: 20
   resolved by exact: 15
   resolved by suffix: 5
@@ -669,12 +669,15 @@ what let the blocking finding through.**
 `scripts/agents/check_doc_citations.py --changed-vs origin/master`
 explicitly; the sweep listed the `rg` half and not the mechanical half,
 so a bare-basename citation that `rg` happily matched went unchecked for
-ambiguity. It is in the block now. (`docs scanned: 10` because `--changed-vs` diffs
-*committed* history — `docs/agents/lessons.md`'s ledger append is in the
-same commit as this block, so the next run scans 11; that is
-`lessons.md`'s own `[changed-vs-sees-only-commits]`, and the invariant
-that matters, `out-of-range or ambiguous: NONE`, holds either way.) Of
-its 16 skipped
+ambiguity. It is in the block now, and the run above is the
+**post-commit** one — `--changed-vs` diffs *committed* history (`lessons.md`'s own
+`[changed-vs-sees-only-commits]`), so the pre-commit run scanned 10 docs
+and missed `docs/agents/lessons.md`. That mattered: the ledger entry this
+round appends *quotes the bad citation*, so the post-commit re-run went
+red on `lessons.md:238` and needed a third commit. **A ledger entry about
+a bad citation is itself a citation** — which is the sharpest form of
+doc-consistency.md's "prove it is a fixed point" rule, and is now in the
+ledger entry too. Of its 16 skipped
 external citations, the eight into `hazma/spectra/_neutrino/*.pyx` each
 now name `ed1fa20`, so "external" reads as "open it at that revision"
 rather than "unresolvable"; four are `scipy/integrate/_quadpack_py.py`,
