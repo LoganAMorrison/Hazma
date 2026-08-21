@@ -58,7 +58,10 @@
 //! Ignoring either would put both kernels outside their corpus budget,
 //! which is `EXACT` (bit-equality) on the capturing platform. With both,
 //! all five closed-form kernels reproduce the Cython **bit-for-bit at
-//! every one of the 4,667 points the parity corpus pins**.
+//! every one of the 5,811 values the parity corpus compares them on** —
+//! 5,814 stored (5,670 on the swept grids, 144 on the scalar probes)
+//! less the 3 positions that stand in for a pinned `TypeError` rather
+//! than for a number.
 //!
 //! # Where the FMAs are
 //!

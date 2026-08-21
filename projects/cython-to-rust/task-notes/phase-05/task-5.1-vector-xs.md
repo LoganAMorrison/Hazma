@@ -179,6 +179,17 @@ the choice is a project-wide dev-loop decision, not a Task 5.1 one.
   `test_the_served_roster_is_exactly_the_ported_entry_points` compares
   the served leaf names against `Case.function`, which is what forced the
   canonical spelling; `TestTheWrapperReExports` pins each alias.
+- **PR #75 review round 1** — one blocking finding, a stale pinned-value
+  count. `rust/src/kernels/vector_xs.rs:61` said 4,667 where this note
+  said 5,667. Re-derived from the stored corpus rather than reconciled
+  to either: **5,814 stored, less 3 replayed raises, is 5,811**. Both
+  circulating figures were short because they counted only the swept
+  grids and not the 144 scalar-probe values `test_parity.py:243` sends
+  through the same budget — `scalar_values` is not in its `ABSCISSAE`
+  set. All six occurrences swept and corrected; the class is cited on
+  `[hand-written-population-in-a-derived-check]` in
+  [`lessons.md`](../../../../docs/agents/lessons.md). Nothing executable
+  changed.
 
 ## Files Changed
 
@@ -210,6 +221,8 @@ the choice is a project-wide dev-loop decision, not a Task 5.1 one.
 - `docs/followups/todo/{vector-cross-sections-raise-at-the-two-mx-threshold,
   thermal-cross-section-quadrature-never-converges,
   editable-installs-build-the-rust-extension-in-debug}.md` + index rows.
+- `docs/agents/lessons.md` — PR #75 cited on
+  `[hand-written-population-in-a-derived-check]` (review round 1).
 - `projects/cython-to-rust/phases/phase-05-mediator-cross-sections.md` —
   `status: In Progress`.
 - `projects/cython-to-rust/task-notes/{README.md,phase-05/README.md}`,
@@ -267,8 +280,14 @@ What the tests cover, by kind rather than by count:
 
 - **Parity** — the six entry points against the stored pre-port arrays
   at three mediator model points each (open, narrow and closed
-  resonance), 5,667 array values plus scalar probes, plus the three
-  replayed raises.
+  resonance; six blocks for `sigma_xx_to_v_to_ff`, which is captured
+  once per lepton). For the five closed forms that is **5,814 stored
+  values** — 5,670 on the swept grids and 144 on the scalar probes,
+  which `test_parity.py` holds to the same budget because
+  `scalar_values` is not in its `ABSCISSAE` set — of which 3 stand in
+  for a replayed raise rather than for a number, leaving **5,811
+  compared numerically**. `thermal_cross_section` adds 285 more, on a
+  grid with no scalar branch.
 - **Against an independent Python implementation** — all five closed
   forms re-derived from the physics with no shared code
   (`ReferenceCrossSections`), at six energies spanning four decades.
@@ -320,12 +339,25 @@ sits inside its 1e-13 budget by construction.
 ## Numerical impact
 
 **All five closed-form kernels are bit-equal to the Cython at every one
-of the 5,667 values the parity corpus pins**, on the capturing platform,
-at `rtol = 0`. Verified with
+of the 5,811 values the parity corpus compares them on**, on the
+capturing platform, at `rtol = 0`. Verified with
 `pytest test/parity -q -k vector` → `351 passed`, and measured directly
-against the Cython before its deletion (`scratch/ref.py` sweep, 943–945
-points per kernel per model point): `0 / 945 differ` for each of
-`sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}` and `sigma_xx_to_vv`.
+against the Cython before its deletion (`scratch/ref.py`, sweeping each
+case's whole grid — 945 points for the four single-block cases, 1,890
+for `sigma_xx_to_v_to_ff`, which is captured per lepton): `0` of them
+differ, for every one of the five.
+
+The count is derived rather than quoted, because two wrong figures were
+in circulation before PR #75's review round 1 — 4,667 in the Rust module
+docs and 5,667 in this note. From the stored corpus:
+`sigma_xx_to_v_to_ff` holds 1,890 array-path values and 48 scalar-probe
+values across six blocks; the other four hold 945 and 24 each across
+three; total **5,814 stored**, of which `pipi` contributes 2 and `pi0v`
+1 position that stand in for a replayed `TypeError` rather than for a
+number. **5,814 − 3 = 5,811 compared numerically.** The scalar probes
+belong in that count: `test_parity.py:243` sends every array not in
+`ABSCISSAE` through the case's value budget, and `scalar_values` is not
+in it.
 
 `thermal_cross_section` moves, and is the only one that does:
 
@@ -479,7 +511,7 @@ $ python -c "import hazma, hazma._core; print(hazma.__file__, hazma._core.__file
 ```
 
 **Numerical-impact statement:** five closed-form kernels bit-equal to
-the Cython at all 5,667 pinned values on the capturing platform;
+the Cython at all 5,811 compared values on the capturing platform;
 `thermal_cross_section` moves by at most **2.06e-14** relative over 285
 pinned values (64 of them bit-equal), inside the 1e-12 this change
 tightens its budget to and below `rules.md` rule 3's 1e-12 declaration

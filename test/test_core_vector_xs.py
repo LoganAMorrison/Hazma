@@ -9,10 +9,12 @@ twin left to compare against here. What replaces it is three separate
 oracles, each named where it is used:
 
 ``the parity corpus``
-    ``test/parity`` pins what the Cython returned at 5,667 sampled
-    energies across three mediator model points, and this port reproduces
-    every one of them **bit-for-bit** — the ``EXACT`` budget, ``rtol =
-    0``. That is the value gate and it is not repeated here. Numbers
+    ``test/parity`` pins what the Cython returned across three mediator
+    model points, and this port reproduces every one of the **5,811**
+    values it compares the five closed forms on **bit-for-bit** — the
+    ``EXACT`` budget, ``rtol = 0``. (5,814 stored: 5,670 on the swept
+    grids and 144 on the scalar probes, less the 3 that stand in for a
+    replayed ``TypeError`` rather than for a number.) That is the value gate and it is not repeated here. Numbers
     measured against the twin *before* its deletion are quoted in the
     module below where they bear on a claim.
 

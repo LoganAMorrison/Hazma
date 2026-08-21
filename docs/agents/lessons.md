@@ -439,7 +439,18 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   pin the stored *arrays*, never numbers *derived* from them, so review
   edited a non-sampled case's count and all 18 tests still passed). When
   a check samples, say what the unsampled members are pinned by, and name
-  a check that pins the same kind of claim — or drop the sampling.
+  a check that pins the same kind of claim — or drop the sampling. The
+  same shape, with the domain narrowed by an *ad-hoc* sweep instead of a
+  typed list (PR #75: "bit-equal at all 5,667 values the parity corpus
+  pins" was measured, over the swept grids the author's own comparison
+  loop iterated — while `test_parity.py` also compares 144 scalar-probe
+  values, because `scalar_values` is not in its `ABSCISSAE` set. 5,814
+  stored, less 3 that stand in for a pinned raise, is 5,811. Review
+  caught a *third* number, 4,667, in a sibling doc, re-derived 5,667
+  from the manifest by the same array-only route, and agreed with the
+  wrong answer). **Count what the gate compares, not what your sweep
+  looped over** — enumerate the population from the gate's own
+  definition of it.
 - [bound-parameter-sized-the-allocation] A parameter that *bounds* work is
   not a prediction of it, so sizing a buffer by one turns a caller's
   permissive input into an allocation request. `scipy.integrate.quad`

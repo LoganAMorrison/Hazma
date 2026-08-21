@@ -1453,10 +1453,12 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 - **Task 5.1 (vector cross sections): five of six entry points
   bit-equal; one moves by 2.06e-14.** The five closed forms —
   `sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}` and `sigma_xx_to_vv` —
-  reproduce the Cython **exactly** at all 5,667 values the corpus pins,
-  on the capturing platform, at `rtol = 0`. That was not free: two of
-  them compiled through `double _Complex` (see Findings), and a
-  real-arithmetic transliteration would have missed by up to 9.0e-15.
+  reproduce the Cython **exactly** at all 5,811 values the corpus
+  compares them on (5,814 stored, less 3 positions that stand in for a
+  pinned raise), on the capturing platform, at `rtol = 0`. That was not
+  free: two of them compiled through `double _Complex` (see Findings),
+  and a real-arithmetic transliteration would have missed by up to
+  9.0e-15.
   `cross_sections.vector.thermal_cross_section` moves by at most
   **2.0597e-14** relative over its 285 pinned values (64 bit-equal),
   worst at `open_resonance`, `x = 0.298`
