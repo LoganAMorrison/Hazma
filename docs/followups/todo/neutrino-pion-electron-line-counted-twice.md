@@ -21,7 +21,7 @@
 were meant to partition the pion's decay modes:
 
 ```python
-# hazma/spectra/_neutrino/_pion.pyx:196-200 (deleted in Task 4.6)
+# hazma/spectra/_neutrino/_pion.pyx:196-200 at ed1fa20 (deleted in Task 4.6)
 mu_nu = c_dnde_mu_numu_point(enu, epi)
 e_nu = c_dnde_e_nue_point(enu, epi)
 result.electron = mu_nu.electron + e_nu.electron
@@ -32,7 +32,7 @@ result.muon = mu_nu.muon + e_nu.muon
 `c_dnde_mu_numu_point`, despite its name, **also** adds it:
 
 ```python
-# hazma/spectra/_neutrino/_pion.pyx:112-114 (deleted in Task 4.6)
+# hazma/spectra/_neutrino/_pion.pyx:112-114 at ed1fa20 (deleted in Task 4.6)
 # Contribution from pi -> nu_e + e
 enu_rf = two_body_energy(MASS_PI, 0.0, MASS_E)
 delta_e = BR_PI_TO_E_NUE * boost_delta_function(enu_rf, enu, 0.0, beta)

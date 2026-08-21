@@ -445,10 +445,15 @@ points, and everything below is history.
   saying `"Positron energies"`, which those tests read from source.
   **Task 4.6 deletes that `def` too and there is no unary candidate after
   it** — the neutrino entry points return a 3-tuple or a `(3, N)` array.
-  `TestCythonMessageParity` is unaffected either way: its
-  `"Photon energies"` roster entry lives in
-  `hazma/spectra/_neutrino/_muon.pyx:205`, the copy-paste defect Task 3.5
-  recorded, which survives Phase 04.
+  `TestCythonMessageParity` is unaffected either way — **but not for the
+  reason this bullet gave before Task 4.6 landed.** Its `"Photon
+  energies"` roster entry lived in
+  `hazma/spectra/_neutrino/_muon.pyx:205` (at `ed1fa20`), the copy-paste
+  defect Task 3.5 recorded, and that file is *deleted* by Task 4.6, so
+  the entry does **not** survive Phase 04. What the roster does instead is
+  shrink with the tree: it now reads two `assert` wordings, both in the
+  mediator decay-spectrum modules, and the two wordings the port still
+  emits are pinned in each kernel's own test module.
 - **The `.pyx` that boxes its locals contracts nothing** (Task 4.5).
   `_rho.pyx`'s untyped `cdef beta/gamma/emin/emax/pre` make every
   arithmetic operation a `PyNumber_*` call, so `objdump` finds **zero**

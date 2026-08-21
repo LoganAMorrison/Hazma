@@ -234,7 +234,16 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   lines to 148 and left a `:148-153` citation in a reference doc the same
   PR was already editing — out of range, and the author had read that
   very paragraph while adding a staleness note two lines above it
-  (PR #67).
+  (PR #67). And a *deletion* can make a citation **ambiguous** rather than
+  merely stale: a bare `_pion.pyx:196-200` resolved fine while three files
+  of that basename existed and became a hard `AMBIGUOUS` the moment the PR
+  deleted the one it meant, leaving two candidates and no way to pick
+  (PR #74 — the task note's sweep block listed the `rg` half of the
+  line-number sweep and omitted `check_doc_citations.py`, so nothing
+  mechanical ran; seven citations across four docs then needed the full
+  path plus `at ed1fa20`, three of them pre-existing lines that *this*
+  PR's deletion had orphaned). Cite the full path, never the basename,
+  whenever your own diff removes a file.
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs
   *committed* history, so running it on an uncommitted tree scans zero
   files and prints a success-shaped line — `check_doc_citations.py

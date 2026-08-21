@@ -102,10 +102,11 @@ simplification and a corpus failure.
 `dnde_neutrino_charged_pion(0.0, epi)` returned `(0, 0, 0)` from the
 Cython and `(nan, nan, 0)` from the first version of the port. The
 integrand is `(dN/dE)_μ(E)/E`, which is `0/0` at the origin, and at
-`E_ν = 0` the boost window collapses onto it. `scipy/integrate/
-_quadpack_py.py:436` returns `(0., 0.)` for `a == b` **before** the limits
-are ordered and before QUADPACK is reached — the integrand is never called
-(verified: a counting integrand records 0 calls). `crate::quad::quad`
+`E_ν = 0` the boost window collapses onto it.
+`scipy/integrate/_quadpack_py.py:436` returns `(0., 0.)` for `a == b`
+**before** the limits are ordered and before QUADPACK is reached — the
+integrand is never called (verified: a counting integrand records 0
+calls). `crate::quad::quad`
 handed `[0, 0]` to `qagse`, where every Gauss-Kronrod node collapses onto
 the point and `f(x)·0` is `NaN`.
 
@@ -137,8 +138,11 @@ same in prose. The two files really do disagree and only one is wrong.
 
 ### A new pinned defect: the `π → e ν` neutrino line is counted twice
 
-`_pion.pyx:196-200` sums `c_dnde_mu_numu_point` and `c_dnde_e_nue_point`,
-and **both** add the boosted `π → e ν_e` line (`:112-114` and `:167`). The
+`hazma/spectra/_neutrino/_pion.pyx:196-200` sums `c_dnde_mu_numu_point`
+and `c_dnde_e_nue_point`, and **both** add the boosted `π → e ν_e` line
+(same file, `:112-114` and `:167`). Every line number here is at
+`ed1fa20`, this branch's merge-base — the file is deleted by this task, so
+read it with `git show ed1fa20:hazma/spectra/_neutrino/_pion.pyx`. The
 electron-neutrino row therefore carries `2 BR(π → e ν)`. The muon row is
 unaffected — `c_dnde_e_nue_point` writes nothing there — which is what
 makes it a transcription slip rather than a convention.
@@ -277,6 +281,28 @@ module rather than in the roster.
   and two adaptive integrators are not bit-equal anywhere.
   `test/test_core_neutrino.py` follows `test/test_core_photon_rho.py` —
   independent Python references — because its twins are gone.
+
+- **Review round 1 (blocking): every citation into a file this task
+  deletes now carries the full path and the revision.** The note cited
+  `hazma/spectra/_neutrino/_pion.pyx` by bare basename plus a line range,
+  and `scripts/agents/check_doc_citations.py --changed-vs origin/master`
+  fails that — two files of that basename survive in the tree
+  (`_photon/` and `_positron/`) and the one meant, `_neutrino/`, is gone.
+  Fixed as a class rather than at the cited line: all seven citations
+  into `hazma/spectra/_neutrino/{_muon,_pion}.pyx` across four docs now
+  read `<full path>:<lines>` plus `at ed1fa20` (this branch's
+  merge-base), including three that pre-dated this task and that *this
+  task's deletion* is what made unresolvable. A line-wrapped
+  `scipy/integrate/_quadpack_py.py:436` was un-wrapped for the same
+  reason — the wrap left a bare basename on its own line.
+- **The same sweep found a claim the deletion falsified.**
+  `task-notes/phase-04/README.md` said `TestCythonMessageParity`'s
+  `"Photon energies"` roster entry "survives Phase 04". It does not: the
+  entry lives in `hazma/spectra/_neutrino/_muon.pyx:205` (at `ed1fa20`),
+  which this task deletes. The
+  bullet now says what actually happens — the roster shrinks with the
+  tree, to two wordings, and the two the port still emits are pinned in
+  each kernel's own test module.
 
 ## Files Changed
 
@@ -620,7 +646,42 @@ $ find hazma -name '*.pyx' | wc -l ; find hazma -name '*.pxd' | wc -l
        8
 $ python -c "import sys; sys.path.insert(0,'test/parity'); import cases; print(len(cases.rust_core_kernels()))"
 16
+$ scripts/agents/check_doc_citations.py --changed-vs origin/master
+docs scanned: 10
+in-repo citations checked: 20
+  resolved by exact: 15
+  resolved by suffix: 5
+external citations skipped: 16
+  _eta_prime.pyx (1)
+  _phi.pyx (1)
+  hazma/spectra/_neutrino/_muon.pyx (5)
+  hazma/spectra/_neutrino/_pion.pyx (3)
+  hazma/spectra/_photon/_eta_prime.pyx (1)
+  hazma/spectra/_photon/_phi.pyx (1)
+  scipy/integrate/_quadpack_py.py (4)
+out-of-range or ambiguous: NONE
 ```
+
+**The citation check was missing from this block on round 1, and that is
+what let the blocking finding through.**
+[`doc-consistency.md`](../../../../docs/agents/doc-consistency.md)'s
+"Line-number citation sweep" names
+`scripts/agents/check_doc_citations.py --changed-vs origin/master`
+explicitly; the sweep listed the `rg` half and not the mechanical half,
+so a bare-basename citation that `rg` happily matched went unchecked for
+ambiguity. It is in the block now. (`docs scanned: 10` because `--changed-vs` diffs
+*committed* history — `docs/agents/lessons.md`'s ledger append is in the
+same commit as this block, so the next run scans 11; that is
+`lessons.md`'s own `[changed-vs-sees-only-commits]`, and the invariant
+that matters, `out-of-range or ambiguous: NONE`, holds either way.) Of
+its 16 skipped
+external citations, the eight into `hazma/spectra/_neutrino/*.pyx` each
+now name `ed1fa20`, so "external" reads as "open it at that revision"
+rather than "unresolvable"; four are `scipy/integrate/_quadpack_py.py`,
+which is out of tree by nature. The two bare survivors — `_eta_prime.pyx`
+and `_phi.pyx` — are Task 4.2's prose about files Task 4.2 deleted, are
+unambiguous (one candidate has ever existed for each), and are left
+alone: they are outside the class this task created.
 
 **Numerical-impact statement:** three public functions moved, each within
 its declared budget and each measured above — 5.494e-15, 0 (bit-equal)

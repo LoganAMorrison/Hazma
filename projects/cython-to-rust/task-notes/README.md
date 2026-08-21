@@ -264,7 +264,8 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   written into that reference): a 0-d array raises rather than taking the
   scalar path, a Python list is *accepted*, shape errors are
   `AssertionError` not `ValueError`, and
-  `hazma/spectra/_neutrino/_muon.pyx:205` says "Photon energies". Two of
+  `hazma/spectra/_neutrino/_muon.pyx:205` (at `ed1fa20`; Task 4.6 deletes
+  the file) says "Photon energies". Two of
   the four become silent public-API narrowings if the port transcribes
   the design instead of the code. **Settled by Task 3.5 (2026-08-11)**,
   which found the deeper problem: there are four dispatch *shapes*, not
@@ -599,7 +600,9 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   last digit), so normalizing means multiplying. **The sibling proves it
   is an inversion and not a convention:**
   `hazma/spectra/_neutrino/_muon.pyx:23` declares the identical constant
-  and `:58`/`:114` multiply by it. It propagates to
+  and `:58`/`:114` multiply by it — line numbers at `ed1fa20`, since
+  Task 4.6 deletes that file; `rust/src/kernels/neutrino_muon.rs` carries
+  the same constant and the same multiplication now. It propagates to
   `dnde_positron_charged_pion` (∫ = 0.999623 at `E_π = 500 MeV`), both
   mediator positron modules, and every positron-based limit. Reproduced
   per rule 1, pinned in both languages, filed as
@@ -1193,7 +1196,8 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
     Cython has no single string to reproduce (`expected 'double'` in the
     spectra, `expected 'float64_t'` in the mediator modules);
   - `hazma/spectra/_neutrino/_muon.pyx:205`'s "Photon energies" becomes
-    "Neutrino energies".
+    "Neutrino energies" (line number at `ed1fa20`; Task 4.6 deletes the
+    file and ships that decision).
 
 - **Task 4.1, 2026-08-11 (`dnde_positron_muon` → Rust — the first kernel
   swap): no public value changes.** The "before" is still in the tree:
