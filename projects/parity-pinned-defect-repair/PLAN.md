@@ -59,7 +59,7 @@ function:
 
 | Wave | Task | Deletes | Closes the window for |
 | --- | --- | --- | --- |
-| 1 | 4.6 (the only Phase 04 task left) | `hazma/spectra/_positron/_pion.pyx`, the neutrino pair | `spectra.positron.charged_pion` re-derivation for the positron-muon defect |
+| 1 | 4.6 (the only Phase 04 task left) | the neutrino pair and their struct module — **not** `hazma/spectra/_positron/_pion.pyx`, which turned out to be a capi survivor and now dies in wave 3 (corrected when 4.6 landed, 2026-08-20) | `spectra.positron.charged_pion` re-derivation for the positron-muon defect |
 | 2 | 6.2 / 6.3 | the four mediator spectrum `.pyx` | every `mediator_spectra.*` case for the muon and charged-pion defects |
 | 3 | 6.4 | the four capi survivors + `hazma/_utils/boost.{pyx,pxd}` | everything else |
 
@@ -206,7 +206,10 @@ the final tree.
 Capture the composition chain too, not only the defective function: for
 A2 and A3 that means the `mediator_spectra.*` cases, which lose their
 Cython at Tasks 6.2/6.3; for A4 it means `spectra.positron.charged_pion`,
-which loses its Cython at Task 4.6. See
+which was expected to lose its Cython at Task 4.6 and in the event kept
+it — 4.6 removed only the `def`, and the `cdef` this capture reads
+survives to Task 6.4. Task 2 had already captured it by then, so the
+correction relaxes the deadline rather than moving it. See
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
 for the per-defect case list and
 [`references/corpus-repinning.md`](references/corpus-repinning.md) for

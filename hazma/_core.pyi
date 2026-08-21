@@ -4,11 +4,16 @@ import numpy as np
 
 # `hazma._core` is the Rust extension (cython-to-rust ADR-0001). Its
 # per-domain submodules — photon, positron, neutrino, scalar_mediator,
-# vector_mediator — are filled one kernel at a time by Phases 04-06;
-# `positron` carries the first, `dnde_positron_muon` (Task 4.1), and
-# `photon` the seven tabulated meson spectra (Task 4.2), the
-# radiative muon spectrum (Task 4.3) and the two pion spectra
-# (Task 4.4).
+# vector_mediator — are filled one kernel at a time by Phases 04-06.
+# Phase 04 closed on 2026-08-20 having filled the first three: `photon`
+# carries all twelve public decay spectra, `positron` both of its
+# compiled ones, and `neutrino` both of its. `scalar_mediator` and
+# `vector_mediator` are still empty and are Phases 05-06's.
+#
+# The live roster is discovered rather than listed — `test/parity/
+# cases.py`'s `rust_core_kernels()` walks the extension — so this comment
+# names phases rather than kernels, which is what keeps it from going
+# stale one swap at a time.
 #
 # They are deliberately unstubbed, and a stub file is not the cheap fix
 # it looks like: `_core` is a single extension, so a submodule stub needs

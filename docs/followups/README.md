@@ -40,6 +40,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [both rho photon spectra return the boost integrand at rest](todo/rho-rest-frame-branch-returns-the-integrand.md) | 2026-08-18 | cython-to-rust Task 4.5 | cross-cutting |
 | [four scalar elastic cross sections cancel away every significant bit](todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md) | 2026-08-18 | closing the parity-corpus follow-up | cross-cutting |
 | [the review-lessons ledger is past its working-set cap](todo/lessons-ledger-over-its-working-set-cap.md) | 2026-08-19 | PR #72 review round 1 | cross-cutting |
+| [the charged pion's `pi -> e nu` neutrino line is added twice](todo/neutrino-pion-electron-line-counted-twice.md) | 2026-08-20 | cython-to-rust Task 4.6 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

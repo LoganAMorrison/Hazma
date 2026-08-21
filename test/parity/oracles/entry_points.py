@@ -270,8 +270,20 @@ SOURCES: dict[str, Source] = {
         "hazma.spectra._positron._pion",
         "dnde_positron_charged_pion_point",
         "capsule",
-        "def deleted by cython-to-rust Task 4.4; the .pyx itself dies at "
-        "Task 4.6, the earliest of the deletion waves",
+        # The committed `data/manifest.json` records this note as it read
+        # when Task 2 captured the arrays: "def deleted by cython-to-rust
+        # Task 4.4; the .pyx itself dies at Task 4.6, the earliest of the
+        # deletion waves". Both halves were prospective and both turned
+        # out wrong -- cython-to-rust Task 4.6 deleted the `def`, not
+        # Task 4.4, and it kept the file, because both mediator positron
+        # spectrum modules cimport `dnde_positron_charged_pion_array`
+        # (`phase-04-spectra-kernels.md`, "scoped exception to rules.md
+        # rule 1"). The `.pyx` now dies with the other three capi
+        # survivors at Phase 06 Task 6.4. The capture is unaffected: the
+        # capsule this Source reads is what survives either way, and the
+        # arrays were taken before any of it.
+        "def deleted by cython-to-rust Task 4.6; the .pyx survives as a "
+        "capi provider until Phase 06 Task 6.4",
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s": Source(
         "hazma.scalar_mediator.scalar_mediator_positron_spec",

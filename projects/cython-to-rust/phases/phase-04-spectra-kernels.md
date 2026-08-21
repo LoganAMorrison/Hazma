@@ -1,7 +1,7 @@
 ---
 phase: 04
 title: Spectra kernels
-status: In Progress
+status: Complete
 ---
 
 # Phase 04: Spectra kernels

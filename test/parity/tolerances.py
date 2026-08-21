@@ -73,12 +73,16 @@ implementation does* rather than by what it computes:
     integrands and each live shape lands far inside it: Task 4.4 measured
     `spectra.photon.charged_pion` at **2.6e-15** relative over its 1,500
     pinned values (317 of them not bit-equal), i.e. a dozen ulp, which is
-    accumulated last-bit arithmetic rather than method error. So that case
-    takes `PORTED_QUAD_RTOL` and the two unported ones keep the opening
-    figure until Task 4.6 measures them. Nothing external moves under a
-    ported case any more -- the reference values are stored, scipy no
-    longer participates, and the remaining variation is the platform libm,
-    which the corpus is scoped to anyway.
+    accumulated last-bit arithmetic rather than method error. Task 4.6
+    then measured the last two spectra members,
+    `spectra.positron.charged_pion` at **5.5e-15** over 1,460 values and
+    `spectra.neutrino.charged_pion` at **9.7e-16** over 4,185. So all
+    three ported members take `PORTED_QUAD_RTOL`, and the two cases still
+    at the opening figure are the thermal cross sections, which Phase 05
+    ports and measures. Nothing external moves under a ported case any
+    more -- the reference values are stored, scipy no longer participates,
+    and the remaining variation is the platform libm, which the corpus is
+    scoped to anyway.
 ``NESTED`` (rtol 1e-6, or `PORTED_NESTED_RTOL` = 1e-9 once measured)
     An adaptive quadrature whose integrand is itself an adaptive
     quadrature. Subdivision is a discontinuous function of the integrand:
@@ -433,25 +437,33 @@ BUDGETS: dict[str, Budget] = {
         "modes').",
     ),
     "spectra.positron.charged_pion": Budget(
-        rtol=QUAD_RTOL,
+        rtol=PORTED_QUAD_RTOL,
         atol=0.0,
-        why="one quad over cos(theta) "
+        why="one quad over the positron's rest-frame energy "
         "(hazma/spectra/_positron/_pion.pyx:58, epsabs=1e-10, "
-        "epsrel=1e-4) over the closed-form positron-muon spectrum.",
+        "epsrel=1e-4) over the closed-form positron-muon spectrum. "
+        "Tightened from QUAD_RTOL by Task 4.6 on its own measurement -- "
+        "5.5e-15 worst relative over the 1,460 pinned values (1,304 of "
+        "them bit-equal), against 1e-12 here.",
     ),
     # -- spectra: neutrino --------------------------------------------------
     "spectra.neutrino.muon": Budget(
         rtol=EXACT_RTOL,
         atol=0.0,
         why="closed-form per-flavor spectra, libc math only "
-        "(hazma/spectra/_neutrino/_muon.pyx:8).",
+        "(hazma/spectra/_neutrino/_muon.pyx:8). Ported to Rust in Task "
+        "4.6, which reproduces this platform bit-for-bit at all 3,795 "
+        "pinned values -- exact because that was achieved, not because "
+        "the closed form is well conditioned.",
     ),
     "spectra.neutrino.charged_pion": Budget(
-        rtol=QUAD_RTOL,
+        rtol=PORTED_QUAD_RTOL,
         atol=0.0,
         why="two energy-space quads at scipy's default tolerances "
         "(hazma/spectra/_neutrino/_pion.pyx:124,127) over the closed-form "
-        "neutrino-muon spectrum.",
+        "neutrino-muon spectrum. Tightened from QUAD_RTOL by Task 4.6 on "
+        "its own measurement -- 9.7e-16 worst relative over the 4,185 "
+        "pinned values (3,793 of them bit-equal), against 1e-12 here.",
     ),
     # -- scalar-mediator cross sections -------------------------------------
     "cross_sections.scalar.sigma_xx_to_s_to_ff": Budget(
