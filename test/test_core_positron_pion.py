@@ -48,6 +48,11 @@ a denser off-corpus sweep (3,200 points over eight pion energies, worst at
 ``E_pi = 1e4`` MeV). ``test/parity/tolerances.py`` tightened this case from
 ``QUAD_RTOL`` (1e-8) to ``PORTED_QUAD_RTOL`` (1e-12) on those numbers.
 
+Those figures are the capturing platform's, and the range they hold over
+is part of the claim: see :data:`CHARGED_PION_BUDGET` and
+:meth:`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`
+for why every grid here stops at ``E_pi = 1e4`` MeV.
+
 The inherited normalization defect
 ----------------------------------
 The muon-channel continuum is Task 4.1's kernel, which divides by the
@@ -116,7 +121,8 @@ R_FACTOR = 1.0001870858234163
 #: un-defected value states the separation it relies on.
 NORMALIZATION_DEFICIT = 1.0 - 1.0 / R_FACTOR**2
 
-#: This kernel's budget against the Cython, on **every** platform.
+#: This kernel's budget against the Cython, on **every** platform, within
+#: the boost range :data:`PION_ENERGIES` covers.
 #:
 #: A measurement, not a concession: the port replaces scipy's QUADPACK
 #: with the in-tree one, and two independent adaptive integrators are not
@@ -130,7 +136,26 @@ NORMALIZATION_DEFICIT = 1.0 - 1.0 / R_FACTOR**2
 #: `atol` is scaled by the peak alongside it, for the same reason the muon
 #: kernels scale theirs: the spectrum passes through zero at its endpoint,
 #: and a relative bound alone is unbounded at a cancellation.
+#:
+#: **The range is part of the claim** -- see
+#: :data:`ULTRARELATIVISTIC_PION_ENERGY` and
+#: :meth:`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`.
+#: The lower boost limit `gamma (E - beta k)` is a catastrophic
+#: cancellation whose relative error grows like `2 gamma**2 eps`, so past
+#: `gamma ~ 1e3` *no* tolerance against a second implementation is
+#: honest. PR #74's first CI run proved it: green on macOS/arm64 and red
+#: on all five Linux jobs at `E_pi = 1e6` (gamma = 7165), where the
+#: predicted envelope is 2.3e-8 and the measured disagreement was 7.5e-9
+#: plus a delta-function branch flip. The grids stop at 1e4 for that
+#: reason and not to make a red test green: 1e4 is already 71x the pion
+#: mass, seven times what the parity corpus samples, and far past the
+#: sub-GeV domain hazma is for.
 CHARGED_PION_BUDGET = 1e-12
+
+#: A pion energy past which this kernel is ill-conditioned rather than
+#: this port inaccurate: `gamma = 7165`, so `2 gamma**2 eps = 2.3e-8`.
+#: Used only by the test that documents the regime.
+ULTRARELATIVISTIC_PION_ENERGY = 1e6
 
 #: The signature string that is also the capsule's *name*, so a changed
 #: `cdef` prototype fails loudly rather than being called through the wrong
@@ -319,7 +344,15 @@ class TestAgainstTheCythonTwin:
         )
 
     def test_the_kinematic_edges_match(self) -> None:
-        for epi in (MASS_PI, np.nextafter(MASS_PI, np.inf), 500.0, 1e6):
+        """Every branch boundary, at four pion energies.
+
+        The top energy is 1e4 MeV, matching :data:`PION_ENERGIES` and for
+        the same reason: past `gamma ~ 1e3` the boost window's lower limit
+        is a catastrophic cancellation and no cross-implementation
+        tolerance is honest there. See
+        :meth:`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`.
+        """
+        for epi in (MASS_PI, np.nextafter(MASS_PI, np.inf), 500.0, 1e4):
             edges = np.array(
                 [
                     MASS_E,
@@ -491,6 +524,71 @@ class TestPhysics:
         # The continuum is smooth across the edge, so the jump is the line.
         assert just_above - just_below == pytest.approx(plateau, rel=5e-2)
         assert plateau > 0.0
+
+    def test_the_boost_window_is_ill_conditioned_at_extreme_boosts(self) -> None:
+        """Why every grid in this module stops at ``E_pi = 1e4`` MeV.
+
+        The boost integral runs from ``emin = gamma (E - beta k)`` with
+        ``k = sqrt(E**2 - m_e**2)``. As ``beta -> 1`` that difference is a
+        catastrophic cancellation: ``E - beta k`` falls like
+        ``E / (2 gamma**2)`` while ``E`` and ``beta k`` stay ``O(E)``, so
+        the *relative* error in ``emin`` grows like ``2 gamma**2 eps``.
+        That is a property of the formula, not of either implementation,
+        and it is why no cross-implementation tolerance is honest past
+        ``gamma ~ 1e3``.
+
+        PR #74's first CI run is the worked example: identical on
+        macOS/arm64 (7.9e-16 at ``E_pi = 1e6``) and adrift on all five
+        Linux jobs, where the shipped Cython is compiled without an FMA —
+        x86-64's baseline has none — so its ``E - beta k`` is unfused
+        while the port's ``mul_add`` is fused. One ulp there, amplified by
+        ``2 gamma**2``, came out as 7.5e-9 at ``E = E_pi / 2`` and as a
+        *branch flip* on the ``pi -> e nu`` line at ``E = E_pi``.
+
+        So this test asserts the **mechanism** rather than a value, which
+        is what survives a change of platform:
+
+        1. the cancellation really does scale as ``E / (2 gamma**2)``;
+        2. the envelope it implies is *quadratic* in the boost — a decade
+           of ``gamma`` costs two decades of precision in ``emin``;
+        3. at :data:`ULTRARELATIVISTIC_PION_ENERGY` that envelope is four
+           decades outside :data:`CHARGED_PION_BUDGET`, so the grids'
+           upper bound is derived rather than chosen.
+
+        The envelope bounds what *can* propagate, not what does: it is
+        2.3e-12 already at ``E_pi = 1e4``, where every sweep in this
+        module passes on Linux at 1e-12, because the integrand vanishes at
+        its own threshold and damps a wobble in the lower limit. What made
+        1e6 different is that the same wobble also flipped the
+        ``pi -> e nu`` delta function's ``eminus < e0 < eplus`` branch,
+        turning a rounding difference into a support difference — which no
+        tolerance should absorb. The empirical bracket from that CI run is
+        therefore: covered and green at 1e4, ill-conditioned at 1e6.
+        """
+        eps = float(np.finfo(np.float64).eps)
+
+        def envelope(epi: float) -> float:
+            """``2 gamma**2 eps`` — the relative error ``emin`` inherits."""
+            return 2.0 * (epi / MASS_PI) ** 2 * eps
+
+        # 1. The cancellation is the one the derivation names. At E = E_pi
+        #    the exact difference tends to E/(2 gamma**2); check it over
+        #    three decades of boost.
+        for epi in (1e4, 1e5, 1e6):
+            beta = math.sqrt(1.0 - (MASS_PI / epi) ** 2)
+            k = math.sqrt(epi * epi - MASS_E * MASS_E)
+            assert epi - beta * k == pytest.approx(
+                epi / (2.0 * (epi / MASS_PI) ** 2), rel=1e-3
+            )
+
+        # 2. Quadratic, not linear: ten times the boost is a hundred times
+        #    the envelope. This is what makes the regime arrive suddenly.
+        assert envelope(1e5) == pytest.approx(100.0 * envelope(1e4), rel=1e-12)
+
+        # 3. Four decades outside the budget at 1e6, which is the derived
+        #    reason no grid in this module goes there.
+        assert envelope(ULTRARELATIVISTIC_PION_ENERGY) > 1e4 * CHARGED_PION_BUDGET
+        assert ULTRARELATIVISTIC_PION_ENERGY > 10.0 * max(PION_ENERGIES)
 
     def test_a_faster_pion_spreads_the_same_positrons_over_more_energy(self) -> None:
         """The peak falls as the parent is boosted, at fixed total.

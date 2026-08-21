@@ -1907,8 +1907,8 @@ it from memory.)
 - Scaffolding PR: `scripts/agents/preflight.sh` (repo gate; no code
   changes).
 - **Phase 04 closing state (2026-08-20, Task 4.6):** bare `pytest -q` →
-  **`1934 passed, 15 skipped, 7 warnings in 118.12s`** on the capturing
-  environment, from `1831 / 15` on `origin/master`. **+103 = 47 new tests
+  **`1935 passed, 15 skipped, 7 warnings in 151.28s`** on the capturing
+  environment, from `1831 / 15` on `origin/master`. **+104 = 48 new tests
   in `test/test_core_positron_pion.py` plus 58 in
   `test/test_core_neutrino.py` less 2 parameterized rows retired from
   `test/test_core_constants.py`** with `derived::neutrino_muon` (23 → 21);
@@ -1929,6 +1929,12 @@ it from memory.)
   gates could not see**, a γ spelling 29x outside the corpus's budget at
   energies the corpus does not sample — and one shown unobservable *by
   construction* and recorded as such, closing the campaign 11 / 11.
+  **PR #74 round 1 was red on all five Linux jobs and green on macOS**, in
+  one assertion of the new positron-pion module at `E_π = 1e6` MeV:
+  `emin = γ(E − βk)` is a cancellation conditioned at `2γ²ε` (2.3e-8 at
+  γ = 7165), and x86-64's baseline has no FMA so the shipped Cython is
+  unfused there while the port's `mul_add` is fused. Resolved by bounding
+  the module's grids to `E_π = 1e4` and asserting the mechanism.
 - **Phase 04 Task 4.5 state (2026-08-18) — the nested ρ, and the photon
   domain closed:** bare `pytest -q` →
   **`1802 passed, 15 skipped, 6 warnings in 47.15s`** on the capturing
@@ -2420,7 +2426,7 @@ with the corpus there however faithful it is.
   regenerate it from a tree in which any kernel runs on Rust —
   `rules.md` rule 2, enforced in code by `assert_no_rust_core`.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1934 passed / 15 skipped** as of Task 4.6 (2026-08-20),
+  `pytest -q` → **1935 passed / 15 skipped** as of Task 4.6 (2026-08-20),
   from 1802/15 at Task 4.5, 1755/15 at 4.4, 1682/15 at 4.3, 1628/15 at
   4.2, 1378/13 at 3.5, 1063/13 at Phase 02 close and 1006/13 at Phase 01
   close. `cargo test --no-default-features` → **169 passed**, from 133.

@@ -163,6 +163,45 @@ prompt lines, because a delta function has no rest-frame representation in
 this API. Deciding what it should return is a design question, not a
 transcription fix.
 
+### x86-64's baseline has no FMA, so the shipped Cython is unfused there
+
+**Found by CI, not locally** (PR #74 round 1: green on macOS/arm64, red on
+all five Linux jobs). `test_the_kinematic_edges_match` swept up to
+`E_π = 1e6` MeV and failed at 7.5e-9 relative plus a delta-function
+*branch flip*, against a 1e-12 budget measured on macOS.
+
+The port is not wrong. The kernel is ill-conditioned there and the two
+builds differ in their FMA:
+
+- the boost integral runs from `emin = γ(E − βk)`, and as `β → 1` that
+  difference falls like `E/(2γ²)` while both terms stay `O(E)` — so
+  `emin`'s *relative* error grows like `2γ²ε`, which is **2.3e-8** at
+  `E_π = 1e6` (γ = 7165);
+- clang contracts `E − β·k` into an `fmsub` on arm64, and **cannot** on
+  x86-64 without `-march`, because SSE2 has no FMA. So the shipped Cython
+  is fused on the capturing platform and unfused on Linux, while the
+  port's `mul_add` is fused on both. One ulp, amplified by `2γ²`.
+
+Locally, macOS/arm64 agrees to 7.9e-16 at that same point — which is why
+no local run could have caught it. `test_core_positron_muon.py`'s
+docstring records the same asymmetry for its own kernel; this task's
+mistake was writing a module docstring that said "one budget, no platform
+branch" and then deriving that budget from one platform's measurement.
+
+**Fixed by bounding the claim, not by widening the budget.** Every grid in
+`test/test_core_positron_pion.py` now stops at `E_π = 1e4` MeV — 71x the
+pion mass, seven times what the corpus samples, and far past hazma's
+sub-GeV domain — and a new
+`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`
+asserts the *mechanism* (the `E/(2γ²)` cancellation, its quadratic
+envelope, and that the envelope at 1e6 is four decades outside the budget)
+rather than a value. The envelope is a bound on what can propagate, not
+what does: it is already 2.3e-12 at `E_π = 1e4`, where every sweep passes
+on Linux at 1e-12, because the integrand vanishes at its own threshold and
+damps a wobble in the lower limit. What made 1e6 different is that the
+wobble also crossed `eminus < e0 < eplus`, turning a rounding difference
+into a *support* difference — which no tolerance should absorb.
+
 ### `_positron/_pion` returns zero at rest, unlike every sibling
 
 `if fabs(epi - mpi) < DBL_EPSILON: return 0.0` — where the photon, rho and
@@ -318,11 +357,11 @@ $ cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
 $ cargo test --manifest-path rust/Cargo.toml --no-default-features
 test result: ok. 169 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 $ .venv/bin/python -m pytest -q
-1934 passed, 15 skipped, 7 warnings in 134.31s (0:02:14)
+1935 passed, 15 skipped, 7 warnings in 151.28s (0:02:31)
 $ .venv/bin/python -m pytest test/parity -q -p no:randomly
 658 passed, 1 skipped in 77.75s
 $ .venv/bin/python -m pytest test/test_core_positron_pion.py test/test_core_neutrino.py -q -p no:randomly
-105 passed
+106 passed
 $ .venv/bin/python -m pytest test/test_theory_aggregation.py -q -p no:randomly
 69 passed
 $ env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths "<9 .py>" --md "<10 .md>"
@@ -355,26 +394,26 @@ close the two wrapper files' debt in one pass, but it rewrites 64
 annotations in two public modules for no reason this task supplies — that
 is the follow-up's option 1, not this task's business.
 
-`1934 passed / 15 skipped`, from `1831 / 15` on `origin/master` — **+103**,
-and the arithmetic is `47 + 58 − 2`:
+`1935 passed / 15 skipped`, from `1831 / 15` on `origin/master` — **+104**,
+and the arithmetic is `48 + 58 − 2`:
 
 | Module | before | after | why |
 | --- | --- | --- | --- |
-| `test/test_core_positron_pion.py` | — | 47 | new |
+| `test/test_core_positron_pion.py` | — | 48 | new |
 | `test/test_core_neutrino.py` | — | 58 | new |
 | `test/test_core_constants.py` | 23 | 21 | two parameterized rows retired with `derived::neutrino_muon` |
 | `test/test_core_dispatch.py` | 118 | 118 | the oracle module was swapped, not the assertions |
 | `test/parity` | 659 | 659 | cases repointed, none added or dropped |
-| whole suite | 1831 | 1934 | **+103** |
+| whole suite | 1831 | 1935 | **+104** |
 
 `cargo test --no-default-features` goes **133 → 169**, and the +36 is
 exactly the four new kernel modules' own tests (`cargo test | grep -c
 '^test kernels::neutrino_flavors::'` → 2, `neutrino_muon` → 10,
 `neutrino_pion` → 15, `positron_pion` → 9).
 
-### What the 105 per-kernel tests cover
+### What the 106 per-kernel tests cover
 
-**`test/test_core_positron_pion.py` (47)**
+**`test/test_core_positron_pion.py` (48)**
 
 - **`TestDispatchWiring` (11)** — one assertion per contract branch:
   scalar → `float`, NumPy scalar and 0-d array on the scalar path, array →
@@ -389,12 +428,14 @@ exactly the four new kernel modules' own tests (`cargo test | grep -c
   `__pyx_capi__`, at 7 pion energies × (swept grid + random arguments),
   plus the kinematic edges at 4 more, the support comparison, the budget's
   own non-vacuity, the at-rest zero, and a `NaN` in either argument.
-- **`TestPhysics` (11)** — the three thresholds, the boosted endpoint
+- **`TestPhysics` (12)** — the three thresholds, the boosted endpoint
   against `γ(1+β) E_rf`, finiteness and non-negativity at 4 pion energies,
   positron-number conservation at 3 (including that the total is the
   *shipped* `BR_μ/N² + BR_e` and not the un-defected one), the electron
-  line's plateau located by its window edge, and the peak falling with the
-  boost.
+  line's plateau located by its window edge, the peak falling with the
+  boost, and — added after PR #74's first CI round — the boost window's
+  ill-conditioning at extreme boosts, which is what bounds every grid in
+  the module.
 
 **`test/test_core_neutrino.py` (58)**
 
@@ -419,6 +460,19 @@ exactly the four new kernel modules' own tests (`cargo test | grep -c
   by continuum subtraction, the at-rest branch's missing lines, the
   zero-energy zero, finiteness at 3 energies, and the peak falling with
   the boost.
+
+### CI
+
+PR #74 round 1: `Lint`, `Rust (fmt, clippy, test)` and
+`Test (macos-latest, py3.14)` green; all five `Test (ubuntu-latest, …)`
+jobs red on one assertion,
+`test_core_positron_pion.py::TestAgainstTheCythonTwin::test_the_kinematic_edges_match`
+at `E_π = 1e6` — 3 of 10 edges, worst 7.5e-9 relative and two of them a
+zero-vs-1.23e-10 support flip. Diagnosed as the kernel's own
+ill-conditioning plus x86-64's missing baseline FMA (see Findings), and
+resolved by bounding the module's grids to `E_π = 1e4` and asserting the
+mechanism. Nothing in `test/parity`, `test/test_core_neutrino.py` or
+`cargo test` was red in that round.
 
 ### Test validity (stash-proof)
 

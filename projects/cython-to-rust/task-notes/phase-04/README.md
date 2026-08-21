@@ -608,8 +608,8 @@ points, and everything below is history.
   comparisons, which the phase's history would have predicted as the
   casualty, passed on Linux at 1e-12 in both rounds.
 - **After Task 4.6 (2026-08-20), which closes the phase:** bare
-  `pytest -q` → `1934 passed, 15 skipped, 7 warnings in 118.12s`, from
-  `1831 / 15` on `origin/master` — **+103**, being 47 new tests in
+  `pytest -q` → `1935 passed, 15 skipped, 7 warnings in 151.28s`, from
+  `1831 / 15` on `origin/master` — **+104**, being 48 new tests in
   `test/test_core_positron_pion.py` plus 58 in `test/test_core_neutrino.py`
   less 2 parameterized rows retired from `test/test_core_constants.py`
   with `derived::neutrino_muon` (`test/test_core_dispatch.py` unchanged at
@@ -625,6 +625,20 @@ points, and everything below is history.
   with two survivors — one lifted out into `neutrino_pion::boost_window`
   and killed, the other shown unobservable *by construction* and recorded
   as such, so the campaign closes 11 / 11.
+- **PR #74's first CI round is the phase's fourth Linux-only failure, and
+  the same class as the first three.** One assertion —
+  `test_core_positron_pion.py`'s kinematic-edge sweep at `E_π = 1e6` MeV —
+  green on macOS/arm64 and red on all five ubuntu jobs at 7.5e-9 relative
+  plus a delta-function support flip. Cause: `emin = γ(E − βk)` is a
+  catastrophic cancellation whose relative error grows like `2γ²ε`
+  (2.3e-8 at γ = 7165), **and** clang cannot contract `E − β·k` on x86-64
+  without `-march` because SSE2 has no FMA, so the shipped Cython is fused
+  on the capturing platform and unfused on Linux while the port's
+  `mul_add` is fused on both. Resolved by bounding the module's grids to
+  `E_π = 1e4` and asserting the mechanism, not by widening the budget. The
+  lesson is Task 4.1's, one level out: **a budget derived from one
+  platform's measurement must state the range it holds over**, or the
+  first CI run finds the range for you.
 
 ## Open Questions
 

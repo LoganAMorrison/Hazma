@@ -159,9 +159,9 @@ kernel's drift from its shape.
 
 ## 4. Test Infrastructure State
 
-- **Bare `pytest -q` → `1934 passed, 15 skipped`** at phase close, from
+- **Bare `pytest -q` → `1935 passed, 15 skipped`** at phase close, from
   `1378 / 13` at Phase 03's. The series across the phase:
-  1628 (4.2) → 1682 (4.3) → 1755 (4.4) → 1802 (4.5) → 1934 (4.6).
+  1628 (4.2) → 1682 (4.3) → 1755 (4.4) → 1802 (4.5) → 1935 (4.6).
   Re-derive rather than quoting.
 - **`cargo test --no-default-features` → `169 passed`**, from 69 at Phase
   03's close: 80 (4.1) → 96 (4.2) → 109 (4.3) → 120 (4.4) → 133 (4.5) →
@@ -191,6 +191,20 @@ kernel's drift from its shape.
   before "the port is wrong", and scope the class to
   `test/parity/data/manifest.json`'s machine rather than to a
   does-this-compiler-contract probe.
+- **A budget derived from one platform's measurement must state the range
+  it holds over.** Task 4.6's positron-pion module declared "one budget,
+  no platform branch" — right about bit-equality, wrong about the number,
+  which came from a macOS-only sweep and was then applied to a grid
+  reaching `E_π = 1e6` MeV. PR #74's first CI round was green on
+  macOS/arm64 and red on all five Linux jobs, for two reasons stacked:
+  `emin = γ(E − βk)` is a catastrophic cancellation conditioned at
+  `2γ²ε` (2.3e-8 at γ = 7165), **and** clang cannot contract `E − β·k` on
+  x86-64 without `-march`, since SSE2 has no FMA — so the shipped Cython
+  is fused on the capturing platform and unfused on Linux while the port's
+  `mul_add` is fused on both. The fix was to bound the grids to the range
+  the claim holds over and assert the *mechanism*; widening the budget
+  would have hidden a support flip, which is the one thing a tolerance
+  must never absorb.
 - **Do not chase a divergent-regime measurement one platform at a time.**
   PR #68 raised a budget from 1e-10 to 1e-8 on a macOS measurement and
   the *next* Linux point failed at 3.06e-08. Wynn's epsilon-algorithm is
