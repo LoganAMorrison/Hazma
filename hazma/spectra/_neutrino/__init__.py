@@ -3,19 +3,16 @@ Module for computing neutrino spectra.
 @author: Logan Morrison and Adam Coogan
 """
 
-from typing import overload, Optional, Union  # , List, Dict, Callable, NamedTuple
+from typing import Optional, Union, overload  # , List, Dict, Callable, NamedTuple
 
 import numpy as np
 
 from hazma import parameters
-from hazma.spectra._neutrino import _muon
-from hazma.spectra._neutrino import _pion
+from hazma._core import neutrino as _core_neutrino
 from hazma.utils import RealArray, RealOrRealArray
 
-from ._utils import (
-    load_interp as _load_interp,
-    dnde_neutrino as _dnde_neutrino,
-)
+from ._utils import dnde_neutrino as _dnde_neutrino
+from ._utils import load_interp as _load_interp
 
 _eta_interp_e = _load_interp("eta_neutrino_e.csv")
 _eta_interp_mu = _load_interp("eta_neutrino_mu.csv")
@@ -71,7 +68,7 @@ def dnde_neutrino_muon(
         The neutrino spectrum. If flavor is None, the result has the shape
         (3, len(neutrino_energies)). Otherwise, has the shape (len(neutrino_energies),).
     """
-    dnde = _muon.dnde_neutrino_muon(neutrino_energies, muon_energy)
+    dnde = _core_neutrino.dnde_neutrino_muon(neutrino_energies, muon_energy)
     if flavor is None:
         return dnde
     elif flavor == "e":
@@ -118,7 +115,7 @@ def dnde_neutrino_charged_pion(
         The neutrino spectrum. If flavor is None, the result has the shape
         (3, len(neutrino_energies)). Otherwise, has the shape (len(neutrino_energies),).
     """
-    dnde = _pion.dnde_neutrino_charged_pion(neutrino_energies, pion_energy)
+    dnde = _core_neutrino.dnde_neutrino_charged_pion(neutrino_energies, pion_energy)
     if flavor is None:
         return dnde
     elif flavor == "e":

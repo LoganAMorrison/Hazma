@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 04
-**Status:** In Progress
+**Status:** **Complete (2026-08-20)**
 **Plan References:** `../../phases/phase-04-spectra-kernels.md`
 **Related ADRs:** ADR-0001, ADR-0002
 **Depends On:** Phase 03 complete
@@ -22,12 +22,17 @@ kernel ports.
 | 4.3 | `_photon/_muon` (spence) | 4.1 | **Complete (2026-08-16)** | [task-4.3-photon-muon.md](task-4.3-photon-muon.md) |
 | 4.4 | `_photon/_pion` | 4.3 | **Complete (2026-08-17)** | [task-4.4-photon-pion.md](task-4.4-photon-pion.md) |
 | 4.5 | `_photon/_rho` (nested quad) | 4.4 | **Complete (2026-08-18)** | [task-4.5-photon-rho.md](task-4.5-photon-rho.md) |
-| 4.6 | `_positron/_pion` + neutrino pair | 4.1, 4.3 | Not started | [task-4.6-positron-pion-neutrino.md](task-4.6-positron-pion-neutrino.md) |
+| 4.6 | `_positron/_pion` + neutrino pair | 4.1, 4.3 | **Complete (2026-08-20)** | [task-4.6-positron-pion-neutrino.md](task-4.6-positron-pion-neutrino.md) |
 
 ## Exit Criteria
 
-- All rows Complete; phase file frontmatter `status: Complete`.
-- Phase learnings at `../../learnings/phase-04-spectra-kernels.md`.
+- [x] All rows Complete; phase file frontmatter `status: Complete`.
+- [x] Phase learnings at
+      [`../../learnings/phase-04-spectra-kernels.md`](../../learnings/phase-04-spectra-kernels.md).
+
+**Both discharged 2026-08-20 with Task 4.6.** Read the learnings rather
+than this file: it is the distillation of six tasks and sixteen entry
+points, and everything below is history.
 
 ## Inputs Reviewed
 
@@ -296,6 +301,54 @@ kernel ports.
   counts (`26 | 7` three times running). Snapshot to a file outside the
   tree, `cmp` before each mutation, and verify the restore.
 
+- **`scipy.integrate.quad` short-circuits `a == b` before QUADPACK is
+  reached, and `crate::quad` did not** (Task 4.6). The Python wrapper
+  returns `(0., 0.)` without calling the integrand at all
+  (`scipy/integrate/_quadpack_py.py:436`, verified with a counting
+  integrand); the port handed `[x, x]` to `qagse`, where every
+  Gauss-Kronrod node collapses onto the point and a singular integrand
+  gives `f(x)·0 = NaN`. Live at `dnde_neutrino_charged_pion(0.0, epi)`,
+  whose integrand is `(dN/dE)/E`. Fixed in `crate::quad::quad`, which is
+  where the gap is, not in the kernel. **The existing test could not see
+  it** because its integrand was `exp` — smooth, so the two paths agree —
+  which is the general shape: *a degenerate-input test needs a
+  degenerate integrand.*
+- **A folded compile-time constant can be folded with contraction**
+  (Task 4.6). `_positron/_pion.pyx`'s `emax_pi_rf` is a module-level
+  `cdef double` that clang reduces to one stored immediate, and the
+  immediate is **one ulp above** the unfused expression because
+  `1.0 + β·√…` fused. Reproducing it takes a literal plus a `mul_add`
+  re-derivation; a `const` expression lands one ulp low. Brute-forcing
+  the eight fused/unfused combinations against the immediate is how the
+  responsible term was isolated.
+- **Two files can contract nothing for opposite reasons** (Task 4.6).
+  `_photon/_rho.pyx` boxes its untyped locals, so clang sees no
+  expression; `_neutrino/_pion.pyx` types every local and simply contains
+  no multiply-add. Same `grep -c` answer, different cause — one more
+  reason step 1 of the recipe reads the disassembly rather than the
+  source.
+- **The two muon files disagree about the Michel normalization and only
+  one is wrong** (Task 4.6). `_neutrino/_muon.pyx` **multiplies** by
+  `R_FACTOR`, which is correct — both its rows integrate to exactly one
+  neutrino — while `_positron/_muon.pyx` divides and is 0.0374% low.
+  A reader who meets Task 4.1's defect first will be tempted to "fix"
+  the neutrino kernel; both sides are now asserted so that attempt fails.
+- **The phase's seventh live defect: the charged pion's `π → e ν`
+  neutrino line is added twice** (Task 4.6). `_pion.pyx` sums two `cdef`s
+  that were meant to partition the decay modes, and both add the boosted
+  electron-neutrino line; the muon row has no second copy. Measured by
+  continuum subtraction at **exactly 2.0000** copies against the muon
+  line's 1.0000. Filed as
+  [`neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md);
+  unlike its six siblings it needs no Cython oracle, so its twin's
+  deletion costs nothing.
+- **An absolute `DBL_EPSILON` guard on a MeV quantity is not a tolerance
+  band** (Task 4.6). `fabs(epi - mpi) < DBL_EPSILON` at
+  `m_π = 139.57` MeV admits exactly one double — `m_π` itself — because
+  one ulp there is 2.8e-14, 128x `DBL_EPSILON`. The two-sided `fabs` is
+  inoperative, and `_positron/_pion` is also the one kernel that returns
+  **zero** at rest rather than a rest-frame value.
+
 ## Decisions and Implementation Notes
 
 - **The per-kernel swap recipe now lives in the phase file's Goal**
@@ -475,6 +528,25 @@ kernel ports.
   not just its `def`s: nothing cimported it, so the capi exception in the
   phase Goal does not apply.
 
+### Task 4.6
+
+- New: `rust/src/kernels/{positron_pion,neutrino_flavors,neutrino_muon,
+  neutrino_pion}.rs`, `test/test_core_positron_pion.py`,
+  `test/test_core_neutrino.py`,
+  `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`.
+- Changed: `rust/src/{kernels,positron,neutrino,quad,constants}.rs`,
+  `hazma/spectra/_positron/{__init__.py,_pion.pyx}`,
+  `hazma/spectra/_neutrino/__init__.py`, `setup.py`,
+  `test/parity/{cases,tolerances}.py`,
+  `test/parity/oracles/entry_points.py`,
+  `test/test_core_{dispatch,constants}.py`, `docs/followups/README.md`,
+  `../../phases/phase-04-spectra-kernels.md`, `../../PLAN.md`,
+  and — correcting a claim about this task that was always wrong —
+  `../../../parity-pinned-defect-repair/{PLAN.md,references/defect-blast-radius.md}`.
+- Deleted: nine files — `hazma/spectra/_positron/_pion.pyi`, and the
+  eight under `hazma/spectra/_neutrino/`
+  (`_{muon,pion}.{pyx,pxd,pyi}` plus `_neutrino.{pyx,pxd}`).
+
 ## Verification
 
 - Per task: corpus suite for the swapped entry points + full pytest +
@@ -535,6 +607,24 @@ kernel ports.
   the test rather than widening again — see Findings. The converged-regime
   comparisons, which the phase's history would have predicted as the
   casualty, passed on Linux at 1e-12 in both rounds.
+- **After Task 4.6 (2026-08-20), which closes the phase:** bare
+  `pytest -q` → `1934 passed, 15 skipped, 7 warnings in 118.12s`, from
+  `1831 / 15` on `origin/master` — **+103**, being 47 new tests in
+  `test/test_core_positron_pion.py` plus 58 in `test/test_core_neutrino.py`
+  less 2 parameterized rows retired from `test/test_core_constants.py`
+  with `derived::neutrino_muon` (`test/test_core_dispatch.py` unchanged at
+  118: the oracle module was swapped, not the assertions).
+  `pytest -q test/parity` → `658 passed, 1 skipped`, all three swapped
+  cases green — `spectra.neutrino.muon` **bit-equal at all 3,795 pinned
+  values** at `EXACT_RTOL`, `spectra.positron.charged_pion` at 5.494e-15
+  and `spectra.neutrino.charged_pion` at 9.739e-16 against the 1e-12 both
+  were **tightened** to. `cargo test --no-default-features` →
+  `169 passed`, from 133 (+36 across the four new kernel modules).
+  `pytest -q test/test_theory_aggregation.py` → `69 passed` either side of
+  the swap. An **eleven-mutation** validity campaign is in the task note,
+  with two survivors — one lifted out into `neutrino_pion::boost_window`
+  and killed, the other shown unobservable *by construction* and recorded
+  as such, so the campaign closes 11 / 11.
 
 ## Open Questions
 
@@ -600,78 +690,46 @@ kernel ports.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 04:** read `../../PLAN.md`,
-`../README.md`, this file, then the phase file — its Goal carries the
-eight-step swap recipe *and* the capi-survivor exception. **Task 4.6
-(`_positron/_pion` + the neutrino pair) is next and closes the phase.**
-Deleting the `_photon/_muon`, `_photon/_pion`, `_positron/_muon` or
-`_positron/_pion` extensions still breaks the mediator imports; Task 4.6
-removes `def`s, not files.
+**Phase 04 is closed (2026-08-20).** Read
+[`../../learnings/phase-04-spectra-kernels.md`](../../learnings/phase-04-spectra-kernels.md)
+rather than this file — it is the distillation of six tasks and sixteen
+entry points, and everything above is history kept for provenance.
+
+**For the next agent starting Phase 05 or 06:**
+
+1. `../../PLAN.md`, then `../README.md`, then the phase-04 learnings,
+   then the target phase file.
+2. Phase 05 must read
+   [`../phase-01/followup-parity-corpus-stability.md`](../phase-01/followup-parity-corpus-stability.md)
+   before porting the scalar cross sections — 494 pinned positions in the
+   four it ports assert nothing.
+3. Phase 06's Task 6.4 is the only place the four capi survivors
+   (`_photon/{_muon,_pion}`, `_positron/{_muon,_pion}`) and the `_utils`
+   headers go.
 
 **Currently safe to assume:**
 
-- The foundation (interp, boost, quad, dispatch, constants) is unit-tested
-  against scipy and NumPy, and Tasks 4.1–4.5 have exercised
-  `constants::{pdg,derived}`, all four `boost::*`, `interp::interp`,
-  `special::spence`, `quad::quad` (both `qagse` and `qagpe`) and
-  `dispatch::map_unary` through thirteen real kernels end to end.
-- **The photon domain is finished.** All 12 public
-  `hazma.spectra.dnde_photon_*` decay spectra come from `hazma._core`, and
-  `hazma/spectra/_photon/` holds no Cython Python entry point at all;
-  `_muon.pyx` and `_pion.pyx` survive there for their `cdef` capsules
-  alone, read now only by the two mediator decay-spectrum modules.
-  `cases.rust_core_kernels()` → **13**.
-- **14 `.pyx` and 11 `.pxd`** after Task 4.5, from 15/12 — the ρ was a
-  whole-file deletion, unlike Tasks 4.3/4.4. Re-derive with a clean
+- **`hazma/spectra/` holds no Cython Python entry point of any kind.**
+  `cases.rust_core_kernels()` → **16**; **11 `.pyx` and 8 `.pxd`** remain
+  in the tree, all of them Phase 05/06 business. Re-derive with a clean
   rebuild rather than quoting.
-- **`kernels::photon_pion::{dnde_photon_charged_pion,
-  dnde_photon_neutral_pion, charged_pion_integrand, dnde_pi_to_lnug}` are
-  `pub` and PyO3-free**, and Task 4.5 consumed the first two natively as
-  its integrands — the pattern for any kernel that boosts another.
-- **`NESTED` is measured.** `test/parity/tolerances.py` has
-  `PORTED_NESTED_RTOL = 1e-9` taken by the two ρ cases; the seven
-  mediator-spectrum cases keep the 1e-6 opening figure for Phase 06.
-  `PORTED_QUAD_RTOL = 1e-12` is still `spectra.photon.charged_pion` only,
-  and the two unported `QUAD` cases keep 1e-8 until Task 4.6 measures
-  them. `dnde_neutrino_charged_pion` nests too — the ρ came in at 1.5e-13,
-  five decades inside its class — but **re-derive rather than inherit**:
-  three tasks running, the phase's prediction has been wrong in a
-  different direction each time.
-- **Four test-module shapes now, and the twin forces the choice.**
-  `test_core_positron_muon.py` / `test_core_photon_muon.py` for a kernel
-  whose twin survives *and* admits bit-equality;
-  `test_core_photon_pion.py` for one carrying two oracle classes at two
-  standards; `test_core_photon_tables.py` and, new in Task 4.5,
-  `test_core_photon_rho.py` for a kernel whose twin does **not** survive
-  the PR — there the substitute is an independent reference (a Python +
-  scipy transcription over the already-ported inner kernels) plus the
-  against-the-Cython numbers measured before the deletion.
-- **Run a mutation campaign, then interrogate the survivors.** Task 4.5's
-  six caught five, and the survivor was fixed by lifting the arithmetic
-  out of the integral into a testable `fn` rather than accepted.
-- `test/test_core_dispatch.py`'s spectra oracle is `_positron/_pion`,
-  whose `def` Task 4.6 deletes; there is no unary candidate after it. See
-  Decisions.
-- The corpus is in budget mode from Task 4.1 and **cannot be
-  regenerated**. `EXACT`-class cases are still `rtol = 0`, and
-  `spectra.photon.neutral_pion` passes there on Rust.
+- **Every kernel module under `rust/src/kernels/` is `pub` and
+  PyO3-free**, so Phase 06's mediator spectra call them natively the way
+  the `.pyx` cimport the Cython today.
+- **`crate::quad` short-circuits an empty interval**, as scipy does
+  (Task 4.6). Any Phase 05/06 kernel whose limits can coincide inherits
+  the fix.
 
 **Currently risky / unknown:**
 
-- **Seven blocked defects now share one eventual corpus regeneration** —
-  the positron normalization (4.1), the boost integral (3.4), the η′ line
-  weight and the φ line energies (4.2), the muon photon spectrum's
-  rest-frame endpoint (4.3), the charged pion's lost forward cone (4.4),
-  and the ρ rest-frame branch returning its integrand (4.5). Do not "fix"
-  any in passing. **Worth telling the maintainer separately from this
-  project's schedule** — and the forward-cone entry now carries Task 4.5's
-  measurement that the ρ *compounds* rather than merely inherits it, which
-  changes the shape of that repair.
-- **Phase 05 has to name the cross sections' `quantity` wording**;
-  `"Center-of-mass energies"` is the placeholder
-  `test/test_core_dispatch.py` uses.
-- ~~**Off macOS the corpus does not reproduce**~~ — **fixed 2026-08-18**
-  ([`parity-corpus-pins-ill-conditioned-points.md`](../../../../docs/followups/done/parity-corpus-pins-ill-conditioned-points.md)).
-  CI runs the corpus on every matrix entry again; `test/parity` now
-  declines to pin 494 positions in the four scalar elastic cross
-  sections, which is Phase 05's business rather than Phase 04's.
+- **Eight blocked defects now share one eventual corpus regeneration** —
+  the seven this phase and Task 3.4's found, plus the boost integral.
+  Do not "fix" any in passing.
+- **`test_core_dispatch.py`'s `TestDeclaredDivergencesFromCython` has one
+  Cython oracle left in the tree** (`scalar_mediator_decay_spectrum`), and
+  Phase 06 deletes it. Retire the class or re-express its widenings
+  against `cython_xs`.
+- **Phase 05 still has to name the cross sections' `quantity` wording.**
+  They carry no dispatch message today, so the port invents it and it is
+  user-visible from the first swap. `"Center-of-mass energies"` is the
+  placeholder `test/test_core_dispatch.py` uses.

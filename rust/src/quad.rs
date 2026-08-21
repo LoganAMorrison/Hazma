@@ -1578,6 +1578,18 @@ fn filter_points(points: &[f64], a: f64, b: f64) -> Vec<f64> {
 /// [`QuadOutcome`] where scipy raises an `IntegrationWarning`. hazma's call
 /// sites all take the value and ignore the warning.
 ///
+/// An **empty interval short-circuits to zero without evaluating the
+/// integrand at all**, which is what `scipy/integrate/_quadpack_py.py`
+/// does (`if a == b: return (0., 0.)`, before the limits are ordered and
+/// before QUADPACK is reached). Handing `[x, x]` to [`qagse`] instead is
+/// not equivalent: every Gauss-Kronrod node collapses onto `x`, so a
+/// singular integrand there gives `f(x) · 0 = NaN` rather than `0`. That
+/// is a live difference and not a theoretical one — cython-to-rust
+/// Task 4.6 found it at `dnde_neutrino_charged_pion(0.0, epi)`, whose
+/// integrand is `(dN/dE)/E` and whose boost window is `[0, 0]` at a
+/// zero-energy neutrino. `a == b` is false when either is `NaN`, so `NaN`
+/// limits still fall through, as they do in scipy.
+///
 /// # Errors
 ///
 /// Only the cases where scipy raises `ValueError`; see [`QuadError`].
@@ -1585,6 +1597,16 @@ pub fn quad<F>(f: &mut F, a: f64, b: f64, opts: &QuadOpts<'_>) -> Result<QuadOut
 where
     F: FnMut(f64) -> f64,
 {
+    if a == b {
+        return Ok(QuadOutcome {
+            value: 0.0,
+            abserr: 0.0,
+            neval: 0,
+            last: 0,
+            ier: Ier::Ok,
+        });
+    }
+
     let flip = b < a;
     let (lo, hi) = if flip { (b, a) } else { (a, b) };
 
@@ -2015,12 +2037,50 @@ mod tests {
         assert!(out.value.is_nan() || out.value == 0.0);
     }
 
+    /// An empty interval returns zero **without touching the integrand**,
+    /// which is scipy's `if a == b` short circuit rather than a property
+    /// of QUADPACK.
+    ///
+    /// The distinction is invisible on a smooth integrand — every
+    /// Gauss-Kronrod node collapses onto the point and the half-length is
+    /// zero, so the weighted sum is zero either way — and decisive on a
+    /// singular one, where `f(x) · 0` is `NaN`. The counter below is what
+    /// pins the short circuit; the first version of this driver had the
+    /// smooth assertion alone and passed while answering `NaN` for the
+    /// live case (cython-to-rust Task 4.6,
+    /// `dnde_neutrino_charged_pion(0.0, epi)`).
     #[test]
-    fn a_zero_width_interval_integrates_to_zero() {
-        let mut f = |x: f64| x.exp();
-        let out = quad(&mut f, 1.5, 1.5, &QuadOpts::default()).unwrap();
+    fn an_empty_interval_returns_zero_without_evaluating_the_integrand() {
+        let mut calls = 0_usize;
+        let mut smooth = |x: f64| {
+            calls += 1;
+            x.exp()
+        };
+        let out = quad(&mut smooth, 1.5, 1.5, &QuadOpts::default()).unwrap();
         assert_eq!(out.value, 0.0);
         assert_eq!(out.ier, Ier::Ok);
+        assert_eq!(out.neval, 0);
+        assert_eq!(calls, 0, "the integrand must not be evaluated at all");
+
+        // The case that separates the short circuit from the accident:
+        // `0/0` at the collapsed node.
+        let mut singular = |x: f64| 0.0 / x;
+        assert_eq!(
+            quad(&mut singular, 0.0, 0.0, &QuadOpts::default())
+                .unwrap()
+                .value,
+            0.0
+        );
+
+        // `a == b` is false for a `NaN`, so `NaN` limits still fall
+        // through to the integrator, as they do in scipy.
+        let mut anything = |_x: f64| 1.0;
+        assert!(
+            quad(&mut anything, f64::NAN, f64::NAN, &QuadOpts::default())
+                .unwrap()
+                .value
+                .is_nan()
+        );
     }
 
     #[test]

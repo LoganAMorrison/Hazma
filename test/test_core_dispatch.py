@@ -58,7 +58,7 @@ import pytest
 from hazma._core import dispatch as core_dispatch
 from hazma._core import roundtrip
 from hazma.scalar_mediator import _c_scalar_mediator_cross_sections as cython_xs
-from hazma.spectra._positron import _pion as cython_positron_pion
+from hazma.scalar_mediator import scalar_mediator_decay_spectrum as cython_spectrum
 
 # The `hazma._core.dispatch` probes, bound here so the tests below read like
 # ordinary calls. Each takes the quantity wording as an argument, which the
@@ -83,6 +83,20 @@ N_FLAVORS = 3
 
 DIMENSION_ERROR = f"{QUANTITY} must be 0 or 1-dimensional."
 TYPE_ERROR = f"{QUANTITY} must be a float or a NumPy array."
+
+#: The remaining three arguments of `scalar_mediator_decay_spectrum`, which
+#: `TestDeclaredDivergencesFromCython` uses as its surviving Cython oracle:
+#: ``(sm_energy, sm_mass, partial_widths)`` in MeV, MeV and MeV. The
+#: mediator is heavy enough to open every channel and the widths are all
+#: zero, so the spectrum is identically zero -- these tests are about
+#: *dispatch*, and a zero spectrum keeps them from paying for the physics.
+SPECTRUM_ARGS = (500.0, 200.0, np.zeros(9))
+
+#: The quantity `scalar_mediator_decay_spectrum.pyx:270` names in its rank
+#: `assert`. It is `"Photon energies"` rather than the `"Positron
+#: energies"` the previous oracle used, and the tests below read it from
+#: here so the coupling is visible.
+SPECTRUM_QUANTITY = "Photon energies"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -655,17 +669,30 @@ class TestCythonMessageParity:
     """
 
     def test_the_tree_carries_exactly_the_expected_message_roster(self) -> None:
-        # Enumerated from source so the four templates below are known to
-        # cover everything, and so a new wording cannot appear unnoticed.
-        # `"Photon energies ..."` in `hazma/spectra/_neutrino/_muon.pyx` is a
-        # copy-paste defect its `_pion.pyx` sibling does not share; Task 3.5
-        # decided the port says "Neutrino energies" there, which is why the
-        # roster is pinned rather than merely counted.
+        # Enumerated from source so the templates below are known to cover
+        # everything, and so a new wording cannot appear unnoticed.
+        #
+        # The roster **shrinks as the port advances**, because it is read
+        # from the surviving `.pyx`. Task 3.5 measured four `assert`
+        # wordings across the whole compiled layer; cython-to-rust Task 4.6
+        # swapped the last `hazma/spectra/**` entry points, so
+        # `"Positron energies ..."` and `"Neutrino energies ..."` no longer
+        # appear in any `.pyx` and the three below are what is left, all of
+        # them in the mediator decay-spectrum modules Phase 06 deletes.
+        #
+        # The port still emits both retired wordings — that is the whole
+        # point of carrying a Cython twin's message across a swap — and
+        # each is pinned in its own kernel's test module
+        # (`test/test_core_positron_muon.py`,
+        # `test/test_core_positron_pion.py`,
+        # `test/test_core_neutrino.py`) rather than here. Note in
+        # particular that `hazma/spectra/_neutrino/_muon.pyx:205` said
+        # `"Photon energies ..."`, a copy-paste defect its `_pion.pyx`
+        # sibling did not share; Task 3.5 decided the port says
+        # `"Neutrino energies"` there, and Task 4.6 shipped that.
         found = cython_dispatch_messages()
         assert found["assert"] == {
             "Photon energies must be 0 or 1-dimensional.",
-            "Positron energies must be 0 or 1-dimensional.",
-            "Neutrino energies must be 0 or 1-dimensional.",
             "Partial widths must be 1-dimensional.",
         }
         assert found["raise"] == {"Partial widths must be a list or array."}
@@ -711,26 +738,36 @@ class TestDeclaredDivergencesFromCython:
     ``def`` with the unary "scalar or 1-D array in, same out" shape. That
     was ``_photon/_muon`` until cython-to-rust Task 4.3 swapped it, then
     ``_photon/_pion`` until Task 4.4, then ``_photon/_rho`` until Task 4.5
-    exhausted the photon candidates. It is ``_positron/_pion`` now: the
-    same ``hasattr(__len__)`` / ``assert`` / array-return shape as all
-    three predecessors, differing only in the quantity its message names
-    (``"Positron energies"``), which these tests take from the source
-    rather than hard-code.
+    exhausted the photon candidates, then ``_positron/_pion`` until Task
+    4.6 closed Phase 04 and left ``hazma/spectra/`` with no top-level
+    ``def`` at all.
 
-    **Task 4.6 swaps that one too, and it is the last unary spectra
-    ``def`` in the tree** — the neutrino entry points survive it but
-    return a 3-tuple or a ``(3, N)`` array, so they do not fit these
-    assertions without rewriting them. At that point either rewrite them
-    around the neutrino shape or retire them; by the end of Phase 04 the
-    widening they describe stops having a live Cython side outside
-    ``cython_xs``.
+    It is ``scalar_mediator_decay_spectrum`` now, and that choice is
+    forced rather than preferred. The two surviving neutrino entry points
+    went to Rust in the same task, so "rewrite these around the neutrino
+    shape" — which this docstring used to offer as the alternative — has
+    no Cython side left to rewrite against. What
+    ``scalar_mediator_decay_spectrum`` has is the *identical* dispatch
+    shape on its first argument: ``hasattr(__len__)``, then
+    ``np.array``, then ``assert len(shape) == 1`` with the message
+    ``"Photon energies must be 0 or 1-dimensional."``
+    (``scalar_mediator_decay_spectrum.pyx:268-271``). It differs only in
+    carrying three more arguments, which these tests supply as
+    :data:`SPECTRUM_ARGS`, and in the quantity its message names, which
+    they take from the source rather than hard-code.
+
+    It survives until Phase 06 deletes the mediator spectrum modules.
+    After that the widening described here has no live Cython side outside
+    ``cython_xs``, and this class retires with the last ``.pyx``.
     """
 
     def test_a_zero_dimensional_array_raises_in_cython_and_returns_in_rust(
         self,
     ) -> None:
         with pytest.raises(AssertionError):
-            cython_positron_pion.dnde_positron_charged_pion(np.array(15.0), 200.0)
+            cython_spectrum.scalar_mediator_decay_spectrum(
+                np.array(15.0), *SPECTRUM_ARGS
+            )
         assert type(roundtrip(np.array(15.0))) is float
 
     def test_the_cross_sections_already_take_the_ported_zero_dimensional_path(
@@ -751,14 +788,16 @@ class TestDeclaredDivergencesFromCython:
         # downstream failure instead. The *message* is unchanged, which is
         # what `TestCythonMessageParity` checks.
         with pytest.raises(AssertionError) as cython_error:
-            cython_positron_pion.dnde_positron_charged_pion(np.ones((2, 2)), 200.0)
+            cython_spectrum.scalar_mediator_decay_spectrum(
+                np.ones((2, 2)), *SPECTRUM_ARGS
+            )
         with pytest.raises(ValueError) as rust_error:
-            roundtrip_as(np.ones((2, 2)), "Positron energies")
+            roundtrip_as(np.ones((2, 2)), SPECTRUM_QUANTITY)
         assert str(cython_error.value) == str(rust_error.value)
 
     def test_a_sequence_is_accepted_by_the_spectra_and_by_the_port(self) -> None:
-        assert cython_positron_pion.dnde_positron_charged_pion(
-            [15.0, 25.0], 200.0
+        assert cython_spectrum.scalar_mediator_decay_spectrum(
+            [15.0, 25.0], *SPECTRUM_ARGS
         ).shape == (2,)
         assert roundtrip([15.0, 25.0]).shape == (2,)
 

@@ -220,13 +220,15 @@ From `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` Task
 
 | Task | Deletes | Group A capture it strands |
 | --- | --- | --- |
-| 4.6 | `hazma/spectra/_positron/_pion.pyx`, the neutrino pair | A4's `spectra.positron.charged_pion` |
+| 4.6 | the neutrino pair and their struct module. **Not** `hazma/spectra/_positron/_pion.pyx`: both mediator positron spectrum modules cimport it, so 4.6 removed only its `def` and the file dies with the other capi survivors at 6.4 (corrected when 4.6 landed, 2026-08-20) | A4's `spectra.positron.charged_pion` |
 | 6.2 | the two mediator decay spectrum `.pyx` | A2's and A3's three `mediator_spectra.*.photon` cases |
 | 6.3 | the two mediator positron spectrum `.pyx` | A4's four `mediator_spectra.*.positron` cases |
-| 6.4 | `hazma/spectra/_photon/{_muon,_pion}.pyx`, `hazma/spectra/_positron/_muon.pyx`, `hazma/_utils/boost.{pyx,pxd}` | everything remaining in A1–A4 |
+| 6.4 | `hazma/spectra/_photon/{_muon,_pion}.pyx`, `hazma/spectra/_positron/{_muon,_pion}.pyx`, `hazma/_utils/boost.{pyx,pxd}` | everything remaining in A1–A4 |
 
-Task 4.6 is the only task left in Phase 04, so the first of these
-windows is the one closing soonest. Nothing in Group B appears in this
+Task 4.6 landed 2026-08-20 and closed Phase 04. It deleted less than
+this table expected: `hazma/spectra/_positron/_pion.pyx` is a capi
+survivor, so only its `def` went and the `cdef` A4's capture reads is
+now in the 6.4 row above. Nothing in Group B appears in this
 table — that is what "corpus re-pinning only" means for B1–B3.
 
 ### Two windows that had already closed

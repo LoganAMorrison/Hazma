@@ -47,12 +47,19 @@ extensions = []
 extensions += make_extension(["_utils"], ["boost"])
 
 # Decay Spectra
-# The five tabulated photon extensions (_kaon, _eta, _omega, _eta_prime,
-# _phi) went to Rust in cython-to-rust Task 4.2 and _rho in Task 4.5, so
-# those six .pyx are gone. The Python entry points of _muon (Task 4.3)
-# and _pion (Task 4.4) are gone too but both extensions stay built:
-# _pion.pyx cimports _muon's cdefs, and both mediator decay-spectrum
-# modules cimport from each. Phase 06 Task 6.4 is where the files go.
+# Every spectra entry point is served by hazma._core as of cython-to-rust
+# Task 4.6, so no extension under hazma/spectra/ has a top-level `def`
+# left. (The mediator extensions further down still do — they are
+# Phases 05-06.) The five
+# tabulated photon extensions (_kaon, _eta, _omega, _eta_prime, _phi)
+# went in Task 4.2, _rho in Task 4.5, and all three _neutrino extensions
+# (_muon, _pion, _neutrino) in Task 4.6, so those nine .pyx are gone.
+#
+# The four below stay built for their `__pyx_capi__` capsules alone:
+# _photon/_pion cimports _photon/_muon, _positron/_pion cimports
+# _positron/_muon, and both mediator decay-spectrum modules and both
+# mediator positron-spectrum modules cimport from these four. Phase 06
+# Task 6.4 is where the files go.
 extensions += make_extension(
     ["spectra", "_photon"],
     ["_muon", "_pion"],
@@ -60,10 +67,6 @@ extensions += make_extension(
 extensions += make_extension(
     ["spectra", "_positron"],
     ["_muon", "_pion"],
-)
-extensions += make_extension(
-    ["spectra", "_neutrino"],
-    ["_muon", "_pion", "_neutrino"],
 )
 
 # Scalar mediator

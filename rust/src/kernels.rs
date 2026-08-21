@@ -7,21 +7,30 @@
 //! [`crate::dispatch`] and the per-domain submodules.
 //!
 //! One submodule per ported `.pyx`, named for it: [`positron_muon`] is
-//! `hazma/spectra/_positron/_muon.pyx`, [`photon_muon`] is
+//! `hazma/spectra/_positron/_muon.pyx`, [`positron_pion`] is
+//! `hazma/spectra/_positron/_pion.pyx`, [`photon_muon`] is
 //! `hazma/spectra/_photon/_muon.pyx`, [`photon_pion`] is
-//! `hazma/spectra/_photon/_pion.pyx` and [`photon_rho`] is
-//! `hazma/spectra/_photon/_rho.pyx`. [`photon_tables`] is the one
-//! exception and says so in its own docs — the five tabulated photon
-//! `.pyx` files were near-copies of one another, so they port to a single
-//! module parameterised by table, mass and line terms. The two
-//! `roundtrip` probes below stay at this level because they belong to no
-//! `.pyx` at all.
+//! `hazma/spectra/_photon/_pion.pyx`, [`photon_rho`] is
+//! `hazma/spectra/_photon/_rho.pyx`, [`neutrino_muon`] is
+//! `hazma/spectra/_neutrino/_muon.pyx` and [`neutrino_pion`] is
+//! `hazma/spectra/_neutrino/_pion.pyx`. Two modules are the documented
+//! exceptions: [`photon_tables`], because the five tabulated photon
+//! `.pyx` files were near-copies of one another and port to a single
+//! module parameterised by table, mass and line terms; and
+//! [`neutrino_flavors`], because the literal transcription of
+//! `hazma/spectra/_neutrino/_neutrino.pyx` would be `neutrino_neutrino`.
+//! Each says so in its own docs. The two `roundtrip` probes below stay at
+//! this level because they belong to no `.pyx` at all.
 
+pub mod neutrino_flavors;
+pub mod neutrino_muon;
+pub mod neutrino_pion;
 pub mod photon_muon;
 pub mod photon_pion;
 pub mod photon_rho;
 pub mod photon_tables;
 pub mod positron_muon;
+pub mod positron_pion;
 
 /// Return `x` unchanged.
 ///

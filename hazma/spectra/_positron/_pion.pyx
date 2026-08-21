@@ -77,22 +77,18 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_positron_charged_pion_array(double[:] 
 
 
 # ===================================================================
-# ---- Python API ---------------------------------------------------
+# ---- No Python API ------------------------------------------------
 # ===================================================================
-
-def dnde_positron_charged_pion(epos, epi):
-    """
-    Compute the positron spectrum dN/dE from the decay of a charged pion.
-    Paramaters
-    ----------
-    epos: float or array-like
-        Positron energy.
-    epi: float 
-        Energy of the pion.
-    """
-    if hasattr(epos, '__len__'):
-        energies = np.array(epos)
-        assert len(energies.shape) == 1, "Positron energies must be 0 or 1-dimensional."
-        return dnde_positron_charged_pion_array(energies, epi)
-    else:
-        return dnde_positron_charged_pion_point(epos, epi)
+#
+# `dnde_positron_charged_pion` was the top-level `def` here until the
+# cython-to-rust project's Task 4.6: `hazma/spectra/_positron/__init__.py`
+# now calls `hazma._core.positron.dnde_positron_charged_pion`, so this
+# extension is Python-unreferenced.
+#
+# The file survives because both mediator positron-spectrum modules
+# cimport `dnde_positron_charged_pion_array` from it at the C level
+# (`scalar_mediator_positron_spec.pyx:2`,
+# `vector_mediator_positron_spec.pyx:10`), which needs the built extension
+# and its `__pyx_capi__` capsules. Phase 06 Task 6.4 deletes the file once
+# the last cimporter is gone. See the phase file's "scoped exception to
+# rules.md rule 1".

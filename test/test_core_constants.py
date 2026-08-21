@@ -90,21 +90,29 @@ DERIVED_SOURCES = {
     # `constants::pdg` directly.
     "derived::positron_muon": Path("hazma/spectra/_positron/_muon.pyx"),
     "derived::positron_pion": Path("hazma/spectra/_positron/_pion.pyx"),
-    "derived::neutrino_muon": Path("hazma/spectra/_neutrino/_muon.pyx"),
+    # `derived::neutrino_muon` was here until cython-to-rust Task 4.6
+    # deleted `hazma/spectra/_neutrino/_muon.pyx`. Unlike
+    # `derived::photon_rho` above, its five `DEF`s were arithmetic on
+    # `constants.pxd` rather than bare aliases, so they did not simply
+    # vanish -- they moved into `rust/src/kernels/neutrino_muon.rs`, the
+    # one kernel that reads them. Either way this mapping tracks the
+    # surviving `.pyx`, so the row goes with the file.
 }
 
 #: Which ``.pxd`` each of those ``.pyx`` ``include``-s, and therefore
-#: which table its *computed* ``DEF`` entries resolve names against. All five
-#: take ``constants.pxd``; the mediator extensions that take the legacy
-#: header declare no ``DEF`` entries of their own.
+#: which table its *computed* ``DEF`` entries resolve names against. All
+#: three take ``constants.pxd``; the mediator extensions that take the
+#: legacy header declare no ``DEF`` entries of their own.
 DERIVED_INCLUDES = dict.fromkeys(DERIVED_SOURCES, "pdg")
 
 #: Loose floors for the sanity check that the parsers matched *something*.
-#: Deliberately well under the real counts (151 / 48 / 25) so that editing
-#: a table is not also editing this test.
+#: Deliberately well under the real counts (151 / 48 / 17) so that editing
+#: a table is not also editing this test. The derived count fell from 22
+#: when cython-to-rust Task 4.6 retired ``derived::neutrino_muon`` with
+#: its ``.pyx``, and the floor came down with it.
 FLOOR_PDG = 100
 FLOOR_LEGACY = 30
-FLOOR_DERIVED = 20
+FLOOR_DERIVED = 12
 #: Decay widths in ``constants.pxd``. The legacy table has none, on
 #: purpose -- see :func:`test_the_legacy_widths_table_is_still_empty`.
 PDG_WIDTH_COUNT = 13
@@ -317,8 +325,8 @@ class TestParsers:
         self, rust: Namespaces, tables: Namespaces
     ) -> None:
         # Guards against a regex that matches nothing. The real counts
-        # are 151 / 48 in the two .pxd and 25 module-local DEFs across
-        # five .pyx; the floors are loose so ordinary edits to the tables
+        # are 151 / 48 in the two .pxd and 17 module-local DEFs across
+        # three .pyx; the floors are loose so ordinary edits to the tables
         # do not have to touch this test.
         assert len(tables["pdg"]) > FLOOR_PDG
         assert len(tables["legacy"]) > FLOOR_LEGACY
@@ -337,7 +345,8 @@ class TestParsers:
         # comparison below upper-cases the Cython. That is only sound
         # while the mapping stays injective -- `etap_BR_pi0_pi0_eta` in
         # the legacy table and the lowercase `DEF`s of
-        # `_positron/_pion.pyx` are the names it has to fold.
+        # `_positron/_pion.pyx` are the names it has to fold. The `.pyx`
+        # count is three as of cython-to-rust Task 4.6.
         for label, table in {**tables, **derived}.items():
             folded = [name.upper() for name in table]
             assert len(set(folded)) == len(folded), label
@@ -499,6 +508,13 @@ def test_r_factor_is_the_michel_normalization_over_the_pdg_ratio(
     difference is a factor of ``r^2 ~ 2.3e-5`` on that term, so the
     published value settles it. Pinned here so a port that trusts the
     comment over the number fails loudly.
+
+    The literal appears in **two** Rust files, because the neutrino muon
+    kernel keeps its own copy: cython-to-rust Task 4.6 deleted
+    ``hazma/spectra/_neutrino/_muon.pyx``, which retired
+    ``derived::neutrino_muon`` with it and moved its constants into
+    ``rust/src/kernels/neutrino_muon.rs``. Both copies are checked, so
+    they cannot drift apart silently.
     """
     r = rust["derived::positron_muon"]["R"]
     r2, r4 = r * r, r * r * r * r
@@ -509,8 +525,14 @@ def test_r_factor_is_the_michel_normalization_over_the_pdg_ratio(
     as_commented = 1 / (1 - 8 * r2 + 8 * r6 - r8 - 12 * r2 * log)
 
     assert bits(rust["derived::positron_muon"]["R_FACTOR"]) == bits(correct)
-    assert bits(rust["derived::neutrino_muon"]["R_FACTOR"]) == bits(correct)
     assert bits(as_commented) != bits(correct)
+
+    kernel = require(REPO_ROOT / "rust" / "src" / "kernels" / "neutrino_muon.rs")
+    match = re.search(
+        r"^const R_FACTOR: f64 = ([0-9_.]+);$", kernel.read_text(), re.MULTILINE
+    )
+    assert match, "R_FACTOR is no longer a plain literal in the neutrino kernel"
+    assert bits(float(match.group(1).replace("_", ""))) == bits(correct)
 
 
 # ---------------------------------------------------------------------

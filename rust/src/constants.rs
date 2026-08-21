@@ -596,25 +596,15 @@ pub mod derived {
         pub const GAMMA_MU: f64 = ENG_MU_PI_RF / MMU;
     }
 
-    /// `hazma/spectra/_neutrino/_muon.pyx`.
-    ///
-    /// `R`, `R2` and `R_FACTOR` are the same three the positron muon
-    /// kernel defines; `R4` and `R6` are extra.
-    pub mod neutrino_muon {
-        use super::super::pdg;
-
-        /// Electron-to-muon mass ratio, dimensionless.
-        pub const R: f64 = pdg::MASS_E / pdg::MASS_MU;
-        /// [`R`] squared.
-        pub const R2: f64 = R * R;
-        /// [`R`] to the fourth.
-        pub const R4: f64 = R2 * R2;
-        /// [`R`] to the sixth.
-        pub const R6: f64 = R4 * R2;
-        /// Michel-spectrum normalization; see
-        /// [`super::positron_muon::R_FACTOR`].
-        pub const R_FACTOR: f64 = 1.0001870858234163;
-    }
+    // `derived::neutrino_muon` was here until cython-to-rust Task 4.6
+    // deleted `hazma/spectra/_neutrino/_muon.pyx`. Its five `DEF`s (`R`,
+    // `R2`, `R4`, `R6`, `R_FACTOR`) are arithmetic on `pdg` rather than
+    // bare aliases, so unlike `derived::photon_rho` they did not simply
+    // vanish -- they moved into `rust/src/kernels/neutrino_muon.rs`, the
+    // one kernel that reads them, beside the constants clang folds out of
+    // them. This namespace is scored against the surviving `.pyx` by
+    // `test/test_core_constants.py`, so a submodule whose source file is
+    // gone cannot stay here.
 }
 
 #[cfg(test)]
@@ -708,10 +698,6 @@ mod tests {
             derived::positron_muon::R_FACTOR.to_bits(),
             expected.to_bits()
         );
-        assert_eq!(
-            derived::neutrino_muon::R_FACTOR.to_bits(),
-            derived::positron_muon::R_FACTOR.to_bits()
-        );
     }
 
     /// Cython folds `DEF`s at compile time in Python; these are `const`
@@ -729,12 +715,12 @@ mod tests {
             (0.5 * (mpi * mpi + me * me) / mpi).to_bits()
         );
         assert_eq!(
-            derived::neutrino_muon::R6.to_bits(),
-            {
-                let r2 = (me / mmu) * (me / mmu);
-                r2 * r2 * r2
-            }
-            .to_bits()
+            derived::positron_pion::GAMMA_MU.to_bits(),
+            (derived::positron_pion::ENG_MU_PI_RF / mmu).to_bits()
+        );
+        assert_eq!(
+            derived::positron_muon::R2.to_bits(),
+            ((me / mmu) * (me / mmu)).to_bits()
         );
     }
 }

@@ -450,22 +450,25 @@ _SPECTRA: list[tuple[str, str, str, float, list[float]]] = [
         [params.electron_mass],
     ),
     (
+        # Ported: cython-to-rust Task 4.6 -- this row and the two below.
+        # The module is the *wrapper* for the same reason the positron
+        # muon's is; see `PORTED_ENTRY_POINTS`.
         "positron.charged_pion",
-        "hazma.spectra._positron._pion",
+        "hazma.spectra._positron",
         "dnde_positron_charged_pion",
         params.charged_pion_mass,
         [params.electron_mass, params.muon_mass / 2.0, ENG_MU_PIRF],
     ),
     (
         "neutrino.muon",
-        "hazma.spectra._neutrino._muon",
+        "hazma.spectra._neutrino",
         "dnde_neutrino_muon",
         params.muon_mass,
         [],
     ),
     (
         "neutrino.charged_pion",
-        "hazma.spectra._neutrino._pion",
+        "hazma.spectra._neutrino",
         "dnde_neutrino_charged_pion",
         params.charged_pion_mass,
         [ENG_MU_PIRF, params.muon_mass / 2.0],
@@ -1432,6 +1435,22 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     "spectra.photon.neutral_rho": (
         "hazma.spectra._photon._rho",
         "dnde_photon_neutral_rho",
+    ),
+    # cython-to-rust Task 4.6, which closes Phase 04. The positron pion
+    # is a capi survivor like the two photon rows above -- both mediator
+    # positron-spectrum modules cimport its `cdef`s -- so the file stays
+    # and only its `def` went. The three neutrino `.pyx` had no cimporter
+    # outside their own package, so all three files went in the swap PR
+    # and these rows are the only record of where the pinned values came
+    # from.
+    "spectra.positron.charged_pion": (
+        "hazma.spectra._positron._pion",
+        "dnde_positron_charged_pion",
+    ),
+    "spectra.neutrino.muon": ("hazma.spectra._neutrino._muon", "dnde_neutrino_muon"),
+    "spectra.neutrino.charged_pion": (
+        "hazma.spectra._neutrino._pion",
+        "dnde_neutrino_charged_pion",
     ),
 }
 

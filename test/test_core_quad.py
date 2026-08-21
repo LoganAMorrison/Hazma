@@ -489,12 +489,15 @@ class TestLiveIntegrandShapes:
     @pytest.mark.parametrize(
         ("epsabs", "epsrel", "site"),
         [
-            # Ported by cython-to-rust Task 4.5; the tolerances now live
-            # in `rust/src/kernels/photon_rho.rs`'s `RHO_QUAD` and the
-            # citation is where they came from.
+            # All three ported — the rho by cython-to-rust Task 4.5, the
+            # positron and neutrino pions by Task 4.6. The tolerances now
+            # live in `rust/src/kernels/{photon_rho,positron_pion,
+            # neutrino_pion}.rs`'s `*_QUAD` consts and the citations are
+            # where they came from; two of the three `.pyx` are gone from
+            # the tree, so these are provenance, not live call sites.
             (1e-10, 1e-5, "spectra/_photon/_rho.pyx:52,123 (ported)"),
-            (1e-10, 1e-4, "spectra/_positron/_pion.pyx:58"),
-            (1.49e-8, 1.49e-8, "spectra/_neutrino/_pion.pyx:124,127"),
+            (1e-10, 1e-4, "spectra/_positron/_pion.pyx:58 (ported)"),
+            (1.49e-8, 1.49e-8, "spectra/_neutrino/_pion.pyx:124,127 (ported)"),
         ],
     )
     def test_boosted_energy_window_sites(

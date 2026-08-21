@@ -9,7 +9,6 @@ from hazma import parameters
 from hazma._core import positron as _core_positron
 from hazma.utils import RealArray, RealOrRealArray
 
-from . import _pion
 from ._utils import dnde_positron as _dnde_positron
 from ._utils import load_interp as _load_interp
 
@@ -95,7 +94,7 @@ def dnde_positron_charged_pion(
         The value of the spectrum given a positron energy(ies)
         ``positron_energies`` and charged pion energy ``pion_energy``.
     """
-    return _pion.dnde_positron_charged_pion(positron_energies, pion_energy)
+    return _core_positron.dnde_positron_charged_pion(positron_energies, pion_energy)
 
 
 @overload
