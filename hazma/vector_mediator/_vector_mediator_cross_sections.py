@@ -1,33 +1,42 @@
-from hazma.parameters import charged_pion_mass as mpi
-from hazma.parameters import neutral_pion_mass as mpi0
-from hazma.parameters import muon_mass as mmu
-from hazma.parameters import electron_mass as me
-from hazma.parameters import fpi, qe
+import warnings
+
+import numpy as np
+from numpy.polynomial.legendre import leggauss
 from scipy.integrate import quad
 
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    sigma_xx_to_v_to_ff as sig_ff,
+# The six compiled cross sections, served by the Rust extension since
+# cython-to-rust Task 5.1 deleted
+# `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx`. Import
+# path, call signatures and returned values are unchanged; see
+# `rust/src/kernels/vector_xs.rs` for the port and
+# `projects/cython-to-rust/rules.md` rule 7 (Rust conventions 2) for why
+# the wrapper, not the extension, stays the public surface.
+from hazma._core.vector_mediator import (
+    sigma_xx_to_v_to_ff,
+    sigma_xx_to_v_to_pi0g,
+    sigma_xx_to_v_to_pi0v,
+    sigma_xx_to_v_to_pipi,
+    sigma_xx_to_vv,
+    thermal_cross_section,
 )
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    sigma_xx_to_v_to_pipi as sig_pipi,
-)
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    sigma_xx_to_v_to_pi0g as sig_pi0g,
-)
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    sigma_xx_to_v_to_pi0v as sig_pi0v,
-)
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    sigma_xx_to_vv as sig_vv,
-)
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import electron_mass as me
+from hazma.parameters import fpi
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.parameters import qe
 
-from hazma.vector_mediator._c_vector_mediator_cross_sections import (
-    thermal_cross_section as tcs,
-)
-
-from numpy.polynomial.legendre import leggauss
-import warnings
-import numpy as np
+# Short names for the class below, whose methods share their spelling
+# with the kernels they call. Imported under the kernels' own names first
+# so this module reads as the entry point it now is -- `test/parity`
+# drives these names, and `test/test_core_vector_xs.py` pins each alias
+# to the kernel it stands for.
+sig_ff = sigma_xx_to_v_to_ff
+sig_pipi = sigma_xx_to_v_to_pipi
+sig_pi0g = sigma_xx_to_v_to_pi0g
+sig_pi0v = sigma_xx_to_v_to_pi0v
+sig_vv = sigma_xx_to_vv
+tcs = thermal_cross_section
 
 
 class VectorMediatorCrossSections:

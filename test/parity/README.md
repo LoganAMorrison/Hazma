@@ -116,9 +116,12 @@ number lives.
 
 **Coverage** is checked, not asserted: `assert_full_coverage` walks the
 surviving `.pyx` for top-level `def`s and fails if any lacks a case, or
-if a case names a `def` that no longer exists. The two `sigma_xx_to_all`
+if a case names a `def` that no longer exists. The `sigma_xx_to_all`
 exports are the only exclusions, and `assert_unconsumed_exports_are_unimported`
-re-derives at generation time that nothing imports them.
+re-derives at generation time that nothing imports them. There were two;
+cython-to-rust Task 5.1 deleted the vector module without porting its
+export, so `UNCONSUMED_EXPORTS` is down to the scalar one, which
+Task 5.2 takes the same way.
 
 **Edge behavior is part of the contract.** Grids deliberately run past
 thresholds and endpoints, and values are stored exactly as returned —

@@ -20,12 +20,27 @@ implementation does* rather than by what it computes:
 
 ``EXACT`` (rtol 0)
     Closed-form arithmetic: `+ - * /`, `sqrt`, `pow`, `log`, `exp`,
-    `atan`, `atanh` and branch selection, nothing else — everything in
-    this class reaches only `libc.math`. The phase file asks for
-    bit-equality here against the capturing commit. Note this is strict
-    enough to catch a libm change — Rust's `f64::exp` need not agree with
-    the platform C library in the last ulp — which is deliberate: such a
-    shift should be measured and declared, not absorbed silently.
+    `atan`, `atanh` and branch selection, nothing else. The phase file
+    asks for bit-equality here against the capturing commit. Note this is
+    strict enough to catch a libm change — Rust's `f64::exp` need not
+    agree with the platform C library in the last ulp — which is
+    deliberate: such a shift should be measured and declared, not
+    absorbed silently.
+
+    This sentence used to end "everything in this class reaches only
+    `libc.math`", and Task 5.1 found that two members do not.
+    `sigma_xx_to_v_to_pipi` and `sigma_xx_to_v_to_pi0v` raise a double to
+    the power `1.5`, and Cython 3's default `cpow` semantics compile the
+    whole enclosing expression in `double _Complex` — so the Cython
+    reaches `cpow` and compiler-rt's `__divdc3`, neither of which agrees
+    with its real-arithmetic spelling (up to 9.0e-15 and 4.0e-16
+    relative respectively, measured over 3.7M arguments). The class still
+    holds, and at `rtol = 0`: the port reproduces both routines rather
+    than approximating them (`rust/src/kernels/vector_xs.rs`), and all
+    five closed-form vector kernels came back bit-equal at every pinned
+    value. What the correction changes is the *reason* — a future member
+    of this class has to be checked against the generated C, not against
+    the `.pyx`.
 ``SPECFUN`` (rtol 1e-13)
     Closed form apart from a special function. ADR-0002 replaces scipy's
     cephes bindings with cephes-lineage Rust, which is
@@ -77,9 +92,14 @@ implementation does* rather than by what it computes:
     then measured the last two spectra members,
     `spectra.positron.charged_pion` at **5.5e-15** over 1,460 values and
     `spectra.neutrino.charged_pion` at **9.7e-16** over 4,185. So all
-    three ported members take `PORTED_QUAD_RTOL`, and the two cases still
-    at the opening figure are the thermal cross sections, which Phase 05
-    ports and measures. Nothing external moves under a ported case any
+    three ported members take `PORTED_QUAD_RTOL`. Task 5.1 then measured
+    the fourth, `cross_sections.vector.thermal_cross_section`, at
+    **2.1e-14** relative over its 285 pinned values (64 bit-equal) and
+    tightened it the same way; the drift there is the Bessel prefactor
+    and weight rather than the integrator, since `bessel_kn(2, ·)` agrees
+    with scipy to 8.9e-16 and the prefactor squares it. The one case
+    still at the opening figure is the scalar thermal cross section,
+    which Task 5.2 ports and measures. Nothing external moves under a ported case any
     more -- the reference values are stored, scipy no longer participates,
     and the remaining variation is the platform libm, which the corpus is
     scoped to anyway.
@@ -560,12 +580,15 @@ BUDGETS: dict[str, Budget] = {
         why="closed-form t/u-channel result, arithmetic only.",
     ),
     "cross_sections.vector.thermal_cross_section": Budget(
-        rtol=QUAD_RTOL,
+        rtol=PORTED_QUAD_RTOL,
         atol=0.0,
         why="QAGP over z with mediator breakpoints "
         "(hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:656) "
         "and Bessel K1/K2 prefactors (:606, :650); the x > 300 saturation "
-        "is a branch, not a tolerance question.",
+        "is a branch, not a tolerance question. Tightened from QUAD_RTOL "
+        "by Task 5.1 on its own measurement -- 2.06e-14 worst relative "
+        "over the 285 pinned values, 64 of them bit-equal, so 1e-12 "
+        "leaves 49x headroom.",
     ),
     # -- mediator spectra ---------------------------------------------------
     "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum": Budget(

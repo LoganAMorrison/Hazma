@@ -14,12 +14,14 @@
 //!   `TypeError`.
 //!
 //! [`map_flavors`] is the same contract with the neutrino return shape —
-//! a 3-tuple for a scalar, a `(3, N)` array for a grid — and
+//! a 3-tuple for a scalar, a `(3, N)` array for a grid;
 //! [`require_vector`] is the third live shape, an argument that must be a
-//! 1-D array and is never a scalar (`partial_widths`).
+//! 1-D array and is never a scalar (`partial_widths`); and
+//! [`map_unary_try`] is [`map_unary`] for a kernel that raises at some
+//! arguments, which two of the vector-mediator cross sections do.
 //!
 //! Implemented once here so no kernel re-derives it. Phases 03–06 call
-//! these three rather than touching PyO3 in a kernel module (`rules.md`
+//! these four rather than touching PyO3 in a kernel module (`rules.md`
 //! rule 8).
 //!
 //! # Relationship to the Cython these replace
@@ -218,6 +220,45 @@ where
             // result must not alias the input, and the view may be
             // non-contiguous.
             let mapped: Vec<f64> = values.as_array().iter().map(|&x| kernel(x)).collect();
+            Ok(mapped.into_pyarray(py).into_any().unbind())
+        }
+    }
+}
+
+/// [`map_unary`] for a kernel that can fail at some arguments.
+///
+/// The fourth live shape, and the newest: the two vector-mediator cross
+/// sections whose `**` operator compiled to complex arithmetic raise
+/// `TypeError` where the imaginary part comes back non-zero
+/// (`crate::kernels::vector_xs`, and the `.pyx` through
+/// `__Pyx_SoftComplexToDouble`). One bad element takes the whole call
+/// down, in both languages: the Cython's `__vec_*` loop jumps to its
+/// error label on the first failing index rather than filling that slot
+/// and continuing, so an array containing the `e_cm = 2 m_x` threshold
+/// raises instead of returning a partly-`nan` array.
+///
+/// `kernel` returns a `PyResult` rather than a plain `Result` so that the
+/// caller — a per-domain submodule, never a kernel module — chooses both
+/// the exception type and its wording. [`crate::kernels`] stays PyO3-free
+/// (`rules.md` rule 8).
+///
+/// # Errors
+///
+/// As [`map_unary`], plus whatever `kernel` returns for the first
+/// argument it rejects.
+pub fn map_unary_try<F>(obj: &Bound<'_, PyAny>, quantity: &str, kernel: F) -> PyResult<Py<PyAny>>
+where
+    F: Fn(f64) -> PyResult<f64>,
+{
+    let py = obj.py();
+    match classify(obj, quantity)? {
+        Argument::Scalar(value) => Ok(PyFloat::new(py, kernel(value)?).into_any().unbind()),
+        Argument::Vector(values) => {
+            let mapped: Vec<f64> = values
+                .as_array()
+                .iter()
+                .map(|&x| kernel(x))
+                .collect::<PyResult<Vec<f64>>>()?;
             Ok(mapped.into_pyarray(py).into_any().unbind())
         }
     }

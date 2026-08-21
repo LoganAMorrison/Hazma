@@ -19,8 +19,12 @@
 //! module parameterised by table, mass and line terms; and
 //! [`neutrino_flavors`], because the literal transcription of
 //! `hazma/spectra/_neutrino/_neutrino.pyx` would be `neutrino_neutrino`.
-//! Each says so in its own docs. The two `roundtrip` probes below stay at
-//! this level because they belong to no `.pyx` at all.
+//! Each says so in its own docs. [`vector_xs`] is a third: it is
+//! `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx`, whose
+//! literal name would be `c_vector_mediator_cross_sections` and whose
+//! `vector_mediator` half is already the PyO3 submodule's name. The two
+//! `roundtrip` probes below stay at this level because they belong to no
+//! `.pyx` at all.
 
 pub mod neutrino_flavors;
 pub mod neutrino_muon;
@@ -31,6 +35,7 @@ pub mod photon_rho;
 pub mod photon_tables;
 pub mod positron_muon;
 pub mod positron_pion;
+pub mod vector_xs;
 
 /// Return `x` unchanged.
 ///
