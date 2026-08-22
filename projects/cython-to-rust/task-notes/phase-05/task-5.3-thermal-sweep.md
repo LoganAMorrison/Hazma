@@ -66,6 +66,19 @@ grid, and record the phase's headline benchmark from a release build.
   `rtol` 1e-5 → 1e-8 → 1e-10 collapses the pre↔post difference by four
   orders while the pre-port answer itself moves by only 1.3e-5. A true
   drift would not shrink when the *solver* is tightened.
+- **An adaptive-solver pin's platform spread only shows up in CI, and it
+  is bigger than the capture platform suggests.** The first version of
+  this task pinned the Boltzmann path at `relic_density`'s default
+  `rtol=1e-5` with a 1e-4 budget, chosen as ~3x the 3.82e-5 measured on
+  macOS/arm64. All five Linux jobs failed at **1.222e-4**
+  (`vector.open_resonance`) while macOS passed — a different libm
+  perturbs the step sequence differently, so the same comparison is ~3x
+  worse there, and macOS alone could not have predicted it. **The fix
+  was not a wider budget**: pinning the same six values at `rtol=1e-10`
+  instead drops the pre-vs-ported spread to **1.93e-8**, a ~2000x
+  improvement in what the pin can resolve, for ~1.5 s of extra solve
+  time. Pin an ODE where the physics dominates the step noise, not where
+  the caller's default happens to sit.
 - **Debug and release `hazma._core` are numerically bit-identical.**
   The whole six-scenario sweep (12 relic densities + 78
   `thermal_cross_section` values) reproduces at `rtol = 0` across the two
@@ -91,10 +104,17 @@ grid, and record the phase's headline benchmark from a release build.
   `SEMI_ANALYTIC_RTOL = 1e-12` is ~2000× the measured 4.2e-16 — sharp
   enough that a real kernel regression cannot hide behind it (verified:
   a 1e-9 relative perturbation fails all six subtests).
-  `BOLTZMANN_RTOL = 1e-4` bounds the measured 3.82e-5 step-selection
-  spread with ~3× headroom; it is a coarse end-to-end smoke gate by
-  construction, and the note says so rather than implying a physics
-  budget.
+  `BOLTZMANN_RTOL = 1e-5` is ~500× the 1.93e-8 measured at the pin's own
+  `rtol=1e-10`, leaving room for the platform spread CI exposed. It
+  remains a coarse end-to-end smoke gate — it resolves kernel errors
+  ≳1e-4 — and the test says so rather than implying a physics budget.
+- **The Boltzmann pins are taken at `rtol=1e-10`, not at
+  `relic_density`'s defaults.** Pinning the default `rtol=1e-5` failed
+  CI on Linux (see Findings). Overriding the solver tolerance in the
+  test is the honest fix: it pins the physics rather than `solve_ivp`'s
+  step-acceptance history, and the two constants that do it
+  (`BOLTZMANN_SOLVER_RTOL` / `_ATOL`) sit beside the pins with the
+  reason. Cost is ~1.5 s; `relic_density`'s own defaults are unchanged.
 - **Reused `test/parity/cases.py`'s six model points verbatim** rather
   than inventing scenarios, so a failure here and a corpus failure
   implicate the same kernels at the same couplings. They are not
@@ -137,14 +157,20 @@ the same interpreter and pins. Post-port tree: this branch.
 
 Six model points, taken verbatim from `test/parity/cases.py`.
 
-| scenario | semi-analytic | Boltzmann (`rtol=1e-5`) |
-| --- | --- | --- |
-| `scalar.open_resonance` | 0 (bit-equal) | 7.94e-10 |
-| `scalar.narrow_resonance` | 4.03e-16 | 1.94e-07 |
-| `scalar.closed_resonance` | 0 (bit-equal) | 2.81e-06 |
-| `vector.open_resonance` | 1.73e-16 | 2.93e-05 |
-| `vector.narrow_resonance` | 0 (bit-equal) | 3.82e-05 |
-| `vector.closed_resonance` | 4.11e-16 | 2.32e-06 |
+| scenario | semi-analytic | Boltzmann `rtol=1e-5` | Boltzmann `rtol=1e-10` |
+| --- | --- | --- | --- |
+| `scalar.open_resonance` | 0 (bit-equal) | 7.94e-10 | 1.93e-08 |
+| `scalar.narrow_resonance` | 4.03e-16 | 1.94e-07 | 5.70e-09 |
+| `scalar.closed_resonance` | 0 (bit-equal) | 2.81e-06 | 2.70e-13 |
+| `vector.open_resonance` | 1.73e-16 | 2.93e-05 | 1.00e-09 |
+| `vector.narrow_resonance` | 0 (bit-equal) | 3.82e-05 | 3.84e-09 |
+| `vector.closed_resonance` | 4.11e-16 | 2.32e-06 | 1.52e-12 |
+
+The third column is what the committed test pins. The second is what the
+first version of this task pinned, and what CI rejected: on Linux/glibc
+the `vector.open_resonance` entry reads **1.222e-4**, 3.2x its macOS
+value, against a 1e-4 budget. The `rtol=1e-10` column's worst entry is
+1.93e-8 and the budget is 1e-5.
 
 ### The Boltzmann column is step selection, not drift
 
@@ -196,10 +222,20 @@ port as ~20× slower.
   semi-analytic solver; the same six on the Boltzmann solver.
 - **Test validity (perturbation-proof).** The port cannot be `git
   stash`ed — it is two merged commits — so validity was shown by
-  perturbing the kernel instead: multiplying both models'
-  `thermal_cross_section` by `1 + 1e-9` fails all 6 semi-analytic
-  subtests; by `1 + 1e-3` fails all 6 of both tests. Neither test passes
-  against a wrong kernel.
+  perturbing the kernel instead, multiplying both models'
+  `thermal_cross_section` by `1 + eps` and re-running:
+
+  | `eps` | semi-analytic subtests failed | Boltzmann subtests failed |
+  | --- | --- | --- |
+  | 1e-9 | 6 / 6 | 0 / 6 |
+  | 1e-6 | 6 / 6 | 0 / 6 |
+  | 1e-5 | 6 / 6 | 0 / 6 |
+  | 1e-4 | 6 / 6 | 6 / 6 |
+  | 1e-3 | 6 / 6 | 6 / 6 |
+
+  So the semi-analytic gate resolves a kernel error of 1e-9 and the
+  Boltzmann gate one of 1e-4. Neither passes against a wrong kernel; the
+  Boltzmann one is the coarse end-to-end check it is documented to be.
 - Debug/release identity: the full sweep re-run against the release
   `_core.abi3.so` reproduces the debug run at `rtol = 0` across all 90
   values.
@@ -213,10 +249,11 @@ port as ~20× slower.
 `relic_density` is a public function and the diff reaches it, so it was
 measured directly (tables above). Semi-analytic: **no public value
 changes beyond 4.2e-16**, four of six bit-equal — below rule 3's 1e-12
-threshold, no CHANGELOG line of its own. Boltzmann: up to **3.82e-5**,
-which is `solve_ivp` step selection at the caller's own `rtol=1e-5`, not
-a drift in the physics; the underlying answer is unchanged to ~1e-9 once
-the solver is tightened. Logged in `../numerical-impact.md`. No change
+threshold, no CHANGELOG line of its own. Boltzmann: up to **3.82e-5** at
+the caller's default `rtol=1e-5`, which is `solve_ivp` step selection
+rather than a drift in the physics — at `rtol=1e-10`, where the
+committed pins are taken, the same comparison is **1.93e-8**. Logged
+in `../numerical-impact.md`. No change
 to `version_bump:` — it was already `major` on API-removal grounds.
 
 ## Open Questions
@@ -259,6 +296,8 @@ Run against `claude/cython-to-rust/task-5.3-thermal-sweep`.
 | Lint on the touched module | `ruff check test/test_relic_density.py` | `All checks passed!` — was 10 findings at `origin/master`, so the file left cleaner than it arrived |
 | Numerical-impact statement | measured, tables in §Measurements; logged in `../numerical-impact.md` | semi-analytic `relic_density` ≤4.11e-16 (4 of 6 bit-equal); Boltzmann ≤3.82e-5, identified as `solve_ivp` step selection by the tolerance sweep, not drift; no `version_bump:` change |
 | Preflight | `env PATH=".venv/bin:$PATH" scripts/agents/preflight.sh --paths … --md …` | `RESULT: PASS` (see §Verification) |
+| Cross-platform CI | `gh pr checks 78` | first push red on all five Linux jobs (Boltzmann pin at the solver default); re-pinned at `rtol=1e-10`, not widened — see Findings |
+| Tolerance constants agree with the note | `grep -n 'RTOL\|ATOL' test/test_relic_density.py` against §Measurements and §Decisions | `SEMI_ANALYTIC_RTOL=1e-12`, `BOLTZMANN_RTOL=1e-5`, `BOLTZMANN_SOLVER_RTOL=1e-10`, `BOLTZMANN_SOLVER_ATOL=1e-8` — all four cited with their measured basis in the note, the log and the learnings |
 
 ## Handoff to Next Task
 

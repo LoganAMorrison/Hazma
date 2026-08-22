@@ -90,13 +90,19 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: (Omega h^2).  Not physical abundances — these model points were chosen
     #: to stress the cross sections, not to sit on the observed value.
     PINNED: ClassVar = {
-        "scalar.open_resonance": (26.68685642281613, 34.4452749510159),
-        "scalar.narrow_resonance": (6767.372700752017, 8088.965075110545),
-        "scalar.closed_resonance": (1.148403342097341e-06, 1.3502945042316372e-06),
-        "vector.open_resonance": (6.105824110025352e-07, 6.371224032649989e-07),
-        "vector.narrow_resonance": (0.3074889583129119, 0.3270447354727253),
-        "vector.closed_resonance": (4.1185334301418195e-06, 4.98145477734309e-06),
+        "scalar.open_resonance": (26.68685642281613, 34.44575717769028),
+        "scalar.narrow_resonance": (6767.372700752017, 8089.043577107299),
+        "scalar.closed_resonance": (1.148403342097341e-06, 1.350303034524835e-06),
+        "vector.open_resonance": (6.105824110025352e-07, 6.371422579338723e-07),
+        "vector.narrow_resonance": (0.3074889583129119, 0.3270523666229746),
+        "vector.closed_resonance": (4.1185334301418195e-06, 4.981522406974646e-06),
     }
+
+    #: Solver tolerances for the Boltzmann pins above.  *Not* the
+    #: `relic_density` defaults (``rtol=1e-5, atol=1e-3``) — see
+    #: `BOLTZMANN_RTOL` for why the defaults cannot be pinned portably.
+    BOLTZMANN_SOLVER_RTOL = 1e-10
+    BOLTZMANN_SOLVER_ATOL = 1e-8
 
     #: The semi-analytic path is a closed-form composition of
     #: `thermal_cross_section` with no adaptive solver in it, so the port's
@@ -106,16 +112,26 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: regression and loose enough to survive a libm difference.
     SEMI_ANALYTIC_RTOL = 1e-12
 
-    #: The Boltzmann path runs `scipy.integrate.solve_ivp` with the
-    #: `relic_density` default ``rtol=1e-5``.  A last-bit change in
+    #: The Boltzmann path integrates the same kernel with
+    #: `scipy.integrate.solve_ivp`, whose adaptive stepping does not
+    #: depend continuously on its input: a last-bit change in
     #: `thermal_cross_section` flips a step-acceptance decision and the
-    #: whole step sequence differs, so the answer moves at the *solver's*
-    #: tolerance, not the kernel's: measured <= 3.83e-5 here.  Tightening
-    #: the solve collapses it (Task 5.3 measured 2.8e-7 at ``rtol=1e-8``
-    #: and 3.8e-9 at ``rtol=1e-10``), which is what identifies it as step
-    #: selection rather than drift.  1e-4 bounds the measured spread with
-    #: ~3x headroom.
-    BOLTZMANN_RTOL = 1e-4
+    #: whole step sequence differs.  The answer then moves at the
+    #: *solver's* tolerance rather than the kernel's, which makes a pin
+    #: taken at the `relic_density` default ``rtol=1e-5`` both loose and
+    #: platform-dependent — cython-to-rust Task 5.3 measured 3.82e-5
+    #: pre-port vs ported on macOS/arm64 and CI then found 1.22e-4 for
+    #: the same comparison on Linux/glibc, because a different libm
+    #: perturbs the step sequence differently.
+    #:
+    #: So these pins are taken at ``rtol=1e-10`` instead, where the
+    #: physics dominates the step noise: the same comparison is 1.93e-8
+    #: at worst (`scalar.open_resonance`), a ~2000x improvement in what
+    #: the pin can resolve, for ~1.5 s of extra solve time across the six
+    #: scenarios.  1e-5 is ~500x that measured worst case, leaving room
+    #: for the platform spread while still catching any kernel error
+    #: large enough to matter physically.
+    BOLTZMANN_RTOL = 1e-5
 
     def _models(self) -> Iterator[tuple[str, object]]:
         for name, kwargs in self.SCALAR_POINTS.items():
@@ -136,7 +152,12 @@ class TestMediatorRelicDensity(unittest.TestCase):
         for name, model in self._models():
             with self.subTest(model=name):
                 assert_allclose(
-                    relic_density(model, semi_analytic=False),
+                    relic_density(
+                        model,
+                        semi_analytic=False,
+                        rtol=self.BOLTZMANN_SOLVER_RTOL,
+                        atol=self.BOLTZMANN_SOLVER_ATOL,
+                    ),
                     self.PINNED[name][1],
                     rtol=self.BOLTZMANN_RTOL,
                 )
