@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 05
-**Status:** In Progress — Tasks 5.1 and 5.2 complete (2026-08-21)
+**Status:** Complete (2026-08-21) — all three tasks done; [learnings](../../learnings/phase-05-mediator-cross-sections.md)
 **Plan References:** `../../phases/phase-05-mediator-cross-sections.md`
 **Related ADRs:** ADR-0002
 **Depends On:** Phase 03 complete (may run parallel to Phase 04 — no
@@ -20,7 +20,7 @@ cross-section ports.
 | --- | ------ | ------------ | -------- | ----------- |
 | 5.1 | Vector cross sections (template) | — | **Complete (2026-08-20)** | [task-5.1-vector-xs.md](task-5.1-vector-xs.md) |
 | 5.2 | Scalar cross sections | 5.1 | **Complete (2026-08-21)** | [task-5.2-scalar-xs.md](task-5.2-scalar-xs.md) |
-| 5.3 | Thermal ⟨σv⟩ validation sweep | 5.1, 5.2 | Not started | [task-5.3-thermal-sweep.md](task-5.3-thermal-sweep.md) |
+| 5.3 | Thermal ⟨σv⟩ validation sweep | 5.1, 5.2 | **Complete (2026-08-21)** | [task-5.3-thermal-sweep.md](task-5.3-thermal-sweep.md) |
 
 ## Exit Criteria
 
@@ -64,8 +64,10 @@ cross-section ports.
   neither `epsabs` nor `epsrel`, so scipy's default absolute tolerance
   (1.49e-8) is met by the first Kronrod pass on an integrand whose
   integral is ~1e-27. The shipped answer is 0.5%–5% off the true
-  integral for every `x ≳ 5`. Filed; Task 5.3 should measure the relic
-  consequence.
+  integral for every `x ≳ 5`. Filed; **Task 5.3 measured the relic
+  consequence**: relic abundance goes as 1/⟨σv⟩, so the shipped relic
+  densities carry that 0.5%–5% error roughly linearly across
+  freeze-out.
 - **`pow(x, 2.0)` folds to `x·x`, `pow(x, 3.0)` and `pow(x, 4.0)` do
   not** — `_pow` is a live libm import of the shipped object. Writing
   `x·x·x` is a different number.
@@ -81,6 +83,26 @@ cross-section ports.
   whole path to the root through `PyNumber_*` on `PyFloat`s, so nothing
   there contracts while the pure-C operands still fuse internally. Same
   observable as Phase 04's `_photon/_rho.pyx`, different cause.
+- **Nothing in the suite drove `relic_density` through a compiled
+  `thermal_cross_section` until Task 5.3.** `test/test_relic_density.py`'s
+  `ToyModel` supplies its own constant `thermal_cross_section`, and
+  `_thermal_functions.thermal_cross_section` short-circuits to the model's
+  when it has one — so every pre-existing relic assertion bypassed the
+  compiled layer. Phase 01 pinned the kernel; nothing pinned the consumer.
+- **The two relic solvers propagate kernel drift nine orders apart, and
+  only the semi-analytic one measures physics.** Semi-analytic carries the
+  ≤2.06e-14 kernel drift through undamped (≤4.2e-16 over six scenarios,
+  four bit-equal); the Boltzmann path moves up to 3.82e-5 because a
+  last-bit input change flips a `solve_ivp` step-acceptance decision.
+  Tightening `rtol` 1e-5 → 1e-10 collapses the difference by four orders —
+  that is the test that tells step selection from drift, and it is worth
+  running before treating any ODE-path delta as a regression. It is also
+  why an ODE pin must not be taken at its caller's default tolerance:
+  the first version of Task 5.3 did, and every Linux CI job failed at
+  1.222e-4 against a budget chosen from a 3.82e-5 macOS measurement.
+- **Debug and release `hazma._core` are bit-identical** across 90 values
+  (12 relic densities + 78 ⟨σv⟩). The cargo profile buys speed only, so a
+  parity result taken in debug is trustworthy and only its *timing* is not.
 
 ## Decisions and Implementation Notes
 
@@ -112,8 +134,29 @@ cross-section ports.
   [the follow-up](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)
   is updated to say the "do it during Phase 05" window closed and what
   the standalone change now looks like.
+- Task 5.3: the end-to-end check landed in `test/test_relic_density.py`,
+  not the parity corpus — rule 2 forbids regenerating the corpus from a
+  Rust-serving tree and `generate.py` enforces it. Pre-port values came
+  from building `14f1c66` in a throwaway worktree and are now constants.
+- Task 5.3: two tolerances with separate justifications —
+  `SEMI_ANALYTIC_RTOL = 1e-12` (~2000× the measured drift, a real gate)
+  and `BOLTZMANN_RTOL = 1e-4` (bounds step-selection spread, a smoke
+  gate). Both are documented as such in the test.
+- Task 5.3: `setup.py` was not changed. The release build for the
+  benchmark was a temporary `debug=False`, measured and reverted; the
+  profile decision belongs to the open follow-up and Phase 07 Task 7.1.
 
 ## Files Changed
+
+### Task 5.3
+
+- `test/test_relic_density.py` — `TestMediatorRelicDensity`, six mediator
+  scenarios × two solvers pinned to pre-port values.
+- `docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md`
+  — records that the two cargo profiles are numerically bit-identical.
+- Project bookkeeping: this README, the Task 5.3 note, `../README.md`,
+  `../numerical-impact.md`, `../../learnings/phase-05-mediator-cross-sections.md`,
+  `../../phases/phase-05-mediator-cross-sections.md`, `../../PLAN.md`.
 
 ### Task 5.2
 
@@ -140,7 +183,7 @@ cross-section ports.
 ## Verification
 
 - Corpus over the mediator parameter grid; relic-density end-to-end
-  check (Task 5.3); benchmark per rules.md rule 12.
+  check (Task 5.3); benchmark per rules.md rule 12. All three ran.
 - Task 5.1: `pytest -q` → `2013 passed, 15 skipped`;
   `pytest test/parity -q` → `658 passed, 1 skipped`;
   `cargo test --no-default-features` → `186 passed`;
@@ -149,6 +192,19 @@ cross-section ports.
   `pytest test/parity -q` → `658 passed, 1 skipped`;
   `cargo test --no-default-features` → `201 passed`;
   `pytest test/test_theory_aggregation.py -q` → `69 passed`.
+- Task 5.3 (first push): CI red on all five Linux jobs — the Boltzmann
+  relic pin was taken at `relic_density`'s default `rtol=1e-5`, where
+  the pre↔post spread is `solve_ivp` step selection and therefore
+  libm-dependent: 3.82e-5 on macOS, **1.222e-4** on Linux, against a
+  1e-4 budget. Re-pinned at `rtol=1e-10` (spread 1.93e-8, budget 1e-5)
+  rather than widened.
+- Task 5.3: `pytest -q` → `2093 passed, 15 skipped, 12 subtests passed`
+  (the +2 over Task 5.2 are `TestMediatorRelicDensity`'s two methods);
+  `pytest test/test_relic_density.py -q` →
+  `3 passed, 12 subtests passed`. Test validity shown by perturbing
+  `thermal_cross_section` rather than by `git stash` — the port is two
+  merged commits: `× (1 + 1e-9)` fails all 6 semi-analytic subtests,
+  `× (1 + 1e-3)` fails all 6 of both tests.
 
 ## Open Questions
 
@@ -171,46 +227,50 @@ cross-section ports.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 05 (Task 5.3):** read
-`../../PLAN.md`, `../README.md`, this file, then the phase file, then
-[`task-5.2-scalar-xs.md`](task-5.2-scalar-xs.md)'s Handoff. Both thermal
-cross sections are Rust now, so 5.3's relic-density sweep and benchmark
-run against a fully ported path — and the benchmark must come from a
-**release** build, not an editable install.
+**Phase 05 is closed.** Read
+[`../../learnings/phase-05-mediator-cross-sections.md`](../../learnings/phase-05-mediator-cross-sections.md)
+instead of this file and the three task notes; they are history.
 
 **Currently safe to assume:**
 
-- Both `_c_*` cross-section modules are gone — neither had a `.pxd` and
-  neither exported capsules, so both went whole. Nothing in the phase
-  cimports anything from hazma any more.
+- All 18 consumed defs are on Rust, both `_c_*` cross-section modules
+  are gone (neither had a `.pxd` nor exported capsules, so both went
+  whole), and both `sigma_xx_to_all` exports are dropped. Nothing in the
+  phase cimports anything from hazma.
 - The layout is settled: kernels in `crate::kernels::<name>_xs`, PyO3
   registration in `crate::<model>_mediator`, module-local constants
   beside the kernels, and the shared `**`-operator shims in
-  `crate::kernels::soft_complex`.
-- `dispatch::map_unary_try` exists for a kernel that raises, and
-  `crate::quad`'s `qagp` plus `crate::special`'s Bessels are on the live
-  path of **both** thermal averages now.
-- Every closed-form cross section in the phase is bit-equal to its
-  Cython. The two `thermal_cross_section` entry points are the only ones
-  that moved (2.06e-14 vector, 3.12e-15 scalar) and both budgets are
-  tightened to `PORTED_QUAD_RTOL`.
+  `crate::kernels::soft_complex`. `dispatch::map_unary_try` exists for a
+  kernel that raises; `Case.attribute` exists for a wrapper that cannot
+  re-export a kernel under its own name.
+- Sixteen of eighteen entry points are bit-equal to their Cython. The
+  two `thermal_cross_section` entry points are the only ones that moved
+  (2.06e-14 vector, 3.12e-15 scalar), both budgets tightened to
+  `PORTED_QUAD_RTOL`, and `QUAD_RTOL` now has no holder.
+- The relic-density consumer is pinned end-to-end
+  (`test/test_relic_density.py::TestMediatorRelicDensity`, twelve
+  pre-port values from `14f1c66`) and is 1.46×–1.93× faster.
+- Debug and release `hazma._core` are bit-identical, so a parity result
+  from an editable tree is valid; only its timing is not.
 
 **Currently risky / unknown:**
 
-- **Task 5.3 owns both of the phase's deferred items**: the
-  relic-density end-to-end check through
-  `hazma/relic_density/_thermal_functions.py`, and the benchmark. The
-  benchmark must be taken from a **release** build —
-  [an editable install builds the extension in debug](../../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)
-  and reads ~20× pessimistic.
-- The two models disagree above `x = 300`: the scalar returns exactly
-  `0.0`, the vector saturates. The corpus pins both and 5.3's sweep
-  crosses that boundary; do not unify them.
+- **Phase 06's four `.pyx` have not been run through
+  `grep -c SoftComplexToDouble` on their generated C.** That grep
+  changed the answer twice in this phase. Run it; do not eyeball the
+  source.
+- The two models disagree above `x = 300` — the scalar returns exactly
+  `0.0`, the vector saturates. The corpus pins both; do not unify them.
 - [The thermal quadrature never converges](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
-  on either model — the shipped answer is 0.5%–5% off the true integral
-  for `x ≳ 5`. Reproduced, not fixed; its relic-density consequence is
-  what Task 5.3 measures.
+  on either model. Task 5.3 measured the consequence: relic abundance
+  goes as 1/⟨σv⟩, so every published relic density carries that 0.5%–5%
+  error roughly linearly. Reproduced, not fixed; the follow-up is
+  unblocked and Phase 07's CHANGELOG names it.
 - Four scalar elastic kernels carry
   [the `atan`-cancellation defect](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)
-  into Rust unchanged, and read `test/parity/stability.py` before
-  trusting any comparison near `e_cm = 2 mx`.
+  into Rust unchanged; read `test/parity/stability.py` before trusting
+  any comparison near `e_cm = 2 mx`.
+- Establishing a pre-port baseline now costs a build from a git commit —
+  the twins are deleted. Task 5.3's recipe (detached worktree, its own
+  venv with the same pins, one sweep script run against both
+  interpreters) is the cheapest way and Phase 06 will need it.
