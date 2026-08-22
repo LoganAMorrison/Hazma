@@ -23,6 +23,12 @@ the project-level `../README.md`, but scoped to a single phase:
 Agents working on any task in this phase should read this file first,
 append to it as they learn, and update the Tasks Status cell when a
 task completes.
+
+Length (docs/adrs/ADR-0002): append one-liners; the per-task detail
+belongs in the task note. Once this phase closes and
+`../../learnings/phase-<XX>-<slug>.md` exists, the learnings file is
+what later phases read — this file and the phase's task notes become
+history that a citation may point into.
 -->
 
 ## Objective

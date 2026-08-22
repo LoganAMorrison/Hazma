@@ -109,36 +109,79 @@ of `rust/target/`, which nothing Python imports.
 
 ### Step 4: Read only the required context
 
+The reading list is a budget, not a syllabus
+([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 In this order; skip what does not apply:
 
 1. `projects/<slug>/PLAN.md` — always. Frontmatter `phased:` picks the
    branch below. Read the **Numerical impact** section; it constrains
    what you are allowed to change.
-2. `projects/<slug>/task-notes/README.md` — **always.** The live Tasks
-   table (flat) or Phases table (phased), cumulative findings, the
-   Numerical-impact-so-far log, open questions, and the rolling
-   `## Handoff to Next Task`. Read *before* individual task notes.
+2. `projects/<slug>/task-notes/README.md` — **always**, and only this
+   head file: the live Tasks table (flat) or Phases table (phased), the
+   open questions, and the rolling `## Handoff to Next Task`. Its pointer
+   sections name the archive (`task-notes/history-*.md`) and, where the
+   project keeps one, the numerical-impact log
+   (`task-notes/numerical-impact.md`). Do not read the archive; read the
+   log only when your diff can reach a public code path (6b) or you are
+   closing the project.
 3. `projects/<slug>/rules.md` — cross-cutting project rules (optional).
 4. `projects/<slug>/phases/phase-XX-<slug>.md` — **phased only**, and
    **only the target phase**. Find the exact `### Task X.Y`, its Exit
    Criteria, and Prerequisites.
-5. `projects/<slug>/task-notes/phase-XX/README.md` — **phased only.**
-   Per-phase working memory; authoritative for "next unfinished task".
+5. `projects/<slug>/task-notes/phase-XX/README.md` — **phased only**,
+   the current phase. Per-phase working memory; authoritative for "next
+   unfinished task".
 6. Files named in that phase file's Prerequisites block.
-7. `projects/<slug>/learnings/phase-XX-*.md` for completed upstream
-   phases (phased only).
-8. Active ADRs touching the same area: `projects/<slug>/adrs/ADR-*.md`
+7. `projects/<slug>/learnings/phase-XX-*.md` for every **closed**
+   upstream phase (phased only). **These replace the closed phases' task
+   notes and per-phase READMEs** — do not open those; the one exception
+   is a learnings entry, the current handoff, or a citation that sends
+   you to a specific note for a specific detail.
+8. Task notes of the **current phase only**
+   (`task-notes/phase-XX/task-*.md`): the previous task's
+   `## Handoff to Next Task` and `## Open Questions` first, the rest of a
+   note only when the handoff points into it. Flat projects: the same
+   rule, for the preceding task's note.
+9. Active ADRs touching the same area: `projects/<slug>/adrs/ADR-*.md`
    and `docs/adrs/ADR-*.md`.
-9. The existing task note if this task is already in progress.
-10. [`lessons.md`](../../../docs/agents/lessons.md) — check your plan
-    against each recurring class before writing code.
-11. [`environment.md`](../../../docs/agents/environment.md) — skim; it is
+10. The existing task note if this task is already in progress.
+11. [`lessons.md`](../../../docs/agents/lessons.md) — check your plan
+    against each recurring class before writing code. The worked
+    examples behind each class are in
+    [`lessons-examples.md`](../../../docs/agents/lessons-examples.md);
+    open a class's section only when its one-line rule is not enough to
+    act on.
+12. [`environment.md`](../../../docs/agents/environment.md) — skim; it is
     load-bearing for every command you will run.
 
 **Do NOT** read other phase files unless a Prerequisites link pulls you
-there, and do not read the whole `projects/` tree "to get oriented". When
-you genuinely need to survey the codebase, delegate the sweep to an
-`Explore` subagent rather than pulling every file into this context.
+there, and do not read the whole `projects/` tree "to get oriented".
+
+**Context discipline.** Three rules, each from a measured transcript
+(ADR-0002 carries the numbers: three Phase 04–05 tasks each ended
+between 513k and 644k tokens of context, and the mandatory documents
+above were under 35k of it — the agent's own output and ad-hoc source
+reads were the rest):
+
+- **Delegate survey reads.** Reading a whole `.pyx`, `.c`, `.rs` or test
+  module to answer a bounded question — which constants a kernel reads,
+  where a symbol is dispatched, what a generated file contains — is an
+  `Explore` subagent's job: hand it the question and the paths and take
+  back the conclusion with `file:line` citations, not the file. Read a
+  file yourself only when you are about to edit it, and then by symbol
+  (`rg -n 'def name' file`, then `sed -n 'a,bp'` on the range you need),
+  not by sweeping `sed -n` windows through it.
+- **Never echo generated artifacts.** Write generated output — a
+  transpiled expression, a disassembly, a captured array, a full
+  `pytest -v` log — to a file under your scratch directory, then inspect
+  a narrow range (`wc -l`, `grep -c`, `sed -n '1,20p'`, a `diff` against
+  the expected form). A multi-thousand-character expression printed into
+  the transcript is paid for on every later step and read by nothing.
+- **Write once; do not re-read what you wrote.** A heredoc or `Write`
+  payload is already in context; confirm it landed with `wc -l` or
+  `grep -n` on the lines you care about, not `cat`. The same goes for
+  the task note: a note written in ten chunks and re-read between them
+  costs its size twice.
 
 **Template-file awareness:** files named `_template.md` are references,
 not artifacts. Glob for artifact patterns explicitly:
@@ -156,6 +199,20 @@ not artifacts. Glob for artifact patterns explicitly:
 - **Path:** flat → `projects/<slug>/task-notes/task-N-<slug>.md`;
   phased → `projects/<slug>/task-notes/phase-XX/task-X.Y-<slug>.md`.
 - Keep it current **while working**, not only at the end.
+- **Length budget** (ADR-0002): a task note is evidence, not narrative.
+  `## Findings` + `## Decisions and Implementation Notes` together stay
+  under ~100 lines; `## Inputs Reviewed` is one line per source;
+  `## Open Questions` one paragraph per question; the whole note under
+  ~500 lines. The measurement tables, `## Verification` (commands and
+  their summary lines — never whole logs), `## Numerical impact`, the
+  `## Stale-state sweep` block and `## Handoff to Next Task` are exempt
+  because they are pasted evidence. A section about to exceed its budget
+  is either a phase-level fact (one line here, the rest in
+  `phase-XX/README.md`) or prose to compress — do not weaken a gate to
+  meet it. Measured 2026-08-21 (`wc -l`): the three longest notes ran
+  775–876 lines (`phase-04/task-4.4` 876, with a 254-line
+  `## Findings`; `phase-01/task-1.3` 815; `phase-04/task-4.5` 775), and
+  the Phase 04 learnings condensed all six Phase 04 notes into 245 lines.
 
 **Fill in Exit Criteria first**, before you implement — copy the concrete
 bullets from the phase file's `**Exit criteria:**` block (phased) or the
@@ -233,7 +290,9 @@ representative grid and diff the arrays. Record in the task note:
 
 `No public value changes (verified: <command>)` is a valid result.
 Silence is not. If a value moved, say so in the task note, append a line
-to the working-memory README's **Numerical impact so far** section, and
+to the project's numerical-impact log — `task-notes/numerical-impact.md`
+where the project keeps one (cython-to-rust does), otherwise the
+working-memory README's **Numerical impact so far** section — and
 re-check the project's `version_bump:` level against
 [`versioning.md`](../../../docs/versioning.md) — a moved published number
 is `minor`, not `patch`.
@@ -332,16 +391,28 @@ Then **record task status in two places**:
    task's `Status` cell in `task-notes/phase-XX/README.md` (touch the
    project-level README only for cross-phase material and the Phases
    table). Every status change updates: the Tasks-table cell;
-   **Findings** (only what outlives this task); **Numerical impact so
-   far**; **Decisions** (one-liners with rationale, linking an ADR if
-   written); **Open Questions**; **Files Changed** (a `### Task N`
-   roll-up); and a rewritten `## Handoff to Next Task`.
+   **Findings** (only what outlives this task); the numerical-impact
+   log (`numerical-impact.md`, or the README's **Numerical impact so
+   far** section where no separate log exists); **Decisions**
+   (one-liners with rationale, linking an ADR if written); **Open
+   Questions**; **Files Changed** (a `### Task N` roll-up); and a
+   rewritten `## Handoff to Next Task`. The project-level README is a
+   head file of roughly 5k tokens — tables, open questions, handoff and
+   pointers — so append one-liners, not narrative, and keep the handoff
+   to what the next task needs (ADR-0002).
 
 Then handle closure:
 
 - **Phased, last task in the phase:** synthesize
   `learnings/phase-XX-<slug>.md`, set the phase file frontmatter
   `status: Complete`, update its cell in `PLAN.md`'s `## Phases` table.
+  Then sweep the project README: move the closed phase's Findings,
+  Decisions, Files Changed and Verification entries **verbatim** into
+  `task-notes/history-<section>.md` (same directory as the README so the
+  moved text's links keep resolving; shape and provenance header as in
+  `projects/cython-to-rust/task-notes/history-findings.md`), leaving the pointer
+  paragraph in place — the learnings file you just wrote replaces them
+  for every later reader (ADR-0002). Nothing is deleted or summarised.
 - **Last task overall:** synthesize `learnings/project-retrospective.md`.
   For every substantive §5 follow-on seed, file a
   `docs/followups/todo/<slug>.md` stub with an index row, and
@@ -406,9 +477,10 @@ status to `Blocked` with a concrete blocker description.
 - Code, tests, or docs changes for exactly one task.
 - Updated per-task note with Exit Criteria, Verification, the numerical-
   impact result, Plan Impact, and the `## Stale-state sweep` block.
-- Updated working-memory README: Tasks Status cell, Findings, Numerical
-  impact so far, Decisions, Open Questions, Files Changed roll-up, and a
-  rewritten `## Handoff to Next Task`.
+- Updated working-memory README: Tasks Status cell, Findings, the
+  numerical-impact log (`numerical-impact.md` or the README section),
+  Decisions, Open Questions, Files Changed roll-up, and a rewritten
+  `## Handoff to Next Task` — one-liners, within the head-file budget.
 - ADR (project-scoped or repo-wide) if the decision is canonical.
 - `PLAN.md` / phase file updated only if canonical scope, ordering, or
   task *shape* changed — never for live status.

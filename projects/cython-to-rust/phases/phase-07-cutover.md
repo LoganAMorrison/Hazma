@@ -90,8 +90,8 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 **Exit criteria:**
 
 - `CHANGELOG.md` entry: the migration summary + the aggregated
-  numerical-drift table from `../task-notes/README.md` (per-function
-  max shifts), naming this project slug.
+  numerical-drift table from `../task-notes/numerical-impact.md`
+  (per-function max shifts), naming this project slug.
 - `VERSION` bumped per `PLAN.md` `version_bump` (re-check the level
   against actual recorded drift and the Task 0.5 outcome);
   `scripts/agents/preflight.sh --closing` green.

@@ -112,8 +112,8 @@ Everything else is behavior-invisible.
   Cython twin used the factored form. The swap is therefore a
   **declared** numerical change near threshold (≤2.1e-7 relative within
   1e-7 of it; ≤5e-15 at `cme ≥ 1.1 ×` threshold) — record it in
-  `task-notes/README.md` "Numerical impact so far", do not absorb it
-  silently.
+  `task-notes/numerical-impact.md` (the working memory's "Numerical
+  impact so far" log), do not absorb it silently.
 - The three config files that name the deleted sources are updated in
   **this** task, because the build and the test collection break the
   moment the sources go: `setup.py`'s `_positron` / `_neutrino` /

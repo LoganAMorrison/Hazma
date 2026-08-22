@@ -32,8 +32,8 @@ cutover and project close.
 ## Inputs Reviewed
 
 - `../../phases/phase-07-cutover.md`; `../README.md`; the drift table
-  in `../README.md` ("Numerical impact so far") — input to the
-  CHANGELOG.
+  in `../numerical-impact.md` (moved out of `../README.md`'s "Numerical
+  impact so far" section on 2026-08-21) — input to the CHANGELOG.
 
 ## Findings
 

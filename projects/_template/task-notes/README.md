@@ -24,6 +24,17 @@ Agents working on any task in this project should:
 Per-task notes (`task-N-*.md`) remain the retrospective record of a
 single task's execution. This file is the running context + live
 status shared across tasks.
+
+4. **Keep it a head file** (docs/adrs/ADR-0002): roughly 5k tokens —
+   the status table(s), open questions, the rolling handoff, and
+   pointers. Append one-liners, not narrative. When a section outgrows
+   that, move it *wholesale and verbatim* to a sibling file and leave
+   the heading here as a pointer: `## Numerical impact so far` →
+   `numerical-impact.md`; closed phases' Findings / Decisions / Files
+   Changed / Verification → `history-<section>.md`, swept at phase
+   close once the learnings file exists (the learnings are what the
+   next agent reads; the archive is for citations). Shape and
+   provenance header: `projects/cython-to-rust/task-notes/`.
 -->
 
 ## Objective
@@ -118,7 +129,9 @@ library returns. One line per task that touched a public code path:
 the function, the grid checked, and the result ("unchanged", or the
 magnitude and direction of the shift). This is what the closing PR's
 CHANGELOG entry and the `version_bump:` level are derived from — do
-not reconstruct it from memory at close time. -->
+not reconstruct it from memory at close time. When it outgrows this
+file, move it wholesale to `numerical-impact.md` and leave this heading
+as a pointer (docs/adrs/ADR-0002); never summarise or reorder it. -->
 
 _No public code paths touched yet._
 

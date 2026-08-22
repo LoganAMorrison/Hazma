@@ -37,7 +37,9 @@ Re-measure affected public paths and update durable records and the PR body if
 needed. Rebuild after Cython edits and run the preflight gate before staging.
 
 For class-shaped review findings, update the lessons ledger in the same commit
-only when a real PR citation is available. In a pipeline or review cycle,
+only when a real PR citation is available: the one-line rule in
+`docs/agents/lessons.md`, its worked example under the matching `### <class>`
+heading in `docs/agents/lessons-examples.md`. In a pipeline or review cycle,
 commit and push the approved fixes after the gate; standalone use leaves them
 uncommitted for `$commit-and-pr`.
 

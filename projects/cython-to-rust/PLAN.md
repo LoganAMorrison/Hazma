@@ -67,8 +67,10 @@ Phase 00 deletes `hazma/deprecated/rambo.py` (any removal from
 `hazma/deprecated/` is `major` per `docs/versioning.md` and
 `AGENTS.md`) and, per ADR-0003 (accepted), removes the
 broken-on-import `hazma.gamma_ray` module. The running numerical
-record lives in `task-notes/README.md` ("Numerical impact so far");
-the closing CHANGELOG aggregates it per function.
+record lives in `task-notes/numerical-impact.md` (moved out of
+`task-notes/README.md`'s "Numerical impact so far" section on
+2026-08-21; that heading now points there); the closing CHANGELOG
+aggregates it per function.
 
 ## Orientation
 
@@ -142,7 +144,10 @@ removal, 2026-08-04). Nothing in this plan is awaiting a sign-off.
 The PR that flips this `PLAN.md` `status:` to `Complete` must also bump
 `VERSION` in `hazma/__init__.py` per the `version_bump:` frontmatter and
 add a `CHANGELOG.md` entry naming this project slug. Re-check the level
-against the **Numerical impact** section above before bumping.
+against the **Numerical impact** section above before bumping, and
+assemble that entry's per-function drift table from
+`task-notes/numerical-impact.md` — the running record every task
+appended to; do not reconstruct it from memory.
 Verify with `scripts/agents/preflight.sh --closing` (note Task 7.1
 relocates the version's source of truth — the closing check must run
 against the post-cutover plumbing). See
