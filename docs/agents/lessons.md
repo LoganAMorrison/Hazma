@@ -208,3 +208,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   *resource* is about to disappear binds on capturing that resource, not on
   finishing the work that consumes it; name the artifact and the wave that
   strands it (PR #72).
+- [correction-record-names-the-wrong-doc] A note recording *where* a fixed
+  claim lived is itself a claim; naming one location for a claim a repo-wide
+  `rg` returns several times silently caps the next sweep. Paste the sweep and
+  its hit count into the note instead of a location (PR #76).

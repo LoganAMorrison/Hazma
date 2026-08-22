@@ -523,12 +523,21 @@ either side of the swap. One budget tightened, none widened.
 Task 5.1 row in `../phase-05/README.md`, the Phase 05 row in
 `../README.md`, and
 `../../phases/phase-05-mediator-cross-sections.md`'s `status: In
-Progress` all agree: one of three tasks done, phase open.
+Progress` all agree: one of three tasks done, phase open. **Historical —
+this paragraph records Task 5.1's closeout state.** Task 5.2 landed on
+2026-08-21, so the live count is two of three; the phase is still open,
+and [`README.md`](README.md) carries the current tally.
 `../../PLAN.md`'s phase table is untouched, which is correct — it moves
 when the phase closes. The three new follow-ups each have a row in
 `docs/followups/README.md`'s Open table.
 
 ## Handoff to Next Task
+
+> **Historical (as of 2026-08-21).** This section was written for
+> Task 5.2, which has since landed. Individual claims it got wrong or
+> left open are corrected inline below; for the phase's live handoff
+> read [`README.md`](README.md) and
+> [`task-5.2-scalar-xs.md`](task-5.2-scalar-xs.md) instead.
 
 **Read first:** this note's Findings, then
 `rust/src/kernels/vector_xs.rs`'s module docs. Task 5.2 is the same
@@ -559,10 +568,15 @@ shape at four times the size.
   `docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md`
   says four of its kernels cancel away every significant bit — read
   `test/parity/stability.py` before trusting a comparison there.
-- `test/test_core_quad.py`'s scalar `sigma_xx_to_all` oracle dies with
-  that module; the vector branch shows the replacement.
+- ~~`test/test_core_quad.py`'s scalar `sigma_xx_to_all` oracle dies with
+  that module; the vector branch shows the replacement.~~ — **settled by
+  Task 5.2 on 2026-08-21**: it did, and 5.2 rebuilt it from the ported
+  kernels exactly as the vector branch does.
 - Whether the scalar `thermal_cross_section` tightens to
   `PORTED_QUAD_RTOL` too is a measurement, not an inheritance —
   Phase 04's §1 is emphatic that per-kernel drift is not predictable
-  from shape. Note that the scalar model **short-circuits to `0.0`**
-  above `x = 300` where the vector saturates; the corpus pins both.
+  from shape. **Measured by Task 5.2 on 2026-08-21**: it does — the
+  scalar side moves by 3.12e-15 relative and its budget is tightened to
+  `PORTED_QUAD_RTOL`, same as the vector's. Note that the scalar model
+  **short-circuits to `0.0`** above `x = 300` where the vector
+  saturates; the corpus pins both.

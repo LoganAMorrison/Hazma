@@ -53,8 +53,9 @@ Copied from the phase file at task start:
 
 ### The handoff was wrong: this module *does* go through complex arithmetic
 
-Phase 05's README told the next agent "the scalar module has **no**
-`** 1.5`, so it probably does not need [`map_unary_try`] — check
+[Task 5.1's handoff](task-5.1-vector-xs.md) told the next agent "the
+scalar module has **no** `** 1.5`, so it probably does not need
+[`map_unary_try`] — check
 `grep -c SoftComplexToDouble` on the generated C before assuming either
 way." The check is what settles it, and it says **six** occurrences, of
 which one is a live call site:
@@ -207,6 +208,37 @@ disagree, and settling that is the follow-up's job, not this task's.
   compared against. Both were evidence that the port's 0-d and
   sequence widenings were the cross sections' own behavior; the Cython
   side is gone and the port's half is pinned in the new test module.
+- **Review round 1 (PR #76): the `** 1.5` correction was a point fix and
+  had to be redone class-wide.** The reviewer caught
+  `docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md`
+  still saying the scalar module has none. Sweeping
+  `no .{0,20}`** 1.5`|scalar module has none` across `projects/`,
+  `docs/`, `hazma/`, `test/` and `rust/` found a **second** uncorrected
+  copy — this phase's `README.md` `**`-operator finding — and showed why
+  it was missed: this note had recorded the wrong claim as living in the
+  README's *Handoff* when it lived in Task 5.1's Handoff **and** the
+  README's *Findings*. Both are corrected now, and the attribution above
+  is fixed. **A third copy surfaced during the rebase onto PR #77**, in
+  the project working memory's handoff
+  (`../README.md`), phrased "the scalar cross sections have **none**" —
+  which the phrase-keyed sweep above could not match. Re-run claim-keyed
+  (`scalar[^.]{0,120}\b(have|has)\s+none`) it falls out; that copy is
+  fixed in the port commit, where the same paragraph had to be relocated
+  onto the new `task-notes/` structure anyway.
+- **Review round 1: the same follow-up's threshold claim did not survive
+  measurement either.** It said the scalar's twelve channels "return
+  `inf`/`nan` at `2 m_x`". Evaluated over four mediator points, they
+  return a parameter-dependent mixture that is mostly `0.0` —
+  eight-to-eleven finite, one-to-three `±inf`, `nan` at one point, and
+  **never** a raise. The "raises nowhere" conclusion held; its stated
+  reason did not, and the entry now gives the real one (the vanishing
+  root is in the numerator, so `__divdc3` never sees a zero
+  denominator).
+- **Review round 1: Task 5.1's note is marked historical.** Its
+  bookkeeping paragraph still read "one of three tasks done" and two of
+  its "Currently risky / unknown" bullets described work this task
+  finished. Each is annotated in place with what settled it, and the
+  Handoff section carries a banner pointing at the live documents.
 
 ## Files Changed
 
@@ -401,10 +433,15 @@ consumed — and the "no hazma cimports" claim held: the file had no
 `.pxd` and exported no capsules, so it went whole.
 
 The one canonical text that *was* wrong is not a plan file but the
-phase's own working memory, and it is this task's to fix: the Handoff
-section of [`README.md`](README.md) told the next agent the scalar module
-had no `** 1.5`. It has one. Corrected in place rather than deferred, per
-the canonical-contract rule, and the correction is why
+phase's own working memory, and it is this task's to fix — in **three**
+places, which is two more than this note first recorded: the Handoff
+section of [`task-5.1-vector-xs.md`](task-5.1-vector-xs.md) told the next
+agent the scalar module had no `** 1.5`; the `**` operator finding in
+[`README.md`](README.md) said the same thing as "the scalar module has
+none"; and the project working memory's handoff (`../README.md`) said it
+a third way, "the scalar cross sections have none". It has one. All
+three corrected in place rather than deferred, per the
+canonical-contract rule, and the correction is why
 `crate::kernels::soft_complex` exists.
 
 `../../PLAN.md`'s **Numerical impact** section anticipated this shape —

@@ -43,7 +43,12 @@ cross-section ports.
   `cpow(t+0i, 1.5+0i)` is bit-for-bit `exp(1.5·ln t)`, and `__divdc3` is
   C99 Annex G's scaled quotient. **Check `grep -c SoftComplexToDouble`
   on the generated C before porting any `.pyx` with a fractional
-  exponent** — the scalar module has none, but Phase 06's four might.
+  exponent** — Task 5.1 wrote this bullet ending "the scalar module has
+  none", from reading the source rather than running the grep. Task 5.2
+  ran it on 2026-08-21 and found **one** live call site there
+  (`__sigma_xx_to_s_to_ff`, whose `(-4 mf**2 + e_cm**2) ** 1.5` is easy
+  to miss by eye). Run the grep; do not eyeball the `.pyx`. Phase 06's
+  four are still unmeasured.
 - **Three of the corpus's pinned records are `raises`, not values**, all
   `TypeError` at `e_cm = 2 m_x`, and `test_parity.py` replays them
   rather than skipping. That forced `dispatch::map_unary_try`, the

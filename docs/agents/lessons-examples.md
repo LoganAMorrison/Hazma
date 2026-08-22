@@ -754,3 +754,24 @@ cites a real PR.
   collapsed). Pairs with [settling-a-deferral-has-two-sweeps]: correcting
   a sequencing claim is only half done while the corrected version still
   names the wrong unit of work.
+
+### correction-record-names-the-wrong-doc
+
+When you fix a wrong claim and then write down *where it lived*, that
+provenance sentence is itself a claim — and getting it wrong silently
+caps the sweep, because the next reader (and the next reviewer) trusts
+it instead of re-running the grep. The tell is a correction note that
+names **one** location for a claim a repo-wide `rg` returns several
+times (PR #76: the Task 5.2 note recorded "the Handoff section of
+`README.md` told the next agent the scalar module had no `** 1.5`". The
+wrong claim actually lived in Task **5.1**'s Handoff *and* in the phase
+README's *Findings* — two documents, two sections, neither the one
+named. The 5.1 copy was struck through, the README copy shipped stale,
+and review caught it. A third copy, in the project working memory's
+handoff, said "the scalar cross sections have none" and survived the
+first sweep too, because that sweep was keyed on the phrasing
+"module has none" rather than on the claim). Cite the sweep, not a
+location: paste the `rg` and its hit count into the note, so the
+provenance sentence is falsifiable by re-running one line. Sibling of
+[sibling-copies-of-a-fixed-claim] — there the sweep ran and missed a
+copy; here the record of the sweep is what misleads.
