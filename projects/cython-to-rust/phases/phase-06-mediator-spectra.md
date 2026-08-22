@@ -86,6 +86,6 @@ symbols) — none of which survives contact with Rust.
 
 - Zero Cython in the tree; all 41 consumed entry points on
   `hazma._core`.
-- Drift table complete in `../task-notes/README.md` — this is the
-  input to Phase 07's CHANGELOG aggregation.
+- Drift table complete in `../task-notes/numerical-impact.md` — this
+  is the input to Phase 07's CHANGELOG aggregation.
 - Phase learnings written to `../learnings/phase-06-mediator-spectra.md`.

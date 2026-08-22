@@ -7,6 +7,21 @@
 **Related ADRs:** <none | ADR-XXXX (project-scoped) | ADR-XXXX (`docs/adrs/`)>
 **Depends On:** <none | Task N-1 | ADR-XXXX>
 
+<!--
+Length budget (docs/adrs/ADR-0002): a task note is evidence, not
+narrative. Keep `## Findings` + `## Decisions and Implementation Notes`
+under ~100 lines together, `## Inputs Reviewed` to one line per source,
+`## Open Questions` to one paragraph per question, and the whole note
+under ~500 lines. Exempt, because they are pasted evidence: measurement
+tables, `## Verification` (commands and their summary lines, never whole
+logs), `## Numerical impact`, `## Stale-state sweep`, `## Handoff to
+Next Task`. A section about to exceed its budget is either a phase-level
+fact (one line here, the rest in the phase or project README) or prose
+to compress. Do not weaken a gate to meet the budget. Measured
+2026-08-21: unbudgeted notes reached 775–876 lines and 12–15k tokens
+each, while one phase learnings file condensed six of them into 245.
+-->
+
 ## Objective
 
 <One or two sentences stating what this task accomplishes.>

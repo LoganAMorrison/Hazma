@@ -99,5 +99,5 @@ foundation and can run in parallel with Phase 04 if staffing allows
 - 16 cross-section kernels + 2 thermal functions (18 consumed defs)
   on Rust; the 2 `sigma_xx_to_all` exports dropped; both `_c_*`
   `.pyx` files deleted; corpus + relic-density checks green.
-- Drift table updated in `../task-notes/README.md`.
+- Drift table updated in `../task-notes/numerical-impact.md`.
 - Phase learnings written to `../learnings/phase-05-mediator-cross-sections.md`.

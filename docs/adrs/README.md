@@ -47,3 +47,4 @@ Copy [`template.md`](template.md) and fill in the sections.
 | ADR | Title | Status | Date |
 | --- | --- | --- | --- |
 | [ADR-0001](ADR-0001-fsr-generator-takes-both-matrix-elements.md) | The FSR generator takes both matrix elements | Accepted | 2026-08-04 |
+| [ADR-0002](ADR-0002-read-phase-learnings-not-closed-task-notes.md) | Phase learnings replace a closed phase's task notes | Accepted | 2026-08-21 |

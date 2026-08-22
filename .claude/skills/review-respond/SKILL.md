@@ -185,9 +185,13 @@ clean verdict over a half-applied round.
 If any addressed finding is **class-shaped** — it could recur on
 unrelated tasks, not a one-off typo — append a one-line entry to
 [`lessons.md`](../../../docs/agents/lessons.md) in the *same commit* as
-the fix: `- [class] one-line rule (PR #N)`. If an existing entry covers
-the class, add this PR to its citation list rather than duplicating.
-Cite a real PR; an uncited lesson is a guess.
+the fix: `- [class] one-line rule (PR #N)`, **and** the worked example
+(what the PR did, what review caught, the command that exposed it) under
+a matching `### <class>` heading in
+[`lessons-examples.md`](../../../docs/agents/lessons-examples.md). If an
+existing entry covers the class, add this PR to its citation list in
+`lessons.md` and append the example under its heading rather than
+duplicating. Cite a real PR; an uncited lesson is a guess.
 
 ### Commit boundary
 

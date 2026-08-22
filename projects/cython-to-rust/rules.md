@@ -35,9 +35,10 @@ a dangling reference. Prefer the annotated form
    justification in the tolerance file and a note in the task note.
 3. **Every numerical shift is declared.** If a swapped kernel moves any
    value beyond 1e-12 relative, the PR body and the working-memory
-   "Numerical impact so far" section record the function, grid, and
-   max shift — even when the corpus tolerance absorbs it. The Phase 07
-   closing CHANGELOG aggregates these.
+   numerical-impact log (`task-notes/numerical-impact.md`, formerly the
+   README's "Numerical impact so far" section) record the function,
+   grid, and max shift — even when the corpus tolerance absorbs it. The
+   Phase 07 closing CHANGELOG aggregates these.
 
 ## Constants
 

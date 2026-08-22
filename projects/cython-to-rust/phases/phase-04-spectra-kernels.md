@@ -60,8 +60,9 @@ in Phases 05–06. Steps 1 and 5 are the two most often skipped.
    (bit-for-bit on the platform the parity corpus was captured on, a
    budget scaled to the spectrum's peak elsewhere), and physics that
    outlives the Cython.
-8. **Record the drift** in the task note and in `task-notes/README.md`'s
-   "Numerical impact so far", per rules 2–3.
+8. **Record the drift** in the task note and in
+   `task-notes/numerical-impact.md` (the working memory's "Numerical
+   impact so far" log), per rules 2–3.
 
 ## Prerequisites
 
@@ -167,7 +168,8 @@ Cheapest first — exercises constants + dispatch on pure math.
 
 - All 16 spectra entry points served by `hazma._core`; corpus green in
   CI; cumulative drift table recorded in
-  `../task-notes/README.md` ("Numerical impact so far").
+  `../task-notes/numerical-impact.md` (the working memory's "Numerical
+  impact so far" log).
 - Remaining Cython under `hazma/spectra/` + `hazma/_utils/` is exactly
   the four capi survivors and their headers, each still built and
   importable (mediator modules unbroken — CI import smoke proves it).

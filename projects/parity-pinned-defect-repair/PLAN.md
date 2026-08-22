@@ -517,8 +517,10 @@ revision pinned, per
 ## Related
 
 - Background: the seven follow-ups listed under "The defects", and
-  `projects/cython-to-rust/task-notes/README.md`'s "Numerical impact so
-  far", which is where each defect was first measured.
+  `projects/cython-to-rust/task-notes/numerical-impact.md` (that
+  project's "Numerical impact so far" log, moved out of its
+  `task-notes/README.md` on 2026-08-21), which is where each defect was
+  first measured.
 - `projects/cython-to-rust/rules.md` rules 1–3 (parity discipline) are
   the constraint this project is designed around; nothing here relaxes
   them.

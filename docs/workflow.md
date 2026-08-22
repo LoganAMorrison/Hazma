@@ -60,6 +60,8 @@ projects/<slug>/
 ├── rules.md             # OPTIONAL: project-specific cross-cutting rules
 ├── task-notes/          # per-task notes + shared working memory
 │   ├── README.md                 # project-level live status + working memory
+│   ├── numerical-impact.md       # OPTIONAL: the drift log, once it outgrows README.md
+│   ├── history-<section>.md      # OPTIONAL: verbatim archive of swept README sections
 │   ├── task-N-slug.md            (flat projects: per-task note)
 │   └── phase-XX/                 (phased projects)
 │       ├── README.md             # per-phase live Tasks table + working memory
@@ -197,7 +199,11 @@ Every task gets a note. It captures:
 - Plan impact (None | ADR needed | phase file or `rules.md` update).
 - Handoff: what the next agent should read first.
 
-Use `projects/_template/task-notes/_template.md` as the starting shape.
+Use `projects/_template/task-notes/_template.md` as the starting shape,
+and keep to the length budget stated in its header comment (narrative
+under ~100 lines, whole note under ~500, pasted-evidence sections
+exempt) — a note is evidence, not narrative
+([ADR-0002](adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 
 **Canonical path:**
 
@@ -226,11 +232,30 @@ Agents should read working-memory files before loading per-task notes,
 append to them as they learn, and promote stable entries to `PLAN.md` or
 an ADR once a finding is canonical.
 
+**Keep the head file small.** `task-notes/README.md` is read on every
+task, so it stays a head file of roughly 5k tokens: the status table(s),
+the open questions, the rolling handoff, and pointers. When a section
+outgrows that, move it *wholesale and verbatim* to a sibling file and
+leave the heading in place as a pointer — `## Numerical impact so far`
+to `task-notes/numerical-impact.md`, and closed phases' Findings,
+Decisions, Files Changed and Verification entries to
+`task-notes/history-<section>.md` (same directory, so the moved text's
+relative links keep resolving). Phase close is the sweep point: once
+`learnings/phase-XX-*.md` exists it replaces that phase's task notes and
+working-memory accretions for every later reader
+([ADR-0002](adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)),
+so their verbatim entries move to the archive then. Nothing is deleted or
+summarised; the archive stays greppable and each file records its source
+lines and commit. `projects/cython-to-rust/task-notes/` is the shape.
+
 ## Learnings
 
 When a phase closes (phased projects) or a project wraps up, synthesize
 the task notes into a learnings document. This is durable memory for
-future work that touches the same area — not a status log.
+future work that touches the same area — not a status log — and, per
+[ADR-0002](adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md),
+it is what every later task reads *instead of* that phase's task notes,
+so it must carry everything a later phase will need.
 
 A retrospective should also include a **§5 Follow-on seeds** section
 listing every substantive deferred item the project surfaced. Each seed
