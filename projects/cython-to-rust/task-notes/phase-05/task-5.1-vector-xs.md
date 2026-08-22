@@ -540,9 +540,14 @@ shape at four times the size.
   `crate::<model>_mediator`, module constants beside the kernels rather
   than in `constants::derived`.
 - `dispatch::map_unary_try` exists and is the shape for a kernel that
-  raises. The scalar module has **no** `** 1.5`, so it probably does not
-  need it — check `grep -c SoftComplexToDouble` on the generated C
-  before assuming either way.
+  raises. ~~The scalar module has **no** `** 1.5`, so it probably does
+  not need it~~ — **wrong, corrected by Task 5.2 on 2026-08-21**: the
+  scalar module has one, in `__sigma_xx_to_s_to_ff`
+  (`_c_scalar_mediator_cross_sections.pyx:31`), and needed both shims.
+  The second half of the sentence is the part that held: check
+  `grep -c SoftComplexToDouble` on the generated C before assuming
+  either way, and do it for every `.pyx`, not only ones with a visible
+  fractional exponent.
 - `crate::quad`'s `qagp` and `crate::special`'s `bessel_k1`/`bessel_kn`
   are exercised by a live thermal path now, not only by their probes.
 - `pow(x, 2.0)` folds; `pow(x, 3.0)` and `pow(x, 4.0)` do not.

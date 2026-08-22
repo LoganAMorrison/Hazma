@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 05
-**Status:** In Progress — Task 5.1 complete (2026-08-20)
+**Status:** In Progress — Tasks 5.1 and 5.2 complete (2026-08-21)
 **Plan References:** `../../phases/phase-05-mediator-cross-sections.md`
 **Related ADRs:** ADR-0002
 **Depends On:** Phase 03 complete (may run parallel to Phase 04 — no
@@ -19,7 +19,7 @@ cross-section ports.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 5.1 | Vector cross sections (template) | — | **Complete (2026-08-20)** | [task-5.1-vector-xs.md](task-5.1-vector-xs.md) |
-| 5.2 | Scalar cross sections | 5.1 | Not started | [task-5.2-scalar-xs.md](task-5.2-scalar-xs.md) |
+| 5.2 | Scalar cross sections | 5.1 | **Complete (2026-08-21)** | [task-5.2-scalar-xs.md](task-5.2-scalar-xs.md) |
 | 5.3 | Thermal ⟨σv⟩ validation sweep | 5.1, 5.2 | Not started | [task-5.3-thermal-sweep.md](task-5.3-thermal-sweep.md) |
 
 ## Exit Criteria
@@ -64,6 +64,18 @@ cross-section ports.
 - **`pow(x, 2.0)` folds to `x·x`, `pow(x, 3.0)` and `pow(x, 4.0)` do
   not** — `_pow` is a live libm import of the shipped object. Writing
   `x·x·x` is a different number.
+- **Where clang fuses is one syntactic rule, not a list of cases.**
+  `EmitFMulAdd` contracts `A + B` when `A` is a multiply, else when `B`
+  is — on the *C* tree Cython emits, where `x ** n` is a `pow` **call**
+  and `-x**n` is an `FNeg`. That is why `-4*mx**2 + e_cm**2` fuses,
+  `ms**2 - e_cm**2` does not, and `-mpi0**2 + e_cm**2` does not. Task
+  5.2 implemented the rule and reproduced all 138 FMA sites in eleven
+  kernels from it, without reading a disassembly per site.
+- **One Python-level call boxes everything above it.** `np.log(4)` at
+  `_c_scalar_mediator_cross_sections.pyx:283` makes Cython evaluate the
+  whole path to the root through `PyNumber_*` on `PyFloat`s, so nothing
+  there contracts while the pure-C operands still fuse internally. Same
+  observable as Phase 04's `_photon/_rho.pyx`, different cause.
 
 ## Decisions and Implementation Notes
 
@@ -80,8 +92,35 @@ cross-section ports.
 - Task 5.1: the corpus cases point at the pure-Python wrapper under the
   kernels' canonical names, because this wrapper defines no function of
   its own (its surface is a mixin class).
+- Task 5.2: the **scalar** wrapper does define one per kernel, so its
+  cases point at the wrapper's short aliases through a new
+  `Case.attribute` field. `hazma._core.<sub>` cannot be named directly —
+  a PyO3 submodule has no `__file__` and
+  `assert_module_is_repo_tree` rejects it.
+- Task 5.2: the two complex-arithmetic shims moved from `vector_xs.rs`
+  into `crate::kernels::soft_complex` rather than being copied, once the
+  scalar module turned out to need the identical pair.
+- Task 5.2: the four kernels whose `atan` difference cancels were ported
+  **with the defect**, not stabilised. Rule 1 gates the swap on a corpus
+  rule 2 forbids regenerating, so a stabilised kernel cannot pass the
+  gate that would let it ship;
+  [the follow-up](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)
+  is updated to say the "do it during Phase 05" window closed and what
+  the standalone change now looks like.
 
 ## Files Changed
+
+### Task 5.2
+
+`rust/src/kernels/{scalar_xs,soft_complex}.rs` (both new),
+`rust/src/scalar_mediator.rs`,
+`rust/src/{kernels,vector_mediator}.rs`,
+`rust/src/kernels/vector_xs.rs`,
+`hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx` (deleted,
+1,606 lines), `hazma/scalar_mediator/_scalar_mediator_cross_sections.py`,
+`setup.py`, `hazma/_core.pyi`, `test/test_core_scalar_xs.py` (new),
+`test/parity/{cases,tolerances}.py`,
+`test/test_core_{quad,dispatch}.py`, one `docs/followups/todo/` entry.
 
 ### Task 5.1
 
@@ -101,6 +140,10 @@ cross-section ports.
   `pytest test/parity -q` → `658 passed, 1 skipped`;
   `cargo test --no-default-features` → `186 passed`;
   `pytest test/test_theory_aggregation.py -q` → `69 passed`.
+- Task 5.2: `pytest -q` → `2091 passed, 15 skipped`;
+  `pytest test/parity -q` → `658 passed, 1 skipped`;
+  `cargo test --no-default-features` → `201 passed`;
+  `pytest test/test_theory_aggregation.py -q` → `69 passed`.
 
 ## Open Questions
 
@@ -108,9 +151,14 @@ cross-section ports.
   [the `2 m_x` raise](../../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md),
   [the unconverged thermal quadrature](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md),
   [the debug editable build](../../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md).
-- `test/test_core_quad.py`'s scalar `sigma_xx_to_all` oracle dies with
-  the scalar `.pyx` in Task 5.2; the vector branch shows the
-  replacement shape.
+- Task 5.2 rebuilt `test/test_core_quad.py`'s scalar `sigma_xx_to_all`
+  oracle from the ported kernels, the way Task 5.1 did the vector one,
+  and retired the two `test_core_dispatch.py` cases whose oracle was the
+  deleted module.
+- Four scalar kernels carry the `atan`-cancellation defect into Rust
+  unchanged, and `sigma_xg_to_xg`'s `e_cm = 2 mx` guard disagrees with
+  `sigma_xs_to_xs`'s treatment of the same 0/0. Both are
+  [the same follow-up](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md).
 
 ## Plan Impact
 
@@ -118,35 +166,46 @@ cross-section ports.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 05 (Task 5.2):** read
+**For the next agent working in Phase 05 (Task 5.3):** read
 `../../PLAN.md`, `../README.md`, this file, then the phase file, then
-[`task-5.1-vector-xs.md`](task-5.1-vector-xs.md)'s Findings and
-`rust/src/kernels/vector_xs.rs`'s module docs — Task 5.2 is the same
-shape at four times the size. Transliterate the Mathematica dumps
-mechanically; never retype a 90-line expression.
+[`task-5.2-scalar-xs.md`](task-5.2-scalar-xs.md)'s Handoff. Both thermal
+cross sections are Rust now, so 5.3's relic-density sweep and benchmark
+run against a fully ported path — and the benchmark must come from a
+**release** build, not an editable install.
 
 **Currently safe to assume:**
 
-- Both `_c_*` modules cimport nothing from hazma — they are
-  self-contained above the foundation. The vector one is gone; nothing
-  cimported it and it exported no capsules, so it went whole.
+- Both `_c_*` cross-section modules are gone — neither had a `.pxd` and
+  neither exported capsules, so both went whole. Nothing in the phase
+  cimports anything from hazma any more.
 - The layout is settled: kernels in `crate::kernels::<name>_xs`, PyO3
   registration in `crate::<model>_mediator`, module-local constants
-  beside the kernels.
+  beside the kernels, and the shared `**`-operator shims in
+  `crate::kernels::soft_complex`.
 - `dispatch::map_unary_try` exists for a kernel that raises, and
-  `crate::quad`'s `qagp` plus `crate::special`'s Bessels are now on a
-  live path rather than only under their probes.
+  `crate::quad`'s `qagp` plus `crate::special`'s Bessels are on the live
+  path of **both** thermal averages now.
+- Every closed-form cross section in the phase is bit-equal to its
+  Cython. The two `thermal_cross_section` entry points are the only ones
+  that moved (2.06e-14 vector, 3.12e-15 scalar) and both budgets are
+  tightened to `PORTED_QUAD_RTOL`.
 
 **Currently risky / unknown:**
 
-- Near-resonance corpus points are the most drift-sensitive for ⟨σv⟩
-  (the integrand peaks at the `points=` breakpoints). Task 5.1 measured
-  2.06e-14 there; **re-derive rather than inherit** — Phase 04's §1 is
-  emphatic that per-kernel drift is not predictable from shape.
-- The scalar file's two 90-line expressions are the phase's real
-  transliteration risk, and
-  `docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md`
-  says four of its kernels cancel away every significant bit — read
-  `test/parity/stability.py` before trusting a comparison there.
-- The scalar model **short-circuits to `0.0`** above `x = 300` where the
-  vector saturates. The corpus pins both; do not unify them.
+- **Task 5.3 owns both of the phase's deferred items**: the
+  relic-density end-to-end check through
+  `hazma/relic_density/_thermal_functions.py`, and the benchmark. The
+  benchmark must be taken from a **release** build —
+  [an editable install builds the extension in debug](../../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)
+  and reads ~20× pessimistic.
+- The two models disagree above `x = 300`: the scalar returns exactly
+  `0.0`, the vector saturates. The corpus pins both and 5.3's sweep
+  crosses that boundary; do not unify them.
+- [The thermal quadrature never converges](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
+  on either model — the shipped answer is 0.5%–5% off the true integral
+  for `x ≳ 5`. Reproduced, not fixed; its relic-density consequence is
+  what Task 5.3 measures.
+- Four scalar elastic kernels carry
+  [the `atan`-cancellation defect](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)
+  into Rust unchanged, and read `test/parity/stability.py` before
+  trusting any comparison near `e_cm = 2 mx`.

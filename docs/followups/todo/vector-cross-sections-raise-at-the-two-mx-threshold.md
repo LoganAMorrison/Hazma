@@ -88,9 +88,10 @@ with the change recorded, or to take this after Phase 07 closes.
 - `test/parity/data/manifest.json` — the three `raises` records, under
   `cross_sections.vector.sigma_xx_to_v_to_pipi` blocks 1 and 2 and
   `cross_sections.vector.sigma_xx_to_v_to_pi0v` block 2.
-- `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx` — the
-  twelve scalar guards option 2 would also touch (until Task 5.2 ports
-  them).
+- `rust/src/kernels/scalar_xs.rs` — the twelve scalar guards option 2
+  would also touch. Task 5.2 ported them on 2026-08-21; the scalar
+  module raises nowhere, because its one complex expression puts the
+  vanishing root in the numerator.
 - Related project: `projects/cython-to-rust/`
 
 ## Risks / open questions

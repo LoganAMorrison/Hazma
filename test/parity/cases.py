@@ -17,12 +17,12 @@ compiled layer, enumerated in
 ``projects/cython-to-rust/references/cython-inventory.md`` ("Entry
 points by module"): 16 spectra kernels, 12 scalar-mediator and 6
 vector-mediator cross-section entry points, and 7 mediator-spectrum
-entry points. Both cross-section modules also export a
-``sigma_xx_to_all``, and both are excluded because nothing imports them;
-`assert_unconsumed_exports_are_unimported` proves that at generation
-time rather than trusting the inventory snapshot. It has one row rather
-than two from cython-to-rust Task 5.1 on, because the check reads the
-live tree and the vector module is gone — see `UNCONSUMED_EXPORTS`.
+entry points. Both cross-section modules also exported a
+``sigma_xx_to_all``, and both were excluded because nothing imported
+them; `assert_unconsumed_exports_are_unimported` proved that at
+generation time rather than trusting the inventory snapshot. Its mapping
+is empty from cython-to-rust Task 5.2 on, because the check reads the
+live tree and both modules are now gone — see `UNCONSUMED_EXPORTS`.
 
 Grid design
 -----------
@@ -191,6 +191,16 @@ class Case:
     function: str
     summary: str
     blocks: list[Block] = field(default_factory=list)
+    #: The attribute to read off `module`, when it is not `function`.
+    #:
+    #: Needed once, by the twelve scalar cross sections: their wrapper
+    #: already uses every canonical name for a mixin method taking
+    #: ``self``, so it serves the kernels under short aliases
+    #: (`_SCALAR_XS_ALIASES`). `function` stays the entry point's own
+    #: name, which is what the manifest records and what
+    #: `test_parity.py`'s served-roster check compares against; this is
+    #: only how to reach it.
+    attribute: str | None = None
 
     @property
     def entry_point(self) -> str:
@@ -212,7 +222,7 @@ class Case:
         """
         module = importlib.import_module(self.module)
         assert_module_is_repo_tree(module)
-        return getattr(module, self.function)
+        return getattr(module, self.attribute or self.function)
 
 
 # ===========================================================================
@@ -902,16 +912,48 @@ def _scalar_decay_spectrum_blocks(models: ModelPoints) -> list[Block]:
 #: `assert_unconsumed_exports_are_unimported` re-derives this at generation
 #: time; the plan drops each one in Phase 05 rather than porting it.
 #:
-#: The vector row went with its ``.pyx`` in cython-to-rust Task 5.1: the
-#: check below reads the *live* tree, and a module that no longer exists
-#: has no export to prove unimported. The port kept the sum as a private
-#: helper of the Rust thermal integrand, which is what the plan means by
-#: "dropped, not ported".
-UNCONSUMED_EXPORTS = {
-    "hazma.scalar_mediator._c_scalar_mediator_cross_sections": "sigma_xx_to_all",
-}
+#: **Empty from cython-to-rust Task 5.2 on**, and correctly so rather
+#: than vacuously: the check below reads the *live* tree, and both
+#: modules that exported a ``sigma_xx_to_all`` are gone — the vector one
+#: in Task 5.1, the scalar one in Task 5.2. Each port kept the sum as a
+#: private helper of its Rust thermal integrand, which is what the plan
+#: means by "dropped, not ported". The mapping stays because Phase 06
+#: has four more ``.pyx`` to go and may find another unconsumed export;
+#: an empty one makes the check a no-op, not a false pass.
+UNCONSUMED_EXPORTS: dict[str, str] = {}
 
-_SCALAR_XS_MODULE = "hazma.scalar_mediator._c_scalar_mediator_cross_sections"
+#: Ported: cython-to-rust Task 5.2. The module is the *wrapper*, not the
+#: ``.pyx``, for the reason `PORTED_ENTRY_POINTS` gives — but unlike its
+#: vector twin the cases are driven through the wrapper's **short
+#: aliases** rather than the kernels' own names, because every canonical
+#: name is already taken in that module by the mixin method of the same
+#: name, which takes ``self`` and a different argument list. So
+#: `Case.function` stays the kernel's own name and `Case.attribute`
+#: carries the alias; `_SCALAR_XS_ALIASES` is that mapping and
+#: `PORTED_ENTRY_POINTS` still records the canonical ``.pyx`` origin.
+#:
+#: Driving the alias is not a weaker gate than driving the kernel: it is
+#: a strictly longer path, covering the import the swap actually
+#: rewrote. `hazma._core.scalar_mediator` cannot be named here in any
+#: case — a PyO3 submodule has no ``__file__``, so
+#: `assert_module_is_repo_tree` rejects it.
+_SCALAR_XS_MODULE = "hazma.scalar_mediator._scalar_mediator_cross_sections"
+
+#: Kernel name -> the alias `_SCALAR_XS_MODULE` serves it under.
+_SCALAR_XS_ALIASES = {
+    "sigma_xx_to_s_to_ff": "sig_ff",
+    "sigma_xx_to_s_to_gg": "sig_gg",
+    "sigma_xx_to_s_to_pi0pi0": "sig_pi0pi0",
+    "sigma_xx_to_s_to_pipi": "sig_pipi",
+    "sigma_xx_to_ss": "sig_ss",
+    "sigma_ss_to_xx": "sig_ss_to_xx",
+    "sigma_xl_to_xl": "sig_xl",
+    "sigma_xpi_to_xpi": "sig_xpi",
+    "sigma_xpi0_to_xpi0": "sig_xpi0",
+    "sigma_xg_to_xg": "sig_xg",
+    "sigma_xs_to_xs": "sig_xs",
+    "thermal_cross_section": "tcs",
+}
 #: Ported: cython-to-rust Task 5.1. The module is the *wrapper*, not the
 #: ``.pyx``, because that is where the value now comes from — see
 #: `PORTED_ENTRY_POINTS`. Unlike the spectra wrappers this one defines no
@@ -946,6 +988,7 @@ def build_cases() -> dict[str, Case]:
             name=f"cross_sections.scalar.{name}",
             module=_SCALAR_XS_MODULE,
             function=name,
+            attribute=_SCALAR_XS_ALIASES[name],
             summary=summary or f"scalar-mediator {name}, MeV^-2",
             blocks=_cross_section_blocks(
                 scalar_models, _scalar_args, "ms", "width_s", extra
@@ -977,6 +1020,7 @@ def build_cases() -> dict[str, Case]:
             name="cross_sections.scalar.sigma_xx_to_s_to_ff",
             module=_SCALAR_XS_MODULE,
             function="sigma_xx_to_s_to_ff",
+            attribute=_SCALAR_XS_ALIASES["sigma_xx_to_s_to_ff"],
             summary="scalar-mediator xx -> s* -> f fbar, MeV^-2",
             blocks=[
                 Block(
@@ -1001,6 +1045,7 @@ def build_cases() -> dict[str, Case]:
             name="cross_sections.scalar.sigma_xl_to_xl",
             module=_SCALAR_XS_MODULE,
             function="sigma_xl_to_xl",
+            attribute=_SCALAR_XS_ALIASES["sigma_xl_to_xl"],
             summary="scalar-mediator x l -> x l elastic scattering, MeV^-2",
             blocks=[
                 Block(
@@ -1037,6 +1082,7 @@ def build_cases() -> dict[str, Case]:
             name="cross_sections.scalar.thermal_cross_section",
             module=_SCALAR_XS_MODULE,
             function="thermal_cross_section",
+            attribute=_SCALAR_XS_ALIASES["thermal_cross_section"],
             summary="scalar-mediator thermally averaged <sigma v>, MeV^-2",
             blocks=_thermal_blocks(scalar_models, _scalar_args, "ms"),
         )
@@ -1349,12 +1395,14 @@ def assert_no_rust_core() -> None:
 def assert_unconsumed_exports_are_unimported() -> None:
     """Prove the excluded entry points still have no importers.
 
-    The corpus deliberately omits every ``sigma_xx_to_all`` export
-    because nothing in `hazma` imports one, so there is no consumed
+    The corpus deliberately omitted every ``sigma_xx_to_all`` export
+    because nothing in `hazma` imported one, so there was no consumed
     behavior to pin. That is a property of the tree, not a fact to
     inherit from the inventory snapshot, so it is re-derived here: if
-    either name ever acquires an importer, generation fails and the
-    corpus has to grow.
+    any listed name ever acquires an importer, generation fails and the
+    corpus has to grow. `UNCONSUMED_EXPORTS` is empty from Task 5.2 on,
+    so today this walks nothing; it stays for Phase 06's four remaining
+    ``.pyx``.
     """
     package = REPO_ROOT / "hazma"
     # A name can be defined in more than one module (both cross-section
@@ -1496,6 +1544,61 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     ),
     "cross_sections.vector.thermal_cross_section": (
         "hazma.vector_mediator._c_vector_mediator_cross_sections",
+        "thermal_cross_section",
+    ),
+    # cython-to-rust Task 5.2. Nothing cimported
+    # `_c_scalar_mediator_cross_sections.pyx` either -- no `.pxd`, no
+    # capsules -- so the whole file went in the swap PR and these rows
+    # are the only record of where the pinned values came from. Its
+    # thirteenth `def`, `sigma_xx_to_all`, is absent here because it was
+    # never in the corpus, for the same reason its vector namesake was
+    # not.
+    "cross_sections.scalar.sigma_xx_to_s_to_ff": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xx_to_s_to_ff",
+    ),
+    "cross_sections.scalar.sigma_xx_to_s_to_gg": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xx_to_s_to_gg",
+    ),
+    "cross_sections.scalar.sigma_xx_to_s_to_pi0pi0": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xx_to_s_to_pi0pi0",
+    ),
+    "cross_sections.scalar.sigma_xx_to_s_to_pipi": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xx_to_s_to_pipi",
+    ),
+    "cross_sections.scalar.sigma_xx_to_ss": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xx_to_ss",
+    ),
+    "cross_sections.scalar.sigma_ss_to_xx": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_ss_to_xx",
+    ),
+    "cross_sections.scalar.sigma_xl_to_xl": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xl_to_xl",
+    ),
+    "cross_sections.scalar.sigma_xpi_to_xpi": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xpi_to_xpi",
+    ),
+    "cross_sections.scalar.sigma_xpi0_to_xpi0": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xpi0_to_xpi0",
+    ),
+    "cross_sections.scalar.sigma_xg_to_xg": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xg_to_xg",
+    ),
+    "cross_sections.scalar.sigma_xs_to_xs": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
+        "sigma_xs_to_xs",
+    ),
+    "cross_sections.scalar.thermal_cross_section": (
+        "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
         "thermal_cross_section",
     ),
 }

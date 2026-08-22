@@ -81,8 +81,9 @@ thermally averaged cross section).
 - `rust/src/kernels/vector_xs.rs` — `thermal_cross_section`, and
   `tests::the_thermal_integral_matches_a_composite_rule`, which measures
   the gap and is where the numbers above come from.
-- `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1411` —
-  the scalar twin, same defaults, until Task 5.2 ports it.
+- `rust/src/kernels/scalar_xs.rs` — `thermal_cross_section`, the scalar
+  twin, with the same inherited defaults. Ported by Task 5.2 on
+  2026-08-21, so **both** mediator paths now carry this defect in Rust.
 - `hazma/relic_density/_thermal_functions.py` — the live consumer.
 - `test/test_core_quad.py` — `TestLiveIntegrandShapes::test_thermal_cross_section_site`,
   which pins the initial-partition behavior this would change.

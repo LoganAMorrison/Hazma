@@ -36,8 +36,8 @@
 //! | Function | Cython call site | Argument range |
 //! | --- | --- | --- |
 //! | [`spence`] | `hazma/spectra/_photon/_muon.pyx:113` | `xm`, `xp` ∈ (0, 1) |
-//! | [`bessel_k1`] | `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1361`, `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:606` | `x·z`, `z ≥ 2` |
-//! | [`bessel_kn`] | scalar `:1404`, vector `:650` (always `n = 2`) | `x ∈ (0, 300]` |
+//! | [`bessel_k1`] | `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1361`, `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:606` (both ported — Tasks 5.2 and 5.1 — now [`crate::kernels::scalar_xs`] and [`crate::kernels::vector_xs`]) | `x·z`, `z ≥ 2` |
+//! | [`bessel_kn`] | scalar `:1404`, vector `:650` (always `n = 2`; ported with the rows above) | `x ∈ (0, 300]` |
 //!
 //! The `.pyx` reach them through
 //! `from scipy.special.cython_special cimport ...`, which is what pins

@@ -31,7 +31,10 @@ How faithful this is
 The four bodies below were extracted **verbatim** from
 ``hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx`` at kernel
 digest ``f5e6e269be47`` (the digest the corpus manifest records), lines
-265-292, 293-391, 392-489 and 490-515. A ``cdef double`` body in that
+265-292, 293-391, 392-489 and 490-515. That file was deleted by
+cython-to-rust Task 5.2, so the citation is provenance rather than a
+live path -- ``git show <sha>:<path>`` is how to read it now, and the
+Rust port of the same four is ``rust/src/kernels/scalar_xs.rs``. A ``cdef double`` body in that
 file is pure Python-syntax arithmetic, so the copy needed no
 transcription: only the ``cdef`` declarations were dropped and the
 arguments promoted to ``mpmath.mpf``, after which `black` rewrapped the

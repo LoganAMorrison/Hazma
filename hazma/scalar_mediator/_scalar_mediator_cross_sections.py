@@ -1,24 +1,36 @@
-from hazma.scalar_mediator._c_scalar_mediator_cross_sections import (
-    sigma_xx_to_s_to_ff as sig_ff,
-    sigma_xx_to_s_to_gg as sig_gg,
-    sigma_xx_to_s_to_pi0pi0 as sig_pi0pi0,
-    sigma_xx_to_s_to_pipi as sig_pipi,
-    sigma_xx_to_ss as sig_ss,
-    sigma_ss_to_xx as sig_ss_to_xx,
-    sigma_xl_to_xl as sig_xl,
-    sigma_xpi_to_xpi as sig_xpi,
-    sigma_xpi0_to_xpi0 as sig_xpi0,
-    sigma_xg_to_xg as sig_xg,
-    sigma_xs_to_xs as sig_xs,
-    thermal_cross_section as tcs,
-)
-
-from hazma.parameters import muon_mass as mmu
-from hazma.parameters import electron_mass as me
-
-from numpy.polynomial.legendre import leggauss
+# The twelve compiled cross sections, served by the Rust extension since
+# cython-to-rust Task 5.2 deleted
+# `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx`. Import
+# path, call signatures and returned values are unchanged; see
+# `rust/src/kernels/scalar_xs.rs` for the port and
+# `projects/cython-to-rust/rules.md` rule 7 (Rust conventions 2) for why
+# the wrapper, not the extension, stays the public surface.
+#
+# Imported under short names rather than their own, unlike the vector
+# twin: every kernel's canonical name is already taken in this module by
+# the mixin method of the same name, which takes `self`. That is also
+# why `test/parity` drives `hazma._core.scalar_mediator` directly for
+# these entry points and `test/test_core_scalar_xs.py` pins each alias
+# below to the kernel it stands for.
 import warnings
+
 import numpy as np
+from numpy.polynomial.legendre import leggauss
+
+from hazma._core.scalar_mediator import sigma_ss_to_xx as sig_ss_to_xx
+from hazma._core.scalar_mediator import sigma_xg_to_xg as sig_xg
+from hazma._core.scalar_mediator import sigma_xl_to_xl as sig_xl
+from hazma._core.scalar_mediator import sigma_xpi0_to_xpi0 as sig_xpi0
+from hazma._core.scalar_mediator import sigma_xpi_to_xpi as sig_xpi
+from hazma._core.scalar_mediator import sigma_xs_to_xs as sig_xs
+from hazma._core.scalar_mediator import sigma_xx_to_s_to_ff as sig_ff
+from hazma._core.scalar_mediator import sigma_xx_to_s_to_gg as sig_gg
+from hazma._core.scalar_mediator import sigma_xx_to_s_to_pi0pi0 as sig_pi0pi0
+from hazma._core.scalar_mediator import sigma_xx_to_s_to_pipi as sig_pipi
+from hazma._core.scalar_mediator import sigma_xx_to_ss as sig_ss
+from hazma._core.scalar_mediator import thermal_cross_section as tcs
+from hazma.parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
 
 
 def sigma_xx_to_s_to_ff(self, e_cm, f):

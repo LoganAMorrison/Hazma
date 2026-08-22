@@ -19,12 +19,19 @@
 //! module parameterised by table, mass and line terms; and
 //! [`neutrino_flavors`], because the literal transcription of
 //! `hazma/spectra/_neutrino/_neutrino.pyx` would be `neutrino_neutrino`.
-//! Each says so in its own docs. [`vector_xs`] is a third: it is
-//! `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx`, whose
-//! literal name would be `c_vector_mediator_cross_sections` and whose
-//! `vector_mediator` half is already the PyO3 submodule's name. The two
-//! `roundtrip` probes below stay at this level because they belong to no
-//! `.pyx` at all.
+//! Each says so in its own docs. [`vector_xs`] and [`scalar_xs`] are a
+//! third and fourth: they are the two `_c_*_mediator_cross_sections.pyx`,
+//! whose literal names would be `c_vector_mediator_cross_sections` and
+//! `c_scalar_mediator_cross_sections` and whose `<model>_mediator` halves
+//! are already the PyO3 submodules' names.
+//!
+//! [`soft_complex`] is the one submodule that is not a `.pyx` at all. It
+//! holds the two pieces of C complex arithmetic Cython's `**` operator
+//! drags in, which both cross-section modules need and neither owns;
+//! cython-to-rust Task 5.2 split it out of `vector_xs` on finding the
+//! scalar module reached the identical pair. The two `roundtrip` probes
+//! below stay at this level for the opposite reason — they belong to no
+//! `.pyx` and to no domain.
 
 pub mod neutrino_flavors;
 pub mod neutrino_muon;
@@ -35,6 +42,8 @@ pub mod photon_rho;
 pub mod photon_tables;
 pub mod positron_muon;
 pub mod positron_pion;
+pub mod scalar_xs;
+pub mod soft_complex;
 pub mod vector_xs;
 
 /// Return `x` unchanged.

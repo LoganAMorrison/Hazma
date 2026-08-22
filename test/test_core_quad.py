@@ -74,18 +74,20 @@ import pytest
 import scipy.integrate as si
 from scipy.special import k1
 
+from hazma._core import scalar_mediator as core_scalar
 from hazma._core import vector_mediator as core_vector
-from hazma.scalar_mediator import _c_scalar_mediator_cross_sections as scalar_xs
 
-#: The two lepton masses `_c_vector_mediator_cross_sections.pyx:9-10`
-#: declared for itself. Written out because the `.pyx` is gone
-#: (cython-to-rust Task 5.1) and because they are *not*
-#: `hazma.parameters`' values -- that file's electron and muon masses
-#: come from a different table (`rust/src/constants.rs`, "the two tables
-#: disagree"). `rust/src/kernels/vector_xs.rs`'s `ME` and `MMU` are these
-#: numbers, and `test/test_core_vector_xs.py` pins that.
-VECTOR_ME = 0.510998928
-VECTOR_MMU = 105.6583715
+#: The two lepton masses each mediator `.pyx` declared for itself
+#: (`_c_vector_mediator_cross_sections.pyx:9-10`,
+#: `_c_scalar_mediator_cross_sections.pyx:11-12`, identical values).
+#: Written out because both `.pyx` are gone (cython-to-rust Tasks 5.1 and
+#: 5.2) and because they are *not* `hazma.parameters`' values -- that
+#: file's electron and muon masses come from a different table
+#: (`rust/src/constants.rs`, "the two tables disagree").
+#: `rust/src/kernels/{vector,scalar}_xs.rs`'s `ME` and `MMU` are these
+#: numbers, and `test/test_core_{vector,scalar}_xs.py` pins that.
+MEDIATOR_ME = 0.510998928
+MEDIATOR_MMU = 105.6583715
 
 #: A quadrature integrand: one float in, one float out.
 Integrand = Callable[[float], float]
@@ -452,7 +454,7 @@ class TestLiveIntegrandShapes:
     """One case per row of the call-site table, at that row's settings.
 
     Two of these run the **actual** integrand — the thermal-average one,
-    reachable because ``sigma_xx_to_all`` is a public Cython export. The
+    rebuilt from the kernels `hazma._core` exports. The
     rest reproduce the *shape*: the boost Jacobian ``1/(2 gamma |1 - beta
     cos t|)`` that the cos-theta sites integrate against
     (``hazma/spectra/_photon/_pion.pyx:94-99``), and the smooth
@@ -568,22 +570,32 @@ class TestLiveIntegrandShapes:
         and
         ``hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:598-606``.
 
-        The scalar half still calls the Cython ``sigma_xx_to_all``, which
-        is a public export of that module until Task 5.2. The vector
-        ``.pyx`` is gone (Task 5.1) and its ``sigma_xx_to_all`` was
-        dropped rather than ported, because nothing imported it — so the
-        vector half rebuilds the sum here from the six kernels
-        ``hazma._core.vector_mediator`` does export, in the ``.pyx``'s own
-        summation order. That is the same arithmetic the Rust integrand
+        Both ``.pyx`` are gone (Tasks 5.1 and 5.2) and each one's
+        ``sigma_xx_to_all`` was dropped rather than ported, because
+        nothing imported it — so both halves rebuild the sum here from
+        the kernels ``hazma._core`` does export, in the ``.pyx``'s own
+        summation order. That is the same arithmetic each Rust integrand
         performs internally, so this stays the integrand rather than
         becoming a stand-in for it.
         """
         if model == "scalar":
-            # (e_cm, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
-            args = (1.0, 1.0, 0.1, 0.1, 1e4, width, 0.0)
+            # (gsxx, gsff, gsGG, gsFF, lam, width_s, vs) -- the trailing
+            # block after `(e_cm, mx, ms)`, in the `.pyx`'s order.
+            rest = (1.0, 1.0, 0.1, 0.1, 1e4, width, 0.0)
 
             def sigma_all(e_cm: float) -> float:
-                return scalar_xs.sigma_xx_to_all(e_cm, mx, m_med, *args)
+                # The `.pyx`'s own summation order: e, mu, gg, pi0pi0,
+                # pipi, ss.
+                return (
+                    core_scalar.sigma_xx_to_s_to_ff(e_cm, mx, m_med, *rest, MEDIATOR_ME)
+                    + core_scalar.sigma_xx_to_s_to_ff(
+                        e_cm, mx, m_med, *rest, MEDIATOR_MMU
+                    )
+                    + core_scalar.sigma_xx_to_s_to_gg(e_cm, mx, m_med, *rest)
+                    + core_scalar.sigma_xx_to_s_to_pi0pi0(e_cm, mx, m_med, *rest)
+                    + core_scalar.sigma_xx_to_s_to_pipi(e_cm, mx, m_med, *rest)
+                    + core_scalar.sigma_xx_to_ss(e_cm, mx, m_med, *rest)
+                )
 
         else:
             # (gvxx, gvuu, gvdd, gvss, gvee, gvmumu, width_v) -- the
@@ -597,10 +609,10 @@ class TestLiveIntegrandShapes:
                 # pi0v, vv.
                 return (
                     core_vector.sigma_xx_to_v_to_ff(
-                        e_cm, mx, m_med, gvxx, gvee, width_v, VECTOR_ME
+                        e_cm, mx, m_med, gvxx, gvee, width_v, MEDIATOR_ME
                     )
                     + core_vector.sigma_xx_to_v_to_ff(
-                        e_cm, mx, m_med, gvxx, gvmumu, width_v, VECTOR_MMU
+                        e_cm, mx, m_med, gvxx, gvmumu, width_v, MEDIATOR_MMU
                     )
                     + core_vector.sigma_xx_to_v_to_pipi(e_cm, mx, m_med, *rest)
                     + core_vector.sigma_xx_to_v_to_pi0g(e_cm, mx, m_med, *rest)
