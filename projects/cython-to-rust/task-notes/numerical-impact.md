@@ -616,6 +616,43 @@ pointer here so that every citation of that section still resolves.
     Both are reproduced under rule 1, so no value moves; the second is
     the more consequential, because relic abundance goes as 1/⟨σv⟩.
 
+- **Task 5.2 (scalar cross sections): eleven of twelve entry points
+  bit-equal; one moves by 3.12e-15.** The eleven closed forms —
+  `sigma_xx_to_s_to_{ff,gg,pi0pi0,pipi}`, `sigma_xx_to_ss`,
+  `sigma_ss_to_xx`, `sigma_x{l,pi,pi0,g,s}_to_x{l,pi,pi0,g,s}` —
+  reproduce the Cython **exactly** at all 12,155 values the corpus
+  compares them on, on the capturing platform, at `rtol = 0`. Measured
+  directly against the live Cython before deletion, not only through the
+  corpus. That was not free either: one of them
+  (`sigma_xx_to_s_to_ff`) compiled through `double _Complex` — which the
+  phase's own handoff had said this module did not do — and a
+  real-arithmetic transliteration misses bit-equality at 355 of 935
+  points on its electron block alone.
+  `cross_sections.scalar.thermal_cross_section` moves by at most
+  **3.1240e-15** relative over its 285 pinned values (104 bit-equal),
+  worst at `open_resonance`, `x = 0.116895`
+  (`5.560975522996041e-09 → 5.560975522996024e-09`). Same cause as its
+  vector twin: the Bessel prefactor and weight, not the integrator.
+  Below rule 3's 1e-12 threshold, so no CHANGELOG line of its own.
+  **Budget tightened, not widened:** that case goes from `QUAD_RTOL`
+  (1e-8) to `PORTED_QUAD_RTOL` (1e-12), 320x headroom. It was the last
+  case at the opening figure, so **`QUAD_RTOL` now has no holder**.
+  - **No user-visible string change.** The scalar module's one complex
+    expression can only fail on a vanishing denominator, which no corpus
+    point reaches; the `TypeError` message exists but nothing pins it.
+  - **`np.log(4)` → `LN_4` moves nothing.** `math.log(4.0)` is
+    `1.3862943611198906`, the double NumPy returned.
+  - **A tenth *known wrong* entry for the Phase 07 CHANGELOG,** filed
+    before this task and carried into Rust unchanged: four elastic
+    scattering kernels compute an `atan` difference that cancels away
+    every significant bit near `e_cm = 2 m_x` and for a small width,
+    giving the wrong sign and a fabricated pole
+    ([the cancellation](../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)).
+    Reproduced under rule 1: rule 2 forbids regenerating the corpus a
+    stabilised kernel would have to pass, and `PLAN.md`'s Scope excludes
+    physics changes. The follow-up is updated with what closed and what
+    the standalone fix now costs.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)

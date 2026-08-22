@@ -26,7 +26,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
-| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **In Progress** — Task 5.1 complete (2026-08-20); the six vector entry points on Rust and its `.pyx` deleted |
+| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **In Progress** — Tasks 5.1 and 5.2 complete (2026-08-21); all 18 cross-section entry points on Rust and both `_c_*` `.pyx` deleted; Task 5.3 (relic sweep + benchmark) remains |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
@@ -69,7 +69,26 @@ its phase is appended below as one bullet and swept into the archive
 when that phase closes
 ([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 
-_No cross-phase findings recorded since the 2026-08-21 sweep._
+- **The scalar mediator's threshold behavior is explained, not just
+  observed** (Task 5.2, updating
+  [`history-findings.md`](history-findings.md)'s "Two live entry points
+  raise" entry, which said only that the scalar siblings do not raise).
+  The scalar module *does* compile one expression through
+  `double _Complex` — `__sigma_xx_to_s_to_ff` — but its vanishing root
+  sits in the **numerator**, so `__divdc3`'s zero-denominator recovery
+  is never reached. Two consequences for Phase 06: the archived claim
+  that this module has no `** 1.5` is **wrong**, and
+  `grep -c SoftComplexToDouble` on the generated C — not a read of the
+  `.pyx` — is what settles the question for the four modules left.
+- **Both `thermal_cross_section` divergences above `x = 300` were
+  reproduced, not unified** (Tasks 5.1 and 5.2, closing
+  [`history-findings.md`](history-findings.md)'s "Phase 05 must
+  reproduce both or declare the unification"). The scalar returns `0.0`,
+  the vector clips to `xnew = 300`; they live in separate Rust modules
+  with the divergence documented on each, so no published number moved.
+  A shared Rust helper is the obvious design and is the one that would
+  have moved them — do not revisit it in Phase 06 without declaring the
+  change.
 
 ## Numerical impact so far
 
@@ -247,9 +266,10 @@ than quoting them: the current state is in the open phase's
 ## Handoff to Next Task
 
 **Phases 00–04 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20)
-and **Phase 05 is open**: Task 5.1 landed the six vector cross sections
-on 2026-08-20 and deleted their `.pyx`, leaving **Task 5.2** (the twelve
-scalar ones) and **Task 5.3** (the thermal ⟨σv⟩ / relic sweep). After
+and **Phase 05 is open with one task left**: Task 5.1 landed the six
+vector cross sections on 2026-08-20 and Task 5.2 the twelve scalar ones
+on 2026-08-21, each deleting its `.pyx`, leaving **Task 5.3** (the
+thermal ⟨σv⟩ relic sweep and the phase's benchmark). After
 that come **Phase 06** (mediator spectra) and **Phase 07** (cutover +
 close). 05 and 06 share no files with what Phase 04 touched; 06 depends
 on 04's kernels and on 05 only for ordering.
@@ -277,9 +297,11 @@ platform**; the rest run at their declared budget. **Five budgets have now
 been tightened and none widened** — `PORTED_QUAD_RTOL = 1e-12` for
 `spectra.photon.charged_pion` (Task 4.4), `spectra.positron.charged_pion`
 and `spectra.neutrino.charged_pion` (both Task 4.6), and
-`PORTED_NESTED_RTOL = 1e-9` for both ρ cases (Task 4.5). `QUAD_RTOL`'s
-two remaining holders are the thermal cross sections, which are Phase
-05's to measure.
+`PORTED_NESTED_RTOL = 1e-9` for both ρ cases (Task 4.5), and
+`PORTED_QUAD_RTOL` for both thermal cross sections (Tasks 5.1 and 5.2).
+That is **seven tightened, none widened**, and it leaves `QUAD_RTOL`
+with no holder at all — it is now the documented opening figure for the
+next quadrature-backed case, which Phase 06 supplies.
 
 **The corpus is platform-portable as of 2026-08-18 and CI runs it on
 every matrix entry.** Three carve-outs make that true and each names
@@ -288,11 +310,14 @@ should be triaged into one of them rather than absorbed by a wider
 budget: `test/parity/stability.py`'s 494 unpinnable positions,
 `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` for those
 two classes off the capturing libm, and `tolerances.zero_floor` for the
-four declared stored zeros a change of libm moves. **Phase 05 must read
+four declared stored zeros a change of libm moves. Task 5.2 read
 [`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
-before porting the scalar cross sections** — 494 pinned positions in the
-four it ports assert nothing, and a faithful Rust rewrite will disagree
-with the corpus there however faithful it is.
+before porting the four scalar kernels the mask covers, and the four
+came back bit-equal anyway — the 494 masked positions are where a
+*different* implementation would disagree, and a faithful
+transliteration is not one. **Phase 06 should read it for the same
+reason**, and should not read Task 5.2's result as evidence the mask is
+unnecessary.
 
 **For the next agent starting any task in this project:**
 
@@ -313,13 +338,25 @@ with the corpus there however faithful it is.
   snapshot. **Every row of its dead-code table is now done.** Read it for
   the **live surface** and the cimport DAG, which Phases 05–06 still need;
   read its headline counts as history.
-- **10 `.pyx` and 8 `.pxd` after Task 5.1** (11/8 after Task 4.6, 14/11
-  before it). The vector cross sections were a whole-file deletion —
-  nothing cimported them, and the module exported no capsules — unlike
-  the `def`-only removal from `_positron/_pion.pyx`. Zero C++.
+- **9 `.pyx` and 8 `.pxd` after Task 5.2** (10/8 after Task 5.1, 11/8
+  after Task 4.6, 14/11 before it). Both mediator cross-section modules
+  were whole-file deletions — nothing cimported either and neither
+  exported capsules — unlike the `def`-only removal from
+  `_positron/_pion.pyx`. Zero C++.
   Re-derive with the clean-then-rebuild recipe rather than quoting this;
   a stale `.so` makes a wrong list look right.
-- **`hazma._core` serves twenty-two kernels.** The six added by
+- **`hazma._core` serves thirty-four kernels.** The twelve added by
+  Task 5.2 are the whole consumed surface of
+  `_c_scalar_mediator_cross_sections.pyx` —
+  `scalar_mediator.sigma_xx_to_s_to_{ff,gg,pi0pi0,pipi}`,
+  `sigma_xx_to_ss`, `sigma_ss_to_xx`,
+  `sigma_x{l,pi,pi0,g,s}_to_x{l,pi,pi0,g,s}` and
+  `thermal_cross_section` — each called by
+  `hazma/scalar_mediator/_scalar_mediator_cross_sections.py` under a
+  short alias, because that wrapper already uses every canonical name
+  for a mixin method. Its thirteenth `def`, `sigma_xx_to_all`, was
+  **dropped rather than ported** on the same re-run importer check as
+  the vector one. The six added by
   Task 5.1 are `vector_mediator.sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}`,
   `vector_mediator.sigma_xx_to_vv` and
   `vector_mediator.thermal_cross_section`, each called by
@@ -398,9 +435,25 @@ with the corpus there however faithful it is.
   9.0e-15 and 4.0e-16 relative), so both must be reproduced:
   `cpow(t + 0i, 1.5 + 0i)` is bit-for-bit `exp(1.5·ln t)` and `__divdc3`
   is C99 Annex G's scaled quotient, both in
-  `rust/src/kernels/vector_xs.rs`. **`grep -c SoftComplexToDouble` on
-  the generated C before porting** — the scalar cross sections have
-  none; Phase 06's four modules are unchecked.
+  `rust/src/kernels/soft_complex.rs`, shared by both mediator kernel
+  modules. **`grep -c SoftComplexToDouble` on the generated C before
+  porting** — the scalar cross sections turned out to have **one**
+  (`__sigma_xx_to_s_to_ff`), against a Task 5.1 note that said they had
+  none, so run the grep rather than reading the `.pyx`. Phase 06's four
+  modules are unchecked.
+- **Where clang fuses is one syntactic rule** (Task 5.2). Its
+  `EmitFMulAdd` contracts `A + B` when `A` is a multiply, else when `B`
+  is, decided on the **C** tree Cython emits — where `x ** n` is a `pow`
+  **call**, never a multiply, and `-x**n` is an `FNeg`. That one rule
+  explains every case Phase 04 and Task 5.1 recorded separately
+  (`-4*mx**2 + e_cm**2` fuses, `ms**2 - e_cm**2` does not,
+  `-mpi0**2 + e_cm**2` does not), and Task 5.2 reproduced all 138 FMA
+  sites in eleven kernels from it without reading a disassembly per
+  site. **One Python-level call boxes everything above it**: `np.log(4)`
+  inside a `cdef` function makes Cython evaluate the whole path to the
+  root through `PyNumber_*`, so nothing there contracts while the pure-C
+  operands still fuse internally — the same observable as Phase 04's
+  `_photon/_rho.pyx` from a different cause.
 - **`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1) —
   `setuptools_rust` infers `debug = self.inplace or self.debug`. A
   benchmark from an editable tree is ~20x pessimistic and inverts the

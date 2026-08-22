@@ -20,7 +20,8 @@ use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 
 use crate::dispatch::{map_unary, map_unary_try};
-use crate::kernels::vector_xs::{self, NonRealResult};
+use crate::kernels::soft_complex::NonRealResult;
+use crate::kernels::vector_xs;
 
 /// The wording every `NonRealResult` reaches Python with.
 ///

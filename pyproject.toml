@@ -68,7 +68,26 @@ build-backend = "setuptools.build_meta"
 # on PATH, which pip cannot install — a source build without cargo fails
 # here. Both this requirement and the Cython half go away at the Phase 07
 # maturin cutover.
-requires = ["numpy", "cython", "setuptools", "setuptools-rust", "scipy>=1.13"]
+#
+# cython is capped below 3.3 because 3.3.0 (released 2026-08-21) refuses
+# to compile `scalar_mediator_decay_spectrum.pyx`. That file passes
+# `integrand` — whose signature takes an `np.ndarray[np.float64_t,ndim=1]`
+# — as a C function pointer, so Cython auto-generates a `cfunc.to_py`
+# wrapper for it, and 3.3 rejects a buffer type in that generated
+# signature: `cfunc.to_py:85:180: Invalid type.` The cap is unpinned-
+# dependency damage control, not a considered floor — an uncapped `cython`
+# put a breaking upstream release straight into CI, failing all six Test
+# jobs on PR #76 with nothing in the diff to explain it. Revisit when the
+# Phase 07 maturin cutover deletes the last `.pyx`, or sooner if a 3.3.x
+# fixes it; the buffer-typed signature is the thing to change if neither
+# happens first.
+requires = [
+    "numpy",
+    "cython<3.3",
+    "setuptools",
+    "setuptools-rust",
+    "scipy>=1.13",
+]
 
 [tool.setuptools]
 zip-safe = false

@@ -97,9 +97,14 @@ implementation does* rather than by what it computes:
     **2.1e-14** relative over its 285 pinned values (64 bit-equal) and
     tightened it the same way; the drift there is the Bessel prefactor
     and weight rather than the integrator, since `bessel_kn(2, ·)` agrees
-    with scipy to 8.9e-16 and the prefactor squares it. The one case
-    still at the opening figure is the scalar thermal cross section,
-    which Task 5.2 ports and measures. Nothing external moves under a ported case any
+    with scipy to 8.9e-16 and the prefactor squares it. Task 5.2 then
+    measured the fifth and last, `cross_sections.scalar.
+    thermal_cross_section`, at **3.1e-15** (104 of 285 bit-equal) and
+    tightened it too. That leaves the class with **no case at the
+    opening figure**: `QUAD_RTOL` is now the documented starting point
+    for the next unported member rather than a live budget, and Phase 06
+    is where the next one arrives. Nothing external moves under a ported
+    case any
     more -- the reference values are stored, scipy no longer participates,
     and the remaining variation is the platform libm, which the corpus is
     scoped to anyway.
@@ -194,6 +199,11 @@ import generate as corpus_generate
 EXACT_RTOL = 0.0
 SPECFUN_RTOL = 1e-13
 TABULATED_RTOL = 1e-12
+#: The opening `QUAD` budget, held by no case since cython-to-rust
+#: Task 5.2 measured and tightened the last of the five. It stays as the
+#: figure a newly ported quadrature-backed case starts at, before its own
+#: drift is measured -- Phase 06's four mediator spectrum modules are the
+#: next to need it.
 QUAD_RTOL = 1e-8
 #: The `QUAD` budget after a case has been ported and its drift measured.
 #: See the "Budget classes" section: 380x headroom over Task 4.4's
@@ -544,12 +554,15 @@ BUDGETS: dict[str, Budget] = {
         why="closed-form elastic scattering, arithmetic only.",
     ),
     "cross_sections.scalar.thermal_cross_section": Budget(
-        rtol=QUAD_RTOL,
+        rtol=PORTED_QUAD_RTOL,
         atol=0.0,
         why="QAGP over z with mediator breakpoints "
         "(hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1411) "
-        "and Bessel K1/K2 prefactors (:1361, :1404); the quadrature, not "
-        "the 1e-13 Bessel class, sets the budget.",
+        "and Bessel K1/K2 prefactors (:1361, :1404); the x > 300 cutoff "
+        "is a branch, not a tolerance question. Tightened from QUAD_RTOL "
+        "by Task 5.2 on its own measurement -- 3.12e-15 worst relative "
+        "over the 285 pinned values, 104 of them bit-equal, so 1e-12 "
+        "leaves 320x headroom.",
     ),
     # -- vector-mediator cross sections -------------------------------------
     "cross_sections.vector.sigma_xx_to_v_to_ff": Budget(

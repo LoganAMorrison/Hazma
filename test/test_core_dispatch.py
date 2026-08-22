@@ -57,7 +57,6 @@ import pytest
 
 from hazma._core import dispatch as core_dispatch
 from hazma._core import roundtrip
-from hazma.scalar_mediator import _c_scalar_mediator_cross_sections as cython_xs
 from hazma.scalar_mediator import scalar_mediator_decay_spectrum as cython_spectrum
 
 # The `hazma._core.dispatch` probes, bound here so the tests below read like
@@ -756,9 +755,27 @@ class TestDeclaredDivergencesFromCython:
     :data:`SPECTRUM_ARGS`, and in the quantity its message names, which
     they take from the source rather than hard-code.
 
-    It survives until Phase 06 deletes the mediator spectrum modules.
-    After that the widening described here has no live Cython side outside
-    ``cython_xs``, and this class retires with the last ``.pyx``.
+    It survives until Phase 06 deletes the mediator spectrum modules,
+    after which the widening described here has no live Cython side at
+    all and this class retires with the last ``.pyx``.
+
+    **Two of its cases have already retired**, in cython-to-rust Task
+    5.2, which deleted ``_c_scalar_mediator_cross_sections.pyx``. Both
+    were *evidence* rather than gates — they showed that the port's two
+    widenings were the surviving cross-section dispatch's own behavior
+    rather than inventions:
+
+    * a 0-d array took the scalar path there and raises in the spectra,
+      which is why the port returns a float for one
+      (``_c_scalar_mediator_cross_sections.pyx:1052`` read ``.ndim``
+      after ``hasattr(__len__)``);
+    * a Python list was refused there with ``AttributeError`` for the
+      same reason, and the port accepts it.
+
+    Neither statement has a Cython side left to compare against; the
+    *port's* half of both is pinned in
+    ``test/test_core_scalar_xs.py::TestTheDispatchContract`` and its
+    vector twin.
     """
 
     def test_a_zero_dimensional_array_raises_in_cython_and_returns_in_rust(
@@ -769,16 +786,6 @@ class TestDeclaredDivergencesFromCython:
                 np.array(15.0), *SPECTRUM_ARGS
             )
         assert type(roundtrip(np.array(15.0))) is float
-
-    def test_the_cross_sections_already_take_the_ported_zero_dimensional_path(
-        self,
-    ) -> None:
-        # The reason the widening above is the cross sections' behavior rather
-        # than a new invention.
-        args = (5.0, 200.0, 1.0, 1.0, 0.1, 0.1, 1e5, 1.0, 0.0, 0.511)
-        assert cython_xs.sigma_xx_to_s_to_ff(
-            np.array(15.0), *args
-        ) == cython_xs.sigma_xx_to_s_to_ff(15.0, *args)
 
     def test_a_rank_error_is_an_assertion_in_cython_and_a_value_error_in_rust(
         self,
@@ -801,17 +808,13 @@ class TestDeclaredDivergencesFromCython:
         ).shape == (2,)
         assert roundtrip([15.0, 25.0]).shape == (2,)
 
-    def test_a_sequence_is_refused_by_the_cross_sections_and_accepted_by_the_port(
-        self,
-    ) -> None:
-        # The one place the port is *wider* than the Cython twin it replaces
-        # rather than equal to it: the cross-section dispatch reads `.ndim` on
-        # whatever it is given, so a list raises AttributeError today. Phase 05
-        # inherits the widening, which no working call can notice.
-        with pytest.raises(AttributeError):
-            cython_xs.sigma_xx_to_s_to_ff(
-                [15.0, 25.0], 5.0, 200.0, 1.0, 1.0, 0.1, 0.1, 1e5, 1.0, 0.0, 0.511
-            )
+    def test_a_sequence_is_accepted_by_the_port(self) -> None:
+        # The one place the port is *wider* than the Cython twin it replaced
+        # rather than equal to it: the cross-section dispatch read `.ndim` on
+        # whatever it was given, so a list raised AttributeError. The
+        # comparison retired with that module in Task 5.2 (see the class
+        # docstring); the port's half is still worth pinning, because it is
+        # what no working call can notice.
         assert roundtrip_as([15.0, 25.0], "Center-of-mass energies").shape == (2,)
 
 

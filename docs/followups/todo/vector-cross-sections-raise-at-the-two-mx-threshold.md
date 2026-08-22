@@ -88,9 +88,10 @@ with the change recorded, or to take this after Phase 07 closes.
 - `test/parity/data/manifest.json` — the three `raises` records, under
   `cross_sections.vector.sigma_xx_to_v_to_pipi` blocks 1 and 2 and
   `cross_sections.vector.sigma_xx_to_v_to_pi0v` block 2.
-- `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx` — the
-  twelve scalar guards option 2 would also touch (until Task 5.2 ports
-  them).
+- `rust/src/kernels/scalar_xs.rs` — the twelve scalar guards option 2
+  would also touch. Task 5.2 ported them on 2026-08-21; the scalar
+  module raises nowhere, because its one complex expression puts the
+  vanishing root in the numerator.
 - Related project: `projects/cython-to-rust/`
 
 ## Risks / open questions
@@ -98,7 +99,14 @@ with the change recorded, or to take this after Phase 07 closes.
 - Which option the maintainer wants is a physics-API question, not a
   numerics one. Option 2 is the friendliest and the most invasive.
 - The scalar mediator has the same `<` guards and the same vanishing
-  `sqrt`, but **no** `** 1.5`, so it raises nowhere — its twelve
-  channels return `inf`/`nan` at `2 m_x` today. Fixing only the vector
-  side would make the two models disagree at threshold, which is worse
-  than the current state.
+  `sqrt`, and it *does* have a `** 1.5` — one, in
+  `__sigma_xx_to_s_to_ff`, found by Task 5.2 on 2026-08-21. It still
+  raises nowhere, but for a different reason than this entry first
+  recorded: that expression's vanishing root sits in the **numerator**,
+  so `__divdc3` never sees a zero denominator and the imaginary part
+  stays zero. What its twelve channels return at `2 m_x` is a
+  parameter-dependent mixture of `0.0` and `±inf` (occasionally `nan`),
+  not the uniform `inf`/`nan` this entry first claimed — measured over
+  four mediator points, eight-to-eleven finite, one-to-three `±inf`,
+  never a raise. Fixing only the vector side would make the two models
+  disagree at threshold, which is worse than the current state.

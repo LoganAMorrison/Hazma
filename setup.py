@@ -70,21 +70,23 @@ extensions += make_extension(
 )
 
 # Scalar mediator
+# `_c_scalar_mediator_cross_sections` went in cython-to-rust Task 5.2 —
+# all twelve of its consumed entry points are served by
+# `hazma._core.scalar_mediator`, and the thirteenth (`sigma_xx_to_all`)
+# was dropped rather than ported because nothing imported it. The two
+# spectrum modules below are Phase 06's.
 extensions += make_extension(
     ["scalar_mediator"],
     [
         "scalar_mediator_decay_spectrum",
         "scalar_mediator_positron_spec",
-        "_c_scalar_mediator_cross_sections",
     ],
 )
 
 # Vector mediator
-# `_c_vector_mediator_cross_sections` went in cython-to-rust Task 5.1 —
-# all six of its consumed entry points are served by
-# `hazma._core.vector_mediator`, and the seventh (`sigma_xx_to_all`) was
-# dropped rather than ported because nothing imported it. Its scalar
-# twin is Task 5.2's; the two spectrum modules below are Phase 06's.
+# `_c_vector_mediator_cross_sections` went in cython-to-rust Task 5.1,
+# the same way and for the same reasons as its scalar twin above. The
+# two spectrum modules below are Phase 06's.
 extensions += make_extension(
     ["vector_mediator"],
     [
