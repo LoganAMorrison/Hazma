@@ -78,6 +78,16 @@ re-enters Python per quadrature node.
   change flip a step-acceptance decision. Tightening `rtol` to 1e-8 and
   1e-10 collapses the difference to 2.75e-7 and 3.84e-9. Run that sweep
   before treating any adaptive-solver delta as a regression.
+- **And do not pin an adaptive solver at its caller's default
+  tolerance.** Such a pin is measuring step-acceptance history, which is
+  libm-dependent, so it passes on the capture platform and fails
+  elsewhere — Task 5.3 pinned the Boltzmann relic path at the default
+  `rtol=1e-5` with a 1e-4 budget chosen from a macOS measurement of
+  3.82e-5, and every Linux CI job failed at **1.222e-4**. The fix is not
+  a wider budget: re-pinning at `rtol=1e-10` drops the spread to 1.93e-8
+  for ~1.5 s of solve time. **Only CI can tell you this**, which makes
+  an ODE-backed pin one of the few things worth expecting a red first
+  run from.
 
 ## 3. Quirk Log & Edge Cases
 

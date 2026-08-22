@@ -96,7 +96,10 @@ cross-section ports.
   last-bit input change flips a `solve_ivp` step-acceptance decision.
   Tightening `rtol` 1e-5 → 1e-10 collapses the difference by four orders —
   that is the test that tells step selection from drift, and it is worth
-  running before treating any ODE-path delta as a regression.
+  running before treating any ODE-path delta as a regression. It is also
+  why an ODE pin must not be taken at its caller's default tolerance:
+  the first version of Task 5.3 did, and every Linux CI job failed at
+  1.222e-4 against a budget chosen from a 3.82e-5 macOS measurement.
 - **Debug and release `hazma._core` are bit-identical** across 90 values
   (12 relic densities + 78 ⟨σv⟩). The cargo profile buys speed only, so a
   parity result taken in debug is trustworthy and only its *timing* is not.
@@ -189,6 +192,12 @@ cross-section ports.
   `pytest test/parity -q` → `658 passed, 1 skipped`;
   `cargo test --no-default-features` → `201 passed`;
   `pytest test/test_theory_aggregation.py -q` → `69 passed`.
+- Task 5.3 (first push): CI red on all five Linux jobs — the Boltzmann
+  relic pin was taken at `relic_density`'s default `rtol=1e-5`, where
+  the pre↔post spread is `solve_ivp` step selection and therefore
+  libm-dependent: 3.82e-5 on macOS, **1.222e-4** on Linux, against a
+  1e-4 budget. Re-pinned at `rtol=1e-10` (spread 1.93e-8, budget 1e-5)
+  rather than widened.
 - Task 5.3: `pytest -q` → `2093 passed, 15 skipped, 12 subtests passed`
   (the +2 over Task 5.2 are `TestMediatorRelicDensity`'s two methods);
   `pytest test/test_relic_density.py -q` →

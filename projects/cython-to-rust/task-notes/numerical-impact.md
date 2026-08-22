@@ -673,8 +673,14 @@ pointer here so that every citation of that section still resolves.
   itself moves 1.3e-5 between those tolerances. The physics is unchanged
   to ~1e-9; what the default reports is the solver's own error.
   Pinned going forward by `test/test_relic_density.py`'s
-  `TestMediatorRelicDensity` at `rtol` 1e-12 (semi-analytic) and 1e-4
-  (Boltzmann).
+  `TestMediatorRelicDensity` at `rtol` 1e-12 (semi-analytic) and 1e-5
+  (Boltzmann). The Boltzmann pins are taken with the *solver* at
+  `rtol=1e-10` rather than `relic_density`'s default, because a pin at
+  the default is not platform-portable: this task's first version pinned
+  it at 1e-4 and all five Linux CI jobs failed at **1.222e-4**
+  (`vector.open_resonance`) while macOS passed — a different libm
+  perturbs the step sequence differently. At `rtol=1e-10` the same
+  comparison is 1.93e-8.
   - **`thermal_cross_section` itself**, on this sweep's 13-point
     `x = mx/T` grid per model (78 values spanning 0.1–500, both sides of
     the scalar kernel's `x = 300` cutoff): worst **1.2799e-15**, 37
