@@ -653,6 +653,43 @@ pointer here so that every citation of that section still resolves.
     physics changes. The follow-up is updated with what closed and what
     the standalone fix now costs.
 
+- **Task 5.3 (thermal ⟨σv⟩ validation sweep): no public value changes
+  in the semi-analytic relic density; the ODE path moves at its own
+  solver tolerance.** `relic_density` is the live consumer of both
+  ported `thermal_cross_section`s and was measured end-to-end against
+  the pre-port tree (`14f1c66`) on six model points — the same
+  `open/narrow/closed_resonance` scalar and vector configurations
+  `test/parity/cases.py` uses. `relic_density(semi_analytic=True)`:
+  worst **4.11e-16** relative, four of six **bit-equal**. That path is a
+  closed-form composition, so it carries Tasks 5.1/5.2's ≤2.06e-14
+  kernel drift through undamped and no further. Below rule 3's 1e-12
+  threshold — no CHANGELOG line of its own.
+  `relic_density(semi_analytic=False)`: worst **3.82e-5** relative
+  (`vector.narrow_resonance`), which is **not** drift. `solve_ivp` runs
+  at the caller's default `rtol=1e-5`, a last-bit input change flips a
+  step-acceptance decision, and the whole step sequence differs.
+  Tightening only the solver collapses it — 3.82e-5 → 2.75e-7
+  (`rtol=1e-8`) → 3.84e-9 (`rtol=1e-10`) — while the pre-port answer
+  itself moves 1.3e-5 between those tolerances. The physics is unchanged
+  to ~1e-9; what the default reports is the solver's own error.
+  Pinned going forward by `test/test_relic_density.py`'s
+  `TestMediatorRelicDensity` at `rtol` 1e-12 (semi-analytic) and 1e-4
+  (Boltzmann).
+  - **`thermal_cross_section` itself**, on this sweep's 13-point
+    `x = mx/T` grid per model (78 values spanning 0.1–500, both sides of
+    the scalar kernel's `x = 300` cutoff): worst **1.2799e-15**, 37
+    bit-equal. Consistent with the corpus-grid figures; this grid does
+    not land on their worst point.
+  - **Debug and release `hazma._core` are bit-identical** over all 90
+    values, so the cargo profile is a speed choice only.
+  - **The eleventh *known wrong* entry is now quantified at the
+    consumer.** The unconverged thermal quadrature is 0.5%–5% wrong on
+    ⟨σv⟩ across freeze-out, and relic abundance goes as 1/⟨σv⟩, so every
+    relic density Hazma has shipped inherits that error roughly
+    linearly
+    ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
+    Reproduced under rule 1, not fixed here.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)

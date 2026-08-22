@@ -81,6 +81,15 @@ that the rebuild is unoptimized.
 
 ## Risks / open questions
 
+- **Not a risk: the two profiles are numerically identical.**
+  cython-to-rust Task 5.3 re-ran its whole relic-density sweep against a
+  debug and a release `hazma._core` — 12 relic densities and 78
+  `thermal_cross_section` values across six mediator model points — and
+  every one reproduced at `rtol = 0`. `[profile.release]`'s `lto = true`
+  and `codegen-units = 1` buy speed without moving a double, so switching
+  the profile needs no parity re-run and a parity result taken in a debug
+  tree stays valid. Only *timing* taken there is wrong.
+
 - Phase 07 replaces setuptools-rust with maturin, whose `develop`
   command has the same debug default and a `--release` flag. Anything
   written into `setup.py` now is discarded then; anything written into
