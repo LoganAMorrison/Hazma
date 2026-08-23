@@ -199,7 +199,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   outward (PR #71).
 - [sweep-block-written-from-intent] Write the stale-state sweep block last, by
   pasting command output after every prose edit is frozen; "I remember fixing
-  that" is a claim to re-check, not evidence (PR #71).
+  that" is a claim to re-check, not evidence (PR #71, #78).
 - [sign-copied-from-a-defect-description] A delta quoted from a bug report
   carries the *defect's* sign and the repair's is the opposite with the same
   magnitude; restate the endpoints, or say "magnitude", when you copy a figure

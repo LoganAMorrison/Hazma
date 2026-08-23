@@ -142,9 +142,12 @@ re-enters Python per quadrature node.
   — so every relic assertion in the suite bypassed the compiled layer.
   `TestMediatorRelicDensity` pins twelve pre-port values (six model
   points × two solvers, captured at `14f1c66`) with two separately
-  justified tolerances: `1e-12` semi-analytic, a real gate; `1e-4`
-  Boltzmann, a smoke gate bounding step-selection spread. Both were
-  shown to fail against a perturbed kernel.
+  justified tolerances: `1e-12` semi-analytic, a real gate resolving a
+  1e-9 kernel error; `1e-5` Boltzmann, a smoke gate resolving a 1e-4
+  one. The Boltzmann half overrides the solver to `rtol=1e-10` rather
+  than using `relic_density`'s defaults — see the CI lesson in §2.
+  Perturbing the kernel by `1 + eps` fails both across five decades of
+  `eps`, so neither passes against a wrong kernel.
 - **The corpus cannot be extended from here on.** Rule 2 forbids
   regenerating it from a tree where Rust serves the kernels, and
   `generate.py` enforces it — true of both mediators since Task 5.2.

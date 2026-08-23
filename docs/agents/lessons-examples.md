@@ -725,6 +725,22 @@ cites a real PR.
   re-check rather than as evidence (PR #71: `pyproject.toml`'s `addopts`
   comment was spotted, left, and then reported as swept).
 
+- [sweep-block-written-from-intent] The same failure has a second entry
+  point: a value that changes **after** the sweep block is written. PR
+  #78 pinned a tolerance at `1e-4`, wrote a sweep row asserting that all
+  four tolerance constants were "cited with their measured basis in the
+  note, the log and the learnings", then re-pinned at `1e-5` in a later
+  commit when CI rejected the first value. The row was true when written
+  and false when pushed; the phase README and the phase learnings still
+  said `1e-4`, and review caught it. A sweep row is a claim about the
+  tree at push time, not at authoring time — so any late change to a
+  constant, count, or identifier re-runs the row's own command before
+  the push, and `rg -n '<old-value>' projects/ docs/ test/` is that
+  command. Note the review's framing was the useful part: fix the
+  *claim*, not the digit — both stale sites also carried the superseded
+  justification ("bounds step-selection spread") and omitted the solver
+  override that made the new value portable.
+
 ### sign-copied-from-a-defect-description
 
 - [sign-copied-from-a-defect-description] A displacement, ratio, or

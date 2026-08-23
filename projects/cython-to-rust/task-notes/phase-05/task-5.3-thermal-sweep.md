@@ -115,6 +115,17 @@ grid, and record the phase's headline benchmark from a release build.
   step-acceptance history, and the two constants that do it
   (`BOLTZMANN_SOLVER_RTOL` / `_ATOL`) sit beside the pins with the
   reason. Cost is ~1.5 s; `relic_density`'s own defaults are unchanged.
+- **Review round 1 (blocking, accepted):** the re-pin from 1e-4 to 1e-5
+  landed in the test and the task note but not in the two durable docs
+  that restate the tolerance — the phase README's Decisions bullet and
+  the phase learnings' §4. Both were fixed, and both needed more than
+  the digit: each also carried the superseded justification ("bounds
+  step-selection spread") and omitted the solver override that makes the
+  new value portable. Sweep evidence below. The class is
+  `sweep-block-written-from-intent`, already in the ledger — this task
+  wrote a sweep row asserting the four constants agreed everywhere, and
+  the row was true when written and false when pushed, because the value
+  changed in a later commit. PR #78 added to its citations.
 - **Reused `test/parity/cases.py`'s six model points verbatim** rather
   than inventing scenarios, so a failure here and a corpus failure
   implicate the same kernels at the same couplings. They are not
@@ -297,7 +308,8 @@ Run against `claude/cython-to-rust/task-5.3-thermal-sweep`.
 | Numerical-impact statement | measured, tables in §Measurements; logged in `../numerical-impact.md` | semi-analytic `relic_density` ≤4.11e-16 (4 of 6 bit-equal); Boltzmann ≤3.82e-5, identified as `solve_ivp` step selection by the tolerance sweep, not drift; no `version_bump:` change |
 | Preflight | `env PATH=".venv/bin:$PATH" scripts/agents/preflight.sh --paths … --md …` | `RESULT: PASS` (see §Verification) |
 | Cross-platform CI | `gh pr checks 78` | first push red on all five Linux jobs (Boltzmann pin at the solver default); re-pinned at `rtol=1e-10`, not widened — see Findings |
-| Tolerance constants agree with the note | `grep -n 'RTOL\|ATOL' test/test_relic_density.py` against §Measurements and §Decisions | `SEMI_ANALYTIC_RTOL=1e-12`, `BOLTZMANN_RTOL=1e-5`, `BOLTZMANN_SOLVER_RTOL=1e-10`, `BOLTZMANN_SOLVER_ATOL=1e-8` — all four cited with their measured basis in the note, the log and the learnings |
+| Tolerance constants agree everywhere | `grep -nE 'TOL = ' test/test_relic_density.py`, then `rg -n 'SEMI_ANALYTIC_RTOL.BOLTZMANN' projects/ docs/` (full alternations in the commit) | re-run at push time after the round-1 fix: the test says `1e-12` / `1e-5` / `1e-10` / `1e-8`, and all 23 restatements across the note, the log, the phase README and the learnings agree |
+| Stale-sibling sweep on the changed value | `rg -n '1e-4\b' projects/ docs/ test/ README.md CHANGELOG.md` | pre-fix 2 stale sites (phase README:143, learnings:145); post-fix 0 — the 4 surviving hits in those two files describe the rejected first version and the gate's perturbation resolution, which the review said to retain |
 
 ## Handoff to Next Task
 

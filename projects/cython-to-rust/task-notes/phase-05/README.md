@@ -139,9 +139,15 @@ cross-section ports.
   Rust-serving tree and `generate.py` enforces it. Pre-port values came
   from building `14f1c66` in a throwaway worktree and are now constants.
 - Task 5.3: two tolerances with separate justifications —
-  `SEMI_ANALYTIC_RTOL = 1e-12` (~2000× the measured drift, a real gate)
-  and `BOLTZMANN_RTOL = 1e-4` (bounds step-selection spread, a smoke
-  gate). Both are documented as such in the test.
+  `SEMI_ANALYTIC_RTOL = 1e-12` (~2000× the measured 4.2e-16, a real
+  gate) and `BOLTZMANN_RTOL = 1e-5` (~500× the 1.93e-8 measured at the
+  pin's own `rtol=1e-10`, a smoke gate that resolves kernel errors
+  ≳1e-4). Both are documented as such in the test.
+- Task 5.3: the Boltzmann pins override the solver to `rtol=1e-10` /
+  `atol=1e-8` rather than using `relic_density`'s defaults, because a
+  pin at the default measures `solve_ivp`'s step-acceptance history and
+  is therefore libm-dependent — that is what failed CI on Linux.
+  `relic_density`'s own defaults are unchanged.
 - Task 5.3: `setup.py` was not changed. The release build for the
   benchmark was a temporary `debug=False`, measured and reverted; the
   profile decision belongs to the open follow-up and Phase 07 Task 7.1.
