@@ -126,6 +126,27 @@ grid, and record the phase's headline benchmark from a release build.
   wrote a sweep row asserting the four constants agreed everywhere, and
   the row was true when written and false when pushed, because the value
   changed in a later commit. PR #78 added to its citations.
+- **Review round 2 (blocking, accepted):** the measured relic
+  consequence of the unconverged quadrature was written as "every relic
+  density Hazma has published", which is wrong — `relic_density` takes
+  any model and short-circuits to `model.thermal_cross_section` when one
+  exists, so the suite's own `ToyModel` bypasses the kernel entirely.
+  Corrected at all six sites to the `ScalarMediator`/`VectorMediator`
+  families. Re-deriving the true scope from the code rather than
+  narrowing to the reviewer's suggested wording turned up two facts the
+  review did not have: the affected set is the whole family
+  (`HiggsPortal`, `HeavyQuark`, `KineticMixing`, `QuarksOnly`), not the
+  two subclasses named; and **the same missing-tolerance defect exists at
+  two further pure-Python sites** this project never ported —
+  `relic_density/_thermal_functions.py:476` (the generic fallback) and
+  `vector_mediator/_gev/thermal_cross_section.py:143`. The follow-up now
+  carries a "Which models" section and lists all four sites, because a
+  Rust-only fix would silently leave two behind.
+- **Review round 2 (blocking, accepted):** commit `78171ee`'s header was
+  74 characters against the 69-char limit in `docs/PR_GUIDELINES.md`.
+  Rewritten to `fix(relic): pin the boltzmann path at a tightened solver
+  tolerance` (66) and force-pushed with `--force-with-lease`; content
+  unchanged, verified by diffing against a pre-rewrite backup ref.
 - **Reused `test/parity/cases.py`'s six model points verbatim** rather
   than inventing scenarios, so a failure here and a corpus failure
   implicate the same kernels at the same couplings. They are not

@@ -65,9 +65,9 @@ cross-section ports.
   (1.49e-8) is met by the first Kronrod pass on an integrand whose
   integral is ~1e-27. The shipped answer is 0.5%–5% off the true
   integral for every `x ≳ 5`. Filed; **Task 5.3 measured the relic
-  consequence**: relic abundance goes as 1/⟨σv⟩, so the shipped relic
-  densities carry that 0.5%–5% error roughly linearly across
-  freeze-out.
+  consequence**: relic abundance goes as 1/⟨σv⟩, so a relic density
+  computed for a `ScalarMediator`- or `VectorMediator`-family model
+  carries that 0.5%–5% error roughly linearly across freeze-out.
 - **`pow(x, 2.0)` folds to `x·x`, `pow(x, 3.0)` and `pow(x, 4.0)` do
   not** — `_pow` is a live libm import of the shipped object. Writing
   `x·x·x` is a different number.
@@ -269,8 +269,9 @@ instead of this file and the three task notes; they are history.
   `0.0`, the vector saturates. The corpus pins both; do not unify them.
 - [The thermal quadrature never converges](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
   on either model. Task 5.3 measured the consequence: relic abundance
-  goes as 1/⟨σv⟩, so every published relic density carries that 0.5%–5%
-  error roughly linearly. Reproduced, not fixed; the follow-up is
+  goes as 1/⟨σv⟩, so a relic density computed for any
+  `ScalarMediator`- or `VectorMediator`-family model carries that
+  0.5%–5% error roughly linearly. Reproduced, not fixed; the follow-up is
   unblocked and Phase 07's CHANGELOG names it.
 - Four scalar elastic kernels carry
   [the `atan`-cancellation defect](../../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)

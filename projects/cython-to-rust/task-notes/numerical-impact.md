@@ -690,9 +690,13 @@ pointer here so that every citation of that section still resolves.
     values, so the cargo profile is a speed choice only.
   - **The eleventh *known wrong* entry is now quantified at the
     consumer.** The unconverged thermal quadrature is 0.5%–5% wrong on
-    ⟨σv⟩ across freeze-out, and relic abundance goes as 1/⟨σv⟩, so every
-    relic density Hazma has shipped inherits that error roughly
-    linearly
+    ⟨σv⟩ across freeze-out, and relic abundance goes as 1/⟨σv⟩, so a
+    relic density computed for any `ScalarMediator`- or
+    `VectorMediator`-family model (`HiggsPortal`, `HeavyQuark`,
+    `KineticMixing`, `QuarksOnly`) inherits that error roughly linearly.
+    Those are the models that supply the affected
+    `thermal_cross_section`; `relic_density` takes any model, and one
+    supplying its own — the suite's `ToyModel` — bypasses it entirely
     ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
     Reproduced under rule 1, not fixed here.
 

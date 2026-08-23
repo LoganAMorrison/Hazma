@@ -118,8 +118,11 @@ re-enters Python per quadrature node.
   integrand whose integral is ~1e-27; the shipped answer is 0.5%–5% off
   the true integral for every `x ≳ 5`, i.e. across all of freeze-out.
   Task 5.3 measured the consequence: relic abundance goes as 1/⟨σv⟩, so
-  every relic density Hazma has published inherits that error roughly
-  linearly. Reproduced under rule 1, not fixed —
+  a relic density computed for any `ScalarMediator`- or
+  `VectorMediator`-family model inherits that error roughly linearly —
+  those being the models that supply the affected
+  `thermal_cross_section`, since `relic_density` takes any model and one
+  supplying its own bypasses the kernel. Reproduced under rule 1, not fixed —
   [the follow-up](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
   now carries the downstream size and is unblocked.
 
