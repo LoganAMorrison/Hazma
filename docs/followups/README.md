@@ -44,6 +44,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [two vector cross sections raise `TypeError` at `e_cm = 2 m_x`](todo/vector-cross-sections-raise-at-the-two-mx-threshold.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [`thermal_cross_section` returns its integrator's initial estimate](todo/thermal-cross-section-quadrature-never-converges.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [`pip install -e .` builds `hazma._core` unoptimized](todo/editable-installs-build-the-rust-extension-in-debug.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
+| [mediator spectra return 0.0 for an unrecognised mode string](todo/mediator-spectra-accept-unknown-mode-strings.md) | 2026-08-23 | cython-to-rust Task 6.1 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

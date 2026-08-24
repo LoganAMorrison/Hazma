@@ -1,7 +1,7 @@
 ---
 phase: 06
 title: Mediator spectra
-status: Not started
+status: In Progress
 ---
 
 # Phase 06: Mediator spectra
@@ -34,11 +34,27 @@ symbols) — none of which survives contact with Rust.
 - A Rust struct owning the precomputed 500-point log-spaced rest-frame
   tables (built once per parameter set by calling the Phase 04 kernel
   `fn`s natively — no Python round trips), with genuine memoization
-  keyed on the mediator mass + partial widths (fixing the dead-cache
-  bug; same numbers, declared as performance-only per rules.md 3, 12).
+  keyed on the mediator mass (fixing the dead-cache bug; same numbers,
+  declared as performance-only per rules.md 3, 12).
+
+  **Amended by Task 6.1 (2026-08-23):** this bullet read "keyed on the
+  mediator mass + partial widths", copying the key the Cython's dead
+  predicate *declares*. `__set_spectra` takes only the mass and reads no
+  width, so the tables are a pure function of the mass; keying on the
+  widths too would be equally correct and strictly slower, rebuilding
+  both tables whenever a caller varies a coupling at fixed mass — the
+  sweep the cache exists to make cheap.
 - Mode dispatch (`"total"`, `"e e g"`, `"pi pi g"`, …) becomes an enum
   at the PyO3 boundary; string parsing happens once per call, not per
-  quadrature node. Accepted strings and error text byte-match today's.
+  quadrature node. Accepted strings byte-match today's.
+
+  **Amended by Task 6.1 (2026-08-23):** this bullet read "Accepted
+  strings and error text byte-match today's". There is no error text to
+  match: an unrecognised mode raises nothing today, it returns `0.0` —
+  every `cdef double` integrand ends in an `if`-chain with no `else` and
+  a C function that falls off its end returns zero. Reproduced under
+  rule 1 and filed as
+  [`../../../docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md`](../../../docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md).
 - Design reviewed against both decay + both positron modules before
   implementation (they are two clone-pairs — one parameterized
   implementation each).
