@@ -25,12 +25,12 @@
 //! parameterised by the mediator mass: [`PhotonTables`] and
 //! [`PositronTables`].
 //!
-//! # The grid is `numpy.logspace`, bit for bit
+//! # The grid is `numpy.logspace`
 //!
 //! All four `.pyx` build their abscissae with
 //! `np.logspace(start, log10(m/2), num=500)`, and the values a
 //! bit-equality-class comparison sees depend on reproducing that
-//! exactly rather than on any equivalent spelling. [`logspace`] is
+//! algorithm exactly rather than on any equivalent spelling. [`logspace`] is
 //! NumPy's own arithmetic: `step = (stop - start) / (num - 1)`, then
 //! `10**(i * step + start)` with the multiply and the add rounded
 //! separately — **not** fused — and the final point taken as `10**stop`
@@ -46,11 +46,23 @@
 //!
 //! `cargo` gates the *algorithm* only — the tests below assert the
 //! unfused step, the substituted endpoint and the endpoints themselves.
-//! Agreement with NumPy is a claim about libm, which
-//! `test/test_core_mediator_tables.py` re-derives live through
-//! [`crate::mediator_tables_probe`] on whatever platform the suite runs;
-//! hard-coding one platform's bits here would turn a Linux CI job red
-//! for a libm difference rather than a defect
+//! Agreement with NumPy is a separate claim, and a platform-dependent
+//! one: `numpy.logspace` evaluates `10 ** y` through NumPy's own
+//! `power` loop, which is vectorised on x86-64, while [`logspace`] calls
+//! `f64::powf` and reaches the platform libm. **They are not the same
+//! code, and they do not always agree.** Measured on CI run
+//! 32681245809: bit-for-bit at every abscissa on macOS/arm64 (the
+//! platform the parity corpus was captured on), and on Linux/x86-64
+//! about 5% of the 500 points differ — 19 to 31 per grid, **every one of
+//! them by exactly one ulp**, worst relative 2.16e-16.
+//!
+//! So a Phase 06 table built on Linux sits within one ulp of the one the
+//! Cython built there, not on top of it. That is inside every budget the
+//! corpus applies off its capturing platform, and it is why the NumPy
+//! comparison lives in `test/test_core_mediator_tables.py` — scoped by
+//! platform, the way `test/test_core_interp.py` scopes the same kind of
+//! claim — rather than as captured bits in a `cargo` test, which would
+//! turn a Linux CI job red for a libm difference rather than a defect
 //! (`projects/cython-to-rust/learnings/phase-04-spectra-kernels.md` §4).
 //!
 //! One spelling difference between the four sources is *not* a
@@ -64,8 +76,8 @@
 //! Neither decay module caches at all — `__set_spectra` is called
 //! unconditionally at the top of every entry point
 //! (`scalar_mediator_decay_spectrum.pyx:245`,
-//! `vector_mediator_decay_spectrum.pyx:250` and `:274`), so every call rebuilds a
-//! 500-point quadrature-backed table. Both positron modules *look*
+//! `vector_mediator_decay_spectrum.pyx:250` and `:274`), so every call
+//! rebuilds a 500-point quadrature-backed table. Both positron modules *look*
 //! cached and are not: `__recompute_rf_spectra` compares against
 //! `cache_ms` / `cache_pws` and **no line anywhere assigns to either**,
 //! so the sentinel `-1.0` they are initialised with never changes and

@@ -112,6 +112,23 @@ this task made to it (see `## Plan Impact`):
   (mass, start) pairs over `np.linspace(1, 2000, 4001)` MeV × the two
   grid starts — and at **none** of the corpus's three masses, so a
   three-mass check would have missed it.
+- **The Rust grid is bit-equal to `numpy.logspace` on macOS/arm64 and
+  one ulp off it on Linux/x86-64** — found by CI, not locally (run
+  32681245809: green on macOS, red on all five Linux jobs, in exactly
+  the 15 tests that compare against NumPy and none of the 50 that do
+  not). `numpy.logspace` evaluates `10 ** y` through NumPy's own
+  vectorised `power` loop; `logspace` calls `f64::powf` and reaches the
+  platform libm. **They are not the same code.** About 5% of the 500
+  points differ per grid — 19 to 31 — and every measured disagreement
+  was exactly one ulp, worst relative 2.16e-16, which is the most two
+  correctly-rounded implementations of `10 ** y` can differ.
+
+  Consequence for 6.2/6.3: a table built on Linux sits within one ulp of
+  the one the Cython built there. That is inside every budget the corpus
+  applies off its capturing platform, and the corpus already runs in
+  budget mode off macOS — so it changes no gate, but it does mean
+  "bit-equal to the Cython" is a **macOS/arm64 statement** for anything
+  that reads these tables.
 
 ## Decisions and Implementation Notes
 
@@ -132,12 +149,30 @@ this task made to it (see `## Plan Impact`):
   Tightening it into a raise would be a behaviour change the corpus
   cannot gate (it samples valid modes only) — filed instead.
 - **`cargo` gates the grid *algorithm*; Python gates its agreement with
-  NumPy.** Hard-coding the capturing platform's NumPy bits into a cargo
-  test would turn a Linux CI job red for a libm difference rather than a
-  defect — the failure Phase 04 learnings §4 records twice. So
+  NumPy, scoped by platform.** Hard-coding the capturing platform's
+  NumPy bits into a cargo test would turn a Linux CI job red for a libm
+  difference rather than a defect — the failure Phase 04 learnings §4
+  records twice, and this task then reproduced it in the Python half.
   `cargo test` asserts the unfused step, the substituted endpoint and
-  monotonicity, and `test/test_core_mediator_tables.py` compares against
-  live `numpy.logspace` on whatever platform runs.
+  monotonicity; `test/test_core_mediator_tables.py` compares against live
+  `numpy.logspace` and demands bit-equality **on the capturing platform
+  only**, one ulp elsewhere, declaring the mode from
+  `ON_THE_CAPTURING_PLATFORM` the way `test/test_core_interp.py` does
+  rather than from a probe (Phase 04 learnings §4 records that probe
+  mechanism as unsound twice).
+- **The two off-platform comparators are separate functions, tested
+  directly.** `assert_within_one_ulp` and `assert_within_peak_budget` are
+  split out of the scoped callers so `TestTheOffPlatformBudgets` can
+  exercise them on **every** platform, including the one whose callers
+  never reach them. The first draft tested them through the scoped
+  entry points, which on macOS took the exact branch and asserted
+  nothing about the budgets — the same way `test_core_interp.py`'s probe
+  silently voided nine claims before its rewrite.
+- **The `lookup`-vs-`np.interp` budget is `test_core_interp.py`'s**
+  (`OFF_PLATFORM_BUDGET = 1e-12` of the compared array's peak), cited
+  rather than re-derived: same port, same question about a contracted
+  multiply-add, and the grid is shared by both sides, so a second
+  derivation would measure the same thing.
 - **A sixth probe submodule, `hazma._core.mediator_tables`.** Added to
   `_CORE_TEST_ONLY_MODULES` with the rest, and for the same reason the
   five before it were: the oracles (`numpy.logspace`, `numpy.interp`,
@@ -165,8 +200,8 @@ this task made to it (see `## Plan Impact`):
 - `rust/src/kernels.rs` — register the module; document why it is the
   fifth naming exception.
 - `rust/src/lib.rs` — register the probe; extend the probe paragraph.
-- `test/test_core_mediator_tables.py` — **new.** 65 tests over six
-  classes.
+- `test/test_core_mediator_tables.py` — **new.** 70 tests over seven
+  classes, two of the comparisons scoped to the capturing platform.
 - `test/parity/cases.py` — `hazma._core.mediator_tables` added to
   `_CORE_TEST_ONLY_MODULES`, with its rationale in the existing comment.
 - `projects/cython-to-rust/phases/phase-06-mediator-spectra.md` — Task
@@ -195,22 +230,24 @@ this task made to it (see `## Plan Impact`):
   columns are the Phase 04 kernels, legacy `m_e`); and all three
   selectors (accepted set, rejected set, line-carrying modes, bit values,
   the default list, repeated/unknown names).
-- `pytest test/test_core_mediator_tables.py -q -n 0` — `65 passed`.
+- `pytest test/test_core_mediator_tables.py -q -n 0` — `70 passed`.
   Covers: `logspace` vs `numpy.logspace` at the corpus masses and over a
   4,001-mass sweep, the last point, the `num < 2` raise; both table sets'
   grids and columns against the public Rust entry points; the legacy vs
   PDG electron mass; `lookup` vs `np.interp` and vs the `.pyx` tail
   branch over 6,000+ probes, both clamps, `NaN`, both error paths; and
   every selector's accepted and rejected sets — the rejected sets
-  **against the live Cython twins**, which return `0.0` for them.
+  **against the live Cython twins**, which return `0.0` for them; and
+  `TestTheOffPlatformBudgets`, which runs both off-platform comparators
+  on every machine.
 - `pytest test/parity -q` — `658 passed, 1 skipped`; all 41 entry points
   unchanged.
 - `pytest test/test_theory_aggregation.py -q` — `69 passed` (the
   model-layer gate the corpus cannot be).
-- `pytest -q` (full suite) — `2158 passed, 15 skipped, 12 subtests
+- `pytest -q` (full suite) — `2163 passed, 15 skipped, 12 subtests
   passed`. `git diff origin/master --name-only -- test/` names only
   `test/parity/cases.py` (a comment and one `frozenset` entry) and the
-  new module, so the 65 new tests are the whole delta.
+  new module, so the 70 new tests are the whole delta.
 - `scripts/agents/preflight.sh --paths "…"` — see the sweep block.
 - **Mutation campaign, 8/8 killed** — the Phase 04 discipline, run
   against `cargo test` because that is the gate a future edit meets
@@ -237,10 +274,21 @@ this task made to it (see `## Plan Impact`):
   the grid's first decade into extrapolation. Both were caught by
   `test/test_core_mediator_tables.py` (M1: 13 failures) — the campaign's
   value was making `cargo` catch them too.
+- **CI found what the local machine could not.** The first round
+  (run 32681245809) was green on macOS/arm64 and red on all five Linux
+  jobs, in exactly the 15 tests that compare against NumPy and in none of
+  the 50 that do not — so the port was never in question, the
+  cross-implementation claim's *scope* was. See `## Findings` for the
+  measurement and `## Decisions` for the fix. Phase 04 learnings §4 says
+  to read a Linux-only failure in a bit-equality assertion as "the scope
+  is wrong" before "the port is wrong"; that is what this was.
 - **Test validity.** Most new assertions pin behaviour this task
   created, so there is no production change to stash; the mutation
   campaign above is the substitute, and it is stronger — every mutation
-  was applied to the real source, built, and run.
+  was applied to the real source, built, and run. The two off-platform
+  budgets carry their own inversions:
+  `test_the_grid_budget_rejects_two_ulp` and
+  `test_the_interp_budget_rejects_a_visible_error`.
 - **Deferred:** no benchmark. `rules.md` rule 12 wants one for a
   performance claim, and this task makes none — the cache has no caller
   until Task 6.2, which the phase file already charges with the
@@ -319,7 +367,7 @@ an editable install in this worktree — `hazma.__file__` and
 | Forbidden tokens in new files | `rg -n "TODO\|FIXME\|breakpoint()\|import pdb\|print("` over the three new source files | no occurrences; preflight's own gate reports `none added`. |
 | Follow-up not a duplicate | `rg` over `docs/followups/{todo,done}/`; `gh pr list --state open` | no existing entry, no open PRs. New stub plus index row. |
 | The two prose lists of probe submodules | `rg -n "_CORE_TEST_ONLY_MODULES" test/parity/cases.py`; `rust/src/lib.rs` module docs | both name all six submodules and their oracles, and agree with the `frozenset`. |
-| Numerical-impact statement | `pytest test/parity -q`; `pytest test/test_theory_aggregation.py -q` | `658 passed, 1 skipped` and `69 passed`. **No public value changes**; nothing appended to `../numerical-impact.md`. |
+| Numerical-impact statement | `pytest test/parity -q`; `pytest test/test_theory_aggregation.py -q` | `658 passed, 1 skipped` and `69 passed`, on both CI platforms. **No public value changes**; nothing appended to `../numerical-impact.md`. |
 | Preflight | `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths … --md …` | `RESULT: PASS` — eleven rows, one `SKIP` (version bump, not a closing PR). |
 
 ## Handoff to Next Task

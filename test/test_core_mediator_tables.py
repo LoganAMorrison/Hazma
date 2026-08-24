@@ -15,22 +15,58 @@ crate, so ``cargo`` cannot state them:
 
 * **the grid is ``numpy.logspace``.** ``cargo`` pins the algorithm — the
   unfused ``i * step + start``, the last point substituted from ``stop``
-  — but agreement with NumPy rests on Rust's ``log10``/``powf`` and
-  NumPy's ``power`` loop reaching the same libm. Hard-coding one
-  platform's bits into a ``cargo`` test would turn a Linux CI job red for
-  a libm difference rather than a defect, the failure mode Phase 04
-  learnings §4 records twice. Here the comparison re-derives on whatever
-  platform the suite runs, and if a platform ever *does* disagree this
-  module is where it says so.
+  — but agreement with NumPy rests on Rust's ``powf`` and NumPy's
+  ``power`` loop, which are not the same code. Hard-coding one platform's
+  bits into a ``cargo`` test would turn a Linux CI job red for a libm
+  difference rather than a defect, the failure mode Phase 04 learnings §4
+  records twice. Here the comparison re-derives wherever the suite runs.
 * **the tables hold the Phase 04 kernels themselves**, called natively
   rather than through Python. Asserting that against
   ``hazma._core.photon`` / ``hazma._core.positron`` — the same kernels
   through their public entry points — is a real check; a re-derivation
-  inside the crate would only compare the kernel to itself.
+  inside the crate would only compare the kernel to itself. That claim is
+  Rust against Rust and holds bit-for-bit on every platform.
 
 The mode oracles are stronger still, because the Cython twins are all
 four alive until Tasks 6.2-6.4 delete them: an unrecognised mode string
 can be put through the shipped ``.pyx`` and the Rust parser side by side.
+
+Two comparisons are platform-scoped, and both were measured
+------------------------------------------------------------
+The first CI round on this module was green on macOS/arm64 and red on all
+five Linux jobs, in exactly the fifteen tests that compare against NumPy
+and in none of the fifty that do not (run 32681245809). The port is not
+what differs — ``hazma._core`` reproduces the Phase 04 kernels on both —
+so the mode is **declared from the platform**, the way
+``test/test_core_interp.py`` declares it, rather than detected by a
+probe that Phase 04 learnings §4 records as unsound twice over.
+
+**The grid.** ``numpy.logspace`` evaluates ``10 ** y`` through NumPy's
+own ``power`` loop, which is vectorised on x86-64; ``rust/src/kernels/
+mediator_tables.rs`` calls ``f64::powf``, which goes to the platform
+libm. On macOS/arm64 the two agree bit-for-bit at every abscissa. On
+Linux/x86-64 about 5% of the 500 points disagree — 19 to 31 per grid —
+and **every disagreement measured was exactly one ulp**, worst relative
+2.16e-16 across the nine pairs the failing run reported. That is the most
+two implementations of ``10 ** y`` can differ if both round correctly, so
+:func:`assert_matches_numpy_grid` allows one ulp off-platform and nothing
+on it.
+
+**The interpolation.** ``TestLookup`` compares ``hazma._core``'s
+``np.interp`` port against NumPy's on a grid both sides share, so the only
+divergence is whether ``slope * (x - xp[j]) + fp[j]`` is contracted — the
+same question ``test/test_core_interp.py`` answers at length. This module
+reuses that module's derived figure rather than inventing one:
+:data:`OFF_PLATFORM_BUDGET` is ``1e-12`` of the compared array's **peak**,
+4.6e3x the worst peak-relative disagreement measured on linux/amd64.
+Peak-scaled and not pointwise, because the pointwise relative reading
+reaches 4e-2 at cancellation points; see that module's docstring for the
+measurement table.
+
+What neither budget may absorb is a *support* change — an abscissa moving
+to a different cell, or a value that was exactly zero becoming nonzero.
+The tail-branch test asserts the branch structure separately from the
+values for that reason.
 
 The tables are the *legacy* constants
 -------------------------------------
@@ -41,7 +77,11 @@ way; :class:`TestPositronTables` asserts the difference rather than
 letting a later cleanup pass silently unify them.
 """
 
+import json
 import math
+import platform
+import sys
+from pathlib import Path
 from typing import ClassVar
 
 import numpy as np
@@ -79,19 +119,126 @@ REFERENCE_DAUGHTER_ENERGY = REFERENCE_MASS / 2.0
 ALL_SCALAR_PHOTON_BITS = 127
 
 
+#: The machine the parity corpus was captured on, read from its own
+#: manifest so the two cannot drift apart -- the same source
+#: ``test/test_core_interp.py`` reads.
+CAPTURE_MACHINE = json.loads(
+    (
+        Path(__file__).resolve().parents[1]
+        / "test"
+        / "parity"
+        / "data"
+        / "manifest.json"
+    ).read_text()
+)["environment"]["machine"]
+
+ON_THE_CAPTURING_PLATFORM = (
+    sys.platform == "darwin" and platform.machine() == CAPTURE_MACHINE
+)
+
+#: What ``lookup`` may differ from ``numpy.interp`` by off the capturing
+#: platform, as a fraction of the compared array's peak. Taken verbatim
+#: from ``test/test_core_interp.py``, which derived it from a linux/amd64
+#: build over 1.15 million abscissae; the mechanism here is identical (the
+#: same port, the same question about a contracted multiply-add) and the
+#: grid is shared by both sides, so a second derivation would measure the
+#: same thing.
+OFF_PLATFORM_BUDGET = 1e-12
+
+
 def bits(array: np.ndarray) -> np.ndarray:
     """Reinterpret a ``float64`` array as its bit patterns."""
     return np.asarray(array, dtype=np.float64).view(np.int64)
 
 
+def ulp_distance(actual: np.ndarray, expected: np.ndarray) -> np.ndarray:
+    """How many representable doubles separate each pair.
+
+    Valid for the same-sign, finite values these grids hold; a sign
+    change or a NaN is not something a one-ulp budget should absorb, and
+    the callers below never produce one.
+    """
+    return np.abs(bits(actual).astype(np.int64) - bits(expected).astype(np.int64))
+
+
 def assert_bit_equal(actual: np.ndarray, expected: np.ndarray, what: str) -> None:
-    """Assert two ``float64`` arrays agree in every bit."""
+    """Assert two ``float64`` arrays agree in every bit, on any platform.
+
+    For Rust-against-Rust claims, which carry no libm question.
+    """
     differing = np.flatnonzero(bits(actual) != bits(expected))
     assert differing.size == 0, (
         f"{what}: {differing.size} of {np.size(expected)} values differ; "
         f"first at index {differing[0] if differing.size else -1} "
         f"({actual[differing[0]]!r} != {expected[differing[0]]!r})"
     )
+
+
+def assert_within_one_ulp(actual: np.ndarray, expected: np.ndarray, what: str) -> None:
+    """The off-platform half of :func:`assert_matches_numpy_grid`.
+
+    A separate function so :class:`TestTheOffPlatformBudgets` can
+    exercise it on every platform, including the one where the caller
+    below never reaches it. A budget only the CI machines run is a budget
+    nobody has checked.
+    """
+    distance = ulp_distance(actual, expected)
+    worst = int(distance.max(initial=0))
+    assert worst <= 1, (
+        f"{what}: {int(np.count_nonzero(distance))} of {np.size(expected)} "
+        f"values differ from numpy.logspace by up to {worst} ulp, off the "
+        f"platform the corpus was captured on where one ulp is the most two "
+        f"correctly-rounded implementations of 10**y can differ"
+    )
+
+
+def assert_within_peak_budget(
+    actual: np.ndarray, expected: np.ndarray, what: str
+) -> None:
+    """The off-platform half of :func:`assert_matches_numpy_interp`.
+
+    Split out for the same reason as :func:`assert_within_one_ulp`.
+    """
+    peak = float(np.max(np.abs(expected), initial=0.0))
+    tolerance = OFF_PLATFORM_BUDGET * max(peak, 1.0)
+    np.testing.assert_allclose(
+        actual, expected, rtol=OFF_PLATFORM_BUDGET, atol=tolerance, err_msg=what
+    )
+
+
+def assert_matches_numpy_grid(
+    actual: np.ndarray, expected: np.ndarray, what: str
+) -> None:
+    """Assert a grid matches ``numpy.logspace``.
+
+    Bit-for-bit where the corpus was captured -- the port was written
+    against *this* build's arithmetic and reproduces it exactly, which is
+    a stronger statement than any tolerance. One ulp elsewhere, because
+    off it the comparison measures NumPy's ``power`` loop against the
+    platform libm rather than measuring the port. See the module
+    docstring for the measurement behind the figure.
+    """
+    if ON_THE_CAPTURING_PLATFORM:
+        assert_bit_equal(actual, expected, what)
+    else:
+        assert_within_one_ulp(actual, expected, what)
+
+
+def assert_matches_numpy_interp(
+    actual: np.ndarray, expected: np.ndarray, what: str
+) -> None:
+    """Assert a lookup matches ``numpy.interp``.
+
+    Bit-for-bit on the capturing platform; :data:`OFF_PLATFORM_BUDGET` of
+    the compared array's peak elsewhere, scaled to the peak rather than
+    applied pointwise for the reason ``test/test_core_interp.py``
+    documents -- the pointwise relative reading reaches 4e-2 at
+    cancellation points and cannot set an honest figure.
+    """
+    if ON_THE_CAPTURING_PLATFORM:
+        assert_bit_equal(actual, expected, what)
+    else:
+        assert_within_peak_budget(actual, expected, what)
 
 
 class TestLogspace:
@@ -105,7 +252,7 @@ class TestLogspace:
         self, mass: float, start: float
     ) -> None:
         stop = math.log10(mass / 2.0)
-        assert_bit_equal(
+        assert_matches_numpy_grid(
             tables.logspace(start, stop, N_INTERP_PTS),
             np.logspace(start, stop, num=N_INTERP_PTS),
             f"logspace({start}, {stop}, {N_INTERP_PTS})",
@@ -119,7 +266,7 @@ class TestLogspace:
         for mass in np.linspace(1.0, 2000.0, 4001):
             for start in (PHOTON_LOG10_START, math.log10(LEGACY_ELECTRON_MASS)):
                 stop = math.log10(mass / 2.0)
-                assert_bit_equal(
+                assert_matches_numpy_grid(
                     tables.logspace(start, stop, N_INTERP_PTS),
                     np.logspace(start, stop, num=N_INTERP_PTS),
                     f"logspace at m = {mass}, start = {start}",
@@ -139,13 +286,65 @@ class TestLogspace:
             tables.logspace(-1.0, 1.0, 1)
 
 
+class TestTheOffPlatformBudgets:
+    """The two off-platform comparators reject what they must reject.
+
+    They are called **directly** rather than through
+    :func:`assert_matches_numpy_grid` / :func:`assert_matches_numpy_interp`,
+    so they run on every platform including the one where the scoped
+    callers never reach them. A budget only the CI machines execute is a
+    budget nobody has checked -- which is how
+    ``test/test_core_interp.py``'s probe silently voided nine claims
+    before its 2026-08-12 rewrite.
+    """
+
+    @staticmethod
+    def _grid() -> np.ndarray:
+        return np.logspace(PHOTON_LOG10_START, math.log10(275.0), num=N_INTERP_PTS)
+
+    def test_the_grid_budget_accepts_one_ulp(self) -> None:
+        grid = self._grid()
+        nudged = np.nextafter(grid, np.inf)
+        assert np.all(ulp_distance(nudged, grid) == 1)
+        assert_within_one_ulp(nudged, grid, "one ulp")
+
+    def test_the_grid_budget_rejects_two_ulp(self) -> None:
+        grid = self._grid()
+        nudged = np.nextafter(np.nextafter(grid, np.inf), np.inf)
+        with pytest.raises(AssertionError, match="by up to 2 ulp"):
+            assert_within_one_ulp(nudged, grid, "two ulp")
+
+    def test_the_interp_budget_accepts_a_last_bit_difference(self) -> None:
+        values = self._grid()
+        assert_within_peak_budget(np.nextafter(values, np.inf), values, "one ulp")
+
+    def test_the_interp_budget_rejects_a_visible_error(self) -> None:
+        # 1e-8 of the peak: 1e4x the budget, and still far too small to
+        # see in a plot -- the probe size test_core_interp.py uses.
+        values = self._grid()
+        perturbed = values + 1e-8 * float(np.max(values))
+        with pytest.raises(AssertionError):
+            assert_within_peak_budget(perturbed, values, "visible error")
+
+    def test_the_scoped_comparator_is_exact_here_and_budgeted_elsewhere(self) -> None:
+        # Which branch this machine takes, asserted rather than assumed,
+        # so a platform that silently changed mode would say so.
+        grid = self._grid()
+        nudged = np.nextafter(grid, np.inf)
+        if ON_THE_CAPTURING_PLATFORM:
+            with pytest.raises(AssertionError, match="values differ"):
+                assert_matches_numpy_grid(nudged, grid, "one ulp")
+        else:
+            assert_matches_numpy_grid(nudged, grid, "one ulp")
+
+
 class TestPhotonTables:
     """The decay modules' tables: grid, values, and their provenance."""
 
     @pytest.mark.parametrize("mass", CORPUS_MASSES)
     def test_grid_is_the_pyx_grid(self, mass: float) -> None:
         energies, _, _ = tables.photon_tables(mass)
-        assert_bit_equal(
+        assert_matches_numpy_grid(
             energies,
             np.logspace(PHOTON_LOG10_START, math.log10(mass / 2.0), num=N_INTERP_PTS),
             f"photon grid at m = {mass}",
@@ -188,7 +387,7 @@ class TestPositronTables:
         from hazma.parameters import electron_mass  # noqa: PLC0415
 
         energies, _, _ = tables.positron_tables(mass)
-        assert_bit_equal(
+        assert_matches_numpy_grid(
             energies,
             np.logspace(
                 math.log10(LEGACY_ELECTRON_MASS),
@@ -198,8 +397,17 @@ class TestPositronTables:
             f"positron grid at m = {mass}",
         )
         # rules.md rule 4: the mediator `.pyx` include the legacy header,
-        # so this is *not* the PDG value hazma.parameters exposes.
-        assert energies[0] == LEGACY_ELECTRON_MASS
+        # so this is *not* the PDG value hazma.parameters exposes. The
+        # first abscissa is `10 ** log10(m_e)`, which round-trips exactly
+        # on the capturing platform and is allowed one ulp elsewhere for
+        # the same reason the grid is; the gap to the PDG mass is 6e-9
+        # relative, seven decades outside that, so the second assertion
+        # needs no scoping.
+        assert_matches_numpy_grid(
+            np.array([energies[0]]),
+            np.array([LEGACY_ELECTRON_MASS]),
+            "positron grid start",
+        )
         assert energies[0] != electron_mass
 
     @pytest.mark.parametrize("mass", CORPUS_MASSES)
@@ -237,7 +445,7 @@ class TestLookup:
                 energies,
             ]
         )
-        assert_bit_equal(
+        assert_matches_numpy_interp(
             tables.lookup(probes, energies, values, False),
             np.interp(probes, energies, values),
             "clamped lookup",
@@ -260,11 +468,17 @@ class TestLookup:
             values[0] * energies[0] / probes,
             np.interp(probes, energies, values),
         )
+        got = tables.lookup(probes, energies, values, True)
+        # The branch structure first, and exactly, on every platform: a
+        # tolerance may absorb a rounding difference but must never absorb
+        # a probe taking the wrong branch.
+        below = probes < PHOTON_GRID_FIRST_ENERGY
         assert_bit_equal(
-            tables.lookup(probes, energies, values, True),
-            expected,
-            "1/E-tail lookup",
+            got[below],
+            (values[0] * energies[0] / probes)[below],
+            "1/E tail below the threshold",
         )
+        assert_matches_numpy_interp(got[~below], expected[~below], "1/E-tail lookup")
 
     def test_the_tail_threshold_is_the_grids_own_first_point(self) -> None:
         # The Cython compares against the literal `10**-1` rather than

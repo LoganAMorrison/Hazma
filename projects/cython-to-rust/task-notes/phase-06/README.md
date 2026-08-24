@@ -62,6 +62,13 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 - **`__set_spectra` reads only the mass**, so the tables are a pure
   function of it and the Cython's declared width-bearing key is wider
   than its inputs.
+- **`numpy.logspace` and `f64::powf` are not the same code.** The grid
+  is bit-equal to NumPy's on macOS/arm64 and one ulp off it at ~5% of
+  points on Linux/x86-64 (CI run 32681245809; every measured
+  disagreement exactly one ulp, worst relative 2.16e-16). So
+  "bit-equal to the Cython" is a **capturing-platform statement** for
+  anything reading these tables. No gate changes — the corpus already
+  runs in budget mode off macOS.
 
 ## Decisions and Implementation Notes
 
@@ -73,8 +80,12 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   probe, because every oracle (`numpy.logspace`, `numpy.interp`, the
   Phase 04 entry points, the four live twins) is in Python.
 - **`cargo` gates the grid algorithm, Python gates its agreement with
-  NumPy** — captured NumPy bits in a cargo test would turn a Linux CI
-  job red for a libm difference (Phase 04 learnings §4).
+  NumPy, scoped by platform** — captured NumPy bits in a cargo test
+  would turn a Linux CI job red for a libm difference (Phase 04
+  learnings §4), and the first CI round proved the same is true of an
+  unscoped Python comparison. The mode is declared from
+  `ON_THE_CAPTURING_PLATFORM`, never probed, and the two off-platform
+  comparators are separate functions so they are exercised everywhere.
 
 ## Files Changed
 
@@ -91,7 +102,7 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 - Corpus (quad budgets); benchmark vs pre-swap Cython (dead-cache fix
   is the expected headline); import smoke after 6.4.
 - **After Task 6.1:** `cargo test --no-default-features` → `222 passed`
-  (201 at Phase 05's close); `pytest -q` → `2158 passed, 15 skipped, 12
+  (201 at Phase 05's close); `pytest -q` → `2163 passed, 15 skipped, 12
   subtests passed`; `pytest test/parity -q` → `658 passed, 1 skipped`;
   `pytest test/test_theory_aggregation.py -q` → `69 passed`. No public
   value moved — nothing appended to `../numerical-impact.md`.

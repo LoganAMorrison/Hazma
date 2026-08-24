@@ -269,6 +269,16 @@ raising, so the parsers return `Option` and the entry points owe that
 never reads, so the port keys on the mediator mass alone — the phase
 file's Task 6.1 bullet is amended to say so.
 
+**A fourth result, and the one that cost a red CI round:** the Rust
+grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp off
+it at ~5% of points on Linux/x86-64** — NumPy's vectorised `power` loop
+and `f64::powf` are not the same code. Every measured disagreement was
+exactly one ulp. Nothing downstream changes (the corpus already runs in
+budget mode off its capturing platform), but **"bit-equal to the
+Cython" is a macOS/arm64 statement for anything that reads these
+tables**, and any 6.2/6.3 comparison against a NumPy oracle must be
+scoped with `ON_THE_CAPTURING_PLATFORM` rather than left open.
+
 **A sixth `_CORE_TEST_ONLY_MODULES` probe exists**,
 `hazma._core.mediator_tables`, because every oracle for the foundation
 lives in Python. Its `test/test_core_mediator_tables.py` also holds the
