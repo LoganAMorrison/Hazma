@@ -1308,7 +1308,13 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: ``hazma._core.dispatch`` is Task 3.5's argument-and-error layer,
 #: exposed so ``test/test_core_dispatch.py`` can render every error
 #: message with a caller-chosen quantity and compare it byte for byte
-#: against the strings extracted from the ``.pyx`` sources. In every case the
+#: against the strings extracted from the ``.pyx`` sources; and
+#: ``hazma._core.mediator_tables`` is Phase 06 Task 6.1's rest-frame
+#: table, cache and mode selectors, exposed so
+#: ``test/test_core_mediator_tables.py`` can compare its grid against
+#: ``numpy.logspace``, its columns against the Phase 04 kernels' own
+#: entry points, and its mode parsers against the four mediator
+#: ``.pyx`` that are still alive. In every case the
 #: kernels that will use them call the Rust side directly, in Rust, and
 #: never through Python. What makes the exemption safe rather than
 #: convenient is that no module under `hazma/` may import these — asserted
@@ -1323,6 +1329,7 @@ _CORE_TEST_ONLY_MODULES = frozenset(
         "hazma._core.interp",
         "hazma._core.boost",
         "hazma._core.dispatch",
+        "hazma._core.mediator_tables",
     }
 )
 
