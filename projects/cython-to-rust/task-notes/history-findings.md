@@ -1,8 +1,10 @@
-# Archived working memory: Findings (Phases 00–04)
+# Archived working memory: Findings (Phases 00–05)
 
 **Project:** cython-to-rust
-**Moved:** 2026-08-21, from [`README.md`](README.md)
-**Source lines:** 58–892 of that file at commit `c57ce4f`
+**Moved:** 2026-08-21, from [`README.md`](README.md), in two passes —
+Phases 00–04 at Phase 04 close, Phase 05's two bullets at Phase 05 close
+**Source lines:** 58–892 of that file at commit `c57ce4f` (Phases 00–04);
+lines 72–91 at commit `cbe5555` (Phase 05)
 
 This file is a verbatim archive. Nothing below the rule was edited,
 summarised or reordered when it moved, and it sits in the same
@@ -857,3 +859,28 @@ closed phase's entries below, verbatim, under a
     surviving γ spelling was a real error sitting **29x outside the
     corpus's own budget** at energies the corpus does not sample, and only
     a lifted, bit-pinned `fn` caught it.
+
+---
+
+## Phase 05 (moved 2026-08-21 at Phase 05 close)
+
+- **The scalar mediator's threshold behavior is explained, not just
+  observed** (Task 5.2, updating
+  [`history-findings.md`](history-findings.md)'s "Two live entry points
+  raise" entry, which said only that the scalar siblings do not raise).
+  The scalar module *does* compile one expression through
+  `double _Complex` — `__sigma_xx_to_s_to_ff` — but its vanishing root
+  sits in the **numerator**, so `__divdc3`'s zero-denominator recovery
+  is never reached. Two consequences for Phase 06: the archived claim
+  that this module has no `** 1.5` is **wrong**, and
+  `grep -c SoftComplexToDouble` on the generated C — not a read of the
+  `.pyx` — is what settles the question for the four modules left.
+- **Both `thermal_cross_section` divergences above `x = 300` were
+  reproduced, not unified** (Tasks 5.1 and 5.2, closing
+  [`history-findings.md`](history-findings.md)'s "Phase 05 must
+  reproduce both or declare the unification"). The scalar returns `0.0`,
+  the vector clips to `xnew = 300`; they live in separate Rust modules
+  with the divergence documented on each, so no published number moved.
+  A shared Rust helper is the obvious design and is the one that would
+  have moved them — do not revisit it in Phase 06 without declaring the
+  change.

@@ -26,7 +26,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 02 | Rust scaffold | [phase-02-rust-scaffold.md](../phases/phase-02-rust-scaffold.md) | [phase-02/README.md](phase-02/README.md) | **Complete (2026-08-09)** — all three tasks done; [learnings](../learnings/phase-02-rust-scaffold.md) |
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
-| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **In Progress** — Tasks 5.1 and 5.2 complete (2026-08-21); all 18 cross-section entry points on Rust and both `_c_*` `.pyx` deleted; Task 5.3 (relic sweep + benchmark) remains |
+| 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
@@ -57,38 +57,21 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 
 ## Findings
 
-Cross-phase findings from Phases 00–04 moved verbatim to
+Cross-phase findings from Phases 00–05 moved verbatim to
 [`history-findings.md`](history-findings.md) on 2026-08-21 (lines
-58–892 of this file at `c57ce4f`). The phase learnings under
+58–892 of this file at `c57ce4f` for Phases 00–04; lines 72–91 at
+`cbe5555` for Phase 05). The phase learnings under
 [`../learnings/`](../learnings/) are their distillation and are what a
 new task reads; open the archive only when a learnings entry, a task
 note or a citation sends you to the original. Phase-scoped findings
 for the open phase live in its working memory
-([`phase-05/README.md`](phase-05/README.md)). A finding that outlives
+([`phase-06/README.md`](phase-06/README.md)). A finding that outlives
 its phase is appended below as one bullet and swept into the archive
 when that phase closes
 ([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 
-- **The scalar mediator's threshold behavior is explained, not just
-  observed** (Task 5.2, updating
-  [`history-findings.md`](history-findings.md)'s "Two live entry points
-  raise" entry, which said only that the scalar siblings do not raise).
-  The scalar module *does* compile one expression through
-  `double _Complex` — `__sigma_xx_to_s_to_ff` — but its vanishing root
-  sits in the **numerator**, so `__divdc3`'s zero-denominator recovery
-  is never reached. Two consequences for Phase 06: the archived claim
-  that this module has no `** 1.5` is **wrong**, and
-  `grep -c SoftComplexToDouble` on the generated C — not a read of the
-  `.pyx` — is what settles the question for the four modules left.
-- **Both `thermal_cross_section` divergences above `x = 300` were
-  reproduced, not unified** (Tasks 5.1 and 5.2, closing
-  [`history-findings.md`](history-findings.md)'s "Phase 05 must
-  reproduce both or declare the unification"). The scalar returns `0.0`,
-  the vector clips to `xnew = 300`; they live in separate Rust modules
-  with the divergence documented on each, so no published number moved.
-  A shared Rust helper is the obvious design and is the one that would
-  have moved them — do not revisit it in Phase 06 without declaring the
-  change.
+_Phase 05's two cross-phase findings were swept into the archive at
+phase close on 2026-08-21. No cross-phase finding recorded since._
 
 ## Numerical impact so far
 
@@ -265,14 +248,23 @@ than quoting them: the current state is in the open phase's
 
 ## Handoff to Next Task
 
-**Phases 00–04 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20)
-and **Phase 05 is open with one task left**: Task 5.1 landed the six
-vector cross sections on 2026-08-20 and Task 5.2 the twelve scalar ones
-on 2026-08-21, each deleting its `.pyx`, leaving **Task 5.3** (the
-thermal ⟨σv⟩ relic sweep and the phase's benchmark). After
-that come **Phase 06** (mediator spectra) and **Phase 07** (cutover +
-close). 05 and 06 share no files with what Phase 04 touched; 06 depends
-on 04's kernels and on 05 only for ordering.
+**Phases 00–05 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
+08-21). Phase 05 shipped all 18 consumed cross-section defs, dropped the
+2 unconsumed `sigma_xx_to_all` exports, deleted both `_c_*` `.pyx`, and
+closed with Task 5.3's relic-density end-to-end pin and benchmark.
+**Next is Phase 06** (mediator spectra), then **Phase 07** (cutover +
+close). 06 depends on 04's kernels and on 05 only for ordering.
+
+**Read [`../learnings/phase-05-mediator-cross-sections.md`](../learnings/phase-05-mediator-cross-sections.md)
+before starting Phase 06.** It replaces the three Phase 05 notes. Its
+three load-bearing items for 06: run
+`grep -c SoftComplexToDouble` on the **generated C** of all four
+mediator-spectrum `.pyx` before transliterating anything (that grep
+changed the answer twice in Phase 05, and 06's four are still
+unmeasured); clang's FMA contraction follows one syntactic rule on the C
+tree, not a case list; and establishing a pre-port baseline now costs a
+build from a git commit, because the twins are deleted — Task 5.3's
+detached-worktree recipe is the cheapest way and 06 will need it.
 
 **Phase 04 delivered 16 entry points and `hazma/spectra/` now holds no
 Cython Python entry point of any kind.** Four `.pyx` survive there for

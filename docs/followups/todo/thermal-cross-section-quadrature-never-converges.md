@@ -4,9 +4,9 @@
 - **Source:** cython-to-rust Task 5.1
 - **Scope:** cross-cutting
 - **Status:** open
-- **Triggers / blockers:** best taken with, or just after, Phase 05
-  Task 5.3, which sweeps relic densities through this function and is
-  where the downstream size of the error becomes visible.
+- **Triggers / blockers:** none. Task 5.3 ran the sweep (see
+  "Downstream size" below); this is now free-standing work whose only
+  constraint is that it moves published numbers.
 
 ## Why
 
@@ -46,8 +46,9 @@ binds and the answer is good to six or seven digits. Above it — which is
 the whole freeze-out region, `x ~ 20` — the answer is a **0.5% to 5%**
 approximation, and it degrades as `x` grows. Freeze-out abundance goes
 roughly as `1/<sigma v>`, so this propagates more or less linearly into
-every relic density hazma computes, and into every coupling a user
-solves for by matching one.
+the relic density of every model that supplies one of the affected
+`thermal_cross_section` implementations — see "Which models" below — and
+into every coupling a user solves for by matching one.
 
 This is shipped 2.1.0 behavior, unchanged by the Rust port: the port
 reproduces the same quadrature settings and lands within 2.1e-14 of the
@@ -84,10 +85,57 @@ thermally averaged cross section).
 - `rust/src/kernels/scalar_xs.rs` — `thermal_cross_section`, the scalar
   twin, with the same inherited defaults. Ported by Task 5.2 on
   2026-08-21, so **both** mediator paths now carry this defect in Rust.
-- `hazma/relic_density/_thermal_functions.py` — the live consumer.
+- `hazma/relic_density/_thermal_functions.py` — the live consumer, and
+  at line 476 a **third** instance of the same defect (see
+  "Which models").
+- `hazma/vector_mediator/_gev/thermal_cross_section.py:143` — a
+  **fourth**, in the GeV vector model. Neither pure-Python site was
+  ported, so neither is covered by a Rust-side fix.
 - `test/test_core_quad.py` — `TestLiveIntegrandShapes::test_thermal_cross_section_site`,
   which pins the initial-partition behavior this would change.
 - Related project: `projects/cython-to-rust/` (Phase 05 Task 5.3)
+
+## Downstream size (measured)
+
+cython-to-rust Task 5.3 swept `relic_density` through both mediators on
+six model points. The relevant fact is the shape of the dependence, not
+a single number: relic abundance goes as `1 / <sigma v>`, so a 0.5%–5%
+error on ⟨σv⟩ across the freeze-out region propagates roughly linearly
+into the relic density of every affected model. It is by a wide margin
+the largest of the project's known-wrong entries — four orders of
+magnitude above the
+1e-9-and-below drifts the port itself introduced — and it predates the
+port entirely.
+
+### Which models
+
+`relic_density` accepts any model, and `_thermal_functions.
+thermal_cross_section` short-circuits to `model.thermal_cross_section`
+when the model defines one — so the blast radius is "models that supply
+an affected implementation", not "everything".
+
+- **Affected via the ported kernels:** the `ScalarMediator` and
+  `VectorMediator` families — `HiggsPortal`, `HeavyQuark`,
+  `KineticMixing`, `QuarksOnly`, and the base classes. These are what
+  Task 5.3 measured.
+- **Affected via pure Python, on paths this project never ported** —
+  found while scoping this section, and the reason the defect is a
+  four-site class rather than the two-site one the Entry points above
+  imply: `hazma/relic_density/_thermal_functions.py:476` (the generic
+  fallback used when a model defines no `thermal_cross_section`) and
+  `hazma/vector_mediator/_gev/thermal_cross_section.py:143` both call
+  `quad` with neither `epsabs` nor `epsrel`, exactly as the two `.pyx`
+  did. A fix that touches only the Rust kernels leaves these two behind.
+- **Not affected:** any model supplying its own unrelated
+  `thermal_cross_section`, such as `test/test_relic_density.py`'s
+  `ToyModel`.
+
+Fixing it is therefore a `minor`-at-least numerical change with a
+CHANGELOG line, not a silent repair, and
+`test/test_relic_density.py::TestMediatorRelicDensity`'s twelve pinned
+values move with it. Those pins are pre-port Cython values captured at
+`14f1c66`; re-derive them from the corrected kernel rather than
+loosening the tolerances.
 
 ## Risks / open questions
 
