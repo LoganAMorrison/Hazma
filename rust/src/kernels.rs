@@ -25,6 +25,12 @@
 //! `c_scalar_mediator_cross_sections` and whose `<model>_mediator` halves
 //! are already the PyO3 submodules' names.
 //!
+//! [`mediator_tables`] is a fifth, and the only one that is shared
+//! *foundation* rather than a port: the four mediator-spectrum `.pyx`
+//! repeat one rest-frame-table construction, one memo cache and one set
+//! of mode selectors between them, so cython-to-rust Task 6.1 factored
+//! those out before Tasks 6.2 and 6.3 built the entry points on top.
+//!
 //! [`soft_complex`] is the one submodule that is not a `.pyx` at all. It
 //! holds the two pieces of C complex arithmetic Cython's `**` operator
 //! drags in, which both cross-section modules need and neither owns;
@@ -33,6 +39,7 @@
 //! below stay at this level for the opposite reason — they belong to no
 //! `.pyx` and to no domain.
 
+pub mod mediator_tables;
 pub mod neutrino_flavors;
 pub mod neutrino_muon;
 pub mod neutrino_pion;

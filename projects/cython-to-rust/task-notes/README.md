@@ -27,7 +27,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
-| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | Not started |
+| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **In Progress** — Task 6.1 complete (2026-08-23); 6.2–6.4 open |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
 ```text
@@ -249,11 +249,41 @@ than quoting them: the current state is in the open phase's
 ## Handoff to Next Task
 
 **Phases 00–05 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
-08-21). Phase 05 shipped all 18 consumed cross-section defs, dropped the
-2 unconsumed `sigma_xx_to_all` exports, deleted both `_c_*` `.pyx`, and
-closed with Task 5.3's relic-density end-to-end pin and benchmark.
-**Next is Phase 06** (mediator spectra), then **Phase 07** (cutover +
-close). 06 depends on 04's kernels and on 05 only for ordering.
+08-21) and **Phase 06 is open**: Task 6.1 landed the shared
+table/cache/mode foundation on 2026-08-23, so **the next task is 6.2**
+(the decay spectrum pair), then 6.3, 6.4 and Phase 07.
+
+**Three Task 6.1 results a 6.2/6.3 agent should not re-derive.** (1) The
+`grep -c SoftComplexToDouble` the Phase 05 learnings demanded has been
+run: **6 / 0 / 6 / 0** for scalar-decay / scalar-positron /
+vector-decay / vector-positron, one live site each in the photon pair
+(the `** 1.5` FSR coefficient at
+`scalar_mediator_decay_spectrum.pyx:113` and
+`vector_mediator_decay_spectrum.pyx:73`), both covered by the existing
+`crate::kernels::soft_complex` pair — **neither positron module needs
+it**. (2) An unrecognised mode string returns `0.0` today rather than
+raising, so the parsers return `Option` and the entry points owe that
+`0.0`; the tightening is
+[filed](../../../docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md).
+(3) The Cython's cache key names partial widths that `__set_spectra`
+never reads, so the port keys on the mediator mass alone — the phase
+file's Task 6.1 bullet is amended to say so.
+
+**A fourth result, and the one that cost a red CI round:** the Rust
+grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp off
+it at ~5% of points on Linux/x86-64** — NumPy's vectorised `power` loop
+and `f64::powf` are not the same code. Every measured disagreement was
+exactly one ulp. Nothing downstream changes (the corpus already runs in
+budget mode off its capturing platform), but **"bit-equal to the
+Cython" is a macOS/arm64 statement for anything that reads these
+tables**, and any 6.2/6.3 comparison against a NumPy oracle must be
+scoped with `ON_THE_CAPTURING_PLATFORM` rather than left open.
+
+**A sixth `_CORE_TEST_ONLY_MODULES` probe exists**,
+`hazma._core.mediator_tables`, because every oracle for the foundation
+lives in Python. Its `test/test_core_mediator_tables.py` also holds the
+only record of the pre-repair unknown-mode behaviour once Tasks 6.2–6.4
+delete the twins.
 
 **Read [`../learnings/phase-05-mediator-cross-sections.md`](../learnings/phase-05-mediator-cross-sections.md)
 before starting Phase 06.** It replaces the three Phase 05 notes. Its

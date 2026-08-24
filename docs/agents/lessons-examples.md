@@ -791,3 +791,48 @@ location: paste the `rg` and its hit count into the note, so the
 provenance sentence is falsifiable by re-running one line. Sibling of
 [sibling-copies-of-a-fixed-claim] — there the sweep ran and missed a
 copy; here the record of the sweep is what misleads.
+
+### phase-handoff-outlives-its-question
+
+A phase working-memory README carries a `## Handoff to Next Task` block
+written when the *phase* was scaffolded, long before any of its tasks
+ran. It is a list of things the scaffolder thought would be risky, and
+the phase's first task typically answers two or three of them outright —
+which makes that block the highest-density source of stale claims in the
+project tree, and the one least likely to be swept, because the task
+that invalidates it is editing its *own* note and the phase file rather
+than the README's tail.
+
+PR #79 (cython-to-rust Task 6.1) is the worked case. The Phase 06 README
+had shipped since 2026-08-03 saying: "**Currently risky / unknown:**
+memoization keying (mediator mass + partial widths) must match how model
+classes mutate parameters — verify against
+`hazma/scalar_mediator/__init__.py` setter behavior before trusting the
+cache." Task 6.1 discharged that premise twice over — the key is the
+mediator mass alone, because `__set_spectra` reads no partial width; and
+no setter can strand the cache at all, because the wrappers read
+`self.ms` / `self.mv` fresh on every call and pass the mass as an
+argument (`_scalar_mediator_spectra.py:72,81`), so a mutated mass
+re-keys by construction. The task amended the *canonical* criterion in
+the phase file, recorded the finding in its own note, and rewrote the
+project-level handoff. It did not touch the phase README's handoff, so
+the one file whose entire job is telling Task 6.2 what to worry about
+was the one still telling it to worry about the wrong thing. Review
+caught it as the round's only blocking finding.
+
+The reason a claim-keyed sweep misses this is that the stale text shares
+no distinctive string with the fix: the task's own prose says "keyed on
+the mediator mass", the stale copy says "memoization keying (mediator
+mass + partial widths) must match how model classes mutate parameters".
+An `rg` for the *new* wording finds nothing; an `rg` for the old wording
+only works if you already remember the block exists. The cheap habit is
+positional rather than lexical — before finishing the first task in any
+phase, open `task-notes/phase-XX/README.md` and read its handoff block
+top to bottom against what you shipped, treating every "currently risky
+/ unknown" bullet as a question you must either close with evidence or
+restate. Closing one is worth a strikethrough plus the evidence rather
+than a deletion, so the next reader can see the question was answered
+and not merely dropped. Sibling of
+[settling-a-deferral-has-two-sweeps]: there the two populations are
+pointers and behavior statements within the swept files; here the second
+population is a whole file the sweep never opened.
