@@ -212,3 +212,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   claim lived is itself a claim; naming one location for a claim a repo-wide
   `rg` returns several times silently caps the next sweep. Paste the sweep and
   its hit count into the note instead of a location (PR #76).
+- [phase-handoff-outlives-its-question] A phase README's `## Handoff to Next
+  Task` is written *before* the phase starts, as a list of open worries; the
+  phase's first task answers several of them and closing one in the task note
+  does not close it in the README. Re-read that block against what you shipped
+  before calling the sweep done (PR #79).

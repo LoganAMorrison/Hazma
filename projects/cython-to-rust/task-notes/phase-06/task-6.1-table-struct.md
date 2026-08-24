@@ -183,6 +183,20 @@ this task made to it (see `## Plan Impact`):
   no non-test caller, so `clippy -D warnings` rejected it; Task 6.2 adds
   it back with the integrand that branches on it rather than carrying a
   `dead_code` allowance through the phase.
+- **Review round 1 (blocking, 1 finding): the phase README's handoff was
+  never refreshed.** It still told Task 6.2 that "memoization keying
+  (mediator mass + partial widths) must match how model classes mutate
+  parameters — verify against `hazma/scalar_mediator/__init__.py` setter
+  behavior before trusting the cache", contradicting the amended
+  criterion, this note, and the shipped `TableCache`. Rewritten, and the
+  premise closed on evidence rather than deleted: the key is the mass
+  alone, **and** no setter can strand the cache, because the wrappers
+  read `self.ms` / `self.mv` fresh per call and pass the mass as an
+  argument (`_scalar_mediator_spectra.py:72,81`,
+  `_vector_mediator_spectra.py:84`), so a mutated mass re-keys by
+  construction. The whole block was refreshed, not the cited line —
+  "currently safe to assume" was equally stale. Filed as
+  `[phase-handoff-outlives-its-question]` in the lessons ledger.
 - **The shared photon table set builds the muon table the scalar decay
   module will not read.** One 500-point evaluation per *distinct mass*
   against the two-per-*call* the dead cache costs today; Task 6.2
@@ -211,7 +225,10 @@ this task made to it (see `## Plan Impact`):
   and `docs/followups/README.md` — **new** follow-up and its index row.
 - `projects/cython-to-rust/task-notes/phase-06/README.md`,
   `projects/cython-to-rust/task-notes/README.md` — status, findings,
-  handoff.
+  handoff. The phase README's `## Handoff to Next Task` was rewritten in
+  review round 1; it was still the pre-phase block from 2026-08-03.
+- `docs/agents/lessons.md`, `docs/agents/lessons-examples.md` —
+  `[phase-handoff-outlives-its-question]` (PR #79).
 
 ## Verification
 
@@ -368,6 +385,7 @@ an editable install in this worktree — `hazma.__file__` and
 | Follow-up not a duplicate | `rg` over `docs/followups/{todo,done}/`; `gh pr list --state open` | no existing entry, no open PRs. New stub plus index row. |
 | The two prose lists of probe submodules | `rg -n "_CORE_TEST_ONLY_MODULES" test/parity/cases.py`; `rust/src/lib.rs` module docs | both name all six submodules and their oracles, and agree with the `frozenset`. |
 | Numerical-impact statement | `pytest test/parity -q`; `pytest test/test_theory_aggregation.py -q` | `658 passed, 1 skipped` and `69 passed`, on both CI platforms. **No public value changes**; nothing appended to `../numerical-impact.md`. |
+| Phase README handoff vs what shipped (review round 1) | `rg -n "mass \+ partial widths\|before trusting the cache" projects/ docs/ hazma/ test/` | 3 hits, **all** amendment records or strikethroughs that quote the old wording deliberately; zero live claims. Before the fix the phase README's handoff carried a live one. |
 | Preflight | `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths … --md …` | `RESULT: PASS` — eleven rows, one `SKIP` (version bump, not a closing PR). |
 
 ## Handoff to Next Task

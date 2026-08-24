@@ -122,15 +122,48 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 
 ## Handoff to Next Task
 
-**For the next agent working in Phase 06:** read `../../PLAN.md`,
-`../README.md`, this file, then the phase file. This is a redesign —
-review Task 6.1's design against all four modules before writing
-kernel code.
+**For the next agent working in Phase 06 (Task 6.2 is next):** read
+`../../PLAN.md`, `../README.md`, this file, then the phase file, then
+[`task-6.1-table-struct.md`](task-6.1-table-struct.md) — its `## Findings`
+and `## Handoff` carry the four measurements 6.2/6.3 would otherwise
+re-derive at the cost of a build.
 
-**Currently safe to assume:** the Phase 04 kernel `fn`s are natively
-callable from Rust (rules.md rule 8 kept them PyO3-free).
+**Now safe to assume** (Task 6.1 delivered all of it):
 
-**Currently risky / unknown:** memoization keying (mediator mass +
-partial widths) must match how model classes mutate parameters —
-verify against `hazma/scalar_mediator/__init__.py` setter behavior
-before trusting the cache.
+- The Phase 04 kernel `fn`s are natively callable from Rust (rules.md
+  rule 8 kept them PyO3-free), and `crate::kernels::mediator_tables`
+  already calls them: `photon_tables(mass)` / `positron_tables(mass)`
+  return memoized `Arc`s whose columns are those kernels on a
+  `numpy.logspace`-identical grid, and `RestFrameTable::lookup` carries
+  each clone-pair's below-grid policy.
+- **The cache keys on the mediator mass alone**, and the phase file's
+  Task 6.1 criterion is amended to say so. `__set_spectra` reads no
+  partial width, so the tables are a pure function of the mass.
+- ~~Memoization keying must match how model classes mutate parameters —
+  verify against `hazma/scalar_mediator/__init__.py` setter behavior
+  before trusting the cache.~~ **Closed by Task 6.1, and the premise was
+  wrong twice over.** The key is the mass, not mass + widths; and no
+  setter can strand the cache, because the wrappers read `self.ms` /
+  `self.mv` fresh on every call and pass the mass as an argument
+  (`hazma/scalar_mediator/_scalar_mediator_spectra.py:72,81`,
+  `hazma/vector_mediator/_vector_mediator_spectra.py:84`), so a mutated
+  mass re-keys on the next call by construction.
+- The mode selectors are enums parsed once per call, and an
+  **unrecognised mode owes `0.0`, not a raise** — see Findings.
+
+**Still risky / unknown for Task 6.2:**
+
+- **Whether the charged pion's forward-cone defect reaches the mediator
+  spectra**, carried in unanswered from Phase 04. The charged-pion photon
+  table Task 6.1 builds *is* the affected kernel, so the measurement is
+  one lookup away and 6.2 owns it.
+- **The FMA reading is not discharged.** `grep -c SoftComplexToDouble`
+  answered the complex-`pow` question only; the disassembly still has to
+  be read per kernel before transliterating (Phase 04 learnings §2,
+  step 1).
+- **Take the benchmark before deleting the twins.** While all four
+  `.pyx` are alive, 6.2 can time both implementations in one
+  interpreter; afterwards a baseline costs a build from a git commit.
+- **Any comparison against a NumPy oracle must be platform-scoped** with
+  `ON_THE_CAPTURING_PLATFORM`, not left open — see Findings for what an
+  unscoped one cost Task 6.1.
