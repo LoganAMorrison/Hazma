@@ -1,12 +1,21 @@
-""":mod:`hazma._core.mediator_tables` against NumPy and the live Cython.
+""":mod:`hazma._core.mediator_tables` against NumPy and the mediator spectra.
 
 The four mediator-spectrum ``.pyx`` — ``scalar_mediator_decay_spectrum``,
 ``vector_mediator_decay_spectrum`` and the two ``*_positron_spec`` — each
-rebuild a 500-point log-spaced rest-frame table, interpolate it, and
-re-dispatch a mode string inside their integrand. cython-to-rust Task 6.1
-factors those three things into ``rust/src/kernels/mediator_tables.rs``;
-Tasks 6.2 and 6.3 build the entry points on it. This module is the gate
-on the factored part, before any entry point moves.
+rebuilt a 500-point log-spaced rest-frame table, interpolated it, and
+re-dispatched a mode string inside their integrand. cython-to-rust Task
+6.1 factored those three things into
+``rust/src/kernels/mediator_tables.rs``; Tasks 6.2 and 6.3 build the entry
+points on it. This module is the gate on the factored part.
+
+**Two of the four are gone.** Task 6.2 deleted both decay modules, so the
+mode oracles below that used to call a shipped ``.pyx`` now call the port
+that replaced it. What was measured against the Cython while it was alive
+is recorded in
+``projects/cython-to-rust/task-notes/phase-06/task-6.2-decay-spectra.md``;
+what those tests still buy is that the parser's verdict and the entry
+point's behaviour stay coupled, which is the half a later edit could
+break.
 
 Why the oracles live here rather than in ``cargo test``
 -------------------------------------------------------
@@ -27,9 +36,11 @@ crate, so ``cargo`` cannot state them:
   inside the crate would only compare the kernel to itself. That claim is
   Rust against Rust and holds bit-for-bit on every platform.
 
-The mode oracles are stronger still, because the Cython twins are all
-four alive until Tasks 6.2-6.4 delete them: an unrecognised mode string
-can be put through the shipped ``.pyx`` and the Rust parser side by side.
+The mode oracles were stronger still while the Cython twins were alive:
+an unrecognised mode string could be put through the shipped ``.pyx`` and
+the Rust parser side by side. Task 6.2 spent that oracle for the two
+decay modules and Task 6.3 spends the rest; each records its measurement
+in its own task note before deleting the file.
 
 Two comparisons are platform-scoped, and both were measured
 ------------------------------------------------------------
@@ -99,7 +110,7 @@ CORPUS_MASSES = (250.0, 550.0, 900.0)
 LEGACY_ELECTRON_MASS = 0.510998928
 
 #: Points in every mediator-spectrum table (``n_interp_pts`` in all four
-#: ``.pyx``).
+#: ``.pyx``, two of which Task 6.2 deleted).
 N_INTERP_PTS = 500
 
 #: The decay modules' lower grid endpoint, as the base-10 exponent both
@@ -537,14 +548,17 @@ class TestPhotonMode:
     def test_rejects_everything_else(self, mode: str) -> None:
         assert tables.photon_mode(mode) is None
 
-    def test_the_rejected_set_is_what_the_cython_answers_with_zero(self) -> None:
-        # The strongest oracle available while the twin is alive: a mode
-        # the parser rejects is one the shipped `.pyx` returns 0.0 for --
-        # its integrand falls off the end of a `cdef double` -- so the
-        # port must not tighten it into a raise.
-        from hazma.vector_mediator.vector_mediator_decay_spectrum import (  # noqa: PLC0415
-            dnde_decay_v_pt,
-        )
+    def test_the_rejected_set_is_what_the_entry_point_answers_with_zero(
+        self,
+    ) -> None:
+        # A mode the parser rejects is one the entry point returns 0.0 for,
+        # because the `.pyx`'s integrand fell off the end of a `cdef
+        # double`. This was the shipped Cython until Task 6.2 deleted it
+        # and is the port now, so it pins the *coupling* rather than the
+        # behaviour -- the behaviour itself is pinned against the
+        # pre-deletion measurement in
+        # `test/test_core_mediator_decay_photon.py`.
+        from hazma._core.vector_mediator import dnde_decay_v_pt  # noqa: PLC0415
 
         pws = np.array([0.25, 0.25, 0.25, 0.25])
         for mode in ["", "Total", "pi0g", "g g", "not a mode"]:
@@ -624,10 +638,11 @@ class TestScalarPhotonModes:
         )
         assert tables.scalar_photon_mode_bits([]) == 0
 
-    def test_a_repeated_mode_does_not_change_the_cython_result(self) -> None:
-        # The same claim against the shipped entry point, which is what
-        # actually consumes the bitflag.
-        from hazma.scalar_mediator.scalar_mediator_decay_spectrum import (  # noqa: PLC0415
+    def test_a_repeated_mode_does_not_change_the_entry_point_result(self) -> None:
+        # The same claim against the entry point, which is what actually
+        # consumes the bitflag. The shipped `.pyx` until Task 6.2 deleted
+        # it; the port since.
+        from hazma._core.scalar_mediator import (  # noqa: PLC0415
             scalar_mediator_decay_spectrum,
         )
 

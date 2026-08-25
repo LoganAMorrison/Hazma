@@ -1145,13 +1145,19 @@ def build_cases() -> dict[str, Case]:
     )
 
     # -- mediator spectra: 7 consumed entry points --------------------------
+    # The three *photon* cases resolve through the Python wrapper rather
+    # than through the `.pyx` they were captured from: cython-to-rust Task
+    # 6.2 deleted both `*_mediator_decay_spectrum.pyx` and repointed the
+    # wrappers at `hazma._core`, the same way `_SCALAR_XS_MODULE` above
+    # resolves the swapped cross sections. The four *positron* cases still
+    # name their `.pyx` directly until Task 6.3 does the same to them.
     scalar_spec_models = _scalar_spectrum_models()
     vector_spec_models = _vector_spectrum_models()
 
     cases.append(
         Case(
             name="mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
-            module="hazma.scalar_mediator.scalar_mediator_decay_spectrum",
+            module="hazma.scalar_mediator._scalar_mediator_spectra",
             function="scalar_mediator_decay_spectrum",
             summary="photon dN/dE from scalar-mediator decay, MeV^-1",
             blocks=_scalar_decay_spectrum_blocks(scalar_spec_models),
@@ -1193,7 +1199,7 @@ def build_cases() -> dict[str, Case]:
         cases.append(
             Case(
                 name=f"mediator_spectra.vector.photon.{function}",
-                module="hazma.vector_mediator.vector_mediator_decay_spectrum",
+                module="hazma.vector_mediator._vector_mediator_spectra",
                 function=function,
                 summary="photon dN/dE from vector-mediator decay, MeV^-1",
                 blocks=_mediator_spectrum_blocks(
@@ -1313,8 +1319,11 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: table, cache and mode selectors, exposed so
 #: ``test/test_core_mediator_tables.py`` can compare its grid against
 #: ``numpy.logspace``, its columns against the Phase 04 kernels' own
-#: entry points, and its mode parsers against the four mediator
-#: ``.pyx`` that are still alive. In every case the
+#: entry points, and its mode parsers against the mediator ``.pyx`` that
+#: are still alive -- four when Task 6.1 wrote that, the two positron
+#: modules since Task 6.2, and none after Task 6.3, at which point the
+#: mode-parser half of that module keeps only the *port's* side. In every
+#: case the
 #: kernels that will use them call the Rust side directly, in Rust, and
 #: never through Python. What makes the exemption safe rather than
 #: convenient is that no module under `hazma/` may import these — asserted
@@ -1607,6 +1616,21 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     "cross_sections.scalar.thermal_cross_section": (
         "hazma.scalar_mediator._c_scalar_mediator_cross_sections",
         "thermal_cross_section",
+    ),
+    # -- Phase 06 Task 6.2: the two mediator decay *photon* modules --------
+    # Both `.pyx` were deleted outright, like the cross sections above and
+    # unlike the capi survivors under `hazma/spectra/`.
+    "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum": (
+        "hazma.scalar_mediator.scalar_mediator_decay_spectrum",
+        "scalar_mediator_decay_spectrum",
+    ),
+    "mediator_spectra.vector.photon.dnde_decay_v": (
+        "hazma.vector_mediator.vector_mediator_decay_spectrum",
+        "dnde_decay_v",
+    ),
+    "mediator_spectra.vector.photon.dnde_decay_v_pt": (
+        "hazma.vector_mediator.vector_mediator_decay_spectrum",
+        "dnde_decay_v_pt",
     ),
 }
 

@@ -484,7 +484,10 @@ class TestLiveIntegrandShapes:
     @pytest.mark.parametrize("beta", [0.1, 0.9, 0.999, 0.999999])
     def test_cos_theta_sites(self, beta: float) -> None:
         # `points=[-1, 1]`, epsabs=1e-10, epsrel=1e-5 — the settings shared
-        # by _photon/_pion.pyx:123 and all four mediator spectrum modules.
+        # by _photon/_pion.pyx:123 and all four mediator spectrum modules,
+        # two of which cython-to-rust Task 6.2 replaced with
+        # `crate::kernels::{scalar,vector}_decay_photon`'s `BOOST_QUAD`.
+        # Same five numbers on both sides of that swap.
         gamma = 1.0 / math.sqrt(1.0 - beta * beta)
         f = self.boost_jacobian_integrand(beta, gamma, 1.0)
         assert_matches_scipy(

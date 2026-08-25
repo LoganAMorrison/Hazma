@@ -250,80 +250,100 @@ than quoting them: the current state is in the open phase's
 
 **Phases 00–05 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
 08-21) and **Phase 06 is open**: Task 6.1 landed the shared
-table/cache/mode foundation on 2026-08-23, so **the next task is 6.2**
-(the decay spectrum pair), then 6.3, 6.4 and Phase 07.
+table/cache/mode foundation on 2026-08-23 and Task 6.2 swapped the decay
+photon pair the same day, so **the next task is 6.3** (the positron
+pair), then 6.4 and Phase 07.
 
-**Three Task 6.1 results a 6.2/6.3 agent should not re-derive.** (1) The
-`grep -c SoftComplexToDouble` the Phase 05 learnings demanded has been
-run: **6 / 0 / 6 / 0** for scalar-decay / scalar-positron /
-vector-decay / vector-positron, one live site each in the photon pair
-(the `** 1.5` FSR coefficient at
-`scalar_mediator_decay_spectrum.pyx:113` and
-`vector_mediator_decay_spectrum.pyx:73`), both covered by the existing
-`crate::kernels::soft_complex` pair — **neither positron module needs
-it**. (2) An unrecognised mode string returns `0.0` today rather than
-raising, so the parsers return `Option` and the entry points owe that
-`0.0`; the tightening is
-[filed](../../../docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md).
-(3) The Cython's cache key names partial widths that `__set_spectra`
-never reads, so the port keys on the mediator mass alone — the phase
-file's Task 6.1 bullet is amended to say so.
+**Read [`phase-06/README.md`](phase-06/README.md) and then
+[`phase-06/task-6.2-decay-spectra.md`](phase-06/task-6.2-decay-spectra.md)
+before starting 6.3** — the positron modules are the other half of the
+same clone-pair split, and 6.2's note is the direct template.
 
-**A fourth result, and the one that cost a red CI round:** the Rust
-grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp off
-it at ~5% of points on Linux/x86-64** — NumPy's vectorised `power` loop
-and `f64::powf` are not the same code. Every measured disagreement was
-exactly one ulp. Nothing downstream changes (the corpus already runs in
-budget mode off its capturing platform), but **"bit-equal to the
-Cython" is a macOS/arm64 statement for anything that reads these
-tables**, and any 6.2/6.3 comparison against a NumPy oracle must be
-scoped with `ON_THE_CAPTURING_PLATFORM` rather than left open.
+**Five Task 6.2 results a later task should not re-derive.**
+
+1. **The drift these swaps carry is the integrator's, not the
+   transliteration's**, and that is measured: setting `eng_s == ms` makes
+   the boost integrand a *constant*, and every channel then agrees with
+   the Cython to within one ulp. What the corpus sees — worst 5.3327e-12
+   — is `crate::quad` against scipy's QUADPACK. A constant integrand is
+   not reproduced exactly either: `∫₋₁¹ c dcl` lands one ulp off the exact
+   `2c` on **both** sides, at different `c`. Expect the same floor in 6.3.
+2. **All three swapped entry points moved**, so **three budgets were
+   tightened** from `NESTED_RTOL` to `PORTED_NESTED_RTOL` (188x and 838x
+   headroom) — **ten tightened, none widened** across the project — and
+   the Phase 07 CHANGELOG owes all three a line.
+3. **The forward-cone question is closed, from data that already
+   existed.** `test/parity/oracles/data/manifest.json` holds defect A3's
+   corrected-value capture over exactly the three photon corpus cases:
+   repairing it moves 1,032/8,610 scalar values by up to 1.63e-06 and
+   2,013/29,295 vector values by up to **7.77** relative. **Task 6.3 owes
+   the same question for the positron pair and the same manifest answers
+   it** (defect A4) — do not measure it again.
+4. **A mutation survivor is a statement about the coefficient or about
+   the grid.** Fourteen of 6.2's thirty-seven fused sites are provably
+   identity-equivalent (power-of-two coefficient ⇒ exact product; zero
+   disagreements over 40,002 masses per shape under exact rational
+   arithmetic); two more were alive only because the grid never reached
+   `2 m_μ`. And **force the rebuild between mutations** — 6.2's second
+   campaign run measured a stale `.so` and lagged its own mutations by
+   two iterations.
+5. **`pyproject.toml`'s `cython<3.3` cap is gone**, because the only file
+   it protected was the one 6.2 deleted. Measured first: the seven
+   surviving `.pyx` compile under cython 3.3.0 and a tree whose
+   extensions are *built* by it runs the suite at the same counts as
+   3.2.9, corpus and Cython-twin bit-equality included.
+
+**Two things Task 6.2 spent that do not come back.** It deleted the last
+`.pyx` that spells a dispatch message, so `test_core_dispatch.py`'s
+Cython-oracle classes are retired and the roster the port emits is now
+*frozen* there with per-message provenance — from 6.3 on, "the port's
+messages are the Cython's" is transcription rather than execution. And
+`test/test_core_mediator_tables.py`'s two live-twin mode oracles now call
+the port, so they pin the parser/entry-point *coupling* rather than the
+behaviour.
+
+**The performance story is the dead cache, and it is now measured**
+(release builds of both sides, `rules.md` rule 12): **4.2x** on the table
+build itself, and 12.9x–5,500x once the memo hits, because the `.pyx`
+rebuilt two 500-point quadrature-backed tables on *every* call. A
+20-point partial-width sweep at fixed mass goes from 186.3 ms to
+0.045 ms.
+
+**A fourth Task 6.1 result, and the one that cost a red CI round:** the
+Rust grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp
+off it at ~5% of points on Linux/x86-64**. Nothing downstream changes,
+but **"bit-equal to the Cython" is a macOS/arm64 statement** for anything
+that reads these tables, and any comparison against a NumPy oracle must
+be scoped with `ON_THE_CAPTURING_PLATFORM` rather than left open.
 
 **A sixth `_CORE_TEST_ONLY_MODULES` probe exists**,
 `hazma._core.mediator_tables`, because every oracle for the foundation
-lives in Python. Its `test/test_core_mediator_tables.py` also holds the
-only record of the pre-repair unknown-mode behaviour once Tasks 6.2–6.4
-delete the twins.
+lives in Python.
 
 **Read [`../learnings/phase-05-mediator-cross-sections.md`](../learnings/phase-05-mediator-cross-sections.md)
-before starting Phase 06.** It replaces the three Phase 05 notes. Its
-three load-bearing items for 06: run
-`grep -c SoftComplexToDouble` on the **generated C** of all four
-mediator-spectrum `.pyx` before transliterating anything (that grep
-changed the answer twice in Phase 05, and 06's four are still
-unmeasured); clang's FMA contraction follows one syntactic rule on the C
-tree, not a case list; and establishing a pre-port baseline now costs a
-build from a git commit, because the twins are deleted — Task 5.3's
-detached-worktree recipe is the cheapest way and 06 will need it.
+and [`../learnings/phase-04-spectra-kernels.md`](../learnings/phase-04-spectra-kernels.md)
+before starting any Phase 06 task.** They replace the Phase 04 and 05
+notes. The load-bearing items for what is left: run
+`grep -c SoftComplexToDouble` on the **generated C** before
+transliterating (0/0 for both positron modules, per Task 6.1, so no
+complex arithmetic there); clang's FMA contraction follows one syntactic
+rule on the C tree, which Task 6.2 applied to 37 sites and confirmed
+against the live twin; every task's numerical prediction has been wrong
+in a different direction; and a mutation survivor is either unobservable
+*by construction* or a seam that needs lifting out.
 
-**Phase 04 delivered 16 entry points and `hazma/spectra/` now holds no
+**Phase 04 delivered 16 entry points and `hazma/spectra/` holds no
 Cython Python entry point of any kind.** Four `.pyx` survive there for
 their `cdef` capsules alone — `_photon/{_muon,_pion}` and
-`_positron/{_muon,_pion}` — read only by the four mediator spectrum
-modules Phase 06 ports. `cases.rust_core_kernels()` → **16**.
-
-**Read [`../learnings/phase-04-spectra-kernels.md`](../learnings/phase-04-spectra-kernels.md)
-before starting either phase.** It replaces the six task notes, and three
-of its lessons are the ones a Phase 05/06 agent will otherwise relearn:
-the seven live defects all came from writing a statement the original
-never made; every task's numerical prediction was wrong in a different
-direction; and a mutation survivor is either unobservable *by
-construction* or a seam that needs lifting out — Task 4.6's was the
-latter, a γ spelling **29x outside the corpus's own budget** at energies
-the corpus does not sample.
+`_positron/{_muon,_pion}`. After Task 6.2 the first pair has **no
+consumer outside its own pair**, and the second is read only by the two
+`.pyx` Task 6.3 deletes — so Task 6.4's `rg` sweep should come back empty
+for all four the moment 6.3 lands.
 
 **The parity corpus left bit-equality mode permanently in Task 4.1**, and
 corpus *regeneration* is closed (see Open Questions). 19 of the 41 cases
 are `EXACT` class and still run at `rtol = 0` **on the capturing
-platform**; the rest run at their declared budget. **Five budgets have now
-been tightened and none widened** — `PORTED_QUAD_RTOL = 1e-12` for
-`spectra.photon.charged_pion` (Task 4.4), `spectra.positron.charged_pion`
-and `spectra.neutrino.charged_pion` (both Task 4.6), and
-`PORTED_NESTED_RTOL = 1e-9` for both ρ cases (Task 4.5), and
-`PORTED_QUAD_RTOL` for both thermal cross sections (Tasks 5.1 and 5.2).
-That is **seven tightened, none widened**, and it leaves `QUAD_RTOL`
-with no holder at all — it is now the documented opening figure for the
-next quadrature-backed case, which Phase 06 supplies.
+platform**; the rest run at their declared budget.
 
 **The corpus is platform-portable as of 2026-08-18 and CI runs it on
 every matrix entry.** Three carve-outs make that true and each names
@@ -332,14 +352,10 @@ should be triaged into one of them rather than absorbed by a wider
 budget: `test/parity/stability.py`'s 494 unpinnable positions,
 `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` for those
 two classes off the capturing libm, and `tolerances.zero_floor` for the
-four declared stored zeros a change of libm moves. Task 5.2 read
-[`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)
-before porting the four scalar kernels the mask covers, and the four
-came back bit-equal anyway — the 494 masked positions are where a
-*different* implementation would disagree, and a faithful
-transliteration is not one. **Phase 06 should read it for the same
-reason**, and should not read Task 5.2's result as evidence the mask is
-unnecessary.
+four declared stored zeros a change of libm moves. **Phase 06 should read
+[`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)**
+before porting anything the mask covers, and should not read Task 5.2's
+bit-equal result as evidence the mask is unnecessary.
 
 **For the next agent starting any task in this project:**
 
@@ -358,150 +374,121 @@ unnecessary.
   [`../references/cython-inventory.md`](../references/cython-inventory.md)
   were verified against 2.1.0 (Aug 2026) and the file declares itself a
   snapshot. **Every row of its dead-code table is now done.** Read it for
-  the **live surface** and the cimport DAG, which Phases 05–06 still need;
+  the **live surface** and the cimport DAG, which Phase 06 still needs;
   read its headline counts as history.
-- **9 `.pyx` and 8 `.pxd` after Task 5.2** (10/8 after Task 5.1, 11/8
-  after Task 4.6, 14/11 before it). Both mediator cross-section modules
-  were whole-file deletions — nothing cimported either and neither
-  exported capsules — unlike the `def`-only removal from
-  `_positron/_pion.pyx`. Zero C++.
+- **7 `.pyx` and 8 `.pxd` after Task 6.2** (9/8 after Task 5.2, 10/8
+  after 5.1, 11/8 after 4.6). Both mediator decay-spectrum modules were
+  whole-file deletions — nothing cimported either and neither exported
+  capsules — as both cross-section modules were before them. Zero C++.
   Re-derive with the clean-then-rebuild recipe rather than quoting this;
   a stale `.so` makes a wrong list look right.
-- **`hazma._core` serves thirty-four kernels.** The twelve added by
-  Task 5.2 are the whole consumed surface of
+- **`hazma._core` serves thirty-seven kernels.** The three added by
+  Task 6.2 are the whole consumed surface of the two
+  `*_mediator_decay_spectrum.pyx` —
+  `scalar_mediator.scalar_mediator_decay_spectrum` and
+  `vector_mediator.{dnde_decay_v, dnde_decay_v_pt}` — called by
+  `hazma/{scalar,vector}_mediator/_*_mediator_spectra.py`. The two vector
+  entry points are one kernel behind two dispatch shapes, and are
+  bit-for-bit identical to each other. The twelve from Task 5.2 are the
+  whole consumed surface of
   `_c_scalar_mediator_cross_sections.pyx` —
   `scalar_mediator.sigma_xx_to_s_to_{ff,gg,pi0pi0,pipi}`,
   `sigma_xx_to_ss`, `sigma_ss_to_xx`,
   `sigma_x{l,pi,pi0,g,s}_to_x{l,pi,pi0,g,s}` and
-  `thermal_cross_section` — each called by
-  `hazma/scalar_mediator/_scalar_mediator_cross_sections.py` under a
-  short alias, because that wrapper already uses every canonical name
-  for a mixin method. Its thirteenth `def`, `sigma_xx_to_all`, was
-  **dropped rather than ported** on the same re-run importer check as
-  the vector one. The six added by
-  Task 5.1 are `vector_mediator.sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}`,
-  `vector_mediator.sigma_xx_to_vv` and
-  `vector_mediator.thermal_cross_section`, each called by
-  `hazma/vector_mediator/_vector_mediator_cross_sections.py`. Its
-  seventh `def`, `sigma_xx_to_all`, was **dropped rather than ported**
-  (the importer check was re-run and came back empty) and survives as a
-  private helper of the Rust thermal integrand. The sixteen from
-  Phase 04:
+  `thermal_cross_section` — each called under a short alias, because that
+  wrapper already uses every canonical name for a mixin method. Its
+  thirteenth `def`, `sigma_xx_to_all`, was **dropped rather than ported**.
+  The six from Task 5.1 are
+  `vector_mediator.sigma_xx_to_v_to_{ff,pipi,pi0g,pi0v}`,
+  `sigma_xx_to_vv` and `thermal_cross_section`; its seventh
+  `sigma_xx_to_all` was likewise dropped and survives as a private helper
+  of the Rust thermal integrand. The sixteen from Phase 04:
   `positron.dnde_positron_muon` (4.1), the seven
   `photon.dnde_photon_*` tabulated meson spectra (4.2),
   `photon.dnde_photon_muon` (4.3),
   `photon.dnde_photon_{charged,neutral}_pion` (4.4),
   `photon.dnde_photon_{charged,neutral}_rho` (4.5), and
   `positron.dnde_positron_charged_pion` plus
-  `neutrino.dnde_neutrino_{muon,charged_pion}` (4.6) — each called by its
-  wrapper in `hazma/spectra/_{positron,photon,neutrino}/__init__.py`.
-  Every kernel module under `rust/src/kernels/` is `pub` and PyO3-free,
-  so Phase 06's mediator spectra call them natively the way the `.pyx`
-  cimport the Cython today: `kernels::photon_pion`'s four `pub` fns and
-  `kernels::positron_pion::dnde_positron_charged_pion` most of all.
+  `neutrino.dnde_neutrino_{muon,charged_pion}` (4.6). Every kernel module
+  under `rust/src/kernels/` is `pub` and PyO3-free, so the mediator
+  spectra call them natively the way the `.pyx` cimported the Cython.
+- **A swap needs three edits in `test/parity/cases.py`, not one** (Task
+  6.2): the `Case.module` moves to the wrapper, a `PORTED_ENTRY_POINTS`
+  row is added, and the `_CORE_TEST_ONLY_MODULES` comment counting live
+  mediator `.pyx` needs re-deriving. Missing the second turns
+  `test_the_served_roster_is_exactly_the_ported_entry_points` red with a
+  set-difference message that does not name the cause.
 - **`crate::quad` short-circuits an empty interval**, as
-  `scipy.integrate.quad` does (Task 4.6, found at
-  `dnde_neutrino_charged_pion(0.0, epi)`). Any Phase 05/06 kernel whose
-  limits can coincide inherits the fix; the pre-existing test missed it
-  because its integrand was smooth.
+  `scipy.integrate.quad` does (Task 4.6). Any later kernel whose limits
+  can coincide inherits the fix.
 - **Four test-module shapes, and the twin's fate forces the choice.**
   `test/test_core_{positron,photon}_muon.py` for a kernel whose twin
   survives *and* admits bit-equality; `test/test_core_photon_pion.py` for
   one carrying two oracle classes at two standards;
   `test/test_core_positron_pion.py` for a surviving twin that is
   quadrature-backed and therefore has **no** bit-equality mode on any
-  platform; and `test/test_core_{photon_tables,photon_rho,neutrino}.py`
+  platform; and `test/test_core_{photon_tables,photon_rho,neutrino,mediator_decay_photon}.py`
   for a kernel whose twin does **not** survive the PR — there the
   substitute is an independent Python reference plus the
   against-the-Cython numbers measured *before* the deletion. **Not**
   `test/test_core_dispatch.py`; see Decisions.
+- **One test module per clone-pair, not per entry point**, when the
+  independent reference is one function parameterised by pair (Task 6.2).
 - **Run a mutation campaign on every kernel, and interrogate the
   survivors.** Task 4.4's eleven had two survivors and concluded they were
   unobservable; Task 4.5's six had one and *fixed* it; Task 4.6's eleven
-  had two and resolved both — one lifted into a pinned `fn`, one proved
-  unobservable by construction. Ask "can this be lifted out?" before
-  writing a limitation into the source.
+  had two and resolved both; Task 6.2's thirty-seven had sixteen, of which
+  fourteen are provably identity-equivalent and two needed a wider grid.
+  Ask "can this be lifted out?" and "is this the coefficient or the
+  grid?" before writing a limitation into the source.
 - **A `.pyx` whose locals are untyped contracts nothing** (Task 4.5) —
   and so does one whose locals are all typed but which contains no
-  multiply-add at all (Task 4.6, `_neutrino/_pion.pyx`). Same `grep -c`
-  answer, different cause. **Read the disassembly; do not infer it from
-  the source.** And a module-level `cdef double` folded at import can be
-  folded *with* contraction: `_positron/_pion.pyx`'s `emax_pi_rf` is one
-  ulp above its unfused expression.
-- **`crate::quad` is proven on both of its drivers**: `qagpe` by
-  Task 4.4's `points=[-1, 1]` site (where scipy's filter discards both
-  break points, so it runs over an empty list) and `qagse` by Task 4.5's
-  two and Task 4.6's three, which pass no `points` keyword at all. Copy
-  the call site's `epsabs`/`epsrel`/`points` verbatim into a
-  `const QuadOpts` — Task 4.6's neutrino pion is the one live site that
-  passes **no** tolerance keywords, so its `const` is scipy's defaults.
-  `quad`'s `Err` arm depends only on the options, never on the integrand,
-  so it is unreachable for a `const` opts value; return `NaN` there rather
-  than panicking, and assert the unreachability with a `cargo` test.
+  multiply-add at all (Task 4.6). **Read the disassembly; do not infer it
+  from the source.**
+- **`crate::quad` is proven on both of its drivers**: `qagpe` by Task
+  4.4's `points=[-1, 1]` site and by both Task 6.2 entry points (which
+  pass the same discarded break points), and `qagse` by Tasks 4.5 and
+  4.6. Copy the call site's `epsabs`/`epsrel`/`points` verbatim into a
+  `const QuadOpts`. `quad`'s `Err` arm depends only on the options, never
+  on the integrand, so it is unreachable for a `const` opts value; return
+  `NaN` there rather than panicking, and assert the unreachability with a
+  `cargo` test.
 - **`hazma_core::constants` exists and is bit-equal to the Cython**
   (Task 3.1). Name the table the `.pyx` `include`s — `pdg` for everything
-  under `hazma/spectra/**`, `legacy` for the four mediator spectrum
-  extensions — **except** `derived::photon_pion`, which legitimately reads
-  both. A `derived::` submodule is retired with its `.pyx`, and there are
-  two precedents for what happens to its contents: `derived::photon_rho`
-  simply vanished (Task 4.5 — its three entries were bare `pdg` aliases),
-  while `derived::neutrino_muon`'s five **moved into**
-  `rust/src/kernels/neutrino_muon.rs` (Task 4.6 — they are arithmetic the
-  kernel needs). `test/test_core_constants.py` scans the tree for the
-  sources it maps, so the row must go with the file either way.
-- **A `.pyx` with a fractional exponent is not doing real
-  arithmetic** (Task 5.1). Cython 3's default `cpow` semantics compile
-  `double ** double` — and everything around it in the same expression —
-  in `double _Complex`, reaching `cpow` and compiler-rt's `__divdc3`
-  instead of `pow` and `/`. Neither agrees with its real spelling (up to
-  9.0e-15 and 4.0e-16 relative), so both must be reproduced:
-  `cpow(t + 0i, 1.5 + 0i)` is bit-for-bit `exp(1.5·ln t)` and `__divdc3`
-  is C99 Annex G's scaled quotient, both in
-  `rust/src/kernels/soft_complex.rs`, shared by both mediator kernel
-  modules. **`grep -c SoftComplexToDouble` on the generated C before
-  porting** — the scalar cross sections turned out to have **one**
-  (`__sigma_xx_to_s_to_ff`), against a Task 5.1 note that said they had
-  none, so run the grep rather than reading the `.pyx`. Phase 06's four
-  modules are unchecked.
-- **Where clang fuses is one syntactic rule** (Task 5.2). Its
-  `EmitFMulAdd` contracts `A + B` when `A` is a multiply, else when `B`
-  is, decided on the **C** tree Cython emits — where `x ** n` is a `pow`
-  **call**, never a multiply, and `-x**n` is an `FNeg`. That one rule
-  explains every case Phase 04 and Task 5.1 recorded separately
-  (`-4*mx**2 + e_cm**2` fuses, `ms**2 - e_cm**2` does not,
-  `-mpi0**2 + e_cm**2` does not), and Task 5.2 reproduced all 138 FMA
-  sites in eleven kernels from it without reading a disassembly per
-  site. **One Python-level call boxes everything above it**: `np.log(4)`
-  inside a `cdef` function makes Cython evaluate the whole path to the
-  root through `PyNumber_*`, so nothing there contracts while the pure-C
-  operands still fuse internally — the same observable as Phase 04's
-  `_photon/_rho.pyx` from a different cause.
-- **`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1) —
-  `setuptools_rust` infers `debug = self.inplace or self.debug`. A
+  under `hazma/spectra/**`, `legacy` for the mediator spectrum extensions
+  — **except** `derived::photon_pion`, which legitimately reads both.
+- **A `.pyx` with a fractional exponent is not doing real arithmetic**
+  (Task 5.1). Cython 3's default `cpow` semantics compile `double **
+  double` — and everything around it in the same expression — in
+  `double _Complex`, reaching `cpow` and compiler-rt's `__divdc3`. Both
+  are in `rust/src/kernels/soft_complex.rs`, and Task 6.2 needed exactly
+  that pair for the two decay modules' FSR coefficients (one live site
+  each, on *different* factors: the scalar's lepton coefficient and the
+  vector's charged-pion one). **`grep -c SoftComplexToDouble` on the
+  generated C before porting.**
+- **Where clang fuses is one syntactic rule** (Task 5.2): `EmitFMulAdd`
+  contracts `A ± B` when `A` is a syntactic multiply, else when `B` is,
+  decided on the **C** tree Cython emits — where `x ** n` is a `pow`
+  **call**, never a multiply. Task 6.2 reproduced 37 sites in two kernels
+  from that rule alone without reading a disassembly per site, and its
+  mutation campaign confirmed 23 of them observable.
+- **`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1) — a
   benchmark from an editable tree is ~20x pessimistic and inverts the
-  comparison against Cython. Filed rather than fixed
-  ([the debug editable build](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md));
-  until it is decided, take rule 12's benchmark from a release build and
-  say so.
+  comparison against Cython. Take rule 12's benchmark from a **release**
+  build of both sides in one interpreter, and **run it from outside the
+  repo**: a run from the repo root imports `hazma` from the worktree
+  rather than site-packages, which silently invalidated a Task 6.2
+  measurement. Filed rather than fixed
+  ([the debug editable build](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)).
 - **Task 3.5 is done, so the dispatch and error contract is settled** —
-  a Phase 05–06 wrapper writes
-  `dispatch::map_unary(x, "<quantity>", kernel)`, `map_flavors` for a
-  `(3, N)` return (Task 4.6), or **`map_unary_try` for a kernel that
-  raises at some arguments** (Task 5.1, the fourth live shape) and
-  inherits every message, return type and edge case. The rule that decided every
+  a wrapper writes `dispatch::map_unary(x, "<quantity>", kernel)`,
+  `map_flavors` for a `(3, N)` return, `map_unary_try` for a kernel that
+  raises at some arguments, or **`require_vector` for an argument that
+  must be a 1-D array and is never a scalar** — which Task 6.2 used for
+  both `partial_widths` and `dnde_decay_v`'s energies, declaring the two
+  divergences that come with the latter. The rule that decided every
   divergence: **each exception the Cython raises explicitly keeps its
   type; only its `assert`s change type** (`../rules.md` rule 9).
-- **`test/test_core_dispatch.py`'s spectra oracle is now
-  `scalar_mediator_decay_spectrum`** (moved by Task 4.6, which exhausted
-  `hazma/spectra/` entirely; it was `_positron/_pion` before that,
-  `_photon/_rho` before that). **Phase 06 deletes that too, and there is no
-  candidate after it** — retire `TestDeclaredDivergencesFromCython` or
-  re-express its widenings against `cython_xs`, which is the only other
-  live `.pyx` dispatch shape. `TestCythonMessageParity` is a separate
-  matter: its roster now reads from the surviving `.pyx` and is down to
-  two `assert` wordings, both in the mediator decay-spectrum modules. The
-  wordings the port still emits for swapped kernels are pinned in each
-  kernel's own test module.
 - **Task 3.4 is done, so `hazma_core::{interp, boost}` exist**, both
   bit-equal to what they replace on the capturing platform. Do not touch
   the `mul_add`s and do not repair `boost_integrate_linear_interp`'s
@@ -514,32 +501,31 @@ unnecessary.
   regenerate it from a tree in which any kernel runs on Rust —
   `rules.md` rule 2, enforced in code by `assert_no_rust_core`.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **1935 passed / 15 skipped** as of Task 4.6 (2026-08-20),
-  from 1802/15 at Task 4.5, 1755/15 at 4.4, 1682/15 at 4.3, 1628/15 at
-  4.2, 1378/13 at 3.5, 1063/13 at Phase 02 close and 1006/13 at Phase 01
-  close. `cargo test --no-default-features` → **169 passed**, from 133.
-  Re-derive rather than quoting; the historical series is in
-  [phase-01/README.md](phase-01/README.md),
-  [phase-02/README.md](phase-02/README.md) and
-  [phase-04/README.md](phase-04/README.md).
+  `pytest -q` → **2262 passed / 15 skipped / 12 subtests** as of Task 6.2
+  (2163/15/12 at 6.1, 1935/15 at 4.6, 1006/13 at Phase 01 close).
+  `cargo test --no-default-features` → **249 passed**, from 222.
+  Re-derive rather than quoting.
 - **`test/test_theory_aggregation.py` is the model-layer gate the corpus
   cannot be** (Task 1.4): identities over `hazma/theory/`'s pure-Python
   aggregation, no golden data, and the only numerical gate in the repo
-  that is not scoped to the capturing platform. **Phases 05–06 run it
-  either side of every kernel swap** — `69 passed` as of Task 4.6.
+  that is not scoped to the capturing platform. **Run it either side of
+  every kernel swap** — `69 passed` as of Task 6.2.
 - **A `.rs` edit needs `pip install -e .`, not `cargo build`** (Task 2.2).
   Iterate with
   `cargo test --manifest-path rust/Cargo.toml --no-default-features`,
   reinstall before quoting any pytest or parity number, and confirm with
-  `python -c "import hazma._core; print(hazma._core.__file__)"`.
-- **The build entry point is `setup.py`.** `_build.py` was deleted in
-  `7a817f9` (2026-08-02) and Task 0.4 swept the durable docs that named it.
+  `python -c "import hazma._core; print(hazma._core.__file__)"`. If a
+  *harness* rebuilds in a loop, delete the artifact first and assert it
+  came back — see Task 6.2's campaign.
+- **The build entry point is `setup.py`**, and **`pyproject.toml` no
+  longer caps `cython`** (Task 6.2 removed the `<3.3` cap with the file
+  that forced it; the surviving `.pyx` are measured green under 3.3.0).
 - **The sdist and wheel both build, and the sdist installs and runs** in a
   fresh venv from outside the repo (recipe in Task 0.4's note; reuse it in
   Phase 07).
-- **`hazma.gamma_ray` is gone, docs and all** (Task 0.5 swept, Task 0.2
-  deleted). The settled replacement wording for the Phase 07 aggregate:
-  `gamma_ray_decay` → `hazma.spectra.dnde_photon`, `gamma_ray_fsr` →
+- **`hazma.gamma_ray` is gone, docs and all.** The settled replacement
+  wording for the Phase 07 aggregate: `gamma_ray_decay` →
+  `hazma.spectra.dnde_photon`, `gamma_ray_fsr` →
   `hazma.spectra.dnde_photon_fsr`, **neither a drop-in**.
 - The legacy constants table lives at
   `hazma/_utils/legacy_parameters.pxd` and is now its **only** copy.
@@ -558,26 +544,35 @@ unnecessary.
   swaps. **Worth telling the maintainer separately from this project's
   schedule** — several affect published numbers today, and two affect the
   *shape* of a spectrum rather than a total, which is the kind a limit
-  calculation notices. Task 4.5 also found that the forward-cone defect
-  **compounds** through the ρ rather than merely propagating (0.945 of
-  endpoint predicted, 0.537 measured at `γ_ρ = 10`), so that repair is
-  larger than the follow-up originally scoped. Six of the eight are
-  sequenced in
-  [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md);
-  4.6's arrived after that roster was fixed and needs no Cython oracle,
-  so it can be scheduled independently.
-- **Phase 05 has to name the cross sections' `quantity` wording.** They
-  carry no dispatch message at all today, so the port invents it and it is
-  user-visible from the first swap. `"Center-of-mass energies"` is the
-  placeholder `test/test_core_dispatch.py` uses.
+  calculation notices. Task 4.5 found the forward-cone defect
+  **compounds** through the ρ rather than merely propagating, and **Task
+  6.2 quantified its reach into the mediator photon spectra**: up to
+  **7.77** relative on `dnde_decay_v`, i.e. a factor of 8.8, though at an
+  absolute 7.3e-10. Six of the eight are sequenced in
+  [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md).
+- **Re-capturing `test/parity/oracles` closes at Task 6.4**, and the
+  roster it would need is now incomplete: `RESTORED_SOURCES` has no rows
+  for the two `.pyx` Task 6.2 deleted, because a task cannot cite its own
+  commit's SHA. Filed
+  ([the restore revisions](../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md));
+  **Task 6.3 should discharge it for both pairs at once**. Not blocking —
+  the `pytest` gate does not read that dict.
+- **Nine places in the tree cite a lessons class that is not in the
+  ledger** (`[mutation-harness-poisons-its-own-baseline]`), including a
+  guard in `test/parity/oracles/capture.py` named after it. Found by Task
+  6.2 on hitting the class a third time; filed
+  ([the missing class](../../../docs/followups/todo/lessons-ledger-missing-the-mutation-harness-class.md))
+  rather than fixed, because the ledger's format needs the PR that
+  learned it (Task 3.3's) and the ledger is past its working-set cap.
 - **Two Task 1.4 follow-ups ripen inside this project.** The
   [`MASS_E` `nan`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
-  before Phases 05/06, and the
+  is now **on the grid's first abscissa** — the positron table starts at
+  the legacy `m_e`, so Task 6.3 is where it bites — and the
   [scalar-energy contract](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
-  during 05–06 — Task 3.5 settled the compiled half; what is left is pure
+  during 06; Task 3.5 settled the compiled half and what is left is pure
   Python.
 - **`release.yml` has no pull-request trigger**, so any future change to
   it needs its own dispatch to be measured at all
   (`../../../docs/agents/lessons.md`
-  `[unrun-workflow-cannot-close-a-criterion]`). Phase 07 Task 7.1 rewrites
-  it for maturin and inherits that.
+  `[unrun-workflow-cannot-close-a-criterion]`). Phase 07 Task 7.1
+  rewrites it for maturin and inherits that.

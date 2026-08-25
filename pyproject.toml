@@ -69,21 +69,25 @@ build-backend = "setuptools.build_meta"
 # here. Both this requirement and the Cython half go away at the Phase 07
 # maturin cutover.
 #
-# cython is capped below 3.3 because 3.3.0 (released 2026-08-21) refuses
-# to compile `scalar_mediator_decay_spectrum.pyx`. That file passes
-# `integrand` — whose signature takes an `np.ndarray[np.float64_t,ndim=1]`
-# — as a C function pointer, so Cython auto-generates a `cfunc.to_py`
-# wrapper for it, and 3.3 rejects a buffer type in that generated
-# signature: `cfunc.to_py:85:180: Invalid type.` The cap is unpinned-
-# dependency damage control, not a considered floor — an uncapped `cython`
-# put a breaking upstream release straight into CI, failing all six Test
-# jobs on PR #76 with nothing in the diff to explain it. Revisit when the
-# Phase 07 maturin cutover deletes the last `.pyx`, or sooner if a 3.3.x
-# fixes it; the buffer-typed signature is the thing to change if neither
-# happens first.
+# cython was capped below 3.3 from PR #76 until cython-to-rust Task 6.2,
+# because 3.3.0 (released 2026-08-21) refused to compile
+# `scalar_mediator_decay_spectrum.pyx`: that file passed `integrand` —
+# whose signature took an `np.ndarray[np.float64_t,ndim=1]` — as a C
+# function pointer, so Cython auto-generated a `cfunc.to_py` wrapper for
+# it, and 3.3 rejects a buffer type in that generated signature
+# (`cfunc.to_py:85:180: Invalid type.`). **Task 6.2 deleted that file**,
+# which is the only thing the cap was ever protecting, so the cap is
+# gone. Measured before removing it: the seven surviving `.pyx` compile
+# under cython 3.3.0, and a tree whose extensions are built by it runs
+# the full suite at `2262 passed, 15 skipped, 12 subtests passed` —
+# the same counts as 3.2.9, parity corpus and every Cython-twin
+# bit-equality comparison included. Uncapped again means an upstream
+# break can reach CI with nothing in the diff to explain it (that is what
+# PR #76 hit); the remaining `.pyx` go in Tasks 6.3 and 6.4, and Phase 07
+# removes the Cython requirement entirely.
 requires = [
     "numpy",
-    "cython<3.3",
+    "cython",
     "setuptools",
     "setuptools-rust",
     "scipy>=1.13",

@@ -605,15 +605,106 @@ impl ScalarPhotonModes {
         Self(bits)
     }
 
-    /// The raw bitflag, for comparison against the Cython's `int`.
+    /// Every mode name, in the order
+    /// `scalar_mediator_decay_spectrum.pyx:253-266` tests them.
     ///
-    /// The only reader the bit set needs today. A `contains(bit)`
-    /// helper belongs with the integrand that branches on it, so Task
-    /// 6.2 adds one when it has a caller rather than leaving a
-    /// `dead_code` allowance here.
+    /// The order is observable: the `.pyx` evaluates `"pi pi" in modes`
+    /// before `"mu mu" in modes`, so a `modes` object whose
+    /// `__contains__` raises reports the first name it was asked about.
+    /// [`crate::scalar_mediator`] walks this slice to keep that.
+    pub const NAMES: [&'static str; 7] = [
+        "pi pi", "mu mu", "pi0 pi0", "g g", "e e g", "pi pi g", "mu mu g",
+    ];
+
+    /// The raw bitflag, for comparison against the Cython's `int`.
     #[must_use]
     pub fn bits(self) -> u32 {
         self.0
+    }
+
+    /// Wrap a bitflag built elsewhere.
+    ///
+    /// [`crate::scalar_mediator`] folds the bits itself, because the
+    /// `.pyx` decides membership with Python's `in` operator and that
+    /// has to stay on the PyO3 side of `rules.md` rule 8: `modes` may be
+    /// any object with a `__contains__`, and a `str` is the live example
+    /// (`modes="pi pi"` works today and sets the charged-pion bit).
+    #[must_use]
+    pub const fn from_bits(bits: u32) -> Self {
+        Self(bits)
+    }
+
+    /// Whether `bit` is set — the `.pyx`'s `bitflag & BITFLAG_*`.
+    #[must_use]
+    pub const fn contains(self, bit: u32) -> bool {
+        self.0 & bit != 0
+    }
+}
+
+// ===========================================================================
+// ---- Partial widths and the two ways a kernel can fail --------------------
+// ===========================================================================
+
+/// Why a mediator-spectrum kernel has no number to return.
+///
+/// Both arms are the Cython's own behaviour, not the port's invention,
+/// and both reach Python through the per-domain submodule rather than
+/// from here (`rules.md` rule 8).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SpectrumError {
+    /// A `pws[i]` past the end of the buffer.
+    ///
+    /// All four `.pyx` carry `@cython.boundscheck(True)` on the
+    /// integrand and the entry points, so a short `partial_widths`
+    /// raises `IndexError` there rather than reading past the end. It is
+    /// reachable with a *working* call one element longer: at
+    /// `ms = 550`, `eng_s = 600`, a four-element `pws` returns `0.0` for
+    /// a photon outside the `g g` line window and raises inside it,
+    /// because `pws[4]` is read only under that window.
+    OutOfBounds,
+    /// An FSR coefficient's `**` operator came back complex.
+    ///
+    /// `__Pyx_SoftComplexToDouble` raises `TypeError`. Reachable only at
+    /// `m = 2 m_l` (scalar) or `m = 2 m_π` (vector), where the `1 − 4μ²`
+    /// under the `1.5` power is exactly zero and
+    /// [`crate::kernels::soft_complex::complex_quotient_real_denominator`]
+    /// divides by it — and then only at `E_γ = 0`, since every other
+    /// energy fails the `x > xmax` guard first.
+    NonReal,
+}
+
+impl From<crate::kernels::soft_complex::NonRealResult> for SpectrumError {
+    fn from(_: crate::kernels::soft_complex::NonRealResult) -> Self {
+        Self::NonReal
+    }
+}
+
+/// The mediator's normalised partial widths, indexed as the Cython
+/// indexes them.
+///
+/// A newtype rather than a bare slice so that every read goes through
+/// [`Self::get`] and inherits `boundscheck(True)`; a plain `pws[i]` in a
+/// kernel would panic where the Cython raises, and a panic crossing the
+/// PyO3 boundary is a `pyo3_runtime.PanicException`, not an
+/// `IndexError`.
+#[derive(Clone, Copy, Debug)]
+pub struct PartialWidths<'a>(&'a [f64]);
+
+impl<'a> PartialWidths<'a> {
+    /// Borrow `values` as a partial-width buffer.
+    #[must_use]
+    pub const fn new(values: &'a [f64]) -> Self {
+        Self(values)
+    }
+
+    /// `pws[index]`, or [`SpectrumError::OutOfBounds`].
+    ///
+    /// # Errors
+    ///
+    /// [`SpectrumError::OutOfBounds`] when `index` is past the end,
+    /// which is where the Cython's bounds check raised `IndexError`.
+    pub fn get(self, index: usize) -> Result<f64, SpectrumError> {
+        self.0.get(index).copied().ok_or(SpectrumError::OutOfBounds)
     }
 }
 

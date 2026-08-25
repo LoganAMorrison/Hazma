@@ -24,9 +24,13 @@
 //! whose literal names would be `c_vector_mediator_cross_sections` and
 //! `c_scalar_mediator_cross_sections` and whose `<model>_mediator` halves
 //! are already the PyO3 submodules' names.
+//! [`scalar_decay_photon`] and [`vector_decay_photon`] are a fifth and
+//! sixth of exactly that kind: they are
+//! `hazma/{scalar,vector}_mediator/*_mediator_decay_spectrum.pyx`, whose
+//! literal names repeat the submodule name the same way.
 //!
-//! [`mediator_tables`] is a fifth, and the only one that is shared
-//! *foundation* rather than a port: the four mediator-spectrum `.pyx`
+//! [`mediator_tables`] is the only one that is shared *foundation*
+//! rather than a port: the four mediator-spectrum `.pyx`
 //! repeat one rest-frame-table construction, one memo cache and one set
 //! of mode selectors between them, so cython-to-rust Task 6.1 factored
 //! those out before Tasks 6.2 and 6.3 built the entry points on top.
@@ -49,8 +53,10 @@ pub mod photon_rho;
 pub mod photon_tables;
 pub mod positron_muon;
 pub mod positron_pion;
+pub mod scalar_decay_photon;
 pub mod scalar_xs;
 pub mod soft_complex;
+pub mod vector_decay_photon;
 pub mod vector_xs;
 
 /// Return `x` unchanged.

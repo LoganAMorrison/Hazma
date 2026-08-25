@@ -372,10 +372,31 @@ class TestTheWrapperReExports:
     def test_each_alias_is_its_kernel(self, alias: str, kernel: str) -> None:
         assert getattr(wrapper, alias) is getattr(core_scalar, kernel)
 
-    def test_the_alias_table_is_the_whole_served_roster(self) -> None:
-        """Twelve aliases, twelve kernels, nothing left over either way."""
+    #: Everything `hazma._core.scalar_mediator` serves that is *not* a
+    #: cross section, and which task put it there. The submodule is
+    #: per-model rather than per-`.pyx`, so Phase 06 lands the mediator
+    #: spectra alongside these twelve; each is pinned in its own test
+    #: module (`test/test_core_mediator_decay_photon.py` for the one
+    #: below) rather than here. Task 6.3 adds `dnde_decay_s` and
+    #: `dnde_decay_s_pt`.
+    NON_CROSS_SECTIONS: ClassVar[set[str]] = {
+        "scalar_mediator_decay_spectrum",  # cython-to-rust Task 6.2
+    }
+
+    def test_the_alias_table_is_the_whole_served_cross_section_roster(self) -> None:
+        """Twelve aliases, twelve kernels, nothing left over either way.
+
+        The equality is against the aliases *plus*
+        :data:`NON_CROSS_SECTIONS`, so a kernel that appears on this
+        submodule without a home still fails -- what the roster no longer
+        claims is that cross sections are all this submodule holds.
+        """
         served = {name for name in dir(core_scalar) if not name.startswith("_")}
-        assert served == {kernel for _, kernel in self.ALIASES}
+        expected = {kernel for _, kernel in self.ALIASES} | self.NON_CROSS_SECTIONS
+        assert served == expected
+        # And the two sets really are disjoint, so the union above cannot
+        # be hiding a missing alias.
+        assert not self.NON_CROSS_SECTIONS & {kernel for _, kernel in self.ALIASES}
 
     def test_the_cython_twin_is_gone(self) -> None:
         """The twin is gone, asserted on the source files.

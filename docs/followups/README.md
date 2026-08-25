@@ -45,6 +45,8 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`thermal_cross_section` returns its integrator's initial estimate](todo/thermal-cross-section-quadrature-never-converges.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [`pip install -e .` builds `hazma._core` unoptimized](todo/editable-installs-build-the-rust-extension-in-debug.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [mediator spectra return 0.0 for an unrecognised mode string](todo/mediator-spectra-accept-unknown-mode-strings.md) | 2026-08-23 | cython-to-rust Task 6.1 | cross-cutting |
+| [the oracle roster has no restore revision for the deleted mediator decay `.pyx`](todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md) | 2026-08-23 | cython-to-rust Task 6.2 | commit |
+| [`[mutation-harness-poisons-its-own-baseline]` is cited but not in the ledger](todo/lessons-ledger-missing-the-mutation-harness-class.md) | 2026-08-23 | cython-to-rust Task 6.2 | cross-cutting |
 
 ## Promoted / Done / Pruned
 

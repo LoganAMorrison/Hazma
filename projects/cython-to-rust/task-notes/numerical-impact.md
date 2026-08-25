@@ -700,6 +700,71 @@ pointer here so that every citation of that section still resolves.
     ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
     Reproduced under rule 1, not fixed here.
 
+- **Task 6.2 (the two mediator decay *photon* modules): all three entry
+  points move, none beyond 5.4e-12.** `scalar_mediator_decay_spectrum`
+  is bit-equal at **6,379 of 8,610** pinned values with a worst relative
+  shift of **5.3327e-12**, at `ms_550.boosted_strong.default`
+  (`4.7719319100240627e-04 → 4.7719319100495100e-04`);
+  `dnde_decay_v` and `dnde_decay_v_pt` are bit-equal at **22,918 of
+  29,295** each with a worst of **1.1935e-12**, at
+  `mv_900.boosted_strong.mu_mu`
+  (`5.016851224412527e-05 → 5.0168512244185144e-05`). The two vector
+  entry points are bit-for-bit identical to each other, because the port
+  serves both from one kernel where the `.pyx` had two `def`s over one
+  `cdef`. All three are **above** rule 3's 1e-12 threshold, so the
+  Phase 07 CHANGELOG owes them a line.
+  **The drift is the integrator's, not the transliteration's**, and that
+  is measured rather than argued: setting `eng_s == ms` makes the boost
+  integrand a *constant* (`β = 0`, so `jac = 1/2` and `E_γ,rf = E_γ`
+  exactly), and every channel of both entry points then agrees with the
+  Cython to within one ulp — worst 4.2e-16 over 61 energies × 14
+  channel/entry-point combinations. The tables the integrand reads are
+  bit-equal (Task 6.1) and so are their columns against the Phase 04
+  entry points, so what remains is `crate::quad` against scipy's
+  QUADPACK, which `PORTED_QUAD_RTOL` already exists for. A constant
+  integrand is not reproduced exactly either: `∫₋₁¹ c dcl` lands one ulp
+  off the exact `2c` on **both** sides, at different `c` — at
+  `E_γ = 0.01` MeV the port matches the exact value and the Cython does
+  not, at `0.1` MeV the reverse.
+  **Budgets tightened, not widened:** all three cases go from
+  `NESTED_RTOL` (1e-6) to `PORTED_NESTED_RTOL` (1e-9) — 188x headroom on
+  the scalar and 838x on the vector pair. That makes **ten tightened and
+  none widened** across the project.
+  - **A user-visible *type* change on one path, and it is a widening.**
+    `dnde_decay_v` takes `crate::dispatch::require_vector` for its energy
+    argument, so a scalar `eng_gam` raises `ValueError` where the `.pyx`
+    raised `TypeError` ("Argument 'eng_gam' has incorrect type"), and a
+    `list` is now accepted where it was refused. The Python wrapper picks
+    `dnde_decay_v_pt` for a scalar, so no working call reaches either.
+    Two new `TypeError` wordings replace `__Pyx_SoftComplexToDouble`'s
+    at the degenerate masses (`ms = 2 m_l`, `mv = 2 m_π`), for the reason
+    Task 5.1 recorded: the Cython text is two thirds advice about a
+    compiler directive that will not exist after Phase 07.
+  - **The port stops raising `IntegrationWarning`.** Both entry points
+    raise one from scipy at every argument tried, because the boost
+    integrand's `1/|1 − β cos θ|` is hard for QAGP. The `.pyx`
+    subscripted `quad(...)[0]`, so it never affected a value; the same
+    silence was accepted for every quad-backed kernel Phase 04 ported.
+  - **The forward-cone defect's reach into these spectra is now
+    quantified**, from the committed corrected-value oracle rather than a
+    new measurement (`test/parity/oracles/data/manifest.json`, defect
+    A3): repairing it moves **1,032 of 8,610** scalar values by up to
+    **1.63e-06** relative, and **2,013 of 29,295** vector values by up to
+    **7.77** relative — a factor of 8.8, at an absolute 7.3e-10. So the
+    answer to Phase 04's open question is *yes*, and in the vector case
+    the shape of the low-energy tail is what changes. Reproduced under
+    rule 1, not fixed here
+    ([the forward cone](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md)).
+  - **Performance, from release builds of both sides** (`rules.md`
+    rule 12; the editable install would have been ~20x pessimistic):
+    **4.2x** on the table build itself (7.457 ms → 1.793 ms for a call at
+    a mass never seen before) and **12.9x–5,500x** once the memo hits,
+    because the `.pyx` rebuilt two 500-point quadrature-backed tables on
+    *every* call. A 20-point partial-width sweep at fixed mass — the
+    shape the dead cache punished hardest — goes from 186.3 ms to
+    0.045 ms, **4,180x**. Same numbers either way: this is the dead-cache
+    repair `rules.md` rules 3 and 12 declare as performance-only.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)

@@ -15,11 +15,14 @@ Three resolution kinds, in ascending order of how much they had to be
 recovered:
 
 ``live``
-    The ``.pyx`` still carries the ``def``. All seven ``mediator_spectra.*``
-    cases: Phase 06 has not landed, so
-    ``hazma/{scalar,vector}_mediator/*_{decay_spectrum,positron_spec}.pyx``
-    are still what the corpus entry point imports, and they ``cimport``
-    the photon/positron ``cdef``\ s, so the whole chain is Cython.
+    The ``.pyx`` still carries the ``def``. The four
+    ``mediator_spectra.*.positron.*`` cases:
+    ``hazma/{scalar,vector}_mediator/*_positron_spec.pyx`` are still what
+    the corpus entry point imports, and they ``cimport`` the
+    photon/positron ``cdef``\ s, so the whole chain is Cython. The three
+    ``mediator_spectra.*.photon.*`` cases were ``live`` too until
+    ``cython-to-rust`` Task 6.2 deleted both decay modules; Task 6.3 does
+    the same to the two above.
 
 ``capsule``
     The ``.pyx`` survives but its ``def`` is gone; the ``cdef`` is exported
@@ -160,8 +163,14 @@ def resolve(source: Source) -> Callable[..., Any]:
 
 
 _MEDIATOR_LIVE = (
-    "Phase 06 has not landed: this .pyx still carries its def and still "
-    "cimports the photon/positron cdefs, so the whole chain is Cython"
+    "this .pyx still carries its def and still cimports the "
+    "photon/positron cdefs, so the whole chain is Cython"
+)
+_MEDIATOR_DECAY_RESTORED = (
+    "deleted by cython-to-rust Task 6.2; restore from the parent of the "
+    "commit that removed the file, which a re-capture must resolve with "
+    "`git log -1 --format=%h --diff-filter=D -- <path>` because that task "
+    "could not know its own SHA (see RESTORED_SOURCES in defects.py)"
 )
 _TABLES_RESTORED = (
     "deleted by cython-to-rust Task 4.2 (0954e5a); restored from git for " "the capture"
@@ -242,20 +251,20 @@ SOURCES: dict[str, Source] = {
     "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum": Source(
         "hazma.scalar_mediator.scalar_mediator_decay_spectrum",
         "scalar_mediator_decay_spectrum",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_DECAY_RESTORED,
     ),
     "mediator_spectra.vector.photon.dnde_decay_v": Source(
         "hazma.vector_mediator.vector_mediator_decay_spectrum",
         "dnde_decay_v",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_DECAY_RESTORED,
     ),
     "mediator_spectra.vector.photon.dnde_decay_v_pt": Source(
         "hazma.vector_mediator.vector_mediator_decay_spectrum",
         "dnde_decay_v_pt",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_DECAY_RESTORED,
     ),
     # -- A4: the positron chain -------------------------------------------
     "spectra.positron.muon": Source(
@@ -300,13 +309,13 @@ SOURCES: dict[str, Source] = {
     "mediator_spectra.vector.positron.dnde_decay_v": Source(
         "hazma.vector_mediator.vector_mediator_positron_spec",
         "dnde_decay_v",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_DECAY_RESTORED,
     ),
     "mediator_spectra.vector.positron.dnde_decay_v_pt": Source(
         "hazma.vector_mediator.vector_mediator_positron_spec",
         "dnde_decay_v_pt",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_DECAY_RESTORED,
     ),
 }

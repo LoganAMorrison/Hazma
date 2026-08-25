@@ -57,9 +57,11 @@ extensions += make_extension(["_utils"], ["boost"])
 #
 # The four below stay built for their `__pyx_capi__` capsules alone:
 # _photon/_pion cimports _photon/_muon, _positron/_pion cimports
-# _positron/_muon, and both mediator decay-spectrum modules and both
-# mediator positron-spectrum modules cimport from these four. Phase 06
-# Task 6.4 is where the files go.
+# _positron/_muon, and both mediator positron-spectrum modules cimport
+# from these four. The two mediator decay-spectrum modules did too until
+# cython-to-rust Task 6.2 deleted them, which leaves _photon/_muon and
+# _photon/_pion with no consumer outside their own pair — Phase 06 Task
+# 6.4 is where all four files go.
 extensions += make_extension(
     ["spectra", "_photon"],
     ["_muon", "_pion"],
@@ -73,26 +75,23 @@ extensions += make_extension(
 # `_c_scalar_mediator_cross_sections` went in cython-to-rust Task 5.2 —
 # all twelve of its consumed entry points are served by
 # `hazma._core.scalar_mediator`, and the thirteenth (`sigma_xx_to_all`)
-# was dropped rather than ported because nothing imported it. The two
-# spectrum modules below are Phase 06's.
+# was dropped rather than ported because nothing imported it.
+# `scalar_mediator_decay_spectrum` went in Task 6.2, served by
+# `hazma._core.scalar_mediator.scalar_mediator_decay_spectrum`. The
+# positron module below is Task 6.3's.
 extensions += make_extension(
     ["scalar_mediator"],
-    [
-        "scalar_mediator_decay_spectrum",
-        "scalar_mediator_positron_spec",
-    ],
+    ["scalar_mediator_positron_spec"],
 )
 
 # Vector mediator
-# `_c_vector_mediator_cross_sections` went in cython-to-rust Task 5.1,
-# the same way and for the same reasons as its scalar twin above. The
-# two spectrum modules below are Phase 06's.
+# `_c_vector_mediator_cross_sections` went in cython-to-rust Task 5.1 and
+# `vector_mediator_decay_spectrum` in Task 6.2, the same way and for the
+# same reasons as their scalar twins above. The positron module below is
+# Task 6.3's.
 extensions += make_extension(
     ["vector_mediator"],
-    [
-        "vector_mediator_decay_spectrum",
-        "vector_mediator_positron_spec",
-    ],
+    ["vector_mediator_positron_spec"],
 )
 
 # The Rust half. One cdylib, at its final import path from day one, built
