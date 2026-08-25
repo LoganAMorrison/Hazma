@@ -1,12 +1,16 @@
 import numpy as np
 
 from hazma import spectra
-from hazma.parameters import muon_mass as mmu
-from hazma.parameters import electron_mass as me
 
-from hazma.scalar_mediator.scalar_mediator_decay_spectrum import (
-    scalar_mediator_decay_spectrum,
-)
+# Served by the Rust extension since cython-to-rust Task 6.2 deleted
+# `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx`. Import path,
+# call signature and returned values are unchanged; see
+# `rust/src/kernels/scalar_decay_photon.rs` for the port and
+# `projects/cython-to-rust/rules.md` rule 7 (Rust conventions 2) for why
+# the wrapper, not the extension, stays the public surface.
+from hazma._core.scalar_mediator import scalar_mediator_decay_spectrum
+from hazma.parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
 
 SM_DECAY_MODES = ["pi pi", "mu mu", "pi0 pi0", "g g", "e e g", "pi pi g", "mu mu g"]
 

@@ -3,11 +3,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from hazma import spectra
+
+# Served by the Rust extension since cython-to-rust Task 6.2 deleted
+# `hazma/vector_mediator/vector_mediator_decay_spectrum.pyx`. Import
+# paths, call signatures and returned values are unchanged; see
+# `rust/src/kernels/vector_decay_photon.rs` for the port.
+from hazma._core.vector_mediator import dnde_decay_v, dnde_decay_v_pt
 from hazma.parameters import neutral_pion_mass as mpi0
-from hazma.vector_mediator.vector_mediator_decay_spectrum import (
-    dnde_decay_v,
-    dnde_decay_v_pt,
-)
 
 
 class VectorMediatorSpectra:

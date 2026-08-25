@@ -57,7 +57,6 @@ import pytest
 
 from hazma._core import dispatch as core_dispatch
 from hazma._core import roundtrip
-from hazma.scalar_mediator import scalar_mediator_decay_spectrum as cython_spectrum
 
 # The `hazma._core.dispatch` probes, bound here so the tests below read like
 # ordinary calls. Each takes the quantity wording as an argument, which the
@@ -83,19 +82,41 @@ N_FLAVORS = 3
 DIMENSION_ERROR = f"{QUANTITY} must be 0 or 1-dimensional."
 TYPE_ERROR = f"{QUANTITY} must be a float or a NumPy array."
 
-#: The remaining three arguments of `scalar_mediator_decay_spectrum`, which
-#: `TestDeclaredDivergencesFromCython` uses as its surviving Cython oracle:
-#: ``(sm_energy, sm_mass, partial_widths)`` in MeV, MeV and MeV. The
-#: mediator is heavy enough to open every channel and the widths are all
-#: zero, so the spectrum is identically zero -- these tests are about
-#: *dispatch*, and a zero spectrum keeps them from paying for the physics.
-SPECTRUM_ARGS = (500.0, 200.0, np.zeros(9))
+#: Every rank message the compiled layer ever carried, frozen with its
+#: provenance because no file in the tree spells any of them any more.
+#:
+#: `cython_dispatch_messages()` read this roster out of the `.pyx` sources
+#: until cython-to-rust Task 6.2 deleted the last two files that spelled a
+#: dispatch message; that helper is now the *guard* that the tree stays
+#: silent, and this is the roster the port must keep emitting. Sources, at
+#: the commit that removed each:
+#:
+#: * `"Photon energies ..."` --
+#:   `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx:270` and
+#:   `hazma/spectra/_photon/{_muon,_pion,_rho}.pyx` (Tasks 6.2, 4.3-4.5);
+#:   also `hazma/spectra/_neutrino/_muon.pyx:205`, a copy-paste defect
+#:   whose port says `"Neutrino energies"` instead (Task 3.5's decision,
+#:   shipped in Task 4.6).
+#: * `"Positron energies ..."` -- `hazma/spectra/_positron/{_muon,_pion}.pyx`
+#:   (Tasks 4.1, 4.6).
+#: * `"Neutrino energies ..."` -- `hazma/spectra/_neutrino/_pion.pyx`
+#:   (Task 4.6), and the port's spelling for the `_muon.pyx` site above.
+#:
+#: Each is additionally pinned in its own kernel's test module; this roster
+#: is what proves the *contract layer* still renders all of them.
+FROZEN_RANK_QUANTITIES = (
+    "Photon energies",
+    "Positron energies",
+    "Neutrino energies",
+)
 
-#: The quantity `scalar_mediator_decay_spectrum.pyx:270` names in its rank
-#: `assert`. It is `"Photon energies"` rather than the `"Positron
-#: energies"` the previous oracle used, and the tests below read it from
-#: here so the coupling is visible.
-SPECTRUM_QUANTITY = "Photon energies"
+#: The two `partial_widths` messages, from
+#: `scalar_mediator_decay_spectrum.pyx:249` (a `raise ValueError`) and
+#: `:251` (an `assert`). Task 6.2 deleted that file; Task 6.3's positron
+#: twins never carried either, because they declared
+#: `np.ndarray[double] pws` and let Cython's buffer cast raise.
+FROZEN_WIDTHS_MISSING = "Partial widths must be a list or array."
+FROZEN_WIDTHS_RANK = "Partial widths must be 1-dimensional."
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -661,160 +682,81 @@ def cython_dispatch_messages() -> dict[str, set[str]]:
 class TestCythonMessageParity:
     """The port's messages are the Cython's, byte for byte.
 
-    The phase file's second exit criterion. The oracle is the ``.pyx`` sources
-    themselves -- read here, not copied into this file -- because the messages
-    are a user-visible part of the public API and a reworded one is a silent
-    break that no numerical gate can see.
+    The phase file's second exit criterion. It used to read its oracle out
+    of the ``.pyx`` sources, because the messages are a user-visible part
+    of the public API and a reworded one is a silent break no numerical
+    gate can see. cython-to-rust Task 6.2 deleted the last two files that
+    spelled one, so the roster moved into :data:`FROZEN_RANK_QUANTITIES`
+    and :data:`FROZEN_WIDTHS_MISSING` / :data:`FROZEN_WIDTHS_RANK` with
+    per-message provenance, and the source scan stayed on as the guard
+    that the tree does not quietly grow one back.
     """
 
-    def test_the_tree_carries_exactly_the_expected_message_roster(self) -> None:
-        # Enumerated from source so the templates below are known to cover
-        # everything, and so a new wording cannot appear unnoticed.
-        #
-        # The roster **shrinks as the port advances**, because it is read
-        # from the surviving `.pyx`. Task 3.5 measured four `assert`
-        # wordings across the whole compiled layer; cython-to-rust Task 4.6
-        # swapped the last `hazma/spectra/**` entry points, so
-        # `"Positron energies ..."` and `"Neutrino energies ..."` no longer
-        # appear in any `.pyx` and the three below are what is left, all of
-        # them in the mediator decay-spectrum modules Phase 06 deletes.
-        #
-        # The port still emits both retired wordings — that is the whole
-        # point of carrying a Cython twin's message across a swap — and
-        # each is pinned in its own kernel's test module
-        # (`test/test_core_positron_muon.py`,
-        # `test/test_core_positron_pion.py`,
-        # `test/test_core_neutrino.py`) rather than here. Note in
-        # particular that `hazma/spectra/_neutrino/_muon.pyx:205` said
-        # `"Photon energies ..."`, a copy-paste defect its `_pion.pyx`
-        # sibling did not share; Task 3.5 decided the port says
-        # `"Neutrino energies"` there, and Task 4.6 shipped that.
+    def test_the_tree_no_longer_spells_a_dispatch_message(self) -> None:
+        # The roster shrank as the port advanced and is now empty: the four
+        # capi-survivor `.pyx` under `hazma/spectra/` carry no top-level
+        # `def` and no dispatch `assert`, and `hazma/_utils/boost.pyx`'s two
+        # `assert`s carry no message. If this fails, a `.pyx` grew a
+        # dispatch message back and the frozen roster above is no longer
+        # the whole story.
         found = cython_dispatch_messages()
-        assert found["assert"] == {
-            "Photon energies must be 0 or 1-dimensional.",
-            "Partial widths must be 1-dimensional.",
-        }
-        assert found["raise"] == {"Partial widths must be a list or array."}
+        assert found["assert"] == set()
+        assert found["raise"] == set()
 
-    def test_every_rank_message_is_reproduced_exactly(self) -> None:
-        suffix = " must be 0 or 1-dimensional."
-        messages = [
-            message
-            for message in cython_dispatch_messages()["assert"]
-            if message.endswith(suffix)
-        ]
-        assert messages, "no rank messages found in the .pyx sources"
-        for message in messages:
-            quantity = message[: -len(suffix)]
-            with pytest.raises(ValueError) as excinfo:
-                roundtrip_as(np.ones((2, 2)), quantity)
-            assert str(excinfo.value) == message
+    @pytest.mark.parametrize("quantity", FROZEN_RANK_QUANTITIES)
+    def test_every_rank_message_is_reproduced_exactly(self, quantity: str) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            roundtrip_as(np.ones((2, 2)), quantity)
+        assert str(excinfo.value) == f"{quantity} must be 0 or 1-dimensional."
 
     def test_the_partial_width_messages_are_reproduced_exactly(self) -> None:
-        found = cython_dispatch_messages()
-        rank = "Partial widths must be 1-dimensional."
-        missing = "Partial widths must be a list or array."
-        assert rank in found["assert"]
-        assert missing in found["raise"]
-
         with pytest.raises(ValueError) as excinfo:
             roundtrip_vector(np.ones((2, 2)), "Partial widths")
-        assert str(excinfo.value) == rank
+        assert str(excinfo.value) == FROZEN_WIDTHS_RANK
 
         with pytest.raises(ValueError) as excinfo:
             roundtrip_vector(1.0, "Partial widths")
-        assert str(excinfo.value) == missing
+        assert str(excinfo.value) == FROZEN_WIDTHS_MISSING
 
 
 class TestDeclaredDivergencesFromCython:
-    """Each place the port deliberately does not match the live Cython.
+    """The three ways the port is deliberately wider than the Cython was.
 
-    Written as assertions against **both** implementations so that the claim
-    "this is a widening, not a break" is checked rather than asserted, and so
-    that a Phase 04-06 swap changing one of these fails here first.
+    Each was measured against a live twin while one survived, and each is
+    a *widening*: no call that worked before can notice it. The twins are
+    all gone now — cython-to-rust Task 5.2 deleted the last cross-section
+    ``.pyx`` and Task 6.2 the last spectra-shaped one — so what is left
+    here is the port's half, pinned so a later edit cannot narrow it back
+    without a test going red. The measurements themselves are in the task
+    notes (Tasks 3.5, 4.6, 5.2 and 6.2).
 
-    The spectra half of the oracle is whichever ``.pyx`` still exports a
-    ``def`` with the unary "scalar or 1-D array in, same out" shape. That
-    was ``_photon/_muon`` until cython-to-rust Task 4.3 swapped it, then
-    ``_photon/_pion`` until Task 4.4, then ``_photon/_rho`` until Task 4.5
-    exhausted the photon candidates, then ``_positron/_pion`` until Task
-    4.6 closed Phase 04 and left ``hazma/spectra/`` with no top-level
-    ``def`` at all.
-
-    It is ``scalar_mediator_decay_spectrum`` now, and that choice is
-    forced rather than preferred. The two surviving neutrino entry points
-    went to Rust in the same task, so "rewrite these around the neutrino
-    shape" — which this docstring used to offer as the alternative — has
-    no Cython side left to rewrite against. What
-    ``scalar_mediator_decay_spectrum`` has is the *identical* dispatch
-    shape on its first argument: ``hasattr(__len__)``, then
-    ``np.array``, then ``assert len(shape) == 1`` with the message
-    ``"Photon energies must be 0 or 1-dimensional."``
-    (``scalar_mediator_decay_spectrum.pyx:268-271``). It differs only in
-    carrying three more arguments, which these tests supply as
-    :data:`SPECTRUM_ARGS`, and in the quantity its message names, which
-    they take from the source rather than hard-code.
-
-    It survives until Phase 06 deletes the mediator spectrum modules,
-    after which the widening described here has no live Cython side at
-    all and this class retires with the last ``.pyx``.
-
-    **Two of its cases have already retired**, in cython-to-rust Task
-    5.2, which deleted ``_c_scalar_mediator_cross_sections.pyx``. Both
-    were *evidence* rather than gates — they showed that the port's two
-    widenings were the surviving cross-section dispatch's own behavior
-    rather than inventions:
-
-    * a 0-d array took the scalar path there and raises in the spectra,
-      which is why the port returns a float for one
-      (``_c_scalar_mediator_cross_sections.pyx:1052`` read ``.ndim``
-      after ``hasattr(__len__)``);
-    * a Python list was refused there with ``AttributeError`` for the
-      same reason, and the port accepts it.
-
-    Neither statement has a Cython side left to compare against; the
-    *port's* half of both is pinned in
-    ``test/test_core_scalar_xs.py::TestTheDispatchContract`` and its
-    vector twin.
+    * **A 0-d array takes the scalar path** instead of raising. The
+      spectra entry points asserted on it (``len(np.array(15.0).shape)``
+      is 0, not 1); the eighteen cross-section entry points already
+      called ``.item()`` on whatever they were given.
+    * **A rank error is a ``ValueError``, not an ``AssertionError``.**
+      ``rules.md`` rule 9: the Cython's ``assert``s vanish under
+      ``python -O`` and leave the user a downstream failure instead. The
+      *message* is unchanged, which is what
+      :class:`TestCythonMessageParity` checks.
+    * **A list or tuple is accepted.** The seventeen
+      ``hasattr(__len__)``-dispatching entry points already accepted one
+      (they called ``np.array``); the cross sections read ``.ndim`` on it
+      and raised ``AttributeError``.
     """
 
-    def test_a_zero_dimensional_array_raises_in_cython_and_returns_in_rust(
-        self,
-    ) -> None:
-        with pytest.raises(AssertionError):
-            cython_spectrum.scalar_mediator_decay_spectrum(
-                np.array(15.0), *SPECTRUM_ARGS
-            )
+    def test_a_zero_dimensional_array_returns_a_float(self) -> None:
         assert type(roundtrip(np.array(15.0))) is float
 
-    def test_a_rank_error_is_an_assertion_in_cython_and_a_value_error_in_rust(
+    def test_a_rank_error_is_a_value_error_carrying_the_assert_s_message(
         self,
     ) -> None:
-        # rules.md rule 9: the Cython's `assert`s become unconditional raises,
-        # because today they vanish under `python -O` and leave the user a
-        # downstream failure instead. The *message* is unchanged, which is
-        # what `TestCythonMessageParity` checks.
-        with pytest.raises(AssertionError) as cython_error:
-            cython_spectrum.scalar_mediator_decay_spectrum(
-                np.ones((2, 2)), *SPECTRUM_ARGS
-            )
-        with pytest.raises(ValueError) as rust_error:
-            roundtrip_as(np.ones((2, 2)), SPECTRUM_QUANTITY)
-        assert str(cython_error.value) == str(rust_error.value)
-
-    def test_a_sequence_is_accepted_by_the_spectra_and_by_the_port(self) -> None:
-        assert cython_spectrum.scalar_mediator_decay_spectrum(
-            [15.0, 25.0], *SPECTRUM_ARGS
-        ).shape == (2,)
-        assert roundtrip([15.0, 25.0]).shape == (2,)
+        with pytest.raises(ValueError) as excinfo:
+            roundtrip_as(np.ones((2, 2)), "Photon energies")
+        assert str(excinfo.value) == "Photon energies must be 0 or 1-dimensional."
 
     def test_a_sequence_is_accepted_by_the_port(self) -> None:
-        # The one place the port is *wider* than the Cython twin it replaced
-        # rather than equal to it: the cross-section dispatch read `.ndim` on
-        # whatever it was given, so a list raised AttributeError. The
-        # comparison retired with that module in Task 5.2 (see the class
-        # docstring); the port's half is still worth pinning, because it is
-        # what no working call can notice.
+        assert roundtrip([15.0, 25.0]).shape == (2,)
         assert roundtrip_as([15.0, 25.0], "Center-of-mass energies").shape == (2,)
 
 

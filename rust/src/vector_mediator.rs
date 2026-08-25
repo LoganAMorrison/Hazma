@@ -14,14 +14,30 @@
 //! survives as a private helper of the thermal integrand, which is the
 //! only caller it ever had.
 //!
-//! Phase 06 adds the spectrum modules alongside these.
+//! # The decay spectrum
+//!
+//! [`dnde_decay_v`] and [`dnde_decay_v_pt`] are the seventh and eighth
+//! entry points, landed in Task 6.2 — the whole public surface of
+//! `hazma/vector_mediator/vector_mediator_decay_spectrum.pyx`, which
+//! that task deleted. Their math is in
+//! [`crate::kernels::vector_decay_photon`]. They are a *pair* rather
+//! than one dispatching function because the `.pyx` was: `dnde_decay_v`
+//! declared `np.ndarray[double] eng_gam` and `dnde_decay_v_pt` declared
+//! `double eng_gam`, and
+//! `hazma/vector_mediator/_vector_mediator_spectra.py:99-102` still
+//! chooses between them on `hasattr(e_gams, "__len__")`.
+//!
+//! Phase 06 Task 6.3 adds the positron spectrum alongside them.
 
-use pyo3::exceptions::PyTypeError;
+use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 
-use crate::dispatch::{map_unary, map_unary_try};
+use crate::dispatch::{map_unary, map_unary_try, require_vector};
+use crate::kernels::mediator_tables::{PartialWidths, PhotonMode, SpectrumError};
 use crate::kernels::soft_complex::NonRealResult;
+use crate::kernels::vector_decay_photon;
 use crate::kernels::vector_xs;
+use numpy::IntoPyArray;
 
 /// The wording every `NonRealResult` reaches Python with.
 ///
@@ -242,6 +258,134 @@ fn thermal_cross_section(
         .map_err(non_real)
 }
 
+/// The wording the port gives `dnde_decay_v`'s energy argument.
+///
+/// The `.pyx` had no `assert` here to borrow from — it declared
+/// `np.ndarray[double] eng_gam` and let Cython's own argument check and
+/// buffer cast raise — so this is the spelling the argument has in the
+/// `.pyx` signature, matching what the scalar twin's `assert` called the
+/// same quantity.
+const PHOTON_ENERGIES: &str = "Photon energies";
+
+/// The wording the port gives `partial_widths`, as in the scalar twin.
+const PARTIAL_WIDTHS: &str = "Partial widths";
+
+/// Cython's own out-of-bounds wording, verbatim — see
+/// [`crate::scalar_mediator`]'s copy for how it was measured.
+const OUT_OF_BOUNDS_MESSAGE: &str = "Out of bounds on buffer access (axis 0)";
+
+/// The wording a complex FSR coefficient reaches Python with.
+///
+/// The charged pion's, here, where the scalar twin's is the lepton's:
+/// the two `.pyx` put the `1.5` exponent on different factors.
+const NON_REAL_SPECTRUM_MESSAGE: &str = "Photon spectrum is complex at this mediator mass: the final-state \
+     radiation coefficient raised to the power 3/2 divides by a vanishing \
+     denominator, which happens at mv = 2 * m_pi exactly.";
+
+/// Map a kernel failure onto the exception the Cython raised.
+fn spectrum_error(error: SpectrumError) -> PyErr {
+    match error {
+        SpectrumError::OutOfBounds => PyIndexError::new_err(OUT_OF_BOUNDS_MESSAGE),
+        SpectrumError::NonReal => PyTypeError::new_err(NON_REAL_SPECTRUM_MESSAGE),
+    }
+}
+
+/// Photon `dN/dE` in MeV⁻¹ from the decay of a boosted vector mediator,
+/// over a grid of energies.
+///
+/// # Parameters
+///
+/// * `eng_gam` — lab-frame photon energies in MeV, as a 1-D `float64`
+///   array. Never a scalar: use [`dnde_decay_v_pt`] for that, as the
+///   `.pyx` required and as the Python wrapper still does.
+/// * `eng_v` — the mediator's total energy, MeV.
+/// * `mv` — the mediator's mass, MeV.
+/// * `pws` — the four normalised partial widths, in the order
+///   `[e e, mu mu, pi0 g, pi pi]`.
+/// * `mode` — the channel: `"total"`, `"e e g"`, `"pi pi g"`,
+///   `"pi pi"`, `"pi0 g"`, `"mu mu g"` or `"mu mu"`. Anything else —
+///   including `None` — gives `0.0` at every energy, which is what the
+///   `.pyx` gives (see
+///   [`crate::kernels::mediator_tables`]'s docs, and the follow-up
+///   `docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md`).
+///
+/// # Returns
+///
+/// A fresh 1-D `float64` array of `dN/dE` in MeV⁻¹.
+///
+/// # Errors
+///
+/// `ValueError` if either array argument is not 1-D `float64`, or has no
+/// `__len__` at all; `IndexError` for a `pws` shorter than four;
+/// `TypeError` where the charged-pion FSR coefficient comes back
+/// complex.
+///
+/// Two divergences from the Cython, both on paths no working call takes.
+/// A scalar `eng_gam` raised `TypeError` there and raises `ValueError`
+/// here (`"Photon energies must be a list or array."`), and a `list` was
+/// refused there and is accepted here — the same widening
+/// [`crate::dispatch`] declares for every other entry point.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_gam, eng_v, mv, pws, mode)")]
+fn dnde_decay_v(
+    py: Python<'_>,
+    eng_gam: &Bound<'_, PyAny>,
+    eng_v: f64,
+    mv: f64,
+    pws: &Bound<'_, PyAny>,
+    mode: Option<&str>,
+) -> PyResult<Py<PyAny>> {
+    let energies = require_vector(eng_gam, PHOTON_ENERGIES)?;
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = mode.and_then(PhotonMode::parse);
+    let tables = vector_decay_photon::tables_for(mv);
+    let widths = PartialWidths::new(&widths);
+
+    let spectrum = energies
+        .iter()
+        .map(|&energy| {
+            vector_decay_photon::spectrum_point(energy, eng_v, mv, widths, selected, &tables)
+                .map_err(spectrum_error)
+        })
+        .collect::<PyResult<Vec<f64>>>()?;
+    Ok(spectrum.into_pyarray(py).into_any().unbind())
+}
+
+/// Photon `dN/dE` in MeV⁻¹ from the decay of a boosted vector mediator,
+/// at one energy.
+///
+/// The scalar-argument twin of [`dnde_decay_v`]; arguments and errors are
+/// that function's, except that `eng_gam` is a single energy in MeV and
+/// PyO3 raises the same `TypeError` for a non-number that CPython raised
+/// at the `.pyx`'s `double eng_gam`.
+///
+/// # Errors
+///
+/// As [`dnde_decay_v`], minus the `eng_gam` array cases.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_gam, eng_v, mv, pws, mode)")]
+fn dnde_decay_v_pt(
+    eng_gam: f64,
+    eng_v: f64,
+    mv: f64,
+    pws: &Bound<'_, PyAny>,
+    mode: Option<&str>,
+) -> PyResult<f64> {
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = mode.and_then(PhotonMode::parse);
+    let tables = vector_decay_photon::tables_for(mv);
+
+    vector_decay_photon::spectrum_point(
+        eng_gam,
+        eng_v,
+        mv,
+        PartialWidths::new(&widths),
+        selected,
+        &tables,
+    )
+    .map_err(spectrum_error)
+}
+
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xx_to_v_to_ff, module)?)?;
@@ -250,5 +394,7 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xx_to_v_to_pi0v, module)?)?;
     module.add_function(wrap_pyfunction!(sigma_xx_to_vv, module)?)?;
     module.add_function(wrap_pyfunction!(thermal_cross_section, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_decay_v, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_decay_v_pt, module)?)?;
     Ok(())
 }

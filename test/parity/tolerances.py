@@ -605,12 +605,18 @@ BUDGETS: dict[str, Budget] = {
     ),
     # -- mediator spectra ---------------------------------------------------
     "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="cos(theta) QAGP "
         "(hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx:184) "
         "over an integrand that calls the quad-backed charged-pion photon "
-        "kernel (:2-3).",
+        "kernel (:2-3). Tightened from NESTED_RTOL by Task 6.2 on its own "
+        "measurement -- 5.33e-12 worst relative over the 8,610 pinned "
+        "values, 6,379 of them bit-equal, worst at "
+        "ms_550.boosted_strong.default. 188x headroom. The residual is the "
+        "quadrature port's rather than the transliteration's: at "
+        "eng_s == ms the boost integrand is a constant and every channel "
+        "agrees to within one ulp.",
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s": Budget(
         rtol=NESTED_RTOL,
@@ -626,19 +632,26 @@ BUDGETS: dict[str, Budget] = {
         "(hazma/scalar_mediator/scalar_mediator_positron_spec.pyx:209).",
     ),
     "mediator_spectra.vector.photon.dnde_decay_v": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="cos(theta) QAGP "
         "(hazma/vector_mediator/vector_mediator_decay_spectrum.pyx:219) "
         "over an integrand that calls the quad-backed charged-pion photon "
-        "kernel (:10).",
+        "kernel (:10). Tightened from NESTED_RTOL by Task 6.2 on its own "
+        "measurement -- 1.19e-12 worst relative over the 29,295 pinned "
+        "values, 22,918 of them bit-equal, worst at "
+        "mv_900.boosted_strong.mu_mu. 838x headroom.",
     ),
     "mediator_spectra.vector.photon.dnde_decay_v_pt": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="scalar-argument twin of the vector photon dnde_decay_v, same "
         "nested quadrature "
-        "(hazma/vector_mediator/vector_mediator_decay_spectrum.pyx:219).",
+        "(hazma/vector_mediator/vector_mediator_decay_spectrum.pyx:219), "
+        "and bit-for-bit the same values -- Task 6.2 measured the two "
+        "entry points identical over its whole grid, because the port "
+        "serves both from one kernel. Tightened with its twin, on the "
+        "same 1.19e-12.",
     ),
     "mediator_spectra.vector.positron.dnde_decay_v": Budget(
         rtol=NESTED_RTOL,

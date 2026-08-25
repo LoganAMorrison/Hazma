@@ -34,12 +34,26 @@
 //! passes all of them positionally, so dropping or renaming one would
 //! narrow the public API.
 //!
-//! Phase 06 adds the spectrum modules alongside these.
+//! # The decay spectrum
+//!
+//! [`scalar_mediator_decay_spectrum`] is the thirteenth entry point,
+//! landed in Task 6.2 — the whole public surface of
+//! `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx`, which
+//! that task deleted. Its math is in
+//! [`crate::kernels::scalar_decay_photon`]. It is the only function here
+//! that takes an array argument other than the mapped one
+//! (`partial_widths`) and the only one with a container argument
+//! (`modes`), and both are handled below rather than in a kernel because
+//! both are Python-object questions (`rules.md` rule 8).
+//!
+//! Phase 06 Task 6.3 adds the positron spectrum alongside it.
 
-use pyo3::exceptions::PyTypeError;
+use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 
-use crate::dispatch::{map_unary, map_unary_try};
+use crate::dispatch::{map_unary, map_unary_try, require_vector};
+use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
+use crate::kernels::scalar_decay_photon;
 use crate::kernels::scalar_xs;
 use crate::kernels::soft_complex::NonRealResult;
 
@@ -408,6 +422,134 @@ fn thermal_cross_section(
         .map_err(non_real)
 }
 
+/// The wording the `.pyx`'s rank `assert` gave the mapped argument.
+///
+/// `scalar_mediator_decay_spectrum.pyx:270` said `"Photon energies must
+/// be 0 or 1-dimensional."`, and the port reproduces the message and
+/// promotes the `AssertionError` to a `ValueError` (`rules.md` rule 9).
+const PHOTON_ENERGIES: &str = "Photon energies";
+
+/// The wording the `.pyx`'s two `partial_widths` checks gave it.
+///
+/// Both were that call site's own text — the `raise ValueError("Partial
+/// widths must be a list or array.")` at `:249` and the `assert ...,
+/// "Partial widths must be 1-dimensional."` at `:251` —
+/// and [`require_vector`] emits both verbatim.
+const PARTIAL_WIDTHS: &str = "Partial widths";
+
+/// Cython's own out-of-bounds wording, verbatim.
+///
+/// `@cython.boundscheck(True)` on the integrand and the entry point
+/// means a short `partial_widths` raised
+/// `IndexError: Out of bounds on buffer access (axis 0)`, measured
+/// against the shipped 2.1.0 extension rather than read off the
+/// generated C. The axis is the only one a 1-D buffer has.
+const OUT_OF_BOUNDS_MESSAGE: &str = "Out of bounds on buffer access (axis 0)";
+
+/// The wording a complex FSR coefficient reaches Python with.
+///
+/// Not the Cython's, for the reason [`crate::vector_mediator`]'s
+/// `NON_REAL_MESSAGE` gives: `__Pyx_SoftComplexToDouble`'s text is two
+/// thirds advice about a Cython compiler directive. The **type** is what
+/// the port owes, so `TypeError` it stays.
+const NON_REAL_SPECTRUM_MESSAGE: &str = "Photon spectrum is complex at this mediator mass: the final-state \
+     radiation coefficient raised to the power 3/2 divides by a vanishing \
+     denominator, which happens at ms = 2 * m_lepton exactly.";
+
+/// Map a kernel failure onto the exception the Cython raised.
+fn spectrum_error(error: SpectrumError) -> PyErr {
+    match error {
+        SpectrumError::OutOfBounds => PyIndexError::new_err(OUT_OF_BOUNDS_MESSAGE),
+        SpectrumError::NonReal => PyTypeError::new_err(NON_REAL_SPECTRUM_MESSAGE),
+    }
+}
+
+/// Photon `dN/dE` in MeV⁻¹ from the decay of a boosted scalar mediator.
+///
+/// # Parameters
+///
+/// * `photon_energies` — the mapped argument: lab-frame photon energies
+///   in MeV, as a float, a NumPy scalar, a 0-d numeric array, or a 1-D
+///   `float64` array (or a sequence that converts to one).
+/// * `sm_energy` — the mediator's total energy, MeV.
+/// * `sm_mass` — the mediator's mass, MeV.
+/// * `partial_widths` — the five normalised partial widths, in the order
+///   `[e e, mu mu, pi0 pi0, pi pi, g g]`, as a 1-D `float64` array or a
+///   sequence that converts to one.
+/// * `modes` — any container of mode names; membership is decided with
+///   Python's `in`, as the `.pyx` decided it, so a `str` works and sets
+///   every bit whose name it contains. Omitted means all seven.
+///
+/// # Returns
+///
+/// `dN/dE` in MeV⁻¹: a float for a scalar argument, a fresh 1-D
+/// `float64` array for a grid.
+///
+/// # Errors
+///
+/// `ValueError` for a rank or dtype violation in either array argument,
+/// `TypeError` for a `photon_energies` that is neither a real number nor
+/// a sequence, whatever `modes.__contains__` raises, `IndexError` for a
+/// `partial_widths` too short for the channels asked for, and `TypeError`
+/// where an FSR coefficient comes back complex.
+#[pyfunction]
+#[pyo3(
+    text_signature = "(photon_energies, sm_energy, sm_mass, partial_widths, \
+                      modes=['pi pi', 'mu mu', 'pi0 pi0', 'g g', 'e e g', \
+                      'pi pi g', 'mu mu g'])"
+)]
+#[pyo3(signature = (photon_energies, sm_energy, sm_mass, partial_widths, modes=None))]
+fn scalar_mediator_decay_spectrum(
+    photon_energies: &Bound<'_, PyAny>,
+    sm_energy: f64,
+    sm_mass: f64,
+    partial_widths: &Bound<'_, PyAny>,
+    modes: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Py<PyAny>> {
+    let widths = require_vector(partial_widths, PARTIAL_WIDTHS)?;
+    let selected = scalar_photon_modes(modes)?;
+    // Built once per call. The `.pyx` rebuilt a 500-point,
+    // quadrature-backed table on *every* call because its cache was
+    // never populated; the memo in
+    // `crate::kernels::mediator_tables` returns the same numbers from
+    // the same inputs, so this is performance only (`rules.md` rules 3
+    // and 12).
+    let tables = scalar_decay_photon::tables_for(sm_mass);
+    let pws = PartialWidths::new(&widths);
+
+    map_unary_try(photon_energies, PHOTON_ENERGIES, |eng_gam| {
+        scalar_decay_photon::spectrum_point(eng_gam, sm_energy, sm_mass, pws, selected, &tables)
+            .map_err(spectrum_error)
+    })
+}
+
+/// Fold `modes` into a bit set with Python's `in`, one name at a time.
+///
+/// The `.pyx` wrote `if "pi pi" in modes: bitflag += BITFLAG_PP` seven
+/// times (`:253-266`), so membership is `__contains__` and not a list
+/// comparison — `modes="pi pi g"` sets the `"pi pi"` and `"pi pi g"`
+/// bits today by substring, and a set or a tuple works as well as a
+/// list. Testing each name once also means a repeated entry cannot
+/// double a flag into its neighbour's bit.
+///
+/// `None` means the argument was omitted, and the `.pyx`'s default is
+/// every mode. Passing `modes=None` explicitly raised `TypeError` there
+/// (`"pi pi" in None`) and takes the default here — a divergence no
+/// working call can notice, since no working call passes it.
+fn scalar_photon_modes(modes: Option<&Bound<'_, PyAny>>) -> PyResult<ScalarPhotonModes> {
+    let Some(modes) = modes else {
+        return Ok(ScalarPhotonModes::from_names(ScalarPhotonModes::NAMES));
+    };
+    let mut bits = 0;
+    for name in ScalarPhotonModes::NAMES {
+        if modes.contains(name)? {
+            bits |= ScalarPhotonModes::bit_for(name)
+                .expect("every NAMES entry has a bit by construction");
+        }
+    }
+    Ok(ScalarPhotonModes::from_bits(bits))
+}
+
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xx_to_s_to_ff, module)?)?;
@@ -422,5 +564,6 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xg_to_xg, module)?)?;
     module.add_function(wrap_pyfunction!(sigma_xs_to_xs, module)?)?;
     module.add_function(wrap_pyfunction!(thermal_cross_section, module)?)?;
+    module.add_function(wrap_pyfunction!(scalar_mediator_decay_spectrum, module)?)?;
     Ok(())
 }

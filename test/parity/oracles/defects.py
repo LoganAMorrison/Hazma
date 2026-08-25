@@ -143,4 +143,13 @@ RESTORED_SOURCES: dict[str, str] = {
     "hazma/spectra/_photon/path.py": "0954e5a^",
     "hazma/spectra/_photon/_rho.pyx": "b5f7f90^",
     "hazma/spectra/_photon/_rho.pxd": "b5f7f90^",
+    # cython-to-rust Task 6.2 deleted
+    # `hazma/{scalar,vector}_mediator/*_mediator_decay_spectrum.pyx`, which
+    # the three `mediator_spectra.*.photon.*` cases run through. They are
+    # deliberately *not* listed here: every revision above is a literal
+    # SHA so a restore is reproducible, and that task could not know the
+    # SHA of its own commit. A re-capture must add both files with
+    # `git log -1 --format=%h --diff-filter=D -- <path>` suffixed `^`.
+    # Tracked as `docs/followups/todo/oracle-restore-revisions-for-the-
+    # mediator-decay-pyx.md`.
 }
