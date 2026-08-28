@@ -218,7 +218,7 @@ closed phase's entries below, verbatim, under a
   (`../references/cython-inventory.md` §Bugs item 3); this consequence
   was not. **Phases 05/06 must reproduce the `nan` or declare the
   consolidation** —
-  [`../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
+  [`../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md).
 - **A predicate that means "the port has started" must ask whether a
   kernel is *served*, not whether the extension exists** (Task 2.1). From
   Phase 02 on, `hazma._core` is in every build while every value still

@@ -8,14 +8,14 @@ re-dispatched a mode string inside their integrand. cython-to-rust Task
 ``rust/src/kernels/mediator_tables.rs``; Tasks 6.2 and 6.3 build the entry
 points on it. This module is the gate on the factored part.
 
-**Two of the four are gone.** Task 6.2 deleted both decay modules, so the
-mode oracles below that used to call a shipped ``.pyx`` now call the port
-that replaced it. What was measured against the Cython while it was alive
-is recorded in
-``projects/cython-to-rust/task-notes/phase-06/task-6.2-decay-spectra.md``;
-what those tests still buy is that the parser's verdict and the entry
-point's behaviour stay coupled, which is the half a later edit could
-break.
+**All four are gone.** Task 6.2 deleted both decay modules and Task 6.3
+both positron ones, so every mode oracle below that used to call a
+shipped ``.pyx`` now calls the port that replaced it. What was measured
+against the Cython while it was alive is recorded in
+``projects/cython-to-rust/task-notes/phase-06/task-6.2-decay-spectra.md``
+and ``task-6.3-positron-spectra.md``; what those tests still buy is that
+the parser's verdict and the entry point's behaviour stay coupled, which
+is the half a later edit could break.
 
 Why the oracles live here rather than in ``cargo test``
 -------------------------------------------------------
@@ -584,8 +584,24 @@ class TestPositronMode:
     def test_rejects_everything_else(self, fs: str) -> None:
         assert tables.positron_mode(fs) is None
 
-    def test_the_rejected_set_is_what_the_cython_answers_with_zero(self) -> None:
-        from hazma.scalar_mediator.scalar_mediator_positron_spec import (  # noqa: PLC0415
+    def test_the_rejected_set_reaches_the_entry_point_as_zero(self) -> None:
+        """A rejected string is `0.0` at the entry point, not an error.
+
+        Until Task 6.3 the call below went to
+        ``scalar_mediator_positron_spec.pyx``, so this was an independent
+        oracle: every ``cdef double`` integrand there ends in an
+        ``if``-chain with no ``else``, and a C function that falls off
+        its end returns zero. That ``.pyx`` is gone and the call now goes
+        to the port, so what this pins is the port's promise to keep
+        answering the way the Cython did — transcription with its
+        provenance recorded, the same standing
+        ``cython_dispatch_messages()`` has had since Task 6.2.
+
+        The measurement behind the transcription is in
+        ``docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md``,
+        which is also where the case for *changing* it lives.
+        """
+        from hazma.scalar_mediator._scalar_mediator_positron_spectra import (  # noqa: PLC0415
             dnde_decay_s_pt,
         )
 

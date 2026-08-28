@@ -339,7 +339,7 @@ the Cython's numbers bit-for-bit rather than approximately.
   follow-up below is taken up.
 - The two consolidation follow-ups this module makes concrete but does
   not touch:
-  [`positron-spectrum-nan-at-legacy-electron-mass`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  [`positron-spectrum-nan-at-legacy-electron-mass`](../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   (ripens before Phases 05/06) and the general table merge, which
   `../../PLAN.md` scopes out. `constants.rs`'s two namespaces are what
   either would edit.

@@ -1145,12 +1145,12 @@ def build_cases() -> dict[str, Case]:
     )
 
     # -- mediator spectra: 7 consumed entry points --------------------------
-    # The three *photon* cases resolve through the Python wrapper rather
-    # than through the `.pyx` they were captured from: cython-to-rust Task
-    # 6.2 deleted both `*_mediator_decay_spectrum.pyx` and repointed the
-    # wrappers at `hazma._core`, the same way `_SCALAR_XS_MODULE` above
-    # resolves the swapped cross sections. The four *positron* cases still
-    # name their `.pyx` directly until Task 6.3 does the same to them.
+    # All seven cases resolve through the Python wrapper rather than
+    # through the `.pyx` they were captured from: cython-to-rust Task 6.2
+    # deleted both `*_mediator_decay_spectrum.pyx` and Task 6.3 both
+    # `*_mediator_positron_spec.pyx`, repointing the wrappers at
+    # `hazma._core` — the same way `_SCALAR_XS_MODULE` above resolves the
+    # swapped cross sections.
     scalar_spec_models = _scalar_spectrum_models()
     vector_spec_models = _vector_spectrum_models()
 
@@ -1168,11 +1168,15 @@ def build_cases() -> dict[str, Case]:
     # (hazma/scalar_mediator/scalar_mediator_positron_spec.pyx:232-234).
     positron_keys = ["e e", "mu mu", "pi pi"]
     positron_modes = ["total", "e e", "mu mu", "pi pi"]
+    # Ported: cython-to-rust Task 6.3. The module is the wrapper, as for
+    # every other swap -- see `PORTED_ENTRY_POINTS`. The leaf name the
+    # extension serves differs from the public one here; `CORE_RENAMES`
+    # is where that is declared.
     for function, pointwise in (("dnde_decay_s", False), ("dnde_decay_s_pt", True)):
         cases.append(
             Case(
                 name=f"mediator_spectra.scalar.positron.{function}",
-                module="hazma.scalar_mediator.scalar_mediator_positron_spec",
+                module="hazma.scalar_mediator._scalar_mediator_positron_spectra",
                 function=function,
                 summary="positron dN/dE from scalar-mediator decay, MeV^-1",
                 blocks=_mediator_spectrum_blocks(
@@ -1211,11 +1215,12 @@ def build_cases() -> dict[str, Case]:
                 ),
             )
         )
+    # Ported: cython-to-rust Task 6.3, as the scalar pair above.
     for function, pointwise in (("dnde_decay_v", False), ("dnde_decay_v_pt", True)):
         cases.append(
             Case(
                 name=f"mediator_spectra.vector.positron.{function}",
-                module="hazma.vector_mediator.vector_mediator_positron_spec",
+                module="hazma.vector_mediator._vector_mediator_positron_spectra",
                 function=function,
                 summary="positron dN/dE from vector-mediator decay, MeV^-1",
                 blocks=_mediator_spectrum_blocks(
@@ -1321,9 +1326,10 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: ``numpy.logspace``, its columns against the Phase 04 kernels' own
 #: entry points, and its mode parsers against the mediator ``.pyx`` that
 #: are still alive -- four when Task 6.1 wrote that, the two positron
-#: modules since Task 6.2, and none after Task 6.3, at which point the
-#: mode-parser half of that module keeps only the *port's* side. In every
-#: case the
+#: modules after Task 6.2, and none after Task 6.3, so the mode-parser
+#: half of that module now keeps only the *port's* side, with the
+#: provenance of each accepted string recorded in place of an oracle. In
+#: every case the
 #: kernels that will use them call the Rust side directly, in Rust, and
 #: never through Python. What makes the exemption safe rather than
 #: convenient is that no module under `hazma/` may import these — asserted
@@ -1632,6 +1638,51 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
         "hazma.vector_mediator.vector_mediator_decay_spectrum",
         "dnde_decay_v_pt",
     ),
+    # -- Phase 06 Task 6.3: the two mediator decay *positron* modules ------
+    # Both `.pyx` were deleted outright, like the photon pair above. The
+    # two `.pyx` were the same text once the model's name was substituted
+    # out, so one Rust kernel serves all four rows.
+    "mediator_spectra.scalar.positron.dnde_decay_s": (
+        "hazma.scalar_mediator.scalar_mediator_positron_spec",
+        "dnde_decay_s",
+    ),
+    "mediator_spectra.scalar.positron.dnde_decay_s_pt": (
+        "hazma.scalar_mediator.scalar_mediator_positron_spec",
+        "dnde_decay_s_pt",
+    ),
+    "mediator_spectra.vector.positron.dnde_decay_v": (
+        "hazma.vector_mediator.vector_mediator_positron_spec",
+        "dnde_decay_v",
+    ),
+    "mediator_spectra.vector.positron.dnde_decay_v_pt": (
+        "hazma.vector_mediator.vector_mediator_positron_spec",
+        "dnde_decay_v_pt",
+    ),
+}
+
+
+#: Case name -> the leaf name ``hazma._core`` serves it under, where that
+#: differs from the public name the wrapper exports.
+#:
+#: Empty until cython-to-rust Task 6.3, because until then every swap
+#: could keep the Cython's own spelling on the extension. The positron
+#: pair could not: ``vector_mediator_positron_spec.pyx`` exported
+#: ``dnde_decay_v``/``dnde_decay_v_pt``, and Task 6.2 had already
+#: registered those two names in ``hazma._core.vector_mediator`` for the
+#: *photon* spectrum out of `vector_mediator_decay_spectrum.pyx`. Two
+#: extensions could each export ``dnde_decay_v``; one PyO3 submodule
+#: cannot. The scalar half is renamed to match even though nothing there
+#: collides, so the two models read alike.
+#:
+#: Only `test_the_served_roster_is_exactly_the_ported_entry_points` reads
+#: this. The corpus itself calls the *wrapper*, which is what a user
+#: calls, so an alias wired to the wrong `_core` function still fails the
+#: corpus rather than hiding behind this map.
+CORE_RENAMES: dict[str, str] = {
+    "mediator_spectra.scalar.positron.dnde_decay_s": "dnde_positron_decay_s",
+    "mediator_spectra.scalar.positron.dnde_decay_s_pt": "dnde_positron_decay_s_pt",
+    "mediator_spectra.vector.positron.dnde_decay_v": "dnde_positron_decay_v",
+    "mediator_spectra.vector.positron.dnde_decay_v_pt": "dnde_positron_decay_v_pt",
 }
 
 

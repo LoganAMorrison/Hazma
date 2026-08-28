@@ -1,7 +1,22 @@
 import numpy as np
 
 from hazma import spectra
-from hazma.vector_mediator.vector_mediator_positron_spec import dnde_decay_v
+
+# Served by the Rust extension since cython-to-rust Task 6.3 deleted
+# `hazma/vector_mediator/vector_mediator_positron_spec.pyx`. Import
+# paths, call signatures and returned values are unchanged; the `_core`
+# names differ from these because `hazma._core.vector_mediator` already
+# spells `dnde_decay_v` for the *photon* spectrum Task 6.2 ported. See
+# `rust/src/kernels/mediator_decay_positron.rs` for the port.
+#
+# Both names are bound here rather than imported directly, because
+# `dnde_decay_v_pt` is a re-export: it was a public `def` of the deleted
+# extension and this module is what stands in for it, but nothing below
+# calls it.
+from hazma._core import vector_mediator as _core
+
+dnde_decay_v = _core.dnde_positron_decay_v
+dnde_decay_v_pt = _core.dnde_positron_decay_v_pt
 
 
 class VectorMediatorPositronSpectra:

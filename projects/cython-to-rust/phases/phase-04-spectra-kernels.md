@@ -15,12 +15,17 @@ entry points move; every swap gates on the corpus.
 **Scoped exception to rules.md rule 1 (delete-twin-same-PR):** the four
 extensions the mediator spectrum `.pyx` files cimport C symbols from —
 `_photon/_muon`, `_photon/_pion`, `_positron/_muon`, `_positron/_pion` —
-stay **built but Python-unreferenced** through this phase (their
-`__pyx_capi__` capsules keep the still-Cython mediator modules
-importable). They, the other spectra twins' shared `.pxd` headers, and
+stay **built but Python-unreferenced** through this phase, their
+`__pyx_capi__` capsules keeping the then-still-Cython mediator modules
+importable. They, the other spectra twins' shared `.pxd` headers, and
 `hazma/_utils/{boost,constants,kinematics}` are deleted in Phase 06
 Task 6.4 once the last cimporter is gone. All other twins (rho, kaon,
 eta family, neutrino pair) delete in their swap PR as usual.
+
+That release condition is now met: Phase 06 Tasks 6.2 and 6.3 deleted all
+four mediator modules, so each surviving `_pion` cimports only its own
+`_muon` twin and `hazma/_utils/boost`, and nothing outside the two pairs
+reads any of them. The exception stands only until Task 6.4 runs.
 
 "Python-unreferenced" is literal, and Task 4.1 settled how: a survivor's
 top-level `def` is **deleted in the swap PR** while its `cdef`s stay, so

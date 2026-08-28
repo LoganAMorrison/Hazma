@@ -85,10 +85,10 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_positron_charged_pion_array(double[:] 
 # now calls `hazma._core.positron.dnde_positron_charged_pion`, so this
 # extension is Python-unreferenced.
 #
-# The file survives because both mediator positron-spectrum modules
-# cimport `dnde_positron_charged_pion_array` from it at the C level
-# (`scalar_mediator_positron_spec.pyx:2`,
-# `vector_mediator_positron_spec.pyx:10`), which needs the built extension
-# and its `__pyx_capi__` capsules. Phase 06 Task 6.4 deletes the file once
-# the last cimporter is gone. See the phase file's "scoped exception to
-# rules.md rule 1".
+# The file survived Task 4.6 because both mediator positron-spectrum
+# modules cimported `dnde_positron_charged_pion_array` from it at the C
+# level, which needed the built extension and its `__pyx_capi__`
+# capsules. Task 6.3 deleted both of those, so this extension now has no
+# cimporter at all and `hazma/spectra/_positron/_muon.pyx` — which it
+# cimports in turn — has only this one. Phase 06 Task 6.4 deletes the
+# pair. See the phase file's "scoped exception to rules.md rule 1".

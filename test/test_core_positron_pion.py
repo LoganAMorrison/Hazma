@@ -4,13 +4,16 @@ cython-to-rust Phase 04 Task 4.6. Shaped after
 ``test/test_core_positron_muon.py`` rather than after
 ``test/test_core_photon_rho.py``, and the choice is forced the same way it
 was for Task 4.4's pion: ``hazma/spectra/_positron/_pion.pyx`` **survives**
-this swap as a capi provider, because both mediator positron-spectrum
-modules ``cimport`` its ``dnde_positron_charged_pion_array``
-(``scalar_mediator_positron_spec.pyx:2``,
-``vector_mediator_positron_spec.pyx:10``). Only its ``def`` went. So the
-live ``cdef`` is still reachable through ``__pyx_capi__`` and is the
-strongest available oracle; Phase 06 Task 6.4 deletes it and this module's
+this swap as a capi provider. Only its ``def`` went, so the live ``cdef``
+is still reachable through ``__pyx_capi__`` and is the strongest
+available oracle; Phase 06 Task 6.4 deletes it and this module's
 :class:`TestAgainstTheCythonTwin` with it.
+
+What kept the file on disk was the two mediator positron-spectrum
+modules, which reached its ``dnde_positron_charged_pion_array`` through a
+``cimport``. Task 6.3 ported and deleted both, so nothing cimports this
+extension any more — the reason it survives is now only that Task 6.4
+has not run.
 
 Four parts:
 
@@ -66,6 +69,7 @@ from __future__ import annotations
 
 import ctypes
 import math
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -73,16 +77,22 @@ import pytest
 
 from hazma import spectra
 from hazma._core import positron as core_positron
-from hazma.scalar_mediator import scalar_mediator_positron_spec as scalar_mediator
+from hazma.scalar_mediator import (
+    _scalar_mediator_positron_spectra as scalar_mediator_wrapper,
+)
 from hazma.spectra import _nbody
 from hazma.spectra import _positron as wrapper
 from hazma.spectra._positron import _pion as cython_module
-from hazma.vector_mediator import vector_mediator_positron_spec as vector_mediator
+from hazma.vector_mediator import (
+    _vector_mediator_positron_spectra as vector_mediator_wrapper,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 dnde = core_positron.dnde_positron_charged_pion
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 QUANTITY = "Positron energies"
 DIMENSION_ERROR = f"{QUANTITY} must be 0 or 1-dimensional."
@@ -311,11 +321,33 @@ class TestWrapperAndPublicApi:
         # N-body path on the implementation the swap replaced.
         assert _nbody._dnde_positron_dict["pi"] is wrapper.dnde_positron_charged_pion
 
-    def test_the_mediator_positron_spectra_still_import(self) -> None:
-        # The whole reason the file survives. An import is the cheap end of
-        # the check; the parity corpus pins their values.
-        assert hasattr(scalar_mediator, "dnde_decay_s")
-        assert hasattr(vector_mediator, "dnde_decay_v")
+    def test_the_mediator_positron_spectra_keep_their_public_names(self) -> None:
+        # These two names were `def`s in the mediator `.pyx` this file
+        # used to feed by capsule. Task 6.3 moved them to `hazma._core`
+        # under different spellings and had the wrappers re-export them
+        # under these, so the check is that the rename stayed invisible.
+        # An attribute is the cheap end of it; the parity corpus pins
+        # their values.
+        assert hasattr(scalar_mediator_wrapper, "dnde_decay_s")
+        assert hasattr(vector_mediator_wrapper, "dnde_decay_v")
+
+    def test_nothing_cimports_this_extension_any_more(self) -> None:
+        # The two mediator `.pyx` were the only cimporters, and Task 6.3
+        # deleted them. Asserted on the sources rather than by importing,
+        # because a built `.so` outlives its deleted `.pyx`
+        # (`docs/agents/environment.md`).
+        sources = [
+            path
+            for suffix in ("*.pyx", "*.pxd")
+            for path in (REPO_ROOT / "hazma").rglob(suffix)
+        ]
+        assert sources, "found no Cython sources to scan"
+        cimporters = [
+            path.relative_to(REPO_ROOT).as_posix()
+            for path in sources
+            if "_positron._pion cimport" in path.read_text()
+        ]
+        assert cimporters == []
 
 
 class TestAgainstTheCythonTwin:

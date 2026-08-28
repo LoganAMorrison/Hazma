@@ -33,7 +33,8 @@ use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 
 use crate::dispatch::{map_unary, map_unary_try, require_vector};
-use crate::kernels::mediator_tables::{PartialWidths, PhotonMode, SpectrumError};
+use crate::kernels::mediator_decay_positron;
+use crate::kernels::mediator_tables::{PartialWidths, PhotonMode, PositronMode, SpectrumError};
 use crate::kernels::soft_complex::NonRealResult;
 use crate::kernels::vector_decay_photon;
 use crate::kernels::vector_xs;
@@ -386,6 +387,107 @@ fn dnde_decay_v_pt(
     .map_err(spectrum_error)
 }
 
+/// The wording the port gives the positron module's energy argument.
+///
+/// The `.pyx` did not check it — `np.ndarray[double] eng_ps` let the
+/// buffer cast raise — so this is the spelling the argument has in its
+/// signature, as with [`PHOTON_ENERGIES`] above.
+const POSITRON_ENERGIES: &str = "Positron energies";
+
+/// Positron `dN/dE` in MeV⁻¹ from the decay of a boosted vector
+/// mediator, over a grid of energies.
+///
+/// `hazma/vector_mediator/vector_mediator_positron_spec.pyx` called this
+/// `dnde_decay_v`, which is the name [`dnde_decay_v`] above already has
+/// from the *photon* module Task 6.2 ported. Both `.pyx` exported that
+/// spelling from different extensions; one PyO3 submodule cannot, so the
+/// positron pair is spelled out here and
+/// `hazma/vector_mediator/_vector_mediator_positron_spectra.py` imports
+/// it under the Cython name. [`crate::scalar_mediator`]'s twin follows
+/// the same spelling even though nothing there collides.
+///
+/// # Parameters
+///
+/// * `eng_ps` — lab-frame positron energies in MeV, as a 1-D `float64`
+///   array. Never a scalar: use [`dnde_positron_decay_v_pt`] for that, as
+///   the `.pyx` required and as the Python wrapper still does.
+/// * `eng_v` — the mediator's total energy, MeV.
+/// * `mv` — the mediator's mass, MeV.
+/// * `pws` — the three normalised partial widths, in the order
+///   `[e e, mu mu, pi pi]` — **not** the four-element `[e e, mu mu,
+///   pi0 g, pi pi]` the photon pair takes.
+/// * `fs` — the channel: `"total"`, `"e e"`, `"mu mu"` or `"pi pi"`.
+///   Anything else — including `None` — gives `0.0` at every energy,
+///   which is what the `.pyx` gives.
+///
+/// # Returns
+///
+/// A fresh 1-D `float64` array of `dN/dE` in MeV⁻¹.
+///
+/// # Errors
+///
+/// As [`crate::scalar_mediator`]'s twin: `ValueError` for a rank or
+/// dtype violation in either array argument, `IndexError` for a `pws`
+/// shorter than three once an index it does not have is read.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_ps, eng_v, mv, pws, fs)")]
+fn dnde_positron_decay_v(
+    py: Python<'_>,
+    eng_ps: &Bound<'_, PyAny>,
+    eng_v: f64,
+    mv: f64,
+    pws: &Bound<'_, PyAny>,
+    fs: Option<&str>,
+) -> PyResult<Py<PyAny>> {
+    let energies = require_vector(eng_ps, POSITRON_ENERGIES)?;
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = fs.and_then(PositronMode::parse);
+    let tables = mediator_decay_positron::tables_for(mv);
+    let widths = PartialWidths::new(&widths);
+
+    let spectrum = energies
+        .iter()
+        .map(|&energy| {
+            mediator_decay_positron::spectrum_point(energy, eng_v, mv, widths, selected, &tables)
+                .map_err(spectrum_error)
+        })
+        .collect::<PyResult<Vec<f64>>>()?;
+    Ok(spectrum.into_pyarray(py).into_any().unbind())
+}
+
+/// Positron `dN/dE` in MeV⁻¹ from the decay of a boosted vector
+/// mediator, at one energy.
+///
+/// The scalar-argument twin of [`dnde_positron_decay_v`], and
+/// `dnde_decay_v_pt` in the `.pyx` that exported it.
+///
+/// # Errors
+///
+/// As [`dnde_positron_decay_v`], minus the `eng_ps` array cases.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_p, eng_v, mv, pws, fs)")]
+fn dnde_positron_decay_v_pt(
+    eng_p: f64,
+    eng_v: f64,
+    mv: f64,
+    pws: &Bound<'_, PyAny>,
+    fs: Option<&str>,
+) -> PyResult<f64> {
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = fs.and_then(PositronMode::parse);
+    let tables = mediator_decay_positron::tables_for(mv);
+
+    mediator_decay_positron::spectrum_point(
+        eng_p,
+        eng_v,
+        mv,
+        PartialWidths::new(&widths),
+        selected,
+        &tables,
+    )
+    .map_err(spectrum_error)
+}
+
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xx_to_v_to_ff, module)?)?;
@@ -396,5 +498,7 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(thermal_cross_section, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_decay_v, module)?)?;
     module.add_function(wrap_pyfunction!(dnde_decay_v_pt, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_positron_decay_v, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_positron_decay_v_pt, module)?)?;
     Ok(())
 }

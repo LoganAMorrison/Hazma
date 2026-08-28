@@ -72,27 +72,16 @@ extensions += make_extension(
 )
 
 # Scalar mediator
+# Neither mediator package builds a Cython extension any more.
 # `_c_scalar_mediator_cross_sections` went in cython-to-rust Task 5.2 —
 # all twelve of its consumed entry points are served by
 # `hazma._core.scalar_mediator`, and the thirteenth (`sigma_xx_to_all`)
 # was dropped rather than ported because nothing imported it.
-# `scalar_mediator_decay_spectrum` went in Task 6.2, served by
-# `hazma._core.scalar_mediator.scalar_mediator_decay_spectrum`. The
-# positron module below is Task 6.3's.
-extensions += make_extension(
-    ["scalar_mediator"],
-    ["scalar_mediator_positron_spec"],
-)
-
-# Vector mediator
-# `_c_vector_mediator_cross_sections` went in cython-to-rust Task 5.1 and
-# `vector_mediator_decay_spectrum` in Task 6.2, the same way and for the
-# same reasons as their scalar twins above. The positron module below is
-# Task 6.3's.
-extensions += make_extension(
-    ["vector_mediator"],
-    ["vector_mediator_positron_spec"],
-)
+# `_c_vector_mediator_cross_sections` went the same way in Task 5.1, both
+# `*_mediator_decay_spectrum` modules in Task 6.2, and both
+# `*_mediator_positron_spec` modules in Task 6.3, whose four entry points
+# `hazma._core.{scalar,vector}_mediator` serve under the
+# `dnde_positron_decay_*` names.
 
 # The Rust half. One cdylib, at its final import path from day one, built
 # against CPython's limited API so a single shared object serves every

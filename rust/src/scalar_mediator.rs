@@ -46,13 +46,33 @@
 //! (`modes`), and both are handled below rather than in a kernel because
 //! both are Python-object questions (`rules.md` rule 8).
 //!
-//! Phase 06 Task 6.3 adds the positron spectrum alongside it.
+//! # The positron spectrum
+//!
+//! [`dnde_positron_decay_s`] and [`dnde_positron_decay_s_pt`] are the
+//! fourteenth and fifteenth, landed in Task 6.3 — the whole public
+//! surface of `hazma/scalar_mediator/scalar_mediator_positron_spec.pyx`,
+//! which that task deleted. Both were `dnde_decay_s`/`dnde_decay_s_pt`
+//! in the Cython, and
+//! `hazma/scalar_mediator/_scalar_mediator_positron_spectra.py` still
+//! imports them under those names; they are spelled out here because the
+//! vector twin's Cython names collide with the photon pair Task 6.2
+//! registered in [`crate::vector_mediator`], and the two models are
+//! easier to read named alike than named differently for a reason that
+//! only applies to one of them.
+//!
+//! Their math is in [`crate::kernels::mediator_decay_positron`], which is
+//! one module serving both models because the two `.pyx` were the same
+//! text.
 
+use numpy::IntoPyArray;
 use pyo3::exceptions::{PyIndexError, PyTypeError};
 use pyo3::prelude::*;
 
 use crate::dispatch::{map_unary, map_unary_try, require_vector};
-use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
+use crate::kernels::mediator_decay_positron;
+use crate::kernels::mediator_tables::{
+    PartialWidths, PositronMode, ScalarPhotonModes, SpectrumError,
+};
 use crate::kernels::scalar_decay_photon;
 use crate::kernels::scalar_xs;
 use crate::kernels::soft_complex::NonRealResult;
@@ -550,6 +570,105 @@ fn scalar_photon_modes(modes: Option<&Bound<'_, PyAny>>) -> PyResult<ScalarPhoto
     Ok(ScalarPhotonModes::from_bits(bits))
 }
 
+/// The wording the port gives the positron modules' energy argument.
+///
+/// Neither `.pyx` checked it — `np.ndarray[double] eng_ps` let the
+/// buffer cast raise — so this is the spelling the argument has in the
+/// `.pyx` signature, as in [`crate::vector_mediator`]'s photon copy.
+const POSITRON_ENERGIES: &str = "Positron energies";
+
+/// Positron `dN/dE` in MeV⁻¹ from the decay of a boosted scalar
+/// mediator, over a grid of energies.
+///
+/// # Parameters
+///
+/// * `eng_ps` — lab-frame positron energies in MeV, as a 1-D `float64`
+///   array. Never a scalar: use [`dnde_positron_decay_s_pt`] for that, as
+///   the `.pyx` required and as the Python wrapper still does.
+/// * `eng_s` — the mediator's total energy, MeV.
+/// * `ms` — the mediator's mass, MeV.
+/// * `pws` — the three normalised partial widths, in the order
+///   `[e e, mu mu, pi pi]`.
+/// * `fs` — the channel: `"total"`, `"e e"`, `"mu mu"` or `"pi pi"`.
+///   Anything else — including `None` — gives `0.0` at every energy,
+///   which is what the `.pyx` gives (see
+///   `docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md`).
+///
+/// # Returns
+///
+/// A fresh 1-D `float64` array of `dN/dE` in MeV⁻¹.
+///
+/// # Errors
+///
+/// `ValueError` if either array argument is not 1-D `float64`, or has no
+/// `__len__` at all; `IndexError` for a `pws` shorter than three, once
+/// an index it does not have is actually read.
+///
+/// The same two divergences from the Cython [`crate::vector_mediator`]'s
+/// photon pair declares, and on the same paths no working call takes: a
+/// scalar `eng_ps` raised `TypeError` there and raises `ValueError` here,
+/// and a `list` was refused there and is accepted here.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_ps, eng_s, ms, pws, fs)")]
+fn dnde_positron_decay_s(
+    py: Python<'_>,
+    eng_ps: &Bound<'_, PyAny>,
+    eng_s: f64,
+    ms: f64,
+    pws: &Bound<'_, PyAny>,
+    fs: Option<&str>,
+) -> PyResult<Py<PyAny>> {
+    let energies = require_vector(eng_ps, POSITRON_ENERGIES)?;
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = fs.and_then(PositronMode::parse);
+    let tables = mediator_decay_positron::tables_for(ms);
+    let widths = PartialWidths::new(&widths);
+
+    let spectrum = energies
+        .iter()
+        .map(|&energy| {
+            mediator_decay_positron::spectrum_point(energy, eng_s, ms, widths, selected, &tables)
+                .map_err(spectrum_error)
+        })
+        .collect::<PyResult<Vec<f64>>>()?;
+    Ok(spectrum.into_pyarray(py).into_any().unbind())
+}
+
+/// Positron `dN/dE` in MeV⁻¹ from the decay of a boosted scalar
+/// mediator, at one energy.
+///
+/// The scalar-argument twin of [`dnde_positron_decay_s`]; arguments and
+/// errors are that function's, except that `eng_p` is a single energy in
+/// MeV and PyO3 raises the same `TypeError` for a non-number that CPython
+/// raised at the `.pyx`'s `double eng_p`.
+///
+/// # Errors
+///
+/// As [`dnde_positron_decay_s`], minus the `eng_ps` array cases.
+#[pyfunction]
+#[pyo3(text_signature = "(eng_p, eng_s, ms, pws, fs)")]
+fn dnde_positron_decay_s_pt(
+    eng_p: f64,
+    eng_s: f64,
+    ms: f64,
+    pws: &Bound<'_, PyAny>,
+    fs: Option<&str>,
+) -> PyResult<f64> {
+    let widths = require_vector(pws, PARTIAL_WIDTHS)?;
+    let selected = fs.and_then(PositronMode::parse);
+    let tables = mediator_decay_positron::tables_for(ms);
+
+    mediator_decay_positron::spectrum_point(
+        eng_p,
+        eng_s,
+        ms,
+        PartialWidths::new(&widths),
+        selected,
+        &tables,
+    )
+    .map_err(spectrum_error)
+}
+
 /// Populate the submodule.
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xx_to_s_to_ff, module)?)?;
@@ -565,5 +684,7 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(sigma_xs_to_xs, module)?)?;
     module.add_function(wrap_pyfunction!(thermal_cross_section, module)?)?;
     module.add_function(wrap_pyfunction!(scalar_mediator_decay_spectrum, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_positron_decay_s, module)?)?;
+    module.add_function(wrap_pyfunction!(dnde_positron_decay_s_pt, module)?)?;
     Ok(())
 }

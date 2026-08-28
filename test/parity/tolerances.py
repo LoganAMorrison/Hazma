@@ -127,9 +127,13 @@ implementation does* rather than by what it computes:
     photon energy whose boost window straddles the pi0 box's upper edge,
     where a jump discontinuity sits inside the interval and one bisection
     decision can flip. Even there the difference is five decades below the
-    `abserr` the integrator itself reports. So the two rho cases take
-    `PORTED_NESTED_RTOL` and the seven unported mediator-spectrum cases
-    keep the opening figure until Phase 06 measures them.
+    `abserr` the integrator itself reports. So the two rho cases took
+    `PORTED_NESTED_RTOL` first, and Phase 06 measured the seven
+    mediator-spectrum cases and moved every one of them onto it too --
+    the three photon cases in Task 6.2 (worst 5.33e-12) and the four
+    positron cases in Task 6.3 (worst 2.33e-12). No case holds the
+    opening figure any more; the worst drift anywhere in the class is
+    still two and a half decades inside it.
 
 Abscissae are their own class
 -----------------------------
@@ -202,13 +206,16 @@ TABULATED_RTOL = 1e-12
 #: The opening `QUAD` budget, held by no case since cython-to-rust
 #: Task 5.2 measured and tightened the last of the five. It stays as the
 #: figure a newly ported quadrature-backed case starts at, before its own
-#: drift is measured -- Phase 06's four mediator spectrum modules are the
-#: next to need it.
+#: drift is measured.
 QUAD_RTOL = 1e-8
 #: The `QUAD` budget after a case has been ported and its drift measured.
 #: See the "Budget classes" section: 380x headroom over Task 4.4's
 #: measured 2.6e-15, and still four decades inside the opening figure.
 PORTED_QUAD_RTOL = 1e-12
+#: The opening `NESTED` budget, held by no case since cython-to-rust
+#: Task 6.3 measured and tightened the last four -- the mediator positron
+#: pair. Like `QUAD_RTOL` above it stays as the figure a newly ported
+#: case in this class starts at.
 NESTED_RTOL = 1e-6
 #: The `NESTED` budget after a case has been ported and its drift
 #: measured. See the "Budget classes" section: 6,600x headroom over
@@ -619,17 +626,26 @@ BUDGETS: dict[str, Budget] = {
         "agrees to within one ulp.",
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="cos(theta) QAGP "
         "(hazma/scalar_mediator/scalar_mediator_positron_spec.pyx:209) "
-        "over the quad-backed positron charged-pion kernel (:2).",
+        "over the quad-backed positron charged-pion kernel (:2). "
+        "Tightened from NESTED_RTOL by Task 6.3 on its own measurement -- "
+        "2.33e-12 worst relative over the 16,740 pinned values, 13,403 of "
+        "them bit-equal, worst at ms_550.boosted_strong.pi_pi. 429x "
+        "headroom. As for the photon pair, the residual is the quadrature "
+        "port's rather than the transliteration's.",
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s_pt": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="scalar-argument twin of dnde_decay_s, same nested quadrature "
-        "(hazma/scalar_mediator/scalar_mediator_positron_spec.pyx:209).",
+        "(hazma/scalar_mediator/scalar_mediator_positron_spec.pyx:209), "
+        "and bit-for-bit the same values -- Task 6.3 measured the two "
+        "entry points identical over the whole corpus, because the port "
+        "serves both from one kernel. Tightened with its twin, on the "
+        "same 2.33e-12.",
     ),
     "mediator_spectra.vector.photon.dnde_decay_v": Budget(
         rtol=PORTED_NESTED_RTOL,
@@ -654,18 +670,25 @@ BUDGETS: dict[str, Budget] = {
         "same 1.19e-12.",
     ),
     "mediator_spectra.vector.positron.dnde_decay_v": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="cos(theta) QAGP "
         "(hazma/vector_mediator/vector_mediator_positron_spec.pyx:210) "
-        "over the quad-backed positron charged-pion kernel (:10).",
+        "over the quad-backed positron charged-pion kernel (:10). "
+        "Tightened from NESTED_RTOL by Task 6.3 on its own measurement -- "
+        "1.50e-12 worst relative over the 16,740 pinned values, 13,684 of "
+        "them bit-equal, worst at mv_900.boosted_strong.total. 665x "
+        "headroom. One Rust kernel serves this case and the scalar one "
+        "above, the two .pyx having been the same text.",
     ),
     "mediator_spectra.vector.positron.dnde_decay_v_pt": Budget(
-        rtol=NESTED_RTOL,
+        rtol=PORTED_NESTED_RTOL,
         atol=0.0,
         why="scalar-argument twin of the vector positron dnde_decay_v, "
         "same nested quadrature "
-        "(hazma/vector_mediator/vector_mediator_positron_spec.pyx:210).",
+        "(hazma/vector_mediator/vector_mediator_positron_spec.pyx:210), "
+        "and bit-for-bit the same values, for the reason its scalar "
+        "counterpart is. Tightened with its twin, on the same 1.50e-12.",
     ),
 }
 
