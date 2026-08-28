@@ -374,13 +374,21 @@ class TestTheWrapperReExports:
 
     #: Everything `hazma._core.scalar_mediator` serves that is *not* a
     #: cross section, and which task put it there. The submodule is
-    #: per-model rather than per-`.pyx`, so Phase 06 lands the mediator
+    #: per-model rather than per-`.pyx`, so Phase 06 landed the mediator
     #: spectra alongside these twelve; each is pinned in its own test
-    #: module (`test/test_core_mediator_decay_photon.py` for the one
-    #: below) rather than here. Task 6.3 adds `dnde_decay_s` and
-    #: `dnde_decay_s_pt`.
+    #: module (`test/test_core_mediator_decay_photon.py` and
+    #: `test/test_core_mediator_positron.py`) rather than here.
+    #:
+    #: The two positron names are not the `.pyx`'s. It exported
+    #: `dnde_decay_s`/`dnde_decay_s_pt`, and the wrapper still does; the
+    #: extension spells them out because the *vector* twin's Cython names
+    #: collide with the photon pair Task 6.2 registered, and the two
+    #: models are named alike. `test/parity/cases.py`'s `CORE_RENAMES` is
+    #: where that mapping is declared.
     NON_CROSS_SECTIONS: ClassVar[set[str]] = {
         "scalar_mediator_decay_spectrum",  # cython-to-rust Task 6.2
+        "dnde_positron_decay_s",  # cython-to-rust Task 6.3
+        "dnde_positron_decay_s_pt",  # cython-to-rust Task 6.3
     }
 
     def test_the_alias_table_is_the_whole_served_cross_section_roster(self) -> None:

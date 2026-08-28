@@ -140,9 +140,10 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_photon_muon_array(double[:] energies, 
 # leaving a second reachable implementation behind.
 #
 # The two `cdef`s above stay, and so does this file, because
-# `hazma/spectra/_photon/_pion.pyx` and
-# `hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx` still `cimport`
-# them through this module's `__pyx_capi__`. Phase 06 Task 6.4 deletes
-# the whole extension once the last cimporter is gone; until then this
-# is the capi-survivor exception in
+# `hazma/spectra/_photon/_pion.pyx` still `cimport`s them through this
+# module's `__pyx_capi__`. It is the only cimporter left: the two
+# `hazma/{scalar,vector}_mediator/*_decay_spectrum.pyx` that were the
+# others went in Task 6.2. Nothing outside this pair reads either file
+# now, so Phase 06 Task 6.4 deletes both together; until then this is
+# the capi-survivor exception in
 # `projects/cython-to-rust/phases/phase-04-spectra-kernels.md`.

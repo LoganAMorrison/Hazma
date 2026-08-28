@@ -426,7 +426,7 @@ task time are already answered for them.
   behaviour differs from this task's.** `BelowGrid::Clamp`, not the `1/E`
   tail, and the grid starts at the **legacy** `m_e = 0.510998928` — which
   is exactly where
-  [`../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  [`../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   says the positron spectra return `nan`. The project handoff has been
   asking for that follow-up to be met "before Phases 05/06"; 6.3 is where
   it actually lands on the grid's first abscissa.

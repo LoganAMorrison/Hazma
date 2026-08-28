@@ -115,7 +115,7 @@ def positron_energies(model: TheoryAnn) -> np.ndarray:
     mediator positron kernels return ``nan`` at exactly ``0.510998928`` — the
     legacy ``MASS_E`` in ``hazma/_utils/legacy_parameters.pxd``, against
     ``0.5109989461`` everywhere else — and that kernel edge belongs to
-    ``docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md``,
+    ``docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md``,
     not to this module, which tests the aggregation above it.
     """
     return np.geomspace(1.0, e_cm_halo(model.mx), 10)

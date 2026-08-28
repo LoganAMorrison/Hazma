@@ -19,7 +19,7 @@ spectrum redesign — the last Cython.
 | --- | ------ | ------------ | -------- | ----------- |
 | 6.1 | Spectrum-table struct design | — | **Complete (2026-08-23)** | [task-6.1-table-struct.md](task-6.1-table-struct.md) |
 | 6.2 | Decay spectrum pair | 6.1 | **Complete (2026-08-23)** | [task-6.2-decay-spectra.md](task-6.2-decay-spectra.md) |
-| 6.3 | Positron spectrum pair | 6.1 | Not started | [task-6.3-positron-spectra.md](task-6.3-positron-spectra.md) |
+| 6.3 | Positron spectrum pair | 6.1 | **Complete (2026-08-27)** | [task-6.3-positron-spectra.md](task-6.3-positron-spectra.md) |
 | 6.4 | Retire capi survivors + `_utils` headers | 6.2, 6.3 | Not started | [task-6.4-retire-survivors.md](task-6.4-retire-survivors.md) |
 
 ## Exit Criteria
@@ -100,6 +100,37 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   anything reading these tables. No gate changes — the corpus already
   runs in budget mode off macOS.
 
+- **The two positron `.pyx` were not a clone-pair but the *same
+  implementation twice*** (Task 6.3). Normalised for the model's name,
+  `diff` reports only those substitutions and the order of two `import`
+  lines — unlike the decay pair, which differed in four ways. One Rust
+  kernel serves all four entry points, and the scalar and vector spectra
+  are bit-for-bit equal at equal arguments by construction.
+- **The `nan` at the legacy `m_e` was a clang FMA contraction, not a
+  constants divergence** (Task 6.3). `sqrt(E² − m_e²)` compiles to an FMA
+  that subtracts the *rounded* `m_e²` from an exactly-computed square, and
+  that rounding is upward by 1.45e-17. Fixed by clamping the radicand;
+  the two `MASS_E` tables are untouched and their consolidation is still
+  a separate declared change under rule 4.
+- **A Python replica of a `cdef` is unfused and the shipped C is not**
+  (Task 6.3). Four rounds of transliterating the integrand into Python
+  returned `0.0` where the extension returned `NaN`. What settled it was
+  a temporary `def` in the `.pyx` returning the intermediates.
+  **Instrument the extension before trusting a replica.**
+- **A mutation campaign can overturn the contraction rule, and did**
+  (Task 6.3). `head − coef·m_e·m_e` ends in a syntactic multiply, so the
+  rule predicts a fusion; fusing it *loses* bit-equal values. The rule
+  predicts, the campaign decides.
+- **The shipped `e⁺e⁻` line is low by the positron's rest-frame velocity**
+  (Task 6.3): the box's edges carry `r` and its height does not, so it
+  integrates to `pw_ee · r`. Reproduced under rule 1, filed as
+  [the missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+- **Task 6.2 left an attribution bug in the oracle roster** (found by
+  Task 6.3): its rename flipped the two
+  `mediator_spectra.vector.positron.*` rows to `restored` alongside the
+  three photon rows it was really deleting. Latent — nothing in `pytest`
+  reads that dict — and corrected in 6.3.
+
 ## Decisions and Implementation Notes
 
 - **Task 6.1 amended two of its own exit criteria in the phase file**
@@ -116,6 +147,16 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   under cython 3.3.0 and a tree whose extensions are *built* by it runs
   the suite at the same counts as 3.2.9, corpus and Cython-twin
   bit-equality included.
+- **Task 6.3 named the `_core` positron entry points
+  `dnde_positron_decay_{s,v}`** rather than the Cython's
+  `dnde_decay_{s,v}`, because Task 6.2 had already taken the vector pair's
+  spelling for the *photon* spectrum in the same PyO3 submodule. The
+  scalar half follows for symmetry; both wrappers re-export under the
+  Cython names, and `test/parity/cases.py`'s new `CORE_RENAMES` declares
+  the mapping for the served-roster test alone — the corpus still calls
+  the wrapper.
+- **Task 6.3 emptied `NESTED_RTOL`**, the last opening budget any corpus
+  case held. Fourteen budgets tightened across the project, none widened.
 - **Task 6.2 retired `test_core_dispatch.py`'s two Cython-oracle
   classes**, because it deleted the last `.pyx` that spells a dispatch
   message. `cython_dispatch_messages()` survives as the guard that the
@@ -160,6 +201,21 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 `docs/followups/{todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md,README.md}`,
 `docs/agents/lessons.md`.
 
+### Task 6.3
+
+`rust/src/kernels/mediator_decay_positron.rs` (new — one kernel for both
+models), `rust/src/kernels.rs`, `rust/src/{scalar,vector}_mediator.rs`,
+`hazma/{scalar,vector}_mediator/_*_mediator_positron_spectra.py`,
+`hazma/{scalar,vector}_mediator/*_mediator_positron_spec.pyx` (deleted),
+`hazma/vector_mediator/vector_mediator_positron_spec.pyi` (deleted),
+`hazma/spectra/{_photon,_positron}/{_muon,_pion}.pyx` (survivor comments),
+`setup.py`, `test/test_core_mediator_positron.py` (new),
+`test/test_core_{mediator_tables,positron_pion,scalar_xs}.py`,
+`test/test_theory_aggregation.py`,
+`test/parity/{cases,tolerances,test_parity}.py`,
+`test/parity/oracles/entry_points.py`,
+`docs/followups/{done/positron-spectrum-nan-at-legacy-electron-mass.md,todo/mediator-positron-line-misses-the-electron-velocity.md,todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md,README.md}`.
+
 ## Verification
 
 - Corpus (quad budgets); benchmark vs pre-swap Cython (dead-cache fix
@@ -176,6 +232,15 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   `find hazma -name "*.pyx"` → **7** (was 9). All three swapped entry
   points moved — see `../numerical-impact.md`; worst 5.3327e-12, three
   budgets tightened from `NESTED_RTOL` to `PORTED_NESTED_RTOL`.
+- **After Task 6.3:** `cargo test --no-default-features` → `258 passed`;
+  `pytest -q` → `2389 passed, 15 skipped, 12 subtests passed`;
+  `pytest test/parity -q` → `658 passed, 1 skipped`;
+  `pytest test/test_theory_aggregation.py -q` → `69 passed`;
+  `find hazma -name "*.pyx" -o -name "*.pxd"` → **13** (was 15), and
+  neither mediator package holds one. All four swapped entry points
+  moved — see `../numerical-impact.md`; worst 2.3319e-12, four budgets
+  tightened, and one value moved `NaN → 0.0` at the legacy `m_e`.
+  Benchmark 32x–43x from release builds of both sides.
 
 ## Open Questions
 
@@ -187,9 +252,12 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   values by up to **1.63e-06** relative and **2,013 of 29,295** vector
   values by up to **7.77** relative (a factor of 8.8, at an absolute
   7.3e-10). In the vector case it changes the *shape* of the low-energy
-  tail, not a total. **Task 6.3 owes the same question for the positron
-  pair**, where the relevant defect is A4 and the same manifest already
-  answers it.
+  tail, not a total. **Task 6.3 answered the same question for the
+  positron pair from the same manifest** (defect A4): 5,237 of 16,740
+  values in each of the four cases, all moving *up*, by up to
+  **3.7421e-04** relative — which agrees with `R_FACTOR**2 - 1` to eight
+  digits and is identical across all four, so a pure normalization rather
+  than a change of shape.
 - ~~**Is one cache slot enough, and should the shared photon table set
   stop building the muon table the scalar module ignores?**~~ — **closed
   by Task 6.2's benchmark: yes and no.** One slot is enough because every
@@ -198,17 +266,26 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   the 4.2x win on the table build and the 4,180x win on a fixed-mass
   parameter sweep. Splitting the cache would mean two `LazyLock`s
   differing by a field, for no measurable gain.
-- **The oracle roster has no restore revision for the two `.pyx` Task 6.2
-  deleted**, because `RESTORED_SOURCES` records literal SHAs and a task
-  cannot know its own commit's. Filed as
-  [`../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md`](../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md);
-  **Task 6.3 should discharge it for both pairs at once**, after which
-  the roster is complete. Not blocking — the `pytest` gate does not read
-  that dict.
+- **The oracle roster still has no restore revision for the four `.pyx`
+  Tasks 6.2 and 6.3 deleted**, because `RESTORED_SOURCES` records literal
+  SHAs and a task cannot know its own commit's. The handoff asked Task
+  6.3 to discharge it for both pairs; it could not, for exactly the
+  reason 6.2 could not, and instead widened the follow-up to name all
+  four —
+  [`oracle-restore-revisions-for-the-mediator-decay-pyx`](../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
+  **Task 6.4 can**, because by then both deleting commits are merged, and
+  6.4 is also where re-capture closes and the item becomes moot — so
+  decide there rather than defer again. Not blocking; the `pytest` gate
+  does not read that dict.
 - **`test/parity/oracles` re-capture closes at Task 6.4.** Two of the four
   defect patches (A3, A4) reach the mediator spectra, and the arrays are
   committed; nothing needs recapturing unless a patch changes. Task 6.4
   should say so explicitly when it deletes the last `.pyx`.
+- **The line term's missing `1/r` is a post-6.4 item.** It moves
+  published numbers well above the budgets the four positron cases now
+  hold, so it needs a corpus re-capture or a declared exception, and
+  neither belongs inside a swap —
+  [the missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
 
 ## Plan Impact
 
@@ -216,78 +293,52 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 
 ## Handoff to Next Task
 
-**Task 6.3 (the positron pair) is next**, then 6.4 and Phase 07. Read
-`../../PLAN.md`, `../README.md`, this file, the phase file, then
-[`task-6.2-decay-spectra.md`](task-6.2-decay-spectra.md) — its
-`## Findings`, `## Decisions` and `## Handoff` are the direct template,
-because the positron modules are the *other* clone-pair and 6.2 already
-paid for four of the five things that would otherwise cost a build each.
-[`task-6.1-table-struct.md`](task-6.1-table-struct.md) still carries the
-foundation's own measurements.
+**Task 6.4 (retire the capi survivors and the `_utils` headers) is
+next**, and it closes the phase. Read `../../PLAN.md`, `../README.md`,
+this file, then the phase file's Task 6.4 block;
+[`task-6.3-positron-spectra.md`](task-6.3-positron-spectra.md)'s
+`## Handoff` is the direct brief, and
+[`task-6.2-decay-spectra.md`](task-6.2-decay-spectra.md) still carries
+the FMA-campaign method both swaps used.
 
-**Now safe to assume** (Tasks 6.1 and 6.2 delivered all of it):
+**Now safe to assume** (Tasks 6.1–6.3 delivered all of it):
 
-- **`crate::kernels::mediator_tables` is complete for 6.3.**
-  `positron_tables(mass)` returns a memoized `Arc<PositronTables>` whose
-  columns are the Phase 04 kernels on a `numpy.logspace`-identical grid
-  starting at the **legacy** `m_e`, with `BelowGrid::Clamp`; plus
-  `PositronMode`, `PartialWidths` (carrying `boundscheck(True)`) and
-  `SpectrumError`. 6.3 adds no foundation.
-- **The module layout, naming and test shape are settled.** One kernel
-  module per `.pyx`, named `<model>_decay_<product>`; one shared test
-  module per clone-pair; `kernels.rs` already documents the naming
-  exception. Both PyO3 submodules already own `spectrum_error`,
-  `PARTIAL_WIDTHS` and `OUT_OF_BOUNDS_MESSAGE`.
-- **The fallible-integrand shape**: capture the first `SpectrumError` in
-  an `Option`, return `NaN` from the closure, raise after `quad` returns.
-- **`require_vector` for the array-only entry points** (`dnde_decay_s`,
-  `dnde_decay_v`), a plain `f64` for the `_pt` twins, with the two
-  divergences 6.2 declared — a scalar energy raises `ValueError` rather
-  than `TypeError`, and a `list` is accepted.
-- **Neither positron module needs `soft_complex`**
-  (`grep -c SoftComplexToDouble` → `0 / 0`, Task 6.1), so
-  `SpectrumError::NonReal` is unreachable from them and their
-  `spectrum_point` can carry only `OutOfBounds`.
-- **The cython cap is gone** and the seven surviving `.pyx` are known to
-  compile under cython 3.3.0 with the suite at the same counts.
+- **6.4's `rg` sweep is already empty.** The four capi survivors cimport
+  only each other and `hazma/_utils/boost`; the two mediator decay
+  modules that read them went in 6.2 and the two positron ones in 6.3.
+  Every stale comment claiming otherwise — in all four `.pyx`, in
+  `test/parity/oracles/entry_points.py`, in `test/test_core_positron_pion.py` —
+  was corrected in 6.3, so what 6.4 reads is current.
+- **Both mediator packages are Cython-free**, and `setup.py` builds no
+  extension for either. Thirteen `.pyx`/`.pxd` remain and all are 6.4's:
+  the four survivors with their `.pxd`, `_utils/boost.{pyx,pxd}`,
+  `constants.pxd`, `kinematics.pxd`, `legacy_parameters.pxd`.
+- **All 41 consumed entry points are on `hazma._core`.** Nothing is left
+  to swap; 6.4 is deletion and build plumbing only.
+- **Every mode string and dispatch message in the tree is the port's.**
+  No `.pyx` spells one, so `test_core_mediator_tables.py` and
+  `cython_dispatch_messages()` hold the provenance instead.
+- **No corpus or oracle re-capture is pending.** The committed defect
+  arrays cover A3 and A4 and nothing changes unless a patch does.
 
-**Still risky / unknown for Task 6.3:**
+**Still risky / unknown for Task 6.4:**
 
-- **The `nan` at the legacy `m_e` lands on the grid's first abscissa.**
-  The positron grid *starts* at `0.510998928` MeV, which is exactly where
-  [`../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
-  says the positron spectra return `nan`. The project handoff has been
-  asking for that follow-up to be met "before Phases 05/06"; 6.3 is where
-  it actually bites.
-- **`dnde_decay_s` short-circuits `fs == "e e"` before the integral**
-  (`scalar_mediator_positron_spec.pyx:207`), returning the line term
-  alone — a fifth structural difference from the decay pair, and one that
-  changes which `pws` indices are read at all. Read the `.pyx`'s read
-  *order* before writing the integrand; 6.2's `pws[4]`-inside-the-window
-  finding is the warning.
-- **Take the benchmark before deleting the twins, from a release build of
-  both sides in one interpreter, and run it from outside the repo.** The
-  editable install is ~20x pessimistic and inverts the comparison; and a
-  suite or benchmark run from the repo root imports `hazma` from the
-  worktree rather than site-packages, which silently invalidated the
-  first cython-3.3 measurement Task 6.2 took. The recipe that worked:
-  `git worktree add --detach <dir> origin/master`, then a non-editable
-  `uv pip install .` of each side into one scratch venv.
-- **`test/parity/cases.py` needs three edits per swap, not one** — the
-  `Case.module` moves to the wrapper, a `PORTED_ENTRY_POINTS` row is
-  added, and the `_CORE_TEST_ONLY_MODULES` comment counting live mediator
-  `.pyx` needs re-deriving. Missing the second turns
-  `test_the_served_roster_is_exactly_the_ported_entry_points` red with a
-  set-difference message that does not name the cause.
-- **A mutation survivor is a statement about the coefficient or about the
-  grid.** Task 6.2's fourteen survivors were provably identity-equivalent
-  (power-of-two coefficients); two more were alive only because the grid
-  never reached `2 m_μ`. Decide which before writing one off — and force
-  a rebuild between mutations, or the harness will measure the previous
-  one.
-- **Task 6.4's ground is visible now.** With both decay modules gone,
-  `hazma/spectra/_photon/{_muon,_pion}.pyx` have no consumer outside
-  their own pair, and the `_positron` pair is read only by the two `.pyx`
-  Task 6.3 deletes — so 6.4's `rg` sweep should come back empty for all
-  four the moment 6.3 lands, and `pyproject.toml`'s Cython *requirement*
-  goes with them.
+- **Deleting a `.pyx` does not make its module unimportable**, and 6.4
+  deletes four at once. The built `.so` and generated `.c` sit beside
+  each source, are gitignored, and survive `git rm` — Task 6.3 relied on
+  that deliberately, keeping both twins callable after `git rm` to take
+  the drift measurement, then removed them by hand. Assert on the source
+  files and the `setup.py` entry, never with `pytest.raises(ImportError)`.
+- **`pyproject.toml`'s Cython *requirement* goes with them**, and so does
+  `setuptools-rust`'s reason to coexist with it. Check
+  `[build-system] requires`, the `lint`/`dev` groups, `MANIFEST.in` and
+  CI's toolchain steps in the same pass — a clean wheel is not evidence
+  of a clean sdist (`docs/agents/environment.md`).
+- **Decide the restore-revision follow-up rather than defer it.** 6.4 is
+  the first task that *can* resolve it and also the task that makes it
+  moot; leaving it open past the phase leaves a dangling item nobody
+  else will own.
+- **The `_utils` headers are read by more than the survivors.** Sweep
+  `include "` as well as `cimport` — the mediator `.pyx` reached
+  `legacy_parameters.pxd` through `include`, which no `cimport` grep
+  would have found.

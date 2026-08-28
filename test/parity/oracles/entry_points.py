@@ -15,14 +15,13 @@ Three resolution kinds, in ascending order of how much they had to be
 recovered:
 
 ``live``
-    The ``.pyx`` still carries the ``def``. The four
-    ``mediator_spectra.*.positron.*`` cases:
-    ``hazma/{scalar,vector}_mediator/*_positron_spec.pyx`` are still what
-    the corpus entry point imports, and they ``cimport`` the
-    photon/positron ``cdef``\ s, so the whole chain is Cython. The three
-    ``mediator_spectra.*.photon.*`` cases were ``live`` too until
-    ``cython-to-rust`` Task 6.2 deleted both decay modules; Task 6.3 does
-    the same to the two above.
+    The ``.pyx`` still carries the ``def``. **No case is ``live`` any
+    more.** All seven ``mediator_spectra.*`` cases were, until
+    ``cython-to-rust`` Task 6.2 deleted the two decay modules and Task
+    6.3 the two positron ones. The kind is kept because it is what the
+    committed ``data/manifest.json`` records for the captures taken while
+    those modules were alive, and because a future capture of a
+    not-yet-ported entry point would use it again.
 
 ``capsule``
     The ``.pyx`` survives but its ``def`` is gone; the ``cdef`` is exported
@@ -162,15 +161,16 @@ def resolve(source: Source) -> Callable[..., Any]:
     return getattr(importlib.import_module(source.module), source.function)
 
 
-_MEDIATOR_LIVE = (
-    "this .pyx still carries its def and still cimports the "
-    "photon/positron cdefs, so the whole chain is Cython"
-)
 _MEDIATOR_DECAY_RESTORED = (
     "deleted by cython-to-rust Task 6.2; restore from the parent of the "
     "commit that removed the file, which a re-capture must resolve with "
     "`git log -1 --format=%h --diff-filter=D -- <path>` because that task "
     "could not know its own SHA (see RESTORED_SOURCES in defects.py)"
+)
+_MEDIATOR_POSITRON_RESTORED = (
+    "deleted by cython-to-rust Task 6.3; restore the same way as the "
+    "decay pair above, and for the same reason -- that task could not "
+    "know its own SHA either (see RESTORED_SOURCES in defects.py)"
 )
 _TABLES_RESTORED = (
     "deleted by cython-to-rust Task 4.2 (0954e5a); restored from git for " "the capture"
@@ -272,8 +272,8 @@ SOURCES: dict[str, Source] = {
         "dnde_positron_muon_point",
         "capsule",
         "def deleted by cython-to-rust Task 4.1; the cdef survives as a "
-        "capi export because _pion.pyx and both mediator positron modules "
-        "cimport it",
+        "capi export because _pion.pyx cimports it -- the two mediator "
+        "positron modules did too until Task 6.3 deleted them",
     ),
     "spectra.positron.charged_pion": Source(
         "hazma.spectra._positron._pion",
@@ -285,37 +285,38 @@ SOURCES: dict[str, Source] = {
         # deletion waves". Both halves were prospective and both turned
         # out wrong -- cython-to-rust Task 4.6 deleted the `def`, not
         # Task 4.4, and it kept the file, because both mediator positron
-        # spectrum modules cimport `dnde_positron_charged_pion_array`
+        # spectrum modules cimported `dnde_positron_charged_pion_array`
         # (`phase-04-spectra-kernels.md`, "scoped exception to rules.md
-        # rule 1"). The `.pyx` now dies with the other three capi
-        # survivors at Phase 06 Task 6.4. The capture is unaffected: the
-        # capsule this Source reads is what survives either way, and the
-        # arrays were taken before any of it.
+        # rule 1"). Task 6.3 deleted those two, so nothing cimports the
+        # file any more and it dies with the other three capi survivors
+        # at Phase 06 Task 6.4. The capture is unaffected: the capsule
+        # this Source reads is what survives either way, and the arrays
+        # were taken before any of it.
         "def deleted by cython-to-rust Task 4.6; the .pyx survives as a "
         "capi provider until Phase 06 Task 6.4",
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s": Source(
         "hazma.scalar_mediator.scalar_mediator_positron_spec",
         "dnde_decay_s",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_POSITRON_RESTORED,
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s_pt": Source(
         "hazma.scalar_mediator.scalar_mediator_positron_spec",
         "dnde_decay_s_pt",
-        "live",
-        _MEDIATOR_LIVE,
+        "restored",
+        _MEDIATOR_POSITRON_RESTORED,
     ),
     "mediator_spectra.vector.positron.dnde_decay_v": Source(
         "hazma.vector_mediator.vector_mediator_positron_spec",
         "dnde_decay_v",
         "restored",
-        _MEDIATOR_DECAY_RESTORED,
+        _MEDIATOR_POSITRON_RESTORED,
     ),
     "mediator_spectra.vector.positron.dnde_decay_v_pt": Source(
         "hazma.vector_mediator.vector_mediator_positron_spec",
         "dnde_decay_v_pt",
         "restored",
-        _MEDIATOR_DECAY_RESTORED,
+        _MEDIATOR_POSITRON_RESTORED,
     ),
 }

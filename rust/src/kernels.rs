@@ -29,6 +29,13 @@
 //! `hazma/{scalar,vector}_mediator/*_mediator_decay_spectrum.pyx`, whose
 //! literal names repeat the submodule name the same way.
 //!
+//! [`mediator_decay_positron`] is a seventh, and the only one that is
+//! *one* module for *two* `.pyx`. `scalar_mediator_positron_spec.pyx`
+//! and `vector_mediator_positron_spec.pyx` are the same text once the
+//! model's name is substituted out — the module's own docs carry the
+//! `diff` — so a `scalar_decay_positron`/`vector_decay_positron` pair
+//! would be one implementation written twice.
+//!
 //! [`mediator_tables`] is the only one that is shared *foundation*
 //! rather than a port: the four mediator-spectrum `.pyx`
 //! repeat one rest-frame-table construction, one memo cache and one set
@@ -43,6 +50,7 @@
 //! below stay at this level for the opposite reason — they belong to no
 //! `.pyx` and to no domain.
 
+pub mod mediator_decay_positron;
 pub mod mediator_tables;
 pub mod neutrino_flavors;
 pub mod neutrino_muon;

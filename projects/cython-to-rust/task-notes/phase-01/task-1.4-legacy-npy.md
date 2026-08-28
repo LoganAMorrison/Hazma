@@ -259,7 +259,8 @@ Added:
 - `test/test_theory_aggregation.py` — 21 test functions, 69 collected
   (16 parametrized over 4 model points, 5 unparametrized), covering the
   pure-Python aggregation layer.
-- `docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`,
+- `docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`
+  (created under `todo/`; moved when cython-to-rust Task 6.3 resolved it),
   `docs/followups/todo/model-spectra-reject-scalar-energies.md`, plus
   their two rows in `docs/followups/README.md`.
 
@@ -453,7 +454,7 @@ projects/cython-to-rust/phases/phase-01-parity-corpus.md \
 projects/cython-to-rust/PLAN.md \
 docs/followups/README.md \
 docs/followups/todo/model-spectra-reject-scalar-energies.md \
-docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md \
+docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md \
 docs/agents/lessons.md"
 TESTS="test/test_theory_aggregation.py test/rh_neutrino/test_rh_neutrino_integration.py"
 ```
@@ -525,7 +526,7 @@ scaffold). Read, in order:
   before Phase 04.** Six corpus blocks gate nothing for the port, not
   just for CI.
 - Two new follow-ups ripen inside this project:
-  [the `MASS_E` `nan`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  [the `MASS_E` `nan`](../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   before Phases 05/06, and
   [the scalar-energy contract](../../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
   during 04–06, where the compiled half resolves itself if the port

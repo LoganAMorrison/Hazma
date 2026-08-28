@@ -230,7 +230,7 @@ Not plan tasks — the phase is complete and these repair its artifacts.
   constants divergence itself was already on the record
   (`../../references/cython-inventory.md` §Bugs item 3); this consequence
   was not. Filed as
-  [`../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md),
+  [`../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md),
   ripening **before Phase 05/06**.
 - **`Theory.spectra` and `Theory.positron_spectra` reject scalar
   energies** (Task 1.4) despite documenting `float or float numpy.array`
@@ -416,7 +416,8 @@ Nothing under `hazma/` was touched.
   corrected docstrings (7 configured-ruff findings → 0).
 - New: `test/test_theory_aggregation.py` — 21 test functions / 69
   collected over the pure-Python aggregation layer.
-- New: `docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`
+- New: `docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`
+  (created under `todo/`; moved when cython-to-rust Task 6.3 resolved it)
   and `docs/followups/todo/model-spectra-reject-scalar-energies.md`, with
   their two rows in `docs/followups/README.md`.
 - `../../phases/phase-01-parity-corpus.md` — frontmatter `status:
@@ -607,7 +608,7 @@ they are history. Then `../../phases/phase-02-rust-scaffold.md` and
   rather than six assorted ones, they gate nothing for the port, and
   `test/parity/stability.py` is what stops that reading as a regression.
 - Two Task 1.4 follow-ups ripen inside this project: the
-  [`MASS_E` `nan`](../../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  [`MASS_E` `nan`](../../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   before Phases 05/06, and the
   [scalar-energy contract](../../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
   during 04–06.

@@ -100,7 +100,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   new path — never strip the segment, `docs/followups/<slug>.md` resolves to
   nothing — and sweep with `rg -oN --no-filename
   'docs/followups/[A-Za-z0-9_./-]*\.md' -g '*.md' . | sort -u` plus `[ -e ]` on
-  each hit (PR #44).
+  each hit. Run the sweep repo-wide, not over `--paths`: the reference that
+  goes stale is in a file the moving PR never touches. A stale reference
+  surviving elsewhere in the tree is evidence the sweep was skipped there,
+  never a convention to copy (PRs #44, #81).
 - [degenerate-sample-count] An API whose contract includes a statistical error
   estimate validates its sample-count input — type and `>= 2` — at the public
   entry point, or a degenerate count flows to every consumer as a finite value

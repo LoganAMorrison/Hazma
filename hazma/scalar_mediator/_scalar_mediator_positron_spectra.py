@@ -1,7 +1,22 @@
 import numpy as np
 
 from hazma import spectra
-from hazma.scalar_mediator.scalar_mediator_positron_spec import dnde_decay_s
+
+# Served by the Rust extension since cython-to-rust Task 6.3 deleted
+# `hazma/scalar_mediator/scalar_mediator_positron_spec.pyx`. Import
+# paths, call signatures and returned values are unchanged; the `_core`
+# names are spelled out because the vector twin's Cython names collide
+# with the photon pair Task 6.2 registered. See
+# `rust/src/kernels/mediator_decay_positron.rs` for the port.
+#
+# Both names are bound here rather than imported directly, because
+# `dnde_decay_s_pt` is a re-export: it was a public `def` of the deleted
+# extension and this module is what stands in for it, but nothing below
+# calls it.
+from hazma._core import scalar_mediator as _core
+
+dnde_decay_s = _core.dnde_positron_decay_s
+dnde_decay_s_pt = _core.dnde_positron_decay_s_pt
 
 
 def dnde_pos_pipi(_, positron_energies, cme):

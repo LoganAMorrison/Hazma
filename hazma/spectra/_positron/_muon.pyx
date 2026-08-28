@@ -154,9 +154,11 @@ cdef np.ndarray[np.float64_t,ndim=1] dnde_positron_muon_array(double[:] engs_p, 
 # cython-to-rust project's Task 4.1: `hazma/spectra/_positron/__init__.py`
 # now calls `hazma._core.positron.dnde_positron_muon`, and this extension
 # is built solely so its `__pyx_capi__` capsules stay resolvable —
-# `hazma/spectra/_positron/_pion.pyx` and both mediator positron spectrum
-# modules still `cimport` the two `cdef` functions above.
+# `hazma/spectra/_positron/_pion.pyx` still `cimport`s the two `cdef`
+# functions above. It is the only cimporter left: both mediator positron
+# spectrum modules, which were the others, went in Task 6.3.
 #
-# Phase 06 Task 6.4 deletes this file once the last cimporter is gone;
-# until then it is the phase file's declared exception to rules.md rule 1
-# ("the Cython twin is deleted in the same PR as the swap").
+# Nothing outside this pair reads either file now, so Phase 06 Task 6.4
+# deletes both together; until then it is the phase file's declared
+# exception to rules.md rule 1 ("the Cython twin is deleted in the same
+# PR as the swap").

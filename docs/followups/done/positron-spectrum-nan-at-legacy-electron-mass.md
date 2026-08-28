@@ -3,11 +3,45 @@
 - **Added:** 2026-08-08
 - **Source:** `projects/cython-to-rust/task-notes/phase-01/task-1.4-legacy-npy.md`
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** ripens **before Phase 05/06** of `cython-to-rust`,
-  which port the mediator spectrum kernels. `rules.md` rule 4 (constants keep
-  bit-parity through the port) decides how the port must treat this; deciding
-  after the swap costs a second declared numerical change.
+- **Status:** done — cython-to-rust Task 6.3 (2026-08-27), by the second
+  option below.
+- **Triggers / blockers:** ripened **at Phase 06 Task 6.3**, which ported the
+  two kernels named here.
+
+## Resolution
+
+**The `nan` was never in the source's semantics.** It is a clang
+contraction: `sqrt(eng_p * eng_p - me * me)` compiles to
+`fma(eng_p, eng_p, -(me * me))`, which computes the square exactly and
+subtracts the *already rounded* `me * me`. For the legacy `m_e` that
+rounding is upward by `1.4517720908119372e-17`, so at `eng_p == m_e` the
+radicand is negative by exactly that and `sqrt` answers `nan`. The
+divergence between the two `MASS_E` tables is what puts a grid on the
+singular point; it is not what creates it.
+
+That settles the choice below in favour of the **second** option.
+`rust/src/kernels/mediator_decay_positron.rs`'s `momentum` keeps clang's
+fused spelling — so every other energy's arithmetic is unchanged, and
+13,403 of 16,740 pinned scalar values stay bit-equal — and clamps a
+negative radicand to zero, which is the momentum at the threshold and the
+limit from both sides. Written `if radicand < 0.0` rather than
+`.max(0.0)`, so a `nan` energy still propagates rather than being turned
+into a momentum of zero.
+
+**Consolidating the two `MASS_E` tables is still open**, and is still
+what `projects/cython-to-rust/rules.md` rule 4 reserves for a separate
+declared change after the port. Nothing here forecloses it; the singular
+point simply no longer depends on it.
+
+**Where the point is pinned.** Not in the parity corpus, as the *What*
+section below asks: rule 2 allows corpus data only from pre-port Cython,
+and the pre-port value is the `nan` this change removes, so pinning it
+and then changing it in the same PR would be circular. It is pinned in
+`test/test_core_mediator_positron.py::TestTheThresholdSingularity`
+instead — the threshold itself, both neighbouring doubles, and a
+20,001-point sweep of the `[0.5109988, 0.5109990]` interval this file
+swept. Recorded in
+`projects/cython-to-rust/task-notes/numerical-impact.md` under Task 6.3.
 
 ## Why
 

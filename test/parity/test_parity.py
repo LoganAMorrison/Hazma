@@ -577,6 +577,12 @@ def test_the_served_roster_is_exactly_the_ported_entry_points() -> None:
     to be; Task 4.3's is `hazma.spectra._photon._muon:dnde_photon`,
     serving `dnde_photon_muon`.
 
+    `cases.CORE_RENAMES` covers the other direction — a served kernel
+    whose leaf name differs from the public one, which Task 6.3's
+    positron pair is the first of. A case with no row there is compared
+    on its own function name, so the map stays a list of exceptions
+    rather than a second roster to keep in step.
+
     If this fails, either a swap landed without its `PORTED_ENTRY_POINTS`
     row (add it; the corpus case must move to the wrapper in the same
     change) or something non-kernel became public on the extension and
@@ -585,7 +591,10 @@ def test_the_served_roster_is_exactly_the_ported_entry_points() -> None:
     `test_test_only_core_submodules_have_no_importer`'s guarantee).
     """
     served = corpus.rust_core_kernels()
-    ported = {CASES[name].function for name in corpus.PORTED_ENTRY_POINTS}
+    ported = {
+        corpus.CORE_RENAMES.get(name, CASES[name].function)
+        for name in corpus.PORTED_ENTRY_POINTS
+    }
 
     assert {name.rpartition(".")[2] for name in served} == ported
     assert len(served) == len(corpus.PORTED_ENTRY_POINTS), (

@@ -128,7 +128,7 @@ the phase file already specified it.
   sides. The corpus does not pin it (zero `nan` across 19,610 pinned
   positron values), so a Rust port can land anywhere there and still pass.
   Filed as
-  [`docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
+  [`docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md).
 - **An Actions ternary cannot return the empty string on its true
   branch.** `&&`/`||` yield values, not booleans, and `''` is falsy, so
   `cond && '' || 'X'` evaluates to `'X'` for *both* outcomes of `cond`.
@@ -243,7 +243,7 @@ the phase file already specified it.
 
 - **Mediator positron spectra return `nan` at exactly the legacy
   `MASS_E`** —
-  [`todo/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md).
+  [`done/positron-spectrum-nan-at-legacy-electron-mass.md`](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md).
   Ripens **before Phase 05/06**. `rules.md` rule 4 says ported code uses
   the exact constant its Cython source used, so the port either reproduces
   the `nan` or the divergence is consolidated — and that is a declared

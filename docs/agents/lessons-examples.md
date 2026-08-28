@@ -220,6 +220,24 @@ cites a real PR.
   `rg -oN --no-filename 'docs/followups/[A-Za-z0-9_./-]*\.md' -g '*.md' .
   | sort -u` and test each hit with `[ -e ]` (PR #44: two Phase-00
   task-note records were left naming a status-stripped path).
+- PR #81 hit the same class from a new angle and shows two things. First,
+  **scope the sweep to the repo, not to the diff.** That PR moved
+  `positron-spectrum-nan-at-legacy-electron-mass.md` to `done/`,
+  repointed the thirteen references it found, and still shipped four
+  dangling ones — all four in Phase-01 and Phase-03 task notes it had no
+  other reason to open, so no `--paths`-scoped check would have looked at
+  them. Second, **a surviving stale reference is not a convention.** The
+  four were skipped deliberately: two sit in pasted command output and
+  two are creation records, and the author generalised from the three
+  surviving `todo/legacy-parameters-width-exponent-bug.md` references
+  still in the tree that transcripts are treated as frozen evidence.
+  `docs/workflow.md:291` says the opposite — update *every* reference —
+  and those three are simply an unswept PR. The ledger already carried
+  this lesson and it was read at task start; what defeated it was
+  preferring an observed counter-example in the tree to the written rule.
+  When the two disagree, check whether the counter-example was ever
+  swept. A transcript stays honest by carrying the current path plus a
+  bracketed note of what the command saw when it ran.
 
 ### degenerate-sample-count
 

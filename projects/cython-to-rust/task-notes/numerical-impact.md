@@ -765,6 +765,95 @@ pointer here so that every citation of that section still resolves.
     0.045 ms, **4,180x**. Same numbers either way: this is the dead-cache
     repair `rules.md` rules 3 and 12 declare as performance-only.
 
+## Task 6.3 — the two mediator positron spectra (2026-08-27)
+
+`dnde_decay_s` / `dnde_decay_s_pt` (scalar) and `dnde_decay_v` /
+`dnde_decay_v_pt` (vector), all four now served by
+`hazma._core.{scalar,vector}_mediator` under the
+`dnde_positron_decay_*` names and re-exported by the wrappers under the
+Cython ones.
+
+- **Drift against the pinned corpus, per entry point:** scalar
+  **2.3319e-12** worst relative over 16,740 values, 13,403 of them
+  bit-equal, worst at `ms_550.boosted_strong.pi_pi`; vector
+  **1.5037e-12** over 16,740, 13,684 bit-equal, worst at
+  `mv_900.boosted_strong.total`. Each `_pt` twin is **bit-for-bit
+  identical** to its array form, and the scalar and vector kernels are
+  bit-for-bit identical to *each other* at equal arguments, because the
+  two `.pyx` were the same text and the port serves all four from one
+  kernel. All four are above rule 3's 1e-12 threshold, so the Phase 07
+  CHANGELOG owes them a line.
+  The residual is the integrator's, on the same evidence Task 6.2 gave
+  for the photon pair: the tables are bit-equal, their columns match the
+  Phase 04 entry points, and what is left is `crate::quad` against
+  scipy's QUADPACK.
+- **Budgets tightened, not widened:** all four go from `NESTED_RTOL`
+  (1e-6) to `PORTED_NESTED_RTOL` (1e-9) — 429x headroom on the scalar
+  pair and 665x on the vector. That makes **fourteen tightened and none
+  widened** across the project, and leaves **no corpus case holding
+  either opening figure**: `QUAD_RTOL` emptied at Task 5.2 and
+  `NESTED_RTOL` here.
+- **One value deliberately moves: `NaN → 0.0` at exactly the legacy
+  `m_e`.** At `eng_p == 0.510998928` MeV every continuum mode of both
+  spectra returned `NaN`, because clang contracts
+  `sqrt(eng_p * eng_p - me * me)` into an FMA whose radicand is the
+  upward rounding of `me * me` — negative by 1.45e-17. One double wide:
+  both neighbours returned `0.0` before and return `0.0` now, and a
+  20,001-point sweep of `[0.5109988, 0.5109990]` is finite throughout.
+  The port keeps the fused spelling and clamps the radicand, so no other
+  energy's arithmetic changes. This discharges
+  [`positron-spectrum-nan-at-legacy-electron-mass`](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
+  by its own option 2; option 1 (consolidating the two `MASS_E` tables)
+  stays out under `rules.md` rule 4. No corpus value moves — the corpus
+  pins no `NaN` anywhere in these four cases.
+- **A user-visible *type* change on one path, and it is a widening**, the
+  same one Task 6.2 declared: the array entry points take
+  `crate::dispatch::require_vector`, so a scalar energy raises
+  `ValueError` where the `.pyx` raised `TypeError`, and a `list` is now
+  accepted where it was refused. Both wrappers pass an array, so no
+  working call reaches either.
+- **The port stops raising `IntegrationWarning`,** for the reason the
+  photon pair did: the `.pyx` subscripted `quad(...)[0]`, so the warning
+  never reached a value.
+- **A shipped normalization defect is reproduced, not repaired.** The
+  `e⁺e⁻` line integrates to `pw_ee · r` rather than `pw_ee`, `r` being the
+  positron's rest-frame velocity — the box's edges carry the factor and
+  its height does not. Worth 3.3e-5 at `m = 125` MeV, 1.4e-6 at 600 MeV,
+  and divergent as `m → 2 m_e`. Held under rule 1 and filed as
+  [the missing electron velocity](../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+- **The positron-normalization defect's reach into these spectra is now
+  quantified**, from the committed corrected-value oracle rather than a
+  new measurement (`test/parity/oracles/data/manifest.json`, defect A4 —
+  the answer Task 6.2's handoff asked this task for). Repairing it moves
+  **5,237 of 16,740** values in *every one* of the four cases, all of them
+  **upward**, by up to **3.7421e-04** relative — 7.97e-06 absolute on the
+  scalar pair and 3.35e-06 on the vector. Unlike A3's reach into the
+  photon spectra, this is not a change of shape: the relative shift is
+  the same in all four cases and agrees with `R_FACTOR**2 - 1`
+  (`3.7420664794e-04` against the recorded `3.7420665021e-04`) to eight
+  digits, the residual being the quadrature's rather than the constant's.
+  That is the signature of a single inverted normalization rather than a
+  kinematic error.
+  Reproduced under rule 1, not fixed here
+  ([the inverted normalization](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md)).
+- **Performance, from release builds of both sides** (`rules.md`
+  rule 12; non-editable installs of `origin/master` and this branch into
+  two scratch venvs, run from `/tmp`, 200-point energy sweep at
+  `mv = 600`, `E = 700` MeV):
+
+  | shape | Cython | Rust | speedup |
+  | --- | --- | --- | --- |
+  | one sweep, a fresh mass each time | 60.545 ms | 1.877 ms | **32.3x** |
+  | one sweep, a mass already seen | 59.048 ms | 1.380 ms | **42.8x** |
+  | 20 sweeps varying only the widths | 1177.840 ms | 27.212 ms | **43.3x** |
+
+  The Cython's first two rows are the same number because its memo cache
+  was never populated — it rebuilt two 500-point quadrature-backed
+  tables on every call. Same numbers either way: the cache repair is
+  performance-only under `rules.md` rules 3 and 12. Unlike the photon
+  pair's 4,180x, the ceiling here is the boost quadrature itself rather
+  than the table build, which the two Rust rows price at ~0.5 ms.
+
 (Per-function drift lines land here as Phase 04–06 swaps merge; the
 Phase 07 CHANGELOG is assembled from this section — do not reconstruct
 it from memory.)

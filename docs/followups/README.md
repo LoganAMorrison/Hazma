@@ -30,7 +30,6 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [markdownlint was never run over `.claude/skills/`](todo/markdownlint-skips-skill-file-shapes.md) | 2026-08-06 | PR #48 review round 1 | cross-cutting |
 | [sdist ships cythonized `*.c`, `docs/`, `test/`](todo/sdist-ships-generated-c-and-docs.md) | 2026-08-06 | cython-to-rust Task 0.4 | cross-cutting |
 | [model spectrum dicts reject scalar energies](todo/model-spectra-reject-scalar-energies.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
-| [positron spectra return `nan` at the legacy `MASS_E`](todo/positron-spectrum-nan-at-legacy-electron-mass.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
 | [the boost integral mis-covers its window at both ends](todo/boost-integral-drops-last-interior-cell.md) | 2026-08-10 | cython-to-rust Task 3.4 | cross-cutting |
 | [the muon positron spectrum divides by its normalization](todo/positron-muon-spectrum-normalization-inverted.md) | 2026-08-11 | cython-to-rust Task 4.1 | cross-cutting |
 | [the η′ two-photon line carries one photon instead of two](todo/eta-prime-two-photon-line-missing-factor-two.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
@@ -45,13 +44,16 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`thermal_cross_section` returns its integrator's initial estimate](todo/thermal-cross-section-quadrature-never-converges.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [`pip install -e .` builds `hazma._core` unoptimized](todo/editable-installs-build-the-rust-extension-in-debug.md) | 2026-08-20 | cython-to-rust Task 5.1 | cross-cutting |
 | [mediator spectra return 0.0 for an unrecognised mode string](todo/mediator-spectra-accept-unknown-mode-strings.md) | 2026-08-23 | cython-to-rust Task 6.1 | cross-cutting |
-| [the oracle roster has no restore revision for the deleted mediator decay `.pyx`](todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md) | 2026-08-23 | cython-to-rust Task 6.2 | commit |
+| [the oracle roster has no restore revision for the deleted mediator spectrum `.pyx`](todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md) | 2026-08-23 | cython-to-rust Tasks 6.2, 6.3 | commit |
 | [`[mutation-harness-poisons-its-own-baseline]` is cited but not in the ledger](todo/lessons-ledger-missing-the-mutation-harness-class.md) | 2026-08-23 | cython-to-rust Task 6.2 | cross-cutting |
+| [mediator positron line misses the electron velocity](todo/mediator-positron-line-misses-the-electron-velocity.md) | 2026-08-27 | cython-to-rust Task 6.3 | cross-cutting |
+| [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
 
 ## Promoted / Done / Pruned
 
 | Item | Status | Resolution |
 | --- | --- | --- |
+| [positron spectra return `nan` at the legacy `MASS_E`](done/positron-spectrum-nan-at-legacy-electron-mass.md) | done | cython-to-rust Task 6.3 — the `nan` was a clang FMA contraction of `sqrt(eng_p*eng_p - me*me)`, whose radicand is the upward rounding of `me*me` (1.45e-17) and so negative at `eng_p == m_e`, not a consequence of the two `MASS_E` tables diverging. Resolved by the file's second option: `mediator_decay_positron.rs`'s `momentum` keeps the fused spelling and clamps the radicand at zero, moving that one double from `nan` to `0.0` and no other value. Consolidating the tables stays open under `rules.md` rule 4. Pinned in `test/test_core_mediator_positron.py::TestTheThresholdSingularity` rather than in the corpus, which rule 2 forbids. |
 | [parity corpus pins ill-conditioned points](done/parity-corpus-pins-ill-conditioned-points.md) | done | `test/parity/stability.py` masks the 494 stored positions whose values are cancellation residue, established against `test/parity/reference.py` (the same closed forms at 60 digits) rather than against platform disagreement; `tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` give those two classes an off-libm budget and `tolerances.zero_floor` handles the four declared stored zeros a change of libm moves. CI's `--ignore=test/parity` scoping removed; `pytest test/parity` is **637 passed, 1 skipped** on macOS/arm64, Linux/aarch64 and Linux/x86_64. The underlying kernel defect is carved out to [its own follow-up](todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md). |
 | [`test_core_interp.py` scoped its NumPy oracle with a probe](done/interp-oracle-scoped-by-an-unsound-probe.md) | done | Probe replaced by `ON_THE_CAPTURING_PLATFORM` + a measured, peak-scaled `OFF_PLATFORM_BUDGET = 1e-12`; `TestFusedArithmetic` rewritten against a full Python transcription of `rust/src/interp.rs`. Module goes from `24 passed, 9 skipped` to **`42 passed, 0 skipped`** on linux/amd64. |
 | [markdownlint config for templates](done/markdownlint-config-for-templates.md) | done | Committed [`.markdownlint.jsonc`](../../.markdownlint.jsonc) encoding the repo's shapes (frontmatter-title phase files, `<placeholder>` notation, wide fact tables); all 18 inline pragmas removed. `docs/` + `projects/` errors 132 → 0. |

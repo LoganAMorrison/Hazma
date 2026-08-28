@@ -27,7 +27,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
-| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **In Progress** — Task 6.1 complete (2026-08-23); 6.2–6.4 open |
+| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **In Progress** — Tasks 6.1–6.3 complete (2026-08-23, -23, -27); 6.4 open |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
 ```text
@@ -250,14 +250,21 @@ than quoting them: the current state is in the open phase's
 
 **Phases 00–05 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
 08-21) and **Phase 06 is open**: Task 6.1 landed the shared
-table/cache/mode foundation on 2026-08-23 and Task 6.2 swapped the decay
-photon pair the same day, so **the next task is 6.3** (the positron
-pair), then 6.4 and Phase 07.
+table/cache/mode foundation on 2026-08-23, Task 6.2 swapped the decay
+photon pair the same day, and Task 6.3 swapped the positron pair on
+2026-08-27. **The next task is 6.4** (retire the capi survivors and the
+`_utils` headers), which closes the phase, then Phase 07.
+
+**All 41 consumed entry points are now on `hazma._core`.** Thirteen
+`.pyx`/`.pxd` remain and every one is Task 6.4's: the four capi
+survivors with their `.pxd`, `_utils/boost.{pyx,pxd}`, `constants.pxd`,
+`kinematics.pxd` and `legacy_parameters.pxd`. Nothing is left to swap.
 
 **Read [`phase-06/README.md`](phase-06/README.md) and then
-[`phase-06/task-6.2-decay-spectra.md`](phase-06/task-6.2-decay-spectra.md)
-before starting 6.3** — the positron modules are the other half of the
-same clone-pair split, and 6.2's note is the direct template.
+[`phase-06/task-6.3-positron-spectra.md`](phase-06/task-6.3-positron-spectra.md)
+before starting 6.4** — its `## Handoff` is the brief, and its
+`## Findings` carry the two results a deletion task would otherwise
+re-derive.
 
 **Five Task 6.2 results a later task should not re-derive.**
 
@@ -276,9 +283,13 @@ same clone-pair split, and 6.2's note is the direct template.
    existed.** `test/parity/oracles/data/manifest.json` holds defect A3's
    corrected-value capture over exactly the three photon corpus cases:
    repairing it moves 1,032/8,610 scalar values by up to 1.63e-06 and
-   2,013/29,295 vector values by up to **7.77** relative. **Task 6.3 owes
-   the same question for the positron pair and the same manifest answers
-   it** (defect A4) — do not measure it again.
+   2,013/29,295 vector values by up to **7.77** relative. **Task 6.3
+   answered the same question for the positron pair from the same
+   manifest** (defect A4): 5,237 of 16,740 values in each of the four
+   cases, all moving *up*, by up to **3.7421e-04** relative — exactly
+   `R_FACTOR**2 - 1`, so a pure normalization rather than a change of
+   shape. Both are recorded in `numerical-impact.md`; do not measure
+   either again.
 4. **A mutation survivor is a statement about the coefficient or about
    the grid.** Fourteen of 6.2's thirty-seven fused sites are provably
    identity-equivalent (power-of-two coefficient ⇒ exact product; zero
@@ -302,12 +313,15 @@ messages are the Cython's" is transcription rather than execution. And
 the port, so they pin the parser/entry-point *coupling* rather than the
 behaviour.
 
-**The performance story is the dead cache, and it is now measured**
-(release builds of both sides, `rules.md` rule 12): **4.2x** on the table
-build itself, and 12.9x–5,500x once the memo hits, because the `.pyx`
-rebuilt two 500-point quadrature-backed tables on *every* call. A
-20-point partial-width sweep at fixed mass goes from 186.3 ms to
-0.045 ms.
+**The performance story is the dead cache, and it is now measured on
+both pairs** (release builds of both sides, `rules.md` rule 12). Task
+6.2, isolating the table build: **4.2x** on the build itself and
+12.9x–5,500x once the memo hits, with a 20-point partial-width sweep at
+fixed mass going from 186.3 ms to 0.045 ms. Task 6.3, on a whole
+200-point energy sweep, where the boost quadrature rather than the table
+is the ceiling: **32.3x** at a fresh mass, **42.8x** at a repeated one,
+**43.3x** over a 20-point width sweep. The `.pyx` rebuilt two 500-point
+quadrature-backed tables on *every* call in both pairs.
 
 **A fourth Task 6.1 result, and the one that cost a red CI round:** the
 Rust grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp
@@ -328,17 +342,20 @@ notes. The load-bearing items for what is left: run
 transliterating (0/0 for both positron modules, per Task 6.1, so no
 complex arithmetic there); clang's FMA contraction follows one syntactic
 rule on the C tree, which Task 6.2 applied to 37 sites and confirmed
-against the live twin; every task's numerical prediction has been wrong
+against the live twin — and which Task 6.3 found **predicts rather than
+decides**, one of its eleven sites contradicting the rule under
+measurement; every task's numerical prediction has been wrong
 in a different direction; and a mutation survivor is either unobservable
 *by construction* or a seam that needs lifting out.
 
 **Phase 04 delivered 16 entry points and `hazma/spectra/` holds no
 Cython Python entry point of any kind.** Four `.pyx` survive there for
 their `cdef` capsules alone — `_photon/{_muon,_pion}` and
-`_positron/{_muon,_pion}`. After Task 6.2 the first pair has **no
-consumer outside its own pair**, and the second is read only by the two
-`.pyx` Task 6.3 deletes — so Task 6.4's `rg` sweep should come back empty
-for all four the moment 6.3 lands.
+`_positron/{_muon,_pion}`. **As of Task 6.3 none has a consumer outside
+its own pair**: each `_pion` cimports its `_muon` twin and
+`hazma/_utils/boost`, and nothing else in the tree reads any of them. So
+**Task 6.4's `rg` sweep is already empty**, and the stale comments that
+claimed otherwise were corrected in 6.3.
 
 **The parity corpus left bit-equality mode permanently in Task 4.1**, and
 corpus *regeneration* is closed (see Open Questions). 19 of the 41 cases
@@ -551,12 +568,14 @@ bit-equal result as evidence the mask is unnecessary.
   absolute 7.3e-10. Six of the eight are sequenced in
   [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md).
 - **Re-capturing `test/parity/oracles` closes at Task 6.4**, and the
-  roster it would need is now incomplete: `RESTORED_SOURCES` has no rows
-  for the two `.pyx` Task 6.2 deleted, because a task cannot cite its own
-  commit's SHA. Filed
-  ([the restore revisions](../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md));
-  **Task 6.3 should discharge it for both pairs at once**. Not blocking —
-  the `pytest` gate does not read that dict.
+  roster it would need is incomplete: `RESTORED_SOURCES` has no rows for
+  the four `.pyx` Tasks 6.2 and 6.3 deleted, because a task cannot cite
+  its own commit's SHA. Filed
+  ([the restore revisions](../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md)),
+  and 6.3 widened it to all four rather than discharging it — it hit the
+  same wall 6.2 did. **Task 6.4 is the first task that can close it, and
+  also the one that makes it moot**, so decide there. Not blocking — the
+  `pytest` gate does not read that dict.
 - **Nine places in the tree cite a lessons class that is not in the
   ledger** (`[mutation-harness-poisons-its-own-baseline]`), including a
   guard in `test/parity/oracles/capture.py` named after it. Found by Task
@@ -565,7 +584,7 @@ bit-equal result as evidence the mask is unnecessary.
   rather than fixed, because the ledger's format needs the PR that
   learned it (Task 3.3's) and the ledger is past its working-set cap.
 - **Two Task 1.4 follow-ups ripen inside this project.** The
-  [`MASS_E` `nan`](../../../docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md)
+  [`MASS_E` `nan`](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   is now **on the grid's first abscissa** — the positron table starts at
   the legacy `m_e`, so Task 6.3 is where it bites — and the
   [scalar-energy contract](../../../docs/followups/todo/model-spectra-reject-scalar-energies.md)
