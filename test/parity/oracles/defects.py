@@ -143,13 +143,42 @@ RESTORED_SOURCES: dict[str, str] = {
     "hazma/spectra/_photon/path.py": "0954e5a^",
     "hazma/spectra/_photon/_rho.pyx": "b5f7f90^",
     "hazma/spectra/_photon/_rho.pxd": "b5f7f90^",
-    # cython-to-rust Task 6.2 deleted
-    # `hazma/{scalar,vector}_mediator/*_mediator_decay_spectrum.pyx`, which
-    # the three `mediator_spectra.*.photon.*` cases run through. They are
-    # deliberately *not* listed here: every revision above is a literal
-    # SHA so a restore is reproducible, and that task could not know the
-    # SHA of its own commit. A re-capture must add both files with
-    # `git log -1 --format=%h --diff-filter=D -- <path>` suffixed `^`.
-    # Tracked as `docs/followups/todo/oracle-restore-revisions-for-the-
-    # mediator-decay-pyx.md`.
+    # The four mediator spectrum modules, which the seven
+    # `mediator_spectra.*` cases run through. cython-to-rust Task 6.2
+    # deleted the decay pair and Task 6.3 the positron pair; neither could
+    # add its own row, because the revision each needs is the parent of the
+    # commit carrying its own deletion. Both are merged now, so these
+    # resolve.
+    "hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx": "7594761^",
+    "hazma/vector_mediator/vector_mediator_decay_spectrum.pyx": "7594761^",
+    "hazma/scalar_mediator/scalar_mediator_positron_spec.pyx": "c384aff^",
+    "hazma/vector_mediator/vector_mediator_positron_spec.pyx": "c384aff^",
+    # The four capi survivors and the headers every restore above compiles
+    # against, deleted by cython-to-rust Task 6.4. Their revision is spelled
+    # as a plain SHA rather than `<deleting commit>^` for a reason that
+    # applies only to this group: Task 6.4 is the task that deleted them, so
+    # it faced the same "cannot know its own commit" problem 6.2 and 6.3
+    # did, and resolved it by naming a revision that already existed —
+    # `origin/master` as of that task, where all eleven files are present in
+    # their final form. `git show <rev>:<path>` does not care which spelling
+    # it is given, and a revision that exists is strictly more robust than
+    # one that has to be computed from a later commit's parent.
+    #
+    # Defect A3 patches `_photon/_pion.pyx` and A4 `_positron/_muon.pyx`;
+    # the rest are here because a restore has to compile. `_pion` cimports
+    # its `_muon` twin in both families, all four `include` the pdg header,
+    # and all four cimport `boost`. `legacy_parameters.pxd` is included by
+    # the four mediator modules above, not by these.
+    "hazma/spectra/_photon/_muon.pyx": "1b022d4",
+    "hazma/spectra/_photon/_muon.pxd": "1b022d4",
+    "hazma/spectra/_photon/_pion.pyx": "1b022d4",
+    "hazma/spectra/_photon/_pion.pxd": "1b022d4",
+    "hazma/spectra/_positron/_muon.pyx": "1b022d4",
+    "hazma/spectra/_positron/_muon.pxd": "1b022d4",
+    "hazma/spectra/_positron/_pion.pyx": "1b022d4",
+    "hazma/spectra/_positron/_pion.pxd": "1b022d4",
+    "hazma/_utils/boost.pyx": "1b022d4",
+    "hazma/_utils/boost.pxd": "1b022d4",
+    "hazma/_utils/constants.pxd": "1b022d4",
+    "hazma/_utils/legacy_parameters.pxd": "1b022d4",
 }

@@ -693,12 +693,14 @@ class TestCythonMessageParity:
     """
 
     def test_the_tree_no_longer_spells_a_dispatch_message(self) -> None:
-        # The roster shrank as the port advanced and is now empty: the four
-        # capi-survivor `.pyx` under `hazma/spectra/` carry no top-level
-        # `def` and no dispatch `assert`, and `hazma/_utils/boost.pyx`'s two
-        # `assert`s carry no message. If this fails, a `.pyx` grew a
-        # dispatch message back and the frozen roster above is no longer
-        # the whole story.
+        # The roster shrank as the port advanced and is now empty for the
+        # strongest possible reason: cython-to-rust Task 6.4 deleted the
+        # last `.pyx`, so the scan below walks an empty set of files. It
+        # is kept as a standing guard rather than deleted with its oracle
+        # -- if this fails, Cython has come back and the frozen roster
+        # above is no longer the whole story.
+        # `test/test_no_cython_remains.py` is the sharper form of the same
+        # claim; this one stays because it is specifically about messages.
         found = cython_dispatch_messages()
         assert found["assert"] == set()
         assert found["raise"] == set()

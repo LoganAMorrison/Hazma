@@ -348,7 +348,7 @@ beyond the integrator's own noise.
   task cannot know its own commit's. `entry_points.py`'s three `Source`
   rows are updated to `"restored"` and say how to resolve it; the rows
   themselves are filed as
-  [`../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md`](../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md),
+  [`../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md`](../../../../docs/followups/done/oracle-restore-revisions-for-the-mediator-decay-pyx.md),
   which ripens the moment this PR merges and which Task 6.3 should
   discharge for both pairs at once. Not blocking: `capture.py --check`,
   the gate that runs in `pytest`, does not read `RESTORED_SOURCES`.

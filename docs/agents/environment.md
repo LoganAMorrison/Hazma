@@ -198,9 +198,10 @@ install.** `test/parity/cases.py` refuses a `hazma` that resolves
 outside the repository (`cases.assert_module_is_repo_tree`), and running pytest
 from the repo root puts the source tree first on `sys.path` regardless,
 so a non-editable `pip install .` leaves the corpus looking at a tree
-with no compiled extensions in it. `pip install -e .`, then confirm with
-`python -c "import hazma.spectra._photon._muon as m; print(m.__file__)"`
-that the `.so` is inside your worktree. CI does the non-editable install
+with no compiled extension in it. `pip install -e .`, then confirm with
+`python -c "import hazma._core as m; print(m.__file__)"` that
+`_core.abi3.so` is inside your worktree — since cython-to-rust Task 6.4
+it is the only compiled module there is. CI does the non-editable install
 first (that is what its outside-the-repo import smoke test checks) and
 reinstalls editable before the test step.
 

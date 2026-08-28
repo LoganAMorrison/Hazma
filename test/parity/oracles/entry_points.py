@@ -4,9 +4,10 @@ The parity corpus (``test/parity/data``) was captured from pre-port
 Cython, and its manifest records the entry point each case was captured
 through. Those entry points no longer resolve to Cython: the
 ``cython-to-rust`` port repointed most of them at ``hazma._core`` and
-deleted the ``def``\ s (Tasks 4.1-4.5), leaving only ``cdef``\ s reachable
-through ``__pyx_capi__`` — and for two families it deleted the ``.pyx``
-outright.
+deleted the ``def``\ s (Tasks 4.1-4.5) and then, by Task 6.4, every
+``.pyx`` that carried one. Nothing here resolves against a module in the
+working tree any more; each case names the source and the revision a
+capture would have to restore first.
 
 This module maps each case name this project needs back to a callable
 with the *pre-port* signature, so `test/parity/cases.py`'s own `Block`
@@ -162,15 +163,22 @@ def resolve(source: Source) -> Callable[..., Any]:
 
 
 _MEDIATOR_DECAY_RESTORED = (
-    "deleted by cython-to-rust Task 6.2; restore from the parent of the "
-    "commit that removed the file, which a re-capture must resolve with "
-    "`git log -1 --format=%h --diff-filter=D -- <path>` because that task "
-    "could not know its own SHA (see RESTORED_SOURCES in defects.py)"
+    "deleted by cython-to-rust Task 6.2; RESTORED_SOURCES in defects.py "
+    "carries the revision"
 )
 _MEDIATOR_POSITRON_RESTORED = (
-    "deleted by cython-to-rust Task 6.3; restore the same way as the "
-    "decay pair above, and for the same reason -- that task could not "
-    "know its own SHA either (see RESTORED_SOURCES in defects.py)"
+    "deleted by cython-to-rust Task 6.3; RESTORED_SOURCES in defects.py "
+    "carries the revision"
+)
+#: The four capi survivors, deleted by cython-to-rust Task 6.4. Until then
+#: these four cases were ``capsule``: the ``.pyx`` was still built, its
+#: ``def`` gone and its ``cdef`` reachable through ``__pyx_capi__``. With
+#: the file deleted there is no capsule to read, so they join the
+#: ``restored`` majority.
+_SURVIVORS_RESTORED = (
+    "def deleted in Phase 04, the file itself by cython-to-rust Task 6.4; "
+    "RESTORED_SOURCES in defects.py carries the revision, and lists the "
+    "headers and cimported twins a restore has to compile against"
 )
 _TABLES_RESTORED = (
     "deleted by cython-to-rust Task 4.2 (0954e5a); restored from git for " "the capture"
@@ -223,18 +231,15 @@ SOURCES: dict[str, Source] = {
     # -- A2 / A3: the muon and charged-pion photon chains ------------------
     "spectra.photon.muon": Source(
         "hazma.spectra._photon._muon",
-        "dnde_photon_muon_point",
-        "capsule",
-        "def deleted by cython-to-rust Task 4.3; the cdef survives as a "
-        "capi export because _pion.pyx and both mediator decay-spectrum "
-        "modules cimport it",
+        "dnde_photon",
+        "restored",
+        _SURVIVORS_RESTORED,
     ),
     "spectra.photon.charged_pion": Source(
         "hazma.spectra._photon._pion",
-        "dnde_photon_charged_pion_point",
-        "capsule",
-        "def deleted by cython-to-rust Task 4.4; the cdef survives as a "
-        "capi export because both mediator decay-spectrum modules cimport it",
+        "dnde_photon_charged_pion",
+        "restored",
+        _SURVIVORS_RESTORED,
     ),
     "spectra.photon.charged_rho": Source(
         "hazma.spectra._photon._rho",
@@ -269,31 +274,25 @@ SOURCES: dict[str, Source] = {
     # -- A4: the positron chain -------------------------------------------
     "spectra.positron.muon": Source(
         "hazma.spectra._positron._muon",
-        "dnde_positron_muon_point",
-        "capsule",
-        "def deleted by cython-to-rust Task 4.1; the cdef survives as a "
-        "capi export because _pion.pyx cimports it -- the two mediator "
-        "positron modules did too until Task 6.3 deleted them",
+        "dnde_positron_muon",
+        "restored",
+        _SURVIVORS_RESTORED,
     ),
     "spectra.positron.charged_pion": Source(
         "hazma.spectra._positron._pion",
-        "dnde_positron_charged_pion_point",
-        "capsule",
+        "dnde_positron_charged_pion",
+        "restored",
         # The committed `data/manifest.json` records this note as it read
         # when Task 2 captured the arrays: "def deleted by cython-to-rust
         # Task 4.4; the .pyx itself dies at Task 4.6, the earliest of the
         # deletion waves". Both halves were prospective and both turned
-        # out wrong -- cython-to-rust Task 4.6 deleted the `def`, not
-        # Task 4.4, and it kept the file, because both mediator positron
-        # spectrum modules cimported `dnde_positron_charged_pion_array`
-        # (`phase-04-spectra-kernels.md`, "scoped exception to rules.md
-        # rule 1"). Task 6.3 deleted those two, so nothing cimports the
-        # file any more and it dies with the other three capi survivors
-        # at Phase 06 Task 6.4. The capture is unaffected: the capsule
-        # this Source reads is what survives either way, and the arrays
-        # were taken before any of it.
-        "def deleted by cython-to-rust Task 4.6; the .pyx survives as a "
-        "capi provider until Phase 06 Task 6.4",
+        # out wrong -- Task 4.6 deleted the `def`, not Task 4.4, and it
+        # kept the file, because both mediator positron spectrum modules
+        # cimported `dnde_positron_charged_pion_array`. Task 6.3 deleted
+        # those two and Task 6.4 the file. The capture is unaffected: the
+        # arrays were taken while the capsule was live, and this Source
+        # only says how to reach that value again.
+        _SURVIVORS_RESTORED,
     ),
     "mediator_spectra.scalar.positron.dnde_decay_s": Source(
         "hazma.scalar_mediator.scalar_mediator_positron_spec",

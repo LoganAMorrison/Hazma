@@ -27,7 +27,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 03 | Numerics foundation | [phase-03-numerics-foundation.md](../phases/phase-03-numerics-foundation.md) | [phase-03/README.md](phase-03/README.md) | **Complete (2026-08-11)** — all five tasks done; [learnings](../learnings/phase-03-numerics-foundation.md) |
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
-| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **In Progress** — Tasks 6.1–6.3 complete (2026-08-23, -23, -27); 6.4 open |
+| 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **Complete (2026-08-27)** — all four tasks done; zero `.pyx`/`.pxd` remain; [learnings](../learnings/phase-06-mediator-spectra.md) |
 | 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
 
 ```text
@@ -248,138 +248,37 @@ than quoting them: the current state is in the open phase's
 
 ## Handoff to Next Task
 
-**Phases 00–05 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
-08-21) and **Phase 06 is open**: Task 6.1 landed the shared
-table/cache/mode foundation on 2026-08-23, Task 6.2 swapped the decay
-photon pair the same day, and Task 6.3 swapped the positron pair on
-2026-08-27. **The next task is 6.4** (retire the capi survivors and the
-`_utils` headers), which closes the phase, then Phase 07.
+**Phases 00–06 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
+08-21, 08-27) and **the port itself is finished**. All 41 consumed entry
+points are on `hazma._core`, and after Task 6.4
+`find hazma -name "*.pyx" -o -name "*.pxd"` returns **nothing** —
+`setup.py` declares one `RustExtension`, `[build-system] requires` is
+`["setuptools", "setuptools-rust"]`, and `test/test_no_cython_remains.py`
+asserts all of that so it cannot regress unnoticed.
 
-**All 41 consumed entry points are now on `hazma._core`.** Thirteen
-`.pyx`/`.pxd` remain and every one is Task 6.4's: the four capi
-survivors with their `.pxd`, `_utils/boost.{pyx,pxd}`, `constants.pxd`,
-`kinematics.pxd` and `legacy_parameters.pxd`. Nothing is left to swap.
+**Phase 07 (packaging cutover and close) is next, starting at Task
+7.1.** Read [`../PLAN.md`](../PLAN.md), this file, then
+[`../learnings/phase-06-mediator-spectra.md`](../learnings/phase-06-mediator-spectra.md)
+— *not* the four Phase 06 task notes
+([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md))
+— and then [`phase-06/README.md`](phase-06/README.md)'s `## Handoff`,
+which carries the four Phase-07-specific risks Task 6.4 identified: the
+`MANIFEST.in` deletion versus the test that reads it, the version's
+source of truth moving under `preflight.sh --closing`, sdist contents
+needing explicit verification, and `AGENTS.md` + `docs/agents/` now
+stating Cython facts that are false.
 
-**Read [`phase-06/README.md`](phase-06/README.md) and then
-[`phase-06/task-6.3-positron-spectra.md`](phase-06/task-6.3-positron-spectra.md)
-before starting 6.4** — its `## Handoff` is the brief, and its
-`## Findings` carry the two results a deletion task would otherwise
-re-derive.
-
-**Five Task 6.2 results a later task should not re-derive.**
-
-1. **The drift these swaps carry is the integrator's, not the
-   transliteration's**, and that is measured: setting `eng_s == ms` makes
-   the boost integrand a *constant*, and every channel then agrees with
-   the Cython to within one ulp. What the corpus sees — worst 5.3327e-12
-   — is `crate::quad` against scipy's QUADPACK. A constant integrand is
-   not reproduced exactly either: `∫₋₁¹ c dcl` lands one ulp off the exact
-   `2c` on **both** sides, at different `c`. Expect the same floor in 6.3.
-2. **All three swapped entry points moved**, so **three budgets were
-   tightened** from `NESTED_RTOL` to `PORTED_NESTED_RTOL` (188x and 838x
-   headroom) — **ten tightened, none widened** across the project — and
-   the Phase 07 CHANGELOG owes all three a line.
-3. **The forward-cone question is closed, from data that already
-   existed.** `test/parity/oracles/data/manifest.json` holds defect A3's
-   corrected-value capture over exactly the three photon corpus cases:
-   repairing it moves 1,032/8,610 scalar values by up to 1.63e-06 and
-   2,013/29,295 vector values by up to **7.77** relative. **Task 6.3
-   answered the same question for the positron pair from the same
-   manifest** (defect A4): 5,237 of 16,740 values in each of the four
-   cases, all moving *up*, by up to **3.7421e-04** relative — exactly
-   `R_FACTOR**2 - 1`, so a pure normalization rather than a change of
-   shape. Both are recorded in `numerical-impact.md`; do not measure
-   either again.
-4. **A mutation survivor is a statement about the coefficient or about
-   the grid.** Fourteen of 6.2's thirty-seven fused sites are provably
-   identity-equivalent (power-of-two coefficient ⇒ exact product; zero
-   disagreements over 40,002 masses per shape under exact rational
-   arithmetic); two more were alive only because the grid never reached
-   `2 m_μ`. And **force the rebuild between mutations** — 6.2's second
-   campaign run measured a stale `.so` and lagged its own mutations by
-   two iterations.
-5. **`pyproject.toml`'s `cython<3.3` cap is gone**, because the only file
-   it protected was the one 6.2 deleted. Measured first: the seven
-   surviving `.pyx` compile under cython 3.3.0 and a tree whose
-   extensions are *built* by it runs the suite at the same counts as
-   3.2.9, corpus and Cython-twin bit-equality included.
-
-**Two things Task 6.2 spent that do not come back.** It deleted the last
-`.pyx` that spells a dispatch message, so `test_core_dispatch.py`'s
-Cython-oracle classes are retired and the roster the port emits is now
-*frozen* there with per-message provenance — from 6.3 on, "the port's
-messages are the Cython's" is transcription rather than execution. And
-`test/test_core_mediator_tables.py`'s two live-twin mode oracles now call
-the port, so they pin the parser/entry-point *coupling* rather than the
-behaviour.
-
-**The performance story is the dead cache, and it is now measured on
-both pairs** (release builds of both sides, `rules.md` rule 12). Task
-6.2, isolating the table build: **4.2x** on the build itself and
-12.9x–5,500x once the memo hits, with a 20-point partial-width sweep at
-fixed mass going from 186.3 ms to 0.045 ms. Task 6.3, on a whole
-200-point energy sweep, where the boost quadrature rather than the table
-is the ceiling: **32.3x** at a fresh mass, **42.8x** at a repeated one,
-**43.3x** over a 20-point width sweep. The `.pyx` rebuilt two 500-point
-quadrature-backed tables on *every* call in both pairs.
-
-**A fourth Task 6.1 result, and the one that cost a red CI round:** the
-Rust grid is bit-equal to `numpy.logspace` on macOS/arm64 and **one ulp
-off it at ~5% of points on Linux/x86-64**. Nothing downstream changes,
-but **"bit-equal to the Cython" is a macOS/arm64 statement** for anything
-that reads these tables, and any comparison against a NumPy oracle must
-be scoped with `ON_THE_CAPTURING_PLATFORM` rather than left open.
-
-**A sixth `_CORE_TEST_ONLY_MODULES` probe exists**,
-`hazma._core.mediator_tables`, because every oracle for the foundation
-lives in Python.
-
-**Read [`../learnings/phase-05-mediator-cross-sections.md`](../learnings/phase-05-mediator-cross-sections.md)
-and [`../learnings/phase-04-spectra-kernels.md`](../learnings/phase-04-spectra-kernels.md)
-before starting any Phase 06 task.** They replace the Phase 04 and 05
-notes. The load-bearing items for what is left: run
-`grep -c SoftComplexToDouble` on the **generated C** before
-transliterating (0/0 for both positron modules, per Task 6.1, so no
-complex arithmetic there); clang's FMA contraction follows one syntactic
-rule on the C tree, which Task 6.2 applied to 37 sites and confirmed
-against the live twin — and which Task 6.3 found **predicts rather than
-decides**, one of its eleven sites contradicting the rule under
-measurement; every task's numerical prediction has been wrong
-in a different direction; and a mutation survivor is either unobservable
-*by construction* or a seam that needs lifting out.
-
-**Phase 04 delivered 16 entry points and `hazma/spectra/` holds no
-Cython Python entry point of any kind.** Four `.pyx` survive there for
-their `cdef` capsules alone — `_photon/{_muon,_pion}` and
-`_positron/{_muon,_pion}`. **As of Task 6.3 none has a consumer outside
-its own pair**: each `_pion` cimports its `_muon` twin and
-`hazma/_utils/boost`, and nothing else in the tree reads any of them. So
-**Task 6.4's `rg` sweep is already empty**, and the stale comments that
-claimed otherwise were corrected in 6.3.
-
-**The parity corpus left bit-equality mode permanently in Task 4.1**, and
-corpus *regeneration* is closed (see Open Questions). 19 of the 41 cases
-are `EXACT` class and still run at `rtol = 0` **on the capturing
-platform**; the rest run at their declared budget.
-
-**The corpus is platform-portable as of 2026-08-18 and CI runs it on
-every matrix entry.** Three carve-outs make that true and each names
-exactly what it covers, so a `test/parity` failure on a new platform
-should be triaged into one of them rather than absorbed by a wider
-budget: `test/parity/stability.py`'s 494 unpinnable positions,
-`tolerances.PLATFORM_EXACT_RTOL` and `PLATFORM_SPECFUN_RTOL` for those
-two classes off the capturing libm, and `tolerances.zero_floor` for the
-four declared stored zeros a change of libm moves. **Phase 06 should read
-[`phase-01/followup-parity-corpus-stability.md`](phase-01/followup-parity-corpus-stability.md)**
-before porting anything the mask covers, and should not read Task 5.2's
-bit-equal result as evidence the mask is unnecessary.
+**Task 6.4 patched two phase files.** Phase 06's Task 6.4 block no
+longer lists the `spectra/_neutrino/_neutrino` struct module (Phase 04
+had already deleted it), and Phase 07's Task 7.1 no longer owes the
+cython/numpy/scipy build requirements — 6.4 removed them, because after
+it nothing build-time read them.
 
 **For the next agent starting any task in this project:**
 
 1. Read `../PLAN.md` end-to-end, then this file, then the closed phases'
-   learnings — **Phase 04's first**, since it is the most recent and the
-   most directly applicable — then the active phase's
-   `phase-XX/README.md`.
+   learnings — **Phase 06's first**, since it is the most recent — then
+   the active phase's `phase-XX/README.md`.
 2. Load the reference file(s) the phase's Prerequisites name — the
    references replace re-reading the Cython audit.
 3. Check Open Questions above. No ADR sign-off is outstanding — all three
@@ -390,16 +289,19 @@ bit-equal result as evidence the mask is unnecessary.
 - The dead-code map and entry-point inventory in
   [`../references/cython-inventory.md`](../references/cython-inventory.md)
   were verified against 2.1.0 (Aug 2026) and the file declares itself a
-  snapshot. **Every row of its dead-code table is now done.** Read it for
-  the **live surface** and the cimport DAG, which Phase 06 still needs;
-  read its headline counts as history.
-- **7 `.pyx` and 8 `.pxd` after Task 6.2** (9/8 after Task 5.2, 10/8
-  after 5.1, 11/8 after 4.6). Both mediator decay-spectrum modules were
-  whole-file deletions — nothing cimported either and neither exported
-  capsules — as both cross-section modules were before them. Zero C++.
-  Re-derive with the clean-then-rebuild recipe rather than quoting this;
-  a stale `.so` makes a wrong list look right.
-- **`hazma._core` serves thirty-seven kernels.** The three added by
+  snapshot. **Every row of its dead-code table is done, and so is every
+  row of its live-surface table.** The whole file is history now; the
+  cimport DAG describes a tree that no longer exists.
+- **Zero `.pyx` and zero `.pxd`, as of Task 6.4** (7/8 after Task 6.2,
+  9/8 after 5.2, 11/8 after 4.6). Zero C++. One built extension,
+  `hazma/_core.abi3.so`. Asserted by
+  `test/test_no_cython_remains.py` rather than left to a count in this
+  file — but still re-derive with the clean-then-rebuild recipe before
+  drawing a conclusion from a local tree, because a stale `.so` outlives
+  its deleted source.
+- **`hazma._core` serves all 41 consumed entry points**, the last seven
+  added by Phase 06 (three mediator decay photon spectra in Task 6.2,
+  four mediator positron spectra in 6.3). The three added by
   Task 6.2 are the whole consumed surface of the two
   `*_mediator_decay_spectrum.pyx` —
   `scalar_mediator.scalar_mediator_decay_spectrum` and
@@ -438,17 +340,16 @@ bit-equal result as evidence the mask is unnecessary.
 - **`crate::quad` short-circuits an empty interval**, as
   `scipy.integrate.quad` does (Task 4.6). Any later kernel whose limits
   can coincide inherits the fix.
-- **Four test-module shapes, and the twin's fate forces the choice.**
-  `test/test_core_{positron,photon}_muon.py` for a kernel whose twin
-  survives *and* admits bit-equality; `test/test_core_photon_pion.py` for
-  one carrying two oracle classes at two standards;
-  `test/test_core_positron_pion.py` for a surviving twin that is
-  quadrature-backed and therefore has **no** bit-equality mode on any
-  platform; and `test/test_core_{photon_tables,photon_rho,neutrino,mediator_decay_photon}.py`
-  for a kernel whose twin does **not** survive the PR — there the
-  substitute is an independent Python reference plus the
-  against-the-Cython numbers measured *before* the deletion. **Not**
-  `test/test_core_dispatch.py`; see Decisions.
+- **Only one test-module shape is still available: the twin is always
+  gone.** Four shapes existed while twins survived, chosen by the twin's
+  fate; Task 6.4 collapsed them onto the last one, which is
+  `test/test_core_{photon_tables,photon_rho,neutrino,mediator_decay_photon}.py`'s
+  — an independent Python reference plus the against-the-Cython numbers
+  measured *before* the deletion, recorded in prose where they can no
+  longer be re-run. The three that read a live twin
+  (`test/test_core_{photon,positron}_{muon,pion}.py`) were rewritten into
+  that shape in Task 6.4. **Not** `test/test_core_dispatch.py`; see
+  Decisions.
 - **One test module per clone-pair, not per entry point**, when the
   independent reference is one function parameterised by pair (Task 6.2).
 - **Run a mutation campaign on every kernel, and interrogate the
@@ -481,8 +382,10 @@ bit-equal result as evidence the mask is unnecessary.
   are in `rust/src/kernels/soft_complex.rs`, and Task 6.2 needed exactly
   that pair for the two decay modules' FSR coefficients (one live site
   each, on *different* factors: the scalar's lepton coefficient and the
-  vector's charged-pion one). **`grep -c SoftComplexToDouble` on the
-  generated C before porting.**
+  vector's charged-pion one). The `grep -c SoftComplexToDouble` check
+  this item prescribed has no target left — Task 6.4 deleted the last
+  `.pyx` — but both routines stay, because the kernels that need them
+  are the port's now.
 - **Where clang fuses is one syntactic rule** (Task 5.2): `EmitFMulAdd`
   contracts `A ± B` when `A` is a syntactic multiply, else when `B` is,
   decided on the **C** tree Cython emits — where `x ** n` is a `pow`
@@ -534,12 +437,17 @@ bit-equal result as evidence the mask is unnecessary.
   `python -c "import hazma._core; print(hazma._core.__file__)"`. If a
   *harness* rebuilds in a loop, delete the artifact first and assert it
   came back — see Task 6.2's campaign.
-- **The build entry point is `setup.py`**, and **`pyproject.toml` no
-  longer caps `cython`** (Task 6.2 removed the `<3.3` cap with the file
-  that forced it; the surviving `.pyx` are measured green under 3.3.0).
+- **The build entry point is `setup.py`, and it now declares one
+  `RustExtension` and nothing else** (Task 6.4). `[build-system]
+  requires` is `["setuptools", "setuptools-rust"]`: `cython` lost its
+  `<3.3` cap in Task 6.2 and then left entirely in 6.4, along with
+  `numpy` and `scipy`, which were there for the `.pyx` alone. Phase 07
+  Task 7.1 replaces the backend outright and deletes this file.
 - **The sdist and wheel both build, and the sdist installs and runs** in a
   fresh venv from outside the repo (recipe in Task 0.4's note; reuse it in
-  Phase 07).
+  Phase 07). Task 6.4 also removed `*.pyx *.pxd *.c` from `MANIFEST.in`'s
+  `global-include`: `*.c` matched no tracked file and swept a dirty
+  tree's gitignored transpiler output into the sdist.
 - **`hazma.gamma_ray` is gone, docs and all.** The settled replacement
   wording for the Phase 07 aggregate: `gamma_ray_decay` →
   `hazma.spectra.dnde_photon`, `gamma_ray_fsr` →
@@ -567,15 +475,19 @@ bit-equal result as evidence the mask is unnecessary.
   **7.77** relative on `dnde_decay_v`, i.e. a factor of 8.8, though at an
   absolute 7.3e-10. Six of the eight are sequenced in
   [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md).
-- **Re-capturing `test/parity/oracles` closes at Task 6.4**, and the
-  roster it would need is incomplete: `RESTORED_SOURCES` has no rows for
-  the four `.pyx` Tasks 6.2 and 6.3 deleted, because a task cannot cite
-  its own commit's SHA. Filed
-  ([the restore revisions](../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md)),
-  and 6.3 widened it to all four rather than discharging it — it hit the
-  same wall 6.2 did. **Task 6.4 is the first task that can close it, and
-  also the one that makes it moot**, so decide there. Not blocking — the
-  `pytest` gate does not read that dict.
+- ~~**Re-capturing `test/parity/oracles` closes at Task 6.4**, and the
+  roster it would need is incomplete.~~ — **closed by Task 6.4, in the
+  direction of keeping the option rather than losing it.**
+  `RESTORED_SOURCES` now has **29** entries covering every case, because
+  the wall 6.2 and 6.3 hit is not real: `capture.py` resolves a revision
+  with `git show <rev>:<path>`, which takes a plain SHA as readily as a
+  `^` expression, so a task that cannot cite its own commit can cite one
+  that already exists. The roster also lists the headers and cimported
+  twins a restore has to compile against, and `oracles/README.md` now
+  states what a re-capture costs — restore the whole closure plus
+  `setup.py` and `pyproject.toml` — instead of declaring it impossible.
+  Nothing needs one: the committed arrays cover A3 and A4.
+  [Follow-up done](../../../docs/followups/done/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
 - **Nine places in the tree cite a lessons class that is not in the
   ledger** (`[mutation-harness-poisons-its-own-baseline]`), including a
   guard in `test/parity/oracles/capture.py` named after it. Found by Task

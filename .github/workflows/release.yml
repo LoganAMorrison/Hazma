@@ -46,14 +46,18 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH"'
           # Import a compiled extension module, not just the (pure-Python)
           # top-level package, so a mistagged or broken wheel fails the build.
-          # Both toolchains are named: a Cython extension and the Rust one.
+          # `hazma._core` is the only one left: cython-to-rust Task 6.4
+          # deleted the last Cython extension, which this command also named
+          # until then.
           CIBW_TEST_COMMAND: >-
-            python -c "import hazma.spectra._photon._muon, hazma._core"
+            python -c "import hazma._core"
       - name: Assert every wheel ships the Rust extension as abi3
-        # The wheels themselves stay CPython-tagged and will until the
-        # last Cython extension goes in Phase 06 — a wheel tag is a
-        # property of the distribution, not of one extension. What is
-        # checkable now is extension-level: PyO3's abi3-py310 feature
+        # The wheels themselves stay CPython-tagged. The last Cython
+        # extension went in cython-to-rust Task 6.4, so that is no longer
+        # what holds them there — a wheel tag is a property of the
+        # distribution, and setting it is Phase 07 Task 7.2's job, which
+        # rebuilds this workflow on maturin. What is checkable here is
+        # still extension-level: PyO3's abi3-py310 feature
         # makes setuptools-rust install the cdylib as `_core.abi3.so`,
         # so that filename inside the archive *is* the limited-API
         # assertion. A plain `_core.cpython-312-*.so` would mean the

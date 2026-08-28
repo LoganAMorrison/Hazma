@@ -111,8 +111,7 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: >-
           python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,
-          hazma.scalar_mediator, hazma.vector_mediator,
-          hazma.spectra._photon._muon"
+          hazma.scalar_mediator, hazma.vector_mediator, hazma._core"
       - name: Reinstall editable for the test run
         # The golden parity corpus (test/parity/, cython-to-rust Phase 01)
         # refuses to measure a hazma that resolves outside the repository —

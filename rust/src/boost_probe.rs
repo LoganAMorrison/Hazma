@@ -3,10 +3,13 @@
 //! Registration only, like the per-domain submodules. This is a **test
 //! surface, not physics**: the kernels Phase 04 ports call
 //! [`crate::boost`] directly in Rust, and nothing under `hazma/` imports
-//! this module. It exists because Task 3.4's oracle is the Cython twin
-//! itself, reached from Python through `hazma._utils.boost.__pyx_capi__`
-//! — so `test/test_core_boost.py` needs a way to put the same arguments
-//! through both. Same role `special_probe` plays for the cephes shim and
+//! this module. It exists because Task 3.4's oracle lives in Python: it
+//! was the Cython twin itself, reached through
+//! `hazma._utils.boost.__pyx_capi__`, and since Phase 06 Task 6.4 deleted
+//! that extension it is the pair of reference implementations
+//! `test/test_core_boost.py` carries. Either way that module needs a way
+//! to put the same arguments through both. Same role `special_probe`
+//! plays for the cephes shim and
 //! `quad_probe` for the QUADPACK port, and it joins them in
 //! `test/parity/cases.py`'s `_CORE_TEST_ONLY_MODULES` rather than
 //! widening that exemption.

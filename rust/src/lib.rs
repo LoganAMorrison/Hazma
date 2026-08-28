@@ -31,10 +31,12 @@
 //! `test/test_core_special.py`, `test/test_core_quad.py`,
 //! `test/test_core_interp.py`, `test/test_core_boost.py`,
 //! `test/test_core_dispatch.py` and `test/test_core_mediator_tables.py`
-//! can compare them against their oracles — scipy, NumPy, the Cython
-//! twin itself through `__pyx_capi__`, the `.pyx` sources' own error
-//! strings, and the Phase 04 kernels' own entry points. No hazma module
-//! imports any of them.
+//! can compare them against their oracles — scipy, NumPy, a Python
+//! reference implementation, and the Phase 04 kernels' own entry points.
+//! Two of those oracles used to be the Cython itself, reached through
+//! `__pyx_capi__` or read out of the `.pyx` sources; Phase 06 Task 6.4
+//! deleted the last of them, and what replaced each is recorded in the
+//! module that used it. No hazma module imports any of these probes.
 
 pub mod boost;
 mod boost_probe;

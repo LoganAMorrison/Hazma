@@ -514,9 +514,10 @@ class TestWrapperAndPublicApi:
     def test_the_cython_twins_are_gone_from_the_tree(self) -> None:
         """rules.md rule 1, in its unqualified form.
 
-        Nothing outside the package cimported these three, so they are not
-        Phase 06 capi survivors and the swap PR removes the modules
-        outright rather than only their ``def``s.
+        Nothing outside the package cimported these three, so they were
+        not capi survivors and the swap PR removed the modules outright
+        rather than only their ``def``s. The four that did survive that
+        way went in Phase 06 Task 6.4.
 
         Asserted against the **source tree and the build declaration**,
         not against importability. A stale ``_muon.cpython-*.so`` from an

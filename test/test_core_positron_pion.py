@@ -2,37 +2,32 @@
 
 cython-to-rust Phase 04 Task 4.6. Shaped after
 ``test/test_core_positron_muon.py`` rather than after
-``test/test_core_photon_rho.py``, and the choice is forced the same way it
-was for Task 4.4's pion: ``hazma/spectra/_positron/_pion.pyx`` **survives**
-this swap as a capi provider. Only its ``def`` went, so the live ``cdef``
-is still reachable through ``__pyx_capi__`` and is the strongest
-available oracle; Phase 06 Task 6.4 deletes it and this module's
-:class:`TestAgainstTheCythonTwin` with it.
+``test/test_core_photon_rho.py``, because when it was written
+``hazma/spectra/_positron/_pion.pyx`` **survived** this swap as a capi
+provider: only its ``def`` went, and the live ``cdef`` stayed reachable
+through ``__pyx_capi__``. What kept the file on disk was the two mediator
+positron-spectrum modules, which reached its
+``dnde_positron_charged_pion_array`` through a ``cimport``; Task 6.3
+ported and deleted both, and Task 6.4 then deleted the file.
 
-What kept the file on disk was the two mediator positron-spectrum
-modules, which reached its ``dnde_positron_charged_pion_array`` through a
-``cimport``. Task 6.3 ported and deleted both, so nothing cimports this
-extension any more — the reason it survives is now only that Task 6.4
-has not run.
-
-Four parts:
+Three parts:
 
 1. :class:`TestDispatchWiring` — one assertion per contract branch, enough
    to prove this entry point goes through ``map_unary`` with the wording
    its Cython twin used. Branch-by-branch reasoning about the helper
    itself stays in ``test/test_core_dispatch.py``.
 2. :class:`TestWrapperAndPublicApi` — the swap wired out to what users
-   import, and the ``def`` gone while the capsules stay.
-3. :class:`TestAgainstTheCythonTwin` — the surviving ``cdef``, compared
-   within one measured budget on **every** platform. There is no
-   bit-equality mode here and there is none to be had: the port replaces
-   *scipy's* QUADPACK with the in-tree one (Phase 03 Task 3.3), and two
-   independent adaptive integrators are not bit-equal anywhere. That is
-   the same call ``test/test_core_photon_pion.py`` makes for its charged
-   pion, and unlike ``test/test_core_positron_muon.py``'s two-mode
-   comparison, which its closed-form kernel earns.
-4. :class:`TestPhysics` — statements about the spectrum that outlive the
-   Cython.
+   import.
+3. :class:`TestPhysics` — statements about the spectrum itself.
+
+``TestAgainstTheCythonTwin`` was the third of four until Task 6.4.
+It compared the surviving ``cdef`` within one measured budget on **every**
+platform; there was no bit-equality mode to be had, because the port
+replaces *scipy's* QUADPACK with the in-tree one (Phase 03 Task 3.3) and
+two independent adaptive integrators are not bit-equal anywhere. The
+``spectra.positron.charged_pion`` corpus case carries that comparison
+now, at the same budget class and against arrays captured from the same
+Cython.
 
 What this kernel is
 -------------------
@@ -67,10 +62,8 @@ produces, not the correct one; see
 
 from __future__ import annotations
 
-import ctypes
 import math
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -82,13 +75,9 @@ from hazma.scalar_mediator import (
 )
 from hazma.spectra import _nbody
 from hazma.spectra import _positron as wrapper
-from hazma.spectra._positron import _pion as cython_module
 from hazma.vector_mediator import (
     _vector_mediator_positron_spectra as vector_mediator_wrapper,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 dnde = core_positron.dnde_positron_charged_pion
 
@@ -103,15 +92,10 @@ TYPE_ERROR = f"{QUANTITY} must be a float or a NumPy array."
 #: consolidation of the two tables cannot silently move the tests with the
 #: code (`projects/cython-to-rust/rules.md` rule 4).
 MASS_E = 0.5109989461
-MASS_MU = 105.6583745
 MASS_PI = 139.57039
 BR_PI_TO_MU_NUMU = 0.9998770
 BR_PI_TO_E_NUE = 1.230e-4
 
-#: The muon's energy in the pion rest frame, MeV — the `.pyx`'s
-#: `eng_mu_pi_rf`, and the second argument every integrand evaluation
-#: passes to the Michel spectrum.
-ENG_MU_PI_RF = 0.5 * (MASS_PI * MASS_PI + MASS_MU * MASS_MU) / MASS_PI
 
 #: The positron energy of the two-body `pi -> e nu` line in the pion rest
 #: frame, MeV — the `.pyx`'s `eng_e_pi_rf`. Also, to within one ulp, the
@@ -167,62 +151,11 @@ CHARGED_PION_BUDGET = 1e-12
 #: Used only by the test that documents the regime.
 ULTRARELATIVISTIC_PION_ENERGY = 1e6
 
-#: The signature string that is also the capsule's *name*, so a changed
-#: `cdef` prototype fails loudly rather than being called through the wrong
-#: ABI (the Task 3.4 constraint).
-_POINT_SIGNATURE = b"double (double, double)"
 
 #: Pion energies spanning rest, just-off-rest, and increasing boosts. `m_pi`
 #: itself is included because this kernel is the one that returns *zero*
 #: there rather than a rest-frame spectrum.
 PION_ENERGIES = (MASS_PI, MASS_PI + 1e-9, 145.0, 200.0, 500.0, 1500.0, 1e4)
-
-
-def cython_point() -> Callable[[float, float], float]:
-    """The live Cython ``dnde_positron_charged_pion_point``, from Python.
-
-    ``PYFUNCTYPE``, never ``CFUNCTYPE``: this ``cdef`` calls back into
-    Python (``scipy.integrate.quad``), and ``CFUNCTYPE`` releases the GIL,
-    so the call would segfault with no Python-level error.
-    """
-    get_pointer = ctypes.pythonapi.PyCapsule_GetPointer
-    get_pointer.restype = ctypes.c_void_p
-    get_pointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
-
-    capsule = cython_module.__pyx_capi__["dnde_positron_charged_pion_point"]
-    address = get_pointer(capsule, _POINT_SIGNATURE)
-    return ctypes.PYFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(address)
-
-
-def cython_spectrum(epi: float, energies: np.ndarray) -> np.ndarray:
-    """The Cython twin evaluated pointwise over ``energies``."""
-    point = cython_point()
-    return np.array([point(float(e), epi) for e in energies])
-
-
-def assert_matches_the_cython(got: np.ndarray, want: np.ndarray, context: str) -> None:
-    """Assert the port agrees with the twin to :data:`CHARGED_PION_BUDGET`.
-
-    One budget, no platform branch — see the module docstring for why
-    there is no bit-equality mode to branch on.
-    """
-    finite = np.isfinite(want)
-    peak = float(np.abs(want[finite]).max()) if finite.any() else 0.0
-    np.testing.assert_allclose(
-        got,
-        want,
-        rtol=CHARGED_PION_BUDGET,
-        atol=CHARGED_PION_BUDGET * peak,
-        err_msg=(
-            f"{context}: the port left the in-tree QUADPACK's measured "
-            f"agreement with scipy's ({CHARGED_PION_BUDGET:.0e}, against a "
-            f"measured 6.9e-15 over these grids and a peak of {peak:.6e}). "
-            f"Phase 03 Task 3.3's envelope for *converged* runs is 8.2e-11 "
-            f"relative, so a failure here is either a defect or a shape "
-            f"that stopped converging -- check the termination flag before "
-            f"touching this number."
-        ),
-    )
 
 
 class TestDispatchWiring:
@@ -293,28 +226,6 @@ class TestWrapperAndPublicApi:
     def test_the_public_spectra_name_resolves_to_the_same_function(self) -> None:
         assert spectra.dnde_positron_charged_pion(10.0, 500.0) == dnde(10.0, 500.0)
 
-    def test_the_cython_module_no_longer_exports_a_python_entry_point(self) -> None:
-        # rules.md rule 1, as far as the capi exception allows: the
-        # extension is still built for its `cdef` capsules, but no Python
-        # caller can reach the implementation the swap replaced.
-        assert not hasattr(cython_module, "dnde_positron_charged_pion")
-
-    def test_the_cdef_capsules_the_mediator_modules_cimport_are_intact(self) -> None:
-        # Phase 06 Task 6.4 deletes these; until then both mediator
-        # positron spectrum modules cimport `_array`, so removing the
-        # `def` must not have disturbed them.
-        assert set(cython_module.__pyx_capi__) == {
-            "dnde_positron_charged_pion_point",
-            "dnde_positron_charged_pion_array",
-        }
-
-    def test_the_capsule_name_is_the_expected_c_signature(self) -> None:
-        get_name = ctypes.pythonapi.PyCapsule_GetName
-        get_name.restype = ctypes.c_char_p
-        get_name.argtypes = [ctypes.py_object]
-        capsule = cython_module.__pyx_capi__["dnde_positron_charged_pion_point"]
-        assert get_name(capsule) == _POINT_SIGNATURE
-
     def test_the_nbody_dispatch_table_reaches_the_ported_entry_point(self) -> None:
         # `_nbody.py` maps final-state names to spectrum functions; a swap
         # that repointed the wrapper but not this table would leave the
@@ -331,146 +242,16 @@ class TestWrapperAndPublicApi:
         assert hasattr(scalar_mediator_wrapper, "dnde_decay_s")
         assert hasattr(vector_mediator_wrapper, "dnde_decay_v")
 
-    def test_nothing_cimports_this_extension_any_more(self) -> None:
-        # The two mediator `.pyx` were the only cimporters, and Task 6.3
-        # deleted them. Asserted on the sources rather than by importing,
-        # because a built `.so` outlives its deleted `.pyx`
-        # (`docs/agents/environment.md`).
-        sources = [
-            path
-            for suffix in ("*.pyx", "*.pxd")
-            for path in (REPO_ROOT / "hazma").rglob(suffix)
-        ]
-        assert sources, "found no Cython sources to scan"
-        cimporters = [
-            path.relative_to(REPO_ROOT).as_posix()
-            for path in sources
-            if "_positron._pion cimport" in path.read_text()
-        ]
-        assert cimporters == []
-
-
-class TestAgainstTheCythonTwin:
-    """The ``cdef`` the swap left behind, as an oracle.
-
-    The parity corpus pins this entry point at the grids it chose; this
-    reaches the same kernel at arbitrary arguments, which is what lets the
-    edges be probed directly.
-    """
-
-    @pytest.mark.parametrize("epi", PION_ENERGIES)
-    def test_a_swept_grid_matches(self, epi: float) -> None:
-        energies = np.geomspace(MASS_E * 0.5, epi * 1.5, 401)
-        assert_matches_the_cython(
-            dnde(energies, epi), cython_spectrum(epi, energies), f"swept grid, {epi=}"
-        )
-
-    @pytest.mark.parametrize("epi", PION_ENERGIES)
-    def test_random_arguments_match(self, epi: float) -> None:
-        rng = np.random.default_rng(46)
-        energies = rng.uniform(0.0, epi * 1.1, 400)
-        assert_matches_the_cython(
-            dnde(energies, epi),
-            cython_spectrum(epi, energies),
-            f"random arguments, {epi=}",
-        )
-
-    def test_the_kinematic_edges_match(self) -> None:
-        """Every branch boundary, at four pion energies.
-
-        The top energy is 1e4 MeV, matching :data:`PION_ENERGIES` and for
-        the same reason: past `gamma ~ 1e3` the boost window's lower limit
-        is a catastrophic cancellation and no cross-implementation
-        tolerance is honest there. See
-        :meth:`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`.
-        """
-        for epi in (MASS_PI, np.nextafter(MASS_PI, np.inf), 500.0, 1e4):
-            edges = np.array(
-                [
-                    MASS_E,
-                    np.nextafter(MASS_E, np.inf),
-                    np.nextafter(MASS_E, 0.0),
-                    ENG_E_PI_RF,
-                    ENG_MU_PI_RF,
-                    epi / 2.0,
-                    epi,
-                    np.nextafter(epi, np.inf),
-                    0.0,
-                    -1.0,
-                ]
-            )
-            assert_matches_the_cython(
-                dnde(edges, epi),
-                cython_spectrum(epi, edges),
-                f"kinematic edges, {epi=}",
-            )
-
-    def test_the_support_is_identical_everywhere(self) -> None:
-        """Which energies are *zero* is structural, so it holds on any build.
-
-        The budget is a statement about rounding; this is the statement
-        rounding cannot excuse. A port that moved a threshold or a boost
-        limit by one grid point turns this red on every platform,
-        including the ones where the tolerance branch is in force.
-        """
-        for epi in PION_ENERGIES:
-            energies = np.geomspace(MASS_E * 0.5, epi * 1.5, 401)
-            got, want = dnde(energies, epi), cython_spectrum(epi, energies)
-            assert np.array_equal(got == 0.0, want == 0.0), (
-                f"the port and the Cython disagree about where the spectrum "
-                f"vanishes at {epi=}, which no rounding difference explains"
-            )
-
-    def test_the_budget_rejects_a_real_error(self) -> None:
-        """The budget is not vacuous.
-
-        Every assertion above passes; that alone does not show the bound
-        is doing any work. A perturbation of 1e-9 of the peak — three
-        decades above the largest disagreement measured on these grids,
-        and far too small to see in a plot — must be rejected.
-        """
-        energies = np.geomspace(MASS_E * 0.5, 750.0, 401)
-        want = cython_spectrum(500.0, energies)
-        nudged = want.copy()
-        nudged[nudged.argmax()] += 1e-9 * want.max()
-
-        assert_matches_the_cython(want, want, "unperturbed")
-        with pytest.raises(AssertionError):
-            assert_matches_the_cython(nudged, want, "perturbed")
-
-    def test_a_pion_at_rest_is_zero_in_both(self) -> None:
-        """The guard this kernel does *not* share with its siblings.
-
-        Every other boosted kernel in the crate answers a rest-frame value
-        within one ``DBL_EPSILON`` MeV of rest; this one returns exactly
-        zero (``_pion.pyx:49-50``). The corpus's ``rest`` block for this
-        case is therefore a block of zeros, and a port that "fixed" the
-        asymmetry would fail the gate.
-        """
-        point = cython_point()
-        for energy in (1.0, 10.0, 50.0, 69.0):
-            assert dnde(energy, MASS_PI) == 0.0
-            assert point(energy, MASS_PI) == 0.0
-        # And one representable step up, both come alive together.
-        just_above = np.nextafter(MASS_PI, np.inf)
-        assert dnde(10.0, just_above) > 0.0
-        assert point(10.0, just_above) > 0.0
-
-    def test_a_nan_energy_agrees_in_both(self) -> None:
-        """A ``NaN`` argument is not sampled by the corpus, so pin it here.
-
-        Neither threshold comparison fires on a ``NaN``, so it reaches the
-        quadrature over ``NaN`` limits in both implementations. What comes
-        back is whatever the two integrators make of that, and they must
-        make the same thing of it.
-        """
-        point = cython_point()
-        assert math.isnan(dnde(float("nan"), 500.0)) == math.isnan(
-            point(float("nan"), 500.0)
-        )
-        assert math.isnan(dnde(10.0, float("nan"))) == math.isnan(
-            point(10.0, float("nan"))
-        )
+    def test_the_extension_this_module_replaces_is_gone(self) -> None:
+        # This scanned the surviving `.pyx` for a `_positron._pion
+        # cimport` while any remained, and guarded against its own sweep
+        # going vacuous. Task 6.4 deleted the last of them, so the sweep
+        # became the stronger claim it was approaching -- no Cython at all
+        # -- which `test/test_no_cython_remains.py` now makes tree-wide.
+        # What stays here is this module's own half of it.
+        package = REPO_ROOT / "hazma" / "spectra" / "_positron"
+        for suffix in (".pyx", ".pxd"):
+            assert list(package.glob(f"*{suffix}")) == [], suffix
 
 
 class TestPhysics:

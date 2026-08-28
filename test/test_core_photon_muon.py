@@ -7,17 +7,21 @@ tests there cover the three shared dispatch helpers every kernel routes
 through unchanged. What is per-kernel is which helper the wrapper reached
 for, which quantity wording it passed, and whether the numbers are right.
 
-Three parts, same as the template:
+Two parts:
 
 1. :class:`TestDispatchWiring` -- one assertion per contract branch.
-2. :class:`TestAgainstTheCythonTwin` -- the ``cdef``
-   ``dnde_photon_muon_point`` still exported through
-   ``hazma/spectra/_photon/_muon.pyx``'s ``__pyx_capi__``, which is the
-   strongest available oracle. Bit-for-bit on the platform the parity
-   corpus was captured on, within a peak-scaled budget elsewhere. It dies
-   with the ``.pyx`` in Phase 06 Task 6.4.
-3. :class:`TestPhysics` -- statements about the spectrum that outlive the
-   Cython.
+2. :class:`TestPhysics` -- statements about the spectrum itself.
+
+There were three. ``TestAgainstTheCythonTwin`` compared the port
+against the ``cdef`` ``dnde_photon_muon_point``, which
+``hazma/spectra/_photon/_muon.pyx`` exported through ``__pyx_capi__``
+after Task 4.3 deleted its ``def``: bit-for-bit on the platform the
+parity corpus was captured on, within a peak-scaled budget elsewhere.
+cython-to-rust Task 6.4 deleted that file, so the class went with it.
+What replaces it is the corpus itself -- ``spectra.photon.muon`` pins
+this kernel's values against arrays captured from the pre-port Cython,
+which is the same oracle sampled on fixed grids instead of arbitrary
+ones.
 
 Why this kernel needed ``spence`` transcribed
 ---------------------------------------------
@@ -73,13 +77,7 @@ tracks. Asserting the correct endpoint here would contradict the corpus.
 
 from __future__ import annotations
 
-import ctypes
-import json
 import math
-import platform
-import sys
-from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -87,12 +85,6 @@ import pytest
 from hazma import spectra
 from hazma._core import photon as core_photon
 from hazma.spectra import _photon as wrapper
-from hazma.spectra._photon import _muon as cython_module
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
 
 dnde = core_photon.dnde_photon_muon
 
@@ -121,119 +113,6 @@ TRUE_REST_FRAME_ENDPOINT = 0.5 * MASS_MU * (1.0 - R)
 #: The size of the gap between them, MeV. Named so the assertions state
 #: the separation they rely on rather than a bare literal.
 ENDPOINT_GAP = TRUE_REST_FRAME_ENDPOINT - SHIPPED_REST_FRAME_CUT
-
-#: Muon energies spanning rest, the corpus's just-off-rest probe, and
-#: increasing boosts.
-MUON_ENERGIES = (MASS_MU, MASS_MU * (1.0 + 1e-12), 110.0, 150.0, 500.0, 1500.0, 1e5)
-
-#: The signature string that is also the capsule's *name*, so a changed
-#: `cdef` prototype fails loudly rather than being called through the wrong
-#: ABI (the Task 3.4 constraint).
-_POINT_SIGNATURE = b"double (double, double)"
-
-
-def cython_point() -> Callable[[float, float], float]:
-    """The live Cython ``dnde_photon_muon_point``, callable from Python.
-
-    ``PYFUNCTYPE``, never ``CFUNCTYPE``: the latter releases the GIL, and
-    this kernel calls back into ``scipy.special.cython_special``'s
-    ``spence``, which segfaults without it.
-    """
-    get_pointer = ctypes.pythonapi.PyCapsule_GetPointer
-    get_pointer.restype = ctypes.c_void_p
-    get_pointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
-
-    capsule = cython_module.__pyx_capi__["dnde_photon_muon_point"]
-    address = get_pointer(capsule, _POINT_SIGNATURE)
-    return ctypes.PYFUNCTYPE(ctypes.c_double, ctypes.c_double, ctypes.c_double)(address)
-
-
-#: The platform the parity corpus was captured on, read from its own
-#: manifest so the two can never drift apart.
-CAPTURE_MACHINE = json.loads(
-    (REPO_ROOT / "test" / "parity" / "data" / "manifest.json").read_text()
-)["environment"]["machine"]
-
-ON_THE_CAPTURING_PLATFORM = (
-    sys.platform == "darwin" and platform.machine() == CAPTURE_MACHINE
-)
-
-#: The off-platform budget, as a fraction of the peak of the spectrum being
-#: compared. **Derived** rather than measured, unlike the same constant in
-#: ``test/test_core_positron_muon.py``, which carries a Linux measurement
-#: from PR #63. The derivation below is what set the figure; PR #67's CI
-#: then **held it green on Linux/glibc across py3.10-3.14**, which
-#: confirms the budget is not too tight but measures no margin -- the
-#: assertion reports nothing on success. Someone wanting the actual Linux
-#: spread has to provoke a failure, as PR #63 did by accident.
-#:
-#: Two contributions, both bounded above:
-#:
-#: * ``spence``: off macOS/arm64 the C toolchain has no FMA to contract
-#:   into, so scipy's cephes runs unfused and differs from this one by
-#:   <=2.0e-15 relative (measured, both spellings, 13,000 points). Through
-#:   ``(5/beta) * dspence * alpha / (3 pi E_mu)`` at the corpus's smallest
-#:   ``beta`` of 1.4e-6 that is **2.2e-13 absolute**, against a peak of
-#:   order 10 -- 2e-14 of peak.
-#: * libm and contraction elsewhere: the same conditioning structure as the
-#:   positron muon kernel, whose Linux spread was measured at **1.3e-10 of
-#:   peak** at the worst point of a comparable sweep.
-#:
-#: 1e-8 of peak therefore leaves ~75x headroom over the larger of the two,
-#: and is the same figure the positron kernel uses, so the two do not need
-#: separate justification. It is still seven orders of magnitude tighter
-#: than any physically meaningful change: a wrong branch, a dropped term or
-#: a bad constant lands at O(1) against the peak.
-OFF_PLATFORM_BUDGET = 1e-8
-
-
-def assert_within_the_off_platform_budget(
-    got: np.ndarray, want: np.ndarray, context: str
-) -> None:
-    """Assert two spectra agree to :data:`OFF_PLATFORM_BUDGET` of the peak.
-
-    Split out from :func:`assert_matches_the_cython` so the budget can be
-    exercised on *every* platform, including the one where the caller would
-    otherwise take the bit-equality branch and leave this untested --
-    :func:`TestAgainstTheCythonTwin.test_the_off_platform_budget_rejects_a_real_error`.
-
-    ``atol`` is scaled by the peak rather than left at zero because this
-    kernel's relative error is unbounded where it cancels: see "Why the
-    comparison still has two modes".
-    """
-    finite = np.isfinite(want)
-    peak = float(np.abs(want[finite]).max()) if finite.any() else 0.0
-    np.testing.assert_allclose(
-        got,
-        want,
-        rtol=OFF_PLATFORM_BUDGET,
-        atol=OFF_PLATFORM_BUDGET * peak,
-        err_msg=(
-            f"{context}: the port left the Cython's budget of "
-            f"{OFF_PLATFORM_BUDGET:.0e} x the spectrum peak ({peak:.6e}). "
-            f"The largest effect this budget is meant to absorb was bounded "
-            f"at 1.3e-10 x peak, so this is a defect, not a platform "
-            f"difference."
-        ),
-    )
-
-
-def assert_matches_the_cython(got: np.ndarray, want: np.ndarray, context: str) -> None:
-    """The oracle, in whichever of its two modes this platform gets."""
-    if ON_THE_CAPTURING_PLATFORM:
-        assert got.tobytes() == want.tobytes(), (
-            f"{context}: not bit-equal to the Cython on the platform the "
-            f"corpus was captured on, where the port is written to reproduce "
-            f"it exactly"
-        )
-        return
-    assert_within_the_off_platform_budget(got, want, context)
-
-
-def cython_spectrum(emu: float, energies: np.ndarray) -> np.ndarray:
-    """The Cython twin evaluated pointwise over ``energies``."""
-    point = cython_point()
-    return np.array([point(float(e), emu) for e in energies])
 
 
 def boosted_endpoint(emu: float) -> float:
@@ -326,152 +205,6 @@ class TestWrapperAndPublicApi:
 
     def test_the_public_spectra_name_resolves_to_the_same_function(self) -> None:
         assert spectra.dnde_photon_muon(10.0, 500.0) == dnde(10.0, 500.0)
-
-    def test_the_cython_module_no_longer_exports_a_python_entry_point(self) -> None:
-        # rules.md rule 1, as far as the capi exception allows: the extension
-        # is still built for its `cdef` capsules, but no Python caller can
-        # reach the implementation the swap replaced. Note the `.pyx` spelled
-        # its entry point `dnde_photon`, not `dnde_photon_muon`.
-        assert not hasattr(cython_module, "dnde_photon")
-
-    def test_the_cdef_capsules_the_cimporters_need_are_intact(self) -> None:
-        # Phase 06 Task 6.4 deletes these; until then
-        # `hazma/spectra/_photon/_pion.pyx` cimports the point function and
-        # both mediator decay-spectrum modules cimport one or the other, so
-        # removing the `def` must not have disturbed them.
-        exported = cython_module.__pyx_capi__
-        assert set(exported) == {
-            "dnde_photon_muon_point",
-            "dnde_photon_muon_array",
-        }
-
-    def test_the_capsule_name_is_the_expected_c_signature(self) -> None:
-        get_name = ctypes.pythonapi.PyCapsule_GetName
-        get_name.restype = ctypes.c_char_p
-        get_name.argtypes = [ctypes.py_object]
-        capsule = cython_module.__pyx_capi__["dnde_photon_muon_point"]
-        assert get_name(capsule) == _POINT_SIGNATURE
-
-    def test_the_still_cython_photon_siblings_import(self) -> None:
-        # The capi exception is only worth anything if the modules it exists
-        # for still load. `_pion` cimports this kernel at C level.
-        assert wrapper.dnde_photon_charged_pion(20.0, 200.0) >= 0.0
-
-
-class TestAgainstTheCythonTwin:
-    """The ``cdef`` the swap left behind, as an oracle.
-
-    The parity corpus pins the values at the grids it chose; this reaches
-    the same kernel at arbitrary arguments, which is what lets the edges be
-    probed directly.
-    """
-
-    @pytest.mark.parametrize("emu", MUON_ENERGIES)
-    def test_a_swept_grid_matches(self, emu: float) -> None:
-        energies = np.geomspace(1e-4, boosted_endpoint(emu) * 1.5, 2001)
-        assert_matches_the_cython(
-            dnde(energies, emu), cython_spectrum(emu, energies), f"swept grid, {emu=}"
-        )
-
-    @pytest.mark.parametrize("emu", MUON_ENERGIES)
-    def test_random_arguments_match(self, emu: float) -> None:
-        rng = np.random.default_rng(4)
-        energies = rng.uniform(0.0, boosted_endpoint(emu) * 1.1, 4000)
-        assert_matches_the_cython(
-            dnde(energies, emu),
-            cython_spectrum(emu, energies),
-            f"random arguments, {emu=}",
-        )
-
-    def test_the_kinematic_edges_match(self) -> None:
-        for emu in (MASS_MU, MASS_MU * (1 + 1e-17), MASS_MU + 1e-16, 500.0, 1e9):
-            endpoint = boosted_endpoint(emu)
-            edges = np.array(
-                [
-                    SHIPPED_REST_FRAME_CUT,
-                    np.nextafter(SHIPPED_REST_FRAME_CUT, np.inf),
-                    TRUE_REST_FRAME_ENDPOINT,
-                    endpoint,
-                    np.nextafter(endpoint, 0.0),
-                    np.nextafter(endpoint, np.inf),
-                    emu / 2.0,
-                    0.0,
-                    -1.0,
-                    np.inf,
-                ]
-            )
-            assert_matches_the_cython(
-                dnde(edges, emu),
-                cython_spectrum(emu, edges),
-                f"kinematic edges, {emu=}",
-            )
-
-    def test_the_support_is_identical_everywhere(self) -> None:
-        """Which energies are *zero* is structural, so it holds on any build.
-
-        The budget above is a statement about rounding; this is the statement
-        rounding cannot excuse. A port that moved a threshold or a kinematic
-        limit by one grid point turns this red on every platform, including
-        the ones where the tolerance branch is in force.
-        """
-        for emu in MUON_ENERGIES:
-            energies = np.geomspace(1e-4, boosted_endpoint(emu) * 1.5, 2001)
-            got, want = dnde(energies, emu), cython_spectrum(emu, energies)
-            assert np.array_equal(got == 0.0, want == 0.0), (
-                f"the port and the Cython disagree about where the spectrum "
-                f"vanishes at {emu=}, which no rounding difference explains"
-            )
-
-    def test_the_off_platform_budget_rejects_a_real_error(self) -> None:
-        """The budget is not vacuous, asserted where the budget is not used.
-
-        On the capturing platform :func:`assert_matches_the_cython` takes its
-        bit-equality branch, so nothing else here would exercise the
-        tolerance at all and it could rot to `inf` unnoticed. A perturbation
-        of 1e-6 of the peak -- four orders of magnitude above the largest
-        difference this budget is meant to absorb, and still far too small to
-        see in a plot -- must be rejected.
-        """
-        energies = np.geomspace(1e-4, 750.0, 2001)
-        want = cython_spectrum(500.0, energies)
-        nudged = want.copy()
-        nudged[nudged.argmax()] += 1e-6 * want.max()
-
-        assert_within_the_off_platform_budget(want, want, "unperturbed")
-        with pytest.raises(AssertionError):
-            assert_within_the_off_platform_budget(nudged, want, "perturbed")
-
-    def test_a_nan_energy_propagates_and_both_agree_on_that(self) -> None:
-        """A ``NaN`` energy comes back as ``NaN``, in both implementations.
-
-        Worth pinning because the sibling ``dnde_positron_muon`` does the
-        *opposite*: there ``fmax``/``fmin`` swallow the ``NaN`` and a finite
-        number comes back. Nothing clips here, so a port that "helpfully"
-        guarded would differ at an input the corpus never samples.
-        """
-        point = cython_point()
-        for emu in (MASS_MU, 500.0):
-            assert math.isnan(dnde(float("nan"), emu))
-            assert math.isnan(point(float("nan"), emu))
-
-    def test_a_zero_energy_is_nan_in_both(self) -> None:
-        """``E_gamma = 0`` passes both support tests and then divides by it.
-
-        Not a guard the ``.pyx`` has: ``x = 0`` fails ``x < 0`` and fails
-        ``x >= (1-r)/(1-beta)``, so the closed form runs with
-        ``xm = xp = 0`` and takes ``ln 0``. The rest frame is the branch that
-        *does* return zero there.
-        """
-        point = cython_point()
-        assert math.isnan(dnde(0.0, 500.0))
-        assert math.isnan(point(0.0, 500.0))
-        assert dnde(0.0, MASS_MU) == 0.0
-        assert point(0.0, MASS_MU) == 0.0
-
-    def test_a_below_threshold_muon_is_zero_in_both(self) -> None:
-        point = cython_point()
-        assert dnde(10.0, MASS_MU * 0.999_999) == 0.0
-        assert point(10.0, MASS_MU * 0.999_999) == 0.0
 
 
 class TestPhysics:

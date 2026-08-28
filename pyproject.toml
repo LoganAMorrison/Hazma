@@ -34,7 +34,7 @@ Documentation = "http://hazma.readthedocs.io"
 # reformatted files into a style CI rejected.
 #
 # `pip install --group lint` (pip >= 25.1) installs only these packages, so
-# the Lint job never builds the Cython extensions.
+# the Lint job never builds the `hazma._core` extension.
 #
 # The caps are major-version caps, not exact pins: a formatter major bump
 # reformats the whole repo, so it should land as a deliberate PR rather
@@ -59,38 +59,20 @@ dev = [
 
 [build-system]
 build-backend = "setuptools.build_meta"
-# scipy shares the runtime dependency's lower bound: the extensions cimport
-# scipy.special.cython_special, whose exported C symbols must match between
-# build and runtime scipy.
+# setuptools-rust builds the `hazma._core` Rust extension. It needs a Rust
+# toolchain on PATH, which pip cannot install — a source build without
+# cargo fails here. This requirement goes away at the Phase 07 maturin
+# cutover, which replaces the backend outright.
 #
-# setuptools-rust builds the `hazma._core` Rust extension in the same pass
-# as the Cython ones (cython-to-rust ADR-0001). It needs a Rust toolchain
-# on PATH, which pip cannot install — a source build without cargo fails
-# here. Both this requirement and the Cython half go away at the Phase 07
-# maturin cutover.
-#
-# cython was capped below 3.3 from PR #76 until cython-to-rust Task 6.2,
-# because 3.3.0 (released 2026-08-21) refused to compile
-# `scalar_mediator_decay_spectrum.pyx`: that file passed `integrand` —
-# whose signature took an `np.ndarray[np.float64_t,ndim=1]` — as a C
-# function pointer, so Cython auto-generated a `cfunc.to_py` wrapper for
-# it, and 3.3 rejects a buffer type in that generated signature
-# (`cfunc.to_py:85:180: Invalid type.`). **Task 6.2 deleted that file**,
-# which is the only thing the cap was ever protecting, so the cap is
-# gone. Measured before removing it: the seven surviving `.pyx` compile
-# under cython 3.3.0, and a tree whose extensions are built by it runs
-# the full suite at `2262 passed, 15 skipped, 12 subtests passed` —
-# the same counts as 3.2.9, parity corpus and every Cython-twin
-# bit-equality comparison included. Uncapped again means an upstream
-# break can reach CI with nothing in the diff to explain it (that is what
-# PR #76 hit); the remaining `.pyx` go in Tasks 6.3 and 6.4, and Phase 07
-# removes the Cython requirement entirely.
+# numpy, cython and scipy were build requirements for the Cython half
+# alone: `setup.py` needed numpy's headers for every `Extension`, cython
+# to compile the `.pyx`, and scipy's `cython_special.pxd` because
+# `hazma/spectra/_photon/_muon.pyx` cimported it. cython-to-rust Task 6.4
+# deleted the last `.pyx` and `.pxd`, so all three are dropped here; the
+# runtime dependencies above are unaffected.
 requires = [
-    "numpy",
-    "cython",
-    "setuptools",
-    "setuptools-rust",
-    "scipy>=1.13",
+  "setuptools",
+  "setuptools-rust",
 ]
 
 [tool.setuptools]

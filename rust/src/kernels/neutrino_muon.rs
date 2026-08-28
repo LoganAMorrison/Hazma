@@ -55,10 +55,12 @@
 //! [`tests::the_folded_constants_match_the_shipped_object_code`].
 //!
 //! They live in this module rather than in
-//! [`crate::constants::derived`] because that namespace is scored against
-//! the surviving `.pyx` files by `test/test_core_constants.py`, and this
-//! `.pyx` is deleted by the same task that adds this module — the same
-//! call Task 4.5 made for `derived::photon_rho`.
+//! [`crate::constants::derived`] because that namespace mirrored the
+//! `DEF`s of `.pyx` files that were still on disk, and this kernel's was
+//! deleted by the same task that added this module — the same call Task
+//! 4.5 made for `derived::photon_rho`. Task 6.4 has since deleted the
+//! rest, so the distinction is now historical; the constants stay here
+//! because this is the one kernel that reads them.
 
 use super::neutrino_flavors::NeutrinoSpectrumPoint;
 use crate::constants::pdg::{MASS_E, MASS_MU};
