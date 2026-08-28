@@ -35,16 +35,19 @@ import numpy as np
 # `test/test_core_special.py` can sweep them against scipy; `interp` and
 # `boost` expose the interpolation and boost foundation only so
 # `test/test_core_interp.py` can sweep against `np.interp` and
-# `test/test_core_boost.py` against the Cython twin through
-# `hazma._utils.boost.__pyx_capi__`. Those three follow the same dispatch
-# contract `roundtrip` documents below, on the argument their Cython call
-# sites sweep. `quad` exposes the QUADPACK port only so
+# `test/test_core_boost.py` against a Python transcription of
+# `rust/src/boost.rs` (it swept the Cython twin through
+# `hazma._utils.boost.__pyx_capi__` until cython-to-rust Task 6.4 deleted
+# that extension). Those three follow the same dispatch contract
+# `roundtrip` documents below, on the argument their Cython call sites
+# swept. `quad` exposes the QUADPACK port only so
 # `test/test_core_quad.py` can put one Python integrand through both it
 # and `scipy.integrate.quad`; it takes a callable rather than an array and
 # so has no dispatch contract to describe. `dispatch` exposes three probes
 # over the argument-and-error layer itself, each taking the quantity
 # wording as an argument, only so `test/test_core_dispatch.py` can render
-# every message the `.pyx` sources contain and compare bytes. The kernels
+# every message and compare bytes against a frozen roster — the `.pyx`
+# sources it used to extract them from are gone. The kernels
 # that will use any of them call the Rust side directly, and nothing under
 # `hazma/` imports them — a stub would advertise a surface this package
 # does not mean to offer.

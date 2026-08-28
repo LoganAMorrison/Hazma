@@ -7,10 +7,11 @@ what hazma 2.1.0 shipped, wrong values included, and is never rewritten
 ([`projects/parity-pinned-defect-repair/rules.md`](../../../projects/parity-pinned-defect-repair/rules.md)
 rule 1); these arrays are what a repair is checked *against* instead.
 
-They exist on a deadline that has already partly passed. `cython-to-rust`
-deletes the twins in three waves — Task 4.6, Tasks 6.2/6.3, then Task 6.4
-— and after the last one the only source of a corrected value is the
-repaired Rust, which pins the port against its own answer.
+They exist because the twins do not. `cython-to-rust` deleted them in
+three waves — Task 4.6, Tasks 6.2/6.3, then Task 6.4 — and the tree has
+carried no Cython since the last one. Without these committed arrays the
+only source of a corrected value would be the repaired Rust, which pins
+the port against its own answer.
 [`projects/parity-pinned-defect-repair/references/corpus-repinning.md`](../../../projects/parity-pinned-defect-repair/references/corpus-repinning.md)
 is the spec this implements, and
 [`task-notes/task-2-cython-oracles.md`](../../../projects/parity-pinned-defect-repair/task-notes/task-2-cython-oracles.md)
@@ -42,20 +43,31 @@ every captured key to name a real corpus array of the same shape.
 
 ## Recapturing
 
-Only needed if a patch changes. It cannot be done at all once
-`cython-to-rust` Task 6.4 lands — that is the whole point of the arrays
-being committed.
+Only needed if a patch changes, and the arrays are committed precisely so
+that it is not needed otherwise. Since `cython-to-rust` Task 6.4 there is
+no Cython in the tree, so a re-capture now begins by restoring **every**
+source the chains compile from, not just the patched ones —
+`defects.RESTORED_SOURCES` names all of them with a literal revision, and
+the build has to be put back too (see step 1). Treat it as a
+half-day excavation rather than a routine command.
 
 Everything below mutates tracked sources. Snapshot them outside the tree
 first, `cmp` before each step, and verify every restore:
 `docs/agents/lessons.md` `[mutation-harness-poisons-its-own-baseline]` is
 this exact loop, and it has already cost `cython-to-rust` twice.
 
-**1. Restore the sources the port deleted.** Nine of the twenty cases run
-through `.pyx` that no longer exist; `defects.RESTORED_SOURCES` names each
-one and the revision it comes from, and `capture.py` refuses to run if a
-restored file's bytes differ from that revision's. Add the restored
-modules to `setup.py`'s `["spectra", "_photon"]` extension list.
+**1. Restore the sources the port deleted, and the build that compiled
+them.** Every case now runs through a `.pyx` that no longer exists;
+`defects.RESTORED_SOURCES` names each file and the revision it comes from,
+and `capture.py` refuses to run if a restored file's bytes differ from
+that revision's. Restore the headers and cimported twins as well as the
+patched sources — the roster lists them for this reason.
+
+The build is part of the restore. Task 6.4 also stripped `setup.py` to the
+Rust extension and dropped `cython`, `numpy` and `scipy` from
+`[build-system] requires`, so both have to be put back before any of this
+compiles; `git show 1b022d4:setup.py` is the last version that built the
+Cython half.
 
 ```bash
 git show 0954e5a^:hazma/spectra/_photon/_eta.pyx > hazma/spectra/_photon/_eta.pyx
@@ -86,8 +98,11 @@ git apply test/parity/oracles/patches/A1-boost-integral-window.patch
 
 **4. Assemble, then revert everything.** `--assemble` merges the
 per-defect parts and measures each capture against the corpus. Then
-remove the restored sources, restore `setup.py`, rebuild, and confirm
-`git diff -- hazma` is empty: this directory ships no library behavior.
+remove the restored sources, restore `setup.py` and `pyproject.toml`,
+rebuild, and confirm both `git diff -- hazma` and
+`pytest test/test_no_cython_remains.py` come back clean: this directory
+ships no library behavior, and the tree it leaves behind has no Cython in
+it.
 
 ```bash
 python test/parity/oracles/capture.py --assemble

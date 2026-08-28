@@ -47,10 +47,20 @@
 //! | [`legacy`] | `hazma/_utils/legacy_parameters.pxd` | the four mediator spectrum kernels |
 //! | [`derived`] | module-local `DEF`s in individual `.pyx` | that one kernel module |
 //!
-//! `test/test_core_constants.py` re-parses all three sources and this file
-//! and asserts every value is bit-equal, so nothing here rests on careful
-//! typing. It also reconstructs [`derived`]'s seven hard-coded literals from
-//! the formulas their comments imply and pins which table each came from.
+//! Those three sources no longer exist. `test/test_core_constants.py`
+//! re-parsed all of them against this file and asserted every value
+//! bit-equal; it was green over 151 `pdg`, 48 `legacy` and 17 `derived`
+//! entries when cython-to-rust Task 6.4 deleted the last `.pxd`, and it
+//! went with them, because a parser has nothing to parse.
+//!
+//! Two things pin these values now. The `tests` module below re-derives
+//! the computed entries from the tables beside them and asserts the
+//! divergences rule 4 requires, which is the structural half. The parity
+//! corpus (`test/parity/`) is the numerical half: its reference arrays
+//! were captured from the pre-port Cython, so a mistyped constant that
+//! reaches any of the 41 entry points moves a pinned value. A constant no
+//! entry point reads is pinned by neither, and adding a reader is what
+//! would have to bring its own test.
 #![allow(clippy::excessive_precision)]
 // The literals are transcribed from the `.pxd` verbatim so that a diff
 // against the Cython source is meaningful. Several carry trailing zeros
@@ -502,8 +512,7 @@ pub mod legacy {
 /// Module-local `DEF`s — constants a single `.pyx` defines for itself.
 ///
 /// Each submodule is named for the `.pyx` it comes from and holds exactly
-/// that file's `DEF`s, so a Phase 04 kernel port has one place to look and
-/// the coverage check in `test/test_core_constants.py` can be total.
+/// that file's `DEF`s, so a kernel port has one place to look.
 ///
 /// Two kinds live here and they behave differently:
 ///
@@ -526,9 +535,9 @@ pub mod derived {
     /// bit-exactly from [`legacy`](super::legacy)'s masses and from no other
     /// table. Recomputing them from `pdg` moves `ENG_MU_PIRF` by 4.7e-5 MeV
     /// and every photon spectrum from charged-pion decay with it, so they
-    /// are left exactly as the Cython has them.
-    /// `test/test_core_constants.py::test_photon_pion_literals_come_from_the_legacy_table`
-    /// is what turns that claim into a check.
+    /// are left exactly as the Cython had them.
+    /// [`tests::photon_pion_mixes_the_two_tables`](super::super::tests) is
+    /// what turns that claim into a check.
     pub mod photon_pion {
         use super::super::pdg;
 
@@ -568,7 +577,8 @@ pub mod derived {
         /// frozen against the *PDG* table, so it agrees with the [`R`] beside
         /// it. The `.pyx` comment above it writes the log term as
         /// `12 r^2 ln(r^2)`; the exponent is a typo — only `r^4` reproduces
-        /// the digits, and `test/test_core_constants.py` pins that.
+        /// the digits, and `tests::r_factor_reproduces_from_the_pdg_mass_ratio`
+        /// pins that.
         pub const R_FACTOR: f64 = 1.0001870858234163;
     }
 
@@ -602,9 +612,9 @@ pub mod derived {
     // bare aliases, so unlike `derived::photon_rho` they did not simply
     // vanish -- they moved into `rust/src/kernels/neutrino_muon.rs`, the
     // one kernel that reads them, beside the constants clang folds out of
-    // them. This namespace is scored against the surviving `.pyx` by
-    // `test/test_core_constants.py`, so a submodule whose source file is
-    // gone cannot stay here.
+    // them. Each submodule here is named for the `.pyx` its `DEF`s came
+    // from; all of those files are now deleted, so the names are
+    // provenance rather than a live correspondence.
 }
 
 #[cfg(test)]

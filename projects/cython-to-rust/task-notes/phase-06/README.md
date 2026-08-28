@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 06
-**Status:** In Progress
+**Status:** Complete (2026-08-27)
 **Plan References:** `../../phases/phase-06-mediator-spectra.md`
 **Related ADRs:** ADR-0001, ADR-0002
 **Depends On:** Phases 04 and 05 complete
@@ -20,7 +20,7 @@ spectrum redesign — the last Cython.
 | 6.1 | Spectrum-table struct design | — | **Complete (2026-08-23)** | [task-6.1-table-struct.md](task-6.1-table-struct.md) |
 | 6.2 | Decay spectrum pair | 6.1 | **Complete (2026-08-23)** | [task-6.2-decay-spectra.md](task-6.2-decay-spectra.md) |
 | 6.3 | Positron spectrum pair | 6.1 | **Complete (2026-08-27)** | [task-6.3-positron-spectra.md](task-6.3-positron-spectra.md) |
-| 6.4 | Retire capi survivors + `_utils` headers | 6.2, 6.3 | Not started | [task-6.4-retire-survivors.md](task-6.4-retire-survivors.md) |
+| 6.4 | Retire capi survivors + `_utils` headers | 6.2, 6.3 | **Complete (2026-08-27)** | [task-6.4-retire-survivors.md](task-6.4-retire-survivors.md) |
 
 ## Exit Criteria
 
@@ -131,6 +131,41 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
   three photon rows it was really deleting. Latent — nothing in `pytest`
   reads that dict — and corrected in 6.3.
 
+- **The deletion's risk was entirely in the tests** (Task 6.4). No module
+  under `hazma/` read any of the fourteen deleted files, so the library
+  half was a plain `git rm`; six test modules were not, five importing a
+  doomed extension at module scope and one parsing two deleted headers.
+  The phase file's exit criteria do not mention this, and it was most of
+  the task.
+- **A test module written against a live Cython oracle can be built to
+  outlive it, and `test_core_boost.py` was** (Task 6.4). Its
+  `TestFusedArithmetic` already compared the port bit-for-bit against
+  in-module reference implementations on *every* platform — strictly
+  stronger than the Cython sweeps it superseded, which were bit-equal
+  only on macOS/arm64. Where a retired comparison had such a substitute
+  it was repointed, not deleted.
+- **`test_core_constants.py`'s gate does not survive, and no substitute
+  covers all of it** (Task 6.4). It parsed the two `.pxd` and three
+  `.pyx` and compared ~220 constants bit-for-bit against
+  `rust/src/constants.rs`; it was run green (21 passed) against
+  `origin/master` immediately before the deletion, so the transcription
+  is verified as of that moment. `constants.rs`'s `cargo` tests keep the
+  structural half and the corpus keeps every constant that reaches an
+  entry point — **a constant no entry point reads is now pinned by
+  nothing**, stated in that module's header.
+- **`git show <rev>:<path>` does not care whether `<rev>` is a SHA or a
+  `^` expression** (Task 6.4), which is what dissolves the
+  "a task cannot know its own commit" recursion that blocked 6.2 and
+  6.3: name a revision that already exists instead.
+- **A reference implementation is an oracle only where it is defined**
+  (Task 6.4). At `beta == 1` both implementations pass the shared guard
+  (`beta > 1.0`, not `>=`) and compute `1/sqrt(0)`; Rust yields `+inf`
+  under IEEE-754 so the line height underflows to `0.0`, while the
+  Python transcription raises `ZeroDivisionError`.
+- **`hazma/_utils/kinematics.pyx.bak` was a *tracked* backup file**
+  (Task 6.4) — no rule covers one and no sweep in six phases had named
+  it. It went with the header it shadowed.
+
 ## Decisions and Implementation Notes
 
 - **Task 6.1 amended two of its own exit criteria in the phase file**
@@ -216,6 +251,29 @@ models), `rust/src/kernels.rs`, `rust/src/{scalar,vector}_mediator.rs`,
 `test/parity/oracles/entry_points.py`,
 `docs/followups/{done/positron-spectrum-nan-at-legacy-electron-mass.md,todo/mediator-positron-line-misses-the-electron-velocity.md,todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md,README.md}`.
 
+### Task 6.4
+
+Deleted: `hazma/_utils/{boost.pyx,boost.pxd,constants.pxd,kinematics.pxd,legacy_parameters.pxd,kinematics.pyx.bak}`,
+`hazma/spectra/{_photon,_positron}/{_muon,_pion}.{pyx,pxd}` (14 tracked
+Cython sources in all), and `test/test_core_constants.py`.
+New: `test/test_no_cython_remains.py`,
+`../../learnings/phase-06-mediator-spectra.md`.
+Build: `setup.py`, `pyproject.toml`, `MANIFEST.in`.
+Tests: `test/test_core_boost.py`,
+`test/test_core_{photon_muon,photon_pion,positron_muon,positron_pion}.py`,
+`test/test_core_{dispatch,neutrino}.py`.
+Parity: `test/parity/oracles/{defects,entry_points}.py`,
+`test/parity/oracles/README.md`, `test/parity/cases.py`,
+`test/parity/README.md`.
+Rust (doc comments only):
+`rust/src/{boost,boost_probe,lib,constants}.rs`,
+`rust/src/kernels/neutrino_muon.rs`. Also `hazma/_core.pyi`.
+Docs/plan: `docs/followups/` (the restore-revision item moved to `done/`
+with a `## Resolution`, index row moved, three inbound links repointed),
+`../../phases/phase-06-mediator-spectra.md` (status + two amended
+criteria), `../../phases/phase-07-cutover.md` (Task 7.1 bullet and
+Prerequisites), `../../PLAN.md`, this file and `../README.md`.
+
 ## Verification
 
 - Corpus (quad budgets); benchmark vs pre-swap Cython (dead-cache fix
@@ -241,6 +299,19 @@ models), `rust/src/kernels.rs`, `rust/src/{scalar,vector}_mediator.rs`,
   moved — see `../numerical-impact.md`; worst 2.3319e-12, four budgets
   tightened, and one value moved `NaN → 0.0` at the legacy `m_e`.
   Benchmark 32x–43x from release builds of both sides.
+- **After Task 6.4:** `cargo test --no-default-features` → `258 passed`
+  (unchanged — only doc comments changed on the Rust side);
+  `cargo fmt --check` and `cargo clippy --all-targets -- -D warnings`
+  clean; `pytest -q` → **`2231 passed, 15 skipped, 12 subtests
+  passed`**; `pytest test/parity -q` → `658 passed, 1 skipped`
+  (unchanged);
+  `find hazma -name "*.pyx" -o -name "*.pxd"` → **0** (was 13), and
+  `find hazma -name "*.so"` → **1**, `_core.abi3.so`. The suite total
+  falls by 158 and every one is accounted for by `--collect-only` per
+  module (162 retired Cython-oracle tests, 4 added); the accounting is
+  in the task note. **No public value moved** — 88 arrays compared
+  against a second worktree built at `origin/master`, 0 of 88 changed,
+  so nothing was appended to `../numerical-impact.md`.
 
 ## Open Questions
 
@@ -266,21 +337,28 @@ models), `rust/src/kernels.rs`, `rust/src/{scalar,vector}_mediator.rs`,
   the 4.2x win on the table build and the 4,180x win on a fixed-mass
   parameter sweep. Splitting the cache would mean two `LazyLock`s
   differing by a field, for no measurable gain.
-- **The oracle roster still has no restore revision for the four `.pyx`
-  Tasks 6.2 and 6.3 deleted**, because `RESTORED_SOURCES` records literal
-  SHAs and a task cannot know its own commit's. The handoff asked Task
-  6.3 to discharge it for both pairs; it could not, for exactly the
-  reason 6.2 could not, and instead widened the follow-up to name all
-  four —
-  [`oracle-restore-revisions-for-the-mediator-decay-pyx`](../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
-  **Task 6.4 can**, because by then both deleting commits are merged, and
-  6.4 is also where re-capture closes and the item becomes moot — so
-  decide there rather than defer again. Not blocking; the `pytest` gate
-  does not read that dict.
-- **`test/parity/oracles` re-capture closes at Task 6.4.** Two of the four
-  defect patches (A3, A4) reach the mediator spectra, and the arrays are
-  committed; nothing needs recapturing unless a patch changes. Task 6.4
-  should say so explicitly when it deletes the last `.pyx`.
+- ~~**The oracle roster still has no restore revision for the four `.pyx`
+  Tasks 6.2 and 6.3 deleted.**~~ — **closed by Task 6.4**, and closed by
+  completing the roster rather than by letting it lapse. The recursion
+  that blocked 6.2 and 6.3 dissolves once you notice `capture.py`
+  resolves a revision with `git show <rev>:<path>`, which takes a plain
+  SHA as readily as a `^` expression: a task that cannot know its own
+  commit can still name a revision that already exists. The two mediator
+  pairs use `7594761^` and `c384aff^`; the twelve files 6.4 itself
+  deleted use `1b022d4`. `RESTORED_SOURCES` goes 13 → **29** entries,
+  including the headers and cimported twins a restore has to compile
+  against, and all 29 were verified to resolve. The follow-up is
+  [done](../../../../docs/followups/done/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
+- ~~**`test/parity/oracles` re-capture closes at Task 6.4.**~~ — **it
+  does not, and Task 6.4 deliberately kept it open.** Two of the four
+  defect patches (A3, A4) reach the mediator spectra and their arrays
+  are committed, so **nothing needs recapturing unless a patch
+  changes** — the statement 6.4 was asked to make explicitly. What
+  changed is the fallback: with the roster complete a re-capture is
+  still mechanically possible from git history, at the cost of restoring
+  every source in the compile closure plus `setup.py` and
+  `pyproject.toml`. `oracles/README.md` now describes that cost instead
+  of declaring the operation impossible.
 - **The line term's missing `1/r` is a post-6.4 item.** It moves
   published numbers well above the budgets the four positron cases now
   hold, so it needs a corpus re-capture or a declared exception, and
@@ -293,52 +371,53 @@ models), `rust/src/kernels.rs`, `rust/src/{scalar,vector}_mediator.rs`,
 
 ## Handoff to Next Task
 
-**Task 6.4 (retire the capi survivors and the `_utils` headers) is
-next**, and it closes the phase. Read `../../PLAN.md`, `../README.md`,
-this file, then the phase file's Task 6.4 block;
-[`task-6.3-positron-spectra.md`](task-6.3-positron-spectra.md)'s
-`## Handoff` is the direct brief, and
-[`task-6.2-decay-spectra.md`](task-6.2-decay-spectra.md) still carries
-the FMA-campaign method both swaps used.
+**Phase 06 is closed and the port is done. Phase 07 (packaging cutover
+and project close) is next**, starting at Task 7.1. Read `../../PLAN.md`,
+`../README.md`, then
+[`../../learnings/phase-06-mediator-spectra.md`](../../learnings/phase-06-mediator-spectra.md)
+in place of this phase's four task notes
+([ADR-0002](../../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)),
+then the phase file's Task 7.1 block.
 
-**Now safe to assume** (Tasks 6.1–6.3 delivered all of it):
+**Now safe to assume:**
 
-- **6.4's `rg` sweep is already empty.** The four capi survivors cimport
-  only each other and `hazma/_utils/boost`; the two mediator decay
-  modules that read them went in 6.2 and the two positron ones in 6.3.
-  Every stale comment claiming otherwise — in all four `.pyx`, in
-  `test/parity/oracles/entry_points.py`, in `test/test_core_positron_pion.py` —
-  was corrected in 6.3, so what 6.4 reads is current.
-- **Both mediator packages are Cython-free**, and `setup.py` builds no
-  extension for either. Thirteen `.pyx`/`.pxd` remain and all are 6.4's:
-  the four survivors with their `.pxd`, `_utils/boost.{pyx,pxd}`,
-  `constants.pxd`, `kinematics.pxd`, `legacy_parameters.pxd`.
-- **All 41 consumed entry points are on `hazma._core`.** Nothing is left
-  to swap; 6.4 is deletion and build plumbing only.
-- **Every mode string and dispatch message in the tree is the port's.**
-  No `.pyx` spells one, so `test_core_mediator_tables.py` and
-  `cython_dispatch_messages()` hold the provenance instead.
-- **No corpus or oracle re-capture is pending.** The committed defect
-  arrays cover A3 and A4 and nothing changes unless a patch does.
+- **There is no Cython anywhere.**
+  `find hazma -name "*.pyx" -o -name "*.pxd"` is empty, `setup.py`
+  declares one `RustExtension` and imports only `setuptools` and
+  `setuptools_rust`, and `[build-system] requires` is
+  `["setuptools", "setuptools-rust"]`. All four claims are asserted in
+  `test/test_no_cython_remains.py`, so Phase 07 does not need to
+  re-verify them by hand — but it *does* need to keep that module true
+  as it rewrites the same files.
+- **All 41 consumed entry points are on `hazma._core`**, and one `.so`
+  is built.
+- **Task 7.1's exit criteria were patched by Task 6.4.** The
+  cython/numpy/scipy build requirements are already gone; 7.1 still owes
+  the maturin backend, the static version, `setup.py`'s and
+  `MANIFEST.in`'s deletion, and the setuptools-rust removal. Its
+  Prerequisites block now records the two-entry `requires` list rather
+  than the old five.
+- **Nothing needs a corpus or oracle re-capture.** The committed defect
+  arrays cover A3 and A4 and change only if a patch does.
 
-**Still risky / unknown for Task 6.4:**
+**Still risky for Phase 07:**
 
-- **Deleting a `.pyx` does not make its module unimportable**, and 6.4
-  deletes four at once. The built `.so` and generated `.c` sit beside
-  each source, are gitignored, and survive `git rm` — Task 6.3 relied on
-  that deliberately, keeping both twins callable after `git rm` to take
-  the drift measurement, then removed them by hand. Assert on the source
-  files and the `setup.py` entry, never with `pytest.raises(ImportError)`.
-- **`pyproject.toml`'s Cython *requirement* goes with them**, and so does
-  `setuptools-rust`'s reason to coexist with it. Check
-  `[build-system] requires`, the `lint`/`dev` groups, `MANIFEST.in` and
-  CI's toolchain steps in the same pass — a clean wheel is not evidence
-  of a clean sdist (`docs/agents/environment.md`).
-- **Decide the restore-revision follow-up rather than defer it.** 6.4 is
-  the first task that *can* resolve it and also the task that makes it
-  moot; leaving it open past the phase leaves a dangling item nobody
-  else will own.
-- **The `_utils` headers are read by more than the survivors.** Sweep
-  `include "` as well as `cimport` — the mediator `.pyx` reached
-  `legacy_parameters.pxd` through `include`, which no `cimport` grep
-  would have found.
+- **`MANIFEST.in` is on Task 7.1's deletion list and
+  `test_no_cython_remains.py` reads it.** That module's
+  `test_the_sdist_manifest_sweeps_up_no_transpiler_output` will fail on
+  a missing file; decide there whether maturin's own include config
+  carries the claim instead, and update the test rather than deleting it
+  silently.
+- **The version's source of truth moves in Task 7.1**, so
+  `scripts/agents/preflight.sh --closing` must be updated in the same
+  task — the project's closing check runs against the post-cutover
+  plumbing.
+- **A clean wheel is not evidence of a clean sdist.** Task 6.4 removed
+  `*.pyx *.pxd *.c` from `MANIFEST.in`'s `global-include` precisely
+  because `*.c` swept a dirty tree's gitignored build output into an
+  sdist; verify sdist contents explicitly when maturin takes over.
+- **`docs/agents/` and `AGENTS.md` still state Cython facts** — the
+  layout tree, "Editing a `.pyx` requires a rebuild", layering §1, and
+  the commands block. Task 6.4 left every one of them alone because
+  Task 7.3 owns that sweep; they are wrong as of now, so 7.3 is no
+  longer optional cleanup.

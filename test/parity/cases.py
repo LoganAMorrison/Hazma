@@ -1314,18 +1314,21 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: through both it and ``scipy.integrate.quad``; ``hazma._core.interp``
 #: and ``hazma._core.boost`` are Task 3.4's interpolation and boost
 #: foundation, exposed so ``test/test_core_interp.py`` can sweep against
-#: ``np.interp`` and ``test/test_core_boost.py`` against the Cython twin
-#: itself through ``hazma._utils.boost.__pyx_capi__``;
-#: ``hazma._core.dispatch`` is Task 3.5's argument-and-error layer,
-#: exposed so ``test/test_core_dispatch.py`` can render every error
-#: message with a caller-chosen quantity and compare it byte for byte
-#: against the strings extracted from the ``.pyx`` sources; and
+#: ``np.interp`` and ``test/test_core_boost.py`` against a Python
+#: transcription of ``rust/src/boost.rs`` -- the Cython twin itself,
+#: through ``hazma._utils.boost.__pyx_capi__``, until Task 6.4 deleted
+#: that extension; ``hazma._core.dispatch`` is Task 3.5's
+#: argument-and-error layer, exposed so ``test/test_core_dispatch.py``
+#: can render every error message with a caller-chosen quantity and
+#: compare it byte for byte against a frozen roster (it extracted those
+#: strings from the ``.pyx`` sources until Task 6.2 deleted the last one
+#: that spelled a message); and
 #: ``hazma._core.mediator_tables`` is Phase 06 Task 6.1's rest-frame
 #: table, cache and mode selectors, exposed so
 #: ``test/test_core_mediator_tables.py`` can compare its grid against
 #: ``numpy.logspace``, its columns against the Phase 04 kernels' own
 #: entry points, and its mode parsers against the mediator ``.pyx`` that
-#: are still alive -- four when Task 6.1 wrote that, the two positron
+#: were still alive -- four when Task 6.1 wrote that, the two positron
 #: modules after Task 6.2, and none after Task 6.3, so the mode-parser
 #: half of that module now keeps only the *port's* side, with the
 #: provenance of each accepted string recorded in place of an oracle. In
@@ -1464,8 +1467,12 @@ def assert_unconsumed_exports_are_unimported() -> None:
 #:
 #: One row per swapped entry point, added by the swapping task. Rows for
 #: a capi survivor (`hazma/spectra/_positron/_muon.pyx`, whose ``cdef``s
-#: outlive its ``def``) and for a fully deleted twin look the same; the
-#: difference is only whether the ``.pyx`` is still on disk.
+#: outlived its ``def``) and for a fully deleted twin look the same; the
+#: difference was only whether the ``.pyx`` was still on disk, and since
+#: cython-to-rust Task 6.4 none of them is -- every module named below is
+#: gone. The comments distinguishing the two cases are kept because they
+#: record *why* a file outlived its swap, which is what a reader tracing
+#: a captured value back through the port needs.
 PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     # cython-to-rust Task 4.1.
     "spectra.positron.muon": ("hazma.spectra._positron._muon", "dnde_positron_muon"),
@@ -1493,14 +1500,15 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     "spectra.photon.omega": ("hazma.spectra._photon._omega", "dnde_photon_omega"),
     "spectra.photon.phi": ("hazma.spectra._photon._phi", "dnde_photon_phi"),
     # cython-to-rust Task 4.3. Like the positron muon above and unlike
-    # the tabulated family, this ``.pyx`` survives as a capi provider —
-    # its ``def`` is gone and its two ``cdef``s are not.
+    # the tabulated family, this ``.pyx`` outlived its swap as a capi
+    # provider — its ``def`` went and its two ``cdef``s did not, until
+    # Task 6.4 took the file.
     "spectra.photon.muon": ("hazma.spectra._photon._muon", "dnde_photon"),
     # cython-to-rust Task 4.4. Also a capi survivor: *both* mediator
-    # decay-spectrum modules cimport its `cdef`s -- all four of them
-    # between the two -- so the file stays and only its two ``def``s
+    # decay-spectrum modules cimported its `cdef`s -- all four of them
+    # between the two -- so the file stayed and only its two ``def``s
     # went. `_photon/_rho.pyx` was a third cimporter until Task 4.5
-    # deleted it.
+    # deleted it, Task 6.2 took the mediator pair, and Task 6.4 the file.
     "spectra.photon.charged_pion": (
         "hazma.spectra._photon._pion",
         "dnde_photon_charged_pion",
@@ -1523,8 +1531,9 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     ),
     # cython-to-rust Task 4.6, which closes Phase 04. The positron pion
     # is a capi survivor like the two photon rows above -- both mediator
-    # positron-spectrum modules cimport its `cdef`s -- so the file stays
-    # and only its `def` went. The three neutrino `.pyx` had no cimporter
+    # positron-spectrum modules cimported its `cdef`s -- so the file
+    # stayed and only its `def` went, until Task 6.3 took those two
+    # modules and Task 6.4 the file. The three neutrino `.pyx` had no cimporter
     # outside their own package, so all three files went in the swap PR
     # and these rows are the only record of where the pinned values came
     # from.
@@ -1625,7 +1634,8 @@ PORTED_ENTRY_POINTS: dict[str, tuple[str, str]] = {
     ),
     # -- Phase 06 Task 6.2: the two mediator decay *photon* modules --------
     # Both `.pyx` were deleted outright, like the cross sections above and
-    # unlike the capi survivors under `hazma/spectra/`.
+    # unlike the `hazma/spectra/` modules that outlived their swaps as capi
+    # providers until Task 6.4.
     "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum": (
         "hazma.scalar_mediator.scalar_mediator_decay_spectrum",
         "scalar_mediator_decay_spectrum",

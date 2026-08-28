@@ -1,7 +1,7 @@
 ---
 phase: 06
 title: Mediator spectra
-status: In Progress
+status: Complete
 ---
 
 # Phase 06: Mediator spectra
@@ -93,10 +93,27 @@ symbols) — none of which survives contact with Rust.
   consumers; then delete the four capi-survivor extensions
   (`_photon/_muon`, `_photon/_pion`, `_positron/_muon`,
   `_positron/_pion` `.pyx`+`.pxd`), `hazma/_utils/boost.{pyx,pxd}`,
-  `constants.pxd`, `kinematics.pxd`, `legacy_parameters.pxd`, and the
-  `spectra/_neutrino/_neutrino` struct module.
+  `constants.pxd`, `kinematics.pxd` and `legacy_parameters.pxd`.
+
+  **Amended by Task 6.4 (2026-08-27):** this bullet also listed "the
+  `spectra/_neutrino/_neutrino` struct module". Phase 04 Task 4.6 had
+  already deleted it, together with `_neutrino/{_muon,_pion}.pyx`,
+  because nothing outside that package cimported any of the three — so
+  there was no capi survivor to retire here. Corrected rather than left
+  naming a file this task cannot find. The count is therefore **14
+  tracked files**, not thirteen: `hazma/_utils/kinematics.pyx.bak`, a
+  tracked backup shadowing the header beside it, went with them.
 - `find hazma -name "*.pyx" -o -name "*.pxd"` returns **nothing**;
   `setup.py` builds only `hazma._core`; full suite + corpus green.
+
+  **Extended by Task 6.4 (2026-08-27):** the tree-wide half of this is
+  asserted in `test/test_no_cython_remains.py` rather than left to a
+  command someone remembers to run — no Cython source anywhere, no
+  Cython in `setup.py`'s declarations, no Cython toolchain in
+  `[build-system] requires`, and no transpiler-output glob in
+  `MANIFEST.in`. Deleting the sources also required repairing the six
+  test modules whose oracle was one of them; that work is not implied by
+  the wording above and is recorded in the task note.
 
 ## Exit Criteria
 

@@ -482,7 +482,7 @@ this phase's `README.md`, then the phase file.
 
 - **The restore-revision follow-up is still open**, now covering all
   seven `mediator_spectra.*` cases —
-  [`oracle-restore-revisions-for-the-mediator-decay-pyx`](../../../../docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
+  [`oracle-restore-revisions-for-the-mediator-decay-pyx`](../../../../docs/followups/done/oracle-restore-revisions-for-the-mediator-decay-pyx.md).
   Neither 6.2 nor 6.3 could discharge it, for the same reason: the SHA a
   re-capture needs is the parent of the commit carrying the deletion.
   **6.4 can**, because by then both are merged — and 6.4 is also where it

@@ -7,20 +7,20 @@
 //! and [`boost_beta`] turn a parent's energy and mass into boost
 //! parameters, [`boost_delta_function`] boosts a two-body line, and
 //! [`boost_integrate_linear_interp`] boosts a tabulated continuum. The
-//! `.pyx` also carries `boost_jac` and `boost_eng`; both are exported
+//! `.pyx` also carried `boost_jac` and `boost_eng`; both were exported
 //! through `__pyx_capi__` and called by nothing in the tree (checked with
-//! `rg` at execution time, 2026-08-10), so they are out of this port's
-//! scope — Phase 06 Task 6.4 deletes the extension outright.
+//! `rg` at execution time, 2026-08-10), so they were left out of this
+//! port's scope and went with the file when Phase 06 Task 6.4 deleted it.
 //!
 //! # What calls these, and with what
 //!
-//! The `.pyx` column is the pre-port record; Task 4.2 replaced the five
-//! tabulated photon files with [`crate::kernels::photon_tables`], which
-//! calls all four of these natively and is the only kernel that reaches
-//! [`boost_integrate_linear_interp`] at all. (The remaining `.pyx` in the
-//! table still `cimport` the Cython twin until Phase 06 Task 6.4, and
-//! [`crate::boost_probe`] exposes these to Python for
-//! `test/test_core_boost.py` only.)
+//! The `.pyx` column is the pre-port record and every file in it has
+//! since been deleted — the last four by Phase 06 Task 6.4. Task 4.2
+//! replaced the five tabulated photon files with
+//! [`crate::kernels::photon_tables`], which calls all four of these
+//! natively and is the only kernel that reaches
+//! [`boost_integrate_linear_interp`] at all. [`crate::boost_probe`]
+//! exposes these to Python for `test/test_core_boost.py` only.
 //!
 //! | Function | Cython call sites |
 //! | --- | --- |
@@ -39,8 +39,8 @@
 //! macOS/arm64 build that does. Each site below was
 //! confirmed by disassembling the shipped
 //! `hazma/_utils/boost.cpython-312-darwin.so` (`fmsub` / `fmadd`
-//! instructions) *and* by bisection against the live kernel through
-//! `__pyx_capi__`; both records are in
+//! instructions) *and*, while the extension still built, by bisection
+//! against the live kernel through `__pyx_capi__`; both records are in
 //! `projects/cython-to-rust/task-notes/phase-03/task-3.4-interp-boost.md`.
 //!
 //! The measurement that makes this load-bearing rather than pedantic:
@@ -567,8 +567,10 @@ mod tests {
     /// sum) and nothing else, for `1.9 / (2γβ) = 1.9 / 1.5`. The true
     /// integral over `[1.1, 4]` would be `2.9 / 1.5`.
     ///
-    /// Checked against the live Cython through `__pyx_capi__`, which
-    /// returns this same 1.2666666666666666 (Task 3.4 task note).
+    /// Checked against the live Cython through `__pyx_capi__` while that
+    /// extension still existed: it returned this same 1.2666666666666666
+    /// (Task 3.4 task note). The literal is what carries that measurement
+    /// now.
     #[test]
     fn the_last_interior_cell_is_dropped() {
         let x = [1.0, 2.0, 3.0, 4.0];

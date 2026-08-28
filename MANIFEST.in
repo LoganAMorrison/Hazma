@@ -1,5 +1,11 @@
-global-include *.txt *.rst *.pyx *.pxd *.c *.md
+global-include *.txt *.rst *.md
 include MANIFEST.in
+
+# The sweep above carried *.pyx *.pxd *.c until cython-to-rust Task 6.4
+# deleted the last Cython source. Dropping the patterns is not just
+# tidiness: *.c matched no tracked file even then, only the gitignored
+# output of a local build, so an sdist built from a dirty tree shipped
+# transpiler artifacts. The Rust sources are included explicitly below.
 
 # The global-include above is a repo-wide sweep, so it also picks up the
 # agent-workflow scaffolding: `.claude/` and `.codex/` skills, and the

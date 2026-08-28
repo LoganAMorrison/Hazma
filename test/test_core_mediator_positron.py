@@ -592,8 +592,10 @@ class TestTheCythonTwinsAreGone:
         assert '"vector_mediator_positron_spec"' not in setup
 
     def test_neither_mediator_package_builds_any_extension(self) -> None:
-        # Task 6.3 takes the last one from each, which is what makes
-        # Task 6.4's sweep over the four capi survivors possible.
+        # Task 6.3 took the last one from each, which is what made Task
+        # 6.4's sweep over the four capi survivors possible. Kept as a
+        # per-package guard now that `test/test_no_cython_remains.py`
+        # carries the tree-wide claim.
         for package in ("scalar_mediator", "vector_mediator"):
             assert not list((REPO_ROOT / "hazma" / package).glob("*.pyx"))
             assert not list((REPO_ROOT / "hazma" / package).glob("*.pxd"))

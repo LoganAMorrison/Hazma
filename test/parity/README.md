@@ -90,11 +90,13 @@ against scipy; `hazma._core.quad`, the Task 3.3 QUADPACK port that
 `test/test_core_quad.py` compares against `scipy.integrate.quad`;
 `hazma._core.interp` and `hazma._core.boost`, the Task 3.4 interpolation
 and boost foundation, swept by `test/test_core_interp.py` against
-`np.interp` and by `test/test_core_boost.py` against the Cython twin
-itself through `hazma._utils.boost.__pyx_capi__`; and
-`hazma._core.dispatch`, the Task 3.5 argument-and-error layer, whose
-messages `test/test_core_dispatch.py` compares byte for byte against the
-strings it extracts from the `.pyx` sources). That
+`np.interp` and by `test/test_core_boost.py` against a Python
+transcription of `rust/src/boost.rs`; and `hazma._core.dispatch`, the
+Task 3.5 argument-and-error layer, whose messages
+`test/test_core_dispatch.py` compares byte for byte against a frozen
+roster. The last two read the Cython itself — through `__pyx_capi__` and
+by scanning the `.pyx` sources — until cython-to-rust Task 6.4 deleted
+the last of them). That
 second exemption is held honest by
 `test_test_only_core_submodules_have_no_importer`, which fails the moment
 anything under `hazma/` imports one of them — at which point it is a

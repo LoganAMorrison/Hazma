@@ -16,7 +16,10 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 
 - Phase 06 complete (zero Cython).
 - Current packaging facts (verify still true at execution):
-  build-system requires `numpy`, `cython`, `setuptools`, `scipy>=1.13`;
+  build-system requires `setuptools` and `setuptools-rust` only —
+  `numpy`, `cython` and `scipy>=1.13` were dropped by Phase 06 Task 6.4,
+  which deleted the last `.pyx` and so removed the only build-time
+  reader of all three;
   version is dynamic via `attr: hazma.VERSION`; pytest config moved to
   pyproject in Phase 01; release.yml uses cibuildwheel
   (cp310–cp314 × {linux x86_64, macos arm64} = 10 wheels, sdist job,
@@ -33,8 +36,15 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 
 - `[build-system] requires = ["maturin>=1.x"]`; `[tool.maturin]`
   mixed-layout config (python packages + `rust/Cargo.toml`,
-  `module-name = "hazma._core"`); setuptools-rust, `setup.py`, and the
-  cython/scipy/numpy build requirements deleted.
+  `module-name = "hazma._core"`); setuptools-rust and `setup.py`
+  deleted.
+
+  **Amended by Task 6.4 (2026-08-27):** this bullet also owed "the
+  cython/scipy/numpy build requirements deleted". Task 6.4 deleted the
+  last `.pyx`, which left those three declared but read by nothing, so
+  it removed them in the same pass rather than shipping a false
+  requirement. `setup.py` survives that task stripped to the single
+  `RustExtension`; deleting the file is still this task's.
 - Version becomes static in `[project]`; `hazma.VERSION` reads
   `importlib.metadata.version` (attribute preserved — it is public
   API); `scripts/agents/preflight.sh --closing` version check updated

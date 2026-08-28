@@ -5,11 +5,12 @@
   widened to the positron pair by Task 6.3
   (`.../task-6.3-positron-spectra.md`)
 - **Scope:** commit
-- **Status:** open
-- **Triggers / blockers:** ripens the moment **Task 6.3's** PR is merged
-  and both deleting commits have SHAs — 6.2's has one already. Must land
-  before any re-capture of `test/parity/oracles/data/*.npz`, and is moot
-  once `cython-to-rust` Task 6.4 closes re-capture for good.
+- **Status:** done (cython-to-rust Task 6.4, 2026-08-27)
+- **Triggers / blockers:** none left. Discharged by `cython-to-rust`
+  Task 6.4, which was the first task that could resolve the two merged
+  SHAs and also the task that deleted the remaining sources. Rather than
+  let re-capture become impossible, that task completed the roster for
+  every file a chain compiles from — see `## Resolution` at the end.
 
 ## Why
 
@@ -79,3 +80,44 @@ carry `_MEDIATOR_POSITRON_RESTORED`.
 - `test/parity/oracles/README.md` — the "Recapturing" recipe, step 1
 - Related project: `projects/parity-pinned-defect-repair/`
 - Related project: `projects/cython-to-rust/` (Tasks 6.2, 6.3, 6.4)
+
+## Resolution
+
+`cython-to-rust` Task 6.4 (2026-08-27) completed
+`test/parity/oracles/defects.py`'s `RESTORED_SOURCES`, taking it from 13
+entries to 29, and every corpus case a defect chain reaches is now
+covered.
+
+The four mediator modules resolve as this file specified, from the
+parents of the two deleting commits, both merged by then:
+
+- `7594761^` — Task 6.2's decay pair.
+- `c384aff^` — Task 6.3's positron pair.
+
+The twelve files Task 6.4 itself deleted — the four capi survivors with
+their `.pxd`, `hazma/_utils/boost.{pyx,pxd}`, `constants.pxd` and
+`legacy_parameters.pxd` — could not use that spelling, for exactly the
+reason 6.2 and 6.3 could not: a task cannot know the SHA of its own
+commit. The recursion was broken by noticing that `capture.py` runs
+`git show <rev>:<path>`, which does not care whether `<rev>` is a plain
+SHA or a `^` expression. They are therefore pinned to `1b022d4`, the
+`origin/master` Task 6.4 branched from, where all twelve are present in
+their final form — a revision that already exists is strictly more
+robust than one computed from a later commit's parent.
+
+All 29 entries were verified to resolve with `git show`. Two things
+beyond the original scope were needed to make a re-capture actually
+possible rather than nominally recorded:
+
+- The roster now lists the **headers and cimported twins** a restore has
+  to compile against, not only the patched sources. `_pion` cimports its
+  `_muon` twin in both families, all four `include` the pdg header, and
+  all four cimport `boost`.
+- `test/parity/oracles/README.md`'s recipe now says that Task 6.4 also
+  stripped `setup.py` to the Rust extension and dropped `cython`,
+  `numpy` and `scipy` from `[build-system] requires`, so both must be
+  restored before anything compiles.
+
+The note in `RESTORED_SOURCES` and the pointers in `entry_points.py`'s
+`_MEDIATOR_DECAY_RESTORED` / `_MEDIATOR_POSITRON_RESTORED` were replaced
+by references to the roster itself.
