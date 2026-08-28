@@ -47,6 +47,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the oracle roster has no restore revision for the deleted mediator spectrum `.pyx`](todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md) | 2026-08-23 | cython-to-rust Tasks 6.2, 6.3 | commit |
 | [`[mutation-harness-poisons-its-own-baseline]` is cited but not in the ledger](todo/lessons-ledger-missing-the-mutation-harness-class.md) | 2026-08-23 | cython-to-rust Task 6.2 | cross-cutting |
 | [mediator positron line misses the electron velocity](todo/mediator-positron-line-misses-the-electron-velocity.md) | 2026-08-27 | cython-to-rust Task 6.3 | cross-cutting |
+| [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
 
 ## Promoted / Done / Pruned
 

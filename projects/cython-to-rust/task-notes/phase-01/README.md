@@ -416,7 +416,8 @@ Nothing under `hazma/` was touched.
   corrected docstrings (7 configured-ruff findings → 0).
 - New: `test/test_theory_aggregation.py` — 21 test functions / 69
   collected over the pure-Python aggregation layer.
-- New: `docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md`
+- New: `docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md`
+  (created under `todo/`; moved when cython-to-rust Task 6.3 resolved it)
   and `docs/followups/todo/model-spectra-reject-scalar-energies.md`, with
   their two rows in `docs/followups/README.md`.
 - `../../phases/phase-01-parity-corpus.md` — frontmatter `status:

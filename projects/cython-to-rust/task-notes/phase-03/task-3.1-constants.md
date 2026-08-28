@@ -405,10 +405,14 @@ $ rg -n '_build\.py' rust/src/constants.rs test/test_core_constants.py \
 $ rg -n 'constants\.pxd|legacy_parameters' docs/
 docs/followups/README.md:44            (WIDTH_K/WIDTH_PI, done)
 docs/followups/done/legacy-parameters-width-exponent-bug.md   (17 lines)
-docs/followups/todo/positron-spectrum-nan-at-legacy-electron-mass.md:14,15,57,73,74
+docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md
 (all still accurate: they describe the divergence this task preserves
  rather than resolves, and none cites a line number this diff moves.
- docs/source/ has no occurrence — no public Python object is renamed.)
+ docs/source/ has no occurrence — no public Python object is renamed.
+ The file was at `todo/` and its hits at lines 14, 15, 57, 73 and 74
+ when this sweep ran; cython-to-rust Task 6.3 resolved the follow-up and
+ rewrote it, so the path is updated here and the line numbers dropped
+ rather than left pointing into different prose.)
 
 $ python3 -c "..."   # every numeric claim in this note, re-derived
 199 .pxd constants (151 pdg + 48 legacy); 25 module-local DEFs across 5 .pyx

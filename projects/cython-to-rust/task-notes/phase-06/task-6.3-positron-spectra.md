@@ -142,6 +142,19 @@ bind every swap:
   transcription.** It called the shipped `.pyx`; that `.pyx` is gone, so
   it calls the port. Kept and relabelled with its provenance, the
   standing `cython_dispatch_messages()` has had since Task 6.2.
+- **Review fix (PR #81): all four remaining `todo/` references to the
+  moved follow-up were repointed.** The first pass left them on the
+  theory that a pasted transcript and a creation record are frozen
+  evidence, generalising from three surviving references to
+  `todo/legacy-parameters-width-exponent-bug.md`. `docs/workflow.md:291`
+  requires **every** reference to move, and those three are an unswept
+  PR rather than a convention — the `[status-encoding-path-reference]`
+  ledger entry already said so. The two transcripts now carry the current
+  path with a bracketed note of what the command saw when it ran. The two
+  older dangling slugs are filed as
+  [`moved-followups-leave-dangling-inbound-paths`](../../../../docs/followups/todo/moved-followups-leave-dangling-inbound-paths.md),
+  which also proposes the repo-wide preflight gate that would have caught
+  this.
 - **The restore-revision follow-up stays open.** It cannot be discharged
   here for the same reason Task 6.2 could not discharge it: the revision
   a re-capture needs is the parent of the commit carrying the deletion,
@@ -342,9 +355,51 @@ The three live claims were wrong once this task landed and were
 rewritten: the roster follow-up was widened rather than discharged, the
 A4 question was answered, and all seven mediator cases now resolve
 through their wrapper. `task-6.2`'s three are a **closed** task note's
-record of what was true when it was written, and are left as history —
-the same treatment `todo/legacy-parameters-width-exponent-bug.md`'s
-pasted paths got when that follow-up moved to `done/`.
+record of what was true when it was written, and are left as history:
+they are statements about what that task expected, not paths a reader
+follows.
+
+### Moved-follow-up path sweep
+
+`positron-spectrum-nan-at-legacy-electron-mass.md` moved from `todo/` to
+`done/` in this task, so every inbound reference had to move with it —
+`docs/workflow.md:291` requires `rg -l '<slug>\.md'` and an update to
+**every** reference, with no exception for a pasted transcript or a
+creation record.
+
+The first command below searches the *slug* rather than the old
+directory, so it catches a reference in either direction and does not
+itself plant the stale path it is looking for. That is not a nicety: the
+first draft of this block wrote out the `todo/` path in prose and in the
+search pattern, and tripped the second command.
+
+```text
+$ rg -n 'positron-spectrum-nan-at-legacy-electron-mass' projects/ docs/ hazma/ test/ rust/ \
+    | rg -v 'done/positron-spectrum-nan'
+(no occurrences outside this note)
+
+$ for p in $(rg -oN --no-filename 'docs/followups/(todo|done)/[a-z0-9-]+\.md' \
+      projects/ docs/ hazma/ test/ rust/ README.md CHANGELOG.md | sort -u); do
+    [ -f "$p" ] || echo "DANGLING: $p"
+  done
+DANGLING: docs/followups/todo/cross-section-prefactor-threshold-cancellation.md
+DANGLING: docs/followups/todo/legacy-parameters-width-exponent-bug.md
+```
+
+Seventeen references were repointed: thirteen when the file moved, and
+four more after review caught them — two creation records
+(`phase-01/task-1.4-legacy-npy.md:262`, `phase-01/README.md:419`) and two
+inside pasted command output (`task-1.4-legacy-npy.md:456`,
+`phase-03/task-3.1-constants.md:408`). The first pass skipped those four
+on the theory that a transcript is frozen evidence; `docs/workflow.md`
+says otherwise, and the two transcripts now carry the current path with a
+bracketed note recording what the command saw when it ran. The
+`task-3.1` line also dropped its line numbers, which this task's rewrite
+of the follow-up had invalidated.
+
+The two remaining `DANGLING` slugs are older and belong to Phase 00 task
+notes, not to this diff; they are the same class and are filed as
+[`moved-followups-leave-dangling-inbound-paths`](../../../../docs/followups/todo/moved-followups-leave-dangling-inbound-paths.md).
 
 ### Count sweep
 
