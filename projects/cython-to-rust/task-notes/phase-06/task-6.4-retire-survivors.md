@@ -108,6 +108,19 @@ Carried in from the Task 6.3 handoff:
   cimported twin, `_utils/boost.{pyx,pxd}` and `constants.pxd`. The
   roster went 13 -> 29 entries for that reason, and every one was
   verified to resolve against git.
+- **A consumer sweep scoped to `hazma/` and `test/` misses CI, and this
+  one did.** The first push went red on every `Test` job:
+  `.github/workflows/ci.yml`'s import smoke test named
+  `hazma.spectra._photon._muon` explicitly, and `release.yml`'s
+  `CIBW_TEST_COMMAND` named it too — both deliberately, to import *a
+  compiled extension* rather than the pure-Python package, so a mistagged
+  or broken wheel fails the build. `docs/agents/environment.md` carried
+  the same import as its "confirm the `.so` is in your worktree" recipe.
+  All three now name `hazma._core`, the only compiled module left.
+  **The rule the phase file's `rg` gate implies is too narrow: a
+  deletion sweep has to cover `.github/` and `scripts/` as well as the
+  package and the suite**, and `pytest` cannot see the gap because the
+  workflows are not Python the suite imports.
 - **A test caught a bug in a test I wrote in the same pass.**
   `assert not path.glob(...)` is always false — `glob` returns a
   generator, which is truthy — so the replacement for
@@ -162,8 +175,11 @@ the deleted headers.
 
 **New:** `test/test_no_cython_remains.py`.
 
-**Build:** `setup.py` (Cython half removed), `pyproject.toml`
-(`[build-system] requires`, one stale comment), `MANIFEST.in`.
+**Build and CI:** `setup.py` (Cython half removed), `pyproject.toml`
+(`[build-system] requires`, one stale comment), `MANIFEST.in`,
+`.github/workflows/{ci,release}.yml` (both named a deleted module in an
+import smoke test), `docs/agents/environment.md` (the same import, as a
+recipe).
 
 **Tests repaired:** `test/test_core_boost.py` (Cython oracle retired,
 nine tests repointed to the in-module reference, docstring rewritten),
@@ -311,6 +327,7 @@ Every command run against this branch after the last edit.
 | Dangling `:class:`/`:meth:` refs | AST scan of the six changed test modules for references to names they no longer define | `0` — three `TestAgainstTheCythonTwin` refs were found and downgraded to literals |
 | Forbidden tokens | `git diff origin/master -- '*.py' '*.rs'`, `+` lines, grepped for `TODO`/`FIXME`/`breakpoint()`/`pdb`/`print(` | no occurrences |
 | Session language | same diff, grepped for "as discussed", "per the plan", "as requested", "for now", "in this task" | no occurrences |
+| Deleted-module references, repo-wide | `rg` for an import of any deleted module across the whole tree, not just `hazma/` and `test/` | 5 hits, all provenance strings in captured manifests and the `PORTED_ENTRY_POINTS` / oracle rosters; the three *executable* ones in `.github/` and `docs/agents/` were found by CI and fixed |
 | Present-tense survivor claims | `rg 'capi survivor\|capi-survivor\|four survivors'` outside `projects/` | 9 hits, all past-tense or explicitly historical after one fix in `test/test_core_mediator_positron.py` |
 | Orphaned module constants | AST scan of the five rewritten test modules for upper-case module-level assignments with exactly one occurrence in the file | **21 found and removed**, each confirmed live on `origin/master` first so the cleanup is this task's own residue and not a drive-by |
 | Rust gates | `cargo fmt --check`; `cargo clippy --all-targets -- -D warnings`; `cargo test --no-default-features` | clean; clean; `258 passed` |
