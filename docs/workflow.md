@@ -362,8 +362,9 @@ version_bump: patch     # patch | minor | major
 ---
 ```
 
-The closing PR for every project bumps `VERSION` in `hazma/__init__.py`
-per this field and adds a `CHANGELOG.md` entry naming the project slug.
+The closing PR for every project bumps `[project] version` in
+`pyproject.toml` per this field and adds a `CHANGELOG.md` entry naming
+the project slug.
 `scripts/agents/preflight.sh --closing` checks both.
 
 See [`versioning.md`](versioning.md) for the full policy: the litmus

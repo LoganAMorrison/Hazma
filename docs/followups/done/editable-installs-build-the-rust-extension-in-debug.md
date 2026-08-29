@@ -3,10 +3,20 @@
 - **Added:** 2026-08-20
 - **Source:** cython-to-rust Task 5.1 (benchmarking the vector cross sections)
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** revisit with Phase 07 Task 7.1, which swaps
-  the build backend to maturin and has to make the same choice again
-  (`maturin develop` defaults to debug too).
+- **Status:** done (2026-08-27, cython-to-rust Task 7.1)
+- **Resolution:** the backend swap resolved it without a choice having to
+  be made. The debug default belonged to `setuptools_rust.build_rust`,
+  which reads `debug = self.inplace or self.debug` and so built debug for
+  any `--inplace` (editable) install. maturin's PEP 517 hooks — the ones
+  `pip install -e .` calls — build release unconditionally; only the
+  separate `maturin develop` **CLI** defaults to debug, and nothing in
+  this repo invokes it. Measured after the cutover on macOS/arm64:
+  `uv pip install -e .` leaves `rust/target/release/` and no
+  `rust/target/debug/`, and `vector_mediator.thermal_cross_section` at
+  `x = 0.5` runs at **35.8 us** per call from that editable tree — the
+  release order of magnitude in the table below, not the 1866 us debug
+  one. `rules.md` rule 12's benchmark-against-Cython instruction is
+  therefore sound as written from an ordinary editable tree again.
 
 ## Why
 
@@ -81,14 +91,40 @@ that the rebuild is unoptimized.
 
 ## Risks / open questions
 
-- **Not a risk: the two profiles are numerically identical.**
-  cython-to-rust Task 5.3 re-ran its whole relic-density sweep against a
-  debug and a release `hazma._core` — 12 relic densities and 78
-  `thermal_cross_section` values across six mediator model points — and
-  every one reproduced at `rtol = 0`. `[profile.release]`'s `lto = true`
-  and `codegen-units = 1` buy speed without moving a double, so switching
-  the profile needs no parity re-run and a parity result taken in a debug
-  tree stays valid. Only *timing* taken there is wrong.
+- ~~**Not a risk: the two profiles are numerically identical.**~~
+  **Corrected 2026-08-27 by Task 7.1, which switched the profile and
+  measured the result.** The original reading — cython-to-rust Task 5.3
+  re-ran its whole relic-density sweep against a debug and a release
+  `hazma._core`, 12 relic densities and 78 `thermal_cross_section`
+  values across six mediator model points, every one at `rtol = 0` —
+  holds for those functions and does not generalize. `[profile.release]`'s
+  `lto = true` and `codegen-units = 1` do move doubles elsewhere: the
+  mediator table grids come out **one ulp** from `numpy.logspace` at 4 of
+  500 abscissae at m = 550 MeV and 1 of 500 at m = 900 MeV under release,
+  and bit-equal under debug.
+
+  Nothing users receive moved, on two independent grounds. Every
+  published wheel has always been a release build, so the release values
+  are the shipped ones and the debug values were only ever the
+  developer's — and the two agree anyway on the public surface: a
+  16-function sweep over 7,206 values (the ten `dnde_*` spectra at
+  m = 900 MeV over 400 log-spaced energies, plus both mediator models'
+  total photon and positron spectra and three `thermal_cross_section`
+  points each) is **bit-equal** between a debug and a release
+  `hazma._core` built from identical sources. The one-ulp grid difference
+  does not reach a published number; it is visible only to a test that
+  reads `mediator_tables` directly. What the switch changed is which of
+  the two builds the test suite measures, and
+  `test/test_core_mediator_tables.py`'s grid comparison had encoded the
+  debug values as an exact claim scoped by *platform*. Task 7.1 moved that
+  comparison to the one-ulp budget the same module already derived; see
+  `assert_matches_numpy_grid` for the reasoning.
+
+  The durable lesson is the one this bullet got backwards: **a
+  profile-parity result is scoped to the functions it measured.** A debug
+  tree is the right place to take a parity reading only for kernels whose
+  arithmetic has been checked across the profiles; timing taken there is
+  wrong unconditionally.
 
 - Phase 07 replaces setuptools-rust with maturin, whose `develop`
   command has the same debug default and a `--release` flag. Anything

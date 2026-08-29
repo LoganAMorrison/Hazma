@@ -65,9 +65,9 @@ before you stage anything.
    compiled extensions; an edit that was never rebuilt, or a rebuild
    against a different interpreter, produces a tree that lints and
    formats cleanly and fails at import. Run this after any change under
-   `_utils/`, to the `.pyx` in `spectra/`, `scalar_mediator/`,
-   `vector_mediator/`, to anything under `rust/`, and after any
-   `setup.py` change. Note that the three cargo gates above do **not**
+   `_utils/`, to anything under `rust/`, and after any change to
+   `pyproject.toml`'s `[build-system]` or `[tool.maturin]`. Note that the
+   three cargo gates above do **not**
    cover this: `cargo test` exercises `rust/target/`, while Python
    imports the `hazma/_core.abi3.so` that only `pip install -e .` puts
    there — so a `.rs` change can be cargo-green and stale in the tree.
@@ -86,8 +86,9 @@ before you stage anything.
    run does not.
 10. **Version-bump check** — only when the diff flips a
    `projects/<slug>/PLAN.md` `status:` to `Complete`.
-   `scripts/agents/preflight.sh --closing` verifies that `VERSION` in
-   `hazma/__init__.py` actually moved relative to the trunk and that
+   `scripts/agents/preflight.sh --closing` verifies that `[project]
+   version` in `pyproject.toml` actually moved relative to the trunk and
+   that
    `CHANGELOG.md` carries a matching `## [X.Y.Z]` section. See
    [`../versioning.md`](../versioning.md).
 11. **Forbidden-token scan** over the diff: `breakpoint()`,

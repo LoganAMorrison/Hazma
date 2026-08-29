@@ -28,7 +28,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **Complete (2026-08-27)** — all four tasks done; zero `.pyx`/`.pxd` remain; [learnings](../learnings/phase-06-mediator-spectra.md) |
-| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | Not started |
+| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | **In progress** — Task 7.1 complete (2026-08-27); 7.2 and 7.3 unblocked |
 
 ```text
 00 ──► 01 ──► 02 ──► 03 ──► 04 ──► 06 ──► 07
@@ -41,7 +41,8 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
   consumed entry points served by `hazma._core` (the 2 unconsumed
   `sigma_xx_to_all` exports dropped in Phase 05); maturin backend live.
 - ADR-0002 and ADR-0003 both accepted 2026-08-04.
-- Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
+- Closing PR bumps `[project] version` in `pyproject.toml` per
+  `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug, with the aggregated drift table. See
   [`../../../docs/versioning.md`](../../../docs/versioning.md).
@@ -65,13 +66,26 @@ Cross-phase findings from Phases 00–05 moved verbatim to
 new task reads; open the archive only when a learnings entry, a task
 note or a citation sends you to the original. Phase-scoped findings
 for the open phase live in its working memory
-([`phase-06/README.md`](phase-06/README.md)). A finding that outlives
+([`phase-07/README.md`](phase-07/README.md)). A finding that outlives
 its phase is appended below as one bullet and swept into the archive
 when that phase closes
 ([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 
 _Phase 05's two cross-phase findings were swept into the archive at
-phase close on 2026-08-21. No cross-phase finding recorded since._
+phase close on 2026-08-21._
+
+- **A bit-equality assertion against a compiled kernel can be scoped to
+  the cargo profile, not only to the platform** (Task 7.1). Under
+  `[profile.release]`'s `lto = true` / `codegen-units = 1` the mediator
+  table grid sits one ulp from `numpy.logspace` where a debug build is
+  exact, and `pip install -e .` built **debug** under setuptools-rust and
+  builds **release** under maturin — so every exact assertion written
+  during Phases 03–06 was measured against the profile users do *not*
+  receive. One such assertion existed and is fixed; the suite is green.
+  Cross-phase because it retro-scopes the whole port's test evidence: a
+  new exact claim needs checking against both profiles, and Task 5.3's
+  "the two profiles are numerically identical" result is scoped to the
+  functions it measured, not general.
 
 ## Numerical impact so far
 
@@ -92,7 +106,15 @@ ADRs and phase files; the learnings carry the rest. A new cross-phase
 decision is appended below as one line with its rationale and ADR link,
 and swept into the archive when its phase closes.
 
-_No cross-phase decisions recorded since the 2026-08-21 sweep._
+- **The version's source of truth is `pyproject.toml`'s
+  `[project] version`** (Task 7.1); `hazma.VERSION` and `__version__`
+  survive as public API by reading it back from `importlib.metadata`. A
+  build backend cannot import the package it has not built, and maturin
+  stamps the distribution from that field. `preflight.sh --closing`,
+  `docs/versioning.md`, `docs/workflow.md`,
+  `docs/agents/{preflight,doc-consistency}.md` and all three project
+  `PLAN.md` closing paragraphs were repointed in the same pass. No ADR:
+  ADR-0001 already names maturin as the packaging decision.
 
 ## Files Changed
 
@@ -204,7 +226,7 @@ than quoting them: the current state is in the open phase's
   judgment calls, not defects — but **time-boxed to before Phase 07 Task
   7.1**, because maturin does not read `MANIFEST.in` and the same
   decisions cost more to express afterwards. Filed as
-  [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
+  [`../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/done/sdist-ships-generated-c-and-docs.md).
 - ~~Whether the mediator cross-section `.pyx` include a constants
   header~~ — **closed by Task 0.1: they contain no `include` directive
   at all.**
@@ -251,28 +273,39 @@ than quoting them: the current state is in the open phase's
 **Phases 00–06 are closed** (2026-08-06, 08-08, 08-09, 08-11, 08-20,
 08-21, 08-27) and **the port itself is finished**. All 41 consumed entry
 points are on `hazma._core`, and after Task 6.4
-`find hazma -name "*.pyx" -o -name "*.pxd"` returns **nothing** —
-`setup.py` declares one `RustExtension`, `[build-system] requires` is
-`["setuptools", "setuptools-rust"]`, and `test/test_no_cython_remains.py`
-asserts all of that so it cannot regress unnoticed.
+`find hazma -name "*.pyx" -o -name "*.pxd"` returns **nothing**.
 
-**Phase 07 (packaging cutover and close) is next, starting at Task
-7.1.** Read [`../PLAN.md`](../PLAN.md), this file, then
-[`../learnings/phase-06-mediator-spectra.md`](../learnings/phase-06-mediator-spectra.md)
-— *not* the four Phase 06 task notes
-([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md))
-— and then [`phase-06/README.md`](phase-06/README.md)'s `## Handoff`,
-which carries the four Phase-07-specific risks Task 6.4 identified: the
-`MANIFEST.in` deletion versus the test that reads it, the version's
-source of truth moving under `preflight.sh --closing`, sdist contents
-needing explicit verification, and `AGENTS.md` + `docs/agents/` now
-stating Cython facts that are false.
+**Phase 07 is in progress: Task 7.1 landed the maturin cutover on
+2026-08-27, and Tasks 7.2 (release pipeline) and 7.3 (docs sweep) are
+both unblocked and share no files.** Read [`../PLAN.md`](../PLAN.md),
+this file, then
+[`phase-07/README.md`](phase-07/README.md)'s `## Handoff` and Task 7.1's
+note. The four Phase-07 risks Task 6.4 flagged are all discharged — and
+all four were real; `phase-06/README.md` is history now
+([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 
-**Task 6.4 patched two phase files.** Phase 06's Task 6.4 block no
-longer lists the `spectra/_neutrino/_neutrino` struct module (Phase 04
-had already deleted it), and Phase 07's Task 7.1 no longer owes the
-cython/numpy/scipy build requirements — 6.4 removed them, because after
-it nothing build-time read them.
+**The build is maturin and nothing else.** `[build-system] requires` is
+`["maturin>=1.5,<2.0"]`; `setup.py` and `MANIFEST.in` are deleted;
+`[tool.maturin]` carries `python-source = "."`, `manifest-path`,
+`module-name`, `exclude` and `include`.
+`test/test_no_cython_remains.py` asserts all of that so it cannot regress
+unnoticed, and no other test module reads a build script any more (five
+did, through `setup.py`, until 7.1).
+
+**Two things the cutover changed that are easy to trip over.** The
+version now lives in `pyproject.toml`'s `[project] version`, not
+`hazma/__init__.py` — the closing bump edits that line. And
+`pip install -e .` now builds **release** rather than debug, which is
+why `rules.md` rule 12 benchmarks from an editable tree are sound again,
+and why an exact assertion against a compiled kernel needs checking
+against both profiles (see Findings).
+
+**Task 6.4 patched two phase files, and Task 7.1 patched a third time.**
+Phase 06's Task 6.4 block no longer lists the
+`spectra/_neutrino/_neutrino` struct module (Phase 04 had already
+deleted it); Phase 07's Task 7.1 no longer owes the cython/numpy/scipy
+build requirements; and Phase 07's Prerequisites, 7.2 and 7.3 blocks are
+rewritten against the post-cutover tree.
 
 **For the next agent starting any task in this project:**
 
@@ -392,14 +425,15 @@ it nothing build-time read them.
   **call**, never a multiply. Task 6.2 reproduced 37 sites in two kernels
   from that rule alone without reading a disassembly per site, and its
   mutation campaign confirmed 23 of them observable.
-- **`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1) — a
-  benchmark from an editable tree is ~20x pessimistic and inverts the
-  comparison against Cython. Take rule 12's benchmark from a **release**
-  build of both sides in one interpreter, and **run it from outside the
-  repo**: a run from the repo root imports `hazma` from the worktree
-  rather than site-packages, which silently invalidated a Task 6.2
-  measurement. Filed rather than fixed
-  ([the debug editable build](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)).
+- ~~**`pip install -e .` builds `hazma._core` unoptimized** (Task 5.1)~~
+  — **fixed by the Task 7.1 cutover**: maturin's PEP 517 hooks build
+  release, so rule 12's benchmark is sound from an ordinary editable tree
+  again ([follow-up closed](../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md)).
+  Still **run it from outside the repo**: a run from the repo root
+  imports `hazma` from the worktree rather than site-packages, which
+  silently invalidated a Task 6.2 measurement. And note what the switch
+  exposed — a debug-versus-release parity result is scoped to the
+  functions it measured (see Findings).
 - **Task 3.5 is done, so the dispatch and error contract is settled** —
   a wrapper writes `dispatch::map_unary(x, "<quantity>", kernel)`,
   `map_flavors` for a `(3, N)` return, `map_unary_try` for a kernel that
@@ -421,7 +455,10 @@ it nothing build-time read them.
   regenerate it from a tree in which any kernel runs on Rust —
   `rules.md` rule 2, enforced in code by `assert_no_rust_core`.
 - **The suites are merged and green on the capturing platform**: bare
-  `pytest -q` → **2262 passed / 15 skipped / 12 subtests** as of Task 6.2
+  `pytest -q` → **2231 passed / 15 skipped / 12 subtests** as of Task 7.1
+  — the same count `origin/master` gives, since 7.1 removed one test and
+  split another in two (2262/15/12 at Task 6.2; the difference is Tasks
+  6.3–6.4's, not 7.1's)
   (2163/15/12 at 6.1, 1935/15 at 4.6, 1006/13 at Phase 01 close).
   `cargo test --no-default-features` → **249 passed**, from 222.
   Re-derive rather than quoting.
@@ -437,17 +474,22 @@ it nothing build-time read them.
   `python -c "import hazma._core; print(hazma._core.__file__)"`. If a
   *harness* rebuilds in a loop, delete the artifact first and assert it
   came back — see Task 6.2's campaign.
-- **The build entry point is `setup.py`, and it now declares one
-  `RustExtension` and nothing else** (Task 6.4). `[build-system]
-  requires` is `["setuptools", "setuptools-rust"]`: `cython` lost its
-  `<3.3` cap in Task 6.2 and then left entirely in 6.4, along with
-  `numpy` and `scipy`, which were there for the `.pyx` alone. Phase 07
-  Task 7.1 replaces the backend outright and deletes this file.
-- **The sdist and wheel both build, and the sdist installs and runs** in a
-  fresh venv from outside the repo (recipe in Task 0.4's note; reuse it in
-  Phase 07). Task 6.4 also removed `*.pyx *.pxd *.c` from `MANIFEST.in`'s
-  `global-include`: `*.c` matched no tracked file and swept a dirty
-  tree's gitignored transpiler output into the sdist.
+- **There is no build entry point but `pyproject.toml`** (Task 7.1).
+  `setup.py` and `MANIFEST.in` are deleted and `[build-system] requires`
+  is `["maturin>=1.5,<2.0"]`; `cython` lost its `<3.3` cap in Task 6.2
+  and then left entirely in 6.4 along with `numpy` and `scipy`, and
+  `setuptools`/`setuptools-rust` left in 7.1. The wheel is now tagged
+  `cp310-abi3` rather than per-CPython — verified by installing a
+  3.14-built wheel under CPython 3.10.
+- **The sdist and wheel both build, and the sdist installs and runs** in
+  a fresh venv from outside the repo (recipe in Task 0.4's note; Task 7.1
+  re-ran it on CPython 3.10 post-cutover). maturin honors `.gitignore` for
+  both artifacts, so a dirty tree no longer leaks *build output* into
+  them — the class of bug Task 6.4 patched by hand when it removed
+  `*.pyx *.pxd *.c` from `MANIFEST.in`'s `global-include`. A file that is
+  untracked **and** unignored still gets in, so build a release from a
+  clean tree. The sdist carries `hazma/` and `rust/` only: 264 files
+  against the setuptools sdist's 415.
 - **`hazma.gamma_ray` is gone, docs and all.** The settled replacement
   wording for the Phase 07 aggregate: `gamma_ray_decay` →
   `hazma.spectra.dnde_photon`, `gamma_ray_fsr` →

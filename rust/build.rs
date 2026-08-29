@@ -5,7 +5,7 @@
 //! time and resolved by the interpreter that `dlopen`s the module.
 //! Without it a plain `cargo build` fails with a wall of undefined
 //! `_Py*` symbols even though the same crate builds fine through
-//! setuptools-rust, which passes the flags itself.
+//! maturin, which passes the flags itself.
 //!
 //! `rustc-cdylib-link-arg` applies only when a cdylib is being linked,
 //! so the `cargo test` harness — which links libpython for real, under

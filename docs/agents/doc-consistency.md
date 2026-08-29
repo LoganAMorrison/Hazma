@@ -75,8 +75,8 @@ the current branch head, never the ambient checkout.
 
 6. **Version-bump and CHANGELOG consistency (closing PRs).** If the diff
    flips a `projects/<slug>/PLAN.md` `status:` to `Complete`, run
-   `scripts/agents/preflight.sh --closing` to verify that `VERSION` in
-   `hazma/__init__.py` moved relative to the trunk and that
+   `scripts/agents/preflight.sh --closing` to verify that `[project]
+   version` in `pyproject.toml` moved relative to the trunk and that
    `CHANGELOG.md` carries a matching `## [X.Y.Z] — YYYY-MM-DD` section
    naming the project slug. Also confirm the bump **level** matches the
    `version_bump:` frontmatter and that the frontmatter itself is still

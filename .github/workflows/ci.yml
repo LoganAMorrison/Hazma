@@ -25,7 +25,7 @@ jobs:
         # group, never here. A literal pin in this file is what drifted
         # from the pyproject one and made Lint reject a locally-clean
         # tree. `--group` needs pip >= 25.1 and installs only the group,
-        # so this job still does not build the Cython extensions.
+        # so this job still does not build the `hazma._core` extension.
         run: |
           python -m pip install --upgrade pip
           python -m pip install --group lint
@@ -86,13 +86,14 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - uses: dtolnay/rust-toolchain@stable
-        # pyproject.toml's [build-system] requires setuptools-rust, which
-        # shells out to cargo — so from cython-to-rust Phase 02 on, no
-        # cargo means no build at all, on either OS. The GitHub-hosted
-        # images happened to ship one already (measured on PR #55: the
-        # whole matrix went green with no toolchain step), but nothing in
-        # this repo required them to keep doing so, and an image refresh
-        # that dropped Rust would have taken every entry down at once.
+        # pyproject.toml's [build-system] requires maturin, which shells
+        # out to cargo — so from cython-to-rust Phase 02 on (setuptools-rust
+        # then, maturin since Task 7.1), no cargo means no build at all,
+        # on either OS. The GitHub-hosted images happened to ship one
+        # already (measured on PR #55: the whole matrix went green with no
+        # toolchain step), but nothing in this repo required them to keep
+        # doing so, and an image refresh that dropped Rust would have taken
+        # every entry down at once.
       - name: Build and install hazma
         run: |
           python -m pip install --upgrade pip
@@ -106,8 +107,8 @@ jobs:
         #
         # This step is the only thing in CI that exercises the *installed*
         # distribution, which is why it runs before the editable reinstall
-        # below rather than after it. A missing entry in
-        # [tool.setuptools.package-data] is invisible from the source tree.
+        # below rather than after it. A data file the wheel fails to carry
+        # is invisible from the source tree, where it is simply there.
         working-directory: ${{ runner.temp }}
         run: >-
           python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,

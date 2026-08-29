@@ -22,11 +22,30 @@ passes on a stale tree and says nothing.
 
 from __future__ import annotations
 
-import ast
 import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _toml_array(table: str, key: str) -> str:
+    """The raw text inside ``[table] key = [...]`` in ``pyproject.toml``.
+
+    Read with a regex rather than with ``tomllib``, which is 3.11+ while
+    this project supports 3.10 (``requires-python``), and rather than with
+    a third-party TOML reader, which the test group does not carry. Both
+    arrays this module reads are flat lists of strings, so this is
+    sufficient.
+    """
+    text = (REPO_ROOT / "pyproject.toml").read_text()
+    match = re.search(
+        rf"^\[{re.escape(table)}\].*?^{re.escape(key)}\s*=\s*\[(.*?)\]",
+        text,
+        re.S | re.M,
+    )
+    assert match is not None, f"no [{table}] {key} array in pyproject.toml"
+    return match.group(1)
+
 
 #: Suffixes no file in the repository may carry. ``.pyx.bak`` is here
 #: because one such backup was tracked until Task 6.4 removed it, so the
@@ -37,7 +56,17 @@ CYTHON_GLOBS = ("*.pyx", "*.pxd", "*.pyx.bak", "*.pxi")
 #: The crate's own ``rust/`` is *not* skipped -- a ``.pyx`` there would be
 #: as wrong as one anywhere else -- but its ``target/`` is, being large and
 #: rebuilt constantly.
-SKIPPED_DIRS = frozenset({".git", "build", "dist", "target", "__pycache__"})
+#:
+#: ``site-packages`` is the load-bearing one. The documented dev loop
+#: builds its virtualenv inside the checkout (``uv venv``,
+#: ``docs/agents/environment.md``), and numpy ships 26 ``.pxd`` headers, so
+#: without this the walk reports a working environment as a Cython
+#: regression. Skipping by that name rather than by ``.venv`` catches every
+#: virtualenv layout: the headers are always under ``site-packages``,
+#: whatever the environment directory is called.
+SKIPPED_DIRS = frozenset(
+    {".git", "build", "dist", "target", "__pycache__", "site-packages"}
+)
 
 
 def tracked_cython_sources() -> list[Path]:
@@ -54,78 +83,50 @@ def test_no_cython_source_remains_anywhere() -> None:
     assert tracked_cython_sources() == []
 
 
-def test_setup_py_declares_only_the_rust_extension() -> None:
-    """No ``cythonize``, no ``Extension``, no ``ext_modules``.
+def test_no_setuptools_build_script_remains() -> None:
+    """``setup.py`` was the last place a Cython step could be declared.
 
-    Parsed rather than imported, because importing ``setup.py`` runs
-    ``setup()``; and parsed rather than grepped, because the file's own
-    docstring says the word "Cython" while declaring none of it. What is
-    scanned is the identifiers and keywords the module actually uses.
+    It is gone with the setuptools backend (cython-to-rust Task 7.1), so
+    the assertion is on its absence rather than on its contents. A
+    ``setup.py`` reappearing beside a maturin backend would be dead at
+    best and a second, unnoticed build path at worst.
     """
-    tree = ast.parse((REPO_ROOT / "setup.py").read_text())
-    used = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
-    used |= {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
-    used |= {
-        alias.name.split(".")[0]
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
-    }
-    used |= {
-        node.module.split(".")[0]
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module
-    }
-    used |= {
-        keyword.arg
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        for keyword in node.keywords
-        if keyword.arg
-    }
-    for banned in ("cythonize", "Cython", "Extension", "ext_modules", "numpy"):
-        assert banned not in used, banned
-    assert "RustExtension" in used
-    assert "rust_extensions" in used
+    assert not (REPO_ROOT / "setup.py").exists()
+    assert not (REPO_ROOT / "setup.cfg").read_text().count("cythonize")
 
 
 def test_the_build_requirements_name_no_cython_toolchain() -> None:
-    """``numpy``, ``cython`` and ``scipy`` were there for the ``.pyx`` alone.
+    """One backend, and it is not a compiler of ``.pyx``.
 
     ``numpy`` supplied the headers every ``Extension`` compiled against,
     ``cython`` the compiler, and ``scipy`` the ``cython_special.pxd``
     that ``hazma/spectra/_photon/_muon.pyx`` ``cimport``ed. None of the
-    three has a build-time reader now. They remain *runtime* dependencies
-    and are deliberately not asserted against here.
+    three has a build-time reader now, and neither do ``setuptools`` and
+    ``setuptools-rust``, which Task 7.1 replaced with ``maturin``. All
+    five remain unasserted as *runtime* dependencies where they are one.
     """
-    text = (REPO_ROOT / "pyproject.toml").read_text()
-    # Parsed with a regex rather than with `tomllib`, which is 3.11+ while
-    # this project supports 3.10 (`requires-python`), and rather than with
-    # a third-party TOML reader, which the test group does not carry. The
-    # block is a single flat array of strings, so this is sufficient.
-    block = re.search(
-        r"^\[build-system\].*?^requires\s*=\s*\[(.*?)\]",
-        text,
-        re.S | re.M,
-    )
-    assert block is not None, "no [build-system] requires array in pyproject.toml"
     requires = {
         name.split(">")[0].split("=")[0].split("<")[0].strip().lower()
-        for name in re.findall(r'"([^"]+)"', block.group(1))
+        for name in re.findall(r'"([^"]+)"', _toml_array("build-system", "requires"))
     }
-    assert requires == {"setuptools", "setuptools-rust"}
+    assert requires == {"maturin"}
 
 
-def test_the_sdist_manifest_sweeps_up_no_transpiler_output() -> None:
-    """``global-include *.c`` matched only gitignored build output.
+def test_the_distribution_sweep_ships_no_editor_leftovers() -> None:
+    """The one class of package cruft no ignore rule can catch.
 
-    It never matched a tracked file -- the repository has never committed
-    generated C (``AGENTS.md``) -- so its only effect was to ship a local
-    build's artifacts in an sdist made from a dirty tree.
+    ``MANIFEST.in`` carried a broader version of this claim until Task 7.1
+    deleted it with the setuptools backend: its ``global-include`` was a
+    repo-wide filesystem sweep that shipped even ``.gitignore``d build
+    output. maturin honors ``.gitignore``, so the ``*.so``, ``*.c`` and
+    ``__pycache__`` a built tree accumulates need no help staying out.
+
+    What ``.gitignore`` cannot reach is a file that is *tracked* and still
+    does not belong in a release, which is what the four editor leftovers
+    under ``hazma/`` are. ``[tool.maturin] exclude`` is the only thing
+    keeping them out, so it is worth asserting; a ``*.so`` entry would not
+    be, having been measured to change nothing.
     """
-    manifest = (REPO_ROOT / "MANIFEST.in").read_text()
-    sweep = next(
-        line for line in manifest.splitlines() if line.startswith("global-include")
-    )
-    for pattern in ("*.pyx", "*.pxd", "*.c"):
-        assert pattern not in sweep, pattern
+    assert not (REPO_ROOT / "MANIFEST.in").exists()
+    excluded = set(re.findall(r'"([^"]+)"', _toml_array("tool.maturin", "exclude")))
+    assert {"hazma/**/*.bak", "hazma/**/*.org"} <= excluded

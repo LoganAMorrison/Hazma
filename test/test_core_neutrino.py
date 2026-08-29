@@ -532,8 +532,11 @@ class TestWrapperAndPublicApi:
                 assert not (package / f"{stem}{suffix}").exists(), f"{stem}{suffix}"
         # And they are out of the build, so no future `pip install -e .`
         # brings the extensions back.
-        setup = (REPO_ROOT / "setup.py").read_text()
-        assert '"spectra", "_neutrino"' not in setup
+        # Nothing can rebuild it either: the build declares no Cython
+        # step at all, which `test/test_no_cython_remains.py` asserts
+        # tree-wide against `[build-system] requires`. That replaced the
+        # per-module `setup.py` extension-list check this test used to
+        # carry, which went with `setup.py` at the maturin cutover.
 
     def test_the_nbody_dispatch_table_reaches_the_ported_entry_points(self) -> None:
         # `_nbody.py` maps final-state names to spectrum functions; a swap

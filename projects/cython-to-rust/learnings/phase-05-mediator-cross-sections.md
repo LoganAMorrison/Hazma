@@ -69,7 +69,7 @@ re-enters Python per quadrature node.
   win. But Task 5.3 verified the two profiles are **bit-identical**
   across 90 values, so a *parity* result from a debug tree is valid and
   only its timing is not. Phase 07 Task 7.1 makes the profile decision;
-  [the follow-up](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)
+  [the follow-up](../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md)
   carries it.
 - **Tell solver noise from drift by tightening the solver, not the
   kernel.** `relic_density(semi_analytic=False)` moved by up to 3.82e-5
@@ -176,6 +176,6 @@ All four are filed; none blocks Phase 06.
 - [The `atan` cancellation](../../../docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)
   — its "fix it during Phase 05" window has closed; the note records
   what the standalone change now costs.
-- [The debug editable build](../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)
+- [The debug editable build](../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md)
   — Phase 07 Task 7.1 revisits it, and Task 5.3 removed its one
   numerical risk.

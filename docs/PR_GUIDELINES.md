@@ -45,7 +45,7 @@ Use the most specific scope that applies. Common scopes (non-exhaustive):
 | `form`      | `hazma/form_factors/`                                        |
 | `params`    | `hazma/parameters.py`, `gamma_ray_parameters.py`             |
 | `utils`     | `hazma/utils.py`, `hazma/_utils/` Cython helpers             |
-| `packaging` | `setup.py`, Cython build wiring, `pyproject.toml`            |
+| `packaging` | `pyproject.toml`, `rust/Cargo.toml`, maturin/wheel wiring     |
 | `actions`   | `.github/workflows/` — CI and release automation             |
 | `sphinx`    | `docs/source/` — the published docs and their build          |
 | `readme`    | `README.md` and other top-level prose                        |

@@ -569,8 +569,8 @@ class TestTheThresholdSingularity:
 class TestTheCythonTwinsAreGone:
     """``rules.md`` rule 1: no second reachable implementation.
 
-    Asserted on the sources and on ``setup.py`` rather than by importing,
-    because a built ``.so`` outlives its deleted ``.pyx`` — see
+    Asserted on the source files rather than by importing, because a
+    built ``.so`` outlives its deleted ``.pyx`` — see
     ``docs/agents/environment.md``, and
     ``test/test_core_photon_rho.py`` for the worked example.
     """
@@ -583,19 +583,13 @@ class TestTheCythonTwinsAreGone:
         ):
             assert not (REPO_ROOT / path).exists(), path
 
-    def test_setup_py_builds_neither(self) -> None:
-        # The quoted form, which is how `make_extension` names a module.
-        # `setup.py` still *mentions* both in the comment recording where
-        # they went, and that comment is not a build instruction.
-        setup = (REPO_ROOT / "setup.py").read_text()
-        assert '"scalar_mediator_positron_spec"' not in setup
-        assert '"vector_mediator_positron_spec"' not in setup
-
     def test_neither_mediator_package_builds_any_extension(self) -> None:
         # Task 6.3 took the last one from each, which is what made Task
         # 6.4's sweep over the four capi survivors possible. Kept as a
         # per-package guard now that `test/test_no_cython_remains.py`
-        # carries the tree-wide claim.
+        # carries the tree-wide claim -- which is also what replaced the
+        # `setup.py` extension-list check this class used to carry
+        # alongside it, `setup.py` having gone at the maturin cutover.
         for package in ("scalar_mediator", "vector_mediator"):
             assert not list((REPO_ROOT / "hazma" / package).glob("*.pyx"))
             assert not list((REPO_ROOT / "hazma" / package).glob("*.pxd"))

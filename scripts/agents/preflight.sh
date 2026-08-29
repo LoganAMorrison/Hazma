@@ -321,6 +321,16 @@ if [[ ${CLOSING} -eq 1 ]]; then
     # Read the version out of a file. Written as a standalone script (not a
     # heredoc) because a heredoc claims stdin, which silently swallows a
     # piped `git show` and makes the whole gate pass on an empty old value.
+    #
+    # The number lives in pyproject.toml's `[project] version`. It was
+    # `hazma/__init__.py`'s `VERSION` until the cython-to-rust maturin
+    # cutover, which made the field static so the build backend could read
+    # it without importing the package it has not built yet; `VERSION` now
+    # reads back the other way, out of the installed metadata, so the file
+    # this gate used to parse no longer holds a number to compare.
+    #
+    # The `[project]` table is isolated before the key is matched, so a
+    # `version` under some `[tool.*]` table cannot answer for it.
     read_version() {
         python -c '
 import re, sys
@@ -328,29 +338,32 @@ try:
     text = open(sys.argv[1], encoding="utf-8").read()
 except OSError:
     sys.exit(1)
-m = re.search(r"VERSION\s*:\s*Final\[str\]\s*=\s*\"([^\"]+)\"", text)
+table = re.search(r"^\[project\]\s*$(.*?)(?=^\[|\Z)", text, re.S | re.M)
+if not table:
+    sys.exit(1)
+m = re.search(r"^version\s*=\s*\"([^\"]+)\"", table.group(1), re.M)
 if not m:
     sys.exit(1)
 print(m.group(1))
 ' "$1"
     }
 
-    OLD_FILE="${TMPDIR_PF}/old_init.py"
-    NEW_VER="$(read_version hazma/__init__.py)" || NEW_VER=""
-    if git show "${BASE_REF}:hazma/__init__.py" >"${OLD_FILE}" 2>/dev/null; then
+    OLD_FILE="${TMPDIR_PF}/old_pyproject.toml"
+    NEW_VER="$(read_version pyproject.toml)" || NEW_VER=""
+    if git show "${BASE_REF}:pyproject.toml" >"${OLD_FILE}" 2>/dev/null; then
         OLD_VER="$(read_version "${OLD_FILE}")" || OLD_VER=""
     else
         OLD_VER=""
     fi
 
     if [[ -z "${NEW_VER}" ]]; then
-        row FAIL "version bump" "could not read VERSION from hazma/__init__.py"
+        row FAIL "version bump" "could not read [project] version from pyproject.toml"
     elif [[ -z "${OLD_VER}" ]]; then
         # No baseline means the comparison is vacuous — never report PASS.
         row FAIL "version bump" \
-            "could not read VERSION from ${BASE_REF}:hazma/__init__.py — bump unverifiable"
+            "could not read [project] version from ${BASE_REF}:pyproject.toml — bump unverifiable"
     elif [[ "${NEW_VER}" == "${OLD_VER}" ]]; then
-        row FAIL "version bump" "VERSION still ${OLD_VER} — closing PRs must bump it"
+        row FAIL "version bump" "version still ${OLD_VER} — closing PRs must bump it"
     elif ! grep -q "\[${NEW_VER}\]" CHANGELOG.md 2>/dev/null; then
         row FAIL "version bump" "no '## [${NEW_VER}]' section in CHANGELOG.md"
     else

@@ -142,7 +142,8 @@ removal, 2026-08-04). Nothing in this plan is awaiting a sign-off.
 ## Closing this project
 
 The PR that flips this `PLAN.md` `status:` to `Complete` must also bump
-`VERSION` in `hazma/__init__.py` per the `version_bump:` frontmatter and
+`[project] version` in `pyproject.toml` per the `version_bump:`
+frontmatter and
 add a `CHANGELOG.md` entry naming this project slug. Re-check the level
 against the **Numerical impact** section above before bumping, and
 assemble that entry's per-function drift table from

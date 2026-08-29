@@ -190,7 +190,7 @@ Two more worth carrying:
   defect, which is why a dead-code task did not settle them. **Trigger:
   before Phase 07 Task 7.1** — maturin does not read `MANIFEST.in`, so
   after the cutover the same decisions cost more to express. Filed as
-  [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
+  [`../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/done/sdist-ships-generated-c-and-docs.md).
 - **`requirements.txt` and `Dockerfile` contradict `pyproject.toml`**
   (`numpy>=1.16.2` against `numpy>=2.0`; a dev toolchain of flake8 and
   jupyter that the PEP 735 groups replaced). Deliberately untouched by

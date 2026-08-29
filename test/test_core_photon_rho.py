@@ -371,10 +371,11 @@ class TestWrapperAndPublicApi:
         package = REPO_ROOT / "hazma" / "spectra" / "_photon"
         for suffix in (".pyx", ".pxd", ".pyi"):
             assert not (package / f"_rho{suffix}").exists(), suffix
-        # And it is out of the build, so no future `pip install -e .`
-        # brings the extension back.
-        setup = (REPO_ROOT / "setup.py").read_text()
-        assert '"_rho"' not in setup
+        # Nothing can rebuild it either: the build declares no Cython
+        # step at all, which `test/test_no_cython_remains.py` asserts
+        # tree-wide against `[build-system] requires`. That replaced the
+        # per-module `setup.py` extension-list check this test used to
+        # carry, which went with `setup.py` at the maturin cutover.
 
     def test_the_nbody_dispatch_table_reaches_the_ported_entry_points(self) -> None:
         # `_nbody.py` maps final-state names to spectrum functions; a swap

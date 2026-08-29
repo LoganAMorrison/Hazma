@@ -220,19 +220,38 @@ def assert_within_peak_budget(
 def assert_matches_numpy_grid(
     actual: np.ndarray, expected: np.ndarray, what: str
 ) -> None:
-    """Assert a grid matches ``numpy.logspace``.
+    """Assert a grid matches ``numpy.logspace`` to within one ulp.
 
-    Bit-for-bit where the corpus was captured -- the port was written
-    against *this* build's arithmetic and reproduces it exactly, which is
-    a stronger statement than any tolerance. One ulp elsewhere, because
-    off it the comparison measures NumPy's ``power`` loop against the
-    platform libm rather than measuring the port. See the module
-    docstring for the measurement behind the figure.
+    One ulp everywhere, including where the corpus was captured. This
+    comparison used to be bit-for-bit there, on the reasoning that the
+    port was written against *this* build's arithmetic and reproduced it
+    exactly. That was true of the build the reasoning was written
+    against and not of the build it named: exactness here turns out to
+    depend on the **cargo profile**, not only on the platform. Under
+    `[profile.release]`'s `lto = true` and `codegen-units = 1` the
+    generated grid moves by one ulp at 4 of 500 abscissae at m = 550 MeV
+    and 1 of 500 at m = 900 MeV, and it did so before this comparison was
+    written -- every published wheel has always been a release build. The
+    bit-equal branch was green only because the editable install the dev
+    loop and CI both use was, under setuptools-rust, a **debug** build;
+    the maturin cutover made it release, which is what surfaced this.
+
+    So one ulp is the honest budget, and it is the one this module
+    already derived: off the capturing platform the comparison measures
+    NumPy's ``power`` loop against the platform libm, and one ulp is the
+    most two correctly-rounded implementations of ``10**y`` can differ.
+    Nothing about the values users receive changed here -- what changed
+    is that the developer's build now computes the same ones. The one-ulp
+    grid difference does not reach a published number either: a
+    16-function, 7206-value sweep of the public spectra and cross sections
+    is bit-equal between the two profiles, so this module reading
+    ``mediator_tables`` directly is the only place it is visible.
+
+    :func:`assert_matches_numpy_interp` keeps its platform split: the
+    interp comparison is a different mechanism and is unaffected by the
+    profile (measured, same run).
     """
-    if ON_THE_CAPTURING_PLATFORM:
-        assert_bit_equal(actual, expected, what)
-    else:
-        assert_within_one_ulp(actual, expected, what)
+    assert_within_one_ulp(actual, expected, what)
 
 
 def assert_matches_numpy_interp(
@@ -337,16 +356,27 @@ class TestTheOffPlatformBudgets:
         with pytest.raises(AssertionError):
             assert_within_peak_budget(perturbed, values, "visible error")
 
-    def test_the_scoped_comparator_is_exact_here_and_budgeted_elsewhere(self) -> None:
-        # Which branch this machine takes, asserted rather than assumed,
-        # so a platform that silently changed mode would say so.
+    def test_the_grid_comparator_is_budgeted_on_every_platform(self) -> None:
+        # One ulp is accepted and two are not, here and everywhere: the
+        # grid comparison no longer has a platform-scoped exact branch.
+        # Asserted rather than assumed, so a comparator that silently
+        # tightened or loosened would say so.
         grid = self._grid()
         nudged = np.nextafter(grid, np.inf)
+        assert_matches_numpy_grid(nudged, grid, "one ulp")
+        with pytest.raises(AssertionError, match="up to 2 ulp"):
+            assert_matches_numpy_grid(np.nextafter(nudged, np.inf), grid, "two ulp")
+
+    def test_the_interp_comparator_is_exact_here_and_budgeted_elsewhere(self) -> None:
+        # The interp half keeps the platform split the grid half gave up;
+        # which branch this machine takes, asserted rather than assumed.
+        values = self._grid()
+        nudged = np.nextafter(values, np.inf)
         if ON_THE_CAPTURING_PLATFORM:
             with pytest.raises(AssertionError, match="values differ"):
-                assert_matches_numpy_grid(nudged, grid, "one ulp")
+                assert_matches_numpy_interp(nudged, values, "one ulp")
         else:
-            assert_matches_numpy_grid(nudged, grid, "one ulp")
+            assert_matches_numpy_interp(nudged, values, "one ulp")
 
 
 class TestPhotonTables:
