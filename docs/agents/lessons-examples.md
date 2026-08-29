@@ -743,6 +743,24 @@ cites a real PR.
   re-check rather than as evidence (PR #71: `pyproject.toml`'s `addopts`
   comment was spotted, left, and then reported as swept).
 
+- [sweep-block-written-from-intent] The same root cause reaches a
+  different artifact: an inventory of what a task **defers**. PR #83
+  (cython-to-rust Task 7.1) narrowed the next task's exit criteria to
+  "`AGENTS.md`'s layout tree, layering §1, commands block and its 'Never
+  commit generated C/C++' convention, and `docs/agents/environment.md`'s
+  two remaining `.pyx` paragraphs" — written from memory of what had
+  scrolled past while editing those files. Review flagged the deferral
+  itself as fine and worth checking; running
+  `rg -n 'Cython|\.pyx|\.pxd|cythoniz' AGENTS.md docs/agents/environment.md`
+  returned **eleven** sites, not six: `environment.md` had four paragraphs
+  rather than "two", including a flatly false "`pip install -e .` needs
+  Cython, NumPy, and a C compiler" sitting directly above the paragraph
+  the PR had just corrected, and `AGENTS.md:20`'s "currently
+  mid-migration" had no entry at all. A deferral is a handoff, and an
+  undercounted one is worse than none: the receiving task treats the list
+  as the work. Enumerate it from the command, in a table, with the
+  line numbers the sweep printed.
+
 - [sweep-block-written-from-intent] The same failure has a second entry
   point: a value that changes **after** the sweep block is written. PR
   #78 pinned a tolerance at `1e-4`, wrote a sweep row asserting that all

@@ -101,11 +101,26 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   machinery are corrected in `AGENTS.md`, `docs/versioning.md`,
   `docs/workflow.md`, `docs/agents/{preflight,doc-consistency,environment,review-lenses}.md`
   and `docs/PR_GUIDELINES.md`, because Task 7.1's own diff falsified them.
-  What remains here is the Cython-fact sweep proper: `AGENTS.md`'s layout
-  tree, layering §1, commands block and its "Never commit generated
-  C/C++ — `setup.py` cythonizes on build" convention (which names a file
-  that no longer exists), and `docs/agents/environment.md`'s two
-  remaining `.pyx` paragraphs.
+
+  What remains is the Cython-fact sweep proper. Enumerated rather than
+  described, from `rg -n 'Cython|\.pyx|\.pxd|cythoniz'` over both files
+  after Task 7.1 (line numbers are that task's; re-derive before
+  editing):
+
+  | File | Line | What is wrong |
+  | --- | --- | --- |
+  | `AGENTS.md` | 20 | "historically Cython, currently mid-migration" — true only until this project closes; Task 7.4 is the last moment it can stay |
+  | `AGENTS.md` | 50 | layout tree: `_utils/  # Cython helpers (boost.pyx, constants.pxd, …)` — the directory holds no such file |
+  | `AGENTS.md` | 68 | layering §1 names "the `.pyx` under `_utils/`, `spectra/`, …" |
+  | `AGENTS.md` | 90 | commands block: `pip install -e .  # build the Cython + Rust extensions in place` |
+  | `AGENTS.md` | 120–134 | the whole "Editing a `.pyx` or `.pxd` requires a rebuild" paragraph, including its closing "Confirm the same way as for Cython" |
+  | `AGENTS.md` | 171 | "Never commit generated C/C++. `setup.py` cythonizes on build" — names a file Task 7.1 deleted |
+  | `environment.md` | 38–43 | "Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel", whose second sentence still says `setup.py` compiles them |
+  | `environment.md` | 51–55 | "`pip install -e .` needs Cython, NumPy, and a C compiler" — false since Task 6.4, and now sits directly above the corrected `maturin`/cargo paragraph |
+  | `environment.md` | 67 | "exactly like a `.pyx`" inside the `.rs` rebuild note |
+  | `environment.md` | 77–84 | "Deleting a `.pyx` does not make its module unimportable" — the stale-`.so` note; its *mechanism* is still true of `.rs`, so rewrite rather than delete |
+  | `environment.md` | 106–107 | "Never hand-edit generated `.c` / `.cpp`. They are cythonize output" |
+
 - README / docs/source install instructions updated (Rust toolchain
   only needed for source builds; wheels cover normal installs);
   Sphinx/RTD build verified against the maturin-built package.

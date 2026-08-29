@@ -154,7 +154,10 @@ From the phase file's Task 7.1 block, as amended by Task 6.4:
   the stale-`.so` note). All are recorded in the phase file's 7.3 block.
   What this task did patch in durable docs is only what its own diff
   falsified: the version mechanism, the build backend, and the
-  sdist/wheel machinery.
+  sdist/wheel machinery. **PR #83 review** asked for the deferral to be
+  checked rather than trusted: it was an undercount, so the phase file's
+  7.3 block now carries the eleven-row inventory the sweep produced
+  instead of a prose gesture at "two remaining `.pyx` paragraphs".
 
 ## Files Changed
 
@@ -201,6 +204,20 @@ Docs:
   unchanged from `origin/master`, which gives the same
   `2231 passed, 15 skipped, 12 subtests` — this task removed one test
   (`test_setup_py_builds_neither`) and split one comparator test in two.
+
+  The pass/skip **split** is environment-dependent, so the local figure
+  is not the portable statement; the collected total (2246) is. CI is,
+  and it is identical either side of the cutover:
+
+  | | Linux, py3.10–3.14 | macOS, py3.14 |
+  | --- | --- | --- |
+  | `origin/master` (run 33142305371) | 2229 passed, 17 skipped | 2230 passed, 16 skipped |
+  | this branch (run 33233765164) | 2229 passed, 17 skipped | 2230 passed, 16 skipped |
+
+  The gradient — 15 skipped locally, 16 on macOS CI, 17 on Linux CI — is
+  the parity corpus's environment guard (`test_parity.py:297` skips when
+  the interpreter, NumPy, SciPy or platform drift from the manifest) plus
+  the platform-scoped modules, and it predates this task.
 - `pytest test/test_no_cython_remains.py -q -o addopts=""` — `4 passed`.
 - `pytest test/test_core_mediator_tables.py -q -o addopts=""` —
   `71 passed` (70 before; one comparator test split in two).
