@@ -100,7 +100,8 @@ remain.>
 
 - <criterion 1>
 - <criterion 2>
-- Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
+- Closing PR bumps `[project] version` in `pyproject.toml` per
+  `PLAN.md`'s
   `version_bump:` frontmatter and adds a `CHANGELOG.md` entry naming
   this project slug. See
   [`../../../docs/versioning.md`](../../../docs/versioning.md).

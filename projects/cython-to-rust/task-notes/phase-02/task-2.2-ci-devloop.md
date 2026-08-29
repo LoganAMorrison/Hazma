@@ -364,7 +364,7 @@ reasoned, not measured. It does.
   cargo**, so it broke the moment Task 2.1 landed. No follow-up filed:
   `phases/phase-07-cutover.md` Task 7.3 already owns removing it
   alongside `requirements.txt`, and
-  [`../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md)
+  [`../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md)
   records that assignment. Noted here so the breakage is on the record
   between now and then.
 

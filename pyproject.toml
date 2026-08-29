@@ -11,7 +11,16 @@ keywords = ["dark-matter", "mev-dark-matter", "gamma-ray-spectra"]
 description = "Python package for computing indirect detection constraints on sub-GeV dark matter."
 classifiers = ["Programming Language :: Python"]
 
-dynamic = ["version"]
+# The single source of truth for the version. It used to live in
+# `hazma/__init__.py` and be read from here via `dynamic`; the direction is
+# now reversed -- `hazma.VERSION` reads it back out of the installed
+# metadata -- because this is the field maturin stamps the distribution
+# from, and a backend that had to import the package to learn its version
+# would have to do so before the package is built. (The crate's own
+# `version` in rust/Cargo.toml is unrelated and stays where it is.)
+# `docs/versioning.md` names this line as the one number a closing PR
+# edits.
+version = "2.1.0"
 
 # numpy >= 2.0: the source uses np.trapezoid, which NumPy 2.0 introduced as
 # the replacement for the removed np.trapz. scipy >= 1.13 is the first
@@ -58,50 +67,85 @@ dev = [
 ]
 
 [build-system]
-build-backend = "setuptools.build_meta"
-# setuptools-rust builds the `hazma._core` Rust extension. It needs a Rust
+build-backend = "maturin"
+# maturin is the whole build toolchain: it drives cargo, lays the crate's
+# cdylib into the `hazma` package as `_core.abi3.so`, and tags the wheel
+# `cp310-abi3` from the crate's `abi3-py310` feature. It still needs a Rust
 # toolchain on PATH, which pip cannot install — a source build without
-# cargo fails here. This requirement goes away at the Phase 07 maturin
-# cutover, which replaces the backend outright.
+# cargo fails here — but nothing else: setuptools, setuptools-rust and the
+# `setup.py` that configured them are gone, as are the numpy/cython/scipy
+# requirements the Cython half needed before cython-to-rust Task 6.4
+# deleted the last `.pyx`. The runtime dependencies above are unaffected.
 #
-# numpy, cython and scipy were build requirements for the Cython half
-# alone: `setup.py` needed numpy's headers for every `Extension`, cython
-# to compile the `.pyx`, and scipy's `cython_special.pxd` because
-# `hazma/spectra/_photon/_muon.pyx` cimported it. cython-to-rust Task 6.4
-# deleted the last `.pyx` and `.pxd`, so all three are dropped here; the
-# runtime dependencies above are unaffected.
-requires = [
-  "setuptools",
-  "setuptools-rust",
+# The floor is a measured one rather than a changelog reading: 1.5.1,
+# 1.7.8, 1.9.6 and 1.15.0 each build this configuration from a clean tree
+# and each produce the same `cp310-abi3` wheel. The major cap is there
+# because `[tool.maturin]`'s keys are the backend's own interface.
+requires = ["maturin>=1.5,<2.0"]
+
+[tool.maturin]
+# A mixed Rust/Python project: `hazma/` is the importable package and the
+# crate under `rust/` becomes one module inside it. `python-source = "."`
+# says the package sits at the project root rather than under `src/`.
+python-source = "."
+manifest-path = "rust/Cargo.toml"
+# The crate's `[lib] name` is `_core`, which fixes the `PyInit__core`
+# symbol; this is the dotted path that symbol has to be importable under,
+# and it is what puts the shared object inside the package rather than
+# beside it.
+module-name = "hazma._core"
+
+# Wheel and sdist contents.
+#
+# maturin ships the whole `hazma/` tree, so every data file the library
+# reads at runtime -- the gamma-ray `.dat` tables, the spectrum `.csv`
+# grids, the PBH and CMB data -- is included by being in the package,
+# with no per-directory glob to keep in sync. That replaces
+# `[tool.setuptools.package-data]`, whose twelve globs had drifted (it
+# listed `*.pyd`, the Windows binary suffix, where the Cython headers it
+# meant are `.pxd`).
+#
+# What that sweep must not pick up is build state, and maturin handles
+# most of it without help: it honors `.gitignore`, so the `*.so`, `*.c`
+# and `__pycache__` a built tree accumulates stay out of both artifacts.
+# Measured, because it decides whether these entries are needed: a stray
+# `hazma/_stale_probe.abi3.so` placed in the package directory reaches
+# neither the wheel nor the sdist, with this list or with `exclude = []`.
+# So no `*.so` entry appears below -- it would assert a mechanism that is
+# already someone else's.
+#
+# The sharp edge that remains is a file which is untracked *and* not
+# ignored: `hazma/UNTRACKED_JUNK.txt` does reach both artifacts. That is
+# narrower than the setuptools sweep it replaces, which shipped
+# `.gitignore`d files too, but it is not nothing -- build from a clean
+# tree when it matters.
+#
+# The four entries are tracked editor leftovers inside the package (two
+# `gecco.dat.bak`, `_gev.py.bak`, a `notes.org`). Being tracked, they are
+# the one class `.gitignore` cannot reach, and with `exclude = []` all
+# four ship. Nothing imports or reads them; they are excluded from the
+# distribution rather than deleted from the repository, which is a
+# separate question.
+#
+# `hazma/**/testdata/*.json` is deliberately NOT excluded. Those six files
+# are the parametrization for the `_*_test.py` modules that sit inside
+# `hazma/` and therefore ship in the wheel already; setuptools shipped the
+# tests without their data, so the tests could not run from an installed
+# wheel at all.
+exclude = [
+  "hazma/**/*.bak",
+  "hazma/**/*.org",
 ]
 
-[tool.setuptools]
-zip-safe = false
-
-[tool.setuptools.package-data]
-"hazma.gamma_ray_data" = ["*.dat"]
-"hazma.gamma_ray_data.A_eff" = ["*.dat"]
-"hazma.gamma_ray_data.bg_model" = ["*.dat"]
-"hazma.gamma_ray_data.energy_res" = ["*.dat"]
-"hazma.gamma_ray_data.obs" = ["*.dat"]
-"hazma.pbh_data" = ["*.csv"]
-"hazma.limits.data" = ["*.dat"]
-"hazma.cmb_data" = ["*.dat"]
-"hazma.relic_density" = ["*.dat"]
-"hazma.spectra._photon.data" = ["*.csv"]
-"hazma.spectra._positron.data" = ["*.csv"]
-"hazma.spectra._neutrino.data" = ["*.csv"]
-"hazma" = ["*.txt", "*.rst", "*.pyx", "*.pyd", "*.c", "*.md"]
-
-[tool.setuptools.packages.find]
-# Only ship the hazma package. Namespace discovery (the pyproject default)
-# with an unrestricted `where` used to pull docs/, test/, notebooks/, and
-# top-level duplicates of every subpackage into the wheel.
-where = ["."]
-include = ["hazma", "hazma.*"]
-
-[tool.setuptools.dynamic]
-version = { attr = "hazma.VERSION" }
+# The sdist is a *source* distribution, so it carries what a source build
+# needs and nothing else. maturin includes `pyproject.toml`, the readme,
+# the `hazma/` package and the crate named by `manifest-path`; these are
+# the files outside all of those that a build or a licence check reads.
+include = [
+  { path = "LICENSE", format = "sdist" },
+  { path = "CHANGELOG.md", format = "sdist" },
+  { path = "rust/Cargo.lock", format = "sdist" },
+]
 
 [tool.pytest.ini_options]
 # One suite, one collection. Both roots are listed so that a bare

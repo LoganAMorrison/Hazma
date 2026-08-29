@@ -1,7 +1,7 @@
 ---
 phase: 07
 title: Packaging cutover and close
-status: Not started
+status: In progress
 ---
 
 # Phase 07: Packaging cutover and close
@@ -15,15 +15,14 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 ## Prerequisites
 
 - Phase 06 complete (zero Cython).
-- Current packaging facts (verify still true at execution):
-  build-system requires `setuptools` and `setuptools-rust` only —
-  `numpy`, `cython` and `scipy>=1.13` were dropped by Phase 06 Task 6.4,
-  which deleted the last `.pyx` and so removed the only build-time
-  reader of all three;
-  version is dynamic via `attr: hazma.VERSION`; pytest config moved to
-  pyproject in Phase 01; release.yml uses cibuildwheel
+- Current packaging facts, as of Task 7.1 (2026-08-27): build-system
+  requires `maturin` alone, and `[tool.maturin]` carries the mixed
+  layout; `setup.py` and `MANIFEST.in` are deleted; the version is
+  static in `[project] version`, with `hazma.VERSION` reading it back
+  from `importlib.metadata`; pytest config moved to pyproject in
+  Phase 01. **Not yet touched:** release.yml still uses cibuildwheel
   (cp310–cp314 × {linux x86_64, macos arm64} = 10 wheels, sdist job,
-  PyPI trusted publishing).
+  PyPI trusted publishing), which is Task 7.2's.
 
 ## Tasks
 
@@ -68,6 +67,16 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   wheel abi3 tags and importability verified in the workflow
   (`CIBW_TEST_COMMAND`-equivalent import check on the oldest supported
   CPython, 3.10, and the newest).
+
+  **Narrowed by Task 7.1 (2026-08-27):** the abi3 tag itself is no longer
+  outstanding. maturin reads the crate's `abi3-py310` feature and already
+  emits `hazma-2.1.0-cp310-abi3-<platform>.whl`, verified cross-version
+  (built under CPython 3.14, installed and imported under 3.10). What this
+  task owes is producing the *two platform* wheels in CI and verifying the
+  tag and the import there — not making the tag correct. Under
+  setuptools-rust the wheel was mistagged `cp314-cp314` despite carrying a
+  correct `_core.abi3.so`, which is the failure this criterion was written
+  against.
 - Decision recorded (one line in task note): whether to add
   linux aarch64 / Windows wheels now that they are cheap — default no,
   matching current support surface.
@@ -86,11 +95,43 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   `docs/agents/` env notes updated (Rust toolchain requirement, uv +
   editable-rebuild loop); `CLAUDE.md`/skills references checked by the
   doc-consistency checklist.
+
+  **Narrowed by Task 7.1:** the *build-mechanism* half of this sweep is
+  done — the version's source of truth, the backend, and the sdist/wheel
+  machinery are corrected in `AGENTS.md`, `docs/versioning.md`,
+  `docs/workflow.md`, `docs/agents/{preflight,doc-consistency,environment,review-lenses}.md`
+  and `docs/PR_GUIDELINES.md`, because Task 7.1's own diff falsified them.
+
+  What remains is the Cython-fact sweep proper. Enumerated rather than
+  described, from `rg -n 'Cython|\.pyx|\.pxd|cythoniz'` over both files
+  after Task 7.1 (line numbers are that task's; re-derive before
+  editing):
+
+  | File | Line | What is wrong |
+  | --- | --- | --- |
+  | `AGENTS.md` | 20 | "historically Cython, currently mid-migration" — true only until this project closes; Task 7.4 is the last moment it can stay |
+  | `AGENTS.md` | 50 | layout tree: `_utils/  # Cython helpers (boost.pyx, constants.pxd, …)` — the directory holds no such file |
+  | `AGENTS.md` | 68 | layering §1 names "the `.pyx` under `_utils/`, `spectra/`, …" |
+  | `AGENTS.md` | 90 | commands block: `pip install -e .  # build the Cython + Rust extensions in place` |
+  | `AGENTS.md` | 120–134 | the whole "Editing a `.pyx` or `.pxd` requires a rebuild" paragraph, including its closing "Confirm the same way as for Cython" |
+  | `AGENTS.md` | 171 | "Never commit generated C/C++. `setup.py` cythonizes on build" — names a file Task 7.1 deleted |
+  | `environment.md` | 38–43 | "Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel", whose second sentence still says `setup.py` compiles them |
+  | `environment.md` | 51–55 | "`pip install -e .` needs Cython, NumPy, and a C compiler" — false since Task 6.4, and now sits directly above the corrected `maturin`/cargo paragraph |
+  | `environment.md` | 67 | "exactly like a `.pyx`" inside the `.rs` rebuild note |
+  | `environment.md` | 77–84 | "Deleting a `.pyx` does not make its module unimportable" — the stale-`.so` note; its *mechanism* is still true of `.rs`, so rewrite rather than delete |
+  | `environment.md` | 106–107 | "Never hand-edit generated `.c` / `.cpp`. They are cythonize output" |
+
 - README / docs/source install instructions updated (Rust toolchain
   only needed for source builds; wheels cover normal installs);
   Sphinx/RTD build verified against the maturin-built package.
 - Stale artifacts removed: `requirements.txt`, `Dockerfile` (both
-  contradict pyproject today) — or updated if kept deliberately.
+  contradict pyproject today), `docs/source/installation.rst`'s
+  `python setup.py install` line, and `setup.cfg`'s `[aliases]` section
+  (a setuptools-only feature, inert since Task 7.1) — or updated if kept
+  deliberately. Also decide whether the four tracked editor leftovers
+  under `hazma/` (`{A_eff,energy_res}/gecco.dat.bak`, `_gev.py.bak`,
+  `form_factors/notes.org`) should be deleted; Task 7.1 excluded them
+  from the distribution but left the files alone.
 
 ### Task 7.4: Close the project
 
@@ -102,8 +143,10 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 - `CHANGELOG.md` entry: the migration summary + the aggregated
   numerical-drift table from `../task-notes/numerical-impact.md`
   (per-function max shifts), naming this project slug.
-- `VERSION` bumped per `PLAN.md` `version_bump` (re-check the level
-  against actual recorded drift and the Task 0.5 outcome);
+- `[project] version` in `pyproject.toml` bumped per `PLAN.md`
+  `version_bump` (re-check the level against actual recorded drift and
+  the Task 0.5 outcome; Task 7.1 moved the source of truth off
+  `hazma/__init__.py`, and `preflight.sh --closing` reads the new one);
   `scripts/agents/preflight.sh --closing` green.
 - Project retrospective written to
   `../learnings/project-retrospective.md` incl. §5 follow-on seeds

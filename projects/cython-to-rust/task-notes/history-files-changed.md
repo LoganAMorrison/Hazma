@@ -160,7 +160,7 @@ closed phase's entries below, verbatim, under a
   twelve by rename, plus `docs/versioning.md`, whose sole occurrence sat
   inside an obsolete blockquote that was deleted outright (its `VERSION`
   snippet was re-derived at the same time). One follow-up filed
-  ([sdist payload](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md)).
+  ([sdist payload](../../../docs/followups/done/sdist-ships-generated-c-and-docs.md)).
   Phase closed: learnings written, phase frontmatter
   `status: Complete`, `PLAN.md` Phases row updated. Full list in
   [`phase-00/README.md`](phase-00/README.md).

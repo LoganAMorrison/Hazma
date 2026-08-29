@@ -57,7 +57,8 @@ this project is time-critical.
 - No live document still sequences any of the seven repairs "after
   Phase 06 Task 6.4".
 - `git diff --stat -- test/parity/data` empty across the whole project.
-- Closing PR bumps `VERSION` in `hazma/__init__.py` per `PLAN.md`'s
+- Closing PR bumps `[project] version` in `pyproject.toml` per
+  `PLAN.md`'s
   `version_bump: minor` and adds a `CHANGELOG.md` entry naming this
   project slug, carrying the aggregated per-defect shifts. See
   [`../../../docs/versioning.md`](../../../docs/versioning.md).

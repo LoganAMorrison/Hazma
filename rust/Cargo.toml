@@ -15,10 +15,11 @@ publish = false
 
 [lib]
 # The cdylib's name fixes the module-init symbol PyO3 generates
-# (`PyInit__core`), which must match the Python import path `hazma._core`
-# that setuptools-rust installs it under. Renaming this without renaming
-# the `#[pymodule]` in src/lib.rs yields a shared object Python cannot
-# import.
+# (`PyInit__core`), which must match the last component of the Python
+# import path `hazma._core` that maturin installs it under
+# (`[tool.maturin] module-name` in pyproject.toml). Renaming this without
+# renaming the `#[pymodule]` in src/lib.rs yields a shared object Python
+# cannot import.
 name = "_core"
 # `rlib` alongside `cdylib` so `cargo test` has a library to link the
 # test harness against; the wheel only ever ships the cdylib.
@@ -26,10 +27,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # abi3-py310 builds against CPython's limited API, so one shared object
-# serves every CPython >= 3.10 (pyproject.toml's `requires-python`).
-# Until the last Cython extension goes in Phase 06, the *wheels* stay
-# CPython-tagged regardless — abi3 here is an extension-level property,
-# verified by the `_core.abi3.so` filename, not a wheel tag.
+# serves every CPython >= 3.10 (pyproject.toml's `requires-python`). This
+# feature is also where the wheel's tag comes from: maturin reads it and
+# tags the wheel `cp310-abi3`, so raising the floor here raises the floor
+# of every published wheel.
 pyo3 = { version = "0.29.2", features = ["abi3-py310"] }
 numpy = "0.29.0"
 # The special functions the Cython layer cimports from

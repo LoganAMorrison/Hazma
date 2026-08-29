@@ -153,7 +153,7 @@ Everything else is behavior-invisible.
   same PR). The
   wheel was already clean; `test/`, `docs/` and the cythonized `*.c`
   stay, and the case for dropping them is
-  [`../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
+  [`../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../docs/followups/done/sdist-ships-generated-c-and-docs.md).
 - `_build.py` no longer exists — it was replaced by `setup.py` in
   `7a817f9` (2026-08-02), *before* this project began, and thirteen
   durable docs still named it as the build entry point (`AGENTS.md`,

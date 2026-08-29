@@ -210,6 +210,6 @@ predate it and are already tracked:
   deciding the two separately risks two different answers.
 - [positron spectrum `nan` at the legacy electron mass](../../../docs/followups/done/positron-spectrum-nan-at-legacy-electron-mass.md)
   — ripens before Phases 05/06.
-- [sdist ships generated C and docs](../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md)
+- [sdist ships generated C and docs](../../../docs/followups/done/sdist-ships-generated-c-and-docs.md)
   — time-boxed to before Phase 07 Task 7.1, since maturin reads neither
   `MANIFEST.in` nor `[tool.setuptools]`.

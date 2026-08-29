@@ -7,15 +7,27 @@ touch.
 
 ## The version lives in one place
 
+```toml
+# pyproject.toml
+[project]
+version = "2.1.0"
+```
+
+That line is the number, and the only one to edit. The package reads it
+back rather than declaring it:
+
 ```python
 # hazma/__init__.py
-VERSION: Final[str] = "2.1.0"
+VERSION: Final[str] = version("hazma")   # importlib.metadata
 __version__ = VERSION
 ```
 
-`pyproject.toml` reads it dynamically (`version = { attr =
-"hazma.VERSION" }`), so there is exactly one number to edit. Do not add a
-second copy.
+Both attributes are public API and are not going away; what changed in
+cython-to-rust Task 7.1 is which end holds the value. The build backend
+is maturin, which stamps the distribution from `[project] version`, and a
+backend cannot import the package to learn the version of the package it
+has not built yet. Do not add a second copy — in particular, do not put
+one in `rust/Cargo.toml`, whose `version` is the crate's and unrelated.
 
 ## The public surface
 
@@ -95,7 +107,7 @@ assertion absorbs a 0.1% shift, and 0.1% on a published spectrum is a
 The PR that flips a `projects/<slug>/PLAN.md` frontmatter `status:` to
 `Complete` carries the bump in the same diff:
 
-1. **`hazma/__init__.py`** — `VERSION` set to the new value.
+1. **`pyproject.toml`** — `[project] version` set to the new value.
 2. **`CHANGELOG.md`** — a new `## [X.Y.Z] — YYYY-MM-DD` section that
    names the project slug and lists user-facing changes under
    `Added` / `Changed` / `Fixed` / `Removed`. Numerical changes go under
@@ -107,8 +119,8 @@ Verify locally before committing:
 scripts/agents/preflight.sh --closing
 ```
 
-It checks that `VERSION` actually moved relative to the trunk and that
-`CHANGELOG.md` has a matching section. A partial closure (status flipped,
+It checks that `[project] version` actually moved relative to the trunk
+and that `CHANGELOG.md` has a matching section. A partial closure (status flipped,
 version untouched) fails the gate.
 
 ## Cheat sheet

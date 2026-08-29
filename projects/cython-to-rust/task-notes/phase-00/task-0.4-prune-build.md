@@ -103,7 +103,7 @@ last two bullets were added *by* this task and are flagged as such.
   *.c` sweeps them in. So the tarball's contents are stable, but they are
   build-output rather than source. Deferred, with the `docs/`, `test/`
   and `*.pyd` questions, to
-  [`../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md).
+  [`../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md).
 - **The preflight `isort`/`ruff` rows behave as Task 0.5 predicted**, and
   this task narrowed the `ruff` debt: `setup.py` was one of the files
   carrying `UP006` (`List[str]` where `list[str]` works on Python ≥3.10).
@@ -218,7 +218,7 @@ The thirteenth is the exception the rename would have broken:
   was deliberately not touched: its format requires a merged PR
   citation, and it says to put an uncitable class in a `docs/agents/`
   checklist instead.)
-- `docs/followups/todo/sdist-ships-generated-c-and-docs.md` (new) +
+- `docs/followups/done/sdist-ships-generated-c-and-docs.md` (new) +
   an Open row in `docs/followups/README.md`.
 
 ### Project bookkeeping
@@ -277,7 +277,7 @@ note below it.
 **Why the first numbers were wrong, and why it matters beyond a typo.**
 The original `498 → 397` was taken right after the `MANIFEST.in` edit,
 *before* this task had written its own task note, its learnings file and
-`docs/followups/todo/sdist-ships-generated-c-and-docs.md`. Those three
+`docs/followups/done/sdist-ships-generated-c-and-docs.md`. Those three
 files then landed in the tree — two under the now-pruned `projects/`,
 but the follow-up under `docs/`, which is **not** pruned. So the
 follow-up documenting the sdist payload became part of the sdist
@@ -375,7 +375,7 @@ Per the recipe in `../README.md`, `git add -A` was run after the
 
 - **The sdist payload** — cythonized `*.c`, `docs/`, `test/`,
   `notebooks/`, and the `*.pyd`-for-`*.pxd` package-data entry. Filed as
-  [`../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md),
+  [`../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md),
   deliberately deferred, with a stated deadline of Phase 07 Task 7.1
   (after which `MANIFEST.in` no longer exists to fix).
 - **`preflight.sh` `isort`/`ruff` on the trunk** — still red for reasons

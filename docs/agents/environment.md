@@ -55,12 +55,13 @@ a clear "install Cython" message. (Every C++ extension went with
 builds as C only.)
 
 **It also needs `cargo` on `PATH`, and pip cannot supply it.**
-`pyproject.toml`'s `[build-system] requires` carries `setuptools-rust`
-(cython-to-rust Phase 02), which shells out to cargo to build the
-`hazma._core` extension in the same pass as the Cython ones. No
-toolchain, no build — of *any* extension, not just the Rust one. Install
-it from rustup; edition 2024 needs rustc ≥ 1.85. Both this requirement
-and the Cython half disappear at the Phase 07 maturin cutover.
+`pyproject.toml`'s `[build-system] requires` is `maturin` alone
+(cython-to-rust Task 7.1; `setuptools-rust` from Phase 02 until then),
+which shells out to cargo to build the `hazma._core` extension. No
+toolchain, no build. Install it from rustup; edition 2024 needs
+rustc ≥ 1.85. The Cython half of this requirement is gone — `cython`,
+`numpy` and `scipy` left `[build-system] requires` in Task 6.4 — but the
+cargo half is permanent.
 
 **Editing a `.rs` and re-running pytest tests the OLD extension, exactly
 like a `.pyx`.** And the trap has an extra step, because the fast
@@ -105,14 +106,21 @@ broken toolchain rather than a wrong flag.
 **Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
 Edit the `.pyx` and rebuild.
 
-**A clean wheel is not evidence of a clean sdist.** They are built by
-different machinery and neither fix reaches the other: the wheel's
-contents come from `[tool.setuptools.packages.find]` in
-`pyproject.toml`, the sdist's from `MANIFEST.in`. `MANIFEST.in`'s
-`global-include` is a **repo-wide** sweep, so it happily picks up
-`.claude/`, `.codex/` and `projects/` — it did, unnoticed, for four
-months, because no one ran `build --sdist` (cython-to-rust Task 0.4).
-Check the artifact you actually changed. And when probing a `tar tzf`
+**A clean wheel is not evidence of a clean sdist.** They are still built
+by different machinery, though under maturin (cython-to-rust Task 7.1)
+they share a config: the wheel is the `hazma/` package directory as it
+lies on disk, minus `[tool.maturin] exclude`, plus the freshly built
+`_core.abi3.so`; the sdist is that same directory plus `rust/` and
+whatever `[tool.maturin] include` names. Both honor `.gitignore`, so a
+built tree's `*.so`, `*.c` and `__pycache__` stay out of each without
+configuration — but a file that is untracked **and** unignored reaches
+both, so build a release from a clean tree. The sdist also carries crate
+sources the wheel never sees. Under the
+setuptools backend the split was sharper and cost more: `MANIFEST.in`'s
+`global-include` was a **repo-wide filesystem** sweep that picked up
+`.claude/`, `.codex/` and `projects/` unnoticed for four months, because
+no one ran `build --sdist` (Task 0.4). Check the artifact you actually
+changed. And when probing a `tar tzf`
 listing for paths that should be absent, **anchor the pattern** (`^…$`):
 an unanchored `_positron` or `gamma_ray` matches dozens of live paths
 and buries the real hit.
@@ -169,12 +177,12 @@ mistyped path, a `-k` filter that matches nothing, or a `collect_ignore`
 entry silently reduces the run to nothing. Read the summary line
 (`N passed`), not just the exit status.
 
-**`test/conftest.py` no longer ignores any test module.** Its
-`collect_ignore` list holds only the repo's `setup.py`, which is not a
-test module. Both entries that used to hide part of the suite are gone
-with the code they covered: `test/decay/` alongside `hazma/_decay/`
+**`test/conftest.py` ignores nothing at all.** Its `collect_ignore` list
+is empty. The two entries that used to hide part of the suite went with
+the code they covered — `test/decay/` alongside `hazma/_decay/`
 (cython-to-rust Task 0.3) and `test/test_gamma_ray.py` alongside
-`hazma/gamma_ray.py` (Task 0.2).
+`hazma/gamma_ray.py` (Task 0.2) — and the last one, the repo's
+`setup.py`, went with the file itself at the maturin cutover (Task 7.1).
 
 **A bare `pytest` is now the whole suite, and it is slow.** pytest is
 configured in `pyproject.toml`'s `[tool.pytest.ini_options]` — not
@@ -263,7 +271,7 @@ repo's standard. Do not cite it as precedent, and do not import from
 **The CI test matrix is Python 3.10 through 3.14 on Linux, plus macOS on
 3.14**, matching `pyproject.toml`'s `requires-python = ">=3.10"`. Each
 entry installs a Rust toolchain (`dtolnay/rust-toolchain@stable`; without
-cargo nothing builds — see the `setuptools-rust` note above), installs
+cargo nothing builds — see the `maturin` note above), installs
 hazma non-editable, runs an import smoke test from outside the repo (so a
 broken build or a missing package-data entry fails there rather than as a
 confusing collection error), reinstalls editable, and then runs a bare

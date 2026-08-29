@@ -31,8 +31,15 @@ DANGLING: docs/followups/todo/cross-section-prefactor-threshold-cancellation.md
 DANGLING: docs/followups/todo/legacy-parameters-width-exponent-bug.md
 ```
 
-Both slugs live under `done/` today. The five references to them are in
-Phase 00 task notes:
+Re-run on 2026-08-27 during cython-to-rust Task 7.1, which moved two more
+follow-ups and repointed all 23 of their inbound references by hand: the
+same two, plus a third that had accrued in the meantime —
+`docs/followups/todo/oracle-restore-revisions-for-the-mediator-decay-pyx.md`,
+moved to `done/` by Task 6.4. That is the growth rate this file predicted,
+observed.
+
+All three slugs live under `done/` today. The five references to the first
+two are in Phase 00 task notes:
 
 - `projects/cython-to-rust/task-notes/phase-00/task-0.1-relocate-constants.md`
   — three, one a prose record and two inside pasted command output.

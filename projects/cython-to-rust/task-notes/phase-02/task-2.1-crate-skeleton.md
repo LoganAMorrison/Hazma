@@ -177,7 +177,7 @@ criteria ask the plumbing suite to assert. Nothing in `hazma/` calls
   `[tool.setuptools.package-data]`, which lists `*.pyd` where `*.pxd` was
   surely meant. 15 `.pyi` in both wheel and sdist (14 pre-existing + the
   new `_core.pyi`). The `*.pyd` typo is already recorded in
-  [`../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md);
+  [`../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md);
   not touched here.
 - **The repo has no `py.typed` marker at all** (`git ls-files | grep -c
   py.typed` → 0), so "py.typed unaffected" is satisfied by there being

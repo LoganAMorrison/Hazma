@@ -42,7 +42,7 @@ grid, and record the phase's headline benchmark from a release build.
   `test/test_relic_density.py`.
 - `test/parity/cases.py` — `_scalar_model_points` / `_vector_model_points`,
   reused verbatim as the sweep's scenarios.
-- `docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md`.
+- `docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md`.
 
 ## Findings
 
@@ -166,7 +166,7 @@ grid, and record the phase's headline benchmark from a release build.
 - `test/test_relic_density.py` — new `TestMediatorRelicDensity`: six
   mediator scenarios × two solvers, pinned to pre-port values with
   stated tolerances.
-- `docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md`
+- `docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md`
   — records that the two cargo profiles are numerically bit-identical.
 - `docs/followups/todo/thermal-cross-section-quadrature-never-converges.md`
   — unblocked, and now carries the measured downstream size.

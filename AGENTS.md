@@ -135,8 +135,8 @@ Cython: `python -c "import hazma._core; print(hazma._core.__file__)"`
 must land inside your worktree.
 
 A source build now needs `cargo` on `PATH` at all: `pyproject.toml`'s
-`[build-system] requires` includes `setuptools-rust`, and pip cannot
-install a Rust toolchain for you.
+`[build-system] requires` is `maturin` alone, and pip cannot install a
+Rust toolchain for you.
 
 ## Conventions
 

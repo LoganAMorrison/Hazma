@@ -158,7 +158,7 @@ cross-section ports.
 
 - `test/test_relic_density.py` — `TestMediatorRelicDensity`, six mediator
   scenarios × two solvers pinned to pre-port values.
-- `docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md`
+- `docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md`
   — records that the two cargo profiles are numerically bit-identical.
 - Project bookkeeping: this README, the Task 5.3 note, `../README.md`,
   `../numerical-impact.md`, `../../learnings/phase-05-mediator-cross-sections.md`,
@@ -217,7 +217,7 @@ cross-section ports.
 - Three follow-ups opened by Task 5.1, none blocking:
   [the `2 m_x` raise](../../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md),
   [the unconverged thermal quadrature](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md),
-  [the debug editable build](../../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md).
+  [the debug editable build](../../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md).
 - Task 5.2 rebuilt `test/test_core_quad.py`'s scalar `sigma_xx_to_all`
   oracle from the ported kernels, the way Task 5.1 did the vector one,
   and retired the two `test_core_dispatch.py` cases whose oracle was the

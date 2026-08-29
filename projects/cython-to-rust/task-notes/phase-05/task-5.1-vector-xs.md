@@ -122,7 +122,7 @@ Task 5.3's relic sweep is where the downstream size shows.
 editable install passes `--inplace`. The first benchmark taken this way
 said the port was **20× slower** than the Cython. In release it is
 1.1×–3.2× faster. Filed as
-[a follow-up](../../../../docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md)
+[a follow-up](../../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md)
 rather than fixed here: `[profile.release]`'s `lto = true` +
 `codegen-units = 1` make a one-file rebuild cost 64 s against ~10 s, so
 the choice is a project-wide dev-loop decision, not a Task 5.1 one.
@@ -388,7 +388,7 @@ benchmark) but recorded because it is what surfaced the debug-build
 finding. macOS/arm64, Python 3.13.7, best of three runs, pre-swap Cython
 rebuilt standalone from `git show HEAD:…_c_vector_mediator_cross_sections.pyx`
 on the same machine. **Release profile** — see the Findings above and
-`docs/followups/todo/editable-installs-build-the-rust-extension-in-debug.md`
+`docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md`
 for why an editable install does not give you this.
 
 | entry point | Cython | Rust | speedup |

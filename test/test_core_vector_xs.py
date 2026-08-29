@@ -631,8 +631,8 @@ class TestTheWrapperReExports:
         repo = Path(__file__).resolve().parent.parent
         pyx = repo / "hazma" / "vector_mediator"
         assert not (pyx / "_c_vector_mediator_cross_sections.pyx").exists()
-        # The `setup.py` check is on the *extension list*, not on the
-        # whole file: the entry there is what would rebuild the module,
-        # and the file also carries a comment naming it.
-        sources = (repo / "setup.py").read_text()
-        assert '"_c_vector_mediator_cross_sections",' not in sources
+        # Nothing can rebuild it either: the build declares no Cython
+        # step at all, which `test/test_no_cython_remains.py` asserts
+        # tree-wide against `[build-system] requires`. That replaced the
+        # per-module `setup.py` extension-list check this test used to
+        # carry, which went with `setup.py` at the maturin cutover.

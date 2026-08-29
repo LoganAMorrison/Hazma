@@ -4,11 +4,49 @@
 - **Source:** cython-to-rust Task 0.4 — the first `uv build --sdist` run
   in the project's history
 - **Scope:** cross-cutting (packaging)
-- **Status:** open
-- **Triggers / blockers:** decide before Phase 07 Task 7.1 rewrites the
-  build backend on maturin — maturin's sdist is `Cargo.toml`-driven and
-  will not read `MANIFEST.in`, so whatever is decided here has to be
-  re-expressed there rather than carried over.
+- **Status:** done (2026-08-27, cython-to-rust Task 7.1)
+- **Resolution:** folded into Task 7.1, which is the window this file
+  named as the cheapest one. `MANIFEST.in` is deleted with the setuptools
+  backend and every question below is answered by `[tool.maturin]`:
+  - **Item 1, the cythonized `*.c`:** moot. Task 6.4 deleted the last
+    `.pyx`, so there is no transpiler to produce them.
+  - **Item 2, `docs/` / `test/` / `notebooks/`:** all three are dropped.
+    maturin's sdist carries the `hazma/` package, the `rust/` crate and
+    the files `[tool.maturin] include` names, so shipping any of them
+    would now be a deliberate addition rather than a sweep's by-catch,
+    and none is needed to build or install from source. Measured
+    2026-08-27 on a clean tree: the sdist goes from **415 files to 264**.
+  - **Item 3, working-directory dependence:** mostly fixed, and the
+    residue is named rather than assumed. maturin honors `.gitignore` for
+    both artifacts, which is exactly the failure this item described — a
+    `.pytest_cache/README.md` swept in despite `.gitignore:526` listing
+    it, and a built tree's `*.c` and `*.so` alongside. Probed after the
+    cutover: a stray `hazma/_stale_probe.abi3.so` reaches neither the
+    wheel nor the sdist, with or without `[tool.maturin] exclude`.
+
+    What still tracks the working directory is a file that is untracked
+    **and** unignored: `hazma/UNTRACKED_JUNK.txt`, planted as a probe,
+    reaches both. That is much narrower than `global-include`, and it is
+    the reason this file's "build from a clean tree, and say so when
+    quoting a file count" instruction stays good advice rather than
+    becoming unnecessary.
+
+    Separately, `[tool.maturin] exclude` carries the one class no ignore
+    rule can: four **tracked** editor leftovers under `hazma/`
+    (`{A_eff,energy_res}/gecco.dat.bak`, `_gev.py.bak`,
+    `form_factors/notes.org`), all four of which ship with
+    `exclude = []`.
+    `test/test_no_cython_remains.py::test_the_distribution_sweep_ships_no_editor_leftovers`
+    asserts those entries survive.
+  - **Item 4, the `*.pyd` typo:** deleted with the whole
+    `[tool.setuptools.package-data]` block. maturin ships the package
+    directory, so the twelve per-directory globs it replaced have no
+    successor to drift.
+
+  Verified as this file prescribed: `uv build`, then
+  `uv pip install --no-binary hazma dist/hazma-2.1.0.tar.gz` into a fresh
+  CPython 3.10 venv, then an import smoke of the public entry points from
+  outside the repo.
 
 ## Why
 

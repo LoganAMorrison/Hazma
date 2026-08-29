@@ -235,7 +235,7 @@ purge.
   The first is not distribution content under any reading; the rest are
   judgment calls that a dead-code-purge task is the wrong place to
   settle. Filed as
-  [`../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md)
+  [`../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md)
   with a deadline of **before Phase 07 Task 7.1**, after which
   `MANIFEST.in` no longer exists to fix.
 - Task 0.4 left `requirements.txt` and `Dockerfile` untouched even though
@@ -348,7 +348,7 @@ purge.
   blockquote was deleted rather than renamed, and the
   `hazma/__init__.py` snippet three lines above it re-derived
   (`2.0.2` → `2.1.0`).
-- `docs/followups/todo/sdist-ships-generated-c-and-docs.md` (new) + index
+- `docs/followups/done/sdist-ships-generated-c-and-docs.md` (new) + index
   row. Phase file: Task 0.4 exit criteria amended, frontmatter
   `status: Complete`. `PLAN.md` Phases row 00.
   `learnings/phase-00-dead-code-purge.md` (new). Full list in the task
@@ -447,7 +447,7 @@ purge.
   `notebooks/`, and `pyproject.toml` lists `*.pyd` where `*.pxd` was
   surely meant. Deferred deliberately — each is a judgment call, not a
   defect. Filed as
-  [`docs/followups/todo/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/todo/sdist-ships-generated-c-and-docs.md),
+  [`docs/followups/done/sdist-ships-generated-c-and-docs.md`](../../../../docs/followups/done/sdist-ships-generated-c-and-docs.md),
   **time-boxed to before Phase 07 Task 7.1**, after which `MANIFEST.in`
   no longer exists to fix.
 - ~~`cross_section_prefactor`'s threshold cancellation — deferred;
