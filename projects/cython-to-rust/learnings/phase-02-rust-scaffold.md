@@ -136,13 +136,20 @@ wrong?" before it is called done. Three of the three tasks here found a
   installs rustup in the container, `CIBW_ENVIRONMENT_LINUX` puts it on
   `PATH`). Same shape as Phase 00's `MANIFEST.in`-vs-wheel lesson: two
   artifacts, two mechanisms, and fixing one has never fixed the other.
-  **Phase 07 Task 7.1 rewrites this job for maturin and inherits it.**
+  **Settled by Phase 07 Task 7.2 (2026-08-29), not inherited:**
+  `PyO3/maturin-action@v1` builds Linux inside a manylinux container that
+  ships its own Rust toolchain, so the rustup-in-the-container recipe and
+  the host toolchain step both came out. The two-artifacts-two-mechanisms
+  shape survives one level up, between the wheel jobs and the sdist job.
 - **`release.yml` has no pull-request trigger**, so nothing about it is
   verifiable from a PR check however green the PR is. Closing one of its
   criteria takes an explicit `gh workflow run release.yml --ref <branch>`
   (safe because `publish` is gated on
   `github.event_name == 'release'` — check that gate before dispatching).
-  Measured cost ~17 min for both platforms.
+  Measured cost ~17 min for both platforms. **Task 7.2 gave it one**,
+  filtered to `release.yml` and `pyproject.toml`, so a packaging edit is
+  now measured by an ordinary PR check; a dispatch is still what covers
+  an edit anywhere else.
 - **The live Cython dispatch is not the contract the reference
   described** — four measured divergences, now written into
   `../references/numerics-replacements.md`: a 0-d array raises rather

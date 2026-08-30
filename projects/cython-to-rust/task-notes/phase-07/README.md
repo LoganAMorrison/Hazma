@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 07
-**Status:** In progress (Task 7.1 complete 2026-08-27)
+**Status:** In progress (Tasks 7.1–7.2 complete; 7.2 on 2026-08-29)
 **Plan References:** `../../phases/phase-07-cutover.md`
 **Related ADRs:** ADR-0001
 **Depends On:** Phase 06 complete
@@ -18,7 +18,7 @@ cutover and project close.
 | # | Task | Depends on | Status | Task Note |
 | --- | ------ | ------------ | -------- | ----------- |
 | 7.1 | Backend switch to maturin | — | **Complete (2026-08-27)** | [task-7.1-maturin-backend.md](task-7.1-maturin-backend.md) |
-| 7.2 | Release pipeline (abi3 wheels) | 7.1 | Not started | [task-7.2-release-pipeline.md](task-7.2-release-pipeline.md) |
+| 7.2 | Release pipeline (abi3 wheels) | 7.1 | **Complete (2026-08-29)** | [task-7.2-release-pipeline.md](task-7.2-release-pipeline.md) |
 | 7.3 | Documentation sweep | 7.1 | Not started | [task-7.3-docs-sweep.md](task-7.3-docs-sweep.md) |
 | 7.4 | Close the project | 7.1–7.3 | Not started | [task-7.4-close.md](task-7.4-close.md) |
 
@@ -36,6 +36,35 @@ cutover and project close.
   impact so far" section on 2026-08-21) — input to the CHANGELOG.
 
 ## Findings
+
+### Task 7.2
+
+- **A wheel filename's last three fields are compressed tag *sets*, not
+  tags.** Each is dot-separated and the wheel carries their cross
+  product, one `Tag:` line per member. The manylinux wheel is
+  `cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64` — one platform
+  field standing for two tags — and the macOS wheel is one tag per field,
+  so an assertion comparing field against `Tag:` line as a single string
+  passes on macOS and rejects a correct Linux wheel. Both halves of a
+  two-platform matrix have to run before a format assertion is believed;
+  a locally built wheel is the macOS shape only.
+- **`twine check` cannot fail an unbuildable sdist.** It reads metadata.
+  An archive missing `rust/Cargo.toml` passes it and then fails every
+  `pip install --no-binary`, and nothing else in the pipeline notices,
+  because both wheel jobs build from the checkout rather than from the
+  sdist.
+- **The manylinux container ships its own Rust toolchain.** Phase 02's
+  `CIBW_BEFORE_ALL_LINUX` rustup install, its `CIBW_ENVIRONMENT_LINUX`
+  `PATH` edit, and the host `dtolnay/rust-toolchain` step that covered
+  macOS all came out with cibuildwheel; `maturin-action` needs none of
+  them. The phase-02 learnings entry that handed this recipe forward is
+  settled in place.
+- **`ci.yml` never had Cython caching to drop.** The Task 7.2 criterion's
+  first clause was written in the August 2026 analysis against an
+  anticipated shape. `rg -in 'cython' .github/workflows/` returns six
+  hits on `origin/master`, every one prose inside a comment; no step,
+  flag or cache key mentions Cython. The sole caching in the file is
+  `actions/setup-python`'s `cache: pip`, which is unrelated and stays.
 
 ### Task 7.1
 
@@ -69,6 +98,37 @@ cutover and project close.
 
 ## Decisions and Implementation Notes
 
+### Task 7.2
+
+- **`PyO3/maturin-action@v1` over cibuildwheel's maturin support.**
+  cibuildwheel's value here was the CPython matrix and the manylinux
+  container; `abi3-py310` removes the first and maturin-action supplies
+  the second, so keeping it would mean narrowing `CIBW_BUILD` to one
+  version to stop it rebuilding the same wheel five times.
+- **No aarch64 or Windows wheels** — the decision the criterion asks for,
+  default kept. The support surface is unchanged and neither target has a
+  user asking for it. They are a matrix row each under maturin, which is
+  why this is a deliberate no rather than an oversight; `PLAN.md`'s Scope
+  already records it as a cheap follow-up, so no stub was filed.
+- **The two import checks use `--no-deps`.** The claim is that one
+  `cp310-abi3` wheel loads on both ends of the range it advertises, and
+  `hazma/__init__.py` imports only the standard library. Installing
+  numpy/scipy/matplotlib/scikit-image would let a third-party wheel gap
+  on the newest CPython read as an abi3 failure; the full-dependency
+  install smoke stays in `ci.yml`, on every matrix entry.
+- **A path-filtered `pull_request` trigger** on `release.yml` and
+  `pyproject.toml` retires the `[unrun-workflow-cannot-close-a-criterion]`
+  workaround for packaging edits, at the cost of two rare paths rather
+  than every PR. `rust/**` is excluded: `ci.yml` already compiles the
+  crate on both operating systems for every PR. The `publish` job's
+  existing `if: github.event_name == 'release'` gate is what keeps the
+  new trigger from uploading.
+- **One cargo cache per OS across the whole Python matrix.** abi3 links
+  against the limited API, so the cargo artifacts do not vary with the
+  interpreter; `workspaces: rust` points `Swatinem/rust-cache@v2` at the
+  crate's own `[workspace]` root, and pip's in-tree build means both
+  installs in that job reuse `rust/target`.
+
 ### Task 7.1
 
 - `[project] version` is the source of truth; `hazma.VERSION` reads it
@@ -95,6 +155,14 @@ cutover and project close.
 
 ## Files Changed
 
+### Task 7.2
+
+- Workflows: `.github/workflows/release.yml` (rewritten),
+  `.github/workflows/ci.yml` (cargo cache in the `rust` and `test` jobs)
+- Project docs: `../../phases/phase-07-cutover.md` (Prerequisites; Task
+  7.3's enumeration extended), `../../learnings/phase-02-rust-scaffold.md`
+  (two forward pointers settled), this file and the task note
+
 ### Task 7.1
 
 - Build: `pyproject.toml`; `setup.py` and `MANIFEST.in` deleted;
@@ -116,6 +184,21 @@ cutover and project close.
   import check on CPython 3.10 and newest; RTD/Sphinx build;
   `scripts/agents/preflight.sh --closing`.
 
+### Task 7.2
+
+- Both dispatched `release.yml` runs, with `publish` skipped in each;
+  conclusions and the assertion output are pasted in the task note. PR #84
+  then ran it a third time through the new `pull_request` trigger, where
+  `Publish to PyPI` again reported `skipping` — the release gate holding
+  on a real pull-request event, not only under `workflow_dispatch`.
+- The two assertion scripts extracted verbatim from the workflow and run
+  against locally built artifacts, then against eleven mutants — every
+  failure branch fires and the compressed-manylinux shape passes.
+- `ci.yml` dispatched on the branch (it does not run on a branch push):
+  run 33284511292, **all eight jobs success**, both cache steps observed
+  targeting `rust/target` and the five Linux matrix entries deriving one
+  shared key.
+
 ### Task 7.1
 
 - Bare `pytest -q`: **2231 passed, 15 skipped, 12 subtests passed**.
@@ -129,8 +212,10 @@ cutover and project close.
 
 ## Open Questions
 
-- Add aarch64/Windows wheels now that they are cheap? (Task 7.2
-  records the call; default no.)
+- **Answered by Task 7.2 (2026-08-29): no aarch64 or Windows wheels.**
+  The support surface is unchanged and neither has a user asking for it;
+  `PLAN.md`'s Scope keeps them as a cheap follow-up, and each is one
+  matrix row whenever that changes.
 - Should the four tracked editor leftovers under `hazma/` be deleted from
   the repository, not just excluded from the distribution? Handed to Task
   7.3 alongside `requirements.txt` and the `Dockerfile`.
@@ -141,11 +226,12 @@ cutover and project close.
 
 ## Handoff to Next Task
 
-**Tasks 7.2 (release pipeline) and 7.3 (docs sweep) are both unblocked
-and share no files.** Read `../../PLAN.md`, `../README.md`, this file,
-then the phase file — whose Prerequisites block and whose 7.2/7.3 exit
-criteria Task 7.1 rewrote against the post-cutover tree, so they no
-longer need re-verifying by hand.
+**Task 7.3 (documentation sweep) is the only unblocked task**; 7.4 waits
+on it. Read `../../PLAN.md`, `../README.md`, this file, then the phase
+file — whose Prerequisites block carries both the Task 7.1 packaging
+facts and the Task 7.2 release-pipeline facts, and whose 7.3 exit
+criteria enumerate the remaining stale sites rather than describing them.
+Re-derive the line numbers in that enumeration before editing.
 
 **Currently safe to assume:**
 
@@ -154,33 +240,40 @@ longer need re-verifying by hand.
   `manifest-path`, `module-name`, `exclude`, `include`. No `setup.py`, no
   `MANIFEST.in`, no `setuptools`. `test/test_no_cython_remains.py` asserts
   it, and nothing else in `test/` reads a build script any more.
-- **The wheel is already `cp310-abi3` and portable across CPythons.**
-  Task 7.2 owes CI verification of the tag and the two platform wheels,
-  not the tag itself.
+- **The release pipeline is maturin's too, and it has been observed to
+  run.** `release.yml` builds one `cp310-abi3` wheel per platform plus the
+  sdist on `PyO3/maturin-action@v1`; the tag, the sole-`.abi3.so` claim,
+  the 3.10/3.14 imports and the sdist's build inputs are all asserted in
+  the workflow. Task 7.2's criteria are closed against a dispatched run,
+  not against the file.
+- **`release.yml` now has a `pull_request` trigger**, filtered to
+  `release.yml` and `pyproject.toml`. An edit to either is measured by an
+  ordinary PR check; an edit anywhere else still needs
+  `gh workflow run release.yml --ref <branch>`. `publish` stays gated on
+  `github.event_name == 'release'`, which is what makes both safe.
 - **The sdist is 264 files** — `hazma/` + `rust/` + pyproject +
   README/LICENSE/CHANGELOG — and source-installs into a fresh CPython
   3.10 venv. maturin honors `.gitignore` for both artifacts, so build
   output stays out; an untracked *unignored* file does not.
-- **The version lives in `pyproject.toml`'s `[project] version`.** Task
-  7.4's bump edits that line; `preflight.sh --closing` already reads it.
-  Its tooling tendrils were swept: `docs/versioning.md`,
-  `docs/workflow.md`, `docs/agents/{preflight,doc-consistency}.md`, and
-  the three project `PLAN.md` closing paragraphs.
+- **The version lives in `pyproject.toml`'s `[project] version`, and it
+  is on `origin/master`.** Task 7.4's bump edits that line;
+  `preflight.sh --closing` reads it and is no longer vacuous (Task 7.1
+  merged in PR #83).
 - **`pip install -e .` builds release now**, so a `rules.md` rule 12
   benchmark from an editable tree is sound again.
 
 **Currently risky / unknown:**
 
-- **`preflight.sh --closing` is vacuous on a branch cut before Task 7.1
-  merged**: `origin/master`'s `pyproject.toml` has no `[project] version`
-  to compare against, so the gate reports "bump unverifiable" — a FAIL,
-  not a false pass. It resolves once 7.1 is on master, which is before
-  7.4 runs.
 - **An exact assertion against a compiled kernel may be scoped to the
   cargo profile.** Task 7.1 found and fixed one; the suite is green, but
   a newly written bit-equality claim should be checked against both
   profiles before being trusted.
-- **`release.yml` still has no pull-request trigger**, so Task 7.2 cannot
-  measure its own rewrite without an explicit dispatch
-  (`../../../../docs/agents/lessons.md`
-  `[unrun-workflow-cannot-close-a-criterion]`).
+- **A format assertion written against one platform's artifact encodes
+  that platform's shape.** Task 7.2's wheel-tag check passed locally and
+  on macOS and rejected a correct manylinux wheel, because a filename's
+  tag fields are compressed *sets* and only the Linux wheel has more than
+  one member. Both halves of the matrix have to run.
+- **`--paths` on `preflight.sh` feeds black, isort and ruff directly**, so
+  naming a `.yml` file there makes them parse it as Python and the gate
+  goes red on a clean tree. Pass source paths (or the `hazma test`
+  default) and use `--md` for markdown.

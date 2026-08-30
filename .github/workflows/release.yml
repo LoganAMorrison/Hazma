@@ -1,104 +1,238 @@
-# Build wheels + sdist and publish to PyPI when a GitHub release is published.
-# Can also be run manually (workflow_dispatch) to test the build without
-# publishing.
+# Build the abi3 wheels + sdist and publish to PyPI when a GitHub release is
+# published.
+#
+# Two wheels cover every supported interpreter and platform: the crate's
+# `abi3-py310` feature (rust/Cargo.toml) makes one shared object serve every
+# CPython >= 3.10, and maturin tags the wheel `cp310-abi3` from it. Before
+# cython-to-rust Phase 07 this job was a cibuildwheel matrix of five CPython
+# versions x two platforms = ten wheels, each carrying its own copy of the
+# same limited-API extension.
 name: Release
 
 on:
   release:
     types: [published]
   workflow_dispatch:
+  # Nothing else in the repository exercises this file, so an edit to it used
+  # to be unmeasurable until a release ran -- see docs/agents/lessons.md
+  # `[unrun-workflow-cannot-close-a-criterion]`. The path filter keeps that
+  # from costing every pull request: these two files are the packaging inputs
+  # whose edits can break a release build without turning ci.yml red. Rust
+  # source is deliberately absent -- ci.yml already compiles the crate on both
+  # operating systems for every pull request.
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - pyproject.toml
 
 permissions:
   contents: read
 
 jobs:
-  build-wheels:
-    name: Build wheels (${{ matrix.os }})
+  build-wheel:
+    name: Build wheel (${{ matrix.artifact }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact: manylinux-x86_64
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            artifact: macos-arm64
+            target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-        # macOS only in effect: cibuildwheel builds the macOS wheels on
-        # the runner itself, so the host toolchain is the one that builds
-        # hazma._core. The Linux wheels are built inside a manylinux
-        # container that cannot see this one — CIBW_BEFORE_ALL_LINUX
-        # below is their toolchain.
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v4.1.1
-        env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
-          # scipy ships no musllinux wheels, so testing there would compile
-          # scipy from source; not worth the build time.
-          CIBW_SKIP: "*-musllinux*"
-          CIBW_ARCHS_LINUX: "x86_64"
-          CIBW_ARCHS_MACOS: "arm64"
-          # setuptools-rust needs cargo inside the manylinux container.
-          # This is cibuildwheel's documented recipe for Rust projects;
-          # CIBW_ENVIRONMENT_LINUX is what puts the freshly-installed
-          # toolchain on PATH for the build step that follows.
-          CIBW_BEFORE_ALL_LINUX: >-
-            curl -sSf https://sh.rustup.rs
-            | sh -s -- -y --profile minimal --default-toolchain stable
-          CIBW_ENVIRONMENT_LINUX: 'PATH="$HOME/.cargo/bin:$PATH"'
-          # Import a compiled extension module, not just the (pure-Python)
-          # top-level package, so a mistagged or broken wheel fails the build.
-          # `hazma._core` is the only one left: cython-to-rust Task 6.4
-          # deleted the last Cython extension, which this command also named
-          # until then.
-          CIBW_TEST_COMMAND: >-
-            python -c "import hazma._core"
-      - name: Assert every wheel ships the Rust extension as abi3
-        # The wheels themselves stay CPython-tagged. The last Cython
-        # extension went in cython-to-rust Task 6.4, so that is no longer
-        # what holds them there — a wheel tag is a property of the
-        # distribution, and setting it is Phase 07 Task 7.2's job, which
-        # rebuilds this workflow on maturin. What is checkable here is
-        # still extension-level: PyO3's abi3-py310 feature
-        # makes setuptools-rust install the cdylib as `_core.abi3.so`,
-        # so that filename inside the archive *is* the limited-API
-        # assertion. A plain `_core.cpython-312-*.so` would mean the
-        # feature silently stopped applying.
+
+      - name: Build the wheel with maturin
+        uses: PyO3/maturin-action@v1
+        with:
+          command: build
+          target: ${{ matrix.target }}
+          # Linux only: the action builds inside a manylinux container that
+          # ships its own Rust toolchain and CPythons, which is why no
+          # rustup step appears in this job. `auto` takes the container's
+          # highest applicable policy rather than pinning one here; the
+          # resulting platform tag is asserted below, not assumed.
+          manylinux: auto
+          # `--locked` makes the published artifact a build of the committed
+          # rust/Cargo.lock rather than of whatever resolves on the day.
+          # No `-i`: for an abi3 crate maturin emits a single wheel however
+          # many interpreters it finds, and the "exactly one wheel" assertion
+          # below is what holds that to be true.
+          args: --release --locked --out dist
+
+      - name: Assert the wheel is a single cp310-abi3 distribution
+        # Two distinct claims, both checkable from the archive alone:
+        #
+        #   distribution level  the filename and the .dist-info/WHEEL `Tag:`
+        #                       lines both say `cp310-abi3`, so one wheel
+        #                       installs on every CPython >= 3.10;
+        #   extension level     the only shared object inside is
+        #                       `hazma/_core.abi3.so`, so the extension
+        #                       really was built against the limited API.
+        #
+        # Keeping both is the point of docs/agents/lessons.md
+        # `[wheel-tag-vs-extension-abi]`: a wheel tag is a property of the
+        # distribution and can disagree with what the distribution contains.
+        # Under setuptools-rust it did -- the wheel was tagged `cp314-cp314`
+        # while carrying a correct `_core.abi3.so` (cython-to-rust Task 7.1).
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib, sys, zipfile
+          import pathlib
+          import sys
+          import zipfile
 
-          wheels = sorted(pathlib.Path("wheelhouse").glob("*.whl"))
-          if not wheels:
-              sys.exit("no wheels in wheelhouse/ — nothing was verified")
-          bad = []
-          for wheel in wheels:
-              names = zipfile.ZipFile(wheel).namelist()
-              ok = "hazma/_core.abi3.so" in names
-              print(f"{'ok  ' if ok else 'FAIL'} {wheel.name}")
-              if not ok:
-                  bad.append(wheel.name)
-          if bad:
-              sys.exit(f"missing hazma/_core.abi3.so in: {', '.join(bad)}")
-          print(f"{len(wheels)} wheel(s) carry hazma/_core.abi3.so")
+          wheels = sorted(pathlib.Path("dist").glob("*.whl"))
+          if len(wheels) != 1:
+              sys.exit(
+                  "expected exactly one abi3 wheel in dist/, found "
+                  f"{len(wheels)}: {[w.name for w in wheels]}"
+              )
+          wheel = wheels[0]
+          print(f"wheel: {wheel.name}")
+
+          # A wheel filename's last three fields are compressed tag *sets*
+          # (PEP 425): each is dot-separated, and the wheel is tagged with
+          # their cross product. The manylinux wheel exercises this and the
+          # macOS one does not -- `manylinux_2_17_x86_64.manylinux2014_x86_64`
+          # is one filename field standing for two platform tags, which
+          # `.dist-info/WHEEL` then writes on two `Tag:` lines.
+          fields = wheel.stem.split("-")
+          if len(fields) != 5:
+              sys.exit(f"cannot parse wheel filename into 5 fields: {wheel.stem}")
+          python_tags, abi_tags, platform_tags = (
+              field.split(".") for field in fields[2:]
+          )
+          if (python_tags, abi_tags) != (["cp310"], ["abi3"]):
+              sys.exit(
+                  f"filename tag is {fields[2]}-{fields[3]}, expected cp310-abi3"
+              )
+          print(f"platform tags: {platform_tags}")
+
+          archive = zipfile.ZipFile(wheel)
+          names = archive.namelist()
+
+          metadata = [
+              name
+              for name in names
+              if name.endswith(".dist-info/WHEEL")
+          ]
+          if len(metadata) != 1:
+              sys.exit(f"expected one .dist-info/WHEEL, found {metadata}")
+          declared = {
+              line.split(":", 1)[1].strip()
+              for line in archive.read(metadata[0]).decode().splitlines()
+              if line.startswith("Tag:")
+          }
+          expected = {
+              f"{python}-{abi}-{platform}"
+              for python in python_tags
+              for abi in abi_tags
+              for platform in platform_tags
+          }
+          if declared != expected:
+              sys.exit(
+                  f"WHEEL declares Tag: {sorted(declared)}, "
+                  f"filename expands to {sorted(expected)}"
+              )
+          print(f"WHEEL Tag: {sorted(declared)}")
+
+          shared_objects = [
+              name for name in names if name.endswith((".so", ".pyd", ".dylib"))
+          ]
+          if shared_objects != ["hazma/_core.abi3.so"]:
+              sys.exit(
+                  "expected hazma/_core.abi3.so as the only compiled object, "
+                  f"found {shared_objects}"
+              )
+          print("extension: hazma/_core.abi3.so")
           PY
+
+      # The two ends of the range the `cp310-abi3` tag claims. They are the
+      # oldest and newest entries of ci.yml's test matrix and of
+      # pyproject.toml's `requires-python`; move all three together.
+      #
+      # `--no-deps` on purpose. The claim under test is that this one wheel
+      # loads on both interpreters, and installing numpy/scipy/matplotlib/
+      # scikit-image alongside it would let a third-party wheel gap on the
+      # newest CPython read as an abi3 failure. Importing `hazma._core` needs
+      # none of them: `hazma/__init__.py` imports only the standard library.
+      # The full-dependency install smoke is ci.yml's `Import smoke test`,
+      # which runs on every matrix entry.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.10"
+      - name: Import the wheel on CPython 3.10
+        # Outside the checkout, so the installed package is what gets
+        # imported rather than the source tree next to it.
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --no-deps "$GITHUB_WORKSPACE"/dist/*.whl
+          python -c "import hazma, hazma._core; print(hazma.VERSION, hazma._core.__file__)"
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Import the wheel on CPython 3.14
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --no-deps "$GITHUB_WORKSPACE"/dist/*.whl
+          python -c "import hazma, hazma._core; print(hazma.VERSION, hazma._core.__file__)"
+
       - uses: actions/upload-artifact@v7
         with:
-          name: wheels-${{ matrix.os }}
-          path: wheelhouse/*.whl
+          name: wheel-${{ matrix.artifact }}
+          path: dist/*.whl
 
   build-sdist:
     name: Build sdist
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+
+      - name: Build the sdist with maturin
+        uses: PyO3/maturin-action@v1
         with:
-          python-version: "3.12"
-      - name: Build sdist
+          command: sdist
+          args: --out dist
+
+      - name: Check the sdist
+        # `twine check` reads the metadata; it cannot tell whether the
+        # archive holds enough to build from. That is what the second half
+        # asserts -- an sdist without the crate named by `[tool.maturin]
+        # manifest-path` is unbuildable, and nothing else in the pipeline
+        # would notice, since the wheel jobs build from the checkout.
         run: |
-          python -m pip install build twine
-          python -m build --sdist
-          python -m twine check dist/*
+          python -m pip install --upgrade pip twine
+          python -m twine check dist/*.tar.gz
+          python3 - <<'PY'
+          import pathlib
+          import sys
+          import tarfile
+
+          sdists = sorted(pathlib.Path("dist").glob("*.tar.gz"))
+          if len(sdists) != 1:
+              sys.exit(f"expected one sdist, found {[s.name for s in sdists]}")
+          with tarfile.open(sdists[0]) as archive:
+              names = archive.getnames()
+          root = names[0].split("/")[0]
+          required = [
+              f"{root}/pyproject.toml",
+              f"{root}/rust/Cargo.toml",
+              f"{root}/rust/Cargo.lock",
+              f"{root}/hazma/__init__.py",
+          ]
+          missing = [path for path in required if path not in names]
+          if missing:
+              sys.exit(f"sdist {sdists[0].name} is missing {missing}")
+          print(f"{sdists[0].name}: {len(names)} members, all build inputs present")
+          PY
+
       - uses: actions/upload-artifact@v7
         with:
           name: sdist
@@ -106,9 +240,11 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    # Only publish on an actual release; manual runs just exercise the build.
+    # Only publish on an actual release. Manual runs and the packaging-path
+    # pull-request runs above just exercise the build, and this condition is
+    # the only thing that keeps them from uploading.
     if: github.event_name == 'release'
-    needs: [build-wheels, build-sdist]
+    needs: [build-wheel, build-sdist]
     runs-on: ubuntu-latest
     # Registered as the environment on PyPI's trusted publisher for hazma, so
     # only this job can mint an upload token.  Its deployment rule restricts

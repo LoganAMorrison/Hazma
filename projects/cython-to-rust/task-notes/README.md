@@ -28,7 +28,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **Complete (2026-08-27)** — all four tasks done; zero `.pyx`/`.pxd` remain; [learnings](../learnings/phase-06-mediator-spectra.md) |
-| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | **In progress** — Task 7.1 complete (2026-08-27); 7.2 and 7.3 unblocked |
+| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | **In progress** — Tasks 7.1–7.2 complete (7.2 on 2026-08-29); 7.3 unblocked |
 
 ```text
 00 ──► 01 ──► 02 ──► 03 ──► 04 ──► 06 ──► 07
@@ -276,13 +276,23 @@ points are on `hazma._core`, and after Task 6.4
 `find hazma -name "*.pyx" -o -name "*.pxd"` returns **nothing**.
 
 **Phase 07 is in progress: Task 7.1 landed the maturin cutover on
-2026-08-27, and Tasks 7.2 (release pipeline) and 7.3 (docs sweep) are
-both unblocked and share no files.** Read [`../PLAN.md`](../PLAN.md),
-this file, then
-[`phase-07/README.md`](phase-07/README.md)'s `## Handoff` and Task 7.1's
+2026-08-27 and Task 7.2 rebuilt the release pipeline on it on 2026-08-29,
+leaving Task 7.3 (docs sweep) the only unblocked task.** Read
+[`../PLAN.md`](../PLAN.md), this file, then
+[`phase-07/README.md`](phase-07/README.md)'s `## Handoff` and Task 7.2's
 note. The four Phase-07 risks Task 6.4 flagged are all discharged — and
 all four were real; `phase-06/README.md` is history now
 ([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
+
+**The release pipeline is maturin's too, and it has been observed to
+run.** `release.yml` builds one `cp310-abi3` wheel per platform plus the
+sdist on `PyO3/maturin-action@v1`, replacing a ten-wheel cibuildwheel
+matrix, and asserts the tag, the sole-`.abi3.so` claim, imports on
+CPython 3.10 and 3.14, and the sdist's build inputs inside the workflow.
+It also now runs on pull requests touching `release.yml` or
+`pyproject.toml`, so a packaging edit is no longer unmeasurable until a
+release happens; `publish` stays gated on
+`github.event_name == 'release'`.
 
 **The build is maturin and nothing else.** `[build-system] requires` is
 `["maturin>=1.5,<2.0"]`; `setup.py` and `MANIFEST.in` are deleted;

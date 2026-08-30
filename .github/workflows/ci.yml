@@ -58,6 +58,11 @@ jobs:
         # below, and hence a Python on PATH here.
         with:
           python-version: "3.12"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          # The crate declares its own `[workspace]`, so the workspace root
+          # is `rust/` and the target directory it caches is `rust/target`.
+          workspaces: rust
       - name: Check formatting with rustfmt
         run: cargo fmt --manifest-path rust/Cargo.toml --check
       - name: Lint with clippy
@@ -94,6 +99,16 @@ jobs:
         # toolchain step), but nothing in this repo required them to keep
         # doing so, and an image refresh that dropped Rust would have taken
         # every entry down at once.
+      - uses: Swatinem/rust-cache@v2
+        # One cache per operating system, shared across the whole Python
+        # matrix. That is sound because the crate is abi3 (`abi3-py310` in
+        # rust/Cargo.toml): it links against CPython's limited API rather
+        # than against the interpreter of the moment, so the cargo artifacts
+        # the matrix entries produce are the same artifacts. pip builds
+        # in-tree, so `pip install .` and `pip install -e .` below both
+        # populate and reuse `rust/target` here rather than a temporary copy.
+        with:
+          workspaces: rust
       - name: Build and install hazma
         run: |
           python -m pip install --upgrade pip
