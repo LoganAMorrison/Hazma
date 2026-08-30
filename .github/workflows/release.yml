@@ -94,15 +94,23 @@ jobs:
           wheel = wheels[0]
           print(f"wheel: {wheel.name}")
 
+          # A wheel filename's last three fields are compressed tag *sets*
+          # (PEP 425): each is dot-separated, and the wheel is tagged with
+          # their cross product. The manylinux wheel exercises this and the
+          # macOS one does not -- `manylinux_2_17_x86_64.manylinux2014_x86_64`
+          # is one filename field standing for two platform tags, which
+          # `.dist-info/WHEEL` then writes on two `Tag:` lines.
           fields = wheel.stem.split("-")
           if len(fields) != 5:
               sys.exit(f"cannot parse wheel filename into 5 fields: {wheel.stem}")
-          _, _, python_tag, abi_tag, platform_tag = fields
-          if (python_tag, abi_tag) != ("cp310", "abi3"):
+          python_tags, abi_tags, platform_tags = (
+              field.split(".") for field in fields[2:]
+          )
+          if (python_tags, abi_tags) != (["cp310"], ["abi3"]):
               sys.exit(
-                  f"filename tag is {python_tag}-{abi_tag}, expected cp310-abi3"
+                  f"filename tag is {fields[2]}-{fields[3]}, expected cp310-abi3"
               )
-          print(f"platform tag: {platform_tag}")
+          print(f"platform tags: {platform_tags}")
 
           archive = zipfile.ZipFile(wheel)
           names = archive.namelist()
@@ -114,15 +122,23 @@ jobs:
           ]
           if len(metadata) != 1:
               sys.exit(f"expected one .dist-info/WHEEL, found {metadata}")
-          declared = sorted(
+          declared = {
               line.split(":", 1)[1].strip()
               for line in archive.read(metadata[0]).decode().splitlines()
               if line.startswith("Tag:")
-          )
-          expected = [f"cp310-abi3-{platform_tag}"]
+          }
+          expected = {
+              f"{python}-{abi}-{platform}"
+              for python in python_tags
+              for abi in abi_tags
+              for platform in platform_tags
+          }
           if declared != expected:
-              sys.exit(f"WHEEL declares Tag: {declared}, expected {expected}")
-          print(f"WHEEL Tag: {declared[0]}")
+              sys.exit(
+                  f"WHEEL declares Tag: {sorted(declared)}, "
+                  f"filename expands to {sorted(expected)}"
+              )
+          print(f"WHEEL Tag: {sorted(declared)}")
 
           shared_objects = [
               name for name in names if name.endswith((".so", ".pyd", ".dylib"))
