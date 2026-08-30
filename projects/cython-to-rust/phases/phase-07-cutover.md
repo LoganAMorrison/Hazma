@@ -20,9 +20,14 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   layout; `setup.py` and `MANIFEST.in` are deleted; the version is
   static in `[project] version`, with `hazma.VERSION` reading it back
   from `importlib.metadata`; pytest config moved to pyproject in
-  Phase 01. **Not yet touched:** release.yml still uses cibuildwheel
-  (cp310–cp314 × {linux x86_64, macos arm64} = 10 wheels, sdist job,
-  PyPI trusted publishing), which is Task 7.2's.
+  Phase 01.
+- Release pipeline, as of Task 7.2 (2026-08-29): release.yml is built on
+  `PyO3/maturin-action@v1` and produces one `cp310-abi3` wheel per
+  platform plus the sdist, replacing the cibuildwheel matrix
+  (cp310–cp314 × {linux x86_64, macos arm64} = 10 wheels) it carried
+  until then. The trusted-publishing job is unchanged and still gated on
+  `github.event_name == 'release'`; the workflow also runs on pull
+  requests that touch `release.yml` or `pyproject.toml`.
 
 ## Tasks
 
@@ -120,6 +125,20 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   | `environment.md` | 67 | "exactly like a `.pyx`" inside the `.rs` rebuild note |
   | `environment.md` | 77–84 | "Deleting a `.pyx` does not make its module unimportable" — the stale-`.so` note; its *mechanism* is still true of `.rs`, so rewrite rather than delete |
   | `environment.md` | 106–107 | "Never hand-edit generated `.c` / `.cpp`. They are cythonize output" |
+
+  **Extended by Task 7.2 (2026-08-29):** two more sites, in the skills
+  rather than in those two files, and invisible to the grep above because
+  they name setuptools instead of Cython. Both tell a reviewer to check
+  new package data against a table `pyproject.toml` no longer has:
+
+  | File | Line | What is wrong |
+  | --- | --- | --- |
+  | `.claude/skills/review-plan/SKILL.md` | 217–219 | "New `*.dat` / `*.csv` under `hazma/` must be registered in `[tool.setuptools.package-data]`" — maturin ships the whole `hazma/` tree, so there is nothing to register |
+  | `.claude/skills/review-pr/SKILL.md` | 107–109 | the same claim, as a review finding to look for |
+  | `.codex/skills/review-pr/SKILL.md` | 30 | "package data registration" in the lens summary — the pointer to the claim above |
+
+  Derived from `rg -n 'package-data|package data' .claude/ .codex/`; the
+  `.codex/` copies carry only that one pointer, not the claim itself.
 
 - README / docs/source install instructions updated (Rust toolchain
   only needed for source builds; wheels cover normal installs);
