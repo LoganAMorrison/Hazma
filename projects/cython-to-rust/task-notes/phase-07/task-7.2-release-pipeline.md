@@ -244,6 +244,36 @@ the archives:
 | sdist without `rust/Cargo.toml` | 1 | `missing ['hazma-2.1.0/rust/Cargo.toml']` |
 | two sdists in `dist/` | 1 | `expected one sdist, found [...]` |
 
+### ci.yml, observed running
+
+`ci.yml` runs on `push: branches: [master]` and `pull_request`, so a
+branch push does not exercise it. Dispatched instead:
+`gh workflow run ci.yml --ref claude/cython-to-rust/task-7.2-release-pipeline`
+→ [33284511292](https://github.com/LoganAMorrison/Hazma/actions/runs/33284511292),
+**all eight jobs success** (Lint; Rust; Test on ubuntu 3.10/3.11/3.12/
+3.13/3.14 and macOS 3.14).
+
+The cache steps executed and targeted the crate's own workspace:
+
+```text
+Rust (fmt, clippy, test)     /home/runner/work/Hazma/Hazma/rust/target
+                             v0-rust-rust-Linux-x64-0b9fd15e
+                             No cache found. ... Saving cache ...
+Test (ubuntu-latest, py3.10) v0-rust-test-Linux-x64-0b9fd15e
+Test (ubuntu-latest, py3.11) v0-rust-test-Linux-x64-0b9fd15e
+Test (ubuntu-latest, py3.12) v0-rust-test-Linux-x64-0b9fd15e
+Test (ubuntu-latest, py3.13) v0-rust-test-Linux-x64-0b9fd15e
+Test (ubuntu-latest, py3.14) v0-rust-test-Linux-x64-0b9fd15e
+Test (macos-latest,  py3.14) v0-rust-test-Darwin-arm64-2bc65c5a
+```
+
+That is the "one cache per operating system across the whole Python
+matrix" claim, measured: all five Linux entries derive the same key, and
+the key carries the job name and the runner architecture but nothing
+about the interpreter. `No cache found` on this first run is expected —
+the saving half is what a first run can show, and every job reached
+`... Saving cache ...`.
+
 ### Local gates
 
 ```text
@@ -450,8 +480,8 @@ passed** as Task 7.1, from a `pip install -e .` tree whose
 | importability on oldest (3.10) and newest CPython | `Import the wheel on CPython 3.10` / `3.14`, both platforms; output pasted above |
 | aarch64/Windows decision recorded | §Decisions bullet 2 — no; the phase README's Open Questions entry now answers rather than poses it |
 | ci.yml: drop per-version Cython caching | none existed; §Findings bullet 2 carries the derivation |
-| ci.yml: add cargo caching | `Swatinem/rust-cache@v2` in the `rust` and `test` jobs |
-| ci.yml: matrix unchanged | `git diff origin/master -- .github/workflows/ci.yml` adds only the two cache steps |
+| ci.yml: add cargo caching | `Swatinem/rust-cache@v2` in the `rust` and `test` jobs; run 33284511292 shows both executing against `rust/target` |
+| ci.yml: matrix unchanged | `git diff origin/master -- .github/workflows/ci.yml` adds only the two cache steps; run 33284511292 has the same eight jobs, all green |
 | workflow observed to run, publish gated | two dispatches; `publish: skipped` in both |
 
 ### Task-note self-consistency

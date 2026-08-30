@@ -191,6 +191,10 @@ cutover and project close.
 - The two assertion scripts extracted verbatim from the workflow and run
   against locally built artifacts, then against eleven mutants — every
   failure branch fires and the compressed-manylinux shape passes.
+- `ci.yml` dispatched on the branch (it does not run on a branch push):
+  run 33284511292, **all eight jobs success**, both cache steps observed
+  targeting `rust/target` and the five Linux matrix entries deriving one
+  shared key.
 
 ### Task 7.1
 
