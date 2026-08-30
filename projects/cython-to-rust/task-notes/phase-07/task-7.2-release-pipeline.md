@@ -161,6 +161,23 @@ narrowing.
   the `pip install -e .` in that job populate and reuse `rust/target`
   rather than a temporary copy.
 
+### Review round 1 (PR #84)
+
+- **The changed-file count was stale in five places** and the citation
+  sweep ran over four of five documents, because "four markdown files"
+  was written before `task-notes/README.md` joined the diff. Every
+  affected block is re-run rather than re-numbered, and the count now has
+  a row in the count sweep — it had none, which is why nothing caught it.
+- **The forward-looking-phrase sweep printed a repo-wide command above
+  path-scoped output.** Re-run scoped to `$(git diff origin/master
+  --name-only)`, which returns **five** hits, not two: the three extra
+  are this note quoting the phrases it falsified, now classified rather
+  than declared absent.
+- Both are class-shaped and cited on the existing
+  `[derived-count-not-rederived]` and `[sweep-block-written-from-intent]`
+  ledger entries; the second one's rule text gained the "the command must
+  be the one that produced the output" clause it did not have.
+
 ## Files Changed
 
 - `.github/workflows/release.yml` — rewritten on maturin: two wheel
@@ -177,6 +194,10 @@ narrowing.
   deleted (the rustup-in-container recipe, the missing PR trigger).
 - `projects/cython-to-rust/task-notes/phase-07/README.md` and this note —
   status, findings, handoff.
+- `projects/cython-to-rust/task-notes/README.md` — the project Phases
+  table row and the cross-phase handoff.
+- `docs/agents/{lessons,lessons-examples}.md` — review round 1: this PR
+  cited on two existing classes, with a worked example for each.
 
 ## Verification
 
@@ -284,30 +305,37 @@ the saving half is what a first run can show, and every job reached
 
 ### Local gates
 
+The `--md` list is derived, not typed, so it cannot fall behind the diff
+the way the four-file list it replaces did:
+
 ```text
 $ scripts/agents/preflight.sh --paths "hazma test" \
-    --md "<the four markdown files this diff touches>"
+    --md "$(git diff origin/master --name-only | grep '\.md$' | tr '\n' ' ')"
 PASS   black --check           hazma test
 FAIL   isort --check-only      run `isort hazma test` and re-check
 FAIL   ruff check              see output below
 PASS   cargo fmt --check       rust/
 PASS   cargo clippy            rust/
 PASS   cargo test              rust/
-PASS   pytest                  2231 passed, 15 skipped, 12 subtests passed in 29.52s
+PASS   pytest                  2231 passed, 15 skipped, 12 subtests passed in 30.62s
 PASS   import hazma            version 2.1.0
-PASS   markdownlint            <the four files>
+PASS   markdownlint            docs/agents/lessons-examples.md docs/agents/lessons.md
+                               projects/cython-to-rust/learnings/phase-02-rust-scaffold.md
+                               projects/cython-to-rust/phases/phase-07-cutover.md
+                               projects/cython-to-rust/task-notes/README.md
+                               projects/cython-to-rust/task-notes/phase-07/README.md
+                               projects/cython-to-rust/task-notes/phase-07/task-7.2-release-pipeline.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 ```
+
+(The `markdownlint` row is one line in the real output; wrapped here.)
 
 The two red rows are inherited, not introduced:
 `docs/followups/todo/preflight-isort-ruff-red-on-trunk.md` records both
 gates as failing on unmodified trunk code, and
 `git diff origin/master --name-only | grep -E '\.py$|\.pyx$|\.rs$'`
-returns nothing, so this diff cannot have moved either count. The
-markdownlint row was red on the first run — four `MD013` line-length
-violations in this note — and the lines were rewrapped rather than the
-rule relaxed.
+returns nothing, so this diff cannot have moved either count.
 
 - `cargo metadata --manifest-path rust/Cargo.toml --locked` succeeds, so
   `--locked` in the wheel build cannot fail on a stale lockfile.
@@ -339,8 +367,10 @@ cibuildwheel Linux job alone ran 16m 25s of its 16m 30s.
 
 ## Numerical impact
 
-None. The diff touches two GitHub Actions workflow files and four project
-documents; no `hazma/` module, no `rust/` source, no test. Verified:
+None. `git diff origin/master --name-only` returns **nine** paths: two
+GitHub Actions workflow files, five `projects/` documents, and the two
+`docs/agents/` lessons files review round 1 added. No `hazma/` module, no
+`rust/` source, no test. Verified:
 `git diff origin/master --stat` lists no path under `hazma/`, `rust/` or
 `test/`, and the bare `pytest` in the preflight table above reports the
 same **2231 passed, 15 skipped, 12 subtests passed** as Task 7.1.
@@ -417,42 +447,67 @@ criterion, the phase-02 learnings settlement).
 
 ### Line-number citation sweep
 
+Over every Markdown file this diff changes, derived rather than listed:
+
+```sh
+git diff origin/master --name-only | grep '\.md$' | tr '\n' '\0' \
+  | xargs -0 python scripts/agents/check_doc_citations.py
+```
+
 ```text
-$ python scripts/agents/check_doc_citations.py \
-    projects/cython-to-rust/phases/phase-07-cutover.md \
-    projects/cython-to-rust/learnings/phase-02-rust-scaffold.md \
-    projects/cython-to-rust/task-notes/phase-07/README.md \
-    projects/cython-to-rust/task-notes/phase-07/task-7.2-release-pipeline.md
-docs scanned: 4
-in-repo citations checked: 0
-external citations skipped: 1
+docs scanned: 7
+in-repo citations checked: 1
+  resolved by suffix: 1
+external citations skipped: 2
+  hazma/_utils/constants.pxd (1)
   hazma/spectra/_neutrino/_muon.pyx (1)
 out-of-range or ambiguous: NONE
 ```
 
-The skipped `.pyx` is pre-existing in the phase-02 learnings and is the
-known `docs/followups/todo/citation-checker-skips-deleted-inrepo-files.md`
-behavior, not something this diff introduced. The line numbers this diff
-*does* add — Task 7.3's three skill sites — are stated with their
-derivation command in the phase file, so the next reader re-derives them
-rather than trusting them.
+Both skipped citations are pre-existing — the `.pxd` in
+`task-notes/README.md`, the `.pyx` in the phase-02 learnings — and both
+are the known
+`docs/followups/todo/citation-checker-skips-deleted-inrepo-files.md`
+behavior: the checker cannot bounds-check a citation whose file the port
+deleted. Neither was introduced here, and nothing is out of range. The
+line numbers this diff *does* add — Task 7.3's three skill sites — are
+stated in the phase file with the command that derives them, so the next
+reader re-derives rather than trusts them.
 
 ### Forward-looking phrase sweep
 
-Over the six touched files:
+Scoped to the paths this diff touches, so the command reproduces the
+output beneath it. Counted per file rather than per line: this block
+contains the pattern it greps for, so its own line numbers move whenever
+it is edited, and a pinned `file:line` listing here would be stale before
+it was committed.
 
 ```sh
-rg -n '(Task 7\.[0-9] will|will be added|still pending|Not yet touched|still has no pull-request|Not started)'
+rg -c '(Task 7\.[0-9] will|will be added|still pending|Not yet touched|still has no pull-request|Not started)' \
+  $(git diff origin/master --name-only)
 ```
 
 ```text
-task-notes/phase-07/README.md:22   KEPT  | 7.3 | ... | Not started |
-task-notes/phase-07/README.md:23   KEPT  | 7.4 | ... | Not started |
+projects/cython-to-rust/task-notes/phase-07/README.md:2
+projects/cython-to-rust/task-notes/phase-07/task-7.2-release-pipeline.md:5
+docs/agents/lessons-examples.md:1
 ```
 
-Both are live status in the Tasks table and correct. "Not yet touched"
-and "still has no pull-request trigger", the two phrases this task
-falsified, return nothing.
+Eight hits, all kept, and **none of them asserts a falsified phrase**:
+
+- The two in the phase README are live status — the `Not started` cells
+  for Tasks 7.3 and 7.4 in the Tasks table.
+- Five are in this note: §Plan Impact quoting the "Not yet touched"
+  Prerequisites text it replaced, and this block's own `rg` pattern,
+  pasted output and commentary.
+- One is the worked example this round added under
+  `[sweep-block-written-from-intent]` in `docs/agents/lessons-examples.md`,
+  which quotes the pattern to explain the finding.
+
+The claim worth making is the negative one, and the identifier sweep
+above is what carries it: no *assertion* of "Not yet touched" or "still
+has no pull-request trigger" survives in the phase file or the phase-02
+learnings, which are the two documents that made them.
 
 ### Count sweep
 
@@ -466,12 +521,23 @@ falsified, return nothing.
 | §Verification 16m 30s → 1m 18s | `gh run view <id> --json createdAt,updatedAt` | 05:53:39→06:10:09; 00:45:05→00:46:23 | OK |
 | §Verification "Linux job alone ran 16m 25s" | same, `jobs[].startedAt/completedAt` | 05:53:43→06:10:08 | OK |
 | Exit criterion "2 abi3 wheels" | the green run's job list, plus the in-workflow assertion | 2 wheel jobs, one wheel each | OK |
+| §Numerical impact "nine paths … two workflow files, five `projects/` documents, two `docs/agents/`" | `git diff origin/master --name-only`, then `grep -c` per prefix | 9 = 2 + 5 + 2 | OK |
+| §Verification "docs scanned: 7" | `git diff origin/master --name-only \| grep -c '\.md$'` | 7 | OK |
+| §Verification forward sweep "eight hits" | the `rg -c` in that block, summed | 2 + 5 + 1 = 8 | OK |
+
+The last three rows exist because this table did not have them. The
+changed-file count was written once as "four" and copied to four more
+places, and nothing in the sweep re-derived it — which is how it survived
+into review after `task-notes/README.md` joined the diff. A count that
+appears in the note but not in this table is a count nothing checks, and
+this one proved the point twice: adding the two lessons files during the
+review round moved it again, from seven to nine, and the row caught it.
 
 ### Numerical-impact statement
 
 **No public value changes (verified: `git diff origin/master --stat`
 lists no path under `hazma/`, `rust/` or `test/`).** The diff is two
-workflow files and four project documents. The bare `pytest` in the
+workflow files and seven Markdown documents. The bare `pytest` in the
 preflight table reports the same **2231 passed, 15 skipped, 12 subtests
 passed** as Task 7.1, from a `pip install -e .` tree whose
 `hazma._core.__file__` resolves inside this worktree. No entry is owed to

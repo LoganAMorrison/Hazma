@@ -55,6 +55,19 @@ cites a real PR.
   -q | awk -F'::' '{print $2}' | sort | uniq -c`, `grep -c '#\[test\]'` —
   so the next reader re-runs it instead of trusting it.
 
+- [derived-count-not-rederived] The count most likely to go stale is the
+  one describing **your own diff**, because it is written early and the
+  diff keeps growing. PR #84 (cython-to-rust Task 7.2) wrote "the four
+  markdown files this diff touches" into its task note, then added
+  `task-notes/README.md` to the diff two commits later. The number was by
+  then in five places — a pasted `preflight.sh` invocation and its
+  `markdownlint` row, two `## Numerical impact` sentences, and a
+  four-argument `check_doc_citations.py` command that consequently
+  scanned four of five documents. The note's own count sweep re-derived
+  eight other numbers and had no row for this one, so nothing caught it;
+  review did. `git diff origin/master --name-only | grep -c '\.md$'`
+  answers it in one command, and it now has a sweep row.
+
 ### measurement-taken-before-the-task-ended
 
 - [measurement-taken-before-the-task-ended] A number measured *correctly*,
@@ -776,6 +789,19 @@ cites a real PR.
   *claim*, not the digit — both stale sites also carried the superseded
   justification ("bounds step-selection spread") and omitted the solver
   override that made the new value portable.
+
+- [sweep-block-written-from-intent] A subtler variant: the block *was*
+  written last from real output, but the command printed beside it is not
+  the command that produced it. PR #84's forward-looking-phrase sweep
+  showed a bare repo-wide
+  `rg -n '(Task 7\.[0-9] will|…|Not started)'` above two hits and the
+  conclusion that the falsified phrases "return nothing". Run as written
+  it returns matches from all over `projects/`; run as actually executed —
+  scoped to the touched files — it returns five, three of them the note
+  quoting the very phrases it had just declared absent. Scope the command
+  in the block to what you ran (`$(git diff origin/master --name-only)`
+  makes the scope self-deriving), and classify every hit, including the
+  ones your own note reintroduces as quotations.
 
 ### sign-copied-from-a-defect-description
 

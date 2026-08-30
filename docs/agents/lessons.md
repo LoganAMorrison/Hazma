@@ -63,7 +63,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [derived-count-not-rederived] Every count in a plan, note or PR body — your
   own artifacts included — is re-derived from source with a stated command at
   write time, and the command is quoted next to the number so the next reader
-  re-runs it instead of trusting it (PR #35, #59).
+  re-runs it instead of trusting it. A count describing *your own diff* goes
+  stale the moment the diff grows, so give it a row in the count sweep like any
+  other — an uncounted count is one nothing re-checks (PR #35, #59, #84).
 - [measurement-taken-before-the-task-ended] Re-run every measurement against the
   final tree after your last edit; take both halves of a before/after on the
   same tree and environment; derive breakdowns from the command so the parts
@@ -202,9 +204,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   outward (PR #71).
 - [sweep-block-written-from-intent] Write the stale-state sweep block last, by
   pasting command output after every prose edit is frozen; "I remember fixing
-  that" is a claim to re-check, not evidence. The same rule binds any inventory
-  of what a task is *deferring* — enumerate it from the grep, not from memory
-  (PR #71, #78, #83).
+  that" is a claim to re-check, not evidence. The command you paste must be the
+  one that produced the output beside it — a narrowed run written up under a
+  repo-wide command reads as a clean sweep and is unreproducible. The same rule
+  binds any inventory of what a task is *deferring* — enumerate it from the
+  grep, not from memory (PR #71, #78, #83, #84).
 - [sign-copied-from-a-defect-description] A delta quoted from a bug report
   carries the *defect's* sign and the repair's is the opposite with the same
   magnitude; restate the endpoints, or say "magnitude", when you copy a figure
