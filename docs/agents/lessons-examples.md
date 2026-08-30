@@ -517,6 +517,26 @@ cites a real PR.
   skipped, and the assertion step reported `5 wheel(s) carry
   hazma/_core.abi3.so` per OS).
 
+- **When the dispatch cannot reach the job, revise the criterion.** A
+  criterion can be *structurally* unsatisfiable rather than merely
+  unmeasured, and then dispatching does not help. PR #86 (cython-to-rust
+  Task 7.4, the closing PR) inherited "a release candidate builds, tests,
+  and **publishes** from CI". `release.yml`'s `publish` job is gated
+  `if: github.event_name == 'release'`; a release needs the `3.0.0` tag;
+  that tag exists only once the closing PR merges — so the criterion
+  gated on an event that satisfying it would first have to enable.
+  Holding closure is a deadlock, not a stricter gate. The first attempt
+  split the difference and marked the phase "Met … with one clause
+  qualified" while the same paragraph documented the clause as unmet,
+  which review blocked. The fix was to revise the criterion to what
+  closure can attest (both wheels and the sdist built, the workflow's own
+  assertions passed, the `publish` gate observed holding on a non-release
+  event), reassign the upload to the release manager rather than drop it,
+  and state the residual risk in place — trusted publishing under
+  `maturin-action` had still never executed. **Test for this shape: ask
+  what event satisfying the criterion requires, and whether the work the
+  criterion gates is what produces that event.**
+
 ### marker-count-vs-outcome-count
 
 - [marker-count-vs-outcome-count] A count of *declaration sites* and a

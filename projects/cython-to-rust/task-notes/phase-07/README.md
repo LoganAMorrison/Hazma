@@ -3,7 +3,8 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 07
-**Status:** In progress (Tasks 7.1–7.3 complete; 7.3 on 2026-08-29)
+**Status:** Complete (2026-08-29) — all four tasks done; the project
+closed at hazma 3.0.0
 **Plan References:** `../../phases/phase-07-cutover.md`
 **Related ADRs:** ADR-0001
 **Depends On:** Phase 06 complete
@@ -20,14 +21,33 @@ cutover and project close.
 | 7.1 | Backend switch to maturin | — | **Complete (2026-08-27)** | [task-7.1-maturin-backend.md](task-7.1-maturin-backend.md) |
 | 7.2 | Release pipeline (abi3 wheels) | 7.1 | **Complete (2026-08-29)** | [task-7.2-release-pipeline.md](task-7.2-release-pipeline.md) |
 | 7.3 | Documentation sweep | 7.1 | **Complete (2026-08-29)** | [task-7.3-docs-sweep.md](task-7.3-docs-sweep.md) |
-| 7.4 | Close the project | 7.1–7.3 | Not started | [task-7.4-close.md](task-7.4-close.md) |
+| 7.4 | Close the project | 7.1–7.3 | **Complete (2026-08-29)** | [task-7.4-close.md](task-7.4-close.md) |
 
 ## Exit Criteria
 
 - All rows Complete; phase file frontmatter `status: Complete`;
-  release candidate publishes from CI.
+  release candidate **builds and tests** from CI, with the `publish`
+  job's release gate observed holding on a non-release event.
 - Phase learnings at `../../learnings/phase-07-cutover.md` and the
   project retrospective at `../../learnings/project-retrospective.md`.
+
+**All met on 2026-08-29, against the revised release clause.** The four
+task rows are Complete, the phase file's frontmatter reads
+`status: Complete`, and both learnings files exist. `release.yml` has
+been dispatched three times and run once through its `pull_request`
+trigger, producing both `cp310-abi3` wheels and the sdist and passing the
+workflow's own assertions, with `publish` reporting `skipping` in all
+four — the release gate holding, which is what this clause now asks for.
+
+**The clause was revised, not merely qualified, and the first row above
+records the revision.** It previously read "release candidate publishes
+from CI", which no closing PR can satisfy: `publish` is gated on
+`github.event_name == 'release'`, a release needs the `3.0.0` tag, and
+that tag exists only after the closing PR merges. See
+`../../phases/phase-07-cutover.md` §"Revision of the release clause" for
+the reasoning and the residual risk — **trusted publishing under
+`maturin-action` has never executed**, and the 3.0.0 release is its first
+run.
 
 ## Inputs Reviewed
 
@@ -36,6 +56,45 @@ cutover and project close.
   impact so far" section on 2026-08-21) — input to the CHANGELOG.
 
 ## Findings
+
+### Task 7.4
+
+- **The `[Unreleased]` section *was* the release section.** Its
+  `Added` / `Removed` / `Changed` blocks were written by Tasks 0.2, 0.3
+  and 0.5 and explicitly left as "the settled wording for the Phase 07
+  aggregate" (`../numerical-impact.md`, Task 0.2). Closing was therefore
+  a promotion of that heading plus the Phase 02–06 material, not a fresh
+  section written beside it. One sentence inside it had gone stale in the
+  meantime — "Wheels now ship 20 extension modules instead of 25" was
+  true when Phase 00 wrote it and is not true of the release — which is
+  the cost of drafting a release note twenty-six days early.
+- **The declared `major` survives the re-check, and nothing numerical
+  drives it.** The largest drift in the whole port is
+  `scalar_mediator_decay_spectrum` at 5.3327e-12 relative, a
+  `patch`-level number under `docs/versioning.md`. `major` rests entirely
+  on Phase 00's two API removals, exactly as `PLAN.md` §"Numerical
+  impact" predicted on day one.
+- **Exactly the fourteen entry points that moved are the fourteen whose
+  budget was tightened**, and the other 27 are bit-equal. Derived from
+  `test/parity/tolerances.py` rather than from the prose record: 11
+  budgets carry "Tightened from" and 3 `_pt` twins carry "Tightened with
+  its twin", against 41 cases total. `QUAD_RTOL` and `NESTED_RTOL` have
+  **zero** holders. Two entries whose rationale contains the word
+  "tightened" are false positives — `spectra.photon.{charged_kaon,eta}`
+  say the class is kept *rather than* tightened — so a bare
+  `grep -c tighten` overcounts by two.
+- **Twelve reproduced 2.1.0 defects, not eleven.** The running log's
+  running count drifts (Task 5.3 calls the unconverged thermal quadrature
+  "the eleventh" where Task 5.1 had already filed it as the ninth), so
+  the roster is better derived from `docs/followups/` than from the
+  ordinals: one from Task 3.4, seven from Phase 04, three from Phase 05,
+  one from Task 6.3.
+- **The aarch64 / Windows question needed a stub after all**, and that is
+  a change of circumstance rather than a reversal of Task 7.2. That task
+  declined to file because `PLAN.md` §Scope recorded the option — true
+  while `PLAN.md` was live. Closing it makes the record archival, and
+  `docs/followups/todo/` is the live backlog by construction. The
+  decision is unchanged; only its location moved.
 
 ### Task 7.3
 
@@ -221,6 +280,23 @@ cutover and project close.
 
 ## Files Changed
 
+### Task 7.4
+
+- Release: `CHANGELOG.md` (`[Unreleased]` → `[3.0.0]`, plus the drift
+  table, the behavior-change list, `Fixed` and a new `Known issues`
+  section), `pyproject.toml` (`[project] version` 2.1.0 → 3.0.0)
+- Project close: `../../PLAN.md` (`status: Complete`, Phase 07 row,
+  the Scope bullet on aarch64/Windows), `projects/README.md` (row moved
+  to Completed), `../../phases/phase-07-cutover.md` (frontmatter)
+- Learnings: `../../learnings/phase-07-cutover.md` and
+  `../../learnings/project-retrospective.md` (both new)
+- Working memory: `../README.md` (Status, Phases row, one open question
+  closed, Handoff rewritten; its two Phase 07 cross-phase entries swept
+  to `../history-{findings,decisions}.md`), this file, the task note, and
+  `../numerical-impact.md`
+- Follow-ups: `docs/followups/todo/{consolidate-the-two-constants-tables,free-threaded-abi3t-wheels,relic-density-odes-in-rust,wheels-for-aarch64-and-windows}.md`
+  (new) and their four rows in `docs/followups/README.md`
+
 ### Task 7.3
 
 - Repo docs: `AGENTS.md`, `README.md`, `docs/source/installation.rst`,
@@ -294,10 +370,15 @@ cutover and project close.
 
 ## Open Questions
 
+None outstanding — the phase and the project are closed.
+
 - **Answered by Task 7.2 (2026-08-29): no aarch64 or Windows wheels.**
-  The support surface is unchanged and neither has a user asking for it;
-  `PLAN.md`'s Scope keeps them as a cheap follow-up, and each is one
-  matrix row whenever that changes.
+  The support surface is unchanged and neither has a user asking for it,
+  and each is one matrix row whenever that changes. Task 7.4 moved the
+  record from `PLAN.md`'s Scope into
+  [`../../../../docs/followups/todo/wheels-for-aarch64-and-windows.md`](../../../../docs/followups/todo/wheels-for-aarch64-and-windows.md),
+  because closing the plan made that Scope bullet archival. The decision
+  is unchanged.
 - **Answered by Task 7.3 (2026-08-29): the four tracked non-source files
   under `hazma/` stay.** `requirements.txt` and the `Dockerfile` went;
   the four did not, because two of them are a superseded detector
@@ -312,57 +393,22 @@ cutover and project close.
 
 ## Handoff to Next Task
 
-**Task 7.4 (close the project) is the only task left**, and every
-dependency it names is met. Read `../../PLAN.md` — its "Closing this
-project" section is the checklist — then `../numerical-impact.md`, which
-is the input to the CHANGELOG table and must not be reconstructed from
-memory, then this file and the phase file.
+**There is no next task.** Phase 07 is Complete, and with it the
+cython-to-rust project — all eight phases, all 33 tasks, shipped as
+hazma 3.0.0 on 2026-08-29.
 
-**Currently safe to assume:**
+Read [`../../learnings/project-retrospective.md`](../../learnings/project-retrospective.md)
+first and
+[`../../learnings/phase-07-cutover.md`](../../learnings/phase-07-cutover.md)
+for the packaging contract. Those two replace this file and the four
+Phase 07 task notes for every later reader
+([ADR-0002](../../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md));
+[`../README.md`](../README.md)'s Handoff routes the common follow-on
+questions.
 
-- **maturin is the whole build, and the release pipeline is maturin's
-  too.** `[build-system] requires` is `["maturin>=1.5,<2.0"]`;
-  `release.yml` builds one `cp310-abi3` wheel per platform plus the sdist
-  on `PyO3/maturin-action@v1`, and has been observed to run. No
-  `setup.py`, no `MANIFEST.in`, no `setuptools`, no `.pyx`.
-- **The version lives in `pyproject.toml`'s `[project] version`** and is
-  `2.1.0` on `origin/master`. Task 7.4's bump edits that line;
-  `preflight.sh --closing` reads it and is not vacuous.
-- **No live instruction doc states a Cython fact.** `AGENTS.md`,
-  `README.md`, `docs/` and both skill trees were swept in Task 7.3. What
-  the grep still returns there is project-slug citations and sentences
-  that declare themselves historical. `docs/agents/lessons-examples.md`,
-  `docs/followups/` and `projects/` keep their `.pyx` citations on
-  purpose — they are the record, and rewriting them is a defect.
-- **The docs build.** `python -m sphinx -b html docs/source <out>` exits
-  0 against the maturin-built package. Its warnings predate this phase
-  and no page Task 7.3 touched produces one; the count is
-  environment-dependent (107 under `sphinx-build 9.1.0` into an empty
-  build directory, 23 incremental), so re-derive it rather than quoting
-  it. There is no
-  `.readthedocs.yaml`, and nothing in CI or `preflight.sh` builds the
-  docs — a broken Sphinx build will not turn anything red.
-- **`release.yml` has a `pull_request` trigger** filtered to
-  `release.yml` and `pyproject.toml`, so Task 7.4's version bump is
-  measured by an ordinary PR check. `publish` stays gated on
-  `github.event_name == 'release'`.
-
-**Currently risky / unknown:**
-
-- **`major` is the declared bump and it is driven by API removals, not
-  numbers** — `hazma/deprecated/rambo.py` and `hazma.gamma_ray`, both in
-  Phase 00. Re-check the level against `../numerical-impact.md` and
-  `docs/versioning.md` before editing the line; do not infer it from the
-  frontmatter alone.
-- **A closing PR is where `doc-consistency.md` §3 and §6 bind hardest.**
-  Every gate bullet in `PLAN.md`, the seven phase files and the three
-  ADRs needs one line of evidence, and `preflight.sh --closing` has to
-  run against the post-cutover plumbing rather than `hazma/__init__.py`.
-- **`docs/followups/todo/` holds entries this project sourced**, several
-  of them live 2.1.0 defects the port surfaced. The retrospective has to
-  cross-check all of `todo/`, not only Task 7.4's own diff — including
-  the one Task 7.3 filed.
-- **`--paths` on `preflight.sh` feeds black, isort and ruff directly**,
-  so naming a `.yml` or `.md` file there makes them parse it as Python
-  and the gate goes red on a clean tree. Pass source paths (or the
-  `hazma test` default) and use `--md` for markdown.
+**The one thing a release manager still owes:** `publish` has never run.
+It is gated on `github.event_name == 'release'`, and every observation so
+far — three dispatches and one `pull_request` run — correctly skipped it.
+Cutting the 3.0.0 release is the first time that job executes, so watch
+it rather than assuming it (`docs/agents/lessons.md`
+`[unrun-workflow-cannot-close-a-criterion]`).

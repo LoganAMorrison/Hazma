@@ -884,3 +884,18 @@ closed phase's entries below, verbatim, under a
   A shared Rust helper is the obvious design and is the one that would
   have moved them — do not revisit it in Phase 06 without declaring the
   change.
+
+## Phase 07 (moved 2026-08-29 at project close)
+
+- **A bit-equality assertion against a compiled kernel can be scoped to
+  the cargo profile, not only to the platform** (Task 7.1). Under
+  `[profile.release]`'s `lto = true` / `codegen-units = 1` the mediator
+  table grid sits one ulp from `numpy.logspace` where a debug build is
+  exact, and `pip install -e .` built **debug** under setuptools-rust and
+  builds **release** under maturin — so every exact assertion written
+  during Phases 03–06 was measured against the profile users do *not*
+  receive. One such assertion existed and is fixed; the suite is green.
+  Cross-phase because it retro-scopes the whole port's test evidence: a
+  new exact claim needs checking against both profiles, and Task 5.3's
+  "the two profiles are numerically identical" result is scoped to the
+  functions it measured, not general.

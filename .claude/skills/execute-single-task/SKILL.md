@@ -423,8 +423,9 @@ Then handle closure:
   **Then bump the version (mandatory closure step).** Read
   `version_bump:` from `PLAN.md`, re-confirm the level against the
   project's realized **Numerical impact** and
-  [`versioning.md`](../../../docs/versioning.md), set `VERSION` in
-  `hazma/__init__.py`, and add a `## [X.Y.Z] — YYYY-MM-DD` section to
+  [`versioning.md`](../../../docs/versioning.md), set `version` in
+  `pyproject.toml`'s `[project]` table, and add a
+  `## [X.Y.Z] — YYYY-MM-DD` section to
   `CHANGELOG.md` naming the slug and stating any numerical change and its
   magnitude. Verify with `scripts/agents/preflight.sh --closing`.
 

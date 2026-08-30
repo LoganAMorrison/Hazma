@@ -159,7 +159,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [unrun-workflow-cannot-close-a-criterion] A workflow with no `pull_request`
   trigger is invisible to PR checks; dispatch it (`gh workflow run <file> --ref
   <branch>`, with publishing jobs gated) and paste the job conclusions before
-  marking a criterion met (PR #56).
+  marking a criterion met. When a dispatch cannot reach the job because the
+  criterion is structurally unsatisfiable, revise the criterion instead of
+  qualifying a "Met" that is not met (PRs #56, #86).
 - [marker-count-vs-outcome-count] A count of declaration sites and a count of
   runtime outcomes are different numbers; take outcomes from `pytest -rs` and
   sites from `rg`, state which one you mean, and give both when they differ (PR
