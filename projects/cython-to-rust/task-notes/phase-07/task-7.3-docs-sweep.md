@@ -134,9 +134,12 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
 - `AGENTS.md` — "What Hazma is", the layout tree, layering §1, the
   commands block, the rebuild paragraph, the private-package example;
   the generated-C/C++ bullet deleted.
-- `docs/agents/environment.md` — three Cython entries deleted, the
-  stale-artifact entry rewritten for `.rs`, the cargo requirement folded
-  into one paragraph, and the zsh/`MULTIOS` entry added.
+- `docs/agents/environment.md` — two Cython entries deleted (the `.pyx`
+  staleness trap, the generated-`.c` rule), the stale-artifact entry
+  rewritten for `.rs`, the `.rs` entry's "exactly like a `.pyx`" dropped,
+  the Cython build requirement folded into the cargo paragraph, the CI
+  paragraph's "missing package-data entry" corrected, and the
+  zsh/`MULTIOS` entry added.
 - `docs/agents/{README,doc-consistency,preflight,review-lenses}.md`,
   `docs/{versioning,workflow,PR_GUIDELINES}.md` — one claim each.
 - `README.md`, `docs/source/installation.rst` — install instructions:
