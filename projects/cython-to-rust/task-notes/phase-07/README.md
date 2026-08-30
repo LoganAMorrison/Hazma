@@ -63,9 +63,12 @@ cutover and project close.
   0.1 MeV rather than 0.2. A `.bak` suffix is not evidence that a file is
   a copy of its neighbor.
 - **The Sphinx build was never broken by the port, and it does not
-  gate.** It exits 0 with 107 warnings on this tree, none from any page
-  this task touched, and there is no `.readthedocs.yaml` in the
-  repository at all — the published docs are built by RTD's default
+  gate.** It exits 0 with 107 warnings on this tree (`sphinx-build
+  9.1.0`, CPython 3.12, into an *empty* build directory — an incremental
+  re-run reports 23, so the count is a recipe rather than a constant),
+  none of them from a page this task touched, and there is no
+  `.readthedocs.yaml` in the repository at all — the published docs are
+  built by RTD's default
   detection, not by a committed config. Nothing in CI or `preflight.sh`
   builds them.
 
@@ -332,8 +335,11 @@ memory, then this file and the phase file.
   `docs/followups/` and `projects/` keep their `.pyx` citations on
   purpose — they are the record, and rewriting them is a defect.
 - **The docs build.** `python -m sphinx -b html docs/source <out>` exits
-  0 against the maturin-built package. Its 107 warnings predate this
-  phase and no page Task 7.3 touched produces one. There is no
+  0 against the maturin-built package. Its warnings predate this phase
+  and no page Task 7.3 touched produces one; the count is
+  environment-dependent (107 under `sphinx-build 9.1.0` into an empty
+  build directory, 23 incremental), so re-derive it rather than quoting
+  it. There is no
   `.readthedocs.yaml`, and nothing in CI or `preflight.sh` builds the
   docs — a broken Sphinx build will not turn anything red.
 - **`release.yml` has a `pull_request` trigger** filtered to

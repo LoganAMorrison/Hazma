@@ -48,7 +48,11 @@ pip install .
 Hazma computes its gamma-ray, electron and positron spectra in a compiled
 Rust extension, so a source build needs a [Rust
 toolchain](https://rustup.rs) — `cargo` on your `PATH`, rustc 1.85 or
-newer. `pip` cannot install one for you.
+newer. `pip` cannot install one for you. It also needs your platform's
+native linker, since `rustc` links through the system C toolchain driver:
+the Xcode command line tools on macOS, `build-essential` or equivalent on
+Linux, the MSVC build tools on Windows. Hazma itself no longer ships any
+C or C++ source to compile.
 
 ## 🚀 Usage<a id="usage"></a>
 

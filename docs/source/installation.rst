@@ -27,8 +27,14 @@ repo_, navigate to the package directory and run:
 ``hazma`` computes its spectra in a compiled Rust extension, ``hazma._core``,
 so a source build needs a Rust toolchain: ``cargo`` on your ``PATH`` and
 ``rustc`` 1.85 or newer. Install one from rustup_. ``pip`` cannot supply it,
-and without it the build fails before any python code runs. No C or C++
-compiler is required.
+and without it the build fails before any python code runs.
+
+A source build also needs your platform's native linker, because ``rustc``
+links through the system C toolchain driver rather than shipping its own:
+the Xcode command line tools on macOS (``xcode-select --install``), a C
+toolchain such as ``build-essential`` on Linux, or the MSVC build tools on
+Windows. This is a Rust requirement, not a hazma one — ``hazma`` itself no
+longer contains any C or C++ source to compile.
 
 .. _repo: https://github.com/LoganAMorrison/Hazma.git
 .. _rustup: https://rustup.rs

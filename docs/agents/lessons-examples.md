@@ -329,6 +329,37 @@ cites a real PR.
   against a threshold of 11 — pre-existing, but a new docstring had just
   promised NaN below threshold, converting it into a false contract).
 
+### rewrite-narrowed-the-trigger-set
+
+- PR #85 swept the last Cython facts out of the instruction surface. One
+  of them was the rebuild trigger, which read ``.pyx` / `.pxd` / `rust/` /
+  `setup.py`` in seven `.claude/` skills and as "Cython edits" or "when
+  Cython sources changed" in four `.codex/` ones. The sweep found every
+  copy — that part worked — and rewrote them by deleting the Cython
+  members, landing on `rust/` alone in five places.
+
+  But the canonical statement of that trigger is `preflight.md`'s gate 8,
+  and it names **`rust/` *and* `pyproject.toml`'s `[build-system]` or
+  `[tool.maturin]`** — a build-config change moves the installed
+  extension just as a `.rs` change does. `review-lenses.md:135` already
+  said "`rust/` or the build configuration in `pyproject.toml`". So the
+  PR produced a tree where the `.claude/` copies said both and the
+  `.codex/` copies said only Rust, an inconsistency review caught:
+
+  ```text
+  .codex/skills/commit-and-pr/SKILL.md:20  Rebuild first when the Rust crate changed
+  .codex/skills/review-pr/SKILL.md:38      require a rebuild after Rust edits
+  .codex/skills/review-respond/SKILL.md:37 Rebuild after Rust edits
+  docs/agents/preflight.md:143             edit → rebuild (if Rust) → run gates
+  ```
+
+  The tell is that the edit was a *deletion from a list* dressed as a
+  substitution: "Cython or Rust" → "Rust" reads like removing a dead term
+  but is also removing a live one, because the list was never
+  "the two languages" — it was "the inputs a rebuild depends on". Deriving
+  the replacement from gate 8 instead of from the string being edited
+  would have produced the right set the first time.
+
 ### sibling-copies-of-a-fixed-claim
 
 - [sibling-copies-of-a-fixed-claim] A repo-fact claim is usually written

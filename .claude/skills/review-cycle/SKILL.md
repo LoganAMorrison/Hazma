@@ -373,7 +373,8 @@ does — report `STATUS` so the caller routes accordingly.
   verifiers.
 - **Preflight gate before every commit.** review-respond runs
   [`preflight.md`](../../../docs/agents/preflight.md), including a
-  rebuild when the crate changed. There are no pre-commit hooks here.
+  rebuild when `rust/` or the build config changed. There are no
+  pre-commit hooks here.
 - **No fabricated test claims.** Every TESTS line quotes the literal
   pytest summary; a zero-collection run is a false green.
 - **No unmeasured numerics verdicts.** Neither a reviewer nor the

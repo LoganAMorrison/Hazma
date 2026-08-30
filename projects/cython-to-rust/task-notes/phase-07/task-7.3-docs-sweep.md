@@ -85,9 +85,11 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
 - **Nothing builds the docs.** There is no `.readthedocs.yaml` in the
   repository, and neither `ci.yml` nor `preflight.sh` runs Sphinx, so a
   broken docs build turns nothing red. The build itself is healthy: exit
-  0, 107 warnings, all pre-existing classes (36 duplicate object
+  0, with warnings only in pre-existing classes (36 duplicate object
   descriptions, 19 autodoc failures on `Theory`'s abstract methods, a
-  theme option, an undefined label in `spectra.rst`).
+  theme option, an undefined label in `spectra.rst`). Their *count* is
+  environment- and incrementality-dependent — see `## Verification` for
+  the recipe that produces 107 — so it is not a number to quote back.
 
 ## Decisions and Implementation Notes
 
@@ -119,6 +121,18 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
   `docs/followups/`, `docs/adrs/ADR-0002` and every `projects/` note
   cite `.pyx` files as evidence of what happened. They are correct as
   written; a sweep that rewrites them destroys the record.
+- **Review round 1 (PR #85) corrected two claims and one inconsistency.**
+  (a) The source-build docs said no C or C++ compiler is required; that
+  is wrong, because `rustc` links through the platform C toolchain
+  driver. Verified rather than argued: `rustc --print link-args` on this
+  host names `"cc"` as the linker. Both `README.md` and
+  `docs/source/installation.rst` now name the platform linker
+  requirement and scope it as Rust's, not hazma's. (b) The rebuild
+  trigger had been narrowed to `rust/` in five places while
+  `preflight.md`'s gate 8 and `review-lenses.md` both require it after
+  build-config changes too; all copies now say `rust/` **or** the build
+  configuration. (c) The Sphinx warning count and the `--md` file list
+  are recorded as reproducible recipes rather than bare numbers.
 - **A new `environment.md` entry, from a trap this task hit.** The Bash
   tool shell here is zsh, which that file did not say; zsh does not
   word-split an unquoted `$VAR`, and its `MULTIOS` turns an unquoted
@@ -143,8 +157,9 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
 - `docs/agents/{README,doc-consistency,preflight,review-lenses}.md`,
   `docs/{versioning,workflow,PR_GUIDELINES}.md` — one claim each.
 - `README.md`, `docs/source/installation.rst` — install instructions:
-  wheels for normal installs, a Rust toolchain for source builds, no
-  C/C++ compiler.
+  wheels for normal installs; a Rust toolchain *and* the platform's
+  native linker for source builds, since `rustc` links through the
+  system C toolchain driver.
 - `.claude/skills/{commit-and-pr,execute-single-task,review-cycle,review-plan,review-pr,review-respond,task-pipeline}/SKILL.md`
   and `.codex/skills/{commit-and-pr,execute-single-task,review-plan,review-pr,review-respond}/SKILL.md`
   — rebuild triggers, the layering invariant, the package-data findings.
@@ -162,9 +177,50 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
 
 ## Verification
 
-- `PATH=".venv/bin:$PATH" scripts/agents/preflight.sh --paths "hazma test"
-  --md "<the 15 touched markdown files>"` — gate table under
-  `## Stale-state sweep`.
+- The gate, with the `--md` list written out so the run reproduces:
+
+  ```sh
+  PATH=".venv/bin:$PATH" scripts/agents/preflight.sh --paths "hazma test" --md \
+    "AGENTS.md README.md docs/versioning.md docs/workflow.md \
+     docs/PR_GUIDELINES.md docs/agents/environment.md \
+     docs/agents/preflight.md docs/agents/review-lenses.md \
+     docs/agents/doc-consistency.md docs/agents/README.md \
+     docs/followups/README.md \
+     docs/followups/todo/tracked-non-source-files-under-hazma.md \
+     projects/cython-to-rust/phases/phase-07-cutover.md \
+     projects/cython-to-rust/task-notes/phase-07/task-7.3-docs-sweep.md \
+     projects/cython-to-rust/task-notes/phase-07/README.md"
+  ```
+
+  Gate table under `## Stale-state sweep`.
+
+- **That is 15 of the diff's 27 markdown files. The 12 omitted are the
+  changed `SKILL.md` files, and the omission is the documented state of
+  the gate, not an oversight.** `.markdownlint.jsonc` was written against
+  `docs/` and `projects/` and has never accommodated the skill-file
+  shape, which is the open follow-up
+  [`markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md).
+  Verified rather than assumed — `markdownlint --dot` over the 12 changed
+  skill files returns 9 errors in 2 files, every one on a line this diff
+  does not touch:
+
+  ```text
+  .claude/skills/review-plan/SKILL.md:12    MD036/no-emphasis-as-heading
+  .claude/skills/review-plan/SKILL.md:20    MD036/no-emphasis-as-heading
+  .claude/skills/task-pipeline/SKILL.md:14  MD036/no-emphasis-as-heading
+  .claude/skills/task-pipeline/SKILL.md:21  MD036/no-emphasis-as-heading
+  .claude/skills/task-pipeline/SKILL.md:319 MD032/blanks-around-lists
+  .claude/skills/task-pipeline/SKILL.md:337 MD031/blanks-around-fences
+  .claude/skills/task-pipeline/SKILL.md:357 MD031/blanks-around-fences
+  .claude/skills/task-pipeline/SKILL.md:362 MD031/blanks-around-fences
+  .claude/skills/task-pipeline/SKILL.md:367 MD031/blanks-around-fences
+  ```
+
+  The `task-pipeline` hits are inside quoted subagent prompts at lines
+  319–367; this diff's edits to that file are at lines 73 and 462. The
+  other 10 changed skill files are clean. Passing them to `--md` would
+  add a red row this PR did not cause; the follow-up is where fixing the
+  config belongs.
 - `pytest` (bare, via preflight) — **2231 passed, 15 skipped, 12
   subtests passed in 26.49s**, from the final gate run after the last
   prose edit. Same counts as Task 7.1 recorded, on a tree rebuilt after
@@ -182,10 +238,19 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
   named 'hazma._utils'`, after the reinstall. The deletion took effect
   rather than being masked by a stale install.
 - `python -m sphinx -b html docs/source <out>` — **exit 0**, 107
-  warnings, none from `installation.rst`. Re-run with `-W --keep-going`
-  to enumerate them: 129 warnings-as-errors, same classes. The rendered
+  warnings, none from `installation.rst`. The rendered
   `installation.html` contains `rustup` twice and `cargo` once and
   neither `Cython` nor `cython`.
+
+  **The warning count is environment-dependent; treat it as a
+  reproduction recipe, not a repo constant.** 107 is `sphinx-build
+  9.1.0` on CPython 3.12 with the `.venv` pins, building into an *empty*
+  output directory. The same command re-run into a populated one emits
+  **23**, because Sphinx skips unchanged documents — so a count taken
+  without `rm -rf` on the build dir is not comparable. `-W --keep-going`
+  over the clean build reports 129 rather than 107, counting
+  warnings-as-errors differently again. Nothing in CI or `preflight.sh`
+  builds the docs, so no gate pins any of these numbers.
 - Deferred: no attempt to reduce the 107 Sphinx warnings or the
   README's 13 remaining markdownlint findings. Both predate this task
   and belong to files it barely touches; see the sweep block for the
@@ -315,7 +380,7 @@ memory were wrong and are corrected in place rather than defended.
 | note: 15 lines / 7 files remain | `rg -c` over the same surface, this branch | 15 lines, 7 files | OK |
 | phase file: "three more sites" | rows in the Task 7.2 table | 3 | FIXED (read "two") |
 | phase file: "Each tells a reviewer" | same table | 3 rows | FIXED (read "Both") |
-| note: "107 warnings" | `python -m sphinx -b html`, `grep -c WARNING` | 107 | OK |
+| note: "107 warnings" | `python -m sphinx -b html` into an empty dir, `grep -c WARNING` | 107 (23 incremental) | OK, qualified |
 | note: "2231 passed, 15 skipped" | bare `pytest` via preflight | 2231 passed, 15 skipped, 12 subtests | OK |
 | note: "4 passed in 1.18s" | `pytest test/test_no_cython_remains.py -q` | 4 passed in 1.18s | OK |
 | note: README markdownlint 14 → 13 | `markdownlint --dot` on each revision | 14 (master), 13 (head) | OK |

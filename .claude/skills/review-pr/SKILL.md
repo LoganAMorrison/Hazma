@@ -100,8 +100,8 @@ Common "diff omits" patterns in this repo:
 - A new final state / channel added to one dispatch table but not its
   siblings (photon but not positron; the function map but not the
   documented channel list).
-- A `rust/` change with no evidence of a rebuild, so the cited test
-  results came from the old extension.
+- A `rust/` or build-config change with no evidence of a rebuild, so the
+  cited test results came from the old extension.
 - A renamed or removed public object still referenced by `docs/source/`
   — the published Sphinx build breaks without any test failing.
 - A new test file placed where the run that is cited as green never
