@@ -36,8 +36,8 @@ inherits the active model.
 - **D — Doc Consistency & Canonical Contract:** Use when a diff touches
   durable docs, a public docstring, or claims that must reproduce.
 - **E — Numerics & Performance:** Use whenever a change can move a number or
-  touches a hot loop or Cython boundary. This is the highest-value physics
-  lens.
+  touches a hot loop or the Python/Rust boundary. This is the
+  highest-value physics lens.
 
 **Agent models and effort.** The roster is calibrated for the current
 generation:
@@ -165,7 +165,7 @@ conventions — with equal weight. Specifically confirm:
    package `__init__`), documented with NumPy-style docstrings, and have
    **units stated** for every physical quantity.
 2. **Layering.** The dependency direction in
-   [`AGENTS.md`](../../AGENTS.md) holds — Cython kernels import nothing
+   [`AGENTS.md`](../../AGENTS.md) holds — the Rust kernels import nothing
    from pure-Python layers; models depend on `theory`, not the reverse.
 3. **Broadcasting contract.** A new spectrum-shaped function accepts both
    a scalar and an array energy and has a test for both.
@@ -274,9 +274,9 @@ are right**, then on how fast they are computed.
 - Python-level loops over NumPy arrays where a vectorized expression
   exists; repeated recomputation of an invariant inside a loop; array
   copies where a view suffices; `np.append` in a loop.
-- **The Cython boundary.** Crossing from Python into a `.pyx` kernel once
-  per array element is the expensive pattern; crossing once per array is
-  the cheap one.
+- **The Python/Rust boundary.** Crossing from Python into a
+  `hazma._core` kernel once per array element is the expensive pattern;
+  crossing once per array is the cheap one.
 - **Verify claimed properties.** When the diff claims a speedup, ask for
   the measurement — a command and two numbers, on a stated grid size.
   "Should be faster" is not a measurement, and an unmeasured perf claim

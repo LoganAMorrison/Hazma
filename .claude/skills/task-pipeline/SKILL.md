@@ -70,8 +70,8 @@ and `<BRANCH>` from Phase A.
 > on branch `<BRANCH>`, branched from the trunk. This worktree is managed
 > by the pipeline orchestrator.
 >
-> Hazma ships Cython and Rust extensions. If your work touches `.pyx`,
-> `.pxd`, `rust/`, or `setup.py`, run `pip install -e .` inside this
+> Hazma ships one Rust extension, `hazma._core`. If your work touches
+> `rust/` or `pyproject.toml`, run `pip install -e .` inside this
 > worktree before running tests — `cargo build` alone publishes nothing
 > to Python — and confirm `python -c "import hazma; print(hazma.__file__)"`
 > resolves inside `<WT_PATH>` — otherwise every result you report comes
@@ -459,8 +459,8 @@ projects/README.md.>
   Phase A. Every subagent prompt tells the agent to `cd` into `WT_PATH`
   and **not** call any worktree-creation tool.
 - **Rebuild discipline is stated in every worktree prompt.** A subagent
-  reporting green tests against a stale Cython extension is a failed
-  phase, not a pass.
+  reporting green tests against a stale `hazma._core` is a failed phase,
+  not a pass.
 - **Bounded subagent nesting (one level).** The orchestrator spawns the
   Phase B implementer and the Phase E finalizer directly; Phase D's
   subagents come from the inline `/review-cycle` workflow. No subagent

@@ -35,7 +35,9 @@ Hazma can be installed from PyPI using:
 pip install hazma
 ```
 
-Alternatively, you can clone the Hazma repo and build from source:
+That installs a prebuilt wheel on manylinux x86_64 and macOS arm64, which
+needs no compiler. Alternatively, you can clone the Hazma repo and build
+from source:
 
 ```shell
 git clone https://github.com/LoganAMorrison/Hazma.git
@@ -43,8 +45,10 @@ cd Hazma
 pip install .
 ```
 
-Since Hazma utilizes C to rapidly compute gamma ray, electron and positron spectra, you will need to have [Cython](https://github.com/cython/cython)
-and a c/c++ compiler installed.
+Hazma computes its gamma-ray, electron and positron spectra in a compiled
+Rust extension, so a source build needs a [Rust
+toolchain](https://rustup.rs) — `cargo` on your `PATH`, rustc 1.85 or
+newer. `pip` cannot install one for you.
 
 ## 🚀 Usage<a id="usage"></a>
 

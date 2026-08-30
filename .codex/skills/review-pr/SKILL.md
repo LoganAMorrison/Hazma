@@ -26,8 +26,8 @@ phase, task note, relevant ADRs, and upstream learnings. For ad-hoc work,
 review against `AGENTS.md`, the PR guidelines, and the change itself.
 
 Read every changed non-trivial file in full context. Check common diff omissions:
-public exports, sibling dispatch tables, Cython rebuild evidence, stale Sphinx
-references, package data registration, and ignored tests.
+public exports, sibling dispatch tables, Rust rebuild evidence, stale Sphinx
+references, and ignored tests.
 
 ## Apply one lens
 
@@ -35,7 +35,7 @@ Read the assigned section of
 [`docs/agents/review-lenses.md`](../../../docs/agents/review-lenses.md) and
 apply its baseline duties before the lens rubric. Reproduce PR-body claims,
 check a real pytest collection/result, run changed examples or observable
-claims, and require a rebuild after Cython edits.
+claims, and require a rebuild after Rust edits.
 
 - `default`: public API, units/docstrings, layering, broadcasting, debug
   residue, task completion, and PR conventions.

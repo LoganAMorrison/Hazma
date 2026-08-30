@@ -116,9 +116,8 @@ in the response.
   update the task note and (on a closing PR) `CHANGELOG.md`. Then
   re-check the PR body against the post-fix diff — a stale body is a
   blocking finding.
-- **Rebuild before gating** if you touched `.pyx` / `.pxd` / `rust/` /
-  `setup.py`: `pip install -e .` (a `cargo` run does not republish the
-  extension).
+- **Rebuild before gating** if you touched `rust/` or `pyproject.toml`:
+  `pip install -e .` (a `cargo` run does not republish the extension).
 - **Run the preflight gate.** `scripts/agents/preflight.sh --paths
   "<touched>"` — bare, so its pytest gate is the same collection CI runs
   (or the manual list in

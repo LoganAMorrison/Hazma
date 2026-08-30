@@ -44,7 +44,7 @@ Use the most specific scope that applies. Common scopes (non-exhaustive):
 | `relic`     | `hazma/relic_density/`                                       |
 | `form`      | `hazma/form_factors/`                                        |
 | `params`    | `hazma/parameters.py`, `gamma_ray_parameters.py`             |
-| `utils`     | `hazma/utils.py`, `hazma/_utils/` Cython helpers             |
+| `utils`     | `hazma/utils.py` and the shared helpers beside it            |
 | `packaging` | `pyproject.toml`, `rust/Cargo.toml`, maturin/wheel wiring     |
 | `actions`   | `.github/workflows/` — CI and release automation             |
 | `sphinx`    | `docs/source/` — the published docs and their build          |

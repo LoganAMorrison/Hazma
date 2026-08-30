@@ -120,12 +120,15 @@ module-name = "hazma._core"
 # `.gitignore`d files too, but it is not nothing -- build from a clean
 # tree when it matters.
 #
-# The four entries are tracked editor leftovers inside the package (two
-# `gecco.dat.bak`, `_gev.py.bak`, a `notes.org`). Being tracked, they are
-# the one class `.gitignore` cannot reach, and with `exclude = []` all
-# four ship. Nothing imports or reads them; they are excluded from the
-# distribution rather than deleted from the repository, which is a
-# separate question.
+# The two globs cover four tracked non-source files inside the package
+# (two `gecco.dat.bak`, `_gev.py.bak`, a `notes.org`). Being tracked, they
+# are the one class `.gitignore` cannot reach, and with `exclude = []` all
+# four ship. Nothing imports or reads them, so they are excluded from the
+# distribution rather than deleted from the repository -- the two
+# `.dat.bak` are a superseded detector response with its own cited
+# provenance, not a backup. Whether the repository should keep them is
+# tracked in `docs/followups/todo/tracked-non-source-files-under-hazma.md`;
+# the globs stay either way, as the guard against the next one.
 #
 # `hazma/**/testdata/*.json` is deliberately NOT excluded. Those six files
 # are the parametrization for the `_*_test.py` modules that sit inside

@@ -28,6 +28,14 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   until then. The trusted-publishing job is unchanged and still gated on
   `github.event_name == 'release'`; the workflow also runs on pull
   requests that touch `release.yml` or `pyproject.toml`.
+- Documentation, as of Task 7.3 (2026-08-29): no live instruction doc
+  states a Cython fact any more. What survives
+  `rg -n 'Cython|\.pyx|\.pxd|cythoniz'` over `AGENTS.md`, `README.md`,
+  `docs/` and the two skill trees is project-slug citations and
+  explicitly historical sentences, plus the deliberately historical
+  `docs/agents/lessons-examples.md` and `docs/followups/`.
+  `requirements.txt`, `Dockerfile`, `setup.cfg`'s `[aliases]` and the
+  vestigial `hazma/_utils/` package are deleted.
 
 ## Tasks
 
@@ -112,30 +120,30 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   after Task 7.1 (line numbers are that task's; re-derive before
   editing):
 
-  | File | Line | What is wrong |
-  | --- | --- | --- |
-  | `AGENTS.md` | 20 | "historically Cython, currently mid-migration" — true only until this project closes; Task 7.4 is the last moment it can stay |
-  | `AGENTS.md` | 50 | layout tree: `_utils/  # Cython helpers (boost.pyx, constants.pxd, …)` — the directory holds no such file |
-  | `AGENTS.md` | 68 | layering §1 names "the `.pyx` under `_utils/`, `spectra/`, …" |
-  | `AGENTS.md` | 90 | commands block: `pip install -e .  # build the Cython + Rust extensions in place` |
-  | `AGENTS.md` | 120–134 | the whole "Editing a `.pyx` or `.pxd` requires a rebuild" paragraph, including its closing "Confirm the same way as for Cython" |
-  | `AGENTS.md` | 171 | "Never commit generated C/C++. `setup.py` cythonizes on build" — names a file Task 7.1 deleted |
-  | `environment.md` | 38–43 | "Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel", whose second sentence still says `setup.py` compiles them |
-  | `environment.md` | 51–55 | "`pip install -e .` needs Cython, NumPy, and a C compiler" — false since Task 6.4, and now sits directly above the corrected `maturin`/cargo paragraph |
-  | `environment.md` | 67 | "exactly like a `.pyx`" inside the `.rs` rebuild note |
-  | `environment.md` | 77–84 | "Deleting a `.pyx` does not make its module unimportable" — the stale-`.so` note; its *mechanism* is still true of `.rs`, so rewrite rather than delete |
-  | `environment.md` | 106–107 | "Never hand-edit generated `.c` / `.cpp`. They are cythonize output" |
+  | File | Line | What is wrong | Task 7.3 |
+  | --- | --- | --- | --- |
+  | `AGENTS.md` | 20 | "historically Cython, currently mid-migration" — true only until this project closes; Task 7.4 is the last moment it can stay | rewritten |
+  | `AGENTS.md` | 50 | layout tree: `_utils/  # Cython helpers (boost.pyx, constants.pxd, …)` — the directory holds no such file | row deleted with the package |
+  | `AGENTS.md` | 68 | layering §1 names "the `.pyx` under `_utils/`, `spectra/`, …" | rewritten |
+  | `AGENTS.md` | 90 | commands block: `pip install -e .  # build the Cython + Rust extensions in place` | rewritten |
+  | `AGENTS.md` | 120–134 | the whole "Editing a `.pyx` or `.pxd` requires a rebuild" paragraph, including its closing "Confirm the same way as for Cython" | folded into the `.rs` paragraph |
+  | `AGENTS.md` | 171 | "Never commit generated C/C++. `setup.py` cythonizes on build" — names a file Task 7.1 deleted | bullet deleted |
+  | `environment.md` | 38–43 | "Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel", whose second sentence still says `setup.py` compiles them | deleted |
+  | `environment.md` | 51–55 | "`pip install -e .` needs Cython, NumPy, and a C compiler" — false since Task 6.4, and now sits directly above the corrected `maturin`/cargo paragraph | folded into the cargo paragraph |
+  | `environment.md` | 67 | "exactly like a `.pyx`" inside the `.rs` rebuild note | rewritten |
+  | `environment.md` | 77–84 | "Deleting a `.pyx` does not make its module unimportable" — the stale-`.so` note; its *mechanism* is still true of `.rs`, so rewrite rather than delete | rewritten for `.rs` |
+  | `environment.md` | 106–107 | "Never hand-edit generated `.c` / `.cpp`. They are cythonize output" | deleted |
 
-  **Extended by Task 7.2 (2026-08-29):** two more sites, in the skills
+  **Extended by Task 7.2 (2026-08-29):** three more sites, in the skills
   rather than in those two files, and invisible to the grep above because
-  they name setuptools instead of Cython. Both tell a reviewer to check
+  they name setuptools instead of Cython. Each tells a reviewer to check
   new package data against a table `pyproject.toml` no longer has:
 
-  | File | Line | What is wrong |
-  | --- | --- | --- |
-  | `.claude/skills/review-plan/SKILL.md` | 217–219 | "New `*.dat` / `*.csv` under `hazma/` must be registered in `[tool.setuptools.package-data]`" — maturin ships the whole `hazma/` tree, so there is nothing to register |
-  | `.claude/skills/review-pr/SKILL.md` | 107–109 | the same claim, as a review finding to look for |
-  | `.codex/skills/review-pr/SKILL.md` | 30 | "package data registration" in the lens summary — the pointer to the claim above |
+  | File | Line | What is wrong | Task 7.3 |
+  | --- | --- | --- | --- |
+  | `.claude/skills/review-plan/SKILL.md` | 217–219 | "New `*.dat` / `*.csv` under `hazma/` must be registered in `[tool.setuptools.package-data]`" — maturin ships the whole `hazma/` tree, so there is nothing to register | rewritten |
+  | `.claude/skills/review-pr/SKILL.md` | 107–109 | the same claim, as a review finding to look for | bullet deleted |
+  | `.codex/skills/review-pr/SKILL.md` | 30 | "package data registration" in the lens summary — the pointer to the claim above | pointer deleted |
 
   Derived from `rg -n 'package-data|package data' .claude/ .codex/`; the
   `.codex/` copies carry only that one pointer, not the claim itself.

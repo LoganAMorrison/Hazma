@@ -85,7 +85,7 @@ the current branch head, never the ambient checkout.
    started as one.
 
 7. **Docstring / inline-comment sweep on touched source files.** For
-   every `.py` / `.pyx` file the diff touches, read the module docstring
+   every `.py` / `.rs` file the diff touches, read the module docstring
    and the docstring above every public function or class, and flag any
    sentence that describes the pre-change state — a `Parameters` section
    listing a removed argument, a `Returns` section with the old units, a

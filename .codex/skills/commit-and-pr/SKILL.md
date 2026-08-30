@@ -17,7 +17,7 @@ branch and PR instead.
 3. Work only on a feature branch. If a new branch is needed, create
    `codex/<project>/<task>` for project work or `codex/<description>` for
    ad-hoc work; never commit to `master`.
-4. Rebuild first when Cython sources changed, then run:
+4. Rebuild first when the Rust crate changed, then run:
 
    ```sh
    scripts/agents/preflight.sh --paths "<touched paths>" \

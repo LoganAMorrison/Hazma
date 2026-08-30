@@ -202,7 +202,7 @@ produce a PR that moves them silently.
 #### 4. Architecture — does it fit the repo?
 
 - **Layering.** The dependency direction in
-  [`AGENTS.md`](../../../AGENTS.md) must hold: Cython kernels import
+  [`AGENTS.md`](../../../AGENTS.md) must hold: the Rust kernels import
   nothing from pure-Python layers; models depend on `theory`, not the
   reverse; analysis consumes models. Flag any task that inverts it.
 - **Public vs private.** Does the plan put new code in the right place —
@@ -210,13 +210,13 @@ produce a PR that moves them silently.
   the user-facing entry point — and export it where users will look?
 - Does the plan reuse existing abstractions (the `Theory` interface, the
   spectra dispatch, `phase_space`, the boost machinery) or reinvent them?
-- **Cython vs NumPy.** If the plan proposes a new `.pyx` kernel, does it
-  justify why vectorized NumPy is insufficient? A new compiled extension
-  adds build surface, a rebuild step for every contributor, and a
-  platform-specific failure mode — it needs a reason.
-- **Data files.** New `*.dat` / `*.csv` under `hazma/` must be registered
-  in `[tool.setuptools.package-data]` or they vanish from the wheel. Does
-  the plan say so, and does it record the data's provenance?
+- **Rust vs NumPy.** If the plan proposes a new kernel in `rust/`, does
+  it justify why vectorized NumPy is insufficient? Compiled code adds a
+  rebuild step for every contributor and a platform-specific failure
+  mode — it needs a reason.
+- **Data files.** maturin ships the whole `hazma/` tree, so new `*.dat` /
+  `*.csv` under `hazma/` need no packaging entry. Does the plan record
+  the data's provenance?
 - ADR placement: project-scoped vs repo-wide per
   [`workflow.md`](../../../docs/workflow.md). Unit and normalization
   conventions are the classic repo-wide tier here.
@@ -252,7 +252,8 @@ them. The hazma-specific points:
 - **Regression risk.** Does the change risk moving an existing spectrum,
   limit, or relic-density result? Is there a battery that would catch it?
 - **Performance.** Python loops over arrays, repeated recomputation, or
-  per-element crossings of the Cython boundary — does the plan know where
+  per-element crossings of the Python/Rust boundary — does the plan know
+  where
   its cost is, and does it commit to a measurement rather than a claim?
 - **Dep hygiene.** New third-party dependencies justified? They land in
   `pyproject.toml` and every downstream user pays for them.

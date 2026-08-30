@@ -140,7 +140,7 @@ sees, compare `markdownlint --version` before assuming the doc is wrong.
 The path from a finished edit to a landed commit is strictly sequential:
 
 ```text
-edit → rebuild (if Cython or Rust) → run gates → read results
+edit → rebuild (if Rust) → run gates → read results
      → stage → commit → push → verify
 ```
 

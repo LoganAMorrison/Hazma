@@ -29,7 +29,7 @@ change directly, then use `$commit-and-pr` when it is ready to ship.
    Run all later commands in the reported `wt_path`, preferably as
    `git -C <wt_path> ...`. If a pipeline already supplied its managed
    worktree, skip this creation step and use that exact path.
-4. If the task edits `.pyx`, `.pxd`, `rust/`, or `setup.py`, rebuild
+4. If the task edits `rust/` or `pyproject.toml`, rebuild
    inside that worktree (`pip install -e .` — not `cargo build`, which
    publishes nothing to Python) and confirm
    `python -c "import hazma; print(hazma.__file__)"` resolves there
@@ -60,7 +60,7 @@ Read only the context needed for the chosen task, in this order
 Treat `_template.md` files as references, not live artifacts.
 
 Context discipline (ADR-0002 carries the measurements): reading a whole
-`.pyx`, `.c`, `.rs` or test module to answer a bounded question is a
+`.rs` or test module to answer a bounded question is a
 narrowly scoped, read-only Codex subagent's job — take back the
 conclusion with `file:line` citations, not the file, and read a file
 yourself only when you are about to edit it, by symbol rather than by
