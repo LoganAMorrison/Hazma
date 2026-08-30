@@ -28,7 +28,7 @@ than restating them.
 | [`preflight.md`](preflight.md) | The before-every-commit / before-every-PR gate: format, lint, the cargo gates, tests, import smoke, the sequential critical path. |
 | [`doc-consistency.md`](doc-consistency.md) | The canonical doc-consistency checklist — implementers run it pre-PR, Reviewer D verifies it. |
 | [`review-lenses.md`](review-lenses.md) | Reviewer roster, per-lens rubrics, selection rules, and the verdict rule. |
-| [`environment.md`](environment.md) | Environment and test-infra gotchas (fish shell, cwd resets, Cython rebuilds, pytest collection traps). |
+| [`environment.md`](environment.md) | Environment and test-infra gotchas (fish shell, cwd resets, Rust rebuilds, pytest collection traps). |
 | [`lessons.md`](lessons.md) | The living review-lessons ledger: one line per class-shaped mistake that recurs, cited by PR. Read on every task. |
 | [`lessons-examples.md`](lessons-examples.md) | The worked examples behind each ledger class, one `###` section per class. Read a section only when its rule is not enough to act on. |
 

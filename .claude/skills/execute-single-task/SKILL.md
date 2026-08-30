@@ -99,8 +99,8 @@ All edits and gates happen inside the worktree. The Bash-tool cwd can
 reset between calls — use `git -C <worktree>` with absolute paths (see
 [`environment.md`](../../../docs/agents/environment.md)).
 
-**If the task touches compiled code** (`.pyx`, `.pxd`, `rust/`,
-`setup.py`), rebuild in the worktree before running anything:
+**If the task touches compiled code** (`rust/`, `pyproject.toml`),
+rebuild in the worktree before running anything:
 `pip install -e .`, then confirm
 `python -c "import hazma; print(hazma.__file__)"` points inside the
 worktree. A stale extension makes every later result meaningless, and
@@ -163,7 +163,7 @@ between 513k and 644k tokens of context, and the mandatory documents
 above were under 35k of it — the agent's own output and ad-hoc source
 reads were the rest):
 
-- **Delegate survey reads.** Reading a whole `.pyx`, `.c`, `.rs` or test
+- **Delegate survey reads.** Reading a whole `.rs` or test
   module to answer a bounded question — which constants a kernel reads,
   where a symbol is dispatched, what a generated file contains — is an
   `Explore` subagent's job: hand it the question and the paths and take
@@ -513,6 +513,5 @@ NEXT: <what the next agent should read first>
 - Do not commit or push unless the caller instructs it.
 - Do not bury durable findings only in PR text or chat.
 - Do not report a numerical result from a tree you did not rebuild after
-  a Cython edit, or from an installed hazma rather than the worktree.
-- Never hand-edit generated `.c` / `.cpp` — edit the `.pyx` and rebuild.
+  a Rust edit, or from an installed hazma rather than the worktree.
 - Prefer files and tests over long explanations.

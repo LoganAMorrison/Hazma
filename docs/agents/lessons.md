@@ -129,6 +129,12 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   enclosing artifact, then sweep repo-wide keyed on the *claim* (reflow the file
   to one line first, alternate the synonyms), and when a count changes mid-PR
   re-derive every number derived from it (PR #48, #50, #60, #63).
+- [rewrite-narrowed-the-trigger-set] Replacing a stale term in a claim that
+  names a *set* — a rebuild trigger, a file-type list, a set of gated paths —
+  silently drops the members the stale term was not about; re-derive the set
+  from its canonical statement rather than editing the salient member in place,
+  and diff your replacement against that source before sweeping it into every
+  copy (PR #85).
 - [elided-doc-paths] Write every citation as a full repository-relative path —
   `.../foo.py` is unresolvable once the basename is not unique — and never quote
   a bad citation in citation form, because the checker parses the example (PR

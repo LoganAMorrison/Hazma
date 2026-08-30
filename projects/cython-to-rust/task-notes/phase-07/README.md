@@ -3,7 +3,7 @@
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
 **Phase:** 07
-**Status:** In progress (Tasks 7.1–7.2 complete; 7.2 on 2026-08-29)
+**Status:** In progress (Tasks 7.1–7.3 complete; 7.3 on 2026-08-29)
 **Plan References:** `../../phases/phase-07-cutover.md`
 **Related ADRs:** ADR-0001
 **Depends On:** Phase 06 complete
@@ -19,7 +19,7 @@ cutover and project close.
 | --- | ------ | ------------ | -------- | ----------- |
 | 7.1 | Backend switch to maturin | — | **Complete (2026-08-27)** | [task-7.1-maturin-backend.md](task-7.1-maturin-backend.md) |
 | 7.2 | Release pipeline (abi3 wheels) | 7.1 | **Complete (2026-08-29)** | [task-7.2-release-pipeline.md](task-7.2-release-pipeline.md) |
-| 7.3 | Documentation sweep | 7.1 | Not started | [task-7.3-docs-sweep.md](task-7.3-docs-sweep.md) |
+| 7.3 | Documentation sweep | 7.1 | **Complete (2026-08-29)** | [task-7.3-docs-sweep.md](task-7.3-docs-sweep.md) |
 | 7.4 | Close the project | 7.1–7.3 | Not started | [task-7.4-close.md](task-7.4-close.md) |
 
 ## Exit Criteria
@@ -36,6 +36,41 @@ cutover and project close.
   impact so far" section on 2026-08-21) — input to the CHANGELOG.
 
 ## Findings
+
+### Task 7.3
+
+- **The phase file's enumeration found 14 of the 34 stale sites.** Its
+  grep was scoped to `AGENTS.md` and `docs/agents/environment.md` (plus
+  three package-data sites Task 7.2 added by hand). Run over
+  `README.md`, `docs/`, `.claude/skills/` and `.codex/skills/` as well,
+  the same pattern returns 20 more — every one a live instruction, not a
+  historical aside. The largest population is the rebuild trigger
+  ``.pyx` / `.pxd` / `rust/` / `setup.py``, copied verbatim into seven
+  skill files; a claim written once and pasted is a claim that has to be
+  swept by its *text*, not by the file that first stated it.
+- **`hazma/_utils/` outlived its contents.** Task 6.4 deleted the four
+  Cython headers and left the package's empty `__init__.py`, so the
+  directory has been an importable no-op since. Nothing imports
+  `hazma._utils` — every `._utils` hit in the tree is a sibling package
+  (`rh_neutrino/`, `spectra/_positron/`, `spectra/_neutrino/`,
+  `phase_space/`, `form_factors/vector/`). `docs/versioning.md` names it
+  as the example of a non-public package, which is what made the stale
+  directory look load-bearing.
+- **Two of the four "editor leftovers" are not backups.**
+  `A_eff/gecco.dat.bak` cites a different source than `A_eff/gecco.dat`
+  ("Taken from slides from Alexander Moiseev" against "From Alexander
+  Moiseev Febuary 7th, 2022") and tabulates a different grid, starting at
+  0.1 MeV rather than 0.2. A `.bak` suffix is not evidence that a file is
+  a copy of its neighbor.
+- **The Sphinx build was never broken by the port, and it does not
+  gate.** It exits 0 with 107 warnings on this tree (`sphinx-build
+  9.1.0`, CPython 3.12, into an *empty* build directory — an incremental
+  re-run reports 23, so the count is a recipe rather than a constant),
+  none of them from a page this task touched, and there is no
+  `.readthedocs.yaml` in the repository at all — the published docs are
+  built by RTD's default
+  detection, not by a committed config. Nothing in CI or `preflight.sh`
+  builds them.
 
 ### Task 7.2
 
@@ -98,6 +133,37 @@ cutover and project close.
 
 ## Decisions and Implementation Notes
 
+### Task 7.3
+
+- **`requirements.txt` and the `Dockerfile` are deleted, not updated.**
+  The former pinned `Cython>=0.29.12` and `flake8` and was read by
+  nothing but the latter; the latter builds on
+  `jupyter/scipy-notebook`, installs from that file, and enables
+  `jupyter_contrib_nbextensions`, which Notebook 7 dropped. Neither has
+  worked for some time and `pyproject.toml` answers both questions.
+- **`setup.cfg` survives with `[aliases]` removed.** Its `[flake8]` and
+  `[mypy]` sections are stale in a different way — this repo lints with
+  ruff and type-checks with pyright — but that is a lint-tooling
+  question, not setuptools residue, and
+  `test/test_no_cython_remains.py` reads the file. Left for whoever
+  settles the linter set.
+- **`hazma/_utils/` deleted.** `docs/versioning.md` excludes
+  leading-underscore packages from the public surface explicitly, so an
+  empty one that nothing imports is removable, and removing it is what
+  makes `AGENTS.md`'s layout tree true without a footnote. The two docs
+  that used it as an example now name a package that still has contents.
+- **The four tracked non-source files under `hazma/` are kept, and the
+  question is now tracked rather than open.** Deleting a superseded
+  detector response with its own cited provenance is a physics call, and
+  the four cost users nothing: `[tool.maturin] exclude` keeps them out
+  of both artifacts and `test/test_no_cython_remains.py` asserts it.
+  Stub: [`../../../../docs/followups/todo/tracked-non-source-files-under-hazma.md`](../../../../docs/followups/todo/tracked-non-source-files-under-hazma.md).
+- **Historical prose was left alone.** `docs/agents/lessons-examples.md`,
+  `docs/followups/`, `docs/adrs/ADR-0002`, and every `projects/` note
+  cite `.pyx` files as evidence of what happened. They are correct as
+  written; a sweep that rewrites them destroys the record the ledger
+  exists to keep.
+
 ### Task 7.2
 
 - **`PyO3/maturin-action@v1` over cibuildwheel's maturin support.**
@@ -154,6 +220,22 @@ cutover and project close.
   inherited.
 
 ## Files Changed
+
+### Task 7.3
+
+- Repo docs: `AGENTS.md`, `README.md`, `docs/source/installation.rst`,
+  `docs/{versioning,workflow,PR_GUIDELINES}.md`,
+  `docs/agents/{README,doc-consistency,environment,preflight,review-lenses}.md`
+- Skills: `.claude/skills/{commit-and-pr,execute-single-task,review-cycle,review-plan,review-pr,review-respond,task-pipeline}/SKILL.md`;
+  `.codex/skills/{commit-and-pr,execute-single-task,review-plan,review-pr,review-respond}/SKILL.md`
+- Deleted: `requirements.txt`, `Dockerfile`, `hazma/_utils/__init__.py`;
+  `setup.cfg`'s `[aliases]` section
+- Packaging: `pyproject.toml` (the `[tool.maturin] exclude` comment only)
+- Follow-ups: `docs/followups/todo/tracked-non-source-files-under-hazma.md`
+  (new) and its row in `docs/followups/README.md`
+- Project docs: `../../phases/phase-07-cutover.md` (Prerequisites; a
+  disposition column on both Task 7.3 enumeration tables), this file and
+  the task note
 
 ### Task 7.2
 
@@ -216,9 +298,13 @@ cutover and project close.
   The support surface is unchanged and neither has a user asking for it;
   `PLAN.md`'s Scope keeps them as a cheap follow-up, and each is one
   matrix row whenever that changes.
-- Should the four tracked editor leftovers under `hazma/` be deleted from
-  the repository, not just excluded from the distribution? Handed to Task
-  7.3 alongside `requirements.txt` and the `Dockerfile`.
+- **Answered by Task 7.3 (2026-08-29): the four tracked non-source files
+  under `hazma/` stay.** `requirements.txt` and the `Dockerfile` went;
+  the four did not, because two of them are a superseded detector
+  response with distinct provenance rather than backups. The decision and
+  its reasoning are in
+  [`../../../../docs/followups/todo/tracked-non-source-files-under-hazma.md`](../../../../docs/followups/todo/tracked-non-source-files-under-hazma.md)
+  so the next packaging change does not re-derive them.
 
 ## Plan Impact
 
@@ -226,54 +312,57 @@ cutover and project close.
 
 ## Handoff to Next Task
 
-**Task 7.3 (documentation sweep) is the only unblocked task**; 7.4 waits
-on it. Read `../../PLAN.md`, `../README.md`, this file, then the phase
-file — whose Prerequisites block carries both the Task 7.1 packaging
-facts and the Task 7.2 release-pipeline facts, and whose 7.3 exit
-criteria enumerate the remaining stale sites rather than describing them.
-Re-derive the line numbers in that enumeration before editing.
+**Task 7.4 (close the project) is the only task left**, and every
+dependency it names is met. Read `../../PLAN.md` — its "Closing this
+project" section is the checklist — then `../numerical-impact.md`, which
+is the input to the CHANGELOG table and must not be reconstructed from
+memory, then this file and the phase file.
 
 **Currently safe to assume:**
 
-- **maturin is the whole build.** `[build-system] requires` is
-  `["maturin>=1.5,<2.0"]`; `[tool.maturin]` carries `python-source = "."`,
-  `manifest-path`, `module-name`, `exclude`, `include`. No `setup.py`, no
-  `MANIFEST.in`, no `setuptools`. `test/test_no_cython_remains.py` asserts
-  it, and nothing else in `test/` reads a build script any more.
-- **The release pipeline is maturin's too, and it has been observed to
-  run.** `release.yml` builds one `cp310-abi3` wheel per platform plus the
-  sdist on `PyO3/maturin-action@v1`; the tag, the sole-`.abi3.so` claim,
-  the 3.10/3.14 imports and the sdist's build inputs are all asserted in
-  the workflow. Task 7.2's criteria are closed against a dispatched run,
-  not against the file.
-- **`release.yml` now has a `pull_request` trigger**, filtered to
-  `release.yml` and `pyproject.toml`. An edit to either is measured by an
-  ordinary PR check; an edit anywhere else still needs
-  `gh workflow run release.yml --ref <branch>`. `publish` stays gated on
-  `github.event_name == 'release'`, which is what makes both safe.
-- **The sdist is 264 files** — `hazma/` + `rust/` + pyproject +
-  README/LICENSE/CHANGELOG — and source-installs into a fresh CPython
-  3.10 venv. maturin honors `.gitignore` for both artifacts, so build
-  output stays out; an untracked *unignored* file does not.
-- **The version lives in `pyproject.toml`'s `[project] version`, and it
-  is on `origin/master`.** Task 7.4's bump edits that line;
-  `preflight.sh --closing` reads it and is no longer vacuous (Task 7.1
-  merged in PR #83).
-- **`pip install -e .` builds release now**, so a `rules.md` rule 12
-  benchmark from an editable tree is sound again.
+- **maturin is the whole build, and the release pipeline is maturin's
+  too.** `[build-system] requires` is `["maturin>=1.5,<2.0"]`;
+  `release.yml` builds one `cp310-abi3` wheel per platform plus the sdist
+  on `PyO3/maturin-action@v1`, and has been observed to run. No
+  `setup.py`, no `MANIFEST.in`, no `setuptools`, no `.pyx`.
+- **The version lives in `pyproject.toml`'s `[project] version`** and is
+  `2.1.0` on `origin/master`. Task 7.4's bump edits that line;
+  `preflight.sh --closing` reads it and is not vacuous.
+- **No live instruction doc states a Cython fact.** `AGENTS.md`,
+  `README.md`, `docs/` and both skill trees were swept in Task 7.3. What
+  the grep still returns there is project-slug citations and sentences
+  that declare themselves historical. `docs/agents/lessons-examples.md`,
+  `docs/followups/` and `projects/` keep their `.pyx` citations on
+  purpose — they are the record, and rewriting them is a defect.
+- **The docs build.** `python -m sphinx -b html docs/source <out>` exits
+  0 against the maturin-built package. Its warnings predate this phase
+  and no page Task 7.3 touched produces one; the count is
+  environment-dependent (107 under `sphinx-build 9.1.0` into an empty
+  build directory, 23 incremental), so re-derive it rather than quoting
+  it. There is no
+  `.readthedocs.yaml`, and nothing in CI or `preflight.sh` builds the
+  docs — a broken Sphinx build will not turn anything red.
+- **`release.yml` has a `pull_request` trigger** filtered to
+  `release.yml` and `pyproject.toml`, so Task 7.4's version bump is
+  measured by an ordinary PR check. `publish` stays gated on
+  `github.event_name == 'release'`.
 
 **Currently risky / unknown:**
 
-- **An exact assertion against a compiled kernel may be scoped to the
-  cargo profile.** Task 7.1 found and fixed one; the suite is green, but
-  a newly written bit-equality claim should be checked against both
-  profiles before being trusted.
-- **A format assertion written against one platform's artifact encodes
-  that platform's shape.** Task 7.2's wheel-tag check passed locally and
-  on macOS and rejected a correct manylinux wheel, because a filename's
-  tag fields are compressed *sets* and only the Linux wheel has more than
-  one member. Both halves of the matrix have to run.
-- **`--paths` on `preflight.sh` feeds black, isort and ruff directly**, so
-  naming a `.yml` file there makes them parse it as Python and the gate
-  goes red on a clean tree. Pass source paths (or the `hazma test`
-  default) and use `--md` for markdown.
+- **`major` is the declared bump and it is driven by API removals, not
+  numbers** — `hazma/deprecated/rambo.py` and `hazma.gamma_ray`, both in
+  Phase 00. Re-check the level against `../numerical-impact.md` and
+  `docs/versioning.md` before editing the line; do not infer it from the
+  frontmatter alone.
+- **A closing PR is where `doc-consistency.md` §3 and §6 bind hardest.**
+  Every gate bullet in `PLAN.md`, the seven phase files and the three
+  ADRs needs one line of evidence, and `preflight.sh --closing` has to
+  run against the post-cutover plumbing rather than `hazma/__init__.py`.
+- **`docs/followups/todo/` holds entries this project sourced**, several
+  of them live 2.1.0 defects the port surfaced. The retrospective has to
+  cross-check all of `todo/`, not only Task 7.4's own diff — including
+  the one Task 7.3 filed.
+- **`--paths` on `preflight.sh` feeds black, isort and ruff directly**,
+  so naming a `.yml` or `.md` file there makes them parse it as Python
+  and the gate goes red on a clean tree. Pass source paths (or the
+  `hazma test` default) and use `--md` for markdown.

@@ -45,6 +45,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`[mutation-harness-poisons-its-own-baseline]` is cited but not in the ledger](todo/lessons-ledger-missing-the-mutation-harness-class.md) | 2026-08-23 | cython-to-rust Task 6.2 | cross-cutting |
 | [mediator positron line misses the electron velocity](todo/mediator-positron-line-misses-the-electron-velocity.md) | 2026-08-27 | cython-to-rust Task 6.3 | cross-cutting |
 | [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
+| [four tracked non-source files under `hazma/`](todo/tracked-non-source-files-under-hazma.md) | 2026-08-29 | cython-to-rust Task 7.3 | commit |
 
 ## Promoted / Done / Pruned
 

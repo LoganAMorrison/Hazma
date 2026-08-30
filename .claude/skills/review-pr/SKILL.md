@@ -100,13 +100,10 @@ Common "diff omits" patterns in this repo:
 - A new final state / channel added to one dispatch table but not its
   siblings (photon but not positron; the function map but not the
   documented channel list).
-- A `.pyx` / `.pxd` / `rust/` change with no evidence of a rebuild, so
-  the cited test results came from the old extension.
+- A `rust/` or build-config change with no evidence of a rebuild, so the
+  cited test results came from the old extension.
 - A renamed or removed public object still referenced by `docs/source/`
   — the published Sphinx build breaks without any test failing.
-- Package data (`*.dat`, `*.csv`) added under `hazma/` but not registered
-  in `[tool.setuptools.package-data]` in `pyproject.toml`, so it is
-  missing from the installed wheel.
 - A new test file placed where the run that is cited as green never
   collects it — `test/conftest.py`'s `collect_ignore`, or a filename
   matching no `python_files` pattern (`test/rh_neutrino/integration.py`,
@@ -131,8 +128,8 @@ not hunt outside your area — that is another reviewer's job.
 - **Empirical execution.** When the diff edits a docstring example, a
   README snippet, or claims a user-visible behavior, RUN it and paste the
   output. Static review does not catch a wrong number.
-- **Rebuild awareness.** If the diff touches `.pyx` / `.pxd` / `rust/` /
-  `setup.py`, confirm the cited results came from a rebuilt tree —
+- **Rebuild awareness.** If the diff touches `rust/` or
+  `pyproject.toml`, confirm the cited results came from a rebuilt tree —
   including a `cargo`-only run cited as if it were a Python result.
 
 The full baseline duties and the **per-lens FOCUS rubric** for your lens
@@ -162,7 +159,8 @@ read your section there; it carries the load-bearing detail. Summaries:
   is blocking regardless of test status. Then: dimensional analysis
   against `hazma/parameters.py`, limiting cases, floating-point
   stability, integration/interpolation ranges, tolerance justification,
-  and performance (vectorization, the Cython boundary, measured claims).
+  and performance (vectorization, the Python/Rust boundary, measured
+  claims).
 
 ### Step 6: Produce the review
 

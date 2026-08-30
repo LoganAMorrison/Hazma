@@ -178,7 +178,7 @@ Agent(
 >
 > **You MUST commit and push.** Stage only files you intentionally
 > changed. Rebuild first (`pip install -e .`, never `cargo build` alone)
-> if you touched `.pyx` / `.pxd` / `rust/` / `setup.py`.
+> if you touched `rust/` or `pyproject.toml`.
 > Run the preflight gate (`docs/agents/preflight.md`) before staging;
 > assert a real `N passed` count. Commit with a Conventional Commits
 > message (validate with `scripts/agents/check_pr_title.py`) and
@@ -373,8 +373,8 @@ does — report `STATUS` so the caller routes accordingly.
   verifiers.
 - **Preflight gate before every commit.** review-respond runs
   [`preflight.md`](../../../docs/agents/preflight.md), including a
-  rebuild when Cython sources changed. There are no pre-commit hooks
-  here.
+  rebuild when `rust/` or the build config changed. There are no
+  pre-commit hooks here.
 - **No fabricated test claims.** Every TESTS line quotes the literal
   pytest summary; a zero-collection run is a false green.
 - **No unmeasured numerics verdicts.** Neither a reviewer nor the

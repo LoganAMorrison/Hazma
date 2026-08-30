@@ -1,44 +1,40 @@
 Installation
 ============
 
-``hazma`` was developed for python3. Before installing ``hazma``, the user
-needs to install several well-established python packages: ``cython``,
-``scipy``, ``numpy``, and ``scikit-image``. Theses are easily installed by using
-PyPI. If the user has PyPI installed on their system, then these packages
-can be installed using:
-
-.. code-block:: bash
-
-    pip install cython, scipy, numpy, scikit-image, matplotlib
-
-``hazma`` can be installed in the same way, using:
+``hazma`` requires python 3.10 or newer. The simplest way to install it is
+from PyPI:
 
 .. code-block:: bash
 
     pip install hazma
 
-This will download a tarball from the PyPI repository, compile all the
-c-code and install ``hazma`` on the system. Alternatively, the user can
-install ``hazma`` by downloading the package from Hazma repo_. Once
-downloaded, navigate to the package directory using the command line and
-run either:
+On manylinux x86_64 and macOS arm64 that installs a prebuilt wheel, which
+carries the compiled extension and needs no compiler on your system. The
+scientific packages ``hazma`` depends on at runtime — ``numpy``,
+``scipy``, ``scikit-image`` and ``matplotlib`` — are installed alongside
+it.
+
+Building from source
+--------------------
+
+To build from a checkout instead, download the package from the Hazma
+repo_, navigate to the package directory and run:
 
 .. code-block:: bash
 
     pip install .
 
-or:
+``hazma`` computes its spectra in a compiled Rust extension, ``hazma._core``,
+so a source build needs a Rust toolchain: ``cargo`` on your ``PATH`` and
+``rustc`` 1.85 or newer. Install one from rustup_. ``pip`` cannot supply it,
+and without it the build fails before any python code runs.
 
-.. code-block:: bash
-
-    python setup.py install
-
-Note that since ``hazma`` makes extensive usage of the package
-``cython``, the user will need to have a ``c`` and ``c++`` compiler installed on
-their system (for example ``gcc`` and ``g++`` on unix-like systems or
-Microsoft Visual Studios 2015 or later on Windows). For more information,
-see the Cython_ installation guide.
-
+A source build also needs your platform's native linker, because ``rustc``
+links through the system C toolchain driver rather than shipping its own:
+the Xcode command line tools on macOS (``xcode-select --install``), a C
+toolchain such as ``build-essential`` on Linux, or the MSVC build tools on
+Windows. This is a Rust requirement, not a hazma one — ``hazma`` itself no
+longer contains any C or C++ source to compile.
 
 .. _repo: https://github.com/LoganAMorrison/Hazma.git
-.. _Cython: https://cython.readthedocs.io/en/latest/src/quickstart/install.html
+.. _rustup: https://rustup.rs

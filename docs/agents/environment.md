@@ -10,10 +10,30 @@ keeps it worth reading.
 
 ## Shell and filesystem
 
-**The Bash tool shell may be fish, not bash.** `VAR=$(...)` assignment,
-`for` loops, and backtick substitution are mangled or rejected. Prefix
-one-shot env vars as `env VAR=val cmd`; avoid shell loops — call the tool
-once per command, or write a `.sh` and run it with `bash`.
+**The Bash tool shell is not bash.** It has been observed as both fish
+and zsh, and which one you get is not something the tool announces —
+`ps -p $$ -o comm=` is how you find out. Under fish, `VAR=$(...)`
+assignment, `for` loops, and backtick substitution are mangled or
+rejected. Prefix one-shot env vars as `env VAR=val cmd`; avoid shell
+loops — call the tool once per command, or write the script and run it
+with an explicit `bash -c` or `python3 -`.
+
+**Under zsh an unquoted `$VAR` does not word-split, and an unquoted
+redirect target that expands to several words truncates every one of
+them.** The two combine into a file-destroying pair. `for f in $FILES`
+binds `f` to the whole space-separated string rather than iterating it,
+so a target built from `$f` — `> $dir/$(echo $f | tr / _)` — expands to
+many words, and zsh's `MULTIOS` writes to each: the first is the path you
+meant and the rest are created or **truncated relative to the current
+directory**. That is how a repo-root `README.md` ends up zero bytes with
+no error printed, from a command that only meant to read. Quote every
+redirect target (`> "$b"`), or keep the whole loop inside
+`bash -c '...'`. After any command that redirected a computed path,
+`git status --short` before trusting the tree: a truncated tracked file
+shows as an ordinary modification, and a truncated *untouched* file is
+the one you will not think to look for. `git ls-files | while read -r f;
+do [ -f "$f" ] && [ ! -s "$f" ] && echo "$f"; done` lists every empty
+tracked file if you need to sweep for it.
 
 **`ls` may be aliased with color escape codes.** Parsing its output in a
 scripting context picks up ANSI garbage; use `command ls` (or a glob)
@@ -35,12 +55,6 @@ file.** Edit the marked region by hand, then confirm zero markers remain
 
 ## Build and imports
 
-**Editing a `.pyx` / `.pxd` and re-running pytest tests the OLD kernel.**
-Cython sources are compiled at build time by `setup.py`. Until you
-rebuild (`pip install -e .`), every import resolves the previously-built
-extension — so a change can look like it had no effect, or a bug can look
-fixed when it isn't. Rebuild, then confirm.
-
 **You may be importing an installed hazma, not the worktree.** A
 site-packages install shadows the checkout depending on cwd and how the
 env was set up. `python -c "import hazma; print(hazma.__file__)"` before
@@ -48,44 +62,37 @@ trusting any result you attribute to your edit — especially inside a git
 worktree under `.claude/worktrees/` or `.codex/worktrees/`, which is a
 *different directory* from the checkout the editable install points at.
 
-**`pip install -e .` needs Cython, NumPy, and a C compiler.** A missing
-toolchain surfaces as a build error deep in a generated `.c` file, not as
-a clear "install Cython" message. (Every C++ extension went with
-`_gamma_ray/` and `_phase_space/` in cython-to-rust Task 0.2; the tree
-builds as C only.)
-
-**It also needs `cargo` on `PATH`, and pip cannot supply it.**
-`pyproject.toml`'s `[build-system] requires` is `maturin` alone
-(cython-to-rust Task 7.1; `setuptools-rust` from Phase 02 until then),
+**`pip install -e .` needs `cargo` on `PATH`, and pip cannot supply
+it.** `pyproject.toml`'s `[build-system] requires` is `maturin` alone,
 which shells out to cargo to build the `hazma._core` extension. No
-toolchain, no build. Install it from rustup; edition 2024 needs
-rustc ≥ 1.85. The Cython half of this requirement is gone — `cython`,
-`numpy` and `scipy` left `[build-system] requires` in Task 6.4 — but the
-cargo half is permanent.
+toolchain, no build, and the failure arrives as a maturin error rather
+than as a missing-package message pip knows how to fix. Install it from
+rustup; edition 2024 needs rustc ≥ 1.85. Nothing else is required:
+`cython`, `numpy` and `scipy` left `[build-system] requires` in
+cython-to-rust Task 6.4, and `setuptools-rust` followed in Task 7.1.
 
-**Editing a `.rs` and re-running pytest tests the OLD extension, exactly
-like a `.pyx`.** And the trap has an extra step, because the fast
-iteration command is not the publishing one: `cargo build` and
-`cargo test` work out of `rust/target/`, which nothing Python imports.
-Only `pip install -e .` re-links the crate into the tree as
-`hazma/_core.abi3.so`. So iterate with
+**Editing a `.rs` and re-running pytest tests the OLD extension.** The
+trap has an extra step, because the fast iteration command is not the
+publishing one: `cargo build` and `cargo test` work out of
+`rust/target/`, which nothing Python imports. Only `pip install -e .`
+re-links the crate into the tree as `hazma/_core.abi3.so`. So iterate with
 `cargo test --manifest-path rust/Cargo.toml --no-default-features`, then
 reinstall before believing any Python-side result, and confirm with
 `python -c "import hazma._core; print(hazma._core.__file__)"` that the
 path is inside your worktree.
 
-**Deleting a `.pyx` does not make its module unimportable.** The built
-`_name.cpython-*.so` and the generated `_name.c` sit beside the source in
-the package directory, both are gitignored, and neither is removed by
-deleting the `.pyx`, by `git checkout`, or by `git stash`. Python imports
-the stale extension happily. So a test written as
-`pytest.raises(ImportError)` to prove a module was deleted is testing
-whoever last ran `pip install -e .`, not the change — assert on the
-source files and the `setup.py` entry instead
-(`test/test_core_photon_rho.py::test_the_cython_twin_is_gone_from_the_tree`
-is the worked example). And `rm` the orphaned `.so`/`.c` after any stash
-cycle that briefly restored the source, or the next build resurrects the
-extension.
+**Deleting Rust source does not withdraw what it exported.**
+`hazma/_core.abi3.so` sits in the package directory, is gitignored, and
+is removed by nothing you do to `rust/src/` — not by deleting a module,
+not by `git checkout`, not by `git stash`. Python imports the stale
+extension and its old symbols happily. So a test written as
+`pytest.raises(ImportError)` or `hasattr` to prove something was removed
+is testing whoever last ran `pip install -e .`, not the change — assert
+on the source files instead
+(`test/test_no_cython_remains.py::test_no_cython_source_remains_anywhere`
+is the worked example, over the whole tree). And `rm` the orphaned `.so`
+after any stash cycle that briefly restored a deleted source, or the next
+build resurrects it.
 
 **`git checkout <path>` restores from the *index*, not from HEAD.** If
 you staged a file earlier with `git add -A` and have since edited it,
@@ -102,9 +109,6 @@ undefined for the interpreter that `dlopen`s the module. A test
 executable has no such interpreter, so with the feature on the harness
 fails to link — a wall of undefined `_Py*` symbols that reads like a
 broken toolchain rather than a wrong flag.
-
-**Never hand-edit generated `.c` / `.cpp`.** They are cythonize output.
-Edit the `.pyx` and rebuild.
 
 **A clean wheel is not evidence of a clean sdist.** They are still built
 by different machinery, though under maturin (cython-to-rust Task 7.1)
@@ -273,9 +277,9 @@ repo's standard. Do not cite it as precedent, and do not import from
 entry installs a Rust toolchain (`dtolnay/rust-toolchain@stable`; without
 cargo nothing builds — see the `maturin` note above), installs
 hazma non-editable, runs an import smoke test from outside the repo (so a
-broken build or a missing package-data entry fails there rather than as a
-confusing collection error), reinstalls editable, and then runs a bare
-`pytest`, parity corpus included, on every entry.
+broken build or a data file missing from the distribution fails there
+rather than as a confusing collection error), reinstalls editable, and
+then runs a bare `pytest`, parity corpus included, on every entry.
 
 **CI has a third job, `rust`.** It runs the same three cargo gates
 `preflight.sh` does — `cargo fmt --check`,

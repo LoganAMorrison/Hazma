@@ -38,8 +38,7 @@ location for each finding.
 - **Correctness:** error paths, physical limits, scalar/array inputs, NaN and
   mass edge cases, dispatch-table fan-out, and downstream model interactions.
 - **Architecture:** layering, public/private placement and exports, existing
-  abstractions, justified Cython additions, package-data registration, and ADR
-  placement.
+  abstractions, justified additions to the Rust crate, and ADR placement.
 - **Idiomatic Python:** public annotations, NumPy docstrings with units,
   broadcast contract, appropriate Hazma errors, and black/isort/ruff
   conventions from `AGENTS.md`.

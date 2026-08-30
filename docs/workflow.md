@@ -176,7 +176,7 @@ Examples of repo-wide ADRs:
 
 - "Spectrum functions broadcast over energy arrays and return NaN outside
   the kinematic range"
-- "Cython kernels never import from pure-Python `hazma` modules"
+- "The Rust kernels never import from pure-Python `hazma` modules"
 - "Published spectra are pinned by regression arrays, not tolerances"
 
 Examples of project-scoped ADRs:
