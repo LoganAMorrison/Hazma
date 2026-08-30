@@ -189,3 +189,15 @@ closed phase's entries below, verbatim, under a
   direct replacement; nearest are the Altarelli–Parisi
   approximations) — instead of the wrapped compiled names
   `gamma`/`gamma_point`.
+
+## Phase 07 (moved 2026-08-29 at project close)
+
+- **The version's source of truth is `pyproject.toml`'s
+  `[project] version`** (Task 7.1); `hazma.VERSION` and `__version__`
+  survive as public API by reading it back from `importlib.metadata`. A
+  build backend cannot import the package it has not built, and maturin
+  stamps the distribution from that field. `preflight.sh --closing`,
+  `docs/versioning.md`, `docs/workflow.md`,
+  `docs/agents/{preflight,doc-consistency}.md` and all three project
+  `PLAN.md` closing paragraphs were repointed in the same pass. No ADR:
+  ADR-0001 already names maturin as the packaging decision.

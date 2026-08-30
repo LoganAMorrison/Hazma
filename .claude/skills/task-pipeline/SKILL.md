@@ -357,8 +357,8 @@ Agent(
 >    ```
 >    **If `<PLAN_IMPACT>` is `Project closure`,** insert a `## Versioning`
 >    section between `## Project` and `## Numerical impact`. Read the new
->    version from `hazma/__init__.py`; the prior is in
->    `git show origin/master:hazma/__init__.py`:
+>    version from `pyproject.toml`'s `[project] version`; the prior is in
+>    `git show origin/master:pyproject.toml`:
 >    ```markdown
 >    ## Versioning
 >    Closing project — version bumps `<OLD>` → `<NEW>`

@@ -46,6 +46,10 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [mediator positron line misses the electron velocity](todo/mediator-positron-line-misses-the-electron-velocity.md) | 2026-08-27 | cython-to-rust Task 6.3 | cross-cutting |
 | [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
 | [four tracked non-source files under `hazma/`](todo/tracked-non-source-files-under-hazma.md) | 2026-08-29 | cython-to-rust Task 7.3 | commit |
+| [consolidate the divergent constants tables](todo/consolidate-the-two-constants-tables.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [free-threaded `abi3t` wheels](todo/free-threaded-abi3t-wheels.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [the relic-density Boltzmann solve in Rust](todo/relic-density-odes-in-rust.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [wheels for linux-aarch64 and Windows](todo/wheels-for-aarch64-and-windows.md) | 2026-08-29 | cython-to-rust retrospective §5 | commit |
 
 ## Promoted / Done / Pruned
 

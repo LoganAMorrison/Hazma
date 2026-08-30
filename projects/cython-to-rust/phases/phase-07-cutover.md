@@ -1,7 +1,7 @@
 ---
 phase: 07
 title: Packaging cutover and close
-status: In progress
+status: Complete
 ---
 
 # Phase 07: Packaging cutover and close
@@ -190,3 +190,22 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   from CI; no Cython, setuptools, or cibuildwheel-version-matrix
   residue anywhere.
 - Phase learnings written to `../learnings/phase-07-cutover.md`.
+
+**Met on 2026-08-29 (Task 7.4), with one clause qualified.** All four
+task rows are Complete and the frontmatter reads `status: Complete`. The
+residue clause is discharged and asserted rather than inspected:
+`test/test_no_cython_remains.py` fails on any Cython source, any
+setuptools build script, and any Cython entry in the build requirements,
+and `release.yml` carries no version matrix.
+
+The qualification is on **"publishes from CI"**. `release.yml` has been
+dispatched three times and has run once through its `pull_request`
+trigger, building both `cp310-abi3` wheels and the sdist and passing its
+own tag, sole-extension and cross-version import assertions each time.
+The `publish` job is gated on `github.event_name == 'release'` and
+correctly reported `skipping` in all four runs, so **the publish step
+itself is still unexecuted** and cannot be exercised before a release is
+cut. That is the gate working as designed, not a hole in it — but it is
+an open instance of `docs/agents/lessons.md`
+`[unrun-workflow-cannot-close-a-criterion]`, and whoever cuts 3.0.0
+should watch that job rather than assume it.
