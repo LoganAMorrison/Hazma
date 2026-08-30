@@ -143,6 +143,35 @@ plus `../../PLAN.md` §"Closing this project":
   ODE port are the three the phase file names; each is still live at
   close and each gets a `todo/` stub. The aarch64 / Windows stub is the
   fourth, for the reason in Findings.
+- **Review round 1 (blocking finding 1): the release criterion is
+  revised, not qualified.** The first version of this task annotated
+  §"Exit Criteria" with "Met … with one clause qualified" while the same
+  paragraph documented the clause as unmet, and `../README.md` said "All
+  met" — a contradiction the reviewer was right to block on. The
+  reviewer offered two remedies; **the first is unavailable.** "Keep
+  closure pending until the release publish is observed" deadlocks:
+  `publish` is gated on `github.event_name == 'release'`, a release needs
+  the `3.0.0` tag, and that tag exists only after this closing PR merges,
+  so closure would gate on an event that closure itself enables. Taking
+  the second remedy — formally revise the criterion — is also what
+  `execute-single-task` Step 7 prescribes for a gate sentence that is
+  factually wrong. The revision narrows the clause to what closure can
+  attest and reassigns the upload rather than dropping it; because it is
+  a narrowing, the residual risk is stated in the phase file rather than
+  buried: trusted publishing under `maturin-action` has never executed.
+- **Review round 1 (blocking finding 2): the file-set counts are
+  re-derived, not patched.** The reviewer cited one stale count ("19
+  files: 12 modified, 7 created"). It was correct when written and went
+  stale when `/commit-and-pr` added three `.claude/skills/` edits at the
+  commit boundary — which means every *sibling* file-set count went stale
+  the same way, not just the cited one, and this round's own fixes then
+  moved them again. Rather than chase them, every count was re-derived
+  from `git diff` once after all content edits were frozen
+  (`doc-consistency.md` §11 rule 1, "sweep last"): **24 files, 17
+  modified and 7 created**; 23 `.md` in the diff; 20 of those outside
+  `.claude/skills/`. Two distinct quantities were being conflated — the
+  `.md` count in the diff and the count of documents this task authored —
+  so both are now named explicitly wherever they appear.
 - **`hazma/experimental/axial_vector_mediator/__init__.py` stays
   broken.** Phase 00's learnings flagged it and deliberately filed
   nothing, because `experimental/` is not a public surface
@@ -159,8 +188,13 @@ plus `../../PLAN.md` §"Closing this project":
   filled in.
 - `projects/README.md` — `cython-to-rust` row moved Active → Completed.
 - `projects/cython-to-rust/phases/phase-07-cutover.md` — frontmatter
-  `status: Complete`, and §"Exit Criteria" annotated with how each clause
-  was met, including the qualification on "publishes from CI".
+  `status: Complete`, and §"Exit Criteria" revised: the release clause
+  narrowed to build-and-test plus an observed release gate, with
+  §"Revision of the release clause" recording why and what risk that
+  leaves (review round 1).
+- `docs/agents/lessons.md` and `docs/agents/lessons-examples.md` — the
+  `[unrun-workflow-cannot-close-a-criterion]` class extended to cover a
+  structurally unsatisfiable criterion, cited to this PR (review round 1).
 - `projects/cython-to-rust/learnings/phase-07-cutover.md` — new.
 - `projects/cython-to-rust/learnings/project-retrospective.md` — new.
 - `projects/cython-to-rust/task-notes/README.md` — Phases table, Status,
@@ -190,7 +224,7 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Verification
 
-- **`scripts/agents/preflight.sh --closing --md "<the 18 changed .md>"`**
+- **`scripts/agents/preflight.sh --closing --md "<the 23 changed .md>"`**
   — the full gate, with every markdown file in the diff passed to
   `--md`. Rows:
 
@@ -229,11 +263,11 @@ plus `../../PLAN.md` §"Closing this project":
   1 MD032, 2 MD036). That is the condition
   [`markdownlint-skips-skill-file-shapes`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md)
   tracks — markdownlint was never run over `.claude/skills/`, so the
-  skill trees have never been clean. **All 18 documents this task
+  skill trees have never been clean. **All 20 documents this task
   authored or rewrote lint clean** on their own:
 
   ```sh
-  markdownlint --dot <the 18 non-skill .md in the diff>   # exit 0
+  markdownlint --dot <the 20 non-skill .md in the diff>   # exit 0
   ```
 
   No other gate is red.
@@ -320,10 +354,15 @@ mandates).
   the §Scope bullet on Windows / linux-aarch64 repointed at the follow-up
   Task 7.4 filed, because closing the plan makes a Scope bullet an
   archival record rather than a live one.
-- `../../phases/phase-07-cutover.md`: frontmatter `status:` → `Complete`,
-  and §"Exit Criteria" annotated with how each clause was met — including
-  the honest reading of "release candidate publishes from CI", which the
-  gate can only partly discharge.
+- `../../phases/phase-07-cutover.md`: frontmatter `status:` → `Complete`;
+  §"Exit Criteria" **revised**, not merely annotated. Its release clause
+  read "a release candidate builds, tests, and *publishes* from CI",
+  which no closing PR can satisfy — see §"Revision of the release clause"
+  in that file, and the review-round bullet in §Decisions above. The
+  clause now asks for build-and-test plus an observed release gate; the
+  upload is reassigned to the release manager with its residual risk
+  stated. `../README.md`'s Exit Criteria copy was revised in the same
+  pass.
 - No ADR. Nothing about architecture, invariants, interfaces, task
   ordering, units or normalization changed; all three project ADRs were
   Accepted and none needed amending. The canonical-contract diff was run
@@ -366,9 +405,9 @@ table. The other two are this block quoting itself.
 
 ### Link and index sweep
 
-Every relative markdown link in all 18 changed/created `.md` files
+Every relative markdown link in all 23 changed/created `.md` files
 resolves (script over `git diff origin/master --name-only`):
-`checked 18 markdown files / all relative links resolve`.
+`checked 23 markdown files; all relative links resolve`.
 
 `docs/followups/README.md`'s Open table against `docs/followups/todo/`:
 `listed but missing: none / on disk but unlisted: none / counts: listed
@@ -377,10 +416,11 @@ resolves (script over `git diff origin/master --name-only`):
 ### Line-number citation sweep
 
 ```sh
-python scripts/agents/check_doc_citations.py --changed-vs origin/master <18 docs>
-docs scanned: 18
-in-repo citations checked: 4
+python scripts/agents/check_doc_citations.py --changed-vs origin/master <23 docs>
+docs scanned: 23
+in-repo citations checked: 5
   resolved by exact: 4
+  resolved by suffix: 1
 external citations skipped: 16
 out-of-range or ambiguous: NONE
 ```
@@ -480,9 +520,18 @@ nothing.
 
 `**Status:** Complete` in the header, matching the phase README's Task
 7.4 row and this note's §Verification. Every file named in §Files Changed
-appears in `git diff origin/master --stat` (**19 files: 12 modified, 7
+appears in `git diff origin/master --stat` (**24 files: 17 modified, 7
 created**), and every file in that diff is named in §Files Changed —
-re-checked mechanically after the last edit. Three
+re-checked mechanically after the last content edit. Review round 1 cited
+this line reading "19 files: 12 modified, 7 created", which was true when
+written and went stale when `/commit-and-pr` added three
+`.claude/skills/` edits at the commit boundary; the round's own fixes
+then added two more files. **Every file-set count in this note is
+re-derived from `git diff` at the frozen tree rather than patched at the
+one line review cited** — the `--md` argument, the link sweep, the
+citation sweep and the lint count all moved with it. The two remaining
+`18`s were replaced by 20: that is the *non-skill* document count, a
+different number from the 23 `.md` in the diff. Three
 figures written before measurement were corrected in place rather than
 left to stand: "eleven defects" → twelve, "33 rows would say bit-equal"
 → 27, and "seven of the eight entry points past 1e-12" → exactly seven.

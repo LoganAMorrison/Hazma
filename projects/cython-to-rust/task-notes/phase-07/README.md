@@ -26,17 +26,28 @@ cutover and project close.
 ## Exit Criteria
 
 - All rows Complete; phase file frontmatter `status: Complete`;
-  release candidate publishes from CI.
+  release candidate **builds and tests** from CI, with the `publish`
+  job's release gate observed holding on a non-release event.
 - Phase learnings at `../../learnings/phase-07-cutover.md` and the
   project retrospective at `../../learnings/project-retrospective.md`.
 
-**All met on 2026-08-29.** The four task rows are Complete, the phase
-file's frontmatter reads `status: Complete`, and both learnings files
-exist. On "publishes from CI": `release.yml` has been dispatched three
-times and run once through its `pull_request` trigger, producing both
-wheels and the sdist with `publish` correctly skipped each time — the
-job is gated on `github.event_name == 'release'`, so the publish step
-itself is exercised only by an actual release.
+**All met on 2026-08-29, against the revised release clause.** The four
+task rows are Complete, the phase file's frontmatter reads
+`status: Complete`, and both learnings files exist. `release.yml` has
+been dispatched three times and run once through its `pull_request`
+trigger, producing both `cp310-abi3` wheels and the sdist and passing the
+workflow's own assertions, with `publish` reporting `skipping` in all
+four — the release gate holding, which is what this clause now asks for.
+
+**The clause was revised, not merely qualified, and the first row above
+records the revision.** It previously read "release candidate publishes
+from CI", which no closing PR can satisfy: `publish` is gated on
+`github.event_name == 'release'`, a release needs the `3.0.0` tag, and
+that tag exists only after the closing PR merges. See
+`../../phases/phase-07-cutover.md` §"Revision of the release clause" for
+the reasoning and the residual risk — **trusted publishing under
+`maturin-action` has never executed**, and the 3.0.0 release is its first
+run.
 
 ## Inputs Reviewed
 

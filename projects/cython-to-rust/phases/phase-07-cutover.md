@@ -186,26 +186,47 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 
 ## Exit Criteria
 
-- All tasks complete; a release candidate builds, tests, and publishes
-  from CI; no Cython, setuptools, or cibuildwheel-version-matrix
-  residue anywhere.
+- All tasks complete; no Cython, setuptools, or
+  cibuildwheel-version-matrix residue anywhere.
+- A release candidate **builds and tests from CI**: `release.yml`
+  produces both `cp310-abi3` wheels and the sdist and passes that
+  workflow's own wheel-tag, sole-extension and cross-version import
+  assertions, and its `publish` job's release gate is observed holding on
+  a non-release event.
 - Phase learnings written to `../learnings/phase-07-cutover.md`.
 
-**Met on 2026-08-29 (Task 7.4), with one clause qualified.** All four
-task rows are Complete and the frontmatter reads `status: Complete`. The
-residue clause is discharged and asserted rather than inspected:
-`test/test_no_cython_remains.py` fails on any Cython source, any
-setuptools build script, and any Cython entry in the build requirements,
-and `release.yml` carries no version matrix.
+### Revision of the release clause (Task 7.4, 2026-08-29)
 
-The qualification is on **"publishes from CI"**. `release.yml` has been
-dispatched three times and has run once through its `pull_request`
-trigger, building both `cp310-abi3` wheels and the sdist and passing its
-own tag, sole-extension and cross-version import assertions each time.
-The `publish` job is gated on `github.event_name == 'release'` and
-correctly reported `skipping` in all four runs, so **the publish step
-itself is still unexecuted** and cannot be exercised before a release is
-cut. That is the gate working as designed, not a hole in it — but it is
-an open instance of `docs/agents/lessons.md`
-`[unrun-workflow-cannot-close-a-criterion]`, and whoever cuts 3.0.0
-should watch that job rather than assume it.
+**The second bullet previously read "a release candidate builds, tests,
+and *publishes* from CI." It was unsatisfiable, and circularly so.**
+`release.yml`'s `publish` job is gated `if: github.event_name ==
+'release'`; a GitHub release needs the `3.0.0` tag; that tag exists only
+once the closing PR merges — and the closing PR is what this criterion
+gates. Holding closure until an upload is observed is therefore a
+deadlock rather than a stricter gate: the version bump could never land,
+so the release could never be cut, so `publish` could never run.
+
+The clause is narrowed to what closure can actually attest, and **the
+upload is reassigned rather than dropped** — it is now an explicit
+release-manager handoff, recorded in `../task-notes/phase-07/README.md`'s
+Handoff and in the closing PR. This is a narrowing of a gate, so the
+residual risk is stated plainly rather than buried: **trusted publishing
+under `PyO3/maturin-action` has never executed.** The 3.0.0 release is
+its first run, and it should be watched rather than assumed.
+
+**Met on 2026-08-29 (Task 7.4), as revised.** All four task rows are
+Complete and the frontmatter reads `status: Complete`. The residue clause
+is asserted rather than inspected: `test/test_no_cython_remains.py` fails
+on any Cython source, any setuptools build script, and any Cython entry
+in the build requirements, and `release.yml` carries no version matrix.
+The build-and-test clause is met by four observed `release.yml` runs —
+three `workflow_dispatch` and one `pull_request` (the closing PR's own,
+triggered by its `pyproject.toml` edit) — each producing both wheels and
+the sdist, passing the workflow's assertions, and reporting `publish` as
+`skipping`, which is the release gate holding.
+
+The original phrasing was an instance of `docs/agents/lessons.md`
+`[unrun-workflow-cannot-close-a-criterion]`, and this revision extends
+that class: when dispatching cannot reach the job because the criterion
+is structurally unsatisfiable, the fix is to revise the criterion and
+reassign the observation — not to qualify a "Met" that is not met.
