@@ -54,7 +54,8 @@ inventing a one-off scope.
   and, on a closing PR, in `CHANGELOG.md`.
 - **Version-bump check (project-closing PRs only).** If the diff flips a
   `projects/<slug>/PLAN.md` `status:` to `Complete`, the PR must carry
-  the `VERSION` bump in `hazma/__init__.py` and a `CHANGELOG.md` entry.
+  the version bump in `pyproject.toml`'s `[project] version` and a
+  `CHANGELOG.md` entry.
   `/execute-single-task` Step 8 is the canonical place to do it; if you
   arrive here with a closing diff that lacks it, stop and add it.
 

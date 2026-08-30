@@ -20,7 +20,7 @@ classifiers = ["Programming Language :: Python"]
 # `version` in rust/Cargo.toml is unrelated and stays where it is.)
 # `docs/versioning.md` names this line as the one number a closing PR
 # edits.
-version = "2.1.0"
+version = "3.0.0"
 
 # numpy >= 2.0: the source uses np.trapezoid, which NumPy 2.0 introduced as
 # the replacement for the removed np.trapz. scipy >= 1.13 is the first

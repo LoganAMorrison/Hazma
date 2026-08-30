@@ -854,6 +854,36 @@ Cython ones.
   pair's 4,180x, the ceiling here is the boost quadrature itself rather
   than the table build, which the two Rust rows price at ~0.5 ms.
 
-(Per-function drift lines land here as Phase 04–06 swaps merge; the
-Phase 07 CHANGELOG is assembled from this section — do not reconstruct
-it from memory.)
+## Task 7.4 — project close (2026-08-29)
+
+**No public value changes.** The whole diff is markdown plus one line of
+`pyproject.toml`, and that line is the version:
+
+```sh
+git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
+    '*.csv' '*.dat' '*.npy' '*.toml'
+# -> pyproject.toml   (the single hunk is `version = "2.1.0"` -> "3.0.0")
+```
+
+No code path, constant, table or signature is reachable from it, so no
+grid evaluation applies. The full suite is green either side —
+`pytest -q` is **2231 passed, 15 skipped, 12 subtests passed**, which
+includes `test/parity` at its declared budgets on the capturing platform,
+and `cargo test --no-default-features` is **258 passed**.
+
+One user-visible value does move, and it is not numerical:
+`hazma.VERSION` and `hazma.__version__` read back **3.0.0** instead of
+2.1.0, because Task 7.1 made `pyproject.toml`'s `[project] version` the
+source of truth and the attributes resolve it through
+`importlib.metadata`. That resolution is against the *installed*
+distribution, so an editable tree keeps reporting the old number until
+`pip install -e .` is re-run — `preflight.sh`'s import-smoke row said
+`version 2.1.0` on a tree whose `pyproject.toml` already said 3.0.0.
+
+**This closes the log.** Its aggregate is the `## [3.0.0]` section of
+`CHANGELOG.md`: 27 of the 41 entry points bit-for-bit identical to
+2.1.0 and the other 14 tabulated with their worst relative shift, the
+largest being `scalar_mediator_decay_spectrum` at **5.3327e-12**. The
+declared `major` bump is carried by Phase 00's two API removals, not by
+any of those figures — the re-check `../PLAN.md` §"Closing this project"
+asks for was run and the level is unchanged.
