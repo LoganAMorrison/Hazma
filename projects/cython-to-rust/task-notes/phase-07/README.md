@@ -187,7 +187,10 @@ cutover and project close.
 ### Task 7.2
 
 - Both dispatched `release.yml` runs, with `publish` skipped in each;
-  conclusions and the assertion output are pasted in the task note.
+  conclusions and the assertion output are pasted in the task note. PR #84
+  then ran it a third time through the new `pull_request` trigger, where
+  `Publish to PyPI` again reported `skipping` — the release gate holding
+  on a real pull-request event, not only under `workflow_dispatch`.
 - The two assertion scripts extracted verbatim from the workflow and run
   against locally built artifacts, then against eleven mutants — every
   failure branch fires and the compressed-manylinux shape passes.

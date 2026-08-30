@@ -199,6 +199,14 @@ build was correct and the assertion was wrong. It is kept in this table
 rather than replaced by the green one, because it is the evidence that
 the assertion can fail.
 
+The new `pull_request` trigger is exercised by the PR that ships it
+([#84](https://github.com/LoganAMorrison/Hazma/pull/84), run
+33288783161): the three build jobs appear as PR checks and pass, and
+`Publish to PyPI` reports **skipping**. That is the
+`github.event_name == 'release'` gate holding on a real `pull_request`
+event rather than only under `workflow_dispatch`, which is the property
+the trigger's safety rests on.
+
 Assertion output from the green run (`gh run view 33284053186 --log`):
 
 ```text
