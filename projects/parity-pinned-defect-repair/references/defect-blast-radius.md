@@ -167,6 +167,19 @@ block **only**. The guard `E_ρ − m_ρ < DBL_EPSILON` is absolute and one
 ulp at 775.26 MeV is 1.14e-13, ~500× `DBL_EPSILON`, so no other double
 reaches it.
 
+### B4 — scalar decay FSR normalization (1 case)
+
+`mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum` — the 15
+`.default` blocks, both value arrays, every position where an FSR channel
+is open; the 15 `mu_mu_only` blocks open none and do not move. Found and
+repaired after this roster was drawn
+([`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md)):
+both rest-frame FSR coefficients of the scalar kernel were half the
+pair-summed spectrum, so `repaired = stored + fsr_old`, with `fsr_old`
+half the repaired kernel's FSR-only spectrum. Declared in
+`test/parity/deltas.py`, which landed with the repair rather than under
+Task 1.
+
 ### The defects, and which group each is in
 
 Group A still has a live Cython twin and is on the clock for its oracle
@@ -181,6 +194,7 @@ capture; Group B does not, and has no ordering constraint at all.
 | B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
 | B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
 | B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs` |
+| B4 | Scalar decay spectrum's FSR coefficients are half size | [`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md) | deleted, Task 6.2 | `rust/src/kernels/scalar_decay_photon.rs` — **repaired** |
 
 ## Coverage arithmetic
 

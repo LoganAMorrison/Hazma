@@ -3,8 +3,11 @@ import numpy as np
 from hazma import spectra
 
 # Served by the Rust extension since cython-to-rust Task 6.2 deleted
-# `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx`. Import path,
-# call signature and returned values are unchanged; see
+# `hazma/scalar_mediator/scalar_mediator_decay_spectrum.pyx`. Import path
+# and call signature are unchanged; the returned values differ from the
+# `.pyx` in one declared way, the FSR channels being twice its size (the
+# kernel's `PAIR_NORMALIZATION`, CHANGELOG, and
+# `docs/followups/done/scalar-decay-fsr-half-normalized.md`). See
 # `rust/src/kernels/scalar_decay_photon.rs` for the port and
 # `projects/cython-to-rust/rules.md` rule 7 (Rust conventions 2) for why
 # the wrapper, not the extension, stays the public surface.

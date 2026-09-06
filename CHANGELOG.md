@@ -75,6 +75,23 @@ signature did.
 
 ### Changed
 
+- **The scalar mediator's decay photon spectrum was a factor of 2 low
+  in FSR.** The rest-frame `e⁺e⁻γ`, `μ⁺μ⁻γ` and `π⁺π⁻γ` coefficients of
+  `scalar_mediator_decay_spectrum` (the kernel behind
+  `ScalarMediator.dnde_ss`, the `s s` channel of `χχ → SS`) returned half
+  the pair-summed spectrum, at every energy, since the file was written
+  in 2018; the annihilation-side `dnde_xx_to_s_to_ffg` /
+  `dnde_xx_to_s_to_pipig` and the vector mediator's decay kernel were
+  right. Both coefficients are now doubled and pinned against those
+  closed forms and against the Altarelli-Parisi pair limit. The `s s`
+  spectrum's FSR components **double**; its meson- and muon-decay photons
+  and the `γγ` line do not move. Photon yield per scalar decay rises by
+  1.7% to 2.9% with the couplings in `test/parity/cases.py`, and
+  pointwise by up to a factor of two at energies where FSR is the only
+  open channel. A decaying scalar and a decaying vector of the same mass
+  now give the same `e⁺e⁻` FSR to within a percent. Details:
+  `docs/followups/done/scalar-decay-fsr-half-normalized.md`.
+
 - **Two-body kinematics near threshold move; everything else moves by
   roundoff at most.** `hazma.utils.cross_section_prefactor` and the
   two-body branches of `hazma.phase_space` (`Rambo.cross_section`,

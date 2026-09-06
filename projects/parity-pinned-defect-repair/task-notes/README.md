@@ -21,7 +21,7 @@ section tracks live *status*.
 
 | # | Task | Depends on | Status | Task Note |
 |---|------|------------|--------|-----------|
-| 1 | Delta-declaration layer | — | Not started | `task-1-delta-declarations.md` |
+| 1 | Delta-declaration layer | — | **Landed** with the B4 repair (`test/parity/deltas.py`); the ADR and the Task 1 note are still owed | `task-1-delta-declarations.md` |
 | 2 | Capture the corrected-value oracles | — | **Complete** | `task-2-cython-oracles.md` |
 | 3 | Closed-form delta models (B1–B3) | 1 | Not started | `task-3-closed-form-deltas.md` |
 | 4 | Repair A1 — boost integral window | 1, 2 | Not started | `task-4-boost-window.md` |
@@ -164,6 +164,15 @@ are recorded rather than re-derivable:
   photons per decay at `E_π` = 1000/1396/5000 MeV.
 - **A4**: the Michel spectrum integrates to 1.000000000000 (one ulp) at
   rest and at both boosts; shipped, 0.999625933330.
+- **B4** (repaired, outside the task sequence): the scalar decay
+  kernel's FSR-only spectrum at rest was 0.5000000000 × the
+  annihilation-side `dnde_xx_to_s_to_ffg` / `dnde_xx_to_s_to_pipig` in
+  every channel; now 1.000. `scalar_mediator_decay_spectrum`, all 15
+  `.default` blocks, both arrays: 3,061 of 4,305 positions move, 2,874
+  by more than 0.1%, pointwise up to exactly 2×; photon yield per decay
+  +1.7% to +2.9% with the corpus couplings. Declared relation held to
+  1e-3 (measured 3.1e-4). Details in
+  `docs/followups/done/scalar-decay-fsr-half-normalized.md`.
 
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`

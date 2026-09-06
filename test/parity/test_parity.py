@@ -41,7 +41,9 @@ For every block:
    the corpus stored there is one platform's rounding, not a number any
    reimplementation reproduces. Where the corpus stored an exact ``0.0``
    the comparison is absolute instead of relative, against
-   `tolerances.zero_floor`.
+   `tolerances.zero_floor`. Arrays a repair has moved on purpose are
+   declared in `deltas` and compared against the declared relation
+   instead of the stored value — see `_assert_declared_delta`.
 3. **The raises**, replayed rather than skipped. Three blocks record a
    `TypeError` at a kinematic edge (`sigma_xx_to_v_to_pipi` and
    `sigma_xx_to_v_to_pi0v` at ``e_cm = 2 mx``). The stored value there is
@@ -80,6 +82,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cases as corpus  # (imported after the sys.path entry above)
+import deltas
 import generate as corpus_generate
 import stability
 import tolerances
@@ -116,6 +119,12 @@ EXPECTED_MASKED_POSITIONS = 494
 #: version of that exemption covered 66,840 positions, so its size is the
 #: number worth making somebody defend in a diff (PR #71 review round 1).
 EXPECTED_PORTABILITY_ZEROS = 4
+
+#: How many stored arrays a repair has declared moved. A literal for the
+#: same reason as the two above: the size of the set the gate compares
+#: against something other than the stored corpus is the number worth
+#: defending in a diff.
+EXPECTED_DECLARED_ARRAYS = 30
 
 
 def _drop_unpinnable(
@@ -157,6 +166,72 @@ def _portability_zero_mask(
     if declared:
         mask[..., sorted(declared)] = True
     return mask
+
+
+def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
+    delta: deltas.Delta,
+    *,
+    live: np.ndarray,
+    pinned: np.ndarray,
+    term: np.ndarray,
+    compare: np.ndarray,
+    budget: tolerances.Budget,
+    where: str,
+) -> None:
+    """Compare one declared array against its declared relation.
+
+    Declared positions are held to ``pinned + term`` within the relation's
+    own budget; undeclared positions are held to ``pinned`` within the
+    case's budget as if nothing had been declared. Then the staleness
+    rule: wherever the term is larger than the relation's budget, the
+    live value must actually differ from the stored one, so a reverted
+    repair cannot hide behind a declaration that no longer describes it.
+    """
+    declared = np.zeros(pinned.shape, dtype=bool)
+    if delta.positions == deltas.ALL:
+        declared[...] = True
+    else:
+        declared[..., list(delta.positions)] = True
+    undeclared = compare & ~declared
+    if undeclared.any():
+        np.testing.assert_allclose(
+            live[undeclared],
+            pinned[undeclared],
+            rtol=budget.rtol,
+            atol=budget.atol,
+            equal_nan=True,
+            err_msg=f"{where}: an undeclared position moved beyond its budget "
+            f"({budget.why})",
+        )
+    selected = compare & declared
+    relation = delta.relation
+    np.testing.assert_allclose(
+        live[selected],
+        (pinned + term)[selected],
+        rtol=relation.rtol,
+        atol=budget.atol,
+        equal_nan=True,
+        err_msg=f"{where}: does not satisfy the {delta.repair} relation "
+        f"({relation.why})",
+    )
+    with np.errstate(divide="ignore", invalid="ignore"):
+        predicted = np.abs(term[selected]) / np.abs(pinned[selected])
+    moved = predicted > relation.rtol
+    assert moved.any(), (
+        f"{where}: the {delta.repair} declaration moves nothing beyond its "
+        "own budget here, so it is stale -- narrow it (deltas.py)"
+    )
+    assert not np.allclose(
+        live[selected][moved],
+        pinned[selected][moved],
+        rtol=relation.rtol,
+        atol=budget.atol,
+        equal_nan=True,
+    ), (
+        f"{where}: still equal to the stored corpus where the {delta.repair} "
+        "declaration says it moved -- the repair is reverted or the "
+        "declaration is stale (deltas.py)"
+    )
 
 
 def _blocks() -> list[Any]:
@@ -255,22 +330,40 @@ def test_entry_point_matches_corpus(
                 err_msg=f"{where} is not the pinned grid ({grid_budget.why})",
             )
             continue
+        delta = deltas.declared(case_name, block.label, suffix)
+        term = None
+        if delta is not None:
+            term = delta.relation.term(case.resolve(), block)[suffix]
+            term, _ = _drop_unpinnable(term, expected, case_name, block.label, suffix)
         live, pinned = _drop_unpinnable(
             actual[suffix], expected, case_name, block.label, suffix
         )
         # The four positions `stability` declares are compared against an
         # absolute floor; everything else -- including all 66,836 other
         # stored zeros, which `atol = 0` holds to exact equality -- goes
-        # through the ordinary budget.
+        # through the ordinary budget, or through the declared relation
+        # for the arrays a repair has moved on purpose.
         floored = _portability_zero_mask(pinned, case_name, block.label, suffix)
-        np.testing.assert_allclose(
-            live[~floored],
-            pinned[~floored],
-            rtol=budget.rtol,
-            atol=budget.atol,
-            equal_nan=True,
-            err_msg=f"{where} moved beyond its budget ({budget.why})",
-        )
+        if delta is None:
+            np.testing.assert_allclose(
+                live[~floored],
+                pinned[~floored],
+                rtol=budget.rtol,
+                atol=budget.atol,
+                equal_nan=True,
+                err_msg=f"{where} moved beyond its budget ({budget.why})",
+            )
+        else:
+            assert term is not None
+            _assert_declared_delta(
+                delta,
+                live=live,
+                pinned=pinned,
+                term=term,
+                compare=~floored,
+                budget=budget,
+                where=where,
+            )
         if floored.any():
             floor = tolerances.zero_floor(pinned)
             np.testing.assert_array_less(
@@ -439,6 +532,49 @@ def test_the_portability_floor_covers_only_four_positions() -> None:
         sum(len(v) for v in stability.PORTABILITY_ZEROS.values())
         == EXPECTED_PORTABILITY_ZEROS
     )
+
+
+def test_every_declared_delta_addresses_a_real_stored_array(
+    stored_arrays: ArrayLoader,
+) -> None:
+    """A declaration names a case, block and value array the corpus holds.
+
+    And every explicit position is in range for that array. A key that
+    resolves to nothing would silently declare nothing.
+    """
+    for (case_name, label, suffix), delta in deltas.DECLARED_DELTAS.items():
+        assert case_name in MANIFEST["cases"], f"{case_name}: no such corpus case"
+        blocks = {b["label"]: b for b in MANIFEST["cases"][case_name]["blocks"]}
+        assert label in blocks, f"{case_name}: no block {label!r}"
+        assert suffix in blocks[label]["arrays"], f"{case_name}[{label}]: no {suffix}"
+        assert suffix not in ABSCISSAE, f"{case_name}[{label}].{suffix} is a grid"
+        if delta.positions != deltas.ALL:
+            size = stored_arrays(case_name)[
+                blocks[label]["arrays"][suffix]["key"]
+            ].shape[-1]
+            assert delta.positions, f"{case_name}[{label}].{suffix}: empty positions"
+            assert all(0 <= i < size for i in delta.positions)
+            assert len(set(delta.positions)) == len(delta.positions)
+
+
+def test_every_declared_delta_is_a_roster_repair_with_its_evidence() -> None:
+    """The label is from the closed roster and the evidence file exists.
+
+    The mechanism only aggregates at close time if every declaration
+    names a repair the roster knows, and only stays re-derivable if the
+    measurement behind it is written down somewhere that is checked in.
+    """
+    repo_root = Path(__file__).resolve().parents[2]
+    for key, delta in deltas.DECLARED_DELTAS.items():
+        assert delta.repair in deltas.REPAIRS, f"{key}: repair {delta.repair!r}"
+        assert delta.measured.strip(), f"{key}: no measurement"
+        assert delta.relation.why.strip(), f"{key}: relation budget has no reason"
+        assert (repo_root / delta.evidence).is_file(), f"{key}: {delta.evidence}"
+
+
+def test_the_declared_arrays_are_counted() -> None:
+    """Growing the declared set has to show up as a change to a literal."""
+    assert len(deltas.DECLARED_DELTAS) == EXPECTED_DECLARED_ARRAYS
 
 
 def test_only_the_declared_cases_are_masked() -> None:

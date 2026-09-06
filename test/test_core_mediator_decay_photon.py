@@ -23,7 +23,9 @@ The four parts
    the helpers themselves stays in ``test/test_core_dispatch.py``.
 2. :class:`TestAgainstAnIndependentReference` — the ``.pyx`` bodies
    re-transcribed in NumPy and ``scipy.integrate.quad`` (:func:`reference`
-   below), compared at a stated budget.
+   below), compared at a stated budget. The scalar FSR transcriptions
+   carry :data:`PAIR_NORMALIZATION`, the one deliberate departure from
+   the ``.pyx``; :class:`TestPhysics` is where that factor is justified.
 3. :class:`TestPhysics` — statements that owe nothing to the
    implementation being replaced: thresholds, support, the line's photon
    count, additivity over channels, and broadcasting.
@@ -77,9 +79,11 @@ import numpy as np
 import pytest
 from scipy.integrate import quad
 
-from hazma import spectra
+from hazma import parameters, spectra
 from hazma._core import scalar_mediator as core_scalar
 from hazma._core import vector_mediator as core_vector
+from hazma.scalar_mediator import ScalarMediator
+from hazma.vector_mediator import VectorMediator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -113,6 +117,17 @@ ALPHA_EM = 1.0 / 137.0
 #: ``qe = sqrt(4 pi alpha)``, the module-level ``cdef double`` both
 #: ``.pyx`` files declared.
 QE = math.sqrt(4.0 * math.pi * ALPHA_EM)
+
+#: The factor ``scalar_mediator_decay_spectrum.pyx``'s two rest-frame FSR
+#: coefficients were missing. The ``.pyx`` returned half the pair-summed
+#: spectrum in every FSR channel; ``rust/src/kernels/scalar_decay_photon.rs``
+#: restores the factor as its ``PAIR_NORMALIZATION`` and the transcriptions
+#: below apply the same one, so the reference describes the repaired kernel
+#: rather than the deleted source. :class:`TestPhysics` pins the corrected
+#: size against the annihilation-side matrix elements and the collinear
+#: limit; ``docs/followups/done/scalar-decay-fsr-half-normalized.md`` has
+#: the measurement.
+PAIR_NORMALIZATION = 2.0
 
 #: Points in the rest-frame interpolation table — ``n_interp_pts`` in both
 #: sources.
@@ -223,7 +238,7 @@ def _interp_with_tail(energy: float, energies: np.ndarray, dnde: np.ndarray) -> 
 
 
 def _fsr_cp_scalar(egam: float, ms: float) -> float:
-    """``dnde_fsr_cp_srf`` -- ``scalar_mediator_decay_spectrum.pyx:63-84``."""
+    """``dnde_fsr_cp_srf`` -- ``scalar_mediator_decay_spectrum.pyx:63-84``, times :data:`PAIR_NORMALIZATION`."""
     mupi = MASS_PI / ms
     x = 2.0 * egam / ms
     xmax = 1 - 4.0 * mupi**2
@@ -235,11 +250,11 @@ def _fsr_cp_scalar(egam: float, ms: float) -> float:
         + (-1 + 2 * mupi**2 + x) * math.log((1 - x - root) ** 2 / (-1 + x - root) ** 2)
     ) / x
     coeff = QE**2 / (8.0 * math.sqrt(1 - 4 * mupi**2) * math.pi**2)
-    return 2 * (dynamic * coeff) / ms
+    return PAIR_NORMALIZATION * (2 * (dynamic * coeff) / ms)
 
 
 def _fsr_l_scalar(egam: float, ml: float, ms: float) -> float:
-    """``dnde_fsr_l_srf`` -- ``scalar_mediator_decay_spectrum.pyx:90-115``."""
+    """``dnde_fsr_l_srf`` -- ``scalar_mediator_decay_spectrum.pyx:90-115``, times :data:`PAIR_NORMALIZATION`."""
     mul = ml / ms
     x = 2.0 * egam / ms
     xmax = 1 - 4.0 * mul**2
@@ -252,7 +267,7 @@ def _fsr_l_scalar(egam: float, ml: float, ms: float) -> float:
         * math.log((1 - x + root) ** 2 / (-1 + x + root) ** 2)
     ) / x
     coeff = QE**2 / (16.0 * (1 - 4 * mul**2) ** 1.5 * math.pi**2)
-    return 2 * (dynamic * coeff) / ms
+    return PAIR_NORMALIZATION * (2 * (dynamic * coeff) / ms)
 
 
 def _fsr_cp_vector(egam: float, mv: float) -> float:
@@ -680,6 +695,118 @@ class TestPhysics:
         empty = np.array([], dtype=float)
         assert np.asarray(scalar_call(empty, 600.0, 550.0)).shape == (0,)
         assert dnde_decay_v(empty, 600.0, 550.0, VECTOR_PWS, "total").shape == (0,)
+
+    # ---- the FSR normalization ------------------------------------------
+    #
+    # `chi chi -> S* -> f fbar gamma` at `sqrt(s) = m_s` and `S -> f fbar
+    # gamma` at rest share a matrix element: the dark-matter current
+    # factorizes out of the normalized photon spectrum (the vector case by
+    # current conservation). So the annihilation-side closed forms in
+    # `hazma.scalar_mediator` / `hazma.vector_mediator`, which reproduce
+    # the pair-summed collinear limit of arXiv:1907.11846 Eq. 4.6 to under
+    # a percent, are an oracle for the decay kernels' FSR that shares no
+    # code with them. The kernels evaluate at the legacy constant table
+    # (`ALPHA_EM = 1/137`, the masses above); the models at
+    # `hazma.parameters`. The alpha ratio is applied explicitly and the
+    # mass differences (3e-8 for the leptons, 1.5e-6 for the pion) set the
+    # budgets.
+
+    #: `alpha_legacy / alpha_PDG`: what separates a kernel from a model
+    #: evaluating the same expression.
+    ALPHA_RATIO = ALPHA_EM / parameters.alpha_em
+
+    @staticmethod
+    def _fsr_grid(mass: float, mode: str) -> np.ndarray:
+        # Forty photon energies from the soft end to 98% of the channel's
+        # own endpoint `x_max = 1 - 4 (m_f / m_s)^2`, so every point is
+        # inside the support of both sides.
+        m_f = {
+            "e e g": parameters.electron_mass,
+            "mu mu g": parameters.muon_mass,
+            "pi pi g": parameters.charged_pion_mass,
+        }[mode]
+        x_max = 1.0 - 4.0 * (m_f / mass) ** 2
+        return np.geomspace(1e-2, 0.98 * x_max * mass / 2.0, 40)
+
+    @pytest.mark.parametrize(
+        ("mode", "index", "rtol"),
+        [("e e g", 0, 1e-6), ("mu mu g", 1, 1e-6), ("pi pi g", 3, 1e-4)],
+    )
+    def test_the_scalar_fsr_is_the_annihilation_matrix_element_at_rest(
+        self, mode: str, index: int, rtol: float
+    ) -> None:
+        # The pre-repair kernel sat at exactly 0.5 here in all three
+        # channels (`docs/followups/done/scalar-decay-fsr-half-normalized.md`).
+        mass = 550.0
+        model = ScalarMediator(
+            mx=1e-3, ms=1e3, gsxx=1.0, gsff=1.0, gsGG=0.0, gsFF=0.0, lam=1e5
+        )
+        egams = self._fsr_grid(mass, mode)
+        pws = np.zeros(5)
+        pws[index] = 1.0
+        if mode == "pi pi g":
+            want = model.dnde_xx_to_s_to_pipig(egams, mass)
+        else:
+            lepton = (
+                parameters.electron_mass if mode == "e e g" else parameters.muon_mass
+            )
+            want = model.dnde_xx_to_s_to_ffg(egams, mass, lepton)
+        got = np.asarray(scalar_call(egams, mass, mass, pws=pws, modes=[mode]))
+        assert np.all(want > 0.0)
+        np.testing.assert_allclose(got / self.ALPHA_RATIO, want, rtol=rtol, atol=0.0)
+
+    @pytest.mark.parametrize(
+        ("mode", "index", "rtol"),
+        [("e e g", 0, 1e-6), ("mu mu g", 1, 1e-6), ("pi pi g", 3, 1e-4)],
+    )
+    def test_the_vector_fsr_is_the_annihilation_matrix_element_at_rest(
+        self, mode: str, index: int, rtol: float
+    ) -> None:
+        # The vector twin never had the defect; this is the same statement
+        # so that the two kernels are held to one normalization.
+        mass = 550.0
+        model = VectorMediator(
+            mx=1e-3,
+            mv=1e3,
+            gvxx=1.0,
+            gvuu=1.0,
+            gvdd=-1.0,
+            gvss=0.0,
+            gvee=1.0,
+            gvmumu=1.0,
+        )
+        egams = self._fsr_grid(mass, mode)
+        pws = np.zeros(4)
+        pws[index] = 1.0
+        if mode == "pi pi g":
+            want = model.dnde_xx_to_v_to_pipig(egams, mass)
+        else:
+            want = model.dnde_xx_to_v_to_ffg(
+                egams, mass, "e" if mode == "e e g" else "mu"
+            )
+        got = np.array([vector_call(e, mass, mass, pws=pws, mode=mode) for e in egams])
+        assert np.all(want > 0.0)
+        np.testing.assert_allclose(got / self.ALPHA_RATIO, want, rtol=rtol, atol=0.0)
+
+    def test_the_scalar_lepton_fsr_reproduces_the_collinear_limit(self) -> None:
+        # Independent of both models: at `m_e / m_s = 5e-4` and `x = 0.02`
+        # the exact `S -> e+ e- gamma` spectrum is the pair-summed
+        # Altarelli-Parisi form (Eq. 4.6 of arXiv:1907.11846, twice the
+        # per-leg `dnde_photon_ap_fermion`) to 1.4e-5. A 1e-3 budget is
+        # fifty times that and five hundred times tighter than the factor
+        # of two the repair removed.
+        mass = 1000.0
+        egam = 0.01 * mass
+        limit = (
+            2.0
+            * spectra.dnde_photon_ap_fermion(
+                np.array([egam]), mass**2, parameters.electron_mass
+            )[0]
+        )
+        got = scalar_call(
+            egam, mass, mass, pws=np.array([1.0, 0, 0, 0, 0]), modes=["e e g"]
+        )
+        assert got / self.ALPHA_RATIO == pytest.approx(limit, rel=1e-3, abs=0.0)
 
 
 # ===========================================================================
