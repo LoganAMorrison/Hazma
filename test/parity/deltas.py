@@ -24,6 +24,16 @@ declaration knows how to compute. The term here is evaluated live, from
 the repaired kernel, and is its own adaptive quadrature; the budget each
 relation carries is measured, not assumed, and says so in its ``why``.
 
+Positions
+---------
+A declaration covers exactly the positions its mechanism reaches
+(``rules.md`` rule 5): either an explicit tuple, every entry of which the
+term must move, or `MOVED`, which resolves at comparison time to the
+positions where the term is non-zero. Every other position of a declared
+array is compared against the stored value under the case's own budget,
+exactly as if nothing had been declared, so a regression where the
+repair changed nothing is still caught at that budget.
+
 Staleness
 ---------
 A declaration that no longer describes a change is a hole in the gate
@@ -48,10 +58,13 @@ if TYPE_CHECKING:
 #: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
 REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"})
 
-#: The sentinel for "every position of the array".
-ALL = "all"
+#: The sentinel for "every position the term is non-zero at", resolved
+#: against the term at comparison time. A term that is zero at a position
+#: has not moved it, and a declaration that covered it anyway would be
+#: wider than its mechanism.
+MOVED = "moved"
 
-Positions = tuple[int, ...] | Literal["all"]
+Positions = tuple[int, ...] | Literal["moved"]
 
 #: ``(entry point, block) -> {array suffix: term}``. Evaluates whatever
 #: the relation adds to the stored array, on the block's own grids, for
@@ -89,9 +102,11 @@ class Delta:
     ----------
     repair : str
         Which roster entry moved it; drawn from `REPAIRS`.
-    positions : tuple of int or ALL
-        Which positions the relation covers. Undeclared positions are
-        still compared against the stored value under the case's budget.
+    positions : tuple of int or MOVED
+        Which positions the relation covers: an explicit tuple, every
+        entry of which the term must move, or `MOVED` for wherever the
+        term is non-zero. Undeclared positions are still compared against
+        the stored value under the case's budget.
     relation : Additive
         How the repaired value relates to the stored one.
     measured : str
@@ -148,13 +163,13 @@ def _scalar_decay_fsr_half(
 
 _B4 = Delta(
     repair="B4",
-    positions=ALL,
+    positions=MOVED,
     relation=Additive(
         term=_scalar_decay_fsr_half,
         rtol=1e-3,
         why="the term is its own cos(theta) quadrature (epsrel 1e-5) over a "
         "different integrand than the stored total, and the repaired total "
-        "is a third; measured 3.1e-4 worst relative over all 4,305 "
+        "is a third; measured 3.1e-4 worst relative over the 3,065 "
         "declared positions, at ms_550.boosted_strong E=2696 MeV where the "
         "boost window is narrow and the integrator's own error estimate is "
         "what moves. Three times headroom; the pre-repair arrays sit a "
@@ -163,16 +178,19 @@ _B4 = Delta(
     measured="the FSR-only spectrum at rest is 0.5000000000 x the annihilation-"
     "side ScalarMediator.dnde_xx_to_s_to_ffg / dnde_xx_to_s_to_pipig at the "
     "same invariant mass, in every channel, to ten digits after removing the "
-    "legacy/PDG alpha ratio; the vector twin is 1.000 x its own. 3,061 of the "
-    "4,305 pinned positions move, 2,874 by more than 0.1%, up to exactly "
-    "double.",
+    "legacy/PDG alpha ratio; the vector twin is 1.000 x its own. The FSR "
+    "term is non-zero at 3,065 of the 4,305 pinned positions; 2,874 of "
+    "those move by more than 0.1%, up to exactly double.",
     evidence="docs/followups/done/scalar-decay-fsr-half-normalized.md",
 )
 
 #: Every declared array. The ``mu_mu_only`` blocks of the same case are
 #: deliberately absent: they open no FSR channel and must still match the
 #: stored arrays bit for bit, which is the "moved only what it intended"
-#: half of the proof.
+#: half of the proof. Within a declared array the same holds position by
+#: position: wherever the FSR term is zero -- above a channel's endpoint,
+#: below the soft cut, outside the boost window -- `MOVED` leaves the
+#: position at the case's own budget.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",

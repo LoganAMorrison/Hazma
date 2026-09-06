@@ -181,17 +181,29 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     """Compare one declared array against its declared relation.
 
     Declared positions are held to ``pinned + term`` within the relation's
-    own budget; undeclared positions are held to ``pinned`` within the
-    case's budget as if nothing had been declared. Then the staleness
-    rule: wherever the term is larger than the relation's budget, the
-    live value must actually differ from the stored one, so a reverted
-    repair cannot hide behind a declaration that no longer describes it.
+    own budget; every other position is held to ``pinned`` within the
+    case's budget as if nothing had been declared. A declaration reaches
+    only what its term moves: `deltas.MOVED` resolves to the non-zero
+    positions of the term, and an explicit tuple may not name a position
+    the term leaves at zero -- that would be a carve-out wider than its
+    mechanism, and it fails here rather than silently loosening the gate.
+    Then the staleness rule: wherever the term is larger than the
+    relation's budget, the live value must actually differ from the
+    stored one, so a reverted repair cannot hide behind a declaration
+    that no longer describes it.
     """
-    declared = np.zeros(pinned.shape, dtype=bool)
-    if delta.positions == deltas.ALL:
-        declared[...] = True
+    moved_by_term = term != 0.0
+    if delta.positions == deltas.MOVED:
+        declared = moved_by_term
     else:
+        declared = np.zeros(pinned.shape, dtype=bool)
         declared[..., list(delta.positions)] = True
+        unmoved = declared & ~moved_by_term
+        assert not unmoved.any(), (
+            f"{where}: the {delta.repair} declaration names "
+            f"{int(unmoved.sum())} position(s) its term does not move -- a "
+            "declaration wider than its mechanism (deltas.py)"
+        )
     undeclared = compare & ~declared
     if undeclared.any():
         np.testing.assert_allclose(
@@ -548,7 +560,7 @@ def test_every_declared_delta_addresses_a_real_stored_array(
         assert label in blocks, f"{case_name}: no block {label!r}"
         assert suffix in blocks[label]["arrays"], f"{case_name}[{label}]: no {suffix}"
         assert suffix not in ABSCISSAE, f"{case_name}[{label}].{suffix} is a grid"
-        if delta.positions != deltas.ALL:
+        if delta.positions != deltas.MOVED:
             size = stored_arrays(case_name)[
                 blocks[label]["arrays"][suffix]["key"]
             ].shape[-1]
@@ -575,6 +587,121 @@ def test_every_declared_delta_is_a_roster_repair_with_its_evidence() -> None:
 def test_the_declared_arrays_are_counted() -> None:
     """Growing the declared set has to show up as a change to a literal."""
     assert len(deltas.DECLARED_DELTAS) == EXPECTED_DECLARED_ARRAYS
+
+
+class TestTheDeclaredDeltaComparison:
+    """`_assert_declared_delta` on synthetic arrays, mutation by mutation.
+
+    The proof obligations in
+    ``projects/parity-pinned-defect-repair/references/corpus-repinning.md``
+    are properties of the gate, not claims in a note: a declaration must
+    not loosen the positions its term leaves alone, must not be widenable
+    by a position the term does not move, and must fail once the repair
+    it describes is reverted. Each is run here as the mutation that would
+    exploit it, against a fake declaration whose term is known exactly.
+    """
+
+    #: The case budget an undeclared position is held to.
+    BUDGET = tolerances.Budget(rtol=1e-9, atol=0.0, why="synthetic")
+
+    @staticmethod
+    def _declaration(positions: deltas.Positions) -> deltas.Delta:
+        return deltas.Delta(
+            repair="B4",
+            positions=positions,
+            relation=deltas.Additive(
+                term=lambda fn, block: {},
+                rtol=1e-3,
+                why="synthetic",
+            ),
+            measured="synthetic",
+            evidence="test/parity/deltas.py",
+        )
+
+    @staticmethod
+    def _arrays() -> tuple[np.ndarray, np.ndarray]:
+        # Six stored values; the term moves the first three only, by
+        # amounts that dwarf the relation budget, and leaves the last
+        # three at exactly zero -- the shape of a real additive repair
+        # whose channel closes partway along the grid.
+        pinned = np.array([1.0, 2.0, 0.5, 0.0486, 3.0, 7.0])
+        term = np.array([1.0, 0.5, 0.5, 0.0, 0.0, 0.0])
+        return pinned, term
+
+    def _check(self, delta: deltas.Delta, live: np.ndarray) -> None:
+        pinned, term = self._arrays()
+        _assert_declared_delta(
+            delta,
+            live=live,
+            pinned=pinned,
+            term=term,
+            compare=np.ones(pinned.shape, dtype=bool),
+            budget=self.BUDGET,
+            where="synthetic",
+        )
+
+    def test_the_repaired_array_passes(self) -> None:
+        pinned, term = self._arrays()
+        self._check(self._declaration(deltas.MOVED), pinned + term)
+
+    def test_noise_within_the_relation_budget_passes_where_the_term_moved(
+        self,
+    ) -> None:
+        pinned, term = self._arrays()
+        live = pinned + term
+        live[1] *= 1.0 + 5e-4
+        self._check(self._declaration(deltas.MOVED), live)
+
+    def test_a_regression_where_the_term_is_zero_fails_at_the_case_budget(
+        self,
+    ) -> None:
+        # A 0.05% regression at a position the repair does not reach must
+        # fail at the case's 1e-9, not pass at the relation's 1e-3.
+        pinned, term = self._arrays()
+        live = pinned + term
+        live[3] *= 1.0 + 5e-4
+        with pytest.raises(AssertionError, match="undeclared position"):
+            self._check(self._declaration(deltas.MOVED), live)
+
+    def test_a_reverted_repair_fails(self) -> None:
+        # With the term far outside the relation budget, a revert trips
+        # the relation itself before the staleness rule gets a look.
+        pinned, _ = self._arrays()
+        with pytest.raises(AssertionError, match="does not satisfy the B4 relation"):
+            self._check(self._declaration(deltas.MOVED), pinned.copy())
+
+    def test_a_declaration_that_moves_nothing_beyond_its_budget_is_stale(
+        self,
+    ) -> None:
+        # The other way a declaration can outlive its repair: the term is
+        # real but everywhere smaller than the relation budget, so the
+        # relation is satisfied by the *unrepaired* array too. That is a
+        # declaration asserting nothing, and it must fail as stale.
+        pinned = np.array([1.0, 2.0, 0.5, 0.0486, 3.0, 7.0])
+        term = pinned * 1e-6
+        term[3:] = 0.0
+        with pytest.raises(AssertionError, match="stale"):
+            _assert_declared_delta(
+                self._declaration(deltas.MOVED),
+                live=pinned + term,
+                pinned=pinned,
+                term=term,
+                compare=np.ones(pinned.shape, dtype=bool),
+                budget=self.BUDGET,
+                where="synthetic",
+            )
+
+    def test_an_explicit_tuple_of_moved_positions_passes(self) -> None:
+        pinned, term = self._arrays()
+        self._check(self._declaration((0, 1, 2)), pinned + term)
+
+    def test_widening_a_tuple_by_an_unmoved_position_fails(self) -> None:
+        # Proof obligation 2: widening the declaration by one position the
+        # term does not move is refused outright, so the widened
+        # declaration cannot be used to absorb a regression there.
+        pinned, term = self._arrays()
+        with pytest.raises(AssertionError, match="wider than its mechanism"):
+            self._check(self._declaration((0, 1, 2, 3)), pinned + term)
 
 
 def test_only_the_declared_cases_are_masked() -> None:

@@ -23,11 +23,13 @@ function's budget.
 
 ## Commands
 
-Run the gate. One test per corpus block (623 of them) plus 15 guards;
-around five minutes of single-core work, nearly all of it the nested
-adaptive quadrature in the rho and mediator-spectrum kernels. The
-pytest-xdist `addopts` in `pyproject.toml` spread it across cores, so
-the wall-clock is that cost divided by the machine:
+Run the gate. One test per corpus block (623 of them) plus 25 others — the
+guards on the corpus, the mask, the roster and the declaration table (`pytest
+test/parity/test_parity.py --collect-only -q | tail -1` reports 648); around
+five minutes of single-core work, nearly all of it the nested adaptive
+quadrature in the rho and mediator-spectrum kernels. The pytest-xdist
+`addopts` in `pyproject.toml` spread it across cores, so the wall-clock is
+that cost divided by the machine:
 
 ```bash
 pytest test/parity

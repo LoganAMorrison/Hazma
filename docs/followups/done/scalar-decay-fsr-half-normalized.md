@@ -79,9 +79,11 @@ was never affected.
    declares all 30 `.default` arrays of
    `mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum` as
    `stored + fsr_old`, with `fsr_old` evaluated as half the repaired
-   kernel's FSR-only spectrum. The 15 `mu_mu_only` arrays stay undeclared
-   and still match bit for bit, which is the "moved only what it
-   intended" half of the proof.
+   kernel's FSR-only spectrum, at the 3,065 of their 4,305 positions
+   where that term is non-zero; the other 1,240 stay at the case budget.
+   The 15 `mu_mu_only` arrays stay undeclared and still match bit for
+   bit. Together that is the "moved only what it intended" half of the
+   proof.
 4. `CHANGELOG.md` records the shift under `Changed`.
 
 ## Entry points
@@ -102,7 +104,7 @@ was never affected.
 - **The declared relation is held to 1e-3, not to the case's 1e-9.**
   The term is its own `cos θ` quadrature (`epsrel = 1e-5`) over a
   different integrand than the stored total, and the repaired total is
-  a third; measured 3.1e-4 worst relative over all 4,305 declared
+  a third; measured 3.1e-4 worst relative over the 3,065 declared
   positions, at `ms_550.boosted_strong`, `E = 2696` MeV, where the boost
   window is narrow and the integrator's own error estimate is what
   moves. Where the FSR is the only open channel the pre-repair value is

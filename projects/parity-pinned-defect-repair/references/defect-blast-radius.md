@@ -170,9 +170,11 @@ reaches it.
 ### B4 — scalar decay FSR normalization (1 case)
 
 `mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum` — the 15
-`.default` blocks, both value arrays, every position where an FSR channel
-is open; the 15 `mu_mu_only` blocks open none and do not move. Found and
-repaired after this roster was drawn
+`.default` blocks, both value arrays, at the 3,065 of their 4,305
+positions where the FSR term is non-zero (`test/parity/deltas.py`,
+`MOVED`); the 15 `mu_mu_only` blocks open no FSR channel and do not
+move. The case is inside A3's set (above). Found and repaired after this
+roster was drawn
 ([`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md)):
 both rest-frame FSR coefficients of the scalar kernel were half the
 pair-summed spectrum, so `repaired = stored + fsr_old`, with `fsr_old`
@@ -198,12 +200,13 @@ capture; Group B does not, and has no ordering constraint at all.
 
 ## Coverage arithmetic
 
-The corpus has 41 cases. The rows above name 7 + 1 + 6 + 6 + 1 + 1 + 2
-= **24 case slots** across seven defects, but three of the seven sets are
-wholly contained in another — derived, not eyeballed:
+The corpus has 41 cases. The rows above name
+7 + 1 + 6 + 6 + 1 + 1 + 2 + 1 = **25 case slots** across eight defects,
+but four of the eight sets are wholly contained in another — derived,
+not eyeballed:
 
 ```text
-B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3     and A1, A2, A3, A4 are pairwise disjoint
+B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3   B4 ⊆ A3     and A1, A2, A3, A4 are pairwise disjoint
 ```
 
 So the union is exactly `|A1| + |A2| + |A3| + |A4|` = 7 + 1 + 6 + 6 =
@@ -212,7 +215,12 @@ now *disjoint* — A2 reaches only `spectra.photon.muon`, A3 reaches
 exactly the six cases A2 was predicted to share with it — so Task 8
 opens six cases of its own rather than adding positions to ones Task 7
 already declared, and `rules.md` rule 7's no-overlap requirement binds
-between A3 and B3 rather than between A2 and A3. And A4 is disjoint from
+between A3 and B3, and between A3 and B4, rather than between A2 and
+A3. B4 is the one repair that has already landed: its declaration on
+`scalar_mediator_decay_spectrum` covers the positions the FSR term
+moves, and A3 will reach the same arrays through the `pi pi` decay
+channel, so Task 8 either proves the two position sets disjoint or
+folds B4's declaration into a composite. And A4 is disjoint from
 everything else, which is what makes Task 10 safe to run in parallel.
 
 Untouched: **21** — the 18 `cross_sections.*`, the 2 `spectra.neutrino.*`
@@ -221,11 +229,13 @@ interpolating integral), and `spectra.photon.neutral_pion` (the π⁰ → γγ
 box reaches neither the muon kernel nor the boost integral). 20 + 21 = 41.
 
 That arithmetic is the cheapest check on this file, and it has now done
-its job once: Task 2's measurement cut A2 from 7 cases to 1, the slot
+its job twice. Task 2's measurement cut A2 from 7 cases to 1, the slot
 count fell from 30 to 24 and one containment (`A3 ⊆ A2`) inverted into a
 disjointness — but the union stayed at 20, because the six cases A2 lost
-are exactly the six A3 keeps. Redo the sum after any measured change and
-make it come out to 41 again rather than patching one cell.
+are exactly the six A3 keeps. Then B4 joined the roster with one case
+that was already inside A3's set, so the slot count rose from 24 to 25
+and the union stayed at 20 again. Redo the sum after any measured change
+and make it come out to 41 again rather than patching one cell.
 
 ## The deletion schedule this radius has to beat
 

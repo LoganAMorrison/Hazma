@@ -2,7 +2,7 @@
 status: In Progress
 phased: false
 version_bump: minor
-deliverable: The seven parity-pinned numerical defects repaired, each with a declared per-array delta asserted against the corpus arrays that pinned the defect — which stay committed
+deliverable: The eight parity-pinned numerical defects repaired (B4 landed ahead of the task sequence in PR #87), each with a declared per-array delta asserted against the corpus arrays that pinned the defect — which stay committed
 created: 2026-08-19
 ---
 
@@ -12,8 +12,11 @@ created: 2026-08-19
 
 ## Goal
 
-Repair the seven live numerical defects the `cython-to-rust` port
-surfaced, and do it under a corpus mechanism that keeps the arrays which
+Repair the eight live numerical defects the `cython-to-rust` port
+surfaced — seven rostered when this plan was drawn, and B4, found and
+repaired ahead of the task sequence in
+[PR #87](https://github.com/LoganAMorrison/Hazma/pull/87) — and do it
+under a corpus mechanism that keeps the arrays which
 pinned each defect rather than overwriting them. Every repair ships with
 a **declared delta**: a named statement of which corpus positions move,
 by how much, and why — asserted as a gate, so a fix that leaks past its
@@ -71,9 +74,9 @@ longer racing the port.
 
 **In scope:**
 
-- The seven defects rostered in
+- The eight defects rostered in
   [`references/defect-blast-radius.md`](references/defect-blast-radius.md),
-  each repaired in the Rust kernel that now serves it.
+  each repaired in the Rust kernel that now serves it (B4 already is).
 - A delta-declaration layer under `test/parity/` that pins each repair's
   blast radius while leaving `test/parity/data/*.npz` untouched.
 - A committed, provenance-stamped oracle capture from the four live
@@ -101,7 +104,8 @@ longer racing the port.
 
 ## Numerical impact
 
-**This project moves published numbers, deliberately, seven times.** That
+**This project moves published numbers, deliberately, eight times**
+(one of them, B4, already landed). That
 is the whole deliverable, and it is what sets `version_bump: minor` —
 no public name, signature, return shape or documented unit changes, but
 users' plots move. Known magnitudes, from the follow-ups' own
@@ -182,6 +186,12 @@ declaration set and a collected count that matches today's, proving the
 layer is inert before any repair lands. A shape test that fails if a
 declaration names a case, block, array or position the corpus does not
 contain. `git diff --stat -- test/parity/data` empty.
+
+**Status:** landed in [PR #87](https://github.com/LoganAMorrison/Hazma/pull/87)
+together with the B4 repair rather than ahead of the first one, so the
+inertness proof took a different shape — see
+`task-notes/task-1-delta-declarations.md` and
+[`adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`](adrs/ADR-0001-corpus-repairs-are-declared-deltas.md).
 
 ### Task 2: Capture the corrected-value oracles from the four live twins
 
@@ -395,7 +405,10 @@ A2; A2 measured at one case (`spectra.photon.muon`) and the two are now
 **disjoint**, so every case here is one Task 8 opens itself rather than
 one Task 7 has already touched, and `rules.md` rule 7's no-overlap
 requirement binds between this task and Task 9 (B3, the rho `rest`
-blocks) rather than against Task 7. The specific figure the follow-up
+blocks) rather than against Task 7 — and against the B4 declaration
+already on `scalar_mediator_decay_spectrum`, which this task must prove
+disjoint from its own positions or fold into one composite. The specific
+figure the follow-up
 pins is confirmed from Cython:
 `dnde_photon_charged_pion(900, 1396)` moves from `0.0` to
 `3.585860e-07` MeV⁻¹, against the `3.586e-07` predicted. A test that no
@@ -491,12 +504,12 @@ measured shift, and the `minor` bump.
 **Scope / implementation notes:** The per-repair figures accumulate in
 `task-notes/README.md`'s "Numerical impact so far" as each task lands;
 this task aggregates rather than reconstructs. Re-check the level against
-the aggregate before bumping — seven deliberate corrections to published
+the aggregate before bumping — eight deliberate corrections to published
 spectra with no API change is `minor`, and nothing in Tasks 4–10 should
 have raised it, but the check is the point.
 
 **Deliverable / gate:** `scripts/agents/preflight.sh --closing` green;
-`PLAN.md` `status: Complete`; the seven follow-ups moved to
+`PLAN.md` `status: Complete`; the seven follow-ups still under `todo/` moved to
 `docs/followups/done/` with their inbound links repointed and the
 revision pinned, per
 [`docs/workflow.md`](../../docs/workflow.md)'s follow-up lifecycle and
