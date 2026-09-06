@@ -2,7 +2,7 @@
 
 **Project:** cython-to-rust
 **Ran:** 2026-08-03 → 2026-08-29 (26 calendar days, 8 phases, 33 tasks)
-**Shipped as:** hazma 3.0.0
+**Shipped as:** hazma 2.2.0
 **Deliverable:** Hazma's compiled layer rebuilt in Rust (PyO3, one abi3
 `hazma._core`, maturin-built), zero Cython, and a permanent parity-test
 corpus.
@@ -62,7 +62,7 @@ writing a statement the original never made — an analytic normalization
 check, a sibling-to-sibling diff, a rest-frame limit, a forward-cone
 argument, a continuum subtraction — in order to have something to hold
 the port to. Section 3 draws the general lesson; the roster is in the
-3.0.0 CHANGELOG's `Known issues` and in `docs/followups/todo/`.
+2.2.0 CHANGELOG's `Known issues` and in `docs/followups/todo/`.
 
 **ADRs:** three, all Accepted, none superseded or amended after
 acceptance. ADR-0001 (PyO3 + maturin over pybind11) was decided before
@@ -262,7 +262,7 @@ Four filed at close, plus the standing backlog the project sourced.
 by-product, and they deserve a conversation the schedule of this project
 never gave them.** Six are sequenced in
 [`projects/parity-pinned-defect-repair/`](../../parity-pinned-defect-repair/PLAN.md);
-the rest are individual `docs/followups/todo/` entries, and the 3.0.0
+the rest are individual `docs/followups/todo/` entries, and the 2.2.0
 CHANGELOG's `Known issues` section is the user-facing roster with
 magnitudes. Two are worth naming here because they are the ones a user is
 most likely to be affected by without noticing: the **boost integral**
@@ -304,7 +304,7 @@ next one.
 - **The running numerical record has to be a file, not a memory.**
   `task-notes/numerical-impact.md` — one entry per task giving the
   function, the grid, and the result, appended in task order — is what
-  the 3.0.0 CHANGELOG was assembled from at close, twenty-six days and
+  the 2.2.0 CHANGELOG was assembled from at close, twenty-six days and
   thirty-three tasks after the first entry. It was moved out of the
   working-memory README at Task 5.3 precisely because it had outgrown a
   section. No closing agent could have reconstructed those figures, and

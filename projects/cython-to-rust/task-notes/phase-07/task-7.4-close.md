@@ -74,15 +74,21 @@ plus `../../PLAN.md` §"Closing this project":
   for the Phase 07 aggregate" (`../numerical-impact.md`, Task 0.2). So
   closing is a promotion of that heading plus the Phase 02–06 material,
   not a fresh section written beside it.
-- **The declared `major` survives the re-check, and nothing numerical
-  drives it.** The largest drift in the whole port is
+- **The re-check lowered the declared `major` to `minor`, and nothing
+  numerical drives either.** The largest drift in the whole port is
   `scalar_mediator_decay_spectrum` at **5.3327e-12** relative — a
-  `patch`-level number under `docs/versioning.md`. `major` is carried
+  `patch`-level number under `docs/versioning.md`. `major` was carried
   entirely by Phase 00's two API removals (`hazma.gamma_ray`,
   `hazma.deprecated.rambo`), exactly as `PLAN.md` §"Numerical impact"
-  predicted. The one genuinely user-visible numerical change is Task
-  0.3's threshold repair (1.3e-4 within 1e-10 of threshold, plus three
-  edge behaviors), and it too is already written up in `[Unreleased]`.
+  predicted. Neither can break working code — the first was
+  un-importable in every released tag, the second warned on import and
+  named `hazma.phase_space` — so `docs/versioning.md` gains a
+  reachability carve-out covering both and the release ships as
+  **2.2.0**. `minor` stands on its own regardless: this release adds
+  `hazma.utils.two_body_momentum` and `hazma.spectra.dnde_photon_fsr`,
+  and Task 0.3's threshold repair is a genuinely user-visible numerical
+  change (1.3e-4 within 1e-10 of threshold, plus three edge behaviors),
+  already written up in `[Unreleased]`.
 - **Exactly seven entry points moved past `rules.md` rule 3's 1e-12
   threshold, and all seven are mediator spectra that moved for one
   reason.** Task 6.2's three and Task 6.3's four are `crate::quad`
@@ -122,7 +128,7 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Decisions and Implementation Notes
 
-- **Promote `[Unreleased]` to `## [3.0.0] — 2026-08-29` rather than open
+- **Promote `[Unreleased]` to `## [2.2.0] — 2026-08-29` rather than open
   a new section.** Phase 00's blocks are already the settled wording and
   every later phase's material is additive to them. A second section
   would split one release across two headings and break the
@@ -151,7 +157,7 @@ plus `../../PLAN.md` §"Closing this project":
   reviewer offered two remedies; **the first is unavailable.** "Keep
   closure pending until the release publish is observed" deadlocks:
   `publish` is gated on `github.event_name == 'release'`, a release needs
-  the `3.0.0` tag, and that tag exists only after this closing PR merges,
+  the `2.2.0` tag, and that tag exists only after this closing PR merges,
   so closure would gate on an event that closure itself enables. Taking
   the second remedy — formally revise the criterion — is also what
   `execute-single-task` Step 7 prescribes for a gate sentence that is
@@ -180,10 +186,10 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Files Changed
 
-- `CHANGELOG.md` — `[Unreleased]` promoted to `[3.0.0]`; the migration
+- `CHANGELOG.md` — `[Unreleased]` promoted to `[2.2.0]`; the migration
   summary, the aggregated drift table and the `Known issues` block added;
   the section list in the file header amended for `Known issues`.
-- `pyproject.toml` — `[project] version` `2.1.0` → `3.0.0`.
+- `pyproject.toml` — `[project] version` `2.1.0` → `2.2.0`.
 - `projects/cython-to-rust/PLAN.md` — `status: Complete`; Phase 07 row
   filled in.
 - `projects/README.md` — `cython-to-rust` row moved Active → Completed.
@@ -239,7 +245,7 @@ plus `../../PLAN.md` §"Closing this project":
   | `pytest` | PASS — `2231 passed, 15 skipped, 12 subtests passed` |
   | `import hazma` | PASS |
   | `markdownlint` | **FAIL** — pre-existing, see below |
-  | `version bump` | PASS — `2.1.0 → 3.0.0 + CHANGELOG entry` |
+  | `version bump` | PASS — `2.1.0 → 2.2.0 + CHANGELOG entry` |
   | `forbidden tokens` | PASS — none added |
 
 - **All three FAIL rows are pre-existing, and none is this task's.**
@@ -284,9 +290,9 @@ plus `../../PLAN.md` §"Closing this project":
 
 - **The version resolves after a rebuild.** `uv pip install -e .` then
   `python -c "import hazma; print(hazma.VERSION, hazma.__version__)"` →
-  `3.0.0 3.0.0`. Worth running explicitly: `hazma.VERSION` reads the
+  `2.2.0 2.2.0`. Worth running explicitly: `hazma.VERSION` reads the
   *installed* metadata, so preflight's import-smoke row reported
-  `version 2.1.0` from a tree whose `pyproject.toml` already said 3.0.0.
+  `version 2.1.0` from a tree whose `pyproject.toml` already said 2.2.0.
 
 - **The drift table was derived, not transcribed.** The 14-moved /
   27-bit-equal split is read out of `test/parity/tolerances.py` — 11
@@ -311,21 +317,31 @@ doing so: one line of `pyproject.toml` (the version) and markdown.
 ```sh
 git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
     '*.csv' '*.dat' '*.npy' '*.toml'
-# -> pyproject.toml    (single hunk: version = "2.1.0" -> "3.0.0")
+# -> pyproject.toml    (single hunk: version = "2.1.0" -> "2.2.0")
 ```
 
 No code path, constant, table or signature is reachable, so no grid
 evaluation applies. Recorded as the closing entry in
 [`../numerical-impact.md`](../numerical-impact.md), which also states the
-one user-visible non-numerical move (`hazma.VERSION` → `3.0.0`) and the
+one user-visible non-numerical move (`hazma.VERSION` → `2.2.0`) and the
 aggregate the CHANGELOG carries.
 
-**Version level re-checked, not inherited.** `PLAN.md`'s
-`version_bump: major` holds: the largest drift anywhere in the port is
-5.3327e-12 relative, `patch`-level under `docs/versioning.md`, and
-`major` rests on Phase 00's removal of `hazma.gamma_ray` and
-`hazma.deprecated.rambo` — the latter `major` by the
-`hazma/deprecated/` rule specifically.
+**Version level re-checked, not inherited, and lowered.** `PLAN.md`
+declared `version_bump: major`; it now reads `minor` and the release is
+**2.2.0**. Nothing numerical ever drove the level — the largest drift
+anywhere in the port is 5.3327e-12 relative, `patch`-level under
+`docs/versioning.md` — so `major` rested entirely on Phase 00's removal
+of `hazma.gamma_ray` and `hazma.deprecated.rambo`. Neither removal can
+break working code: `hazma/gamma_ray.py` opens with
+`from hazma import rambo` and `hazma/rambo.py` appears in no released
+tag, and `hazma/deprecated/rambo.py` warned on import toward
+`hazma.phase_space`. `docs/versioning.md` had no exception for either
+case, so this change adds the **reachability carve-out** that covers
+both, and `minor` then holds on its own merits through the two added
+public functions and Task 0.3's threshold repair. The lowering note the
+rule requires is in [`../README.md`](../README.md) §"Decisions and
+Implementation Notes"; ADR-0003 carries a dated note because its
+mitigation cited the old level.
 
 ## Open Questions
 
@@ -337,10 +353,10 @@ open:
 
 - **`release.yml`'s `publish` job has never executed.** Three dispatches
   and one `pull_request` run all skipped it correctly, which is what the
-  `github.event_name == 'release'` gate is for. Cutting 3.0.0 is the
+  `github.event_name == 'release'` gate is for. Cutting 2.2.0 is the
   first execution — watch it (`docs/agents/lessons.md`
   `[unrun-workflow-cannot-close-a-criterion]`).
-- **Twelve reproduced 2.1.0 defects ship in 3.0.0.** That is
+- **Twelve reproduced 2.1.0 defects ship in 2.2.0.** That is
   `rules.md` rules 1 and 2 working as intended, not an oversight; the
   CHANGELOG's `Known issues` section says so to users and
   `projects/parity-pinned-defect-repair/` sequences the repairs.
@@ -449,7 +465,7 @@ citation *is* covered, and is one of the four resolved above —
 | Retrospective/Phase-07 "`pytest -q` 2231/15/12" | preflight's pytest row | `2231 passed, 15 skipped, 12 subtests passed` | OK |
 | Constants stub "twelve names disagree" | `the_two_tables_disagree_where_the_cython_says_they_do` | **12** entries | OK |
 | Constants stub "two α values differ by 2.6e-4" | `(1/137 − 1/137.035999084) / (1/137.035999084)` | 2.627e-4 | OK |
-| `docs/versioning.md` version snippet | `grep '^version' pyproject.toml` | `3.0.0` | **EDITED** — snippet still said 2.1.0 |
+| `docs/versioning.md` version snippet | `grep '^version' pyproject.toml` | `2.2.0` | **EDITED** — snippet still said 2.1.0 |
 | Skills naming the version's home | `rg -n 'hazma/__init__\.py' .claude/skills/ .codex/skills/` | 3 hits before, **0** after | **EDITED** — see below |
 | `task-pipeline/SKILL.md` lint delta | `markdownlint --dot` on this tree vs `git show origin/master:` copy | **7 errors both sides**, same rules and contexts | KEPT — pre-existing |
 
@@ -458,7 +474,7 @@ citation *is* covered, and is one of the four resolved above —
 **No public value changes (verified:
 `git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd'
 '*.csv' '*.dat' '*.npy' '*.toml'` → `pyproject.toml` only, whose single
-hunk is `version = "2.1.0"` → `"3.0.0"`).** No code path, constant,
+hunk is `version = "2.1.0"` → `"2.2.0"`).** No code path, constant,
 table or signature is reachable from this diff, so no grid evaluation
 applies. `pytest -q` is `2231 passed, 15 skipped, 12 subtests passed`,
 which includes `test/parity` at its declared budgets and
@@ -469,12 +485,12 @@ which includes `test/parity` at its declared budgets and
 
 | Criterion | Artifact |
 | --- | --- |
-| CHANGELOG entry with the aggregated drift table, naming the slug | `CHANGELOG.md` §`[3.0.0]` — lede names `cython-to-rust` and links its `PLAN.md`; the 11-row table under `Changed`; `preflight.sh --closing` asserts the `## [3.0.0]` section exists |
-| Version bumped per `version_bump`, level re-checked | `pyproject.toml:23` `3.0.0`; re-check recorded in §Numerical impact; `preflight.sh --closing` row `version bump  2.1.0 → 3.0.0 + CHANGELOG entry` |
+| CHANGELOG entry with the aggregated drift table, naming the slug | `CHANGELOG.md` §`[2.2.0]` — lede names `cython-to-rust` and links its `PLAN.md`; the 11-row table under `Changed`; `preflight.sh --closing` asserts the `## [2.2.0]` section exists |
+| Version bumped per `version_bump`, level re-checked | `pyproject.toml:23` `2.2.0`; re-check recorded in §Numerical impact; `preflight.sh --closing` row `version bump  2.1.0 → 2.2.0 + CHANGELOG entry` |
 | `preflight.sh --closing` green | all rows PASS except the two documented trunk reds (below) |
 | Retrospective incl. §5 seeds, three named candidates | `../../learnings/project-retrospective.md` §5 — all three filed, plus a fourth; `docs/followups/todo/` cross-checked whole (27 = 27 above) |
 | `PLAN.md status: Complete` | `head -2 projects/cython-to-rust/PLAN.md` → `status: Complete` |
-| `projects/README.md` row moved with Shipped date | Completed table row, `2026-08-29 (hazma 3.0.0)` |
+| `projects/README.md` row moved with Shipped date | Completed table row, `2026-08-29 (hazma 2.2.0)` |
 | Phase 07 closed: rows, frontmatter, learnings, history sweep | phase README's four rows Complete; `phases/phase-07-cutover.md` frontmatter `status: Complete`; `../../learnings/phase-07-cutover.md`; the two Phase 07 cross-phase entries appended verbatim to `../history-{findings,decisions}.md` under a `## Phase 07 (moved 2026-08-29 at project close)` heading |
 
 ### Preflight
@@ -487,9 +503,9 @@ PASS   cargo fmt --check       rust/
 PASS   cargo clippy            rust/
 PASS   cargo test              rust/
 PASS   pytest                  2231 passed, 15 skipped, 12 subtests passed
-PASS   import hazma            version 3.0.0
+PASS   import hazma            version 2.2.0
 FAIL   markdownlint            (task-pipeline/SKILL.md only; unchanged)
-PASS   version bump            2.1.0 → 3.0.0 + CHANGELOG entry
+PASS   version bump            2.1.0 → 2.2.0 + CHANGELOG entry
 PASS   forbidden tokens        none added
 ```
 
@@ -540,7 +556,7 @@ left to stand: "eleven defects" → twelve, "33 rows would say bit-equal"
 
 **There is no next task.** The cython-to-rust project is Complete —
 eight phases, 33 tasks, 2026-08-03 to 2026-08-29, shipped as hazma
-3.0.0.
+2.2.0.
 
 Read [`../../learnings/project-retrospective.md`](../../learnings/project-retrospective.md)
 first; it replaces this note and the other 32 for every later reader
@@ -552,8 +568,8 @@ carries the packaging contract.
 
 **Safe to assume:**
 
-- `[project] version` is `3.0.0` and `CHANGELOG.md` has a matching
-  `## [3.0.0] — 2026-08-29` section. `preflight.sh --closing` is green on
+- `[project] version` is `2.2.0` and `CHANGELOG.md` has a matching
+  `## [2.2.0] — 2026-08-29` section. `preflight.sh --closing` is green on
   both.
 - `projects/README.md` lists cython-to-rust under **Completed**; the only
   Active project is `parity-pinned-defect-repair`.

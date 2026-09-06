@@ -1,7 +1,8 @@
 # ADR 0003: Remove the broken `hazma.gamma_ray` module
 
 **Date:** 2026-08-03
-**Status:** Accepted (signed off by Logan 2026-08-04)
+**Status:** Accepted (signed off by Logan 2026-08-04); versioning
+consequence superseded 2026-09-06, see the note at the end.
 **Scope:** Project-scoped (applies only within `projects/cython-to-rust/`).
 
 ## Context
@@ -73,3 +74,21 @@ migration exactly as prescribed: `hazma.spectra.dnde_photon_fsr`
 CHANGELOG entry for this removal should therefore name
 `hazma.spectra.dnde_photon_fsr` as `gamma_ray_fsr`'s replacement
 instead of "none". The decision recorded here is unchanged.
+
+## Note (2026-09-06): the versioning argument, superseded
+
+The Context and Consequences above reason from a `docs/versioning.md`
+that made every public removal `major` with no exception, and lean on
+the project being `major` anyway so that this deletion cost nothing
+extra. That rule now carries a **reachability carve-out**: a name that
+no released version could import, or a `hazma/deprecated/` module that
+warned on import and named its replacement, is `minor`. Both of Phase
+00's removals qualify, and the project shipped as **hazma 2.2.0**.
+
+**The decision itself is unaffected.** Its load-bearing argument was
+always that `hazma.gamma_ray` cannot be imported and so has no oracle to
+rebuild against — the same fact the carve-out now rests on. What changes
+is only the mitigation: deletion is no longer free because the release
+was breaking regardless, it is free because it breaks nothing. The
+lowering is recorded in
+[`../task-notes/README.md`](../task-notes/README.md).

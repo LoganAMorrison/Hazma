@@ -862,7 +862,7 @@ Cython ones.
 ```sh
 git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
     '*.csv' '*.dat' '*.npy' '*.toml'
-# -> pyproject.toml   (the single hunk is `version = "2.1.0"` -> "3.0.0")
+# -> pyproject.toml   (the single hunk is `version = "2.1.0"` -> "2.2.0")
 ```
 
 No code path, constant, table or signature is reachable from it, so no
@@ -872,18 +872,21 @@ includes `test/parity` at its declared budgets on the capturing platform,
 and `cargo test --no-default-features` is **258 passed**.
 
 One user-visible value does move, and it is not numerical:
-`hazma.VERSION` and `hazma.__version__` read back **3.0.0** instead of
+`hazma.VERSION` and `hazma.__version__` read back **2.2.0** instead of
 2.1.0, because Task 7.1 made `pyproject.toml`'s `[project] version` the
 source of truth and the attributes resolve it through
 `importlib.metadata`. That resolution is against the *installed*
 distribution, so an editable tree keeps reporting the old number until
 `pip install -e .` is re-run — `preflight.sh`'s import-smoke row said
-`version 2.1.0` on a tree whose `pyproject.toml` already said 3.0.0.
+`version 2.1.0` on a tree whose `pyproject.toml` already said 2.2.0.
 
-**This closes the log.** Its aggregate is the `## [3.0.0]` section of
+**This closes the log.** Its aggregate is the `## [2.2.0]` section of
 `CHANGELOG.md`: 27 of the 41 entry points bit-for-bit identical to
 2.1.0 and the other 14 tabulated with their worst relative shift, the
 largest being `scalar_mediator_decay_spectrum` at **5.3327e-12**. The
-declared `major` bump is carried by Phase 00's two API removals, not by
-any of those figures — the re-check `../PLAN.md` §"Closing this project"
-asks for was run and the level is unchanged.
+bump is carried by the two added public functions and Task 0.3's
+threshold repair, not by any of those figures. The re-check `../PLAN.md`
+§"Closing this project" asks for was run and **lowered the declared
+`major` to `minor`**: the `major` rested only on Phase 00's two API
+removals, and neither can break working code, so `docs/versioning.md`
+gained a reachability carve-out covering both.

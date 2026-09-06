@@ -15,7 +15,7 @@ The phase delivered what it promised. `pyproject.toml` is the only build
 entry point, `[build-system] requires` is `["maturin>=1.5,<2.0"]`, a
 release publishes two `cp310-abi3` wheels and an sdist from
 `PyO3/maturin-action@v1`, no live instruction document states a Cython
-fact, and the project closes at 3.0.0. Four of four tasks landed; no ADR
+fact, and the project closes at 2.2.0. Four of four tasks landed; no ADR
 was needed, because ADR-0001 had already fixed the framework and every
 packaging question this phase answered was an implementation of it.
 

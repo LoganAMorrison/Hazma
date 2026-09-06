@@ -13,7 +13,7 @@ its magnitude and a pointer to the tracked repair. **Numerical changes go
 under `Changed` with the magnitude stated** — a spectrum that moves is a
 user-facing change even when no signature did.
 
-## [3.0.0] — 2026-08-29
+## [2.2.0] — 2026-08-29
 
 **Hazma's compiled layer is now Rust.** The twenty Cython extension
 modules are gone, replaced by a single abi3 extension, `hazma._core`,
@@ -27,10 +27,17 @@ keyword arguments, same return shapes and units. Delivered as the
 `cython-to-rust` project
 ([`projects/cython-to-rust/PLAN.md`](projects/cython-to-rust/PLAN.md)).
 
-**The major bump is an API removal, not a number.** `hazma.gamma_ray` and
-`hazma.deprecated.rambo` are gone; see `Removed`. Of the 41 compiled
-entry points the port moved, 27 reproduce 2.1.0 **bit-for-bit** and the
-other 14 move by at most **5.4e-12** relative — see the table under
+**Two public names are gone, and neither removal can break working
+code.** `hazma.gamma_ray` could not be imported in any released version,
+and `hazma.deprecated.rambo` shipped an import-time warning naming
+`hazma.phase_space` as its replacement. Both meet the reachability
+carve-out in [`docs/versioning.md`](docs/versioning.md), which is why a
+release that removes two public names is `minor`; check your imports
+against `Removed` before upgrading anyway.
+
+**The port itself changes no number by more than roundoff.** Of the 41
+compiled entry points it moved, 27 reproduce 2.1.0 **bit-for-bit** and
+the other 14 move by at most **5.4e-12** relative — see the table under
 `Changed`. The one substantive numerical change in this release is the
 two-body threshold repair, also under `Changed`, and it predates the
 Rust work.
@@ -81,8 +88,11 @@ its normalization.
 ### Removed
 
 - **`hazma.gamma_ray` — the whole module.** It could not be imported in
-  any released version (it transitively imported the long-deleted
-  `hazma.rambo`), so no working user code depended on it. Decided in
+  any released version — `hazma/gamma_ray.py` opened with
+  `from hazma import rambo`, and `hazma/rambo.py` is in no released tag —
+  so no working user code depended on it, which is the other half of the
+  reachability carve-out in
+  [`docs/versioning.md`](docs/versioning.md). Decided in
   [`projects/cython-to-rust/adrs/ADR-0003`](projects/cython-to-rust/adrs/ADR-0003-remove-gamma-ray-module.md).
   Both public functions have a named replacement, **neither a drop-in**:
   - `gamma_ray_decay` → `hazma.spectra.dnde_photon`, the live n-body
@@ -94,9 +104,11 @@ its normalization.
 
 - **`hazma.deprecated.rambo`.** The last module under
   `hazma/deprecated/`, superseded by the pure-NumPy `hazma.phase_space`
-  it already warned users toward on import. Removing anything from
-  `hazma/deprecated/` is `major` per
-  [`docs/versioning.md`](docs/versioning.md); the package is now empty.
+  it already warned users toward on import. That warning shipped in
+  2.1.0 and named the replacement, which is what puts this removal under
+  the reachability carve-out in
+  [`docs/versioning.md`](docs/versioning.md) rather than in `major`; the
+  package is now empty.
 
 - **The `hazma._gamma_ray` and `hazma._phase_space` Cython extensions**
   (private, never re-exported, and the only C++ in the tree) and the
@@ -260,7 +272,7 @@ its normalization.
 
 Twelve defects that hazma 2.1.0 already had, found while porting and
 **reproduced here rather than repaired**. None is new in
-3.0.0 and none changes a number relative to 2.1.0; each is tracked in
+2.2.0 and none changes a number relative to 2.1.0; each is tracked in
 [`docs/followups/todo/`](docs/followups/todo/) and most are sequenced for
 repair in
 [`projects/parity-pinned-defect-repair/`](projects/parity-pinned-defect-repair/PLAN.md).

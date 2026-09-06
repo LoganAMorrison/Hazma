@@ -46,4 +46,4 @@ for why `_template.md` files stay in place after scaffolding.
 
 | Slug | Deliverable | Phased | Started | Shipped |
 | --- | --- | --- | --- | --- |
-| [`cython-to-rust`](cython-to-rust/PLAN.md) | Compiled layer rebuilt in Rust (PyO3, abi3 `hazma._core`, maturin); zero Cython; permanent parity corpus | Yes (8) | 2026-08-03 | 2026-08-29 (hazma 3.0.0) |
+| [`cython-to-rust`](cython-to-rust/PLAN.md) | Compiled layer rebuilt in Rust (PyO3, abi3 `hazma._core`, maturin); zero Cython; permanent parity corpus | Yes (8) | 2026-08-03 | 2026-08-29 (hazma 2.2.0) |

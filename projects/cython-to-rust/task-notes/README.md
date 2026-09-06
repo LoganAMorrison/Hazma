@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
-**Status:** Complete (2026-08-29, shipped as hazma 3.0.0)
+**Status:** Complete (2026-08-29, shipped as hazma 2.2.0)
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (accepted 2026-08-04 —
 Phase 03 Tasks 3.2/3.3 no longer gated), ADR-0003 (accepted
@@ -28,7 +28,7 @@ not re-discovery. Per-task status lives in each `phase-XX/README.md`.
 | 04 | Spectra kernels | [phase-04-spectra-kernels.md](../phases/phase-04-spectra-kernels.md) | [phase-04/README.md](phase-04/README.md) | **Complete (2026-08-20)** — all six tasks done; 16 entry points on Rust and `hazma/spectra/` holds no Cython `def`; [learnings](../learnings/phase-04-spectra-kernels.md) |
 | 05 | Mediator cross sections | [phase-05-mediator-cross-sections.md](../phases/phase-05-mediator-cross-sections.md) | [phase-05/README.md](phase-05/README.md) | **Complete (2026-08-21)** — all three tasks done; [learnings](../learnings/phase-05-mediator-cross-sections.md) |
 | 06 | Mediator spectra | [phase-06-mediator-spectra.md](../phases/phase-06-mediator-spectra.md) | [phase-06/README.md](phase-06/README.md) | **Complete (2026-08-27)** — all four tasks done; zero `.pyx`/`.pxd` remain; [learnings](../learnings/phase-06-mediator-spectra.md) |
-| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | **Complete (2026-08-29)** — all four tasks done; maturin backend and release pipeline, docs swept, project closed at 3.0.0; [learnings](../learnings/phase-07-cutover.md), [retrospective](../learnings/project-retrospective.md) |
+| 07 | Cutover + close | [phase-07-cutover.md](../phases/phase-07-cutover.md) | [phase-07/README.md](phase-07/README.md) | **Complete (2026-08-29)** — all four tasks done; maturin backend and release pipeline, docs swept, project closed at 2.2.0; [learnings](../learnings/phase-07-cutover.md), [retrospective](../learnings/project-retrospective.md) |
 
 ```text
 00 ──► 01 ──► 02 ──► 03 ──► 04 ──► 06 ──► 07
@@ -98,6 +98,23 @@ and swept into the archive when its phase closes.
 
 _Phase 07's one cross-phase decision was swept into the archive at
 project close on 2026-08-29._
+
+**`version_bump` lowered `major` → `minor` at close (2026-09-06),** per
+the lowering rule in `docs/versioning.md`. The project's `major` rested
+entirely on Phase 00's two API removals, and neither can break working
+code: `hazma.gamma_ray` was un-importable in every released tag, and
+`hazma/deprecated/rambo.py` shipped an import-time warning naming
+`hazma.phase_space`. The rule as it then stood made every removal
+`major` with no escape valve, which made `hazma/deprecated/` a freezer
+rather than the staging area it is meant to be, so the same change adds
+a **reachability carve-out** to `docs/versioning.md` covering both cases
+and lands the release as **2.2.0**. `minor` is independently correct on
+its own merits: this release adds `hazma.utils.two_body_momentum` and
+`hazma.spectra.dnde_photon_fsr` and moves published numbers at the
+two-body threshold. The earlier records that reason from the old rule —
+`phases/phase-00-dead-code-purge.md`, the Phase 00 task notes, and
+`references/cython-inventory.md` — are history and stand as written;
+ADR-0003 carries a dated note because its mitigation cited the bump.
 
 ## Files Changed
 
@@ -258,7 +275,7 @@ than quoting them: the current state is in the open phase's
 ## Handoff to Next Task
 
 **The project is closed.** All eight phases are Complete, all 33 tasks
-landed, and it shipped as **hazma 3.0.0** on 2026-08-29. There is no next
+landed, and it shipped as **hazma 2.2.0** on 2026-08-29. There is no next
 task in this project.
 
 **Read the retrospective, not this file.**
@@ -274,7 +291,7 @@ working memory and the per-phase READMEs are history
 - **Repairing one of the twelve reproduced 2.1.0 defects** →
   [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md)
   sequences six of them and defines the declared-delta mechanism; the
-  rest are individual `docs/followups/todo/` entries. The 3.0.0
+  rest are individual `docs/followups/todo/` entries. The 2.2.0
   CHANGELOG's `Known issues` section is the user-facing roster with
   magnitudes. **Do not repair one outside that mechanism** — the parity
   corpus pins the wrong values on purpose and `../rules.md` rule 2

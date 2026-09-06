@@ -200,7 +200,7 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 **The second bullet previously read "a release candidate builds, tests,
 and *publishes* from CI." It was unsatisfiable, and circularly so.**
 `release.yml`'s `publish` job is gated `if: github.event_name ==
-'release'`; a GitHub release needs the `3.0.0` tag; that tag exists only
+'release'`; a GitHub release needs the `2.2.0` tag; that tag exists only
 once the closing PR merges — and the closing PR is what this criterion
 gates. Holding closure until an upload is observed is therefore a
 deadlock rather than a stricter gate: the version bump could never land,
@@ -211,7 +211,7 @@ upload is reassigned rather than dropped** — it is now an explicit
 release-manager handoff, recorded in `../task-notes/phase-07/README.md`'s
 Handoff and in the closing PR. This is a narrowing of a gate, so the
 residual risk is stated plainly rather than buried: **trusted publishing
-under `PyO3/maturin-action` has never executed.** The 3.0.0 release is
+under `PyO3/maturin-action` has never executed.** The 2.2.0 release is
 its first run, and it should be watched rather than assumed.
 
 **Met on 2026-08-29 (Task 7.4), as revised.** All four task rows are

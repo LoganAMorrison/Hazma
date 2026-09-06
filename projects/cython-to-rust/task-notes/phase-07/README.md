@@ -4,7 +4,7 @@
 **Project:** cython-to-rust
 **Phase:** 07
 **Status:** Complete (2026-08-29) — all four tasks done; the project
-closed at hazma 3.0.0
+closed at hazma 2.2.0
 **Plan References:** `../../phases/phase-07-cutover.md`
 **Related ADRs:** ADR-0001
 **Depends On:** Phase 06 complete
@@ -42,11 +42,11 @@ four — the release gate holding, which is what this clause now asks for.
 **The clause was revised, not merely qualified, and the first row above
 records the revision.** It previously read "release candidate publishes
 from CI", which no closing PR can satisfy: `publish` is gated on
-`github.event_name == 'release'`, a release needs the `3.0.0` tag, and
+`github.event_name == 'release'`, a release needs the `2.2.0` tag, and
 that tag exists only after the closing PR merges. See
 `../../phases/phase-07-cutover.md` §"Revision of the release clause" for
 the reasoning and the residual risk — **trusted publishing under
-`maturin-action` has never executed**, and the 3.0.0 release is its first
+`maturin-action` has never executed**, and the 2.2.0 release is its first
 run.
 
 ## Inputs Reviewed
@@ -68,12 +68,17 @@ run.
   meantime — "Wheels now ship 20 extension modules instead of 25" was
   true when Phase 00 wrote it and is not true of the release — which is
   the cost of drafting a release note twenty-six days early.
-- **The declared `major` survives the re-check, and nothing numerical
-  drives it.** The largest drift in the whole port is
+- **Nothing numerical drives the bump, and the re-check lowered it to
+  `minor`.** The largest drift in the whole port is
   `scalar_mediator_decay_spectrum` at 5.3327e-12 relative, a
-  `patch`-level number under `docs/versioning.md`. `major` rests entirely
-  on Phase 00's two API removals, exactly as `PLAN.md` §"Numerical
-  impact" predicted on day one.
+  `patch`-level number under `docs/versioning.md`. The declared `major`
+  rested entirely on Phase 00's two API removals, exactly as `PLAN.md`
+  §"Numerical impact" predicted on day one — and neither removal can
+  break working code, so the same change adds a reachability carve-out
+  to `docs/versioning.md` and ships **2.2.0**. What holds `minor` up on
+  its own is the two added public functions and Task 0.3's threshold
+  repair; see `../README.md` §"Decisions and Implementation Notes" for
+  the lowering.
 - **Exactly the fourteen entry points that moved are the fourteen whose
   budget was tightened**, and the other 27 are bit-equal. Derived from
   `test/parity/tolerances.py` rather than from the prose record: 11
@@ -282,9 +287,9 @@ run.
 
 ### Task 7.4
 
-- Release: `CHANGELOG.md` (`[Unreleased]` → `[3.0.0]`, plus the drift
+- Release: `CHANGELOG.md` (`[Unreleased]` → `[2.2.0]`, plus the drift
   table, the behavior-change list, `Fixed` and a new `Known issues`
-  section), `pyproject.toml` (`[project] version` 2.1.0 → 3.0.0)
+  section), `pyproject.toml` (`[project] version` 2.1.0 → 2.2.0)
 - Project close: `../../PLAN.md` (`status: Complete`, Phase 07 row,
   the Scope bullet on aarch64/Windows), `projects/README.md` (row moved
   to Completed), `../../phases/phase-07-cutover.md` (frontmatter)
@@ -395,7 +400,7 @@ None outstanding — the phase and the project are closed.
 
 **There is no next task.** Phase 07 is Complete, and with it the
 cython-to-rust project — all eight phases, all 33 tasks, shipped as
-hazma 3.0.0 on 2026-08-29.
+hazma 2.2.0 on 2026-08-29.
 
 Read [`../../learnings/project-retrospective.md`](../../learnings/project-retrospective.md)
 first and
@@ -409,6 +414,6 @@ questions.
 **The one thing a release manager still owes:** `publish` has never run.
 It is gated on `github.event_name == 'release'`, and every observation so
 far — three dispatches and one `pull_request` run — correctly skipped it.
-Cutting the 3.0.0 release is the first time that job executes, so watch
+Cutting the 2.2.0 release is the first time that job executes, so watch
 it rather than assuming it (`docs/agents/lessons.md`
 `[unrun-workflow-cannot-close-a-criterion]`).

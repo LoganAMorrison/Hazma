@@ -9,8 +9,10 @@
   Phase 00 Task 0.5 deleted `docs/source/gamma_ray.rst`, so
   `minkowski_dot` has no public-docs reference at all, and Task 0.2 has
   since deleted `hazma/gamma_ray.py` itself. Both cleanups are name
-  removals, so they want the same major bump the cython-to-rust project
-  already carries.
+  removals. They were sequenced to ride the major bump cython-to-rust
+  was planned to carry; that project shipped as **2.2.0** instead, so
+  there is no major window to ride and the two names are now on
+  different clocks — see the note under "Why".
 
 ## Why
 
@@ -70,10 +72,16 @@ fires:
   should be using it.
 
 `minkowski_dot` landed in `e94fb21`, after the `2.1.0` tag, so it is
-unreleased today and removing it currently costs nothing. That is only
-true until the next release ships it — which is the argument for
-resolving this inside the cython-to-rust major rather than letting it
-drift.
+unreleased today and removing it costs nothing. **That window closes the
+moment 2.2.0 ships it.** Once released it is an ordinary public name:
+not in `hazma/deprecated/` and importable, so the reachability carve-out
+in `docs/versioning.md` does not reach it and removing it later is a
+`major`. Either drop it before 2.2.0 tags, or accept that this half of
+the follow-up waits for the next major.
+
+`kinematically_accessable` is not on that clock — it shipped in 2.1.0,
+so its removal is already `major` and nothing about the 2.2.0 decision
+changes it.
 
 ## Entry points
 

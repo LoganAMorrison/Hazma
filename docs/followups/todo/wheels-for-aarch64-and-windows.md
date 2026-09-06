@@ -11,7 +11,7 @@
 
 Hazma publishes wheels for macOS arm64 and manylinux x86_64 and nothing
 else. Users on Windows or on 64-bit ARM Linux must build from the sdist,
-which since 3.0.0 means having a Rust toolchain on `PATH`.
+which since 2.2.0 means having a Rust toolchain on `PATH`.
 
 The cython-to-rust project put both platforms out of scope, and Task 7.2
 made that a deliberate decision rather than an oversight when it rebuilt

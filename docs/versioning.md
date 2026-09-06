@@ -10,7 +10,7 @@ touch.
 ```toml
 # pyproject.toml
 [project]
-version = "3.0.0"
+version = "2.2.0"
 ```
 
 That line is the number, and the only one to edit. The package reads it
@@ -42,11 +42,13 @@ A change is user-facing if it changes any of these:
 4. **Numerical output.** The values the library computes. A spectrum that
    moves is a user-facing change even when no signature changed.
 5. **Exception types.** What is raised, and when (`hazma/hazma_errors.py`).
-6. **`hazma/deprecated/`.** Whatever lives there stays importable;
-   removing or changing anything there is a break. The package is
-   currently empty — its last module, `rambo.py`, was removed in
-   cython-to-rust Task 0.2 — so the rule binds the next module parked
-   there, not any module shipping today.
+6. **`hazma/deprecated/`.** Whatever lives there stays importable, and
+   changing it is a break. Removing it is a break too unless a released
+   version warned on import and named the replacement, which is the
+   reachability carve-out below. The package is currently empty — its
+   last module, `rambo.py`, warned toward `hazma.phase_space` and was
+   removed in cython-to-rust Task 0.2 — so the rule binds the next module
+   parked there, not any module shipping today.
 7. **Supported Python versions** and required runtime dependencies.
 
 Explicitly **not** the public surface: `hazma/experimental/`, anything
@@ -63,24 +65,36 @@ The litmus test, applied in order — the first line that matches wins:
 changes meaning:
 
 - A public function, class, module, or keyword argument is **removed or
-  renamed**.
+  renamed**, except where the reachability carve-out under `minor`
+  applies.
 - A return shape or unit changes (`dN/dE` in `MeV⁻¹` becomes `GeV⁻¹`; a
   scalar becomes an array).
 - A required argument is added, or an argument's default changes in a way
   that changes results.
 - The minimum Python version rises.
-- Anything in `hazma/deprecated/` is removed.
+- Anything in `hazma/deprecated/` is removed without having shipped an
+  import-time deprecation warning first; see the same carve-out.
 
 **`minor`** — additive, or a deliberate correction to a published number:
 
 - A new public function, class, model, channel, or keyword argument with
   a backward-compatible default.
 - **A numerical result changes because a physics bug was fixed.** This is
-  the carve-out worth reading twice: the API is unchanged, so it is not
+  the case worth reading twice: the API is unchanged, so it is not
   `major`, but a user's plot moves, so it is not `patch`. Name the
   affected functions and the size of the change in `CHANGELOG.md`.
 - A previously-raising input now returns a value (or vice versa) as a
   deliberate correctness fix.
+- **A public name is removed when no working user code could have
+  depended on it.** This is the reachability carve-out, and exactly two
+  cases qualify. Either the name was **un-importable in every released
+  version**, so no correct program ever used it; or it lived in
+  `hazma/deprecated/` and **a released version emitted an import-time
+  deprecation warning naming its maintained replacement**, which is what
+  that package exists to do. Everything else removed is `major`. A
+  `minor` here is a claim about reachability rather than about taste, so
+  state the evidence in `CHANGELOG.md` beside the removal: the import
+  that fails and why, or the release that carried the warning.
 - A dependency's minimum version rises.
 
 **`patch`** — no user-visible behavior change:
@@ -137,3 +151,5 @@ version untouched) fails the gate.
 | Added a new model package                            | `minor` |
 | Tightened a docstring                                | `patch` |
 | Dropped Python 3.10 support                          | `major` |
+| Removed a module no released version could import     | `minor` |
+| Removed a `deprecated/` module that warned on import  | `minor` |

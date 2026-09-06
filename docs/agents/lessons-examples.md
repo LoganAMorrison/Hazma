@@ -532,7 +532,7 @@ cites a real PR.
   unmeasured, and then dispatching does not help. PR #86 (cython-to-rust
   Task 7.4, the closing PR) inherited "a release candidate builds, tests,
   and **publishes** from CI". `release.yml`'s `publish` job is gated
-  `if: github.event_name == 'release'`; a release needs the `3.0.0` tag;
+  `if: github.event_name == 'release'`; a release needs the `2.2.0` tag;
   that tag exists only once the closing PR merges — so the criterion
   gated on an event that satisfying it would first have to enable.
   Holding closure is a deadlock, not a stricter gate. The first attempt

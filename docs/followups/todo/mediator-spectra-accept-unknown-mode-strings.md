@@ -4,10 +4,12 @@
 - **Source:** `projects/cython-to-rust/task-notes/phase-06/task-6.1-table-struct.md`
 - **Scope:** cross-cutting (four public entry points, both mediator models)
 - **Status:** open
-- **Triggers / blockers:** none technically, but the repair is a
-  behaviour change on a public API, so it wants the same
-  major-version window as the cython-to-rust port itself. Reproduced
-  under `projects/cython-to-rust/rules.md` rule 1 by Phase 06.
+- **Triggers / blockers:** none technically, but the repair turns a
+  silent `0.0` into a raise on a public API, so it wants a major-version
+  window. It was sequenced against the one cython-to-rust was planned to
+  carry; that project shipped as **2.2.0**, so this now waits for the
+  next major rather than riding an existing one. Reproduced under
+  `projects/cython-to-rust/rules.md` rule 1 by Phase 06.
 
 ## Why
 
