@@ -4,7 +4,8 @@
 **Project:** parity-pinned-defect-repair
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
-**Related ADRs:** none yet — two anticipated, see `../PLAN.md`
+**Related ADRs:** `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
+(Task 1); one more anticipated, see `../PLAN.md`
 **Depends On:** none. **Constrains** `cython-to-rust` Tasks 4.6, 6.2,
 6.3 and 6.4 — see Open Questions.
 
@@ -21,7 +22,7 @@ section tracks live *status*.
 
 | # | Task | Depends on | Status | Task Note |
 |---|------|------------|--------|-----------|
-| 1 | Delta-declaration layer | — | Not started | `task-1-delta-declarations.md` |
+| 1 | Delta-declaration layer | — | **Complete** — landed in PR #87 with the B4 repair; ADR-0001 | `task-1-delta-declarations.md` |
 | 2 | Capture the corrected-value oracles | — | **Complete** | `task-2-cython-oracles.md` |
 | 3 | Closed-form delta models (B1–B3) | 1 | Not started | `task-3-closed-form-deltas.md` |
 | 4 | Repair A1 — boost integral window | 1, 2 | Not started | `task-4-boost-window.md` |
@@ -51,11 +52,12 @@ this project is time-critical.
 
 ## Exit Criteria
 
-- All twelve tasks complete; all seven follow-ups moved to
-  `docs/followups/done/` with inbound links repointed and the revision
-  pinned.
-- No live document still sequences any of the seven repairs "after
-  Phase 06 Task 6.4".
+- All twelve tasks complete; all eight defects repaired — the seven
+  follow-ups under `docs/followups/todo/` moved to `docs/followups/done/`
+  with inbound links repointed and the revision pinned (B4's already
+  lives there).
+- No live document still sequences any of the seven original repairs
+  "after Phase 06 Task 6.4".
 - `git diff --stat -- test/parity/data` empty across the whole project.
 - Closing PR bumps `[project] version` in `pyproject.toml` per
   `PLAN.md`'s
@@ -127,7 +129,8 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**No public value has moved yet.** Task 2 shipped no library behavior —
+**One public value has moved: B4, in PR #87** (bullet below). Task 2
+shipped no library behavior —
 its four `.pyx` patches exist only inside the capture and are reverted.
 What it produced is the *measurement* each of Tasks 4, 7, 8 and 10 will
 be judged against: how far the corrected value sits from the committed
@@ -164,6 +167,17 @@ are recorded rather than re-derivable:
   photons per decay at `E_π` = 1000/1396/5000 MeV.
 - **A4**: the Michel spectrum integrates to 1.000000000000 (one ulp) at
   rest and at both boosts; shipped, 0.999625933330.
+- **B4** (repaired in PR #87, outside the task sequence): the scalar
+  decay kernel's FSR-only spectrum at rest was 0.5000000000 × the
+  annihilation-side `dnde_xx_to_s_to_ffg` / `dnde_xx_to_s_to_pipig` in
+  every channel; now 1.000. `scalar_mediator_decay_spectrum`, all 15
+  `.default` blocks, both arrays: 3,065 of 4,305 positions are declared
+  (the FSR term is non-zero there), 2,874 of them move by more than
+  0.1%, pointwise up to exactly 2×; photon yield per decay +1.7% to
+  +2.9% with the corpus couplings. Declared relation held to 1e-3
+  (measured 3.1e-4); the other 1,240 positions stay at the case budget.
+  Counts from the command in `task-1-delta-declarations.md`. Details in
+  `docs/followups/done/scalar-decay-fsr-half-normalized.md`.
 
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
@@ -175,8 +189,14 @@ it does not reconstruct it.
 - **The corpus is extended, not regenerated.** The committed arrays stay
   as the record of what 2.1.0 shipped; each repair adds a declared delta
   against them. Rationale and schema in
-  `../references/corpus-repinning.md`; candidate for a project-scoped
-  ADR at Task 1 (`../PLAN.md`, Anticipated ADRs).
+  `../references/corpus-repinning.md`; decided in
+  `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`.
+- **B4 was found and repaired outside the task sequence** (PR #87). A
+  user report led to the scalar decay kernel's FSR, which no roster
+  entry covered; the repair could not merge without the Task 1 layer,
+  so the layer landed with it. Its case is inside A3's set, so Task 8
+  inherits a rule 7 obligation against a declaration that already
+  exists.
 - **The seven follow-ups' "Risks" sections were deliberately left
   standing** when their "Triggers / blockers" bullets were corrected, so
   the correction and the plan that justifies it would land in one
@@ -202,16 +222,27 @@ it does not reconstruct it.
 
 ## Files Changed
 
-_None yet — no task started._ The change that created this project
-touched only `docs/followups/todo/*.md` (seven blocker bullets, one hunk
-per file), `projects/README.md` (the Active Projects row) and
-`projects/parity-pinned-defect-repair/` itself. No library file, test or
-build input is in that diff.
+The change that created this project touched only
+`docs/followups/todo/*.md` (seven blocker bullets, one hunk per file),
+`projects/README.md` (the Active Projects row) and
+`projects/parity-pinned-defect-repair/` itself. Task 2 added
+`test/parity/oracles/`. Task 1 landed in PR #87 with the B4 repair:
+`test/parity/deltas.py` (new), `test/parity/test_parity.py`,
+`test/parity/README.md`, `rust/src/kernels/scalar_decay_photon.rs`,
+`test/test_core_mediator_decay_photon.py`,
+`hazma/scalar_mediator/_scalar_mediator_spectra.py`, `CHANGELOG.md`,
+`docs/followups/`, and this project's plan, rules, references, ADR and
+notes — see `task-1-delta-declarations.md`.
 
 ## Verification
 
+**PR #87** (Task 1 + B4) was gated with the bare `preflight.sh` over its
+Python paths and markdown; the pytest row read `2241 passed, 15 skipped`
+before this round's tests were added — the Task 1 note has the final
+figures.
+
 **The scaffolding change itself** (the seven corrected blocker bullets +
-this project tree; no task of this project has run yet) was gated with:
+this project tree; no task of this project had run yet) was gated with:
 
 ```sh
 scripts/agents/preflight.sh \
@@ -287,7 +318,8 @@ measuring one.
   verified at `3e01590`.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- Nothing in this project has changed a library value yet.
+- B4 (PR #87) is the only repair that has changed a library value;
+  every other corpus array is still compared against its stored value.
 
 **Currently risky / unknown:**
 

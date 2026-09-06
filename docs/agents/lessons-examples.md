@@ -68,6 +68,16 @@ cites a real PR.
   review did. `git diff origin/master --name-only | grep -c '\.md$'`
   answers it in one command, and it now has a sweep row.
 
+- [derived-count-not-rederived] A roster gains a row and the arithmetic
+  below it keeps the old total (PR #87: B4 was added to the defect table
+  in `references/defect-blast-radius.md` while the coverage paragraph
+  still said "24 case slots across seven defects", and `PLAN.md`,
+  `corpus-repinning.md` and the working-memory README still said seven
+  in six places; `test/parity/README.md` said "623 blocks plus 15 guards"
+  after three guards had been added. `pytest test/parity/test_parity.py
+  --collect-only -q | tail -1` and `rg -n '\bseven\b'` over the project
+  answer both).
+
 ### measurement-taken-before-the-task-ended
 
 - [measurement-taken-before-the-task-ended] A number measured *correctly*,
@@ -775,6 +785,17 @@ cites a real PR.
   where the kernel returns exactly zero; two rounds of self-review had
   narrowed the floor's *size* twice without ever questioning its scope).
 
+- [exemption-wider-than-its-mechanism] The same shape, one project later,
+  in the mechanism built to prevent it (PR #87: the first corpus
+  declaration said `positions=ALL` for an additive repair whose term is
+  zero at 1,240 of the 4,305 positions it covered, so those positions
+  quietly moved from the case's 1e-9 budget to the relation's 1e-3; the
+  reviewer injected a 0.05% regression at
+  `ms_250.rest_plus_eps.default.values[193]`, where the term is exactly
+  zero, and the gate passed. The fix resolves the declared set against
+  the term (`MOVED`), refuses an explicit tuple naming an unmoved
+  position, and runs both as mutations).
+
 ### sweep-block-written-from-intent
 
 - [sweep-block-written-from-intent] The stale-state sweep block is a
@@ -929,3 +950,17 @@ and not merely dropped. Sibling of
 [settling-a-deferral-has-two-sweeps]: there the two populations are
 pointers and behavior statements within the swept files; here the second
 population is a whole file the sweep never opened.
+
+### status-row-ahead-of-its-artifacts
+
+- [status-row-ahead-of-its-artifacts] A live-status table is read as the
+  truth about a project, so a row that runs ahead of its artifacts
+  misleads every later reader (PR #87: the repair project's README marked
+  Task 1 "Landed" for a layer that did ship in the PR, but the task note
+  the row itself pointed at did not exist, the ADR the plan anticipated
+  at that task was "still owed", and four other sentences in the same
+  file — "No public value has moved yet", "None yet — no task started",
+  "Nothing in this project has changed a library value yet" — were left
+  saying the opposite of what the PR did. Review caught all of it in one
+  pass; the fix wrote the note and the ADR and re-read every claim in the
+  file against the diff).

@@ -30,6 +30,26 @@
 //! `modes` list folded once per call rather than re-tested inside the
 //! integrand as the `.pyx` did.
 //!
+//! # The FSR normalization is twice the `.pyx`'s
+//!
+//! The three FSR terms are the one place this module does not reproduce
+//! the `.pyx` bit for bit. Both rest-frame coefficients there —
+//! `dnde_fsr_l_srf` (`:113`) and `dnde_fsr_cp_srf` (`:82`) — were half
+//! the pair-summed spectrum: at the same invariant mass they returned
+//! exactly `0.5 ×` the annihilation-side matrix elements
+//! `ScalarMediator.dnde_xx_to_s_to_ffg` / `dnde_xx_to_s_to_pipig`,
+//! and `0.5 ×` the collinear (Altarelli-Parisi) limit those satisfy,
+//! while the vector twin's coefficients reproduce both to better than
+//! a per mille. The scalar decay spectrum therefore under-counted its
+//! `e⁺e⁻γ`, `μ⁺μ⁻γ` and `π⁺π⁻γ` photons by a factor of two from the day
+//! the file was written; see
+//! `docs/followups/done/scalar-decay-fsr-half-normalized.md` for the
+//! measurement. [`PAIR_NORMALIZATION`] restores the factor at the end of
+//! each coefficient, where scaling by two is exact in binary floating
+//! point and leaves every FMA site below undisturbed. The parity corpus
+//! still pins the pre-repair arrays; `test/parity/deltas.py` declares
+//! how the repaired ones relate to them.
+//!
 //! # Only the charged pion is tabulated
 //!
 //! The `.pyx` interpolates the charged pion's rest-frame photon spectrum
@@ -111,7 +131,19 @@ const BOOST_QUAD: QuadOpts<'static> = QuadOpts {
 /// `α`, the equality is what would break.
 const QE_SQUARED: f64 = 4.0 * std::f64::consts::PI * legacy::ALPHA_EM;
 
-/// FSR off the charged pions, in the scalar's rest frame — `:63-84`.
+/// The factor the `.pyx`'s rest-frame FSR coefficients were missing.
+///
+/// Each coefficient below is the `.pyx`'s expression, transcribed FMA
+/// for FMA, times this. The `.pyx` gave the radiation summed over the
+/// charged pair at half its size (module docs, "The FSR normalization is
+/// twice the `.pyx`'s"); `lepton_fsr_reproduces_the_collinear_limit` and
+/// `charged_pion_fsr_reproduces_the_collinear_limit` pin the corrected
+/// size against the model-independent Altarelli-Parisi limit. A power
+/// of two, so applying it last changes no rounding upstream of it.
+const PAIR_NORMALIZATION: f64 = 2.0;
+
+/// FSR off the charged pions, in the scalar's rest frame — `:63-84`,
+/// at twice the `.pyx`'s normalization ([`PAIR_NORMALIZATION`]).
 ///
 /// # Parameters
 ///
@@ -151,10 +183,11 @@ pub fn dnde_fsr_cp_srf(egam: f64, ms: f64) -> f64 {
     let dynamic = numerator / x;
     let coeff = QE_SQUARED / ((8.0 * xmax.sqrt()) * PI_SQUARED);
 
-    (2.0 * (dynamic * coeff)) / ms
+    PAIR_NORMALIZATION * ((2.0 * (dynamic * coeff)) / ms)
 }
 
-/// FSR off a charged lepton pair, in the scalar's rest frame — `:90-115`.
+/// FSR off a charged lepton pair, in the scalar's rest frame — `:90-115`,
+/// at twice the `.pyx`'s normalization ([`PAIR_NORMALIZATION`]).
 ///
 /// # Parameters
 ///
@@ -215,7 +248,7 @@ pub fn dnde_fsr_l_srf(egam: f64, ml: f64, ms: f64) -> Result<f64, SpectrumError>
     let denominator = (16.0 * soft_complex_pow_1_5(xmax)) * PI_SQUARED;
     let coeff = complex_quotient_real_denominator(QE_SQUARED, denominator)?;
 
-    Ok((2.0 * (dynamic * coeff)) / ms)
+    Ok(PAIR_NORMALIZATION * ((2.0 * (dynamic * coeff)) / ms))
 }
 
 /// The boost integrand at `cos θ = cl` — `:123-155`.
@@ -378,8 +411,8 @@ pub fn tables_for(ms: f64) -> std::sync::Arc<PhotonTables> {
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOST_QUAD, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_srf, dnde_fsr_l_srf, spectrum_point,
-        tables_for,
+        BOOST_QUAD, PAIR_NORMALIZATION, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_srf, dnde_fsr_l_srf,
+        spectrum_point, tables_for,
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
@@ -519,6 +552,64 @@ mod tests {
             assert!(value < previous, "muon FSR not falling at {egam}");
             previous = value;
         }
+    }
+
+    /// Eq. 4.6 of arXiv:1907.11846: the photon spectrum radiated by a
+    /// charged pair in the collinear limit, summed over both legs, per
+    /// unit photon energy. `split` is the splitting function — fermion
+    /// `(1 + (1 − x)²)/x`, scalar `2(1 − x)/x`.
+    fn altarelli_parisi_pair(egam: f64, mass: f64, m: f64, split: fn(f64) -> f64) -> f64 {
+        let x = 2.0 * egam / mass;
+        let log_term = (mass * mass * (1.0 - x) / (m * m)).ln() - 1.0;
+        legacy::ALPHA_EM / std::f64::consts::PI * split(x) * log_term * (2.0 / mass)
+    }
+
+    #[test]
+    fn the_pair_normalization_is_a_power_of_two() {
+        // What makes applying it last exact: `2 × fl(y)` is `fl(2 × y)`
+        // for every finite `y` short of overflow, so the corrected
+        // coefficient is bit-for-bit twice the transcribed one.
+        assert_eq!(PAIR_NORMALIZATION, 2.0);
+        assert_eq!(PAIR_NORMALIZATION.log2().fract(), 0.0);
+    }
+
+    #[test]
+    fn lepton_fsr_reproduces_the_collinear_limit() {
+        // Deep in the collinear regime (`m_e/m_s = 5e-4`, soft photon)
+        // the exact `s → e⁺e⁻γ` spectrum is the pair-summed
+        // Altarelli-Parisi form to O(m²/s) and O(x): measured 1.4e-5
+        // relative at `x = 0.02`, 3.9e-4 at `x = 0.1`. The pre-repair
+        // coefficient sat at 0.500 here, so a 1e-4 budget separates the
+        // two normalizations by three orders of magnitude.
+        let ms = 1000.0;
+        let egam = 0.01 * ms;
+        let fermion = |x: f64| (1.0 + (1.0 - x) * (1.0 - x)) / x;
+        let exact = dnde_fsr_l_srf(egam, legacy::MASS_E, ms).unwrap();
+        let limit = altarelli_parisi_pair(egam, ms, legacy::MASS_E, fermion);
+        assert!(
+            ((exact / limit) - 1.0).abs() < 1e-4,
+            "lepton FSR / AP pair limit = {}",
+            exact / limit
+        );
+    }
+
+    #[test]
+    fn charged_pion_fsr_reproduces_the_collinear_limit() {
+        // Same statement for the scalar splitting function. The pion is
+        // heavy enough that `m_s = 1000` MeV is still 1.3% off the
+        // collinear limit at `x = 0.02`; at `m_s = 5000` MeV the exact
+        // form sits 2.9e-4 below it, so the budget is 1e-3 — still five
+        // hundred times closer than the pre-repair 0.500.
+        let ms = 5000.0;
+        let egam = 0.01 * ms;
+        let scalar = |x: f64| 2.0 * (1.0 - x) / x;
+        let exact = dnde_fsr_cp_srf(egam, ms);
+        let limit = altarelli_parisi_pair(egam, ms, legacy::MASS_PI, scalar);
+        assert!(
+            ((exact / limit) - 1.0).abs() < 1e-3,
+            "pion FSR / AP pair limit = {}",
+            exact / limit
+        );
     }
 
     #[test]

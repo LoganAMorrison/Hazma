@@ -6,17 +6,17 @@ protocol, and the proof obligations each repair inherits.
 
 ## The problem in one paragraph
 
-`test/parity/data/*.npz` holds 179,695 values captured from pre-port
-Cython at kernel digest `f5e6e269be47`. Seven of the numbers in there are
-wrong, and the corpus is the gate that keeps the Rust port faithful to
-them. The obvious move — regenerate — is barred three ways: by
-`projects/cython-to-rust/rules.md` rule 2, by
-`test/parity/cases.py`'s `assert_no_rust_core` (which already refuses,
-since Phase 04 serves the photon family), and by arithmetic — after
-Phase 06 Task 6.4 there is no non-Rust implementation left to generate
-from. The less obvious move — re-pin the affected arrays in place — is
-worse: it destroys the record of what 2.1.0 shipped, which is the only
-thing that lets anyone later ask "did this repair move what it claimed?"
+`test/parity/data/*.npz` holds 179,695 values captured from pre-port Cython at
+kernel digest `f5e6e269be47`. Eight of the numbers in there are wrong (seven
+rostered at first; B4 joined and was repaired later), and the corpus is the
+gate that keeps the Rust port faithful to them. The obvious move — regenerate
+— is barred three ways: by `projects/cython-to-rust/rules.md` rule 2, by
+`test/parity/cases.py`'s `assert_no_rust_core` (which already refuses, since
+Phase 04 serves the photon family), and by arithmetic — after Phase 06 Task
+6.4 there is no non-Rust implementation left to generate from. The less
+obvious move — re-pin the affected arrays in place — is worse: it destroys the
+record of what 2.1.0 shipped, which is the only thing that lets anyone later
+ask "did this repair move what it claimed?"
 
 ## The mechanism
 
@@ -35,7 +35,7 @@ be usable by the runner:
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "rest", "values"): Delta(
         repair="B3",                       # which task moved it
-        positions=ALL,                     # explicit tuple, or ALL
+        positions=MOVED,                   # explicit tuple, or MOVED
         relation=Ratio(...),               # see "Relations" below
         measured="ratio is E_gamma exactly at all 100 positions",
         evidence="projects/.../task-9-rho-rest-frame.md",
@@ -44,7 +44,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 ```
 
 Every field is load-bearing. `repair` is what makes an aggregate
-possible at close time without re-reading seven task notes; `measured`
+possible at close time without re-reading eight task notes; `measured`
 and `evidence` are what stop the table from becoming a list of
 assertions nobody re-derived.
 
@@ -173,5 +173,5 @@ At close, one number: how many of the corpus's 179,695 pinned values are
 under a declaration. Derive it with a command and paste the command
 (`[derived-count-not-rederived]`), broken out per repair so the parts
 sum (`[measurement-taken-before-the-task-ended]`). If the total is
-larger than the sum of the seven per-repair figures, two declarations
+larger than the sum of the eight per-repair figures, two declarations
 overlap and the shape test missed it.

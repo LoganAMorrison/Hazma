@@ -65,7 +65,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   write time, and the command is quoted next to the number so the next reader
   re-runs it instead of trusting it. A count describing *your own diff* goes
   stale the moment the diff grows, so give it a row in the count sweep like any
-  other — an uncounted count is one nothing re-checks (PR #35, #59, #84).
+  other — an uncounted count is one nothing re-checks (PR #35, #59, #84,
+  #87).
 - [measurement-taken-before-the-task-ended] Re-run every measurement against the
   final tree after your last edit; take both halves of a before/after on the
   same tree and environment; derive breakdowns from the command so the parts
@@ -207,7 +208,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [exemption-wider-than-its-mechanism] Scope a carve-out to the positions its
   mechanism actually reaches — a declared allowlist with the measurement beside
   each row — and pin the allowlist's shape with a test so it cannot drift
-  outward (PR #71).
+  outward (PR #71, PR #87).
 - [sweep-block-written-from-intent] Write the stale-state sweep block last, by
   pasting command output after every prose edit is frozen; "I remember fixing
   that" is a claim to re-check, not evidence. The command you paste must be the
@@ -232,3 +233,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   phase's first task answers several of them and closing one in the task note
   does not close it in the README. Re-read that block against what you shipped
   before calling the sweep done (PR #79).
+- [status-row-ahead-of-its-artifacts] A task-status row says Complete or Landed
+  only when every artifact the plan names for that task — note, ADR, gate
+  output — is in the same diff, and every sibling claim in the working memory
+  ("nothing has moved yet", "no task started") has been re-read against it;
+  otherwise the row says what landed and what is owed (PR #87).

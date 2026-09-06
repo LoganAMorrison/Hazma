@@ -47,8 +47,9 @@ and the task notes. There is no per-section numbering to reconcile.
 
 7. **Declarations do not overlap.** Where two repairs move the same
    array (A3 and B3 on both rho cases; A1 and B1/B2 on `eta_prime` and
-   `phi`), either the position sets are provably disjoint or the two
-   collapse into one composite declaration. A shape test enforces this.
+   `phi`; A3 and the already-landed B4 on the scalar decay case), either
+   the position sets are provably disjoint or the two collapse into one
+   composite declaration. A shape test enforces this.
    This rule first read "A2 and A3 on both rho cases"; Task 2 measured
    A2's radius at one case and neither rho is in it, so A2 overlaps
    nothing — see `references/defect-blast-radius.md`.

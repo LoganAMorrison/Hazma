@@ -12,6 +12,7 @@ function's budget.
 | [`generate.py`](generate.py) | Evaluates the specification and writes `data/`; also verifies `data/` against its manifest. |
 | [`tolerances.py`](tolerances.py) | How far a replacement implementation may move each entry point, and why that far. |
 | [`stability.py`](stability.py) | Which pinned values are rounding residue rather than physics, and are therefore skipped. |
+| [`deltas.py`](deltas.py) | Which pinned arrays a repair has moved on purpose, and how the repaired value relates to the stored one. The stored arrays are never rewritten. |
 | [`reference.py`](reference.py) | Arbitrary-precision copies of the four cancellation-prone kernels. Used only to rebuild the mask. |
 | [`test_parity.py`](test_parity.py) | The gate — re-evaluates every entry point and compares against `data/`. |
 | `data/*.npz` | One file per entry point. Reference arrays, stored exactly as the library returned them. |
@@ -22,11 +23,13 @@ function's budget.
 
 ## Commands
 
-Run the gate. One test per corpus block (623 of them) plus 15 guards;
-around five minutes of single-core work, nearly all of it the nested
-adaptive quadrature in the rho and mediator-spectrum kernels. The
-pytest-xdist `addopts` in `pyproject.toml` spread it across cores, so
-the wall-clock is that cost divided by the machine:
+Run the gate. One test per corpus block (623 of them) plus 25 others — the
+guards on the corpus, the mask, the roster and the declaration table (`pytest
+test/parity/test_parity.py --collect-only -q | tail -1` reports 648); around
+five minutes of single-core work, nearly all of it the nested adaptive
+quadrature in the rho and mediator-spectrum kernels. The pytest-xdist
+`addopts` in `pyproject.toml` spread it across cores, so the wall-clock is
+that cost divided by the machine:
 
 ```bash
 pytest test/parity
@@ -104,15 +107,18 @@ served kernel and belongs back in the count. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 
-Seven of the values in here are, separately, *wrong* — filed under
-`docs/followups/todo/` and repaired by
+Eight of the values in here are, separately, *wrong* — filed under
+`docs/followups/` and repaired by
 [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
 That does not make them regenerable either: the committed arrays are the
 record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them. [`oracles/`](oracles/README.md) holds what those
+delta against them, in [`deltas.py`](deltas.py) — one has been (the
+scalar decay spectrum's FSR normalization, roster entry B4), so the
+arrays of that case are compared against `stored + term` rather than
+against `stored`. [`oracles/`](oracles/README.md) holds what the other
 positions *should* be, captured from the Cython twins before the port
-deleted them, and is the only place in this directory where a corrected
-number lives.
+deleted them, and is the only other place in this directory where a
+corrected number lives.
 
 ## What the corpus pins
 
@@ -144,7 +150,7 @@ the same argument, and must not raise anywhere new. Evaluation goes
 through `generate.evaluate_block`, the same function that produced the
 stored numbers, so the kernel is the only thing that can differ.
 
-Two carve-outs, both narrow and both declared:
+Three carve-outs, all narrow and all declared:
 
 - **Unpinnable positions are dropped** before the value comparison. Four
   scalar elastic cross sections evaluate a difference of two `atan`s that
@@ -160,6 +166,14 @@ Two carve-outs, both narrow and both declared:
   with `atol` at zero that reads as an infinite relative error.
   `stability.PORTABILITY_ZEROS` names the four — every other stored zero,
   66,836 of them, keeps the exact-zero contract.
+- **Declared arrays are compared against their declared relation.** A
+  repair that moved a pinned value declares it in [`deltas.py`](deltas.py)
+  — which array, which positions, how the repaired value relates to the
+  stored one, and the measurement behind the relation's budget. The
+  runner holds a declared array to that relation and every undeclared
+  position to the stored value as before, and fails a declaration whose
+  array no longer differs from the corpus, so a reverted repair cannot
+  hide behind it.
 
 The budget depends on which tree you are on. When the kernel digest, the
 toolchain and the numerics libraries all match what the manifest records,
