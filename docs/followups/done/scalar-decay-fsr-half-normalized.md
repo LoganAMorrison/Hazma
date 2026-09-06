@@ -9,8 +9,9 @@
   `VectorMediator.dnde_vv` were never compared to it.
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the parity corpus)
-- **Status:** done — repaired in the pull request that files this entry,
-  under the declared-delta mechanism
+- **Status:** done — repaired in
+  [PR #87](https://github.com/LoganAMorrison/Hazma/pull/87), the pull
+  request that files this entry, under the declared-delta mechanism
   [`projects/parity-pinned-defect-repair/references/corpus-repinning.md`](../../../projects/parity-pinned-defect-repair/references/corpus-repinning.md)
   specifies and `test/parity/deltas.py` now implements. Roster label
   **B4** in
