@@ -118,6 +118,15 @@ schema so that Tasks 5, 6 and 9 declare rather than derive.
   `test/test_core_photon_tables.py` already sets the convention of
   transcribing `rust/src/constants.rs`'s `pdg` table so a consolidation
   of the two constant tables cannot move a test with the code.
+- **ADR-0001 states the contract, so it moved with it** (review round 1).
+  The ADR defined `MOVED` as "resolved against the term at comparison
+  time" and called one extra kernel evaluation per declared array an
+  unconditional cost. Both are the pre-`Exact` contract: the runner now
+  resolves against the predicted array, and a closed-form transform
+  evaluates no kernel. Its Decision and Consequences sections are
+  rewritten to the relation-general form, and the staleness bullet now
+  carries the timing that follows from it — a declaration cannot precede
+  its repair.
 - **The relation budgets are bounds, not measurements, and say so.**
   Neither B1/B2's 1e-11 nor B3's 1e-9 can be measured until the repair
   lands: each is set to the case's own budget with headroom, so Tasks 5,
@@ -135,6 +144,11 @@ schema so that Tasks 5, 6 and 9 declare rather than derive.
   the re-derived collected count.
 - `projects/parity-pinned-defect-repair/PLAN.md` — Task 3's gate, its
   `mpmath` scope note, and the stale `hazma/_utils/boost.pyx` reference.
+- `projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
+  — the relation contract, relation-general (review round 1).
+- `docs/agents/lessons.md`, `docs/agents/lessons-examples.md` —
+  `[sweep-excluded-the-canonical-directory]` gains `adrs/` as a live site
+  and PR #92 as a citation (review round 1).
 - `projects/parity-pinned-defect-repair/references/corpus-repinning.md` —
   when a declaration may be written; `Ratio` → `Exact` in the schema
   example.
@@ -397,6 +411,39 @@ baseline measured on this environment.
 | The `mpmath` reference where the form is analytic | Measured unnecessary (15.6–16.2 digits, `height × width` = 1.0 to one ulp) and `PLAN.md`'s scope note patched to record the measurement instead of the instruction |
 | `pytest test/parity` green, collected count accounted for | `687 passed, 1 skipped`; 669 → 688 collected, +19 accounted for above |
 | `git diff --stat -- test/parity/data` empty | Empty (row above) |
+
+### Review round 1 — the contract sweep
+
+The round's one blocking finding was `ADR-0001` still defining `MOVED`
+against an additive term. Swept as a class rather than fixed at the line
+(`doc-consistency.md` §11):
+
+```sh
+rg -n --hidden 'against the term|term is non-zero|non-zero positions of the term|term does not move|the term moves|extra kernel evaluation|relation whose term' \
+    projects/ docs/ hazma/ test/ .claude/ .codex/ README.md CHANGELOG.md
+```
+
+#### Pre-fix occurrences
+
+18 hits in 10 files. Triaged by role, per §11's instruction-versus-record
+rule:
+
+| Site | Role | Disposition |
+| --- | --- | --- |
+| `adrs/ADR-0001…md:43-45` | Durable decision, in force | EDITED — the finding |
+| `adrs/ADR-0001…md:58-62` | Same, one hunk further down | EDITED — the reviewer did not cite it; "one extra kernel evaluation per declared array" is false of an `Exact` transform, which evaluates none |
+| `references/defect-blast-radius.md:174` | Live spec, B4-specific | KEPT — B4's relation is `Additive` and its term is unchanged |
+| `task-notes/task-1-delta-declarations.md:62,67,68,122` | Closed task note | KEPT — a record of what Task 1 built, in its own review round's voice |
+| `task-notes/README.md:198`, `deltas.py:513`, `docs/followups/done/scalar-decay-fsr-half-normalized.md:83` | B4 measurements | KEPT — still true of `Additive` |
+| `test_parity.py:659` | Comment on the synthetic fixture's local `term` | KEPT — that array still exists and still moves three positions |
+| `test_delta_models.py:167,298,341-343`, `deltas.py:105` | Live code and `Additive`'s own docstring | KEPT — `Additive.term` is unchanged |
+
+#### Post-fix occurrences
+
+13 hits, none in `adrs/`. Every survivor is one of the KEPT rows above,
+plus three new ones in `docs/agents/lessons-examples.md` and two in this
+note that **quote** the old wording — rewriting a record of what went
+stale would falsify it.
 
 ### Task-note self-consistency
 
