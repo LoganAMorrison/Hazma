@@ -5,7 +5,7 @@ the two corpus cases whose stored arrays hold the *unconverged* estimate
 QUADPACK returns when its default ``epsabs`` of 1.49e-8 is applied to an
 integral of order 1e-27: the absolute criterion is satisfied by the very
 first Gauss-Kronrod pass, so the initial three-interval partition comes
-back unrefined and no subdivision ever happens. Roster entry ``B5`` in
+back unrefined and no subdivision ever happens. Roster entry ``B6`` in
 ``projects/parity-pinned-defect-repair`` zeroes that ``epsabs`` in both
 kernels, which leaves the relative criterion binding.
 
@@ -25,7 +25,7 @@ closed-form vector kernels reproduce the pre-port Cython bit for bit at
 every one of the 5,811 corpus positions that sample them.
 
 The two large-``x`` rules below are the kernels' own and are **not**
-what ``B5`` repairs: the scalar hard-returns ``0.0`` above ``x = 300``
+what ``B6`` repairs: the scalar hard-returns ``0.0`` above ``x = 300``
 while the vector clips ``x`` to 300 and saturates. That divergence
 between the two models predates the port and is untouched here.
 """

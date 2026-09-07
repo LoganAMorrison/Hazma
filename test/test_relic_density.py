@@ -74,7 +74,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
     else in the suite drives `relic_density` through a real
     ``thermal_cross_section``.  These six scenarios do, and they pin the
     values the converged kernel produces.  They held the pre-port Cython's
-    values until ``B5`` (cython-to-rust Task 5.3 captured those at
+    values until ``B6`` (cython-to-rust Task 5.3 captured those at
     ``14f1c66``); that quadrature never converged, so the numbers it
     produced pinned a defect rather than a physical prediction.
 
@@ -100,7 +100,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: to stress the cross sections, not to sit on the observed value.
     #:
     #: Derived from the converged ``thermal_cross_section`` (roster entry
-    #: ``B5``), not from the pre-port Cython: the shipped kernels returned
+    #: ``B6``), not from the pre-port Cython: the shipped kernels returned
     #: their integrator's initial partition, so the values these replace
     #: were wrong by up to 100% on <sigma v> and, since freeze-out
     #: abundance goes as 1/<sigma v>, by up to two orders of magnitude
@@ -125,7 +125,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: The semi-analytic path is a closed-form composition of
     #: `thermal_cross_section` with no adaptive solver in it, so whatever
     #: that kernel's own error is arrives essentially undamped.  Since
-    #: ``B5`` the kernel subdivides until it meets ``epsrel = 1.49e-8``,
+    #: ``B6`` the kernel subdivides until it meets ``epsrel = 1.49e-8``,
     #: which is four decades looser than the <= 2.06e-14 port drift this
     #: budget used to be set from, and a platform whose libm steers
     #: QUADPACK to a different accepted partition may land anywhere inside
@@ -134,7 +134,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: kernel is within 3.6e-9 at all 540 corpus positions it integrates,
     #: but 1.49e-8 is the bound that has to hold off this platform.  1e-6
     #: is ~6.7x that bound: still ~10,000x
-    #: tighter than the smallest shift ``B5`` itself produced (0.071%, at
+    #: tighter than the smallest shift ``B6`` itself produced (0.071%, at
     #: ``scalar.open_resonance``), so a real kernel regression cannot hide
     #: under it.
     SEMI_ANALYTIC_RTOL = 1e-6

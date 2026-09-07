@@ -6,7 +6,7 @@
 - **Scope:** cross-cutting
 - **Status:** open
 - **Triggers / blockers:** none. Independent of the quadrature-tolerance
-  repair that surfaced it (roster entry `B5`), which is already landed.
+  repair that surfaced it (roster entry `B6`), which is already landed.
 
 ## Why
 
@@ -44,7 +44,7 @@ VectorMediatorGeV(mx=5e3, mv=2e3, gvxx=1.0, gvuu=3.0, gvdd=1.0, gvss=-1.0,
 ).relic_density(semi_analytic=True, three_body=False, four_body=False)
 ```
 
-returning `nan`, which it does both before and after `B5` — the two are
+returning `nan`, which it does both before and after `B6` — the two are
 independent defects that happen to live on the same two lines.
 
 The two Rust kernels do **not** have this: they integrate to
@@ -66,7 +66,7 @@ with a measurement rather than copying a magic number a third time.
 
 Fixing this **moves published numbers** for every model that reaches
 either site, and it is the more consequential of the two defects on these
-lines: `B5` corrected ⟨σv⟩ by up to 100%, whereas this one replaces a
+lines: `B6` corrected ⟨σv⟩ by up to 100%, whereas this one replaces a
 hard zero. Expect a `minor` bump and a `CHANGELOG.md` entry, and note
 that the affected surface is *not* the `ScalarMediator` /
 `VectorMediator` families — those define their own
@@ -86,13 +86,13 @@ and no `thermal_cross_section`.
   both Python sites, deliberately below `x = 25` because above it there
   is no integral to check. Widen its grid when this is fixed.
 - Related: `docs/followups/done/thermal-cross-section-quadrature-never-converges.md`
-  (`B5`), the tolerance defect on the same two lines.
+  (`B6`), the tolerance defect on the same two lines.
 
 ## Risks / open questions
 
 - The scalar and vector Rust kernels also diverge above `x = 300` (the
   scalar returns `0.0`, the vector clips and saturates). That is a third,
-  separate divergence on this code path, recorded in `B5`'s notes and
+  separate divergence on this code path, recorded in `B6`'s notes and
   untouched by either.
 - Whether the GeV `nan` is *fully* explained by this or whether the
   solver has its own issue should be confirmed by re-running the model

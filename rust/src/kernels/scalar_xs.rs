@@ -147,7 +147,7 @@ const LN_16: f64 = 2.772588722239781;
 /// This is the one place the port departs from the settings the `.pyx`
 /// used (`:1411-1414`, which passed neither tolerance), so the two
 /// `cross_sections.*.thermal_cross_section` corpus cases carry a
-/// declared delta — roster entry `B5` in
+/// declared delta — roster entry `B6` in
 /// `projects/parity-pinned-defect-repair`.
 ///
 /// With `epsabs = 0` QUADPACK's "tolerance unachievable" test rests on
@@ -922,7 +922,7 @@ fn sigma_xx_to_all(
 /// [`THERMAL_LIMIT`] the subdivision room the criterion needs to be
 /// reachable. The `.pyx` passed neither tolerance and so returned its
 /// integrator's initial partition; correcting that moved published
-/// numbers, as roster entry `B5` of
+/// numbers, as roster entry `B6` of
 /// `projects/parity-pinned-defect-repair`
 /// (`docs/followups/done/thermal-cross-section-quadrature-never-converges.md`).
 ///

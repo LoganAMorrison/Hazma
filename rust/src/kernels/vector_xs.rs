@@ -156,7 +156,7 @@ const PI_5: f64 = 306.0196847852814;
 /// This is the one place the port departs from the settings the `.pyx`
 /// used (`:656-660`, which passed neither tolerance), so the two
 /// `cross_sections.*.thermal_cross_section` corpus cases carry a
-/// declared delta — roster entry `B5` in
+/// declared delta — roster entry `B6` in
 /// `projects/parity-pinned-defect-repair`.
 ///
 /// With `epsabs = 0` QUADPACK's "tolerance unachievable" test rests on
@@ -803,7 +803,7 @@ mod tests {
     /// panel boundaries and the rule still only sees `h^{5/2}` across
     /// them.
     ///
-    /// It did not always. Until roster entry `B5` of
+    /// It did not always. Until roster entry `B6` of
     /// `projects/parity-pinned-defect-repair` this kernel inherited
     /// scipy's default `epsabs = 1.49e-8` against an integrand whose
     /// integral is of order `1e-27`, so the absolute criterion was met by

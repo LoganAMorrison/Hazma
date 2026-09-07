@@ -674,7 +674,7 @@ class TestLiveIntegrandShapes:
         # partition, which is what the probe's inherited `epsabs = 1.49e-8`
         # gives against an integrand of order 1e-33 — so the filtering
         # probe below keeps those defaults deliberately. It is no longer
-        # what the kernels run: since `B5` they pass `epsabs = 0`, which
+        # what the kernels run: since `B6` they pass `epsabs = 0`, which
         # subdivides and makes `last` a statement about convergence rather
         # than about filtering. Both are exercised, in that order.
         x, width = 20.0, 2.5

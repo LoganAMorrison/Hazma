@@ -4,7 +4,7 @@
 - **Source:** cython-to-rust Task 5.1
 - **Scope:** cross-cutting
 - **Status:** done — `parity-pinned-defect-repair` Task 13, roster entry
-  `B5`. See `projects/parity-pinned-defect-repair/task-notes/task-13-thermal-quadrature.md`.
+  `B6`. See `projects/parity-pinned-defect-repair/task-notes/task-13-thermal-quadrature.md`.
 - **Triggers / blockers:** none. Task 5.3 ran the sweep (see
   "Downstream size" below); this was free-standing work whose only
   constraint was that it moves published numbers.

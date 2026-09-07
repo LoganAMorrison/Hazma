@@ -17,6 +17,23 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The charged pion's prompt `π → e ν` neutrino line was counted twice.**
+  `hazma.spectra.dnde_neutrino_charged_pion` summed two contributions that
+  were meant to partition the pion's decay modes, and both carried the
+  boosted `π → e ν_e` line, so the electron-neutrino row shipped
+  `2 BR(π → e ν_e)` where physics wants one. The muon row was never
+  affected — the `π → e ν_e` half writes nothing there. The line now comes
+  from that half alone. **Only the electron-neutrino row moves, and only
+  downward.** Integrated, the yield falls by exactly
+  `BR(π → e ν_e) = 1.230e-4` neutrinos per pion, 0.0123% of the row.
+  Pointwise the drop is about 5e-5 relative on the plateau where the
+  muon-decay continuum dominates, and **exactly a factor of two** at
+  energies above that continuum's support, where the doubled line was the
+  whole spectrum — at `E_π = 1000` MeV that band runs from 692 to 994 MeV.
+  A pion exactly at rest is unaffected: that branch drops both prompt
+  lines already. `hazma.spectra.dnde_neutrino` moves for any final state
+  containing a charged pion. Details:
+  `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`.
 - **Both mediator `thermal_cross_section` implementations now converge,
   and `relic_density` moves with them — by up to two orders of
   magnitude.** ⟨σv⟩ was computed by a quadrature that never subdivided:
@@ -46,7 +63,7 @@ user-facing change even when no signature did.
   This was
   [a known issue in 2.2.0](docs/followups/done/thermal-cross-section-quadrature-never-converges.md);
   the corpus arrays that pinned it stay committed, with the moved
-  positions declared as roster entry `B5` of
+  positions declared as roster entry `B6` of
   [`projects/parity-pinned-defect-repair`](projects/parity-pinned-defect-repair/PLAN.md).
 
 ## [2.2.0] — 2026-09-06

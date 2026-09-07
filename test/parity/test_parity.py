@@ -123,9 +123,9 @@ EXPECTED_PORTABILITY_ZEROS = 4
 #: How many stored arrays a repair has declared moved. A literal for the
 #: same reason as the two above: the size of the set the gate compares
 #: against something other than the stored corpus is the number worth
-#: defending in a diff. 30 for B4's scalar decay spectrum, 6 for B5's two
-#: thermal averages.
-EXPECTED_DECLARED_ARRAYS = 36
+#: defending in a diff. 30 for B4's scalar decay spectrum, 6 for B5's
+#: charged-pion neutrino line, 6 for B6's two thermal averages.
+EXPECTED_DECLARED_ARRAYS = 42
 
 
 def _drop_unpinnable(

@@ -1,9 +1,9 @@
-# Task 13 — Repair B5: the thermal averages never converged
+# Task 13 — Repair B6: the thermal averages never converged
 
 **Status:** Complete
 **Task:** Task 13 (added after the original twelve)
 **Plan reference:** `../PLAN.md`, "Task 13"
-**Defect:** `B5` in `../references/defect-blast-radius.md`
+**Defect:** `B6` in `../references/defect-blast-radius.md`
 
 ## Exit Criteria
 
@@ -106,7 +106,7 @@ the spec's unimplemented `Exact` and `Bounded` will plug into.
   2.06e-14 drift on a kernel that never subdivided. This is not a
   tolerance widened to absorb a failure (`../rules.md` rule 2) — the
   pins are re-derived, and the budget now describes a mechanism that
-  changed. It stays ~10,000x tighter than the smallest shift B5 itself
+  changed. It stays ~10,000x tighter than the smallest shift B6 itself
   produced (0.071%).
 - **Review round 1 (PR #91) added coverage for the two pure-Python
   sites.** The repair fixed four call sites but only the two Rust ones
@@ -270,10 +270,10 @@ the tree-wide fix.
 
 **Rule 1:** `git diff --stat -- test/parity/data` is empty.
 
-**Rule 7 (no overlapping declarations):** B5's two cases are
+**Rule 7 (no overlapping declarations):** B6's two cases are
 `cross_sections.*`. No other roster entry reaches a `cross_sections`
 case — the containment algebra in
-`../references/defect-blast-radius.md` has B5 disjoint from A1–A4 and
+`../references/defect-blast-radius.md` has B6 disjoint from A1–A4 and
 from B1–B4.
 
 ## Plan Impact
@@ -284,7 +284,7 @@ reference).
 - `PLAN.md`: eight defects → nine; frontmatter `deliverable`, Goal,
   Scope, Numerical impact, "The defects", and Task 12's bump check.
   Task 13 added to Task Details.
-- `references/defect-blast-radius.md`: B5 section, roster row, and the
+- `references/defect-blast-radius.md`: B6 section, roster row, and the
   coverage arithmetic re-derived — 25 → 27 slots, union 20 → 22,
   untouched 21 → 19, still summing to 41.
 - `task-notes/README.md`: Tasks table, dependency diagram, Exit
@@ -312,9 +312,9 @@ $ grep -n "EXPECTED_DECLARED_ARRAYS = " test/parity/test_parity.py
 
 $ python -c "import sys; sys.path.insert(0,'test/parity'); import deltas; \
       print(len(deltas.DECLARED_DELTAS), \
-            sum(1 for d in deltas.DECLARED_DELTAS.values() if d.repair=='B5'), \
+            sum(1 for d in deltas.DECLARED_DELTAS.values() if d.repair=='B6'), \
             sorted(deltas.REPAIRS))"
-36 6 ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'B5']
+36 6 ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'B6']
 
 $ grep -rn "DEFAULT_EPSABS\|DEFAULT_LIMIT" rust/src/kernels/vector_xs.rs \
       rust/src/kernels/scalar_xs.rs
@@ -371,7 +371,7 @@ so it is left for that follow-up rather than half-corrected here.
 
 **Numerical-impact statement:** ⟨σv⟩ moves at 539 of 570 pinned corpus
 positions, by up to 1.00 relative; `relic_density` moves by −99.88% to
-+2.40% at the six pinned model points. Intended, declared as `B5`, and
++2.40% at the six pinned model points. Intended, declared as `B6`, and
 recorded in `CHANGELOG.md` and the project's numerical-impact log.
 
 ## Open Questions
@@ -381,7 +381,7 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
   with no floor, so the interval closes at `x = 25` and inverts above it.
   Freeze-out is `x ~ 20`–`30`, and this is what makes
   `VectorMediatorGeV.relic_density` return `nan` — verified to predate
-  `B5`, which shares only the two lines. A separate, larger defect than
+  `B6`, which shares only the two lines. A separate, larger defect than
   the one this task repaired; filed as
   `docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md`
   rather than folded in. `TestThermalQuadratureConverges` caps its grid
@@ -402,18 +402,18 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
 
 ## Handoff to Next Task
 
-- **B5 is done and needs nothing from Tasks 3–10.** It touched no
+- **B6 is done and needs nothing from Tasks 3–10.** It touched no
   spectrum kernel, no boost integral and no photon table.
 - **Tasks 11 and 12 inherit work from it.** Task 11's prose sweep should
-  include B5's follow-up (already in `done/`). Task 12 aggregates the
-  numerical impact: B5's figures are in `task-notes/README.md` under
+  include B6's follow-up (already in `done/`). Task 12 aggregates the
+  numerical impact: B6's figures are in `task-notes/README.md` under
   "Numerical impact so far" and are the largest in the project by four
   orders of magnitude, so the `CHANGELOG` entry should lead with them.
 - **The delta layer now has two relations.** Pick `Additive` when the
   physics names the term, `Reference` when only a second implementation
   can say what the value should be. Both answer `term_for`; the runner
   needs no change for either. `EXPECTED_DECLARED_ARRAYS` is 36 — 30 for
-  B4, 6 for B5 — and must move with any new declaration.
+  B4, 6 for B6 — and must move with any new declaration.
 - **Build before believing anything.** These are Rust edits;
   `cargo test` does not re-link the extension. `uv pip install -e .
   --config-setting build-args="--features test-probes"`.
