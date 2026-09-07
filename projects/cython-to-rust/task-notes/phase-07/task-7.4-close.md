@@ -271,10 +271,9 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Verification
 
-- **`scripts/agents/preflight.sh --closing --md "<the 27 non-task-pipeline .md>"`**
-  — the full gate, with every markdown file in the diff except the
-  known-red `task-pipeline/SKILL.md` passed to `--md`, and `VIRTUAL_ENV`
-  set to an absolute path. Rows:
+- **`scripts/agents/preflight.sh --closing --md "<every .md in the diff>"`**
+  — the full gate, with every markdown file in the diff passed to `--md`
+  and no exclusion, and `VIRTUAL_ENV` set to an absolute path. Rows:
 
   | Gate | Result |
   | --- | --- |
@@ -323,18 +322,17 @@ plus `../../PLAN.md` §"Closing this project":
   [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
   exists for, and this task adds nothing to it.
 
-  markdownlint is red on exactly one file, `.claude/skills/task-pipeline/SKILL.md`,
-  which this task edited by two lines that touch no fence. Its lint state
-  is **unchanged**: 7 errors on this tree and 7 on `origin/master`, the
-  same five rules with the same contexts (4 MD031 on blockquoted fences,
-  1 MD032, 2 MD036). That is the condition
-  [`markdownlint-skips-skill-file-shapes`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md)
-  tracks — markdownlint was never run over `.claude/skills/`, so the
-  skill trees have never been clean. **All 20 documents this task
-  authored or rewrote lint clean** on their own:
+  markdownlint is green. It was red on
+  `.claude/skills/task-pipeline/SKILL.md` while this branch was open —
+  7 errors both here and on the then-trunk, none of them this task's two
+  edited lines — and
+  [PR #88](https://github.com/LoganAMorrison/Hazma/pull/88) resolved that
+  by normalizing both skill trees, closing
+  [`markdownlint-skips-skill-file-shapes`](../../../../docs/followups/done/markdownlint-skips-skill-file-shapes.md).
+  Every markdown file in this diff now lints clean with no exclusion:
 
   ```sh
-  markdownlint --dot <the 27 non-task-pipeline .md in the diff>   # 0 issues
+  markdownlint --dot <every .md in the diff>   # 0 issues
   ```
 
   No other gate is red.
@@ -494,7 +492,7 @@ table. The other two are this block quoting itself.
 
 Every relative markdown link in all 23 changed/created `.md` files
 resolves (script over `git diff origin/master --name-only`):
-`checked 27 markdown files; broken relative links: 0`.
+`checked 28 markdown files; broken relative links: 0`.
 
 `docs/followups/README.md`'s Open table against `docs/followups/todo/`:
 `listed but missing: none / on disk but unlisted: none / counts: listed
@@ -504,7 +502,7 @@ resolves (script over `git diff origin/master --name-only`):
 
 ```sh
 python scripts/agents/check_doc_citations.py --changed-vs origin/master <23 docs>
-docs scanned: 27
+docs scanned: 28
 in-repo citations checked: 5
   resolved by exact: 4
   resolved by suffix: 1
@@ -538,7 +536,7 @@ citation *is* covered, and is one of the four resolved above —
 | Constants stub "two α values differ by 2.6e-4" | `(1/137 − 1/137.035999084) / (1/137.035999084)` | 2.627e-4 | OK |
 | `docs/versioning.md` version snippet | `grep '^version' pyproject.toml` | `2.2.0` | **EDITED** — snippet still said 2.1.0 |
 | Skills naming the version's home | `rg -n 'hazma/__init__\.py' .claude/skills/ .codex/skills/` | 3 hits before, **0** after | **EDITED** — see below |
-| `task-pipeline/SKILL.md` lint delta | `markdownlint --dot` on this tree vs `git show origin/master:` copy | **7 errors both sides**, same rules and contexts | KEPT — pre-existing |
+| `task-pipeline/SKILL.md` lint state | `markdownlint --dot` on this tree | **0 issues** — PR #88 normalized both skill trees and closed the follow-up that tracked it | **EDITED** — this note previously recorded it as 7 errors both sides |
 
 ### Numerical-impact statement
 
@@ -560,7 +558,7 @@ tests that exercised the wrapper rather than the physics — and includes
 | CHANGELOG entry with the aggregated drift table, naming the slug | `CHANGELOG.md` §`[2.2.0]` — lede names `cython-to-rust` and links its `PLAN.md`; the 11-row table under `Changed`; `preflight.sh --closing` asserts the `## [2.2.0]` section exists |
 | Version bumped per `version_bump`, level re-checked | `pyproject.toml:23` `2.2.0`; re-check recorded in §Numerical impact; `preflight.sh --closing` row `version bump  2.1.0 → 2.2.0 + CHANGELOG entry` |
 | `preflight.sh --closing` green on every gate this project can move, trunk reds measured unmoved | Nine of eleven rows PASS. `isort` and `ruff` FAIL on trunk code — `origin/master` with no edit applied gives the same 72 isort ERROR lines and 6091 ruff errors, and on the two `.py` files this PR changes the ruff finding text is identical with line numbers stripped. The criterion was revised to this wording in `phases/phase-07-cutover.md` §"Revision of the preflight clause"; it previously read "green", which no PR can satisfy |
-| Retrospective incl. §5 seeds, three named candidates | `../../learnings/project-retrospective.md` §5 — all three filed, plus a fourth; `docs/followups/todo/` cross-checked whole (27 = 27 above) |
+| Retrospective incl. §5 seeds, three named candidates | `../../learnings/project-retrospective.md` §5 — all three filed, plus a fourth; `docs/followups/todo/` cross-checked whole (26 = 26 above) |
 | `PLAN.md status: Complete` | `head -2 projects/cython-to-rust/PLAN.md` → `status: Complete` |
 | `projects/README.md` row moved with Shipped date | Completed table row, `2026-08-29 (hazma 2.2.0)` |
 | Phase 07 closed: rows, frontmatter, learnings, history sweep | phase README's four rows Complete; `phases/phase-07-cutover.md` frontmatter `status: Complete`; `../../learnings/phase-07-cutover.md`; the two Phase 07 cross-phase entries appended verbatim to `../history-{findings,decisions}.md` under a `## Phase 07 (moved 2026-08-29 at project close)` heading |
@@ -576,7 +574,7 @@ PASS   cargo clippy            rust/
 PASS   cargo test              rust/
 PASS   pytest                  2246 passed, 15 skipped, 12 subtests passed
 PASS   import hazma            version 2.2.0
-PASS   markdownlint            <the 27 non-task-pipeline .md in the diff>
+PASS   markdownlint            <every .md in the diff>
 PASS   version bump            2.1.0 → 2.2.0 + CHANGELOG entry
 PASS   forbidden tokens        none added
 ```
