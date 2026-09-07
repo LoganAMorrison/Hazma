@@ -22,9 +22,11 @@ transpiler remain in the tree. Wheels are tagged `cp310-abi3` — one per
 platform, valid on every CPython from 3.10 onward, instead of one per
 (CPython, platform) pair — and a source build now needs a Rust toolchain
 on `PATH` rather than Cython, NumPy and SciPy build-time headers. The
-public Python API is unchanged: same module paths, same names, same
-keyword arguments, same return shapes and units. Delivered as the
-`cython-to-rust` project
+port changes no signature it touched: all 41 compiled entry points keep
+their module paths, names, keyword arguments, return shapes and units.
+Two public names are removed, but by Phase 00's dead-code purge rather
+than by the port — see `Removed`. Delivered as the `cython-to-rust`
+project
 ([`projects/cython-to-rust/PLAN.md`](projects/cython-to-rust/PLAN.md)).
 
 **Two public names are gone, and neither removal can break working

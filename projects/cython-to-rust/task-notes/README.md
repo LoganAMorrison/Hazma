@@ -282,7 +282,7 @@ task in this project.
 [`../learnings/project-retrospective.md`](../learnings/project-retrospective.md)
 is the durable memory now — what the port established, what its quirks
 were, what the test infrastructure looks like, and what it left behind.
-The seven phase learnings beside it hold the per-phase detail; this
+The eight phase learnings beside it hold the per-phase detail; this
 working memory and the per-phase READMEs are history
 ([ADR-0002](../../../docs/adrs/ADR-0002-read-phase-learnings-not-closed-task-notes.md)).
 

@@ -66,12 +66,12 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   re-runs it instead of trusting it. A count describing *your own diff* goes
   stale the moment the diff grows, so give it a row in the count sweep like any
   other — an uncounted count is one nothing re-checks (PR #35, #59, #84,
-  #87).
+  #86, #87).
 - [measurement-taken-before-the-task-ended] Re-run every measurement against the
   final tree after your last edit; take both halves of a before/after on the
   same tree and environment; derive breakdowns from the command so the parts
   sum; and never let "both", "each" or "the two" stand in for an enumerated
-  count (PR #49, #55, #64, #67, #68, #72).
+  count (PR #49, #55, #64, #67, #68, #72, #86).
 - [partial-historical-labeling] Label the *section* as historical, not one line
   of it — decide per claim what it is a statement about, date the block, and
   head a task note's §Files Changed / §Numerical impact with the task's own PR
@@ -107,6 +107,23 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   goes stale is in a file the moving PR never touches. A stale reference
   surviving elsewhere in the tree is evidence the sweep was skipped there,
   never a convention to copy (PRs #44, #81).
+- [pre-existing-failure-asserted-not-measured] "Pre-existing" is a measurement,
+  never an assertion: run the red gate against the *same paths* on the base ref
+  and diff the findings text with line numbers stripped. Arguing it from the
+  diff's shape ("no `.py` changed") dies the moment the diff grows, and a real
+  regression sitting beside thousands of standing findings is exactly what the
+  shortcut waves through. When a criterion demands a whole-repo gate be green
+  and that gate is red on the trunk, the criterion is unmeetable by any PR —
+  revise it to what a PR can attest and leave the cleanup to the follow-up that
+  tracks it, rather than mapping "green" onto red. Compare in two real
+  worktrees: a scratch copy loses `pyproject.toml`, the tool falls back to
+  default rules, and the diff invents a delta (PR #86).
+- [removal-sweep-filtered-by-extension] Enumerate a symbol's consumers with
+  `git grep -l` and **no** `--include` filter before deleting it. An extension
+  list written from memory omits whatever the repo also keeps the symbol in —
+  notebooks, JSON fixtures, docs — and the resulting "every call site" and "the
+  two consumers" claims are then wrong in the durable record, not just in the
+  sweep (PR #86).
 - [degenerate-sample-count] An API whose contract includes a statistical error
   estimate validates its sample-count input — type and `>= 2` — at the public
   entry point, or a degenerate count flows to every consumer as a finite value

@@ -174,7 +174,10 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   `version_bump` (re-check the level against actual recorded drift and
   the Task 0.5 outcome; Task 7.1 moved the source of truth off
   `hazma/__init__.py`, and `preflight.sh --closing` reads the new one);
-  `scripts/agents/preflight.sh --closing` green.
+  `scripts/agents/preflight.sh --closing` **green on every gate whose
+  input this project can change**, and its two trunk-red gates measured
+  against `origin/master` and shown unmoved. See the revision note
+  below.
 - Project retrospective written to
   `../learnings/project-retrospective.md` incl. §5 follow-on seeds
   (candidates surfaced so far: constants-table consolidation as a
@@ -230,3 +233,32 @@ The original phrasing was an instance of `docs/agents/lessons.md`
 that class: when dispatching cannot reach the job because the criterion
 is structurally unsatisfiable, the fix is to revise the criterion and
 reassign the observation — not to qualify a "Met" that is not met.
+
+### Revision of the preflight clause (Task 7.4, 2026-09-06)
+
+This criterion originally read `scripts/agents/preflight.sh --closing`
+**green**. No PR can satisfy that, and none could when the clause was
+written. Two of the gate's eleven rows fail on unmodified trunk code: on
+a clean `origin/master` worktree with no edit applied, `isort
+--check-only hazma test` reports **72 ERROR lines** and `ruff check hazma
+test` reports **6091 errors**. That condition has been tracked since
+2026-08-05 in
+[`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md),
+which predates this phase, offers three candidate remedies, and has none
+chosen — it is a cross-cutting change to be sequenced on its own, not
+something a closing PR should decide unilaterally while touching a
+physics library.
+
+The clause is revised rather than waived, because
+[`docs/agents/preflight.md`](../../../docs/agents/preflight.md) is right
+that a red gate must not be argued away: *"A non-zero exit is a blocked
+commit — fix and re-run; do not commit around a red gate."* What a
+closing PR can honestly attest is that it introduces nothing red, and
+that claim is falsifiable — run each red gate against the same paths on
+`origin/master` and diff the findings, rather than asserting
+"pre-existing" from intent.
+
+**Residual risk, stated rather than buried:** a real isort or ruff
+regression introduced next to 6091 existing findings is easy to miss.
+The measurement above is what closes that hole for this PR; the follow-up
+is what closes it for the repository.

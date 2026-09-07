@@ -7,7 +7,7 @@
 `hazma._core`, maturin-built), zero Cython, and a permanent parity-test
 corpus.
 
-This file is the project's durable memory. The seven phase learnings
+This file is the project's durable memory. The eight phase learnings
 files beside it hold the per-phase detail and are still the right thing
 to read before touching an area they cover; this one holds what only
 becomes visible from the whole arc
@@ -133,7 +133,7 @@ Contracts this project established that later work must respect.
 
 ## 3. Quirk Log & Edge Cases
 
-The transferable ones. Per-phase detail is in the seven phase files.
+The transferable ones. Per-phase detail is in the eight phase files.
 
 - **Cython's compiled arithmetic is not the arithmetic its source
   reads.** Three separate discoveries, each of which would have failed
@@ -314,5 +314,5 @@ next one.
   works.** ADR-0002 was written mid-project against measured context
   growth (three Phase 04–05 tasks each ended between 513k and 644k
   tokens, with the mandatory documents under 35k of it). Closing this
-  project meant reading seven learnings files instead of thirty-three
+  project meant reading eight learnings files instead of thirty-three
   task notes, and nothing needed was missing from them.

@@ -223,6 +223,17 @@ Add `--md "docs/agents/preflight.md"` when curated docs changed and
 per gate and exits non-zero on the first hard failure. A non-zero exit is
 a blocked commit — fix and re-run; do not commit around a red gate.
 
+**Two gates are red on the trunk itself**, so that rule currently cannot
+be met by any PR: on an untouched `origin/master`, `isort --check-only
+hazma test` reports 72 ERROR lines and `ruff check hazma test` reports
+6091 errors. `docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`
+tracks the condition and lists three candidate remedies; none is chosen,
+and picking one is its own change, not something to fold into unrelated
+work. Until then, "pre-existing" is a claim to **measure, not assert** —
+run the red gate against the same paths on `origin/master` and diff the
+findings, so a real regression next to 6091 existing ones still shows up.
+Anything you cannot show unmoved that way is yours to fix.
+
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain
 (`pip install --group dev`, which pulls black, isort, ruff, pytest,
