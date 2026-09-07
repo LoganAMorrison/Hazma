@@ -113,7 +113,7 @@ Gauss–Kronrod pass and QUADPACK returns on its initial three-interval
 partition. Measured against the same integrand and integrator at
 `epsabs = 0, epsrel = 1e-11`, the shipped answer is **0.5%–5% off** for
 every `x ≳ 5`, i.e. across the whole freeze-out region. Filed as
-[a follow-up](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md);
+[a follow-up](../../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md);
 Task 5.3's relic sweep is where the downstream size shows.
 
 ### `pip install -e .` builds the extension in debug

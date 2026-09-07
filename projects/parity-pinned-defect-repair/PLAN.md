@@ -2,7 +2,7 @@
 status: In Progress
 phased: false
 version_bump: minor
-deliverable: The nine parity-pinned numerical defects repaired (B4 landed ahead of the task sequence in PR #87), each with a declared per-array delta asserted against the corpus arrays that pinned the defect — which stay committed
+deliverable: The ten parity-pinned numerical defects repaired (B4, B5 and B6 landed ahead of the task sequence — PR #87, Task 10a and Task 13), each with a declared per-array delta asserted against the corpus arrays that pinned the defect — which stay committed
 created: 2026-08-19
 ---
 
@@ -12,12 +12,13 @@ created: 2026-08-19
 
 ## Goal
 
-Repair the nine live numerical defects the `cython-to-rust` port
-surfaced — seven rostered when this plan was drawn, B4, found and
-repaired ahead of the task sequence in
-[PR #87](https://github.com/LoganAMorrison/Hazma/pull/87), and B5, whose
+Repair the ten live numerical defects the `cython-to-rust` port
+surfaced — seven rostered when this plan was drawn, then three repaired
+ahead of the task sequence: B4 in
+[PR #87](https://github.com/LoganAMorrison/Hazma/pull/87), B5, whose
 follow-up was filed the day after this plan and named it as its home
-without a row ever being added — and do it
+without a row ever being added, and B6, whose follow-up was corpus-pinned
+and so could not be repaired anywhere else — and do it
 under a corpus mechanism that keeps the arrays which
 pinned each defect rather than overwriting them. Every repair ships with
 a **declared delta**: a named statement of which corpus positions move,
@@ -76,7 +77,7 @@ longer racing the port.
 
 **In scope:**
 
-- The nine defects rostered in
+- The ten defects rostered in
   [`references/defect-blast-radius.md`](references/defect-blast-radius.md),
   each repaired in the Rust kernel that now serves it (B4 already is).
 - A delta-declaration layer under `test/parity/` that pins each repair's
@@ -86,6 +87,10 @@ longer racing the port.
 - One `CHANGELOG.md` entry per moved published spectrum, with the
   magnitude, per `projects/cython-to-rust/rules.md` rule 3 and
   [`docs/versioning.md`](../../docs/versioning.md).
+
+B6 also widens the scope sentence above: it is the first defect here
+whose blast radius is `cross_sections.*` rather than a spectrum, and the
+first whose repair is a quadrature setting rather than a closed form.
 
 **Out of scope:**
 
@@ -106,8 +111,8 @@ longer racing the port.
 
 ## Numerical impact
 
-**This project moves published numbers, deliberately, nine times**
-(one of them, B4, already landed). That
+**This project moves published numbers, deliberately, ten times**
+(three of them, B4, B5 and B6, already landed). That
 is the whole deliverable, and it is what sets `version_bump: minor` —
 no public name, signature, return shape or documented unit changes, but
 users' plots move. Known magnitudes, from the follow-ups' own
@@ -137,6 +142,12 @@ measurements:
   `BR(π → e ν_e) = 1.230e-4` per pion, 0.0123% integrated; pointwise about
   5e-5 on the plateau and exactly a factor of two above the muon-decay
   continuum's support. The muon and tau rows do not move.
+- Both mediator `thermal_cross_section` implementations, and with them
+  `relic_density` for every model that supplies one: ⟨σv⟩ was wrong by
+  up to **100%** across the freeze-out region, and the relic densities
+  `test/test_relic_density.py` pins move by −92% and −99.9% at the two
+  closed-resonance points. **The largest correction in the project by
+  four orders of magnitude**, and the only one that is not a spectrum.
 
 Task 12 aggregates the measured figures. Every bullet above except the
 last is a pre-repair estimate the follow-up recorded rather than one of
@@ -160,8 +171,8 @@ the canonical *shape* of each task below.
 
 ## The defects
 
-Nine, labelled **A1–A4** (a live Cython twin, so an oracle capture is on
-the clock) and **B1–B5** (no twin, and no ordering constraint at all).
+Ten, labelled **A1–A4** (a live Cython twin, so an oracle capture is on
+the clock) and **B1–B6** (no twin, and no ordering constraint at all).
 The roster — each defect's follow-up, its twin's fate, the Rust kernel
 that serves it now, and the corpus cases it reaches — is one table, in
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md).
@@ -557,6 +568,35 @@ every touched doc — it is not in `preflight.sh`, per
 commands and their output, written after the last prose edit
 (`[sweep-block-written-from-intent]`).
 
+### Task 13: Repair B6 — the thermal averages never converged
+
+Added after the original twelve, and executed immediately rather than
+queued: it depends on nothing in Tasks 3–10 and blocks Tasks 11 and 12,
+which aggregate and close.
+
+**Objective:** Make both mediator `thermal_cross_section` implementations
+integrate to a criterion that binds, and declare what that moves.
+
+**Scope / implementation notes:** Four call sites share the defect, and
+a repair confined to the two Rust kernels would leave the other two: the
+generic fallback in `hazma/relic_density/_thermal_functions.py` and the
+GeV vector model's own in
+`hazma/vector_mediator/_gev/thermal_cross_section.py`, neither of which
+the port ever touched. `epsabs = 0` at all four. The two kernels also
+need a subdivision limit above `quad`'s default of 50, or the criterion
+they now bind to cannot be reached — see `THERMAL_LIMIT`.
+
+The declaration needs a relation the layer did not have. `Additive` and
+`Exact` both presuppose a term or transform the physics names, and there
+is none here: the stored value is not the true one shifted, it is the
+true one unresolved. `Reference` supersedes it instead, against
+`test/parity/thermal_reference.py`.
+
+**Deliverable / gate:** `pytest test/parity` green with the six thermal
+arrays declared, and red when the repair is reverted. The twelve pinned
+values in `test/test_relic_density.py` re-derived from the corrected
+kernel rather than absorbed by a widened tolerance.
+
 ### Task 12: Close — aggregate the drift and ship the bump
 
 **Objective:** One `CHANGELOG.md` entry naming this slug, carrying every
@@ -565,13 +605,17 @@ measured shift, and the `minor` bump.
 **Scope / implementation notes:** The per-repair figures accumulate in
 `task-notes/README.md`'s "Numerical impact so far" as each task lands;
 this task aggregates rather than reconstructs. Re-check the level against
-the aggregate before bumping — eight deliberate corrections to published
-spectra with no API change is `minor`, and nothing in Tasks 4–10 should
-have raised it, but the check is the point.
+the aggregate before bumping — ten deliberate corrections to published
+numbers with no API change is `minor`, and nothing in Tasks 4–10 or 13
+should have raised it, but the check is the point. B6 is the one to look
+at hardest: it moves `relic_density` by up to 99.9%, which is a far
+larger user-visible change than any spectrum here, and `minor` still
+covers it only because no public name, signature, return shape or
+documented unit moves.
 
 **Deliverable / gate:** `scripts/agents/preflight.sh --closing` green;
-`PLAN.md` `status: Complete`; the eight follow-ups still under `todo/` —
-the original seven plus B5's — moved to
+`PLAN.md` `status: Complete`; the follow-ups still under `todo/` — the
+original seven less B5's and B6's, which are already in `done/` — moved to
 `docs/followups/done/` with their inbound links repointed and the
 revision pinned, per
 [`docs/workflow.md`](../../docs/workflow.md)'s follow-up lifecycle and

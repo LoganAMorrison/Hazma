@@ -630,6 +630,15 @@ class TestLiveIntegrandShapes:
     #: for the vector (`_c_vector_mediator_cross_sections.pyx:657`).
     THERMAL_FLOOR: ClassVar[dict[str, float]] = {"scalar": 100.0, "vector": 150.0}
 
+    #: The subdivision limit both kernels pass, above `quad`'s default of
+    #: 50 because their `epsabs` is zero and a criterion that binds needs
+    #: room to be reached: `THERMAL_LIMIT` in
+    #: `rust/src/kernels/vector_xs.rs` and in `scalar_xs.rs`. Mirrored
+    #: here so this test drives the live configuration rather than the
+    #: probe's defaults — at 50 the scalar `mx=100, m=200` regime comes
+    #: back `ier = 1`.
+    THERMAL_LIMIT: ClassVar[int] = 100
+
     @pytest.mark.parametrize("model", ["scalar", "vector"])
     @pytest.mark.parametrize(
         ("mx", "m_med", "expected_last", "regime"),
@@ -647,9 +656,9 @@ class TestLiveIntegrandShapes:
         expected_last: int,
         regime: str,
     ) -> None:
-        # `points=[2, m/mx, 2 m/mx]` over [2, max(50/x, floor)] at scipy's
-        # default tolerances — both mediator sites verbatim, in the three
-        # regimes Task 3.3's exit criteria name. At x = 20 the upper limit
+        # `points=[2, m/mx, 2 m/mx]` over [2, max(50/x, floor)] — both
+        # mediator sites verbatim, in the three regimes Task 3.3's exit
+        # criteria name. At x = 20 the upper limit
         # is the floor (100 or 150), so:
         #   mx=100, m=250 -> [2, 2.5, 5]; 2 equals the lower limit and is
         #                    dropped, leaving 2 interior points, 3 intervals;
@@ -661,7 +670,13 @@ class TestLiveIntegrandShapes:
         # `last` is asserted directly, not only against scipy: it is the
         # observable that says the filtering produced the partition this
         # comment claims, and two implementations could agree on a wrong
-        # one.
+        # one. Reading it needs a tolerance that stops on the initial
+        # partition, which is what the probe's inherited `epsabs = 1.49e-8`
+        # gives against an integrand of order 1e-33 — so the filtering
+        # probe below keeps those defaults deliberately. It is no longer
+        # what the kernels run: since `B6` they pass `epsabs = 0`, which
+        # subdivides and makes `last` a statement about convergence rather
+        # than about filtering. Both are exercised, in that order.
         x, width = 20.0, 2.5
         f = self.thermal_integrand(model, x, mx, m_med, width)
         upper = max(50.0 / x, self.THERMAL_FLOOR[model])
@@ -679,13 +694,33 @@ class TestLiveIntegrandShapes:
             f, 2.0, upper, points=points
         )
         assert last == expected_last
-        assert ier == 0, "no live call site should terminate abnormally"
+        assert ier == 0, "break-point filtering should not terminate abnormally"
 
-        # The live tolerances are absolute 1.49e-8 against an integrand of
-        # order 1e-33, so QUADPACK stops on the initial partition and never
-        # subdivides — which is what happens in production too. Guard that
-        # the integrand is not simply zero, or all three regimes would
-        # agree for the wrong reason.
+        # Now the settings the kernels actually ship: `epsabs = 0`, so the
+        # relative criterion binds and QUADPACK subdivides until it is met.
+        # The partition is no longer the filtered one, so this asserts
+        # convergence and scipy agreement rather than `last`.
+        assert_matches_scipy(
+            f,
+            2.0,
+            upper,
+            points=points,
+            epsabs=0.0,
+            limit=self.THERMAL_LIMIT,
+            rtol=SINGULAR_RTOL,
+            label=f"{model} thermal cross section at the live epsabs, {regime}",
+        )
+        _value, _abserr, _neval, live_last, live_ier = core_quad.quad(
+            f, 2.0, upper, points=points, epsabs=0.0, limit=self.THERMAL_LIMIT
+        )
+        assert live_ier == 0, "no live call site should terminate abnormally"
+        assert live_last > expected_last, (
+            "zeroing epsabs should force subdivision past the filtered "
+            f"partition, but last stayed at {live_last}"
+        )
+
+        # Guard that the integrand is not simply zero, or all three regimes
+        # would agree for the wrong reason.
         sampled = [f(z) for z in np.linspace(2.001, min(upper, 30.0), 200)]
         assert max(sampled) > 0.0, "the live thermal integrand vanished"
 

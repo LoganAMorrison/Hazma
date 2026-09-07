@@ -1231,3 +1231,59 @@ git grep -l "minkowski_dot"      # every tracked file, any extension
 The cost was not the missed edit, which was one line in a notebook that
 was already dead on other removed imports. It was that two confident
 quantified claims went into the durable record wrong.
+
+### fix-covered-only-where-tests-already-ran
+
+A repair to `thermal_cross_section` corrected four call sites that shared
+one defect: two Rust kernels and two pure-Python ones the Cython port had
+never touched. The parity corpus and the mediator relic-density pins both
+run through the Rust kernels, so the suite went green the moment those two
+were fixed, and the PR shipped with the Python pair uncovered. Reverting
+`epsabs=0` at either of them left the entire suite passing.
+
+Review caught it by asking the question the author had not: which test
+fails if *this* line goes back? The answer for two of the four sites was
+"none".
+
+What the sites needed was not more end-to-end coverage but a reachable
+unit. One was reachable already and only looked untestable, because
+`hazma.relic_density._thermal_functions.thermal_cross_section` defers to
+`model.thermal_cross_section` whenever the model defines one — and every
+mediator model does, so every obvious candidate short-circuits past the
+generic path. A wrapper exposing `annihilation_cross_sections` and *not*
+`thermal_cross_section` reaches it. The other was a closure built inside
+`VectorMediatorGeV.relic_density` and handed to a collaborator, reachable
+by intercepting the collaborator rather than by solving the Boltzmann
+equation the method otherwise runs:
+
+```python
+captured = {}
+original = gev_site.rd
+try:
+    gev_site.rd = lambda model, **_: captured.setdefault("model", model)
+    model.relic_density(semi_analytic=True, three_body=False, four_body=False)
+finally:
+    gev_site.rd = original
+site = captured["model"].thermal_cross_section   # the real closure, 0.00s
+```
+
+That mattered beyond convenience: the end-to-end call takes 11.6 s and
+returns `nan` for reasons unrelated to the repair, so a pinned-value test
+through the public API was not available at all.
+
+The proof to run is per site, not per fix. Reverting one site at a time
+showed each test failing alone — the generic fallback's revert failed 17
+subtests of its own test while the GeV test stayed green, and vice versa.
+Reverting both at once would have failed both tests and demonstrated
+nothing about which site either was watching.
+
+A last trap: the first oracle drafted for these tests used a synthetic
+cross section chosen to make the integral analytic, and the resulting
+integrand was smooth enough that scipy's default `epsabs` already
+resolved it to 3.8e-6 — the test would have passed with the fix reverted.
+Both sites integrate to `50/x`, an interval that tracks the integrand's
+own decay length, so they never had the pathology the Rust kernels' fixed
+`max(50/x, 150)` interval creates. Only a realistic resonant integrand
+exposes the defect (0.765 relative error at the worst point). An oracle
+has to be built from the shape that actually breaks, and the way to know
+it is: revert the fix and watch the test go red.

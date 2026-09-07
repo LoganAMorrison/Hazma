@@ -33,8 +33,9 @@ section tracks live *status*.
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
-| 11 | Reconcile the superseded sequencing prose | 4–10a | Not started | `task-11-prose-reconciliation.md` |
+| 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | Not started | `task-11-prose-reconciliation.md` |
 | 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
+| 13 | Repair B6 — thermal quadrature convergence | 1 | **Complete** | `task-13-thermal-quadrature.md` |
 
 ```text
 1 ──┬──► 3 ──┬──────────► 5 ──┐
@@ -42,6 +43,7 @@ section tracks live *status*.
     ├──► 4 ──┴────────────────┼──► 11 ──► 12
     │        └──► 6 ──────────┤
     ├──► 10a ─────────────────┤
+    └──► 13 ──────────────────┤
 2 ──┼──► 7 ──► 8 ──► 9 ───────┤
     └──► 10 ──────────────────┘
 ```
@@ -54,10 +56,10 @@ this project is time-critical.
 
 ## Exit Criteria
 
-- All thirteen tasks complete; all nine defects repaired — the eight
-  follow-ups under `docs/followups/todo/` moved to `docs/followups/done/`
-  with inbound links repointed and the revision pinned (B4's already
-  lives there; B5's is repaired but deliberately still in `todo/`, so the
+- All fourteen tasks complete; all ten defects repaired — the follow-ups
+  under `docs/followups/todo/` moved to `docs/followups/done/` with
+  inbound links repointed and the revision pinned (B4's and B6's already
+  live there; B5's is repaired but deliberately still in `todo/`, so the
   repoint sweep happens once).
 - No live document still sequences any of the seven original repairs
   "after Phase 06 Task 6.4".
@@ -178,11 +180,46 @@ this project is time-critical.
   `[test-name-claims-an-unmade-assertion]` (several existing tests are
   named for the defect they pin and need renaming, not just
   re-pointing).
+- **A defect can live in the integrator rather than in a closed form,
+  and the roster had no shape for one** (Task 13). B6's stored values
+  are not the true ones transformed; they are the true ones unresolved,
+  so no `Additive` or `Exact` relation can state the delta. The layer
+  grew a `Reference` relation, which answers Task 3's `expected`
+  protocol alongside `Additive` and `Exact`.
+- **Zeroing a tolerance is only half a convergence fix.** B6's kernels
+  also needed `THERMAL_LIMIT` above `quad`'s default of 50: at 50, 33 of
+  the 540 thermal positions exhausted the subdivision table and came
+  back flagged. A criterion that binds has to be reachable.
+- **Four call sites shared B6's defect and only two were in Rust.** The
+  two pure-Python ones (`hazma/relic_density/_thermal_functions.py`, the
+  GeV vector model) were never ported, so a Rust-only repair would have
+  left them. Worth checking for the same shape on any defect inherited
+  verbatim from a `.pyx`.
 
 ## Numerical impact so far
 
-**Two public values have moved: B4, in PR #87, and B5, in Task 10a**
-(bullets below). Task 2
+**Three public values have moved: B4 in PR #87, B5 in Task 10a, and B6
+in Task 13** (bullets below).
+
+**B6 — both mediator `thermal_cross_section`, and `relic_density`
+through them.** Measured on the two corpus cases' own grids (570
+positions, 6 blocks, `x = mx/T` from 0.1 to 1000) against
+`test/parity/thermal_reference.py`, scipy's QUADPACK on the same
+integrand at `epsrel = 1e-12`:
+
+| Quantity | Grid | Shipped error | After |
+| --- | --- | --- | --- |
+| ⟨σv⟩, scalar + vector | 570 corpus positions | up to **1.00 relative** (both `closed_resonance` blocks); per-block medians 7.2e-6 to 8.1e-2 | within 3.6e-9 of the reference |
+| `relic_density`, semi-analytic | the 6 pinned model points | −91.85% to +2.04% | re-pinned |
+| `relic_density`, Boltzmann | the 6 pinned model points | −99.88% to +2.40% | re-pinned |
+
+539 of the 570 stored positions move. This is **the largest correction
+in the project by four orders of magnitude**, and the only one that is
+not a spectrum: freeze-out abundance goes as 1/⟨σv⟩, so a ⟨σv⟩ that
+retained none of the true value at the closed-resonance points moved the
+relic density there by two orders of magnitude. Cost, measured on this
+worktree: 12 `relic_density` solves go 1.31 s → 5.4 s, and a single
+`thermal_cross_section` call 4.6–48 µs → 21–136 µs. Task 2
 shipped no library behavior —
 its four `.pyx` patches exist only inside the capture and are reverted.
 What it produced is the *measurement* each of Tasks 4, 7, 8 and 10 will
@@ -261,9 +298,10 @@ Reach: B1 six arrays / 189 positions, B2 six / 305, B3 four / 350.
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
 rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
-it does not reconstruct it. B4 and B5 have each written their own
-`CHANGELOG.md` entry already, B5's under `[Unreleased]` because 2.2.0 is
-released; Task 12 renames that heading rather than re-deriving it, and
+it does not reconstruct it. B4, B5 and B6 have each written their own
+`CHANGELOG.md` entry already, B5's and B6's under `[Unreleased]` because
+2.2.0 is released; Task 12 renames that heading rather than re-deriving
+it, and
 `preflight.sh --closing` greps for `## [<new version>]`, so it must.
 
 ## Decisions and Implementation Notes
@@ -327,6 +365,23 @@ released; Task 12 renames that heading rather than re-deriving it, and
   mediator positron cases" against four — each mediator ships a
   `dnde_decay_*` and a `dnde_decay_*_pt` entry point. Every list is now
   written out with a count, and each repair gate names every case.
+- **Two tasks generalized the relation protocol concurrently, and the
+  merge kept one** (Tasks 3 and 13). Task 13 shipped
+  `term_for(fn, block, suffix, pinned)` returning the additive term;
+  Task 3 shipped `expected(fn, block, stored)` returning the repaired
+  arrays, and merged to master first. `Reference` was rewritten onto
+  `expected` and `term_for` is gone. Worth knowing that the discarded
+  shape existed for a reason: Task 13 reached it after an `expected`-like
+  first attempt round-tripped `pinned + term` and turned the unpinnable
+  positions' stored `NaN` into a `NaN` term, breaking three B4 blocks.
+  Task 3's version avoids that by dropping unpinnable positions from the
+  predicted array rather than from a derived term.
+- **B6's budget is set from the kernel's own tolerance, not from the
+  local measurement** (Task 13). The repaired kernels agree with the
+  reference to 3.6e-9 here, but they are only held to `epsrel = 1.49e-8`,
+  and a platform whose libm steers QUADPACK to a different accepted
+  partition may land anywhere inside that. The declaration's `rtol` is
+  6.7x the bound, not 28x the measurement.
 
 ## Files Changed
 
@@ -360,6 +415,19 @@ library or build file, and `test/parity/data/` untouched.
 (new), `docs/followups/README.md`, `../PLAN.md`,
 `../references/defect-blast-radius.md`, this file, and
 `task-10a-neutrino-pion-line.md` (new). `test/parity/data/` untouched.
+
+### Task 13 (B6)
+
+`rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
+(`THERMAL_EPSABS`, `THERMAL_LIMIT`, and the composite-rule test),
+`hazma/relic_density/_thermal_functions.py`,
+`hazma/vector_mediator/_gev/thermal_cross_section.py`,
+`test/parity/thermal_reference.py` (new), `test/parity/deltas.py`,
+`test/parity/test_parity.py`, `test/test_relic_density.py`,
+`test/test_core_quad.py`, `CHANGELOG.md`, `docs/followups/` (the
+follow-up moved to `done/`, plus a new `todo/` entry), plus this
+project's `PLAN.md`, `references/defect-blast-radius.md` and these
+notes — see `task-13-thermal-quadrature.md`.
 
 ## Verification
 
@@ -465,9 +533,10 @@ has no `hazma._core` test probes for the suite to import.
   verified at `3e01590`.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87) and B5 (Task 10a) are the repairs that have changed a
-  library value; every other corpus array is still compared against its
-  stored value. `test/parity/deltas.py` declares 36 arrays, and
+- B4 (PR #87), B5 (Task 10a) and B6 (Task 13) are the repairs that have
+  changed a library value; every other corpus array is still compared
+  against its stored value. `test/parity/deltas.py` declares 42 arrays —
+  30 for B4, 6 for B5, 6 for B6 — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff.
 - The measurement recipe every remaining repair task needs: capture the
@@ -481,6 +550,11 @@ has no `hazma._core` test probes for the suite to import.
   `EXPECTED_DECLARED_ARRAYS`; the key lists and position counts are in
   `task-3-closed-form-deltas.md`'s handoff, to be re-derived after
   Task 4 rather than pasted.
+- The delta layer now carries three relations. A new repair picks
+  `Additive` when the physics names the term, `Exact` when a closed form
+  transforms the stored array, and `Reference` when only a second
+  implementation can say what the value should be; all three answer
+  `expected`, and the runner needs no change for any of them.
 
 **Currently risky / unknown:**
 

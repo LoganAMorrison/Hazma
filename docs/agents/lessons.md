@@ -226,7 +226,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [test-name-claims-an-unmade-assertion] A test that captures a signal and never
   asserts on it advertises a check it does not perform; assert where the signal
   is reachable, say in the docstring where it is not, and rename so the roster
-  stops claiming the check (PR #68).
+  stops claiming the check (PR #68, #91).
 - [stale-group-membership-claim] After editing a `[dependency-groups]` group,
   `rg` its name and member list out of `docs/agents/` and `AGENTS.md` and
   re-derive each enumeration (PR #69, #71).
@@ -291,3 +291,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   drops an in-progress project's `references/` and `rules.md` — which someone
   executes next week — along with the task notes that must not be rewritten.
   Classify per file and state the rule applied to each skip (PR #88).
+- [fix-covered-only-where-tests-already-ran] A defect repaired at every site of
+  a class gets coverage only where the suite already looked; the sites it
+  already reaches go green immediately and make the untested ones invisible.
+  Enumerate the sites the fix touched, and for each confirm a test that fails
+  when *only that site* is reverted — reverting all of them at once proves
+  nothing about which one the test was watching (PR #91).

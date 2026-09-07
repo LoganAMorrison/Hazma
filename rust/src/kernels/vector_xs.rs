@@ -116,7 +116,7 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
-use crate::quad::{DEFAULT_EPSABS, DEFAULT_EPSREL, DEFAULT_LIMIT, QuadOpts, quad};
+use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
 use crate::special::{bessel_k1, bessel_kn};
 
 /// Electron mass in MeV — `_c_vector_mediator_cross_sections.pyx:9`.
@@ -142,13 +142,47 @@ const PI_4: f64 = 97.40909103400242;
 /// `π⁵`, as clang folds `pow(M_PI, 5.0)`. See [`PI_4`].
 const PI_5: f64 = 306.0196847852814;
 
-/// The quadrature settings `thermal_cross_section` inherits from
-/// `scipy.integrate.quad`'s defaults — the `.pyx` passes neither
-/// `epsabs` nor `epsrel` (`:656-660`). `points` is supplied per call
-/// because two of the three break points depend on `m_v/m_x`.
-const THERMAL_EPSABS: f64 = DEFAULT_EPSABS;
-/// See [`THERMAL_EPSABS`].
+/// Absolute tolerance for the thermal average, disabled so that
+/// [`THERMAL_EPSREL`] is the criterion that binds.
+///
+/// ⟨σv⟩ runs around 1e-27 MeV⁻² at ordinary couplings, twenty decades
+/// under `scipy.integrate.quad`'s default `epsabs` of 1.49e-8. QUADPACK
+/// stops as soon as *either* tolerance is met, so that default is
+/// satisfied by the first Gauss–Kronrod pass: the initial partition
+/// comes back unrefined, and over the freeze-out region that estimate
+/// is 0.5% to 5% off. Zero holds the integral to its relative error
+/// instead.
+///
+/// This is the one place the port departs from the settings the `.pyx`
+/// used (`:656-660`, which passed neither tolerance), so the two
+/// `cross_sections.*.thermal_cross_section` corpus cases carry a
+/// declared delta — roster entry `B6` in
+/// `projects/parity-pinned-defect-repair`.
+///
+/// With `epsabs = 0` QUADPACK's "tolerance unachievable" test rests on
+/// `epsrel` alone: `epsrel >= max(50 ε, 5e-29)`, which is 1.11e-14
+/// here, and [`THERMAL_EPSREL`] clears it by six decades.
+const THERMAL_EPSABS: f64 = 0.0;
+/// `scipy.integrate.quad`'s default relative tolerance, and — with
+/// [`THERMAL_EPSABS`] zeroed — the tolerance the thermal average is
+/// actually held to. `points` is supplied per call because two of the
+/// three break points depend on `m_v/m_x`.
 const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
+
+/// Subdivision limit for the thermal average, above
+/// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
+///
+/// A criterion that binds is only worth having if the integrator is
+/// allowed to reach it. At scipy's default limit of 50, 33 of the 540
+/// thermal positions the parity corpus pins exhaust the subdivision
+/// table and come back flagged; at 100 that falls to 16 and the worst
+/// error against `test/parity/thermal_reference.py` improves from
+/// 2.5e-8 to 3.6e-9, after which it plateaus — raising the limit
+/// further only lets the 16 subdivide deeper without moving their
+/// value. Those 16 are at the roundoff floor of the extrapolation
+/// table, not short of subdivisions, so 100 is where the accuracy is
+/// and 200 or 500 would only buy work.
+const THERMAL_LIMIT: usize = 100;
 
 /// `σ(x x̄ → V* → f f̄)` in MeV⁻², for a lepton of mass `mf`.
 ///
@@ -462,7 +496,7 @@ pub fn thermal_cross_section(
     let options = QuadOpts {
         epsabs: THERMAL_EPSABS,
         epsrel: THERMAL_EPSREL,
-        limit: DEFAULT_LIMIT,
+        limit: THERMAL_LIMIT,
         points: Some(&points),
     };
     let integral = match quad(&mut integrand, 2.0, upper, &options) {
@@ -763,23 +797,29 @@ mod tests {
     /// Substituting `z = √(4 + w²)` (so `dz = w/z · dw`) turns that into
     /// `w²`, which Simpson handles to rounding.
     ///
-    /// The entry point then lands **0.79% away** from that reference, and
-    /// that is shipped behavior rather than a port defect: the `.pyx`
-    /// passes neither `epsabs` nor `epsrel`, so the integral runs at
-    /// scipy's default `epsabs = 1.49e-8` against an integrand whose
-    /// integral is of order `1e-27`. The absolute criterion is met by the
-    /// very first Gauss–Kronrod pass, QUADPACK returns on its initial
-    /// three-interval partition (63 evaluations), and no subdivision ever
-    /// happens. `test/test_core_quad.py` records the same partition from
-    /// the other side.
+    /// The entry point lands **4.2e-8** from that reference, which is
+    /// Simpson's own residual rather than anything the entry point
+    /// contributes — the channel thresholds put a `(z − z_open)^{3/2}` on
+    /// panel boundaries and the rule still only sees `h^{5/2}` across
+    /// them.
     ///
-    /// So this test asserts two things at two standards, and the pairing
-    /// is the point: the entry point is within 2% of the true integral,
-    /// and the *same integrand through the same integrator* at a
-    /// convergent tolerance reproduces the reference to 4.2e-8. Together
-    /// they say the formula and the transcription are right and the gap
-    /// is the tolerance —
-    /// `docs/followups/todo/thermal-cross-section-quadrature-never-converges.md`.
+    /// It did not always. Until roster entry `B6` of
+    /// `projects/parity-pinned-defect-repair` this kernel inherited
+    /// scipy's default `epsabs = 1.49e-8` against an integrand whose
+    /// integral is of order `1e-27`, so the absolute criterion was met by
+    /// the very first Gauss–Kronrod pass, QUADPACK returned on its
+    /// initial three-interval partition, no subdivision ever happened,
+    /// and the answer sat **0.79%** from this reference. [`THERMAL_EPSABS`]
+    /// is zero now and the relative criterion binds.
+    ///
+    /// So this test asserts two things at one standard, and the pairing is
+    /// still the point: the entry point reproduces the reference, and the
+    /// *same integrand through the same integrator* at a three-decade
+    /// tighter tolerance reproduces it no better. Together they say the
+    /// formula, the transcription and the shipped tolerance are all
+    /// right. Loosen the tolerance again and only the first assertion
+    /// moves, which is what tells a tolerance defect from a
+    /// transcription one.
     #[test]
     fn the_thermal_integral_matches_a_composite_rule() {
         let x = 20.0;
@@ -848,22 +888,20 @@ mod tests {
         let got =
             thermal_cross_section(x, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
 
-        // What the entry point ships: the right integral, resolved to
-        // about a percent. 2e-2 is one measurement (7.9e-3) plus room,
-        // not a fitted bound -- the convergent comparison below is where
-        // the precision claim lives.
+        // The entry point at the tolerance it ships with. 1e-6 is 24x
+        // the measured 4.199e-8, and that residual is Simpson's, not the
+        // entry point's: the convergent comparison below lands on the
+        // same figure.
         assert!(
-            (got - expected).abs() < 2e-2 * expected.abs(),
-            "shipped tolerances gave {got}, Simpson {expected}"
+            (got - expected).abs() < 1e-6 * expected.abs(),
+            "entry point gave {got}, Simpson {expected}"
         );
 
-        // The same integrand, the same integrator, a convergent
-        // tolerance: now the two independent quadratures agree to
-        // 4.2e-8 relative (measured), which is Simpson's own residual
-        // error -- the channel thresholds put a `(z - z_open)^{3/2}` on
-        // panel boundaries but the rule still only sees `h^{5/2}` across
-        // them. 1e-6 is 24x that, and five decades tighter than the 2e-2
-        // the shipped tolerances leave above.
+        // The same integrand and the same integrator three decades
+        // tighter: 4.2e-8 again, so what is left is Simpson's residual
+        // and the shipped tolerance already reaches it. Held to the same
+        // 1e-6 as above so the pair is a comparison rather than two
+        // unrelated claims.
         let mut integrand = |z: f64| {
             let sigma =
                 sigma_xx_to_all(MX * z, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
@@ -895,9 +933,12 @@ mod tests {
     /// admits, so `thermal_cross_section`'s `Err(_) => NaN` arm is
     /// unreachable.
     ///
-    /// `crate::quad::QuadError` depends only on the options — `epsabs > 0`
-    /// and `limit` above the surviving break-point count — and all three
-    /// break points can survive, so `limit = 50` is the binding claim.
+    /// `crate::quad::QuadError` depends only on the options. With
+    /// [`THERMAL_EPSABS`] at zero the tolerance test falls on `epsrel`
+    /// alone — `epsrel >= max(50 ε, 5e-29)`, which [`THERMAL_EPSREL`]
+    /// clears by six decades — leaving `limit` above the surviving
+    /// break-point count as the other half. All three break points can
+    /// survive, so [`THERMAL_LIMIT`] is the binding claim.
     #[test]
     fn thermal_quad_options_are_always_accepted() {
         for x in [1e-6, 0.1, 1.0 / 3.0, 1.0, 20.0, 300.0, 1e6] {

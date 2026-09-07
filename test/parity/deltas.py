@@ -70,6 +70,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+import thermal_reference
 
 from hazma import parameters
 from hazma._core import boost as core_boost
@@ -79,7 +80,7 @@ if TYPE_CHECKING:
 
 #: The closed set of repair labels a declaration may carry: the roster in
 #: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
-REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5"})
+REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6"})
 
 #: The sentinel for "every position the relation actually moves", resolved
 #: against the prediction at comparison time. A position the relation
@@ -167,8 +168,44 @@ class Exact:
         return self.transform(block, stored)
 
 
+@dataclass(frozen=True)
+class Reference:
+    """``repaired == reference(block)``, within ``rtol``.
+
+    The stored array is superseded rather than corrected: the repaired
+    kernel is compared against a value reached without it. Use this where
+    the defect left the stored value *wrong* by an amount only a second
+    implementation can say, rather than shifted by a term the physics
+    names (`Additive`) or transformed by a closed form (`Exact`).
+
+    Parameters
+    ----------
+    reference : TermFn
+        Computes the superseding arrays for one block.
+    rtol : float
+        Relative budget the relation holds to. Measured, and ``why`` says
+        how.
+    why : str
+        One-line justification of ``rtol``.
+    """
+
+    reference: TermFn
+    rtol: float
+    why: str
+
+    def expected(
+        self,
+        fn: Callable[..., Any],
+        block: Block,
+        stored: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray]:
+        """The repaired arrays this relation predicts, by suffix."""
+        del stored  # superseded outright; that is the point of the relation
+        return self.reference(fn, block)
+
+
 #: How a repaired value may relate to the stored one.
-Relation = Additive | Exact
+Relation = Additive | Exact | Reference
 
 
 @dataclass(frozen=True)
@@ -604,6 +641,38 @@ _B5 = Delta(
     evidence="docs/followups/todo/neutrino-pion-electron-line-counted-twice.md",
 )
 
+# ---------------------------------------------------------------------------
+# B6 -- the thermal averages never converged
+# ---------------------------------------------------------------------------
+
+
+_B6 = Delta(
+    repair="B6",
+    positions=MOVED,
+    relation=Reference(
+        reference=thermal_reference.reference_values,
+        rtol=1e-7,
+        why="the reference is scipy's QUADPACK at epsrel 1e-12 over the same "
+        "integrand, so what bounds agreement is the repaired kernels' own "
+        "epsrel of 1.49e-8, not the reference: a platform whose libm steers "
+        "QUADPACK to a different accepted partition may land anywhere inside "
+        "it. Measured 3.6e-9 worst relative over the 540 positions the "
+        "reference integrates. 1e-7 is 6.7x the bound that has to hold "
+        "everywhere, rather than 28x the figure this platform happens to "
+        "give.",
+    ),
+    measured="the stored arrays are the initial-partition estimate: against "
+    "the reference they are wrong by up to 1.00 relative (scalar and vector "
+    "closed_resonance, where the shipped value retains none of the true "
+    "one), with per-block medians from 7.2e-6 to 8.1e-2. 539 of the 570 "
+    "pinned positions move. Of the 31 that do not, 30 are the ten points per "
+    "scalar block above x = 300, where that kernel returns 0.0 outright and "
+    "the quadrature is never reached; the last is vector narrow_resonance at "
+    "x = 0.1367, small enough that the relative criterion already bound "
+    "before the repair.",
+    evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
+)
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
@@ -773,6 +842,37 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.neutrino.charged_pion", "boosted_mild", "scalar_values"): _B5,
     ("spectra.neutrino.charged_pion", "boosted_strong", "values"): _B5,
     ("spectra.neutrino.charged_pion", "boosted_strong", "scalar_values"): _B5,
+    # B6.
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "open_resonance",
+        "values",
+    ): _B6,
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "narrow_resonance",
+        "values",
+    ): _B6,
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "closed_resonance",
+        "values",
+    ): _B6,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "open_resonance",
+        "values",
+    ): _B6,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "narrow_resonance",
+        "values",
+    ): _B6,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "closed_resonance",
+        "values",
+    ): _B6,
 }
 
 
@@ -786,6 +886,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "B3": _B3,
     "B4": _B4,
     "B5": _B5,
+    "B6": _B6,
 }
 
 

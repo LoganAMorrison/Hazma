@@ -140,7 +140,16 @@ def relic_density(
             return 0.0
 
         pf = x / (2.0 * special.kn(2, x)) ** 2
-        return pf * integrate.quad(integrand, 2.0, 50.0 / x, points=[2.0], args=(x,))[0]
+        # `epsabs=0.0` leaves the relative criterion as the binding one;
+        # see `hazma.relic_density._thermal_functions.
+        # thermal_cross_section` for why the default absolute one is
+        # satisfied before any subdivision happens.
+        return (
+            pf
+            * integrate.quad(
+                integrand, 2.0, 50.0 / x, points=[2.0], args=(x,), epsabs=0.0
+            )[0]
+        )
 
     model = VectorMediatorGeVRelicDensity(
         mx=self.mx, thermal_cross_section=thermal_cross_section

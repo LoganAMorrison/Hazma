@@ -168,7 +168,7 @@ grid, and record the phase's headline benchmark from a release build.
   stated tolerances.
 - `docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md`
   — records that the two cargo profiles are numerically bit-identical.
-- `docs/followups/todo/thermal-cross-section-quadrature-never-converges.md`
+- `docs/followups/done/thermal-cross-section-quadrature-never-converges.md`
   — unblocked, and now carries the measured downstream size.
 - Project bookkeeping, all under `projects/cython-to-rust/`: this note;
   `task-notes/phase-05/README.md` (row, status, findings, handoff);
@@ -291,7 +291,7 @@ to `version_bump:` — it was already `major` on API-removal grounds.
 ## Open Questions
 
 - The unconverged thermal quadrature
-  (`docs/followups/todo/thermal-cross-section-quadrature-never-converges.md`)
+  (`docs/followups/done/thermal-cross-section-quadrature-never-converges.md`)
   is now measured at the consumer: it is 0.5%–5% wrong on ⟨σv⟩ across
   freeze-out, and relic abundance goes as 1/⟨σv⟩, so the shipped relic
   densities inherit that error more or less linearly. This task

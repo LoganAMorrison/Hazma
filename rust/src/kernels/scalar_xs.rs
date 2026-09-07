@@ -92,7 +92,7 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
-use crate::quad::{DEFAULT_EPSABS, DEFAULT_EPSREL, DEFAULT_LIMIT, QuadOpts, quad};
+use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
 use crate::special::{bessel_k1, bessel_kn};
 
 /// Higgs vacuum expectation value in MeV —
@@ -133,12 +133,47 @@ const LN_4: f64 = 1.3862943611198906;
 /// at compile time. See [`LN_4`].
 const LN_16: f64 = 2.772588722239781;
 
-/// The quadrature settings `thermal_cross_section` inherits from
-/// `scipy.integrate.quad`'s defaults — the `.pyx` passes neither
-/// `epsabs` nor `epsrel` (`:1411-1414`).
-const THERMAL_EPSABS: f64 = DEFAULT_EPSABS;
-/// See [`THERMAL_EPSABS`].
+/// Absolute tolerance for the thermal average, disabled so that
+/// [`THERMAL_EPSREL`] is the criterion that binds.
+///
+/// ⟨σv⟩ runs around 1e-27 MeV⁻² at ordinary couplings, twenty decades
+/// under `scipy.integrate.quad`'s default `epsabs` of 1.49e-8. QUADPACK
+/// stops as soon as *either* tolerance is met, so that default is
+/// satisfied by the first Gauss–Kronrod pass: the initial partition
+/// comes back unrefined, and over the freeze-out region that estimate
+/// is 0.5% to 5% off. Zero holds the integral to its relative error
+/// instead.
+///
+/// This is the one place the port departs from the settings the `.pyx`
+/// used (`:1411-1414`, which passed neither tolerance), so the two
+/// `cross_sections.*.thermal_cross_section` corpus cases carry a
+/// declared delta — roster entry `B6` in
+/// `projects/parity-pinned-defect-repair`.
+///
+/// With `epsabs = 0` QUADPACK's "tolerance unachievable" test rests on
+/// `epsrel` alone: `epsrel >= max(50 ε, 5e-29)`, which is 1.11e-14
+/// here, and [`THERMAL_EPSREL`] clears it by six decades.
+const THERMAL_EPSABS: f64 = 0.0;
+/// `scipy.integrate.quad`'s default relative tolerance, and — with
+/// [`THERMAL_EPSABS`] zeroed — the tolerance the thermal average is
+/// actually held to. `points` is supplied per call because two of the
+/// three break points depend on `m_s/m_x`.
 const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
+
+/// Subdivision limit for the thermal average, above
+/// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
+///
+/// A criterion that binds is only worth having if the integrator is
+/// allowed to reach it. At scipy's default limit of 50, 33 of the 540
+/// thermal positions the parity corpus pins exhaust the subdivision
+/// table and come back flagged; at 100 that falls to 16 and the worst
+/// error against `test/parity/thermal_reference.py` improves from
+/// 2.5e-8 to 3.6e-9, after which it plateaus — raising the limit
+/// further only lets the 16 subdivide deeper without moving their
+/// value. Those 16 are at the roundoff floor of the extrapolation
+/// table, not short of subdivisions, so 100 is where the accuracy is
+/// and 200 or 500 would only buy work.
+const THERMAL_LIMIT: usize = 100;
 
 /// `pow(x, 2.0)`, which is `x · x`.
 ///
@@ -882,11 +917,14 @@ fn sigma_xx_to_all(
 /// The break points are the endpoint, the mediator resonance `z = m_s/m_x`
 /// and the `SS` threshold `z = 2 m_s/m_x`.
 ///
-/// Neither `epsabs` nor `epsrel` is passed, so this inherits scipy's
-/// defaults, which the integrand's ~1e-27 scale satisfies on the first
-/// Kronrod pass — the quadrature does not converge, and that is
-/// reproduced rather than fixed
-/// (`docs/followups/todo/thermal-cross-section-quadrature-never-converges.md`).
+/// [`THERMAL_EPSABS`] is zero, so the relative criterion binds; that
+/// constant carries why the inherited absolute default did not, and
+/// [`THERMAL_LIMIT`] the subdivision room the criterion needs to be
+/// reachable. The `.pyx` passed neither tolerance and so returned its
+/// integrator's initial partition; correcting that moved published
+/// numbers, as roster entry `B6` of
+/// `projects/parity-pinned-defect-repair`
+/// (`docs/followups/done/thermal-cross-section-quadrature-never-converges.md`).
 ///
 /// # Errors
 ///
@@ -940,7 +978,7 @@ pub fn thermal_cross_section(
     let options = QuadOpts {
         epsabs: THERMAL_EPSABS,
         epsrel: THERMAL_EPSREL,
-        limit: DEFAULT_LIMIT,
+        limit: THERMAL_LIMIT,
         points: Some(&points),
     };
     let integral = match quad(&mut integrand, 2.0, upper, &options) {
