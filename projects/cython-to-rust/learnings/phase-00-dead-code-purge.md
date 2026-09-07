@@ -177,7 +177,7 @@ Two more worth carrying:
   `ruff --isolated --select E9,F63,F7,F82`. Every task in this phase
   inherited the two red rows and had to prove they were pre-existing.
   Tracked in
-  [`../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+  [`../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md).
 
 ## 5. Follow-on seeds
 

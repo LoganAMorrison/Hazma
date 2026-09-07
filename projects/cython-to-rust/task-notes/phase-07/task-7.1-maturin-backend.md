@@ -269,7 +269,7 @@ PASS   forbidden tokens        none added
 ```
 
 The two FAILs are the trunk condition
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 records, and the "is this mine?" analysis it asks every task in flight to
 redo was run rather than assumed: `isort --check-only hazma test` names
 files under `hazma/` that this diff does not contain, and

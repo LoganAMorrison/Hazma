@@ -589,7 +589,7 @@ drift to declare) — `provenance` already records `platform` and
   mode gap with it.
 - **The red `ruff check` row is the already-tracked trunk condition**,
   not something this task introduced:
-  [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+  [`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   ("every PR inherits a FAIL… every task now has to prove its own red
   rows are pre-existing"). This task did exactly that proof — see the
   delta table in Verification — and did not file a second follow-up.

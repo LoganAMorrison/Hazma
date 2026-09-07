@@ -5,10 +5,12 @@
   docstring-only change to `hazma/spectra/_photon/__init__.py` returned
   `RESULT: FAIL` from an otherwise clean preflight run
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** ripens now; nothing blocks it. It gets more
-  expensive the longer it waits, because every task in flight has to
-  re-derive the same "is this mine?" analysis.
+- **Status:** done
+- **Resolved:** 2026-09-06 by **option 2** (narrow the gate to the diff).
+  The lint debt itself is untouched and still real; what changed is that
+  gates 2 and 3 no longer charge it to the branch that runs them. See
+  **Resolution** below, including which of this file's citations had gone
+  stale by the time it was picked up.
 
 ## Why
 
@@ -106,3 +108,89 @@ temptation.
 - **This is formatting, not physics** — `docs/versioning.md` is
   unaffected and no published number moves, so whichever option is taken
   is a `patch`-level change on its own.
+
+## Resolution
+
+**Option 2, via [`scripts/agents/lint_delta.py`](../../../scripts/agents/lint_delta.py).**
+Gates 2 and 3 now run their linter twice — over the working tree, and
+over the same paths as they stand at the merge base — and report only the
+difference. Each row states the split it measured, so a green gate is
+evidence rather than an argument:
+
+```text
+PASS   isort --check-only      0 new (72 pre-existing at 3bbd0a0bddf4)
+PASS   ruff check              0 new (6091 pre-existing at 3bbd0a0bddf4)
+```
+
+Findings are compared as a multiset of `(path, rule, message)` with line
+and column dropped, so an edit near the top of a file does not re-report
+everything below it; the price is that removing one finding and adding an
+identical one in the same file cancels out. `isort` is compared per file,
+because `--check-only` names the file rather than the offending import.
+Gate 1 stays absolute: black is green on the trunk and CI enforces it
+that way.
+
+**The fourth item needed no flag.** A diff that touches no Python leaves
+the two trees identical over `--paths`, so the comparison is empty and
+the rows PASS on their own — reported as `no Python changed against
+<sha>`, in 0.4 s, without the archive step. Adding `--no-python` would
+have been a second way to say what the measurement already says, and
+treating an empty `--paths` as "skip gates 1–3" was rejected outright: a
+forgotten `--paths` would then silently skip the Python gates, trading a
+false red for a false green.
+
+**Why not option 1.** Measured at `3bbd0a0b` under ruff 0.16.6: 6091
+findings across 70 rule codes, of which only 715 are `--fix`-able. The
+top four are `ANN001` (2364), `ANN202` (837), `D205` (445) and `ANN201`
+(417) — annotating roughly 3600 function signatures and rewriting several
+hundred docstrings across a physics library. That is a project with its
+own numerical-review burden, not a task, and it would conflict with
+everything in flight. It remains the durable end state, and option 2 is
+what makes it optional rather than urgent: the debt no longer costs
+anything per-PR, so it can be paid down file by file, each drop credited
+by the `N fixed` counter.
+
+**CI was left alone.** Option 1 paired its cleanup with "add both gates
+to CI so the debt cannot re-accumulate", and a diff-scoped gate makes
+that possible for the first time — but not free. `actions/checkout@v7`
+fetches depth 1, so `git merge-base` has no trunk to resolve and the
+comparison would fail closed on every run; enforcing this in CI means
+`fetch-depth: 0` and a base ref that differs between `push` and
+`pull_request`. That is its own change with its own failure modes, and
+adding a required check is a contribution-contract decision rather than a
+gate repair. `preflight.sh` remains the enforcement point, as
+[`preflight.md`](../../agents/preflight.md) already says.
+
+Option 3 was not taken and stays available. Three things noticed while
+measuring, none folded in:
+
+- `[tool.ruff]` does not exclude `hazma/experimental/` or `notebooks/`,
+  though [`AGENTS.md`](../../../AGENTS.md) says both are outside the lint
+  gate; CI passes `--exclude` for them on its own, `--isolated` run. 305
+  of the 6091 and 8 of the 72 sit in `hazma/experimental/`. Harmless
+  under a diff-scoped gate, and a slice of option 3 rather than of this.
+- The `[tool.ruff]` keys are the deprecated top-level spelling, which
+  makes ruff print a migration warning on every gate run — carved out to
+  [`ruff-config-uses-deprecated-top-level-keys.md`](../todo/ruff-config-uses-deprecated-top-level-keys.md).
+- Gate 1 is still absolute, and `scripts/` is formatted by nothing, so
+  widening `--paths` to cover a helper you edited fails black on three
+  files you did not touch — the same inherited red, in the one gate that
+  did not need diffing. Carved out to
+  [`scripts-are-outside-the-format-and-lint-gates.md`](../todo/scripts-are-outside-the-format-and-lint-gates.md).
+
+### Citations that had gone stale
+
+This file was filed on 2026-08-05 and picked up on 2026-09-06, and the
+cython-to-rust migration rewrote its exemplar in between. Both of these
+were checked against the tree before anything was built on them:
+
+- `hazma/spectra/_photon/__init__.py:12-21`, cited as the isort exemplar
+  and as yielding 17 ruff findings, is now clean on both counts — the
+  module is a thin `hazma._core` wrapper with two imports, and
+  `ruff check` on it reports `All checks passed!`.
+- `preflight.sh:81`, cited as the `PATHS="hazma test"` default, is now
+  line 93.
+
+The *condition* the file describes survived intact: `isort --check-only
+hazma test` still reports 72 ERROR lines and `ruff check hazma test`
+still reports 6091 errors on an untouched trunk.

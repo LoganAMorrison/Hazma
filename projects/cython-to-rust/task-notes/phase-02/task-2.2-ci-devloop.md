@@ -251,7 +251,7 @@ PASS   forbidden tokens        none added
 Python at all** (`git diff origin/master -- '*.py'` is empty), and the
 default `hazma test` is the directory form that returns thousands of
 pre-existing findings —
-[`../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+[`../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md).
 `setup.py` is a real, checked file that keeps the three Python rows
 honest instead of omitted.
 
@@ -507,8 +507,12 @@ $ rg -n 'Gate [0-9]+|gate [0-9]+|Gates [0-9]' docs/agents/ docs/followups/ \
 scripts/agents/preflight.sh:138,156,174,192,243,268,281,317,364   1,2,3,4-6,7,8,9,10,11 — match the implementation
 docs/agents/preflight.md:106                       gate 9 = markdownlint ✓
 docs/agents/preflight.md:170                       gate 7 = pytest ✓
-docs/followups/todo/preflight-isort-ruff-red-on-trunk.md:20,24     gates 2,3 = isort, ruff ✓ (unmoved)
+docs/followups/done/preflight-isort-ruff-red-on-trunk.md:20,24     gates 2,3 = isort, ruff ✓ (unmoved)
 ```
+
+[Path repointed: the run printed `todo/preflight-isort-ruff-red-on-trunk.md`,
+which moved to `done/` when the follow-up was resolved on 2026-09-06. The
+line numbers are the file as it stood for this run.]
 
 **Count sweep:**
 

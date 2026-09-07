@@ -172,7 +172,7 @@ the module wrapped, not its public API, and go with it in Task 0.2.
   docs criterion.
 - `projects/cython-to-rust/PLAN.md` — §Anticipated ADRs bullet updated
   (Task 0.5 executed; both functions have a named replacement).
-- `docs/followups/todo/preflight-isort-ruff-red-on-trunk.md` (new) plus
+- `docs/followups/done/preflight-isort-ruff-red-on-trunk.md` (new) plus
   its index row in `docs/followups/README.md` — the trunk lint debt that
   keeps `preflight.sh` red for every touched file.
 - `projects/cython-to-rust/task-notes/phase-00/task-0.5-gamma-ray-decision.md`
@@ -248,7 +248,7 @@ Regenerated against this branch, not curated.
 - Surfaced, not owned by this task: `preflight.sh` returns `FAIL` for
   any file under `hazma/` because gates 2 (`isort`) and 3 (configured
   `ruff`) are red on the trunk. Filed as
-  [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+  [`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md).
   Checked first that nothing already covered it — the two existing lint
   follow-ups are both `done/` and both about pins, not rule sets.
 
@@ -447,7 +447,7 @@ an untouched import block, or clearing 17 trunk-wide
 ruff findings inside a docs task, would be exactly the scope creep the
 skill forbids. Both are the trunk's problem, and both are invisible to
 CI. Flagged here rather than absorbed, and filed as
-[`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 so the next agent does not repeat this analysis.
 
 ### Exit Criteria → artifact mapping
@@ -471,7 +471,7 @@ note is edited (`git diff --stat origin/master -- . ':!…/task-0.5-gamma-ray-de
  docs/adrs/README.md                                |   2 +-
  docs/followups/README.md                           |   1 +
  docs/followups/done/msqrd-driven-fsr-generator.md  |   6 +-
- .../todo/preflight-isort-ruff-red-on-trunk.md      |  92 +++++++++++++
+ .../done/preflight-isort-ruff-red-on-trunk.md      |  92 +++++++++++++
  .../todo/utils-public-surface-redundant-helpers.md |  28 ++--
  docs/source/gamma_ray.rst                          | 150 ---------------------
  hazma/spectra/_photon/__init__.py                  |   6 +-
@@ -481,6 +481,10 @@ note is edited (`git diff --stat origin/master -- . ':!…/task-0.5-gamma-ray-de
  .../cython-to-rust/task-notes/phase-00/README.md   | 138 ++++++++++++++++---
  13 files changed, 324 insertions(+), 217 deletions(-)
 ```
+
+[Path repointed: this commit created the follow-up under `todo/`, which is
+what the command above printed; it moved to `done/` when the follow-up was
+resolved on 2026-09-06.]
 
 The fourteenth file is this note, added whole.
 

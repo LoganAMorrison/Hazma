@@ -319,7 +319,7 @@ plus `../../PLAN.md` §"Closing this project":
   ```
 
   So the gate is red for the reason
-  [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+  [`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   exists for, and this task adds nothing to it.
 
   markdownlint is green. It was red on
@@ -594,7 +594,7 @@ both report **50 ruff findings whose text is identical** once line
 numbers are stripped, and `isort --check-only` on them exits **0**. So
 this PR introduces neither finding, and the reds are the standing
 condition
-[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 tracks.
 
 That is what the revised criterion asks for and all it asks for. It is

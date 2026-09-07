@@ -108,16 +108,19 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   surviving elsewhere in the tree is evidence the sweep was skipped there,
   never a convention to copy (PRs #44, #81).
 - [pre-existing-failure-asserted-not-measured] "Pre-existing" is a measurement,
-  never an assertion: run the red gate against the *same paths* on the base ref
-  and diff the findings text with line numbers stripped. Arguing it from the
-  diff's shape ("no `.py` changed") dies the moment the diff grows, and a real
-  regression sitting beside thousands of standing findings is exactly what the
-  shortcut waves through. When a criterion demands a whole-repo gate be green
-  and that gate is red on the trunk, the criterion is unmeetable by any PR —
-  revise it to what a PR can attest and leave the cleanup to the follow-up that
-  tracks it, rather than mapping "green" onto red. Compare in two real
-  worktrees: a scratch copy loses `pyproject.toml`, the tool falls back to
-  default rules, and the diff invents a delta (PR #86).
+  never an assertion. `preflight.sh` gates 2 and 3 make it for you — they diff
+  the tree's findings against the merge base, so a red row is already only what
+  you added. Every other gate, and any linter you run by hand, still needs the
+  manual form: the *same paths* on the base ref, line numbers stripped before
+  diffing the findings text. Arguing it from the diff's shape ("no `.py`
+  changed") dies the moment the diff grows, and a real regression sitting beside
+  thousands of standing findings is exactly what the shortcut waves through.
+  When a criterion demands a whole-repo gate be green and that gate is red on
+  the trunk, the criterion is unmeetable by any PR — revise it to what a PR can
+  attest and leave the cleanup to the follow-up that tracks it, rather than
+  mapping "green" onto red. Compare in two real worktrees: a scratch copy loses
+  `pyproject.toml`, the tool falls back to default rules, and the diff invents a
+  delta (PR #86).
 - [removal-sweep-filtered-by-extension] Enumerate a symbol's consumers with
   `git grep -l` and **no** `--include` filter before deleting it. An extension
   list written from memory omits whatever the repo also keeps the symbol in —

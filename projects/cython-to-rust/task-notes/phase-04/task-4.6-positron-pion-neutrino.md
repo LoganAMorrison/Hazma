@@ -400,7 +400,7 @@ __init__.py` carry long-standing ruff debt — `Optional`/`Union`
 annotations, docstring rules, an unused local — and the gate asserts
 absolute cleanliness rather than comparing against the merge base, which
 is the standing
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 follow-up. That file's own instruction is to prove the red rows are
 pre-existing; measured side by side with the same tool versions:
 

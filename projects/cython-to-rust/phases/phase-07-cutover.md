@@ -243,7 +243,7 @@ a clean `origin/master` worktree with no edit applied, `isort
 --check-only hazma test` reports **72 ERROR lines** and `ruff check hazma
 test` reports **6091 errors**. That condition has been tracked since
 2026-08-05 in
-[`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md),
+[`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md),
 which predates this phase, offers three candidate remedies, and has none
 chosen — it is a cross-cutting change to be sequenced on its own, not
 something a closing PR should decide unilaterally while touching a
