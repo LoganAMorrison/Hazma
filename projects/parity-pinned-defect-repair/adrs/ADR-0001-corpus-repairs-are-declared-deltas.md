@@ -15,7 +15,7 @@ with a one-line pointer to the new ADR.
 `test/parity/data/` pins 179,695 values captured from the pre-port
 Cython, and `projects/cython-to-rust/rules.md` rule 2 forbids
 regenerating them from a tree whose kernels run on Rust — after
-cython-to-rust Task 6.4 there is nothing else to generate from. Eight of
+cython-to-rust Task 6.4 there is nothing else to generate from. Nine of
 those values are wrong (the roster in
 `../references/defect-blast-radius.md`), and every repair has to get
 past the gate that pins the wrong value. Re-pinning the affected arrays

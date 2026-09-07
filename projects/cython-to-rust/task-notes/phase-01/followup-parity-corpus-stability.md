@@ -481,7 +481,7 @@ RESULT: FAIL — blocked commit.
 ```
 
 The two red rows are the trunk condition
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 tracks, and this task's delta against it is **zero**:
 
 ```text

@@ -10,11 +10,8 @@
 //! (BR 1.230e-4), and the spectrum is the sum of three terms:
 //!
 //! * the **prompt muon-neutrino line** at [`ENU_MU_PI_RF`], boosted;
-//! * the **prompt electron-neutrino line** at [`ENU_E_PI_RF`], boosted —
-//!   and counted **twice**, once inside [`dnde_mu_numu`] and once inside
-//!   [`dnde_e_nue`], because the `.pyx` sums two `cdef`s that both carry
-//!   it. That is a defect, it is what the corpus pins, and rule 1 keeps
-//!   it: see [`dnde_neutrino_charged_pion`];
+//! * the **prompt electron-neutrino line** at [`ENU_E_PI_RF`], boosted,
+//!   contributed by [`dnde_e_nue`] alone;
 //! * the **muon-decay continuum**, `π → μ ν_μ` followed by
 //!   `μ → e ν̄_e ν_μ`, obtained by boosting [`super::neutrino_muon`]'s
 //!   spectrum out of the pion frame with the massless flat-boost integral
@@ -28,6 +25,22 @@
 //! integrand returns — so a single evaluation of this kernel runs two
 //! adaptive quadratures whose integrand is a closed-form kernel. That is
 //! one level shallower than [`super::photon_rho`]'s nesting.
+//!
+//! # The prompt electron-neutrino line is added once, not twice
+//!
+//! That line is the one place this module does not reproduce the `.pyx`
+//! bit for bit. `_pion.pyx` summed two `cdef`s, `c_dnde_mu_numu_point`
+//! and `c_dnde_e_nue_point`, that were meant to partition the pion's two
+//! decay modes — and the first of them carried a `π → ν_e e` term as well
+//! as its own, so the electron row of the sum came out at `2 BR(π → e
+//! ν_e)` where physics wants one. The muon row was never affected:
+//! `c_dnde_e_nue_point` writes nothing there, which is what makes the
+//! asymmetry a transcription slip rather than a convention. [`dnde_mu_numu`]
+//! therefore carries the `π → μ ν_μ` line alone and [`dnde_e_nue`] is the
+//! sole source of the electron one; see
+//! `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` for
+//! the measurement. The parity corpus still pins the pre-repair arrays;
+//! `test/parity/deltas.py` declares how the repaired ones relate to them.
 //!
 //! # Why there is not a single `mul_add` here
 //!
@@ -148,11 +161,12 @@ pub fn mu_numu_integrand(e1: f64, flavor: Flavor) -> f64 {
 ///    have no rest-frame representation here. A `NaN` `E_π` fails both
 ///    comparisons and falls through to the boosted branch, where every
 ///    quantity is `NaN`, exactly as in the Cython.
-/// 3. Otherwise both prompt lines, boosted, plus the two quadratures.
+/// 3. Otherwise the prompt `π → μ ν_μ` line, boosted, plus the two
+///    quadratures.
 ///
-/// Note branch 3 carries the `π → e ν_e` line as well as the `π → μ ν_μ`
-/// one, even though this function is named for the muon channel; that is
-/// the double-counting [`dnde_neutrino_charged_pion`] documents.
+/// Branch 3 carries only the line this function is named for. The `.pyx`
+/// added the `π → e ν_e` line here too, on top of the copy
+/// [`dnde_e_nue`] contributes; see the module docs.
 #[must_use]
 // Not a disguised equality test: `epi >= MASS_PI` is already established
 // above, so this is the one-sided "within one epsilon MeV of rest"
@@ -175,12 +189,11 @@ pub fn dnde_mu_numu(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
     let beta = boost::boost_beta(epi, MASS_PI);
     let (emin, emax, pre) = boost_window(enu, epi);
 
-    let delta_e = BR_PI_TO_E_NUE * boost::boost_delta_function(ENU_E_PI_RF, enu, 0.0, beta);
     let delta_m = BR_PI_TO_MU_NUMU * boost::boost_delta_function(ENU_MU_PI_RF, enu, 0.0, beta);
 
     let weight = pre * BR_PI_TO_MU_NUMU;
     NeutrinoSpectrumPoint {
-        electron: delta_e + weight * boost_integral(emin, emax, Flavor::Electron),
+        electron: weight * boost_integral(emin, emax, Flavor::Electron),
         muon: delta_m + weight * boost_integral(emin, emax, Flavor::Muon),
         tau: 0.0,
     }
@@ -289,18 +302,12 @@ pub fn dnde_e_nue(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
 ///
 /// The three flavors' `dN/dE` in MeV⁻¹, the tau row always zero.
 ///
-/// **The `π → e ν_e` line is counted twice.** [`dnde_mu_numu`] adds it in
-/// its boosted branch and [`dnde_e_nue`] adds it again, so the
-/// electron-neutrino line in the returned spectrum carries `2 · BR(π → e
-/// ν_e)` where physics wants one. The overweight is `1.23e-4` of the
-/// pion's total neutrino yield and it sits on a narrow plateau, so it does
-/// not visibly change an integrated rate — but it does change the shape
-/// there. This is a live defect in hazma 2.1.0 which the port reproduces
-/// on purpose (`projects/cython-to-rust/rules.md` rule 1: the parity
-/// corpus pins the doubled values, so a repair here fails the gate that
-/// governs the swap) and which
-/// `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`
-/// tracks.
+/// The two halves partition the pion's decay modes: [`dnde_mu_numu`]
+/// carries the `π → μ ν_μ` line and the muon-decay continuum, and
+/// [`dnde_e_nue`] carries the `π → e ν_e` line, so each prompt line
+/// appears exactly once. hazma 2.1.0 shipped the electron one twice —
+/// the module docs have the history, and `test/parity/deltas.py` declares
+/// how the corpus's stored values relate to these.
 #[must_use]
 pub fn dnde_neutrino_charged_pion(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
     let mu_nu = dnde_mu_numu(enu, epi);
@@ -404,16 +411,19 @@ mod tests {
         );
     }
 
-    /// The `π → e ν_e` line really is added twice.
+    /// The `π → e ν_e` line comes from [`dnde_e_nue`] and nowhere else.
     ///
-    /// The defect this module's docs declare, asserted rather than
-    /// described: at a lab energy inside the electron line's boosted
-    /// window and outside the muon line's, the total is exactly the sum of
-    /// the two halves, each of which carries the same line. Written as a
-    /// bit-equal identity so a "fix" that removes one copy fails here and
-    /// has to change the docs and the corpus with it.
+    /// The half that partitions the modes, asserted rather than described:
+    /// at a lab energy inside the electron line's boosted window and
+    /// outside the muon line's, `dnde_e_nue` contributes exactly one line
+    /// and `dnde_mu_numu` contributes none. The first half of that is a
+    /// bit-equal identity. The second cannot be, because the continuum
+    /// `dnde_mu_numu` does return there is ~5,000x the line and would
+    /// swamp it in any comparison of totals — so it is asserted at the
+    /// line's window edge instead, where a hidden copy is a step and the
+    /// continuum is smooth.
     #[test]
-    fn the_electron_line_is_counted_by_both_halves() {
+    fn the_electron_line_comes_from_one_half_only() {
         let epi = 400.0;
         // A lab energy inside the electron line's window: the line is at
         // `ENU_E_PI_RF` in the rest frame, so `gamma * ENU_E_PI_RF` is
@@ -426,13 +436,30 @@ mod tests {
             dnde_neutrino_charged_pion(enu, epi).electron.to_bits(),
             (from_mu_half.electron + from_e_half.electron).to_bits()
         );
-        // The two copies are the same number, so the plateau is exactly
-        // twice what one channel would put there.
+        // One copy, from the half named for the channel.
         let beta = crate::boost::boost_beta(epi, MASS_PI);
         let one_line =
             BR_PI_TO_E_NUE * crate::boost::boost_delta_function(ENU_E_PI_RF, enu, 0.0, beta);
         assert_eq!(from_e_half.electron.to_bits(), one_line.to_bits());
-        assert!(from_mu_half.electron > one_line);
+
+        // And the other half carries no line at all, which the sum above
+        // cannot see. A boosted line is a plateau that ends where its
+        // window stops straddling `ENU_E_PI_RF`, so a copy hiding in
+        // `dnde_mu_numu` would show up as a step of `one_line` across that
+        // edge; the muon-decay continuum crosses it smoothly.
+        let gamma = 1.0 / (1.0 - beta * beta).sqrt();
+        let edge = ENU_E_PI_RF / (gamma * (1.0 - beta));
+        let (below, above) = (edge * (1.0 - 1e-9), edge * (1.0 + 1e-9));
+        assert!(
+            dnde_e_nue(below, epi).electron > 0.0 && dnde_e_nue(above, epi).electron == 0.0,
+            "the bracket must straddle the line's upper window edge"
+        );
+        let step = (dnde_mu_numu(above, epi).electron - dnde_mu_numu(below, epi).electron).abs();
+        assert!(
+            step < 1e-6 * one_line,
+            "the mu nu_mu half steps by {step} across the electron line's \
+             window edge, so it is carrying a copy of the line ({one_line})"
+        );
     }
 
     /// The muon-neutrino line appears once, and only in the muon row.
@@ -549,9 +576,8 @@ mod tests {
         }
     }
 
-    /// The boost conserves neutrino number, per flavor, to the accuracy
-    /// the integrator claims — and the doubled line is visible in the
-    /// total.
+    /// The boost conserves neutrino number, per flavor, and each decay
+    /// mode contributes its own branching ratio exactly once.
     ///
     /// The statement about this kernel that owes nothing to the Cython.
     /// Per charged pion the yields are:
@@ -560,8 +586,8 @@ mod tests {
     ///   the muon's own `ν_μ` (`BR_μ`, since
     ///   [`super::neutrino_muon`]'s rows each integrate to exactly one);
     /// * **electron neutrinos** — the muon's `ν̄_e` (`BR_μ`) plus the
-    ///   prompt `π → e ν_e` line, counted **twice** (`2 BR_e`), which is
-    ///   the defect [`dnde_neutrino_charged_pion`] declares.
+    ///   prompt `π → e ν_e` line (`BR_e`). The shipped 2.1.0 kernel
+    ///   counted that line twice and this row summed to `BR_μ + 2 BR_e`.
     ///
     /// Trapezoid on 4_001 points from just above zero to past the highest
     /// endpoint — the grid starts at one step rather than at zero because
@@ -570,7 +596,10 @@ mod tests {
     /// is 3e-3 relative: the spectrum has step discontinuities where each
     /// line's window opens and closes, and a composite rule resolves those
     /// at `O(h)`. That still separates the expected total from any
-    /// factor-of-two error by two decades.
+    /// factor-of-two error by two decades — but it is 24x `BR_e` itself,
+    /// so what this test pins is the continuum's normalization, not how
+    /// many copies of the electron line the row carries. That is
+    /// [`tests::the_electron_line_comes_from_one_half_only`]'s job.
     #[test]
     fn the_boost_conserves_neutrino_number_per_flavor() {
         let epi = 400.0;
@@ -587,9 +616,8 @@ mod tests {
             totals[0] += weight * point.electron;
             totals[1] += weight * point.muon;
         }
-        // The electron row: the muon's nu_e_bar, plus the prompt line
-        // twice (the declared defect).
-        let expected_electron = BR_PI_TO_MU_NUMU + 2.0 * BR_PI_TO_E_NUE;
+        // The electron row: the muon's nu_e_bar, plus the prompt line.
+        let expected_electron = BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE;
         // The muon row: the muon's nu_mu, plus the prompt line once.
         let expected_muon = BR_PI_TO_MU_NUMU + BR_PI_TO_MU_NUMU;
         for (flavor, (total, expected)) in ["electron", "muon"]

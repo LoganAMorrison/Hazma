@@ -13,8 +13,11 @@
 #       [--tests "test/spectra"] [--md "a.md b.md"] [--closing]
 #
 #   --paths "a b"    Space-separated files/dirs your diff touched. The
-#                    Python formatters and linters run against these.
-#                    Defaults to `hazma test` when omitted. It does not
+#                    Python formatter and linters run against these.
+#                    Defaults to `hazma test` when omitted, which is safe
+#                    to leave alone: the isort and ruff gates report only
+#                    what your tree adds to its merge base, so widening
+#                    them costs a second and inherits nothing. It does not
 #                    scope the cargo gates: the Rust crate is small and
 #                    always checked whole.
 #   --tests "a b"    Space-separated pytest targets. Omit it and the gate
@@ -32,7 +35,9 @@
 # Gates, in order: black --check, isort --check-only, ruff check, the
 # three cargo gates over rust/, pytest, import smoke, markdownlint (with
 # --md), version bump (with --closing), and a forbidden-token scan of the
-# diff against the trunk (WARN only).
+# diff against the trunk (WARN only). The isort and ruff gates are
+# measured against the merge base rather than absolutely — see the block
+# above them, and scripts/agents/lint_delta.py.
 #
 # Design notes:
 #   - `set -uo pipefail` (NOT `-e`): every gate runs so the table is
@@ -153,37 +158,64 @@ else
 fi
 
 # --------------------------------------------------------------------------
-# Gate 2: isort --check-only
+# Gates 2-3: isort and ruff, measured against the merge base
 # --------------------------------------------------------------------------
+#
+# These two ask what the working tree *adds*, not whether the whole tree
+# is clean. The configured rule set reports thousands of findings on
+# untouched trunk code, so an absolute check fails on every branch, and a
+# verdict every branch shares cannot single out the branch that earned
+# it. lint_delta.py runs each linter over the working tree and over the
+# same paths at the merge base, and reports only the difference; its
+# header carries the comparison rules.
+#
+# Gate 1 stays absolute because black is green on the trunk over the
+# paths this gate defaults to, and CI enforces it over exactly those. A
+# gate is only worth diffing once it has to be. Widening --paths past
+# `hazma test` can still fail gate 1 on trunk state, though: nothing
+# formats `scripts/`, where three files are unformatted.
+#
+# A diff that touches no Python needs no special flag here: the two trees
+# are then identical over ${PATHS}, so the delta is empty and the row
+# PASSes on its own.
+
+delta_gate() {
+    # delta_gate <linter> <label> <fix hint shown on failure>
+    local linter="$1" label="$2" hint="$3"
+    local out="${TMPDIR_PF}/${linter}.log"
+    local status detail
+    # shellcheck disable=SC2086
+    capture "${out}" "${SCRIPT_DIR}/lint_delta.py" \
+        --linter "${linter}" --base "${BASE_REF}" ${PATHS}
+    status=$?
+    detail="$(sed -n 's/^SUMMARY: //p' "${out}" | tail -n 1)"
+    [[ -n "${detail}" ]] || detail="$(tail -n 1 "${out}")"
+    if [[ ${status} -eq 0 ]]; then
+        row PASS "${label}" "${detail}"
+    elif [[ ${status} -eq 1 ]]; then
+        # Findings this tree introduced. They are the branch's to fix;
+        # nothing here is inherited.
+        row FAIL "${label}" "${detail} — ${hint}"
+        tail_of "${out}"
+    else
+        # No baseline, so no verdict. Never report PASS on a comparison
+        # that did not happen.
+        row FAIL "${label}" "${detail}"
+        tail_of "${out}"
+    fi
+}
 
 if have isort; then
-    OUT="${TMPDIR_PF}/isort.log"
-    # shellcheck disable=SC2086
-    capture "${OUT}" isort --check-only ${PATHS}
-    if [[ $? -eq 0 ]]; then
-        row PASS "isort --check-only" "${PATHS}"
-    else
-        row FAIL "isort --check-only" "run \`isort ${PATHS}\` and re-check"
-        tail_of "${OUT}"
-    fi
+    # The hint names the listed files rather than ${PATHS}: running isort
+    # over the whole path set would also re-sort the trunk's standing
+    # backlog, which is a much larger change than the gate is asking for.
+    delta_gate isort "isort --check-only" "run \`isort\` on the files below"
 else
     row WARN "isort --check-only" "isort not installed — import order unchecked"
 fi
 
-# --------------------------------------------------------------------------
-# Gate 3: ruff check
-# --------------------------------------------------------------------------
-
 if have ruff; then
-    OUT="${TMPDIR_PF}/ruff.log"
-    # shellcheck disable=SC2086
-    capture "${OUT}" ruff check ${PATHS}
-    if [[ $? -eq 0 ]]; then
-        row PASS "ruff check" "${PATHS}"
-    else
-        row FAIL "ruff check" "see output below"
-        tail_of "${OUT}"
-    fi
+    delta_gate ruff "ruff check" "see output below"
 else
     row WARN "ruff check" "ruff not installed — lint unchecked"
 fi

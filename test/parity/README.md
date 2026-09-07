@@ -116,15 +116,16 @@ served kernel and belongs back in the count. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 
-Eight of the values in here are, separately, *wrong* — filed under
+Nine of the values in here are, separately, *wrong* — filed under
 `docs/followups/` and repaired by
 [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
 That does not make them regenerable either: the committed arrays are the
 record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them, in [`deltas.py`](deltas.py) — one has been (the
-scalar decay spectrum's FSR normalization, roster entry B4), so the
-arrays of that case are compared against the relation it declares rather
-than against `stored`. Three more are *modelled* there without being
+delta against them, in [`deltas.py`](deltas.py) — two have been (the
+scalar decay spectrum's FSR normalization, roster entry B4, and the
+charged pion's doubled prompt neutrino line, B5), so the arrays of those
+two cases are compared against the relation each declares rather than
+against `stored`. Three more are *modelled* there without being
 declared — B1, B2 and B3, whose Cython twins are already gone — because
 a declaration on an array the tree has not moved yet would fail as
 stale; [`test_delta_models.py`](test_delta_models.py) checks those models

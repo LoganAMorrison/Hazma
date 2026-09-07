@@ -64,12 +64,14 @@ the model waits in `DELTA_MODELS` and the repair adds the keys.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
+from hazma import parameters
 from hazma._core import boost as core_boost
 
 if TYPE_CHECKING:
@@ -77,7 +79,7 @@ if TYPE_CHECKING:
 
 #: The closed set of repair labels a declaration may carry: the roster in
 #: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
-REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"})
+REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5"})
 
 #: The sentinel for "every position the relation actually moves", resolved
 #: against the prediction at comparison time. A position the relation
@@ -515,14 +517,105 @@ _B4 = Delta(
     evidence="docs/followups/done/scalar-decay-fsr-half-normalized.md",
 )
 
-#: Every declared array. The ``mu_mu_only`` blocks of the same case are
-#: deliberately absent: they open no FSR channel and must still match the
-#: stored arrays bit for bit, which is the "moved only what it intended"
-#: half of the proof. Within a declared array the same holds position by
-#: position: wherever the FSR term is zero -- above a channel's endpoint,
-#: below the soft cut, outside the boost window -- `MOVED` leaves the
-#: position at the case's own budget.
+# ---------------------------------------------------------------------------
+# B5 -- the charged pion's prompt "pi -> e nu" neutrino line was added twice
+# ---------------------------------------------------------------------------
+
+#: ``BR(pi -> e nu_e)``, as ``rust/src/constants.rs``'s ``pdg`` module
+#: spells it. A literal because ``hazma.parameters`` has no branching
+#: ratios in it -- the masses the term needs do come from there, and agree
+#: with the crate's ``pdg`` constants bit for bit, which is what keeps the
+#: window decision below on the same side of every grid point.
+BR_PI_TO_E_NUE = 1.230e-4
+
+
+def _pion_electron_line(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+    """Minus one boosted ``pi -> e nu_e`` line, on the block's grids.
+
+    A rest-frame line at ``e0`` boosts to a flat plateau of height
+    ``1 / (2 gamma beta e0)`` across the lab energies whose boost window
+    ``[gamma E (1 - beta), gamma E (1 + beta)]`` straddles ``e0``, and zero
+    elsewhere; the shipped kernel added ``BR_e`` of it in both halves of
+    the sum, so ``stored = repaired + BR_e * plateau``. Only the electron
+    row carries it -- the ``pi -> e nu_e`` half writes nothing to the other
+    two -- so the term is zero everywhere else, and `MOVED` leaves those
+    positions at the case's own budget.
+    """
+    epi = block.params["parent_energy"]
+    mpi = block.params["parent_mass"]
+    e0 = (mpi * mpi - parameters.electron_mass**2) / (2.0 * mpi)
+    ratio = mpi / epi
+    beta = math.sqrt(1.0 - ratio * ratio)
+
+    def line(energies: np.ndarray) -> np.ndarray:
+        # A line has no rest-frame representation and no width to boost,
+        # so a parent at rest carries none -- the same answer, and for the
+        # same reason, as ``boost.boost_delta_function``'s ``beta <= 0``
+        # guard. Without this the height below divides by zero.
+        if beta <= 0.0:
+            return np.zeros_like(energies)
+        gamma = 1.0 / math.sqrt(1.0 - beta * beta)
+        inside = (gamma * energies * (1.0 - beta) < e0) & (
+            e0 < gamma * energies * (1.0 + beta)
+        )
+        return np.where(inside, -BR_PI_TO_E_NUE / (2.0 * gamma * beta * e0), 0.0)
+
+    # Row 0 of a (3, n) values array and column 0 of an (n, 3) scalar one:
+    # both are the electron flavor, `cases` stores the two orientations.
+    terms = {}
+    values = np.zeros((3, block.grid.size), dtype=np.float64)
+    values[0] = line(block.grid)
+    terms["values"] = values
+    probe = block.scalar_probe
+    if probe.size:
+        scalar_values = np.zeros((probe.size, 3), dtype=np.float64)
+        scalar_values[:, 0] = line(probe)
+        terms["scalar_values"] = scalar_values
+    return terms
+
+
+_B5 = Delta(
+    repair="B5",
+    positions=MOVED,
+    relation=Additive(
+        term=_pion_electron_line,
+        rtol=3e-12,
+        why="three times the case's own PORTED_QUAD_RTOL (1e-12), derived "
+        "rather than fitted: the term carries no quadrature, so the only "
+        "slack the relation needs is the platform drift already between the "
+        "stored value and the live one, and the comparison denominator "
+        "stored + term is at most 2x smaller than stored (the doubled line "
+        "cannot exceed the stored value), so that budget is amplified by at "
+        "most two. The closed form's own disagreement with the kernel's "
+        "boost_delta_function -- an FMA in the gamma fold this expression "
+        "does not spell -- adds under 1.5e-15 of the compared value. Worst "
+        "measured over the 215 declared positions: 1.494e-15, in "
+        "boosted_strong.",
+    ),
+    measured="the repair removes exactly one BR_e = 1.230e-4 from the "
+    "electron-neutrino row per pion, and moves 215 of the case's 4,305 pinned "
+    "values, all downward and all in the electron row: 35 in near_rest, 69 in "
+    "boosted_mild, 111 in boosted_strong, and none in rest or rest_plus_eps, "
+    "where beta is too small for any grid point's window to straddle the "
+    "line. The drop runs from 4.716e-5 relative, on the plateau where the "
+    "muon-decay continuum dominates, to exactly 0.500000000000 at the 14 "
+    "positions where that continuum's quadrature returns zero and the "
+    "doubled line was the entire value.",
+    evidence="docs/followups/todo/neutrino-pion-electron-line-counted-twice.md",
+)
+
+#: Every declared array. The two blocks of the same case that are absent --
+#: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
+#: the case's own budget, which is the "moved only what it intended" half of
+#: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
+#: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
+    # B4. The ``mu_mu_only`` blocks of this case are deliberately absent:
+    # they open no FSR channel and must still match the stored arrays bit
+    # for bit. Within a declared array the same holds position by position:
+    # wherever the FSR term is zero -- above a channel's endpoint, below the
+    # soft cut, outside the boost window -- `MOVED` leaves the position at
+    # the case's own budget.
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_250.rest.default",
@@ -673,6 +766,13 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "ms_900.boosted_strong.default",
         "scalar_values",
     ): _B4,
+    # B5.
+    ("spectra.neutrino.charged_pion", "near_rest", "values"): _B5,
+    ("spectra.neutrino.charged_pion", "near_rest", "scalar_values"): _B5,
+    ("spectra.neutrino.charged_pion", "boosted_mild", "values"): _B5,
+    ("spectra.neutrino.charged_pion", "boosted_mild", "scalar_values"): _B5,
+    ("spectra.neutrino.charged_pion", "boosted_strong", "values"): _B5,
+    ("spectra.neutrino.charged_pion", "boosted_strong", "scalar_values"): _B5,
 }
 
 
@@ -680,7 +780,13 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 #: has not landed and which therefore hold no key in `DECLARED_DELTAS`
 #: yet. A repair task moves its model into that table by adding the arrays
 #: it measured moving; see the module docstring.
-DELTA_MODELS: dict[str, Delta] = {"B1": _B1, "B2": _B2, "B3": _B3, "B4": _B4}
+DELTA_MODELS: dict[str, Delta] = {
+    "B1": _B1,
+    "B2": _B2,
+    "B3": _B3,
+    "B4": _B4,
+    "B5": _B5,
+}
 
 
 def declared(case_name: str, block_label: str, array_suffix: str) -> Delta | None:

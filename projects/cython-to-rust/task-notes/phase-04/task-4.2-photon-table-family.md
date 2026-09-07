@@ -217,7 +217,7 @@ Copied from the phase file's Task 4.2 block:
   `hazma/spectra/_photon/__init__.py` reported the same 11 `D205` / `D412`
   / `D400` docstring-style findings on `origin/master` as on this branch —
   zero delta, and the situation
-  [`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+  [`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   describes. But preflight FAILs on the absolute count, not on a delta, so
   "no delta" is not a green gate. They are mechanical (a numpydoc summary
   is one line; a section header takes no blank line; a summary ends with a

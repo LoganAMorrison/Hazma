@@ -127,6 +127,15 @@ schema so that Tasks 5, 6 and 9 declare rather than derive.
   rewritten to the relation-general form, and the staleness bullet now
   carries the timing that follows from it — a declaration cannot precede
   its repair.
+- **B5 landed on master mid-review and declares under this protocol.**
+  Task 10a's charged-pion neutrino line is an `Additive` declaration
+  written against the term contract, so the merge had to show the
+  generalization inert for it as well as for B4: measured, it declares
+  the same 215 positions under `predicted != stored` as under
+  `term != 0`, split 35 / 69 / 111 across `near_rest`, `boosted_mild`
+  and `boosted_strong` exactly as Task 10a recorded. `DELTA_MODELS`
+  gains `"B5"`, which is what `test_every_declaration_points_at_a_delta_model`
+  requires of a keyed declaration.
 - **The relation budgets are bounds, not measurements, and say so.**
   Neither B1/B2's 1e-11 nor B3's 1e-9 can be measured until the repair
   lands: each is set to the case's own budget with headroom, so Tasks 5,
@@ -222,17 +231,23 @@ served Rust kernels), so the declared per-case budgets are in force —
 the expected mid-port state.
 
 ```sh
-pytest                     # 2265 passed, 15 skipped, 12 subtests passed
+pytest                     # 2277 passed, 15 skipped, 12 subtests passed
 pytest test/parity -q      # 687 passed, 1 skipped
 pytest test/parity --collect-only -q   # 688 tests collected
 git diff --stat -- test/parity/data    # (empty)
 ```
 
 Baseline at `origin/master`, measured on this same environment by
-restoring the four files and holding the new one aside:
-`2246 passed, 15 skipped, 12 subtests passed`, `test/parity` collecting
+restoring the two tracked files and holding the new one aside:
+`2258 passed, 15 skipped, 12 subtests passed`, `test/parity` collecting
 `669`. So this task adds **19 tests and no skips** — 17 in
 `test_delta_models.py`, 2 in `test_parity.py`.
+
+Run `pytest` with the virtualenv's `bin` on `PATH`, as `preflight.sh`
+does. Without it the nine `test/agents/test_lint_delta.py` cases skip on
+"ruff is not installed" and the totals read `2268 passed, 24 skipped`,
+which is an environment difference and not a branch one — both sides of
+the comparison above were measured with the same `PATH`.
 
 What the 17 cover: six parametrized line-weight readings against the
 corpus (three correct siblings as controls, three defects); the sweep's
@@ -375,10 +390,10 @@ documents, where they are the plan.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Note, Verification | `pytest -q` | `2265 passed, 15 skipped, 12 subtests passed` | OK |
+| Note, Verification | `pytest -q` | `2277 passed, 15 skipped, 12 subtests passed` | OK — re-derived after merging `origin/master` |
 | Note, Verification | `pytest test/parity -q` | `687 passed, 1 skipped` | OK |
 | Note, Verification | `pytest test/parity --collect-only -q` | `688` | OK |
-| Note, Verification (baseline) | same two, files restored to `origin/master` | `2246 passed, 15 skipped, 12 subtests`; `669` | OK — +19 tests, +0 skips |
+| Note, Verification (baseline) | same two, files restored to `origin/master` | `2258 passed, 15 skipped, 12 subtests`; `669` | OK — +19 tests, +0 skips, unchanged by the merge |
 | `test/parity/README.md` "plus 27 others … reports 650" | `pytest test/parity/test_parity.py --collect-only -q` | `650` | OK |
 | `test/parity/README.md` "623 of them" | manifest block count | `623` | OK |
 | Note, "17 tests" | `pytest test/parity/test_delta_models.py --collect-only -q` | `17` | OK |
@@ -444,6 +459,25 @@ rule:
 plus three new ones in `docs/agents/lessons-examples.md` and two in this
 note that **quote** the old wording — rewriting a record of what went
 stale would falsify it.
+
+### Merge of `origin/master`
+
+`origin/master` moved to `e9b1f2fd` while this branch was in review,
+bringing Task 10a (the B5 neutrino-pion repair), which declares under the
+relation protocol this task generalized. Conflicts in `deltas.py` (one
+import hunk) and `task-notes/README.md` (five additive sections) were
+resolved by hand; `PLAN.md`, `lessons.md` and `lessons-examples.md`
+auto-merged with both sides intact. Three consequences the merge itself
+did not raise:
+
+| Site | Command | Result |
+| --- | --- | --- |
+| B5's declared positions under the new `MOVED` rule | model vs term, re-derived | 215 either way, split 35 / 69 / 111 — identical to Task 10a's record |
+| `DELTA_MODELS` | `sorted(deltas.DELTA_MODELS)` | `['B1', 'B2', 'B3', 'B4', 'B5']` — B5 added, which `test_every_declaration_points_at_a_delta_model` requires of a keyed declaration |
+| Roster size, in the three live docs this branch owns | `rg -n 'Eight of\|eight per-repair\|one has been'` | EDITED — `ADR-0001`, `references/corpus-repinning.md` (two sites) and `test/parity/README.md` all still said eight defects and one landed repair; the roster is nine with two repaired (`references/defect-blast-radius.md:214-222`). Post-fix sweep clean. |
+
+The Rust kernel changed on master, so the extension was rebuilt with the
+editable install before any of this was measured.
 
 ### Task-note self-consistency
 

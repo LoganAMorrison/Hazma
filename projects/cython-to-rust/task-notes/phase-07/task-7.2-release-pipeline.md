@@ -332,7 +332,7 @@ PASS   forbidden tokens        none added
 (The `markdownlint` row is one line in the real output; wrapped here.)
 
 The two red rows are inherited, not introduced:
-`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md` records both
+`docs/followups/done/preflight-isort-ruff-red-on-trunk.md` records both
 gates as failing on unmodified trunk code, and
 `git diff origin/master --name-only | grep -E '\.py$|\.pyx$|\.rs$'`
 returns nothing, so this diff cannot have moved either count.

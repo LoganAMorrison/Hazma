@@ -7,8 +7,9 @@ protocol, and the proof obligations each repair inherits.
 ## The problem in one paragraph
 
 `test/parity/data/*.npz` holds 179,695 values captured from pre-port Cython at
-kernel digest `f5e6e269be47`. Eight of the numbers in there are wrong (seven
-rostered at first; B4 joined and was repaired later), and the corpus is the
+kernel digest `f5e6e269be47`. Nine of the numbers in there are wrong (seven
+rostered at first; B4 and B5 joined later, and both are repaired), and the
+corpus is the
 gate that keeps the Rust port faithful to them. The obvious move — regenerate
 — is barred three ways: by `projects/cython-to-rust/rules.md` rule 2, by
 `test/parity/cases.py`'s `assert_no_rust_core` (which already refuses, since
@@ -186,5 +187,5 @@ At close, one number: how many of the corpus's 179,695 pinned values are
 under a declaration. Derive it with a command and paste the command
 (`[derived-count-not-rederived]`), broken out per repair so the parts
 sum (`[measurement-taken-before-the-task-ended]`). If the total is
-larger than the sum of the eight per-repair figures, two declarations
+larger than the sum of the nine per-repair figures, two declarations
 overlap and the shape test missed it.
