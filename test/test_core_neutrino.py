@@ -46,22 +46,25 @@ does not:
   **2.3e-14** on the off-corpus sweep. Task 4.6 tightened its budget from
   ``QUAD_RTOL`` (1e-8) to ``PORTED_QUAD_RTOL`` (1e-12) on those numbers.
 
-Two declared defects
---------------------
-Both are live in hazma 2.1.0, both are reproduced on purpose (rule 1: the
-corpus pins them), and both are asserted below rather than described.
+One repair and one declared defect
+----------------------------------
+Both shipped in hazma 2.1.0 and 2.2.0; the first is repaired and the
+second is not. Both are asserted below rather than described.
 
-* **The ``pi -> e nu`` line is counted twice.** ``_pion.pyx`` sums
-  ``c_dnde_mu_numu_point`` and ``c_dnde_e_nue_point``, and *both* add the
-  boosted electron-neutrino line. The overweight is one extra ``BR_e``
-  (1.23e-4) per pion, landing as a 0.03-0.06% excess on the
-  electron-neutrino plateau where the line sits. Tracked in
+* **The ``pi -> e nu`` line was counted twice, and is not any more.**
+  ``_pion.pyx`` summed ``c_dnde_mu_numu_point`` and
+  ``c_dnde_e_nue_point``, and *both* added the boosted electron-neutrino
+  line, so the row carried one extra ``BR_e`` (1.23e-4) per pion. The
+  repaired kernel adds it in ``dnde_e_nue`` alone. The corpus still pins
+  the shipped values; ``test/parity/deltas.py`` declares the 215 it moves
+  as roster entry B5. Tracked in
   ``docs/followups/todo/neutrino-pion-electron-line-counted-twice.md``.
 * **A pion at rest loses both prompt lines.** The ``E - m < DBL_EPSILON``
   branch returns only the muon-decay continuum, because a delta function
-  in the rest frame has no representation here. Not filed separately: it
-  is the same "the rest-frame branch is not the limit of the boosted one"
-  family as the rho's, and unlike the rho's it does not change units.
+  in the rest frame has no representation here. Reproduced on purpose
+  (rule 1: the corpus pins it) and not filed separately: it is the same
+  "the rest-frame branch is not the limit of the boosted one" family as
+  the rho's, and unlike the rho's it does not change units.
 
 What is **not** a defect, and must not be "fixed": ``_neutrino/_muon.pyx``
 applies the Michel normalization the right way round, so both its rows
@@ -270,9 +273,15 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
     its own reference. The prompt lines are recomputed from the flat-boost
     closed form rather than from ``boost_delta_function``.
 
-    Reproduces the double-counted ``pi -> e nu`` line on purpose: the
-    point of this reference is to check the *boost*, not to disagree with
-    the shipped physics, which :class:`TestPhysics` covers separately.
+    Carries each prompt line once, as the repaired kernel does. hazma
+    2.1.0 doubled the ``pi -> e nu`` one; the line terms here are written
+    from the physics rather than from either implementation, so they are
+    what says which of the two is right.
+
+    The continuum is *not* independent in that sense: it integrates over
+    the same unclipped boost window the kernel uses, so where that window
+    loses the integrand's support both return zero together. See
+    ``docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md``.
     """
     zero = np.zeros(N_FLAVORS)
     if epi < MASS_PI:
@@ -305,8 +314,9 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
             )[0]
         )
 
-    # The `pi -> e nu` line appears once from each half of the `.pyx`.
-    electron = 2.0 * BR_PI_TO_E_NUE * line(ENU_E_PI_RF) + continuum(0)
+    # One prompt line per decay mode: `pi -> e nu_e` here, `pi -> mu nu_mu`
+    # below. The shipped kernel added the first from both halves of its sum.
+    electron = BR_PI_TO_E_NUE * line(ENU_E_PI_RF) + continuum(0)
     muon = BR_PI_TO_MU_NUMU * line(ENU_MU_PI_RF) + continuum(1)
     return np.array([electron, muon, 0.0])
 
@@ -670,14 +680,17 @@ class TestPhysics:
 
         A charged pion makes a prompt ``nu_mu`` and then the muon makes
         another, so the row carries two per pion. The electron-neutrino
-        row carries one from the muon plus the doubled prompt line, which
-        the next test isolates.
+        row carries one from the muon plus one prompt line, which the next
+        test isolates.
 
         Trapezoid on 20_001 points to past the highest endpoint. Each
         point costs two adaptive quadratures, so the grid is short and the
         budget is 1e-3 relative: the spectrum has step discontinuities
         where each line's window opens and closes, which a composite rule
-        resolves at ``O(h)``.
+        resolves at ``O(h)``. That budget is eight times ``BR_e`` itself,
+        so the electron assertion here pins the continuum's normalization
+        rather than how many copies of the line the row carries; the next
+        test is what counts them.
         """
         epi = 400.0
         gamma = epi / MASS_PI
@@ -688,11 +701,11 @@ class TestPhysics:
             2.0 * BR_PI_TO_MU_NUMU, rel=1e-3
         )
         assert np.trapezoid(values[0], energies) == pytest.approx(
-            BR_PI_TO_MU_NUMU + 2.0 * BR_PI_TO_E_NUE, rel=1e-3
+            BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE, rel=1e-3
         )
 
-    def test_the_electron_line_is_counted_twice_and_the_muon_line_once(self) -> None:
-        """The declared defect, asserted rather than described.
+    def test_each_prompt_line_is_counted_exactly_once(self) -> None:
+        """The repair, asserted rather than described.
 
         Each boosted prompt line is a flat plateau of height
         ``BR / (2 gamma beta E_rf)`` across the lab energies whose boost
@@ -701,13 +714,15 @@ class TestPhysics:
         subtraction owes nothing to the code under test — leaves exactly
         the plateau.
 
-        What comes out is **2.0000** copies of the ``pi -> e nu`` line and
+        What comes out is **1.0000** copies of the ``pi -> e nu`` line and
         **1.0000** of the ``pi -> mu nu`` one, at every energy inside both
-        windows. The electron excess is the defect: ``_pion.pyx`` sums
-        ``c_dnde_mu_numu_point`` and ``c_dnde_e_nue_point`` and both add
-        it. The muon row has no second copy because ``c_dnde_e_nue_point``
-        writes nothing there, which is what makes the pair of ratios a
-        discriminating test rather than a scale check.
+        windows. hazma 2.1.0 gave **2.0000** for the electron one, because
+        ``_pion.pyx`` summed ``c_dnde_mu_numu_point`` and
+        ``c_dnde_e_nue_point`` and both added it; the muon row never had a
+        second copy, because ``c_dnde_e_nue_point`` writes nothing there.
+        That asymmetry is what makes the pair of ratios a discriminating
+        test rather than a scale check, and it is why both are asserted
+        here rather than only the repaired one.
 
         1e-6 relative, which is what the subtraction supports: the
         continuum is recomputed to scipy's default 1.49e-8 absolute.
@@ -726,8 +741,8 @@ class TestPhysics:
         for enu in (20.0, 30.0, 50.0):
             total = dnde_pion(enu, epi)
             assert total[0] - reference_pion_continuum(enu, epi, 0) == pytest.approx(
-                2.0 * electron_line, rel=1e-6
-            ), f"the pi -> e nu line is not doubled at {enu=}"
+                electron_line, rel=1e-6
+            ), f"the pi -> e nu line is not single at {enu=}"
             assert total[1] - reference_pion_continuum(enu, epi, 1) == pytest.approx(
                 muon_line, rel=1e-6
             ), f"the pi -> mu nu line is not single at {enu=}"
