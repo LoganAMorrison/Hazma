@@ -1,14 +1,21 @@
 import unittest
 import warnings
-from collections.abc import Iterator
-from typing import ClassVar
+from collections.abc import Callable, Iterator
+from typing import Any, ClassVar
 
 from numpy.testing import assert_allclose
+from scipy.integrate import quad
+from scipy.special import k1, kn
 
+import hazma.vector_mediator._gev.thermal_cross_section as gev_site
 from hazma.parameters import omega_h2_cdm
 from hazma.relic_density import relic_density
+from hazma.relic_density._thermal_functions import (
+    thermal_cross_section,
+    thermal_cross_section_integrand,
+)
 from hazma.scalar_mediator import HiggsPortal
-from hazma.vector_mediator import KineticMixing
+from hazma.vector_mediator import KineticMixing, VectorMediatorGeV
 
 warnings.filterwarnings("ignore")
 
@@ -159,7 +166,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
         for name, kwargs in self.VECTOR_POINTS.items():
             yield f"vector.{name}", KineticMixing(**kwargs)
 
-    def test_semi_analytic_matches_pre_port(self) -> None:
+    def test_semi_analytic_matches_converged_kernel(self) -> None:
         for name, model in self._models():
             with self.subTest(model=name):
                 assert_allclose(
@@ -168,7 +175,7 @@ class TestMediatorRelicDensity(unittest.TestCase):
                     rtol=self.SEMI_ANALYTIC_RTOL,
                 )
 
-    def test_boltzmann_matches_pre_port(self) -> None:
+    def test_boltzmann_matches_converged_kernel(self) -> None:
         for name, model in self._models():
             with self.subTest(model=name):
                 assert_allclose(
@@ -181,3 +188,173 @@ class TestMediatorRelicDensity(unittest.TestCase):
                     self.PINNED[name][1],
                     rtol=self.BOLTZMANN_RTOL,
                 )
+
+
+class TestThermalQuadratureConverges(unittest.TestCase):
+    r"""The two pure-Python ``thermal_cross_section`` sites resolve their integral.
+
+    Both pass ``epsabs=0.0`` so that the relative criterion is the one
+    that binds.  Neither is reachable from the parity corpus or from
+    `TestMediatorRelicDensity`: those go through
+    ``hazma._core``'s scalar and vector kernels, and the mediator models
+    define their own ``thermal_cross_section``, which
+    `hazma.relic_density._thermal_functions.thermal_cross_section`
+    short-circuits to.  Without the tests below, reverting ``epsabs`` at
+    either Python site would leave the whole suite green.
+
+    Each site is compared against the same integrand integrated to
+    ``epsrel = 1e-12``, and each test also asserts that scipy's default
+    ``epsabs`` would *not* pass — the assertion that makes this a
+    regression test for the tolerance rather than a generic accuracy
+    check.  Measured worst relative error at the default, over the grid
+    below: **0.765** for the generic fallback (``scalar.open`` at
+    ``x = 5``) and **3.6e-3** for the GeV vector site.
+    """
+
+    #: Budget for "the site agrees with a converged integral".  Both sites
+    #: run at scipy's default ``epsrel = 1.49e-8``, so that — not the
+    #: measured figure — is what a pin here has to survive on a platform
+    #: whose libm steers QUADPACK to a different accepted partition.
+    #: 1e-6 is ~67x it, and still two decades under the smallest error the
+    #: default ``epsabs`` produces anywhere on this grid (2.2e-5).
+    CONVERGED_RTOL = 1e-6
+
+    #: ``x = mx/T`` sample points.  Capped below 25 deliberately: both
+    #: sites integrate to ``50/x``, which reaches the lower limit of 2 at
+    #: exactly ``x = 25`` and inverts above it, so there is no integral to
+    #: check there.  That is a separate, pre-existing defect —
+    #: ``docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md``.
+    X_GRID: ClassVar = (1.0, 5.0, 10.0, 20.0, 24.0)
+
+    @staticmethod
+    def _converged(integrand: Callable[..., float], x: float, args: tuple) -> float:
+        """``<sigma v>(x)`` from the same integrand at ``epsrel = 1e-12``."""
+        prefactor = x / (2.0 * kn(2, x)) ** 2
+        value, _ = quad(
+            integrand,
+            2.0,
+            50.0 / x,
+            args=args,
+            points=[2.0],
+            epsabs=0.0,
+            epsrel=1e-12,
+            limit=200,
+        )
+        return prefactor * value
+
+    @staticmethod
+    def _at_scipy_defaults(
+        integrand: Callable[..., float], x: float, args: tuple
+    ) -> float:
+        """The same integral with no tolerances passed: what the sites did."""
+        prefactor = x / (2.0 * kn(2, x)) ** 2
+        value, _ = quad(integrand, 2.0, 50.0 / x, args=args, points=[2.0])
+        return prefactor * value
+
+    def test_generic_fallback_converges(self) -> None:
+        """`_thermal_functions.thermal_cross_section`, the no-kernel path."""
+
+        class NoThermalCrossSection:
+            """A model the fallback cannot short-circuit past.
+
+            `thermal_cross_section` defers to ``model.thermal_cross_section``
+            whenever the model defines one, and every mediator model does,
+            so reaching the generic path needs a model that does not.
+            """
+
+            def __init__(self, inner: HiggsPortal | KineticMixing) -> None:
+                self._inner = inner
+                self.mx: float = inner.mx
+
+            def annihilation_cross_sections(self, e_cm: float) -> dict:
+                return self._inner.annihilation_cross_sections(e_cm)
+
+        points = {
+            "scalar.open": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
+            "scalar.closed": HiggsPortal(mx=300.0, ms=200.0, gsxx=1.0, stheta=1e-2),
+            "vector.open": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
+            "vector.closed": KineticMixing(mx=300.0, mv=200.0, gvxx=1.0, eps=1e-2),
+        }
+        worst_default = 0.0
+        for name, inner in points.items():
+            model = NoThermalCrossSection(inner)
+            for x in self.X_GRID:
+                with self.subTest(model=name, x=x):
+                    reference = self._converged(
+                        thermal_cross_section_integrand, x, (x, model)
+                    )
+                    assert_allclose(
+                        thermal_cross_section(x, model),
+                        reference,
+                        rtol=self.CONVERGED_RTOL,
+                    )
+                    default = self._at_scipy_defaults(
+                        thermal_cross_section_integrand, x, (x, model)
+                    )
+                    worst_default = max(
+                        worst_default, abs(default - reference) / abs(reference)
+                    )
+        assert worst_default > self.CONVERGED_RTOL, (
+            "scipy's default epsabs now resolves this integral, so `epsabs=0.0` "
+            f"at the call site pins nothing (worst relative error {worst_default:.2e} "
+            f"against a budget of {self.CONVERGED_RTOL:.0e})"
+        )
+
+    def test_gev_vector_site_converges(self) -> None:
+        """The `VectorMediatorGeV.relic_density` closure.
+
+        The closure is built inside the method and handed to
+        `hazma.relic_density.relic_density`, so it is reached by
+        intercepting that call rather than by solving the Boltzmann
+        equation — which for this model returns ``nan`` for reasons that
+        predate the tolerance fix (see the follow-up cited on `X_GRID`).
+        """
+        model = VectorMediatorGeV(
+            mx=5e3,
+            mv=2e3,
+            gvxx=1.0,
+            gvuu=3.0,
+            gvdd=1.0,
+            gvss=-1.0,
+            gvee=0.0,
+            gvmumu=0.0,
+            gvveve=0.0,
+            gvvmvm=0.0,
+            gvvtvt=0.0,
+        )
+
+        captured: dict[str, Any] = {}
+        original = gev_site.rd
+        try:
+            gev_site.rd = lambda model, **_: captured.setdefault("model", model)
+            model.relic_density(semi_analytic=True, three_body=False, four_body=False)
+        finally:
+            gev_site.rd = original
+        site = captured["model"].thermal_cross_section
+
+        # The integrand the closure built, rebuilt here from the same
+        # channel filter so the reference integrates the same function.
+        channel_fns = {
+            key: fn
+            for key, fn in model.annihilation_cross_section_funcs().items()
+            if key in gev_site.TWO_BODY
+        }
+
+        def integrand(z: float, x: float) -> float:
+            sigma = sum(fn(model.mx * z) for fn in channel_fns.values())
+            return sigma * z**2 * (z**2 - 4.0) * k1(x * z)
+
+        worst_default = 0.0
+        for x in self.X_GRID:
+            with self.subTest(x=x):
+                reference = self._converged(integrand, x, (x,))
+                assert_allclose(site(x), reference, rtol=self.CONVERGED_RTOL)
+                default = self._at_scipy_defaults(integrand, x, (x,))
+                worst_default = max(
+                    worst_default, abs(default - reference) / abs(reference)
+                )
+        assert worst_default > self.CONVERGED_RTOL, (
+            "scipy's default epsabs now resolves this integral, so `epsabs=0.0` "
+            f"at the call site pins nothing (worst relative error {worst_default:.2e} "
+            f"against a budget of {self.CONVERGED_RTOL:.0e})"
+        )

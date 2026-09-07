@@ -45,6 +45,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
 | [four tracked non-source files under `hazma/`](todo/tracked-non-source-files-under-hazma.md) | 2026-08-29 | cython-to-rust Task 7.3 | commit |
 | [consolidate the divergent constants tables](todo/consolidate-the-two-constants-tables.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [the pure-Python thermal averages return `0.0` for every `x >= 25`](todo/thermal-fallback-upper-limit-collapses-at-x-25.md) | 2026-09-06 | PR #91 review round 1 | cross-cutting |
 | [free-threaded `abi3t` wheels](todo/free-threaded-abi3t-wheels.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
 | [the relic-density Boltzmann solve in Rust](todo/relic-density-odes-in-rust.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
 | [wheels for linux-aarch64 and Windows](todo/wheels-for-aarch64-and-windows.md) | 2026-08-29 | cython-to-rust retrospective §5 | commit |

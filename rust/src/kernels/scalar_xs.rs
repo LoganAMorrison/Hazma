@@ -917,10 +917,13 @@ fn sigma_xx_to_all(
 /// The break points are the endpoint, the mediator resonance `z = m_s/m_x`
 /// and the `SS` threshold `z = 2 m_s/m_x`.
 ///
-/// Neither `epsabs` nor `epsrel` is passed, so this inherits scipy's
-/// defaults, which the integrand's ~1e-27 scale satisfies on the first
-/// Kronrod pass — the quadrature does not converge, and that is
-/// reproduced rather than fixed
+/// [`THERMAL_EPSABS`] is zero, so the relative criterion binds; that
+/// constant carries why the inherited absolute default did not, and
+/// [`THERMAL_LIMIT`] the subdivision room the criterion needs to be
+/// reachable. The `.pyx` passed neither tolerance and so returned its
+/// integrator's initial partition; correcting that moved published
+/// numbers, as roster entry `B5` of
+/// `projects/parity-pinned-defect-repair`
 /// (`docs/followups/done/thermal-cross-section-quadrature-never-converges.md`).
 ///
 /// # Errors

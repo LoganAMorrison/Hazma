@@ -108,6 +108,25 @@ the spec's unimplemented `Exact` and `Bounded` will plug into.
   pins are re-derived, and the budget now describes a mechanism that
   changed. It stays ~10,000x tighter than the smallest shift B5 itself
   produced (0.071%).
+- **Review round 1 (PR #91) added coverage for the two pure-Python
+  sites.** The repair fixed four call sites but only the two Rust ones
+  were reachable from the parity corpus and the mediator relic-density
+  pins, so reverting `epsabs = 0` at either Python site left the suite
+  green. `test/test_relic_density.py::TestThermalQuadratureConverges`
+  now pins both against the same integrand at `epsrel = 1e-12`, and each
+  fails when *only its own* site is reverted (17 subtests for the
+  fallback, 6 for the GeV site). The first oracle drafted for them used a
+  synthetic analytic cross section and was **not** revert-sensitive —
+  both Python sites integrate to `50/x`, which tracks the integrand's
+  decay length, so they lack the pathology the Rust kernels' fixed
+  `max(50/x, 150)` interval creates; only a realistic resonant integrand
+  exposes it (0.765 worst relative error at the default `epsabs`).
+  Ledgered as `[fix-covered-only-where-tests-already-ran]`.
+- **Review round 1 also found the scalar kernel's function-level doc
+  still describing the pre-repair behavior** — the `THERMAL_EPSABS`
+  const doc was updated but `thermal_cross_section`'s own was not. Swept
+  the class across both kernels; the vector twin's doc makes no
+  tolerance claim, so scalar was the only occurrence.
 - **The `IntegrationWarning` the reference raises at 16 positions is
   suppressed with its justification**: requesting `epsrel` of 1e-9,
   1e-10, 1e-11 and 1e-12 in turn moves the answer by at most 7.8e-10,
@@ -221,11 +240,12 @@ $ isort --check-only base/a.py base/b.py
 ERROR: base/a.py Imports are incorrectly sorted and/or formatted.
 ERROR: base/b.py Imports are incorrectly sorted and/or formatted.
 
-$ ruff check base/a.py base/b.py | grep -c '^[A-Z]'      # origin/master
-33
+$ ruff check base/a.py base/b.py | grep -oE 'Found [0-9]+ error'  # origin/master
+Found 32 error
 $ ruff check hazma/relic_density/_thermal_functions.py \
-      hazma/vector_mediator/_gev/thermal_cross_section.py | grep -c '^[A-Z]'
-33
+      hazma/vector_mediator/_gev/thermal_cross_section.py \
+  | grep -oE 'Found [0-9]+ error'
+Found 32 error
 ```
 
 Identical count before and after: this change adds no lint finding. The
@@ -243,7 +263,7 @@ PASS   ruff check
 
 `isort` would fix the two `hazma/` files with a three-line import
 reorder each, and running it here was tried and reverted: it is churn
-unrelated to the repair, it does not change `RESULT` (ruff's 33
+unrelated to the repair, it does not change `RESULT` (ruff's 32
 pre-existing findings still fail the run), and `AGENTS.md`'s
 stay-in-scope rule puts it in its own change. The tracked follow-up owns
 the tree-wide fix.
@@ -356,6 +376,16 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
 
 ## Open Questions
 
+- **Both pure-Python sites return `0.0` for every `x >= 25`**, found
+  while writing the round-1 regression tests: they integrate to `50/x`
+  with no floor, so the interval closes at `x = 25` and inverts above it.
+  Freeze-out is `x ~ 20`–`30`, and this is what makes
+  `VectorMediatorGeV.relic_density` return `nan` — verified to predate
+  `B5`, which shares only the two lines. A separate, larger defect than
+  the one this task repaired; filed as
+  `docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md`
+  rather than folded in. `TestThermalQuadratureConverges` caps its grid
+  below 25 because above it there is no integral to check.
 - **The two models disagree above `x = 300` and this task did not touch
   it.** The scalar hard-returns `0.0`; the vector clips `x` to 300 and
   saturates. The follow-up flagged the divergence and explicitly scoped
