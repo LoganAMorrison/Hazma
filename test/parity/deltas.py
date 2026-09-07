@@ -19,42 +19,47 @@ measurement that justifies its budget, and where the evidence lives.
 
 Relations
 ---------
-Every relation answers the same question — how far is the stored array
-from what it should hold? — through `Relation.term_for`, so the runner
-never has to know which kind it is holding. Relations differ in how they
-reach that term, not in what the runner does with it.
+A relation answers one question — what the repaired array should be —
+and both spellings return it from `Relation.expected`.
 
 ``Additive`` — the repaired value is the stored value plus a term the
-declaration knows how to compute. The term is evaluated live, from the
-repaired kernel, and is its own adaptive quadrature.
+declaration knows how to compute. The term may be evaluated live, from
+the repaired kernel, and be its own adaptive quadrature; the budget each
+relation carries is measured, not assumed, and says so in its ``why``.
 
-``Reference`` — the stored value is superseded outright by one computed
-without going through the kernel under repair. A defect that made an
-array *wrong*, rather than shifting it by a knowable amount, has no
-additive term to name: `thermal_reference` integrates the same integrand
-with a different QUADPACK at a convergent tolerance, and the repaired
-kernel is held to that.
-
-The budget each relation carries is measured, not assumed, and says so
-in its ``why``.
+``Exact`` — the repaired value is a closed-form transform of the stored
+value, so nothing is recomputed and the prediction is limited by the
+transform's own arithmetic rather than by a quadrature. It is the
+strongest relation the spec offers and the one to reach for first.
 
 Positions
 ---------
 A declaration covers exactly the positions its mechanism reaches
 (``rules.md`` rule 5): either an explicit tuple, every entry of which the
-term must move, or `MOVED`, which resolves at comparison time to the
-positions where the term is non-zero. Every other position of a declared
-array is compared against the stored value under the case's own budget,
-exactly as if nothing had been declared, so a regression where the
-repair changed nothing is still caught at that budget.
+relation must move, or `MOVED`, which resolves at comparison time to the
+positions where the predicted array differs from the stored one. Every
+other position of a declared array is compared against the stored value
+under the case's own budget, exactly as if nothing had been declared, so
+a regression where the repair changed nothing is still caught at that
+budget.
 
 Staleness
 ---------
 A declaration that no longer describes a change is a hole in the gate
 (spec rule 3), so the runner also asserts that a declared array *has*
-moved: at the positions where the term exceeds the relation's own budget,
-the live value must differ from the stored one. Reverting a repair fails
-that assertion; the declaration cannot outlive the repair it describes.
+moved: at the positions where the prediction departs from the stored
+value by more than the relation's own budget, the live value must differ
+from the stored one. Reverting a repair fails that assertion; the
+declaration cannot outlive the repair it describes.
+
+Models without a declaration
+----------------------------
+`DELTA_MODELS` holds one entry per roster repair whose delta has been
+modelled, `DECLARED_DELTAS` only the arrays a *landed* repair moves. The
+two differ while a model is established ahead of its repair: declaring an
+array the tree has not yet moved would fail the staleness rule above, so
+the model waits in `DELTA_MODELS` and the repair adds the keys.
+`test_delta_models.py` gates every entry either way.
 """
 
 from __future__ import annotations
@@ -68,6 +73,7 @@ import numpy as np
 import thermal_reference
 
 from hazma import parameters
+from hazma._core import boost as core_boost
 
 if TYPE_CHECKING:
     from cases import Block
@@ -76,10 +82,10 @@ if TYPE_CHECKING:
 #: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
 REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6"})
 
-#: The sentinel for "every position the term is non-zero at", resolved
-#: against the term at comparison time. A term that is zero at a position
-#: has not moved it, and a declaration that covered it anyway would be
-#: wider than its mechanism.
+#: The sentinel for "every position the relation actually moves", resolved
+#: against the prediction at comparison time. A position the relation
+#: leaves at its stored value has not moved, and a declaration that
+#: covered it anyway would be wider than its mechanism.
 MOVED = "moved"
 
 Positions = tuple[int, ...] | Literal["moved"]
@@ -89,6 +95,12 @@ Positions = tuple[int, ...] | Literal["moved"]
 #: every value suffix the block stores (``values`` and, when the entry
 #: point has a scalar branch, ``scalar_values``).
 TermFn = Callable[[Callable[..., Any], "Block"], dict[str, np.ndarray]]
+
+#: ``(block, stored) -> {array suffix: repaired}``. Rebuilds the repaired
+#: arrays from the stored ones, which arrive keyed by suffix exactly as
+#: the corpus holds them (``grid`` and ``scalar_grid`` included, so a
+#: transform can read the abscissae it is a function of).
+TransformFn = Callable[["Block", dict[str, np.ndarray]], dict[str, np.ndarray]]
 
 
 @dataclass(frozen=True)
@@ -111,16 +123,49 @@ class Additive:
     rtol: float
     why: str
 
-    def term_for(
+    def expected(
         self,
         fn: Callable[..., Any],
         block: Block,
-        suffix: str,
-        pinned: np.ndarray,
-    ) -> np.ndarray:
-        """The declared term itself; ``pinned`` is not consulted."""
-        del pinned
-        return self.term(fn, block)[suffix]
+        stored: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray]:
+        """The repaired arrays this relation predicts, by suffix."""
+        return {
+            suffix: stored[suffix] + term
+            for suffix, term in self.term(fn, block).items()
+        }
+
+
+@dataclass(frozen=True)
+class Exact:
+    """``repaired == transform(stored)``, within ``rtol``.
+
+    Parameters
+    ----------
+    transform : TransformFn
+        Rebuilds the repaired arrays from the stored ones.
+    rtol : float
+        Relative budget the relation holds to. A closed-form transform of
+        the stored array reaches the last few bits, so this is orders
+        tighter than an `Additive` whose term is a quadrature; ``why``
+        says which operations set it.
+    why : str
+        One-line justification of ``rtol``.
+    """
+
+    transform: TransformFn
+    rtol: float
+    why: str
+
+    def expected(
+        self,
+        fn: Callable[..., Any],
+        block: Block,
+        stored: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray]:
+        """The repaired arrays this relation predicts, by suffix."""
+        del fn  # a closed-form transform reads the stored arrays, not a kernel
+        return self.transform(block, stored)
 
 
 @dataclass(frozen=True)
@@ -129,13 +174,14 @@ class Reference:
 
     The stored array is superseded rather than corrected: the repaired
     kernel is compared against a value reached without it. Use this where
-    the defect made the stored value wrong by an amount only a second
-    implementation can say, rather than by a term the physics names.
+    the defect left the stored value *wrong* by an amount only a second
+    implementation can say, rather than shifted by a term the physics
+    names (`Additive`) or transformed by a closed form (`Exact`).
 
     Parameters
     ----------
     reference : TermFn
-        Computes the superseding values for one block.
+        Computes the superseding arrays for one block.
     rtol : float
         Relative budget the relation holds to. Measured, and ``why`` says
         how.
@@ -147,15 +193,19 @@ class Reference:
     rtol: float
     why: str
 
-    def term_for(
+    def expected(
         self,
         fn: Callable[..., Any],
         block: Block,
-        suffix: str,
-        pinned: np.ndarray,
-    ) -> np.ndarray:
-        """How far the stored array is from the reference."""
-        return self.reference(fn, block)[suffix] - pinned
+        stored: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray]:
+        """The repaired arrays this relation predicts, by suffix."""
+        del stored  # superseded outright; that is the point of the relation
+        return self.reference(fn, block)
+
+
+#: How a repaired value may relate to the stored one.
+Relation = Additive | Exact | Reference
 
 
 @dataclass(frozen=True)
@@ -168,10 +218,11 @@ class Delta:
         Which roster entry moved it; drawn from `REPAIRS`.
     positions : tuple of int or MOVED
         Which positions the relation covers: an explicit tuple, every
-        entry of which the term must move, or `MOVED` for wherever the
-        term is non-zero. Undeclared positions are still compared against
-        the stored value under the case's budget.
-    relation : Additive or Reference
+        entry of which the relation must move, or `MOVED` for wherever
+        the prediction differs from the stored value. Undeclared
+        positions are still compared against the stored value under the
+        case's budget.
+    relation : Additive or Exact
         How the repaired value relates to the stored one.
     measured : str
         The measurement behind the declaration, so the table is not a
@@ -182,9 +233,264 @@ class Delta:
 
     repair: str
     positions: Positions
-    relation: Additive | Reference
+    relation: Relation
     measured: str
     evidence: str
+
+
+# ---------------------------------------------------------------------------
+# Shared: the tabulated photon family's boosted line terms
+# ---------------------------------------------------------------------------
+
+#: `rust/src/constants.rs`, module ``pdg`` — the table the tabulated
+#: photon kernels read. Spelled out rather than imported from
+#: `hazma.parameters`, which carries the masses but none of the branching
+#: ratios, so that a future consolidation of the two constant tables
+#: cannot silently move a declaration with the code. That is the
+#: convention `test/test_core_photon_tables.py` already sets for the same
+#: constants.
+MASS_ETA = 547.862
+MASS_ETAP = 957.78
+MASS_PHI = 1019.461
+MASS_RHO = 775.26
+BR_ETAP_TO_A_A = 2.307e-2
+BR_PHI_TO_ETA_A = 1.303e-2
+BR_PHI_TO_ETAP_A = 6.22e-5
+
+
+def _photon_energy(parent: float, daughter: float) -> float:
+    """Rest-frame photon energy in ``X -> Y gamma``, MeV.
+
+    ``(M**2 - m**2) / (2 M)``, in the operation order
+    ``photon_tables::OMEGA_TO_PI0_A_ENERGY`` writes it. Its ``phi``
+    counterparts write ``+`` for the same quantity, which is B2 — see
+    `_daughter_energy`.
+    """
+    return (parent * parent - daughter * daughter) / (2.0 * parent)
+
+
+def _daughter_energy(parent: float, daughter: float) -> float:
+    """Rest-frame energy of the *daughter meson* in ``X -> Y gamma``, MeV.
+
+    ``(M**2 + m**2) / (2 M)``, in the operation order
+    ``photon_tables::PHI_TO_ETA_A_ENERGY`` writes it. That constant feeds
+    it to the boost as if it were the photon's energy, which is what B2
+    repairs; the two differ by ``m**2 / M``.
+    """
+    return (parent * parent + daughter * daughter) / (2.0 * parent)
+
+
+def _parent_beta(block: Block) -> float:
+    """The boost velocity the tabulated kernel runs this block at.
+
+    Mirrors ``photon_tables::branch``: the rest-frame arm is taken when
+    the parent energy is within one epsilon MeV of the mass, and it adds
+    no line at all, so the term is identically zero there. Anywhere else
+    the velocity is ``boost::boost_beta``, taken from the crate so that
+    the window edges a declaration resolves `MOVED` against are the
+    kernel's own rather than a re-rounded copy of them.
+    """
+    energy = block.params["parent_energy"]
+    mass = block.params["parent_mass"]
+    if energy - mass < np.finfo(np.float64).eps:
+        return 0.0
+    return float(core_boost.boost_beta(energy, mass))
+
+
+def _boosted_line(
+    e0: float, weight: float, grid: np.ndarray, beta: float
+) -> np.ndarray:
+    """One rest-frame line's contribution to the boosted spectrum, MeV⁻¹.
+
+    ``weight`` photons per decay spread flat across the window the boost
+    opens, and exactly zero outside it — `boost::boost_delta_function`,
+    which the tabulated kernel calls once per line.
+    """
+    return weight * np.asarray(
+        core_boost.boost_delta_function(
+            e0, np.asarray(grid, dtype=np.float64), 0.0, beta
+        ),
+        dtype=np.float64,
+    )
+
+
+def _on_value_grids(
+    block: Block, of_energy: Callable[[np.ndarray], np.ndarray]
+) -> dict[str, np.ndarray]:
+    """Evaluate a function of photon energy on a block's value grids."""
+    terms = {"values": of_energy(block.grid)}
+    probe = block.scalar_probe
+    if probe.size:
+        terms["scalar_values"] = of_energy(probe)
+    return terms
+
+
+# ---------------------------------------------------------------------------
+# B1 -- the eta-prime two-photon line carries one branching ratio, not two
+# ---------------------------------------------------------------------------
+
+
+def _eta_prime_line_second_copy(
+    fn: Callable[..., Any], block: Block
+) -> dict[str, np.ndarray]:
+    """The copy of the ``eta' -> gamma gamma`` line the shipped weight drops.
+
+    Two photons leave the decay, so the line's weight is ``2 BR``, which
+    is what the eta and both neutral kaons write. The eta-prime writes a
+    bare ``BR`` (``photon_tables::ETAP_TO_A_A_WEIGHT``), so the repaired
+    spectrum is the stored one plus a second copy of the same term — and
+    the term is closed-form, needing neither the repaired kernel nor a
+    Cython twin.
+    """
+    del fn  # the term is a closed form, not a re-evaluation of the spectrum
+    beta = _parent_beta(block)
+    return _on_value_grids(
+        block,
+        lambda grid: _boosted_line(MASS_ETAP / 2.0, BR_ETAP_TO_A_A, grid, beta),
+    )
+
+
+_B1 = Delta(
+    repair="B1",
+    positions=MOVED,
+    relation=Additive(
+        term=_eta_prime_line_second_copy,
+        rtol=1e-11,
+        why="the term is closed form, so what sets this is the continuum "
+        "underneath it: the unchanged tabulated boost is already allowed "
+        "tolerances.TABULATED_RTOL = 1e-12 off the capturing tree, and the "
+        "relation compares totals. One decade of headroom over that. The "
+        "line term itself reproduces the corpus's own plateau step to "
+        "4.9e-13 worst over 22 line/block pairs "
+        "(test_delta_models.py::"
+        "test_a_tabulated_line_carries_the_weight_the_corpus_stores).",
+    ),
+    measured="the plateau the stored eta-prime spectrum carries at the "
+    "boosted image of M/2 is BR_ETAP_TO_A_A / (2 gamma beta e0) — one "
+    "branching ratio, where its three correct siblings (eta, K_L, K_S) "
+    "carry two. Recovered from the committed arrays alone, to 4.9e-13, in "
+    "all four boosted blocks. The rest block takes the kernel's rest-frame "
+    "arm, which adds no line, so nothing moves there: 189 positions over "
+    "six arrays.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-3-closed-form-deltas.md",
+)
+
+
+# ---------------------------------------------------------------------------
+# B2 -- both phi lines sit at the daughter meson's energy, not the photon's
+# ---------------------------------------------------------------------------
+
+#: ``phi -> Y gamma`` for the two daughters the kernel gives a line, with
+#: the branching ratio each line carries.
+PHI_LINE_DAUGHTERS = ((MASS_ETA, BR_PHI_TO_ETA_A), (MASS_ETAP, BR_PHI_TO_ETAP_A))
+
+
+def _phi_lines_relocated(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+    """Both phi lines moved from the daughter's energy to the photon's.
+
+    Neither weight changes and no channel opens or closes: the repair
+    subtracts each line where the shipped kernel puts it and adds it back
+    at ``(M**2 - m**2) / (2 M)``. Both energies are closed forms, so the
+    term needs no kernel evaluation — and because the total yield is
+    conserved, a declaration that named only a magnitude would pass on an
+    unrepaired kernel. This one names the positions instead.
+    """
+    del fn  # both line energies are closed forms, not kernel outputs
+
+    beta = _parent_beta(block)
+
+    def relocation(grid: np.ndarray) -> np.ndarray:
+        moved = np.zeros(np.shape(grid), dtype=np.float64)
+        for daughter, weight in PHI_LINE_DAUGHTERS:
+            moved += _boosted_line(
+                _photon_energy(MASS_PHI, daughter), weight, grid, beta
+            )
+            moved -= _boosted_line(
+                _daughter_energy(MASS_PHI, daughter), weight, grid, beta
+            )
+        return moved
+
+    return _on_value_grids(block, relocation)
+
+
+_B2 = Delta(
+    repair="B2",
+    positions=MOVED,
+    relation=Additive(
+        term=_phi_lines_relocated,
+        rtol=1e-11,
+        why="closed form on both sides of the move, so the budget is the "
+        "continuum's, exactly as for B1: tolerances.TABULATED_RTOL = 1e-12 "
+        "with a decade of headroom.",
+    ),
+    measured="the stored phi spectrum's top is a two-tread staircase, "
+    "3.1077e-05 then 1.0122e-07 then exactly 0.0, whose treads are the two "
+    "shipped lines' plateau heights at 656.942002472385 and "
+    "959.6459594437648 MeV — recovered from the committed arrays to 0.0 "
+    "and 1.8e-15 relative. Both windows sit above the boosted continuum's "
+    "support, where the repaired kernel has none: 305 positions over six "
+    "arrays, 233 up and 72 down. The two rest blocks do not move — no "
+    "grid point falls inside either window at beta = 1.414e-06.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-3-closed-form-deltas.md",
+)
+
+
+# ---------------------------------------------------------------------------
+# B3 -- the rho rest-frame branch returns the boost integrand
+# ---------------------------------------------------------------------------
+
+
+def _rho_rest_frame_spectrum(
+    block: Block, stored: dict[str, np.ndarray]
+) -> dict[str, np.ndarray]:
+    """The rest-frame spectrum the stored integrand is missing its ``E`` from.
+
+    ``photon_rho::boosted`` short circuits at ``E_rho == m_rho`` and
+    returns ``integrand(E)``, which carries the ``1 / E'`` belonging to
+    the boost kernel rather than to the spectrum — MeV⁻² where the other
+    branch is MeV⁻¹. Multiplying it back is the whole repair, so the
+    repaired array is a transform of the stored one and no kernel is
+    evaluated to predict it.
+
+    Off that branch the repair changes nothing, and this returns the
+    stored arrays unchanged rather than a transform of them: a block the
+    guard does not admit moves at no position, which is what a
+    declaration keyed on one would fail as stale.
+    """
+    energy = block.params["parent_energy"]
+    on_the_rest_branch = (
+        energy >= MASS_RHO and energy - MASS_RHO < np.finfo(np.float64).eps
+    )
+    return {
+        values: stored[values] * stored[grid] if on_the_rest_branch else stored[values]
+        for values, grid in (("values", "grid"), ("scalar_values", "scalar_grid"))
+        if values in stored
+    }
+
+
+_B3 = Delta(
+    repair="B3",
+    positions=MOVED,
+    relation=Exact(
+        transform=_rho_rest_frame_spectrum,
+        rtol=1e-9,
+        why="one multiplication by the abscissa the repaired kernel "
+        "multiplies by, so on the capturing tree the prediction is "
+        "bit-identical and the relation adds no error of its own. Off it, "
+        "what is left is the nested pion quadrature the integrand calls, "
+        "which is the case's own tolerances.PORTED_NESTED_RTOL = 1e-9 — "
+        "so the relation is held to the budget the case already holds "
+        "rather than to a looser one.",
+    ),
+    measured="stored x E_gamma reproduces the same case's rest_plus_eps "
+    "block — the beta -> 0 limit of the branch that is correct — to "
+    "6.8e-11 (charged) and 1.8e-09 (neutral) worst over the 170 paired "
+    "non-zero positions each, with matching zero patterns. The ratio to "
+    "the stored value is E_gamma at every position, spanning 7.75e-03 to "
+    "7.75e+04 MeV: 350 positions over four arrays, all of them the rest "
+    "block, which is the only parent energy the guard admits.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-3-closed-form-deltas.md",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -335,18 +641,16 @@ _B5 = Delta(
     evidence="docs/followups/todo/neutrino-pion-electron-line-counted-twice.md",
 )
 
-
+# ---------------------------------------------------------------------------
 # B6 -- the thermal averages never converged
 # ---------------------------------------------------------------------------
 
-#: The three model points both thermal cases sweep, in corpus block order.
-THERMAL_BLOCKS = ("open_resonance", "narrow_resonance", "closed_resonance")
 
-
-def _thermal(model: str) -> Reference:
-    """The `Reference` relation for one mediator family's thermal case."""
-    return Reference(
-        reference=thermal_reference.reference_values(model),
+_B6 = Delta(
+    repair="B6",
+    positions=MOVED,
+    relation=Reference(
+        reference=thermal_reference.reference_values,
         rtol=1e-7,
         why="the reference is scipy's QUADPACK at epsrel 1e-12 over the same "
         "integrand, so what bounds agreement is the repaired kernels' own "
@@ -356,55 +660,24 @@ def _thermal(model: str) -> Reference:
         "reference integrates. 1e-7 is 6.7x the bound that has to hold "
         "everywhere, rather than 28x the figure this platform happens to "
         "give.",
-    )
-
-
-#: Both cases carry the same measurement, so the two declarations differ
-#: only in which model the reference integrates.
-_B6_MEASURED = (
-    "the stored arrays are the initial-partition estimate: against the "
-    "reference they are wrong by up to 1.00 relative (scalar and vector "
+    ),
+    measured="the stored arrays are the initial-partition estimate: against "
+    "the reference they are wrong by up to 1.00 relative (scalar and vector "
     "closed_resonance, where the shipped value retains none of the true "
     "one), with per-block medians from 7.2e-6 to 8.1e-2. 539 of the 570 "
-    "pinned positions move. Of the 31 that do not, 30 are the ten points "
-    "per scalar block above x = 300, where that kernel returns 0.0 outright "
-    "and the quadrature is never reached; the last is vector "
-    "narrow_resonance at x = 0.1367, small enough that the relative "
-    "criterion already bound before the repair."
-)
-
-_B6_SCALAR = Delta(
-    repair="B6",
-    positions=MOVED,
-    relation=_thermal("scalar"),
-    measured=_B6_MEASURED,
+    "pinned positions move. Of the 31 that do not, 30 are the ten points per "
+    "scalar block above x = 300, where that kernel returns 0.0 outright and "
+    "the quadrature is never reached; the last is vector narrow_resonance at "
+    "x = 0.1367, small enough that the relative criterion already bound "
+    "before the repair.",
     evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
 )
 
-_B6_VECTOR = Delta(
-    repair="B6",
-    positions=MOVED,
-    relation=_thermal("vector"),
-    measured=_B6_MEASURED,
-    evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
-)
-
-#: Every declared array, keyed as `stability.PORTABILITY_ZEROS` is.
-#: What each repair leaves *out* is half its proof that it moved only
-#: what it intended:
-#:
-#: * B4 -- the 15 ``mu_mu_only`` blocks of the scalar decay case open no
-#:   FSR channel and must still match the stored arrays bit for bit.
-#:   Within a declared array the same holds position by position:
-#:   wherever the FSR term is zero -- above a channel's endpoint, below
-#:   the soft cut, outside the boost window -- `MOVED` leaves the
-#:   position at the case's own budget.
-#: * B5 -- ``rest`` and ``rest_plus_eps`` are absent: at rest the kernel
-#:   drops both prompt lines, and one epsilon above it no grid point's
-#:   boost window is wide enough to straddle the line.
-#: * B6 -- the 30 scalar positions above ``x = 300`` are absent, because
-#:   that kernel returns ``0.0`` before it integrates and the repair
-#:   cannot reach them.
+#: Every declared array. The two blocks of the same case that are absent --
+#: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
+#: the case's own budget, which is the "moved only what it intended" half of
+#: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
+#: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     # B4. The ``mu_mu_only`` blocks of this case are deliberately absent:
     # they open no FSR channel and must still match the stored arrays bit
@@ -574,32 +847,46 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "cross_sections.scalar.thermal_cross_section",
         "open_resonance",
         "values",
-    ): _B6_SCALAR,
+    ): _B6,
     (
         "cross_sections.scalar.thermal_cross_section",
         "narrow_resonance",
         "values",
-    ): _B6_SCALAR,
+    ): _B6,
     (
         "cross_sections.scalar.thermal_cross_section",
         "closed_resonance",
         "values",
-    ): _B6_SCALAR,
+    ): _B6,
     (
         "cross_sections.vector.thermal_cross_section",
         "open_resonance",
         "values",
-    ): _B6_VECTOR,
+    ): _B6,
     (
         "cross_sections.vector.thermal_cross_section",
         "narrow_resonance",
         "values",
-    ): _B6_VECTOR,
+    ): _B6,
     (
         "cross_sections.vector.thermal_cross_section",
         "closed_resonance",
         "values",
-    ): _B6_VECTOR,
+    ): _B6,
+}
+
+
+#: Every modelled delta, by roster label — including the ones whose repair
+#: has not landed and which therefore hold no key in `DECLARED_DELTAS`
+#: yet. A repair task moves its model into that table by adding the arrays
+#: it measured moving; see the module docstring.
+DELTA_MODELS: dict[str, Delta] = {
+    "B1": _B1,
+    "B2": _B2,
+    "B3": _B3,
+    "B4": _B4,
+    "B5": _B5,
+    "B6": _B6,
 }
 
 

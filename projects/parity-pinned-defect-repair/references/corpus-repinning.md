@@ -7,8 +7,9 @@ protocol, and the proof obligations each repair inherits.
 ## The problem in one paragraph
 
 `test/parity/data/*.npz` holds 179,695 values captured from pre-port Cython at
-kernel digest `f5e6e269be47`. Eight of the numbers in there are wrong (seven
-rostered at first; B4 joined and was repaired later), and the corpus is the
+kernel digest `f5e6e269be47`. Nine of the numbers in there are wrong (seven
+rostered at first; B4 and B5 joined later, and both are repaired), and the
+corpus is the
 gate that keeps the Rust port faithful to them. The obvious move — regenerate
 — is barred three ways: by `projects/cython-to-rust/rules.md` rule 2, by
 `test/parity/cases.py`'s `assert_no_rust_core` (which already refuses, since
@@ -36,7 +37,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "rest", "values"): Delta(
         repair="B3",                       # which task moved it
         positions=MOVED,                   # explicit tuple, or MOVED
-        relation=Ratio(...),               # see "Relations" below
+        relation=Exact(...),               # see "Relations" below
         measured="ratio is E_gamma exactly at all 100 positions",
         evidence="projects/.../task-9-rho-rest-frame.md",
     ),
@@ -56,7 +57,7 @@ strongest the physics supports:
 
 | Relation | Use when | Example |
 | --- | --- | --- |
-| `Exact(f)` | the delta is a closed-form transform of the stored array | rho `rest`: repaired == stored × `E_γ` |
+| `Exact(f)` | the repaired array is a closed-form transform of the stored one | rho `rest`: repaired == stored × `E_γ` |
 | `Oracle(path)` | a Task 2 capture holds the corrected value | all four Group A repairs |
 | `Additive(term)` | the delta is a computable additive term | η′: `+ BR · boost_delta_function(M/2, …)` |
 | `Bounded(lo, hi, sign)` | only a magnitude and a sign are known | fallback; requires a written justification |
@@ -82,6 +83,16 @@ the `stability.py` masks:
 
 Rule 3 is what makes the layer self-cleaning. Without it, a reverted
 repair passes.
+
+It also fixes when a declaration may be written. A model established
+ahead of its repair — which is what Task 3 does for B1, B2 and B3 — has
+no array that differs yet, so keying it into `DECLARED_DELTAS` would
+fail rule 3 on the spot. Those models live in `deltas.DELTA_MODELS`
+until the repair lands, held to the same terms (roster label, budget
+with a reason, measurement, evidence file) by the same shape tests, and
+checked against the stored arrays by `test/parity/test_delta_models.py`.
+The repair task adds the keys, and re-derives the position counts rather
+than inheriting them (`rules.md` rule 11).
 
 ### Shape tests (Task 1)
 
@@ -176,5 +187,5 @@ At close, one number: how many of the corpus's 179,695 pinned values are
 under a declaration. Derive it with a command and paste the command
 (`[derived-count-not-rederived]`), broken out per repair so the parts
 sum (`[measurement-taken-before-the-task-ended]`). If the total is
-larger than the sum of the eight per-repair figures, two declarations
+larger than the sum of the nine per-repair figures, two declarations
 overlap and the shape test missed it.

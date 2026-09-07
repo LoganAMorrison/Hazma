@@ -232,8 +232,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   re-derive each enumeration (PR #69, #71).
 - [sweep-excluded-the-canonical-directory] Sweep `projects/` *in* and triage by
   file role — a task note is history, a `references/` file is spec unless it
-  self-declares a snapshot, the working-memory `## Phases` table is live status
-  — and give a canonical per-site table a Status column (PR #70).
+  self-declares a snapshot, `adrs/` is the durable decision and goes stale
+  the moment the contract it decided changes, the working-memory `## Phases`
+  table is live status — and give a canonical per-site table a Status column
+  (PR #70, PR #92).
 - [exemption-wider-than-its-mechanism] Scope a carve-out to the positions its
   mechanism actually reaches — a declared allowlist with the measurement beside
   each row — and pin the allowlist's shape with a test so it cannot drift

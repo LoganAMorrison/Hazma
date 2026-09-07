@@ -834,6 +834,26 @@ asymmetry between two sibling wrappers.
   [sibling-copies-of-a-fixed-claim]: there the sweep ran and missed a
   copy, here the sweep never covered the directory.
 
+- [sweep-excluded-the-canonical-directory] `projects/<slug>/adrs/` is the
+  third live site in that tree, and the easiest to miss because an ADR
+  reads as settled history rather than as a contract in force. PR #92
+  generalized the parity delta layer's relation from "an additive term"
+  to "whatever array the relation predicts" — needed for a closed-form
+  transform of the stored array — and swept `PLAN.md`,
+  `references/corpus-repinning.md`, the module docstrings and
+  `test/parity/README.md`, but not `ADR-0001`, which still defined
+  `MOVED` as "resolved against the term at comparison time" and still
+  claimed every declaration "costs one extra kernel evaluation". Review
+  caught the first; the second was one hunk further down the same file
+  and is why the fix is the whole document, not the cited line. An ADR
+  goes stale the moment the contract it decided changes, so sweep
+  `adrs/` on every contract word the change touches — the term for the
+  thing compared, the cost claimed, the timing implied — and re-read the
+  ADR end to end rather than patching at the line number. Exposed by
+  `rg -n --hidden 'against the term|term is non-zero|term does not move'
+  projects/ docs/ hazma/ test/ .claude/ .codex/`, whose only live-spec
+  hits were in that one file.
+
 ### exemption-wider-than-its-mechanism
 
 - [exemption-wider-than-its-mechanism] A carve-out earned by a narrow

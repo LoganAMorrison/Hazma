@@ -24,7 +24,7 @@ section tracks live *status*.
 |---|------|------------|--------|-----------|
 | 1 | Delta-declaration layer | — | **Complete** — landed in PR #87 with the B4 repair; ADR-0001 | `task-1-delta-declarations.md` |
 | 2 | Capture the corrected-value oracles | — | **Complete** | `task-2-cython-oracles.md` |
-| 3 | Closed-form delta models (B1–B3) | 1 | Not started | `task-3-closed-form-deltas.md` |
+| 3 | Closed-form delta models (B1–B3) | 1 | **Complete** — models in `deltas.DELTA_MODELS`, keys land with the repairs | `task-3-closed-form-deltas.md` |
 | 4 | Repair A1 — boost integral window | 1, 2 | Not started | `task-4-boost-window.md` |
 | 5 | Repair B1 — η′ line weight | 3, 4 | Not started | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | Not started | `task-6-phi-lines.md` |
@@ -145,6 +145,29 @@ this project is time-critical.
   [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md);
   it moves published numbers by three to four decades on a band, far more
   than B5 itself.
+- **A declaration cannot be written before its repair lands.**
+  ADR-0001's staleness rule fails a declared array that still equals the
+  corpus, so Task 3's three models sit in `deltas.DELTA_MODELS` and Tasks
+  5, 6 and 9 add the `DECLARED_DELTAS` keys. `PLAN.md` Task 3's gate and
+  `references/corpus-repinning.md` are patched to say so.
+- **Two of the three Group B defects miss a rest block, and B2 misses
+  both.** `photon_tables::dnde` adds line terms only in flight, so B1
+  never reaches `spectra.photon.eta_prime[rest]`; and at
+  `beta = 1.414e-06` the phi's two windows are 2.8e-06 wide in relative
+  energy with no grid point inside, so B2 reaches neither rest block. The
+  corpus anchors the `M/2` line images but not the phi's, which is the
+  whole difference.
+- **The phi's shipped lines sit above the spectrum's own endpoint**,
+  where the boosted continuum is exactly zero — which is why B2 is
+  readable straight off the committed arrays as a two-tread staircase.
+- **A model test that recomputes the model tests nothing.** Three of ten
+  mutations to `test/parity/deltas.py` left the first draft of
+  `test_delta_models.py` green, including B1's weight doubled and B3's
+  transform inverted. Every model test now drives `DELTA_MODELS[...]`
+  rather than a local re-spelling. Related to
+  `[test-name-claims-an-unmade-assertion]` but distinct: the name was
+  right and the assertion was real; it just was not about the code under
+  test.
 - **Lesson classes this project is most exposed to**, from
   `docs/agents/lessons.md`: `[exemption-wider-than-its-mechanism]` (a
   declaration written wider than the mechanism that earned it),
@@ -161,10 +184,8 @@ this project is time-critical.
   and the roster had no shape for one** (Task 13). B6's stored values
   are not the true ones transformed; they are the true ones unresolved,
   so no `Additive` or `Exact` relation can state the delta. The layer
-  grew a `Reference` relation, and relations now answer a single
-  `term_for` question instead of the runner knowing which kind it holds
-  — which is what the spec's unimplemented `Exact` and `Bounded` will
-  plug into.
+  grew a `Reference` relation, which answers Task 3's `expected`
+  protocol alongside `Additive` and `Exact`.
 - **Zeroing a tolerance is only half a convergence fix.** B6's kernels
   also needed `THERMAL_LIMIT` above `quad`'s default of 50: at 50, 33 of
   the 540 thermal positions exhausted the subdivision table and came
@@ -263,6 +284,17 @@ are recorded rather than re-derivable:
   Counts from the command in `task-1-delta-declarations.md`. Details in
   `docs/followups/done/scalar-decay-fsr-half-normalized.md`.
 
+**Task 3 moved nothing** — it models B1, B2 and B3 rather than repairing
+them, and its diff contains no library or build file. What it measured
+off the committed corpus, for Tasks 5, 6 and 9 to be judged against:
+B1's eta-prime plateau reads `1 · BR_ETAP_TO_A_A` where its three correct
+siblings read `2 · BR` (22 line/block readings, worst 4.9e-13); B2's two
+phi lines sit at 656.942002472385 and 959.6459594437648 MeV, above the
+spectrum's own endpoint, as a staircase matching the modelled treads to
+the last bit; and B3's `stored × E_γ` reproduces the same case's
+`rest_plus_eps` block to 6.8e-11 (charged rho) and 1.8e-09 (neutral).
+Reach: B1 six arrays / 189 positions, B2 six / 305, B3 four / 350.
+
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
 rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
@@ -300,6 +332,17 @@ it, and
   `docs/followups/todo/moved-followups-leave-dangling-inbound-paths.md`)
   happens once for all eight rather than eight times. Its `Status:` line
   records the repair and says so.
+- **A relation returns the repaired array, not an additive term**
+  (Task 3). `Additive.expected` and `Exact.expected` both answer "what
+  should this array be", and the runner derives the moved mask from
+  `predicted != stored`. It is what lets B3 be `Exact` — a transform of
+  the stored array, bit-exact where `stored + term` would cost a second
+  rounding — and it makes `MOVED` mean exactly "float64 moves here".
+- **Group B needs no `mpmath` reference** (Task 3). `reference.py` exists
+  for kernels that lose ~33 digits to an `atan` cancellation; measured at
+  60 dps, these three forms lose under half a digit. The committed corpus
+  is the oracle instead, and `mpmath` stays out of the test path, as
+  `pyproject.toml`, `stability.py` and `reference.py` all three say.
 - **The seven follow-ups' "Risks" sections were deliberately left
   standing** when their "Triggers / blockers" bullets were corrected, so
   the correction and the plan that justifies it would land in one
@@ -322,15 +365,17 @@ it, and
   mediator positron cases" against four — each mediator ships a
   `dnde_decay_*` and a `dnde_decay_*_pt` entry point. Every list is now
   written out with a count, and each repair gate names every case.
-- **Relations answer `term_for`, not the runner's arithmetic** (Task 13).
-  `test_parity.py` used to build `pinned + term` itself, which only an
-  `Additive` relation can supply. It now asks the relation how far the
-  stored array is from what it should hold, so `Reference` (supersede
-  outright) and `Additive` (correct by a named term) reach the same
-  comparison. The first shape of this passed a repaired *array* instead
-  and round-tripped `pinned + term`, which turned the unpinnable
-  positions' stored `NaN` into a `NaN` term and broke three B4 blocks —
-  the term is the primitive, not the repaired array.
+- **Two tasks generalized the relation protocol concurrently, and the
+  merge kept one** (Tasks 3 and 13). Task 13 shipped
+  `term_for(fn, block, suffix, pinned)` returning the additive term;
+  Task 3 shipped `expected(fn, block, stored)` returning the repaired
+  arrays, and merged to master first. `Reference` was rewritten onto
+  `expected` and `term_for` is gone. Worth knowing that the discarded
+  shape existed for a reason: Task 13 reached it after an `expected`-like
+  first attempt round-tripped `pinned + term` and turned the unpinnable
+  positions' stored `NaN` into a `NaN` term, breaking three B4 blocks.
+  Task 3's version avoids that by dropping unpinnable positions from the
+  predicted array rather than from a derived term.
 - **B6's budget is set from the kernel's own tolerance, not from the
   local measurement** (Task 13). The repaired kernels agree with the
   reference to 3.6e-9 here, but they are only held to `epsrel = 1.49e-8`,
@@ -351,6 +396,15 @@ The change that created this project touched only
 `hazma/scalar_mediator/_scalar_mediator_spectra.py`, `CHANGELOG.md`,
 `docs/followups/`, and this project's plan, rules, references, ADR and
 notes — see `task-1-delta-declarations.md`.
+
+### Task 3
+
+`test/parity/deltas.py` (the `Exact` relation, the `expected` protocol,
+the B1/B2/B3 models, `DELTA_MODELS`), `test/parity/test_delta_models.py`
+(new), `test/parity/test_parity.py`, `test/parity/README.md`,
+`PLAN.md` (Task 3's gate and two scope notes),
+`references/corpus-repinning.md`, and `task-3-closed-form-deltas.md`. No
+library or build file, and `test/parity/data/` untouched.
 
 ### Task 10a
 
@@ -441,6 +495,17 @@ has no `hazma._core` test probes for the suite to import.
   The sweep of the remaining `quad` call sites has not been done —
   [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
   carries it as its own first question.
+- **Will Group B's relation budgets survive their repairs?** B1 and B2
+  carry `rtol` 1e-11 and B3 1e-9, each derived from the case's own budget
+  rather than measured against a repaired kernel, which cannot exist yet.
+  Tasks 5, 6 and 9 measure the real figure and tighten; a repair needing
+  a *wider* one has found something Task 3 did not model (`rules.md`
+  rule 2).
+- **Do B1's and B2's positions overlap A1's on the same arrays?** Both
+  land on arrays Task 4 also moves, and rule 7 forbids an overlap. The
+  mechanisms are disjoint — `boost_delta_function` against
+  `boost_integrate_linear_interp` — but the position sets have not been
+  intersected. Tasks 5 and 6 inherit that as a gate.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
   closes?** They are the last evidence that a repaired value was ever
   checked against a non-Rust implementation. Anticipated ADR.
@@ -479,10 +544,17 @@ has no `hazma._core` test probes for the suite to import.
   rebuild, capture again, and diff *those* — not the live tree against
   the stored corpus, which reports the platform drift as if it were the
   repair (Findings).
-- The delta layer now carries two relations. A new repair picks
-  `Additive` when the physics names the term and `Reference` when only a
-  second implementation can say what the value should be; both answer
-  `term_for`, and the runner needs no change for either.
+- B1, B2 and B3 have finished, corpus-checked delta models in
+  `deltas.DELTA_MODELS`. Tasks 5, 6 and 9 fix the kernel, add the
+  `DECLARED_DELTAS` keys pointing at those models, and bump
+  `EXPECTED_DECLARED_ARRAYS`; the key lists and position counts are in
+  `task-3-closed-form-deltas.md`'s handoff, to be re-derived after
+  Task 4 rather than pasted.
+- The delta layer now carries three relations. A new repair picks
+  `Additive` when the physics names the term, `Exact` when a closed form
+  transforms the stored array, and `Reference` when only a second
+  implementation can say what the value should be; all three answer
+  `expected`, and the runner needs no change for any of them.
 
 **Currently risky / unknown:**
 

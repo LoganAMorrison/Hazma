@@ -204,22 +204,43 @@ def thermal_cross_section(model: str, args: list[float], x: float) -> float:
 
 ReferenceFn = Callable[[Callable[..., Any], "Block"], dict[str, np.ndarray]]
 
+#: Which mediator family an entry point belongs to, read off the compiled
+#: module it came from. The two thermal cases sweep the same block labels
+#: over argument tuples of the same length, so the entry point is what
+#: separates them -- and it is what `deltas.Reference` is handed.
+_MODEL_BY_MODULE = {
+    "hazma._core.scalar_mediator": "scalar",
+    "hazma._core.vector_mediator": "vector",
+}
 
-def reference_values(model: str) -> ReferenceFn:
-    """A `deltas.Reference` callable for one model's thermal case.
 
-    The entry point is not consulted: the whole point of the reference is
-    that it reaches the same numbers without going through the kernel
-    under repair.
+def reference_values(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+    """`deltas.Reference` callable for either mediator's thermal case.
+
+    Parameters
+    ----------
+    fn : callable
+        The corpus entry point under comparison. Read only to tell the
+        scalar case from the vector one; the reference never calls it,
+        which is the point of being a reference.
+    block : Block
+        The corpus block, supplying the grid and the argument tuple.
+
+    Returns
+    -------
+    dict
+        ``{"values": <sigma v> in MeV^-2 on the block's grid}``.
     """
-
-    def evaluate(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
-        args = block.params["args"]
-        return {
-            "values": np.array(
-                [thermal_cross_section(model, args, float(x)) for x in block.grid],
-                dtype=np.float64,
-            )
-        }
-
-    return evaluate
+    module = getattr(fn, "__module__", "")
+    try:
+        model = _MODEL_BY_MODULE[module]
+    except KeyError:  # pragma: no cover - a new case would have to opt in
+        msg = f"no thermal reference for an entry point from {module!r}"
+        raise KeyError(msg) from None
+    args = block.params["args"]
+    return {
+        "values": np.array(
+            [thermal_cross_section(model, args, float(x)) for x in block.grid],
+            dtype=np.float64,
+        )
+    }

@@ -71,9 +71,13 @@ no gain.
 `Additive` presupposes a term the physics names and `Exact` a transform
 of the stored array; neither exists when the stored value is the true
 one *unresolved*. `Reference` supersedes the stored array against an
-independently computed value. Relations now answer one `term_for`
-question, so the runner no longer knows which kind it holds — the shape
-the spec's unimplemented `Exact` and `Bounded` will plug into.
+independently computed value.
+
+This task and Task 3 generalized the runner concurrently and differently
+— `term_for(fn, block, suffix, pinned)` here, `expected(fn, block,
+stored)` there — and Task 3 merged first. `Reference` was rewritten onto
+its protocol, so all three relations answer `expected` and the runner
+knows which kind it holds for none of them.
 
 ## Decisions and Implementation Notes
 
@@ -400,11 +404,18 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
   numerical impact: B6's figures are in `task-notes/README.md` under
   "Numerical impact so far" and are the largest in the project by four
   orders of magnitude, so the `CHANGELOG` entry should lead with them.
-- **The delta layer now has two relations.** Pick `Additive` when the
-  physics names the term, `Reference` when only a second implementation
-  can say what the value should be. Both answer `term_for`; the runner
-  needs no change for either. `EXPECTED_DECLARED_ARRAYS` is 36 — 30 for
-  B4, 6 for B6 — and must move with any new declaration.
+- **The delta layer now has three relations.** Pick `Additive` when the
+  physics names the term, `Exact` when a closed form transforms the
+  stored array, `Reference` when only a second implementation can say
+  what the value should be. All three answer `expected`; the runner needs
+  no change for any of them. `EXPECTED_DECLARED_ARRAYS` is 42 — 30 for
+  B4, 6 for B5, 6 for B6 — and must move with any new declaration.
+- **A `Reference` model dispatches on the entry point, not the block.**
+  Both thermal cases sweep the same block labels over argument tuples of
+  the same length, so `fn.__module__` is what separates them
+  (`thermal_reference._MODEL_BY_MODULE`). That is what lets B6 be a
+  single `DELTA_MODELS` entry, which
+  `test_every_declaration_points_at_a_delta_model` requires.
 - **Build before believing anything.** These are Rust edits;
   `cargo test` does not re-link the extension. `uv pip install -e .
   --config-setting build-args="--features test-probes"`.

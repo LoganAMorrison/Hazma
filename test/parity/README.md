@@ -12,9 +12,10 @@ function's budget.
 | [`generate.py`](generate.py) | Evaluates the specification and writes `data/`; also verifies `data/` against its manifest. |
 | [`tolerances.py`](tolerances.py) | How far a replacement implementation may move each entry point, and why that far. |
 | [`stability.py`](stability.py) | Which pinned values are rounding residue rather than physics, and are therefore skipped. |
-| [`deltas.py`](deltas.py) | Which pinned arrays a repair has moved on purpose, and how the repaired value relates to the stored one. The stored arrays are never rewritten. |
+| [`deltas.py`](deltas.py) | Which pinned arrays a repair has moved on purpose, and how the repaired value relates to the stored one. Also the models of repairs that have not landed yet. The stored arrays are never rewritten. |
 | [`reference.py`](reference.py) | Arbitrary-precision copies of the four cancellation-prone kernels. Used only to rebuild the mask. |
 | [`test_parity.py`](test_parity.py) | The gate — re-evaluates every entry point and compares against `data/`. |
+| [`test_delta_models.py`](test_delta_models.py) | Checks each `deltas.py` model against the stored arrays that pin the defect it describes. Evaluates no kernel. |
 | `data/*.npz` | One file per entry point. Reference arrays, stored exactly as the library returned them. |
 | `data/manifest.json` | Provenance and per-array hashes. |
 | `data/unpinnable.json` | The mask `stability.py` builds: 494 stored positions that assert nothing. |
@@ -23,9 +24,9 @@ function's budget.
 
 ## Commands
 
-Run the gate. One test per corpus block (623 of them) plus 25 others — the
+Run the gate. One test per corpus block (623 of them) plus 27 others — the
 guards on the corpus, the mask, the roster and the declaration table (`pytest
-test/parity/test_parity.py --collect-only -q | tail -1` reports 648); around
+test/parity/test_parity.py --collect-only -q | tail -1` reports 650); around
 five minutes of single-core work, nearly all of it the nested adaptive
 quadrature in the rho and mediator-spectrum kernels. The pytest-xdist
 `addopts` in `pyproject.toml` spread it across cores, so the wall-clock is
@@ -115,18 +116,23 @@ served kernel and belongs back in the count. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 
-Eight of the values in here are, separately, *wrong* — filed under
+Nine of the values in here are, separately, *wrong* — filed under
 `docs/followups/` and repaired by
 [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
 That does not make them regenerable either: the committed arrays are the
 record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them, in [`deltas.py`](deltas.py) — one has been (the
-scalar decay spectrum's FSR normalization, roster entry B4), so the
-arrays of that case are compared against `stored + term` rather than
-against `stored`. [`oracles/`](oracles/README.md) holds what the other
-positions *should* be, captured from the Cython twins before the port
-deleted them, and is the only other place in this directory where a
-corrected number lives.
+delta against them, in [`deltas.py`](deltas.py) — two have been (the
+scalar decay spectrum's FSR normalization, roster entry B4, and the
+charged pion's doubled prompt neutrino line, B5), so the arrays of those
+two cases are compared against the relation each declares rather than
+against `stored`. Three more are *modelled* there without being
+declared — B1, B2 and B3, whose Cython twins are already gone — because
+a declaration on an array the tree has not moved yet would fail as
+stale; [`test_delta_models.py`](test_delta_models.py) checks those models
+against the stored arrays themselves. [`oracles/`](oracles/README.md)
+holds what the remaining positions *should* be, captured from the Cython
+twins before the port deleted them, and is the only other place in this
+directory where a corrected number lives.
 
 ## What the corpus pins
 
