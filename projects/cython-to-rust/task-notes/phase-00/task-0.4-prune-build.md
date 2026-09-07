@@ -380,7 +380,7 @@ Per the recipe in `../README.md`, `git add -A` was run after the
   (after which `MANIFEST.in` no longer exists to fix).
 - **`preflight.sh` `isort`/`ruff` on the trunk** — still red for reasons
   unrelated to any single task, per
-  [`../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+  [`../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md).
   This task's delta is recorded under Verification in `../README.md`.
 - **CI on the full matrix** is the one exit criterion that cannot be
   closed from a local worktree. Everything CI runs was run here on

@@ -409,7 +409,7 @@ RESULT: PASS          # all eleven rows; only "version bump" SKIPs (not a closin
 file list and the black / isort / ruff gates went red on the `.md` and
 `.rs` paths in it — a harness artifact, not a finding. They are also red
 on the trunk, which is the standing
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 follow-up; measured side by side with the same tool versions, this branch
 is strictly better on each:
 

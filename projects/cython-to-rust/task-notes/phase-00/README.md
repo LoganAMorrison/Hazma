@@ -317,7 +317,7 @@ purge.
   repointed off the deleted `docs/source/gamma_ray.rst:85`, which it
   cited as `minkowski_dot`'s sole public-docs reference. The file landed
   on the trunk mid-task (PR #46).
-- `docs/followups/todo/preflight-isort-ruff-red-on-trunk.md` (new) +
+- `docs/followups/done/preflight-isort-ruff-red-on-trunk.md` (new) +
   index row — the trunk isort/ruff debt that makes `preflight.sh` return
   `FAIL` for any file under `hazma/`.
 - `docs/adrs/ADR-0001-fsr-generator-takes-both-matrix-elements.md` and
@@ -423,7 +423,7 @@ purge.
   task in this phase will inherit the same two red rows and must prove
   they are pre-existing — `git stash` the change and re-run both
   commands. Filed as
-  [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md).
+  [`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md).
   Task 0.2 confirmed it and added the recipe's missing step: `git add -A`
   after the `git stash pop`, or the deletions come back unstaged. Its own
   delta was `isort` red on the same one file both ways, and configured

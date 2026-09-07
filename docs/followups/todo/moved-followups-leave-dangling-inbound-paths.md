@@ -79,10 +79,36 @@ rg -oN --no-filename 'docs/followups/(todo|done)/[a-z0-9-]+\.md' \
 Non-empty output is a failure. Scope it to the whole repo rather than to
 `--paths`: the reference that goes stale is in a file the moving PR does
 not touch, which is exactly why `--paths`-scoped checking missed it in
-PR #81. Note that gate 3 (`ruff check`) is already red on trunk
-(`preflight-isort-ruff-red-on-trunk.md`), so adding a gate that is green
-on trunk is safe; adding one that is not would compound that problem, so
-do step 1 first.
+PR #81.
+
+The ordering constraint this file used to carry — do step 1 first,
+because a gate that is red on trunk compounds the standing redness of
+gate 3 — no longer applies. `ruff check` stopped being red on trunk when
+[`preflight-isort-ruff-red-on-trunk`](../done/preflight-isort-ruff-red-on-trunk.md)
+was resolved by scoping gates 2 and 3 to the diff. A new gate is still
+better introduced green, though, and step 1 is what makes this one green:
+the sweep above reports three dangling paths on an untouched trunk, the
+same three that section names.
+
+**Validate the command before trusting it as a gate.** Its result set
+proved sensitive to which paths it is given. Measured on 2026-09-06 with
+ripgrep 15.1.0, searching for the same pattern:
+
+```text
+docs/                    11 unique paths
+docs/ scripts/            1
+docs/ scripts/ (after `rm -rf scripts/agents/__pycache__`)   11
+docs/ scripts/ --no-ignore                                   11
+```
+
+A gitignored directory under one searched path suppressed matches from
+another, and the full pytest suite creates exactly such a directory —
+`test/agents/test_resolve_phase.py` loads its helper by path, leaving
+`scripts/agents/__pycache__/` behind. A sweep that silently returns fewer
+hits is the false green this gate exists to prevent, so pin the count
+with a fixture containing a known dangling path rather than asserting
+that empty output means clean. The mechanism was not established; only
+the behavior above was measured.
 
 An alternative is to fold it into `check_doc_citations.py`, which already
 walks docs and resolves paths. That is a better home if the checker also
