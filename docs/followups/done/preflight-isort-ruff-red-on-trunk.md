@@ -6,7 +6,9 @@
   `RESULT: FAIL` from an otherwise clean preflight run
 - **Scope:** cross-cutting
 - **Status:** done
-- **Resolved:** 2026-09-06 by **option 2** (narrow the gate to the diff).
+- **Resolved:** 2026-09-06 in
+  [PR #89](https://github.com/LoganAMorrison/Hazma/pull/89), by **option 2**
+  (narrow the gate to the diff).
   The lint debt itself is untouched and still real; what changed is that
   gates 2 and 3 no longer charge it to the branch that runs them. See
   **Resolution** below, including which of this file's citations had gone
@@ -127,8 +129,9 @@ and column dropped, so an edit near the top of a file does not re-report
 everything below it; the price is that removing one finding and adding an
 identical one in the same file cancels out. `isort` is compared per file,
 because `--check-only` names the file rather than the offending import.
-Gate 1 stays absolute: black is green on the trunk and CI enforces it
-that way.
+Gate 1 stays absolute: black is green on the trunk over `hazma test`,
+and CI enforces it over exactly those paths — though not past them, as
+the third item below records.
 
 **The fourth item needed no flag.** A diff that touches no Python leaves
 the two trees identical over `--paths`, so the comparison is empty and
