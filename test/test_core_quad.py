@@ -74,6 +74,7 @@ import pytest
 import scipy.integrate as si
 from scipy.special import k1
 
+from hazma._core import quad as core_quad
 from hazma._core import scalar_mediator as core_scalar
 from hazma._core import vector_mediator as core_vector
 
@@ -96,11 +97,6 @@ Integrand = Callable[[float], float]
 #: `limit`, `points`. Spelled out rather than `Any` so a typo in a test
 #: is a type error rather than a silently ignored keyword.
 QuadKwarg = float | int | list[float] | None
-
-core_quad = pytest.importorskip(
-    "hazma._core.quad",
-    reason="hazma._core is not built; run `pip install -e .`",
-)
 
 #: Ceiling for smooth integrands. It is a ceiling, not a fitted
 #: tolerance: every comparison in this file also asserts that the port

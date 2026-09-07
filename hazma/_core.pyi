@@ -28,10 +28,15 @@ import numpy as np
 # `docs/versioning.md` defines the public API against. Phase 07 revisits
 # the packaging, and the stub layout belongs with it.
 #
-# Five further submodules — `special` (cython-to-rust Task 3.2), `quad`
-# (Task 3.3), `interp` and `boost` (Task 3.4), and `dispatch` (Task 3.5) —
-# are deliberately not
-# stubbed. `special` exposes `spence`, `bessel_k1` and `bessel_kn` only so
+# Six further submodules — `special` (cython-to-rust Task 3.2), `quad`
+# (Task 3.3), `interp` and `boost` (Task 3.4), `dispatch` (Task 3.5) and
+# `mediator_tables` (Task 6.1) — are deliberately not
+# stubbed, and are not present at all in a released build: they compile
+# only under the crate's `test-probes` feature, which `rust/Cargo.toml`
+# keeps out of `default`. So this half of the file describes a surface
+# that exists during development and nowhere else, which is a second
+# reason not to stub it.
+# `special` exposes `spence`, `bessel_k1` and `bessel_kn` only so
 # `test/test_core_special.py` can sweep them against scipy; `interp` and
 # `boost` expose the interpolation and boost foundation only so
 # `test/test_core_interp.py` can sweep against `np.interp` and
@@ -47,8 +52,11 @@ import numpy as np
 # over the argument-and-error layer itself, each taking the quantity
 # wording as an argument, only so `test/test_core_dispatch.py` can render
 # every message and compare bytes against a frozen roster — the `.pyx`
-# sources it used to extract them from are gone. The kernels
-# that will use any of them call the Rust side directly, and nothing under
+# sources it used to extract them from are gone. `mediator_tables` exposes
+# the rest-frame table, its cache and its mode selectors only so
+# `test/test_core_mediator_tables.py` can compare them against
+# `numpy.logspace` and the Phase 04 kernels' own entry points. The kernels
+# that use any of them call the Rust side directly, and nothing under
 # `hazma/` imports them — a stub would advertise a surface this package
 # does not mean to offer.
 

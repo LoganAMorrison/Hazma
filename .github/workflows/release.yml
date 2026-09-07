@@ -184,6 +184,44 @@ jobs:
           python -m pip install --no-deps "$GITHUB_WORKSPACE"/dist/*.whl
           python -c "import hazma, hazma._core; print(hazma.VERSION, hazma._core.__file__)"
 
+      - name: Assert the released extension carries no test-only probes
+        # The crate's `test-probes` feature (rust/Cargo.toml) compiles six
+        # submodules that exist only for `test/test_core_*.py`, and it is
+        # out of `default` so that this build never sees them. Asserted on
+        # the module set rather than on the six names, so this also fails
+        # if a per-domain submodule stops being registered.
+        #
+        # It runs here, against the wheel installed on 3.14 just above,
+        # because the claim is about the built extension: the archive
+        # check earlier can see the shared object but not what is inside
+        # it. Nothing equivalent exists for the sdist, which carries no
+        # extension -- what keeps the probes out of the wheels people
+        # build from it is the feature being absent from `default`, which
+        # is the same fact this step measures on the one platform pair
+        # that does publish a wheel.
+        working-directory: ${{ runner.temp }}
+        run: |
+          python - <<'PY'
+          import inspect
+          import sys
+
+          import hazma._core
+
+          served = {"photon", "positron", "neutrino", "scalar_mediator", "vector_mediator"}
+          found = {
+              name
+              for name in dir(hazma._core)
+              if inspect.ismodule(getattr(hazma._core, name))
+          }
+          if found != served:
+              sys.exit(
+                  f"hazma._core exposes {sorted(found)}, expected exactly "
+                  f"{sorted(served)}. Extra names are the test-only probes "
+                  "leaking into a release build."
+              )
+          print(f"submodules: {sorted(found)}")
+          PY
+
       - uses: actions/upload-artifact@v7
         with:
           name: wheel-${{ matrix.artifact }}
