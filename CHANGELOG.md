@@ -13,7 +13,7 @@ its magnitude and a pointer to the tracked repair. **Numerical changes go
 under `Changed` with the magnitude stated** — a spectrum that moves is a
 user-facing change even when no signature did.
 
-## [2.2.0] — 2026-08-29
+## [2.2.0] — 2026-09-06
 
 **Hazma's compiled layer is now Rust.** The twenty Cython extension
 modules are gone, replaced by a single abi3 extension, `hazma._core`,
@@ -37,12 +37,20 @@ carve-out in [`docs/versioning.md`](docs/versioning.md), which is why a
 release that removes two public names is `minor`; check your imports
 against `Removed` before upgrading anyway.
 
+**Two physics repairs move published numbers, and neither comes from the
+port.** The scalar mediator's decay photon spectrum was a factor of 2 low
+in FSR since 2018 and is now correct — photon yield per scalar decay
+rises 1.7%–2.9%, and pointwise by up to a factor of two where FSR is the
+only open channel. The two-body threshold repair changes
+`cross_section_prefactor` near threshold and makes the below-threshold
+region NaN. Both are under `Changed`; **read them before reusing a
+published `ScalarMediator` result.**
+
 **The port itself changes no number by more than roundoff.** Of the 41
 compiled entry points it moved, 27 reproduce 2.1.0 **bit-for-bit** and
 the other 14 move by at most **5.4e-12** relative — see the table under
-`Changed`. The one substantive numerical change in this release is the
-two-body threshold repair, also under `Changed`, and it predates the
-Rust work.
+`Changed`. That table measures the port alone; where an entry point also
+appears in a repair above, the repair is much the larger move.
 
 **Read `Known issues` before upgrading a published analysis.** Porting
 each kernel meant stating what it computes precisely enough to check, and
@@ -273,8 +281,11 @@ its normalization.
 ### Known issues
 
 Twelve defects that hazma 2.1.0 already had, found while porting and
-**reproduced here rather than repaired**. None is new in
-2.2.0 and none changes a number relative to 2.1.0; each is tracked in
+**reproduced here rather than repaired**. None is new in 2.2.0 and none
+changes a number relative to 2.1.0. The FSR repair under `Changed` is
+not one of them — it was found after the port closed and repaired
+through the declared-delta mechanism, which is what lets a fix land
+without dissolving the parity evidence. Each is tracked in
 [`docs/followups/todo/`](docs/followups/todo/) and most are sequenced for
 repair in
 [`projects/parity-pinned-defect-repair/`](projects/parity-pinned-defect-repair/PLAN.md).

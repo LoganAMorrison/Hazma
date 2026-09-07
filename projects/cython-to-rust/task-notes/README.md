@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-03 (created)
 **Project:** cython-to-rust
-**Status:** Complete (2026-08-29, shipped as hazma 2.2.0)
+**Status:** Complete (2026-08-29); ships in hazma 2.2.0, dated 2026-09-06
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** ADR-0001 (accepted), ADR-0002 (accepted 2026-08-04 —
 Phase 03 Tasks 3.2/3.3 no longer gated), ADR-0003 (accepted
@@ -275,7 +275,8 @@ than quoting them: the current state is in the open phase's
 ## Handoff to Next Task
 
 **The project is closed.** All eight phases are Complete, all 33 tasks
-landed, and it shipped as **hazma 2.2.0** on 2026-08-29. There is no next
+landed on 2026-08-29, and the work ships in **hazma 2.2.0**, whose
+CHANGELOG section is dated 2026-09-06. There is no next
 task in this project.
 
 **Read the retrospective, not this file.**
