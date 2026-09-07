@@ -52,8 +52,10 @@ Two facts the graph makes easy to get wrong:
 - `boost_integrate_linear_interp` is reached **only** by the seven
   tabulated photon spectra. It is not on the muon, pion, rho, positron
   or neutrino paths — those use `boost_beta` / `boost_gamma` /
-  `boost_delta_function`, which this project does not touch. So the
-  boost-window repair does *not* move the mediator spectra.
+  `boost_delta_function`, none of which A1 changes. So the
+  boost-window repair does *not* move the mediator spectra. B5 does touch
+  `boost_delta_function`, but by removing one of its call sites rather
+  than by changing the function, so the two repairs stay disjoint.
 - The rho spectra reach the muon kernel *through* the charged pion — and
   that is **not** enough to put them in A2's radius. This bullet used to
   conclude that it was, and Task 2 measured otherwise: A2's defect sits
@@ -182,6 +184,26 @@ half the repaired kernel's FSR-only spectrum. Declared in
 `test/parity/deltas.py`, which landed with the repair rather than under
 Task 1.
 
+### B5 — the charged pion's doubled neutrino line (1 case)
+
+`spectra.neutrino.charged_pion` — the `near_rest`, `boosted_mild` and
+`boosted_strong` blocks, both value arrays, at the 215 of the case's
+4,305 positions where the boosted `π → e ν_e` line's window straddles
+`ENU_E_PI_RF` (`test/parity/deltas.py`, `MOVED`). **Measured by Task
+10a**, by capturing every block twice — once from a build carrying the
+defect, once from the repaired build — so the pre-existing platform drift
+between the stored corpus and this tree does not enter. Only the electron
+row moves, and only downward; the muon and tau rows are bit-identical.
+
+`rest` and `rest_plus_eps` do not move, for two different reasons: at
+`E_π = m_π` the kernel takes a branch that drops both prompt lines, and
+one epsilon above it `β` is small enough that no grid point's boost
+window straddles the line at all. Found and filed after this roster was
+drawn ([`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md)),
+which is also why it is disjoint from everything else here: the pion's
+neutrino path reaches `boost_delta_function` and `super::neutrino_muon`,
+neither of which any other roster entry touches.
+
 ### The defects, and which group each is in
 
 Group A still has a live Cython twin and is on the clock for its oracle
@@ -197,20 +219,22 @@ capture; Group B does not, and has no ordering constraint at all.
 | B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
 | B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs` |
 | B4 | Scalar decay spectrum's FSR coefficients are half size | [`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md) | deleted, Task 6.2 | `rust/src/kernels/scalar_decay_photon.rs` — **repaired** |
+| B5 | Charged pion's prompt `π → e ν` neutrino line is added twice | [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md) | deleted, Task 4.6 | `rust/src/kernels/neutrino_pion.rs` — **repaired** |
 
 ## Coverage arithmetic
 
 The corpus has 41 cases. The rows above name
-7 + 1 + 6 + 6 + 1 + 1 + 2 + 1 = **25 case slots** across eight defects,
-but four of the eight sets are wholly contained in another — derived,
+7 + 1 + 6 + 6 + 1 + 1 + 2 + 1 + 1 = **26 case slots** across nine defects,
+but four of the nine sets are wholly contained in another — derived,
 not eyeballed:
 
 ```text
-B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3   B4 ⊆ A3     and A1, A2, A3, A4 are pairwise disjoint
+B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3   B4 ⊆ A3
+A1, A2, A3, A4 are pairwise disjoint, and B5 is disjoint from all of them
 ```
 
-So the union is exactly `|A1| + |A2| + |A3| + |A4|` = 7 + 1 + 6 + 6 =
-**20**. Two consequences worth carrying into the tasks. A2 and A3 are
+So the union is `|A1| + |A2| + |A3| + |A4| + |B5|` = 7 + 1 + 6 + 6 + 1 =
+**21**. Two consequences worth carrying into the tasks. A2 and A3 are
 now *disjoint* — A2 reaches only `spectra.photon.muon`, A3 reaches
 exactly the six cases A2 was predicted to share with it — so Task 8
 opens six cases of its own rather than adding positions to ones Task 7
@@ -223,19 +247,24 @@ channel, so Task 8 either proves the two position sets disjoint or
 folds B4's declaration into a composite. And A4 is disjoint from
 everything else, which is what makes Task 10 safe to run in parallel.
 
-Untouched: **21** — the 18 `cross_sections.*`, the 2 `spectra.neutrino.*`
-(no defect on their path; they use `boost_delta_function`, not the
-interpolating integral), and `spectra.photon.neutral_pion` (the π⁰ → γγ
-box reaches neither the muon kernel nor the boost integral). 20 + 21 = 41.
+Untouched: **20** — the 18 `cross_sections.*`, `spectra.neutrino.muon`
+(the muon's own neutrino spectrum has no defect on its path), and
+`spectra.photon.neutral_pion` (the π⁰ → γγ box reaches neither the muon
+kernel nor the boost integral). 21 + 20 = 41. Counts re-derived with the
+command above at Task 10a: 41 cases, 18 of them `cross_sections.*`.
 
 That arithmetic is the cheapest check on this file, and it has now done
-its job twice. Task 2's measurement cut A2 from 7 cases to 1, the slot
-count fell from 30 to 24 and one containment (`A3 ⊆ A2`) inverted into a
-disjointness — but the union stayed at 20, because the six cases A2 lost
-are exactly the six A3 keeps. Then B4 joined the roster with one case
+its job three times. Task 2's measurement cut A2 from 7 cases to 1, the
+slot count fell from 30 to 24 and one containment (`A3 ⊆ A2`) inverted
+into a disjointness — but the union stayed at 20, because the six cases A2
+lost are exactly the six A3 keeps. Then B4 joined the roster with one case
 that was already inside A3's set, so the slot count rose from 24 to 25
-and the union stayed at 20 again. Redo the sum after any measured change
-and make it come out to 41 again rather than patching one cell.
+and the union stayed at 20 again. Then B5 joined with one case that was
+in nobody's set, and this time the union did move — 20 to 21 — and the
+untouched count fell from 21 to 20, taking with it this section's own
+claim that *neither* `spectra.neutrino.*` case had a defect on its path.
+Redo the sum after any measured change and make it come out to 41 again
+rather than patching one cell.
 
 ## The deletion schedule this radius has to beat
 
