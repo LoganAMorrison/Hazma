@@ -25,7 +25,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | --- | --- | --- | --- |
 | [Citation checker skips deleted in-repo files](todo/citation-checker-skips-deleted-inrepo-files.md) | 2026-08-05 | PR #42 review | cross-cutting |
 | [remaining `sqrt(kallen_lambda(...))` call sites](todo/kallen-under-sqrt-remaining-call-sites.md) | 2026-08-05 | carved out of the `cross_section_prefactor` fix | cross-cutting |
-| [redundant `hazma.utils` helpers kept out of the public surface](todo/utils-public-surface-redundant-helpers.md) | 2026-08-05 | docs audit of `utils.rst` | cross-cutting |
+| [`kinematically_accessable` kept out of the public surface](todo/utils-public-surface-redundant-helpers.md) | 2026-08-05 | docs audit of `utils.rst` | cross-cutting |
 | [`preflight.sh` isort/ruff gates are red on the trunk](todo/preflight-isort-ruff-red-on-trunk.md) | 2026-08-05 | cython-to-rust Task 0.5 | cross-cutting |
 | [model spectrum dicts reject scalar energies](todo/model-spectra-reject-scalar-energies.md) | 2026-08-08 | cython-to-rust Task 1.4 | cross-cutting |
 | [the boost integral mis-covers its window at both ends](todo/boost-integral-drops-last-interior-cell.md) | 2026-08-10 | cython-to-rust Task 3.4 | cross-cutting |
@@ -45,6 +45,10 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [mediator positron line misses the electron velocity](todo/mediator-positron-line-misses-the-electron-velocity.md) | 2026-08-27 | cython-to-rust Task 6.3 | cross-cutting |
 | [moved follow-ups leave dangling inbound paths](todo/moved-followups-leave-dangling-inbound-paths.md) | 2026-08-27 | PR #81 review | cross-cutting |
 | [four tracked non-source files under `hazma/`](todo/tracked-non-source-files-under-hazma.md) | 2026-08-29 | cython-to-rust Task 7.3 | commit |
+| [consolidate the divergent constants tables](todo/consolidate-the-two-constants-tables.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [free-threaded `abi3t` wheels](todo/free-threaded-abi3t-wheels.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [the relic-density Boltzmann solve in Rust](todo/relic-density-odes-in-rust.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
+| [wheels for linux-aarch64 and Windows](todo/wheels-for-aarch64-and-windows.md) | 2026-08-29 | cython-to-rust retrospective §5 | commit |
 
 ## Promoted / Done / Pruned
 

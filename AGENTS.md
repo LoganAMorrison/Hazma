@@ -173,9 +173,11 @@ Rust toolchain for you.
   gate** (CI's ruff step passes `--exclude` for both). Do not treat code
   there as a pattern to copy, and do not import from `experimental/` in
   the library.
-- **`hazma/deprecated/` stays importable.** Removing or changing anything
-  there is a user-facing break — see `docs/versioning.md`. The package is
-  empty today (its last module went in cython-to-rust Task 0.2), so the
+- **`hazma/deprecated/` stays importable.** Changing anything there is a
+  user-facing break, and so is removing it unless a released version
+  warned on import and named the replacement — the reachability carve-out
+  in `docs/versioning.md`. The package is empty today (its last module
+  went in cython-to-rust Task 0.2, having warned since 2.1.0), so the
   rule binds the next module parked there.
 - **No `breakpoint()`, `pdb`, or stray `print()` in library code.** Use
   the returned value or a logger.

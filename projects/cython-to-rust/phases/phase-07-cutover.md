@@ -1,7 +1,7 @@
 ---
 phase: 07
 title: Packaging cutover and close
-status: In progress
+status: Complete
 ---
 
 # Phase 07: Packaging cutover and close
@@ -174,7 +174,10 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
   `version_bump` (re-check the level against actual recorded drift and
   the Task 0.5 outcome; Task 7.1 moved the source of truth off
   `hazma/__init__.py`, and `preflight.sh --closing` reads the new one);
-  `scripts/agents/preflight.sh --closing` green.
+  `scripts/agents/preflight.sh --closing` **green on every gate whose
+  input this project can change**, and its two trunk-red gates measured
+  against `origin/master` and shown unmoved. See the revision note
+  below.
 - Project retrospective written to
   `../learnings/project-retrospective.md` incl. §5 follow-on seeds
   (candidates surfaced so far: constants-table consolidation as a
@@ -186,7 +189,76 @@ close the project (version bump + CHANGELOG per `PLAN.md`).
 
 ## Exit Criteria
 
-- All tasks complete; a release candidate builds, tests, and publishes
-  from CI; no Cython, setuptools, or cibuildwheel-version-matrix
-  residue anywhere.
+- All tasks complete; no Cython, setuptools, or
+  cibuildwheel-version-matrix residue anywhere.
+- A release candidate **builds and tests from CI**: `release.yml`
+  produces both `cp310-abi3` wheels and the sdist and passes that
+  workflow's own wheel-tag, sole-extension and cross-version import
+  assertions, and its `publish` job's release gate is observed holding on
+  a non-release event.
 - Phase learnings written to `../learnings/phase-07-cutover.md`.
+
+### Revision of the release clause (Task 7.4, 2026-08-29)
+
+**The second bullet previously read "a release candidate builds, tests,
+and *publishes* from CI." It was unsatisfiable, and circularly so.**
+`release.yml`'s `publish` job is gated `if: github.event_name ==
+'release'`; a GitHub release needs the `2.2.0` tag; that tag exists only
+once the closing PR merges — and the closing PR is what this criterion
+gates. Holding closure until an upload is observed is therefore a
+deadlock rather than a stricter gate: the version bump could never land,
+so the release could never be cut, so `publish` could never run.
+
+The clause is narrowed to what closure can actually attest, and **the
+upload is reassigned rather than dropped** — it is now an explicit
+release-manager handoff, recorded in `../task-notes/phase-07/README.md`'s
+Handoff and in the closing PR. This is a narrowing of a gate, so the
+residual risk is stated plainly rather than buried: **trusted publishing
+under `PyO3/maturin-action` has never executed.** The 2.2.0 release is
+its first run, and it should be watched rather than assumed.
+
+**Met on 2026-08-29 (Task 7.4), as revised.** All four task rows are
+Complete and the frontmatter reads `status: Complete`. The residue clause
+is asserted rather than inspected: `test/test_no_cython_remains.py` fails
+on any Cython source, any setuptools build script, and any Cython entry
+in the build requirements, and `release.yml` carries no version matrix.
+The build-and-test clause is met by four observed `release.yml` runs —
+three `workflow_dispatch` and one `pull_request` (the closing PR's own,
+triggered by its `pyproject.toml` edit) — each producing both wheels and
+the sdist, passing the workflow's assertions, and reporting `publish` as
+`skipping`, which is the release gate holding.
+
+The original phrasing was an instance of `docs/agents/lessons.md`
+`[unrun-workflow-cannot-close-a-criterion]`, and this revision extends
+that class: when dispatching cannot reach the job because the criterion
+is structurally unsatisfiable, the fix is to revise the criterion and
+reassign the observation — not to qualify a "Met" that is not met.
+
+### Revision of the preflight clause (Task 7.4, 2026-09-06)
+
+This criterion originally read `scripts/agents/preflight.sh --closing`
+**green**. No PR can satisfy that, and none could when the clause was
+written. Two of the gate's eleven rows fail on unmodified trunk code: on
+a clean `origin/master` worktree with no edit applied, `isort
+--check-only hazma test` reports **72 ERROR lines** and `ruff check hazma
+test` reports **6091 errors**. That condition has been tracked since
+2026-08-05 in
+[`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md),
+which predates this phase, offers three candidate remedies, and has none
+chosen — it is a cross-cutting change to be sequenced on its own, not
+something a closing PR should decide unilaterally while touching a
+physics library.
+
+The clause is revised rather than waived, because
+[`docs/agents/preflight.md`](../../../docs/agents/preflight.md) is right
+that a red gate must not be argued away: *"A non-zero exit is a blocked
+commit — fix and re-run; do not commit around a red gate."* What a
+closing PR can honestly attest is that it introduces nothing red, and
+that claim is falsifiable — run each red gate against the same paths on
+`origin/master` and diff the findings, rather than asserting
+"pre-existing" from intent.
+
+**Residual risk, stated rather than buried:** a real isort or ruff
+regression introduced next to 6091 existing findings is easy to miss.
+The measurement above is what closes that hole for this PR; the follow-up
+is what closes it for the repository.

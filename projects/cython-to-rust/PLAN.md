@@ -1,7 +1,7 @@
 ---
-status: In Progress
+status: Complete
 phased: true
-version_bump: major
+version_bump: minor
 deliverable: Hazma's compiled layer rebuilt in Rust (PyO3, one abi3 `hazma._core` extension, maturin-built), with zero Cython remaining and a permanent parity-test corpus
 created: 2026-08-03
 ---
@@ -49,7 +49,9 @@ deprecation debt. Full analysis: the August 2026 assessment
   form factors, relic-density ODEs, spline utilities) — they stay on
   NumPy/SciPy.
 - Windows / linux-aarch64 wheel support (recorded as a cheap follow-up;
-  Phase 07 Task 7.2 makes the call explicitly).
+  Phase 07 Task 7.2 makes the call explicitly, and Task 7.4 filed it as
+  [`docs/followups/todo/wheels-for-aarch64-and-windows.md`](../../docs/followups/todo/wheels-for-aarch64-and-windows.md)
+  so it stays in the live backlog now that this plan is closed).
 - Performance work beyond what parity-preserving redesign yields
   (measured, not chased — `rules.md` rule 12).
 
@@ -62,11 +64,15 @@ quad-backed functions and tighten after measurement (closed-form
 kernels: ≤1e-13); (2) Cython-`assert` edge guards become unconditional
 raises (behavior tightening at invalid inputs only).
 
-`version_bump: major` is driven by API removals, not by numbers:
-Phase 00 deletes `hazma/deprecated/rambo.py` (any removal from
-`hazma/deprecated/` is `major` per `docs/versioning.md` and
-`AGENTS.md`) and, per ADR-0003 (accepted), removes the
-broken-on-import `hazma.gamma_ray` module. The running numerical
+`version_bump: minor` is driven by the two new public functions and the
+two-body threshold repair, not by the port. Phase 00's two API removals
+do not raise it: `hazma/deprecated/rambo.py` shipped an import-time
+warning naming `hazma.phase_space`, and `hazma.gamma_ray` was
+broken-on-import in every released tag (ADR-0003, accepted), so both
+fall under the reachability carve-out in `docs/versioning.md`. This
+project was planned as `major` under the rule as it then stood, which
+had no such carve-out; the lowering and the amendment are recorded
+together in `task-notes/README.md`. The running numerical
 record lives in `task-notes/numerical-impact.md` (moved out of
 `task-notes/README.md`'s "Numerical impact so far" section on
 2026-08-21; that heading now points there); the closing CHANGELOG
@@ -99,7 +105,7 @@ total landed at 21–32 days across ~33 tasks.
 | 04 | Spectra kernels | [`phases/phase-04-spectra-kernels.md`](phases/phase-04-spectra-kernels.md) | 4–6 | **Complete (2026-08-20)** — 16 entry points swapped, `hazma/spectra/` holds no Cython `def`; seven live 2.1.0 defects surfaced and filed; five budgets tightened, none widened ([learnings](learnings/phase-04-spectra-kernels.md)) |
 | 05 | Mediator cross sections | [`phases/phase-05-mediator-cross-sections.md`](phases/phase-05-mediator-cross-sections.md) | 2–3 | **Complete (2026-08-21)** — 18 defs swapped, 2 dead exports dropped, both `_c_*` `.pyx` deleted; 16 of 18 bit-equal, relic density pinned end-to-end and 1.5×–1.9× faster ([learnings](learnings/phase-05-mediator-cross-sections.md)) |
 | 06 | Mediator spectra | [`phases/phase-06-mediator-spectra.md`](phases/phase-06-mediator-spectra.md) | 3–4 | **Complete (2026-08-27)** — 7 entry points swapped on a table-struct redesign, then the four capi survivors and the `_utils` headers deleted; **zero `.pyx`/`.pxd` remain** and `setup.py` builds only `hazma._core`; seven budgets tightened, none widened ([learnings](learnings/phase-06-mediator-spectra.md)) |
-| 07 | Cutover + close | [`phases/phase-07-cutover.md`](phases/phase-07-cutover.md) | 2–3 | maturin backend, 2 abi3 wheels, docs sweep, version bump + CHANGELOG |
+| 07 | Cutover + close | [`phases/phase-07-cutover.md`](phases/phase-07-cutover.md) | 2–3 | **Complete (2026-08-29)** — maturin is the whole build and the whole release pipeline (2 `cp310-abi3` wheels + sdist), no live instruction doc states a Cython fact, and the project ships as **2.2.0** ([learnings](learnings/phase-07-cutover.md), [retrospective](learnings/project-retrospective.md)) |
 
 Ordering constraints: 00 → 01 → 02 → 03 → {04, 05} → 06 → 07. Phase 05
 shares no files with 04 and may run in parallel with it. Within 04 the

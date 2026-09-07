@@ -1,14 +1,14 @@
 """Tests for the pure-Python kinematic helpers in :mod:`hazma.utils`.
 
-These cover the two functions that took over from the deleted Cython module
+``cross_section_prefactor`` took over from the deleted Cython module
 ``hazma.field_theory_helper_functions.common_functions`` in the
-Cython-to-Rust migration (project ``cython-to-rust``, Task 0.3):
-``minkowski_dot`` (relocated here) and ``cross_section_prefactor`` (already
-present; its two callers at the time, ``hazma.deprecated.rambo`` and
-``hazma.gamma_ray``, were repointed here before Task 0.2 deleted both),
-plus ``two_body_momentum``, the numerically stable momentum both
-``cross_section_prefactor`` and the two-body phase-space integrators are
-built on.
+Cython-to-Rust migration (project ``cython-to-rust``, Task 0.3); its two
+callers at the time, ``hazma.deprecated.rambo`` and ``hazma.gamma_ray``,
+were repointed here before Task 0.2 deleted both. ``two_body_momentum`` is
+the numerically stable momentum both it and the two-body phase-space
+integrators are built on. ``ldot`` is covered here too — these are its only
+direct tests, and they pin the metric signature every squared matrix
+element in the library depends on.
 
 The pinned tolerances below are chosen from the expected floating-point
 error of each closed form, not from what makes the assertion pass; each
@@ -31,7 +31,6 @@ from hazma.utils import (
     cross_section_prefactor,
     kallen_lambda,
     ldot,
-    minkowski_dot,
     two_body_momentum,
 )
 
@@ -256,30 +255,30 @@ def test_two_body_momentum_broadcasts_over_masses() -> None:
 
 
 # ===================================================================
-# ---- minkowski_dot ------------------------------------------------
+# ---- ldot ---------------------------------------------------------
 # ===================================================================
 
 
-def test_minkowski_dot_sign_convention() -> None:
+def test_ldot_sign_convention() -> None:
     """West-coast (+,-,-,-) metric, pinned on an exactly-representable case."""
     fv1 = np.array([7.0, 1.0, 2.0, 3.0])
     fv2 = np.array([5.0, 4.0, 8.0, 16.0])
     # 7*5 - 1*4 - 2*8 - 3*16 = 35 - 4 - 16 - 48 = -33
-    assert minkowski_dot(fv1, fv2) == -33.0  # noqa: PLR2004 -- the pinned value
+    assert ldot(fv1, fv2) == -33.0  # noqa: PLR2004 -- the pinned value
 
 
-def test_minkowski_dot_is_not_euclidean() -> None:
+def test_ldot_is_not_euclidean() -> None:
     """Guard against a (+,+,+,+) regression.
 
     The sign test above can miss this on its own if someone flips both the
     metric and the operand order, so pin a self-product too.
     """
     fv = np.array([2.0, 1.0, 0.0, 0.0])
-    assert minkowski_dot(fv, fv) == 3.0  # noqa: PLR2004 -- 4 - 1, not 4 + 1
+    assert ldot(fv, fv) == 3.0  # noqa: PLR2004 -- 4 - 1, not 4 + 1
 
 
 @pytest.mark.parametrize("mass", [electron_mass, muon_mass, charged_pion_mass])
-def test_minkowski_dot_on_shell_invariant(mass: float) -> None:
+def test_ldot_on_shell_invariant(mass: float) -> None:
     """Check p.p == m^2 for an on-shell four-momentum.
 
     Tolerance: E^2 - |p|^2 is a cancellation of two numbers of size E^2, so
@@ -291,25 +290,7 @@ def test_minkowski_dot_on_shell_invariant(mass: float) -> None:
     p3 = mass * np.array([1.0, 2.0, 2.0])  # |p| = 3 * mass
     energy = np.sqrt(mass**2 + p3 @ p3)
     fv = np.array([energy, *p3])
-    assert minkowski_dot(fv, fv) == pytest.approx(mass**2, rel=1e-12)
-
-
-def test_minkowski_dot_matches_ldot() -> None:
-    """Agree bit-for-bit with `ldot`, the array-oriented twin.
-
-    Both evaluate p0 - p1 - p2 - p3 in that order, so on a single
-    four-vector there is no room for a difference.
-    """
-    rng = np.random.default_rng(20260804)
-    for _ in range(100):
-        fv1 = rng.normal(scale=100.0, size=4)
-        fv2 = rng.normal(scale=100.0, size=4)
-        assert minkowski_dot(fv1, fv2) == ldot(fv1, fv2)
-
-
-def test_minkowski_dot_accepts_lists() -> None:
-    """Accept plain sequences; the implementation is index-based."""
-    assert minkowski_dot([1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]) == 1.0
+    assert ldot(fv, fv) == pytest.approx(mass**2, rel=1e-12)
 
 
 # ===================================================================

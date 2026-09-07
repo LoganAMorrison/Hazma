@@ -854,6 +854,49 @@ Cython ones.
   pair's 4,180x, the ceiling here is the boost quadrature itself rather
   than the table build, which the two Rust rows price at ~0.5 ms.
 
-(Per-function drift lines land here as Phase 04–06 swaps merge; the
-Phase 07 CHANGELOG is assembled from this section — do not reconstruct
-it from memory.)
+## Task 7.4 — project close (2026-08-29)
+
+**No public value changes.** The diff is markdown, the version line, and
+the removal of `hazma.utils.minkowski_dot`:
+
+```sh
+git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
+    '*.csv' '*.dat' '*.npy' '*.toml'
+# -> pyproject.toml                       (version = "2.1.0" -> "2.2.0")
+#    hazma/utils.py                       (minkowski_dot deleted)
+#    hazma/experimental/.../avm_msqrd.py  (repointed at ldot)
+#    test/test_utils.py                   (tests retargeted at ldot)
+```
+
+That removal is unobservable from outside the repository: the name is in
+**no released tag** (checked against 2.0.2 and 2.1.0), so no user could
+have imported it. Its two consumers move to `ldot`, which is unchanged —
+each passed a shape-`(4,)` `ndarray`, which `ldot` already accepted — and
+both squared matrix elements in `avm_msqrd.py` reproduce the deleted
+implementation **bit-for-bit** over 200 random momentum draws. Nothing
+else reachable changes, so no grid evaluation applies. The full suite is
+green either side — `pytest -q` is **2246 passed, 15 skipped, 12 subtests
+passed** (two fewer than before the removal: the two tests that pinned
+the wrapper's own contract rather than the physics), which includes
+`test/parity` at its declared budgets on the capturing platform, and
+`cargo test --no-default-features` is **261 passed**.
+
+One user-visible value does move, and it is not numerical:
+`hazma.VERSION` and `hazma.__version__` read back **2.2.0** instead of
+2.1.0, because Task 7.1 made `pyproject.toml`'s `[project] version` the
+source of truth and the attributes resolve it through
+`importlib.metadata`. That resolution is against the *installed*
+distribution, so an editable tree keeps reporting the old number until
+`pip install -e .` is re-run — `preflight.sh`'s import-smoke row said
+`version 2.1.0` on a tree whose `pyproject.toml` already said 2.2.0.
+
+**This closes the log.** Its aggregate is the `## [2.2.0]` section of
+`CHANGELOG.md`: 27 of the 41 entry points bit-for-bit identical to
+2.1.0 and the other 14 tabulated with their worst relative shift, the
+largest being `scalar_mediator_decay_spectrum` at **5.3327e-12**. The
+bump is carried by the two added public functions and Task 0.3's
+threshold repair, not by any of those figures. The re-check `../PLAN.md`
+§"Closing this project" asks for was run and **lowered the declared
+`major` to `minor`**: the `major` rested only on Phase 00's two API
+removals, and neither can break working code, so `docs/versioning.md`
+gained a reachability carve-out covering both.

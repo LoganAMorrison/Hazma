@@ -527,6 +527,26 @@ cites a real PR.
   skipped, and the assertion step reported `5 wheel(s) carry
   hazma/_core.abi3.so` per OS).
 
+- **When the dispatch cannot reach the job, revise the criterion.** A
+  criterion can be *structurally* unsatisfiable rather than merely
+  unmeasured, and then dispatching does not help. PR #86 (cython-to-rust
+  Task 7.4, the closing PR) inherited "a release candidate builds, tests,
+  and **publishes** from CI". `release.yml`'s `publish` job is gated
+  `if: github.event_name == 'release'`; a release needs the `2.2.0` tag;
+  that tag exists only once the closing PR merges — so the criterion
+  gated on an event that satisfying it would first have to enable.
+  Holding closure is a deadlock, not a stricter gate. The first attempt
+  split the difference and marked the phase "Met … with one clause
+  qualified" while the same paragraph documented the clause as unmet,
+  which review blocked. The fix was to revise the criterion to what
+  closure can attest (both wheels and the sdist built, the workflow's own
+  assertions passed, the `publish` gate observed holding on a non-release
+  event), reassign the upload to the release manager rather than drop it,
+  and state the residual risk in place — trusted publishing under
+  `maturin-action` had still never executed. **Test for this shape: ask
+  what event satisfying the criterion requires, and whether the work the
+  criterion gates is what produces that event.**
+
 ### marker-count-vs-outcome-count
 
 - [marker-count-vs-outcome-count] A count of *declaration sites* and a
@@ -1077,3 +1097,71 @@ in `task-notes/README.md`, which is mostly record and yet carries a live
 tense about a specific run is a record; an imperative or a present-tense
 requirement is an instruction wherever it sits. Location is the prior, not the
 answer, and the skip that hides a defect is the tree-shaped one.
+
+### pre-existing-failure-asserted-not-measured
+
+A closing PR recorded its preflight run with two FAIL rows annotated
+"pre-existing", and justified that from the shape of the diff: `git diff
+origin/master --name-only -- '*.py' | wc -l` was `0`, so the linters
+necessarily read bytes identical to the trunk. Sound at the time. Two
+commits later the PR deleted a function and the diff gained four `.py`
+files, and the justification became false while the annotation stayed.
+
+Review also found the criterion those rows answered to —
+`scripts/agents/preflight.sh --closing` **green** — mapped in the task
+note onto "all rows PASS except the two documented trunk reds". That is
+the same defect as claiming a criterion is met in a paragraph that
+documents it as unmet, and `docs/agents/preflight.md` had already
+forbidden the move: *"do not commit around a red gate."*
+
+What exposed it, and what the record should have carried from the start:
+
+```sh
+# Is the gate red without me? Untouched base ref, no edit applied.
+git worktree add -f /tmp/base origin/master --detach
+isort --check-only hazma test | grep -c ERROR   # -> 72
+ruff check hazma test                           # -> Found 6091 errors.
+
+# Are MY files red beyond the base? Same paths, both trees, text diffed.
+ruff check --output-format=concise <tree> \
+  | sed 's/^[^:]*:[0-9]*:[0-9]*: //' | sort > /tmp/findings
+diff /tmp/base_findings /tmp/findings            # -> identical, 50 each
+```
+
+One trap in the second block is worth the extra line: **both sides must
+be real worktrees.** Copying the changed files into a scratch directory
+drops `pyproject.toml`, so ruff falls back to its default rules — 11
+findings where the configured set reports 117. The diff then shows a
+hundred "new" findings that do not exist. Use `git worktree add`, not
+`git show > /tmp/...`.
+
+The first block showed the criterion had been unmeetable since weeks
+before the phase was written — a tracked condition with three candidate
+remedies and none chosen — so it was revised to what a PR can attest
+rather than waived. The second is the claim that actually belongs in a
+task note, because it survives the diff growing.
+
+### removal-sweep-filtered-by-extension
+
+Deleting `hazma.utils.minkowski_dot` began with a consumer sweep:
+
+```sh
+grep -rn "minkowski_dot" --include='*.py' --include='*.rst' --include='*.pyi' .
+```
+
+Two consumers came back, both were repointed at `ldot`, and the task
+note recorded "the two consumers" and "every call site passes a
+shape-(4,) ndarray". Review found a third: a tracked `.ipynb` whose
+import now raised `ImportError`. The extension list had been written
+from memory of where Python lives, and notebooks were not on it.
+
+`git grep -l` with no filter is the whole fix — it costs nothing and
+cannot omit a file type you forgot to think of:
+
+```sh
+git grep -l "minkowski_dot"      # every tracked file, any extension
+```
+
+The cost was not the missed edit, which was one line in a notebook that
+was already dead on other removed imports. It was that two confident
+quantified claims went into the durable record wrong.
