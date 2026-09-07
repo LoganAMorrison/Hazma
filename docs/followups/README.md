@@ -48,6 +48,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [free-threaded `abi3t` wheels](todo/free-threaded-abi3t-wheels.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
 | [the relic-density Boltzmann solve in Rust](todo/relic-density-odes-in-rust.md) | 2026-08-29 | cython-to-rust retrospective §5 | cross-cutting |
 | [wheels for linux-aarch64 and Windows](todo/wheels-for-aarch64-and-windows.md) | 2026-08-29 | cython-to-rust retrospective §5 | commit |
+| [the charged pion's neutrino continuum loses its quadrature support](todo/neutrino-pion-continuum-loses-its-quadrature-support.md) | 2026-09-06 | parity-pinned-defect-repair Task 10a | cross-cutting |
 | [`[tool.ruff]` uses the deprecated top-level keys](todo/ruff-config-uses-deprecated-top-level-keys.md) | 2026-09-06 | carved out of the isort/ruff gate repair | cross-cutting |
 | [`scripts/` is outside every format and lint gate](todo/scripts-are-outside-the-format-and-lint-gates.md) | 2026-09-06 | surfaced by the isort/ruff gate repair | cross-cutting |
 

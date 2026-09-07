@@ -11,7 +11,7 @@
 
 ## Objective
 
-Track cumulative context and live task status across all twelve tasks so
+Track cumulative context and live task status across all thirteen tasks so
 any agent picking up work mid-project has the facts, decisions and open
 questions needed to start without re-discovering them.
 
@@ -32,7 +32,8 @@ section tracks live *status*.
 | 8 | Repair A3 — charged-pion forward cone | 7 | Not started | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
-| 11 | Reconcile the superseded sequencing prose | 4–10 | Not started | `task-11-prose-reconciliation.md` |
+| 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
+| 11 | Reconcile the superseded sequencing prose | 4–10a | Not started | `task-11-prose-reconciliation.md` |
 | 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
 
 ```text
@@ -40,6 +41,7 @@ section tracks live *status*.
     │        │                │
     ├──► 4 ──┴────────────────┼──► 11 ──► 12
     │        └──► 6 ──────────┤
+    ├──► 10a ─────────────────┤
 2 ──┼──► 7 ──► 8 ──► 9 ───────┤
     └──► 10 ──────────────────┘
 ```
@@ -52,10 +54,11 @@ this project is time-critical.
 
 ## Exit Criteria
 
-- All twelve tasks complete; all eight defects repaired — the seven
+- All thirteen tasks complete; all nine defects repaired — the eight
   follow-ups under `docs/followups/todo/` moved to `docs/followups/done/`
   with inbound links repointed and the revision pinned (B4's already
-  lives there).
+  lives there; B5's is repaired but deliberately still in `todo/`, so the
+  repoint sweep happens once).
 - No live document still sequences any of the seven original repairs
   "after Phase 06 Task 6.4".
 - `git diff --stat -- test/parity/data` empty across the whole project.
@@ -114,6 +117,32 @@ this project is time-critical.
   This bullet named A2 and A3 as the first pair until Task 2 measured
   A2's radius at a single case that is neither rho — its defect is behind
   an at-rest guard no composed caller reaches. A2 now overlaps nothing.
+- **B5 is disjoint from everything else, and reaches one case.** The
+  charged pion's neutrino path uses `boost_delta_function` and
+  `super::neutrino_muon`; no other roster entry touches either. Task 10a
+  measured 215 of the 4,305 pinned values of
+  `spectra.neutrino.charged_pion` moving, in three of its five blocks and
+  in the electron row only. That retires
+  `../references/defect-blast-radius.md`'s claim that neither
+  `spectra.neutrino.*` case had a defect on its path.
+- **Measure a repair against a build carrying the defect, not against the
+  stored corpus.** Task 10a's live-vs-stored comparison reported 556
+  moved values across four blocks including the muon row; the repair
+  moves 215, in three blocks, in one row. The rest is the ulp-level
+  platform drift the case budget already absorbs (`numpy 2.5.1 → 2.5.3`,
+  `scipy 1.18.0 → 1.18.1`, a macOS point release). Capture the blocks
+  twice — defective build, then repaired build — and diff those.
+- **A declared position at exactly 0.500000 is a second defect, not a
+  rounding.** B5's factor-of-two positions are where the muon-decay
+  continuum's own quadrature returns a hard zero: its integrand's support
+  ends at 69.7835 MeV and the boost window runs hundreds of times wider,
+  so every QUADPACK abscissa falls outside it — A3's failure mode, in the
+  neutrino kernel. `rust/src/kernels/positron_pion.rs:163-164` clips both
+  ends of the same kind of window and is the precedent for the fix. Filed
+  as
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md);
+  it moves published numbers by three to four decades on a band, far more
+  than B5 itself.
 - **Lesson classes this project is most exposed to**, from
   `docs/agents/lessons.md`: `[exemption-wider-than-its-mechanism]` (a
   declaration written wider than the mechanism that earned it),
@@ -129,7 +158,8 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**One public value has moved: B4, in PR #87** (bullet below). Task 2
+**Two public values have moved: B4, in PR #87, and B5, in Task 10a**
+(bullets below). Task 2
 shipped no library behavior —
 its four `.pyx` patches exist only inside the capture and are reverted.
 What it produced is the *measurement* each of Tasks 4, 7, 8 and 10 will
@@ -145,6 +175,7 @@ grids:
 | A2 muon endpoint | 7 | **1** of 7 predicted | 4 | n/a (`0.0` → negative) | down; all four values become negative |
 | A3 pion cone | 8 | 6 of 6 predicted | 6359 | 7.77 | both |
 | A4 positron norm | 10 | 6 of 6 predicted | 21,975 | `0.000374207` uniformly | up, at every position |
+| B5 pion neutrino line | 10a — **landed** | 1 of 1 | 215 | exactly 0.5 | down, at every position |
 
 Three things in there are corrections to the plan rather than
 confirmations of it, and Tasks 4, 7 and 8 inherit them: A1's sign is not
@@ -167,6 +198,20 @@ are recorded rather than re-derivable:
   photons per decay at `E_π` = 1000/1396/5000 MeV.
 - **A4**: the Michel spectrum integrates to 1.000000000000 (one ulp) at
   rest and at both boosts; shipped, 0.999625933330.
+- **B5** (repaired in Task 10a): `hazma.spectra.dnde_neutrino_charged_pion`
+  loses one `BR(π → e ν_e) = 1.230e-4` from its electron-neutrino row per
+  pion, 0.0123% of the row integrated. The muon and tau rows are
+  bit-identical, `spectra.neutrino.muon` and the nine tabulated
+  `dnde_neutrino_*` do not move, and `dnde_neutrino` moves only for final
+  states containing a charged pion. Two grids, both taken from a build
+  carrying the defect against the repaired one. On
+  `np.geomspace(1e-4, 1e5, 2001)` at `E_π` = 200, 400, 1000, 5000 MeV the
+  median pointwise drop is 4.7e-5 to 1.1e-4 and the maximum is exactly
+  `0.500000000000`. On the corpus grids it moves 215 of the case's 4,305
+  pinned values, from 4.716e-5 up to that same `0.500000000000` at 14 of
+  them — the positions where the muon-decay continuum's quadrature returns
+  zero. Declared relation held to 3e-12 (measured 1.494e-15).
+  Details in `task-10a-neutrino-pion-line.md`.
 - **B4** (repaired in PR #87, outside the task sequence): the scalar
   decay kernel's FSR-only spectrum at rest was 0.5000000000 × the
   annihilation-side `dnde_xx_to_s_to_ffg` / `dnde_xx_to_s_to_pipig` in
@@ -182,7 +227,10 @@ are recorded rather than re-derivable:
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
 rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
-it does not reconstruct it.
+it does not reconstruct it. B4 and B5 have each written their own
+`CHANGELOG.md` entry already, B5's under `[Unreleased]` because 2.2.0 is
+released; Task 12 renames that heading rather than re-deriving it, and
+`preflight.sh --closing` greps for `## [<new version>]`, so it must.
 
 ## Decisions and Implementation Notes
 
@@ -197,6 +245,21 @@ it does not reconstruct it.
   so the layer landed with it. Its case is inside A3's set, so Task 8
   inherits a rule 7 obligation against a declaration that already
   exists.
+- **B5 was rostered rather than repaired ad-hoc** (Task 10a). Its
+  follow-up was filed 2026-08-20, one day after this plan, and its
+  "Triggers / blockers" bullet already named this plan as its home — but
+  no row was added, so the plan counted eight defects against a
+  population of nine. It is numbered **Task 10a** because
+  `scripts/agents/resolve_task.py` sorts on `(\d+(?:\.\d+)*)\s*([a-z]*)`,
+  so a letter suffix inserts between Tasks 10 and 11 without renumbering
+  eleven tasks and their citations; Task 12 has to close last and Task 11
+  sweeps this follow-up, so both sides of the position are forced.
+- **B5's follow-up stays in `todo/` until Task 12** even though the
+  repair has landed, so the inbound-reference repoint
+  (`docs/workflow.md#follow-ups`, and
+  `docs/followups/todo/moved-followups-leave-dangling-inbound-paths.md`)
+  happens once for all eight rather than eight times. Its `Status:` line
+  records the repair and says so.
 - **The seven follow-ups' "Risks" sections were deliberately left
   standing** when their "Triggers / blockers" bullets were corrected, so
   the correction and the plan that justifies it would land in one
@@ -233,6 +296,16 @@ The change that created this project touched only
 `hazma/scalar_mediator/_scalar_mediator_spectra.py`, `CHANGELOG.md`,
 `docs/followups/`, and this project's plan, rules, references, ADR and
 notes — see `task-1-delta-declarations.md`.
+
+### Task 10a
+
+`rust/src/kernels/neutrino_pion.rs`, `test/parity/deltas.py`,
+`test/parity/test_parity.py`, `test/test_core_neutrino.py`,
+`CHANGELOG.md`, `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`,
+`docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md`
+(new), `docs/followups/README.md`, `../PLAN.md`,
+`../references/defect-blast-radius.md`, this file, and
+`task-10a-neutrino-pion-line.md` (new). `test/parity/data/` untouched.
 
 ## Verification
 
@@ -294,6 +367,12 @@ has no `hazma._core` test probes for the suite to import.
   closed-form model (the defect is an overall factor, so the delta may
   be expressible as one) — but that has to be established, not assumed,
   and the loss recorded rather than papered over.
+- **How many kernels boost a bounded spectrum over an unclipped window?**
+  Task 10a found `neutrino_pion.rs` doing it and `positron_pion.rs`
+  clipping correctly, but only because a repair's magnitude looked wrong.
+  The sweep of the remaining `quad` call sites has not been done —
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
+  carries it as its own first question.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
   closes?** They are the last evidence that a repaired value was ever
   checked against a non-Rust implementation. Anticipated ADR.
@@ -321,12 +400,26 @@ has no `hazma._core` test probes for the suite to import.
   verified at `3e01590`.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87) is the only repair that has changed a library value;
-  every other corpus array is still compared against its stored value.
+- B4 (PR #87) and B5 (Task 10a) are the repairs that have changed a
+  library value; every other corpus array is still compared against its
+  stored value. `test/parity/deltas.py` declares 36 arrays, and
+  `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
+  change to that number show up in a diff.
+- The measurement recipe every remaining repair task needs: capture the
+  corpus blocks from a build carrying the defect, restore the repair,
+  rebuild, capture again, and diff *those* — not the live tree against
+  the stored corpus, which reports the platform drift as if it were the
+  repair (Findings).
 
 **Currently risky / unknown:**
 
 - The blast-radius table is derived from the composition graph, not
-  measured. Treat it as where to look, never as what you will find.
+  measured. Treat it as where to look, never as what you will find. B5 is
+  the sharpest case so far: the table's coverage arithmetic said both
+  `spectra.neutrino.*` cases were untouched, and one of them was not.
+- A repair's own follow-up can understate its magnitude by orders of
+  magnitude. B5's predicted 0.06% local shift measured at a factor of
+  two, because the follow-up sampled only the plateau. Re-derive every
+  figure before quoting it in a `CHANGELOG.md` entry.
 - Every deadline in this plan depends on `cython-to-rust`'s pace, which
   this project does not control and must not assume.
