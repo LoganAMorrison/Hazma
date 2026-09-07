@@ -1031,3 +1031,49 @@ and name both skill trees. The sites that keep the bare command do so
 deliberately — `AGENTS.md` naming the wrong command in order to warn about it,
 and prose about *which tool* republishes the extension, which now says "the
 editable install" rather than spelling a command a reader might run.
+
+### restated-procedure-outlives-its-source
+
+PR #88 changed `docs/agents/doc-consistency.md` §11 — the repo's canonical
+stale-sibling sweep — to pass `--hidden` and name `.claude/` and `.codex/`,
+because the old command could not reach either skill tree. Review round 2
+found that `.claude/skills/review-respond/SKILL.md` had pasted the *old*
+command inline while linking to §11 as canonical, so the skill that tells an
+implementer how to sweep was, in the same commit that fixed the sweep, telling
+them to run the broken one.
+
+The `.codex` twin of that skill was correct and needed no edit, which is the
+tell: it says "perform the before/after stale-sibling sweep required by
+`doc-consistency.md`" and never restates the command. One tree referenced the
+owner and the other duplicated it; only the duplicate could drift. The fix made
+the `.claude` twin match, rather than pasting the corrected command into it.
+
+The general move when the thing that changed *is* a sweep: sweep for copies of
+the sweep.
+
+```text
+$ rg -n --hidden "rg -n '<old-value>'" .claude .codex docs/agents
+.claude/skills/review-respond/SKILL.md:109  # the stale copy
+docs/agents/lessons-examples.md:839,1018    # deliberate historical quotes
+```
+
+### whole-tree-skipped-because-most-of-it-is-history
+
+The same PR swept a changed editable-install command across the repo and
+excluded `projects/` from the sweep on the grounds that it is a historical
+record. That holds for `projects/cython-to-rust/`, which was closing, and for
+any project's `task-notes/`, `learnings/` and `phases/` — rewriting those
+would falsify what was actually run. It does not hold for
+`projects/parity-pinned-defect-repair/`, which is `status: In Progress` and
+whose `references/corpus-repinning.md` is the operative oracle protocol its
+remaining tasks execute. Review reproduced the consequence: following step 2 of
+that protocol produced a five-submodule build, and `pytest -q
+test/test_core_quad.py` then exited 4 on the new missing-probes guard.
+
+§11 now states the distinction rather than leaving it to judgment, and states
+it per claim rather than per file — because the second of the two fixes landed
+in `task-notes/README.md`, which is mostly record and yet carries a live
+"every one of these needs a built tree" covering tasks that have not run. Past
+tense about a specific run is a record; an imperative or a present-tense
+requirement is an instruction wherever it sits. Location is the prior, not the
+answer, and the skip that hides a defect is the tree-shaped one.

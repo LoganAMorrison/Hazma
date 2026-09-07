@@ -110,9 +110,12 @@ The protocol, per defect:
    measurements — `[mutation-harness-poisons-its-own-baseline]`, hit
    twice in `cython-to-rust`. Snapshot, `cmp` before each step, verify
    the restore.
-2. **Patch the `.pyx`, rebuild with `pip install -e .`.** `cargo build`
-   is not a rebuild for anything Python imports, and neither is an
-   un-rebuilt Cython edit — `AGENTS.md` says both. Confirm with
+2. **Patch the `.pyx`, rebuild with the editable install.** In full,
+   `pip install -e . --config-settings build-args="--features
+   test-probes"`: `cargo build` is not a rebuild for anything Python
+   imports, neither is an un-rebuilt Cython edit — `AGENTS.md` says both —
+   and without the feature the `hazma._core` test probes are missing, so
+   the suite refuses to run. Confirm with
    `python -c "import hazma; print(hazma.__file__)"` landing inside the
    worktree.
 3. **Capture on the corpus's capturing platform.** Read it from

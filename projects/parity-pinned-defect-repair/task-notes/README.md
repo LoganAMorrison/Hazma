@@ -270,9 +270,12 @@ resolve.
   doc, with paths passed explicitly while fixes are uncommitted.
 - Task 12: `scripts/agents/preflight.sh --closing`.
 
-Every one of these needs a built tree (`uv pip install -e .`); a
-non-editable install leaves no extension where the corpus insists on
-measuring one.
+Every one of these needs a built tree
+(`uv pip install -e . --config-setting build-args="--features
+test-probes"` — uv spells the flag singular where pip spells it
+`--config-settings`); a non-editable install leaves no extension where
+the corpus insists on measuring one, and one built without the feature
+has no `hazma._core` test probes for the suite to import.
 
 ## Open Questions
 

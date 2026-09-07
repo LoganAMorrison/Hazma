@@ -142,6 +142,23 @@ the current branch head, never the ambient checkout.
     before/after treatment. This is what prevents a fix from introducing
     an adjacent stale contradiction.
 
+    **A hit is either an instruction someone will follow or a record of
+    what was run, and the two get opposite treatment.** Fix the
+    instruction; rewriting the record falsifies it. Grammar decides,
+    not location: past tense about a specific run is a record, and an
+    imperative or a present-tense "every task needs X" is an
+    instruction wherever it sits — an in-progress project's
+    `task-notes/README.md` routinely carries both.
+
+    Location is the prior, not the answer. Under `projects/`, an
+    in-progress project's `PLAN.md`, `rules.md` and `references/` are
+    live specification, so a stale command there is the same defect as
+    one in `docs/agents/`; its `learnings/` and `phases/`, most of its
+    task notes, and every file of a closed project are records. Skipping
+    a whole tree because most of it is historical is how the live half
+    gets missed — classify per claim, and say which rule each skip
+    invoked.
+
 12. **New artifacts count too.** A brand-new test, comment, or doc that
     embeds a stale fact is the most common escape. Sweep new files, not
     only edited ones: for each `??` entry from `git status --short`,

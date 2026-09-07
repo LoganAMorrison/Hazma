@@ -250,3 +250,13 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   follows. Any sweep for a command, identifier or path must pass `--hidden` and
   name both skill trees, or a changed contract stays live in the files most
   likely to be executed verbatim (PR #88).
+- [restated-procedure-outlives-its-source] A doc that owns a procedure and a
+  skill that pastes its command are two sources, and updating the owner leaves
+  the copy authoritative-looking and wrong — inside the same commit. Reference
+  the owning section instead of restating it, and when a sweep is what changed,
+  sweep for copies of the sweep itself (PR #88).
+- [whole-tree-skipped-because-most-of-it-is-history] `projects/` mixes live
+  specification with closed records, so excluding it wholesale from a sweep
+  drops an in-progress project's `references/` and `rules.md` — which someone
+  executes next week — along with the task notes that must not be rewritten.
+  Classify per file and state the rule applied to each skip (PR #88).
