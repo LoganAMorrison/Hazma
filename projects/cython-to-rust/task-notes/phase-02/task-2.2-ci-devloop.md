@@ -214,7 +214,7 @@ Added in review round 1:
 - `docs/agents/lessons.md` — two entries,
   `[renumbered-list-orphans-its-references]` and
   `[unrun-workflow-cannot-close-a-criterion]`, both citing PR #56.
-- `docs/followups/todo/markdownlint-skips-skill-file-shapes.md` (3
+- `docs/followups/done/markdownlint-skips-skill-file-shapes.md` (3
   occurrences) and `docs/followups/done/markdownlint-config-for-templates.md`
   (2) — ordinal references to the markdownlint gate, now named rather
   than numbered.
@@ -471,14 +471,19 @@ correct; what rotted were references from outside it.
 ```console
 $ rg -n 'Gate 6|gate 6' docs/ .claude/ .codex/ AGENTS.md projects/ scripts/
 docs/agents/preflight.md:106                      → markdownlint   EDITED
-docs/followups/todo/markdownlint-skips-skill-file-shapes.md:21     EDITED
-docs/followups/todo/markdownlint-skips-skill-file-shapes.md:68     EDITED
-docs/followups/todo/markdownlint-skips-skill-file-shapes.md:77     EDITED
+docs/followups/done/markdownlint-skips-skill-file-shapes.md:21     EDITED
+docs/followups/done/markdownlint-skips-skill-file-shapes.md:68     EDITED
+docs/followups/done/markdownlint-skips-skill-file-shapes.md:77     EDITED
 docs/followups/done/markdownlint-config-for-templates.md:48        EDITED
 docs/followups/done/markdownlint-config-for-templates.md:102       EDITED
 projects/…/phase-00/task-0.2-delete-mc-slice.md:390                KEPT
 projects/…/phase-01/task-1.3-test-wiring.md:405                    KEPT
 ```
+
+[The three `markdownlint-skips-skill-file-shapes.md` paths above read
+`todo/` when this command ran; the file moved to `done/` in PR #88 and
+the paths were repointed so they still resolve. Line numbers are as the
+command reported them.]
 
 The two `KEPT` hits are dated task-note records of what a *past* PR ran,
 not instructions to a future reader; the repo treats task notes as

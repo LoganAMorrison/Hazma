@@ -119,7 +119,8 @@ scaffold.
   `.claude/skills/task-pipeline/SKILL.md` reports 7 errors (MD036,
   MD032, MD031) on **both** `origin/master` and this branch; the other
   six report 0. That is
-  [`../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md),
+  [`../../../../docs/followups/done/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/done/markdownlint-skips-skill-file-shapes.md)
+  [under `todo/` when this note was written; closed in PR #88],
   not this diff — so `--md` gets the six clean ones and the count
   comparison above is the evidence, rather than the file being quietly
   dropped.

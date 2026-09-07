@@ -396,7 +396,8 @@ beyond the no-change record.
   `projects/` only. Deciding between a path-scoped relaxation and
   restructuring the skill docs is an agent-tooling call, not a
   dead-code-deletion one. Filed as
-  [`docs/followups/todo/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md).
+  [`docs/followups/done/markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/done/markdownlint-skips-skill-file-shapes.md)
+  [filed under `todo/` when this note was written; closed in PR #88].
 - **Already-dead-on-trunk references are left alone**, on Task 0.3's
   boundary rule: the ~20 `hazma.rambo` / `hazma.decay` imports in
   `notebooks/`, and the root `searchindex.js` — a committed Sphinx

@@ -4,13 +4,11 @@
 - **Source:** PR #48 review round 1 (first PR to pass a skill file to the
   markdownlint gate)
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** none — touches lint config and agent docs
-  only, no library code. Ripens the next time any PR edits a skill file.
-- **Recurrences:** PR #88 edited six skill files to sweep a changed
-  editable-install command through them and inherited the same red
-  markdownlint row, still nine errors in the same two files, neither of
-  which that PR restructured.
+- **Status:** done
+- **Resolved:** 2026-09-06 in
+  [PR #88](https://github.com/LoganAMorrison/Hazma/pull/88), by option 2
+  (normalize the docs) rather than the option 1 this file recommended —
+  see **Resolution** below for why the recommendation was wrong.
 
 ## Why
 
@@ -46,11 +44,14 @@ rather than satisfied.
 
 The two rules are arguably the config's problem, not the docs':
 
-- **MD036** fires on `**When to use this skill**`, the bolded section
-  label every `SKILL.md` opens with. The config already special-cases
-  these files once (`MD041`'s `front_matter_title` accepts their `name:`
-  frontmatter) on the grounds that the format "is defined by the
-  harness, not by us" — the same argument applies here.
+- **MD036** fires on `**When to use this skill**`, which this file called
+  "the bolded section label every `SKILL.md` opens with". That was the
+  load-bearing claim for option 1, and it is false: six of the eight
+  `.claude` skills spell it `## When to use this skill` as a real
+  heading, and only `review-plan` and `task-pipeline` use bold. The
+  `MD041` precedent cited here does not transfer, because that one
+  accommodates a frontmatter format the harness imposes, whereas this is
+  two files deviating from a convention the repo already keeps.
 - **MD031 / MD032** fire inside blockquoted example blocks, where the
   fences and lists are quoted content being *shown*, not structure.
 
@@ -88,3 +89,28 @@ rediscovers this.
 Option 2 changes heading structure in files the agent harness reads. If
 any skill or doc references a `SKILL.md` section by its bolded label,
 that reference has to move with it — sweep before choosing it.
+
+## Resolution
+
+Option 2, and the count above is why: relaxing `MD036` for the skill
+trees would have bent a rule to fit two outliers rather than bringing
+them in line with the other fourteen files. The four bolded labels in
+`review-plan/SKILL.md` and `task-pipeline/SKILL.md` are now `##`
+headings, matching their siblings and sitting above the `## Inputs` those
+files already had.
+
+The risk this file flagged — that something might reference a section by
+its bolded label — was swept before the change and did not materialize:
+`rg -n --hidden 'When to use this skill|When NOT to use this skill'`
+returned only the labels themselves and this file.
+
+The remaining five errors were `MD031`/`MD032` inside Phase C's
+blockquoted subagent prompt, where a fence or list sat flush against the
+line above. They took quoted blank lines (`>`), not bare ones — a bare
+blank line would have split one 79-line blockquote into several, which
+was checked after the fix rather than assumed.
+
+`markdownlint --dot .claude/skills/*/SKILL.md .codex/skills/*/SKILL.md`
+now exits 0, and the markdownlint gate in
+[`preflight.md`](../../agents/preflight.md) says the skill trees are in
+scope so the next agent does not have to rediscover that they are.

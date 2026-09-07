@@ -90,7 +90,10 @@ before you stage anything.
    imports the `hazma/_core.abi3.so` that only the editable install puts
    there — so a `.rs` change can be cargo-green and stale in the tree.
 9. **`markdownlint --dot <changed .md files>`** — when curated docs
-   changed. Word-diff after any `--fix`: it can corrupt code spans.
+   changed, and `.claude/skills/` and `.codex/skills/` count as curated
+   docs: both trees lint clean, so a skill file you edited belongs in
+   the argument list. Word-diff after any `--fix`: it can corrupt code
+   spans.
    Run it from the repo root: the committed
    [`.markdownlint.jsonc`](../../.markdownlint.jsonc) is discovered
    relative to the **current directory**, not to the linted file, so
