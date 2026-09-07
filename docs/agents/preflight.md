@@ -20,9 +20,10 @@ before you stage anything.
    `[tool.ruff]` in `pyproject.toml`. `hazma/experimental/` and
    `notebooks/` are outside the gate.
 4. **`cargo fmt --manifest-path rust/Cargo.toml --check`**
-5. **`cargo clippy --manifest-path rust/Cargo.toml --all-targets --
-   -D warnings`**
-6. **`cargo test --manifest-path rust/Cargo.toml --no-default-features`**
+5. **`cargo clippy --manifest-path rust/Cargo.toml --all-features
+   --all-targets -- -D warnings`**
+6. **`cargo test --manifest-path rust/Cargo.toml --no-default-features
+   --features test-probes`**
    — the `hazma._core` crate's own gates, unaffected by `--paths` (the
    crate is small and always checked whole). They run *before* pytest
    because they cost seconds against the suite's minutes.
@@ -33,6 +34,16 @@ before you stage anything.
    with the feature on the harness does not link at all. `--manifest-path`
    rather than a `cd` keeps every gate anchored to the same worktree
    root.
+
+   The feature flags on gates 5 and 6 are two spellings of one intent:
+   check the `test-probes` modules too. That feature is out of the
+   crate's `default` so no released artifact carries the six
+   `hazma._core` submodules that only `test/test_core_*.py` reach, which
+   leaves them uncompiled — and so unchecked — under a plain run. Clippy
+   can say `--all-features` because it only type-checks, so
+   `extension-module` riding along costs nothing; the test gate has to
+   name `test-probes` on its own, because `--all-features` would
+   reintroduce exactly the link failure the paragraph above describes.
 
    Three absence rules, because this crate is younger than the gate:
    no `rust/` directory is a **SKIP** (branches cut before cython-to-rust
@@ -61,6 +72,13 @@ before you stage anything.
    exits 0 with `no tests ran`. Zero collected means the gate FAILED, not
    passed. Name real targets, not a filter you have not verified selects
    something.
+
+   **Exit 4 with one `ERROR:` line means the extension is built wrong,
+   not that the suite is broken.** `test/conftest.py` refuses to collect
+   against a `hazma._core` compiled without the `test-probes` feature,
+   because seven `test_core_*.py` modules import a probe submodule at
+   module scope. The message carries the install command; re-run the
+   gate after it.
 8. **`python -c "import hazma"`** — the import smoke. Hazma ships
    compiled extensions; an edit that was never rebuilt, or a rebuild
    against a different interpreter, produces a tree that lints and
@@ -69,10 +87,13 @@ before you stage anything.
    `pyproject.toml`'s `[build-system]` or `[tool.maturin]`. Note that the
    three cargo gates above do **not**
    cover this: `cargo test` exercises `rust/target/`, while Python
-   imports the `hazma/_core.abi3.so` that only `pip install -e .` puts
+   imports the `hazma/_core.abi3.so` that only the editable install puts
    there — so a `.rs` change can be cargo-green and stale in the tree.
 9. **`markdownlint --dot <changed .md files>`** — when curated docs
-   changed. Word-diff after any `--fix`: it can corrupt code spans.
+   changed, and `.claude/skills/` and `.codex/skills/` count as curated
+   docs: both trees lint clean, so a skill file you edited belongs in
+   the argument list. Word-diff after any `--fix`: it can corrupt code
+   spans.
    Run it from the repo root: the committed
    [`.markdownlint.jsonc`](../../.markdownlint.jsonc) is discovered
    relative to the **current directory**, not to the linted file, so

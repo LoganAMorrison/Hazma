@@ -177,8 +177,10 @@ Agent(
 > append when a finding is class-shaped.
 >
 > **You MUST commit and push.** Stage only files you intentionally
-> changed. Rebuild first (`pip install -e .`, never `cargo build` alone)
-> if you touched `rust/` or `pyproject.toml`.
+> changed. If you touched `rust/` or `pyproject.toml`, rebuild first
+> with `pip install -e . --config-settings build-args="--features test-probes"`
+> — never `cargo build` alone, and never without the
+> `--config-settings`, which is what compiles the test probes.
 > Run the preflight gate (`docs/agents/preflight.md`) before staging;
 > assert a real `N passed` count. Commit with a Conventional Commits
 > message (validate with `scripts/agents/check_pr_title.py`) and

@@ -204,6 +204,13 @@ fi
 # CPython's symbols undefined for the interpreter to resolve; a test
 # executable has no interpreter, so with it on the harness does not link.
 #
+# `test-probes` is the crate's other feature, and it is default-off so
+# that no released artifact carries the six `hazma._core` submodules that
+# exist only for `test/test_core_*.py`. Both gates below turn it on:
+# clippy through `--all-features`, which is free because clippy only
+# type-checks, and the test gate by name, because it cannot take
+# `--all-features` without dragging `extension-module` back in.
+#
 # Absence rules follow the rest of the table: no `rust/` is a SKIP (the
 # crate arrived in cython-to-rust Phase 02 and older branches must still
 # preflight), while a missing `cargo` with the crate present is a WARN —
@@ -234,9 +241,11 @@ else
     cargo_gate "cargo fmt --check" cargo-fmt \
         fmt --manifest-path rust/Cargo.toml --check
     cargo_gate "cargo clippy" cargo-clippy \
-        clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+        clippy --manifest-path rust/Cargo.toml --all-features --all-targets \
+        -- -D warnings
     cargo_gate "cargo test" cargo-test \
-        test --manifest-path rust/Cargo.toml --no-default-features
+        test --manifest-path rust/Cargo.toml --no-default-features \
+        --features test-probes
 fi
 
 # --------------------------------------------------------------------------
@@ -273,7 +282,8 @@ capture "${OUT}" python -c "import hazma; print(hazma.__version__)"
 if [[ $? -eq 0 ]]; then
     row PASS "import hazma" "version $(tr -d '\n' <"${OUT}")"
 else
-    row FAIL "import hazma" "package does not import — rebuild (pip install -e .)"
+    row FAIL "import hazma" \
+        "package does not import — rebuild: pip install -e . --config-settings build-args=\"--features test-probes\""
     tail_of "${OUT}"
 fi
 

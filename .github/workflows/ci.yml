@@ -66,11 +66,20 @@ jobs:
       - name: Check formatting with rustfmt
         run: cargo fmt --manifest-path rust/Cargo.toml --check
       - name: Lint with clippy
+        # `--all-features` so the `test-probes` modules are linted too.
+        # They are out of `default` (rust/Cargo.toml) and so out of every
+        # released artifact, but they are still PyO3 code that a
+        # default-feature run would never look at. Clippy only
+        # type-checks, so `extension-module` coming along with
+        # `--all-features` costs nothing here -- unlike the test command
+        # below, which links.
         run: >-
           cargo clippy --manifest-path rust/Cargo.toml
-          --all-targets -- -D warnings
+          --all-features --all-targets -- -D warnings
       - name: Run the crate's unit tests
-        run: cargo test --manifest-path rust/Cargo.toml --no-default-features
+        run: >-
+          cargo test --manifest-path rust/Cargo.toml
+          --no-default-features --features test-probes
 
   test:
     name: Test (${{ matrix.os }}, py${{ matrix.python-version }})
@@ -124,10 +133,46 @@ jobs:
         # distribution, which is why it runs before the editable reinstall
         # below rather than after it. A data file the wheel fails to carry
         # is invisible from the source tree, where it is simply there.
+        #
+        # The second half asserts the `test-probes` invariant on the one
+        # build in this file that has default features. It has to live
+        # here rather than only in release.yml: that workflow's
+        # pull_request trigger is filtered to its own file and
+        # pyproject.toml, while `rust/Cargo.toml` and `rust/src/lib.rs`
+        # are what decide whether the probes compile. Adding `test-probes`
+        # to `default`, or dropping a `cfg`, would otherwise reach a
+        # published release without any pull request having built a
+        # probe-free extension -- the editable reinstall below turns the
+        # probes back on, so the test job cannot see it either.
         working-directory: ${{ runner.temp }}
-        run: >-
-          python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,
-          hazma.scalar_mediator, hazma.vector_mediator, hazma._core"
+        run: |
+          python - <<'PY'
+          import inspect
+          import sys
+
+          import hazma._core
+          import hazma.cmb
+          import hazma.limits
+          import hazma.pbh
+          import hazma.scalar_mediator
+          import hazma.theory
+          import hazma.vector_mediator
+
+          served = {"photon", "positron", "neutrino", "scalar_mediator", "vector_mediator"}
+          found = {
+              name
+              for name in dir(hazma._core)
+              if inspect.ismodule(getattr(hazma._core, name))
+          }
+          if found != served:
+              sys.exit(
+                  f"a default-feature build of hazma._core exposes {sorted(found)}, "
+                  f"expected exactly {sorted(served)}. Extra names are the "
+                  "test-only probes, which must stay out of `default` "
+                  "(rust/Cargo.toml) so no released artifact carries them."
+              )
+          print(f"submodules: {sorted(found)}")
+          PY
       - name: Reinstall editable for the test run
         # The golden parity corpus (test/parity/, cython-to-rust Phase 01)
         # refuses to measure a hazma that resolves outside the repository —
@@ -136,7 +181,17 @@ jobs:
         # editable install the compiled extensions simply would not be
         # there. Editable puts them in the tree the corpus is pinned to.
         # Measured cost of the second build: ~40 s.
-        run: python -m pip install -v -e .
+        #
+        # `--features test-probes` is what the plain install above
+        # deliberately lacks: the six `hazma._core` submodules the
+        # `test_core_*.py` modules import exist only under that feature,
+        # and `test/conftest.py` refuses to run the suite without them.
+        # So the two installs test different things on purpose -- the
+        # smoke test above covers the distribution as users receive it,
+        # and this one covers the suite.
+        run: >-
+          python -m pip install -v -e .
+          --config-settings build-args="--features test-probes"
       - name: Run tests
         # Bare `pytest` on every matrix entry: pyproject.toml's
         # `testpaths = ["hazma", "test"]`, the same collection

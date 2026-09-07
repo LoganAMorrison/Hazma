@@ -238,3 +238,25 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   output — is in the same diff, and every sibling claim in the working memory
   ("nothing has moved yet", "no task started") has been re-read against it;
   otherwise the row says what landed and what is owed (PR #87).
+- [path-filtered-assertion-misses-its-own-invariant] A `paths:` filter decides
+  which changes an assertion ever sees, and it is usually written around the
+  file the assertion lives in, not around the files that can break it. Put the
+  check where the inputs that can violate it are already built, and prove it by
+  running the check against a build that does violate it — a check only ever
+  observed passing is a check whose failure path is unmeasured (PR #88).
+- [rg-skips-the-skill-directories] `rg` ignores dot-prefixed directories by
+  default, so a sweep over `docs/ hazma/ test/` reports zero hits in
+  `.claude/skills/` and `.codex/skills/` — the instructions an agent actually
+  follows. Any sweep for a command, identifier or path must pass `--hidden` and
+  name both skill trees, or a changed contract stays live in the files most
+  likely to be executed verbatim (PR #88).
+- [restated-procedure-outlives-its-source] A doc that owns a procedure and a
+  skill that pastes its command are two sources, and updating the owner leaves
+  the copy authoritative-looking and wrong — inside the same commit. Reference
+  the owning section instead of restating it, and when a sweep is what changed,
+  sweep for copies of the sweep itself (PR #88).
+- [whole-tree-skipped-because-most-of-it-is-history] `projects/` mixes live
+  specification with closed records, so excluding it wholesale from a sweep
+  drops an in-progress project's `references/` and `rules.md` — which someone
+  executes next week — along with the task notes that must not be rewritten.
+  Classify per file and state the rule applied to each skip (PR #88).

@@ -9,7 +9,7 @@ problems now, before an implementer starts coding against it. The plan
 author wants the plan to fail here, not in PR review. This skill is
 read-only: it reviews plans and emits a report; it never edits the plan.
 
-**When to use this skill**
+## When to use this skill
 
 - The user asks to review a project plan (by slug, directory, or
   `PLAN.md` path).
@@ -17,7 +17,7 @@ read-only: it reviews plans and emits a report; it never edits the plan.
   agent.
 - A plan is being iterated and the author wants a checkpoint review.
 
-**When NOT to use this skill**
+## When NOT to use this skill
 
 - Reviewing an implementation **PR diff** against a task spec →
   `/review-pr`.

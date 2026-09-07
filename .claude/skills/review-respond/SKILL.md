@@ -103,21 +103,23 @@ in the response.
   that leaves an adjacent stale sibling is what drives extra rounds.
 - **Stale-sibling sweep.** Before fixing any factual claim (count,
   identifier, command, line number, unit, or qualitative prose claim),
-  run the class-wide sweep in
-  [`doc-consistency.md`](../../../docs/agents/doc-consistency.md) §11:
-  `rg -n '<old-value>' projects/ docs/ hazma/ test/ README.md
-  CHANGELOG.md`, paste under `### Pre-fix occurrences`; fix every
-  occurrence or justify each skip; re-run and paste under
-  `### Post-fix occurrences`. Numeric fixes sweep the bare digit
-  (`\b<old>\b`). Re-derive a corrected fact from first principles rather
-  than confirming it against an adjacent copy.
+  run the class-wide sweep exactly as
+  [`doc-consistency.md`](../../../docs/agents/doc-consistency.md) §11
+  specifies it — that section owns the command, its flags and the trees
+  it covers, and a copy here would be a second source to keep in step.
+  Paste the output under `### Pre-fix occurrences`; fix every occurrence
+  or justify each skip; re-run and paste under
+  `### Post-fix occurrences`. Re-derive a corrected fact from first
+  principles rather than confirming it against an adjacent copy.
 - **Re-measure after any behavior fix.** If your fixes changed a code
   path a public function reaches, re-run the numerical comparison and
   update the task note and (on a closing PR) `CHANGELOG.md`. Then
   re-check the PR body against the post-fix diff — a stale body is a
   blocking finding.
 - **Rebuild before gating** if you touched `rust/` or `pyproject.toml`:
-  `pip install -e .` (a `cargo` run does not republish the extension).
+  `pip install -e . --config-settings build-args="--features test-probes"`
+  (a `cargo` run does not republish the extension, and without the
+  `--config-settings` the test probes are not compiled).
 - **Run the preflight gate.** `scripts/agents/preflight.sh --paths
   "<touched>"` — bare, so its pytest gate is the same collection CI runs
   (or the manual list in

@@ -23,37 +23,60 @@
 //! interpolation/boost foundation are the crate's most reusable surface,
 //! and Phases 03–06 consume them from every kernel module.
 //!
-//! [`special_probe`], [`quad_probe`], [`interp_probe`], [`boost_probe`],
-//! [`dispatch_probe`] and [`mediator_tables_probe`] are the exception to
-//! "registration only means per-domain": they register `special`,
-//! `quad`, `interp`, `boost`, `dispatch` and `mediator_tables`
-//! submodules that expose the foundation modules to Python purely so
-//! `test/test_core_special.py`, `test/test_core_quad.py`,
-//! `test/test_core_interp.py`, `test/test_core_boost.py`,
-//! `test/test_core_dispatch.py` and `test/test_core_mediator_tables.py`
+//! The six `*_probe` modules are the exception to "registration only
+//! means per-domain": they register `special`, `quad`, `interp`,
+//! `boost`, `dispatch` and `mediator_tables` submodules that expose the
+//! foundation modules to Python purely so `test/test_core_special.py`,
+//! `test/test_core_quad.py`, `test/test_core_interp.py`,
+//! `test/test_core_boost.py`, `test/test_core_dispatch.py`,
+//! `test/test_core_mediator_tables.py` and `test/test_core_photon_tables.py`
 //! can compare them against their oracles — scipy, NumPy, a Python
 //! reference implementation, and the Phase 04 kernels' own entry points.
 //! Two of those oracles used to be the Cython itself, reached through
 //! `__pyx_capi__` or read out of the `.pyx` sources; Phase 06 Task 6.4
 //! deleted the last of them, and what replaced each is recorded in the
 //! module that used it. No hazma module imports any of these probes.
+//!
+//! Because nothing but the test suite reaches them, they compile only
+//! under the `test-probes` feature, which `rust/Cargo.toml` leaves out
+//! of `default`. A development install and the crate's own gates turn it
+//! on; the wheel and the sdist do not, so a released `hazma._core`
+//! carries the five per-domain submodules and nothing else. The test
+//! modules above import the probes at module scope rather than through
+//! `importorskip`, so a build without the feature fails collection
+//! instead of quietly skipping — `test/conftest.py` turns that failure
+//! into the install command that fixes it.
 
 pub mod boost;
+#[cfg(feature = "test-probes")]
 mod boost_probe;
 pub mod constants;
 mod dispatch;
+#[cfg(feature = "test-probes")]
 mod dispatch_probe;
 pub mod interp;
+#[cfg(feature = "test-probes")]
 mod interp_probe;
+// Without `test-probes`, a handful of kernel items lose their only
+// non-test reader: `roundtrip_flavors` served `dispatch_probe` alone, and
+// four of `mediator_tables`'s accessors served `mediator_tables_probe`.
+// That is the feature working, not dead code, so the lint is relaxed for
+// exactly the build that compiles the probes out. Every gate this repo
+// runs builds them in, so `dead_code` still covers this module where it
+// is enforced.
+#[cfg_attr(not(feature = "test-probes"), allow(dead_code))]
 mod kernels;
+#[cfg(feature = "test-probes")]
 mod mediator_tables_probe;
 mod neutrino;
 mod photon;
 mod positron;
 pub mod quad;
+#[cfg(feature = "test-probes")]
 mod quad_probe;
 mod scalar_mediator;
 pub mod special;
+#[cfg(feature = "test-probes")]
 mod special_probe;
 mod vector_mediator;
 
@@ -119,12 +142,16 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "neutrino", neutrino::register)?;
     add_submodule(module, "scalar_mediator", scalar_mediator::register)?;
     add_submodule(module, "vector_mediator", vector_mediator::register)?;
-    add_submodule(module, "special", special_probe::register)?;
-    add_submodule(module, "quad", quad_probe::register)?;
-    add_submodule(module, "interp", interp_probe::register)?;
-    add_submodule(module, "boost", boost_probe::register)?;
-    add_submodule(module, "dispatch", dispatch_probe::register)?;
-    add_submodule(module, "mediator_tables", mediator_tables_probe::register)?;
+
+    #[cfg(feature = "test-probes")]
+    {
+        add_submodule(module, "special", special_probe::register)?;
+        add_submodule(module, "quad", quad_probe::register)?;
+        add_submodule(module, "interp", interp_probe::register)?;
+        add_submodule(module, "boost", boost_probe::register)?;
+        add_submodule(module, "dispatch", dispatch_probe::register)?;
+        add_submodule(module, "mediator_tables", mediator_tables_probe::register)?;
+    }
 
     Ok(())
 }

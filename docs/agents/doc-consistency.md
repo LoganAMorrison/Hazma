@@ -126,8 +126,14 @@ the current branch head, never the ambient checkout.
 11. **Stale-sibling sweep procedure.** Before fixing any factual claim —
     a count, identifier, command, line number, unit, or qualitative prose
     claim — run the class-wide sweep; do not point-fix the cited line:
-    `rg -n '<old-value>' projects/ docs/ hazma/ test/ README.md
-    CHANGELOG.md`. Paste the output under `### Pre-fix occurrences`.
+    `rg -n --hidden '<old-value>' projects/ docs/ hazma/ test/ .claude/
+    .codex/ README.md CHANGELOG.md`. Paste the output under
+    `### Pre-fix occurrences`. **`--hidden` and the two skill directories
+    are load-bearing**: `rg` skips dot-prefixed directories by default, so
+    a sweep without them reports zero hits in `.claude/skills/` and
+    `.codex/skills/` — where the repo keeps the instructions an agent
+    actually follows, and therefore where a changed command goes stale
+    most consequentially.
     Apply the fix to every listed occurrence, or explicitly justify each
     one you skip. Re-run the same `rg` and paste under
     `### Post-fix occurrences`. For **numeric** fixes, sweep on the bare
@@ -135,6 +141,23 @@ the current branch head, never the ambient checkout.
     localized but rarely are. Qualitative prose claims get the same
     before/after treatment. This is what prevents a fix from introducing
     an adjacent stale contradiction.
+
+    **A hit is either an instruction someone will follow or a record of
+    what was run, and the two get opposite treatment.** Fix the
+    instruction; rewriting the record falsifies it. Grammar decides,
+    not location: past tense about a specific run is a record, and an
+    imperative or a present-tense "every task needs X" is an
+    instruction wherever it sits — an in-progress project's
+    `task-notes/README.md` routinely carries both.
+
+    Location is the prior, not the answer. Under `projects/`, an
+    in-progress project's `PLAN.md`, `rules.md` and `references/` are
+    live specification, so a stale command there is the same defect as
+    one in `docs/agents/`; its `learnings/` and `phases/`, most of its
+    task notes, and every file of a closed project are records. Skipping
+    a whole tree because most of it is historical is how the live half
+    gets missed — classify per claim, and say which rule each skip
+    invoked.
 
 12. **New artifacts count too.** A brand-new test, comment, or doc that
     embeds a stale fact is the most common escape. Sweep new files, not
@@ -156,7 +179,8 @@ Under a `## Stale-state sweep` heading, paste output for each sub-sweep
 
 - **Identifier sweep** — every new/renamed/removed name and every
   identifier cited in §Files Changed / §Decisions / §Findings:
-  `rg -n '<identifier>' projects/<slug>/ docs/ README.md hazma/ test/`.
+  `rg -n --hidden '<identifier>' projects/<slug>/ docs/ README.md hazma/
+  test/ .claude/ .codex/` — same `--hidden` requirement as §11.
 - **Line-number citation sweep** — `file:line` citations of touched
   files: `rg -n '<file_basename>\.py:[0-9]+' projects/<slug>/ docs/`. To
   bounds-check them all mechanically, run

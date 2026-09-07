@@ -89,10 +89,17 @@ no import-order or configured-rule check) — this gate catches more than
 CI will. A non-zero exit is
 a blocked commit; a `WARN` row is an unrun gate, not a pass.
 
-If the diff touched `rust/` or `pyproject.toml`, rebuild
-(`pip install -e .`) **before** the gate, not after. `cargo build` is
-not that rebuild: it refreshes `rust/target/`, not the
-`hazma/_core.abi3.so` Python imports.
+If the diff touched `rust/` or `pyproject.toml`, rebuild **before** the
+gate, not after:
+
+```sh
+pip install -e . --config-settings build-args="--features test-probes"
+```
+
+`cargo build` is not that rebuild: it refreshes `rust/target/`, not the
+`hazma/_core.abi3.so` Python imports. The `--config-settings` is not
+optional either — without it the `hazma._core` test probes are not
+compiled and the gate's pytest row fails at collection.
 
 ### Step 5: Stage and commit
 

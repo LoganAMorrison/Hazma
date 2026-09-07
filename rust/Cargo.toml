@@ -51,6 +51,28 @@ default = ["extension-module"]
 # libpython instead. Phase 02 Task 2.2 wires that spelling into
 # scripts/agents/preflight.sh and the dev-loop docs.
 extension-module = ["pyo3/extension-module"]
+# The six `*_probe` modules in src/, which register `hazma._core`
+# submodules that exist only so `test/test_core_*.py` can reach the
+# foundation layers from Python. Off by default so neither the wheel nor
+# the sdist carries them: an sdist builds through the same PEP 517 hook
+# on every platform without a published wheel, so a default-on feature
+# would ship the probes everywhere maturin is not the one building.
+#
+# Turned on for a development install and for the crate's own gates:
+#
+#     pip install -e . --config-settings build-args="--features test-probes"
+#     cargo clippy --manifest-path rust/Cargo.toml --all-features --all-targets
+#     cargo test --manifest-path rust/Cargo.toml --no-default-features \
+#         --features test-probes
+#
+# `build-args` rather than `maturin.build-args`: maturin reads the
+# namespaced spelling from 1.9 on and means to drop the bare one in 2.0,
+# but 1.5 — this project's floor in pyproject.toml — reads only the bare
+# one, and a config setting it does not recognize is ignored rather than
+# refused. So the bare spelling is the only one that works across the
+# whole `maturin>=1.5,<2.0` range; raise the floor past 1.9 and the
+# namespaced one becomes the one to write.
+test-probes = []
 
 [profile.release]
 # The kernels this crate will hold are scalar float64 math; LTO and a

@@ -1263,8 +1263,9 @@ def assert_module_is_repo_tree(module: Module) -> None:
             f"{module.__name__} resolves to {resolved}, outside the "
             f"repository at {REPO_ROOT}. The parity corpus would then be "
             "captured from a different build than the one `kernel_digest` "
-            "describes. Install this checkout (`pip install -e .`) or run "
-            "from a shell whose sys.path reaches it."
+            "describes. Install this checkout (`pip install -e . "
+            '--config-settings build-args="--features test-probes"`) or '
+            "run from a shell whose sys.path reaches it."
         )
 
 
@@ -1340,6 +1341,13 @@ _CORE_SCAFFOLD_NAMES = frozenset({"roundtrip"})
 #: ``test_parity.py``, not left to this comment. **Do not add a submodule
 #: here to quiet a failing mode check**: a submodule a wrapper imports is
 #: a served kernel, whatever it is named.
+#:
+#: The six are compiled by the crate's ``test-probes`` feature, which
+#: ``rust/Cargo.toml`` keeps out of ``default``, so a released
+#: ``hazma._core`` has none of them and this frozenset excuses nothing
+#: there. That costs the exemption no honesty: `rust_core_kernels` walks
+#: whatever the live extension exposes, and a name it never sees needs no
+#: excusing.
 _CORE_TEST_ONLY_MODULES = frozenset(
     {
         "hazma._core.special",

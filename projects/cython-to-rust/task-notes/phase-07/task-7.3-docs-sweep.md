@@ -198,8 +198,9 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
   changed `SKILL.md` files, and the omission is the documented state of
   the gate, not an oversight.** `.markdownlint.jsonc` was written against
   `docs/` and `projects/` and has never accommodated the skill-file
-  shape, which is the open follow-up
-  [`markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/todo/markdownlint-skips-skill-file-shapes.md).
+  shape, which is the follow-up
+  [`markdownlint-skips-skill-file-shapes.md`](../../../../docs/followups/done/markdownlint-skips-skill-file-shapes.md)
+  [open and under `todo/` when this note was written; closed in PR #88].
   Verified rather than assumed — `markdownlint --dot` over the 12 changed
   skill files returns 9 errors in 2 files, every one on a line this diff
   does not touch:

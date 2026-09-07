@@ -62,6 +62,24 @@ trusting any result you attribute to your edit — especially inside a git
 worktree under `.claude/worktrees/` or `.codex/worktrees/`, which is a
 *different directory* from the checkout the editable install points at.
 
+**The development install is not a plain `pip install -e .`.** It is
+
+```sh
+pip install -e . --config-settings build-args="--features test-probes"
+```
+
+The crate's `test-probes` feature compiles six `hazma._core` submodules —
+`special`, `quad`, `interp`, `boost`, `dispatch`, `mediator_tables` —
+that exist only so `test/test_core_*.py` can reach the foundation layers
+from Python, and `rust/Cargo.toml` keeps it out of `default` so neither
+the wheel nor the sdist ships them. Install without it and seven test
+modules cannot import; `test/conftest.py` stops the run with this command
+rather than letting them skip. `build-args` is maturin's PEP 517 config
+setting (the `MATURIN_PEP517_ARGS` environment variable does the same
+thing); write it bare rather than as `maturin.build-args`, which maturin
+only understands from 1.9 on while `pyproject.toml` allows 1.5. uv spells
+the flag `--config-setting`, singular.
+
 **`pip install -e .` needs `cargo` on `PATH`, and pip cannot supply
 it.** `pyproject.toml`'s `[build-system] requires` is `maturin` alone,
 which shells out to cargo to build the `hazma._core` extension. No
@@ -74,10 +92,12 @@ cython-to-rust Task 6.4, and `setuptools-rust` followed in Task 7.1.
 **Editing a `.rs` and re-running pytest tests the OLD extension.** The
 trap has an extra step, because the fast iteration command is not the
 publishing one: `cargo build` and `cargo test` work out of
-`rust/target/`, which nothing Python imports. Only `pip install -e .`
+`rust/target/`, which nothing Python imports. Only the editable install
 re-links the crate into the tree as `hazma/_core.abi3.so`. So iterate with
-`cargo test --manifest-path rust/Cargo.toml --no-default-features`, then
-reinstall before believing any Python-side result, and confirm with
+`cargo test --manifest-path rust/Cargo.toml --no-default-features
+--features test-probes`, then reinstall — with the same
+`--config-settings` — before believing any Python-side result, and
+confirm with
 `python -c "import hazma._core; print(hazma._core.__file__)"` that the
 path is inside your worktree.
 
@@ -108,7 +128,10 @@ message.
 undefined for the interpreter that `dlopen`s the module. A test
 executable has no such interpreter, so with the feature on the harness
 fails to link — a wall of undefined `_Py*` symbols that reads like a
-broken toolchain rather than a wrong flag.
+broken toolchain rather than a wrong flag. It is also why the test gate
+adds `--features test-probes` by name where clippy simply says
+`--all-features`: clippy only type-checks, so `extension-module` riding
+along is harmless there and fatal here.
 
 **A clean wheel is not evidence of a clean sdist.** They are still built
 by different machinery, though under maturin (cython-to-rust Task 7.1)
@@ -210,7 +233,9 @@ install.** `test/parity/cases.py` refuses a `hazma` that resolves
 outside the repository (`cases.assert_module_is_repo_tree`), and running pytest
 from the repo root puts the source tree first on `sys.path` regardless,
 so a non-editable `pip install .` leaves the corpus looking at a tree
-with no compiled extension in it. `pip install -e .`, then confirm with
+with no compiled extension in it. Run the development install above —
+`pip install -e . --config-settings build-args="--features test-probes"` —
+then confirm with
 `python -c "import hazma._core as m; print(m.__file__)"` that
 `_core.abi3.so` is inside your worktree — since cython-to-rust Task 6.4
 it is the only compiled module there is. CI does the non-editable install
@@ -283,10 +308,19 @@ then runs a bare `pytest`, parity corpus included, on every entry.
 
 **CI has a third job, `rust`.** It runs the same three cargo gates
 `preflight.sh` does — `cargo fmt --check`,
-`cargo clippy --all-targets -- -D warnings`, and
-`cargo test --no-default-features` — on ubuntu only, since none of them
-is platform-sensitive. It installs a Python for the same reason the flag
-exists: the test harness links libpython for real.
+`cargo clippy --all-features --all-targets -- -D warnings`, and
+`cargo test --no-default-features --features test-probes` — on ubuntu
+only, since none of them is platform-sensitive. It installs a Python for
+the same reason the flag exists: the test harness links libpython for
+real.
+
+**The `test` job installs hazma twice, and the two installs differ by
+more than editability.** The first is a plain `pip install .`, whose only
+consumer is the import smoke test — so that step exercises the
+distribution with exactly the features users receive. The second passes
+`--config-settings build-args="--features test-probes"`, because the
+suite cannot run without them. Copying the first command onto the second
+turns the whole matrix red at collection, which is the intended failure.
 
 ## Git and orchestration
 

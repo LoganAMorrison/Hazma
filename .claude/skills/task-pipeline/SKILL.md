@@ -11,14 +11,14 @@ decisions, and points at the shared agent layer
 ([`docs/agents/`](../../../docs/agents/README.md)) rather than restating
 its rules.
 
-**When to use this skill**
+## When to use this skill
 
 - The user asks to "run the pipeline", "implement and ship", or "do one
   task end-to-end".
 - The user wants automated implement → review → PR without manual
   `/clear` steps.
 
-**When NOT to use this skill**
+## When NOT to use this skill
 
 - **Ad-hoc work with no project** — the pipeline hard-requires a
   `projects/<slug>/PLAN.md` (Phase A stalls without one). Route these to
@@ -71,9 +71,12 @@ and `<BRANCH>` from Phase A.
 > by the pipeline orchestrator.
 >
 > Hazma ships one Rust extension, `hazma._core`. If your work touches
-> `rust/` or `pyproject.toml`, run `pip install -e .` inside this
-> worktree before running tests — `cargo build` alone publishes nothing
-> to Python — and confirm `python -c "import hazma; print(hazma.__file__)"`
+> `rust/` or `pyproject.toml`, run
+> `pip install -e . --config-settings build-args="--features test-probes"`
+> inside this worktree before running tests — `cargo build` alone
+> publishes nothing to Python, and without the `--config-settings` the
+> test probes are not compiled — and confirm
+> `python -c "import hazma; print(hazma.__file__)"`
 > resolves inside `<WT_PATH>` — otherwise every result you report comes
 > from a different tree.
 
@@ -316,6 +319,7 @@ Agent(
 > committed.
 >
 > **Context:**
+>
 > - Project: `<project-slug>` — Task `<TASK_ID>`: `<TASK_TITLE>`.
 > - Branch: `<BRANCH>`; task note: `<TASK_NOTE_PATH>`.
 > - Implementation summary: `<SUMMARY from Phase B>`.
@@ -334,6 +338,7 @@ Agent(
 >    before setting it:** `scripts/agents/check_pr_title.py "<title>"`.
 >    Rewrite until it passes; do not hand-count.
 > 4. Compose the body to `pr_body.md`:
+>
 >    ```markdown
 >    ## Summary
 >    - <bullets from implementation and review outcomes>
@@ -355,16 +360,19 @@ Agent(
 >    - <verification commands + real output, or cite the task note's
 >      ## Verification section — do not invent green results>
 >    ```
+>
 >    **If `<PLAN_IMPACT>` is `Project closure`,** insert a `## Versioning`
 >    section between `## Project` and `## Numerical impact`. Read the new
 >    version from `hazma/__init__.py`; the prior is in
 >    `git show origin/master:hazma/__init__.py`:
+>
 >    ```markdown
 >    ## Versioning
 >    Closing project — version bumps `<OLD>` → `<NEW>`
 >    (`<patch | minor | major>` per `PLAN.md` `version_bump:`). New
 >    `CHANGELOG.md` entry under `## [<NEW>]`. See `docs/versioning.md`.
 >    ```
+>
 > 5. Update the PR: `gh pr edit <PR_NUMBER> --title "<title>"
 >    --body-file pr_body.md`, then `rm pr_body.md`.
 > 6. If review is `CONVERGED` (or skipped): `gh pr ready <PR_NUMBER>`,

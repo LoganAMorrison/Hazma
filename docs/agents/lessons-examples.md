@@ -964,3 +964,116 @@ population is a whole file the sweep never opened.
   saying the opposite of what the PR did. Review caught all of it in one
   pass; the fix wrote the note and the ADR and re-read every claim in the
   file against the diff).
+
+### path-filtered-assertion-misses-its-own-invariant
+
+PR #88 moved six test-only `hazma._core` submodules behind a default-off
+`test-probes` cargo feature so no released artifact carries them, and added a
+step to `.github/workflows/release.yml` asserting that the built extension
+exposes exactly the five per-domain submodules. The assertion was correct and
+ran green on the PR that introduced it.
+
+Review caught that it could never run on a PR that broke the invariant.
+`release.yml`'s `pull_request` trigger is filtered to `release.yml` and
+`pyproject.toml`, while what decides whether the probes compile is
+`rust/Cargo.toml` and `rust/src/lib.rs`. Adding `test-probes` to `default`, or
+dropping a `#[cfg]`, would touch neither filtered path. Ordinary CI could not
+catch it either: the `test` job's plain `pip install .` was followed only by an
+import smoke test, and the editable reinstall after it turns the probes back
+on, so the suite runs against a probe-enabled build by construction. The defect
+would first be observable in a published release.
+
+The fix put the assertion where a default-feature build already exists — the
+`test` job's import smoke step, which runs on every pull request across the
+whole matrix — and kept the release-time copy, which checks the actual
+`--release` wheel rather than an in-tree debug build. What made it verifiable
+was running the step's own body against both configurations rather than only
+the passing one:
+
+```text
+$ bash smoke.sh   # probe-enabled build
+a default-feature build of hazma._core exposes ['boost', 'dispatch', 'interp',
+'mediator_tables', 'neutrino', 'photon', 'positron', 'quad', 'scalar_mediator',
+'special', 'vector_mediator'], expected exactly ['neutrino', 'photon',
+'positron', 'scalar_mediator', 'vector_mediator']. ...
+exit: 1
+
+$ bash smoke.sh   # default build
+submodules: ['neutrino', 'photon', 'positron', 'scalar_mediator', 'vector_mediator']
+exit: 0
+```
+
+### rg-skips-the-skill-directories
+
+The same PR changed the development install from `pip install -e .` to
+`pip install -e . --config-settings build-args="--features test-probes"`, and
+swept the new command through `AGENTS.md`, `docs/agents/environment.md` and
+`docs/agents/preflight.md`. Review found four surviving copies of the old
+command in active instructions. The sweep that found the rest found ten, and
+the six the first pass missed were all in `.claude/skills/` and
+`.codex/skills/`.
+
+The cause is a default, not an oversight: `rg` skips dot-prefixed directories,
+and `doc-consistency.md` §11 prescribed
+`rg -n '<old-value>' projects/ docs/ hazma/ test/ README.md CHANGELOG.md` —
+which cannot reach either skill tree no matter how carefully it is run.
+Measured on the same tree:
+
+```text
+$ rg -l 'pip install -e' . | grep -c '^\./\.claude'
+0
+$ rg -l --hidden 'pip install -e' . | grep -c '^\./\.claude'
+5
+```
+
+§11 and the identifier sweep in the forcing-function block now pass `--hidden`
+and name both skill trees. The sites that keep the bare command do so
+deliberately — `AGENTS.md` naming the wrong command in order to warn about it,
+and prose about *which tool* republishes the extension, which now says "the
+editable install" rather than spelling a command a reader might run.
+
+### restated-procedure-outlives-its-source
+
+PR #88 changed `docs/agents/doc-consistency.md` §11 — the repo's canonical
+stale-sibling sweep — to pass `--hidden` and name `.claude/` and `.codex/`,
+because the old command could not reach either skill tree. Review round 2
+found that `.claude/skills/review-respond/SKILL.md` had pasted the *old*
+command inline while linking to §11 as canonical, so the skill that tells an
+implementer how to sweep was, in the same commit that fixed the sweep, telling
+them to run the broken one.
+
+The `.codex` twin of that skill was correct and needed no edit, which is the
+tell: it says "perform the before/after stale-sibling sweep required by
+`doc-consistency.md`" and never restates the command. One tree referenced the
+owner and the other duplicated it; only the duplicate could drift. The fix made
+the `.claude` twin match, rather than pasting the corrected command into it.
+
+The general move when the thing that changed *is* a sweep: sweep for copies of
+the sweep.
+
+```text
+$ rg -n --hidden "rg -n '<old-value>'" .claude .codex docs/agents
+.claude/skills/review-respond/SKILL.md:109  # the stale copy
+docs/agents/lessons-examples.md:839,1018    # deliberate historical quotes
+```
+
+### whole-tree-skipped-because-most-of-it-is-history
+
+The same PR swept a changed editable-install command across the repo and
+excluded `projects/` from the sweep on the grounds that it is a historical
+record. That holds for `projects/cython-to-rust/`, which was closing, and for
+any project's `task-notes/`, `learnings/` and `phases/` — rewriting those
+would falsify what was actually run. It does not hold for
+`projects/parity-pinned-defect-repair/`, which is `status: In Progress` and
+whose `references/corpus-repinning.md` is the operative oracle protocol its
+remaining tasks execute. Review reproduced the consequence: following step 2 of
+that protocol produced a five-submodule build, and `pytest -q
+test/test_core_quad.py` then exited 4 on the new missing-probes guard.
+
+§11 now states the distinction rather than leaving it to judgment, and states
+it per claim rather than per file — because the second of the two fixes landed
+in `task-notes/README.md`, which is mostly record and yet carries a live
+"every one of these needs a built tree" covering tasks that have not run. Past
+tense about a specific run is a record; an imperative or a present-tense
+requirement is an instruction wherever it sits. Location is the prior, not the
+answer, and the skip that hides a defect is the tree-shaped one.

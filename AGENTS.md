@@ -84,7 +84,7 @@ through `hazma.spectra`, `hazma.theory`, and the model packages.
 ## Commands
 
 ```sh
-pip install -e .          # build the hazma._core Rust extension in place
+pip install -e . --config-settings build-args="--features test-probes"
 pip install --group dev   # black, isort, ruff, pytest, pytest-xdist, mpmath
 pytest                    # full suite (hazma + test), parallel via xdist
 pytest -n 0               # same suite in-process (--pdb needs this)
@@ -100,14 +100,29 @@ The Rust crate has its own three, all run from the repo root against
 
 ```sh
 cargo fmt --manifest-path rust/Cargo.toml --check
-cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
-cargo test --manifest-path rust/Cargo.toml --no-default-features
+cargo clippy --manifest-path rust/Cargo.toml --all-features --all-targets \
+    -- -D warnings
+cargo test --manifest-path rust/Cargo.toml --no-default-features \
+    --features test-probes
 ```
 
 `--no-default-features` on the test command is load-bearing: the crate's
 default `extension-module` feature leaves CPython's symbols to be
 resolved by the interpreter that loads the shared object, and a test
 executable has no interpreter, so with it on the harness will not link.
+That is also why the test command names `test-probes` instead of taking
+`--all-features`, which would drag `extension-module` back in; clippy can
+take `--all-features` because it only type-checks.
+
+`test-probes` is the feature the editable install above passes through
+maturin. It compiles six `hazma._core` submodules — `special`, `quad`,
+`interp`, `boost`, `dispatch` and `mediator_tables` — that exist purely so
+`test/test_core_*.py` can reach the crate's foundation layers from Python.
+It is out of `default` so that neither the wheel nor the sdist carries
+them, which means **a plain `pip install -e .` produces a tree the test
+suite refuses to run against**: seven modules import a probe at module
+scope, and `test/conftest.py` fails the run with the command that fixes
+it rather than letting the affected modules skip.
 
 The one-command pre-commit gate is
 [`scripts/agents/preflight.sh`](scripts/agents/preflight.sh) — see
@@ -115,11 +130,12 @@ The one-command pre-commit gate is
 every commit; do not assume a hook covers it.
 
 **Editing a `.rs` requires a rebuild, and `cargo build` is not it.**
-`cargo build` refreshes `rust/target/`, which nothing imports;
-`pip install -e .` is what re-links the crate into the tree as
+`cargo build` refreshes `rust/target/`, which nothing imports; the
+editable install is what re-links the crate into the tree as
 `hazma/_core.abi3.so`. So the loop is: iterate with
-`cargo test --no-default-features` (fast, needs no reinstall, and is
-where kernel unit tests belong), then re-run the editable install before
+`cargo test --no-default-features --features test-probes` (fast, needs no
+reinstall, and is where kernel unit tests belong), then re-run the
+editable install — with the same `--config-settings` — before
 any Python-side check — pytest, the parity corpus, an interactive
 `import hazma._core` — is worth believing. Confirm with
 `python -c "import hazma._core; print(hazma._core.__file__)"` that the
