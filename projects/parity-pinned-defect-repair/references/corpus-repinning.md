@@ -36,7 +36,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "rest", "values"): Delta(
         repair="B3",                       # which task moved it
         positions=MOVED,                   # explicit tuple, or MOVED
-        relation=Ratio(...),               # see "Relations" below
+        relation=Exact(...),               # see "Relations" below
         measured="ratio is E_gamma exactly at all 100 positions",
         evidence="projects/.../task-9-rho-rest-frame.md",
     ),
@@ -56,7 +56,7 @@ strongest the physics supports:
 
 | Relation | Use when | Example |
 | --- | --- | --- |
-| `Exact(f)` | the delta is a closed-form transform of the stored array | rho `rest`: repaired == stored × `E_γ` |
+| `Exact(f)` | the repaired array is a closed-form transform of the stored one | rho `rest`: repaired == stored × `E_γ` |
 | `Oracle(path)` | a Task 2 capture holds the corrected value | all four Group A repairs |
 | `Additive(term)` | the delta is a computable additive term | η′: `+ BR · boost_delta_function(M/2, …)` |
 | `Bounded(lo, hi, sign)` | only a magnitude and a sign are known | fallback; requires a written justification |
@@ -82,6 +82,16 @@ the `stability.py` masks:
 
 Rule 3 is what makes the layer self-cleaning. Without it, a reverted
 repair passes.
+
+It also fixes when a declaration may be written. A model established
+ahead of its repair — which is what Task 3 does for B1, B2 and B3 — has
+no array that differs yet, so keying it into `DECLARED_DELTAS` would
+fail rule 3 on the spot. Those models live in `deltas.DELTA_MODELS`
+until the repair lands, held to the same terms (roster label, budget
+with a reason, measurement, evidence file) by the same shape tests, and
+checked against the stored arrays by `test/parity/test_delta_models.py`.
+The repair task adds the keys, and re-derives the position counts rather
+than inheriting them (`rules.md` rule 11).
 
 ### Shape tests (Task 1)
 

@@ -168,41 +168,53 @@ def _portability_zero_mask(
     return mask
 
 
+def _unchanged(predicted: np.ndarray, pinned: np.ndarray) -> np.ndarray:
+    """Where a relation predicts exactly what the corpus already stores.
+
+    ``NaN`` counts as equal to ``NaN``, matching the ``equal_nan=True``
+    every comparison in this module carries: seven stored cross-section
+    values are ``NaN``, and a relation that reproduces one has not moved
+    it.
+    """
+    return (predicted == pinned) | (np.isnan(predicted) & np.isnan(pinned))
+
+
 def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     delta: deltas.Delta,
     *,
     live: np.ndarray,
     pinned: np.ndarray,
-    term: np.ndarray,
+    predicted: np.ndarray,
     compare: np.ndarray,
     budget: tolerances.Budget,
     where: str,
 ) -> None:
     """Compare one declared array against its declared relation.
 
-    Declared positions are held to ``pinned + term`` within the relation's
-    own budget; every other position is held to ``pinned`` within the
-    case's budget as if nothing had been declared. A declaration reaches
-    only what its term moves: `deltas.MOVED` resolves to the non-zero
-    positions of the term, and an explicit tuple may not name a position
-    the term leaves at zero -- that would be a carve-out wider than its
+    Declared positions are held to the relation's prediction within the
+    relation's own budget; every other position is held to ``pinned``
+    within the case's budget as if nothing had been declared. A
+    declaration reaches only what its relation moves: `deltas.MOVED`
+    resolves to the positions where the prediction differs from the
+    stored value, and an explicit tuple may not name a position the
+    relation leaves alone -- that would be a carve-out wider than its
     mechanism, and it fails here rather than silently loosening the gate.
-    Then the staleness rule: wherever the term is larger than the
-    relation's budget, the live value must actually differ from the
-    stored one, so a reverted repair cannot hide behind a declaration
-    that no longer describes it.
+    Then the staleness rule: wherever the prediction departs from the
+    stored value by more than the relation's budget, the live value must
+    actually differ from the stored one, so a reverted repair cannot hide
+    behind a declaration that no longer describes it.
     """
-    moved_by_term = term != 0.0
+    moved_by_relation = ~_unchanged(predicted, pinned)
     if delta.positions == deltas.MOVED:
-        declared = moved_by_term
+        declared = moved_by_relation
     else:
         declared = np.zeros(pinned.shape, dtype=bool)
         declared[..., list(delta.positions)] = True
-        unmoved = declared & ~moved_by_term
+        unmoved = declared & ~moved_by_relation
         assert not unmoved.any(), (
             f"{where}: the {delta.repair} declaration names "
-            f"{int(unmoved.sum())} position(s) its term does not move -- a "
-            "declaration wider than its mechanism (deltas.py)"
+            f"{int(unmoved.sum())} position(s) its relation does not move "
+            "-- a declaration wider than its mechanism (deltas.py)"
         )
     undeclared = compare & ~declared
     if undeclared.any():
@@ -219,7 +231,7 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     relation = delta.relation
     np.testing.assert_allclose(
         live[selected],
-        (pinned + term)[selected],
+        predicted[selected],
         rtol=relation.rtol,
         atol=budget.atol,
         equal_nan=True,
@@ -227,8 +239,8 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
         f"({relation.why})",
     )
     with np.errstate(divide="ignore", invalid="ignore"):
-        predicted = np.abs(term[selected]) / np.abs(pinned[selected])
-    moved = predicted > relation.rtol
+        size = np.abs(predicted[selected] - pinned[selected]) / np.abs(pinned[selected])
+    moved = size > relation.rtol
     assert moved.any(), (
         f"{where}: the {delta.repair} declaration moves nothing beyond its "
         "own budget here, so it is stale -- narrow it (deltas.py)"
@@ -324,6 +336,11 @@ def test_entry_point_matches_corpus(
         f"{sorted(manifest_block['arrays'])}"
     )
 
+    # An `Exact` relation rebuilds the repaired array from what the corpus
+    # stored, abscissae included, so it is handed the whole block rather
+    # than the one array being compared.
+    stored = {s: arrays[e["key"]] for s, e in manifest_block["arrays"].items()}
+
     for suffix, entry in manifest_block["arrays"].items():
         expected = arrays[entry["key"]]
         where = f"{case_name}[{block.label}].{suffix}"
@@ -343,10 +360,12 @@ def test_entry_point_matches_corpus(
             )
             continue
         delta = deltas.declared(case_name, block.label, suffix)
-        term = None
+        predicted = None
         if delta is not None:
-            term = delta.relation.term(case.resolve(), block)[suffix]
-            term, _ = _drop_unpinnable(term, expected, case_name, block.label, suffix)
+            predicted = delta.relation.expected(case.resolve(), block, stored)[suffix]
+            predicted, _ = _drop_unpinnable(
+                predicted, expected, case_name, block.label, suffix
+            )
         live, pinned = _drop_unpinnable(
             actual[suffix], expected, case_name, block.label, suffix
         )
@@ -366,12 +385,12 @@ def test_entry_point_matches_corpus(
                 err_msg=f"{where} moved beyond its budget ({budget.why})",
             )
         else:
-            assert term is not None
+            assert predicted is not None
             _assert_declared_delta(
                 delta,
                 live=live,
                 pinned=pinned,
-                term=term,
+                predicted=predicted,
                 compare=~floored,
                 budget=budget,
                 where=where,
@@ -569,19 +588,35 @@ def test_every_declared_delta_addresses_a_real_stored_array(
             assert len(set(delta.positions)) == len(delta.positions)
 
 
-def test_every_declared_delta_is_a_roster_repair_with_its_evidence() -> None:
+def test_every_delta_model_is_a_roster_repair_with_its_evidence() -> None:
     """The label is from the closed roster and the evidence file exists.
 
-    The mechanism only aggregates at close time if every declaration
-    names a repair the roster knows, and only stays re-derivable if the
+    The mechanism only aggregates at close time if every model names a
+    repair the roster knows, and only stays re-derivable if the
     measurement behind it is written down somewhere that is checked in.
+    Swept over `deltas.DELTA_MODELS` rather than over the declarations,
+    so a model established ahead of its repair is held to the same terms
+    while it waits for its keys.
     """
     repo_root = Path(__file__).resolve().parents[2]
+    for label, delta in deltas.DELTA_MODELS.items():
+        assert delta.repair == label, f"{label}: keyed under {delta.repair!r}"
+        assert delta.repair in deltas.REPAIRS, f"{label}: repair {delta.repair!r}"
+        assert delta.measured.strip(), f"{label}: no measurement"
+        assert delta.relation.why.strip(), f"{label}: relation budget has no reason"
+        assert (repo_root / delta.evidence).is_file(), f"{label}: {delta.evidence}"
+
+
+def test_every_declaration_points_at_a_delta_model() -> None:
+    """A declared array carries one of the models, not a private copy.
+
+    `DELTA_MODELS` is what the close aggregates and what
+    `test_delta_models.py` gates; a declaration built beside it rather
+    than from it would be in neither.
+    """
+    models = set(map(id, deltas.DELTA_MODELS.values()))
     for key, delta in deltas.DECLARED_DELTAS.items():
-        assert delta.repair in deltas.REPAIRS, f"{key}: repair {delta.repair!r}"
-        assert delta.measured.strip(), f"{key}: no measurement"
-        assert delta.relation.why.strip(), f"{key}: relation budget has no reason"
-        assert (repo_root / delta.evidence).is_file(), f"{key}: {delta.evidence}"
+        assert id(delta) in models, f"{key}: {delta.repair} is not a DELTA_MODELS entry"
 
 
 def test_the_declared_arrays_are_counted() -> None:
@@ -595,10 +630,11 @@ class TestTheDeclaredDeltaComparison:
     The proof obligations in
     ``projects/parity-pinned-defect-repair/references/corpus-repinning.md``
     are properties of the gate, not claims in a note: a declaration must
-    not loosen the positions its term leaves alone, must not be widenable
-    by a position the term does not move, and must fail once the repair
-    it describes is reverted. Each is run here as the mutation that would
-    exploit it, against a fake declaration whose term is known exactly.
+    not loosen the positions its relation leaves alone, must not be
+    widenable by a position the relation does not move, and must fail
+    once the repair it describes is reverted. Each is run here as the
+    mutation that would exploit it, against a fake declaration whose
+    prediction is known exactly.
     """
 
     #: The case budget an undeclared position is held to.
@@ -634,7 +670,7 @@ class TestTheDeclaredDeltaComparison:
             delta,
             live=live,
             pinned=pinned,
-            term=term,
+            predicted=pinned + term,
             compare=np.ones(pinned.shape, dtype=bool),
             budget=self.BUDGET,
             where="synthetic",
@@ -685,7 +721,7 @@ class TestTheDeclaredDeltaComparison:
                 self._declaration(deltas.MOVED),
                 live=pinned + term,
                 pinned=pinned,
-                term=term,
+                predicted=pinned + term,
                 compare=np.ones(pinned.shape, dtype=bool),
                 budget=self.BUDGET,
                 where="synthetic",
@@ -697,11 +733,56 @@ class TestTheDeclaredDeltaComparison:
 
     def test_widening_a_tuple_by_an_unmoved_position_fails(self) -> None:
         # Proof obligation 2: widening the declaration by one position the
-        # term does not move is refused outright, so the widened
+        # relation does not move is refused outright, so the widened
         # declaration cannot be used to absorb a regression there.
         pinned, term = self._arrays()
         with pytest.raises(AssertionError, match="wider than its mechanism"):
             self._check(self._declaration((0, 1, 2, 3)), pinned + term)
+
+    def test_an_exact_relation_is_compared_against_its_transform(self) -> None:
+        # The `Exact` half of the protocol, on the transform B3 uses: the
+        # prediction is the stored array times its abscissae, and a live
+        # array that reproduces it passes while the unrepaired one does
+        # not. Run here rather than only through the corpus because no
+        # `Exact` declaration is keyed until the rho repair lands.
+        pinned = np.array([1.0, 2.0, 0.5, 0.25])
+        grid = np.array([13.0, 50.0, 200.0, 300.0])
+        delta = deltas.Delta(
+            repair="B3",
+            positions=deltas.MOVED,
+            relation=deltas.Exact(
+                transform=lambda block, stored: {
+                    "values": stored["values"] * stored["grid"]
+                },
+                rtol=1e-9,
+                why="synthetic",
+            ),
+            measured="synthetic",
+            evidence="test/parity/deltas.py",
+        )
+        predicted = delta.relation.expected(
+            None, None, {"values": pinned, "grid": grid}
+        )
+        assert predicted["values"] == pytest.approx(pinned * grid)
+        _assert_declared_delta(
+            delta,
+            live=pinned * grid,
+            pinned=pinned,
+            predicted=predicted["values"],
+            compare=np.ones(pinned.shape, dtype=bool),
+            budget=self.BUDGET,
+            where="synthetic",
+        )
+        with pytest.raises(AssertionError, match="does not satisfy the B3 relation"):
+            _assert_declared_delta(
+                delta,
+                live=pinned.copy(),
+                pinned=pinned,
+                predicted=predicted["values"],
+                compare=np.ones(pinned.shape, dtype=bool),
+                budget=self.BUDGET,
+                where="synthetic",
+            )
 
 
 def test_only_the_declared_cases_are_masked() -> None:
