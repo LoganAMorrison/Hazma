@@ -269,7 +269,7 @@ Copied from `../../phases/phase-07-cutover.md`, Task 7.3.
 - **`preflight.sh`'s markdownlint gate is red on `README.md` at
   `origin/master`** (14 findings), so passing `--md README.md` fails the
   gate on any PR that touches it. This task took the count to 13 and
-  added none. It is the same shape as the open
+  added none. It is the same shape as the
   [`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   follow-up and is recorded there rather than in a second stub.
 
@@ -437,7 +437,7 @@ this diff:
   deletions**, the deletion of an empty file. `git diff origin/master
   --name-only | sed 's/.*\.//' | sort | uniq -c` over the final set is
   `1 Dockerfile, 1 cfg, 27 md, 1 py, 1 rst, 1 toml, 1 txt`. Both gates
-  are the open
+  are the
   [`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   follow-up.
 - **markdownlint** is red on `README.md`, which carries 14 findings at

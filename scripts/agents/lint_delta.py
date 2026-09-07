@@ -247,12 +247,28 @@ def run_isort(tree: Path, paths: list[str]) -> Counter[Finding]:
     findings: Counter[Finding] = Counter()
     # isort reports on stderr, but has moved the stream before; read both
     # rather than depending on which one this version chose.
-    for line in (proc.stderr + proc.stdout).splitlines():
+    output = proc.stderr + proc.stdout
+    for line in output.splitlines():
         match = ISORT_ERROR.match(line.strip())
         if match is None:
             continue
         path, message = split_isort_error(match.group("rest"), tree)
         findings[(path, "isort", message)] += 1
+
+    if proc.returncode not in (0, 1):
+        raise LintDeltaError(f"isort exited {proc.returncode}: {output.strip()[:500]}")
+    # Exit 1 means "something here would be re-sorted", so isort has to
+    # have named the file. It also exits 1 when it cannot run at all --
+    # a traceback for an unreadable settings file, `Broken N paths` for a
+    # file it could not open -- and those leave no ERROR line behind. The
+    # exit code cannot separate the two, but the empty result can: a run
+    # that reports changes while naming nothing has not answered the
+    # question, and returning its empty counter would be read as a clean
+    # tree and pass the gate.
+    if proc.returncode == 1 and not findings:
+        raise LintDeltaError(
+            f"isort reported changes but named no file: {output.strip()[:500]}"
+        )
     return findings
 
 

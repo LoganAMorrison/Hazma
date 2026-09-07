@@ -15,6 +15,7 @@ to the branch being checked.
 from __future__ import annotations
 
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
@@ -253,6 +254,49 @@ def test_isort_reports_only_newly_unsorted_files(repo: Path) -> None:
     assert result.returncode == NEW_FINDINGS, result.stdout
     assert "pkg/fresh.py" in result.stdout
     assert "pkg/unsorted.py" not in result.stdout
+
+
+@requires_isort
+def test_isort_failing_to_run_is_not_a_clean_result(repo: Path) -> None:
+    """A linter that crashed must fail the gate, not report an empty diff.
+
+    isort exits 1 both when it would re-sort a file and when it cannot run
+    at all — an unreadable settings file raises and prints a traceback,
+    and a path it cannot open prints `Broken N paths`. Neither leaves an
+    ERROR line behind, so the exit code alone cannot separate them from a
+    clean tree, and an empty result would be reported as a pass.
+    """
+    (repo / "pyproject.toml").write_text("[tool.isort]\nprofile =\n")
+
+    result = _run(repo, "isort", "pkg")
+
+    assert result.returncode not in (NO_NEW_FINDINGS, NEW_FINDINGS), result.stdout
+    assert "could not compare" in result.stdout
+
+
+def test_a_linter_exiting_unexpectedly_is_not_a_clean_result(repo: Path) -> None:
+    """An exit code neither linter defines means no verdict is available."""
+    # Without a Python change the comparison short-circuits before any
+    # linter runs, and the shim below would never be reached.
+    module = repo / "pkg" / "module.py"
+    module.write_text(module.read_text() + "\nOTHER = 3\n")
+
+    shim = repo / "shim"
+    shim.mkdir()
+    (shim / "isort").write_text("#!/bin/sh\nexit 3\n")
+    (shim / "isort").chmod(0o755)
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--linter", "isort", "--base", "HEAD", "pkg"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={**os.environ, "PATH": f"{shim}:{os.environ['PATH']}"},
+    )
+
+    assert result.returncode not in (NO_NEW_FINDINGS, NEW_FINDINGS), result.stdout
+    assert "exited 3" in result.stdout
 
 
 def test_isort_error_lines_split_on_paths_containing_spaces(tmp_path: Path) -> None:

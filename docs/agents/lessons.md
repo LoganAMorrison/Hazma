@@ -106,7 +106,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   each hit. Run the sweep repo-wide, not over `--paths`: the reference that
   goes stale is in a file the moving PR never touches. A stale reference
   surviving elsewhere in the tree is evidence the sweep was skipped there,
-  never a convention to copy (PRs #44, #81).
+  never a convention to copy (PRs #44, #81). Repointing the path is half the
+  job: the sentence around the link usually calls the item *open* or its
+  question unsettled, so re-read every hit rather than `sed`-ing the path
+  through them (PR #89).
 - [pre-existing-failure-asserted-not-measured] "Pre-existing" is a measurement,
   never an assertion. `preflight.sh` gates 2 and 3 make it for you — they diff
   the tree's findings against the merge base, so a red row is already only what
@@ -171,7 +174,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [gate-disabled-stays-green] Removing, narrowing or conditionally skipping a
   check cannot turn CI red, so verify a gate by observing it *execute* —
   collected/passed counts, the env it echoed — and remember GitHub Actions'
-  `cond && '' || 'flag'` yields `'flag'` for both outcomes (PR #52, #53).
+  `cond && '' || 'flag'` yields `'flag'` for both outcomes (PR #52, #53). A
+  wrapper that parses a tool's output needs the same proof: cross the exit code
+  against what was parsed and fail closed when the two disagree. `isort` exits
+  1 both for "this file would be re-sorted" and for a traceback, so an
+  unreadable config yields zero findings and reads as a clean tree (PR #89).
 - [renumbered-list-orphans-its-references] Inserting an item into a numbered
   list falsifies every prose reference to the items after it, wherever they
   live; sweep `rg -n '[Gg]ate [0-9]|[Ss]tep [0-9]|item [0-9]'` across `docs/`,
