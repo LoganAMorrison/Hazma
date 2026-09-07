@@ -19,10 +19,24 @@ measurement that justifies its budget, and where the evidence lives.
 
 Relations
 ---------
+Every relation answers the same question — how far is the stored array
+from what it should hold? — through `Relation.term_for`, so the runner
+never has to know which kind it is holding. Relations differ in how they
+reach that term, not in what the runner does with it.
+
 ``Additive`` — the repaired value is the stored value plus a term the
-declaration knows how to compute. The term here is evaluated live, from
-the repaired kernel, and is its own adaptive quadrature; the budget each
-relation carries is measured, not assumed, and says so in its ``why``.
+declaration knows how to compute. The term is evaluated live, from the
+repaired kernel, and is its own adaptive quadrature.
+
+``Reference`` — the stored value is superseded outright by one computed
+without going through the kernel under repair. A defect that made an
+array *wrong*, rather than shifting it by a knowable amount, has no
+additive term to name: `thermal_reference` integrates the same integrand
+with a different QUADPACK at a convergent tolerance, and the repaired
+kernel is held to that.
+
+The budget each relation carries is measured, not assumed, and says so
+in its ``why``.
 
 Positions
 ---------
@@ -50,13 +64,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+import thermal_reference
 
 if TYPE_CHECKING:
     from cases import Block
 
 #: The closed set of repair labels a declaration may carry: the roster in
 #: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
-REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4"})
+REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5"})
 
 #: The sentinel for "every position the term is non-zero at", resolved
 #: against the term at comparison time. A term that is zero at a position
@@ -93,6 +108,52 @@ class Additive:
     rtol: float
     why: str
 
+    def term_for(
+        self,
+        fn: Callable[..., Any],
+        block: Block,
+        suffix: str,
+        pinned: np.ndarray,
+    ) -> np.ndarray:
+        """The declared term itself; ``pinned`` is not consulted."""
+        del pinned
+        return self.term(fn, block)[suffix]
+
+
+@dataclass(frozen=True)
+class Reference:
+    """``repaired == reference(block)``, within ``rtol``.
+
+    The stored array is superseded rather than corrected: the repaired
+    kernel is compared against a value reached without it. Use this where
+    the defect made the stored value wrong by an amount only a second
+    implementation can say, rather than by a term the physics names.
+
+    Parameters
+    ----------
+    reference : TermFn
+        Computes the superseding values for one block.
+    rtol : float
+        Relative budget the relation holds to. Measured, and ``why`` says
+        how.
+    why : str
+        One-line justification of ``rtol``.
+    """
+
+    reference: TermFn
+    rtol: float
+    why: str
+
+    def term_for(
+        self,
+        fn: Callable[..., Any],
+        block: Block,
+        suffix: str,
+        pinned: np.ndarray,
+    ) -> np.ndarray:
+        """How far the stored array is from the reference."""
+        return self.reference(fn, block)[suffix] - pinned
+
 
 @dataclass(frozen=True)
 class Delta:
@@ -107,7 +168,7 @@ class Delta:
         entry of which the term must move, or `MOVED` for wherever the
         term is non-zero. Undeclared positions are still compared against
         the stored value under the case's budget.
-    relation : Additive
+    relation : Additive or Reference
         How the repaired value relates to the stored one.
     measured : str
         The measurement behind the declaration, so the table is not a
@@ -118,7 +179,7 @@ class Delta:
 
     repair: str
     positions: Positions
-    relation: Additive
+    relation: Additive | Reference
     measured: str
     evidence: str
 
@@ -182,6 +243,60 @@ _B4 = Delta(
     "term is non-zero at 3,065 of the 4,305 pinned positions; 2,874 of "
     "those move by more than 0.1%, up to exactly double.",
     evidence="docs/followups/done/scalar-decay-fsr-half-normalized.md",
+)
+
+# ---------------------------------------------------------------------------
+# B5 -- the thermal averages never converged
+# ---------------------------------------------------------------------------
+
+#: The three model points both thermal cases sweep, in corpus block order.
+THERMAL_BLOCKS = ("open_resonance", "narrow_resonance", "closed_resonance")
+
+
+def _thermal(model: str) -> Reference:
+    """The `Reference` relation for one mediator family's thermal case."""
+    return Reference(
+        reference=thermal_reference.reference_values(model),
+        rtol=1e-7,
+        why="the reference is scipy's QUADPACK at epsrel 1e-12 over the same "
+        "integrand, so what bounds agreement is the repaired kernels' own "
+        "epsrel of 1.49e-8, not the reference: a platform whose libm steers "
+        "QUADPACK to a different accepted partition may land anywhere inside "
+        "it. Measured 3.6e-9 worst relative over the 540 positions the "
+        "reference integrates. 1e-7 is 6.7x the bound that has to hold "
+        "everywhere, rather than 28x the figure this platform happens to "
+        "give.",
+    )
+
+
+#: Both cases carry the same measurement, so the two declarations differ
+#: only in which model the reference integrates.
+_B5_MEASURED = (
+    "the stored arrays are the initial-partition estimate: against the "
+    "reference they are wrong by up to 1.00 relative (scalar and vector "
+    "closed_resonance, where the shipped value retains none of the true "
+    "one), with per-block medians from 7.2e-6 to 8.1e-2. 539 of the 570 "
+    "pinned positions move. Of the 31 that do not, 30 are the ten points "
+    "per scalar block above x = 300, where that kernel returns 0.0 outright "
+    "and the quadrature is never reached; the last is vector "
+    "narrow_resonance at x = 0.1367, small enough that the relative "
+    "criterion already bound before the repair."
+)
+
+_B5_SCALAR = Delta(
+    repair="B5",
+    positions=MOVED,
+    relation=_thermal("scalar"),
+    measured=_B5_MEASURED,
+    evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
+)
+
+_B5_VECTOR = Delta(
+    repair="B5",
+    positions=MOVED,
+    relation=_thermal("vector"),
+    measured=_B5_MEASURED,
+    evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
 )
 
 #: Every declared array. The ``mu_mu_only`` blocks of the same case are
@@ -342,6 +457,36 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "ms_900.boosted_strong.default",
         "scalar_values",
     ): _B4,
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "open_resonance",
+        "values",
+    ): _B5_SCALAR,
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "narrow_resonance",
+        "values",
+    ): _B5_SCALAR,
+    (
+        "cross_sections.scalar.thermal_cross_section",
+        "closed_resonance",
+        "values",
+    ): _B5_SCALAR,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "open_resonance",
+        "values",
+    ): _B5_VECTOR,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "narrow_resonance",
+        "values",
+    ): _B5_VECTOR,
+    (
+        "cross_sections.vector.thermal_cross_section",
+        "closed_resonance",
+        "values",
+    ): _B5_VECTOR,
 }
 
 

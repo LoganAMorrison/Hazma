@@ -13,6 +13,42 @@ its magnitude and a pointer to the tracked repair. **Numerical changes go
 under `Changed` with the magnitude stated** — a spectrum that moves is a
 user-facing change even when no signature did.
 
+## [Unreleased]
+
+### Changed
+
+- **Both mediator `thermal_cross_section` implementations now converge,
+  and `relic_density` moves with them — by up to two orders of
+  magnitude.** ⟨σv⟩ was computed by a quadrature that never subdivided:
+  `scipy.integrate.quad` was given neither `epsabs` nor `epsrel`, and its
+  default `epsabs` of 1.49e-8 is twenty decades above an integral of
+  order 1e-27, so QUADPACK met the absolute criterion on its first
+  Gauss–Kronrod pass and returned its initial three-interval partition
+  unrefined. Measured against scipy's own QUADPACK at `epsrel = 1e-12`
+  over the 570 points the parity corpus pins, the shipped ⟨σv⟩ was wrong
+  by **up to 100%** — at the two closed-resonance model points it
+  retained none of the true value — with per-block median errors from
+  7.2e-6 to 8.1e-2. Freeze-out abundance goes as 1/⟨σv⟩, so
+  `relic_density` for any `ScalarMediator`- or `VectorMediator`-family
+  model moves too: over the six model points `test/test_relic_density.py`
+  pins, between **−99.9% and +2.4%**. If you have published a relic
+  density, a thermally averaged cross section, or a coupling solved for
+  by matching one, recompute it.
+
+  The repair passes `epsabs = 0` at all four affected call sites — both
+  Rust kernels plus `hazma.relic_density._thermal_functions` and the GeV
+  vector model's own implementation, neither of which was ever ported —
+  and raises the two kernels' subdivision limit from 50 to 100, without
+  which the criterion they now bind to could not be reached at 33 of the
+  540 corpus positions. Converged values cost more: one
+  `thermal_cross_section` call goes from 4.6–48 µs to 21–136 µs, and six
+  `relic_density` model points solved both ways from 1.31 s to 5.4 s.
+  This was
+  [a known issue in 2.2.0](docs/followups/done/thermal-cross-section-quadrature-never-converges.md);
+  the corpus arrays that pinned it stay committed, with the moved
+  positions declared as roster entry `B5` of
+  [`projects/parity-pinned-defect-repair`](projects/parity-pinned-defect-repair/PLAN.md).
+
 ## [2.2.0] — 2026-09-06
 
 **Hazma's compiled layer is now Rust.** The twenty Cython extension
@@ -304,12 +340,15 @@ result:
   part in 1e12 above rest, `dnde_photon_eta` returns 767.2 against the
   0.02313 it returns exactly at rest. Separately, when the window reaches
   past the table the final row contributes to nothing at all.
-- **[`thermal_cross_section` returns its integrator's initial estimate.](docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)**
-  The quadrature never converges, so ⟨σv⟩ is 0.5%–5% off the true
-  integral for every `x = m_χ/T` above about 5 — that is, across the
-  entire freeze-out region. Relic abundance goes as 1/⟨σv⟩, so any
-  `relic_density` computed for a `ScalarMediator`- or
-  `VectorMediator`-family model inherits that error roughly linearly.
+- **[`thermal_cross_section` returns its integrator's initial estimate.](docs/followups/done/thermal-cross-section-quadrature-never-converges.md)**
+  The quadrature never converges, so ⟨σv⟩ is off the true integral for
+  every `x = m_χ/T` above about 5 — that is, across the entire freeze-out
+  region. Relic abundance goes as 1/⟨σv⟩, so any `relic_density` computed
+  for a `ScalarMediator`- or `VectorMediator`-family model inherits that
+  error roughly linearly. **The 0.5%–5% this entry originally quoted was
+  measured at one model point and understates it badly**: swept over the
+  parity corpus during the repair, the error reaches 100% — see
+  `Unreleased`, which carries the measurement and the fix.
 - **[Four scalar elastic cross sections cancel away every significant bit.](docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md)**
   `sigma_xl_to_xl`, `sigma_xpi_to_xpi`, `sigma_xpi0_to_xpi0` and
   `sigma_xs_to_xs` form a difference of two `atan`s that cancels

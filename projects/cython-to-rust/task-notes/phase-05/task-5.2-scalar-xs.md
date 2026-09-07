@@ -475,7 +475,7 @@ annotated their vector rows; `test/parity/reference.py:32` says the path
 is provenance and names `git show` as the way to read it; and the two
 follow-ups that said "until Task 5.2 ports it"
 ([the `2 m_x` raise](../../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md),
-[the unconverged quadrature](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md))
+[the unconverged quadrature](../../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md))
 now point at the Rust and say what porting settled.
 
 ```console

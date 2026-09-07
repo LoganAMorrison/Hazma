@@ -216,7 +216,7 @@ cross-section ports.
 
 - Three follow-ups opened by Task 5.1, none blocking:
   [the `2 m_x` raise](../../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md),
-  [the unconverged thermal quadrature](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md),
+  [the unconverged thermal quadrature](../../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md),
   [the debug editable build](../../../../docs/followups/done/editable-installs-build-the-rust-extension-in-debug.md).
 - Task 5.2 rebuilt `test/test_core_quad.py`'s scalar `sigma_xx_to_all`
   oracle from the ported kernels, the way Task 5.1 did the vector one,
@@ -267,7 +267,7 @@ instead of this file and the three task notes; they are history.
   source.
 - The two models disagree above `x = 300` — the scalar returns exactly
   `0.0`, the vector saturates. The corpus pins both; do not unify them.
-- [The thermal quadrature never converges](../../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
+- [The thermal quadrature never converges](../../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)
   on either model. Task 5.3 measured the consequence: relic abundance
   goes as 1/⟨σv⟩, so a relic density computed for any
   `ScalarMediator`- or `VectorMediator`-family model carries that

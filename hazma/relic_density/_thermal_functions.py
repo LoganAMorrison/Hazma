@@ -473,6 +473,13 @@ def thermal_cross_section(x: float, model) -> float:
     # ss = np.linspace(2.0, 150, 500)
     # return simps(integrand(ss), ss) * numpf / den
 
+    # `epsabs=0.0` leaves the relative criterion as the binding one.
+    # <sigma v> is of order 1e-27 here, twenty decades under scipy's
+    # default `epsabs` of 1.49e-8, and QUADPACK returns as soon as
+    # *either* criterion is met -- so at the default the first
+    # Gauss-Kronrod pass clears it and the initial partition comes back
+    # unrefined. Measured on the mediator kernels that share this defect,
+    # that costs up to 100% of the value across the freeze-out region.
     return (
         pf
         * quad(
@@ -481,5 +488,6 @@ def thermal_cross_section(x: float, model) -> float:
             50.0 / x,
             args=(x, model),
             points=[2.0],
+            epsabs=0.0,
         )[0]
     )

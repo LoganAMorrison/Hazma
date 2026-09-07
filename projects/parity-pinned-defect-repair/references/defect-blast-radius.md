@@ -182,6 +182,30 @@ half the repaired kernel's FSR-only spectrum. Declared in
 `test/parity/deltas.py`, which landed with the repair rather than under
 Task 1.
 
+### B5 — thermal quadrature never converged (2 cases)
+
+`cross_sections.scalar.thermal_cross_section` and
+`cross_sections.vector.thermal_cross_section` — all three blocks of
+each, at 539 of their 570 positions. The first two `cross_sections.*`
+cases any defect reaches, and the only entry in this roster whose defect
+is in the *integrator* rather than in a closed form: both kernels
+inherited `scipy.integrate.quad`'s default `epsabs = 1.49e-8` against an
+integral of order 1e-27, so QUADPACK met the absolute criterion on its
+first Gauss–Kronrod pass and returned the initial partition unrefined.
+Found and repaired after this roster was drawn
+([`thermal-cross-section-quadrature-never-converges.md`](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)).
+
+Of the 31 positions that do not move, 30 are the ten points per scalar
+block above `x = 300`, where that kernel returns `0.0` before it
+integrates; the last is vector `narrow_resonance` at `x = 0.1367`, small
+enough that the relative criterion already bound.
+
+Declared with a `Reference` relation rather than an `Additive` one:
+there is no term the physics names, because the stored value is not the
+true one shifted but the true one unresolved. `test/parity/thermal_reference.py`
+supplies what it should hold, integrating the same integrand with
+scipy's QUADPACK at `epsrel = 1e-12`.
+
 ### The defects, and which group each is in
 
 Group A still has a live Cython twin and is on the clock for its oracle
@@ -197,20 +221,22 @@ capture; Group B does not, and has no ordering constraint at all.
 | B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
 | B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs` |
 | B4 | Scalar decay spectrum's FSR coefficients are half size | [`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md) | deleted, Task 6.2 | `rust/src/kernels/scalar_decay_photon.rs` — **repaired** |
+| B5 | Both thermal averages return the integrator's initial estimate | [`thermal-cross-section-quadrature-never-converges.md`](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md) | deleted, Tasks 5.1/5.2 | `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs` — **repaired** |
 
 ## Coverage arithmetic
 
 The corpus has 41 cases. The rows above name
-7 + 1 + 6 + 6 + 1 + 1 + 2 + 1 = **25 case slots** across eight defects,
-but four of the eight sets are wholly contained in another — derived,
-not eyeballed:
+7 + 1 + 6 + 6 + 1 + 1 + 2 + 1 + 2 = **27 case slots** across nine
+defects, but four of the nine sets are wholly contained in another —
+derived, not eyeballed:
 
 ```text
-B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3   B4 ⊆ A3     and A1, A2, A3, A4 are pairwise disjoint
+B1 ⊆ A1   B2 ⊆ A1   B3 ⊆ A3   B4 ⊆ A3
+A1, A2, A3, A4, B5 are pairwise disjoint
 ```
 
-So the union is exactly `|A1| + |A2| + |A3| + |A4|` = 7 + 1 + 6 + 6 =
-**20**. Two consequences worth carrying into the tasks. A2 and A3 are
+So the union is `|A1| + |A2| + |A3| + |A4| + |B5|` = 7 + 1 + 6 + 6 + 2 =
+**22**. Two consequences worth carrying into the tasks. A2 and A3 are
 now *disjoint* — A2 reaches only `spectra.photon.muon`, A3 reaches
 exactly the six cases A2 was predicted to share with it — so Task 8
 opens six cases of its own rather than adding positions to ones Task 7
@@ -223,10 +249,11 @@ channel, so Task 8 either proves the two position sets disjoint or
 folds B4's declaration into a composite. And A4 is disjoint from
 everything else, which is what makes Task 10 safe to run in parallel.
 
-Untouched: **21** — the 18 `cross_sections.*`, the 2 `spectra.neutrino.*`
-(no defect on their path; they use `boost_delta_function`, not the
-interpolating integral), and `spectra.photon.neutral_pion` (the π⁰ → γγ
-box reaches neither the muon kernel nor the boost integral). 20 + 21 = 41.
+Untouched: **19** — the 16 `cross_sections.*` that are not the two
+thermal averages, the 2 `spectra.neutrino.*` (no defect on their path;
+they use `boost_delta_function`, not the interpolating integral), and
+`spectra.photon.neutral_pion` (the π⁰ → γγ box reaches neither the muon
+kernel nor the boost integral). 22 + 19 = 41.
 
 That arithmetic is the cheapest check on this file, and it has now done
 its job twice. Task 2's measurement cut A2 from 7 cases to 1, the slot
@@ -234,8 +261,11 @@ count fell from 30 to 24 and one containment (`A3 ⊆ A2`) inverted into a
 disjointness — but the union stayed at 20, because the six cases A2 lost
 are exactly the six A3 keeps. Then B4 joined the roster with one case
 that was already inside A3's set, so the slot count rose from 24 to 25
-and the union stayed at 20 again. Redo the sum after any measured change
-and make it come out to 41 again rather than patching one cell.
+and the union stayed at 20 again. B5 is the first addition to move the
+union: its two cases are `cross_sections.*`, which no spectra defect can
+reach, so slots went 25 → 27 and the union 20 → 22 with the untouched
+count falling 21 → 19. Redo the sum after any measured change and make
+it come out to 41 again rather than patching one cell.
 
 ## The deletion schedule this radius has to beat
 

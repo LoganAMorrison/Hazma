@@ -32,14 +32,16 @@ section tracks live *status*.
 | 8 | Repair A3 — charged-pion forward cone | 7 | Not started | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
-| 11 | Reconcile the superseded sequencing prose | 4–10 | Not started | `task-11-prose-reconciliation.md` |
+| 11 | Reconcile the superseded sequencing prose | 4–10, 13 | Not started | `task-11-prose-reconciliation.md` |
 | 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
+| 13 | Repair B5 — thermal quadrature convergence | 1 | **Complete** | `task-13-thermal-quadrature.md` |
 
 ```text
 1 ──┬──► 3 ──┬──────────► 5 ──┐
     │        │                │
     ├──► 4 ──┴────────────────┼──► 11 ──► 12
     │        └──► 6 ──────────┤
+    └──► 13 ──────────────────┤
 2 ──┼──► 7 ──► 8 ──► 9 ───────┤
     └──► 10 ──────────────────┘
 ```
@@ -52,10 +54,10 @@ this project is time-critical.
 
 ## Exit Criteria
 
-- All twelve tasks complete; all eight defects repaired — the seven
+- All thirteen tasks complete; all nine defects repaired — the
   follow-ups under `docs/followups/todo/` moved to `docs/followups/done/`
-  with inbound links repointed and the revision pinned (B4's already
-  lives there).
+  with inbound links repointed and the revision pinned (B4's and B5's
+  already live there).
 - No live document still sequences any of the seven original repairs
   "after Phase 06 Task 6.4".
 - `git diff --stat -- test/parity/data` empty across the whole project.
@@ -126,10 +128,48 @@ this project is time-critical.
   `[test-name-claims-an-unmade-assertion]` (several existing tests are
   named for the defect they pin and need renaming, not just
   re-pointing).
+- **A defect can live in the integrator rather than in a closed form,
+  and the roster had no shape for one** (Task 13). B5's stored values
+  are not the true ones transformed; they are the true ones unresolved,
+  so no `Additive` or `Exact` relation can state the delta. The layer
+  grew a `Reference` relation, and relations now answer a single
+  `term_for` question instead of the runner knowing which kind it holds
+  — which is what the spec's unimplemented `Exact` and `Bounded` will
+  plug into.
+- **Zeroing a tolerance is only half a convergence fix.** B5's kernels
+  also needed `THERMAL_LIMIT` above `quad`'s default of 50: at 50, 33 of
+  the 540 thermal positions exhausted the subdivision table and came
+  back flagged. A criterion that binds has to be reachable.
+- **Four call sites shared B5's defect and only two were in Rust.** The
+  two pure-Python ones (`hazma/relic_density/_thermal_functions.py`, the
+  GeV vector model) were never ported, so a Rust-only repair would have
+  left them. Worth checking for the same shape on any defect inherited
+  verbatim from a `.pyx`.
 
 ## Numerical impact so far
 
-**One public value has moved: B4, in PR #87** (bullet below). Task 2
+**Two public values have moved: B4 in PR #87, and B5 in Task 13**
+(bullets below).
+
+**B5 — both mediator `thermal_cross_section`, and `relic_density`
+through them.** Measured on the two corpus cases' own grids (570
+positions, 6 blocks, `x = mx/T` from 0.1 to 1000) against
+`test/parity/thermal_reference.py`, scipy's QUADPACK on the same
+integrand at `epsrel = 1e-12`:
+
+| Quantity | Grid | Shipped error | After |
+| --- | --- | --- | --- |
+| ⟨σv⟩, scalar + vector | 570 corpus positions | up to **1.00 relative** (both `closed_resonance` blocks); per-block medians 7.2e-6 to 8.1e-2 | within 3.6e-9 of the reference |
+| `relic_density`, semi-analytic | the 6 pinned model points | −91.85% to +2.04% | re-pinned |
+| `relic_density`, Boltzmann | the 6 pinned model points | −99.88% to +2.40% | re-pinned |
+
+539 of the 570 stored positions move. This is **the largest correction
+in the project by four orders of magnitude**, and the only one that is
+not a spectrum: freeze-out abundance goes as 1/⟨σv⟩, so a ⟨σv⟩ that
+retained none of the true value at the closed-resonance points moved the
+relic density there by two orders of magnitude. Cost, measured on this
+worktree: 12 `relic_density` solves go 1.31 s → 5.4 s, and a single
+`thermal_cross_section` call 4.6–48 µs → 21–136 µs. Task 2
 shipped no library behavior —
 its four `.pyx` patches exist only inside the capture and are reverted.
 What it produced is the *measurement* each of Tasks 4, 7, 8 and 10 will
@@ -219,6 +259,21 @@ it does not reconstruct it.
   mediator positron cases" against four — each mediator ships a
   `dnde_decay_*` and a `dnde_decay_*_pt` entry point. Every list is now
   written out with a count, and each repair gate names every case.
+- **Relations answer `term_for`, not the runner's arithmetic** (Task 13).
+  `test_parity.py` used to build `pinned + term` itself, which only an
+  `Additive` relation can supply. It now asks the relation how far the
+  stored array is from what it should hold, so `Reference` (supersede
+  outright) and `Additive` (correct by a named term) reach the same
+  comparison. The first shape of this passed a repaired *array* instead
+  and round-tripped `pinned + term`, which turned the unpinnable
+  positions' stored `NaN` into a `NaN` term and broke three B4 blocks —
+  the term is the primitive, not the repaired array.
+- **B5's budget is set from the kernel's own tolerance, not from the
+  local measurement** (Task 13). The repaired kernels agree with the
+  reference to 3.6e-9 here, but they are only held to `epsrel = 1.49e-8`,
+  and a platform whose libm steers QUADPACK to a different accepted
+  partition may land anywhere inside that. The declaration's `rtol` is
+  6.7x the bound, not 28x the measurement.
 
 ## Files Changed
 
@@ -233,6 +288,19 @@ The change that created this project touched only
 `hazma/scalar_mediator/_scalar_mediator_spectra.py`, `CHANGELOG.md`,
 `docs/followups/`, and this project's plan, rules, references, ADR and
 notes — see `task-1-delta-declarations.md`.
+
+### Task 13 (B5)
+
+`rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
+(`THERMAL_EPSABS`, `THERMAL_LIMIT`, and the composite-rule test),
+`hazma/relic_density/_thermal_functions.py`,
+`hazma/vector_mediator/_gev/thermal_cross_section.py`,
+`test/parity/thermal_reference.py` (new), `test/parity/deltas.py`,
+`test/parity/test_parity.py`, `test/test_relic_density.py`,
+`test/test_core_quad.py`, `CHANGELOG.md`, `docs/followups/` (the
+follow-up moved to `done/`), plus this project's `PLAN.md`,
+`references/defect-blast-radius.md` and these notes — see
+`task-13-thermal-quadrature.md`.
 
 ## Verification
 
@@ -321,8 +389,13 @@ has no `hazma._core` test probes for the suite to import.
   verified at `3e01590`.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87) is the only repair that has changed a library value;
-  every other corpus array is still compared against its stored value.
+- B4 (PR #87) and B5 (Task 13) are the repairs that have changed a
+  library value; every other corpus array is still compared against its
+  stored value.
+- The delta layer now carries two relations. A new repair picks
+  `Additive` when the physics names the term and `Reference` when only a
+  second implementation can say what the value should be; both answer
+  `term_for`, and the runner needs no change for either.
 
 **Currently risky / unknown:**
 

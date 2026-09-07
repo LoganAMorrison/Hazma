@@ -66,8 +66,10 @@ class TestMediatorRelicDensity(unittest.TestCase):
     to the compiled layer — it supplies a constant ``sigmav`` — so nothing
     else in the suite drives `relic_density` through a real
     ``thermal_cross_section``.  These six scenarios do, and they pin the
-    values the pre-port Cython produced (cython-to-rust Task 5.3,
-    captured at ``14f1c66``, the commit before the Phase 05 swaps).
+    values the converged kernel produces.  They held the pre-port Cython's
+    values until ``B5`` (cython-to-rust Task 5.3 captured those at
+    ``14f1c66``); that quadrature never converged, so the numbers it
+    produced pinned a defect rather than a physical prediction.
 
     The six model points are the ones `test/parity/cases.py` uses for the
     cross-section corpus, so a failure here and a failure there implicate
@@ -86,16 +88,25 @@ class TestMediatorRelicDensity(unittest.TestCase):
         "closed_resonance": dict(mx=300.0, mv=200.0, gvxx=1.0, eps=1e-2),
     }
 
-    #: Pre-port relic densities, (semi_analytic, boltzmann).  Dimensionless
+    #: Relic densities, (semi_analytic, boltzmann).  Dimensionless
     #: (Omega h^2).  Not physical abundances — these model points were chosen
     #: to stress the cross sections, not to sit on the observed value.
+    #:
+    #: Derived from the converged ``thermal_cross_section`` (roster entry
+    #: ``B5``), not from the pre-port Cython: the shipped kernels returned
+    #: their integrator's initial partition, so the values these replace
+    #: were wrong by up to 100% on <sigma v> and, since freeze-out
+    #: abundance goes as 1/<sigma v>, by up to two orders of magnitude
+    #: here.  The
+    #: closed-resonance points are where the old quadrature missed most of
+    #: the integrand's mass: they fall 91.9% and 99.9%.
     PINNED: ClassVar = {
-        "scalar.open_resonance": (26.68685642281613, 34.44575717769028),
-        "scalar.narrow_resonance": (6767.372700752017, 8089.043577107299),
-        "scalar.closed_resonance": (1.148403342097341e-06, 1.350303034524835e-06),
-        "vector.open_resonance": (6.105824110025352e-07, 6.371422579338723e-07),
-        "vector.narrow_resonance": (0.3074889583129119, 0.3270523666229746),
-        "vector.closed_resonance": (4.1185334301418195e-06, 4.981522406974646e-06),
+        "scalar.open_resonance": (26.667787923392634, 34.42028079003851),
+        "scalar.narrow_resonance": (6905.347000480099, 8282.819772041152),
+        "scalar.closed_resonance": (9.359827513207474e-08, 9.849973690303772e-08),
+        "vector.open_resonance": (6.142001344063203e-07, 6.408469699348235e-07),
+        "vector.narrow_resonance": (0.3081076863117194, 0.3277204010101092),
+        "vector.closed_resonance": (5.6437976262658464e-09, 5.9113937835982655e-09),
     }
 
     #: Solver tolerances for the Boltzmann pins above.  *Not* the
@@ -105,12 +116,21 @@ class TestMediatorRelicDensity(unittest.TestCase):
     BOLTZMANN_SOLVER_ATOL = 1e-8
 
     #: The semi-analytic path is a closed-form composition of
-    #: `thermal_cross_section` with no adaptive solver in it, so the port's
-    #: <= 2.06e-14 drift on that kernel (numerical-impact.md, Tasks 5.1/5.2)
-    #: arrives essentially undamped: measured <= 4.2e-16 over these six
-    #: points.  1e-12 is ~2000x that, tight enough to catch a real kernel
-    #: regression and loose enough to survive a libm difference.
-    SEMI_ANALYTIC_RTOL = 1e-12
+    #: `thermal_cross_section` with no adaptive solver in it, so whatever
+    #: that kernel's own error is arrives essentially undamped.  Since
+    #: ``B5`` the kernel subdivides until it meets ``epsrel = 1.49e-8``,
+    #: which is four decades looser than the <= 2.06e-14 port drift this
+    #: budget used to be set from, and a platform whose libm steers
+    #: QUADPACK to a different accepted partition may land anywhere inside
+    #: it.  Measured against `test/parity/thermal_reference.py` — scipy's
+    #: QUADPACK on the same integrand at ``epsrel = 1e-12`` — the repaired
+    #: kernel is within 3.6e-9 at all 540 corpus positions it integrates,
+    #: but 1.49e-8 is the bound that has to hold off this platform.  1e-6
+    #: is ~6.7x that bound: still ~10,000x
+    #: tighter than the smallest shift ``B5`` itself produced (0.071%, at
+    #: ``scalar.open_resonance``), so a real kernel regression cannot hide
+    #: under it.
+    SEMI_ANALYTIC_RTOL = 1e-6
 
     #: The Boltzmann path integrates the same kernel with
     #: `scipy.integrate.solve_ivp`, whose adaptive stepping does not

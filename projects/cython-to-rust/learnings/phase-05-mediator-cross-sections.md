@@ -123,7 +123,7 @@ re-enters Python per quadrature node.
   those being the models that supply the affected
   `thermal_cross_section`, since `relic_density` takes any model and one
   supplying its own bypasses the kernel. Reproduced under rule 1, not fixed —
-  [the follow-up](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
+  [the follow-up](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)
   now carries the downstream size and is unblocked.
 
 ## 4. Test Infrastructure State
@@ -168,7 +168,7 @@ re-enters Python per quadrature node.
 
 All four are filed; none blocks Phase 06.
 
-- [The unconverged thermal quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)
+- [The unconverged thermal quadrature](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)
   — now unblocked and quantified at the consumer. The most consequential
   open defect in the project.
 - [The `2 m_x` raise](../../../docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md)

@@ -123,8 +123,9 @@ EXPECTED_PORTABILITY_ZEROS = 4
 #: How many stored arrays a repair has declared moved. A literal for the
 #: same reason as the two above: the size of the set the gate compares
 #: against something other than the stored corpus is the number worth
-#: defending in a diff.
-EXPECTED_DECLARED_ARRAYS = 30
+#: defending in a diff. 30 for B4's scalar decay spectrum, 6 for B5's two
+#: thermal averages.
+EXPECTED_DECLARED_ARRAYS = 36
 
 
 def _drop_unpinnable(
@@ -345,7 +346,11 @@ def test_entry_point_matches_corpus(
         delta = deltas.declared(case_name, block.label, suffix)
         term = None
         if delta is not None:
-            term = delta.relation.term(case.resolve(), block)[suffix]
+            # Every relation answers through `term_for`, so an additive
+            # correction and a wholesale replacement reach the comparison
+            # below in the same shape: how far the stored array is from
+            # what it should now hold.
+            term = delta.relation.term_for(case.resolve(), block, suffix, expected)
             term, _ = _drop_unpinnable(term, expected, case_name, block.label, suffix)
         live, pinned = _drop_unpinnable(
             actual[suffix], expected, case_name, block.label, suffix

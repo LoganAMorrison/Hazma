@@ -7,7 +7,7 @@
 - **Triggers / blockers:** **nothing today**, and that is the point of the
   entry. It ripens only if someone produces a profile showing the ODE
   path dominating a real workload. Blocked behind
-  [`thermal-cross-section-quadrature-never-converges`](thermal-cross-section-quadrature-never-converges.md)
+  [`thermal-cross-section-quadrature-never-converges`](../done/thermal-cross-section-quadrature-never-converges.md)
   regardless: porting a solver whose integrand is 0.5%–5% wrong buys
   speed on a wrong answer.
 
@@ -64,7 +64,7 @@ If a profile ever justifies it:
 - `projects/cython-to-rust/task-notes/numerical-impact.md` — Task 5.3, for
   the measured figures quoted above
 - `projects/cython-to-rust/PLAN.md` §Scope — the original exclusion
-- [`thermal-cross-section-quadrature-never-converges`](thermal-cross-section-quadrature-never-converges.md)
+- [`thermal-cross-section-quadrature-never-converges`](../done/thermal-cross-section-quadrature-never-converges.md)
 
 ## Risks / open questions
 

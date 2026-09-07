@@ -612,7 +612,7 @@ pointer here so that every citation of that section still resolves.
     and `thermal_cross_section` returns its integrator's *initial
     estimate* — 0.5%–5% off the true integral for every `x` above about
     5, i.e. across the whole freeze-out region
-    ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
+    ([the unconverged quadrature](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)).
     Both are reproduced under rule 1, so no value moves; the second is
     the more consequential, because relic abundance goes as 1/⟨σv⟩.
 
@@ -697,7 +697,7 @@ pointer here so that every citation of that section still resolves.
     Those are the models that supply the affected
     `thermal_cross_section`; `relic_density` takes any model, and one
     supplying its own — the suite's `ToyModel` — bypasses it entirely
-    ([the unconverged quadrature](../../../docs/followups/todo/thermal-cross-section-quadrature-never-converges.md)).
+    ([the unconverged quadrature](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md)).
     Reproduced under rule 1, not fixed here.
 
 - **Task 6.2 (the two mediator decay *photon* modules): all three entry

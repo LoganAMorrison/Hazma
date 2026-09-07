@@ -3,10 +3,31 @@
 - **Added:** 2026-08-20
 - **Source:** cython-to-rust Task 5.1
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done — `parity-pinned-defect-repair` Task 13, roster entry
+  `B5`. See `projects/parity-pinned-defect-repair/task-notes/task-13-thermal-quadrature.md`.
 - **Triggers / blockers:** none. Task 5.3 ran the sweep (see
-  "Downstream size" below); this is now free-standing work whose only
-  constraint is that it moves published numbers.
+  "Downstream size" below); this was free-standing work whose only
+  constraint was that it moves published numbers.
+
+> **Resolved.** `epsabs = 0` at all four call sites, and the two Rust
+> kernels' subdivision limit raised from 50 to 100 — a criterion that
+> binds is only useful if the integrator can reach it, and at 50 a third
+> of the flagged corpus positions could not.
+>
+> **The measurement below understates the defect.** It was taken at one
+> model point (`mx = 100`, `mv = 300`); swept over all 570 positions the
+> parity corpus pins, against scipy's QUADPACK at `epsrel = 1e-12`, the
+> shipped ⟨σv⟩ is wrong by **up to 100%** rather than 5%, and
+> `relic_density` moves by −99.9% to +2.4% over the six pinned model
+> points. The "up to ~5%" in "What" below is wrong for the same reason.
+>
+> Two predictions in "Risks / open questions" also came out differently:
+> `test_thermal_cross_section_site`'s `expected_last` values did **not**
+> move, because that assertion reads the break-point filtering at the
+> probe's default tolerances and the test now exercises the live
+> `epsabs = 0` configuration separately; and the `neval = 63, last = 3`
+> the "Why" section attributes to `test/test_core_quad.py` was never
+> asserted there — only `last` is, and `neval` only against scipy.
 
 ## Why
 
