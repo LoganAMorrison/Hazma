@@ -267,7 +267,7 @@ Every command below was run in this worktree against an editable install
   `VectorMediatorCrossSections`
   class's missing annotations and docstring shapes, and cleaning them
   would be a 400-line unrelated diff in a physics file — which is what
-  [`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+  [`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   exists to decide once rather than per task. One regression *was*
   introduced and fixed rather than argued away: moving the `sig_*`
   aliases above the module's remaining imports added three `E402`s, so

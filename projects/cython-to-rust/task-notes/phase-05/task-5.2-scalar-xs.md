@@ -556,7 +556,7 @@ A delta of **−1**, and the new file is clean. The 64 are the untouched
 `ScalarMediatorCrossSections` mixin's missing annotations and docstring
 shapes; cleaning them would be a several-hundred-line unrelated diff in
 a physics file, which is what
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 exists to decide once rather than per task.
 `ruff check --isolated --select E9,F63,F7,F82 --exclude hazma/experimental
 --exclude notebooks .` — the form CI runs — **passes**.

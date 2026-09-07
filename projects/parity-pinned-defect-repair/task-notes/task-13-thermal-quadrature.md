@@ -221,52 +221,35 @@ cannot outlive the repair.
 **Preflight** over the touched paths plus the touched markdown:
 
 ```text
-RESULT: FAIL — blocked commit.
-FAIL   isort --check-only
-FAIL   ruff check
-(9 other rows PASS; version bump SKIP, not a closing PR)
+RESULT: PASS
+PASS   isort --check-only      0 new, 2 fixed (2 pre-existing at a973d6caee28)
+PASS   ruff check              0 new, 2 fixed (32 pre-existing at a973d6caee28)
+PASS   pytest                  2260 passed, 15 skipped, 1 warning, 37 subtests passed
+(all eleven rows PASS; version bump SKIP, not a closing PR)
 ```
 
-**Both red rows are trunk debt in the two `hazma/` modules, not this
-change**, which is what
-`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md` predicts for
-any PR that touches package code. Proved side by side rather than
-asserted, against the same files at `origin/master`:
+This run is green only because
+[PR #89](https://github.com/LoganAMorrison/Hazma/pull/89) landed while this
+branch was in review and scoped the `isort` and `ruff` gates to the diff.
+Before that merge, both rows were red here and the run reported
+`RESULT: FAIL` — not from this change but from trunk debt in the two
+`hazma/` modules it touches, which is exactly what
+`docs/followups/done/preflight-isort-ruff-red-on-trunk.md` predicted for
+any PR touching package code. The new gate says so itself, and its
+`32 pre-existing` agrees with the count measured here against
+`origin/master` before the merge:
 
 ```sh
 $ git show origin/master:hazma/relic_density/_thermal_functions.py > base/a.py
 $ git show origin/master:hazma/vector_mediator/_gev/thermal_cross_section.py > base/b.py
-$ isort --check-only base/a.py base/b.py
-ERROR: base/a.py Imports are incorrectly sorted and/or formatted.
-ERROR: base/b.py Imports are incorrectly sorted and/or formatted.
-
-$ ruff check base/a.py base/b.py | grep -oE 'Found [0-9]+ error'  # origin/master
-Found 32 error
-$ ruff check hazma/relic_density/_thermal_functions.py \
-      hazma/vector_mediator/_gev/thermal_cross_section.py \
-  | grep -oE 'Found [0-9]+ error'
+$ ruff check base/a.py base/b.py | grep -oE 'Found [0-9]+ error'
 Found 32 error
 ```
 
-Identical count before and after: this change adds no lint finding. The
-same gate scoped to the five files the task authored or edited outside
-`hazma/` is green on both rows:
-
-```sh
-$ scripts/agents/preflight.sh --paths "test/parity/thermal_reference.py \
-      test/parity/deltas.py test/parity/test_parity.py \
-      test/test_relic_density.py test/test_core_quad.py"
-PASS   black --check
-PASS   isort --check-only
-PASS   ruff check
-```
-
-`isort` would fix the two `hazma/` files with a three-line import
-reorder each, and running it here was tried and reverted: it is churn
-unrelated to the repair, it does not change `RESULT` (ruff's 32
-pre-existing findings still fail the run), and `AGENTS.md`'s
-stay-in-scope rule puts it in its own change. The tracked follow-up owns
-the tree-wide fix.
+The claim that matters on both rows is `0 new`, and it is corroborated
+by the independent before/after above. This diff changes no import line
+in either `hazma/` module (`git diff origin/master -- <the two files> |
+grep -E '^[+-](import|from)'` is empty) and adds no ruff finding.
 
 **Rule 1:** `git diff --stat -- test/parity/data` is empty.
 
@@ -386,6 +369,14 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
   `docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md`
   rather than folded in. `TestThermalQuadratureConverges` caps its grid
   below 25 because above it there is no integral to check.
+- **`preflight.sh`'s new delta gate reports `2 fixed` on a path set where
+  no file's findings visibly decreased.** Both `hazma/` modules are
+  isort-red at the baseline and still isort-red here, and the four
+  touched test files are isort-clean at the baseline. Not investigated —
+  it does not affect this branch's `0 new` verdict — but worth a look by
+  whoever owns
+  [PR #89](https://github.com/LoganAMorrison/Hazma/pull/89)'s tooling,
+  since a spurious `fixed` would also mean a spurious `pre-existing`.
 - **The two models disagree above `x = 300` and this task did not touch
   it.** The scalar hard-returns `0.0`; the vector clips `x` to 300 and
   saturates. The follow-up flagged the divergence and explicitly scoped

@@ -19,6 +19,30 @@ before you stage anything.
 3. **`ruff check <paths>`** — the configured rule set lives under
    `[tool.ruff]` in `pyproject.toml`. `hazma/experimental/` and
    `notebooks/` are outside the gate.
+
+   **Gates 2 and 3 are measured against the merge base, not absolutely.**
+   The configured rule set reports thousands of findings on untouched
+   trunk code, so asking either linter "is this whole tree clean?" fails
+   on every branch and says nothing about the branch that ran it.
+   [`scripts/agents/lint_delta.py`](../../scripts/agents/lint_delta.py)
+   runs each linter twice — over the working tree, and over the same
+   paths as they stand at the merge base — and reports only what the tree
+   adds. Everything it prints is therefore yours to fix; nothing is
+   inherited. Running the two by hand still asks the absolute question,
+   so read a manual `ruff check` as the tree's total, not as your delta.
+
+   Findings are compared without line or column numbers, so an edit near
+   the top of a file does not re-report everything below it. The cost is
+   that removing one finding and adding an identical one elsewhere in the
+   same file cancels out. `isort` is compared per file, because
+   `--check-only` names the file rather than the import at fault.
+
+   Gate 1 stays absolute: black is green on the trunk over `hazma test`,
+   and CI enforces it over exactly those. A gate is only worth diffing
+   once it has to be. Widening `--paths` past `hazma test` can still fail
+   gate 1 on trunk state, because nothing formats `scripts/` — three
+   files there are unformatted, tracked in
+   [`scripts-are-outside-the-format-and-lint-gates.md`](../followups/todo/scripts-are-outside-the-format-and-lint-gates.md).
 4. **`cargo fmt --manifest-path rust/Cargo.toml --check`**
 5. **`cargo clippy --manifest-path rust/Cargo.toml --all-features
    --all-targets -- -D warnings`**
@@ -223,16 +247,21 @@ Add `--md "docs/agents/preflight.md"` when curated docs changed and
 per gate and exits non-zero on the first hard failure. A non-zero exit is
 a blocked commit — fix and re-run; do not commit around a red gate.
 
-**Two gates are red on the trunk itself**, so that rule currently cannot
-be met by any PR: on an untouched `origin/master`, `isort --check-only
-hazma test` reports 72 ERROR lines and `ruff check hazma test` reports
-6091 errors. `docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`
-tracks the condition and lists three candidate remedies; none is chosen,
-and picking one is its own change, not something to fold into unrelated
-work. Until then, "pre-existing" is a claim to **measure, not assert** —
-run the red gate against the same paths on `origin/master` and diff the
-findings, so a real regression next to 6091 existing ones still shows up.
-Anything you cannot show unmoved that way is yours to fix.
+That rule is meetable, which it was not before gates 2 and 3 started
+diffing against the merge base
+([`preflight-isort-ruff-red-on-trunk.md`](../followups/done/preflight-isort-ruff-red-on-trunk.md)).
+The lint debt those gates used to fail on is still there — an untouched
+`origin/master` gives 72 `isort` ERROR lines and 6091 `ruff` errors under
+the configured rule set — but it is now carried, not charged to you. Each
+row reports the split, as `0 new (6091 pre-existing at <sha>)`.
+
+The practical consequence is that **"pre-existing" is no longer yours to
+argue.** The gate measures it, so a red row is a finding your tree added
+and a green row is proof it added none; neither needs a side-by-side run
+on `origin/master` to establish. A diff that touches no Python at all
+needs no flag and no unrelated-but-clean file to point the gate at — the
+two trees are identical over `--paths`, so the rows PASS saying
+`no Python changed against <sha>`.
 
 A `WARN` row means a tool is not installed and its gate did **not** run —
 it is a hole in your coverage, not a pass. Install the toolchain

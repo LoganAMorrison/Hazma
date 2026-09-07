@@ -231,6 +231,28 @@ cites a real PR.
 
 ### status-encoding-path-reference
 
+PR #89 resolved `preflight-isort-ruff-red-on-trunk` and repointed 22 inbound
+references from `todo/` to `done/` with a single `perl -pi -e`. The paths all
+resolved afterwards and the dangling-path sweep was clean, but review found
+prose that the path substitution could not touch: `phase-07-cutover.md` still
+said the follow-up "offers three candidate remedies, and has none chosen", and
+two sentences in `task-7.3-docs-sweep.md` still called it "the open" follow-up.
+
+The sweep that finds these greps the claim, not the link:
+
+```sh
+rg -n --hidden 'three candidate remedies|none chosen' \
+   projects/ docs/ hazma/ test/ .claude/ .codex/
+```
+
+Review cited two occurrences; that command found five. One more caveat: a
+first attempt combined every phrase into one alternation and returned nothing
+at all, while searching the same phrases one at a time found them — run the
+patterns separately, or verify a no-hit sweep against a string you know is
+present. Two of the five were left as written under the §11 grammar rule, one
+past-tense worked example and one canonical phase file given a dated
+"Snapshot, superseded" label rather than a rewrite.
+
 - [status-encoding-path-reference] A `docs/followups/` path encodes the
   item's status in a directory segment, so resolving one invalidates every
   inbound reference. Stripping the segment to make the reference
@@ -473,6 +495,30 @@ cites a real PR.
   that wrote it buys no safety until something else runs it.
 
 ### gate-disabled-stays-green
+
+PR #89 made `preflight.sh`'s isort and ruff gates diff their findings against
+the merge base. `run_ruff` refused any exit code but 0 and 1, because anything
+else means ruff could not answer; `run_isort`, written beside it, checked
+nothing and returned whatever it had parsed. isort exits **1** for a file it
+would re-sort *and* for a traceback from an unreadable settings file, so the
+crash path returned an empty counter, which subtracted to an empty delta and
+passed:
+
+```text
+$ printf '[tool.isort]\nprofile =\n' > pyproject.toml   # invalid TOML
+$ lint_delta.py --linter isort --base HEAD pkg
+SUMMARY: 0 new, 1 fixed (0 pre-existing at d0a743159 )
+exit=0
+```
+
+Note the second half of that line. The wrapper did not merely miss the
+failure — it credited the branch with *fixing* a finding it had failed to
+observe, so a crashed linter looked like an improvement. The guard is a
+consistency check rather than a new exit code, because there is no distinct
+code to test: exit 1 asserts something would change, so isort must have named
+a file, and reporting a change while naming nothing means the output was not
+understood. `git grep -n 'returncode'` across the module is what exposes the
+asymmetry between two sibling wrappers.
 
 - [gate-disabled-stays-green] Removing, narrowing, or conditionally
   skipping a check cannot turn CI red, so a green run is not evidence the

@@ -243,7 +243,7 @@ a clean `origin/master` worktree with no edit applied, `isort
 --check-only hazma test` reports **72 ERROR lines** and `ruff check hazma
 test` reports **6091 errors**. That condition has been tracked since
 2026-08-05 in
-[`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md),
+[`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md),
 which predates this phase, offers three candidate remedies, and has none
 chosen — it is a cross-cutting change to be sequenced on its own, not
 something a closing PR should decide unilaterally while touching a
@@ -262,3 +262,11 @@ that claim is falsifiable — run each red gate against the same paths on
 regression introduced next to 6091 existing findings is easy to miss.
 The measurement above is what closes that hole for this PR; the follow-up
 is what closes it for the repository.
+
+**Snapshot, superseded on 2026-09-06.** The paragraphs above record the
+state when this phase closed and are left as written. The follow-up has
+since taken its option 2 in
+[PR #89](https://github.com/LoganAMorrison/Hazma/pull/89): gates 2 and 3
+measure their findings against the merge base, so both rows pass and the
+residual risk above is closed for the repository too. The 6091 findings
+themselves are untouched.

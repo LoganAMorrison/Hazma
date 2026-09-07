@@ -319,7 +319,7 @@ plus `../../PLAN.md` §"Closing this project":
   ```
 
   So the gate is red for the reason
-  [`docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+  [`docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
   exists for, and this task adds nothing to it.
 
   markdownlint is green. It was red on
@@ -594,7 +594,7 @@ both report **50 ruff findings whose text is identical** once line
 numbers are stripped, and `isort --check-only` on them exits **0**. So
 this PR introduces neither finding, and the reds are the standing
 condition
-[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 tracks.
 
 That is what the revised criterion asks for and all it asks for. It is
@@ -602,8 +602,9 @@ That is what the revised criterion asks for and all it asks for. It is
 must not be argued away, and the honest reading is that the gate cannot
 answer "did this PR break anything?" while it asserts absolute
 cleanliness on a tree carrying 6091 findings. Repairing that is the
-follow-up's job — it lists three candidate remedies and has none chosen —
-not a closing PR's.
+follow-up's job — it listed three candidate remedies and had none chosen
+when this task ran — not a closing PR's. It took option 2 on 2026-09-06 in
+[PR #89](https://github.com/LoganAMorrison/Hazma/pull/89).
 
 A first run also had markdownlint red on one MD012 in
 `../numerical-impact.md` (a doubled trailing blank line this task

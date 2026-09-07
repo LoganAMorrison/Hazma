@@ -371,7 +371,7 @@ findings across a 500-line public wrapper, not anything this diff
 introduced; `UP007` in particular would rewrite `Union[...]` annotations
 in a module `pyproject.toml` marks `runtime-typing = true`, so
 "just autofix them" is a public-API change, not a cleanup. This is
-[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk.md`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 exactly, and the documented handling is to scope `--paths` to the files
 whose verdict the diff can move. Re-run over the other five:
 **RESULT: PASS**, with `black`, `isort`, `ruff`, all three cargo gates,

@@ -82,7 +82,7 @@ closed phase's entries below, verbatim, under a
   selects the maximal *directory* form, which is the second trap in the
   same sentence: a three-file markdown diff came back `FAIL isort` /
   `FAIL ruff` over 98 files and 6,187 findings, none of them in the diff
-  ([`../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)).
+  ([`../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md`](../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)).
   On a docs-only diff, scope `--paths` to the branch's Python rather than
   leaving it off.
 - ~~`hazma._gamma_ray.gamma_ray_generator` compiles but has never been

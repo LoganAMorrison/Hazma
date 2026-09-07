@@ -332,7 +332,7 @@ passed. Configured `ruff check` over the four changed files went
 **22 → 17** findings, i.e. this change only removed findings; `isort`
 was red on `hazma/spectra/_photon/__init__.py` — **identically on the
 trunk** (verified by `git stash`), i.e. the known
-[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md)
+[`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md)
 debt rather than anything this task introduced. Since that is the one
 file under `hazma/` this task edits, its import block was sorted here and
 the row is now **PASS**; the reorder is eight lines of submodule imports

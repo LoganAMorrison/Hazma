@@ -243,7 +243,7 @@ the moved follow-up.
   **38 findings against the trunk's 38** over the same twelve files
   (measured side by side against a stashed trunk, per-file). This change
   adds none. That gate is red on unmodified trunk and is tracked as
-  [`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/todo/preflight-isort-ruff-red-on-trunk.md);
+  [`preflight-isort-ruff-red-on-trunk`](../../../../docs/followups/done/preflight-isort-ruff-red-on-trunk.md);
   CI's own ruff step (`--isolated --select E9,F63,F7,F82`) passes.
   Scope the `--paths` argument to `.py` files that still exist — feeding
   it deleted paths and `.pyx`/`.md` turns black and isort red for reasons
