@@ -3,7 +3,10 @@
 - **Added:** 2026-08-10
 - **Source:** cython-to-rust Task 3.4 (the interp + boost port)
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** open — **repaired** 2026-09-07 as roster entry A1,
+  `projects/parity-pinned-defect-repair` Task 4. The file stays here
+  until that project's close (Task 12) moves all of its follow-ups to
+  `done/` in one sweep, so the inbound references are repointed once.
 - **Triggers / blockers:** **capture the corrected values BEFORE the
   deletion wave that strands them** — the deadline is on the oracle, not
   on the fix. The parity corpus does pin the current values, and
@@ -45,7 +48,8 @@ is clamped to `x[-1]` and `ihigh` becomes the last index, so the upper
 partial-cell term is skipped entirely and **the table's final row
 contributes to no term at all**. Replacing it with a value six orders of
 magnitude larger leaves the answer bit-identical — checked against the
-live Cython, `test/test_core_boost.py::TestDroppedInteriorCell`.
+live Cython, and now inverted in
+`test/test_core_boost.py::TestWindowCoverage`.
 
 This is a real error in a published number, not a rounding artifact. On a
 hand-computable case (`x = y = [1, 2, 3, 4]`, `beta = 0.6`, `E = 2.2`)
@@ -88,8 +92,11 @@ above — one cell out of a wide window, systematically low.
 
 The parity corpus pins these values, faithfully: its `rest_plus_eps`
 block sits exactly in the divergent regime. That is the corpus doing its
-job (it records what the Cython returns, not what is correct), and it is
-why the repair has to regenerate the corpus in the same change.
+job (it records what the Cython returns, not what is correct). The repair
+therefore lands as a declared delta against those arrays rather than as a
+regeneration — see
+[`projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`](../../../projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md),
+which supersedes the regeneration this file's "What" section asks for.
 
 Note `references/cython-inventory.md` already lists "off-by-one index
 pairing in `boost_integrate_linear_interp_massive`" under *dead* code.
@@ -132,15 +139,16 @@ allows).
 - `rust/src/boost.rs` — `boost_integrate_linear_interp`, where the
   behavior is reproduced with the reasoning in its
   `# Faithfulness notes`.
-- `test/test_core_boost.py::TestDroppedInteriorCell` — the pin to invert
-  when this is fixed.
+- `test/test_core_boost.py::TestWindowCoverage` — the pin, inverted: it
+  now asserts both hand-computable cases at their correct values.
 - `projects/cython-to-rust/task-notes/phase-03/task-3.4-interp-boost.md`
   — how it was found and the numbers above.
 - `test/parity/tolerances.py` — the `TABULATED` budget class, which is
   what these seven cases are graded against.
-- `test/test_core_photon_tables.py::TestPhysics::test_the_boost_integral_still_diverges_near_threshold`
-  — the same defect pinned through a public entry point, added when the
-  seven tabulated spectra moved to Rust (Task 4.2).
+- `test/test_core_photon_tables.py::TestPhysics::test_a_barely_moving_parent_converges_to_its_rest_frame_spectrum`
+  — the acceptance test this file proposed, over all seven channels. It
+  pinned the divergence through a public entry point when the seven
+  tabulated spectra moved to Rust (Task 4.2), and now pins the limit.
 - Sibling defects, same class and same blocker:
   [`positron-muon-spectrum-normalization-inverted.md`](positron-muon-spectrum-normalization-inverted.md),
   [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md),
