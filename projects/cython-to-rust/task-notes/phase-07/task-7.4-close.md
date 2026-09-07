@@ -173,8 +173,8 @@ plus `../../PLAN.md` §"Closing this project":
   the same way, not just the cited one, and this round's own fixes then
   moved them again. Rather than chase them, every count was re-derived
   from `git diff` once after all content edits were frozen
-  (`doc-consistency.md` §11 rule 1, "sweep last"): **24 files, 17
-  modified and 7 created**; 23 `.md` in the diff; 20 of those outside
+  (`doc-consistency.md` §11 rule 1, "sweep last"): **32 files, 25
+  modified and 7 created**; 27 `.md` in the diff; 24 of those outside
   `.claude/skills/`. Two distinct quantities were being conflated — the
   `.md` count in the diff and the count of documents this task authored —
   so both are now named explicitly wherever they appear.
@@ -186,12 +186,18 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Files Changed
 
-- `CHANGELOG.md` — `[Unreleased]` promoted to `[2.2.0]`; the migration
-  summary, the aggregated drift table and the `Known issues` block added;
-  the section list in the file header amended for `Known issues`.
+- `CHANGELOG.md` — `[Unreleased]` promoted to `[2.2.0]` dated
+  2026-09-06; the migration summary, the aggregated drift table and the
+  `Known issues` block added; the section list in the file header
+  amended for `Known issues`. Merging `origin/master` brought in the
+  scalar-decay FSR repair under `Changed`, so the lede now leads with the
+  two physics repairs that move published numbers, the drift table is
+  scoped to the port alone, and `Known issues` says why that repair is
+  not one of the twelve.
 - `pyproject.toml` — `[project] version` `2.1.0` → `2.2.0`.
 - `projects/cython-to-rust/PLAN.md` — `status: Complete`; Phase 07 row
-  filled in.
+  filled in; `version_bump: major` → `minor` with its reasoning replaced
+  (version renumber).
 - `projects/README.md` — `cython-to-rust` row moved Active → Completed.
 - `projects/cython-to-rust/phases/phase-07-cutover.md` — frontmatter
   `status: Complete`, and §"Exit Criteria" revised: the release clause
@@ -221,7 +227,36 @@ plus `../../PLAN.md` §"Closing this project":
   `wheels-for-aarch64-and-windows.md`.
 - `docs/followups/README.md` — four rows under Open.
 - `docs/versioning.md` — the illustrative `[project] version` snippet,
-  which still quoted `2.1.0`.
+  which still quoted `2.1.0`, and the **reachability carve-out**: the two
+  `major` removal bullets made subordinate to it, the carve-out itself
+  under `minor`, item 6 of §"The public surface", and two cheat-sheet
+  rows (version renumber).
+- `AGENTS.md` — the `hazma/deprecated/` rule, which stated the removal
+  break without the carve-out's exception (version renumber).
+- `projects/cython-to-rust/adrs/ADR-0003-remove-gamma-ray-module.md` — a
+  dated note at the end. The decision stands; only its mitigation, which
+  argued from the project already being `major`, is superseded (version
+  renumber).
+- `docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md`
+  — sequenced to ride the planned major, it now says that shipping 2.2.0
+  leaves it waiting for the next one (version renumber).
+- `docs/followups/todo/utils-public-surface-redundant-helpers.md` —
+  rescoped to `kinematically_accessable` alone and retitled, with the
+  `minkowski_dot` half recorded as resolved. `docs/followups/README.md`
+  carries the new title.
+- `hazma/utils.py` — `minkowski_dot` deleted, with the
+  `collections.abc.Sequence` import it was the only user of. `ldot` is
+  unchanged: every call site passed a shape-`(4,)` `ndarray`, so nothing
+  needed the looser index-based contract.
+- `hazma/experimental/axial_vector_mediator/avm_msqrd.py` and
+  `notebooks/dev/gamma_ray_fsr/partial_integration.py` — the two
+  consumers, repointed at `ldot`. Neither is on the public surface, and
+  the notebook script stays dead on its own `hazma.rambo` and
+  `hazma.gamma_ray` imports.
+- `test/test_utils.py` — the three tests pinning the metric signature and
+  the on-shell invariant retargeted onto `ldot`, which had no direct
+  coverage of its own; the two exercising only the wrapper dropped. Net
+  −2 tests.
 - `.claude/skills/{commit-and-pr,execute-single-task,task-pipeline}/SKILL.md`
   — the closing-PR instructions still told the next agent to bump
   `VERSION` in `hazma/__init__.py`. Repointed at `pyproject.toml`'s
@@ -242,7 +277,7 @@ plus `../../PLAN.md` §"Closing this project":
   | `cargo fmt --check` | PASS |
   | `cargo clippy` | PASS |
   | `cargo test` | PASS |
-  | `pytest` | PASS — `2231 passed, 15 skipped, 12 subtests passed` |
+  | `pytest` | PASS — `2246 passed, 15 skipped, 12 subtests passed` |
   | `import hazma` | PASS |
   | `markdownlint` | **FAIL** — pre-existing, see below |
   | `version bump` | PASS — `2.1.0 → 2.2.0 + CHANGELOG entry` |
@@ -273,7 +308,7 @@ plus `../../PLAN.md` §"Closing this project":
   authored or rewrote lint clean** on their own:
 
   ```sh
-  markdownlint --dot <the 20 non-skill .md in the diff>   # exit 0
+  markdownlint --dot <the 24 non-skill .md in the diff>   # exit 0
   ```
 
   No other gate is red.
@@ -284,7 +319,7 @@ plus `../../PLAN.md` §"Closing this project":
   inside the 2231.
 
 - **`cargo test --manifest-path rust/Cargo.toml --no-default-features`**
-  — `test result: ok. 258 passed; 0 failed` on the lib target, plus 0
+  — `test result: ok. 261 passed; 0 failed` on the lib target, plus 0
   doc-tests. **The 249 the project working memory carried was two tasks
   stale**; both learnings files now say 258 and say to re-derive it.
 
@@ -311,16 +346,26 @@ plus `../../PLAN.md` §"Closing this project":
 
 ## Numerical impact
 
-**No public value changes**, and the diff proves it rather than a sweep
-doing so: one line of `pyproject.toml` (the version) and markdown.
+**No public value changes.** The diff is markdown, the version line, and
+the `minkowski_dot` removal:
 
 ```sh
 git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
     '*.csv' '*.dat' '*.npy' '*.toml'
-# -> pyproject.toml    (single hunk: version = "2.1.0" -> "2.2.0")
+# -> pyproject.toml                       (version = "2.1.0" -> "2.2.0")
+#    hazma/utils.py                       (minkowski_dot deleted)
+#    hazma/experimental/.../avm_msqrd.py  (repointed at ldot)
+#    test/test_utils.py                   (tests retargeted at ldot)
 ```
 
-No code path, constant, table or signature is reachable, so no grid
+`minkowski_dot` appears in **no released tag** (checked against 2.0.2 and
+2.1.0), so no user could ever have called it and its deletion is
+unobservable from outside the repository. `ldot`, which absorbs its two
+consumers, is untouched — every call site passed a shape-`(4,)`
+`ndarray`, so nothing needed the looser index-based contract, and both
+squared matrix elements in `avm_msqrd.py` are **bit-for-bit identical**
+to the deleted implementation over 200 random momentum draws. No other
+code path, constant, table or signature is reachable, so no grid
 evaluation applies. Recorded as the closing entry in
 [`../numerical-impact.md`](../numerical-impact.md), which also states the
 one user-visible non-numerical move (`hazma.VERSION` → `2.2.0`) and the
@@ -461,8 +506,8 @@ citation *is* covered, and is one of the four resolved above —
 | CHANGELOG drift table, 11 rows | each figure against `../numerical-impact.md` | all 11 match to the quoted precision | OK |
 | CHANGELOG "at most 5.4e-12" | max of the table | 5.3327e-12 | OK |
 | CHANGELOG "twelve defects" | `docs/followups/todo/` entries sourced by this project | 1 (T3.4) + 7 (P04) + 3 (P05) + 1 (T6.3) = **12** | OK (the log's own ordinals disagree; see §Findings) |
-| Retrospective/Phase-07 "`cargo test` … 258" | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `ok. 258 passed; 0 failed` | OK (was 249 in working memory — **EDITED** in both files) |
-| Retrospective/Phase-07 "`pytest -q` 2231/15/12" | preflight's pytest row | `2231 passed, 15 skipped, 12 subtests passed` | OK |
+| Retrospective/Phase-07 "`cargo test` … 261" | `cargo test --manifest-path rust/Cargo.toml --no-default-features` | `ok. 261 passed; 0 failed` | **EDITED** in both files — 249 in working memory, 258 before merging `origin/master` |
+| Retrospective/Phase-07 "`pytest -q` 2246/15/12" | preflight's pytest row | `2246 passed, 15 skipped, 12 subtests passed` | **EDITED** in both files — 2231 before the merge and the `minkowski_dot` removal |
 | Constants stub "twelve names disagree" | `the_two_tables_disagree_where_the_cython_says_they_do` | **12** entries | OK |
 | Constants stub "two α values differ by 2.6e-4" | `(1/137 − 1/137.035999084) / (1/137.035999084)` | 2.627e-4 | OK |
 | `docs/versioning.md` version snippet | `grep '^version' pyproject.toml` | `2.2.0` | **EDITED** — snippet still said 2.1.0 |
@@ -471,13 +516,14 @@ citation *is* covered, and is one of the four resolved above —
 
 ### Numerical-impact statement
 
-**No public value changes (verified:
-`git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd'
-'*.csv' '*.dat' '*.npy' '*.toml'` → `pyproject.toml` only, whose single
-hunk is `version = "2.1.0"` → `"2.2.0"`).** No code path, constant,
-table or signature is reachable from this diff, so no grid evaluation
-applies. `pytest -q` is `2231 passed, 15 skipped, 12 subtests passed`,
-which includes `test/parity` at its declared budgets and
+**No public value changes.** The code the diff touches is the version
+line and the `minkowski_dot` removal; the removed name is in no released
+tag, and `ldot` reproduces it bit-for-bit on both `avm_msqrd.py` squared
+matrix elements over 200 draws. Nothing else reachable changes, so no
+grid evaluation applies. `pytest -q` is `2246 passed, 15 skipped, 12
+subtests passed` — two fewer than before the removal, exactly the two
+tests that exercised the wrapper rather than the physics — and includes
+`test/parity` at its declared budgets and
 `test/test_theory_aggregation.py`. Logged as the closing entry in
 [`../numerical-impact.md`](../numerical-impact.md).
 
@@ -502,7 +548,7 @@ FAIL   ruff check              see output below
 PASS   cargo fmt --check       rust/
 PASS   cargo clippy            rust/
 PASS   cargo test              rust/
-PASS   pytest                  2231 passed, 15 skipped, 12 subtests passed
+PASS   pytest                  2246 passed, 15 skipped, 12 subtests passed
 PASS   import hazma            version 2.2.0
 FAIL   markdownlint            (task-pipeline/SKILL.md only; unchanged)
 PASS   version bump            2.1.0 → 2.2.0 + CHANGELOG entry
@@ -536,18 +582,19 @@ nothing.
 
 `**Status:** Complete` in the header, matching the phase README's Task
 7.4 row and this note's §Verification. Every file named in §Files Changed
-appears in `git diff origin/master --stat` (**24 files: 17 modified, 7
+appears in `git diff origin/master --stat` (**32 files: 25 modified, 7
 created**), and every file in that diff is named in §Files Changed —
 re-checked mechanically after the last content edit. Review round 1 cited
 this line reading "19 files: 12 modified, 7 created", which was true when
 written and went stale when `/commit-and-pr` added three
 `.claude/skills/` edits at the commit boundary; the round's own fixes
-then added two more files. **Every file-set count in this note is
+then added two more files, and the 2.2.0 renumber and the merge of
+`origin/master` moved them again. **Every file-set count in this note is
 re-derived from `git diff` at the frozen tree rather than patched at the
 one line review cited** — the `--md` argument, the link sweep, the
-citation sweep and the lint count all moved with it. The two remaining
-`18`s were replaced by 20: that is the *non-skill* document count, a
-different number from the 23 `.md` in the diff. Three
+citation sweep and the lint count all moved with it. The non-skill
+document count is 24, a different number from the 27 `.md` in the diff.
+Three
 figures written before measurement were corrected in place rather than
 left to stand: "eleven defects" → twelve, "33 rows would say bit-equal"
 → 27, and "seven of the eight entry points past 1e-12" → exactly seven.

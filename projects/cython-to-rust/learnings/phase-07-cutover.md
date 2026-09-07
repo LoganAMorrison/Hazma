@@ -136,11 +136,11 @@ originated it.
   fails on a missing baseline rather than reporting PASS, then requires a
   matching `## [X.Y.Z]` section in `CHANGELOG.md`.
 - **The full gate on the capturing platform at close:** bare `pytest -q`
-  is 2231 passed / 15 skipped / 12 subtests, and
-  `cargo test --no-default-features` is 258 passed (0 doc-tests).
+  is 2246 passed / 15 skipped / 12 subtests, and
+  `cargo test --no-default-features` is 261 passed (0 doc-tests).
   Re-derive rather than quoting — the cargo count was 249 as recently as
-  Task 7.1's note and the pytest count moved four times inside this phase
-  alone.
+  Task 7.1's note, and the pytest count moved four times inside this phase
+  and twice more in the closing PR.
 
 ## 5. Follow-on seeds
 

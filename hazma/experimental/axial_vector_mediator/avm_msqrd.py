@@ -7,7 +7,7 @@
 import numpy as np
 
 from hazma.parameters import alpha_em
-from hazma.utils import minkowski_dot
+from hazma.utils import ldot
 
 
 def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
@@ -51,10 +51,10 @@ def msqrd_xx_to_a_to_ff(moms, mx, mf, ma, cxxa, cffa):
     p1 = np.array([E, 0.0, 0.0, p])
     p2 = np.array([E, 0.0, 0.0, -p])
 
-    p1DOTp4 = minkowski_dot(p1, p4)
-    p2DOTp3 = minkowski_dot(p2, p3)
-    p1DOTp3 = minkowski_dot(p1, p3)
-    p2DOTp4 = minkowski_dot(p2, p4)
+    p1DOTp4 = ldot(p1, p4)
+    p2DOTp3 = ldot(p2, p3)
+    p1DOTp3 = ldot(p1, p3)
+    p2DOTp4 = ldot(p2, p4)
 
     return (
         4
@@ -113,17 +113,17 @@ def msqrd_xx_to_a_to_ffg(moms, mx, mf, ma, qf, cxxa, cffa):
     p1 = np.array([E, 0, 0, p])
     p2 = np.array([E, 0, 0, -p])
 
-    kDOTp3 = minkowski_dot(k, p3)
-    kDOTp4 = minkowski_dot(k, p4)
-    p3DOTp4 = minkowski_dot(p3, p4)
+    kDOTp3 = ldot(k, p3)
+    kDOTp4 = ldot(k, p4)
+    p3DOTp4 = ldot(p3, p4)
 
-    kDOTp1 = minkowski_dot(k, p1)
-    p1DOTp3 = minkowski_dot(p1, p3)
-    p1DOTp4 = minkowski_dot(p1, p4)
+    kDOTp1 = ldot(k, p1)
+    p1DOTp3 = ldot(p1, p3)
+    p1DOTp4 = ldot(p1, p4)
 
-    kDOTp2 = minkowski_dot(k, p2)
-    p2DOTp3 = minkowski_dot(p2, p3)
-    p2DOTp4 = minkowski_dot(p2, p4)
+    kDOTp2 = ldot(k, p2)
+    p2DOTp3 = ldot(p2, p3)
+    p2DOTp4 = ldot(p2, p4)
 
     e = np.sqrt(4 * np.pi * alpha_em)
 

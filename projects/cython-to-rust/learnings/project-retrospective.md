@@ -218,11 +218,12 @@ The transferable ones. Per-phase detail is in the seven phase files.
   against-the-Cython numbers measured *before* deletion, recorded in
   prose where they can no longer be re-run.
 - **The gate at close, on the capturing platform:** bare `pytest -q` is
-  2231 passed / 15 skipped / 12 subtests (from 1006/13 at the Phase 01
-  close), and `cargo test --no-default-features` is 258 passed (from 222
+  2246 passed / 15 skipped / 12 subtests (from 1006/13 at the Phase 01
+  close), and `cargo test --no-default-features` is 261 passed (from 222
   at the Phase 02 close). Re-derive rather than quoting — these moved at
-  nearly every task, and the cargo figure carried in the project's own
-  working memory was two tasks stale at close.
+  nearly every task, the cargo figure carried in the project's own working
+  memory was two tasks stale at close, and both moved again inside the
+  closing PR itself.
 
 ## 5. Follow-on seeds
 

@@ -364,7 +364,7 @@ run.
 
 ### Task 7.1
 
-- Bare `pytest -q`: **2231 passed, 15 skipped, 12 subtests passed**.
+- Bare `pytest -q`: **2246 passed, 15 skipped, 12 subtests passed**.
 - Clean clone (`git ls-files` export, no `.git`) + `uv pip install .` on
   CPython 3.12: green, imports from outside the repo.
 - `uv build`, then `uv pip install --no-binary hazma` of the sdist into a

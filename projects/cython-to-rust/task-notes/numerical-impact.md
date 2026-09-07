@@ -856,20 +856,30 @@ Cython ones.
 
 ## Task 7.4 — project close (2026-08-29)
 
-**No public value changes.** The whole diff is markdown plus one line of
-`pyproject.toml`, and that line is the version:
+**No public value changes.** The diff is markdown, the version line, and
+the removal of `hazma.utils.minkowski_dot`:
 
 ```sh
 git diff origin/master --name-only -- '*.py' '*.rs' '*.pyx' '*.pxd' \
     '*.csv' '*.dat' '*.npy' '*.toml'
-# -> pyproject.toml   (the single hunk is `version = "2.1.0"` -> "2.2.0")
+# -> pyproject.toml                       (version = "2.1.0" -> "2.2.0")
+#    hazma/utils.py                       (minkowski_dot deleted)
+#    hazma/experimental/.../avm_msqrd.py  (repointed at ldot)
+#    test/test_utils.py                   (tests retargeted at ldot)
 ```
 
-No code path, constant, table or signature is reachable from it, so no
-grid evaluation applies. The full suite is green either side —
-`pytest -q` is **2231 passed, 15 skipped, 12 subtests passed**, which
-includes `test/parity` at its declared budgets on the capturing platform,
-and `cargo test --no-default-features` is **258 passed**.
+That removal is unobservable from outside the repository: the name is in
+**no released tag** (checked against 2.0.2 and 2.1.0), so no user could
+have imported it. Its two consumers move to `ldot`, which is unchanged —
+each passed a shape-`(4,)` `ndarray`, which `ldot` already accepted — and
+both squared matrix elements in `avm_msqrd.py` reproduce the deleted
+implementation **bit-for-bit** over 200 random momentum draws. Nothing
+else reachable changes, so no grid evaluation applies. The full suite is
+green either side — `pytest -q` is **2246 passed, 15 skipped, 12 subtests
+passed** (two fewer than before the removal: the two tests that pinned
+the wrapper's own contract rather than the physics), which includes
+`test/parity` at its declared budgets on the capturing platform, and
+`cargo test --no-default-features` is **261 passed**.
 
 One user-visible value does move, and it is not numerical:
 `hazma.VERSION` and `hazma.__version__` read back **2.2.0** instead of
