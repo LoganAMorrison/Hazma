@@ -101,11 +101,17 @@ reset between calls — use `git -C <worktree>` with absolute paths (see
 
 **If the task touches compiled code** (`rust/`, `pyproject.toml`),
 rebuild in the worktree before running anything:
-`pip install -e .`, then confirm
-`python -c "import hazma; print(hazma.__file__)"` points inside the
-worktree. A stale extension makes every later result meaningless, and
-`cargo build` / `cargo test` do not count as the rebuild — they work out
-of `rust/target/`, which nothing Python imports.
+
+```sh
+pip install -e . --config-settings build-args="--features test-probes"
+```
+
+Then confirm `python -c "import hazma; print(hazma.__file__)"` points
+inside the worktree. A stale extension makes every later result
+meaningless, and `cargo build` / `cargo test` do not count as the
+rebuild — they work out of `rust/target/`, which nothing Python imports.
+Dropping the `--config-settings` leaves the `hazma._core` test probes
+uncompiled, which the suite refuses to run against.
 
 ### Step 4: Read only the required context
 

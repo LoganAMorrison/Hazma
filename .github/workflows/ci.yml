@@ -133,10 +133,46 @@ jobs:
         # distribution, which is why it runs before the editable reinstall
         # below rather than after it. A data file the wheel fails to carry
         # is invisible from the source tree, where it is simply there.
+        #
+        # The second half asserts the `test-probes` invariant on the one
+        # build in this file that has default features. It has to live
+        # here rather than only in release.yml: that workflow's
+        # pull_request trigger is filtered to its own file and
+        # pyproject.toml, while `rust/Cargo.toml` and `rust/src/lib.rs`
+        # are what decide whether the probes compile. Adding `test-probes`
+        # to `default`, or dropping a `cfg`, would otherwise reach a
+        # published release without any pull request having built a
+        # probe-free extension -- the editable reinstall below turns the
+        # probes back on, so the test job cannot see it either.
         working-directory: ${{ runner.temp }}
-        run: >-
-          python -c "import hazma.theory, hazma.limits, hazma.cmb, hazma.pbh,
-          hazma.scalar_mediator, hazma.vector_mediator, hazma._core"
+        run: |
+          python - <<'PY'
+          import inspect
+          import sys
+
+          import hazma._core
+          import hazma.cmb
+          import hazma.limits
+          import hazma.pbh
+          import hazma.scalar_mediator
+          import hazma.theory
+          import hazma.vector_mediator
+
+          served = {"photon", "positron", "neutrino", "scalar_mediator", "vector_mediator"}
+          found = {
+              name
+              for name in dir(hazma._core)
+              if inspect.ismodule(getattr(hazma._core, name))
+          }
+          if found != served:
+              sys.exit(
+                  f"a default-feature build of hazma._core exposes {sorted(found)}, "
+                  f"expected exactly {sorted(served)}. Extra names are the "
+                  "test-only probes, which must stay out of `default` "
+                  "(rust/Cargo.toml) so no released artifact carries them."
+              )
+          print(f"submodules: {sorted(found)}")
+          PY
       - name: Reinstall editable for the test run
         # The golden parity corpus (test/parity/, cython-to-rust Phase 01)
         # refuses to measure a hazma that resolves outside the repository —

@@ -138,7 +138,7 @@ These apply regardless of lens.
   rebuilt. A green run against a stale extension proves nothing — and on
   the Rust side `cargo test` is not a rebuild, since it works out of
   `rust/target/` while Python imports the `hazma/_core.abi3.so` that only
-  `pip install -e .` refreshes.
+  the editable install refreshes.
 - **Read [`lessons.md`](lessons.md) first**, then check the diff against
   each listed recurring class.
 - **Apply the verdict rule** (above), including the re-review vocabulary

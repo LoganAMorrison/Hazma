@@ -7,6 +7,10 @@
 - **Status:** open
 - **Triggers / blockers:** none — touches lint config and agent docs
   only, no library code. Ripens the next time any PR edits a skill file.
+- **Recurrences:** PR #88 edited six skill files to sweep a changed
+  editable-install command through them and inherited the same red
+  markdownlint row, still nine errors in the same two files, neither of
+  which that PR restructured.
 
 ## Why
 

@@ -130,8 +130,8 @@ The one-command pre-commit gate is
 every commit; do not assume a hook covers it.
 
 **Editing a `.rs` requires a rebuild, and `cargo build` is not it.**
-`cargo build` refreshes `rust/target/`, which nothing imports;
-`pip install -e .` is what re-links the crate into the tree as
+`cargo build` refreshes `rust/target/`, which nothing imports; the
+editable install is what re-links the crate into the tree as
 `hazma/_core.abi3.so`. So the loop is: iterate with
 `cargo test --no-default-features --features test-probes` (fast, needs no
 reinstall, and is where kernel unit tests belong), then re-run the

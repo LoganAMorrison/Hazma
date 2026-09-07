@@ -45,7 +45,10 @@ took that scoping out again. That work
 is the standing price of the gate. Note that
 the suite needs the extensions built **inside the repository**:
 `cases.assert_module_is_repo_tree` refuses a `hazma` resolving anywhere
-else, so `pip install -e .`, not `pip install .`.
+else, so an editable install and not `pip install .`. It also needs the
+crate's test probes, which are not built by default, so the install is
+`pip install -e . --config-settings build-args="--features test-probes"`
+in full (`docs/agents/environment.md`).
 
 Verify the committed data is intact and complete. Imports no kernel and
 evaluates nothing, so it is fast and works on an unbuilt tree:

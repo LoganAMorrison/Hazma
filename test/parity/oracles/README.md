@@ -73,9 +73,10 @@ Cython half.
 git show 0954e5a^:hazma/spectra/_photon/_eta.pyx > hazma/spectra/_photon/_eta.pyx
 ```
 
-**2. Prove the harness before trusting it.** Build unpatched
-(`pip install -e .`, not `cargo build` — see
-[`AGENTS.md`](../../../AGENTS.md)) and require every case to come back
+**2. Prove the harness before trusting it.** Build unpatched with
+`pip install -e . --config-settings build-args="--features test-probes"`
+— not `cargo build`, which publishes nothing to Python (see
+[`AGENTS.md`](../../../AGENTS.md)) — and require every case to come back
 bit-for-bit identical to the corpus:
 
 ```bash

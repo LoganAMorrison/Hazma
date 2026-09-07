@@ -964,3 +964,70 @@ population is a whole file the sweep never opened.
   saying the opposite of what the PR did. Review caught all of it in one
   pass; the fix wrote the note and the ADR and re-read every claim in the
   file against the diff).
+
+### path-filtered-assertion-misses-its-own-invariant
+
+PR #88 moved six test-only `hazma._core` submodules behind a default-off
+`test-probes` cargo feature so no released artifact carries them, and added a
+step to `.github/workflows/release.yml` asserting that the built extension
+exposes exactly the five per-domain submodules. The assertion was correct and
+ran green on the PR that introduced it.
+
+Review caught that it could never run on a PR that broke the invariant.
+`release.yml`'s `pull_request` trigger is filtered to `release.yml` and
+`pyproject.toml`, while what decides whether the probes compile is
+`rust/Cargo.toml` and `rust/src/lib.rs`. Adding `test-probes` to `default`, or
+dropping a `#[cfg]`, would touch neither filtered path. Ordinary CI could not
+catch it either: the `test` job's plain `pip install .` was followed only by an
+import smoke test, and the editable reinstall after it turns the probes back
+on, so the suite runs against a probe-enabled build by construction. The defect
+would first be observable in a published release.
+
+The fix put the assertion where a default-feature build already exists — the
+`test` job's import smoke step, which runs on every pull request across the
+whole matrix — and kept the release-time copy, which checks the actual
+`--release` wheel rather than an in-tree debug build. What made it verifiable
+was running the step's own body against both configurations rather than only
+the passing one:
+
+```text
+$ bash smoke.sh   # probe-enabled build
+a default-feature build of hazma._core exposes ['boost', 'dispatch', 'interp',
+'mediator_tables', 'neutrino', 'photon', 'positron', 'quad', 'scalar_mediator',
+'special', 'vector_mediator'], expected exactly ['neutrino', 'photon',
+'positron', 'scalar_mediator', 'vector_mediator']. ...
+exit: 1
+
+$ bash smoke.sh   # default build
+submodules: ['neutrino', 'photon', 'positron', 'scalar_mediator', 'vector_mediator']
+exit: 0
+```
+
+### rg-skips-the-skill-directories
+
+The same PR changed the development install from `pip install -e .` to
+`pip install -e . --config-settings build-args="--features test-probes"`, and
+swept the new command through `AGENTS.md`, `docs/agents/environment.md` and
+`docs/agents/preflight.md`. Review found four surviving copies of the old
+command in active instructions. The sweep that found the rest found ten, and
+the six the first pass missed were all in `.claude/skills/` and
+`.codex/skills/`.
+
+The cause is a default, not an oversight: `rg` skips dot-prefixed directories,
+and `doc-consistency.md` §11 prescribed
+`rg -n '<old-value>' projects/ docs/ hazma/ test/ README.md CHANGELOG.md` —
+which cannot reach either skill tree no matter how carefully it is run.
+Measured on the same tree:
+
+```text
+$ rg -l 'pip install -e' . | grep -c '^\./\.claude'
+0
+$ rg -l --hidden 'pip install -e' . | grep -c '^\./\.claude'
+5
+```
+
+§11 and the identifier sweep in the forcing-function block now pass `--hidden`
+and name both skill trees. The sites that keep the bare command do so
+deliberately — `AGENTS.md` naming the wrong command in order to warn about it,
+and prose about *which tool* republishes the extension, which now says "the
+editable install" rather than spelling a command a reader might run.

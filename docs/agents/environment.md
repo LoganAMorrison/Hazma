@@ -92,7 +92,7 @@ cython-to-rust Task 6.4, and `setuptools-rust` followed in Task 7.1.
 **Editing a `.rs` and re-running pytest tests the OLD extension.** The
 trap has an extra step, because the fast iteration command is not the
 publishing one: `cargo build` and `cargo test` work out of
-`rust/target/`, which nothing Python imports. Only `pip install -e .`
+`rust/target/`, which nothing Python imports. Only the editable install
 re-links the crate into the tree as `hazma/_core.abi3.so`. So iterate with
 `cargo test --manifest-path rust/Cargo.toml --no-default-features
 --features test-probes`, then reinstall — with the same
@@ -233,7 +233,9 @@ install.** `test/parity/cases.py` refuses a `hazma` that resolves
 outside the repository (`cases.assert_module_is_repo_tree`), and running pytest
 from the repo root puts the source tree first on `sys.path` regardless,
 so a non-editable `pip install .` leaves the corpus looking at a tree
-with no compiled extension in it. `pip install -e .`, then confirm with
+with no compiled extension in it. Run the development install above —
+`pip install -e . --config-settings build-args="--features test-probes"` —
+then confirm with
 `python -c "import hazma._core as m; print(m.__file__)"` that
 `_core.abi3.so` is inside your worktree — since cython-to-rust Task 6.4
 it is the only compiled module there is. CI does the non-editable install

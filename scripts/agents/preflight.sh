@@ -282,7 +282,8 @@ capture "${OUT}" python -c "import hazma; print(hazma.__version__)"
 if [[ $? -eq 0 ]]; then
     row PASS "import hazma" "version $(tr -d '\n' <"${OUT}")"
 else
-    row FAIL "import hazma" "package does not import — rebuild (pip install -e .)"
+    row FAIL "import hazma" \
+        "package does not import — rebuild: pip install -e . --config-settings build-args=\"--features test-probes\""
     tail_of "${OUT}"
 fi
 

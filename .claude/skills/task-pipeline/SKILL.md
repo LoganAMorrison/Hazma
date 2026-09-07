@@ -71,9 +71,12 @@ and `<BRANCH>` from Phase A.
 > by the pipeline orchestrator.
 >
 > Hazma ships one Rust extension, `hazma._core`. If your work touches
-> `rust/` or `pyproject.toml`, run `pip install -e .` inside this
-> worktree before running tests — `cargo build` alone publishes nothing
-> to Python — and confirm `python -c "import hazma; print(hazma.__file__)"`
+> `rust/` or `pyproject.toml`, run
+> `pip install -e . --config-settings build-args="--features test-probes"`
+> inside this worktree before running tests — `cargo build` alone
+> publishes nothing to Python, and without the `--config-settings` the
+> test probes are not compiled — and confirm
+> `python -c "import hazma; print(hazma.__file__)"`
 > resolves inside `<WT_PATH>` — otherwise every result you report comes
 > from a different tree.
 

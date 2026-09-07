@@ -238,3 +238,15 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   output — is in the same diff, and every sibling claim in the working memory
   ("nothing has moved yet", "no task started") has been re-read against it;
   otherwise the row says what landed and what is owed (PR #87).
+- [path-filtered-assertion-misses-its-own-invariant] A `paths:` filter decides
+  which changes an assertion ever sees, and it is usually written around the
+  file the assertion lives in, not around the files that can break it. Put the
+  check where the inputs that can violate it are already built, and prove it by
+  running the check against a build that does violate it — a check only ever
+  observed passing is a check whose failure path is unmeasured (PR #88).
+- [rg-skips-the-skill-directories] `rg` ignores dot-prefixed directories by
+  default, so a sweep over `docs/ hazma/ test/` reports zero hits in
+  `.claude/skills/` and `.codex/skills/` — the instructions an agent actually
+  follows. Any sweep for a command, identifier or path must pass `--hidden` and
+  name both skill trees, or a changed contract stays live in the files most
+  likely to be executed verbatim (PR #88).

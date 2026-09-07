@@ -117,7 +117,9 @@ in the response.
   re-check the PR body against the post-fix diff — a stale body is a
   blocking finding.
 - **Rebuild before gating** if you touched `rust/` or `pyproject.toml`:
-  `pip install -e .` (a `cargo` run does not republish the extension).
+  `pip install -e . --config-settings build-args="--features test-probes"`
+  (a `cargo` run does not republish the extension, and without the
+  `--config-settings` the test probes are not compiled).
 - **Run the preflight gate.** `scripts/agents/preflight.sh --paths
   "<touched>"` — bare, so its pytest gate is the same collection CI runs
   (or the manual list in
