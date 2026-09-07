@@ -255,25 +255,37 @@ expected delta that needs no Cython twin.
   no kernel.
 - **B1 (η′):** the fix adds a second copy of a line term the stored
   spectrum already carries once, so the delta is
-  `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)` — a constant times
-  a function of `hazma/_utils/boost.pyx`, which is still live and which
-  Task 2 is already capturing.
+  `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)`. This paragraph
+  called that a function of `hazma/_utils/boost.pyx` and said the file
+  was still live; `cython-to-rust` Task 6.4 has since deleted it, so the
+  model reads `hazma._core.boost` — a kernel B1 does not repair, and one
+  whose window arithmetic the model has to match bit for bit, because
+  that is what decides which positions `MOVED` resolves to.
 - **B2 (φ):** both line energies are closed forms,
   `(M_φ² − m²)/(2 M_φ)`; the delta is the two boosted line terms
   recomputed there minus the two the corpus stored.
 
-Where the closed form is analytic, add an `mpmath` reference in the
-shape of `test/parity/reference.py` rather than trusting either
-implementation — that file is the precedent, and
-`projects/cython-to-rust/task-notes/README.md` records the pattern
-settling a comparable question in an afternoon with no build.
+Where the closed form is analytic, an `mpmath` reference in the shape of
+`test/parity/reference.py` is the precedent for settling it without
+trusting either implementation. Task 3 measured that none of these three
+earns one: that file exists because its kernels lose about 33 decimal
+digits to an `atan` cancellation, and against 60-digit `mpmath` these
+forms lose under half a digit — the two-body energies are good to 15.6
+to 16.2 digits, and a boosted line's `height × width` is `1.0` to within
+one ulp. What checks them instead is the committed corpus, which is the
+stronger oracle: an independent implementation, already pinned.
 
-**Deliverable / gate:** For each of B1–B3, a declaration in
-`test/parity/deltas.py` and a test that the declared model reproduces
-the **shipped** value from the corrected form plus the named defect —
-which is falsifiable without either the repaired Rust or a Cython twin,
-and is what makes the model non-circular. Recovering the deleted sources
-for review is `git show 665aed5:<path>` (B1, B2) and
+**Deliverable / gate:** For each of B1–B3, a model in
+`test/parity/deltas.py` — its relation, its budget, and the measurement
+that justifies the budget — and a test that the model reproduces the
+**shipped** value from the corrected form plus the named defect, which
+is falsifiable without either the repaired Rust or a Cython twin and is
+what makes the model non-circular. The model does **not** take a
+`DECLARED_DELTAS` key here: ADR-0001's staleness rule fails a
+declaration whose array has not moved, so the key lands with the repair
+(Tasks 5, 6 and 9) and until then the model waits in `DELTA_MODELS`,
+gated by `test/parity/test_delta_models.py`. Recovering the deleted
+sources for review is `git show 665aed5:<path>` (B1, B2) and
 `git show b5f7f90^:hazma/spectra/_photon/_rho.pyx` (B3).
 
 ### Task 4: Repair A1 — the boost integral window
