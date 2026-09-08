@@ -561,6 +561,18 @@ population at execution time rather than trusting this paragraph, and
 sweep the behavior words as well as the task id
 (`[settling-a-deferral-has-two-sweeps]`).
 
+Also in scope, and a second class rather than a second copy: the
+**twin-liveness** claims. `references/defect-blast-radius.md`'s roster
+table annotates each Group A twin `(live)` and its lead-in says Group A
+"still has a live Cython twin and is on the clock for its oracle
+capture"; `references/corpus-repinning.md`'s Task 2 protocol says
+`test/test_core_boost.py` "already drives `hazma._utils.boost`". Task 2
+is complete and Task 6.4 left no `.pyx` in the tree, so all of that is
+now false in a live `references/` file. Sweep on the liveness claim
+(`still live`, `(live)`, `still supplies`) as well as on the task id —
+PR #94's review found the same sentence surviving in two follow-ups
+after the plan itself had been corrected.
+
 Also in scope: the "Risks" sections of the seven follow-ups, which still
 propose "one declared regeneration after Phase 06 Task 6.4". Those were
 deliberately left standing when the blocker bullets were rewritten, so

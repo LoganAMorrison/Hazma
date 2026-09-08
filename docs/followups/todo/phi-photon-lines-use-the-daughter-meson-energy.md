@@ -18,7 +18,11 @@
   but the corrected values need no Cython oracle: both line energies are
   closed forms, `(M_φ² − m²)/(2 M_φ)`, so the expected delta is the two
   boosted line terms recomputed there minus the two the corpus stored,
-  and `hazma/_utils/boost.pyx` still supplies `boost_delta_function`.
+  built from `boost_delta_function`. This bullet named
+  `hazma/_utils/boost.pyx` as that function's home; `cython-to-rust`
+  Task 6.4 has since deleted it, so the model reads `hazma._core.boost` —
+  a kernel this repair does not touch, and one whose window arithmetic
+  the model has to match bit for bit.
   So this repair is schedulable now, independently of the port's
   remaining phases. Sequenced in
   [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);

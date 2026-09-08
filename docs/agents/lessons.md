@@ -138,7 +138,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   every fact it cites into scope: run `check_doc_citations.py` over the docs you
   touched, pin historical evidence to a commit, cite full paths (never
   basenames) whenever your own diff removes a file, and remember that a ledger
-  entry about a bad citation is itself a citation (PR #42, #43, #65, #67, #74).
+  entry about a bad citation is itself a citation. A green checker is not
+  enough — a citation into a file the tree no longer has at all is reported as
+  EXTERNAL and skipped, so *also* grep the doc's cited paths for present-tense
+  liveness claims ("still live", "still supplies") and test each against the
+  tree (PR #42, #43, #65, #67, #74, #94).
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs committed
   history, so on an uncommitted tree it scans zero files and prints a
   success-shaped line; before believing any gate, confirm it reported a non-zero

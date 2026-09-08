@@ -130,6 +130,19 @@ this repair and the A1 boost repair that already owns the same arrays.
   Both now assert the η′ *with* its three siblings rather than against
   them, and both keep an `assert_ne`/explicit-value line so a revert to
   the shipped weight fails on the number.
+- **Review round 1 (PR #94) caught two stale claims, both class-shaped.**
+  The follow-up this task annotated still said `hazma/_utils/boost.pyx`
+  "is still live" — Task 6.4 deleted it, and `PLAN.md`'s own Task 3
+  bullet already recorded the correction to `hazma._core.boost`; the
+  class sweep found the identical sentence in the φ follow-up, which is
+  Task 6's premise, and both are fixed. And this note's handoff said
+  "Four defects" while listing five; the same sweep found
+  `test_delta_models.py`'s module docstring asserting "all three defects
+  are still live", which this repair falsified for B1. A green
+  `check_doc_citations.py` did not catch the first class because a
+  citation into a deleted file is reported as EXTERNAL and skipped —
+  `docs/agents/lessons.md` `[touched-doc-inherits-its-citations]` now
+  says so.
 - **`folded_constants_match_the_shipped_object_code` keeps pinning the η′
   weight, against twice the shipped immediate.** `0x3f97_9fa9_7e13_2b56`
   → `0x3fa7_9fa9_7e13_2b56`: doubling only increments the exponent field,
@@ -491,7 +504,7 @@ precedent for its hardest part.**
 **Currently safe to assume:**
 
 - `test/parity/data/` is still intact and untouched by this project.
-- Four defects have now moved a library value: B4, B5, B6, A1 and B1.
+- Five defects have now moved a library value: B4, B5, B6, A1 and B1.
   `deltas.DECLARED_DELTAS` holds 98 arrays across five declarations, one
   of which is composite.
 - `../rules.md` rule 7's first real test is answered: A1 and B1 overlap at

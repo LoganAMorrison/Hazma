@@ -22,7 +22,11 @@
   adds a second copy of a line term the stored spectrum already carries
   once, so the expected per-position delta is
   `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)` — computable from a
-  constant and from `hazma/_utils/boost.pyx`, which is still live.
+  constant and from `boost_delta_function`. This bullet named
+  `hazma/_utils/boost.pyx` as that function's home and called the file
+  live; `cython-to-rust` Task 6.4 has since deleted it, so the model
+  reads `hazma._core.boost` — a kernel this repair does not touch, and
+  one whose window arithmetic the model has to match bit for bit.
   So this repair is schedulable now, independently of the port's
   remaining phases. Sequenced in
   [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
