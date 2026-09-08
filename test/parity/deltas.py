@@ -32,6 +32,14 @@ value, so nothing is recomputed and the prediction is limited by the
 transform's own arithmetic rather than by a quadrature. It is the
 strongest relation the spec offers and the one to reach for first.
 
+``Reference`` — the stored value is superseded outright by one a second
+implementation computes. For a defect that lost or doubled a term of a
+quadrature there is no term to add and no transform to apply, so the only
+statement available is what an implementation that does not carry the
+defect returns: `thermal_reference` integrates the same integrand with
+scipy's QUADPACK, and `oracle_reference` reads the arrays captured from
+the Cython twins before the port deleted them.
+
 Positions
 ---------
 A declaration covers exactly the positions its mechanism reaches
@@ -70,6 +78,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
+import oracle_reference
 import thermal_reference
 
 from hazma import parameters
@@ -222,7 +231,7 @@ class Delta:
         the prediction differs from the stored value. Undeclared
         positions are still compared against the stored value under the
         case's budget.
-    relation : Additive or Exact
+    relation : Additive, Exact or Reference
         How the repaired value relates to the stored one.
     measured : str
         The measurement behind the declaration, so the table is not a
@@ -673,12 +682,123 @@ _B6 = Delta(
     evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
 )
 
+# ---------------------------------------------------------------------------
+# A1 -- the boost integral mis-covers its window at both ends
+# ---------------------------------------------------------------------------
+
+
+#: The seven tabulated photon cases `boost_integrate_linear_interp`
+#: reaches. Each contributes four keys below -- ``rest_plus_eps``,
+#: ``near_rest``, ``boosted_mild`` and ``boosted_strong``, both value
+#: suffixes. ``rest`` is deliberately absent from all seven: every one of
+#: these kernels short-circuits to its rest-frame spectrum at
+#: ``E - m < DBL_EPSILON``, so the integral never runs at ``beta = 0`` and
+#: those 1,841 pinned positions must still match the stored arrays.
+A1_CASES = (
+    "spectra.photon.eta",
+    "spectra.photon.eta_prime",
+    "spectra.photon.omega",
+    "spectra.photon.phi",
+    "spectra.photon.charged_kaon",
+    "spectra.photon.long_kaon",
+    "spectra.photon.short_kaon",
+)
+
+_A1 = Delta(
+    repair="A1",
+    positions=MOVED,
+    relation=Reference(
+        reference=oracle_reference.captured("A1"),
+        rtol=1e-12,
+        why="the reference is the same routine with the same window "
+        "coverage, compiled from the pre-port Cython, so the only thing "
+        "between it and the repaired kernel is the port's own arithmetic "
+        "-- which is what `tolerances.TABULATED_RTOL` already budgets for "
+        "these seven cases, and this is that number. Measured 0.0: the "
+        "repaired kernel reproduces the capture at all 10,045 pinned "
+        "positions bit for bit, as the unrepaired port reproduced the "
+        "corpus. Not tightened to zero, because the capture is one "
+        "platform's (`test_oracles.py` holds it against the corpus "
+        "manifest's) and a libm that moves the boost integral has to be "
+        "held exactly as tightly here as the undeclared positions are, "
+        "not tighter.",
+    ),
+    measured="4,154 of the 10,045 pinned positions move, in four of the "
+    "five blocks of each case and in none of the `rest` blocks. The sign "
+    "splits by block rather than by case: `rest_plus_eps` moves down at "
+    "all 1,156 of its positions, where the two partial-cell terms "
+    "overlapped and the shipped value is a median 9,768x and up to "
+    "360,507x too high; `near_rest`, `boosted_mild` and `boosted_strong` "
+    "move up at 2,997 of their 2,998, by up to 98.7%, where the dropped "
+    "interior cell left the value low. Per case: eta 560, eta_prime 552, "
+    "omega 633, phi 551, charged_kaon 631, long_kaon 631, short_kaon 596.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-4-boost-window.md",
+)
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
 #: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
 #: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
+    # A1.
+    ("spectra.photon.eta", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.eta", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.eta", "near_rest", "values"): _A1,
+    ("spectra.photon.eta", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.eta", "boosted_mild", "values"): _A1,
+    ("spectra.photon.eta", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.eta", "boosted_strong", "values"): _A1,
+    ("spectra.photon.eta", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.eta_prime", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.eta_prime", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.eta_prime", "near_rest", "values"): _A1,
+    ("spectra.photon.eta_prime", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.eta_prime", "boosted_mild", "values"): _A1,
+    ("spectra.photon.eta_prime", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.eta_prime", "boosted_strong", "values"): _A1,
+    ("spectra.photon.eta_prime", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.omega", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.omega", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.omega", "near_rest", "values"): _A1,
+    ("spectra.photon.omega", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.omega", "boosted_mild", "values"): _A1,
+    ("spectra.photon.omega", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.omega", "boosted_strong", "values"): _A1,
+    ("spectra.photon.omega", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.phi", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.phi", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.phi", "near_rest", "values"): _A1,
+    ("spectra.photon.phi", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.phi", "boosted_mild", "values"): _A1,
+    ("spectra.photon.phi", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.phi", "boosted_strong", "values"): _A1,
+    ("spectra.photon.phi", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.charged_kaon", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.charged_kaon", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.charged_kaon", "near_rest", "values"): _A1,
+    ("spectra.photon.charged_kaon", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.charged_kaon", "boosted_mild", "values"): _A1,
+    ("spectra.photon.charged_kaon", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.charged_kaon", "boosted_strong", "values"): _A1,
+    ("spectra.photon.charged_kaon", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.long_kaon", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.long_kaon", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.long_kaon", "near_rest", "values"): _A1,
+    ("spectra.photon.long_kaon", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.long_kaon", "boosted_mild", "values"): _A1,
+    ("spectra.photon.long_kaon", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.long_kaon", "boosted_strong", "values"): _A1,
+    ("spectra.photon.long_kaon", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.short_kaon", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.short_kaon", "rest_plus_eps", "scalar_values"): _A1,
+    ("spectra.photon.short_kaon", "near_rest", "values"): _A1,
+    ("spectra.photon.short_kaon", "near_rest", "scalar_values"): _A1,
+    ("spectra.photon.short_kaon", "boosted_mild", "values"): _A1,
+    ("spectra.photon.short_kaon", "boosted_mild", "scalar_values"): _A1,
+    ("spectra.photon.short_kaon", "boosted_strong", "values"): _A1,
+    ("spectra.photon.short_kaon", "boosted_strong", "scalar_values"): _A1,
     # B4. The ``mu_mu_only`` blocks of this case are deliberately absent:
     # they open no FSR channel and must still match the stored arrays bit
     # for bit. Within a declared array the same holds position by position:
@@ -881,6 +1001,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 #: yet. A repair task moves its model into that table by adding the arrays
 #: it measured moving; see the module docstring.
 DELTA_MODELS: dict[str, Delta] = {
+    "A1": _A1,
     "B1": _B1,
     "B2": _B2,
     "B3": _B3,

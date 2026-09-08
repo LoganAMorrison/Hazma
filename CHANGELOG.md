@@ -17,6 +17,34 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The boost integral mis-covered its window at both ends, and all seven
+  tabulated photon spectra move.** `hazma.spectra.dnde_photon_eta`,
+  `dnde_photon_eta_prime`, `dnde_photon_omega`, `dnde_photon_phi`,
+  `dnde_photon_charged_kaon`, `dnde_photon_long_kaon` and
+  `dnde_photon_short_kaon` boost a tabulated rest-frame spectrum by
+  integrating it over the window the boost opens. Two errors in that
+  coverage, both now repaired. Its interior trapezoid ran to an exclusive
+  upper index while the upper partial-cell term began at the inclusive
+  one, so one whole cell was covered by nothing — and under the clamp
+  that applies when the window reaches past the table, the table's final
+  row contributed to no term at all. Where **both** bounds fell inside a
+  single cell the two partial-cell terms overlapped instead, covering
+  about two whole cells rather than the sliver between the bounds; that
+  over-count is `cell width / window width` and diverges as the parent
+  slows. **The sign therefore splits by regime rather than being
+  uniform.** Near threshold the spectra were far too high and now
+  converge: at a parent one part in 1e12 above rest they returned 6,500x
+  to 33,000x their own rest-frame value at `E_γ = m/10`, and now agree
+  with it to better than 1% over `E_γ` from `m/20` to `3m/10`. Away from
+  threshold they were slightly low and now rise — over the 10,045 values
+  the parity corpus pins, by a median 3.3% at `γ = 1.05`, 0.22% at
+  `γ = 2` and 7.1e-5 at `γ = 10`, and by up to 98.7%. In total 4,154 of
+  those 10,045 values move. A parent **exactly** at rest is unaffected:
+  all seven kernels short-circuit to the rest-frame spectrum before the
+  integral, so it never runs at `β = 0`. `hazma.spectra.dnde_photon` and
+  every model `total_spectrum` move for any final state containing one of
+  the seven. Details:
+  `docs/followups/todo/boost-integral-drops-last-interior-cell.md`.
 - **The charged pion's prompt `π → e ν` neutrino line was counted twice.**
   `hazma.spectra.dnde_neutrino_charged_pion` summed two contributions that
   were meant to partition the pion's decay modes, and both carried the
@@ -356,7 +384,9 @@ result:
   value as the parent approaches rest: at `E_γ = m/10` and a parent one
   part in 1e12 above rest, `dnde_photon_eta` returns 767.2 against the
   0.02313 it returns exactly at rest. Separately, when the window reaches
-  past the table the final row contributes to nothing at all.
+  past the table the final row contributes to nothing at all. Repaired
+  after this release — see `Unreleased`, which carries the measurement
+  over the parity corpus and the fix.
 - **[`thermal_cross_section` returns its integrator's initial estimate.](docs/followups/done/thermal-cross-section-quadrature-never-converges.md)**
   The quadrature never converges, so ⟨σv⟩ is off the true integral for
   every `x = m_χ/T` above about 5 — that is, across the entire freeze-out

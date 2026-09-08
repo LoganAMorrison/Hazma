@@ -62,7 +62,9 @@ implementation does* rather than by what it computes:
 ``TABULATED`` (rtol 1e-12)
     Driven by `boost_integrate_linear_interp` over a shipped CSV table:
     `np.trapezoid` across interior cells, closed-form partial cells at
-    both edges, an analytic `1/E` tail below the table. A Rust rewrite
+    both edges, one closed form over the whole window when both bounds
+    land inside a single cell, and an analytic `1/E` tail below the
+    table. A Rust rewrite
     keeps the algorithm and changes the summation order, so the drift is
     accumulated rounding, not method error: the tables are 100 data rows
     (eta) or 500 (the other six), and 500 · 2^-52 is ~1.1e-13, so 1e-12

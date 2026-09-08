@@ -214,24 +214,21 @@ pub fn boost_delta_function(e0: f64, e: f64, m: f64, beta: f64) -> f64 {
 ///
 /// # Faithfulness notes
 ///
-/// Four details are reproduced rather than repaired, per
-/// `projects/cython-to-rust/rules.md` rule 1 — the corpus pins what the
-/// Cython returns, and a repair is a separate declared change. The first
-/// two are the same off-by-one read from opposite sides and are a real
-/// defect, tracked in
-/// `docs/followups/todo/boost-integral-drops-last-interior-cell.md`:
+/// The window coverage below **departs** from the shipped Cython, which
+/// mis-covered it from both sides: its trapezoid ran over an exclusive
+/// `x[ilow..ihigh]` while the upper partial-cell term started at
+/// `x[ihigh]`, leaving `[x[ihigh - 1], x[ihigh]]` covered by nothing —
+/// and where both bounds fell inside one cell the two partial-cell terms
+/// overlapped instead, over-counting by `cell width / window width`,
+/// which diverges as `β → 0`. That is roster entry `A1` of
+/// `projects/parity-pinned-defect-repair`, and the values it moves are
+/// declared in `test/parity/deltas.py` against the corpus arrays that
+/// pinned them.
 ///
-/// * the trapezoid runs over `x[ilow..ihigh]`, an **exclusive** upper
-///   bound, while the upper partial-cell term starts at `x[ihigh]` — so
-///   `[x[ihigh - 1], x[ihigh]]` is covered by *nothing*. When `ub` is
-///   clamped, `ihigh` is the last index and the upper term is skipped
-///   too, so the table's final row contributes to no term at all;
-/// * when both bounds fall inside one cell, `ihigh = ilow - 1` and the
-///   two partial-cell terms **overlap** instead, covering about two whole
-///   cells rather than the sliver between the bounds. The over-count is
-///   `cell width / window width`, which diverges as `β → 0` — which is
-///   why all seven tabulated photon spectra blow up near threshold
-///   rather than converging to their rest-frame values;
+/// Two details are still reproduced rather than repaired, per
+/// `projects/cython-to-rust/rules.md` rule 1 — the corpus pins what the
+/// Cython returns, and a repair is a separate declared change:
+///
 /// * cell membership is decided with a **1e-6 absolute** tolerance on
 ///   energies that span six decades, so "the bound sits on a node" means
 ///   something different at 0.005 MeV than at 1000 MeV;
@@ -344,31 +341,49 @@ pub fn boost_integrate_linear_interp(
         }
     });
 
-    if ilow < ihigh {
-        integral += trapezoid(&x[ilow..ihigh], ilow, &yy);
-    }
-
-    // Partial cell at the lower bound: integrate the linear interpolant
-    // of `y/x` across `[lb, x[ilow]]`.
-    if ilow > 0 && (x[ilow] - lb).abs() > 1e-6 {
+    if ilow > ihigh {
+        // Both bounds land inside the one cell `[x[ihigh], x[ilow]]`, so
+        // `ihigh == ilow - 1`. Neither partial-cell term below may run
+        // here: they would cover `[lb, x[ilow]]` and `[x[ihigh], ub]`,
+        // which overlap. What the window is worth is one linear
+        // interpolant integrated across `[lb, ub]`.
         let x2 = x[ilow];
-        let x1 = x[ilow - 1];
-        let m = (yy(ilow) - yy(ilow - 1)) / (x2 - x1);
-        // Fused: `y1 - m * x1`, then `0.5 * m * (x2 + lb) + b`, then the
-        // accumulation itself — three `fmsub`/`fmadd` in the Cython.
-        let b = (-m).mul_add(x1, yy(ilow - 1));
-        let inner = (0.5 * m).mul_add(x2 + lb, b);
-        integral = (x2 - lb).mul_add(inner, integral);
-    }
-
-    // Partial cell at the upper bound, same shape anchored on `x[ihigh]`.
-    if ihigh < npts - 1 && (ub - x[ihigh]).abs() > 1e-6 {
-        let x2 = x[ihigh + 1];
         let x1 = x[ihigh];
-        let m = (yy(ihigh + 1) - yy(ihigh)) / (x2 - x1);
+        let m = (yy(ilow) - yy(ihigh)) / (x2 - x1);
         let b = (-m).mul_add(x1, yy(ihigh));
-        let inner = (0.5 * m).mul_add(ub + x1, b);
-        integral = (ub - x1).mul_add(inner, integral);
+        let inner = (0.5 * m).mul_add(ub + lb, b);
+        integral = (ub - lb).mul_add(inner, integral);
+    } else {
+        // Inclusive at the top: the cell ending at `x[ihigh]` belongs to
+        // the interior sum, and the upper partial cell below picks up at
+        // `x[ihigh]`, so the two meet without overlapping and without a
+        // gap between them.
+        if ilow < ihigh {
+            integral += trapezoid(&x[ilow..=ihigh], ilow, &yy);
+        }
+
+        // Partial cell at the lower bound: integrate the linear interpolant
+        // of `y/x` across `[lb, x[ilow]]`.
+        if ilow > 0 && (x[ilow] - lb).abs() > 1e-6 {
+            let x2 = x[ilow];
+            let x1 = x[ilow - 1];
+            let m = (yy(ilow) - yy(ilow - 1)) / (x2 - x1);
+            // Fused: `y1 - m * x1`, then `0.5 * m * (x2 + lb) + b`, then the
+            // accumulation itself — three `fmsub`/`fmadd` in the Cython.
+            let b = (-m).mul_add(x1, yy(ilow - 1));
+            let inner = (0.5 * m).mul_add(x2 + lb, b);
+            integral = (x2 - lb).mul_add(inner, integral);
+        }
+
+        // Partial cell at the upper bound, same shape anchored on `x[ihigh]`.
+        if ihigh < npts - 1 && (ub - x[ihigh]).abs() > 1e-6 {
+            let x2 = x[ihigh + 1];
+            let x1 = x[ihigh];
+            let m = (yy(ihigh + 1) - yy(ihigh)) / (x2 - x1);
+            let b = (-m).mul_add(x1, yy(ihigh));
+            let inner = (0.5 * m).mul_add(ub + x1, b);
+            integral = (ub - x1).mul_add(inner, integral);
+        }
     }
 
     Ok(integral / (2.0 * gamma * beta))
@@ -531,13 +546,12 @@ mod tests {
     /// A flat rest-frame spectrum `y = c` boosts to `c ln(ub/lb)/(2γβ)`
     /// when the window sits inside the table.
     ///
-    /// The tolerance is set by the dropped interior cell, not by the
-    /// quadrature: at cell width `h` the missing cell is `h·c/ub` out of
-    /// `c·ln(ub/lb)`, which at `h = 1e-3` here is 2.6e-5 of the answer,
-    /// while the trapezoidal error on `c/x` over the same cells is
-    /// `~1e-10`. See [`the_last_interior_cell_is_dropped`] for the pin on
-    /// the drop itself; this test only has to stay loose enough to let it
-    /// through.
+    /// The tolerance is the trapezoidal rule's own, and nothing else is in
+    /// the way: the window sits strictly inside the table, so neither the
+    /// clamp nor the below-table tail runs. The composite error on `c/x`
+    /// is `(h²/12)(f′(ub) − f′(lb))`, which at `h = 1e-3` is 9.6e-10
+    /// absolute — 5.1e-10 of the answer, and positive, because the rule
+    /// over-estimates a convex integrand. 1e-9 is twice that.
     #[test]
     fn a_flat_table_boosts_to_the_log_of_the_window() {
         let x: Vec<f64> = (0..40_001).map(|i| 1.0 + f64::from(i) * 1e-3).collect();
@@ -549,35 +563,123 @@ mod tests {
         let want = 2.0 * (ub / lb).ln() / (2.0 * gamma * beta);
         let got = boost_integrate_linear_interp(energy, beta, &x, &y).unwrap();
         assert!(
-            (got - want).abs() < 1e-4 * want,
+            (got - want).abs() < 1e-9 * want,
             "boosted flat spectrum {got} vs {want}"
         );
     }
 
-    /// The interior sum stops one cell short of `ihigh`, so the cell
-    /// `[x[ihigh - 1], x[ihigh]]` is covered by nothing.
+    /// A clamped window covers the table's final row.
     ///
-    /// Reproduced, not repaired — `projects/cython-to-rust/rules.md`
-    /// rule 1, and
-    /// `docs/followups/todo/boost-integral-drops-last-interior-cell.md`.
-    /// The numbers are hand-computable: with `y = x` the integrand `y/x`
-    /// is 1, `beta = 0.6` gives `gamma = 1.25`, and `E = 2.2` gives
-    /// `lb = 1.1` and `ub = 4.4`, clamped to `xmax = 4`. The Cython then
-    /// covers `[1.1, 2]` (lower partial cell) and `[2, 3]` (the interior
-    /// sum) and nothing else, for `1.9 / (2γβ) = 1.9 / 1.5`. The true
-    /// integral over `[1.1, 4]` would be `2.9 / 1.5`.
+    /// Hand-computable: with `y = x` the integrand `y/x` is 1, so the
+    /// integral is the covered length. `beta = 0.6` gives `gamma = 1.25`,
+    /// and `E = 2.2` gives `lb = 1.1` and `ub = 4.4`, clamped to
+    /// `xmax = 4`. Covering `[1.1, 4]` is worth `2.9 / (2γβ) = 2.9 / 1.5`.
     ///
-    /// Checked against the live Cython through `__pyx_capi__` while that
-    /// extension still existed: it returned this same 1.2666666666666666
-    /// (Task 3.4 task note). The literal is what carries that measurement
-    /// now.
+    /// The shipped Cython answered `1.9 / 1.5` here — it covered `[1.1, 2]`
+    /// and `[2, 3]` and stopped, because its interior sum ran to an
+    /// exclusive `ihigh` and its upper partial-cell term was skipped
+    /// under the clamp. That is the `A1` repair; the corpus arrays which
+    /// pinned the old answer are declared in `test/parity/deltas.py`.
     #[test]
-    fn the_last_interior_cell_is_dropped() {
+    fn a_clamped_window_covers_the_tables_final_row() {
         let x = [1.0, 2.0, 3.0, 4.0];
         let y = x;
         let got = boost_integrate_linear_interp(2.2, 0.6, &x, &y).unwrap();
-        assert_eq!(got, 1.9 / 1.5);
-        assert_ne!(got, 2.9 / 1.5);
+        assert_eq!(got, 2.9 / 1.5);
+
+        // The sharpest form of the old drop: the final row used to reach
+        // no term at all, so corrupting it changed nothing.
+        let mut spoiled = y;
+        spoiled[3] = 1e6;
+        assert_ne!(
+            boost_integrate_linear_interp(2.2, 0.6, &x, &spoiled).unwrap(),
+            got
+        );
+    }
+
+    /// Both bounds inside one cell integrate that cell's interpolant over
+    /// the window, not two overlapping partial cells.
+    ///
+    /// Also hand-computable with `y = x`: `beta = 0.01` and `E = 3.5` put
+    /// `lb = 3.4652` and `ub = 3.5352` inside `[3, 4]`, and the window is
+    /// worth `ub - lb = 2 E γ β`, so the answer is `E` exactly.
+    ///
+    /// The shipped Cython ran both partial-cell terms here, covering
+    /// `[lb, x[ilow]]` and `[x[ihigh], ub]` — which overlap, and between
+    /// them span about two whole cells. It answered 53.497 against this
+    /// 3.5, a factor of 15.3, and the factor is `cell width / window
+    /// width`, so it grows without bound as the parent slows. That
+    /// divergence is why the seven tabulated photon spectra used to blow
+    /// up near threshold instead of converging to their rest-frame
+    /// values.
+    #[test]
+    fn a_window_inside_one_cell_is_the_window() {
+        let x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let y = x;
+        let got = boost_integrate_linear_interp(3.5, 0.01, &x, &y).unwrap();
+        assert!((got - 3.5).abs() < 1e-14 * 3.5, "{got} vs 3.5");
+    }
+
+    /// The boost conserves the yield: integrating the boosted spectrum
+    /// over the lab energy returns the rest-frame table's own integral.
+    ///
+    /// A boost redistributes photons in energy and creates none, so
+    /// `∫ dE dN/dE(E, β) = ∫ dx y(x)` for every `β`. Swapping the order of
+    /// the two integrals proves it: at fixed `x` the window admits `E`
+    /// over a range of length `2 β γ x`, which cancels the `1/(2γβ)`
+    /// prefactor and the `1/x` in the integrand exactly. This is the
+    /// physics invariant a corpus comparison cannot supply
+    /// (`projects/parity-pinned-defect-repair/rules.md` rule 4), and the
+    /// old window coverage failed it from both sides at once — losing a
+    /// cell out of every wide window, inventing whole cells out of every
+    /// narrow one.
+    ///
+    /// The table vanishes at `x[0]` so the below-table `1/E` tail term is
+    /// zero. That tail is an extrapolation below the tabulated support
+    /// rather than part of the table's yield, and it is still reproduced
+    /// from the Cython rather than repaired (see the function's
+    /// "Faithfulness notes"), so a table with a nonzero first row would be
+    /// testing that extrapolation instead of this identity.
+    ///
+    /// The 5e-5 budget is the outer trapezoid's own discretization error:
+    /// `dN/dE` has a kink wherever a bound crosses a table node, which a
+    /// composite rule resolves at `O(h)`.
+    #[test]
+    fn the_boost_conserves_the_tabulated_yield() {
+        // A smooth bump vanishing at both ends of the table.
+        let x: Vec<f64> = (0..201).map(|i| 1.0 + 0.05 * f64::from(i)).collect();
+        let y: Vec<f64> = x.iter().map(|xi| (xi - 1.0) * (11.0 - xi)).collect();
+        let rest = trapezoid_of(&x, &y);
+
+        for beta in [0.05_f64, 0.3, 0.9] {
+            let gamma = 1.0 / (1.0 - beta * beta).sqrt();
+            // Below `lo` the whole window sits under the table and above
+            // `hi` the whole window sits over it, so the support is inside.
+            let lo = x[0] / (gamma * (1.0 + beta));
+            let hi = x[x.len() - 1] / (gamma * (1.0 - beta));
+            let n = 400_000_usize;
+            let grid: Vec<f64> = (0..=n)
+                .map(|i| lo + (hi - lo) * i as f64 / n as f64)
+                .collect();
+            let boosted: Vec<f64> = grid
+                .iter()
+                .map(|&e| boost_integrate_linear_interp(e, beta, &x, &y).unwrap())
+                .collect();
+            let got = trapezoid_of(&grid, &boosted);
+            assert!(
+                (got - rest).abs() < 5e-5 * rest,
+                "beta = {beta}: the boosted yield is {got}, not {rest}"
+            );
+        }
+    }
+
+    /// A plain sequential trapezoid, for the yield invariant's outer
+    /// integral. Deliberately not [`trapezoid`], which reproduces NumPy's
+    /// pairwise reduction because the kernel's own inner sum must.
+    fn trapezoid_of(xs: &[f64], ys: &[f64]) -> f64 {
+        (0..xs.len() - 1)
+            .map(|i| (xs[i + 1] - xs[i]) * (ys[i + 1] + ys[i]) / 2.0)
+            .sum()
     }
 
     /// A `NaN` energy propagates instead of panicking.

@@ -25,7 +25,7 @@ section tracks live *status*.
 | 1 | Delta-declaration layer | — | **Complete** — landed in PR #87 with the B4 repair; ADR-0001 | `task-1-delta-declarations.md` |
 | 2 | Capture the corrected-value oracles | — | **Complete** | `task-2-cython-oracles.md` |
 | 3 | Closed-form delta models (B1–B3) | 1 | **Complete** — models in `deltas.DELTA_MODELS`, keys land with the repairs | `task-3-closed-form-deltas.md` |
-| 4 | Repair A1 — boost integral window | 1, 2 | Not started | `task-4-boost-window.md` |
+| 4 | Repair A1 — boost integral window | 1, 2 | **Complete** | `task-4-boost-window.md` |
 | 5 | Repair B1 — η′ line weight | 3, 4 | Not started | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | Not started | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | Not started | `task-7-photon-muon-endpoint.md` |
@@ -190,6 +190,29 @@ this project is time-critical.
   also needed `THERMAL_LIMIT` above `quad`'s default of 50: at 50, 33 of
   the 540 thermal positions exhausted the subdivision table and came
   back flagged. A criterion that binds has to be reachable.
+- **A capture-backed `Reference` needs the entry point to name its
+  case.** `Delta` is one object per roster label — `test_parity`'s
+  `test_every_declaration_points_at_a_delta_model` compares by `id` — so
+  a repair spanning seven cases cannot close a case name over its
+  relation. The corpus manifest's `entry_point` cannot resolve it either:
+  it records where each case was *captured* from, which for every Group A
+  case is a `.pyx` the port deleted. `cases.build_cases()` is the live
+  authority, and `test/parity/oracle_reference.py` maps
+  `(module, qualname)` through it for A2, A3 and A4 as well.
+- **A declaration written as `MOVED` over a whole block is a wall for the
+  next repair that lands on the same array.** A1 covers all four non-rest
+  blocks of `eta_prime` and `phi`, which is every array B1 and B2 move.
+  There is no second key to add — one key, one `Delta` — so those repairs
+  compose their relation with A1's rather than declaring beside it.
+  Foreseen by `../rules.md` rule 7; what was not foreseen is that the
+  mechanism makes the wrong answer inexpressible rather than merely
+  forbidden.
+- **A physics invariant may have to switch off an unrepaired
+  faithfulness item to be about the repair.** The boost's yield identity
+  `∫dE dN/dE = ∫dx y(x)` fails by 5.6% on any table with a nonzero first
+  row, because the below-table `1/E` tail — still reproduced from the
+  Cython, not repaired — adds photons the table does not contain. A table
+  vanishing at `x[0]` zeroes that term and leaves the identity exact.
 - **Four call sites shared B6's defect and only two were in Rust.** The
   two pure-Python ones (`hazma/relic_density/_thermal_functions.py`, the
   GeV vector model) were never ported, so a Rust-only repair would have
@@ -198,8 +221,28 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Three public values have moved: B4 in PR #87, B5 in Task 10a, and B6
-in Task 13** (bullets below).
+**Four public values have moved: B4 in PR #87, B5 in Task 10a, B6 in
+Task 13, and A1 in Task 4** (bullets below).
+
+**A1 — all seven tabulated photon spectra.** Measured on the corpus's
+own grids (10,045 positions, 35 blocks) against a build carrying the
+defect, which reproduced the stored arrays bit for bit, so the whole move
+is the repair. 4,154 positions move and **the sign splits by block**:
+
+| Block | γ | moved / pinned | Magnitude |
+| --- | --- | --- | --- |
+| `rest` | 1 | 0 / 1841 | no caller reaches the integral at β = 0 |
+| `rest_plus_eps` | 1 + 1e-12 | 1156 / 2051, all **down** | shipped a median **9,768x** and up to **360,507x** too high |
+| `near_rest` | 1.05 | 1130 / 2051, all up | median +3.34e-02, max +98.7% |
+| `boosted_mild` | 2 | 1028 / 2051, all up | median +2.19e-03 |
+| `boosted_strong` | 10 | 840 / 2051, 839 up | median +7.09e-05 |
+
+Off the corpus grid, the limit that says the window is now covered: at a
+parent one part in 1e12 above rest all seven agree with their own
+rest-frame spectrum to better than 1% over `E_γ` from `m/20` to `3m/10`,
+against the 6,500x–33,000x the follow-up measured. The repaired kernel
+reproduces Task 2's Cython oracle **bit for bit** at all 10,045
+positions. Details: `task-4-boost-window.md`.
 
 **B6 — both mediator `thermal_cross_section`, and `relic_density`
 through them.** Measured on the two corpus cases' own grids (570
@@ -231,7 +274,7 @@ grids:
 
 | Defect | Repair task | Cases moved | Positions moved | Largest relative shift | Direction |
 | --- | --- | --- | --- | --- | --- |
-| A1 boost window | 4 | 7 of 7 predicted | 4154 | ~1.0 (shipped up to 9,800× high near threshold) | **both** — down in `rest_plus_eps`, up in the boosted blocks |
+| A1 boost window | 4 — **landed** | 7 of 7 predicted | 4154 | ~1.0 (shipped a median 9,768× and up to 360,507× high near threshold) | **both** — down in `rest_plus_eps`, up in the boosted blocks |
 | A2 muon endpoint | 7 | **1** of 7 predicted | 4 | n/a (`0.0` → negative) | down; all four values become negative |
 | A3 pion cone | 8 | 6 of 6 predicted | 6359 | 7.77 | both |
 | A4 positron norm | 10 | 6 of 6 predicted | 21,975 | `0.000374207` uniformly | up, at every position |
@@ -306,6 +349,16 @@ it, and
 
 ## Decisions and Implementation Notes
 
+- **Group A repairs are `Reference` relations reading the Task 2
+  capture** (Task 4), not `Additive` or `Exact`: each defect is a lost or
+  doubled term of a quadrature, which no transform of the stored array
+  rebuilds. `test/parity/oracle_reference.py` is the single reader for
+  all four.
+- **A relation's budget is the case's own where the port is bit-faithful**
+  (Task 4): A1 carries `tolerances.TABULATED_RTOL` = 1e-12 against a
+  measured 0.0, because the capture is one platform's and the declared
+  positions must not be held looser *or* tighter than the undeclared ones
+  beside them.
 - **The corpus is extended, not regenerated.** The committed arrays stay
   as the record of what 2.1.0 shipped; each repair adds a declared delta
   against them. Rationale and schema in
@@ -416,6 +469,19 @@ library or build file, and `test/parity/data/` untouched.
 `../references/defect-blast-radius.md`, this file, and
 `task-10a-neutrino-pion-line.md` (new). `test/parity/data/` untouched.
 
+### Task 4 (A1)
+
+`rust/src/boost.rs` (the repair, the rewritten faithfulness notes, the
+renamed coverage test, a yield invariant, a tightened budget),
+`test/parity/oracle_reference.py` (new — the Group A captures as a
+relation, and the reader A2/A3/A4 reuse), `test/parity/deltas.py`,
+`test/parity/test_parity.py` (`EXPECTED_DECLARED_ARRAYS` 42 → 98),
+`test/parity/tolerances.py`, `test/test_core_boost.py`,
+`test/test_core_photon_tables.py`, `CHANGELOG.md`,
+`docs/followups/todo/boost-integral-drops-last-interior-cell.md`,
+`../PLAN.md`, `../references/defect-blast-radius.md`, this file, and
+`task-4-boost-window.md` (new). `test/parity/data/` untouched.
+
 ### Task 13 (B6)
 
 `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
@@ -474,10 +540,14 @@ has no `hazma._core` test probes for the suite to import.
 
 ## Open Questions
 
-- **Does the boost integral run at β = 0?** If the tabulated kernels
-  short-circuit at rest, A1's declaration excludes every `rest` block
-  and the case count in `../references/defect-blast-radius.md` shifts.
-  Measured in Task 4, not assumed.
+- **Do B1's and B2's declared arrays collapse into A1's?** Answered in
+  part, and it is now the sharpest question in the project. A1 declares
+  `MOVED` on all four non-rest blocks of `spectra.photon.eta_prime` and
+  `spectra.photon.phi`, both suffixes, so every array B1 and B2 land on
+  already carries a declaration. `../rules.md` rule 7 forbids an overlap
+  and `DECLARED_DELTAS` maps one key to one `Delta`, so Tasks 5 and 6
+  build one composite relation per shared array rather than adding keys.
+  `task-4-boost-window.md`'s handoff has the mechanics.
 - **Do A2's and A3's declared positions on the two rho cases actually
   overlap, or only appear to?** They are different mechanisms (an
   endpoint guard and a lost quadrature support) reaching the same arrays
@@ -501,11 +571,6 @@ has no `hazma._core` test probes for the suite to import.
   Tasks 5, 6 and 9 measure the real figure and tighten; a repair needing
   a *wider* one has found something Task 3 did not model (`rules.md`
   rule 2).
-- **Do B1's and B2's positions overlap A1's on the same arrays?** Both
-  land on arrays Task 4 also moves, and rule 7 forbids an overlap. The
-  mechanisms are disjoint — `boost_delta_function` against
-  `boost_integrate_linear_interp` — but the position sets have not been
-  intersected. Tasks 5 and 6 inherit that as a gate.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
   closes?** They are the last evidence that a repaired value was ever
   checked against a non-Rust implementation. Anticipated ADR.
@@ -529,27 +594,33 @@ has no `hazma._core` test probes for the suite to import.
 
 **Currently safe to assume:**
 
-- The four Group A `.pyx` twins are present and buildable on this tree,
-  verified at `3e01590`.
+- The four Group A `.pyx` twins are gone; `test/parity/oracles/data/`
+  is what stands in for them, and `test/parity/oracle_reference.py` is
+  the reader that turns a capture into a `deltas.Reference`. Task 4 is
+  the worked precedent for A2, A3 and A4 — they need no new machinery.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87), B5 (Task 10a) and B6 (Task 13) are the repairs that have
-  changed a library value; every other corpus array is still compared
-  against its stored value. `test/parity/deltas.py` declares 42 arrays —
-  30 for B4, 6 for B5, 6 for B6 — and
+- B4 (PR #87), B5 (Task 10a), B6 (Task 13) and A1 (Task 4) are the
+  repairs that have changed a library value; every other corpus array is
+  still compared against its stored value. `test/parity/deltas.py`
+  declares 98 arrays — 30 for B4, 6 for B5, 6 for B6, 56 for A1 — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff.
 - The measurement recipe every remaining repair task needs: capture the
   corpus blocks from a build carrying the defect, restore the repair,
   rebuild, capture again, and diff *those* — not the live tree against
   the stored corpus, which reports the platform drift as if it were the
-  repair (Findings).
+  repair (Findings). On this worktree Task 4's defective build
+  reproduced the stored corpus bit for bit on all 10,045 A1 positions,
+  so the two agreed; that is this platform, not a general fact.
 - B1, B2 and B3 have finished, corpus-checked delta models in
-  `deltas.DELTA_MODELS`. Tasks 5, 6 and 9 fix the kernel, add the
-  `DECLARED_DELTAS` keys pointing at those models, and bump
-  `EXPECTED_DECLARED_ARRAYS`; the key lists and position counts are in
-  `task-3-closed-form-deltas.md`'s handoff, to be re-derived after
-  Task 4 rather than pasted.
+  `deltas.DELTA_MODELS`, and B3's arrays are still undeclared, so Task 9
+  adds keys and bumps `EXPECTED_DECLARED_ARRAYS` in the ordinary way.
+  **Tasks 5 and 6 cannot**: A1 already declares every array B1 and B2
+  move, and one key holds one `Delta`, so those two compose with A1's
+  relation instead — `task-4-boost-window.md`'s handoff has the
+  mechanics, and the position counts in `task-3-closed-form-deltas.md`
+  are to be re-derived against the repaired kernel rather than pasted.
 - The delta layer now carries three relations. A new repair picks
   `Additive` when the physics names the term, `Exact` when a closed form
   transforms the stored array, and `Reference` when only a second

@@ -133,9 +133,14 @@ measurements:
 - Muon photon spectrum: the rest-frame branch regains the last 0.25 MeV
   to the endpoint.
 - Positron muon spectrum: normalization moves by `R_FACTOR²`.
-- Boost integral: the seven tabulated photon spectra rise by the dropped
-  cell; systematic and one-signed (they are currently always slightly
-  low).
+- Boost integral: all seven tabulated photon spectra move, and **the sign
+  splits by regime rather than being one-signed**. Near threshold the
+  shipped values are 6,500x to 33,000x too high and now converge to their
+  own rest-frame spectrum; away from it they were low by the dropped cell
+  and rise, by a median 3.3% at `γ = 1.05` falling to 7.1e-5 at `γ = 10`.
+  4,154 of the 10,045 pinned positions move; a parent exactly at rest does
+  not. Measured by Task 4; the follow-up's "systematically low" reading
+  described only the second regime.
 - Both rho spectra at `E_ρ = m_ρ` exactly: divided by `E_γ`, i.e. the
   value changes by a factor of `E_γ` at a single parent energy.
 - Charged-pion **neutrino** spectrum: the electron-neutrino row loses one

@@ -72,8 +72,8 @@ Lifetime
 --------
 Nothing here reads the Cython any more, so nothing here has a deadline.
 :class:`TestFusedArithmetic` and :class:`TestTrapezoidSummation` pin the
-arithmetic, :class:`TestDroppedInteriorCell` pins the one defect this
-module knows the size of (53%, far above any rounding),
+arithmetic, :class:`TestWindowCoverage` pins the window coverage against
+the two hand-computable cases that 2.1.0 got wrong,
 :class:`TestBoostDeltaFunction` and
 :class:`TestBoostIntegrateLinearInterp` pin each branch by a closed form
 or a sensitivity check as well as against the reference, and
@@ -219,20 +219,27 @@ def integrate_reference(
         ihigh = int(np.flatnonzero(ub <= x)[0])
         if abs(float(x[ihigh]) - ub) > EDGE_ATOL:
             ihigh -= 1
-    if ilow < ihigh:
-        integral += float(np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh]))
-    if ilow > 0 and abs(float(x[ilow]) - lb) > EDGE_ATOL:
-        x2, x1 = float(x[ilow]), float(x[ilow - 1])
-        m = (float(yy[ilow]) - float(yy[ilow - 1])) / (x2 - x1)
-        b = mul_add(-m, x1, float(yy[ilow - 1]))
-        inner = mul_add(0.5 * m, x2 + lb, b)
-        integral = mul_add(x2 - lb, inner, integral)
-    if ihigh < npts - 1 and abs(ub - float(x[ihigh])) > EDGE_ATOL:
-        x2, x1 = float(x[ihigh + 1]), float(x[ihigh])
-        m = (float(yy[ihigh + 1]) - float(yy[ihigh])) / (x2 - x1)
+    if ilow > ihigh:
+        x2, x1 = float(x[ilow]), float(x[ihigh])
+        m = (float(yy[ilow]) - float(yy[ihigh])) / (x2 - x1)
         b = mul_add(-m, x1, float(yy[ihigh]))
-        inner = mul_add(0.5 * m, ub + x1, b)
-        integral = mul_add(ub - x1, inner, integral)
+        inner = mul_add(0.5 * m, ub + lb, b)
+        integral = mul_add(ub - lb, inner, integral)
+    else:
+        if ilow < ihigh:
+            integral += float(np.trapezoid(yy[ilow : ihigh + 1], x=x[ilow : ihigh + 1]))
+        if ilow > 0 and abs(float(x[ilow]) - lb) > EDGE_ATOL:
+            x2, x1 = float(x[ilow]), float(x[ilow - 1])
+            m = (float(yy[ilow]) - float(yy[ilow - 1])) / (x2 - x1)
+            b = mul_add(-m, x1, float(yy[ilow - 1]))
+            inner = mul_add(0.5 * m, x2 + lb, b)
+            integral = mul_add(x2 - lb, inner, integral)
+        if ihigh < npts - 1 and abs(ub - float(x[ihigh])) > EDGE_ATOL:
+            x2, x1 = float(x[ihigh + 1]), float(x[ihigh])
+            m = (float(yy[ihigh + 1]) - float(yy[ihigh])) / (x2 - x1)
+            b = mul_add(-m, x1, float(yy[ihigh]))
+            inner = mul_add(0.5 * m, ub + x1, b)
+            integral = mul_add(ub - x1, inner, integral)
     return integral / (2.0 * gamma * beta)
 
 
@@ -468,9 +475,10 @@ class TestBoostIntegrateLinearInterp:
         """`ub` past the table's top, but `lb` inside it.
 
         The clamp is what keeps this from returning zero, and the value
-        matches the reference. That the clamp *also* skips the upper
-        partial-cell term — and with it the table's last row — is pinned
-        separately in :class:`TestDroppedInteriorCell`.
+        matches the reference. That the clamp leaves the upper
+        partial-cell term unrun — so the interior sum has to reach the
+        table's last row on its own — is pinned separately in
+        :class:`TestWindowCoverage`.
         """
         energy, beta = 5.0, 0.6
         got = boost_integrate_linear_interp(energy, beta, FLAT_X, FLAT_Y)
@@ -609,49 +617,73 @@ class TestFusedArithmetic:
         ), f"unfused worst miss {worst:.3e} is smaller than recorded"
 
 
-class TestDroppedInteriorCell:
-    """The interior sum stops one cell short, and the port keeps it that way.
+class TestWindowCoverage:
+    """The window is covered once and covered whole, from both ends.
 
-    ``np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])`` has an exclusive
-    upper bound, so the cell ``[x[ihigh - 1], x[ihigh]]`` is covered by
-    neither the sum nor the upper partial-cell term. Reproduced rather
-    than repaired (``projects/cython-to-rust/rules.md`` rule 1); the
-    repair is tracked in
-    ``docs/followups/todo/boost-integral-drops-last-interior-cell.md``.
+    ``hazma`` 2.1.0 mis-covered it from both sides at once. Its interior
+    sum ran over ``np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])``, an
+    exclusive upper bound, while the upper partial-cell term started at
+    ``x[ihigh]`` — so ``[x[ihigh - 1], x[ihigh]]`` was covered by nothing;
+    and where both bounds landed inside one cell the two partial-cell
+    terms overlapped instead. That is roster entry ``A1`` of
+    ``projects/parity-pinned-defect-repair``, and the corpus arrays which
+    pinned the old values are declared in ``test/parity/deltas.py``.
+
+    Both cases are hand-computable with ``y = x``, which makes the
+    integrand ``y / x`` exactly 1 and the integral the covered length.
     """
 
     X = np.array([1.0, 2.0, 3.0, 4.0])
     Y = np.array([1.0, 2.0, 3.0, 4.0])  # y / x == 1, so integrals are lengths
 
-    def test_the_hand_computed_value_omits_one_cell(self) -> None:
+    WIDE_X = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    WIDE_Y = WIDE_X
+
+    def test_a_clamped_window_covers_the_whole_window(self) -> None:
         """``E = 2.2``, ``beta = 0.6``: ``lb = 1.1``, ``ub`` clamped to 4.
 
-        The kernel covers ``[1.1, 2]`` (lower partial cell) and ``[2, 3]``
-        (the interior sum) for ``1.9 / (2 gamma beta)``. Covering
-        ``[1.1, 4]`` as intended would give ``2.9`` -- a 53% difference,
-        far too large to be roundoff.
+        Covering ``[1.1, 4]`` is worth ``2.9 / (2 gamma beta) = 2.9 / 1.5``.
+        2.1.0 answered ``1.9 / 1.5`` — it covered ``[1.1, 2]`` and
+        ``[2, 3]`` and stopped.
         """
         got = boost_integrate_linear_interp(2.2, 0.6, self.X, self.Y)
-        assert got == pytest.approx(1.9 / 1.5, rel=1e-15)
-        assert got != pytest.approx(2.9 / 1.5, rel=1e-3)
+        assert got == pytest.approx(2.9 / 1.5, rel=1e-15)
         assert got == integrate_reference(2.2, 0.6, self.X, self.Y, mul_add=fma)
 
-    def test_a_clamped_window_never_reads_the_tables_last_row(self) -> None:
-        """The sharpest form of the drop.
+    def test_a_clamped_window_reads_the_tables_last_row(self) -> None:
+        """The sharpest form of what 2.1.0 dropped.
 
-        When the window reaches past the table, ``ihigh`` is the last
-        index, the upper partial-cell term is skipped, and the interior
-        sum stops one short -- so the final row contributes to nothing.
-        Replacing it with a value six orders larger leaves the answer
-        bit-identical, in the port and in the reference alike.
+        Under the clamp ``ihigh`` is the last index and the upper
+        partial-cell term does not run, so an exclusive interior sum left
+        the final row contributing to no term at all: replacing it with a
+        value six orders larger changed nothing. It changes the answer now,
+        in the port and in the reference alike.
         """
         spoiled = self.Y.copy()
         spoiled[-1] = 1e6
         base = boost_integrate_linear_interp(2.2, 0.6, self.X, self.Y)
-        assert boost_integrate_linear_interp(2.2, 0.6, self.X, spoiled) == base
+        assert boost_integrate_linear_interp(2.2, 0.6, self.X, spoiled) != base
         assert integrate_reference(
             2.2, 0.6, self.X, spoiled, mul_add=fma
-        ) == integrate_reference(2.2, 0.6, self.X, self.Y, mul_add=fma)
+        ) != integrate_reference(2.2, 0.6, self.X, self.Y, mul_add=fma)
+
+    def test_a_window_inside_one_cell_is_worth_the_window(self) -> None:
+        """``E = 3.5``, ``beta = 0.01``: both bounds inside ``[3, 4]``.
+
+        The window is ``ub - lb = 2 E gamma beta`` wide, so the answer is
+        ``E`` exactly. 2.1.0 ran both partial-cell terms here — covering
+        ``[lb, x[ilow]]`` and ``[x[ihigh], ub]``, which overlap — and
+        answered 53.4975, a factor of 15.3 too high. The factor is
+        ``cell width / window width``, so it grows without bound as the
+        parent slows; that is why the seven tabulated photon spectra used
+        to diverge near threshold instead of converging to their
+        rest-frame values.
+        """
+        got = boost_integrate_linear_interp(3.5, 0.01, self.WIDE_X, self.WIDE_Y)
+        assert got == pytest.approx(3.5, rel=1e-14)
+        assert got == integrate_reference(
+            3.5, 0.01, self.WIDE_X, self.WIDE_Y, mul_add=fma
+        )
 
 
 class TestTrapezoidSummation:
@@ -684,10 +716,12 @@ class TestTrapezoidSummation:
 
         got = boost_integrate_linear_interp(energy, beta, x, y)
         yy = y / x
-        # `ilow` is 1 (the node at `lb`), `ihigh` the node at `ub`; the
-        # Cython's slice stops one short of `ihigh`.
+        # `ilow` is 1 (the node at `lb`) and `ihigh` the node at `ub`, and
+        # the sum is inclusive of both.
         ihigh = x.size - 2
-        want = np.trapezoid(yy[1:ihigh], x=x[1:ihigh]) / (2.0 * gamma * beta)
+        want = np.trapezoid(yy[1 : ihigh + 1], x=x[1 : ihigh + 1]) / (
+            2.0 * gamma * beta
+        )
         assert got == want
 
     def test_a_sequential_sum_would_be_a_different_number(self) -> None:

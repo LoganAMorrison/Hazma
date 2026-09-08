@@ -276,10 +276,18 @@ TAIL_RATIO_ON_HALVING = 2.0
 #: stop separating a correct weight from a halved one.
 MAX_LINE_TOLERANCE = 1e-3
 
-#: How far above its own rest-frame value the boost integral's
-#: over-count pushes a barely-moving parent -- a lower bound, since the
-#: measured factor is 6,500x to 33,000x.
-MIN_THRESHOLD_DIVERGENCE = 1e3
+#: How far a barely-moving parent's spectrum may sit from its own
+#: rest-frame value, relative. The worst of the seven channels over
+#: `THRESHOLD_FRACTIONS` is 8.5e-3, at ``eta`` and ``E = m/20``; 2e-2 is
+#: 2.3x that. hazma 2.1.0 missed this by 6,500x to 33,000x, so the bound
+#: separates converging from diverging by five and a half decades.
+MAX_THRESHOLD_MISS = 2e-2
+
+#: Where to check that convergence, as a fraction of the parent mass.
+#: ``m/10`` is the column
+#: ``docs/followups/todo/boost-integral-drops-last-interior-cell.md``
+#: tabulates the shipped divergence at; the others bracket it.
+THRESHOLD_FRACTIONS = (0.05, 0.1, 0.2, 0.3)
 
 
 class TestDispatchWiring:
@@ -631,22 +639,35 @@ class TestPhysics:
             assert np.all(values >= 0.0), f"{name} at E = {parent}"
             assert np.all(np.isfinite(values)), f"{name} at E = {parent}"
 
-    def test_the_boost_integral_still_diverges_near_threshold(self) -> None:
-        """The Task 3.4 defect, reproduced through a public entry point.
+    @pytest.mark.parametrize("name", NAMES)
+    def test_a_barely_moving_parent_converges_to_its_rest_frame_spectrum(
+        self, name: str
+    ) -> None:
+        """The limit that says the boost window is covered correctly.
 
-        ``boost_integrate_linear_interp`` over-counts when both integration
-        bounds fall inside one table cell, by (cell width)/(window width) —
-        which diverges as ``β → 0``. So a barely-moving parent gives a
-        spectrum orders of magnitude *above* its own rest-frame value
-        instead of converging to it. Pinned here because this family is
-        where it is visible from outside:
+        A parent one part in 1e12 above rest is, physically, a parent at
+        rest: its boost opens a window 2.8e-06 wide in relative energy, so
+        the boosted spectrum must reproduce the rest-frame one. The two
+        are computed by entirely different code — at rest the kernel
+        short-circuits to ``np.interp`` on the table, one ulp above it the
+        boost integral takes over — so agreement here is a statement about
+        the integral rather than about the interpolation.
+
+        hazma 2.1.0 failed it by three to four orders of magnitude in the
+        other direction: its two partial-cell terms overlapped whenever
+        both bounds fell inside one cell, over-counting by
+        ``cell width / window width``, which diverges as the parent slows.
+        That is roster entry ``A1`` of
+        ``projects/parity-pinned-defect-repair``, and this is the
+        acceptance test
         ``docs/followups/todo/boost-integral-drops-last-interior-cell.md``
-        is blocked until after Phase 06 Task 6.4, and the corpus pins the
-        wrong values by design, so a swap that "fixed" it would fail its
-        own gate.
+        proposed for it.
         """
-        mass = MASS_ETA
-        dnde = core_photon.dnde_photon_eta
-        at_rest = dnde(100.0, mass)
-        barely_moving = dnde(100.0, mass * (1.0 + 1e-12))
-        assert barely_moving / at_rest > MIN_THRESHOLD_DIVERGENCE
+        dnde, _, mass, _ = SPECTRA[name]
+        for fraction in THRESHOLD_FRACTIONS:
+            energy = mass * fraction
+            at_rest = dnde(energy, mass)
+            barely_moving = dnde(energy, mass * (1.0 + 1e-12))
+            assert barely_moving == pytest.approx(
+                at_rest, rel=MAX_THRESHOLD_MISS
+            ), f"{name} at E = {energy}"

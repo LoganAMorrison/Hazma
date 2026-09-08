@@ -95,12 +95,24 @@ python3 -c "import json; m=json.load(open('test/parity/data/manifest.json')); \
 `spectra.photon.short_kaon`.
 
 Blocks: the three boosted blocks and `rest_plus_eps`. **Measured by
-Task 2**, which is what the instruction below asked for: `rest` moves 0
-of its 1750 positions, because all seven callers short-circuit to the
-rest-frame spectrum before the integral and so it never runs at β = 0.
-The sign splits by block rather than being uniform — `rest_plus_eps`
-moves down at all 1156 positions, the boosted blocks up at 2997 of 2998.
-`../task-notes/task-2-cython-oracles.md` has the table.
+Task 2 and confirmed against the repaired kernel by Task 4**, which is
+what the instruction below asked for: `rest` moves 0 of its 1841
+positions, because all seven callers short-circuit to the rest-frame
+spectrum before the integral and so it never runs at β = 0. The sign
+splits by block rather than being uniform — `rest_plus_eps` moves down at
+all 1156 positions, the boosted blocks up at 2997 of 2998.
+`../task-notes/task-4-boost-window.md` has the per-block and per-case
+tables; `task-2-cython-oracles.md` has the capture they were predicted
+from, and states that 1841 as 1750.
+
+```sh
+python3 -c "import sys; sys.path.insert(0, 'test/parity'); import numpy as np, deltas; \
+  import json; m = json.load(open('test/parity/data/manifest.json')); \
+  print(sum(np.load('test/parity/data/' + m['cases'][n]['file'])[a['key']].size \
+    for n in deltas.A1_CASES for b in m['cases'][n]['blocks'] \
+    if b['label'] == 'rest' for k, a in b['arrays'].items() \
+    if k in ('values', 'scalar_values')))"
+```
 
 ### A2 — muon photon rest-frame endpoint (1 case, predicted 7)
 
