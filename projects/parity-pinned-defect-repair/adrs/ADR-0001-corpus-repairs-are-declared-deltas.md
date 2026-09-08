@@ -38,11 +38,14 @@ value under the case's existing budget. Concretely:
 - The committed arrays and manifest are never rewritten.
 - A declaration names the repair (from a closed roster), the positions
   it covers, the relation, the measurement that justifies the
-  relation's own budget, and the file holding the evidence.
-- A relation answers one question — what the repaired array should be.
-  It may say so as a term added to the stored array or as a closed-form
-  transform of it; either way the runner compares against the array it
-  predicts.
+  relation's own budget, and the file holding the evidence. Where two
+  repairs move the same array it names both, joined by `+`, and one
+  relation covers them — never two overlapping declarations.
+- A relation answers one question — what the repaired array should be —
+  and the runner compares against the array it predicts. How it reaches
+  that prediction is open: a term added to the stored array, a
+  closed-form transform of it, a value a second implementation computes,
+  or one of those with a further repair's term composed on top.
 - A declaration covers only the positions its mechanism moves: either an
   explicit tuple every entry of which the relation moves, or `MOVED`,
   resolved at comparison time against the array the relation predicts.

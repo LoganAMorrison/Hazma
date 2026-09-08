@@ -591,17 +591,32 @@ def test_every_declared_delta_addresses_a_real_stored_array(
 def test_every_delta_model_is_a_roster_repair_with_its_evidence() -> None:
     """The label is from the closed roster and the evidence file exists.
 
-    The mechanism only aggregates at close time if every model names a
-    repair the roster knows, and only stays re-derivable if the
+    The mechanism only aggregates at close time if every model names
+    repairs the roster knows, and only stays re-derivable if the
     measurement behind it is written down somewhere that is checked in.
     Swept over `deltas.DELTA_MODELS` rather than over the declarations,
     so a model established ahead of its repair is held to the same terms
     while it waits for its keys.
+
+    A composite label names more than one roster entry, and then the
+    relation has to be the `deltas.Composed` that actually applies them
+    all: a spelling the relation does not back would claim a repair the
+    array never saw.
     """
     repo_root = Path(__file__).resolve().parents[2]
     for label, delta in deltas.DELTA_MODELS.items():
         assert delta.repair == label, f"{label}: keyed under {delta.repair!r}"
-        assert delta.repair in deltas.REPAIRS, f"{label}: repair {delta.repair!r}"
+        parts = deltas.repair_labels(label)
+        assert set(parts) <= deltas.REPAIRS, f"{label}: not all roster repairs"
+        assert len(set(parts)) == len(parts), f"{label}: names a repair twice"
+        if len(parts) > 1:
+            assert isinstance(
+                delta.relation, deltas.Composed
+            ), f"{label}: names {len(parts)} repairs without composing them"
+            assert len(delta.relation.added) == len(parts) - 1, (
+                f"{label}: composes {len(delta.relation.added) + 1} relations "
+                f"for {len(parts)} repairs"
+            )
         assert delta.measured.strip(), f"{label}: no measurement"
         assert delta.relation.why.strip(), f"{label}: relation budget has no reason"
         assert (repo_root / delta.evidence).is_file(), f"{label}: {delta.evidence}"
