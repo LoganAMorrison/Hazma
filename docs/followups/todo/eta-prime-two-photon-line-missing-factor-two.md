@@ -8,7 +8,10 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.2-photon-table-family.md`)
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
-- **Status:** open
+- **Status:** open — **repaired** 2026-09-07 as roster entry B1,
+  `projects/parity-pinned-defect-repair` Task 5. The file stays here
+  until that project's close (Task 12) moves all of its follow-ups to
+  `done/` in one sweep, so the inbound references are repointed once.
 - **Triggers / blockers:** **corpus re-pinning only** — no ordering
   constraint against `cython-to-rust` Phase 06 Task 6.4. Task 6.4 deletes
   the four surviving `.pyx`; this defect's twin,
@@ -19,7 +22,11 @@
   adds a second copy of a line term the stored spectrum already carries
   once, so the expected per-position delta is
   `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)` — computable from a
-  constant and from `hazma/_utils/boost.pyx`, which is still live.
+  constant and from `boost_delta_function`. This bullet named
+  `hazma/_utils/boost.pyx` as that function's home and called the file
+  live; `cython-to-rust` Task 6.4 has since deleted it, so the model
+  reads `hazma._core.boost` — a kernel this repair does not touch, and
+  one whose window arithmetic the model has to match bit for bit.
   So this repair is schedulable now, independently of the port's
   remaining phases. Sequenced in
   [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
@@ -43,9 +50,10 @@ hazma/spectra/_photon/_eta_prime.pyx:107
 ```
 
 (Quoted from the pre-port sources, which Task 4.2 deleted in the same
-PR as the swap — `git show 665aed5:<path>` recovers them. The
-expressions themselves live on unchanged in
-`rust/src/kernels/photon_tables.rs`.)
+PR as the swap — `git show 665aed5:<path>` recovers them. The four
+expressions live on in `rust/src/kernels/photon_tables.rs`, where the
+η′'s is now the repaired `2.0 * pdg::BR_ETAP_TO_A_A` and the other three
+are unchanged.)
 
 The η′ has no factor of two. It is the code and not a reading of it: the
 shipped `_eta_prime.cpython-312-darwin.so` loads the immediate
@@ -85,18 +93,24 @@ that differs. (The φ's lines have a separate defect of their own; see
    the port has by then. This is a **declared numerical change**:
    `projects/cython-to-rust/rules.md` rule 3 and `docs/versioning.md`
    make a moved published spectrum a `minor` bump at least, and it needs
-   a `CHANGELOG.md` entry stating the 0.63%.
+   a `CHANGELOG.md` entry stating the magnitude. Quote the yield rather
+   than the 0.63% above: the repair adds exactly `BR = 0.02307` photons
+   per decay at every boost, while the percentage that is depends on the
+   integration window, and measures 0.603% of the repaired 3.8291 photons
+   per decay over `1e-3 <= E <= E_parent` at `E_parent = 2 M_η′`.
 3. Check the downstream consumers of `dnde_photon_eta_prime` — the η′
    final state in `hazma.theory`'s channel dicts and any limit that
    opens it — but note the shift is confined to one line, so anything
    integrating over a band that excludes `M_η′/2` in the parent's rest
    frame does not move at all.
 
-The port's tests already encode the correct statement alongside the
-shipped one, so the repair mostly means flipping which is asserted:
-`the_eta_prime_line_is_missing_its_factor_of_two` in
+The port's tests already encoded the correct statement alongside the
+shipped one, so the repair mostly meant flipping which is asserted. Both
+were renamed as well as re-pointed, and now hold the four `X -> gamma
+gamma` weights together:
+`every_two_photon_line_carries_twice_its_branching_ratio` in
 `rust/src/kernels/photon_tables.rs`, and
-`TestPhysics::test_the_eta_prime_line_carries_half_the_photons_it_should`
+`TestPhysics::test_every_two_photon_line_carries_twice_its_branching_ratio`
 in `test/test_core_photon_tables.py`.
 
 ## Entry points
@@ -124,6 +138,11 @@ in `test/test_core_photon_tables.py`.
   (checked). The two kaon tables carry no `a_a` column at all and say so
   in their header comments (`# missing: a_a`). The analytic line is the
   whole `X → γγ` contribution in every one of the four.
-- Sequencing against the corpus is the real cost, as with its siblings:
-  one declared regeneration after Phase 06 Task 6.4 covering all four
-  defects is cheaper than four.
+- Sequencing against the corpus was the real cost, and the "one declared
+  regeneration after Phase 06 Task 6.4" this line proposed was never an
+  available move — see
+  [`projects/parity-pinned-defect-repair/references/the-premise.md`](../../../projects/parity-pinned-defect-repair/references/the-premise.md).
+  What shipped instead is a declared delta against the arrays as they
+  stand: `test/parity/deltas.py` keys the six `spectra.photon.eta_prime`
+  arrays this repair moves to a composite of the A1 boost capture and
+  this line's second copy, and the corpus is not rewritten.

@@ -335,6 +335,24 @@ past-tense worked example and one canonical phase file given a dated
   PR's deletion had orphaned). Cite the full path, never the basename,
   whenever your own diff removes a file.
 
+- **A green `check_doc_citations.py` is not a green liveness check.** PR #94
+  annotated `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`
+  as repaired and corrected three of its claims, then ran the checker over all
+  six touched docs: `out-of-range or ambiguous: NONE`. It still shipped a
+  sentence saying `hazma/_utils/boost.pyx` "is still live" — a file
+  `cython-to-rust` Task 6.4 had deleted outright, leaving no `.pyx` anywhere in
+  the tree. The checker bounds-checks a citation only when it resolves the path
+  to a tracked file; with the file gone the citation is indistinguishable from
+  a `numpy/...` one, so it is counted under "external citations skipped" and
+  never checked. Verified with a two-line probe doc: both
+  `hazma/_utils/boost.pyx` and `hazma/_utils/boost.pyx:216` report EXTERNAL and
+  pass. `docs/followups/todo/citation-checker-skips-deleted-inrepo-files.md`
+  carries the tool gap; the author-side rule is that a *liveness* claim needs
+  its own check. The class-wide sweep
+  (`rg -n --hidden 'still live|_utils/boost\.pyx' …`) found the identical
+  sentence in the φ follow-up, which is Task 6's premise, and would have been
+  read as fact by the next task (PR #94 — caught by review, not by the author).
+
 ### changed-vs-sees-only-commits
 
 - [changed-vs-sees-only-commits] A `--changed-vs <ref>` tool diffs

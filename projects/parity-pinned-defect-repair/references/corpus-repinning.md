@@ -58,15 +58,19 @@ strongest the physics supports:
 | Relation | Use when | Example |
 | --- | --- | --- |
 | `Exact(f)` | the repaired array is a closed-form transform of the stored one | rho `rest`: repaired == stored × `E_γ` |
-| `Oracle(path)` | a Task 2 capture holds the corrected value | all four Group A repairs |
 | `Additive(term)` | the delta is a computable additive term | η′: `+ BR · boost_delta_function(M/2, …)` |
-| `Bounded(lo, hi, sign)` | only a magnitude and a sign are known | fallback; requires a written justification |
+| `Reference(fn)` | only a second implementation can say what the value should be | all four Group A repairs, via a Task 2 capture; B6, via scipy |
+| `Composed(base, added)` | a second repair moves an array the first already declares | `A1+B1` on `spectra.photon.eta_prime` |
 
-`Bounded` is the escape hatch and should be rare. A repair that can only
-say "it got bigger" has not been characterized, and
-`docs/agents/lessons.md` `[exemption-wider-than-its-mechanism]` is about
-exactly this: a carve-out written wider than the mechanism that earned it
-only ever loosens, so nothing turns red when it is wrong.
+`test/parity/deltas.py`'s module docstring is authoritative for the set —
+this table is the guidance, not the enumeration, and a repair that adds a
+relation adds it there. What does *not* change is the standard: name the
+mechanism, not a bound on it. A repair that can only say "it got bigger"
+has not been characterized, and `docs/agents/lessons.md`
+`[exemption-wider-than-its-mechanism]` is about exactly this — a carve-out
+written wider than the mechanism that earned it only ever loosens, so
+nothing turns red when it is wrong. No repair has needed such a fallback,
+and none should be added without one.
 
 ### How the runner uses it
 

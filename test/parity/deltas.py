@@ -40,6 +40,14 @@ defect returns: `thermal_reference` integrates the same integrand with
 scipy's QUADPACK, and `oracle_reference` reads the arrays captured from
 the Cython twins before the port deleted them.
 
+``Composed`` — one relation for an array **more than one** repair moves.
+``rules.md`` rule 7 forbids leaving that as overlapping declarations, and
+one key holds one `Delta` in any case, so they collapse: a base relation
+predicts the array as the first repair leaves it, and each further repair
+adds its own term on top. The `Delta` then names them all, as ``"A1+B1"``,
+and `repair_labels` is what splits a composite spelling back into the
+roster entries it is made of.
+
 Positions
 ---------
 A declaration covers exactly the positions its mechanism reaches
@@ -62,11 +70,12 @@ declaration cannot outlive the repair it describes.
 
 Models without a declaration
 ----------------------------
-`DELTA_MODELS` holds one entry per roster repair whose delta has been
-modelled, `DECLARED_DELTAS` only the arrays a *landed* repair moves. The
-two differ while a model is established ahead of its repair: declaring an
-array the tree has not yet moved would fail the staleness rule above, so
-the model waits in `DELTA_MODELS` and the repair adds the keys.
+`DELTA_MODELS` holds one entry per modelled delta — a roster repair, or a
+composite of several — while `DECLARED_DELTAS` holds only the arrays a
+*landed* repair moves. The two differ while a model is established ahead
+of its repair: declaring an array the tree has not yet moved would fail
+the staleness rule above, so the model waits in `DELTA_MODELS` and the
+repair adds the keys.
 `test_delta_models.py` gates every entry either way.
 """
 
@@ -213,8 +222,66 @@ class Reference:
         return self.reference(fn, block)
 
 
+@dataclass(frozen=True)
+class Composed:
+    """``repaired == base``'s prediction with each ``added`` term on top.
+
+    What two repairs moving the same stored array declare instead of two
+    overlapping declarations (``rules.md`` rule 7): ``base`` predicts the
+    array as the first repair leaves it, and every repair after that
+    contributes the term it adds. The base may be any relation; the
+    addends are `Additive` because an addend has to leave room for what
+    came before it, which a relation that supersedes the array does not.
+
+    Parameters
+    ----------
+    base : Additive, Exact or Reference
+        Predicts the array with the first repair applied and no other.
+    added : tuple of Additive
+        One per further repair, in the order they landed.
+    rtol : float
+        Relative budget the composition holds to. Measured against the
+        repaired kernel; ``why`` says what sets it.
+    why : str
+        One-line justification of ``rtol``.
+    """
+
+    base: Additive | Exact | Reference
+    added: tuple[Additive, ...]
+    rtol: float
+    why: str
+
+    def expected(
+        self,
+        fn: Callable[..., Any],
+        block: Block,
+        stored: dict[str, np.ndarray],
+    ) -> dict[str, np.ndarray]:
+        """The repaired arrays this relation predicts, by suffix."""
+        # Copied, and every entry rebound rather than updated in place: a
+        # `Reference` base hands back `oracle_reference`'s cached arrays,
+        # which are read-only and shared by every comparison that reads
+        # them.
+        predicted = dict(self.base.expected(fn, block, stored))
+        for addend in self.added:
+            for suffix, term in addend.term(fn, block).items():
+                predicted[suffix] = predicted[suffix] + term
+        return predicted
+
+
 #: How a repaired value may relate to the stored one.
-Relation = Additive | Exact | Reference
+Relation = Additive | Exact | Reference | Composed
+
+
+def repair_labels(spelling: str) -> tuple[str, ...]:
+    """The roster entries one ``Delta.repair`` names, in declared order.
+
+    A composite declaration (`Composed`) names every repair that moved the
+    array, joined by ``+``; every other declaration names exactly one. The
+    close aggregates per roster entry, so it needs the parts rather than
+    the spelling.
+    """
+    return tuple(spelling.split("+"))
 
 
 @dataclass(frozen=True)
@@ -224,14 +291,16 @@ class Delta:
     Parameters
     ----------
     repair : str
-        Which roster entry moved it; drawn from `REPAIRS`.
+        Which roster entry moved it, drawn from `REPAIRS` — or, where two
+        repairs moved the same array and `Composed` collapsed them, every
+        one of them joined by ``+``. `repair_labels` splits it.
     positions : tuple of int or MOVED
         Which positions the relation covers: an explicit tuple, every
         entry of which the relation must move, or `MOVED` for wherever
         the prediction differs from the stored value. Undeclared
         positions are still compared against the stored value under the
         case's budget.
-    relation : Additive, Exact or Reference
+    relation : Additive, Exact, Reference or Composed
         How the repaired value relates to the stored one.
     measured : str
         The measurement behind the declaration, so the table is not a
@@ -736,6 +805,44 @@ _A1 = Delta(
 )
 
 
+# ---------------------------------------------------------------------------
+# A1 + B1 -- the six eta-prime arrays both repairs move
+# ---------------------------------------------------------------------------
+
+
+_A1_B1 = Delta(
+    repair="A1+B1",
+    positions=MOVED,
+    relation=Composed(
+        base=_A1.relation,
+        added=(_B1.relation,),
+        rtol=1e-12,
+        why="the base is the A1 capture and the addend is closed form, so "
+        "what separates the prediction from the repaired kernel is the "
+        "order the two line copies are summed in: the kernel folds one "
+        "`2 BR` weight into the boost's own fused multiply-add, the "
+        "prediction adds a second `BR` copy afterwards. Measured 2.1e-16 "
+        "worst over the six arrays, which is one ulp. Held at the case's "
+        "own `tolerances.TABULATED_RTOL` rather than tightened to that, "
+        "for the reason A1 gives: the capture is one platform's, and a "
+        "libm that moves the boost integral must not fail here while the "
+        "undeclared positions of the same block still pass.",
+    ),
+    measured="B1 moves 189 positions over six of this case's ten value "
+    "arrays -- 9 of `rest_plus_eps.values`, 20 of `near_rest.values`, 57 "
+    "and 2 of `boosted_mild.{values,scalar_values}`, 98 and 3 of "
+    "`boosted_strong.{values,scalar_values}` -- every one of them upward, "
+    "by 7.7e-04 to 1.0 relative. 18 of the 189 are positions A1 moves too, "
+    "which is why the two compose rather than declaring separately. The "
+    "case's other four value arrays keep A1's declaration alone: B1 moves "
+    "nothing in either `rest` array, where the kernel takes its rest-frame "
+    "arm and adds no line, and nothing at the scalar probe of "
+    "`rest_plus_eps` or `near_rest`, where the probe falls outside the "
+    "line's window.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-5-eta-prime-line.md",
+)
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
@@ -751,14 +858,14 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.eta", "boosted_mild", "scalar_values"): _A1,
     ("spectra.photon.eta", "boosted_strong", "values"): _A1,
     ("spectra.photon.eta", "boosted_strong", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "rest_plus_eps", "values"): _A1,
+    ("spectra.photon.eta_prime", "rest_plus_eps", "values"): _A1_B1,
     ("spectra.photon.eta_prime", "rest_plus_eps", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "near_rest", "values"): _A1,
+    ("spectra.photon.eta_prime", "near_rest", "values"): _A1_B1,
     ("spectra.photon.eta_prime", "near_rest", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "boosted_mild", "values"): _A1,
-    ("spectra.photon.eta_prime", "boosted_mild", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "boosted_strong", "values"): _A1,
-    ("spectra.photon.eta_prime", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.eta_prime", "boosted_mild", "values"): _A1_B1,
+    ("spectra.photon.eta_prime", "boosted_mild", "scalar_values"): _A1_B1,
+    ("spectra.photon.eta_prime", "boosted_strong", "values"): _A1_B1,
+    ("spectra.photon.eta_prime", "boosted_strong", "scalar_values"): _A1_B1,
     ("spectra.photon.omega", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.omega", "rest_plus_eps", "scalar_values"): _A1,
     ("spectra.photon.omega", "near_rest", "values"): _A1,
@@ -1002,6 +1109,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 #: it measured moving; see the module docstring.
 DELTA_MODELS: dict[str, Delta] = {
     "A1": _A1,
+    "A1+B1": _A1_B1,
     "B1": _B1,
     "B2": _B2,
     "B3": _B3,

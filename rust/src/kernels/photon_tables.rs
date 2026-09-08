@@ -71,7 +71,9 @@
 //! `M/2`, `(M² − m²)/(2M)` — is folded into a single immediate in the
 //! generated code. They are `const` here for the same reason, and
 //! [`tests::folded_constants_match_the_shipped_object_code`] pins each one
-//! against the immediate the disassembly loads.
+//! against the immediate the disassembly loads — bar
+//! [`ETAP_TO_A_A_WEIGHT`], the one this port repairs, which is pinned
+//! against twice it.
 
 use std::sync::LazyLock;
 
@@ -88,14 +90,16 @@ use crate::interp;
 /// The factor of two is the Cython's: two photons per decay, so the line
 /// carries twice the branching ratio (`_eta.pyx:99`).
 const ETA_TO_A_A_WEIGHT: f64 = 2.0 * pdg::BR_ETA_TO_A_A;
-/// `BR(η′ → γγ)`. **No factor of two** — `_eta_prime.pyx:107` omits it
-/// where its four two-photon siblings have it, so the η′ spectrum carries
-/// 0.02307 photons per decay from this mode instead of 0.04614
-/// (measured by integrating the line term). Reproduced, not repaired
-/// (`projects/cython-to-rust/rules.md` rule 1); see
-/// [`tests::the_eta_prime_line_is_missing_its_factor_of_two`] and
-/// `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`.
-const ETAP_TO_A_A_WEIGHT: f64 = pdg::BR_ETAP_TO_A_A;
+/// `2·BR(η′ → γγ)`, the weight of the η′'s two-photon line.
+///
+/// The factor of two is this port's, not the Cython's: `_eta_prime.pyx:107`
+/// omitted it where its three `X → γγ` siblings above carry it, so 2.1.0
+/// shipped 0.02307 photons per decay from this mode instead of 0.04614.
+/// The parity corpus still pins the low value, and
+/// `test/parity/deltas.py` declares the resulting shift as repair `B1`
+/// rather than re-pinning the arrays. See
+/// [`tests::every_two_photon_line_carries_twice_its_branching_ratio`].
+const ETAP_TO_A_A_WEIGHT: f64 = 2.0 * pdg::BR_ETAP_TO_A_A;
 /// `2·BR(K_L → γγ)` (`_kaon.pyx:300`).
 const KL_TO_A_A_WEIGHT: f64 = 2.0 * pdg::BR_KL_TO_A_A;
 /// `2·BR(K_S → γγ)` (`_kaon.pyx:407`).
@@ -499,7 +503,11 @@ mod tests {
     fn folded_constants_match_the_shipped_object_code() {
         assert_eq!(ETA_TO_A_A_WEIGHT.to_bits(), 0x3fe9_38ef_34d6_a162);
         assert_eq!(ETA_TO_A_A_ENERGY.to_bits(), 0x4071_1ee5_6041_8937);
-        assert_eq!(ETAP_TO_A_A_WEIGHT.to_bits(), 0x3f97_9fa9_7e13_2b56);
+        // The one repaired weight: the shipped object code loads
+        // `0x3f97_9fa9_7e13_2b56` here and the two-photon line needs twice
+        // it (B1). Doubling only increments the exponent field, so the
+        // mantissa below is the shipped immediate's, digit for digit.
+        assert_eq!(ETAP_TO_A_A_WEIGHT.to_bits(), 0x3fa7_9fa9_7e13_2b56);
         assert_eq!(ETAP_TO_A_A_ENERGY.to_bits(), 0x407d_ee3d_70a3_d70a);
         assert_eq!(KL_TO_A_A_WEIGHT.to_bits(), 0x3f51_ec91_8e32_5d4a);
         assert_eq!(KS_TO_A_A_WEIGHT.to_bits(), 0x3ed6_0fe1_ca5f_e00f);
@@ -514,24 +522,23 @@ mod tests {
         assert_eq!(PHI_TO_ETAP_A_ENERGY.to_bits(), 0x408d_fd2a_ecc8_ec19);
     }
 
-    /// Four of the five two-photon lines carry `2·BR`; the η′ carries
-    /// `BR`.
+    /// All four `X → γγ` lines carry `2·BR`, the η′ included.
     ///
-    /// `hazma/spectra/_photon/_eta_prime.pyx:107` is the odd one out, and
-    /// the disassembled immediate confirms it is the code rather than a
-    /// reading of it — so the η′ spectrum is short one photon per `η′ →
-    /// γγ` decay. The ω and φ weights are *correctly* un-doubled: their
-    /// lines are `X → Yγ`, one photon each. Reproduced per rule 1 and
-    /// filed as
-    /// `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`;
-    /// this test is what makes a silent "cleanup" fail.
+    /// Two photons leave the decay, so the line's weight is twice the
+    /// branching ratio. The η′ was the one sibling that shipped without
+    /// the factor (`_eta_prime.pyx:107`, and the disassembled immediate
+    /// confirms it was the code rather than a reading of it), which left
+    /// its spectrum short one photon per `η′ → γγ` decay; this test is
+    /// what makes a silent revert to the shipped weight fail. The ω and φ
+    /// weights are *correctly* un-doubled and are deliberately absent:
+    /// their lines are `X → Yγ`, one photon each.
     #[test]
-    fn the_eta_prime_line_is_missing_its_factor_of_two() {
+    fn every_two_photon_line_carries_twice_its_branching_ratio() {
         assert_eq!(ETA_TO_A_A_WEIGHT, 2.0 * pdg::BR_ETA_TO_A_A);
         assert_eq!(KL_TO_A_A_WEIGHT, 2.0 * pdg::BR_KL_TO_A_A);
         assert_eq!(KS_TO_A_A_WEIGHT, 2.0 * pdg::BR_KS_TO_A_A);
-        assert_eq!(ETAP_TO_A_A_WEIGHT, pdg::BR_ETAP_TO_A_A);
-        assert_ne!(ETAP_TO_A_A_WEIGHT, 2.0 * pdg::BR_ETAP_TO_A_A);
+        assert_eq!(ETAP_TO_A_A_WEIGHT, 2.0 * pdg::BR_ETAP_TO_A_A);
+        assert_ne!(ETAP_TO_A_A_WEIGHT, pdg::BR_ETAP_TO_A_A);
     }
 
     /// The φ's two line energies are the *daughter meson's*, not the

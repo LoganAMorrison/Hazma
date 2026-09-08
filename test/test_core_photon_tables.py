@@ -119,7 +119,8 @@ BR_PHI_TO_ETAP_A = 6.22e-5
 
 #: ``name -> (entry point, CSV, parent mass, [(line energy, line weight)])``.
 #: The line expressions are the ``.pyx`` ones character for character,
-#: including the two the port reproduces rather than repairs.
+#: except the eta-prime weight, which the port repairs (B1), and the two
+#: phi energies, which it still reproduces.
 SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
     "charged_kaon": (
         core_photon.dnde_photon_charged_kaon,
@@ -149,7 +150,7 @@ SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
         core_photon.dnde_photon_eta_prime,
         "eta_prime_photon.csv",
         MASS_ETAP,
-        [(MASS_ETAP / 2.0, BR_ETAP_TO_A_A)],
+        [(MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A)],
     ),
     "omega": (
         core_photon.dnde_photon_omega,
@@ -583,25 +584,26 @@ class TestPhysics:
         # above, or this test would pass on a halved weight.
         assert tolerance < MAX_LINE_TOLERANCE
 
-    def test_the_eta_prime_line_carries_half_the_photons_it_should(self) -> None:
-        """A reproduced defect: ``2·BR`` everywhere but the η'.
+    def test_every_two_photon_line_carries_twice_its_branching_ratio(self) -> None:
+        """``X -> a a`` yields two photons, so its line weight is ``2·BR``.
 
-        ``η' -> a a`` yields two photons, so the line's weight should be
-        ``2·BR(η' -> a a) = 0.04614``. ``_eta_prime.pyx:107`` wrote ``BR``,
-        which its four two-photon siblings did not, and the ω and φ weights
-        are correctly un-doubled because their modes ``X -> Y a`` yield one
-        photon each. Reproduced per rules.md rule 1 — the corpus pins the
-        low values — and tracked in
-        ``docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md``.
+        All four two-photon spectra, held together, because the η' was the
+        one that shipped without the factor: ``_eta_prime.pyx:107`` wrote a
+        bare ``BR``, giving 0.02307 photons per decay where the mode
+        delivers ``2·BR(η' -> a a) = 0.04614``. Repaired as roster entry B1
+        of ``projects/parity-pinned-defect-repair``; the corpus still pins
+        the low value and ``test/parity/deltas.py`` declares the shift.
+
+        The ω and φ are deliberately absent: their modes are ``X -> Y a``,
+        one photon each, so their un-doubled weights are correct.
         """
-        assert SPECTRA["eta_prime"][3] == [(MASS_ETAP / 2.0, BR_ETAP_TO_A_A)]
         assert SPECTRA["eta"][3] == [(MASS_ETA / 2.0, 2.0 * BR_ETA_TO_A_A)]
-        # And the shipped kernel really carries the halved count: the same
-        # isolate-the-line measurement as the test above, stated as the
-        # ratio it should have had.
-        lines = SPECTRA["eta_prime"][3]
-        assert lines[0][1] == pytest.approx(BR_ETAP_TO_A_A)
-        assert lines[0][1] == pytest.approx(0.5 * 2.0 * BR_ETAP_TO_A_A)
+        assert SPECTRA["long_kaon"][3] == [(MASS_K0 / 2.0, 2 * BR_KL_TO_A_A)]
+        assert SPECTRA["short_kaon"][3] == [(MASS_K0 / 2.0, 2 * BR_KS_TO_A_A)]
+        assert SPECTRA["eta_prime"][3] == [(MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A)]
+        # Stated as the photon count as well as the expression, so a revert
+        # to the shipped weight fails on the number and not only the form.
+        assert SPECTRA["eta_prime"][3][0][1] == pytest.approx(0.04614)
 
     def test_the_phi_lines_sit_at_the_daughter_mesons_energy(self) -> None:
         """A reproduced defect: ``+`` where the photon needs ``-``.

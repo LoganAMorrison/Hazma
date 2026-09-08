@@ -17,6 +17,27 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The η′'s two-photon line carried one photon per decay instead of
+  two, and `dnde_photon_eta_prime` rises.** Five tabulated photon spectra
+  add a monochromatic line on top of a CSV continuum, and for the four
+  whose mode is `X → γγ` the line's weight is `2 BR`, because two photons
+  leave the decay. The η′ shipped a bare `BR`; the η, `K_L` and `K_S` did
+  not. The weight is now `2 BR(η′ → γγ)` like its three siblings.
+  **The yield rises by exactly `BR(η′ → γγ) = 0.02307` photons per decay,
+  at every boost** — a boosted δ-function integrates to its own weight —
+  which is 0.603% of the repaired total of 3.829 photons per decay
+  integrated over `1e-3 ≤ E_γ ≤ E_η′` at `E_η′ = 2 M_η′`. All of it lands
+  in the line, at `M_η′/2 = 478.89` MeV in the η′ rest frame and spread
+  across that energy's boosted window otherwise, so a band excluding it
+  does not move at all; the continuum is unchanged. An η′ **exactly** at
+  rest is unaffected, because that branch adds no line. Pointwise the
+  rise runs from 7.7e-04 to a factor of two, the latter where the line
+  was the whole spectrum. `hazma.spectra.dnde_photon` moves for any final
+  state containing an η′. `dnde_photon_eta`, `dnde_photon_long_kaon` and
+  `dnde_photon_short_kaon` — whose weights were already right — do not
+  move, and neither do `dnde_photon_omega` or `dnde_photon_phi`, whose
+  `X → Yγ` lines are correctly un-doubled. Details:
+  `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`.
 - **The boost integral mis-covered its window at both ends, and all seven
   tabulated photon spectra move.** `hazma.spectra.dnde_photon_eta`,
   `dnde_photon_eta_prime`, `dnde_photon_omega`, `dnde_photon_phi`,

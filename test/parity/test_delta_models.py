@@ -15,9 +15,9 @@ applies the **named defect** to it, and requires the result to be the
 number the corpus already stores. Nothing here evaluates a spectrum
 kernel; every comparison is against ``data/*.npz``, captured from Cython
 at kernel digest ``f5e6e269be47`` and never rewritten
-(``../rules.md`` rule 1). So these tests are falsifiable today, on a tree
-where all three defects are still live, and they stay falsifiable after
-the repairs land.
+(``../rules.md`` rule 1). So these tests were falsifiable on the tree
+that carried all three defects, and they stay falsifiable as the repairs
+land one at a time: B1's has, and B2's and B3's have not.
 
 The three arguments
 -------------------
