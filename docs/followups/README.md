@@ -31,6 +31,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the muon positron spectrum divides by its normalization](todo/positron-muon-spectrum-normalization-inverted.md) | 2026-08-11 | cython-to-rust Task 4.1 | cross-cutting |
 | [the η′ two-photon line carries one photon instead of two](todo/eta-prime-two-photon-line-missing-factor-two.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
 | [the φ photon lines sit at the daughter meson's energy](todo/phi-photon-lines-use-the-daughter-meson-energy.md) | 2026-08-12 | cython-to-rust Task 4.2 | cross-cutting |
+| [the φ photon spectrum omits its direct `φ → π⁰γ` line](todo/phi-omits-its-direct-pi0-photon-line.md) | 2026-09-07 | parity-pinned-defect-repair Task 6 | cross-cutting |
 | [the muon photon spectrum's rest frame stops short of the endpoint](todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | 2026-08-16 | cython-to-rust Task 4.3 | commit |
 | [the charged-pion photon spectrum returns zero in the forward cone](todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | 2026-08-17 | cython-to-rust Task 4.4 | cross-cutting |
 | [both rho photon spectra return the boost integrand at rest](todo/rho-rest-frame-branch-returns-the-integrand.md) | 2026-08-18 | cython-to-rust Task 4.5 | cross-cutting |

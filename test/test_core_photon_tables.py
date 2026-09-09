@@ -47,23 +47,22 @@ one fused multiply-add is reproduced here with a ``Fraction``-based ``fma``
 rather than approximated — so the comparison is bit-equality on every
 platform rather than on one.
 
-Two reproduced defects
-----------------------
-:class:`TestPhysics` asserts two things that are *wrong physics*, because the
-shipped Cython does them and ``projects/cython-to-rust/rules.md`` rule 1 says
-a port reproduces rather than repairs:
+Two repaired defects
+--------------------
+:class:`TestPhysics` asserts two things hazma 2.1.0 got wrong, both repaired
+under ``projects/parity-pinned-defect-repair``:
 
-* the η' two-photon line carries ``BR(η' -> a a)`` where its four siblings
-  carry ``2·BR`` — 0.02307 photons per decay instead of 0.04614
-  (``docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md``);
-* the φ's two lines are placed at the *daughter meson's* energy rather than
+* the η' two-photon line carried ``BR(η' -> a a)`` where its four siblings
+  carry ``2·BR`` — 0.02307 photons per decay instead of 0.04614 (roster
+  entry B1);
+* the φ's two lines were placed at the *daughter meson's* energy rather than
   the photon's — 656.94 MeV instead of 362.52 for ``φ -> η a``, and 959.65
-  instead of 59.82 for ``φ -> η' a``
-  (``docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md``).
+  instead of 59.82 for ``φ -> η' a`` (roster entry B2).
 
-Asserting the correct physics here would contradict the parity corpus, which
-pins the shipped values. When those follow-ups land, these two tests are the
-ones that change.
+The parity corpus still pins the shipped values, which is what the declared
+deltas in ``test/parity/deltas.py`` exist for; these two tests state the
+repaired physics instead, so a silent revert fails here rather than being
+absorbed.
 
 A note on notation: final states are written the way hazma's own data files
 write them, with ``a`` for a photon (``a_a``, ``pi0_a``, ``eta_a`` are
@@ -119,8 +118,8 @@ BR_PHI_TO_ETAP_A = 6.22e-5
 
 #: ``name -> (entry point, CSV, parent mass, [(line energy, line weight)])``.
 #: The line expressions are the ``.pyx`` ones character for character,
-#: except the eta-prime weight, which the port repairs (B1), and the two
-#: phi energies, which it still reproduces.
+#: except the eta-prime weight (B1) and the two phi energies (B2), which
+#: the repairs move.
 SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
     "charged_kaon": (
         core_photon.dnde_photon_charged_kaon,
@@ -166,8 +165,8 @@ SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
         "phi_photon.csv",
         MASS_PHI,
         [
-            ((MASS_PHI**2 + MASS_ETA**2) / (2 * MASS_PHI), BR_PHI_TO_ETA_A),
-            ((MASS_PHI**2 + MASS_ETAP**2) / (2 * MASS_PHI), BR_PHI_TO_ETAP_A),
+            ((MASS_PHI**2 - MASS_ETA**2) / (2 * MASS_PHI), BR_PHI_TO_ETA_A),
+            ((MASS_PHI**2 - MASS_ETAP**2) / (2 * MASS_PHI), BR_PHI_TO_ETAP_A),
         ],
     ),
 }
@@ -584,6 +583,63 @@ class TestPhysics:
         # above, or this test would pass on a halved weight.
         assert tolerance < MAX_LINE_TOLERANCE
 
+    @pytest.mark.parametrize("name", NAMES)
+    def test_each_line_sits_where_its_rest_frame_energy_declares(
+        self, name: str
+    ) -> None:
+        """The boosted line term's support recovers the rest-frame energies.
+
+        A rest-frame line at ``E₀`` boosts into a rectangle spanning
+        ``[gamma E₀ (1 - beta), gamma E₀ (1 + beta)]``, so the outermost
+        edges of the isolated line term are the smallest and the largest
+        ``E₀`` the spectrum carries, mapped through the boost. Inverting
+        the two edges recovers those energies from the kernel's own output
+        — a statement about *where* the lines are, which the weight test
+        above cannot make: relocating a line leaves every weight, and
+        therefore the whole yield, exactly where it was.
+
+        That is what makes this the gate on roster entry B2 of
+        ``projects/parity-pinned-defect-repair``. The shipped φ energies
+        were 656.94 and 959.65 MeV against the 362.52 and 59.82 asserted
+        here, so a revert misplaces both edges by 81% and 1504% of a
+        window — five decades outside the tolerance, which is derived from
+        the grid: an edge is resolved to the cell it falls in, so ``E₀``
+        comes back to within ``cell`` of the truth, and twice ``cell /
+        edge`` covers that with margin.
+        """
+        dnde, _, mass, lines = SPECTRA[name]
+        x, y = TABLES[name]
+        if not lines:
+            pytest.skip("the charged kaon has no monochromatic line")
+
+        parent = 2.0 * mass
+        beta = float(core_boost.boost_beta(parent, mass))
+        gamma = parent / mass
+        energies = [energy for energy, _ in lines]
+
+        lo = gamma * min(energies) * (1.0 - beta) * 0.5
+        hi = gamma * max(energies) * (1.0 + beta) * 1.5
+        grid = np.linspace(lo, hi, 2_000_001)
+        cell = (hi - lo) / (grid.size - 1)
+
+        line_term = np.asarray(dnde(grid, parent)) - np.asarray(
+            core_boost.boost_integrate_linear_interp(grid, beta, x, y)
+        )
+        # A floor well under the shortest plateau but far above the
+        # continuum residue, so the edges found are the line's own.
+        inside = np.flatnonzero(line_term > 1e-6 * line_term.max())
+        assert inside.size, name
+
+        for edge, factor, expected in (
+            (grid[inside[0]], 1.0 - beta, min(energies)),
+            (grid[inside[-1]], 1.0 + beta, max(energies)),
+        ):
+            recovered = edge / (gamma * factor)
+            assert recovered == pytest.approx(expected, rel=2.0 * cell / edge), (
+                f"{name}: a line edge at {edge} MeV inverts to a rest-frame "
+                f"{recovered} MeV, not the {expected} its energy declares"
+            )
+
     def test_every_two_photon_line_carries_twice_its_branching_ratio(self) -> None:
         """``X -> a a`` yields two photons, so its line weight is ``2·BR``.
 
@@ -605,32 +661,42 @@ class TestPhysics:
         # to the shipped weight fails on the number and not only the form.
         assert SPECTRA["eta_prime"][3][0][1] == pytest.approx(0.04614)
 
-    def test_the_phi_lines_sit_at_the_daughter_mesons_energy(self) -> None:
-        """A reproduced defect: ``+`` where the photon needs ``-``.
+    def test_every_line_sits_at_the_photons_energy_not_the_daughters(self) -> None:
+        """``X -> Y a`` puts the photon at ``(M² - m²)/(2M)``, below ``M/2``.
 
-        For ``φ -> X a`` the photon carries ``(M² - m²)/(2M)`` and the meson
-        ``(M² + m²)/(2M)``; the two sum to ``M``. ``_phi.pyx:111,113`` used
-        the second for the photon line. Reproduced per rules.md rule 1 and
-        tracked in
-        ``docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md``.
+        The meson carries ``(M² + m²)/(2M)`` and the two sum to ``M``, which
+        is what makes the distinction checkable rather than a reading.
+        ``_phi.pyx:111,113`` used the meson's expression for both φ lines,
+        putting them at 656.94 and 959.65 MeV where 362.52 and 59.82 belong
+        — the second above the φ's own half-mass, which no photon from a
+        two-body decay can exceed. Repaired as roster entry B2 of
+        ``projects/parity-pinned-defect-repair``; the corpus still pins the
+        misplaced lines and ``test/parity/deltas.py`` declares the shift.
+
+        Both mesons are held together because both are now correct; the ω's
+        lines were never misplaced.
         """
-        for line_energy, daughter_mass, correct in (
-            (SPECTRA["phi"][3][0][0], MASS_ETA, 362.5189975276151),
-            (SPECTRA["phi"][3][1][0], MASS_ETAP, 59.815040556235125),
+        for name, parent_mass, daughters, correct in (
+            (
+                "phi",
+                MASS_PHI,
+                (MASS_ETA, MASS_ETAP),
+                (362.5189975276151, 59.815040556235125),
+            ),
+            ("omega", MASS_OMEGA, (MASS_PI0, MASS_ETA), (379.6910146562748, 199.5783)),
         ):
-            photon = (MASS_PHI**2 - daughter_mass**2) / (2 * MASS_PHI)
-            assert photon == pytest.approx(correct)
-            assert line_energy + photon == pytest.approx(MASS_PHI)
-            assert line_energy > photon
-        # The ω's lines *are* the photon's, which is what makes the φ's a
-        # defect rather than a convention the family shares.
-        for line_energy, daughter_mass in (
-            (SPECTRA["omega"][3][0][0], MASS_PI0),
-            (SPECTRA["omega"][3][1][0], MASS_ETA),
-        ):
-            assert line_energy == pytest.approx(
-                (MASS_OMEGA**2 - daughter_mass**2) / (2 * MASS_OMEGA)
-            )
+            pairs = zip(daughters, correct, strict=True)
+            for index, (daughter_mass, expected) in enumerate(pairs):
+                line_energy = SPECTRA[name][3][index][0]
+                daughter = (parent_mass**2 + daughter_mass**2) / (2 * parent_mass)
+                assert line_energy == pytest.approx(expected), name
+                assert line_energy + daughter == pytest.approx(parent_mass), name
+                assert line_energy < daughter, name
+                assert line_energy < 0.5 * parent_mass, name
+        # Stated against the shipped energies too, so a revert to the `+`
+        # form fails on the number and not only on the identity.
+        assert SPECTRA["phi"][3][0][0] != pytest.approx(656.942002472385)
+        assert SPECTRA["phi"][3][1][0] != pytest.approx(959.6459594437648)
 
     @pytest.mark.parametrize("name", NAMES)
     def test_the_spectrum_is_non_negative_across_its_support(self, name: str) -> None:

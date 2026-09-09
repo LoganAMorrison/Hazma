@@ -17,6 +17,29 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **Both φ photon lines sat at the daughter meson's energy instead of the
+  photon's, and `dnde_photon_phi` moves.** In the two-body decay
+  `X → Y γ` the photon carries `(M² − m²) / (2 M)` and the meson
+  `(M² + m²) / (2 M)`; the two sum to `M`. The φ kernel used the meson's
+  expression for both of its lines and then boosted the result as a
+  photon energy. In the φ rest frame `φ → ηγ` sat at 656.942 MeV where
+  362.519 belongs, a factor of 1.81, and `φ → η′γ` at 959.646 MeV where
+  59.815 belongs, a factor of 16.0 — the second putting 94% of the φ's
+  whole rest mass into a photon that carries 5.9% of it. Both now sit at
+  `(M_φ² − m²) / (2 M_φ)`. **This relocates a feature rather than
+  rescaling the spectrum: the yield is unchanged at
+  `BR(φ → ηγ) + BR(φ → η′γ) = 0.013092` photons per decay** — a boosted
+  δ-function integrates to its own weight wherever it sits — so a band
+  containing the old line and not the new one loses that yield outright,
+  a band containing neither does not move, and no downstream result can
+  be corrected by a constant factor. Pointwise on a 601-point grid over
+  `1 ≤ E_γ ≤ 5 M_φ`, 331 of 601 values move at `E_φ = 1.5 M_φ` and 474 at
+  `E_φ = 5 M_φ`, most of them up; a φ **exactly** at rest is unaffected,
+  because that branch adds no line. `hazma.spectra.dnde_photon` moves for
+  any final state containing a φ. `dnde_photon_omega`, whose two
+  `ω → Y γ` lines were always the photon's, does not move, and neither
+  do the five other tabulated photon spectra. Details:
+  `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
 - **The η′'s two-photon line carried one photon per decay instead of
   two, and `dnde_photon_eta_prime` rises.** Five tabulated photon spectra
   add a monochromatic line on top of a CSV continuum, and for the four

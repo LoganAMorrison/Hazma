@@ -70,10 +70,12 @@
 //! Cython `DEF`s, so every combination the `.pyx` writes inline — `2·BR`,
 //! `M/2`, `(M² − m²)/(2M)` — is folded into a single immediate in the
 //! generated code. They are `const` here for the same reason, and
-//! [`tests::folded_constants_match_the_shipped_object_code`] pins each one
-//! against the immediate the disassembly loads — bar
-//! [`ETAP_TO_A_A_WEIGHT`], the one this port repairs, which is pinned
-//! against twice it.
+//! [`tests::every_folded_constant_is_the_shipped_immediate_or_its_declared_repair`]
+//! pins each one against the immediate the disassembly loads — bar the
+//! three the repairs move ([`ETAP_TO_A_A_WEIGHT`],
+//! [`PHI_TO_ETA_A_ENERGY`] and [`PHI_TO_ETAP_A_ENERGY`]), which are
+//! pinned against the repaired value with the shipped immediate named
+//! beside it.
 
 use std::sync::LazyLock;
 
@@ -112,31 +114,44 @@ const ETAP_TO_A_A_ENERGY: f64 = pdg::MASS_ETAP / 2.0;
 /// Photon energy from `K⁰ → γγ` in the kaon rest frame, MeV. Shared by
 /// the long and short kaons, which the Cython gives the same mass.
 const K0_TO_A_A_ENERGY: f64 = pdg::MASS_K0 / 2.0;
-/// Photon energy from `ω → π⁰γ` in the ω rest frame, MeV — the two-body
-/// value `(M_ω² − M_π0²) / (2 M_ω)`.
-const OMEGA_TO_PI0_A_ENERGY: f64 =
-    (pdg::MASS_OMEGA * pdg::MASS_OMEGA - pdg::MASS_PI0 * pdg::MASS_PI0) / (2.0 * pdg::MASS_OMEGA);
+/// Photon energy in the two-body decay `X → Y γ`, in X's rest frame, MeV.
+///
+/// `(M² − m²) / (2 M)`. Its counterpart `(M² + m²) / (2 M)` is the
+/// *daughter meson's* energy, and the two sum to `M`; writing the four
+/// line energies below through one function is what keeps the pair from
+/// being confusable, which is how the two φ lines came to be placed at
+/// the meson's energy in 2.1.0 (repair `B2`).
+///
+/// The operation order is the `.pyx` expressions' own, so the folded
+/// constants stay bit-identical to the shipped object code where the
+/// energy is unrepaired — see
+/// [`tests::every_folded_constant_is_the_shipped_immediate_or_its_declared_repair`].
+const fn photon_line_energy(parent: f64, daughter: f64) -> f64 {
+    (parent * parent - daughter * daughter) / (2.0 * parent)
+}
+
+/// Photon energy from `ω → π⁰γ` in the ω rest frame, MeV.
+const OMEGA_TO_PI0_A_ENERGY: f64 = photon_line_energy(pdg::MASS_OMEGA, pdg::MASS_PI0);
 /// Photon energy from `ω → ηγ` in the ω rest frame, MeV.
-const OMEGA_TO_ETA_A_ENERGY: f64 =
-    (pdg::MASS_OMEGA * pdg::MASS_OMEGA - pdg::MASS_ETA * pdg::MASS_ETA) / (2.0 * pdg::MASS_OMEGA);
-/// Rest-frame energy the Cython assigns the `φ → ηγ` line, MeV.
+const OMEGA_TO_ETA_A_ENERGY: f64 = photon_line_energy(pdg::MASS_OMEGA, pdg::MASS_ETA);
+/// Photon energy from `φ → ηγ` in the φ rest frame, MeV.
 ///
-/// `_phi.pyx:111` writes `(M_φ² + M_η²) / (2 M_φ)`, which is the *η's*
-/// energy in the two-body decay, not the photon's — the photon carries
-/// `(M_φ² − M_η²) / (2 M_φ)`. That is **656.94 MeV where 362.52 is
-/// right**, a factor of 1.81. The sign is reproduced rather than
-/// repaired, per `projects/cython-to-rust/rules.md` rule 1, and filed as
-/// `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
-const PHI_TO_ETA_A_ENERGY: f64 =
-    (pdg::MASS_PHI * pdg::MASS_PHI + pdg::MASS_ETA * pdg::MASS_ETA) / (2.0 * pdg::MASS_PHI);
-/// Rest-frame energy the Cython assigns the `φ → η′γ` line, MeV.
+/// The `−` is this port's, not the Cython's: `_phi.pyx:111` wrote
+/// `(M_φ² + M_η²) / (2 M_φ)`, the *η's* energy in the two-body decay
+/// rather than the photon's, and fed it to the boost as a photon energy.
+/// So 2.1.0 shipped this line at **656.94 MeV where 362.52 belongs**, a
+/// factor of 1.81 and above the spectrum's own endpoint. The parity
+/// corpus still pins the misplaced line, and `test/parity/deltas.py`
+/// declares the relocation as repair `B2` rather than re-pinning the
+/// arrays. See [`tests::every_line_energy_is_the_photons_not_the_daughters`].
+const PHI_TO_ETA_A_ENERGY: f64 = photon_line_energy(pdg::MASS_PHI, pdg::MASS_ETA);
+/// Photon energy from `φ → η′γ` in the φ rest frame, MeV.
 ///
-/// The same sign error as [`PHI_TO_ETA_A_ENERGY`] and far worse here,
-/// because the η′ takes almost all of the φ's mass: **959.65 MeV where
-/// 59.82 is right**, a factor of 16.0, and 94% of the φ's own rest mass
-/// carried off by one photon.
-const PHI_TO_ETAP_A_ENERGY: f64 =
-    (pdg::MASS_PHI * pdg::MASS_PHI + pdg::MASS_ETAP * pdg::MASS_ETAP) / (2.0 * pdg::MASS_PHI);
+/// The same repair as [`PHI_TO_ETA_A_ENERGY`] and a far larger move,
+/// because the η′ takes almost all of the φ's mass: 2.1.0 shipped this
+/// line at **959.65 MeV where 59.82 belongs**, a factor of 16.0 and 94%
+/// of the φ's own rest mass carried off by one photon.
+const PHI_TO_ETAP_A_ENERGY: f64 = photon_line_energy(pdg::MASS_PHI, pdg::MASS_ETAP);
 
 // ===========================================================================
 // ---- Embedded tables ------------------------------------------------------
@@ -492,21 +507,25 @@ mod tests {
     }
 
     /// Every folded constant, against the immediate the shipped
-    /// `.cpython-312-darwin.so` loads at that site.
+    /// `.cpython-312-darwin.so` loads at that site — or, for the three a
+    /// repair has moved, against the value that replaces it.
     ///
-    /// Read out of `objdump -d` as the `movk` sequences that build each
-    /// one (little-endian halfwords, high halfword last). Rust's const
-    /// evaluator and clang's constant folder have to agree here to the
-    /// last bit: the parity budget for these entry points is 1e-12 and a
-    /// one-ulp shift in a line's energy moves the whole line.
+    /// The shipped immediates were read out of `objdump -d` as the `movk`
+    /// sequences that build each one (little-endian halfwords, high
+    /// halfword last). Rust's const evaluator and clang's constant folder
+    /// have to agree here to the last bit: the parity budget for these
+    /// entry points is 1e-12 and a one-ulp shift in a line's energy moves
+    /// the whole line. Each repaired constant names the immediate it
+    /// replaces beside it, so the object code stays recoverable from this
+    /// test and a silent revert to it still fails.
     #[test]
-    fn folded_constants_match_the_shipped_object_code() {
+    fn every_folded_constant_is_the_shipped_immediate_or_its_declared_repair() {
         assert_eq!(ETA_TO_A_A_WEIGHT.to_bits(), 0x3fe9_38ef_34d6_a162);
         assert_eq!(ETA_TO_A_A_ENERGY.to_bits(), 0x4071_1ee5_6041_8937);
-        // The one repaired weight: the shipped object code loads
-        // `0x3f97_9fa9_7e13_2b56` here and the two-photon line needs twice
-        // it (B1). Doubling only increments the exponent field, so the
-        // mantissa below is the shipped immediate's, digit for digit.
+        // B1: the shipped object code loads `0x3f97_9fa9_7e13_2b56` here
+        // and the two-photon line needs twice it. Doubling only increments
+        // the exponent field, so the mantissa below is the shipped
+        // immediate's, digit for digit.
         assert_eq!(ETAP_TO_A_A_WEIGHT.to_bits(), 0x3fa7_9fa9_7e13_2b56);
         assert_eq!(ETAP_TO_A_A_ENERGY.to_bits(), 0x407d_ee3d_70a3_d70a);
         assert_eq!(KL_TO_A_A_WEIGHT.to_bits(), 0x3f51_ec91_8e32_5d4a);
@@ -518,8 +537,13 @@ mod tests {
         assert_eq!(OMEGA_TO_ETA_A_ENERGY.to_bits(), 0x4068_f281_6f00_68dc);
         assert_eq!(pdg::BR_PHI_TO_ETA_A.to_bits(), 0x3f8a_af78_feef_5ec8);
         assert_eq!(pdg::BR_PHI_TO_ETAP_A.to_bits(), 0x3f10_4e2b_dcfd_9c78);
-        assert_eq!(PHI_TO_ETA_A_ENERGY.to_bits(), 0x4084_8789_3897_9d28);
-        assert_eq!(PHI_TO_ETAP_A_ENERGY.to_bits(), 0x408d_fd2a_ecc8_ec19);
+        // B2: the shipped object code loads the *daughter meson's* energy
+        // at both sites — `0x4084_8789_3897_9d28` (656.94 MeV) and
+        // `0x408d_fd2a_ecc8_ec19` (959.65 MeV). The photon's energy shares
+        // no bits with either, because the repair changes one sign in the
+        // numerator rather than scaling the result.
+        assert_eq!(PHI_TO_ETA_A_ENERGY.to_bits(), 0x4076_a84d_d059_fcfd);
+        assert_eq!(PHI_TO_ETAP_A_ENERGY.to_bits(), 0x404d_e853_3fba_f8c5);
     }
 
     /// All four `X → γγ` lines carry `2·BR`, the η′ included.
@@ -541,47 +565,44 @@ mod tests {
         assert_ne!(ETAP_TO_A_A_WEIGHT, pdg::BR_ETAP_TO_A_A);
     }
 
-    /// The φ's two line energies are the *daughter meson's*, not the
-    /// photon's, so both sit above where the photon can be.
+    /// All four `X → Y γ` lines sit at the photon's energy, below the
+    /// daughter meson's.
     ///
-    /// `(M_φ² + M_η²)/(2M_φ)` is `E_η`; the photon takes
-    /// `(M_φ² − M_η²)/(2M_φ)`, and the two sum to `M_φ`. So the η line
-    /// sits at 656.94 MeV instead of 362.52 (a factor of 1.81) and the
-    /// η′ line at 959.65 instead of 59.82 (a factor of 16.0) — the second
-    /// puts 94% of the φ's whole rest mass into one photon. Reproduced
-    /// per rule 1 and filed as
-    /// `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
+    /// `(M² − m²)/(2M)` is `E_γ` and `(M² + m²)/(2M)` is `E_Y`; the two
+    /// sum to `M`, which is what makes the distinction checkable rather
+    /// than a reading — a line energy that pairs with the *photon's* to
+    /// give the parent mass is the daughter's. The φ's two lines shipped
+    /// that way in 2.1.0 (`_phi.pyx:111,113`): 656.94 MeV instead of
+    /// 362.52 for `φ → ηγ`, a factor of 1.81, and 959.65 instead of 59.82
+    /// for `φ → η′γ`, a factor of 16.0 that put 94% of the φ's whole rest
+    /// mass into one photon. Repaired as roster entry B2 of
+    /// `projects/parity-pinned-defect-repair`; the corpus still pins the
+    /// misplaced lines and `test/parity/deltas.py` declares the shift.
     ///
-    /// The energy-conservation identity is what makes the diagnosis
-    /// checkable rather than a reading: `E_daughter + E_γ = M` holds
-    /// exactly for a two-body decay, so a line energy that pairs with the
-    /// *photon's* to give the parent mass is the daughter's.
+    /// The ω's two lines were always the photon's, and are held here with
+    /// the φ's rather than as a control, because the two mesons run
+    /// through the same [`photon_line_energy`] now.
     #[test]
-    fn the_phi_line_energies_are_the_daughter_mesons() {
-        for (line, mass) in [
-            (PHI_TO_ETA_A_ENERGY, pdg::MASS_ETA),
-            (PHI_TO_ETAP_A_ENERGY, pdg::MASS_ETAP),
+    fn every_line_energy_is_the_photons_not_the_daughters() {
+        for (line, parent, mass) in [
+            (PHI_TO_ETA_A_ENERGY, pdg::MASS_PHI, pdg::MASS_ETA),
+            (PHI_TO_ETAP_A_ENERGY, pdg::MASS_PHI, pdg::MASS_ETAP),
+            (OMEGA_TO_PI0_A_ENERGY, pdg::MASS_OMEGA, pdg::MASS_PI0),
+            (OMEGA_TO_ETA_A_ENERGY, pdg::MASS_OMEGA, pdg::MASS_ETA),
         ] {
-            let photon = (pdg::MASS_PHI * pdg::MASS_PHI - mass * mass) / (2.0 * pdg::MASS_PHI);
-            assert!((line + photon - pdg::MASS_PHI).abs() < 1e-12 * pdg::MASS_PHI);
-            assert!(line > photon);
-        }
-        assert!((PHI_TO_ETA_A_ENERGY - 656.942_002_472_385).abs() < 1e-9);
-        assert!((PHI_TO_ETAP_A_ENERGY - 959.645_959_443_764_8).abs() < 1e-9);
-
-        // The ω's, by contrast, *are* the photon's, so they pair with the
-        // daughter energy rather than being it. This is the control that
-        // makes the φ assertions a defect rather than a convention the
-        // whole family shares.
-        for (line, mass) in [
-            (OMEGA_TO_PI0_A_ENERGY, pdg::MASS_PI0),
-            (OMEGA_TO_ETA_A_ENERGY, pdg::MASS_ETA),
-        ] {
-            let daughter =
-                (pdg::MASS_OMEGA * pdg::MASS_OMEGA + mass * mass) / (2.0 * pdg::MASS_OMEGA);
-            assert!((line + daughter - pdg::MASS_OMEGA).abs() < 1e-12 * pdg::MASS_OMEGA);
+            let daughter = (parent * parent + mass * mass) / (2.0 * parent);
+            assert!((line + daughter - parent).abs() < 1e-12 * parent);
             assert!(line < daughter);
+            // No photon from a two-body decay carries more than half the
+            // parent's mass; both shipped φ energies did.
+            assert!(line < 0.5 * parent);
         }
+        // Stated as the energies as well as the form, so a revert to the
+        // shipped `+` fails on the number and not only on the identity.
+        assert!((PHI_TO_ETA_A_ENERGY - 362.518_997_527_615_1).abs() < 1e-9);
+        assert!((PHI_TO_ETAP_A_ENERGY - 59.815_040_556_235_125).abs() < 1e-9);
+        assert_ne!(PHI_TO_ETA_A_ENERGY, 656.942_002_472_385);
+        assert_ne!(PHI_TO_ETAP_A_ENERGY, 959.645_959_443_764_8);
     }
 
     /// Every table parses to a paired, non-empty, strictly ascending grid.

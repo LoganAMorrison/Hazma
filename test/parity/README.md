@@ -122,17 +122,20 @@ Ten of the values in here are, separately, *wrong* — filed under
 [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
 That does not make them regenerable either: the committed arrays are the
 record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them, in [`deltas.py`](deltas.py) — four have been (the
+delta against them, in [`deltas.py`](deltas.py) — six have been (the
 scalar decay spectrum's FSR normalization, roster entry B4; the charged
 pion's doubled prompt neutrino line, B5; the two mediator thermal cross
-sections' unconverged quadrature, B6; and the boost integral's window
-coverage, A1, which reaches all seven tabulated photon spectra), so the
+sections' unconverged quadrature, B6; the boost integral's window
+coverage, A1, which reaches all seven tabulated photon spectra; the η′
+two-photon line's weight, B1; and both φ line energies, B2), so the
 arrays of those cases are compared against the relation each declares
-rather than against `stored`. Three more are *modelled* there without
-being declared — B1, B2 and B3, whose Cython twins are already gone —
-because a declaration on an array the tree has not moved yet would fail
-as stale; [`test_delta_models.py`](test_delta_models.py) checks those
-models against the stored arrays themselves. [`oracles/`](oracles/README.md)
+rather than against `stored`. The last two moved arrays A1 had already
+declared, so each collapses into a composite — `A1+B1` and `A1+B2` — as
+the project's rule 7 requires. One more is *modelled* there without being
+declared — B3, whose Cython twin is already gone — because a declaration
+on an array the tree has not moved yet would fail as stale;
+[`test_delta_models.py`](test_delta_models.py) checks that model against
+the stored arrays themselves. [`oracles/`](oracles/README.md)
 holds what the remaining positions *should* be, captured from the Cython
 twins before the port deleted them; it is what A1 is graded against here,
 through [`oracle_reference.py`](oracle_reference.py), and is the only
@@ -191,7 +194,12 @@ Three carve-outs, all narrow and all declared:
   runner holds a declared array to that relation and every undeclared
   position to the stored value as before, and fails a declaration whose
   array no longer differs from the corpus, so a reverted repair cannot
-  hide behind it.
+  hide behind it. Six of those arrays — the `A1+B2` composite on
+  `spectra.photon.phi` — additionally carry an absolute floor, because
+  relocating a line cancels it back out of the captured array the
+  composite builds on and takes the continuum underneath with it; the
+  floor is one ulp of the cancelled plateau and is capped below the
+  array's own zero floor.
 
 The budget depends on which tree you are on. When the kernel digest, the
 toolchain and the numerics libraries all match what the manifest records,

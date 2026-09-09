@@ -46,6 +46,14 @@ value under the case's existing budget. Concretely:
   that prediction is open: a term added to the stored array, a
   closed-form transform of it, a value a second implementation computes,
   or one of those with a further repair's term composed on top.
+- The comparison is relative. A relation may declare an absolute floor
+  beside its relative budget, but only where its own arithmetic cannot
+  resolve the repaired value at every magnitude the array takes — a
+  composition that *relocates* a term subtracts it back out of the base,
+  and where the base is a captured array that cancellation destroys
+  whatever the term's last bit could not hold. The floor is one ulp of
+  the cancelled term, and a shape test caps it below what the case
+  already tolerates for a stored zero, so it cannot grow into a budget.
 - A declaration covers only the positions its mechanism moves: either an
   explicit tuple every entry of which the relation moves, or `MOVED`,
   resolved at comparison time against the array the relation predicts.
@@ -71,7 +79,10 @@ value under the case's existing budget. Concretely:
   the case budget at the declared positions, and costs one extra kernel
   evaluation per declared array in the gate. A closed-form transform of
   the stored array costs neither, which is why it is the relation to
-  reach for first.
+  reach for first. A relocation is the worst case: it cancels a term it
+  did not itself compute, so at positions where that term dominated the
+  result the prediction is exact only down to the term's last bit, and
+  those positions are gated by an absolute floor rather than relatively.
 - **Mitigation:** the relation's budget is measured and written beside
   it; the positions it loosens are exactly the ones the repair moved,
   and the mutation tests in `test_parity.py` keep it from loosening any
