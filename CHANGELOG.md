@@ -35,10 +35,14 @@ user-facing change even when no signature did.
   be corrected by a constant factor. Pointwise on a 601-point grid over
   `1 ≤ E_γ ≤ 5 M_φ`, 331 of 601 values move at `E_φ = 1.5 M_φ` and 474 at
   `E_φ = 5 M_φ`, most of them up; a φ **exactly** at rest is unaffected,
-  because that branch adds no line. `hazma.spectra.dnde_photon` moves for
-  any final state containing a φ. `dnde_photon_omega`, whose two
-  `ω → Y γ` lines were always the photon's, does not move, and neither
-  do the five other tabulated photon spectra. Details:
+  because that branch adds no line. `hazma.spectra.dnde_photon` inherits
+  both halves: it moves for a final state whose φ is in flight, and not
+  at the production threshold `cme = Σm`, where the φ is at rest — so
+  `dnde_photon(E, 2 M_φ, ["phi", "phi"])` is bit-identical across this
+  change while `dnde_photon(E, 2.5 M_φ, ["phi", "phi"])` moves at 98 of
+  201 grid points. `dnde_photon_omega`, whose two `ω → Y γ` lines were
+  always the photon's, does not move, and neither do the five other
+  tabulated photon spectra. Details:
   `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
 - **The η′'s two-photon line carried one photon per decay instead of
   two, and `dnde_photon_eta_prime` rises.** Five tabulated photon spectra
@@ -55,8 +59,9 @@ user-facing change even when no signature did.
   does not move at all; the continuum is unchanged. An η′ **exactly** at
   rest is unaffected, because that branch adds no line. Pointwise the
   rise runs from 7.7e-04 to a factor of two, the latter where the line
-  was the whole spectrum. `hazma.spectra.dnde_photon` moves for any final
-  state containing an η′. `dnde_photon_eta`, `dnde_photon_long_kaon` and
+  was the whole spectrum. `hazma.spectra.dnde_photon` moves for a final
+  state whose η′ is in flight, and not at the production threshold,
+  where the η′ is at rest. `dnde_photon_eta`, `dnde_photon_long_kaon` and
   `dnde_photon_short_kaon` — whose weights were already right — do not
   move, and neither do `dnde_photon_omega` or `dnde_photon_phi`, whose
   `X → Yγ` lines are correctly un-doubled. Details:
@@ -86,8 +91,9 @@ user-facing change even when no signature did.
   those 10,045 values move. A parent **exactly** at rest is unaffected:
   all seven kernels short-circuit to the rest-frame spectrum before the
   integral, so it never runs at `β = 0`. `hazma.spectra.dnde_photon` and
-  every model `total_spectrum` move for any final state containing one of
-  the seven. Details:
+  every model `total_spectrum` inherit that: they move for a final state
+  whose parent is in flight, and not at the production threshold, where
+  it is at rest. Details:
   `docs/followups/todo/boost-integral-drops-last-interior-cell.md`.
 - **The charged pion's prompt `π → e ν` neutrino line was counted twice.**
   `hazma.spectra.dnde_neutrino_charged_pion` summed two contributions that

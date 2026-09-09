@@ -154,6 +154,16 @@ this repair and the A1 boost repair that already owns the same arrays.
 - **`SPECTRA["phi"]` in `test/test_core_photon_tables.py` moved with the
   kernel**, as `SPECTRA["eta_prime"]` did in Task 5: that table is the
   independent statement of which lines the kernel carries.
+- **The public-impact claim is scoped to a φ in flight** (review round 1).
+  The first draft said `dnde_photon` moves for "any final state containing
+  a φ", one sentence after recording that a φ at rest is untouched. At the
+  two-body production threshold every φ is at rest, so `branch` returns
+  `Branch::RestFrame`, that arm adds no line, and neither line energy is
+  reachable. The sweep found the identical overstatement in the merged
+  `CHANGELOG.md` entries for B1 and A1, each one sentence after its own
+  rest-frame caveat; all five occurrences are corrected and the class is
+  in `docs/agents/lessons.md` as
+  `[composed-entry-point-inherits-the-branch-caveat]`.
 
 ## Files Changed
 
@@ -211,11 +221,19 @@ spectrum.
 The n-body public path, `hazma.spectra.dnde_photon(E, cme, states)` on
 `np.geomspace(1, 2000, 201)` MeV at `cme = 2.5 M_φ`:
 
-| Final state | moved | relative shift | up / down |
-| --- | ---: | --- | ---: |
-| `["phi", "phi"]` | 98/201 | 6.57e-05 … 1.00 | 73 / 25 |
-| `["phi", "eta"]` | 113/201 | 2.81e-05 … 1.00 | 90 / 23 |
-| `["eta", "eta"]` | 0/201 | — | — |
+| Final state | `cme` | moved | relative shift | up / down |
+| --- | --- | ---: | --- | ---: |
+| `["phi", "phi"]` | `2.5 M_φ` | 98/201 | 6.57e-05 … 1.00 | 73 / 25 |
+| `["phi", "eta"]` | `2.5 M_φ` | 113/201 | 2.81e-05 … 1.00 | 90 / 23 |
+| `["eta", "eta"]` | `2.5 M_φ` | 0/201 | — | — |
+| `["phi", "phi"]` | `2 M_φ` | 0/201 | — | — |
+| `["phi", "eta"]` | `M_φ + M_η` | 0/201 | — | — |
+
+The last two rows are the two-body production thresholds, where every φ is
+produced at rest: `branch` returns `Branch::RestFrame` at
+`E − m < DBL_EPSILON`, that arm adds no line, and so neither repaired
+energy is reachable. A composed entry point is therefore narrower in reach
+than the kernel it calls, not equal to it.
 
 **Yield: relocated, not changed.** The line term isolated by subtracting
 the boosted continuum, integrated over its own window on a 2,000,001-point
@@ -522,10 +540,17 @@ $ git diff origin/master -- '*.py' '*.rs' \
 | φ `pi0_a` ratios 1.978 / 1.951 vs 1.976 | `numpy.trapezoid` over the two CSVs ÷ each `BR(X → π⁰γ)` | 0.0026115/1.32e-3 = 1.9784; 0.16275/8.34e-2 = 1.9514; `2 × 0.98823` = 1.97646 | OK |
 
 **Numerical-impact statement.** `hazma.spectra.dnde_photon_phi` and
-`hazma.spectra.dnde_photon` on any final state containing a φ move, by
-design; the grids, the per-block counts and the invariant yield are in
-`## Numerical impact` above. Six sibling photon spectra and the
-`["eta", "eta"]` n-body state are bit-identical across the rebuild
+`hazma.spectra.dnde_photon` on a final state whose φ is **in flight**
+move, by design; the grids, the per-block counts and the invariant yield
+are in `## Numerical impact` above. A φ at rest is not in the repair's
+reach at all — the kernel's `branch` guard takes the rest-frame arm at
+`E − m < DBL_EPSILON`, and that arm adds no line, so neither line energy
+can enter. Measured rather than argued: `["phi", "phi"]` at
+`cme = 2 M_φ` and `["phi", "eta"]` at `cme = M_φ + M_η`, the two-body
+production thresholds, are bit-identical across the rebuild, while
+`["phi", "phi"]` at `cme = 2.5 M_φ` moves at 98 of 201 grid points. Six
+sibling photon spectra and the `["eta", "eta"]` n-body state are
+bit-identical across the rebuild
 (`np.geomspace(1, 5 M, 601)` at four parent energies each, and
 `np.geomspace(1, 2000, 201)` at `cme = 2.5 M_φ`). The project's
 `version_bump: minor` is unchanged and still correct.

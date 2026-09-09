@@ -268,8 +268,8 @@ against the 6,500x–33,000x the follow-up measured. The repaired kernel
 reproduces Task 2's Cython oracle **bit for bit** at all 10,045
 positions. Details: `task-4-boost-window.md`.
 
-**B1 — `dnde_photon_eta_prime`, and `dnde_photon` on any final state
-carrying an η′.** Measured before and after on the same worktree by
+**B1 — `dnde_photon_eta_prime`, and `dnde_photon` on a final state whose
+η′ is in flight.** Measured before and after on the same worktree by
 reverting the constant, rebuilding the editable install, and diffing the
 two captures. The spectrum rises at every parent energy above rest and is
 unchanged at `E = M_η′`, where the kernel takes its rest-frame arm and
@@ -288,16 +288,19 @@ integrals now all equal their declared weight to a ratio of
 1.0000000000. `spectra.photon.{eta,long_kaon,short_kaon,omega,phi}` are
 bit-identical across the rebuild. Details: `task-5-eta-prime-line.md`.
 
-**B2 — `dnde_photon_phi`, and `dnde_photon` on any final state carrying a
-φ.** Same before/after method. The spectrum moves at every parent energy
-above rest and is unchanged at `E = M_φ`: 1/601 grid points at
+**B2 — `dnde_photon_phi`, and `dnde_photon` on a final state whose φ is
+in flight.** Same before/after method. The spectrum moves at every parent
+energy above rest and is unchanged at `E = M_φ`: 1/601 grid points at
 `E = M(1+1e-6)`, 331/601 at `1.5 M` and 474/601 at `5 M`, **262 and 449
 of them up** — the sign splits, because a relocation vacates one window
 and fills another rather than adding to what is there. The n-body path
-moves with it (98/201 on `["phi", "phi"]`, 113/201 on `["phi", "eta"]`,
-0/201 on `["eta", "eta"]`). **The yield does not move**: the isolated
-line term integrates to 0.013092203 against the
-`BR(φ → ηγ) + BR(φ → η′γ) = 0.0130922` its weights declare, before and
+moves with it at `cme = 2.5 M_φ` (98/201 on `["phi", "phi"]`, 113/201 on
+`["phi", "eta"]`, 0/201 on `["eta", "eta"]`) and **not at the production
+threshold**, where the φ is at rest and the kernel takes the arm that adds
+no line: `["phi", "phi"]` at `cme = 2 M_φ` and `["phi", "eta"]` at
+`cme = M_φ + M_η` are both bit-identical across the rebuild. **The yield
+does not move**: the isolated line term integrates to 0.013092203 against
+the `BR(φ → ηγ) + BR(φ → η′γ) = 0.0130922` its weights declare, before and
 after, which is why the gate is a position assertion — a yield-only check
 passes on the unrepaired kernel, confirmed by running one. Inverting the
 boosted line term's outer edges recovers 59.8155 and 362.5189 MeV against
