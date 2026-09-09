@@ -62,6 +62,16 @@ strongest the physics supports:
 | `Reference(fn)` | only a second implementation can say what the value should be | all four Group A repairs, via a Task 2 capture; B6, via scipy |
 | `Composed(base, added)` | a second repair moves an array the first already declares | `A1+B1` on `spectra.photon.eta_prime` |
 
+Every relation is compared relatively, with no absolute floor. The one
+exception a repair may reach for is a `Composed` whose addend *relocates*
+a term: it subtracts the term back out of the base, and where the base is
+a captured array that cancellation destroys whatever the term's last bit
+could not hold, so the prediction reads exact zero where the kernel still
+returns the continuum. Such a relation declares an `atol` at one ulp of
+the cancelled term — `A1+B2` on `spectra.photon.phi` is the only one —
+and `test_a_declared_absolute_floor_stays_under_its_arrays_zero_floor`
+caps it below what the case already tolerates for a stored zero.
+
 `test/parity/deltas.py`'s module docstring is authoritative for the set —
 this table is the guidance, not the enumeration, and a repair that adds a
 relation adds it there. What does *not* change is the standard: name the

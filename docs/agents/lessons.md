@@ -301,3 +301,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   Enumerate the sites the fix touched, and for each confirm a test that fails
   when *only that site* is reverted — reverting all of them at once proves
   nothing about which one the test was watching (PR #91).
+- [composed-entry-point-inherits-the-branch-caveat] A kernel repair that spares
+  one branch spares every public entry point that composes it on that branch,
+  so an impact claim about the composed function is narrower than "any caller
+  reaching the kernel". State the caveat once and carry it into the same
+  paragraph's sentence about the consumer, and measure the composed function at
+  the configuration the spared branch corresponds to — for a spectrum kernel
+  with a rest-frame arm, that is the production threshold (PR #95).

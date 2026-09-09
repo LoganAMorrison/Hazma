@@ -48,6 +48,20 @@ adds its own term on top. The `Delta` then names them all, as ``"A1+B1"``,
 and `repair_labels` is what splits a composite spelling back into the
 roster entries it is made of.
 
+Absolute floors
+---------------
+A prediction is compared to the repaired kernel relatively, with ``atol``
+at zero, because an absolute floor is scale-dependent and a spectrum runs
+over twenty decades (`tolerances`, "``atol`` is 0.0 everywhere"). One
+relation cannot hold to that. A `Composed` whose addend *relocates* a
+line subtracts the line back out of the base, and where the base is a
+captured array that subtraction annihilates whatever the cancelled term's
+last bit could not hold -- so the prediction is exactly zero at positions
+where the kernel still returns the continuum underneath, and no relative
+budget can describe it. Such a relation declares an ``atol`` at one ulp of
+the term it cancels, ``why`` says which term, and `test_parity` caps it
+below the array's own zero floor so it cannot grow into a budget.
+
 Positions
 ---------
 A declaration covers exactly the positions its mechanism reaches
@@ -134,12 +148,19 @@ class Additive:
         how; a term that is its own quadrature cannot be held to the
         case's bit-level budget.
     why : str
-        One-line justification of ``rtol``.
+        One-line justification of ``rtol``, and of ``atol`` where it is
+        set.
+    atol : float, optional
+        Absolute floor, added to ``rtol`` when the prediction is compared.
+        ``0.0`` everywhere the relation's arithmetic resolves the repaired
+        value at every magnitude it takes; see "Absolute floors" in the
+        module docstring for the one composition that cannot.
     """
 
     term: TermFn
     rtol: float
     why: str
+    atol: float = 0.0
 
     def expected(
         self,
@@ -168,12 +189,19 @@ class Exact:
         tighter than an `Additive` whose term is a quadrature; ``why``
         says which operations set it.
     why : str
-        One-line justification of ``rtol``.
+        One-line justification of ``rtol``, and of ``atol`` where it is
+        set.
+    atol : float, optional
+        Absolute floor, added to ``rtol`` when the prediction is compared.
+        ``0.0`` everywhere the relation's arithmetic resolves the repaired
+        value at every magnitude it takes; see "Absolute floors" in the
+        module docstring for the one composition that cannot.
     """
 
     transform: TransformFn
     rtol: float
     why: str
+    atol: float = 0.0
 
     def expected(
         self,
@@ -204,12 +232,19 @@ class Reference:
         Relative budget the relation holds to. Measured, and ``why`` says
         how.
     why : str
-        One-line justification of ``rtol``.
+        One-line justification of ``rtol``, and of ``atol`` where it is
+        set.
+    atol : float, optional
+        Absolute floor, added to ``rtol`` when the prediction is compared.
+        ``0.0`` everywhere the relation's arithmetic resolves the repaired
+        value at every magnitude it takes; see "Absolute floors" in the
+        module docstring for the one composition that cannot.
     """
 
     reference: TermFn
     rtol: float
     why: str
+    atol: float = 0.0
 
     def expected(
         self,
@@ -243,13 +278,22 @@ class Composed:
         Relative budget the composition holds to. Measured against the
         repaired kernel; ``why`` says what sets it.
     why : str
-        One-line justification of ``rtol``.
+        One-line justification of ``rtol``, and of ``atol`` where it is
+        set.
+    atol : float, optional
+        Absolute floor, added to ``rtol`` when the prediction is compared.
+        A composition whose addend *relocates* a term rather than adding
+        one subtracts it back out of the base, and where the base is a
+        captured array the subtraction annihilates whatever the cancelled
+        term's last bit could not hold; see "Absolute floors" in the
+        module docstring.
     """
 
     base: Additive | Exact | Reference
     added: tuple[Additive, ...]
     rtol: float
     why: str
+    atol: float = 0.0
 
     def expected(
         self,
@@ -340,9 +384,9 @@ def _photon_energy(parent: float, daughter: float) -> float:
     """Rest-frame photon energy in ``X -> Y gamma``, MeV.
 
     ``(M**2 - m**2) / (2 M)``, in the operation order
-    ``photon_tables::OMEGA_TO_PI0_A_ENERGY`` writes it. Its ``phi``
-    counterparts write ``+`` for the same quantity, which is B2 — see
-    `_daughter_energy`.
+    ``photon_tables::photon_line_energy`` writes it — for the phi's two
+    lines as well as the omega's, since B2. See `_daughter_energy` for
+    what the phi's shipped with.
     """
     return (parent * parent - daughter * daughter) / (2.0 * parent)
 
@@ -350,10 +394,11 @@ def _photon_energy(parent: float, daughter: float) -> float:
 def _daughter_energy(parent: float, daughter: float) -> float:
     """Rest-frame energy of the *daughter meson* in ``X -> Y gamma``, MeV.
 
-    ``(M**2 + m**2) / (2 M)``, in the operation order
-    ``photon_tables::PHI_TO_ETA_A_ENERGY`` writes it. That constant feeds
-    it to the boost as if it were the photon's energy, which is what B2
-    repairs; the two differ by ``m**2 / M``.
+    ``(M**2 + m**2) / (2 M)``, in the operation order the shipped
+    ``photon_tables::PHI_TO_ETA_A_ENERGY`` wrote it. That constant fed it
+    to the boost as if it were the photon's energy, which is what B2
+    repairs; the two differ by ``m**2 / M``. The model still needs it,
+    because the corpus is still pinned at the shipped energies.
     """
     return (parent * parent + daughter * daughter) / (2.0 * parent)
 
@@ -843,6 +888,49 @@ _A1_B1 = Delta(
 )
 
 
+# ---------------------------------------------------------------------------
+# A1 + B2 -- the six phi arrays both repairs move
+# ---------------------------------------------------------------------------
+
+
+_A1_B2 = Delta(
+    repair="A1+B2",
+    positions=MOVED,
+    relation=Composed(
+        base=_A1.relation,
+        added=(_B2.relation,),
+        rtol=1e-12,
+        atol=1e-20,
+        why="the base is the A1 capture and the addend is closed form, so "
+        "the relative budget is the case's own `tolerances.TABULATED_RTOL`, "
+        "for the reason A1 gives: the capture is one platform's, and a libm "
+        "that moves the boost integral must not fail here while the "
+        "undeclared positions of the same block still pass. Measured 2.9e-14 "
+        "worst over the six arrays. The floor is what relocation costs: the "
+        "addend subtracts the shipped line back out of the capture, and at "
+        "the two positions inside the shipped `phi -> eta gamma` window but "
+        "outside both repaired windows that cancellation takes the continuum "
+        "with it -- the plateau there is 3.107723e-05, whose last bit is "
+        "6.8e-21, and the continuum underneath it is 3.3e-21. So the "
+        "prediction reads exactly 0.0 where the kernel returns 3.3e-21 and "
+        "3.1e-22, and one ulp of the cancelled plateau is the tightest "
+        "statement available.",
+    ),
+    measured="B2 moves 305 positions over six of this case's ten value "
+    "arrays -- 57 and 1 of `near_rest.{values,scalar_values}`, 102 and 3 of "
+    "`boosted_mild.{values,scalar_values}`, 139 and 3 of "
+    "`boosted_strong.{values,scalar_values}` -- 233 of them up and 72 down, "
+    "which is what relocating a line rather than adding one looks like. 90 "
+    "of the 305 are positions A1 moves too, so the two compose rather than "
+    "declaring separately. The case's other four value arrays keep A1's "
+    "declaration alone: both `rest` arrays take the kernel's rest-frame arm, "
+    "which adds no line at all, and at `rest_plus_eps` the boost opens a "
+    "window 2.8e-06 wide in relative energy at beta = 1.414e-06, too narrow "
+    "for any grid point to fall inside a shipped or a repaired line.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-6-phi-lines.md",
+)
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
@@ -876,12 +964,12 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.omega", "boosted_strong", "scalar_values"): _A1,
     ("spectra.photon.phi", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.phi", "rest_plus_eps", "scalar_values"): _A1,
-    ("spectra.photon.phi", "near_rest", "values"): _A1,
-    ("spectra.photon.phi", "near_rest", "scalar_values"): _A1,
-    ("spectra.photon.phi", "boosted_mild", "values"): _A1,
-    ("spectra.photon.phi", "boosted_mild", "scalar_values"): _A1,
-    ("spectra.photon.phi", "boosted_strong", "values"): _A1,
-    ("spectra.photon.phi", "boosted_strong", "scalar_values"): _A1,
+    ("spectra.photon.phi", "near_rest", "values"): _A1_B2,
+    ("spectra.photon.phi", "near_rest", "scalar_values"): _A1_B2,
+    ("spectra.photon.phi", "boosted_mild", "values"): _A1_B2,
+    ("spectra.photon.phi", "boosted_mild", "scalar_values"): _A1_B2,
+    ("spectra.photon.phi", "boosted_strong", "values"): _A1_B2,
+    ("spectra.photon.phi", "boosted_strong", "scalar_values"): _A1_B2,
     ("spectra.photon.charged_kaon", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.charged_kaon", "rest_plus_eps", "scalar_values"): _A1,
     ("spectra.photon.charged_kaon", "near_rest", "values"): _A1,
@@ -1110,6 +1198,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 DELTA_MODELS: dict[str, Delta] = {
     "A1": _A1,
     "A1+B1": _A1_B1,
+    "A1+B2": _A1_B2,
     "B1": _B1,
     "B2": _B2,
     "B3": _B3,

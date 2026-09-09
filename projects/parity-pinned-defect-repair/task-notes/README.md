@@ -27,7 +27,7 @@ section tracks live *status*.
 | 3 | Closed-form delta models (B1–B3) | 1 | **Complete** — models in `deltas.DELTA_MODELS`, keys land with the repairs | `task-3-closed-form-deltas.md` |
 | 4 | Repair A1 — boost integral window | 1, 2 | **Complete** | `task-4-boost-window.md` |
 | 5 | Repair B1 — η′ line weight | 3, 4 | **Complete** — declared as the composite `A1+B1` | `task-5-eta-prime-line.md` |
-| 6 | Repair B2 — φ line energies | 3, 4 | Not started | `task-6-phi-lines.md` |
+| 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | Not started | `task-7-photon-muon-endpoint.md` |
 | 8 | Repair A3 — charged-pion forward cone | 7 | Not started | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
@@ -134,6 +134,23 @@ this project is time-critical.
   platform drift the case budget already absorbs (`numpy 2.5.1 → 2.5.3`,
   `scipy 1.18.0 → 1.18.1`, a macOS point release). Capture the blocks
   twice — defective build, then repaired build — and diff those.
+- **A repair that *relocates* a term cannot be declared exactly, and the
+  limit is representation rather than budget.** Task 6's composite
+  subtracts the shipped line back out of the A1 capture; where that line
+  dominated the value — a plateau of 3.107723e-05 over a continuum of
+  3.3e-21 — the capture never held the remainder, so the prediction reads
+  exact zero and no `rtol` describes the position. Additive repairs (B1,
+  B5) never hit this because they only add. Expect it for any later
+  repair that moves a feature rather than scaling one, and reach for a
+  declared absolute floor rather than a looser `rtol` (`../rules.md`
+  rule 2).
+- **`../references/defect-blast-radius.md`'s per-defect "all blocks" is a
+  graph reading, and both measurements so far came back narrower.** B1
+  moves 6 of 10 value arrays, B2 a *different* 6 of 10. The two `rest`
+  arrays never move (that branch adds no line) and `rest_plus_eps` opens
+  a window 2.8e-06 wide in relative energy, too narrow for a grid point
+  to fall inside any line, shipped or repaired. Both sections now carry
+  the measurement.
 - **A declared position at exactly 0.500000 is a second defect, not a
   rounding.** B5's factor-of-two positions are where the muon-decay
   continuum's own quadrature returns a hard zero: its integrand's support
@@ -228,8 +245,8 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Five public values have moved: B4 in PR #87, B5 in Task 10a, B6 in
-Task 13, A1 in Task 4 and B1 in Task 5** (bullets below).
+**Six public values have moved: B4 in PR #87, B5 in Task 10a, B6 in
+Task 13, A1 in Task 4, B1 in Task 5 and B2 in Task 6** (bullets below).
 
 **A1 — all seven tabulated photon spectra.** Measured on the corpus's
 own grids (10,045 positions, 35 blocks) against a build carrying the
@@ -251,8 +268,8 @@ against the 6,500x–33,000x the follow-up measured. The repaired kernel
 reproduces Task 2's Cython oracle **bit for bit** at all 10,045
 positions. Details: `task-4-boost-window.md`.
 
-**B1 — `dnde_photon_eta_prime`, and `dnde_photon` on any final state
-carrying an η′.** Measured before and after on the same worktree by
+**B1 — `dnde_photon_eta_prime`, and `dnde_photon` on a final state whose
+η′ is in flight.** Measured before and after on the same worktree by
 reverting the constant, rebuilding the editable install, and diffing the
 two captures. The spectrum rises at every parent energy above rest and is
 unchanged at `E = M_η′`, where the kernel takes its rest-frame arm and
@@ -270,6 +287,29 @@ scalar probe of `rest_plus_eps` or `near_rest`. The four `X → γγ` line
 integrals now all equal their declared weight to a ratio of
 1.0000000000. `spectra.photon.{eta,long_kaon,short_kaon,omega,phi}` are
 bit-identical across the rebuild. Details: `task-5-eta-prime-line.md`.
+
+**B2 — `dnde_photon_phi`, and `dnde_photon` on a final state whose φ is
+in flight.** Same before/after method. The spectrum moves at every parent
+energy above rest and is unchanged at `E = M_φ`: 1/601 grid points at
+`E = M(1+1e-6)`, 331/601 at `1.5 M` and 474/601 at `5 M`, **262 and 449
+of them up** — the sign splits, because a relocation vacates one window
+and fills another rather than adding to what is there. The n-body path
+moves with it at `cme = 2.5 M_φ` (98/201 on `["phi", "phi"]`, 113/201 on
+`["phi", "eta"]`, 0/201 on `["eta", "eta"]`) and **not at the production
+threshold**, where the φ is at rest and the kernel takes the arm that adds
+no line: `["phi", "phi"]` at `cme = 2 M_φ` and `["phi", "eta"]` at
+`cme = M_φ + M_η` are both bit-identical across the rebuild. **The yield
+does not move**: the isolated line term integrates to 0.013092203 against
+the `BR(φ → ηγ) + BR(φ → η′γ) = 0.0130922` its weights declare, before and
+after, which is why the gate is a position assertion — a yield-only check
+passes on the unrepaired kernel, confirmed by running one. Inverting the
+boosted line term's outer edges recovers 59.8155 and 362.5189 MeV against
+the declared 59.8150 and 362.5190, where the shipped energies were 959.65
+and 656.94. On the corpus: 305 positions over 6 of this case's 10 value
+arrays, 233 up and 72 down, none in either `rest` or either
+`rest_plus_eps` array. `spectra.photon.{eta,eta_prime,omega,charged_kaon,
+long_kaon,short_kaon}` are bit-identical across the rebuild. Details:
+`task-6-phi-lines.md`.
 
 **B6 — both mediator `thermal_cross_section`, and `relic_density`
 through them.** Measured on the two corpus cases' own grids (570
@@ -368,8 +408,8 @@ Reach: B1 six arrays / 189 positions, B2 six / 305, B3 four / 350.
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
 rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
-it does not reconstruct it. B4, B5, B6, A1 and B1 have each written their
-own `CHANGELOG.md` entry already, all but B4's under `[Unreleased]` because
+it does not reconstruct it. B4, B5, B6, A1, B1 and B2 have each written
+their own `CHANGELOG.md` entry already, all but B4's under `[Unreleased]` because
 2.2.0 is released; Task 12 renames that heading rather than re-deriving
 it, and
 `preflight.sh --closing` greps for `## [<new version>]`, so it must.
@@ -391,7 +431,24 @@ it, and
 - **A composite covers only the arrays *every* named repair moves**
   (Task 5): two of A1's eight `eta_prime` arrays keep A1's declaration
   alone, because B1 moves nothing at their scalar probe. Naming B1 there
-  would be a label wider than its mechanism.
+  would be a label wider than its mechanism. Task 6 is the second
+  instance and lands on a different set: both `rest_plus_eps` arrays keep
+  A1 alone, and `near_rest.scalar_values` — which B1 did not reach —
+  joins the composite.
+- **A relation may declare an absolute floor, and only a relocation needs
+  one** (Task 6). `atol` is a field on all four relations, defaulting to
+  `0.0`; the runner compares at `max(budget.atol, relation.atol)`, and
+  `test_a_declared_absolute_floor_stays_under_its_arrays_zero_floor` caps
+  every declared floor below `tolerances.zero_floor` of the array it
+  covers, with `EXPECTED_FLOORED_ARRAYS` counting them. `A1+B2` declares
+  1e-20, one ulp of the plateau it cancels. Amends ADR-0001 a second time.
+- **A defect found in a repair's own area is filed, not folded in**
+  (Task 6). The φ omits a direct `φ → π⁰γ` line, which the B2 follow-up
+  asked to be checked before repairing and instructed be fixed in the same
+  PR. It is filed as its own follow-up instead: that instruction was
+  priced against a corpus regeneration that ADR-0001 removed, adding a
+  line raises the yield where B2 relocates it, and `deltas.REPAIRS` is a
+  closed set of ten that a new defect cannot silently join.
 - **A relation's budget is the case's own where the port is bit-faithful**
   (Task 4): A1 carries `tolerances.TABULATED_RTOL` = 1e-12 against a
   measured 0.0, because the capture is one platform's and the declared
@@ -537,6 +594,30 @@ relations that were never built and neither that were), this file, and
 this task re-points keys rather than adding them. `test/parity/data/`
 untouched.
 
+### Task 6 (B2)
+
+`rust/src/kernels/photon_tables.rs` (a `photon_line_energy` const fn all
+four `X → Yγ` energies now go through, the two repaired constants and
+their doc comments, the module docstring, two renamed tests, two repaired
+bit patterns), `test/test_core_photon_tables.py` (`SPECTRA["phi"]`, the
+module docstring, the renamed `TestPhysics` test, and a new line-position
+test), `test/parity/deltas.py` (the `atol` field on all four relations,
+"Absolute floors", `_A1_B2`, six re-pointed keys),
+`test/parity/test_parity.py` (the runner honors a relation's floor,
+`EXPECTED_FLOORED_ARRAYS`, the cap test),
+`test/parity/test_delta_models.py` and `test/parity/README.md` (stale
+roll-calls of which models had landed — both already wrong for B1),
+`CHANGELOG.md`,
+`docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`,
+`docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md` (new) with
+its `docs/followups/README.md` row,
+`../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`,
+`../references/corpus-repinning.md`,
+`../references/defect-blast-radius.md` (B1's and B2's measured reach),
+this file, and `task-6-phi-lines.md` (new). `EXPECTED_DECLARED_ARRAYS`
+stays 98 — this task re-points keys rather than adding them.
+`test/parity/data/` untouched.
+
 ### Task 13 (B6)
 
 `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
@@ -596,12 +677,13 @@ has no `hazma._core` test probes for the suite to import.
 ## Open Questions
 
 - **Do B1's and B2's declared arrays collapse into A1's?** Answered for
-  B1 (Task 5): they do, through a new `deltas.Composed` relation and the
-  label `A1+B1`, and they had to — A1 and B1 move 18 of the same
-  positions. Two of A1's eight `eta_prime` arrays keep A1's declaration
-  alone, because B1 reaches neither scalar probe. Task 6 repeats the
-  shape for `A1+B2` and re-derives which of φ's arrays B2 actually moves
-  rather than assuming six.
+  both. They do, through `deltas.Composed` and the labels `A1+B1`
+  (Task 5) and `A1+B2` (Task 6), and they had to: A1 and B1 share 18
+  positions on `eta_prime`, A1 and B2 share 90 of B2's 305 on `phi`. Each
+  composite leaves two of A1's eight arrays to A1 alone, but not the same
+  two — B1 spares the scalar probes of `rest_plus_eps` and `near_rest`,
+  B2 both `rest_plus_eps` arrays. Task 9 faces the same question for A3
+  and B3 on the two rho cases.
 - **Do A2's and A3's declared positions on the two rho cases actually
   overlap, or only appear to?** They are different mechanisms (an
   endpoint guard and a lost quadrature support) reaching the same arrays
@@ -619,14 +701,16 @@ has no `hazma._core` test probes for the suite to import.
   The sweep of the remaining `quad` call sites has not been done —
   [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
   carries it as its own first question.
-- **Will Group B's relation budgets survive their repairs?** B1's did,
-  and then some: the composite measured 2.1e-16 against the repaired
-  kernel — one ulp — where the standalone model reserved 1e-11. It is
-  declared at the case's own 1e-12 rather than tightened to what it
-  measures, for A1's reason (the capture is one platform's). B2 and B3
-  still carry 1e-11 and 1e-9 unmeasured; Tasks 6 and 9 measure. A repair
-  needing a *wider* budget has found something Task 3 did not model
-  (`rules.md` rule 2).
+- **Will Group B's relation budgets survive their repairs?** B1's did
+  (2.1e-16 against the repaired kernel, one ulp, where the standalone
+  model reserved 1e-11) and B2's did relatively (2.9e-14 worst), but B2
+  needed something the question did not anticipate: an absolute floor,
+  because two positions have no meaningful relative budget at all. Both
+  are declared at the case's own 1e-12 rather than tightened to what they
+  measure, for A1's reason (the capture is one platform's). B3 still
+  carries 1e-9 unmeasured; Task 9 measures. A repair needing a *wider*
+  `rtol` has found something Task 3 did not model (`rules.md` rule 2) —
+  a floor is a different object and is capped by its own test.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
   closes?** They are the last evidence that a repaired value was ever
   checked against a non-Rust implementation. Anticipated ADR.
@@ -656,11 +740,11 @@ has no `hazma._core` test probes for the suite to import.
   the worked precedent for A2, A3 and A4 — they need no new machinery.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4) and B1 (Task 5)
-  are the repairs that have changed a library value; every other corpus
-  array is still compared against its stored value.
+- B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4), B1 (Task 5) and
+  B2 (Task 6) are the repairs that have changed a library value; every
+  other corpus array is still compared against its stored value.
   `test/parity/deltas.py` declares 98 arrays — 30 for B4, 6 for B5, 6 for
-  B6, 50 for A1 alone and 6 for the composite `A1+B1` — and
+  B6, 44 for A1 alone, 6 for `A1+B1` and 6 for `A1+B2` — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff. Re-derive the split with
   `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
@@ -671,21 +755,27 @@ has no `hazma._core` test probes for the suite to import.
   repair (Findings). On this worktree Task 4's defective build
   reproduced the stored corpus bit for bit on all 10,045 A1 positions,
   so the two agreed; that is this platform, not a general fact.
-- B2 and B3 have finished, corpus-checked delta models in
-  `deltas.DELTA_MODELS`, and B3's arrays are still undeclared, so Task 9
-  adds keys and bumps `EXPECTED_DECLARED_ARRAYS` in the ordinary way.
-  **Task 6 cannot**: A1 already declares every array B2 moves, and one
-  key holds one `Delta`, so it composes as `A1+B2` the way Task 5 did for
-  B1 — `task-5-eta-prime-line.md` is the worked precedent, and the
-  position counts in `task-3-closed-form-deltas.md` are to be re-derived
-  against the repaired kernel rather than pasted. Task 5's held exactly;
-  that is one case, not a rule.
-- The delta layer now carries four relations. A new repair picks
-  `Additive` when the physics names the term, `Exact` when a closed form
-  transforms the stored array, `Reference` when only a second
-  implementation can say what the value should be, and `Composed` when a
-  second repair moves an array the first already declares; all four
-  answer `expected`, and the runner needs no change for any of them.
+- B3 is the last Group B model still undeclared, so Task 9 adds keys and
+  bumps `EXPECTED_DECLARED_ARRAYS` in the ordinary way — unless A3 has
+  already declared the rho arrays by then, in which case it composes.
+  Task 3's predicted reach has now held exactly twice (B1: 6 arrays, 189
+  positions; B2: 6 arrays, 305 positions, 233 up and 72 down), but B2's
+  six were not the six a reader would have guessed from B1's, so
+  re-derive *which* arrays as well as how many
+  (`../rules.md` rule 11).
+- A relation may now declare an absolute floor as well as an `rtol`
+  (Task 6). Reach for one only where the prediction cannot resolve the
+  repaired value at some magnitude the array takes — a relocation that
+  cancels a term it did not compute is the only case so far — and never
+  in place of an `rtol` a measurement says is too tight.
+- The delta layer carries four relations. A new repair picks `Additive`
+  when the physics names the term, `Exact` when a closed form transforms
+  the stored array, `Reference` when only a second implementation can say
+  what the value should be, and `Composed` when a second repair moves an
+  array the first already declares; all four answer `expected`, and a
+  fifth would need no runner change to be compared. The runner does read
+  one field beyond `expected` — a relation's optional `atol` — which
+  Task 6 added and only `A1+B2` sets.
 
 **Currently risky / unknown:**
 

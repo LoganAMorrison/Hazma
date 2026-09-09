@@ -126,6 +126,12 @@ EXPECTED_PORTABILITY_ZEROS = 4
 #: defending in a diff.
 EXPECTED_DECLARED_ARRAYS = 98
 
+#: How many of those hold to an absolute floor as well as a relative one
+#: (`deltas`, "Absolute floors"). Six: the `spectra.photon.phi` arrays the
+#: `A1+B2` composite covers, where relocating a line cancels it back out of
+#: the A1 capture.
+EXPECTED_FLOORED_ARRAYS = 6
+
 
 def _drop_unpinnable(
     live: np.ndarray,
@@ -229,11 +235,18 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
         )
     selected = compare & declared
     relation = delta.relation
+    # The relation's own floor rather than the case's, where it declares
+    # one: a prediction that cancels a term far larger than the result
+    # cannot resolve below that term's last bit, and no relative budget
+    # describes a position whose predicted value is exactly zero
+    # (deltas.py, "Absolute floors"). The staleness check below keeps the
+    # case's floor, because whether the repair happened at all is a
+    # different question from how precisely it can be predicted.
     np.testing.assert_allclose(
         live[selected],
         predicted[selected],
         rtol=relation.rtol,
-        atol=budget.atol,
+        atol=max(budget.atol, relation.atol),
         equal_nan=True,
         err_msg=f"{where}: does not satisfy the {delta.repair} relation "
         f"({relation.why})",
@@ -632,6 +645,38 @@ def test_every_declaration_points_at_a_delta_model() -> None:
     models = set(map(id, deltas.DELTA_MODELS.values()))
     for key, delta in deltas.DECLARED_DELTAS.items():
         assert id(delta) in models, f"{key}: {delta.repair} is not a DELTA_MODELS entry"
+
+
+def test_a_declared_absolute_floor_stays_under_its_arrays_zero_floor(
+    stored_arrays: ArrayLoader,
+) -> None:
+    """A relation's ``atol`` may not grow into a budget.
+
+    Almost every relation holds at ``atol = 0.0``; the exception is a
+    composition that relocates a term and so cannot resolve below the
+    cancelled term's last bit (`deltas`, "Absolute floors"). The ceiling
+    is what the corpus already tolerates where it stored an exact zero —
+    `tolerances.zero_floor`, a fraction of the array's own median non-zero
+    magnitude — so a floor that crept up to absorb a real shift would
+    cross it and fail here rather than pass quietly.
+    """
+    declared = [
+        (key, delta)
+        for key, delta in deltas.DECLARED_DELTAS.items()
+        if delta.relation.atol > 0.0
+    ]
+    for (case_name, label, suffix), delta in declared:
+        blocks = {b["label"]: b for b in MANIFEST["cases"][case_name]["blocks"]}
+        pinned = stored_arrays(case_name)[blocks[label]["arrays"][suffix]["key"]]
+        ceiling = tolerances.zero_floor(pinned)
+        assert delta.relation.atol < ceiling, (
+            f"{case_name}[{label}].{suffix}: the {delta.repair} relation "
+            f"declares atol {delta.relation.atol:.1e}, at or above the "
+            f"{ceiling:.1e} this array tolerates for a stored zero"
+        )
+    # The mechanism is narrow, and stays narrow only if a new floor has to
+    # be counted rather than appearing among the other 90-odd arrays.
+    assert len(declared) == EXPECTED_FLOORED_ARRAYS
 
 
 def test_the_declared_arrays_are_counted() -> None:

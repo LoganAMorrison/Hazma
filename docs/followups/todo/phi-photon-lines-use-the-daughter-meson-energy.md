@@ -8,7 +8,10 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.2-photon-table-family.md`)
 - **Scope:** cross-cutting (a published spectrum has a feature in the
   wrong place; the repair is gated by the `cython-to-rust` corpus)
-- **Status:** open
+- **Status:** open — **repaired** 2026-09-07 as roster entry B2,
+  `projects/parity-pinned-defect-repair` Task 6. The file stays here
+  until that project's close (Task 12) moves all of its follow-ups to
+  `done/` in one sweep, so the inbound references are repointed once.
 - **Triggers / blockers:** **corpus re-pinning only** — no ordering
   constraint against `cython-to-rust` Phase 06 Task 6.4. Task 6.4 deletes
   the four surviving `.pyx`; this defect's twin,
@@ -51,9 +54,9 @@ hazma/spectra/_photon/_phi.pyx:114  res += BR_PHI_TO_ETAP_A * boost_delta_functi
 ```
 
 (Quoted from the pre-port sources, which Task 4.2 deleted in the same
-PR as the swap — `git show 665aed5:<path>` recovers them. The
-expressions themselves live on unchanged in
-`rust/src/kernels/photon_tables.rs`.)
+PR as the swap — `git show 665aed5:<path>` recovers them. The port
+carried the expressions over unchanged; the repair below is what
+replaced them.)
 
 The local's name — `eng_eta` — says what the expression computes. It is
 the η's energy, reused for the η′ without being renamed, and used for
@@ -98,12 +101,21 @@ placed correctly.
    sibling normalization defect, no downstream result can be corrected
    by a constant factor.
 
-The port's tests already encode the correct statement alongside the
-shipped one, so the repair mostly means flipping which is asserted:
-`the_phi_line_energies_are_the_daughter_mesons` in
+The port's tests already encoded the correct statement alongside the
+shipped one, so the repair was mostly a matter of flipping which is
+asserted. Both were renamed to state the repaired physics over all four
+`X → Y γ` lines rather than the φ's two against the ω's:
+`every_line_energy_is_the_photons_not_the_daughters` in
 `rust/src/kernels/photon_tables.rs`, and
-`TestPhysics::test_the_phi_lines_sit_at_the_daughter_mesons_energy` in
-`test/test_core_photon_tables.py`.
+`TestPhysics::test_every_line_sits_at_the_photons_energy_not_the_daughters`
+in `test/test_core_photon_tables.py`. Both constants now go through one
+`photon_line_energy(parent, daughter)`, so the `+` form has no site left
+to be written at.
+
+The corpus was not regenerated. `test/parity/deltas.py` declares the
+relocation as the composite `A1+B2` on the six `spectra.photon.phi`
+arrays both repairs move, and the two `rest_plus_eps` arrays keep A1's
+declaration alone.
 
 ## Entry points
 
@@ -111,7 +123,10 @@ shipped one, so the repair mostly means flipping which is asserted:
   `PHI_TO_ETAP_A_ENERGY`, and `OMEGA_TO_PI0_A_ENERGY` /
   `OMEGA_TO_ETA_A_ENERGY` beside them, which are the control.
 - `test/test_core_photon_tables.py` —
-  `TestPhysics::test_the_phi_lines_sit_at_the_daughter_mesons_energy`.
+  `TestPhysics::test_every_line_sits_at_the_photons_energy_not_the_daughters`
+  and `TestPhysics::test_each_line_sits_where_its_rest_frame_energy_declares`,
+  which recovers each line's rest-frame energy from the kernel's own
+  boosted output.
 - `test/parity/tolerances.py` — `spectra.photon.phi` is `TABULATED`
   (`rtol = 1e-12`), so nothing absorbs this quietly.
 - `hazma/spectra/_photon/data/phi_photon.csv` — the `eta_a` / `etap_a`
@@ -123,16 +138,25 @@ shipped one, so the repair mostly means flipping which is asserted:
 
 ## Risks / open questions
 
-- **The φ may also be missing a `φ → π⁰γ` line entirely, and this is not
-  established.** `constants.pxd` defines `BR_PHI_TO_PI0_A = 1.32e-3`, no
-  `.pyx` reads it, and the ω adds exactly the analogous line for its own
-  `π⁰γ` mode. The φ's `pi0_a` column integrates to 0.002612, against
-  `2 × BR(π⁰ → γγ) × BR(φ → π⁰γ) = 0.002609` for the π⁰'s decay photons
-  alone — suggestive of the direct photon being absent, but the two
-  agreeing to 0.1% is weaker evidence than it looks, since the tables are
-  truncated at low energy. **Check this properly before repairing the two
-  lines above**; if it holds, the same PR should add the missing line
-  rather than leaving a third declared change for later.
-- Sequencing against the corpus is the real cost, as with its siblings:
-  one declared regeneration after Phase 06 Task 6.4 covering all four
-  defects is cheaper than four.
+- **Resolved: the φ *is* missing a `φ → π⁰γ` line, and it is tracked
+  separately.** The check this bullet asked for was run in Task 6 and the
+  ω supplied the control the truncation argument needed. Normalizing each
+  `pi0_a` column by its own `BR(X → π⁰γ)` gives 1.978 for the φ and 1.951
+  for the ω, against `2 BR(π⁰ → γγ) = 1.976` — so both columns hold the
+  π⁰'s own two decay photons and nothing else, and the ω's separate
+  direct-photon line is where its direct photon comes from. The φ has no
+  such line, and `BR_PHI_TO_PI0_A` (now `rust/src/constants.rs:359`) is
+  still read by nothing.
+
+  It is **not** folded in here, contrary to what this bullet used to
+  instruct. That instruction was priced against regenerating the corpus
+  once for several changes; under the declared-delta mechanism
+  (`projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`)
+  the corpus is never regenerated and each repair declares its own delta,
+  so batching saves nothing. It is also a different defect: adding a line
+  changes the φ's yield, where B2 relocates it and leaves the yield
+  exactly where it was. Tracked as
+  [`phi-omits-its-direct-pi0-photon-line.md`](phi-omits-its-direct-pi0-photon-line.md).
+- Sequencing against the corpus was expected to be the real cost. It was
+  not: the declared-delta mechanism made each repair independent, and no
+  regeneration happened for any of them.

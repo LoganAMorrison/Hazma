@@ -17,7 +17,7 @@ kernel; every comparison is against ``data/*.npz``, captured from Cython
 at kernel digest ``f5e6e269be47`` and never rewritten
 (``../rules.md`` rule 1). So these tests were falsifiable on the tree
 that carried all three defects, and they stay falsifiable as the repairs
-land one at a time: B1's has, and B2's and B3's have not.
+land one at a time: B1's and B2's have, and B3's has not.
 
 The three arguments
 -------------------
@@ -31,12 +31,12 @@ stored arrays, the eta reads ``2 BR`` and so do both neutral kaons — and
 the eta-prime reads ``1 BR``, which is the defect.
 
 **B2** — in ``X -> Y gamma`` the photon carries ``(M**2 - m**2) / (2 M)``
-and the meson ``(M**2 + m**2) / (2 M)``. The phi kernel boosts the
-second as if it were the first, which puts both lines *above* the
+and the meson ``(M**2 + m**2) / (2 M)``. The shipped phi kernel boosted
+the second as if it were the first, which put both lines *above* the
 spectrum's true endpoint, in a region where the boosted continuum is
 identically zero. The stored arrays have a two-tread staircase there
 whose treads are exactly the two plateau heights at the *shipped*
-energies — support the repaired kernel will not have, at energies the
+energies — support the repaired kernel does not have, at energies the
 corrected form does not produce.
 
 **B3** — the boost carries a ``1 / E'`` that belongs to its kernel, not
@@ -587,9 +587,10 @@ def test_a_two_body_decay_splits_the_parent_mass() -> None:
 #: than silently re-scoped (`../rules.md` rule 11).
 EXPECTED_REACH = {"B1": (6, 189), "B2": (6, 305), "B3": (4, 350)}
 
-#: Which corpus cases each unlanded model reaches, from the roster in
+#: Which corpus cases each model reaches, from the roster in
 #: ``references/defect-blast-radius.md``. A repair task turns these into
-#: `deltas.DECLARED_DELTAS` keys.
+#: `deltas.DECLARED_DELTAS` keys — B1's and B2's are now the composites
+#: ``A1+B1`` and ``A1+B2``, because A1 declares the same arrays.
 MODEL_CASES = {
     "B1": ("spectra.photon.eta_prime",),
     "B2": ("spectra.photon.phi",),

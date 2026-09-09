@@ -168,11 +168,24 @@ Blocks: all, every non-zero position — it is an overall factor.
 
 ### B1 — η′ line weight (1 case)
 
-`spectra.photon.eta_prime`. All blocks, at the line's image only.
+`spectra.photon.eta_prime`, at the line's image only. **Measured against
+the repaired kernel by Task 5:** 189 positions over six of the case's ten
+value arrays, all upward. Not "all blocks" — both `rest` arrays are
+untouched, because that branch adds no line at all, and so are the scalar
+probes of `rest_plus_eps` and `near_rest`, where the probe falls outside
+the line's boosted window. `../task-notes/task-5-eta-prime-line.md` has
+the per-array table.
 
 ### B2 — φ line energies (1 case)
 
-`spectra.photon.phi`. All blocks, at both lines' images only.
+`spectra.photon.phi`, at the four line images — two shipped, two
+repaired. **Measured against the repaired kernel by Task 6:** 305
+positions over six of the case's ten value arrays, 233 up and 72 down,
+which is what relocating a line rather than adding one looks like. Not
+"all blocks": both `rest` arrays take the no-line branch, and at
+`rest_plus_eps` the window is 2.8e-06 wide in relative energy, too narrow
+for any grid point to fall inside a shipped or a repaired line.
+`../task-notes/task-6-phi-lines.md` has the per-array table.
 
 ### B3 — rho rest-frame branch (2 cases)
 

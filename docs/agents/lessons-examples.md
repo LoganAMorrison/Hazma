@@ -1305,3 +1305,37 @@ own decay length, so they never had the pathology the Rust kernels' fixed
 exposes the defect (0.765 relative error at the worst point). An oracle
 has to be built from the shape that actually breaks, and the way to know
 it is: revert the fix and watch the test go red.
+
+### composed-entry-point-inherits-the-branch-caveat
+
+PR #95 moved both φ photon line energies and measured the impact carefully:
+`dnde_photon_phi` moves at every parent energy above rest, and a φ **exactly**
+at rest does not, because `photon_tables::branch` returns `Branch::RestFrame`
+at `E − m < DBL_EPSILON` and that arm adds no line at all. The `CHANGELOG.md`
+entry stated both facts — and then said `hazma.spectra.dnde_photon` "moves for
+any final state containing a φ", which the first fact contradicts.
+
+Review supplied the counterexample: `dnde_photon(E, 2 m_phi, ["phi", "phi"])`
+puts both φs exactly at rest, so nothing the repair touched is reachable.
+Measured across a real revert-and-rebuild it is bit-identical, as is
+`["phi", "eta"]` at `cme = m_phi + m_eta`, while `["phi", "phi"]` at
+`cme = 2.5 m_phi` moves at 98 of 201 grid points.
+
+The same overstatement was already in the merged entries for the two sibling
+repairs — the η′ line weight and the boost-integral window — each one sentence
+after its own "a parent **exactly** at rest is unaffected". Both were fixed in
+the same sweep:
+
+```text
+$ rg -n --hidden 'any final state (containing|carrying)' \
+      projects/ docs/ hazma/ test/ .claude/ .codex/ README.md CHANGELOG.md
+CHANGELOG.md:39                     # the phi entry (this PR)
+CHANGELOG.md:89                     # the boost-window entry
+projects/.../task-notes/task-6-phi-lines.md:525
+projects/.../task-notes/README.md:291
+```
+
+The pattern to watch for: a paragraph that establishes a branch-scoped caveat
+about a kernel and then makes an unscoped claim about a function that composes
+it. Grep the impact paragraph for "any", and for each occurrence ask which
+branch of the underlying kernel that "any" reaches.
