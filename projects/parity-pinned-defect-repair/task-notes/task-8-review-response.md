@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18
 **Reviewed head:** `278b1ee9602e26cacb1caea12c4320fce5033960`
-**Status:** In Progress — fixes prepared locally; published CI pending
+**Status:** Complete — published fixes passed CI at 3d124214
 **Scope:** Respond to the supplied REQUEST CHANGES review; no kernel change.
 
 ## Assessment
@@ -94,7 +94,7 @@ gives **309 arrays, 86,179 values; zero changed arrays**. This includes
 all six A3 corpus cases, seven pion energy grids and two generic two-pion
 grids. Source changes in the Rust kernel are comments only.
 
-## Verification
+## Verification — local review before 3d124214
 
 The Linux replay substitutes the three logged values at absolute indices
 144, 146 and 148 into the captured vector array, and calls the production
@@ -148,7 +148,7 @@ formatting, documentation, and citation checks were repeated after them.
 This is standalone review-respond work: no commit, push, or fresh remote CI
 is claimed. The pushed head's CI remains red until the fixes are published.
 
-## Stale-state sweep
+## Stale-state sweep — local review before 3d124214
 
 Commands were run after edits, and repeated after this block was pasted.
 Filename lists below are folded from sorted output; all references to
@@ -282,7 +282,46 @@ and measured grid address convergence; headings and status align the
 records. No production expression changed. Fresh remote CI is explicitly
 outstanding rather than represented by the local replay.
 
-## Remaining verification
+## Published verification
 
-Publish through commit-and-pr and observe the complete CI matrix. Task 8
-remains In Progress; request ITERATE until that verification is available.
+The fixes were committed and pushed as
+`3d1242144a85a9c8467880b7143e3358d48003c9`. The remote branch and local
+HEAD matched.
+[CI run 35424652888](https://github.com/LoganAMorrison/Hazma/actions/runs/35424652888)
+completed successfully on that exact code revision:
+
+```sh
+gh run view 35424652888 --json headSha,conclusion,url,jobs --jq '{headSha,conclusion,url,jobs: [.jobs[] | {name,conclusion}]}'
+```
+
+```text
+headSha: 3d1242144a85a9c8467880b7143e3358d48003c9
+conclusion: success
+Rust (fmt, clippy, test): success
+Test (ubuntu-latest, py3.13): success
+Test (ubuntu-latest, py3.10): success
+Test (ubuntu-latest, py3.12): success
+Test (ubuntu-latest, py3.11): success
+Test (ubuntu-latest, py3.14): success
+Lint: success
+Test (macos-latest, py3.14): success
+```
+
+The output above is folded from the command's JSON. All eight checks
+passed, including both previously failing Linux jobs. Task 8 is Complete;
+request ACCEPT. The local-review sections above remain dated evidence of
+the earlier uncommitted state, not claims about the published head.
+
+### Completion status sweep
+
+```sh
+rg -n --hidden 'review fixes prepared|prepared locally|pushed head.*CI|pushed head.*red|updated CI pending|published CI pending|current status and review|remains In Progress|no commit, push|standalone review-respond' projects/parity-pinned-defect-repair/ docs/agents/ .claude/ .codex/
+```
+
+Before: EDITED the Task 8 working-memory row and handoff, task-note status
+and Open Questions, review-response status and remaining-verification
+section, and the lesson example's current-state wording. KEPT the Task 7
+project-status history. After: remaining hits are in explicitly historical
+verification/sweep records, the still-active project's status, and this
+quoted command. No active Task 8 status says the fixes await publication
+or the code's CI remains red. The project itself remains In Progress.

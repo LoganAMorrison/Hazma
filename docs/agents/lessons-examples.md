@@ -158,8 +158,9 @@ cites a real PR.
   Changed and Numerical impact headings. Adding the PR number makes the
   measurements attributable; the initial verification and stale-state
   sections now identify their commit because their local Complete claim
-  preceded failing CI. The current status and review-response note carry
-  the pending-CI state instead of rewriting old command output.
+  preceded failing CI. The review response recorded the pending-CI state
+  explicitly, then added published verification after the fixes passed,
+  without rewriting old command output.
 
 ### flat-vs-sectioned-numbering
 

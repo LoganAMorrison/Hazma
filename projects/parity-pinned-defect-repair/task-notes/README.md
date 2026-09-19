@@ -30,7 +30,7 @@ section tracks live *status*.
 | 5 | Repair B1 — η′ line weight | 3, 4 | **Complete** — declared as the composite `A1+B1` | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
-| 8 | Repair A3 — charged-pion forward cone | 7 | **In Progress** — review fixes prepared, updated CI pending | `task-8-charged-pion-cone.md` |
+| 8 | Repair A3 — charged-pion forward cone | 7 | **Complete** — review fixes verified by CI | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
@@ -720,10 +720,10 @@ has no `hazma._core` test probes for the suite to import.
 
 ## Task 8 handoff addition
 
-PR #97 review fixes are prepared locally; the pushed head's Linux CI is
-red. See `task-8-review-response.md`. Keep Task 8 In Progress until the
-fixes are published and CI passes. The kernel's measured values are
-unchanged by the review fixes.
+PR #97 review fixes are published at `3d124214`; all eight checks in
+CI run 35424652888 passed, including the previously failing Linux jobs.
+See `task-8-review-response.md`. Task 8 is Complete. The kernel's
+measured values are unchanged by the review fixes.
 
 The pion repair preserves its captured oracle and leaves the outer rho
 quadrature unchanged. Its remaining support failure is tracked in

@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18
 **Project:** parity-pinned-defect-repair
-**Status:** In Progress — review fixes prepared; updated CI pending
+**Status:** Complete — review fixes passed CI at 3d124214
 **Plan References:** `../PLAN.md`, Tasks 8 and 9; `../rules.md`
 **Related ADRs:** ADR-0001; ADR-0002
 **Depends On:** Task 7
@@ -269,11 +269,9 @@ The unchanged vector muon-only arrays retain their original case budget.
 
 ## Open Questions
 
-PR #97's pushed head has failing Linux CI. Local review fixes and their
-verification are recorded in
-[`task-8-review-response.md`](task-8-review-response.md); completion awaits
-publishing those changes and a green CI run. The outer rho support repair
-is tracked in
+The review fixes passed all eight CI checks at `3d124214`; evidence is in
+[`task-8-review-response.md`](task-8-review-response.md). No Task 8 gate
+remains open. The separate outer rho support repair is tracked in
 [`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
 
 ## Plan Impact
