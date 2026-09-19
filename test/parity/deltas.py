@@ -871,6 +871,46 @@ _A2 = Delta(
 )
 
 
+# A3 -- restrict the charged-pion angular integral to its physical support.
+_A3 = Delta(
+    repair="A3",
+    positions=MOVED,
+    relation=Reference(
+        reference=oracle_reference.captured("A3"),
+        rtol=1e-12,
+        why="independently compiled Task 2 Cython capture of the same clipped "
+        "quadrature; measured at most 1.55e-13 relative over the declared "
+        "non-scalar-mediator arrays. Retains the pion's existing 1e-12 "
+        "budget and is tighter than the nested consumers' 1e-9 budget.",
+    ),
+    measured="The before/after builds move 6,359 of 71,570 values in six "
+    "corpus cases. The pion moves 245 positions, each rho 528, each vector "
+    "entry point 2,013, and the scalar mediator 1,032. Rho rest positions "
+    "move too: Task 9 must compose B3 with A3. The outer rho support "
+    "defect is a separate follow-up.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md",
+)
+
+_A3_B4 = Delta(
+    repair="A3+B4",
+    positions=MOVED,
+    relation=Composed(
+        base=_A3.relation,
+        added=(_B4.relation,),
+        rtol=_B4.relation.rtol,
+        why="A3's captured scalar decay includes the original half-size FSR; "
+        "add B4's independently evaluated FSR half. The total and term use "
+        "different adaptive partitions, retaining B4's measured 1e-3 "
+        "budget (3.08e-4 worst here). A dedicated rest-frame comparison "
+        "holds A3 to 1e-12 without this quadrature cancellation.",
+    ),
+    measured="A3 changes 1,032 positions already covered by B4, all in "
+    "default-mode blocks at scalar masses 550 and 900 MeV. Their 20 "
+    "arrays compose; B4 keeps the ten arrays at 250 MeV alone.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md",
+)
+
+
 # ---------------------------------------------------------------------------
 # A1 + B1 -- the six eta-prime arrays both repairs move
 # ---------------------------------------------------------------------------
@@ -958,6 +998,217 @@ _A1_B2 = Delta(
 #: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
 #: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
+    # A3: captured inner-pion repair, including the rho rest blocks.
+    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_550.rest.total", "values"): _A3,
+    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_550.rest.pi_pi", "values"): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.rest_plus_eps.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.rest_plus_eps.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.near_rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.near_rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.boosted_mild.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.boosted_mild.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.boosted_strong.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.boosted_strong.pi_pi",
+        "values",
+    ): _A3,
+    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_900.rest.total", "values"): _A3,
+    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_900.rest.pi_pi", "values"): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.rest_plus_eps.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.rest_plus_eps.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.near_rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.near_rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.boosted_mild.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.boosted_mild.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.boosted_strong.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.boosted_strong.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.rest_plus_eps.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.rest_plus_eps.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.near_rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.near_rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.boosted_mild.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.boosted_mild.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.boosted_strong.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_550.boosted_strong.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.rest_plus_eps.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.rest_plus_eps.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.near_rest.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.near_rest.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.boosted_mild.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.boosted_mild.pi_pi",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.boosted_strong.total",
+        "values",
+    ): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v_pt",
+        "mv_900.boosted_strong.pi_pi",
+        "values",
+    ): _A3,
+    ("spectra.photon.charged_pion", "near_rest", "scalar_values"): _A3,
+    ("spectra.photon.charged_pion", "near_rest", "values"): _A3,
+    ("spectra.photon.charged_pion", "boosted_mild", "scalar_values"): _A3,
+    ("spectra.photon.charged_pion", "boosted_mild", "values"): _A3,
+    ("spectra.photon.charged_pion", "boosted_strong", "scalar_values"): _A3,
+    ("spectra.photon.charged_pion", "boosted_strong", "values"): _A3,
+    ("spectra.photon.charged_rho", "rest", "scalar_values"): _A3,
+    ("spectra.photon.charged_rho", "rest", "values"): _A3,
+    ("spectra.photon.charged_rho", "rest_plus_eps", "scalar_values"): _A3,
+    ("spectra.photon.charged_rho", "rest_plus_eps", "values"): _A3,
+    ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3,
+    ("spectra.photon.charged_rho", "near_rest", "values"): _A3,
+    ("spectra.photon.charged_rho", "boosted_mild", "scalar_values"): _A3,
+    ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3,
+    ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3,
+    ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3,
+    ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3,
+    ("spectra.photon.neutral_rho", "rest", "values"): _A3,
+    ("spectra.photon.neutral_rho", "rest_plus_eps", "scalar_values"): _A3,
+    ("spectra.photon.neutral_rho", "rest_plus_eps", "values"): _A3,
+    ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3,
+    ("spectra.photon.neutral_rho", "near_rest", "values"): _A3,
+    ("spectra.photon.neutral_rho", "boosted_mild", "scalar_values"): _A3,
+    ("spectra.photon.neutral_rho", "boosted_mild", "values"): _A3,
+    ("spectra.photon.neutral_rho", "boosted_strong", "scalar_values"): _A3,
+    ("spectra.photon.neutral_rho", "boosted_strong", "values"): _A3,
     ("spectra.photon.muon", "rest", "values"): _A2,
     # A1.
     ("spectra.photon.eta", "rest_plus_eps", "values"): _A1,
@@ -1076,102 +1327,102 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.rest.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.rest.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.rest_plus_eps.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.rest_plus_eps.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.near_rest.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.near_rest.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.boosted_mild.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.boosted_mild.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.boosted_strong.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_550.boosted_strong.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.rest.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.rest.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.rest_plus_eps.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.rest_plus_eps.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.near_rest.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.near_rest.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.boosted_mild.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.boosted_mild.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.boosted_strong.default",
         "values",
-    ): _B4,
+    ): _A3_B4,
     (
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
         "ms_900.boosted_strong.default",
         "scalar_values",
-    ): _B4,
+    ): _A3_B4,
     # B5.
     ("spectra.neutrino.charged_pion", "near_rest", "values"): _B5,
     ("spectra.neutrino.charged_pion", "near_rest", "scalar_values"): _B5,
@@ -1220,6 +1471,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 DELTA_MODELS: dict[str, Delta] = {
     "A1": _A1,
     "A2": _A2,
+    "A3": _A3,
+    "A3+B4": _A3_B4,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
     "B1": _B1,

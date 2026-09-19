@@ -17,6 +17,20 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **Charged-pion photons now retain their forward cone.** The angular
+  integral follows the physical support, including the electron
+  radiative channel's final sliver. At a pion energy of 1396 MeV,
+  `dnde_photon_charged_pion(900, 1396)` changes from zero to
+  3.585860e-7 MeV^-1. Across 2,001-point logarithmic grids from
+  0.01 MeV to 1.01 times the parent energy, the largest measured change
+  is 2.540805e-5 MeV^-1 at a 5 GeV parent. The pion rest spectrum is
+  unchanged. Rho and mediator decay spectra inherit the correction;
+  the generic two-pion spectrum and scalar/vector pion-decay channels
+  move by up to 2.230014e-6 MeV^-1 on a 301-point grid at
+  `cme = 2792 MeV`, while their production-threshold grids are unchanged.
+  The separate rho outer-integral support defect remains open.
+  Details: `projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md`.
+
 - **The muon photon spectrum at rest now reaches its kinematic endpoint.**
   `dnde_photon_muon` restores 0.254263793 MeV of support up to
   52.827951570 MeV, adding a net 5.44538e-8 photons per decay. The largest

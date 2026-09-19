@@ -34,6 +34,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the φ photon spectrum omits its direct `φ → π⁰γ` line](todo/phi-omits-its-direct-pi0-photon-line.md) | 2026-09-07 | parity-pinned-defect-repair Task 6 | cross-cutting |
 | [the muon photon spectrum's rest frame stops short of the endpoint](todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | 2026-08-16 | cython-to-rust Task 4.3 | commit |
 | [the charged-pion photon spectrum returns zero in the forward cone](todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | 2026-08-17 | cython-to-rust Task 4.4 | cross-cutting |
+| [rho photon outer boost can miss its support](todo/rho-photon-outer-boost-misses-support.md) | 2026-09-18 | parity-pinned-defect-repair Task 8 | cross-cutting |
 | [both rho photon spectra return the boost integrand at rest](todo/rho-rest-frame-branch-returns-the-integrand.md) | 2026-08-18 | cython-to-rust Task 4.5 | cross-cutting |
 | [four scalar elastic cross sections cancel away every significant bit](todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md) | 2026-08-18 | closing the parity-corpus follow-up | cross-cutting |
 | [the review-lessons ledger is past its working-set cap](todo/lessons-ledger-over-its-working-set-cap.md) | 2026-08-19 | PR #72 review round 1 | cross-cutting |
