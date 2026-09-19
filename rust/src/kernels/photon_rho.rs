@@ -121,10 +121,8 @@ const RHO_QUAD: QuadOpts<'static> = QuadOpts {
 /// The neutral ρ's rest-frame integrand, MeV⁻².
 ///
 /// `2 · (dN/dE)_{π±}(E, m_ρ/2) / E`. The factor 2 is the two charged
-/// pions; the `1/E` is the flat-boost kernel's, not the spectrum's, which
-/// is why this is not itself a spectrum and why the rest-frame branch of
-/// [`dnde_photon_neutral_rho`] returning it is dimensionally odd (see
-/// there).
+/// pions; the `1/E` is the flat-boost kernel's, not the spectrum's, so
+/// the rest-frame branch removes it to return a spectrum in MeV⁻¹.
 ///
 /// The shipped object emits the doubling as `fadd d0, d9, d9`, i.e.
 /// `x + x`, which is the same double as `2 * x` for every finite `x`; it
@@ -194,8 +192,9 @@ fn boost_window(e: f64, erho: f64) -> (f64, f64, f64) {
 /// The three branches, in the `.pyx`'s order:
 ///
 /// 1. `E_ρ < m_ρ` → exactly `0.0`.
-/// 2. `E_ρ − m_ρ < DBL_EPSILON` → the rest frame, returned as the bare
-///    integrand. A `NaN` `E_ρ` fails both comparisons and falls through to
+/// 2. `E_ρ − m_ρ < DBL_EPSILON` → the rest-frame spectrum, obtained
+///    by multiplying the integrand by `E`. A `NaN` `E_ρ` fails both
+///    comparisons and falls through to
 ///    the quadrature, where `β` and `γ` are `NaN`, the limits are `NaN`
 ///    and the result is `NaN` — the Cython does the same.
 /// 3. Otherwise the quadrature between `γE(1∓β)` with the `1/(2βγ)`
@@ -218,7 +217,7 @@ fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64) -> f64 {
     // is the only branch that is finite — `β = 0` would make the
     // prefactor infinite and the integration range empty.
     if erho - MASS_RHO < f64::EPSILON {
-        return integrand(e);
+        return e * integrand(e);
     }
 
     let (emin, emax, pre) = boost_window(e, erho);
@@ -250,12 +249,8 @@ fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64) -> f64 {
 ///
 /// `dN/dE` in MeV⁻¹, and exactly `0.0` for a ρ below its own rest mass.
 ///
-/// **At `E_ρ` within one `DBL_EPSILON` of `m_ρ` the returned quantity is
-/// the integrand, not the spectrum** — `2·(dN/dE)_{π±}(E, m_ρ/2)/E`, which
-/// carries an extra `1/E` and so is MeV⁻², not MeV⁻¹. The `.pyx` does
-/// this, the parity corpus pins it (its `rest_plus_eps` block), and rule 1
-/// keeps it. It is recorded as a defect in
-/// `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md`.
+/// At rest, returns the sum of the daughter spectra in MeV⁻¹. The
+/// integrand's extra `1/E` belongs only to the boosted branch.
 #[must_use]
 pub fn dnde_photon_neutral_rho(egam: f64, erho: f64) -> f64 {
     boosted(egam, erho, neutral_rho_integrand)
@@ -271,8 +266,7 @@ pub fn dnde_photon_neutral_rho(egam: f64, erho: f64) -> f64 {
 /// # Returns
 ///
 /// `dN/dE` in MeV⁻¹, and exactly `0.0` for a ρ below its own rest mass.
-/// The rest-frame branch carries the same units defect as
-/// [`dnde_photon_neutral_rho`]; see there.
+/// At rest, returns the sum of the charged- and neutral-pion spectra.
 #[must_use]
 pub fn dnde_photon_charged_rho(egam: f64, erho: f64) -> f64 {
     boosted(egam, erho, charged_rho_integrand)
@@ -442,22 +436,39 @@ mod tests {
         }
     }
 
-    /// At rest both entry points return their integrand, per the `.pyx`.
-    ///
-    /// The threshold is `E_ρ − m_ρ < DBL_EPSILON`, an *absolute* window,
-    /// so at `m_ρ ≈ 775` MeV it is reached only by `E_ρ` equal to `m_ρ` or
-    /// a couple of ulp above.
+    /// At rest the photon spectrum is the sum of the daughter spectra,
+    /// with no boost-kernel factor of `1/E` left in its MeV⁻¹ units.
     #[test]
-    fn the_rest_frame_branch_returns_the_bare_integrand() {
-        let e = 200.0;
-        assert_eq!(
-            dnde_photon_neutral_rho(e, MASS_RHO).to_bits(),
-            neutral_rho_integrand(e).to_bits()
-        );
-        assert_eq!(
-            dnde_photon_charged_rho(e, MASS_RHO).to_bits(),
-            charged_rho_integrand(e).to_bits()
-        );
+    fn the_rest_frame_branch_returns_the_daughter_spectra() {
+        for e in [0.01, 13.0, 50.0, 200.0, 300.0, MASS_RHO] {
+            let charged = super::photon_pion::dnde_photon_charged_pion(e, ENG_PI_CHARGED_RHO)
+                + super::photon_pion::dnde_photon_neutral_pion(e, ENG_PI0_CHARGED_RHO);
+            let neutral = 2.0 * super::photon_pion::dnde_photon_charged_pion(e, ENG_PI_NEUTRAL_RHO);
+            for (got, want) in [
+                (dnde_photon_charged_rho(e, MASS_RHO), charged),
+                (dnde_photon_neutral_rho(e, MASS_RHO), neutral),
+            ] {
+                // Division by E followed by multiplication costs at most
+                // two rounding errors; no quadrature comparison here.
+                assert!((got - want).abs() <= 2.0 * f64::EPSILON * want.abs());
+            }
+        }
+    }
+
+    /// The next representable parent energy must use the boost branch;
+    /// its beta -> 0 limit is continuous with the rest-frame spectrum.
+    #[test]
+    fn the_rest_frame_spectrum_matches_the_next_parent_energy() {
+        let next = f64::from_bits(MASS_RHO.to_bits() + 1);
+        assert!(next - MASS_RHO > f64::EPSILON);
+        for spectrum in [dnde_photon_charged_rho, dnde_photon_neutral_rho] {
+            for e in [13.0, 50.0, 200.0, 300.0] {
+                let ratio = spectrum(e, next) / spectrum(e, MASS_RHO);
+                // The outer quad requests 1e-5; a decade of headroom
+                // accommodates the near-zero boost window arithmetic.
+                assert!((ratio - 1.0).abs() < 1e-4);
+            }
+        }
     }
 
     /// A `NaN` ρ energy reaches the quadrature and comes back `NaN`.

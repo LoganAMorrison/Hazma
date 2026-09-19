@@ -45,7 +45,9 @@ value under the case's existing budget. Concretely:
   and the runner compares against the array it predicts. How it reaches
   that prediction is open: a term added to the stored array, a
   closed-form transform of it, a value a second implementation computes,
-  or one of those with a further repair's term composed on top.
+  or one of those with further repairs composed in landing order.
+  A further repair may add a term or transform the preceding prediction;
+  it may not replace that prediction with an unrelated reference.
 - The comparison is relative. A relation may declare an absolute floor
   beside its relative budget, but only where its own arithmetic cannot
   resolve the repaired value at every magnitude the array takes — a

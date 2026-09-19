@@ -17,6 +17,21 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **Rho photon spectra at rest now return the daughter spectrum.**
+  `dnde_photon_charged_rho` and `dnde_photon_neutral_rho` remove the
+  erroneous boost-integrand factor `1/E_gamma` at exactly
+  `E_rho = m_rho = 775.26 MeV`. Relative to the preceding implementation,
+  every nonzero rest value is multiplied by the photon energy in MeV;
+  for example, values at 13, 50, 200 and 300 MeV gain factors of
+  13, 50, 200 and 300. All other parent energies are unchanged.
+  The generic `dnde_photon` spectrum for two rho particles inherits
+  this correction exactly at production threshold; the measured
+  `1.05` and `2` times threshold grids are unchanged. Task 9 changes
+  350 corpus values, composing with the earlier pion repair while
+  preserving the stored arrays and their tolerances. The separate rho
+  outer-boost support defect remains open.
+  Details: `projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md`.
+
 - **Charged-pion photons now retain their forward cone.** The angular
   integral follows the physical support, including the electron
   radiative channel's final sliver. At a pion energy of 1396 MeV,

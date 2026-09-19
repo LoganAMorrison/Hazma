@@ -17,7 +17,7 @@ kernel; every comparison is against ``data/*.npz``, captured from Cython
 at kernel digest ``f5e6e269be47`` and never rewritten
 (``../rules.md`` rule 1). So these tests were falsifiable on the tree
 that carried all three defects, and they stay falsifiable as the repairs
-land one at a time: B1's and B2's have, and B3's has not.
+land one at a time; all three now have declarations.
 
 The three arguments
 -------------------

@@ -35,10 +35,10 @@ be usable by the runner:
 ```python
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "rest", "values"): Delta(
-        repair="B3",                       # which task moved it
+        repair="A3+B3",                    # which tasks moved it
         positions=MOVED,                   # explicit tuple, or MOVED
-        relation=Exact(...),               # see "Relations" below
-        measured="ratio is E_gamma exactly at all 100 positions",
+        relation=Composed(...),            # A3 capture, then B3 transform
+        measured="B3 multiplies the A3 capture by E_gamma at nonzero positions",
         evidence="projects/.../task-9-rho-rest-frame.md",
     ),
 }
@@ -57,10 +57,10 @@ strongest the physics supports:
 
 | Relation | Use when | Example |
 | --- | --- | --- |
-| `Exact(f)` | the repaired array is a closed-form transform of the stored one | rho `rest`: repaired == stored × `E_γ` |
+| `Exact(f)` | the repaired array is a closed-form transform of the preceding value | B3: multiply the A3 prediction by `E_γ` |
 | `Additive(term)` | the delta is a computable additive term | η′: `+ BR · boost_delta_function(M/2, …)` |
 | `Reference(fn)` | only a second implementation can say what the value should be | all four Group A repairs, via a Task 2 capture; B6, via scipy |
-| `Composed(base, added)` | a second repair moves an array the first already declares | `A1+B1` on `spectra.photon.eta_prime` |
+| `Composed(base, added)` | further repairs add terms or transform the preceding prediction | `A1+B1` on eta-prime; `A3+B3` on rho rest arrays |
 
 Every relation is compared relatively, with no absolute floor. The one
 exception a repair may reach for is a `Composed` whose addend *relocates*

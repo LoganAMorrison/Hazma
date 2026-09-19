@@ -183,10 +183,10 @@ def neutral_integrand(e: float) -> float:
 
 
 def reference(egam: float, erho: float, integrand: Callable[[float], float]) -> float:
-    """The deleted ``.pyx``'s three branches, in Python over scipy's quad.
+    """The outer boost in Python over scipy, with the corrected rest limit.
 
-    Deliberately a transcription of the *Cython*, not of the Rust: the
-    point of the comparison is that two independent QUADPACK bindings
+    The boosted branch transcribes the deleted Cython; the rest branch
+    removes its erroneous 1/E factor. Two independent QUADPACK bindings
     given the same integrand and the same tolerances land on the same
     number. The inner pion spectra are shared — they are the ported Rust
     either way — so this oracle tests the outer integration and the
@@ -195,7 +195,7 @@ def reference(egam: float, erho: float, integrand: Callable[[float], float]) -> 
     if erho < MASS_RHO:
         return 0.0
     if erho - MASS_RHO < np.finfo(np.float64).eps:
-        return integrand(egam)
+        return egam * integrand(egam)
 
     beta = math.sqrt(1.0 - (MASS_RHO / erho) ** 2)
     gamma = erho / MASS_RHO
@@ -467,36 +467,60 @@ class TestPhysics:
         assert dnde_charged(100.0, erho) == 0.0
         assert dnde_neutral(100.0, erho) == 0.0
 
-    def test_the_rest_frame_branch_returns_the_bare_integrand(self) -> None:
-        """The ``E - m < DBL_EPSILON`` branch reproduces a units defect.
+    @pytest.mark.parametrize("charged", [True, False], ids=["charged", "neutral"])
+    def test_the_rest_frame_branch_returns_the_daughter_spectra(
+        self, charged: bool
+    ) -> None:
+        """The spectrum sums daughter yields with units MeV^-1."""
+        fn = (
+            spectra.dnde_photon_charged_rho
+            if charged
+            else spectra.dnde_photon_neutral_rho
+        )
+        grid = np.array([0.01, 13.0, 50.0, 200.0, 300.0, MASS_RHO])
+        if charged:
+            want = np.array(
+                [
+                    charged_pion_dnde(e, ENG_PI_CHARGED_RHO)
+                    + neutral_pion_dnde(e, ENG_PI0_CHARGED_RHO)
+                    for e in grid
+                ]
+            )
+        else:
+            want = np.array(
+                [2.0 * charged_pion_dnde(e, ENG_PI_NEUTRAL_RHO) for e in grid]
+            )
+        # Only the division and multiplication by E differ from the sum.
+        np.testing.assert_allclose(
+            fn(grid, MASS_RHO), want, rtol=2 * np.finfo(float).eps, atol=0.0
+        )
+        np.testing.assert_array_equal(
+            fn(grid, MASS_RHO), [fn(float(e), MASS_RHO) for e in grid]
+        )
 
-        The flat-boost limit as ``beta -> 0`` is the rest-frame spectrum
-        ``f(E)``; the branch returns ``f(E)/E``, because the ``.pyx``
-        returns the *integrand* — which carries the boost kernel's own
-        ``1/E`` — rather than the spectrum. That is MeV^-2 where the other
-        branch is MeV^-1. Reproduced rather than repaired under rules.md
-        rule 1, and pinned here so a later "cleanup" is a deliberate
-        decision; the repair is tracked in
-        ``docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md``.
-        """
-        for e in (13.0, 50.0, 200.0, 300.0):
-            assert dnde_neutral(e, MASS_RHO) == neutral_integrand(e)
-            assert dnde_charged(e, MASS_RHO) == charged_integrand(e)
-
-        # The size of the defect, and it is not a rounding: the guard
-        # `E_rho - m_rho < DBL_EPSILON` is *absolute*, and one ulp at
-        # 775.26 MeV is 1.14e-13 -- 500x DBL_EPSILON -- so the branch
-        # fires at `E_rho == m_rho` and at no other double. Stepping to
-        # the very next one multiplies the answer by exactly `E`, which is
-        # the spurious `1/E` coming back out.
         next_double = float(np.nextafter(MASS_RHO, np.inf))
         assert next_double - MASS_RHO > np.finfo(np.float64).eps
         for e in (13.0, 50.0, 200.0, 300.0):
-            ratio = dnde_charged(e, next_double) / dnde_charged(e, MASS_RHO)
-            # Not exactly `e`: the two sides are a quadrature and a bare
-            # integrand evaluation. 1e-4 is the outer call's own `epsrel`
-            # (1e-5) with a decade of slack.
-            assert ratio == pytest.approx(e, rel=1e-4), f"at E = {e} MeV"
+            # A decade above the outer quad's 1e-5, allowing near-zero
+            # boost-window rounding, and far below the old factor of E.
+            assert fn(e, next_double) / fn(e, MASS_RHO) == pytest.approx(1.0, rel=1e-4)
+
+    def test_the_rest_frame_neutral_pion_box_has_two_photons_per_decay(self) -> None:
+        """Subtracting the charged daughter leaves the pi0 -> gamma gamma box."""
+        beta = math.sqrt(1.0 - (MASS_PI0 / ENG_PI0_CHARGED_RHO) ** 2)
+        lo, hi = (
+            ENG_PI0_CHARGED_RHO * (1.0 - beta) / 2,
+            ENG_PI0_CHARGED_RHO * (1.0 + beta) / 2,
+        )
+        grid = np.linspace(lo, hi, 11)[1:-1]
+        residual = dnde_charged(grid, MASS_RHO) - np.array(
+            [charged_pion_dnde(e, ENG_PI_CHARGED_RHO) for e in grid]
+        )
+        # The pion kernel retains its captured f32 box height, whose
+        # relative rounding error is at most 2^-24; allow 1e-7.
+        np.testing.assert_allclose(
+            residual * (hi - lo), 2 * 0.98823, rtol=1e-7, atol=0.0
+        )
 
     @pytest.mark.parametrize("charged", [True, False], ids=["charged", "neutral"])
     def test_the_spectrum_vanishes_above_its_kinematic_endpoint(

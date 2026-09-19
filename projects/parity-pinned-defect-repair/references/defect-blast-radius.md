@@ -203,8 +203,12 @@ for any grid point to fall inside a shipped or a repaired line.
 `spectra.photon.charged_rho`, `spectra.photon.neutral_rho` — the `rest`
 block **only**. The guard `E_ρ − m_ρ < DBL_EPSILON` is absolute and one
 ulp at 775.26 MeV is 1.14e-13, ~500× `DBL_EPSILON`, so no other double
-reaches it. Task 8 already declares these arrays for A3, so B3 must
-multiply A3's captured rest spectrum by photon energy and compose.
+reaches it. Task 9 measures 350 changed positions across four arrays:
+170 vector plus 5 scalar values per species. The declaration composes
+A3's capture with B3's energy factor, within the existing 1e-9 budget.
+All other corpus blocks are unchanged in the same-environment
+before/after capture; the recipe and full measurements are in
+`../task-notes/task-9-rho-rest-frame.md`.
 
 ### B4 — scalar decay FSR normalization (1 case)
 
