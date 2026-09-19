@@ -53,7 +53,7 @@ which the corpus now pins: ``spectra.photon.neutral_pion`` is an
 
 Repaired angular support
 ------------------------
-Task 8 restricts the charged-pion quadrature to the widest channel's
+The charged-pion quadrature integrates over the widest channel's
 support. The energy-variable boost identity below supplies an independent
 check and partitions comparisons by scipy's convergence verdict. Rust
 unit tests inspect the production quadrature's own termination flags.
@@ -347,7 +347,7 @@ class TestPhysics:
             assert np.all(dnde_charged(grid, epi) > 0.0), f"{epi=}"
 
     def test_the_forward_cone_reproduces_the_captured_repair(self) -> None:
-        """The Task 2 independently compiled Cython repair restores this value."""
+        """The forward-cone value matches the independent corrected Cython capture."""
         # Six significant digits recorded by the capture, so 2e-7 relative
         # covers rounding the reference rather than the integrator's error.
         assert dnde_charged(900.0, 1396.0) == pytest.approx(3.585860e-7, rel=2e-7)

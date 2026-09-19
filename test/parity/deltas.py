@@ -84,25 +84,30 @@ declaration cannot outlive the repair it describes.
 
 Models without a declaration
 ----------------------------
-`DELTA_MODELS` holds one entry per modelled delta — a roster repair, or a
-composite of several — while `DECLARED_DELTAS` holds only the arrays a
+`DELTA_MODELS` holds registered models of roster repairs and their
+composites, including consumer variants. `DECLARED_DELTAS` holds only the arrays a
 *landed* repair moves. The two differ while a model is established ahead
 of its repair: declaring an array the tree has not yet moved would fail
 the staleness rule above, so the model waits in `DELTA_MODELS` and the
 repair adds the keys.
-`test_delta_models.py` gates every entry either way.
+Model keys normally equal the roster label. An optional ``/variant``
+suffix distinguishes consumer-specific budgets without inventing a new
+repair: ``A3/nested`` still carries ``Delta.repair == "A3"``. Every
+variant is registered and covered by the same shape and evidence gates.
+`test_delta_models.py` gates the closed-form models.
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import oracle_reference
 import thermal_reference
+import tolerances
 
 from hazma import parameters
 from hazma._core import boost as core_boost
@@ -877,11 +882,10 @@ _A3 = Delta(
     positions=MOVED,
     relation=Reference(
         reference=oracle_reference.captured("A3"),
-        rtol=1e-12,
+        rtol=tolerances.PORTED_QUAD_RTOL,
         why="independently compiled Task 2 Cython capture of the same clipped "
-        "quadrature; measured at most 1.55e-13 relative over the declared "
-        "non-scalar-mediator arrays. Retains the pion's existing 1e-12 "
-        "budget and is tighter than the nested consumers' 1e-9 budget.",
+        "pion quadrature; measured at most 4.12e-16 relative on macOS. "
+        "Retains the pion case's existing 1e-12 arithmetic budget.",
     ),
     measured="The before/after builds move 6,359 of 71,570 values in six "
     "corpus cases. The pion moves 245 positions, each rho 528, each vector "
@@ -890,6 +894,22 @@ _A3 = Delta(
     "defect is a separate follow-up.",
     evidence="projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md",
 )
+
+# The nested consumers retain their existing case budget. One-platform
+# agreement with a compiled capture cannot tighten their portability contract.
+_A3_NESTED = replace(
+    _A3,
+    relation=Reference(
+        reference=oracle_reference.captured("A3"),
+        rtol=tolerances.PORTED_NESTED_RTOL,
+        why="rho and vector mediator consumers retain their existing 1e-9 "
+        "nested-quadrature case budget. PR #97 CI run 35423602586 measured "
+        "9.61566611e-12 relative on Linux for mv_900.rest.total, versus "
+        "at most 1.55e-13 on macOS. The pion-only model keeps 1e-12; "
+        "no corpus tolerance or quadrature option changes.",
+    ),
+)
+
 
 _A3_B4 = Delta(
     repair="A3+B4",
@@ -999,216 +1019,232 @@ _A1_B2 = Delta(
 #: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     # A3: captured inner-pion repair, including the rho rest blocks.
-    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_550.rest.total", "values"): _A3,
-    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_550.rest.pi_pi", "values"): _A3,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.rest.total",
+        "values",
+    ): _A3_NESTED,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_550.rest.pi_pi",
+        "values",
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.rest_plus_eps.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.rest_plus_eps.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.near_rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.near_rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.boosted_mild.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.boosted_mild.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.boosted_strong.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.boosted_strong.pi_pi",
         "values",
-    ): _A3,
-    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_900.rest.total", "values"): _A3,
-    ("mediator_spectra.vector.photon.dnde_decay_v", "mv_900.rest.pi_pi", "values"): _A3,
+    ): _A3_NESTED,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.rest.total",
+        "values",
+    ): _A3_NESTED,
+    (
+        "mediator_spectra.vector.photon.dnde_decay_v",
+        "mv_900.rest.pi_pi",
+        "values",
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.rest_plus_eps.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.rest_plus_eps.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.near_rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.near_rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.boosted_mild.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.boosted_mild.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.boosted_strong.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_900.boosted_strong.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.rest_plus_eps.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.rest_plus_eps.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.near_rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.near_rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.boosted_mild.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.boosted_mild.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.boosted_strong.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_550.boosted_strong.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.rest_plus_eps.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.rest_plus_eps.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.near_rest.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.near_rest.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.boosted_mild.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.boosted_mild.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.boosted_strong.total",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     (
         "mediator_spectra.vector.photon.dnde_decay_v_pt",
         "mv_900.boosted_strong.pi_pi",
         "values",
-    ): _A3,
+    ): _A3_NESTED,
     ("spectra.photon.charged_pion", "near_rest", "scalar_values"): _A3,
     ("spectra.photon.charged_pion", "near_rest", "values"): _A3,
     ("spectra.photon.charged_pion", "boosted_mild", "scalar_values"): _A3,
     ("spectra.photon.charged_pion", "boosted_mild", "values"): _A3,
     ("spectra.photon.charged_pion", "boosted_strong", "scalar_values"): _A3,
     ("spectra.photon.charged_pion", "boosted_strong", "values"): _A3,
-    ("spectra.photon.charged_rho", "rest", "scalar_values"): _A3,
-    ("spectra.photon.charged_rho", "rest", "values"): _A3,
-    ("spectra.photon.charged_rho", "rest_plus_eps", "scalar_values"): _A3,
-    ("spectra.photon.charged_rho", "rest_plus_eps", "values"): _A3,
-    ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3,
-    ("spectra.photon.charged_rho", "near_rest", "values"): _A3,
-    ("spectra.photon.charged_rho", "boosted_mild", "scalar_values"): _A3,
-    ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3,
-    ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3,
-    ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3,
-    ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3,
-    ("spectra.photon.neutral_rho", "rest", "values"): _A3,
-    ("spectra.photon.neutral_rho", "rest_plus_eps", "scalar_values"): _A3,
-    ("spectra.photon.neutral_rho", "rest_plus_eps", "values"): _A3,
-    ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3,
-    ("spectra.photon.neutral_rho", "near_rest", "values"): _A3,
-    ("spectra.photon.neutral_rho", "boosted_mild", "scalar_values"): _A3,
-    ("spectra.photon.neutral_rho", "boosted_mild", "values"): _A3,
-    ("spectra.photon.neutral_rho", "boosted_strong", "scalar_values"): _A3,
-    ("spectra.photon.neutral_rho", "boosted_strong", "values"): _A3,
+    ("spectra.photon.charged_rho", "rest", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "rest", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "rest_plus_eps", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "near_rest", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "boosted_mild", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "rest", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "rest_plus_eps", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "near_rest", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "boosted_mild", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "boosted_mild", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "boosted_strong", "scalar_values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "boosted_strong", "values"): _A3_NESTED,
     ("spectra.photon.muon", "rest", "values"): _A2,
     # A1.
     ("spectra.photon.eta", "rest_plus_eps", "values"): _A1,
@@ -1464,7 +1500,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 }
 
 
-#: Every modelled delta, by roster label — including the ones whose repair
+#: Every modelled delta, by roster label and optional /variant — including
+#: the ones whose repair
 #: has not landed and which therefore hold no key in `DECLARED_DELTAS`
 #: yet. A repair task moves its model into that table by adding the arrays
 #: it measured moving; see the module docstring.
@@ -1472,6 +1509,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "A1": _A1,
     "A2": _A2,
     "A3": _A3,
+    "A3/nested": _A3_NESTED,
     "A3+B4": _A3_B4,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,

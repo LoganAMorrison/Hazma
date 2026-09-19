@@ -30,7 +30,7 @@ section tracks live *status*.
 | 5 | Repair B1 — η′ line weight | 3, 4 | **Complete** — declared as the composite `A1+B1` | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
-| 8 | Repair A3 — charged-pion forward cone | 7 | **Complete** | `task-8-charged-pion-cone.md` |
+| 8 | Repair A3 — charged-pion forward cone | 7 | **In Progress** — review fixes prepared, updated CI pending | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
@@ -209,7 +209,7 @@ this project is time-critical.
   the 540 thermal positions exhausted the subdivision table and came
   back flagged. A criterion that binds has to be reachable.
 - **A capture-backed `Reference` needs the entry point to name its
-  case.** `Delta` is one object per roster label — `test_parity`'s
+  case.** A registered `Delta` can serve several cases — `test_parity`'s
   `test_every_declaration_points_at_a_delta_model` compares by `id` — so
   a repair spanning seven cases cannot close a case name over its
   relation. The corpus manifest's `entry_point` cannot resolve it either:
@@ -261,8 +261,10 @@ grids do not move. Generic two-pion, scalar/vector pion-decay, and
 single-channel annihilation spectra change at 151/301 points for
 `cme = 2792 MeV` (maximum 2.230014e-6 MeV^-1), and remain unchanged
 at `cme = 2 m_pi`. The independent A3 capture agrees within
-1.55e-13 relative on declared non-scalar arrays; scalar A3+B4 keeps
-B4's existing quadrature budget, with an additional 1e-12 rest gate.
+1.55e-13 relative on declared non-scalar arrays on macOS; Linux CI
+measured 9.61566611e-12 on two vector arrays. A3 therefore retains the
+pion's 1e-12 budget and the nested consumers' existing 1e-9 budget.
+Scalar A3+B4 keeps B4's quadrature budget and an additional 1e-12 rest gate.
 Commands and full counts: `task-8-charged-pion-cone.md`.
 
 **A2 — `dnde_photon_muon` at rest, and `dnde_photon` at a two-muon
@@ -717,6 +719,11 @@ the corpus insists on measuring one, and one built without the feature
 has no `hazma._core` test probes for the suite to import.
 
 ## Task 8 handoff addition
+
+PR #97 review fixes are prepared locally; the pushed head's Linux CI is
+red. See `task-8-review-response.md`. Keep Task 8 In Progress until the
+fixes are published and CI passes. The kernel's measured values are
+unchanged by the review fixes.
 
 The pion repair preserves its captured oracle and leaves the outer rho
 quadrature unchanged. Its remaining support failure is tracked in

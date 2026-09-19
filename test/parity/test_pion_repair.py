@@ -11,6 +11,12 @@ import generate
 import numpy as np
 import oracle_reference
 import pytest
+import test_parity
+import tolerances
+
+MASS_PI = 139.57039
+MASS_E = 0.5109989461
+PHOTON_ENDPOINT_PIRF = (MASS_PI**2 - MASS_E**2) / (2 * MASS_PI)
 
 
 @pytest.mark.parametrize("mass", [550, 900])
@@ -41,10 +47,9 @@ def test_pion_stored_zeros_survive_only_outside_physical_support() -> None:
             case.blocks, manifest["cases"][name]["blocks"], strict=True
         ):
             parent = block.params["parent_energy"]
-            mass, electron = 139.57039, 0.5109989461
-            gamma = parent / mass
+            gamma = parent / MASS_PI
             beta = np.sqrt(1 - gamma**-2)
-            endpoint = (mass**2 - electron**2) / (2 * mass) * gamma * (1 + beta)
+            endpoint = PHOTON_ENDPOINT_PIRF * gamma * (1 + beta)
             original = data[stored["arrays"]["values"]["key"]]
             live, _ = generate.evaluate_block(case.resolve(), block)
             inside = (block.grid > 0) & (block.grid < endpoint * (1 - 1e-10))
@@ -78,3 +83,52 @@ def test_a3_rho_rest_and_b4_positions_require_composition() -> None:
                     declaration = deltas.declared(name, block.label, suffix)
                     assert set(deltas.repair_labels(declaration.repair)) == {"A3", "B4"}
     assert overlapping > 0, "the A3/B4 overlap must actually be exercised"
+
+
+def test_a3_preserves_each_consumers_existing_case_budget() -> None:
+    """The shared repair must not impose the pion budget on nested consumers."""
+    for (name, _label, _suffix), delta in deltas.DECLARED_DELTAS.items():
+        if delta.repair == "A3":
+            assert delta.relation.rtol == tolerances.BUDGETS[name].rtol
+
+
+@pytest.mark.parametrize("point_entry", [False, True], ids=["array", "point"])
+def test_linux_vector_residuals_and_reversion(point_entry: bool) -> None:
+    """Replay the PR #97 Linux values through the actual declaration gate.
+
+    CI run 35423602586, Python 3.11 job 105845601264, reports these
+    absolute indices in mv_900.rest.total. The 9.61566611e-12 maximum
+    residual fits the nested case's 1e-9 budget, not the pion's 1e-12.
+    The cause of the runner variation is not established by this replay.
+    """
+    name = "mediator_spectra.vector.photon.dnde_decay_v" + (
+        "_pt" if point_entry else ""
+    )
+    label = "mv_900.rest.total"
+    case = cases.build_cases()[name]
+    block = next(b for b in case.blocks if b.label == label)
+    delta = deltas.declared(name, label, "values")
+    predicted = delta.relation.expected(case.resolve(), block, {})["values"]
+    manifest = json.loads((Path(__file__).parent / "data/manifest.json").read_text())
+    entry = manifest["cases"][name]
+    stored = next(b for b in entry["blocks"] if b["label"] == label)
+    with np.load(generate.DATA_DIR / entry["file"]) as data:
+        pinned = data[stored["arrays"]["values"]["key"]]
+    live = predicted.copy()
+    live[[144, 146, 148]] = [
+        0.0005252181267229549,
+        0.00044004723296967854,
+        0.00036687749882360947,
+    ]
+    kwargs = dict(
+        pinned=pinned,
+        predicted=predicted,
+        compare=np.ones(pinned.shape, dtype=bool),
+        budget=tolerances.BUDGETS[name],
+        where=f"{name}[{label}].values",
+    )
+    test_parity._assert_declared_delta(delta, live=live, **kwargs)
+    # The repaired oracle remains discriminating at the correct case budget:
+    # substituting the original unrepaired corpus must still fail.
+    with pytest.raises(AssertionError):
+        test_parity._assert_declared_delta(delta, live=pinned, **kwargs)

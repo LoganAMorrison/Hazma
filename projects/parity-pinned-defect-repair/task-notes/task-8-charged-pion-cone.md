@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-18
 **Project:** parity-pinned-defect-repair
-**Status:** Complete
+**Status:** In Progress — review fixes prepared; updated CI pending
 **Plan References:** `../PLAN.md`, Tasks 8 and 9; `../rules.md`
 **Related ADRs:** ADR-0001; ADR-0002
 **Depends On:** Task 7
@@ -40,7 +40,9 @@ support and declare the resulting corpus changes against the Task 2 oracle.
   `(m_pi^2 - m_e^2)/(2 m_pi) = 69.784260 MeV`. The legacy boosted-muon
   edge is 8.0e-4 MeV narrower and would clip a real electron tail.
 - The independently compiled A3 capture agrees with the repaired pion
-  within 4.12e-16 relative; declared rho/vector arrays within 1.55e-13.
+  within 4.12e-16 relative on macOS; declared rho/vector arrays within
+  1.55e-13 there. Linux CI later measured 9.61566611e-12 in vector
+  total spectra; see the review-response note.
   A2's signed muon endpoint does not change this comparison because the
   pion's daughter muon is already in flight.
 - A3 moves 1,032 scalar positions already covered by B4. Composition is
@@ -60,12 +62,14 @@ support and declare the resulting corpus changes against the Task 2 oracle.
 
 - Derive the angular lower bound from `E' = E gamma (1 - beta cos(theta))`.
   Clamp it at -1 and return zero when no interval remains. Preserve the
-  at-rest, nonpositive-energy and NaN behavior; no tolerance changes.
+  at-rest, nonpositive-energy and NaN behavior; no integration-tolerance
+  changes.
 - `PHOTON_ENDPOINT_PIRF` and `charged_pion_cos_min` express the support.
   Rust convergence tests use the same bound as production instead of
   checking the old full-angle integral.
-- A3 uses the captured oracle with a 1e-12 relative budget; A3+B4 retains
-  B4's existing 1e-3 budget and has the additional strict rest-frame gate.
+- A3 uses its existing case budgets: 1e-12 for the pion and 1e-9 for
+  rho/vector consumers, registered as `A3/nested` with repair label A3.
+  A3+B4 retains B4's 1e-3 budget and the strict rest-frame gate.
   The literal allowlist adds 66 A3 arrays and replaces 20 B4 declarations
   with A3+B4. Ten B4 arrays at scalar mass 250 MeV remain B4 alone.
 - The independent physics check changes variables to photon energy in
@@ -76,7 +80,7 @@ support and declare the resulting corpus changes against the Task 2 oracle.
   coordinated closeout, like earlier repaired defects. The separate
   `rho-photon-outer-boost-misses-support.md` stays open beyond that close.
 
-## Files Changed
+## Files Changed — PR #97
 
 - `rust/src/kernels/photon_pion.rs`: support bound and live convergence tests.
 - `test/test_core_photon_pion.py`: corrected endpoint, captured spot value,
@@ -90,7 +94,7 @@ support and declare the resulting corpus changes against the Task 2 oracle.
 - Project plan, blast-radius reference, working memory and this note:
   measured overlap, task status and Task 9 handoff.
 
-## Verification
+## Verification — initial implementation at 278b1ee9
 
 Worktree branch: `codex/parity-pinned-defect-repair/task-8-charged-pion-cone`,
 starting at `19c054e3b9a5df9ce1c29b6c91aaae3423674c42`.
@@ -164,7 +168,7 @@ The full pytest gate includes theory aggregation and the parity suite.
 Subsequent changes only append this evidence and wrap plan prose;
 Markdown and citation checks were repeated after those edits.
 
-## Numerical impact
+## Numerical impact — PR #97
 
 Capture the same corpus and public grids from the unrepaired build, then
 rebuild with the repair and repeat. The task used the scratch script below
@@ -265,7 +269,11 @@ The unchanged vector muon-only arrays retain their original case budget.
 
 ## Open Questions
 
-No unresolved Task 8 criterion. The outer rho support repair is tracked in
+PR #97's pushed head has failing Linux CI. Local review fixes and their
+verification are recorded in
+[`task-8-review-response.md`](task-8-review-response.md); completion awaits
+publishing those changes and a green CI run. The outer rho support repair
+is tracked in
 [`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
 
 ## Plan Impact
@@ -277,7 +285,7 @@ prediction is replaced by measured overlap and the existing ADR-0001
 composition rule. No dependency or phase boundary changes. The original
 corpus, oracle arrays and tolerance file are untouched.
 
-## Stale-state sweep
+## Stale-state sweep — initial implementation at 278b1ee9
 
 These are folded outputs from actual commands, one filename per match
 set. Dispositions apply per claim: edited live instructions are listed
@@ -465,6 +473,13 @@ Task-note consistency: Complete matches the working-memory row; every
 criterion maps above and every Files Changed entry belongs to the diff.
 The plan remains In Progress. Sorted sweep outputs were re-run after this
 block was pasted; filename sets and disposition conclusions are unchanged.
+
+## Review follow-up
+
+[PR #97 review response](task-8-review-response.md) records the corrected
+consumer budgets, Linux replay, convergence remeasurement and fresh gates.
+This note's original verification and sweep sections remain the record of
+278b1ee9; their Complete/readiness statements preceded the CI failure.
 
 ## Handoff to Next Task
 

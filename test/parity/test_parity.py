@@ -611,14 +611,18 @@ def test_every_delta_model_is_a_roster_repair_with_its_evidence() -> None:
     so a model established ahead of its repair is held to the same terms
     while it waits for its keys.
 
-    A composite label names more than one roster entry, and then the
+    An optional /variant model key separates consumer budgets while its
+    repair label stays on the closed roster. A composite label names more
+    than one roster entry, and then the
     relation has to be the `deltas.Composed` that actually applies them
     all: a spelling the relation does not back would claim a repair the
     array never saw.
     """
     repo_root = Path(__file__).resolve().parents[2]
-    for label, delta in deltas.DELTA_MODELS.items():
-        assert delta.repair == label, f"{label}: keyed under {delta.repair!r}"
+    for model_key, delta in deltas.DELTA_MODELS.items():
+        label, separator, variant = model_key.partition("/")
+        assert not separator or variant.isidentifier(), f"{model_key}: invalid variant"
+        assert delta.repair == label, f"{model_key}: keyed under {delta.repair!r}"
         parts = deltas.repair_labels(label)
         assert set(parts) <= deltas.REPAIRS, f"{label}: not all roster repairs"
         assert len(set(parts)) == len(parts), f"{label}: names a repair twice"

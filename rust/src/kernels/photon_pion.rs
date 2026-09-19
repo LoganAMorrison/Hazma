@@ -610,9 +610,23 @@ mod tests {
         assert!(dnde_photon_charged_pion(edge * 1.05, epi) < 1e-12);
     }
 
-    /// Sample the repaired quadrature in the library's energy regime.
+    /// Sample the clipped quadrature in the library's energy regime.
     /// Python comparisons independently partition by scipy's verdict;
     /// only Rust can inspect the production quadrature's termination flag.
+    ///
+    /// PR #97 remeasured the sibling's clipped-interval grid on macOS/arm64:
+    /// every sampled photon energy converged at E_pi = 1e3, 3e4 and 4e4 MeV;
+    /// the first sampled failure was E_pi = 6e4, E_gamma = 1e-2 MeV.
+    /// This brackets an observed transition on that grid, not a universal
+    /// 60 GeV boundary. The old full-angle measurement near 40 GeV does
+    /// not describe this integral.
+    ///
+    /// Above the converged regime, adaptive subdivision and Wynn's epsilon
+    /// extrapolation amplify platform arithmetic differences. Therefore the
+    /// exact pointwise flag map is not a portable invariant. This test gates
+    /// convergence on the live grid; its sibling gates that a nonconverging
+    /// regime remains reachable and that the options never become invalid.
+    /// Neither pins the off-domain flag map or compares unconverged values.
     #[test]
     fn the_live_grid_never_leaves_the_converged_regime() {
         for epi in [MASS_PI, 150.0, 200.0, 500.0, 1500.0, 1e4, 3e4] {
