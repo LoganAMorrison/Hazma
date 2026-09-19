@@ -5,14 +5,15 @@
 //! rule 3); [`crate::photon`] is the Python-visible half. Phase 04 Task
 //! 4.4 (`_photon/_pion`) and Phase 06 (the mediator spectra) call
 //! [`dnde_photon_muon`] and [`dnde_photon_muon_rest_frame`] natively, the
-//! way their `.pyx` twins `cimport` `dnde_photon_muon_point` today, which
+//! way their former `.pyx` twins used `dnde_photon_muon_point`, which
 //! is why both are `pub`.
 //!
 //! # The physics
 //!
 //! The radiative decay `μ → e ν ν̄ γ`, from arXiv:hep-ph/9909265 ("Muon
 //! Decay and Physics Beyond the Standard Model"), which the `.pyx`
-//! docstring cites. In the muon rest frame the spectrum is written in
+//! docstring cites. Eqs. (54)-(56) neglect mass-suppressed terms; Eq. (53)
+//! gives the photon endpoint at `1 - r`. In the muon rest frame the spectrum is written in
 //! `y = 2E_γ/m_μ` and `r = (m_e/m_μ)²` as
 //!
 //! ```text
@@ -70,27 +71,21 @@
 //!
 //! # Constant folding
 //!
-//! Four compile-time constants the generated C folds are `const` here
-//! too, each pinned against the immediate the disassembly builds:
-//! `r = (m_e/m_μ)²`, the rest-frame endpoint `1 − m_e/m_μ`, `1 − r`, and
-//! `3π`.
+//! The unchanged folded constants remain pinned against the shipped object.
+//! The rest-frame guard now shares the boosted edge `1 − r`; the old
+//! `1 − m_e/m_μ` cut was repaired by parity-pinned-defect-repair Task 7.
 
 use crate::boost;
 use crate::constants::pdg::{ALPHA_EM, MASS_E, MASS_MU};
 use crate::special::spence;
 
 /// Electron-to-muon mass ratio, dimensionless. Not folded on its own —
-/// it exists so [`R`] and [`Y_MAX`] are written the way the `.pyx` writes
-/// them.
+/// it exists to define [`R`] as in the original expression.
 const MASS_RATIO: f64 = MASS_E / MASS_MU;
 /// `r = (m_e/m_μ)²`, dimensionless — the `.pyx`'s function-local `r`,
 /// which is the argument scale inside every logarithm below.
 const R: f64 = MASS_RATIO * MASS_RATIO;
-/// `1 − m_e/m_μ`, the rest-frame endpoint in `y`. Note it is `1 − r^(1/2)`
-/// and not `1 − r`: the rest-frame guard and the boosted guard use
-/// *different* edges, which is the `.pyx`'s own asymmetry.
-const Y_MAX: f64 = 1.0 - MASS_RATIO;
-/// `1 − r`, the boosted branch's kinematic edge in `x·w`.
+/// `1 − r`, the common kinematic edge in rest-frame `y` and boosted `x·w`.
 const ONE_MINUS_R: f64 = 1.0 - R;
 /// `3π`, folded because both its factors are compile-time constants. It
 /// divides the fine-structure constant in the rest frame and multiplies
@@ -105,17 +100,23 @@ const THREE_PI: f64 = 3.0 * std::f64::consts::PI;
 ///
 /// # Returns
 ///
-/// `dN/dE` in MeV⁻¹, and exactly `0.0` outside `0 < y < 1 − m_e/m_μ` in
+/// `dN/dE` in MeV⁻¹, and exactly `0.0` outside `0 < y < 1 − r` in
 /// the scaled variable `y = 2E_γ/m_μ`. A `NaN` propagates: both edge
 /// comparisons are false for a `NaN`, so it falls through to the
 /// arithmetic exactly as the Cython does — there is no `fmax`/`fmin`
 /// clipping on this branch.
+///
+/// The analytic approximation is signed: in the final 0.0198 MeV below
+/// the endpoint it dips to about −6.44e-9 MeV⁻¹. This is a limitation of
+/// the expression, not a physical negative photon yield. Retaining it
+/// preserves the boost-integral identity with the in-flight formula;
+/// flooring only this branch would break that identity.
 #[must_use]
 pub fn dnde_photon_muon_rest_frame(egam: f64) -> f64 {
     // `2 * egam` is exact, and clang emits it as `egam + egam`.
     let y = (2.0 * egam) / MASS_MU;
 
-    if y <= 0.0 || y >= Y_MAX {
+    if y <= 0.0 || y >= ONE_MINUS_R {
         return 0.0;
     }
 
@@ -260,14 +261,13 @@ pub fn dnde_photon_muon(egam: f64, emu: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        ALPHA_EM, MASS_MU, ONE_MINUS_R, R, THREE_PI, Y_MAX, dnde_photon_muon,
-        dnde_photon_muon_rest_frame,
+        ALPHA_EM, MASS_MU, ONE_MINUS_R, R, THREE_PI, dnde_photon_muon, dnde_photon_muon_rest_frame,
     };
     use crate::constants::pdg::MASS_E;
 
-    /// The rest-frame endpoint in energy: `y = 1 − m_e/m_μ` scaled back
+    /// The rest-frame endpoint in energy: `y = 1 − r` scaled back
     /// by `m_μ/2`, in MeV.
-    const REST_FRAME_ENDPOINT: f64 = 0.5 * MASS_MU * Y_MAX;
+    const REST_FRAME_ENDPOINT: f64 = 0.5 * MASS_MU * ONE_MINUS_R;
 
     /// Every folded constant, against the literal the shipped
     /// `_muon.cpython-312-darwin.so` loads at that site.
@@ -280,33 +280,13 @@ mod tests {
     #[test]
     fn folded_constants_match_the_shipped_object_code() {
         assert_eq!(R.to_bits(), 0x3ef8_86bb_bae1_538a);
-        assert_eq!(Y_MAX.to_bits(), 0x3fef_d861_7a30_552c);
         assert_eq!(ONE_MINUS_R.to_bits(), 0x3fef_ffce_f288_8a3d);
         assert_eq!(THREE_PI.to_bits(), 0x4022_d97c_7f33_21d2);
         assert_eq!(ALPHA_EM.to_bits(), 0x3f7d_e3d4_2a1e_89a9);
         assert_eq!(MASS_MU.to_bits(), 0x405a_6a22_cecc_814d);
     }
 
-    /// `Y_MAX` is `1 − r^(1/2)` and `ONE_MINUS_R` is `1 − r`, and their
-    /// distance from each other is two hundred times their distance
-    /// from 1.
-    ///
-    /// The one transcription error this port could make that no swept
-    /// grid would catch loudly: both constants are within 5e-3 of 1, so
-    /// swapping them moves the rest-frame endpoint by 0.25 MeV and leaves
-    /// a spectrum that still looks like a spectrum. Pinned as a
-    /// separation, not as two literals — and asserted in a `const` block,
-    /// because both sides are compile-time constants and clippy refuses a
-    /// runtime `assert!` on one.
-    #[test]
-    fn the_two_kinematic_edges_are_different_constants() {
-        const { assert!(Y_MAX < ONE_MINUS_R) };
-        const { assert!(ONE_MINUS_R - Y_MAX > 4.0e-3) };
-        assert_eq!(Y_MAX.to_bits(), (1.0 - MASS_E / MASS_MU).to_bits());
-        assert_eq!(ONE_MINUS_R.to_bits(), (1.0 - R).to_bits());
-    }
-
-    /// The rest-frame support is exactly `(0, 1 − m_e/m_μ)` in `y`,
+    /// The rest-frame support is exactly `(0, 1 − r)` in `y`,
     /// closed nowhere.
     ///
     /// Compared on the bit pattern rather than with `==`, for the reason
@@ -405,7 +385,7 @@ mod tests {
     /// Probed a part in `10³` below the edge rather than a part in `10⁹`:
     /// inside the last `0.1%` the closed form's terms cancel to a
     /// residual that is sometimes slightly *negative*, which
-    /// [`the_spectrum_is_finite_and_signed_only_by_cancellation_at_the_edge`]
+    /// [`the_in_flight_signed_endpoint_residual_is_bounded`]
     /// bounds. Both implementations do it; it is the formula, not the
     /// port.
     #[test]
@@ -427,16 +407,16 @@ mod tests {
     /// positive only if all of them are right.
     ///
     /// The exception is real and belongs to the closed form: inside the
-    /// last `0.1%` of the support the cancellation overshoots and the
-    /// result dips negative. Measured against the Cython twin on a
+    /// last `0.1%` of the support the signed approximation and cancellation in its evaluation
+    /// can produce negative values. Measured against the Cython twin on a
     /// 4001-point grid, that dip reaches `2.78e-4` of the value at
     /// `0.99` of the endpoint — the *same* fraction at every parent
     /// energy from `110 MeV` to `10⁵ MeV`, because it depends only on the
     /// scaled variable. The bound below is `1e-3`, so it has 3.6x
     /// headroom and still rejects anything structural.
     #[test]
-    fn the_spectrum_is_finite_and_signed_only_by_cancellation_at_the_edge() {
-        for emu in [MASS_MU, 110.0, 150.0, 500.0, 1500.0, 1e5] {
+    fn the_in_flight_signed_endpoint_residual_is_bounded() {
+        for emu in [110.0, 150.0, 500.0, 1500.0, 1e5] {
             let beta = crate::boost::boost_beta(emu, MASS_MU).max(0.0);
             let endpoint = 0.5 * ONE_MINUS_R * emu * (1.0 + beta);
             let reference = dnde_photon_muon(0.99 * endpoint, emu);
@@ -482,15 +462,9 @@ mod tests {
     /// against the rest frame's `1/m_μ`, which no fixed-`E_μ` sweep can
     /// isolate.
     ///
-    /// The `f` here is [`rest_frame_to_the_true_endpoint`], **not**
-    /// [`dnde_photon_muon_rest_frame`] — the shipped rest-frame branch
-    /// stops `0.25 MeV` short of the kinematic endpoint, which
-    /// [`the_two_branches_disagree_about_the_rest_frame_endpoint`]
-    /// records as a live defect. Using it here would confuse that defect
-    /// with a failure of this identity; with the correct endpoint the
-    /// identity holds to **machine precision** wherever the boost window
-    /// is not truncated, which is itself the evidence that `1 − r` is the
-    /// endpoint the closed form was derived with.
+    /// The integrand is the production rest-frame kernel, including its
+    /// signed endpoint approximation. This now checks both branches
+    /// directly; the old test-only copy bypassed the defective guard.
     ///
     /// Simpson on 40_001 panels in `ln E'`, which is the substitution the
     /// integrand asks for — `f(E') ~ 1/E'` at small argument, so
@@ -532,8 +506,7 @@ mod tests {
                     // dE'/E' = du, so the 1/E' of the boost kernel is
                     // absorbed by the substitution and the integrand is
                     // just f(E').
-                    total +=
-                        weight * rest_frame_to_the_true_endpoint((u_lo + h * index as f64).exp());
+                    total += weight * dnde_photon_muon_rest_frame((u_lo + h * index as f64).exp());
                 }
                 let want = total * h / (3.0 * 2.0 * beta * gamma);
                 let got = dnde_photon_muon(egam, emu);
@@ -548,76 +521,23 @@ mod tests {
         }
     }
 
-    /// [`dnde_photon_muon_rest_frame`] with the endpoint the kinematics
-    /// give: `y < 1 − r`, not `y < 1 − √r`.
-    ///
-    /// Written out rather than parameterised into the kernel because the
-    /// kernel must keep shipping the `.pyx`'s guard (rule 1); this is the
-    /// reference the two tests below measure it against.
-    fn rest_frame_to_the_true_endpoint(egam: f64) -> f64 {
-        let y = (2.0 * egam) / MASS_MU;
-        if y <= 0.0 || y >= ONE_MINUS_R {
-            return 0.0;
-        }
-        let pre = ALPHA_EM / ((THREE_PI * y) * MASS_MU);
-        let ym = 1.0 - y;
-        let (y2, y3, y4) = (y * y, y.powf(3.0), y.powf(4.0));
-        let poly1 = y3.mul_add(55.0, y2.mul_add(-101.0, y.mul_add(46.0, -102.0)));
-        let poly2 = y4.mul_add(2.0, y3.mul_add(-6.0, y2.mul_add(6.0, y.mul_add(-5.0, 3.0))));
-        (pre + pre) * poly2.mul_add((ym / R).ln(), (poly1 * ym) / 12.0)
-    }
-
-    /// The rest-frame branch stops short of the endpoint the boosted
-    /// branch uses, and the port reproduces the gap.
-    ///
-    /// `hazma/spectra/_photon/_muon.pyx:41` guards the rest frame with
-    /// `y >= 1.0 - MASS_E / MASS_MU`, i.e. `y < 1 − √r`, while
-    /// `dnde_photon_muon_point` two functions down uses `1 − r` — and
-    /// `1 − r` is the kinematic endpoint `(m_μ² − m_e²)/(2m_μ)`, which
-    /// `hazma/spectra/_photon/_pion.pyx:16` also hard-codes as
-    /// `ENG_GAM_MAX_MURF = 52.82795006985128`. So the rest-frame branch
-    /// returns exactly `0` over the top `0.2543 MeV` (0.48%) of the
-    /// spectrum's support, where the spectrum is still
-    /// `5.34e-7 MeV⁻¹` — a step, not a taper.
-    ///
-    /// This is a live defect in hazma 2.1.0, not something the port
-    /// introduced, and `projects/cython-to-rust/rules.md` rule 1 says to
-    /// reproduce it rather than repair it: the parity corpus pins the
-    /// truncated values. Filed as
-    /// `docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`.
-    ///
-    /// The bound on the step is `1e-6` relative — the two forms are the
-    /// same arithmetic below the cut, so they agree to rounding there,
-    /// and above it the reference is positive while the shipped branch is
-    /// exactly zero.
+    /// The restored interval has both a positive part and a signed tail.
+    /// Values are independently evaluated at 60 decimal digits in the
+    /// published J+/J- form (hep-ph/9909265v1, Eqs. 54-56). The 1e-9
+    /// relative budget covers cancellation in the original y polynomial.
     #[test]
-    fn the_two_branches_disagree_about_the_rest_frame_endpoint() {
-        let cut = 0.5 * MASS_MU * Y_MAX;
-        let true_endpoint = 0.5 * MASS_MU * ONE_MINUS_R;
-        assert!(cut < true_endpoint);
-        assert!((true_endpoint - cut - 0.254_263_792_848_824_7).abs() < 1e-12);
-
-        // Below the cut the shipped branch and the reference agree.
-        for fraction in [0.1, 0.5, 0.9, 0.999] {
-            let egam = cut * fraction;
-            let shipped = dnde_photon_muon_rest_frame(egam);
-            let reference = rest_frame_to_the_true_endpoint(egam);
-            assert!(reference > 0.0);
-            assert!((shipped - reference).abs() <= 1e-6 * reference);
-        }
-
-        // Above it the shipped branch is a hard zero while the spectrum
-        // is not, and the value at the cut is the size of the step.
-        let at_cut = rest_frame_to_the_true_endpoint(cut * (1.0 + 1e-12));
-        assert!(
-            (at_cut - 5.335_612e-7).abs() < 1e-13,
-            "step size moved: {at_cut}"
-        );
-        for fraction in [1.000_001, 1.001, 1.002, 1.004] {
-            let egam = cut * fraction;
-            assert!(egam < true_endpoint);
-            assert_eq!(dnde_photon_muon_rest_frame(egam), 0.0);
-            assert!(rest_frame_to_the_true_endpoint(egam) > 0.0);
+    fn the_rest_frame_reaches_the_common_endpoint_without_clipping() {
+        let old_cut = 0.5 * (MASS_MU - MASS_E);
+        assert!((REST_FRAME_ENDPOINT - old_cut - 0.254_263_792_848_824_7).abs() < 1e-12);
+        for (energy, expected) in [
+            (52.6, 4.575_785_474_031_121_6e-7),
+            (52.7, 1.957_005_154_234_615_5e-7),
+            (52.81, -1.450_516_446_046_506_8e-9),
+            (52.82, -6.326_005_999_405_918e-9),
+        ] {
+            let got = dnde_photon_muon_rest_frame(energy);
+            assert!((got - expected).abs() <= 1e-9 * expected.abs());
+            assert_eq!(got, dnde_photon_muon(energy, MASS_MU));
         }
     }
 

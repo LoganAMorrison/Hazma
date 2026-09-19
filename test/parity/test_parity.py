@@ -124,7 +124,7 @@ EXPECTED_PORTABILITY_ZEROS = 4
 #: same reason as the two above: the size of the set the gate compares
 #: against something other than the stored corpus is the number worth
 #: defending in a diff.
-EXPECTED_DECLARED_ARRAYS = 98
+EXPECTED_DECLARED_ARRAYS = 99
 
 #: How many of those hold to an absolute floor as well as a relative one
 #: (`deltas`, "Absolute floors"). Six: the `spectra.photon.phi` arrays the

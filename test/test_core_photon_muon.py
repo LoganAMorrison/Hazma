@@ -65,14 +65,14 @@ off-platform budget is scaled to the **peak of the spectrum**: against what
 a downstream integral or limit actually sees, the whole effect is bounded
 by 2.2e-13 absolute against a peak of order 10.
 
-The endpoint defect
--------------------
-:class:`TestPhysics` asserts the rest-frame branch returns zero over the
-top 0.2543 MeV of the spectrum's support, where the spectrum is not zero.
-That is a live defect in hazma 2.1.0 which the port reproduces on purpose
-(``projects/cython-to-rust/rules.md`` rule 1) and which
-``docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md``
-tracks. Asserting the correct endpoint here would contradict the corpus.
+The repaired endpoint
+---------------------
+Task 7 of parity-pinned-defect-repair restores the last 0.2543 MeV of
+rest-frame support. The signed approximation is retained to match the
+analytic boost; it becomes slightly negative in the last 0.0198 MeV.
+The declared A2 delta compares its four moved corpus positions with the
+independent corrected Cython capture. The tests below separately sample
+the restored positive interval and check the published J+/J- expression.
 """
 
 from __future__ import annotations
@@ -217,40 +217,51 @@ class TestPhysics:
         assert dnde(10.0, MASS_MU * 0.999) == 0.0
         assert dnde(-1.0, 500.0) == 0.0
 
-    def test_a_muon_at_rest_stops_at_the_shipped_cut(self) -> None:
-        assert dnde(np.nextafter(SHIPPED_REST_FRAME_CUT, np.inf), MASS_MU) == 0.0
-        assert dnde(SHIPPED_REST_FRAME_CUT * 0.999, MASS_MU) > 0.0
+    def test_a_muon_at_rest_stops_at_the_kinematic_endpoint(self) -> None:
+        edge = TRUE_REST_FRAME_ENDPOINT
+        assert dnde(edge, MASS_MU) == 0.0
+        assert dnde(np.nextafter(edge, np.inf), MASS_MU) == 0.0
+        assert dnde(np.nextafter(edge, -np.inf), MASS_MU) < 0.0
+        assert dnde(np.nextafter(SHIPPED_REST_FRAME_CUT, np.inf), MASS_MU) > 0.0
 
-    def test_the_rest_frame_cut_is_short_of_the_kinematic_endpoint(self) -> None:
-        """The shipped defect, stated as the step it leaves behind.
+    def test_the_rest_frame_recovers_the_missing_interval(self) -> None:
+        """The two branches now radiate in the formerly empty interval.
 
-        ``hazma/spectra/_photon/_muon.pyx:41`` guards the rest frame with
-        ``y >= 1 - m_e/m_mu``; the kinematic endpoint, which the boosted
-        branch and ``_pion.pyx``'s ``ENG_GAM_MAX_MURF`` both use, is
-        ``y = 1 - r``. So the rest-frame spectrum is a hard zero over the
-        top 0.2543 MeV of its support while an infinitesimally moving muon
-        still radiates 5.34e-7 MeV^-1 there.
-
-        Reproduced rather than repaired (``rules.md`` rule 1) and tracked in
-        ``docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md``.
-        The just-off-rest value is compared at 1e-4 relative: the boosted
-        form differences nearly-equal logarithms at ``beta = 1.4e-6``, which
-        is how much of the value that cancellation has eaten.
+        At beta ~ 1.4e-6 the in-flight logarithms lose precision; the
+        pre-existing 1e-4 comparison at the old cut covers that error.
         """
         assert ENDPOINT_GAP == pytest.approx(0.2542637928, rel=1e-9)
-        assert dnde(SHIPPED_REST_FRAME_CUT * (1 + 1e-12), MASS_MU) == 0.0
-
-        just_moving = dnde(
-            SHIPPED_REST_FRAME_CUT * (1 + 1e-12), MASS_MU * (1.0 + 1e-12)
+        energy = SHIPPED_REST_FRAME_CUT * (1 + 1e-12)
+        at_rest = spectra.dnde_photon_muon(energy, MASS_MU)
+        assert at_rest == pytest.approx(5.335612e-7, rel=1e-6, abs=0.0)
+        assert dnde(energy, MASS_MU * (1 + 1e-12)) == pytest.approx(
+            at_rest, rel=1e-4, abs=0.0
         )
-        assert just_moving == pytest.approx(5.3356e-7, rel=1e-4)
+        energies = np.linspace(SHIPPED_REST_FRAME_CUT * 1.000001, 52.8, 64)
+        assert np.all(spectra.dnde_photon_muon(energies, MASS_MU) > 0.0)
 
-        # And the boosted branch keeps radiating all the way to 1 - r.
-        inside_the_gap = np.linspace(
-            SHIPPED_REST_FRAME_CUT * 1.000_001, TRUE_REST_FRAME_ENDPOINT * 0.999, 64
+    def test_the_signed_endpoint_matches_the_published_approximation(self) -> None:
+        """Independent 60-dps J+/J- evaluation, hep-ph/9909265v1 (54)-(56).
+
+        Integrating (54) over cos(theta) and converting y to E gives
+        4*(J_plus + J_minus)/(m_mu*y). The paper neglects mass-suppressed
+        terms; the negative tail is a limitation, not a physical yield.
+        1e-9 relative covers cancellation in the production y polynomials
+        against the paper's independently evaluated (1-y) polynomials.
+        """
+        energies = np.array([52.6, 52.7, 52.81, 52.82])
+        expected = np.array(
+            [
+                4.5757854740311216e-07,
+                1.9570051542346155e-07,
+                -1.4505164460465068e-09,
+                -6.326005999405918e-09,
+            ]
         )
-        assert np.all(dnde(inside_the_gap, MASS_MU) == 0.0)
-        assert np.all(dnde(inside_the_gap, MASS_MU * (1.0 + 1e-12)) > 0.0)
+        array = spectra.dnde_photon_muon(energies, MASS_MU)
+        scalar = np.array([spectra.dnde_photon_muon(e, MASS_MU) for e in energies])
+        np.testing.assert_allclose(array, expected, rtol=1e-9, atol=0.0)
+        np.testing.assert_array_equal(scalar, array)
 
     @pytest.mark.parametrize("emu", [110.0, 150.0, 500.0, 1500.0])
     def test_a_boosted_muon_ends_at_the_forward_cone_endpoint(self, emu: float) -> None:
@@ -300,9 +311,9 @@ class TestPhysics:
         The Cython short-circuits to the rest frame within one epsilon MeV
         of rest because the in-flight form carries ``1/beta`` prefactors. The
         two must agree below the shipped cut, or the guard would be a step in
-        a published spectrum rather than a numerical safeguard -- and above
-        the cut they famously do not, which is
-        :func:`test_the_rest_frame_cut_is_short_of_the_kinematic_endpoint`.
+        a published spectrum rather than a numerical safeguard. The restored
+        interval is checked separately in
+        :func:`test_the_rest_frame_recovers_the_missing_interval`.
         2e-5 relative: the cancellation in the boosted form grows as
         ``beta -> 0``, and at ``E - m = 1e-9 MeV`` (``beta ~ 4.3e-6``) that is
         what it reaches.

@@ -40,6 +40,14 @@ def dnde_photon_muon(
         Units are MeV^-1; ``photon_energies`` and ``muon_energy`` are both
         in MeV.
 
+    Notes
+    -----
+    At rest the kinematic endpoint is ``(m_mu**2 - m_e**2)/(2*m_mu)``.
+    The analytic approximation is slightly negative in the last 0.0198 MeV
+    below it (minimum about -6.44e-9 MeV^-1). This is a limitation of the
+    formula, not a physical negative yield. The signed values are retained
+    for consistency with its analytic boost; they are not clipped to zero.
+
     Examples
     --------
     Calculate spectrum for single gamma ray energy::

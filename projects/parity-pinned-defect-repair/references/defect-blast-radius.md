@@ -116,8 +116,9 @@ python3 -c "import sys; sys.path.insert(0, 'test/parity'); import numpy as np, d
 
 ### A2 — muon photon rest-frame endpoint (1 case, predicted 7)
 
-**Measured by Task 2: `spectra.photon.muon` only, its `rest` block, four
-positions.** The other six this row predicted —
+**Measured by Task 2 and verified against Rust by Task 7:
+`spectra.photon.muon` only, its `rest` block, four positions.** The other
+six this row predicted —
 `spectra.photon.charged_pion`, `spectra.photon.charged_rho`,
 `spectra.photon.neutral_rho`,
 `mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum`,
@@ -128,9 +129,10 @@ each**.
 The prediction came from the composition graph, which is right about who
 calls the muon kernel and silent about *how*. The defective branch is
 guarded by `emu - MASS_MU < DBL_EPSILON`: it fires only for a muon
-exactly at rest. Every composed caller boosts the muon first — the
+exactly at rest. Every composed caller on the corpus grids boosts the muon first:
+the
 charged pion evaluates it at `ENG_MU_PIRF = 109.778` MeV, both mediators
-at `m/2 ≥ 125` MeV — so no chain reaches the branch at all. "Smeared by
+at `m/2 ≥ 125` MeV — so no corpus chain reaches the branch. "Smeared by
 each boost" was the wrong picture: there is nothing to smear.
 
 The general form, worth carrying to the other rows: **a composition edge
@@ -142,7 +144,9 @@ All four moved positions go from a shipped `0.0` to a small *negative*
 value, because the corpus grid samples the top 0.0198 MeV of the
 regained window (where the O(α) formula is below zero) and none of the
 0.234 MeV of positive spectrum beneath it. See
-`../task-notes/task-2-cython-oracles.md`.
+`../task-notes/task-2-cython-oracles.md`. Task 7 retains the signed
+approximation under ADR-0002 and measures the restored interval at a net
+5.44538e-8 photons per decay.
 
 ### A3 — charged-pion forward cone (6 cases)
 
