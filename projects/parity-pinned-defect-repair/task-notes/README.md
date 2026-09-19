@@ -5,7 +5,8 @@
 **Status:** In Progress
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
-(Task 1); one more anticipated, see `../PLAN.md`
+(Task 1); `../adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md`
+(Task 7); oracle-retention ADR still anticipated
 **Depends On:** none. **Constrains** `cython-to-rust` Tasks 4.6, 6.2,
 6.3 and 6.4 — see Open Questions.
 
@@ -28,7 +29,7 @@ section tracks live *status*.
 | 4 | Repair A1 — boost integral window | 1, 2 | **Complete** | `task-4-boost-window.md` |
 | 5 | Repair B1 — η′ line weight | 3, 4 | **Complete** — declared as the composite `A1+B1` | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
-| 7 | Repair A2 — muon photon endpoint | 1, 2 | Not started | `task-7-photon-muon-endpoint.md` |
+| 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
 | 8 | Repair A3 — charged-pion forward cone | 7 | Not started | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
@@ -118,7 +119,7 @@ this project is time-critical.
   with B2. `../rules.md` rule 7 is the constraint that falls out of it.
   This bullet named A2 and A3 as the first pair until Task 2 measured
   A2's radius at a single case that is neither rho — its defect is behind
-  an at-rest guard no composed caller reaches. A2 now overlaps nothing.
+  an at-rest guard no composed corpus caller reaches. A2 overlaps nothing.
 - **B5 is disjoint from everything else, and reaches one case.** The
   charged pion's neutrino path uses `boost_delta_function` and
   `super::neutrino_muon`; no other roster entry touches either. Task 10a
@@ -245,8 +246,24 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Six public values have moved: B4 in PR #87, B5 in Task 10a, B6 in
-Task 13, A1 in Task 4, B1 in Task 5 and B2 in Task 6** (bullets below).
+**Seven repairs have moved public values: B4 in PR #87, B5 in Task 10a,
+B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6 and A2 in Task 7.**
+
+**A2 — `dnde_photon_muon` at rest, and `dnde_photon` at a two-muon
+production threshold.** A before/after build capture over all seven
+candidate corpus cases changes four values, positions 161–164 of
+`muon/rest/values`, from zero to -2.996e-9 through -2.916e-9 MeV^-1.
+The other six cases are bit-identical. On 200,001 samples from the old
+cut to the true endpoint, 200,000 move at rest, by at most
+5.3356121e-7 MeV^-1; the same grids at `m_mu*(1+1e-12)`, 110 and 500 MeV
+do not move. The 1,001-point two-body probe changes 1,000 values at
+`cme = 2 m_mu` (maximum 1.0671224e-6 MeV^-1) and none at `2.5 m_mu`.
+The restored 0.254263793 MeV contributes a **net 5.44538375e-8 photons
+per decay**, including -8.97482474e-11 from the negative tail. The latter
+is the analytic approximation's limitation, retained under ADR-0002 to
+preserve the boost identity. Independent 60-digit evaluations of the
+published J+/J- expression pin both signs. Task 7 records the commands;
+Task 2's earlier 5.454359e-8 estimate was the positive contribution.
 
 **A1 — all seven tabulated photon spectra.** Measured on the corpus's
 own grids (10,045 positions, 35 blocks) against a build carrying the
@@ -618,6 +635,15 @@ this file, and `task-6-phi-lines.md` (new). `EXPECTED_DECLARED_ARRAYS`
 stays 98 — this task re-points keys rather than adding them.
 `test/parity/data/` untouched.
 
+### Task 7 (A2)
+
+`rust/src/kernels/photon_muon.rs`, `hazma/spectra/_photon/__init__.py`,
+`test/test_core_photon_muon.py`, `test/parity/deltas.py`,
+`test/parity/test_parity.py`, `CHANGELOG.md`, the muon-endpoint follow-up,
+`../PLAN.md`, `../references/defect-blast-radius.md`, ADR-0002, this file,
+and `task-7-photon-muon-endpoint.md`. The corpus and capture data remain
+untouched. `EXPECTED_DECLARED_ARRAYS` rises from 98 to 99.
+
 ### Task 13 (B6)
 
 `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
@@ -684,11 +710,11 @@ has no `hazma._core` test probes for the suite to import.
   two — B1 spares the scalar probes of `rest_plus_eps` and `near_rest`,
   B2 both `rest_plus_eps` arrays. Task 9 faces the same question for A3
   and B3 on the two rho cases.
-- **Do A2's and A3's declared positions on the two rho cases actually
-  overlap, or only appear to?** They are different mechanisms (an
-  endpoint guard and a lost quadrature support) reaching the same arrays
-  through the same nesting. `../rules.md` rule 7 forces the question to
-  be answered rather than absorbed.
+- **A2/A3 overlap and the signed endpoint are resolved.** Task 7 verifies
+  A2 moves only the muon rest block; A3 has no declaration there.
+  ADR-0002 retains the signed endpoint approximation so the rest and
+  boosted formulas remain consistent. Task 8 must still reconcile A3
+  with B4 and leave B3's rho rest repair to Task 9.
 - **What happens if `cython-to-rust` reaches Task 4.6 before Task 2
   lands?** The A4 `spectra.positron.charged_pion` oracle becomes
   unrecoverable from anything but the repaired Rust. The fallback is a
@@ -741,10 +767,10 @@ has no `hazma._core` test probes for the suite to import.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
 - B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4), B1 (Task 5) and
-  B2 (Task 6) are the repairs that have changed a library value; every
+  B2 (Task 6), plus A2 (Task 7), have changed a library value; every
   other corpus array is still compared against its stored value.
-  `test/parity/deltas.py` declares 98 arrays — 30 for B4, 6 for B5, 6 for
-  B6, 44 for A1 alone, 6 for `A1+B1` and 6 for `A1+B2` — and
+  `test/parity/deltas.py` declares 99 arrays — 30 for B4, 6 for B5, 6 for
+  B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2` and 1 for A2 — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff. Re-derive the split with
   `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.

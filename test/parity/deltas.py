@@ -850,6 +850,27 @@ _A1 = Delta(
 )
 
 
+# A2 -- restore the muon rest-frame endpoint, retaining the signed formula.
+_A2 = Delta(
+    repair="A2",
+    positions=(161, 162, 163, 164),
+    relation=Reference(
+        reference=oracle_reference.captured("A2"),
+        rtol=1e-9,
+        why="the independent patched-Cython capture uses the same rest-frame "
+        "arithmetic; the endpoint polynomial cancels, so reserve the case's "
+        "existing PLATFORM_SPECFUN_RTOL across libm implementations, with "
+        "no absolute floor. "
+        "The four declared values agree bit for bit on the capturing platform.",
+    ),
+    measured="Only spectra.photon.muon/rest/values moves: positions 161-164 "
+    "change from zero to -2.996e-9 through -2.916e-9 MeV^-1. All six "
+    "candidate composed corpus cases remain unchanged. The signed tail "
+    "is retained to preserve the rest-to-flight boost identity.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md",
+)
+
+
 # ---------------------------------------------------------------------------
 # A1 + B1 -- the six eta-prime arrays both repairs move
 # ---------------------------------------------------------------------------
@@ -937,6 +958,7 @@ _A1_B2 = Delta(
 #: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
 #: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
+    ("spectra.photon.muon", "rest", "values"): _A2,
     # A1.
     ("spectra.photon.eta", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.eta", "rest_plus_eps", "scalar_values"): _A1,
@@ -1197,6 +1219,7 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 #: it measured moving; see the module docstring.
 DELTA_MODELS: dict[str, Delta] = {
     "A1": _A1,
+    "A2": _A2,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
     "B1": _B1,

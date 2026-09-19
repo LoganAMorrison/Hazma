@@ -17,6 +17,18 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The muon photon spectrum at rest now reaches its kinematic endpoint.**
+  `dnde_photon_muon` restores 0.254263793 MeV of support up to
+  52.827951570 MeV, adding a net 5.44538e-8 photons per decay. The largest
+  pointwise change is approximately 5.33561e-7 MeV^-1. The analytic
+  approximation remains signed in the last 0.0197755 MeV, reaching
+  -6.43368e-9 MeV^-1; the public docstring now states this limitation.
+  Retaining that tail keeps the rest and boosted formulas consistent.
+  Muons in flight are unchanged. `hazma.spectra.dnde_photon` inherits
+  the correction for two muons exactly at production threshold
+  (`cme = 2 m_mu`); above threshold both are in flight and do not move.
+  The six candidate composed corpus cases are unchanged. Details:
+  `projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md`.
 - **Both φ photon lines sat at the daughter meson's energy instead of the
   photon's, and `dnde_photon_phi` moves.** In the two-body decay
   `X → Y γ` the photon carries `(M² − m²) / (2 M)` and the meson

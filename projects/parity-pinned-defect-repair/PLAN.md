@@ -377,32 +377,41 @@ whose lines were already right, does not move.
 `1 − √r`.
 
 **Scope / implementation notes:** `rust/src/kernels/photon_muon.rs`.
-This kernel is composed by three others (charged pion, both rhos, and
-both mediator decay spectra), so it comes before Tasks 8 and 9. The Rust
-`fn` is in the PyO3-free kernel layer and Phase 06 calls it natively, so
-the repair reaches the mediator spectra whether or not Phase 06 has
-landed.
+This kernel is composed by the charged pion, both rhos, and both
+mediator decay spectra, so it comes before Tasks 8 and 9. The Rust
+function is in the PyO3-free kernel layer, with native callers in the
+mediator kernels. Reach depends on the daughter muon energy, not just
+on the composition graph.
 
 **Deliverable / gate:** A declared delta on **1** case —
 `spectra.photon.muon`, its `rest` block, four positions. The A2 row of
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
 predicted seven; Task 2 measured the other six at zero moved values
 each, because the rest-frame branch is guarded by
-`emu - MASS_MU < DBL_EPSILON` and every composed caller boosts the muon
-first (the charged pion at `ENG_MU_PIRF = 109.778` MeV, both mediators at
-`m/2 ≥ 125` MeV), so no composition chain can reach it. Re-derive that
+`emu - MASS_MU < DBL_EPSILON` and every composed corpus caller boosts
+the muon first (the charged pion at `ENG_MU_PIRF = 109.778` MeV, both
+mediators at
+`m/2 ≥ 125` MeV), so no corpus chain reaches it. Re-derive that
 against the *Rust* rather than inheriting it — Task 2 measured Cython —
 but expect one case, and treat six moving as a finding about
 `photon_muon.rs` rather than as the prediction being vindicated.
 
-**Settle the negative sliver before declaring anything.** All four
+**Signed endpoint convention (ADR-0002).** Retain the signed analytic
+approximation to preserve its identity with the in-flight boost. The
+public docstring must state its endpoint limitation; the production
+rest-frame kernel, not a test-only copy, enters the boost identity.
+
+The Task 2 finding that motivated this decision: All four
 positions that move go from a shipped `0.0` to a *negative* value
 (−2.92e-09 to −3.00e-09): the corpus grid puts no point in the 0.234 MeV
 of positive spectrum the repair regains, and four in the 0.0198 MeV at
 the top where the O(α) rest-frame formula evaluates below zero. So this
-task's entire numerical impact is the sign question, not the endpoint
-extension. `task-notes/task-2-cython-oracles.md` has the measurement and
-the three options.
+task's corpus delta tests the sign question; separate off-corpus probes
+must verify the positive endpoint extension.
+`task-notes/task-2-cython-oracles.md` has the original
+measurement and
+options; [ADR-0002](adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md)
+records the resolution.
 
 The endpoint invariant Task 4.3 wrote —
 `the_in_flight_form_is_the_boost_integral_of_the_rest_frame_form` — must
