@@ -437,6 +437,11 @@ scipy's own convergence verdict rather than picking one tolerance —
 `projects/cython-to-rust/task-notes/README.md` records that lesson from
 this exact kernel, and PR #68's two CI rounds are why.
 
+The scope is the inner pion integral captured by Task 2. The separate
+outer rho support failure is tracked in
+[`rho-photon-outer-boost-misses-support.md`](../../docs/followups/todo/rho-photon-outer-boost-misses-support.md);
+repairing it requires an independent reference beyond the A3 capture.
+
 **Deliverable / gate:** Declared deltas on all **6** cases the A3 row of
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
 names — `spectra.photon.charged_pion`, `spectra.photon.charged_rho`,
@@ -449,11 +454,11 @@ A2; A2 measured at one case (`spectra.photon.muon`) and the two are now
 **disjoint**, so every case here is one Task 8 opens itself rather than
 one Task 7 has already touched, and `rules.md` rule 7's no-overlap
 requirement binds between this task and Task 9 (B3, the rho `rest`
-blocks) rather than against Task 7 — and against the B4 declaration
-already on `scalar_mediator_decay_spectrum`, which this task must prove
-disjoint from its own positions or fold into one composite. The specific
-figure the follow-up
-pins is confirmed from Cython:
+blocks) rather than against Task 7. Task 8 measured overlap with B4 on
+1,032 scalar-decay positions and composed their relation as `A3+B4`.
+It also measured A3 changes in the rho `rest` blocks, so Task 9 must
+compose B3 with the A3 capture rather than assume disjoint positions.
+The specific figure the follow-up pins is confirmed from Cython:
 `dnde_photon_charged_pion(900, 1396)` moves from `0.0` to
 `3.585860e-07` MeV⁻¹, against the `3.586e-07` predicted. A test that no
 stored zero in that case survives repair *except* the ones outside the
@@ -467,10 +472,12 @@ and a declaration that covers both would hide it.
 **Scope / implementation notes:** `rust/src/kernels/photon_rho.rs`,
 `boosted`. One line, plus the two Rust unit tests and the Python test
 that currently pin the defect — all three named in the follow-up's
-"Entry points", all three needing a rename as well as a re-point. Last
-of the rho-touching tasks because Tasks 7 and 8 also move those arrays;
-the branch fires only at `E_ρ == m_ρ` exactly, so its declared positions
-are disjoint from theirs and the two deltas must be shown not to overlap.
+"Entry points", all three needing a rename as well as a re-point.
+Follows Task 8 because the pion correction already moves those arrays;
+the branch fires only at `E_ρ == m_ρ` exactly, but A3 already changes
+those rest spectra through the boosted daughter pion. Compose the A3
+capture with the B3 energy factor under ADR-0001; do not overwrite A3's
+reference or claim disjointness.
 
 **Deliverable / gate:** Declared delta on the **2** cases the B3 row of
 [`references/defect-blast-radius.md`](references/defect-blast-radius.md)
@@ -478,8 +485,10 @@ names — the `rest` block of `spectra.photon.charged_rho` and of
 `spectra.photon.neutral_rho` — and nowhere else. The guard
 `E_ρ − m_ρ < DBL_EPSILON` is absolute and one ulp at 775.26 MeV is
 1.14e-13, about 500× `DBL_EPSILON`, so no other double reaches it, and a
-delta declared on any other block is a bug in the declaration. The ratio
-to the stored value is `E_γ` at every declared position, exactly.
+B3 delta declared on any other block is a bug in the declaration. The
+ratio to the A3-corrected rest spectrum is `E_γ` at every nonzero
+position. The prediction against the original corpus is therefore the
+A3 capture multiplied by `E_γ`, not the original stored value alone.
 
 ### Task 10: Repair A4 — the muon positron normalization
 

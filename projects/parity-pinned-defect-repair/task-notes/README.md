@@ -30,7 +30,7 @@ section tracks live *status*.
 | 5 | Repair B1 — η′ line weight | 3, 4 | **Complete** — declared as the composite `A1+B1` | `task-5-eta-prime-line.md` |
 | 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
-| 8 | Repair A3 — charged-pion forward cone | 7 | Not started | `task-8-charged-pion-cone.md` |
+| 8 | Repair A3 — charged-pion forward cone | 7 | **Complete** — review fixes verified by CI | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
@@ -209,7 +209,7 @@ this project is time-critical.
   the 540 thermal positions exhausted the subdivision table and came
   back flagged. A criterion that binds has to be reachable.
 - **A capture-backed `Reference` needs the entry point to name its
-  case.** `Delta` is one object per roster label — `test_parity`'s
+  case.** A registered `Delta` can serve several cases — `test_parity`'s
   `test_every_declaration_points_at_a_delta_model` compares by `id` — so
   a repair spanning seven cases cannot close a case name over its
   relation. The corpus manifest's `entry_point` cannot resolve it either:
@@ -246,8 +246,26 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Seven repairs have moved public values: B4 in PR #87, B5 in Task 10a,
-B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6 and A2 in Task 7.**
+**Eight repairs have moved public values: B4 in PR #87, B5 in Task 10a,
+B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6, A2 in Task 7
+and A3 in Task 8.**
+
+**A3 — charged-pion photon angular support and its consumers.** A
+before/after build capture changes 6,359 of 71,570 corpus values: 245
+pion, 528 per rho, 2,013 per vector entry point, and 1,032 scalar.
+`dnde_photon_charged_pion(900, 1396)` changes from zero to
+3.585860e-7 MeV^-1. On 2,001-point log grids from 0.01 MeV through
+1.01 times the parent energy, the maximum absolute change is
+2.540805e-5 MeV^-1 at a 5 GeV parent; the rest and rest-plus-epsilon
+grids do not move. Generic two-pion, scalar/vector pion-decay, and
+single-channel annihilation spectra change at 151/301 points for
+`cme = 2792 MeV` (maximum 2.230014e-6 MeV^-1), and remain unchanged
+at `cme = 2 m_pi`. The independent A3 capture agrees within
+1.55e-13 relative on declared non-scalar arrays on macOS; Linux CI
+measured 9.61566611e-12 on two vector arrays. A3 therefore retains the
+pion's 1e-12 budget and the nested consumers' existing 1e-9 budget.
+Scalar A3+B4 keeps B4's quadrature budget and an additional 1e-12 rest gate.
+Commands and full counts: `task-8-charged-pion-cone.md`.
 
 **A2 — `dnde_photon_muon` at rest, and `dnde_photon` at a two-muon
 production threshold.** A before/after build capture over all seven
@@ -480,8 +498,8 @@ it, and
   user report led to the scalar decay kernel's FSR, which no roster
   entry covered; the repair could not merge without the Task 1 layer,
   so the layer landed with it. Its case is inside A3's set, so Task 8
-  inherits a rule 7 obligation against a declaration that already
-  exists.
+  inherited a rule 7 obligation against a declaration that already
+  existed; Task 8 resolved it with the A3+B4 composite.
 - **B5 was rostered rather than repaired ad-hoc** (Task 10a). Its
   follow-up was filed 2026-08-20, one day after this plan, and its
   "Triggers / blockers" bullet already named this plan as its home — but
@@ -700,6 +718,20 @@ test-probes"` — uv spells the flag singular where pip spells it
 the corpus insists on measuring one, and one built without the feature
 has no `hazma._core` test probes for the suite to import.
 
+## Task 8 handoff addition
+
+PR #97 review fixes are published at `3d124214`; all eight checks in
+CI run 35424652888 passed, including the previously failing Linux jobs.
+See `task-8-review-response.md`. Task 8 is Complete. The kernel's
+measured values are unchanged by the review fixes.
+
+The pion repair preserves its captured oracle and leaves the outer rho
+quadrature unchanged. Its remaining support failure is tracked in
+[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
+Task 12 must not close that new item with the original repaired defects.
+Task 8's measured rho rest overlap corrects the earlier disjointness
+prediction in Task 9's plan; no new relation protocol or ADR is needed.
+
 ## Open Questions
 
 - **Do B1's and B2's declared arrays collapse into A1's?** Answered for
@@ -713,8 +745,9 @@ has no `hazma._core` test probes for the suite to import.
 - **A2/A3 overlap and the signed endpoint are resolved.** Task 7 verifies
   A2 moves only the muon rest block; A3 has no declaration there.
   ADR-0002 retains the signed endpoint approximation so the rest and
-  boosted formulas remain consistent. Task 8 must still reconcile A3
-  with B4 and leave B3's rho rest repair to Task 9.
+  boosted formulas remain consistent. Task 8 composed A3
+  with B4 on 20 scalar arrays. A3 also moves the rho rest blocks;
+  Task 9 must compose B3 with the A3 capture, not with the old corpus.
 - **What happens if `cython-to-rust` reaches Task 4.6 before Task 2
   lands?** The A4 `spectra.positron.charged_pion` oracle becomes
   unrecoverable from anything but the repaired Rust. The fallback is a
@@ -767,10 +800,11 @@ has no `hazma._core` test probes for the suite to import.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
 - B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4), B1 (Task 5) and
-  B2 (Task 6), plus A2 (Task 7), have changed a library value; every
-  other corpus array is still compared against its stored value.
-  `test/parity/deltas.py` declares 99 arrays — 30 for B4, 6 for B5, 6 for
-  B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2` and 1 for A2 — and
+  B2 (Task 6), A2 (Task 7), and A3 (Task 8) have changed library values.
+  Every undeclared position retains its stored-value comparison.
+  `test/parity/deltas.py` declares 165 arrays — 10 for B4, 6 for B5, 6 for
+  B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2`, 1 for A2,
+  66 for A3 and 20 for `A3+B4` — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff. Re-derive the split with
   `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
@@ -781,9 +815,9 @@ has no `hazma._core` test probes for the suite to import.
   repair (Findings). On this worktree Task 4's defective build
   reproduced the stored corpus bit for bit on all 10,045 A1 positions,
   so the two agreed; that is this platform, not a general fact.
-- B3 is the last Group B model still undeclared, so Task 9 adds keys and
-  bumps `EXPECTED_DECLARED_ARRAYS` in the ordinary way — unless A3 has
-  already declared the rho arrays by then, in which case it composes.
+- B3 is the last Group B model still undeclared. Task 8 already declares
+  the rho rest arrays, so Task 9 must compose B3 with the A3 capture.
+  Its energy factor applies to A3's prediction, not the old stored value.
   Task 3's predicted reach has now held exactly twice (B1: 6 arrays, 189
   positions; B2: 6 arrays, 305 positions, 233 up and 72 down), but B2's
   six were not the six a reader would have guessed from B1's, so

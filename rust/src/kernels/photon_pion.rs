@@ -121,6 +121,11 @@ const FPI: f64 = DECAY_CONST_PI * std::f64::consts::FRAC_1_SQRT_2;
 /// the product as a single immediate.
 const MPI_SQ: f64 = MPI * MPI;
 
+/// Widest photon edge in the pion rest frame, MeV: the electron
+/// radiative channel extends beyond the boosted muon and muon-radiative
+/// channels. Using the legacy muon edge would clip the electron tail.
+const PHOTON_ENDPOINT_PIRF: f64 = (MPI_SQ - ME * ME) / (2.0 * MPI);
+
 /// `F_A²`, dimensionless. Folded for the same reason as [`MPI_SQ`]: the
 /// `.pyx`'s `F_A_PI*F_A_PI` is two `DEF`s and never reaches a register.
 const F_A_PI_SQ: f64 = F_A_PI * F_A_PI;
@@ -332,6 +337,20 @@ const CHARGED_PION_QUAD: QuadOpts<'static> = QuadOpts {
     points: Some(&[-1.0, 1.0]),
 };
 
+/// Lower angular bound from E' = E gamma (1 - beta cos(theta)).
+/// At rest there is no angular restriction. Nonpositive photon energies
+/// retain the original integrand's boundary behavior (including signed zero).
+fn charged_pion_cos_min(egam: f64, epi: f64) -> f64 {
+    if (epi - MASS_PI).abs() < f64::EPSILON || egam <= 0.0 {
+        return -1.0;
+    }
+    let gamma = boost::boost_gamma(epi, MASS_PI);
+    let beta = boost::boost_beta(epi, MASS_PI);
+    let cos_min = (1.0 - PHOTON_ENDPOINT_PIRF / (egam * gamma)) / beta;
+    // An explicit comparison preserves NaN propagation, unlike f64::max.
+    if cos_min < -1.0 { -1.0 } else { cos_min }
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ from charged-pion decay.
 ///
 /// # Parameters
@@ -357,8 +376,14 @@ pub fn dnde_photon_charged_pion(egam: f64, epi: f64) -> f64 {
         return 0.0;
     }
 
+    let cos_min = charged_pion_cos_min(egam, epi);
+    if cos_min >= 1.0 {
+        return 0.0;
+    }
+    // Restrict to the physical support: on [-1, 1] every first-rule node
+    // can miss a narrow forward cone and report a false converged zero.
     let mut integrand = |cl: f64| charged_pion_integrand(cl, egam, epi);
-    match quad(&mut integrand, -1.0, 1.0, &CHARGED_PION_QUAD) {
+    match quad(&mut integrand, cos_min, 1.0, &CHARGED_PION_QUAD) {
         Ok(outcome) => outcome.value,
         // Unreachable, and asserted so by
         // `charged_pion_quad_options_are_always_accepted` below:
@@ -418,9 +443,9 @@ pub fn dnde_photon_neutral_pion(egam: f64, epi: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::{
-        CHARGED_PION_QUAD, F_A_PI_SQ, FPI, MPI_SQ, TWELVE_SQRT_2, TWENTY_FOUR_PI_MPI,
-        charged_pion_integrand, dnde_photon_charged_pion, dnde_photon_neutral_pion,
-        dnde_pi_to_lnug,
+        CHARGED_PION_QUAD, F_A_PI_SQ, FPI, MPI_SQ, PHOTON_ENDPOINT_PIRF, TWELVE_SQRT_2,
+        TWENTY_FOUR_PI_MPI, charged_pion_cos_min, charged_pion_integrand, dnde_photon_charged_pion,
+        dnde_photon_neutral_pion, dnde_pi_to_lnug,
     };
     use crate::constants::derived::photon_pion::{ME, MMU};
     use crate::constants::pdg::{BR_PI0_TO_A_A, MASS_PI, MASS_PI0};
@@ -567,15 +592,15 @@ mod tests {
 
     /// The charged-pion spectrum is positive over the bulk of its support
     /// and falls to zero above the boosted endpoint
-    /// `E_γ^max = γ_π(1 + β_π) · ENG_GAM_MAX_PIRG`.
+    /// `E_γ^max = γ_π(1 + β_π) · PHOTON_ENDPOINT_PIRF`.
     #[test]
     fn the_charged_pion_spectrum_is_positive_then_vanishes() {
         let epi = 500.0;
         let gamma = epi / MASS_PI;
         let beta = (1.0 - (MASS_PI / epi) * (MASS_PI / epi)).sqrt();
-        // ENG_GAM_MAX_PIRG is the pion-rest-frame maximum; boosting it
+        // PHOTON_ENDPOINT_PIRF is the pion-rest-frame maximum; boosting it
         // forward gives the lab-frame edge.
-        let edge = 69.783_457_719_487_52 * gamma * (1.0 + beta);
+        let edge = PHOTON_ENDPOINT_PIRF * gamma * (1.0 + beta);
         for egam in [0.5, 5.0, 50.0, 200.0] {
             assert!(
                 dnde_photon_charged_pion(egam, epi) > 0.0,
@@ -585,50 +610,35 @@ mod tests {
         assert!(dnde_photon_charged_pion(edge * 1.05, epi) < 1e-12);
     }
 
-    /// The quadrature converges everywhere hazma is used. Phase 03
-    /// Task 3.3 measured that the port tracks scipy only where QUADPACK
-    /// converges — beyond that Wynn's ε-algorithm is chaotic and the two
-    /// can separate without bound — and made "no live shape reaches the
-    /// other regime" an obligation each consumer re-checks. This is that
-    /// check for the project's first `qagp` consumer.
+    /// Sample the clipped quadrature in the library's energy regime.
+    /// Python comparisons independently partition by scipy's verdict;
+    /// only Rust can inspect the production quadrature's termination flag.
     ///
-    /// The boundary is `E_π ≈ 4e4` MeV (`γ_π ≈ 290`), where a single
-    /// photon energy first reports `ier = 5`; below `3e4` the whole
-    /// eight-decade photon grid is `ier = 0`. That is 40 GeV against a
-    /// library whose domain is **sub-GeV** dark matter, and the corpus's
-    /// most boosted block is `10 m_π = 1396` MeV (`γ = 10`), so nothing
-    /// hazma computes today is within an order of magnitude of it.
+    /// PR #97 remeasured the sibling's clipped-interval grid on macOS/arm64:
+    /// every sampled photon energy converged at E_pi = 1e3, 3e4 and 4e4 MeV;
+    /// the first sampled failure was E_pi = 6e4, E_gamma = 1e-2 MeV.
+    /// This brackets an observed transition on that grid, not a universal
+    /// 60 GeV boundary. The old full-angle measurement near 40 GeV does
+    /// not describe this integral.
     ///
-    /// This test is where the port's **own** `ier` is observed. Nothing on
-    /// the Python side can see it — `hazma._core.photon` returns the
-    /// value alone, exactly as the `.pyx` does — so
-    /// `test/test_core_photon_pion.py` partitions its grid by *scipy's*
-    /// verdict and never inspects this one. Keeping the two halves of
-    /// that claim in the two places they are checkable is deliberate; a
-    /// Python test that recorded a scipy warning and then compared only
-    /// values would be claiming a flag comparison it never made (PR #68
-    /// review round 1).
-    ///
-    /// **What is gated here, and what is not.** Gated: every point below
-    /// the boundary converges, some point above it does not, and no point
-    /// anywhere returns [`Ier::InvalidInput`] — which would mean the
-    /// `const` options had gone bad. *Not* gated: the point-by-point flag
-    /// map above the boundary. It was measured once, on the capturing
-    /// platform, as equal to scipy's code at all 88 points of an 11 × 8
-    /// grid — but the **values** there are demonstrably platform-dependent
-    /// (2.8e-11 apart on macOS/arm64, 6.3e-10 and 3.1e-08 at two points on
-    /// Linux/glibc), and a flag is a discrete decision on the same chaotic
-    /// sequence, so pinning that map would assert as portable something
-    /// measured on one platform. Below the boundary the two subdivide
-    /// identically and agree to one ulp on both, which is why *that* half
-    /// is asserted without qualification.
+    /// Above the converged regime, adaptive subdivision and Wynn's epsilon
+    /// extrapolation amplify platform arithmetic differences. Therefore the
+    /// exact pointwise flag map is not a portable invariant. This test gates
+    /// convergence on the live grid; its sibling gates that a nonconverging
+    /// regime remains reachable and that the options never become invalid.
+    /// Neither pins the off-domain flag map or compares unconverged values.
     #[test]
     fn the_live_grid_never_leaves_the_converged_regime() {
         for epi in [MASS_PI, 150.0, 200.0, 500.0, 1500.0, 1e4, 3e4] {
             for egam in [1e-2, 1e-1, 1.0, 10.0, 100.0, 1e3, 1e4, 1e5] {
+                let lower = charged_pion_cos_min(egam, epi);
+                if lower >= 1.0 {
+                    assert_eq!(dnde_photon_charged_pion(egam, epi), 0.0);
+                    continue;
+                }
                 let mut integrand = |cl: f64| charged_pion_integrand(cl, egam, epi);
                 let outcome =
-                    quad(&mut integrand, -1.0, 1.0, &CHARGED_PION_QUAD).expect("valid options");
+                    quad(&mut integrand, lower, 1.0, &CHARGED_PION_QUAD).expect("valid options");
                 assert_eq!(
                     outcome.ier,
                     Ier::Ok,
@@ -654,9 +664,14 @@ mod tests {
         let mut diverged = 0;
         for epi in [1e3_f64, 3e4, 4e4, 6e4, 8e4, 1e5] {
             for egam in egams {
+                let lower = charged_pion_cos_min(egam, epi);
+                if lower >= 1.0 {
+                    assert_eq!(dnde_photon_charged_pion(egam, epi), 0.0);
+                    continue;
+                }
                 let mut integrand = |cl: f64| charged_pion_integrand(cl, egam, epi);
                 let outcome =
-                    quad(&mut integrand, -1.0, 1.0, &CHARGED_PION_QUAD).expect("valid options");
+                    quad(&mut integrand, lower, 1.0, &CHARGED_PION_QUAD).expect("valid options");
                 // `InvalidInput` is never an outcome, only a `QuadError`,
                 // so seeing it would mean the const options had gone bad.
                 assert_ne!(outcome.ier, Ier::InvalidInput);

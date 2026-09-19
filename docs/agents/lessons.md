@@ -75,7 +75,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [partial-historical-labeling] Label the *section* as historical, not one line
   of it — decide per claim what it is a statement about, date the block, and
   head a task note's §Files Changed / §Numerical impact with the task's own PR
-  number (PR #64, #65).
+  number (PR #64, #65, #97).
 - [flat-vs-sectioned-numbering] A document that restarts numbering per section
   but is cited by a flat index has two schemes and no key; put the mapping in
   the cited document and annotate new citations with both forms (PR #55).
@@ -214,8 +214,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   oracle asserts a property of that build; declare the scope from
   `test/parity/data/manifest.json` (never probe for it), compare bit-for-bit
   there, hold a *measured*, peak-scaled budget elsewhere, and ask whether your
-  platform could even have produced a number that would have stopped you (PR
-  #61, #63, #68).
+  platform could even have produced a number that would have stopped you.
+  Shared repair models must retain each consumer's established portability
+  budget rather than inherit the tightest local measurement (PR #61, #63,
+  #68, #97).
 - [settling-a-deferral-has-two-sweeps] Settling a deferred decision leaves stale
   text in two disjoint populations — pointers carrying the task id, and
   statements of the old behavior carrying none; sweep the behavior words and

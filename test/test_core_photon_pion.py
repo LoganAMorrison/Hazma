@@ -51,27 +51,22 @@ the eighth significant figure -- four decades past the ``EXACT`` budget --
 which the corpus now pins: ``spectra.photon.neutral_pion`` is an
 ``EXACT`` case, so dropping either narrowing moves it.
 
-Where the quadrature stops converging
--------------------------------------
-The charged-pion class also pinned the other half of Task 3.3's
-obligation: the port tracks scipy where QUADPACK converges and may
-separate without bound where it does not, so each consumer had to say
-whether any live shape reaches the second regime. This one does, but only
-at ``E_pi >= 4e4`` MeV (``gamma_pi >= 290``) -- 40 GeV, against a library
-whose domain is sub-GeV dark matter and a corpus whose most boosted block
-is ``10 m_pi = 1396`` MeV. There the port's own termination flag equalled
-scipy's at all 88 sampled arguments, which is asserted in the Rust and so
-survives this module; the corpus never samples that regime.
+Repaired angular support
+------------------------
+The charged-pion quadrature integrates over the widest channel's
+support. The energy-variable boost identity below supplies an independent
+check and partitions comparisons by scipy's convergence verdict. Rust
+unit tests inspect the production quadrature's own termination flags.
 """
 
 from __future__ import annotations
 
 import math
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from scipy.integrate import quad
 
 from hazma import spectra
 from hazma._core import photon as core_photon
@@ -103,6 +98,7 @@ MASS_E = 0.5109989461
 BR_PI0_TO_A_A = 98.823e-2
 
 ENG_GAM_MAX_PIRG = 69.78345771948752
+PHOTON_ENDPOINT_PIRF = (MASS_PI**2 - MASS_E**2) / (2 * MASS_PI)
 ENG_MU_PIRF = 109.77820123634007
 
 
@@ -114,15 +110,9 @@ RADIATIVE_FRACTION_BAND = (1e-3, 1e-1)
 
 
 def charged_endpoint(epi: float) -> float:
-    """The forward-cone photon endpoint from a charged pion, MeV.
-
-    ``ENG_GAM_MAX_PIRG`` is the pion-rest-frame maximum (the muon's own
-    endpoint boosted out of the muon frame); boosting it forward by the
-    pion's own ``gamma (1 + beta)`` gives the lab-frame edge. This is
-    exactly what the ``.pyx``'s unreferenced ``eng_gam_max`` computes.
-    """
+    """The electron radiative edge boosted from the pion rest frame, MeV."""
     beta = math.sqrt(max(1.0 - (MASS_PI / epi) ** 2, 0.0))
-    return ENG_GAM_MAX_PIRG * (epi / MASS_PI) * (1.0 + beta)
+    return PHOTON_ENDPOINT_PIRF * (epi / MASS_PI) * (1.0 + beta)
 
 
 def neutral_edges(epi: float) -> tuple[float, float]:
@@ -342,7 +332,7 @@ class TestPhysics:
     def test_the_charged_pion_spectrum_vanishes_above_its_boosted_endpoint(
         self,
     ) -> None:
-        # `ENG_GAM_MAX_PIRG` boosted forward. Above it every quadrature node
+        # The widest radiative edge boosted forward. Above it every quadrature node
         # is outside the muon's and the radiative decays' support, so the
         # integral is identically zero rather than merely small.
         for epi in (MASS_PI * 1.05, 200.0, 500.0, 5000.0):
@@ -351,61 +341,64 @@ class TestPhysics:
             assert dnde_charged(edge * 10.0, epi) == 0.0
 
     def test_the_charged_pion_spectrum_is_positive_across_its_bulk(self) -> None:
-        # Bounded well below the boosted endpoint on purpose -- see
-        # `test_the_forward_cone_is_a_hard_zero_the_quadrature_invented`
-        # for why "the bulk" stops where it does.
+        # Soft and intermediate photons complement the forward-tail probes.
         for epi in (MASS_PI * 1.05, 200.0, 500.0, 5000.0):
             grid = np.geomspace(0.5, ENG_GAM_MAX_PIRG, 40)
             assert np.all(dnde_charged(grid, epi) > 0.0), f"{epi=}"
 
-    def test_the_forward_cone_is_a_hard_zero_the_quadrature_invented(self) -> None:
-        """A live 2.1.0 defect the port reproduces on purpose.
-
-        `hazma/spectra/_photon/_pion.pyx:123` integrates over the whole of
-        ``cos theta``, but the integrand is nonzero only where the
-        pion-rest-frame photon energy stays below ``ENG_GAM_MAX_PIRG``.
-        Above roughly ``0.77`` of the boosted endpoint at ``gamma = 7``,
-        that window is narrower than QUADPACK's largest first-rule
-        abscissa (~0.9956), so every node returns zero, the error estimate
-        is zero, and the routine terminates *successfully* with ``0.0``.
-
-        Asserting the physically correct value here would contradict the
-        parity corpus (`projects/cython-to-rust/rules.md` rule 1), so what
-        is asserted is the defect itself. The repair is
-        ``docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md``.
-
-        This compared the port's zeros against the Cython's until
-        cython-to-rust Task 6.4 deleted ``_pion.pyx``. That the two agree
-        on *where* the zeros fall is now pinned by the
-        ``spectra.photon.charged_pion`` corpus case, whose reference array
-        was captured from the pre-port Cython over its own grid; what
-        remains here is the defect's shape, which the corpus's fixed grids
-        do not state in these terms.
-        """
-        # (parent energy, photon energy) inside the true support where the
-        # shipped answer is nevertheless exactly zero, with the reference
-        # value the follow-up records.
-        for epi, egam in ((1000.0, 800.0), (1396.0, 900.0), (1396.0, 1200.0)):
-            assert egam < charged_endpoint(epi), "sample must be inside support"
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                assert dnde_charged(egam, epi) == 0.0
-
-        # The zeros are contiguous from a cut-in energy to the endpoint,
-        # rather than scattered, which is what identifies this as the
-        # quadrature losing a shrinking window and not a sampling accident.
+    def test_the_forward_cone_reproduces_the_captured_repair(self) -> None:
+        """The forward-cone value matches the independent corrected Cython capture."""
+        # Six significant digits recorded by the capture, so 2e-7 relative
+        # covers rounding the reference rather than the integrator's error.
+        assert dnde_charged(900.0, 1396.0) == pytest.approx(3.585860e-7, rel=2e-7)
         for epi in (500.0, 1000.0, 2000.0, 5000.0, 1e4):
             grid = np.geomspace(0.5, charged_endpoint(epi) * 0.99, 60)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                got = dnde_charged(grid, epi)
-            zeros = got == 0.0
-            assert zeros.any(), f"the forward-cone defect is absent at {epi=}"
-            first = int(np.argmax(zeros))
-            assert zeros[first:].all(), (
-                f"the lost forward cone is not a contiguous run of zeros "
-                f"reaching the endpoint at {epi=}"
+            assert np.all(dnde_charged(grid, epi) > 0.0)
+
+    @pytest.mark.parametrize("epi", [MASS_PI, 500.0, 1396.0])
+    def test_the_electron_radiative_sliver_is_not_clipped(self, epi: float) -> None:
+        """The electron channel survives beyond the narrower legacy muon edge."""
+        edge = charged_endpoint(epi)
+        energy = edge * (1 + ENG_GAM_MAX_PIRG / PHOTON_ENDPOINT_PIRF) / 2
+        value = dnde_charged(energy, epi)
+        assert value > 0.0
+        assert dnde_charged(np.array([energy]), epi)[0] == value
+        if epi == MASS_PI:
+            # Only the electron channel remains; the independent expression
+            # cancels near the endpoint, hence the 1e-6 relative budget.
+            assert value == pytest.approx(
+                1.230e-4 * _pi_to_lnug(energy, MASS_E), rel=1e-6
             )
+        else:
+            expected, converged = _energy_boost_reference(energy, epi)
+            assert converged
+            # The electron formula cancels at its endpoint; the two
+            # integration coordinates agree within 2e-4 in this tiny tail.
+            assert value == pytest.approx(expected, rel=2e-4)
+        assert dnde_charged(edge * (1 + 1e-10), epi) == 0.0
+
+    def test_the_boost_matches_an_energy_integral_where_scipy_converges(self) -> None:
+        """Change variables to E' and compare only converged reference integrals.
+
+        The energy interval is intersected with physical support in MeV;
+        integrating (dN/dE')/E' then dividing by 2 gamma beta yields MeV^-1.
+        This formulation has no shrinking angular interval to miss.
+        """
+        converged = 0
+        for epi in (150.0, 500.0, 1396.0, 5000.0):
+            for fraction in (0.01, 0.25, 0.6, 0.9, 0.99):
+                energy = fraction * charged_endpoint(epi)
+                expected, success = _energy_boost_reference(energy, epi)
+                if success:
+                    converged += 1
+                    # The production angular quad retains epsabs=1e-10;
+                    # reference uses epsabs=0 and epsrel=1e-9. The absolute
+                    # budget is its production stopping accuracy, not a
+                    # parity budget; the captured repair separately pins it.
+                    assert dnde_charged(energy, epi) == pytest.approx(
+                        expected, rel=2e-5, abs=2e-10
+                    )
+        assert converged > 0, "the scipy-success comparison must execute"
 
     def test_the_radiative_channels_are_a_percent_level_correction(self) -> None:
         """``pi -> l nu gamma`` is small next to the boosted muon spectrum.
@@ -475,3 +468,38 @@ def _pi_to_lnug(egam: float, ml: float) -> float:
         * (f + g)
         / (24 * math.pi * MASS_PI * fpi**2 * (r - 1) ** 2 * (x - 1) ** 2 * r * x)
     )
+
+
+def _energy_boost_reference(energy: float, epi: float) -> tuple[float, bool]:
+    """Independent energy-variable boost of the rest spectrum, in MeV^-1."""
+    gamma = epi / MASS_PI
+    beta = math.sqrt(1 - (MASS_PI / epi) ** 2)
+    lower = energy / (gamma * (1 + beta))
+    upper = min(PHOTON_ENDPOINT_PIRF, energy * gamma * (1 + beta))
+    if lower >= upper:
+        return 0.0, True
+
+    def integrand(rest_energy: float) -> float:
+        rest = (
+            0.9998770 * spectra.dnde_photon_muon(rest_energy, ENG_MU_PIRF)
+            + 0.9998770 * _pi_to_lnug(rest_energy, MASS_MU)
+            + 1.230e-4 * _pi_to_lnug(rest_energy, MASS_E)
+        )
+        return rest / rest_energy
+
+    result = quad(
+        integrand,
+        lower,
+        upper,
+        epsabs=0,
+        epsrel=1e-9,
+        points=[
+            x
+            for x in ((MASS_PI**2 - MASS_MU**2) / (2 * MASS_PI), ENG_GAM_MAX_PIRG)
+            if lower < x < upper
+        ],
+        limit=200,
+        full_output=True,
+    )
+    successful_result_length = 3  # scipy appends a message on non-convergence
+    return result[0] / (2 * gamma * beta), len(result) == successful_result_length

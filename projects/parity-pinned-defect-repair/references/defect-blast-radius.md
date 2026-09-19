@@ -157,8 +157,15 @@ A2 names —
 `mediator_spectra.vector.photon.dnde_decay_v`,
 `mediator_spectra.vector.photon.dnde_decay_v_pt`.
 
-Blocks: all, concentrated in the boosted ones, where the window narrows
-past QUADPACK's largest first-rule abscissa.
+Task 8 measured 6,359 moved values over these six cases: 245 pion,
+528 in each rho, 2,013 in each vector entry point, and 1,032 scalar.
+The pion rest blocks do not move. Both rho rest blocks do, because the
+rho's daughter pion is boosted even at rest. A3 therefore overlaps B3's
+future positions and requires composition there. Scalar changes overlap
+B4 at all 1,032 moved positions; the 20 affected scalar arrays use
+`A3+B4`. The independent Cython capture pins the inner-pion fix only;
+the outer rho support failure remains a separate follow-up.
+See `../task-notes/task-8-charged-pion-cone.md` for measured grids.
 
 ### A4 — positron-muon normalization (6 cases)
 
@@ -196,7 +203,8 @@ for any grid point to fall inside a shipped or a repaired line.
 `spectra.photon.charged_rho`, `spectra.photon.neutral_rho` — the `rest`
 block **only**. The guard `E_ρ − m_ρ < DBL_EPSILON` is absolute and one
 ulp at 775.26 MeV is 1.14e-13, ~500× `DBL_EPSILON`, so no other double
-reaches it.
+reaches it. Task 8 already declares these arrays for A3, so B3 must
+multiply A3's captured rest spectrum by photon energy and compose.
 
 ### B4 — scalar decay FSR normalization (1 case)
 
@@ -295,11 +303,10 @@ exactly the six cases A2 was predicted to share with it — so Task 8
 opens six cases of its own rather than adding positions to ones Task 7
 already declared, and `rules.md` rule 7's no-overlap requirement binds
 between A3 and B3, and between A3 and B4, rather than between A2 and
-A3. B4 is the one repair that has already landed: its declaration on
-`scalar_mediator_decay_spectrum` covers the positions the FSR term
-moves, and A3 will reach the same arrays through the `pi pi` decay
-channel, so Task 8 either proves the two position sets disjoint or
-folds B4's declaration into a composite. And A4 is disjoint from
+A3. Task 8 measured 1,032 overlapping A3/B4 positions and uses a
+composite on 20 scalar arrays, leaving ten B4 arrays unchanged.
+A3 also reaches the rho rest arrays, so B3 needs composition there.
+And A4 is disjoint from
 everything else, which is what makes Task 10 safe to run in parallel.
 
 Untouched: **18** — the 16 `cross_sections.*` that are not the two

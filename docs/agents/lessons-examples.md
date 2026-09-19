@@ -154,6 +154,14 @@ cites a real PR.
   them, which touched no `hazma/` file at all. Head those sections with
   the task's own PR number (PR #64, #65).
 
+- PR #97 repeated the section-label omission in its task note's Files
+  Changed and Numerical impact headings. Adding the PR number makes the
+  measurements attributable; the initial verification and stale-state
+  sections now identify their commit because their local Complete claim
+  preceded failing CI. The review response recorded the pending-CI state
+  explicitly, then added published verification after the fixes passed,
+  without rewriting old command output.
+
 ### flat-vs-sectioned-numbering
 
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
@@ -744,6 +752,17 @@ asymmetry between two sibling wrappers.
   grid. Before asserting a budget globally, ask whether the platform you
   measured on is capable of producing a number that would have stopped
   you; if not, you measured the wrong thing, however carefully.
+
+- PR #97 used one A3 relation at 1e-12 for the pion and its nested
+  consumers, based on a macOS residual below 1.55e-13. Linux CI run
+  35423602586 measured 9.61566611e-12 for two vector total-spectrum arrays.
+  Their pre-existing case budget was 1e-9, but declared positions bypassed
+  it and used the shared relation's tighter budget. Separate registered
+  consumer variants retain 1e-12 for the pion and 1e-9 for rho/vector
+  spectra without altering the corpus, positions, or case tolerances.
+  A replay of the recorded Linux values fails with the old model and
+  passes with the consumer variant; the unrepaired corpus still fails.
+  The runner split does not establish whether NumPy SIMD caused it.
 
 ### settling-a-deferral-has-two-sweeps
 

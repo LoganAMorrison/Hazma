@@ -108,6 +108,15 @@ checked against the stored arrays by `test/parity/test_delta_models.py`.
 The repair task adds the keys, and re-derives the position counts rather
 than inheriting them (`rules.md` rule 11).
 
+A repair spanning different numerical case classes may register named
+model variants, such as `DELTA_MODELS["A3/nested"]`. The suffix identifies
+the consumer budget; `Delta.repair` remains the roster label `A3`, so
+position accounting still aggregates by the physical repair. The pion
+retains its existing 1e-12 case budget; rho and vector consumers retain
+their existing 1e-9 nested budget. Variants preserve the same independent
+capture and position allowlists, and every variant is registered under
+the same evidence and shape gates. They do not change `tolerances.py`.
+
 ### Shape tests (Task 1)
 
 The declaration table is data, so it needs its own gate:
