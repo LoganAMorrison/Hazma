@@ -7,30 +7,17 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.1-positron-muon.md`)
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
-- **Status:** open
-- **Triggers / blockers:** **capture the corrected values BEFORE the
-  deletion wave that strands them** — the deadline is on the oracle, not
-  on the fix, and this defect also affects published numbers today. The
-  parity corpus does pin the wrong values, and
-  `projects/cython-to-rust/rules.md` rule 2 does forbid regenerating them
-  from a tree with ported kernels, so the repair needs corrected
-  reference values from somewhere else.
-  `hazma/spectra/_positron/_muon.pyx` is that somewhere: fix the `.pyx`
-  in a scratch build, drive it through the `__pyx_capi__` capsules this
-  file's "Entry points" section already names, and the corrected values
-  come from a compiler and a source tree that both predate the Rust port.
-  **This one has the nearest deadline of the four**: the
-  `spectra.positron.charged_pion` composition dies at Task 4.6, the only
-  Phase 04 task still open. Task 6.4 then deletes the twin itself.
-  The repair itself has no deadline. Under the plan's mechanism it lands
-  as a *declared delta* against the committed corpus arrays rather than
-  as a regeneration, so it is legal on a tree with ported kernels and can
-  follow the capture by any interval. What cannot follow the deletion is
-  the capture. Sequenced in
-  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
-  — Task 2 (capture) and
-  Task 10 (repair); where a later section of this file still reads "after
-  Task 6.4", that wording is superseded and the plan is authoritative.
+- **Status:** open — repaired by parity-pinned-defect-repair Task 10.
+  Administrative close and link relocation remain with Task 12.
+  See `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
+- **Remaining work:** Task 12 moves this repaired item to `done/`. The
+  repair is declared in `test/parity/deltas.py` (roster entry A4) against
+  Task 2's patched-Cython capture; the corpus arrays stay untouched. No
+  port-deletion blocker remains.
+
+The sections below describe the defect as measured before the repair.
+The kernel now multiplies by `R_FACTOR` in both expressions, and the
+tests listed in Entry points assert an integral of 1.
 
 ## Why
 
@@ -104,12 +91,11 @@ in `hazma/limits/`.
    notebooks; the shift is uniform, so anything that normalizes its own
    spectra will not move.
 
-The port's own tests already encode the *correct* statement alongside the
-shipped one, so the repair mostly means flipping which of the two is
-asserted:
-`rest_frame_spectrum_carries_the_inverted_normalization` in
+The port's own tests encoded the *correct* statement alongside the
+shipped one, so the repair flipped which of the two is asserted:
+`rest_frame_spectrum_integrates_to_one_positron` in
 `rust/src/kernels/positron_muon.rs`, and
-`TestPhysics::test_the_integral_is_the_shipped_inverted_normalization`
+`TestPhysics::test_the_spectrum_integrates_to_one_positron_per_decay`
 in `test/test_core_positron_muon.py`.
 
 ## Entry points
@@ -145,6 +131,9 @@ in `test/test_core_positron_muon.py`.
 - **The in-flight expression's operation order** is unpinned once the
   corpus no longer holds it: `raw * R_FACTOR / (2β)` and
   `raw / (2β) * R_FACTOR` differ in the last ulp. Pick one and say why.
+  **Answered by Task 10:** `raw * R_FACTOR / (2β)`, the order Task 2's
+  patched Cython evaluates, which is what keeps `spectra.positron.muon`
+  bit-for-bit against that capture at all 1,370 pinned values.
 - Sequencing against the corpus is the real cost. Repairing this and
   `boost-integral-drops-last-interior-cell.md` in one declared
   regeneration after Phase 06 is cheaper than two.

@@ -66,13 +66,13 @@ second is not. Both are asserted below rather than described.
   "the rest-frame branch is not the limit of the boosted one" family as
   the rho's, and unlike the rho's it does not change units.
 
-What is **not** a defect, and must not be "fixed": ``_neutrino/_muon.pyx``
-applies the Michel normalization the right way round, so both its rows
-integrate to exactly one neutrino. Its ``_positron/_muon.pyx`` sibling
-divides where it should multiply and is low by 0.0374%
-(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``).
-The two files really do disagree and only one of them is wrong;
-:class:`TestPhysics` pins both sides of that.
+What is **not** a defect: ``_neutrino/_muon.pyx`` applies the Michel
+normalization the right way round, so both its rows integrate to exactly
+one neutrino. Its ``_positron/_muon.pyx`` sibling divided where it should
+multiply and was low by 0.0374%
+(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``);
+the positron port multiplies, as this one does. :class:`TestPhysics` pins
+the neutrino side and the margin that separates it from the inversion.
 """
 
 from __future__ import annotations
@@ -655,15 +655,14 @@ class TestPhysics:
         Two statements at once. That the integral does not depend on
         ``emu`` is the physics — the boost moves neutrinos around in
         energy but creates none. That it is **1** rather than ``1/N**2`` is
-        the thing a reader coming from ``_positron/_muon.pyx`` must not
-        "fix": that file divides by the Michel normalization where it
-        should multiply and is low by 0.0374%, and this one multiplies.
+        the Michel normalization applied as a factor; ``_positron/_muon.pyx``
+        divided by it instead and was low by 0.0374%.
 
         Trapezoid on 200_001 points. 1e-5 relative: the in-flight spectrum
         has a kink where ``x_+`` meets its ``1 - r^2`` clip, and a
         composite rule of this order gets no closer — measured, not
-        chosen. The positron file's deficit is 3.7e-4, so the bound
-        separates the two by a factor of 37.
+        chosen. The inverted normalization's deficit is 3.7e-4, so the
+        bound separates the two by a factor of 37.
         """
         beta = math.sqrt(1.0 - (MASS_MU / emu) ** 2) if emu > MASS_MU else 0.0
         endpoint = (1.0 + beta) * (1.0 - R * R) * emu / 2.0
@@ -672,7 +671,7 @@ class TestPhysics:
         for row, flavor in enumerate(("electron", "muon")):
             integral = np.trapezoid(values[row], energies)
             assert integral == pytest.approx(1.0, rel=1e-5), flavor
-        # And the positron sibling's defect is well outside that bound.
+        # And the inverted normalization is well outside that bound.
         assert abs(1.0 - 1.0 / R_FACTOR**2) > 30.0 * 1e-5
 
     def test_the_pion_yields_one_muon_neutrino_from_each_of_two_sources(self) -> None:

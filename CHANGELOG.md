@@ -17,6 +17,25 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The muon positron spectrum now integrates to one positron per
+  decay.** `dnde_positron_muon` multiplies the Michel spectrum by its
+  normalization `N = 1.0001870858234163` where it divided by it, so every
+  nonzero value rises by exactly `N² = 1.000374206647938` (+0.0374%), at
+  rest and in flight; the integral moves from 0.999626 to 1. The change
+  is a constant factor, so spectral shapes and ratios do not move and
+  absolute rates do. It reaches every spectrum built on the muon's:
+  `dnde_positron_charged_pion` (up to the same factor, less where the
+  `π → e ν` line contributes; a pion exactly at rest still returns zero),
+  `dnde_positron` for final states containing a muon or charged pion,
+  both mediator models' positron spectra (the `mu mu`, `pi pi` and total
+  channels, not `e e`), and anything computed from those spectra.
+  The tabulated meson positron spectra and every neutrino spectrum are
+  unchanged. Task 10 moves 21,975 corpus values across six cases,
+  reproducing Task 2's patched-Cython capture bit for bit for the muon
+  and within 6.4e-12 relative for its consumers, with the stored arrays
+  and their tolerances unchanged.
+  Details: `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
+
 - **Rho photon spectra at rest now return the daughter spectrum.**
   `dnde_photon_charged_rho` and `dnde_photon_neutral_rho` remove the
   erroneous boost-integrand factor `1/E_gamma` at exactly
