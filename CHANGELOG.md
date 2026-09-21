@@ -28,7 +28,11 @@ user-facing change even when no signature did.
   `π → e ν` line contributes; a pion exactly at rest still returns zero),
   `dnde_positron` for final states containing a muon or charged pion,
   both mediator models' positron spectra (the `mu mu`, `pi pi` and total
-  channels, not `e e`), and anything computed from those spectra.
+  channels, not `e e`), and anything computed from those spectra. That
+  includes `SingleChannelAnn` with `fs="mu mu"`, whose positron spectrum
+  rises by exactly `N²`, and `KineticMixingGeV`, whose `mu mu` channel
+  rises by exactly `N²` and whose total rises by at most that factor,
+  inside the total's Monte Carlo run-to-run noise.
   The tabulated meson positron spectra and every neutrino spectrum are
   unchanged. Task 10 moves 21,975 corpus values across six cases,
   reproducing Task 2's patched-Cython capture bit for bit for the muon

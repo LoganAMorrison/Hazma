@@ -53,6 +53,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the charged pion's neutrino continuum loses its quadrature support](todo/neutrino-pion-continuum-loses-its-quadrature-support.md) | 2026-09-06 | parity-pinned-defect-repair Task 10a | cross-cutting |
 | [`[tool.ruff]` uses the deprecated top-level keys](todo/ruff-config-uses-deprecated-top-level-keys.md) | 2026-09-06 | carved out of the isort/ruff gate repair | cross-cutting |
 | [`scripts/` is outside every format and lint gate](todo/scripts-are-outside-the-format-and-lint-gates.md) | 2026-09-06 | surfaced by the isort/ruff gate repair | cross-cutting |
+| [every decaying-theory positron channel evaluates the last channel](todo/decaying-theory-positron-channels-share-the-last-closure.md) | 2026-09-20 | PR #99 review | commit |
 
 ## Promoted / Done / Pruned
 

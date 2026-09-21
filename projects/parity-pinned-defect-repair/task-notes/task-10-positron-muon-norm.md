@@ -81,6 +81,15 @@ against Task 2's A4 Cython capture without rewriting any stored array.
   pion `rest` block fails the staleness rule (Verification).
 - **The follow-up stays in `todo/`**, marked repaired, for Task 12's
   single relocation sweep — the convention Tasks 4–9 and 10a followed.
+- **Review round 1 (PR #99).** The `CHANGELOG.md` entry names
+  `SingleChannelAnn("mu mu")` and `KineticMixingGeV` as downstream
+  consumers; both route their `mu mu` positrons through
+  `2 * dnde_positron_muon` alone (ratio to that expression measured
+  exactly 1 on this build), so they rise by exactly `R_FACTOR²`. A
+  reviewer's observation that `RHNeutrino` positron spectra are all zero
+  is a pre-existing late-binding closure in
+  `TheoryDec.positron_spectrum_funcs`, unmoved by this task and filed as
+  `docs/followups/todo/decaying-theory-positron-channels-share-the-last-closure.md`.
 - **No `PLAN.md`, rules or ADR change.** The Task 10 gate and the
   Numerical-impact bullet (`R_FACTOR²`) are accurate as written.
 
