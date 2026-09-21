@@ -133,7 +133,8 @@ in `test/test_core_positron_muon.py`.
   `raw / (2β) * R_FACTOR` differ in the last ulp. Pick one and say why.
   **Answered by Task 10:** `raw * R_FACTOR / (2β)`, the order Task 2's
   patched Cython evaluates, which is what keeps `spectra.positron.muon`
-  bit-for-bit against that capture at all 1,370 pinned values.
+  bit-for-bit against that capture at all 1,370 pinned values on the
+  capturing platform.
 - Sequencing against the corpus is the real cost. Repairing this and
   `boost-integral-drops-last-interior-cell.md` in one declared
   regeneration after Phase 06 is cheaper than two.

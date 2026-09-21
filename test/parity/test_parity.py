@@ -195,6 +195,7 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     compare: np.ndarray,
     budget: tolerances.Budget,
     where: str,
+    tree: tolerances.Provenance = TREE,
 ) -> None:
     """Compare one declared array against its declared relation.
 
@@ -210,6 +211,12 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     stored value by more than the relation's budget, the live value must
     actually differ from the stored one, so a reverted repair cannot hide
     behind a declaration that no longer describes it.
+
+    The relation's budget goes through `tolerances.platform_budget` on
+    ``tree``, as the case's own budget does in
+    `tolerances.effective_budget`: a relation held to the ``EXACT`` or
+    ``SPECFUN`` figure is bit-reproducible only on the libm its reference
+    was captured on.
     """
     moved_by_relation = ~_unchanged(predicted, pinned)
     if delta.positions == deltas.MOVED:
@@ -236,6 +243,10 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
         )
     selected = compare & declared
     relation = delta.relation
+    relation_budget = tolerances.platform_budget(
+        tolerances.Budget(rtol=relation.rtol, atol=relation.atol, why=relation.why),
+        tree,
+    )
     # The relation's own floor rather than the case's, where it declares
     # one: a prediction that cancels a term far larger than the result
     # cannot resolve below that term's last bit, and no relative budget
@@ -246,15 +257,15 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     np.testing.assert_allclose(
         live[selected],
         predicted[selected],
-        rtol=relation.rtol,
-        atol=max(budget.atol, relation.atol),
+        rtol=relation_budget.rtol,
+        atol=max(budget.atol, relation_budget.atol),
         equal_nan=True,
         err_msg=f"{where}: does not satisfy the {delta.repair} relation "
-        f"({relation.why})",
+        f"({relation_budget.why})",
     )
     with np.errstate(divide="ignore", invalid="ignore"):
         size = np.abs(predicted[selected] - pinned[selected]) / np.abs(pinned[selected])
-    moved = size > relation.rtol
+    moved = size > relation_budget.rtol
     assert moved.any(), (
         f"{where}: the {delta.repair} declaration moves nothing beyond its "
         "own budget here, so it is stale -- narrow it (deltas.py)"
@@ -262,7 +273,7 @@ def _assert_declared_delta(  # noqa: PLR0913 -- one argument per thing compared
     assert not np.allclose(
         live[selected][moved],
         pinned[selected][moved],
-        rtol=relation.rtol,
+        rtol=relation_budget.rtol,
         atol=budget.atol,
         equal_nan=True,
     ), (
@@ -520,6 +531,27 @@ def test_the_platform_branch_moves_only_the_two_declared_classes() -> None:
     assert (
         tolerances.effective_budget(specfun_case, off_platform).rtol
         == tolerances.PLATFORM_SPECFUN_RTOL
+    )
+
+    # Declared relations go through the same branch, and it moves exactly
+    # the ones held to one of the two classes' figures: the A4 muon
+    # relation, which mirrors its case's ``EXACT`` budget.
+    def relation_rtol(delta: deltas.Delta, tree: tolerances.Provenance) -> float:
+        relation = delta.relation
+        return tolerances.platform_budget(
+            tolerances.Budget(relation.rtol, relation.atol, relation.why), tree
+        ).rtol
+
+    moved_models = {
+        label
+        for label, delta in deltas.DELTA_MODELS.items()
+        if relation_rtol(delta, off_platform) != relation_rtol(delta, on_platform)
+    }
+    assert moved_models == {"A4"}
+    assert relation_rtol(deltas.DELTA_MODELS["A4"], on_platform) == 0.0
+    assert (
+        relation_rtol(deltas.DELTA_MODELS["A4"], off_platform)
+        == tolerances.PLATFORM_EXACT_RTOL
     )
 
 
@@ -899,6 +931,48 @@ class TestTheDeclaredDeltaComparison:
         pinned, term = self._arrays()
         with pytest.raises(AssertionError, match="wider than its mechanism"):
             self._check(self._declaration((0, 1, 2, 3)), pinned + term)
+
+    @pytest.mark.parametrize("same_platform", [True, False])
+    def test_an_exact_class_relation_follows_the_platform_branch(
+        self, same_platform: bool
+    ) -> None:
+        # A relation held to `EXACT_RTOL` is bit-equality on the capturing
+        # libm and `PLATFORM_EXACT_RTOL` off it, exactly as its case is.
+        # Off it, a last-ulp libm difference passes and a reverted repair
+        # of A4's size (3.7e-4 relative) still fails.
+        tree = tolerances.Provenance(
+            exact=False, same_platform=same_platform, detail="synthetic"
+        )
+        pinned = np.array([1.0, 2.0, 0.5, 0.25])
+        predicted = pinned * 1.000374206647938
+        delta = deltas.Delta(
+            repair="A4",
+            positions=deltas.MOVED,
+            relation=deltas.Reference(
+                reference=lambda fn, block: {"values": predicted},
+                rtol=tolerances.EXACT_RTOL,
+                why="synthetic",
+            ),
+            measured="synthetic",
+            evidence="test/parity/deltas.py",
+        )
+        kwargs = dict(
+            pinned=pinned,
+            predicted=predicted,
+            compare=np.ones(pinned.shape, dtype=bool),
+            budget=tolerances.Budget(rtol=0.0, atol=0.0, why="synthetic"),
+            where="synthetic",
+            tree=tree,
+        )
+        _assert_declared_delta(delta, live=predicted.copy(), **kwargs)
+        off_by_ulps = predicted * (1.0 + 1e-12)
+        if same_platform:
+            with pytest.raises(AssertionError, match="does not satisfy the A4"):
+                _assert_declared_delta(delta, live=off_by_ulps, **kwargs)
+        else:
+            _assert_declared_delta(delta, live=off_by_ulps, **kwargs)
+        with pytest.raises(AssertionError, match="does not satisfy the A4"):
+            _assert_declared_delta(delta, live=pinned.copy(), **kwargs)
 
     def test_an_exact_relation_is_compared_against_its_transform(self) -> None:
         # The `Exact` half of the protocol, on the transform B3 uses: the

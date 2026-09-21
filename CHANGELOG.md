@@ -36,7 +36,8 @@ user-facing change even when no signature did.
   The tabulated meson positron spectra and every neutrino spectrum are
   unchanged. Task 10 moves 21,975 corpus values across six cases,
   reproducing Task 2's patched-Cython capture bit for bit for the muon
-  and within 6.4e-12 relative for its consumers, with the stored arrays
+  on the capturing platform (within 6.8e-12 relative on Linux) and
+  within 6.4e-12 relative for its consumers, with the stored arrays
   and their tolerances unchanged.
   Details: `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
 

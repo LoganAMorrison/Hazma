@@ -973,8 +973,11 @@ _A4 = Delta(
         why="the Task 2 capture evaluates the same closed form from a "
         "patched build of the pre-port Cython, and the repaired kernel "
         "spells the two changed expressions in the same operation order, so "
-        "spectra.positron.muon keeps its EXACT case budget. Measured 0.0: "
-        "bit-for-bit at all 1,370 pinned values.",
+        "spectra.positron.muon keeps its EXACT case budget, platform branch "
+        "included. Measured 0.0 on the capturing macOS/arm64 libm, "
+        "bit-for-bit at all 1,370 pinned values; up to 6.8e-12 on Linux "
+        "x86_64 CI, inside PLATFORM_EXACT_RTOL and far below the 3.7e-4 "
+        "the repair moves.",
     ),
     measured="Every nonzero value rises by exactly R_FACTOR**2 = "
     "1.000374206647938 wherever the muon kernel is the only contributor: "

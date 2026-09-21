@@ -606,7 +606,9 @@ it, and
   (Task 10): `A4` at `EXACT_RTOL` for the muon, `A4/pion` at
   `PORTED_QUAD_RTOL`, `A4/nested` at `PORTED_NESTED_RTOL` — A3's pattern.
   One relation at the loosest budget would have widened the muon's
-  bit-for-bit contract (`../rules.md` rule 2). Its 178 keys are built as
+  bit-for-bit contract (`../rules.md` rule 2). Like its case budget,
+  `A4` relaxes to `PLATFORM_EXACT_RTOL` off the capturing libm, through
+  `tolerances.platform_budget`. Its 178 keys are built as
   the product they are (blocks × muon-fed channels) rather than written
   out one by one; `EXPECTED_DECLARED_ARRAYS` still pins the count.
 
@@ -807,7 +809,8 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   Task 9 composes B3 with the A3 capture, preserving both repairs.
 - **What happens if `cython-to-rust` reaches Task 4.6 before Task 2
   lands?** Moot: Task 2 captured the A4 oracle first, and Task 10
-  declares A4 against that capture, bit for bit on the muon.
+  declares A4 against that capture, bit for bit on the muon on the
+  capturing platform.
 - **How many kernels boost a bounded spectrum over an unclipped window?**
   Task 10a found `neutrino_pion.rs` doing it and `positron_pion.rs`
   clipping correctly, but only because a repair's magnitude looked wrong.

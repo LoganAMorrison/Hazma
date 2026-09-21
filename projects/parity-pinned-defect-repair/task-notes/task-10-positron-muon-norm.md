@@ -55,9 +55,10 @@ against Task 2's A4 Cython capture without rewriting any stored array.
   reaches the muon kernel, `pi_pi` is closed at a 250 MeV mediator).
 - **The patched Cython's operation order is bit-reproducible.** Writing
   `(-2 root) poly * N` and `numerator * N / (β + β)` reproduces the A4
-  capture bit for bit at all 1,370 `spectra.positron.muon` values, so
-  that case keeps `rtol = 0`. The follow-up's open question on operation
-  order is answered by this.
+  capture bit for bit at all 1,370 `spectra.positron.muon` values on the
+  capturing macOS/arm64 libm, so that case keeps `rtol = 0` there and
+  `PLATFORM_EXACT_RTOL` elsewhere, as its case budget does. The
+  follow-up's open question on operation order is answered by this.
 - **The consumers' residuals are the port's, not the repair's.** Against
   the capture the pion sits at 5.30e-15 and the mediators at 3.55e-12
   (scalar) and 6.40e-12 (vector), the same order as the unrepaired port
@@ -90,6 +91,16 @@ against Task 2's A4 Cython capture without rewriting any stored array.
   is a pre-existing late-binding closure in
   `TheoryDec.positron_spectrum_funcs`, unmoved by this task and filed as
   `docs/followups/todo/decaying-theory-positron-channels-share-the-last-closure.md`.
+- **CI round (PR #99, run 35568134823).** Ubuntu py3.11 and py3.13
+  failed the A4 relation on all five `spectra.positron.muon` blocks, by
+  4.6e-16 to 6.8e-12 relative; the other Linux entries and macOS passed.
+  `_assert_declared_delta` held a relation to its raw `rtol`, bypassing
+  the platform branch that relaxes an `EXACT` case off the capturing
+  libm, so an `EXACT_RTOL` relation demanded bit-equality with a macOS
+  capture on Linux. The branch now lives in `tolerances.platform_budget`,
+  which both `effective_budget` and the relation comparison call. `A4` is
+  the only modeled relation it moves; off-platform it is held to 1e-6,
+  which still fails a revert by three decades (the repair moves 3.7e-4).
 - **No `PLAN.md`, rules or ADR change.** The Task 10 gate and the
   Numerical-impact bullet (`R_FACTOR²`) are accurate as written.
 
@@ -107,7 +118,13 @@ against Task 2's A4 Cython capture without rewriting any stored array.
   docstrings.
 - `test/parity/deltas.py` — `_A4`, `_A4_PION`, `_A4_NESTED`, the 178 keys,
   and three `DELTA_MODELS` entries.
-- `test/parity/test_parity.py` — `EXPECTED_DECLARED_ARRAYS` 165 → 343.
+- `test/parity/test_parity.py` — `EXPECTED_DECLARED_ARRAYS` 165 → 343;
+  `_assert_declared_delta` routes the relation's budget through
+  `tolerances.platform_budget`; the platform-branch test covers
+  `DELTA_MODELS`, and a synthetic `EXACT` relation is run on and off the
+  capturing platform.
+- `test/parity/tolerances.py` — the platform branch of
+  `effective_budget` extracted as `platform_budget`; no budget changed.
 - `CHANGELOG.md` — the `[Unreleased]` entry with the magnitude.
 - `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`
   — status, renamed tests, the operation-order answer.
@@ -211,7 +228,7 @@ cargo test ... -q positron                              31 passed
 cargo test ... -q neutrino_muon                         10 passed
 python test/parity/generate.py --check                  corpus OK: 41 cases / 1580 arrays match the manifest
 python test/parity/oracles/capture.py --check           oracles OK: 4 defects / 940 arrays match the manifest
-git diff --stat -- test/parity/data test/parity/oracles test/parity/tolerances.py   (empty)
+git diff --stat -- test/parity/data test/parity/oracles   (empty)
 ```
 
 What the tests cover: the Michel normalization at rest and in flight
@@ -220,6 +237,16 @@ each of which also rules out `1/N²`; the pion's boost conservation at
 `BR_μ + BR_e`; the neutrino sibling's unchanged norm; and the corpus
 comparison of all 178 declared arrays against the A4 capture, with every
 undeclared position still held to the stored value.
+
+**CI round.** After `platform_budget` took over the relation
+comparison, preflight over the three parity modules and the four touched
+Markdown files reported
+`PASS pytest: 2316 passed, 16 skipped, 1 warning, 37 subtests passed in
+30.45s` and `RESULT: PASS`. The new
+`test_an_exact_class_relation_follows_the_platform_branch` runs a
+synthetic `EXACT_RTOL` relation on and off the capturing platform: a
+1e-12 perturbation fails on it and passes off it, and a revert of A4's
+size fails in both.
 
 **Mutations.**
 
