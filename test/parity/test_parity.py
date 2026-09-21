@@ -73,6 +73,7 @@ import importlib
 import sys
 import types
 from collections.abc import Callable
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -688,6 +689,72 @@ def test_the_declared_arrays_are_counted() -> None:
     assert len(deltas.DECLARED_DELTAS) == EXPECTED_DECLARED_ARRAYS
 
 
+class TestRhoRestDeclaration:
+    """B3 composes with A3 on exactly the rho rest arrays."""
+
+    def test_b3_is_confined_to_the_two_rest_blocks(self) -> None:
+        expected = {
+            (f"spectra.photon.{kind}_rho", "rest", suffix)
+            for kind in ("charged", "neutral")
+            for suffix in ("values", "scalar_values")
+        }
+        actual = {
+            key
+            for key, delta in deltas.DECLARED_DELTAS.items()
+            if "B3" in deltas.repair_labels(delta.repair)
+        }
+        assert actual == expected
+        assert all(deltas.DECLARED_DELTAS[key].repair == "A3+B3" for key in actual)
+
+    @pytest.mark.parametrize("kind", ["charged", "neutral"])
+    @pytest.mark.parametrize("suffix", ["values", "scalar_values"])
+    def test_each_component_is_required_and_the_positions_are_minimal(
+        self, kind: str, suffix: str, stored_arrays: ArrayLoader
+    ) -> None:
+        name = f"spectra.photon.{kind}_rho"
+        case = CASES[name]
+        block = next(b for b in case.blocks if b.label == "rest")
+        meta = next(
+            b for b in MANIFEST["cases"][name]["blocks"] if b["label"] == "rest"
+        )
+        arrays = stored_arrays(name)
+        stored = {key: arrays[entry["key"]] for key, entry in meta["arrays"].items()}
+        snapshot = {key: value.copy() for key, value in stored.items()}
+        delta = deltas.DECLARED_DELTAS[name, "rest", suffix]
+        relation = delta.relation
+        assert isinstance(relation, deltas.Composed)
+        captured = relation.base.expected(case.resolve(), block, stored)
+        predicted = relation.expected(case.resolve(), block, stored)[suffix]
+        grid = stored["grid" if suffix == "values" else "scalar_grid"]
+        # The transform is a single multiplication, including zeros.
+        np.testing.assert_array_equal(predicted, captured[suffix] * grid)
+        for key, value in stored.items():
+            np.testing.assert_array_equal(value, snapshot[key])
+        np.testing.assert_array_equal(
+            relation.base.expected(case.resolve(), block, stored)[suffix],
+            captured[suffix],
+        )
+        kwargs = dict(
+            pinned=stored[suffix],
+            predicted=predicted,
+            compare=np.ones(predicted.shape, dtype=bool),
+            budget=tolerances.effective_budget(name, TREE),
+            where=f"{name}/rest/{suffix}",
+        )
+        _assert_declared_delta(delta, live=predicted, **kwargs)
+        for mutation in (captured[suffix], stored[suffix] * grid):
+            with pytest.raises(
+                AssertionError, match=r"does not satisfy the A3\+B3 relation"
+            ):
+                _assert_declared_delta(delta, live=mutation, **kwargs)
+        moved = np.flatnonzero(~_unchanged(predicted, stored[suffix]))
+        unmoved = np.flatnonzero(_unchanged(predicted, stored[suffix]))
+        assert unmoved.size
+        widened = replace(delta, positions=tuple([*moved, unmoved[0]]))
+        with pytest.raises(AssertionError, match="wider than its mechanism"):
+            _assert_declared_delta(widened, live=predicted, **kwargs)
+
+
 class TestTheDeclaredDeltaComparison:
     """`_assert_declared_delta` on synthetic arrays, mutation by mutation.
 
@@ -739,6 +806,36 @@ class TestTheDeclaredDeltaComparison:
             budget=self.BUDGET,
             where="synthetic",
         )
+
+    @pytest.mark.parametrize("kind", ["additive", "exact"])
+    def test_a_composition_rejects_a_suffix_missing_from_its_base(
+        self, kind: str
+    ) -> None:
+        # The stored scalar array must not silently substitute for an
+        # output that the preceding repair never predicted.
+        stored = {"values": np.array([1.0]), "scalar_values": np.array([3.0])}
+        base = deltas.Reference(
+            reference=lambda fn, block: {"values": np.array([2.0])},
+            rtol=1e-9,
+            why="synthetic",
+        )
+        if kind == "additive":
+            step = deltas.Additive(
+                term=lambda fn, block: {"scalar_values": np.array([1.0])},
+                rtol=1e-9,
+                why="synthetic",
+            )
+        else:
+            step = deltas.Exact(
+                transform=lambda block, arrays: {
+                    "scalar_values": 2.0 * arrays["scalar_values"]
+                },
+                rtol=1e-9,
+                why="synthetic",
+            )
+        relation = deltas.Composed(base, (step,), rtol=1e-9, why="synthetic")
+        with pytest.raises(AssertionError, match="missing from the base prediction"):
+            relation.expected(None, None, stored)
 
     def test_the_repaired_array_passes(self) -> None:
         pinned, term = self._arrays()
@@ -807,8 +904,7 @@ class TestTheDeclaredDeltaComparison:
         # The `Exact` half of the protocol, on the transform B3 uses: the
         # prediction is the stored array times its abscissae, and a live
         # array that reproduces it passes while the unrepaired one does
-        # not. Run here rather than only through the corpus because no
-        # `Exact` declaration is keyed until the rho repair lands.
+        # not. The rho corpus now exercises this inside A3+B3 as well.
         pinned = np.array([1.0, 2.0, 0.5, 0.25])
         grid = np.array([13.0, 50.0, 200.0, 300.0])
         delta = deltas.Delta(

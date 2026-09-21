@@ -122,24 +122,16 @@ Ten of the values in here are, separately, *wrong* — filed under
 [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
 That does not make them regenerable either: the committed arrays are the
 record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them, in [`deltas.py`](deltas.py) — six have been (the
-scalar decay spectrum's FSR normalization, roster entry B4; the charged
-pion's doubled prompt neutrino line, B5; the two mediator thermal cross
-sections' unconverged quadrature, B6; the boost integral's window
-coverage, A1, which reaches all seven tabulated photon spectra; the η′
-two-photon line's weight, B1; and both φ line energies, B2), so the
-arrays of those cases are compared against the relation each declares
-rather than against `stored`. The last two moved arrays A1 had already
-declared, so each collapses into a composite — `A1+B1` and `A1+B2` — as
-the project's rule 7 requires. One more is *modelled* there without being
-declared — B3, whose Cython twin is already gone — because a declaration
-on an array the tree has not moved yet would fail as stale;
-[`test_delta_models.py`](test_delta_models.py) checks that model against
-the stored arrays themselves. [`oracles/`](oracles/README.md)
-holds what the remaining positions *should* be, captured from the Cython
-twins before the port deleted them; it is what A1 is graded against here,
-through [`oracle_reference.py`](oracle_reference.py), and is the only
-other place in this directory where a corrected number lives.
+delta against them, in [`deltas.py`](deltas.py). The live declarations
+and their repair labels are the authoritative roster; count them with
+`Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
+Repairs that share arrays compose in landing order: `A1+B1`, `A1+B2`,
+`A3+B4`, and `A3+B3`. The rho rest correction multiplies A3's captured
+prediction by photon energy, preserving the prior pion repair.
+[`test_delta_models.py`](test_delta_models.py) checks the closed-form
+models against the stored arrays themselves. [`oracles/`](oracles/README.md)
+holds the corrected Group A values captured from Cython before the port
+deleted the twins; [`oracle_reference.py`](oracle_reference.py) reads them.
 
 ## What the corpus pins
 

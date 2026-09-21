@@ -20,7 +20,7 @@ measurement that justifies its budget, and where the evidence lives.
 Relations
 ---------
 A relation answers one question — what the repaired array should be —
-and both spellings return it from `Relation.expected`.
+and all relations return it from `Relation.expected`.
 
 ``Additive`` — the repaired value is the stored value plus a term the
 declaration knows how to compute. The term may be evaluated live, from
@@ -44,7 +44,8 @@ the Cython twins before the port deleted them.
 ``rules.md`` rule 7 forbids leaving that as overlapping declarations, and
 one key holds one `Delta` in any case, so they collapse: a base relation
 predicts the array as the first repair leaves it, and each further repair
-adds its own term on top. The `Delta` then names them all, as ``"A1+B1"``,
+adds a term or applies a closed-form transform to that prediction. The
+`Delta` then names them all, as ``"A1+B1"``,
 and `repair_labels` is what splits a composite spelling back into the
 roster entries it is made of.
 
@@ -264,20 +265,22 @@ class Reference:
 
 @dataclass(frozen=True)
 class Composed:
-    """``repaired == base``'s prediction with each ``added`` term on top.
+    """``repaired == base``'s prediction with each ``added`` repair applied.
 
     What two repairs moving the same stored array declare instead of two
     overlapping declarations (``rules.md`` rule 7): ``base`` predicts the
     array as the first repair leaves it, and every repair after that
-    contributes the term it adds. The base may be any relation; the
-    addends are `Additive` because an addend has to leave room for what
-    came before it, which a relation that supersedes the array does not.
+    adds a term or transforms the preceding prediction. Further repairs
+    are `Additive` or `Exact`; a `Reference` that supersedes the array
+    would discard the preceding repair and cannot be composed here.
+    Every step must return only suffixes present in the base prediction;
+    stored arrays supply abscissae, never a missing predicted output.
 
     Parameters
     ----------
     base : Additive, Exact or Reference
         Predicts the array with the first repair applied and no other.
-    added : tuple of Additive
+    added : tuple of Additive or Exact
         One per further repair, in the order they landed.
     rtol : float
         Relative budget the composition holds to. Measured against the
@@ -295,7 +298,7 @@ class Composed:
     """
 
     base: Additive | Exact | Reference
-    added: tuple[Additive, ...]
+    added: tuple[Additive | Exact, ...]
     rtol: float
     why: str
     atol: float = 0.0
@@ -313,8 +316,15 @@ class Composed:
         # them.
         predicted = dict(self.base.expected(fn, block, stored))
         for addend in self.added:
-            for suffix, term in addend.term(fn, block).items():
-                predicted[suffix] = predicted[suffix] + term
+            # Preserve the stored abscissae for Exact transforms while
+            # replacing every value with the preceding prediction.
+            updated = addend.expected(fn, block, {**stored, **predicted})
+            missing = updated.keys() - predicted.keys()
+            assert not missing, (
+                "composition step returned suffixes missing from the base prediction: "
+                f"{sorted(missing)}"
+            )
+            predicted.update(updated)
         return predicted
 
 
@@ -890,7 +900,7 @@ _A3 = Delta(
     measured="The before/after builds move 6,359 of 71,570 values in six "
     "corpus cases. The pion moves 245 positions, each rho 528, each vector "
     "entry point 2,013, and the scalar mediator 1,032. Rho rest positions "
-    "move too: Task 9 must compose B3 with A3. The outer rho support "
+    "move too: Task 9 composes B3 with A3. The outer rho support "
     "defect is a separate follow-up.",
     evidence="projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md",
 )
@@ -908,6 +918,25 @@ _A3_NESTED = replace(
         "at most 1.55e-13 on macOS. The pion-only model keeps 1e-12; "
         "no corpus tolerance or quadrature option changes.",
     ),
+)
+
+
+_A3_B3 = Delta(
+    repair="A3+B3",
+    positions=MOVED,
+    relation=Composed(
+        base=_A3_NESTED.relation,
+        added=(_B3.relation,),
+        rtol=1e-9,
+        why="B3 multiplies the A3 Cython capture by E_gamma. The single "
+        "multiplication retains the rho consumers' existing nested 1e-9 "
+        "budget; no absolute floor is needed.",
+    ),
+    measured="B3 moves 350 positions in four rho rest arrays, 170 vector "
+    "and five scalar positions per species. All other blocks are unchanged. "
+    "The A3 capture times E_gamma agrees within 4.16e-16 relative on the "
+    "capturing platform; the nested portability budget stays 1e-9.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md",
 )
 
 
@@ -1225,8 +1254,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_pion", "boosted_mild", "values"): _A3,
     ("spectra.photon.charged_pion", "boosted_strong", "scalar_values"): _A3,
     ("spectra.photon.charged_pion", "boosted_strong", "values"): _A3,
-    ("spectra.photon.charged_rho", "rest", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "rest", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "rest", "scalar_values"): _A3_B3,
+    ("spectra.photon.charged_rho", "rest", "values"): _A3_B3,
     ("spectra.photon.charged_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
     ("spectra.photon.charged_rho", "rest_plus_eps", "values"): _A3_NESTED,
     ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3_NESTED,
@@ -1235,8 +1264,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3_NESTED,
     ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3_NESTED,
     ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "rest", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3_B3,
+    ("spectra.photon.neutral_rho", "rest", "values"): _A3_B3,
     ("spectra.photon.neutral_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
     ("spectra.photon.neutral_rho", "rest_plus_eps", "values"): _A3_NESTED,
     ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3_NESTED,
@@ -1511,6 +1540,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "A3": _A3,
     "A3/nested": _A3_NESTED,
     "A3+B4": _A3_B4,
+    "A3+B3": _A3_B3,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
     "B1": _B1,

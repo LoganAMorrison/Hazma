@@ -470,9 +470,9 @@ and a declaration that covers both would hide it.
 **Objective:** Return the rest-frame spectrum, not the boost integrand.
 
 **Scope / implementation notes:** `rust/src/kernels/photon_rho.rs`,
-`boosted`. One line, plus the two Rust unit tests and the Python test
-that currently pin the defect — all three named in the follow-up's
-"Entry points", all three needing a rename as well as a re-point.
+`boosted`. One line, plus the Rust unit test (which covers both species) and the
+Python test that pin the defect; both need a rename and a re-point.
+The original wording counted the Rust assertions as separate tests.
 Follows Task 8 because the pion correction already moves those arrays;
 the branch fires only at `E_ρ == m_ρ` exactly, but A3 already changes
 those rest spectra through the boosted daughter pion. Compose the A3

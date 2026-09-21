@@ -3,22 +3,16 @@
 - **Added:** 2026-08-18
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md`
 - **Scope:** cross-cutting (public spectrum values)
-- **Status:** open
-- **Triggers / blockers:** **corpus re-pinning only** — no ordering
-  constraint against cython-to-rust Phase 06 Task 6.4. Task 6.4 deletes
-  the four surviving `.pyx`; this defect's twin,
-  `hazma/spectra/_photon/_rho.pyx`, is already gone, deleted in Task 4.5
-  in the same PR as the swap, so 6.4 takes away nothing this repair could
-  have used. What the corpus pins is still wrong — both rho cases carry a
-  `rest` block — but the corrected values need no Cython oracle at all:
-  the corrected `rest` value is the stored value times `E_γ` exactly, as
-  the ratio table below measures, so the expected delta is a closed-form
-  transform of the committed array.
-  So this repair is schedulable now, independently of the port's
-  remaining phases. Sequenced in
-  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
-  where a later section of this file still reads "after Task 6.4", that
-  wording is superseded and the plan is authoritative.
+- **Status:** open — repaired by parity-pinned-defect-repair Task 9.
+  Administrative close and link relocation remain with Task 12.
+  See `projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md`.
+- **Remaining work:** Task 12 moves this repaired item to `done/`.
+  B3 composes the A3 Cython capture with the photon-energy factor;
+  the corpus arrays stay untouched. No port-deletion blocker remains.
+
+The sections below describe the defect measured at `b5f7f90`, before
+repair. Current tests assert the daughter spectra and rest-limit
+continuity, under the names listed in Entry points.
 
 ## Why
 
@@ -39,13 +33,13 @@ other branch is MeV⁻¹.
 The deleted `hazma/spectra/_photon/_rho.pyx` wrote it as
 
 ```python
-# hazma/spectra/_photon/_rho.pyx:47-49 (charged: :113-115)
+# Historical Cython at b5f7f90^: neutral lines 43-44, charged 114-115
 if erho - MRHO < DBL_EPSILON:
     return integrand_neutral_rho(e)
 ```
 
-and `rust/src/kernels/photon_rho.rs`'s `boosted` reproduces it under
-`projects/cython-to-rust/rules.md` rule 1.
+and the Rust port initially reproduced it under
+`projects/cython-to-rust/rules.md` rule 1. Task 9 removes that factor.
 
 Measured on this tree (Task 4.5), stepping from `E_ρ = m_ρ` to the very
 next representable double — the charged rho, ratio of the two branches:
@@ -65,8 +59,8 @@ Return the rest-frame *spectrum* rather than the integrand: multiply the
 short-circuit result by `e`, or equivalently factor the `1/E'` out of the
 integrand and into the boost so the two branches share one expression for
 `f`. Both `.pyx` call sites became one Rust helper in Task 4.5, so this
-is a one-line change in `boosted` plus its docs, plus the two Rust unit
-tests and the Python test that currently pin the defect.
+is a one-line change in `boosted` plus its docs, plus its Rust and Python
+regression tests.
 
 The blast radius is narrow but sharp. The branch fires **only** at
 `E_ρ == m_ρ` exactly: the guard `E_ρ − m_ρ < DBL_EPSILON` is absolute,
@@ -85,14 +79,13 @@ specific to the rho, not a convention the library shares.
 - `rust/src/kernels/photon_rho.rs` — `boosted`, and the two integrand
   functions that carry the `1/E`
 - `test/test_core_photon_rho.py` —
-  `TestPhysics.test_the_rest_frame_branch_returns_the_bare_integrand`
-  pins the current behavior and its magnitude
+  `TestPhysics.test_the_rest_frame_branch_returns_the_daughter_spectra`
+  checks the repaired normalization and continuity
 - `rust/src/kernels/photon_rho.rs` tests —
-  `the_rest_frame_branch_returns_the_bare_integrand`
+  `the_rest_frame_branch_returns_the_daughter_spectra` and
+  `the_rest_frame_spectrum_matches_the_next_parent_energy`
 - `test/parity/data/` — the `rest` blocks of `spectra.photon.charged_rho`
   and `spectra.photon.neutral_rho`
-- Blocked on the same regeneration as
-  [`parity-corpus-pins-ill-conditioned-points.md`](../done/parity-corpus-pins-ill-conditioned-points.md)
 
 ## Risks / open questions
 

@@ -31,7 +31,7 @@ section tracks live *status*.
 | 6 | Repair B2 — φ line energies | 3, 4 | **Complete** — declared as the composite `A1+B2` | `task-6-phi-lines.md` |
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
 | 8 | Repair A3 — charged-pion forward cone | 7 | **Complete** — review fixes verified by CI | `task-8-charged-pion-cone.md` |
-| 9 | Repair B3 — rho rest-frame branch | 3, 8 | Not started | `task-9-rho-rest-frame.md` |
+| 9 | Repair B3 — rho rest-frame branch | 3, 8 | **Complete** | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
 | 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | Not started | `task-11-prose-reconciliation.md` |
@@ -246,9 +246,26 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Eight repairs have moved public values: B4 in PR #87, B5 in Task 10a,
-B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6, A2 in Task 7
-and A3 in Task 8.**
+**Nine repairs have moved public values: B4 in PR #87, B5 in Task 10a,
+B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6, A2 in Task 7,
+A3 in Task 8, and B3 in Task 9.**
+
+**B3 — rho rest-frame spectrum.** Task 9 compares all 623 corpus blocks
+from before/after builds in one environment: 350 of 181,191 evaluated
+values change, confined to the four rho `rest` arrays (170 vector and
+5 scalar values per species). Each repaired value equals the preceding
+A3-corrected value times photon energy in MeV. On the corpus grids from
+0.0077526 to 77526 MeV, maximum absolute numerical shifts are
+302.181659743 (charged) and 604.363204522 (neutral), at the lowest energy;
+maximum relative shift is 350.844804609. The A3 capture times photon
+energy agrees within 4.16e-16 relative; the established nested 1e-9
+budget is retained. Generic two-rho spectra at production threshold
+change at 94/101 points on a log grid from 0.01 to 800 MeV (maxima
+362.397970755 and 724.795763660 MeV^-1); grids at 1.05 and 2 times
+threshold are bit-identical. The capture and counting recipes are in
+`task-9-rho-rest-frame.md`, Numerical impact. This measurement counts
+returned values, including scalar probes, independently of the historical
+manifest's stored-value headline.
 
 **A3 — charged-pion photon angular support and its consumers.** A
 before/after build capture changes 6,359 of 71,570 corpus values: 245
@@ -740,14 +757,14 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   positions on `eta_prime`, A1 and B2 share 90 of B2's 305 on `phi`. Each
   composite leaves two of A1's eight arrays to A1 alone, but not the same
   two — B1 spares the scalar probes of `rest_plus_eps` and `near_rest`,
-  B2 both `rest_plus_eps` arrays. Task 9 faces the same question for A3
-  and B3 on the two rho cases.
+  B2 both `rest_plus_eps` arrays. Task 9 answers it for A3
+  and B3 too: four rho rest arrays compose as `A3+B3`.
 - **A2/A3 overlap and the signed endpoint are resolved.** Task 7 verifies
   A2 moves only the muon rest block; A3 has no declaration there.
   ADR-0002 retains the signed endpoint approximation so the rest and
   boosted formulas remain consistent. Task 8 composed A3
   with B4 on 20 scalar arrays. A3 also moves the rho rest blocks;
-  Task 9 must compose B3 with the A3 capture, not with the old corpus.
+  Task 9 composes B3 with the A3 capture, preserving both repairs.
 - **What happens if `cython-to-rust` reaches Task 4.6 before Task 2
   lands?** The A4 `spectra.positron.charged_pion` oracle becomes
   unrecoverable from anything but the repaired Rust. The fallback is a
@@ -766,8 +783,9 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   needed something the question did not anticipate: an absolute floor,
   because two positions have no meaningful relative budget at all. Both
   are declared at the case's own 1e-12 rather than tightened to what they
-  measure, for A1's reason (the capture is one platform's). B3 still
-  carries 1e-9 unmeasured; Task 9 measures. A repair needing a *wider*
+  measure, for A1's reason (the capture is one platform's). Task 9
+  measures B3 at 4.16e-16 relative and retains its existing 1e-9 budget.
+  A repair needing a *wider*
   `rtol` has found something Task 3 did not model (`rules.md` rule 2) —
   a floor is a different object and is capped by its own test.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
@@ -800,11 +818,12 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
 - B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4), B1 (Task 5) and
-  B2 (Task 6), A2 (Task 7), and A3 (Task 8) have changed library values.
+  B2 (Task 6), A2 (Task 7), A3 (Task 8), and B3 (Task 9) have changed
+  library values.
   Every undeclared position retains its stored-value comparison.
   `test/parity/deltas.py` declares 165 arrays — 10 for B4, 6 for B5, 6 for
   B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2`, 1 for A2,
-  66 for A3 and 20 for `A3+B4` — and
+  62 for A3, 20 for `A3+B4`, and 4 for `A3+B3` — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff. Re-derive the split with
   `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
@@ -815,14 +834,9 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   repair (Findings). On this worktree Task 4's defective build
   reproduced the stored corpus bit for bit on all 10,045 A1 positions,
   so the two agreed; that is this platform, not a general fact.
-- B3 is the last Group B model still undeclared. Task 8 already declares
-  the rho rest arrays, so Task 9 must compose B3 with the A3 capture.
-  Its energy factor applies to A3's prediction, not the old stored value.
-  Task 3's predicted reach has now held exactly twice (B1: 6 arrays, 189
-  positions; B2: 6 arrays, 305 positions, 233 up and 72 down), but B2's
-  six were not the six a reader would have guessed from B1's, so
-  re-derive *which* arrays as well as how many
-  (`../rules.md` rule 11).
+- B3 now composes with the A3 capture on the rho rest arrays. All Group B
+  models have declarations. Task 10's A4 repair is next; its independent
+  positron captures need no composition with any earlier repair.
 - A relation may now declare an absolute floor as well as an `rtol`
   (Task 6). Reach for one only where the prediction cannot resolve the
   repaired value at some magnitude the array takes — a relocation that
@@ -852,3 +866,12 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   the window-independent statement where the physics offers one.
 - Every deadline in this plan depends on `cython-to-rust`'s pace, which
   this project does not control and must not assume.
+
+## Task 9 review response
+
+The generalist approved PR #98 at `2bb8f971`. Its three non-blocking
+comments are addressed by the review follow-up; see
+`task-9-review-response.md` for the
+composition guard, historical labels, constant provenance and checks.
+Local gates pass; PR #98's checks track published verification of the
+commit carrying these fixes.
