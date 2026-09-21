@@ -273,6 +273,8 @@ class Composed:
     adds a term or transforms the preceding prediction. Further repairs
     are `Additive` or `Exact`; a `Reference` that supersedes the array
     would discard the preceding repair and cannot be composed here.
+    Every step must return only suffixes present in the base prediction;
+    stored arrays supply abscissae, never a missing predicted output.
 
     Parameters
     ----------
@@ -316,7 +318,13 @@ class Composed:
         for addend in self.added:
             # Preserve the stored abscissae for Exact transforms while
             # replacing every value with the preceding prediction.
-            predicted.update(addend.expected(fn, block, {**stored, **predicted}))
+            updated = addend.expected(fn, block, {**stored, **predicted})
+            missing = updated.keys() - predicted.keys()
+            assert not missing, (
+                "composition step returned suffixes missing from the base prediction: "
+                f"{sorted(missing)}"
+            )
+            predicted.update(updated)
         return predicted
 
 

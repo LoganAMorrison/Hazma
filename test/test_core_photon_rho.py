@@ -516,6 +516,8 @@ class TestPhysics:
         residual = dnde_charged(grid, MASS_RHO) - np.array(
             [charged_pion_dnde(e, ENG_PI_CHARGED_RHO) for e in grid]
         )
+        # 0.98823 is BR(pi0 -> gamma gamma), the captured PDG branching
+        # fraction used by photon_pion.rs.
         # The pion kernel retains its captured f32 box height, whose
         # relative rounding error is at most 2^-24; allow 1e-7.
         np.testing.assert_allclose(

@@ -51,11 +51,13 @@ against the A3-corrected capture without changing the historical corpus.
 - Keep the rho relation at its existing 1e-9 portability budget, with
   no absolute floor, despite the much smaller local residual.
 - Follow-up administrative closure stays with Task 12, as planned.
-  No version bump, commit, or push belongs to this implementation task.
+  The initial implementation stopped before committing; the separately
+  requested shipping step opened PR #98. The version bump remains with
+  project close.
 
-## Files Changed
+## Files Changed — PR #98
 
-This task's uncommitted diff:
+Implementation recorded in PR #98 at `2bb8f971`:
 
 - `rust/src/kernels/photon_rho.rs`: restore the energy factor, correct
   unit documentation, and assert daughter sums and rest-limit continuity.
@@ -134,7 +136,7 @@ each value array: omitting B3, omitting A3, or adding one unmoved position
 must raise AssertionError. The separate roster assertion permits B3 only
 on the two species' rest blocks.
 
-## Numerical impact
+## Numerical impact — PR #98
 
 Captured from builds before and after the one-line kernel repair, using
 one isolated Python 3.13 environment. Import paths were verified inside
@@ -390,5 +392,7 @@ note. The sorted sweep captures are repeated after pasting to check a
 fixed point; file grouping avoids introducing stale line-number claims.
 
 ## Handoff to Next Task
+
+PR #98 review follow-up: see `task-9-review-response.md`.
 
 Task 10 is next; read the working-memory README and its plan entry.

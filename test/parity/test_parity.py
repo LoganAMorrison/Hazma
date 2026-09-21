@@ -807,6 +807,36 @@ class TestTheDeclaredDeltaComparison:
             where="synthetic",
         )
 
+    @pytest.mark.parametrize("kind", ["additive", "exact"])
+    def test_a_composition_rejects_a_suffix_missing_from_its_base(
+        self, kind: str
+    ) -> None:
+        # The stored scalar array must not silently substitute for an
+        # output that the preceding repair never predicted.
+        stored = {"values": np.array([1.0]), "scalar_values": np.array([3.0])}
+        base = deltas.Reference(
+            reference=lambda fn, block: {"values": np.array([2.0])},
+            rtol=1e-9,
+            why="synthetic",
+        )
+        if kind == "additive":
+            step = deltas.Additive(
+                term=lambda fn, block: {"scalar_values": np.array([1.0])},
+                rtol=1e-9,
+                why="synthetic",
+            )
+        else:
+            step = deltas.Exact(
+                transform=lambda block, arrays: {
+                    "scalar_values": 2.0 * arrays["scalar_values"]
+                },
+                rtol=1e-9,
+                why="synthetic",
+            )
+        relation = deltas.Composed(base, (step,), rtol=1e-9, why="synthetic")
+        with pytest.raises(AssertionError, match="missing from the base prediction"):
+            relation.expected(None, None, stored)
+
     def test_the_repaired_array_passes(self) -> None:
         pinned, term = self._arrays()
         self._check(self._declaration(deltas.MOVED), pinned + term)

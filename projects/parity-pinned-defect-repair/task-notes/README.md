@@ -866,3 +866,12 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   the window-independent statement where the physics offers one.
 - Every deadline in this plan depends on `cython-to-rust`'s pace, which
   this project does not control and must not assume.
+
+## Task 9 review response
+
+The generalist approved PR #98 at `2bb8f971`. Its three non-blocking
+comments are addressed by the review follow-up; see
+`task-9-review-response.md` for the
+composition guard, historical labels, constant provenance and checks.
+Local gates pass; PR #98's checks track published verification of the
+commit carrying these fixes.

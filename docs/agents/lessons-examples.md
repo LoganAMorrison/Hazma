@@ -162,6 +162,11 @@ cites a real PR.
   explicitly, then added published verification after the fixes passed,
   without rewriting old command output.
 
+- PR #98 omitted its PR number from the same two headings and still called
+  its committed implementation an uncommitted diff. The response labels
+  both sections with PR #98 and pins the implementation to `2bb8f971`,
+  preserving the recorded measurements rather than rewriting them.
+
 ### flat-vs-sectioned-numbering
 
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
@@ -1358,3 +1363,14 @@ The pattern to watch for: a paragraph that establishes a branch-scoped caveat
 about a kernel and then makes an unscoped claim about a function that composes
 it. Grep the impact paragraph for "any", and for each occurrence ask which
 branch of the underlying kernel that "any" reaches.
+
+### mapping-fallback-hides-missing-output
+
+- PR #98 generalized `test/parity/deltas.py`'s composition steps from
+  additive terms to exact transforms. Passing merged stored and predicted
+  mappings retained the grids but accidentally allowed a later step to use
+  a stored value when the base had never predicted that output. Direct
+  indexing had previously raised a missing-key error. No existing
+  declaration exercised the defect; synthetic additive and exact steps
+  now require rejection if their output suffix is absent from the base.
+  All existing composed predictions retain their keys and values.
