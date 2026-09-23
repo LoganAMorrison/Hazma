@@ -52,7 +52,8 @@ false when Task 6.4 deleted the last Cython.
 
 - **The population was wider than the plan's one known copy and
   narrower than the raw grep.** `grep -rn "Task 6\.4" --include="*.md"`
-  hits 54 tracked files. Triage by file role
+  hit 54 tracked files before this note existed; the note itself makes
+  it 55. Triage by file role
   (`[sweep-excluded-the-canonical-directory]`) leaves 102 live `.md`
   files, and the behavior and liveness sweeps over those led to edits in
   12 of them. Every other hit is a task note, a learnings file, a `done/`
@@ -96,8 +97,21 @@ false when Task 6.4 deleted the last Cython.
   (`665aed5`, `ed1fa20`), so they were left alone.
 - **`projects/cython-to-rust/references/*` `.pyx` inventory rows stay
   unpinned.** Their subject is the Cython that was replaced, and pinning
-  every row is Task 12's move-and-pin sweep or nobody's. Only the one row
-  with a present-tense liveness claim was edited.
+  every row is Task 12's move-and-pin sweep or nobody's. What a row
+  claims about the present is corrected, though: every Status cell of
+  `numerics-replacements.md`'s `scipy.integrate.quad` table now names
+  the task, kernel and commit that ported its call site, and the commit
+  that deleted the `.pyx`.
+- **Review fixes (PR #101, round 1).** The first pass edited only the
+  photon-pion row of that table; the five sibling rows still read
+  `Cython — Task 4.6`, `Cython — Phase 05` and `Cython — Phase 06`, a
+  status vocabulary the liveness sweep did not include. The widened
+  status sweep below found those five and one more stale claim of the
+  same kind in `test/parity/tolerances.py`'s `QUAD` docstring ("Phase 06
+  is where the next one arrives"), and all six were corrected. The
+  count-sweep table's `repaired` command was wrong (it printed 397, not
+  10) and is replaced, and `corpus-repinning.md`'s "Since … so" sentence
+  is rewritten. Both classes are recorded in `docs/agents/lessons.md`.
 - **B5's open question stays open.** The Rust port of the mediator
   positron modules (`mediator_decay_positron.rs`) has not been checked
   for a doubled `π → e ν` line. The follow-up now says so in the present
@@ -116,9 +130,11 @@ false when Task 6.4 deleted the last Cython.
   the mediator positron re-check is stated against the Rust port.
 - `projects/cython-to-rust/phases/phase-03-numerics-foundation.md` —
   the boost bullet corrected, with an "Amended by" note.
-- `projects/cython-to-rust/phases/phase-04-spectra-kernels.md`,
-  `projects/cython-to-rust/references/numerics-replacements.md` — the
-  capi-survivor exception and dual-implementation row put in past tense.
+- `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` — the
+  capi-survivor exception put in past tense.
+- `projects/cython-to-rust/references/numerics-replacements.md` — every
+  Status cell of the `scipy.integrate.quad` table marked ported, with the
+  kernel and the landing and deletion commits.
 - `../PLAN.md` — a one-sentence status on the premise's deadline, a
   "Discharged" line under Dependencies, and Task 12's follow-up count.
 - `../references/defect-blast-radius.md` — Group A lead-in, four roster
@@ -129,21 +145,28 @@ false when Task 6.4 deleted the last Cython.
 - `../references/the-premise.md` — "Re-derived after the port finished".
 - `test/parity/test_oracles.py` — one module-docstring verb, "deletes" to
   "deleted".
+- `test/parity/tolerances.py` — the `QUAD` budget-class docstring no
+  longer says Phase 06 will bring an unported case.
+- `docs/agents/lessons.md` and `docs/agents/lessons-examples.md` — PR
+  #101 added to `[settling-a-deferral-has-two-sweeps]` and
+  `[sweep-block-written-from-intent]`, with worked examples.
 - `README.md` (this directory) and this note.
 
 ## Numerical impact
 
 No public value changes (verified:
 `git diff --stat origin/master -- hazma rust test/parity/data test/parity/oracles`
-prints nothing). The only non-Markdown edit is one word in a test
-module's docstring.
+prints nothing). The only non-Markdown edits are docstring prose in two
+test-suite modules, `test/parity/test_oracles.py` and
+`test/parity/tolerances.py`; no constant or test changed.
 
 ## Verification
 
-- `scripts/agents/check_doc_citations.py` over the 14 touched `.md`
+- `scripts/agents/check_doc_citations.py` over the 16 touched `.md`
   files, paths passed explicitly: see the sweep block.
-- `scripts/agents/preflight.sh --paths "test/parity/test_oracles.py" --md
-  "<the 14 touched .md files>"`: see the sweep block for the result row.
+- `scripts/agents/preflight.sh --paths "test/parity/test_oracles.py
+  test/parity/tolerances.py" --md "<the 16 touched .md files>"`: see the
+  sweep block for the result row.
 - Nothing is deferred except B5's open mediator re-check, which is
   recorded in its follow-up.
 
@@ -171,7 +194,7 @@ population, built by the first command.
 git ls-files "*.md" | grep -v -e "/task-notes/" -e "/learnings/" \
     -e "^docs/followups/done/" -e "lessons-examples.md" -e CHANGELOG.md \
     > /tmp/t11/live.txt   # 102 files
-git ls-files "*.md" | xargs grep -l "Task 6\.4" | wc -l   # 54
+git ls-files "*.md" | xargs grep -l "Task 6\.4" | wc -l   # 55, this note included
 ```
 
 **Behavior and liveness sweep** over the live population:
@@ -203,6 +226,70 @@ deleted the files), a heading (`phase-06-mediator-spectra.md:85`), or
 `cython-inventory.md:140`, a reference that declares itself a snapshot of
 2.1.0. KEPT.
 
+**Status-vocabulary sweep** (review round 1), per
+`docs/agents/doc-consistency.md` §11. The liveness phrases above miss a
+tracking table's own Status wording, so this sweep adds it. Pre-fix
+occurrences come from the committed tree at `fe603cb0`, cut to 110
+columns:
+
+```sh
+git grep -n -E 'Cython — (Task|Phase)|Cython - (Task|Phase)|still Cython|not yet ported|to be ported|unported' \
+    HEAD -- projects docs hazma test .claude .codex README.md CHANGELOG.md
+```
+
+```text
+projects/cython-to-rust/references/numerics-replacements.md:123:| `spectra/_positron/_pion.pyx:58` | cosθ | `
+projects/cython-to-rust/references/numerics-replacements.md:124:| `spectra/_neutrino/_pion.pyx:124,127` | ener
+projects/cython-to-rust/references/numerics-replacements.md:125:| scalar `thermal_cross_section` (`:1370` regi
+projects/cython-to-rust/references/numerics-replacements.md:126:| vector `thermal_cross_section` (`:615` regio
+projects/cython-to-rust/references/numerics-replacements.md:127:| 4 × mediator spectrum modules | cosθ ∈ [
+projects/cython-to-rust/task-notes/README.md:218:  `cases.PORTED_ENTRY_POINTS` would keep unported kernels bit
+projects/cython-to-rust/task-notes/README.md:268:  measurement, and the neutrino kernels are unported and unch
+projects/cython-to-rust/task-notes/phase-04/README.md:421:  `spectra.photon.charged_pion` takes; the two unpor
+projects/cython-to-rust/task-notes/phase-04/task-4.1-positron-muon.md:436:  difference scoped to `PORTED_ENTRY
+projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md:290:  taken by the two ρ cases; the seven
+test/parity/tolerances.py:107:    for the next unported member rather than a live budget, and Phase 06
+```
+
+| Hit | Action |
+| --- | --- |
+| `numerics-replacements.md:123-127` | EDITED: each Status cell names its porting task, kernel, landing commit (`e2698eb6`, `6df9cfd8`, `aa6ab98b`, `75947619`, `c384aff3`) and the commit that deleted the `.pyx` |
+| `test/parity/tolerances.py:107` | EDITED: `QUAD_RTOL` is the starting point "for a newly ported quadrature-backed case"; the Phase 06 prediction is gone, matching the `QUAD_RTOL` constant's own comment |
+| the five `cython-to-rust/task-notes/` hits | KEPT: task notes of a Complete project, past-tense records of their run |
+
+The same table's lead-in, "Keep this table current as Phases 04–06
+land", is KEPT: it is the rule under which the rows above were just
+brought current, and it binds no further port.
+
+Post-fix, the same pattern over the working tree:
+
+```sh
+rg -n --hidden 'Cython — (Task|Phase)|Cython - (Task|Phase)|still Cython|not yet ported|to be ported|unported' \
+    projects/ docs/ hazma/ test/ .claude/ .codex/ README.md CHANGELOG.md \
+    | sort | grep -v task-11-prose
+```
+
+```text
+docs/agents/lessons-examples.md:802:  table's own status vocabulary, `Cython — Task 4.6`, `Cython — Phase 05`
+docs/agents/lessons-examples.md:803:  and `Cython — Phase 06`, which no liveness phrase matches; two reviewers
+projects/cython-to-rust/task-notes/README.md:218:  `cases.PORTED_ENTRY_POINTS` would keep unported kernels bit-exact for
+projects/cython-to-rust/task-notes/README.md:268:  measurement, and the neutrino kernels are unported and unchecked.
+projects/cython-to-rust/task-notes/phase-04/README.md:421:  `spectra.photon.charged_pion` takes; the two unported `QUAD` cases keep
+projects/cython-to-rust/task-notes/phase-04/task-4.1-positron-muon.md:436:  difference scoped to `PORTED_ENTRY_POINTS` — would keep the unported
+projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md:290:  taken by the two ρ cases; the seven unported mediator-spectrum cases
+```
+
+The `grep -v` drops this note, which quotes the pattern. The two new
+hits are the lesson that quotes the retired phrasing. Over
+the 102-file live population the same pattern returns nothing.
+
+**Grammar sweep** for the "Since … so" construction, over every touched
+`.md`, with `P='\bSince\b[^;]{0,120}?, so\b'`. Pre-fix, each file read
+at `HEAD` with `git show HEAD:<file> | rg -c -U --pcre2 "$P"` matched
+once, in `corpus-repinning.md` (lines 136-137). Post-fix,
+`git diff --name-only origin/master -- "*.md" | xargs rg -n -U --pcre2 "$P"`
+prints nothing.
+
 **Line-number citation sweep:**
 
 ```sh
@@ -211,13 +298,16 @@ python3 scripts/agents/check_doc_citations.py \
 ```
 
 ```text
-docs scanned: 14
-in-repo citations checked: 0
-external citations skipped: 29
+docs scanned: 16
+in-repo citations checked: 1
+  resolved by suffix: 1
+external citations skipped: 30
 out-of-range or ambiguous: NONE
 ```
 
-The 29 external skips are all into deleted `.pyx`/`.pxd`. Each one in a
+The one in-repo citation is `_scalar_mediator_spectra.py:72` in
+`docs/agents/lessons-examples.md`, an existing entry this change does not
+touch. The 30 external skips are all into deleted `.pyx`/`.pxd`. Each one in a
 touched follow-up is pinned to a revision (`f479b231^`, `e2698eb6^`,
 `665aed5`, `ed1fa20`) and was read back at that revision with `git show
 <rev>:<path> | sed -n <line>p`. The ones in
@@ -236,12 +326,12 @@ defect", followed by "**Done, 2026-09-06.**"). All KEPT.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Findings, "54 tracked files" | `git ls-files "*.md" \| xargs grep -l "Task 6\.4" \| wc -l` | 54 | OK |
+| Findings, "54 tracked files … 55" | `git ls-files "*.md" \| xargs grep -l "Task 6\.4" \| wc -l`, then again with `grep -v task-11-prose` before `xargs` | 55, 54 | OK |
 | Findings, "102 live `.md` files" | `wc -l < /tmp/t11/live.txt` | 102 | OK |
-| Findings, "edits in 12 of them" | `git diff --name-only origin/master -- "*.md" \| grep -v task-notes \| wc -l` | 12 | OK |
-| Files Changed, "all ten Serving-kernel cells" | `grep -c "\*\*repaired\*\* \|$" references/defect-blast-radius.md` | 10 | OK |
+| Findings, "edits in 12 of them" | `git diff --name-only origin/master -- "*.md" \| grep -v -e task-notes -e docs/agents/lessons \| wc -l` | 12 | OK |
+| Files Changed, "all ten Serving-kernel cells" | `grep -c '\*\*repaired\*\*' references/defect-blast-radius.md` | 10 | OK |
 | the-premise, `find` prints `0` | `find hazma -name "*.pyx" -o -name "*.pxd" \| wc -l` | 0 | OK |
-| Every cited commit exists | `git cat-file -t` on `f479b231 e2698eb6 1a304d02 75947619 c384aff3 20db28f5` | 6 × `commit` | OK |
+| Every cited commit exists | `git cat-file -t` on each of `f479b231 e2698eb6 1a304d02 75947619 c384aff3 20db28f5 6df9cfd8 aa6ab98b` | 8 × `commit` | OK |
 
 **Numerical-impact statement:** no public value changes (verified:
 `git diff --stat origin/master -- hazma rust test/parity/data
@@ -261,13 +351,14 @@ test/parity/oracles | wc -l` prints `0`).
 Criterion checked, and every file in Files Changed appears in `git diff
 --stat origin/master` or is this new note.
 
-**Preflight:** `scripts/agents/preflight.sh --paths
-"test/parity/test_oracles.py" --md "<the 14 touched .md files>"` printed
+**Preflight** (after the review-round fixes):
+`scripts/agents/preflight.sh --paths "test/parity/test_oracles.py
+test/parity/tolerances.py" --md "<the 16 touched .md files>"` printed
 `RESULT: PASS`, exit 0, with every gate green. The pytest row read
-`2320 passed, 16 skipped, 7 warnings, 37 subtests passed`, and the version
-bump was SKIP because this is not a closing PR. This note and
-`the-premise.md` were edited after that run, so `markdownlint --dot` was
-re-run on both, and it passed.
+`2320 passed, 16 skipped, 1 warning, 37 subtests passed in 56.82s`, and
+the version bump was SKIP because this is not a closing PR. Only this
+note was edited after that run, so `markdownlint --dot` was re-run on
+it, and it passed.
 
 ## Handoff to Next Task
 

@@ -133,8 +133,8 @@ The declaration table is data, so it needs its own gate:
 The four Group A twins were `cdef`-only — no top-level `def` — so they
 were reachable from Python solely through `__pyx_capi__` capsules. Task 2
 reused the harness `test/test_core_boost.py` then drove
-`hazma._utils.boost` with, rather than inventing a second one. Since
-`cython-to-rust` Task 6.4 (`f479b231`) no twin is in the tree, so a
+`hazma._utils.boost` with, rather than inventing a second one. No twin has
+been in the tree since `cython-to-rust` Task 6.4 (`f479b231`), so a
 re-capture first restores every source it compiles from —
 `test/parity/oracles/README.md`, "Recapturing", has the steps.
 

@@ -104,9 +104,8 @@ implementation does* rather than by what it computes:
     thermal_cross_section`, at **3.1e-15** (104 of 285 bit-equal) and
     tightened it too. That leaves the class with **no case at the
     opening figure**: `QUAD_RTOL` is now the documented starting point
-    for the next unported member rather than a live budget, and Phase 06
-    is where the next one arrives. Nothing external moves under a ported
-    case any
+    for a newly ported quadrature-backed case rather than a live budget.
+    Nothing external moves under a ported case any
     more -- the reference values are stored, scipy no longer participates,
     and the remaining variation is the platform libm, which the corpus is
     scoped to anyway.

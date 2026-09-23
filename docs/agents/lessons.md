@@ -221,7 +221,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [settling-a-deferral-has-two-sweeps] Settling a deferred decision leaves stale
   text in two disjoint populations — pointers carrying the task id, and
   statements of the old behavior carrying none; sweep the behavior words and
-  identifiers as well as the task id (PR #62).
+  identifiers as well as the task id, and when a tracking table's
+  row is edited, the sibling rows' status cells too (PR #62, #101).
 - [numstat-over-a-directory] `git diff --numstat -- '<dir>/'` counts edits to
   surviving files too; measure deletions with `--diff-filter=D` and re-derive
   sub-counts from the corrected total (PR #66).
@@ -252,7 +253,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   one that produced the output beside it — a narrowed run written up under a
   repo-wide command reads as a clean sweep and is unreproducible. The same rule
   binds any inventory of what a task is *deferring* — enumerate it from the
-  grep, not from memory (PR #71, #78, #83, #84).
+  grep, not from memory (PR #71, #78, #83, #84, #101).
 - [sign-copied-from-a-defect-description] A delta quoted from a bug report
   carries the *defect's* sign and the repair's is the opposite with the same
   magnitude; restate the endpoints, or say "magnitude", when you copy a figure
