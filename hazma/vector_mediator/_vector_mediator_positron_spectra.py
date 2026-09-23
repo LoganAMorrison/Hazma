@@ -24,7 +24,7 @@ class VectorMediatorPositronSpectra:
         return spectra.dnde_positron_charged_pion(e_ps, e_cm / 2.0)
 
     def dnde_pos_mumu(self, e_ps, e_cm):
-        return spectra.dnde_photon_muon(e_ps, e_cm / 2.0)
+        return spectra.dnde_positron_muon(e_ps, e_cm / 2.0)
 
     # positron decay spectrum for chi chibar -> v v
     def dnde_pos_vv(self, e_ps, e_cm, fs="total"):
