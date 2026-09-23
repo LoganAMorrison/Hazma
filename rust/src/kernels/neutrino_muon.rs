@@ -439,16 +439,14 @@ mod tests {
     /// `μ → e ν̄_e ν_μ` emits exactly one neutrino of each light flavor, so
     /// both rows must integrate to 1.
     ///
-    /// That they do is worth pinning, because the sibling kernel gets it
-    /// wrong. `_positron/_muon.pyx:28` **divides** by [`R_FACTOR`] where
-    /// the normalization has to multiply, so every positron value is low
-    /// by `1/N²` — 0.0374% — and
-    /// `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`
-    /// tracks it. `_neutrino/_muon.pyx` writes the same literal into
-    /// `common = R_FACTOR * x² …` as a **factor**, which is correct, and
-    /// the port keeps each file as it is. So a reader who has met the
-    /// positron defect must not "fix" this one to match: the two really do
-    /// disagree, and only one of them is wrong.
+    /// That they do is worth pinning, because the positron sibling's Cython
+    /// source got it wrong. `_positron/_muon.pyx:28` **divided** by
+    /// [`R_FACTOR`] where the normalization has to multiply, leaving every
+    /// positron value low by `1/N²` — 0.0374%
+    /// (`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`);
+    /// [`super::positron_muon`] multiplies. `_neutrino/_muon.pyx` writes the
+    /// same literal into `common = R_FACTOR * x² …` as a **factor**, which
+    /// is correct, and this kernel keeps it.
     ///
     /// Simpson on 100_001 panels over the rest-frame support. 1e-6
     /// relative: the integrand is smooth and vanishes quadratically at
@@ -481,7 +479,7 @@ mod tests {
                 "the {flavor} row integrates to {integral}, not to one neutrino"
             );
         }
-        // And the defect the positron sibling carries is two decades
+        // And the inverted normalization is two decades
         // outside that budget, so this test discriminates rather than
         // merely passing.
         const { assert!(1.0 - 1.0 / (R_FACTOR * R_FACTOR) > 1e-4) };

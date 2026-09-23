@@ -91,15 +91,15 @@ the two scopes cannot drift apart. It remains the gate that governs the
 swap, holding this entry point to ``rtol = 0`` against 179,695 pinned
 pre-port values; nothing here duplicates that.
 
-The normalization defect
-------------------------
-:class:`TestPhysics` asserts the spectrum integrates to ``1/N**2``, not to 1.
-The shipped Cython divides by the Michel normalization where it should
-multiply, so every value is low by 0.0374%. That is a live defect in hazma
-2.1.0 which the port reproduces on purpose
-(``projects/cython-to-rust/rules.md`` rule 1) and which
-``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``
-tracks. Asserting the correct normalization here would contradict the corpus.
+The normalization
+-----------------
+:class:`TestPhysics` asserts the spectrum integrates to 1, one positron per
+decay. The Cython this kernel was ported from divided by the Michel
+normalization where it should multiply, so every value it returned -- and
+every value ``spectra.positron.muon`` pins -- is low by ``1/N**2``, 0.0374%
+(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``).
+The parity suite declares the corrected values against a capture from a
+patched build of that Cython (``test/parity/deltas.py``, roster entry A4).
 """
 
 from __future__ import annotations
@@ -127,9 +127,9 @@ R = MASS_E / MASS_MU
 R_FACTOR = 1.0001870858234163
 
 
-#: How far below 1 the shipped normalization sits: ``1 - 1/R_FACTOR**2``, or
-#: 3.74e-4. Named so the assertion that the integral is *not* 1 states the
-#: separation it relies on rather than a bare literal.
+#: How far below 1 the inverted normalization sits: ``1 - 1/R_FACTOR**2``, or
+#: 3.74e-4. Named so the assertion that the integral is *not* the inverted
+#: value states the separation it relies on rather than a bare literal.
 NORMALIZATION_DEFICIT = 1.0 - 1.0 / R_FACTOR**2
 
 
@@ -255,17 +255,17 @@ class TestPhysics:
         assert np.all(values >= 0.0)
 
     @pytest.mark.parametrize("emu", [MASS_MU, 150.0, 500.0, 1500.0])
-    def test_the_integral_is_the_shipped_inverted_normalization(
+    def test_the_spectrum_integrates_to_one_positron_per_decay(
         self, emu: float
     ) -> None:
-        """``int dN/dE dE = 1/N**2`` at every parent energy.
+        """``int dN/dE dE = 1`` at every parent energy.
 
         Two statements at once. That the integral is the *same* at every
         ``emu`` is the physics -- the boost moves positrons around in energy
         but creates none -- and it is what a wrong Jacobian or a wrong
-        ``x``-scaling would break. That the shared value is ``1/N**2``
-        rather than 1 is the shipped normalization defect this port
-        reproduces (see the module docstring).
+        ``x``-scaling would break. That the shared value is 1 rather than
+        ``1/N**2`` is the Michel normalization applied the right way round
+        (see the module docstring).
 
         Trapezoid on 200_001 points. 5e-5 relative: the in-flight spectrum has
         a kink where the two kinematic branches meet and a square-root edge at
@@ -275,9 +275,9 @@ class TestPhysics:
         """
         energies = np.linspace(MASS_E, emu, 200_001)
         integral = np.trapezoid(dnde(energies, emu), energies)
-        shipped = 1.0 / R_FACTOR**2
-        assert integral == pytest.approx(shipped, rel=5e-5)
-        assert abs(integral - 1.0) > 0.9 * NORMALIZATION_DEFICIT
+        assert integral == pytest.approx(1.0, rel=5e-5)
+        inverted = 1.0 / R_FACTOR**2
+        assert abs(integral - inverted) > 0.9 * NORMALIZATION_DEFICIT
 
     def test_the_rest_frame_limit_is_continuous_in_the_parent_energy(self) -> None:
         """The ``E - m < eps`` branch is a removable singularity.

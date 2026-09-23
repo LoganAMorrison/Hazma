@@ -348,7 +348,7 @@ class Provenance:
         changed an implementation: a different libm rounds `atan`, `log`
         and `exp` differently in the last bit, which is a *fact about the
         host* rather than a drift to declare under
-        ``projects/cython-to-rust/rules.md`` rule 3. `effective_budget`
+        ``projects/cython-to-rust/rules.md`` rule 3. `platform_budget`
         is the only reader.
     detail : str
         Empty when `exact`; otherwise a human-readable list of what
@@ -841,35 +841,55 @@ def effective_budget(case_name: str, tree: Provenance) -> Budget:
             why="running on the capturing tree, where the corpus pins this "
             "implementation against itself",
         )
-    if not tree.same_platform and declared.rtol in _PLATFORM_FLOORS:
-        # The relaxations with a host, not an implementation, behind
-        # them. `EXACT` means "reaches only libc.math and must agree
-        # bit-for-bit"; off the capturing libm the second half of that is
-        # not something any implementation can deliver, so the class
-        # falls back to the figure the corpus's own threshold sampling
-        # implies. `SPECFUN` is held at 1e-13 by `spence` being bit-equal
-        # to scipy, which is likewise a statement about one libm.
-        #
-        # Deliberately a two-row table rather than
-        # `max(declared, some_floor)`: `TABULATED` and the two `PORTED_*`
-        # budgets are also tighter than `PLATFORM_EXACT_RTOL`, and
-        # nothing measured says they need relaxing. Widening them on the
-        # theory that they might is the same over-broad exemption the
-        # zero floor got wrong (PR #71 review round 1). A class that does
-        # need it should arrive as a loud failure somebody measures.
-        floor, name = _PLATFORM_FLOORS[declared.rtol]
-        return Budget(
-            rtol=floor,
-            atol=0.0,
-            why=f"{declared.why} -- held to {name} rather than the declared "
-            "figure because this is not the capturing platform, so "
-            "libc.math itself differs in the last ulp",
-        )
-    return declared
+    return platform_budget(declared, tree)
+
+
+def platform_budget(declared: Budget, tree: Provenance) -> Budget:
+    """``declared``, relaxed to its platform floor off the capturing libm.
+
+    The one place the platform branch is decided. `effective_budget`
+    routes every case budget through it, and `test_parity` routes every
+    declared relation's budget through it too: a `deltas` relation held
+    to the ``EXACT`` or ``SPECFUN`` figure compares the same kernel
+    against a capture from the same libm, so it is bit-reproducible on
+    that platform and on no other, for the same reason the case is.
+
+    Parameters
+    ----------
+    declared : Budget
+        The budget as written, for a case or for a declared relation.
+    tree : Provenance
+        From `provenance`.
+    """
+    if tree.same_platform or declared.rtol not in _PLATFORM_FLOORS:
+        return declared
+    # The relaxations with a host, not an implementation, behind them.
+    # `EXACT` means "reaches only libc.math and must agree bit-for-bit";
+    # off the capturing libm the second half of that is not something any
+    # implementation can deliver, so the class falls back to the figure
+    # the corpus's own threshold sampling implies. `SPECFUN` is held at
+    # 1e-13 by `spence` being bit-equal to scipy, which is likewise a
+    # statement about one libm.
+    #
+    # Deliberately a two-row table rather than
+    # `max(declared, some_floor)`: `TABULATED` and the two `PORTED_*`
+    # budgets are also tighter than `PLATFORM_EXACT_RTOL`, and nothing
+    # measured says they need relaxing. Widening them on the theory that
+    # they might is the same over-broad exemption the zero floor got wrong
+    # (PR #71 review round 1). A class that does need it should arrive as
+    # a loud failure somebody measures.
+    floor, name = _PLATFORM_FLOORS[declared.rtol]
+    return Budget(
+        rtol=floor,
+        atol=declared.atol,
+        why=f"{declared.why} -- held to {name} rather than the declared "
+        "figure because this is not the capturing platform, so "
+        "libc.math itself differs in the last ulp",
+    )
 
 
 #: Declared budget -> (budget off the capturing libm, its constant name).
-#: Only the two classes measured to need it; see `effective_budget`.
+#: Only the two classes measured to need it; see `platform_budget`.
 _PLATFORM_FLOORS: dict[float, tuple[float, str]] = {
     EXACT_RTOL: (PLATFORM_EXACT_RTOL, "PLATFORM_EXACT_RTOL"),
     SPECFUN_RTOL: (PLATFORM_SPECFUN_RTOL, "PLATFORM_SPECFUN_RTOL"),

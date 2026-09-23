@@ -11,11 +11,13 @@
 //! quadrature. The rest-frame shape is
 //!
 //! ```text
-//! dN/dx = -2 √(x² − 4r²) · (4r² + x(−3 − 3r² + 2x)) / N,  2r < x < 1 + r²
+//! dN/dx = -2 √(x² − 4r²) · (4r² + x(−3 − 3r² + 2x)) · N,  2r < x < 1 + r²
 //! ```
 //!
 //! with `r = m_e/m_μ` and `N` the normalization
-//! [`constants::derived::positron_muon::R_FACTOR`]. In flight the same
+//! [`constants::derived::positron_muon::R_FACTOR`], the reciprocal of the
+//! un-normalized polynomial's integral over its support, so that the
+//! spectrum integrates to one positron per decay. In flight the same
 //! polynomial is integrated over the boost cone in closed form between
 //! the kinematic limits `x∓`, which is why this kernel — unlike the
 //! photon muon spectrum — reaches no special function and no
@@ -23,6 +25,13 @@
 //! corpus's `EXACT` class (`test/parity/tolerances.py`): the budget is
 //! `rtol = 0`, so this module must be *bit-equal* to the Cython on the
 //! capturing platform, not merely close.
+//!
+//! The Cython divided by `N` where normalizing multiplies, leaving every
+//! value low by `1/N²` (0.0374%). The corpus still pins those values;
+//! `test/parity/deltas.py` declares this kernel's corrected values against
+//! roster entry A4's capture from a patched build of the same Cython,
+//! whose two changed expressions this module spells in the same operation
+//! order, so the comparison stays bit-for-bit.
 //!
 //! # Why `mul_add`, and where it is *not* used
 //!
@@ -108,7 +117,7 @@ pub fn dndx_rest_frame(x: f64) -> f64 {
     // `fmadd d0, d0, d2, d3`: 4r² + x·inner.
     let poly = x.mul_add(inner, FOUR_R2);
 
-    (-2.0 * root) * poly / R_FACTOR
+    (-2.0 * root) * poly * R_FACTOR
 }
 
 /// The in-flight spectrum `dN/dx` at scaled energy `x` and parent speed
@@ -187,7 +196,10 @@ pub fn dndx(x: f64, beta: f64) -> f64 {
 
     // `fadd d1, d2, d2`: the Cython's `2 * beta`, which clang emits as
     // `β + β`. Exact either way, and written to match the instruction.
-    numerator / ((beta + beta) * R_FACTOR)
+    // Multiplying by `N` before dividing by `2β` is the order the A4
+    // capture's patched Cython evaluates; the other order differs in the
+    // last ulp.
+    numerator * R_FACTOR / (beta + beta)
 }
 
 /// The positron spectrum `dN/dE` from the decay of a muon of energy
@@ -275,34 +287,25 @@ mod tests {
         assert!(dndx_rest_frame(0.5) > 0.0);
     }
 
-    /// `∫ dN/dx dx = 1/N²`, **not** 1 — the shipped normalization is
-    /// inverted, and the port reproduces it.
+    /// `∫ dN/dx dx = 1`: one positron per decay.
     ///
     /// The un-normalized polynomial integrates to exactly `1/N` over
     /// `(2r, 1 + r²)`, where `N =` [`R_FACTOR`]: that is the closed form
-    /// `1 − 8r² + 8r⁶ − r⁸ − 12r⁴ln(r²)` the `.pyx` comment names, and
-    /// `scipy.integrate.quad` reproduces it to 1e-16 relative
-    /// (0.999812949171142 against 0.9998129491711419). Normalizing
-    /// therefore means dividing by `1/N`, i.e. **multiplying** by `N`.
-    /// `hazma/spectra/_positron/_muon.pyx:28` divides instead, so every
-    /// value is low by `1/N²` — 0.0374% — and so is everything built on
-    /// it.
-    ///
-    /// This is a live defect in hazma 2.1.0, not something the port
-    /// introduced, and `projects/cython-to-rust/rules.md` rule 1 says to
-    /// reproduce it rather than repair it: the parity corpus pins the
-    /// low values, so a "fix" here fails the gate that governs the swap.
-    /// Filed as
-    /// `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`.
+    /// `1 − 8r² + 8r⁶ − r⁸ − 12r⁴ln(r²)`, and `scipy.integrate.quad`
+    /// reproduces it to 1e-16 relative (0.999812949171142 against
+    /// 0.9998129491711419). Normalizing therefore means **multiplying** by
+    /// `N`. The Cython this module was ported from divided instead, so
+    /// every value was low by `1/N²` — 0.0374% — which is the value the
+    /// second assertion below rules out.
     ///
     /// Simpson on 200_001 panels. The square-root endpoint at `x = 2r`
     /// leaves the derivative unbounded, so the composite rule converges
     /// at `O(h^1.5)` there rather than `O(h⁴)` and lands 3.3e-6 short —
-    /// hence 1e-5, measured rather than chosen. That still separates
-    /// `1/N²` from `1/N` (1.9e-4 away) and from `1` (3.7e-4 away) by
-    /// more than a decade, which is the discrimination this test needs.
+    /// hence 1e-5, measured rather than chosen. That still separates 1
+    /// from `1/N` (1.9e-4 away) and from `1/N²` (3.7e-4 away) by more than
+    /// a decade, which is the discrimination this test needs.
     #[test]
-    fn rest_frame_spectrum_carries_the_inverted_normalization() {
+    fn rest_frame_spectrum_integrates_to_one_positron() {
         let (lo, hi) = (TWO_R, ONE_PLUS_R2);
         let n = 200_001_usize;
         let h = (hi - lo) / (n - 1) as f64;
@@ -318,14 +321,14 @@ mod tests {
             total += weight * dndx_rest_frame(lo + h * index as f64);
         }
         let integral = total * h / 3.0;
-        let shipped = 1.0 / (R_FACTOR * R_FACTOR);
         assert!(
-            (integral - shipped).abs() < 1e-5,
-            "rest-frame dN/dx integrates to {integral}, not the shipped {shipped}"
+            (integral - 1.0).abs() < 1e-5,
+            "rest-frame dN/dx integrates to {integral}, not 1"
         );
-        // The correct answer is two factors of N away, and far outside the
-        // quadrature error above — so this pins the defect, not the rule.
-        assert!((integral * R_FACTOR * R_FACTOR - 1.0).abs() < 1e-5);
+        // The inverted normalization is two factors of N away, far outside
+        // the quadrature error above — so this pins the repair, not the rule.
+        let inverted = 1.0 / (R_FACTOR * R_FACTOR);
+        assert!((integral - inverted).abs() > 3e-4);
     }
 
     /// `dndx` reduces to the rest-frame form as the parent stops.
@@ -437,13 +440,14 @@ mod tests {
     }
 
     /// The boost conserves positron number: the in-flight spectrum
-    /// integrates to the same `1/N²` the rest-frame one does.
+    /// integrates to the same one positron per decay the rest-frame one
+    /// does ([`rest_frame_spectrum_integrates_to_one_positron`]).
     ///
     /// This is the statement about the kernel that owes nothing to the
     /// Cython — the closed-form boost integral is only correct if it
-    /// preserves the norm — and it is asserted against the rest frame's
-    /// own value rather than against 1, for the reason
-    /// [`rest_frame_spectrum_carries_the_inverted_normalization`] gives.
+    /// preserves the norm — and it carries the normalization repair into
+    /// flight: the in-flight branch applies `N` separately, so a repair to
+    /// the rest frame alone would leave this at `1/N²`.
     ///
     /// Trapezoid on 400_001 points from `m_e` to the endpoint. 1e-6
     /// relative: the in-flight spectrum has a kink where the two
@@ -465,10 +469,9 @@ mod tests {
             total += weight * dnde_positron_muon(lo + h * index as f64, emu);
         }
         let integral = total * h;
-        let shipped = 1.0 / (R_FACTOR * R_FACTOR);
         assert!(
-            (integral - shipped).abs() < 1e-6,
-            "in-flight dN/dE integrates to {integral}, not the shipped {shipped}"
+            (integral - 1.0).abs() < 1e-6,
+            "in-flight dN/dE integrates to {integral}, not 1"
         );
     }
 

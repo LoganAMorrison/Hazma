@@ -24,12 +24,36 @@ user-facing change even when no signature did.
   `dnde_positron_muon`, so the channel carried the radiative muon-decay
   photon spectrum. Integrated from the electron mass to `e_cm / 2`, it
   held 0.062 positrons per annihilation at `e_cm = 1.05 × 2 m_mu`, rising
-  to 0.085 at `e_cm = 1000` MeV. It now holds 0.99963, the same one
-  positron per `mu+ mu-` pair as `ScalarMediator`'s channel. The old and
+  to 0.085 at `e_cm = 1000` MeV. It now holds one positron per
+  `mu+ mu-` pair, as `ScalarMediator`'s channel does. The old and
   new spectra differ in shape, so no constant factor relates them. The legacy
   channel counts positrons only and carries no factor of two, unlike the
   GeV model in `hazma.vector_mediator._gev`, which counts both charges.
   The parity corpus does not pin this channel.
+
+- **The muon positron spectrum now integrates to one positron per
+  decay.** `dnde_positron_muon` multiplies the Michel spectrum by its
+  normalization `N = 1.0001870858234163` where it divided by it, so every
+  nonzero value rises by exactly `N² = 1.000374206647938` (+0.0374%), at
+  rest and in flight; the integral moves from 0.999626 to 1. The change
+  is a constant factor, so spectral shapes and ratios do not move and
+  absolute rates do. It reaches every spectrum built on the muon's:
+  `dnde_positron_charged_pion` (up to the same factor, less where the
+  `π → e ν` line contributes; a pion exactly at rest still returns zero),
+  `dnde_positron` for final states containing a muon or charged pion,
+  both mediator models' positron spectra (the `mu mu`, `pi pi` and total
+  channels, not `e e`), and anything computed from those spectra. That
+  includes `SingleChannelAnn` with `fs="mu mu"`, whose positron spectrum
+  rises by exactly `N²`, and `KineticMixingGeV`, whose `mu mu` channel
+  rises by exactly `N²` and whose total rises by at most that factor,
+  inside the total's Monte Carlo run-to-run noise.
+  The tabulated meson positron spectra and every neutrino spectrum are
+  unchanged. Task 10 moves 21,975 corpus values across six cases,
+  reproducing Task 2's patched-Cython capture bit for bit for the muon
+  on the capturing platform (within 6.8e-12 relative on Linux) and
+  within 6.4e-12 relative for its consumers, with the stored arrays
+  and their tolerances unchanged.
+  Details: `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
 
 - **Rho photon spectra at rest now return the daughter spectrum.**
   `dnde_photon_charged_rho` and `dnde_photon_neutral_rho` remove the

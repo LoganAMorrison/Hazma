@@ -30,12 +30,12 @@ if TYPE_CHECKING:
 # Both channels are open well above threshold: 2 m_pi = 279 MeV.
 E_CM = 500.0  # MeV
 
-# Every spectrum here inherits the muon positron kernel's normalization,
-# which is low by 1 / R_FACTOR^2 - 1 = -3.74e-4
-# (docs/followups/todo/positron-muon-spectrum-normalization-inverted.md).
-# The budget admits that open defect and nothing near a wrong kernel or a
-# factor of two. The trapezoid error on the grid below is under 1e-9.
-RTOL = 1e-3
+# The muon channel integrates to within 3e-10 of one positron on the grid
+# below; the pion channel falls 2.7e-6 short, the residue of the boost
+# integral its kernel runs on top of the muon's. The budget covers that
+# and nothing near a wrong kernel or a factor of two, both of which are
+# orders of magnitude away.
+RTOL = 1e-5
 
 MODELS = [
     pytest.param(

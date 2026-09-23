@@ -32,7 +32,7 @@ section tracks live *status*.
 | 7 | Repair A2 — muon photon endpoint | 1, 2 | **Complete** — signed approximation retained, ADR-0002 | `task-7-photon-muon-endpoint.md` |
 | 8 | Repair A3 — charged-pion forward cone | 7 | **Complete** — review fixes verified by CI | `task-8-charged-pion-cone.md` |
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | **Complete** | `task-9-rho-rest-frame.md` |
-| 10 | Repair A4 — positron-muon normalization | 1, 2 | Not started | `task-10-positron-muon-norm.md` |
+| 10 | Repair A4 — positron-muon normalization | 1, 2 | **Complete** | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
 | 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | Not started | `task-11-prose-reconciliation.md` |
 | 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
@@ -246,9 +246,29 @@ this project is time-critical.
 
 ## Numerical impact so far
 
-**Nine repairs have moved public values: B4 in PR #87, B5 in Task 10a,
+**All ten repairs have moved public values: B4 in PR #87, B5 in Task 10a,
 B6 in Task 13, A1 in Task 4, B1 in Task 5, B2 in Task 6, A2 in Task 7,
-A3 in Task 8, and B3 in Task 9.**
+A3 in Task 8, B3 in Task 9, and A4 in Task 10.**
+
+**A4 — `dnde_positron_muon` and every positron spectrum built on it.**
+A before/after build capture over all 623 corpus blocks changes 21,975
+of 181,191 evaluated values, all upward and all in the six predicted
+cases: 502 muon, 525 pion, and 5,237 per mediator entry point, in 178
+value arrays. Wherever the muon kernel is the only contributor the ratio
+is exactly `R_FACTOR² = 1.000374206647938`; the pion's `π → e ν` line and
+the mediators' `e e` line dilute it elsewhere. The muon reproduces Task
+2's capture bit for bit at all 1,370 values; the pion agrees within
+5.30e-15 and the mediators within 6.40e-12 relative, each inside its
+existing case budget. On 2,001-point log grids from 0.01 MeV to 5 GeV the
+muon moves by exactly `R_FACTOR²` at rest, `1.5 m_μ` and `5 m_μ` (maximum
+1.416254e-5 MeV⁻¹ at rest); the pion, `dnde_positron` on `mu mu`, `pi pi`
+and `mu e`, and both mediator models' `total_positron_spectrum` move by up
+to that factor. The nine other meson positron spectra (three kaons, η,
+η′, ω, φ, both ρ), a pion exactly at rest, and both muon and pion
+neutrino spectra are bit-identical, NaN-aware. The Michel spectrum
+integrates to 1 within 3e-14 at rest, `1.5 m_μ` and `5 m_μ`
+(`scipy.integrate.quad`, `epsrel = 1e-13`), where it shipped
+`1/R_FACTOR² = 0.999626`. Details: `task-10-positron-muon-norm.md`.
 
 **B3 — rho rest-frame spectrum.** Task 9 compares all 623 corpus blocks
 from before/after builds in one environment: 350 of 181,191 evaluated
@@ -396,7 +416,7 @@ grids:
 | A1 boost window | 4 — **landed** | 7 of 7 predicted | 4154 | ~1.0 (shipped a median 9,768× and up to 360,507× high near threshold) | **both** — down in `rest_plus_eps`, up in the boosted blocks |
 | A2 muon endpoint | 7 | **1** of 7 predicted | 4 | n/a (`0.0` → negative) | down; all four values become negative |
 | A3 pion cone | 8 | 6 of 6 predicted | 6359 | 7.77 | both |
-| A4 positron norm | 10 | 6 of 6 predicted | 21,975 | `0.000374207` uniformly | up, at every position |
+| A4 positron norm | 10 — **landed** | 6 of 6 predicted | 21,975 | `0.000374207` uniformly | up, at every position |
 | B5 pion neutrino line | 10a — **landed** | 1 of 1 | 215 | exactly 0.5 | down, at every position |
 
 Three things in there are corrections to the plan rather than
@@ -582,6 +602,15 @@ it, and
   and a platform whose libm steers QUADPACK to a different accepted
   partition may land anywhere inside that. The declaration's `rtol` is
   6.7x the bound, not 28x the measurement.
+- **A4 keeps each case's own budget through three model variants**
+  (Task 10): `A4` at `EXACT_RTOL` for the muon, `A4/pion` at
+  `PORTED_QUAD_RTOL`, `A4/nested` at `PORTED_NESTED_RTOL` — A3's pattern.
+  One relation at the loosest budget would have widened the muon's
+  bit-for-bit contract (`../rules.md` rule 2). Like its case budget,
+  `A4` relaxes to `PLATFORM_EXACT_RTOL` off the capturing libm, through
+  `tolerances.platform_budget`. Its 178 keys are built as
+  the product they are (blocks × muon-fed channels) rather than written
+  out one by one; `EXPECTED_DECLARED_ARRAYS` still pins the count.
 
 ## Files Changed
 
@@ -679,6 +708,19 @@ stays 98 — this task re-points keys rather than adding them.
 and `task-7-photon-muon-endpoint.md`. The corpus and capture data remain
 untouched. `EXPECTED_DECLARED_ARRAYS` rises from 98 to 99.
 
+### Task 10 (A4)
+
+`rust/src/kernels/positron_muon.rs` (the repair, its module doc, two
+renamed/retargeted norm tests), `rust/src/kernels/positron_pion.rs` and
+`rust/src/kernels/neutrino_muon.rs` (norm test and doc comments),
+`test/test_core_positron_muon.py`, `test/test_core_positron_pion.py`,
+`test/test_core_neutrino.py`, `test/parity/deltas.py` (`_A4`,
+`_A4_PION`, `_A4_NESTED`, 178 keys), `test/parity/test_parity.py`
+(`EXPECTED_DECLARED_ARRAYS` 165 → 343), `CHANGELOG.md`, the follow-up,
+`../references/defect-blast-radius.md`, this file, and
+`task-10-positron-muon-norm.md` (new). `test/parity/data/` and
+`test/parity/oracles/` untouched.
+
 ### Task 13 (B6)
 
 `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs`
@@ -766,11 +808,9 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   with B4 on 20 scalar arrays. A3 also moves the rho rest blocks;
   Task 9 composes B3 with the A3 capture, preserving both repairs.
 - **What happens if `cython-to-rust` reaches Task 4.6 before Task 2
-  lands?** The A4 `spectra.positron.charged_pion` oracle becomes
-  unrecoverable from anything but the repaired Rust. The fallback is a
-  closed-form model (the defect is an overall factor, so the delta may
-  be expressible as one) — but that has to be established, not assumed,
-  and the loss recorded rather than papered over.
+  lands?** Moot: Task 2 captured the A4 oracle first, and Task 10
+  declares A4 against that capture, bit for bit on the muon on the
+  capturing platform.
 - **How many kernels boost a bounded spectrum over an unclipped window?**
   Task 10a found `neutrino_pion.rs` doing it and `positron_pion.rs`
   clipping correctly, but only because a repair's magnitude looked wrong.
@@ -817,13 +857,13 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   the worked precedent for A2, A3 and A4 — they need no new machinery.
 - `test/parity/data/` is intact — `python test/parity/generate.py --check`
   verifies it in under a second with no build.
-- B4 (PR #87), B5 (Task 10a), B6 (Task 13), A1 (Task 4), B1 (Task 5) and
-  B2 (Task 6), A2 (Task 7), A3 (Task 8), and B3 (Task 9) have changed
-  library values.
+- All ten roster repairs — B4 (PR #87), B5 (Task 10a), B6 (Task 13),
+  A1 (Task 4), B1 (Task 5), B2 (Task 6), A2 (Task 7), A3 (Task 8), B3
+  (Task 9) and A4 (Task 10) — have changed library values.
   Every undeclared position retains its stored-value comparison.
-  `test/parity/deltas.py` declares 165 arrays — 10 for B4, 6 for B5, 6 for
+  `test/parity/deltas.py` declares 343 arrays — 10 for B4, 6 for B5, 6 for
   B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2`, 1 for A2,
-  62 for A3, 20 for `A3+B4`, and 4 for `A3+B3` — and
+  62 for A3, 20 for `A3+B4`, 4 for `A3+B3`, and 178 for A4 — and
   `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
   change to that number show up in a diff. Re-derive the split with
   `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
@@ -834,9 +874,9 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   repair (Findings). On this worktree Task 4's defective build
   reproduced the stored corpus bit for bit on all 10,045 A1 positions,
   so the two agreed; that is this platform, not a general fact.
-- B3 now composes with the A3 capture on the rho rest arrays. All Group B
-  models have declarations. Task 10's A4 repair is next; its independent
-  positron captures need no composition with any earlier repair.
+- B3 now composes with the A3 capture on the rho rest arrays. Every
+  roster model has declarations; A4's positron arrays overlap no other
+  repair. Task 11 (prose reconciliation) is next, then Task 12.
 - A relation may now declare an absolute floor as well as an `rtol`
   (Task 6). Reach for one only where the prediction cannot resolve the
   repaired value at some magnitude the array takes — a relocation that
