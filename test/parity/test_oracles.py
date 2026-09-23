@@ -8,7 +8,7 @@ somewhere the corpus's own numbers mean anything?
 
 None of these evaluate a kernel. The capture cannot be re-run from a
 repaired tree by construction — it needs a *patched Cython* build, and
-`cython-to-rust` Task 6.4 deletes the last of those sources — so what is
+`cython-to-rust` Task 6.4 deleted the last of those sources — so what is
 checkable afterwards is the record, not the measurement. That is the same
 line `python test/parity/generate.py --check` draws around the corpus.
 

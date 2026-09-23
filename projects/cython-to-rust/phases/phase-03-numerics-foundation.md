@@ -224,8 +224,22 @@ replaced them changed what the other criteria could be held to):
   slightly low). Preserved per rules.md rule 1 and pinned in both
   languages; the repair is
   [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md),
-  blocked until after Phase 06 Task 6.4 because it needs a declared
-  corpus regeneration.
+  which `projects/parity-pinned-defect-repair` Task 4 landed as a
+  declared delta against the corpus, after that project's Task 2 had
+  captured the corrected values from the `.pyx` before Task 6.4 deleted
+  it.
+
+  **Amended by parity-pinned-defect-repair Task 11 (2026-09-22):** this
+  bullet ended "blocked until after Phase 06 Task 6.4 because it needs a
+  declared corpus regeneration". Clerical, not canonical: no exit
+  criterion of this phase depended on it. The regeneration was never
+  available — `test/parity/generate.py` has refused to run since Phase 04
+  Task 4.1 — and waiting for Task 6.4 would have deleted the only
+  independent source of corrected values;
+  `projects/parity-pinned-defect-repair/references/the-premise.md` has
+  the evidence and
+  `projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
+  the decision that replaced the regeneration.
 - **`interp`'s contract is NumPy's, quirks included.** The exit
   criterion names three behaviors; there are two more that a
   spec-driven port would miss. A one-point grid answers *everything*

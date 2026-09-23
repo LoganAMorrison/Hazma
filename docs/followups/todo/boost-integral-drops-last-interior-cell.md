@@ -7,28 +7,19 @@
   `projects/parity-pinned-defect-repair` Task 4. The file stays here
   until that project's close (Task 12) moves all of its follow-ups to
   `done/` in one sweep, so the inbound references are repointed once.
-- **Triggers / blockers:** **capture the corrected values BEFORE the
-  deletion wave that strands them** — the deadline is on the oracle, not
-  on the fix. The parity corpus does pin the current values, and
-  `projects/cython-to-rust/rules.md` rule 2 does forbid regenerating them
-  from a tree with ported kernels, so the repair needs corrected
-  reference values from somewhere else. `hazma/_utils/boost.pyx` is that
-  somewhere: fix the `.pyx` in a scratch build, drive it through the
-  `__pyx_capi__` capsules `test/test_core_boost.py` already uses as an
-  oracle, and the corrected values come from a compiler and a source tree
-  that both predate the Rust port. Phase 06 Task 6.4 deletes that twin,
-  and after it the only remaining source is the fixed Rust itself, which
-  pins the port against its own answer — the vacuous gate rule 2 exists
-  to prevent.
-  The repair itself has no deadline. Under the plan's mechanism it lands
-  as a *declared delta* against the committed corpus arrays rather than
-  as a regeneration, so it is legal on a tree with ported kernels and can
-  follow the capture by any interval. What cannot follow the deletion is
-  the capture. Sequenced in
+- **Triggers / blockers:** none remain. The deadline was on the oracle,
+  not on the fix: the parity corpus pins the shipped values, and
+  `projects/cython-to-rust/rules.md` rule 2 forbids regenerating them
+  from a tree with ported kernels, so the corrected reference values had
+  to come from the Cython twin `hazma/_utils/boost.pyx` before
+  `cython-to-rust` Task 6.4 deleted it (`f479b231`). They did:
+  `projects/parity-pinned-defect-repair` Task 2 patched that `.pyx` in a
+  scratch build, drove it through its `__pyx_capi__` capsules, and
+  committed the result as `test/parity/oracles/data/A1.npz`. Task 4 then
+  repaired `rust/src/boost.rs` and declared the move against the
+  committed corpus arrays rather than regenerating them, as
   [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
-  — Task 2 (capture) and
-  Task 4 (repair); where a later section of this file still reads "after
-  Task 6.4", that wording is superseded and the plan is authoritative.
+  sequences it.
 
 ## Why
 
@@ -38,7 +29,8 @@
 np.trapezoid(yy[ilow:ihigh], x=x[ilow:ihigh])
 ```
 
-(`hazma/_utils/boost.pyx:216`). The slice is exclusive at the top, so the
+(`hazma/_utils/boost.pyx:216` at `f479b231^`, the last revision before
+`cython-to-rust` Task 6.4 deleted it). The slice is exclusive at the top, so the
 sum covers the cells ending at `x[ihigh - 1]` and stops. The upper
 partial-cell term that follows starts at `x[ihigh]`. Nothing covers
 `[x[ihigh - 1], x[ihigh]]`.
@@ -93,10 +85,9 @@ above — one cell out of a wide window, systematically low.
 The parity corpus pins these values, faithfully: its `rest_plus_eps`
 block sits exactly in the divergent regime. That is the corpus doing its
 job (it records what the Cython returns, not what is correct). The repair
-therefore lands as a declared delta against those arrays rather than as a
-regeneration — see
-[`projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`](../../../projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md),
-which supersedes the regeneration this file's "What" section asks for.
+therefore landed as a declared delta against those arrays rather than as
+a regeneration — see
+[`projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`](../../../projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md).
 
 Note `references/cython-inventory.md` already lists "off-by-one index
 pairing in `boost_integrate_linear_interp_massive`" under *dead* code.
@@ -128,14 +119,16 @@ The change moves published numbers for the seven tabulated photon
 spectra — `dnde_photon_{eta, eta_prime, charged_kaon, long_kaon,
 short_kaon, omega, phi}` — and therefore for every model spectrum that
 sums them. Quantify the shift on the corpus grids, state it in the PR
-body and in `CHANGELOG.md`, and regenerate the parity corpus in the same
-change (a deliberate, declared regeneration, which is the only kind rule 2
-allows).
+body and in `CHANGELOG.md`, and declare it in `test/parity/deltas.py` in
+the same change. The corpus itself is not regenerated: `test/parity/generate.py`
+refuses to run once `hazma._core` serves a kernel, and ADR-0001 keeps the
+committed arrays as the record of what 2.1.0 shipped.
 
 ## Entry points
 
-- `hazma/_utils/boost.pyx:206-241` — the interior sum and both partial
-  cells.
+- `hazma/_utils/boost.pyx:206-241` at `f479b231^` — the interior sum and
+  both partial cells in the pre-port source, which `cython-to-rust`
+  Task 6.4 deleted in `f479b231`.
 - `rust/src/boost.rs` — `boost_integrate_linear_interp`, where the
   behavior is reproduced with the reasoning in its
   `# Faithfulness notes`.
@@ -149,12 +142,12 @@ allows).
   — the acceptance test this file proposed, over all seven channels. It
   pinned the divergence through a public entry point when the seven
   tabulated spectra moved to Rust (Task 4.2), and now pins the limit.
-- Sibling defects, same class and same blocker:
+- Sibling defects of the same class:
   [`positron-muon-spectrum-normalization-inverted.md`](positron-muon-spectrum-normalization-inverted.md),
   [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md),
   [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md).
-  All four want one declared corpus regeneration after Phase 06
-  Task 6.4, not four.
+  Each was repaired as its own declared delta; none needed a corpus
+  regeneration, and after Phase 04 Task 4.1 none could have had one.
 
 ## Risks / open questions
 
@@ -173,6 +166,7 @@ allows).
   interesting. Check whether any published figure, limit, or notebook in
   `docs/source/` or `notebooks/` sits in the affected region.
 - **Does anything depend on the current behavior?** The parity corpus
-  does, by construction, and it is regenerated as part of this work. Look
+  does, by construction; it keeps the shipped values and the repair is
+  declared against them in `test/parity/deltas.py`. Look
   for anything else pinned to a near-threshold tabulated spectrum before
   assuming the corpus is the only consumer.

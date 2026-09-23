@@ -118,7 +118,7 @@ citable after the `.pyx` is gone.
 
 | Call site (pre-port) | Interval | Settings | Status |
 | --- | --- | --- | --- |
-| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Task 4.4** — `kernels::photon_pion::CHARGED_PION_QUAD`. The `.pyx` survives as a capi provider and its `cdef` still runs this quad for the two mediator cimporters, so it is the one dual-implementation row until Phase 06 Task 6.4. |
+| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Task 4.4** — `kernels::photon_pion::CHARGED_PION_QUAD`. The `.pyx` survived as a capi provider, its `cdef` running this quad for the two mediator cimporters, which made this the one dual-implementation row until Phase 06 Task 6.4 deleted the `.pyx` (`f479b231`). |
 | `spectra/_photon/_rho.pyx:52,123` | boosted energy | `epsabs=1e-10`, `epsrel=1e-5`; integrand itself calls `_pion`'s quad → **nested adaptive quadrature** | **Ported, Task 4.5** — `kernels::photon_rho::RHO_QUAD`. The `.pyx` is **deleted**; nothing cimported it. No `points` keyword, so `qagse` rather than `qagpe`. |
 | `spectra/_positron/_pion.pyx:58` | cosθ | `epsabs=1e-10`, `epsrel=1e-4` | Cython — Task 4.6 |
 | `spectra/_neutrino/_pion.pyx:124,127` | energy-space | two quads, scipy default tolerances (`epsabs=1.49e-8`, `epsrel=1.49e-8`), integer selector via `args` | Cython — Task 4.6 |

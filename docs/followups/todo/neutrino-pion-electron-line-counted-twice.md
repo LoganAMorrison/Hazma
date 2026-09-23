@@ -130,10 +130,12 @@ Named as they stand after the repair; the pre-repair names are in
 ## Risks / open questions
 
 - **Is the doubled line the only place this pattern appears?** The
-  positron sibling `hazma/spectra/_positron/_pion.pyx` adds its `pi -> e
-  nu` line exactly once, in one place, so it does not share the defect —
-  checked at Task 4.6. Worth re-checking the two mediator positron
-  spectrum modules when Phase 06 ports them.
+  positron sibling, now `rust/src/kernels/positron_pion.rs`, adds its
+  `pi -> e nu` line exactly once, in one place, so it does not share the
+  defect — checked at Task 4.6 against the `.pyx` it ports. Phase 06
+  Task 6.3 has since ported the two mediator positron spectrum modules
+  into `rust/src/kernels/mediator_decay_positron.rs`; that kernel has not
+  been re-checked for the pattern.
 - **The repair moves a published number**, so it needed a `CHANGELOG.md`
   entry and is `minor` at least under `docs/versioning.md`. Written under
   `[Unreleased]` by Task 10a, with the 0.0123% integrated figure and the

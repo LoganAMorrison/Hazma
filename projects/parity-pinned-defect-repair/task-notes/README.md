@@ -34,7 +34,7 @@ section tracks live *status*.
 | 9 | Repair B3 — rho rest-frame branch | 3, 8 | **Complete** | `task-9-rho-rest-frame.md` |
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | **Complete** | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
-| 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | Not started | `task-11-prose-reconciliation.md` |
+| 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | **Complete** | `task-11-prose-reconciliation.md` |
 | 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
 | 13 | Repair B6 — thermal quadrature convergence | 1 | **Complete** | `task-13-thermal-quadrature.md` |
 
@@ -94,13 +94,13 @@ this project is time-critical.
   *serves* any kernel. So "one declared regeneration after Task 6.4",
   which five of the seven follow-ups proposed, was never an available
   move — not merely a mistimed one.
-- **The four Group A twins are `cdef`-only.** None of
+- **The four Group A twins were `cdef`-only.** None of
   `hazma/spectra/_photon/_pion.pyx`, `hazma/spectra/_photon/_muon.pyx`,
   `hazma/spectra/_positron/_muon.pyx` or `hazma/_utils/boost.pyx`
-  defines a top-level `def`, so they are reachable from Python solely
-  through `__pyx_capi__`. `test/test_core_boost.py` already drives
-  `hazma._utils.boost` that way — that harness is the model for Task 2,
-  not something to reinvent.
+  defined a top-level `def`, so they were reachable from Python solely
+  through `__pyx_capi__`. Task 2 reused the harness `test/test_core_boost.py`
+  then drove `hazma._utils.boost` with; `cython-to-rust` Task 6.4 deleted
+  all four in `f479b231`.
 - **The deadline is not one date, it is three.** Task 4.6 (the only
   Phase 04 task left) strands A4's `spectra.positron.charged_pion`
   capture; Tasks 6.2/6.3 strand the mediator-spectra captures; only the
@@ -566,8 +566,9 @@ it, and
 - **The seven follow-ups' "Risks" sections were deliberately left
   standing** when their "Triggers / blockers" bullets were corrected, so
   the correction and the plan that justifies it would land in one
-  reviewable place first. Each corrected bullet says so and points here.
-  Task 11 sweeps them.
+  reviewable place first. Each corrected bullet said so and pointed here.
+  Task 11 swept them, together with the "What" steps that still asked for
+  a regeneration.
 - **The Group A deadline binds on the oracle capture, not on the
   repair** (PR #72 review round 1). The first draft of the four Group A
   blocker bullets said "fix BEFORE Task 6.4", which reads as an
@@ -720,6 +721,15 @@ renamed/retargeted norm tests), `rust/src/kernels/positron_pion.rs` and
 `../references/defect-blast-radius.md`, this file, and
 `task-10-positron-muon-norm.md` (new). `test/parity/data/` and
 `test/parity/oracles/` untouched.
+
+### Task 11
+
+Prose only. `docs/followups/todo/` — the boost, η′, φ, positron-muon and
+charged-pion-neutrino follow-ups; `projects/cython-to-rust/phases/phase-03-numerics-foundation.md`
+(an "Amended by" note), `phase-04-spectra-kernels.md` and
+`references/numerics-replacements.md`; `../PLAN.md`; all three
+`../references/*.md`; `test/parity/test_oracles.py` (one docstring
+tense); this file; and `task-11-prose-reconciliation.md` (new).
 
 ### Task 13 (B6)
 
@@ -876,7 +886,8 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   so the two agreed; that is this platform, not a general fact.
 - B3 now composes with the A3 capture on the rho rest arrays. Every
   roster model has declarations; A4's positron arrays overlap no other
-  repair. Task 11 (prose reconciliation) is next, then Task 12.
+  repair. Task 11 has reconciled the sequencing prose; Task 12 (close)
+  is next and last.
 - A relation may now declare an absolute floor as well as an `rtol`
   (Task 6). Reach for one only where the prediction cannot resolve the
   repaired value at some magnitude the array takes — a relocation that
@@ -904,8 +915,10 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   the integration window while the absolute shift does not. Re-derive
   every figure before quoting it in a `CHANGELOG.md` entry, and prefer
   the window-independent statement where the physics offers one.
-- Every deadline in this plan depends on `cython-to-rust`'s pace, which
-  this project does not control and must not assume.
+- Task 12 moves eight follow-ups to `done/` — the seven originals and
+  B5's; B4's and B6's are already there — and repoints their inbound
+  links. Task 11 pinned the deleted-`.pyx` citations in the ones it
+  touched to a revision, so those need no further pinning.
 
 ## Task 9 review response
 
