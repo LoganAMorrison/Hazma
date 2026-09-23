@@ -17,6 +17,20 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The vector mediator's `mu mu` positron channel now returns positrons.**
+  `VectorMediatorPositronSpectra.dnde_pos_mumu`, which `VectorMediator`
+  and `KineticMixing` use for the `"mu mu"` entry of `positron_spectra`
+  and `total_positron_spectrum`, called `dnde_photon_muon` instead of
+  `dnde_positron_muon`, so the channel carried the radiative muon-decay
+  photon spectrum. Integrated from the electron mass to `e_cm / 2`, it
+  held 0.062 positrons per annihilation at `e_cm = 1.05 × 2 m_mu`, rising
+  to 0.085 at `e_cm = 1000` MeV. It now holds 0.99963, the same one
+  positron per `mu+ mu-` pair as `ScalarMediator`'s channel. The old and
+  new spectra differ in shape, so no constant factor relates them. The legacy
+  channel counts positrons only and carries no factor of two, unlike the
+  GeV model in `hazma.vector_mediator._gev`, which counts both charges.
+  The parity corpus does not pin this channel.
+
 - **Rho photon spectra at rest now return the daughter spectrum.**
   `dnde_photon_charged_rho` and `dnde_photon_neutral_rho` remove the
   erroneous boost-integrand factor `1/E_gamma` at exactly
