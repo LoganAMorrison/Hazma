@@ -960,6 +960,101 @@ _A3_B4 = Delta(
 )
 
 
+# A4 -- multiply the Michel spectrum by its normalization instead of dividing.
+# One model per budget class, as for A3: each case keeps its own corpus
+# budget, because agreement with a one-platform capture cannot tighten a
+# portability contract and must not loosen one.
+_A4 = Delta(
+    repair="A4",
+    positions=MOVED,
+    relation=Reference(
+        reference=oracle_reference.captured("A4"),
+        rtol=tolerances.EXACT_RTOL,
+        why="the Task 2 capture evaluates the same closed form from a "
+        "patched build of the pre-port Cython, and the repaired kernel "
+        "spells the two changed expressions in the same operation order, so "
+        "spectra.positron.muon keeps its EXACT case budget, platform branch "
+        "included. Measured 0.0 on the capturing macOS/arm64 libm, "
+        "bit-for-bit at all 1,370 pinned values; up to 6.8e-12 on Linux "
+        "x86_64 CI, inside PLATFORM_EXACT_RTOL and far below the 3.7e-4 "
+        "the repair moves.",
+    ),
+    measured="Every nonzero value rises by exactly R_FACTOR**2 = "
+    "1.000374206647938 wherever the muon kernel is the only contributor: "
+    "502 positions in all ten value arrays of spectra.positron.muon, 525 "
+    "in eight of spectra.positron.charged_pion's ten (a pion exactly at "
+    "rest returns zero), and 5,237 in 40 arrays of each of the four "
+    "mediator positron entry points -- 21,975 of the 69,830 values the "
+    "capture covers, the count Task 2 predicted. No other corpus value "
+    "moves.",
+    evidence="projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md",
+)
+
+_A4_PION = replace(
+    _A4,
+    relation=Reference(
+        reference=oracle_reference.captured("A4"),
+        rtol=tolerances.PORTED_QUAD_RTOL,
+        why="the pion boosts the muon spectrum through one quad, and the "
+        "capture ran that quadrature in Cython; measured at most 5.30e-15 "
+        "relative, within the case's existing 1e-12 budget.",
+    ),
+)
+
+_A4_NESTED = replace(
+    _A4,
+    relation=Reference(
+        reference=oracle_reference.captured("A4"),
+        rtol=tolerances.PORTED_NESTED_RTOL,
+        why="the mediator positron spectra nest the pion quadrature inside "
+        "an angular one; measured at most 3.55e-12 (scalar) and 6.40e-12 "
+        "(vector) relative against the capture, within the cases' existing "
+        "1e-9 nested budget. The unrepaired port sat 2.33e-12 and 1.50e-12 "
+        "from the corpus on the same arrays.",
+    ),
+)
+
+#: The blocks every A4 case samples, in corpus order.
+_A4_BLOCKS = ("rest", "rest_plus_eps", "near_rest", "boosted_mild", "boosted_strong")
+
+#: The mediator decay channels whose positrons come from a muon, by mediator
+#: mass in MeV. ``e_e`` is a line the muon kernel never reaches, and
+#: ``pi_pi`` is closed at 250 MeV, below twice the charged-pion mass.
+_A4_MEDIATOR_CHANNELS = {
+    250: ("total", "mu_mu"),
+    550: ("total", "mu_mu", "pi_pi"),
+    900: ("total", "mu_mu", "pi_pi"),
+}
+
+#: The 178 arrays A4 moves: the allowlist ``rules.md`` rule 5 asks for,
+#: written as the product it is rather than transcribed key by key.
+_A4_DECLARATIONS: dict[tuple[str, str, str], Delta] = {
+    **{
+        ("spectra.positron.muon", block, suffix): _A4
+        for block in _A4_BLOCKS
+        for suffix in ("values", "scalar_values")
+    },
+    **{
+        ("spectra.positron.charged_pion", block, suffix): _A4_PION
+        for block in _A4_BLOCKS
+        if block != "rest"
+        for suffix in ("values", "scalar_values")
+    },
+    **{
+        (
+            f"mediator_spectra.{kind}.positron.dnde_decay_{m}{pt}",
+            f"m{m}_{mass}.{block}.{channel}",
+            "values",
+        ): _A4_NESTED
+        for kind, m in (("scalar", "s"), ("vector", "v"))
+        for pt in ("", "_pt")
+        for mass, channels in _A4_MEDIATOR_CHANNELS.items()
+        for block in _A4_BLOCKS
+        for channel in channels
+    },
+}
+
+
 # ---------------------------------------------------------------------------
 # A1 + B1 -- the six eta-prime arrays both repairs move
 # ---------------------------------------------------------------------------
@@ -1526,6 +1621,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "closed_resonance",
         "values",
     ): _B6,
+    # A4.
+    **_A4_DECLARATIONS,
 }
 
 
@@ -1541,6 +1638,9 @@ DELTA_MODELS: dict[str, Delta] = {
     "A3/nested": _A3_NESTED,
     "A3+B4": _A3_B4,
     "A3+B3": _A3_B3,
+    "A4": _A4,
+    "A4/pion": _A4_PION,
+    "A4/nested": _A4_NESTED,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
     "B1": _B1,

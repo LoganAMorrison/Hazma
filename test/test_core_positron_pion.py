@@ -51,13 +51,14 @@ is part of the claim: see :data:`CHARGED_PION_BUDGET` and
 :meth:`TestPhysics.test_the_boost_window_is_ill_conditioned_at_extreme_boosts`
 for why every grid here stops at ``E_pi = 1e4`` MeV.
 
-The inherited normalization defect
-----------------------------------
-The muon-channel continuum is Task 4.1's kernel, which divides by the
-Michel normalization where it should multiply, so it is low by ``1/N**2``
-— 0.0374%. :class:`TestPhysics` asserts the integral the shipped code
-produces, not the correct one; see
-``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``.
+The muon channel's normalization
+--------------------------------
+The muon-channel continuum is Task 4.1's kernel. The Cython it was ported
+from divided by the Michel normalization where it should multiply, so the
+values the parity corpus pins for this spectrum are low by ``1/N**2`` —
+0.0374% — in that channel
+(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``).
+:class:`TestPhysics` asserts the corrected integral, one positron per pion.
 """
 
 from __future__ import annotations
@@ -104,15 +105,15 @@ BR_PI_TO_E_NUE = 1.230e-4
 #: this. `rust/src/kernels/positron_pion.rs` pins the one-ulp gap.
 ENG_E_PI_RF = 0.5 * (MASS_PI * MASS_PI + MASS_E * MASS_E) / MASS_PI
 
-#: The Michel normalization `_positron/_muon.pyx` divides by where it
+#: The Michel normalization `_positron/_muon.pyx` divided by where it
 #: should multiply. Named here because the muon channel's continuum is
-#: that kernel, so this file's integral inherits the defect.
+#: that kernel, so this file's integral would carry the inversion too.
 R_FACTOR = 1.0001870858234163
 
-#: How far below one positron per pion the shipped total sits, from the
-#: muon channel's inverted normalization: ``1 - 1/R_FACTOR**2``, or
-#: 3.74e-4. Named so the assertion that the integral is *not* the
-#: un-defected value states the separation it relies on.
+#: How far below one positron per pion the inverted muon normalization
+#: would put the total: ``1 - 1/R_FACTOR**2``, or 3.74e-4. Named so the
+#: assertion that the integral is *not* the inverted value states the
+#: separation it relies on.
 NORMALIZATION_DEFICIT = 1.0 - 1.0 / R_FACTOR**2
 
 #: This kernel's budget against the Cython, on **every** platform, within
@@ -296,25 +297,23 @@ class TestPhysics:
         Two statements at once. That the integral does not depend on
         ``epi`` is the physics — the boost moves positrons around in energy
         but creates none — and it is what a wrong Jacobian or a wrong
-        prefactor would break. The value it takes is
-        ``BR_mu / N**2 + BR_e``: one positron per pion, with the muon
-        channel carrying Task 4.1's inverted normalization.
+        prefactor would break. The value it takes is ``BR_mu + BR_e``:
+        one positron per pion.
 
         Trapezoid on 200_001 points. 2e-4 relative: the spectrum has a step
         where the boosted electron line's window opens and a kink at the
         continuum endpoint, and a composite rule of this order gets no
         closer — measured, not chosen. The ``1/N**2`` deficit is 3.7e-4, so
-        the bound still separates the shipped total from the correct one.
+        the bound still separates the correct total from the inverted one.
         """
         energies = np.linspace(MASS_E, 12.0 * epi, 200_001)
         integral = np.trapezoid(dnde(energies, epi), energies)
-        shipped = BR_PI_TO_MU_NUMU / R_FACTOR**2 + BR_PI_TO_E_NUE
-        assert integral == pytest.approx(shipped, rel=2e-4)
-        # And it is not the un-defected total, which the muon channel's
-        # normalization would give: that sits 3.7e-4 away, well outside
-        # the quadrature bound above.
-        undefected = BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE
-        assert abs(integral - undefected) > NORMALIZATION_DEFICIT / 2.0
+        assert integral == pytest.approx(BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE, rel=2e-4)
+        # And it is not the inverted total, which dividing the muon channel
+        # by its normalization would give: that sits 3.7e-4 away, well
+        # outside the quadrature bound above.
+        inverted = BR_PI_TO_MU_NUMU / R_FACTOR**2 + BR_PI_TO_E_NUE
+        assert abs(integral - inverted) > NORMALIZATION_DEFICIT / 2.0
 
     def test_the_electron_line_is_a_visible_plateau_on_the_continuum(self) -> None:
         """``pi -> e nu`` boosts to a flat step, and it is where it should be.

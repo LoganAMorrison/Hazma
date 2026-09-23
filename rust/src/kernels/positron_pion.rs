@@ -24,10 +24,10 @@
 //!
 //! The integrand is [`super::positron_muon::dnde_positron_muon`], which
 //! this module calls natively — the `.pyx` `cimport`s the same `cdef`
-//! from `_positron/_muon.pyx`. So the port inherits Task 4.1's kernel and
-//! its declared normalization defect
-//! (`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`)
-//! along with it.
+//! from `_positron/_muon.pyx`. So this spectrum carries that kernel's
+//! Michel normalization, including the repair of its inverted
+//! normalization
+//! (`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`).
 //!
 //! # Where the FMAs are
 //!
@@ -390,19 +390,18 @@ mod tests {
     ///
     /// The statement about this kernel that owes nothing to the Cython:
     /// the flat-boost integral is only right if `∫ dN/dE dE` is the same in
-    /// the lab as in the pion rest frame. The rest-frame total is the
-    /// muon channel's own norm (`BR_μ / N²`, carrying Task 4.1's inverted
-    /// normalization) plus the electron line's `BR_e`.
+    /// the lab as in the pion rest frame. The rest-frame total is one
+    /// positron per decay: the muon channel's `BR_μ` plus the electron
+    /// line's `BR_e`.
     ///
     /// Trapezoid on 20_001 points from `m_e` to the endpoint. 2e-4
     /// relative: the boosted spectrum has kinks where the line's window
     /// opens and closes and where the continuum's endpoint lands, and a
     /// composite rule of this order resolves them no better. That still
-    /// separates the shipped total from the un-defected one (3.7e-4 away)
-    /// and from either channel alone.
+    /// separates the total from the inverted muon normalization's
+    /// `BR_μ / N²` (3.7e-4 away) and from either channel alone.
     #[test]
     fn the_boost_conserves_positron_number() {
-        const R_FACTOR: f64 = crate::constants::derived::positron_muon::R_FACTOR;
         let epi = 400.0;
         let (lo, hi) = (ME, epi);
         let n = 20_001_usize;
@@ -417,10 +416,10 @@ mod tests {
             total += weight * dnde_positron_charged_pion(lo + h * index as f64, epi);
         }
         let integral = total * h;
-        let expected = BR_PI_TO_MU_NUMU / (R_FACTOR * R_FACTOR) + BR_PI_TO_E_NUE;
+        let expected = BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE;
         assert!(
             (integral - expected).abs() < 2e-4 * expected,
-            "boosted dN/dE integrates to {integral}, not the shipped {expected}"
+            "boosted dN/dE integrates to {integral}, not {expected}"
         );
     }
 }

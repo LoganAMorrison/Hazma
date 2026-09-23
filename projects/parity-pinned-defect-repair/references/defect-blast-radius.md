@@ -176,6 +176,13 @@ See `../task-notes/task-8-charged-pion-cone.md` for measured grids.
 `mediator_spectra.vector.positron.dnde_decay_v_pt`.
 
 Blocks: all, every non-zero position — it is an overall factor.
+**Measured against the repaired kernel by Task 10:** 21,975 of the
+69,830 captured values move, all up, in 178 of the 260 captured value
+arrays. Not every array: the pion's two `rest` arrays stay zero (a pion
+exactly at rest returns zero), no mediator `e_e` array reaches the muon
+kernel, and `pi_pi` is closed at a 250 MeV mediator. The same-environment
+before/after capture moves nothing outside these six cases.
+`../task-notes/task-10-positron-muon-norm.md` has the per-case table.
 
 ### B1 — η′ line weight (1 case)
 
