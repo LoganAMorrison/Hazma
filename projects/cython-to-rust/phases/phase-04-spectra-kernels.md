@@ -25,7 +25,8 @@ eta family, neutrino pair) delete in their swap PR as usual.
 That release condition is now met: Phase 06 Tasks 6.2 and 6.3 deleted all
 four mediator modules, so each surviving `_pion` cimports only its own
 `_muon` twin and `hazma/_utils/boost`, and nothing outside the two pairs
-reads any of them. The exception stands only until Task 6.4 runs.
+reads any of them. The exception stood only until Task 6.4 ran, and
+Task 6.4 deleted all four on 2026-08-27 (`f479b231`), which closed it.
 
 "Python-unreferenced" is literal, and Task 4.1 settled how: a survivor's
 top-level `def` is **deleted in the swap PR** while its `cdef`s stay, so

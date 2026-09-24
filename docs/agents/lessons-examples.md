@@ -793,6 +793,19 @@ asymmetry between two sibling wrappers.
   that the two populations share no token, so one pattern cannot find
   both.
 
+- [settling-a-deferral-has-two-sweeps] PR #101 settled `cython-to-rust`
+  Task 6.4 and swept its behavior words (`still live`, `(live)`, `still
+  supplies`), which found the one row of
+  `projects/cython-to-rust/references/numerics-replacements.md`'s
+  `scipy.integrate.quad` table that said the photon-pion `.pyx` was still
+  live. The five rows beside it claimed the same false state in the
+  table's own status vocabulary, `Cython — Task 4.6`, `Cython — Phase 05`
+  and `Cython — Phase 06`, which no liveness phrase matches; two reviewers
+  caught it. A table with a Status column is a third population: when one
+  row's status is edited, read every sibling row's status against the
+  current tree, and add the column's own phrasing to the sweep
+  (`rg -n --hidden 'Cython — (Task|Phase)'`).
+
 ### numstat-over-a-directory
 
 - [numstat-over-a-directory] A "lines deleted" claim measured with
@@ -982,6 +995,16 @@ asymmetry between two sibling wrappers.
   in the block to what you ran (`$(git diff origin/master --name-only)`
   makes the scope self-deriving), and classify every hit, including the
   ones your own note reintroduces as quotations.
+
+- [sweep-block-written-from-intent] PR #101's count-sweep table paired
+  `grep -c "\*\*repaired\*\* \|$" <file>` with the figure `10`; the
+  `\|$` alternation matches every line end, so the command prints 397,
+  and the 10 came from a different command that was never pasted. The
+  same table's `git ls-files "*.md" | xargs grep -l "Task 6\.4" | wc -l`
+  printed 54 before the task note existed and 55 once the note, which
+  contains the pattern, was added. Run every count command on the final
+  tree and paste the output it prints, and when a count includes or
+  excludes the artifact that records it, say which.
 
 ### sign-copied-from-a-defect-description
 

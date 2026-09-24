@@ -278,18 +278,21 @@ scipy's QUADPACK at `epsrel = 1e-12`.
 
 ### The defects, and which group each is in
 
-Group A still has a live Cython twin and is on the clock for its oracle
-capture; Group B does not, and has no ordering constraint at all.
+Group A had a live Cython twin when this roster was drawn, and so a
+deadline on its oracle capture. Task 2 captured all four into
+`test/parity/oracles/data/` before `cython-to-rust` Task 6.4 deleted the
+twins in `f479b231`, so no deadline remains. Group B had no twin to lose
+and no ordering constraint at all.
 
 | # | Defect | Follow-up | Twin | Serving kernel |
 | --- | --- | --- | --- | --- |
-| A1 | Boost integral mis-covers its window at both ends | [`boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md) | `hazma/_utils/boost.pyx` (live) | `rust/src/boost.rs` |
-| A2 | Muon photon rest-frame branch stops short of the endpoint | [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | `hazma/spectra/_photon/_muon.pyx` (live) | `rust/src/kernels/photon_muon.rs` |
-| A3 | Charged-pion photon spectrum returns zero in the forward cone | [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | `hazma/spectra/_photon/_pion.pyx` (live) | `rust/src/kernels/photon_pion.rs` |
-| A4 | Muon positron spectrum divides by its normalization | [`positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md) | `hazma/spectra/_positron/_muon.pyx` (live) | `rust/src/kernels/positron_muon.rs` |
-| B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
-| B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs` |
-| B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs` |
+| A1 | Boost integral mis-covers its window at both ends | [`boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md) | `hazma/_utils/boost.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/boost.rs` — **repaired** |
+| A2 | Muon photon rest-frame branch stops short of the endpoint | [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | `hazma/spectra/_photon/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_muon.rs` — **repaired** |
+| A3 | Charged-pion photon spectrum returns zero in the forward cone | [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | `hazma/spectra/_photon/_pion.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_pion.rs` — **repaired** |
+| A4 | Muon positron spectrum divides by its normalization | [`positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md) | `hazma/spectra/_positron/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/positron_muon.rs` — **repaired** |
+| B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
+| B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
+| B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs`  — **repaired** |
 | B4 | Scalar decay spectrum's FSR coefficients are half size | [`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md) | deleted, Task 6.2 | `rust/src/kernels/scalar_decay_photon.rs` — **repaired** |
 | B5 | Charged pion's prompt `π → e ν` neutrino line is added twice | [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md) | deleted, Task 4.6 | `rust/src/kernels/neutrino_pion.rs` — **repaired** |
 | B6 | Both thermal averages return the integrator's initial estimate | [`thermal-cross-section-quadrature-never-converges.md`](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md) | deleted, Tasks 5.1/5.2 | `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs` — **repaired** |
@@ -342,7 +345,12 @@ which no spectra defect can touch, so slots went 26 → 28, the union
 21 → 23 and the untouched count 20 → 18. Redo the sum after any measured
 change and make it come out to 41 again rather than patching one cell.
 
-## The deletion schedule this radius has to beat
+## The deletion schedule this radius had to beat
+
+Every wave below has run: the last, Task 6.4, deleted the remaining
+Cython in `f479b231` (2026-08-27). Task 2 had captured every Group A
+oracle by then, so no capture was stranded. The tables record the
+schedule as it stood while the capture was on the clock.
 
 From `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` Task
 4.6 and `phase-06-mediator-spectra.md` Tasks 6.2–6.4:
@@ -355,7 +363,7 @@ From `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` Task
 | 6.4 | `hazma/spectra/_photon/{_muon,_pion}.pyx`, `hazma/spectra/_positron/{_muon,_pion}.pyx`, `hazma/_utils/boost.{pyx,pxd}` | everything remaining in A1–A4 |
 
 Task 4.6 landed 2026-08-20 and closed Phase 04. It deleted less than
-this table expected: `hazma/spectra/_positron/_pion.pyx` is a capi
+this table expected: `hazma/spectra/_positron/_pion.pyx` was a capi
 survivor, so only its `def` went and the `cdef` A4's capture reads is
 now in the 6.4 row above. Nothing in Group B appears in this
 table — that is what "corpus re-pinning only" means for B1–B3.
@@ -363,8 +371,8 @@ table — that is what "corpus re-pinning only" means for B1–B3.
 ### Two windows that had already closed
 
 Added 2026-08-19 by Task 2, which found them by looking rather than by
-reading this table. The rows above are the waves still ahead; these two
-were behind, and the table as first written implied the whole schedule
+reading this table. The rows above were then the waves still ahead;
+these two were behind, and the table as first written implied the whole schedule
 was in the future.
 
 | Task | Deleted | Group A chain it stranded |
@@ -372,13 +380,14 @@ was in the future.
 | 4.2 (`0954e5a`) | `hazma/spectra/_photon/{_eta,_eta_prime,_kaon,_omega,_phi}.pyx` | **all seven of A1's cases** |
 | 4.5 (`b5f7f90`) | `hazma/spectra/_photon/_rho.pyx` | A2's and A3's two rho cases |
 
-Neither contradicts the A1 row of the roster table: `hazma/_utils/boost.pyx`
-*is* live, and `boost_integrate_linear_interp` still evaluates. What died
-is every Cython caller of it — the composition graph above says
+Neither contradicted the A1 row of the roster table as it then stood:
+`hazma/_utils/boost.pyx` was still live, and its
+`boost_integrate_linear_interp` still evaluated. What had died was every
+Cython caller of it — the composition graph above says
 `rust/src/kernels/photon_tables.rs` is now the only consumer — so no
 corpus case could be reached from Cython through the primitive alone. The
-same split holds for the rho: A3's pion kernel is live, the outer
-quadrature that makes it `spectra.photon.charged_rho` is not.
+same split held for the rho: A3's pion kernel was live, the outer
+quadrature that makes it `spectra.photon.charged_rho` was not.
 
 Task 2 recovered both by rebuilding the deleted sources from git rather
 than capturing at the primitive boundary; `test/parity/oracles/defects.py`

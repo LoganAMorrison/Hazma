@@ -118,13 +118,13 @@ citable after the `.pyx` is gone.
 
 | Call site (pre-port) | Interval | Settings | Status |
 | --- | --- | --- | --- |
-| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Task 4.4** — `kernels::photon_pion::CHARGED_PION_QUAD`. The `.pyx` survives as a capi provider and its `cdef` still runs this quad for the two mediator cimporters, so it is the one dual-implementation row until Phase 06 Task 6.4. |
+| `spectra/_photon/_pion.pyx:123` | cosθ ∈ [−1, 1] | `points=[-1,1]` (QAGP), `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Task 4.4** — `kernels::photon_pion::CHARGED_PION_QUAD`. The `.pyx` survived as a capi provider, its `cdef` running this quad for the two mediator cimporters, which made this the one dual-implementation row until Phase 06 Task 6.4 deleted the `.pyx` (`f479b231`). |
 | `spectra/_photon/_rho.pyx:52,123` | boosted energy | `epsabs=1e-10`, `epsrel=1e-5`; integrand itself calls `_pion`'s quad → **nested adaptive quadrature** | **Ported, Task 4.5** — `kernels::photon_rho::RHO_QUAD`. The `.pyx` is **deleted**; nothing cimported it. No `points` keyword, so `qagse` rather than `qagpe`. |
-| `spectra/_positron/_pion.pyx:58` | cosθ | `epsabs=1e-10`, `epsrel=1e-4` | Cython — Task 4.6 |
-| `spectra/_neutrino/_pion.pyx:124,127` | energy-space | two quads, scipy default tolerances (`epsabs=1.49e-8`, `epsrel=1.49e-8`), integer selector via `args` | Cython — Task 4.6 |
-| scalar `thermal_cross_section` (`:1370` region) | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2ms/mx]` (QAGP) | Cython — Phase 05 |
-| vector `thermal_cross_section` (`:615` region) | z ∈ [2, max(50/x, 150)] | `points=[2, mv/mx, 2mv/mx]` (QAGP) | Cython — Phase 05 |
-| 4 × mediator spectrum modules | cosθ ∈ [−1, 1] | `points=[-1,1]`, `epsabs=1e-10`, `epsrel=1e-5` | Cython — Phase 06 |
+| `spectra/_positron/_pion.pyx:58` | cosθ | `epsabs=1e-10`, `epsrel=1e-4` | **Ported, Task 4.6** (`e2698eb6`) — `kernels::positron_pion::PION_QUAD`. Only the `.pyx`'s `def` went; it survived as a capi provider, its `cdef`s cimported by both mediator positron-spectrum modules, until Phase 06 Task 6.4 deleted it (`f479b231`). |
+| `spectra/_neutrino/_pion.pyx:124,127` | energy-space | two quads, scipy default tolerances (`epsabs=1.49e-8`, `epsrel=1.49e-8`), integer selector via `args` | **Ported, Task 4.6** — `kernels::neutrino_pion::PION_QUAD`. The same commit (`e2698eb6`) **deleted** the `.pyx`. |
+| scalar `thermal_cross_section` (`:1370` region) | z ∈ [2, max(50/x, 100)] | `points=[2, ms/mx, 2ms/mx]` (QAGP) | **Ported, Task 5.2** — `kernels::scalar_xs::thermal_cross_section`. The same commit (`6df9cfd8`) **deleted** `_c_scalar_mediator_cross_sections.pyx`. |
+| vector `thermal_cross_section` (`:615` region) | z ∈ [2, max(50/x, 150)] | `points=[2, mv/mx, 2mv/mx]` (QAGP) | **Ported, Task 5.1** — `kernels::vector_xs::thermal_cross_section`. The same commit (`aa6ab98b`) **deleted** `_c_vector_mediator_cross_sections.pyx`. |
+| 4 × mediator spectrum modules | cosθ ∈ [−1, 1] | `points=[-1,1]`, `epsabs=1e-10`, `epsrel=1e-5` | **Ported, Tasks 6.2 and 6.3** — the `BOOST_QUAD` constants in `kernels::scalar_decay_photon` and `kernels::vector_decay_photon` (`75947619`) and `kernels::mediator_decay_positron` (`c384aff3`). Each commit **deleted** the two `.pyx` modules it ported. |
 
 **Replacement decision (ADR-0002):** port finite-interval QUADPACK —
 `qk15`/`qk21` rules, the `qelg` ε-algorithm extrapolation, `qags`, and

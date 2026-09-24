@@ -7,10 +7,10 @@ protocol, and the proof obligations each repair inherits.
 ## The problem in one paragraph
 
 `test/parity/data/*.npz` holds 179,695 values captured from pre-port Cython at
-kernel digest `f5e6e269be47`. Nine of the numbers in there are wrong (seven
-rostered at first; B4 and B5 joined later, and both are repaired), and the
-corpus is the
-gate that keeps the Rust port faithful to them. The obvious move — regenerate
+kernel digest `f5e6e269be47`. Ten defects are pinned in there (seven
+rostered at first; B4, B5 and B6 joined later, and all ten are now
+repaired), and the corpus is the
+gate that kept the Rust port faithful to them. The obvious move — regenerate
 — is barred three ways: by `projects/cython-to-rust/rules.md` rule 2, by
 `test/parity/cases.py`'s `assert_no_rust_core` (which already refuses, since
 Phase 04 serves the photon family), and by arithmetic — after Phase 06 Task
@@ -130,11 +130,13 @@ The declaration table is data, so it needs its own gate:
 
 ## The oracle capture protocol (Task 2)
 
-The four Group A twins are `cdef`-only — no top-level `def` — so they are
-reachable from Python solely through `__pyx_capi__` capsules.
-`test/test_core_boost.py` already drives `hazma._utils.boost` that way
-against the Rust port; reuse that harness rather than inventing a second
-one.
+The four Group A twins were `cdef`-only — no top-level `def` — so they
+were reachable from Python solely through `__pyx_capi__` capsules. Task 2
+reused the harness `test/test_core_boost.py` then drove
+`hazma._utils.boost` with, rather than inventing a second one. No twin has
+been in the tree since `cython-to-rust` Task 6.4 (`f479b231`), so a
+re-capture first restores every source it compiles from —
+`test/parity/oracles/README.md`, "Recapturing", has the steps.
 
 The protocol, per defect:
 

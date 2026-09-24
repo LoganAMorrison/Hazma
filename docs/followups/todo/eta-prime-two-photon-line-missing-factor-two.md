@@ -12,26 +12,19 @@
   `projects/parity-pinned-defect-repair` Task 5. The file stays here
   until that project's close (Task 12) moves all of its follow-ups to
   `done/` in one sweep, so the inbound references are repointed once.
-- **Triggers / blockers:** **corpus re-pinning only** — no ordering
-  constraint against `cython-to-rust` Phase 06 Task 6.4. Task 6.4 deletes
-  the four surviving `.pyx`; this defect's twin,
-  `hazma/spectra/_photon/_eta_prime.pyx`, is already gone, deleted in
-  Task 4.2 in the same PR as the swap, so 6.4 takes away nothing this
-  repair could have used. What the corpus pins is still wrong and still
-  has to move, but the corrected values need no Cython oracle: the fix
+- **Triggers / blockers:** none remain, and there was never an ordering
+  constraint against `cython-to-rust` Phase 06. This defect's twin,
+  `hazma/spectra/_photon/_eta_prime.pyx`, went in Task 4.2 in the same PR
+  as the swap, and the corrected values need no Cython oracle: the fix
   adds a second copy of a line term the stored spectrum already carries
   once, so the expected per-position delta is
-  `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)` — computable from a
-  constant and from `boost_delta_function`. This bullet named
-  `hazma/_utils/boost.pyx` as that function's home and called the file
-  live; `cython-to-rust` Task 6.4 has since deleted it, so the model
-  reads `hazma._core.boost` — a kernel this repair does not touch, and
-  one whose window arithmetic the model has to match bit for bit.
-  So this repair is schedulable now, independently of the port's
-  remaining phases. Sequenced in
-  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md);
-  where a later section of this file still reads "after Task 6.4", that
-  wording is superseded and the plan is authoritative.
+  `BR_ETAP_TO_A_A · boost_delta_function(M_η′/2, …)`, computed from a
+  constant and from `hazma._core.boost` — a kernel this repair does not
+  touch, and one whose window arithmetic the model has to match bit for
+  bit. The repair is declared against the committed corpus rather than
+  regenerating it, as
+  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
+  Task 5 sequences it.
 
 ## Why
 
@@ -88,9 +81,9 @@ that differs. (The φ's lines have a separate defect of their own; see
 1. Change the weight to `2 · BR(η′ → γγ)` in the Rust port, which is
    where the kernel lives from Task 4.2 on:
    `rust/src/kernels/photon_tables.rs`, `ETAP_TO_A_A_WEIGHT`.
-2. Regenerate the affected parity corpus case
-   (`spectra.photon.eta_prime`), or re-pin it, under whatever mechanism
-   the port has by then. This is a **declared numerical change**:
+2. Declare the move on the affected parity corpus case
+   (`spectra.photon.eta_prime`) in `test/parity/deltas.py` rather than
+   regenerating it. This is a **declared numerical change**:
    `projects/cython-to-rust/rules.md` rule 3 and `docs/versioning.md`
    make a moved published spectrum a `minor` bump at least, and it needs
    a `CHANGELOG.md` entry stating the magnitude. Quote the yield rather
@@ -123,9 +116,11 @@ in `test/test_core_photon_tables.py`.
 - `test/parity/tolerances.py` — `spectra.photon.eta_prime` is
   `TABULATED` (`rtol = 1e-12`), five decades tighter than this shift, so
   nothing absorbs it quietly.
-- `hazma/_utils/constants.pxd:220` — `BR_ETAP_TO_A_A = 2.307e-2`, the
-  branching ratio itself, which is right.
-- Sibling defects, same class and same blocker:
+- `rust/src/constants.rs` — `BR_ETAP_TO_A_A = 2.307e-2`, the branching
+  ratio itself, which is right. The pre-port copy was
+  `hazma/_utils/constants.pxd:220` at `f479b231^`, deleted by
+  `cython-to-rust` Task 6.4.
+- Sibling defects of the same class:
   [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md),
   [`positron-muon-spectrum-normalization-inverted.md`](positron-muon-spectrum-normalization-inverted.md),
   [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md).

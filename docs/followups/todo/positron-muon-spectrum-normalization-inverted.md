@@ -82,9 +82,9 @@ in `hazma/limits/`.
    `/ R_FACTOR` and `dndx`'s `/ ((beta + beta) * R_FACTOR)`. The second
    becomes `* R_FACTOR / (beta + beta)`; note the operation order is
    itself a numerical choice once the corpus no longer pins it.
-2. Regenerate the affected parity corpus cases, or re-pin them, under
-   whatever mechanism the port has by then. This is a **declared
-   numerical change**: `projects/cython-to-rust/rules.md` rule 3 and
+2. Declare the move on the affected parity corpus cases in
+   `test/parity/deltas.py` rather than regenerating them. This is a
+   **declared numerical change**: `projects/cython-to-rust/rules.md` rule 3 and
    `docs/versioning.md` make a moved published spectrum a `minor` bump at
    least, and it needs a `CHANGELOG.md` entry stating the 0.0374%.
 3. Re-run `test/test_theory_aggregation.py` and the positron-limit
@@ -101,25 +101,27 @@ in `test/test_core_positron_muon.py`.
 ## Entry points
 
 - `rust/src/kernels/positron_muon.rs` — `dndx_rest_frame`, `dndx`.
-- `hazma/spectra/_positron/_muon.pyx` — the pre-port source, kept for its
-  `__pyx_capi__` capsules until `cython-to-rust` Phase 06 Task 6.4.
+- `hazma/spectra/_positron/_muon.pyx` at `f479b231^` — the pre-port
+  source, which outlived its swap for its `__pyx_capi__` capsules until
+  `cython-to-rust` Phase 06 Task 6.4 deleted it in `f479b231`.
 - `rust/src/constants.rs` — `constants::derived::positron_muon::R_FACTOR`,
   whose doc comment records that the `.pyx` comment's `12 r²` exponent is
   itself a typo for `12 r⁴` (Task 3.1). The constant's *value* is right;
   only the operator using it is wrong.
-- `hazma/spectra/_neutrino/_muon.pyx:23,58,114` — the sibling that
-  applies the same constant the other way round, and so is the evidence
-  that this is an inversion rather than a convention.
+- `hazma/spectra/_neutrino/_muon.pyx:23,58,114` at `e2698eb6^` — the
+  sibling that applied the same constant the other way round, and so is
+  the evidence that this is an inversion rather than a convention. Its
+  port is `rust/src/kernels/neutrino_muon.rs`.
 - `test/parity/tolerances.py` — `spectra.positron.muon` is `EXACT`
   (`rtol = 0`), so nothing absorbs this quietly.
-- Sibling defects, same class and same blocker:
+- Sibling defects of the same class:
   [`boost-integral-drops-last-interior-cell.md`](boost-integral-drops-last-interior-cell.md),
   and the two the tabulated photon port surfaced in Task 4.2 —
   [`eta-prime-two-photon-line-missing-factor-two.md`](eta-prime-two-photon-line-missing-factor-two.md)
   and
   [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md).
-  All four want one declared corpus regeneration after Phase 06
-  Task 6.4, not four.
+  Each was repaired as its own declared delta; none needed a corpus
+  regeneration, and after Phase 04 Task 4.1 none could have had one.
 
 ## Risks / open questions
 
@@ -135,6 +137,10 @@ in `test/test_core_positron_muon.py`.
   patched Cython evaluates, which is what keeps `spectra.positron.muon`
   bit-for-bit against that capture at all 1,370 pinned values on the
   capturing platform.
-- Sequencing against the corpus is the real cost. Repairing this and
-  `boost-integral-drops-last-interior-cell.md` in one declared
-  regeneration after Phase 06 is cheaper than two.
+- Sequencing against the corpus was expected to be the real cost, with
+  this and `boost-integral-drops-last-interior-cell.md` sharing one
+  regeneration after Phase 06. That regeneration was never available —
+  see
+  [`projects/parity-pinned-defect-repair/references/the-premise.md`](../../../projects/parity-pinned-defect-repair/references/the-premise.md)
+  — and the declared-delta mechanism made each repair independent
+  instead.

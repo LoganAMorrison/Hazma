@@ -71,7 +71,9 @@ function:
 
 Task 2 below is what buys the deadline out: it captures the corrected
 oracle arrays once, commits them, and from that point the repairs are no
-longer racing the port.
+longer racing the port. It landed on 2026-08-19 (`1a304d02`), ahead of
+every wave, and Task 6.4 has since deleted the last Cython (`f479b231`,
+2026-08-27), so no deadline in this section is still open.
 
 ## Scope
 
@@ -649,8 +651,8 @@ covers it only because no public name, signature, return shape or
 documented unit moves.
 
 **Deliverable / gate:** `scripts/agents/preflight.sh --closing` green;
-`PLAN.md` `status: Complete`; the follow-ups still under `todo/` — the
-original seven less B5's and B6's, which are already in `done/` — moved to
+`PLAN.md` `status: Complete`; the eight follow-ups still under `todo/` —
+the original seven and B5's; B4's and B6's are already in `done/` — moved to
 `docs/followups/done/` with their inbound links repointed and the
 revision pinned, per
 [`docs/workflow.md`](../../docs/workflow.md)'s follow-up lifecycle and
@@ -667,6 +669,8 @@ revision pinned, per
   corresponding oracles are unrecoverable from any source but the Rust
   itself and the affected repairs lose their independent check — say so
   in the task note rather than proceeding as if nothing was lost.
+  Discharged: Task 2 landed before Task 4.6, and every Group A oracle is
+  committed under `test/parity/oracles/data/`.
 
 ## Related
 

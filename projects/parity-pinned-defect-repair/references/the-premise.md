@@ -107,6 +107,34 @@ mapping. Task 4.6 is the only Phase 04 task still open
 (`projects/cython-to-rust/task-notes/README.md` Phases table), so the
 first window is the one closing soonest.
 
+## Re-derived after the port finished
+
+Task 11 re-ran the claims above on `20db28f5` (2026-09-22), after every
+deletion wave and every repair had landed. Claims 1 and 5 were true of
+`3e01590` and are now history; the conclusion they supported held.
+
+- **Claims 1 and 3: the four twins are gone, and Task 6.4 took them.**
+  `find hazma -name "*.pyx" -o -name "*.pxd" | wc -l` prints `0`, and
+  `git log --diff-filter=D --format='%h %ad %s' --date=short --
+  hazma/_utils/boost.pyx hazma/spectra/_photon/_muon.pyx
+  hazma/spectra/_photon/_pion.pyx hazma/spectra/_positron/_muon.pyx`
+  names one commit for all four, `f479b231 2026-08-27 build(packaging):
+  delete the last cython from the tree`, whose body opens
+  "cython-to-rust Task 6.4 closes Phase 06".
+- **Claim 4 still holds.** `test/parity/generate.py`'s `generate()` still
+  calls `corpus.assert_no_rust_core()` before it builds a single case, and
+  `test/parity/cases.py`'s `assert_no_rust_core` still raises whenever
+  `rust_core_kernels()` is non-empty. No repair regenerated the corpus.
+- **Claim 5 is history.** `test/test_core_boost.py`'s module docstring
+  records that it drove the `.pyx` through `__pyx_capi__` until Task 6.4
+  and now checks against a reference implementation instead.
+- **Claim 6: the capture beat every wave.** `git log --diff-filter=A
+  --format='%h %ad %s' --date=short -- test/parity/oracles/data/A1.npz`
+  prints `1a304d02 2026-08-19`. The mediator decay `.pyx` went on
+  2026-08-24 (`75947619`, Task 6.2), and the mediator positron `.pyx` and
+  the last twins on 2026-08-27 (`c384aff3`, Task 6.3; `f479b231`,
+  Task 6.4).
+
 ## What this does *not* claim
 
 - It does not claim the Cython twins are *correct*. They are the
