@@ -35,7 +35,7 @@ schema so that Tasks 5, 6 and 9 declare rather than derive.
 - `../rules.md` — all eleven.
 - `../references/corpus-repinning.md` — declaration schema and relations.
 - `../references/defect-blast-radius.md` — the B1, B2, B3 rows.
-- `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`,
+- `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`,
   `phi-photon-lines-use-the-daughter-meson-energy.md`,
   `rho-rest-frame-branch-returns-the-integrand.md`.
 - `rust/src/kernels/photon_tables.rs` (`dnde`, `branch`, the line weights

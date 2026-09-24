@@ -38,7 +38,7 @@ against Task 2's A4 Cython capture without rewriting any stored array.
 - `../PLAN.md` (Scope, Numerical impact, Task 10), `../rules.md`, the
   working-memory README (Findings, Numerical impact, Handoff).
 - `../references/defect-blast-radius.md` (A4 row and coverage arithmetic).
-- `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`.
+- `docs/followups/done/positron-muon-spectrum-normalization-inverted.md`.
 - `test/parity/oracles/data/manifest.json` (A4 entry) and
   `test/parity/oracles/patches/A4-positron-muon-normalization.patch`.
 - `test/parity/deltas.py`, `test/parity/oracle_reference.py`,
@@ -126,7 +126,7 @@ against Task 2's A4 Cython capture without rewriting any stored array.
 - `test/parity/tolerances.py` — the platform branch of
   `effective_budget` extracted as `platform_budget`; no budget changed.
 - `CHANGELOG.md` — the `[Unreleased]` entry with the magnitude.
-- `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`
+- `docs/followups/done/positron-muon-spectrum-normalization-inverted.md`
   — status, renamed tests, the operation-order answer.
 - `../references/defect-blast-radius.md` — A4's measured reach.
 - `README.md` (working memory) and this note.
@@ -202,8 +202,13 @@ Preflight, with the worktree's `.venv/bin` first on `PATH` and no
 `--tests`, so pytest ran the full suite:
 
 ```sh
-scripts/agents/preflight.sh --paths "test/parity/deltas.py test/parity/test_parity.py test/test_core_positron_muon.py test/test_core_positron_pion.py test/test_core_neutrino.py" --md "CHANGELOG.md docs/followups/todo/positron-muon-spectrum-normalization-inverted.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md"
+scripts/agents/preflight.sh --paths "test/parity/deltas.py test/parity/test_parity.py test/test_core_positron_muon.py test/test_core_positron_pion.py test/test_core_neutrino.py" --md "CHANGELOG.md docs/followups/done/positron-muon-spectrum-normalization-inverted.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md"
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ```text
 PASS black, isort (0 new), ruff (0 new), cargo fmt, cargo clippy, cargo test

@@ -57,7 +57,7 @@ The muon-channel continuum is Task 4.1's kernel. The Cython it was ported
 from divided by the Michel normalization where it should multiply, so the
 values the parity corpus pins for this spectrum are low by ``1/N**2`` —
 0.0374% — in that channel
-(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``).
+(``docs/followups/done/positron-muon-spectrum-normalization-inverted.md``).
 :class:`TestPhysics` asserts the corrected integral, one positron per pion.
 """
 

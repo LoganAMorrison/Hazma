@@ -181,7 +181,7 @@ than quoting them: the current state is in the open phase's
   and nothing reads it (checked against `origin/master` too), while the ω
   adds exactly the analogous line for its own `π⁰γ` mode. Suggestive but
   not settled — recorded as the first open question on
-  [`../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md)
+  [`../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md)
   so whoever repairs the line energies settles it in the same PR. The
   port carries exactly what the Cython carried either way.
 - **The ill-conditioned-points repair did not land before the first
@@ -253,7 +253,7 @@ than quoting them: the current state is in the open phase's
   QUADPACK misses it the same way one level out. **Repairing the
   charged-pion kernel is necessary but not sufficient**; the table and the
   consequence are on
-  [`../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md).
+  [`../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md).
   ~~**Whether it also reaches the mediator spectra is still open**~~ —
   **answered by Task 6.2: yes.** From the committed corrected-value
   oracle, repairing it moves 1,032 of 8,610 scalar values by up to

@@ -1,5 +1,5 @@
 ---
-status: In Progress
+status: Complete
 phased: false
 version_bump: minor
 deliverable: The ten parity-pinned numerical defects repaired (B4, B5 and B6 landed ahead of the task sequence — PR #87, Task 10a and Task 13), each with a declared per-array delta asserted against the corpus arrays that pinned the defect — which stay committed
@@ -114,7 +114,7 @@ first whose repair is a quadrature setting rather than a closed form.
 ## Numerical impact
 
 **This project moves published numbers, deliberately, ten times**
-(three of them, B4, B5 and B6, already landed). That
+(all ten have landed: B4 in 2.2.0, the other nine in 2.3.0). That
 is the whole deliverable, and it is what sets `version_bump: minor` —
 no public name, signature, return shape or documented unit changes, but
 users' plots move. Known magnitudes, from the follow-ups' own
@@ -156,10 +156,14 @@ measurements:
   closed-resonance points. **The largest correction in the project by
   four orders of magnitude**, and the only one that is not a spectrum.
 
-Task 12 aggregates the measured figures. Every bullet above except the
-last is a pre-repair estimate the follow-up recorded rather than one of
-this project's own measurements, and is re-derived by its repair task;
-the B5 bullet is the measurement, because Task 10a has run.
+Task 12 aggregated the measured figures into `CHANGELOG.md`'s `[2.3.0]`
+entry. The bullets above are kept as they were planned. Except for the
+last one and the B5 bullet, they are pre-repair estimates the follow-ups
+recorded, not this project's measurements. Where the two disagree the
+measurement wins: B1's 0.63% was measured at 0.603%, and it is better
+quoted as the window-independent `+BR(η′ → γγ)` photons per decay.
+`task-notes/README.md`, "Numerical impact so far", has every measured
+figure with its grid.
 
 ## Tasks
 

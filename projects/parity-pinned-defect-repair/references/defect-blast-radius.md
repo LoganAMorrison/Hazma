@@ -247,7 +247,7 @@ row moves, and only downward; the muon and tau rows are bit-identical.
 `E_π = m_π` the kernel takes a branch that drops both prompt lines, and
 one epsilon above it `β` is small enough that no grid point's boost
 window straddles the line at all. Found and filed after this roster was
-drawn ([`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md)),
+drawn ([`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md)),
 which is also why it is disjoint from everything else here: the pion's
 neutrino path reaches `boost_delta_function` and `super::neutrino_muon`,
 neither of which any other roster entry touches.
@@ -286,15 +286,15 @@ and no ordering constraint at all.
 
 | # | Defect | Follow-up | Twin | Serving kernel |
 | --- | --- | --- | --- | --- |
-| A1 | Boost integral mis-covers its window at both ends | [`boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md) | `hazma/_utils/boost.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/boost.rs` — **repaired** |
-| A2 | Muon photon rest-frame branch stops short of the endpoint | [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | `hazma/spectra/_photon/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_muon.rs` — **repaired** |
-| A3 | Charged-pion photon spectrum returns zero in the forward cone | [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md) | `hazma/spectra/_photon/_pion.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_pion.rs` — **repaired** |
-| A4 | Muon positron spectrum divides by its normalization | [`positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md) | `hazma/spectra/_positron/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/positron_muon.rs` — **repaired** |
-| B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
-| B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
-| B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs`  — **repaired** |
+| A1 | Boost integral mis-covers its window at both ends | [`boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md) | `hazma/_utils/boost.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/boost.rs` — **repaired** |
+| A2 | Muon photon rest-frame branch stops short of the endpoint | [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md) | `hazma/spectra/_photon/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_muon.rs` — **repaired** |
+| A3 | Charged-pion photon spectrum returns zero in the forward cone | [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md) | `hazma/spectra/_photon/_pion.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/photon_pion.rs` — **repaired** |
+| A4 | Muon positron spectrum divides by its normalization | [`positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md) | `hazma/spectra/_positron/_muon.pyx` — deleted, Task 6.4; captured, Task 2 | `rust/src/kernels/positron_muon.rs` — **repaired** |
+| B1 | η′ two-photon line missing its factor of two | [`eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
+| B2 | φ photon lines use the daughter meson's energy | [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md) | deleted, Task 4.2 | `rust/src/kernels/photon_tables.rs`  — **repaired** |
+| B3 | Both rho spectra return the boost integrand at rest | [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md) | deleted, Task 4.5 | `rust/src/kernels/photon_rho.rs`  — **repaired** |
 | B4 | Scalar decay spectrum's FSR coefficients are half size | [`scalar-decay-fsr-half-normalized.md`](../../../docs/followups/done/scalar-decay-fsr-half-normalized.md) | deleted, Task 6.2 | `rust/src/kernels/scalar_decay_photon.rs` — **repaired** |
-| B5 | Charged pion's prompt `π → e ν` neutrino line is added twice | [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md) | deleted, Task 4.6 | `rust/src/kernels/neutrino_pion.rs` — **repaired** |
+| B5 | Charged pion's prompt `π → e ν` neutrino line is added twice | [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md) | deleted, Task 4.6 | `rust/src/kernels/neutrino_pion.rs` — **repaired** |
 | B6 | Both thermal averages return the integrator's initial estimate | [`thermal-cross-section-quadrature-never-converges.md`](../../../docs/followups/done/thermal-cross-section-quadrature-never-converges.md) | deleted, Tasks 5.1/5.2 | `rust/src/kernels/vector_xs.rs`, `rust/src/kernels/scalar_xs.rs` — **repaired** |
 
 ## Coverage arithmetic

@@ -3,11 +3,14 @@
 - **Added:** 2026-08-18
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.5-photon-rho.md`
 - **Scope:** cross-cutting (public spectrum values)
-- **Status:** open — repaired by parity-pinned-defect-repair Task 9.
-  Administrative close and link relocation remain with Task 12.
-  See `projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md`.
-- **Remaining work:** Task 12 moves this repaired item to `done/`.
-  B3 composes the A3 Cython capture with the photon-energy factor;
+- **Status:** done — repaired as roster entry B3 of
+  `projects/parity-pinned-defect-repair`, Task 9
+  ([PR #98](https://github.com/LoganAMorrison/Hazma/pull/98), merge
+  `8124b27`, 2026-09-20); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md`.
+- **Remaining work:** none. The repair's revision is `8124b27`, PR
+  #98's merge commit. B3 composes the A3 Cython capture with the photon-energy factor;
   the corpus arrays stay untouched. No port-deletion blocker remains.
 
 The sections below describe the defect measured at `b5f7f90`, before

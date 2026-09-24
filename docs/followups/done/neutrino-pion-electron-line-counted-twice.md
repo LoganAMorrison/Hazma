@@ -3,10 +3,12 @@
 - **Added:** 2026-08-20
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.6-positron-pion-neutrino.md`
 - **Scope:** cross-cutting (public spectrum values)
-- **Status:** open — **repaired** 2026-09-06 as roster entry B5,
-  `projects/parity-pinned-defect-repair` Task 10a. The file stays here
-  until that project's close (Task 12) moves all eight of its follow-ups
-  to `done/` in one sweep, so the inbound references are repointed once.
+- **Status:** done — repaired as roster entry B5 of
+  `projects/parity-pinned-defect-repair`, Task 10a
+  ([PR #90](https://github.com/LoganAMorrison/Hazma/pull/90), merge
+  `a973d6c`, 2026-09-06); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-10a-neutrino-pion-line.md`.
 - **Triggers / blockers:** **corpus re-pinning only** — no ordering
   constraint against cython-to-rust Phase 06. The Cython twin
   (`hazma/spectra/_neutrino/_pion.pyx`) is already gone, deleted in
@@ -99,7 +101,7 @@ Those factor-of-two positions turned out to expose a second, larger and
 wholly separate defect — the continuum's quadrature loses its support and
 returns a hard zero, which is why the line was all that was left there.
 Filed as
-[`neutrino-pion-continuum-loses-its-quadrature-support.md`](neutrino-pion-continuum-loses-its-quadrature-support.md).
+[`neutrino-pion-continuum-loses-its-quadrature-support.md`](../todo/neutrino-pion-continuum-loses-its-quadrature-support.md).
 
 ## Entry points
 
@@ -138,7 +140,8 @@ Named as they stand after the repair; the pre-repair names are in
   been re-checked for the pattern.
 - **The repair moves a published number**, so it needed a `CHANGELOG.md`
   entry and is `minor` at least under `docs/versioning.md`. Written under
-  `[Unreleased]` by Task 10a, with the 0.0123% integrated figure and the
+  `[Unreleased]` by Task 10a (released as `[2.3.0]` by Task 12), with the
+  0.0123% integrated figure and the
   measured local one — a factor of two, not the 0.06% this file
   originally predicted.
 - A pion **at rest** loses *both* prompt lines instead (the

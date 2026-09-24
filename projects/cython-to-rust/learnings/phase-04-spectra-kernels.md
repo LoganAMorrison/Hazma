@@ -216,18 +216,18 @@ kernel's drift from its shape.
 
 - **Six pinned-defect repairs from this phase** are queued in
   [`../../parity-pinned-defect-repair/PLAN.md`](../../parity-pinned-defect-repair/PLAN.md):
-  [positron-muon normalization](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md),
-  [η′ two-photon line](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md),
-  [φ photon line energies](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md),
-  [muon rest-frame endpoint](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
-  [charged-pion forward cone](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md),
-  [ρ rest-frame integrand](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md).
+  [positron-muon normalization](../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md),
+  [η′ two-photon line](../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md),
+  [φ photon line energies](../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md),
+  [muon rest-frame endpoint](../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
+  [charged-pion forward cone](../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md),
+  [ρ rest-frame integrand](../../../docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md).
   Task 4.5 measured that the forward-cone defect **compounds** through the
   ρ rather than merely propagating (0.945 of endpoint predicted, 0.537
   measured at `γ_ρ = 10`), so that repair is larger than originally
   scoped.
 - **The doubled `π → e ν` neutrino line** —
-  [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md),
+  [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md),
   filed in Task 4.6 and not yet in that project's roster. Unlike its six
   siblings it needs **no** Cython oracle: the excess is a closed-form
   plateau over a computable window, so its twin's deletion costs nothing.

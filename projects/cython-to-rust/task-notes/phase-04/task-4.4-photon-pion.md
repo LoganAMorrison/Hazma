@@ -190,7 +190,7 @@ Reproduced per rule 1 — the port's zeros are in the *same places* as the
 Cython's at every parent energy sampled — pinned by
 `test_the_forward_cone_is_a_hard_zero_the_quadrature_invented`, and filed
 as
-[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md),
+[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md),
 blocked behind Phase 06 Task 6.4 for the same corpus reason as its five
 siblings. **Six blocked defects now share one eventual corpus
 regeneration.**
@@ -394,7 +394,7 @@ needs, already written down in the file that has the defect.
 `claude/cython-to-rust/task-4.4-photon-pion`.)*
 
 - New: `rust/src/kernels/photon_pion.rs`, `test/test_core_photon_pion.py`,
-  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`,
+  `docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`,
   this task note.
 - Changed: `rust/src/{kernels,photon}.rs`,
   `hazma/spectra/_photon/{__init__.py,_pion.pyx}`, `hazma/_core.pyi`,

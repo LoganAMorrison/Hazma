@@ -349,7 +349,7 @@ past-tense worked example and one canonical phase file given a dated
   whenever your own diff removes a file.
 
 - **A green `check_doc_citations.py` is not a green liveness check.** PR #94
-  annotated `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`
+  annotated `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`
   as repaired and corrected three of its claims, then ran the checker over all
   six touched docs: `out-of-range or ambiguous: NONE`. It still shipped a
   sentence saying `hazma/_utils/boost.pyx` "is still live" — a file

@@ -20,7 +20,7 @@ This was measured in
 The A3 oracle in `test/parity/oracles/data/A3.npz` corrects the inner pion
 only. Matching it is evidence for Task 8, not a proof of the outer boost.
 This item splits the still-open outer work from
-[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](charged-pion-photon-spectrum-misses-the-forward-cone.md),
+[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../done/charged-pion-photon-spectrum-misses-the-forward-cone.md),
 so closing that repaired inner defect does not lose the remaining work.
 
 ## What

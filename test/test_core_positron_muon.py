@@ -97,7 +97,7 @@ The normalization
 decay. The Cython this kernel was ported from divided by the Michel
 normalization where it should multiply, so every value it returned -- and
 every value ``spectra.positron.muon`` pins -- is low by ``1/N**2``, 0.0374%
-(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``).
+(``docs/followups/done/positron-muon-spectrum-normalization-inverted.md``).
 The parity suite declares the corrected values against a capture from a
 patched build of that Cython (``test/parity/deltas.py``, roster entry A4).
 """

@@ -50,7 +50,7 @@ points, and everything below is history.
   modules. The sibling `hazma/spectra/_neutrino/_muon.pyx` declares the
   same constant and multiplies by it, which is what makes this an
   inversion rather than a convention. Reproduced per rule 1 and filed as
-  [`positron-muon-spectrum-normalization-inverted.md`](../../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md),
+  [`positron-muon-spectrum-normalization-inverted.md`](../../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md),
   blocked behind Phase 06 Task 6.4. **Found the same way Task 3.4 found
   the boost-integral defect:** by writing an analytic test the original
   never had. Every task in this phase should write one.
@@ -108,9 +108,9 @@ points, and everything below is history.
   photon lines at the **daughter meson's** energy (656.94 MeV where
   362.52 is right; 959.65 where 59.82 is right, a factor of 16). Both
   reproduced per rule 1, filed as
-  [`eta-prime-two-photon-line-missing-factor-two.md`](../../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md)
+  [`eta-prime-two-photon-line-missing-factor-two.md`](../../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md)
   and
-  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md),
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md),
   both blocked behind Phase 06 Task 6.4. **Four blocked defects now share
   one eventual corpus regeneration** — a fifth joined in Task 4.3.
 - **`numpy.sum(axis=0)` is pairwise above eight terms, and exactly one
@@ -205,7 +205,7 @@ points, and everything below is history.
   in-flight closed form is *exactly* the boost integral of the rest-frame
   distribution — to machine precision — but only when integrated to
   `1 − r`. Filed as
-  [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
+  [`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
   blocked behind Phase 06 Task 6.4.
 - **Read `fmla` as well as `fmadd`** (Task 4.3). `grep -c fmadd` finds 17
   sites in this kernel and misses five: one scalar `fmla.d` and four
@@ -261,7 +261,7 @@ points, and everything below is history.
   `E_π = 1` GeV, 0.041% at 1396 MeV and 2.96% at 5 GeV, so it is a
   **shape** defect rather than a yield defect at hazma's scales. The port
   reproduces the zeros in exactly the same places. Filed as
-  [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md),
+  [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md),
   blocked behind Phase 06 Task 6.4. **Six blocked defects now share one
   eventual corpus regeneration.**
 - **The divergent regime is reachable and the port agrees with scipy
@@ -339,7 +339,7 @@ points, and everything below is history.
   electron-neutrino line; the muon row has no second copy. Measured by
   continuum subtraction at **exactly 2.0000** copies against the muon
   line's 1.0000. Filed as
-  [`neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md);
+  [`neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md);
   unlike its six siblings it needs no Cython oracle, so its twin's
   deletion costs nothing.
 - **An absolute `DBL_EPSILON` guard on a MeV quantity is not a tolerance
@@ -476,7 +476,7 @@ points, and everything below is history.
 
 - New: `rust/src/kernels/positron_muon.rs`,
   `test/test_core_positron_muon.py`,
-  `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`.
+  `docs/followups/done/positron-muon-spectrum-normalization-inverted.md`.
 - Changed: `rust/src/{kernels,positron}.rs`,
   `hazma/spectra/_positron/{__init__.py,_muon.pyx}`, `hazma/_core.pyi`,
   `test/parity/{cases,test_parity}.py`, `docs/followups/README.md`,
@@ -487,8 +487,8 @@ points, and everything below is history.
 
 - New: `rust/src/kernels/photon_tables.rs`,
   `test/test_core_photon_tables.py`,
-  `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`,
-  `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
+  `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`,
+  `docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`.
 - Changed: `rust/src/{kernels,photon,boost,interp}.rs`,
   `hazma/spectra/_photon/__init__.py`, `hazma/_core.pyi`, `setup.py`,
   `test/parity/{cases,tolerances,test_parity}.py`,
@@ -500,7 +500,7 @@ points, and everything below is history.
 ### Task 4.3
 
 - New: `rust/src/kernels/photon_muon.rs`, `test/test_core_photon_muon.py`,
-  `docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`.
+  `docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`.
 - Changed: `rust/src/{kernels,photon,special}.rs`,
   `hazma/spectra/_photon/{__init__.py,_muon.pyx}`, `hazma/_core.pyi`,
   `setup.py`, `test/parity/{cases,tolerances,test_parity}.py`,
@@ -510,7 +510,7 @@ points, and everything below is history.
 ### Task 4.4
 
 - New: `rust/src/kernels/photon_pion.rs`, `test/test_core_photon_pion.py`,
-  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
+  `docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
 - Changed: `rust/src/{kernels,photon}.rs`,
   `hazma/spectra/_photon/{__init__.py,_pion.pyx}`, `hazma/_core.pyi`,
   `setup.py`, `test/parity/{cases,tolerances}.py`,
@@ -521,14 +521,14 @@ points, and everything below is history.
 ### Task 4.5
 
 - New: `rust/src/kernels/photon_rho.rs`, `test/test_core_photon_rho.py`,
-  `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md`.
+  `docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md`.
 - Changed: `rust/src/{kernels,photon,constants,quad}.rs`,
   `rust/src/kernels/photon_pion.rs`,
   `hazma/spectra/_photon/__init__.py` (both wrappers repointed, both
   gained return units), `setup.py`, `test/parity/{cases,tolerances}.py`,
   `test/test_core_{dispatch,constants,photon_pion,quad}.py`,
   `docs/followups/README.md`,
-  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
+  `docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
 - Deleted: `hazma/spectra/_photon/_rho.{pyx,pxd,pyi}` — the whole module,
   not just its `def`s: nothing cimported it, so the capi exception in the
   phase Goal does not apply.
@@ -538,7 +538,7 @@ points, and everything below is history.
 - New: `rust/src/kernels/{positron_pion,neutrino_flavors,neutrino_muon,
   neutrino_pion}.rs`, `test/test_core_positron_pion.py`,
   `test/test_core_neutrino.py`,
-  `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`.
+  `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`.
 - Changed: `rust/src/{kernels,positron,neutrino,quad,constants}.rs`,
   `hazma/spectra/_positron/{__init__.py,_pion.pyx}`,
   `hazma/spectra/_neutrino/__init__.py`, `setup.py`,
@@ -664,7 +664,7 @@ points, and everything below is history.
 - **Does the φ omit a `φ → π⁰γ` line entirely?** `BR_PHI_TO_PI0_A` is
   defined and read by nothing, and the ω adds the analogous line. Not
   settled by Task 4.2 — recorded on
-  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md)
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md)
   for whoever repairs the line energies.
 - ~~**Does the rest-frame endpoint defect reach `_pion` and `_rho`?**
   (Task 4.3.)~~ **Answered by Task 4.4: no.** `_pion` evaluates the muon

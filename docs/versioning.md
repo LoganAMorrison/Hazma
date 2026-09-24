@@ -10,7 +10,7 @@ touch.
 ```toml
 # pyproject.toml
 [project]
-version = "2.2.0"
+version = "2.3.0"
 ```
 
 That line is the number, and the only one to edit. The package reads it

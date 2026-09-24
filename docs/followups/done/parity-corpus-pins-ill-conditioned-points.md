@@ -139,7 +139,7 @@ Whichever lands, also revisit two things Task 1.3 left standing:
   that point. Phase 01 recorded the negatives as contract; that decision
   deserves re-examination alongside this, and it may belong with the
   `two_body_momentum` / Källén work in
-  [`kallen-under-sqrt-remaining-call-sites.md`](kallen-under-sqrt-remaining-call-sites.md),
+  [`kallen-under-sqrt-remaining-call-sites.md`](../todo/kallen-under-sqrt-remaining-call-sites.md),
   which is the same class of catastrophic-cancellation defect.
 - If the affected points are dropped rather than fixed, the port loses
   its only pinned evidence at precisely the kinematic edges

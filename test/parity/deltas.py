@@ -776,7 +776,7 @@ _B5 = Delta(
     "muon-decay continuum dominates, to exactly 0.500000000000 at the 14 "
     "positions where that continuum's quadrature returns zero and the "
     "doubled line was the entire value.",
-    evidence="docs/followups/todo/neutrino-pion-electron-line-counted-twice.md",
+    evidence="docs/followups/done/neutrino-pion-electron-line-counted-twice.md",
 )
 
 # ---------------------------------------------------------------------------

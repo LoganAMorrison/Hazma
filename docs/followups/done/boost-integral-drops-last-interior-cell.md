@@ -3,10 +3,12 @@
 - **Added:** 2026-08-10
 - **Source:** cython-to-rust Task 3.4 (the interp + boost port)
 - **Scope:** cross-cutting
-- **Status:** open — **repaired** 2026-09-07 as roster entry A1,
-  `projects/parity-pinned-defect-repair` Task 4. The file stays here
-  until that project's close (Task 12) moves all of its follow-ups to
-  `done/` in one sweep, so the inbound references are repointed once.
+- **Status:** done — repaired as roster entry A1 of
+  `projects/parity-pinned-defect-repair`, Task 4
+  ([PR #93](https://github.com/LoganAMorrison/Hazma/pull/93), merge
+  `46ec629`, 2026-09-07); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-4-boost-window.md`.
 - **Triggers / blockers:** none remain. The deadline was on the oracle,
   not on the fix: the parity corpus pins the shipped values, and
   `projects/cython-to-rust/rules.md` rule 2 forbids regenerating them

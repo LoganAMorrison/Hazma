@@ -40,7 +40,7 @@ this repair and the A1 boost repair that already owns the same arrays.
   Questions (which answered "second composite, not a third part").
 - `../references/corpus-repinning.md` §Relations, §"How the runner uses
   it"; `defect-blast-radius.md` (B2's row and the A1/B2 overlap).
-- `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`,
+- `docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`,
   including its unanswered `φ → π⁰γ` risk bullet.
 - `test/parity/deltas.py`, `test_parity.py`, `test_delta_models.py`,
   `oracle_reference.py`, `tolerances.py`, `stability.py`.
@@ -186,7 +186,7 @@ this repair and the A1 boost repair that already owns the same arrays.
   for B1) and the third carve-out.
 - `CHANGELOG.md` — the `[Unreleased] / Changed` entry, stating the
   relocation and the unchanged yield.
-- `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`
+- `docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`
   — status annotated as repaired, the renamed tests, and the `φ → π⁰γ`
   risk bullet answered.
 - `docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md`,
@@ -433,7 +433,7 @@ $ git status --short
  M CHANGELOG.md
  M docs/followups/README.md
  A docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md
- M docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md
+ M docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md
  M projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md
  M projects/parity-pinned-defect-repair/references/corpus-repinning.md
  M projects/parity-pinned-defect-repair/references/defect-blast-radius.md
@@ -465,6 +465,11 @@ $ git diff origin/master --stat --
  test/test_core_photon_tables.py                    | 148 ++++--
  15 files changed, 1288 insertions(+), 213 deletions(-)
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 **Identifier sweep** —
 `rg -n --hidden '<id>' projects/ docs/ README.md hazma/ test/ rust/ .claude/ .codex/`

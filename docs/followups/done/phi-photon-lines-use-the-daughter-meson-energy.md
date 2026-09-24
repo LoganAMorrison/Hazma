@@ -8,10 +8,12 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.2-photon-table-family.md`)
 - **Scope:** cross-cutting (a published spectrum has a feature in the
   wrong place; the repair is gated by the `cython-to-rust` corpus)
-- **Status:** open — **repaired** 2026-09-07 as roster entry B2,
-  `projects/parity-pinned-defect-repair` Task 6. The file stays here
-  until that project's close (Task 12) moves all of its follow-ups to
-  `done/` in one sweep, so the inbound references are repointed once.
+- **Status:** done — repaired as roster entry B2 of
+  `projects/parity-pinned-defect-repair`, Task 6
+  ([PR #95](https://github.com/LoganAMorrison/Hazma/pull/95), merge
+  `1824829`, 2026-09-08); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-6-phi-lines.md`.
 - **Triggers / blockers:** none remain, and there was never an ordering
   constraint against `cython-to-rust` Phase 06. This defect's twin,
   `hazma/spectra/_photon/_phi.pyx`, went in Task 4.2 in the same PR as
@@ -149,7 +151,7 @@ declaration alone.
   so batching saves nothing. It is also a different defect: adding a line
   changes the φ's yield, where B2 relocates it and leaves the yield
   exactly where it was. Tracked as
-  [`phi-omits-its-direct-pi0-photon-line.md`](phi-omits-its-direct-pi0-photon-line.md).
+  [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
 - Sequencing against the corpus was expected to be the real cost. It was
   not: the declared-delta mechanism made each repair independent, and no
   regeneration happened for any of them.

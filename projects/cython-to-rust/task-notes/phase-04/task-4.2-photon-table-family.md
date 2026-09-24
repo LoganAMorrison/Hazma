@@ -102,14 +102,14 @@ Copied from the phase file's Task 4.2 block:
     weights are *correctly* un-doubled — their modes are `X → Yγ`, one
     photon each — which is what makes the η′ the odd one out rather than
     the family a mixed convention.
-    [`eta-prime-two-photon-line-missing-factor-two.md`](../../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md).
+    [`eta-prime-two-photon-line-missing-factor-two.md`](../../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md).
   - `_phi.pyx:111,113` place both photon lines at `(M² + m²)/(2M)`,
     which is the **daughter meson's** energy, not the photon's — 656.94
     MeV where 362.52 is right for `φ → ηγ` (×1.81) and **959.65 where
     59.82 is right** for `φ → η′γ` (×16.0, i.e. 94% of the φ's whole rest
     mass in one photon). The ω's two lines use `(M² − m²)/(2M)` and are
     right, which is the control. The local is even named `eng_eta`.
-    [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md).
+    [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md).
 - **Deleting an extension strands whatever read its module globals.**
   `test/test_core_interp.py` and `test/test_core_boost.py` (Task 3.4)
   both built their seven-table fixtures from `_eta.eta_data_energies` and
@@ -259,8 +259,8 @@ Copied from the phase file's Task 4.2 block:
 
 - New: `rust/src/kernels/photon_tables.rs`,
   `test/test_core_photon_tables.py`,
-  `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`,
-  `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
+  `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`,
+  `docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`.
 - Changed: `rust/src/{kernels,photon,boost,interp}.rs`,
   `hazma/spectra/_photon/__init__.py`, `hazma/_core.pyi`, `setup.py`,
   `test/parity/{cases,tolerances,test_parity}.py`,
@@ -379,7 +379,7 @@ macOS/arm64 — the parity corpus's capturing environment, built with
   0.002609` for the π⁰'s own decay photons — suggestive but not
   conclusive, since the tables are truncated at low energy. Recorded as
   the first open question on
-  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md);
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md);
   whoever repairs the line energies should settle it in the same PR.
 - **Retiring the photon package-data glob** is Phase 07 Task 7.1's, and
   is now *half* true: the CSVs are unread at runtime but must still ship
@@ -456,12 +456,17 @@ $ rg -n '_photon/(_eta|_eta_prime|_kaon|_omega|_phi)\.pyx:[0-9]' \
     --glob '!.venv' --glob '!rust/target' .
 ./test/parity/cases.py:56,310                             (grid-design docstring)
 ./test/parity/tolerances.py:229,240,246,252               (budget `why` strings)
-./docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md:34-37
-./docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md:28-39
+./docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md:34-37
+./docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md:28-39
 ./rust/src/interp.rs:22                                   (call-site table)
 ./rust/src/kernels/photon_tables.rs:519                   (the η′ defect)
 ./projects/cython-to-rust/task-notes/phase-00/task-0.1-relocate-constants.md:371-376
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 Every one is a citation to the pre-port source, which is the convention
 both parity modules state in their own docstrings ("Phases 04-06 delete

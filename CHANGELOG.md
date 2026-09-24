@@ -13,7 +13,56 @@ its magnitude and a pointer to the tracked repair. **Numerical changes go
 under `Changed` with the magnitude stated** — a spectrum that moves is a
 user-facing change even when no signature did.
 
-## [Unreleased]
+## [2.3.0] — 2026-09-24
+
+**This release repairs nine of the twelve numerical defects 2.2.0 listed
+under `Known issues`, and every one of them moves published numbers.**
+Delivered as the `parity-pinned-defect-repair` project
+([`projects/parity-pinned-defect-repair/PLAN.md`](projects/parity-pinned-defect-repair/PLAN.md)),
+whose roster holds ten defects. The tenth, `B4` (the scalar mediator's
+decay FSR, a factor of 2 low), shipped in 2.2.0. No public name,
+signature, keyword, return shape or documented unit changes, which is
+why a release that moves this many numbers is `minor`
+([`docs/versioning.md`](docs/versioning.md)). If you have published a
+result that reads any spectrum or cross section in the table below,
+recompute it. **Start with `relic_density`**: it is the one quantity
+here that is not a spectrum, and at the model points the test suite
+pins it moves by as much as −99.9%.
+
+| Roster | What moves | Measured shift | Corpus values moved |
+| --- | --- | --- | --- |
+| `B6` | both mediator `thermal_cross_section` implementations, and `relic_density` through them | ⟨σv⟩ was wrong by up to 100% (per-block medians 7.2e-6 to 8.1e-2). Over the six pinned model points `relic_density` moves −91.85% to +2.04% (semi-analytic) and −99.88% to +2.40% (Boltzmann) | 539 of 570 |
+| `A1` | the seven tabulated photon spectra (`eta`, `eta_prime`, `omega`, `phi`, three kaons) | the sign depends on the regime. One part in 1e12 above rest they fall from a median 9,768x too high. In flight they rise, by a median 3.3% at `γ = 1.05`, 0.22% at `γ = 2` and 7.1e-5 at `γ = 10`, and by at most 98.7% | 4,154 of 10,045 |
+| `A3` | `dnde_photon_charged_pion`, both rhos, and the mediator decay photon spectra | `dnde_photon_charged_pion(900, 1396)` goes from 0 to 3.585860e-7 MeV⁻¹; at most 2.540805e-5 MeV⁻¹ on grids up to a 5 GeV parent | 6,359 |
+| `A4` | `dnde_positron_muon` and every positron spectrum built on it | a factor of up to `N² = 1.000374206647938` (+0.0374%), exactly `N²` wherever the muon is the only contributor. The Michel spectrum now integrates to 1 (it was 0.999626) | 21,975 |
+| `B1` | `dnde_photon_eta_prime` | the yield rises by exactly `BR(η′ → γγ) = 0.02307` photons per decay at any boost; pointwise from 7.7e-4 up to a factor of 2 | 189 |
+| `B2` | `dnde_photon_phi` | the yield does not change (0.013092 per decay); both lines move, 656.942 → 362.519 MeV and 959.646 → 59.815 MeV in the φ rest frame | 305 |
+| `B3` | both rho photon spectra at exactly `E_ρ = m_ρ` | each nonzero value is multiplied by `E_γ` in MeV | 350 |
+| `B5` | the electron-neutrino row of `dnde_neutrino_charged_pion` | it loses exactly `BR(π → e ν_e) = 1.230e-4` per pion (0.0123%); pointwise the drop is about 5e-5 on the plateau and a factor of 2 above the muon-decay continuum | 215 |
+| `A2` | `dnde_photon_muon` at rest | 0.254 MeV of support is restored, adding a net 5.445e-8 photons per decay; at most 5.336e-7 MeV⁻¹ | 4 |
+
+A parent **exactly at rest** is unaffected by `A1`, `B1`, `B2` and `B5`,
+and a pion exactly at rest is unaffected by `A3`. A rho at rest is not,
+because its daughter pions are in flight. `A2` and `B3` act *only* at
+rest. "Corpus values moved" counts positions
+in hazma's parity corpus (`test/parity/data/`), which still holds the
+pre-repair arrays from 2.1.0. Each repair declares the positions it
+moves in `test/parity/deltas.py` and checks them against an independent
+oracle, and every other position is still held to its original stored
+value. Each entry below gives the per-function detail.
+
+Three of 2.2.0's known issues remain open:
+[the scalar elastic cross sections' cancellation](docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md),
+[the mediator positron line's missing electron velocity](docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md),
+and [the vector cross sections' `TypeError` at `e_cm = 2 m_x`](docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md).
+The repairs also surfaced three new defects, which this release does not
+fix:
+[the rho's outer boost can miss its support](docs/followups/todo/rho-photon-outer-boost-misses-support.md),
+[the charged pion's neutrino continuum loses its quadrature support](docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md),
+and [the φ omits its direct `φ → π⁰γ` line](docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md).
+
+The release carries one change from outside that project: the first
+entry under `Changed`, the vector mediator's `mu mu` positron channel.
 
 ### Changed
 
@@ -122,7 +171,7 @@ user-facing change even when no signature did.
   201 grid points. `dnde_photon_omega`, whose two `ω → Y γ` lines were
   always the photon's, does not move, and neither do the five other
   tabulated photon spectra. Details:
-  `docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`.
+  `docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`.
 - **The η′'s two-photon line carried one photon per decay instead of
   two, and `dnde_photon_eta_prime` rises.** Five tabulated photon spectra
   add a monochromatic line on top of a CSV continuum, and for the four
@@ -144,7 +193,7 @@ user-facing change even when no signature did.
   `dnde_photon_short_kaon` — whose weights were already right — do not
   move, and neither do `dnde_photon_omega` or `dnde_photon_phi`, whose
   `X → Yγ` lines are correctly un-doubled. Details:
-  `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`.
+  `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`.
 - **The boost integral mis-covered its window at both ends, and all seven
   tabulated photon spectra move.** `hazma.spectra.dnde_photon_eta`,
   `dnde_photon_eta_prime`, `dnde_photon_omega`, `dnde_photon_phi`,
@@ -173,7 +222,7 @@ user-facing change even when no signature did.
   every model `total_spectrum` inherit that: they move for a final state
   whose parent is in flight, and not at the production threshold, where
   it is at rest. Details:
-  `docs/followups/todo/boost-integral-drops-last-interior-cell.md`.
+  `docs/followups/done/boost-integral-drops-last-interior-cell.md`.
 - **The charged pion's prompt `π → e ν` neutrino line was counted twice.**
   `hazma.spectra.dnde_neutrino_charged_pion` summed two contributions that
   were meant to partition the pion's decay modes, and both carried the
@@ -190,7 +239,7 @@ user-facing change even when no signature did.
   A pion exactly at rest is unaffected: that branch drops both prompt
   lines already. `hazma.spectra.dnde_neutrino` moves for any final state
   containing a charged pion. Details:
-  `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`.
+  `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`.
 - **Both mediator `thermal_cross_section` implementations now converge,
   and `relic_density` moves with them — by up to two orders of
   magnitude.** ⟨σv⟩ was computed by a quadrature that never subdivided:
@@ -503,7 +552,7 @@ Repairing them here would have destroyed the port's only evidence that it
 changed nothing else. Ordered by how much they can move a published
 result:
 
-- **[The boost integral mis-covers its window at both ends.](docs/followups/todo/boost-integral-drops-last-interior-cell.md)**
+- **[The boost integral mis-covers its window at both ends.](docs/followups/done/boost-integral-drops-last-interior-cell.md)**
   The worst defect in the list. When the boosted window falls inside a
   single table cell — the regime every model spectrum passes through near
   threshold — two partial-cell terms overlap and cover about two whole
@@ -531,7 +580,7 @@ result:
   completely near `e_cm = 2 m_x` at small width, returning the wrong sign
   and a fabricated pole. The returned value there is the platform's
   rounding residue, not a number any implementation reproduces.
-- **[The charged-pion photon spectrum returns zero in the forward cone.](docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md)**
+- **[The charged-pion photon spectrum returns zero in the forward cone.](docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md)**
   A hard zero over the top ~25% of the support at `γ_π = 10`, worth 0.041%
   of the yield there and 2.96% at `γ_π = 36`. It **compounds** through the
   ρ rather than merely propagating — the charged ρ keeps only 0.5366 of
@@ -540,7 +589,7 @@ result:
   of 29,295 reference values by up to a factor of 8.8 (at an absolute
   7.3e-10). This one changes the *shape* of a low-energy tail, which is
   the kind of error a limit calculation notices.
-- **[The muon positron spectrum divides by its normalization.](docs/followups/todo/positron-muon-spectrum-normalization-inverted.md)**
+- **[The muon positron spectrum divides by its normalization.](docs/followups/done/positron-muon-spectrum-normalization-inverted.md)**
   `dnde_positron_muon` integrates to 0.0374% below one positron per muon.
   Its neutrino sibling applies the same Michel normalization the right way
   round, so the two files genuinely disagree and only one is wrong.
@@ -549,22 +598,22 @@ result:
   the positron's rest-frame velocity: the box's edges carry the factor and
   its height does not. Worth 3.3e-5 at `m = 125` MeV, 1.4e-6 at 600 MeV,
   and divergent as `m → 2 m_e`.
-- **[The η′ two-photon line carries one photon instead of two.](docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md)**
+- **[The η′ two-photon line carries one photon instead of two.](docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md)**
   A missing factor of 2 on the `η′ → γγ` line of `dnde_photon_eta_prime`.
-- **[The φ photon lines sit at the daughter meson's energy.](docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md)**
+- **[The φ photon lines sit at the daughter meson's energy.](docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md)**
   `dnde_photon_phi`'s lines are placed using the daughter meson's energy
   where the photon's is meant, so they land at the wrong energies.
-- **[The charged pion's `π → e ν` neutrino line is added twice.](docs/followups/todo/neutrino-pion-electron-line-counted-twice.md)**
+- **[The charged pion's `π → e ν` neutrino line is added twice.](docs/followups/done/neutrino-pion-electron-line-counted-twice.md)**
   `dnde_neutrino_charged_pion` sums two contributions and both carry the
   line, measured by continuum subtraction at exactly 2.0000 copies. The
   electron-neutrino yield is 0.0123% high integrated, 0.062% high locally
   on the plateau at `E_π = 200` MeV.
-- **[The muon photon spectrum's rest frame stops short of the endpoint.](docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md)**
+- **[The muon photon spectrum's rest frame stops short of the endpoint.](docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md)**
   `dnde_photon_muon` cuts the rest-frame spectrum at `y = 1 − √r` where the
   kinematic endpoint is `y = 1 − r`, leaving a hard zero over the top
   0.2543 MeV of the support (where the spectrum is 5.34e-7 MeV⁻¹) and a
   discontinuity in `E_μ` at rest.
-- **[Both rho photon spectra return the boost integrand at rest.](docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md)**
+- **[Both rho photon spectra return the boost integrand at rest.](docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md)**
   At exactly `E_ρ = m_ρ` the rest-frame branch returns the integrand
   rather than the integral, so the result is short by a factor of `E_γ`
   and carries MeV⁻² where the spectrum is MeV⁻¹. The guard is absolute, so

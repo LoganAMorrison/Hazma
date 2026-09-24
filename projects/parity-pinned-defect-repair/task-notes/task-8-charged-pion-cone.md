@@ -143,8 +143,13 @@ Python lint inputs):
 ```sh
 PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh \
   --paths "test/parity/deltas.py test/parity/test_parity.py test/parity/test_pion_repair.py test/test_core_photon_pion.py" \
-  --md "CHANGELOG.md docs/followups/README.md docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md"
+  --md "CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md"
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ```text
 preflight — /Users/logan.morrison/dev/Hazma/.codex/worktrees/parity-pinned-defect-repair/task-8-charged-pion-cone (base origin/master)
@@ -157,12 +162,17 @@ PASS   cargo clippy            rust/
 PASS   cargo test              rust/
 PASS   pytest                  2302 passed, 16 skipped, 1 warning, 37 subtests passed in 26.99s
 PASS   import hazma            version 2.2.0
-PASS   markdownlint            CHANGELOG.md docs/followups/README.md docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
+PASS   markdownlint            CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 -------------------------------------------------------------------
 RESULT: PASS
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 The full pytest gate includes theory aggregation and the parity suite.
 Subsequent changes only append this evidence and wrap plan prose;
@@ -359,7 +369,7 @@ docs/followups/done/thermal-cross-section-quadrature-never-converges.md
 projects/cython-to-rust/phases/phase-03-numerics-foundation.md
 hazma/pbh_data/pbh_secondary_spectra_bh.csv
 test/vector_mediator/herwig4dm/4pi/run.neutral.0.99.dat
-docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md
+docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md
 hazma/gamma_ray_data/energy_res/amego.dat
 rust/src/kernels/photon_tables.rs
 test/vector_mediator/herwig4dm/4pi/run.neutral.1.99.dat
@@ -370,6 +380,11 @@ projects/cython-to-rust/adrs/ADR-0002-license-clean-numerics.md
 projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
 ```
 
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
+
 Current identifiers and remaining-work links:
 
 ```sh
@@ -379,7 +394,7 @@ rg -n --hidden 'PHOTON_ENDPOINT_PIRF|charged_pion_cos_min|_A3_B4|test_scalar_res
 ```text
 docs/followups/README.md
 test/parity/test_pion_repair.py
-docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md
+docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md
 projects/parity-pinned-defect-repair/PLAN.md
 rust/src/kernels/photon_pion.rs
 test/test_core_photon_pion.py
@@ -387,6 +402,11 @@ test/parity/deltas.py
 projects/parity-pinned-defect-repair/task-notes/README.md
 projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 All KEPT: active implementation, tests, measured handoff or follow-up.
 The new outer-rho follow-up's own filename does not appear in its body;

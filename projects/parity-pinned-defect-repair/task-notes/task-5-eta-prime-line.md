@@ -41,7 +41,7 @@ this repair and the A1 boost repair that already owns the same arrays.
   constraint this task inherits).
 - `../references/corpus-repinning.md` §"Shape tests", `defect-blast-radius.md`
   (B1's row and the A1/B1 overlap).
-- `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`.
+- `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`.
 - `test/parity/deltas.py`, `test_parity.py`, `oracle_reference.py`,
   `test_delta_models.py`, `oracles/{defects,entry_points}.py`.
 - `rust/src/kernels/photon_tables.rs`, `test/test_core_photon_tables.py`.
@@ -164,7 +164,7 @@ this repair and the A1 boost repair that already owns the same arrays.
   composite labels.
 - `CHANGELOG.md` — the `[Unreleased] / Changed` entry for this repair,
   stating the yield rather than a percentage of it.
-- `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md` —
+- `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md` —
   status annotated as repaired; the renamed tests, the surviving Rust
   expression, and the magnitude to quote in `CHANGELOG.md` corrected.
 - `projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
@@ -374,7 +374,7 @@ published spectrum with no name, signature, shape or unit change.
 ```text
 $ git status --short
  M CHANGELOG.md
- M docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md
+ M docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md
  M projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md
  M projects/parity-pinned-defect-repair/references/corpus-repinning.md
  M projects/parity-pinned-defect-repair/task-notes/README.md
@@ -473,6 +473,11 @@ and `dnde_photon(["eta", "eta"])`, all bit-identical across the rebuild.
 Recorded in `README.md`'s "Numerical impact so far" (`../rules.md`
 rule 10).
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ## Handoff to Next Task
 

@@ -6,10 +6,12 @@
 - **Status:** open
 - **Triggers / blockers:** none. Independent of the port — the port
   reproduces the shipped value bit-for-bit and declares nothing here.
-  Best sequenced with the other Group A spectrum-normalization items
+  It was sequenced beside two other spectrum-normalization items
   (`eta-prime-two-photon-line-missing-factor-two.md`,
   `neutrino-pion-electron-line-counted-twice.md`), which move published
-  numbers the same way.
+  numbers the same way; both were repaired by
+  `projects/parity-pinned-defect-repair` (Tasks 5 and 10a) and now live
+  in `done/`, so it no longer waits on anything.
 
 ## Why
 
@@ -98,6 +100,6 @@ carry the factor. Whichever it does, the two should agree.
 - `test/parity/tolerances.py` — the four
   `mediator_spectra.*.positron.*` budgets
 - `hazma/_utils/boost.pyx` — `boost_delta_function`, the sibling to check
-- Related follow-up: `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`
-- Related follow-up: `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`
+- Related follow-up: `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`
+- Related follow-up: `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`
 - Related project: `projects/cython-to-rust/` (Task 6.3)

@@ -60,7 +60,7 @@ gated at bit-equality, not at 1e-13.
   `dnde_positron_charged_pion` integrates to `0.999623` at `E_π = 500 MeV`
   — and so reaches both mediator positron spectra and every positron-based
   limit. Reproduced per rule 1, pinned in both languages, filed as
-  [`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`](../../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md),
+  [`docs/followups/done/positron-muon-spectrum-normalization-inverted.md`](../../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md),
   blocked behind Phase 06 Task 6.4 like its Task 3.4 sibling. **This is the
   second live 2.1.0 numerical defect the port has surfaced by writing an
   analytic test the original never had**, and both were found the same way:
@@ -272,7 +272,7 @@ gated at bit-equality, not at 1e-13.
 - `test/parity/test_parity.py` — the two served-kernel predicate tests
   rewritten for a non-empty roster.
 - `test/test_core_positron_muon.py` — **new**, 47 tests.
-- `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md` —
+- `docs/followups/done/positron-muon-spectrum-normalization-inverted.md` —
   **new**, plus its index row in `docs/followups/README.md`.
 - `projects/cython-to-rust/phases/phase-04-spectra-kernels.md` — the swap
   recipe this task established, written into the phase Goal.
