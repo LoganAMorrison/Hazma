@@ -40,7 +40,7 @@ QUADPACK's first 21-point rule then places every abscissa outside the
 support, the error estimate agrees that the constant zero it sampled is
 exact, and `quad` returns `0.0` with a successful status. This is the
 same failure mode as
-[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](charged-pion-photon-spectrum-misses-the-forward-cone.md)
+[`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../done/charged-pion-photon-spectrum-misses-the-forward-cone.md)
 (roster entry A3), one kernel over: there the lost support is a cone in
 `cos θ`, here it is the tail of a boost window.
 
@@ -110,7 +110,7 @@ positions have to be split between them —
   `spectra.neutrino.charged_pion`
 - Related project: `projects/parity-pinned-defect-repair/`
 - Sibling defect, same mechanism:
-  [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](charged-pion-photon-spectrum-misses-the-forward-cone.md)
+  [`charged-pion-photon-spectrum-misses-the-forward-cone.md`](../done/charged-pion-photon-spectrum-misses-the-forward-cone.md)
 
 ## Risks / open questions
 

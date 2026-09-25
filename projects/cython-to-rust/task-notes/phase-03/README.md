@@ -211,7 +211,7 @@ foundation.
   spectrum as the parent approaches rest (6,500× to 33,000× one part in
   1e12 above rest). Reproduced per rule 1, pinned in both languages,
   filed as
-  [`../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+  [`../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md).
   The inventory's §Bugs lists the same class in the *dead*
   `boost_integrate_linear_interp_massive`; the live twin was not flagged.
   **Phase 04 inherits it unchanged** — the corpus pins these values, so a
@@ -433,7 +433,7 @@ foundation.
   `_CORE_TEST_ONLY_MODULES` and the three prose sites reconciled.
 - `hazma/_core.pyi` — the unstubbed-submodule comment now covers all four
   probes (the only change under `hazma/`, non-executable).
-- `docs/followups/todo/boost-integral-drops-last-interior-cell.md` +
+- `docs/followups/done/boost-integral-drops-last-interior-cell.md` +
   `docs/followups/README.md` — **new**, the preserved defect.
 - **Two canonical patches:** `../../phases/phase-03-numerics-foundation.md`
   (five Task 3.4 criteria added during execution) and

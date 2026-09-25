@@ -133,7 +133,7 @@ added there during execution:
   converging to their own rest-frame spectrum as the parent approaches
   rest (ratios 6,500× to 33,000× one part in 1e12 above rest; table in the
   follow-up). Reproduced per rule 1, pinned in both languages, filed as
-  [`../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+  [`../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md).
   `../../references/cython-inventory.md` §Bugs lists the same class in the
   *dead* `boost_integrate_linear_interp_massive`; the live twin was not
   flagged.
@@ -265,7 +265,7 @@ added there during execution:
   submodules reconciled.
 - `hazma/_core.pyi` — the unstubbed-submodule comment now covers all four
   probes (the only change under `hazma/`, non-executable).
-- `docs/followups/todo/boost-integral-drops-last-interior-cell.md` +
+- `docs/followups/done/boost-integral-drops-last-interior-cell.md` +
   `docs/followups/README.md` — the preserved defect.
 - **Two canonical patches:**
   `../../phases/phase-03-numerics-foundation.md` (five Task 3.4 criteria
@@ -569,7 +569,7 @@ the phase file — whose Tasks 3.2, 3.3 and 3.4 blocks all now carry
   slows (6,500×–33,000× one part in 1e12 above rest). The corpus pins
   those values, so a Phase 04 swap that repairs the coverage **fails the
   gate**. The repair is
-  [`../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md),
+  [`../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../../docs/followups/done/boost-integral-drops-last-interior-cell.md),
   blocked until after Phase 06 Task 6.4.
 - **The live tables are strided views**, not contiguous buffers
   (`np.loadtxt(...).T` rows), so `PyReadonlyArray1::as_slice` refuses

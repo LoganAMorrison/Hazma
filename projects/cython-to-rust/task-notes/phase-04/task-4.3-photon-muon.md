@@ -165,7 +165,7 @@ the published spectrum is **discontinuous in the parent energy at
 1 MeV.
 
 Reproduced per rule 1, filed as
-[`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
+[`photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md),
 blocked behind Phase 06 Task 6.4 like its three siblings. **Five blocked
 defects now share one eventual corpus regeneration.**
 
@@ -296,7 +296,7 @@ clips here, so a `NaN` propagates on both branches.
 - `test/parity/test_parity.py` — served-roster derived from the cases.
 - `test/parity/tolerances.py` — the `SPECFUN` class docstring records what
   Task 4.3 measured and why the budget stayed.
-- `docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`
+- `docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`
   — **new**; `docs/followups/README.md` — its index row.
 - `projects/cython-to-rust/references/numerics-replacements.md` — the
   `spec_math`-replaces-`spence` claim it made is no longer true, so it

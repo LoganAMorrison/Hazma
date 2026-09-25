@@ -117,8 +117,13 @@ literal precision and Markdown line lengths; those were corrected.
 ```sh
 PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh \
   --paths "hazma/spectra/_photon/__init__.py test/parity/deltas.py test/parity/test_parity.py test/test_core_photon_muon.py" \
-  --md "CHANGELOG.md docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md projects/parity-pinned-defect-repair/adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md"
+  --md "CHANGELOG.md docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md projects/parity-pinned-defect-repair/adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md"
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ```text
 preflight — /Users/logan.morrison/dev/Hazma/.codex/worktrees/parity-pinned-defect-repair/task-7-photon-muon-endpoint (base origin/master)
@@ -131,7 +136,7 @@ PASS   cargo clippy            rust/
 PASS   cargo test              rust/
 PASS   pytest                  2294 passed, 16 skipped, 1 warning, 37 subtests passed in 26.87s
 PASS   import hazma            version 2.2.0
-PASS   markdownlint            CHANGELOG.md docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md projects/parity-pinned-defect-repair/adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md
+PASS   markdownlint            CHANGELOG.md docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md projects/parity-pinned-defect-repair/adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 -------------------------------------------------------------------
@@ -139,6 +144,11 @@ RESULT: PASS
 corpus OK: 41 cases / 1580 arrays match the manifest (generated at 010747c6125d, kernel digest f5e6e269be47)
 oracles OK: 4 defects / 940 arrays match the manifest (corpus manifest f476fb420caf)
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 The integrity lines are from `python test/parity/generate.py --check`
 and `python test/parity/oracles/capture.py --check`. The bare pytest gate
@@ -260,12 +270,17 @@ The old-identifier command below was first run before the code edit. Its
 18 matches were in these files (folded from the original output):
 
 ```text
-docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md — EDITED: repaired assertions or follow-up
+docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md — EDITED: repaired assertions or follow-up
 projects/cython-to-rust/task-notes/phase-04/README.md — KEPT: dated port history
 projects/cython-to-rust/task-notes/phase-04/task-4.3-photon-muon.md — KEPT: dated port history
 projects/cython-to-rust/task-notes/phase-04/task-4.4-photon-pion.md — KEPT: dated port history
 test/test_core_photon_muon.py — EDITED: repaired assertions or follow-up
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ### Post-fix occurrences
 
@@ -289,7 +304,7 @@ rg -n --hidden 'ONE_MINUS_R|_A2|dnde_photon_muon_rest_frame|the_rest_frame_reach
 ```
 
 ```text
-docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md — KEPT: current implementation, decision, or historical reference
+docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md — KEPT: current implementation, decision, or historical reference
 projects/cython-to-rust/task-notes/phase-04/task-4.3-photon-muon.md — KEPT: current implementation, decision, or historical reference
 projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md — KEPT: current implementation, decision, or historical reference
 rust/src/kernels/photon_muon.rs — KEPT: current implementation, decision, or historical reference
@@ -297,6 +312,11 @@ test/parity/deltas.py — KEPT: current implementation, decision, or historical 
 test/parity/oracles/patches/A2-muon-rest-frame-endpoint.patch — KEPT: current implementation, decision, or historical reference
 test/test_core_photon_muon.py — KEPT: current implementation, decision, or historical reference
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 #### Forward-looking phrases
 
@@ -326,7 +346,7 @@ rg -n --hidden '\b98\b' projects/parity-pinned-defect-repair/ docs/ hazma/ test/
 ```text
 CHANGELOG.md — KEPT: historical count or unrelated numeric value
 docs/agents/lessons-examples.md — KEPT: historical count or unrelated numeric value
-docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md — KEPT: historical count or unrelated numeric value
+docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md — KEPT: historical count or unrelated numeric value
 docs/followups/todo/kallen-under-sqrt-remaining-call-sites.md — KEPT: historical count or unrelated numeric value
 hazma/pbh_data/pbh_primary_spectra_bh.csv — KEPT: historical count or unrelated numeric value
 hazma/pbh_data/pbh_secondary_spectra.csv — KEPT: historical count or unrelated numeric value
@@ -348,6 +368,11 @@ test/test_core_special.py — KEPT: historical count or unrelated numeric value
 test/vector_mediator/herwig4dm/4pi/run.charged.0.98.dat — KEPT: historical count or unrelated numeric value
 test/vector_mediator/herwig4dm/4pi/run.neutral.0.98.dat — KEPT: historical count or unrelated numeric value
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 ### Line citations, counts, and exit mapping
 

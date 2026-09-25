@@ -38,7 +38,7 @@ and declare the corpus positions the change moves.
 
 ## Inputs Reviewed
 
-- `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` —
+- `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` —
   the defect, its entry points, its predicted magnitude.
 - `../PLAN.md` (all sections), `../rules.md`,
   `../references/corpus-repinning.md` §"Proof obligations",
@@ -147,7 +147,7 @@ and declare the corpus positions the change moves.
   section, `reference_dnde_neutrino_charged_pion` (the independent
   oracle), and two renamed/re-pointed `TestPhysics` tests.
 - `CHANGELOG.md` — a new `[Unreleased]` section with the magnitude.
-- `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` —
+- `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` —
   status, and the corrected local magnitude.
 - `docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md`,
   `docs/followups/README.md` — the second defect this task surfaced.

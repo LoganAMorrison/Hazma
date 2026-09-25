@@ -285,7 +285,7 @@ MAX_THRESHOLD_MISS = 2e-2
 
 #: Where to check that convergence, as a fraction of the parent mass.
 #: ``m/10`` is the column
-#: ``docs/followups/todo/boost-integral-drops-last-interior-cell.md``
+#: ``docs/followups/done/boost-integral-drops-last-interior-cell.md``
 #: tabulates the shipped divergence at; the others bracket it.
 THRESHOLD_FRACTIONS = (0.05, 0.1, 0.2, 0.3)
 
@@ -728,7 +728,7 @@ class TestPhysics:
         That is roster entry ``A1`` of
         ``projects/parity-pinned-defect-repair``, and this is the
         acceptance test
-        ``docs/followups/todo/boost-integral-drops-last-interior-cell.md``
+        ``docs/followups/done/boost-integral-drops-last-interior-cell.md``
         proposed for it.
         """
         dnde, _, mass, _ = SPECTRA[name]

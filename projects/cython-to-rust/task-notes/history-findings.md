@@ -487,7 +487,7 @@ closed phase's entries below, verbatim, under a
   public API. This is a live defect in hazma 2.1.0, not something the
   port introduced. Reproduced per rule 1, pinned in both languages, and
   filed as
-  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md)
+  [`../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md)
   — blocked until after Phase 06 Task 6.4, because the repair needs a
   declared corpus regeneration. **The corpus pins the wrong values by
   design**, so a Phase 04 swap that "fixes" this fails the gate.
@@ -586,7 +586,7 @@ closed phase's entries below, verbatim, under a
   `dnde_positron_charged_pion` (∫ = 0.999623 at `E_π = 500 MeV`), both
   mediator positron modules, and every positron-based limit. Reproduced
   per rule 1, pinned in both languages, filed as
-  [`../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md)
+  [`../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md`](../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md)
   and blocked behind Phase 06 Task 6.4 for the same corpus reason as its
   Task 3.4 sibling. **Worth telling the maintainer separately from this
   project's schedule; it affects published numbers today.**
@@ -666,7 +666,7 @@ closed phase's entries below, verbatim, under a
     The ω's and φ's weights are correctly un-doubled (their modes yield
     one photon), which is what makes the η′ the odd one out rather than
     the family a mixed convention. Filed as
-    [`../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md).
+    [`../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`](../../../docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md).
   - `hazma/spectra/_photon/_phi.pyx:111,113` place both photon lines at
     `(M² + m²)/(2M)`, the **daughter meson's** energy rather than the
     photon's: 656.94 MeV where 362.52 is right for `φ → ηγ`, and **959.65
@@ -674,7 +674,7 @@ closed phase's entries below, verbatim, under a
     φ's rest mass in one photon. The ω uses `(M² − m²)/(2M)` and is
     right, which is the control; the φ's local is even named `eng_eta`.
     Filed as
-    [`../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md).
+    [`../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`](../../../docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md).
   **Four blocked defects now share one eventual corpus regeneration** — a
   fifth joined in Task 4.3, below.
 - **The port has now surfaced five live 2.1.0 defects, and the fifth was
@@ -691,7 +691,7 @@ closed phase's entries below, verbatim, under a
   statement the original never made: *the in-flight closed form is the
   boost integral of the rest-frame distribution*, which holds to machine
   precision — but only when integrated to `1 − r`. Filed as
-  [`../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/todo/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md).
+  [`../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md`](../../../docs/followups/done/photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md).
   **Five blocked defects now share one eventual corpus regeneration.**
 - **`numpy.sum(axis=0)` is pairwise above eight terms, and exactly one
   shipped table is wide enough to notice** (Task 4.2). The Cython built
@@ -757,7 +757,7 @@ closed phase's entries below, verbatim, under a
   **shape** defect rather than a yield defect at hazma's own scales — what
   it breaks is a line search or a tail-dominated limit, not a total. The
   port reproduces the zeros in exactly the same places. Filed as
-  [`../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md).
+  [`../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md).
   **Six blocked defects now share one eventual corpus regeneration.**
 - **Read the `cdef`s, not only the expressions** (Task 4.4).
   `_photon/_pion.pyx`'s neutral-pion kernel declares `cdef float beta` and

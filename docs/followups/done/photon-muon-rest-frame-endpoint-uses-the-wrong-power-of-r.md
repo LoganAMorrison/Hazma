@@ -3,8 +3,12 @@
 - **Added:** 2026-08-16
 - **Source:** `projects/cython-to-rust/` Phase 04 Task 4.3.
 - **Scope:** commit; Rust endpoint guard and declared corpus delta.
-- **Status:** repaired by `parity-pinned-defect-repair` Task 7; retained in
-  `todo/` for Task 12's coordinated move and inbound-link sweep.
+- **Status:** done — repaired as roster entry A2 of
+  `projects/parity-pinned-defect-repair`, Task 7
+  ([PR #96](https://github.com/LoganAMorrison/Hazma/pull/96), merge
+  `19c054e`, 2026-09-18); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md`.
 - **Triggers / blockers:** none. Task 2 captured the corrected Cython
   oracle before the twin was deleted; Task 7 consumes that capture.
 
@@ -49,4 +53,5 @@ muons are boosted and the repair does not act.
   and boundary/NaN tests.
 - [Task 7 evidence](../../../projects/parity-pinned-defect-repair/task-notes/task-7-photon-muon-endpoint.md)
   records before/after grids, mutation checks, and the preflight gate.
-- Task 12 moves this repaired record to `done/` and pins the revision.
+- The repair's revision is `19c054e`, PR #96's merge commit. Task 12
+  moved this record to `done/`.

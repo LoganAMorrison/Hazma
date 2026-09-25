@@ -92,7 +92,7 @@ transcription, and it will survive contact with the artifact.**
   33,000× one part in 1e12 above rest). The corpus pins those values, so a
   Phase 04 swap that *repairs* it fails the gate. Blocked until after
   Phase 06 Task 6.4 —
-  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+  [`../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md).
 - **The dispatch contract is settled and lives in three helpers.**
   `dispatch::map_unary` (33 of the 35 dispatching entry points: 15 with a
   scalar-or-1D energy argument plus the 18 cross sections),
@@ -215,7 +215,7 @@ transcription, and it will survive contact with the artifact.**
 ## 5. Follow-on seeds
 
 - **The boost integral's window coverage** —
-  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md),
+  [`../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md),
   filed in Task 3.4. A live defect in hazma 2.1.0, reproduced per rule 1
   and pinned in both languages. Blocked until after Phase 06 Task 6.4,
   because the repair needs a declared corpus regeneration.

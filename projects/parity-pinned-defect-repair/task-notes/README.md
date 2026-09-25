@@ -2,11 +2,12 @@
 
 **Date:** 2026-08-19 (created)
 **Project:** parity-pinned-defect-repair
-**Status:** In Progress
+**Status:** Complete (2026-09-24, Task 12; shipped as hazma 2.3.0)
 **Plan References:** `../PLAN.md` (all sections)
 **Related ADRs:** `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`
 (Task 1); `../adrs/ADR-0002-retain-the-signed-muon-endpoint-approximation.md`
-(Task 7); oracle-retention ADR still anticipated
+(Task 7); `../adrs/ADR-0003-keep-the-group-a-oracle-captures-committed.md`
+(Task 12)
 **Depends On:** none. **Constrains** `cython-to-rust` Tasks 4.6, 6.2,
 6.3 and 6.4 — see Open Questions.
 
@@ -35,7 +36,7 @@ section tracks live *status*.
 | 10 | Repair A4 — positron-muon normalization | 1, 2 | **Complete** | `task-10-positron-muon-norm.md` |
 | 10a | Repair B5 — charged-pion neutrino line | 1 | **Complete** | `task-10a-neutrino-pion-line.md` |
 | 11 | Reconcile the superseded sequencing prose | 4–10a, 13 | **Complete** | `task-11-prose-reconciliation.md` |
-| 12 | Close — aggregate the drift, bump | 11 | Not started | `task-12-close.md` |
+| 12 | Close — aggregate the drift, bump | 11 | **Complete** — 2.3.0, ADR-0003, retrospective | `task-12-close.md` |
 | 13 | Repair B6 — thermal quadrature convergence | 1 | **Complete** | `task-13-thermal-quadrature.md` |
 
 ```text
@@ -479,12 +480,11 @@ Reach: B1 six arrays / 189 positions, B2 six / 305, B3 four / 350.
 
 Tasks 4–10 each move a published spectrum by design, and each records the
 function, the grid and the max shift here in its own PR (`../rules.md`
-rule 10). Task 12 aggregates this section into the `CHANGELOG.md` entry —
-it does not reconstruct it. B4, B5, B6, A1, B1 and B2 have each written
-their own `CHANGELOG.md` entry already, all but B4's under `[Unreleased]` because
-2.2.0 is released; Task 12 renames that heading rather than re-deriving
-it, and
-`preflight.sh --closing` greps for `## [<new version>]`, so it must.
+rule 10). Task 12 aggregated this section into the `CHANGELOG.md` entry
+rather than reconstructing it: it renamed `[Unreleased]` to
+`## [2.3.0] — 2026-09-24` and added a per-defect summary table above the
+per-repair entries, each figure taken from this section. B4's entry
+stays in `[2.2.0]`.
 
 ## Decisions and Implementation Notes
 
@@ -551,7 +551,7 @@ it, and
   (`docs/workflow.md#follow-ups`, and
   `docs/followups/todo/moved-followups-leave-dangling-inbound-paths.md`)
   happens once for all eight rather than eight times. Its `Status:` line
-  records the repair and says so.
+  records the repair and says so. Task 12 moved all eight.
 - **A relation returns the repaired array, not an additive term**
   (Task 3). `Additive.expected` and `Exact.expected` both answer "what
   should this array be", and the runner derives the moved mask from
@@ -613,6 +613,12 @@ it, and
   the product they are (blocks × muon-fed channels) rather than written
   out one by one; `EXPECTED_DECLARED_ARRAYS` still pins the count.
 
+- **The Group A captures stay committed** (Task 12, ADR-0003): 321 of
+  the 343 declared arrays read them. Their `manifest.json` still names
+  the `todo/` follow-up paths that were live when the capture ran. It is
+  provenance and was left unedited; `oracles/defects.py`, the live
+  roster, is repointed.
+
 ## Files Changed
 
 The change that created this project touched only
@@ -640,7 +646,7 @@ library or build file, and `test/parity/data/` untouched.
 
 `rust/src/kernels/neutrino_pion.rs`, `test/parity/deltas.py`,
 `test/parity/test_parity.py`, `test/test_core_neutrino.py`,
-`CHANGELOG.md`, `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`,
+`CHANGELOG.md`, `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`,
 `docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md`
 (new), `docs/followups/README.md`, `../PLAN.md`,
 `../references/defect-blast-radius.md`, this file, and
@@ -655,7 +661,7 @@ relation, and the reader A2/A3/A4 reuse), `test/parity/deltas.py`,
 `test/parity/test_parity.py` (`EXPECTED_DECLARED_ARRAYS` 42 → 98),
 `test/parity/tolerances.py`, `test/test_core_boost.py`,
 `test/test_core_photon_tables.py`, `CHANGELOG.md`,
-`docs/followups/todo/boost-integral-drops-last-interior-cell.md`,
+`docs/followups/done/boost-integral-drops-last-interior-cell.md`,
 `../PLAN.md`, `../references/defect-blast-radius.md`, this file, and
 `task-4-boost-window.md` (new). `test/parity/data/` untouched.
 
@@ -668,7 +674,7 @@ renamed `TestPhysics` test), `test/parity/deltas.py` (the `Composed`
 relation, `repair_labels`, `_A1_B1`, six re-pointed keys),
 `test/parity/test_parity.py` (composite labels in the model shape test),
 `CHANGELOG.md`,
-`docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`,
+`docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`,
 `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`,
 `../references/corpus-repinning.md` (the Relations table, which named two
 relations that were never built and neither that were), this file, and
@@ -690,7 +696,7 @@ test), `test/parity/deltas.py` (the `atol` field on all four relations,
 `test/parity/test_delta_models.py` and `test/parity/README.md` (stale
 roll-calls of which models had landed — both already wrong for B1),
 `CHANGELOG.md`,
-`docs/followups/todo/phi-photon-lines-use-the-daughter-meson-energy.md`,
+`docs/followups/done/phi-photon-lines-use-the-daughter-meson-energy.md`,
 `docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md` (new) with
 its `docs/followups/README.md` row,
 `../adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`,
@@ -730,6 +736,20 @@ charged-pion-neutrino follow-ups; `projects/cython-to-rust/phases/phase-03-numer
 `references/numerics-replacements.md`; `../PLAN.md`; all three
 `../references/*.md`; `test/parity/test_oracles.py` (one docstring
 tense); this file; and `task-11-prose-reconciliation.md` (new).
+
+### Task 12 (close)
+
+`pyproject.toml` (2.2.0 → 2.3.0), `docs/versioning.md` (the quoted
+version line), `CHANGELOG.md` (`[Unreleased]` → `[2.3.0]` with a summary
+table), the eight follow-ups `git mv`'d to `docs/followups/done/`,
+`docs/followups/README.md`, a new
+`docs/followups/todo/delta-declaration-layer-outlives-its-project.md`,
+inbound-path repoints in 41 files (including comment-only hunks in three
+`rust/src/kernels/*.rs` and six `test/` files), `projects/README.md`,
+`../PLAN.md`, `../adrs/ADR-0003-keep-the-group-a-oracle-captures-committed.md`
+(new), `../learnings/project-retrospective.md` (new), this file, and
+`task-12-close.md` (new). `test/parity/data/` and
+`test/parity/oracles/data/` untouched.
 
 ### Task 13 (B6)
 
@@ -839,8 +859,9 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   `rtol` has found something Task 3 did not model (`rules.md` rule 2) —
   a floor is a different object and is capped by its own test.
 - **Should the Task 2 oracles stay committed after `cython-to-rust`
-  closes?** They are the last evidence that a repaired value was ever
-  checked against a non-Rust implementation. Anticipated ADR.
+  closes?** Answered by ADR-0003 (Task 12): yes. 321 of the 343
+  declared arrays read them at test time, so they are load-bearing
+  rather than archival.
 
 ## Plan Impact
 
@@ -848,77 +869,22 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
 
 ## Handoff to Next Task
 
-**For the next agent starting any task in this project:**
+**The project is closed** (Task 12, 2026-09-24; shipped as hazma 2.3.0).
+There is no next task. Anyone who later touches the parity corpus or the
+delta layer should read
+[`../learnings/project-retrospective.md`](../learnings/project-retrospective.md)
+first, not this file or the task notes.
 
-1. Read `../PLAN.md` end-to-end once — especially "The premise this
-   project corrects" — then this file, then `../rules.md`.
-2. Read the task's detail block in `../PLAN.md` and the references its
-   detail names.
-3. Check "Open Questions" above.
-4. Build first: nothing is prebuilt on a fresh worktree, and stale
-   generated `.c`/`.cpp` must be cleaned before the build
-   (`docs/agents/environment.md`).
-
-**Currently safe to assume:**
-
-- The four Group A `.pyx` twins are gone; `test/parity/oracles/data/`
-  is what stands in for them, and `test/parity/oracle_reference.py` is
-  the reader that turns a capture into a `deltas.Reference`. Task 4 is
-  the worked precedent for A2, A3 and A4 — they need no new machinery.
-- `test/parity/data/` is intact — `python test/parity/generate.py --check`
-  verifies it in under a second with no build.
-- All ten roster repairs — B4 (PR #87), B5 (Task 10a), B6 (Task 13),
-  A1 (Task 4), B1 (Task 5), B2 (Task 6), A2 (Task 7), A3 (Task 8), B3
-  (Task 9) and A4 (Task 10) — have changed library values.
-  Every undeclared position retains its stored-value comparison.
-  `test/parity/deltas.py` declares 343 arrays — 10 for B4, 6 for B5, 6 for
-  B6, 44 for A1 alone, 6 for `A1+B1`, 6 for `A1+B2`, 1 for A2,
-  62 for A3, 20 for `A3+B4`, 4 for `A3+B3`, and 178 for A4 — and
-  `test_parity.EXPECTED_DECLARED_ARRAYS` is the literal that makes a
-  change to that number show up in a diff. Re-derive the split with
-  `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
-- The measurement recipe every remaining repair task needs: capture the
-  corpus blocks from a build carrying the defect, restore the repair,
-  rebuild, capture again, and diff *those* — not the live tree against
-  the stored corpus, which reports the platform drift as if it were the
-  repair (Findings). On this worktree Task 4's defective build
-  reproduced the stored corpus bit for bit on all 10,045 A1 positions,
-  so the two agreed; that is this platform, not a general fact.
-- B3 now composes with the A3 capture on the rho rest arrays. Every
-  roster model has declarations; A4's positron arrays overlap no other
-  repair. Task 11 has reconciled the sequencing prose; Task 12 (close)
-  is next and last.
-- A relation may now declare an absolute floor as well as an `rtol`
-  (Task 6). Reach for one only where the prediction cannot resolve the
-  repaired value at some magnitude the array takes — a relocation that
-  cancels a term it did not compute is the only case so far — and never
-  in place of an `rtol` a measurement says is too tight.
-- The delta layer carries four relations. A new repair picks `Additive`
-  when the physics names the term, `Exact` when a closed form transforms
-  the stored array, `Reference` when only a second implementation can say
-  what the value should be, and `Composed` when a second repair moves an
-  array the first already declares; all four answer `expected`, and a
-  fifth would need no runner change to be compared. The runner does read
-  one field beyond `expected` — a relation's optional `atol` — which
-  Task 6 added and only `A1+B2` sets.
-
-**Currently risky / unknown:**
-
-- The blast-radius table is derived from the composition graph, not
-  measured. Treat it as where to look, never as what you will find. B5 is
-  the sharpest case so far: the table's coverage arithmetic said both
-  `spectra.neutrino.*` cases were untouched, and one of them was not.
-- A repair's own follow-up can misstate its magnitude in either
-  direction. B5's predicted 0.06% local shift measured at a factor of
-  two, because the follow-up sampled only the plateau; B1's predicted
-  0.63% measured at 0.603%, because a *percentage of a yield* depends on
-  the integration window while the absolute shift does not. Re-derive
-  every figure before quoting it in a `CHANGELOG.md` entry, and prefer
-  the window-independent statement where the physics offers one.
-- Task 12 moves eight follow-ups to `done/` — the seven originals and
-  B5's; B4's and B6's are already there — and repoints their inbound
-  links. Task 11 pinned the deleted-`.pyx` citations in the ones it
-  touched to a revision, so those need no further pinning.
+- All ten roster repairs have landed, and their follow-ups are in
+  `docs/followups/done/`. `test/parity/data/` is unchanged across the
+  whole project.
+- The open work this project surfaced lives in `docs/followups/todo/`.
+  The retrospective's §5 lists it: the rho outer boost, the pion
+  neutrino continuum, the φ's `π⁰γ` line, the decaying-theory positron
+  closure, and promoting ADR-0001, the delta layer's ADR.
+- A repair filed after this project has no label in `deltas.REPAIRS`.
+  Settle that first; see
+  [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/todo/delta-declaration-layer-outlives-its-project.md).
 
 ## Task 9 review response
 

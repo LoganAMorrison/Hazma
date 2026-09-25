@@ -3,8 +3,12 @@
 - **Added:** 2026-08-17
 - **Source:** `projects/cython-to-rust/task-notes/phase-04/task-4.4-photon-pion.md`
 - **Scope:** cross-cutting (public spectrum values)
-- **Status:** inner pion repaired in parity-pinned-defect-repair Task 8;
-  retained here until Task 12's coordinated follow-up closeout
+- **Status:** done — repaired as roster entry A3 of
+  `projects/parity-pinned-defect-repair`, Task 8
+  ([PR #97](https://github.com/LoganAMorrison/Hazma/pull/97), merge
+  `42561fe`, 2026-09-18); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md`.
 - **Triggers / blockers:** none for the inner repair; Task 2 captured its
   independent Cython oracle before deletion of the twins.
 
@@ -35,7 +39,7 @@ already repaired. Details and verification:
 
 The rho's *outer* integral independently loses support. That part of the
 original investigation has its own open item:
-[`rho-photon-outer-boost-misses-support.md`](rho-photon-outer-boost-misses-support.md).
+[`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md).
 Neither the A3 capture nor this repair claims to correct it.
 
 ## Entry points

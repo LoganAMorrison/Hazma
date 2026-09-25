@@ -7,13 +7,16 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.1-positron-muon.md`)
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
-- **Status:** open — repaired by parity-pinned-defect-repair Task 10.
-  Administrative close and link relocation remain with Task 12.
-  See `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
-- **Remaining work:** Task 12 moves this repaired item to `done/`. The
-  repair is declared in `test/parity/deltas.py` (roster entry A4) against
-  Task 2's patched-Cython capture; the corpus arrays stay untouched. No
-  port-deletion blocker remains.
+- **Status:** done — repaired as roster entry A4 of
+  `projects/parity-pinned-defect-repair`, Task 10
+  ([PR #99](https://github.com/LoganAMorrison/Hazma/pull/99), merge
+  `500da2c`, 2026-09-22); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-10-positron-muon-norm.md`.
+- **Remaining work:** none. The repair's revision is `500da2c`, PR
+  #99's merge commit. The repair is declared in `test/parity/deltas.py`
+  (roster entry A4) against Task 2's patched-Cython capture; the corpus
+  arrays stay untouched. No port-deletion blocker remains.
 
 The sections below describe the defect as measured before the repair.
 The kernel now multiplies by `R_FACTOR` in both expressions, and the

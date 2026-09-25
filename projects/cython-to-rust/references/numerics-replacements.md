@@ -270,7 +270,7 @@ by replacing it with a value six orders larger and getting a bit-identical
 answer from both implementations. The error is systematic and one-signed:
 the boosted spectrum is always slightly low. Preserved per `rules.md`
 rule 1; repair tracked in
-[`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md).
+[`../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md).
 
 Two smaller facts for Phase 04. The live tables are rows of a transposed
 `np.loadtxt` result, so they are **strided views, not contiguous

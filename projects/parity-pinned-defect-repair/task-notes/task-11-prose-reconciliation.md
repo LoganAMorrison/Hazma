@@ -119,14 +119,14 @@ false when Task 6.4 deleted the last Cython.
 
 ## Files Changed
 
-- `docs/followups/todo/boost-integral-drops-last-interior-cell.md`,
+- `docs/followups/done/boost-integral-drops-last-interior-cell.md`,
   `eta-prime-two-photon-line-missing-factor-two.md`,
   `phi-photon-lines-use-the-daughter-meson-energy.md`,
   `positron-muon-spectrum-normalization-inverted.md` — "Triggers /
   blockers" rewritten to the settled state, "What" regeneration steps
   replaced by the declared delta, sibling and "Risks" lines corrected,
   deleted-source citations pinned.
-- `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` —
+- `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` —
   the mediator positron re-check is stated against the Rust port.
 - `projects/cython-to-rust/phases/phase-03-numerics-foundation.md` —
   the boost bullet corrected, with an "Amended by" note.
@@ -173,7 +173,7 @@ test-suite modules, `test/parity/test_oracles.py` and
 ## Open Questions
 
 - None new. The mediator positron re-check lives in
-  [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md).
+  [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md).
 
 ## Plan Impact
 
@@ -209,7 +209,7 @@ xargs grep -n -i -E "after (Phase 06 )?Task 6\.4|until (after )?(Phase 06 )?Task
 | Hits | Why it stays |
 | --- | --- |
 | `docs/agents/lessons.md:144` | the lesson that names the phrases |
-| `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md:137` | quotes the proposal and says it "was never an available move" |
+| `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md:137` | quotes the proposal and says it "was never an available move" |
 | `projects/cython-to-rust/phases/phase-03-numerics-foundation.md:233,234` | the "Amended by" note quoting the replaced text |
 | `projects/cython-to-rust/phases/phase-04-spectra-kernels.md:28`, `references/numerics-replacements.md:121` | EDITED to past tense; they still match "until Task 6.4" |
 | `projects/parity-pinned-defect-repair/PLAN.md:35,58` | the premise section, quoting what the follow-ups said |

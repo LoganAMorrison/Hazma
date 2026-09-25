@@ -349,7 +349,7 @@ past-tense worked example and one canonical phase file given a dated
   whenever your own diff removes a file.
 
 - **A green `check_doc_citations.py` is not a green liveness check.** PR #94
-  annotated `docs/followups/todo/eta-prime-two-photon-line-missing-factor-two.md`
+  annotated `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`
   as repaired and corrected three of its claims, then ran the checker over all
   six touched docs: `out-of-range or ambiguous: NONE`. It still shipped a
   sentence saying `hazma/_utils/boost.pyx` "is still live" — a file
@@ -1005,6 +1005,17 @@ asymmetry between two sibling wrappers.
   contains the pattern, was added. Run every count command on the final
   tree and paste the output it prints, and when a count includes or
   excludes the artifact that records it, say which.
+
+- [sweep-block-written-from-intent] PR #102's count sweep paired "159
+  occurrences in 41 files" with a procedure described as "per changed
+  file … excluding `docs/followups/` itself". Run as described, that
+  procedure prints `157 40`. The figure came from a loop over
+  `git diff --name-only --diff-filter=M` that excluded only the renamed
+  files, so it kept `docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md`
+  and its two occurrences. The number was right and its description was
+  written from what the loop was meant to do. Paste the loop itself, and
+  when a figure depends on an exclusion, give the figure both with and
+  without it.
 
 ### sign-copied-from-a-defect-description
 

@@ -70,7 +70,7 @@ DEFECTS: dict[str, Defect] = {
     "A1": Defect(
         label="A1",
         summary="the boost integral mis-covers its window at both ends",
-        follow_up="docs/followups/todo/boost-integral-drops-last-interior-cell.md",
+        follow_up="docs/followups/done/boost-integral-drops-last-interior-cell.md",
         repair_task="Task 4",
         patch="test/parity/oracles/patches/A1-boost-integral-window.patch",
         source="hazma/_utils/boost.pyx",
@@ -88,7 +88,7 @@ DEFECTS: dict[str, Defect] = {
         label="A2",
         summary="the muon photon rest-frame branch stops short of the endpoint",
         follow_up=(
-            "docs/followups/todo/"
+            "docs/followups/done/"
             "photon-muon-rest-frame-endpoint-uses-the-wrong-power-of-r.md"
         ),
         repair_task="Task 7",
@@ -100,7 +100,7 @@ DEFECTS: dict[str, Defect] = {
         label="A3",
         summary="the charged-pion photon spectrum returns zero in the forward cone",
         follow_up=(
-            "docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md"
+            "docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md"
         ),
         repair_task="Task 8",
         patch="test/parity/oracles/patches/A3-charged-pion-forward-cone.patch",
@@ -110,7 +110,7 @@ DEFECTS: dict[str, Defect] = {
     "A4": Defect(
         label="A4",
         summary="the muon positron spectrum divides by its normalization",
-        follow_up="docs/followups/todo/positron-muon-spectrum-normalization-inverted.md",
+        follow_up="docs/followups/done/positron-muon-spectrum-normalization-inverted.md",
         repair_task="Task 10",
         patch="test/parity/oracles/patches/A4-positron-muon-normalization.patch",
         source="hazma/spectra/_positron/_muon.pyx",

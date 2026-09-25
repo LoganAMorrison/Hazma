@@ -8,10 +8,12 @@
   (`projects/cython-to-rust/task-notes/phase-04/task-4.2-photon-table-family.md`)
 - **Scope:** cross-cutting (a published number is wrong; the repair is
   gated by the `cython-to-rust` corpus)
-- **Status:** open — **repaired** 2026-09-07 as roster entry B1,
-  `projects/parity-pinned-defect-repair` Task 5. The file stays here
-  until that project's close (Task 12) moves all of its follow-ups to
-  `done/` in one sweep, so the inbound references are repointed once.
+- **Status:** done — repaired as roster entry B1 of
+  `projects/parity-pinned-defect-repair`, Task 5
+  ([PR #94](https://github.com/LoganAMorrison/Hazma/pull/94), merge
+  `6a1058d`, 2026-09-07); moved to `done/` at that project's close (Task 12,
+  2026-09-24). Measurement:
+  `projects/parity-pinned-defect-repair/task-notes/task-5-eta-prime-line.md`.
 - **Triggers / blockers:** none remain, and there was never an ordering
   constraint against `cython-to-rust` Phase 06. This defect's twin,
   `hazma/spectra/_photon/_eta_prime.pyx`, went in Task 4.2 in the same PR

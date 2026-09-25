@@ -37,7 +37,7 @@ seven tabulated photon cases the A1 row names — and on nothing else.
 - `../task-notes/task-2-cython-oracles.md` §A1 and the per-block sign table.
 - `test/parity/oracles/patches/A1-boost-integral-window.patch` — the
   repair, stated exactly, on the Cython the oracle was captured from.
-- `docs/followups/todo/boost-integral-drops-last-interior-cell.md`.
+- `docs/followups/done/boost-integral-drops-last-interior-cell.md`.
 - `rust/src/boost.rs`, `test/test_core_boost.py`,
   `test/test_core_photon_tables.py`, `test/parity/{deltas,test_parity,
   tolerances,stability}.py`, `test/parity/oracles/capture.py`.
@@ -143,7 +143,7 @@ seven tabulated photon cases the A1 row names — and on nothing else.
   inverted into the convergence acceptance test over all seven channels.
 - `CHANGELOG.md` — an `[Unreleased] Changed` entry with the magnitudes,
   and a pointer on the 2.2.0 `Known issues` entry.
-- `docs/followups/todo/boost-integral-drops-last-interior-cell.md` —
+- `docs/followups/done/boost-integral-drops-last-interior-cell.md` —
   status, the two renamed tests, and the superseded regeneration.
 - `../PLAN.md` — the "Numerical impact" bullet, which still said the
   shift was one-signed.

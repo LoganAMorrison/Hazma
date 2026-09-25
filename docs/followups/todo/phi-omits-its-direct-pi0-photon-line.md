@@ -3,7 +3,7 @@
 - **Added:** 2026-09-07
 - **Source:** `projects/parity-pinned-defect-repair` Task 6 — the risk
   bullet on
-  [`phi-photon-lines-use-the-daughter-meson-energy.md`](phi-photon-lines-use-the-daughter-meson-energy.md)
+  [`phi-photon-lines-use-the-daughter-meson-energy.md`](../done/phi-photon-lines-use-the-daughter-meson-energy.md)
   asked for this check before that repair landed, and the measurement
   settled it
   (`projects/parity-pinned-defect-repair/task-notes/task-6-phi-lines.md`)

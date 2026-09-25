@@ -27,7 +27,7 @@
 //! from `_positron/_muon.pyx`. So this spectrum carries that kernel's
 //! Michel normalization, including the repair of its inverted
 //! normalization
-//! (`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`).
+//! (`docs/followups/done/positron-muon-spectrum-normalization-inverted.md`).
 //!
 //! # Where the FMAs are
 //!

@@ -40,10 +40,10 @@ for why `_template.md` files stay in place after scaffolding.
 
 | Slug | Deliverable | Phased | Started | Status |
 | --- | --- | --- | --- | --- |
-| [`parity-pinned-defect-repair`](parity-pinned-defect-repair/PLAN.md) | The seven parity-pinned numerical defects repaired, each with a declared per-array delta asserted against the corpus arrays that pinned it — which stay committed | No | 2026-08-19 | In Progress |
 
 ## Completed Projects
 
 | Slug | Deliverable | Phased | Started | Shipped |
 | --- | --- | --- | --- | --- |
+| [`parity-pinned-defect-repair`](parity-pinned-defect-repair/PLAN.md) | The ten parity-pinned numerical defects repaired, each with a declared per-array delta asserted against the corpus arrays that pinned it — which stay committed | No | 2026-08-19 | 2026-09-24; hazma 2.3.0 |
 | [`cython-to-rust`](cython-to-rust/PLAN.md) | Compiled layer rebuilt in Rust (PyO3, abi3 `hazma._core`, maturin); zero Cython; permanent parity corpus | Yes (8) | 2026-08-03 | 2026-08-29; released in hazma 2.2.0 (2026-09-06) |

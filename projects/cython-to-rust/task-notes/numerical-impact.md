@@ -515,7 +515,7 @@ pointer here so that every citation of that section still resolves.
     guard is absolute and one ulp at 775.26 MeV is 500x `DBL_EPSILON`, so
     it fires at `E_ρ == m_ρ` and at no other double. Reproduced, so no
     value moved — a Phase 07 CHANGELOG entry under *known wrong*, filed as
-    [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md).
+    [`rho-rest-frame-branch-returns-the-integrand.md`](../../../docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md).
   - **And a correction to Task 4.4's entry above:** the charged pion's
     lost forward cone does **not** merely propagate to the ρ, it deepens.
     A pure boost preserves the fraction of the endpoint at which the
@@ -574,7 +574,7 @@ pointer here so that every citation of that section still resolves.
     copies. The electron-neutrino yield is overweight by 1.23e-4 per pion
     (0.0123% integrated, 0.062% locally on the plateau at
     `E_π = 200` MeV). Reproduced, so no value moved; filed as
-    [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md).
+    [`neutrino-pion-electron-line-counted-twice.md`](../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md).
   - **And a fact worth not "fixing":** `_neutrino/_muon.pyx` applies the
     Michel normalization the **right** way round — both its rows
     integrate to exactly one neutrino — while its `_positron/_muon.pyx`
@@ -754,7 +754,7 @@ pointer here so that every citation of that section still resolves.
     answer to Phase 04's open question is *yes*, and in the vector case
     the shape of the low-energy tail is what changes. Reproduced under
     rule 1, not fixed here
-    ([the forward cone](../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md)).
+    ([the forward cone](../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md)).
   - **Performance, from release builds of both sides** (`rules.md`
     rule 12; the editable install would have been ~20x pessimistic):
     **4.2x** on the table build itself (7.457 ms → 1.793 ms for a call at
@@ -835,7 +835,7 @@ Cython ones.
   That is the signature of a single inverted normalization rather than a
   kinematic error.
   Reproduced under rule 1, not fixed here
-  ([the inverted normalization](../../../docs/followups/todo/positron-muon-spectrum-normalization-inverted.md)).
+  ([the inverted normalization](../../../docs/followups/done/positron-muon-spectrum-normalization-inverted.md)).
 - **Performance, from release builds of both sides** (`rules.md`
   rule 12; non-editable installs of `origin/master` and this branch into
   two scratch venvs, run from `/tmp`, 200-point energy sweep at

@@ -58,7 +58,7 @@ second is not. Both are asserted below rather than described.
   repaired kernel adds it in ``dnde_e_nue`` alone. The corpus still pins
   the shipped values; ``test/parity/deltas.py`` declares the 215 it moves
   as roster entry B5. Tracked in
-  ``docs/followups/todo/neutrino-pion-electron-line-counted-twice.md``.
+  ``docs/followups/done/neutrino-pion-electron-line-counted-twice.md``.
 * **A pion at rest loses both prompt lines.** The ``E - m < DBL_EPSILON``
   branch returns only the muon-decay continuum, because a delta function
   in the rest frame has no representation here. Reproduced on purpose
@@ -70,7 +70,7 @@ What is **not** a defect: ``_neutrino/_muon.pyx`` applies the Michel
 normalization the right way round, so both its rows integrate to exactly
 one neutrino. Its ``_positron/_muon.pyx`` sibling divided where it should
 multiply and was low by 0.0374%
-(``docs/followups/todo/positron-muon-spectrum-normalization-inverted.md``);
+(``docs/followups/done/positron-muon-spectrum-normalization-inverted.md``);
 the positron port multiplies, as this one does. :class:`TestPhysics` pins
 the neutrino side and the margin that separates it from the inversion.
 """

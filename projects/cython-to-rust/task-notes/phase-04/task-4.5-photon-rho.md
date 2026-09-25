@@ -181,7 +181,7 @@ lifted *out* of the integral before concluding it is untestable.
 ### The ρ compounds the charged pion's forward-cone defect
 
 Task 4.4's handoff asked whether the lost forward cone
-([`../../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md))
+([`../../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`](../../../../docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md))
 reaches the ρ. It does, and it gets **worse**, which was not the expected
 answer.
 
@@ -236,7 +236,7 @@ ulp at 775.26 MeV is 1.14e-13, about 500x `DBL_EPSILON`, so the branch
 fires at `E_ρ == m_ρ` and at no other double. Reproduced under rule 1,
 pinned by `test_the_rest_frame_branch_returns_the_bare_integrand` in both
 languages, and filed as
-[`../../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md`](../../../../docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md).
+[`../../../../docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md`](../../../../docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md).
 
 The other boosted kernels (`photon_muon`, `photon_tables`,
 `positron_muon`) return a genuine rest-frame spectrum from the same
@@ -373,8 +373,8 @@ returns `13` and `113`, so that cimport survives in the capi provider.
 | `test/test_core_constants.py` | drop the `derived::photon_rho` row, with the reason |
 | `test/test_core_photon_pion.py` | capsule-roster comments lost a cimporter |
 | `test/test_core_quad.py` | two `_rho.pyx` citations marked ported |
-| `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md` | **new** |
-| `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md` | the ρ compounds it — measured table + repair consequence |
+| `docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md` | **new** |
+| `docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md` | the ρ compounds it — measured table + repair consequence |
 | `docs/followups/README.md` | index row for the new follow-up |
 | `docs/agents/environment.md` | two new traps: a deleted `.pyx` stays importable, and `git checkout` restores from the index |
 | `docs/agents/lessons.md` | review round 1: `[sweep-excluded-the-canonical-directory]` |
@@ -581,8 +581,8 @@ the 16 are now served.
 ```console
 $ rg -n '_rho\.pyx|_rho\.pxd|_rho\.pyi|_photon\._rho|_photon/_rho' \
     --glob '!projects/**' --glob '!.venv/**' hazma rust test setup.py docs
-docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md:115  (historical + the new measured table)
-docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md:33,38          (the deleted source, cited as origin)
+docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md:115  (historical + the new measured table)
+docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md:33,38          (the deleted source, cited as origin)
 rust/src/kernels/photon_rho.rs:2,47,48,74,109,262                                 (provenance citations)
 rust/src/kernels/photon_pion.rs:8                                                 (past tense: "before Task 4.5 deleted it")
 rust/src/quad.rs:38                                                               (call-site table, marked "(ported, Task 4.5 …)")
@@ -593,6 +593,11 @@ test/test_core_photon_pion.py:14,453                                            
 test/test_core_quad.py:492,523                                                    (marked ported)
 test/test_core_constants.py:85                                                    (the removal, with its reason)
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 No live import, no build entry, no dispatch-table row still names the
 module. `rg 'import.*_rho|from.*_rho'` over `hazma/` and `test/` returns

@@ -223,7 +223,7 @@ replaced them changed what the other criteria could be held to):
   at all**. Systematic and one-signed (the boosted spectrum is always
   slightly low). Preserved per rules.md rule 1 and pinned in both
   languages; the repair is
-  [`../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md),
+  [`../../../docs/followups/done/boost-integral-drops-last-interior-cell.md`](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md),
   which `projects/parity-pinned-defect-repair` Task 4 landed as a
   declared delta against the corpus, after that project's Task 2 had
   captured the corrected values from the `.pyx` before Task 6.4 deleted

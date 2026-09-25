@@ -156,7 +156,7 @@ pion (0.0123%); locally, the plateau the line sits on is 0.062% high at
 `E_π = 200` MeV and 0.036% at 1000 MeV.
 
 Reproduced under rule 1 and filed as
-[`docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md).
+[`docs/followups/done/neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md).
 Its repair needs no Cython oracle — the excess is a closed-form plateau
 over a computable window — so deleting the twin in this PR costs the
 `parity-pinned-defect-repair` project nothing.
@@ -362,7 +362,7 @@ module rather than in the roster.
 
 ### Docs / cross-project
 
-- `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` —
+- `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` —
   **new**, plus its index row in `docs/followups/README.md`.
 - `test/parity/oracles/entry_points.py`,
   `projects/parity-pinned-defect-repair/PLAN.md` and
@@ -597,7 +597,7 @@ achieved rather than assumed.
 
 - **The doubled `π → e ν` neutrino line** is the eighth blocked defect
   sharing the eventual corpus regeneration —
-  [`neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/todo/neutrino-pion-electron-line-counted-twice.md).
+  [`neutrino-pion-electron-line-counted-twice.md`](../../../../docs/followups/done/neutrino-pion-electron-line-counted-twice.md).
   Unlike most of its siblings it needs no Cython oracle, so its twin's
   deletion in this PR costs nothing.
 - **`test_core_dispatch.py`'s `TestDeclaredDivergencesFromCython` now has

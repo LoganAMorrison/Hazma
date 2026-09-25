@@ -90,6 +90,18 @@ better introduced green, though, and step 1 is what makes this one green:
 the sweep above reports three dangling paths on an untouched trunk, the
 same three that section names.
 
+**The gate needs one deliberate exemption.** On 2026-09-24
+`parity-pinned-defect-repair` Task 12 moved eight follow-ups and
+repointed 159 path occurrences in 41 files, but left
+`test/parity/oracles/data/manifest.json` alone. That file records the
+capture's provenance, so its four `follow_up` fields still name the
+`todo/` paths that were live when the capture ran
+(`projects/parity-pinned-defect-repair/adrs/ADR-0003-keep-the-group-a-oracle-captures-committed.md`).
+Run over `test/`, the loop above reports those four as dangling. The
+gate should exclude that file rather than rewrite it. After that move,
+the loop reports seven paths: those four, plus the three this section
+already names.
+
 **Validate the command before trusting it as a gate.** Its result set
 proved sensitive to which paths it is given. Measured on 2026-09-06 with
 ripgrep 15.1.0, searching for the same pattern:

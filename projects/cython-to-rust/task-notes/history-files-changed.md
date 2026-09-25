@@ -51,7 +51,7 @@ closed phase's entries below, verbatim, under a
 - New: `rust/src/kernels/{positron_pion,neutrino_flavors,neutrino_muon,
   neutrino_pion}.rs`, `test/test_core_positron_pion.py`,
   `test/test_core_neutrino.py`,
-  `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md`,
+  `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`,
   `projects/cython-to-rust/learnings/phase-04-spectra-kernels.md`.
 - Deleted: `hazma/spectra/_neutrino/_{muon,pion,neutrino}.{pyx,pxd,pyi}`
   (8 files — nothing outside the package cimported them) and
@@ -70,7 +70,7 @@ closed phase's entries below, verbatim, under a
 ### Phase 04 (Task 4.5)
 
 - New: `rust/src/kernels/photon_rho.rs`, `test/test_core_photon_rho.py`,
-  `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md`.
+  `docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md`.
 - Deleted: `hazma/spectra/_photon/_rho.{pyx,pxd,pyi}` (whole module —
   nothing cimported it).
 - Changed: `rust/src/{kernels,photon,constants,quad}.rs`,
@@ -78,7 +78,7 @@ closed phase's entries below, verbatim, under a
   `setup.py`, `test/parity/{cases,tolerances}.py`,
   `test/test_core_{dispatch,constants,photon_pion,quad}.py`,
   `docs/followups/README.md`,
-  `docs/followups/todo/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
+  `docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md`.
 
 ### Phase 04 (Task 4.4)
 
@@ -112,7 +112,7 @@ closed phase's entries below, verbatim, under a
 
 - New: `rust/src/kernels/positron_muon.rs`,
   `test/test_core_positron_muon.py`,
-  `docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`.
+  `docs/followups/done/positron-muon-spectrum-normalization-inverted.md`.
 - Changed: `rust/src/{kernels,positron}.rs`,
   `hazma/spectra/_positron/{__init__.py,_muon.pyx}`, `hazma/_core.pyi`,
   `test/parity/{cases,test_parity}.py`, `docs/followups/README.md`,
@@ -291,7 +291,7 @@ closed phase's entries below, verbatim, under a
   `hazma._core.{interp,boost}` exemptions. `hazma/_core.pyi` gains a
   comment — the only change under `hazma/`, and non-executable. One
   follow-up filed
-  ([the boost integral's window coverage](../../../docs/followups/todo/boost-integral-drops-last-interior-cell.md)).
+  ([the boost integral's window coverage](../../../docs/followups/done/boost-integral-drops-last-interior-cell.md)).
   **Two canonical patches:** the phase file's Task 3.4 block gained five
   "criteria added during execution" bullets, and
   [`../references/numerics-replacements.md`](../references/numerics-replacements.md)

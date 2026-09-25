@@ -38,7 +38,7 @@
 //! asymmetry a transcription slip rather than a convention. [`dnde_mu_numu`]
 //! therefore carries the `π → μ ν_μ` line alone and [`dnde_e_nue`] is the
 //! sole source of the electron one; see
-//! `docs/followups/todo/neutrino-pion-electron-line-counted-twice.md` for
+//! `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` for
 //! the measurement. The parity corpus still pins the pre-repair arrays;
 //! `test/parity/deltas.py` declares how the repaired ones relate to them.
 //!

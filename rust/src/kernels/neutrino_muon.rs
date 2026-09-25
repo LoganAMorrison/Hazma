@@ -443,7 +443,7 @@ mod tests {
     /// source got it wrong. `_positron/_muon.pyx:28` **divided** by
     /// [`R_FACTOR`] where the normalization has to multiply, leaving every
     /// positron value low by `1/N²` — 0.0374%
-    /// (`docs/followups/todo/positron-muon-spectrum-normalization-inverted.md`);
+    /// (`docs/followups/done/positron-muon-spectrum-normalization-inverted.md`);
     /// [`super::positron_muon`] multiplies. `_neutrino/_muon.pyx` writes the
     /// same literal into `common = R_FACTOR * x² …` as a **factor**, which
     /// is correct, and this kernel keeps it.

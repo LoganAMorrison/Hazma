@@ -78,8 +78,13 @@ Preflight was run with the isolated `.venv/bin` first on PATH and these
 explicit scopes (no `--tests`, so pytest covers the full suite):
 
 ```sh
-scripts/agents/preflight.sh --paths "test/parity/deltas.py test/parity/test_delta_models.py test/parity/test_parity.py test/test_core_photon_rho.py" --md "CHANGELOG.md docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md projects/parity-pinned-defect-repair/references/corpus-repinning.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md test/parity/README.md projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md"
+scripts/agents/preflight.sh --paths "test/parity/deltas.py test/parity/test_delta_models.py test/parity/test_parity.py test/test_core_photon_rho.py" --md "CHANGELOG.md docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md projects/parity-pinned-defect-repair/references/corpus-repinning.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md test/parity/README.md projects/parity-pinned-defect-repair/task-notes/task-9-rho-rest-frame.md"
 ```
+
+[Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
+`docs/followups/todo/` paths in the block above to `done/`, where the
+follow-ups moved at that project's close; when the command ran they
+were under `todo/`.]
 
 The first run passed every code gate and found three Markdown formatting
 issues, subsequently fixed. Its literal pytest summary was:
@@ -305,7 +310,7 @@ rg -n --hidden '_A3_B3|TestRhoRestDeclaration|the_rest_frame_branch_returns_the_
 | Matched file | Disposition |
 | --- | --- |
 | `docs/followups/todo/rho-photon-outer-boost-misses-support.md` | KEPT — historical evidence or unrelated test/reference |
-| `docs/followups/todo/rho-rest-frame-branch-returns-the-integrand.md` | EDITED — current repair or guidance |
+| `docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md` | EDITED — current repair or guidance |
 | `projects/parity-pinned-defect-repair/PLAN.md` | EDITED — current repair or guidance |
 | `projects/parity-pinned-defect-repair/references/corpus-repinning.md` | EDITED — current repair or guidance |
 | `projects/parity-pinned-defect-repair/references/defect-blast-radius.md` | EDITED — current repair or guidance |
