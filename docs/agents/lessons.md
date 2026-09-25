@@ -253,7 +253,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   one that produced the output beside it — a narrowed run written up under a
   repo-wide command reads as a clean sweep and is unreproducible. The same rule
   binds any inventory of what a task is *deferring* — enumerate it from the
-  grep, not from memory (PR #71, #78, #83, #84, #101).
+  grep, not from memory (PR #71, #78, #83, #84, #101, #102).
 - [sign-copied-from-a-defect-description] A delta quoted from a bug report
   carries the *defect's* sign and the repair's is the opposite with the same
   magnitude; restate the endpoints, or say "magnitude", when you copy a figure

@@ -94,6 +94,13 @@ From `../PLAN.md` Task 12 and the working-memory README's Exit Criteria:
   blocks in 8 task notes, counted with `git grep -c 'repointed the$'`.
 - **One new seed stub** (`delta-declaration-layer-outlives-its-project.md`).
   The other §5 seeds were already filed by Tasks 6, 8, 10 and 10a.
+- **Review fix (PR #102):** the count sweep's command cell said it
+  excluded `docs/followups/`, which reproduces `157 40`, not the stated
+  `159 41`. The figure was right and the description wrong. The sweep
+  counted every file modified in place, so it included
+  `todo/mediator-positron-line-misses-the-electron-velocity.md` (2
+  occurrences). The cell now states that procedure and gives both
+  figures.
 
 ## Files Changed
 
@@ -306,7 +313,7 @@ Every hit is KEPT:
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| retrospective §6, dangling-path follow-up, `README.md` Files Changed: 159 occurrences in 41 files | per changed file, count `followups/todo/($P)\.md` in `git show origin/master:<file>`, excluding `docs/followups/` itself | `159 41` | OK |
+| retrospective §6, dangling-path follow-up, `README.md` Files Changed: 159 occurrences in 41 files | for each file modified in place (`git diff --name-only --diff-filter=M origin/master HEAD`, so the eight renamed follow-ups are out), count `followups/todo/($P)\.md` in `git show origin/master:<file>`. `docs/followups/` is *not* excluded: `todo/mediator-positron-line-misses-the-electron-velocity.md` carries 2 of the 159; excluding the directory gives `157 40` | `159 41` | OK |
 | ADR-0003, retrospective, README: 343 declared, 321 read captures | `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`, then sum the `A*` labels | `343 321` | OK |
 | ADR-0003: about 1.6 MB of oracle data | `ls -l test/parity/oracles/data \| awk '{s+=$5} END {print s}'` | `1597175` | OK |
 | CHANGELOG: nine of twelve known issues | the twelve `- **[` bullets under 2.2.0 `### Known issues`; nine now link into `done/` | 9 / 12 | OK |
