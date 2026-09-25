@@ -176,7 +176,7 @@ project, and one is filed with this retrospective.
   [`decaying-theory-positron-channels-share-the-last-closure.md`](../../../docs/followups/todo/decaying-theory-positron-channels-share-the-last-closure.md).
 - **The delta layer outlives the project that owns its ADR** (filed with
   this retrospective):
-  [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/todo/delta-declaration-layer-outlives-its-project.md).
+  [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/done/delta-declaration-layer-outlives-its-project.md).
   It covers promoting ADR-0001 to `docs/adrs/` and deciding how a later
   repair joins the closed `deltas.REPAIRS`. The first three seeds above
   will each need that.

@@ -48,3 +48,4 @@ Copy [`template.md`](template.md) and fill in the sections.
 | --- | --- | --- | --- |
 | [ADR-0001](ADR-0001-fsr-generator-takes-both-matrix-elements.md) | The FSR generator takes both matrix elements | Accepted | 2026-08-04 |
 | [ADR-0002](ADR-0002-read-phase-learnings-not-closed-task-notes.md) | Phase learnings replace a closed phase's task notes | Accepted | 2026-08-21 |
+| [ADR-0003](ADR-0003-corpus-repairs-are-declared-deltas.md) | Express corpus repairs as declared deltas, never as rewritten arrays | Accepted | 2026-09-24 |

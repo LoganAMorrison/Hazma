@@ -254,9 +254,15 @@ pub fn spectrum_point(
     // short `pws` reports the index the Cython reported. `pws[0]` is
     // read only inside the window, which is why an empty buffer can
     // still succeed outside it.
+    //
+    // The window is `E r β` wide, so a box carrying one positron per
+    // decay is `1 / (E r β)` tall. The shipped `.pyx` divided by `E β`
+    // alone and so integrated to `pws[0] · r`; dividing by `r` last keeps
+    // the value exactly the shipped one over `r`, which is how
+    // `test/parity/deltas.py` declares the repair (`C1`).
     let mut lines_contrib = 0.0;
     if eminus <= eng_p && eng_p <= eplus {
-        lines_contrib = pws.get(0)? / (eng_m * beta);
+        lines_contrib = pws.get(0)? / (eng_m * beta) / r;
     }
 
     if mode == Some(PositronMode::ElectronLine) {
@@ -384,7 +390,7 @@ mod tests {
     fn a_dark_continuum_leaves_the_line_alone() {
         // With both tables identically zero the integral is exactly
         // zero, so the spectrum inside the line window is the closed
-        // form `pw_ee / (E β)` — an analytic pin rather than a
+        // form `pw_ee / (E r β)` — an analytic pin rather than a
         // regression value.
         let tables = tables_for(LIGHT_MASS);
         let eng_m = 250.0;
@@ -392,7 +398,8 @@ mod tests {
         let widths = PartialWidths::new(&pws);
         let ratio = LIGHT_MASS / eng_m;
         let beta = (1.0 - ratio * ratio).sqrt();
-        let expected = pws[0] / (eng_m * beta);
+        let r = (1.0 - 4.0 * MASS_E_SQUARED / (LIGHT_MASS * LIGHT_MASS)).sqrt();
+        let expected = pws[0] / (eng_m * beta) / r;
 
         // Mid-window: `eminus ≈ 16.7`, `eplus ≈ 233` MeV at these
         // arguments, so 100 MeV is comfortably inside.

@@ -164,7 +164,7 @@ because a built `.so` and its generated `.c` outlive a deleted `.pyx`.
 
 ## 5. Follow-on seeds
 
-- [`mediator-positron-line-misses-the-electron-velocity`](../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md)
+- [`mediator-positron-line-misses-the-electron-velocity`](../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md)
   — the `e⁺e⁻` line's missing `1/r`. Needs a corpus re-capture or a
   declared exception; explicitly not a swap-time fix.
 - [`mediator-spectra-accept-unknown-mode-strings`](../../../docs/followups/todo/mediator-spectra-accept-unknown-mode-strings.md)

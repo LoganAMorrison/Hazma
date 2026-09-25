@@ -5,12 +5,27 @@
   `projects/parity-pinned-defect-repair/learnings/project-retrospective.md`
   §5
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done. Resolved together with its first trigger,
+  [`mediator-positron-line-misses-the-electron-velocity.md`](mediator-positron-line-misses-the-electron-velocity.md).
 - **Triggers / blockers:** the next repair that moves a parity-pinned
   value. Three are already filed:
-  [`rho-photon-outer-boost-misses-support.md`](rho-photon-outer-boost-misses-support.md),
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](neutrino-pion-continuum-loses-its-quadrature-support.md)
-  and [`phi-omits-its-direct-pi0-photon-line.md`](phi-omits-its-direct-pi0-photon-line.md).
+  [`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md),
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
+  and [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
+
+> **Resolved.** The project ADR is re-filed as repo-wide
+> [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md),
+> and the project copy is now a one-line pointer to it. The ADR carries
+> the project's rules that bind any repair: never rewrite the corpus,
+> never widen a budget, carry an independent oracle and a physics
+> invariant, declare an allowlist, fail stale declarations, and compose
+> rather than overlap. It adds the label rule. A post-project repair
+> takes the next `C<n>` in landing order and adds it to `deltas.REPAIRS`.
+> Its roster row goes in `test/parity/README.md`, "Repairs", and its
+> evidence is the resolved follow-up. `C1` is the mediator positron line.
+> The Group A oracle reader was not generalized, so the project's
+> ADR-0003 on keeping those captures stays where it is, and the new ADR
+> says it binds only them.
 
 ## Why
 

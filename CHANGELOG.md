@@ -13,6 +13,32 @@ its magnitude and a pointer to the tracked repair. **Numerical changes go
 under `Changed` with the magnitude stated** — a spectrum that moves is a
 user-facing change even when no signature did.
 
+## [Unreleased]
+
+### Changed
+
+- **The `e⁺e⁻` line in every mediator positron spectrum now carries one
+  positron per decay.** `S/V → e⁺e⁻` is a two-body decay, so the boost
+  spreads the rest-frame line into a box `E r β` wide, where
+  `r = sqrt(1 − 4 m_e²/m²)` is the electron's rest-frame velocity. The
+  shipped box was `pw_ee / (E β)` tall, so it integrated to `pw_ee · r`
+  rather than `pw_ee`. It is now `pw_ee / (E r β)`. Inside the line window
+  `dnde_decay_s`, `dnde_decay_v` and their `_pt` twins rise by `1/r − 1`
+  of the line, in every mode string, since every mode adds the line. That
+  is 3.3e-5 at `m = 125` MeV, 8.4e-6 at 250 MeV, 1.7e-6 at 550 MeV and
+  6.4e-7 at 900 MeV. The shift grows without bound as `m → 2 m_e`, where
+  the shipped height stayed finite. The scalar and vector models'
+  `χχ → SS` and `χχ → VV` positron spectra are built on these kernels, so
+  they move by the same factor on the line, and so does everything
+  downstream of them.
+  This was
+  [a known issue in 2.2.0 and 2.3.0](docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
+  The corpus arrays that pinned it stay committed, with 8,912 moved
+  positions declared as parity roster entry `C1`. That is the first
+  label issued under
+  [ADR-0003](docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md),
+  which now governs corpus repairs made outside a project.
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed
@@ -53,7 +79,7 @@ value. Each entry below gives the per-function detail.
 
 Three of 2.2.0's known issues remain open:
 [the scalar elastic cross sections' cancellation](docs/followups/todo/scalar-elastic-cross-sections-cancel-in-atan-difference.md),
-[the mediator positron line's missing electron velocity](docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md),
+[the mediator positron line's missing electron velocity](docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md),
 and [the vector cross sections' `TypeError` at `e_cm = 2 m_x`](docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md).
 The repairs also surfaced three new defects, which this release does not
 fix:
@@ -593,7 +619,7 @@ result:
   `dnde_positron_muon` integrates to 0.0374% below one positron per muon.
   Its neutrino sibling applies the same Michel normalization the right way
   round, so the two files genuinely disagree and only one is wrong.
-- **[The mediator positron line misses the electron velocity.](docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md)**
+- **[The mediator positron line misses the electron velocity.](docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md)**
   The `e⁺e⁻` line integrates to `pw_ee · r` rather than `pw_ee`, `r` being
   the positron's rest-frame velocity: the box's edges carry the factor and
   its height does not. Worth 3.3e-5 at `m = 125` MeV, 1.4e-6 at 600 MeV,

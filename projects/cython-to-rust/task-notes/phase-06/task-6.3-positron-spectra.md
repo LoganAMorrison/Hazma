@@ -81,7 +81,7 @@ bind every swap:
   to `pw_ee · r` rather than `pw_ee` — a missing `1/r`, worth `3.3e-5` at
   `m = 125` MeV and divergent as `m → 2 m_e`. Reproduced under rule 1 and
   filed as
-  [`mediator-positron-line-misses-the-electron-velocity`](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+  [`mediator-positron-line-misses-the-electron-velocity`](../../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
 - **Defect A4 reaches all four cases, and it is a pure normalization.**
   Answered from the committed oracle rather than measured again
   (`test/parity/oracles/data/manifest.json`): repairing the inverted
@@ -488,7 +488,7 @@ this phase's `README.md`, then the phase file.
   **6.4 can**, because by then both are merged — and 6.4 is also where it
   becomes moot, so decide rather than defer.
 - **A new follow-up from this task**, not blocking:
-  [the line's missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+  [the line's missing electron velocity](../../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
   It moves published numbers above the budgets these four cases now
   hold, so it needs a corpus re-capture or a declared exception — which
   makes it a *post*-6.4 item, not a Phase 06 one.

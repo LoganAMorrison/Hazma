@@ -884,7 +884,7 @@ first, not this file or the task notes.
   closure, and promoting ADR-0001, the delta layer's ADR.
 - A repair filed after this project has no label in `deltas.REPAIRS`.
   Settle that first; see
-  [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/todo/delta-declaration-layer-outlives-its-project.md).
+  [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/done/delta-declaration-layer-outlives-its-project.md).
 
 ## Task 9 review response
 

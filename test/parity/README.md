@@ -117,17 +117,34 @@ served kernel and belongs back in the count. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 
-Ten of the values in here are, separately, *wrong* — filed under
-`docs/followups/` and repaired by
-[`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md).
-That does not make them regenerable either: the committed arrays are the
-record of what 2.1.0 shipped, and a repair is expressed as a declared
-delta against them, in [`deltas.py`](deltas.py). The live declarations
-and their repair labels are the authoritative roster; count them with
+## Repairs
+
+Some of the values in here are *wrong*. That does not make
+them regenerable either: the committed arrays are the record of what
+2.1.0 shipped, and a repair is expressed as a declared delta against
+them, in [`deltas.py`](deltas.py). The rules for a declaration, including
+how a repair gets its label, are
+[ADR-0003](../../docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md).
+
+The labels are the closed set `deltas.REPAIRS`, in two parts:
+
+- **`A1`–`A4` and `B1`–`B6`** are the ten defects
+  [`projects/parity-pinned-defect-repair`](../../projects/parity-pinned-defect-repair/PLAN.md)
+  repaired. Its `references/defect-blast-radius.md` is their roster.
+- **`C1` onward** are repairs that landed after that project closed,
+  numbered in landing order. Each is listed below, and its evidence is
+  the follow-up it resolved.
+
+| Label | Repair | Arrays declared |
+| --- | --- | --- |
+| `C1` | [the mediator positron line carries the electron's velocity](../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md) | 192 over the four `mediator_spectra.*.positron.*` cases, 128 of them composed with `A4` |
+
+The live declarations and their repair labels are the authoritative
+count; get it with
 `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
 Repairs that share arrays compose in landing order: `A1+B1`, `A1+B2`,
-`A3+B4`, and `A3+B3`. The rho rest correction multiplies A3's captured
-prediction by photon energy, preserving the prior pion repair.
+`A3+B4`, `A3+B3` and `A4+C1`. The rho rest correction multiplies A3's
+captured prediction by photon energy, preserving the prior pion repair.
 [`test_delta_models.py`](test_delta_models.py) checks the closed-form
 models against the stored arrays themselves. [`oracles/`](oracles/README.md)
 holds the corrected Group A values captured from Cython before the port

@@ -3,9 +3,11 @@
 The corpus under ``data/`` records what 2.1.0 shipped, and
 ``projects/cython-to-rust/rules.md`` rule 2 forbids regenerating it from a
 tree whose kernels run on Rust. Some of what it pins is *wrong* — the
-defects filed under ``docs/followups/`` and repaired under
-``projects/parity-pinned-defect-repair`` — and a repair still has to get
-past the gate. It does so by declaring, for each stored array it moves,
+defects filed under ``docs/followups/``, repaired first under
+``projects/parity-pinned-defect-repair`` and since then one at a time —
+and a repair still has to get past the gate. The rules are
+``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``. A repair
+passes by declaring, for each stored array it moves,
 how the repaired value relates to the stored one. ``test_parity.py``
 compares a declared array against that relation and every other array
 against the stored values unchanged, so a repair proves it moved only
@@ -103,6 +105,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from fractions import Fraction
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
@@ -116,9 +119,13 @@ from hazma._core import boost as core_boost
 if TYPE_CHECKING:
     from cases import Block
 
-#: The closed set of repair labels a declaration may carry: the roster in
-#: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``.
-REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6"})
+#: The closed set of repair labels a declaration may carry. ``A1``-``A4``
+#: and ``B1``-``B6`` are the roster in
+#: ``projects/parity-pinned-defect-repair/references/defect-blast-radius.md``;
+#: ``C1`` onward are the repairs that landed after that project closed,
+#: numbered in landing order and listed in ``README.md``, "Repairs". See
+#: ``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``.
+REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1"})
 
 #: The sentinel for "every position the relation actually moves", resolved
 #: against the prediction at comparison time. A position the relation
@@ -1056,6 +1063,135 @@ _A4_DECLARATIONS: dict[tuple[str, str, str], Delta] = {
 
 
 # ---------------------------------------------------------------------------
+# C1 -- the mediator positron line carries the electron's velocity
+# ---------------------------------------------------------------------------
+
+#: `rust/src/constants.rs`, module ``legacy`` -- the electron mass the
+#: mediator positron kernel reads. Spelled out for the reason the photon
+#: masses above are: ``hazma.parameters.electron_mass`` is the modern
+#: 0.5109989461, and a consolidation of the two must not move this model.
+LEGACY_MASS_E = 0.510998928
+
+
+def _mul_add(a: float, b: float, c: float) -> float:
+    """``a * b + c`` rounded once, as Rust's ``f64::mul_add`` rounds it.
+
+    `math.fma` needs Python 3.13. `Fraction` arithmetic is exact, and
+    converting the exact result back to a float rounds it once, so this
+    is the fused value rather than an approximation of it.
+    """
+    return float(Fraction(a) * Fraction(b) + Fraction(c))
+
+
+def _electron_line_velocity(
+    fn: Callable[..., Any], block: Block
+) -> dict[str, np.ndarray]:
+    """The part of the ``S/V -> e+ e-`` box the shipped height left out.
+
+    Boosted, the rest-frame line at ``m/2`` is a flat box between
+    ``E (1 -+ r beta) / 2``, where ``r = sqrt(1 - 4 m_e**2 / m**2)`` is the
+    electron's rest-frame velocity. The box is ``E r beta`` wide, so one
+    positron per decay makes it ``pw_ee / (E r beta)`` tall; the shipped
+    kernel wrote ``pw_ee / (E beta)``, and the repaired kernel divides
+    that by ``r``. The term is the difference, inside the window and
+    nowhere else. Every mode string adds the line, so the term is the same
+    for all four of a block's modes.
+
+    The window edges are the kernel's own -- ``mediator_decay_positron::
+    spectrum_point`` fuses ``r beta + 1`` -- because the corpus grids
+    carry anchors on exactly those edges. With the mediator at rest the
+    box is a single point where both heights are infinite, so nothing
+    moves; below its mass the kernel returns zero.
+    """
+    del fn  # closed form in the block's parameters
+    energy = block.params["mediator_energy"]
+    mass = block.params["mediator_mass"]
+    pw_ee = block.params["partial_widths"][0]
+    if energy <= mass:
+        return _on_value_grids(block, np.zeros_like)
+    ratio = mass / energy
+    beta = math.sqrt(1.0 - ratio * ratio)
+    r = math.sqrt(1.0 - ((4.0 * LEGACY_MASS_E) * LEGACY_MASS_E) / (mass * mass))
+    eplus = (energy * _mul_add(r, beta, 1.0)) / 2.0
+    eminus = (energy * _mul_add(-r, beta, 1.0)) / 2.0
+    shipped = pw_ee / (energy * beta)
+    missing = shipped / r - shipped
+    return _on_value_grids(
+        block, lambda e: np.where((eminus <= e) & (e <= eplus), missing, 0.0)
+    )
+
+
+_C1 = Delta(
+    repair="C1",
+    positions=MOVED,
+    relation=Additive(
+        term=_electron_line_velocity,
+        rtol=tolerances.PORTED_NESTED_RTOL,
+        why="the case's own budget. The term is closed form and the arrays "
+        "C1 declares alone have no continuum under the line -- every `e_e` "
+        "block, and `pi_pi` at 250 MeV, below the pion threshold -- so the "
+        "stored line plus the term reproduces the repaired kernel bit for "
+        "bit: measured 0.0 over all 3,000 positions it moves.",
+    ),
+    measured="Every position inside the boosted `e+ e-` window moves "
+    "by the line's height times `1/r - 1`: 8.356e-06 at 250 MeV, 1.726e-06 "
+    "at 550 MeV and 6.447e-07 at 900 MeV, relative to the line. Over the "
+    "four mediator positron cases that is 8,912 positions in 192 arrays -- "
+    "2,228 per case, in all four modes of the `rest_plus_eps`, "
+    "`near_rest`, `boosted_mild` and `boosted_strong` blocks of all three "
+    "masses. 6,596 of them move by more than the cases' 1e-9 budget; the "
+    "rest sit under a continuum large enough to hide the shift. Nothing "
+    "moves at `rest`, where the box is one point of infinite height.",
+    evidence="docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md",
+)
+
+_A4_C1 = Delta(
+    repair="A4+C1",
+    positions=MOVED,
+    relation=Composed(
+        base=_A4_NESTED.relation,
+        added=(_C1.relation,),
+        rtol=tolerances.PORTED_NESTED_RTOL,
+        why="the base is the A4 capture at A4's nested budget and the "
+        "addend is closed form, so the composition inherits A4's residual: "
+        "measured at most 3.55e-12 (scalar) and 6.40e-12 (vector) relative "
+        "over the 5,912 positions C1 moves in these arrays, the figures "
+        "A4 alone measured on them.",
+    ),
+    measured="C1 moves 5,912 positions in 128 arrays that A4 already "
+    "declares: `total` and `mu_mu` at every mass, and `pi_pi` at 550 and "
+    "900 MeV, in the four blocks above rest. They compose rather than "
+    "declaring separately because one key holds one declaration. The "
+    "`rest` block of each keeps A4's declaration alone.",
+    evidence=_C1.evidence,
+)
+
+#: Every block the mediator positron line moves in, with the mode strings'
+#: labels. ``rest`` is absent: see `_electron_line_velocity`.
+_C1_BLOCKS = ("rest_plus_eps", "near_rest", "boosted_mild", "boosted_strong")
+
+#: The arrays C1 moves. Where A4 already declares the array, the two
+#: compose, since one key holds one `Delta`; the rest -- every ``e_e``
+#: block, and ``pi_pi`` at 250 MeV where the pion channel is closed and
+#: the line is all the array holds -- carry C1 alone.
+_C1_DECLARATIONS: dict[tuple[str, str, str], Delta] = {
+    key: (_A4_C1 if key in _A4_DECLARATIONS else _C1)
+    for key in (
+        (
+            f"mediator_spectra.{kind}.positron.dnde_decay_{m}{pt}",
+            f"m{m}_{mass}.{block}.{channel}",
+            "values",
+        )
+        for kind, m in (("scalar", "s"), ("vector", "v"))
+        for pt in ("", "_pt")
+        for mass in (250, 550, 900)
+        for block in _C1_BLOCKS
+        for channel in ("total", "e_e", "mu_mu", "pi_pi")
+    )
+}
+
+
+# ---------------------------------------------------------------------------
 # A1 + B1 -- the six eta-prime arrays both repairs move
 # ---------------------------------------------------------------------------
 
@@ -1623,6 +1759,8 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ): _B6,
     # A4.
     **_A4_DECLARATIONS,
+    # C1, after A4: it replaces the A4 keys it shares with their composite.
+    **_C1_DECLARATIONS,
 }
 
 
@@ -1641,6 +1779,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "A4": _A4,
     "A4/pion": _A4_PION,
     "A4/nested": _A4_NESTED,
+    "A4+C1": _A4_C1,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
     "B1": _B1,
@@ -1649,6 +1788,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "B4": _B4,
     "B5": _B5,
     "B6": _B6,
+    "C1": _C1,
 }
 
 

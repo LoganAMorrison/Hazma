@@ -3,15 +3,23 @@
 - **Added:** 2026-08-27
 - **Source:** cython-to-rust Task 6.3 (`projects/cython-to-rust/task-notes/phase-06/task-6.3-positron-spectra.md`)
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** none. Independent of the port — the port
-  reproduces the shipped value bit-for-bit and declares nothing here.
-  It was sequenced beside two other spectrum-normalization items
+- **Status:** done. Repaired as parity roster entry `C1`, the first
+  label issued under
+  [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md).
+- **Triggers / blockers:** none. It was sequenced beside two other
+  spectrum-normalization items
   (`eta-prime-two-photon-line-missing-factor-two.md`,
-  `neutrino-pion-electron-line-counted-twice.md`), which move published
-  numbers the same way; both were repaired by
-  `projects/parity-pinned-defect-repair` (Tasks 5 and 10a) and now live
-  in `done/`, so it no longer waits on anything.
+  `neutrino-pion-electron-line-counted-twice.md`), both of which
+  `projects/parity-pinned-defect-repair` repaired first.
+
+> **Resolved.** `spectrum_point` in
+> `rust/src/kernels/mediator_decay_positron.rs` divides the line by `r`,
+> so the `e⁺e⁻` box integrates to `pw_ee` at every mass. All four
+> mediator positron entry points and every mode string move, because
+> every mode adds the line. The sibling `boost::boost_delta_function`
+> already carried the factor: its height is `1 / (2 γ β k₀)`, and `k₀ =
+> e₀ r` is the daughter's momentum. The two now agree. The measurement is
+> under "Resolution (measured)" below.
 
 ## Why
 
@@ -103,3 +111,59 @@ carry the factor. Whichever it does, the two should agree.
 - Related follow-up: `docs/followups/done/eta-prime-two-photon-line-missing-factor-two.md`
 - Related follow-up: `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`
 - Related project: `projects/cython-to-rust/` (Task 6.3)
+
+## Resolution (measured)
+
+**Kernel.** The line term is `pws[0] / (E β) / r`. Dividing by `r` last
+makes the repaired line exactly the shipped one over `r`. That is what
+lets the parity declaration reproduce it bit for bit.
+
+**Physics invariant.**
+`test/test_core_mediator_positron.py::TestPhysics::test_the_electron_line_carries_its_own_positron_count`
+now asserts that the box integrates to `pw_ee` to 1e-9, at `m = 125` MeV
+and `E = 200` MeV. The shipped value was `pw_ee · r`, 3.3e-5 low. The
+module's independent reference, `reference`, divides by `r` as well, and
+its docstring names that as its one departure from the `.pyx`. The
+kernel's own `a_dark_continuum_leaves_the_line_alone` pins the closed
+form `pw_ee / (E r β)`.
+
+**Corpus.** The committed arrays are untouched, and the moved positions
+are declared in `test/parity/deltas.py` as `C1`. The model is an
+`Additive` closed-form term, `shipped / r − shipped`, inside the kernel's
+own window. The window edges use the kernel's fused `r β + 1`, reproduced
+exactly through `Fraction` arithmetic, because the corpus grids anchor
+points on those edges. Measured with
+`deltas.DELTA_MODELS["C1"].relation.term` over every block of the four
+cases:
+
+| Mass | Line shift, `1/r − 1` |
+| --- | --- |
+| 250 MeV | 8.356e-06 |
+| 550 MeV | 1.726e-06 |
+| 900 MeV | 6.447e-07 |
+
+- **Reach.** 8,912 positions in 192 arrays, 2,228 per case. They cover
+  all four modes of the `rest_plus_eps`, `near_rest`, `boosted_mild` and
+  `boosted_strong` blocks at every mass. 6,596 of them move by more than
+  the cases' `PORTED_NESTED_RTOL = 1e-9`, and the rest sit under a
+  continuum large enough to hide the shift. Nothing moves at `rest`,
+  where the box is one point whose height is infinite before and after.
+- **`C1` alone** covers 64 arrays: every `e_e` block, and `pi_pi` at
+  250 MeV, where the pion channel is closed and the line is all the
+  array holds. The prediction matches the repaired kernel bit for bit at
+  all 3,000 positions it moves.
+- **`A4+C1`** covers the other 128 arrays, which A4 already declared:
+  `total` and `mu_mu` at every mass, and `pi_pi` at 550 and 900 MeV. The
+  composition's worst residual is 3.55e-12 (scalar) and 6.40e-12
+  (vector) relative, which are A4's own figures on those arrays.
+- **Independent oracle.**
+  `test/parity/test_delta_models.py::test_the_electron_line_loses_exactly_its_velocity`
+  multiplies the model's corrected `e_e` box by `r` and requires the
+  stored array. The support must match position for position, and the
+  values match bit for bit at all 557 in-window positions per case. No
+  kernel is evaluated.
+- **Revert check.** Restoring the shipped height fails exactly the 192
+  declared arrays in `pytest test/parity -k positron`.
+
+`EXPECTED_DECLARED_ARRAYS` goes from 343 to 407, because 64 arrays are
+newly declared and 128 A4 keys became composites.
