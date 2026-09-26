@@ -121,10 +121,11 @@ knows which kind it holds for none of them.
   fails when *only its own* site is reverted (17 subtests for the
   fallback, 6 for the GeV site). The first oracle drafted for them used a
   synthetic analytic cross section and was **not** revert-sensitive —
-  both Python sites integrate to `50/x`, which tracks the integrand's
-  decay length, so they lack the pathology the Rust kernels' fixed
-  `max(50/x, 150)` interval creates; only a realistic resonant integrand
-  exposes it (0.765 worst relative error at the default `epsabs`).
+  both Python sites then integrated to `50/x`, which tracks the
+  integrand's decay length, so they lacked the pathology the Rust
+  kernels' fixed `max(50/x, 150)` interval creates; only a realistic
+  resonant integrand exposes it (0.765 worst relative error at the
+  default `epsabs`).
   Ledgered as `[fix-covered-only-where-tests-already-ran]`.
 - **Review round 1 also found the scalar kernel's function-level doc
   still describing the pre-repair behavior** — the `THERMAL_EPSABS`
@@ -363,16 +364,21 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
 
 ## Open Questions
 
-- **Both pure-Python sites return `0.0` for every `x >= 25`**, found
-  while writing the round-1 regression tests: they integrate to `50/x`
-  with no floor, so the interval closes at `x = 25` and inverts above it.
-  Freeze-out is `x ~ 20`–`30`, and this is what makes
+- **Resolved after this task: both pure-Python sites returned `0.0` for
+  every `x >= 25`.** This entry records the state at `B6`. Found while
+  writing the round-1 regression tests: the sites integrated to `50/x`
+  with no floor, so the interval closed at `x = 25` and inverted above
+  it. Freeze-out is `x ~ 20`–`30`, and this is what made
   `VectorMediatorGeV.relic_density` return `nan` — verified to predate
-  `B6`, which shares only the two lines. A separate, larger defect than
-  the one this task repaired; filed as
-  `docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md`
-  rather than folded in. `TestThermalQuadratureConverges` caps its grid
-  below 25 because above it there is no integral to check.
+  `B6`, which shares only the two lines. It was a separate, larger defect
+  than the one this task repaired, filed as
+  `docs/followups/done/thermal-fallback-upper-limit-collapses-at-x-25.md`
+  rather than folded in, and `TestThermalQuadratureConverges` capped its
+  grid below 25 at the time. Both sites now integrate to
+  `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`,
+  `2 + 50/x`, which stays above threshold for every `x`; the test's grid
+  now runs to `x = 300`, and the GeV `relic_density` is finite. The
+  follow-up records the measured shifts.
 - **`preflight.sh`'s new delta gate reports `2 fixed` on a path set where
   no file's findings visibly decreased.** Both `hazma/` modules are
   isort-red at the baseline and still isort-red here, and the four

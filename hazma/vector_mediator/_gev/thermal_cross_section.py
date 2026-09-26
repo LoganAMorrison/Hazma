@@ -4,6 +4,7 @@ from scipy import special
 from scipy import integrate
 
 from hazma.relic_density import relic_density as rd
+from hazma.relic_density._thermal_functions import thermal_cross_section_upper_limit
 
 TWO_BODY = [
     "e e",
@@ -147,7 +148,12 @@ def relic_density(
         return (
             pf
             * integrate.quad(
-                integrand, 2.0, 50.0 / x, points=[2.0], args=(x,), epsabs=0.0
+                integrand,
+                2.0,
+                thermal_cross_section_upper_limit(x),
+                points=[2.0],
+                args=(x,),
+                epsabs=0.0,
             )[0]
         )
 

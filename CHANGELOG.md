@@ -17,6 +17,28 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The generic thermal average and `VectorMediatorGeV.relic_density`
+  now integrate ⟨σv⟩ past `x = 25`.** Both pure-Python
+  `thermal_cross_section` sites integrated over `z` from 2 to `50/x`, an
+  interval that closes at `x = 25` and inverts above it. They returned
+  zero there, or `NaN` for the GeV model, whose cross sections are `NaN`
+  below threshold. They also truncated below it: 19% of ⟨σv⟩ was lost at
+  `x = 20`, and 24% to 100% at `x = 24`. Freeze-out sits at `x ~ 20`–`30`,
+  so both reached `relic_density` directly. Both sites now integrate to
+  `2 + 50/x`, which drops at most 1.4e-17 of the Bessel kernel's
+  integral at any `x`.
+
+  `hazma.relic_density.relic_density` moves for any model that supplies
+  `annihilation_cross_sections` but no `thermal_cross_section`. At four
+  mediator parameter points the semi-analytic abundance moved from
+  27.19 to 26.67, and fell from 4.2e-3 to 9.36e-8, from 1.41e-3 to
+  6.64e-7, and from 4.1e-3 to 6.25e-9; the Boltzmann solve moves
+  likewise. It now matches the Rust scalar kernel to 7.6e-8.
+  `VectorMediatorGeV.relic_density` returned `NaN` and now returns a
+  value, 1.654e-4 at `mx = 5 GeV`, `mv = 2 GeV`. The `ScalarMediator`
+  and `VectorMediator` families define their own `thermal_cross_section`
+  and do not move. Details:
+  `docs/followups/done/thermal-fallback-upper-limit-collapses-at-x-25.md`.
 - **The `e⁺e⁻` line in every mediator positron spectrum now carries one
   positron per decay.** `S/V → e⁺e⁻` is a two-body decay, so the boost
   spreads the rest-frame line into a box `E r β` wide, where
