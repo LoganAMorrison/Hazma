@@ -161,7 +161,7 @@ this project is time-critical.
   neutrino kernel. `rust/src/kernels/positron_pion.rs:163-164` clips both
   ends of the same kind of window and is the precedent for the fix. Filed
   as
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md);
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md);
   it moves published numbers by three to four decades on a band, far more
   than B5 itself.
 - **A declaration cannot be written before its repair lands.**
@@ -647,7 +647,7 @@ library or build file, and `test/parity/data/` untouched.
 `rust/src/kernels/neutrino_pion.rs`, `test/parity/deltas.py`,
 `test/parity/test_parity.py`, `test/test_core_neutrino.py`,
 `CHANGELOG.md`, `docs/followups/done/neutrino-pion-electron-line-counted-twice.md`,
-`docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md`
+`docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md`
 (new), `docs/followups/README.md`, `../PLAN.md`,
 `../references/defect-blast-radius.md`, this file, and
 `task-10a-neutrino-pion-line.md` (new). `test/parity/data/` untouched.
@@ -845,7 +845,7 @@ prediction in Task 9's plan; no new relation protocol or ADR is needed.
   Task 10a found `neutrino_pion.rs` doing it and `positron_pion.rs`
   clipping correctly, but only because a repair's magnitude looked wrong.
   The sweep of the remaining `quad` call sites has not been done —
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md)
   carries it as its own first question.
 - **Will Group B's relation budgets survive their repairs?** B1's did
   (2.1e-16 against the repaired kernel, one ulp, where the standalone

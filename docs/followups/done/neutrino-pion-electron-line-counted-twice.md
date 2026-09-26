@@ -101,7 +101,7 @@ Those factor-of-two positions turned out to expose a second, larger and
 wholly separate defect — the continuum's quadrature loses its support and
 returns a hard zero, which is why the line was all that was left there.
 Filed as
-[`neutrino-pion-continuum-loses-its-quadrature-support.md`](../todo/neutrino-pion-continuum-loses-its-quadrature-support.md).
+[`neutrino-pion-continuum-loses-its-quadrature-support.md`](../done/neutrino-pion-continuum-loses-its-quadrature-support.md).
 
 ## Entry points
 

@@ -17,8 +17,17 @@
 //!   spectrum out of the pion frame with the massless flat-boost integral
 //!
 //!   ```text
-//!   dN/dE = 1/(2 β γ) ∫_{γE(1−β)}^{γE(1+β)} dE'  (dN/dE')_μ(E', E_μ^rf) / E' .
+//!   dN/dE = 1/(2 β γ) ∫_{γE(1−β)}^{min(γE(1+β), E_max)} dE'  (dN/dE')_μ(E', E_μ^rf) / E' .
 //!   ```
+//!
+//! The window is clipped above at the muon spectrum's own endpoint,
+//! [`super::neutrino_muon::max_energy`] at `E_μ^rf` — 69.7836 MeV, just
+//! below the `π → e ν_e` line. For a boosted pion the unclipped window runs
+//! hundreds of times past that endpoint, and QUADPACK's first 21-point
+//! rule then samples only the zeros beyond it and accepts `0.0`. The
+//! `.pyx` integrated the whole window and lost the continuum that way; see
+//! `docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md`.
+//! [`super::positron_pion`] clips its own boost window the same way.
 //!
 //! The two flavors of that continuum are integrated **separately**, in two
 //! `quad` calls that differ only in which row of the muon spectrum the
@@ -199,8 +208,14 @@ pub fn dnde_mu_numu(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
     }
 }
 
-/// The boost window `[max(0, γE(1−β)), γE(1+β)]` and the `1/(2βγ)`
-/// prefactor.
+/// The boost window `[max(0, γE(1−β)), min(γE(1+β), E_max)]` and the
+/// `1/(2βγ)` prefactor.
+///
+/// `E_max` is [`neutrino_muon::max_energy`] at [`ENG_MU_PI_RF`], the edge
+/// of the integrand's support; the module docs say why the window stops
+/// there. A window that opens above `E_max` has no support at all, and the
+/// lower limit is clipped to the upper one so that it collapses onto a
+/// point, which [`crate::quad::quad`] integrates to an exact `+0.0`.
 ///
 /// Split out of [`dnde_mu_numu`] for the reason [`super::photon_rho`]'s
 /// `boost_window` was: it is the module's arithmetic a caller can observe
@@ -224,18 +239,22 @@ pub fn dnde_mu_numu(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
 ///
 /// # Returns
 ///
-/// `(emin, emax, pre)` in MeV, MeV and dimensionless.
+/// `(emin, emax, pre)` in MeV, MeV and dimensionless, with
+/// `emin <= emax` for every finite input. A `NaN` `enu` or `epi` gives a
+/// `NaN` `emax`, which [`crate::quad::quad`] carries into a `NaN` spectrum.
 #[must_use]
 fn boost_window(enu: f64, epi: f64) -> (f64, f64, f64) {
     let beta = boost::boost_beta(epi, MASS_PI);
     // `1.0 / sqrt(1.0 - beta ** 2)`, not `boost_gamma(epi, MASS_PI)` —
     // see the docs above.
     let gamma = 1.0 / (1.0 - beta * beta).sqrt();
-    (
-        (enu * gamma * (1.0 - beta)).max(0.0),
-        enu * gamma * (1.0 + beta),
-        0.5 / (gamma * beta),
-    )
+    let upper = enu * gamma * (1.0 + beta);
+    let endpoint = neutrino_muon::max_energy(ENG_MU_PI_RF);
+    // Not `upper.min(endpoint)`: `f64::min` discards a `NaN` operand, which
+    // would turn a `NaN` energy into a finite window and a finite spectrum.
+    let emax = if upper > endpoint { endpoint } else { upper };
+    let emin = (enu * gamma * (1.0 - beta)).max(0.0).min(emax);
+    (emin, emax, 0.5 / (gamma * beta))
 }
 
 /// One of the two `quad` calls, MeV⁻¹ before the `1/(2βγ)` prefactor.
@@ -324,9 +343,11 @@ pub fn dnde_neutrino_charged_pion(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
 mod tests {
     use super::{
         ENG_MU_PI_RF, ENU_E_PI_RF, ENU_MU_PI_RF, Flavor, NeutrinoSpectrumPoint, PION_QUAD,
-        boost_window, dnde_e_nue, dnde_mu_numu, dnde_neutrino_charged_pion, mu_numu_integrand,
+        boost_integral, boost_window, dnde_e_nue, dnde_mu_numu, dnde_neutrino_charged_pion,
+        mu_numu_integrand,
     };
     use crate::constants::pdg::{BR_PI_TO_E_NUE, BR_PI_TO_MU_NUMU, MASS_MU, MASS_PI};
+    use crate::kernels::neutrino_muon::max_energy;
     use crate::quad::quad;
 
     /// The three folded immediates read out of the shipped
@@ -540,22 +561,102 @@ mod tests {
         assert!((from_beta - from_energy).abs() / from_energy > 1e-11);
     }
 
-    /// The window's endpoints, bit for bit, and the `max(0, ...)` floor.
+    /// The window's endpoints, bit for bit, where the boost window lies
+    /// inside the integrand's support.
     #[test]
     fn the_boost_window_endpoints_are_the_pyx_s_arithmetic() {
-        let (enu, epi) = (20.0, 400.0);
+        // `gamma (1 + beta) = 5.55` at this pion energy, so the window
+        // closes at 27.8 MeV, well inside the support.
+        let (enu, epi) = (5.0, 400.0);
         let beta = crate::boost::boost_beta(epi, MASS_PI);
         let gamma = 1.0 / (1.0 - beta * beta).sqrt();
         let (emin, emax, pre) = boost_window(enu, epi);
         assert_eq!(emin.to_bits(), (enu * gamma * (1.0 - beta)).to_bits());
         assert_eq!(emax.to_bits(), (enu * gamma * (1.0 + beta)).to_bits());
         assert_eq!(pre.to_bits(), (0.5 / (gamma * beta)).to_bits());
-        assert!(emin < emax);
-        // The floor: a negative neutrino energy would otherwise give a
-        // negative lower limit and an inverted interval.
-        let (floored, upper, _) = boost_window(-1.0, epi);
-        assert_eq!(floored.to_bits(), 0.0_f64.to_bits());
+        assert!(emin < emax && emax < max_energy(ENG_MU_PI_RF));
+    }
+
+    /// The window is clipped to the integrand's support: above at the
+    /// muon spectrum's endpoint, below at zero, and collapsed onto a point
+    /// where the two clips cross.
+    #[test]
+    fn the_boost_window_is_clipped_to_the_integrand_s_support() {
+        let endpoint = max_energy(ENG_MU_PI_RF);
+        // The first of the follow-up's three positions: the boost window
+        // is [40.0, 1.59e4] MeV, 228 times wider than the support.
+        let (emin, emax, _) = boost_window(798.21, 1_395.703_9);
+        assert!(emin > 40.0 && emin < endpoint);
+        assert_eq!(emax.to_bits(), endpoint.to_bits());
+        // A window that opens above the endpoint has no support at all.
+        let (emin, emax, _) = boost_window(5_000.0, 1_395.703_9);
+        assert_eq!(emin.to_bits(), endpoint.to_bits());
+        assert_eq!(emax.to_bits(), endpoint.to_bits());
+        // A negative neutrino energy gives a negative upper limit, and the
+        // floor at zero would otherwise leave the interval inverted.
+        let (floored, upper, _) = boost_window(-1.0, 400.0);
         assert!(upper < 0.0);
+        assert_eq!(floored.to_bits(), upper.to_bits());
+    }
+
+    /// The clip keeps a `NaN` input `NaN`: the upper limit stays `NaN`
+    /// rather than falling back to the endpoint, so the boosted continuum
+    /// is `NaN` in both rows instead of a finite integral over the support.
+    #[test]
+    fn a_nan_input_stays_nan_through_the_clip() {
+        for (enu, epi) in [(f64::NAN, 400.0), (20.0, f64::NAN)] {
+            let (_, emax, _) = boost_window(enu, epi);
+            assert!(emax.is_nan(), "enu = {enu}, epi = {epi}");
+            let point = dnde_neutrino_charged_pion(enu, epi);
+            assert!(point.electron.is_nan() && point.muon.is_nan());
+        }
+    }
+
+    /// The clip loses nothing: the integrand is exactly zero at the
+    /// endpoint and everywhere above it, for both rows, and is not zero
+    /// one ulp below.
+    #[test]
+    fn the_clip_is_the_integrand_s_own_endpoint() {
+        let endpoint = max_energy(ENG_MU_PI_RF);
+        for flavor in [Flavor::Electron, Flavor::Muon] {
+            for e in [endpoint, endpoint * (1.0 + 1e-12), 2.0 * endpoint, 1e4] {
+                assert_eq!(mu_numu_integrand(e, flavor).to_bits(), 0.0_f64.to_bits());
+            }
+            let below = f64::from_bits(endpoint.to_bits() - 1);
+            assert_ne!(mu_numu_integrand(below, flavor), 0.0);
+        }
+        // It is the muon's endpoint, not the `pi -> e nu_e` line's, and
+        // the two are 7.0e-4 MeV apart.
+        assert!(endpoint < ENU_E_PI_RF);
+        assert!((ENU_E_PI_RF - endpoint - 7.0e-4).abs() < 1e-5);
+    }
+
+    /// The continuum survives a strong boost, which the unclipped window
+    /// lost: at these three positions the shipped kernel integrated both
+    /// rows to exactly zero.
+    ///
+    /// Pinned against `scipy.integrate.quad` over the clipped window and
+    /// the independent muon transcription in `test/test_core_neutrino.py`,
+    /// which is where the figures below were measured. The tolerance is
+    /// 1e-6 relative: well outside what two converged QUADPACK runs at the
+    /// default `1.49e-8` disagree by, and far inside a lost continuum.
+    #[test]
+    fn a_strongly_boosted_continuum_is_not_lost() {
+        for (epi, enu, electron, muon) in [
+            (1_395.703_9, 798.21, 3.047_944_311e-4, 4.736_525_673e-4),
+            (1_395.703_9, 1_369.1, 1.535_788_844e-8, 4.684_501_029e-7),
+            (5_000.0, 412.098, 5.037_573_032e-4, 4.255_611_664e-4),
+        ] {
+            let (emin, emax, pre) = boost_window(enu, epi);
+            let weight = pre * BR_PI_TO_MU_NUMU;
+            for (flavor, want) in [(Flavor::Electron, electron), (Flavor::Muon, muon)] {
+                let got = weight * boost_integral(emin, emax, flavor);
+                assert!(
+                    (got - want).abs() < 1e-6 * want,
+                    "{flavor:?} continuum at epi = {epi}, enu = {enu}: {got}, not {want}"
+                );
+            }
+        }
     }
 
     /// The quadrature options are accepted for every interval, so the
@@ -600,35 +701,41 @@ mod tests {
     /// so what this test pins is the continuum's normalization, not how
     /// many copies of the electron line the row carries. That is
     /// [`tests::the_electron_line_comes_from_one_half_only`]'s job.
+    ///
+    /// The two stronger boosts are where the unclipped boost window lost
+    /// the continuum: there hazma 2.3.0's continuum carried 94% and 89% of
+    /// its electron and muon neutrinos at `10 m_π`, and 21% and 18% at
+    /// 5 GeV.
     #[test]
     fn the_boost_conserves_neutrino_number_per_flavor() {
-        let epi = 400.0;
-        let beta = crate::boost::boost_beta(epi, MASS_PI);
-        let gamma = epi / MASS_PI;
-        // Above the highest endpoint any term can reach.
-        let hi = gamma * (1.0 + beta) * ENU_E_PI_RF * 1.01;
-        let n = 4_001_usize;
-        let h = hi / n as f64;
-        let mut totals = [0.0_f64; 2];
-        for index in 1..=n {
-            let weight = if index == n { 0.5 } else { 1.0 };
-            let point = dnde_neutrino_charged_pion(h * index as f64, epi);
-            totals[0] += weight * point.electron;
-            totals[1] += weight * point.muon;
-        }
-        // The electron row: the muon's nu_e_bar, plus the prompt line.
-        let expected_electron = BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE;
-        // The muon row: the muon's nu_mu, plus the prompt line once.
-        let expected_muon = BR_PI_TO_MU_NUMU + BR_PI_TO_MU_NUMU;
-        for (flavor, (total, expected)) in ["electron", "muon"]
-            .iter()
-            .zip(totals.iter().zip([expected_electron, expected_muon]))
-        {
-            let integral = total * h;
-            assert!(
-                (integral - expected).abs() < 3e-3 * expected,
-                "the {flavor} row integrates to {integral}, not {expected}"
-            );
+        for epi in [400.0, 1_395.703_9, 5_000.0] {
+            let beta = crate::boost::boost_beta(epi, MASS_PI);
+            let gamma = epi / MASS_PI;
+            // Above the highest endpoint any term can reach.
+            let hi = gamma * (1.0 + beta) * ENU_E_PI_RF * 1.01;
+            let n = 4_001_usize;
+            let h = hi / n as f64;
+            let mut totals = [0.0_f64; 2];
+            for index in 1..=n {
+                let weight = if index == n { 0.5 } else { 1.0 };
+                let point = dnde_neutrino_charged_pion(h * index as f64, epi);
+                totals[0] += weight * point.electron;
+                totals[1] += weight * point.muon;
+            }
+            // The electron row: the muon's nu_e_bar, plus the prompt line.
+            let expected_electron = BR_PI_TO_MU_NUMU + BR_PI_TO_E_NUE;
+            // The muon row: the muon's nu_mu, plus the prompt line once.
+            let expected_muon = BR_PI_TO_MU_NUMU + BR_PI_TO_MU_NUMU;
+            for (flavor, (total, expected)) in ["electron", "muon"]
+                .iter()
+                .zip(totals.iter().zip([expected_electron, expected_muon]))
+            {
+                let integral = total * h;
+                assert!(
+                    (integral - expected).abs() < 3e-3 * expected,
+                    "at epi = {epi} the {flavor} row integrates to {integral}, not {expected}"
+                );
+            }
         }
     }
 
