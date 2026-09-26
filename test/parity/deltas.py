@@ -112,9 +112,11 @@ import numpy as np
 import oracle_reference
 import thermal_reference
 import tolerances
+from scipy.integrate import quad
 
 from hazma import parameters
 from hazma._core import boost as core_boost
+from hazma._core import neutrino as core_neutrino
 
 if TYPE_CHECKING:
     from cases import Block
@@ -125,7 +127,9 @@ if TYPE_CHECKING:
 #: ``C1`` onward are the repairs that landed after that project closed,
 #: numbered in landing order and listed in ``README.md``, "Repairs". See
 #: ``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``.
-REPAIRS = frozenset({"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1"})
+REPAIRS = frozenset(
+    {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2"}
+)
 
 #: The sentinel for "every position the relation actually moves", resolved
 #: against the prediction at comparison time. A position the relation
@@ -709,6 +713,8 @@ _B4 = Delta(
 #: with the crate's ``pdg`` constants bit for bit, which is what keeps the
 #: window decision below on the same side of every grid point.
 BR_PI_TO_E_NUE = 1.230e-4
+#: ``BR(pi -> mu nu_mu)``, spelled the same way, for C2's continuum below.
+BR_PI_TO_MU_NUMU = 0.9998770
 
 
 def _pion_electron_line(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
@@ -781,9 +787,136 @@ _B5 = Delta(
     "where beta is too small for any grid point's window to straddle the "
     "line. The drop runs from 4.716e-5 relative, on the plateau where the "
     "muon-decay continuum dominates, to exactly 0.500000000000 at the 14 "
-    "positions where that continuum's quadrature returns zero and the "
-    "doubled line was the entire value.",
+    "positions where the stored continuum was zero and the doubled line "
+    "was the entire value; C2 restores that continuum.",
     evidence="docs/followups/done/neutrino-pion-electron-line-counted-twice.md",
+)
+
+# ---------------------------------------------------------------------------
+# C2 -- the charged pion's neutrino continuum keeps its quadrature support
+# ---------------------------------------------------------------------------
+
+
+def _pion_continuum(epi: float, mpi: float, enu: float, row: int, clip: bool) -> float:
+    """One row of the pion's muon-decay continuum, MeV⁻¹, by scipy.
+
+    ``BR_mu / (2 gamma beta)`` times ``quad`` of ``(dN/dE')_mu / E'`` over
+    the boost window ``[max(0, gamma E (1 - beta)), gamma E (1 + beta)]``,
+    in ``rust/src/kernels/neutrino_pion.rs``'s arithmetic, and with
+    ``clip`` over that window's intersection with the integrand's support
+    ``E' < E_max``. The integrand is the ported muon kernel, which
+    reproduces the Cython the corpus captured bit for bit, and the
+    integrator is scipy's QUADPACK at its defaults, which is what the
+    Cython called; so the unclipped value is the stored continuum, and
+    the clipped one differs from it only by the window.
+    """
+    ratio = mpi / epi
+    beta = math.sqrt(1.0 - ratio * ratio)
+    gamma = 1.0 / math.sqrt(1.0 - beta * beta)
+    emu = (mpi * mpi + parameters.muon_mass**2) / (2.0 * mpi)
+    emax = enu * gamma * (1.0 + beta)
+    emin = max(enu * gamma * (1.0 - beta), 0.0)
+    if clip:
+        # `neutrino_muon::max_energy(emu)`: `(1 + beta_mu)(1 - r^2) E_mu / 2`,
+        # to within the ulp the kernel steps onto its guard with. The
+        # integrand is exactly zero across that ulp.
+        mu_ratio = parameters.muon_mass / emu
+        r = parameters.electron_mass / parameters.muon_mass
+        end = (math.sqrt(1.0 - mu_ratio * mu_ratio) + 1.0) * (1.0 - r * r) / (2.0 / emu)
+        emax = min(emax, end)
+        emin = min(emin, emax)
+    if emin == emax:
+        return 0.0
+    integral = quad(
+        lambda e: core_neutrino.dnde_neutrino_muon(e, emu)[row] / e, emin, emax
+    )[0]
+    return 0.5 / (gamma * beta) * BR_PI_TO_MU_NUMU * integral
+
+
+def _pion_continuum_support(
+    _fn: Callable[..., Any], block: Block
+) -> dict[str, np.ndarray]:
+    """The continuum the clipped window recovers, on the block's grids.
+
+    The repaired kernel integrates over the boost window clipped at the
+    muon spectrum's endpoint, and the shipped one over the whole window,
+    so the term is the clipped continuum minus the unclipped one, for
+    both rows. Where the window already lies inside the support the two
+    are the same quadrature and the term is exactly zero. A parent at
+    rest takes the kernel's rest-frame branch, which integrates nothing,
+    and so has no term.
+    """
+    epi = block.params["parent_energy"]
+    mpi = block.params["parent_mass"]
+
+    def term(energies: np.ndarray) -> np.ndarray:
+        out = np.zeros((3, energies.size), dtype=np.float64)
+        if epi - mpi < np.finfo(np.float64).eps:
+            return out
+        for row in (0, 1):
+            for i, enu in enumerate(energies):
+                clipped = _pion_continuum(epi, mpi, float(enu), row, clip=True)
+                shipped = _pion_continuum(epi, mpi, float(enu), row, clip=False)
+                out[row, i] = clipped - shipped
+        return out
+
+    terms = {"values": term(block.grid)}
+    probe = block.scalar_probe
+    if probe.size:
+        # `cases` stores the scalar branch as (n, 3) rather than (3, n).
+        terms["scalar_values"] = term(probe).T
+    return terms
+
+
+_C2 = Delta(
+    repair="C2",
+    positions=MOVED,
+    relation=Additive(
+        term=_pion_continuum_support,
+        rtol=_B5.relation.rtol,
+        why="B5's budget, on B5's derivation: the term's unclipped half is "
+        "the stored continuum recomputed by the integrator and integrand "
+        "that produced it, and its clipped half is the repaired kernel's "
+        "quadrature redone by scipy's QUADPACK rather than the crate's, so "
+        "the slack is the platform drift already between stored and live. "
+        "No compared value falls below the stored one by more than 1.1e-5 "
+        "relative, so the term does not amplify that drift. Measured "
+        "composed with B5, in the only arrays C2 moves: 1.273e-15 worst "
+        "over 430 positions, in boosted_strong.",
+    ),
+    measured="the repaired kernel clips the boost window at the muon "
+    "spectrum's endpoint, 69.78356271700862 MeV. That moves 430 of the "
+    "case's 4,305 pinned values, both rows at the same 215 energies B5 "
+    "moves in the electron row: 70 in near_rest, 138 in boosted_mild and "
+    "222 in boosted_strong. None move at rest, where the kernel's "
+    "rest-frame branch integrates nothing, or one step above it, where no "
+    "grid point's boost window straddles the endpoint. 402 move by 6.4e-12 "
+    "to 9.3e-4 relative, either way, where the narrower interval "
+    "re-subdivides a quadrature that had found the support. The other 28, "
+    "all in boosted_strong, are where the shipped quadrature returned 0.0: "
+    "14 muon-row values that were exactly 0.0, and the 14 electron-row "
+    "values B5 left holding the prompt line alone, which rise by 0.17x to "
+    "3,441x.",
+    evidence="docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md",
+)
+
+_B5_C2 = Delta(
+    repair="B5+C2",
+    positions=MOVED,
+    relation=Composed(
+        base=_B5.relation,
+        added=(_C2.relation,),
+        rtol=_B5.relation.rtol,
+        why="both relations hold to B5's derived 3e-12 and neither term "
+        "amplifies the other: B5's line is closed form, and C2's term lowers "
+        "no value by more than 1.1e-5. Measured 1.273e-15 worst relative "
+        "over the 430 positions the composition moves, in boosted_strong.",
+    ),
+    measured="C2 moves exactly the six arrays B5 declares, so every one "
+    "of them composes: B5's 215 electron-row positions, which C2 moves as "
+    "well, and the 215 muon-row positions at the same energies, which C2 "
+    "moves alone.",
+    evidence=_C2.evidence,
 )
 
 # ---------------------------------------------------------------------------
@@ -1719,13 +1852,13 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
         "ms_900.boosted_strong.default",
         "scalar_values",
     ): _A3_B4,
-    # B5.
-    ("spectra.neutrino.charged_pion", "near_rest", "values"): _B5,
-    ("spectra.neutrino.charged_pion", "near_rest", "scalar_values"): _B5,
-    ("spectra.neutrino.charged_pion", "boosted_mild", "values"): _B5,
-    ("spectra.neutrino.charged_pion", "boosted_mild", "scalar_values"): _B5,
-    ("spectra.neutrino.charged_pion", "boosted_strong", "values"): _B5,
-    ("spectra.neutrino.charged_pion", "boosted_strong", "scalar_values"): _B5,
+    # B5, composed with C2 in every array it declares.
+    ("spectra.neutrino.charged_pion", "near_rest", "values"): _B5_C2,
+    ("spectra.neutrino.charged_pion", "near_rest", "scalar_values"): _B5_C2,
+    ("spectra.neutrino.charged_pion", "boosted_mild", "values"): _B5_C2,
+    ("spectra.neutrino.charged_pion", "boosted_mild", "scalar_values"): _B5_C2,
+    ("spectra.neutrino.charged_pion", "boosted_strong", "values"): _B5_C2,
+    ("spectra.neutrino.charged_pion", "boosted_strong", "scalar_values"): _B5_C2,
     # B6.
     (
         "cross_sections.scalar.thermal_cross_section",
@@ -1787,8 +1920,10 @@ DELTA_MODELS: dict[str, Delta] = {
     "B3": _B3,
     "B4": _B4,
     "B5": _B5,
+    "B5+C2": _B5_C2,
     "B6": _B6,
     "C1": _C1,
+    "C2": _C2,
 }
 
 

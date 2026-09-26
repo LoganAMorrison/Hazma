@@ -162,7 +162,7 @@ project, and one is filed with this retrospective.
   reference beyond the A3 capture.
 - **The charged pion's neutrino continuum loses its quadrature support**
   (Task 10a):
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md).
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md).
   It moves published numbers by three to four decades on a band. That
   is far more than B5 itself. The file also carries the sweep of every
   `quad` call site that boosts a bounded spectrum over an unclipped

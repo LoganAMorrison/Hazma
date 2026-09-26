@@ -96,7 +96,7 @@ and declare the corpus positions the change moves.
   wider, so every QUADPACK abscissa falls outside it. That is the same
   lost-support failure as A3 and it is untouched by this repair, in the
   charged pion's *neutrino* kernel rather than its photon one. Filed as
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md).
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md).
 
 ## Decisions and Implementation Notes
 
@@ -149,7 +149,7 @@ and declare the corpus positions the change moves.
 - `CHANGELOG.md` — a new `[Unreleased]` section with the magnitude.
 - `docs/followups/done/neutrino-pion-electron-line-counted-twice.md` —
   status, and the corrected local magnitude.
-- `docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md`,
+- `docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md`,
   `docs/followups/README.md` — the second defect this task surfaced.
 - `../PLAN.md`, `../references/defect-blast-radius.md`, `../task-notes/README.md`.
 
@@ -242,7 +242,7 @@ between 4.716e-5 and exactly 0.500000.
 - **Does the muon-decay continuum's lost quadrature support reach other
   kernels?** `positron_pion.rs` boosts the same muon spectrum over the
   same kind of window. Filed as
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md),
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md),
   which names that as its own first question rather than assuming it.
 - **Should `[Unreleased]` stay, or fold into Task 12's version heading?**
   This task added one because 2.2.0 is released and a moved published

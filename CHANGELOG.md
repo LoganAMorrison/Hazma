@@ -43,6 +43,30 @@ user-facing change even when no signature did.
   [ADR-0003](docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md),
   which now governs corpus repairs made outside a project.
 
+- **The charged pion's neutrino spectrum keeps its muon-decay continuum
+  at high boost.** `dnde_neutrino_charged_pion` builds the continuum by
+  boosting the muon's neutrino spectrum out of the pion frame, and it
+  integrated over the whole boost window `[γE(1−β), γE(1+β)]`. The
+  integrand is zero above the muon spectrum's endpoint, 69.7836 MeV in
+  the pion frame, and for a boosted pion the window runs hundreds of
+  times past it. QUADPACK then sampled only those zeros and returned
+  `0.0` as converged. The window now stops at the endpoint. Both
+  neutrino rows move, always upward where the continuum had been lost.
+  Integrated over energy, the shipped continuum held 94% of its electron
+  neutrinos and 89% of its muon neutrinos at `E_π = 10 m_π`, and 21% and
+  18% at `E_π = 5` GeV. It now holds all of them at every boost. Pointwise,
+  `dnde_neutrino_charged_pion(798.21, 1395.7039)` goes from
+  `(8.857e-8, 0, 0)` to `(3.049e-4, 4.737e-4, 0)` MeV⁻¹. Where the
+  continuum was not lost, values still move by up to 9.3e-4 relative at
+  `E_π = 2 m_π`, because the narrower interval changes how the
+  quadrature subdivides. Everything built on this kernel moves with it:
+  the N-body neutrino spectra with a charged pion in the final state,
+  and the neutrino spectra of `hazma.vector_mediator._gev`. This was
+  [a defect 2.3.0 measured without repairing](docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md).
+  The corpus arrays that pinned it stay committed, with 430 moved
+  positions declared as parity roster entry `C2`, composed with `B5` in
+  all six arrays.
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed
@@ -88,7 +112,7 @@ and [the vector cross sections' `TypeError` at `e_cm = 2 m_x`](docs/followups/to
 The repairs also surfaced three new defects, which this release does not
 fix:
 [the rho's outer boost can miss its support](docs/followups/todo/rho-photon-outer-boost-misses-support.md),
-[the charged pion's neutrino continuum loses its quadrature support](docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md),
+[the charged pion's neutrino continuum loses its quadrature support](docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md),
 and [the φ omits its direct `φ → π⁰γ` line](docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md).
 
 The release carries one change from outside that project: the first
