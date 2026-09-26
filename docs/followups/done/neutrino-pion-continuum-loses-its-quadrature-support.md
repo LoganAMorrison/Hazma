@@ -214,3 +214,14 @@ energy-space boost integral with an unclipped window except
 [`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md)
 already tracks. The same failure in the angular variable is filed as
 [`mediator-decay-angular-windows-miss-their-support.md`](../todo/mediator-decay-angular-windows-miss-their-support.md).
+
+**`NaN` inputs.** The clip is a comparison, not `f64::min`, because
+`f64::min` discards a `NaN` operand. Written with it,
+`dnde_neutrino_charged_pion(nan, 400.0)` returned the finite
+`(0.006957016, 0.005797595, 0)` where 2.3.0 returned `(nan, nan, 0)`.
+The clipped kernel returns `(nan, nan, 0.0)` for a `NaN` neutrino or pion
+energy, pinned in the kernel's
+`a_nan_input_stays_nan_through_the_clip` and in
+`test/test_core_neutrino.py`'s `test_a_nan_neutrino_energy_stays_nan`.
+`positron_pion.rs` has the same idiom from before this repair, filed as
+[`positron-pion-clip-turns-nan-into-a-spectrum.md`](../todo/positron-pion-clip-turns-nan-into-a-spectrum.md).

@@ -240,14 +240,19 @@ pub fn dnde_mu_numu(enu: f64, epi: f64) -> NeutrinoSpectrumPoint {
 /// # Returns
 ///
 /// `(emin, emax, pre)` in MeV, MeV and dimensionless, with
-/// `emin <= emax` for every finite input.
+/// `emin <= emax` for every finite input. A `NaN` `enu` or `epi` gives a
+/// `NaN` `emax`, which [`crate::quad::quad`] carries into a `NaN` spectrum.
 #[must_use]
 fn boost_window(enu: f64, epi: f64) -> (f64, f64, f64) {
     let beta = boost::boost_beta(epi, MASS_PI);
     // `1.0 / sqrt(1.0 - beta ** 2)`, not `boost_gamma(epi, MASS_PI)` —
     // see the docs above.
     let gamma = 1.0 / (1.0 - beta * beta).sqrt();
-    let emax = (enu * gamma * (1.0 + beta)).min(neutrino_muon::max_energy(ENG_MU_PI_RF));
+    let upper = enu * gamma * (1.0 + beta);
+    let endpoint = neutrino_muon::max_energy(ENG_MU_PI_RF);
+    // Not `upper.min(endpoint)`: `f64::min` discards a `NaN` operand, which
+    // would turn a `NaN` energy into a finite window and a finite spectrum.
+    let emax = if upper > endpoint { endpoint } else { upper };
     let emin = (enu * gamma * (1.0 - beta)).max(0.0).min(emax);
     (emin, emax, 0.5 / (gamma * beta))
 }
@@ -592,6 +597,19 @@ mod tests {
         let (floored, upper, _) = boost_window(-1.0, 400.0);
         assert!(upper < 0.0);
         assert_eq!(floored.to_bits(), upper.to_bits());
+    }
+
+    /// The clip keeps a `NaN` input `NaN`: the upper limit stays `NaN`
+    /// rather than falling back to the endpoint, so the boosted continuum
+    /// is `NaN` in both rows instead of a finite integral over the support.
+    #[test]
+    fn a_nan_input_stays_nan_through_the_clip() {
+        for (enu, epi) in [(f64::NAN, 400.0), (20.0, f64::NAN)] {
+            let (_, emax, _) = boost_window(enu, epi);
+            assert!(emax.is_nan(), "enu = {enu}, epi = {epi}");
+            let point = dnde_neutrino_charged_pion(enu, epi);
+            assert!(point.electron.is_nan() && point.muon.is_nan());
+        }
     }
 
     /// The clip loses nothing: the integrand is exactly zero at the

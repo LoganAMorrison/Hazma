@@ -46,6 +46,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [every decaying-theory positron channel evaluates the last channel](todo/decaying-theory-positron-channels-share-the-last-closure.md) | 2026-09-20 | PR #99 review | commit |
 | [the INT_MAX `limit` test allocates 16 GiB inside scipy](todo/quad-limit-test-allocates-16-gib-in-scipy.md) | 2026-09-24 | parity-pinned-defect-repair Task 12 preflight | commit |
 | [the mediator decay spectra lose their support at large boost](todo/mediator-decay-angular-windows-miss-their-support.md) | 2026-09-25 | the charged-pion neutrino continuum repair (`C2`) | cross-cutting |
+| [the charged-pion positron clip turns a `NaN` energy into a spectrum](todo/positron-pion-clip-turns-nan-into-a-spectrum.md) | 2026-09-25 | PR #105 review | commit |
 
 ## Promoted / Done / Pruned
 
