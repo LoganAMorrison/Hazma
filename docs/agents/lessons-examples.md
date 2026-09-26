@@ -1357,12 +1357,12 @@ A last trap: the first oracle drafted for these tests used a synthetic
 cross section chosen to make the integral analytic, and the resulting
 integrand was smooth enough that scipy's default `epsabs` already
 resolved it to 3.8e-6 — the test would have passed with the fix reverted.
-Both sites integrate to `50/x`, an interval that tracks the integrand's
-own decay length, so they never had the pathology the Rust kernels' fixed
-`max(50/x, 150)` interval creates. Only a realistic resonant integrand
-exposes the defect (0.765 relative error at the worst point). An oracle
-has to be built from the shape that actually breaks, and the way to know
-it is: revert the fix and watch the test go red.
+Both sites then integrated to `50/x`, an interval that tracks the
+integrand's own decay length, so they never had the pathology the Rust
+kernels' fixed `max(50/x, 150)` interval creates. Only a realistic
+resonant integrand exposes the defect (0.765 relative error at the worst
+point). An oracle has to be built from the shape that actually breaks,
+and the way to know it is: revert the fix and watch the test go red.
 
 ### composed-entry-point-inherits-the-branch-caveat
 

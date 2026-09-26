@@ -1,6 +1,7 @@
 import unittest
 import warnings
 from collections.abc import Callable, Iterator
+from itertools import pairwise
 from typing import Any, ClassVar
 
 from numpy.testing import assert_allclose
@@ -8,11 +9,17 @@ from scipy.integrate import quad
 from scipy.special import k1, kn
 
 import hazma.vector_mediator._gev.thermal_cross_section as gev_site
-from hazma.parameters import omega_h2_cdm
+from hazma.parameters import (
+    charged_pion_mass,
+    muon_mass,
+    neutral_pion_mass,
+    omega_h2_cdm,
+)
 from hazma.relic_density import relic_density
 from hazma.relic_density._thermal_functions import (
     thermal_cross_section,
     thermal_cross_section_integrand,
+    thermal_cross_section_upper_limit,
 )
 from hazma.scalar_mediator import HiggsPortal
 from hazma.vector_mediator import KineticMixing, VectorMediatorGeV
@@ -190,6 +197,22 @@ class TestMediatorRelicDensity(unittest.TestCase):
                 )
 
 
+class NoThermalCrossSection:
+    """A model the generic thermal average cannot short-circuit past.
+
+    `thermal_cross_section` defers to ``model.thermal_cross_section``
+    whenever the model defines one, and every mediator model does, so
+    reaching the generic path needs a model that does not.
+    """
+
+    def __init__(self, inner: HiggsPortal | KineticMixing) -> None:
+        self._inner = inner
+        self.mx: float = inner.mx
+
+    def annihilation_cross_sections(self, e_cm: float) -> dict:
+        return self._inner.annihilation_cross_sections(e_cm)
+
+
 class TestThermalQuadratureConverges(unittest.TestCase):
     r"""The two pure-Python ``thermal_cross_section`` sites resolve their integral.
 
@@ -207,38 +230,60 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     ``epsabs`` would *not* pass — the assertion that makes this a
     regression test for the tolerance rather than a generic accuracy
     check.  Measured worst relative error at the default, over the grid
-    below: **0.765** for the generic fallback (``scalar.open`` at
-    ``x = 5``) and **3.6e-3** for the GeV vector site.
+    below: **0.726** for the generic fallback (``scalar.open`` at
+    ``x = 10``) and **3.8e-3** for the GeV vector site.
+
+    The grid reaches past ``x = 25`` because both sites share an upper
+    limit, `thermal_cross_section_upper_limit`, that must keep the
+    interval open through freeze-out and beyond.
     """
 
     #: Budget for "the site agrees with a converged integral".  Both sites
     #: run at scipy's default ``epsrel = 1.49e-8``, so that — not the
     #: measured figure — is what a pin here has to survive on a platform
     #: whose libm steers QUADPACK to a different accepted partition.
-    #: 1e-6 is ~67x it, and still two decades under the smallest error the
-    #: default ``epsabs`` produces anywhere on this grid (2.2e-5).
+    #: 1e-6 is ~67x it, and the default ``epsabs`` misses it by up to
+    #: 0.73 on this grid, the worst case the class docstring quotes.
     CONVERGED_RTOL = 1e-6
 
-    #: ``x = mx/T`` sample points.  Capped below 25 deliberately: both
-    #: sites integrate to ``50/x``, which reaches the lower limit of 2 at
-    #: exactly ``x = 25`` and inverts above it, so there is no integral to
-    #: check there.  That is a separate, pre-existing defect —
-    #: ``docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md``.
-    X_GRID: ClassVar = (1.0, 5.0, 10.0, 20.0, 24.0)
+    #: ``x = mx/T`` sample points, spanning freeze-out (``x ~ 20`` to ``30``)
+    #: up to the ``x = 300`` cutoff both sites share.
+    X_GRID: ClassVar = (1.0, 5.0, 10.0, 20.0, 24.0, 25.0, 30.0, 50.0, 100.0, 300.0)
 
     @staticmethod
-    def _converged(integrand: Callable[..., float], x: float, args: tuple) -> float:
-        """``<sigma v>(x)`` from the same integrand at ``epsrel = 1e-12``."""
+    def _converged(
+        integrand: Callable[..., float],
+        x: float,
+        args: tuple,
+        points: tuple[float, ...] = (),
+    ) -> float:
+        """``<sigma v>(x)`` from the same integrand at ``epsrel = 1e-12``.
+
+        Independent of the sites' upper limit: the integral runs twice as
+        many decay lengths ``1/x`` past threshold as theirs does, split at
+        ``2 + k/x`` so that every piece sees its share of the
+        ``exp(-x z)`` fall-off rather than leaving it to one partition.
+        ``points`` adds the integrand's own features, the channel
+        thresholds and the mediator resonance, which the sites leave to
+        adaptive refinement. Without them the ``sqrt`` onset of the
+        ``pi pi`` channels at ``z = 2.7`` to ``2.8`` biases this reference by
+        3.4e-6 at ``scalar.open``, ``x = 10``, while reporting
+        convergence.
+        """
         prefactor = x / (2.0 * kn(2, x)) ** 2
-        value, _ = quad(
-            integrand,
-            2.0,
-            50.0 / x,
-            args=args,
-            points=[2.0],
-            epsabs=0.0,
-            epsrel=1e-12,
-            limit=200,
+        decay = [2.0 + k / x for k in (0.0, 1.0, 4.0, 16.0, 50.0, 100.0)]
+        edges = sorted(decay + [z for z in points if decay[0] < z < decay[-1]])
+        value = sum(
+            quad(
+                integrand,
+                lo,
+                hi,
+                args=args,
+                epsabs=0.0,
+                epsrel=1e-12,
+                limit=200,
+            )[0]
+            for lo, hi in pairwise(edges)
         )
         return prefactor * value
 
@@ -246,29 +291,19 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     def _at_scipy_defaults(
         integrand: Callable[..., float], x: float, args: tuple
     ) -> float:
-        """The same integral with no tolerances passed: what the sites did."""
+        """The same integral with no tolerances passed."""
         prefactor = x / (2.0 * kn(2, x)) ** 2
-        value, _ = quad(integrand, 2.0, 50.0 / x, args=args, points=[2.0])
+        value, _ = quad(
+            integrand,
+            2.0,
+            thermal_cross_section_upper_limit(x),
+            args=args,
+            points=[2.0],
+        )
         return prefactor * value
 
     def test_generic_fallback_converges(self) -> None:
         """`_thermal_functions.thermal_cross_section`, the no-kernel path."""
-
-        class NoThermalCrossSection:
-            """A model the fallback cannot short-circuit past.
-
-            `thermal_cross_section` defers to ``model.thermal_cross_section``
-            whenever the model defines one, and every mediator model does,
-            so reaching the generic path needs a model that does not.
-            """
-
-            def __init__(self, inner: HiggsPortal | KineticMixing) -> None:
-                self._inner = inner
-                self.mx: float = inner.mx
-
-            def annihilation_cross_sections(self, e_cm: float) -> dict:
-                return self._inner.annihilation_cross_sections(e_cm)
-
         points = {
             "scalar.open": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
             "scalar.closed": HiggsPortal(mx=300.0, ms=200.0, gsxx=1.0, stheta=1e-2),
@@ -278,10 +313,18 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         worst_default = 0.0
         for name, inner in points.items():
             model = NoThermalCrossSection(inner)
+            mediator = inner.ms if isinstance(inner, HiggsPortal) else inner.mv
+            features = tuple(
+                2.0 * m / inner.mx
+                for m in (muon_mass, neutral_pion_mass, charged_pion_mass)
+            ) + (mediator / inner.mx, 2.0 * mediator / inner.mx)
             for x in self.X_GRID:
                 with self.subTest(model=name, x=x):
                     reference = self._converged(
-                        thermal_cross_section_integrand, x, (x, model)
+                        thermal_cross_section_integrand,
+                        x,
+                        (x, model),
+                        points=features,
                     )
                     assert_allclose(
                         thermal_cross_section(x, model),
@@ -300,14 +343,38 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             f"against a budget of {self.CONVERGED_RTOL:.0e})"
         )
 
+    def test_generic_fallback_relic_density_matches_scalar_kernel(self) -> None:
+        """The fallback's ``<sigma v>`` carries through to the scalar kernel's abundance.
+
+        ``hazma._core``'s scalar kernel integrates the same cross sections
+        to ``max(50/x, 100)`` with its own QUADPACK port and break points,
+        and like the fallback returns ``0.0`` above ``x = 300``, so the two
+        must give the same semi-analytic relic density. The vector kernel
+        holds its ``x = 300`` value above that cutoff instead, which is why
+        it is not compared here. Measured agreement is 7.6e-8
+        (``scalar.open``) and 3e-14 (``scalar.closed``); the budget is
+        `CONVERGED_RTOL`. With the upper limit at ``50/x`` the fallback
+        gave 27.19 and 4.2e-3 against the kernel's 26.67 and 9.4e-8.
+        """
+        points = {
+            "scalar.open": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
+            "scalar.closed": HiggsPortal(mx=300.0, ms=200.0, gsxx=1.0, stheta=1e-2),
+        }
+        for name, inner in points.items():
+            with self.subTest(model=name):
+                assert_allclose(
+                    relic_density(NoThermalCrossSection(inner), semi_analytic=True),
+                    relic_density(inner, semi_analytic=True),
+                    rtol=self.CONVERGED_RTOL,
+                )
+
     def test_gev_vector_site_converges(self) -> None:
         """The `VectorMediatorGeV.relic_density` closure.
 
         The closure is built inside the method and handed to
         `hazma.relic_density.relic_density`, so it is reached by
         intercepting that call rather than by solving the Boltzmann
-        equation — which for this model returns ``nan`` for reasons that
-        predate the tolerance fix (see the follow-up cited on `X_GRID`).
+        equation, which would bury ``<sigma v>`` inside a relic density.
         """
         model = VectorMediatorGeV(
             mx=5e3,
