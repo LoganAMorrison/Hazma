@@ -319,3 +319,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   thresholds such as `m = 2 m_e` are the usual ones — and evaluate there with
   the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
   into `NaN` that no tolerance catches (PR #103).
+- [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
+  `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
+  becomes a finite limit and a finite result. Clip with a comparison that
+  keeps `NaN`, and pin a `NaN` input, scalar and in an array, against the
+  pre-change output (PR #105).

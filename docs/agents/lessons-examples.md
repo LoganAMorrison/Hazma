@@ -1425,3 +1425,18 @@ branch of the underlying kernel that "any" reaches.
   PR. One guard on the numerator (`pw_ee != 0`) removed both, and
   `TestPhysics::test_a_closed_electron_channel_adds_no_line` pins both points
   and their neighbouring doubles.
+
+### float-clip-swallows-nan
+
+- PR #105 clipped the charged-pion neutrino boost window at the muon
+  spectrum's endpoint with `(enu * gamma * (1.0 + beta)).min(endpoint)`.
+  Review rebuilt `origin/master` and the PR separately and evaluated
+  `dnde_neutrino_charged_pion(float("nan"), 400.0)`: master returned
+  `(nan, nan, 0)` because the quadrature ran to a `NaN` limit, and the PR
+  returned `(0.006957016, 0.005797595, 0)` because `f64::min` replaced the
+  `NaN` with the endpoint. The repair clips with
+  `if upper > endpoint { endpoint } else { upper }`, and
+  `a_nan_input_stays_nan_through_the_clip` plus
+  `TestPhysics::test_a_nan_neutrino_energy_stays_nan` pin the scalar and
+  array cases. The same idiom in `positron_pion.rs` predates the PR and is
+  filed as `docs/followups/todo/positron-pion-clip-turns-nan-into-a-spectrum.md`.

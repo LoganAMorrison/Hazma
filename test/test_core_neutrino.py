@@ -26,7 +26,7 @@ Five parts:
 4. :class:`TestAgainstAnIndependentReference` — both spectra recomputed
    in Python: the muon's closed forms transcribed from
    ``hep-ph/9909265``-era Michel algebra, and the pion's boost integral
-   with ``scipy.integrate.quad`` over the *ported* muon kernel. A genuine
+   with ``scipy.integrate.quad`` over that transcription. A genuine
    second opinion, using a different QUADPACK binding for the pion.
 5. :class:`TestPhysics` — statements about the spectra that outlive the
    Cython, including the two declared defects.
@@ -278,9 +278,10 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
     """An independent recomputation of the pion neutrino spectra.
 
     The boost integral is redone with ``scipy.integrate.quad`` — a
-    different QUADPACK binding — over the **ported** muon kernel, which
+    different QUADPACK binding — over `reference_dnde_neutrino_muon`, the
+    independent muon transcription, which
     :class:`TestAgainstAnIndependentReference` has already checked against
-    its own reference. The prompt lines are recomputed from the flat-boost
+    the ported kernel. The prompt lines are recomputed from the flat-boost
     closed form rather than from ``boost_delta_function``.
 
     Carries each prompt line once, as the repaired kernel does. hazma
@@ -317,8 +318,8 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
 def reference_pion_continuum(enu: float, epi: float, row: int) -> float:
     """The pion's muon-decay continuum alone, without either prompt line.
 
-    Recomputed with ``scipy.integrate.quad`` over the ported muon kernel,
-    so subtracting it from the shipped spectrum isolates the lines using
+    Recomputed with ``scipy.integrate.quad`` over
+    `reference_dnde_neutrino_muon`, so subtracting it from the shipped spectrum isolates the lines using
     an integrator the code under test does not share. ``row`` is 0 for
     electron neutrinos and 1 for muon neutrinos.
 
@@ -569,8 +570,8 @@ class TestAgainstAnIndependentReference:
 
     Not the Cython — that is gone. The muon's reference is a transcription
     of the same closed forms; the pion's redoes the boost integral with
-    scipy's QUADPACK binding over the ported muon kernel, which is a
-    genuinely different integrator over the same integrand.
+    scipy's QUADPACK binding over that transcription, which is a
+    genuinely different integrator over an independent integrand.
     """
 
     @pytest.mark.parametrize("emu", MUON_ENERGIES)
@@ -718,7 +719,7 @@ class TestPhysics:
         Each boosted prompt line is a flat plateau of height
         ``BR / (2 gamma beta E_rf)`` across the lab energies whose boost
         window straddles ``E_rf``. Subtracting the muon-decay continuum —
-        recomputed here with scipy over the ported muon kernel, so the
+        recomputed here with scipy over the muon transcription, so the
         subtraction owes nothing to the code under test — leaves exactly
         the plateau.
 
@@ -793,6 +794,25 @@ class TestPhysics:
         """
         assert dnde_pion(0.0, 400.0) == (0.0, 0.0, 0.0)
         assert dnde_muon(0.0, 400.0) == (0.0, 0.0, 0.0)
+
+    def test_a_nan_neutrino_energy_stays_nan(self) -> None:
+        """The boost window's clip to the muon endpoint keeps ``NaN``.
+
+        ``f64::min`` discards a ``NaN`` operand, so clipping the upper
+        limit with it would integrate a ``NaN`` energy over the whole
+        support and return a finite spectrum. Both continuum rows must be
+        ``NaN`` instead, for a scalar and inside an array alike, and the
+        array's finite neighbors must be untouched.
+        """
+        scalar = dnde_pion(math.nan, 400.0)
+        assert math.isnan(scalar[0]) and math.isnan(scalar[1])
+        assert scalar[2] == 0.0
+
+        energies = np.array([20.0, math.nan, 30.0])
+        array = dnde_pion(energies, 400.0)
+        assert np.isnan(array[:2, 1]).all()
+        finite = dnde_pion(energies[[0, 2]], 400.0)
+        np.testing.assert_array_equal(array[:, [0, 2]], finite)
 
     @pytest.mark.parametrize("parent", [150.0, 500.0, 1500.0])
     def test_both_spectra_are_finite_and_non_negative(self, parent: float) -> None:
