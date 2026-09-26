@@ -260,9 +260,16 @@ pub fn spectrum_point(
     // alone and so integrated to `pws[0] · r`; dividing by `r` last keeps
     // the value exactly the shipped one over `r`, which is how
     // `test/parity/deltas.py` declares the repair (`C1`).
+    //
+    // A closed `e⁺e⁻` channel adds no line. Skipping it is what keeps a
+    // zero width from reading `0 / 0` where the box has no width: at rest
+    // (`β = 0`) and exactly at threshold (`m = 2 m_e`, so `r = 0`).
     let mut lines_contrib = 0.0;
     if eminus <= eng_p && eng_p <= eplus {
-        lines_contrib = pws.get(0)? / (eng_m * beta) / r;
+        let pw_ee = pws.get(0)?;
+        if pw_ee != 0.0 {
+            lines_contrib = pw_ee / (eng_m * beta) / r;
+        }
     }
 
     if mode == Some(PositronMode::ElectronLine) {
@@ -384,6 +391,25 @@ mod tests {
             &tables,
         );
         assert_eq!(value, Ok(0.0));
+    }
+
+    #[test]
+    fn a_closed_electron_channel_adds_no_line_where_the_box_has_no_width() {
+        // At rest `β = 0`, and at `m = 2 m_e` the electron is at rest in
+        // the mediator frame, so `r = 0`. Either way the window is the one
+        // point `E / 2`, and dividing a zero width by the box's width would
+        // be `0 / 0`. A closed channel contributes nothing there, as it
+        // does at every other energy.
+        let threshold = 2.0 * legacy::MASS_E;
+        let pws = [0.0, 0.0, 0.0];
+        let widths = PartialWidths::new(&pws);
+        for (eng_m, mass) in [(2.0 * threshold, threshold), (LIGHT_MASS, LIGHT_MASS)] {
+            let tables = tables_for(mass);
+            for mode in [PositronMode::Total, PositronMode::ElectronLine] {
+                let value = spectrum_point(eng_m / 2.0, eng_m, mass, widths, Some(mode), &tables);
+                assert_eq!(value, Ok(0.0), "m = {mass}, E = {eng_m}, mode {mode:?}");
+            }
+        }
     }
 
     #[test]

@@ -381,6 +381,37 @@ class TestPhysics:
         # and four orders below the `1 - r` the old height lost.
         assert np.trapezoid(box, grid) == pytest.approx(PWS[0], rel=1e-9)
 
+    @pytest.mark.parametrize(
+        ("mass", "energy"),
+        [(2.0 * LEGACY_MASS_E, 4.0 * LEGACY_MASS_E), (125.0, 125.0)],
+        ids=["electron-threshold", "at-rest"],
+    )
+    @pytest.mark.parametrize("mode", ["total", "e e"])
+    @pytest.mark.parametrize(("_name", "array_fn", "point_fn"), MODELS, ids=MODEL_IDS)
+    def test_a_closed_electron_channel_adds_no_line(
+        self,
+        _name: str,
+        array_fn: object,
+        point_fn: object,
+        mass: float,
+        energy: float,
+        mode: str,
+    ) -> None:
+        # Where the box has no width -- `r = 0` exactly at `m = 2 m_e`, and
+        # `beta = 0` at rest -- its one point is `E / 2`, and a zero
+        # electron width divided by that width would be `0 / 0`. A closed
+        # channel contributes nothing there, as it does at the neighbours.
+        closed = np.zeros(3)
+        grid = np.array(
+            [
+                math.nextafter(energy / 2.0, 0.0),
+                energy / 2.0,
+                math.nextafter(energy / 2.0, math.inf),
+            ]
+        )
+        assert list(array_fn(grid, energy, mass, closed, mode)) == [0.0, 0.0, 0.0]
+        assert point_fn(energy / 2.0, energy, mass, closed, mode) == 0.0
+
     @pytest.mark.parametrize(("mass", "energy"), CONFIGS)
     @pytest.mark.parametrize(("_name", "_array", "point_fn"), MODELS, ids=MODEL_IDS)
     def test_the_channels_are_additive(

@@ -24,10 +24,14 @@ user-facing change even when no signature did.
   shipped box was `pw_ee / (E β)` tall, so it integrated to `pw_ee · r`
   rather than `pw_ee`. It is now `pw_ee / (E r β)`. Inside the line window
   `dnde_decay_s`, `dnde_decay_v` and their `_pt` twins rise by `1/r − 1`
-  of the line, in every mode string, since every mode adds the line. That
-  is 3.3e-5 at `m = 125` MeV, 8.4e-6 at 250 MeV, 1.7e-6 at 550 MeV and
-  6.4e-7 at 900 MeV. The shift grows without bound as `m → 2 m_e`, where
-  the shipped height stayed finite. The scalar and vector models'
+  of the line in every recognised mode string, since each of them adds
+  the line; an unrecognised mode still returns `0.0`. That is 3.3e-5 at
+  `m = 125` MeV, 8.4e-6 at 250 MeV, 1.7e-6 at 550 MeV and 6.4e-7 at
+  900 MeV. The shift grows without bound as `m → 2 m_e`, where the shipped
+  height stayed finite. A closed `e⁺e⁻` channel (`pw_ee = 0`) now adds no
+  line at all. That changes one point: where the box has no width, at
+  `E = m` or exactly at `m = 2 m_e`, `E_e = E/2` returned `NaN` and now
+  returns `0.0`. The scalar and vector models'
   `χχ → SS` and `χχ → VV` positron spectra are built on these kernels, so
   they move by the same factor on the line, and so does everything
   downstream of them.

@@ -1094,8 +1094,8 @@ def _electron_line_velocity(
     positron per decay makes it ``pw_ee / (E r beta)`` tall; the shipped
     kernel wrote ``pw_ee / (E beta)``, and the repaired kernel divides
     that by ``r``. The term is the difference, inside the window and
-    nowhere else. Every mode string adds the line, so the term is the same
-    for all four of a block's modes.
+    nowhere else. Every recognised mode string adds the line, so the term
+    is the same for all four of a block's modes.
 
     The window edges are the kernel's own -- ``mediator_decay_positron::
     spectrum_point`` fuses ``r beta + 1`` -- because the corpus grids

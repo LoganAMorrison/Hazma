@@ -15,8 +15,9 @@
 > **Resolved.** `spectrum_point` in
 > `rust/src/kernels/mediator_decay_positron.rs` divides the line by `r`,
 > so the `e⁺e⁻` box integrates to `pw_ee` at every mass. All four
-> mediator positron entry points and every mode string move, because
-> every mode adds the line. The sibling `boost::boost_delta_function`
+> mediator positron entry points move in every recognised mode string,
+> because each of them adds the line; an unrecognised mode still returns
+> `0.0`. The sibling `boost::boost_delta_function`
 > already carried the factor: its height is `1 / (2 γ β k₀)`, and `k₀ =
 > e₀ r` is the daughter's momentum. The two now agree. The measurement is
 > under "Resolution (measured)" below.
@@ -116,7 +117,15 @@ carry the factor. Whichever it does, the two should agree.
 
 **Kernel.** The line term is `pws[0] / (E β) / r`. Dividing by `r` last
 makes the repaired line exactly the shipped one over `r`. That is what
-lets the parity declaration reproduce it bit for bit.
+lets the parity declaration reproduce it bit for bit. The term is skipped
+when `pws[0] == 0`. Without that guard, a closed channel reads `0 / 0`
+wherever the box has no width: at `r = 0`, exactly at `m = 2 m_e`, which
+the division by `r` introduced, and at `β = 0`, at rest, which the shipped
+kernel already had. Both returned `NaN` at `E_e = E/2` and now return
+`0.0`. PR #103 review caught the first, and
+`TestPhysics::test_a_closed_electron_channel_adds_no_line` pins both.
+No corpus value moves, because every corpus block has an open `e⁺e⁻`
+channel.
 
 **Physics invariant.**
 `test/test_core_mediator_positron.py::TestPhysics::test_the_electron_line_carries_its_own_positron_count`
