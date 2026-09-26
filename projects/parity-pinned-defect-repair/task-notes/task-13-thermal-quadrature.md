@@ -370,7 +370,7 @@ recorded in `CHANGELOG.md` and the project's numerical-impact log.
   `VectorMediatorGeV.relic_density` return `nan` — verified to predate
   `B6`, which shares only the two lines. A separate, larger defect than
   the one this task repaired; filed as
-  `docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md`
+  `docs/followups/done/thermal-fallback-upper-limit-collapses-at-x-25.md`
   rather than folded in. `TestThermalQuadratureConverges` caps its grid
   below 25 because above it there is no integral to check.
 - **`preflight.sh`'s new delta gate reports `2 fixed` on a path set where

@@ -4,9 +4,54 @@
 - **Source:** PR #91 review round 1, while writing regression coverage for
   the two pure-Python `thermal_cross_section` sites
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done — both sites integrate to
+  `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`.
 - **Triggers / blockers:** none. Independent of the quadrature-tolerance
   repair that surfaced it (roster entry `B6`), which is already landed.
+
+> **Resolved.** Both pure-Python sites now integrate to `2 + 50/x`, not
+> to either Rust kernel's `max(50/x, floor)`. The open question below,
+> what floor to use, came out as "none": the limit should scale with the
+> decay length `1/x` rather than sit at a constant.
+>
+> **Why not a floor.** The kernel `z² (z² − 4) K₁(x z)` decays as
+> `e^{−x z}`, so `2 + 50/x` cuts it where the Bessel argument is 50 past
+> its threshold value `2x`. Measured at 40 digits for `x` from 0.01 to
+> 300, the dropped tail is at most 1.4e-17 of the kernel's integral. A
+> constant limit is instead too long at large `x`: QUADPACK's first
+> Gauss–Kronrod nodes on `[2, 100]` or `[2, 150]` sit in the tail, and
+> against a split `epsrel = 1e-12` reference over the four mediator
+> points `max(50/x, 150)` is up to 1.9e-4 off for `x ≥ 200`, and
+> `max(50/x, 100)` is 1.0e-4 off at `x = 300`. `2 + 50/x` stays within
+> 8.6e-9 of a reference split at every channel threshold, across `x`
+> from 1 to 300. The vector kernel inherits that
+> error; it is
+> [its own follow-up](../todo/vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md).
+>
+> **What moved.** Above `x = 25` both sites returned zero. They were also
+> already truncating below it: at `x = 20` the `50/x` cut lost 19% of
+> ⟨σv⟩ at `HiggsPortal(mx=100, ms=300, gsxx=1, stheta=0.1)`, and at
+> `x = 24` it lost 32% to 100% across the four mediator points and 24%
+> for the GeV model. Through the generic fallback, `relic_density` at
+> that point moves from 27.19 to 26.67 semi-analytically and from 35.64
+> to 34.42 by the Boltzmann solve. At the other three mediator points it
+> falls by three to six decades: 4.2e-3 to 9.36e-8, 1.41e-3 to 6.64e-7
+> and 4.1e-3 to 6.25e-9 semi-analytically, and 4.4e-3 to 9.83e-8,
+> 1.54e-3 to 6.89e-7 and 4.1e-3 to 6.47e-9 by the Boltzmann solve. It
+> now matches the Rust scalar kernel to 7.6e-8 and 3e-14 at the two
+> `HiggsPortal` points.
+>
+> **The GeV `nan` was fully this defect.** With `50/x < 2` the integrand
+> is evaluated below threshold, where the GeV cross sections are `nan`,
+> not zero. The model above now gives `relic_density` = 1.654e-4
+> semi-analytically and 1.721e-4 by the Boltzmann solve.
+>
+> The third divergence named in "Risks" is still open: above `x = 300`
+> the fallback and the scalar kernel return `0.0`, while the vector
+> kernel holds its `x = 300` value. That alone puts the fallback's
+> `relic_density` 8% off the vector kernel's at the two
+> `KineticMixing` points, although the two agree on ⟨σv⟩ to 1e-7 below
+> `x = 300`.
 
 ## Why
 

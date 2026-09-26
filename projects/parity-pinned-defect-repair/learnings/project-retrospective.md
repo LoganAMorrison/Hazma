@@ -182,9 +182,9 @@ project, and one is filed with this retrospective.
   will each need that.
 
 B6's review also filed
-[`thermal-fallback-upper-limit-collapses-at-x-25.md`](../../../docs/followups/todo/thermal-fallback-upper-limit-collapses-at-x-25.md)
+[`thermal-fallback-upper-limit-collapses-at-x-25.md`](../../../docs/followups/done/thermal-fallback-upper-limit-collapses-at-x-25.md)
 (PR #91 review round 1). It is a separate defect in the pure-Python
-fallback's upper limit and is still open.
+fallback's upper limit, resolved after the project closed.
 
 ## 6. Process notes
 
