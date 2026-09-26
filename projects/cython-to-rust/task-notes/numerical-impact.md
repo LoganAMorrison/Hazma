@@ -820,7 +820,7 @@ Cython ones.
   positron's rest-frame velocity — the box's edges carry the factor and
   its height does not. Worth 3.3e-5 at `m = 125` MeV, 1.4e-6 at 600 MeV,
   and divergent as `m → 2 m_e`. Held under rule 1 and filed as
-  [the missing electron velocity](../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+  [the missing electron velocity](../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
 - **The positron-normalization defect's reach into these spectra is now
   quantified**, from the committed corrected-value oracle rather than a
   new measurement (`test/parity/oracles/data/manifest.json`, defect A4 —

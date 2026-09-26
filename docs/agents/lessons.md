@@ -310,7 +310,12 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   reaching the kernel". State the caveat once and carry it into the same
   paragraph's sentence about the consumer, and measure the composed function at
   the configuration the spared branch corresponds to — for a spectrum kernel
-  with a rest-frame arm, that is the production threshold (PR #95).
+  with a rest-frame arm, that is the production threshold (PR #95, #103).
 - [mapping-fallback-hides-missing-output] When replacing direct dictionary
   indexing with merged mappings, preserve missing-output failures explicitly;
   test a stored key that the preceding computation did not produce (PR #98).
+- [new-divisor-zero-set] A repair that introduces a divisor also introduces its
+  zero set. Find every parameter point where the new divisor vanishes —
+  thresholds such as `m = 2 m_e` are the usual ones — and evaluate there with
+  the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
+  into `NaN` that no tolerance catches (PR #103).

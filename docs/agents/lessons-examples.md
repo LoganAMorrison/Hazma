@@ -1398,6 +1398,11 @@ about a kernel and then makes an unscoped claim about a function that composes
 it. Grep the impact paragraph for "any", and for each occurrence ask which
 branch of the underlying kernel that "any" reaches.
 
+- PR #103's changelog and follow-up said the mediator positron spectra rise
+  "in every mode string". The kernel returns `0.0` for an unrecognised mode
+  before it adds the line, so that branch is spared and the claim was too
+  wide. Review caught it; the wording is now "every recognised mode string".
+
 ### mapping-fallback-hides-missing-output
 
 - PR #98 generalized `test/parity/deltas.py`'s composition steps from
@@ -1408,3 +1413,15 @@ branch of the underlying kernel that "any" reaches.
   declaration exercised the defect; synthetic additive and exact steps
   now require rejection if their output suffix is absent from the base.
   All existing composed predictions retain their keys and values.
+
+### new-divisor-zero-set
+
+- PR #103 repaired the mediator positron line by dividing its height by the
+  electron's rest-frame velocity `r = sqrt(1 - 4 m_e**2 / m**2)`. Review found
+  that `r` is exactly zero at `m = 2 * 0.510998928` MeV, so with a closed
+  `e+ e-` channel (`pws = [0, 0, 0]`) the term read `0 / (E beta) / 0` and every
+  entry point returned `NaN` at `E_e = E / 2`, where it had returned `0.0`. The
+  sibling zero, `beta = 0` at rest, already produced the same `NaN` before the
+  PR. One guard on the numerator (`pw_ee != 0`) removed both, and
+  `TestPhysics::test_a_closed_electron_channel_adds_no_line` pins both points
+  and their neighbouring doubles.

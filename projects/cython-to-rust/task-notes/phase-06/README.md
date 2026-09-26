@@ -124,7 +124,7 @@ Phase-scoped, from Task 6.1; the full evidence is in its note.
 - **The shipped `e⁺e⁻` line is low by the positron's rest-frame velocity**
   (Task 6.3): the box's edges carry `r` and its height does not, so it
   integrates to `pw_ee · r`. Reproduced under rule 1, filed as
-  [the missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+  [the missing electron velocity](../../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
 - **Task 6.2 left an attribution bug in the oracle roster** (found by
   Task 6.3): its rename flipped the two
   `mediator_spectra.vector.positron.*` rows to `restored` alongside the
@@ -363,7 +363,7 @@ Prerequisites), `../../PLAN.md`, this file and `../README.md`.
   published numbers well above the budgets the four positron cases now
   hold, so it needs a corpus re-capture or a declared exception, and
   neither belongs inside a swap —
-  [the missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md).
+  [the missing electron velocity](../../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md).
 
 ## Plan Impact
 

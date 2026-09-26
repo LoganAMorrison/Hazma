@@ -283,7 +283,7 @@ be driven from outside both trees.
   and the natural time to close it is whenever the two tables are
   consolidated — the separate declared change rule 4 still forbids.
 - **The line term's missing `1/r` is still open and still post-6.4**
-  ([the missing electron velocity](../../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md)).
+  ([the missing electron velocity](../../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md)).
   Unchanged by this task.
 - **Re-capturing `test/parity/oracles` is now possible but expensive.**
   Nothing needs it: the committed arrays cover A3 and A4 and change only

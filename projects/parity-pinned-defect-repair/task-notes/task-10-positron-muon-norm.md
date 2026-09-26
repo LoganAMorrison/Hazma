@@ -268,7 +268,7 @@ size fails in both.
 ## Open Questions
 
 None. The mediator positron line's separate electron-velocity defect
-([`mediator-positron-line-misses-the-electron-velocity.md`](../../../docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md))
+([`mediator-positron-line-misses-the-electron-velocity.md`](../../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md))
 is not on this roster and is not touched here.
 
 ## Plan Impact

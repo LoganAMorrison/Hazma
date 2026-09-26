@@ -46,6 +46,15 @@ stored one times ``E_gamma``. The corpus checks it against itself: the
 ``rest_plus_eps`` block of the same case runs the *other* branch at
 ``beta = 1.4e-06``, whose ``beta -> 0`` limit is the rest-frame spectrum.
 
+**C1** — a repair made after that project, under
+``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``. Its twin
+died in cython-to-rust Task 6.3. A boosted two-body line is a box as wide
+as ``E r beta``, where ``r`` is the daughter's rest-frame velocity, so
+one positron per decay makes it ``pw_ee / (E r beta)`` tall. The shipped
+mediator positron kernel dropped the ``r``. The stored ``e_e`` blocks
+hold the line alone, so the corrected box times ``r`` has to be them
+exactly, with the same support.
+
 Deliberately not arbitrary precision
 ------------------------------------
 ``../rules.md`` rule 3 asks for an `mpmath` reference in the shape of
@@ -585,7 +594,12 @@ def test_a_two_body_decay_splits_the_parent_mass() -> None:
 #: own ``measured``. Held as literals so that a model whose reach changes
 #: — a grid change, a constant that moves — has to be re-measured rather
 #: than silently re-scoped (`../rules.md` rule 11).
-EXPECTED_REACH = {"B1": (6, 189), "B2": (6, 305), "B3": (4, 350)}
+EXPECTED_REACH = {
+    "B1": (6, 189),
+    "B2": (6, 305),
+    "B3": (4, 350),
+    "C1": (192, 8912),
+}
 
 #: Which corpus cases each model reaches, from the roster in
 #: ``references/defect-blast-radius.md``. A repair task turns these into
@@ -595,6 +609,11 @@ MODEL_CASES = {
     "B1": ("spectra.photon.eta_prime",),
     "B2": ("spectra.photon.phi",),
     "B3": ("spectra.photon.charged_rho", "spectra.photon.neutral_rho"),
+    "C1": tuple(
+        f"mediator_spectra.{kind}.positron.dnde_decay_{m}{pt}"
+        for kind, m in (("scalar", "s"), ("vector", "v"))
+        for pt in ("", "_pt")
+    ),
 }
 
 
@@ -619,3 +638,49 @@ def test_each_model_moves_what_it_says_it_moves(repair: str) -> None:
                     arrays += 1
                     positions += moved
     assert (arrays, positions) == EXPECTED_REACH[repair]
+
+
+#: How far the repaired ``e_e`` box times ``r`` may sit from the stored
+#: box. The model adds ``shipped / r - shipped`` to the stored value and
+#: this undoes it with one more multiply, so three roundings separate the
+#: two. Measured bit-equal at all 557 in-window positions of each case's
+#: twelve ``e_e`` blocks; held at four ulp rather than zero because
+#: nothing guarantees those roundings cancel.
+LINE_RTOL = 4 * np.finfo(np.float64).eps
+
+
+@pytest.mark.parametrize("case_name", MODEL_CASES["C1"])
+def test_the_electron_line_loses_exactly_its_velocity(case_name: str) -> None:
+    """The stored ``e_e`` box is the one-positron box times ``r``.
+
+    The model's in-window term is where it says the box is. So a term
+    whose support is not the stored line's, or that does not rescale it by
+    exactly ``1 / r``, fails here against the corpus rather than against
+    the repaired kernel.
+    """
+    for label, stored in _stored(case_name).items():
+        if not label.endswith(".e_e") or ".rest." in label:
+            continue
+        params = _params(case_name, label)
+        mass = params["mediator_mass"]
+        r = np.sqrt(1.0 - 4.0 * deltas.LEGACY_MASS_E**2 / mass**2)
+        block = _block(case_name, label, stored)
+        term = deltas.DELTA_MODELS["C1"].relation.term(None, block)["values"]
+        line = stored["values"]
+        # The support is the stored line's, position for position: the
+        # model's window edges are the kernel's, anchors included.
+        assert (
+            (term != 0.0) == (line != 0.0)
+        ).all(), f"{case_name}[{label}]: the model's window is not the stored line's"
+        repaired = deltas.DELTA_MODELS["C1"].relation.expected(None, block, stored)
+        np.testing.assert_allclose(
+            repaired["values"] * r,
+            line,
+            rtol=LINE_RTOL,
+            atol=0.0,
+            err_msg=f"{case_name}[{label}]: the stored line is not the "
+            "one-positron box times r",
+        )
+        # Falsification: the stored line is not already the corrected one.
+        inside = line != 0.0
+        assert (repaired["values"][inside] > line[inside]).all()

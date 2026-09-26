@@ -143,6 +143,12 @@ def reference(
     positron modules clamp below the grid (``:97-99``), which is
     ``np.interp``'s own behaviour and the whole difference in below-grid
     policy between the two clone-pairs.
+
+    One line departs from the source: the ``e e`` box is divided by the
+    electron's rest-frame velocity ``r`` as well as by ``E beta``, so that
+    it carries one positron per decay. The ``.pyx`` omitted the ``r``
+    (``:197-203``); see
+    :meth:`TestPhysics.test_the_electron_line_carries_its_own_positron_count`.
     """
     if energy < mass:
         return 0.0
@@ -155,7 +161,7 @@ def reference(
 
     lines_contrib = 0.0
     if eminus <= eng_p <= eplus:
-        lines_contrib = pws[0] / (energy * beta)
+        lines_contrib = pws[0] / (energy * beta) / r
 
     if fs == "e e":
         return lines_contrib
@@ -359,16 +365,11 @@ class TestPhysics:
     ) -> None:
         # `S/V -> e+ e-` is a line at `m/2` in the rest frame, boosted to
         # a flat box between `eminus` and `eplus`. The box is `E r beta`
-        # wide and `pw_ee / (E beta)` tall (`:197-203`), so it integrates
-        # to `pw_ee * r` — *not* to `pw_ee`, which is what one positron
-        # per decay weighted by its branching fraction would give.
-        #
-        # The missing `1/r` is a defect in the code this port replaces,
-        # reproduced here rather than repaired because `rules.md` rule 1
-        # forbids a physics change inside a swap. It is worth 3.3e-5 at
-        # this mass and diverges as `m -> 2 m_e`. Filed as
-        # `docs/followups/todo/mediator-positron-line-misses-the-electron-velocity.md`,
-        # which is also what flips this assertion back.
+        # wide, where `r` is the electron's rest-frame velocity, so one
+        # positron per decay weighted by its branching fraction makes it
+        # `pw_ee / (E r beta)` tall and integrate to `pw_ee`. The shipped
+        # `.pyx` omitted the `r` from the height (`:197-203`), which left
+        # the integral at `pw_ee * r`: 3.3e-5 low at this mass.
         mass, energy = 125.0, 200.0
         beta = math.sqrt(1.0 - (mass / energy) ** 2)
         r = math.sqrt(1.0 - 4.0 * LEGACY_MASS_E**2 / mass**2)
@@ -376,10 +377,40 @@ class TestPhysics:
         grid = np.linspace(eminus, eplus, 4001)
         box = array_fn(grid, energy, mass, PWS, "e e")
         # The trapezoid is exact on a constant and the box is one, so the
-        # only error is the half-cell at each end; 1e-9 is far inside it.
-        assert np.trapezoid(box, grid) == pytest.approx(PWS[0] * r, rel=1e-9)
-        # And the deficit really is the `r`, not a coincidence of scale.
-        assert np.trapezoid(box, grid) < PWS[0]
+        # only error is the half-cell at each end; 1e-9 is far inside it
+        # and four orders below the `1 - r` the old height lost.
+        assert np.trapezoid(box, grid) == pytest.approx(PWS[0], rel=1e-9)
+
+    @pytest.mark.parametrize(
+        ("mass", "energy"),
+        [(2.0 * LEGACY_MASS_E, 4.0 * LEGACY_MASS_E), (125.0, 125.0)],
+        ids=["electron-threshold", "at-rest"],
+    )
+    @pytest.mark.parametrize("mode", ["total", "e e"])
+    @pytest.mark.parametrize(("_name", "array_fn", "point_fn"), MODELS, ids=MODEL_IDS)
+    def test_a_closed_electron_channel_adds_no_line(
+        self,
+        _name: str,
+        array_fn: object,
+        point_fn: object,
+        mass: float,
+        energy: float,
+        mode: str,
+    ) -> None:
+        # Where the box has no width -- `r = 0` exactly at `m = 2 m_e`, and
+        # `beta = 0` at rest -- its one point is `E / 2`, and a zero
+        # electron width divided by that width would be `0 / 0`. A closed
+        # channel contributes nothing there, as it does at the neighbours.
+        closed = np.zeros(3)
+        grid = np.array(
+            [
+                math.nextafter(energy / 2.0, 0.0),
+                energy / 2.0,
+                math.nextafter(energy / 2.0, math.inf),
+            ]
+        )
+        assert list(array_fn(grid, energy, mass, closed, mode)) == [0.0, 0.0, 0.0]
+        assert point_fn(energy / 2.0, energy, mass, closed, mode) == 0.0
 
     @pytest.mark.parametrize(("mass", "energy"), CONFIGS)
     @pytest.mark.parametrize(("_name", "_array", "point_fn"), MODELS, ids=MODEL_IDS)
