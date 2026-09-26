@@ -142,6 +142,16 @@ ENG_MU_PI_RF = two_body_energy(MASS_PI, MASS_MU, 0.0)
 ENU_E_PI_RF = two_body_energy(MASS_PI, 0.0, MASS_E)
 #: The prompt `pi -> mu nu_mu` neutrino energy in the pion rest frame, MeV.
 ENU_MU_PI_RF = two_body_energy(MASS_PI, 0.0, MASS_MU)
+#: The muon-decay continuum's endpoint in the pion rest frame, MeV: the
+#: in-flight muon's `(1 + beta)(1 - r^2) E_mu / 2`, where
+#: `reference_dnde_neutrino_muon(., ENG_MU_PI_RF)` closes. 7.0e-4 MeV below
+#: `ENU_E_PI_RF`, and the upper clip on the pion's boost integral.
+ENU_MAX_PI_RF = (
+    (1.0 + math.sqrt(1.0 - (MASS_MU / ENG_MU_PI_RF) ** 2))
+    * (1.0 - (MASS_E / MASS_MU) ** 2)
+    * ENG_MU_PI_RF
+    / 2.0
+)
 
 #: Muon and pion energies the sweeps use: rest, one step off rest, and
 #: increasing boosts.
@@ -276,12 +286,8 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
     Carries each prompt line once, as the repaired kernel does. hazma
     2.1.0 doubled the ``pi -> e nu`` one; the line terms here are written
     from the physics rather than from either implementation, so they are
-    what says which of the two is right.
-
-    The continuum is *not* independent in that sense: it integrates over
-    the same unclipped boost window the kernel uses, so where that window
-    loses the integrand's support both return zero together. See
-    ``docs/followups/todo/neutrino-pion-continuum-loses-its-quadrature-support.md``.
+    what says which of the two is right. The continuum is
+    `reference_pion_continuum`'s.
     """
     zero = np.zeros(N_FLAVORS)
     if epi < MASS_PI:
@@ -299,25 +305,12 @@ def reference_dnde_neutrino_charged_pion(enu: float, epi: float) -> np.ndarray:
         lo, hi = gamma * enu * (1.0 - beta), gamma * enu * (1.0 + beta)
         return 1.0 / (2.0 * gamma * beta * e0) if lo < e0 < hi else 0.0
 
-    emin, emax = max(0.0, enu * gamma * (1.0 - beta)), enu * gamma * (1.0 + beta)
-    pre = 0.5 / (gamma * beta) * BR_PI_TO_MU_NUMU
-
-    def continuum(row: int) -> float:
-        if emin == emax:
-            return 0.0
-        return (
-            pre
-            * quad(
-                lambda e: reference_dnde_neutrino_muon(e, ENG_MU_PI_RF)[row] / e,
-                emin,
-                emax,
-            )[0]
-        )
-
     # One prompt line per decay mode: `pi -> e nu_e` here, `pi -> mu nu_mu`
     # below. The shipped kernel added the first from both halves of its sum.
-    electron = BR_PI_TO_E_NUE * line(ENU_E_PI_RF) + continuum(0)
-    muon = BR_PI_TO_MU_NUMU * line(ENU_MU_PI_RF) + continuum(1)
+    electron = BR_PI_TO_E_NUE * line(ENU_E_PI_RF) + reference_pion_continuum(
+        enu, epi, 0
+    )
+    muon = BR_PI_TO_MU_NUMU * line(ENU_MU_PI_RF) + reference_pion_continuum(enu, epi, 1)
     return np.array([electron, muon, 0.0])
 
 
@@ -328,10 +321,19 @@ def reference_pion_continuum(enu: float, epi: float, row: int) -> float:
     so subtracting it from the shipped spectrum isolates the lines using
     an integrator the code under test does not share. ``row`` is 0 for
     electron neutrinos and 1 for muon neutrinos.
+
+    The boost window is clipped to the integrand's support,
+    ``[0, ENU_MAX_PI_RF]``. Integrated over the whole window instead, a
+    strongly boosted pion hands QUADPACK an interval hundreds of times
+    wider than the support, every abscissa of its first rule lands on a
+    zero, and the continuum comes back as ``0.0``; hazma 2.3.0 and earlier
+    shipped that. See
+    ``docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md``.
     """
     beta = math.sqrt(1.0 - (MASS_PI / epi) ** 2)
     gamma = 1.0 / math.sqrt(1.0 - beta**2)
-    emin, emax = max(0.0, enu * gamma * (1.0 - beta)), enu * gamma * (1.0 + beta)
+    emax = min(enu * gamma * (1.0 + beta), ENU_MAX_PI_RF)
+    emin = min(max(0.0, enu * gamma * (1.0 - beta)), emax)
     if emin == emax:
         return 0.0
     pre = 0.5 / (gamma * beta) * BR_PI_TO_MU_NUMU
@@ -674,7 +676,10 @@ class TestPhysics:
         # And the inverted normalization is well outside that bound.
         assert abs(1.0 - 1.0 / R_FACTOR**2) > 30.0 * 1e-5
 
-    def test_the_pion_yields_one_muon_neutrino_from_each_of_two_sources(self) -> None:
+    @pytest.mark.parametrize("epi", [400.0, 1395.7039, 5000.0])
+    def test_the_pion_yields_one_muon_neutrino_from_each_of_two_sources(
+        self, epi: float
+    ) -> None:
         """The muon-neutrino row integrates to ``2 BR_mu``.
 
         A charged pion makes a prompt ``nu_mu`` and then the muon makes
@@ -690,8 +695,12 @@ class TestPhysics:
         so the electron assertion here pins the continuum's normalization
         rather than how many copies of the line the row carries; the next
         test is what counts them.
+
+        The two stronger boosts are where hazma 2.3.0 lost the continuum
+        to an unclipped boost window, and carried 94% and 89% of the
+        muon's electron and muon neutrinos at ``10 m_pi``, and 21% and 18%
+        at 5 GeV. Measured with the clip: within 5.5e-5 at all three.
         """
-        epi = 400.0
         gamma = epi / MASS_PI
         beta = math.sqrt(1.0 - (MASS_PI / epi) ** 2)
         energies = np.linspace(0.0, gamma * (1.0 + beta) * ENU_E_PI_RF * 1.02, 20_001)

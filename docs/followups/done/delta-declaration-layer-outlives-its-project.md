@@ -10,7 +10,7 @@
 - **Triggers / blockers:** the next repair that moves a parity-pinned
   value. Three are already filed:
   [`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md),
-  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../todo/neutrino-pion-continuum-loses-its-quadrature-support.md)
+  [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../done/neutrino-pion-continuum-loses-its-quadrature-support.md)
   and [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
 
 > **Resolved.** The project ADR is re-filed as repo-wide

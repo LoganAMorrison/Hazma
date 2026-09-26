@@ -3,16 +3,20 @@
 - **Added:** 2026-09-06
 - **Source:** `projects/parity-pinned-defect-repair/task-notes/task-10a-neutrino-pion-line.md`
 - **Scope:** cross-cutting (public spectrum values)
-- **Status:** open
-- **Triggers / blockers:** **corpus re-pinning only.** The Cython twin
+- **Status:** done. Repaired as parity roster entry `C2`, the second
+  label issued under
+  [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md).
+- **Triggers / blockers:** corpus re-pinning only. The Cython twin
   (`hazma/spectra/_neutrino/_pion.pyx`) was deleted in `cython-to-rust`
-  Task 4.6, so there is no oracle to capture and no deletion wave to beat.
-  The corrected values need none: the repair narrows an integration
-  window to the support the integrand already declares, and the
-  difference is a `scipy.integrate.quad` over the narrowed window, which
-  runs against the committed arrays with no build. Belongs in
-  [`projects/parity-pinned-defect-repair/PLAN.md`](../../../projects/parity-pinned-defect-repair/PLAN.md)
-  alongside the other pinned defects, as a roster entry of its own.
+  Task 4.6, so there was no oracle to capture. `parity-pinned-defect-repair`
+  closed with 2.3.0 before this landed, so it takes a `C` label rather
+  than a roster entry in that project's plan.
+
+> **Resolved.** `boost_window` in `rust/src/kernels/neutrino_pion.rs`
+> clips the window above at `neutrino_muon::max_energy(ENG_MU_PI_RF)`,
+> the muon spectrum's own endpoint, and clips the lower limit to the
+> upper one so that an empty window integrates to `+0.0`. Both rows of
+> `dnde_neutrino_charged_pion` move. See "Resolution (measured)" below.
 
 ## Why
 
@@ -134,3 +138,79 @@ positions have to be split between them —
   it is `minor` at least under [`docs/versioning.md`](../../versioning.md)
   and needs a `CHANGELOG.md` entry with the magnitude — a much larger one
   than B5's own.
+
+## Resolution (measured)
+
+**Kernel.** `neutrino_muon::max_energy(emu)` returns the smallest double
+at which `dnde_neutrino_muon`'s own guard closes, so the spectrum is
+exactly zero there and nonzero one ulp below. At `E_μ^rf` that is
+**69.78356271700862 MeV**. The 200,001-point sweep above put it at
+69.783500, and the precise figure is 6.97e-4 MeV below `ENU_E_PI_RF`
+rather than 7.6e-4. `boost_window` clips at it, as `positron_pion.rs`
+clips at `EMAX_PI_RF`. Both are pinned in the kernel's tests:
+`the_clip_is_the_integrand_s_own_endpoint` and
+`max_energy_is_the_boosted_support_s_edge`.
+
+**Physics invariant.** Neutrino number per flavor, which the corpus
+cannot see because it compares each parent energy only against itself.
+`the_boost_conserves_neutrino_number_per_flavor` (Rust) and
+`TestPhysics::test_the_pion_yields_one_muon_neutrino_from_each_of_two_sources`
+(`test/test_core_neutrino.py`) now run at `E_π = 400`, `1395.7039` and
+`5000` MeV. With the clip, both rows integrate to their branching
+ratios within 5.5e-5 at 20,001 points. Over the shipped window, the
+muon-decay continuum carried this fraction of its neutrinos, measured
+by trapezoid on 4,001 points against scipy over the unclipped window:
+
+| `E_π` (MeV) | electron row | muon row |
+| --- | --- | --- |
+| 400 | 0.99998 | 0.99981 |
+| 1395.7039 | 0.939 | 0.889 |
+| 5000 | 0.212 | 0.178 |
+
+**Independent reference.** `test/test_core_neutrino.py`'s
+`reference_pion_continuum` clips at its own transcription of the
+endpoint, and `reference_dnde_neutrino_charged_pion` now takes its
+continuum from it. The kernel's
+`a_strongly_boosted_continuum_is_not_lost` pins the three positions in
+the table under "Why", for both rows, against that reference to 1e-6.
+The muon row at `E_π = 1395.7039`, `E_ν = 798.21` MeV is
+4.736526e-04 MeV⁻¹, where 2.3.0 returned exactly `0.0`.
+
+**Corpus.** The committed arrays are untouched. The moved positions are
+declared in `test/parity/deltas.py` as `C2`: an `Additive` term equal to
+scipy's continuum over the clipped window minus scipy's continuum over
+the shipped one, both over the ported muon kernel, which reproduces the
+Cython's integrand bit for bit.
+
+- **Reach.** 430 positions in 6 arrays, both rows at the same 215
+  energies B5 moves in the electron row: 70 in `near_rest`, 138 in
+  `boosted_mild` and 222 in `boosted_strong`. Nothing moves at `rest`,
+  where the rest-frame branch integrates nothing, or at `rest_plus_eps`,
+  where no grid point's window straddles the endpoint.
+- **Magnitude.** 402 positions move by 6.4e-12 to 9.3e-4 relative, in
+  either direction, because the narrower interval re-subdivides a
+  quadrature that had already found the support. The other 28, all in
+  `boosted_strong`, are where the shipped quadrature returned `0.0`: 14
+  muon-row values that were exactly `0.0`, and the 14 electron-row
+  values B5 left holding the prompt line alone, which rise by 0.17x to
+  3,441x. This is the "exactly 0.500000000000" band B5 recorded.
+- **`B5+C2`.** C2 moves exactly the six arrays B5 declares, so all six
+  compose, as `rules.md` rule 7 requires. The composition holds to B5's
+  derived 3e-12 and measures 1.273e-15 worst relative over the 430
+  positions.
+- **Independent oracle.**
+  `test/parity/test_delta_models.py::test_the_shipped_window_is_the_stored_continuum`
+  requires the term's shipped half, plus the shipped lines, to equal the
+  stored arrays at all 2,344 positions of the four boosted blocks. It
+  holds to 2.2e-16 relative, and it recounts the 28 lost positions. No
+  spectrum kernel is evaluated.
+- **Revert check.** Restoring the unclipped upper limit fails exactly
+  the three blocks that hold the six declared arrays in
+  `pytest test/parity`.
+
+**Other windows.** The sweep asked for under "Risks" found no other
+energy-space boost integral with an unclipped window except
+`photon_rho.rs`'s, which
+[`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md)
+already tracks. The same failure in the angular variable is filed as
+[`mediator-decay-angular-windows-miss-their-support.md`](../todo/mediator-decay-angular-windows-miss-their-support.md).

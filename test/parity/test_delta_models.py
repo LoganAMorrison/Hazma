@@ -55,6 +55,15 @@ mediator positron kernel dropped the ``r``. The stored ``e_e`` blocks
 hold the line alone, so the corrected box times ``r`` has to be them
 exactly, with the same support.
 
+**C2** — the second repair after that project. Its twin died in
+cython-to-rust Task 4.6, and its model is a quadrature rather than a
+closed form: the charged pion's muon-decay continuum over the clipped
+boost window, minus the same continuum over the shipped, unclipped one.
+The backward argument still holds for the shipped half. Integrated by
+scipy over the shipped window and added to the shipped lines, it has to
+be the stored arrays exactly, at every boosted position, whether or not
+the clip moves that position.
+
 Deliberately not arbitrary precision
 ------------------------------------
 ``../rules.md`` rule 3 asks for an `mpmath` reference in the shape of
@@ -599,6 +608,7 @@ EXPECTED_REACH = {
     "B2": (6, 305),
     "B3": (4, 350),
     "C1": (192, 8912),
+    "C2": (6, 430),
 }
 
 #: Which corpus cases each model reaches, from the roster in
@@ -614,6 +624,7 @@ MODEL_CASES = {
         for kind, m in (("scalar", "s"), ("vector", "v"))
         for pt in ("", "_pt")
     ),
+    "C2": ("spectra.neutrino.charged_pion",),
 }
 
 
@@ -684,3 +695,79 @@ def test_the_electron_line_loses_exactly_its_velocity(case_name: str) -> None:
         # Falsification: the stored line is not already the corrected one.
         inside = line != 0.0
         assert (repaired["values"][inside] > line[inside]).all()
+
+
+#: How far the shipped pion continuum plus the shipped lines may sit from
+#: the stored arrays. Both halves are what the Cython computed: scipy's
+#: QUADPACK at its defaults over the muon kernel, which the port
+#: reproduces bit for bit, and `boost_delta_function`. Measured at most
+#: 2.2e-16 relative over the 2,344 positions of the four boosted blocks,
+#: so this is 45x headroom and far inside the 1e-11 relative the smallest
+#: re-subdivision C2 declares moves by.
+SHIPPED_CONTINUUM_RTOL = 1e-14
+
+#: The positions where the shipped window lost the continuum outright and
+#: the clipped one recovers it: 14 per row, all in ``boosted_strong``, as
+#: C2's ``measured`` says.
+C2_LOST_POSITIONS = 28
+
+
+def test_the_shipped_window_is_the_stored_continuum() -> None:
+    """C2's shipped half, plus the shipped lines, is the stored spectrum.
+
+    Every boosted block, both rows, every position: the electron row is
+    the unclipped continuum plus two copies of the ``pi -> e nu_e`` line,
+    which is B5's defect, and the muon row is the unclipped continuum plus
+    one ``pi -> mu nu_mu`` line. So the half of C2's term that stands for
+    what shipped is what shipped, including the zeros where the unclipped
+    window lost the support. The ``rest`` block takes the kernel's
+    rest-frame branch, which integrates nothing and has no term.
+    """
+    case_name = "spectra.neutrino.charged_pion"
+    electron_mass = deltas.parameters.electron_mass
+    muon_mass = deltas.parameters.muon_mass
+    lost = 0
+    for label, stored in _stored(case_name).items():
+        beta = _beta(case_name, label)
+        if beta <= 0.0:
+            continue
+        params = _params(case_name, label)
+        epi, mpi = params["parent_energy"], params["parent_mass"]
+        lines = (
+            (mpi * mpi - electron_mass**2) / (2.0 * mpi),
+            2.0 * deltas.BR_PI_TO_E_NUE,
+        ), (
+            (mpi * mpi - muon_mass**2) / (2.0 * mpi),
+            deltas.BR_PI_TO_MU_NUMU,
+        )
+        for suffix, grid_suffix in (
+            ("values", "grid"),
+            ("scalar_values", "scalar_grid"),
+        ):
+            grid = stored[grid_suffix]
+            # `cases` stores the scalar branch as (n, 3) rather than (3, n).
+            values = stored[suffix].T if suffix == "scalar_values" else stored[suffix]
+            for row, (e0, weight) in enumerate(lines):
+                shipped = np.array(
+                    [
+                        deltas._pion_continuum(epi, mpi, float(e), row, clip=False)
+                        for e in grid
+                    ]
+                )
+                np.testing.assert_allclose(
+                    shipped + deltas._boosted_line(e0, weight, grid, beta),
+                    values[row],
+                    rtol=SHIPPED_CONTINUUM_RTOL,
+                    atol=0.0,
+                    err_msg=f"{case_name}[{label}].{suffix} row {row}: the "
+                    "unclipped continuum is not the stored one",
+                )
+                clipped = np.array(
+                    [
+                        deltas._pion_continuum(epi, mpi, float(e), row, clip=True)
+                        for e in grid
+                    ]
+                )
+                lost += int(((shipped == 0.0) & (clipped > 0.0)).sum())
+    # Falsification: the stored arrays do carry the defect.
+    assert lost == C2_LOST_POSITIONS

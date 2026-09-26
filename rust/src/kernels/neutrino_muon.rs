@@ -150,6 +150,39 @@ pub fn dnde_neutrino_muon_rest_frame(enu: f64) -> NeutrinoSpectrumPoint {
     }
 }
 
+/// The upper edge of [`dnde_neutrino_muon`]'s support, MeV.
+///
+/// # Parameters
+///
+/// * `emu` — the muon's total energy, MeV, at least its rest mass.
+///
+/// # Returns
+///
+/// `(1 + β)(1 − r²) E_μ / 2`, the lab energy at which the boosted spectrum
+/// closes: the smallest double at which the kernel's own guard
+/// `(1 + β)(1 − r²) ≤ (2/E_μ) E` holds, so the spectrum is exactly zero
+/// here and everywhere above, and inside its support one ulp below. A
+/// caller integrating this spectrum clips its window to this edge,
+/// because an adaptive rule over a window many times wider than the
+/// support can place every abscissa outside it.
+#[must_use]
+pub fn max_energy(emu: f64) -> f64 {
+    // The guard's operands, in `dnde_neutrino_muon`'s arithmetic.
+    let e_to_x = 2.0 / emu;
+    let ratio = MASS_MU / emu;
+    let threshold = ((1.0 - ratio * ratio).sqrt() + 1.0) * XMAX_RF;
+    // The quotient can round to either side of the double on which the
+    // guard's product first reaches the threshold, by an ulp; step onto it.
+    let mut edge = threshold / e_to_x;
+    while e_to_x * edge < threshold {
+        edge = edge.next_up();
+    }
+    while e_to_x * edge.next_down() >= threshold {
+        edge = edge.next_down();
+    }
+    edge
+}
+
 /// The neutrino spectra `dN/dE` in MeV⁻¹ from the decay of a muon of
 /// energy `emu`.
 ///
@@ -517,6 +550,21 @@ mod tests {
                 (integral - 1.0).abs() < 1e-5,
                 "the boosted {flavor} row integrates to {integral}, not to one"
             );
+        }
+    }
+
+    /// [`max_energy`] is where the boosted guard closes: the spectrum is
+    /// exactly zero there and not zero one ulp below, at every boost.
+    #[test]
+    fn max_energy_is_the_boosted_support_s_edge() {
+        for emu in [MASS_MU * (1.0 + 1e-6), 109.778, 150.0, 500.0, 1e4] {
+            let edge = super::max_energy(emu);
+            assert_eq!(
+                dnde_neutrino_muon(edge, emu),
+                super::NeutrinoSpectrumPoint::ZERO
+            );
+            let below = dnde_neutrino_muon(f64::from_bits(edge.to_bits() - 1), emu);
+            assert!(below.electron != 0.0 && below.muon != 0.0, "{emu}");
         }
     }
 
