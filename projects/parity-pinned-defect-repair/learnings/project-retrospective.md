@@ -168,7 +168,7 @@ project, and one is filed with this retrospective.
   `quad` call site that boosts a bounded spectrum over an unclipped
   window.
 - **The φ omits its direct `φ → π⁰γ` line** (Task 6):
-  [`phi-omits-its-direct-pi0-photon-line.md`](../../../docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md).
+  [`phi-omits-its-direct-pi0-photon-line.md`](../../../docs/followups/done/phi-omits-its-direct-pi0-photon-line.md).
   It was deliberately not folded into B2, because B2 relocates the
   yield and this would raise it.
 - **Every decaying-theory positron channel evaluates the last channel**

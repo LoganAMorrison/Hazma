@@ -18,9 +18,9 @@
 //! | `dnde_photon_long_kaon` | `long_kaon_photon.csv` | [`pdg::MASS_K0`] | `K_L → γγ` |
 //! | `dnde_photon_short_kaon` | `short_kaon_photon.csv` | [`pdg::MASS_K0`] | `K_S → γγ` |
 //! | `dnde_photon_eta` | `eta_photon.csv` | [`pdg::MASS_ETA`] | `η → γγ` |
-//! | `dnde_photon_eta_prime` | `eta_prime_photon.csv` | [`pdg::MASS_ETAP`] | `η′ → γγ` |
+//! | `dnde_photon_eta_prime` | `eta_prime_photon.csv` | [`pdg::MASS_ETAP`] | `η′ → γγ`, `η′ → ρ⁰γ`, `η′ → ωγ` |
 //! | `dnde_photon_omega` | `omega_photon.csv` | [`pdg::MASS_OMEGA`] | `ω → π⁰γ`, `ω → ηγ` |
-//! | `dnde_photon_phi` | `phi_photon.csv` | [`pdg::MASS_PHI`] | `φ → ηγ`, `φ → η′γ` |
+//! | `dnde_photon_phi` | `phi_photon.csv` | [`pdg::MASS_PHI`] | `φ → ηγ`, `φ → η′γ`, `φ → π⁰γ` |
 //!
 //! Both kaon flavours take their threshold and boost from
 //! [`pdg::MASS_K0`], not from `MASS_KL` / `MASS_KS` — the Cython does,
@@ -117,9 +117,9 @@ const K0_TO_A_A_ENERGY: f64 = pdg::MASS_K0 / 2.0;
 /// Photon energy in the two-body decay `X → Y γ`, in X's rest frame, MeV.
 ///
 /// `(M² − m²) / (2 M)`. Its counterpart `(M² + m²) / (2 M)` is the
-/// *daughter meson's* energy, and the two sum to `M`; writing the four
-/// line energies below through one function is what keeps the pair from
-/// being confusable, which is how the two φ lines came to be placed at
+/// *daughter meson's* energy, and the two sum to `M`; writing every
+/// `X → Y γ` line energy below through one function is what keeps the
+/// pair from being confusable, which is how the two φ lines came to be placed at
 /// the meson's energy in 2.1.0 (repair `B2`).
 ///
 /// The operation order is the `.pyx` expressions' own, so the folded
@@ -152,6 +152,21 @@ const PHI_TO_ETA_A_ENERGY: f64 = photon_line_energy(pdg::MASS_PHI, pdg::MASS_ETA
 /// line at **959.65 MeV where 59.82 belongs**, a factor of 16.0 and 94%
 /// of the φ's own rest mass carried off by one photon.
 const PHI_TO_ETAP_A_ENERGY: f64 = photon_line_energy(pdg::MASS_PHI, pdg::MASS_ETAP);
+/// Photon energy from `φ → π⁰γ` in the φ rest frame, MeV.
+///
+/// 2.1.0 shipped no line for this mode at all (repair `C4`); see
+/// [`PHI`] for why the table cannot carry it instead.
+const PHI_TO_PI0_A_ENERGY: f64 = photon_line_energy(pdg::MASS_PHI, pdg::MASS_PI0);
+/// Photon energy from `η′ → ρ⁰γ` in the η′ rest frame, MeV.
+///
+/// The ρ⁰ is taken at its pole mass, as the table's own `rho0_a` column
+/// takes it, although it is 149 MeV wide and `BR_ETAP_TO_RHO_A` includes
+/// the non-resonant `π⁺π⁻γ` continuum. 2.1.0 shipped no line for this
+/// mode (repair `C5`).
+const ETAP_TO_RHO_A_ENERGY: f64 = photon_line_energy(pdg::MASS_ETAP, pdg::MASS_RHO);
+/// Photon energy from `η′ → ωγ` in the η′ rest frame, MeV. 2.1.0 shipped
+/// no line for this mode (repair `C5`).
+const ETAP_TO_OMEGA_A_ENERGY: f64 = photon_line_energy(pdg::MASS_ETAP, pdg::MASS_OMEGA);
 
 // ===========================================================================
 // ---- Embedded tables ------------------------------------------------------
@@ -335,14 +350,33 @@ pub static ETA: LazyLock<Spectrum> = LazyLock::new(|| {
 });
 
 /// The photon spectrum from η′ decay.
+///
+/// Every `X → Y γ` and `X → γγ` mode needs a line, because the table
+/// holds only the photons of the decay products: its generator,
+/// `notebooks/decay_spectra/utils.py`, gives a final-state photon no
+/// spectrum of its own. Per decay of their mode, the `rho0_a` and
+/// `omega_a` columns integrate to 0.22 and 2.35 photons: the ρ⁰'s own
+/// yield exactly, and within 0.12 of the ω's, where a direct photon would
+/// add one. See `test/test_core_photon_tables.py`,
+/// `test_no_table_column_carries_its_modes_direct_photon`.
 pub static ETA_PRIME: LazyLock<Spectrum> = LazyLock::new(|| {
     Spectrum::new(
         ETA_PRIME_CSV,
         pdg::MASS_ETAP,
-        vec![Line {
-            energy: ETAP_TO_A_A_ENERGY,
-            weight: ETAP_TO_A_A_WEIGHT,
-        }],
+        vec![
+            Line {
+                energy: ETAP_TO_A_A_ENERGY,
+                weight: ETAP_TO_A_A_WEIGHT,
+            },
+            Line {
+                energy: ETAP_TO_RHO_A_ENERGY,
+                weight: pdg::BR_ETAP_TO_RHO_A,
+            },
+            Line {
+                energy: ETAP_TO_OMEGA_A_ENERGY,
+                weight: pdg::BR_ETAP_TO_OMEGA_A,
+            },
+        ],
     )
 });
 
@@ -365,6 +399,10 @@ pub static OMEGA: LazyLock<Spectrum> = LazyLock::new(|| {
 });
 
 /// The photon spectrum from φ decay.
+///
+/// As for [`ETA_PRIME`], each `φ → Y γ` mode's direct photon is a line
+/// rather than part of the table. The `pi0_a` column integrates to 1.978
+/// photons per `φ → π⁰γ` decay, which is exactly the π⁰'s own yield.
 pub static PHI: LazyLock<Spectrum> = LazyLock::new(|| {
     Spectrum::new(
         PHI_CSV,
@@ -377,6 +415,10 @@ pub static PHI: LazyLock<Spectrum> = LazyLock::new(|| {
             Line {
                 energy: PHI_TO_ETAP_A_ENERGY,
                 weight: pdg::BR_PHI_TO_ETAP_A,
+            },
+            Line {
+                energy: PHI_TO_PI0_A_ENERGY,
+                weight: pdg::BR_PHI_TO_PI0_A,
             },
         ],
     )
@@ -544,6 +586,11 @@ mod tests {
         // numerator rather than scaling the result.
         assert_eq!(PHI_TO_ETA_A_ENERGY.to_bits(), 0x4076_a84d_d059_fcfd);
         assert_eq!(PHI_TO_ETAP_A_ENERGY.to_bits(), 0x404d_e853_3fba_f8c5);
+        // C4 and C5: the shipped object code has no site for these three
+        // lines at all, so there is no immediate to name beside them.
+        assert_eq!(PHI_TO_PI0_A_ENERGY.to_bits(), 0x407f_4cb8_6c25_0057);
+        assert_eq!(ETAP_TO_RHO_A_ENERGY.to_bits(), 0x4064_a420_91c3_fbee);
+        assert_eq!(ETAP_TO_OMEGA_A_ENERGY.to_bits(), 0x4063_e389_d44f_de3c);
     }
 
     /// All four `X → γγ` lines carry `2·BR`, the η′ included.
@@ -565,7 +612,7 @@ mod tests {
         assert_ne!(ETAP_TO_A_A_WEIGHT, pdg::BR_ETAP_TO_A_A);
     }
 
-    /// All four `X → Y γ` lines sit at the photon's energy, below the
+    /// All seven `X → Y γ` lines sit at the photon's energy, below the
     /// daughter meson's.
     ///
     /// `(M² − m²)/(2M)` is `E_γ` and `(M² + m²)/(2M)` is `E_Y`; the two
@@ -580,8 +627,10 @@ mod tests {
     /// misplaced lines and `test/parity/deltas.py` declares the shift.
     ///
     /// The ω's two lines were always the photon's, and are held here with
-    /// the φ's rather than as a control, because the two mesons run
-    /// through the same [`photon_line_energy`] now.
+    /// the φ's rather than as a control, because every parent runs
+    /// through the same [`photon_line_energy`] now. So do the three lines
+    /// 2.1.0 omitted outright, `φ → π⁰γ` and the η′'s two (repairs `C4`
+    /// and `C5`).
     #[test]
     fn every_line_energy_is_the_photons_not_the_daughters() {
         for (line, parent, mass) in [
@@ -589,6 +638,9 @@ mod tests {
             (PHI_TO_ETAP_A_ENERGY, pdg::MASS_PHI, pdg::MASS_ETAP),
             (OMEGA_TO_PI0_A_ENERGY, pdg::MASS_OMEGA, pdg::MASS_PI0),
             (OMEGA_TO_ETA_A_ENERGY, pdg::MASS_OMEGA, pdg::MASS_ETA),
+            (PHI_TO_PI0_A_ENERGY, pdg::MASS_PHI, pdg::MASS_PI0),
+            (ETAP_TO_RHO_A_ENERGY, pdg::MASS_ETAP, pdg::MASS_RHO),
+            (ETAP_TO_OMEGA_A_ENERGY, pdg::MASS_ETAP, pdg::MASS_OMEGA),
         ] {
             let daughter = (parent * parent + mass * mass) / (2.0 * parent);
             assert!((line + daughter - parent).abs() < 1e-12 * parent);

@@ -71,6 +71,17 @@ holds the unclipped boost over the repaired pion, so the backward check
 is against that capture rather than the stored arrays: the shipped half
 has to reproduce it at every boosted position.
 
+**C4** and **C5** — the phi's ``pi0 gamma`` line and the eta-prime's
+``rho0 gamma`` and ``omega gamma`` lines, which no Cython kernel carried.
+Each term is a closed-form line added where there was none, so there is
+no shipped line to read back off the corpus, and the continuum's own step
+across a window edge runs from 0.6% to 4x the plateau it would have to
+reveal.
+Their backward argument runs against the tables instead:
+``test/test_core_photon_tables.py::TestPhysics::test_no_table_column_carries_its_modes_direct_photon``
+shows that each mode's column holds the daughter's photons and no direct
+one. Here they get only the reach check.
+
 Deliberately not arbitrary precision
 ------------------------------------
 ``../rules.md`` rule 3 asks for an `mpmath` reference in the shape of
@@ -619,6 +630,8 @@ EXPECTED_REACH = {
     "C2": (6, 430),
     "C3/charged_rho": (6, 191),
     "C3/neutral_rho": (6, 191),
+    "C4": (5, 179),
+    "C5": (6, 164),
 }
 
 #: Which corpus cases each model reaches, from the roster in
@@ -637,6 +650,8 @@ MODEL_CASES = {
     "C2": ("spectra.neutrino.charged_pion",),
     "C3/charged_rho": ("spectra.photon.charged_rho",),
     "C3/neutral_rho": ("spectra.photon.neutral_rho",),
+    "C4": ("spectra.photon.phi",),
+    "C5": ("spectra.photon.eta_prime",),
 }
 
 

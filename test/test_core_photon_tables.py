@@ -76,8 +76,10 @@ from __future__ import annotations
 
 import math
 import sys
+from collections.abc import Callable
 from fractions import Fraction
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
@@ -105,21 +107,27 @@ MASS_ETAP = 957.78
 MASS_K = 493.677
 MASS_K0 = 497.611
 MASS_OMEGA = 782.66
+MASS_RHO = 775.26
 MASS_PHI = 1019.461
 
 BR_ETA_TO_A_A = 39.41e-2
 BR_ETAP_TO_A_A = 2.307e-2
+BR_ETAP_TO_RHO_A = 29.5e-2
+BR_ETAP_TO_OMEGA_A = 2.52e-2
 BR_KL_TO_A_A = 5.47e-4
 BR_KS_TO_A_A = 2.63e-6
 BR_OMEGA_TO_PI0_A = 8.34e-2
 BR_OMEGA_TO_ETA_A = 4.5e-4
 BR_PHI_TO_ETA_A = 1.303e-2
 BR_PHI_TO_ETAP_A = 6.22e-5
+BR_PHI_TO_PI0_A = 1.32e-3
 
 #: ``name -> (entry point, CSV, parent mass, [(line energy, line weight)])``.
 #: The line expressions are the ``.pyx`` ones character for character,
 #: except the eta-prime weight (B1) and the two phi energies (B2), which
-#: the repairs move.
+#: the repairs move, and the three lines no ``.pyx`` carried: the phi's
+#: ``pi0 gamma`` (C4) and the eta-prime's ``rho0 gamma`` and
+#: ``omega gamma`` (C5).
 SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
     "charged_kaon": (
         core_photon.dnde_photon_charged_kaon,
@@ -149,7 +157,11 @@ SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
         core_photon.dnde_photon_eta_prime,
         "eta_prime_photon.csv",
         MASS_ETAP,
-        [(MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A)],
+        [
+            (MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A),
+            ((MASS_ETAP**2 - MASS_RHO**2) / (2 * MASS_ETAP), BR_ETAP_TO_RHO_A),
+            ((MASS_ETAP**2 - MASS_OMEGA**2) / (2 * MASS_ETAP), BR_ETAP_TO_OMEGA_A),
+        ],
     ),
     "omega": (
         core_photon.dnde_photon_omega,
@@ -167,11 +179,19 @@ SPECTRA: dict[str, tuple[object, str, float, list[tuple[float, float]]]] = {
         [
             ((MASS_PHI**2 - MASS_ETA**2) / (2 * MASS_PHI), BR_PHI_TO_ETA_A),
             ((MASS_PHI**2 - MASS_ETAP**2) / (2 * MASS_PHI), BR_PHI_TO_ETAP_A),
+            ((MASS_PHI**2 - MASS_PI0**2) / (2 * MASS_PHI), BR_PHI_TO_PI0_A),
         ],
     ),
 }
 
 NAMES = tuple(SPECTRA)
+
+#: How far an ``X -> Y a`` column's photons per decay may sit from the
+#: daughter's own yield before the column could be holding the mode's
+#: direct photon as well, which would add exactly one. A quarter of that
+#: photon, against a worst reading of 0.12 (the ω column; see
+#: `TestPhysics.test_no_table_column_carries_its_modes_direct_photon`).
+DIRECT_PHOTON_MARGIN = 0.25
 
 #: The wrapper functions the public API exposes, in the same order.
 WRAPPERS = {
@@ -650,13 +670,14 @@ class TestPhysics:
         of ``projects/parity-pinned-defect-repair``; the corpus still pins
         the low value and ``test/parity/deltas.py`` declares the shift.
 
-        The ω and φ are deliberately absent: their modes are ``X -> Y a``,
-        one photon each, so their un-doubled weights are correct.
+        The ω and φ are deliberately absent, as are the η''s other two
+        lines: those modes are ``X -> Y a``, one photon each, so their
+        un-doubled weights are correct.
         """
         assert SPECTRA["eta"][3] == [(MASS_ETA / 2.0, 2.0 * BR_ETA_TO_A_A)]
         assert SPECTRA["long_kaon"][3] == [(MASS_K0 / 2.0, 2 * BR_KL_TO_A_A)]
         assert SPECTRA["short_kaon"][3] == [(MASS_K0 / 2.0, 2 * BR_KS_TO_A_A)]
-        assert SPECTRA["eta_prime"][3] == [(MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A)]
+        assert SPECTRA["eta_prime"][3][0] == (MASS_ETAP / 2.0, 2.0 * BR_ETAP_TO_A_A)
         # Stated as the photon count as well as the expression, so a revert
         # to the shipped weight fails on the number and not only the form.
         assert SPECTRA["eta_prime"][3][0][1] == pytest.approx(0.04614)
@@ -673,20 +694,38 @@ class TestPhysics:
         ``projects/parity-pinned-defect-repair``; the corpus still pins the
         misplaced lines and ``test/parity/deltas.py`` declares the shift.
 
-        Both mesons are held together because both are now correct; the ω's
-        lines were never misplaced.
+        Every ``X -> Y a`` line is held together because all of them are
+        now correct. The ω's lines were never misplaced, and the φ's
+        ``π⁰ a`` and the η''s ``ρ⁰ a`` and ``ω a`` shipped with no line at
+        all (repairs C4 and C5). The η''s first line is its ``a a`` one,
+        which the test above holds.
         """
-        for name, parent_mass, daughters, correct in (
+        for name, parent_mass, first, daughters, correct in (
             (
                 "phi",
                 MASS_PHI,
-                (MASS_ETA, MASS_ETAP),
-                (362.5189975276151, 59.815040556235125),
+                0,
+                (MASS_ETA, MASS_ETAP, MASS_PI0),
+                (362.5189975276151, 59.815040556235125, 500.79502500966686),
             ),
-            ("omega", MASS_OMEGA, (MASS_PI0, MASS_ETA), (379.6910146562748, 199.5783)),
+            (
+                "omega",
+                MASS_OMEGA,
+                0,
+                (MASS_PI0, MASS_ETA),
+                (379.6910146562748, 199.5783),
+            ),
+            (
+                "eta_prime",
+                MASS_ETAP,
+                1,
+                (MASS_RHO, MASS_OMEGA),
+                (165.12897575643677, 159.11057487105597),
+            ),
         ):
+            assert len(SPECTRA[name][3]) == first + len(daughters), name
             pairs = zip(daughters, correct, strict=True)
-            for index, (daughter_mass, expected) in enumerate(pairs):
+            for index, (daughter_mass, expected) in enumerate(pairs, start=first):
                 line_energy = SPECTRA[name][3][index][0]
                 daughter = (parent_mass**2 + daughter_mass**2) / (2 * parent_mass)
                 assert line_energy == pytest.approx(expected), name
@@ -697,6 +736,71 @@ class TestPhysics:
         # form fails on the number and not only on the identity.
         assert SPECTRA["phi"][3][0][0] != pytest.approx(656.942002472385)
         assert SPECTRA["phi"][3][1][0] != pytest.approx(959.6459594437648)
+
+    @pytest.mark.parametrize(
+        "mode",
+        [
+            (
+                "phi",
+                "pi0_a",
+                MASS_PHI,
+                MASS_PI0,
+                BR_PHI_TO_PI0_A,
+                spectra.dnde_photon_neutral_pion,
+            ),
+            (
+                "eta_prime",
+                "rho0_a",
+                MASS_ETAP,
+                MASS_RHO,
+                BR_ETAP_TO_RHO_A,
+                spectra.dnde_photon_neutral_rho,
+            ),
+            (
+                "eta_prime",
+                "omega_a",
+                MASS_ETAP,
+                MASS_OMEGA,
+                BR_ETAP_TO_OMEGA_A,
+                spectra.dnde_photon_omega,
+            ),
+        ],
+        ids=["phi -> pi0 a", "eta' -> rho0 a", "eta' -> omega a"],
+    )
+    def test_no_table_column_carries_its_modes_direct_photon(
+        self, mode: tuple[str, str, float, float, float, Callable[..., Any]]
+    ) -> None:
+        """An ``X -> Y a`` column holds the daughter's photons and no others.
+
+        This is why the modes need a line. The tables' generator,
+        ``notebooks/decay_spectra/utils.py``, gives a final-state photon no
+        spectrum of its own, so a column counts only ``Y``'s decay photons:
+        per decay of the mode, its integral is ``Y``'s own photon yield at
+        ``Y``'s energy in the two-body decay. A direct photon folded into
+        the column would add exactly one photon to that.
+
+        Integrated on the table's own grid, the π⁰ and ρ⁰ columns match
+        today's daughter kernels to 2e-9 and 2e-7, which says the column is
+        exactly ``BR`` times the daughter's boosted spectrum. The ω column
+        sits 0.12 photons above today's ω kernel on the same grid, so the
+        table was generated from an ω spectrum that differs from today's.
+        Either reading is well under the one photon a direct photon would
+        add, and `DIRECT_PHOTON_MARGIN` separates them.
+        """
+        parent, column, parent_mass, daughter_mass, weight, daughter = mode
+        csv = DATA_DIR / f"{parent}_photon.csv"
+        header = csv.read_text().splitlines()[0]
+        index = header.lstrip("# ").split(",").index(column)
+        data = np.loadtxt(csv, delimiter=",").T
+        energies, values = data[0], data[index]
+        daughter_energy = (parent_mass**2 + daughter_mass**2) / (2 * parent_mass)
+
+        per_decay = float(np.trapezoid(values, energies)) / weight
+        own = float(np.trapezoid(daughter(energies, daughter_energy), energies))
+        assert abs(per_decay - own) < DIRECT_PHOTON_MARGIN, (
+            f"{parent}.{column}: {per_decay} photons per decay against the "
+            f"daughter's own {own}"
+        )
 
     @pytest.mark.parametrize("name", NAMES)
     def test_the_spectrum_is_non_negative_across_its_support(self, name: str) -> None:
