@@ -294,8 +294,21 @@ past-tense worked example and one canonical phase file given a dated
   this lesson and it was read at task start; what defeated it was
   preferring an observed counter-example in the tree to the written rule.
   When the two disagree, check whether the counter-example was ever
-  swept. A transcript stays honest by carrying the current path plus a
-  bracketed note of what the command saw when it ran.
+  swept. A path inside a transcript is a record rather than a link, so it
+  keeps the path the command saw, and a bracketed note beside it gives the
+  current one (`doc-consistency.md` §11).
+- PR #108 moved `rho-photon-outer-boost-misses-support.md` to `done/` and
+  repointed every hit of the old path, including the preflight command and
+  markdownlint output recorded in
+  `projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md`
+  and the sweep table in `task-9-rho-rest-frame.md`. Both records now named a
+  `done/` file that was under `todo/` when they ran. The bracketed note under
+  the Task 8 command still credited Task 12 with every repointed path, so it
+  misattributed the later move too. Review restored the recorded `todo/`
+  paths and extended the note to name PR #108 as the one that moved the file.
+  The sweep that caught it was the diff itself: `git diff master...HEAD -U0 |
+  grep -E '^[-+].*<slug>'` shows each repointed hit with its surrounding
+  line, and a hit inside a fenced command or output block is a record.
 
 ### degenerate-sample-count
 
