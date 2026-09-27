@@ -3,9 +3,25 @@
 - **Added:** 2026-09-20
 - **Source:** PR #99 review (parity-pinned-defect-repair Task 10, Reviewer E)
 - **Scope:** commit
-- **Status:** open
+- **Status:** done — `TheoryDec.positron_spectrum_funcs` binds each
+  channel through a `make_dnde_wrapped(fs)` factory.
 - **Triggers / blockers:** none. The parity corpus does not pin any
   `TheoryDec` positron spectrum, so the repair moves no corpus value.
+
+> **Resolved.** Each wrapped channel now evaluates its own kernel, and
+> `RHNeutrino`'s total matches the branching-fraction-weighted channel
+> sum quoted below, bit for bit. Two identities in
+> `test/test_theory_aggregation.py` pin this for the electron and muon
+> flavors at 500 MeV, and both fail on the shipped closure.
+>
+> **Blast radius.** Only direct callers of the `TheoryDec` positron
+> methods saw zeros: `positron_spectra`, `total_positron_spectrum`, and
+> `total_conv_positron_spectrum_fn`. The two CMB paths,
+> `TheoryCMB.f_eff` and `hazma.limits._cmb`, call
+> `total_positron_spectrum(es, e_cm)` with the annihilation signature,
+> which a `TheoryDec` does not accept, so they never reached this code.
+> `PBH` has one channel, `all`, and defines no `_positron_spectrum_funcs`
+> of its own, so it cannot hit the closure either.
 
 ## Why
 

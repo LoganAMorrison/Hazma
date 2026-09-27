@@ -89,6 +89,22 @@ user-facing change even when no signature did.
   positions declared as parity roster entry `C2`, composed with `B5` in
   all six arrays.
 
+- **`RHNeutrino` positron spectra are no longer zero.**
+  `TheoryDec.positron_spectrum_funcs` built its per-channel wrappers in a
+  loop whose closures read the loop variables when called, so every
+  channel evaluated the last one in `_positron_spectrum_funcs`. For
+  `RHNeutrino` that is a three-neutrino decay with no positron, so
+  `positron_spectra`, `total_positron_spectrum` and
+  `total_conv_positron_spectrum_fn` returned zeros for every channel and
+  for the total. Each channel now evaluates its own kernel. For
+  `RHNeutrino(500, 1e-3, "e")` at `E = 1, 3.0, 9.1, 27, 83, 250` MeV the
+  total goes from zero to
+  `(4.75e-5, 4.64e-4, 3.41e-3, 7.64e-3, 6.37e-3, 0)` MeV⁻¹; `e pi`, the
+  largest channel, has branching fraction 0.41. `SingleChannelDec` does
+  not move, since its only channel is also its last.
+  The parity corpus pins no decaying-theory positron spectrum. Details:
+  `docs/followups/done/decaying-theory-positron-channels-share-the-last-closure.md`.
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed

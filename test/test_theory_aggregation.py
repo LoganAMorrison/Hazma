@@ -33,13 +33,14 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
 from hazma.parameters import neutral_pion_mass, vh
+from hazma.rh_neutrino import RHNeutrino
 from hazma.scalar_mediator import HeavyQuark, ScalarMediator
 from hazma.vector_mediator import KineticMixing, QuarksOnly, VectorMediator
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
 
-    from hazma.theory import TheoryAnn
+    from hazma.theory import TheoryAnn, TheoryDec
 
 # A dark-matter pair at rest annihilates at e_cm = 2 mx (1 + v_rel^2 / 2);
 # v_rel = 1e-3 is the Milky Way halo value the model docs use throughout.
@@ -332,6 +333,61 @@ def test_total_positron_spectrum_matches_the_positron_spectra_total(
         np.asarray(model.total_positron_spectrum(e_ps, e_cm)),
         np.asarray(model.positron_spectra(e_ps, e_cm)["total"]),
     )
+
+
+# --------------------------------------------------------------------------
+# Decaying-theory positron spectra
+# --------------------------------------------------------------------------
+
+# Right-handed neutrinos at 500 MeV decay through about twenty channels, so
+# every per-channel wrapper in ``TheoryDec.positron_spectrum_funcs`` has to
+# reach its own kernel. Each model's last channel is a three-neutrino decay
+# with no positron, so a wrapper that evaluates the last channel returns zeros.
+DECAYING_MODELS = [
+    pytest.param(RHNeutrino(500.0, 1e-3, "e"), id="rh-neutrino-e"),
+    pytest.param(RHNeutrino(500.0, 1e-3, "mu"), id="rh-neutrino-mu"),
+]
+
+
+def decay_positron_energies(model: TheoryDec) -> np.ndarray:
+    """Positron energies spanning 1 MeV to half the decaying particle's mass."""
+    return np.geomspace(1.0, model.mx / 2.0, 6)
+
+
+@pytest.mark.parametrize("model", DECAYING_MODELS)
+def test_decay_positron_channels_evaluate_their_own_kernel(
+    model: TheoryDec,
+) -> None:
+    """Each wrapped channel is its unwrapped kernel, or zeros when closed."""
+    e_ps = decay_positron_energies(model)
+    widths = model.decay_widths()
+    wrapped = model.positron_spectrum_funcs()
+    unwrapped = model._positron_spectrum_funcs()
+
+    assert list(wrapped) == list(unwrapped)
+    for fs, dnde in unwrapped.items():
+        expected = dnde(e_ps) if widths[fs] > 0 else np.zeros_like(e_ps)
+        assert_array_equal(np.asarray(wrapped[fs](e_ps)), expected, err_msg=fs)
+
+
+@pytest.mark.parametrize("model", DECAYING_MODELS)
+def test_decay_positron_total_is_the_weighted_channel_sum(model: TheoryDec) -> None:
+    """The total is the branching-fraction-weighted sum of the open kernels.
+
+    Exact: ``positron_spectra`` accumulates the same products in the same
+    order, and each closed channel adds an exact ``0.0``. The positivity check
+    keeps the identity from passing vacuously on an all-zero spectrum.
+    """
+    e_ps = decay_positron_energies(model)
+    widths = model.decay_widths()
+    bfs = model.decay_branching_fractions()
+    unwrapped = model._positron_spectrum_funcs()
+
+    expected = sum(
+        bfs[fs] * dnde(e_ps) for fs, dnde in unwrapped.items() if widths[fs] > 0
+    )
+    assert np.any(expected > 0.0)
+    assert_array_equal(np.asarray(model.total_positron_spectrum(e_ps)), expected)
 
 
 # --------------------------------------------------------------------------

@@ -173,7 +173,7 @@ project, and one is filed with this retrospective.
   yield and this would raise it.
 - **Every decaying-theory positron channel evaluates the last channel**
   (PR #99 review, Task 10):
-  [`decaying-theory-positron-channels-share-the-last-closure.md`](../../../docs/followups/todo/decaying-theory-positron-channels-share-the-last-closure.md).
+  [`decaying-theory-positron-channels-share-the-last-closure.md`](../../../docs/followups/done/decaying-theory-positron-channels-share-the-last-closure.md).
 - **The delta layer outlives the project that owns its ADR** (filed with
   this retrospective):
   [`delta-declaration-layer-outlives-its-project.md`](../../../docs/followups/done/delta-declaration-layer-outlives-its-project.md).
