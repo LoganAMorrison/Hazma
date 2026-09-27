@@ -89,6 +89,35 @@ user-facing change even when no signature did.
   positions declared as parity roster entry `C2`, composed with `B5` in
   all six arrays.
 
+- **Both rho photon spectra keep the top of their spectrum at high
+  boost.** `dnde_photon_charged_rho` and `dnde_photon_neutral_rho` boost
+  the daughter pions' photon spectra out of the rho frame, and they
+  integrated over the whole boost window. The integrand is zero above
+  the rho's rest-frame photon endpoint, 375.47 MeV for the charged rho
+  and 374.63 MeV for the neutral one. Near the lab-frame endpoint only a
+  sliver at the bottom of the window survives, and QUADPACK returned
+  `0.0` as converged. The window now stops at the endpoint. With the
+  charged pion already repaired in 2.3.0, both spectra were exactly zero
+  over the top 0.2% of their range at `E_ρ = 1.05 m_ρ`, the top 2.7% at
+  `2 m_ρ` and the top 46% at `10 m_ρ`. They now reach the kinematic
+  endpoint at every boost. Integrated over energy, the charged rho had
+  lost 0.13% of its photon energy at `2 m_ρ` and 35% at `10 m_ρ`, most
+  of it the top of the `π⁰ → γγ` box; the neutral rho had lost 0.63% at
+  `10 m_ρ`. Both now carry `γ` times their rest-frame photon energy to
+  within 1e-6. Pointwise, at `E_ρ = 10 m_ρ` and `E_γ = 6` GeV the
+  charged rho goes from `0` to 6.020e-5 MeV⁻¹ and the neutral rho from
+  `0` to 7.976e-10 MeV⁻¹. Where the tail was not lost, values still move
+  by up to 4.8e-2 relative, because the narrower interval changes how
+  the quadrature subdivides. Everything built on these kernels moves
+  with them: `hazma.spectra.dnde_photon` with a `"rho"` or `"rho0"`
+  final state, and `RHNeutrino`'s `ν ρ⁰` photon spectrum, pointwise by
+  up to 9.9e-2 at `m_N = 2` GeV. The rest-frame values, at
+  `E_ρ = m_ρ`, do not move. This was
+  [a defect 2.3.0 measured without repairing](docs/followups/done/rho-photon-outer-boost-misses-support.md).
+  The corpus arrays that pinned it stay committed, with 382 moved
+  positions declared as parity roster entry `C3`, composed with `A3` in
+  all twelve arrays.
+
 - **`RHNeutrino` positron spectra are no longer zero.**
   `TheoryDec.positron_spectrum_funcs` built its per-channel wrappers in a
   loop whose closures read the loop variables when called, so every
@@ -149,7 +178,7 @@ Three of 2.2.0's known issues remain open:
 and [the vector cross sections' `TypeError` at `e_cm = 2 m_x`](docs/followups/todo/vector-cross-sections-raise-at-the-two-mx-threshold.md).
 The repairs also surfaced three new defects, which this release does not
 fix:
-[the rho's outer boost can miss its support](docs/followups/todo/rho-photon-outer-boost-misses-support.md),
+[the rho's outer boost can miss its support](docs/followups/done/rho-photon-outer-boost-misses-support.md),
 [the charged pion's neutrino continuum loses its quadrature support](docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md),
 and [the φ omits its direct `φ → π⁰γ` line](docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md).
 

@@ -143,7 +143,7 @@ Python lint inputs):
 ```sh
 PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh \
   --paths "test/parity/deltas.py test/parity/test_parity.py test/parity/test_pion_repair.py test/test_core_photon_pion.py" \
-  --md "CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md"
+  --md "CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/done/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md"
 ```
 
 [Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
@@ -162,7 +162,7 @@ PASS   cargo clippy            rust/
 PASS   cargo test              rust/
 PASS   pytest                  2302 passed, 16 skipped, 1 warning, 37 subtests passed in 26.99s
 PASS   import hazma            version 2.2.0
-PASS   markdownlint            CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/todo/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
+PASS   markdownlint            CHANGELOG.md docs/followups/README.md docs/followups/done/charged-pion-photon-spectrum-misses-the-forward-cone.md docs/followups/done/rho-photon-outer-boost-misses-support.md projects/parity-pinned-defect-repair/PLAN.md projects/parity-pinned-defect-repair/references/defect-blast-radius.md projects/parity-pinned-defect-repair/task-notes/README.md projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 -------------------------------------------------------------------
@@ -282,7 +282,7 @@ The unchanged vector muon-only arrays retain their original case budget.
 The review fixes passed all eight CI checks at `3d124214`; evidence is in
 [`task-8-review-response.md`](task-8-review-response.md). No Task 8 gate
 remains open. The separate outer rho support repair is tracked in
-[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
+[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/done/rho-photon-outer-boost-misses-support.md).
 
 ## Plan Impact
 

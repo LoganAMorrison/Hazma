@@ -64,6 +64,13 @@ scipy over the shipped window and added to the shipped lines, it has to
 be the stored arrays exactly, at every boosted position, whether or not
 the clip moves that position.
 
+**C3** — the third, and the same shape as C2 one kernel up: the rho's
+photon boost over the clipped window minus the same boost over the
+shipped one. Its declarations compose onto A3, whose capture already
+holds the unclipped boost over the repaired pion, so the backward check
+is against that capture rather than the stored arrays: the shipped half
+has to reproduce it at every boosted position.
+
 Deliberately not arbitrary precision
 ------------------------------------
 ``../rules.md`` rule 3 asks for an `mpmath` reference in the shape of
@@ -93,6 +100,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import deltas  # (imported after the sys.path entry above)
 import generate as corpus_generate
+import oracle_reference
 
 MANIFEST = corpus_generate.load_manifest()
 
@@ -609,6 +617,8 @@ EXPECTED_REACH = {
     "B3": (4, 350),
     "C1": (192, 8912),
     "C2": (6, 430),
+    "C3/charged_rho": (6, 191),
+    "C3/neutral_rho": (6, 191),
 }
 
 #: Which corpus cases each model reaches, from the roster in
@@ -625,6 +635,8 @@ MODEL_CASES = {
         for pt in ("", "_pt")
     ),
     "C2": ("spectra.neutrino.charged_pion",),
+    "C3/charged_rho": ("spectra.photon.charged_rho",),
+    "C3/neutral_rho": ("spectra.photon.neutral_rho",),
 }
 
 
@@ -771,3 +783,61 @@ def test_the_shipped_window_is_the_stored_continuum() -> None:
                 lost += int(((shipped == 0.0) & (clipped > 0.0)).sum())
     # Falsification: the stored arrays do carry the defect.
     assert lost == C2_LOST_POSITIONS
+
+
+#: How far C3's shipped half may sit from the A3 capture. Both are the
+#: rule over the whole boost window, at the kernel's tolerances, over the
+#: repaired pion spectra: the capture ran it in the patched Cython, and
+#: C3 runs it through scipy's QUADPACK over the ported pion kernels.
+#: Measured at most 4.5e-15 relative over the 1,140 positions of each
+#: case's four boosted blocks, so this is 20x headroom and far inside the
+#: 1.5e-11 relative the smallest re-subdivision C3 declares moves by.
+A3_CAPTURE_RTOL = 1e-13
+
+#: The positions of one rho case where the whole window lost the
+#: spectrum outright and the clipped one recovers it: one in
+#: ``boosted_mild`` and eight in ``boosted_strong``, as C3's ``measured``
+#: says.
+C3_LOST_POSITIONS = 9
+
+
+@pytest.mark.parametrize("charged", [True, False], ids=["charged_rho", "neutral_rho"])
+def test_the_whole_window_is_the_a3_capture(charged: bool) -> None:
+    """C3's shipped half is what A3 captured, zeros included.
+
+    Every block off the rest-frame branch, both value arrays, every
+    position. So the half of C3's term that stands for what the A3 build
+    returned is what it returned, including the zeros where the whole
+    window lost the support, and the term is the repair's own change and
+    nothing else.
+    """
+    case_name = f"spectra.photon.{'charged' if charged else 'neutral'}_rho"
+    captures = oracle_reference._blocks("A3")
+    lost = 0
+    for label, stored in _stored(case_name).items():
+        erho = _params(case_name, label)["parent_energy"]
+        if erho - deltas.MASS_RHO < np.finfo(np.float64).eps:
+            continue
+        capture = captures[case_name, label]
+        for suffix, grid_suffix in (
+            ("values", "grid"),
+            ("scalar_values", "scalar_grid"),
+        ):
+            grid = stored[grid_suffix]
+            shipped = np.array(
+                [deltas._rho_boost(float(e), erho, charged, clip=False) for e in grid]
+            )
+            np.testing.assert_allclose(
+                shipped,
+                capture[suffix],
+                rtol=A3_CAPTURE_RTOL,
+                atol=0.0,
+                err_msg=f"{case_name}[{label}].{suffix}: the whole-window boost "
+                "is not the A3 capture",
+            )
+            clipped = np.array(
+                [deltas._rho_boost(float(e), erho, charged, clip=True) for e in grid]
+            )
+            lost += int(((shipped == 0.0) & (clipped > 0.0)).sum())
+    # Falsification: the A3 capture does carry the defect.
+    assert lost == C3_LOST_POSITIONS

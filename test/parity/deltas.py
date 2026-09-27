@@ -117,6 +117,7 @@ from scipy.integrate import quad
 from hazma import parameters
 from hazma._core import boost as core_boost
 from hazma._core import neutrino as core_neutrino
+from hazma._core import photon as core_photon
 
 if TYPE_CHECKING:
     from cases import Block
@@ -128,7 +129,7 @@ if TYPE_CHECKING:
 #: numbered in landing order and listed in ``README.md``, "Repairs". See
 #: ``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``.
 REPAIRS = frozenset(
-    {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2"}
+    {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3"}
 )
 
 #: The sentinel for "every position the relation actually moves", resolved
@@ -1041,7 +1042,7 @@ _A3 = Delta(
     "corpus cases. The pion moves 245 positions, each rho 528, each vector "
     "entry point 2,013, and the scalar mediator 1,032. Rho rest positions "
     "move too: Task 9 composes B3 with A3. The outer rho support "
-    "defect is a separate follow-up.",
+    "defect is C3, composed with A3 in the boosted rho blocks.",
     evidence="projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md",
 )
 
@@ -1405,13 +1406,218 @@ _A1_B2 = Delta(
 )
 
 
+# ---------------------------------------------------------------------------
+# C3 -- the rho photon boost keeps its quadrature support
+# ---------------------------------------------------------------------------
+
+#: The rho's two-body pion energies, MeV, in ``photon_rho.rs``'s operation
+#: order: the charged rho's charged and neutral daughters, and either
+#: daughter of the neutral rho.
+_ENG_PI_CHARGED_RHO = (
+    MASS_RHO * MASS_RHO
+    + parameters.charged_pion_mass**2
+    - parameters.neutral_pion_mass**2
+) / (2.0 * MASS_RHO)
+_ENG_PI0_CHARGED_RHO = (
+    MASS_RHO * MASS_RHO
+    + parameters.neutral_pion_mass**2
+    - parameters.charged_pion_mass**2
+) / (2.0 * MASS_RHO)
+_ENG_PI_NEUTRAL_RHO = MASS_RHO / 2.0
+
+
+def _charged_pion_photon_endpoint(epi: float) -> float:
+    """``photon_pion::charged_pion_photon_endpoint``, MeV.
+
+    The ``pi -> e nu gamma`` edge ``(m_pi^2 - m_e^2) / (2 m_pi)``, the
+    widest of the charged pion's channels, boosted fully forward.
+    """
+    mpi = parameters.charged_pion_mass
+    me = parameters.electron_mass
+    rest = (mpi * mpi - me * me) / (2.0 * mpi)
+    gamma = float(core_boost.boost_gamma(epi, mpi))
+    beta = float(core_boost.boost_beta(epi, mpi))
+    return rest * gamma * (1.0 + beta)
+
+
+def _neutral_pion_box_top(epi: float) -> float:
+    """The top of ``photon_pion::neutral_pion_photon_box``, MeV.
+
+    ``E_pi (1 + beta) / 2`` with ``beta`` rounded through ``float32``, as
+    the kernel's box is.
+    """
+    ratio = parameters.neutral_pion_mass / epi
+    beta = float(np.float32(math.sqrt(1.0 - ratio * ratio)))
+    return (epi * (1.0 + beta)) * 0.5
+
+
+def _rho_integrand(charged: bool) -> Callable[[float], float]:
+    """``photon_rho.rs``'s rest-frame integrand, ``f(E') / E'`` in MeV⁻²."""
+    if charged:
+
+        def integrand(e: float) -> float:
+            pion = core_photon.dnde_photon_charged_pion(e, _ENG_PI_CHARGED_RHO)
+            pi0 = core_photon.dnde_photon_neutral_pion(e, _ENG_PI0_CHARGED_RHO)
+            return (pion + pi0) / e
+
+        return integrand
+
+    def integrand(e: float) -> float:
+        pion = core_photon.dnde_photon_charged_pion(e, _ENG_PI_NEUTRAL_RHO)
+        return (pion + pion) / e
+
+    return integrand
+
+
+def _rho_endpoint(charged: bool) -> float:
+    """The rest-frame energy above which `_rho_integrand` vanishes, MeV.
+
+    The charged rho's is the higher of its daughters' two edges, which at
+    these energies is the charged pion's continuum, not the pi0 box.
+    """
+    if charged:
+        return max(
+            _charged_pion_photon_endpoint(_ENG_PI_CHARGED_RHO),
+            _neutral_pion_box_top(_ENG_PI0_CHARGED_RHO),
+        )
+    return _charged_pion_photon_endpoint(_ENG_PI_NEUTRAL_RHO)
+
+
+def _rho_boost(egam: float, erho: float, charged: bool, clip: bool) -> float:
+    """One boosted rho photon value, MeV⁻¹, by scipy.
+
+    ``1 / (2 beta gamma)`` times ``quad`` of `_rho_integrand` over the
+    boost window ``[gamma E (1 - beta), gamma E (1 + beta)]``, in
+    ``photon_rho::boost_window``'s arithmetic and at ``RHO_QUAD``'s
+    tolerances, which are scipy's defaults apart from the two the deleted
+    ``.pyx`` passed. With ``clip`` the window stops at `_rho_endpoint`, as
+    the repaired kernel's does. The integrand is the live pion kernels,
+    which A3 repaired, so the unclipped value is what the A3 capture holds
+    and the clipped one differs from it only by the window.
+    """
+    beta = float(core_boost.boost_beta(erho, MASS_RHO))
+    gamma = float(core_boost.boost_gamma(erho, MASS_RHO))
+    emin = gamma * egam * (1.0 - beta)
+    emax = gamma * egam * (1.0 + beta)
+    if clip:
+        endpoint = _rho_endpoint(charged)
+        if emin >= endpoint:
+            return 0.0
+        emax = min(emax, endpoint)
+    value = quad(_rho_integrand(charged), emin, emax, epsabs=1e-10, epsrel=1e-5)[0]
+    return 0.5 / (beta * gamma) * value
+
+
+def _rho_boost_support(charged: bool) -> TermFn:
+    """The term for one rho species: what the clipped window recovers.
+
+    A factory because the two species share a corpus block shape whose
+    parameters do not say which rho they are. The term is the clipped
+    value minus the unclipped one. Where the window already lies inside
+    the support the two are the same quadrature and the term is exactly
+    zero, so it is not evaluated. A rho at rest takes the kernel's
+    rest-frame branch, which integrates nothing, and has no term.
+    """
+
+    def support(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+        erho = block.params["parent_energy"]
+
+        def term(energies: np.ndarray) -> np.ndarray:
+            out = np.zeros(energies.size, dtype=np.float64)
+            if erho - MASS_RHO < np.finfo(np.float64).eps:
+                return out
+            beta = float(core_boost.boost_beta(erho, MASS_RHO))
+            gamma = float(core_boost.boost_gamma(erho, MASS_RHO))
+            endpoint = _rho_endpoint(charged)
+            for i, egam in enumerate(energies):
+                if gamma * egam * (1.0 + beta) <= endpoint:
+                    continue
+                clipped = _rho_boost(float(egam), erho, charged, clip=True)
+                shipped = _rho_boost(float(egam), erho, charged, clip=False)
+                out[i] = clipped - shipped
+            return out
+
+        terms = {"values": term(block.grid)}
+        probe = block.scalar_probe
+        if probe.size:
+            terms["scalar_values"] = term(probe)
+        return terms
+
+    return support
+
+
+def _c3(charged: bool) -> Delta:
+    """C3 for one rho species, alone: the stored array plus its term."""
+    return Delta(
+        repair="C3",
+        positions=MOVED,
+        relation=Additive(
+            term=_rho_boost_support(charged),
+            rtol=tolerances.PORTED_NESTED_RTOL,
+            why="the rho cases' own 1e-9 nested budget. The term's "
+            "unclipped half is the kernel's pre-repair quadrature redone by "
+            "scipy's QUADPACK over the same pion kernels, and its clipped "
+            "half is the repaired one redone the same way, so the only "
+            "slack is the platform drift already between stored and live. "
+            "No compared value falls below the unclipped one by more than "
+            "8.3e-4 relative, so the term does not amplify that drift.",
+        ),
+        measured="the repaired kernel clips the boost window at the rho's "
+        "rest-frame photon endpoint: the charged pion's pi -> e nu gamma "
+        "edge boosted into the rho frame, 375.4681 MeV for the charged rho "
+        "(above its pi0 box's 374.6598 MeV top) and 374.6256 MeV for the "
+        "neutral one. That moves 191 of each case's 1,395 pinned values: 21 "
+        "in near_rest, 60 in boosted_mild and 110 in boosted_strong, and "
+        "none at rest, where the rest-frame branch integrates nothing, or "
+        "one step above it, where no grid point's window straddles the "
+        "endpoint. 182 per case move by 1.5e-11 to 4.8e-2 relative, either "
+        "way, where the narrower interval re-subdivides a quadrature that "
+        "had found the support. The other nine per case, one in "
+        "boosted_mild and eight in boosted_strong, are where the "
+        "whole-window quadrature returned 0.0. Independently, int E dN/dE over the "
+        "repaired spectrum is gamma times the rest-frame value to 8.3e-7, "
+        "where the whole window lost 35% of it for the charged rho at "
+        "10 m_rho.",
+        evidence="docs/followups/done/rho-photon-outer-boost-misses-support.md",
+    )
+
+
+def _a3_c3(c3: Delta) -> Delta:
+    """A3's capture composed with one species' C3 term."""
+    return Delta(
+        repair="A3+C3",
+        positions=MOVED,
+        relation=Composed(
+            base=_A3_NESTED.relation,
+            added=(c3.relation,),
+            rtol=tolerances.PORTED_NESTED_RTOL,
+            why="A3's nested 1e-9 budget, on C3's derivation: the capture "
+            "holds the unclipped quadrature over the repaired pion, which "
+            "C3's unclipped half recomputes to 4.5e-15, so the composition "
+            "adds no slack of its own. Measured 6.9e-14 worst relative over "
+            "the 382 positions it moves, in charged_rho boosted_strong.",
+        ),
+        measured="C3 moves only arrays A3 already declares, the twelve "
+        "boosted arrays of the two rho cases, so all of them compose; the "
+        "rest arrays keep A3+B3 and the rest_plus_eps arrays A3 alone.",
+        evidence=c3.evidence,
+    )
+
+
+_C3_CHARGED = _c3(charged=True)
+_C3_NEUTRAL = _c3(charged=False)
+_A3_C3_CHARGED = _a3_c3(_C3_CHARGED)
+_A3_C3_NEUTRAL = _a3_c3(_C3_NEUTRAL)
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
 #: the B5 proof: at rest the kernel drops both prompt lines, and one epsilon
 #: above it no grid point's boost window is wide enough to straddle the line.
 DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
-    # A3: captured inner-pion repair, including the rho rest blocks.
+    # A3: captured inner-pion repair, including the rho rest blocks, and
+    # composed with C3 in the boosted rho blocks.
     (
         "mediator_spectra.vector.photon.dnde_decay_v",
         "mv_550.rest.total",
@@ -1622,22 +1828,22 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.charged_rho", "rest", "values"): _A3_B3,
     ("spectra.photon.charged_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
     ("spectra.photon.charged_rho", "rest_plus_eps", "values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "near_rest", "values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "boosted_mild", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3_NESTED,
+    ("spectra.photon.charged_rho", "near_rest", "scalar_values"): _A3_C3_CHARGED,
+    ("spectra.photon.charged_rho", "near_rest", "values"): _A3_C3_CHARGED,
+    ("spectra.photon.charged_rho", "boosted_mild", "scalar_values"): _A3_C3_CHARGED,
+    ("spectra.photon.charged_rho", "boosted_mild", "values"): _A3_C3_CHARGED,
+    ("spectra.photon.charged_rho", "boosted_strong", "scalar_values"): _A3_C3_CHARGED,
+    ("spectra.photon.charged_rho", "boosted_strong", "values"): _A3_C3_CHARGED,
     ("spectra.photon.neutral_rho", "rest", "scalar_values"): _A3_B3,
     ("spectra.photon.neutral_rho", "rest", "values"): _A3_B3,
     ("spectra.photon.neutral_rho", "rest_plus_eps", "scalar_values"): _A3_NESTED,
     ("spectra.photon.neutral_rho", "rest_plus_eps", "values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "near_rest", "values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "boosted_mild", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "boosted_mild", "values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "boosted_strong", "scalar_values"): _A3_NESTED,
-    ("spectra.photon.neutral_rho", "boosted_strong", "values"): _A3_NESTED,
+    ("spectra.photon.neutral_rho", "near_rest", "scalar_values"): _A3_C3_NEUTRAL,
+    ("spectra.photon.neutral_rho", "near_rest", "values"): _A3_C3_NEUTRAL,
+    ("spectra.photon.neutral_rho", "boosted_mild", "scalar_values"): _A3_C3_NEUTRAL,
+    ("spectra.photon.neutral_rho", "boosted_mild", "values"): _A3_C3_NEUTRAL,
+    ("spectra.photon.neutral_rho", "boosted_strong", "scalar_values"): _A3_C3_NEUTRAL,
+    ("spectra.photon.neutral_rho", "boosted_strong", "values"): _A3_C3_NEUTRAL,
     ("spectra.photon.muon", "rest", "values"): _A2,
     # A1.
     ("spectra.photon.eta", "rest_plus_eps", "values"): _A1,
@@ -1909,6 +2115,8 @@ DELTA_MODELS: dict[str, Delta] = {
     "A3/nested": _A3_NESTED,
     "A3+B4": _A3_B4,
     "A3+B3": _A3_B3,
+    "A3+C3/charged_rho": _A3_C3_CHARGED,
+    "A3+C3/neutral_rho": _A3_C3_NEUTRAL,
     "A4": _A4,
     "A4/pion": _A4_PION,
     "A4/nested": _A4_NESTED,
@@ -1924,6 +2132,8 @@ DELTA_MODELS: dict[str, Delta] = {
     "B6": _B6,
     "C1": _C1,
     "C2": _C2,
+    "C3/charged_rho": _C3_CHARGED,
+    "C3/neutral_rho": _C3_NEUTRAL,
 }
 
 

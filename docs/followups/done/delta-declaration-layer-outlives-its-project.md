@@ -9,7 +9,7 @@
   [`mediator-positron-line-misses-the-electron-velocity.md`](mediator-positron-line-misses-the-electron-velocity.md).
 - **Triggers / blockers:** the next repair that moves a parity-pinned
   value. Three are already filed:
-  [`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md),
+  [`rho-photon-outer-boost-misses-support.md`](../done/rho-photon-outer-boost-misses-support.md),
   [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../done/neutrino-pion-continuum-loses-its-quadrature-support.md)
   and [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
 

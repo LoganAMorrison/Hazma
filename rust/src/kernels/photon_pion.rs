@@ -337,6 +337,22 @@ const CHARGED_PION_QUAD: QuadOpts<'static> = QuadOpts {
     points: Some(&[-1.0, 1.0]),
 };
 
+/// The highest photon energy a charged pion of energy `epi` emits, MeV.
+///
+/// [`PHOTON_ENDPOINT_PIRF`] boosted fully forward, `γ_π(1 + β_π)` times
+/// the rest-frame edge. Above it [`dnde_photon_charged_pion`] is exactly
+/// zero, the statement [`charged_pion_cos_min`] makes as `cos θ_min ≥ 1`.
+/// The two spellings round independently, so at the edge itself the
+/// angular bound can land a few ulps below 1 and leave a value of order
+/// 1e-39 MeV⁻¹. A pion at rest has `β = 0` and returns the rest-frame
+/// edge itself.
+#[must_use]
+pub fn charged_pion_photon_endpoint(epi: f64) -> f64 {
+    let gamma = boost::boost_gamma(epi, MASS_PI);
+    let beta = boost::boost_beta(epi, MASS_PI);
+    PHOTON_ENDPOINT_PIRF * gamma * (1.0 + beta)
+}
+
 /// Lower angular bound from E' = E gamma (1 - beta cos(theta)).
 /// At rest there is no angular restriction. Nonpositive photon energies
 /// retain the original integrand's boundary behavior (including signed zero).
@@ -398,6 +414,26 @@ pub fn dnde_photon_charged_pion(egam: f64, epi: f64) -> f64 {
     }
 }
 
+/// A neutral pion's velocity, rounded through `f32`.
+///
+/// `fcvt s3, d3` / `fcvt d3, s3` in the shipped object: the `.pyx`
+/// declares `cdef float beta`. See the module docs.
+fn neutral_pion_beta(epi: f64) -> f64 {
+    let ratio = MASS_PI0 / epi;
+    f64::from((1.0 - ratio * ratio).sqrt() as f32)
+}
+
+/// The edges `E_π(1 ∓ β)/2` of a neutral pion's `γγ` box, MeV.
+///
+/// The support of [`dnde_photon_neutral_pion`], computed from the same
+/// `f32`-rounded `β`, so the box and its edges agree bit for bit.
+#[must_use]
+pub fn neutral_pion_photon_box(epi: f64) -> (f64, f64) {
+    let beta = neutral_pion_beta(epi);
+    // `/ 2.0` is emitted as `* 0.5`, which is the same double.
+    ((epi * (1.0 - beta)) * 0.5, (epi * (1.0 + beta)) * 0.5)
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ from neutral-pion decay.
 ///
 /// # Parameters
@@ -423,13 +459,8 @@ pub fn dnde_photon_neutral_pion(egam: f64, epi: f64) -> f64 {
         return 0.0;
     }
 
-    let ratio = MASS_PI0 / epi;
-    // `fcvt s3, d3` / `fcvt d3, s3`: `cdef float beta`.
-    let beta = f64::from((1.0 - ratio * ratio).sqrt() as f32);
-
-    // `/ 2.0` is emitted as `* 0.5`, which is the same double.
-    let lower = (epi * (1.0 - beta)) * 0.5;
-    let upper = (epi * (1.0 + beta)) * 0.5;
+    let beta = neutral_pion_beta(epi);
+    let (lower, upper) = neutral_pion_photon_box(epi);
 
     if lower <= egam && egam <= upper {
         // `fcvt s0, d0` / `fcvt d0, s0`: `cdef float ret_val`. The

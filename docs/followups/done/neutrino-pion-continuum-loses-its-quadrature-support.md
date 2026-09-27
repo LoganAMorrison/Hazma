@@ -211,8 +211,9 @@ Cython's integrand bit for bit.
 **Other windows.** The sweep asked for under "Risks" found no other
 energy-space boost integral with an unclipped window except
 `photon_rho.rs`'s, which
-[`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md)
-already tracks. The same failure in the angular variable is filed as
+[`rho-photon-outer-boost-misses-support.md`](rho-photon-outer-boost-misses-support.md)
+tracked and `C3` has since repaired. The same failure in the angular
+variable is filed as
 [`mediator-decay-angular-windows-miss-their-support.md`](../todo/mediator-decay-angular-windows-miss-their-support.md).
 
 **`NaN` inputs.** The clip is a comparison, not `f64::min`, because

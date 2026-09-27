@@ -12,7 +12,7 @@ swap's PR. There is no twin left to call, so the against-the-Cython
 evidence is the parity corpus plus the direct comparison run *before* the
 deletion — see "What replaced the Cython oracle" below.
 
-Four parts:
+Five parts:
 
 1. :class:`TestDispatchWiring` — one assertion per contract branch, for
    both entry points.
@@ -22,7 +22,10 @@ Four parts:
    recomputed in Python with ``scipy.integrate.quad`` over the *ported*
    pion kernels. A genuine second opinion on the layer this task added,
    using a different QUADPACK binding over the same integrand.
-4. :class:`TestPhysics` — statements about the spectra that outlive the
+4. :class:`TestTheBoostedTail` — the top of the boosted spectrum, which
+   the Cython's whole-window integral lost, against a log-energy
+   reference and the ``gamma`` scaling of the photon energy.
+5. :class:`TestPhysics` — statements about the spectra that outlive the
    Cython.
 
 What replaced the Cython oracle
@@ -92,11 +95,13 @@ MASS_RHO = 775.26
 MASS_PI = 139.57039
 MASS_PI0 = 134.9768
 
-#: `hazma/spectra/_photon/_pion.pyx:17`, the pion-rest-frame photon
-#: endpoint. A *legacy*-table literal in a file that `include`s the PDG
-#: one — the mixed provenance Phase 03 Task 3.1 recorded and rule 4
-#: preserves. Needed here only to locate the daughters' endpoints.
-ENG_GAM_MAX_PIRG = 69.78345771948752
+MASS_E = 0.5109989461
+
+#: The pion-rest-frame photon endpoint, MeV: ``(m_pi^2 - m_e^2) / (2 m_pi)``,
+#: the edge of the ``pi -> e nu gamma`` channel and the widest of the
+#: charged pion's three. ``PHOTON_ENDPOINT_PIRF`` in
+#: ``rust/src/kernels/photon_pion.rs``.
+PHOTON_ENDPOINT_PIRF = (MASS_PI * MASS_PI - MASS_E * MASS_E) / (2.0 * MASS_PI)
 
 
 def two_body_energy(q: float, m1: float, m2: float) -> float:
@@ -150,6 +155,11 @@ INDEPENDENT_BUDGET = 1e-9
 #: integrands' ratio inverts.
 PI0_BOX_LOWER_EDGE = 12.156854062150506
 
+#: Both edges of that box, MeV: the lower one above and ``E_pi0 (1 + beta)/2``.
+#: Jump discontinuities of the charged rho's integrand, which
+#: :func:`log_energy_reference` hands to scipy as break points.
+PI0_BOX_EDGES = (PI0_BOX_LOWER_EDGE, 374.6597689891406)
+
 #: The band the charged-to-neutral integrand ratio occupies **below**
 #: :data:`PI0_BOX_LOWER_EDGE`, where the charged rho has one charged pion
 #: against the neutral rho's two. Exactly 0.5 in the limit where the two
@@ -182,15 +192,19 @@ def neutral_integrand(e: float) -> float:
     return 2.0 * charged_pion_dnde(e, ENG_PI_NEUTRAL_RHO) / e
 
 
-def reference(egam: float, erho: float, integrand: Callable[[float], float]) -> float:
-    """The outer boost in Python over scipy, with the corrected rest limit.
+def reference(
+    egam: float, erho: float, integrand: Callable[[float], float], endpoint: float
+) -> float:
+    """The outer boost in Python over scipy, as the repaired kernel poses it.
 
-    The boosted branch transcribes the deleted Cython; the rest branch
-    removes its erroneous 1/E factor. Two independent QUADPACK bindings
-    given the same integrand and the same tolerances land on the same
-    number. The inner pion spectra are shared — they are the ported Rust
-    either way — so this oracle tests the outer integration and the
-    branch structure, and nothing below them.
+    The boosted branch transcribes the deleted Cython's window clipped at
+    the integrand's rest-frame ``endpoint``; the rest branch removes its
+    erroneous 1/E factor. Two independent QUADPACK bindings given the same
+    integrand, interval and tolerances land on the same number. The inner
+    pion spectra are shared — they are the ported Rust either way — so
+    this oracle tests the outer integration and the branch structure, and
+    nothing below them. :func:`log_energy_reference` is the one that does
+    not share the kernel's interval.
     """
     if erho < MASS_RHO:
         return 0.0
@@ -200,9 +214,44 @@ def reference(egam: float, erho: float, integrand: Callable[[float], float]) -> 
     beta = math.sqrt(1.0 - (MASS_RHO / erho) ** 2)
     gamma = erho / MASS_RHO
     emin = gamma * egam * (1.0 - beta)
-    emax = gamma * egam * (1.0 + beta)
+    emax = min(gamma * egam * (1.0 + beta), endpoint)
+    if emin >= emax:
+        return 0.0
     pre = 0.5 / (beta * gamma)
     return pre * quad(integrand, emin, emax, epsabs=QUAD_EPSABS, epsrel=QUAD_EPSREL)[0]
+
+
+def log_energy_reference(egam: float, erho: float, charged: bool) -> float:
+    """The boosted spectrum integrated over ``u = ln E'``, MeV^-1.
+
+    ``dE'/E' = du``, so the boost integral is ``1/(2 beta gamma)`` times
+    ``int f(e^u) du`` over the window's intersection with the support,
+    with the pi0 box's two edges handed to scipy as break points and a
+    tolerance three decades tighter than the kernel's, the tightest at which
+    scipy reports no roundoff against the inner quadrature's noise. It shares the pion
+    spectra with the kernel and nothing else: not the variable, not the
+    interval's parametrization, and not the break-point-free rule the
+    kernel's ``qags`` applies across the box edges.
+    """
+    beta = math.sqrt(1.0 - (MASS_RHO / erho) ** 2)
+    gamma = erho / MASS_RHO
+    lower = math.log(gamma * egam * (1.0 - beta))
+    upper = math.log(min(gamma * egam * (1.0 + beta), rho_rest_frame_endpoint(charged)))
+    if lower >= upper:
+        return 0.0
+    integrand = charged_integrand if charged else neutral_integrand
+    edges = PI0_BOX_EDGES if charged else ()
+    points = [math.log(e) for e in edges if lower < math.log(e) < upper]
+    value = quad(
+        lambda u: math.exp(u) * integrand(math.exp(u)),
+        lower,
+        upper,
+        points=points or None,
+        epsabs=0.0,
+        epsrel=1e-8,
+        limit=200,
+    )[0]
+    return 0.5 / (beta * gamma) * value
 
 
 def daughter_endpoint(rest_endpoint: float, energy: float, mass: float) -> float:
@@ -214,7 +263,7 @@ def daughter_endpoint(rest_endpoint: float, energy: float, mass: float) -> float
 def rho_rest_frame_endpoint(charged: bool) -> float:
     """The highest photon energy a rho at rest can emit, MeV."""
     from_charged_pion = daughter_endpoint(
-        ENG_GAM_MAX_PIRG,
+        PHOTON_ENDPOINT_PIRF,
         ENG_PI_CHARGED_RHO if charged else ENG_PI_NEUTRAL_RHO,
         MASS_PI,
     )
@@ -389,12 +438,14 @@ class TestAgainstAnIndependentBoostIntegral:
     """The outer integral, recomputed through scipy's QUADPACK binding.
 
     Not a re-implementation of the Rust: :func:`reference` transcribes the
-    deleted ``.pyx``'s three branches and hands the same integrand and the
+    deleted ``.pyx``'s three branches, with the window clipped at the
+    support as the kernel clips it, and hands the same integrand and the
     same ``epsabs``/``epsrel`` to ``scipy.integrate.quad``. What it can
-    catch is everything this task added — the branch structure, the boost
-    window, the ``1/(2 beta gamma)`` prefactor, which daughter energies go
-    into which integrand — against an integrator that shares no code with
-    the port. What it cannot catch is an error in the *pion* kernels,
+    catch is the branch structure, the boost window, the
+    ``1/(2 beta gamma)`` prefactor, which daughter energies go into which
+    integrand — against an integrator that shares no code with the port.
+    Because it shares the kernel's interval it cannot see a wrong clip;
+    :class:`TestTheBoostedTail` can. What it cannot catch is an error in the *pion* kernels,
     which both sides call; those are Task 4.4's, gated by its own module
     and by the corpus.
     """
@@ -404,9 +455,10 @@ class TestAgainstAnIndependentBoostIntegral:
     def test_a_swept_grid_matches(self, erho: float, charged: bool) -> None:
         fn = dnde_charged if charged else dnde_neutral
         integrand = charged_integrand if charged else neutral_integrand
+        endpoint = rho_rest_frame_endpoint(charged)
         grid = probe_grid(erho, charged)
         got = np.asarray(fn(grid, erho))
-        want = np.array([reference(float(e), erho, integrand) for e in grid])
+        want = np.array([reference(float(e), erho, integrand, endpoint) for e in grid])
         peak = float(np.abs(want).max())
         np.testing.assert_allclose(
             got,
@@ -427,8 +479,11 @@ class TestAgainstAnIndependentBoostIntegral:
         # A wrong prefactor is the cheapest way to be wrong here, and it
         # must be caught by the same comparison the test above makes.
         erho = MASS_RHO * 2.0
+        endpoint = rho_rest_frame_endpoint(charged=True)
         grid = probe_grid(erho, charged=True, npoints=12)
-        want = np.array([reference(float(e), erho, charged_integrand) for e in grid])
+        want = np.array(
+            [reference(float(e), erho, charged_integrand, endpoint) for e in grid]
+        )
         # `1/(beta gamma)` instead of `1/(2 beta gamma)`.
         mutated = 2.0 * want
         peak = float(np.abs(want).max())
@@ -442,8 +497,11 @@ class TestAgainstAnIndependentBoostIntegral:
         # which mass each integrand uses is a transcription error a
         # relative budget would have to be O(1) to miss.
         erho = MASS_RHO * 2.0
+        endpoint = rho_rest_frame_endpoint(charged=True)
         grid = probe_grid(erho, charged=True, npoints=12)
-        want = np.array([reference(float(e), erho, charged_integrand) for e in grid])
+        want = np.array(
+            [reference(float(e), erho, charged_integrand, endpoint) for e in grid]
+        )
 
         def swapped(e: float) -> float:
             return (
@@ -451,8 +509,121 @@ class TestAgainstAnIndependentBoostIntegral:
                 + neutral_pion_dnde(e, ENG_PI_CHARGED_RHO)
             ) / e
 
-        got = np.array([reference(float(e), erho, swapped) for e in grid])
+        # Clipped at the unswapped endpoint, which cuts the swapped box's
+        # last MeV; the two differ by far more than that anyway.
+        got = np.array([reference(float(e), erho, swapped, endpoint) for e in grid])
         assert not np.allclose(got, want, rtol=1e-6)
+
+
+class TestTheBoostedTail:
+    """The top of the boosted spectrum, which the whole-window rule lost.
+
+    Near the lab-frame endpoint the boost window spans decades while the
+    integrand survives only on ``[gamma E (1 - beta), E'_max]`` at its
+    bottom, and a rule over the whole window can place every node above
+    that sliver. With the charged-pion angular integral already repaired,
+    that returned exactly zero over the top 0.2% of the spectrum at
+    ``1.05 m_rho`` and the top 46% at ``10 m_rho``. The kernel now clips
+    the window at ``E'_max``; these tests hold it to references that do
+    not share its interval, and to an invariant no quadrature choice can
+    satisfy by accident.
+    """
+
+    #: How far the kernel may sit from :func:`log_energy_reference`. The
+    #: kernel's outer and inner quadratures both request ``epsrel = 1e-5``
+    #: and the reference cannot resolve the inner one's noise, so the two
+    #: agree to that noise and no better: 5.3e-6 worst, measured over the
+    #: grid below. Five times the requested tolerance; the defect this
+    #: gates is a zero where the reference is positive.
+    LOG_REFERENCE_BUDGET = 5e-5
+
+    #: How far ``int E dN/dE`` may sit from ``gamma`` times its rest-frame
+    #: value. Measured 8.3e-7 worst over the four parametrizations; the
+    #: whole-window rule missed it by 1.3e-3 for the charged rho at
+    #: ``2 m_rho``, by 0.35 at ``10 m_rho``, and by 6.3e-3 for the neutral
+    #: rho at ``10 m_rho``.
+    ENERGY_BUDGET = 1e-5
+
+    #: Fractions of the lab-frame endpoint the tail tests probe. The top
+    #: one sits inside the 0.2% the whole-window rule lost at ``1.05 m_rho``.
+    FRACTIONS = (1e-3, 0.1, 0.3, 0.6, 0.9, 0.99, 0.9999)
+
+    @pytest.mark.parametrize("factor", [1.05, 2.0, 10.0])
+    @pytest.mark.parametrize("charged", [True, False], ids=["charged", "neutral"])
+    def test_the_tail_matches_a_log_energy_reference(
+        self, charged: bool, factor: float
+    ) -> None:
+        fn = dnde_charged if charged else dnde_neutral
+        erho = factor * MASS_RHO
+        lab_endpoint = daughter_endpoint(
+            rho_rest_frame_endpoint(charged), erho, MASS_RHO
+        )
+        grid = np.array(self.FRACTIONS) * lab_endpoint
+        want = np.array([log_energy_reference(float(e), erho, charged) for e in grid])
+        assert np.all(want > 0.0)
+        np.testing.assert_allclose(
+            fn(grid, erho), want, rtol=self.LOG_REFERENCE_BUDGET, atol=0.0
+        )
+
+    def test_the_whole_window_loses_the_tail_the_reference_keeps(self) -> None:
+        # The defect, reproduced through scipy rather than the kernel: the
+        # same rule over the unclipped window returns a converged zero
+        # where the log-energy reference, and now the kernel, do not.
+        erho = 10.0 * MASS_RHO
+        endpoint = rho_rest_frame_endpoint(charged=True)
+        egam = 0.9 * daughter_endpoint(endpoint, erho, MASS_RHO)
+        assert reference(egam, erho, charged_integrand, math.inf) == 0.0
+        assert log_energy_reference(egam, erho, charged=True) > 0.0
+        assert dnde_charged(egam, erho) > 0.0
+
+    @pytest.mark.parametrize("factor", [2.0, 10.0])
+    @pytest.mark.parametrize("charged", [True, False], ids=["charged", "neutral"])
+    def test_the_lab_frame_photon_energy_is_gamma_times_the_rest_frame_energy(
+        self, charged: bool, factor: float
+    ) -> None:
+        """``int E dN/dE dE = gamma int E' f(E') dE'``, exactly.
+
+        Integrating the flat boost kernel against ``E`` over the lab
+        energies that see a given ``E'`` gives ``gamma E'``: an isotropic
+        rest-frame source carries its energy into the lab multiplied by
+        ``gamma``. The top of the spectrum carries the most energy, so this
+        is the invariant a lost tail violates most.
+        """
+        fn = dnde_charged if charged else dnde_neutral
+        integrand = charged_integrand if charged else neutral_integrand
+        endpoint = rho_rest_frame_endpoint(charged)
+        edges = PI0_BOX_EDGES if charged else ()
+        rest = quad(
+            lambda e: e * e * integrand(e),
+            0.0,
+            endpoint,
+            points=edges or None,
+            epsabs=0.0,
+            epsrel=1e-8,
+            limit=200,
+        )[0]
+
+        erho = factor * MASS_RHO
+        gamma = erho / MASS_RHO
+        beta = math.sqrt(1.0 - 1.0 / (gamma * gamma))
+        lab_endpoint = daughter_endpoint(endpoint, erho, MASS_RHO)
+        # The boosted box edges are kinks of the lab spectrum.
+        kinks = sorted(
+            x * gamma * (1.0 + sign * beta)
+            for x in (*edges, endpoint)
+            for sign in (-1.0, 1.0)
+            if x * gamma * (1.0 + sign * beta) < lab_endpoint
+        )
+        lab = quad(
+            lambda e: e * float(fn(e, erho)),
+            0.0,
+            lab_endpoint,
+            points=kinks,
+            epsabs=0.0,
+            epsrel=1e-6,
+            limit=200,
+        )[0]
+        assert lab / (gamma * rest) == pytest.approx(1.0, rel=self.ENERGY_BUDGET)
 
 
 class TestPhysics:

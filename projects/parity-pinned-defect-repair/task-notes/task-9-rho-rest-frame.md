@@ -309,7 +309,7 @@ rg -n --hidden '_A3_B3|TestRhoRestDeclaration|the_rest_frame_branch_returns_the_
 
 | Matched file | Disposition |
 | --- | --- |
-| `docs/followups/todo/rho-photon-outer-boost-misses-support.md` | KEPT — historical evidence or unrelated test/reference |
+| `docs/followups/done/rho-photon-outer-boost-misses-support.md` | KEPT — historical evidence or unrelated test/reference |
 | `docs/followups/done/rho-rest-frame-branch-returns-the-integrand.md` | EDITED — current repair or guidance |
 | `projects/parity-pinned-defect-repair/PLAN.md` | EDITED — current repair or guidance |
 | `projects/parity-pinned-defect-repair/references/corpus-repinning.md` | EDITED — current repair or guidance |

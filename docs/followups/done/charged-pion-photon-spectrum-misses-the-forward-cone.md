@@ -38,8 +38,9 @@ already repaired. Details and verification:
 [`task-8-charged-pion-cone.md`](../../../projects/parity-pinned-defect-repair/task-notes/task-8-charged-pion-cone.md).
 
 The rho's *outer* integral independently loses support. That part of the
-original investigation has its own open item:
-[`rho-photon-outer-boost-misses-support.md`](../todo/rho-photon-outer-boost-misses-support.md).
+original investigation was its own item, since repaired as parity roster
+entry `C3`:
+[`rho-photon-outer-boost-misses-support.md`](rho-photon-outer-boost-misses-support.md).
 Neither the A3 capture nor this repair claims to correct it.
 
 ## Entry points
