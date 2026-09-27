@@ -599,19 +599,18 @@ class TheoryDec(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
 
     def positron_spectrum_funcs(self):
         widths = self.decay_widths()
-        dndes_wrapped = {}
+        spectrum_funcs = self._positron_spectrum_funcs()
 
-        for fs, dnde in self._positron_spectrum_funcs().items():
-
+        def make_dnde_wrapped(fs: str) -> Callable:
             def dnde_wrapped(e_ps):
                 if widths[fs] > 0:
-                    return dnde(e_ps)
+                    return spectrum_funcs[fs](e_ps)
                 else:
                     return np.zeros_like(e_ps)
 
-            dndes_wrapped[fs] = dnde_wrapped
+            return dnde_wrapped
 
-        return dndes_wrapped
+        return {fs: make_dnde_wrapped(fs) for fs in spectrum_funcs.keys()}
 
     def positron_spectra(self, e_ps):
         bfs = self.decay_branching_fractions()

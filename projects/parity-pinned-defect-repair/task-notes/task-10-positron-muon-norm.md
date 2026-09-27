@@ -90,7 +90,7 @@ against Task 2's A4 Cython capture without rewriting any stored array.
   reviewer's observation that `RHNeutrino` positron spectra are all zero
   is a pre-existing late-binding closure in
   `TheoryDec.positron_spectrum_funcs`, unmoved by this task and filed as
-  `docs/followups/todo/decaying-theory-positron-channels-share-the-last-closure.md`.
+  `docs/followups/done/decaying-theory-positron-channels-share-the-last-closure.md`.
 - **CI round (PR #99, run 35568134823).** Ubuntu py3.11 and py3.13
   failed the A4 relation on all five `spectra.positron.muon` blocks, by
   4.6e-16 to 6.8e-12 relative; the other Linux entries and macOS passed.
