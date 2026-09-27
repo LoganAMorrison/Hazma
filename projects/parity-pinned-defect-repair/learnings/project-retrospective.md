@@ -157,7 +157,7 @@ Each substantive seed has a live follow-up. Four were filed during the
 project, and one is filed with this retrospective.
 
 - **The rho's outer boost can miss its support** (Task 8):
-  [`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
+  [`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/done/rho-photon-outer-boost-misses-support.md).
   The inner pion repair (A3) left it standing. It needs an independent
   reference beyond the A3 capture.
 - **The charged pion's neutrino continuum loses its quadrature support**

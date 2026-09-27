@@ -816,7 +816,7 @@ measured values are unchanged by the review fixes.
 
 The pion repair preserves its captured oracle and leaves the outer rho
 quadrature unchanged. Its remaining support failure is tracked in
-[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
+[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/done/rho-photon-outer-boost-misses-support.md).
 Task 12 must not close that new item with the original repaired defects.
 Task 8's measured rho rest overlap corrects the earlier disjointness
 prediction in Task 9's plan; no new relation protocol or ADR is needed.

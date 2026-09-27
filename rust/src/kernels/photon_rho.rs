@@ -23,6 +23,15 @@
 //!   [`ENG_PI_CHARGED_RHO`] and one neutral pion at
 //!   [`ENG_PI0_CHARGED_RHO`], so `f` is the sum of the two.
 //!
+//! `f` vanishes above a rest-frame endpoint `E'_max`, the highest energy
+//! either daughter's photons reach ([`neutral_rho_endpoint`],
+//! [`charged_rho_endpoint`]), so the integral runs over the window's
+//! intersection with `(0, E'_max]`. Near the lab-frame endpoint that
+//! intersection is a sliver at the bottom of a window spanning decades,
+//! and an adaptive rule on the whole window can place every node above
+//! the sliver and return a converged zero; [`boosted`] integrates the
+//! intersection instead.
+//!
 //! Neither branching ratio appears: the `.pyx` weights both daughters by
 //! 1, so a ρ is treated as decaying to pions with unit probability. That
 //! is the shipped behavior and rule 1 (parity discipline) keeps it.
@@ -146,6 +155,30 @@ pub fn charged_rho_integrand(e: f64) -> f64 {
     (charged + neutral) / e
 }
 
+/// The neutral ρ's rest-frame photon endpoint, MeV.
+///
+/// [`neutral_rho_integrand`] is exactly zero above it: both daughters are
+/// charged pions at [`ENG_PI_NEUTRAL_RHO`], so this is their boosted
+/// radiative edge.
+#[must_use]
+pub fn neutral_rho_endpoint() -> f64 {
+    photon_pion::charged_pion_photon_endpoint(ENG_PI_NEUTRAL_RHO)
+}
+
+/// The charged ρ's rest-frame photon endpoint, MeV.
+///
+/// [`charged_rho_integrand`] is exactly zero above it. It is the higher
+/// of its two daughters' edges: the charged pion's radiative continuum
+/// and the top of the neutral pion's `γγ` box. At the ρ's two-body
+/// energies the continuum reaches 375.47 MeV and the box 374.66 MeV, so
+/// clipping at the box alone would drop the continuum's last 0.8 MeV.
+#[must_use]
+pub fn charged_rho_endpoint() -> f64 {
+    let continuum = photon_pion::charged_pion_photon_endpoint(ENG_PI_CHARGED_RHO);
+    let (_, box_top) = photon_pion::neutral_pion_photon_box(ENG_PI0_CHARGED_RHO);
+    continuum.max(box_top)
+}
+
 /// The boost window `[γE(1−β), γE(1+β)]` and the `1/(2βγ)` prefactor.
 ///
 /// Split out of [`boosted`] for one reason: it is the module's only
@@ -197,8 +230,11 @@ fn boost_window(e: f64, erho: f64) -> (f64, f64, f64) {
 ///    comparisons and falls through to
 ///    the quadrature, where `β` and `γ` are `NaN`, the limits are `NaN`
 ///    and the result is `NaN` — the Cython does the same.
-/// 3. Otherwise the quadrature between `γE(1∓β)` with the `1/(2βγ)`
-///    prefactor.
+/// 3. Otherwise the quadrature with the `1/(2βγ)` prefactor, over the
+///    boost window `[γE(1−β), γE(1+β)]` clipped above at `endpoint`, the
+///    rest-frame energy past which `integrand` is exactly zero. A window
+///    that starts at or above `endpoint` is exactly `0.0` without a
+///    quadrature. Clipping is what keeps the tail: see the module docs.
 ///
 /// Every operation is separate and in source order; see the module docs
 /// for why no [`f64::mul_add`] appears.
@@ -207,7 +243,7 @@ fn boost_window(e: f64, erho: f64) -> (f64, f64, f64) {
 // one-sided "within one epsilon MeV of rest" threshold the Cython writes,
 // and `.abs()` would change nothing.
 #[allow(clippy::float_equality_without_abs)]
-fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64) -> f64 {
+fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64, endpoint: f64) -> f64 {
     if erho < MASS_RHO {
         return 0.0;
     }
@@ -221,6 +257,12 @@ fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64) -> f64 {
     }
 
     let (emin, emax, pre) = boost_window(e, erho);
+    if emin >= endpoint {
+        return 0.0;
+    }
+    // Explicit comparisons rather than `f64::min`, so a `NaN` window still
+    // reaches the quadrature and comes back `NaN`.
+    let emax = if emax > endpoint { endpoint } else { emax };
 
     let mut integrand = integrand;
     match quad(&mut integrand, emin, emax, &RHO_QUAD) {
@@ -253,7 +295,7 @@ fn boosted(e: f64, erho: f64, integrand: fn(f64) -> f64) -> f64 {
 /// integrand's extra `1/E` belongs only to the boosted branch.
 #[must_use]
 pub fn dnde_photon_neutral_rho(egam: f64, erho: f64) -> f64 {
-    boosted(egam, erho, neutral_rho_integrand)
+    boosted(egam, erho, neutral_rho_integrand, neutral_rho_endpoint())
 }
 
 /// The photon spectrum `dN/dE` in MeV⁻¹ from charged-ρ decay.
@@ -269,15 +311,15 @@ pub fn dnde_photon_neutral_rho(egam: f64, erho: f64) -> f64 {
 /// At rest, returns the sum of the charged- and neutral-pion spectra.
 #[must_use]
 pub fn dnde_photon_charged_rho(egam: f64, erho: f64) -> f64 {
-    boosted(egam, erho, charged_rho_integrand)
+    boosted(egam, erho, charged_rho_integrand, charged_rho_endpoint())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
         ENG_PI_CHARGED_RHO, ENG_PI_NEUTRAL_RHO, ENG_PI0_CHARGED_RHO, RHO_QUAD,
-        charged_rho_integrand, dnde_photon_charged_rho, dnde_photon_neutral_rho,
-        neutral_rho_integrand,
+        charged_rho_endpoint, charged_rho_integrand, dnde_photon_charged_rho,
+        dnde_photon_neutral_rho, neutral_rho_endpoint, neutral_rho_integrand,
     };
     use crate::constants::pdg::MASS_RHO;
     use crate::quad::quad;
@@ -549,6 +591,68 @@ mod tests {
             assert!(value > 0.0, "positive at {factor}");
             assert!(value < previous, "monotone at {factor}");
             previous = value;
+        }
+    }
+
+    /// Each rest-frame endpoint is the edge of its integrand's support:
+    /// positive just below it, exactly zero just above it.
+    ///
+    /// For the charged ρ the continuum edge must win over the π⁰ box's
+    /// top, or the clip would drop the continuum's last 0.8 MeV.
+    #[test]
+    fn the_rest_frame_endpoints_bound_their_integrands() {
+        let continuum = super::photon_pion::charged_pion_photon_endpoint(ENG_PI_CHARGED_RHO);
+        let (_, box_top) = super::photon_pion::neutral_pion_photon_box(ENG_PI0_CHARGED_RHO);
+        assert!(box_top < continuum);
+        assert_eq!(charged_rho_endpoint().to_bits(), continuum.to_bits());
+        assert!(
+            charged_rho_integrand(0.5 * (box_top + continuum)) > 0.0,
+            "the continuum alone is live between the box top and its edge"
+        );
+
+        for (integrand, endpoint) in [
+            (
+                charged_rho_integrand as fn(f64) -> f64,
+                charged_rho_endpoint(),
+            ),
+            (neutral_rho_integrand, neutral_rho_endpoint()),
+        ] {
+            assert!(integrand(endpoint * (1.0 - 1e-4)) > 0.0, "below {endpoint}");
+            assert_eq!(integrand(endpoint * (1.0 + 1e-12)), 0.0, "above {endpoint}");
+        }
+    }
+
+    /// The boosted spectrum reaches its lab-frame endpoint
+    /// `E'_max γ(1+β)` and is exactly zero past it.
+    ///
+    /// Integrating the whole boost window returned a converged zero over
+    /// the top of the spectrum once the live sliver `[γE(1−β), E'_max]`
+    /// fell between the rule's nodes — from 0.2% of the endpoint at
+    /// `γ = 1.05` to the top 46% at `γ = 10`. Clipping the window at
+    /// `E'_max` leaves nothing for the nodes to miss.
+    #[test]
+    fn the_boosted_spectrum_reaches_its_lab_frame_endpoint() {
+        for (spectrum, endpoint) in [
+            (
+                dnde_photon_charged_rho as fn(f64, f64) -> f64,
+                charged_rho_endpoint(),
+            ),
+            (dnde_photon_neutral_rho, neutral_rho_endpoint()),
+        ] {
+            for factor in [1.05_f64, 2.0, 10.0] {
+                let erho = factor * MASS_RHO;
+                let beta = crate::boost::boost_beta(erho, MASS_RHO);
+                let gamma = crate::boost::boost_gamma(erho, MASS_RHO);
+                let lab_endpoint = endpoint * gamma * (1.0 + beta);
+                for fraction in [0.6, 0.9, 0.999] {
+                    assert!(
+                        spectrum(fraction * lab_endpoint, erho) > 0.0,
+                        "zero at {fraction} of the endpoint at {factor} m_rho"
+                    );
+                }
+                assert_eq!(spectrum(lab_endpoint * (1.0 + 1e-9), erho), 0.0);
+                assert_eq!(spectrum(2.0 * lab_endpoint, erho), 0.0);
+            }
         }
     }
 

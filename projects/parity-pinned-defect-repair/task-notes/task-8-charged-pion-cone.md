@@ -147,9 +147,11 @@ PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh \
 ```
 
 [Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
-`docs/followups/todo/` paths in the block above to `done/`, where the
-follow-ups moved at that project's close; when the command ran they
-were under `todo/`.]
+charged-pion follow-up's path in the block above from
+`docs/followups/todo/` to `done/`, where it moved at that project's
+close; when the command ran it was under `todo/`. The rho outer-boost
+follow-up keeps its recorded `todo/` path. It moved to `done/` later,
+with parity repair `C3` in PR #108.]
 
 ```text
 preflight — /Users/logan.morrison/dev/Hazma/.codex/worktrees/parity-pinned-defect-repair/task-8-charged-pion-cone (base origin/master)
@@ -170,9 +172,11 @@ RESULT: PASS
 ```
 
 [Task 12 of `parity-pinned-defect-repair` (2026-09-24) repointed the
-`docs/followups/todo/` paths in the block above to `done/`, where the
-follow-ups moved at that project's close; when the command ran they
-were under `todo/`.]
+charged-pion follow-up's path in the block above from
+`docs/followups/todo/` to `done/`, where it moved at that project's
+close; when the command ran it was under `todo/`. The rho outer-boost
+follow-up keeps its recorded `todo/` path. It moved to `done/` later,
+with parity repair `C3` in PR #108.]
 
 The full pytest gate includes theory aggregation and the parity suite.
 Subsequent changes only append this evidence and wrap plan prose;
@@ -282,7 +286,7 @@ The unchanged vector muon-only arrays retain their original case budget.
 The review fixes passed all eight CI checks at `3d124214`; evidence is in
 [`task-8-review-response.md`](task-8-review-response.md). No Task 8 gate
 remains open. The separate outer rho support repair is tracked in
-[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/todo/rho-photon-outer-boost-misses-support.md).
+[`rho-photon-outer-boost-misses-support.md`](../../../docs/followups/done/rho-photon-outer-boost-misses-support.md).
 
 ## Plan Impact
 

@@ -445,7 +445,7 @@ this exact kernel, and PR #68's two CI rounds are why.
 
 The scope is the inner pion integral captured by Task 2. The separate
 outer rho support failure is tracked in
-[`rho-photon-outer-boost-misses-support.md`](../../docs/followups/todo/rho-photon-outer-boost-misses-support.md);
+[`rho-photon-outer-boost-misses-support.md`](../../docs/followups/done/rho-photon-outer-boost-misses-support.md);
 repairing it requires an independent reference beyond the A3 capture.
 
 **Deliverable / gate:** Declared deltas on all **6** cases the A3 row of

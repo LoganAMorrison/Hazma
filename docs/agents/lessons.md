@@ -109,7 +109,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   never a convention to copy (PRs #44, #81). Repointing the path is half the
   job: the sentence around the link usually calls the item *open* or its
   question unsettled, so re-read every hit rather than `sed`-ing the path
-  through them (PR #89).
+  through them (PR #89). A hit inside a recorded command, its output or a
+  sweep table is a record, not a link: it keeps the path as run, and a note
+  beside it names the move (PR #108).
 - [pre-existing-failure-asserted-not-measured] "Pre-existing" is a measurement,
   never an assertion. `preflight.sh` gates 2 and 3 make it for you — they diff
   the tree's findings against the merge base, so a red row is already only what
