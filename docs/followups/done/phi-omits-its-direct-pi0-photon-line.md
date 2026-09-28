@@ -23,9 +23,14 @@
 
 > **Resolved.** `rust/src/kernels/photon_tables.rs` gives `PHI` a
 > `φ → π⁰γ` line at 500.795 MeV and `ETA_PRIME` an `η′ → ρ⁰γ` line at
-> 165.129 MeV and an `η′ → ωγ` line at 159.111 MeV. The φ gains
-> `1.32e-3` photons per decay and the η′ gains `0.3202`. See
+> 165.129 MeV and an `η′ → ωγ` line at 159.111 MeV. In flight, the φ
+> gains `1.32e-3` photons per decay and the η′ gains `0.3202`; at rest
+> both return the table alone and do not move. See
 > "Resolution (measured)" below.
+
+The sections from "Why" through "Risks / open questions" describe the
+defect as it was filed, before the repair. In particular,
+`BR_PHI_TO_PI0_A` is now read by `PHI`'s third line.
 
 ## Why
 
@@ -176,6 +181,11 @@ form, and `test/parity/deltas.py` declares them as `Additive` relations.
   arrays by 1.7% to 56%. Five are already `A1+B1` and become
   `A1+B1+C5`, measured 3.3e-16 worst. The sixth, `near_rest.scalar_values`,
   was `A1` alone and becomes `A1+C5`, measured 0.0.
-- Neither moves `rest`, where the kernel adds no line, or
-  `rest_plus_eps`, where the window is 2.8e-6 wide and no grid point
-  falls inside it. No other corpus case moves.
+- Neither moves `rest`, where the kernel returns the table alone and
+  adds no line, or `rest_plus_eps`, where the window is 2.8e-6 wide and
+  no grid point falls inside it. No other corpus case moves.
+
+**Release.** The change is recorded under `[Unreleased]` in
+`CHANGELOG.md` as a numerical change, which `docs/versioning.md` classes
+as `minor`. The version in `pyproject.toml` moves with the release that
+ships it, as it did for the other fixes already under `[Unreleased]`.

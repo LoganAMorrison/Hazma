@@ -141,14 +141,19 @@ user-facing change even when no signature did.
   `η′ → ρ⁰γ` (29.5%) and `η′ → ωγ` (2.52%). They now sit at 500.795,
   165.129 and 159.111 MeV in the parent's rest frame. The ρ⁰ line is at
   the ρ⁰ pole mass, as the table treats it, although the ρ⁰ is 149 MeV
-  wide. `dnde_photon_phi` gains 1.32e-3 photons per decay at any boost,
-  +0.061% of its yield, and `dnde_photon_eta_prime` gains 0.3202, +8.8%.
+  wide. For a parent in flight, `dnde_photon_phi` gains 1.32e-3 photons
+  per decay, +0.061% of its yield, and `dnde_photon_eta_prime` gains
+  0.3202, +8.8%. At rest both return the tabulated continuum alone, which
+  carries no line, so their rest-frame values do not move.
   Pointwise at twice the parent mass, `dnde_photon_phi(500, 2038.922)`
   goes from 1.033088e-3 to 1.033849e-3 MeV⁻¹ and
   `dnde_photon_eta_prime(160, 1915.56)` from 8.451172e-3 to 9.012606e-3
-  MeV⁻¹. Everything built on these kernels moves with them: the N-body
-  photon spectra with a φ or an η′ in the final state, and the photon
-  spectra of `hazma.vector_mediator._gev`. This was
+  MeV⁻¹. Everything built on these kernels moves with them wherever the
+  φ or η′ is in flight: the N-body photon spectra with a φ or an η′ in
+  the final state, and the photon spectra of
+  `hazma.vector_mediator._gev`. A final state that puts every φ and η′
+  exactly at rest, such as `["phi", "phi"]` at `cme = 2 m_φ`, does not
+  move. This was
   [a defect 2.3.0 measured without repairing](docs/followups/done/phi-omits-its-direct-pi0-photon-line.md),
   widened to the η′ by the sweep that repair asked for. The corpus arrays
   that pinned it stay committed, with the moved positions declared as

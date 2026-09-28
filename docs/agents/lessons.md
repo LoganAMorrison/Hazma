@@ -75,7 +75,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 - [partial-historical-labeling] Label the *section* as historical, not one line
   of it — decide per claim what it is a statement about, date the block, and
   head a task note's §Files Changed / §Numerical impact with the task's own PR
-  number (PR #64, #65, #97, #98).
+  number (PR #64, #65, #97, #98, #109).
 - [flat-vs-sectioned-numbering] A document that restarts numbering per section
   but is cited by a flat index has two schemes and no key; put the mapping in
   the cited document and annotate new citations with both forms (PR #55).
@@ -312,7 +312,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   reaching the kernel". State the caveat once and carry it into the same
   paragraph's sentence about the consumer, and measure the composed function at
   the configuration the spared branch corresponds to — for a spectrum kernel
-  with a rest-frame arm, that is the production threshold (PR #95, #103).
+  with a rest-frame arm, that is the production threshold (PR #95, #103, #109).
 - [mapping-fallback-hides-missing-output] When replacing direct dictionary
   indexing with merged mappings, preserve missing-output failures explicitly;
   test a stored key that the preceding computation did not produce (PR #98).
