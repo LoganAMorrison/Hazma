@@ -134,6 +134,32 @@ user-facing change even when no signature did.
   The parity corpus pins no decaying-theory positron spectrum. Details:
   `docs/followups/done/decaying-theory-positron-channels-share-the-last-closure.md`.
 
+- **The φ and η′ photon spectra now carry the direct photon of every
+  `X → Y γ` mode.** The tabulated spectra hold only the photons of each
+  mode's decay products, so a mode's own photon has to come from a
+  monochromatic line. Three modes had none: `φ → π⁰γ` (BR 1.32e-3), and
+  `η′ → ρ⁰γ` (29.5%) and `η′ → ωγ` (2.52%). They now sit at 500.795,
+  165.129 and 159.111 MeV in the parent's rest frame. The ρ⁰ line is at
+  the ρ⁰ pole mass, as the table treats it, although the ρ⁰ is 149 MeV
+  wide. For a parent in flight, `dnde_photon_phi` gains 1.32e-3 photons
+  per decay, +0.061% of its yield, and `dnde_photon_eta_prime` gains
+  0.3202, +8.8%. At rest both return the tabulated continuum alone, which
+  carries no line, so their rest-frame values do not move.
+  Pointwise at twice the parent mass, `dnde_photon_phi(500, 2038.922)`
+  goes from 1.033088e-3 to 1.033849e-3 MeV⁻¹ and
+  `dnde_photon_eta_prime(160, 1915.56)` from 8.451172e-3 to 9.012606e-3
+  MeV⁻¹. Everything built on these kernels moves with them wherever the
+  φ or η′ is in flight: the N-body photon spectra with a φ or an η′ in
+  the final state, and the photon spectra of
+  `hazma.vector_mediator._gev`. A final state that puts every φ and η′
+  exactly at rest, such as `["phi", "phi"]` at `cme = 2 m_φ`, does not
+  move. This was
+  [a defect 2.3.0 measured without repairing](docs/followups/done/phi-omits-its-direct-pi0-photon-line.md),
+  widened to the η′ by the sweep that repair asked for. The corpus arrays
+  that pinned it stay committed, with the moved positions declared as
+  parity roster entries `C4` (179 positions, composed with `A1+B2`) and
+  `C5` (164 positions, composed with `A1+B1` or `A1`).
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed
@@ -180,7 +206,7 @@ The repairs also surfaced three new defects, which this release does not
 fix:
 [the rho's outer boost can miss its support](docs/followups/done/rho-photon-outer-boost-misses-support.md),
 [the charged pion's neutrino continuum loses its quadrature support](docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md),
-and [the φ omits its direct `φ → π⁰γ` line](docs/followups/todo/phi-omits-its-direct-pi0-photon-line.md).
+and [the φ omits its direct `φ → π⁰γ` line](docs/followups/done/phi-omits-its-direct-pi0-photon-line.md).
 
 The release carries one change from outside that project: the first
 entry under `Changed`, the vector mediator's `mu mu` positron channel.

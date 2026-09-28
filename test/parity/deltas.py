@@ -129,7 +129,23 @@ if TYPE_CHECKING:
 #: numbered in landing order and listed in ``README.md``, "Repairs". See
 #: ``docs/adrs/ADR-0003-corpus-repairs-are-declared-deltas.md``.
 REPAIRS = frozenset(
-    {"A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "B5", "B6", "C1", "C2", "C3"}
+    {
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "B6",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+    }
 )
 
 #: The sentinel for "every position the relation actually moves", resolved
@@ -398,13 +414,18 @@ class Delta:
 #: cannot silently move a declaration with the code. That is the
 #: convention `test/test_core_photon_tables.py` already sets for the same
 #: constants.
+MASS_PI0 = 134.9768
 MASS_ETA = 547.862
 MASS_ETAP = 957.78
+MASS_OMEGA = 782.66
 MASS_PHI = 1019.461
 MASS_RHO = 775.26
 BR_ETAP_TO_A_A = 2.307e-2
+BR_ETAP_TO_RHO_A = 29.5e-2
+BR_ETAP_TO_OMEGA_A = 2.52e-2
 BR_PHI_TO_ETA_A = 1.303e-2
 BR_PHI_TO_ETAP_A = 6.22e-5
+BR_PHI_TO_PI0_A = 1.32e-3
 
 
 def _photon_energy(parent: float, daughter: float) -> float:
@@ -1610,6 +1631,149 @@ _A3_C3_CHARGED = _a3_c3(_C3_CHARGED)
 _A3_C3_NEUTRAL = _a3_c3(_C3_NEUTRAL)
 
 
+# ---------------------------------------------------------------------------
+# C4 and C5 -- direct-photon lines the phi and the eta-prime never carried
+# ---------------------------------------------------------------------------
+
+#: ``phi -> pi0 gamma``, the one ``phi -> Y gamma`` mode 2.1.0 gave no line.
+PHI_MISSING_LINES = ((MASS_PI0, BR_PHI_TO_PI0_A),)
+
+#: ``eta' -> rho0 gamma`` and ``eta' -> omega gamma``, both without a line
+#: in 2.1.0.
+ETAP_MISSING_LINES = ((MASS_RHO, BR_ETAP_TO_RHO_A), (MASS_OMEGA, BR_ETAP_TO_OMEGA_A))
+
+
+def _missing_lines(
+    parent: float, daughters: tuple[tuple[float, float], ...]
+) -> Callable[[Callable[..., Any], Block], dict[str, np.ndarray]]:
+    """The term that adds each ``parent -> Y gamma`` line the kernel omitted.
+
+    The tables hold only the photons of the decay products, because the
+    generator in ``notebooks/decay_spectra/utils.py`` gives a final-state
+    photon no spectrum of its own. So a mode with no line is missing its
+    direct photon outright, and the repair adds the line at the photon's
+    energy with the mode's branching ratio as its weight. Both are closed
+    forms, so the term needs no kernel evaluation.
+    """
+
+    def term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+        del fn  # every line is a closed form, not a kernel output
+        beta = _parent_beta(block)
+
+        def added(grid: np.ndarray) -> np.ndarray:
+            total = np.zeros(np.shape(grid), dtype=np.float64)
+            for daughter, weight in daughters:
+                total += _boosted_line(
+                    _photon_energy(parent, daughter), weight, grid, beta
+                )
+            return total
+
+        return _on_value_grids(block, added)
+
+    return term
+
+
+_C4 = Delta(
+    repair="C4",
+    positions=MOVED,
+    relation=Additive(
+        term=_missing_lines(MASS_PHI, PHI_MISSING_LINES),
+        rtol=1e-11,
+        why="the term is closed form, so the budget is the continuum's, "
+        "exactly as for B1 and B2: tolerances.TABULATED_RTOL = 1e-12 with a "
+        "decade of headroom.",
+    ),
+    measured="the phi kernel carried lines for `phi -> eta gamma` and "
+    "`phi -> eta' gamma` but none for `phi -> pi0 gamma`, and the table's "
+    "`pi0_a` column integrates to 1.978 photons per decay of the mode, the "
+    "pi-zero's own two. Adding the line at 500.795 MeV raises 179 "
+    "positions over five arrays, by 4.4e-05 to 0.13 relative to the stored "
+    "value: 19 of `near_rest.values`, 58 and 2 of "
+    "`boosted_mild.{values,scalar_values}`, 97 and 3 of "
+    "`boosted_strong.{values,scalar_values}`. Nothing moves at `rest`, "
+    "where the kernel adds no line, or at `rest_plus_eps`, where no grid "
+    "point falls inside the window.",
+    evidence="docs/followups/done/phi-omits-its-direct-pi0-photon-line.md",
+)
+
+_C5 = Delta(
+    repair="C5",
+    positions=MOVED,
+    relation=Additive(
+        term=_missing_lines(MASS_ETAP, ETAP_MISSING_LINES),
+        rtol=1e-11,
+        why="the term is closed form, so the budget is the continuum's, "
+        "exactly as for B1 and B2: tolerances.TABULATED_RTOL = 1e-12 with a "
+        "decade of headroom.",
+    ),
+    measured="the eta-prime kernel carried a line for `eta' -> gamma "
+    "gamma` but none for `eta' -> rho0 gamma` or `eta' -> omega gamma`, "
+    "whose table columns integrate to the rho-zero's and the omega's own "
+    "photon yields. Adding the lines at 165.129 and 159.111 MeV raises 164 "
+    "positions over six arrays, by 1.7% to 56% relative to the stored "
+    "value: 9 and 1 of `near_rest.{values,scalar_values}`, 53 and 1 of "
+    "`boosted_mild.{values,scalar_values}`, 98 and 2 of "
+    "`boosted_strong.{values,scalar_values}`. Nothing moves at `rest` or "
+    "`rest_plus_eps`, for the reasons C4 gives.",
+    evidence="docs/followups/done/phi-omits-its-direct-pi0-photon-line.md",
+)
+
+
+_A1_B2_C4 = Delta(
+    repair="A1+B2+C4",
+    positions=MOVED,
+    relation=Composed(
+        base=_A1.relation,
+        added=(_B2.relation, _C4.relation),
+        rtol=_A1_B2.relation.rtol,
+        atol=_A1_B2.relation.atol,
+        why="A1+B2's budget and floor, for A1+B2's reasons: C4's addend is "
+        "closed form and adds a line where B2's subtracts one, so it "
+        "cancels nothing and needs no floor of its own. Measured 4.3e-16 "
+        "worst over the 179 positions C4 moves, and 2.9e-14 over the six "
+        "arrays, which is A1+B2's own figure.",
+    ),
+    measured="C4 moves 179 positions over five of this case's ten value "
+    "arrays, every one of which A1+B2 already declares, so the three "
+    "compose. The sixth, `near_rest.scalar_values`, keeps A1+B2: its "
+    "probe falls outside the new line's window.",
+    evidence=_C4.evidence,
+)
+
+_A1_B1_C5 = Delta(
+    repair="A1+B1+C5",
+    positions=MOVED,
+    relation=Composed(
+        base=_A1.relation,
+        added=(_B1.relation, _C5.relation),
+        rtol=_A1_B1.relation.rtol,
+        why="A1+B1's budget, for A1+B1's reasons: C5's addend is closed form "
+        "and is summed after the kernel's fused line terms, as B1's is. "
+        "Measured 3.3e-16 worst over the five arrays.",
+    ),
+    measured="C5 moves 164 positions over six of this case's ten value "
+    "arrays. Five of them A1+B1 already declares, so the three compose. "
+    "The sixth is in `A1+C5`.",
+    evidence=_C5.evidence,
+)
+
+_A1_C5 = Delta(
+    repair="A1+C5",
+    positions=MOVED,
+    relation=Composed(
+        base=_A1.relation,
+        added=(_C5.relation,),
+        rtol=_A1.relation.rtol,
+        why="A1's budget, for A1's reasons: C5's addend is closed form. "
+        "Measured 0.0.",
+    ),
+    measured="the one eta-prime array C5 moves that B1 does not: the "
+    "scalar probe of `near_rest`, whose 199.4 MeV point falls inside "
+    "both new windows but outside the two-photon one.",
+    evidence=_C5.evidence,
+)
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
@@ -1856,12 +2020,12 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.eta", "boosted_strong", "scalar_values"): _A1,
     ("spectra.photon.eta_prime", "rest_plus_eps", "values"): _A1_B1,
     ("spectra.photon.eta_prime", "rest_plus_eps", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "near_rest", "values"): _A1_B1,
-    ("spectra.photon.eta_prime", "near_rest", "scalar_values"): _A1,
-    ("spectra.photon.eta_prime", "boosted_mild", "values"): _A1_B1,
-    ("spectra.photon.eta_prime", "boosted_mild", "scalar_values"): _A1_B1,
-    ("spectra.photon.eta_prime", "boosted_strong", "values"): _A1_B1,
-    ("spectra.photon.eta_prime", "boosted_strong", "scalar_values"): _A1_B1,
+    ("spectra.photon.eta_prime", "near_rest", "values"): _A1_B1_C5,
+    ("spectra.photon.eta_prime", "near_rest", "scalar_values"): _A1_C5,
+    ("spectra.photon.eta_prime", "boosted_mild", "values"): _A1_B1_C5,
+    ("spectra.photon.eta_prime", "boosted_mild", "scalar_values"): _A1_B1_C5,
+    ("spectra.photon.eta_prime", "boosted_strong", "values"): _A1_B1_C5,
+    ("spectra.photon.eta_prime", "boosted_strong", "scalar_values"): _A1_B1_C5,
     ("spectra.photon.omega", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.omega", "rest_plus_eps", "scalar_values"): _A1,
     ("spectra.photon.omega", "near_rest", "values"): _A1,
@@ -1872,12 +2036,12 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.photon.omega", "boosted_strong", "scalar_values"): _A1,
     ("spectra.photon.phi", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.phi", "rest_plus_eps", "scalar_values"): _A1,
-    ("spectra.photon.phi", "near_rest", "values"): _A1_B2,
+    ("spectra.photon.phi", "near_rest", "values"): _A1_B2_C4,
     ("spectra.photon.phi", "near_rest", "scalar_values"): _A1_B2,
-    ("spectra.photon.phi", "boosted_mild", "values"): _A1_B2,
-    ("spectra.photon.phi", "boosted_mild", "scalar_values"): _A1_B2,
-    ("spectra.photon.phi", "boosted_strong", "values"): _A1_B2,
-    ("spectra.photon.phi", "boosted_strong", "scalar_values"): _A1_B2,
+    ("spectra.photon.phi", "boosted_mild", "values"): _A1_B2_C4,
+    ("spectra.photon.phi", "boosted_mild", "scalar_values"): _A1_B2_C4,
+    ("spectra.photon.phi", "boosted_strong", "values"): _A1_B2_C4,
+    ("spectra.photon.phi", "boosted_strong", "scalar_values"): _A1_B2_C4,
     ("spectra.photon.charged_kaon", "rest_plus_eps", "values"): _A1,
     ("spectra.photon.charged_kaon", "rest_plus_eps", "scalar_values"): _A1,
     ("spectra.photon.charged_kaon", "near_rest", "values"): _A1,
@@ -2123,6 +2287,9 @@ DELTA_MODELS: dict[str, Delta] = {
     "A4+C1": _A4_C1,
     "A1+B1": _A1_B1,
     "A1+B2": _A1_B2,
+    "A1+B2+C4": _A1_B2_C4,
+    "A1+B1+C5": _A1_B1_C5,
+    "A1+C5": _A1_C5,
     "B1": _B1,
     "B2": _B2,
     "B3": _B3,
@@ -2134,6 +2301,8 @@ DELTA_MODELS: dict[str, Delta] = {
     "C2": _C2,
     "C3/charged_rho": _C3_CHARGED,
     "C3/neutral_rho": _C3_NEUTRAL,
+    "C4": _C4,
+    "C5": _C5,
 }
 
 

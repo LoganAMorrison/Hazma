@@ -151,7 +151,7 @@ declaration alone.
   so batching saves nothing. It is also a different defect: adding a line
   changes the φ's yield, where B2 relocates it and leaves the yield
   exactly where it was. Tracked as
-  [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
+  [`phi-omits-its-direct-pi0-photon-line.md`](phi-omits-its-direct-pi0-photon-line.md).
 - Sequencing against the corpus was expected to be the real cost. It was
   not: the declared-delta mechanism made each repair independent, and no
   regeneration happened for any of them.

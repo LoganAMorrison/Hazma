@@ -9,7 +9,10 @@
   (`projects/parity-pinned-defect-repair/task-notes/task-6-phi-lines.md`)
 - **Scope:** cross-cutting (a published spectrum is missing a feature and
   a yield; the repair moves parity-pinned values)
-- **Status:** open
+- **Status:** done. Repaired as parity roster entries `C4` (the φ) and
+  `C5` (the η′, which the sweep below found carries the same omission),
+  under
+  [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md).
 - **Triggers / blockers:** none. It is a declared numerical change like
   its siblings, and the declared-delta mechanism
   (`projects/parity-pinned-defect-repair/adrs/ADR-0001-corpus-repairs-are-declared-deltas.md`)
@@ -17,6 +20,17 @@
   project's roster of ten, which `test/parity/deltas.py`'s `REPAIRS` holds
   as a closed set, so adding it means adding a roster entry — either as a
   new task in that project before it closes, or as its own change after.
+
+> **Resolved.** `rust/src/kernels/photon_tables.rs` gives `PHI` a
+> `φ → π⁰γ` line at 500.795 MeV and `ETA_PRIME` an `η′ → ρ⁰γ` line at
+> 165.129 MeV and an `η′ → ωγ` line at 159.111 MeV. In flight, the φ
+> gains `1.32e-3` photons per decay and the η′ gains `0.3202`; at rest
+> both return the table alone and do not move. See
+> "Resolution (measured)" below.
+
+The sections from "Why" through "Risks / open questions" describe the
+defect as it was filed, before the repair. In particular,
+`BR_PHI_TO_PI0_A` is now read by `PHI`'s third line.
 
 ## Why
 
@@ -104,3 +118,74 @@ line in `photon_tables.rs`.
   a line in `photon_tables.rs` contribute their direct photon. That sweep
   is item 3's "before implementing" note above and is the reason this is
   filed as cross-cutting rather than as a one-line fix.
+
+## Resolution (measured)
+
+**The sweep.** The generator, `notebooks/decay_spectra/utils.py`, gives a
+final-state photon no decay spectrum and no FSR, so no table column holds
+a mode's direct photon. Every two-body `X → Y γ` mode therefore needs a
+line. Over the seven tabulated parents, three such modes had a column
+and no line:
+
+| Mode | BR | column integral / BR | daughter's own yield on that grid |
+| --- | --- | --- | --- |
+| `φ → π⁰γ` | 1.32e-3 | 1.978 | 1.978 |
+| `η′ → ρ⁰γ` | 29.5e-2 | 0.2155 | 0.2155 |
+| `η′ → ωγ` | 2.52e-2 | 2.351 | 2.230 |
+
+The daughter's yield is today's `dnde_photon_neutral_pion`,
+`dnde_photon_neutral_rho` or `dnde_photon_omega` at the daughter's
+two-body energy, integrated by trapezoid on the parent table's own grid.
+The π⁰ and ρ⁰ agree to 2e-9 and 2e-7, so each column is exactly `BR`
+times the daughter's boosted spectrum. That settles the risk bullet
+above: the φ's column is not hiding a smeared line, because it is the π⁰
+spectrum and nothing else. The ω column sits 0.12 photons above today's
+ω kernel, so the table was generated from a different ω spectrum, but a
+direct photon would add 1.0. `test/test_core_photon_tables.py`
+(`test_no_table_column_carries_its_modes_direct_photon`) pins all three.
+
+The omission was absent elsewhere. The ω's two modes and the φ's other
+two have lines. The φ's `f₀(980)γ` and `a₀(980)γ` modes are commented
+out of the generator and have neither a column nor a line. Three-body
+radiative modes such as `η → π⁺π⁻γ` also lack their direct photon, but
+that is a continuum rather than a line, and it is out of this scope.
+
+**The ρ⁰ line is a modeling choice.** The ρ⁰ is 149 MeV wide, and
+`BR(η′ → ρ⁰γ)` includes the non-resonant `π⁺π⁻γ` continuum, so its
+photon is not truly monochromatic. The line sits at the ρ⁰ pole mass,
+which is how the table's own `rho0_a` column treats the ρ⁰.
+
+**Kernel.** Three `Line`s, with energies through `photon_line_energy`,
+appended after the existing lines, so the kernel's fused multiply-adds
+for the shipped lines are untouched. `every_line_energy_is_the_photons_not_the_daughters`
+and `every_folded_constant_is_the_shipped_immediate_or_its_declared_repair`
+pin the new energies: `0x407f_4cb8_6c25_0057`, `0x4064_a420_91c3_fbee`
+and `0x4063_e389_d44f_de3c`.
+
+**Yield.** The rest-frame table plus lines, integrated over each table's
+grid, goes from 2.17466 to 2.17598 photons per φ decay (+0.061%) and
+from 3.64032 to 3.96052 per η′ decay (+8.8%). Pointwise at twice the
+parent mass, `dnde_photon_phi(500, 2038.922)` goes from 1.033088e-3 to
+1.033849e-3 MeV⁻¹ (+0.074%) and `dnde_photon_eta_prime(160, 1915.56)`
+from 8.451172e-3 to 9.012606e-3 MeV⁻¹ (+6.6%).
+
+**Corpus.** The committed arrays are untouched. Both terms are closed
+form, and `test/parity/deltas.py` declares them as `Additive` relations.
+
+- **`C4`** raises 179 positions over five `spectra.photon.phi` arrays by
+  4.4e-5 to 0.13 relative to the stored value. All five are already
+  `A1+B2`, so they become `A1+B2+C4`. That keeps A1+B2's 1e-12 budget
+  and its 1e-20 floor, and measures 4.3e-16 worst at the positions C4
+  moves.
+- **`C5`** raises 164 positions over six `spectra.photon.eta_prime`
+  arrays by 1.7% to 56%. Five are already `A1+B1` and become
+  `A1+B1+C5`, measured 3.3e-16 worst. The sixth, `near_rest.scalar_values`,
+  was `A1` alone and becomes `A1+C5`, measured 0.0.
+- Neither moves `rest`, where the kernel returns the table alone and
+  adds no line, or `rest_plus_eps`, where the window is 2.8e-6 wide and
+  no grid point falls inside it. No other corpus case moves.
+
+**Release.** The change is recorded under `[Unreleased]` in
+`CHANGELOG.md` as a numerical change, which `docs/versioning.md` classes
+as `minor`. The version in `pyproject.toml` moves with the release that
+ships it, as it did for the other fixes already under `[Unreleased]`.

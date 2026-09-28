@@ -140,14 +140,16 @@ The labels are the closed set `deltas.REPAIRS`, in two parts:
 | `C1` | [the mediator positron line carries the electron's velocity](../../docs/followups/done/mediator-positron-line-misses-the-electron-velocity.md) | 192 over the four `mediator_spectra.*.positron.*` cases, 128 of them composed with `A4` |
 | `C2` | [the charged pion's neutrino continuum keeps its quadrature support](../../docs/followups/done/neutrino-pion-continuum-loses-its-quadrature-support.md) | 6 in `spectra.neutrino.charged_pion`, all composed with `B5` |
 | `C3` | [the rho photon boost keeps its quadrature support](../../docs/followups/done/rho-photon-outer-boost-misses-support.md) | 12 over `spectra.photon.charged_rho` and `spectra.photon.neutral_rho`, all composed with `A3` |
+| `C4` | [the φ photon spectrum carries its `φ → π⁰γ` line](../../docs/followups/done/phi-omits-its-direct-pi0-photon-line.md) | 5 in `spectra.photon.phi`, all composed with `A1+B2` |
+| `C5` | [the η′ photon spectrum carries its `η′ → ρ⁰γ` and `η′ → ωγ` lines](../../docs/followups/done/phi-omits-its-direct-pi0-photon-line.md) | 6 in `spectra.photon.eta_prime`, 5 composed with `A1+B1` and 1 with `A1` |
 
 The live declarations and their repair labels are the authoritative
 count; get it with
 `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
 Repairs that share arrays compose in landing order: `A1+B1`, `A1+B2`,
-`A3+B4`, `A3+B3`, `A3+C3`, `A4+C1` and `B5+C2`. The rho rest correction
-multiplies A3's captured prediction by photon energy, preserving the prior
-pion repair.
+`A3+B4`, `A3+B3`, `A3+C3`, `A4+C1`, `B5+C2`, `A1+B2+C4`, `A1+B1+C5`
+and `A1+C5`. The rho rest correction multiplies A3's captured prediction
+by photon energy, preserving the prior pion repair.
 [`test_delta_models.py`](test_delta_models.py) checks the closed-form
 models against the stored arrays themselves. [`oracles/`](oracles/README.md)
 holds the corrected Group A values captured from Cython before the port

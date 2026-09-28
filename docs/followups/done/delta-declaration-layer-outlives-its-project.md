@@ -11,7 +11,7 @@
   value. Three are already filed:
   [`rho-photon-outer-boost-misses-support.md`](../done/rho-photon-outer-boost-misses-support.md),
   [`neutrino-pion-continuum-loses-its-quadrature-support.md`](../done/neutrino-pion-continuum-loses-its-quadrature-support.md)
-  and [`phi-omits-its-direct-pi0-photon-line.md`](../todo/phi-omits-its-direct-pi0-photon-line.md).
+  and [`phi-omits-its-direct-pi0-photon-line.md`](phi-omits-its-direct-pi0-photon-line.md).
 
 > **Resolved.** The project ADR is re-filed as repo-wide
 > [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md),

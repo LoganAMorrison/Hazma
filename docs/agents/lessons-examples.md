@@ -167,6 +167,12 @@ cites a real PR.
   both sections with PR #98 and pins the implementation to `2bb8f971`,
   preserving the recorded measurements rather than rewriting them.
 
+- PR #109 prepended a "Resolved" notice to its follow-up but left the
+  filed Why, What and Entry points sections in the present tense, so the
+  file said both that `PHI` has a `φ → π⁰γ` line and that it carries only
+  two lines with `BR_PHI_TO_PI0_A` unread. The fix labels those sections,
+  as a block, as the defect as filed.
+
 ### flat-vs-sectioned-numbering
 
 - [flat-vs-sectioned-numbering] A document whose items restart numbering in
@@ -1415,6 +1421,15 @@ branch of the underlying kernel that "any" reaches.
   "in every mode string". The kernel returns `0.0` for an unrecognised mode
   before it adds the line, so that branch is spared and the claim was too
   wide. Review caught it; the wording is now "every recognised mode string".
+
+- PR #109 added three direct-photon lines and its changelog said
+  `dnde_photon_phi` gains 1.32e-3 photons per decay "at any boost". The
+  `Branch::RestFrame` arm returns the table alone, so a φ or η′ exactly at
+  rest does not move, and review measured identical rest-frame values
+  before and after. The same entry then said the N-body spectra "move with
+  them", which `dnde_photon(E, 2 m_phi, ["phi", "phi"])` contradicts: it
+  equals twice the rest-frame table bit for bit. Both sentences, the
+  follow-up's resolved notice and its README row now say "in flight".
 
 ### mapping-fallback-hides-missing-output
 
