@@ -160,6 +160,31 @@ user-facing change even when no signature did.
   parity roster entries `C4` (179 positions, composed with `A1+B2`) and
   `C5` (164 positions, composed with `A1+B1` or `A1`).
 
+- **`RHNeutrino`'s `ℓ ρ` channel now carries the charged rho's spectra.**
+  `hazma.rh_neutrino`'s `dnde_l_rho` evaluated the `(ℓ, K)` final state,
+  so the `ℓ ρ` channel was weighted by the rho's width but shaped like the
+  kaon's spectrum, and the charged rho's photon, positron and neutrino
+  spectra never reached the model. It now evaluates `(ℓ, ρ)`. Per `ℓ ρ`
+  decay with `ℓ = e`, the channel's photon energy goes from 104.2 to
+  406.3 MeV at `m_N = 1` GeV and from 453.7 to 1,330.4 MeV at 5 GeV, as
+  the rho's `π⁰ → γγ` box replaces the kaon's mostly photon-free modes.
+  Its positrons go from 1.111 to 1.000 and its neutrinos from 2.598 to
+  5.996 at every mass. The rho carries less momentum than the kaon, so
+  the positron and neutrino spectra end lower. At `m_N = 1` GeV the
+  channel's branching fraction is 0.246 for `ℓ = e` and 0.229 for
+  `ℓ = μ`, and every `RHNeutrino` total moves at 359 or 360 of 400
+  log-spaced energies. Per heavy-neutrino decay with `ℓ = e`, the photon
+  energy rises from 244.1 to 393.0 MeV, the positrons fall from 1.468 to
+  1.440 and the neutrinos rise from 6.65 to 8.33.
+  `RHNeutrino(1000, 1e-3, "e").total_spectrum` at 300 MeV goes from
+  2.390e-3 to 4.536e-3 MeV⁻¹. The neutrino figures inherit a separate
+  defect: `dnde_neutrino_charged_rho` yields twice the neutrinos a
+  `ρ± → π± π⁰` decay holds, because the charged and neutral rho neutrino
+  tables are swapped
+  ([tracked](docs/followups/todo/rho-neutrino-tables-are-swapped.md)).
+  The parity corpus pins no `rh_neutrino` spectrum. Details:
+  `docs/followups/done/rhn-charged-rho-channel-evaluates-the-kaon.md`.
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed
