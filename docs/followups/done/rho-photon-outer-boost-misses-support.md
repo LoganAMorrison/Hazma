@@ -149,5 +149,5 @@ from 2,174.8 to 2,368.6 MeV. Its photon energy per decay moves by at most
 8.1e-7, because the neutral rho's boost there is mild. `RHNeutrino`'s
 `ℓ ρ±` channel does not move, because `dnde_l_rho` evaluates the
 `(ℓ, K)` final state. That is a separate defect, filed as
-[`rhn-charged-rho-channel-evaluates-the-kaon.md`](../todo/rhn-charged-rho-channel-evaluates-the-kaon.md).
+[`rhn-charged-rho-channel-evaluates-the-kaon.md`](rhn-charged-rho-channel-evaluates-the-kaon.md).
 No mediator model decays through a rho, and no other corpus case moves.

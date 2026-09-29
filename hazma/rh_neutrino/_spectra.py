@@ -299,7 +299,7 @@ def dnde_l_rho(model: SingleRhNeutrinoModel, product_energies, product: str):
         Differential energy spectrum evaluated at the input energies.
     """
     ell = _LEPTON_STRS[model.gen]
-    return _dnde_two_body(model, product_energies, product, (ell, "k"))
+    return _dnde_two_body(model, product_energies, product, (ell, "rho"))
 
 
 def dnde_v_l_l(
