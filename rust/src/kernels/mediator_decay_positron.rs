@@ -32,6 +32,13 @@
 //! recognised mode — unlike the photon modules, where only two of the
 //! seven modes carry one.
 //!
+//! Both tables are zero above an edge below `m/2`, so the `cos θ` integral
+//! starts at [`mediator_tables::cos_theta_min`] of the selected continua's
+//! edge rather than at `−1`, for the reason
+//! [`crate::kernels::scalar_decay_photon`]'s "The integral starts where
+//! the support does" gives. Over the whole range, at `γ = 30` the
+//! continua lost about half their positrons.
+//!
 //! # The threshold `NaN`, and why it is a compiler artifact
 //!
 //! `p = sqrt(eng_p * eng_p - m_e * m_e)` is one expression, and clang
@@ -191,6 +198,24 @@ fn integrand(
     Ok(jac * (dnde_cp + dnde_mu))
 }
 
+/// The rest-frame energy in MeV at and above which [`integrand`] is zero
+/// for `mode`'s continua.
+///
+/// Each continuum is a table, and its edge is the table's interpolated
+/// one, below `m/2`; `"total"` sums both, so its edge is the wider. The
+/// `e⁺e⁻` line rides outside the integral and has none, and neither does
+/// an unrecognised mode, whose integrand is zero everywhere.
+fn rest_frame_endpoint(mode: Option<PositronMode>, tables: &PositronTables) -> f64 {
+    match mode {
+        None | Some(PositronMode::ElectronLine) => f64::NEG_INFINITY,
+        Some(PositronMode::Total) => {
+            mediator_tables::widest(tables.charged_pion.support_end(), tables.muon.support_end())
+        }
+        Some(PositronMode::ChargedPionDecay) => tables.charged_pion.support_end(),
+        Some(PositronMode::MuonDecay) => tables.muon.support_end(),
+    }
+}
+
 /// The positron spectrum `dN/dE` in MeV⁻¹ at one energy — `:166-215`
 /// (scalar), `:167-216` (vector).
 ///
@@ -215,7 +240,9 @@ fn integrand(
 /// The `e⁺e⁻` line rides outside the integral and is added to every
 /// recognised mode. `"e e"` short-circuits before the integral and
 /// returns the line alone, so it is the one mode whose value costs no
-/// quadrature.
+/// quadrature; so does any energy above the continua's lab endpoint,
+/// where the integral is skipped but the widths it reads are still
+/// checked.
 ///
 /// As in both photon modules the quadrature's termination flag is
 /// discarded, because the `.pyx` subscripts `quad(...)[0]`; the port
@@ -279,6 +306,21 @@ pub fn spectrum_point(
         return Ok(0.0);
     }
 
+    let cos_min = mediator_tables::cos_theta_min(
+        eng_p,
+        momentum(eng_p),
+        eng_m / mass,
+        beta,
+        rest_frame_endpoint(mode, tables),
+    );
+    if cos_min >= 1.0 {
+        // No continuum reaches this energy at any angle. The integrand
+        // would have read the second and third widths at every node, so a
+        // short buffer still raises here.
+        pws.get(2)?;
+        return Ok(lines_contrib);
+    }
+
     let mut failure: Option<SpectrumError> = None;
     let mut kernel = |cl: f64| match integrand(cl, eng_p, eng_m, mass, pws, mode, tables) {
         Ok(value) => value,
@@ -287,7 +329,7 @@ pub fn spectrum_point(
             f64::NAN
         }
     };
-    let result = match quad(&mut kernel, -1.0, 1.0, &BOOST_QUAD) {
+    let result = match quad(&mut kernel, cos_min, 1.0, &BOOST_QUAD) {
         Ok(outcome) => outcome.value,
         // Unreachable; see `boost_quad_options_are_always_accepted`.
         Err(_) => f64::NAN,
@@ -307,7 +349,9 @@ pub fn tables_for(mass: f64) -> std::sync::Arc<PositronTables> {
 
 #[cfg(test)]
 mod tests {
-    use super::{BOOST_QUAD, MASS_E_SQUARED, momentum, spectrum_point, tables_for};
+    use super::{
+        BOOST_QUAD, MASS_E_SQUARED, momentum, rest_frame_endpoint, spectrum_point, tables_for,
+    };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, PositronMode, SpectrumError};
     use crate::quad::quad;
@@ -566,5 +610,40 @@ mod tests {
             residual < BOOST_QUAD.epsrel * (total - line).abs(),
             "channels did not add: total={total:e} muon={muon:e} pion={pion:e} line={line:e}"
         );
+    }
+
+    /// At `γ = 30` a continuum's support is a cone about `1/(2γ²)` wide
+    /// next to `cos θ = 1`, which a first 21-point rule over all of
+    /// `[−1, 1]` never sampled: 2.3.0 returned the `e⁺e⁻` line alone over
+    /// most of the spectrum here. Clipped, each continuum is non-zero up to
+    /// its lab endpoint `γ(E' + β p')` and zero beyond it, where the
+    /// quadrature is skipped but the widths are still read. The closed
+    /// `e⁺e⁻` width keeps the line out of the way.
+    #[test]
+    fn a_strongly_boosted_continuum_keeps_its_forward_tail() {
+        let (mass, eng_m) = (550.0, 30.0 * 550.0);
+        let tables = tables_for(mass);
+        let pws = [0.0, 0.5, 0.25];
+        let widths = PartialWidths::new(&pws);
+        let ratio = mass / eng_m;
+        let beta = (1.0 - ratio * ratio).sqrt();
+        for mode in [
+            PositronMode::Total,
+            PositronMode::MuonDecay,
+            PositronMode::ChargedPionDecay,
+        ] {
+            let edge = rest_frame_endpoint(Some(mode), &tables);
+            let top = (eng_m / mass) * beta.mul_add(momentum(edge), edge);
+            for fraction in [0.5, 0.9, 0.99] {
+                let value =
+                    spectrum_point(fraction * top, eng_m, mass, widths, Some(mode), &tables);
+                assert!(value.unwrap() > 0.0, "{mode:?} at {fraction} of {top} MeV");
+            }
+            let above = spectrum_point(top * 1.001, eng_m, mass, widths, Some(mode), &tables);
+            assert_eq!(above, Ok(0.0), "{mode:?}");
+            let short = PartialWidths::new(&pws[..2]);
+            let raised = spectrum_point(top * 1.001, eng_m, mass, short, Some(mode), &tables);
+            assert_eq!(raised, Err(SpectrumError::OutOfBounds), "{mode:?}");
+        }
     }
 }

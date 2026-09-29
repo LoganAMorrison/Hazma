@@ -18,8 +18,8 @@
 //!
 //! A scalar of mass `ms` and energy `eng_s ≥ ms` decays isotropically in
 //! its own rest frame; the lab spectrum is the boost integral over
-//! `cos θ ∈ [−1, 1]` of the rest-frame spectrum at the Doppler-shifted
-//! energy, weighted by the Jacobian `1/(2γ|1 − β cos θ|)`. Six channels
+//! `cos θ` of the rest-frame spectrum at the Doppler-shifted energy,
+//! weighted by the Jacobian `1/(2γ|1 − β cos θ|)`. Six channels
 //! ride inside that integral — FSR off `e⁺e⁻`, `μ⁺μ⁻` and `π⁺π⁻`, and the
 //! decay continua of `π⁺π⁻`, `π⁰π⁰` and `μ⁺μ⁻` — and a seventh, the
 //! monochromatic `s → γγ` line, is added outside it over the boosted
@@ -29,6 +29,19 @@
 //! [`mediator_tables::ScalarPhotonModes`], which is this entry point's
 //! `modes` list folded once per call rather than re-tested inside the
 //! integrand as the `.pyx` did.
+//!
+//! # The integral starts where the support does
+//!
+//! Every channel is zero above a rest-frame endpoint below `m_s/2`, and
+//! the rest-frame energy falls as `cos θ` rises, so a lab energy near
+//! the top of the spectrum is supported only on a forward cone about
+//! `1/(2γ²)` wide. The `.pyx` integrated over all of `[−1, 1]`, where
+//! QUADPACK's first 21-point rule can sample nothing but zeros and accept
+//! `0.0`; at `γ = 30` that lost most of every channel's spectrum. The
+//! integral here starts at [`mediator_tables::cos_theta_min`] of the
+//! widest open channel's endpoint ([`rest_frame_endpoint`]), and is
+//! skipped outright where that bound reaches `1`. Recorded in
+//! `docs/followups/done/mediator-decay-angular-windows-miss-their-support.md`.
 //!
 //! # The FSR normalization is twice the `.pyx`'s
 //!
@@ -319,6 +332,51 @@ fn integrand(
     Ok(jac * result)
 }
 
+/// The rest-frame energy in MeV at and above which [`integrand`] is zero
+/// for every channel `modes` opens.
+///
+/// Each channel has its own endpoint, all of them below `m_s/2`: the FSR
+/// kinematic edge `x_max`, the charged-pion table's interpolated edge, and
+/// the forward-cone edges of the neutral pion's box and the muon's
+/// spectrum at the daughter energy `m_s/2`. The integrand is their sum,
+/// so its endpoint is the widest open channel's. The `g g` line rides
+/// outside the integral and has none.
+fn rest_frame_endpoint(modes: ScalarPhotonModes, ms: f64, tables: &PhotonTables) -> f64 {
+    let daughter_energy = ms / 2.0;
+    let channels = [
+        (
+            ScalarPhotonModes::ELECTRON_FSR,
+            mediator_tables::fsr_photon_endpoint(legacy::MASS_E, ms),
+        ),
+        (
+            ScalarPhotonModes::CHARGED_PION_FSR,
+            mediator_tables::fsr_photon_endpoint(legacy::MASS_PI, ms),
+        ),
+        (
+            ScalarPhotonModes::CHARGED_PION_DECAY,
+            tables.charged_pion.support_end(),
+        ),
+        (
+            ScalarPhotonModes::NEUTRAL_PION_DECAY,
+            photon_pion::neutral_pion_photon_endpoint(daughter_energy),
+        ),
+        (
+            ScalarPhotonModes::MUON_FSR,
+            mediator_tables::fsr_photon_endpoint(legacy::MASS_MU, ms),
+        ),
+        (
+            ScalarPhotonModes::MUON_DECAY,
+            photon_muon::photon_endpoint(daughter_energy),
+        ),
+    ];
+    channels
+        .into_iter()
+        .filter(|&(bit, _)| modes.contains(bit))
+        .fold(f64::NEG_INFINITY, |end, (_, edge)| {
+            mediator_tables::widest(end, edge)
+        })
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ at one photon energy — `:166-191`.
 ///
 /// # Parameters
@@ -334,6 +392,11 @@ fn integrand(
 /// `dN/dE` in MeV⁻¹, and exactly `0.0` for `eng_s < ms` — below which the
 /// `.pyx` returns before touching `pws`, so a short buffer does not
 /// raise there.
+///
+/// The `cos θ` integral runs over the open channels' support only (module
+/// docs, "The integral starts where the support does"). Above the lab
+/// endpoint it is not evaluated at all, but the four widths it would have
+/// read are still checked, so a short buffer raises at every energy.
 ///
 /// The quadrature's termination flag is discarded because the `.pyx`
 /// subscripts `quad(...)[0]`: an `ier != 0` that scipy reported as an
@@ -361,33 +424,50 @@ pub fn spectrum_point(
 
     let ratio = ms / eng_s;
     let beta = (1.0 - ratio * ratio).sqrt();
+    let gamma = eng_s / ms;
     let eplus = (eng_s * (1.0 + beta)) / 2.0;
     let eminus = (eng_s * (1.0 - beta)) / 2.0;
 
-    // scipy propagates an exception out of the integrand rather than
-    // absorbing it, so the first failure is remembered and raised after
-    // the integrator finishes; `NaN` keeps QUADPACK's own arithmetic
-    // defined until then. Same shape as
-    // `crate::kernels::vector_xs::thermal_cross_section`.
-    let mut failure: Option<SpectrumError> = None;
-    let mut kernel = |cl: f64| match integrand(cl, eng_gam, eng_s, ms, pws, modes, tables) {
-        Ok(value) => value,
-        Err(error) => {
-            failure = failure.or(Some(error));
-            f64::NAN
+    let cos_min = mediator_tables::cos_theta_min(
+        eng_gam,
+        eng_gam,
+        gamma,
+        beta,
+        rest_frame_endpoint(modes, ms, tables),
+    );
+    let mut result = if cos_min >= 1.0 {
+        // No channel reaches this energy at any angle. The integrand would
+        // have read the first four widths at every node, so a short buffer
+        // still raises here.
+        pws.get(3)?;
+        0.0
+    } else {
+        // scipy propagates an exception out of the integrand rather than
+        // absorbing it, so the first failure is remembered and raised
+        // after the integrator finishes; `NaN` keeps QUADPACK's own
+        // arithmetic defined until then. Same shape as
+        // `crate::kernels::vector_xs::thermal_cross_section`.
+        let mut failure: Option<SpectrumError> = None;
+        let mut kernel = |cl: f64| match integrand(cl, eng_gam, eng_s, ms, pws, modes, tables) {
+            Ok(value) => value,
+            Err(error) => {
+                failure = failure.or(Some(error));
+                f64::NAN
+            }
+        };
+        let value = match quad(&mut kernel, cos_min, 1.0, &BOOST_QUAD) {
+            Ok(outcome) => outcome.value,
+            // Unreachable, and asserted so by
+            // `boost_quad_options_are_always_accepted`: `QuadError` is a
+            // statement about the options, never about the integrand, and
+            // these options are `const`.
+            Err(_) => f64::NAN,
+        };
+        if let Some(error) = failure {
+            return Err(error);
         }
+        value
     };
-    let mut result = match quad(&mut kernel, -1.0, 1.0, &BOOST_QUAD) {
-        Ok(outcome) => outcome.value,
-        // Unreachable, and asserted so by
-        // `boost_quad_options_are_always_accepted`: `QuadError` is a
-        // statement about the options, never about the integrand, and
-        // these options are `const`.
-        Err(_) => f64::NAN,
-    };
-    if let Some(error) = failure {
-        return Err(error);
-    }
 
     if modes.contains(ScalarPhotonModes::TWO_PHOTON_LINE) && eminus <= eng_gam && eng_gam <= eplus {
         // `pws[4] * 1.` in the `.pyx` (`:189`); multiplying by one is
@@ -412,7 +492,7 @@ pub fn tables_for(ms: f64) -> std::sync::Arc<PhotonTables> {
 mod tests {
     use super::{
         BOOST_QUAD, PAIR_NORMALIZATION, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_srf, dnde_fsr_l_srf,
-        spectrum_point, tables_for,
+        rest_frame_endpoint, spectrum_point, tables_for,
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
@@ -777,5 +857,40 @@ mod tests {
             (total - summed).abs() <= 1e-5 * total.abs(),
             "total {total} vs summed {summed}"
         );
+    }
+
+    /// At `γ = 30` a channel's support is a cone about `1/(2γ²)` wide next
+    /// to `cos θ = 1`, which a first 21-point rule over all of `[−1, 1]`
+    /// never sampled: 2.3.0 returned `0.0` over most of every channel's
+    /// spectrum here. Clipped, each channel is non-zero up to its lab
+    /// endpoint `γ E'_max (1 + β)` and zero beyond it, where the quadrature
+    /// is skipped but the widths are still read.
+    #[test]
+    fn a_strongly_boosted_channel_keeps_its_forward_tail() {
+        let (ms, eng_s) = (550.0, 30.0 * 550.0);
+        let tables = tables_for(ms);
+        let widths = PartialWidths::new(&PWS);
+        let ratio = ms / eng_s;
+        let beta = (1.0 - ratio * ratio).sqrt();
+        for bit in [
+            ScalarPhotonModes::CHARGED_PION_DECAY,
+            ScalarPhotonModes::MUON_DECAY,
+            ScalarPhotonModes::NEUTRAL_PION_DECAY,
+            ScalarPhotonModes::ELECTRON_FSR,
+            ScalarPhotonModes::CHARGED_PION_FSR,
+            ScalarPhotonModes::MUON_FSR,
+        ] {
+            let modes = ScalarPhotonModes::from_bits(bit);
+            let top = (eng_s / ms) * rest_frame_endpoint(modes, ms, &tables) * (1.0 + beta);
+            for fraction in [0.5, 0.9, 0.99] {
+                let value = spectrum_point(fraction * top, eng_s, ms, widths, modes, &tables);
+                assert!(value.unwrap() > 0.0, "bit {bit} at {fraction} of {top} MeV");
+            }
+            let above = spectrum_point(top * 1.001, eng_s, ms, widths, modes, &tables);
+            assert_eq!(above, Ok(0.0), "bit {bit}");
+            let short = PartialWidths::new(&PWS[..3]);
+            let raised = spectrum_point(top * 1.001, eng_s, ms, short, modes, &tables);
+            assert_eq!(raised, Err(SpectrumError::OutOfBounds), "bit {bit}");
+        }
     }
 }

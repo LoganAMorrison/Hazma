@@ -24,7 +24,11 @@ The five parts
    ``test/test_core_dispatch.py``.
 2. :class:`TestAgainstAnIndependentReference` — the ``.pyx`` body
    re-transcribed in NumPy and ``scipy.integrate.quad``
-   (:func:`reference`), compared at a stated budget.
+   (:func:`reference`), compared at a stated budget. Its ``cos theta``
+   window is clipped to the continua's support, as the kernel's is, and
+   :class:`TestTheBoostedTail` checks that clip against a quadrature in
+   the energy variable (:func:`energy_reference`) and against positron
+   number.
 3. :class:`TestPhysics` — statements that owe nothing to the
    implementation being replaced: thresholds, the line's positron count,
    additivity over channels, support, and broadcasting.
@@ -45,15 +49,20 @@ what gates the swap; the drift it measures is in
 from __future__ import annotations
 
 import math
+import warnings
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from scipy.integrate import quad
+from scipy.integrate import IntegrationWarning, quad
 
 from hazma import spectra
 from hazma._core import scalar_mediator as core_scalar
 from hazma._core import vector_mediator as core_vector
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 #: The four entry points, under the names the deleted `.pyx` gave them.
 #: Bound here rather than imported directly so the import block matches
@@ -102,8 +111,8 @@ CONFIGS = [(125.0, 200.0), (125.0, 1000.0), (600.0, 700.0), (600.0, 3000.0)]
 #: `test/parity/tolerances.PORTED_NESTED_RTOL`, the figure Task 4.5
 #: established for exactly this "nested quadrature, ported integrator"
 #: shape and the one all four corpus cases now hold; the worst difference
-#: measured over every (model, config, mode, energy) below is 1.6e-14, at
-#: scalar/`mass=600`/`energy=3000`/`"mu mu"`/`eng_p=100`.
+#: measured over every (model, config, mode, energy) below is 7.8e-15, at
+#: scalar/`mass=600`/`energy=3000`/`"mu mu"`/`eng_p=1200`.
 REFERENCE_RTOL = 1e-9
 
 
@@ -132,6 +141,69 @@ def _tables(mass: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     )
 
 
+def _table_edge(energies: np.ndarray, dnde: np.ndarray) -> float:
+    """The energy, MeV, at and above which a rest-frame table interpolates to zero.
+
+    The first abscissa after the last non-zero entry: ``np.interp`` carries
+    that entry down to zero across the next cell. Infinite if the last entry
+    is non-zero, because ``np.interp`` clamps to it above the grid, and
+    minus infinity for a table that is zero throughout.
+    """
+    nonzero = np.flatnonzero(dnde)
+    if nonzero.size == 0:
+        return -math.inf
+    if nonzero[-1] + 1 == energies.size:
+        return math.inf
+    return float(energies[nonzero[-1] + 1])
+
+
+def rest_frame_spectrum(
+    mass: float, pws: np.ndarray, fs: str
+) -> tuple[Callable[[float], float], float, list[float]]:
+    """The boost integrand's rest-frame spectrum, its endpoint and its kinks.
+
+    Returns ``(spectrum, endpoint, kinks)``: ``spectrum(E')`` is ``dN/dE'``
+    in MeV^-1 over the continua ``fs`` selects, the line excluded;
+    ``endpoint`` in MeV is the widest selected table's edge, above which
+    ``spectrum`` is zero; ``kinks`` are both tables' edges, MeV, as break
+    points for a quadrature over ``E'``.
+    """
+    energies, cp_dnde, mu_dnde = _tables(mass)
+    edges = {
+        "pi pi": _table_edge(energies, cp_dnde),
+        "mu mu": _table_edge(energies, mu_dnde),
+    }
+    selected = ["pi pi", "mu mu"] if fs == "total" else [fs]
+    endpoint = max(
+        (edges[channel] for channel in selected if channel in edges), default=-math.inf
+    )
+
+    def spectrum(rest_frame: float) -> float:
+        dnde = 0.0
+        if fs in {"total", "pi pi"}:
+            dnde += pws[2] * float(np.interp(rest_frame, energies, cp_dnde))
+        if fs in {"total", "mu mu"}:
+            dnde += pws[1] * float(np.interp(rest_frame, energies, mu_dnde))
+        return dnde
+
+    return spectrum, endpoint, list(edges.values())
+
+
+def _line(eng_p: float, energy: float, mass: float, pws: np.ndarray) -> float:
+    """The boosted ``e+ e-`` line, MeV^-1, which every recognised mode adds.
+
+    A box of height ``pw_ee / (E r beta)`` over ``E (1 -+ r beta) / 2``,
+    where ``r`` is the electron's rest-frame velocity. The ``.pyx`` omitted
+    the ``r`` (``:197-203``); see
+    :meth:`TestPhysics.test_the_electron_line_carries_its_own_positron_count`.
+    """
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    r = math.sqrt(1.0 - 4.0 * LEGACY_MASS_E * LEGACY_MASS_E / (mass * mass))
+    if energy * (1.0 - r * beta) / 2.0 <= eng_p <= energy * (1.0 + r * beta) / 2.0:
+        return pws[0] / (energy * beta) / r
+    return 0.0
+
+
 def reference(
     eng_p: float, energy: float, mass: float, pws: np.ndarray, fs: str
 ) -> float:
@@ -144,36 +216,37 @@ def reference(
     ``np.interp``'s own behaviour and the whole difference in below-grid
     policy between the two clone-pairs.
 
-    One line departs from the source: the ``e e`` box is divided by the
-    electron's rest-frame velocity ``r`` as well as by ``E beta``, so that
-    it carries one positron per decay. The ``.pyx`` omitted the ``r``
-    (``:197-203``); see
-    :meth:`TestPhysics.test_the_electron_line_carries_its_own_positron_count`.
+    Two departures from the source are the kernel's. The ``e e`` box
+    carries the electron's velocity (:func:`_line`). And the ``cos
+    theta`` integral starts where the rest-frame energy ``gamma (E - beta p
+    cos theta)`` falls to the selected continua's endpoint, rather than at
+    ``-1``: the ``.pyx`` integrated the whole range, and at a large boost
+    its quadrature never sampled the support near ``cos theta = 1``.
+    :class:`TestTheBoostedTail` checks the clipped integral against one in
+    the energy variable, which has no such window to miss.
     """
     if energy < mass:
         return 0.0
 
     beta = math.sqrt(1.0 - (mass / energy) ** 2)
     gamma = energy / mass
-    r = math.sqrt(1.0 - 4.0 * LEGACY_MASS_E * LEGACY_MASS_E / (mass * mass))
-    eplus = energy * (1.0 + r * beta) / 2.0
-    eminus = energy * (1.0 - r * beta) / 2.0
-
-    lines_contrib = 0.0
-    if eminus <= eng_p <= eplus:
-        lines_contrib = pws[0] / (energy * beta) / r
-
+    lines_contrib = _line(eng_p, energy, mass, pws)
     if fs == "e e":
         return lines_contrib
     if fs not in {"total", "pi pi", "mu mu"}:
         return 0.0
 
-    energies, cp_dnde, mu_dnde = _tables(mass)
+    spectrum, endpoint, _ = rest_frame_spectrum(mass, pws, fs)
+    p = math.sqrt(max(eng_p * eng_p - LEGACY_MASS_E * LEGACY_MASS_E, 0.0))
+    lower = -1.0
+    if beta * p > 0.0:
+        lower = max(-1.0, (eng_p - endpoint / gamma) / (beta * p))
+    if lower >= 1.0:
+        return lines_contrib
 
     def integrand(cl: float) -> float:
         if eng_p < LEGACY_MASS_E:
             return 0.0
-        p = math.sqrt(max(eng_p * eng_p - LEGACY_MASS_E * LEGACY_MASS_E, 0.0))
         rest_frame = gamma * (eng_p - p * beta * cl)
         jac = p / (
             2.0
@@ -184,15 +257,67 @@ def reference(
             )
             * gamma
         )
-        dnde = 0.0
-        if fs in {"total", "pi pi"}:
-            dnde += pws[2] * float(np.interp(rest_frame, energies, cp_dnde))
-        if fs in {"total", "mu mu"}:
-            dnde += pws[1] * float(np.interp(rest_frame, energies, mu_dnde))
-        return jac * dnde
+        return jac * spectrum(rest_frame)
 
-    value = quad(integrand, -1.0, 1.0, points=[-1.0, 1.0], epsabs=1e-10, epsrel=1e-5)[0]
+    # The clipped interval is narrower but no easier: at some energies the
+    # tables' knots exhaust QUADPACK's 50 subdivisions, which scipy reports
+    # and the kernel, reading only `quad(...)[0]`, never did.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IntegrationWarning)
+        value = quad(
+            integrand, lower, 1.0, points=[-1.0, 1.0], epsabs=1e-10, epsrel=1e-5
+        )[0]
     return value + lines_contrib
+
+
+def energy_reference(
+    eng_p: float, energy: float, mass: float, pws: np.ndarray, fs: str
+) -> float:
+    """The boosted spectrum integrated over rest-frame energy, MeV^-1.
+
+    For an isotropic daughter of mass ``m_e``, ``E' = gamma (E - beta p cos
+    theta)`` turns the ``cos theta`` integral into
+
+        dN/dE = 1 / (2 beta gamma) int dE' f(E') / p',
+                gamma (E - beta p) <= E' <= gamma (E + beta p),
+
+    which has no angular window to miss. Integrated over ``t = ln p'``, in
+    which ``dE' / p' = dp' / E'`` makes the integrand ``f(E') p' / E'`` and
+    removes the ``1 / p'`` at threshold, with the tables' edges as break
+    points and at ``epsrel = 1e-8``. Shares only the rest-frame spectrum
+    with :func:`reference`. ``fs`` must select a continuum.
+    """
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    gamma = energy / mass
+    spectrum, _, kinks = rest_frame_spectrum(mass, pws, fs)
+    p = math.sqrt(eng_p * eng_p - LEGACY_MASS_E * LEGACY_MASS_E)
+
+    def rest_momentum(rest_energy: float) -> float:
+        return math.sqrt(max(rest_energy**2 - LEGACY_MASS_E**2, 0.0))
+
+    lower = math.log(rest_momentum(gamma * (eng_p - beta * p)))
+    upper = math.log(rest_momentum(gamma * (eng_p + beta * p)))
+    finite = [math.log(rest_momentum(k)) for k in kinks if LEGACY_MASS_E < k < math.inf]
+    points = sorted({x for x in finite if lower < x < upper})
+
+    def integrand(t: float) -> float:
+        rest_p = math.exp(t)
+        rest_energy = math.hypot(rest_p, LEGACY_MASS_E)
+        return spectrum(rest_energy) * rest_p / rest_energy
+
+    # Roundoff at the tables' knots; see the photon twin's `energy_reference`.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IntegrationWarning)
+        value = quad(
+            integrand,
+            lower,
+            upper,
+            points=points or None,
+            epsabs=0.0,
+            epsrel=1e-8,
+            limit=500,
+        )[0]
+    return value / (2.0 * beta * gamma) + _line(eng_p, energy, mass, pws)
 
 
 #: ``(label, array entry point, pointwise entry point)`` for the two
@@ -343,6 +468,92 @@ class TestAgainstAnIndependentReference:
             [point_fn(e, energy, mass, PWS, "total") for e in grid]
         )
         assert swept.tobytes() == one_at_a_time.tobytes()
+
+
+#: Mediator boosts ``gamma = E / m`` for :class:`TestTheBoostedTail`. By
+#: ``gamma = 10`` 2.3.0 had lost 4-5% of the continuum's positrons, and by
+#: 30 about half.
+TAIL_BOOSTS = [2.0, 10.0, 30.0]
+
+#: The budget against :func:`energy_reference`. The kernel converges to
+#: ``epsrel = 1e-5`` or ``epsabs = 1e-10`` MeV^-1, whichever is looser, so
+#: in the far tail the absolute bound governs and the relative error can
+#: grow past ``epsrel``; the photon twin measures 7.6e-4 there. Measured
+#: 1.1e-5 worst on the grid below at 550 and 900 MeV. The defect this
+#: guards is a relative error of exactly 1.
+TAIL_RTOL = 1e-3
+
+#: The budget on ``int dN/dE dE = int f(E') dE'``. Measured within 5.1e-6
+#: of one at both masses and every boost below, the trapezoid rule's error
+#: on 4,001 log-spaced energies; 2.3.0 carried 0.46 to 0.55 of the
+#: continuum's positrons at ``gamma = 30``.
+NUMBER_IDENTITY_TOL = 2e-5
+
+
+class TestTheBoostedTail:
+    """The boost integral keeps its support when the mediator is fast.
+
+    ``E' = gamma (E - beta p cos theta)`` puts the support of a continuum
+    ending at ``E'_max`` at ``cos theta >= (E - E'_max / gamma) / (beta
+    p)``: near the lab endpoint, a cone ``1 / (2 gamma**2)`` wide. Over the
+    whole of ``[-1, 1]`` the first 21-point rule sampled only zeros there
+    and QUADPACK accepted ``0.0``, so 2.3.0 lost the top of both continua
+    once the mediator moved. The kernel now starts the integral at the
+    cone's edge; these tests check it against a quadrature that never had
+    the window to miss.
+    """
+
+    @staticmethod
+    def _lab_endpoint(mass: float, energy: float, fs: str) -> float:
+        """``gamma (E'_max + beta p'_max)``, the continuum's highest lab energy, MeV."""
+        _, endpoint, _ = rest_frame_spectrum(mass, PWS, fs)
+        beta = math.sqrt(1.0 - (mass / energy) ** 2)
+        rest_p = math.sqrt(endpoint**2 - LEGACY_MASS_E**2)
+        return energy / mass * (endpoint + beta * rest_p)
+
+    @pytest.mark.parametrize("gamma", TAIL_BOOSTS)
+    @pytest.mark.parametrize("mass", [550.0, 900.0])
+    @pytest.mark.parametrize("fs", ["total", "mu mu", "pi pi"])
+    def test_the_spectrum_matches_the_energy_integral(
+        self, gamma: float, mass: float, fs: str
+    ) -> None:
+        energy = gamma * mass
+        top = self._lab_endpoint(mass, energy, fs)
+        energies = np.maximum(top * np.geomspace(1e-3, 0.999, 13), 1.01 * LEGACY_MASS_E)
+        for eng_p in map(float, energies):
+            got = dnde_positron_decay_s_pt(eng_p, energy, mass, PWS, fs)
+            want = energy_reference(eng_p, energy, mass, PWS, fs)
+            assert got == pytest.approx(
+                want, rel=TAIL_RTOL, abs=0.0
+            ), f"{fs} at {eng_p / top:.4f} of the {top:.1f} MeV endpoint"
+
+    @pytest.mark.parametrize("gamma", TAIL_BOOSTS)
+    @pytest.mark.parametrize("fs", ["total", "mu mu", "pi pi"])
+    def test_the_boost_conserves_the_continuum_s_positrons(
+        self, gamma: float, fs: str
+    ) -> None:
+        """``int dN/dE dE`` in the lab equals the rest frame's.
+
+        A boost moves positrons between energies and creates none, so the
+        count is the same in every frame, whatever the integrator. The line
+        is closed (``pw_ee = 0``) because it rides outside the integral. The
+        lab side is a trapezoid over energies spaced logarithmically above
+        ``m_e``, the rest-frame side scipy over the table.
+        """
+        mass, energy = 550.0, gamma * 550.0
+        pws = np.array([0.0, PWS[1], PWS[2]])
+        spectrum, endpoint, kinks = rest_frame_spectrum(mass, pws, fs)
+        points = sorted(k for k in kinks if LEGACY_MASS_E < k < endpoint)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", IntegrationWarning)
+            rest_frame = quad(
+                spectrum, LEGACY_MASS_E, endpoint, points=points, limit=500, epsrel=1e-8
+            )[0]
+        top = self._lab_endpoint(mass, energy, fs)
+        energies = LEGACY_MASS_E + (top - LEGACY_MASS_E) * np.geomspace(1e-9, 1.0, 4001)
+        lab = np.asarray(dnde_positron_decay_s(energies, energy, mass, pws, fs))
+        carried = np.trapezoid(lab, energies)
+        assert carried / rest_frame == pytest.approx(1.0, abs=NUMBER_IDENTITY_TOL)
 
 
 # ===========================================================================

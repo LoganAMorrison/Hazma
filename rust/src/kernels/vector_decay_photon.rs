@@ -15,7 +15,8 @@
 //! Structurally not at all — the same 500-point log-spaced rest-frame
 //! table, the same `1/E` tail below `10⁻¹` MeV, the same `cos θ` QAGP
 //! with `epsabs = 1e-10`, `epsrel = 1e-5` and the same discarded break
-//! points. Four differences, all of them data:
+//! points, started at the same support edge (the twin's "The integral
+//! starts where the support does"). Four differences, all of them data:
 //!
 //! * **two tables, not one.** The vector interpolates the muon's
 //!   rest-frame photon spectrum as well as the charged pion's (`:35-36`),
@@ -256,6 +257,50 @@ fn integrand(
     Ok(jac * component)
 }
 
+/// The rest-frame energy in MeV at and above which [`integrand`] is zero
+/// for `mode`'s channel, or for the widest of all six under `"total"`.
+///
+/// The FSR kinematic edge `x_max`, the two tables' interpolated edges, and
+/// the top of the `π⁰` box at the `V → π⁰γ` two-body energy. The first
+/// three lie below `m_V/2`. The box top is `m_V/2` in exact kinematics,
+/// since the `π⁰`'s energy plus momentum is `m_V`. Here it lands 4.8e-5 MeV
+/// below that at `m_V = 550` MeV, because the two-body energy takes the
+/// legacy `π⁰` mass, the box's `β` takes the PDG one and rounds it to
+/// `f32`. It is the box's own edge either way, so the bound needs no
+/// margin. The integrand evaluates all six channels whatever
+/// the mode, but only the selected one reaches its value, so only that
+/// one bounds the integral. The `π⁰γ` line rides outside it and has no
+/// endpoint here. `f64::NEG_INFINITY` for an unrecognised mode, whose
+/// integrand is zero everywhere.
+fn rest_frame_endpoint(mode: Option<PhotonMode>, mv: f64, tables: &PhotonTables) -> f64 {
+    let electron_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_E, mv);
+    let muon_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_MU, mv);
+    let charged_pion_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_PI, mv);
+    let charged_pion_decay = tables.charged_pion.support_end();
+    let e_pi0 = (0.5 * (legacy::MASS_PI0 * legacy::MASS_PI0 + mv * mv)) / mv;
+    let neutral_pion = photon_pion::neutral_pion_photon_endpoint(e_pi0);
+    let muon_decay = tables.muon.support_end();
+    match mode {
+        None => f64::NEG_INFINITY,
+        Some(PhotonMode::Total) => [
+            electron_fsr,
+            muon_fsr,
+            charged_pion_fsr,
+            charged_pion_decay,
+            neutral_pion,
+            muon_decay,
+        ]
+        .into_iter()
+        .fold(f64::NEG_INFINITY, mediator_tables::widest),
+        Some(PhotonMode::ElectronFsr) => electron_fsr,
+        Some(PhotonMode::ChargedPionFsr) => charged_pion_fsr,
+        Some(PhotonMode::ChargedPionDecay) => charged_pion_decay,
+        Some(PhotonMode::NeutralPionLine) => neutral_pion,
+        Some(PhotonMode::MuonFsr) => muon_fsr,
+        Some(PhotonMode::MuonDecay) => muon_decay,
+    }
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ at one photon energy — `:184-227`.
 ///
 /// # Parameters
@@ -273,7 +318,10 @@ fn integrand(
 /// `.pyx` returns before touching `pws`.
 ///
 /// The `π⁰γ` line rides outside the integral and is added for `"pi0 g"`
-/// and `"total"` only (`:223`). As in the scalar twin, the quadrature's
+/// and `"total"` only (`:223`). The integral itself starts at the
+/// selected channel's support edge, as the scalar twin's does, and is
+/// skipped above the lab endpoint with the widths still checked. As in
+/// the scalar twin, the quadrature's
 /// termination flag is discarded because the `.pyx` subscripts
 /// `quad(...)[0]`, so the port no longer raises the `IntegrationWarning`
 /// scipy raises here today.
@@ -307,22 +355,38 @@ pub fn spectrum_point(
         lines_contrib = pws.get(2)? / (eng_v * beta);
     }
 
-    let mut failure: Option<SpectrumError> = None;
-    let mut kernel = |cl: f64| match integrand(cl, eng_gam, eng_v, mv, pws, mode, tables) {
-        Ok(value) => value,
-        Err(error) => {
-            failure = failure.or(Some(error));
-            f64::NAN
+    let cos_min = mediator_tables::cos_theta_min(
+        eng_gam,
+        eng_gam,
+        eng_v / mv,
+        beta,
+        rest_frame_endpoint(mode, mv, tables),
+    );
+    let result = if cos_min >= 1.0 {
+        // The selected channel is zero at every angle. The integrand would
+        // have read the first four widths at every node, so a short buffer
+        // still raises here.
+        pws.get(3)?;
+        0.0
+    } else {
+        let mut failure: Option<SpectrumError> = None;
+        let mut kernel = |cl: f64| match integrand(cl, eng_gam, eng_v, mv, pws, mode, tables) {
+            Ok(value) => value,
+            Err(error) => {
+                failure = failure.or(Some(error));
+                f64::NAN
+            }
+        };
+        let value = match quad(&mut kernel, cos_min, 1.0, &BOOST_QUAD) {
+            Ok(outcome) => outcome.value,
+            // Unreachable; see `boost_quad_options_are_always_accepted`.
+            Err(_) => f64::NAN,
+        };
+        if let Some(error) = failure {
+            return Err(error);
         }
+        value
     };
-    let result = match quad(&mut kernel, -1.0, 1.0, &BOOST_QUAD) {
-        Ok(outcome) => outcome.value,
-        // Unreachable; see `boost_quad_options_are_always_accepted`.
-        Err(_) => f64::NAN,
-    };
-    if let Some(error) = failure {
-        return Err(error);
-    }
 
     if mode.is_some_and(PhotonMode::has_line) {
         return Ok(result + lines_contrib);
@@ -341,8 +405,8 @@ pub fn tables_for(mv: f64) -> std::sync::Arc<PhotonTables> {
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOST_QUAD, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_vrf, dnde_fsr_l_vrf, spectrum_point,
-        tables_for,
+        BOOST_QUAD, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_vrf, dnde_fsr_l_vrf, rest_frame_endpoint,
+        spectrum_point, tables_for,
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, PhotonMode, SpectrumError};
@@ -561,5 +625,35 @@ mod tests {
             (total - summed).abs() <= 1e-5 * total.abs(),
             "total {total} vs summed {summed}"
         );
+    }
+
+    /// The scalar twin's `a_strongly_boosted_channel_keeps_its_forward_tail`,
+    /// per mode. The `π⁰γ` line is subtracted where it applies: it rides
+    /// outside the integral, and its window `E(1 ± β)/2` reaches the lab
+    /// endpoint of every channel but the electron FSR's.
+    #[test]
+    fn a_strongly_boosted_channel_keeps_its_forward_tail() {
+        let (mv, eng_v) = (550.0, 30.0 * 550.0);
+        let tables = tables_for(mv);
+        let widths = PartialWidths::new(&PWS);
+        let ratio = mv / eng_v;
+        let beta = (1.0 - ratio * ratio).sqrt();
+        let line = PWS[2] / (eng_v * beta);
+        for mode in ALL_MODES {
+            let top = (eng_v / mv) * rest_frame_endpoint(Some(mode), mv, &tables) * (1.0 + beta);
+            let offset = if mode.has_line() { line } else { 0.0 };
+            for fraction in [0.5, 0.9, 0.99] {
+                let value =
+                    spectrum_point(fraction * top, eng_v, mv, widths, Some(mode), &tables).unwrap();
+                assert!(value - offset > 0.0, "{mode:?} at {fraction} of {top} MeV");
+            }
+            let eplus = (eng_v * (1.0 + beta)) / 2.0;
+            let line_above = if top * 1.001 <= eplus { offset } else { 0.0 };
+            let above = spectrum_point(top * 1.001, eng_v, mv, widths, Some(mode), &tables);
+            assert_eq!(above, Ok(line_above), "{mode:?}");
+            let short = PartialWidths::new(&PWS[..3]);
+            let raised = spectrum_point(top * 1.001, eng_v, mv, short, Some(mode), &tables);
+            assert_eq!(raised, Err(SpectrumError::OutOfBounds), "{mode:?}");
+        }
     }
 }
