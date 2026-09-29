@@ -185,6 +185,45 @@ user-facing change even when no signature did.
   The parity corpus pins no `rh_neutrino` spectrum. Details:
   `docs/followups/done/rhn-charged-rho-channel-evaluates-the-kaon.md`.
 
+- **The mediator decay spectra keep the top of their spectrum at high
+  boost.** `scalar_mediator_decay_spectrum`, `dnde_decay_v` and the four
+  mediator positron spectra boost a rest-frame spectrum into the lab by
+  integrating over `cos θ`. Every channel is zero above a rest-frame
+  endpoint below `m/2`, so near the top of the lab spectrum only a
+  forward cone about `1/(2γ²)` wide survives. Over the whole range
+  QUADPACK sampled only zeros there and returned `0.0` as converged. The
+  integral now starts at the cone's edge, taken from the widest channel
+  the mode selects.
+
+  In flight every channel of all three kernels moved:
+
+  - **Tails.** At `m_s = 550` MeV and `γ = 30` the scalar's `mu mu`
+    positron spectrum ended at 1.8 GeV and now ends at 15.7 GeV. The
+    scalar's photon continua carried 8.1% of their photon energy and now
+    carry `γ` times their rest-frame energy to within 2e-6. The positron
+    continua carried 48% of their positrons and now carry all of them to
+    within 5e-6. At `γ = 10` the losses were 30% and 4%.
+  - **Other values.** Short of the lost tails, values move either way
+    by up to 0.97 relative. Partly lost tails recover, and elsewhere the
+    narrower interval changes how the quadrature subdivides. The largest
+    fall, 10.5%, is where 2.3.0 sat 11.6% above an independent
+    reference.
+  - **Downstream.** Everything built on these kernels moves with them:
+    `ScalarMediator`'s `s s` photon and positron spectra, and
+    `VectorMediator`'s `v v` and `π⁰ v` spectra. Those channels boost by
+    `γ ≈ m_x / m_med`. At `m_x = 5.5` GeV and `m_med = 550` MeV,
+    `HiggsPortal`'s `s s` photon energy per annihilation rises 52%, from
+    2,273 to 3,460 MeV. `KineticMixing`'s `v v` photon energy rises 13%
+    and its positrons 2.4%.
+  - **What does not move.** A mediator exactly at rest does not move.
+    Neither does any energy whose window already lay inside the support.
+
+  This was
+  [a defect 2.3.0 measured without repairing](docs/followups/done/mediator-decay-angular-windows-miss-their-support.md).
+  The corpus arrays that pinned it stay committed, with 14,580 moved
+  positions in 265 arrays declared as parity roster entry `C6`. Of those
+  arrays, 144 are composed with `A3`, `B4` or `A4+C1`.
+
 ## [2.3.0] — 2026-09-24
 
 **This release repairs nine of the twelve numerical defects 2.2.0 listed

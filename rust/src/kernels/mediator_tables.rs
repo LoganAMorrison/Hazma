@@ -290,6 +290,29 @@ impl RestFrameTable {
     pub fn values(&self) -> &[f64] {
         &self.dnde
     }
+
+    /// The energy in MeV at and above which [`Self::lookup`] is exactly
+    /// zero.
+    ///
+    /// The interpolant's own edge, not the tabulated kernel's: linear
+    /// interpolation carries the last non-zero value down to zero across
+    /// the next cell, so the edge is the first abscissa after that value,
+    /// up to one grid step (1.6% at `m = 550` MeV) above the kernel's
+    /// endpoint. `f64::INFINITY` if the last tabulated value is non-zero,
+    /// because the lookup clamps to it above the grid, and
+    /// `f64::NEG_INFINITY` for a table that is zero everywhere, which has
+    /// no support to bound. A `NaN` entry counts as non-zero.
+    #[must_use]
+    pub fn support_end(&self) -> f64 {
+        match self.dnde.iter().rposition(|&value| value != 0.0) {
+            None => f64::NEG_INFINITY,
+            Some(last) => self
+                .energies
+                .get(last + 1)
+                .copied()
+                .unwrap_or(f64::INFINITY),
+        }
+    }
 }
 
 /// The `10**-1` the decay modules compare against before extrapolating.
@@ -642,6 +665,61 @@ impl ScalarPhotonModes {
 }
 
 // ===========================================================================
+// ---- The boost integral's support -----------------------------------------
+// ===========================================================================
+
+/// The rest-frame photon endpoint of an FSR spectrum, MeV.
+///
+/// `x_max m / 2`, with `x_max = 1 − 4 (m_f / m)²` spelled as all four FSR
+/// functions spell it. Each is exactly zero for `x = 2E/m > x_max`, where
+/// `m_f` is the radiating lepton's or pion's mass and `m` the mediator's.
+/// Negative when the channel is closed (`m < 2 m_f`), which leaves it no
+/// support at all.
+#[must_use]
+pub fn fsr_photon_endpoint(radiator_mass: f64, mass: f64) -> f64 {
+    let mu = radiator_mass / mass;
+    (-4.0_f64).mul_add(mu * mu, 1.0) * mass / 2.0
+}
+
+/// The wider of two rest-frame endpoints, MeV, propagating a `NaN`.
+///
+/// `f64::max` discards a `NaN` operand, which would turn a `NaN`
+/// mediator mass into a finite clip rather than a `NaN` spectrum.
+#[must_use]
+pub fn widest(a: f64, b: f64) -> f64 {
+    if b.is_nan() || b > a { b } else { a }
+}
+
+/// The lower `cos θ` limit of a mediator's boost integral, clipped to its
+/// integrand's support.
+///
+/// A daughter of lab energy `energy` and momentum `momentum` (MeV)
+/// emitted at `cos θ` to a mediator moving with `gamma` and `beta` has
+/// rest-frame energy `E' = γ(E − β p cos θ)`, which falls as `cos θ`
+/// rises. An integrand that is zero for `E' ≥ endpoint` is therefore
+/// supported on `cos θ ≥ (E − endpoint/γ) / (β p)` alone, and at a large
+/// boost that is a sliver of width about `1/(2γ²)` next to `cos θ = 1`
+/// that a first 21-point rule over `[−1, 1]` can miss entirely.
+///
+/// Returns `−1` where nothing restricts the angle: a mediator at rest, a
+/// daughter at rest, or a window already inside the support. A value
+/// `≥ 1` means the integrand is zero at every angle. A `NaN` argument
+/// returns `NaN`, because the clamp is a comparison rather than
+/// `f64::max`.
+///
+/// This is `photon_pion`'s `charged_pion_cos_min` for a massive daughter;
+/// for a photon, `momentum == energy` and the two agree.
+#[must_use]
+pub fn cos_theta_min(energy: f64, momentum: f64, gamma: f64, beta: f64, endpoint: f64) -> f64 {
+    let scale = beta * momentum;
+    if scale <= 0.0 {
+        return -1.0;
+    }
+    let cos_min = (energy - endpoint / gamma) / scale;
+    if cos_min < -1.0 { -1.0 } else { cos_min }
+}
+
+// ===========================================================================
 // ---- Partial widths and the two ways a kernel can fail --------------------
 // ===========================================================================
 
@@ -712,7 +790,8 @@ impl<'a> PartialWidths<'a> {
 mod tests {
     use super::{
         BelowGrid, N_INTERP_PTS, PHOTON_GRID_LOG10_START, PhotonMode, PositronMode, RestFrameTable,
-        ScalarPhotonModes, TableCache, logspace, photon_tables, positron_tables,
+        ScalarPhotonModes, TableCache, cos_theta_min, fsr_photon_endpoint, logspace, photon_tables,
+        positron_tables, widest,
     };
     use crate::constants::legacy;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1088,5 +1167,107 @@ mod tests {
             0
         );
         assert_eq!(ScalarPhotonModes::default().bits(), 0);
+    }
+
+    /// A table whose support ends mid-grid, on abscissae `1, 2, …, 6`.
+    fn truncated_table(dnde: Vec<f64>) -> RestFrameTable {
+        let energies = std::iter::successors(Some(1.0), |x| Some(x + 1.0))
+            .take(dnde.len())
+            .collect();
+        RestFrameTable::from_columns(energies, dnde, BelowGrid::Clamp).unwrap()
+    }
+
+    #[test]
+    fn a_table_s_support_ends_one_cell_past_its_last_value() {
+        // Interpolation carries the last non-zero value down to zero across
+        // the next cell, so the edge is the next abscissa, not this one.
+        let table = truncated_table(vec![1.0, 2.0, 0.5, 0.0, 0.0, 0.0]);
+        assert_eq!(table.support_end(), 4.0);
+        assert!(table.lookup(3.999) > 0.0);
+        assert_eq!(table.lookup(4.0), 0.0);
+        assert_eq!(table.lookup(1e6), 0.0);
+    }
+
+    #[test]
+    fn a_table_that_never_reaches_zero_or_never_leaves_it_is_unbounded_or_empty() {
+        // The lookup clamps to the last value above the grid, so a non-zero
+        // last value supports every energy; an all-zero table supports none.
+        let open = truncated_table(vec![1.0, 1.0, 1.0]);
+        assert_eq!(open.support_end(), f64::INFINITY);
+        assert!(open.lookup(1e6) > 0.0);
+        assert_eq!(
+            truncated_table(vec![0.0; 3]).support_end(),
+            f64::NEG_INFINITY
+        );
+    }
+
+    #[test]
+    fn every_live_table_ends_below_the_daughter_energy() {
+        // The premise of clipping at `support_end`: every rest-frame
+        // spectrum is kinematically bounded below `m/2`, so no table's
+        // last value is non-zero and none of them is unbounded. At 250 MeV
+        // the charged pion is closed and its table is empty.
+        for mass in [250.0, 550.0, 900.0, 5000.0] {
+            let photon = photon_tables(mass);
+            let positron = positron_tables(mass);
+            for table in [
+                &photon.charged_pion,
+                &photon.muon,
+                &positron.charged_pion,
+                &positron.muon,
+            ] {
+                assert!(table.support_end() < mass / 2.0, "m = {mass}");
+            }
+        }
+        assert_eq!(
+            photon_tables(250.0).charged_pion.support_end(),
+            f64::NEG_INFINITY
+        );
+    }
+
+    #[test]
+    fn the_fsr_endpoint_is_where_x_reaches_its_kinematic_maximum() {
+        let (lepton, mass) = (legacy::MASS_MU, 550.0);
+        let mu = lepton / mass;
+        let expected = (1.0 - 4.0 * mu * mu) * mass / 2.0;
+        let edge = fsr_photon_endpoint(lepton, mass);
+        assert!((edge - expected).abs() <= 1e-13 * expected);
+        // A closed channel has a negative endpoint, which bounds nothing.
+        assert!(fsr_photon_endpoint(legacy::MASS_PI, 250.0) < 0.0);
+    }
+
+    #[test]
+    fn the_angular_bound_maps_back_onto_the_endpoint() {
+        // `E' = γ(E − β p cos θ)` at the returned bound is the endpoint.
+        let (gamma, beta) = (10.0, (1.0_f64 - 1e-2).sqrt());
+        for (energy, momentum) in [(2000.0, 2000.0), (2000.0, 1999.9)] {
+            let endpoint = 270.0;
+            let cos_min = cos_theta_min(energy, momentum, gamma, beta, endpoint);
+            assert!(-1.0 < cos_min && cos_min < 1.0);
+            let rest_frame = gamma * (energy - beta * momentum * cos_min);
+            assert!((rest_frame - endpoint).abs() < 1e-10 * endpoint);
+        }
+    }
+
+    #[test]
+    fn the_angular_bound_leaves_the_window_alone_where_nothing_restricts_it() {
+        // At rest, for a daughter at rest, for a window inside the support,
+        // and for an unbounded one.
+        assert_eq!(cos_theta_min(100.0, 100.0, 1.0, 0.0, 50.0), -1.0);
+        assert_eq!(cos_theta_min(100.0, 0.0, 2.0, 0.8, 50.0), -1.0);
+        assert_eq!(cos_theta_min(1.0, 1.0, 2.0, 0.8, 50.0), -1.0);
+        assert_eq!(cos_theta_min(1e9, 1e9, 2.0, 0.8, f64::INFINITY), -1.0);
+        // No support at all puts the bound above every angle.
+        assert!(cos_theta_min(1.0, 1.0, 2.0, 0.8, f64::NEG_INFINITY) >= 1.0);
+    }
+
+    #[test]
+    fn a_nan_survives_the_angular_bound_and_the_widest_endpoint() {
+        assert!(cos_theta_min(f64::NAN, f64::NAN, 2.0, 0.8, 50.0).is_nan());
+        assert!(cos_theta_min(100.0, 100.0, 2.0, 0.8, f64::NAN).is_nan());
+        assert!(widest(f64::NAN, 1.0).is_nan());
+        assert!(widest(1.0, f64::NAN).is_nan());
+        assert_eq!(widest(f64::NEG_INFINITY, 3.0), 3.0);
+        assert_eq!(widest(3.0, 2.0), 3.0);
     }
 }

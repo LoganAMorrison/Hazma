@@ -146,6 +146,30 @@ pub fn dnde_photon_muon_rest_frame(egam: f64) -> f64 {
     (pre + pre) * poly2.mul_add((ym / R).ln(), (poly1 * ym) / 12.0)
 }
 
+/// The photon energy in MeV at and above which [`dnde_photon_muon`] is
+/// exactly zero, for a muon of total energy `emu`.
+///
+/// The in-flight guard's edge `x = (1 − r)/(1 − β)` scaled back to energy,
+/// `(1 − r) E_μ (1 + β) / 2`, and the rest-frame guard's `y = 1 − r` for
+/// a muon within one `f64::EPSILON` MeV of rest. Written from the guard's
+/// own operands, so it lands within rounding of the guard rather than on
+/// it. `f64::NEG_INFINITY` below the muon mass, where the spectrum is zero
+/// at every energy.
+#[must_use]
+// See `dnde_photon_muon` for why this is a threshold, not an equality.
+#[allow(clippy::float_equality_without_abs)]
+pub fn photon_endpoint(emu: f64) -> f64 {
+    if emu < MASS_MU {
+        return f64::NEG_INFINITY;
+    }
+    if emu - MASS_MU < f64::EPSILON {
+        return 0.5 * MASS_MU * ONE_MINUS_R;
+    }
+    let gamma = boost::boost_gamma(emu, MASS_MU);
+    let beta = boost::boost_beta(emu, MASS_MU);
+    (ONE_MINUS_R / (1.0 - beta)) / gamma * (0.5 * MASS_MU)
+}
+
 /// The photon spectrum `dN/dE` from a muon of total energy `emu`.
 ///
 /// # Parameters
@@ -262,6 +286,7 @@ pub fn dnde_photon_muon(egam: f64, emu: f64) -> f64 {
 mod tests {
     use super::{
         ALPHA_EM, MASS_MU, ONE_MINUS_R, R, THREE_PI, dnde_photon_muon, dnde_photon_muon_rest_frame,
+        photon_endpoint,
     };
     use crate::constants::pdg::MASS_E;
 
@@ -551,5 +576,19 @@ mod tests {
     fn a_nan_photon_energy_propagates_on_both_branches() {
         assert!(dnde_photon_muon(f64::NAN, MASS_MU).is_nan());
         assert!(dnde_photon_muon(f64::NAN, 500.0).is_nan());
+    }
+
+    /// `photon_endpoint` is the edge of the spectrum it describes, on both
+    /// branches: zero at and above it, not zero just below it. The signed
+    /// sliver `the_in_flight_signed_endpoint_residual_is_bounded` describes
+    /// is still support, so the check below it is `!= 0`, not `> 0`.
+    #[test]
+    fn the_photon_endpoint_is_where_the_spectrum_closes() {
+        for emu in [MASS_MU, 110.0, 275.0, 1500.0, 1e5] {
+            let edge = photon_endpoint(emu);
+            assert_eq!(dnde_photon_muon(edge * (1.0 + 1e-12), emu), 0.0, "{emu}");
+            assert_ne!(dnde_photon_muon(edge * (1.0 - 1e-6), emu), 0.0, "{emu}");
+        }
+        assert_eq!(photon_endpoint(MASS_MU - 1.0), f64::NEG_INFINITY);
     }
 }

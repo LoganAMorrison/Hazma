@@ -632,6 +632,9 @@ EXPECTED_REACH = {
     "C3/neutral_rho": (6, 191),
     "C4": (5, 179),
     "C5": (6, 164),
+    "C6/scalar_photon": (37, 1184),
+    "C6/vector_photon": (66, 3658),
+    "C6/positron": (48, 3040),
 }
 
 #: Which corpus cases each model reaches, from the roster in
@@ -652,6 +655,16 @@ MODEL_CASES = {
     "C3/neutral_rho": ("spectra.photon.neutral_rho",),
     "C4": ("spectra.photon.phi",),
     "C5": ("spectra.photon.eta_prime",),
+    # The `_pt` twins evaluate the same kernel pointwise and store the same
+    # values, so one entry point of each pair carries the count.
+    "C6/scalar_photon": (
+        "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
+    ),
+    "C6/vector_photon": ("mediator_spectra.vector.photon.dnde_decay_v",),
+    "C6/positron": (
+        "mediator_spectra.scalar.positron.dnde_decay_s",
+        "mediator_spectra.vector.positron.dnde_decay_v",
+    ),
 }
 
 
@@ -856,3 +869,103 @@ def test_the_whole_window_is_the_a3_capture(charged: bool) -> None:
             lost += int(((shipped == 0.0) & (clipped > 0.0)).sum())
     # Falsification: the A3 capture does carry the defect.
     assert lost == C3_LOST_POSITIONS
+
+
+#: How far C6's whole-window half may sit from what the array held before
+#: C6: the stored value, or the capture a `deltas.Reference` base holds
+#: where A3 or A4 recaptured the array. Both are the whole-window rule at
+#: the kernel's tolerances over the same rest-frame spectrum; the stored
+#: and captured arrays ran it in the Cython, C6 runs it through scipy over
+#: the kernel at rest. Measured 4.4e-15 (scalar photon), 2.4e-12 (vector
+#: photon) and 4.3e-11 (positron) worst relative over the 3,114, 10,819
+#: and 8,096 positions where the term is evaluated; the positron's is the
+#: port-to-Cython drift A4 already measured against its capture. Held at
+#: the cases' own 1e-9 nested budget, which C6's declarations use too.
+C6_WHOLE_WINDOW_RTOL = 1e-9
+
+#: The positions of each model's cases where the whole window lost the
+#: continuum outright and the clipped one recovers it. More than the
+#: stored zeros C6's ``measured`` counts, because a line can sit over a
+#: lost continuum: every positron position, and the scalar photon's
+#: default modes, where the ``g g`` line does.
+C6_LOST_POSITIONS = {
+    "C6/scalar_photon": 66,
+    "C6/vector_photon": 205,
+    "C6/positron": 184,
+}
+
+
+def _c6_line(kind: str, params: dict, energy: float) -> float:
+    """The line a mediator spectrum carries outside its boost integral, MeV^-1.
+
+    As the arrays C6 starts from held it: the scalar's ``g g`` line and the
+    vector's ``pi0 gamma`` line over ``E (1 -+ beta) / 2``, and the
+    positron's ``e+ e-`` box at its shipped height ``pw_ee / (E beta)``,
+    before C1 divided it by ``r``, over ``E (1 -+ r beta) / 2``.
+    """
+    eng, mass = params["mediator_energy"], params["mediator_mass"]
+    pws = params["partial_widths"]
+    ratio = mass / eng
+    beta = np.sqrt(1.0 - ratio * ratio)
+    if kind == "positron":
+        me = deltas.LEGACY_MASS_E
+        r = np.sqrt(1.0 - ((4.0 * me) * me) / (mass * mass))
+        lower = (eng * deltas._mul_add(-r, beta, 1.0)) / 2.0
+        upper = (eng * deltas._mul_add(r, beta, 1.0)) / 2.0
+        width = pws[0] if params["mode"] in ("total", "e e", "mu mu", "pi pi") else 0.0
+    else:
+        lower = (eng * (1.0 - beta)) / 2.0
+        upper = (eng * (1.0 + beta)) / 2.0
+        if kind == "vector_photon":
+            width = pws[2] if params["mode"] in ("total", "pi0 g") else 0.0
+        else:
+            width = pws[4] if "g g" in params["modes"] else 0.0
+    if width == 0.0 or not lower <= energy <= upper:
+        return 0.0
+    return width / (eng * beta)
+
+
+@pytest.mark.parametrize("repair", sorted(C6_LOST_POSITIONS))
+def test_the_whole_window_is_what_c6_starts_from(repair: str) -> None:
+    """C6's whole-window half, plus the line, is the array C6 starts from.
+
+    At every position the term is evaluated. For an array nothing else
+    declares, that is the stored array; where A3 or A4 recaptured the array
+    it is that capture, which the composite builds on. For B4's arrays it
+    is the stored one too, because C6 clips the half-size FSR the corpus
+    holds. So the half of C6's term that stands for what shipped is what
+    shipped, including the zeros where the whole window lost the support.
+    """
+    kind = repair.split("/")[1]
+    lost = compared = 0
+    for case_name in MODEL_CASES[repair]:
+        for label, stored in _stored(case_name).items():
+            block = _block(case_name, label, stored)
+            halves = deltas._mediator_boost_halves(kind, block)
+            for suffix, grid_suffix in (
+                ("values", "grid"),
+                ("scalar_values", "scalar_grid"),
+            ):
+                if suffix not in stored:
+                    continue
+                before = stored[suffix]
+                declaration = deltas.declared(case_name, label, suffix)
+                if declaration is not None:
+                    first = deltas.repair_labels(declaration.repair)[0]
+                    if first in ("A3", "A4"):
+                        captures = oracle_reference._blocks(first)
+                        before = captures[case_name, label][suffix]
+                for energy, value in zip(stored[grid_suffix], before, strict=True):
+                    pair = halves(float(energy))
+                    if pair is None:
+                        continue
+                    whole, clipped = pair
+                    compared += 1
+                    lost += int(whole == 0.0 and clipped > 0.0)
+                    shipped = whole + _c6_line(kind, block.params, float(energy))
+                    assert shipped == pytest.approx(
+                        value, rel=C6_WHOLE_WINDOW_RTOL, abs=0.0
+                    ), f"{case_name}[{label}].{suffix} at E = {energy}"
+    assert compared > 0
+    # Falsification: the arrays C6 starts from do carry the defect.
+    assert lost == C6_LOST_POSITIONS[repair]

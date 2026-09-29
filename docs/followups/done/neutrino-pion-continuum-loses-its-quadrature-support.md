@@ -214,7 +214,8 @@ energy-space boost integral with an unclipped window except
 [`rho-photon-outer-boost-misses-support.md`](rho-photon-outer-boost-misses-support.md)
 tracked and `C3` has since repaired. The same failure in the angular
 variable is filed as
-[`mediator-decay-angular-windows-miss-their-support.md`](../todo/mediator-decay-angular-windows-miss-their-support.md).
+[`mediator-decay-angular-windows-miss-their-support.md`](mediator-decay-angular-windows-miss-their-support.md),
+since repaired as `C6`.
 
 **`NaN` inputs.** The clip is a comparison, not `f64::min`, because
 `f64::min` discards a `NaN` operand. Written with it,

@@ -103,6 +103,7 @@ variant is registered and covered by the same shape and evidence gates.
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from fractions import Fraction
@@ -112,12 +113,15 @@ import numpy as np
 import oracle_reference
 import thermal_reference
 import tolerances
-from scipy.integrate import quad
+from scipy.integrate import IntegrationWarning, quad
 
 from hazma import parameters
 from hazma._core import boost as core_boost
+from hazma._core import mediator_tables as core_tables
 from hazma._core import neutrino as core_neutrino
 from hazma._core import photon as core_photon
+from hazma._core import scalar_mediator as core_scalar
+from hazma._core import vector_mediator as core_vector
 
 if TYPE_CHECKING:
     from cases import Block
@@ -145,6 +149,7 @@ REPAIRS = frozenset(
         "C3",
         "C4",
         "C5",
+        "C6",
     }
 )
 
@@ -1774,6 +1779,480 @@ _A1_C5 = Delta(
 )
 
 
+# ---------------------------------------------------------------------------
+# C6 -- the mediator decay boosts keep their quadrature support
+# ---------------------------------------------------------------------------
+
+#: `rust/src/constants.rs`, module ``legacy`` -- the muon and pion masses the
+#: mediator kernels' FSR and ``pi0 gamma`` terms read, spelled out for the
+#: reason `LEGACY_MASS_E` is.
+LEGACY_MASS_MU = 105.6583715
+LEGACY_MASS_PI = 139.57018
+LEGACY_MASS_PI0 = 134.9766
+
+#: The three mediator spectra whose boost integral C6 clips, as the kinds
+#: `_mediator_rest_frame` distinguishes.
+MediatorKind = Literal["scalar_photon", "vector_photon", "positron"]
+
+#: The line-free vector modes: every channel inside the integral but the
+#: ``pi0``, whose mode also carries the line.
+_VECTOR_CONTINUUM_MODES = ("e e g", "mu mu g", "pi pi g", "pi pi", "mu mu")
+
+
+def _table_support_end(energies: np.ndarray, dnde: np.ndarray) -> float:
+    """``mediator_tables::RestFrameTable::support_end``, MeV.
+
+    The first abscissa after the last non-zero value, where interpolation
+    reaches zero; infinite if the last value is non-zero, minus infinity for
+    an all-zero table.
+    """
+    nonzero = np.flatnonzero(dnde)
+    if nonzero.size == 0:
+        return -math.inf
+    if nonzero[-1] + 1 == energies.size:
+        return math.inf
+    return float(energies[nonzero[-1] + 1])
+
+
+def _fsr_photon_endpoint(radiator: float, mass: float) -> float:
+    """``mediator_tables::fsr_photon_endpoint``: ``x_max m / 2``, MeV."""
+    mu = radiator / mass
+    return _mul_add(-4.0, mu * mu, 1.0) * mass / 2.0
+
+
+def _muon_photon_endpoint(emu: float) -> float:
+    """``photon_muon::photon_endpoint``, MeV, in the kernel's operation order."""
+    mmu = parameters.muon_mass
+    if emu < mmu:
+        return -math.inf
+    ratio = parameters.electron_mass / mmu
+    one_minus_r = 1.0 - ratio * ratio
+    if emu - mmu < np.finfo(np.float64).eps:
+        return 0.5 * mmu * one_minus_r
+    gamma = float(core_boost.boost_gamma(emu, mmu))
+    beta = float(core_boost.boost_beta(emu, mmu))
+    return (one_minus_r / (1.0 - beta)) / gamma * (0.5 * mmu)
+
+
+def _neutral_pion_photon_endpoint(epi: float) -> float:
+    """``photon_pion::neutral_pion_photon_endpoint``, MeV."""
+    if epi < MASS_PI0:
+        return -math.inf
+    return _neutral_pion_box_top(epi)
+
+
+def _mediator_rest_frame(
+    kind: MediatorKind, block: Block
+) -> tuple[Callable[[float], float], float]:
+    """The rest-frame spectrum a stored array boosted, and its endpoint.
+
+    Returns ``(spectrum, endpoint)``: ``spectrum(E')`` in MeV^-1, lines
+    excluded, and the rest-frame energy in MeV above which it is zero --
+    the widest selected channel's edge, in each kernel's own
+    ``rest_frame_endpoint`` arithmetic.
+
+    The spectrum is the live kernel evaluated **at rest**, where its boost
+    integrand is the constant ``f(E') / 2`` and the ``cos theta`` quadrature
+    returns ``f(E')`` itself, so every table, fused product and FSR
+    coefficient is the kernel's. Lines are kept out by the arguments: the
+    scalar's ``g g`` is dropped from its modes, the positron's ``e+ e-``
+    width is zeroed, and the vector's ``pi0`` channel -- the one whose mode
+    also carries the ``pi0 gamma`` line -- is transcribed rather than
+    evaluated. The scalar's FSR enters at **half** its live size, because
+    that is what the stored arrays integrated: B4 doubled it after capture,
+    and composes with this repair by adding the doubled half separately.
+    """
+    mass = block.params["mediator_mass"]
+    pws = np.asarray(block.params["partial_widths"], dtype=np.float64)
+    daughter = mass / 2.0
+
+    if kind == "scalar_photon":
+        modes = [mode for mode in block.params["modes"] if mode != "g g"]
+        fsr = [mode for mode in modes if mode in SCALAR_DECAY_FSR_MODES]
+        cp_table = core_tables.photon_tables(mass)
+        edges = {
+            "e e g": _fsr_photon_endpoint(LEGACY_MASS_E, mass),
+            "pi pi g": _fsr_photon_endpoint(LEGACY_MASS_PI, mass),
+            "pi pi": _table_support_end(cp_table[0], cp_table[1]),
+            "pi0 pi0": _neutral_pion_photon_endpoint(daughter),
+            "mu mu g": _fsr_photon_endpoint(LEGACY_MASS_MU, mass),
+            "mu mu": _muon_photon_endpoint(daughter),
+        }
+
+        def scalar(e: float) -> float:
+            value = core_scalar.scalar_mediator_decay_spectrum(
+                e, mass, mass, pws, modes
+            )
+            if fsr:
+                value -= 0.5 * core_scalar.scalar_mediator_decay_spectrum(
+                    e, mass, mass, pws, fsr
+                )
+            return value
+
+        return scalar, max((edges[mode] for mode in modes), default=-math.inf)
+
+    if kind == "vector_photon":
+        mode = block.params["mode"]
+        tables = core_tables.photon_tables(mass)
+        e_pi0 = (0.5 * (LEGACY_MASS_PI0 * LEGACY_MASS_PI0 + mass * mass)) / mass
+        edges = {
+            "e e g": _fsr_photon_endpoint(LEGACY_MASS_E, mass),
+            "mu mu g": _fsr_photon_endpoint(LEGACY_MASS_MU, mass),
+            "pi pi g": _fsr_photon_endpoint(LEGACY_MASS_PI, mass),
+            "pi pi": _table_support_end(tables[0], tables[1]),
+            "pi0 g": _neutral_pion_photon_endpoint(e_pi0),
+            "mu mu": _table_support_end(tables[0], tables[2]),
+        }
+        continua = _VECTOR_CONTINUUM_MODES if mode == "total" else (mode,)
+        continua = tuple(m for m in continua if m != "pi0 g")
+        pi0 = mode in ("total", "pi0 g")
+
+        def vector(e: float) -> float:
+            value = sum(
+                core_vector.dnde_decay_v_pt(e, mass, mass, pws, m) for m in continua
+            )
+            if pi0:
+                value += pws[2] * core_photon.dnde_photon_neutral_pion(e, e_pi0)
+            return value
+
+        endpoint = max(edges.values()) if mode == "total" else edges[mode]
+        return vector, endpoint
+
+    fs = block.params["mode"]
+    tables = core_tables.positron_tables(mass)
+    edges = {
+        "pi pi": _table_support_end(tables[0], tables[1]),
+        "mu mu": _table_support_end(tables[0], tables[2]),
+    }
+    continuum = np.array([0.0, pws[1], pws[2]])
+
+    def positron(e: float) -> float:
+        return core_scalar.dnde_positron_decay_s_pt(e, mass, mass, continuum, fs)
+
+    endpoint = max(edges.values()) if fs == "total" else edges.get(fs, -math.inf)
+    return positron, endpoint
+
+
+def _mediator_boost_halves(
+    kind: MediatorKind, block: Block
+) -> Callable[[float], tuple[float, float] | None]:
+    """Both halves of C6's term at one lab energy, as a function of it.
+
+    Returns ``halves(E)``, which gives ``(whole_window, clipped)``: the
+    boost integral over ``cos theta`` in ``[-1, 1]`` and from
+    ``mediator_tables::cos_theta_min`` up, in MeV^-1, both over
+    `_mediator_rest_frame` and through scipy's QUADPACK at the kernel's
+    options: ``epsabs = 1e-10``, ``epsrel = 1e-5`` and the ``points = [-1,
+    1]`` that select QAGP and are then discarded as non-interior. The
+    whole-window half is what the stored array integrated. ``halves(E)`` is
+    ``None`` where the bound does not rise above ``-1``, since the two
+    would be the same quadrature; for a mediator at rest, which has no
+    angle to clip; and for a selection with no support, whose integrand is
+    zero at every angle.
+    """
+    energy = block.params["mediator_energy"]
+    mass = block.params["mediator_mass"]
+    if energy <= mass:
+        return lambda _e: None
+    rest_frame, endpoint = _mediator_rest_frame(kind, block)
+    if endpoint == -math.inf:
+        return lambda _e: None
+    ratio = mass / energy
+    beta = math.sqrt(1.0 - ratio * ratio)
+    gamma = energy / mass
+    options = {"points": [-1.0, 1.0], "epsabs": 1e-10, "epsrel": 1e-5}
+
+    def halves(e: float) -> tuple[float, float] | None:
+        if kind == "positron":
+            if e < LEGACY_MASS_E:
+                return None
+            p = math.sqrt(max(e * e - LEGACY_MASS_E * LEGACY_MASS_E, 0.0))
+
+            def integrand(cl: float) -> float:
+                rest = gamma * (e - p * beta * cl)
+                rest_p = math.sqrt(max(rest * rest - LEGACY_MASS_E**2, 0.0))
+                return p / (2.0 * rest_p) * rest_frame(rest) if rest_p else 0.0
+
+        else:
+            p = e
+
+            def integrand(cl: float) -> float:
+                # Fused, as both photon kernels fuse it: in the tail the
+                # support is a sliver of `cos theta` a few ulps of `E'`
+                # wide, and the unfused spelling moves it measurably.
+                doppler = _mul_add(-beta, cl, 1.0)
+                return rest_frame((e * gamma) * doppler) / (
+                    (2.0 * gamma) * abs(doppler)
+                )
+
+        scale = beta * p
+        if scale <= 0.0:
+            return None
+        lower = (e - endpoint / gamma) / scale
+        if lower <= -1.0:
+            return None
+        # The kernels read only `quad(...)[0]`, and the whole-window half is
+        # by construction the quadrature that stopped early, so scipy's
+        # report on it is expected and says nothing new.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", IntegrationWarning)
+            whole = quad(integrand, -1.0, 1.0, **options)[0]
+            clipped = quad(integrand, lower, 1.0, **options)[0] if lower < 1.0 else 0.0
+        return whole, clipped
+
+    return halves
+
+
+def _mediator_boost_support(kind: MediatorKind) -> TermFn:
+    """C6's term for one kind of mediator spectrum.
+
+    The clipped boost integral minus the whole-window one, from
+    `_mediator_boost_halves`, and exactly zero wherever that has nothing to
+    clip.
+    """
+
+    def support(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+        halves = _mediator_boost_halves(kind, block)
+
+        def term(e: float) -> float:
+            pair = halves(e)
+            return 0.0 if pair is None else pair[1] - pair[0]
+
+        return _on_value_grids(
+            block, lambda grid: np.array([term(float(e)) for e in grid])
+        )
+
+    return support
+
+
+_C6_EVIDENCE = (
+    "docs/followups/done/mediator-decay-angular-windows-miss-their-support.md"
+)
+
+
+def _c6(kind: MediatorKind, measured: str) -> Delta:
+    """C6 for one kind of mediator spectrum, alone: the stored array plus its term."""
+    return Delta(
+        repair="C6",
+        positions=MOVED,
+        relation=Additive(
+            term=_mediator_boost_support(kind),
+            rtol=tolerances.PORTED_NESTED_RTOL,
+            why="the mediator cases' own 1e-9 nested budget. The term's "
+            "whole-window half redoes the stored quadrature in scipy's "
+            "QUADPACK over the kernel's own rest-frame spectrum and fused "
+            "Doppler factor, and its clipped half redoes the repaired one, so "
+            "the only slack is the port-to-scipy drift the corpus already "
+            "carries. Measured 2.4e-12 worst relative over the 6,393 "
+            "positions C6 moves alone, at vector mv_900.boosted_strong.mu_mu.",
+        ),
+        measured=measured,
+        evidence=_C6_EVIDENCE,
+    )
+
+
+_C6_SCALAR_PHOTON = _c6(
+    "scalar_photon",
+    measured="the repaired kernel starts the cos(theta) integral where the "
+    "rest-frame energy falls to the widest open channel's endpoint: FSR at "
+    "x_max, the charged-pion table's interpolated edge, and the pi0 box and "
+    "muon forward-cone edges at m_s / 2. That moves 1,184 of the case's "
+    "8,610 pinned values in 37 arrays: 10 at rest_plus_eps, 135 in "
+    "near_rest, 375 in boosted_mild and 664 in boosted_strong, 648 up and "
+    "536 down. 37 were 0.0 and 26 more rise by over 100%, up to 6.8e5x, "
+    "where the whole-window quadrature lost the channel's support. The "
+    "other 1,121 move by 4.0e-13 to 0.16 relative, either way, where the "
+    "narrower interval re-subdivides a quadrature that had found the "
+    "support; 11 of them by more than 1e-3.",
+)
+_C6_VECTOR_PHOTON = _c6(
+    "vector_photon",
+    measured="as for the scalar photon, per mode: 3,658 of each entry "
+    "point's 29,295 pinned values in 66 arrays -- 77 at rest_plus_eps, 385 "
+    "in near_rest, 1,152 in boosted_mild and 2,044 in boosted_strong. 131 "
+    "were 0.0 and 44 more rise by over 100%; the other 3,483 move by 4.1e-16 "
+    "to 0.97 relative. The largest fall is 10.5%, at "
+    "mv_550.boosted_mild.pi_pi E = 858 MeV, where 2.3.0 sat 11.6% above an "
+    "energy-variable reference and the repaired kernel sits 0.15% below it.",
+)
+_C6_POSITRON = _c6(
+    "positron",
+    measured="the repaired kernel starts the integral where the rest-frame "
+    "energy falls to the selected positron tables' interpolated edge. That "
+    "moves 1,520 of each entry point's 16,740 pinned values in 24 arrays, "
+    "every continuum channel at every mass in near_rest (174), boosted_mild "
+    "(486) and boosted_strong (860). None was 0.0, because the e+ e- line "
+    "sits under the whole range; 87 scalar values rise by over 100%, up to "
+    "1.4e5x, where the continuum under the line was lost. The vector's "
+    "wider e+ e- width leaves its worst rise at 44%. The rest move by "
+    "3.2e-11 to 0.44 relative, and no value falls by more than 6.7e-5.",
+)
+
+
+def _c6_composite(prior: Delta, c6: Delta, why: str, measured: str) -> Delta:
+    """``prior`` with C6 appended to its additions, in landing order."""
+    relation = prior.relation
+    if isinstance(relation, Composed):
+        base, added = relation.base, (*relation.added, c6.relation)
+    else:
+        base, added = relation, (c6.relation,)
+    return Delta(
+        repair=f"{prior.repair}+C6",
+        positions=MOVED,
+        relation=Composed(
+            base=base,
+            added=added,
+            rtol=max(relation.rtol, c6.relation.rtol),
+            why=why,
+        ),
+        measured=measured,
+        evidence=c6.evidence,
+    )
+
+
+_B4_WITH_C6 = (
+    "B4's measured 1e-3 budget, which dominates. B4's term reads the live "
+    "kernel, so after C6 it is half the *clipped* FSR, and C6's term "
+    "therefore clips the stored integrand -- the half-size FSR -- rather "
+    "than the live one; the two sum to the repaired spectrum exactly. "
+    "Measured {worst} worst relative over the {n} positions, from B4's own "
+    "FSR-only quadrature, below the 3.1e-4 B4 measured before the clip."
+)
+
+_B4_C6 = _c6_composite(
+    _B4,
+    _C6_SCALAR_PHOTON,
+    why=_B4_WITH_C6.format(worst="1.25e-5", n="656"),
+    measured="C6 moves 205 positions in the six boosted default-mode arrays "
+    "at 250 MeV, which B4 already declares. The rest and rest_plus_eps "
+    "arrays there keep B4 alone.",
+)
+_A3_B4_C6 = _c6_composite(
+    _A3_B4,
+    _C6_SCALAR_PHOTON,
+    why=_B4_WITH_C6.format(worst="1.02e-5", n="1,704"),
+    measured="C6 moves 390 positions in 14 default-mode arrays at 550 and "
+    "900 MeV that A3+B4 already declares: both suffixes of near_rest, "
+    "boosted_mild and boosted_strong, and the rest_plus_eps values. The "
+    "rest arrays and the rest_plus_eps scalar probes keep A3+B4.",
+)
+_A3_C6 = _c6_composite(
+    _A3_NESTED,
+    _C6_VECTOR_PHOTON,
+    why="A3's nested 1e-9 budget, on C6's derivation: the A3 capture is the "
+    "whole-window quadrature over the repaired pion table, which C6's "
+    "whole-window half recomputes. Measured 8.1e-13 worst relative over the "
+    "3,382 positions.",
+    measured="C6 moves 1,512 positions in 28 pion-bearing vector arrays at "
+    "550 and 900 MeV that A3 already declares. The rest arrays keep A3.",
+)
+_A4_C1_C6 = _c6_composite(
+    _A4_C1,
+    _C6_POSITRON,
+    why="the nested 1e-9 budget A4 and C1 hold. The A4 capture is the "
+    "whole-window quadrature over the repaired muon table, which C6's "
+    "whole-window half recomputes, and C1's line is closed form. Measured "
+    "4.3e-11 worst relative over the 14,344 positions.",
+    measured="every positron array C6 moves is one A4+C1 already declares: "
+    "6,080 positions in 96 arrays over the four entry points. The rest "
+    "arrays keep A4 alone and the e_e and 250 MeV pi_pi arrays C1 alone.",
+)
+
+#: What each C6 array composes into, by the declaration it carried before.
+_C6_AFTER = {
+    None: None,
+    "B4": _B4_C6,
+    "A3+B4": _A3_B4_C6,
+    "A3": _A3_C6,
+    "A4+C1": _A4_C1_C6,
+}
+
+
+#: The blocks above rest in which every open channel's boost straddles its
+#: endpoint somewhere on the grid. ``rest`` has no angle to clip, and at
+#: ``rest_plus_eps`` the window is ``2 beta`` wide in relative energy with
+#: ``beta = 1.4e-6``, so only the arrays listed separately below have a grid
+#: point inside it.
+_C6_BLOCKS = ("near_rest", "boosted_mild", "boosted_strong")
+
+#: The vector photon modes with an open channel, by mediator mass. The pions
+#: are closed at 250 MeV, below twice the charged-pion mass.
+_C6_VECTOR_MODES = {
+    250: ("total", "e_e_g", "mu_mu", "mu_mu_g", "pi0_g"),
+    550: ("total", "e_e_g", "mu_mu", "mu_mu_g", "pi0_g", "pi_pi", "pi_pi_g"),
+    900: ("total", "e_e_g", "mu_mu", "mu_mu_g", "pi0_g", "pi_pi", "pi_pi_g"),
+}
+
+#: The ``rest_plus_eps`` arrays C6 moves, where a grid point sits within the
+#: ``2 beta`` window of an endpoint.
+_C6_VECTOR_REST_PLUS_EPS = {
+    250: ("total", "pi0_g"),
+    550: ("total", "e_e_g", "pi0_g"),
+    900: ("total", "e_e_g", "mu_mu", "pi0_g"),
+}
+
+_SCALAR_PHOTON_CASE = "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum"
+
+#: The arrays C6 moves, each composed with whatever already declared it:
+#: ``A3+B4`` or ``B4`` on the scalar photon's default modes, ``A3`` on the
+#: vector photon's pion-bearing ones, and ``A4+C1`` on every positron
+#: continuum. The scalar's ``near_rest`` probe of the ``mu mu`` mode alone
+#: at 250 MeV is the one regular array absent: its eight points all sit
+#: below the band the clip reaches.
+_C6_KEYS: dict[tuple[str, str, str], Delta] = {
+    **{
+        (_SCALAR_PHOTON_CASE, f"ms_{mass}.{block}.{modes}", suffix): _C6_SCALAR_PHOTON
+        for mass in (250, 550, 900)
+        for block in _C6_BLOCKS
+        for modes in ("default", "mu_mu_only")
+        for suffix in ("values", "scalar_values")
+        if (mass, block, modes, suffix)
+        != (250, "near_rest", "mu_mu_only", "scalar_values")
+    },
+    **{
+        (
+            _SCALAR_PHOTON_CASE,
+            f"ms_{mass}.rest_plus_eps.default",
+            "values",
+        ): _C6_SCALAR_PHOTON
+        for mass in (550, 900)
+    },
+    **{
+        (
+            f"mediator_spectra.vector.photon.dnde_decay_v{pt}",
+            f"mv_{mass}.{block}.{mode}",
+            "values",
+        ): _C6_VECTOR_PHOTON
+        for pt in ("", "_pt")
+        for mass, modes in _C6_VECTOR_MODES.items()
+        for block in _C6_BLOCKS
+        for mode in modes
+    },
+    **{
+        (
+            f"mediator_spectra.vector.photon.dnde_decay_v{pt}",
+            f"mv_{mass}.rest_plus_eps.{mode}",
+            "values",
+        ): _C6_VECTOR_PHOTON
+        for pt in ("", "_pt")
+        for mass, modes in _C6_VECTOR_REST_PLUS_EPS.items()
+        for mode in modes
+    },
+    **{
+        (
+            f"mediator_spectra.{kind}.positron.dnde_decay_{m}{pt}",
+            f"m{m}_{mass}.{block}.{channel}",
+            "values",
+        ): _C6_POSITRON
+        for kind, m in (("scalar", "s"), ("vector", "v"))
+        for pt in ("", "_pt")
+        for mass, channels in _A4_MEDIATOR_CHANNELS.items()
+        for block in _C6_BLOCKS
+        for channel in channels
+    },
+}
+
+
 #: Every declared array. The two blocks of the same case that are absent --
 #: ``rest`` and ``rest_plus_eps`` -- must still match the stored arrays under
 #: the case's own budget, which is the "moved only what it intended" half of
@@ -2267,6 +2746,17 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
 }
 
 
+def _c6_declaration(key: tuple[str, str, str], c6: Delta) -> Delta:
+    """C6 alone, or the composite that replaces the array's prior declaration."""
+    prior = DECLARED_DELTAS.get(key)
+    composite = _C6_AFTER[prior.repair if prior else None]
+    return composite or c6
+
+
+# C6, last: it composes after whatever each of its arrays already carried.
+DECLARED_DELTAS.update({key: _c6_declaration(key, c6) for key, c6 in _C6_KEYS.items()})
+
+
 #: Every modelled delta, by roster label and optional /variant — including
 #: the ones whose repair
 #: has not landed and which therefore hold no key in `DECLARED_DELTAS`
@@ -2303,6 +2793,13 @@ DELTA_MODELS: dict[str, Delta] = {
     "C3/neutral_rho": _C3_NEUTRAL,
     "C4": _C4,
     "C5": _C5,
+    "C6/scalar_photon": _C6_SCALAR_PHOTON,
+    "C6/vector_photon": _C6_VECTOR_PHOTON,
+    "C6/positron": _C6_POSITRON,
+    "B4+C6": _B4_C6,
+    "A3+B4+C6": _A3_B4_C6,
+    "A3+C6": _A3_C6,
+    "A4+C1+C6": _A4_C1_C6,
 }
 
 

@@ -24,8 +24,11 @@ The four parts
 2. :class:`TestAgainstAnIndependentReference` — the ``.pyx`` bodies
    re-transcribed in NumPy and ``scipy.integrate.quad`` (:func:`reference`
    below), compared at a stated budget. The scalar FSR transcriptions
-   carry :data:`PAIR_NORMALIZATION`, the one deliberate departure from
-   the ``.pyx``; :class:`TestPhysics` is where that factor is justified.
+   carry :data:`PAIR_NORMALIZATION`, a deliberate departure from the
+   ``.pyx`` that :class:`TestPhysics` justifies; the clipped ``cos theta``
+   window is the other, and :class:`TestTheBoostedTail` checks it against
+   a quadrature in the energy variable (:func:`energy_reference`) and
+   against the boost's photon-energy identity.
 3. :class:`TestPhysics` — statements that owe nothing to the
    implementation being replaced: thresholds, support, the line's photon
    count, additivity over channels, and broadcasting.
@@ -77,7 +80,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from scipy.integrate import quad
+from scipy.integrate import IntegrationWarning, quad
 
 from hazma import parameters, spectra
 from hazma._core import scalar_mediator as core_scalar
@@ -172,7 +175,8 @@ CONFIGS = [(550.0, 550.0), (550.0, 600.0), (550.0, 1500.0)]
 #: ``.pyx``'s C tree fused; 1e-9 is
 #: ``test/parity/tolerances.PORTED_NESTED_RTOL``, the figure Task 4.5
 #: established for exactly this "nested quadrature, ported integrator"
-#: shape, and the worst difference measured here is 3.5e-12.
+#: shape, and the worst difference measured here is 2.4e-11, at
+#: ``"e e g"``, ``mass = 550``, ``energy = 1500``, ``egam = 414`` MeV.
 REFERENCE_RTOL = 1e-9
 
 #: The additivity budget. Each single-channel call is its own adaptive
@@ -311,38 +315,117 @@ def _fsr_l_vector(egam: float, ml: float, mv: float) -> float:
     return 2 * (dynamic * coeff) / mv
 
 
-def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
-    egam: float,
-    energy: float,
-    mass: float,
-    pws: np.ndarray,
-    selector: Selector,
-    *,
-    vector: bool,
-) -> float:
-    """The deleted ``.pyx`` body, re-derived in NumPy and scipy.
+def _table_edge(energies: np.ndarray, dnde: np.ndarray) -> float:
+    """The energy, MeV, at and above which a rest-frame table interpolates to zero.
 
-    ``selector`` is a list of mode names for the scalar entry point and a
-    single ``mode`` string for the vector ones, matching each source's own
-    argument.
+    The first abscissa after the last non-zero entry: ``np.interp`` carries
+    that entry down to zero across the next cell. Infinite if the last entry
+    is non-zero, because ``np.interp`` clamps to it above the grid, and
+    minus infinity for a table that is zero throughout.
     """
-    if energy < mass:
-        return 0.0
+    nonzero = np.flatnonzero(dnde)
+    if nonzero.size == 0:
+        return -math.inf
+    if nonzero[-1] + 1 == energies.size:
+        return math.inf
+    return float(energies[nonzero[-1] + 1])
 
-    beta = math.sqrt(1.0 - (mass / energy) ** 2)
-    gamma = energy / mass
-    eplus = energy * (1.0 + beta) / 2.0
-    eminus = energy * (1.0 - beta) / 2.0
 
-    cp_energies, cp_dnde = _tabulate(mass, spectra.dnde_photon_charged_pion)
+def _neutral_pion_box_top(epi: float) -> float:
+    """The top of the ``pi0 -> gamma gamma`` box at pion energy ``epi``, MeV.
+
+    ``E_pi (1 + beta) / 2``, with ``beta`` rounded to ``float32`` as the
+    public kernel declares it; minus infinity below the pion mass.
+    """
+    if epi < parameters.neutral_pion_mass:
+        return -math.inf
+    ratio = parameters.neutral_pion_mass / epi
+    beta = float(np.float32(math.sqrt(1.0 - ratio * ratio)))
+    return epi * (1.0 + beta) / 2.0
+
+
+def _muon_photon_endpoint(emu: float) -> float:
+    """The highest photon energy ``spectra.dnde_photon_muon`` reaches, MeV.
+
+    The radiative muon decay's rest-frame edge ``(1 - r) m_mu / 2``, with
+    ``r = (m_e / m_mu)**2``, boosted fully forward; minus infinity below the
+    muon mass. The public kernel takes PDG masses, not the legacy ones above.
+    """
+    mmu = parameters.muon_mass
+    if emu < mmu:
+        return -math.inf
+    r = (parameters.electron_mass / mmu) ** 2
+    beta = math.sqrt(1.0 - (mmu / emu) ** 2)
+    return (1.0 - r) * emu * (1.0 + beta) / 2.0
+
+
+def _channel_endpoints(
+    mass: float, *, vector: bool, tables: dict[str, float]
+) -> dict[str, float]:
+    """Each channel's rest-frame photon endpoint, MeV, keyed by its mode.
+
+    ``tables`` holds the two interpolated tables' edges, keyed ``"pi pi"``
+    and ``"mu mu"``. The FSR channels end at ``x = 1 - 4 mu**2``; the
+    neutral pion at the top of its box; the scalar's muon, which is not
+    tabulated, at its forward-cone edge. Lines ride outside the integral
+    and have no endpoint here.
+    """
+
+    def fsr(radiator: float) -> float:
+        return (1.0 - 4.0 * (radiator / mass) ** 2) * mass / 2.0
+
     if vector:
-        mu_energies, mu_dnde = _tabulate(mass, spectra.dnde_photon_muon)
+        e_pi0 = 0.5 * (MASS_PI0**2 + mass**2) / mass
+        return {
+            "e e g": fsr(MASS_E),
+            "mu mu g": fsr(MASS_MU),
+            "pi pi g": fsr(MASS_PI),
+            "pi pi": tables["pi pi"],
+            "pi0 g": _neutral_pion_box_top(e_pi0),
+            "mu mu": tables["mu mu"],
+        }
+    return {
+        "e e g": fsr(MASS_E),
+        "pi pi g": fsr(MASS_PI),
+        "pi pi": tables["pi pi"],
+        "pi0 pi0": _neutral_pion_box_top(mass / 2.0),
+        "mu mu g": fsr(MASS_MU),
+        "mu mu": _muon_photon_endpoint(mass / 2.0),
+    }
 
-    def integrand(cl: float) -> float:
-        jac = 1.0 / (2.0 * gamma * abs(1.0 - beta * cl))
-        erf = egam * gamma * (1.0 - beta * cl)
+
+def rest_frame_spectrum(
+    mass: float, pws: np.ndarray, selector: Selector, *, vector: bool
+) -> tuple[Callable[[float], float], float, list[float]]:
+    """The boost integrand's rest-frame spectrum, its endpoint and its kinks.
+
+    Returns ``(spectrum, endpoint, kinks)``: ``spectrum(E')`` is ``dN/dE'``
+    in MeV^-1 summed over the channels ``selector`` opens, lines excluded;
+    ``endpoint`` in MeV is the widest of those channels' endpoints, above
+    which ``spectrum`` is zero; ``kinks`` are every rest-frame energy, MeV,
+    where some channel starts, stops or changes form -- break points for a
+    quadrature over ``E'``.
+    """
+    cp_energies, cp_dnde = _tabulate(mass, spectra.dnde_photon_charged_pion)
+    mu_energies, mu_dnde = _tabulate(mass, spectra.dnde_photon_muon)
+    tables = {
+        "pi pi": _table_edge(cp_energies, cp_dnde),
+        "mu mu": _table_edge(mu_energies, mu_dnde),
+    }
+    edges = _channel_endpoints(mass, vector=vector, tables=tables)
+    if vector:
+        selected = list(edges) if selector == "total" else [selector]
+    else:
+        selected = list(selector)
+    endpoint = max(
+        (edges[mode] for mode in selected if mode in edges), default=-math.inf
+    )
+    e_pi0 = 0.5 * (MASS_PI0**2 + mass**2) / mass if vector else mass / 2.0
+    box_bottom = e_pi0 - (_neutral_pion_box_top(e_pi0) - e_pi0)
+    kinks = [10**GRID_LOG10_START, box_bottom, *edges.values()]
+
+    def spectrum(erf: float) -> float:
         if vector:
-            e_pi0 = 0.5 * (MASS_PI0**2 + mass**2) / mass
             components = {
                 "e e g": pws[0] * _fsr_l_vector(erf, MASS_E, mass),
                 "mu mu g": pws[1] * _fsr_l_vector(erf, MASS_MU, mass),
@@ -352,8 +435,8 @@ def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
                 "mu mu": 2.0 * pws[1] * _interp_with_tail(erf, mu_energies, mu_dnde),
             }
             if selector == "total":
-                return jac * sum(components.values())
-            return jac * components.get(selector, 0.0)
+                return sum(components.values())
+            return components.get(selector, 0.0)
 
         result = 0.0
         if "e e g" in selector:
@@ -368,19 +451,136 @@ def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
             result += pws[1] * _fsr_l_scalar(erf, MASS_MU, mass)
         if "mu mu" in selector:
             result += 2.0 * pws[1] * spectra.dnde_photon_muon(erf, mass / 2.0)
-        return jac * result
+        return result
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        result = quad(integrand, -1.0, 1.0, **QUAD_KWARGS)[0]
+    return spectrum, endpoint, kinks
 
-    in_window = eminus <= egam <= eplus
+
+def _line(  # noqa: PLR0913 -- one argument per `.pyx` parameter
+    egam: float,
+    energy: float,
+    mass: float,
+    pws: np.ndarray,
+    selector: Selector,
+    *,
+    vector: bool,
+) -> float:
+    """The monochromatic line both sources add outside the integral, MeV^-1.
+
+    The vector's ``pi0 gamma`` line for ``"pi0 g"`` and ``"total"``, the
+    scalar's ``gamma gamma`` line when ``"g g"`` is selected: a box of
+    height ``pw / (E beta)`` over ``E (1 -+ beta) / 2``. At rest the box
+    is the single point ``m / 2`` and its height is IEEE ``pw / 0``, as the
+    kernels divide it.
+    """
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    if not energy * (1.0 - beta) / 2.0 <= egam <= energy * (1.0 + beta) / 2.0:
+        return 0.0
     if vector:
-        if selector in ("pi0 g", "total") and in_window:
-            result += pws[2] / (energy * beta)
-    elif "g g" in selector and in_window:
-        result += pws[4] / (energy * beta)
-    return result
+        if selector not in ("pi0 g", "total"):
+            return 0.0
+        width = pws[2]
+    elif "g g" in selector:
+        width = pws[4]
+    else:
+        return 0.0
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return float(np.divide(width, energy * beta))
+
+
+def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
+    egam: float,
+    energy: float,
+    mass: float,
+    pws: np.ndarray,
+    selector: Selector,
+    *,
+    vector: bool,
+) -> float:
+    """The deleted ``.pyx`` body, re-derived in NumPy and scipy.
+
+    ``selector`` is a list of mode names for the scalar entry point and a
+    single ``mode`` string for the vector ones, matching each source's own
+    argument.
+
+    One departure from the source, the one the kernel makes: the ``cos
+    theta`` integral starts where the rest-frame energy falls to the
+    selected channels' endpoint rather than at ``-1``. The ``.pyx``
+    integrated the whole range, and at a large boost its quadrature never
+    sampled the support near ``cos theta = 1``;
+    :class:`TestTheBoostedTail` checks the clipped integral against one in
+    the energy variable, which has no such window to miss.
+    """
+    if energy < mass:
+        return 0.0
+
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    gamma = energy / mass
+    spectrum, endpoint, _ = rest_frame_spectrum(mass, pws, selector, vector=vector)
+    lower = -1.0
+    if beta > 0.0 and egam > 0.0:
+        lower = max(-1.0, (1.0 - endpoint / (gamma * egam)) / beta)
+
+    def integrand(cl: float) -> float:
+        jac = 1.0 / (2.0 * gamma * abs(1.0 - beta * cl))
+        return jac * spectrum(egam * gamma * (1.0 - beta * cl))
+
+    result = 0.0
+    if lower < 1.0:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = quad(integrand, lower, 1.0, **QUAD_KWARGS)[0]
+    return result + _line(egam, energy, mass, pws, selector, vector=vector)
+
+
+def energy_reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
+    egam: float,
+    energy: float,
+    mass: float,
+    pws: np.ndarray,
+    selector: Selector,
+    *,
+    vector: bool,
+) -> float:
+    """The boosted spectrum integrated over rest-frame energy, MeV^-1.
+
+    For an isotropic massless daughter, ``E' = gamma E (1 - beta cos
+    theta)`` turns the ``cos theta`` integral into
+
+        dN/dE = 1 / (2 beta gamma) int dE' f(E') / E',
+                gamma E (1 - beta) <= E' <= gamma E (1 + beta),
+
+    which has no angular window to miss: the support is the part of this
+    range below the endpoint, and the channels' kinks are break points.
+    Integrated over ``u = ln E'``, in which ``f(E') dE' / E'`` is
+    ``f(e^u) du``, at ``epsrel = 1e-8`` -- three decades under the kernel's
+    own, and the tightest scipy reaches without reporting roundoff. Shares only the rest-frame spectrum with :func:`reference`.
+    """
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    gamma = energy / mass
+    spectrum, _, kinks = rest_frame_spectrum(mass, pws, selector, vector=vector)
+    lower = math.log(gamma * egam * (1.0 - beta))
+    upper = math.log(gamma * egam * (1.0 + beta))
+    points = sorted(
+        {math.log(k) for k in kinks if k > 0.0 and lower < math.log(k) < upper}
+    )
+    # The tabulated channels are piecewise linear over 500 knots, and scipy
+    # reports each unresolved kink as roundoff at this tolerance. The value
+    # is what the tests check, against the kernel and the energy identity.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", IntegrationWarning)
+        value = quad(
+            lambda u: spectrum(math.exp(u)),
+            lower,
+            upper,
+            points=points or None,
+            epsabs=0.0,
+            epsrel=1e-8,
+            limit=500,
+        )[0]
+    return value / (2.0 * beta * gamma) + _line(
+        egam, energy, mass, pws, selector, vector=vector
+    )
 
 
 def scalar_call(
@@ -577,6 +777,148 @@ class TestAgainstAnIndependentReference:
         array = np.asarray(dnde_decay_v(egams, 600.0, 550.0, VECTOR_PWS, mode))
         pointwise = np.array([vector_call(e, 600.0, 550.0, mode=mode) for e in egams])
         assert array.tobytes() == pointwise.tobytes()
+
+
+#: The scalar selectors :class:`TestTheBoostedTail` samples: each channel
+#: inside the integral alone, then the entry point's default list.
+TAIL_SCALAR_SELECTORS = [
+    ["pi pi"],
+    ["mu mu"],
+    ["pi0 pi0"],
+    ["e e g"],
+    ["pi pi g"],
+    ["mu mu g"],
+    SCALAR_MODES,
+]
+
+#: Mediator boosts ``gamma = E / m`` for :class:`TestTheBoostedTail`. At
+#: ``gamma = 2`` 2.3.0 already lost the top of the electron FSR; by 30 it
+#: returned zero over most of every channel's range.
+TAIL_BOOSTS = [2.0, 10.0, 30.0]
+
+#: The budget against :func:`energy_reference`. The kernel converges to
+#: ``epsrel = 1e-5`` or ``epsabs = 1e-10`` MeV^-1, whichever is looser, so in
+#: the far tail, where ``dN/dE`` falls to 1e-12, the absolute bound governs
+#: and the relative error grows: measured up to 7.6e-4 at 0.889 of the lab
+#: endpoint of ``"pi pi"`` on a 60-point sweep, and 6.9e-5 worst on the
+#: 13-point grid below, at 550 MeV. The defect this guards is a relative
+#: error of exactly 1.
+TAIL_RTOL = 1e-3
+
+#: The budget on ``int E dN/dE dE = gamma int E' f(E') dE'``. Measured
+#: within 8.5e-6 of one at every boost below, which is the trapezoid rule's
+#: error on 4,001 log-spaced energies; 2.3.0 carried 0.081 of the scalar's
+#: photon energy at ``gamma = 30``.
+ENERGY_IDENTITY_TOL = 3e-5
+
+
+def _lab_endpoint(
+    mass: float, energy: float, pws: np.ndarray, selector: Selector, *, vector: bool
+) -> float:
+    """The highest lab photon energy the boost integral reaches, MeV.
+
+    The rest-frame endpoint boosted fully forward, ``gamma E'_max (1 + beta)``.
+    """
+    _, endpoint, _ = rest_frame_spectrum(mass, pws, selector, vector=vector)
+    beta = math.sqrt(1.0 - (mass / energy) ** 2)
+    return energy / mass * endpoint * (1.0 + beta)
+
+
+class TestTheBoostedTail:
+    """The boost integral keeps its support when the mediator is fast.
+
+    ``E' = gamma E (1 - beta cos theta)`` puts the support of a channel whose
+    rest-frame spectrum ends at ``E'_max`` at ``cos theta >= (1 - E'_max /
+    (gamma E)) / beta``: near the lab endpoint, a cone ``1 / (2 gamma**2)``
+    wide. Over the whole of ``[-1, 1]`` the first 21-point rule sampled
+    only zeros there and QUADPACK accepted ``0.0``, so 2.3.0 lost the top
+    of every channel's spectrum once the mediator moved. The kernels now
+    start the integral at the cone's edge; these tests check the result
+    against a quadrature that never had the window to miss.
+    """
+
+    @pytest.mark.parametrize("gamma", TAIL_BOOSTS)
+    @pytest.mark.parametrize("selector", TAIL_SCALAR_SELECTORS, ids=str)
+    def test_the_scalar_spectrum_matches_the_energy_integral(
+        self, gamma: float, selector: list[str]
+    ) -> None:
+        self._compare(gamma, SCALAR_PWS, selector, vector=False)
+
+    @pytest.mark.parametrize("gamma", TAIL_BOOSTS)
+    @pytest.mark.parametrize("mode", VECTOR_MODES)
+    def test_the_vector_spectrum_matches_the_energy_integral(
+        self, gamma: float, mode: str
+    ) -> None:
+        self._compare(gamma, VECTOR_PWS, mode, vector=True)
+
+    @staticmethod
+    def _compare(
+        gamma: float, pws: np.ndarray, selector: Selector, *, vector: bool
+    ) -> None:
+        mass = 550.0
+        energy = gamma * mass
+        top = _lab_endpoint(mass, energy, pws, selector, vector=vector)
+        call = vector_call if vector else scalar_call
+        for egam in top * np.geomspace(1e-3, 0.999, 13):
+            got = call(float(egam), energy, mass, pws, selector)
+            want = energy_reference(egam, energy, mass, pws, selector, vector=vector)
+            assert got == pytest.approx(
+                want, rel=TAIL_RTOL, abs=0.0
+            ), f"{selector} at {egam / top:.4f} of the {top:.1f} MeV endpoint"
+
+    @pytest.mark.parametrize("gamma", TAIL_BOOSTS)
+    @pytest.mark.parametrize(
+        ("selector", "vector"),
+        [
+            (["pi pi", "mu mu", "pi0 pi0", "e e g", "pi pi g", "mu mu g"], False),
+            ("e e g", True),
+            ("pi pi", True),
+            ("mu mu", True),
+        ],
+        ids=["scalar-continua", "vector-e_e_g", "vector-pi_pi", "vector-mu_mu"],
+    )
+    def test_the_boost_carries_the_rest_frame_photon_energy(
+        self, gamma: float, selector: Selector, vector: bool
+    ) -> None:
+        """``int E dN/dE dE`` in the lab is ``gamma`` times the rest frame's.
+
+        A statement about any isotropic source that owes nothing to either
+        integrator: the mean of ``E = gamma E' (1 + beta cos theta*)`` over
+        the decay angle is ``gamma E'``. The lab side is a trapezoid over
+        ``ln E`` from ``1e-7`` of the endpoint up to it, the rest-frame side
+        scipy over ``ln E'`` from ``1e-7`` of its endpoint, so each drops the
+        same negligible sliver at the bottom. Lines are excluded, since they
+        ride outside the integral.
+        """
+        mass = 550.0
+        energy = gamma * mass
+        pws = VECTOR_PWS if vector else SCALAR_PWS
+        spectrum, endpoint, kinks = rest_frame_spectrum(
+            mass, pws, selector, vector=vector
+        )
+        floor = 1e-7 * endpoint
+        points = sorted({math.log(k) for k in kinks if floor < k < endpoint})
+        # Roundoff at the tables' knots, as in `energy_reference`.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", IntegrationWarning)
+            rest_frame = quad(
+                lambda u: math.exp(2.0 * u) * spectrum(math.exp(u)),
+                math.log(floor),
+                math.log(endpoint),
+                points=points,
+                limit=500,
+                epsrel=1e-8,
+            )[0]
+        top = _lab_endpoint(mass, energy, pws, selector, vector=vector)
+        energies = top * np.geomspace(1e-7, 1.0, 4001)
+        if vector:
+            lab = np.asarray(dnde_decay_v(energies, energy, mass, pws, selector))
+        else:
+            lab = np.asarray(scalar_spectrum(energies, energy, mass, pws, selector))
+        carried = np.trapezoid(energies * energies * lab, np.log(energies))
+        assert carried / (gamma * rest_frame) == pytest.approx(
+            1.0, abs=ENERGY_IDENTITY_TOL
+        )
 
 
 # ===========================================================================

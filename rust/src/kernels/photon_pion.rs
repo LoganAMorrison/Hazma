@@ -434,6 +434,17 @@ pub fn neutral_pion_photon_box(epi: f64) -> (f64, f64) {
     ((epi * (1.0 - beta)) * 0.5, (epi * (1.0 + beta)) * 0.5)
 }
 
+/// The top of a neutral pion's `γγ` box, MeV, or `f64::NEG_INFINITY`
+/// below the pion's rest mass, where [`dnde_photon_neutral_pion`] is zero
+/// at every energy and [`neutral_pion_photon_box`] has no real `β`.
+#[must_use]
+pub fn neutral_pion_photon_endpoint(epi: f64) -> f64 {
+    if epi < MASS_PI0 {
+        return f64::NEG_INFINITY;
+    }
+    neutral_pion_photon_box(epi).1
+}
+
 /// The photon spectrum `dN/dE` in MeV⁻¹ from neutral-pion decay.
 ///
 /// # Parameters
@@ -476,7 +487,8 @@ mod tests {
     use super::{
         CHARGED_PION_QUAD, F_A_PI_SQ, FPI, MPI_SQ, PHOTON_ENDPOINT_PIRF, TWELVE_SQRT_2,
         TWENTY_FOUR_PI_MPI, charged_pion_cos_min, charged_pion_integrand, dnde_photon_charged_pion,
-        dnde_photon_neutral_pion, dnde_pi_to_lnug,
+        dnde_photon_neutral_pion, dnde_pi_to_lnug, neutral_pion_photon_box,
+        neutral_pion_photon_endpoint,
     };
     use crate::constants::derived::photon_pion::{ME, MMU};
     use crate::constants::pdg::{BR_PI0_TO_A_A, MASS_PI, MASS_PI0};
@@ -733,6 +745,22 @@ mod tests {
         assert!(
             relative < 1e-12,
             "rest-frame spectrum {integrated} vs {at_one_angle} (rel {relative:e})"
+        );
+    }
+
+    /// The box's top is its endpoint; below the pion mass there is no box
+    /// and no real `β`, so no endpoint either.
+    #[test]
+    fn the_neutral_pion_endpoint_is_the_top_of_its_box() {
+        for epi in [MASS_PI0, 275.0, 5000.0] {
+            let edge = neutral_pion_photon_endpoint(epi);
+            assert_eq!(edge.to_bits(), neutral_pion_photon_box(epi).1.to_bits());
+            assert!(dnde_photon_neutral_pion(edge, epi) > 0.0);
+            assert_eq!(dnde_photon_neutral_pion(edge * (1.0 + 1e-12), epi), 0.0);
+        }
+        assert_eq!(
+            neutral_pion_photon_endpoint(MASS_PI0 - 1.0),
+            f64::NEG_INFINITY
         );
     }
 }
