@@ -261,8 +261,13 @@ fn integrand(
 /// for `mode`'s channel, or for the widest of all six under `"total"`.
 ///
 /// The FSR kinematic edge `x_max`, the two tables' interpolated edges, and
-/// the top of the `π⁰` box at the `V → π⁰γ` two-body energy — every one of
-/// them below `m_V/2`. The integrand evaluates all six channels whatever
+/// the top of the `π⁰` box at the `V → π⁰γ` two-body energy. The first
+/// three lie below `m_V/2`. The box top is `m_V/2` in exact kinematics,
+/// since the `π⁰`'s energy plus momentum is `m_V`. Here it lands 4.8e-5 MeV
+/// below that at `m_V = 550` MeV, because the two-body energy takes the
+/// legacy `π⁰` mass, the box's `β` takes the PDG one and rounds it to
+/// `f32`. It is the box's own edge either way, so the bound needs no
+/// margin. The integrand evaluates all six channels whatever
 /// the mode, but only the selected one reaches its value, so only that
 /// one bounds the integral. The `π⁰γ` line rides outside it and has no
 /// endpoint here. `f64::NEG_INFINITY` for an unrecognised mode, whose

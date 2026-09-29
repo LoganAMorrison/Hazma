@@ -189,7 +189,7 @@ user-facing change even when no signature did.
   boost.** `scalar_mediator_decay_spectrum`, `dnde_decay_v` and the four
   mediator positron spectra boost a rest-frame spectrum into the lab by
   integrating over `cos θ`. Every channel is zero above a rest-frame
-  endpoint below `m/2`, so near the top of the lab spectrum only a
+  endpoint at or below `m/2`, so near the top of the lab spectrum only a
   forward cone about `1/(2γ²)` wide survives. Over the whole range
   QUADPACK sampled only zeros there and returned `0.0` as converged. The
   integral now starts at the cone's edge, taken from the widest channel
