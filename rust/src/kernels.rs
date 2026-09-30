@@ -49,6 +49,10 @@
 //! scalar module reached the identical pair. The two `roundtrip` probes
 //! below stay at this level for the opposite reason — they belong to no
 //! `.pyx` and to no domain.
+//!
+//! [`thermal_window`] is the second shared piece between the two
+//! cross-section modules: the interval and break points both thermal
+//! averages integrate over, built from each model's channel thresholds.
 
 pub mod mediator_decay_positron;
 pub mod mediator_tables;
@@ -64,6 +68,7 @@ pub mod positron_pion;
 pub mod scalar_decay_photon;
 pub mod scalar_xs;
 pub mod soft_complex;
+pub mod thermal_window;
 pub mod vector_decay_photon;
 pub mod vector_xs;
 

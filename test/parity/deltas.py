@@ -996,10 +996,12 @@ _C7 = Delta(
         "every array C7 moves: 1.8e-8 worst relative over 540 positions, at "
         "scalar open_resonance x = 14.8.",
     ),
-    measured="both kernels integrate [2, 2 + 100/x] where they integrated "
-    "[2, max(floor, 50/x)], with a floor of 100 for the scalar and 150 for "
-    "the vector. That changes the partition behind all 540 positions the "
-    "two cases integrate, and the value at 518 of them, but only 16 move by "
+    measured="both kernels integrate to 100 decay lengths 1/x past their "
+    "last channel threshold, splitting at decay lengths past each, where "
+    "they integrated [2, max(floor, 50/x)], with a floor of 100 for the "
+    "scalar and 150 for the vector. That changes the partition behind all "
+    "540 positions the two cases integrate, and the value at 520 of them, "
+    "but only 16 move by "
     "more than B6's budget: the vector closed_resonance block from "
     "x = 209.9 up, 13 of them at or past the x = 300 clip where it "
     "saturates. There the fixed interval's first Gauss-Kronrod nodes "

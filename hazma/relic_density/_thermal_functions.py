@@ -430,6 +430,15 @@ def thermal_cross_section_upper_limit(x: float) -> float:
     `HiggsPortal` with ``stheta = 1e-4``, and a cut at ``2 + 50 / x``
     loses 1.2e-7 of that model's value at ``x = 12.6``.
 
+    Counting from threshold assumes every channel that matters opens
+    within the window. One that opens past ``2 + 100 / x`` is dropped
+    whole: with ``stheta = 0`` that same model's average is ``0.0`` at
+    ``x = 30``. The Rust mediator kernels count from their last channel
+    threshold instead (``rust/src/kernels/thermal_window.rs``). The
+    generic sites see only ``annihilation_cross_sections``, so they
+    cannot; ``docs/followups/todo/python-thermal-sites-cannot-see-channel-thresholds.md``
+    tracks giving them the thresholds.
+
     Because the interval scales with the decay length ``1 / x``, the
     integrator's first nodes also land where the integrand is not
     negligible. A fixed cut such as ``[2, 150]`` puts them in the tail at

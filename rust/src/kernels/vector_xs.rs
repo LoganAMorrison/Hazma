@@ -17,8 +17,9 @@
 //!   ⟨σv⟩(x) = x / (2 K₂(x))² · ∫₂^Z dz  σ_all(m_x z) z² (z² − 4) K₁(x z)
 //! ```
 //!
-//! over the sum of all six channels, with `Z = 2 + 100/x` and QAGP
-//! break points at `[2, m_v/m_x, 2 m_v/m_x]`.
+//! over the sum of all six channels, with `Z` and the QAGP break points
+//! built from the channel thresholds and the resonance `m_v/m_x` by
+//! [`crate::kernels::thermal_window`].
 //!
 //! `sigma_xx_to_all` — the sum the integrand needs — was also a public
 //! Cython `def`. Nothing imported it, so the plan drops it rather than
@@ -116,6 +117,7 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
+use crate::kernels::thermal_window::partition;
 use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
 use crate::special::{bessel_k1, bessel_kn};
 
@@ -173,12 +175,12 @@ const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
 /// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
 ///
 /// A criterion that binds is only worth having if the integrator is
-/// allowed to reach it. At scipy's default limit of 50, 15 of the 540
-/// thermal positions the parity corpus pins exhaust the subdivision
-/// table and come back flagged; at 100 none do. The worst error against
+/// allowed to reach it. At scipy's default limit of 50, one of the 540
+/// thermal positions the parity corpus pins exhausts the subdivision
+/// table and comes back flagged; at 100 none do. The worst error against
 /// `test/parity/thermal_reference.py`'s converged integral is 1.8e-8 at
-/// 50, 100 and 200 alike, so 100 is the smallest limit at which every
-/// position converges, and a larger one would only buy work.
+/// both, so 100 is a limit at which every position converges with room
+/// for the break points `crate::kernels::thermal_window` adds.
 const THERMAL_LIMIT: usize = 100;
 
 /// `σ(x x̄ → V* → f f̄)` in MeV⁻², for a lepton of mass `mf`.
@@ -458,18 +460,18 @@ pub fn thermal_cross_section(
     let two_k2 = 2.0 * bessel_kn(2, xnew);
     let prefactor = xnew / (two_k2 * two_k2);
 
-    // A hundred decay lengths `1 / x` past threshold, so the interval
-    // scales with the integrand;
-    // `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`
-    // derives it. A fixed cut puts QUADPACK's first nodes in the tail at
-    // large `x`, where its error estimate misses the peak at `z = 2`.
-    let upper = 2.0 + 100.0 / xnew;
-
-    // "points at which integrand may have trouble are: 1. endpoint;
-    // 2. when ss final state is accessible => z = 2 mv / mx;
-    // 3. when we hit mediator resonance => z = mv / mx"
-    let ratio = mv / mx;
-    let points = [2.0, ratio, 2.0 * ratio];
+    // Every `z` at which a channel of `sigma_xx_to_all` opens, each at its
+    // kernel's own threshold, and the mediator resonance.
+    let features = [
+        2.0 * ME / mx,
+        2.0 * MMU / mx,
+        2.0 * MPI / mx,
+        MPI0 / mx,
+        (MPI0 + mv) / mx,
+        2.0 * mv / mx,
+        mv / mx,
+    ];
+    let (upper, points) = partition(xnew, &features);
 
     let mut nonreal = false;
     let mut integrand = |z: f64| {
@@ -936,8 +938,8 @@ mod tests {
     /// points below threshold, so QUADPACK sees one interval; on a fixed
     /// `[2, 150]` its first Gauss–Kronrod nodes all land in the tail, its
     /// error estimate misses the peak, and the average came back 1.9e-4
-    /// high. An upper limit of `2 + 100/x` scales the interval with the
-    /// peak instead.
+    /// high. `crate::kernels::thermal_window` scales the interval and its
+    /// break points with `1/x` instead.
     ///
     /// The oracle is the same integrand through the same integrator,
     /// taken twice as far and split at decay lengths `1/x`, so that no
@@ -974,6 +976,55 @@ mod tests {
         let two_k2 = 2.0 * crate::special::bessel_kn(2, x);
         let expected = x / (two_k2 * two_k2) * integral;
 
+        assert!(
+            (got / expected - 1.0).abs() < 1e-7,
+            "entry point gave {got}, converged {expected}"
+        );
+    }
+
+    /// The average keeps `V V` when nothing lighter is open.
+    ///
+    /// With every Standard Model coupling at zero, `m_x = 200` and
+    /// `m_v = 550` MeV, only `V V` contributes, and it opens at
+    /// `z = 2 m_v / m_x = 5.5`. At `x = 30` an upper limit counted from
+    /// threshold, `2 + 100/x = 5.33`, lies below it and returns `0.0`; the
+    /// limit runs from the last feature instead
+    /// (`crate::kernels::thermal_window`).
+    ///
+    /// The oracle is the same integrand through the same integrator, run
+    /// 200 decay lengths past the threshold in pieces at decay lengths past
+    /// it. Held to 1e-7; the entry point lands 1.4e-14 from it.
+    #[test]
+    fn the_thermal_average_keeps_the_mediator_pair_when_nothing_else_is_open() {
+        let (mx, mv, width_v) = (200.0, 550.0, 12.7);
+        let x = 30.0;
+        let got = thermal_cross_section(x, mx, mv, GVXX, 0.0, 0.0, 0.0, 0.0, width_v).unwrap();
+
+        let open = 2.0 * mv / mx;
+        let edges = [0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0].map(|k| open + k / x);
+        let options = QuadOpts {
+            epsabs: 0.0,
+            epsrel: 1e-12,
+            limit: 500,
+            points: None,
+        };
+        let integral: f64 = edges
+            .windows(2)
+            .map(|window| {
+                let mut integrand = |z: f64| {
+                    let sigma =
+                        sigma_xx_to_all(mx * z, mx, mv, GVXX, 0.0, 0.0, 0.0, 0.0, width_v).unwrap();
+                    sigma * (z * z) * ((z * z) - 4.0) * crate::special::bessel_k1(x * z)
+                };
+                quad(&mut integrand, window[0], window[1], &options)
+                    .expect("convergent options are valid options")
+                    .value
+            })
+            .sum();
+        let two_k2 = 2.0 * crate::special::bessel_kn(2, x);
+        let expected = x / (two_k2 * two_k2) * integral;
+
+        assert!(expected > 0.0, "the oracle vanished");
         assert!(
             (got / expected - 1.0).abs() < 1e-7,
             "entry point gave {got}, converged {expected}"

@@ -1468,3 +1468,18 @@ branch of the underlying kernel that "any" reaches.
   `TestPhysics::test_a_nan_neutrino_energy_stays_nan` pin the scalar and
   array cases. The same idiom in `positron_pion.rs` predates the PR and is
   filed as `docs/followups/todo/positron-pion-clip-turns-nan-into-a-spectrum.md`.
+
+### integration-window-anchored-at-the-first-feature
+
+- PR #112 moved both mediator thermal kernels from a fixed `[2, 150]` to
+  `[2, 2 + 100/x]`, justified by the Bessel kernel's tail beyond the cut
+  being at most 3.0e-38 of its integral. Review rebuilt `origin/master`
+  and the PR and evaluated `HiggsPortal(mx=200, ms=550, gsxx=1,
+  stheta=0)` at `x = 30`: only `S S` is open, from `z = 5.5`, and
+  `2 + 100/x = 5.33` lies below it, so the PR returned `0.0` where master
+  and a split reference gave `2.566e-52` MeV⁻²; `stheta = 1e-20` came back
+  99.0% low. The bound was relative to the kernel alone and assumed the
+  cross section did not grow past the cut. The repair,
+  `rust/src/kernels/thermal_window.rs`, runs the limit 100 decay lengths
+  past the last channel threshold with splits past every threshold, and
+  the kernel tests pin the zero-coupling points.

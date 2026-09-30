@@ -687,9 +687,10 @@ def _thermal_blocks(
       ``hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1412``;
       the vector floor was 150
       (``hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:657``),
-      giving ``x = 1/3``). The kernels now integrate to ``2 + 100 / x``
-      at every ``x`` (roster entry ``C7`` in `deltas`), so neither anchor
-      marks a branch any more; the captured grid keeps them;
+      giving ``x = 1/3``). The kernels now build their interval from
+      ``1 / x`` and their channel thresholds at every ``x`` (roster entry
+      ``C7`` in `deltas`), so neither anchor marks a branch any more; the
+      captured grid keeps them;
     * ``x = 1/3`` -- the vector model's equivalent switch;
     * ``x = m_med / mx`` and ``2 m_med / mx`` -- the QAGP breakpoints,
       which are exactly where a breakpoint-handling difference shows;

@@ -26,7 +26,7 @@ user-facing change even when no signature did.
   `x = 20`, and 24% to 100% at `x = 24`. Freeze-out sits at `x ~ 20`–`30`,
   so both reached `relic_density` directly. Both sites now integrate to
   an upper limit that scales with `1/x`, `2 + 100/x` since the thermal
-  kernel entry below.
+  kernel entry above.
 
   `hazma.relic_density.relic_density` moves for any model that supplies
   `annihilation_cross_sections` but no `thermal_cross_section`. At four
@@ -228,13 +228,20 @@ user-facing change even when no signature did.
   `max(50/x, 100)` and `max(50/x, 150)`. Above `x ~ 200` the integrand
   sits within a few `1/x` of `z = 2`, so on that fixed interval
   QUADPACK's first nodes all landed in the tail and its error estimate
-  missed the peak. Both kernels, the generic thermal average and
-  `VectorMediatorGeV.relic_density` now integrate to `2 + 100/x`, which
-  drops at most 3.0e-38 of the Bessel kernel's integral at any `x`.
-  Half that interval, `2 + 50/x`, is not enough: a channel that opens
-  above threshold can grow by fifteen decades, as `S S` does in
-  `HiggsPortal(mx=200, ms=550, stheta=1e-4)`, and that cut loses 1.2e-7
-  of its ⟨σv⟩ near `x = 12`.
+  missed the peak. Both kernels now integrate to 100 decay lengths `1/x`
+  past their last channel threshold, with break points at every
+  threshold, at the resonance and at decay lengths past each. The Bessel
+  kernel drops at most 3.0e-38 of its integral past that limit. The
+  limit has to count from the last threshold: `HiggsPortal(mx=200,
+  ms=550, stheta=0)` has only `S S`, which opens at `z = 5.5`, and at
+  `x = 30` a limit of `2 + 100/x` returns `0.0`. The generic thermal
+  average and `VectorMediatorGeV.relic_density` cannot see channel
+  thresholds and move from `2 + 50/x` to `2 + 100/x`; at
+  `HiggsPortal(mx=200, ms=550, stheta=1e-4)` the old cut lost 1.2e-7 of
+  ⟨σv⟩ near `x = 12`. They still drop a channel that opens past that
+  window, as
+  [a follow-up](docs/followups/todo/python-thermal-sites-cannot-see-channel-thresholds.md)
+  records.
 
   - **Vector kernel.** At `KineticMixing(mx=300, mv=200, gvxx=1,
     eps=1e-2)` ⟨σv⟩ falls by 1.1e-4 at `x = 210`, 1.8e-4 at `x = 287`,
@@ -242,7 +249,7 @@ user-facing change even when no signature did.
     abundance rises by 2.65e-5 semi-analytically and 2.50e-5 from the
     Boltzmann solve.
   - **Everything else.** At the other five pinned mediator points,
-    ⟨σv⟩ moves by at most 1.8e-8 and the abundance by at most 8.2e-9.
+    ⟨σv⟩ moves by at most 1.8e-8 and the abundance by at most 2.1e-8.
     The generic thermal average moves by up to 4.2e-7 at the same six
     points, and by up to 2.4e-6 at isolated `x` where the longer interval
     changes how QUADPACK partitions a resonance that site passes no

@@ -115,11 +115,11 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: closed-resonance points are where the old quadrature missed most of
     #: the integrand's mass: they fall 91.9% and 99.9%.  The
     #: ``vector.closed_resonance`` pair was re-derived under roster entry
-    #: ``C7``, which moves the kernels' upper limit to ``2 + 100/x``: above
+    #: ``C7``, which scales the kernels' interval with ``1/x``: above
     #: ``x = 200`` the fixed ``[2, 150]`` had QUADPACK miss the peak at
     #: threshold and return <sigma v> up to 1.9e-4 high, so both
     #: abundances rise by 2.65e-5 and 2.50e-5.  The other five move by at
-    #: most 8.2e-9.
+    #: most 2.1e-8.
     PINNED: ClassVar = {
         "scalar.open_resonance": (26.667787923392634, 34.42028079003851),
         "scalar.narrow_resonance": (6905.347000480099, 8282.819772041152),
@@ -349,16 +349,42 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             f"against a budget of {self.CONVERGED_RTOL:.0e})"
         )
 
+    def test_generic_fallback_keeps_a_channel_far_above_threshold(self) -> None:
+        """The fallback's upper limit reaches a channel that opens late.
+
+        At ``HiggsPortal(mx=200, ms=550, stheta=1e-6)`` the ``S S`` channel
+        opens at ``z = 5.5``, fifteen-plus decades above the suppressed
+        channels, and at ``x = 12`` most of the average sits just past it.
+        `thermal_cross_section_upper_limit`'s ``2 + 100/x = 10.3`` keeps
+        it: the fallback lands 1.3e-9 from `_converged`.  A limit of
+        ``2 + 50/x = 6.2`` cuts through it and loses 5.1e-4, which
+        `CONVERGED_RTOL` rejects.
+        """
+        inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=1e-6)
+        x = 12.0
+        reference = self._converged(
+            thermal_cross_section_integrand,
+            x,
+            (x, NoThermalCrossSection(inner)),
+            points=(inner.ms / inner.mx, 2.0 * inner.ms / inner.mx),
+        )
+        assert_allclose(
+            thermal_cross_section(x, NoThermalCrossSection(inner)),
+            reference,
+            rtol=self.CONVERGED_RTOL,
+        )
+
     def test_generic_fallback_relic_density_matches_scalar_kernel(self) -> None:
         """The fallback's ``<sigma v>`` carries through to the scalar kernel's abundance.
 
         ``hazma._core``'s scalar kernel integrates the same cross sections
-        to the same ``2 + 100/x`` with its own QUADPACK port and break points,
+        with its own QUADPACK port, over an interval and break points built
+        from its channel thresholds,
         and like the fallback returns ``0.0`` above ``x = 300``, so the two
         must give the same semi-analytic relic density. The vector kernel
         holds its ``x = 300`` value above that cutoff instead, which is why
         it is not compared here. Measured agreement is 7.6e-8
-        (``scalar.open``) and 7e-16 (``scalar.closed``); the budget is
+        (``scalar.open``) and 7.7e-12 (``scalar.closed``); the budget is
         `CONVERGED_RTOL`. With the upper limit at ``50/x`` the fallback
         gave 27.19 and 4.2e-3 against the kernel's 26.67 and 9.4e-8.
         """

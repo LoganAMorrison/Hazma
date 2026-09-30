@@ -29,7 +29,8 @@ That reference integrates the interval the kernels ran over when
 there: at large ``x`` the whole integrand sits within a few ``1/x`` of
 threshold, so on a fixed interval QUADPACK's first nodes land in the tail
 and its error estimate misses the peak, at any tolerance. Roster entry
-``C7`` moves both kernels to ``[2, 2 + 100/x]``, and `interval_term` is
+``C7`` builds both kernels' interval from ``1/x`` and their channel
+thresholds (``rust/src/kernels/thermal_window.rs``), and `interval_term` is
 what that adds on top of `reference_values`: the difference between a
 **decay-length-split** integral, which no interval choice can mislead, and
 the ``B6`` value.
@@ -97,11 +98,11 @@ REFERENCE_EPSREL = 1e-12
 REFERENCE_LIMIT = 200
 
 #: Where the converged integral is split, in decay lengths ``1/x`` past
-#: threshold. The last is twice the ``100`` of the kernels' own upper
-#: limit (``hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit``),
-#: so the reference does not share it. Every piece sees its share of the
-#: ``exp(-x z)`` fall-off, so no single Gauss-Kronrod pass can sample only
-#: the tail.
+#: each of `_features`. The last is twice the ``100`` the kernels run past
+#: their last feature (``rust/src/kernels/thermal_window.rs``), so the
+#: reference does not share their upper limit. Every piece sees its share
+#: of the ``exp(-x z)`` fall-off, so no single Gauss-Kronrod pass can
+#: sample only the tail.
 DECAY_LENGTHS = (0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0)
 
 
@@ -174,15 +175,19 @@ def _clip(model: str, x: float) -> float | None:
 
 
 def _features(model: str, mx: float, m_med: float) -> tuple[float, ...]:
-    """Every ``z = e_cm / m_x`` at which the integrand has a kink or a peak.
+    """Every ``z = e_cm / m_x`` at which a channel opens or the mediator peaks.
 
-    The mediator resonance and the mediator-pair threshold are the break
-    points the kernels pass; the rest are the channel thresholds they
-    leave to adaptive refinement. Masses are `hazma.parameters`' rather
-    than the kernels' hard-coded ones, which is immaterial for a break
-    point: it only has to sit near the feature, not on it.
+    Masses are `hazma.parameters`' rather than the kernels' hard-coded
+    ones. A split only has to sit near the feature, and the upper limit
+    runs 200 decay lengths past the last one, so a feature moved by a
+    fraction of an MeV moves neither the partition's purpose nor the
+    value.
     """
-    thresholds = [2.0 * parameters.muon_mass, 2.0 * parameters.charged_pion_mass]
+    thresholds = [
+        2.0 * parameters.electron_mass,
+        2.0 * parameters.muon_mass,
+        2.0 * parameters.charged_pion_mass,
+    ]
     if model == "scalar":
         thresholds.append(2.0 * parameters.neutral_pion_mass)
     else:
@@ -269,8 +274,9 @@ def thermal_cross_section(model: str, args: list[float], x: float) -> float:
 def converged_thermal_cross_section(model: str, args: list[float], x: float) -> float:
     """``<sigma v>(x)`` in MeV^-2, split so no interval choice can bias it.
 
-    Integrates ``[2, 2 + 200/x]`` in pieces at `DECAY_LENGTHS` and at every
-    `_features` point inside it, each to `REFERENCE_EPSREL`.
+    Integrates from threshold to 200 decay lengths past the last of
+    `_features`, in pieces at every feature and at `DECAY_LENGTHS` past
+    each, each piece to `REFERENCE_EPSREL`.
 
     Parameters
     ----------
@@ -289,9 +295,13 @@ def converged_thermal_cross_section(model: str, args: list[float], x: float) -> 
     xnew = _clip(model, x)
     if xnew is None:
         return 0.0
-    decay = [Z_THRESHOLD + k / xnew for k in DECAY_LENGTHS]
-    features = _features(model, args[0], args[1])
-    edges = sorted({*decay, *(z for z in features if decay[0] < z < decay[-1])})
+    openings = {
+        Z_THRESHOLD,
+        *(max(z, Z_THRESHOLD) for z in _features(model, *args[:2])),
+    }
+    upper = max(openings) + DECAY_LENGTHS[-1] / xnew
+    splits = {z + k / xnew for z in openings for k in DECAY_LENGTHS}
+    edges = sorted(z for z in splits if z <= upper)
     return sum(_integral(model, args, xnew, pair) for pair in pairwise(edges))
 
 
@@ -349,7 +359,7 @@ def reference_values(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarr
 def interval_term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
     """`deltas.Additive` term for ``C7``, composed after `reference_values`.
 
-    What moving the kernels' upper limit to ``2 + 100/x`` adds to the
+    What rebuilding the kernels' interval from ``1/x`` adds to the
     ``B6`` value: `converged_thermal_cross_section` minus
     `thermal_cross_section`, on the block's grid.
 

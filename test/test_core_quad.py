@@ -649,9 +649,11 @@ class TestLiveIntegrandShapes:
         expected_last: int,
         regime: str,
     ) -> None:
-        # `points=[2, m/mx, 2 m/mx]` over [2, 2 + 100/x] — both mediator
-        # sites verbatim, in the three regimes Task 3.3's exit criteria
-        # name. At x = 20 the upper limit is 7, so:
+        # `points=[2, m/mx, 2 m/mx]` over [2, 2 + 100/x] — the break points
+        # both `.pyx` sites passed, in the three regimes Task 3.3's exit
+        # criteria name; the kernels now add threshold splits from
+        # `rust/src/kernels/thermal_window.rs`. At x = 20 the upper limit
+        # is 7, so:
         #   mx=100, m=210 -> [2, 2.1, 4.2]; 2 equals the lower limit and is
         #                    dropped, leaving 2 interior points, 3 intervals;
         #   mx=100, m=200 -> [2, 2, 4]; the duplicate collapses and the

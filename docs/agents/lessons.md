@@ -326,3 +326,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   becomes a finite limit and a finite result. Clip with a comparison that
   keeps `NaN`, and pin a `NaN` input, scalar and in an array, against the
   pre-change output (PR #105).
+- [integration-window-anchored-at-the-first-feature] A truncated integral's
+  tail bound holds only relative to what lies inside the window. Anchor a
+  scaled cut at the *last* place the integrand can turn on (a channel
+  threshold, a resonance), not the first, and pin a point where every
+  earlier contribution is zero — the "negligible tail" is then the whole
+  answer (PR #112).
