@@ -239,6 +239,17 @@ class ScalarMediator(TheoryAnn):
 
         return vs
 
+    def annihilation_resonances(self) -> list[tuple[float, float]]:
+        """
+        List the scalar mediator's resonance.
+
+        Returns
+        -------
+        resonances : list(tuple(float, float))
+            ``[(ms, width_s)]`` in MeV.
+        """
+        return [(self.ms, self.width_s)]
+
     def compute_width_s(self):
         """Updates the scalar's total width."""
         self.width_s = self.partial_widths()["total"]

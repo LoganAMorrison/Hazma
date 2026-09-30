@@ -4,7 +4,10 @@ from scipy import special
 from scipy import integrate
 
 from hazma.relic_density import relic_density as rd
-from hazma.relic_density._thermal_functions import thermal_cross_section_upper_limit
+from hazma.relic_density._thermal_functions import (
+    thermal_cross_section_break_points,
+    thermal_cross_section_upper_limit,
+)
 
 TWO_BODY = [
     "e e",
@@ -144,16 +147,18 @@ def relic_density(
         # `epsabs=0.0` leaves the relative criterion as the binding one;
         # see `hazma.relic_density._thermal_functions.
         # thermal_cross_section` for why the default absolute one is
-        # satisfied before any subdivision happens.
+        # satisfied before any subdivision happens, and for `limit`.
+        points = thermal_cross_section_break_points(x, self)
         return (
             pf
             * integrate.quad(
                 integrand,
                 2.0,
                 thermal_cross_section_upper_limit(x),
-                points=[2.0],
+                points=[2.0, *points],
                 args=(x,),
                 epsabs=0.0,
+                limit=50 + len(points),
             )[0]
         )
 

@@ -15,8 +15,51 @@ user-facing change even when no signature did.
 
 ## [Unreleased]
 
+### Added
+
+- **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
+  of each resonance in a model's annihilation cross sections, in MeV.
+  The default lists none. `ScalarMediator`, `VectorMediator` and
+  `VectorMediatorGeV` return their mediator. A model that relies on the
+  generic thermal average, because it defines no `thermal_cross_section`
+  of its own, should override it when it has an `s`-channel mediator.
+
 ### Changed
 
+- **The pure-Python thermal averages now bracket mediator resonances
+  with quadrature break points.** The generic fallback in
+  `hazma.relic_density` and `VectorMediatorGeV.relic_density` split
+  their integral only at threshold. QUADPACK's error estimate then
+  missed a resonance at isolated `x` and reported convergence anyway.
+  For `HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)`, with a 7 MeV
+  resonance, ⟨σv⟩ was 4.0e-4 low at `x = 0.891` and 9.2e-6 low at
+  `x = 0.223`. At narrow resonances the error was unbounded: for
+  `gsxx=1e-2, stheta=1e-3` (width 7e-4 MeV) ⟨σv⟩ was 16% low at
+  `x = 5.818` and lost all but 1.4e-4 of its value at `x = 11.07`, and
+  for `KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)` it lost all
+  but 3.8e-4 at `x = 11.07`. Both sites now take
+  each resonance from `annihilation_resonances()` and place break points
+  at `m/mx ± (w/mx) 4^k`, which holds ⟨σv⟩ within 1.5e-6 of an
+  independently split reference for `x` from 0.1 to 300. Break points
+  placed only at the peak, as the `hazma._core` kernels place them,
+  fail at narrow resonances. That defect is
+  `docs/followups/todo/thermal-kernels-miss-narrow-mediator-resonances.md`.
+
+  Away from narrow resonances the semi-analytic `relic_density` barely
+  moves. At four mediator points and the 7 MeV one it moves by at most
+  1.2e-9, and at `VectorMediatorGeV(mx=5 GeV, mv=2 GeV)` by 6e-15, at
+  1.6543977e-4. The Boltzmann solve at its default `rtol=1e-5`,
+  `atol=1e-3` moves by up to 1.1e-3, because its adaptive steps amplify
+  ⟨σv⟩ shifts of 1e-8. At `rtol = atol = 1e-9` the same solve moves by at
+  most 2.6e-8. At narrow resonances the old values were wrong. The
+  semi-analytic abundance falls from 2659 to 935 for the narrow
+  `HiggsPortal` point and from 6.10 to 1.40 for the narrow
+  `KineticMixing` one. For `VectorMediatorGeV(mx=1 GeV, mv=2.75 GeV)`
+  with every coupling at 1e-2 it falls by 9.3e-4, from 1.0330 to
+  1.0321. Models
+  without a resonance integrate exactly as before, and the
+  `ScalarMediator` and `VectorMediator` families, which define their own
+  `thermal_cross_section`, do not move.
 - **The generic thermal average and `VectorMediatorGeV.relic_density`
   now integrate ⟨σv⟩ past `x = 25`.** Both pure-Python
   `thermal_cross_section` sites integrated over `z` from 2 to `50/x`, an

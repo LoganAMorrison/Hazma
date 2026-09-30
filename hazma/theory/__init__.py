@@ -72,6 +72,27 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         sigmas["total"] = sum(sigmas.values())
         return sigmas
 
+    def annihilation_resonances(self) -> list[tuple[float, float]]:
+        r"""
+        Lists the resonances in the annihilation cross sections.
+
+        The generic thermal average, `hazma.relic_density`'s fallback for a
+        model without its own ``thermal_cross_section``, brackets each
+        resonance with quadrature break points spaced by its width. Adaptive
+        quadrature can otherwise miss the peak at isolated temperatures, or
+        entirely when the resonance is narrow.
+
+        The default lists none. Models with an ``s``-channel mediator should
+        override it.
+
+        Returns
+        -------
+        resonances : list(tuple(float, float))
+            ``(mass, width)`` of each resonance, both in MeV. A resonance
+            with zero width is ignored.
+        """
+        return []
+
     def annihilation_branching_fractions(self, e_cm: float) -> Dict[str, float]:
         r"""
         Computes annihilation branching fractions.
