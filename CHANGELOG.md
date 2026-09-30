@@ -243,8 +243,10 @@ user-facing change even when no signature did.
     Boltzmann solve.
   - **Everything else.** At the other five pinned mediator points,
     ⟨σv⟩ moves by at most 1.8e-8 and the abundance by at most 8.2e-9.
-    The generic thermal average moves by at most 1.3e-7 at the same six
-    points, and `relic_density` through it by at most 9.3e-9.
+    The generic thermal average moves by up to 4.2e-7 at the same six
+    points, and by up to 2.4e-6 at isolated `x` where the longer interval
+    changes how QUADPACK partitions a resonance that site passes no
+    break point for. `relic_density` through it moves by at most 9.3e-9.
     `VectorMediatorGeV.relic_density` does not move at `mx = 5 GeV`,
     `mv = 2 GeV`.
 

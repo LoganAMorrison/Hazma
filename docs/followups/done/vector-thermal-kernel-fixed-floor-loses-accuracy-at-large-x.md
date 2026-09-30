@@ -149,9 +149,13 @@ the new interval. Neither kernel flags an unconverged position at
 pins rise by 2.65e-5 (semi-analytic) and 2.50e-5 (Boltzmann) and were
 re-derived. The other five pins move by at most 8.2e-9, inside their
 budgets. Moving the pure-Python sites from `2 + 50/x` to `2 + 100/x`
-changes the generic thermal average by at most 1.3e-7 at the six
-corpus points, and its `relic_density` by at most 9.3e-9;
-`VectorMediatorGeV.relic_density` does not move.
+changes the generic thermal average by up to 4.2e-7 on a 400-point
+grid over the six corpus points, and by 2.4e-6 at `x = 2.42` for the
+scalar `narrow_resonance` point. There the fallback passes no break
+point at the resonance, so its partition, not its interval, sets the
+error; that error is unchanged by this repair and reaches 3.9e-4 at two
+isolated points below `x = 1`. Its `relic_density` moves by at most
+9.3e-9, and `VectorMediatorGeV.relic_density` does not move.
 
 **Not decided here.** The above-300 divergence under "Risks" is
 unchanged, and is
