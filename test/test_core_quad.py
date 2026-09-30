@@ -624,26 +624,19 @@ class TestLiveIntegrandShapes:
 
         return f
 
-    #: Upper limit of each model's thermal integral, as a function of x.
-    #: `max(50/x, 100)` for the scalar
-    #: (`_c_scalar_mediator_cross_sections.pyx:1412`) and `max(50/x, 150)`
-    #: for the vector (`_c_vector_mediator_cross_sections.pyx:657`).
-    THERMAL_FLOOR: ClassVar[dict[str, float]] = {"scalar": 100.0, "vector": 150.0}
-
     #: The subdivision limit both kernels pass, above `quad`'s default of
     #: 50 because their `epsabs` is zero and a criterion that binds needs
     #: room to be reached: `THERMAL_LIMIT` in
     #: `rust/src/kernels/vector_xs.rs` and in `scalar_xs.rs`. Mirrored
     #: here so this test drives the live configuration rather than the
-    #: probe's defaults — at 50 the scalar `mx=100, m=200` regime comes
-    #: back `ier = 1`.
+    #: probe's defaults.
     THERMAL_LIMIT: ClassVar[int] = 100
 
     @pytest.mark.parametrize("model", ["scalar", "vector"])
     @pytest.mark.parametrize(
         ("mx", "m_med", "expected_last", "regime"),
         [
-            (100.0, 250.0, 3, "break points interior (resonance active)"),
+            (100.0, 210.0, 3, "break points interior (resonance active)"),
             (100.0, 200.0, 2, "the lower break point sits on the lower limit"),
             (1.0, 500.0, 1, "both mediator break points outside the interval"),
         ],
@@ -656,11 +649,10 @@ class TestLiveIntegrandShapes:
         expected_last: int,
         regime: str,
     ) -> None:
-        # `points=[2, m/mx, 2 m/mx]` over [2, max(50/x, floor)] — both
-        # mediator sites verbatim, in the three regimes Task 3.3's exit
-        # criteria name. At x = 20 the upper limit
-        # is the floor (100 or 150), so:
-        #   mx=100, m=250 -> [2, 2.5, 5]; 2 equals the lower limit and is
+        # `points=[2, m/mx, 2 m/mx]` over [2, 2 + 100/x] — both mediator
+        # sites verbatim, in the three regimes Task 3.3's exit criteria
+        # name. At x = 20 the upper limit is 7, so:
+        #   mx=100, m=210 -> [2, 2.1, 4.2]; 2 equals the lower limit and is
         #                    dropped, leaving 2 interior points, 3 intervals;
         #   mx=100, m=200 -> [2, 2, 4]; the duplicate collapses and the
         #                    survivor 2 is dropped, leaving 1 point,
@@ -679,7 +671,7 @@ class TestLiveIntegrandShapes:
         # than about filtering. Both are exercised, in that order.
         x, width = 20.0, 2.5
         f = self.thermal_integrand(model, x, mx, m_med, width)
-        upper = max(50.0 / x, self.THERMAL_FLOOR[model])
+        upper = 2.0 + 100.0 / x
         points = [2.0, m_med / mx, 2.0 * m_med / mx]
 
         assert_matches_scipy(

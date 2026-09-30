@@ -1,4 +1,4 @@
-"""A converged, independently integrated value for the thermal averages.
+"""Converged, independently integrated values for the thermal averages.
 
 ``cross_sections.scalar.thermal_cross_section`` and its vector twin are
 the two corpus cases whose stored arrays hold the *unconverged* estimate
@@ -24,16 +24,28 @@ deliberately shared, because it is not what moved -- the five
 closed-form vector kernels reproduce the pre-port Cython bit for bit at
 every one of the 5,811 corpus positions that sample them.
 
+That reference integrates the interval the kernels ran over when
+``B6`` landed, ``[2, max(floor, 50/x)]``, and it shares their defect
+there: at large ``x`` the whole integrand sits within a few ``1/x`` of
+threshold, so on a fixed interval QUADPACK's first nodes land in the tail
+and its error estimate misses the peak, at any tolerance. Roster entry
+``C7`` moves both kernels to ``[2, 2 + 100/x]``, and `interval_term` is
+what that adds on top of `reference_values`: the difference between a
+**decay-length-split** integral, which no interval choice can mislead, and
+the ``B6`` value.
+
 The two large-``x`` rules below are the kernels' own and are **not**
-what ``B6`` repairs: the scalar hard-returns ``0.0`` above ``x = 300``
-while the vector clips ``x`` to 300 and saturates. That divergence
-between the two models predates the port and is untouched here.
+what either repair touches: the scalar hard-returns ``0.0`` above
+``x = 300`` while the vector clips ``x`` to 300 and saturates. That
+divergence between the two models predates the port and is untouched
+here.
 """
 
 from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
+from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -41,6 +53,7 @@ import scipy.integrate as si
 from scipy.integrate import IntegrationWarning
 from scipy.special import k1, kn
 
+from hazma import parameters
 from hazma._core import scalar_mediator as _core_scalar
 from hazma._core import vector_mediator as _core_vector
 
@@ -56,9 +69,9 @@ if TYPE_CHECKING:
 ME = 0.510998928
 MMU = 105.6583715
 
-#: Floor on the upper integration limit, per model. The kernels
-#: integrate to ``max(floor, 50/x)`` -- 100 for the scalar, 150 for the
-#: vector -- so the floor binds everywhere above ``x = 0.5`` and
+#: Floor on the upper integration limit, per model, before ``C7``. The
+#: kernels integrated to ``max(floor, 50/x)`` -- 100 for the scalar, 150
+#: for the vector -- so the floor bound everywhere above ``x = 0.5`` and
 #: ``x = 1/3`` respectively.
 UPPER_FLOOR = {"scalar": 100.0, "vector": 150.0}
 
@@ -82,6 +95,14 @@ REFERENCE_EPSREL = 1e-12
 #: 200 is twice the kernels' own ``THERMAL_LIMIT`` of 100, which keeps
 #: the reference from being the shallower of the two quadratures.
 REFERENCE_LIMIT = 200
+
+#: Where the converged integral is split, in decay lengths ``1/x`` past
+#: threshold. The last is twice the ``100`` of the kernels' own upper
+#: limit (``hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit``),
+#: so the reference does not share it. Every piece sees its share of the
+#: ``exp(-x z)`` fall-off, so no single Gauss-Kronrod pass can sample only
+#: the tail.
+DECAY_LENGTHS = (0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0)
 
 
 def _sigma_all(
@@ -145,8 +166,83 @@ def _sigma_all(
     return sigma_all, mx, m_med
 
 
+def _clip(model: str, x: float) -> float | None:
+    """The kernels' own large-``x`` rule: ``None`` where the scalar returns 0."""
+    if model == "scalar":
+        return None if x > X_CLIP else x
+    return min(x, X_CLIP)
+
+
+def _features(model: str, mx: float, m_med: float) -> tuple[float, ...]:
+    """Every ``z = e_cm / m_x`` at which the integrand has a kink or a peak.
+
+    The mediator resonance and the mediator-pair threshold are the break
+    points the kernels pass; the rest are the channel thresholds they
+    leave to adaptive refinement. Masses are `hazma.parameters`' rather
+    than the kernels' hard-coded ones, which is immaterial for a break
+    point: it only has to sit near the feature, not on it.
+    """
+    thresholds = [2.0 * parameters.muon_mass, 2.0 * parameters.charged_pion_mass]
+    if model == "scalar":
+        thresholds.append(2.0 * parameters.neutral_pion_mass)
+    else:
+        thresholds += [
+            parameters.neutral_pion_mass,
+            parameters.neutral_pion_mass + m_med,
+        ]
+    return tuple(m / mx for m in (*thresholds, m_med, 2.0 * m_med))
+
+
+def _integral(
+    model: str,
+    args: list[float],
+    xnew: float,
+    bounds: tuple[float, float],
+    points: list[float] | None = None,
+) -> float:
+    """``<sigma v>`` in MeV^-2 from one ``quad`` call over ``bounds``.
+
+    ``points`` are interior break points; QUADPACK drops any on or outside
+    the interval, and filtering them here keeps scipy from raising on the
+    duplicates the kernels pass.
+    """
+    sigma_all, mx, _m_med = _sigma_all(model, args)
+    prefactor = xnew / (2.0 * kn(2, xnew)) ** 2
+    lo, hi = bounds
+    interior = [p for p in points or () if lo < p < hi]
+
+    def integrand(z: float) -> float:
+        return sigma_all(mx * z) * z * z * (z * z - 4.0) * k1(xnew * z)
+
+    with warnings.catch_warnings():
+        # A few of the corpus positions report roundoff in the
+        # extrapolation table at this tolerance. The warning is about
+        # what QUADPACK can still certify, not about the value it
+        # returns: asking for epsrel 1e-9, 1e-10, 1e-11 and 1e-12 in
+        # turn moves the answer by at most 7.8e-10 relative, two decades
+        # under the budget `deltas.py` holds the repair to. Suppressed so
+        # the parity run stays quiet; widen the tolerance instead if that
+        # stability ever stops holding.
+        warnings.simplefilter("ignore", IntegrationWarning)
+        value, _abserr = si.quad(
+            integrand,
+            lo,
+            hi,
+            points=interior or None,
+            epsabs=0.0,
+            epsrel=REFERENCE_EPSREL,
+            limit=REFERENCE_LIMIT,
+        )
+    return prefactor * value
+
+
 def thermal_cross_section(model: str, args: list[float], x: float) -> float:
-    """``<sigma v>(x)`` in MeV^-2, integrated to `REFERENCE_EPSREL`.
+    """``<sigma v>(x)`` in MeV^-2 over the pre-``C7`` interval.
+
+    Integrates ``[2, max(floor, 50/x)]`` with the kernels' break points, to
+    `REFERENCE_EPSREL`. This is the ``B6`` reference, and at large ``x``
+    it carries the interval's defect: it is 1.9e-4 high at the vector
+    ``closed_resonance`` block above ``x = 200``.
 
     Parameters
     ----------
@@ -162,44 +258,41 @@ def thermal_cross_section(model: str, args: list[float], x: float) -> float:
     float
         The thermally averaged cross section in MeV^-2.
     """
-    sigma_all, mx, m_med = _sigma_all(model, args)
-    if model == "scalar":
-        if x > X_CLIP:
-            return 0.0
-        xnew = x
-    else:
-        xnew = min(x, X_CLIP)
-
-    prefactor = xnew / (2.0 * kn(2, xnew)) ** 2
+    xnew = _clip(model, x)
+    if xnew is None:
+        return 0.0
+    ratio = args[1] / args[0]
     upper = max(UPPER_FLOOR[model], 50.0 / xnew)
-    ratio = m_med / mx
-    # QUADPACK drops break points on or outside the interval; doing it
-    # here keeps scipy from raising on the duplicates the kernels pass.
-    points = [p for p in (Z_THRESHOLD, ratio, 2.0 * ratio) if Z_THRESHOLD < p < upper]
+    return _integral(model, args, xnew, (Z_THRESHOLD, upper), [ratio, 2.0 * ratio])
 
-    def integrand(z: float) -> float:
-        return sigma_all(mx * z) * z * z * (z * z - 4.0) * k1(xnew * z)
 
-    with warnings.catch_warnings():
-        # 16 of the 540 positions this integrates report roundoff in
-        # the extrapolation table at this tolerance. The warning is about
-        # what QUADPACK can still certify, not about the value it
-        # returns: asking for epsrel 1e-9, 1e-10, 1e-11 and 1e-12 in
-        # turn moves the answer by at most 7.8e-10 relative, two decades
-        # under the budget `deltas.py` holds the repair to. Suppressed so
-        # the parity run stays quiet; widen the tolerance instead if that
-        # stability ever stops holding.
-        warnings.simplefilter("ignore", IntegrationWarning)
-        value, _abserr = si.quad(
-            integrand,
-            Z_THRESHOLD,
-            upper,
-            points=points or None,
-            epsabs=0.0,
-            epsrel=REFERENCE_EPSREL,
-            limit=REFERENCE_LIMIT,
-        )
-    return prefactor * value
+def converged_thermal_cross_section(model: str, args: list[float], x: float) -> float:
+    """``<sigma v>(x)`` in MeV^-2, split so no interval choice can bias it.
+
+    Integrates ``[2, 2 + 200/x]`` in pieces at `DECAY_LENGTHS` and at every
+    `_features` point inside it, each to `REFERENCE_EPSREL`.
+
+    Parameters
+    ----------
+    model : {'scalar', 'vector'}
+        Which mediator family.
+    args : list of float
+        The block's stored argument tuple.
+    x : float
+        ``m_x / T``, dimensionless.
+
+    Returns
+    -------
+    float
+        The thermally averaged cross section in MeV^-2.
+    """
+    xnew = _clip(model, x)
+    if xnew is None:
+        return 0.0
+    decay = [Z_THRESHOLD + k / xnew for k in DECAY_LENGTHS]
+    features = _features(model, args[0], args[1])
+    edges = sorted({*decay, *(z for z in features if decay[0] < z < decay[-1])})
+    return sum(_integral(model, args, xnew, pair) for pair in pairwise(edges))
 
 
 ReferenceFn = Callable[[Callable[..., Any], "Block"], dict[str, np.ndarray]]
@@ -214,8 +307,20 @@ _MODEL_BY_MODULE = {
 }
 
 
+def _model(fn: Callable[..., Any]) -> str:
+    """Which mediator family an entry point belongs to."""
+    module = getattr(fn, "__module__", "")
+    try:
+        return _MODEL_BY_MODULE[module]
+    except KeyError:  # pragma: no cover - a new case would have to opt in
+        msg = f"no thermal reference for an entry point from {module!r}"
+        raise KeyError(msg) from None
+
+
 def reference_values(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
     """`deltas.Reference` callable for either mediator's thermal case.
+
+    The ``B6`` reference: `thermal_cross_section` on the block's grid.
 
     Parameters
     ----------
@@ -231,16 +336,44 @@ def reference_values(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarr
     dict
         ``{"values": <sigma v> in MeV^-2 on the block's grid}``.
     """
-    module = getattr(fn, "__module__", "")
-    try:
-        model = _MODEL_BY_MODULE[module]
-    except KeyError:  # pragma: no cover - a new case would have to opt in
-        msg = f"no thermal reference for an entry point from {module!r}"
-        raise KeyError(msg) from None
+    model = _model(fn)
     args = block.params["args"]
     return {
         "values": np.array(
             [thermal_cross_section(model, args, float(x)) for x in block.grid],
+            dtype=np.float64,
+        )
+    }
+
+
+def interval_term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+    """`deltas.Additive` term for ``C7``, composed after `reference_values`.
+
+    What moving the kernels' upper limit to ``2 + 100/x`` adds to the
+    ``B6`` value: `converged_thermal_cross_section` minus
+    `thermal_cross_section`, on the block's grid.
+
+    Parameters
+    ----------
+    fn : callable
+        The corpus entry point under comparison, read only for its model.
+    block : Block
+        The corpus block, supplying the grid and the argument tuple.
+
+    Returns
+    -------
+    dict
+        ``{"values": the term in MeV^-2 on the block's grid}``.
+    """
+    model = _model(fn)
+    args = block.params["args"]
+    return {
+        "values": np.array(
+            [
+                converged_thermal_cross_section(model, args, float(x))
+                - thermal_cross_section(model, args, float(x))
+                for x in block.grid
+            ],
             dtype=np.float64,
         )
     }

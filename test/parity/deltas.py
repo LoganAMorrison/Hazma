@@ -150,6 +150,7 @@ REPAIRS = frozenset(
         "C4",
         "C5",
         "C6",
+        "C7",
     }
 )
 
@@ -976,6 +977,55 @@ _B6 = Delta(
     "x = 0.1367, small enough that the relative criterion already bound "
     "before the repair.",
     evidence="docs/followups/done/thermal-cross-section-quadrature-never-converges.md",
+)
+
+# ---------------------------------------------------------------------------
+# C7 -- the thermal averages integrate to a limit that scales with 1/x
+# ---------------------------------------------------------------------------
+
+
+_C7 = Delta(
+    repair="C7",
+    positions=MOVED,
+    relation=Additive(
+        term=thermal_reference.interval_term,
+        rtol=_B6.relation.rtol,
+        why="B6's budget, on B6's derivation: the term is scipy's QUADPACK "
+        "at epsrel 1e-12 twice over, so what bounds agreement is the "
+        "kernels' own epsrel of 1.49e-8. Measured composed with B6, in "
+        "every array C7 moves: 1.8e-8 worst relative over 540 positions, at "
+        "scalar open_resonance x = 14.8.",
+    ),
+    measured="both kernels integrate [2, 2 + 100/x] where they integrated "
+    "[2, max(floor, 50/x)], with a floor of 100 for the scalar and 150 for "
+    "the vector. That changes the partition behind all 540 positions the "
+    "two cases integrate, and the value at 518 of them, but only 16 move by "
+    "more than B6's budget: the vector closed_resonance block from "
+    "x = 209.9 up, 13 of them at or past the x = 300 clip where it "
+    "saturates. There the fixed interval's first Gauss-Kronrod nodes "
+    "missed the peak at threshold and the B6 value sat 1.1e-4 to 1.9e-4 "
+    "high. Everywhere else the term is at most 1.8e-8 relative.",
+    evidence="docs/followups/done/"
+    "vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md",
+)
+
+_B6_C7 = Delta(
+    repair="B6+C7",
+    positions=MOVED,
+    relation=Composed(
+        base=_B6.relation,
+        added=(_C7.relation,),
+        rtol=_B6.relation.rtol,
+        why="C7's term replaces B6's value with a converged one, so the "
+        "composition is held to what B6 and C7 each hold to. Measured 1.8e-8 "
+        "worst relative over the 540 positions the composition integrates.",
+    ),
+    measured="C7 changes the kernels that produced every value in the six "
+    "arrays B6 declares, so every one of them composes. The prediction "
+    "moves 540 of their 570 pinned positions, all but the 30 scalar zeros "
+    "above x = 300; C7 moves 16 of them past the budget, all in vector "
+    "closed_resonance.",
+    evidence=_C7.evidence,
 )
 
 # ---------------------------------------------------------------------------
@@ -2708,37 +2758,37 @@ DECLARED_DELTAS: dict[tuple[str, str, str], Delta] = {
     ("spectra.neutrino.charged_pion", "boosted_mild", "scalar_values"): _B5_C2,
     ("spectra.neutrino.charged_pion", "boosted_strong", "values"): _B5_C2,
     ("spectra.neutrino.charged_pion", "boosted_strong", "scalar_values"): _B5_C2,
-    # B6.
+    # B6, composed with C7 in every array it declares.
     (
         "cross_sections.scalar.thermal_cross_section",
         "open_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     (
         "cross_sections.scalar.thermal_cross_section",
         "narrow_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     (
         "cross_sections.scalar.thermal_cross_section",
         "closed_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     (
         "cross_sections.vector.thermal_cross_section",
         "open_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     (
         "cross_sections.vector.thermal_cross_section",
         "narrow_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     (
         "cross_sections.vector.thermal_cross_section",
         "closed_resonance",
         "values",
-    ): _B6,
+    ): _B6_C7,
     # A4.
     **_A4_DECLARATIONS,
     # C1, after A4: it replaces the A4 keys it shares with their composite.
@@ -2787,6 +2837,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "B5": _B5,
     "B5+C2": _B5_C2,
     "B6": _B6,
+    "B6+C7": _B6_C7,
     "C1": _C1,
     "C2": _C2,
     "C3/charged_rho": _C3_CHARGED,
@@ -2800,6 +2851,7 @@ DELTA_MODELS: dict[str, Delta] = {
     "A3+B4+C6": _A3_B4_C6,
     "A3+C6": _A3_C6,
     "A4+C1+C6": _A4_C1_C6,
+    "C7": _C7,
 }
 
 

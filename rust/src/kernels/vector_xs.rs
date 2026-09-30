@@ -17,7 +17,7 @@
 //!   ⟨σv⟩(x) = x / (2 K₂(x))² · ∫₂^Z dz  σ_all(m_x z) z² (z² − 4) K₁(x z)
 //! ```
 //!
-//! over the sum of all six channels, with `Z = max(50/x, 150)` and QAGP
+//! over the sum of all six channels, with `Z = 2 + 100/x` and QAGP
 //! break points at `[2, m_v/m_x, 2 m_v/m_x]`.
 //!
 //! `sigma_xx_to_all` — the sum the integrand needs — was also a public
@@ -173,15 +173,12 @@ const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
 /// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
 ///
 /// A criterion that binds is only worth having if the integrator is
-/// allowed to reach it. At scipy's default limit of 50, 33 of the 540
+/// allowed to reach it. At scipy's default limit of 50, 15 of the 540
 /// thermal positions the parity corpus pins exhaust the subdivision
-/// table and come back flagged; at 100 that falls to 16 and the worst
-/// error against `test/parity/thermal_reference.py` improves from
-/// 2.5e-8 to 3.6e-9, after which it plateaus — raising the limit
-/// further only lets the 16 subdivide deeper without moving their
-/// value. Those 16 are at the roundoff floor of the extrapolation
-/// table, not short of subdivisions, so 100 is where the accuracy is
-/// and 200 or 500 would only buy work.
+/// table and come back flagged; at 100 none do. The worst error against
+/// `test/parity/thermal_reference.py`'s converged integral is 1.8e-8 at
+/// 50, 100 and 200 alike, so 100 is the smallest limit at which every
+/// position converges, and a larger one would only buy work.
 const THERMAL_LIMIT: usize = 100;
 
 /// `σ(x x̄ → V* → f f̄)` in MeV⁻², for a lepton of mass `mf`.
@@ -461,9 +458,12 @@ pub fn thermal_cross_section(
     let two_k2 = 2.0 * bessel_kn(2, xnew);
     let prefactor = xnew / (two_k2 * two_k2);
 
-    // `max(50.0 / xnew, 150.0)`, in Python's evaluation order.
-    let floor = 50.0 / xnew;
-    let upper = if 150.0 > floor { 150.0 } else { floor };
+    // A hundred decay lengths `1 / x` past threshold, so the interval
+    // scales with the integrand;
+    // `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`
+    // derives it. A fixed cut puts QUADPACK's first nodes in the tail at
+    // large `x`, where its error estimate misses the peak at `z = 2`.
+    let upper = 2.0 + 100.0 / xnew;
 
     // "points at which integrand may have trouble are: 1. endpoint;
     // 2. when ss final state is accessible => z = 2 mv / mx;
@@ -823,7 +823,7 @@ mod tests {
     #[test]
     fn the_thermal_integral_matches_a_composite_rule() {
         let x = 20.0;
-        let upper: f64 = 150.0_f64.max(50.0 / x);
+        let upper = 2.0 + 100.0 / x;
 
         // In `w = √(z² − 4)`: the integrand times the Jacobian.
         let transformed = |w: f64| {
@@ -926,6 +926,57 @@ mod tests {
         assert!(
             (converged - expected).abs() < 1e-6 * expected.abs(),
             "converged {converged} vs Simpson {expected}"
+        );
+    }
+
+    /// At large `x` the average resolves its peak at threshold.
+    ///
+    /// By `x = 300` the whole integrand sits within a few `1/x` of
+    /// `z = 2`. The corpus's `closed_resonance` point puts both break
+    /// points below threshold, so QUADPACK sees one interval; on a fixed
+    /// `[2, 150]` its first Gauss–Kronrod nodes all land in the tail, its
+    /// error estimate misses the peak, and the average came back 1.9e-4
+    /// high. An upper limit of `2 + 100/x` scales the interval with the
+    /// peak instead.
+    ///
+    /// The oracle is the same integrand through the same integrator,
+    /// taken twice as far and split at decay lengths `1/x`, so that no
+    /// piece's first pass sees only the tail. It is held to 1e-7, 6.7x
+    /// the entry point's own `epsrel`.
+    #[test]
+    fn the_thermal_average_resolves_its_peak_at_large_x() {
+        // `KineticMixing(mx=300, mv=200, gvxx=1, eps=1e-2)`, rounded.
+        let (mx, mv, gvuu, gvdd, gvll, width_v) = (300.0, 200.0, -2e-3, 1e-3, 3e-3, 4.9e-5);
+        let x = 300.0;
+        let got = thermal_cross_section(x, mx, mv, GVXX, gvuu, gvdd, gvll, gvll, width_v).unwrap();
+
+        let edges = [0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0].map(|k| 2.0 + k / x);
+        let options = QuadOpts {
+            epsabs: 0.0,
+            epsrel: 1e-12,
+            limit: 500,
+            points: None,
+        };
+        let integral: f64 = edges
+            .windows(2)
+            .map(|window| {
+                let mut integrand = |z: f64| {
+                    let sigma =
+                        sigma_xx_to_all(mx * z, mx, mv, GVXX, gvuu, gvdd, gvll, gvll, width_v)
+                            .unwrap();
+                    sigma * (z * z) * ((z * z) - 4.0) * crate::special::bessel_k1(x * z)
+                };
+                quad(&mut integrand, window[0], window[1], &options)
+                    .expect("convergent options are valid options")
+                    .value
+            })
+            .sum();
+        let two_k2 = 2.0 * crate::special::bessel_kn(2, x);
+        let expected = x / (two_k2 * two_k2) * integral;
+
+        assert!(
+            (got / expected - 1.0).abs() < 1e-7,
+            "entry point gave {got}, converged {expected}"
         );
     }
 
