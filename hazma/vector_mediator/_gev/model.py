@@ -969,7 +969,10 @@ class VectorMediatorGeV(TheoryAnn):
         Lists the energy at which each annihilation channel opens.
 
         Hadronic thresholds sum the final-state masses of the form factor
-        that computes the channel's cross section.
+        that computes the channel's cross section. The ``pi0 pi0 gamma``
+        cross section is that of an on-shell ``pi0 omega`` pair times the
+        ``omega -> pi0 gamma`` branching fraction, so it opens at
+        ``m_pi0 + m_omega`` rather than at ``2 m_pi0``.
 
         Returns
         -------
@@ -981,6 +984,7 @@ class VectorMediatorGeV(TheoryAnn):
             "k0 k0": self._ff_k0_k0,
             "k k": self._ff_k_k,
             "pi0 gamma": self._ff_pi0_gamma,
+            "pi0 pi0 gamma": self._ff_pi0_omega,
             "eta gamma": self._ff_eta_gamma,
             "pi0 phi": self._ff_pi0_phi,
             "eta phi": self._ff_eta_phi,
@@ -1002,7 +1006,6 @@ class VectorMediatorGeV(TheoryAnn):
             "ve ve": 0.0,
             "vt vt": 0.0,
             "vm vm": 0.0,
-            "pi0 pi0 gamma": 2.0 * _MPI0,
             "v v": 2.0 * self.mv,
             **{fs: sum(ff.fsp_masses) for fs, ff in form_factors.items()},
         }

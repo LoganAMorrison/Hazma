@@ -1508,3 +1508,18 @@ branch of the underlying kernel that "any" reaches.
   returned `NaN`. The repair drops ladder points within the same 1e-9 of
   threshold, and `test_break_points_stay_off_the_threshold` pins both
   sites with widths chosen so that a rung lands one ulp above `z = 2`.
+
+### threshold-read-off-the-channel-label
+
+- PR #116 added `VectorMediatorGeV.annihilation_thresholds()`, which listed
+  `pi0 pi0 gamma` at `2 m_pi0 = 269.9536` MeV. Its cross section,
+  `sigma_xx_to_pi0_pi0_gamma`, is the `VectorFormFactorPi0Omega` width
+  times `BR(omega -> pi0 gamma)` and is zero below `m_pi0 + m_omega =
+  917.6368` MeV. Review restricted a model to that channel at `mx = 100`,
+  `x = 30`: the generic thermal average stopped 100 decay lengths past
+  `269.9536` MeV and returned `0.0` against a converged `1.2462e-101`
+  MeV⁻². The boundary test, `test_model_thresholds_are_where_channels_open`,
+  had covered only the MeV models; with the GeV model's `gvuu == gvdd` the
+  isovector channels vanish everywhere and pass the closed-below check
+  regardless. The repair takes the threshold from `_ff_pi0_omega`, and the
+  test covers `VectorMediatorGeV` with kinetic-mixing quark couplings.

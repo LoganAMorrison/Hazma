@@ -343,10 +343,28 @@ class TestThermalPartition(unittest.TestCase):
         it. The cross sections are evaluated one part in 1e5 either side,
         because the ``hazma._core`` kernels hard-code older pion masses,
         134.9766 and 139.57018 MeV, 1.5e-6 below `hazma.parameters`'.
+
+        `VectorMediatorGeV` takes the quark couplings of a kinetically
+        mixed photon: with ``gvuu == gvdd`` the isovector channels, among
+        them ``pi pi`` and ``pi0 pi0 gamma``, vanish at every energy and
+        would pass the closed-below check whatever threshold they listed.
         """
         models = {
             "HiggsPortal": HiggsPortal(mx=50.0, ms=550.0, gsxx=1.0, stheta=1e-1),
             "KineticMixing": KineticMixing(mx=50.0, mv=550.0, gvxx=1.0, eps=1e-1),
+            "VectorMediatorGeV": VectorMediatorGeV(
+                mx=50.0,
+                mv=2.75e3,
+                gvxx=1.0,
+                gvuu=2.0 / 3.0,
+                gvdd=-1.0 / 3.0,
+                gvss=-1.0 / 3.0,
+                gvee=1.0,
+                gvmumu=1.0,
+                gvveve=1.0,
+                gvvmvm=1.0,
+                gvvtvt=1.0,
+            ),
         }
         for name, model in models.items():
             sigmas = model.annihilation_cross_section_funcs()
