@@ -339,3 +339,33 @@ def test_a_missing_baseline_never_reports_success(repo: Path) -> None:
 
     assert result.returncode not in (NO_NEW_FINDINGS, NEW_FINDINGS)
     assert "could not compare" in result.stdout
+
+
+@requires_ruff
+def test_a_single_file_keeps_its_package_context(repo: Path) -> None:
+    """Linting one file inside a private package compares like with like.
+
+    ruff decides whether a function is public from the module path it
+    derives through the enclosing `__init__.py` files. If the baseline
+    held only the named file, every method in `pkg/_private/mod.py` would
+    read as public there (ANN201) and private in the working tree
+    (ANN202), and an edit touching none of them would report each one as
+    both new and fixed.
+    """
+    (repo / "pyproject.toml").write_text(
+        FIXTURE_PYPROJECT.replace('select = ["F"]', 'select = ["ANN"]')
+    )
+    private = repo / "pkg" / "_private"
+    private.mkdir()
+    (repo / "pkg" / "__init__.py").write_text("")
+    (private / "__init__.py").write_text("")
+    module = private / "mod.py"
+    module.write_text("def compute(x: int):\n    return x\n")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "--quiet", "-m", "private package")
+    module.write_text(module.read_text() + "\n\nOTHER = 3\n")
+
+    result = _run(repo, "ruff", "pkg/_private/mod.py")
+
+    assert result.returncode == NO_NEW_FINDINGS, result.stdout
+    assert "0 new (1 pre-existing" in result.stdout

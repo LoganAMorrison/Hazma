@@ -125,15 +125,38 @@ def diff_touches_python(rev: str, paths: list[str], *, root: Path) -> bool:
     return any(Path(name).suffix in PYTHON_SUFFIXES for name in changed)
 
 
+def package_markers(paths: list[str]) -> list[str]:
+    """List the `__init__` files that could make an ancestor of `paths` a package.
+
+    A linter derives a module's dotted name, and with it whether the module
+    is private, from the `__init__` files above it. The working tree always
+    has them, so the baseline needs them too, or a file named on its own
+    lints as a top-level module there and every finding that depends on
+    the dotted name changes rule between the two trees.
+    """
+    markers: dict[str, None] = {}
+    for path in paths:
+        for parent in Path(path).parents:
+            if parent == Path("."):
+                continue
+            for suffix in sorted(PYTHON_SUFFIXES):
+                markers[str(parent / f"__init__{suffix}")] = None
+    return list(markers)
+
+
 def materialize(rev: str, paths: list[str], *, root: Path, dest: Path) -> list[str]:
     """Extract `rev`'s copy of `paths` into `dest`, plus the linter config.
+
+    The `__init__` files of the packages enclosing `paths` come along, so
+    the baseline sees the same package structure the working tree does.
 
     Returns the subset of `paths` that exists in `rev`; a path added by
     this branch is absent there, and every finding in it is new by
     definition.
     """
     present = [path for path in paths if exists_at(rev, path, root=root)]
-    wanted = present + ([CONFIG] if exists_at(rev, CONFIG, root=root) else [])
+    support = [CONFIG, *package_markers(present)]
+    wanted = present + [path for path in support if exists_at(rev, path, root=root)]
     if not wanted:
         return []
 
