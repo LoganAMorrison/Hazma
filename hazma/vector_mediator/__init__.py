@@ -1,5 +1,6 @@
 from typing import List
 
+from hazma import parameters
 from hazma.parameters import Qd, Qe, Qu, qe
 from hazma.theory import TheoryAnn
 from hazma.vector_mediator._vector_mediator_cross_sections import (
@@ -167,6 +168,24 @@ class VectorMediator(
             ``[(mv, width_v)]`` in MeV.
         """
         return [(self.mv, self.width_v)]
+
+    def annihilation_thresholds(self) -> dict[str, float]:
+        """
+        List the energy at which each annihilation channel opens.
+
+        Returns
+        -------
+        thresholds : dict(str, float)
+            Center-of-mass energy in MeV at which each final state opens.
+        """
+        return {
+            "mu mu": 2.0 * parameters.muon_mass,
+            "e e": 2.0 * parameters.electron_mass,
+            "pi pi": 2.0 * parameters.charged_pion_mass,
+            "pi0 g": parameters.neutral_pion_mass,
+            "pi0 v": parameters.neutral_pion_mass + self.mv,
+            "v v": 2.0 * self.mv,
+        }
 
     def compute_width_v(self) -> None:
         """Recomputes the scalar's total width."""

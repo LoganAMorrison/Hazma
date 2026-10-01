@@ -4,10 +4,7 @@ from scipy import special
 from scipy import integrate
 
 from hazma.relic_density import relic_density as rd
-from hazma.relic_density._thermal_functions import (
-    thermal_cross_section_break_points,
-    thermal_cross_section_upper_limit,
-)
+from hazma.relic_density._thermal_functions import thermal_cross_section_partition
 
 TWO_BODY = [
     "e e",
@@ -130,6 +127,12 @@ def relic_density(
         if key in final_states
     }
 
+    thresholds = [
+        e_cm
+        for key, e_cm in self.annihilation_thresholds().items()
+        if key in final_states
+    ]
+
     def acs(cme):
         return sum(fn(cme) for fn in acs_fns.values())
 
@@ -148,13 +151,15 @@ def relic_density(
         # see `hazma.relic_density._thermal_functions.
         # thermal_cross_section` for why the default absolute one is
         # satisfied before any subdivision happens, and for `limit`.
-        points = thermal_cross_section_break_points(x, self)
+        z_max, points = thermal_cross_section_partition(
+            x, self.mx, thresholds, self.annihilation_resonances()
+        )
         return (
             pf
             * integrate.quad(
                 integrand,
                 2.0,
-                thermal_cross_section_upper_limit(x),
+                z_max,
                 points=[2.0, *points],
                 args=(x,),
                 epsabs=0.0,

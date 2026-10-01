@@ -21,7 +21,7 @@ from hazma.relic_density._thermal_functions import (
     _MIN_THRESHOLD_PIECE,
     thermal_cross_section,
     thermal_cross_section_integrand,
-    thermal_cross_section_upper_limit,
+    thermal_cross_section_partition,
 )
 from hazma.scalar_mediator import HiggsPortal
 from hazma.vector_mediator import KineticMixing, VectorMediatorGeV
@@ -223,12 +223,25 @@ class NoThermalCrossSection:
     def annihilation_resonances(self) -> list[tuple[float, float]]:
         return self._inner.annihilation_resonances()
 
+    def annihilation_thresholds(self) -> dict[str, float]:
+        return self._inner.annihilation_thresholds()
+
 
 class NoResonances(NoThermalCrossSection):
     """A `NoThermalCrossSection` that hides its mediator from the quadrature."""
 
     def annihilation_resonances(self) -> list[tuple[float, float]]:
         return []
+
+
+class NoFeatures(NoResonances):
+    """A `NoThermalCrossSection` that hides its thresholds and its mediator.
+
+    Its partition is that of a model that defines neither hook.
+    """
+
+    def annihilation_thresholds(self) -> dict[str, float]:
+        return {}
 
 
 class PinnedResonance(NoThermalCrossSection):
@@ -242,6 +255,107 @@ class PinnedResonance(NoThermalCrossSection):
 
     def annihilation_resonances(self) -> list[tuple[float, float]]:
         return [self._resonance]
+
+
+class TestThermalPartition(unittest.TestCase):
+    """`thermal_cross_section_partition` follows the kernels' window rule.
+
+    The same three properties ``rust/src/kernels/thermal_window.rs`` tests
+    for ``partition``, plus the resonance ladder the Python sites add.
+    """
+
+    def test_the_upper_limit_follows_the_last_feature(self) -> None:
+        """The limit runs 100 decay lengths from the last feature, not from ``z = 2``."""
+        x, mx = 30.0, 100.0
+        z_max, _ = thermal_cross_section_partition(x, mx, (50.0, 275.0, 550.0), ())
+        self.assertEqual(z_max, 5.5 + 100.0 / x)
+        z_max, _ = thermal_cross_section_partition(x, mx, (50.0, 150.0), ())
+        self.assertEqual(z_max, 2.0 + 100.0 / x)
+        z_max, _ = thermal_cross_section_partition(x, mx, (), [(700.0, 1.0)])
+        self.assertEqual(z_max, 7.0 + 100.0 / x)
+
+    def test_every_opening_is_split_past(self) -> None:
+        """Each threshold above ``z = 2``, and 1, 4, 16, 50 decay lengths past it."""
+        x, mx = 10.0, 100.0
+        threshold = 2.0
+        _, points = thermal_cross_section_partition(x, mx, (100.0, 300.0), ())
+        expected = {
+            z + k / x for z in (threshold, 3.0) for k in (0.0, 1.0, 4.0, 16.0, 50.0)
+        }
+        self.assertEqual(set(points), {z for z in expected if z > threshold})
+        self.assertNotIn(1.0, points)
+
+    def test_a_threshold_just_above_z_2_moves_onto_it(self) -> None:
+        """No piece starting at ``z = 2`` is shorter than ``_MIN_THRESHOLD_PIECE``."""
+        x, mx = 20.0, 1.0
+        sliver = 2.0 * (1.0 + math.ulp(1.0))
+        _, points = thermal_cross_section_partition(x, mx, (sliver,), ())
+        self.assertNotIn(sliver, points)
+        self.assertGreaterEqual(min(points) - 2.0, _MIN_THRESHOLD_PIECE)
+
+    def test_a_resonance_is_bracketed_by_its_width_ladder(self) -> None:
+        """Rungs at ``z_r +/- g 4^k`` inside the interval, never the peak."""
+        x, mx = 1.0, 100.0
+        mass, width = 400.0, 1e-3
+        z_max, points = thermal_cross_section_partition(x, mx, (), [(mass, width)])
+        z_res, g = mass / mx, width / mx
+        rungs = {
+            z_res + sign * g * 4.0**k
+            for sign in (-1.0, 1.0)
+            for k in range(40)
+            if g * 4.0**k < z_max - 2.0
+        }
+        inside = {z for z in rungs if 2.0 + _MIN_THRESHOLD_PIECE < z < z_max}
+        self.assertTrue(inside <= set(points))
+        self.assertNotIn(z_res, points)
+
+    def test_model_thresholds_cover_every_channel(self) -> None:
+        """Each mediator model lists a threshold for each of its channels."""
+        models = {
+            "HiggsPortal": HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=1e-3),
+            "KineticMixing": KineticMixing(mx=200.0, mv=550.0, gvxx=1.0, eps=1e-3),
+            "VectorMediatorGeV": VectorMediatorGeV(
+                mx=1e3,
+                mv=2.75e3,
+                gvxx=1.0,
+                gvuu=1.0,
+                gvdd=1.0,
+                gvss=1.0,
+                gvee=1.0,
+                gvmumu=1.0,
+                gvveve=1.0,
+                gvvmvm=1.0,
+                gvvtvt=1.0,
+            ),
+        }
+        for name, model in models.items():
+            with self.subTest(model=name):
+                self.assertEqual(
+                    set(model.annihilation_thresholds()),
+                    set(model.annihilation_cross_section_funcs()),
+                )
+
+    def test_model_thresholds_are_where_channels_open(self) -> None:
+        """Each listed channel is closed just below its threshold and open above.
+
+        Checked where the threshold lies above the pair threshold ``2 mx``,
+        so that the channel's own kinematics, not the dark matter's, close
+        it. The cross sections are evaluated one part in 1e5 either side,
+        because the ``hazma._core`` kernels hard-code older pion masses,
+        134.9766 and 139.57018 MeV, 1.5e-6 below `hazma.parameters`'.
+        """
+        models = {
+            "HiggsPortal": HiggsPortal(mx=50.0, ms=550.0, gsxx=1.0, stheta=1e-1),
+            "KineticMixing": KineticMixing(mx=50.0, mv=550.0, gvxx=1.0, eps=1e-1),
+        }
+        for name, model in models.items():
+            sigmas = model.annihilation_cross_section_funcs()
+            for fs, e_cm in model.annihilation_thresholds().items():
+                if e_cm <= 2.0 * model.mx:
+                    continue
+                with self.subTest(model=name, final_state=fs):
+                    self.assertEqual(sigmas[fs](e_cm * (1.0 - 1e-5)), 0.0)
+                    self.assertGreater(sigmas[fs](e_cm * (1.0 + 1e-5)), 0.0)
 
 
 class TestThermalQuadratureConverges(unittest.TestCase):
@@ -265,7 +379,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     ``x = 5``) and **1.4e-2** for the GeV vector site.
 
     The grid reaches past ``x = 25`` because both sites share an upper
-    limit, `thermal_cross_section_upper_limit`, that must keep the
+    limit, from `thermal_cross_section_partition`, that must keep the
     interval open through freeze-out and beyond.
     """
 
@@ -286,24 +400,32 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         integrand: Callable[..., float],
         x: float,
         args: tuple,
+        openings: tuple[float, ...] = (),
         points: tuple[float, ...] = (),
     ) -> float:
         """``<sigma v>(x)`` from the same integrand at ``epsrel = 1e-12``.
 
-        Independent of the sites' upper limit: the integral runs twice as
-        many decay lengths ``1/x`` past threshold as theirs does, split at
-        ``2 + k/x`` so that every piece sees its share of the
+        ``openings`` are the ``z`` at which the integrand's channels open
+        or its mediator peaks, from a list kept here rather than read from
+        the model's hooks, so the reference does not share the sites'
+        source of thresholds. Independent of the sites' upper limit, the
+        integral runs twice as many decay lengths ``1/x`` past the last
+        opening as theirs does, split at ``k/x`` past threshold and past
+        each opening, so that every piece sees its share of the
         ``exp(-x z)`` fall-off rather than leaving it to one partition.
-        ``points`` adds the integrand's own features, the channel
-        thresholds and the mediator resonance, which the sites leave to
-        adaptive refinement. Without them the ``sqrt`` onset of the
-        ``pi pi`` channels at ``z = 2.7`` to ``2.8`` biases this reference by
-        3.4e-6 at ``scalar.open``, ``x = 10``, while reporting
-        convergence.
+        Without the openings the ``sqrt`` onset of the ``pi pi`` channels
+        at ``z = 2.7`` to ``2.8`` biases this reference by 3.4e-6 at
+        ``scalar.open``, ``x = 10``, while reporting convergence.
+        ``points`` are further break points, the resonance ladders, kept
+        where they fall inside the interval.
         """
         prefactor = x / (2.0 * kn(2, x)) ** 2
-        decay = [2.0 + k / x for k in (0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0)]
-        edges = sorted(decay + [z for z in points if decay[0] < z < decay[-1]])
+        threshold = 2.0
+        starts = {threshold, *(z for z in openings if z > threshold)}
+        upper = max(starts) + 200.0 / x
+        splits = {z + k / x for z in starts for k in (0.0, 1.0, 4.0, 16.0, 50.0)}
+        inside = {z for z in points if threshold < z < upper}
+        edges = sorted({upper, *inside, *(z for z in splits if z < upper)})
         value = sum(
             quad(
                 integrand,
@@ -320,17 +442,16 @@ class TestThermalQuadratureConverges(unittest.TestCase):
 
     @staticmethod
     def _at_scipy_defaults(
-        integrand: Callable[..., float], x: float, args: tuple
+        integrand: Callable[..., float], x: float, args: tuple, mx: float
     ) -> float:
-        """The same integral with no tolerances passed."""
+        """The same integral with no tolerances passed.
+
+        It runs over the interval of a model with no thresholds or
+        resonances, split only at ``z = 2``.
+        """
         prefactor = x / (2.0 * kn(2, x)) ** 2
-        value, _ = quad(
-            integrand,
-            2.0,
-            thermal_cross_section_upper_limit(x),
-            args=args,
-            points=[2.0],
-        )
+        z_max, _ = thermal_cross_section_partition(x, mx, (), ())
+        value, _ = quad(integrand, 2.0, z_max, args=args, points=[2.0])
         return prefactor * value
 
     def test_generic_fallback_converges(self) -> None:
@@ -355,7 +476,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                         thermal_cross_section_integrand,
                         x,
                         (x, model),
-                        points=features,
+                        openings=features,
                     )
                     assert_allclose(
                         thermal_cross_section(x, model),
@@ -363,7 +484,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                         rtol=self.CONVERGED_RTOL,
                     )
                     default = self._at_scipy_defaults(
-                        thermal_cross_section_integrand, x, (x, model)
+                        thermal_cross_section_integrand, x, (x, model), inner.mx
                     )
                     worst_default = max(
                         worst_default, abs(default - reference) / abs(reference)
@@ -380,10 +501,8 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         At ``HiggsPortal(mx=200, ms=550, stheta=1e-6)`` the ``S S`` channel
         opens at ``z = 5.5``, fifteen-plus decades above the suppressed
         channels, and at ``x = 12`` most of the average sits just past it.
-        `thermal_cross_section_upper_limit`'s ``2 + 100/x = 10.3`` keeps
-        it: the fallback lands 1.3e-9 from `_converged`.  A limit of
-        ``2 + 50/x = 6.2`` cuts through it and loses 5.1e-4, which
-        `CONVERGED_RTOL` rejects.
+        A limit of ``2 + 50/x = 6.2`` cuts through it and loses 5.1e-4,
+        which `CONVERGED_RTOL` rejects.
         """
         inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=1e-6)
         x = 12.0
@@ -391,12 +510,51 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             thermal_cross_section_integrand,
             x,
             (x, NoThermalCrossSection(inner)),
-            points=(inner.ms / inner.mx, 2.0 * inner.ms / inner.mx),
+            openings=(inner.ms / inner.mx, 2.0 * inner.ms / inner.mx),
         )
         assert_allclose(
             thermal_cross_section(x, NoThermalCrossSection(inner)),
             reference,
             rtol=self.CONVERGED_RTOL,
+        )
+
+    def test_generic_fallback_keeps_a_channel_past_the_window(self) -> None:
+        """The fallback integrates past the last channel threshold.
+
+        In ``HiggsPortal(mx=200, ms=550, gsxx=1)`` the ``S S`` channel opens
+        at ``z = 5.5``. At ``x = 30`` that lies past ``2 + 100/x = 5.33``,
+        the window of a model that lists no thresholds or resonances, so
+        the fallback without them returns ``0.0`` with ``stheta = 0`` and
+        loses 99.0% with ``stheta = 1e-20``. Reading
+        ``annihilation_thresholds``, it runs to ``5.5 + 100/x`` and lands
+        within 2.4e-12 of `_converged`.
+        """
+        x = 30.0
+        worst_blind = 0.0
+        for stheta in (0.0, 1e-20):
+            inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=stheta)
+            with self.subTest(stheta=stheta):
+                reference = self._converged(
+                    thermal_cross_section_integrand,
+                    x,
+                    (x, NoThermalCrossSection(inner)),
+                    openings=(
+                        2.0 * muon_mass / inner.mx,
+                        2.0 * charged_pion_mass / inner.mx,
+                        inner.ms / inner.mx,
+                        2.0 * inner.ms / inner.mx,
+                    ),
+                )
+                assert_allclose(
+                    thermal_cross_section(x, NoThermalCrossSection(inner)),
+                    reference,
+                    rtol=self.CONVERGED_RTOL,
+                )
+                blind = thermal_cross_section(x, NoFeatures(inner))
+                worst_blind = max(worst_blind, abs(blind - reference) / reference)
+        assert worst_blind > self.CONVERGED_RTOL, (
+            "the fallback now reaches z = 5.5 at x = 30 without thresholds, so "
+            f"this point pins nothing (worst relative error {worst_blind:.2e})"
         )
 
     @staticmethod
@@ -498,16 +656,14 @@ class TestThermalQuadratureConverges(unittest.TestCase):
 
         ``HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)`` puts a
         7 MeV-wide resonance at ``z = 2.75``. Integrated over
-        ``[2, 2 + 100/x]`` with nothing marking it, QUADPACK's error
-        estimate misses the peak at isolated ``x`` and reports
-        convergence: the average came out 4.0e-4 low at ``x = 0.891`` and
-        9.2e-6 low at ``x = 0.223``, while ``x = 0.89`` and ``x = 0.224``
-        are good to 1e-9. With ``gsxx=1e-2, stheta=1e-3`` the width is
-        7e-4 MeV, and the unmarked average is 16% low at ``x = 5.818``. A
-        single break point *at* the peak, as the ``hazma._core`` kernels
-        place it, fixes the wide case but loses all of the narrow one at
-        ``x = 20``. With the width ladder all four agree with the reference
-        to 3e-10.
+        ``[2, 2 + 100/x]`` with no break point near it, QUADPACK's error
+        estimate missed the peak at isolated ``x`` and reported
+        convergence, 4.0e-4 low at ``x = 0.891`` and 9.2e-6 low at
+        ``x = 0.223``. The decay-length splits of
+        `thermal_cross_section_partition` alone resolve those two. With
+        ``gsxx=1e-2, stheta=1e-3`` the width is 7e-4 MeV, and the splits
+        alone lose 99.7% at ``x = 3.487`` and 99.95% at ``x = 5.818``.
+        With the width ladder all agree with the reference to 6e-12.
 
         The misses depend on QUADPACK's exact partition, so the assertion
         that the unmarked integral misses is what keeps these ``x`` values
@@ -521,7 +677,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             ),
             "narrow": (
                 HiggsPortal(mx=200.0, ms=550.0, gsxx=1e-2, stheta=1e-3),
-                (5.818, 20.0),
+                (3.487, 5.818, 20.0),
             ),
         }
         worst_unmarked = 0.0
@@ -632,7 +788,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             with self.subTest(x=x):
                 reference = self._converged(integrand, x, (x,))
                 assert_allclose(site(x), reference, rtol=self.CONVERGED_RTOL)
-                default = self._at_scipy_defaults(integrand, x, (x,))
+                default = self._at_scipy_defaults(integrand, x, (x,), model.mx)
                 worst_default = max(
                     worst_default, abs(default - reference) / abs(reference)
                 )
@@ -647,9 +803,10 @@ class TestThermalQuadratureConverges(unittest.TestCase):
 
         With ``gvxx``, ``gvuu`` and ``gvdd`` at 1e-2, the other couplings
         zero, ``mx = 1`` GeV and ``mv = 2.75`` GeV, the resonance is
-        1.4e-2 MeV wide. Integrated with nothing marking
-        it, the closure's average at ``x = 1`` is 100% low; with the width
-        ladder it agrees with the reference to 2e-11.
+        1.4e-2 MeV wide. Over the partition the closure builds for a model
+        without resonances, which splits only at decay lengths past
+        threshold, the average at ``x = 5.818`` is 99.8% low; with the
+        width ladder it agrees with the reference to 1.2e-12.
         """
         model = VectorMediatorGeV(
             mx=1e3,
@@ -668,22 +825,23 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         ((mass, width),) = model.annihilation_resonances()
         features = self._resonance_features(mass, width, model.mx)
 
-        x = 1.0
+        x = 5.818
         reference = self._converged(integrand, x, (x,), points=features)
         assert_allclose(site(x), reference, rtol=self.CONVERGED_RTOL)
+        z_max, points = thermal_cross_section_partition(x, model.mx, (), ())
         unmarked = (
             x
             / (2.0 * kn(2, x)) ** 2
             * quad(
                 integrand,
                 2.0,
-                thermal_cross_section_upper_limit(x),
+                z_max,
                 args=(x,),
-                points=[2.0],
+                points=[2.0, *points],
                 epsabs=0.0,
             )[0]
         )
         assert abs(unmarked - reference) > self.CONVERGED_RTOL * abs(reference), (
-            "the unmarked integral now resolves the resonance at x = 1, so this "
-            "point pins nothing"
+            "the unmarked integral now resolves the resonance at x = 5.818, so "
+            "this point pins nothing"
         )

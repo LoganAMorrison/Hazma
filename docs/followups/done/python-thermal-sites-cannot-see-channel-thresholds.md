@@ -3,8 +3,39 @@
 - **Added:** 2026-09-29
 - **Source:** PR #112 review, round 1
 - **Scope:** cross-cutting
-- **Status:** open
+- **Status:** done — both sites build their interval and break points
+  with
+  `hazma.relic_density._thermal_functions.thermal_cross_section_partition`
+  from `TheoryAnn.annihilation_thresholds()` and
+  `annihilation_resonances()`.
 - **Triggers / blockers:** none.
+
+> **Resolved.** `TheoryAnn.annihilation_thresholds()` maps each final
+> state to the center-of-mass energy at which it opens, empty by default,
+> and `ScalarMediator`, `VectorMediator` and `VectorMediatorGeV` supply
+> theirs. `thermal_cross_section_partition` mirrors
+> `thermal_window::partition`: the integral runs to 100 decay lengths past
+> the last threshold or resonance, with break points at each threshold
+> and at 1, 4, 16 and 50 decay lengths past it. Resonances keep the width
+> ladder `z_r ± (Γ/m_x) 4^k` rather than the kernels' single point at the
+> peak. The GeV site takes only the thresholds of the channels it sums.
+>
+> **The three cases.** At `x = 30`, wrapped as `NoThermalCrossSection`,
+> `HiggsPortal(mx=200, ms=550, gsxx=1)` now agrees with
+> `converged_thermal_cross_section` to 1.3e-14 at `stheta = 0` and
+> 2.3e-11 at `stheta = 1e-20`. The resonance case had already been
+> repaired by the width ladder before this change; with the splits the
+> fallback is within 3.5e-9 of that reference on the 400-point grid over
+> `x` from 0.1 to 300, for `stheta` of 0, 1e-20 and 1e-4.
+> `test/test_relic_density.py` pins all three.
+>
+> **The default.** A model that defines neither hook integrates over
+> `[2, 2 + 100/x]`, split at decay lengths past threshold. That drops any
+> channel opening past the window, as the `annihilation_thresholds`
+> docstring states. The splits alone still improve it: at
+> `HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)` with both hooks
+> hidden, the worst error on a 120-point grid falls from 2.6e-5 to
+> 8.3e-8.
 
 ## Why
 

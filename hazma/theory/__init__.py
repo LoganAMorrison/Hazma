@@ -93,6 +93,31 @@ class TheoryAnn(TheoryGammaRayLimits, TheoryCMB, TheoryConstrain):
         """
         return []
 
+    def annihilation_thresholds(self) -> dict[str, float]:
+        r"""
+        Lists the energies at which the annihilation channels open.
+
+        The generic thermal average, `hazma.relic_density`'s fallback for a
+        model without its own ``thermal_cross_section``, integrates to 100
+        Boltzmann decay lengths past the last threshold and places
+        quadrature break points past each. A channel that opens further
+        than that above the dark matter pair threshold is otherwise dropped
+        from the average.
+
+        The default lists none, which is complete only when every channel opens
+        within ``100 T`` of ``2 mx``. Models with a channel that opens above
+        the pair threshold, such as annihilation into a pair of mediators,
+        should override it.
+
+        Returns
+        -------
+        thresholds : dict(str, float)
+            Center-of-mass energy in MeV at which each final state of
+            `annihilation_cross_section_funcs` opens, i.e. the sum of its
+            final-state masses. A threshold below ``2 mx`` is harmless.
+        """
+        return {}
+
     def annihilation_branching_fractions(self, e_cm: float) -> Dict[str, float]:
         r"""
         Computes annihilation branching fractions.

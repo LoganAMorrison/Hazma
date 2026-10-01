@@ -214,7 +214,7 @@ and `2 + 100/x` lands 1.3e-9 from the reference.
 
 **The Python sites.** They see only `annihilation_cross_sections`, so
 they cannot build the kernels' window and still drop the review cases.
-That is [its own follow-up](../todo/python-thermal-sites-cannot-see-channel-thresholds.md).
+That is [its own follow-up](python-thermal-sites-cannot-see-channel-thresholds.md).
 
 ## Review round 2
 

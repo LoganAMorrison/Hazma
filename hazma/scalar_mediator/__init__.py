@@ -5,6 +5,10 @@ from hazma.parameters import up_quark_mass as muq
 from hazma.parameters import down_quark_mass as mdq
 from hazma.parameters import strange_quark_mass as msq
 from hazma.parameters import fpi, b0, vh
+from hazma.parameters import charged_pion_mass as mpi
+from hazma.parameters import electron_mass as me
+from hazma.parameters import muon_mass as mmu
+from hazma.parameters import neutral_pion_mass as mpi0
 
 
 # Note that Theory must be inherited from AFTER all the other mixin classes,
@@ -249,6 +253,24 @@ class ScalarMediator(TheoryAnn):
             ``[(ms, width_s)]`` in MeV.
         """
         return [(self.ms, self.width_s)]
+
+    def annihilation_thresholds(self) -> dict[str, float]:
+        """
+        List the energy at which each annihilation channel opens.
+
+        Returns
+        -------
+        thresholds : dict(str, float)
+            Center-of-mass energy in MeV at which each final state opens.
+        """
+        return {
+            "mu mu": 2.0 * mmu,
+            "e e": 2.0 * me,
+            "g g": 0.0,
+            "pi0 pi0": 2.0 * mpi0,
+            "pi pi": 2.0 * mpi,
+            "s s": 2.0 * self.ms,
+        }
 
     def compute_width_s(self):
         """Updates the scalar's total width."""
