@@ -406,7 +406,7 @@ above can be loaded using [1]_:
 The attributes of the ``FluxMeasurement`` store all of the provide
 information, with the :math:`E^n` prefactor removed from the flux and
 error bars, and the errors converted from the positions of the error bars
-to their sizes. These are used internally by the ``Theory.binned_limit()``
+to their sizes. These are used internally by the ``TheoryGammaRayLimits.binned_limit()``
 method, and can be accessed as follows:
 
 .. code-block:: python
@@ -478,8 +478,8 @@ We find it easiest to place all of these components is modular classes and then 
     # Decay spectra for neutral and charged pions
     from hazma.spectra import dnde_photon_neutral_pion as neutral_pion
     from hazma.spectra import dnde_photon_charged_pion as charged_pion
-    # The `Theory` class which we will ultimately inherit from
-    from hazma.theory import Theory
+    # The `TheoryAnn` class which we will ultimately inherit from
+    from hazma.theory import TheoryAnn
 
 Now, we implement a cross section class:
 
@@ -572,7 +572,7 @@ Lastly, we group all of these classes into a master class and we're done:
     class HazmaExample(HazmaExampleCrossSection,
                        HazmaExamplePositronSpectra,
                        HazmaExampleSpectra,
-                       Theory):
+                       TheoryAnn):
         # Model parameters are DM mass: mx,
         # Wilson coefficients: c1, c2 and
         # cutoff scale: lam

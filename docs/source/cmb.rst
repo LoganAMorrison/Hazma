@@ -4,19 +4,19 @@ CMB constraints
 Overview
 --------
 
-The ``Theory`` class contains functions for computing CMB limits and
-:math:`f_{\mathrm{eff}}` for dark matter models. Other useful constants and
-functions are also available.
+The ``TheoryCMB`` mixin, which ``TheoryAnn`` inherits, contains functions for
+computing CMB limits and :math:`f_{\mathrm{eff}}` for dark matter models. Other
+useful constants and functions are also available.
 
 Computing CMB limits
 --------------------
 
-.. automethod:: hazma.theory.Theory.cmb_limit
+.. automethod:: hazma.theory.TheoryCMB.cmb_limit
 
 Functions and constants
 -----------------------
 
-.. automethod:: hazma.theory.Theory.f_eff
+.. automethod:: hazma.theory.TheoryCMB.f_eff
 
 .. autodata:: hazma.cmb.p_ann_planck_temp_pol
 
