@@ -48,20 +48,24 @@ user-facing change even when no signature did.
   Away from narrow resonances the semi-analytic `relic_density` barely
   moves. At the six `HiggsPortal` and `KineticMixing` points of
   `test/test_relic_density.py`, the 7 MeV one among them, it moves by at
-  most 1.1e-9, and at `VectorMediatorGeV(mx=5 GeV, mv=2 GeV)` by 6e-15,
-  at 1.6543977e-4. At the same six points the Boltzmann solve at its
-  default `rtol=1e-5`, `atol=1e-3` moves by up to 2.0e-3, because its
-  adaptive steps amplify even the 1.1e-11 shift ⟨σv⟩ takes at
-  `HiggsPortal(mx=300, ms=200)`. At `rtol = atol = 1e-9` the same solve
-  moves by at most 3.2e-8. At narrow resonances the old values were wrong. The
-  semi-analytic abundance falls from 2659 to 935 for the narrow
-  `HiggsPortal` point and from 6.10 to 1.40 for the narrow
-  `KineticMixing` one. For `VectorMediatorGeV(mx=1 GeV, mv=2.75 GeV)`
-  with every coupling at 1e-2 it falls by 9.3e-4, from 1.0330 to
-  1.0321. Models
-  without a resonance integrate exactly as before, and the
-  `ScalarMediator` and `VectorMediator` families, which define their own
-  `thermal_cross_section`, do not move.
+  most 1.1e-9, and at `VectorMediatorGeV(mx=5 GeV, mv=2 GeV)` by at most
+  1.2e-14 for a fixed mediator width. That model's width sums Monte
+  Carlo phase-space integrals, so its abundance, about 1.65440e-4,
+  varies by 1.3e-6 between runs either way. At the same six points the
+  Boltzmann solve at its default `rtol=1e-5`, `atol=1e-3` moves by up to
+  2.0e-3, because its adaptive steps amplify even the 1.1e-11 shift ⟨σv⟩
+  takes at `HiggsPortal(mx=300, ms=200)`. At `rtol = atol = 1e-9` the
+  same solve moves by at most 3.2e-8. At narrow resonances the old
+  values were wrong. The semi-analytic abundance falls from 2659 to 935
+  for the narrow `HiggsPortal` point and from 6.10 to 1.40 for the
+  narrow `KineticMixing` one. For `VectorMediatorGeV(mx=1 GeV, mv=2.75
+  GeV)` with `gvxx`, `gvuu` and `gvdd` at 1e-2 and the other couplings
+  zero, it now lands between 1.0310 and 1.0325, the run-to-run scatter
+  of its width. In three runs that each shared one width between the old
+  and new averages, the old abundance sat 8.8e-4, 8.9e-4 and 83% above
+  the new one. Models without a resonance integrate exactly as before,
+  and the `ScalarMediator` and `VectorMediator` families, which define
+  their own `thermal_cross_section`, do not move.
 - **The generic thermal average and `VectorMediatorGeV.relic_density`
   now integrate ⟨σv⟩ past `x = 25`.** Both pure-Python
   `thermal_cross_section` sites integrated over `z` from 2 to `50/x`, an

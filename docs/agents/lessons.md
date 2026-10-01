@@ -336,5 +336,6 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   from physics (thresholds, resonances) can land within a few ulps of an
   endpoint where the integrand is singular, and the quadrature nodes of
   that sliver round onto it. Merge a point closer than a resolvable
-  distance into the endpoint, and pin a mass one ulp from each threshold
-  (PR #112).
+  distance into the endpoint at every site that builds break points, not
+  only the one that surfaced it, and pin a point one ulp from each
+  threshold (PR #112, PR #113).

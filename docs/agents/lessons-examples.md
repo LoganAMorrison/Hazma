@@ -1497,3 +1497,14 @@ branch of the underlying kernel that "any" reaches.
   moves any feature within `MIN_THRESHOLD_PIECE = 1e-9` of `z = 2` onto
   it, and `the_thermal_average_is_finite_with_a_channel_just_above_threshold`
   pins both thresholds one ulp below their masses.
+- PR #113 added a resonance ladder `z_r ± (w/mx) 4^k` to the two
+  pure-Python thermal averages, in
+  `thermal_cross_section_break_points`, and filtered it only to the open
+  interval `(2, 2 + 100/x)`, without the kernels' `MIN_THRESHOLD_PIECE`.
+  Review chose `KineticMixing(mx=200, mv=550, gvxx=3.4419490584757075,
+  eps=1e-3)`, whose ladder has a rung at `2.0000000000000004`; the generic
+  average at `x = 1` raised `TypeError` at `e_cm = 2 mx` where master
+  gave `3.0228041089539943e-6`, and the `VectorMediatorGeV` closure
+  returned `NaN`. The repair drops ladder points within the same 1e-9 of
+  threshold, and `test_break_points_stay_off_the_threshold` pins both
+  sites with widths chosen so that a rung lands one ulp above `z = 2`.

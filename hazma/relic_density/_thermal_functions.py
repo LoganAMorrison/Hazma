@@ -467,6 +467,14 @@ class _DarkMatterModel(Protocol):
 #: of its width. See `thermal_cross_section_break_points`.
 _RESONANCE_LADDER_RATIO = 4.0
 
+#: How far above the threshold ``z = 2`` the first break point must sit.
+#: The cross sections can be singular at ``z = 2`` itself, and the
+#: Gauss-Kronrod nodes of a sliver ``[2, 2 + eps]`` round onto it. On a
+#: piece this long the outermost 21-point Kronrod node lands 2.2e-12, about
+#: 4900 ulps, past threshold. The ``hazma._core`` kernels apply the same
+#: bound as ``thermal_window::MIN_THRESHOLD_PIECE``.
+_MIN_THRESHOLD_PIECE = 1e-9
+
 
 def thermal_cross_section_break_points(
     x: float, model: _DarkMatterModel
@@ -479,9 +487,10 @@ def thermal_cross_section_break_points(
     width ``w``, contributes the ladder ``z_r +/- g 4^k`` for
     ``k = 0, 1, ...``, where ``z_r = m / mx`` and ``g = w / mx``, up to the
     length of the integration interval. The peak itself is never a break
-    point. Only points inside the open interval from threshold to
-    `thermal_cross_section_upper_limit` are kept. A model that does not
-    define the method contributes none.
+    point. Only points more than ``_MIN_THRESHOLD_PIECE`` above threshold
+    and below `thermal_cross_section_upper_limit` are kept, so that no
+    quadrature node rounds onto ``z = 2``. A model that does not define the
+    method contributes none.
 
     Without break points near it, QUADPACK's error estimate misses the
     peak at isolated ``x``: for
@@ -524,7 +533,7 @@ def thermal_cross_section_break_points(
         while 0.0 < offset < z_max - z_min:
             points.update((z_res - offset, z_res + offset))
             offset *= _RESONANCE_LADDER_RATIO
-    return sorted(z for z in points if z_min < z < z_max)
+    return sorted(z for z in points if z_min + _MIN_THRESHOLD_PIECE < z < z_max)
 
 
 def thermal_cross_section_integrand(z: float, x: float, model) -> float:

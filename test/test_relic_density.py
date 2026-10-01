@@ -1,3 +1,4 @@
+import math
 import unittest
 import warnings
 from collections.abc import Callable, Iterator
@@ -17,6 +18,7 @@ from hazma.parameters import (
 )
 from hazma.relic_density import relic_density
 from hazma.relic_density._thermal_functions import (
+    _MIN_THRESHOLD_PIECE,
     thermal_cross_section,
     thermal_cross_section_integrand,
     thermal_cross_section_upper_limit,
@@ -229,6 +231,19 @@ class NoResonances(NoThermalCrossSection):
         return []
 
 
+class PinnedResonance(NoThermalCrossSection):
+    """A `NoThermalCrossSection` that hands the quadrature a given resonance."""
+
+    def __init__(
+        self, inner: HiggsPortal | KineticMixing, resonance: tuple[float, float]
+    ) -> None:
+        super().__init__(inner)
+        self._resonance = resonance
+
+    def annihilation_resonances(self) -> list[tuple[float, float]]:
+        return [self._resonance]
+
+
 class TestThermalQuadratureConverges(unittest.TestCase):
     r"""The two pure-Python ``thermal_cross_section`` sites resolve their integral.
 
@@ -396,6 +411,88 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         ladder = (z_res + sign * g * 2.0**k for sign in (-1, 1) for k in range(80))
         return (*ladder, 2.0 * z_res)
 
+    @staticmethod
+    def _width_with_a_rung_on_threshold(mass: float, width: float, mx: float) -> float:
+        """A width within a factor 4 of ``width`` whose ladder has a rung on ``z = 2``.
+
+        The sites' ladder runs ``z_r - (w/mx) 4^k`` and multiplying by 4 is
+        exact, so a rung lands one ulp above threshold when ``w/mx`` is the
+        gap ``z_r - nextafter(2)`` over a power of 4. Pinning the width
+        keeps the reproducer exact, where tuning a coupling would hang on
+        the last bits of a computed width, and ``VectorMediatorGeV``'s
+        varies from run to run.
+        """
+        threshold = 2.0
+        z_res = mass / mx
+        gap = z_res - math.nextafter(threshold, z_res)
+        pinned = gap / 4.0 ** round(math.log(gap / (width / mx), 4.0)) * mx
+        offset, rungs = pinned / mx, []
+        while offset < z_res:
+            rungs.append(z_res - offset)
+            offset *= 4.0
+        assert any(threshold < z < threshold + _MIN_THRESHOLD_PIECE for z in rungs), (
+            f"no rung of the ladder for width {pinned} lands just above z = 2, so "
+            "this reproducer pins nothing"
+        )
+        return pinned
+
+    def test_break_points_stay_off_the_threshold(self) -> None:
+        """Neither site keeps a break point a sliver above ``z = 2``.
+
+        The cross sections are singular at ``z = 2`` itself, where
+        ``KineticMixing`` raises `TypeError` and ``VectorMediatorGeV``
+        returns ``NaN``. A ladder rung one ulp above it leaves a piece
+        ``[2, 2 + 4e-16]`` whose Gauss-Kronrod nodes round onto threshold.
+        With each mediator's width pinned so that its ladder has such a
+        rung, both sites raise or return ``NaN`` at ``x = 1`` if they keep
+        it. Dropping every point within ``_MIN_THRESHOLD_PIECE`` of
+        threshold, they agree with the reference to 1.1e-11.
+        """
+        x = 1.0
+
+        with self.subTest(site="generic"):
+            inner = KineticMixing(mx=200.0, mv=550.0, gvxx=1.0, eps=1e-3)
+            pinned = self._width_with_a_rung_on_threshold(
+                inner.mv, inner.width_v, inner.mx
+            )
+            reference = self._converged(
+                thermal_cross_section_integrand,
+                x,
+                (x, NoThermalCrossSection(inner)),
+                points=self._resonance_features(inner.mv, inner.width_v, inner.mx),
+            )
+            assert_allclose(
+                thermal_cross_section(x, PinnedResonance(inner, (inner.mv, pinned))),
+                reference,
+                rtol=self.CONVERGED_RTOL,
+            )
+
+        with self.subTest(site="gev"):
+            model = VectorMediatorGeV(
+                mx=1e3,
+                mv=2.75e3,
+                gvxx=1e-2,
+                gvuu=1e-2,
+                gvdd=1e-2,
+                gvss=0.0,
+                gvee=0.0,
+                gvmumu=0.0,
+                gvveve=0.0,
+                gvvmvm=0.0,
+                gvvtvt=0.0,
+            )
+            ((mass, width),) = model.annihilation_resonances()
+            pinned = self._width_with_a_rung_on_threshold(mass, width, model.mx)
+            model.annihilation_resonances = lambda: [(mass, pinned)]
+            site, integrand = self._gev_site(model)
+            reference = self._converged(
+                integrand,
+                x,
+                (x,),
+                points=self._resonance_features(mass, width, model.mx),
+            )
+            assert_allclose(site(x), reference, rtol=self.CONVERGED_RTOL)
+
     def test_generic_fallback_resolves_the_mediator_resonance(self) -> None:
         """The fallback brackets the model's resonances with break points.
 
@@ -548,8 +645,9 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     def test_gev_vector_site_resolves_a_narrow_resonance(self) -> None:
         """The GeV closure brackets the mediator resonance too.
 
-        With every coupling at 1e-2, ``mx = 1`` GeV and ``mv = 2.75`` GeV,
-        the resonance is 1.4e-2 MeV wide. Integrated with nothing marking
+        With ``gvxx``, ``gvuu`` and ``gvdd`` at 1e-2, the other couplings
+        zero, ``mx = 1`` GeV and ``mv = 2.75`` GeV, the resonance is
+        1.4e-2 MeV wide. Integrated with nothing marking
         it, the closure's average at ``x = 1`` is 100% low; with the width
         ladder it agrees with the reference to 2e-11.
         """
