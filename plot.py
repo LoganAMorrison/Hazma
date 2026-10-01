@@ -1,0 +1,42 @@
+import json, numpy as np, matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+L=lambda n: json.load(open(f"/tmp/hz-plots/{n}.json"))
+a,b,r=L("after"),L("before"),L("ref")
+CB, CA, CR = "#c0392b", "#2471a3", "0.25"
+
+fig, ax = plt.subplots(2, 2, figsize=(11, 7), sharex="col", gridspec_kw=dict(height_ratios=[2.2, 1]))
+x=np.array(a["x"]); R=np.array(r["sv_narrow"]); B=np.array(b["sv_narrow"]); A=np.array(a["sv_narrow"])
+ax[0,0].loglog(x,R,color=CR,lw=3,alpha=.35,label="converged reference")
+ax[0,0].loglog(x,B,color=CB,lw=1,label=r"\texttt{master}")
+ax[0,0].loglog(x,A,color=CA,lw=1,ls="--",label="this PR")
+ax[0,0].set_ylabel(r"$\langle\sigma v\rangle$ [MeV$^{-2}$]")
+ax[0,0].set_title(r"$\langle\sigma v\rangle(x)$ at $m_S = 550$ MeV")
+ax[0,0].legend(frameon=False)
+ax[1,0].loglog(x,np.maximum(abs(B/R-1),1e-16),color=CB,lw=1)
+ax[1,0].loglog(x,np.maximum(abs(A/R-1),1e-16),color=CA,lw=1)
+ax[1,0].set_ylabel(r"$|\mathrm{rel.\ error}|$"); ax[1,0].set_xlabel(r"$x = m_\chi/T$")
+ax[1,0].set_ylim(1e-14,10)
+ms=np.array(a["ms"]); R=np.array(r["omega_narrow"]); B=np.array(b["omega_narrow"]); A=np.array(a["omega_narrow"])
+ax[0,1].semilogy(ms,R,color=CR,lw=3,alpha=.35); ax[0,1].semilogy(ms,B,"o-",color=CB,ms=3,lw=1); ax[0,1].semilogy(ms,A,"s--",color=CA,ms=2.5,lw=1)
+ax[0,1].set_ylabel(r"$\Omega h^2$ (semi-analytic)"); ax[0,1].set_title(r"Relic abundance across the resonance")
+ax[1,1].semilogy(ms,np.maximum(abs(B/R-1),1e-16),"o-",color=CB,ms=3,lw=1); ax[1,1].semilogy(ms,np.maximum(abs(A/R-1),1e-16),"s--",color=CA,ms=2.5,lw=1)
+ax[1,1].set_ylabel(r"$|\mathrm{rel.\ error}|$"); ax[1,1].set_xlabel(r"$m_S$ [MeV]"); ax[1,1].set_ylim(1e-14,1e3)
+for c in ax[:,1]: c.axvline(400,color="0.6",lw=.8,ls=":")
+fig.suptitle(r"Generic thermal average, narrow resonance: \texttt{HiggsPortal}$(m_\chi=200\,\mathrm{MeV}, g_{S\chi}=10^{-2}, \sin\theta=10^{-3})$")
+fig.tight_layout(); fig.savefig("/tmp/hz-plots/narrow.png",dpi=150)
+
+g1,g0=L("grid_after"),L("grid_before")
+fig, ax = plt.subplots(1, 2, figsize=(11, 4.4), sharey=True)
+norm=LogNorm(1e-12,1e-2)
+for c,g,t in ((ax[0],g0,r"\texttt{master}"),(ax[1],g1,"this PR")):
+    E=np.clip(np.array(g["err"]),1e-16,None)
+    im=c.pcolormesh(g["ms"],g["x"],E.T,norm=norm,cmap="magma_r",shading="nearest")
+    c.set_yscale("log"); c.set_xlabel(r"$m_S$ [MeV]"); c.axvline(400,color="0.5",lw=.8,ls=":")
+    m, e = f"{np.max(g['err']):.1e}".split("e")
+    c.set_title(t + rf": worst ${m}\times10^{{{int(e)}}}$")
+ax[0].set_ylabel(r"$x = m_\chi/T$")
+fig.colorbar(im,ax=ax,label=r"$|\langle\sigma v\rangle/\langle\sigma v\rangle_{\mathrm{ref}} - 1|$")
+fig.suptitle(r"Wide resonance, $\langle\sigma v\rangle$ error over $(m_S, x)$: \texttt{HiggsPortal}$(m_\chi=200\,\mathrm{MeV}, g_{S\chi}=1, \sin\theta=10^{-4})$")
+fig.savefig("/tmp/hz-plots/wide_grid.png",dpi=150,bbox_inches="tight")
