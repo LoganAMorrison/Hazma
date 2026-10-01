@@ -11,6 +11,7 @@ Welcome to Hazma's documentation!
    phase_space
    form_factors
    models
+   particle_physics
    limits
    utils
    parameters
