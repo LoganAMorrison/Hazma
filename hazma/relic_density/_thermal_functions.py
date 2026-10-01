@@ -500,7 +500,7 @@ def thermal_cross_section_break_points(
     ``w / mx`` down to 7.8e-7 and under 6e-7 for widths of a few percent,
     across ``x`` from 0.1 to 300. A general split at decay lengths
     ``2 + k/x`` does not substitute for it. Such a split fixes the 7 MeV
-    case but loses all of the narrow one at ``x = 7.41``, because it
+    case but loses 99.7% of the narrow one at ``x = 3.487``, because it
     does not know where the peak is.
 
     Parameters
