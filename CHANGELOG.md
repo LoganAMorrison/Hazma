@@ -46,12 +46,14 @@ user-facing change even when no signature did.
   `docs/followups/todo/thermal-kernels-miss-narrow-mediator-resonances.md`.
 
   Away from narrow resonances the semi-analytic `relic_density` barely
-  moves. At four mediator points and the 7 MeV one it moves by at most
-  1.2e-9, and at `VectorMediatorGeV(mx=5 GeV, mv=2 GeV)` by 6e-15, at
-  1.6543977e-4. The Boltzmann solve at its default `rtol=1e-5`,
-  `atol=1e-3` moves by up to 1.1e-3, because its adaptive steps amplify
-  ⟨σv⟩ shifts of 1e-8. At `rtol = atol = 1e-9` the same solve moves by at
-  most 2.6e-8. At narrow resonances the old values were wrong. The
+  moves. At the six `HiggsPortal` and `KineticMixing` points of
+  `test/test_relic_density.py`, the 7 MeV one among them, it moves by at
+  most 1.1e-9, and at `VectorMediatorGeV(mx=5 GeV, mv=2 GeV)` by 6e-15,
+  at 1.6543977e-4. At the same six points the Boltzmann solve at its
+  default `rtol=1e-5`, `atol=1e-3` moves by up to 2.0e-3, because its
+  adaptive steps amplify even the 1.1e-11 shift ⟨σv⟩ takes at
+  `HiggsPortal(mx=300, ms=200)`. At `rtol = atol = 1e-9` the same solve
+  moves by at most 3.2e-8. At narrow resonances the old values were wrong. The
   semi-analytic abundance falls from 2659 to 935 for the narrow
   `HiggsPortal` point and from 6.10 to 1.40 for the narrow
   `KineticMixing` one. For `VectorMediatorGeV(mx=1 GeV, mv=2.75 GeV)`
