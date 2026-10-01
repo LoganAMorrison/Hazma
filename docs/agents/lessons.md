@@ -332,3 +332,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   threshold, a resonance), not the first, and pin a point where every
   earlier contribution is zero — the "negligible tail" is then the whole
   answer (PR #112).
+- [break-point-a-sliver-from-a-singular-endpoint] Break points computed
+  from physics (thresholds, resonances) can land within a few ulps of an
+  endpoint where the integrand is singular, and the quadrature nodes of
+  that sliver round onto it. Merge a point closer than a resolvable
+  distance into the endpoint, and pin a mass one ulp from each threshold
+  (PR #112).

@@ -1483,3 +1483,17 @@ branch of the underlying kernel that "any" reaches.
   `rust/src/kernels/thermal_window.rs`, runs the limit 100 decay lengths
   past the last channel threshold with splits past every threshold, and
   the kernel tests pin the zero-coupling points.
+
+### break-point-a-sliver-from-a-singular-endpoint
+
+- PR #112's `rust/src/kernels/thermal_window.rs` made every channel
+  threshold a QUADPACK break point. Review evaluated
+  `KineticMixing(mx=np.nextafter(105.6583715, 0), mv=550, gvxx=1,
+  eps=0.01).thermal_cross_section(20)` against a rebuilt master: the
+  `μ μ` threshold sat at `z = 2 (1 + ε)`, the piece `[2, 2 + 4e-16]` had
+  its Gauss–Kronrod nodes round to `z = 2`, where `σ_all` is infinite and
+  the integrand `NaN`, and the PR returned `NaN` where master gave
+  `6.8209861455e-13` MeV⁻². The charged pion did the same. The repair
+  moves any feature within `MIN_THRESHOLD_PIECE = 1e-9` of `z = 2` onto
+  it, and `the_thermal_average_is_finite_with_a_channel_just_above_threshold`
+  pins both thresholds one ulp below their masses.

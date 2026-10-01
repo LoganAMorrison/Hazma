@@ -440,8 +440,9 @@ fn sigma_xx_to_all(
 ///
 /// As [`sigma_xx_to_v_to_pipi`], if the integrand's `σ_all` hits the
 /// `e_cm = 2 m_x` threshold. Unreachable in practice: that needs `z = 2`,
-/// which is the integration's *lower limit*, and Gauss–Kronrod evaluates
-/// only strictly inside each subinterval.
+/// which is the integration's *lower limit*, and
+/// [`crate::kernels::thermal_window::partition`] keeps every piece that
+/// starts there long enough that no Gauss–Kronrod node rounds onto it.
 #[allow(clippy::too_many_arguments)]
 pub fn thermal_cross_section(
     x: f64,
@@ -1029,6 +1030,76 @@ mod tests {
             (got / expected - 1.0).abs() < 1e-7,
             "entry point gave {got}, converged {expected}"
         );
+    }
+
+    /// The average stays finite with a channel opening a sliver above
+    /// threshold.
+    ///
+    /// With `m_x` one ulp below `m_μ` or `m_π`, that pair opens at
+    /// `z = 2 (1 + ε)`. As a break point it leaves a piece `[2, 2 + 4e-16]`
+    /// whose Gauss–Kronrod nodes round to `z = 2`, where `σ_all` is
+    /// infinite and the integrand `NaN`;
+    /// `crate::kernels::thermal_window::MIN_THRESHOLD_PIECE` moves it onto
+    /// threshold instead.
+    ///
+    /// The oracle is the same integrand through the same integrator,
+    /// taken twice as far past the last feature and split at decay lengths
+    /// `1/x` past every feature. It is held to 1e-7, 6.7x the entry
+    /// point's own `epsrel`; the entry point lands within 2.0e-13 of it.
+    #[test]
+    fn the_thermal_average_is_finite_with_a_channel_just_above_threshold() {
+        let (mv, x) = (550.0, 20.0);
+        for mass in [MMU, MPI] {
+            let mx = mass.next_down();
+            let got =
+                thermal_cross_section(x, mx, mv, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
+
+            let upper = 2.0 * mv / mx + 200.0 / x;
+            let mut edges: Vec<f64> = [2.0, mv / mx, (MPI0 + mv) / mx, 2.0 * mv / mx]
+                .into_iter()
+                .flat_map(|z| [0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0].map(|k| z + k / x))
+                .filter(|&z| z <= upper)
+                .collect();
+            edges.sort_by(f64::total_cmp);
+            edges.dedup();
+            let options = QuadOpts {
+                epsabs: 0.0,
+                epsrel: 1e-12,
+                limit: 500,
+                points: None,
+            };
+            let integral: f64 = edges
+                .windows(2)
+                .map(|window| {
+                    let mut integrand = |z: f64| {
+                        let sigma = sigma_xx_to_all(
+                            mx * z,
+                            mx,
+                            mv,
+                            GVXX,
+                            GVUU,
+                            GVDD,
+                            GVEE,
+                            GVMUMU,
+                            WIDTH_V,
+                        )
+                        .unwrap();
+                        sigma * (z * z) * ((z * z) - 4.0) * crate::special::bessel_k1(x * z)
+                    };
+                    quad(&mut integrand, window[0], window[1], &options)
+                        .expect("convergent options are valid options")
+                        .value
+                })
+                .sum();
+            let two_k2 = 2.0 * crate::special::bessel_kn(2, x);
+            let expected = x / (two_k2 * two_k2) * integral;
+
+            assert!(expected > 0.0, "m_x = {mx}: the oracle vanished");
+            assert!(
+                (got / expected - 1.0).abs() < 1e-7,
+                "m_x = {mx}: entry point gave {got}, converged {expected}"
+            );
+        }
     }
 
     /// The quadrature options are accepted at every `x` the entry point

@@ -74,6 +74,12 @@ Then re-derive the moved corpus positions and declare them as the next
 
 ## Resolution (measured)
 
+> **Historical.** This section records the repair as first shipped,
+> with all four sites integrating to `2 + 100/x`. "Review round 1"
+> below replaced the kernels' interval with one counted from their last
+> channel threshold and re-measured the corpus and the relic-density
+> pins; where the two disagree, that section's figures are current.
+
 **Why not `2 + 50/x`.** The docstring's tail bound, 1.4e-17 of the
 Bessel kernel, only holds for a cross section that grows by fewer than
 eight decades across the tail. At the corpus's scalar
@@ -88,10 +94,12 @@ The kernels' fixed floors had covered it.
 
 At `2 + 100/x` the Bessel kernel's tail is at most 3.0e-38 of its
 integral, measured at 30 digits for `x` from 0.01 to 300, so a cross
-section would have to grow by thirty decades to reach `epsrel`. All
-four sites share the limit through
+section would have to grow by thirty decades to reach `epsrel`. As
+first shipped, all four sites shared that limit through
 `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`,
-whose docstring carries the derivation.
+whose docstring carries the derivation. Only the two pure-Python sites
+still use it; the kernels count from their last channel threshold, as
+"Review round 1" describes.
 
 **Schemes compared.** Each was run with scipy at the kernels' settings
 (`epsrel = 1.49e-8`, `epsabs = 0`, `limit = 100`) against a converged
@@ -207,3 +215,31 @@ and `2 + 100/x` lands 1.3e-9 from the reference.
 **The Python sites.** They see only `annihilation_cross_sections`, so
 they cannot build the kernels' window and still drop the review cases.
 That is [its own follow-up](../todo/python-thermal-sites-cannot-see-channel-thresholds.md).
+
+## Review round 2
+
+The break points at every feature left a sliver when a channel opens
+just above `z = 2`. With `m_x` one ulp below the vector kernel's muon
+mass, 105.6583715 MeV, `KineticMixing(mx=m_x, mv=550, gvxx=1, eps=0.01)`
+puts a break point at `z = 2 (1 + ε)`, and the Gauss–Kronrod nodes of
+`[2, 2 + 4e-16]` round to `z = 2`. There `σ_all` is infinite and the
+integrand `NaN`, so at `x = 20` the average was `NaN`, where master
+gives `6.8209861455e-13` MeV⁻². The charged-pion threshold did the
+same.
+
+`thermal_window.rs` now moves any feature within `MIN_THRESHOLD_PIECE`,
+1e-9, of `z = 2` onto it. The outermost 21-point Kronrod node sits
+2.17e-3 of a piece's length inside it, so the shortest piece starting
+at threshold puts its first node about 4900 ulps past `z = 2`. The
+reproducer now gives `6.8209861434e-13`, 3.1e-10 from master, and the
+pion case `2.2091181288e-12`, 2.1e-13 from master. Across both kernels,
+the electron, muon and both pion thresholds, `m_x` from one ulp above
+to `1e-7` below each, and `x` from 0.01 to 1000, all 420 averages are
+finite.
+
+`vector_xs.rs`'s
+`the_thermal_average_is_finite_with_a_channel_just_above_threshold`
+pins both thresholds against a decay-length-split oracle, landing within
+2.0e-13 of it, and fails with `NaN` without the merge.
+`thermal_window.rs`'s `a_feature_just_above_threshold_moves_onto_it`
+pins the partition itself.
