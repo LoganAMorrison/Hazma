@@ -791,7 +791,7 @@ mod tests {
     use super::{
         BelowGrid, N_INTERP_PTS, PHOTON_GRID_LOG10_START, PhotonMode, PositronMode, RestFrameTable,
         ScalarPhotonModes, TableCache, cos_theta_min, fsr_photon_endpoint, logspace, photon_tables,
-        positron_tables, widest,
+        photon_tables_for, positron_tables, widest,
     };
     use crate::constants::legacy;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1011,12 +1011,18 @@ mod tests {
 
     #[test]
     fn photon_tables_are_memoized_and_hold_the_phase_04_kernels() {
-        let tables = photon_tables(550.0);
-        let again = photon_tables(550.0);
+        // Identity is asserted on a local cache: other tests call
+        // `photon_tables` at other masses on parallel threads, and any of
+        // them can evict the process-wide slot between two calls here.
+        let cache = TableCache::new();
+        let first = cache.get_or_build(550.0, photon_tables_for);
+        let again = cache.get_or_build(550.0, photon_tables_for);
         assert!(
-            std::sync::Arc::ptr_eq(&tables, &again),
+            std::sync::Arc::ptr_eq(&first, &again),
             "a second call rebuilt the photon tables"
         );
+
+        let tables = photon_tables(550.0);
 
         // Grid endpoints: `10**-1` MeV to the daughter energy `m/2`.
         assert_eq!(
