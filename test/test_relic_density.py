@@ -113,14 +113,20 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: abundance goes as 1/<sigma v>, by up to two orders of magnitude
     #: here.  The
     #: closed-resonance points are where the old quadrature missed most of
-    #: the integrand's mass: they fall 91.9% and 99.9%.
+    #: the integrand's mass: they fall 91.9% and 99.9%.  The
+    #: ``vector.closed_resonance`` pair was re-derived under roster entry
+    #: ``C7``, which scales the kernels' interval with ``1/x``: above
+    #: ``x = 200`` the fixed ``[2, 150]`` had QUADPACK miss the peak at
+    #: threshold and return <sigma v> up to 1.9e-4 high, so both
+    #: abundances rise by 2.65e-5 and 2.50e-5.  The other five move by at
+    #: most 2.1e-8.
     PINNED: ClassVar = {
         "scalar.open_resonance": (26.667787923392634, 34.42028079003851),
         "scalar.narrow_resonance": (6905.347000480099, 8282.819772041152),
         "scalar.closed_resonance": (9.359827513207474e-08, 9.849973690303772e-08),
         "vector.open_resonance": (6.142001344063203e-07, 6.408469699348235e-07),
         "vector.narrow_resonance": (0.3081076863117194, 0.3277204010101092),
-        "vector.closed_resonance": (5.6437976262658464e-09, 5.9113937835982655e-09),
+        "vector.closed_resonance": (5.643947300106501e-09, 5.911541688175546e-09),
     }
 
     #: Solver tolerances for the Boltzmann pins above.  *Not* the
@@ -138,9 +144,9 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: QUADPACK to a different accepted partition may land anywhere inside
     #: it.  Measured against `test/parity/thermal_reference.py` — scipy's
     #: QUADPACK on the same integrand at ``epsrel = 1e-12`` — the repaired
-    #: kernel is within 3.6e-9 at all 540 corpus positions it integrates,
-    #: but 1.49e-8 is the bound that has to hold off this platform.  1e-6
-    #: is ~6.7x that bound: still ~10,000x
+    #: kernel is within 1.8e-8 at all 540 corpus positions it integrates,
+    #: which is its ``epsrel`` rather than anything this platform
+    #: happens to give.  1e-6 is ~55x that: still ~10,000x
     #: tighter than the smallest shift ``B6`` itself produced (0.071%, at
     #: ``scalar.open_resonance``), so a real kernel regression cannot hide
     #: under it.
@@ -230,8 +236,8 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     ``epsabs`` would *not* pass — the assertion that makes this a
     regression test for the tolerance rather than a generic accuracy
     check.  Measured worst relative error at the default, over the grid
-    below: **0.726** for the generic fallback (``scalar.open`` at
-    ``x = 10``) and **3.8e-3** for the GeV vector site.
+    below: **0.835** for the generic fallback (``scalar.open`` at
+    ``x = 5``) and **1.4e-2** for the GeV vector site.
 
     The grid reaches past ``x = 25`` because both sites share an upper
     limit, `thermal_cross_section_upper_limit`, that must keep the
@@ -243,7 +249,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     #: measured figure — is what a pin here has to survive on a platform
     #: whose libm steers QUADPACK to a different accepted partition.
     #: 1e-6 is ~67x it, and the default ``epsabs`` misses it by up to
-    #: 0.73 on this grid, the worst case the class docstring quotes.
+    #: 0.84 on this grid, the worst case the class docstring quotes.
     CONVERGED_RTOL = 1e-6
 
     #: ``x = mx/T`` sample points, spanning freeze-out (``x ~ 20`` to ``30``)
@@ -271,7 +277,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         convergence.
         """
         prefactor = x / (2.0 * kn(2, x)) ** 2
-        decay = [2.0 + k / x for k in (0.0, 1.0, 4.0, 16.0, 50.0, 100.0)]
+        decay = [2.0 + k / x for k in (0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0)]
         edges = sorted(decay + [z for z in points if decay[0] < z < decay[-1]])
         value = sum(
             quad(
@@ -343,16 +349,42 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             f"against a budget of {self.CONVERGED_RTOL:.0e})"
         )
 
+    def test_generic_fallback_keeps_a_channel_far_above_threshold(self) -> None:
+        """The fallback's upper limit reaches a channel that opens late.
+
+        At ``HiggsPortal(mx=200, ms=550, stheta=1e-6)`` the ``S S`` channel
+        opens at ``z = 5.5``, fifteen-plus decades above the suppressed
+        channels, and at ``x = 12`` most of the average sits just past it.
+        `thermal_cross_section_upper_limit`'s ``2 + 100/x = 10.3`` keeps
+        it: the fallback lands 1.3e-9 from `_converged`.  A limit of
+        ``2 + 50/x = 6.2`` cuts through it and loses 5.1e-4, which
+        `CONVERGED_RTOL` rejects.
+        """
+        inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=1e-6)
+        x = 12.0
+        reference = self._converged(
+            thermal_cross_section_integrand,
+            x,
+            (x, NoThermalCrossSection(inner)),
+            points=(inner.ms / inner.mx, 2.0 * inner.ms / inner.mx),
+        )
+        assert_allclose(
+            thermal_cross_section(x, NoThermalCrossSection(inner)),
+            reference,
+            rtol=self.CONVERGED_RTOL,
+        )
+
     def test_generic_fallback_relic_density_matches_scalar_kernel(self) -> None:
         """The fallback's ``<sigma v>`` carries through to the scalar kernel's abundance.
 
         ``hazma._core``'s scalar kernel integrates the same cross sections
-        to ``max(50/x, 100)`` with its own QUADPACK port and break points,
+        with its own QUADPACK port, over an interval and break points built
+        from its channel thresholds,
         and like the fallback returns ``0.0`` above ``x = 300``, so the two
         must give the same semi-analytic relic density. The vector kernel
         holds its ``x = 300`` value above that cutoff instead, which is why
         it is not compared here. Measured agreement is 7.6e-8
-        (``scalar.open``) and 3e-14 (``scalar.closed``); the budget is
+        (``scalar.open``) and 7.7e-12 (``scalar.closed``); the budget is
         `CONVERGED_RTOL`. With the upper limit at ``50/x`` the fallback
         gave 27.19 and 4.2e-3 against the kernel's 26.67 and 9.4e-8.
         """

@@ -18,8 +18,8 @@
 //!   ⟨σv⟩(x) = x / (2 K₂(x))² · ∫₂^Z dz  σ_all(m_x z) z² (z² − 4) K₁(x z)
 //! ```
 //!
-//! with `Z = max(50/x, 100)` and QAGP break points at
-//! `[2, m_s/m_x, 2 m_s/m_x]`.
+//! with `Z` and the QAGP break points built from the channel thresholds
+//! and the resonance `m_s/m_x` by [`crate::kernels::thermal_window`].
 //!
 //! Every kernel returns exactly `0.0` below its own threshold, which the
 //! corpus compares at `atol = 0`.
@@ -92,6 +92,7 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
+use crate::kernels::thermal_window::partition;
 use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
 use crate::special::{bessel_k1, bessel_kn};
 
@@ -164,15 +165,12 @@ const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
 /// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
 ///
 /// A criterion that binds is only worth having if the integrator is
-/// allowed to reach it. At scipy's default limit of 50, 33 of the 540
-/// thermal positions the parity corpus pins exhaust the subdivision
-/// table and come back flagged; at 100 that falls to 16 and the worst
-/// error against `test/parity/thermal_reference.py` improves from
-/// 2.5e-8 to 3.6e-9, after which it plateaus — raising the limit
-/// further only lets the 16 subdivide deeper without moving their
-/// value. Those 16 are at the roundoff floor of the extrapolation
-/// table, not short of subdivisions, so 100 is where the accuracy is
-/// and 200 or 500 would only buy work.
+/// allowed to reach it. At scipy's default limit of 50, one of the 540
+/// thermal positions the parity corpus pins exhausts the subdivision
+/// table and comes back flagged; at 100 none do. The worst error against
+/// `test/parity/thermal_reference.py`'s converged integral is 1.8e-8 at
+/// both, so 100 is a limit at which every position converges with room
+/// for the break points `crate::kernels::thermal_window` adds.
 const THERMAL_LIMIT: usize = 100;
 
 /// `pow(x, 2.0)`, which is `x · x`.
@@ -913,9 +911,15 @@ fn sigma_xx_to_all(
 /// and the corpus pins both (`test/parity/cases.py`'s `_thermal_blocks`
 /// says so at length); unifying them would move published numbers.
 ///
-/// The upper limit is `max(50/x, 100)`, where the vector's floor is 150.
-/// The break points are the endpoint, the mediator resonance `z = m_s/m_x`
-/// and the `SS` threshold `z = 2 m_s/m_x`.
+/// The interval and break points come from
+/// [`crate::kernels::thermal_window`], as in the vector model: the limit
+/// runs 100 decay lengths past the last channel threshold, with break
+/// points at each threshold and at the resonance `z = m_s/m_x`. The `.pyx`
+/// integrated to `max(50/x, 100)` with break points at the resonance and
+/// the `SS` threshold only, and on that fixed interval QUADPACK misjudges
+/// the peak at threshold once `x` is large; departing from it moves
+/// published numbers, as roster entry `C7` in `test/parity/deltas.py`
+/// (`docs/followups/done/vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md`).
 ///
 /// [`THERMAL_EPSABS`] is zero, so the relative criterion binds; that
 /// constant carries why the inherited absolute default did not, and
@@ -950,15 +954,18 @@ pub fn thermal_cross_section(
     let two_k2 = 2.0 * bessel_kn(2, x);
     let prefactor = x / sq(two_k2);
 
-    // `max(50.0 / x, 100.0)`, in Python's evaluation order.
-    let floor = 50.0 / x;
-    let upper = if 100.0 > floor { 100.0 } else { floor };
-
-    // "points at which integrand may have trouble are: 1. endpoint;
-    // 2. when ss final state is accessible => z = 2 ms / mx;
-    // 3. when we hit mediator resonance => z = ms / mx"
-    let ratio = ms / mx;
-    let points = [2.0, ratio, 2.0 * ratio];
+    // Every `z` at which a channel of `sigma_xx_to_all` opens, each at its
+    // kernel's own threshold, and the mediator resonance. `S → γγ` opens
+    // with the pair itself.
+    let features = [
+        2.0 * ME / mx,
+        2.0 * MMU / mx,
+        2.0 * MPI0 / mx,
+        2.0 * MPI / mx,
+        2.0 * ms / mx,
+        ms / mx,
+    ];
+    let (upper, points) = partition(x, &features);
 
     let mut nonreal = false;
     let mut integrand = |z: f64| {
@@ -1003,6 +1010,7 @@ mod tests {
         sigma_xx_to_all, sigma_xx_to_s_to_ff, sigma_xx_to_s_to_gg, sigma_xx_to_s_to_pi0pi0,
         sigma_xx_to_s_to_pipi, sigma_xx_to_ss, sq, thermal_cross_section,
     };
+    use crate::quad::{QuadOpts, quad};
 
     /// A representative model point: the parity corpus's `open_resonance`
     /// `HiggsPortal(mx=100, ms=300, gsxx=1, stheta=1e-1)`, with the derived
@@ -1342,21 +1350,84 @@ mod tests {
         }
     }
 
-    /// The upper limit switches from the constant floor to `50/x` below
-    /// `x = 0.5`, and the scalar floor is 100 where the vector's is 150.
+    /// The thermal average keeps a channel that opens far above threshold.
     ///
-    /// Checked through the integral rather than by reading the constant:
-    /// at `x = 0.5` the two expressions coincide, so the value is
-    /// continuous there, while an integrand that is still non-negligible
-    /// at `z = 100` would make the *choice* of floor visible.
+    /// With `m_x = 200` and `m_s = 550` MeV the `S S` channel opens at
+    /// `z = 2 m_s / m_x = 5.5`, and it does not scale with the Standard
+    /// Model couplings, which the cases below shrink:
+    ///
+    /// - at `1e-6` the cross section jumps by fifteen decades across that
+    ///   threshold, and ending at `2 + 50/x` drops 1.6e-4 of the average
+    ///   at `x = 12`;
+    /// - at `0` nothing else is open, so at `x = 30` an upper limit of
+    ///   `2 + 100/x = 5.33` sits below the threshold and returns `0.0`;
+    /// - at `1e-20` the same limit keeps only the suppressed channels and
+    ///   returns the average 99.0% low.
+    ///
+    /// Each is why the limit runs from the last feature rather than from
+    /// threshold (`crate::kernels::thermal_window`).
+    ///
+    /// The oracle is the same integrand through the same integrator,
+    /// taken twice as far past the last feature and split at decay lengths
+    /// `1/x` past every feature, so that no piece's first Gauss–Kronrod
+    /// pass sees only the tail. It is held to 1e-7, 6.7x the entry point's
+    /// own `epsrel`; the entry point lands within 1.1e-11 of it in all
+    /// three cases.
     #[test]
-    fn the_upper_limit_is_continuous_where_the_branch_switches() {
-        let at = |x: f64| {
-            thermal_cross_section(x, MX, MS, GSXX, GSFF, GSGG, GSFF_PHOTON, LAM, WIDTH_S, VS)
-                .unwrap()
-        };
-        let left = at(0.5 * (1.0 - 1e-9));
-        let right = at(0.5 * (1.0 + 1e-9));
-        assert!((left / right - 1.0).abs() < 1e-6, "{left} vs {right}");
+    fn the_thermal_average_keeps_a_channel_far_above_threshold() {
+        let (mx, ms, width_s) = (200.0, 550.0, 7.0);
+        let ratio = ms / mx;
+        for (sm, x) in [(1e-6, 12.0), (0.0, 30.0), (1e-20, 30.0)] {
+            let (gsff, gsgg, gsff_photon) = (sm, 3.0 * sm, -0.8 * sm);
+            let got =
+                thermal_cross_section(x, mx, ms, GSXX, gsff, gsgg, gsff_photon, LAM, width_s, 0.0)
+                    .unwrap();
+
+            let upper = 2.0 * ratio + 200.0 / x;
+            let mut edges: Vec<f64> = [2.0, ratio, 2.0 * ratio]
+                .into_iter()
+                .flat_map(|z| [0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0].map(|k| z + k / x))
+                .filter(|&z| z <= upper)
+                .collect();
+            edges.sort_by(f64::total_cmp);
+            edges.dedup();
+            let options = QuadOpts {
+                epsabs: 0.0,
+                epsrel: 1e-12,
+                limit: 500,
+                points: None,
+            };
+            let integral: f64 = edges
+                .windows(2)
+                .map(|window| {
+                    let mut integrand = |z: f64| {
+                        let sigma = sigma_xx_to_all(
+                            mx * z,
+                            mx,
+                            ms,
+                            GSXX,
+                            gsff,
+                            gsgg,
+                            gsff_photon,
+                            LAM,
+                            width_s,
+                            0.0,
+                        )
+                        .unwrap();
+                        sigma * sq(z) * (sq(z) - 4.0) * crate::special::bessel_k1(x * z)
+                    };
+                    quad(&mut integrand, window[0], window[1], &options)
+                        .expect("convergent options are valid options")
+                        .value
+                })
+                .sum();
+            let expected = x / sq(2.0 * crate::special::bessel_kn(2, x)) * integral;
+
+            assert!(expected > 0.0, "couplings {sm}: the oracle vanished");
+            assert!(
+                (got / expected - 1.0).abs() < 1e-7,
+                "couplings {sm}, x = {x}: entry point gave {got}, converged {expected}"
+            );
+        }
     }
 }

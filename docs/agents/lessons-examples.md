@@ -1468,3 +1468,32 @@ branch of the underlying kernel that "any" reaches.
   `TestPhysics::test_a_nan_neutrino_energy_stays_nan` pin the scalar and
   array cases. The same idiom in `positron_pion.rs` predates the PR and is
   filed as `docs/followups/todo/positron-pion-clip-turns-nan-into-a-spectrum.md`.
+
+### integration-window-anchored-at-the-first-feature
+
+- PR #112 moved both mediator thermal kernels from a fixed `[2, 150]` to
+  `[2, 2 + 100/x]`, justified by the Bessel kernel's tail beyond the cut
+  being at most 3.0e-38 of its integral. Review rebuilt `origin/master`
+  and the PR and evaluated `HiggsPortal(mx=200, ms=550, gsxx=1,
+  stheta=0)` at `x = 30`: only `S S` is open, from `z = 5.5`, and
+  `2 + 100/x = 5.33` lies below it, so the PR returned `0.0` where master
+  and a split reference gave `2.566e-52` MeV⁻²; `stheta = 1e-20` came back
+  99.0% low. The bound was relative to the kernel alone and assumed the
+  cross section did not grow past the cut. The repair,
+  `rust/src/kernels/thermal_window.rs`, runs the limit 100 decay lengths
+  past the last channel threshold with splits past every threshold, and
+  the kernel tests pin the zero-coupling points.
+
+### break-point-a-sliver-from-a-singular-endpoint
+
+- PR #112's `rust/src/kernels/thermal_window.rs` made every channel
+  threshold a QUADPACK break point. Review evaluated
+  `KineticMixing(mx=np.nextafter(105.6583715, 0), mv=550, gvxx=1,
+  eps=0.01).thermal_cross_section(20)` against a rebuilt master: the
+  `μ μ` threshold sat at `z = 2 (1 + ε)`, the piece `[2, 2 + 4e-16]` had
+  its Gauss–Kronrod nodes round to `z = 2`, where `σ_all` is infinite and
+  the integrand `NaN`, and the PR returned `NaN` where master gave
+  `6.8209861455e-13` MeV⁻². The charged pion did the same. The repair
+  moves any feature within `MIN_THRESHOLD_PIECE = 1e-9` of `z = 2` onto
+  it, and `the_thermal_average_is_finite_with_a_channel_just_above_threshold`
+  pins both thresholds one ulp below their masses.

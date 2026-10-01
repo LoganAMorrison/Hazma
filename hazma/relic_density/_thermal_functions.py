@@ -419,13 +419,25 @@ def thermal_cross_section_upper_limit(x: float) -> float:
 
     The integral runs over ``z = sqrt(s) / m`` from threshold, ``z = 2``,
     and its kernel falls off as ``K1(x z) ~ exp(-x z)``. The limit
-    ``2 + 50 / x`` cuts it where the Bessel argument has run 50 past its
+    ``2 + 100 / x`` cuts it where the Bessel argument has run 100 past its
     threshold value ``2x``.
-    The tail that drops is at most 1.4e-17 of the kernel
-    ``z^2 (z^2 - 4) K1(x z)``'s full integral, measured at 40 digits for
+    The tail that drops is at most 3.0e-38 of the kernel
+    ``z^2 (z^2 - 4) K1(x z)``'s full integral, measured at 30 digits for
     ``x`` from 0.01 to 300, so a cross section would have to grow by
-    eight decades across the tail to reach ``quad``'s default
-    ``epsrel``.
+    thirty decades across the tail to reach ``quad``'s default
+    ``epsrel``. Half that interval is not enough: a channel that opens
+    above threshold can grow by fifteen decades, as ``S S`` does in a
+    `HiggsPortal` with ``stheta = 1e-4``, and a cut at ``2 + 50 / x``
+    loses 1.2e-7 of that model's value at ``x = 12.6``.
+
+    Counting from threshold assumes every channel that matters opens
+    within the window. One that opens past ``2 + 100 / x`` is dropped
+    whole: with ``stheta = 0`` that same model's average is ``0.0`` at
+    ``x = 30``. The Rust mediator kernels count from their last channel
+    threshold instead (``rust/src/kernels/thermal_window.rs``). The
+    generic sites see only ``annihilation_cross_sections``, so they
+    cannot; ``docs/followups/todo/python-thermal-sites-cannot-see-channel-thresholds.md``
+    tracks giving them the thresholds.
 
     Because the interval scales with the decay length ``1 / x``, the
     integrator's first nodes also land where the integrand is not
@@ -442,7 +454,7 @@ def thermal_cross_section_upper_limit(x: float) -> float:
     z_max: float
         Upper limit of the integral, in units of the dark matter mass.
     """
-    return 2.0 + 50.0 / x
+    return 2.0 + 100.0 / x
 
 
 def thermal_cross_section_integrand(z: float, x: float, model) -> float:

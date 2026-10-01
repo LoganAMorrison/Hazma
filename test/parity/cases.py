@@ -681,13 +681,16 @@ def _thermal_blocks(
     Anchors:
 
     * ``x = 20`` -- the conventional freeze-out value;
-    * ``x = 0.5`` -- where the integration upper bound switches from the
-      constant floor to ``50 / x``
+    * ``x = 0.5`` -- where the Cython's integration upper bound switched
+      from the constant floor to ``50 / x``
       (``max(50.0 / x, 100.0)`` at
       ``hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1412``;
-      the vector floor is 150
+      the vector floor was 150
       (``hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:657``),
-      giving ``x = 1/3``);
+      giving ``x = 1/3``). The kernels now build their interval from
+      ``1 / x`` and their channel thresholds at every ``x`` (roster entry
+      ``C7`` in `deltas`), so neither anchor marks a branch any more; the
+      captured grid keeps them;
     * ``x = 1/3`` -- the vector model's equivalent switch;
     * ``x = m_med / mx`` and ``2 m_med / mx`` -- the QAGP breakpoints,
       which are exactly where a breakpoint-handling difference shows;

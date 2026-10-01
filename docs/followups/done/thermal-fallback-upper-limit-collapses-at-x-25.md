@@ -26,7 +26,7 @@
 > 8.6e-9 of a reference split at every channel threshold, across `x`
 > from 1 to 300. The vector kernel inherits that
 > error; it is
-> [its own follow-up](../todo/vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md).
+> [its own follow-up](vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md).
 >
 > **What moved.** Above `x = 25` both sites returned zero. They were also
 > already truncating below it: at `x = 20` the `50/x` cut lost 19% of
