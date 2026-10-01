@@ -34,10 +34,11 @@
 //!   `z = 2 (1 + ε)`, and as its own break point it makes
 //!   `KineticMixing(mv=550)`'s average `NaN` at `x = 20`.
 //!
-//! The pure-Python sites do not see channel thresholds, so they run
-//! from `z = 2` instead: their upper limit is
-//! `hazma.relic_density._thermal_functions.thermal_cross_section_upper_limit`,
-//! `2 + 100/x`, whose docstring bounds the tail it drops.
+//! The pure-Python sites apply the same rule in
+//! `hazma.relic_density._thermal_functions.thermal_cross_section_partition`,
+//! fed from each model's `annihilation_thresholds()`, except that they
+//! bracket a resonance with a ladder of break points scaled by its width
+//! rather than splitting at the peak.
 
 /// How far past the last feature the integral runs, in decay lengths
 /// `1/x`. The Bessel kernel's tail beyond it is at most 3.0e-38 of its

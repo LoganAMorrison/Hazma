@@ -339,3 +339,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   distance into the endpoint at every site that builds break points, not
   only the one that surfaced it, and pin a point one ulp from each
   threshold (PR #112, PR #113).
+- [threshold-read-off-the-channel-label] A channel's threshold is where its
+  implemented cross section turns on, which need not be the sum of the masses
+  its name lists: an on-shell intermediate state opens it later. Derive the
+  threshold from the object that computes the cross section, and test it by
+  evaluating that cross section just below and just above, at couplings for
+  which the channel is not identically zero there (PR #116).

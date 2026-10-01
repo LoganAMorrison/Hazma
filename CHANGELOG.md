@@ -23,8 +23,47 @@ user-facing change even when no signature did.
   `VectorMediatorGeV` return their mediator. A model that relies on the
   generic thermal average, because it defines no `thermal_cross_section`
   of its own, should override it when it has an `s`-channel mediator.
+- **`TheoryAnn.annihilation_thresholds()`** maps each annihilation final
+  state to the center-of-mass energy, in MeV, at which it opens. The
+  default is empty. `ScalarMediator`, `VectorMediator` and
+  `VectorMediatorGeV` list every channel of
+  `annihilation_cross_section_funcs`. A model that relies on the generic
+  thermal average should override it when a channel opens above the dark
+  matter pair threshold, such as annihilation into two mediators.
 
 ### Changed
+
+- **The pure-Python thermal averages now integrate past the last channel
+  threshold.** The generic fallback in `hazma.relic_density` and
+  `VectorMediatorGeV.relic_density` integrated ⟨σv⟩ over
+  `z = sqrt(s)/mx` from 2 to `2 + 100/x`, which drops a channel that
+  opens beyond that window. For `HiggsPortal(mx=200, ms=550, gsxx=1)`,
+  whose only open channel at `stheta = 0` is `S S` at `z = 5.5`, ⟨σv⟩ was
+  `0.0` at `x = 30`; at `stheta = 1e-20` it was 99.0% low there and a
+  factor 21.6 low at `x = 30.5`. Both sites now take each model's
+  `annihilation_thresholds()` and `annihilation_resonances()` and follow
+  the rule of the `hazma._core` kernels: the integral runs 100 decay
+  lengths `1/x` past the last threshold or resonance, with break points
+  at each threshold and at 1, 4, 16 and 50 decay lengths past it. Against
+  the parity suite's converged reference, that `HiggsPortal` is now
+  within 3.5e-9 for `x` from 0.1 to 300 at `stheta` of 0, 1e-20 and 1e-4.
+
+  Elsewhere the values barely move. At the six `HiggsPortal` and
+  `KineticMixing` points of `test/test_relic_density.py`, and at the
+  narrow `HiggsPortal(mx=200, ms=550, gsxx=1e-2, stheta=1e-3)`, ⟨σv⟩
+  moves by at most 6.3e-8 for `x` from 0.1 to 300 and the semi-analytic
+  abundance by at most 9.6e-9. The abundance of the `stheta = 0` and
+  `1e-20` model moves by 2.9e-10, because freeze-out lies where the old
+  window still reached `S S`. `VectorMediatorGeV.relic_density`'s ⟨σv⟩
+  moves by at most 8.2e-10 at `mx = 5 GeV`, `mv = 2 GeV`, for a fixed
+  mediator width. A model that defines neither hook keeps the window
+  `[2, 2 + 100/x]` and gains only the splits past `z = 2`. Those move its
+  ⟨σv⟩ by up to 1.4e-4, and its largest moves are corrections: with both
+  hooks hidden, the `HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)`
+  average's worst error falls from 2.6e-5 to 8.3e-8. The `ScalarMediator` and
+  `VectorMediator` families define their own `thermal_cross_section` and
+  do not move. Details:
+  `docs/followups/done/python-thermal-sites-cannot-see-channel-thresholds.md`.
 
 - **The pure-Python thermal averages now bracket mediator resonances
   with quadrature break points.** The generic fallback in
@@ -287,10 +326,8 @@ user-facing change even when no signature did.
   average and `VectorMediatorGeV.relic_density` cannot see channel
   thresholds and move from `2 + 50/x` to `2 + 100/x`; at
   `HiggsPortal(mx=200, ms=550, stheta=1e-4)` the old cut lost 1.2e-7 of
-  ⟨σv⟩ near `x = 12`. They still drop a channel that opens past that
-  window, as
-  [a follow-up](docs/followups/todo/python-thermal-sites-cannot-see-channel-thresholds.md)
-  records.
+  ⟨σv⟩ near `x = 12`. The entry on channel thresholds above extends
+  their window past the last channel that opens.
 
   - **Vector kernel.** At `KineticMixing(mx=300, mv=200, gvxx=1,
     eps=1e-2)` ⟨σv⟩ falls by 1.1e-4 at `x = 210`, 1.8e-4 at `x = 287`,

@@ -1,5 +1,6 @@
 import os
-from typing import Protocol, overload
+from collections.abc import Iterable
+from typing import overload
 
 import numpy as np
 from scipy.special import kn, k1
@@ -413,58 +414,20 @@ def weq(
     return np.log(_neq / s) if _neq > 0.0 else -np.inf
 
 
-def thermal_cross_section_upper_limit(x: float) -> float:
-    """
-    Compute the upper limit of the thermal average's integral over z.
+#: How far past the last feature the integral over ``z`` runs, in decay
+#: lengths ``1/x``. See `thermal_cross_section_partition`. The
+#: ``hazma._core`` kernels use the same value as
+#: ``thermal_window::DECAY_LENGTHS_PAST_LAST``.
+_DECAY_LENGTHS_PAST_LAST = 100.0
 
-    The integral runs over ``z = sqrt(s) / m`` from threshold, ``z = 2``,
-    and its kernel falls off as ``K1(x z) ~ exp(-x z)``. The limit
-    ``2 + 100 / x`` cuts it where the Bessel argument has run 100 past its
-    threshold value ``2x``.
-    The tail that drops is at most 3.0e-38 of the kernel
-    ``z^2 (z^2 - 4) K1(x z)``'s full integral, measured at 30 digits for
-    ``x`` from 0.01 to 300, so a cross section would have to grow by
-    thirty decades across the tail to reach ``quad``'s default
-    ``epsrel``. Half that interval is not enough: a channel that opens
-    above threshold can grow by fifteen decades, as ``S S`` does in a
-    `HiggsPortal` with ``stheta = 1e-4``, and a cut at ``2 + 50 / x``
-    loses 1.2e-7 of that model's value at ``x = 12.6``.
-
-    Counting from threshold assumes every channel that matters opens
-    within the window. One that opens past ``2 + 100 / x`` is dropped
-    whole: with ``stheta = 0`` that same model's average is ``0.0`` at
-    ``x = 30``. The Rust mediator kernels count from their last channel
-    threshold instead (``rust/src/kernels/thermal_window.rs``). The
-    generic sites see only ``annihilation_cross_sections``, so they
-    cannot; ``docs/followups/todo/python-thermal-sites-cannot-see-channel-thresholds.md``
-    tracks giving them the thresholds.
-
-    Because the interval scales with the decay length ``1 / x``, the
-    integrator's first nodes also land where the integrand is not
-    negligible. A fixed cut such as ``[2, 150]`` puts them in the tail at
-    large ``x`` and loses 1e-4 of the value at ``x = 300``.
-
-    Parameters
-    ----------
-    x: float
-        Mass of the dark matter divided by its temperature.
-
-    Returns
-    -------
-    z_max: float
-        Upper limit of the integral, in units of the dark matter mass.
-    """
-    return 2.0 + 100.0 / x
-
-
-class _DarkMatterModel(Protocol):
-    """Any model with a dark matter mass ``mx`` in MeV."""
-
-    mx: float
-
+#: Break points past each channel opening, in decay lengths ``1/x``. The
+#: piece after the last starts where the Boltzmann weight has fallen by
+#: ``e^-50``. The ``hazma._core`` kernels use the same values as
+#: ``thermal_window::SPLITS``.
+_SPLITS = (1.0, 4.0, 16.0, 50.0)
 
 #: Ratio between successive break points bracketing a resonance, in units
-#: of its width. See `thermal_cross_section_break_points`.
+#: of its width. See `thermal_cross_section_partition`.
 _RESONANCE_LADDER_RATIO = 4.0
 
 #: How far above the threshold ``z = 2`` the first break point must sit.
@@ -476,64 +439,103 @@ _RESONANCE_LADDER_RATIO = 4.0
 _MIN_THRESHOLD_PIECE = 1e-9
 
 
-def thermal_cross_section_break_points(
-    x: float, model: _DarkMatterModel
-) -> list[float]:
+def thermal_cross_section_partition(
+    x: float,
+    mx: float,
+    thresholds: Iterable[float],
+    resonances: Iterable[tuple[float, float]],
+) -> tuple[float, list[float]]:
     """
-    Compute the break points of the thermal average's integral over z.
+    Compute the upper limit and break points of the thermal average's integral.
 
-    Each of the model's
-    `hazma.theory.TheoryAnn.annihilation_resonances`, of mass ``m`` and
-    width ``w``, contributes the ladder ``z_r +/- g 4^k`` for
-    ``k = 0, 1, ...``, where ``z_r = m / mx`` and ``g = w / mx``, up to the
-    length of the integration interval. The peak itself is never a break
-    point. Only points more than ``_MIN_THRESHOLD_PIECE`` above threshold
-    and below `thermal_cross_section_upper_limit` are kept, so that no
-    quadrature node rounds onto ``z = 2``. A model that does not define the
-    method contributes none.
+    The integral runs over ``z = sqrt(s) / mx`` from the pair threshold
+    ``z = 2``, and its Boltzmann kernel ``K1(x z) ~ exp(-x z)`` confines
+    each channel's contribution to a few decay lengths ``1/x`` past the
+    ``z`` at which it opens. The partition is therefore built from the
+    *features* of the cross section: the threshold ``z = 2``, each channel
+    threshold, and each resonance. It follows
+    ``rust/src/kernels/thermal_window.rs``, the rule the ``hazma._core``
+    mediator kernels use, except at resonances.
 
-    Without break points near it, QUADPACK's error estimate misses the
-    peak at isolated ``x``: for
-    ``HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)``, whose resonance
-    is 7 MeV wide, the average came out 4.0e-4 low at ``x = 0.891``
-    while ``x = 0.89`` is good to 6e-11. Breaking only *at* the peak, as
-    the ``hazma._core`` kernels do, fixes that case but fails for narrow
-    resonances. It leaves the peak on a subinterval's endpoint, where no
-    Gauss-Kronrod node samples it. With ``gsxx=1e-2, stheta=1e-3`` the
-    width is 7e-4 MeV, and the average then loses 13% at ``x = 1`` and
-    all of it at ``x = 20``.
-    The ladder puts the peak inside a subinterval two widths across, and
-    each rung outward sees a tail that changes by a bounded factor.
-    Against independently split references integrated to
-    ``epsrel = 1e-12``, a ratio of 4 holds the error under 1.5e-6 for
-    ``w / mx`` down to 7.8e-7 and under 6e-7 for widths of a few percent,
-    across ``x`` from 0.1 to 300. A general split at decay lengths
-    ``2 + k/x`` does not substitute for it. Such a split fixes the 7 MeV
-    case but loses 99.7% of the narrow one at ``x = 3.487``, because it
-    does not know where the peak is.
+    - **The upper limit** is ``_DECAY_LENGTHS_PAST_LAST`` decay lengths
+      past the last feature. The tail beyond it is at most 3.0e-38 of the
+      kernel ``z^2 (z^2 - 4) K1(x z)``'s integral from that feature,
+      measured at 30 digits for ``x`` from 0.01 to 300. Counting from
+      ``z = 2`` alone drops a channel that opens past the window: the
+      ``S S`` channel of ``HiggsPortal(mx=200, ms=550, gsxx=1)`` opens at
+      ``z = 5.5``, and at ``x = 30`` a limit of ``2 + 100/x`` returns
+      ``0.0`` for ``stheta = 0`` and loses 99.0% for ``stheta = 1e-20``.
+      Half that many decay lengths is not enough either: at
+      ``stheta = 1e-4`` the ``S S`` channel sits fifteen decades above the
+      suppressed channels, and a cut 50 decay lengths past threshold loses
+      1.2e-7 at ``x = 12.6``.
+    - **Each channel opening**, and ``_SPLITS`` decay lengths past it, is a
+      break point. A piece many decay lengths long whose integrand sits
+      within ``1/x`` of its left end is where QUADPACK's first
+      Gauss-Kronrod nodes all land in the tail and its error estimate
+      misses the peak.
+    - **Each resonance**, of mass ``m`` and width ``w``, contributes the
+      ladder ``z_r +/- g 4^k`` for ``k = 0, 1, ...``, where
+      ``z_r = m / mx`` and ``g = w / mx``, up to the length of the
+      interval. The peak itself is never a break point: there it would sit
+      on a subinterval's endpoint, where no Gauss-Kronrod node samples it.
+      For ``HiggsPortal(mx=200, ms=550, gsxx=1e-2, stheta=1e-3)``, whose
+      resonance is 7e-4 MeV wide, a break point at the peak on top of the
+      splits above, as the ``hazma._core`` kernels place it, loses 87% of
+      the average at ``x = 2`` and 99.9% at ``x = 3.487``. The splits
+      alone do not know where the peak is, and lose 99.7% at
+      ``x = 3.487`` and 99.95% at ``x = 5.818``. With the ladder, the
+      average is within 1.2e-11 of an independently split reference
+      integrated to ``epsrel = 1e-12``, on 80 points of ``x`` from 0.1 to
+      300; it is within 8e-11 for ``KineticMixing(mx=200, mv=550,
+      gvxx=1e-2, eps=1e-3)`` and 5.6e-9 for ``HiggsPortal(mx=100, ms=300,
+      gsxx=1, stheta=0.1)``, whose width is 5% of ``mx``.
+
+    A threshold below ``z = 2``, or within ``_MIN_THRESHOLD_PIECE`` above
+    it, is moved onto it, and only break points more than
+    ``_MIN_THRESHOLD_PIECE`` above threshold and below the upper limit are
+    kept, so that no quadrature node rounds onto ``z = 2``. With no
+    thresholds and no resonances the integral runs over
+    ``[2, 2 + 100/x]``, split at decay lengths past ``z = 2``. That
+    suffices for a cross section with no peak whose channels all open
+    within the window, and drops any channel that opens past it.
 
     Parameters
     ----------
     x: float
         Mass of the dark matter divided by its temperature.
-    model: dark matter model
-        Dark matter model with a mass ``mx`` in MeV.
+    mx: float
+        Mass of the dark matter in MeV.
+    thresholds: iterable of float
+        Center-of-mass energies, in MeV, at which the annihilation channels
+        open.
+    resonances: iterable of (float, float)
+        ``(mass, width)`` of each resonance, both in MeV. A resonance with
+        zero width contributes no ladder.
 
     Returns
     -------
+    z_max: float
+        Upper limit of the integral, in units of the dark matter mass.
     points: list of float
         Sorted, distinct break points in units of the dark matter mass.
     """
-    resonances = getattr(model, "annihilation_resonances", list)()
-    z_min, z_max = 2.0, thermal_cross_section_upper_limit(x)
-    points = set()
-    for mass, width in resonances:
-        z_res = mass / model.mx
-        offset = width / model.mx
+    z_min = 2.0
+    openings = {z_min}
+    for e_cm in thresholds:
+        z = e_cm / mx
+        openings.add(z if z >= z_min + _MIN_THRESHOLD_PIECE else z_min)
+    peaks = [(mass / mx, width / mx) for mass, width in resonances]
+    last = max(openings | {z_res for z_res, _ in peaks})
+    z_max = last + _DECAY_LENGTHS_PAST_LAST / x
+
+    points = {z + k / x for z in openings for k in (0.0, *_SPLITS)}
+    for z_res, width in peaks:
+        offset = width
         while 0.0 < offset < z_max - z_min:
             points.update((z_res - offset, z_res + offset))
             offset *= _RESONANCE_LADDER_RATIO
-    return sorted(z for z in points if z_min + _MIN_THRESHOLD_PIECE < z < z_max)
+    return z_max, sorted(z for z in points if z_min + _MIN_THRESHOLD_PIECE < z < z_max)
 
 
 def thermal_cross_section_integrand(z: float, x: float, model) -> float:
@@ -572,7 +574,12 @@ def thermal_cross_section(x: float, model) -> float:
         Mass of the dark matter divided by its temperature.
     model: dark matter model
         Dark matter model, i.e. `ScalarMediator`, `VectorMediator`
-        or any model with a dark matter particle.
+        or any model with a dark matter particle. A model without its own
+        ``thermal_cross_section`` is integrated over a partition built
+        from its ``annihilation_thresholds()`` and
+        ``annihilation_resonances()``; see
+        `thermal_cross_section_partition` for what is lost when it does
+        not define them.
 
     Returns
     -------
@@ -606,13 +613,21 @@ def thermal_cross_section(x: float, model) -> float:
     #
     # `limit` keeps scipy's default 50 subdivisions free for refinement on
     # top of the intervals the break points already cut.
-    points = thermal_cross_section_break_points(x, model)
+    #
+    # A model need not derive from `hazma.theory.TheoryAnn`, so one that
+    # lacks the threshold or resonance hook contributes no features.
+    z_max, points = thermal_cross_section_partition(
+        x,
+        model.mx,
+        getattr(model, "annihilation_thresholds", dict)().values(),
+        getattr(model, "annihilation_resonances", list)(),
+    )
     return (
         pf
         * quad(
             thermal_cross_section_integrand,
             2.0,
-            thermal_cross_section_upper_limit(x),
+            z_max,
             args=(x, model),
             points=[2.0, *points],
             epsabs=0.0,

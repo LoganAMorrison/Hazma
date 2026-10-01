@@ -964,6 +964,52 @@ class VectorMediatorGeV(TheoryAnn):
         """
         return [(self.mv, self.width_v())]
 
+    def annihilation_thresholds(self) -> dict[str, float]:
+        r"""
+        Lists the energy at which each annihilation channel opens.
+
+        Hadronic thresholds sum the final-state masses of the form factor
+        that computes the channel's cross section. The ``pi0 pi0 gamma``
+        cross section is that of an on-shell ``pi0 omega`` pair times the
+        ``omega -> pi0 gamma`` branching fraction, so it opens at
+        ``m_pi0 + m_omega`` rather than at ``2 m_pi0``.
+
+        Returns
+        -------
+        thresholds : dict(str, float)
+            Center-of-mass energy in MeV at which each final state opens.
+        """
+        form_factors = {
+            "pi pi": self._ff_pi_pi,
+            "k0 k0": self._ff_k0_k0,
+            "k k": self._ff_k_k,
+            "pi0 gamma": self._ff_pi0_gamma,
+            "pi0 pi0 gamma": self._ff_pi0_omega,
+            "eta gamma": self._ff_eta_gamma,
+            "pi0 phi": self._ff_pi0_phi,
+            "eta phi": self._ff_eta_phi,
+            "eta omega": self._ff_eta_omega,
+            "pi pi pi0": self._ff_pi_pi_pi0,
+            "pi pi eta": self._ff_pi_pi_eta,
+            "pi pi etap": self._ff_pi_pi_etap,
+            "pi pi omega": self._ff_pi_pi_omega,
+            "pi0 pi0 omega": self._ff_pi0_pi0_omega,
+            "pi0 k0 k0": self._ff_pi0_k0_k0,
+            "pi0 k k": self._ff_pi0_k_k,
+            "pi k k0": self._ff_pi_k_k0,
+            "pi pi pi pi": self._ff_pi_pi_pi_pi,
+            "pi pi pi0 pi0": self._ff_pi_pi_pi0_pi0,
+        }
+        return {
+            "e e": 2.0 * _ME,
+            "mu mu": 2.0 * _MMU,
+            "ve ve": 0.0,
+            "vt vt": 0.0,
+            "vm vm": 0.0,
+            "v v": 2.0 * self.mv,
+            **{fs: sum(ff.fsp_masses) for fs, ff in form_factors.items()},
+        }
+
     # ========================================================================
     # ---- Spectra -----------------------------------------------------------
     # ========================================================================

@@ -2,7 +2,7 @@
 
 - **Added:** 2026-09-29
 - **Source:** bracketing the resonance in the pure-Python thermal
-  averages (`thermal_cross_section_break_points`)
+  averages (now `thermal_cross_section_partition`)
 - **Scope:** cross-cutting
 - **Status:** open
 - **Triggers / blockers:** none. It moves parity-pinned values, so it
@@ -29,8 +29,8 @@ KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)   6.3e-6  -1.0     -1.0     -
 The pure-Python sites used to share the endpoint placement's failure.
 They now bracket each resonance with the ladder
 `z_r ± (Γ/m_x) 4^k` from
-`hazma.relic_density._thermal_functions.thermal_cross_section_break_points`,
-which holds both rows above to 1.5e-6 or better. Wide resonances of a
+`hazma.relic_density._thermal_functions.thermal_cross_section_partition`,
+which holds both rows above to 8e-11 or better. Wide resonances of a
 few percent are unaffected either way.
 
 ## What
@@ -52,7 +52,7 @@ the next `C<n>` in `test/parity/deltas.py`, with a `CHANGELOG.md` entry.
 - `rust/src/kernels/vector_xs.rs` — the same two.
 - `test/parity/thermal_reference.py::thermal_cross_section` — the
   reference's `points`.
-- `hazma/relic_density/_thermal_functions.py::thermal_cross_section_break_points`
+- `hazma/relic_density/_thermal_functions.py::thermal_cross_section_partition`
   — the Python ladder and the measurements behind its ratio.
 
 ## Risks / open questions
