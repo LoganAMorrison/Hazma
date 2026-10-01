@@ -157,6 +157,17 @@ class VectorMediator(
         self._gvmumu = gvmumu
         self.compute_width_v()
 
+    def annihilation_resonances(self) -> list[tuple[float, float]]:
+        """
+        List the vector mediator's resonance.
+
+        Returns
+        -------
+        resonances : list(tuple(float, float))
+            ``[(mv, width_v)]`` in MeV.
+        """
+        return [(self.mv, self.width_v)]
+
     def compute_width_v(self) -> None:
         """Recomputes the scalar's total width."""
         self.width_v = self.partial_widths()["total"]

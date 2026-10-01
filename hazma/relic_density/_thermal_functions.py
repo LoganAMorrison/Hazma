@@ -1,5 +1,5 @@
 import os
-from typing import overload
+from typing import Protocol, overload
 
 import numpy as np
 from scipy.special import kn, k1
@@ -457,6 +457,85 @@ def thermal_cross_section_upper_limit(x: float) -> float:
     return 2.0 + 100.0 / x
 
 
+class _DarkMatterModel(Protocol):
+    """Any model with a dark matter mass ``mx`` in MeV."""
+
+    mx: float
+
+
+#: Ratio between successive break points bracketing a resonance, in units
+#: of its width. See `thermal_cross_section_break_points`.
+_RESONANCE_LADDER_RATIO = 4.0
+
+#: How far above the threshold ``z = 2`` the first break point must sit.
+#: The cross sections can be singular at ``z = 2`` itself, and the
+#: Gauss-Kronrod nodes of a sliver ``[2, 2 + eps]`` round onto it. On a
+#: piece this long the outermost 21-point Kronrod node lands 2.2e-12, about
+#: 4900 ulps, past threshold. The ``hazma._core`` kernels apply the same
+#: bound as ``thermal_window::MIN_THRESHOLD_PIECE``.
+_MIN_THRESHOLD_PIECE = 1e-9
+
+
+def thermal_cross_section_break_points(
+    x: float, model: _DarkMatterModel
+) -> list[float]:
+    """
+    Compute the break points of the thermal average's integral over z.
+
+    Each of the model's
+    `hazma.theory.TheoryAnn.annihilation_resonances`, of mass ``m`` and
+    width ``w``, contributes the ladder ``z_r +/- g 4^k`` for
+    ``k = 0, 1, ...``, where ``z_r = m / mx`` and ``g = w / mx``, up to the
+    length of the integration interval. The peak itself is never a break
+    point. Only points more than ``_MIN_THRESHOLD_PIECE`` above threshold
+    and below `thermal_cross_section_upper_limit` are kept, so that no
+    quadrature node rounds onto ``z = 2``. A model that does not define the
+    method contributes none.
+
+    Without break points near it, QUADPACK's error estimate misses the
+    peak at isolated ``x``: for
+    ``HiggsPortal(mx=200, ms=550, gsxx=1, stheta=1e-4)``, whose resonance
+    is 7 MeV wide, the average came out 4.0e-4 low at ``x = 0.891``
+    while ``x = 0.89`` is good to 6e-11. Breaking only *at* the peak, as
+    the ``hazma._core`` kernels do, fixes that case but fails for narrow
+    resonances. It leaves the peak on a subinterval's endpoint, where no
+    Gauss-Kronrod node samples it. With ``gsxx=1e-2, stheta=1e-3`` the
+    width is 7e-4 MeV, and the average then loses 13% at ``x = 1`` and
+    all of it at ``x = 20``.
+    The ladder puts the peak inside a subinterval two widths across, and
+    each rung outward sees a tail that changes by a bounded factor.
+    Against independently split references integrated to
+    ``epsrel = 1e-12``, a ratio of 4 holds the error under 1.5e-6 for
+    ``w / mx`` down to 7.8e-7 and under 6e-7 for widths of a few percent,
+    across ``x`` from 0.1 to 300. A general split at decay lengths
+    ``2 + k/x`` does not substitute for it. Such a split fixes the 7 MeV
+    case but loses 99.7% of the narrow one at ``x = 3.487``, because it
+    does not know where the peak is.
+
+    Parameters
+    ----------
+    x: float
+        Mass of the dark matter divided by its temperature.
+    model: dark matter model
+        Dark matter model with a mass ``mx`` in MeV.
+
+    Returns
+    -------
+    points: list of float
+        Sorted, distinct break points in units of the dark matter mass.
+    """
+    resonances = getattr(model, "annihilation_resonances", list)()
+    z_min, z_max = 2.0, thermal_cross_section_upper_limit(x)
+    points = set()
+    for mass, width in resonances:
+        z_res = mass / model.mx
+        offset = width / model.mx
+        while 0.0 < offset < z_max - z_min:
+            points.update((z_res - offset, z_res + offset))
+            offset *= _RESONANCE_LADDER_RATIO
+    return sorted(z for z in points if z_min + _MIN_THRESHOLD_PIECE < z < z_max)
+
+
 def thermal_cross_section_integrand(z: float, x: float, model) -> float:
     """
     Compute the integrand of the thermally average cross section for the dark
@@ -524,6 +603,10 @@ def thermal_cross_section(x: float, model) -> float:
     # Gauss-Kronrod pass clears it and the initial partition comes back
     # unrefined. Measured on the mediator kernels that share this defect,
     # that costs up to 100% of the value across the freeze-out region.
+    #
+    # `limit` keeps scipy's default 50 subdivisions free for refinement on
+    # top of the intervals the break points already cut.
+    points = thermal_cross_section_break_points(x, model)
     return (
         pf
         * quad(
@@ -531,7 +614,8 @@ def thermal_cross_section(x: float, model) -> float:
             2.0,
             thermal_cross_section_upper_limit(x),
             args=(x, model),
-            points=[2.0],
+            points=[2.0, *points],
             epsabs=0.0,
+            limit=50 + len(points),
         )[0]
     )

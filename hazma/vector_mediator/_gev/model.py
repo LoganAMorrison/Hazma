@@ -953,6 +953,17 @@ class VectorMediatorGeV(TheoryAnn):
             "pi pi pi0 pi0",
         ]
 
+    def annihilation_resonances(self) -> list[tuple[float, float]]:
+        r"""
+        Lists the vector mediator's resonance.
+
+        Returns
+        -------
+        resonances : list(tuple(float, float))
+            ``[(mv, width_v())]`` in MeV.
+        """
+        return [(self.mv, self.width_v())]
+
     # ========================================================================
     # ---- Spectra -----------------------------------------------------------
     # ========================================================================
