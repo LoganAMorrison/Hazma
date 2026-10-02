@@ -624,12 +624,13 @@ class TestLiveIntegrandShapes:
 
         return f
 
-    #: The subdivision limit both kernels pass, above `quad`'s default of
-    #: 50 because their `epsabs` is zero and a criterion that binds needs
-    #: room to be reached: `THERMAL_LIMIT` in
-    #: `rust/src/kernels/vector_xs.rs` and in `scalar_xs.rs`. Mirrored
-    #: here so this test drives the live configuration rather than the
-    #: probe's defaults.
+    #: The subdivisions both kernels allow beyond their break points, above
+    #: `quad`'s default of 50 because their `epsabs` is zero and a
+    #: criterion that binds needs room to be reached: `THERMAL_LIMIT` in
+    #: `rust/src/kernels/vector_xs.rs` and in `scalar_xs.rs`, which pass
+    #: it plus the break-point count as `limit`. Mirrored here so this
+    #: test drives the live configuration rather than the probe's
+    #: defaults.
     THERMAL_LIMIT: ClassVar[int] = 100
 
     @pytest.mark.parametrize("model", ["scalar", "vector"])
@@ -651,8 +652,9 @@ class TestLiveIntegrandShapes:
     ) -> None:
         # `points=[2, m/mx, 2 m/mx]` over [2, 2 + 100/x] — the break points
         # both `.pyx` sites passed, in the three regimes Task 3.3's exit
-        # criteria name; the kernels now add threshold splits from
-        # `rust/src/kernels/thermal_window.rs`. At x = 20 the upper limit
+        # criteria name; the kernels now add threshold splits and a
+        # resonance ladder from `rust/src/kernels/thermal_window.rs`, and
+        # place no break point at the peak. At x = 20 the upper limit
         # is 7, so:
         #   mx=100, m=210 -> [2, 2.1, 4.2]; 2 equals the lower limit and is
         #                    dropped, leaving 2 interior points, 3 intervals;
@@ -700,12 +702,17 @@ class TestLiveIntegrandShapes:
             upper,
             points=points,
             epsabs=0.0,
-            limit=self.THERMAL_LIMIT,
+            limit=self.THERMAL_LIMIT + len(points),
             rtol=SINGULAR_RTOL,
             label=f"{model} thermal cross section at the live epsabs, {regime}",
         )
         _value, _abserr, _neval, live_last, live_ier = core_quad.quad(
-            f, 2.0, upper, points=points, epsabs=0.0, limit=self.THERMAL_LIMIT
+            f,
+            2.0,
+            upper,
+            points=points,
+            epsabs=0.0,
+            limit=self.THERMAL_LIMIT + len(points),
         )
         assert live_ier == 0, "no live call site should terminate abnormally"
         assert live_last > expected_last, (

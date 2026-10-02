@@ -38,6 +38,26 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The `ScalarMediator` and `VectorMediator` thermal averages now
+  resolve narrow mediator resonances.** The `hazma._core` kernels behind
+  `thermal_cross_section` and `relic_density` placed a quadrature break
+  point at the mediator peak. Gauss–Kronrod nodes are interior, so once
+  the resonance was narrower than the node spacing no node sampled it,
+  and QUADPACK reported convergence anyway. For `HiggsPortal(mx=200,
+  ms=550, gsxx=1e-2, stheta=1e-3)`, whose width is 3.5e-6 of `mx`, ⟨σv⟩
+  lost more than 90% of its value on most of `x` from 2.2 to 4.4. For
+  `KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)` it did so on most
+  of `x` from 0.12 to 1.0, and kept only 2.6e-4 of its value at `x = 1`.
+  Both kernels
+  now bracket the resonance with the break points
+  `m/mx ± (w/mx) 4^k` that the pure-Python sites use, which holds both
+  models within 3e-9 of an independent reference for `x` from 0.1 to
+  300. Away from narrow resonances the values barely move: at the parity
+  corpus's 570 thermal positions ⟨σv⟩ moves by at most 5.7e-10, and at
+  `HiggsPortal(mx=100, ms=300, gsxx=1, stheta=0.1)` by at most 7.0e-9.
+  Details:
+  `docs/followups/done/thermal-kernels-miss-narrow-mediator-resonances.md`.
+
 - **`VectorMediatorGeV`'s `v v` positron and neutrino spectra are no
   longer zero.** Both inverted the mediator's boost, `γ = 2 m_V / e_cm`,
   and returned zeros wherever `χχ → VV` is open. Behind that guard they
@@ -119,7 +139,8 @@ user-facing change even when no signature did.
   independently split reference for `x` from 0.1 to 300. Break points
   placed only at the peak, as the `hazma._core` kernels place them,
   fail at narrow resonances. That defect is
-  `docs/followups/todo/thermal-kernels-miss-narrow-mediator-resonances.md`.
+  `docs/followups/done/thermal-kernels-miss-narrow-mediator-resonances.md`,
+  since repaired in the `hazma._core` kernels as well.
 
   Away from narrow resonances the semi-analytic `relic_density` barely
   moves. At the six `HiggsPortal` and `KineticMixing` points of
