@@ -8,13 +8,12 @@ Boost (:mod:`hazma.spectra.boost`)
 Utilities for boosting differential energy spectra.
 """
 
-from typing import Callable, Tuple
 import inspect
 import warnings
+from typing import Callable, Tuple
 
 import numpy as np
-from scipy import interpolate
-from scipy import integrate
+from scipy import integrate, interpolate
 
 from hazma.utils import RealArray
 
@@ -109,7 +108,7 @@ def boost_delta_function(product_energy, e0: float, m: float, beta: float):
         Boost velocity of the decaying particle
     """
     scalar = np.isscalar(product_energy)
-    e = np.atleast_1d(product_energy)
+    e = np.atleast_1d(np.asarray(product_energy, dtype=np.float64))
     dnde = np.zeros_like(e)
 
     if 0.0 < beta < 1.0:
@@ -149,7 +148,7 @@ def double_boost_delta_function(
         1st and 2nd boost velocities of the decaying particle.
     """
     scalar = np.isscalar(product_energy)
-    e2 = np.atleast_1d(product_energy)
+    e2 = np.atleast_1d(np.asarray(product_energy, dtype=np.float64))
     dnde = np.zeros_like(e2)
 
     gamma1 = 1.0 / np.sqrt(1.0 - beta1**2)
@@ -181,20 +180,33 @@ def double_boost_delta_function(
     return dnde
 
 
-def dnde_boost_array(dnde, energies, beta: float, mass: float = 0.0):
+def dnde_boost_array(
+    dnde,
+    energies,
+    beta: float,
+    mass: float = 0.0,
+    *,
+    rest_energies: RealArray | None = None,
+):
     """Boost a spectrum dN/dE given as a numeric array.
 
     Parameters
     ----------
     dnde: array
         Spectrum to boost.
-    energies: array
-        Energies corresponding to `dnde`.
+    energies: float or array
+        Energies where the boosted spectrum is evaluated. Unless
+        `rest_energies` is given, these are also the energies corresponding
+        to `dnde`, and must be an array.
     beta: float
         Boost velocity. If `beta` is outside [0,1), zeros are returned.
     mass: float
         Mass of the product of the spectrum (i.e. 0 for photon, electron-mass
         for positron).
+    rest_energies: array, optional
+        Increasing rest-frame energies corresponding to `dnde`. Supplying a
+        grid that spans the spectrum's support makes the result independent
+        of `energies`. The spectrum is taken to be zero outside the grid.
 
     Notes
     -----
@@ -203,14 +215,20 @@ def dnde_boost_array(dnde, energies, beta: float, mass: float = 0.0):
 
     Returns
     -------
-    dnde_boosted: array
-        The boosted spectrum.
+    dnde_boosted: float or array
+        The boosted spectrum, a float when `energies` is one.
     """
+    scalar = np.isscalar(energies)
+    energies = np.atleast_1d(np.asarray(energies, dtype=np.float64))
+
     if beta < np.finfo(float).eps:
-        return dnde
+        if rest_energies is None:
+            return dnde
+        boosted = np.interp(energies, rest_energies, dnde, left=0.0, right=0.0)
+        return boosted[0] if scalar else boosted
 
     if beta < 0 or beta > 1.0:
-        return np.zeros_like(energies)
+        return 0.0 if scalar else np.zeros_like(energies)
 
     gamma = 1.0 / np.sqrt(1 - beta**2)
 
@@ -221,13 +239,22 @@ def dnde_boost_array(dnde, energies, beta: float, mass: float = 0.0):
     emax = gamma * (es + beta * k)
     emin = gamma * (es - beta * k)
 
-    integrand = dnde[mask] / k
+    if rest_energies is None:
+        rest_es, rest_k, rest_dnde = es, k, dnde[mask]
+    else:
+        rest_mask = rest_energies > mass
+        rest_es = rest_energies[rest_mask]
+        rest_k = np.sqrt(rest_es**2 - mass**2)
+        rest_dnde = dnde[rest_mask]
+
+    integrand = rest_dnde / rest_k
     pre = 1.0 / (2 * beta * gamma)
 
-    spline = interpolate.InterpolatedUnivariateSpline(es, integrand, ext=1, k=1)
+    spline = interpolate.InterpolatedUnivariateSpline(rest_es, integrand, ext=1, k=1)
     boosted[mask] = np.array([spline.integral(a, b) for a, b in zip(emin, emax)])
 
-    return pre * boosted
+    boosted *= pre
+    return boosted[0] if scalar else boosted
 
 
 def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
@@ -350,6 +377,7 @@ def make_boost_function(fn: Callable, mass: float, vectorized: bool = True):
         arguments compatible with quad can be specified.
         """
         check_method(method)
+        energies = np.asarray(energies, dtype=np.float64)
         early = kinematic_early_return(energies, beta)
         if early is not None:
             return early

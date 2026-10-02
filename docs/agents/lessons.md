@@ -320,7 +320,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   zero set. Find every parameter point where the new divisor vanishes —
   thresholds such as `m = 2 m_e` are the usual ones — and evaluate there with
   the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
-  into `NaN` that no tolerance catches (PR #103).
+  into `NaN` that no tolerance catches (PR #103, #118).
 - [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
   `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
   becomes a finite limit and a finite result. Clip with a comparison that
@@ -345,3 +345,14 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   threshold from the object that computes the cross section, and test it by
   evaluating that cross section just below and just above, at couplings for
   which the channel is not identically zero there (PR #116).
+- [fixed-grid-steps-over-a-vanishing-feature] A spectrum tabulated on a
+  fixed grid loses any feature whose width can shrink below the grid's
+  spacing, such as a line boosted by a parent that is nearly at rest near
+  its production threshold. Put the feature's edges on the grid from the
+  kinematics, and pin a count just above each threshold where the width
+  vanishes (PR #118).
+- [output-inherits-the-input-dtype] An output allocated with
+  `np.zeros_like(energies)` takes the caller's dtype, so integer energies
+  truncate every value written into it to zero. Coerce the input to a float
+  array before allocating, or allocate float explicitly, and pin an integer
+  and a scalar request against the float array's values (PR #118).
