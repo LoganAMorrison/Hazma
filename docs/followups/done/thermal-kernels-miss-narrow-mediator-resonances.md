@@ -80,8 +80,12 @@ lengths and at `z_r ± (Γ/m_x) 2^k`, at `x` from 0.1 to 300:
 - **`HiggsPortal(mx=100, ms=300, gsxx=1, stheta=0.1)`**, whose width is
   5% of `m_x`, moves by at most 7.0e-9.
 
-The failures fall at isolated `x`, not on the contiguous ranges the table
-above reports, which came from a different grid.
+On 160 log-spaced points of `x` from 0.1 to 300 the failures form bands.
+The narrow `HiggsPortal` lost more than 90% of its average at 11 points
+between `x = 2.2` and 4.4, and the narrow `KineticMixing` at 36 points
+between `x = 0.12` and 1.0. Past ten times the kernels' `epsrel`, they
+were off at 59 and 42 of the 160 points. Both also sat up to 2.3e-7 off
+near `x = 50`.
 
 Across the 570 positions of the two corpus thermal cases the kernels
 move by at most 5.7e-10, and they stay within 1.8e-8 of the `B6+C7`

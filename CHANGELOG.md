@@ -45,8 +45,10 @@ user-facing change even when no signature did.
   the resonance was narrower than the node spacing no node sampled it,
   and QUADPACK reported convergence anyway. For `HiggsPortal(mx=200,
   ms=550, gsxx=1e-2, stheta=1e-3)`, whose width is 3.5e-6 of `mx`, ⟨σv⟩
-  was 87% low at `x = 2`. For `KineticMixing(mx=200, mv=550, gvxx=1e-2,
-  eps=1e-3)` it kept only 2.6e-4 of its value at `x = 1`. Both kernels
+  lost more than 90% of its value on most of `x` from 2.2 to 4.4. For
+  `KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)` it did so on most
+  of `x` from 0.12 to 1.0, and kept only 2.6e-4 of its value at `x = 1`.
+  Both kernels
   now bracket the resonance with the break points
   `m/mx ± (w/mx) 4^k` that the pure-Python sites use, which holds both
   models within 3e-9 of an independent reference for `x` from 0.1 to
