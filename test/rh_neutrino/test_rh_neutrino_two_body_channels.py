@@ -1,4 +1,4 @@
-"""Pin `RHNeutrino`'s `l rho` channel to the boosted charged rho spectra.
+"""Pin `RHNeutrino`'s `l rho` and `v rho` channels to the boosted rho spectra.
 
 `N -> l rho` is a two-body decay, so the rho carries the fixed energy
 `E_rho = (m_N^2 + m_rho^2 - m_l^2) / (2 m_N)`. With `l = e` the electron adds
@@ -12,6 +12,11 @@ once.
 Each expectation is assembled from public `hazma.spectra` functions, so the
 tests hold the channel to the charged rho rather than to whatever
 `hazma.spectra.dnde_photon` returns for the `(e, rho)` final state.
+
+`N -> v rho0` is the neutral counterpart. The neutrino is massless, so the
+rho0 carries `E_rho = (m_N^2 + m_rho^2) / (2 m_N)`, and the channel's positron
+and neutrino spectra are the neutral rho's, boosted to `E_rho`. The channel is
+self-conjugate, so `RHNeutrino` applies no doubling to any product.
 """
 
 import numpy as np
@@ -66,6 +71,32 @@ def test_l_rho_neutrino_is_boosted_charged_rho(mx: float) -> None:
     model, e_rho, es = _setup(mx)
     expected = 2.0 * spectra.dnde_neutrino_charged_rho(es, e_rho)
     actual = model._neutrino_spectrum_funcs()["e rho"](es)
+    assert np.shape(actual) == (3, es.size)
+    np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=0.0)
+    assert np.any(actual > 0.0)
+
+
+def _setup_v_rho(mx: float) -> tuple[rh_neutrino.RHNeutrino, float, np.ndarray]:
+    model = rh_neutrino.RHNeutrino(mx, 1e-3, "e")
+    e_rho = (mx**2 + MRHO**2) / (2.0 * mx)
+    energies = np.geomspace(1e-3, 0.6, 50) * mx
+    return model, e_rho, energies
+
+
+@pytest.mark.parametrize("mx", MASSES)
+def test_v_rho_positron_is_boosted_neutral_rho(mx: float) -> None:
+    model, e_rho, es = _setup_v_rho(mx)
+    expected = spectra.dnde_positron_neutral_rho(es, e_rho)
+    actual = model._positron_spectrum_funcs()["ve rho"](es)
+    np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=0.0)
+    assert np.any(actual > 0.0)
+
+
+@pytest.mark.parametrize("mx", MASSES)
+def test_v_rho_neutrino_is_boosted_neutral_rho(mx: float) -> None:
+    model, e_rho, es = _setup_v_rho(mx)
+    expected = spectra.dnde_neutrino_neutral_rho(es, e_rho)
+    actual = model._neutrino_spectrum_funcs()["ve rho"](es)
     assert np.shape(actual) == (3, es.size)
     np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=0.0)
     assert np.any(actual > 0.0)

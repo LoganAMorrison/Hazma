@@ -22,9 +22,10 @@ MRHO = sm_masses["rho"]
 MPI = sm_masses["pi"]
 MPI0 = sm_masses["pi0"]
 
-# The rho tables reproduce the pion's yield to 9.4e-4 for the muon flavor and
-# 2e-4 for the electron flavor; the residual is the tables' interpolation
-# error, so 2e-3 holds with margin and still fails a factor of two.
+# The rho tables reproduce the pion's yield to 9.55e-4 (a shortfall) for the
+# muon flavor and 1.0e-4 (an excess) for the electron flavor; the residual is
+# the tables' interpolation error, so 2e-3 holds with margin and still fails a
+# factor of two.
 YIELD_RTOL = 2e-3
 
 

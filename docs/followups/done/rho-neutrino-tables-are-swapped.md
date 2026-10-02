@@ -76,7 +76,7 @@ rho's neutrino spectrum at `γ = 1.5` and `5` and holds it to the charged
 pion's count of 1.000 electron-flavor and 1.9998 muon-flavor neutrinos:
 once for the charged rho and twice for the neutral rho, at `rtol = 2e-3`.
 The tables carry only the two-pion modes, so the `π⁰ γ` and non-pion
-`ρ⁰` modes do not enter, and the residual of at most 9.4e-4 is the
+`ρ⁰` modes do not enter, and the residual of at most 9.55e-4 is the
 tables' interpolation error. A third test holds `dnde_positron` and
 `dnde_neutrino` for the `("rho0", "pi0")` final state to the neutral
 rho's own spectra at its two-body energy. All five tests fail on the
