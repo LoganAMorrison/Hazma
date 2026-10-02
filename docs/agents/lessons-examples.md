@@ -1431,6 +1431,19 @@ branch of the underlying kernel that "any" reaches.
   equals twice the rest-frame table bit for bit. Both sentences, the
   follow-up's resolved notice and its README row now say "in flight".
 
+- PR #120 routed the N-body `"rho0"` entry to `dnde_positron_neutral_rho`
+  and `dnde_neutrino_neutral_rho`, and tested the dispatch only at 1.5 times
+  threshold, where both take the boosted branch. Review evaluated
+  `("rho0", "pi0")` at `cme = m_rho + m_pi0`, where the rho is exactly at
+  rest, and got `-5.07e-5` positrons per MeV at 500 MeV, past the 374.6 MeV
+  endpoint. The boosted branch integrates the table's spline, which
+  `integral` treats as zero outside the data; the rest-frame branch called
+  the spline, which extrapolates. The defect sat in every table-backed
+  parent and was reachable before through `"rho"`, but no test evaluated a
+  table spectrum at rest past its endpoint. Building both `load_interp`
+  splines with `ext="zeros"` repairs the class, and
+  `test/spectra/test_table_rest_frame_support.py` covers all eighteen.
+
 ### mapping-fallback-hides-missing-output
 
 - PR #98 generalized `test/parity/deltas.py`'s composition steps from

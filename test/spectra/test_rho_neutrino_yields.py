@@ -76,3 +76,47 @@ def test_nbody_rho0_carries_the_neutral_rho_spectra() -> None:
         rtol=1e-12,
         atol=0.0,
     )
+
+
+# At production threshold the rho is at rest, where the rest-frame branch
+# evaluates the tables pointwise. Both tables end at 374.6 MeV, the decay's
+# endpoint, so both energies below lie past it and must give exactly zero.
+_PAST_ENDPOINT = (380.0, 500.0)
+
+
+@pytest.mark.parametrize("energy", _PAST_ENDPOINT)
+def test_nbody_rho0_at_threshold_vanishes_past_the_endpoint(energy: float) -> None:
+    cme = MRHO + MPI0
+    assert spectra.dnde_positron(energy, cme, ("rho0", "pi0")) == 0.0
+    np.testing.assert_array_equal(
+        spectra.dnde_neutrino(energy, cme, ("rho0", "pi0")), np.zeros(3)
+    )
+
+
+def test_nbody_rho0_at_threshold_matches_the_boosted_spectrum() -> None:
+    # The rest-frame branch is pinned against the boosted branch a part in
+    # 1e6 above threshold, which integrates the same tables over the Lorentz
+    # window rather than evaluating them pointwise. Up to 350 MeV the two
+    # agree to 1.8e-3, the tables' curvature over that window, so 5e-3 holds
+    # with margin; nearer the endpoint the spectrum falls steeply and the
+    # window's average departs from the point value. Past the endpoint and
+    # below the tables' first energy, 0.511 MeV, both are exactly zero.
+    cme = MRHO + MPI0
+    energies = np.concatenate([[0.1, 0.3], np.geomspace(1.0, 350.0, 40)])
+    energies = np.concatenate([energies, _PAST_ENDPOINT])
+    e_rho = MRHO * (1.0 + 1e-6)
+
+    for at_rest, boosted in [
+        (
+            spectra.dnde_positron(energies, cme, ("rho0", "pi0")),
+            spectra.dnde_positron_neutral_rho(energies, e_rho),
+        ),
+        (
+            spectra.dnde_neutrino(energies, cme, ("rho0", "pi0")),
+            spectra.dnde_neutrino_neutral_rho(energies, e_rho),
+        ),
+    ]:
+        assert np.all(np.isfinite(at_rest))
+        assert np.all(at_rest >= 0.0)
+        np.testing.assert_allclose(at_rest, boosted, rtol=5e-3, atol=1e-9)
+        np.testing.assert_array_equal(at_rest[..., -2:], 0.0)

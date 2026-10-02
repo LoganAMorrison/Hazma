@@ -54,7 +54,16 @@ user-facing change even when no signature did.
   `RHNeutrino(1000, 1e-3, "e")` decay, the `e`- and `μ`-flavor neutrinos
   fall from 2.956 and 4.585 to 2.503 and 3.680 and the positrons rise
   from 1.440 to 1.460. Photon spectra do not move, and the parity corpus
-  pins no affected spectrum. Details:
+  pins no affected spectrum. The positron and neutrino spectra of every
+  table-backed parent (kaons, `η`, `η′`, `ω`, `φ` and both rhos) are now
+  exactly zero outside their table at rest, as they already were in
+  flight. At rest they had extrapolated the table past the decay's
+  endpoint: `("rho0", "pi0")` at threshold gave `-5.07e-5` positrons and
+  `-2.09e-5` and `-1.90e-4` `e`- and `μ`-flavor neutrinos per MeV at
+  500 MeV. Array positron energies below `m_e`, which gave `nan`, give
+  zero, and rest-frame neutrinos below each table's first energy, 0.023
+  to 0.050 MeV for the mesons and 0.511 MeV for the rhos, give zero
+  rather than an extrapolation. Details:
   `docs/followups/done/rho-neutrino-tables-are-swapped.md`.
 
 - **`VectorMediatorGeV`'s `v v` positron and neutrino spectra are no

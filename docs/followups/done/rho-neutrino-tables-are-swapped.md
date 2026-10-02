@@ -96,3 +96,24 @@ positrons rise from 1.440 to 1.460. Photon spectra do not move.
 
 **The parity corpus** pins only the rho photon spectra and reaches
 neither `RHNeutrino` nor the N-body dispatch, so no corpus value moves.
+
+**The rest-frame bound.** Wiring `"rho0"` exposed a defect shared by
+every table-backed parent. At rest, `dnde_positron` and `dnde_neutrino`
+in `hazma/spectra/_positron/_utils.py` and `_neutrino/_utils.py` evaluate
+the table's spline pointwise, and the spline extrapolated past the
+table. At production threshold, `cme = m_ρ + m_π⁰`, the
+`("rho0", "pi0")` spectra at 500 MeV, past the 374.6 MeV endpoint, were
+`-5.07e-5` positrons and `-2.09e-5` and `-1.90e-4` `e`- and `μ`-flavor
+neutrinos per MeV. Both `load_interp` functions now build the spline with
+`ext="zeros"`, the bound that `integral` already applies in flight, and
+the positron rest branch clips `E² − m_e²` at zero so that array energies
+below `m_e` give zero rather than `nan`. Values inside each table do not
+move. Rest-frame neutrinos below a table's first energy, 0.023 to
+0.050 MeV for the mesons and 0.511 MeV for the rhos, now give zero rather
+than an extrapolation, again matching the boosted branch. Two tests in
+`test/spectra/test_rho_neutrino_yields.py` pin the `("rho0", "pi0")`
+threshold spectra for scalar and array input: past the endpoint they are
+exactly zero, and elsewhere they match the boosted spectrum a part in
+1e6 above rest to `rtol = 5e-3`. `test/spectra/test_table_rest_frame_support.py`
+holds all eighteen table-backed rest-frame spectra to zero past the
+endpoint. All three fail without the bound.
