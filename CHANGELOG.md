@@ -66,6 +66,22 @@ user-facing change even when no signature did.
   rather than an extrapolation. Details:
   `docs/followups/done/rho-neutrino-tables-are-swapped.md`.
 
+- **`VectorMediatorGeV`'s `v v` photon lines carry their branching
+  fractions.** The boosted `V → π⁰γ` and `V → ηγ` lines each added one
+  photon per decay whatever the mediator's branching fractions, and the
+  `π⁰γ` line sat at `(m_V − m_π±² / m_V) / 2`, with the charged pion's
+  mass. Each line is now weighted by its branching fraction and the `π⁰γ`
+  line uses the neutral pion's mass. At `m_x = 5` GeV, `m_V = 1` GeV,
+  `e_cm = 10.1` GeV and every coupling 1, the two lines carry 0.023
+  photons per annihilation where they carried 4.00, and the `v v` photon
+  energy falls from 9,418 to about 973 MeV, within 1.7e-4 of the
+  branching-weighted channel sum. For a 200 MeV mediator that decays only
+  to `π⁰γ`, the photon energy rises 1.5%, to within 4.2e-4 of the decay's
+  own. A mediator with no open decay now yields zeros rather than `NaN`.
+  The continuum is still tabulated on the requested energies, a
+  [separate follow-up](docs/followups/todo/vector-mediator-gev-vv-photon-continuum-uses-caller-energies.md).
+  Details:
+  `docs/followups/done/vector-mediator-gev-vv-photon-lines-ignore-branching-fractions.md`.
 - **`VectorMediatorGeV`'s `v v` positron and neutrino spectra are no
   longer zero.** Both inverted the mediator's boost, `γ = 2 m_V / e_cm`,
   and returned zeros wherever `χχ → VV` is open. Behind that guard they

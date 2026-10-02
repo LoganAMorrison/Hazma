@@ -754,39 +754,44 @@ def dnde_photon_pi_pi_pi0_pi0(
 
 
 def _dnde_photon_v_v_rest_frame(
-    self: _DecayDndePhoton, photon_energies, *, npts=1 << 15, nbins=30
+    self: _DecayDndePhoton,
+    photon_energies,
+    bfs: dict[str, float],
+    *,
+    npts: int,
+    nbins: int,
 ):
-    if self.mv < 2 * me:
-        return np.zeros_like(photon_energies)
+    """Photon continuum of a pair of vector mediators, each at rest.
 
-    pws = self.partial_widths()
-    pw = sum(pws.values())
-    pws = {key: val / pw for key, val in pws.items()}
-
+    The spectrum is twice the sum of the mediator's decay channels, each
+    evaluated at a center-of-mass energy equal to the mediator mass and
+    weighted by its branching fraction in `bfs`. The monochromatic photons
+    of `V -> pi0 gamma` and `V -> eta gamma` are left to `dnde_photon_v_v`.
+    """
     kwargs = {"npts": npts, "nbins": nbins}
     kwargs2 = {"nbins": nbins}
 
-    pw_ee = pws["e e"]
-    pw_mm = pws["mu mu"]
-    pw_pp = pws["pi pi"]
-    pw_k0k0 = pws["k0 k0"]
-    pw_kk = pws["k k"]
-    pw_0a = pws["pi0 gamma"]
-    pw_na = pws["eta gamma"]
-    pw_0f = pws["pi0 phi"]
-    pw_nf = pws["eta phi"]
-    pw_nw = pws["eta omega"]
-    pw_00a = pws["pi0 pi0 gamma"]
-    pw_pp0 = pws["pi pi pi0"]
-    pw_ppn = pws["pi pi eta"]
-    pw_ppnp = pws["pi pi etap"]
-    pw_ppw = pws["pi pi omega"]
-    pw_00w = pws["pi0 pi0 omega"]
-    pw_0k0k0 = pws["pi0 k0 k0"]
-    pw_0kk = pws["pi0 k k"]
-    pw_pkk0 = pws["pi k k0"]
-    pw_pppp = pws["pi pi pi pi"]
-    pw_pp00 = pws["pi pi pi0 pi0"]
+    pw_ee = bfs["e e"]
+    pw_mm = bfs["mu mu"]
+    pw_pp = bfs["pi pi"]
+    pw_k0k0 = bfs["k0 k0"]
+    pw_kk = bfs["k k"]
+    pw_0a = bfs["pi0 gamma"]
+    pw_na = bfs["eta gamma"]
+    pw_0f = bfs["pi0 phi"]
+    pw_nf = bfs["eta phi"]
+    pw_nw = bfs["eta omega"]
+    pw_00a = bfs["pi0 pi0 gamma"]
+    pw_pp0 = bfs["pi pi pi0"]
+    pw_ppn = bfs["pi pi eta"]
+    pw_ppnp = bfs["pi pi etap"]
+    pw_ppw = bfs["pi pi omega"]
+    pw_00w = bfs["pi0 pi0 omega"]
+    pw_0k0k0 = bfs["pi0 k0 k0"]
+    pw_0kk = bfs["pi0 k k"]
+    pw_pkk0 = bfs["pi k k0"]
+    pw_pppp = bfs["pi pi pi pi"]
+    pw_pp00 = bfs["pi pi pi0 pi0"]
 
     # Factor of 2 for 2 vectors
     args = (photon_energies, self.mv)
@@ -824,22 +829,59 @@ def dnde_photon_v_v(
     npts=1 << 15,
     nbins=30,
 ):
-    ev = 0.5 * cme
+    """Generate the photon spectrum into two vector mediators.
+
+    Each mediator carries `cme / 2` and decays isotropically in its rest
+    frame. The rest-frame continuum, weighted by branching fractions, is
+    evaluated on `photon_energies` and boosted by
+    `hazma.spectra.boost.dnde_boost_array`. The monochromatic photons of
+    `V -> pi0 gamma` and `V -> eta gamma`, one per decay, are boosted
+    analytically.
+
+    Parameters
+    ----------
+    photon_energies: array
+        Array of photon energies where the spectrum should be computed,
+        in MeV.
+    cme: float
+        Center-of-mass energy, in MeV.
+    method: str, optional
+        Unused.
+    npts: int, optional
+        Number of phase-space points for the n-body channels.
+    nbins: int, optional
+        Number of energy bins for the n-body channels.
+
+    Returns
+    -------
+    dnde: array
+        Spectrum evaluated at `photon_energies`, in MeV^-1.
+    """
     mv = self.mv
-    gamma = ev / mv
-    if gamma < 1.0:
+    gamma = 0.5 * cme / mv
+    if gamma < 1.0 or mv <= 2.0 * me:
+        return np.zeros_like(photon_energies)
+
+    pws = self.partial_widths()
+    width = sum(pws.values())
+    if width == 0.0:
+        # A mediator with no open decay is stable and yields nothing.
         return np.zeros_like(photon_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
+    bfs = {key: val / width for key, val in pws.items()}
 
-    dnde = _dnde_photon_v_v_rest_frame(self, photon_energies, npts=npts, nbins=nbins)
+    dnde = _dnde_photon_v_v_rest_frame(
+        self, photon_energies, bfs, npts=npts, nbins=nbins
+    )
     boosted = boost.dnde_boost_array(dnde, photon_energies, beta)
 
-    # Factor of 2 for 2 vectors
-    e0pi = 0.5 * (mv - mpi**2 / mv)
-    boosted += 2 * boost_delta_function(photon_energies, e0pi, 0.0, beta)
-    e0eta = 0.5 * (mv - meta**2 / mv)
-    boosted += 2 * boost_delta_function(photon_energies, e0eta, 0.0, beta)
+    # One photon per decay, two vectors
+    for channel, mass in (("pi0 gamma", mpi0), ("eta gamma", meta)):
+        e0 = 0.5 * (mv - mass**2 / mv)
+        boosted += (
+            2 * bfs[channel] * boost_delta_function(photon_energies, e0, 0.0, beta)
+        )
 
     return boosted
 
