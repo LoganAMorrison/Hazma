@@ -1,4 +1,4 @@
-"""Positron and neutrino spectra of ``VectorMediatorGeV``'s ``v v`` channel.
+"""Photon, positron and neutrino spectra of ``VectorMediatorGeV``'s ``v v`` channel.
 
 Each mediator carries ``e_cm / 2`` and decays isotropically in its own
 rest frame. A boost moves particles in energy without creating or
@@ -26,8 +26,9 @@ from scipy.integrate import trapezoid
 
 from hazma.parameters import charged_pion_mass
 from hazma.parameters import electron_mass as me
+from hazma.parameters import eta_mass, neutral_pion_mass
 from hazma.vector_mediator import VectorMediatorGeV
-from hazma.vector_mediator._gev import neutrino, positron
+from hazma.vector_mediator._gev import neutrino, positron, spectra
 
 MX = 5e3  # MeV
 MV = 1e3  # MeV
@@ -274,4 +275,106 @@ def test_v_v_vanishes_for_a_stable_mediator(kind: str) -> None:
     model = VectorMediatorGeV(MX, MV, 1.0, *([0.0] * 8))
     np.testing.assert_array_equal(
         _spectrum_fn(model, kind)(np.array([1.0, 2.0]), CMES[0]), 0.0
+    )
+
+
+def _photon_moments(
+    model: VectorMediatorGeV, cme: float, line_masses: list[float]
+) -> tuple[float, float]:
+    """Photon number and total energy (MeV) per annihilation.
+
+    The grid carries both edges of each boosted `V -> M gamma` line, where
+    the spectrum is discontinuous.
+    """
+    gamma = 0.5 * cme / model.mv
+    beta = np.sqrt(1.0 - gamma**-2)
+    edges = []
+    for m in line_masses:
+        e0 = 0.5 * (model.mv - m**2 / model.mv)
+        edges += [gamma * e0 * (1.0 - beta), gamma * e0 * (1.0 + beta)]
+    around = [x * (1.0 + s) for x in edges for s in (-1e-12, 1e-12)]
+    es = np.unique(np.concatenate([np.geomspace(1e-6, 0.5 * cme, 20_001), around]))
+    dnde = spectra.dnde_photon_v_v(model, es, cme)
+    return trapezoid(dnde, es), trapezoid(es * dnde, es)
+
+
+# PDG's `BR(pi0 -> gamma gamma)`, as `hazma._core` carries it in
+# `rust/src/constants.rs`. The neutral pion's photon spectrum counts only
+# this mode.
+BR_PI0_TO_A_A = 0.98823
+
+# `dnde_photon_v_v` tabulates its rest-frame continuum on the requested
+# energies, so the edges of each pion and eta decay box fall between grid
+# points. On these grids that costs at most 4.2e-4 of the photon energy
+# (2.0e-4 of the number). Placing the `pi0 gamma` line at the charged pion
+# mass lowers the `pi0 gamma` energy by 1.5%, and lines left unweighted by
+# their branching fractions raise the hadronic energy ninefold. The budget
+# is a few times the largest residual.
+PHOTON_RTOL = 1e-3
+
+
+def test_v_v_photons_from_pi0_gamma_match_the_decay_yield() -> None:
+    """A mediator that only decays to `pi0 gamma` yields its photon and the pion's.
+
+    At `m_V = 200` MeV with only quark couplings, `V -> pi0 gamma` is the one
+    open decay. Each decay gives the monochromatic photon at
+    `(m_V - m_pi0^2 / m_V) / 2` and the pion's two photons, which carry the
+    pion's energy, so the photon number and energy pin both the line's
+    weight and its position.
+    """
+    mv = 200.0
+    model = VectorMediatorGeV(MX, mv, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    pws = model.partial_widths()
+    assert pws["pi0 gamma"] == sum(pws.values())
+
+    cme = CMES[0]
+    number, energy = _photon_moments(model, cme, [neutral_pion_mass])
+    e_line = 0.5 * (mv - neutral_pion_mass**2 / mv)
+    per_decay_energy = e_line + BR_PI0_TO_A_A * (mv - e_line)
+    # Two mediators, each carrying a Lorentz factor of `cme / (2 m_V)`.
+    assert number == pytest.approx(2 * (1 + 2 * BR_PI0_TO_A_A), rel=PHOTON_RTOL)
+    assert energy == pytest.approx(cme / mv * per_decay_energy, rel=PHOTON_RTOL)
+
+
+def test_hadronic_v_v_photon_energy_matches_the_channel_yields() -> None:
+    """With hadronic decays open, the energy is the branching-weighted sum.
+
+    Photon number diverges with the final-state radiation's infrared tail,
+    but the energy it carries does not, and an isotropic source's lab
+    energy is the Lorentz factor times its rest-frame energy. The reference
+    integrates each channel's continuum at rest through the model's dispatch
+    table and adds one photon per `V -> pi0 gamma` and `V -> eta gamma`
+    decay at its line energy. The reference integrates the same per-channel
+    functions the implementation sums, so it pins the boost, the `2 BR`
+    weighting and the line placement but not the channel continua
+    themselves.
+    """
+    model = _universal()
+    pws = model.partial_widths()
+    width = sum(pws.values())
+    lines = {"pi0 gamma": neutral_pion_mass, "eta gamma": eta_mass}
+    rest_es = np.geomspace(1e-6, 0.5 * MV, 20_001)
+    channel_fns = model._spectrum_funcs()
+    per_decay = 0.0
+    for channel, pw in pws.items():
+        if pw == 0.0:
+            continue
+        fn = channel_fns[channel]
+        params = inspect.signature(fn).parameters
+        options = {k: v for k, v in N_BODY_OPTIONS.items() if k in params}
+        dnde = fn(rest_es, MV, **options)
+        per_decay += pw / width * trapezoid(rest_es * dnde, rest_es)
+        if channel in lines:
+            per_decay += pw / width * 0.5 * (MV - lines[channel] ** 2 / MV)
+
+    cme = CMES[0]
+    _, energy = _photon_moments(model, cme, list(lines.values()))
+    assert energy == pytest.approx(0.5 * cme / MV * 2 * per_decay, rel=PHOTON_RTOL)
+
+
+def test_v_v_photons_vanish_for_a_stable_mediator() -> None:
+    """With every Standard Model coupling zero the mediator never decays."""
+    model = VectorMediatorGeV(MX, MV, 1.0, *([0.0] * 8))
+    np.testing.assert_array_equal(
+        spectra.dnde_photon_v_v(model, np.array([1.0, 2.0]), CMES[0]), 0.0
     )

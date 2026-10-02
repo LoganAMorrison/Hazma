@@ -149,7 +149,7 @@ in `test/vector_mediator/test_gev_v_v_spectra.py`:
   mass. At the "Why" point the boxes carry 4.00 of the spectrum's 6.09
   photons per annihilation, where weighted boxes would carry 0.023. Filed
   as
-  [`vector-mediator-gev-vv-photon-lines-ignore-branching-fractions.md`](../todo/vector-mediator-gev-vv-photon-lines-ignore-branching-fractions.md).
+  [`vector-mediator-gev-vv-photon-lines-ignore-branching-fractions.md`](vector-mediator-gev-vv-photon-lines-ignore-branching-fractions.md).
 - `VectorMediatorGeV`'s `e e` positron line and `ν ν` neutrino lines
   count one particle per annihilation, while its continua count
   particles and antiparticles together. Filed as
