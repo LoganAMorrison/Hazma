@@ -14,7 +14,10 @@ that array's linear interpolant with `boost.dnde_boost_array`. The result
 therefore depends on the caller's grid: a coarse request misses the
 `π⁰` and `η` decay boxes and the final-state radiation's shape, and a
 scalar energy raises, because `dnde_boost_array` needs an array when it
-is given no `rest_energies`. The positron and neutrino spectra avoid
+is given no `rest_energies`. An integer energy array raises
+`ValueError: Photon energies must be a float64 array` from `hazma._core`
+once the continuum is reached, for example at `cme = 400` MeV and
+`m_V = 200` MeV. The positron and neutrino spectra avoid
 both through a fixed rest-frame grid, `utils.v_v_rest_energies`.
 
 ## What
@@ -26,8 +29,8 @@ lower end must be an infrared cutoff, since the radiation diverges as
 `η → γγ` boxes of the two-body channels (`π⁰ γ`, `η γ`, `π⁰ φ`, `η φ`,
 `η ω`), not the charged-pion lines. Pin the result as
 `test/vector_mediator/test_gev_v_v_spectra.py` pins the positrons: its
-values must not depend on the requested energies, and a scalar energy
-must give the array's value.
+values must not depend on the requested energies, and scalar and
+integer energies must give the float array's values.
 
 ## Entry points
 

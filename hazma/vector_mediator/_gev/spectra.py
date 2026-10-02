@@ -26,6 +26,8 @@ from hazma.spectra.altarelli_parisi import dnde_photon_ap_fermion, dnde_photon_a
 from hazma.spectra.boost import boost_delta_function, double_boost_delta_function
 from hazma.utils import RealArray
 
+from .utils import float_zeros_like
+
 if TYPE_CHECKING:
     from hazma.form_factors.vector import (
         VectorFormFactorPi0K0K0,
@@ -846,7 +848,7 @@ def dnde_photon_v_v(
     cme: float
         Center-of-mass energy, in MeV.
     method: str, optional
-        Unused.
+        Accepted and ignored. Nothing in the package passes it.
     npts: int, optional
         Number of phase-space points for the n-body channels.
     nbins: int, optional
@@ -860,13 +862,13 @@ def dnde_photon_v_v(
     mv = self.mv
     gamma = 0.5 * cme / mv
     if gamma < 1.0 or mv <= 2.0 * me:
-        return np.zeros_like(photon_energies)
+        return float_zeros_like(photon_energies)
 
     pws = self.partial_widths()
     width = sum(pws.values())
     if width == 0.0:
         # A mediator with no open decay is stable and yields nothing.
-        return np.zeros_like(photon_energies)
+        return float_zeros_like(photon_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
     bfs = {key: val / width for key, val in pws.items()}

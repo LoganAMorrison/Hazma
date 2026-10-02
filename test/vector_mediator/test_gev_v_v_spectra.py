@@ -344,7 +344,10 @@ def test_hadronic_v_v_photon_energy_matches_the_channel_yields() -> None:
     energy is the Lorentz factor times its rest-frame energy. The reference
     integrates each channel's continuum at rest through the model's dispatch
     table and adds one photon per `V -> pi0 gamma` and `V -> eta gamma`
-    decay at its line energy.
+    decay at its line energy. The reference integrates the same per-channel
+    functions the implementation sums, so it pins the boost, the `2 BR`
+    weighting and the line placement but not the channel continua
+    themselves.
     """
     model = _universal()
     pws = model.partial_widths()
@@ -354,7 +357,7 @@ def test_hadronic_v_v_photon_energy_matches_the_channel_yields() -> None:
     channel_fns = model._spectrum_funcs()
     per_decay = 0.0
     for channel, pw in pws.items():
-        if channel == "v v" or pw == 0.0:
+        if pw == 0.0:
             continue
         fn = channel_fns[channel]
         params = inspect.signature(fn).parameters

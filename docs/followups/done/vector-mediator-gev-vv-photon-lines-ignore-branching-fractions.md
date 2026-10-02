@@ -68,6 +68,12 @@ energy and the two line energies.
 | --- | --- | --- | --- |
 | hadronic `v v` photon energy, MeV | 9,418 | 972.05 | 972.21 |
 | `π⁰γ`-only photon energy, MeV | 9,860 | 10,018 | 10,013 |
+| lepton-only, `m_V = 300` MeV, photon energy, MeV | 4,018 | 62.9 | |
+
+A mediator without hadronic couplings loses the lines entirely: with
+only lepton couplings and `m_V = 300` MeV, the `v v` photon energy
+falls from 4,018 to 62.9 MeV, since the lines carried a photon per decay
+that the mediator never makes.
 
 The hadronic values come from one model instance; the n-body partial
 widths are Monte Carlo phase-space integrals, so the energy moves by

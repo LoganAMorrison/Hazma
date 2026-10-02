@@ -45,6 +45,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [`RHNeutrino` spectra raise once a channel with a tau opens](todo/rhn-spectra-raise-when-a-tau-channel-opens.md) | 2026-09-29 | the RHN `ℓ ρ±` channel repair | cross-cutting |
 | [`RHNeutrino`'s line tables name channels the model does not have](todo/rhn-line-tables-name-missing-channels.md) | 2026-09-29 | the RHN `ℓ ρ±` channel repair | cross-cutting |
 | [the GeV vector mediator's `v v` photon continuum is tabulated on the caller's energies](todo/vector-mediator-gev-vv-photon-continuum-uses-caller-energies.md) | 2026-10-01 | the GeV `v v` photon line repair | cross-cutting |
+| [`boost_delta_function` returns zeros at `beta == 0`](todo/boost-delta-function-vanishes-at-beta-zero.md) | 2026-10-01 | PR #121 review | cross-cutting |
 | [the GeV vector mediator's lepton lines count one particle](todo/vector-mediator-gev-lines-count-one-particle.md) | 2026-10-01 | the GeV `v v` positron and neutrino repair | cross-cutting |
 | [the mediator decay boosts integrate across their channels' edges](todo/mediator-decay-boosts-lack-channel-break-points.md) | 2026-09-29 | the mediator decay boost repair (`C6`) | commit |
 | [the two thermal kernels disagree above `x = 300`](todo/thermal-kernels-disagree-above-x-300.md) | 2026-09-29 | the thermal upper-limit repair (`C7`) | cross-cutting |

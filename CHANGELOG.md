@@ -78,6 +78,9 @@ user-facing change even when no signature did.
   branching-weighted channel sum. For a 200 MeV mediator that decays only
   to `π⁰γ`, the photon energy rises 1.5%, to within 4.2e-4 of the decay's
   own. A mediator with no open decay now yields zeros rather than `NaN`.
+  A mediator without hadronic couplings loses the lines entirely: for
+  `m_V = 300` MeV with only lepton couplings, the `v v` photon energy at
+  `e_cm = 10.1` GeV falls from 4,018 to 62.9 MeV.
   The continuum is still tabulated on the requested energies, a
   [separate follow-up](docs/followups/todo/vector-mediator-gev-vv-photon-continuum-uses-caller-energies.md).
   Details:
