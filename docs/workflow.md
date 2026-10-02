@@ -377,6 +377,10 @@ This repo defines equivalent workflow skills under `.claude/skills/` and
 `.codex/skills/`:
 
 - `execute-single-task` — scoped implementation of one task.
+- `solo-task` — one task by hand in the current session, kept
+  context-lean by delegating reads, gates, shipping, and one review
+  pass to subagents. Claude only; the Codex port is
+  [`solo-task-codex-port.md`](followups/todo/solo-task-codex-port.md).
 - `commit-and-pr` — commit, push, and open a PR following the guidelines.
 - `review-pr` — focused single-lens review of a PR.
 - `review-respond` — synthesize review comments and implement fixes.
