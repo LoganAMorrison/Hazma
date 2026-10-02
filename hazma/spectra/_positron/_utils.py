@@ -20,8 +20,11 @@ def load_interp(fname):
     dnde = np.sum(data[1:], axis=0)
     dnde_integrand = dnde / np.sqrt(energies**2 - me**2)
 
+    # The table spans the decay's whole positron support, so the spline is
+    # zero outside it; `integral` already treats it that way, and `ext`
+    # extends the same bound to the rest-frame evaluation.
     integrand_interp = interpolate.InterpolatedUnivariateSpline(
-        energies, dnde_integrand, k=1
+        energies, dnde_integrand, k=1, ext="zeros"
     )
 
     return integrand_interp
@@ -65,7 +68,8 @@ def _dnde_positron_array(
         return np.zeros_like(positron_energy)
 
     if parent_energy - parent_mass < eps:
-        return interp(positron_energy) * np.sqrt(positron_energy**2 - me**2)
+        k = np.sqrt(np.clip(positron_energy**2 - me**2, 0.0, None))
+        return interp(positron_energy) * k
 
     return np.array(
         [

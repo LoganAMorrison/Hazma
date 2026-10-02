@@ -38,6 +38,34 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The rho neutrino spectra are no longer swapped, and `ρ⁰` final states
+  keep their positrons and neutrinos.** The charged and neutral rho
+  neutrino tables were filed under each other's names, so
+  `dnde_neutrino_charged_rho` returned the `ρ⁰ → π⁺π⁻` spectrum and
+  `dnde_neutrino_neutral_rho` the `ρ± → π± π⁰` one. Integrated at
+  `E_ρ = 1.5 m_ρ`, the charged rho's `e`- and `μ`-flavor neutrinos go
+  from 2.000 and 3.996 to 1.000 and 1.998, one charged pion's yield, and
+  the neutral rho's go from 1.000 and 1.998 to 2.000 and 3.996.
+  Separately, `hazma.spectra.dnde_positron` and `dnde_neutrino` returned
+  zero for a `"rho0"` in the final state; they now use the neutral rho's
+  spectra, so a `("rho0", "pi0")` state at 1.5 times threshold goes from
+  zero to 0.9997 positrons and 2.000 and 3.996 neutrinos. `RHNeutrino`
+  moves through its `ν ρ⁰` and `ℓ ρ` channels: per
+  `RHNeutrino(1000, 1e-3, "e")` decay, the `e`- and `μ`-flavor neutrinos
+  fall from 2.956 and 4.585 to 2.503 and 3.680 and the positrons rise
+  from 1.440 to 1.460. Photon spectra do not move, and the parity corpus
+  pins no affected spectrum. The positron and neutrino spectra of every
+  table-backed parent (kaons, `η`, `η′`, `ω`, `φ` and both rhos) are now
+  exactly zero outside their table at rest, as they already were in
+  flight. At rest they had extrapolated the table past the decay's
+  endpoint: `("rho0", "pi0")` at threshold gave `-5.07e-5` positrons and
+  `-2.09e-5` and `-1.90e-4` `e`- and `μ`-flavor neutrinos per MeV at
+  500 MeV. Array positron energies below `m_e`, which gave `nan`, give
+  zero, and rest-frame neutrinos below each table's first energy, 0.023
+  to 0.050 MeV for the mesons and 0.511 MeV for the rhos, give zero
+  rather than an extrapolation. Details:
+  `docs/followups/done/rho-neutrino-tables-are-swapped.md`.
+
 - **`VectorMediatorGeV`'s `v v` positron and neutrino spectra are no
   longer zero.** Both inverted the mediator's boost, `γ = 2 m_V / e_cm`,
   and returned zeros wherever `χχ → VV` is open. Behind that guard they
@@ -306,7 +334,7 @@ user-facing change even when no signature did.
   defect: `dnde_neutrino_charged_rho` yields twice the neutrinos a
   `ρ± → π± π⁰` decay holds, because the charged and neutral rho neutrino
   tables are swapped
-  ([tracked](docs/followups/todo/rho-neutrino-tables-are-swapped.md)).
+  ([since repaired](docs/followups/done/rho-neutrino-tables-are-swapped.md)).
   The parity corpus pins no `rh_neutrino` spectrum. Details:
   `docs/followups/done/rhn-charged-rho-channel-evaluates-the-kaon.md`.
 

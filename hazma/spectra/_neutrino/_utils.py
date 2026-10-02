@@ -18,8 +18,11 @@ def load_interp(fname, k=2):
     dnde = np.sum(data[1:], axis=0)
     dnde_integrand = dnde / energies
 
+    # The table spans the decay's whole neutrino support, so the spline is
+    # zero outside it; `integral` already treats it that way, and `ext`
+    # extends the same bound to the rest-frame evaluation.
     integrand_interp = interpolate.InterpolatedUnivariateSpline(
-        energies, dnde_integrand, k=k
+        energies, dnde_integrand, k=k, ext="zeros"
     )
 
     return integrand_interp
