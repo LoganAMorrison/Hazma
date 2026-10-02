@@ -93,8 +93,9 @@ REFERENCE_EPSREL = 1e-12
 
 #: Subdivision limit. The integrand is a near-exponential spike against
 #: an interval running out to 150, so the converged partition is deep;
-#: 200 is twice the kernels' own ``THERMAL_LIMIT`` of 100, which keeps
-#: the reference from being the shallower of the two quadratures.
+#: 200 is twice the kernels' own ``THERMAL_LIMIT`` of 100 subdivisions
+#: beyond their break points, which keeps the reference from being the
+#: shallower of the two quadratures.
 REFERENCE_LIMIT = 200
 
 #: Where the converged integral is split, in decay lengths ``1/x`` past
@@ -104,6 +105,16 @@ REFERENCE_LIMIT = 200
 #: of the ``exp(-x z)`` fall-off, so no single Gauss-Kronrod pass can
 #: sample only the tail.
 DECAY_LENGTHS = (0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0)
+
+#: Ratio between successive splits bracketing the resonance, in units of
+#: its width. Half the kernels' ``RESONANCE_LADDER_RATIO`` of 4
+#: (``rust/src/kernels/thermal_window.rs``), so the reference's pieces
+#: around the peak are not the kernels' and no piece is many widths long
+#: with the peak at its end, where no Gauss-Kronrod node samples it.
+RESONANCE_LADDER_RATIO = 2.0
+
+#: Index of the mediator width in each model's argument tuple.
+_WIDTH_INDEX = {"scalar": 7, "vector": 8}
 
 
 def _sigma_all(
@@ -275,8 +286,9 @@ def converged_thermal_cross_section(model: str, args: list[float], x: float) -> 
     """``<sigma v>(x)`` in MeV^-2, split so no interval choice can bias it.
 
     Integrates from threshold to 200 decay lengths past the last of
-    `_features`, in pieces at every feature and at `DECAY_LENGTHS` past
-    each, each piece to `REFERENCE_EPSREL`.
+    `_features`, in pieces at every feature, at `DECAY_LENGTHS` past each,
+    and at ``z_r +/- g 2^k`` around the resonance ``z_r = m_med / m_x``
+    of width ``g`` in units of ``m_x``, each piece to `REFERENCE_EPSREL`.
 
     Parameters
     ----------
@@ -301,7 +313,12 @@ def converged_thermal_cross_section(model: str, args: list[float], x: float) -> 
     }
     upper = max(openings) + DECAY_LENGTHS[-1] / xnew
     splits = {z + k / xnew for z in openings for k in DECAY_LENGTHS}
-    edges = sorted(z for z in splits if z <= upper)
+    z_res = args[1] / args[0]
+    offset = args[_WIDTH_INDEX[model]] / args[0]
+    while 0.0 < offset < upper - Z_THRESHOLD:
+        splits.update((z_res - offset, z_res + offset))
+        offset *= RESONANCE_LADDER_RATIO
+    edges = sorted(z for z in splits if Z_THRESHOLD <= z <= upper)
     return sum(_integral(model, args, xnew, pair) for pair in pairwise(edges))
 
 
