@@ -28,8 +28,9 @@
 //!   average 1.9e-4 high at `x = 300`.
 //! - **A resonance** of peak `z_r` and width `g`, both in units of
 //!   `m_x`, contributes the ladder `z_r ± g·4^k` for `k = 0, 1, …` up to
-//!   the length of the interval, and counts toward the last feature. The
-//!   peak itself is never a break point: there it would sit on a piece's
+//!   the length of the interval, and counts toward the last feature. For
+//!   widths above the floor described below, the peak itself is never a
+//!   break point: there it would sit on a piece's
 //!   endpoint, where no Gauss–Kronrod node samples it, and once the
 //!   resonance is narrower than the node spacing QUADPACK reports
 //!   convergence on a partition that never saw it. With the peak as a
@@ -37,7 +38,13 @@
 //!   whose width is 3.5e-6 of `m_x`, was 87% low at `x = 2`, and
 //!   `KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)`, at 6.3e-6,
 //!   kept 2.6e-4 of its average at `x = 1`. With the ladder, each kernel
-//!   holds both within its own `epsrel` from `x = 0.1` to 300.
+//!   holds both within its own `epsrel` from `x = 0.1` to 300. The ladder
+//!   resolves a resonance only while its width is well above the ulp of
+//!   `z_r`: below about that, the inner rungs round onto the peak, and
+//!   near `g ≈ 1e-13` the propagator's `s − m²` cancels to about
+//!   `ulp(z_r)/g` relative, which no partition recovers and the kernels do
+//!   not report. See
+//!   `docs/followups/todo/thermal-kernels-lose-accuracy-below-width-1e-13.md`.
 //! - **A threshold within [`MIN_THRESHOLD_PIECE`] of `z = 2`** is moved
 //!   onto it, and no break point is kept that close above it. `σ_all` is
 //!   infinite at `z = 2` itself, where the integrand's `(z² − 4)` makes
@@ -64,7 +71,7 @@ pub const SPLITS: [f64; 4] = [1.0, 4.0, 16.0, 50.0];
 
 /// Ratio between successive break points bracketing a resonance, in
 /// units of its width. The ladder adds `2 ⌈log₄((Z − 2)/g)⌉` points for
-/// an interval `[2, Z]` and a width `g`: 70 for a width of 1e-17 of
+/// an interval `[2, Z]` and a width `g`: 54 for a width of 1e-12 of
 /// `m_x` at `x = 0.01`.
 pub const RESONANCE_LADDER_RATIO: f64 = 4.0;
 
