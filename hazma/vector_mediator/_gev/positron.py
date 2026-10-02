@@ -34,6 +34,9 @@ from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
 from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
+from hazma.utils import RealArray
+
+from .utils import V_V_REST_FRAME_POINTS
 
 PositronDecaySpectrumFn = Callable[[Any, float], Any]
 
@@ -62,6 +65,8 @@ class _DecayDndePostiron(Protocol):
     _ff_pi_k_k0: vff.VectorFormFactorPiKK0
     _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
     _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
+
+    def partial_widths(self) -> dict[str, float]: ...
 
 
 def _make_spectrum_n_body_decay(
@@ -848,68 +853,110 @@ def dnde_positron_pi_pi_pi0_pi0(
     return dnde
 
 
+def _dnde_positron_v_v_rest_frame(
+    self: _DecayDndePostiron,
+    positron_energies: RealArray,
+    bfs: dict[str, float],
+    *,
+    npts: int,
+    nbins: int,
+) -> RealArray:
+    """Positron spectrum of a pair of vector mediators, each at rest.
+
+    The spectrum is twice the sum of the mediator's decay channels, each
+    evaluated at a center-of-mass energy equal to the mediator mass and
+    weighted by its branching fraction in `bfs`. Like every channel in this
+    module it counts electrons and positrons together. The `e e` line is
+    left to `dnde_positron_v_v`.
+    """
+    kwargs = {"npts": npts, "nbins": nbins}
+    kwargs2 = {"nbins": nbins}
+
+    # Factor of 2 for 2 vectors
+    args = (positron_energies, self.mv)
+    return 2 * (
+        bfs["mu mu"] * dnde_positron_mu_mu(self, *args)
+        + bfs["pi pi"] * dnde_positron_pi_pi(self, *args)
+        + bfs["k0 k0"] * dnde_positron_k0_k0(self, *args)
+        + bfs["k k"] * dnde_positron_k_k(self, *args)
+        + bfs["pi0 gamma"] * dnde_positron_pi0_gamma(self, *args)
+        + bfs["eta gamma"] * dnde_positron_eta_gamma(self, *args)
+        + bfs["pi0 phi"] * dnde_positron_pi0_phi(self, *args)
+        + bfs["eta phi"] * dnde_positron_eta_phi(self, *args)
+        + bfs["eta omega"] * dnde_positron_eta_omega(self, *args)
+        + bfs["pi0 pi0 gamma"] * dnde_positron_pi0_pi0_gamma(self, *args)
+        + bfs["pi pi pi0"] * dnde_positron_pi_pi_pi0(self, *args, **kwargs)
+        + bfs["pi pi eta"] * dnde_positron_pi_pi_eta(self, *args, **kwargs2)
+        + bfs["pi pi etap"] * dnde_positron_pi_pi_etap(self, *args, **kwargs2)
+        + bfs["pi pi omega"] * dnde_positron_pi_pi_omega(self, *args, **kwargs2)
+        + bfs["pi0 pi0 omega"] * dnde_positron_pi0_pi0_omega(self, *args, **kwargs2)
+        + bfs["pi0 k0 k0"] * dnde_positron_pi0_k0_k0(self, *args, **kwargs)
+        + bfs["pi0 k k"] * dnde_positron_pi0_k_k(self, *args, **kwargs)
+        + bfs["pi k k0"] * dnde_positron_pi_k_k0(self, *args, **kwargs)
+        + bfs["pi pi pi pi"] * dnde_positron_pi_pi_pi_pi(self, *args, **kwargs)
+        + bfs["pi pi pi0 pi0"] * dnde_positron_pi_pi_pi0_pi0(self, *args, **kwargs)
+    )
+
+
 def dnde_positron_v_v(
     self: _DecayDndePostiron,
     positron_energies,
     cme,
     *,
-    method="quad",
     npts: int = 1 << 15,
     nbins: int = 30,
 ):
-    """Generate the spectrum into two vector mediators
+    """Generate the spectrum into two vector mediators.
+
+    Each mediator carries `cme / 2` and decays isotropically in its rest
+    frame. The rest-frame spectrum is tabulated on `V_V_REST_FRAME_POINTS`
+    log-spaced energies from the electron mass to `m_V / 2`, which spans
+    its support, and its linear interpolant is boosted exactly by
+    `hazma.spectra.boost.dnde_boost_array`. The `V -> e+ e-` line at
+    `m_V / 2` carries two leptons per decay and is boosted analytically.
 
     Parameters
     ----------
-    photon_energies: array
-        Array of photon energies where the spectrum should be computed.
+    positron_energies: array
+        Array of positron energies where the spectrum should be computed,
+        in MeV.
     cme: float
-        Center-of-mass energy.
+        Center-of-mass energy, in MeV.
+    npts: int, optional
+        Number of phase-space points for the n-body channels.
+    nbins: int, optional
+        Number of energy bins for the n-body channels.
 
     Returns
     -------
     dnde: array
-        Spectrum evaluated at `photon_energies`.
+        Spectrum evaluated at `positron_energies`, in MeV^-1.
     """
-    gamma = 2.0 * self.mv / cme
+    gamma = 0.5 * cme / self.mv
     if gamma < 1.0:
         return np.zeros_like(positron_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
 
-    kwargs = {"npts": npts, "nbins": nbins}
-    kwargs2 = {"nbins": nbins}
+    pws = self.partial_widths()
+    width = sum(pws.values())
+    bfs = {key: val / width for key, val in pws.items()}
 
-    def dnde(es):
-        args = (es, cme)
-        spec = np.zeros_like(es)
-        spec += dnde_positron_e_e(self, *args)
-        spec += dnde_positron_mu_mu(self, *args)
-        spec += dnde_positron_pi_pi(self, *args)
-        spec += dnde_positron_k0_k0(self, *args)
-        spec += dnde_positron_k_k(self, *args)
-        spec += dnde_positron_pi0_gamma(self, *args)
-        spec += dnde_positron_eta_gamma(self, *args)
-        spec += dnde_positron_pi0_phi(self, *args)
-        spec += dnde_positron_eta_phi(self, *args)
-        spec += dnde_positron_eta_omega(self, *args)
-        spec += dnde_positron_pi0_pi0_gamma(self, *args)
-        spec += dnde_positron_pi_pi_pi0(self, *args, **kwargs)
-        spec += dnde_positron_pi_pi_eta(self, *args, **kwargs2)
-        spec += dnde_positron_pi_pi_etap(self, *args, **kwargs2)
-        spec += dnde_positron_pi_pi_omega(self, *args, **kwargs2)
-        spec += dnde_positron_pi0_pi0_omega(self, *args, **kwargs2)
-        spec += dnde_positron_pi0_k0_k0(self, *args, **kwargs)
-        spec += dnde_positron_pi0_k_k(self, *args, **kwargs)
-        spec += dnde_positron_pi_k_k0(self, *args, **kwargs)
-        spec += dnde_positron_pi_pi_pi_pi(self, *args, **kwargs)
-        spec += dnde_positron_pi_pi_pi0_pi0(self, *args, **kwargs)
-
-        return spec
-
-    return boost.make_boost_function(dnde, mass=me)(
-        positron_energies, beta, method=method
+    rest_energies = np.geomspace(me, 0.5 * self.mv, V_V_REST_FRAME_POINTS)
+    dnde = _dnde_positron_v_v_rest_frame(
+        self, rest_energies, bfs, npts=npts, nbins=nbins
     )
+    boosted = boost.dnde_boost_array(
+        dnde, positron_energies, beta, mass=me, rest_energies=rest_energies
+    )
+
+    # Two leptons per decay, two vectors
+    boosted += (
+        4
+        * bfs["e e"]
+        * boost.boost_delta_function(positron_energies, 0.5 * self.mv, me, beta)
+    )
+    return boosted
 
 
 PositronSpectrumFunctions = TypedDict(

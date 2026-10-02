@@ -247,7 +247,7 @@ unchanged. Its only in-tree consumers are `hazma/vector_mediator/_gev`'s
 `v v` positron and neutrino spectra, and "Risks" was right that they
 never boost: both invert `γ`, so they return zero wherever the channel is
 open. That defect is filed as
-[`vector-mediator-gev-vv-positron-and-neutrino-are-zero.md`](../todo/vector-mediator-gev-vv-positron-and-neutrino-are-zero.md).
+[`vector-mediator-gev-vv-positron-and-neutrino-are-zero.md`](vector-mediator-gev-vv-positron-and-neutrino-are-zero.md).
 The window matters there only once that is repaired. Separately, the
 sweep found a residual that predates this repair: the vector `total` is
 2.2e-4 from the energy-variable reference at `γ = 1.05` and 0.060 of its

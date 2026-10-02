@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, overload
+from typing import Dict, List, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -7,6 +7,13 @@ from hazma import parameters
 
 RealArray = npt.NDArray[np.float64]
 BoolArray = npt.NDArray[np.bool_]
+
+# Number of rest-frame energies on which the `v v` positron and neutrino
+# spectra tabulate a mediator's decay spectrum before boosting it. At
+# m_V = 1 GeV the boosted spectra agree with a 32,000-point tabulation to
+# 1.2e-5 (positrons) and 5.7e-4 (neutrinos) wherever they exceed 1e-3 of
+# their peak, and conserve particle number to 2e-5.
+V_V_REST_FRAME_POINTS = 2000
 
 
 def call_with_kinematic_threshold(f, x, thresholds: List[float]):

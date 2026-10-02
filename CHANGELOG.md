@@ -30,8 +30,31 @@ user-facing change even when no signature did.
   `annihilation_cross_section_funcs`. A model that relies on the generic
   thermal average should override it when a channel opens above the dark
   matter pair threshold, such as annihilation into two mediators.
+- **`hazma.spectra.dnde_boost_array` takes `rest_energies`.** The
+  keyword-only argument samples the rest-frame spectrum on its own grid,
+  so the boosted values no longer depend on the lab energies requested.
+  Without it the function behaves as before.
 
 ### Changed
+
+- **`VectorMediatorGeV`'s `v v` positron and neutrino spectra are no
+  longer zero.** Both inverted the mediator's boost, `γ = 2 m_V / e_cm`,
+  and returned zeros wherever `χχ → VV` is open. Behind that guard they
+  also evaluated the decay channels at `e_cm` instead of `m_V` and summed
+  them without branching fractions. Both now tabulate one mediator's
+  branching-weighted decay spectrum at rest, double it, and boost it by
+  `γ = e_cm / (2 m_V)`. The `V → e⁺e⁻` and `V → νν̄` lines enter as
+  boosted boxes carrying two particles per decay, the counting every
+  channel of `hazma.vector_mediator._gev` uses. At `m_x = 5` GeV,
+  `m_V = 1` GeV, `e_cm = 10.1` GeV and every coupling 1, the spectra
+  carry 2.647 electrons and positrons, 2.294 electron-, 3.117 muon- and
+  0.375 tau-flavored neutrinos per annihilation, peaking at 3.7e-3,
+  4.4e-3, 5.9e-3 and 7.6e-5 MeV⁻¹; all were `0.0`. With only leptonic
+  decays open, each count matches twice the exact per-decay yield within
+  1.8e-5, at `γ = 5.05` and `γ = 20`. The private `method` keyword of
+  both functions is gone, since nothing is integrated by quadrature.
+  Details:
+  `docs/followups/done/vector-mediator-gev-vv-positron-and-neutrino-are-zero.md`.
 
 - **The pure-Python thermal averages now integrate past the last channel
   threshold.** The generic fallback in `hazma.relic_density` and

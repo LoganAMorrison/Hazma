@@ -33,7 +33,9 @@ from hazma.parameters import omega_mass as momega
 from hazma.parameters import phi_mass as mphi
 from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
-from hazma.utils import NeutrinoFlavor
+from hazma.utils import NeutrinoFlavor, RealArray
+
+from .utils import V_V_REST_FRAME_POINTS
 
 NeutrinoDecaySpectrumFn = Callable[[Any, float, NeutrinoFlavor], Any]
 
@@ -62,6 +64,8 @@ class _DecayDndeNeutrino(Protocol):
     _ff_pi_k_k0: vff.VectorFormFactorPiKK0
     _ff_pi_pi_pi_pi: vff.VectorFormFactorPiPiPiPi
     _ff_pi_pi_pi0_pi0: vff.VectorFormFactorPiPiPi0Pi0
+
+    def partial_widths(self) -> dict[str, float]: ...
 
 
 def _make_zeros(neutrino_energies):
@@ -948,70 +952,120 @@ def dnde_neutrino_pi_pi_pi0_pi0(
     return dnde
 
 
-def dnde_neutrino_v_v(
+def _dnde_neutrino_v_v_rest_frame(  # noqa: PLR0913 — the channel signature plus `bfs`
+    self: _DecayDndeNeutrino,
+    neutrino_energies: RealArray,
+    flavor: NeutrinoFlavor,
+    bfs: dict[str, float],
+    *,
+    npts: int,
+    nbins: int,
+) -> RealArray:
+    """Neutrino spectrum of a pair of vector mediators, each at rest.
+
+    The spectrum is twice the sum of the mediator's decay channels, each
+    evaluated at a center-of-mass energy equal to the mediator mass and
+    weighted by its branching fraction in `bfs`. Like every channel in this
+    module it counts neutrinos and anti-neutrinos together. The neutrino
+    lines are left to `dnde_neutrino_v_v`.
+    """
+    kwargs = {"npts": npts, "nbins": nbins}
+    kwargs2 = {"nbins": nbins}
+
+    # Factor of 2 for 2 vectors
+    args = (neutrino_energies, self.mv, flavor)
+    return 2 * (
+        bfs["mu mu"] * dnde_neutrino_mu_mu(self, *args)
+        + bfs["pi pi"] * dnde_neutrino_pi_pi(self, *args)
+        + bfs["k0 k0"] * dnde_neutrino_k0_k0(self, *args)
+        + bfs["k k"] * dnde_neutrino_k_k(self, *args)
+        + bfs["pi0 gamma"] * dnde_neutrino_pi0_gamma(self, *args)
+        + bfs["eta gamma"] * dnde_neutrino_eta_gamma(self, *args)
+        + bfs["pi0 phi"] * dnde_neutrino_pi0_phi(self, *args)
+        + bfs["eta phi"] * dnde_neutrino_eta_phi(self, *args)
+        + bfs["eta omega"] * dnde_neutrino_eta_omega(self, *args)
+        + bfs["pi0 pi0 gamma"] * dnde_neutrino_pi0_pi0_gamma(self, *args)
+        + bfs["pi pi pi0"] * dnde_neutrino_pi_pi_pi0(self, *args, **kwargs)
+        + bfs["pi pi eta"] * dnde_neutrino_pi_pi_eta(self, *args, **kwargs2)
+        + bfs["pi pi etap"] * dnde_neutrino_pi_pi_etap(self, *args, **kwargs2)
+        + bfs["pi pi omega"] * dnde_neutrino_pi_pi_omega(self, *args, **kwargs2)
+        + bfs["pi0 pi0 omega"] * dnde_neutrino_pi0_pi0_omega(self, *args, **kwargs2)
+        + bfs["pi0 k0 k0"] * dnde_neutrino_pi0_k0_k0(self, *args, **kwargs)
+        + bfs["pi0 k k"] * dnde_neutrino_pi0_k_k(self, *args, **kwargs)
+        + bfs["pi k k0"] * dnde_neutrino_pi_k_k0(self, *args, **kwargs)
+        + bfs["pi pi pi pi"] * dnde_neutrino_pi_pi_pi_pi(self, *args, **kwargs)
+        + bfs["pi pi pi0 pi0"] * dnde_neutrino_pi_pi_pi0_pi0(self, *args, **kwargs)
+    )
+
+
+# The mediator decay that yields a neutrino line of each flavor.
+_NEUTRINO_LINE_CHANNEL: dict[str, str] = {"e": "ve ve", "mu": "vm vm", "tau": "vt vt"}
+
+
+def dnde_neutrino_v_v(  # noqa: PLR0913 — the channel signature
     self: _DecayDndeNeutrino,
     neutrino_energies,
     cme,
     flavor: NeutrinoFlavor,
     *,
-    method: str = "quad",
     npts: int = 1 << 15,
     nbins: int = 30,
 ):
     """Generate the spectrum into two vector mediators.
 
+    Each mediator carries `cme / 2` and decays isotropically in its rest
+    frame. The rest-frame spectrum is tabulated on `V_V_REST_FRAME_POINTS`
+    log-spaced energies from `1e-6 m_V / 2` to `m_V / 2`, which spans its
+    support up to a negligible soft tail, and its linear interpolant is
+    boosted exactly by `hazma.spectra.boost.dnde_boost_array`. The
+    `V -> nu nubar` line of the requested flavor at `m_V / 2` carries two
+    neutrinos per decay and is boosted analytically.
+
     Parameters
     ----------
     neutrino_energies: array
-        Array of photon energies where the spectrum should be computed.
+        Array of neutrino energies where the spectrum should be computed,
+        in MeV.
     cme: float
-        Center-of-mass energy.
+        Center-of-mass energy, in MeV.
     flavor: str
         Flavor of neutrino. Can be 'e', 'mu' or 'tau'.
+    npts: int, optional
+        Number of phase-space points for the n-body channels.
+    nbins: int, optional
+        Number of energy bins for the n-body channels.
 
     Returns
     -------
     dnde: array
-        Spectrum evaluated at `neutrino_energies`.
+        Spectrum evaluated at `neutrino_energies`, in MeV^-1.
     """
-    gamma = 2.0 * self.mv / cme
+    gamma = 0.5 * cme / self.mv
     if gamma < 1.0:
         return _make_zeros(neutrino_energies)
 
     beta = np.sqrt(1.0 - gamma**-2)
 
-    kwargs = {"npts": npts, "nbins": nbins}
-    kwargs2 = {"nbins": nbins}
+    pws = self.partial_widths()
+    width = sum(pws.values())
+    bfs = {key: val / width for key, val in pws.items()}
 
-    def dnde(es):
-        args = (es, cme, flavor)
-        spec = np.zeros_like(es)
-        spec += dnde_neutrino_e_e(self, *args)
-        spec += dnde_neutrino_mu_mu(self, *args)
-        spec += dnde_neutrino_pi_pi(self, *args)
-        spec += dnde_neutrino_k0_k0(self, *args)
-        spec += dnde_neutrino_k_k(self, *args)
-        spec += dnde_neutrino_pi0_gamma(self, *args)
-        spec += dnde_neutrino_eta_gamma(self, *args)
-        spec += dnde_neutrino_pi0_phi(self, *args)
-        spec += dnde_neutrino_eta_phi(self, *args)
-        spec += dnde_neutrino_eta_omega(self, *args)
-        spec += dnde_neutrino_pi0_pi0_gamma(self, *args)
-        spec += dnde_neutrino_pi_pi_pi0(self, *args, **kwargs)
-        spec += dnde_neutrino_pi_pi_eta(self, *args, **kwargs2)
-        spec += dnde_neutrino_pi_pi_etap(self, *args, **kwargs2)
-        spec += dnde_neutrino_pi_pi_omega(self, *args, **kwargs2)
-        spec += dnde_neutrino_pi0_pi0_omega(self, *args, **kwargs2)
-        spec += dnde_neutrino_pi0_k0_k0(self, *args, **kwargs)
-        spec += dnde_neutrino_pi0_k_k(self, *args, **kwargs)
-        spec += dnde_neutrino_pi_k_k0(self, *args, **kwargs)
-        spec += dnde_neutrino_pi_pi_pi_pi(self, *args, **kwargs)
-        spec += dnde_neutrino_pi_pi_pi0_pi0(self, *args, **kwargs)
+    emax = 0.5 * self.mv
+    rest_energies = np.geomspace(1e-6 * emax, emax, V_V_REST_FRAME_POINTS)
+    dnde = _dnde_neutrino_v_v_rest_frame(
+        self, rest_energies, flavor, bfs, npts=npts, nbins=nbins
+    )
+    boosted = boost.dnde_boost_array(
+        dnde, neutrino_energies, beta, rest_energies=rest_energies
+    )
 
-        return spec
-
-    booster = boost.make_boost_function(dnde, mass=0.0)
-    return booster(neutrino_energies, beta, method=method)
+    # Two neutrinos per decay, two vectors
+    boosted += (
+        4
+        * bfs[_NEUTRINO_LINE_CHANNEL[flavor]]
+        * boost.boost_delta_function(neutrino_energies, emax, 0.0, beta)
+    )
+    return boosted
 
 
 NeutrinoSpectrumFunctions = TypedDict(
