@@ -22,7 +22,9 @@ every coupling 1: the `v v` photon spectrum carries 6.09 photons per
 annihilation, and the two line boxes carry 4.00 of them. Weighted by
 `BR(π⁰γ) = 6e-4` and `BR(ηγ) = 0.0109`, they would carry 0.023. The
 line misplacement moves the `π⁰γ` line from 490.89 to 490.26 MeV in the
-rest frame.
+rest frame. The continuum also divides by the mediator's total width, so
+a mediator with no open decay gives `NaN` rather than zero, which the
+positron and neutrino spectra guard against.
 
 ## What
 

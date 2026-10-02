@@ -24,6 +24,7 @@ import numpy as np
 import pytest
 from scipy.integrate import trapezoid
 
+from hazma.parameters import charged_pion_mass
 from hazma.parameters import electron_mass as me
 from hazma.vector_mediator import VectorMediatorGeV
 from hazma.vector_mediator._gev import neutrino, positron
@@ -199,3 +200,78 @@ def test_v_v_vanishes_below_threshold(
     else:
         dnde = neutrino.dnde_neutrino_v_v(leptophilic, es, cme, kind)
     np.testing.assert_array_equal(dnde, 0.0)
+
+
+# PDG's `BR(pi -> mu nu)`, as `hazma._core` carries it in
+# `rust/src/constants.rs`. The rest goes to `pi -> e nu`.
+BR_PI_TO_MU_NUMU = 0.9998770
+
+# A charged pion yields one electron or positron and one electron-flavored
+# neutrino whichever way it decays, and two muon-flavored neutrinos
+# through `pi -> mu nu`.
+PER_PION = {
+    "positron": 1.0,
+    "e": 1.0,
+    "mu": 2.0 * BR_PI_TO_MU_NUMU,
+    "tau": 0.0,
+}
+
+
+@pytest.mark.parametrize("kind", list(MASSES))
+def test_v_v_keeps_the_pion_lines_at_the_pion_pair_threshold(kind: str) -> None:
+    """Pions from `V -> pi pi` just above threshold keep their prompt lines.
+
+    At `m_V = 2 m_pi (1 + 1e-6)` each pion's lines boost into boxes 0.3%
+    wide, narrower than a step of the rest-frame grid's log spacing. With
+    only quark couplings `V -> pi pi` and `V -> pi0 gamma` are open, and
+    the second yields neither leptons nor neutrinos, so each count is
+    exact. The rest-frame grid's residual is 2.5e-5, inside `NUMBER_RTOL`;
+    without the box edges on that grid the muon-flavored count lost half
+    its value.
+    """
+    mv = 2.0 * charged_pion_mass * (1.0 + 1e-6)
+    model = VectorMediatorGeV(MX, mv, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    pws = model.partial_widths()
+    bf_pi_pi = pws["pi pi"] / sum(pws.values())
+
+    cme = CMES[0]
+    lo = me * (1.0 + 1e-9) if kind == "positron" else 1e-6
+    es = np.geomspace(lo, 0.5 * cme, 20_001)
+    number = trapezoid(_spectrum_fn(model, kind)(es, cme), es)
+
+    # Two mediators, two pions each.
+    expected = 4.0 * bf_pi_pi * PER_PION[kind]
+    assert number == pytest.approx(expected, rel=NUMBER_RTOL, abs=1e-300)
+
+
+@pytest.mark.parametrize("kind", list(MASSES))
+def test_v_v_accepts_integer_and_scalar_energies(kind: str) -> None:
+    """Integer and scalar energies give the floating-point array's values."""
+    model = _leptophilic()
+    fn = _spectrum_fn(model, kind)
+    cme = CMES[0]
+    expected = fn(np.array([100.0, 200.0]), cme)
+
+    assert np.all(expected > 0.0)
+    np.testing.assert_array_equal(fn(np.array([100, 200]), cme), expected)
+    scalar = fn(100.0, cme)
+    assert isinstance(scalar, float)
+    assert scalar == expected[0]
+
+
+def test_v_v_positrons_vanish_below_the_electron_pair_threshold() -> None:
+    """A mediator lighter than `2 m_e` decays only into neutrinos."""
+    model = VectorMediatorGeV(MX, 0.5, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0)
+    es = np.array([1.0, 2.0])
+    cme = 10.1e3
+    np.testing.assert_array_equal(positron.dnde_positron_v_v(model, es, cme), 0.0)
+    assert np.all(neutrino.dnde_neutrino_v_v(model, es, cme, "e") > 0.0)
+
+
+@pytest.mark.parametrize("kind", list(MASSES))
+def test_v_v_vanishes_for_a_stable_mediator(kind: str) -> None:
+    """With every Standard Model coupling zero the mediator never decays."""
+    model = VectorMediatorGeV(MX, MV, 1.0, *([0.0] * 8))
+    np.testing.assert_array_equal(
+        _spectrum_fn(model, kind)(np.array([1.0, 2.0]), CMES[0]), 0.0
+    )

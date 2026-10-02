@@ -1454,6 +1454,13 @@ branch of the underlying kernel that "any" reaches.
   `TestPhysics::test_a_closed_electron_channel_adds_no_line` pins both points
   and their neighbouring doubles.
 
+- PR #118 normalized `VectorMediatorGeV`'s decay partial widths into
+  branching fractions for the `v v` positron and neutrino spectra. Review
+  set `gvxx = 1` and every Standard Model coupling to zero: `χχ → VV` stays
+  open, the mediator width is zero, and both spectra returned
+  `[nan, nan]`. The repair returns zeros for a mediator with no open decay,
+  and `test_v_v_vanishes_for_a_stable_mediator` pins all four spectra.
+
 ### float-clip-swallows-nan
 
 - PR #105 clipped the charged-pion neutrino boost window at the muon
@@ -1523,3 +1530,26 @@ branch of the underlying kernel that "any" reaches.
   isovector channels vanish everywhere and pass the closed-below check
   regardless. The repair takes the threshold from `_ff_pi0_omega`, and the
   test covers `VectorMediatorGeV` with kinetic-mixing quark couplings.
+
+### fixed-grid-steps-over-a-vanishing-feature
+
+- PR #118 tabulated the `v v` neutrino spectrum's rest frame on 2,000
+  log-spaced energies. Review set `m_V = 2 m_π± (1 + 1e-6)` with quark
+  couplings `(1, −1, 0)`: each pion's `π → μ ν` line boosts into a box
+  0.3% wide, narrower than one grid step, and the muon-flavored count fell
+  from `7.5789e-4` to `3.7891e-4`. The repair, `v_v_rest_energies` in
+  `hazma/vector_mediator/_gev/utils.py`, brackets both edges of each
+  boosted pion line, and the count is now within 2.4e-6 of exact.
+  `test_v_v_keeps_the_pion_lines_at_the_pion_pair_threshold` pins it.
+
+### output-inherits-the-input-dtype
+
+- PR #118's `v v` positron and neutrino spectra returned zeros for
+  `np.array([100, 200])` and nonzero values for `[100.0, 200.0]`:
+  `dnde_boost_array` and `boost_delta_function` allocated their output with
+  `np.zeros_like` on the caller's integer array. A scalar request raised
+  `TypeError` because `dnde_boost_array` indexed its input. The repair
+  coerces energies to a float array in every function of
+  `hazma/spectra/boost.py` and unwraps a scalar result.
+  `test_v_v_accepts_integer_and_scalar_energies` and
+  `test_integer_and_scalar_energies_boost_like_floats` pin both.

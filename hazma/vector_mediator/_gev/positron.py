@@ -36,7 +36,7 @@ from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
 from hazma.utils import RealArray
 
-from .utils import V_V_REST_FRAME_POINTS
+from .utils import float_zeros_like, v_v_rest_energies
 
 PositronDecaySpectrumFn = Callable[[Any, float], Any]
 
@@ -909,11 +909,11 @@ def dnde_positron_v_v(
     """Generate the spectrum into two vector mediators.
 
     Each mediator carries `cme / 2` and decays isotropically in its rest
-    frame. The rest-frame spectrum is tabulated on `V_V_REST_FRAME_POINTS`
-    log-spaced energies from the electron mass to `m_V / 2`, which spans
-    its support, and its linear interpolant is boosted exactly by
-    `hazma.spectra.boost.dnde_boost_array`. The `V -> e+ e-` line at
-    `m_V / 2` carries two leptons per decay and is boosted analytically.
+    frame. The rest-frame spectrum is tabulated from the electron mass to
+    `m_V / 2`, which spans its support, on the grid of
+    `utils.v_v_rest_energies`, and its linear interpolant is boosted
+    exactly by `hazma.spectra.boost.dnde_boost_array`. The `V -> e+ e-`
+    line at `m_V / 2` carries two leptons per decay and is boosted analytically.
 
     Parameters
     ----------
@@ -933,16 +933,19 @@ def dnde_positron_v_v(
         Spectrum evaluated at `positron_energies`, in MeV^-1.
     """
     gamma = 0.5 * cme / self.mv
-    if gamma < 1.0:
-        return np.zeros_like(positron_energies)
-
-    beta = np.sqrt(1.0 - gamma**-2)
+    if gamma < 1.0 or self.mv <= 2.0 * me:
+        return float_zeros_like(positron_energies)
 
     pws = self.partial_widths()
     width = sum(pws.values())
+    if width == 0.0:
+        # A mediator with no open decay is stable and yields nothing.
+        return float_zeros_like(positron_energies)
+
+    beta = np.sqrt(1.0 - gamma**-2)
     bfs = {key: val / width for key, val in pws.items()}
 
-    rest_energies = np.geomspace(me, 0.5 * self.mv, V_V_REST_FRAME_POINTS)
+    rest_energies = v_v_rest_energies(self.mv, me)
     dnde = _dnde_positron_v_v_rest_frame(
         self, rest_energies, bfs, npts=npts, nbins=nbins
     )

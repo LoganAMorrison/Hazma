@@ -116,6 +116,32 @@ argument: an identical result when `rest_energies` equals `energies`,
 interpolation at rest, and a narrow peak boosting to
 `boost_delta_function` within 8.8e-12.
 
+**Review round 1 (PR #118).** Review found five defects, each now pinned
+in `test/vector_mediator/test_gev_v_v_spectra.py`:
+
+- *Narrow support at the `π⁺π⁻` threshold.* Near threshold the pions are
+  nearly at rest, so each `π → ℓ ν` line boosts into a box whose width
+  vanishes there. A plain log grid stepped over it. At
+  `m_V = 2 m_π± (1 + 1e-6)` with quark couplings `(1, −1, 0)`, the
+  muon-flavored count was `3.7891e-4` against an exact `7.5780e-4`.
+  `utils.v_v_rest_energies` now adds points bracketing both edges of the
+  pion's three lines to the log grid. The pion's are the only lines in
+  the decay spectra these sums read; the kaon spectra are tabulated
+  integrands. Counts against the exact per-pion yield (one e±, one ν_e,
+  `2 BR(π → μν)` ν_μ) are within 2.4e-5 at `ε = 1e-6`, `1e-3` and `0.1`.
+  At `ε = 1e-9` the rest-frame grid carries the pion's count to 2.5e-5,
+  and the lab count converges to 6.2e-6 on 200,001 lab energies. At the
+  muon and kaon thresholds the plain grid was already within 1e-4.
+- *Integer energies gave zeros.* The boost functions allocated output in
+  the caller's dtype. Every function in `hazma/spectra/boost.py` now
+  computes in floating point.
+- *Scalar energies raised `TypeError`.* `dnde_boost_array` now accepts a
+  scalar when `rest_energies` is given and returns a float.
+- *A mediator lighter than `2 m_e` raised `IndexError`* in the positron
+  spectrum, whose rest grid was empty. It now returns zeros.
+- *A mediator with no open decay gave `NaN`*, from `0 / 0` in the
+  branching fractions. Both spectra now return zeros.
+
 **Found along the way.** Two defects outside this item's scope:
 
 - `dnde_photon_v_v` adds its `π⁰γ` and `ηγ` line boxes with weight 2

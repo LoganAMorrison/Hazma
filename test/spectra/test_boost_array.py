@@ -46,3 +46,23 @@ def test_a_narrow_rest_frame_peak_boosts_like_a_line() -> None:
     np.testing.assert_allclose(
         boosted, area * boost_delta_function(es, e0, 0.0, beta), rtol=1e-9
     )
+
+
+def test_integer_and_scalar_energies_boost_like_floats() -> None:
+    """The boosted values do not inherit an integer dtype or need an array."""
+    rest_es = np.linspace(0.0, 60.0, 61)
+    dnde = _triangle(rest_es)
+    expected = dnde_boost_array(
+        dnde, np.array([20.0, 40.0]), 0.6, rest_energies=rest_es
+    )
+
+    assert np.all(expected > 0.0)
+    np.testing.assert_array_equal(
+        dnde_boost_array(dnde, np.array([20, 40]), 0.6, rest_energies=rest_es),
+        expected,
+    )
+    assert dnde_boost_array(dnde, 20.0, 0.6, rest_energies=rest_es) == expected[0]
+    np.testing.assert_array_equal(
+        boost_delta_function(np.array([20, 40]), 30.0, 0.0, 0.6),
+        boost_delta_function(np.array([20.0, 40.0]), 30.0, 0.0, 0.6),
+    )

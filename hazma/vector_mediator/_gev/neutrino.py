@@ -35,7 +35,7 @@ from hazma.phase_space import PhaseSpaceDistribution1D
 from hazma.spectra import boost
 from hazma.utils import NeutrinoFlavor, RealArray
 
-from .utils import V_V_REST_FRAME_POINTS
+from .utils import float_zeros_like, v_v_rest_energies
 
 NeutrinoDecaySpectrumFn = Callable[[Any, float, NeutrinoFlavor], Any]
 
@@ -1014,9 +1014,9 @@ def dnde_neutrino_v_v(  # noqa: PLR0913 — the channel signature
     """Generate the spectrum into two vector mediators.
 
     Each mediator carries `cme / 2` and decays isotropically in its rest
-    frame. The rest-frame spectrum is tabulated on `V_V_REST_FRAME_POINTS`
-    log-spaced energies from `1e-6 m_V / 2` to `m_V / 2`, which spans its
-    support up to a negligible soft tail, and its linear interpolant is
+    frame. The rest-frame spectrum is tabulated from `1e-6 m_V / 2` to
+    `m_V / 2`, which spans its support up to a negligible soft tail, on the
+    grid of `utils.v_v_rest_energies`, and its linear interpolant is
     boosted exactly by `hazma.spectra.boost.dnde_boost_array`. The
     `V -> nu nubar` line of the requested flavor at `m_V / 2` carries two
     neutrinos per decay and is boosted analytically.
@@ -1042,16 +1042,19 @@ def dnde_neutrino_v_v(  # noqa: PLR0913 — the channel signature
     """
     gamma = 0.5 * cme / self.mv
     if gamma < 1.0:
-        return _make_zeros(neutrino_energies)
-
-    beta = np.sqrt(1.0 - gamma**-2)
+        return float_zeros_like(neutrino_energies)
 
     pws = self.partial_widths()
     width = sum(pws.values())
+    if width == 0.0:
+        # A mediator with no open decay is stable and yields nothing.
+        return float_zeros_like(neutrino_energies)
+
+    beta = np.sqrt(1.0 - gamma**-2)
     bfs = {key: val / width for key, val in pws.items()}
 
     emax = 0.5 * self.mv
-    rest_energies = np.geomspace(1e-6 * emax, emax, V_V_REST_FRAME_POINTS)
+    rest_energies = v_v_rest_energies(self.mv, 1e-6 * emax)
     dnde = _dnde_neutrino_v_v_rest_frame(
         self, rest_energies, flavor, bfs, npts=npts, nbins=nbins
     )
