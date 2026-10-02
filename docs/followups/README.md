@@ -49,6 +49,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the mediator decay boosts integrate across their channels' edges](todo/mediator-decay-boosts-lack-channel-break-points.md) | 2026-09-29 | the mediator decay boost repair (`C6`) | commit |
 | [the two thermal kernels disagree above `x = 300`](todo/thermal-kernels-disagree-above-x-300.md) | 2026-09-29 | the thermal upper-limit repair (`C7`) | cross-cutting |
 | [the Rust thermal kernels miss narrow mediator resonances](todo/thermal-kernels-miss-narrow-mediator-resonances.md) | 2026-09-29 | bracketing the resonance in the pure-Python thermal averages | cross-cutting |
+| [`solo-task` has no Codex counterpart](todo/solo-task-codex-port.md) | 2026-10-01 | the PR that added `solo-task` | commit |
 
 ## Promoted / Done / Pruned
 

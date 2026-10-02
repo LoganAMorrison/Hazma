@@ -237,6 +237,9 @@ only in a PR description.
 `.claude/skills/` and `.codex/skills/` hold parallel workflow skills for
 this loop: `execute-single-task`, `commit-and-pr`, `review-pr`,
 `review-respond`, `review-cycle`, `task-pipeline`, `begin-phase`, and
-`review-plan`. Each expects the filesystem contract above and points into
+`review-plan`. `.claude/skills/` also holds `solo-task`, which runs one
+task by hand in a long-lived session and has no Codex counterpart yet
+([`solo-task-codex-port.md`](docs/followups/todo/solo-task-codex-port.md)).
+Each expects the filesystem contract above and points into
 `docs/agents/` for shared rules. Read the active agent's `SKILL.md` for
 its exact inputs and outputs.

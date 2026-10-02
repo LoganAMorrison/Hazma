@@ -21,6 +21,10 @@ memory.
 - **Ad-hoc, non-project work** (a one-off fix, dep bump, or a branch that
   is not `<agent>/<project-slug>/<task-slug>`) → this skill errors out in
   Step 1. Do it directly and use `/commit-and-pr`.
+- **One task by hand in a long-lived main session** → `/solo-task`,
+  which runs this procedure by reference and hands its full-document
+  reads, gate, bookkeeping, and shipping to subagents so the main
+  window stays small.
 - **Committing / opening the PR** → out of scope. This skill runs the
   preflight gate and leaves the tree ready.
 
