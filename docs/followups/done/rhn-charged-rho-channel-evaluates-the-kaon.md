@@ -53,7 +53,7 @@ is wired for all three products in `hazma/spectra/_nbody.py`, to
 `dnde_neutrino_charged_rho`, so the channel now reaches the charged rho's
 own spectra. The `"rho0"` entries route the positron and the neutrino
 to zero, which is a separate defect, filed with the swap below as
-[`rho-neutrino-tables-are-swapped.md`](../todo/rho-neutrino-tables-are-swapped.md).
+[`rho-neutrino-tables-are-swapped.md`](rho-neutrino-tables-are-swapped.md).
 
 **The pin.** `test/rh_neutrino/test_rh_neutrino_two_body_channels.py`
 holds the `e ρ` channel to the charged rho boosted to
@@ -87,7 +87,7 @@ nonzero positron and neutrino energy on a 400-point log grid moves from
 The neutrino count, 6.0 per decay, is twice what `ρ± → π± π⁰` can make.
 The charged and neutral rho neutrino tables are swapped, so this channel
 now carries the neutral rho's `π⁺π⁻` yield. That is
-[`rho-neutrino-tables-are-swapped.md`](../todo/rho-neutrino-tables-are-swapped.md).
+[`rho-neutrino-tables-are-swapped.md`](rho-neutrino-tables-are-swapped.md).
 
 **The model.** Only `m_N = 1` GeV can be measured through the model's
 totals. At 2 and 5 GeV a channel with a tau is open, and every

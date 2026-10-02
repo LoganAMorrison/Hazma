@@ -96,7 +96,7 @@ _dnde_positron_dict: Dict[str, Callable[[RealArray, float], RealArray]] = {
     "eta": _positron.dnde_positron_eta,
     "etap": _positron.dnde_positron_eta_prime,
     "rho": _positron.dnde_positron_charged_rho,
-    "rho0": _dnde_zero,
+    "rho0": _positron.dnde_positron_neutral_rho,
     "omega": _positron.dnde_positron_omega,
     "phi": _positron.dnde_positron_phi,
 }
@@ -115,7 +115,7 @@ _dnde_neutrino_dict = {
     "eta": _neutrino.dnde_neutrino_eta,
     "etap": _neutrino.dnde_neutrino_eta_prime,
     "rho": _neutrino.dnde_neutrino_charged_rho,
-    "rho0": _dnde_zero_nu,
+    "rho0": _neutrino.dnde_neutrino_neutral_rho,
     "omega": _neutrino.dnde_neutrino_omega,
     "phi": _neutrino.dnde_neutrino_phi,
 }
