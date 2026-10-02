@@ -42,7 +42,10 @@ few percent are unaffected either way.
 
 Replace the kernels' `[2, ratio, 2 ratio]` with the same ladder. Both
 kernels already receive the mediator width (`width_s`, `width_v`). The
-ladder can add up to about 60 points at `Γ/m_x ~ 1e-17`, so
+ladder can add up to 70 points at `Γ/m_x ~ 1e-17` and `x = 0.01` (a
+width below the floor recorded in
+[`thermal-kernels-lose-accuracy-below-width-1e-13.md`](../todo/thermal-kernels-lose-accuracy-below-width-1e-13.md)),
+so
 `THERMAL_LIMIT` must grow with the point count, as the Python sites'
 `limit=50 + len(points)` does. Keep `2 ratio` as well, since the kernels
 open `xx → ss` and `xx → vv` there. Then re-derive the moved corpus

@@ -1442,9 +1442,11 @@ mod tests {
     /// The oracle splits at decay lengths `1/x` past every feature, as in
     /// `the_thermal_average_keeps_a_channel_far_above_threshold`, and at
     /// `z_r ± g·2^k` around the peak, half the ratio of
-    /// `crate::kernels::thermal_window::RESONANCE_LADDER_RATIO`, so no
-    /// piece shares the entry point's partition. It is held to 1e-7, 6.7x
-    /// the entry point's own `epsrel`.
+    /// `crate::kernels::thermal_window::RESONANCE_LADDER_RATIO`. The
+    /// `g·2^k` ladder contains every `g·4^k` rung, so the oracle refines
+    /// the entry point's partition, halving every rung interval, and
+    /// integrates each piece to `epsrel` 1e-12 separately. It is held to
+    /// 1e-7, 6.7x the entry point's own `epsrel`.
     #[test]
     fn the_thermal_average_resolves_a_narrow_resonance() {
         let (mx, ms) = (200.0, 550.0);
