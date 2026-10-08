@@ -95,9 +95,10 @@ CEPHES_DISCRIMINATOR_RTOL = 1e-14
 #: selecting what its name says.
 MIN_GRID_POINTS = 100
 
-#: Above this the mediator models short-circuit
-#: (``thermal_cross_section`` returns ``0.0`` for ``x > 300``), so it is
-#: the top of the only ``kn`` domain hazma can reach.
+#: The top of the ``kn`` range the comparison sweeps. It is where the
+#: unscaled ``K2(x)`` is still far from underflow, so the sweep measures
+#: the algorithm rather than the flush to zero that
+#: :class:`TestBesselKnUnderflowTail` covers.
 X_MAX_THERMAL = 300.0
 
 #: Where ``scipy.special.kn(2, .)`` first flushes to zero, and where this
@@ -544,10 +545,9 @@ class TestBesselKnUnderflowTail:
     conservative exponent limit, not the end of the representable range,
     so it discards about three decades of real values.
 
-    Nothing in hazma reaches it: ``thermal_cross_section`` short-circuits
-    above ``x = 300``, where ``K2 ~ 3.7e-132``. Pinned here so that a
-    later caller which widens that domain meets the divergence in a test
-    rather than in a spectrum.
+    Nothing in hazma reaches it: the thermal averages take the
+    exponentially scaled ``bessel_kne``, which does not underflow. Pinned here so that a later caller of the unscaled ``bessel_kn``
+    meets the divergence in a test rather than in a spectrum.
     """
 
     def test_agrees_up_to_scipys_flush_point(self) -> None:
@@ -559,7 +559,7 @@ class TestBesselKnUnderflowTail:
         # this module: measured max is 5.7e-14 here against 9.8e-16 over
         # the live domain, because the top of this window is deep in the
         # subnormals where the reference itself has lost mantissa bits.
-        # Not a reason to loosen anything -- hazma stops at x = 300.
+        # Not a reason to loosen anything -- no hazma caller reaches it.
         error, _ = max_relative_error(got, want)
         assert error <= RTOL, f"max relative error {error:.3e}"
 

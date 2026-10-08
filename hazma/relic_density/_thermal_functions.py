@@ -1,11 +1,11 @@
 import os
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import overload
 
 import numpy as np
-from scipy.special import kn, k1
 from scipy.integrate import quad
 from scipy.interpolate import UnivariateSpline
+from scipy.special import k1, k1e, kn, kve
 
 from hazma.utils import RealArray, RealOrRealArray
 
@@ -539,29 +539,76 @@ def thermal_cross_section_partition(
     return z_max, sorted(z for z in points if z_min + _MIN_THRESHOLD_PIECE < z < z_max)
 
 
-def thermal_cross_section_integrand(z: float, x: float, model) -> float:
+def thermal_average(
+    x: float,
+    mx: float,
+    sigma: Callable[[float], float],
+    thresholds: Iterable[float],
+    resonances: Iterable[tuple[float, float]],
+) -> float:
     """
-    Compute the integrand of the thermally average cross section for the dark
-    matter particle of the given model.
+    Compute the thermally averaged annihilation cross section.
+
+    This is the Gondolo-Gelmini average
+
+    ``<sigma v> = x / (2 K2(x))^2 * int_2^inf sigma(mx z) z^2 (z^2 - 4) K1(x z) dz``
+
+    over ``z = sqrt(s) / mx``, on the partition from
+    `thermal_cross_section_partition`. The Bessel factors overflow and
+    underflow a double from about ``x = 350``, so they are evaluated
+    exponentially scaled, with their common ``exp(2 x)`` cancelled, as
+    ``rust/src/kernels/thermal_window.rs`` does for the ``hazma._core``
+    kernels. The average is therefore finite at every ``x`` and tends to
+    its ``v -> 0`` limit as ``x`` grows: the s-wave cross section, or zero
+    as ``1/x`` when nothing is s-wave.
 
     Parameters
     ----------
-    z: float
-        Center of mass energy divided by DM mass.
     x: float
         Mass of the dark matter divided by its temperature.
-    model: dark matter model
-        Dark matter model, i.e. `ScalarMediator`, `VectorMediator`
-        or any model with a dark matter particle.
+    mx: float
+        Mass of the dark matter in MeV.
+    sigma: callable
+        Total annihilation cross section in MeV^-2 as a function of the
+        center-of-mass energy in MeV.
+    thresholds: iterable of float
+        Center-of-mass energies in MeV at which a channel opens.
+    resonances: iterable of (float, float)
+        Mass and width in MeV of each mediator.
 
     Returns
     -------
-    integrand: float
-        Integrand of the thermally-averaged cross-section.
+    tcs: float
+        Thermally averaged cross section in MeV^-2.
     """
-    sig = model.annihilation_cross_sections(model.mx * z)["total"]
-    kernal = z**2 * (z**2 - 4.0) * k1(x * z)
-    return sig * kernal
+    z_max, points = thermal_cross_section_partition(x, mx, thresholds, resonances)
+    pf = x / (2.0 * kve(2, x)) ** 2
+
+    def integrand(z: float) -> float:
+        weight = k1e(x * z) * np.exp(-x * (z - 2.0))
+        return sigma(mx * z) * z**2 * (z**2 - 4.0) * weight
+
+    # `epsabs=0.0` leaves the relative criterion as the binding one.
+    # <sigma v> is of order 1e-27 here, twenty decades under scipy's
+    # default `epsabs` of 1.49e-8, and QUADPACK returns as soon as
+    # *either* criterion is met -- so at the default the first
+    # Gauss-Kronrod pass clears it and the initial partition comes back
+    # unrefined. Measured on the mediator kernels that share this defect,
+    # that costs up to 100% of the value across the freeze-out region.
+    #
+    # `limit` keeps scipy's default 50 subdivisions free for refinement on
+    # top of the intervals the break points already cut.
+    return (
+        pf
+        * quad(
+            integrand,
+            2.0,
+            z_max,
+            points=[2.0, *points],
+            epsabs=0.0,
+            limit=50 + len(points),
+        )[0]
+    )
 
 
 def thermal_cross_section(x: float, model) -> float:
@@ -591,47 +638,12 @@ def thermal_cross_section(x: float, model) -> float:
     if hasattr(model, "thermal_cross_section"):
         return model.thermal_cross_section(x)
 
-    # If x is really large, we will get divide by zero errors
-    if x > 300:
-        return 0.0
-
-    pf = x / (2.0 * kn(2, x)) ** 2
-
-    # Commented out code does not seem to work. It give about a two
-    # orders-of-magnitude larger value that `quad`. I've tried `simps`,
-    # `trapz`, `romb` and `lagguass` (after factoring out e^(-x)). All of them
-    # seem to fail?
-    # ss = np.linspace(2.0, 150, 500)
-    # return simps(integrand(ss), ss) * numpf / den
-
-    # `epsabs=0.0` leaves the relative criterion as the binding one.
-    # <sigma v> is of order 1e-27 here, twenty decades under scipy's
-    # default `epsabs` of 1.49e-8, and QUADPACK returns as soon as
-    # *either* criterion is met -- so at the default the first
-    # Gauss-Kronrod pass clears it and the initial partition comes back
-    # unrefined. Measured on the mediator kernels that share this defect,
-    # that costs up to 100% of the value across the freeze-out region.
-    #
-    # `limit` keeps scipy's default 50 subdivisions free for refinement on
-    # top of the intervals the break points already cut.
-    #
     # A model need not derive from `hazma.theory.TheoryAnn`, so one that
     # lacks the threshold or resonance hook contributes no features.
-    z_max, points = thermal_cross_section_partition(
+    return thermal_average(
         x,
         model.mx,
+        lambda e_cm: model.annihilation_cross_sections(e_cm)["total"],
         getattr(model, "annihilation_thresholds", dict)().values(),
         getattr(model, "annihilation_resonances", list)(),
-    )
-    return (
-        pf
-        * quad(
-            thermal_cross_section_integrand,
-            2.0,
-            z_max,
-            args=(x, model),
-            points=[2.0, *points],
-            epsabs=0.0,
-            limit=50 + len(points),
-        )[0]
     )

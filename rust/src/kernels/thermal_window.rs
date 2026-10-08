@@ -58,6 +58,16 @@
 //! `hazma.relic_density._thermal_functions.thermal_cross_section_partition`,
 //! fed from each model's `annihilation_thresholds()` and
 //! `annihilation_resonances()`.
+//!
+//! The average's Bessel factors, `x / (2 K₂(x))²` outside the integral
+//! and `K₁(x z)` inside it, overflow and underflow a double from about
+//! `x = 350`, though their product stays finite at every `x`.
+//! [`prefactor`] and [`boltzmann_weight`] are those factors with their
+//! common `e^{±2x}` cancelled, so the average is computed at the true
+//! `x` everywhere and tends to its `v → 0` limit as `x` grows: the
+//! s-wave cross section, or zero as `1/x` when nothing is s-wave.
+
+use crate::special::{bessel_k1e, bessel_kne};
 
 /// How far past the last feature the integral runs, in decay lengths
 /// `1/x`. The Bessel kernel's tail beyond it is at most 3.0e-38 of its
@@ -80,6 +90,28 @@ pub const RESONANCE_LADDER_RATIO: f64 = 4.0;
 /// inside it, so on a piece this long the first evaluation lands 2.2e-12
 /// past `z = 2`, about 4900 ulps, where `σ_all` is finite.
 pub const MIN_THRESHOLD_PIECE: f64 = 1e-9;
+
+/// `x / (2 K₂(x))²`, scaled by `e^{−2x}`, the factor outside the
+/// thermal average's integral.
+///
+/// It grows as `x² / 2π` at large `x` rather than overflowing; the
+/// `e^{2x}` it omits is carried by [`boltzmann_weight`].
+#[must_use]
+pub fn prefactor(x: f64) -> f64 {
+    let two_k2 = 2.0 * bessel_kne(2, x);
+    x / (two_k2 * two_k2)
+}
+
+/// `K₁(x z)`, scaled by `e^{2x}`, the Boltzmann weight inside the thermal
+/// average's integral.
+///
+/// It is `e^{x z} K₁(x z)` times `e^{−x (z − 2)}`, which is at most of
+/// order one on `z ≥ 2` and underflows only where `K₁(x z)` is
+/// negligible against its value at threshold.
+#[must_use]
+pub fn boltzmann_weight(x: f64, z: f64) -> f64 {
+    bessel_k1e(x * z) * (-x * (z - 2.0)).exp()
+}
 
 /// The upper limit and break points for the thermal average at `x`.
 ///
@@ -128,8 +160,45 @@ pub fn partition(x: f64, thresholds: &[f64], resonances: &[(f64, f64)]) -> (f64,
 #[cfg(test)]
 mod tests {
     use super::{
-        DECAY_LENGTHS_PAST_LAST, MIN_THRESHOLD_PIECE, RESONANCE_LADDER_RATIO, SPLITS, partition,
+        DECAY_LENGTHS_PAST_LAST, MIN_THRESHOLD_PIECE, RESONANCE_LADDER_RATIO, SPLITS,
+        boltzmann_weight, partition, prefactor,
     };
+    use crate::special::{bessel_k1, bessel_kn};
+
+    /// Where the unscaled factors are normal their product is unchanged.
+    /// The two forms round different exponents, `x (z − 2)` against
+    /// `x z`, and an exponent rounded by `δ` moves the result by `δ`
+    /// relative; with `x z` up to 630 here that is 2.8e-14 measured,
+    /// under the bound by 3.5x.
+    #[test]
+    fn the_scaled_factors_keep_the_product() {
+        for &x in &[0.01_f64, 0.5, 3.0, 20.0, 100.0, 300.0] {
+            let two_k2 = 2.0 * bessel_kn(2, x);
+            for &z in &[2.0_f64, 2.0 + 1.0 / x, 2.0 + 30.0 / x] {
+                let unscaled = x / (two_k2 * two_k2) * bessel_k1(x * z);
+                let scaled = prefactor(x) * boltzmann_weight(x, z);
+                assert!(
+                    (scaled - unscaled).abs() <= 1e-13 * unscaled,
+                    "x = {x}, z = {z}: {scaled} against {unscaled}"
+                );
+            }
+        }
+    }
+
+    /// Past the unscaled factors' overflow the product keeps its leading
+    /// behavior, `x^{3/2} / (2 √(2π z)) e^{−x (z − 2)}`, from
+    /// `K_ν(y) ~ √(π/2y) e^{−y}`; the relative corrections are `O(1/x)`.
+    #[test]
+    fn the_scaled_factors_stay_finite_at_large_x() {
+        for &x in &[1e3_f64, 1e5, 1e8] {
+            let z = 2.0 + 2.0 / x;
+            let leading = x.powf(1.5) / (2.0 * (2.0 * std::f64::consts::PI * z).sqrt())
+                * (-x * (z - 2.0)).exp();
+            let got = prefactor(x) * boltzmann_weight(x, z);
+            assert!(got.is_normal());
+            assert!((got / leading - 1.0).abs() < 5.0 / x, "x = {x}");
+        }
+    }
 
     /// The limit runs from the last feature, not from threshold.
     #[test]

@@ -1,10 +1,7 @@
-from typing import List, Optional, NamedTuple, Callable
-
-from scipy import special
-from scipy import integrate
+from typing import Callable, List, NamedTuple, Optional
 
 from hazma.relic_density import relic_density as rd
-from hazma.relic_density._thermal_functions import thermal_cross_section_partition
+from hazma.relic_density._thermal_functions import thermal_average
 
 TWO_BODY = [
     "e e",
@@ -136,35 +133,9 @@ def relic_density(
     def acs(cme):
         return sum(fn(cme) for fn in acs_fns.values())
 
-    def integrand(z, x):
-        sig = acs(self.mx * z)
-        kernal = z**2 * (z**2 - 4.0) * special.k1(x * z)
-        return sig * kernal
-
     def thermal_cross_section(x):
-        # If x is really large, we will get divide by zero errors
-        if x > 300:
-            return 0.0
-
-        pf = x / (2.0 * special.kn(2, x)) ** 2
-        # `epsabs=0.0` leaves the relative criterion as the binding one;
-        # see `hazma.relic_density._thermal_functions.
-        # thermal_cross_section` for why the default absolute one is
-        # satisfied before any subdivision happens, and for `limit`.
-        z_max, points = thermal_cross_section_partition(
-            x, self.mx, thresholds, self.annihilation_resonances()
-        )
-        return (
-            pf
-            * integrate.quad(
-                integrand,
-                2.0,
-                z_max,
-                points=[2.0, *points],
-                args=(x,),
-                epsabs=0.0,
-                limit=50 + len(points),
-            )[0]
+        return thermal_average(
+            x, self.mx, acs, thresholds, self.annihilation_resonances()
         )
 
     model = VectorMediatorGeVRelicDensity(

@@ -117,9 +117,8 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
-use crate::kernels::thermal_window::partition;
+use crate::kernels::thermal_window::{boltzmann_weight, partition, prefactor};
 use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
-use crate::special::{bessel_k1, bessel_kn};
 
 /// Electron mass in MeV — `_c_vector_mediator_cross_sections.pyx:9`.
 pub const ME: f64 = 0.510998928;
@@ -433,10 +432,12 @@ fn sigma_xx_to_all(
 
 /// The thermally averaged `⟨σv⟩` in MeV⁻², at `x = m_x / T`.
 ///
-/// `x` is clipped at 300 rather than short-circuited to zero — the scalar
-/// model does the opposite at the same boundary, and the corpus pins both
-/// (`test/parity/cases.py`'s `_thermal_blocks`). Above `x = 300` this
-/// therefore keeps returning the value at 300.
+/// The average is integrated at the true `x` at every temperature, with
+/// the Bessel factors from [`prefactor`] and [`boltzmann_weight`]. The
+/// `.pyx` clipped `x` to 300, where its unscaled factors overflow, while
+/// the scalar model returned `0.0` there; replacing both rules moved
+/// published numbers, as roster entry `C8` in `test/parity/deltas.py`
+/// (`docs/followups/done/thermal-kernels-disagree-above-x-300.md`).
 ///
 /// # Errors
 ///
@@ -457,12 +458,6 @@ pub fn thermal_cross_section(
     gvmumu: f64,
     width_v: f64,
 ) -> Result<f64, NonRealResult> {
-    // "If x is really large, we will get divide by zero errors; we clip x
-    // since the thermal cross section should tend to a constant."
-    let xnew = if x < 300.0 { x } else { 300.0 };
-    let two_k2 = 2.0 * bessel_kn(2, xnew);
-    let prefactor = xnew / (two_k2 * two_k2);
-
     // Every `z` at which a channel of `sigma_xx_to_all` opens, each at its
     // kernel's own threshold.
     let thresholds = [
@@ -473,19 +468,12 @@ pub fn thermal_cross_section(
         (MPI0 + mv) / mx,
         2.0 * mv / mx,
     ];
-    let (upper, points) = partition(xnew, &thresholds, &[(mv / mx, width_v / mx)]);
+    let (upper, points) = partition(x, &thresholds, &[(mv / mx, width_v / mx)]);
 
     let mut nonreal = false;
     let mut integrand = |z: f64| {
         match sigma_xx_to_all(mx * z, mx, mv, gvxx, gvuu, gvdd, gvee, gvmumu, width_v) {
-            // `xnew`, not `x`: the `.pyx` passes the *clipped* value into
-            // the integrand's args tuple (`:658`), so above `x = 300`
-            // the Boltzmann weight saturates along with the prefactor.
-            // With the unclipped `x` here, `K₁(x z)` underflows to zero
-            // past `x ≈ 350` and the whole average collapses to `0.0`
-            // instead of tending to a constant — which is the behavior
-            // the clip exists to produce.
-            Ok(sigma) => sigma * (z * z) * ((z * z) - 4.0) * bessel_k1(xnew * z),
+            Ok(sigma) => sigma * (z * z) * ((z * z) - 4.0) * boltzmann_weight(x, z),
             Err(NonRealResult) => {
                 // scipy's `quad` propagates an exception out of the
                 // integrand rather than absorbing it, so the flag makes
@@ -515,7 +503,7 @@ pub fn thermal_cross_section(
     if nonreal {
         return Err(NonRealResult);
     }
-    Ok(prefactor * integral)
+    Ok(prefactor(x) * integral)
 }
 
 #[cfg(test)]
@@ -763,28 +751,36 @@ mod tests {
 
     // -- The thermal average ----------------------------------------------
 
-    /// Above `x = 300` the average saturates rather than vanishing.
+    /// Long after freeze-out the average tends to the s-wave cross
+    /// section, at every `x` rather than freezing at `x = 300`.
     ///
-    /// The `.pyx` clips `x` and passes the *clipped* value into the
-    /// integrand's argument tuple, so both the prefactor and the
-    /// Boltzmann weight freeze. Reproducing the clip in the prefactor
-    /// alone leaves `K₁(x z)` underflowing to zero past `x ≈ 350` and the
-    /// whole average collapsing to `0.0` — which is what this port did
-    /// until the corpus's `x = 1000` grid point caught it.
+    /// The vector `s`-channel annihilation of a Dirac pair is s-wave, so
+    /// `σ v → a` at threshold, with `v` the relative velocity `2β`, and
+    /// `⟨σv⟩ → a` as `x → ∞` (Gondolo and Gelmini, Nucl. Phys. B 360
+    /// (1991) 145). `a = 2β σ` is read off `sigma_xx_to_all` at
+    /// `β = 1e-6`, where the next order is 1e-12 relative; the average's
+    /// own next order is `O(1/x)` relative. Measured, `⟨σv⟩ / a − 1` is
+    /// 1.90/x from `x = 1e3` to 1e6, which the bound `10/x` holds with room;
+    /// the coefficient at 1e5 and 1e6 agrees to 3e-6. The quadrature's
+    /// `epsrel` of 1.49e-8 allows 8e-3 of the excess at 1e6, so the 1e-2
+    /// on that agreement is the integrator's own budget.
     #[test]
-    fn the_thermal_average_saturates_above_three_hundred() {
-        let at_300 =
-            thermal_cross_section(300.0, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
-        assert!(at_300 > 0.0);
-        for x in [300.0, 301.0, 1_000.0, 1e6] {
-            let got =
-                thermal_cross_section(x, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
-            assert_eq!(bits(got), bits(at_300), "x = {x} did not saturate");
+    fn the_thermal_average_tends_to_the_s_wave_limit_at_large_x() {
+        let at = |x: f64| {
+            thermal_cross_section(x, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap()
+        };
+        // `z − 2` is exact, so `β` carries no cancellation.
+        let z: f64 = 2.0 + 2.0_f64.powi(-40);
+        let beta = ((z - 2.0) * (z + 2.0)).sqrt() / z;
+        let a = 2.0
+            * beta
+            * sigma_xx_to_all(MX * z, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
+        let excess = |x: f64| at(x) / a - 1.0;
+        for x in [3e2_f64, 1e3, 1e4, 1e5, 1e6] {
+            assert!(excess(x).abs() < 10.0 / x, "x = {x}: {}", excess(x));
         }
-        // And below the clip it is a genuine function of x.
-        let at_299 =
-            thermal_cross_section(299.0, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
-        assert_ne!(bits(at_299), bits(at_300));
+        let (slow, fast) = (1e5 * excess(1e5), 1e6 * excess(1e6));
+        assert!((fast / slow - 1.0).abs() < 1e-2, "{slow} against {fast}");
     }
 
     /// The thermal integral, against an independent composite rule — and

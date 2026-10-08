@@ -1,4 +1,4 @@
-//! The three `scipy.special` functions hazma's compiled layer uses.
+//! The `scipy.special` functions hazma's compiled layer uses.
 //!
 //! A PyO3-free shim over the [`spec_math`] crate, plus two routines that
 //! deliberately do not use it
@@ -38,6 +38,12 @@
 //! | [`spence`] | `hazma/spectra/_photon/_muon.pyx:113` | `xm`, `xp` ∈ (0, 1) |
 //! | [`bessel_k1`] | `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1361`, `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:606` (both ported — Tasks 5.2 and 5.1 — now [`crate::kernels::scalar_xs`] and [`crate::kernels::vector_xs`]) | `x·z`, `z ≥ 2` |
 //! | [`bessel_kn`] | scalar `:1404`, vector `:650` (always `n = 2`; ported with the rows above) | `x ∈ (0, 300]` |
+//!
+//! The ported thermal averages no longer call [`bessel_k1`] or
+//! [`bessel_kn`]. They take the exponentially scaled [`bessel_k1e`] and
+//! [`bessel_kne`] through [`crate::kernels::thermal_window`], which
+//! keeps the average finite at every `x` rather than only up to the
+//! `.pyx`'s cutoff at 300.
 //!
 //! The `.pyx` reach them through
 //! `from scipy.special.cython_special cimport ...`, which is what pins
@@ -252,8 +258,8 @@ pub fn bessel_k1(x: f64) -> f64 {
 /// `698 ≲ x ≲ 742` — where scipy's answer is `0` and this one is around
 /// `1e-311`.
 ///
-/// That region is unreachable from hazma: `thermal_cross_section`
-/// short-circuits to `0.0` above `x = 300`, where `K₂ ≈ 3.7e-132`. The
+/// That region is unreachable from hazma: the thermal averages, the one
+/// place that needs `K₂` at large `x`, take [`bessel_kne`] instead. The
 /// boundary is pinned in `test/test_core_special.py` so a future caller
 /// that widens the domain finds the divergence in a test rather than in
 /// a spectrum.
@@ -269,16 +275,48 @@ pub fn bessel_kn(n: i32, x: f64) -> f64 {
         return f64::INFINITY;
     }
 
+    upward_recurrence(n, x, x.bessel_k0(), x.bessel_k1())
+}
+
+/// Exponentially scaled `K₁` — `e^x K₁(x)`.
+///
+/// `scipy.special.k1e(x)`, through cephes `k1e`. Unlike [`bessel_k1`] it
+/// does not underflow at large `x`: it falls only as `√(π/2x)`, so the
+/// Boltzmann weight of the thermal averages can carry its `e^{−x z}`
+/// separately (`crate::kernels::thermal_window::boltzmann_weight`).
+/// Edge behavior follows cephes: `x = 0` gives `+∞`, `x < 0` gives `NaN`.
+pub fn bessel_k1e(x: f64) -> f64 {
+    x.bessel_k1e()
+}
+
+/// Exponentially scaled `Kₙ` of integer order — `e^x Kₙ(x)`.
+///
+/// `scipy.special.kve(n, x)` at integer `n`. The upward recurrence of
+/// [`bessel_kn`] is linear and homogeneous, so seeding it on cephes
+/// `k0e`/`k1e` scales every order by the same `e^x`; it is that
+/// function's algorithm with the overflow-prone factor taken out, and it
+/// stays finite and normal at every `x > 0`.
+pub fn bessel_kne(n: i32, x: f64) -> f64 {
+    if x == 0.0 {
+        return f64::INFINITY;
+    }
+    upward_recurrence(n, x, x.bessel_k0e(), x.bessel_k1e())
+}
+
+/// `K_{|n|}(x)` from the seeds `K₀(x)` and `K₁(x)`, by DLMF 10.29.1, or
+/// the same with every order scaled by a common factor.
+///
+/// The boundary inputs need no special-casing: the seeds carry cephes'
+/// answers (NaN below zero, 0 or a finite limit at +∞) and the recurrence
+/// propagates each one, because `2m/x` is finite or zero for every `x`
+/// other than zero, which the callers handle.
+fn upward_recurrence(n: i32, x: f64, k0: f64, k1: f64) -> f64 {
     match n.unsigned_abs() {
-        0 => x.bessel_k0(),
-        1 => x.bessel_k1(),
+        0 => k0,
+        1 => k1,
         order => {
-            // The remaining boundary inputs need no special-casing: the
-            // seeds carry cephes' answers (NaN below zero, 0 at +∞) and
-            // the recurrence propagates each one, because `2m/x` is
-            // finite or zero for every `x` that reaches here.
-            let mut lower = x.bessel_k0();
-            let mut current = x.bessel_k1();
+            let mut lower = k0;
+            let mut current = k1;
             for m in 1..order {
                 let next = lower + 2.0 * f64::from(m) * current / x;
                 lower = current;
@@ -509,5 +547,67 @@ mod tests {
             );
             assert_eq!(bessel_kn(order, -0.0), bessel_kn(order, 0.0));
         }
+    }
+
+    /// Where the unscaled functions are normal, the scaled ones are them
+    /// times `e^x`. The bound is a few ulps of the product `e^{-x}·K̂`:
+    /// both sides come from the same cephes Chebyshev series, so they
+    /// differ only by the rounding of the exponential, at most 2.0e-16
+    /// relative over this grid.
+    #[test]
+    fn the_scaled_functions_are_the_unscaled_times_e_to_the_x() {
+        for &x in &[0.01_f64, 0.1, 1.0, 2.0, 9.5, 50.0, 299.0, 600.0] {
+            let scale = (-x).exp();
+            let k1 = bessel_k1(x);
+            assert!(
+                (bessel_k1e(x) * scale - k1).abs() <= 1e-15 * k1,
+                "k1e at {x}"
+            );
+            for order in 0..4_i32 {
+                let kn = bessel_kn(order, x);
+                let got = bessel_kne(order, x) * scale;
+                assert!((got - kn).abs() <= 1e-15 * kn, "kne({order}) at {x}");
+            }
+        }
+    }
+
+    /// Past the underflow of `Kₙ` the scaled function follows its
+    /// asymptotic series, DLMF 10.40.2, `√(π/2x) Σ a_k(ν)/x^k` with
+    /// `a_k = Π_{j≤k} (4ν² − (2j − 1)²) / (k! 8^k)`. Through `k = 5` the
+    /// truncation is under 1e-18 relative from `x = 1e3`, so the bound is
+    /// the cephes series' and the recurrence's own rounding.
+    #[test]
+    fn the_scaled_functions_follow_the_large_x_series() {
+        for &x in &[1e3_f64, 1e4, 1e6, 1e10] {
+            for order in [1_i32, 2] {
+                let mu = 4.0 * f64::from(order * order);
+                let mut term = 1.0;
+                let mut series = 1.0;
+                for k in 1..6 {
+                    let odd = f64::from(2 * k - 1);
+                    term *= (mu - odd * odd) / (f64::from(k) * 8.0 * x);
+                    series += term;
+                }
+                let expected = (std::f64::consts::PI / (2.0 * x)).sqrt() * series;
+                let got = if order == 1 {
+                    bessel_k1e(x)
+                } else {
+                    bessel_kne(order, x)
+                };
+                assert!(
+                    (got - expected).abs() <= 1e-13 * expected,
+                    "order {order} at {x}: {got} against {expected}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn bessel_kne_edges_follow_cephes() {
+        assert_eq!(bessel_kne(2, 0.0), f64::INFINITY);
+        assert_eq!(bessel_kne(2, -0.0), f64::INFINITY);
+        assert!(bessel_kne(2, -1.0).is_nan());
+        assert_eq!(bessel_kne(-2, 3.0), bessel_kne(2, 3.0));
+        assert_eq!(bessel_kne(1, 3.0), bessel_k1e(3.0));
     }
 }

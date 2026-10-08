@@ -694,15 +694,14 @@ def _thermal_blocks(
     * ``x = 1/3`` -- the vector model's equivalent switch;
     * ``x = m_med / mx`` and ``2 m_med / mx`` -- the QAGP breakpoints,
       which are exactly where a breakpoint-handling difference shows;
-    * ``x = 300`` -- the low-temperature cutoff, where the two models
-      **disagree with each other**: the scalar returns ``0.0`` outright
-      (``if x > 300: return 0.0``,
-      ``hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1401-1402``)
-      while the vector saturates, clipping to ``xnew = 300`` and
-      continuing to return the value there
+    * ``x = 300`` -- the Cython's low-temperature cutoff, where the two
+      models disagreed: the scalar returned ``0.0`` outright
+      (``hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1401-1402``)
+      while the vector clipped to ``xnew = 300`` and kept returning the
+      value there
       (``hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:649``).
-      A port that unifies the two would move published numbers above
-      ``x = 300``, so the corpus pins both behaviors.
+      Both kernels now integrate at the true ``x`` (roster entry ``C8``
+      in `deltas`), so the anchor no longer marks a branch either;
 
     ``thermal_cross_section`` takes a scalar ``x`` only, so the "array"
     call loops; there is no separate scalar branch to probe.
