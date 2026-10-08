@@ -110,6 +110,13 @@ pub const MIN_THRESHOLD_PIECE: f64 = 1e-9;
 /// pure-Python sites mirror the bound in
 /// `hazma.relic_density._thermal_functions`. Freeze-out lies near
 /// `x = 20`, and `relic_density` integrates to `x ≈ 1e3`.
+///
+/// Nothing is gained by extending the bound: long before `x = 1e7` the
+/// dark matter has kinetically decoupled from the plasma and cools faster
+/// than it, so an average over a velocity distribution at the plasma
+/// temperature no longer describes it. Late-time annihilation is instead
+/// evaluated at the dark matter's own velocity, as `hazma.cmb.vx_cmb`
+/// does for the CMB.
 pub const X_MAX: f64 = 1e7;
 
 /// `x / (2 K₂(x))²`, scaled by `e^{−2x}`, the factor outside the
