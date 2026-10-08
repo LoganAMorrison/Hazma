@@ -231,7 +231,7 @@ def dnde_positron_k_k(
     if cme < 2 * mk:
         return np.zeros_like(positron_energies)
 
-    dec = spectra.dnde_positron_charged_kaon(positron_energies, cme / 2.0)
+    dec = 2 * spectra.dnde_positron_charged_kaon(positron_energies, cme / 2.0)
     return dec
 
 
@@ -1007,10 +1007,13 @@ def dnde_positron_spectrum_fns(self) -> PositronSpectrumFunctions:
     def dnde_zero(e, _: float):
         return np.zeros_like(e)
 
+    # The channel functions count particles and antiparticles together,
+    # and every final state is its own charge conjugate, so half of each
+    # is the positron spectrum the model reports.
     def wrap(f):
         @functools.wraps(f)
         def fnew(*args, **kwargs):
-            return f(self, *args, **kwargs)
+            return 0.5 * f(self, *args, **kwargs)
 
         return fnew
 

@@ -1,15 +1,11 @@
-"""Positron yield per annihilation of the legacy mediator models' channels.
+"""Positron yield per annihilation of the mediator models' channels.
 
-``ScalarMediator`` and the ``VectorMediator`` family count positrons only:
-a ``mu+ mu-`` or ``pi+ pi-`` pair carries one positive particle, whose decay
-chain ends in exactly one positron. So each of those channel spectra must
-integrate to one positron per annihilation. The pin catches a channel wired
+``ScalarMediator``, the ``VectorMediator`` family and ``VectorMediatorGeV``
+count positrons only: a ``mu+ mu-`` or ``pi+ pi-`` pair carries one positive
+particle, whose decay chain ends in exactly one positron. So each of those
+channel spectra must integrate to one positron per annihilation. The pin catches a channel wired
 to the wrong kernel — a photon spectrum integrates to under 0.1 over the
 same range — and a stray factor of two alike.
-
-The GeV kinetic-mixing model in ``hazma.vector_mediator._gev`` counts
-positrons and electrons together, and so carries a factor of two these
-channels do not.
 """
 
 from __future__ import annotations
@@ -22,7 +18,7 @@ from scipy.integrate import trapezoid
 
 from hazma.parameters import electron_mass, vh
 from hazma.scalar_mediator import ScalarMediator
-from hazma.vector_mediator import VectorMediator
+from hazma.vector_mediator import VectorMediator, VectorMediatorGeV
 
 if TYPE_CHECKING:
     from hazma.theory import TheoryAnn
@@ -62,6 +58,24 @@ MODELS = [
             gvmumu=1.0,
         ),
         id="vector-mediator",
+    ),
+    # Its cross section vanishes at ``E_CM = 2 mx``, which would zero every
+    # channel, so the dark matter sits below threshold.
+    pytest.param(
+        VectorMediatorGeV(
+            mx=200.0,
+            mv=1000.0,
+            gvxx=1.0,
+            gvuu=1.0,
+            gvdd=-1.0,
+            gvss=1.0,
+            gvee=1.0,
+            gvmumu=1.0,
+            gvveve=1.0,
+            gvvmvm=1.0,
+            gvvtvt=1.0,
+        ),
+        id="vector-mediator-gev",
     ),
 ]
 

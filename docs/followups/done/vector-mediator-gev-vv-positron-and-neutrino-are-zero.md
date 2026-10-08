@@ -153,4 +153,4 @@ in `test/vector_mediator/test_gev_v_v_spectra.py`:
 - `VectorMediatorGeV`'s `e e` positron line and `ν ν` neutrino lines
   count one particle per annihilation, while its continua count
   particles and antiparticles together. Filed as
-  [`vector-mediator-gev-lines-count-one-particle.md`](../todo/vector-mediator-gev-lines-count-one-particle.md).
+  [`vector-mediator-gev-lines-count-one-particle.md`](vector-mediator-gev-lines-count-one-particle.md).
