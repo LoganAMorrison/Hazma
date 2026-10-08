@@ -107,7 +107,11 @@ edges of the line's box:
 **Values.** At the "Why" point, the spectra now carry 2.647 electrons
 and positrons and 2.294, 3.117 and 0.375 `e`-, `μ`- and `τ`-flavored
 neutrinos per annihilation. They peak at 3.7e-3, 4.4e-3, 5.9e-3 and
-7.6e-5 MeV⁻¹.
+7.6e-5 MeV⁻¹. These values count particles and antiparticles together.
+The model counts particles only since
+[`vector-mediator-gev-lines-count-one-particle.md`](vector-mediator-gev-lines-count-one-particle.md),
+which gives 1.49 positrons and 1.31, 1.78 and 0.187 neutrinos at the
+same point.
 
 **Tests.** `test/vector_mediator/test_gev_v_v_spectra.py` pins the
 identities above and the zero below `e_cm = 2 m_V`; all 17 of its tests
@@ -153,4 +157,4 @@ in `test/vector_mediator/test_gev_v_v_spectra.py`:
 - `VectorMediatorGeV`'s `e e` positron line and `ν ν` neutrino lines
   count one particle per annihilation, while its continua count
   particles and antiparticles together. Filed as
-  [`vector-mediator-gev-lines-count-one-particle.md`](../todo/vector-mediator-gev-lines-count-one-particle.md).
+  [`vector-mediator-gev-lines-count-one-particle.md`](vector-mediator-gev-lines-count-one-particle.md).

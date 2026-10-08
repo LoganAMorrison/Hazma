@@ -260,7 +260,7 @@ def dnde_neutrino_k_k(
     if cme < 2 * mk:
         return _make_zeros(neutrino_energies)
 
-    dec = spectra.dnde_neutrino_charged_kaon(
+    dec = 2 * spectra.dnde_neutrino_charged_kaon(
         neutrino_energies, cme / 2.0, flavor=flavor
     )
     return dec
@@ -1116,10 +1116,13 @@ def dnde_neutrino_spectrum_fns(self) -> NeutrinoSpectrumFunctions:
     def dnde_zero(e, _: float, flavor: NeutrinoFlavor):
         return _make_zeros(e)
 
+    # The channel functions count particles and antiparticles together.
+    # Each final state is either its own charge conjugate or summed with
+    # its conjugate, so half of each is the spectrum of neutrinos alone, which the model reports.
     def wrap(f):
         @functools.wraps(f)
         def fnew(*args, **kwargs):
-            return f(self, *args, **kwargs)
+            return 0.5 * f(self, *args, **kwargs)
 
         return fnew
 

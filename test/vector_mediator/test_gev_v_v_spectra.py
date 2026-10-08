@@ -6,9 +6,9 @@ destroying any, and an isotropic source's mean lab energy is the Lorentz factor 
 its mean rest-frame energy. The tests pin both statements, which owe
 nothing to the boost integrator.
 
-Like every channel in ``hazma.vector_mediator._gev``, these spectra count
-particles and antiparticles together: a muon pair yields two electrons or
-positrons, two electron-flavored neutrinos and two muon-flavored ones.
+Like every channel of ``VectorMediatorGeV``, these spectra count particles
+only: a muon pair yields one positron, one electron neutrino and one muon
+neutrino.
 
 Every spectrum is integrated on a log grid that also carries the two edges
 of the boosted ``V → f f̄`` line, where the spectrum is discontinuous; with
@@ -126,10 +126,10 @@ def _leptophilic_count(model: VectorMediatorGeV, kind: str) -> float:
     width = sum(pws.values())
     bf = {key: val / width for key, val in pws.items()}
     per_decay = {
-        "positron": 2 * bf["e e"] + 2 * bf["mu mu"],
-        "e": 2 * bf["ve ve"] + 2 * bf["mu mu"],
-        "mu": 2 * bf["vm vm"] + 2 * bf["mu mu"],
-        "tau": 2 * bf["vt vt"],
+        "positron": bf["e e"] + bf["mu mu"],
+        "e": bf["ve ve"] + bf["mu mu"],
+        "mu": bf["vm vm"] + bf["mu mu"],
+        "tau": bf["vt vt"],
     }
     return 2 * per_decay[kind]
 
@@ -175,7 +175,7 @@ def test_hadronic_v_v_positrons_match_the_channel_yields() -> None:
     width = sum(pws.values())
     rest_es = np.geomspace(me * (1.0 + 1e-9), 0.5 * MV, 20_001)
     channel_fns = model._positron_spectrum_funcs()
-    per_decay = 2 * pws["e e"] / width  # the e+ e- line
+    per_decay = pws["e e"] / width  # the e+ e- line
     for channel, pw in pws.items():
         if channel in ("e e", "v v") or pw == 0.0:
             continue
@@ -240,8 +240,8 @@ def test_v_v_keeps_the_pion_lines_at_the_pion_pair_threshold(kind: str) -> None:
     es = np.geomspace(lo, 0.5 * cme, 20_001)
     number = trapezoid(_spectrum_fn(model, kind)(es, cme), es)
 
-    # Two mediators, two pions each.
-    expected = 4.0 * bf_pi_pi * PER_PION[kind]
+    # Two mediators. Half a pion pair's leptons are particles, one pion's worth.
+    expected = 2.0 * bf_pi_pi * PER_PION[kind]
     assert number == pytest.approx(expected, rel=NUMBER_RTOL, abs=1e-300)
 
 

@@ -38,6 +38,30 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **`VectorMediatorGeV` counts positrons and neutrinos only, not their
+  antiparticles.** Its continua counted both, so a `μ⁺μ⁻` pair yielded
+  two positrons, while its `e e` and `ν ν̄` lines, weighted by branching
+  fraction alone, counted one lepton. Each final state is either its own
+  charge conjugate or summed with its conjugate, so the continua now
+  report half their former value: `positron_spectra` and
+  `neutrino_spectra` fall by exactly a factor of two in every channel but
+  two. The convolved positron spectrum halves only where the continuum
+  dominates, since its `e e` line is unchanged. For a leptophilic model
+  (`m_x = 200` MeV, `m_V = 1` GeV, `g_ee = g_μμ = 1`) at `e_cm = 500`
+  MeV with 5% resolution, it falls to 0.500 of its former value at
+  100 MeV and to 0.999 at the line, 250 MeV. The `k k` channel is
+  unchanged, because it already counted one kaon's leptons, which is the
+  positron count of a `K⁺K⁻` pair. The `v v` channel, whose repair is
+  listed below, falls by 0.50 to 0.57 times rather than exactly half,
+  because its rest-frame sum counts the `K⁺K⁻` decays in full. The lines
+  are unchanged. `TheoryCMB`'s `f_eff` doubles the positron spectrum to
+  count e±, so the model's continuum e± energy had been counted twice:
+  `f_eff_ep` for `KineticMixingGeV(mv=1000, eps=1e-3)` with
+  `mode="interp"` falls from 0.5517 to 0.3726 at `m_x = 300` MeV and from
+  0.3746 to 0.2716 at `m_x = 600` MeV. The model now matches
+  `ScalarMediator` and `VectorMediator`, whose `mu mu` and `pi pi`
+  channels yield one positron per annihilation. Details:
+  `docs/followups/done/vector-mediator-gev-lines-count-one-particle.md`.
 - **The `ScalarMediator` and `VectorMediator` thermal averages now
   resolve narrow mediator resonances.** The `hazma._core` kernels behind
   `thermal_cross_section` and `relic_density` placed a quadrature break
@@ -112,14 +136,14 @@ user-facing change even when no signature did.
   them without branching fractions. Both now tabulate one mediator's
   branching-weighted decay spectrum at rest, double it, and boost it by
   `γ = e_cm / (2 m_V)`. The `V → e⁺e⁻` and `V → νν̄` lines enter as
-  boosted boxes carrying two particles per decay, the counting every
-  channel of `hazma.vector_mediator._gev` uses. At `m_x = 5` GeV,
-  `m_V = 1` GeV, `e_cm = 10.1` GeV and every coupling 1, the spectra
-  carry 2.647 electrons and positrons, 2.294 electron-, 3.117 muon- and
-  0.375 tau-flavored neutrinos per annihilation, peaking at 3.7e-3,
-  4.4e-3, 5.9e-3 and 7.6e-5 MeV⁻¹; all were `0.0`. With only leptonic
-  decays open, each count matches twice the exact per-decay yield within
-  1.8e-5, at `γ = 5.05` and `γ = 20`. The rest-frame grid also brackets
+  boosted boxes carrying one particle per decay, since the model counts
+  positrons and neutrinos only. At `m_x = 5` GeV, `m_V = 1` GeV,
+  `e_cm = 10.1` GeV and every coupling 1, the spectra carry 1.49
+  positrons and 1.31 electron-, 1.78 muon- and 0.187 tau-flavored
+  neutrinos per annihilation, peaking at 2.2e-3, 2.6e-3, 3.5e-3 and
+  3.8e-5 MeV⁻¹; all were `0.0`. With only leptonic decays open, each
+  count matches twice the exact per-decay yield within 1.8e-5, at
+  `γ = 5.05` and `γ = 20`. The rest-frame grid also brackets
   the edges of the charged pion's boosted decay lines, which shrink to
   zero width at the `π⁺π⁻` threshold. At `m_V = 2 m_π± (1 + 1e-6)` the
   muon-flavored count is within 2.4e-6 of exact, where a plain log grid
