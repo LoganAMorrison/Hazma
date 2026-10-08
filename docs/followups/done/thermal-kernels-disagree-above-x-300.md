@@ -97,3 +97,11 @@ up to 9.4e-3 from the held value. The composed prediction holds to
 `KineticMixing` rises by 1.4e-4 to 6.2e-4. The fallback and both kernels
 now agree in `relic_density` to at most 8.5e-8 at four model points,
 where the fallback and the vector kernel had sat 8% apart.
+
+**Testing.** Each site has its own check past `x = 300`. The kernels and
+the generic fallback agree from `x = 300` to `1e7`, and the GeV closure
+matches a converged reference in the exponentially scaled form to at
+most 1.7e-9 over the same range. All four raise past `x = 1e7`. The
+scalar kernel's 6.6e-8 offset from the fallback is their electron
+masses, legacy `0.510998928` against `0.5109989461`, and belongs to
+[the constants consolidation](../todo/consolidate-the-two-constants-tables.md).

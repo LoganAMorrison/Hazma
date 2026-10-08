@@ -57,6 +57,12 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   extreme, not by testing a few large values; either measure the
   supported range, state it, and reject beyond it at every entry point, or
   do not claim it (PR #124).
+- [offset-blamed-on-the-quadrature-before-the-inputs] A constant relative
+  offset between two implementations of one integral, unchanged across its
+  argument, points at a shared input such as a physical constant, not at
+  the quadrature, whose error varies with the integrand. Diff the constants
+  each side reads and rerun with them equal before filing the offset as a
+  numerics defect (PR #124).
 - [ported-file-stale-reference] A file copied in from another repo carries that
   repo's references (workflow paths, CI actions, design docs) and reads as
   authoritative here; grep every ported file for paths and tool names and
@@ -310,7 +316,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   already reaches go green immediately and make the untested ones invisible.
   Enumerate the sites the fix touched, and for each confirm a test that fails
   when *only that site* is reverted — reverting all of them at once proves
-  nothing about which one the test was watching (PR #91).
+  nothing about which one the test was watching (PR #91, #124).
 - [composed-entry-point-inherits-the-branch-caveat] A kernel repair that spares
   one branch spares every public entry point that composes it on that branch,
   so an impact claim about the composed function is narrower than "any caller

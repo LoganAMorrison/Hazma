@@ -70,7 +70,9 @@ Then re-derive the moved corpus positions and declare them as the next
   and saturates) is a separate defect on the same path. It puts the
   pure-Python fallback's `relic_density` 8% off the vector kernel's at
   the two `KineticMixing` corpus points. Deciding it in the same change
-  would save a second corpus re-derivation.
+  would save a second corpus re-derivation. (Historical: it was
+  repaired separately as `C8`; see
+  [its follow-up](thermal-kernels-disagree-above-x-300.md).)
 
 ## Resolution (measured)
 
@@ -170,7 +172,8 @@ isolated points below `x = 1`. Its `relic_density` moves by at most
 
 **Not decided here.** The above-300 divergence under "Risks" is
 unchanged, and is
-[its own follow-up](thermal-kernels-disagree-above-x-300.md).
+[its own follow-up](thermal-kernels-disagree-above-x-300.md), since
+repaired as `C8`.
 
 ## Review round 1
 

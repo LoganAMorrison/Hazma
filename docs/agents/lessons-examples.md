@@ -1383,6 +1383,16 @@ resonant integrand exposes the defect (0.765 relative error at the worst
 point). An oracle has to be built from the shape that actually breaks,
 and the way to know it is: revert the fix and watch the test go red.
 
+PR #124 repeated it on the same four sites. Its repair to the thermal
+average past `x = 300` was tested through both kernels and the generic
+fallback, but not through the `VectorMediatorGeV.relic_density` closure,
+although the intercepting helper above already existed in the suite.
+Review restored only that closure's `x > 300` cutoff and the suite still
+passed: 19 tests and 122 subtests. The fix pins the closure against a
+converged reference in the exponentially scaled form from `x = 301` to
+`1e7`, and its rejection past `1e7`; with the cutoff restored, every one
+of those checks fails.
+
 ### composed-entry-point-inherits-the-branch-caveat
 
 PR #95 moved both φ photon line energies and measured the impact carefully:
@@ -1576,4 +1586,19 @@ branch of the underlying kernel that "any" reaches.
   `x = 1e12`) or raised `TypeError`, and the fallback gave NaN from about
   `x = 1.26e9`. The repair measures the range, fixes `X_MAX = 1e7`, and
   rejects past it with `ValueError` in both Rust bindings and both Python
-  sites. `test_every_site_rejects_x_past_the_supported_maximum` pins it.
+  sites. `test_every_site_rejects_x_past_the_supported_maximum` pins it for
+  the kernels and the generic fallback, and
+  `test_gev_vector_site_rejects_x_past_the_supported_maximum` for the GeV
+  vector mediator's closure.
+
+### offset-blamed-on-the-quadrature-before-the-inputs
+
+- PR #124 measured the scalar Rust thermal kernel a constant relative
+  6.61e-8 below the pure-Python fallback at an open resonance, the same at
+  `x = 300`, `1e3`, `1e4` and `1e6`, and filed it as a resonance or
+  quadrature defect. Review diffed the inputs instead: the kernel's
+  `ME` in `rust/src/kernels/scalar_xs.rs` is the legacy `0.510998928`,
+  and the fallback's cross sections read `hazma.parameters.electron_mass`,
+  `0.5109989461`. With the fallback's mass set to the kernel's, the two
+  agree to at most 6.3e-16. The misfiled follow-up was withdrawn, and the
+  measurement joined `docs/followups/todo/consolidate-the-two-constants-tables.md`.
