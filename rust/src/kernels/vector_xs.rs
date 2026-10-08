@@ -167,20 +167,22 @@ const PI_5: f64 = 306.0196847852814;
 const THERMAL_EPSABS: f64 = 0.0;
 /// `scipy.integrate.quad`'s default relative tolerance, and — with
 /// [`THERMAL_EPSABS`] zeroed — the tolerance the thermal average is
-/// actually held to. `points` is supplied per call because two of the
-/// three break points depend on `m_v/m_x`.
+/// actually held to. `points` is supplied per call because the break
+/// points depend on `m_v/m_x` and the mediator width.
 const THERMAL_EPSREL: f64 = DEFAULT_EPSREL;
 
-/// Subdivision limit for the thermal average, above
-/// `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`] is zero.
+/// Subdivisions the thermal average may make beyond its initial break
+/// points, above `crate::quad::DEFAULT_LIMIT` because [`THERMAL_EPSABS`]
+/// is zero. The `limit` passed to the integrator adds the break-point
+/// count, which the resonance ladder of
+/// `crate::kernels::thermal_window` makes grow as the width shrinks.
 ///
 /// A criterion that binds is only worth having if the integrator is
 /// allowed to reach it. At scipy's default limit of 50, one of the 540
 /// thermal positions the parity corpus pins exhausts the subdivision
 /// table and comes back flagged; at 100 none do. The worst error against
 /// `test/parity/thermal_reference.py`'s converged integral is 1.8e-8 at
-/// both, so 100 is a limit at which every position converges with room
-/// for the break points `crate::kernels::thermal_window` adds.
+/// both, so 100 is a limit at which every position converges.
 const THERMAL_LIMIT: usize = 100;
 
 /// `σ(x x̄ → V* → f f̄)` in MeV⁻², for a lepton of mass `mf`.
@@ -462,17 +464,16 @@ pub fn thermal_cross_section(
     let prefactor = xnew / (two_k2 * two_k2);
 
     // Every `z` at which a channel of `sigma_xx_to_all` opens, each at its
-    // kernel's own threshold, and the mediator resonance.
-    let features = [
+    // kernel's own threshold.
+    let thresholds = [
         2.0 * ME / mx,
         2.0 * MMU / mx,
         2.0 * MPI / mx,
         MPI0 / mx,
         (MPI0 + mv) / mx,
         2.0 * mv / mx,
-        mv / mx,
     ];
-    let (upper, points) = partition(xnew, &features);
+    let (upper, points) = partition(xnew, &thresholds, &[(mv / mx, width_v / mx)]);
 
     let mut nonreal = false;
     let mut integrand = |z: f64| {
@@ -499,7 +500,7 @@ pub fn thermal_cross_section(
     let options = QuadOpts {
         epsabs: THERMAL_EPSABS,
         epsrel: THERMAL_EPSREL,
-        limit: THERMAL_LIMIT,
+        limit: THERMAL_LIMIT + points.len(),
         points: Some(&points),
     };
     let integral = match quad(&mut integrand, 2.0, upper, &options) {
@@ -507,7 +508,7 @@ pub fn thermal_cross_section(
         // Unreachable, and asserted so by
         // `thermal_quad_options_are_always_accepted`: `QuadError` is a
         // statement about the options, never about the integrand, and
-        // `limit` is a const comfortably above the three break points.
+        // `limit` exceeds the break-point count by construction.
         Err(_) => f64::NAN,
     };
 
@@ -1110,14 +1111,85 @@ mod tests {
     /// [`THERMAL_EPSABS`] at zero the tolerance test falls on `epsrel`
     /// alone — `epsrel >= max(50 ε, 5e-29)`, which [`THERMAL_EPSREL`]
     /// clears by six decades — leaving `limit` above the surviving
-    /// break-point count as the other half. All three break points can
-    /// survive, so [`THERMAL_LIMIT`] is the binding claim.
+    /// break-point count as the other half, which `THERMAL_LIMIT +
+    /// points.len()` is by construction.
     #[test]
     fn thermal_quad_options_are_always_accepted() {
         for x in [1e-6, 0.1, 1.0 / 3.0, 1.0, 20.0, 300.0, 1e6] {
             let got =
                 thermal_cross_section(x, MX, MV, GVXX, GVUU, GVDD, GVEE, GVMUMU, WIDTH_V).unwrap();
             assert!(got.is_finite(), "x = {x} gave {got}");
+        }
+    }
+
+    /// A resonance narrower than the Gauss–Kronrod node spacing is
+    /// resolved. `KineticMixing(mx=200, mv=550, gvxx=1e-2, eps=1e-3)` has a
+    /// width of 1.3e-3 MeV, 6.3e-6 of `m_x`. With a break point at the peak
+    /// and none around it, no node sampled the peak at small `x`: the
+    /// average was 85% low at `x = 0.1`, kept 2.9e-3 of itself at
+    /// `x = 0.5` and 2.6e-4 at `x = 1`, each with QUADPACK reporting
+    /// convergence.
+    ///
+    /// The oracle splits at decay lengths `1/x` past every feature, as in
+    /// `the_thermal_average_is_finite_with_a_channel_just_above_threshold`,
+    /// and at `z_r ± g·2^k` around the peak, half the ratio of
+    /// `crate::kernels::thermal_window::RESONANCE_LADDER_RATIO`. The
+    /// `g·2^k` ladder contains every `g·4^k` rung, so the oracle refines
+    /// the entry point's partition, halving every rung interval, and
+    /// integrates each piece to `epsrel` 1e-12 separately. It is held to
+    /// 1e-7, 6.7x the entry point's own `epsrel`.
+    #[test]
+    fn the_thermal_average_resolves_a_narrow_resonance() {
+        let (mx, mv, gvxx) = (200.0, 550.0, 1e-2);
+        let (gvuu, gvdd) = (-2.018_784_669_045_979_2e-4, 1.009_392_334_522_989_6e-4);
+        let gvll = 3.028_177_003_568_968_6e-4;
+        let width_v = 1.269_020_213_815_367_1e-3;
+        let (ratio, width) = (mv / mx, width_v / mx);
+        for x in [0.1, 0.5, 1.0, 5.818, 20.0, 100.0] {
+            let got =
+                thermal_cross_section(x, mx, mv, gvxx, gvuu, gvdd, gvll, gvll, width_v).unwrap();
+
+            let upper = 2.0 * ratio + 200.0 / x;
+            let mut edges: Vec<f64> = [2.0, ratio, (MPI0 + mv) / mx, 2.0 * ratio]
+                .into_iter()
+                .flat_map(|z| [0.0, 1.0, 4.0, 16.0, 50.0, 100.0, 200.0].map(|k| z + k / x))
+                .collect();
+            let mut offset = width;
+            while offset < upper - 2.0 {
+                edges.extend([ratio - offset, ratio + offset]);
+                offset *= 2.0;
+            }
+            edges.retain(|&z| (2.0..=upper).contains(&z));
+            edges.sort_by(f64::total_cmp);
+            edges.dedup();
+            let options = QuadOpts {
+                epsabs: 0.0,
+                epsrel: 1e-12,
+                limit: 500,
+                points: None,
+            };
+            let integral: f64 = edges
+                .windows(2)
+                .map(|window| {
+                    let mut integrand = |z: f64| {
+                        let sigma =
+                            sigma_xx_to_all(mx * z, mx, mv, gvxx, gvuu, gvdd, gvll, gvll, width_v)
+                                .unwrap();
+                        sigma * (z * z) * ((z * z) - 4.0) * crate::special::bessel_k1(x * z)
+                    };
+                    quad(&mut integrand, window[0], window[1], &options)
+                        .expect("convergent options are valid options")
+                        .value
+                })
+                .sum();
+            let two_k2 = 2.0 * crate::special::bessel_kn(2, x);
+            let expected = x / (two_k2 * two_k2) * integral;
+
+            assert!(expected > 0.0, "x = {x}: the oracle vanished");
+            assert!(
+                (got / expected - 1.0).abs() < 1e-7,
+                "x = {x}: entry point gave {got}, converged {expected}"
+            );
         }
     }
 }

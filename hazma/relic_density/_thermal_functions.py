@@ -427,7 +427,8 @@ _DECAY_LENGTHS_PAST_LAST = 100.0
 _SPLITS = (1.0, 4.0, 16.0, 50.0)
 
 #: Ratio between successive break points bracketing a resonance, in units
-#: of its width. See `thermal_cross_section_partition`.
+#: of its width. See `thermal_cross_section_partition`. The ``hazma._core``
+#: kernels use the same value as ``thermal_window::RESONANCE_LADDER_RATIO``.
 _RESONANCE_LADDER_RATIO = 4.0
 
 #: How far above the threshold ``z = 2`` the first break point must sit.
@@ -455,7 +456,7 @@ def thermal_cross_section_partition(
     *features* of the cross section: the threshold ``z = 2``, each channel
     threshold, and each resonance. It follows
     ``rust/src/kernels/thermal_window.rs``, the rule the ``hazma._core``
-    mediator kernels use, except at resonances.
+    mediator kernels use.
 
     - **The upper limit** is ``_DECAY_LENGTHS_PAST_LAST`` decay lengths
       past the last feature. The tail beyond it is at most 3.0e-38 of the
@@ -481,15 +482,15 @@ def thermal_cross_section_partition(
       on a subinterval's endpoint, where no Gauss-Kronrod node samples it.
       For ``HiggsPortal(mx=200, ms=550, gsxx=1e-2, stheta=1e-3)``, whose
       resonance is 7e-4 MeV wide, a break point at the peak on top of the
-      splits above, as the ``hazma._core`` kernels place it, loses 87% of
-      the average at ``x = 2`` and 99.9% at ``x = 3.487``. The splits
-      alone do not know where the peak is, and lose 99.7% at
-      ``x = 3.487`` and 99.95% at ``x = 5.818``. With the ladder, the
-      average is within 1.2e-11 of an independently split reference
-      integrated to ``epsrel = 1e-12``, on 80 points of ``x`` from 0.1 to
-      300; it is within 8e-11 for ``KineticMixing(mx=200, mv=550,
-      gvxx=1e-2, eps=1e-3)`` and 5.6e-9 for ``HiggsPortal(mx=100, ms=300,
-      gsxx=1, stheta=0.1)``, whose width is 5% of ``mx``.
+      splits above loses 87% of the average at ``x = 2`` and 99.9% at
+      ``x = 3.487``. The splits alone do not know where the peak is, and
+      lose 99.7% at ``x = 3.487`` and 99.95% at ``x = 5.818``. With the
+      ladder, the average is within 1.2e-11 of an independently split
+      reference integrated to ``epsrel = 1e-12``, on 80 points of ``x``
+      from 0.1 to 300; it is within 8e-11 for ``KineticMixing(mx=200,
+      mv=550, gvxx=1e-2, eps=1e-3)`` and 5.6e-9 for
+      ``HiggsPortal(mx=100, ms=300, gsxx=1, stheta=0.1)``, whose width is
+      5% of ``mx``.
 
     A threshold below ``z = 2``, or within ``_MIN_THRESHOLD_PIECE`` above
     it, is moved onto it, and only break points more than
