@@ -52,6 +52,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
 
 ## Ledger
 
+- [claim-checked-at-samples-not-the-domain] A "finite/correct at every x"
+  claim is verified by sweeping the argument to the floating-point
+  extreme, not by testing a few large values; either measure the
+  supported range, state it, and reject beyond it at every entry point, or
+  do not claim it (PR #124).
 - [ported-file-stale-reference] A file copied in from another repo carries that
   repo's references (workflow paths, CI actions, design docs) and reads as
   authoritative here; grep every ported file for paths and tool names and

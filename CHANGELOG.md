@@ -45,8 +45,12 @@ user-facing change even when no signature did.
   in `hazma.relic_density` and `VectorMediatorGeV.relic_density` returned
   `0.0`. None of these rules was physics; they kept the Bessel factors
   from overflowing. All four now evaluate those factors exponentially
-  scaled, so ⟨σv⟩ tends to its `v → 0` limit at every `x`: the s-wave
-  cross section, or zero as `1/x` when nothing is s-wave. A model's
+  scaled, so ⟨σv⟩ tends to its `v → 0` limit as `x` grows: the s-wave
+  cross section, or zero as `1/x` when nothing is s-wave. The averages
+  are supported up to `x = 1e7` and raise `ValueError` past it, where
+  their integration window above threshold is no longer resolved and
+  they returned `0.0`, `NaN` or a negative value, or raised `TypeError`,
+  from about `x = 5e8`. A model's
   abundance therefore no longer depends on which path computes its ⟨σv⟩;
   the fallback and the vector kernel had sat 8% apart in `relic_density`.
   Below `x = 300` the values move by at most 1.4e-11. Above

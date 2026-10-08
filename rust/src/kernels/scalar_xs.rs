@@ -906,8 +906,10 @@ fn sigma_xx_to_all(
 
 /// The thermally averaged `⟨σv⟩` in MeV⁻², at `x = m_x / T`.
 ///
-/// The average is integrated at the true `x` at every temperature, with
-/// the Bessel factors from [`prefactor`] and [`boltzmann_weight`]. The
+/// The average is integrated at the true `x`, with the Bessel factors
+/// from [`prefactor`] and [`boltzmann_weight`], up to
+/// [`crate::kernels::thermal_window::X_MAX`], past which the window above
+/// threshold is no longer resolved and the bindings reject `x`. The
 /// `.pyx` returned exactly `0.0` above `x = 300`, where its unscaled
 /// factors overflow, while the vector model clipped `x` to 300; replacing
 /// both rules moved published numbers, as roster entry `C8` in
@@ -1004,6 +1006,7 @@ mod tests {
         sigma_xx_to_all, sigma_xx_to_s_to_ff, sigma_xx_to_s_to_gg, sigma_xx_to_s_to_pi0pi0,
         sigma_xx_to_s_to_pipi, sigma_xx_to_ss, sq, thermal_cross_section,
     };
+    use crate::kernels::thermal_window::X_MAX;
     use crate::quad::{QuadOpts, quad};
 
     /// A representative model point: the parity corpus's `open_resonance`
@@ -1304,7 +1307,8 @@ mod tests {
     // -- The thermal average ----------------------------------------------
 
     /// Long after freeze-out the average tends to its `v → 0` limit, at
-    /// every `x` rather than only up to an overflow-driven cutoff.
+    /// every `x` up to [`X_MAX`] rather than only up to an overflow-driven
+    /// cutoff.
     ///
     /// Every channel here is p-wave: the pair is a Dirac fermion, and
     /// both the scalar `s`-channel and the `S S` channel need a unit of
@@ -1313,7 +1317,7 @@ mod tests {
     /// Gelmini, Nucl. Phys. B 360 (1991) 145). `b = σ / (2β)` is read off
     /// `sigma_xx_to_all` at `β = 1e-6`, where the next order is 1e-12
     /// relative; the average's own next order is `O(1/x)` relative.
-    /// Measured, `x ⟨σv⟩ / 6b − 1` is 5.46/x from `x = 1e3` to 1e6, which the
+    /// Measured, `x ⟨σv⟩ / 6b − 1` is 5.46/x from `x = 1e3` to [`X_MAX`], which the
     /// bound `10/x` holds with room; the coefficient at 1e5 and 1e6 agrees
     /// to 7e-5. The quadrature's `epsrel` of 1.49e-8 allows 3e-3 of the
     /// excess at 1e6, so the 1e-2 on that agreement is the integrator's
@@ -1342,7 +1346,7 @@ mod tests {
         .unwrap();
         let b = sigma / (2.0 * beta);
         let excess = |x: f64| x * at(x) / (6.0 * b) - 1.0;
-        for x in [3e2_f64, 1e3, 1e4, 1e5, 1e6] {
+        for x in [3e2_f64, 1e3, 1e4, 1e5, 1e6, X_MAX] {
             assert!(excess(x).abs() < 10.0 / x, "x = {x}: {}", excess(x));
         }
         let (slow, fast) = (1e5 * excess(1e5), 1e6 * excess(1e6));

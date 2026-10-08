@@ -1566,3 +1566,14 @@ branch of the underlying kernel that "any" reaches.
   `hazma/spectra/boost.py` and unwraps a scalar result.
   `test_v_v_accepts_integer_and_scalar_energies` and
   `test_integer_and_scalar_energies_boost_like_floats` pin both.
+
+### claim-checked-at-samples-not-the-domain
+
+- PR #124 rescaled the thermal-average Bessel factors and claimed the
+  average was finite and correct at every `x`, testing up to `x = 1e6`.
+  Review swept further: from about `x = 5e8` the kernels returned `0.0`, a
+  negative value (`HiggsPortal(300, 200, 1e-2)` gave −1.52e-6 at
+  `x = 1e12`) or raised `TypeError`, and the fallback gave NaN from about
+  `x = 1.26e9`. The repair measures the range, fixes `X_MAX = 1e7`, and
+  rejects past it with `ValueError` in both Rust bindings and both Python
+  sites. `test_every_site_rejects_x_past_the_supported_maximum` pins it.

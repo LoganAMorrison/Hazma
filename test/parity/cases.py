@@ -701,7 +701,8 @@ def _thermal_blocks(
       value there
       (``hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:649``).
       Both kernels now integrate at the true ``x`` (roster entry ``C8``
-      in `deltas`), so the anchor no longer marks a branch either;
+      in `deltas`), so the anchor no longer marks a branch either, and
+      the captured grid keeps it.
 
     ``thermal_cross_section`` takes a scalar ``x`` only, so the "array"
     call loops; there is no separate scalar branch to probe.

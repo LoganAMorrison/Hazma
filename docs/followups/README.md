@@ -50,6 +50,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the mediator decay boosts integrate across their channels' edges](todo/mediator-decay-boosts-lack-channel-break-points.md) | 2026-09-29 | the mediator decay boost repair (`C6`) | commit |
 | [`solo-task` has no Codex counterpart](todo/solo-task-codex-port.md) | 2026-10-01 | the PR that added `solo-task` | commit |
 | [thermal kernels lose accuracy below width `1e-13` of `m_x`](todo/thermal-kernels-lose-accuracy-below-width-1e-13.md) | 2026-10-01 | PR #122 review | cross-cutting |
+| [scalar thermal kernel sits 6.6e-8 below its reference at a resonance](todo/scalar-open-resonance-thermal-kernel-offset.md) | 2026-10-07 | PR #124 review | commit |
 
 ## Promoted / Done / Pruned
 

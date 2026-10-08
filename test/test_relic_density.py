@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterator
 from itertools import pairwise
 from typing import Any, ClassVar
 
+import pytest
 from numpy.testing import assert_allclose
 from scipy.integrate import quad
 from scipy.special import k1, kn
@@ -780,7 +781,8 @@ class TestThermalQuadratureConverges(unittest.TestCase):
 
         All three integrate at the true ``x`` with the exponentially
         scaled Bessel factors, so they agree wherever the average is
-        evaluated, out to ``x = 1e6``. Measured agreement is 6.6e-8
+        evaluated, out to the supported maximum ``x = 1e7``. Measured
+        agreement is 6.6e-8
         (``scalar.open``) and 1.1e-15 (``vector.open``);
         the budget is `CONVERGED_RTOL`, as for the grid that stops at 300.
         """
@@ -789,7 +791,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             "vector.open": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
         }
         for name, inner in points.items():
-            for x in (300.0, 301.0, 1e3, 1e4, 1e6):
+            for x in (300.0, 301.0, 1e3, 1e4, 1e6, 1e7):
                 with self.subTest(model=name, x=x):
                     kernel = inner.thermal_cross_section(x)
                     assert kernel > 0.0
@@ -798,6 +800,31 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                         kernel,
                         rtol=self.CONVERGED_RTOL,
                     )
+
+    def test_every_site_rejects_x_past_the_supported_maximum(self) -> None:
+        """Past ``x = 1e7`` the fallback and both kernels raise.
+
+        The integral runs in ``z``, and past the bound its window above
+        ``z = 2`` is too narrow to resolve: the kernels returned ``0.0``,
+        a negative value or a complex-result ``TypeError``, and the
+        fallback ``NaN``, from about ``x = 5e8``. The bound itself is
+        still evaluated.
+        """
+        points = {
+            "scalar": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
+            "vector": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
+        }
+        for name, inner in points.items():
+            with self.subTest(model=name):
+                assert inner.thermal_cross_section(1e7) > 0.0
+                for site in (
+                    inner.thermal_cross_section,
+                    lambda x, m=inner: thermal_cross_section(
+                        x, NoThermalCrossSection(m)
+                    ),
+                ):
+                    with pytest.raises(ValueError, match="supported maximum"):
+                        site(1.0000001e7)
 
     @staticmethod
     def _gev_site(

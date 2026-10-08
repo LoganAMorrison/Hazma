@@ -61,17 +61,22 @@
 //!
 //! The average's Bessel factors, `x / (2 K₂(x))²` outside the integral
 //! and `K₁(x z)` inside it, overflow and underflow a double from about
-//! `x = 350`, though their product stays finite at every `x`.
+//! `x = 350`, though their product stays finite up to [`X_MAX`].
 //! [`prefactor`] and [`boltzmann_weight`] are those factors with their
 //! common `e^{±2x}` cancelled, so the average is computed at the true
-//! `x` everywhere and tends to its `v → 0` limit as `x` grows: the
-//! s-wave cross section, or zero as `1/x` when nothing is s-wave.
+//! `x` and tends to its `v → 0` limit as `x` grows: the s-wave cross
+//! section, or zero as `1/x` when nothing is s-wave.
+//!
+//! The scaling removes the overflow but not a second limit, which is
+//! [`X_MAX`]: the integral runs in `z`, so the window of width `1/x`
+//! above `z = 2` is resolved only while it spans many ulps of 2.
 
 use crate::special::{bessel_k1e, bessel_kne};
 
 /// How far past the last feature the integral runs, in decay lengths
 /// `1/x`. The Bessel kernel's tail beyond it is at most 3.0e-38 of its
-/// integral from the feature, for `x` from 0.01 to 300.
+/// integral from the feature, for `x` from 0.01 to [`X_MAX`]; above
+/// `x = 300` it is under 5.2e-42, tending to `101 e^{−100}` from `z = 2`.
 pub const DECAY_LENGTHS_PAST_LAST: f64 = 100.0;
 
 /// Break points past each feature, in decay lengths `1/x`. The piece
@@ -91,6 +96,22 @@ pub const RESONANCE_LADDER_RATIO: f64 = 4.0;
 /// past `z = 2`, about 4900 ulps, where `σ_all` is finite.
 pub const MIN_THRESHOLD_PIECE: f64 = 1e-9;
 
+/// The largest `x` at which the thermal averages are supported.
+///
+/// Past it the integration window `[2, 2 + 100/x]` spans too few ulps of
+/// `z = 2` to resolve: QUADPACK bisects toward the threshold until its
+/// nodes round onto `z = 2`, where `σ` is infinite, and from `x ≈ 5e10`
+/// [`partition`] drops every split, so the first piece's nodes all see a
+/// zero weight. Measured on the parity model points, the kernels track
+/// the `v → 0` limit to within their `epsrel` up to `x = 1e7`, are 7e-7
+/// high by 1e8, and from about 5e8 return zero, a negative value or
+/// [`super::soft_complex::NonRealResult`]. The `hazma._core` bindings
+/// reject a larger `x` (`crate::dispatch::require_thermal_x`), and the
+/// pure-Python sites mirror the bound in
+/// `hazma.relic_density._thermal_functions`. Freeze-out lies near
+/// `x = 20`, and `relic_density` integrates to `x ≈ 1e3`.
+pub const X_MAX: f64 = 1e7;
+
 /// `x / (2 K₂(x))²`, scaled by `e^{−2x}`, the factor outside the
 /// thermal average's integral.
 ///
@@ -105,9 +126,10 @@ pub fn prefactor(x: f64) -> f64 {
 /// `K₁(x z)`, scaled by `e^{2x}`, the Boltzmann weight inside the thermal
 /// average's integral.
 ///
-/// It is `e^{x z} K₁(x z)` times `e^{−x (z − 2)}`, which is at most of
-/// order one on `z ≥ 2` and underflows only where `K₁(x z)` is
-/// negligible against its value at threshold.
+/// It is `e^{x z} K₁(x z)` times `e^{−x (z − 2)}`. The first factor falls
+/// as `√(π / 2xz)` at large `x z` and grows as `1/(x z)` at small, and
+/// the second underflows only where `K₁(x z)` is negligible against its
+/// value at threshold.
 #[must_use]
 pub fn boltzmann_weight(x: f64, z: f64) -> f64 {
     bessel_k1e(x * z) * (-x * (z - 2.0)).exp()
@@ -185,11 +207,12 @@ mod tests {
         }
     }
 
-    /// Past the unscaled factors' overflow the product keeps its leading
+    /// Past the unscaled factors' overflow the product of the two factors,
+    /// not the average, which [`X_MAX`] bounds, keeps its leading
     /// behavior, `x^{3/2} / (2 √(2π z)) e^{−x (z − 2)}`, from
     /// `K_ν(y) ~ √(π/2y) e^{−y}`; the relative corrections are `O(1/x)`.
     #[test]
-    fn the_scaled_factors_stay_finite_at_large_x() {
+    fn the_scaled_factors_multiply_to_a_finite_product_at_large_x() {
         for &x in &[1e3_f64, 1e5, 1e8] {
             let z = 2.0 + 2.0 / x;
             let leading = x.powf(1.5) / (2.0 * (2.0 * std::f64::consts::PI * z).sqrt())

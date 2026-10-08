@@ -10,7 +10,8 @@
 - **Triggers / blockers:** none.
 
 > **Resolved.** All four sites integrate at the true `x` with
-> exponentially scaled Bessel factors, rather than clipping. See
+> exponentially scaled Bessel factors, rather than clipping, up to a
+> supported maximum of `x = 1e7`; past it they raise `ValueError`. See
 > "Resolution (measured)" below.
 
 ## Why
@@ -67,6 +68,16 @@ side adds `thermal_average` in
 `hazma/relic_density/_thermal_functions.py`. Clipping was rejected
 because it holds ⟨σv⟩ at its `x = 300` value instead of letting it
 approach the `v → 0` limit.
+
+**Supported domain.** The average is supported for `0 < x ≤ 1e7`
+(`X_MAX` in `rust/src/kernels/thermal_window.rs`, mirrored by
+`_THERMAL_X_MAX` in `hazma/relic_density/_thermal_functions.py`).
+Measured, the kernels returned `0.0`, a negative value
+(`HiggsPortal(300, 200, 1e-2)` gave −1.52e-6 at `x = 1e12`), a
+`TypeError` (vector) or NaN from roughly `x = 5e8`, so every entry point
+raises `ValueError` past `X_MAX` instead. Master's vector clip had
+returned a finite value there; no in-tree default reaches it, since
+`relic_density`'s Boltzmann path stops near `x ≈ 1.1e3`.
 
 **Four sites, not three.** The follow-up named the two Rust kernels and
 the generic fallback. The fourth is

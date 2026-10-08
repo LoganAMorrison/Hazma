@@ -31,7 +31,7 @@
 //! coefficients, different roundings — and the second is measurably the
 //! wrong answer for hazma.
 //!
-//! # What calls these, and with what
+//! # What the Cython called these with
 //!
 //! | Function | Cython call site | Argument range |
 //! | --- | --- | --- |
@@ -39,11 +39,14 @@
 //! | [`bessel_k1`] | `hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1361`, `hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:606` (both ported — Tasks 5.2 and 5.1 — now [`crate::kernels::scalar_xs`] and [`crate::kernels::vector_xs`]) | `x·z`, `z ≥ 2` |
 //! | [`bessel_kn`] | scalar `:1404`, vector `:650` (always `n = 2`; ported with the rows above) | `x ∈ (0, 300]` |
 //!
-//! The ported thermal averages no longer call [`bessel_k1`] or
-//! [`bessel_kn`]. They take the exponentially scaled [`bessel_k1e`] and
+//! The table records the `.pyx` call sites the port started from. The
+//! ported thermal averages no longer call [`bessel_k1`] or
+//! [`bessel_kn`]: they take the exponentially scaled [`bessel_k1e`] and
 //! [`bessel_kne`] through [`crate::kernels::thermal_window`], which
-//! keeps the average finite at every `x` rather than only up to the
-//! `.pyx`'s cutoff at 300.
+//! keeps the average finite up to
+//! [`crate::kernels::thermal_window::X_MAX`] rather than only up to the
+//! `.pyx`'s cutoff at 300. [`bessel_k1`] and [`bessel_kn`] stay as the
+//! scipy-matched functions `crate::special_probe` exposes.
 //!
 //! The `.pyx` reach them through
 //! `from scipy.special.cython_special cimport ...`, which is what pins

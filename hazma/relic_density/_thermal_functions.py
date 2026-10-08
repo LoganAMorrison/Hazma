@@ -439,6 +439,14 @@ _RESONANCE_LADDER_RATIO = 4.0
 #: bound as ``thermal_window::MIN_THRESHOLD_PIECE``.
 _MIN_THRESHOLD_PIECE = 1e-9
 
+#: The largest ``x = mx / T`` at which the thermal average is supported.
+#: The integral runs in ``z``, so its window of width ``1/x`` above
+#: ``z = 2`` is resolved only while it spans many ulps of 2; past this the
+#: quadrature's nodes round onto the threshold, where the cross sections
+#: are singular. The ``hazma._core`` kernels reject a larger ``x`` at the
+#: same bound, ``thermal_window::X_MAX``, which records the measurement.
+_THERMAL_X_MAX = 1e7
+
 
 def thermal_cross_section_partition(
     x: float,
@@ -461,7 +469,8 @@ def thermal_cross_section_partition(
     - **The upper limit** is ``_DECAY_LENGTHS_PAST_LAST`` decay lengths
       past the last feature. The tail beyond it is at most 3.0e-38 of the
       kernel ``z^2 (z^2 - 4) K1(x z)``'s integral from that feature,
-      measured at 30 digits for ``x`` from 0.01 to 300. Counting from
+      measured at 30 digits for ``x`` from 0.01 to 300, and under 5.2e-42
+      from there to ``_THERMAL_X_MAX``. Counting from
       ``z = 2`` alone drops a channel that opens past the window: the
       ``S S`` channel of ``HiggsPortal(mx=200, ms=550, gsxx=1)`` opens at
       ``z = 5.5``, and at ``x = 30`` a limit of ``2 + 100/x`` returns
@@ -558,9 +567,9 @@ def thermal_average(
     underflow a double from about ``x = 350``, so they are evaluated
     exponentially scaled, with their common ``exp(2 x)`` cancelled, as
     ``rust/src/kernels/thermal_window.rs`` does for the ``hazma._core``
-    kernels. The average is therefore finite at every ``x`` and tends to
-    its ``v -> 0`` limit as ``x`` grows: the s-wave cross section, or zero
-    as ``1/x`` when nothing is s-wave.
+    kernels. The average therefore tends to its ``v -> 0`` limit as ``x``
+    grows: the s-wave cross section, or zero as ``1/x`` when nothing is
+    s-wave. It is supported up to ``x = 1e7``, ``_THERMAL_X_MAX``.
 
     Parameters
     ----------
@@ -580,7 +589,18 @@ def thermal_average(
     -------
     tcs: float
         Thermally averaged cross section in MeV^-2.
+
+    Raises
+    ------
+    ValueError
+        If ``x`` exceeds ``_THERMAL_X_MAX``.
     """
+    if x > _THERMAL_X_MAX:
+        msg = (
+            f"x = {x:g} is past the thermal average's supported maximum of "
+            f"{_THERMAL_X_MAX:g}."
+        )
+        raise ValueError(msg)
     z_max, points = thermal_cross_section_partition(x, mx, thresholds, resonances)
     pf = x / (2.0 * kve(2, x)) ** 2
 
