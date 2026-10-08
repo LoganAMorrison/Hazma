@@ -52,10 +52,11 @@ it in `CHANGELOG.md`.
 The channel functions in `hazma/vector_mediator/_gev/positron.py` and
 `neutrino.py` keep counting particles and antiparticles together, and
 `dnde_positron_spectrum_fns` and `dnde_neutrino_spectrum_fns` halve each
-one. Every final state is its own charge conjugate, so half the count is
-the particle count exactly. The lines, weighted by branching fraction
-alone, already counted one particle and are unchanged. Neutrinos follow
-the positrons, so a flavor's spectrum counts `ν` and not `ν̄`.
+one. Each final state is either its own charge conjugate or summed with
+its conjugate, so half the count is the particle count exactly. The
+lines, weighted by branching fraction alone, already counted one
+particle and are unchanged. Neutrinos follow the positrons, so a
+flavor's spectrum counts `ν` and not `ν̄`.
 
 The `k k` channel was the one function that counted a single kaon's
 leptons. That is 1.111 e± per K⁺, which is `1 + 2 BR(K⁺ → 3π)`, and by
@@ -72,5 +73,8 @@ and 0.187.
 `mu mu` and `pi pi` channels to one positron per annihilation beside the
 MeV models, and `test/vector_mediator/test_gev_neutrino_channels.py`
 pins the neutrino counts of the same channels. Both fail at twice their
-value against the former code. No parity-corpus array pins a `_gev`
+value against the former code. Both files also pin `k k` at one charged
+kaon's leptons, 1.111 e± and 1.111, 1.486 and 0 for the `e`, `μ` and `τ`
+flavors at `e_cm = 1500` MeV, and both fail when the `2 *` in `k_k` is
+removed. No parity-corpus array pins a `_gev`
 spectrum, so no repair label applies. Recorded in `CHANGELOG.md`.

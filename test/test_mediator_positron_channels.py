@@ -3,9 +3,9 @@
 ``ScalarMediator``, the ``VectorMediator`` family and ``VectorMediatorGeV``
 count positrons only: a ``mu+ mu-`` or ``pi+ pi-`` pair carries one positive
 particle, whose decay chain ends in exactly one positron. So each of those
-channel spectra must integrate to one positron per annihilation. The pin catches a channel wired
-to the wrong kernel — a photon spectrum integrates to under 0.1 over the
-same range — and a stray factor of two alike.
+channel spectra must integrate to one positron per annihilation. The pin
+catches a channel wired to the wrong kernel — a photon spectrum integrates
+to under 0.1 over the same range — and a stray factor of two alike.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ import numpy as np
 import pytest
 from scipy.integrate import trapezoid
 
+from hazma import spectra
 from hazma.parameters import electron_mass, vh
 from hazma.scalar_mediator import ScalarMediator
 from hazma.vector_mediator import VectorMediator, VectorMediatorGeV
@@ -94,3 +95,35 @@ def test_channel_yields_one_positron_per_annihilation(
     dnde = np.asarray(model.positron_spectrum_funcs()[channel](e_ps, E_CM))
 
     assert trapezoid(dnde, e_ps) == pytest.approx(1.0, rel=RTOL)
+
+
+def test_gev_kaon_channel_matches_one_charged_kaon() -> None:
+    """The ``k k`` channel yields the positrons of one charged kaon.
+
+    By CP, the positron count of a ``K+ K-`` pair equals the ``e+`` and
+    ``e-`` count of a single charged kaon, each carrying ``E_CM / 2`` in
+    MeV. The channel is compared with that kernel on a common grid, so a
+    dropped or doubled factor shows as a ratio of 2 or 1/2, while the grid
+    cancels. Both integrals run to about 1.11 positrons on this grid.
+    """
+    e_cm = 1500.0  # MeV; above 2 m_K = 987 MeV
+    model = VectorMediatorGeV(
+        mx=200.0,
+        mv=1000.0,
+        gvxx=1.0,
+        gvuu=1.0,
+        gvdd=-1.0,
+        gvss=1.0,
+        gvee=1.0,
+        gvmumu=1.0,
+        gvveve=1.0,
+        gvvmvm=1.0,
+        gvvtvt=1.0,
+    )
+    e_ps = np.geomspace(electron_mass, e_cm / 2.0, 200_001)
+    dnde = np.asarray(model.positron_spectrum_funcs()["k k"](e_ps, e_cm))
+    kaon = spectra.dnde_positron_charged_kaon(e_ps, e_cm / 2.0)
+
+    # Both sides evaluate the same kernel on the same grid, so they agree
+    # to rounding; 1e-9 leaves room for that and nothing near a factor of two.
+    assert trapezoid(dnde, e_ps) == pytest.approx(trapezoid(kaon, e_ps), rel=1e-9)

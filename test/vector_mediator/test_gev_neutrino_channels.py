@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 from scipy.integrate import trapezoid
 
+from hazma import spectra
 from hazma.vector_mediator import VectorMediatorGeV
 
 # Both channels are open well above threshold: 2 m_pi = 279 MeV.
@@ -68,3 +69,38 @@ def test_channel_yields_neutrinos_only(channel: str, flavor: str) -> None:
 
     expected = EXPECTED[(channel, flavor)]
     assert trapezoid(dnde, e_nus) == pytest.approx(expected, rel=RTOL, abs=1e-300)
+
+
+@pytest.mark.parametrize("flavor", ["e", "mu", "tau"])
+def test_kaon_channel_matches_one_charged_kaon(flavor: str) -> None:
+    """The ``k k`` channel yields the neutrinos of one charged kaon.
+
+    By CP, the neutrinos of a given flavor from a ``K+ K-`` pair equal the
+    neutrino and antineutrino count of a single charged kaon carrying
+    ``E_CM / 2``, in MeV. The channel is compared with that kernel on a
+    common grid, so a dropped or doubled factor shows as a ratio of 2 or
+    1/2. The counts are about 1.11 (e), 1.49 (mu) and 0 (tau).
+    """
+    e_cm = 1500.0  # MeV; above 2 m_K = 987 MeV
+    model = VectorMediatorGeV(
+        mx=200.0,
+        mv=1000.0,
+        gvxx=1.0,
+        gvuu=1.0,
+        gvdd=-1.0,
+        gvss=1.0,
+        gvee=1.0,
+        gvmumu=1.0,
+        gvveve=1.0,
+        gvvmvm=1.0,
+        gvvtvt=1.0,
+    )
+    e_nus = np.geomspace(1e-6, e_cm / 2.0, 200_001)
+    dnde = np.asarray(model.neutrino_spectrum_funcs(flavor)["k k"](e_nus, e_cm))
+    kaon = spectra.dnde_neutrino_charged_kaon(e_nus, e_cm / 2.0, flavor=flavor)
+
+    # Both sides evaluate the same kernel on the same grid, so they agree
+    # to rounding; 1e-9 leaves room for that and nothing near a factor of two.
+    assert trapezoid(dnde, e_nus) == pytest.approx(
+        trapezoid(kaon, e_nus), rel=1e-9, abs=1e-300
+    )

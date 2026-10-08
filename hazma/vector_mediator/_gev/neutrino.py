@@ -1116,9 +1116,9 @@ def dnde_neutrino_spectrum_fns(self) -> NeutrinoSpectrumFunctions:
     def dnde_zero(e, _: float, flavor: NeutrinoFlavor):
         return _make_zeros(e)
 
-    # The channel functions count particles and antiparticles together,
-    # and every final state is its own charge conjugate, so half of each
-    # is the spectrum of neutrinos alone, which the model reports.
+    # The channel functions count particles and antiparticles together.
+    # Each final state is either its own charge conjugate or summed with
+    # its conjugate, so half of each is the spectrum of neutrinos alone, which the model reports.
     def wrap(f):
         @functools.wraps(f)
         def fnew(*args, **kwargs):

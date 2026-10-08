@@ -41,17 +41,22 @@ user-facing change even when no signature did.
 - **`VectorMediatorGeV` counts positrons and neutrinos only, not their
   antiparticles.** Its continua counted both, so a `μ⁺μ⁻` pair yielded
   two positrons, while its `e e` and `ν ν̄` lines, weighted by branching
-  fraction alone, counted one lepton. Every final state is its own charge
-  conjugate, so the continua now report half their former value, and
-  `positron_spectra`, `neutrino_spectra` and the convolved positron
-  spectrum fall by exactly a factor of two in every channel but two. The
-  `k k` channel is unchanged, because it already counted one kaon's
-  leptons, which is the positron count of a `K⁺K⁻` pair. The `v v`
-  channel, whose repair is listed below, uses the same counting. The
-  lines are unchanged. The
-  model now matches `ScalarMediator` and `VectorMediator`, whose
-  `mu mu` and `pi pi` channels yield one positron per annihilation.
-  Details:
+  fraction alone, counted one lepton. Each final state is either its own
+  charge conjugate or summed with its conjugate, so the continua now
+  report half their former value, and `positron_spectra`,
+  `neutrino_spectra` and the convolved positron spectrum fall by exactly
+  a factor of two in every channel but two. The `k k` channel is
+  unchanged, because it already counted one kaon's leptons, which is the
+  positron count of a `K⁺K⁻` pair. The `v v` channel, whose repair is
+  listed below, falls by 0.50 to 0.57 times rather than exactly half,
+  because its rest-frame sum counts the `K⁺K⁻` decays in full. The lines
+  are unchanged. `TheoryCMB`'s `f_eff` doubles the positron spectrum to
+  count e±, so the model's continuum e± energy had been counted twice:
+  `f_eff_ep` for `KineticMixingGeV(mv=1000, eps=1e-3)` with
+  `mode="interp"` falls from 0.5517 to 0.3726 at `m_x = 300` MeV and from
+  0.3746 to 0.2716 at `m_x = 600` MeV. The model now matches
+  `ScalarMediator` and `VectorMediator`, whose `mu mu` and `pi pi`
+  channels yield one positron per annihilation. Details:
   `docs/followups/done/vector-mediator-gev-lines-count-one-particle.md`.
 - **The `ScalarMediator` and `VectorMediator` thermal averages now
   resolve narrow mediator resonances.** The `hazma._core` kernels behind
