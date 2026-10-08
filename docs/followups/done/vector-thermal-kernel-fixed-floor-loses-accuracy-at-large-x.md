@@ -170,7 +170,7 @@ isolated points below `x = 1`. Its `relic_density` moves by at most
 
 **Not decided here.** The above-300 divergence under "Risks" is
 unchanged, and is
-[its own follow-up](../todo/thermal-kernels-disagree-above-x-300.md).
+[its own follow-up](thermal-kernels-disagree-above-x-300.md).
 
 ## Review round 1
 

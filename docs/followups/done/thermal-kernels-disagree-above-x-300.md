@@ -4,10 +4,14 @@
 - **Source:** "Risks" in
   [`vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md`](../done/vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md)
 - **Scope:** cross-cutting
-- **Status:** open
-- **Triggers / blockers:** none. It moves parity-pinned values, so it
-  takes the next `C<n>` label under
+- **Status:** done. Repaired as parity roster entry `C8`, the eighth
+  label issued under
   [ADR-0003](../../adrs/ADR-0003-corpus-repairs-are-declared-deltas.md).
+- **Triggers / blockers:** none.
+
+> **Resolved.** All four sites integrate at the true `x` with
+> exponentially scaled Bessel factors, rather than clipping. See
+> "Resolution (measured)" below.
 
 ## Why
 
@@ -50,3 +54,35 @@ next `C<n>` in `test/parity/deltas.py`, with a `CHANGELOG.md` entry.
 
 - `relic_density` integrates past `x = 300` for any model that freezes
   out late, so this changes abundances as well as the corpus.
+
+## Resolution (measured)
+
+**The rule.** Every site integrates at the true `x`, and none clips or
+cuts off. The prefactor `x / (2 K₂(x))²` and the kernel `K₁(x z)` are
+evaluated as `exp(-x)`-scaled factors, so the product that reaches the
+integrand never overflows. The Rust side adds `bessel_k1e` and
+`bessel_kne` in `rust/src/special.rs`, and `prefactor` and
+`boltzmann_weight` in `rust/src/kernels/thermal_window.rs`; the Python
+side adds `thermal_average` in
+`hazma/relic_density/_thermal_functions.py`. Clipping was rejected
+because it holds ⟨σv⟩ at its `x = 300` value instead of letting it
+approach the `v → 0` limit.
+
+**Four sites, not three.** The follow-up named the two Rust kernels and
+the generic fallback. The fourth is
+`hazma/vector_mediator/_gev/thermal_cross_section.py`, which also
+returned `0.0` above 300. It and the fallback now share
+`thermal_average`, and `thermal_cross_section_integrand` is gone.
+
+**Corpus.** The repair is parity roster entry `C8`, and the six
+thermal arrays are declared as `B6+C7+C8`. The 60 corpus positions
+above `x = 300` move. At `x = 1000` the scalar average goes from `0.0`
+to 0.29 to 0.30 of its `x = 300` value, and the vector average falls by
+up to 9.4e-3 from the held value. The composed prediction holds to
+1.2e-11 above `x = 300` and to 1.8e-8 over all positions.
+
+**Downstream.** The relic densities of the six parity model points move.
+`HiggsPortal` falls by up to 1.26%, at `mx=300, ms=200`, and
+`KineticMixing` rises by 1.4e-4 to 6.2e-4. The fallback and both kernels
+now agree in `relic_density` to at most 8.5e-8 at four model points,
+where the fallback and the vector kernel had sat 8% apart.
