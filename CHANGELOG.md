@@ -43,9 +43,13 @@ user-facing change even when no signature did.
   two positrons, while its `e e` and `ν ν̄` lines, weighted by branching
   fraction alone, counted one lepton. Each final state is either its own
   charge conjugate or summed with its conjugate, so the continua now
-  report half their former value, and `positron_spectra`,
-  `neutrino_spectra` and the convolved positron spectrum fall by exactly
-  a factor of two in every channel but two. The `k k` channel is
+  report half their former value: `positron_spectra` and
+  `neutrino_spectra` fall by exactly a factor of two in every channel but
+  two. The convolved positron spectrum halves only where the continuum
+  dominates, since its `e e` line is unchanged. For a leptophilic model
+  (`m_x = 200` MeV, `m_V = 1` GeV, `g_ee = g_μμ = 1`) at `e_cm = 500`
+  MeV with 5% resolution, it falls to 0.500 of its former value at
+  100 MeV and to 0.999 at the line, 250 MeV. The `k k` channel is
   unchanged, because it already counted one kaon's leptons, which is the
   positron count of a `K⁺K⁻` pair. The `v v` channel, whose repair is
   listed below, falls by 0.50 to 0.57 times rather than exactly half,
