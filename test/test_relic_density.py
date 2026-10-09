@@ -5,9 +5,10 @@ from collections.abc import Callable, Iterator
 from itertools import pairwise
 from typing import Any, ClassVar
 
+import pytest
 from numpy.testing import assert_allclose
 from scipy.integrate import quad
-from scipy.special import k1, kn
+from scipy.special import k1, k1e, kn, kve
 
 import hazma.vector_mediator._gev.thermal_cross_section as gev_site
 from hazma.parameters import (
@@ -20,7 +21,6 @@ from hazma.relic_density import relic_density
 from hazma.relic_density._thermal_functions import (
     _MIN_THRESHOLD_PIECE,
     thermal_cross_section,
-    thermal_cross_section_integrand,
     thermal_cross_section_partition,
 )
 from hazma.scalar_mediator import HiggsPortal
@@ -122,13 +122,22 @@ class TestMediatorRelicDensity(unittest.TestCase):
     #: threshold and return <sigma v> up to 1.9e-4 high, so both
     #: abundances rise by 2.65e-5 and 2.50e-5.  The other five move by at
     #: most 2.1e-8.
+    #:
+    #: All six were re-derived under roster entry ``C8``, which integrates
+    #: <sigma v> at the true ``x`` past ``x = 300``, where the scalar kernel
+    #: returned ``0.0`` and the vector kernel held its value at 300.  The
+    #: scalar abundances fall, as annihilation no longer stops there: by
+    #: 9.68e-3 and 1.26e-2 at ``closed_resonance`` and at most 9.4e-6
+    #: elsewhere.  The vector abundances rise by 1.4e-4 to 6.2e-4, as the
+    #: held value overstated a <sigma v> that keeps falling toward its
+    #: s-wave limit.
     PINNED: ClassVar = {
-        "scalar.open_resonance": (26.667787923392634, 34.42028079003851),
-        "scalar.narrow_resonance": (6905.347000480099, 8282.819772041152),
-        "scalar.closed_resonance": (9.359827513207474e-08, 9.849973690303772e-08),
-        "vector.open_resonance": (6.142001344063203e-07, 6.408469699348235e-07),
-        "vector.narrow_resonance": (0.3081076863117194, 0.3277204010101092),
-        "vector.closed_resonance": (5.643947300106501e-09, 5.911541688175546e-09),
+        "scalar.open_resonance": (26.66778250323461, 34.42027096049727),
+        "scalar.narrow_resonance": (6905.293168693853, 8282.741823344584),
+        "scalar.closed_resonance": (9.26919311709022e-08, 9.725648516044737e-08),
+        "vector.open_resonance": (6.143301461219751e-07, 6.409488876517519e-07),
+        "vector.narrow_resonance": (0.3081594633734353, 0.327766554996798),
+        "vector.closed_resonance": (5.6474572459042584e-09, 5.914007563556889e-09),
     }
 
     #: Solver tolerances for the Boltzmann pins above.  *Not* the
@@ -225,6 +234,19 @@ class NoThermalCrossSection:
 
     def annihilation_thresholds(self) -> dict[str, float]:
         return self._inner.annihilation_thresholds()
+
+
+def _unscaled_integrand(z: float, x: float, model: NoThermalCrossSection) -> float:
+    """The thermal average's integrand with the unscaled ``K1(x z)``.
+
+    Paired with the unscaled prefactor ``x / (2 K2(x))^2`` it is the
+    textbook form of the average, which the references below integrate
+    independently of the sites' exponentially scaled one. Both factors
+    are normal only up to about ``x = 350``, so it serves a grid that
+    stops at ``x = 300``.
+    """
+    sigma = model.annihilation_cross_sections(model.mx * z)["total"]
+    return sigma * z**2 * (z**2 - 4.0) * k1(x * z)
 
 
 class NoResonances(NoThermalCrossSection):
@@ -410,11 +432,12 @@ class TestThermalQuadratureConverges(unittest.TestCase):
     CONVERGED_RTOL = 1e-6
 
     #: ``x = mx/T`` sample points, spanning freeze-out (``x ~ 20`` to ``30``)
-    #: up to the ``x = 300`` cutoff both sites share.
+    #: up to ``x = 300``, past which the unscaled reference leaves a double.
     X_GRID: ClassVar = (1.0, 5.0, 10.0, 20.0, 24.0, 25.0, 30.0, 50.0, 100.0, 300.0)
 
-    @staticmethod
+    @classmethod
     def _converged(
+        cls,
         integrand: Callable[..., float],
         x: float,
         args: tuple,
@@ -422,6 +445,36 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         points: tuple[float, ...] = (),
     ) -> float:
         """``<sigma v>(x)`` from the same integrand at ``epsrel = 1e-12``.
+
+        The integral is `_converged_integral`'s, and the prefactor the
+        unscaled ``x / (2 K2(x))^2``.
+        """
+        prefactor = x / (2.0 * kn(2, x)) ** 2
+        return prefactor * cls._converged_integral(integrand, x, args, openings, points)
+
+    @classmethod
+    def _converged_scaled(
+        cls, scaled_integrand: Callable[[float, float], float], x: float
+    ) -> float:
+        """`_converged` in the exponentially scaled form, for any ``x``.
+
+        ``scaled_integrand(z, x)`` carries ``K1(x z)`` as
+        ``k1e(x z) exp(-x (z - 2))``, and the prefactor carries ``K2(x)``
+        as ``kve(2, x)``, so the reference reaches past ``x = 350``, where
+        the unscaled factors leave a double.
+        """
+        prefactor = x / (2.0 * kve(2, x)) ** 2
+        return prefactor * cls._converged_integral(scaled_integrand, x, (x,))
+
+    @staticmethod
+    def _converged_integral(
+        integrand: Callable[..., float],
+        x: float,
+        args: tuple,
+        openings: tuple[float, ...] = (),
+        points: tuple[float, ...] = (),
+    ) -> float:
+        """The integral over ``z`` of `_converged`, without its prefactor.
 
         ``openings`` are the ``z`` at which the integrand's channels open
         or its mediator peaks, from a list kept here rather than read from
@@ -437,14 +490,13 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         ``points`` are further break points, the resonance ladders, kept
         where they fall inside the interval.
         """
-        prefactor = x / (2.0 * kn(2, x)) ** 2
         threshold = 2.0
         starts = {threshold, *(z for z in openings if z > threshold)}
         upper = max(starts) + 200.0 / x
         splits = {z + k / x for z in starts for k in (0.0, 1.0, 4.0, 16.0, 50.0)}
         inside = {z for z in points if threshold < z < upper}
         edges = sorted({upper, *inside, *(z for z in splits if z < upper)})
-        value = sum(
+        return sum(
             quad(
                 integrand,
                 lo,
@@ -456,7 +508,6 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             )[0]
             for lo, hi in pairwise(edges)
         )
-        return prefactor * value
 
     @staticmethod
     def _at_scipy_defaults(
@@ -491,7 +542,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             for x in self.X_GRID:
                 with self.subTest(model=name, x=x):
                     reference = self._converged(
-                        thermal_cross_section_integrand,
+                        _unscaled_integrand,
                         x,
                         (x, model),
                         openings=features,
@@ -502,7 +553,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                         rtol=self.CONVERGED_RTOL,
                     )
                     default = self._at_scipy_defaults(
-                        thermal_cross_section_integrand, x, (x, model), inner.mx
+                        _unscaled_integrand, x, (x, model), inner.mx
                     )
                     worst_default = max(
                         worst_default, abs(default - reference) / abs(reference)
@@ -525,7 +576,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=1e-6)
         x = 12.0
         reference = self._converged(
-            thermal_cross_section_integrand,
+            _unscaled_integrand,
             x,
             (x, NoThermalCrossSection(inner)),
             openings=(inner.ms / inner.mx, 2.0 * inner.ms / inner.mx),
@@ -553,7 +604,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             inner = HiggsPortal(mx=200.0, ms=550.0, gsxx=1.0, stheta=stheta)
             with self.subTest(stheta=stheta):
                 reference = self._converged(
-                    thermal_cross_section_integrand,
+                    _unscaled_integrand,
                     x,
                     (x, NoThermalCrossSection(inner)),
                     openings=(
@@ -632,7 +683,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                 inner.mv, inner.width_v, inner.mx
             )
             reference = self._converged(
-                thermal_cross_section_integrand,
+                _unscaled_integrand,
                 x,
                 (x, NoThermalCrossSection(inner)),
                 points=self._resonance_features(inner.mv, inner.width_v, inner.mx),
@@ -660,7 +711,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             ((mass, width),) = model.annihilation_resonances()
             pinned = self._width_with_a_rung_on_threshold(mass, width, model.mx)
             model.annihilation_resonances = lambda: [(mass, pinned)]
-            site, integrand = self._gev_site(model)
+            site, integrand, _ = self._gev_site(model)
             reference = self._converged(
                 integrand,
                 x,
@@ -704,7 +755,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             for x in xs:
                 with self.subTest(model=name, x=x):
                     reference = self._converged(
-                        thermal_cross_section_integrand,
+                        _unscaled_integrand,
                         x,
                         (x, NoThermalCrossSection(inner)),
                         points=features,
@@ -724,23 +775,27 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             f"budget of {self.CONVERGED_RTOL:.0e})"
         )
 
-    def test_generic_fallback_relic_density_matches_scalar_kernel(self) -> None:
-        """The fallback's ``<sigma v>`` carries through to the scalar kernel's abundance.
+    def test_generic_fallback_relic_density_matches_kernels(self) -> None:
+        """The fallback's ``<sigma v>`` carries through to each kernel's abundance.
 
-        ``hazma._core``'s scalar kernel integrates the same cross sections
-        with its own QUADPACK port, over an interval and break points built
-        from its channel thresholds,
-        and like the fallback returns ``0.0`` above ``x = 300``, so the two
-        must give the same semi-analytic relic density. The vector kernel
-        holds its ``x = 300`` value above that cutoff instead, which is why
-        it is not compared here. Measured agreement is 7.6e-8
-        (``scalar.open``) and 7.7e-12 (``scalar.closed``); the budget is
-        `CONVERGED_RTOL`. With the upper limit at ``50/x`` the fallback
-        gave 27.19 and 4.2e-3 against the kernel's 26.67 and 9.4e-8.
+        ``hazma._core``'s mediator kernels integrate the same cross
+        sections with their own QUADPACK port, over an interval and break
+        points built from their channel thresholds, and like the fallback
+        at the true ``x`` past ``x = 300``, so each pair must give the same
+        semi-analytic relic density. Measured agreement is 8.5e-8
+        (``scalar.open``), 3.3e-16 (``scalar.closed``), 1.0e-8
+        (``vector.open``) and 9.9e-13 (``vector.closed``); the budget is
+        `CONVERGED_RTOL`. With the upper limit at ``50/x``
+        the fallback gave 27.19 and 4.2e-3 against the scalar kernel's
+        26.67 and 9.4e-8, and while the vector kernel held its ``x = 300``
+        value above that point and the fallback returned ``0.0``, the two
+        sat 8% apart at ``vector.open``.
         """
         points = {
             "scalar.open": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
             "scalar.closed": HiggsPortal(mx=300.0, ms=200.0, gsxx=1.0, stheta=1e-2),
+            "vector.open": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
+            "vector.closed": KineticMixing(mx=300.0, mv=200.0, gvxx=1.0, eps=1e-1),
         }
         for name, inner in points.items():
             with self.subTest(model=name):
@@ -750,10 +805,68 @@ class TestThermalQuadratureConverges(unittest.TestCase):
                     rtol=self.CONVERGED_RTOL,
                 )
 
+    def test_generic_fallback_matches_kernels_long_after_freeze_out(self) -> None:
+        """The fallback and both kernels share one rule past ``x = 300``.
+
+        All three integrate at the true ``x`` with the exponentially
+        scaled Bessel factors, so they agree wherever the average is
+        evaluated, out to the supported maximum ``x = 1e7``. Measured
+        agreement is 6.6e-8 (``scalar.open``) and 1.1e-15
+        (``vector.open``); the budget is `CONVERGED_RTOL`, as for the grid
+        that stops at 300. The scalar figure is not quadrature error: the
+        scalar kernel's electron mass is the legacy ``0.510998928`` MeV
+        and the fallback's is `hazma.parameters.electron_mass`, and with
+        the two equal they agree to 6.3e-16
+        (``docs/followups/todo/consolidate-the-two-constants-tables.md``).
+        """
+        points = {
+            "scalar.open": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
+            "vector.open": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
+        }
+        for name, inner in points.items():
+            for x in (300.0, 301.0, 1e3, 1e4, 1e6, 1e7):
+                with self.subTest(model=name, x=x):
+                    kernel = inner.thermal_cross_section(x)
+                    assert kernel > 0.0
+                    assert_allclose(
+                        thermal_cross_section(x, NoThermalCrossSection(inner)),
+                        kernel,
+                        rtol=self.CONVERGED_RTOL,
+                    )
+
+    def test_every_site_rejects_x_past_the_supported_maximum(self) -> None:
+        """Past ``x = 1e7`` the fallback and both kernels raise.
+
+        The integral runs in ``z``, and past the bound its window above
+        ``z = 2`` is too narrow to resolve: the kernels returned ``0.0``,
+        a negative value or a complex-result ``TypeError``, and the
+        fallback ``NaN``, from about ``x = 5e8``. The bound itself is
+        still evaluated.
+        """
+        points = {
+            "scalar": HiggsPortal(mx=100.0, ms=300.0, gsxx=1.0, stheta=1e-1),
+            "vector": KineticMixing(mx=100.0, mv=300.0, gvxx=1.0, eps=1e-1),
+        }
+        for name, inner in points.items():
+            with self.subTest(model=name):
+                assert inner.thermal_cross_section(1e7) > 0.0
+                for site in (
+                    inner.thermal_cross_section,
+                    lambda x, m=inner: thermal_cross_section(
+                        x, NoThermalCrossSection(m)
+                    ),
+                ):
+                    with pytest.raises(ValueError, match="supported maximum"):
+                        site(1.0000001e7)
+
     @staticmethod
     def _gev_site(
         model: VectorMediatorGeV,
-    ) -> tuple[Callable[[float], float], Callable[[float, float], float]]:
+    ) -> tuple[
+        Callable[[float], float],
+        Callable[[float, float], float],
+        Callable[[float, float], float],
+    ]:
         """The `VectorMediatorGeV.relic_density` closure, and its integrand.
 
         The closure is built inside the method and handed to
@@ -761,7 +874,9 @@ class TestThermalQuadratureConverges(unittest.TestCase):
         intercepting that call rather than by solving the Boltzmann
         equation, which would bury ``<sigma v>`` inside a relic density.
         The integrand is rebuilt here from the same channel filter, so a
-        reference integrates the same function.
+        reference integrates the same function. It is returned twice, with
+        the unscaled ``K1`` for `_converged` and in the scaled form
+        `_converged_scaled` takes.
         """
         captured: dict[str, Any] = {}
         original = gev_site.rd
@@ -777,15 +892,22 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             if key in gev_site.TWO_BODY
         }
 
+        def sigma(z: float) -> float:
+            return sum(fn(model.mx * z) for fn in channel_fns.values())
+
         def integrand(z: float, x: float) -> float:
-            sigma = sum(fn(model.mx * z) for fn in channel_fns.values())
-            return sigma * z**2 * (z**2 - 4.0) * k1(x * z)
+            return sigma(z) * z**2 * (z**2 - 4.0) * k1(x * z)
 
-        return captured["model"].thermal_cross_section, integrand
+        def scaled_integrand(z: float, x: float) -> float:
+            weight = k1e(x * z) * math.exp(-x * (z - 2.0))
+            return sigma(z) * z**2 * (z**2 - 4.0) * weight
 
-    def test_gev_vector_site_converges(self) -> None:
-        """The `VectorMediatorGeV.relic_density` closure, from `_gev_site`."""
-        model = VectorMediatorGeV(
+        return captured["model"].thermal_cross_section, integrand, scaled_integrand
+
+    @staticmethod
+    def _gev_model() -> VectorMediatorGeV:
+        """A GeV vector mediator below its pair threshold, quark couplings only."""
+        return VectorMediatorGeV(
             mx=5e3,
             mv=2e3,
             gvxx=1.0,
@@ -799,7 +921,10 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             gvvtvt=0.0,
         )
 
-        site, integrand = self._gev_site(model)
+    def test_gev_vector_site_converges(self) -> None:
+        """The `VectorMediatorGeV.relic_density` closure, from `_gev_site`."""
+        model = self._gev_model()
+        site, integrand, _ = self._gev_site(model)
 
         worst_default = 0.0
         for x in self.X_GRID:
@@ -815,6 +940,34 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             f"at the call site pins nothing (worst relative error {worst_default:.2e} "
             f"against a budget of {self.CONVERGED_RTOL:.0e})"
         )
+
+    def test_gev_vector_site_converges_long_after_freeze_out(self) -> None:
+        """The GeV closure integrates at the true ``x`` past ``x = 300``.
+
+        The reference is `_converged_scaled`, which at ``x = 300`` matches
+        `_converged` to 4.6e-15. Measured agreement is at most
+        1.7e-9, at ``x = 1e7``; the budget is `CONVERGED_RTOL`. The average
+        rises 1.7% from its ``x = 300`` value toward the s-wave limit, so
+        returning ``0.0`` or the ``x = 300`` value past that point fails.
+        """
+        model = self._gev_model()
+        site, integrand, scaled_integrand = self._gev_site(model)
+        assert_allclose(
+            self._converged_scaled(scaled_integrand, 300.0),
+            self._converged(integrand, 300.0, (300.0,)),
+            rtol=self.CONVERGED_RTOL,
+        )
+        for x in (301.0, 1e3, 1e4, 1e6, 1e7):
+            with self.subTest(x=x):
+                reference = self._converged_scaled(scaled_integrand, x)
+                assert_allclose(site(x), reference, rtol=self.CONVERGED_RTOL)
+
+    def test_gev_vector_site_rejects_x_past_the_supported_maximum(self) -> None:
+        """Past ``x = 1e7`` the GeV closure raises, as the other sites do."""
+        site, _, _ = self._gev_site(self._gev_model())
+        assert site(1e7) > 0.0
+        with pytest.raises(ValueError, match="supported maximum"):
+            site(1.0000001e7)
 
     def test_gev_vector_site_resolves_a_narrow_resonance(self) -> None:
         """The GeV closure brackets the mediator resonance too.
@@ -839,7 +992,7 @@ class TestThermalQuadratureConverges(unittest.TestCase):
             gvvmvm=0.0,
             gvvtvt=0.0,
         )
-        site, integrand = self._gev_site(model)
+        site, integrand, _ = self._gev_site(model)
         ((mass, width),) = model.annihilation_resonances()
         features = self._resonance_features(mass, width, model.mx)
 

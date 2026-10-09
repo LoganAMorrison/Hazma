@@ -35,11 +35,14 @@ what that adds on top of `reference_values`: the difference between a
 **decay-length-split** integral, which no interval choice can mislead, and
 the ``B6`` value.
 
-The two large-``x`` rules below are the kernels' own and are **not**
-what either repair touches: the scalar hard-returns ``0.0`` above
-``x = 300`` while the vector clips ``x`` to 300 and saturates. That
-divergence between the two models predates the port and is untouched
-here.
+Both of those values apply the kernels' large-``x`` rules from before
+roster entry ``C8``: the scalar returned ``0.0`` above ``x = 300`` while
+the vector clipped ``x`` to 300 and saturated. ``C8`` integrates at the
+true ``x`` everywhere, and `large_x_term` is what that adds on top of the
+``C7`` value: the converged average at the true ``x`` minus the one at
+the clipped ``x``. Every integral here takes the Bessel factors
+exponentially scaled, as the kernels now do, so that the true ``x`` is
+reachable on the corpus grid out to ``x = 1000``.
 """
 
 from __future__ import annotations
@@ -52,7 +55,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import scipy.integrate as si
 from scipy.integrate import IntegrationWarning
-from scipy.special import k1, kn
+from scipy.special import k1e, kve
 
 from hazma import parameters
 from hazma._core import scalar_mediator as _core_scalar
@@ -76,8 +79,9 @@ MMU = 105.6583715
 #: ``x = 1/3`` respectively.
 UPPER_FLOOR = {"scalar": 100.0, "vector": 150.0}
 
-#: Where each kernel stops integrating in ``x = m_x / T``. Above it the
-#: Bessel prefactor ``x / (2 K_2(x))^2`` overflows a double.
+#: Where each kernel stopped integrating in ``x = m_x / T`` before
+#: ``C8``, because its unscaled Bessel prefactor ``x / (2 K_2(x))^2``
+#: overflows a double not far above it.
 X_CLIP = 300.0
 
 #: Lower limit of the integral, in ``z = e_cm / m_x``: the pair
@@ -179,7 +183,7 @@ def _sigma_all(
 
 
 def _clip(model: str, x: float) -> float | None:
-    """The kernels' own large-``x`` rule: ``None`` where the scalar returns 0."""
+    """The pre-``C8`` large-``x`` rule: ``None`` where the scalar returned 0."""
     if model == "scalar":
         return None if x > X_CLIP else x
     return min(x, X_CLIP)
@@ -223,12 +227,15 @@ def _integral(
     duplicates the kernels pass.
     """
     sigma_all, mx, _m_med = _sigma_all(model, args)
-    prefactor = xnew / (2.0 * kn(2, xnew)) ** 2
+    # Both Bessel factors scaled by `exp(x)`; the `exp(2 x)` the prefactor
+    # omits is restored to the weight as `exp(-x (z - 2))`.
+    prefactor = xnew / (2.0 * kve(2, xnew)) ** 2
     lo, hi = bounds
     interior = [p for p in points or () if lo < p < hi]
 
     def integrand(z: float) -> float:
-        return sigma_all(mx * z) * z * z * (z * z - 4.0) * k1(xnew * z)
+        weight = k1e(xnew * z) * np.exp(-xnew * (z - Z_THRESHOLD))
+        return sigma_all(mx * z) * z * z * (z * z - 4.0) * weight
 
     with warnings.catch_warnings():
         # A few of the corpus positions report roundoff in the
@@ -285,10 +292,11 @@ def thermal_cross_section(model: str, args: list[float], x: float) -> float:
 def converged_thermal_cross_section(model: str, args: list[float], x: float) -> float:
     """``<sigma v>(x)`` in MeV^-2, split so no interval choice can bias it.
 
-    Integrates from threshold to 200 decay lengths past the last of
-    `_features`, in pieces at every feature, at `DECAY_LENGTHS` past each,
-    and at ``z_r +/- g 2^k`` around the resonance ``z_r = m_med / m_x``
-    of width ``g`` in units of ``m_x``, each piece to `REFERENCE_EPSREL`.
+    Integrates at the true ``x`` from threshold to 200 decay lengths past
+    the last of `_features`, in pieces at every feature, at
+    `DECAY_LENGTHS` past each, and at ``z_r +/- g 2^k`` around the
+    resonance ``z_r = m_med / m_x`` of width ``g`` in units of ``m_x``,
+    each piece to `REFERENCE_EPSREL`.
 
     Parameters
     ----------
@@ -304,22 +312,27 @@ def converged_thermal_cross_section(model: str, args: list[float], x: float) -> 
     float
         The thermally averaged cross section in MeV^-2.
     """
-    xnew = _clip(model, x)
-    if xnew is None:
-        return 0.0
     openings = {
         Z_THRESHOLD,
         *(max(z, Z_THRESHOLD) for z in _features(model, *args[:2])),
     }
-    upper = max(openings) + DECAY_LENGTHS[-1] / xnew
-    splits = {z + k / xnew for z in openings for k in DECAY_LENGTHS}
+    upper = max(openings) + DECAY_LENGTHS[-1] / x
+    splits = {z + k / x for z in openings for k in DECAY_LENGTHS}
     z_res = args[1] / args[0]
     offset = args[_WIDTH_INDEX[model]] / args[0]
     while 0.0 < offset < upper - Z_THRESHOLD:
         splits.update((z_res - offset, z_res + offset))
         offset *= RESONANCE_LADDER_RATIO
     edges = sorted(z for z in splits if Z_THRESHOLD <= z <= upper)
-    return sum(_integral(model, args, xnew, pair) for pair in pairwise(edges))
+    return sum(_integral(model, args, x, pair) for pair in pairwise(edges))
+
+
+def _clipped_converged(model: str, args: list[float], x: float) -> float:
+    """`converged_thermal_cross_section` under the pre-``C8`` rule."""
+    xnew = _clip(model, x)
+    if xnew is None:
+        return 0.0
+    return converged_thermal_cross_section(model, args, xnew)
 
 
 ReferenceFn = Callable[[Callable[..., Any], "Block"], dict[str, np.ndarray]]
@@ -378,7 +391,8 @@ def interval_term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]
 
     What rebuilding the kernels' interval from ``1/x`` adds to the
     ``B6`` value: `converged_thermal_cross_section` minus
-    `thermal_cross_section`, on the block's grid.
+    `thermal_cross_section`, both under the pre-``C8`` large-``x`` rule,
+    on the block's grid.
 
     Parameters
     ----------
@@ -397,8 +411,46 @@ def interval_term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]
     return {
         "values": np.array(
             [
-                converged_thermal_cross_section(model, args, float(x))
+                _clipped_converged(model, args, float(x))
                 - thermal_cross_section(model, args, float(x))
+                for x in block.grid
+            ],
+            dtype=np.float64,
+        )
+    }
+
+
+def large_x_term(fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+    """`deltas.Additive` term for ``C8``, composed after `interval_term`.
+
+    What integrating at the true ``x`` adds to the ``C7`` value:
+    `converged_thermal_cross_section` at ``x`` minus the same at the
+    pre-``C8`` clipped ``x``, on the block's grid. It is exactly zero up
+    to ``x = 300``, where the two rules agree.
+
+    Parameters
+    ----------
+    fn : callable
+        The corpus entry point under comparison, read only for its model.
+    block : Block
+        The corpus block, supplying the grid and the argument tuple.
+
+    Returns
+    -------
+    dict
+        ``{"values": the term in MeV^-2 on the block's grid}``.
+    """
+    model = _model(fn)
+    args = block.params["args"]
+    return {
+        "values": np.array(
+            [
+                (
+                    0.0
+                    if float(x) <= X_CLIP
+                    else converged_thermal_cross_section(model, args, float(x))
+                    - _clipped_converged(model, args, float(x))
+                )
                 for x in block.grid
             ],
             dtype=np.float64,

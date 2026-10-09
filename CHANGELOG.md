@@ -38,6 +38,29 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **Every thermal average now integrates at the true `x` past
+  `x = 300`.** Above `x = m_x / T = 300` the `ScalarMediator` kernel
+  behind `thermal_cross_section` returned exactly `0.0`, the
+  `VectorMediator` kernel held its value at 300, and the generic fallback
+  in `hazma.relic_density` and `VectorMediatorGeV.relic_density` returned
+  `0.0`. None of these rules was physics; they kept the Bessel factors
+  from overflowing. All four now evaluate those factors exponentially
+  scaled, so ⟨σv⟩ tends to its `v → 0` limit as `x` grows: the s-wave
+  cross section, or zero as `1/x` when nothing is s-wave. The averages
+  are supported up to `x = 1e7` and raise `ValueError` past it, where
+  their integration window above threshold is no longer resolved and
+  they returned `0.0`, `NaN` or a negative value, or raised `TypeError`,
+  from about `x = 5e8`. A model's
+  abundance therefore no longer depends on which path computes its ⟨σv⟩;
+  the fallback and the vector kernel had sat 8% apart in `relic_density`.
+  Below `x = 300` the values move by at most 1.4e-11. Above
+  it, the scalar average at `x = 1000` is about 0.3 of its value at 300
+  rather than zero, and the vector average falls by up to 9.4e-3 from
+  the held value. `relic_density` for the six parity model points moves
+  as a result: the `HiggsPortal` abundances fall by up to 1.26%
+  (`mx=300, ms=200, stheta=1e-2`) and the `KineticMixing` abundances rise
+  by 1.4e-4 to 6.2e-4. Details:
+  `docs/followups/done/thermal-kernels-disagree-above-x-300.md`.
 - **`VectorMediatorGeV` counts positrons and neutrinos only, not their
   antiparticles.** Its continua counted both, so a `μ⁺μ⁻` pair yielded
   two positrons, while its `e e` and `ν ν̄` lines, weighted by branching

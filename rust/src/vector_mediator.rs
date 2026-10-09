@@ -232,6 +232,10 @@ fn sigma_xx_to_vv(
 ///
 /// # Errors
 ///
+/// `ValueError` if `x` exceeds
+/// [`crate::kernels::thermal_window::X_MAX`], where the average is no
+/// longer resolved.
+///
 /// As [`sigma_xx_to_v_to_pipi`], if the integrand reaches the threshold.
 /// Unreachable in practice — see
 /// [`crate::kernels::vector_xs::thermal_cross_section`].
@@ -255,6 +259,7 @@ fn thermal_cross_section(
     // _vector_mediator_cross_sections.py` still passes all ten, so
     // dropping or renaming one would narrow the public API.
     let _ = gvss;
+    crate::dispatch::require_thermal_x(x)?;
     vector_xs::thermal_cross_section(x, mx, mv, gvxx, gvuu, gvdd, gvee, gvmumu, width_v)
         .map_err(non_real)
 }

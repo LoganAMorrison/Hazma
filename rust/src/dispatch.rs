@@ -343,3 +343,19 @@ pub fn require_vector(obj: &Bound<'_, PyAny>, quantity: &str) -> PyResult<Vec<f6
         .map_err(|_| dtype_error(array, quantity))?;
     Ok(values.as_array().to_vec())
 }
+
+/// Reject an `x = m_x / T` past the thermal averages' supported maximum,
+/// [`crate::kernels::thermal_window::X_MAX`], which says why there is one.
+///
+/// # Errors
+///
+/// `ValueError` if `x` exceeds it.
+pub fn require_thermal_x(x: f64) -> PyResult<()> {
+    let x_max = crate::kernels::thermal_window::X_MAX;
+    if x > x_max {
+        return Err(PyValueError::new_err(format!(
+            "x = {x:e} is past the thermal average's supported maximum of {x_max:e}."
+        )));
+    }
+    Ok(())
+}

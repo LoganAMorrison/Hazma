@@ -566,8 +566,8 @@ BUDGETS: dict[str, Budget] = {
         atol=0.0,
         why="QAGP over z with mediator breakpoints "
         "(hazma/scalar_mediator/_c_scalar_mediator_cross_sections.pyx:1411) "
-        "and Bessel K1/K2 prefactors (:1361, :1404); the x > 300 cutoff "
-        "is a branch, not a tolerance question. Tightened from QUAD_RTOL "
+        "and Bessel K1/K2 prefactors (:1361, :1404); the .pyx's x > 300 "
+        "cutoff is a branch, declared as C8 in deltas.py. Tightened from QUAD_RTOL "
         "by Task 5.2 on its own measurement -- 3.12e-15 worst relative "
         "over the 285 pinned values, 104 of them bit-equal, so 1e-12 "
         "leaves 320x headroom.",
@@ -605,8 +605,8 @@ BUDGETS: dict[str, Budget] = {
         atol=0.0,
         why="QAGP over z with mediator breakpoints "
         "(hazma/vector_mediator/_c_vector_mediator_cross_sections.pyx:656) "
-        "and Bessel K1/K2 prefactors (:606, :650); the x > 300 saturation "
-        "is a branch, not a tolerance question. Tightened from QUAD_RTOL "
+        "and Bessel K1/K2 prefactors (:606, :650); the .pyx's x > 300 "
+        "saturation is a branch, declared as C8 in deltas.py. Tightened from QUAD_RTOL "
         "by Task 5.1 on its own measurement -- 2.06e-14 worst relative "
         "over the 285 pinned values, 64 of them bit-equal, so 1e-12 "
         "leaves 49x headroom.",

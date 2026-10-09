@@ -31,6 +31,19 @@ historical artifact of two headers growing separately. A user comparing a
 mediator spectrum against a meson spectrum is comparing numbers computed
 with different values of α, and nothing in the API says so.
 
+The split reaches the thermal averages as well. The mediator
+cross-section kernels carry their own module constants, transcribed from
+the `.pyx` sources: `ME` is `0.510998928` in `rust/src/kernels/scalar_xs.rs`
+and `rust/src/kernels/vector_xs.rs`, while the pure-Python cross sections
+read `hazma/parameters.py`'s `0.5109989461`. For
+`HiggsPortal(mx=100, ms=300, gsxx=1, stheta=0.1)`, whose scalar resonance
+is open, the Rust thermal kernel therefore sits a constant relative
+6.61e-8 below the generic fallback in
+`hazma/relic_density/_thermal_functions.py` from `x = 300` to `1e7`, about
+four times the kernel's `epsrel` of 1.49e-8. With the fallback's
+electron mass set to the kernel's, the two agree to at most 6.3e-16 at
+`x = 300`, `1e3`, `1e4`, `1e6` and `1e7`.
+
 ## What
 
 Pick one table, state its provenance (which PDG edition, which CODATA
@@ -57,6 +70,8 @@ Expect the shift to be small but real: the two α values differ by
 
 - `rust/src/constants.rs` — the `pdg` / `legacy` / `derived` split
 - `hazma/parameters.py:205` — the third α
+- `rust/src/kernels/scalar_xs.rs` and `rust/src/kernels/vector_xs.rs` —
+  the mediator cross-section kernels' own module constants
 - `test/test_core_constants.py` — the bit-parity assertions that pinned
   the split
 - `projects/cython-to-rust/rules.md` rule 4 — the rule that deferred this

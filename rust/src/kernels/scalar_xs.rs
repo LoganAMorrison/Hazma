@@ -92,9 +92,8 @@
 use crate::kernels::soft_complex::{
     NonRealResult, complex_quotient_real_denominator, soft_complex_pow_1_5,
 };
-use crate::kernels::thermal_window::partition;
+use crate::kernels::thermal_window::{boltzmann_weight, partition, prefactor};
 use crate::quad::{DEFAULT_EPSREL, QuadOpts, quad};
-use crate::special::{bessel_k1, bessel_kn};
 
 /// Higgs vacuum expectation value in MeV —
 /// `_c_scalar_mediator_cross_sections.pyx:9`.
@@ -907,11 +906,15 @@ fn sigma_xx_to_all(
 
 /// The thermally averaged `⟨σv⟩` in MeV⁻², at `x = m_x / T`.
 ///
-/// Above `x = 300` this returns exactly `0.0` — "if x is really large,
-/// we will get divide by zero errors" (`:1400-1402`). The **vector**
-/// model clips `x` to 300 and keeps returning the value there instead,
-/// and the corpus pins both (`test/parity/cases.py`'s `_thermal_blocks`
-/// says so at length); unifying them would move published numbers.
+/// The average is integrated at the true `x`, with the Bessel factors
+/// from [`prefactor`] and [`boltzmann_weight`], up to
+/// [`crate::kernels::thermal_window::X_MAX`], past which the window above
+/// threshold is no longer resolved and the bindings reject `x`. The
+/// `.pyx` returned exactly `0.0` above `x = 300`, where its unscaled
+/// factors overflow, while the vector model clipped `x` to 300; replacing
+/// both rules moved published numbers, as roster entry `C8` in
+/// `test/parity/deltas.py`
+/// (`docs/followups/done/thermal-kernels-disagree-above-x-300.md`).
 ///
 /// The interval and break points come from
 /// [`crate::kernels::thermal_window`], as in the vector model: the limit
@@ -949,14 +952,6 @@ pub fn thermal_cross_section(
     width_s: f64,
     vs: f64,
 ) -> Result<f64, NonRealResult> {
-    // "If x is really large, we will get divide by zero errors."
-    if x > 300.0 {
-        return Ok(0.0);
-    }
-
-    let two_k2 = 2.0 * bessel_kn(2, x);
-    let prefactor = x / sq(two_k2);
-
     // Every `z` at which a channel of `sigma_xx_to_all` opens, each at its
     // kernel's own threshold. `S → γγ` opens with the pair itself.
     let thresholds = [
@@ -971,7 +966,7 @@ pub fn thermal_cross_section(
     let mut nonreal = false;
     let mut integrand = |z: f64| {
         match sigma_xx_to_all(mx * z, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs) {
-            Ok(sigma) => ((sigma * sq(z)) * (sq(z) - 4.0)) * bessel_k1(x * z),
+            Ok(sigma) => ((sigma * sq(z)) * (sq(z) - 4.0)) * boltzmann_weight(x, z),
             Err(NonRealResult) => {
                 // scipy's `quad` propagates an exception out of the
                 // integrand rather than absorbing it, so the flag makes
@@ -1000,7 +995,7 @@ pub fn thermal_cross_section(
     if nonreal {
         return Err(NonRealResult);
     }
-    Ok(prefactor * integral)
+    Ok(prefactor(x) * integral)
 }
 
 #[cfg(test)]
@@ -1011,6 +1006,7 @@ mod tests {
         sigma_xx_to_all, sigma_xx_to_s_to_ff, sigma_xx_to_s_to_gg, sigma_xx_to_s_to_pi0pi0,
         sigma_xx_to_s_to_pipi, sigma_xx_to_ss, sq, thermal_cross_section,
     };
+    use crate::kernels::thermal_window::X_MAX;
     use crate::quad::{QuadOpts, quad};
 
     /// A representative model point: the parity corpus's `open_resonance`
@@ -1310,23 +1306,51 @@ mod tests {
 
     // -- The thermal average ----------------------------------------------
 
-    /// Above `x = 300` the scalar model returns exactly `0.0`, where the
-    /// vector model saturates instead.
+    /// Long after freeze-out the average tends to its `v → 0` limit, at
+    /// every `x` up to [`X_MAX`] rather than only up to an overflow-driven
+    /// cutoff.
     ///
-    /// The two disagree, deliberately: `test/parity/cases.py`'s
-    /// `_thermal_blocks` pins both, and unifying them would move
-    /// published numbers. The boundary is `x > 300`, so `x = 300` itself
-    /// still integrates.
+    /// Every channel here is p-wave: the pair is a Dirac fermion, and
+    /// both the scalar `s`-channel and the `S S` channel need a unit of
+    /// orbital angular momentum. So `σ v = b v²` near threshold, with `v`
+    /// the relative velocity `2β`, and `⟨σv⟩ → 6 b / x` (Gondolo and
+    /// Gelmini, Nucl. Phys. B 360 (1991) 145). `b = σ / (2β)` is read off
+    /// `sigma_xx_to_all` at `β = 1e-6`, where the next order is 1e-12
+    /// relative; the average's own next order is `O(1/x)` relative.
+    /// Measured, `x ⟨σv⟩ / 6b − 1` is 5.46/x from `x = 1e3` to [`X_MAX`], which the
+    /// bound `10/x` holds with room; the coefficient at 1e5 and 1e6 agrees
+    /// to 7e-5. The quadrature's `epsrel` of 1.49e-8 allows 3e-3 of the
+    /// excess at 1e6, so the 1e-2 on that agreement is the integrator's
+    /// own budget.
     #[test]
-    fn the_thermal_average_cuts_off_above_three_hundred() {
+    fn the_thermal_average_falls_as_one_over_x_at_large_x() {
         let at = |x: f64| {
             thermal_cross_section(x, MX, MS, GSXX, GSFF, GSGG, GSFF_PHOTON, LAM, WIDTH_S, VS)
                 .unwrap()
         };
-        assert!(at(300.0) > 0.0);
-        for x in [300.000_000_1, 301.0, 1e3, 1e6] {
-            assert_eq!(at(x), 0.0, "x = {x}");
+        // `z − 2` is exact, so `β` carries no cancellation.
+        let z: f64 = 2.0 + 2.0_f64.powi(-40);
+        let beta = ((z - 2.0) * (z + 2.0)).sqrt() / z;
+        let sigma = super::sigma_xx_to_all(
+            MX * z,
+            MX,
+            MS,
+            GSXX,
+            GSFF,
+            GSGG,
+            GSFF_PHOTON,
+            LAM,
+            WIDTH_S,
+            VS,
+        )
+        .unwrap();
+        let b = sigma / (2.0 * beta);
+        let excess = |x: f64| x * at(x) / (6.0 * b) - 1.0;
+        for x in [3e2_f64, 1e3, 1e4, 1e5, 1e6, X_MAX] {
+            assert!(excess(x).abs() < 10.0 / x, "x = {x}: {}", excess(x));
         }
+        let (slow, fast) = (1e5 * excess(1e5), 1e6 * excess(1e6));
+        assert!((fast / slow - 1.0).abs() < 1e-2, "{slow} against {fast}");
     }
 
     /// The thermal average is positive and falls with `x` across the

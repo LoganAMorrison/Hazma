@@ -421,6 +421,10 @@ fn sigma_xs_to_xs(
 ///
 /// # Errors
 ///
+/// `ValueError` if `x` exceeds
+/// [`crate::kernels::thermal_window::X_MAX`], where the average is no
+/// longer resolved.
+///
 /// As [`sigma_xx_to_s_to_ff`]. Unreachable in practice — see
 /// [`crate::kernels::scalar_xs::thermal_cross_section`].
 #[pyfunction]
@@ -438,6 +442,7 @@ fn thermal_cross_section(
     width_s: f64,
     vs: f64,
 ) -> PyResult<f64> {
+    crate::dispatch::require_thermal_x(x)?;
     scalar_xs::thermal_cross_section(x, mx, ms, gsxx, gsff, gsGG, gsFF, lam, width_s, vs)
         .map_err(non_real)
 }
