@@ -331,17 +331,22 @@ def _table_edge(energies: np.ndarray, dnde: np.ndarray) -> float:
     return float(energies[nonzero[-1] + 1])
 
 
-def _neutral_pion_box_top(epi: float) -> float:
-    """The top of the ``pi0 -> gamma gamma`` box at pion energy ``epi``, MeV.
+def _neutral_pion_box(epi: float) -> tuple[float, float]:
+    """The ``pi0 -> gamma gamma`` box at pion energy ``epi``, MeV.
 
-    ``E_pi (1 + beta) / 2``, with ``beta`` rounded to ``float32`` as the
-    public kernel declares it; minus infinity below the pion mass.
+    ``E_pi (1 -+ beta) / 2``, with ``beta`` rounded to ``float32`` as the
+    public kernel declares it; both minus infinity below the pion mass.
     """
     if epi < parameters.neutral_pion_mass:
-        return -math.inf
+        return -math.inf, -math.inf
     ratio = parameters.neutral_pion_mass / epi
     beta = float(np.float32(math.sqrt(1.0 - ratio * ratio)))
-    return epi * (1.0 + beta) / 2.0
+    return epi * (1.0 - beta) / 2.0, epi * (1.0 + beta) / 2.0
+
+
+def _neutral_pion_box_top(epi: float) -> float:
+    """The top of :func:`_neutral_pion_box`, MeV."""
+    return _neutral_pion_box(epi)[1]
 
 
 def _muon_photon_endpoint(emu: float) -> float:
@@ -403,8 +408,10 @@ def rest_frame_spectrum(
     in MeV^-1 summed over the channels ``selector`` opens, lines excluded;
     ``endpoint`` in MeV is the widest of those channels' endpoints, above
     which ``spectrum`` is zero; ``kinks`` are every rest-frame energy, MeV,
-    where some channel starts, stops or changes form -- break points for a
-    quadrature over ``E'``.
+    where an open selected channel stops or changes form -- break points
+    for a quadrature over ``E'``. They are its endpoint, a table's first
+    abscissa, where the ``1/E`` tail begins, and the bottom of a ``pi0``
+    box, as ``mediator_tables::RestFrameSupport`` marks them.
     """
     cp_energies, cp_dnde = _tabulate(mass, spectra.dnde_photon_charged_pion)
     mu_energies, mu_dnde = _tabulate(mass, spectra.dnde_photon_muon)
@@ -421,8 +428,16 @@ def rest_frame_spectrum(
         (edges[mode] for mode in selected if mode in edges), default=-math.inf
     )
     e_pi0 = 0.5 * (MASS_PI0**2 + mass**2) / mass if vector else mass / 2.0
-    box_bottom = e_pi0 - (_neutral_pion_box_top(e_pi0) - e_pi0)
-    kinks = [10**GRID_LOG10_START, box_bottom, *edges.values()]
+    box_bottom = _neutral_pion_box(e_pi0)[0]
+    tail = 10**GRID_LOG10_START
+    inner = {"pi pi": tail, "mu mu": tail} if vector else {"pi pi": tail}
+    inner["pi0 g" if vector else "pi0 pi0"] = box_bottom
+    kinks = [
+        kink
+        for mode in selected
+        if edges.get(mode, -math.inf) > 0.0
+        for kink in (edges[mode], *([inner[mode]] if mode in inner else []))
+    ]
 
     def spectrum(erf: float) -> float:
         if vector:
@@ -503,23 +518,31 @@ def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
     single ``mode`` string for the vector ones, matching each source's own
     argument.
 
-    One departure from the source, the one the kernel makes: the ``cos
+    Two departures from the source, the ones the kernel makes. The ``cos
     theta`` integral starts where the rest-frame energy falls to the
     selected channels' endpoint rather than at ``-1``. The ``.pyx``
     integrated the whole range, and at a large boost its quadrature never
     sampled the support near ``cos theta = 1``;
     :class:`TestTheBoostedTail` checks the clipped integral against one in
-    the energy variable, which has no such window to miss.
+    the energy variable, which has no such window to miss. And each kink
+    of :func:`rest_frame_spectrum` inside the window is a break point,
+    which :class:`TestTheChannelEdges` checks the same way.
     """
     if energy < mass:
         return 0.0
 
     beta = math.sqrt(1.0 - (mass / energy) ** 2)
     gamma = energy / mass
-    spectrum, endpoint, _ = rest_frame_spectrum(mass, pws, selector, vector=vector)
-    lower = -1.0
-    if beta > 0.0 and egam > 0.0:
-        lower = max(-1.0, (1.0 - endpoint / (gamma * egam)) / beta)
+    spectrum, endpoint, kinks = rest_frame_spectrum(mass, pws, selector, vector=vector)
+
+    def cos_theta(rest: float) -> float:
+        """Where the rest-frame energy crosses ``rest`` MeV, clamped to -1."""
+        if beta > 0.0 and egam > 0.0:
+            return max(-1.0, (1.0 - rest / (gamma * egam)) / beta)
+        return -1.0
+
+    lower = cos_theta(endpoint)
+    points = [*QUAD_KWARGS["points"], *(cos_theta(kink) for kink in kinks)]
 
     def integrand(cl: float) -> float:
         jac = 1.0 / (2.0 * gamma * abs(1.0 - beta * cl))
@@ -529,7 +552,7 @@ def reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
     if lower < 1.0:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = quad(integrand, lower, 1.0, **QUAD_KWARGS)[0]
+            result = quad(integrand, lower, 1.0, **{**QUAD_KWARGS, "points": points})[0]
     return result + _line(egam, energy, mass, pws, selector, vector=vector)
 
 
@@ -924,6 +947,48 @@ class TestTheBoostedTail:
 # ===========================================================================
 # ---- Part 3: physics ------------------------------------------------------
 # ===========================================================================
+
+
+#: The budget at a kink, against :func:`energy_reference`: the kernel's own
+#: ``epsrel``. With each kink a break point the points below land within
+#: 5.3e-7 of the reference; without them QUADPACK accepted estimates that
+#: straddled the kink, 8.7e-5 to 5.1e-4 off.
+KINK_RTOL = 1e-5
+
+#: ``(vector, mass, gamma, selector, egam)``: lab photon energies, MeV,
+#: whose boost window holds a kink of the rest-frame spectrum -- the bottom
+#: of the ``pi0`` box for the vector, a narrower channel's endpoint for the
+#: scalar's default modes.
+KINK_POINTS = [
+    (True, 550.0, 10.0, "pi0 g", 7.795),
+    (True, 550.0, 1.05, "total", 22.69),
+    (False, 550.0, 1.5, SCALAR_MODES, 98.38),
+]
+
+
+class TestTheChannelEdges:
+    """A kink inside the boost window is a break point of the quadrature.
+
+    The integrand sums channels that end, or change form, at different
+    rest-frame energies, and QUADPACK's error estimate does not hold across
+    a jump or a kink. ``mediator_tables::RestFrameSupport`` maps each one to
+    ``cos theta`` and hands it to the quadrature.
+    """
+
+    @pytest.mark.parametrize(
+        ("vector", "mass", "gamma", "selector", "egam"),
+        KINK_POINTS,
+        ids=["vector-pi0_g", "vector-total", "scalar-default"],
+    )
+    def test_the_spectrum_matches_the_energy_integral_at_a_kink(
+        self, vector: bool, mass: float, gamma: float, selector: Selector, egam: float
+    ) -> None:
+        energy = gamma * mass
+        pws = VECTOR_PWS if vector else SCALAR_PWS
+        call = vector_call if vector else scalar_call
+        got = call(egam, energy, mass, pws, selector)
+        want = energy_reference(egam, energy, mass, pws, selector, vector=vector)
+        assert got == pytest.approx(want, rel=KINK_RTOL, abs=0.0)
 
 
 class TestPhysics:

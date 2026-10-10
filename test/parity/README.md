@@ -145,14 +145,15 @@ The labels are the closed set `deltas.REPAIRS`, in two parts:
 | `C6` | [the mediator decay boosts keep their quadrature support](../../docs/followups/done/mediator-decay-angular-windows-miss-their-support.md) | 265 over all seven `mediator_spectra.*` cases: 96 composed with `A4+C1`, 28 with `A3`, 14 with `A3+B4` and 6 with `B4` |
 | `C7` | [the thermal averages integrate to a limit that scales with `1/x`](../../docs/followups/done/vector-thermal-kernel-fixed-floor-loses-accuracy-at-large-x.md) | 6 over both `cross_sections.*.thermal_cross_section` cases, all composed with `B6` |
 | `C8` | [the thermal averages integrate at the true `x` past `x = 300`](../../docs/followups/done/thermal-kernels-disagree-above-x-300.md) | 6 over both `cross_sections.*.thermal_cross_section` cases, all composed with `B6+C7` |
+| `C9` | [the mediator decay photon boosts break their quadrature at channel edges](../../docs/followups/done/mediator-decay-boosts-lack-channel-break-points.md) | 70 over both `mediator_spectra.vector.photon.*` cases: 42 composed with `C6` and 28 with `A3+C6` |
 
 The live declarations and their repair labels are the authoritative
 count; get it with
 `Counter(d.repair for d in deltas.DECLARED_DELTAS.values())`.
 Repairs that share arrays compose in landing order: `A1+B1`, `A1+B2`,
 `A3+B4`, `A3+B3`, `A3+C3`, `A4+C1`, `B5+C2`, `A1+B2+C4`, `A1+B1+C5`,
-`A1+C5`, `A3+C6`, `B4+C6`, `A3+B4+C6`, `A4+C1+C6`, `B6+C7` and
-`B6+C7+C8`. The rho rest
+`A1+C5`, `A3+C6`, `B4+C6`, `A3+B4+C6`, `A4+C1+C6`, `C6+C9`,
+`A3+C6+C9`, `B6+C7` and `B6+C7+C8`. The rho rest
 correction multiplies A3's captured prediction by photon energy,
 preserving the prior pion repair.
 [`test_delta_models.py`](test_delta_models.py) checks the closed-form
