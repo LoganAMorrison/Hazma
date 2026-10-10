@@ -38,6 +38,21 @@ user-facing change even when no signature did.
 
 ### Changed
 
+- **The mediator decay photon spectra break their boost integral at
+  channel edges.** `ScalarMediator` and `VectorMediator` decay photon
+  spectra sum channels that end or change form at different rest-frame
+  energies: each narrower channel's endpoint, the bottom of the `π⁰`
+  box, and the first energy of a tabulated spectrum. QUADPACK's error
+  estimate does not hold across such a kink, so the `cos θ` integral
+  could stop short of its `1e-5` tolerance; each kink is now a break
+  point. Against an independent integral over rest-frame energy, the
+  scalar spectrum's worst error falls from 5.0e-4 to 2.4e-5. The vector
+  spectrum moves by up to 4.8e-4 where its partial widths are of order
+  one, and by up to 1.56% where a tiny width puts the quadrature on its
+  absolute floor, as for `pi0 g` at `m_V = 250` MeV and `γ = 2`, which
+  now agrees with that integral. The positron spectra are unchanged.
+  Details:
+  `docs/followups/done/mediator-decay-boosts-lack-channel-break-points.md`.
 - **Every thermal average now integrates at the true `x` past
   `x = 300`.** Above `x = m_x / T = 300` the `ScalarMediator` kernel
   behind `thermal_cross_section` returned exactly `0.0`, the

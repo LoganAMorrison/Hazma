@@ -635,6 +635,8 @@ EXPECTED_REACH = {
     "C6/scalar_photon": (37, 1184),
     "C6/vector_photon": (66, 3658),
     "C6/positron": (48, 3040),
+    "C9/scalar_photon": (17, 1113),
+    "C9/vector_photon": (35, 2360),
 }
 
 #: Which corpus cases each model reaches, from the roster in
@@ -661,6 +663,10 @@ MODEL_CASES = {
         "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
     ),
     "C6/vector_photon": ("mediator_spectra.vector.photon.dnde_decay_v",),
+    "C9/scalar_photon": (
+        "mediator_spectra.scalar.photon.scalar_mediator_decay_spectrum",
+    ),
+    "C9/vector_photon": ("mediator_spectra.vector.photon.dnde_decay_v",),
     "C6/positron": (
         "mediator_spectra.scalar.positron.dnde_decay_s",
         "mediator_spectra.vector.positron.dnde_decay_v",
