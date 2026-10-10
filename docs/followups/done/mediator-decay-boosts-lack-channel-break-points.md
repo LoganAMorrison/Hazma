@@ -116,9 +116,25 @@ array of `near_rest`, `boosted_mild` and `boosted_strong`, the open
 and 900 MeV. Every one is an array `C6` already moved, so it composes as
 `C6+C9` (42 arrays over both entry points) or `A3+C6+C9` (28). The term
 redoes the window's quadrature in scipy with and without the break
-points, and its worst error is 2.4e-12 of the 1e-9 nested budget. The
-scalar photon arrays move too, but only inside the 1e-3 budget their
-`B4` composites already carry, so they need no declaration.
+points, and its worst error is 2.4e-12 of the 1e-9 nested budget.
+
+It also moves 1,113 of the scalar photon case's 8,610 values, in the 17
+default-mode arrays of the three moving blocks, by up to 3.7e-4. Those
+moves fit inside the 1e-3 budget `B4` carries, but left undeclared they
+would have used up to 3.7e-4 of the slack `B4` measured at about 1e-5. So
+they are declared too, composed as `B4+C6+C9` (5 arrays at 250 MeV) and
+`A3+B4+C6+C9` (12 at 550 and 900 MeV). Those predictions hold to 1.0e-6
+and 6.0e-6, below the 1.25e-5 and 1.02e-5 measured before the break
+points.
+
+A test that drops the table's first abscissa from
+`RestFrameSupport::add_table` fails nine cases of
+`TestAgainstAnIndependentReference`, whose `cos θ` reference marks the
+same kinks at a 1e-9 budget, so that kink is pinned without a point of
+its own. Its effect on the value is at the `1e-5` level of the kernel's
+`epsrel`, too small for `TestTheChannelEdges` to separate the two trees.
+`energy_reference` marks every open channel's kinks, selected or not, so
+it does not inherit the kernel's selection.
 
 **A reference fix.** The test's `rest_frame_spectrum` put the `π⁰` box
 bottom at `E_π − (top − E_π)`, which is `E_π(3 − β)/2` rather than

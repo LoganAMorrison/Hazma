@@ -468,7 +468,8 @@ pub fn spectrum_point(
         let value = match quad(&mut kernel, cos_min, 1.0, &opts) {
             Ok(outcome) => outcome.value,
             // Unreachable, and asserted so by
-            // `boost_quad_options_are_always_accepted`: `QuadError` is a
+            // `boost_quad_options_are_always_accepted` and
+            // `boost_quad_options_accept_every_break_point`: `QuadError` is a
             // statement about the options, never about the integrand. The
             // tolerances are `BOOST_QUAD`'s, and its `limit` exceeds the
             // eight break points that opening every channel produces.
@@ -507,7 +508,7 @@ mod tests {
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
-    use crate::quad::quad;
+    use crate::quad::{QuadOpts, quad};
 
     /// Every channel open, which is the entry point's default `modes`.
     fn all_modes() -> ScalarPhotonModes {
@@ -608,6 +609,28 @@ mod tests {
         let mut integrand = |_: f64| 1.0;
         let outcome = quad(&mut integrand, -1.0, 1.0, &BOOST_QUAD);
         assert!(outcome.is_ok());
+        assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
+    }
+
+    /// The most break points `spectrum_point` can pass, every channel's,
+    /// all inside the window are still accepted: `quad` refuses
+    /// `limit <= npts`, which is the one `QuadError` per-call points can
+    /// raise.
+    #[test]
+    fn boost_quad_options_accept_every_break_point() {
+        let tables = tables_for(550.0);
+        let n = rest_frame_support(all_modes(), 550.0, &tables)
+            .cos_theta_points(100.0, 100.0, 2.0, 0.8)
+            .len();
+        let spacing = 2.0 / f64::from(u32::try_from(n + 1).unwrap());
+        let points: Vec<f64> = (1..=n)
+            .map(|i| f64::from(u32::try_from(i).unwrap()).mul_add(spacing, -1.0))
+            .collect();
+        let opts = QuadOpts {
+            points: Some(&points),
+            ..BOOST_QUAD
+        };
+        let outcome = quad(&mut |_: f64| 1.0, -1.0, 1.0, &opts);
         assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
     }
 

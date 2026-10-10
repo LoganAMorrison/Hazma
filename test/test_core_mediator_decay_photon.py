@@ -400,7 +400,12 @@ def _channel_endpoints(
 
 
 def rest_frame_spectrum(
-    mass: float, pws: np.ndarray, selector: Selector, *, vector: bool
+    mass: float,
+    pws: np.ndarray,
+    selector: Selector,
+    *,
+    vector: bool,
+    every_channel: bool = False,
 ) -> tuple[Callable[[float], float], float, list[float]]:
     """The boost integrand's rest-frame spectrum, its endpoint and its kinks.
 
@@ -412,6 +417,8 @@ def rest_frame_spectrum(
     for a quadrature over ``E'``. They are its endpoint, a table's first
     abscissa, where the ``1/E`` tail begins, and the bottom of a ``pi0``
     box, as ``mediator_tables::RestFrameSupport`` marks them.
+    ``every_channel`` marks every open channel's instead, selected or not,
+    which is a superset and owes nothing to the kernel's selection.
     """
     cp_energies, cp_dnde = _tabulate(mass, spectra.dnde_photon_charged_pion)
     mu_energies, mu_dnde = _tabulate(mass, spectra.dnde_photon_muon)
@@ -434,7 +441,7 @@ def rest_frame_spectrum(
     inner["pi0 g" if vector else "pi0 pi0"] = box_bottom
     kinks = [
         kink
-        for mode in selected
+        for mode in (edges if every_channel else selected)
         if edges.get(mode, -math.inf) > 0.0
         for kink in (edges[mode], *([inner[mode]] if mode in inner else []))
     ]
@@ -581,7 +588,9 @@ def energy_reference(  # noqa: PLR0913 -- one argument per `.pyx` parameter
     """
     beta = math.sqrt(1.0 - (mass / energy) ** 2)
     gamma = energy / mass
-    spectrum, _, kinks = rest_frame_spectrum(mass, pws, selector, vector=vector)
+    spectrum, _, kinks = rest_frame_spectrum(
+        mass, pws, selector, vector=vector, every_channel=True
+    )
     lower = math.log(gamma * egam * (1.0 - beta))
     upper = math.log(gamma * egam * (1.0 + beta))
     points = sorted(

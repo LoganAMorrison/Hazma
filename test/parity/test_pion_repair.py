@@ -82,9 +82,14 @@ def test_a3_rho_rest_and_b4_positions_require_composition() -> None:
                     overlapping += np.count_nonzero(shared)
                     declaration = deltas.declared(name, block.label, suffix)
                     # Both repairs, composed; C6 composes after them where
-                    # the boost's window was clipped too.
+                    # the boost's window was clipped too, and C9 after C6
+                    # where the window also holds a channel's kink.
                     labels = set(deltas.repair_labels(declaration.repair))
-                    assert labels in ({"A3", "B4"}, {"A3", "B4", "C6"})
+                    assert labels in (
+                        {"A3", "B4"},
+                        {"A3", "B4", "C6"},
+                        {"A3", "B4", "C6", "C9"},
+                    )
     assert overlapping > 0, "the A3/B4 overlap must actually be exercised"
 
 

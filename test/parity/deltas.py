@@ -1588,8 +1588,12 @@ def _neutral_pion_box_top(epi: float) -> float:
 def _neutral_pion_box_bottom(epi: float) -> float:
     """The bottom of ``photon_pion::neutral_pion_photon_box``, MeV.
 
-    ``E_pi (1 - beta) / 2``, with `_neutral_pion_box_top`'s ``beta``.
+    ``E_pi (1 - beta) / 2``, with `_neutral_pion_box_top`'s ``beta``, or
+    minus infinity below the pion's rest mass, where the box has no real
+    ``beta``.
     """
+    if epi < MASS_PI0:
+        return -math.inf
     return (epi * (1.0 - _neutral_pion_beta(epi))) * 0.5
 
 
@@ -2888,101 +2892,152 @@ def _c6_declaration(key: tuple[str, str, str], c6: Delta) -> Delta:
 DECLARED_DELTAS.update({key: _c6_declaration(key, c6) for key, c6 in _C6_KEYS.items()})
 
 
-def _vector_photon_kinks(block: Block) -> list[float]:
-    """``vector_decay_photon::rest_frame_support``'s kinks, MeV.
+#: The two photon spectra whose boost integral C9 breaks at its kinks.
+PhotonKind = Literal["scalar_photon", "vector_photon"]
 
-    Every open selected channel's endpoint, each selected table's first
+
+def _photon_kinks(kind: PhotonKind, block: Block) -> list[float]:
+    """Each photon kernel's ``rest_frame_support`` kinks, MeV.
+
+    Every open selected channel's endpoint, the charged-pion table's first
     abscissa, where its ``1/E`` tail begins, and the bottom of the ``pi0``
-    box at the ``V -> pi0 gamma`` two-body energy. A closed channel, whose
-    endpoint is not positive, marks nothing, as
+    box; the vector's muon table adds its own first abscissa. The ``pi0``
+    sits at ``m / 2`` for the scalar and at the ``V -> pi0 gamma`` two-body
+    energy for the vector, and the scalar's muon, which is not tabulated,
+    ends at its forward-cone edge with no kink inside. A closed channel,
+    whose endpoint is not positive, marks nothing, as
     ``mediator_tables::RestFrameSupport::add`` has it.
     """
     mass = block.params["mediator_mass"]
-    mode = block.params["mode"]
     energies, charged_pion, muon = core_tables.photon_tables(mass)
-    e_pi0 = (0.5 * (LEGACY_MASS_PI0 * LEGACY_MASS_PI0 + mass * mass)) / mass
+    if kind == "vector_photon":
+        e_pi0 = (0.5 * (LEGACY_MASS_PI0 * LEGACY_MASS_PI0 + mass * mass)) / mass
+        muon_channel = ("mu mu", _table_support_end(energies, muon), (energies[0],))
+        pi0_mode = "pi0 g"
+    else:
+        e_pi0 = mass / 2.0
+        muon_channel = ("mu mu", _muon_photon_endpoint(mass / 2.0), ())
+        pi0_mode = "pi0 pi0"
     channels = {
-        "e e g": (_fsr_photon_endpoint(LEGACY_MASS_E, mass), ()),
-        "mu mu g": (_fsr_photon_endpoint(LEGACY_MASS_MU, mass), ()),
-        "pi pi g": (_fsr_photon_endpoint(LEGACY_MASS_PI, mass), ()),
-        "pi pi": (_table_support_end(energies, charged_pion), (energies[0],)),
-        "pi0 g": (
-            _neutral_pion_photon_endpoint(e_pi0),
-            (_neutral_pion_box_bottom(e_pi0),),
-        ),
-        "mu mu": (_table_support_end(energies, muon), (energies[0],)),
+        mode: (endpoint, inner)
+        for mode, endpoint, inner in (
+            ("e e g", _fsr_photon_endpoint(LEGACY_MASS_E, mass), ()),
+            ("mu mu g", _fsr_photon_endpoint(LEGACY_MASS_MU, mass), ()),
+            ("pi pi g", _fsr_photon_endpoint(LEGACY_MASS_PI, mass), ()),
+            ("pi pi", _table_support_end(energies, charged_pion), (energies[0],)),
+            (
+                pi0_mode,
+                _neutral_pion_photon_endpoint(e_pi0),
+                (_neutral_pion_box_bottom(e_pi0),),
+            ),
+            muon_channel,
+        )
     }
-    selected = channels if mode == "total" else {mode: channels[mode]}
+    if kind == "vector_photon":
+        mode = block.params["mode"]
+        selected = list(channels) if mode == "total" else [mode]
+    else:
+        selected = [mode for mode in block.params["modes"] if mode in channels]
     return [
         float(kink)
-        for endpoint, inner in selected.values()
-        if endpoint > 0.0
-        for kink in (endpoint, *inner)
+        for mode in selected
+        if channels[mode][0] > 0.0
+        for kink in (channels[mode][0], *channels[mode][1])
     ]
 
 
-def _vector_break_points(
-    _fn: Callable[..., Any], block: Block
-) -> dict[str, np.ndarray]:
-    """C9's term for the vector photon spectrum.
+def _photon_break_points(kind: PhotonKind) -> TermFn:
+    """C9's term for one photon spectrum.
 
     The ``cos theta`` integral over C6's clipped window with every kink of
-    `_vector_photon_kinks` as a break point, minus the same integral without
-    them, both over `_mediator_rest_frame` and through scipy's QUADPACK at
-    the kernel's options. Where C6 clips, the second half is C6's own
-    clipped half, so the two terms telescope. Exactly zero where no kink is
-    strictly inside the window, because the two quadratures are then the
-    same one.
+    `_photon_kinks` as a break point, minus the same integral without them,
+    both over `_mediator_rest_frame` and through scipy's QUADPACK at the
+    kernel's options. Where C6 clips, the second half is C6's own clipped
+    half, so the two terms telescope. Exactly zero where no kink is strictly
+    inside the window, because the two quadratures are then the same one.
     """
-    energy = block.params["mediator_energy"]
-    mass = block.params["mediator_mass"]
-    if energy <= mass:
-        return _on_value_grids(block, np.zeros_like)
-    rest_frame, endpoint = _mediator_rest_frame("vector_photon", block)
-    kinks = _vector_photon_kinks(block)
-    ratio = mass / energy
-    beta = math.sqrt(1.0 - ratio * ratio)
-    gamma = energy / mass
-    options = {"epsabs": 1e-10, "epsrel": 1e-5}
 
-    def cos_theta(e: float, rest: float) -> float:
-        """``mediator_tables::cos_theta_min`` for a photon."""
-        return max((e - rest / gamma) / (beta * e), -1.0)
+    def break_points(_fn: Callable[..., Any], block: Block) -> dict[str, np.ndarray]:
+        energy = block.params["mediator_energy"]
+        mass = block.params["mediator_mass"]
+        if energy <= mass:
+            return _on_value_grids(block, np.zeros_like)
+        rest_frame, endpoint = _mediator_rest_frame(kind, block)
+        kinks = _photon_kinks(kind, block)
+        ratio = mass / energy
+        beta = math.sqrt(1.0 - ratio * ratio)
+        gamma = energy / mass
+        options = {"epsabs": 1e-10, "epsrel": 1e-5}
 
-    def term(e: float) -> float:
-        if endpoint == -math.inf or e <= 0.0:
-            return 0.0
-        lower = cos_theta(e, endpoint)
-        points = [cos_theta(e, kink) for kink in kinks]
-        if not any(lower < point < 1.0 for point in points):
-            return 0.0
-        integrand = _photon_boost_integrand(rest_frame, e, gamma, beta)
-        # The kernel reads only `quad(...)[0]`, and the unmarked half is by
-        # construction the quadrature whose error estimate a kink spoils.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", IntegrationWarning)
-            marked = quad(integrand, lower, 1.0, points=[-1.0, 1.0, *points], **options)
-            unmarked = quad(integrand, lower, 1.0, points=[-1.0, 1.0], **options)
-        return marked[0] - unmarked[0]
+        def cos_theta(e: float, rest: float) -> float:
+            """``mediator_tables::cos_theta_min`` for a photon."""
+            return max((e - rest / gamma) / (beta * e), -1.0)
 
-    return _on_value_grids(block, lambda grid: np.array([term(float(e)) for e in grid]))
+        def term(e: float) -> float:
+            if endpoint == -math.inf or e <= 0.0:
+                return 0.0
+            lower = cos_theta(e, endpoint)
+            points = [cos_theta(e, kink) for kink in kinks]
+            if not any(lower < point < 1.0 for point in points):
+                return 0.0
+            integrand = _photon_boost_integrand(rest_frame, e, gamma, beta)
+            # The kernel reads only `quad(...)[0]`, and the unmarked half is
+            # by construction the quadrature whose error estimate a kink
+            # spoils.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", IntegrationWarning)
+                marked = quad(
+                    integrand, lower, 1.0, points=[-1.0, 1.0, *points], **options
+                )
+                unmarked = quad(integrand, lower, 1.0, points=[-1.0, 1.0], **options)
+            return marked[0] - unmarked[0]
+
+        return _on_value_grids(
+            block, lambda grid: np.array([term(float(e)) for e in grid])
+        )
+
+    return break_points
 
 
 _C9_EVIDENCE = "docs/followups/done/mediator-decay-boosts-lack-channel-break-points.md"
 
-_C9_VECTOR_PHOTON = Delta(
-    repair="C9",
-    positions=MOVED,
-    relation=Additive(
-        term=_vector_break_points,
-        rtol=tolerances.PORTED_NESTED_RTOL,
-        why="the mediator cases' own 1e-9 nested budget, on C6's derivation: "
-        "both halves of the term redo a quadrature of the kernel's in scipy's "
-        "QUADPACK over its own rest-frame spectrum, so the only slack is the "
-        "port-to-scipy drift the corpus already carries. Measured 2.4e-12 "
-        "worst relative over the 8,650 positions its two composites declare, "
-        "at mv_250.boosted_mild.pi0_g.",
-    ),
+
+def _c9(kind: PhotonKind, measured: str) -> Delta:
+    """C9 for one photon spectrum, alone: the stored array plus its term."""
+    return Delta(
+        repair="C9",
+        positions=MOVED,
+        relation=Additive(
+            term=_photon_break_points(kind),
+            rtol=tolerances.PORTED_NESTED_RTOL,
+            why="the mediator cases' own 1e-9 nested budget, on C6's "
+            "derivation: both halves of the term redo a quadrature of the "
+            "kernel's in scipy's QUADPACK over its own rest-frame spectrum, so "
+            "the only slack is the port-to-scipy drift the corpus already "
+            "carries. Measured 2.4e-12 worst relative over the 8,650 vector "
+            "positions its composites declare, at mv_900.boosted_strong.mu_mu, "
+            "which is C6's residual there unchanged. On the scalar arrays B4's "
+            "term dominates; see B4+C6+C9.",
+        ),
+        measured=measured,
+        evidence=_C9_EVIDENCE,
+    )
+
+
+_C9_SCALAR_PHOTON = _c9(
+    "scalar_photon",
+    measured="the repaired kernel passes every kink inside the open "
+    "channels' support to the cos(theta) quadrature as a break point: each "
+    "narrower channel's endpoint, the charged-pion table's first abscissa "
+    "and the bottom of the pi0 box. That moves 1,113 of the case's 8,610 "
+    "pinned values in the 17 default-mode arrays of the three moving blocks "
+    "-- 132 in near_rest, 397 in boosted_mild and 584 in boosted_strong, 539 "
+    "up and 574 down. None was 0.0. They move by 1.0e-11 to 3.7e-4 "
+    "relative, 17 by more than 1e-5, the largest at "
+    "ms_550.boosted_strong.default E = 21.0 MeV.",
+)
+_C9_VECTOR_PHOTON = _c9(
+    "vector_photon",
     measured="the repaired kernel passes every kink inside the selected "
     "channels' support to the cos(theta) quadrature as a break point: the "
     "bottom of the pi0 box, each table's first abscissa, and under total "
@@ -2994,9 +3049,28 @@ _C9_VECTOR_PHOTON = Delta(
     "mv_250.boosted_mild.pi0_g E = 11.6 MeV, where 2.3.0 sat 1.54% below an "
     "energy-variable reference and the repaired kernel agrees with it to "
     "1e-15.",
-    evidence=_C9_EVIDENCE,
 )
 
+_B4_C6_C9 = _appended(
+    _B4_C6,
+    _C9_SCALAR_PHOTON,
+    why="B4's measured 1e-3 budget, which dominates. C9's term, like C6's, "
+    "integrates the stored half-size FSR, and B4's term reads the live "
+    "kernel's FSR, break points included. Measured 1.0e-6 worst relative over "
+    "the 650 positions, below the 1.25e-5 B4+C6 measured before the break "
+    "points.",
+    measured="C9 moves 271 positions in the five boosted default-mode arrays "
+    "at 250 MeV that B4+C6 declares.",
+)
+_A3_B4_C6_C9 = _appended(
+    _A3_B4_C6,
+    _C9_SCALAR_PHOTON,
+    why="B4's measured 1e-3 budget, on the same derivation as B4+C6+C9. "
+    "Measured 6.0e-6 worst relative over the 1,312 positions, below the "
+    "1.02e-5 A3+B4+C6 measured before the break points.",
+    measured="C9 moves 842 positions in the 12 boosted default-mode arrays at "
+    "550 and 900 MeV that A3+B4+C6 declares.",
+)
 _C6_C9 = _appended(
     _C6_VECTOR_PHOTON,
     _C9_VECTOR_PHOTON,
@@ -3018,7 +3092,12 @@ _A3_C6_C9 = _appended(
 
 #: What each C9 array composes into, by the declaration it carried before.
 #: Every array C9 moves is one C6 already moved.
-_C9_AFTER = {"C6": _C6_C9, "A3+C6": _A3_C6_C9}
+_C9_AFTER = {
+    "B4+C6": _B4_C6_C9,
+    "A3+B4+C6": _A3_B4_C6_C9,
+    "C6": _C6_C9,
+    "A3+C6": _A3_C6_C9,
+}
 
 #: The vector photon modes with a kink inside their support, by mediator
 #: mass: each table's first abscissa, the bottom of the ``pi0`` box, and
@@ -3030,9 +3109,20 @@ _C9_VECTOR_MODES = {
     900: ("total", "mu_mu", "pi0_g", "pi_pi"),
 }
 
-#: The arrays C9 moves. At ``rest_plus_eps`` only ``total`` has a grid
-#: point whose ``2 beta`` window holds a kink, at 550 and 900 MeV.
+#: The arrays C9 moves. The scalar's are its default-mode arrays in the
+#: three moving blocks; the ``near_rest`` probe at 250 MeV has no point
+#: whose window holds a kink, and its ``mu_mu_only`` arrays have none,
+#: since the muon alone is smooth inside its support. Of the vector's
+#: ``rest_plus_eps`` arrays only ``total`` has a grid point whose ``2 beta``
+#: window holds a kink, at 550 and 900 MeV.
 _C9_KEYS: tuple[tuple[str, str, str], ...] = (
+    *(
+        (_SCALAR_PHOTON_CASE, f"ms_{mass}.{block}.default", suffix)
+        for mass in (250, 550, 900)
+        for block in _C6_BLOCKS
+        for suffix in ("values", "scalar_values")
+        if (mass, block, suffix) != (250, "near_rest", "scalar_values")
+    ),
     *(
         (
             f"mediator_spectra.vector.photon.dnde_decay_v{pt}",
@@ -3108,7 +3198,10 @@ DELTA_MODELS: dict[str, Delta] = {
     "A4+C1+C6": _A4_C1_C6,
     "C7": _C7,
     "C8": _C8,
-    "C9": _C9_VECTOR_PHOTON,
+    "C9/scalar_photon": _C9_SCALAR_PHOTON,
+    "C9/vector_photon": _C9_VECTOR_PHOTON,
+    "B4+C6+C9": _B4_C6_C9,
+    "A3+B4+C6+C9": _A3_B4_C6_C9,
     "C6+C9": _C6_C9,
     "A3+C6+C9": _A3_C6_C9,
 }
