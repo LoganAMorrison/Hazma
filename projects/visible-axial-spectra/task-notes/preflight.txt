@@ -1,0 +1,16 @@
+
+preflight — /Users/logan.morrison/dev/Hazma/.codex/worktrees/visible-axial-spectra/contracts-lo-three-pion (base origin/master)
+-------------------------------------------------------------------
+PASS   black --check           hazma/form_factors/axial test/form_factors/axial
+PASS   isort --check-only      0 new (0 pre-existing at cb16e2c26460)
+PASS   ruff check              0 new (0 pre-existing at cb16e2c26460)
+PASS   cargo fmt --check       rust/
+PASS   cargo clippy            rust/
+PASS   cargo test              rust/
+PASS   pytest                  2739 passed, 16 skipped, 10 warnings, 127 subtests passed in 53.70s
+PASS   import hazma            version 2.3.0
+PASS   markdownlint            CHANGELOG.md projects/README.md projects/visible-axial-spectra/PLAN.md projects/visible-axial-spectra/adrs/ADR-0001-current-and-tensor-contracts.md projects/visible-axial-spectra/task-notes/README.md projects/visible-axial-spectra/task-notes/task-1-contracts.md projects/visible-axial-spectra/task-notes/task-2-lo-three-pion.md projects/visible-axial-spectra/references/lo-three-pion.md
+SKIP   version bump            not a closing PR (pass --closing)
+PASS   forbidden tokens        none added
+-------------------------------------------------------------------
+RESULT: PASS

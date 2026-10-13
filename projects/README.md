@@ -40,6 +40,7 @@ for why `_template.md` files stay in place after scaffolding.
 
 | Slug | Deliverable | Phased | Started | Status |
 | --- | --- | --- | --- | --- |
+| [`visible-axial-spectra`](visible-axial-spectra/PLAN.md) | Neutral axial rates and stable particle spectra | No | 2026-10-12 | In Progress |
 
 ## Completed Projects
 

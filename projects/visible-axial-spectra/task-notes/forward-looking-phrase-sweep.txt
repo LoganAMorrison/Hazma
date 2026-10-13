@@ -1,0 +1,3 @@
+projects/visible-axial-spectra/PLAN.md:2:status: In Progress
+projects/visible-axial-spectra/task-notes/README.md:3:**Status:** In Progress
+projects/visible-axial-spectra/task-notes/_template.md:5:**Status:** <In Progress | Complete | Blocked | Superseded>
