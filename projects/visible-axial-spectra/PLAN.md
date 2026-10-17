@@ -25,22 +25,24 @@ cards can support indirect and laboratory observables.
 
 - Current, unit and source-coverage contracts and the exact-isospin LO
   three-pion current (Tasks 1-2).
+- A Rust port of the Task 1-2 numerics behind PyO3 bindings, with the NumPy
+  implementation kept as the test oracle (Task 3).
 - Coherent longitudinal pi0, eta and eta' poles through the Proca embedding
-  (Task 3).
+  (Task 4).
 - `AxialVectorMediator(TheoryAnn)` with declared channels, sigma, sigma v,
-  widths, lines, thresholds and resonances (Task 4), extended to the remaining
-  hadronic channels of the declared theory (Task 10).
+  widths, lines, thresholds and resonances (Task 5), extended to the remaining
+  hadronic channels of the declared theory (Task 11).
 - UV-scale model cards: generic `G_V`, `G_A` with an anomaly report, the
-  hypercharge-aligned type-I 2HDM and the secluded L_mu-L_tau model (Task 11).
-- Enforced validity domains and an explicit unsupported-domain error (Task 12).
-- Mediator-pair annihilation chi chibar -> Z'Z' (Task 13).
+  hypercharge-aligned type-I 2HDM and the secluded L_mu-L_tau model (Task 12).
+- Enforced validity domains and an explicit unsupported-domain error (Task 13).
+- Mediator-pair annihilation chi chibar -> Z'Z' (Task 14).
 - Invisible pi0, eta, eta' -> chi chibar widths with caller-supplied limits
-  (Task 14).
+  (Task 15).
 - Rest-frame yields, polarized cascades, resolved radiative photons and the
-  gamma-ray and CMB adapters (Tasks 5-8).
+  gamma-ray and CMB adapters (Tasks 6-9).
 - Shipped benchmark cards, a channel support matrix generated from code,
-  documentation and the closing release (Task 15).
-- Optional: fitted-input overlays with covariance (Task 9). Task 9 is not
+  documentation and the closing release (Task 16).
+- Optional: fitted-input overlays with covariance (Task 10). Task 10 is not
   required to close the project; if it is not done it moves to a follow-on
   project.
 
@@ -81,6 +83,50 @@ note. Corrections that move existing published numbers are out of scope
 Each task lands as one PR. Tasks 1 and 2 land together as the first PR from the
 branch `codex/visible-axial-spectra/contracts-lo-three-pion`.
 
+## Implementation layering
+
+Compute lives in Rust; Python is the public surface. This follows the
+repository's compiled-layer contract (`AGENTS.md`): kernels in
+`rust/src/kernels/` are plain Rust free of PyO3 types, `rust/src/dispatch.rs` is
+the only PyO3 boundary, and each domain registers a `hazma._core` submodule in
+`rust/src/lib.rs`. Kernels import nothing from the Python layers.
+
+- **Rust:** every loop over samples, energies or phase-space points, every
+  integral, contraction, matrix inversion and spectrum fold. Kernel unit tests
+  (analytic limits, edge cases, identities) run under `cargo test
+  --no-default-features --features test-probes`.
+- **Python:** parameter and source cards, argument validation and error
+  messages, result and metadata objects, the `TheoryAnn` model class,
+  documentation. Python code calls `hazma._core` and performs no per-sample
+  numerical loop.
+- **Cross-language gate:** the Python tests of each task run against the rebuilt
+  `hazma._core`, with an independent oracle (an analytic result, a NumPy or
+  SymPy reference under `test/`, or an existing Hazma implementation). `cargo
+  fmt`, `cargo clippy` and `cargo test` pass for every task that touches
+  `rust/`.
+- **Performance:** measured for each new kernel against the oracle and recorded
+  in the task note; no budget is set in advance.
+
+| Task | Rust kernel modules (`rust/src/kernels/`) | PyO3 submodule | Python surface |
+|---|---|---|---|
+| 3 | `axial_tensors`, `axial_three_pi` | `hazma._core.axial` | `hazma.form_factors.axial` |
+| 4 | `axial_poles` | `hazma._core.axial` | `hazma.form_factors.axial` |
+| 5 | `axial_rates` | `hazma._core.axial_vector_mediator` | `hazma.axial_vector_mediator` |
+| 6 | `polarized_muon`, existing spectrum kernels | `hazma._core.axial_vector_mediator` | model spectrum methods |
+| 7 | `polarized_cascade` | `hazma._core.axial_vector_mediator` | model spectrum methods |
+| 8 | `axial_radiation` | `hazma._core.axial_vector_mediator` | model spectrum methods |
+| 9 | `deposition` (fold for the new model only) | `hazma._core.axial_vector_mediator` | `TheoryAnn` adapters |
+| 10 | `axial_overlays` (covariance projection) | `hazma._core.axial` | optional overlay cards |
+| 11 | `axial_channels` | `hazma._core.axial` | channel declarations |
+| 12 | `axial_uv` (neutral mixing, anomaly sums, embeddability) | `hazma._core.axial_vector_mediator` | UV card constructors |
+| 13 | `axial_domains` (one declaration table) | `hazma._core.axial` | domain errors and flags |
+| 14 | `axial_pairs` | `hazma._core.axial_vector_mediator` | model channels |
+| 15 | `axial_invisible` | `hazma._core.axial` | invisible-meson functions |
+| 16 | none | none | cards, support matrix, docs |
+
+Module names are a starting proposal; the task that creates a module may rename
+it and records the choice in its task note.
+
 ## Task details
 
 ### Task 1 Current and unit contracts
@@ -111,7 +157,30 @@ Exit criteria:
 - Thresholds, shapes, broadcasting and unsupported input paths are tested.
 - Full preflight and durable documentation checks pass.
 
-### Task 3 Coherent longitudinal meson poles
+### Task 3 Rust port of the Task 1-2 numerics
+
+**Objective:** Move the tensor algebra and the LO three-pion currents and
+phase-space integration from NumPy into Rust kernels behind `hazma._core.axial`,
+keeping the public Python API unchanged.
+
+**Scope / implementation notes:** Port `hadronic_tensor`, `current_projections`,
+`tensor_projections` (including its roundoff budget and conditioning guard) and
+`integrate_spectral_functions` to `axial_tensors`, and the charged and neutral
+LO three-pion currents, source densities and three-body integration to
+`axial_three_pi`. Complex amplitudes stay complex until contraction. The cards,
+validation, unit conversion and result objects in `hazma/form_factors/axial/`
+stay in Python and call the kernels. The NumPy implementation moves under
+`test/form_factors/axial/` as the reference oracle and is no longer importable
+from `hazma`.
+
+**Deliverable / gate:** The existing axial test suite passes unchanged against
+the Rust-backed functions; every ported function agrees with the NumPy oracle to
+a few units in the last place on its existing test inputs, with any larger
+difference measured and justified; cargo unit tests cover the Ward identities,
+threshold zeros and the conditioning guard; `references/check_public_impact.py`
+stays bit-identical; performance against the oracle is recorded.
+
+### Task 4 Coherent longitudinal meson poles
 
 **Objective:** Provide the longitudinal source density `A_L` of the C-even final
 states from coherent pi0, eta and eta' exchange.
@@ -130,7 +199,7 @@ full inverse; `k.H_gg` approaches the ABJ coefficient away from the poles (note
 are recovered at each pole; a single invisible-cut insertion is verified
 independently.
 
-### Task 4 Rates and mediator model
+### Task 5 Rates and mediator model
 
 **Objective:** Ship `AxialVectorMediator(TheoryAnn)` with declared channel cross
 sections, sigma v, partial and total widths, lines, thresholds and resonances.
@@ -144,7 +213,7 @@ exactly one theory and never sums across theories. Use the note master formula
 `eq:ax-master`: the width enters only the transverse term, the `A_L` s-wave is a
 non-resonant contact `2 m^2 g_A^2 A_L/(s M^4)`, and `Gamma(Z' -> X) =
 A_T(M^2)/(2M)`. Initial channels are e, mu, tau, nu (exact), three pions (Task
-2) and gamma gamma (Task 3). Implement `annihilation_resonances` and
+2) and gamma gamma (Task 4). Implement `annihilation_resonances` and
 `annihilation_thresholds` as in the maintained models. Convert between sigma and
 sigma v_Moller explicitly.
 
@@ -154,7 +223,7 @@ axial couplings nonzero (the note reached 5e-16 and 2e-14, `sec:ax-match`);
 threshold limits of sigma and sigma v agree; particle and population factors are
 separate; no fabricated zero for an unavailable channel.
 
-### Task 5 Rest frame stable particle yields
+### Task 6 Rest frame stable particle yields
 
 **Objective:** Convolve signed parent histories with public decay kernels to
 give rest-frame photon, positron and neutrino yields per channel.
@@ -171,7 +240,7 @@ identity; neutrino flavor counts; mean e+ energy per pi+ at rest
 36.94069288635647 MeV with spin and 38.430221 MeV without it (note `sec:k22`);
 count bins and differential spectra round-trip by bin width.
 
-### Task 6 Polarized cascade marginals
+### Task 7 Polarized cascade marginals
 
 **Objective:** Boost polarized mediator decays into lab-frame yields from a
 declared or model-generated spin density.
@@ -179,7 +248,7 @@ declared or model-generated spin density.
 **Scope / implementation notes:** Angular and event convolution of normalized
 production marginals with F0 = 0, 1/3 and 1. A user-supplied density gives
 conditional yields; a model-generated density needs the production amplitude of
-its completion (Task 13 for Z'Z'). The inclusive yield is 2B, never B^2.
+its completion (Task 14 for Z'Z'). The inclusive yield is 2B, never B^2.
 
 **Deliverable / gate:** Density positivity and trace; integral of D over solid
 angle equals the identity; daughter energies sum correctly; beta -> 0 and
@@ -187,7 +256,7 @@ ultra-relativistic endpoints; the isotropic limit agrees with the maintained
 boost helpers; the 600/450 and 900/500 MeV three-pion cascade cases reproduce
 their reference spectra.
 
-### Task 7 Resolved radiative photons
+### Task 8 Resolved radiative photons
 
 **Objective:** Add invariant and polarized event paths for radiative photons in
 the new channels.
@@ -202,7 +271,7 @@ the approximate and exact radiation paths; the restricted LO resolved fractions
 at 450/500 MeV listed in `references/scope-and-acceptance.md` are reproduced
 within the stated statistical and discretization error.
 
-### Task 8 Observation adapters
+### Task 9 Observation adapters
 
 **Objective:** Connect the new spectra to the existing gamma-ray limits and to
 CMB energy deposition.
@@ -218,9 +287,9 @@ dark matter. Requires the standalone `_f_eff_helper` correction PR
 cascade efficiencies 0.3967 (600/450 MeV) and 0.3705 (900/500 MeV) of note
 `tab:spd-cascade`; the line efficiencies 0.724 and 0.601 of note `sec:spd-feff`;
 the secluded L_mu-L_tau efficiency 0.952771 and p_ann of 1.286% of the Planck
-limit (note `sec:axl6-cmb`, after Task 13).
+limit (note `sec:axl6-cmb`, after Task 14).
 
-### Task 9 Fitted input overlays (optional)
+### Task 10 Fitted input overlays (optional)
 
 **Objective:** Offer measured-input overlays with their covariance as an option
 on top of the LO and resonance sources.
@@ -235,7 +304,7 @@ covariance.
 projection verified; inclusive normalization is kept separate from differential
 shape validation.
 
-### Task 10 Remaining hadronic channels
+### Task 11 Remaining hadronic channels
 
 **Objective:** Extend the model to the hadronic channel set of note
 `sec:ax-match` under each declared theory.
@@ -243,10 +312,10 @@ shape validation.
 **Scope / implementation notes:** pi+ pi-, K Kbar, pi0 gamma, eta gamma, eta'
 gamma, pi+ pi- pi0 (vector isoscalar and axial isovector including the a1),
 3pi0, eta pi pi, with the validity labels of
-`references/scope-and-acceptance.md`. Reuse `hazma/form_factors/vector/` for
-vector-current pieces where the definitions match. The `rcht` axial current uses
-the a1 fit to tau -> 3 pi nu (m_A = 1230 MeV, Gamma_A = 420 MeV, kappa_A =
-0.1539, beta = 0.9408).
+`references/scope-and-acceptance.md`. Port the needed vector-current pieces of
+`hazma/form_factors/vector/` to Rust, with the existing Python implementations
+as parity oracles. The `rcht` axial current uses the a1 fit to tau -> 3 pi nu
+(m_A = 1230 MeV, Gamma_A = 420 MeV, kappa_A = 0.1539, beta = 0.9408).
 
 **Deliverable / gate:** The pure-vector limit (G_A = 0) reproduces Hazma's
 vector-mediator sigma v(pi+ pi-), Gamma(V -> pi pi) and Gamma(V -> pi0 gamma) to
@@ -254,10 +323,10 @@ vector-mediator sigma v(pi+ pi-), Gamma(V -> pi pi) and Gamma(V -> pi0 gamma) to
 9.03% and 9.23%; the resonance-to-LO transverse ratio tends to 1 at low energy
 (note `fig:ax-checks`).
 
-### Task 11 UV model cards
+### Task 12 UV model cards
 
 **Objective:** Provide UV-scale constructors that map a chiral U(1)' completion
-onto the low-energy couplings of Task 4.
+onto the low-energy couplings of Task 5.
 
 **Scope / implementation notes:** A generic `G_V`, `G_A` card with an anomaly
 report that warns by default and raises in strict mode; the hypercharge-aligned,
@@ -265,13 +334,13 @@ anomaly-free type-I 2HDM constructor (note `sec:ax-uv`); a warning that a single
 Higgs doublet suppresses the axial couplings by M_Z'^2/M_Z^2; the embeddability
 check of the minimal H1H2S completion (note `eq:uv-massrel`); and the secluded
 L_mu-L_tau card with loop-induced kinetic mixing feeding e+ e-. No SymPy at
-runtime.
+runtime; the numerical maps are Rust kernels.
 
 **Deliverable / gate:** Anomaly coefficients vanish for the shipped anomaly-free
 cards; the embeddability bound for the illustrative hypercharge card (M_Z' >=
 15.55 GeV or |g_A^chi| <= 0.0268) is reproduced.
 
-### Task 12 Validity and domain guards
+### Task 13 Validity and domain guards
 
 **Objective:** Make the declared validity domain of every channel and theory
 part of the API.
@@ -285,31 +354,31 @@ channel table; `UnsupportedDomainError` above the declared range and an
 **Deliverable / gate:** One test per guard and flag; the support matrix of Task
 15 is generated from these declarations.
 
-### Task 13 Mediator pair channels
+### Task 14 Mediator pair channels
 
 **Objective:** Add chi chibar -> Z'Z' through t- and u-channel chi exchange,
 with dark-Higgs exchange only for named completions.
 
 **Scope / implementation notes:** Expose the threshold helicity content of the
-pair (note `eq:vv-threshold`) as the production density for Task 6.
+pair (note `eq:vv-threshold`) as the production density for Task 7.
 
 **Deliverable / gate:** The secluded L_mu-L_tau benchmark gives sigma v =
 4.35523e-26 cm^3/s (note `sec:axl6-cmb`); the helicity fractions sum to one and
 are positive.
 
-### Task 14 Invisible meson decays
+### Task 15 Invisible meson decays
 
 **Objective:** Return BR(pi0, eta, eta' -> chi chibar) from the longitudinal
 residue, with caller-supplied experimental limits.
 
-**Scope / implementation notes:** Uses the Task 3 residues; no detector
+**Scope / implementation notes:** Uses the Task 4 residues; no detector
 simulation; limits are inputs.
 
 **Deliverable / gate:** The NA62 bound kappa <= 5.34e-6 GeV^-2 at m_chi = 60 MeV
 (note `sec:ax-inv`); the exclusion window 1.355 MeV < m_chi < m_pi0/2 - 5.5 eV
 for the illustrative hypercharge card (note `sec:ax`).
 
-### Task 15 Benchmarks, documentation and closing
+### Task 16 Benchmarks, documentation and closing
 
 **Objective:** Ship benchmark cards, a generated support matrix and user
 documentation, then close the project.
@@ -328,9 +397,10 @@ CHANGELOG entry naming this project.
 
 ## Dependencies
 
-- Requires: the standalone `_f_eff_helper` correction PR before Task 8; a
-  rebuilt Rust core on master before the first PR merges.
-- Enables: the follow-on project `pseudo-scalar-mediator`.
+- Requires: the standalone `_f_eff_helper` correction PR before Task 9; a Rust
+  toolchain (`cargo`, `maturin`) for every task from Task 3 on; a   rebuilt Rust
+  core on master before the first PR merges. - Enables: the follow-on project
+  `pseudo-scalar-mediator`.
 
 ## Related
 
@@ -357,8 +427,9 @@ add a `CHANGELOG.md` entry naming this project slug. Verify with
 
 ### Anticipated ADRs
 
-- Hadronic theory selector and the rule against summing theories (Task 4).
+- Rust/Python split and the NumPy oracle (Task 3).
+- Hadronic theory selector and the rule against summing theories (Task 5).
 - sigma versus sigma v, population factors and stable-particle output
-  conventions (Tasks 4-5).
-- Proca embedding of the longitudinal meson poles (Task 3).
-- Validity policy: error versus flag (Task 12).
+  conventions (Tasks 5-6).
+- Proca embedding of the longitudinal meson poles (Task 4).
+- Validity policy: error versus flag (Task 13).

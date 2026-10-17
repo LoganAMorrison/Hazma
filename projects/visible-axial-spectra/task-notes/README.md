@@ -10,21 +10,22 @@
 | --- | --- | --- | --- | --- |
 | 1 | Current and unit contracts | — | Complete | `task-1-contracts.md` |
 | 2 | Axial tensors and LO three pion amplitudes | 1 | Complete | `task-2-lo-three-pion.md` |
-| 3 | Coherent longitudinal poles | 1 | Not started | — |
-| 4 | Rates and mediator model | 2, 3 | Not started | — |
-| 5 | Rest frame yields | 4 | Not started | — |
-| 6 | Polarized cascades | 5; 13 for model-generated pair densities | Not started | — |
-| 7 | Resolved photons | 5; 6 for polarized boosts | Not started | — |
-| 8 | Observation adapters | 5, 6; standalone `_f_eff_helper` PR | Not started | — |
-| 9 | Fitted input overlays (optional) | 4; 5-8 for derived yields | Not started | — |
-| 10 | Remaining hadronic channels | 4 | Not started | — |
-| 11 | UV model cards | 1 | Not started | — |
-| 12 | Validity and domain guards | 4, 10 | Not started | — |
-| 13 | Mediator pair channels | 4, 11 | Not started | — |
-| 14 | Invisible meson decays | 3, 4 | Not started | — |
-| 15 | Benchmarks, documentation and closing | 5-8, 10-14 | Not started | — |
+| 3 | Rust port of the Task 1-2 numerics | 1, 2 | Not started | — |
+| 4 | Coherent longitudinal poles | 3 | Not started | — |
+| 5 | Rates and mediator model | 3, 4 | Not started | — |
+| 6 | Rest frame yields | 5 | Not started | — |
+| 7 | Polarized cascades | 6; 14 for model-generated pair densities | Not started | — |
+| 8 | Resolved photons | 6; 7 for polarized boosts | Not started | — |
+| 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Not started | — |
+| 10 | Fitted input overlays (optional) | 5; 6-9 for derived yields | Not started | — |
+| 11 | Remaining hadronic channels | 5 | Not started | — |
+| 12 | UV model cards | 3 | Not started | — |
+| 13 | Validity and domain guards | 5, 11 | Not started | — |
+| 14 | Mediator pair channels | 5, 12 | Not started | — |
+| 15 | Invisible meson decays | 4, 5 | Not started | — |
+| 16 | Benchmarks, documentation and closing | 6-9, 11-15 | Not started | — |
 
-Tasks 3 and 11 have no dependency on each other and can run in parallel.
+Tasks 4 and 12 have no dependency on each other and can run in parallel.
 
 ## Findings and decisions
 
@@ -36,6 +37,10 @@ Tasks 3 and 11 have no dependency on each other and can run in parallel.
   Reference values and their note labels are in
   [`scope-and-acceptance.md`](../references/scope-and-acceptance.md). The
   version bump stays `minor`.
+- Restructured on 2026-10-17: compute moves to Rust kernels behind `hazma._core`
+  with Python as the public surface (`PLAN.md` Implementation layering). The new
+  Task 3 ports the Task 1-2 numerics and keeps the NumPy code as the test
+  oracle; former Tasks 3-15 are now Tasks 4-16.
 
 ## Numerical impact so far
 
