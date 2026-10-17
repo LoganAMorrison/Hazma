@@ -53,7 +53,16 @@
 //! [`thermal_window`] is the second shared piece between the two
 //! cross-section modules: the interval and break points both thermal
 //! averages integrate over, built from each model's channel thresholds.
+//!
+//! [`axial_tensors`] and [`axial_three_pi`] port no `.pyx`: they are the
+//! visible-axial-spectra project's kernels, behind
+//! `hazma/form_factors/axial/_tensors.py` and `_three_pi.py`, and are
+//! named for the kernel modules that project's plan lays out. Their oracle
+//! is the NumPy implementation in `test/form_factors/axial/axial_oracle.py`
+//! rather than the parity corpus.
 
+pub mod axial_tensors;
+pub mod axial_three_pi;
 pub mod mediator_decay_positron;
 pub mod mediator_tables;
 pub mod neutrino_flavors;

@@ -113,7 +113,11 @@ extension exposes none of them and the exemption applies to nothing
 there. That second exemption is held honest by
 `test_test_only_core_submodules_have_no_importer`, which fails the moment
 anything under `hazma/` imports one of them — at which point it is a
-served kernel and belongs back in the count. If a swap changes a number,
+served kernel and belongs back in the count. A third exemption,
+`cases._CORE_NEW_PHYSICS_MODULES`, skips submodules whose kernels port no
+Cython and so have no corpus case: today only `hazma._core.axial`, which
+`test/form_factors/axial/test_oracle.py` pins against a NumPy oracle
+instead. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 

@@ -1,11 +1,14 @@
 //! `hazma._core` — hazma's compiled numerical layer.
 //!
-//! One `cdylib`, five per-domain submodules, built against CPython's
+//! One `cdylib`, six per-domain submodules, built against CPython's
 //! limited API (`abi3-py310`). This is the final import path from the
 //! day the crate exists: Phases 03–06 of the cython-to-rust project fill
 //! the submodules and repoint hazma's pure-Python wrappers at them one
 //! kernel at a time, and no public Python import path changes when they
 //! do (`projects/cython-to-rust/rules.md`, Rust conventions rule 2).
+//! The sixth, `axial`, ports no Cython: it holds the visible-axial-spectra
+//! project's axial current kernels, which `hazma/form_factors/axial/`
+//! wraps.
 //!
 //! Layering inside the crate mirrors that rule: [`kernels`] is plain
 //! GIL-free Rust with no PyO3 types at all, and everything PyO3 touches
@@ -41,12 +44,13 @@
 //! under the `test-probes` feature, which `rust/Cargo.toml` leaves out
 //! of `default`. A development install and the crate's own gates turn it
 //! on; the wheel and the sdist do not, so a released `hazma._core`
-//! carries the five per-domain submodules and nothing else. The test
+//! carries the six per-domain submodules and nothing else. The test
 //! modules above import the probes at module scope rather than through
 //! `importorskip`, so a build without the feature fails collection
 //! instead of quietly skipping — `test/conftest.py` turns that failure
 //! into the install command that fixes it.
 
+mod axial;
 pub mod boost;
 #[cfg(feature = "test-probes")]
 mod boost_probe;
@@ -142,6 +146,7 @@ fn _core(module: &Bound<'_, PyModule>) -> PyResult<()> {
     add_submodule(module, "neutrino", neutrino::register)?;
     add_submodule(module, "scalar_mediator", scalar_mediator::register)?;
     add_submodule(module, "vector_mediator", vector_mediator::register)?;
+    add_submodule(module, "axial", axial::register)?;
 
     #[cfg(feature = "test-probes")]
     {

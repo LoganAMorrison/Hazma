@@ -1362,6 +1362,19 @@ _CORE_TEST_ONLY_MODULES = frozenset(
     }
 )
 
+#: Submodules of ``hazma._core`` whose kernels port no Cython. They compute
+#: new physics, so the corpus has no case for them and nothing pre-port to
+#: capture one from: counting them would fail the one-callable-per-ported-
+#: entry-point check for a kernel the corpus could never pin. Each is pinned
+#: by its own oracle instead, and that oracle is named here so the exemption
+#: cannot outlive it. ``hazma._core.axial`` is the visible-axial-spectra
+#: project's axial current kernels, compared against the NumPy
+#: implementation in ``test/form_factors/axial/axial_oracle.py`` by
+#: ``test/form_factors/axial/test_oracle.py``. Unlike
+#: :data:`_CORE_TEST_ONLY_MODULES`, a wrapper under `hazma/` does import
+#: these; what exempts them is that no corpus value depends on them.
+_CORE_NEW_PHYSICS_MODULES = frozenset({"hazma._core.axial"})
+
 
 def rust_core_kernels() -> list[str]:
     """Fully-qualified names of the kernels ``hazma._core`` serves today.
@@ -1369,7 +1382,9 @@ def rust_core_kernels() -> list[str]:
     Empty while the extension is a bare scaffold, non-empty from the
     first Phase 04 swap. Discovered by walking the module rather than
     from a hardcoded list, so a kernel added to a submodule this file has
-    never heard of still counts.
+    never heard of still counts. The submodules in
+    :data:`_CORE_TEST_ONLY_MODULES` and :data:`_CORE_NEW_PHYSICS_MODULES`
+    are not walked.
 
     Returns
     -------
@@ -1395,11 +1410,13 @@ def rust_core_kernels() -> list[str]:
                 # Only into our own subtree: a submodule that imports
                 # numpy must not make numpy look like a ported kernel.
                 # And not into the test-only submodules, which are Rust
-                # that no wrapper calls.
+                # that no wrapper calls, nor the new-physics ones, which
+                # port nothing the corpus pins.
                 qualified = getattr(member, "__name__", "")
                 if (
                     qualified.startswith("hazma._core")
                     and qualified not in _CORE_TEST_ONLY_MODULES
+                    and qualified not in _CORE_NEW_PHYSICS_MODULES
                 ):
                     walk(member, f"{prefix}.{name}")
             elif callable(member) and name not in _CORE_SCAFFOLD_NAMES:

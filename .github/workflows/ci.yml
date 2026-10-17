@@ -158,7 +158,14 @@ jobs:
           import hazma.theory
           import hazma.vector_mediator
 
-          served = {"photon", "positron", "neutrino", "scalar_mediator", "vector_mediator"}
+          served = {
+              "photon",
+              "positron",
+              "neutrino",
+              "scalar_mediator",
+              "vector_mediator",
+              "axial",
+          }
           found = {
               name
               for name in dir(hazma._core)

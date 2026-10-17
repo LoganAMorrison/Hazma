@@ -10,7 +10,7 @@
 | --- | --- | --- | --- | --- |
 | 1 | Current and unit contracts | — | Complete | `task-1-contracts.md` |
 | 2 | Axial tensors and LO three pion amplitudes | 1 | Complete | `task-2-lo-three-pion.md` |
-| 3 | Rust port of the Task 1-2 numerics | 1, 2 | Not started | — |
+| 3 | Rust port of the Task 1-2 numerics | 1, 2 | Complete | `task-3-rust-port.md` |
 | 4 | Coherent longitudinal poles | 3 | Not started | — |
 | 5 | Rates and mediator model | 3, 4 | Not started | — |
 | 6 | Rest frame yields | 5 | Not started | — |
@@ -31,6 +31,9 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
 
 - [ADR-0001](../adrs/ADR-0001-current-and-tensor-contracts.md) defines the
   normalization, units and source-longitudinal versus helicity distinction.
+- [ADR-0002](../adrs/ADR-0002-rust-kernels-and-numpy-oracle.md) fixes the Rust
+  kernels in `hazma._core.axial` as the compute path and keeps the NumPy
+  implementation as the test oracle.
 - Exact isospin LO three-pion coverage is distinct from a fitted physical
   charged/neutral mass prescription or a general singlet source.
 - Scope extended on 2026-10-17 with Tasks 10-15 and gates for Tasks 3-9.
@@ -45,14 +48,16 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
 ## Numerical impact so far
 
 The first cluster adds public primitives. The recorded existing-output grid
-contains 164 values and is bit-identical after integration. Reproduce it with
+contains 164 values and is bit-identical after integration, including after
+the Task 3 Rust port. Reproduce it with
 `.venv/bin/python
 projects/visible-axial-spectra/references/check_public_impact.py`.
 
 ## Verification
 
-The focused axial suite passed 183 tests. Full preflight passed 2,739 tests,
-with 16 skips and 127 subtests, and all Rust/format/import gates. Exact commands
+After Task 3 the focused axial suite passed 243 tests and the Rust crate 313
+tests. Full preflight passed 2,799 tests, with 16 skips and 127 subtests, and
+all Rust/format/import gates. Exact commands
 and literal summaries are in the completed task notes and
 `projects/visible-axial-spectra/task-notes/preflight.txt`.
 
@@ -63,6 +68,9 @@ missing singlet input directions. These do not block LO isovector currents.
 
 ## Handoff to next task
 
-Read PLAN and ADR-0001, then the task notes and
-`references/scope-and-acceptance.md`. Neutral poles require the axial embedding
-and cannot use a spin-zero mediator Breit-Wigner replacement.
+Read PLAN, ADR-0001 and
+`projects/visible-axial-spectra/adrs/ADR-0002-rust-kernels-and-numpy-oracle.md`,
+then the task notes and `references/scope-and-acceptance.md`. Task 4 adds
+`axial_poles` to `hazma._core.axial` with the same oracle pattern; see "Handoff
+to Next Task" in `task-3-rust-port.md`. Neutral poles require the axial
+embedding and cannot use a spin-zero mediator Breit-Wigner replacement.
