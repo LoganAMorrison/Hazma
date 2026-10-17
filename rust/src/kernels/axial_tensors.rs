@@ -49,10 +49,14 @@ pub fn hadronic_tensor(current: &[Complex64; 4]) -> [[Complex64; 4]; 4] {
 /// Return `(|H_spatial|² / 3, |H_time|²)` with `H` boosted to the q rest
 /// frame.
 ///
-/// `q` must be future-directed and timelike. The boost evaluates both
-/// projectors as sums of positive terms, so the cancellation of the
-/// covariant form `|q·H|²/s − H·H*` never happens and the relative error
-/// grows only like `γ²` in the boost factor `γ = q⁰/√s`.
+/// `q` must be future-directed and timelike, at a scale where `q·q` neither
+/// underflows nor overflows; the Python wrapper rescales it so that
+/// `q⁰ ∈ [1/2, 1)`, which leaves both projections unchanged.
+///
+/// The boost evaluates both projectors as sums of positive terms, so the
+/// cancellation of the covariant form `|q·H|²/s − H·H*` never happens and
+/// the relative error grows only like `γ²` in the boost factor
+/// `γ = q⁰/√s`.
 pub fn current_projections(current: &[Complex64; 4], q: &[f64; 4]) -> (f64, f64) {
     let mass = invariant(q).sqrt();
     let spatial_dot = current[1] * q[1] + current[2] * q[2] + current[3] * q[3];
@@ -77,7 +81,8 @@ pub fn current_projections(current: &[Complex64; 4], q: &[f64; 4]) -> (f64, f64)
 /// within it is clamped to zero, and a bound above `rtol` times the
 /// rest-frame norm `L + 3T` is [`ProjectionError::IllConditioned`]. The
 /// caller has already checked that `W` is finite and Hermitian and that `q`
-/// is future-directed and timelike.
+/// is future-directed and timelike, and has rescaled `q` as
+/// [`current_projections`] requires.
 ///
 /// # Errors
 ///

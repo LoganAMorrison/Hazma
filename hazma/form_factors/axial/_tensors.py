@@ -59,9 +59,16 @@ def _components(array: np.ndarray, shape: tuple[int, ...], rank: int) -> np.ndar
     return batch.reshape(math.prod(array.shape[:rank]), math.prod(shape))
 
 
-def _momentum(q: ArrayLike) -> tuple[RealArray, RealArray]:
+def _momentum(q: ArrayLike) -> RealArray:
+    """Return the validated ``q``, rescaled so that ``0.5 <= q[0] < 1``.
+
+    Both projections are invariant under ``q -> lambda * q``. Rescaling by an
+    exact power of two keeps q squared from underflowing or overflowing, which
+    at extreme scales would corrupt the projections and the timelike check.
+    """
     momentum = _four_vector(q, "q", real=True)
     with np.errstate(over="ignore", invalid="ignore"):
+        momentum = np.ldexp(momentum, -np.frexp(momentum[0])[1])
         invariant = momentum[0] ** 2 - np.sum(momentum[1:] ** 2, axis=0)
     if (
         not np.all(np.isfinite(invariant))
@@ -71,7 +78,7 @@ def _momentum(q: ArrayLike) -> tuple[RealArray, RealArray]:
         raise ValueError(
             "q must be finite, future-directed and timelike (q squared > 0)."
         )
-    return momentum, invariant
+    return momentum
 
 
 def _finite_result(value: np.ndarray) -> np.ndarray:
@@ -127,7 +134,7 @@ def current_projections(
     projectors as positive norms, avoiding cancellation of large norms.
     """
     amplitude = _four_vector(current, "current")
-    momentum, _ = _momentum(q)
+    momentum = _momentum(q)
     shape = np.broadcast_shapes(amplitude.shape[1:], momentum.shape[1:])
     transverse, longitudinal = _axial.current_projections(
         _components(amplitude, shape, 1), _components(momentum, shape, 1)
@@ -196,7 +203,7 @@ def tensor_projections(
     tolerance = 64 * np.finfo(float).eps * scale
     if np.any(np.abs(density - density.swapaxes(0, 1).conj()) > tolerance):
         raise ValueError("tensor must be Hermitian in its Lorentz indices.")
-    momentum, _ = _momentum(q)
+    momentum = _momentum(q)
     shape = np.broadcast_shapes(density.shape[2:], momentum.shape[1:])
     transverse, longitudinal = _axial.tensor_projections(
         _components(density, shape, 2), _components(momentum, shape, 1), float(rtol)

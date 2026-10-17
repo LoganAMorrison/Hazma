@@ -184,7 +184,9 @@ def test_batch_axes_broadcast_and_phase_space_weights() -> None:
         [-1, 0, 0, 0],
         [np.nan, 0, 0, 0],
         [np.inf, 0, 0, 0],
-        [1e308, 0, 0, 0],
+        [1e308, 1e308, 0, 0],
+        # Spacelike, though its squares underflow to a positive difference.
+        [0.79 * 2e-162, 0.6 * 2e-162, 0.6 * 2e-162, 0],
         [1, 2, 3],
         [1j, 0, 0, 0],
     ],
@@ -194,6 +196,33 @@ def test_invalid_momentum_is_rejected(q: list[float | complex]) -> None:
         current_projections([1, 2, 3, 4], q)
     with pytest.raises(ValueError):
         tensor_projections(np.eye(4), q)
+
+
+@pytest.mark.parametrize("batch", [False, True])
+def test_projections_are_independent_of_the_momentum_scale(batch: bool) -> None:
+    current = np.array([0.3 + 0.1j, 1.0 - 0.2j, 0.7j, -0.4])
+    tensor = np.diag([1.0, 0, 0, 0])
+    q = np.array([1.0, 0.2, -0.1, 0.3])
+    # At these scales q squared underflows or overflows unless q is rescaled
+    # before the contraction.
+    scales = np.array([2e-162, 1e-155, 1e160, 1e307])
+    scaled = q[:, None] * scales if batch else [q * scale for scale in scales]
+
+    def project(momentum: np.ndarray) -> np.ndarray:
+        return np.array(
+            current_projections(current, momentum)
+            + tensor_projections(tensor, momentum, rtol=1e-12)
+        )
+
+    # W^00 = 1 has L = q0**2 / s and T = (L - 1) / 3, here to a few ulps.
+    s = 0.86
+    expected = project(q)
+    assert_allclose(expected[2:], [(1 / s - 1) / 3, 1 / s], rtol=1e-15, atol=0)
+    actual = project(scaled) if batch else np.stack([project(m) for m in scaled], -1)
+    # Both projectors are homogeneous of degree zero in q, so only the
+    # half-ulp rounding of each scaled component moves them: 5.8 eps measured.
+    expected = np.broadcast_to(expected[:, None], actual.shape)
+    assert_allclose(actual, expected, rtol=16 * np.finfo(float).eps, atol=0)
 
 
 @pytest.mark.parametrize("current", [[1, 2, 3], [np.nan, 0, 0, 0], [np.inf, 0, 0, 0]])

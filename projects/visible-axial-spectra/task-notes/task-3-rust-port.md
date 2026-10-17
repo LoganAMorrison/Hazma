@@ -75,6 +75,14 @@ test oracle.
   orders and three masses; a cargo test pins the `128 ε` factor and the
   diagonal term of the conditioning bound; and the Gauss-Legendre
   documentation states the measured accuracy of both rules.
+- Review fix: `_momentum` rescales each `q` by an exact power of two to
+  `0.5 <= q[0] < 1` before the timelike check and both projection kernels,
+  which are invariant under `q → λq`. At `q` scaled by `2e-162`, `q·q`
+  underflowed: `tensor_projections` passed its guard with `(0.0, 1.0)`
+  against the true `(0.0543, 1.163)`, `current_projections` was 30% low,
+  and a spacelike `q` passed the timelike check. The fix also accepts large
+  timelike `q` such as `(1e308, 0, 0, 0)`, which was refused. In-range
+  values are unchanged, since the rescaling is exact.
 - `num-complex` is a direct dependency (already in the lock tree through
   `numpy`) so PyO3-free kernels can use complex arithmetic.
 - Module names follow the plan's table: `axial_tensors`, `axial_three_pi`,
@@ -95,6 +103,7 @@ test oracle.
   — submodule roster comment and the built-extension roster assertions.
 - `test/form_factors/axial/axial_oracle.py`, `test_oracle.py` — NumPy oracle and
   comparison.
+- `test/form_factors/axial/test_tensors.py` — momentum-scale regression tests.
 - `test/parity/cases.py`, `test/parity/README.md` — new-physics exemption.
 - `projects/visible-axial-spectra/adrs/ADR-0002-rust-kernels-and-numpy-oracle.md`.
 
@@ -127,6 +136,11 @@ same inputs. Worst cases on macOS/arm64: `hadronic_tensor` 1.4 ulps of
 spectral functions a relative difference of 3.2e-14 at order 505 (orders 8
 to 512, both channel classes, pion masses 134.9768, 139.57 and 0), from the
 two quadrature rules differing; the tolerance is 1e-13.
+
+Outside rounding, `current_projections` and `tensor_projections` change
+only where `q·q` underflowed or overflowed: they returned wrong values for
+`q` near `1e-162` and refused finite timelike `q` near `1e308`, and now
+return the unit-scale values to 5.8 eps.
 
 ## Performance
 

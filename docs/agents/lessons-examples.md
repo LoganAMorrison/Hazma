@@ -1598,6 +1598,17 @@ branch of the underlying kernel that "any" reaches.
   order 511 against the kernel's 3e-12 (mpmath). The test now covers
   orders 8 to 512 and three masses with a relative tolerance and states the
   measured worst case.
+- PR #127's `tensor_projections` guarded its roundoff with a budget built
+  from the same products as the result, tested only at `q` of order one.
+  Review scaled `q` by `2e-162`: `q·q` underflowed to a subnormal, the
+  guard accepted `(0.0, 1.0)` against the true `(0.0543, 1.163)` at
+  `rtol=1e-12`, and `current_projections` was 30% low, because a budget
+  computed from underflowed numbers cannot see the underflow. The timelike
+  check had the same blind spot: a spacelike `q` at that scale passed, and
+  `q = (1e308, 0, 0, 0)` was refused. Both projections are invariant under
+  `q → λq`, so the wrapper now rescales `q` by an exact power of two before
+  validating it, and `test_projections_are_independent_of_the_momentum_scale`
+  pins scalar and batch values from `2e-162` to `1e307`.
 
 ### offset-blamed-on-the-quadrature-before-the-inputs
 
