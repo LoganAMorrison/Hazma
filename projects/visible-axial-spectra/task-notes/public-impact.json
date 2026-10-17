@@ -1,0 +1,17 @@
+{
+  "imported_hazma": "/Users/logan.morrison/dev/Hazma/.codex/worktrees/visible-axial-spectra/contracts-lo-three-pion/hazma/__init__.py",
+  "existing_output_samples": 164,
+  "photon_positron_neutrino_grid_points": 32,
+  "energy_grid_mev": [
+    0.6,
+    49.0
+  ],
+  "vector_width_grid_mev": [
+    300.0,
+    450.0,
+    600.0,
+    1000.0
+  ],
+  "maximum_absolute_difference": 0.0,
+  "status": "unchanged on the recorded grid"
+}

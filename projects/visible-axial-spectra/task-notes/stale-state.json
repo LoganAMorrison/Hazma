@@ -1,0 +1,62 @@
+{
+  "Identifier sweep": {
+    "command": [
+      "rg",
+      "-n",
+      "--hidden",
+      "--glob",
+      "!*sweep.txt",
+      "--glob",
+      "!stale-state.json",
+      "AxialCurrent|AxialSpectralResult|AxialFormFactorPiPiPi0|AxialFormFactorPi0Pi0Pi0|source_longitudinal",
+      "projects/visible-axial-spectra",
+      "docs/source/form_factors.rst",
+      "CHANGELOG.md",
+      "hazma/form_factors/axial",
+      "test/form_factors/axial",
+      ".claude/skills",
+      ".codex/skills"
+    ],
+    "matches": 102,
+    "record": "projects/visible-axial-spectra/task-notes/identifier-sweep.txt"
+  },
+  "Forward looking phrase sweep": {
+    "command": [
+      "rg",
+      "-n",
+      "--glob",
+      "!*sweep.txt",
+      "--glob",
+      "!stale-state.json",
+      "Task [0-9]+ will|will be added|still pending|today: ?stub|currently|In Progress",
+      "projects/visible-axial-spectra",
+      "hazma/form_factors/axial"
+    ],
+    "matches": 3,
+    "record": "projects/visible-axial-spectra/task-notes/forward-looking-phrase-sweep.txt"
+  },
+  "Line citation sweep": {
+    "command": [
+      "rg",
+      "-n",
+      "--glob",
+      "!*sweep.txt",
+      "--glob",
+      "!stale-state.json",
+      "(_sources|_units|_base|_tensors|_three_pi)\\.py:[0-9]+",
+      "projects/visible-axial-spectra",
+      "docs"
+    ],
+    "matches": 0,
+    "record": "projects/visible-axial-spectra/task-notes/line-citation-sweep.txt"
+  },
+  "counts": {
+    "public_exports": 13,
+    "new_python_files": 10,
+    "focused_tests_passed": 183,
+    "focused_suite_command": ".venv/bin/python -m pytest -n 0 test/form_factors/axial -q",
+    "export_count_command": ".venv/bin/python -c \"from hazma.form_factors.axial import __all__; print(len(__all__))\"",
+    "file_count_command": "find hazma/form_factors/axial test/form_factors/axial -maxdepth 1 -name \"*.py\""
+  },
+  "classification": "Captured real output, sorted and re-run to a fixed point. Saved receipt text and JSON are explicitly excluded from recursive self-matches. Identifier hits kept; forward-looking hits kept as open-project/later-task or immutable-template records."
+}

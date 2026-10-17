@@ -1,0 +1,102 @@
+docs/source/form_factors.rst:292:from the channel approximation that evaluates it. ``AxialCurrent`` records
+docs/source/form_factors.rst:305:    from hazma.form_factors.axial import AxialCurrent, AxialFormFactorPiPiPi0
+docs/source/form_factors.rst:307:    source = AxialCurrent(
+docs/source/form_factors.rst:313:    channel = AxialFormFactorPiPiPi0(pion_mass=135.0)
+docs/source/form_factors.rst:316:    longitudinal = result.source_longitudinal  # MeV squared
+hazma/form_factors/axial/__init__.py:16:from ._three_pi import AxialFormFactorPi0Pi0Pi0, AxialFormFactorPiPiPi0
+hazma/form_factors/axial/__init__.py:20:    "AxialCurrent",
+hazma/form_factors/axial/__init__.py:21:    "AxialFormFactorPi0Pi0Pi0",
+hazma/form_factors/axial/__init__.py:22:    "AxialFormFactorPiPiPi0",
+hazma/form_factors/axial/__init__.py:23:    "AxialSpectralResult",
+hazma/form_factors/axial/__init__.py:8:from ._base import AxialSpectralResult
+hazma/form_factors/axial/__init__.py:9:from ._sources import AxialCurrent, InputStatus, MatchingCard, SourceCoverage
+hazma/form_factors/axial/_base.py:24:class AxialSpectralResult:
+hazma/form_factors/axial/_base.py:33:    source_longitudinal : float or array-like
+hazma/form_factors/axial/_base.py:54:    source_longitudinal: float | RealArray
+hazma/form_factors/axial/_base.py:72:        for name in ("q_mev", "transverse", "source_longitudinal"):
+hazma/form_factors/axial/_base.py:88:            ("q_mev", "transverse", "source_longitudinal"),
+hazma/form_factors/axial/_sources.py:127:    ) -> AxialCurrent:
+hazma/form_factors/axial/_sources.py:141:        AxialCurrent
+hazma/form_factors/axial/_sources.py:166:    ) -> AxialCurrent:
+hazma/form_factors/axial/_sources.py:182:        AxialCurrent
+hazma/form_factors/axial/_sources.py:221:    current : AxialCurrent
+hazma/form_factors/axial/_sources.py:238:    current: AxialCurrent
+hazma/form_factors/axial/_sources.py:247:        if not isinstance(self.current, AxialCurrent):
+hazma/form_factors/axial/_sources.py:248:            raise ValueError("current must be an AxialCurrent.")
+hazma/form_factors/axial/_sources.py:46:class AxialCurrent:
+hazma/form_factors/axial/_tensors.py:140:    transverse, source_longitudinal : ndarray
+hazma/form_factors/axial/_tensors.py:210:    transverse, source_longitudinal : ndarray
+hazma/form_factors/axial/_tensors.py:99:    transverse, source_longitudinal : ndarray
+hazma/form_factors/axial/_three_pi.py:155:    def current(self, momenta: ArrayLike, couplings: AxialCurrent) -> np.ndarray:
+hazma/form_factors/axial/_three_pi.py:163:        couplings : AxialCurrent
+hazma/form_factors/axial/_three_pi.py:189:        self, momenta: ArrayLike, couplings: AxialCurrent
+hazma/form_factors/axial/_three_pi.py:213:        self, q: ArrayLike, couplings: AxialCurrent, *, quadrature_order: int = 64
+hazma/form_factors/axial/_three_pi.py:214:    ) -> AxialSpectralResult:
+hazma/form_factors/axial/_three_pi.py:221:        couplings : AxialCurrent
+hazma/form_factors/axial/_three_pi.py:229:        result : AxialSpectralResult
+hazma/form_factors/axial/_three_pi.py:294:        return AxialSpectralResult(
+hazma/form_factors/axial/_three_pi.py:297:            source_longitudinal=longitudinal,
+hazma/form_factors/axial/_three_pi.py:304:        self, q: ArrayLike, couplings: AxialCurrent, *, quadrature_order: int = 64
+hazma/form_factors/axial/_three_pi.py:31:from ._base import AxialSpectralResult
+hazma/form_factors/axial/_three_pi.py:325:class AxialFormFactorPiPiPi0(_AxialThreePion):
+hazma/form_factors/axial/_three_pi.py:32:from ._sources import AxialCurrent, SourceCoverage
+hazma/form_factors/axial/_three_pi.py:337:class AxialFormFactorPi0Pi0Pi0(_AxialThreePion):
+hazma/form_factors/axial/_three_pi.py:338:    """LO three-pi0 current; identical parameters to AxialFormFactorPiPiPi0.
+hazma/form_factors/axial/_three_pi.py:63:def _g3(couplings: AxialCurrent) -> float:
+hazma/form_factors/axial/_three_pi.py:64:    if not isinstance(couplings, AxialCurrent):
+hazma/form_factors/axial/_three_pi.py:65:        raise TypeError("couplings must be an AxialCurrent with source metadata.")
+test/form_factors/axial/test_sources.py:105:        AxialCurrent(1, -1, 0, **{**METADATA, "scale_mev": bad})
+test/form_factors/axial/test_sources.py:112:        AxialCurrent(1, -1, 0, **{**METADATA, name: bad})
+test/form_factors/axial/test_sources.py:118:        AxialCurrent(1, -1, -1, **METADATA).rescale_singlet(
+test/form_factors/axial/test_sources.py:126:        _ = AxialCurrent(largest, largest, largest, **METADATA).generator_coefficients
+test/form_factors/axial/test_sources.py:128:        AxialCurrent.from_generator_coefficients(largest, largest, largest, **METADATA)
+test/form_factors/axial/test_sources.py:132:    source = AxialCurrent(1, -1, -1, **METADATA)
+test/form_factors/axial/test_sources.py:36:    source = AxialCurrent(*flavors, **METADATA)
+test/form_factors/axial/test_sources.py:47:    inverse = AxialCurrent.from_generator_coefficients(*independent, **METADATA)
+test/form_factors/axial/test_sources.py:54:    source = AxialCurrent(1, -1, -1, **METADATA)
+test/form_factors/axial/test_sources.py:65:    source = AxialCurrent(1, -1, -1, **METADATA)
+test/form_factors/axial/test_sources.py:83:    source = AxialCurrent(1, -1, -1, **METADATA)
+test/form_factors/axial/test_sources.py:86:    assert hash(source) == hash(AxialCurrent(1.0, -1.0, -1.0, **METADATA))
+test/form_factors/axial/test_sources.py:87:    assert source.fingerprint == AxialCurrent(1, -1, -1, **METADATA).fingerprint
+test/form_factors/axial/test_sources.py:8:from hazma.form_factors.axial._sources import AxialCurrent, MatchingCard, SourceCoverage
+test/form_factors/axial/test_sources.py:99:        AxialCurrent(**args)
+test/form_factors/axial/test_tensors.py:127:def test_source_longitudinal_does_not_mean_helicity_zero() -> None:
+test/form_factors/axial/test_tensors.py:236:    result = AxialSpectralResult(
+test/form_factors/axial/test_tensors.py:252:    scalar = AxialSpectralResult(
+test/form_factors/axial/test_tensors.py:257:    broadcast = AxialSpectralResult(
+test/form_factors/axial/test_tensors.py:271:        {"source_longitudinal": np.inf},
+test/form_factors/axial/test_tensors.py:287:        source_longitudinal=4,
+test/form_factors/axial/test_tensors.py:294:        AxialSpectralResult(**args)
+test/form_factors/axial/test_tensors.py:9:from hazma.form_factors.axial._base import AxialSpectralResult
+test/form_factors/axial/test_three_pi.py:119:    cls: type[AxialFormFactorPiPiPi0] | type[AxialFormFactorPi0Pi0Pi0],
+test/form_factors/axial/test_three_pi.py:12:    AxialFormFactorPi0Pi0Pi0,
+test/form_factors/axial/test_three_pi.py:13:    AxialFormFactorPiPiPi0,
+test/form_factors/axial/test_three_pi.py:176:    np.testing.assert_array_equal(result.source_longitudinal, 0)
+test/form_factors/axial/test_three_pi.py:18:SOURCE = AxialCurrent(
+test/form_factors/axial/test_three_pi.py:194:        (True, result.source_longitudinal),
+test/form_factors/axial/test_three_pi.py:208:    neutral_l = neutral.spectral_functions(q, SOURCE).source_longitudinal
+test/form_factors/axial/test_three_pi.py:226:    np.testing.assert_allclose(result.source_longitudinal, expected_l, rtol=1e-11)
+test/form_factors/axial/test_three_pi.py:228:        neutral.spectral_functions(q, SOURCE).source_longitudinal,
+test/form_factors/axial/test_three_pi.py:236:    cls: type[AxialFormFactorPiPiPi0] | type[AxialFormFactorPi0Pi0Pi0],
+test/form_factors/axial/test_three_pi.py:244:    np.testing.assert_array_equal(np.asarray(result.source_longitudinal)[0], 0)
+test/form_factors/axial/test_three_pi.py:245:    scaled = AxialCurrent(
+test/form_factors/axial/test_three_pi.py:253:        scaled_result.source_longitudinal,
+test/form_factors/axial/test_three_pi.py:254:        np.asarray(result.source_longitudinal) / 4,
+test/form_factors/axial/test_three_pi.py:26:CLASSES = (AxialFormFactorPiPiPi0, AxialFormFactorPi0Pi0Pi0)
+test/form_factors/axial/test_three_pi.py:270:        refined.source_longitudinal, coarse.source_longitudinal, rtol=2e-12, atol=0
+test/form_factors/axial/test_three_pi.py:289:    cls: type[AxialFormFactorPiPiPi0] | type[AxialFormFactorPi0Pi0Pi0],
+test/form_factors/axial/test_three_pi.py:303:    ff = AxialFormFactorPiPiPi0(pion_mass=135)
+test/form_factors/axial/test_three_pi.py:304:    coupling = AxialCurrent(
+test/form_factors/axial/test_three_pi.py:316:        AxialFormFactorPiPiPi0().spectral_functions(q, SOURCE)
+test/form_factors/axial/test_three_pi.py:322:        AxialFormFactorPiPiPi0().spectral_functions(500, SOURCE, quadrature_order=order)
+test/form_factors/axial/test_three_pi.py:326:    ff = AxialFormFactorPiPiPi0(pion_mass=135)
+test/form_factors/axial/test_three_pi.py:342:    with pytest.raises(TypeError, match="AxialCurrent"):
+test/form_factors/axial/test_three_pi.py:347:    ff = AxialFormFactorPiPiPi0(pion_mass=135)
+test/form_factors/axial/test_three_pi.py:352:    huge = AxialCurrent(
+test/form_factors/axial/test_three_pi.py:361:    result = AxialFormFactorPiPiPi0(pion_mass=0).spectral_functions(1e-200, SOURCE)
+test/form_factors/axial/test_three_pi.py:378:            scaled.source_longitudinal / factor**2,
+test/form_factors/axial/test_three_pi.py:379:            reference.source_longitudinal,
+test/form_factors/axial/test_three_pi.py:387:        assert tiny.source_longitudinal == 0
+test/form_factors/axial/test_three_pi.py:95:    charged = AxialFormFactorPiPiPi0(pion_mass=135)
+test/form_factors/axial/test_three_pi.py:96:    neutral = AxialFormFactorPi0Pi0Pi0(pion_mass=135)
+test/form_factors/axial/test_three_pi.py:9:from hazma.form_factors.axial._sources import AxialCurrent

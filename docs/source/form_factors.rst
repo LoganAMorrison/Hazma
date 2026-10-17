@@ -10,8 +10,9 @@ Overview
 ``hazma`` has several form factors for computing matrix elements into mesonic
 final states. Currently, ``hazma`` has all the important vector form factors
 relevant for center of mass energies below the :math:`\tau` mass. In a future
-release, we may include scalar form factors or form factors for other tensor
-interactions.
+release, we may include scalar form factors or further tensor interactions.
+A separate axial interface now supplies declared current contracts, covariant
+source tensors and restricted LO isovector three-pion currents, described below.
 
 Below, we describe how to use the form factors to compute cross-sections, widths
 and distributions.
@@ -282,3 +283,66 @@ API
 
 .. autoclass:: hazma.form_factors.vector.VectorFormFactorPiPiPiPi
     :members:
+
+
+Axial Current Primitives
+------------------------
+
+The :mod:`hazma.form_factors.axial` interface separates a light flavor current
+from the channel approximation that evaluates it. ``AxialCurrent`` records
+``G_A = diag(gau, gad, gas)`` in ``Z_mu qbar gamma^mu gamma5 G_A q``, with
+explicit QCD scheme, scale and provenance. Its generator decomposition
+preserves the singlet trace. The first three-pion providers accept only the
+exact isospin isovector direction, and raise for unsupported source directions.
+
+Both pion classes use a common pion mass in the exact isospin LO action.
+Their default support ends at 600 MeV, a declared restricted model domain
+rather than a fitted precision claim. They do not supply a general singlet
+source, a resummed mediator model or secondary photon/positron/neutrino yields.
+
+.. code-block:: python
+
+    from hazma.form_factors.axial import AxialCurrent, AxialFormFactorPiPiPi0
+
+    source = AxialCurrent(
+        1.0, -1.0, 0.0,
+        qcd_scheme="MSbar-Nf3",
+        scale_mev=2000.0,
+        provenance="LO isovector example",
+    )
+    channel = AxialFormFactorPiPiPi0(pion_mass=135.0)
+    result = channel.spectral_functions(500.0, source)
+    transverse = result.transverse           # MeV squared
+    longitudinal = result.source_longitudinal  # MeV squared
+    width = channel.width(500.0, source)      # MeV
+
+Four-momenta have leading Lorentz axis, metric ``(+,-,-,-)`` and units MeV.
+For three particles the shape is ``(4, 3, ...)`` in the documented particle
+order; ``current`` returns ``(4, ...)``. ``differential_weight`` is the
+unpolarized transverse current norm per event, before phase-space integration
+and the channel symmetry factor. The full current includes the pion-pole
+term required for the longitudinal Ward identity.
+
+The integrated densities are
+
+.. math::
+
+    A_T = \frac{1}{3}\int d\Phi\,|\mathbf H_{\mathrm{CM}}|^2,
+    \qquad A_L = \int d\Phi\,|H^0_{\mathrm{CM}}|^2.
+
+They include the identical-particle factor once. The spin-one width is
+``A_T/(2*q)``; ``A_L`` is the source response parallel to total momentum and
+is not a physical helicity-zero branching fraction. The neutral three-pion
+current has nonzero longitudinal response at finite pion mass but zero
+on-shell spin-one width. These densities are full phase-space integrals, not
+half-measure absorptive Gram matrices.
+
+``gev_to_mev(value, energy_power)`` applies ``1000**energy_power``; the inverse
+conversion uses the opposite scale. Widths have power 1, cross sections power
+-2, spectrum densities power -1 and these integrated source densities power 2.
+No charge, spin-average or dark-matter population factor is inferred by the
+unit helpers.
+
+.. automodule:: hazma.form_factors.axial
+    :members:
+    :undoc-members:

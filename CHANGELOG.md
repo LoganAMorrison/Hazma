@@ -17,6 +17,16 @@ user-facing change even when no signature did.
 
 ### Added
 
+- **Neutral axial source primitives** under `hazma.form_factors.axial`:
+  immutable current, matching and coverage cards; explicit GeV/MeV conversion;
+  covariant hadronic tensors and transverse/source-longitudinal projections;
+  and charged/neutral three-pion currents in the exact isospin LO action.
+  The default support is restricted to center-of-mass energies at most
+  600 MeV. The pion-pole term is retained for the longitudinal Ward identity;
+  the neutral channel has longitudinal density but zero on-shell spin-one
+  width. This is the first task cluster of `visible-axial-spectra`, not a
+  complete mediator model or stable-particle spectrum implementation.
+
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.
   The default lists none. `ScalarMediator`, `VectorMediator` and
