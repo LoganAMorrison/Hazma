@@ -26,6 +26,14 @@ user-facing change even when no signature did.
   the neutral channel has longitudinal density but zero on-shell spin-one
   width. This is the first task cluster of `visible-axial-spectra`, not a
   complete mediator model or stable-particle spectrum implementation.
+- **Coherent longitudinal meson poles and the `gamma gamma` source density**
+  under `hazma.form_factors.axial`: `AxialMesonPoles` resums the LO U(3)
+  `pi0`, `eta` and `eta'` block with single-angle mixing and returns the
+  source mixing strengths, the pole self-energy, the first-order mixing
+  guard `MIXING_GUARD = 0.1`, and invisible `chi chibar` widths from one
+  inserted pair cut. `AxialFormFactorGammaGamma` returns `A_L` in MeV^2 from
+  the poles plus lepton and charm triangles, with `A_T = 0`, through
+  1600 MeV. Existing public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

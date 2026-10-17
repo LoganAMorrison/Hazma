@@ -54,13 +54,14 @@
 //! cross-section modules: the interval and break points both thermal
 //! averages integrate over, built from each model's channel thresholds.
 //!
-//! [`axial_tensors`] and [`axial_three_pi`] port no `.pyx`: they are the
-//! visible-axial-spectra project's kernels, behind
-//! `hazma/form_factors/axial/_tensors.py` and `_three_pi.py`, and are
-//! named for the kernel modules that project's plan lays out. Their oracle
-//! is the NumPy implementation in `test/form_factors/axial/axial_oracle.py`
-//! rather than the parity corpus.
+//! [`axial_tensors`], [`axial_three_pi`] and [`axial_poles`] port no
+//! `.pyx`: they are the visible-axial-spectra project's kernels, behind
+//! `hazma/form_factors/axial/_tensors.py`, `_three_pi.py` and `_poles.py`,
+//! and are named for the kernel modules that project's plan lays out. Their
+//! oracle is the NumPy implementation in
+//! `test/form_factors/axial/axial_oracle.py` rather than the parity corpus.
 
+pub mod axial_poles;
 pub mod axial_tensors;
 pub mod axial_three_pi;
 pub mod mediator_decay_positron;
