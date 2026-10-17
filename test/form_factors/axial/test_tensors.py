@@ -292,3 +292,50 @@ def test_spectral_result_rejects_invalid_metadata_or_values(
     args.update(changes)
     with pytest.raises(ValueError):
         AxialSpectralResult(**args)
+
+
+def _boost_along_z(gamma: float) -> RealArray:
+    beta_gamma = np.sqrt(gamma**2 - 1)
+    boost = np.eye(4)
+    boost[0, 0] = boost[3, 3] = gamma
+    boost[0, 3] = boost[3, 0] = beta_gamma
+    return boost
+
+
+def test_boosted_tensor_projection_rejects_lost_precision() -> None:
+    # Review case: a q-proportional source at gamma = 1e4. The exact answer is
+    # transverse = 0 and source_longitudinal = s = 1; the old contraction
+    # returned (1.667, 6.0).
+    q = np.array([np.sqrt(100000001.0), 0.0, 0.0, 10000.0])
+    # The amplitude path keeps the error near gamma**2 * eps.
+    assert_allclose(current_projections(q, q), (0.0, 1.0), rtol=0, atol=3e-8)
+    with pytest.raises(ValueError, match="ill-conditioned"):
+        tensor_projections(hadronic_tensor(q), q)
+    # Loosening rtol does not admit a result with no correct digit.
+    with pytest.raises(ValueError, match="ill-conditioned"):
+        tensor_projections(hadronic_tensor(q), q, rtol=0.5)
+
+
+def test_moderately_boosted_tensor_projection_is_accepted() -> None:
+    current = np.array([1.5 - 0.5j, 0.3 + 2j, -1.2 + 0.4j, 0.7 - 1.1j])
+    boost = _boost_along_z(10.0)
+    boosted = boost @ current
+    q = boost @ np.array([3.0, 0.0, 0.0, 0.0])
+    expected = current_projections(boosted, q)
+    norm = expected[1] + 3 * expected[0]
+    # At gamma = 10 the measured error is about 1e-12 of the norm.
+    assert_allclose(
+        tensor_projections(hadronic_tensor(boosted), q),
+        expected,
+        rtol=0,
+        atol=1e-10 * norm,
+    )
+    # The same input fails a tolerance tighter than its roundoff bound.
+    with pytest.raises(ValueError, match="ill-conditioned"):
+        tensor_projections(hadronic_tensor(boosted), q, rtol=1e-12)
+
+
+@pytest.mark.parametrize("rtol", [0, 1, -1e-6, np.nan, np.inf, True, "1e-6"])
+def test_invalid_projection_tolerance_is_rejected(rtol: object) -> None:
+    with pytest.raises(ValueError, match="rtol"):
+        tensor_projections(np.eye(4), [2, 0, 0, 0], rtol=rtol)  # type: ignore[arg-type]

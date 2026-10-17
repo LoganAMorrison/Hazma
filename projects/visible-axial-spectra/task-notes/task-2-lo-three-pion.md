@@ -127,3 +127,38 @@ work retain their live statuses in the working-memory table.
 Read PLAN, ADR-0001 and the LO derivation. Next is the coherent longitudinal
 meson embedding. Preserve source/current normalization; arbitrary singlet
 providers and secondary yields are still separate planned tasks.
+
+## Review follow-up: tensor projection conditioning
+
+PR #126 review (head `5785b9c`) showed that `tensor_projections` returned
+(1.667, 6.0) for the q-proportional source at gamma = 1e4, where the exact
+result is (0, 1). The contraction cancels terms of order gamma**4 times the
+result, and rounding in the tensor entries alone limits the accuracy to
+about gamma**4 times machine epsilon, so no reordering fixes it. A sweep of
+random currents boosted to gamma = 1 to 7e3 showed the existing roundoff
+budget tracks the measured error with a margin of about 100.
+
+`tensor_projections` takes a keyword `rtol` (default 1e-6) and raises when
+the budget exceeds `rtol` times the rest-frame norm
+`source_longitudinal + 3 * transverse`. With the default, rejection starts
+near gamma = 50. `current_projections` is unchanged: on the review case it
+returns (0.0, 1.0000000149), within its gamma**2 error.
+
+Tests added in `test/form_factors/axial/test_tensors.py`: the review case is
+rejected, also with `rtol=0.5`; a gamma = 10 tensor agrees with
+`current_projections` to 1e-10 of the norm and is rejected with
+`rtol=1e-12`; invalid `rtol` values raise.
+
+```sh
+.venv/bin/python -m pytest -n 0 -q -p no:cacheprovider test/form_factors/axial
+```
+
+```text
+192 passed in 0.79s
+```
+
+Black, isort and Ruff pass on both files, and the public-impact check
+reports maximum absolute difference 0.0. The full suite in the sandbox gave
+2736 passed, 16 skipped and 127 subtests; its 12 errors are in
+`test/agents/test_lint_delta.py`, which builds scratch git repositories that
+the sandbox cannot create. The Rust gates were not run in the sandbox.

@@ -124,7 +124,9 @@ def current_projections(
     return _finite_result(transverse), _finite_result(longitudinal)
 
 
-def tensor_projections(tensor: ArrayLike, q: ArrayLike) -> tuple[RealArray, RealArray]:
+def tensor_projections(
+    tensor: ArrayLike, q: ArrayLike, *, rtol: float = 1e-6
+) -> tuple[RealArray, RealArray]:
     r"""Project a Hermitian hadronic tensor using invariant projectors.
 
     Parameters
@@ -134,6 +136,10 @@ def tensor_projections(tensor: ArrayLike, q: ArrayLike) -> tuple[RealArray, Real
         integration if desired. Units are declared by its provider.
     q : array-like, shape (4, ...)
         Real future-directed timelike four-momentum in MeV.
+    rtol : float, default 1e-6
+        Largest accepted roundoff bound, relative to the rest-frame norm
+        ``source_longitudinal + 3 * transverse`` of each batch element.
+        Must lie in (0, 1).
 
     Returns
     -------
@@ -145,8 +151,27 @@ def tensor_projections(tensor: ArrayLike, q: ArrayLike) -> tuple[RealArray, Real
     ------
     ValueError
         For invalid shapes, nonfinite inputs/results, non-Hermitian tensors,
-        invalid momentum, or materially negative projected densities.
+        invalid momentum, materially negative projected densities, or a
+        roundoff bound above ``rtol`` times the rest-frame norm.
+
+    Notes
+    -----
+    The contraction cancels terms of order ``gamma**4`` times the result,
+    where ``gamma = q[0] / sqrt(s)``. The rounding already present in the
+    tensor entries then limits the projections to a relative accuracy of
+    about ``gamma**4`` times machine epsilon, and no reordering of the sum
+    recovers it. With the default ``rtol`` the projection is rejected from
+    about ``gamma = 50``. Project the amplitude with
+    :func:`current_projections`, whose error grows only like
+    ``gamma**2``, or supply the tensor in the q rest frame.
     """
+    if (
+        isinstance(rtol, bool)
+        or not isinstance(rtol, (int, float, np.floating, np.integer))
+        or not np.isfinite(rtol)
+        or not 0 < rtol < 1
+    ):
+        raise ValueError("rtol must be a finite number in (0, 1).")
     density = np.asarray(tensor, dtype=np.complex128)
     if density.ndim < _TENSOR_RANK or density.shape[:2] != (4, 4):
         raise ValueError("tensor must have shape (4, 4, ...).")
@@ -183,7 +208,18 @@ def tensor_projections(tensor: ArrayLike, q: ArrayLike) -> tuple[RealArray, Real
         _finite_result(value)
         if np.any(value < -budget):
             raise ValueError("tensor has a negative projected density.")
-    return np.maximum(transverse, 0.0), np.maximum(longitudinal, 0.0)
+    transverse = np.maximum(transverse, 0.0)
+    longitudinal = np.maximum(longitudinal, 0.0)
+    # The budget also bounds positive errors; compare it with the rest-frame
+    # norm, which dominates both projections.
+    if np.any(budget > rtol * (longitudinal + 3.0 * transverse)):
+        raise ValueError(
+            "tensor projection is ill-conditioned for this q: its roundoff "
+            "bound exceeds rtol times the rest-frame norm. Project the "
+            "current with current_projections or supply the tensor in the "
+            "q rest frame."
+        )
+    return transverse, longitudinal
 
 
 def integrate_spectral_functions(
