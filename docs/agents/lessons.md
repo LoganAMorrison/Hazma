@@ -368,3 +368,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   truncate every value written into it to zero. Coerce the input to a float
   array before allocating, or allocate float explicitly, and pin an integer
   and a scalar request against the float array's values (PR #118).
+- [closed-form-cancels-where-a-series-converges] A closed form written as
+  `1 - f(x)` loses its relative precision wherever `f → 1`, and a test on
+  ordinary arguments does not see it. Sum the series where it converges
+  fast, join the two branches at a pinned point, and pin every branch
+  against a high-precision reference across the whole support (PR #128).

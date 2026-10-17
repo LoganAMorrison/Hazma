@@ -1621,3 +1621,15 @@ branch of the underlying kernel that "any" reaches.
   `0.5109989461`. With the fallback's mass set to the kernel's, the two
   agree to at most 6.3e-16. The misfiled follow-up was withdrawn, and the
   measurement joined `docs/followups/todo/consolidate-the-two-constants-tables.md`.
+
+### closed-form-cancels-where-a-series-converges
+
+- PR #128 evaluated the axial lepton and charm triangle as `1 - tau
+  arcsin²(1/√tau)` in `rust/src/kernels/axial_poles.rs`. Its tests used
+  energies near the fermion mass, where the form is accurate. Review
+  compared the charm triangle with 40-digit mpmath at small `q`: it was 29%
+  off at `q = 1e-4` MeV and exactly zero at `1e-6` MeV, because the
+  subtraction loses digits like `ε/x`, `x = s/(4m²)`. The kernel now sums
+  `tau arcsin² - 1 = Σ 2^{2n} x^{n-1}/(2 n² C(2n, n))` for `x ≤ 1/4`, and
+  `test_triangle_keeps_its_relative_precision_across_the_support` pins all
+  four fermions from `1e-6` to `1600` MeV at a worst error of 3.2e-15.

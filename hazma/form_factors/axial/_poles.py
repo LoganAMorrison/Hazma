@@ -84,7 +84,10 @@ class InvisibleCut:
     ``kappa = 2 m_chi g_A^chi/M**2``. The cut's absorptive part
     ``i s beta_chi kappa**2 c c^T/(8 pi)`` is added to the full meson
     matrix, so it also couples the mesons; its dispersive part renormalizes
-    the pole inputs and is not included.
+    the pole inputs and is not included. ``dm_mass = 0`` gives ``kappa = 0``,
+    a cut that changes nothing. Within :data:`MIXING_GUARD` the width it adds
+    is a subleading correction: ``Gamma_inv/Gamma_P = epsilon_P Pi/M**2`` at
+    each pole, with ``Pi = beta_chi (m_chi g_A^chi)**2/(2 pi)``.
     """
 
     dm_mass: float
@@ -280,6 +283,12 @@ class AxialMesonPoles:
             eta') with the visible widths, then the shape of ``q``. A point
             whose largest entry exceeds :data:`MIXING_GUARD` is outside the
             first-order treatment. An exact pole of zero width gives inf.
+
+        Notes
+        -----
+        This is the note's per-pole measure (``sec:ax-match``). The exact
+        size of the second insertion, ``|source_self_energy(q)|/M**2``, is at
+        most the sum of the three entries, so up to three times the largest.
         """
         flavors = _flavor_couplings(couplings)
         energies = _energies(q)
@@ -371,7 +380,9 @@ class AxialFormFactorGammaGamma:
         triangles : TriangleCouplings
             Dimensionless lepton and charm axial couplings.
         invisible : InvisibleCut, optional
-            Dark-matter cut to insert once in the meson block.
+            Dark-matter cut to insert once in the meson block. Without it the
+            amplitude does not depend on the mediator; with it, it depends on
+            the mediator mass through the cut's ``kappa``.
 
         Returns
         -------
@@ -408,6 +419,10 @@ class AxialFormFactorGammaGamma:
         ``|k.H|**2/s`` over two-body massless phase space, ``1/(8 pi)``, with
         the identical-photon factor 1/2; ``alpha`` is
         :data:`hazma.parameters.alpha_em`.
+
+        The density does not check the first-order mixing guard, which needs
+        the mediator mass: a rate built on it must reject points where
+        :meth:`AxialMesonPoles.mixing_expansion` exceeds :data:`MIXING_GUARD`.
         """
         flavors = _flavor_couplings(couplings)
         if not isinstance(triangles, TriangleCouplings):

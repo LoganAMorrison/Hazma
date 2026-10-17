@@ -25,7 +25,8 @@ Task 15's invisible branching ratios read the same residues.
   with the propagator leaves `-J.k/M^2` for any `k`-parallel hadronic current,
   so the longitudinal response is a non-resonant contact with no pole at
   `s = M^2`. The width dresses only the transverse term. The hadronic object
-  Task 4 returns is therefore independent of `M` and of `Gamma_Z'`.
+  Task 4 returns is therefore independent of `M` and of `Gamma_Z'`, except
+  through an invisible cut, whose strength carries `1/M^2`.
 - **One mixing insertion, guarded.** The full quadratic kernel over
   `(a, pi3, eta8, eta0)`, with `a` the source-longitudinal mode
   (`K_aa = M^2`, `K_ai = i sqrt(s) c_i`), defines the exact amplitude
@@ -34,20 +35,32 @@ Task 15's invisible branching ratios read the same residues.
   the mixing, and drops the Schur correction to `D_a`. Its size per pole,
   `epsilon_P = |c_P^2 s/(M^2 (s - m_P^2 + i m_P Gamma_P))|`, is exposed as
   `AxialMesonPoles.mixing_expansion` with the guard `MIXING_GUARD = 0.1`
-  (note `sec:ax-match`). A rate must reject points above the guard; the form
-  factor does not know `M` and cannot.
+  (note `sec:ax-match`). The exact total, `|s c^T D^-1 c|/M^2`, is at most
+  the sum over the three poles, so the per-pole guard can understate it up
+  to threefold. A rate must reject points above the guard; the form factor
+  does not know `M` and cannot.
 - **The meson block is inverted whole.** `D(s)` is the full complex
   `3 x 3` inverse propagator in the physical basis `(pi0, eta, eta')`, with
   the single LO angle `theta_P = -15.4` degrees and a common `f = 92.2` MeV
   in the isospin limit. Any absorptive insertion is added to the whole
   matrix, not to one diagonal width, because a rotation does not commute
-  with adding a fresh diagonal width.
+  with adding a fresh diagonal width. The invisible cut is a rank-one update
+  along the source direction `a_P = Tr(G_A lambda_P)` itself, so
+  Sherman-Morrison gives the exact inverse in closed form,
+  `a^T D^-1 b = a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)`, with no
+  linear solve. A meson with `a_P = 0` drops out exactly.
 - **The invisible cut is inserted once.** Moving the `a`-line pair cut onto
   the mesons gives `y_P = kappa c_P`, `kappa = 2 m_chi g_A^chi/M^2`, and the
   rank-one absorptive matrix `i s beta_chi kappa^2 c c^T/(8 pi)`. Its
   dispersive part renormalizes the pole inputs and is omitted. At each pole
   it adds exactly `Gamma(P -> chi chibar) = m_P beta_chi y_P^2/(8 pi)`
-  (note `eq:ax-inv`) to the visible width.
+  (note `eq:ax-inv`) to the visible width. It is not a leading effect: at
+  each pole `Gamma_inv/Gamma_P = epsilon_P Pi_aa/M^2`, with `Pi_aa` the
+  `a`-line pair cut, so wherever the guard passes it is smaller than the
+  dropped real Schur term by `Pi_aa/M^2`. It is kept because it is the
+  residue's physical consequence, which Task 15 bounds, and because a
+  line shape near an open pair threshold should carry the width it
+  implies.
 - **Light quarks reach `gamma gamma` only through the poles.** The
   Bardeen-form WZW has no direct source-photon-photon vertex, so the light
   anomaly is the pole sum, which tends to `N_c sum_q g_A^q Q_q^2` for

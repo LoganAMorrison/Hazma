@@ -8,6 +8,7 @@ the mediator note (pinned values), the full-kernel NumPy oracle in
 from __future__ import annotations
 
 import axial_oracle as oracle
+import mpmath
 import numpy as np
 import pytest
 
@@ -42,6 +43,9 @@ GAMMA_GAMMA = AxialFormFactorGammaGamma()
 MASSES = np.array([POLES.pion_mass, POLES.eta_mass, POLES.eta_prime_mass])
 WIDTHS = np.array([POLES.pion_width, POLES.eta_width, POLES.eta_prime_width])
 ANGLE = np.deg2rad(POLES.mixing_angle_deg)
+# Relative distance from tau = 1 inside which arcsin's own conditioning,
+# ulp/sqrt(tau - 1), rather than the kernel, sets the triangle's error.
+TRIANGLE_THRESHOLD_EXCLUSION = 1e-4
 # Energies (MeV) on both sides of, and within a width or two of, each pole.
 Q_GRID = [1.0, 60.0, 134.9, 135.0, 300.0, 547.8, 547.9, 700.0, 957.7, 1600.0]
 SOURCES = [
@@ -100,11 +104,12 @@ def test_schur_complement_matches_the_full_kernel_inverse(
     """The physical-basis meson resummation equals the full 4x4 inverse.
 
     The oracle inverts the whole kernel over (a, pi3, eta8, eta0) in the
-    generator basis; the kernel solves only the meson block in the physical
-    basis. Both are exact, so they differ by rounding amplified by the meson
-    block's conditioning, up to |D_eta'|/|D_eta| ~ 1e6 near the eta pole;
-    the largest measured difference is 3.0e-13 relative (macOS/arm64), and
-    1e-11 allows for that conditioning on other platforms.
+    generator basis; the kernel sums the diagonal meson block in the physical
+    basis in closed form. Both are exact, so they differ by the oracle's
+    rounding amplified by the meson block's conditioning, max/min |D_P| up
+    to 1.4e5 on this grid (q = 135.0 MeV). The largest measured difference
+    is 3.0e-13 relative (macOS/arm64), and 1e-11 allows for that
+    conditioning on other platforms.
     The amplitude does not depend on the mediator mass, which only sets K_aa.
     """
     for q in Q_GRID:
@@ -427,13 +432,14 @@ def test_heavy_triangle_decouples_below_its_pair_threshold(
 ) -> None:
     """``1 - tau f(tau) = -(x/3 + 8x²/45) + O(x³)`` with ``x = s/(4 m²)``.
 
-    With no light-quark source the amplitude is the triangle alone. The
-    truncated series is good to (12/35) x², and the subtraction
-    1 - tau arcsin² loses ~ulp/x relative; 1e-8 covers both here.
+    With no light-quark source the amplitude is the triangle alone. This
+    two-term reference is good to (12/35) x², 2.2e-11 for the muon here, so
+    1e-10 bounds it.
     """
     x = q * q / (4 * mass**2)
     amplitude = GAMMA_GAMMA.amplitude(q, ZERO, triangles)
-    assert amplitude.real == pytest.approx(-weight * (x / 3 + 8 * x**2 / 45), rel=1e-8)
+    expected = -weight * (x / 3 + 8 * x**2 / 45)
+    assert amplitude.real == pytest.approx(expected, rel=1e-10)
     assert amplitude.imag == 0.0
 
 
@@ -449,6 +455,69 @@ def test_light_triangle_carries_the_full_anomaly() -> None:
     assert abs(amplitude - 1.0) < tau * (np.log(4 / tau) ** 2 + np.pi**2) / 4
     expected = oracle.triangle_factor(1600.0, parameters.electron_mass)
     assert amplitude == pytest.approx(expected, rel=1e-13)
+
+
+@pytest.mark.parametrize(
+    ("name", "mass", "weight"),
+    [
+        ("electron", parameters.electron_mass, 1.0),
+        ("muon", parameters.muon_mass, 1.0),
+        ("tau", parameters.tau_mass, 1.0),
+        ("charm", parameters.charm_quark_mass, 4 / 3),
+    ],
+)
+def test_triangle_keeps_its_relative_precision_across_the_support(
+    name: str, mass: float, weight: float
+) -> None:
+    """Each triangle against 40-digit mpmath from 1e-6 MeV to the 1600 MeV ceiling.
+
+    Far below threshold the closed form 1 - tau arcsin² cancels like
+    ulp*tau, so the kernel sums the series there. The worst measured error
+    is 3.2e-15 relative (macOS/arm64), where the closed form takes over at
+    tau = 4; 1e-14 allows libm differences. Points within 1e-4 of tau = 1
+    are skipped: there arcsin's own conditioning, ulp/sqrt(tau - 1), sets
+    the error.
+    """
+    couplings = {"electron": 0.0, "muon": 0.0, "tau": 0.0, "charm": 0.0}
+    couplings[name] = 1.0
+    q = np.logspace(-6, np.log10(1600.0), 400)
+    tau = 4 * mass**2 / q**2
+    q = q[np.abs(tau - 1) >= TRIANGLE_THRESHOLD_EXCLUSION]
+    amplitude = GAMMA_GAMMA.amplitude(q, ZERO, TriangleCouplings(**couplings))
+    with mpmath.workdps(40):
+        expected = np.array([complex(_mpmath_triangle(value, mass)) for value in q])
+    np.testing.assert_allclose(amplitude / weight, expected, rtol=1e-14, atol=0)
+
+
+def _mpmath_triangle(q: float, mass: float) -> mpmath.mpc:
+    tau = 4 * mpmath.mpf(mass) ** 2 / mpmath.mpf(q) ** 2
+    if tau >= 1:
+        return 1 - tau * mpmath.asin(1 / mpmath.sqrt(tau)) ** 2
+    r = mpmath.sqrt(1 - tau)
+    return 1 + tau / 4 * (mpmath.log((1 + r) / (1 - r)) - 1j * mpmath.pi) ** 2
+
+
+def test_a_meson_the_source_does_not_couple_to_drops_out_at_its_pole() -> None:
+    """An isoscalar source has c_pi = 0, so a stable pi0 pole contributes nothing.
+
+    At the exact zero-width pion pole the amplitude and self-energy are
+    finite and continuous with q(1 + 1e-9), where only O(1e-9) changes in
+    the eta and eta' terms separate them; a coupled stable pole still raises.
+    """
+    isoscalar = _current(1e-3, 1e-3, 0.0)
+    stable_poles = AxialMesonPoles(pion_width=0.0, eta_width=0.0, eta_prime_width=0.0)
+    stable = AxialFormFactorGammaGamma(poles=stable_poles)
+    q = np.array([MASSES[0], MASSES[0] * (1 + 1e-9)])
+    amplitude = stable.amplitude(q, isoscalar, NO_TRIANGLES)
+    assert amplitude[0] == pytest.approx(amplitude[1], rel=1e-8)
+    self_energy = stable_poles.source_self_energy(q, isoscalar)
+    assert self_energy[0] == pytest.approx(self_energy[1], rel=1e-8)
+    assert (
+        stable_poles.mixing_expansion(MASSES[0], isoscalar, mediator_mass=500.0)[0]
+        == 0.0
+    )
+    with pytest.raises(ValueError, match="zero width"):
+        stable.amplitude(MASSES[0], HYPERCHARGE, NO_TRIANGLES)
 
 
 def test_invalid_inputs_raise() -> None:

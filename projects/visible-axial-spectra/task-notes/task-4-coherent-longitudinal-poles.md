@@ -81,7 +81,12 @@ insertion is verified independently."
   insertion is kept behind an exported guard. The meson block is inverted
   whole, and the cut is inserted once.
 - **Kernel and oracle algorithms.** The kernel `rust/src/kernels/axial_poles.rs`
-  works in the physical basis with a pivoted 3x3 complex solve. The oracle
+  works in the physical basis. The invisible cut is a rank-one update along
+  the source direction `a_P = Tr(G_A lambda_P)`, so Sherman-Morrison gives
+  `a^T D^-1 b = a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)` in closed form
+  with no linear solve, and a meson with `a_P = 0` is skipped exactly. The
+  heavy-fermion triangle `1 - tau arcsin^2` is summed as a series for
+  `s/(4 m^2) <= 1/4`, where the subtraction would cancel. The oracle
   inverts the full 4x4 kernel over `(a, pi3, eta8, eta0)` in the generator
   basis, so basis covariance is tested along with the Schur identity.
 - **Guard placement.** The guard is `AxialMesonPoles.mixing_expansion` plus
@@ -99,7 +104,8 @@ insertion is verified independently."
 
 ## Files Changed
 
-- `rust/src/kernels/axial_poles.rs`: new PyO3-free kernel and its unit tests.
+- `rust/src/kernels/axial_poles.rs`: new PyO3-free kernel and its unit tests,
+  with the Sherman-Morrison cut and the triangle series.
 - `rust/src/axial.rs`, `rust/src/kernels.rs`: entry-point registration and
   the module roster.
 - `hazma/form_factors/axial/_poles.py`, `__init__.py`: the public surface
@@ -107,22 +113,24 @@ insertion is verified independently."
   `TriangleCouplings` and `MIXING_GUARD`.
 - `test/form_factors/axial/axial_oracle.py`: full-kernel and Dirac-trace
   oracle.
-- `test/form_factors/axial/test_poles.py`: 36 tests.
+- `test/form_factors/axial/test_poles.py`: 41 tests.
 - `projects/visible-axial-spectra/adrs/ADR-0003-proca-embedding-of-longitudinal-meson-poles.md`,
   with a link from `PLAN.md`.
 - `docs/source/form_factors.rst` and `CHANGELOG.md` (Unreleased, Added).
+- `docs/agents/lessons.md` and `lessons-examples.md`: the review lesson on
+  closed forms that cancel.
 
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes`: 322 passed (8 new), with clippy `-D warnings`
+  --features test-probes`: 323 passed (9 new), with clippy `-D warnings`
   clean.
-- `.venv/bin/python -m pytest -n 0 -q test/form_factors/axial`: 312 passed.
+- `.venv/bin/python -m pytest -n 0 -q test/form_factors/axial`: 317 passed.
 - With the worktree `.venv/bin` on PATH,
   `scripts/agents/preflight.sh --paths "hazma/form_factors/axial
-  test/form_factors/axial"`, with `--md` naming the four touched Markdown
+  test/form_factors/axial"`, with `--md` naming the five touched Markdown
   files, gives `RESULT: PASS` on every row. The pytest row reads
-  `2868 passed, 16 skipped, 20 warnings, 127 subtests passed`, and ruff
+  `2873 passed, 16 skipped, 20 warnings, 127 subtests passed`, and ruff
   reads `0 new, 2 fixed`.
 - Tolerances measured on macOS/arm64:
 
@@ -131,6 +139,7 @@ insertion is verified independently."
 | research Berends-Giele `A_L`, 8 energies | 1.4e-15 rel | 4e-15 |
 | Schur complement vs 4x4 full inverse, amplitude and self-energy | 3.0e-13 rel | 1e-11 |
 | meson-block cut vs Proca-line Dirac-trace cut | 1.7e-12 rel | 1e-11 |
+| four triangles vs 40-digit mpmath, 1e-6 to 1600 MeV | 3.2e-15 rel | 1e-14 |
 
 - Performance on N = 1e5 energies: the kernel takes 51 ns per point (83 ns
   with the cut). The oracle's 4x4 solve takes 15.6 us per point, about 300
@@ -141,6 +150,26 @@ insertion is verified independently."
 `.venv/bin/python projects/visible-axial-spectra/references/check_public_impact.py`
 reports `maximum_absolute_difference: 0.0` and "unchanged on the recorded
 grid". The change is additive.
+
+## Review
+
+Findings from a generalist (A) and a numerics (E) reviewer on PR #128.
+
+| # | Finding | Verdict | Resolution |
+|---|---|---|---|
+| E1, A4 | Triangle `1 - tau asin^2` cancels for `s << m^2` (charm 29% off at 1e-4 MeV) | Accepted | Series for `x <= 1/4`; mpmath test on all four fermions |
+| E3 | 3x3 pivoted solve ill-conditioned when the cut dominates | Accepted | Sherman-Morrison closed form; solve removed |
+| E4, A1 | A decoupled zero-width pole gives `0*inf = NaN` | Accepted | Skipped exactly; a coupled zero-width pole is now singular even with a cut |
+| E2 | Per-pole guard can understate the Schur correction up to 3x | Accepted | Documented in `mixing_expansion` and ADR-0003 |
+| E5 | The kept cut is smaller than the dropped Schur term by `Pi_aa/M^2` | Accepted | Documented in `InvisibleCut` and ADR-0003 |
+| E6 | Conditioning figure "~1e6" wrong | Accepted | Recomputed: 1.4e5 at q = 135.0 MeV |
+| A2 | With a cut the amplitude depends on `M` through `kappa` | Accepted | Documented in `amplitude` and ADR-0003 |
+| A3 | `spectral_functions` does not point at the guard | Accepted | Docstring paragraph |
+| A6 | `dm_mass = 0` is a silent no-op cut | Accepted | `InvisibleCut` docstring |
+| A5 | Provenance string over 88 columns | Rejected | Matches `_three_pi.py`'s style; black and ruff pass |
+
+The heavy-triangle reference test also tightened to rel 1e-10. No existing
+public value moves, so the numerical-impact result stands.
 
 ## Open Questions
 
@@ -182,10 +211,10 @@ tables below are folded by hand from the commands named in each row.
 
 | Claim location | Command | Actual | Status |
 |---|---|---|---|
-| Verification "312 passed" | `pytest -n 0 -q test/form_factors/axial` | 312 | KEPT |
-| Files Changed "36 tests" | `pytest --collect-only test/form_factors/axial/test_poles.py` | 36 | KEPT |
-| Verification "8 new" Rust tests | `rg -c '#\[test\]' rust/src/kernels/axial_poles.rs` | 8 | KEPT |
-| README "322 Rust tests" | `cargo test` (preflight) | 322 | KEPT |
+| Verification "317 passed" | `pytest -n 0 -q test/form_factors/axial` | 317 | EDITED |
+| Files Changed "41 tests" | `pytest --collect-only test/form_factors/axial/test_poles.py` | 41 | EDITED |
+| Verification "9 new" Rust tests | `rg -c '#\[test\]' rust/src/kernels/axial_poles.rs` | 9 | EDITED |
+| README "323 Rust tests" | `cargo test` (preflight) | 323 | EDITED |
 | lib.rs "six per-domain submodules" | `dir(hazma._core)` modules | six | KEPT |
 
 - **Numerical-impact statement.** No public value changes (verified:
@@ -201,7 +230,7 @@ tables below are folded by hand from the commands named in each row.
 | `k.H_gg` approaches the ABJ coefficient | `test_amplitude_approaches_the_abj_coefficient_away_from_the_poles`, Rust `amplitude_approaches_the_abj_coefficient_far_from_the_poles` |
 | Transverse gamma gamma density is zero | `test_transverse_gamma_gamma_density_is_exactly_zero` |
 | Residue at each pole | `test_residue_is_recovered_at_each_pole`, Rust `residue_is_recovered_at_each_pole` |
-| Single invisible-cut insertion | `test_invisible_cut_inserted_once_matches_the_mediator_line_cut`, `test_invisible_widths_reproduce_the_note_benchmarks`, Rust `invisible_cut_adds_its_width_to_each_pole_once` |
+| Single invisible-cut insertion | `test_invisible_cut_inserted_once_matches_the_mediator_line_cut`, `test_invisible_widths_reproduce_the_note_benchmarks`, Rust `invisible_cut_broadens_an_isolated_pole_by_its_width` |
 | theta_P = -15.4 degrees, guard 0.1 | `test_benchmark_mixing_strengths_match_the_note`, `test_mixing_expansion_reproduces_the_note_example` |
 | Rust kernel, NumPy oracle, public values unchanged | `axial_oracle.py` comparisons in `test_poles.py`; `check_public_impact.py` |
 

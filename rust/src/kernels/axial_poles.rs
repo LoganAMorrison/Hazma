@@ -7,10 +7,10 @@
 //! source momentum `k`, so it reaches only the source-longitudinal response,
 //! and the Proca propagator's `k^μ k^ν/(s M²)` term turns it into a
 //! non-resonant contact rather than a spin-zero mediator (project ADR-0003).
-//! The meson block is kept whole: its inverse propagator `D(s)` is a full
-//! complex matrix, so an absorptive insertion that couples the mesons, such
-//! as the invisible dark-matter cut, is resummed with them rather than
-//! added to one diagonal width.
+//! The meson block is kept whole: the invisible dark-matter cut couples all
+//! three mesons, and because it is a rank-one update along the source
+//! direction itself, the full inverse propagator has a closed form
+//! (Sherman–Morrison) rather than a fresh width on one diagonal entry.
 //!
 //! The physical basis `(π⁰, η, η′)` uses the single-angle LO mixing
 //! `λ_η = cos θ_P T₈ − sin θ_P T₀` and `λ_η′ = sin θ_P T₈ + cos θ_P T₀`, with
@@ -45,8 +45,9 @@ pub struct MesonBlock {
 ///
 /// The longitudinal contact gives each meson the pseudoscalar coupling
 /// `y_P = κ c_P` to `χ̄ γ₅ χ`, with `κ = 2 m_χ g_A^χ / M²`. Its absorptive
-/// part adds the rank-one matrix `i ρ(s) κ² c cᵀ`, `ρ = s β_χ/(8π)`, to
-/// `D(s)`; the dispersive part renormalizes the pole inputs and is omitted.
+/// part adds the rank-one matrix `i ρ(s) κ² c cᵀ`, `ρ = s β_χ/(8π)`, to the
+/// inverse propagator `diag(s − m_P² + i m_P Γ_P)`; the dispersive part
+/// renormalizes the pole inputs and is omitted.
 #[derive(Clone, Copy, Debug)]
 pub struct InvisibleCut {
     /// Dark-matter mass `m_χ` in MeV.
@@ -78,43 +79,6 @@ pub struct Triangles {
 
 fn dot3(a: &[f64; 3], b: &[f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-/// Solve `a x = b` by Gaussian elimination with partial pivoting.
-///
-/// A zero pivot, which only an exact pole of zero width produces, yields a
-/// non-finite solution for the caller to reject.
-fn solve(mut a: [[Complex64; 3]; 3], mut b: [Complex64; 3]) -> [Complex64; 3] {
-    for k in 0..3 {
-        let pivot = (k..3)
-            .max_by(|&i, &j| a[i][k].norm().total_cmp(&a[j][k].norm()))
-            .unwrap_or(k);
-        a.swap(k, pivot);
-        b.swap(k, pivot);
-        for r in k + 1..3 {
-            // Skipping exact zeros keeps a zero pivot from turning the
-            // already-decoupled rows of a diagonal block into 0/0.
-            if a[r][k] == Complex64::new(0.0, 0.0) {
-                continue;
-            }
-            let factor = a[r][k] / a[k][k];
-            let pivot_row = a[k];
-            for (entry, pivot_entry) in a[r].iter_mut().zip(pivot_row).skip(k) {
-                *entry -= factor * pivot_entry;
-            }
-            let update = factor * b[k];
-            b[r] -= update;
-        }
-    }
-    let mut x = [Complex64::new(0.0, 0.0); 3];
-    for k in (0..3).rev() {
-        let mut sum = b[k];
-        for c in k + 1..3 {
-            sum -= a[k][c] * x[c];
-        }
-        x[k] = sum / a[k][k];
-    }
-    x
 }
 
 impl MesonBlock {
@@ -149,46 +113,45 @@ impl MesonBlock {
             .map(|lambda| N_COLORS * dot3(&lambda, &QUARK_CHARGES_SQUARED))
     }
 
-    /// Return the inverse meson propagator `D(s)` in MeV² at `s = q²`.
-    ///
-    /// Without a cut it is `diag(s − m_P² + i m_P Γ_P)`; a cut adds its
-    /// rank-one absorptive matrix, which couples all three mesons.
-    pub fn inverse_propagator(
-        &self,
-        q: f64,
-        couplings: &[f64; 3],
-        cut: Option<&InvisibleCut>,
-    ) -> [[Complex64; 3]; 3] {
-        let s = q * q;
-        let mut d = [[Complex64::new(0.0, 0.0); 3]; 3];
-        for (p, row) in d.iter_mut().enumerate() {
+    /// Return `Δ_P = s − m_P² + i m_P Γ_P` in MeV², the diagonal inverse
+    /// propagator without a cut.
+    fn denominators(&self, s: f64) -> [Complex64; 3] {
+        std::array::from_fn(|p| {
             let mass = self.masses[p];
-            row[p] = Complex64::new(s - mass * mass, mass * self.widths[p]);
-        }
-        if let Some(cut) = cut {
-            let weight = cut.absorptive_weight(s);
-            let y = self.source_couplings(couplings).map(|c| cut.strength * c);
-            for (p, row) in d.iter_mut().enumerate() {
-                for (r, entry) in row.iter_mut().enumerate() {
-                    entry.im += weight * y[p] * y[r];
-                }
-            }
-        }
-        d
+            Complex64::new(s - mass * mass, mass * self.widths[p])
+        })
     }
 
-    /// Return `s aᵀ D(s)⁻¹ b`, the coherent sum over the three poles.
+    /// Return `s aᵀ D(s)⁻¹ b`, `a_P = Tr(G_A λ_P)`, the coherent sum over the
+    /// three poles.
+    ///
+    /// The cut adds `i γ a aᵀ`, `γ = ρ κ² f²`, to `D = diag(Δ_P)`, so
+    /// Sherman–Morrison gives the exact `aᵀ D⁻¹ b = aᵀΔ⁻¹b / (1 + i γ aᵀΔ⁻¹a)`.
+    /// A meson with `a_P = 0` drops out of both sums exactly, even at its own
+    /// zero-width pole; a coupled zero-width pole is singular, with or
+    /// without a cut.
     fn coherent_sum(
         &self,
         q: f64,
-        a: &[f64; 3],
         b: &[f64; 3],
         couplings: &[f64; 3],
         cut: Option<&InvisibleCut>,
     ) -> Complex64 {
-        let d = self.inverse_propagator(q, couplings, cut);
-        let x = solve(d, b.map(|value| Complex64::new(value, 0.0)));
-        q * q * (a[0] * x[0] + a[1] * x[1] + a[2] * x[2])
+        let s = q * q;
+        let a = self.source_traces(couplings);
+        let delta = self.denominators(s);
+        let project = |v: &[f64; 3]| -> Complex64 {
+            (0..3)
+                .filter(|&p| a[p] != 0.0)
+                .map(|p| a[p] * v[p] / delta[p])
+                .sum()
+        };
+        let mut sum = project(b);
+        if let Some(cut) = cut {
+            let gamma = cut.absorptive_weight(s) * (cut.strength * self.decay_constant).powi(2);
+            sum /= Complex64::new(1.0, 0.0) + Complex64::i() * gamma * project(&a);
+        }
+        s * sum
     }
 
     /// Return the meson-pole part `s cᵀ D(s)⁻¹ c` of the longitudinal
@@ -204,14 +167,15 @@ impl MesonBlock {
         cut: Option<&InvisibleCut>,
     ) -> Complex64 {
         let c = self.source_couplings(couplings);
-        self.coherent_sum(q, &c, &c, couplings, cut)
+        self.decay_constant * self.coherent_sum(q, &c, couplings, cut)
     }
 
     /// Return `ε_P = |c_P² s / (M² (s − m_P² + i m_P Γ_P))|` per meson,
     /// dimensionless, with the visible widths only.
     ///
-    /// `ε_P` measures the neglected second mixing insertion relative to the
-    /// first; it is infinite at an exact pole of zero width.
+    /// `ε_P` is the note's per-pole measure of the neglected second mixing
+    /// insertion; the exact total is `|source_self_energy|/M²`, at most the
+    /// sum of the three. It is infinite at an exact pole of zero width.
     pub fn mixing_expansion(&self, q: f64, couplings: &[f64; 3], mediator_mass: f64) -> [f64; 3] {
         let s = q * q;
         let c = self.source_couplings(couplings);
@@ -226,8 +190,8 @@ impl MesonBlock {
         })
     }
 
-    /// Return `Γ(P → χχ̄) = m_P β_χ κ² c_P² / (8π)` in MeV, the cut's
-    /// diagonal at each pole divided by `m_P`; zero for a closed channel.
+    /// Return `Γ(P → χχ̄) = m_P β_χ κ² c_P² / (8π)` in MeV, the width the
+    /// cut adds at each pole; zero for a closed channel.
     pub fn invisible_widths(&self, couplings: &[f64; 3], cut: &InvisibleCut) -> [f64; 3] {
         let c = self.source_couplings(couplings);
         std::array::from_fn(|p| {
@@ -241,15 +205,40 @@ impl MesonBlock {
     }
 }
 
+/// Largest `x = s/(4m²)` at which [`triangle_factor`] sums its heavy-fermion
+/// series. At `x = 1/4` the closed form `1 − τ arcsin²(1/√τ)` keeps all but
+/// a few ulps; below it the subtraction loses digits like `ε/x`.
+const TRIANGLE_SERIES_MAX: f64 = 0.25;
+
+/// Return `τ arcsin²(1/√τ) − 1 = Σ_{n≥2} 2^{2n} xⁿ⁻¹ / (2 n² C(2n, n))` for
+/// `x = 1/τ ≤ 1/4`, whose successive terms fall by
+/// `2x n²/((n + 1)(2n + 1)) < x`.
+fn heavy_triangle_series(x: f64) -> f64 {
+    let mut term = x / 3.0;
+    let mut sum = 0.0;
+    let mut n = 2.0;
+    while term > 0.5 * f64::EPSILON * sum {
+        sum += term;
+        term *= 2.0 * x * n * n / ((n + 1.0) * (2.0 * n + 1.0));
+        n += 1.0;
+    }
+    sum
+}
+
 /// Return the triangle form factor `1 − τ f(τ)`, `τ = 4m²/s`, at `s = q²`.
 ///
 /// `f(τ) = arcsin²(1/√τ)` for `τ ≥ 1` and
 /// `−¼ [ln((1 + r)/(1 − r)) − iπ]²`, `r = √(1 − τ)`, below. The factor is
-/// one for a massless fermion and vanishes like `−s/(12 m²)` as `s → 0`.
+/// one for a massless fermion and vanishes like `−s/(12 m²)` as `s → 0`,
+/// where it is summed as a series to keep full relative precision.
 pub fn triangle_factor(q: f64, mass: f64) -> Complex64 {
     let s = q * q;
     if s == 0.0 {
         return Complex64::new(0.0, 0.0);
+    }
+    let x = s / (4.0 * mass * mass);
+    if x <= TRIANGLE_SERIES_MAX {
+        return Complex64::new(-heavy_triangle_series(x), 0.0);
     }
     let tau = 4.0 * mass * mass / s;
     if tau == 0.0 {
@@ -278,9 +267,8 @@ pub fn gamma_gamma_amplitude(
     triangles: &Triangles,
     cut: Option<&InvisibleCut>,
 ) -> Complex64 {
-    let a = block.source_traces(couplings);
     let b = block.photon_traces();
-    let poles = 0.5 * block.coherent_sum(q, &a, &b, couplings, cut);
+    let poles = 0.5 * block.coherent_sum(q, &b, couplings, cut);
     let fermions: Complex64 = TRIANGLE_WEIGHTS
         .iter()
         .zip(triangles.couplings)
@@ -420,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn invisible_cut_adds_its_width_to_each_pole_once() {
+    fn invisible_widths_follow_the_pseudoscalar_coupling() {
         let mesons = block(MASSES, WIDTHS);
         let cut = InvisibleCut {
             dm_mass: 60.0,
@@ -430,8 +418,6 @@ mod tests {
         let c = mesons.source_couplings(&HYPERCHARGE);
         for p in 0..3 {
             let mass = MASSES[p];
-            let d = mesons.inverse_propagator(mass, &HYPERCHARGE, Some(&cut));
-            assert_close(d[p][p].im, mass * (WIDTHS[p] + gamma[p]), 1e-15);
             let beta = (1.0 - 4.0 * 60.0f64.powi(2) / mass.powi(2)).sqrt();
             let y = cut.strength * c[p];
             assert_close(gamma[p], mass * beta * y * y / (8.0 * PI), 1e-15);
@@ -444,30 +430,71 @@ mod tests {
     }
 
     #[test]
-    fn solve_handles_a_coupled_block() {
+    fn invisible_cut_broadens_an_isolated_pole_by_its_width() {
+        // G_A = g λ_π couples only the π⁰, so the coherent sum is one
+        // Breit–Wigner whose width the cut raises by Γ(π⁰ → χχ̄), however
+        // large the cut is against the visible width.
+        let aligned = [1e-3, -1e-3, 0.0];
         let mesons = block(MASSES, WIDTHS);
-        let cut = InvisibleCut {
-            dm_mass: 1.0,
-            strength: 1e-2,
-        };
-        let d = mesons.inverse_propagator(MASSES[0], &HYPERCHARGE, Some(&cut));
-        let b = [1.0, -2.0, 0.5].map(|v| Complex64::new(v, 0.0));
-        let x = solve(d, b);
-        for (row, expected) in d.iter().zip(b) {
-            let residual = row[0] * x[0] + row[1] * x[1] + row[2] * x[2] - expected;
-            assert!(residual.norm() < 1e-12, "{residual}");
+        let a = mesons.source_traces(&aligned);
+        assert_eq!([a[1], a[2]], [0.0; 2]);
+        let b = mesons.photon_traces();
+        for strength in [1.92e-5, 1.92e-2] {
+            let cut = InvisibleCut {
+                dm_mass: 20.0,
+                strength,
+            };
+            let width = mesons.widths[0] + mesons.invisible_widths(&aligned, &cut)[0];
+            let mass = MASSES[0];
+            let amplitude =
+                gamma_gamma_amplitude(&mesons, mass, &aligned, &NO_TRIANGLES, Some(&cut));
+            let expected = 0.5 * mass * mass * a[0] * b[0] / Complex64::new(0.0, mass * width);
+            assert!((amplitude - expected).norm() <= 1e-14 * expected.norm());
         }
+    }
+
+    #[test]
+    fn decoupled_zero_width_pole_drops_out() {
+        // An isoscalar source has c_π = 0, so the stable π⁰ pole contributes
+        // nothing, at its own mass as on either side of it.
+        let isoscalar = [1e-3, 1e-3, 0.0];
+        let stable = block(MASSES, [0.0; 3]);
+        let mass = MASSES[0];
+        let at = gamma_gamma_amplitude(&stable, mass, &isoscalar, &NO_TRIANGLES, None);
+        let near = gamma_gamma_amplitude(
+            &stable,
+            mass * (1.0 + 1e-9),
+            &isoscalar,
+            &NO_TRIANGLES,
+            None,
+        );
+        assert!(at.is_finite());
+        assert!((at - near).norm() <= 1e-8 * at.norm());
+        let self_energy = stable.source_self_energy(mass, &isoscalar, None);
+        assert!(self_energy.is_finite());
+        assert_eq!(stable.mixing_expansion(mass, &isoscalar, 500.0)[0], 0.0);
+        // A coupled stable pole is singular.
+        let coupled = gamma_gamma_amplitude(&stable, mass, &HYPERCHARGE, &NO_TRIANGLES, None);
+        assert!(!coupled.is_finite());
     }
 
     #[test]
     fn triangle_factor_has_its_limits() {
         // Massless fermions carry the full anomaly.
         assert_eq!(triangle_factor(100.0, 0.0), Complex64::new(1.0, 0.0));
-        // A heavy fermion decouples like −s/(12 m²); the next term is
-        // −s²/(90 m⁴), so the ratio is 1 + O(s/m²).
+        // A heavy fermion decouples like −(x/3 + 8x²/45), x = s/(4m²); the
+        // next term, 4x³/35, is 3e-14 of the sum here.
+        let x = 1.0 / 4e6;
         let heavy = triangle_factor(1.0, 1e3);
-        assert_close(heavy.re, -1.0 / 12e6, 1e-6);
+        assert_close(heavy.re, -(x / 3.0 + 8.0 * x * x / 45.0), 1e-13);
         assert_eq!(heavy.im, 0.0);
+        // The series and the closed form meet at x = 1/4 to a few ulps.
+        let series = triangle_factor(1.0, 1.0);
+        let closed_form = triangle_factor(1.0 + 1e-15, 1.0);
+        assert_close(series.re, closed_form.re, 1e-14);
+        // 1 − 4 arcsin²(1/2), rounded from mpmath; evaluating it in f64
+        // would itself cancel to 2.5e-15.
+        assert_close(series.re, -0.096_622_711_232_150_95, 1e-15);
         // Continuity across the pair threshold τ = 1, where f = π²/4.
         let open = triangle_factor(2.0 * (1.0 + 1e-12), 1.0);
         let closed = triangle_factor(2.0 * (1.0 - 1e-12), 1.0);
