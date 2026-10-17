@@ -5,7 +5,8 @@ is proportional to q; it is distinct from the helicity-zero polarization of
 an on-shell spin-one particle, which obeys q.dot(epsilon) = 0.
 
 The functions here validate and broadcast their arguments; the contractions
-run in the ``hazma._core.axial`` kernels, which take each batch sample-major.
+run in the ``hazma._core.axial`` kernels, which take each batch
+component-major, as ``(W, N)``.
 """
 
 from __future__ import annotations

@@ -55,7 +55,7 @@ projects/visible-axial-spectra/references/check_public_impact.py`.
 
 ## Verification
 
-After Task 3 the focused axial suite passed 243 tests and the Rust crate 313
+After Task 3 the focused axial suite passed 273 tests and the Rust crate 314
 tests. Full preflight passed 2,799 tests, with 16 skips and 127 subtests, and
 all Rust/format/import gates. Exact commands
 and literal summaries are in the completed task notes and

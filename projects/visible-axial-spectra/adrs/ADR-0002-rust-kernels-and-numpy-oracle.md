@@ -41,10 +41,14 @@ oracle. Later kernels in the project's table follow the same split.
   PyO3-free and are unit-tested under `cargo test`; the oracle catches a
   kernel that drifts from the implementation Tasks 1 and 2 validated.
 - **Negative:** The oracle and the kernels are not bit-identical where
-  NumPy fuses complex multiplies (arm64) or sums in another order, so the
-  comparison carries measured ulp budgets rather than equality. Gauss-
-  Legendre nodes are computed in Rust on every call, which costs about
-  2 ms at order 512 where NumPy cached them.
+  NumPy fuses complex multiplies (arm64), divides complex by real as a
+  multiply by the reciprocal, or sums in another order, so the comparison
+  carries measured ulp budgets rather than equality. The spectral
+  functions differ more, because the Rust Newton rule and NumPy's
+  `leggauss` are different quadrature rules (weights good to 3e-12 and
+  2e-10 relative at order 511), so they carry a relative tolerance.
+  Gauss-Legendre nodes are computed in Rust on every call, which costs
+  about 2.3 ms at order 512 where NumPy cached them.
 - **Mitigation:** Each budget in `test_oracle.py` states its scale and the
   measured worst case. Cache the quadrature rule if a caller ever needs
   order 512 in a tight loop.

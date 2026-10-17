@@ -42,9 +42,11 @@ test oracle.
 
 - NumPy 2.5.4 on macOS/arm64 fuses complex multiplies into FMAs, so the
   oracle's `H H*` has a nonzero imaginary diagonal of order 1e-16 while the
-  kernel's is exactly real. This, and summation order, are the only sources
-  of oracle disagreement; the real-valued three-pion currents are
-  bit-identical.
+  kernel's is exactly real. Two more sources of rounding difference are
+  summation order and NumPy's evaluation of complex divided by real as a
+  multiply by the reciprocal; the real-valued three-pion currents are
+  bit-identical. The spectral functions add the quadrature rules, which
+  genuinely differ (see Decisions).
 - The parity suite asserts that every served `hazma._core` callable is a
   ported Cython entry point, so a new-physics submodule needs its own
   exemption (`_CORE_NEW_PHYSICS_MODULES`) rather than a corpus case.
@@ -59,11 +61,20 @@ test oracle.
   messages live in Rust with the NumPy precedence (overflow, then negative
   density, then conditioning) as the batch error.
 - Gauss-Legendre nodes come from Newton's method in Rust
-  (`axial_three_pi::gauss_legendre`), not a port of NumPy's eigensolver;
-  this is the 7-ulp spectral-function difference.
+  (`axial_three_pi::gauss_legendre`), not a port of NumPy's eigensolver.
+  Against mpmath at order 511 the kernel's nodes are good to about an ulp
+  and its weights to 3e-12 relative; `leggauss` has the same node accuracy
+  but weights good to 2e-10. The integral inherits the weight differences,
+  so the oracle comparison is a relative tolerance of 1e-13 rather than a
+  count of ulps. The Newton stop is 4 ulps with one further step, because
+  the rounding of `value / derivative` can never meet a 1-ulp stop.
 - Sums over many terms use `boost::pairwise_sum`, matching NumPy's
   reduction of a contiguous axis; the 16-term tensor sums are sequential,
   matching NumPy's reduction of a batched `(4, 4, N)` array.
+- Review fixes: the oracle comparison for spectral functions sweeps seven
+  orders and three masses; a cargo test pins the `128 ε` factor and the
+  diagonal term of the conditioning bound; and the Gauss-Legendre
+  documentation states the measured accuracy of both rules.
 - `num-complex` is a direct dependency (already in the lock tree through
   `numpy`) so PyO3-free kernels can use complex arithmetic.
 - Module names follow the plan's table: `axial_tensors`, `axial_three_pi`,
@@ -89,13 +100,13 @@ test oracle.
 
 ## Verification
 
-- `cargo test --no-default-features --features test-probes`: 313 passed,
-  14 of them axial (Ward identities, threshold zeros, conditioning guard,
-  chiral limit, Gauss-Legendre exactness).
+- `cargo test --no-default-features --features test-probes`: 314 passed,
+  15 of them axial (Ward identities, threshold zeros, conditioning guard
+  and its `128 ε` bound, chiral limit, Gauss-Legendre exactness).
 - `cargo clippy --all-features --all-targets -D warnings` and
   `cargo fmt --check`: clean.
-- `pytest -n 0 test/form_factors/axial -q`: 243 passed (192 existing,
-  unchanged, plus 51 oracle comparisons).
+- `pytest -n 0 test/form_factors/axial -q`: 273 passed (192 existing,
+  unchanged, plus 81 oracle comparisons).
 - `pytest test/parity -q`: 723 passed, 1 skipped.
 - `references/check_public_impact.py`: maximum absolute difference 0.0,
   "unchanged on the recorded grid".
@@ -113,11 +124,14 @@ same inputs. Worst cases on macOS/arm64: `hadronic_tensor` 1.4 ulps of
 `|H_mu||H_nu|`; `current_projections` 2 ulps of `gamma**2 (L + 3T)`;
 `tensor_projections` 3.7e-3 of its own roundoff budget; integration 2 ulps
 (last axis) and 5 ulps (other axes); three-pion currents and weights 0;
-spectral functions 7 ulps.
+spectral functions a relative difference of 3.2e-14 at order 505 (orders 8
+to 512, both channel classes, pion masses 134.9768, 139.57 and 0), from the
+two quadrature rules differing; the tolerance is 1e-13.
 
 ## Performance
 
-Minimum of five runs, `N = 100000` samples, macOS/arm64.
+Minimum of five runs, `N = 100000` samples, macOS/arm64; the two
+`spectral_functions` rows are the minimum of 21 runs.
 
 | function | NumPy oracle (ms) | Rust (ms) |
 |---|---|---|
@@ -126,11 +140,12 @@ Minimum of five runs, `N = 100000` samples, macOS/arm64.
 | `tensor_projections` | 16.36 | 11.80 |
 | `integrate_spectral_functions` | 2.45 | 1.41 |
 | three-pion `current` (Rust includes 1.33 ms of shared validation) | 0.87 | 1.60 |
-| `spectral_functions`, 1000 energies, order 64 | 0.20 | 0.20 |
-| `spectral_functions`, 1000 energies, order 512 | 1.10 | 2.83 |
+| `spectral_functions`, 1000 energies, order 64 | 0.19 | 0.20 |
+| `spectral_functions`, 1000 energies, order 512 | 1.12 | 3.29 |
 
-At order 512 the Rust path spends 1.88 ms building the rule, which NumPy
-cached with `lru_cache`; see ADR-0002's mitigation.
+At order 512 the Rust path spends 2.32 ms building the rule, which NumPy
+cached with `lru_cache`; see ADR-0002's mitigation. The extra Newton step
+that makes the nodes converge costs about 0.4 ms over the earlier 1.88 ms.
 
 ## Open Questions
 
@@ -174,8 +189,8 @@ Run against the branch with untracked files marked by `git add -N .`.
 | Claim location | Command | Actual | Status |
 |---|---|---|---|
 | lib.rs "six per-domain submodules" | `dir(hazma._core)` modules | six | KEPT |
-| README "313 Rust tests" | `cargo test` | 313 | KEPT |
-| README "243 tests" | `pytest -n 0 test/form_factors/axial` | 243 | KEPT |
+| README "314 Rust tests" | `cargo test` | 314 | EDITED |
+| README "273 tests" | `pytest -n 0 test/form_factors/axial` | 273 | EDITED |
 | parity README "today six" test-only | `_CORE_TEST_ONLY_MODULES` | six | KEPT |
 
 - **Numerical-impact statement.** No public value changes (verified:
@@ -187,8 +202,8 @@ Run against the branch with untracked files marked by `git add -N .`.
 | Exit criterion | Satisfied by |
 |---|---|
 | Existing suite unchanged | `test/form_factors/axial/` (192 tests) |
-| Agreement with oracle | `test_oracle.py` (51 comparisons) |
-| Cargo Ward, threshold, guard | `kernels/axial_*.rs` unit tests (14) |
+| Agreement with oracle | `test_oracle.py` (81 comparisons) |
+| Cargo Ward, threshold, guard | `kernels/axial_*.rs` unit tests (15) |
 | Public values bit-identical | `check_public_impact.py` |
 | Performance recorded | `## Performance` above |
 

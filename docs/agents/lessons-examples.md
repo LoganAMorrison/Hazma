@@ -1590,6 +1590,14 @@ branch of the underlying kernel that "any" reaches.
   the kernels and the generic fallback, and
   `test_gev_vector_site_rejects_x_past_the_supported_maximum` for the GeV
   vector mediator's closure.
+- PR #127 compared the Rust axial spectral functions with the NumPy oracle
+  at orders 8, 64 and 512 and wrote that the two quadrature rules "differ
+  by an ulp or two", with an 8-ulp limit. Review swept the orders and
+  masses: at order 505 the difference was 286 ulps (6e-14 relative),
+  because NumPy's `leggauss` end weights carry 2e-10 relative error at
+  order 511 against the kernel's 3e-12 (mpmath). The test now covers
+  orders 8 to 512 and three masses with a relative tolerance and states the
+  measured worst case.
 
 ### offset-blamed-on-the-quadrature-before-the-inputs
 

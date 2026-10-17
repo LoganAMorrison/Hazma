@@ -8,9 +8,11 @@
 //!
 //! Every function takes one sample; the PyO3 layer maps them over a batch.
 //! Arithmetic is written in the order the NumPy oracle in
-//! `test/form_factors/axial/axial_oracle.py` evaluates it, and sums over more than
-//! a few terms use [`pairwise_sum`], so the two agree to a few units in the
-//! last place.
+//! `test/form_factors/axial/axial_oracle.py` evaluates it, and sums over more
+//! than a few terms use [`pairwise_sum`], so the two agree to a few units in
+//! the last place. They still differ by rounding, because NumPy fuses the
+//! products of a complex multiply, divides a complex number by a real one as
+//! a multiply by the reciprocal, and reduces some axes sequentially.
 
 use num_complex::Complex64;
 
@@ -246,6 +248,27 @@ mod tests {
         assert!(tensor_projections(&tensor, &rest, 1e-6).is_ok());
         assert_eq!(
             tensor_projections(&tensor, &rest, 1e-16),
+            Err(ProjectionError::IllConditioned)
+        );
+    }
+
+    /// Pins the `128 ε` factor and the diagonal term of the roundoff bound.
+    ///
+    /// In the rest frame a tensor with only `W⁰⁰ = 1` has `L = 1`, `T = 0`,
+    /// a magnitude sum of 1 and a diagonal of 1, so the bound is exactly
+    /// `256 ε` against a rest-frame norm of 1, and `rtol` decides the
+    /// verdict at that edge.
+    #[test]
+    fn conditioning_bound_is_128_epsilon_times_magnitude_and_diagonal() {
+        let rest = [1.0, 0.0, 0.0, 0.0];
+        let mut tensor = [[c(0.0, 0.0); 4]; 4];
+        tensor[0][0] = c(1.0, 0.0);
+        assert_eq!(
+            tensor_projections(&tensor, &rest, 256.0 * f64::EPSILON),
+            Ok((0.0, 1.0))
+        );
+        assert_eq!(
+            tensor_projections(&tensor, &rest, 255.0 * f64::EPSILON),
             Err(ProjectionError::IllConditioned)
         );
     }

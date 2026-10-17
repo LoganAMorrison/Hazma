@@ -1,11 +1,14 @@
 """Rust-backed axial numerics against the NumPy oracle in `axial_oracle`.
 
 Each tolerance is a count of units in the last place of the scale both
-implementations round against, with the largest difference measured on
-macOS/arm64 (NumPy 2.5.4) beside it. NumPy fuses the two products of a
-complex multiply into one FMA there, and the kernels do not, so the
-complex-valued paths differ by rounding while the real-valued three-pion
-currents are bit-identical.
+implementations round against (the spectral functions, whose rules differ,
+a relative difference), with the largest difference measured on
+macOS/arm64 (NumPy 2.5.4) beside it. The complex-valued paths differ by
+rounding for three reasons: NumPy fuses the two products of a complex
+multiply into one FMA there and the kernels do not, it divides a complex
+number by a real one as a multiply by the reciprocal, and it sums some
+axes in a different order. The real-valued three-pion currents are
+bit-identical.
 """
 
 from __future__ import annotations
@@ -173,8 +176,8 @@ def test_three_pi_current_and_weight(cls: type, mass: float) -> None:
 
 
 @pytest.mark.parametrize("cls", [AxialFormFactorPiPiPi0, AxialFormFactorPi0Pi0Pi0])
-@pytest.mark.parametrize("mass", [135.0, 0.0])
-@pytest.mark.parametrize("order", [8, 64, 512])
+@pytest.mark.parametrize("mass", [134.9768, 139.57, 0.0])
+@pytest.mark.parametrize("order", [8, 9, 40, 100, 446, 505, 512])
 def test_three_pi_spectral_functions(cls: type, mass: float, order: int) -> None:
     form_factor = cls(pion_mass=mass)
     energies = np.append(np.linspace(0.0, 600.0, 241), 3 * mass * (1 + 1e-9))
@@ -183,9 +186,16 @@ def test_three_pi_spectral_functions(cls: type, mass: float, order: int) -> None
         energies, G3, mass, 92.2, form_factor._neutral, quadrature_order=order
     )
     # The kernel finds the Gauss-Legendre nodes by Newton's method and NumPy
-    # by an eigensolver; the rules differ by an ulp or two: measured 7 ulps.
-    limit = 8
+    # by an eigensolver, and the two rules differ: NumPy's endpoint weights
+    # carry about 2e-10 relative error at order 511 against the kernel's
+    # 3e-12. The integral inherits the weight differences, so the relative
+    # difference grows with the order. Measured worst 3.2e-14 (order 505),
+    # so 1e-13 leaves about 3x headroom.
+    tolerance = 1e-13
     for actual, reference in zip(
         (result.transverse, result.source_longitudinal), expected, strict=True
     ):
-        assert _ulps(actual - reference, reference) <= limit
+        zero = reference == 0.0
+        assert np.all(actual[zero] == 0.0)
+        relative = np.abs(actual[~zero] - reference[~zero]) / np.abs(reference[~zero])
+        assert np.all(relative <= tolerance)
