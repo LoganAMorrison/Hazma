@@ -3,13 +3,20 @@
 Lorentz indices precede all batch indices. The source-longitudinal direction
 is proportional to q; it is distinct from the helicity-zero polarization of
 an on-shell spin-one particle, which obeys q.dot(epsilon) = 0.
+
+The functions here validate and broadcast their arguments; the contractions
+run in the ``hazma._core.axial`` kernels, which take each batch
+component-major, as ``(W, N)``.
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 
 import numpy as np
+
+from hazma._core import axial as _axial
 
 # Keep runtime-resolvable annotations, as required by AGENTS.md.
 from hazma.utils import ComplexArray, RealArray  # noqa: TC001
@@ -41,9 +48,27 @@ def _broadcast_lorentz(
     )
 
 
-def _momentum(q: ArrayLike) -> tuple[RealArray, RealArray]:
+def _components(array: np.ndarray, shape: tuple[int, ...], rank: int) -> np.ndarray:
+    """Broadcast ``array`` to batch ``shape`` as a C-contiguous ``(W, N)`` array.
+
+    W is the number of Lorentz components in the ``rank`` leading axes and N
+    the batch size: the layout every ``hazma._core.axial`` kernel takes, and
+    the one a kernel result is reshaped back from.
+    """
+    batch = np.ascontiguousarray(_broadcast_lorentz(array, shape, rank))
+    return batch.reshape(math.prod(array.shape[:rank]), math.prod(shape))
+
+
+def _momentum(q: ArrayLike) -> RealArray:
+    """Return the validated ``q``, rescaled so that ``0.5 <= q[0] < 1``.
+
+    Both projections are invariant under ``q -> lambda * q``. Rescaling by an
+    exact power of two keeps q squared from underflowing or overflowing, which
+    at extreme scales would corrupt the projections and the timelike check.
+    """
     momentum = _four_vector(q, "q", real=True)
     with np.errstate(over="ignore", invalid="ignore"):
+        momentum = np.ldexp(momentum, -np.frexp(momentum[0])[1])
         invariant = momentum[0] ** 2 - np.sum(momentum[1:] ** 2, axis=0)
     if (
         not np.all(np.isfinite(invariant))
@@ -53,7 +78,7 @@ def _momentum(q: ArrayLike) -> tuple[RealArray, RealArray]:
         raise ValueError(
             "q must be finite, future-directed and timelike (q squared > 0)."
         )
-    return momentum, invariant
+    return momentum
 
 
 def _finite_result(value: np.ndarray) -> np.ndarray:
@@ -77,8 +102,9 @@ def hadronic_tensor(current: ArrayLike) -> ComplexArray:
         Tensor in the same batch shape, with units ``abs(current units)**2``.
     """
     amplitude = _four_vector(current, "current")
-    with np.errstate(over="ignore", invalid="ignore"):
-        return _finite_result(amplitude[:, None] * amplitude.conj()[None, :])
+    shape = amplitude.shape[1:]
+    tensor = _axial.hadronic_tensor(_components(amplitude, shape, 1))
+    return _finite_result(tensor.reshape((4, 4) + shape))
 
 
 def current_projections(
@@ -108,20 +134,15 @@ def current_projections(
     projectors as positive norms, avoiding cancellation of large norms.
     """
     amplitude = _four_vector(current, "current")
-    momentum, invariant = _momentum(q)
+    momentum = _momentum(q)
     shape = np.broadcast_shapes(amplitude.shape[1:], momentum.shape[1:])
-    amplitude = _broadcast_lorentz(amplitude, shape, 1)
-    momentum = _broadcast_lorentz(momentum, shape, 1)
-    mass = np.sqrt(np.broadcast_to(invariant, shape))
-    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
-        spatial_dot = np.sum(momentum[1:] * amplitude[1:], axis=0)
-        time = (momentum[0] * amplitude[0] - spatial_dot) / mass
-        spatial = amplitude[1:] + momentum[1:] * (
-            spatial_dot / (mass * (momentum[0] + mass)) - amplitude[0] / mass
-        )
-        transverse = np.sum(np.abs(spatial) ** 2, axis=0) / 3.0
-        longitudinal = np.abs(time) ** 2
-    return _finite_result(transverse), _finite_result(longitudinal)
+    transverse, longitudinal = _axial.current_projections(
+        _components(amplitude, shape, 1), _components(momentum, shape, 1)
+    )
+    return (
+        _finite_result(transverse.reshape(shape)[()]),
+        _finite_result(longitudinal.reshape(shape)[()]),
+    )
 
 
 def tensor_projections(
@@ -182,44 +203,12 @@ def tensor_projections(
     tolerance = 64 * np.finfo(float).eps * scale
     if np.any(np.abs(density - density.swapaxes(0, 1).conj()) > tolerance):
         raise ValueError("tensor must be Hermitian in its Lorentz indices.")
-    momentum, invariant = _momentum(q)
+    momentum = _momentum(q)
     shape = np.broadcast_shapes(density.shape[2:], momentum.shape[1:])
-    density = _broadcast_lorentz(density, shape, 2)
-    momentum = _broadcast_lorentz(momentum, shape, 1)
-    invariant = np.broadcast_to(invariant, shape)
-    covariant = momentum * np.array([1.0, -1.0, -1.0, -1.0]).reshape(
-        (4,) + (1,) * len(shape)
+    transverse, longitudinal = _axial.tensor_projections(
+        _components(density, shape, 2), _components(momentum, shape, 1), float(rtol)
     )
-    with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
-        terms = covariant[:, None] * covariant[None, :] * density / invariant
-        longitudinal = np.sum(terms, axis=(0, 1)).real
-        trace = density[0, 0].real - sum(density[i, i].real for i in range(1, 4))
-        transverse = (longitudinal - trace) / 3.0
-        budget = (
-            128
-            * np.finfo(float).eps
-            * (
-                np.sum(np.abs(terms), axis=(0, 1))
-                + np.sum(np.abs(np.diagonal(density, axis1=0, axis2=1)), axis=-1)
-            )
-        )
-    _finite_result(budget)
-    for value in (transverse, longitudinal):
-        _finite_result(value)
-        if np.any(value < -budget):
-            raise ValueError("tensor has a negative projected density.")
-    transverse = np.maximum(transverse, 0.0)
-    longitudinal = np.maximum(longitudinal, 0.0)
-    # The budget also bounds positive errors; compare it with the rest-frame
-    # norm, which dominates both projections.
-    if np.any(budget > rtol * (longitudinal + 3.0 * transverse)):
-        raise ValueError(
-            "tensor projection is ill-conditioned for this q: its roundoff "
-            "bound exceeds rtol times the rest-frame norm. Project the "
-            "current with current_projections or supply the tensor in the "
-            "q rest frame."
-        )
-    return transverse, longitudinal
+    return transverse.reshape(shape)[()], longitudinal.reshape(shape)[()]
 
 
 def integrate_spectral_functions(
@@ -263,7 +252,17 @@ def integrate_spectral_functions(
         raise ValueError("sample_axis must be an integer density axis.")
     if transverse.ndim == 0 or not -transverse.ndim <= sample_axis < transverse.ndim:
         raise ValueError("sample_axis is outside the density batch dimensions.")
-    with np.errstate(over="ignore", invalid="ignore"):
-        result_t = np.sum(transverse * measure, axis=sample_axis)
-        result_l = np.sum(longitudinal * measure, axis=sample_axis)
-    return _finite_result(result_t), _finite_result(result_l)
+    # One row of samples per batch element, summed by the kernel.
+    densities = [
+        np.ascontiguousarray(np.moveaxis(value, sample_axis, -1))
+        for value in (transverse, longitudinal, measure)
+    ]
+    batch = densities[0].shape[:-1]
+    rows = (math.prod(batch), densities[0].shape[-1])
+    result_t, result_l = _axial.integrate_spectral_functions(
+        *(value.reshape(rows) for value in densities)
+    )
+    return (
+        _finite_result(result_t.reshape(batch)[()]),
+        _finite_result(result_l.reshape(batch)[()]),
+    )

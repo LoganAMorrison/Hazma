@@ -74,6 +74,8 @@ note. Corrections that move existing published numbers are out of scope
 
 - [Current and tensor
   conventions](adrs/ADR-0001-current-and-tensor-contracts.md).
+- [Rust kernels and the NumPy
+  oracle](adrs/ADR-0002-rust-kernels-and-numpy-oracle.md).
 - [LO three-pion derivation](references/lo-three-pion.md).
 - [Scope sources and acceptance references](references/scope-and-acceptance.md):
   benchmark values with their note labels, the channel validity table, and the

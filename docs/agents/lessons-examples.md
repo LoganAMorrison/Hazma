@@ -1590,6 +1590,25 @@ branch of the underlying kernel that "any" reaches.
   the kernels and the generic fallback, and
   `test_gev_vector_site_rejects_x_past_the_supported_maximum` for the GeV
   vector mediator's closure.
+- PR #127 compared the Rust axial spectral functions with the NumPy oracle
+  at orders 8, 64 and 512 and wrote that the two quadrature rules "differ
+  by an ulp or two", with an 8-ulp limit. Review swept the orders and
+  masses: at order 505 the difference was 286 ulps (6e-14 relative),
+  because NumPy's `leggauss` end weights carry 2e-10 relative error at
+  order 511 against the kernel's 3e-12 (mpmath). The test now covers
+  orders 8 to 512 and three masses with a relative tolerance and states the
+  measured worst case.
+- PR #127's `tensor_projections` guarded its roundoff with a budget built
+  from the same products as the result, tested only at `q` of order one.
+  Review scaled `q` by `2e-162`: `q·q` underflowed to a subnormal, the
+  guard accepted `(0.0, 1.0)` against the true `(0.0543, 1.163)` at
+  `rtol=1e-12`, and `current_projections` was 30% low, because a budget
+  computed from underflowed numbers cannot see the underflow. The timelike
+  check had the same blind spot: a spacelike `q` at that scale passed, and
+  `q = (1e308, 0, 0, 0)` was refused. Both projections are invariant under
+  `q → λq`, so the wrapper now rescales `q` by an exact power of two before
+  validating it, and `test_projections_are_independent_of_the_momentum_scale`
+  pins scalar and batch values from `2e-162` to `1e307`.
 
 ### offset-blamed-on-the-quadrature-before-the-inputs
 

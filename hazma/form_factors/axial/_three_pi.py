@@ -20,16 +20,17 @@ currents, without resonances, loops, electromagnetic or isospin corrections.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import ClassVar
 
 import numpy as np
 
+from hazma._core import axial as _axial
 from hazma.parameters import neutral_pion_mass
 from hazma.utils import RealOrRealArray
 
 from ._base import AxialSpectralResult
 from ._sources import AxialCurrent, SourceCoverage
+from ._tensors import _components
 
 ArrayLike = RealOrRealArray | list[float] | tuple[float, ...]
 _MIN_ORDER = 8
@@ -66,13 +67,6 @@ def _g3(couplings: AxialCurrent) -> float:
     if couplings.gas != 0.0 or couplings.gau != -couplings.gad:
         raise ValueError("LO three-pion currents support only G_A = g3 diag(1,-1,0).")
     return np.float64(couplings.gau)
-
-
-@lru_cache(maxsize=8)
-def _quadrature(order: int) -> tuple[np.ndarray, np.ndarray]:
-    nodes, weights = np.polynomial.legendre.leggauss(order)
-    theta = (nodes + 1) * np.pi / 2
-    return theta, weights * np.pi / 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,6 +116,11 @@ class _AxialThreePion:
             provenance="SU(2) O(p²) action; exact isospin; contact plus pion pole; restricted LO domain, not a precision bound",
         )
 
+    @property
+    def _parameters(self) -> tuple[float, float, bool]:
+        """Pion mass, decay constant and channel, as the kernels take them."""
+        return self.pion_mass, self.decay_constant, self._neutral
+
     @np.errstate(over="ignore", invalid="ignore", divide="ignore")
     def _kinematics(
         self, momenta: ArrayLike
@@ -151,7 +150,6 @@ class _AxialThreePion:
             raise ValueError("Total momentum is outside the declared LO support.")
         return ps, q, q2
 
-    @np.errstate(over="ignore", invalid="ignore", divide="ignore")
     def current(self, momenta: ArrayLike, couplings: AxialCurrent) -> np.ndarray:
         r"""Return the full contravariant current H^mu, dimensionless.
 
@@ -170,21 +168,13 @@ class _AxialThreePion:
             A single event of shape (4,3) returns shape (4,).
         """
         g3 = _g3(couplings)
-        ps, q, q2 = self._kinematics(momenta)
-        m2 = np.square(self.pion_mass)
-        if g3 == 0 or (self._neutral and self.pion_mass == 0):
-            return np.zeros_like(q)
-        if self._neutral:
-            value = -2 * g3 / self.decay_constant * q * (m2 / (q2 - m2))
-            return _real_array(value, "Current")
-        pair = ps[:, 0] + ps[:, 1]
-        s = _dot(pair, pair)
-        value = (
-            2 * g3 / self.decay_constant * (-2 * ps[:, 2] + q * ((q2 - s) / (q2 - m2)))
+        ps, _, _ = self._kinematics(momenta)
+        shape = ps.shape[2:]
+        value = _axial.three_pi_current(
+            _components(ps, shape, 2), g3, *self._parameters
         )
-        return _real_array(value, "Current")
+        return _real_array(value.reshape((4,) + shape), "Current")
 
-    @np.errstate(over="ignore", invalid="ignore", divide="ignore")
     def differential_weight(
         self, momenta: ArrayLike, couplings: AxialCurrent
     ) -> float | np.ndarray:
@@ -197,18 +187,14 @@ class _AxialThreePion:
         longitudinal projection. Three pi0 has exactly zero physical weight.
         """
         g3 = _g3(couplings)
-        ps, q, q2 = self._kinematics(momenta)
-        if self._neutral:
-            result = np.zeros_like(q2)
-        else:
-            pcm2 = np.maximum(
-                _dot(q, ps[:, 2]) ** 2 / q2 - np.square(self.pion_mass), 0.0
-            )
-            result = 16 * g3**2 * pcm2 / (3 * np.square(self.decay_constant))
-        result = _real_array(result, "Differential weight")
+        ps, _, _ = self._kinematics(momenta)
+        shape = ps.shape[2:]
+        result = _axial.three_pi_differential_weight(
+            _components(ps, shape, 2), g3, *self._parameters
+        )
+        result = _real_array(result.reshape(shape), "Differential weight")
         return float(result) if result.ndim == 0 else result
 
-    @np.errstate(over="ignore", invalid="ignore", divide="ignore")
     def spectral_functions(
         self, q: ArrayLike, couplings: AxialCurrent, *, quadrature_order: int = 64
     ) -> AxialSpectralResult:
@@ -252,49 +238,16 @@ class _AxialThreePion:
             or not _MIN_ORDER <= quadrature_order <= _MAX_ORDER
         ):
             raise ValueError("quadrature_order must be an integer from 8 through 512.")
-        transverse = np.zeros_like(energies)
-        longitudinal = np.zeros_like(energies)
-        mask = energies > self.threshold
-        if self.pion_mass == 0:
-            if not self._neutral:
-                transverse = (
-                    (g3 * energies / self.decay_constant) ** 2
-                    * energies**2
-                    / (384 * np.pi**3)
-                )
-            mask = np.zeros_like(mask)
-        if np.any(mask):
-            energy = energies[mask, None]
-            # Dimensionless ratios keep the massive integral well-defined even
-            # when very small MeV scales have unrepresentable squared masses.
-            ratio = self.pion_mass / energy
-            ratio2 = ratio**2
-            theta, weights = _quadrature(int(quadrature_order))
-            span = np.maximum((1 - 3 * ratio) * (1 + ratio), 0.0)
-            s = 4 * ratio2 + span * (1 - np.cos(theta)) / 2
-            jac = span * np.sin(theta) / 2
-            lam = ((1 - ratio) ** 2 - s) * ((1 + ratio) ** 2 - s)
-            measure = (
-                energy**2
-                * weights
-                * jac
-                * np.sqrt(np.maximum(lam, 0))
-                * np.sqrt(np.maximum(1 - 4 * ratio2 / s, 0))
-                / (128 * np.pi**3)
-            )
-            prefactor = 4 * (g3 * energy / self.decay_constant) ** 2
-            if self._neutral:
-                value_l = prefactor * ratio2**2 / (1 - ratio2) ** 2
-                longitudinal[mask] = np.sum(measure * value_l, axis=-1) / 6
-            else:
-                value_t = prefactor * lam / 3
-                value_l = prefactor * ratio2**2 * (s - ratio2) ** 2 / (1 - ratio2) ** 2
-                transverse[mask] = np.sum(measure * value_t, axis=-1)
-                longitudinal[mask] = np.sum(measure * value_l, axis=-1)
+        transverse, longitudinal = _axial.three_pi_spectral_functions(
+            energies.reshape(-1),
+            g3,
+            *self._parameters,
+            int(quadrature_order),
+        )
         return AxialSpectralResult(
             q_mev=energies,
-            transverse=transverse,
-            source_longitudinal=longitudinal,
+            transverse=transverse.reshape(energies.shape),
+            source_longitudinal=longitudinal.reshape(energies.shape),
             threshold_mev=self.threshold,
             coverage=self.coverage,
             units="MeV^2",

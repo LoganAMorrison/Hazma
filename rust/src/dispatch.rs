@@ -47,7 +47,10 @@
 //! * a rank error names the argument rather than the buffer.
 
 use numpy::ndarray::Array2;
-use numpy::{IntoPyArray, PyReadonlyArray1, PyUntypedArray, PyUntypedArrayMethods};
+use numpy::{
+    Element, IntoPyArray, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArray,
+    PyUntypedArrayMethods,
+};
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyTuple};
@@ -342,6 +345,70 @@ pub fn require_vector(obj: &Bound<'_, PyAny>, quantity: &str) -> PyResult<Vec<f6
         .extract()
         .map_err(|_| dtype_error(array, quantity))?;
     Ok(values.as_array().to_vec())
+}
+
+/// A batch of `N` samples with `W` components each, laid out
+/// component-major: component `c` of every sample is one contiguous run.
+///
+/// This is the layout of a NumPy array whose leading axes index components
+/// and whose trailing axes index the batch, such as a `(4, ...)` current,
+/// once reshaped to `(W, N)` — so the wrappers in `hazma/form_factors/axial/`
+/// hand their batches over without transposing them.
+pub struct Components<'a, T, const W: usize> {
+    values: &'a [T],
+    len: usize,
+}
+
+impl<T: Copy, const W: usize> Components<'_, T, W> {
+    /// Every sample's components, in sample order.
+    pub fn samples(&self) -> impl ExactSizeIterator<Item = [T; W]> + '_ {
+        (0..self.len).map(|n| std::array::from_fn(|c| self.values[c * self.len + n]))
+    }
+}
+
+/// Borrow a C-contiguous `(W, N)` array as [`Components`].
+///
+/// The fifth argument shape, and the only one that is not a public
+/// argument: the axial wrappers validate and broadcast their inputs in
+/// NumPy first, so a layout this refuses is a wrapper bug rather than a
+/// user error.
+///
+/// # Errors
+///
+/// `ValueError` naming `quantity` if the array does not have `W` rows or is
+/// not C-contiguous.
+pub fn components<'a, T: Element, const W: usize>(
+    array: &'a PyReadonlyArray2<'_, T>,
+    quantity: &str,
+) -> PyResult<Components<'a, T, W>> {
+    let shape = array.shape();
+    if shape[0] != W {
+        return Err(PyValueError::new_err(format!(
+            "{quantity} must have {W} components."
+        )));
+    }
+    let values = array
+        .as_slice()
+        .map_err(|_| PyValueError::new_err(format!("{quantity} must be C-contiguous.")))?;
+    Ok(Components {
+        values,
+        len: shape[1],
+    })
+}
+
+/// Lay out one `[T; W]` per sample as a component-major `(W, N)` array, the
+/// inverse of [`components`].
+pub fn component_major<'py, T: Element + Copy + Default, const W: usize>(
+    py: Python<'py>,
+    samples: impl ExactSizeIterator<Item = [T; W]>,
+) -> Bound<'py, PyArray2<T>> {
+    let mut array = Array2::default((W, samples.len()));
+    for (n, sample) in samples.enumerate() {
+        for (c, value) in sample.into_iter().enumerate() {
+            array[[c, n]] = value;
+        }
+    }
+    array.into_pyarray(py)
 }
 
 /// Reject an `x = m_x / T` past the thermal averages' supported maximum,
